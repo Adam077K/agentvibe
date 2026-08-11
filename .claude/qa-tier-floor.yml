@@ -1,55 +1,112 @@
-# File-path tier-floor map — QA-Lead enforcement (template)
-# Adopted from Agentvibe agent system; retune patterns for your repo layout.
+# THE classifier's data file. One file computes risk.
 #
-# Used by .github/workflows/qa-lead-pass.yml to set the MINIMUM risk tier
-# any PR touching the matching files must carry. Workers may upgrade; never downgrade.
+# Consumers (all of them go through scripts/lib/classifier.js — there is no second
+# implementation of this matching logic):
+#   · scripts/classify.mjs            — the CLI
+#   · .github/workflows/qa-lead-pass.yml — merge gate, calls the CLI
+#   · scripts/ledger.mjs              — picks resolvers + enforcement per claim
 #
-# Tiers (ascending severity): trivial < lite < full < irreversible
-# Match order: first match wins (most-specific patterns FIRST).
+# Each rule answers four questions about a path:
+#   tier                  minimum review tier — workers may upgrade, never downgrade
+#   resolvers             which claim resolvers must run over claims in that file
+#   required_claim_kinds  which kinds of claim that file must carry (empty = none required)
+#   enforcement           block = fails the build today · shadow = logs would_block only
 #
-# Update protocol: append-only; if a pattern's tier changes, add a `supersedes:`
-# entry and keep the old one commented for one release cycle.
+# Tiers (ascending): trivial < lite < full < irreversible
+#
+# MATCH SEMANTICS — corrected 2026-08-11.
+# This header used to read "first match wins (most-specific patterns FIRST)". Its only
+# consumer — a bash reimplementation inside qa-lead-pass.yml — took the MAXIMUM tier
+# across every matching pattern instead. The two happened to agree because the rules are
+# ordered strictest-first, so nothing had broken; the documentation was simply false, and
+# would have become wrong the moment anyone reordered this file.
+#
+#   tier                 → the STRICTEST matching rule wins (this is a floor)
+#   resolvers            → union of all matching rules
+#   required_claim_kinds → union of all matching rules
+#   enforcement          → strictest of all matching rules (block beats shadow)
+#   no match             → tier: lite (the default this file always claimed and never had —
+#                          the bash started at trivial, rating bin/warroom a typo)
+#
+# Globs: `**/` = zero or more path segments · `*` = within one segment, does NOT cross `/`.
+#
+# Update protocol: append-only; if a pattern's tier changes, add a `supersedes:` entry and
+# keep the old one commented for one release cycle.
+# Test by execution: `node --test scripts/classifier.test.mjs`. Never by reading.
 
-version: 1
-generated: 2026-05-25
+version: 2
+generated: 2026-08-11
 
 rules:
   # ──────────────── IRREVERSIBLE ────────────────
   # Money flows, schema changes, workflow definitions, agent identity.
   # Require: tier:full review + 2-of-3 multi-judge + Founder sign-off.
+  #
+  # `enforcement: block` on this group is the ADR-001 carve-out: every gate ships in
+  # shadow mode first EXCEPT outbound send, deploy, migration and harness self-edit,
+  # which block from day one because they are not revertible by a git revert.
+  # Note this only bites files that actually carry claims — a file with no claim block
+  # is unaffected by enforcement, whatever its tier.
   - pattern: "**/supabase/migrations/**"
     tier: irreversible
+    enforcement: block
+    resolvers: [claim-command]
     reason: "DB schema change — destructive replay impossible"
   - pattern: "**/prisma/migrations/**"
     tier: irreversible
+    enforcement: block
+    resolvers: [claim-command]
     reason: "Prisma schema migrations"
   - pattern: "**/drizzle/migrations/**"
     tier: irreversible
+    enforcement: block
+    resolvers: [claim-command]
     reason: "Drizzle schema migrations"
   - pattern: ".github/workflows/**"
     tier: irreversible
-    reason: "CI/CD changes affect every PR; bad workflow blocks merges"
+    enforcement: block
+    resolvers: [claim-command]
+    reason: "Harness self-edit — CI/CD changes affect every PR; a bad workflow blocks merges"
   - pattern: ".claude/agents/**"
     tier: irreversible
-    reason: "Agent definitions; bad prompt cascades across every spawn"
+    enforcement: block
+    resolvers: [claim-command]
+    reason: "Harness self-edit — agent definitions; a bad prompt cascades across every spawn"
   - pattern: ".claude/settings.json"
     tier: irreversible
-    reason: "Runtime permission boundary"
+    enforcement: block
+    reason: "Harness self-edit — runtime permission boundary"
   - pattern: ".claude/qa-tier-floor.yml"
     tier: irreversible
-    reason: "This file itself — bad tier map silently downgrades reviews"
+    enforcement: block
+    resolvers: [claim-command]
+    reason: "This file itself — a bad tier map silently downgrades every review"
   - pattern: ".claude/hooks/**"
     tier: irreversible
-    reason: "PostToolUse / SessionStart hooks execute on every action"
+    enforcement: block
+    resolvers: [claim-command]
+    reason: "Harness self-edit — PostToolUse / SessionStart hooks execute on every action"
+  - pattern: "scripts/lib/**"
+    tier: irreversible
+    enforcement: block
+    resolvers: [claim-command]
+    reason: "Harness self-edit — the classifier, claim parser and resolvers themselves"
   - pattern: "**/api/billing/**"
     tier: irreversible
+    enforcement: block
     reason: "Payment/billing flow — silent failure = lost revenue"
   - pattern: "**/api/webhooks/**"
     tier: irreversible
+    enforcement: block
     reason: "External webhook handlers — idempotency-critical"
   - pattern: "**/api/payments/**"
     tier: irreversible
+    enforcement: block
     reason: "Payment processing endpoints"
+  # NOT LISTED, deliberately: an outbound-send pattern. ADR-001 names outbound send as a
+  # day-one blocker, but this repository has no outbound-send path to name. A pattern
+  # matching nothing would read as coverage it does not have. It is added the day the
+  # mechanism is.
 
   # ──────────────── FULL ────────────────
   # API routes, auth, agent business logic, DB queries from app code.
@@ -74,6 +131,24 @@ rules:
   - pattern: "**/lib/credit*/**"
     tier: full
     reason: "Credit / quota logic — pricing-critical"
+  - pattern: "docs/09-metrics/**"
+    tier: full
+    resolvers: [claim-source, claim-freshness]
+    required_claim_kinds: [external-fact]
+    reason: "Numbers that get acted on — an invented metric is unrecoverable, unlike a bad diff"
+    # AGENT-SYSTEM-REBUILD.md §3.2 shows `claim-arithmetic` here. It is deliberately NOT
+    # listed: no such resolver is implemented, and naming a mechanism that does not exist
+    # is the exact defect this rebuild was called to fix. It goes in the day it runs.
+    # `resolvers:` accepts only implemented names — scripts/lib/resolvers.js is the
+    # registry, and an unknown name makes the classifier throw.
+  - pattern: "scripts/**"
+    tier: full
+    resolvers: [claim-command]
+    reason: "Harness machinery — the ledger, the linters, the installer"
+  - pattern: "bin/**"
+    tier: full
+    resolvers: [claim-command]
+    reason: "The launcher every project starts from"
 
   # ──────────────── LITE ────────────────
   # General app code: UI components, pages, utilities.
@@ -89,12 +164,29 @@ rules:
   - pattern: "packages/**"
     tier: lite
     reason: "Shared packages — affect all consumers"
+  - pattern: "docs/02-competitive/**"
+    tier: lite
+    resolvers: [claim-source, claim-freshness]
+    required_claim_kinds: [external-fact]
+    reason: "Competitive claims about the outside world — they rot, and nobody notices"
+  - pattern: "docs/03-system-design/**"
+    tier: lite
+    resolvers: [claim-command, claim-freshness]
+    reason: "Design docs assert what the system does — verifiable by running it"
+  - pattern: ".claude/memory/**"
+    tier: lite
+    resolvers: [claim-freshness]
+    reason: "Durable memory — the surface that went stale invisibly and started this rebuild"
 
   # ──────────────── TRIVIAL ────────────────
   # Docs, planning, brand guidelines — text only, no executable risk.
+  - pattern: "docs/06-codebase/ledger-canary.md"
+    tier: trivial
+    resolvers: [claim-source, claim-freshness]
+    reason: "The canary — a claim that is supposed to fail. If ledger verify ever reports zero would_blocks, the resolvers stopped firing"
   - pattern: "docs/**"
     tier: trivial
-    reason: "Documentation — Haiku schema-lint sufficient"
+    reason: "Documentation — schema-lint sufficient"
   - pattern: "**/*.md"
     tier: trivial
     reason: "Markdown — text only"
@@ -104,6 +196,3 @@ rules:
   - pattern: "README*"
     tier: trivial
     reason: "Readme edits"
-
-# Default tier for unmatched files: lite
-# (set in qa-lead-pass.yml workflow; do not duplicate here)
