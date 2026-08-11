@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | Accepted · **Phases 1–5 complete** · **Phase 6 next** (reader, budgets, stall detection, routines — and the memory-file collapse). Phase 5 was brought forward ahead of 4b; see the phase table |
+| **Status** | Accepted · **Phases 1–5 complete** · **Phase 6 next** — see [PHASE-6-HANDOFF.md](PHASE-6-HANDOFF.md). Phase 5 was brought forward ahead of 4b; see the phase table |
 | **Date** | 2026-08-11 |
 | **Owner** | ceo |
 | **Evidence** | [2026-08-11-ENFORCEMENT-DIAGNOSTIC.md](../06-codebase/2026-08-11-ENFORCEMENT-DIAGNOSTIC.md) |
