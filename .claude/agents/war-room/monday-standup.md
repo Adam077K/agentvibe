@@ -16,9 +16,6 @@ budget:
   max_runtime_minutes: 10
   max_tool_calls: 25
 delivery: linear-ticket
-mcpServers:
-  - linear
-  - mem0
 skills:
   - documentation-templates
   - writing-plans

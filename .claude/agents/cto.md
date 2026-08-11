@@ -7,11 +7,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep, Task]
 maxTurns: 30
 color: blue
 isolation: worktree
-mcpServers:
-  - github
-  - supabase
-  - linear
-  - context7
 skills:
   - multi-agent-patterns
   - dispatching-parallel-agents

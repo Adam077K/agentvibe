@@ -7,12 +7,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep, Task]
 maxTurns: 30
 color: pink
 isolation: worktree
-mcpServers:
-  - refero
-  - stitch
-  - pencil
-  - playwright
-  - linear
 skills:
   - design-taste-frontend
   - design-orchestration

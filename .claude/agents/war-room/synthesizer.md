@@ -23,10 +23,6 @@ round_sequence:
   - persona-strategist
   - persona-aria
 supabase_scope: rls-scoped  # Q9 — RLS-scoped writes only (decisions table + audit_log row_kind='decision')
-mcpServers:
-  - linear
-  - supabase
-  - mem0
 skills:
   - multi-agent-brainstorming
   - board-meeting-protocol

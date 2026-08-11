@@ -13,11 +13,6 @@ budget:
   max_cost_usd: 0.75
   max_runtime_minutes: 15
   max_tool_calls: 40
-mcpServers:
-  - linear  # D4 R2-A — read-only Linear for ticket context
-  - mem0
-  - context7
-  - context7
 skills:
   - deep-research
   - search-specialist

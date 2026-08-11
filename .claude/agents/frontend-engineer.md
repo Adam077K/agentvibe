@@ -6,10 +6,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep]
 maxTurns: 20
 color: pink
 isolation: worktree
-mcpServers:
-  - ide
-  - framer-mcp
-  - refero
 skills:
   - react-patterns
   - nextjs-app-router-patterns

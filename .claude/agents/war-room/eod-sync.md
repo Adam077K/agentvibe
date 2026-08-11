@@ -16,11 +16,6 @@ budget:
   max_runtime_minutes: 8
   max_tool_calls: 20
 delivery: linear-ticket
-mcpServers:
-  - linear
-  - supabase
-  - github
-  - mem0  # Q5 — write episodic memory chain for Morning Digest
 skills:
   - documentation-templates
   - mem0-patterns

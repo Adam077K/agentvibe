@@ -6,8 +6,6 @@ tools: [Read, Write, Edit, Glob, Grep]
 maxTurns: 15
 color: gray
 isolation: worktree
-mcpServers:
-  - github
 skills:
   - documentation
   - api-documentation

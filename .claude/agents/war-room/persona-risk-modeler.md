@@ -7,7 +7,6 @@ tools: [Read, Write, Glob, Grep]
 maxTurns: 12
 color: silver
 isolation: none
-mcpServers: []
 skills:
   - board-meeting-protocol
   - security-audit

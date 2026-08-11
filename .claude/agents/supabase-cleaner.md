@@ -6,8 +6,6 @@ tools: [Read, Write, Edit, Glob, Grep, Bash]
 maxTurns: 20
 color: teal
 isolation: worktree
-mcpServers:
-  - supabase
 skills:
   - postgresql
   - database

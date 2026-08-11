@@ -9,7 +9,6 @@ color: purple
 invoke_via: "@visionary"
 round_protocol: "round-1-horizon"
 maxTurns: 10
-mcpServers: []
 skills:
   - market-sizing-analysis
   - board-meeting-protocol

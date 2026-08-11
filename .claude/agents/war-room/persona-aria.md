@@ -9,7 +9,6 @@ model: claude-opus-4-7
 color: red
 invoke_via: "@aria"
 round_protocol: "round-2-critic"
-mcpServers:
 skills:
   - security-audit
   - web-security-testing

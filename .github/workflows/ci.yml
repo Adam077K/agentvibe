@@ -63,6 +63,13 @@ jobs:
       - name: Warroom launcher + install guard rails
         run: npm run check:warroom
 
+      # The lens layer — the encoded expertise, as linted data rather than agent prose.
+      # These tests construct the failures rather than trusting the rules fire: a vague
+      # step, a placeholder, a lens citing a source that does not exist, and an
+      # "independent" review panel drawn from a single model family.
+      - name: Lens files
+        run: npm run test:lenses
+
       # The claim ledger. Four things, all deterministic:
       #   · the parser and schema (43 tests, most of them "this must REFUSE")
       #   · the tier map, run against a path list rather than read

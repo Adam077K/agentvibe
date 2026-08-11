@@ -13,10 +13,6 @@ budget:
   max_cost_usd: 0.50
   max_runtime_minutes: 15
   max_tool_calls: 30
-mcpServers:
-  - supabase
-  - github
-  - linear
 skills:
   - vercel-deployment
   - deployment-procedures

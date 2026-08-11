@@ -9,8 +9,6 @@ color: teal
 invoke_via: "@architect"
 round_protocol: "round-1-feasibility"
 maxTurns: 10
-mcpServers:
-  - context7
 skills:
   - architecture-decision-records
   - architecture

@@ -2,13 +2,10 @@
 name: design-critic
 description: "Worker. Reviews implemented designs from user and professional-designer perspectives. Takes screenshots, evaluates brand fidelity and craft, returns prioritized actionable feedback. Spawned by Design-Lead."
 model: claude-sonnet-4-6
-tools: [Read, Write, Glob, Grep, Bash]
+tools: [Read, Glob, Grep, Bash]
 maxTurns: 15
 color: gray
 isolation: worktree
-mcpServers:
-  - playwright
-  - refero
 skills:
   - ui-visual-validator
   - wcag-audit-patterns

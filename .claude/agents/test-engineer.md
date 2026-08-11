@@ -6,9 +6,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep]
 maxTurns: 15
 color: yellow
 isolation: worktree
-mcpServers:
-  - playwright
-  - ide
 skills:
   - testing-patterns
   - e2e-testing-patterns

@@ -2,12 +2,10 @@
 name: code-reviewer
 description: "Worker. Reads a diff and returns a prioritized P1/P2/P3 findings list covering quality, patterns, and security basics. Scope is changed files only. Spawned by QA-Lead before merge."
 model: claude-sonnet-4-6
-tools: [Read, Write, Glob, Grep, Bash]
+tools: [Read, Glob, Grep, Bash]
 maxTurns: 15
 color: gray
 isolation: worktree
-mcpServers:
-  - github
 skills:
   - code-review-excellence
   - find-bugs

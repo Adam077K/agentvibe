@@ -16,11 +16,6 @@ budget:
   max_runtime_minutes: 20
   max_tool_calls: 40
 delivery: linear-ticket
-mcpServers:
-  - linear
-  - supabase
-  - mem0
-  - context7
 skills:
   - seo-content-writer
   - deep-research

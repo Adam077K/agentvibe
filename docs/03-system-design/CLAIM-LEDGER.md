@@ -267,6 +267,34 @@ claims:
     confidence: 1
     supports: [c-shadow-window-open]
 
+  - id: c-lens-content-is-linted
+    assert: "Lens files are checked for content, not only shape — vagueness, placeholders and dead provenance all fail"
+    kind: behavior
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node --test scripts/lenses.test.mjs", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+    supports: [d-001]
+
+  - id: c-reviewers-cannot-write
+    assert: "No read-only reviewer declares a Write or Edit tool — an agent that can edit what it reviews will review what it can edit"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence: {cmd: "! grep -lE '^tools:.*(Write|Edit)' .claude/agents/code-reviewer.md .claude/agents/security-engineer.md .claude/agents/design-critic.md .claude/agents/researcher.md .claude/agents/adversary-engineer.md", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+
+  - id: c-no-decorative-capabilities
+    assert: "No agent declares an mcpServers capability that no MCP configuration backs"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node .claude/hooks/schema-lint.js", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+
   - id: c-qa-gate-blocks
     assert: "The QA-Lead gate blocks: qa-lead-pass.yml no longer carries continue-on-error"
     kind: internal-fact

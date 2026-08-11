@@ -8,12 +8,6 @@ color: blue
 isolation: worktree
 spawned_by: cto-daily-plan
 supabase_scope: read-only
-mcpServers:
-  - linear
-  - supabase
-  - github
-  - context7
-  - ide
 skills:
   - nextjs-app-router-patterns
   - nodejs-backend-patterns

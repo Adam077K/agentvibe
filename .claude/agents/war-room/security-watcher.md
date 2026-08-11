@@ -19,11 +19,6 @@ budget:
   max_runtime_minutes: 8
   max_tool_calls: 25
 delivery: linear-ticket
-mcpServers:
-  - linear
-  - supabase
-  - github
-  - mem0
 skills:
   - security-audit
   - web-security-testing

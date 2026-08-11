@@ -18,10 +18,6 @@ budget:
   max_runtime_minutes: 20
   max_tool_calls: 50
 delivery: linear-ticket
-mcpServers:
-  - linear
-  - supabase
-  - mem0
 skills:
   - dispatching-parallel-agents
   - multi-agent-patterns

@@ -36,6 +36,17 @@ const REPO_ROOT = (() => {
 
 const AGENTS_DIR = path.join(REPO_ROOT, '.claude', 'agents');
 const MANIFEST_PATH = path.join(REPO_ROOT, '.claude', 'skills', 'MANIFEST.json');
+const LENSES_PATH = path.join(REPO_ROOT, '.claude', 'lenses.yml');
+const REVIEW_LENSES_PATH = path.join(REPO_ROOT, '.claude', 'review-lenses.yml');
+
+// One parser. `parseYamlSubset` already reads every claim block and the tier map; the lens
+// files use it too rather than gaining a fourth hand-rolled YAML reader.
+const { parseYamlSubset, KINDS, independenceIssue } = require('../../scripts/lib/claims.js');
+
+// The seven engines of the Phase 4 roster. Held here as a constant rather than read from
+// disk because the lens files are authored BEFORE the engine files exist — 4a proves the
+// expertise survives, and only then does 4b delete what it replaced.
+const ENGINES = ['orchestrator', 'framer', 'sourcer', 'builder', 'designer', 'reviewer', 'reader'];
 
 // ── 07b template checks ────────────────────────────────────────────────────
 
@@ -47,10 +58,26 @@ const REQUIRED_FRONTMATTER = [
   'maxTurns',
   'color',
   'isolation',
-  'mcpServers',
   'skills',
   'risk_tier_default',
 ];
+// `mcpServers` was required here and is no longer. Every one of the 52 agent files
+// declared it while `settings.json` had no `mcpServers` key and no `.mcp.json` existed
+// anywhere, so the field granted nothing to anybody. §3.7: "a capability field
+// auto-granted whatever it requests is worse than no field — it degrades to false
+// confidence, not to zero." The declarations are deleted, and the check below makes the
+// field fail the build unless real MCP config exists, so it cannot return as decoration.
+
+/** Is there any MCP configuration in this repo at all? */
+function mcpConfigured() {
+  if (fs.existsSync(path.join(REPO_ROOT, '.mcp.json'))) return true;
+  try {
+    const s = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, '.claude', 'settings.json'), 'utf8'));
+    return Object.prototype.hasOwnProperty.call(s, 'mcpServers');
+  } catch {
+    return false;
+  }
+}
 // escalates_to + escalates_when are required for non-personas
 // return_contract + pre_flight_reads are required for everyone
 
@@ -206,9 +233,18 @@ function lintFile(filePath) {
     issues.push(`frontmatter: isolation="${fm.isolation}" not in (${VALID_ISOLATION.join('|')})`);
   }
 
-  // mcpServers must be a list (possibly empty)
-  if (fm.mcpServers !== undefined && !Array.isArray(fm.mcpServers)) {
-    issues.push(`frontmatter: mcpServers must be a YAML list`);
+  // A declared capability must be a real one. Declaring `mcpServers` with no MCP config
+  // anywhere is not a harmless hint — it reads as a granted boundary that does not exist.
+  if (fm.mcpServers !== undefined) {
+    if (!Array.isArray(fm.mcpServers)) {
+      issues.push(`frontmatter: mcpServers must be a YAML list`);
+    } else if (fm.mcpServers.length > 0 && !mcpConfigured()) {
+      issues.push(
+        `frontmatter: declares mcpServers [${fm.mcpServers.join(', ')}] but this repo has no MCP config ` +
+        `(no .mcp.json, no mcpServers key in .claude/settings.json) — the declaration grants nothing. ` +
+        `Configure MCP or delete the field.`
+      );
+    }
   }
 
   // skills must be a list — verify each name resolves
@@ -312,6 +348,153 @@ function lintFile(filePath) {
   return { path: filePath, status, issues, checks, warnings, lines, sections: sections.length };
 }
 
+// ── Lens files ─────────────────────────────────────────────────────────────
+//
+// AGENT-SYSTEM-REBUILD.md §7 names the risk directly: "Lens files are prose in YAML.
+// They rot exactly as agent definitions did unless the linter checks their content, not
+// only their shape." A shape-only linter here would reproduce the exact failure the lens
+// files were introduced to fix, so these rules read the words.
+
+// A placeholder is content that IS a stub, not prose that mentions one. The first version
+// of this rule failed a review check reading "No placeholder, stub or TODO shipped as a
+// deliverable" — a rule about TODOs is not a TODO. Anchored, and it now needs the marker
+// to lead the entry or carry a colon.
+const PLACEHOLDER = /^(TODO|TBD|FIXME|XXX|WIP)\b|\b(TODO|TBD|FIXME):|\?\?\?|\.\.\.\s*$/i;
+
+// A step beginning with an article or a bare pronoun is a description, not an instruction.
+// "The analysis should be sensitivity-tested" tells nobody to do anything. This applies to
+// `procedure` ONLY — `refuses` entries are noun phrases by design ("a single-point
+// projection") and `checks` are predicates ("Authorisation checked at the boundary").
+// Applying one grammar rule to three different kinds of statement was my error, and the
+// linter caught it on its first run.
+const NOT_AN_INSTRUCTION = /^(the|a|an|this|that|these|it|there|we|you should|it is)\b/i;
+
+// The vagueness this whole file exists to prevent. Straight from the design-critic
+// anti-pattern: "'The spacing looks off' is not a finding." A judgement word with no
+// measurable anchor is unfalsifiable, which makes it unenforceable.
+const VAGUE = /\b(looks?|feels?|seems?|appropriate|reasonable|properly|adequately|good|nice|clean|sensible|as needed|where appropriate)\b/i;
+const ANCHOR = /\b(match(es|ing)?|equals?|exceeds?|at least|no more than|within|per|against the|stated|written|measured|number|date|source|list(ed)?)\b/i;
+
+function lintStep(text, where, issues, { min = 20, max = 200, mode = 'procedure' } = {}) {
+  if (typeof text !== 'string' || text.trim() === '') {
+    issues.push(`${where}: empty entry`);
+    return;
+  }
+  const s = text.trim();
+  if (PLACEHOLDER.test(s)) issues.push(`${where}: is a placeholder — ${JSON.stringify(s.slice(0, 60))}`);
+  if (s.length < min) issues.push(`${where}: too short to carry procedure (${s.length} chars) — ${JSON.stringify(s)}`);
+  if (s.length > max) issues.push(`${where}: ${s.length} chars — an entry this long is a document, split it`);
+  if (mode === 'procedure' && NOT_AN_INSTRUCTION.test(s)) {
+    issues.push(`${where}: reads as description, not instruction — ${JSON.stringify(s.slice(0, 60))}`);
+  }
+  if (mode !== 'refuses' && VAGUE.test(s) && !ANCHOR.test(s)) {
+    issues.push(`${where}: vague and unfalsifiable — ${JSON.stringify(s.slice(0, 60))}. Name what it is measured against`);
+  }
+}
+
+function lintLensFile(filePath, kind) {
+  const issues = [];
+  const rel = path.relative(REPO_ROOT, filePath);
+  if (!fs.existsSync(filePath)) return { rel, issues: [`${rel}: missing`], count: 0 };
+
+  let doc;
+  try {
+    doc = parseYamlSubset(fs.readFileSync(filePath, 'utf8'));
+  } catch (e) {
+    // Refuse loudly. The historic failure in this file is `catch { LIVE_SKILLS = null }`,
+    // which turns an unreadable input into a silently skipped check.
+    return { rel, issues: [`${rel}: ${e.message}`], count: 0 };
+  }
+
+  const key = kind === 'domain' ? 'lenses' : 'review_lenses';
+  const list = doc && doc[key];
+  if (!Array.isArray(list) || list.length === 0) {
+    return { rel, issues: [`${rel}: no non-empty "${key}:" list`], count: 0 };
+  }
+
+  const seen = new Set();
+  list.forEach((l, i) => {
+    const where = `${rel} ${key}[${i}]`;
+    if (!l || typeof l !== 'object') { issues.push(`${where}: not a mapping`); return; }
+    const id = l.id;
+    if (typeof id !== 'string' || !/^[a-z][a-z0-9-]*$/.test(id)) {
+      issues.push(`${where}: id must be kebab-case, got ${JSON.stringify(id)}`);
+    } else if (seen.has(id)) {
+      issues.push(`${where}: duplicate lens id "${id}"`);
+    } else {
+      seen.add(id);
+    }
+    const at = `${rel} ${id || i}`;
+
+    if (typeof l.summary !== 'string' || l.summary.trim().length < 15) {
+      issues.push(`${at}: summary must say what the lens is for`);
+    }
+
+    // Provenance is dead-path checked. A lens may not claim to come from a file that
+    // does not exist — the same rule check-registration.mjs applies to governing docs.
+    if (!Array.isArray(l.sources) || l.sources.length === 0) {
+      issues.push(`${at}: sources is required — a lens must record which file its expertise came from`);
+    } else {
+      for (const s of l.sources) {
+        if (!fs.existsSync(path.join(REPO_ROOT, String(s)))) {
+          issues.push(`${at}: sources entry "${s}" does not exist`);
+        }
+      }
+    }
+
+    if (kind === 'domain') {
+      if (!Array.isArray(l.procedure)) {
+        issues.push(`${at}: procedure must be a list`);
+      } else {
+        if (l.procedure.length < 3) issues.push(`${at}: ${l.procedure.length} step(s) — that is not encoded expertise`);
+        if (l.procedure.length > 12) issues.push(`${at}: ${l.procedure.length} steps — a lens this long is a document`);
+        l.procedure.forEach((s, k) => lintStep(s, `${at} procedure[${k}]`, issues, { mode: 'procedure' }));
+        if (l.procedure.some((s) => typeof s === 'string' && s.trim().toLowerCase() === String(id))) {
+          issues.push(`${at}: a step that merely restates the lens id says nothing`);
+        }
+      }
+      // The anti-patterns are where this system's expertise actually concentrates —
+      // every source agent's sharpest knowledge is in its DO NOT list.
+      if (!Array.isArray(l.refuses) || l.refuses.length === 0) {
+        issues.push(`${at}: refuses is required — what this lens will not accept`);
+      } else {
+        l.refuses.forEach((s, k) => lintStep(s, `${at} refuses[${k}]`, issues, { min: 10, mode: 'refuses' }));
+      }
+      if (!Array.isArray(l.applies_to) || l.applies_to.length === 0) {
+        issues.push(`${at}: applies_to must name at least one engine`);
+      } else {
+        for (const e of l.applies_to) {
+          if (!ENGINES.includes(e)) issues.push(`${at}: applies_to "${e}" is not an engine (${ENGINES.join(', ')})`);
+        }
+      }
+      for (const k of (l.requires_claims || [])) {
+        if (!KINDS.includes(k)) issues.push(`${at}: requires_claims "${k}" is not a claim kind`);
+      }
+    } else {
+      if (!Array.isArray(l.checks) || l.checks.length < 2) {
+        issues.push(`${at}: checks must list at least 2 things this lens looks at`);
+      } else {
+        l.checks.forEach((s, k) => lintStep(s, `${at} checks[${k}]`, issues, { mode: 'checks' }));
+      }
+      if (!Array.isArray(l.blocking_severities) || l.blocking_severities.length === 0) {
+        issues.push(`${at}: blocking_severities is required — a lens that blocks nothing is advisory, say so explicitly with an empty list`);
+      }
+      if (typeof l.independent !== 'boolean') {
+        issues.push(`${at}: independent must be true or false`);
+      }
+      const families = Array.isArray(l.model_families) ? l.model_families : [];
+      if (families.length === 0) issues.push(`${at}: model_families is required`);
+      if (l.independent === true) {
+        // Shared with risk:high claim panels — see independenceIssue() in claims.js.
+        const problem = independenceIssue(families, 2, `${at}: independent:true`);
+        if (problem) issues.push(problem);
+      }
+    }
+  });
+
+  return { rel, issues, count: list.length };
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 function main() {
   const args = process.argv.slice(2);
@@ -329,14 +512,23 @@ function main() {
 
   const results = files.map(lintFile);
   const passCount = results.filter((r) => r.status === 'pass').length;
-  const failCount = results.filter((r) => r.status === 'fail').length;
+  let failCount = results.filter((r) => r.status === 'fail').length;
   const warnCount = results.reduce((s, r) => s + (r.warnings || 0), 0);
+
+  // Lens files are linted whenever the whole roster is linted — never when a single
+  // agent file was named, so `schema-lint <one-file>` stays a targeted query.
+  const lensResults = targets.length > 0 ? [] : [
+    lintLensFile(LENSES_PATH, 'domain'),
+    lintLensFile(REVIEW_LENSES_PATH, 'review'),
+  ];
+  for (const r of lensResults) failCount += r.issues.length > 0 ? 1 : 0;
 
   if (jsonMode) {
     process.stdout.write(JSON.stringify({
       version: '1.0',
       summary: { pass: passCount, fail: failCount, warnings: warnCount, total: results.length },
       files: results,
+      lenses: lensResults,
     }, null, 2) + '\n');
   } else {
     for (const r of results) {
@@ -350,13 +542,29 @@ function main() {
         for (const issue of r.issues) process.stdout.write(`    - ${issue}\n`);
       }
     }
+    for (const r of lensResults) {
+      if (r.issues.length === 0) {
+        process.stdout.write(`✓ ${r.rel} — ${r.count} lenses\n`);
+      } else {
+        process.stdout.write(`✗ ${r.rel} — FAIL\n`);
+        for (const i of r.issues) process.stdout.write(`    - ${i}\n`);
+      }
+    }
     process.stdout.write(`\nSummary: ${passCount} pass · ${failCount} fail · ${warnCount} warnings\n`);
   }
 
   process.exit(failCount > 0 ? 1 : 0);
 }
 
-try { main(); } catch (err) {
-  process.stderr.write(`schema-lint: script error: ${err.message}\n`);
-  process.exit(2);
+// Exported for scripts/lenses.test.mjs, which points lintLensFile at fixture files so the
+// rules are tested by constructing the failures rather than by trusting that they fire.
+// Phase 2's lesson: six install guards all passed a manual pass and one still shipped
+// broken, because the mismatch the bug needed was never built.
+module.exports = { lintLensFile, lintFile, ENGINES };
+
+if (require.main === module) {
+  try { main(); } catch (err) {
+    process.stderr.write(`schema-lint: script error: ${err.message}\n`);
+    process.exit(2);
+  }
 }

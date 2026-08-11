@@ -7,9 +7,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep, Task, WebSearch, WebFetch]
 maxTurns: 25
 color: purple
 isolation: worktree
-mcpServers:
-  - linear
-  - context7
 skills:
   - deep-research
   - competitive-landscape

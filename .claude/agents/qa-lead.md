@@ -7,9 +7,6 @@ tools: [Read, Grep, Glob, Bash, Task]
 maxTurns: 25
 color: red
 isolation: worktree
-mcpServers:
-  - github
-  - linear
 skills:
   - code-review-excellence
   - multi-agent-patterns

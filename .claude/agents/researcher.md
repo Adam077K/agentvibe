@@ -2,12 +2,10 @@
 name: researcher
 description: "Worker. Deep research on one specific, bounded question. Sources every claim with URL + date + confidence. Returns structured findings JSON to Research-Lead. Never invents data."
 model: claude-opus-4-7
-tools: [Read, Write, Glob, Grep, WebSearch, WebFetch]
+tools: [Read, Glob, Grep, WebSearch, WebFetch]
 maxTurns: 20
 color: purple
 isolation: none
-mcpServers:
-  - context7
 skills:
   - deep-research
   - competitive-landscape
