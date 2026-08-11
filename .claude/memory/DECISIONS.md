@@ -315,3 +315,36 @@ inputs. Parity alone would have covered only what is safe to run.
 **Reversibility:** n/a (verification)
 **Owner:** ceo
 **Affects:** Phase 2 gate, Phase 9 rollout confidence, `scripts/warroom-parity.sh`
+
+## 2026-08-11 — The claim is the unit; the ledger has one classifier and one parser
+
+**Context:** Phase 3 builds the enforcement spine. Three sub-decisions had real alternatives.
+**Decision (a) — match semantics:** the tier map takes the **strictest** matching rule, not the first, and an
+unmatched path defaults to `lite`. Both were already documented and neither was implemented; the bash took the
+max but started at `trivial`, so `bin/warroom` and `package.json` classified as typos.
+**Decision (b) — the registry is closed:** `resolvers:` and `required_claim_kinds:` accept only implemented
+names, and the classifier throws otherwise. This is why `claim-arithmetic` — which §3.2 of the rebuild plan
+shows in an example — is absent rather than present-and-inert.
+**Decision (c) — `judge` does not call a model:** it verifies that a judgment exists, is unanimous, and spans
+≥2 model families at `risk: high`. An unjudged claim stays `unresolved` forever.
+**Rationale:** (a) and (b) both fail closed. For (c), a resolver that fabricates a verdict is worse than one
+that admits it has none, and CI has no model credentials to call anyway — pretending otherwise would have put
+a decorative mechanism on the critical path.
+**Reversibility:** reversible
+**Owner:** ceo
+**Affects:** `.claude/qa-tier-floor.yml`, `scripts/lib/*`, `.github/workflows/qa-lead-pass.yml`, Phase 4 lenses
+
+## 2026-08-11 — qa-lead-pass promoted to blocking; memory-file collapse deferred
+
+**Context:** ADR-001 says every gate ships in shadow first and is promoted on evidence. Phase 3 owed a
+promotion decision and a decision on collapsing the four memory files into generated views.
+**Decision:** Promote `qa-lead-pass.yml` to blocking. **Do not** collapse `DECISIONS.md`, `LONG-TERM.md`,
+`USER-INSIGHTS.md` or `CODEBASE-MAP.md` yet.
+**Rationale:** The gate ran in shadow across every PR of Phases 1–2, was correct each time, and demands
+nothing the documentation gate did not already require — so its measured friction is zero, which is the only
+honest reason to promote. The memory collapse is the opposite case: it is a data migration over files holding
+real founder memory, its friction is unmeasured, and a conversion bug would cost more than the staleness it
+fixes. `ledger views` proves the rendering works; the migration waits for a phase that owns it.
+**Reversibility:** reversible (restore `continue-on-error: true`)
+**Owner:** ceo · **Founder decision outstanding:** branch protection on `main` is a repo setting, not a file
+**Affects:** every future PR, `.claude/memory/*`, Phase 4
