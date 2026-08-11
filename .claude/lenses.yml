@@ -43,7 +43,7 @@ lenses:
       - "an unlabelled number"
       - "reopening a locked decision without escalating first"
     requires_claims: [external-fact]
-    sources: [".claude/agents/cbo.md"]
+    sources: ["git:.claude/agents/cbo.md@cda6de9"]
 
   - id: customer
     summary: "Support, onboarding, retention, churn diagnosis, customer voice"
@@ -59,7 +59,7 @@ lenses:
       - "patching copy over a broken feature"
       - "estimated churn figures"
     requires_claims: [user-language]
-    sources: [".claude/agents/cco.md"]
+    sources: ["git:.claude/agents/cco.md@cda6de9"]
 
   - id: growth
     summary: "Copy, positioning, campaigns, conversion, SEO and GEO"
@@ -77,7 +77,7 @@ lenses:
       - "writing what customers probably say"
       - "changing a price while writing about it"
     requires_claims: [user-language]
-    sources: [".claude/agents/cmo.md"]
+    sources: ["git:.claude/agents/cmo.md@cda6de9"]
 
   - id: product
     summary: "Specs, user stories, prioritisation, acceptance criteria"
@@ -94,7 +94,7 @@ lenses:
       - "success metrics like 'improve the experience'"
       - "specifying implementation detail"
     requires_claims: [user-language]
-    sources: [".claude/agents/cpo.md"]
+    sources: ["git:.claude/agents/cpo.md@cda6de9"]
 
   - id: engineering
     summary: "Decomposition, risk tiering, dispatch, and merge discipline"
@@ -110,7 +110,7 @@ lenses:
       - "sequential dispatch of tasks that could run in parallel"
       - "skipping the gate because the diff looks small"
     requires_claims: [behavior]
-    sources: [".claude/agents/cto.md", ".claude/agents/qa-lead.md"]
+    sources: ["git:.claude/agents/cto.md@cda6de9", "git:.claude/agents/qa-lead.md@cda6de9"]
 
   - id: research
     summary: "Sourced enquiry, competitive and market evidence"
@@ -128,7 +128,7 @@ lenses:
       - "accepting an unbounded question"
       - "omitting the gaps"
     requires_claims: [external-fact]
-    sources: [".claude/agents/research-lead.md", ".claude/agents/researcher.md"]
+    sources: ["git:.claude/agents/research-lead.md@cda6de9", "git:.claude/agents/researcher.md@cda6de9"]
 
   - id: design
     summary: "Visual craft, hierarchy, and perception-loop iteration"
@@ -144,7 +144,7 @@ lenses:
       - "reviewing from source when the rendered output is available"
       - "criticism with nothing named as working"
     requires_claims: [judgment]
-    sources: [".claude/agents/design-critic.md", ".claude/agents/design-lead.md"]
+    sources: ["git:.claude/agents/design-critic.md@cda6de9", "git:.claude/agents/design-lead.md@cda6de9"]
 
   - id: evidence
     summary: "The cross-cutting discipline every engine inherits: never assert without checking"
@@ -160,4 +160,4 @@ lenses:
       - "an assertion about library or syscall behaviour that was not executed"
       - "silence about what was skipped"
     requires_claims: [internal-fact]
-    sources: [".claude/agents/researcher.md", ".claude/agents/cbo.md", ".claude/agents/code-reviewer.md"]
+    sources: ["git:.claude/agents/researcher.md@cda6de9", "git:.claude/agents/cbo.md@cda6de9", "git:.claude/agents/code-reviewer.md@cda6de9"]

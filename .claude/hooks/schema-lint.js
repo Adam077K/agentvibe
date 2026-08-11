@@ -23,6 +23,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 const REPO_ROOT = (() => {
   // Walk up from cwd until we find .claude/agents
@@ -47,6 +48,18 @@ const { parseYamlSubset, KINDS, VERIFIERS, independenceIssue } = require('../../
 // disk because the lens files are authored BEFORE the engine files exist — 4a proves the
 // expertise survives, and only then does 4b delete what it replaced.
 const ENGINES = ['orchestrator', 'framer', 'sourcer', 'builder', 'designer', 'reviewer', 'reader'];
+
+// Engines that must never be able to change what they look at.
+//
+// STATED LIMIT: this checks the DECLARATION, not the binding. It proves the file does not
+// ask for write tools; it does not prove the runtime refuses them if it did. Verifying the
+// binding means spawning an engine with a restricted tool list and watching a write fail,
+// which needs subagent spawning — disabled in these sessions by founder instruction. The
+// probe is written up in the Phase 4b session file and has to be run by hand.
+//
+// Treating this lint as the gate criterion would be exactly the decorative-capability
+// failure §3.7 names: a field that looks like a boundary and enforces nothing.
+const READ_ONLY_ENGINES = ['reviewer', 'reader'];
 
 // ── 07b template checks ────────────────────────────────────────────────────
 
@@ -200,6 +213,51 @@ function lintFile(filePath) {
     return { path: filePath, status: 'fail', issues: ['no YAML frontmatter found'], checks: [], warnings: 0, lines, sections: 0 };
   }
 
+  // ── Shims ────────────────────────────────────────────────────────────────
+  // A shim is a name kept occupied on purpose. Deleting a repo agent whose name also
+  // exists in ~/.claude/agents/ does not remove it — it UN-SHADOWS the global copy, and
+  // the name keeps working while quietly meaning an older, drifted definition. For
+  // `ceo` that would have swapped a 226-line Opus definition for a 313-line Sonnet one
+  // routing to four agents this repo retired. A failure that keeps working is worse than
+  // one that stops.
+  //
+  // Shims carry their own schema: they hold no procedure, so requiring the eight body
+  // sections of a real agent would just invite filler. They are checked for what they
+  // actually assert — that they point at a real engine and real lenses, and that they
+  // name the phase that removes them.
+  if (fm.kind === 'shim') {
+    const shimRequired = ['name', 'description', 'kind', 'engine', 'lenses', 'retired', 'retires_at'];
+    for (const f of shimRequired) {
+      if (fm[f] === undefined || fm[f] === null) issues.push(`shim: missing required field "${f}"`);
+    }
+    const baseName2 = path.basename(filePath, '.md');
+    if (fm.name && fm.name !== baseName2) issues.push(`shim: name="${fm.name}" doesn't match filename "${baseName2}"`);
+    if (fm.engine && !ENGINES.includes(fm.engine)) {
+      issues.push(`shim: engine "${fm.engine}" is not an engine (${ENGINES.join(', ')})`);
+    }
+    if (fm.lenses !== undefined) {
+      if (!Array.isArray(fm.lenses)) issues.push('shim: lenses must be a YAML list');
+      else {
+        const domain = knownDomainLenses();
+        for (const l of fm.lenses) {
+          if (!domain.has(l)) issues.push(`shim: lens "${l}" is not in .claude/lenses.yml`);
+        }
+      }
+    }
+    // A shim with no removal phase is a permanent second roster. Naming the phase is what
+    // keeps this a migration step rather than the new shape of the system.
+    if (fm.retires_at !== undefined && !/^phase-\d+$/.test(String(fm.retires_at))) {
+      issues.push(`shim: retires_at must name the phase that removes it, e.g. phase-9 (got ${JSON.stringify(fm.retires_at)})`);
+    }
+    for (const banned of ['tools', 'model', 'maxTurns', 'skills']) {
+      if (fm[banned] !== undefined) {
+        issues.push(`shim: must not declare "${banned}" — a shim routes, it does not run. Put it on the engine`);
+      }
+    }
+    if (lines > 40) issues.push(`shim: ${lines} lines — a shim points somewhere, it does not explain itself at length`);
+    return { path: filePath, status: issues.length ? 'fail' : 'pass', issues, checks, warnings, lines, sections: 0, shim: true };
+  }
+
   // Frontmatter required fields
   for (const f of REQUIRED_FRONTMATTER) {
     if (fm[f] === undefined || fm[f] === null) {
@@ -260,6 +318,17 @@ function lintFile(filePath) {
       } else {
         warnings++;
       }
+    }
+  }
+
+  // Read-only engines may not ask for write tools.
+  if (READ_ONLY_ENGINES.includes(path.basename(filePath, '.md')) && Array.isArray(fm.tools)) {
+    const writes = fm.tools.filter((t) => ['Write', 'Edit', 'NotebookEdit'].includes(t));
+    if (writes.length) {
+      issues.push(
+        `frontmatter: "${path.basename(filePath, '.md')}" is a read-only engine but declares ${writes.join(', ')}. ` +
+        'An agent that can edit what it reviews will review what it can edit.'
+      );
     }
   }
 
@@ -392,6 +461,46 @@ function lintStep(text, where, issues, { min = 20, max = 200, mode = 'procedure'
   }
 }
 
+// Provenance that survives deletion.
+//
+// Phase 4b deleted the fifteen agent files the lenses were mined from, and the existence
+// check below promptly failed — correctly. The expertise really did come from
+// `.claude/agents/cbo.md`; that file really is gone.
+//
+// The wrong fixes were tempting and both dishonest: re-point `sources` at the engine that
+// replaced it (the expertise did not come from there), or archive 6,487 lines of
+// superseded prose into `docs/` purely to keep a path resolving — which is the "keep it
+// just in case" dead surface Phase 1 deleted 1,459 files to remove.
+//
+// So a source may name a path in git history: `git:<path>@<rev>`, verified with
+// `git cat-file -e`. The claim "this came from that file" stays true and stays checkable
+// after the file is gone. CI must fetch history for this — see fetch-depth in ci.yml.
+function provenanceProblem(s) {
+  // A shim holds no expertise — it is 24 lines pointing at an engine. A lens claiming to
+  // have been mined from one is claiming provenance from a file that never had any. This
+  // fired on eight lenses after 4b, when the files they cited became shims in place.
+  const live = path.join(REPO_ROOT, s);
+  if (!s.startsWith('git:') && fs.existsSync(live)) {
+    try {
+      if (/^\s*kind:\s*shim\s*$/m.test(fs.readFileSync(live, 'utf8'))) {
+        return 'is a shim and holds no expertise — cite the pre-collapse file as git:<path>@<rev>';
+      }
+    } catch { /* fall through to the existence check */ }
+  }
+
+  const gitForm = /^git:(.+)@([0-9a-f]{7,40})$/.exec(s);
+  if (gitForm) {
+    const [, p, rev] = gitForm;
+    try {
+      execFileSync('git', ['cat-file', '-e', `${rev}:${p}`], { cwd: REPO_ROOT, stdio: 'ignore' });
+      return null;
+    } catch {
+      return `does not resolve in git history (git cat-file -e ${rev}:${p} failed — a shallow clone will do this; CI needs fetch-depth: 0)`;
+    }
+  }
+  return fs.existsSync(path.join(REPO_ROOT, s)) ? null : 'does not exist';
+}
+
 function lintLensFile(filePath, kind) {
   const issues = [];
   const rel = path.relative(REPO_ROOT, filePath);
@@ -436,9 +545,8 @@ function lintLensFile(filePath, kind) {
       issues.push(`${at}: sources is required — a lens must record which file its expertise came from`);
     } else {
       for (const s of l.sources) {
-        if (!fs.existsSync(path.join(REPO_ROOT, String(s)))) {
-          issues.push(`${at}: sources entry "${s}" does not exist`);
-        }
+        const problem = provenanceProblem(String(s));
+        if (problem) issues.push(`${at}: sources entry "${s}" ${problem}`);
       }
     }
 

@@ -11,7 +11,7 @@ Counts below are verified by `npm run check:registration`, which fails the build
 
 | Layer | Path | Count |
 |-------|------|-------|
-| Agents (CEO → C-suite → Workers) | `.claude/agents/` (26) + `.claude/agents/war-room/` (25) | 51 `.md` |
+| Agents (7 engines + 11 shims + routines) | `.claude/agents/` (18) + `.claude/agents/war-room/` (25) | 43 `.md` |
 | Skills (curated, on-demand, MANIFEST-indexed) | `.claude/skills/` | 147 |
 | Hooks (pre-tool, stop, schema-lint, context monitor, statusline, update check) | `.claude/hooks/` | 6 |
 | Slash commands | `.claude/commands/` | 13 |

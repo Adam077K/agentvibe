@@ -314,6 +314,29 @@ claims:
     valid_until: 2026-11-09
     confidence: 1
 
+  - id: c-read-only-engines-declare-no-write
+    assert: "The reviewer and reader engines declare no Write or Edit tool — verified as a declaration, NOT as a runtime binding"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node .claude/hooks/schema-lint.js", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+
+  - id: c-read-only-binding-unverified
+    assert: "Whether the tools field actually BINDS at runtime is unverified — the probe needs subagent spawning, which is disabled in these sessions"
+    kind: runtime-capability
+    scope: project
+    verified_by: judge
+    evidence:
+      lenses: [reproducibility]
+      risk: high
+      judged_by: []
+    valid_until: 2026-09-08
+    confidence: 0.5
+    disposition: {action: waive, until: 2026-09-08, reason: "scripts/probe-readonly-engine.sh must be run by hand; revisit with the shadow-window review"}
+    supports: [c-read-only-engines-declare-no-write]
+
   - id: c-qa-gate-blocks
     assert: "The QA-Lead gate blocks: qa-lead-pass.yml no longer carries continue-on-error"
     kind: internal-fact
