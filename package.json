@@ -5,6 +5,14 @@
   "bin": {
     "gsa-startup-kit": "bin/install.js"
   },
+  "scripts": {
+    "check": "npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:registration",
+    "lint:agents": "node .claude/hooks/schema-lint.js",
+    "test:gate": "node --test .claude/workflows/lib/gate-logic.test.mjs",
+    "check:manifest": "node scripts/build-skills-manifest.mjs --check",
+    "check:registration": "node scripts/check-registration.mjs",
+    "build:manifest": "node scripts/build-skills-manifest.mjs"
+  },
   "files": [
     "bin/",
     ".claude/agents/",

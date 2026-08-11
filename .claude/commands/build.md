@@ -34,7 +34,7 @@ QA-Lead runs in parallel:
 CTO presents merge table showing all branches, files changed, QA status. User confirms before any merge.
 
 ### Step 6 — Merge + Memory
-After confirmation: branches merged, worktrees cleaned, session summary written to `.claude/memory/sessions/`.
+After confirmation: branches merged, worktrees cleaned, session summary written to `docs/08-agents_work/sessions/`.
 
 ### Step 7 — Deploy (optional)
 If `--deploy` flag: CEO dispatches CTO to deploy to staging. User confirms production.

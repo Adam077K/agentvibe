@@ -1,3 +1,19 @@
+# POSTURE: SHADOW. This workflow computes the full QA verdict and reports it,
+# but does not fail the build.
+#
+# Why it does not block yet: it requires a `QA-Lead PASS` comment on the PR, and
+# nothing in this repository posts that comment automatically. Made required on
+# day one, it would block every PR on ceremony — including the PRs that rebuild
+# the harness itself. The system's own rule is that every gate ships in shadow
+# mode first so the friction is measured rather than guessed, with unrecoverable
+# actions as the only exception; a PR merge is revertible, so it is not one.
+#
+# It ran for the first time in Phase 1 — before that it lived in a directory
+# GitHub does not read, so none of the logic below had ever executed.
+#
+# TO PROMOTE (Phase 3): delete the `continue-on-error: true` line below and add
+# this job to the branch protection required checks. The verdict logic needs no
+# other change.
 name: QA Lead Pass
 
 on:
@@ -13,8 +29,10 @@ permissions:
 
 jobs:
   qa-gate:
-    name: Verify QA Lead PASS
+    name: Verify QA Lead PASS (shadow)
     runs-on: ubuntu-latest
+    # SHADOW MODE — see header. Remove this line to promote the gate to blocking.
+    continue-on-error: true
 
     steps:
       - name: Checkout PR head
@@ -236,7 +254,7 @@ jobs:
               --jq '[.labels[].name] | contains(["risk:irreversible"])')
             if [ "$HAS_LABEL" != "true" ]; then
               echo ""
-              echo "❌ BLOCKED — file-path tier-floor requires risk:irreversible label."
+              echo "[shadow] WOULD BLOCK — file-path tier-floor requires risk:irreversible label."
               echo "   Reason: $MATCH_REASON"
               echo "   Add the 'risk:irreversible' label or remove the affected file(s)."
               exit 1
@@ -253,7 +271,7 @@ jobs:
           fi
 
       # ── F13: risk:irreversible enforcement ─────────────────────────────────
-      # Per CONNECTIONS.md §B + 2026-05-16 board verdict (decision #3):
+      # Per the 2026-05-16 board verdict (decision #3):
       # a PR carrying risk:irreversible MUST have either `tier: full` or
       # `tier: irreversible` in its session file. Lite/trivial-tier are insufficient.
       - name: Enforce tier:full|irreversible for risk:irreversible PRs
@@ -307,9 +325,9 @@ jobs:
 
           if [ -z "$SESSION_FILE" ] || [ ! -f "$SESSION_FILE" ]; then
             echo ""
-            echo "❌ BLOCKED — risk:irreversible label requires a session file with tier: full or tier: irreversible."
+            echo "[shadow] WOULD BLOCK — risk:irreversible label requires a session file with tier: full or tier: irreversible."
             echo "   No session file found for slug: ${TASK_SLUG} or in PR diff"
-            echo "   Per CONNECTIONS.md §B + 2026-05-16 board decision #3: risk:irreversible requires full or irreversible tier review."
+            echo "   Per 2026-05-16 board decision #3: risk:irreversible requires full or irreversible tier review."
             exit 1
           fi
 
@@ -335,7 +353,7 @@ jobs:
             exit 0
           else
             echo ""
-            echo "❌ BLOCKED — risk:irreversible label requires tier: full or tier: irreversible per board decision #3."
+            echo "[shadow] WOULD BLOCK — risk:irreversible label requires tier: full or tier: irreversible per board decision #3."
             echo "   Session file found: ${SESSION_FILE}"
             echo "   Neither tier: full nor tier: irreversible present in session frontmatter."
             grep "tier" "$SESSION_FILE" || echo "(no tier line found)"

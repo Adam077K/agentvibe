@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// POSTURE: BLOCKS in CI, ADVISES in session — exit 1 on any failing agent. .github/workflows/ci.yml treats that as a build
+// failure; the Stop-hook registration only surfaces it, since Stop cannot block.
 // .claude/hooks/schema-lint.js — Agentvibe agent file schema lint
 //
 // Validates .claude/agents/*.md (top-level only — NOT war-room/ which uses

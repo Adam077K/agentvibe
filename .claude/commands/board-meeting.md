@@ -1,6 +1,6 @@
 ---
 name: board-meeting
-description: Run a 4-round multi-persona board meeting on a strategic decision. 6 personas (Visionary, Strategist, Architect, Risk Modeler, Customer Voice, Adversary) deliberate independently with de-anchored framings, cross-critique, then a fresh-context Synthesizer lands a structured decision document. $3/meeting cap, 8/month max. Adam-veto required before decisions propagate. Spec: docs/08-agents_work/ORCHESTRATION.md §2F.
+description: Run a 4-round multi-persona board meeting on a strategic decision. 6 personas (Visionary, Strategist, Architect, Risk Modeler, Customer Voice, Adversary) deliberate independently with de-anchored framings, cross-critique, then a fresh-context Synthesizer lands a structured decision document. $3/meeting cap, 8/month max. Adam-veto required before decisions propagate. Spec: docs/08-agents_work/INDEX.md.
 ---
 
 # /board-meeting <topic-slug>
@@ -19,7 +19,7 @@ Use this command when a decision is irreversible-tier or board-grade — archite
 
 ## Protocol (4 rounds)
 
-The full protocol is specified in `docs/08-agents_work/ORCHESTRATION.md` §2F. Quick version:
+The full protocol is specified in `docs/08-agents_work/INDEX.md`. Quick version:
 
 1. **Round 0 — De-anchored framings.** CEO writes 5 differently-framed versions of the topic, one per persona, to prevent topic-prompt anchoring.
 2. **Round 1 — Independent.** 6 personas spawned in parallel via Task. Each sees only its own framing. Returns Zod-validated JSON.

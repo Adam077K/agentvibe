@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# POSTURE: ADVISES — `trap 'exit 0' ERR` at L28 and exit 0 at L138 — it cannot fail a turn by design.
 # Stop hook — Agentvibe Phase 6 (2026-05-16)
 #
 # PURPOSE: Validate session hygiene at close. SOFT-WARN ONLY — never blocks.

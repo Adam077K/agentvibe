@@ -19,7 +19,7 @@ For non-obvious bugs, CEO dispatches CTO to spawn the right engineer with diagno
 - database-engineer (Supabase / migration / RLS / query)
 - ai-engineer (LLM call / prompt / eval / agent execution)
 - The engineer follows the systematic-debugging skill: reproduce → falsifiable hypothesis → binary search → evidence → root cause
-- Returns root cause analysis in `decisions_made` + writes notes to a debug log under `.claude/memory/sessions/`
+- Returns root cause analysis in `decisions_made` + writes notes to a debug log under `docs/08-agents_work/sessions/`
 
 For obvious bugs (typo, wrong variable): skip to Step 3.
 
@@ -45,7 +45,7 @@ CTO presents: what was fixed, what changed, QA PASS. User confirms merge.
 - QA BLOCK after fix → fix the new issues before merging
 
 ## Notes
-- Diagnosing engineer keeps a structured note in `.claude/memory/sessions/` so context can be re-loaded across sessions
+- Diagnosing engineer keeps a structured note in `docs/08-agents_work/sessions/` so context can be re-loaded across sessions
 - Always creates a worktree — never hacks directly on main
 - Reproduce first (write a failing test or capture exact repro steps), then fix
 - See the `systematic-debugging` skill for the hypothesis-driven method

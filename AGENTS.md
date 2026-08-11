@@ -85,12 +85,12 @@ These agents are the execution backbone. Dispatched by leads for structured proj
 
 ## Routing Examples
 
-| What you need | Who handles it |
-|--------------|----------------|
 Routing uses the current C-suite. The 9-lead model was retired on 2026-05-16 (see Layer 2 above);
 `build-lead`, `product-lead`, `growth-lead` and `business-lead` folded into CTO/CPO/CMO/CBO, and
 `devops-lead`/`data-lead` became `-engineer` workers under CTO.
 
+| What you need | Who handles it |
+|--------------|----------------|
 | "Build a new feature" | CEO → CTO → backend-engineer + frontend-engineer |
 | "Research competitors" | CEO → Research-Lead → researcher (x2-3) |
 | "Design a new screen" | CEO → Design-Lead → frontend-engineer |
@@ -117,4 +117,4 @@ Routing uses the current C-suite. The 9-lead model was retired on 2026-05-16 (se
 | `.claude/memory/LONG-TERM.md` | CEO | CEO (every session) |
 | `docs/08-agents_work/sessions/` | Each C-suite / Lead | CEO (for daily) |
 
-There is no `.claude/memory/specs/`. Specs live with the PRD in `docs/`.
+There is no .claude/memory/specs/ directory. Specs live with the PRD under `docs/`.
