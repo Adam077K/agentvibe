@@ -128,12 +128,17 @@ function inspect(dest, expectedHash) {
 
 function backup(realPath, session) {
   const bytes = fs.readFileSync(realPath);
+  // Preserve the mode. A backup of a launcher that is not itself executable is
+  // not a restorable backup — found by running the first real install, where
+  // the stored copy came back 0644 and could not be invoked.
+  const mode = fs.statSync(realPath).mode & 0o7777;
   const id = `${session}-${crypto.randomUUID()}`;
   const dir = path.join(BACKUPS, id);
   fs.mkdirSync(dir, { recursive: true });
   const stored = path.join(dir, path.basename(realPath));
   fs.writeFileSync(stored, bytes);
-  return { id, stored, origin: realPath, sha256: sha256(bytes), bytes: bytes.length };
+  fs.chmodSync(stored, mode);
+  return { id, stored, origin: realPath, sha256: sha256(bytes), bytes: bytes.length, mode };
 }
 
 function cmdCheck(configs) {
@@ -339,7 +344,11 @@ function cmdRollback(session) {
   }
   for (const b of rec.backups) {
     fs.copyFileSync(b.stored, b.origin);
-    console.log(`  ✓ restored ${b.origin} from ${b.id}`);
+    // Older manifests predate mode recording; there copyFileSync truncates in
+    // place and the destination keeps its own mode, which is why rollback
+    // still worked before this was fixed.
+    if (b.mode) fs.chmodSync(b.origin, b.mode);
+    console.log(`  ✓ restored ${b.origin} from ${b.id}${b.mode ? ` (mode ${(b.mode & 0o777).toString(8)})` : ''}`);
   }
   delete m.installs[session];
   writeManifest(m);
