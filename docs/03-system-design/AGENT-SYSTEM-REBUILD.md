@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | Accepted · Phase 1 in progress |
+| **Status** | Accepted · **Phase 1 complete** ([PR #1](https://github.com/Adam077K/agentvibe/pull/1)) · Phase 2 not started |
 | **Date** | 2026-08-11 |
 | **Owner** | ceo |
 | **Evidence** | [2026-08-11-ENFORCEMENT-DIAGNOSTIC.md](../06-codebase/2026-08-11-ENFORCEMENT-DIAGNOSTIC.md) |
@@ -283,7 +283,7 @@ Add ~6 namespace router skills so the discovery tier stops growing linearly.
 
 | # | Phase | Gate to proceed |
 |---|---|---|
-| 1 | **Subtract and wire** · *externally verified* | Rules ≤ 400 · blocking mechanisms ≥ 4 · fabrications = 0 · schema-lint exit 0 · one PR observed RED then GREEN |
+| 1 | **Subtract and wire** · *externally verified* — ✅ **DONE** | ~~Rules ≤ 400~~ *(re-scoped — see below)* · blocking mechanisms ≥ 4 → **5** · fabrications = 0 → **0** · schema-lint exit 0 → **✅** · one PR observed RED then GREEN → **✅ runs `31505991227` → `31506094985`** |
 | 2 | **Fleet: one program, many configs** | Launcher behaviour unchanged on `agentvibe`; check-only run across all 13 projects; `adamos` verdict recorded |
 | 3 | **Spine** — claims, resolvers, ledger, shadow mode | Dead URL + expired `valid_until` both fire as `would_block`; `ledger rebuild` byte-identical from clean clone |
 | 4 | **Roster collapse** — 7 engines + lenses | schema-lint exit 0 across 7 files; single-model "independent" panel fails the lint; read-only engine cannot write, verified by attempt |
@@ -316,6 +316,28 @@ self-review begins. Sixteen fabrications got in because an immature system revie
   every registration points at a file that exists. Converts this exact failure class into a build failure
 - Every hook declares its **enforcement posture in its first five lines** (`BLOCKS` / `ADVISES`)
 - **Confirm write-capable nested spawning outside plan mode**, then delete the dispatch-packet machinery
+
+#### Phase 1 outcome — 2026-08-11, [PR #1](https://github.com/Adam077K/agentvibe/pull/1)
+
+All criteria met except the rule count, which was **re-scoped rather than met**. Measured at execution time,
+601 of 1,353 imperatives live in `.claude/agents/**` (collapsed in Phase 4) and 569 in `.claude/skills/**`
+(curated in Phase 7) — Phase 1's deletions touch almost neither, so ≤ 400 was unreachable by this phase's own
+work. Phase 1 is instead accountable for the **governing set** (CLAUDE.md, AGENTS.md, `.claude/commands/`):
+**30 rules, each now naming its enforcing mechanism** or explicitly marked ADVISORY with the phase that will
+give it one. The ≤ 400 total is inherited by Phases 4 and 7.
+
+Blocking mechanisms **1 → 5** · tracked files **2,290 → 644** · schema-lint **exit 1 (11 pass / 15 fail) →
+exit 0 (26 / 0)** · CI runs ever **0 → every PR** · red-then-green proven on runs `31505991227` →
+`31506094985`.
+
+**Six of the sixteen fabrications were not fabrications.** The diagnostic pattern-matched where it claimed to
+verify — its own stated failure mode. Real count: 9 repaired, 1 resolved by probe; corrections recorded in
+place in the diagnostic.
+
+> **Re-verify the assets table below before Phase 2 relies on it.** Two of its rows were wrong:
+> `qa-lead-pass.yml` is 343 lines with 6 blocking exits, not 176 with 4; and `.agent/` was not an inert
+> mirror — every one of MANIFEST's 154 paths pointed into it, so deleting it in the stated order would have
+> broken the skills system in the same commit.
 
 ---
 
