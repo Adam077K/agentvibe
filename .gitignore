@@ -28,3 +28,6 @@ war-room-dashboard/
 # IDE / tool caches (keep config, ignore caches)
 .claude/memory/*.local.md
 .planning/state.local.json
+
+# Ledger run log — only used when no ~/.<session>/events.jsonl is configured
+.ledger-events.jsonl

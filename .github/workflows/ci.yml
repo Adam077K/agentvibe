@@ -62,3 +62,22 @@ jobs:
       # is stated rather than papered over.
       - name: Warroom launcher + install guard rails
         run: npm run check:warroom
+
+      # The claim ledger. Four things, all deterministic:
+      #   · the parser and schema (43 tests, most of them "this must REFUSE")
+      #   · the tier map, run against a path list rather than read
+      #   · the resolvers, with dead DNS / 404 / moved-quote / timeout constructed
+      #     rather than hoped for
+      #   · the index, which must reproduce byte-identically from this clean clone —
+      #     that is what makes "the index is never hand-edited" true instead of asked for
+      #
+      # `ledger verify` then runs every resolver for real. It exits non-zero ONLY when a
+      # claim on an `enforcement: block` path fails (migration, deploy, harness
+      # self-edit). Everything else is written to events.jsonl as claim.would_block and
+      # the build stays green — that is shadow mode, and it is what the Phase 3 window
+      # is measuring.
+      #
+      # The canary at docs/06-codebase/ledger-canary.md must produce exactly two
+      # would_block lines on every run. Zero means the resolvers stopped firing.
+      - name: Claim ledger
+        run: npm run check:ledger

@@ -6,7 +6,14 @@
     "gsa-startup-kit": "bin/install.js"
   },
   "scripts": {
-    "check": "npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:registration && npm run check:warroom",
+    "check": "npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:registration && npm run check:warroom && npm run check:ledger",
+    "check:ledger": "npm run test:claims && npm run test:classifier && npm run test:ledger && node scripts/ledger.mjs lint && node scripts/ledger.mjs build --check && node scripts/ledger.mjs verify",
+    "test:claims": "node --test scripts/claims.test.mjs",
+    "test:classifier": "node --test scripts/classifier.test.mjs",
+    "test:ledger": "node --test scripts/ledger.test.mjs",
+    "ledger:build": "node scripts/ledger.mjs build",
+    "ledger:verify": "node scripts/ledger.mjs verify",
+    "ledger:views": "node scripts/ledger.mjs views",
     "check:warroom": "bash -n bin/warroom && node --check scripts/warroom-install.mjs && bash -n scripts/warroom-parity.sh && npm run test:warroom",
     "test:warroom": "node --test scripts/warroom-install.test.mjs",
     "warroom:fleet": "node scripts/warroom-install.mjs fleet",

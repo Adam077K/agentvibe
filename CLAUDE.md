@@ -104,11 +104,14 @@ Every PR is risk-tiered. **No merge without QA-Lead PASS.** The CEO and CTO cann
 | **Full** | API/DB/auth/billing touched, ≥ 300 LOC | Lite + security-engineer + craft-reviewer + Codex CLI second opinion | `risk:full` |
 | **Irreversible** | DB migration, workflow file, agent definition, billing flow | Full + 2-of-3 multi-judge + Founder sign-off | `risk:irreversible` |
 
-Auto-classification: see [.claude/qa-tier-floor.yml](.claude/qa-tier-floor.yml).
-[.github/workflows/ci.yml](.github/workflows/ci.yml) is installed and **blocks** on schema-lint, the gate
-tests, and the registration check. [.github/workflows/qa-lead-pass.yml](.github/workflows/qa-lead-pass.yml)
-is installed in **shadow mode** — it computes the verdict and logs `would_block`, but does not fail the
-build. It is promoted to blocking in Phase 3, per
+Auto-classification: [.claude/qa-tier-floor.yml](.claude/qa-tier-floor.yml), read through
+[scripts/lib/classifier.js](scripts/lib/classifier.js) — **one file computes risk**, and it is the only
+implementation. Query it with `node scripts/classify.mjs <paths...>`.
+
+[.github/workflows/ci.yml](.github/workflows/ci.yml) **blocks** on schema-lint, the gate tests, the manifest
+check, the registration check, the launcher guard rails, and the claim ledger.
+[.github/workflows/qa-lead-pass.yml](.github/workflows/qa-lead-pass.yml) **blocks** as of Phase 3
+(2026-08-11) — promoted out of shadow after running correctly across every PR of Phases 1 and 2. Per
 [ADR-001](docs/03-system-design/adr/001-claim-ledger-as-enforcement-spine.md).
 
 ---
@@ -171,20 +174,29 @@ rule — and this list previously had eight of them, zero enforced. `ENFORCED` r
 
 | # | Rule | Mechanism |
 |---|------|-----------|
-| 1 | **Read before acting.** Glob/Grep before creating; check memory before deciding. | `ADVISORY` — no mechanism. Phase 3 (claim ledger) |
+| 1 | **Read before acting.** Glob/Grep before creating; check memory before deciding. | `ADVISORY` — **no mechanism, and none planned.** Phase 3 was supposed to give it one and did not: a ledger can check what you *assert*, not what you *read*. The enforceable half of this rule is rule 3 |
 | 2 | **Own your domain.** Don't do another agent's work. | `ADVISORY` — no mechanism. Phase 4 (`tools:` scoping) |
-| 3 | **Source claims.** No agent invents data. | `ADVISORY` in prose; **`ENFORCED`** for repo paths by `scripts/check-registration.mjs` (dead-path check). Phase 3 extends it to external sources |
-| 4 | **Leave breadcrumbs.** Append to DECISIONS.md when choices affect others. | `ADVISORY` — no mechanism. Phase 3 |
+| 3 | **Source claims.** No agent invents data. | **`ENFORCED`** for repo paths — `scripts/check-registration.mjs` (dead-path check) and `scripts/ledger.mjs` at `lint` (a claim citing a nonexistent ADR fails). **`SHADOW`** for external sources — the `claim-source` resolver fetches the URL and asserts the quote is present, logging `claim.would_block` |
+| 4 | **Leave breadcrumbs.** Append to DECISIONS.md when choices affect others. | `ADVISORY` — nothing forces the append. What *is* enforced: a claim's `supports:` targets must resolve to a real ADR or a real claim, so a breadcrumb that is written cannot dangle |
 | 5 | **Iterate, don't overwrite.** Understand existing code before replacing. | `ADVISORY` — no mechanism |
 | 6 | **No placeholder UI.** Zero tolerance for stubs / TODOs in deliverables. | `ADVISORY` — no mechanism. Phase 4 (review lenses) |
 | 7 | **Worktrees for code.** Every code worker creates a worktree. | **`ENFORCED`** (partial) — `.claude/hooks/schema-lint.js` warns when `isolation: worktree` lacks the worktree block |
-| 8 | **QA gate is sacred.** No merge without QA-Lead PASS + user confirmation. | **`SHADOW`** — `.github/workflows/qa-lead-pass.yml` computes the verdict and logs `would_block`. Promoted to blocking in Phase 3 |
+| 8 | **QA gate is sacred.** No merge without QA-Lead PASS + user confirmation. | **`ENFORCED`** — `.github/workflows/qa-lead-pass.yml` blocks as of Phase 3, 2026-08-11. It ran in shadow through Phases 1–2, was correct every time, and adds no ceremony that the documentation gate did not already require |
+| 9 | **Claims expire.** A durable claim carries `valid_until` or it is not a claim. | **`ENFORCED`** — `scripts/ledger.mjs` at `lint` fails a `global`/`project` claim with no expiry; the `claim-freshness` resolver fails it once the date passes. This is the rule that would have caught the nested-spawn fabrication |
+| 10 | **A resolver never passes what it could not check.** | **`ENFORCED`** — `scripts/ledger.test.mjs` pins `unresolved` (offline, timeout, unjudged, disabled) as distinct from `pass` for every resolver |
 
 Additionally enforced, and blocking today: agent schema (`schema-lint.js`), QA verdict logic
-(`gate-logic.test.mjs`), skills manifest drift (`build-skills-manifest.mjs --check`), and registration
-completeness (`check-registration.mjs`) — all four run by [.github/workflows/ci.yml](.github/workflows/ci.yml).
-Dangerous shell and `.env`/migration writes are blocked in-session by
-[.claude/hooks/pre-tool-use.sh](.claude/hooks/pre-tool-use.sh) (`exit 2`).
+(`gate-logic.test.mjs`), skills manifest drift (`build-skills-manifest.mjs --check`), registration
+completeness (`check-registration.mjs`), the launcher guard rails (`warroom-install.test.mjs`), and the claim
+ledger — parser, classifier, resolvers, and index reproducibility (`npm run check:ledger`) — all run by
+[.github/workflows/ci.yml](.github/workflows/ci.yml). Dangerous shell and `.env`/migration writes are blocked
+in-session by [.claude/hooks/pre-tool-use.sh](.claude/hooks/pre-tool-use.sh) (`exit 2`).
+
+**Shadow mode.** Claim failures are computed, written to `events.jsonl` as `claim.would_block`, and do not
+fail the build — so the friction is measured rather than guessed. The exceptions block from day one, because
+`git revert` does not undo them: **migration · deploy · harness self-edit**, marked `enforcement: block` in
+[.claude/qa-tier-floor.yml](.claude/qa-tier-floor.yml). See
+[CLAIM-LEDGER.md](docs/03-system-design/CLAIM-LEDGER.md).
 
 ---
 

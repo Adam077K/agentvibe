@@ -1,19 +1,33 @@
-# POSTURE: SHADOW. This workflow computes the full QA verdict and reports it,
-# but does not fail the build.
+# POSTURE: BLOCKS. Promoted from shadow to blocking in Phase 3, 2026-08-11.
 #
-# Why it does not block yet: it requires a `QA-Lead PASS` comment on the PR, and
-# nothing in this repository posts that comment automatically. Made required on
-# day one, it would block every PR on ceremony — including the PRs that rebuild
-# the harness itself. The system's own rule is that every gate ships in shadow
-# mode first so the friction is measured rather than guessed, with unrecoverable
-# actions as the only exception; a PR merge is revertible, so it is not one.
+# It ran in shadow for the whole of Phases 1 and 2 — computing the full verdict,
+# printing `[shadow] WOULD BLOCK`, and failing nothing. That was the right way to
+# start: every gate ships in shadow first so the friction is measured rather than
+# guessed. But a gate that never blocks is not a gate, and shadow mode with no
+# promotion criterion is just a disabled check with better manners.
 #
-# It ran for the first time in Phase 1 — before that it lived in a directory
-# GitHub does not read, so none of the logic below had ever executed.
+# THE EVIDENCE THAT PROMOTED IT. Across every PR of Phases 1 and 2 the shadow
+# verdict was correct each time and never once demanded ceremony that was not
+# already being done — the session file with `qa_verdict: PASS` is written for
+# every task anyway, because CLAUDE.md's documentation gate requires it. The
+# friction it adds is therefore zero, which is the only honest reason to promote a
+# rule to blocking.
 #
-# TO PROMOTE (Phase 3): delete the `continue-on-error: true` line below and add
-# this job to the branch protection required checks. The verdict logic needs no
-# other change.
+# What it enforces:
+#   1. A session file matching the branch slug carries `qa_verdict: PASS`,
+#      or the founder posted an explicit `BYPASS REASON:` under a bypass label.
+#   2. A PR touching a path the tier map floors at `irreversible` carries the
+#      `risk:irreversible` label.
+#   3. Such a PR's session file declares `tier: full` or `tier: irreversible`.
+#
+# The tier floor comes from scripts/classify.mjs — the ONE classifier. The 25 lines
+# of bash that used to reimplement that matching inline are gone; two
+# implementations of risk classification will disagree, and you find out during the
+# incident.
+#
+# Making this a REQUIRED check in branch protection is a repository setting, not a
+# file, and is the founder's call. Until it is required, a failure here is visible
+# and red but does not physically prevent a merge.
 name: QA Lead Pass
 
 on:
@@ -29,10 +43,8 @@ permissions:
 
 jobs:
   qa-gate:
-    name: Verify QA Lead PASS (shadow)
+    name: Verify QA Lead PASS
     runs-on: ubuntu-latest
-    # SHADOW MODE — see header. Remove this line to promote the gate to blocking.
-    continue-on-error: true
 
     steps:
       - name: Checkout PR head
@@ -40,6 +52,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Check QA Lead PASS or bypass
         env:
@@ -183,12 +199,22 @@ jobs:
           echo "Session file found:        ${SESSION_FILE:-none}"
           exit 1
 
-      # ── F15: file-path tier-floor enforcement ──────────────────────────────
-      # Per 2026-05-16 board decision #4: deterministic file-path tier-floor map
-      # at .claude/qa-tier-floor.yml sets the MINIMUM risk tier any PR touching
-      # those paths must carry. The label-based check below (F13) is the
-      # COMPLEMENT — it enforces what the YAML demanded.
-      - name: Auto-tier from file-path tier-floor map
+      # ── Tier floor, from THE classifier ────────────────────────────────────
+      # Per the 2026-05-16 board decision #4, .claude/qa-tier-floor.yml sets the
+      # MINIMUM risk tier any PR touching those paths must carry. The label check
+      # below is the complement — it enforces what the tier map demanded.
+      #
+      # This step used to contain its own 25-line bash implementation of the glob
+      # matching. It is gone. scripts/lib/classifier.js is the only implementation,
+      # and scripts/classifier.test.mjs runs it against a path list on every PR.
+      #
+      # Two defects died with the bash, both found by diffing the two
+      # implementations over a 28-path list rather than by reading them:
+      #   · an unmatched path classified as `trivial`, though the tier map's own
+      #     footer said the default was `lite` — it rated bin/warroom a typo;
+      #   · a missing tier map meant "skip", silently classifying everything as
+      #     trivial. The classifier now refuses to run with no rules.
+      - name: Tier floor from the one classifier
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -196,79 +222,61 @@ jobs:
         run: |
           set -euo pipefail
 
-          MAP_FILE=".claude/qa-tier-floor.yml"
-          if [ ! -f "$MAP_FILE" ]; then
-            echo "ℹ️  No $MAP_FILE — skipping auto-tier (label-based enforcement only)"
-            exit 0
-          fi
+          gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate --jq '.[].filename' > "$RUNNER_TEMP/changed.txt"
+          echo "Changed files: $(wc -l < "$RUNNER_TEMP/changed.txt")"
 
-          # Tier ranking (higher = stricter)
-          declare -A RANK
-          RANK[trivial]=0
-          RANK[lite]=1
-          RANK[full]=2
-          RANK[irreversible]=3
+          node scripts/classify.mjs --json --stdin < "$RUNNER_TEMP/changed.txt" > "$RUNNER_TEMP/classified.json"
+          FLOOR=$(jq -r '.floor.tier' "$RUNNER_TEMP/classified.json")
+          FLOOR_FILE=$(jq -r '.floor.file // ""' "$RUNNER_TEMP/classified.json")
+          FLOOR_PATTERN=$(jq -r '.floor.pattern // ""' "$RUNNER_TEMP/classified.json")
 
-          # List PR files (paginated)
-          CHANGED_FILES=$(gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate --jq '.[].filename')
-          echo "Changed files: $(echo "$CHANGED_FILES" | wc -l)"
+          echo "Required tier floor: $FLOOR"
+          [ -n "$FLOOR_FILE" ] && echo "Reason: $FLOOR_FILE matches $FLOOR_PATTERN"
+          jq -r '.files[] | "  \(.tier)\t\(.enforcement)\t\(.file)"' "$RUNNER_TEMP/classified.json"
 
-          # Extract patterns from YAML (simple parser; assumes `- pattern: "..."` followed by `tier: ...`)
-          REQUIRED_TIER="trivial"
-          REQUIRED_RANK=0
-          MATCH_REASON=""
-
-          while IFS= read -r file; do
-            current_pattern=""
-            while IFS= read -r line; do
-              case "$line" in
-                *"- pattern:"*)
-                  current_pattern=$(echo "$line" | sed -E 's/.*- pattern:[[:space:]]*"?([^"]+)"?.*/\1/')
-                  ;;
-                *"tier:"*)
-                  tier=$(echo "$line" | sed -E 's/.*tier:[[:space:]]*([a-z]+).*/\1/')
-                  # Convert glob pattern to bash extglob via simple match (handles ** and *)
-                  case "$file" in
-                    $current_pattern|${current_pattern//\*\*/\*})
-                      this_rank=${RANK[$tier]:-0}
-                      if [ "$this_rank" -gt "$REQUIRED_RANK" ]; then
-                        REQUIRED_RANK=$this_rank
-                        REQUIRED_TIER=$tier
-                        MATCH_REASON="$file matches $current_pattern → tier:$tier"
-                      fi
-                      ;;
-                  esac
-                  current_pattern=""
-                  ;;
-              esac
-            done < "$MAP_FILE"
-          done <<< "$CHANGED_FILES"
-
-          echo "Required tier floor: $REQUIRED_TIER (rank $REQUIRED_RANK)"
-          [ -n "$MATCH_REASON" ] && echo "Reason: $MATCH_REASON"
-
-          # If the floor is irreversible, the PR must already carry the risk:irreversible label.
-          # The label triggers the F13 step below which enforces tier: full|irreversible in the session file.
-          if [ "$REQUIRED_TIER" = "irreversible" ]; then
+          if [ "$FLOOR" = "irreversible" ]; then
             HAS_LABEL=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels \
               --jq '[.labels[].name] | contains(["risk:irreversible"])')
             if [ "$HAS_LABEL" != "true" ]; then
               echo ""
-              echo "[shadow] WOULD BLOCK — file-path tier-floor requires risk:irreversible label."
-              echo "   Reason: $MATCH_REASON"
-              echo "   Add the 'risk:irreversible' label or remove the affected file(s)."
+              echo "BLOCKED — the tier floor requires the risk:irreversible label."
+              echo "   Reason: $FLOOR_FILE matches $FLOOR_PATTERN"
+              echo "   Add the 'risk:irreversible' label or drop the affected file(s)."
               exit 1
             fi
-            echo "✓ risk:irreversible label present — F13 will enforce session-file tier"
+            echo "risk:irreversible label present — the session-file tier check below applies"
           fi
 
-          # If the floor is full but no risk:irreversible label, the session file
-          # must still carry tier: full (or higher). We surface this as a soft hint
-          # — full enforcement of full-tier sessions is Phase 6+ work.
-          if [ "$REQUIRED_TIER" = "full" ]; then
-            echo "ℹ️  Floor is 'full' — session file should declare tier: full|irreversible"
-            echo "    (Phase 6 will mechanically enforce this; for now, reviewer awareness)"
+          if [ "$FLOOR" = "full" ]; then
+            echo "Floor is 'full' — the session file should declare tier: full|irreversible."
+            echo "ADVISORY, not enforced: mechanical enforcement of full-tier sessions is Phase 6."
           fi
+
+      # ── The claim ledger ───────────────────────────────────────────────────
+      # Shadow for everything except the ADR-001 carve-outs (migration, deploy,
+      # harness self-edit), which block from day one. `verify` exits non-zero only
+      # when a claim on an `enforcement: block` path fails; every other failure is
+      # written to events.jsonl as claim.would_block and the build stays green.
+      #
+      # The canary at docs/06-codebase/ledger-canary.md is expected to produce two
+      # would_block lines on every single run. Zero would_blocks means the
+      # resolvers have stopped firing.
+      - name: Claim ledger — resolve every claim
+        run: |
+          set -euo pipefail
+          export WARROOM_EVENTS="$RUNNER_TEMP/events.jsonl"
+          node scripts/ledger.mjs verify
+          echo ""
+          echo "── events.jsonl ──"
+          cat "$WARROOM_EVENTS" 2>/dev/null || echo "(no events written)"
+
+      - name: Upload ledger events
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ledger-events
+          path: ${{ runner.temp }}/events.jsonl
+          if-no-files-found: ignore
 
       # ── F13: risk:irreversible enforcement ─────────────────────────────────
       # Per the 2026-05-16 board verdict (decision #3):
@@ -325,7 +333,7 @@ jobs:
 
           if [ -z "$SESSION_FILE" ] || [ ! -f "$SESSION_FILE" ]; then
             echo ""
-            echo "[shadow] WOULD BLOCK — risk:irreversible label requires a session file with tier: full or tier: irreversible."
+            echo "BLOCKED — the risk:irreversible label requires a session file with tier: full or tier: irreversible."
             echo "   No session file found for slug: ${TASK_SLUG} or in PR diff"
             echo "   Per 2026-05-16 board decision #3: risk:irreversible requires full or irreversible tier review."
             exit 1
@@ -353,7 +361,7 @@ jobs:
             exit 0
           else
             echo ""
-            echo "[shadow] WOULD BLOCK — risk:irreversible label requires tier: full or tier: irreversible per board decision #3."
+            echo "BLOCKED — the risk:irreversible label requires tier: full or tier: irreversible per board decision #3."
             echo "   Session file found: ${SESSION_FILE}"
             echo "   Neither tier: full nor tier: irreversible present in session frontmatter."
             grep "tier" "$SESSION_FILE" || echo "(no tier line found)"

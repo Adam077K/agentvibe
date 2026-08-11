@@ -1,5 +1,11 @@
 # Phase 3 Handoff — the claim ledger spine
 
+> **CLOSED 2026-08-11.** Phase 3 is complete; all three gate criteria were met by execution and are recorded
+> in [AGENT-SYSTEM-REBUILD.md §4](AGENT-SYSTEM-REBUILD.md) and [CLAIM-LEDGER.md](CLAIM-LEDGER.md). This
+> document is kept as the record of what was handed over and what the handing-over team got wrong — three of
+> its five "traps" fired, and one of its assets-table rows was still stale. Do not treat its "State at
+> handoff" numbers as current.
+
 **For:** the team executing Phase 3.
 **State at handoff:** Phases 1 and 2 complete and merged. `main` = `72337f8`. `npm run check` exits 0.
 **Read first:** [AGENT-SYSTEM-REBUILD.md](AGENT-SYSTEM-REBUILD.md) · [ADR-001](adr/001-claim-ledger-as-enforcement-spine.md)
