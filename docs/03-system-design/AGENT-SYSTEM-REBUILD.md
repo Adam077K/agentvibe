@@ -301,7 +301,7 @@ Add ~6 namespace router skills so the discovery tier stops growing linearly.
 | # | Phase | Gate to proceed |
 |---|---|---|
 | 1 | **Subtract and wire** · *externally verified* — ✅ **DONE** | ~~Rules ≤ 400~~ *(re-scoped — see below)* · blocking mechanisms ≥ 4 → **5** · fabrications = 0 → **0** · schema-lint exit 0 → **✅** · one PR observed RED then GREEN → **✅ runs `31505991227` → `31506094985`** |
-| 2 | **Fleet machinery** — *next; `agentvibe` only, no rollout* | Launcher behaviour unchanged on `agentvibe`; `.warroom.yml` extracted; manifest / backup / hard-link refusal / rollback built and tested; **read-only** check-only run across the 12 reports the 5 generations. **No other project is written to.** Baseline + decisions: [FLEET-BASELINE.md](../06-codebase/2026-08-11-FLEET-BASELINE.md) |
+| 2 | **Fleet machinery** — ✅ **DONE** (`agentvibe` only, no rollout) | Launcher behaviour unchanged on `agentvibe` → **verified live, byte-identical to the backed-up original** · `.warroom.yml` extracted (3 values) · manifest / backup / hard-link refusal / rollback **each verified by executing the failure** · read-only fleet scan reports **12 in scope, 5 generations**. No other project written to. [FLEET-BASELINE.md](../06-codebase/2026-08-11-FLEET-BASELINE.md) |
 | 3 | **Spine** — claims, resolvers, ledger, shadow mode | Dead URL + expired `valid_until` both fire as `would_block`; `ledger rebuild` byte-identical from clean clone |
 | 4 | **Roster collapse** — 7 engines + lenses | schema-lint exit 0 across 7 files; single-model "independent" panel fails the lint; read-only engine cannot write, verified by attempt |
 | 5 | **Playbooks** | Six seed playbooks lint clean; `/build` `/ship` `/design` `/research` are invocations, not prose |
