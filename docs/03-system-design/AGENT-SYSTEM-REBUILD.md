@@ -162,7 +162,17 @@ verdict is required. Scope is the remaining **12 launchers, 5 generations** — 
 **Sequencing, decided 2026-08-11:** extract the preamble **verbatim** first so Phase 2 stays a
 behaviour-preserving refactor, and converge its content in a separate diff · the program's source of truth
 is **`bin/warroom` in this repo**, installed to `~/.warroom/bin/`, so `npm run check` and CI gate every
-change to it · rollout is **`agentvibe` → one pilot → all 10 remaining at once**.
+change to it · rollout is **`agentvibe` → one pilot → all 10 remaining at once**, and it happens in
+**Phase 9, after the whole system is built** — not in Phase 2.
+
+**What Phase 2 therefore is:** build the one program, extract `.warroom.yml`, move each preamble verbatim to
+`.claude/entry/<role>.md`, and build the propagation machinery (per-file SHA256 manifest, content-hash
+backups, symlink preservation, hard-link refusal, loud rollback, `installation_modified` guard). Prove all of
+it on `agentvibe`. Run the check-only pass across the other 11 **read-only**. Write to nothing else.
+
+**The cost of deferring, stated plainly:** 11 projects run the old launcher for the whole rebuild, and they
+keep drifting while it runs. That is the price of propagating a finished system once instead of an
+intermediate one seven times. Stop condition 5b tracks whether that price is rising.
 
 ### 3.4 Roster — derived from 38 jobs
 
@@ -291,13 +301,20 @@ Add ~6 namespace router skills so the discovery tier stops growing linearly.
 | # | Phase | Gate to proceed |
 |---|---|---|
 | 1 | **Subtract and wire** · *externally verified* — ✅ **DONE** | ~~Rules ≤ 400~~ *(re-scoped — see below)* · blocking mechanisms ≥ 4 → **5** · fabrications = 0 → **0** · schema-lint exit 0 → **✅** · one PR observed RED then GREEN → **✅ runs `31505991227` → `31506094985`** |
-| 2 | **Fleet: one program, many configs** — *next, scoped* | Launcher behaviour unchanged on `agentvibe`; check-only run across the **12 in-scope** launchers; pilot converged before the remaining 10. `adamos`/`test1`/`hitstampjavagame` excluded by founder — no verdict required. Baseline + decisions: [FLEET-BASELINE.md](../06-codebase/2026-08-11-FLEET-BASELINE.md) |
+| 2 | **Fleet machinery** — *next; `agentvibe` only, no rollout* | Launcher behaviour unchanged on `agentvibe`; `.warroom.yml` extracted; manifest / backup / hard-link refusal / rollback built and tested; **read-only** check-only run across the 12 reports the 5 generations. **No other project is written to.** Baseline + decisions: [FLEET-BASELINE.md](../06-codebase/2026-08-11-FLEET-BASELINE.md) |
 | 3 | **Spine** — claims, resolvers, ledger, shadow mode | Dead URL + expired `valid_until` both fire as `would_block`; `ledger rebuild` byte-identical from clean clone |
 | 4 | **Roster collapse** — 7 engines + lenses | schema-lint exit 0 across 7 files; single-model "independent" panel fails the lint; read-only engine cannot write, verified by attempt |
 | 5 | **Playbooks** | Six seed playbooks lint clean; `/build` `/ship` `/design` `/research` are invocations, not prose |
 | 6 | **Reader, budgets, stall detection, routines** | Stall escalates instead of looping; ceiling fires *before* dispatch with a named reason; stale reader stamp warns at session start |
 | 7 | **Skills** *(parallelizable with 3–6)* | ~70 curated by the stated method; routers in place |
 | 8 | **Mission Control** | Dispatch a goal into a second project with no terminal attached; session appears in history with real cost; claims land in that repo's ledger |
+| 9 | **Fleet rollout** — *the only phase that touches another project* | Pilot converged and behaviour-identical; then all 10 remaining; every launcher on one generation; `newproject` has an update path |
+
+> **No project other than `agentvibe` is touched before Phase 9.** Founder decision, 2026-08-11. Phase 2
+> builds the propagation *machinery* and proves it on `agentvibe` alone; propagation itself happens once, at
+> the end, carrying a finished system rather than seven intermediate ones. This **supersedes the earlier
+> decision that moved fleet propagation to Phase 2** — the machinery stays in Phase 2, the rollout moves to
+> Phase 9.
 
 ### Phase 1 detail — the only phase not self-reviewed
 
@@ -375,9 +392,13 @@ Each needs a checker and a date. A stop condition written as a sentence is not a
 2. The run log exists four weeks with no reader.
 3. A run burns > 200k tokens and returns no structured output *after* the stall envelope ships.
 4. The build extends past Phase 6 without an explicit decision to continue.
-5. The fleet is still on **eight** launcher generations after Phase 2 (re-measured 2026-08-11 across 15
-   launchers, not the 5-across-13 originally recorded — see
-   [FLEET-BASELINE.md](../06-codebase/2026-08-11-FLEET-BASELINE.md)).
+5. ~~The fleet is still on eight launcher generations after Phase 2.~~ **Restated 2026-08-11.** Rollout moved
+   to Phase 9, so this can no longer fire at Phase 2 — a stop condition that cannot fire until the end is not
+   a stop condition. It splits in two, both checkable during the build:
+   - **5a** — the 12 in-scope launchers are still on more than one generation after **Phase 9**.
+   - **5b** — *the generation count increases during the rebuild.* The 11 untouched projects keep drifting
+     while Phase 2–8 run. Re-run the read-only baseline script monthly; if generations go up, the cost of
+     deferring rollout is growing and the decision should be revisited.
 6. No user-facing venture work ships during the rebuild.
 7. **A new mechanism is added that nothing invokes within two weeks** — the condition that catches this plan's
    own worst failure mode: building mechanisms because they are satisfying to build.

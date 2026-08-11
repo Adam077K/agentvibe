@@ -240,3 +240,45 @@ launchers the only differences are the preamble generation, per-project config, 
 **Reversibility:** n/a (measurement)
 **Owner:** ceo
 **Affects:** Phase 2 execution plan
+
+## 2026-08-11 — Fleet rollout moves to Phase 9; nothing but agentvibe is touched before then
+
+**Supersedes:** "Fleet propagation moves from last phase to Phase 2" (2026-08-11, earlier this session).
+
+**Context:** That earlier decision moved propagation early on the rationale that "until it lands, every
+improvement pays back in one repo out of thirteen." Founder reversed the rollout half: the pilot, and any
+write to another project, waits until the whole system is built.
+**Options considered:** Roll out after Phase 2 machinery (original) / after Phase 6 (functionally complete) /
+after Phase 7 (last phase that changes installed content) / after all 8 phases.
+**Decision (founder):** **After all 8 phases.** Rollout becomes **Phase 9**. Phase 2 still builds the
+propagation machinery — one `warroom` program, `.warroom.yml`, preamble extraction, SHA256 manifest, backups,
+hard-link refusal, rollback, `installation_modified` guard — but proves it on `agentvibe` alone. The
+check-only pass across the other 11 is read-only. **No project other than `agentvibe` is written to before
+Phase 9.**
+**Rationale:** Propagate one finished system once rather than seven intermediate ones. Every phase from 3 to 7
+changes what is actually installed into a project, so rolling out earlier means re-rolling out repeatedly, and
+carrying rollout risk through every later phase on the machine used for daily work.
+**Cost, accepted:** 11 projects run the old launcher for the entire rebuild and keep drifting while it runs.
+This is the exact benefit the superseded decision was reaching for, now traded away deliberately rather than
+by omission.
+**Reversibility:** reversible — the machinery exists from Phase 2 onward, so rollout can be pulled earlier if
+the cost rises.
+**Owner:** founder
+**Affects:** phase order (new Phase 9), stop condition 5 (split into 5a/5b), Phase 2 exit criteria, the pilot
+decision (deferred to Phase 9)
+
+## 2026-08-11 — Stop condition 5 split so it can fire during the build, not only at the end
+
+**Context:** Stop condition 5 was "the fleet is still on N launcher generations after Phase 2." With rollout
+moved to Phase 9 it could not fire until the end — and a stop condition that cannot fire until the end is not
+a stop condition, which is the precise failure this rebuild exists to remove.
+**Decision:** Split it.
+- **5a** — the 12 in-scope launchers are still on more than one generation after **Phase 9**.
+- **5b** — **the generation count increases during the rebuild.** Re-run the read-only reproduce script in
+  [FLEET-BASELINE.md](../../docs/06-codebase/2026-08-11-FLEET-BASELINE.md) monthly. A rise means the cost of
+  deferring rollout is growing and the deferral should be revisited.
+**Rationale:** 5b makes the accepted cost of the deferral measurable instead of assumed, and it is checkable
+by running one script that already exists.
+**Reversibility:** reversible
+**Owner:** ceo
+**Affects:** stop conditions, monthly harness-health routine (Phase 6)
