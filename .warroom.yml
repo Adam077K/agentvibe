@@ -1,0 +1,14 @@
+# warroom project config — owned by this repository.
+# `warroom` updates NEVER write to this file. That structural boundary is what
+# makes fleet propagation safe: generated content and project content never
+# share a destination.
+#
+# Required:
+session: agentvibe
+project_dir: ~/VibeCoding/Agentvibe
+
+# Optional — each defaults to the derivation the standalone launchers hardcoded:
+#   display_name  defaults to session, uppercased        (banner text)
+#   state_dir     defaults to ~/.<session>               (snapshots, events.jsonl)
+#   entry_ceo     defaults to .claude/entry/ceo.md,
+#                 falling back to .claude/agents/_seeds/ceo.md
