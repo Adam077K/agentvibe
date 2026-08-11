@@ -41,7 +41,7 @@ const REVIEW_LENSES_PATH = path.join(REPO_ROOT, '.claude', 'review-lenses.yml');
 
 // One parser. `parseYamlSubset` already reads every claim block and the tier map; the lens
 // files use it too rather than gaining a fourth hand-rolled YAML reader.
-const { parseYamlSubset, KINDS, independenceIssue } = require('../../scripts/lib/claims.js');
+const { parseYamlSubset, KINDS, VERIFIERS, independenceIssue } = require('../../scripts/lib/claims.js');
 
 // The seven engines of the Phase 4 roster. Held here as a constant rather than read from
 // disk because the lens files are authored BEFORE the engine files exist — 4a proves the
@@ -495,6 +495,164 @@ function lintLensFile(filePath, kind) {
   return { rel, issues, count: list.length };
 }
 
+// ── Playbooks ──────────────────────────────────────────────────────────────
+//
+// §3.5: "A playbook declares the STAGES a category of work passes and the CLAIMS +
+// CRITERIA required to exit each. It never declares method — the agent picks its own
+// path inside every stage."
+//
+// That last sentence is the whole design, so it is a lint rule rather than a hope: a
+// stage carrying `steps`, `how`, `method` or `implementation` is refused. Without it a
+// playbook slowly becomes the 50 lines of pipeline prose it replaced.
+//
+// Exit conditions are a tiny DSL, and every reference in them is resolved:
+//   claim(kind=K, verified_by=V)      K must be a real claim kind, V a real resolver
+//   review(lens=L)                    L must exist in review-lenses.yml
+//   criterion(name[, verified_by=V])  named check; V optional but validated if present
+// A playbook naming a lens that does not exist is the same defect as a doc naming a file
+// that does not exist, and it fails the same way.
+
+const GATES = ['qa-verdict', 'founder-approval', 'outbound-approval', 'migration-approval'];
+const METHOD_KEYS = ['steps', 'how', 'method', 'implementation', 'tasks', 'procedure'];
+const EXIT_RE = /^(claim|review|criterion)\(([^)]*)\)$/;
+
+function parseArgs(raw) {
+  const out = {};
+  const positional = [];
+  for (const part of raw.split(',').map((s) => s.trim()).filter(Boolean)) {
+    const eq = part.indexOf('=');
+    if (eq < 0) positional.push(part);
+    else out[part.slice(0, eq).trim()] = part.slice(eq + 1).trim();
+  }
+  return { out, positional };
+}
+
+function lintExit(entry, where, issues, knownLenses) {
+  if (typeof entry !== 'string') { issues.push(`${where}: exit entry must be a string`); return; }
+  const m = EXIT_RE.exec(entry.trim());
+  if (!m) {
+    issues.push(`${where}: ${JSON.stringify(entry)} is not claim(...), review(...) or criterion(...)`);
+    return;
+  }
+  const [, fn, rawArgs] = m;
+  const { out: args, positional } = parseArgs(rawArgs);
+
+  if (fn === 'claim') {
+    if (!KINDS.includes(args.kind)) issues.push(`${where}: claim kind ${JSON.stringify(args.kind)} is not a claim kind`);
+    if (args.verified_by && !VERIFIERS.includes(args.verified_by)) {
+      issues.push(`${where}: claim verified_by ${JSON.stringify(args.verified_by)} is not a resolver`);
+    }
+  } else if (fn === 'review') {
+    if (!args.lens) issues.push(`${where}: review(...) needs lens=`);
+    else if (!knownLenses.has(args.lens)) {
+      issues.push(`${where}: review lens "${args.lens}" is not in .claude/review-lenses.yml — a playbook may not name a lens that does not exist`);
+    }
+  } else {
+    if (positional.length !== 1) issues.push(`${where}: criterion(...) needs exactly one name, got ${positional.length}`);
+    if (args.verified_by && !VERIFIERS.includes(args.verified_by)) {
+      issues.push(`${where}: criterion verified_by ${JSON.stringify(args.verified_by)} is not a resolver`);
+    }
+  }
+}
+
+function knownReviewLenses() {
+  try {
+    const doc = parseYamlSubset(fs.readFileSync(REVIEW_LENSES_PATH, 'utf8'));
+    return new Set((doc.review_lenses || []).map((l) => l.id));
+  } catch {
+    // Fail closed. If the lens file cannot be read, every review() reference is
+    // unverifiable — returning an empty set makes them all fail loudly, which is the
+    // opposite of the LIVE_SKILLS=null pattern above it.
+    return new Set();
+  }
+}
+
+function knownDomainLenses() {
+  try {
+    const doc = parseYamlSubset(fs.readFileSync(LENSES_PATH, 'utf8'));
+    return new Set((doc.lenses || []).map((l) => l.id));
+  } catch {
+    return new Set();
+  }
+}
+
+function lintPlaybook(filePath, knownLenses, knownDomain) {
+  const issues = [];
+  const rel = path.relative(REPO_ROOT, filePath);
+  let doc;
+  try {
+    doc = parseYamlSubset(fs.readFileSync(filePath, 'utf8'));
+  } catch (e) {
+    return { rel, issues: [`${rel}: ${e.message}`], stages: 0 };
+  }
+  if (!doc || typeof doc !== 'object') return { rel, issues: [`${rel}: empty`], stages: 0 };
+
+  const base = path.basename(filePath, '.yml');
+  if (doc.playbook !== base) {
+    issues.push(`${rel}: playbook "${doc.playbook}" does not match filename "${base}"`);
+  }
+  if (typeof doc.summary !== 'string' || doc.summary.trim().length < 15) {
+    issues.push(`${rel}: summary must say what category of work this covers`);
+  }
+  if (!Array.isArray(doc.stages) || doc.stages.length < 2) {
+    issues.push(`${rel}: stages must be a list of at least 2 — one stage is not a sequence`);
+    return { rel, issues, stages: 0 };
+  }
+
+  const seen = new Set();
+  doc.stages.forEach((s, i) => {
+    const where = `${rel} stages[${i}]`;
+    if (!s || typeof s !== 'object') { issues.push(`${where}: not a mapping`); return; }
+    if (typeof s.id !== 'string' || !/^[a-z][a-z0-9-]*$/.test(s.id)) {
+      issues.push(`${where}: id must be kebab-case, got ${JSON.stringify(s.id)}`);
+    } else if (seen.has(s.id)) {
+      issues.push(`${where}: duplicate stage id "${s.id}"`);
+    } else seen.add(s.id);
+
+    const at = `${rel} ${s.id || i}`;
+    if (typeof s.goal !== 'string' || s.goal.trim().length < 15) {
+      issues.push(`${at}: goal must state the outcome of the stage`);
+    }
+
+    // The design rule, enforced.
+    for (const k of METHOD_KEYS) {
+      if (s[k] !== undefined) {
+        issues.push(`${at}: carries "${k}" — a playbook declares stages and exit criteria, never method. The engine picks its own path inside the stage`);
+      }
+    }
+
+    if (!Array.isArray(s.exit) || s.exit.length === 0) {
+      issues.push(`${at}: exit is required — a stage nobody can leave is not a stage`);
+    } else {
+      s.exit.forEach((e, k) => lintExit(e, `${at} exit[${k}]`, issues, knownLenses));
+    }
+
+    for (const l of (s.lenses || [])) {
+      if (!knownDomain.has(l)) issues.push(`${at}: lens "${l}" is not in .claude/lenses.yml`);
+    }
+    if (s.gate !== undefined && !GATES.includes(s.gate)) {
+      issues.push(`${at}: gate "${s.gate}" is not one of (${GATES.join(', ')})`);
+    }
+    for (const d of (s.dispatch || [])) {
+      if (!d || typeof d !== 'object') { issues.push(`${at}: dispatch entry must be a mapping`); continue; }
+      if (typeof d.task !== 'string' || d.task.trim().length < 10) issues.push(`${at}: dispatch task must describe the work`);
+      if (!ENGINES.includes(d.engine)) issues.push(`${at}: dispatch engine "${d.engine}" is not an engine (${ENGINES.join(', ')})`);
+    }
+  });
+
+  return { rel, issues, stages: doc.stages.length };
+}
+
+function lintAllPlaybooks() {
+  const dir = path.join(REPO_ROOT, '.claude', 'playbooks');
+  if (!fs.existsSync(dir)) return [{ rel: '.claude/playbooks', issues: ['.claude/playbooks: missing'], stages: 0 }];
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.yml')).sort();
+  if (files.length === 0) return [{ rel: '.claude/playbooks', issues: ['.claude/playbooks: no playbooks'], stages: 0 }];
+  const lenses = knownReviewLenses();
+  const domain = knownDomainLenses();
+  return files.map((f) => lintPlaybook(path.join(dir, f), lenses, domain));
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 function main() {
   const args = process.argv.slice(2);
@@ -520,6 +678,7 @@ function main() {
   const lensResults = targets.length > 0 ? [] : [
     lintLensFile(LENSES_PATH, 'domain'),
     lintLensFile(REVIEW_LENSES_PATH, 'review'),
+    ...lintAllPlaybooks(),
   ];
   for (const r of lensResults) failCount += r.issues.length > 0 ? 1 : 0;
 
@@ -544,7 +703,7 @@ function main() {
     }
     for (const r of lensResults) {
       if (r.issues.length === 0) {
-        process.stdout.write(`✓ ${r.rel} — ${r.count} lenses\n`);
+        process.stdout.write(`✓ ${r.rel} — ${r.count !== undefined ? r.count + ' lenses' : r.stages + ' stages'}\n`);
       } else {
         process.stdout.write(`✗ ${r.rel} — FAIL\n`);
         for (const i of r.issues) process.stdout.write(`    - ${i}\n`);
@@ -560,7 +719,7 @@ function main() {
 // rules are tested by constructing the failures rather than by trusting that they fire.
 // Phase 2's lesson: six install guards all passed a manual pass and one still shipped
 // broken, because the mismatch the bug needed was never built.
-module.exports = { lintLensFile, lintFile, ENGINES };
+module.exports = { lintLensFile, lintPlaybook, lintFile, knownReviewLenses, knownDomainLenses, ENGINES, GATES };
 
 if (require.main === module) {
   try { main(); } catch (err) {

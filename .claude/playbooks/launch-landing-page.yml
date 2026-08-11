@@ -1,0 +1,39 @@
+# Rehoused from: .claude/agents/cmo.md (Steps 1-8, including the hard gate on customer
+# language and the brand-voice checklist) and .claude/agents/design-lead.md.
+playbook: launch-landing-page
+summary: "Ship a customer-facing page whose words came from customers and whose claims are sourced"
+
+stages:
+  - id: positioning
+    goal: "Establish what this page says, in the customer's own words rather than the company's"
+    lenses: [growth, customer]
+    exit:
+      - "claim(kind=user-language, verified_by=source)"
+      - "claim(kind=external-fact, verified_by=source)"
+      - "criterion(audience-slice-named)"
+
+  - id: copy
+    goal: "Write the words, reusing captured customer phrasing over invented phrasing"
+    lenses: [growth]
+    exit:
+      - "criterion(no-unsourced-number)"
+      - "review(lens=voice)"
+    dispatch:
+      - task: "Page copy, headline and calls to action"
+        engine: builder
+
+  - id: design
+    goal: "Render the page so it is usable by people who are not using it the way you do"
+    lenses: [design]
+    exit:
+      - "review(lens=craft)"
+      - "review(lens=accessibility)"
+    dispatch:
+      - task: "Layout, visual hierarchy and responsive behaviour"
+        engine: designer
+
+  - id: ship
+    goal: "Publish only after a human has seen the staged page"
+    exit:
+      - "criterion(staged-to-preview-not-production, verified_by=command)"
+    gate: outbound-approval

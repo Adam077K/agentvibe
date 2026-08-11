@@ -6,7 +6,10 @@
 # `schema-lint.js` — 360 correct lines with a blocking exit path — was registered
 # nowhere at all.
 #
-# The judged gate (qa-lead-pass.yml) deliberately does NOT block yet. See its header.
+# The judged gate (qa-lead-pass.yml) shipped in shadow alongside this and was promoted to
+# blocking in Phase 3, with `main` under branch protection requiring both jobs. This
+# comment said "deliberately does NOT block yet" for one phase after that stopped being
+# true — a small instance of the exact rot this repository exists to catch.
 name: CI
 
 on:
@@ -69,6 +72,12 @@ jobs:
       # "independent" review panel drawn from a single model family.
       - name: Lens files
         run: npm run test:lenses
+
+      # Playbooks — stages and exit criteria, never method. The rule that a playbook
+      # may not carry `steps:` is what stops it drifting back into the pipeline prose
+      # it replaced, and the tests construct that failure rather than trusting it.
+      - name: Playbooks
+        run: npm run test:playbooks
 
       # The claim ledger. Four things, all deterministic:
       #   · the parser and schema (43 tests, most of them "this must REFUSE")

@@ -1,0 +1,31 @@
+# Rehoused from: .claude/agents/research-lead.md, .claude/agents/cbo.md (market sizing)
+# and .claude/agents/cco.md (customer signal).
+playbook: validate-a-market
+summary: "Decide whether a market is real before building for it, on evidence rather than enthusiasm"
+
+stages:
+  - id: frame
+    goal: "State what would have to be true for this market to be worth entering"
+    lenses: [product, business]
+    exit:
+      - "criterion(falsifiable-conditions-stated)"
+
+  - id: evidence
+    goal: "Gather what customers actually say and what the market actually is"
+    lenses: [research, customer, evidence]
+    exit:
+      - "claim(kind=user-language, verified_by=source)"
+      - "claim(kind=external-fact, verified_by=source)"
+    dispatch:
+      - task: "Market size and competitive landscape, sourced"
+        engine: sourcer
+      - task: "Customer language and pain phrasing, verbatim with provenance"
+        engine: sourcer
+
+  - id: judge
+    goal: "Decide against the conditions set in framing, not against how the evidence feels"
+    lenses: [business, evidence]
+    exit:
+      - "claim(kind=judgment, verified_by=judge)"
+      - "review(lens=evidence)"
+    gate: founder-approval

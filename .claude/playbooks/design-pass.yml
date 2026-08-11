@@ -1,0 +1,27 @@
+# Rehoused from: .claude/agents/design-lead.md and .claude/agents/design-critic.md
+# (Steps 1-7), plus .claude/commands/design.md.
+playbook: design-pass
+summary: "Bring an already-working screen up to the standard, judged against a written system"
+
+stages:
+  - id: reference
+    goal: "Establish what this screen is being measured against before changing anything"
+    lenses: [design]
+    exit:
+      - "criterion(design-system-rules-identified)"
+
+  - id: build
+    goal: "Make the change, then look at what rendered rather than at what was written"
+    lenses: [design]
+    exit:
+      - "claim(kind=judgment, verified_by=judge)"
+    dispatch:
+      - task: "Spacing, type scale, colour and state coverage"
+        engine: designer
+
+  - id: critique
+    goal: "Judge the rendered result, naming every finding as a measured difference from a rule"
+    exit:
+      - "review(lens=craft)"
+      - "review(lens=accessibility)"
+    gate: qa-verdict

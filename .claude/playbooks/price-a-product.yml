@@ -1,0 +1,42 @@
+# Rehoused from: .claude/agents/cbo.md (Steps 1-10 and its anti-patterns).
+# The financial discipline itself lives in the `business` lens; this is the sequence.
+playbook: price-a-product
+summary: "Set or change a price, with the numbers sourced and the reversibility stated first"
+
+stages:
+  - id: frame
+    goal: "Name the exact decision this analysis unlocks, and stop if it is already locked"
+    lenses: [business]
+    exit:
+      - "criterion(decision-named-in-one-sentence)"
+      - "criterion(prior-decisions-checked)"
+
+  - id: gather
+    goal: "Pull the live numbers and verify every vendor cost against that vendor's own page"
+    lenses: [business, research, evidence]
+    exit:
+      - "claim(kind=external-fact, verified_by=source)"
+      - "criterion(every-number-labelled-fact-estimate-or-assumed)"
+    dispatch:
+      - task: "Sourced competitor and market pricing, with URL and access date"
+        engine: sourcer
+
+  - id: model
+    goal: "Produce the recommendation with a range, not a point, and reversibility stated before it"
+    lenses: [business]
+    exit:
+      - "criterion(three-scenarios-base-downside-upside)"
+      - "criterion(reversibility-stated-before-recommendation)"
+
+  - id: review
+    goal: "Have the numbers and the reversibility judged by someone who did not produce them"
+    exit:
+      - "review(lens=evidence)"
+      - "review(lens=scope)"
+    gate: qa-verdict
+
+  - id: commit
+    goal: "Record the decision so the next reader inherits the reasoning, not just the price"
+    exit:
+      - "criterion(decision-recorded-with-rationale)"
+    gate: founder-approval

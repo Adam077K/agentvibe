@@ -1,0 +1,57 @@
+# Rehoused from: .claude/commands/build.md, .claude/commands/fix.md,
+# .claude/agents/cto.md (Steps 1-7), .claude/agents/qa-lead.md.
+#
+# A playbook declares STAGES and what it takes to EXIT each. It never declares method:
+# the engine picks its own path inside a stage. That is the whole point, and the linter
+# enforces it — a stage carrying `steps:` or `how:` is refused.
+playbook: ship-feature
+summary: "Take a feature or fix from a request to merged, through the gate that cannot be overridden"
+triggers: ["/build", "/fix"]
+
+stages:
+  - id: frame
+    goal: "Turn the request into an unambiguous outcome with a measurable definition of done"
+    lenses: [product, evidence]
+    exit:
+      - "claim(kind=user-language, verified_by=source)"
+      - "criterion(success-is-measurable)"
+      - "criterion(prior-decisions-checked)"
+
+  - id: plan
+    goal: "Decompose into units that can run independently, and tier the risk before any of them start"
+    lenses: [engineering]
+    exit:
+      - "criterion(risk-tier-assigned, verified_by=command)"
+      - "criterion(every-unit-has-an-isolated-worktree)"
+    dispatch:
+      - task: "Server logic, API surface and data access"
+        engine: builder
+        isolation: worktree
+      - task: "User interface and client behaviour"
+        engine: builder
+        isolation: worktree
+      - task: "Schema change or migration"
+        engine: builder
+        isolation: worktree
+
+  - id: build
+    goal: "Produce the change in isolation and return what actually landed, not what was intended"
+    lenses: [engineering, evidence]
+    exit:
+      - "claim(kind=behavior, verified_by=command)"
+      - "criterion(branch-exists-and-was-verified, verified_by=command)"
+
+  - id: review
+    goal: "Judge the diff independently of whoever produced it"
+    exit:
+      - "review(lens=correctness)"
+      - "review(lens=security)"
+      - "review(lens=scope)"
+    gate: qa-verdict
+
+  - id: ship
+    goal: "Merge only after the gate passes and the founder confirms"
+    exit:
+      - "criterion(ci-green, verified_by=command)"
+      - "criterion(session-file-written, verified_by=command)"
+    gate: founder-approval
