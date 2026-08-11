@@ -32,9 +32,6 @@ rules:
   - pattern: ".claude/agents/**"
     tier: irreversible
     reason: "Agent definitions; bad prompt cascades across every spawn"
-  - pattern: ".agent/agents/**"
-    tier: irreversible
-    reason: "Mirror of .claude/agents"
   - pattern: ".claude/settings.json"
     tier: irreversible
     reason: "Runtime permission boundary"

@@ -1,7 +1,7 @@
 {
   "name": "gsa-startup-kit",
   "version": "1.1.0",
-  "description": "AI Agent Kit for Claude Code & Antigravity — 3-layer autonomous startup team (CEO, Leads, Workers) with 426+ expert skills",
+  "description": "AI Agent Kit for Claude Code & Antigravity — autonomous startup team (CEO, C-suite, Workers) with 147 expert skills",
   "bin": {
     "gsa-startup-kit": "bin/install.js"
   },
@@ -9,11 +9,9 @@
     "bin/",
     ".claude/agents/",
     ".claude/commands/",
-    ".claude/get-shit-done/",
     ".claude/hooks/",
     ".claude/package.json",
     ".claude/settings.json",
-    ".agent/",
     "docs/",
     "AGENTS.md",
     "CLAUDE.md",
