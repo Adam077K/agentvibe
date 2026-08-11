@@ -180,7 +180,6 @@ Load these in addition to the defaults above when the task matches. Read with `R
 
 | When you're doing this... | Load this skill |
 |---|---|
-| Touching `apps/web/supabase/migrations/` or RLS | `supabase-rls-agentvibe` |
 | Raw SQL / query tuning | `postgresql` |
 | `.env`, vendor key, secret-rotation work | `secrets-management` |
 | Adding or changing an LLM API call | `llm-app-patterns` |

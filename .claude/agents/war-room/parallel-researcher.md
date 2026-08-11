@@ -22,7 +22,6 @@ skills:
   - deep-research
   - search-specialist
   - competitive-landscape
-  - pgvector-rag-agentvibe
   - market-sizing-analysis
 ---
 

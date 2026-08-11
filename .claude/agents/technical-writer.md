@@ -14,7 +14,6 @@ skills:
   - documentation-templates
   - code-documentation-code-explain
   - readme
-  - agentvibe-voice-canon
 risk_tier_default: trivial
 escalates_to: ceo
 escalates_when: |

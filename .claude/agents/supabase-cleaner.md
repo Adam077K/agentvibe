@@ -12,7 +12,6 @@ skills:
   - postgresql
   - database
   - sql-optimization-patterns
-  - supabase-rls-agentvibe
   - database-design
 risk_tier_default: full
 escalates_to: ceo

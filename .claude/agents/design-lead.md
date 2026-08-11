@@ -18,7 +18,6 @@ skills:
   - design-orchestration
   - high-end-visual-design
   - emilkowal-animations
-  - agentvibe-brand-quality-bar
   - minimalist-ui
   - stitch-design-taste
 risk_tier_default: lite

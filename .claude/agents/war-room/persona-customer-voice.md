@@ -12,7 +12,6 @@ skills:
   - board-meeting-protocol
   - marketing-psychology
   - onboarding-cro
-  - agentvibe-voice-canon
 risk_tier_default: full
 round_protocol_position: r1 + r2
 voice_lens: "6-week churn timer"

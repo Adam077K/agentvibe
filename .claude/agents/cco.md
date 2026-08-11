@@ -15,7 +15,6 @@ skills:
   - marketing-psychology
   - segment-cdp
   - linear-mvp-recipe
-  - agentvibe-voice-canon
   - page-cro
   - form-cro
 risk_tier_default: lite
@@ -275,7 +274,6 @@ Load these in addition to the defaults above when the task matches. Read with `R
 | Lifecycle / activation emails | `email-systems` |
 | Microcopy across product surface | `copywriting` |
 | CX comms needing human tone | `humanizer` |
-| Voice consistency check on customer-facing string | `agentvibe-voice-canon` |
 
 ## Anti-patterns
 

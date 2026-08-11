@@ -15,7 +15,6 @@ skills:
   - competitive-landscape
   - market-sizing-analysis
   - search-specialist
-  - pgvector-rag-agentvibe
   - mem0-patterns
 risk_tier_default: lite
 escalates_to: ceo
@@ -206,7 +205,6 @@ Load these in addition to the defaults above when the task matches. Read with `R
 | Spawning parallel researchers | `dispatching-parallel-agents` |
 | GTM / launch-context research | `launch-strategy` |
 | Producing PRD-grade inputs for CPO | `product-manager-toolkit` |
-| Persisting findings into RAG corpus | `pgvector-rag-agentvibe` |
 
 ## Anti-patterns
 

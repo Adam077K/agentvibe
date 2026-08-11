@@ -3,7 +3,7 @@ name: design-polisher
 description: "Worker. Adds craft density to an already-functional build — depth, micro-interactions, signature details, motion choreography, spacing/type refinement — measured against the screen's reference folder as VIBE, not copy. Spawned by design-lead inside the BUILD->critic->polish loop. Distinct from product-designer (first-paint build) and design-critic (judges, never edits)."
 model: claude-sonnet-4-6
 tools: [Read, Write, Edit, Bash, Glob, Grep, SendMessage, TaskCreate, TaskUpdate, TaskList]
-maxTurns: 50
+maxTurns: 30
 color: pink
 isolation: worktree
 mcpServers:

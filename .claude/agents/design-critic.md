@@ -11,7 +11,6 @@ mcpServers:
   - refero
 skills:
   - ui-visual-validator
-  - agentvibe-brand-quality-bar
   - wcag-audit-patterns
   - design-taste-frontend
   - screenshots

@@ -10,7 +10,6 @@ mcpServers: []
 skills:
   - security-audit
   - trust-spec-contracts
-  - supabase-rls-agentvibe
   - web-security-testing
   - broken-authentication
   - api-security-testing

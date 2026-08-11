@@ -14,7 +14,6 @@ skills:
   - copywriting
   - marketing-psychology
   - seo-content-writer
-  - agentvibe-voice-canon
   - linear-mvp-recipe
   - launch-strategy
   - humanizer

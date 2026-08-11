@@ -199,7 +199,6 @@ async function validateInboundSpec(rawSpec: unknown): Promise<TrustSpec> {
 
 - `anthropic-routines` — [[anthropic-routines]]
 - `security-audit` — [[security-audit]]
-- `supabase-rls-agentvibe` — [[supabase-rls-agentvibe]]
 - `secrets-management` — [[secrets-management]]
 
 ## Anti-patterns

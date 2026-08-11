@@ -15,7 +15,6 @@ skills:
   - data-engineer
   - data-storytelling
   - segment-cdp
-  - supabase-rls-agentvibe
 risk_tier_default: trivial
 escalates_to: cbo
 escalates_when: |

@@ -13,7 +13,6 @@ skills:
   - competitive-landscape
   - search-specialist
   - market-sizing-analysis
-  - pgvector-rag-agentvibe
 risk_tier_default: trivial
 escalates_to: research-lead
 escalates_when: |
@@ -200,7 +199,6 @@ Load these in addition to the defaults above when the task matches. Read with `R
 
 | When you're doing this... | Load this skill |
 |---|---|
-| Persisting findings into RAG corpus | `pgvector-rag-agentvibe` |
 | Recalling prior research on the same topic | `mem0-patterns` |
 
 ## Anti-patterns
