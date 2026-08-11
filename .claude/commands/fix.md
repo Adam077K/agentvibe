@@ -30,14 +30,14 @@ CTO (or the diagnosing engineer above, in continuation) ships the fix:
 - Success criteria: "Bug no longer reproducible"
 
 ### Step 4 — QA Gate
-QA Lead checks:
+QA-Lead checks:
 - Does the fix break anything else? (test coverage)
 - Did the fix introduce any security issues?
 
 PASS = proceed. BLOCK = fix the new issues first.
 
 ### Step 5 — Human Confirmation + Merge
-Build Lead presents: what was fixed, what changed, QA PASS. User confirms merge.
+CTO presents: what was fixed, what changed, QA PASS. User confirms merge.
 
 ## Abort Conditions
 - Root cause still unknown after diagnosing engineer → CEO asks user for more context

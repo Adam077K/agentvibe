@@ -1,20 +1,24 @@
 # GSA Startup Kit
 *Autonomous C-suite agent system for Claude Code. Drop into a new repo, fill in placeholders, ship.*
 
-> **2026-05-25 — re-baselined on the Beamix agent system.** The previous GSA kit (31 agents · 426 skills · 10 commands) is archived intact at [.archive/pre-beamix-bundle-2026-05-25/](.archive/pre-beamix-bundle-2026-05-25/). This README, [CLAUDE.md](CLAUDE.md), and [AGENTS.md](AGENTS.md) now describe the new baseline.
+> **2026-05-25 — re-baselined on the Beamix agent system.** This README, [CLAUDE.md](CLAUDE.md), and
+> [AGENTS.md](AGENTS.md) describe that baseline. A rebuild is in progress — see
+> [AGENT-SYSTEM-REBUILD.md](docs/03-system-design/AGENT-SYSTEM-REBUILD.md).
 
 ## What's inside
 
+Counts below are verified by `npm run check:registration`, which fails the build when they drift.
+
 | Layer | Path | Count |
 |-------|------|-------|
-| Agents (3-layer: CEO → C-suite → Workers) | `.claude/agents/` (mirrored to `.agent/agents/`) | 51 `.md` |
+| Agents (CEO → C-suite → Workers) | `.claude/agents/` (26) + `.claude/agents/war-room/` (25) | 51 `.md` |
 | Skills (curated, on-demand, MANIFEST-indexed) | `.claude/skills/` | 147 |
-| Hooks (pre/post tool, schema-lint, context monitor, statusline) | `.claude/hooks/` | 7 |
+| Hooks (pre-tool, stop, schema-lint, context monitor, statusline, update check) | `.claude/hooks/` | 6 |
 | Slash commands | `.claude/commands/` | 13 |
 | QA-tier auto-classifier (4 tiers: trivial → irreversible) | `.claude/qa-tier-floor.yml` | 1 |
-| Permissions + MCP grants | `.claude/settings.json` (+ `.proposed`) | 2 |
+| Permissions + hooks (no MCP grants — none are configured) | `.claude/settings.json` (+ `.proposed`) | 2 |
 | Memory templates | `.claude/memory/{DECISIONS,LONG-TERM,USER-INSIGHTS,CODEBASE-MAP}.md` | 4 |
-| CI workflows (staged, not installed) | `new agents-skills-workflows-system/.github/workflows/` | 2 |
+| CI workflows | `.github/workflows/` | 2 |
 
 ## 30-second pitch
 
@@ -29,7 +33,7 @@
 1. Read [TEMPLATE-USAGE.md](TEMPLATE-USAGE.md) — placeholder list + replacement script.
 2. Fill in `CLAUDE.md` → Project State section.
 3. Fill in `.claude/memory/LONG-TERM.md`.
-4. (Optional) Wire CI by copying the workflows from the staging folder to `.github/workflows/`.
+4. Run `npm run check` — schema-lint, gate tests, and the registration check must pass.
 5. Smoke-test:
    ```
    /name ceo-smoke-test
@@ -45,7 +49,7 @@
 | [AGENTS.md](AGENTS.md) | Full routing table — who handles what, model assignments. |
 | [TEMPLATE-USAGE.md](TEMPLATE-USAGE.md) | Placeholder list, first-run checklist, smoke test. |
 | [SKILLS_SOURCE.md](SKILLS_SOURCE.md) | Skill library provenance (preserved from prior kit). |
-| `.archive/pre-beamix-bundle-2026-05-25/README.md` | The previous GSA kit's README, preserved verbatim. |
+| [AGENT-SYSTEM-REBUILD.md](docs/03-system-design/AGENT-SYSTEM-REBUILD.md) | The in-progress rebuild: design, phases, and gates. |
 
 ## License
 

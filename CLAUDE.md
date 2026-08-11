@@ -38,7 +38,9 @@ See [AGENTS.md](AGENTS.md) for the full routing table and [.claude/agents/](.cla
 **Discovery — read MANIFEST.json, never `ls | grep`:**
 
 ```
-Step 1: Read .claude/skills/MANIFEST.json — filter `skills` array by `tags` matching task domain
+Step 1: Read .claude/skills/MANIFEST.json — match the task against each entry's `name` and
+        `description`. (`tags` are present on only 16 of 147 entries, so filtering by tag
+        alone silently misses most of the library.)
 Step 2: Load 3-5 matching SKILL.md files (CEO, C-suite, leads)
         Load 2-3 matching SKILL.md files (workers)
 ```
@@ -73,7 +75,7 @@ Memory:     Mem0 (primary) + Anthropic Memory Tool (auto-fallback after 3 retrie
 | `.claude/memory/CODEBASE-MAP.md` | Key files, patterns, tech debt | code-reviewer |
 | `.claude/memory/USER-INSIGHTS.md` | Customer language, pain phrases, JTBD | CMO + CPO (only authorized writers) |
 | `.claude/memory/LONG-TERM.md` | Cross-session facts: user prefs, recurring patterns | CEO after each session |
-| `.claude/memory/sessions/` | Lead session summaries (`YYYY-MM-DD-[lead]-[task].md`) | Each C-suite / Lead |
+| `docs/08-agents_work/sessions/` | Lead session summaries (`YYYY-MM-DD-[lead]-[task].md`) | Each C-suite / Lead |
 
 **Hard caps:** DECISIONS.md ≤ 50 entries (archive when full); LONG-TERM.md ≤ 100 lines; session summaries ≤ 10 lines each.
 
@@ -97,12 +99,17 @@ Every PR is risk-tiered. **No merge without QA-Lead PASS.** The CEO and CTO cann
 
 | Tier | Trigger | Review pipeline | Required label |
 |------|---------|-----------------|----------------|
-| **Trivial** | Typo, single-line, comment-only | Haiku schema-lint hook only (auto-pass) | none |
+| **Trivial** | Typo, single-line, comment-only | `.github/workflows/ci.yml` only (schema-lint + gate tests + registration check) | none |
 | **Lite** | Isolated feature, < 300 LOC, no API/DB/auth | code-reviewer + qa-engineer + semgrep | `risk:lite` |
 | **Full** | API/DB/auth/billing touched, ≥ 300 LOC | Lite + security-engineer + craft-reviewer + Codex CLI second opinion | `risk:full` |
 | **Irreversible** | DB migration, workflow file, agent definition, billing flow | Full + 2-of-3 multi-judge + Founder sign-off | `risk:irreversible` |
 
-Auto-classification: see [.claude/qa-tier-floor.yml](.claude/qa-tier-floor.yml). Enforced by [.github/workflows/qa-lead-pass.yml](.github/workflows/qa-lead-pass.yml) (not installed by default — copy from `.archive/pre-beamix-bundle-2026-05-25/` or the upstream bundle when you wire CI).
+Auto-classification: see [.claude/qa-tier-floor.yml](.claude/qa-tier-floor.yml).
+[.github/workflows/ci.yml](.github/workflows/ci.yml) is installed and **blocks** on schema-lint, the gate
+tests, and the registration check. [.github/workflows/qa-lead-pass.yml](.github/workflows/qa-lead-pass.yml)
+is installed in **shadow mode** — it computes the verdict and logs `would_block`, but does not fail the
+build. It is promoted to blocking in Phase 3, per
+[ADR-001](docs/03-system-design/adr/001-claim-ledger-as-enforcement-spine.md).
 
 ---
 
@@ -229,5 +236,5 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
 ## Template Provenance
 
 Adopted from the Beamix agent system snapshot dated **2026-05-25**.
-Pre-template variant archived at [.archive/pre-beamix-bundle-2026-05-25/](.archive/pre-beamix-bundle-2026-05-25/).
+The pre-template variant was not preserved in this repo; recover it from git history if needed.
 See [TEMPLATE-USAGE.md](TEMPLATE-USAGE.md) for the placeholder list and first-run checklist.

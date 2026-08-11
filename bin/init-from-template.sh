@@ -61,7 +61,7 @@ prompt PRIMARY_LANGUAGE "Primary language"                  "English"
 prompt LANGUAGES        "Languages (e.g. 'English' or 'English + Hebrew')" "$PRIMARY_LANGUAGE"
 
 echo ""
-echo "About to substitute across .claude/ .agent/ CLAUDE.md AGENTS.md TEMPLATE-USAGE.md."
+echo "About to substitute across .claude/ CLAUDE.md AGENTS.md TEMPLATE-USAGE.md."
 if [[ $NONINTERACTIVE -ne 1 ]]; then
   read -r -p "Continue? [y/N] " ok
   [[ "$ok" =~ ^[Yy]$ ]] || { echo "Aborted."; exit 1; }
@@ -100,7 +100,7 @@ else
 fi
 
 # Apply across all relevant file types
-find .claude .agent CLAUDE.md AGENTS.md TEMPLATE-USAGE.md README.md \
+find .claude CLAUDE.md AGENTS.md TEMPLATE-USAGE.md README.md \
   \( -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.sh" -o -name "*.js" \) \
   -type f -print0 \
   | xargs -0 sed "${SED_INPLACE[@]}" "${SED_EXPRS[@]}"
@@ -109,7 +109,7 @@ echo ""
 echo "✓ Substitutions applied."
 echo ""
 echo "Remaining placeholders (should be zero or only intentional):"
-grep -rho "{{[A-Z_][A-Z_]*}}" .claude .agent CLAUDE.md AGENTS.md TEMPLATE-USAGE.md 2>/dev/null \
+grep -rho "{{[A-Z_][A-Z_]*}}" .claude CLAUDE.md AGENTS.md TEMPLATE-USAGE.md 2>/dev/null \
   | sort -u | head -10 || echo "✓ none"
 echo ""
 
@@ -136,7 +136,7 @@ echo "Next steps:"
 echo "  1. Review CLAUDE.md — make sure stack + project state read correctly"
 echo "  2. Review .claude/qa-tier-floor.yml — retune file-path patterns for your repo layout"
 echo "  3. Review .claude/settings.json — confirm bash allowlist + hook paths"
-echo "  4. (Optional) Wire CI: cp 'new agents-skills-workflows-system/.github/workflows/'*.yml .github/workflows/"
+echo "  4. Run checks: npm run check"
 echo "  5. Smoke test in a Claude Code session:"
 echo "       /name ceo-smoke-test"
 echo "       /color gold"

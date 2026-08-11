@@ -77,7 +77,7 @@ After implementation:
 6. **Loop until quality bar is met** (no fixed cap)
 
 ### Step 9 — Quality Gate
-1. **WCAG accessibility check** via QA Lead (PASS required)
+1. **WCAG accessibility check** via QA-Lead (PASS required)
 2. **Responsive verification** (375px, 768px, 1024px, 1440px)
 3. **Brand compliance** (colors, fonts, spacing, icons)
 4. **Anti-slop check** (taste-skill rules)
@@ -103,7 +103,7 @@ Present final result with desktop + mobile screenshots. User approves or request
 - **Design Lead** — orchestrates the full pipeline
 - **Frontend Developer** — implements from design reference package
 - **Design Critic** — external review from user + designer perspective
-- **QA Lead** — WCAG accessibility gate
+- **QA-Lead** — WCAG accessibility gate
 
 ## Abort Conditions
 - Missing spec (no states defined) → Design Lead asks user in brainstorm

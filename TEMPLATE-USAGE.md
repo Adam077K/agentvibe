@@ -12,7 +12,7 @@ placeholders and review a small set of files by hand.
 ## 1 — Fast path (recommended)
 
 Run the interactive init script. It prompts for every placeholder and runs the
-substitution across `.claude/`, `.agent/`, and the root template files.
+substitution across `.claude/` and the root template files.
 
 ```bash
 bash bin/init-from-template.sh
@@ -108,42 +108,45 @@ across all agent files — the examples are written assuming specific API shapes
 
 ---
 
-## 5 — Skill library (147 → 144 after scrub)
+## 5 — Skill library (147 skills)
 
-3 Beamix-only skills were archived to `.archive/pre-beamix-bundle-2026-05-25/beamix-only-skills/`:
+3 Beamix-only skills were dropped in the template scrub. They were **not** preserved in this repo —
+recover them from git history if you need them:
 - `beamix-scan-architecture` — Beamix's GEO scan pipeline (project-specific)
 - `beamix-voice-canon` — Beamix Model B voice canon (project-specific)
 - `beamix-brand-quality-bar` — Beamix design system v4.0 (project-specific)
 
-2 were renamed to drop the Beamix suffix:
+2 were renamed to drop the Beamix suffix, and both exist:
 - `supabase-rls-beamix` → `supabase-rls-conventions`
 - `pgvector-rag-beamix` → `pgvector-rag-conventions`
 
-The skill MANIFEST at `.claude/skills/MANIFEST.json` was regenerated from the
-filesystem and is the discovery index — agents filter by tags rather than `ls | grep`.
+Note: 14 agent definitions kept referencing the dropped three under `agentvibe-` names long after they
+were gone, which is what made `schema-lint.js` fail 15 of 26 agents. Those references are now removed.
 
-If you delete/rename more skills, regenerate the manifest. The bundled
-`bin/init-from-template.sh` does not regenerate it; if you make structural skill
-changes, the regen pattern is in the script `Regenerating MANIFEST.json` section
-of the conversation that produced this kit (or write your own walk).
+The MANIFEST at `.claude/skills/MANIFEST.json` is the discovery index. **Generate it, never hand-edit
+it:** `node scripts/build-skills-manifest.mjs`. CI runs the same script with `--check` and fails when the
+manifest drifts from disk. Agents match a task against each entry's `name` and `description` — only 16 of
+147 entries carry `tags`, so tag-only filtering misses most of the library.
+
+If you delete or rename more skills, re-run `node scripts/build-skills-manifest.mjs`.
 
 ---
 
-## 6 — CI (not installed by default)
+## 6 — CI (installed)
 
-The Beamix kit shipped `.github/workflows/qa-lead-pass.yml` and `promptfoo-eval.yml`.
-They are staged in `new agents-skills-workflows-system/.github/workflows/` but not
-copied to `.github/` at the repo root, because the workflow references conventions
-(session-file frontmatter, label vocabulary) you should validate first.
+`.github/workflows/` contains two workflows:
 
-When ready:
+| Workflow | Posture | Runs |
+|----------|---------|------|
+| `ci.yml` | **BLOCKS** | schema-lint, gate-logic tests, registration-completeness, manifest drift check |
+| `qa-lead-pass.yml` | **SHADOW** | computes the QA verdict and logs `would_block`; never fails the build |
 
-```bash
-mkdir -p .github/workflows
-cp "new agents-skills-workflows-system/.github/workflows/"*.yml .github/workflows/
-```
+`qa-lead-pass.yml` requires a `QA-Lead PASS` comment on the PR, and nothing posts that comment
+automatically yet. It ships in shadow mode so the friction is measured before it is imposed; it is
+promoted to blocking in Phase 3 of the rebuild. `promptfoo-eval.yml` was **not** installed — it requires
+a `promptfoo/promptfoo.config.yaml` and an `apps/web/` directory that do not exist here.
 
-Then read both YAML files and confirm:
+Before promoting the QA gate, confirm:
 - Required GitHub labels (`risk:lite`, `risk:full`, `risk:irreversible`) exist in your repo settings
 - Required secrets are configured (Claude API key for the multi-judge step)
 - The session-file path convention (`docs/08-agents_work/sessions/`) matches your docs layout
@@ -154,10 +157,9 @@ Then read both YAML files and confirm:
 
 | Path | What it is |
 |------|------------|
-| `.archive/pre-beamix-bundle-2026-05-25/` | The pre-existing GSA Startup Kit (31 agents, 426 skills, 10 commands) — preserved verbatim. Use as reference, do not modify. |
-| `.archive/pre-beamix-bundle-2026-05-25/beamix-only-skills/` | The 3 Beamix-specific skills that were too project-bound to template. |
-| `new agents-skills-workflows-system/` | The raw Beamix bundle as imported (5.2 MB). Useful for diff or re-install. Safe to delete once you're confident in the installed `.claude/` + `.agent/`. |
-| `.claude/` and `.agent/` | The active agent system. Identical mirrors. |
+| `.claude/` | The active agent system — agents, skills, hooks, commands, workflows, memory. |
+| `.github/workflows/` | CI. `ci.yml` blocks; `qa-lead-pass.yml` runs in shadow mode. |
+| `docs/03-system-design/AGENT-SYSTEM-REBUILD.md` | The in-progress rebuild: design, 8 phases, gates. |
 | `CLAUDE.md` | Auto-loaded by Claude Code every session. |
 | `AGENTS.md` | Routing table. |
 
