@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// POSTURE: ADVISES — detached background spawn with unref(); the session never waits on it.
 // Check for GSA updates in background, write result to cache
 // Called by SessionStart hook - runs once per session
 

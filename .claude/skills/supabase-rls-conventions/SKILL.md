@@ -23,7 +23,7 @@ risk: low
 ## When NOT to use
 
 - For application-layer auth (that's Supabase Auth + middleware)
-- For pgvector RAG query patterns (see `pgvector-rag-agentvibe`)
+- For pgvector RAG query patterns
 
 ## Core RLS conventions
 

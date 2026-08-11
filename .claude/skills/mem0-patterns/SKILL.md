@@ -164,7 +164,6 @@ Inngest `mem0-retry` function drains this queue. Not implemented in MVP — fall
 
 ## See also
 
-- `pgvector-rag-agentvibe` — [[pgvector-rag-agentvibe]]
 - `anthropic-routines` — [[anthropic-routines]]
 - `agent-memory-systems` — [[agent-memory-systems]]
 

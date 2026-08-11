@@ -1,0 +1,50 @@
+# POSTURE: BLOCKS. Every check here is deterministic — it executes code and
+# compares the result to the repository, so a failure is a fact, not a judgment.
+#
+# This is the first workflow this repository has ever run. Before it, the QA gate
+# CLAUDE.md called "sacred" lived in a directory GitHub does not read, and
+# `schema-lint.js` — 360 correct lines with a blocking exit path — was registered
+# nowhere at all.
+#
+# The judged gate (qa-lead-pass.yml) deliberately does NOT block yet. See its header.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Deterministic checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Validates agent frontmatter, mandatory body sections, model IDs, maxTurns
+      # ranges, and every declared skill against MANIFEST.json.
+      - name: Agent schema lint
+        run: node .claude/hooks/schema-lint.js
+
+      # 23 tests over the QA verdict logic: severity eligibility, tier gating,
+      # confirmation parsing, finding caps. They passed all along; nothing ran them.
+      - name: Gate logic tests
+        run: node --test .claude/workflows/lib/gate-logic.test.mjs
+
+      # The skills MANIFEST is generated from disk. This fails if someone
+      # hand-edited it or added a skill without regenerating.
+      - name: Skills manifest matches disk
+        run: node scripts/build-skills-manifest.mjs --check
+
+      # Fabrication catcher: dead paths in governing docs, hooks registered to
+      # missing files, README counts that drifted, skills declared but absent.
+      - name: Registration completeness
+        run: node scripts/check-registration.mjs

@@ -60,7 +60,7 @@ mkdir -p ~/.agent
 mkdir -p ~/.claude/agents
 
 # Skills — symlink (stays in sync with updates)
-ln -sf <path-to-kit>/.agent/skills ~/.agent/skills
+ln -sf <path-to-kit>/.claude/skills ~/.claude/skills
 
 # Agents, Commands, Workflows — copy (or symlink)
 cp -r <path-to-kit>/.claude/agents/* ~/.claude/agents/
@@ -78,7 +78,7 @@ To use skills with `@skill-name` in Cursor:
 npx antigravity-awesome-skills --cursor --path ~/.cursor/skills
 ```
 
-Or symlink specific sub-directories from `.agent/skills/` to `~/.cursor/skills/`.
+Or symlink specific sub-directories from `.claude/skills/` to `~/.cursor/skills/`.
 
 ### Step 3: Global Rules for Cursor (optional)
 

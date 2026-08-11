@@ -41,12 +41,12 @@ Always start with CEO. CEO assembles the right team.
 
 ## Skills
 
-Agents load skills on demand via `.agent/skills/MANIFEST.json`.
+Agents load skills on demand via `.claude/skills/MANIFEST.json`.
 
 - `@brainstorming` — Design before coding
 - `@react-patterns` — React component patterns
 - `@api-design-principles` — API design
-- See [BUNDLES](../.agent/skills/docs/BUNDLES.md) for curated starter packs
+- See [BUNDLES](../.claude/skills/BUNDLES.md) for curated starter packs
 
 ## Key Files
 
@@ -55,4 +55,4 @@ Agents load skills on demand via `.agent/skills/MANIFEST.json`.
 | CLAUDE.md | Project context (auto-loaded by Claude Code) |
 | AGENTS.md | Full agent roster and routing table |
 | .claude/memory/DECISIONS.md | Architecture decision log |
-| .agent/skills/MANIFEST.json | Skills discovery index |
+| .claude/skills/MANIFEST.json | Skills discovery index |

@@ -38,7 +38,9 @@ See [AGENTS.md](AGENTS.md) for the full routing table and [.claude/agents/](.cla
 **Discovery — read MANIFEST.json, never `ls | grep`:**
 
 ```
-Step 1: Read .claude/skills/MANIFEST.json — filter `skills` array by `tags` matching task domain
+Step 1: Read .claude/skills/MANIFEST.json — match the task against each entry's `name` and
+        `description`. (`tags` are present on only 16 of 147 entries, so filtering by tag
+        alone silently misses most of the library.)
 Step 2: Load 3-5 matching SKILL.md files (CEO, C-suite, leads)
         Load 2-3 matching SKILL.md files (workers)
 ```
@@ -73,7 +75,7 @@ Memory:     Mem0 (primary) + Anthropic Memory Tool (auto-fallback after 3 retrie
 | `.claude/memory/CODEBASE-MAP.md` | Key files, patterns, tech debt | code-reviewer |
 | `.claude/memory/USER-INSIGHTS.md` | Customer language, pain phrases, JTBD | CMO + CPO (only authorized writers) |
 | `.claude/memory/LONG-TERM.md` | Cross-session facts: user prefs, recurring patterns | CEO after each session |
-| `.claude/memory/sessions/` | Lead session summaries (`YYYY-MM-DD-[lead]-[task].md`) | Each C-suite / Lead |
+| `docs/08-agents_work/sessions/` | Lead session summaries (`YYYY-MM-DD-[lead]-[task].md`) | Each C-suite / Lead |
 
 **Hard caps:** DECISIONS.md ≤ 50 entries (archive when full); LONG-TERM.md ≤ 100 lines; session summaries ≤ 10 lines each.
 
@@ -97,12 +99,17 @@ Every PR is risk-tiered. **No merge without QA-Lead PASS.** The CEO and CTO cann
 
 | Tier | Trigger | Review pipeline | Required label |
 |------|---------|-----------------|----------------|
-| **Trivial** | Typo, single-line, comment-only | Haiku schema-lint hook only (auto-pass) | none |
+| **Trivial** | Typo, single-line, comment-only | `.github/workflows/ci.yml` only (schema-lint + gate tests + registration check) | none |
 | **Lite** | Isolated feature, < 300 LOC, no API/DB/auth | code-reviewer + qa-engineer + semgrep | `risk:lite` |
 | **Full** | API/DB/auth/billing touched, ≥ 300 LOC | Lite + security-engineer + craft-reviewer + Codex CLI second opinion | `risk:full` |
 | **Irreversible** | DB migration, workflow file, agent definition, billing flow | Full + 2-of-3 multi-judge + Founder sign-off | `risk:irreversible` |
 
-Auto-classification: see [.claude/qa-tier-floor.yml](.claude/qa-tier-floor.yml). Enforced by [.github/workflows/qa-lead-pass.yml](.github/workflows/qa-lead-pass.yml) (not installed by default — copy from `.archive/pre-beamix-bundle-2026-05-25/` or the upstream bundle when you wire CI).
+Auto-classification: see [.claude/qa-tier-floor.yml](.claude/qa-tier-floor.yml).
+[.github/workflows/ci.yml](.github/workflows/ci.yml) is installed and **blocks** on schema-lint, the gate
+tests, and the registration check. [.github/workflows/qa-lead-pass.yml](.github/workflows/qa-lead-pass.yml)
+is installed in **shadow mode** — it computes the verdict and logs `would_block`, but does not fail the
+build. It is promoted to blocking in Phase 3, per
+[ADR-001](docs/03-system-design/adr/001-claim-ledger-as-enforcement-spine.md).
 
 ---
 
@@ -158,14 +165,26 @@ Auto-classification: see [.claude/qa-tier-floor.yml](.claude/qa-tier-floor.yml).
 
 ## Rules (All Agents)
 
-1. **Read before acting.** Glob/Grep before creating; check memory before deciding.
-2. **Own your domain.** Don't do another agent's work.
-3. **Source claims.** Researchers source; no agent invents data.
-4. **Leave breadcrumbs.** Append to DECISIONS.md when choices affect others.
-5. **Iterate, don't overwrite.** Understand existing code before replacing.
-6. **No placeholder UI.** Zero tolerance for stubs / TODOs in deliverables.
-7. **Worktrees for code.** Every code worker creates a worktree.
-8. **QA gate is sacred.** No merge without QA-Lead PASS + user confirmation.
+**Every rule names the mechanism that enforces it.** A rule enforced only by this sentence is a wish, not a
+rule — and this list previously had eight of them, zero enforced. `ENFORCED` rules fail something.
+`ADVISORY` rules are honest about having no mechanism yet; each names the phase that gives it one.
+
+| # | Rule | Mechanism |
+|---|------|-----------|
+| 1 | **Read before acting.** Glob/Grep before creating; check memory before deciding. | `ADVISORY` — no mechanism. Phase 3 (claim ledger) |
+| 2 | **Own your domain.** Don't do another agent's work. | `ADVISORY` — no mechanism. Phase 4 (`tools:` scoping) |
+| 3 | **Source claims.** No agent invents data. | `ADVISORY` in prose; **`ENFORCED`** for repo paths by `scripts/check-registration.mjs` (dead-path check). Phase 3 extends it to external sources |
+| 4 | **Leave breadcrumbs.** Append to DECISIONS.md when choices affect others. | `ADVISORY` — no mechanism. Phase 3 |
+| 5 | **Iterate, don't overwrite.** Understand existing code before replacing. | `ADVISORY` — no mechanism |
+| 6 | **No placeholder UI.** Zero tolerance for stubs / TODOs in deliverables. | `ADVISORY` — no mechanism. Phase 4 (review lenses) |
+| 7 | **Worktrees for code.** Every code worker creates a worktree. | **`ENFORCED`** (partial) — `.claude/hooks/schema-lint.js` warns when `isolation: worktree` lacks the worktree block |
+| 8 | **QA gate is sacred.** No merge without QA-Lead PASS + user confirmation. | **`SHADOW`** — `.github/workflows/qa-lead-pass.yml` computes the verdict and logs `would_block`. Promoted to blocking in Phase 3 |
+
+Additionally enforced, and blocking today: agent schema (`schema-lint.js`), QA verdict logic
+(`gate-logic.test.mjs`), skills manifest drift (`build-skills-manifest.mjs --check`), and registration
+completeness (`check-registration.mjs`) — all four run by [.github/workflows/ci.yml](.github/workflows/ci.yml).
+Dangerous shell and `.env`/migration writes are blocked in-session by
+[.claude/hooks/pre-tool-use.sh](.claude/hooks/pre-tool-use.sh) (`exit 2`).
 
 ---
 
@@ -229,5 +248,5 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
 ## Template Provenance
 
 Adopted from the Beamix agent system snapshot dated **2026-05-25**.
-Pre-template variant archived at [.archive/pre-beamix-bundle-2026-05-25/](.archive/pre-beamix-bundle-2026-05-25/).
+The pre-template variant was not preserved in this repo; recover it from git history if needed.
 See [TEMPLATE-USAGE.md](TEMPLATE-USAGE.md) for the placeholder list and first-run checklist.

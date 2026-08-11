@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# POSTURE: BLOCKS — exit 2 at L38 denies the tool call. The only mechanism in this repo that can
+# stop an action. Soft-warn rules deliberately exit 0 so the call proceeds.
 # PreToolUse safety gate — Agentvibe Phase 6 (2026-05-16)
 #
 # PURPOSE: Block genuinely dangerous commands and file edits before they run.

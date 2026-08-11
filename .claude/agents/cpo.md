@@ -278,7 +278,6 @@ Load these in addition to the defaults above when the task matches. Read with `R
 |---|---|
 | Positioning vs competitors | `competitive-landscape` |
 | Market sizing for a new initiative | `market-sizing-analysis` |
-| Writing customer-visible copy in a spec | `agentvibe-voice-canon` |
 | Decision needs an ADR | `architecture-decision-records` |
 
 ## Anti-patterns

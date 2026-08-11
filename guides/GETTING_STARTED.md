@@ -28,7 +28,7 @@ cd <repo-name>
 | Tool | How to Open |
 |------|-------------|
 | **Claude Code** | Open the folder; `CLAUDE.md` loads automatically |
-| **Antigravity** | Open the folder as workspace; skills load from `.agent/skills/` |
+| **Antigravity** | Open the folder as workspace; skills load from `.claude/skills/` |
 
 ### 3. Start Building
 

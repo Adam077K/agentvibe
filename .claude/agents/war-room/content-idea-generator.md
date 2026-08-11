@@ -25,7 +25,6 @@ skills:
   - copywriting
   - competitive-landscape
   - marketing-psychology
-  - agentvibe-voice-canon
   - humanizer
 ---
 

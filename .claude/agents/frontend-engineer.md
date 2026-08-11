@@ -13,7 +13,6 @@ mcpServers:
 skills:
   - react-patterns
   - nextjs-app-router-patterns
-  - agentvibe-brand-quality-bar
   - tailwind-design-system
   - radix-ui-design-system
   - react-ui-patterns

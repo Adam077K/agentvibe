@@ -22,7 +22,6 @@ mcpServers:
   - mem0
   - context7
 skills:
-  - agentvibe-scan-architecture
   - seo-content-writer
   - deep-research
   - competitive-landscape

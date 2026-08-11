@@ -1,0 +1,4 @@
+PRDs written by CPO land here. Referenced by .claude/commands/plan.md, so this
+directory must exist in the repository — git does not track empty directories,
+and check-registration.mjs fails when a governing doc names a path that a fresh
+clone does not have.

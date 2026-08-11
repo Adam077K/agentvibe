@@ -59,10 +59,6 @@
           {
             "type": "command",
             "command": "node .claude/hooks/gsa-context-monitor.js"
-          },
-          {
-            "type": "command",
-            "command": ".claude/hooks/post-edit-typecheck.sh"
           }
         ]
       }
@@ -73,6 +69,10 @@
           {
             "type": "command",
             "command": ".claude/hooks/stop.sh"
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/schema-lint.js"
           }
         ]
       }

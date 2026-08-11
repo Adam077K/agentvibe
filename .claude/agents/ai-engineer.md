@@ -12,7 +12,6 @@ mcpServers:
 skills:
   - prompt-engineering-patterns
   - llm-evaluation
-  - agentvibe-scan-architecture
   - llm-app-patterns
   - prompt-caching
   - agent-memory-systems
@@ -223,7 +222,6 @@ Load these in addition to the defaults above when the task matches. Read with `R
 
 | When you're doing this... | Load this skill |
 |---|---|
-| RAG retrieval / pgvector queries | `pgvector-rag-agentvibe` |
 | Mem0 read/write or memory schema work | `mem0-patterns` |
 | Choosing or migrating an embedding model | `embedding-strategies` |
 | Cron / scheduled agent (Anthropic Routine) | `anthropic-routines` |

@@ -150,7 +150,6 @@ function installClaude(targetDir, force, dryRun) {
 
   copyDir(path.join(src, 'agents'),        path.join(dest, 'agents'),        force, dryRun);
   copyDir(path.join(src, 'commands'),      path.join(dest, 'commands'),      force, dryRun);
-  copyDir(path.join(src, 'get-shit-done'), path.join(dest, 'get-shit-done'), force, dryRun);
   copyDir(path.join(src, 'hooks'),         path.join(dest, 'hooks'),         force, dryRun);
 
   copyFile(path.join(src, 'package.json'), path.join(dest, 'package.json'), force, dryRun);
@@ -161,31 +160,22 @@ function installClaude(targetDir, force, dryRun) {
   copyFile(path.join(PKG_DIR, 'AGENTS.md'),      path.join(targetDir, 'AGENTS.md'),      false, dryRun);
   copyFile(path.join(PKG_DIR, 'SKILLS_SOURCE.md'), path.join(targetDir, 'SKILLS_SOURCE.md'), false, dryRun);
 
-  // skills — placeholder dir; install 426+ skills here via antigravity-awesome-skills
+  // skills — placeholder dir; the library is installed separately (not bundled)
   const skillsDest = path.join(dest, 'skills');
   if (!dryRun) fs.mkdirSync(skillsDest, { recursive: true });
-  log.info(`Skills not bundled (55MB+). Install to .claude/skills/ with:`);
+  log.info(`Skills not bundled. Install to .claude/skills/ with:`);
   log.info(`  ${c.cyan}npx antigravity-awesome-skills --path ${skillsDest}${c.reset}`);
 
   // Empty memory templates
   const mem = path.join(dest, 'memory');
   const templates = [
     ['DECISIONS.md',   '# Architecture & Strategy Decisions\n\n*Updated by agents when making decisions that affect others.*\n\n---\n'],
-    ['CODEBASE-MAP.md','# Codebase Map\n\n*Updated by Scout after audits.*\n\n---\n'],
-    ['USER-INSIGHTS.md','# User Insights\n\n*Updated by Rex after user research.*\n\n---\n'],
+    ['CODEBASE-MAP.md','# Codebase Map\n\n*Updated by code-reviewer after audits.*\n\n---\n'],
+    ['USER-INSIGHTS.md','# User Insights\n\n*Updated by CMO and CPO after user research.*\n\n---\n'],
   ];
   for (const [file, content] of templates) {
     createTemplate(path.join(mem, file), content, dryRun);
   }
-}
-
-function installCursor(targetDir, force, dryRun) {
-  log.section('Cursor');
-  copyDir(
-    path.join(PKG_DIR, '.cursor', 'rules'),
-    path.join(targetDir, '.cursor', 'rules'),
-    force, dryRun
-  );
 }
 
 function installAntigravity(targetDir, force, dryRun) {
@@ -207,15 +197,11 @@ function installAntigravity(targetDir, force, dryRun) {
     force, dryRun, AGENT_PATH_MAP
   );
 
-  // workflows and rules — straight copy (referenced via .claude/ paths; Claude Code feature)
-  copyDir(path.join(PKG_DIR, '.agent', 'workflows'), path.join(dest, 'workflows'), force, dryRun);
-  copyDir(path.join(PKG_DIR, '.agent', 'rules'),     path.join(dest, 'rules'),     force, dryRun);
-
   // memory — empty templates (never overwrite existing)
   const memTemplates = [
     ['DECISIONS.md',    '# Architecture & Strategy Decisions\n\n*Updated by agents when making decisions that affect others.*\n\n---\n'],
-    ['CODEBASE-MAP.md', '# Codebase Map\n\n*Updated by Scout after audits.*\n\n---\n'],
-    ['USER-INSIGHTS.md','# User Insights\n\n*Updated by Rex after user research.*\n\n---\n'],
+    ['CODEBASE-MAP.md', '# Codebase Map\n\n*Updated by code-reviewer after audits.*\n\n---\n'],
+    ['USER-INSIGHTS.md','# User Insights\n\n*Updated by CMO and CPO after user research.*\n\n---\n'],
   ];
   for (const [file, content] of memTemplates) {
     createTemplate(path.join(dest, 'memory', file), content, dryRun);
@@ -239,7 +225,7 @@ ${c.bold}USAGE${c.reset}
 
 ${c.bold}TARGET${c.reset}
   ${c.cyan}--claude${c.reset}        Install for Claude Code  (.claude/)
-  ${c.cyan}--cursor${c.reset}        Install for Cursor       (.cursor/rules/)
+  ${c.cyan}--cursor${c.reset}        Install for Cursor       (.agent/)
   ${c.cyan}--antigravity${c.reset}   Install for Antigravity  (.agent/)
   ${c.cyan}--all${c.reset}           Install for all tools
 
@@ -281,9 +267,11 @@ async function runInteractive(targetDir) {
   const tool = toolMap[toolAnswer.trim().toLowerCase()] || 'all';
   const force = forceAnswer.trim().toLowerCase() === 'y';
 
-  if (tool === 'claude'      || tool === 'all') installClaude(targetDir,      force, false);
-  if (tool === 'cursor'      || tool === 'all') installCursor(targetDir,      force, false);
-  if (tool === 'antigravity' || tool === 'all') installAntigravity(targetDir, force, false);
+  if (tool === 'claude' || tool === 'all') installClaude(targetDir, force, false);
+  // Cursor and Antigravity share the `.agent/` layout — install it once.
+  if (tool === 'cursor' || tool === 'antigravity' || tool === 'all') {
+    installAntigravity(targetDir, force, false);
+  }
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -302,9 +290,11 @@ async function main() {
   if (interactive) {
     await runInteractive(targetDir);
   } else {
-    if (flags.claude)       installClaude(targetDir,      flags.force, flags.dryRun);
-    if (flags.cursor)       installCursor(targetDir,      flags.force, flags.dryRun);
-    if (flags.antigravity)  installAntigravity(targetDir, flags.force, flags.dryRun);
+    if (flags.claude) installClaude(targetDir, flags.force, flags.dryRun);
+    // Cursor and Antigravity share the `.agent/` layout — install it once.
+    if (flags.cursor || flags.antigravity) {
+      installAntigravity(targetDir, flags.force, flags.dryRun);
+    }
   }
 
   if (!flags.dryRun) {

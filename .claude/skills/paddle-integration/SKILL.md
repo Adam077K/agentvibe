@@ -157,7 +157,6 @@ trial_ends_at    timestamptz
 
 ## See also
 
-- `supabase-rls-agentvibe` — [[supabase-rls-agentvibe]]
 - `secrets-management` — [[secrets-management]]
 - `error-handling-patterns` — [[error-handling-patterns]]
 - `api-design-principles` — [[api-design-principles]]

@@ -12,7 +12,6 @@ mcpServers:
 skills:
   - postgresql
   - sql-optimization-patterns
-  - supabase-rls-agentvibe
   - database-design
   - nextjs-supabase-auth
   - sharp-edges

@@ -15,8 +15,12 @@ Thumbs.db
 # Git worktrees (agent isolated work branches)
 .worktrees/
 
-# Large skills backup directory (use .agent/skills/ instead)
+# Large skills backup directory (live skills are .claude/skills/)
 all_skills_stored/
+
+# Generated install output of war-room/dashboard/ — never edit here, edit the
+# source and re-run bin/install-war-room.sh
+war-room-dashboard/
 
 # Local Claude permissions (machine-specific)
 .claude/settings.local.json

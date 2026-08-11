@@ -124,3 +124,55 @@
 **Reversibility:** reversible
 **Owner:** ceo
 **Affects:** war-room dashboard, session history, all 13 projects
+
+## 2026-08-11 — Deterministic checks block; the judged QA gate ships in shadow
+
+**Context:** Phase 1 had to wire `qa-lead-pass.yml` (343 lines, 6 blocking exits) into a real
+`.github/workflows/`. It requires a `QA-Lead PASS` comment on the PR, and nothing in this repo posts that
+comment automatically.
+**Options considered:** Port it verbatim and let it block (gates every PR on ceremony, on the exact path the
+harness uses to rebuild itself — unpriced friction at maximum blast radius) / Ship only a new small
+deterministic workflow and defer the QA gate to Phase 3 (leaves the "sacred" gate still not running) /
+Port it in shadow mode alongside blocking deterministic checks.
+**Decision:** `ci.yml` **blocks** on schema-lint, the 23 gate-logic tests, manifest drift, and registration
+completeness — all objective, all executing code. `qa-lead-pass.yml` ships in **shadow**: full verdict
+computed and reported, `continue-on-error: true`, does not fail the build. Promotion is deleting one line.
+**Rationale:** The system had already decided this case — every gate ships in shadow before it blocks,
+unrecoverable actions excepted; a PR merge is revertible, so it is not one. The deterministic checks are the
+ones that would have caught 15 of 16 fabrications, so they are what should block.
+**Reversibility:** reversible (one line)
+**Owner:** ceo
+**Affects:** CI, the QA gate, Phase 3 promotion review
+
+## 2026-08-11 — "Rules ≤ 400" re-scoped to the governing set
+
+**Context:** Phase 1's stated exit criterion was ≤ 400 stated rules. Measured at execution time: 1,452, of
+which 601 live in `.claude/agents/**` and 569 in `.claude/skills/**`. Phase 1's deletions touch almost none
+of either.
+**Options considered:** Pull the roster collapse and skills curation into Phase 1 to hit the number (merges
+three phases and destroys the externally-verified-before-self-review property) / Drop the count criterion
+entirely (loses the only measure of prose bloat) / Re-scope to what Phase 1 controls.
+**Decision:** Phase 1 is accountable for the governing set — CLAUDE.md, AGENTS.md, `.claude/commands/` — now
+30 rules, each naming its enforcing mechanism or explicitly marked ADVISORY with the phase that will give it
+one. The ≤ 400 total moves to Phase 4 (roster) and Phase 7 (skills).
+**Rationale:** A criterion that cannot be met by the work it gates is not a gate. The intent behind ≤ 400 was
+that rules name mechanisms; that intent is now enforced where Phase 1 can enforce it.
+**Reversibility:** reversible
+**Owner:** ceo (founder agreed)
+**Affects:** Phase 1 exit criteria, Phase 4 and Phase 7 gates
+
+## 2026-08-11 — The enforcement diagnostic is corrected in place, never rewritten
+
+**Context:** Re-verifying the 16-fabrication list before repairing it found that **6 were not fabrications**
+and 7 of the diagnostic's numbers were wrong. It had pattern-matched where it claimed to have verified —
+breaking its own stated rule.
+**Options considered:** Silently rewrite the diagnostic to be correct (destroys the before-measurement every
+later phase diffs against) / Note corrections only in the session file (buries them) / Correct in place,
+preserving the original claim beside the verified truth.
+**Decision:** Corrections table added at the top of the diagnostic; original claims left unedited below.
+`scripts/check-registration.mjs` now performs these checks by execution on every PR.
+**Rationale:** The before-measurement must stay auditable, and an evidence file that quietly changes is worth
+less than one that shows its own error. The durable fix is not a better document — it is a script that runs.
+**Reversibility:** reversible
+**Owner:** ceo
+**Affects:** all later phase boundaries, which diff against this file

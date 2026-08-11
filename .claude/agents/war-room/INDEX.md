@@ -6,9 +6,15 @@ status: Phase 6B in progress — frontmatter locked, bodies being written
 
 # War Room — Agent Index
 
-**22 agents total: 12 Routines + 6 Worker templates + 4 Persona templates.**
+**25 agents total: 12 Routines + 6 Worker templates + 7 Persona templates.**
 
 Per the war-room governance decision: only the 12 Routines are provisioned in claude.ai. Workers + Personas are **Task subagent templates** invoked in interactive sessions, NOT standalone Routines. They need no `routine_id_env_key` / `routine_token_env_key` and no wrangler secrets.
+
+> **None of these agents can run in this repository as it stands.** 24 of the 25 reference Linear, Supabase
+> `audit_log`, Inngest, or Mem0. There is no MCP configuration anywhere in the repo — no `mcpServers` key in
+> `.claude/settings.json` and no `.mcp.json` — so every one of those integrations is unconfigured. They are
+> specifications awaiting wiring, not running automation. Rebuilding roughly three of them against real
+> integrations is Phase 6 of the rebuild; the rest are candidates for deletion.
 
 ---
 

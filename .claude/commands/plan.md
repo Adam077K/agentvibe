@@ -16,14 +16,14 @@ CEO reads LONG-TERM.md + DECISIONS.md, asks clarifying questions:
 - Are there existing specs or prior decisions to honor?
 - What complexity level: Quick / Medium / Complex?
 
-### Step 2 — Product Lead (if feature is vague)
-If the request is an idea without a spec, CEO dispatches Product Lead to write a PRD first:
+### Step 2 — CPO (if feature is vague)
+If the request is an idea without a spec, CEO dispatches CPO to write a PRD first:
 - Problem validation
 - RICE scoring
-- PRD with acceptance criteria written to `.claude/memory/specs/[name].md`
+- PRD with acceptance criteria written to `docs/04-product/specs/[name].md`
 
 ### Step 3 — Technical Breakdown
-Build Lead explores codebase and produces:
+CTO explores codebase and produces:
 - Task list with assigned workers
 - Wave ordering (parallel where possible, sequential where dependencies exist)
 - Worktree names for each task
@@ -55,5 +55,5 @@ CEO asks: "Ready to start? I'll kick off `/build [feature]` or you can review th
 
 ## Notes
 - Plan is not automatically executed — user decides when to start
-- Build Lead does the codebase exploration, not CEO
-- If PRD was written: it's saved to `.claude/memory/specs/` for reference
+- CTO does the codebase exploration, not CEO
+- If PRD was written: it's saved to `docs/04-product/specs/` for reference

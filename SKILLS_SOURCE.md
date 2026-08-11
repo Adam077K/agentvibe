@@ -3,21 +3,21 @@
 ## Source
 
 - **Upstream:** [sickn33/antigravity-awesome-skills](https://github.com/sickn33/antigravity-awesome-skills)
-- **Location:** `.agent/skills/`
+- **Location:** `.claude/skills/`
 
 ## Update Skills
 
 To pull the latest skills from upstream:
 
 ```bash
-cd .agent/skills
+cd .claude/skills
 git pull origin main
 ```
 
 Or reinstall via npx:
 
 ```bash
-npx antigravity-awesome-skills --path .agent/skills
+npx antigravity-awesome-skills --path .claude/skills
 ```
 
 ## Compatibility
@@ -29,4 +29,4 @@ Skills work with:
 - Gemini CLI
 - Codex CLI
 
-See [.agent/skills/docs/GETTING_STARTED.md](.agent/skills/docs/GETTING_STARTED.md) for tool-specific paths.
+See [.claude/skills/docs/GETTING_STARTED.md](.claude/skills/docs/GETTING_STARTED.md) for tool-specific paths.

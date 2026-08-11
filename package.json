@@ -1,19 +1,25 @@
 {
   "name": "gsa-startup-kit",
   "version": "1.1.0",
-  "description": "AI Agent Kit for Claude Code & Antigravity — 3-layer autonomous startup team (CEO, Leads, Workers) with 426+ expert skills",
+  "description": "AI Agent Kit for Claude Code & Antigravity — autonomous startup team (CEO, C-suite, Workers) with 147 expert skills",
   "bin": {
     "gsa-startup-kit": "bin/install.js"
+  },
+  "scripts": {
+    "check": "npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:registration",
+    "lint:agents": "node .claude/hooks/schema-lint.js",
+    "test:gate": "node --test .claude/workflows/lib/gate-logic.test.mjs",
+    "check:manifest": "node scripts/build-skills-manifest.mjs --check",
+    "check:registration": "node scripts/check-registration.mjs",
+    "build:manifest": "node scripts/build-skills-manifest.mjs"
   },
   "files": [
     "bin/",
     ".claude/agents/",
     ".claude/commands/",
-    ".claude/get-shit-done/",
     ".claude/hooks/",
     ".claude/package.json",
     ".claude/settings.json",
-    ".agent/",
     "docs/",
     "AGENTS.md",
     "CLAUDE.md",

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// POSTURE: ADVISES — cosmetic — renders the status line only.
 // Claude Code Statusline - GSA Edition
 // Shows: model | current task | directory | context usage
 

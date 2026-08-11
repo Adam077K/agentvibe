@@ -34,8 +34,8 @@ Security Engineer runs OWASP audit on all source files:
 
 Both Step 2 and 3 run in parallel.
 
-### Step 4 — QA Lead Synthesizes
-QA Lead aggregates all findings into prioritized report:
+### Step 4 — QA-Lead Synthesizes
+QA-Lead aggregates all findings into prioritized report:
 
 ```
 ## Codebase Audit — [Date]
@@ -64,5 +64,5 @@ QA Lead aggregates all findings into prioritized report:
 
 ## Notes
 - CODEBASE-MAP.md updated with current state after audit
-- QA Lead verdict: PASS (healthy, no critical issues) / NEEDS ATTENTION (critical issues found)
+- QA-Lead verdict: PASS (healthy, no critical issues) / NEEDS ATTENTION (critical issues found)
 - If Critical issues found: CEO recommends routing to `/fix` immediately
