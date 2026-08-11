@@ -233,6 +233,11 @@ function command(claim, opts = {}) {
   if (opts.skipCommands) {
     return result('claim-command', claim, 'unresolved', 'command execution disabled — this claim is unverified');
   }
+  // Belt and braces with resolversFor(): never shell out to nothing and call the result a
+  // failed command.
+  if (typeof ev.cmd !== 'string' || ev.cmd.trim() === '') {
+    return result('claim-command', claim, 'unresolved', 'this claim carries no evidence.cmd — the command resolver does not apply to it');
+  }
 
   let stdout = '';
   let stderr = '';
@@ -341,8 +346,21 @@ function resolversFor(claim, fileResolvers = []) {
   const own = VERIFIED_BY_RESOLVER[claim.verified_by];
   if (own) set.add(own);
   if (claim.scope === 'global' || claim.scope === 'project') set.add('claim-freshness');
+
+  // A resolver from the tier map is added only when the claim carries the evidence it
+  // needs. Without this, a `verified_by: judge` claim living under a path whose rule lists
+  // `claim-command` had the command resolver run against an absent `cmd` — it executed
+  // nothing and reported `exit 127, expected 0`, which reads as a real failure of a real
+  // command. A resolver that cannot apply must not produce a verdict that looks like it did.
+  const ev = claim.evidence || {};
+  const applicable = {
+    'claim-freshness': true,
+    'claim-command': typeof ev.cmd === 'string',
+    'claim-source': typeof ev.url === 'string',
+    'claim-judge': Array.isArray(ev.judged_by),
+  };
   for (const r of fileResolvers) {
-    if (RESOLVER_NAMES.includes(r)) set.add(r);
+    if (RESOLVER_NAMES.includes(r) && applicable[r]) set.add(r);
   }
   return [...set].sort();
 }

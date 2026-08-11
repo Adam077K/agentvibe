@@ -26,7 +26,13 @@ jobs:
     name: Deterministic checks
     runs-on: ubuntu-latest
     steps:
+      # fetch-depth: 0 is load-bearing. Lens provenance survives the Phase 4b deletions by
+      # citing git history (`git:<path>@<rev>`), and schema-lint verifies those with
+      # `git cat-file -e`. A shallow clone cannot resolve them, so the lint would fail for
+      # a reason the PR did not cause.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:

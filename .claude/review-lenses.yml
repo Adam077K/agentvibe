@@ -30,7 +30,7 @@ review_lenses:
     scope: diff-only
     independent: false
     model_families: [anthropic]
-    sources: [".claude/agents/code-reviewer.md"]
+    sources: ["git:.claude/agents/code-reviewer.md@cda6de9"]
 
   - id: security
     summary: "Is the change exploitable"
@@ -43,7 +43,7 @@ review_lenses:
     scope: diff-only
     independent: true
     model_families: [anthropic, openai]
-    sources: [".claude/agents/security-engineer.md", ".claude/agents/adversary-engineer.md"]
+    sources: ["git:.claude/agents/security-engineer.md@cda6de9", "git:.claude/agents/adversary-engineer.md@cda6de9"]
 
   - id: adversarial
     summary: "How would a hostile user weaponise this"
@@ -56,7 +56,7 @@ review_lenses:
     scope: diff-only
     independent: true
     model_families: [anthropic, openai]
-    sources: [".claude/agents/adversary-engineer.md"]
+    sources: ["git:.claude/agents/adversary-engineer.md@cda6de9"]
 
   - id: craft
     summary: "Does the rendered result meet the design system"
@@ -69,7 +69,7 @@ review_lenses:
     scope: rendered-output
     independent: false
     model_families: [anthropic]
-    sources: [".claude/agents/design-critic.md"]
+    sources: ["git:.claude/agents/design-critic.md@cda6de9"]
 
   - id: evidence
     summary: "Is every assertion in the change actually checked"
@@ -82,7 +82,7 @@ review_lenses:
     scope: diff-only
     independent: true
     model_families: [anthropic, openai]
-    sources: [".claude/agents/researcher.md", ".claude/agents/research-lead.md"]
+    sources: ["git:.claude/agents/researcher.md@cda6de9", "git:.claude/agents/research-lead.md@cda6de9"]
 
   - id: voice
     summary: "Does customer-facing copy sound like this company and like its customers"
@@ -95,7 +95,7 @@ review_lenses:
     scope: rendered-output
     independent: false
     model_families: [anthropic]
-    sources: [".claude/agents/cmo.md"]
+    sources: ["git:.claude/agents/cmo.md@cda6de9"]
 
   - id: accessibility
     summary: "Can this be used by someone not using it the way you do"
@@ -108,7 +108,7 @@ review_lenses:
     scope: rendered-output
     independent: false
     model_families: [anthropic]
-    sources: [".claude/agents/design-critic.md"]
+    sources: ["git:.claude/agents/design-critic.md@cda6de9"]
 
   - id: scope
     summary: "Did the change stay inside what was asked for"
@@ -120,4 +120,4 @@ review_lenses:
     scope: diff-only
     independent: false
     model_families: [anthropic]
-    sources: [".claude/agents/code-reviewer.md", ".claude/agents/security-engineer.md"]
+    sources: ["git:.claude/agents/code-reviewer.md@cda6de9", "git:.claude/agents/security-engineer.md@cda6de9"]

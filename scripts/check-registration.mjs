@@ -218,9 +218,18 @@ for (const cmd of listMd('.claude/commands')) {
 // Measured 2026-08-11: 44 agents live in ~/.claude/agents/. Eleven collide by name with a
 // repo agent and all eleven have drifted substantially. Project definitions shadow global
 // ones — verified by comparing a live session's loaded agent descriptions against both
-// copies — so the colliding ones are inert HERE and are the only copy in every other
-// project on the machine. Reconciling them changes ~14 projects at once, which is Phase 9's
-// job. This check exists so Phase 9 inherits a measured list instead of a surprise.
+// copies.
+//
+// CORRECTION, 2026-08-11. An earlier version of this comment said the colliding copies are
+// "the only copy in every other project on this machine". That was inferred, not checked,
+// and it is false: 14 of 16 projects under ~/VibeCoding carry their own .claude/agents/
+// and shadow the globals exactly as this repo does. The globals are live in TWO projects,
+// obsidian-claude-code-mcp and overstory, neither of which has a ceo or qa-lead of its own.
+// A wrong claim inside the fabrication catcher is worth correcting loudly.
+//
+// The hazard that matters is local: deleting a repo agent UN-SHADOWS its global twin, so
+// the name keeps working and quietly means the older definition. That is why Phase 4b left
+// shim files behind for these eleven names instead of deleting them outright.
 const globalAgentsDir = path.join(process.env.HOME || '', '.claude', 'agents');
 if (fs.existsSync(globalAgentsDir)) {
   const globalNames = fs.readdirSync(globalAgentsDir).filter((f) => f.endsWith('.md'));

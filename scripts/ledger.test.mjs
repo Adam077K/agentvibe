@@ -297,11 +297,35 @@ test('a task-scoped claim gets no freshness resolver', () => {
   assert.deepEqual(R.resolversFor(claim({ scope: 'task', verified_by: 'command' }), []), ['claim-command']);
 });
 
-test('tier-map resolvers are added to the claim\'s own', () => {
+test('tier-map resolvers are added to the claim\'s own — when the evidence supports them', () => {
+  // A claim carrying BOTH a cmd and a url legitimately gets both resolvers.
   assert.deepEqual(
-    R.resolversFor(claim({ verified_by: 'command' }), ['claim-source']),
+    R.resolversFor(claim({ verified_by: 'command', evidence: { cmd: 'true', url: 'https://x.test/' } }), ['claim-source']),
     ['claim-command', 'claim-freshness', 'claim-source']
   );
+});
+
+test('a tier-map resolver is skipped when the claim carries no evidence for it', () => {
+  // Regression. A `verified_by: judge` claim under docs/03-system-design/** — whose rule
+  // lists claim-command — had the command resolver run against an absent cmd. It executed
+  // nothing and reported "exit 127, expected 0", which reads as a real command failing.
+  const judgeClaim = claim({
+    verified_by: 'judge',
+    evidence: { lenses: ['x'], risk: 'low', judged_by: [] },
+  });
+  assert.deepEqual(R.resolversFor(judgeClaim, ['claim-command', 'claim-freshness']),
+    ['claim-freshness', 'claim-judge'], 'claim-command must not attach to a claim with no cmd');
+
+  const sourceClaimNoUrl = claim({ verified_by: 'command', evidence: { cmd: 'true' } });
+  assert.deepEqual(R.resolversFor(sourceClaimNoUrl, ['claim-source']),
+    ['claim-command', 'claim-freshness'], 'claim-source must not attach to a claim with no url');
+});
+
+test('the command resolver refuses to shell out to nothing', () => {
+  const r = R.command(claim({ verified_by: 'judge', evidence: { lenses: ['x'] } }), { cwd: REPO_ROOT });
+  assert.equal(r.status, 'unresolved');
+  assert.match(r.reason, /carries no evidence.cmd/);
+  assert.notEqual(r.status, 'fail', 'an inapplicable resolver must not look like a failed command');
 });
 
 test('an unknown resolver name throws — the registry is closed', async () => {

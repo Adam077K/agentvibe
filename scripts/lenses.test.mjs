@@ -47,7 +47,7 @@ lenses:
     refuses:
       - "a single-point projection"
     requires_claims: [external-fact]
-    sources: [".claude/agents/cbo.md"]
+    sources: ["git:.claude/agents/cbo.md@cda6de9"]
 `;
 
 const GOOD_REVIEW = `version: 1
@@ -61,7 +61,7 @@ review_lenses:
     scope: diff-only
     independent: false
     model_families: [anthropic]
-    sources: [".claude/agents/code-reviewer.md"]
+    sources: ["git:.claude/agents/code-reviewer.md@cda6de9"]
 `;
 
 // ── The live files ──────────────────────────────────────────────────────────
@@ -141,12 +141,27 @@ test('a lens with no refuses is refused — the anti-patterns are where the expe
 // ── Provenance ──────────────────────────────────────────────────────────────
 
 test('a lens citing a source that does not exist is refused', () => {
-  const bad = GOOD_DOMAIN.replace('".claude/agents/cbo.md"', '".claude/agents/chief-vibes-officer.md"');
+  const bad = GOOD_DOMAIN.replace('"git:.claude/agents/cbo.md@cda6de9"', '".claude/agents/chief-vibes-officer.md"');
   assert.match(lintYaml(bad, 'domain').join('\n'), /does not exist/);
 });
 
+test('a lens citing a git revision that does not contain the file is refused', () => {
+  // Provenance survives deletion by pointing into history — but only real history.
+  const bad = GOOD_DOMAIN.replace('git:.claude/agents/cbo.md@cda6de9', 'git:.claude/agents/never-existed.md@cda6de9');
+  assert.match(lintYaml(bad, 'domain').join('\n'), /does not resolve in git history/);
+});
+
+test('a lens citing a SHIM is refused — a shim holds no expertise', () => {
+  // Fired on eight real lenses the moment Phase 4b turned their sources into shims.
+  // A 24-line file that points at an engine is not where the procedure came from.
+  const bad = GOOD_DOMAIN.replace('"git:.claude/agents/cbo.md@cda6de9"', '".claude/agents/ceo.md"');
+  const issues = lintYaml(bad, 'domain');
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /is a shim and holds no expertise/);
+});
+
 test('a lens with no sources at all is refused', () => {
-  const bad = GOOD_DOMAIN.replace(/    sources: \[".claude\/agents\/cbo.md"\]\n/, '');
+  const bad = GOOD_DOMAIN.replace(/    sources: \["git:.claude\/agents\/cbo.md@cda6de9"\]\n/, '');
   assert.match(lintYaml(bad, 'domain').join('\n'), /sources is required/);
 });
 
