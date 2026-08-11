@@ -7,7 +7,8 @@
   },
   "scripts": {
     "check": "npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:registration && npm run check:warroom",
-    "check:warroom": "bash -n bin/warroom && node --check scripts/warroom-install.mjs && bash -n scripts/warroom-parity.sh",
+    "check:warroom": "bash -n bin/warroom && node --check scripts/warroom-install.mjs && bash -n scripts/warroom-parity.sh && npm run test:warroom",
+    "test:warroom": "node --test scripts/warroom-install.test.mjs",
     "warroom:fleet": "node scripts/warroom-install.mjs fleet",
     "warroom:check": "node scripts/warroom-install.mjs check",
     "lint:agents": "node .claude/hooks/schema-lint.js",

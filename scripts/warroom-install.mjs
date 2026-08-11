@@ -344,11 +344,32 @@ function cmdRollback(session) {
   }
   for (const b of rec.backups) {
     fs.copyFileSync(b.stored, b.origin);
-    // Older manifests predate mode recording; there copyFileSync truncates in
-    // place and the destination keeps its own mode, which is why rollback
-    // still worked before this was fixed.
     if (b.mode) fs.chmodSync(b.origin, b.mode);
-    console.log(`  ✓ restored ${b.origin} from ${b.id}${b.mode ? ` (mode ${(b.mode & 0o777).toString(8)})` : ''}`);
+
+    // Self-heal an unexecutable script.
+    //
+    // Two ways a backup ends up holding a mode that cannot run:
+    //   - it was taken before mode was recorded at all, and on macOS
+    //     copyFileSync uses fcopyfile, which copies the SOURCE's metadata —
+    //     so the stored 0644 lands on the destination;
+    //   - it faithfully captured an origin that was already broken.
+    //
+    // Both happened here, in that order. warroom manages exactly two kinds of
+    // file and both are executables, so restoring a shebang script without an
+    // execute bit is never the intent — it just hands back something the shell
+    // refuses to run.
+    const mode = fs.statSync(b.origin).mode & 0o777;
+    const isScript = fs.readFileSync(b.origin).subarray(0, 2).toString() === '#!';
+    let healed = false;
+    if (isScript && !(mode & 0o111)) {
+      fs.chmodSync(b.origin, mode | 0o111);
+      healed = true;
+    }
+    const shown = (fs.statSync(b.origin).mode & 0o777).toString(8);
+    console.log(`  ✓ restored ${b.origin} from ${b.id} (mode ${shown})`);
+    if (healed) {
+      console.log(`    ⚠ backup recorded mode ${mode.toString(8)} — not executable. Restored with +x so the launcher runs.`);
+    }
   }
   delete m.installs[session];
   writeManifest(m);

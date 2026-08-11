@@ -49,13 +49,16 @@ jobs:
       - name: Registration completeness
         run: node scripts/check-registration.mjs
 
-      # The launcher every project starts from. A syntax error here means no
-      # session can start, so it is checked on every PR.
+      # The launcher every project starts from, plus the install/rollback guard
+      # rails. Syntax, then 11 tests that run the installer against a temporary
+      # HOME — including the regression for a backup restored without its
+      # executable bit, which shipped because the manual pass never constructed
+      # the mismatch it needed.
       #
       # NOTE: scripts/warroom-parity.sh proves byte-identical behaviour against
       # the standalone launcher it replaces, but that launcher lives in ~/bin
       # and does not exist on a CI runner. Parity is therefore verified locally
-      # and recorded in the PR; CI verifies syntax only. This limit is stated
-      # rather than papered over.
-      - name: Warroom launcher syntax
+      # and recorded in the PR; CI covers syntax and the guard rails. This limit
+      # is stated rather than papered over.
+      - name: Warroom launcher + install guard rails
         run: npm run check:warroom
