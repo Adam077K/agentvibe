@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | Accepted · **Phase 1 complete** ([PR #1](https://github.com/Adam077K/agentvibe/pull/1)) · Phase 2 not started |
+| **Status** | Accepted · **Phases 1 and 2 complete** · Phase 3 next — see [PHASE-3-HANDOFF.md](PHASE-3-HANDOFF.md) |
 | **Date** | 2026-08-11 |
 | **Owner** | ceo |
 | **Evidence** | [2026-08-11-ENFORCEMENT-DIAGNOSTIC.md](../06-codebase/2026-08-11-ENFORCEMENT-DIAGNOSTIC.md) |
@@ -19,13 +19,22 @@ launch environment · entry prompts · roster · skills · commands & playbooks 
 observability · automation · integrations · distribution across a **13-project fleet** · human interface.
 
 A measured diagnostic found the system's documentation describes a machine that does not exist, and its
-distribution mechanism is copy-paste. Headline: **~1,736 stated imperative rules, 1 mechanism that can block,
-16 verified fabrications, 5 launcher generations across 13 projects.** Full evidence in the diagnostic.
+distribution mechanism is copy-paste. Headline **as originally reported**: ~1,736 stated imperative rules,
+1 mechanism that can block, 16 verified fabrications, 5 launcher generations across 13 projects.
+
+> **Corrected during execution — the diagnostic was wrong in seven places.** Re-verified: **1,452 rules**
+> (its own reproduce script never yielded 1,736), **9 real fabrications** of the 16 reported (six were
+> miscounts, one was resolved by probe), and **8 launcher generations across 15 launchers**, not 5 across 13.
+> The direction was right and every corrected number is worse or larger, not better. Corrections are recorded
+> in place in [the diagnostic](../06-codebase/2026-08-11-ENFORCEMENT-DIAGNOSTIC.md) and
+> [the fleet baseline](../06-codebase/2026-08-11-FLEET-BASELINE.md). **Treat any number in this document that
+> post-dates neither file as unverified.**
 
 Five findings shape everything below.
 
-1. **The QA gate has never run.** `qa-lead-pass.yml` — 176 lines, 4 blocking `exit 1`s — lives in a directory
-   GitHub does not read. There is no `.github/` at the repo root. The gate CLAUDE.md calls sacred does not exist.
+1. **The QA gate has never run.** `qa-lead-pass.yml` — **343 lines, 6 blocking `exit 1`s** (not the 176/4
+   originally reported) — lived in a directory GitHub does not read. *Resolved in Phase 1: it now runs on
+   every PR in shadow mode. Phase 3 promotes it to blocking.*
 2. **The best asset is unwired.** `schema-lint.js` — 360 lines, correct, blocking — is registered nowhere. Run
    today it exits 1: 11 pass, 15 fail.
 3. **The system is code-shaped; the work is not.** The target is *any* venture work. A verdict bound to a
@@ -302,7 +311,7 @@ Add ~6 namespace router skills so the discovery tier stops growing linearly.
 |---|---|---|
 | 1 | **Subtract and wire** · *externally verified* — ✅ **DONE** | ~~Rules ≤ 400~~ *(re-scoped — see below)* · blocking mechanisms ≥ 4 → **5** · fabrications = 0 → **0** · schema-lint exit 0 → **✅** · one PR observed RED then GREEN → **✅ runs `31505991227` → `31506094985`** |
 | 2 | **Fleet machinery** — ✅ **DONE** (`agentvibe` only, no rollout) | Launcher behaviour unchanged on `agentvibe` → **verified live, byte-identical to the backed-up original** · `.warroom.yml` extracted (3 values) · manifest / backup / hard-link refusal / rollback **each verified by executing the failure** · read-only fleet scan reports **12 in scope, 5 generations**. No other project written to. [FLEET-BASELINE.md](../06-codebase/2026-08-11-FLEET-BASELINE.md) |
-| 3 | **Spine** — claims, resolvers, ledger, shadow mode | Dead URL + expired `valid_until` both fire as `would_block`; `ledger rebuild` byte-identical from clean clone |
+| 3 | **Spine** — claims, resolvers, ledger, shadow mode — *next* | Dead URL + expired `valid_until` both fire as `would_block`; `ledger rebuild` byte-identical from clean clone; **`qa-lead-pass.yml` promoted to blocking with one PR observed red then green under it**. Handoff: [PHASE-3-HANDOFF.md](PHASE-3-HANDOFF.md) |
 | 4 | **Roster collapse** — 7 engines + lenses | schema-lint exit 0 across 7 files; single-model "independent" panel fails the lint; read-only engine cannot write, verified by attempt |
 | 5 | **Playbooks** | Six seed playbooks lint clean; `/build` `/ship` `/design` `/research` are invocations, not prose |
 | 6 | **Reader, budgets, stall detection, routines** | Stall escalates instead of looping; ceiling fires *before* dispatch with a named reason; stale reader stamp warns at session start |
