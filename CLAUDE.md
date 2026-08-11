@@ -165,14 +165,26 @@ build. It is promoted to blocking in Phase 3, per
 
 ## Rules (All Agents)
 
-1. **Read before acting.** Glob/Grep before creating; check memory before deciding.
-2. **Own your domain.** Don't do another agent's work.
-3. **Source claims.** Researchers source; no agent invents data.
-4. **Leave breadcrumbs.** Append to DECISIONS.md when choices affect others.
-5. **Iterate, don't overwrite.** Understand existing code before replacing.
-6. **No placeholder UI.** Zero tolerance for stubs / TODOs in deliverables.
-7. **Worktrees for code.** Every code worker creates a worktree.
-8. **QA gate is sacred.** No merge without QA-Lead PASS + user confirmation.
+**Every rule names the mechanism that enforces it.** A rule enforced only by this sentence is a wish, not a
+rule — and this list previously had eight of them, zero enforced. `ENFORCED` rules fail something.
+`ADVISORY` rules are honest about having no mechanism yet; each names the phase that gives it one.
+
+| # | Rule | Mechanism |
+|---|------|-----------|
+| 1 | **Read before acting.** Glob/Grep before creating; check memory before deciding. | `ADVISORY` — no mechanism. Phase 3 (claim ledger) |
+| 2 | **Own your domain.** Don't do another agent's work. | `ADVISORY` — no mechanism. Phase 4 (`tools:` scoping) |
+| 3 | **Source claims.** No agent invents data. | `ADVISORY` in prose; **`ENFORCED`** for repo paths by `scripts/check-registration.mjs` (dead-path check). Phase 3 extends it to external sources |
+| 4 | **Leave breadcrumbs.** Append to DECISIONS.md when choices affect others. | `ADVISORY` — no mechanism. Phase 3 |
+| 5 | **Iterate, don't overwrite.** Understand existing code before replacing. | `ADVISORY` — no mechanism |
+| 6 | **No placeholder UI.** Zero tolerance for stubs / TODOs in deliverables. | `ADVISORY` — no mechanism. Phase 4 (review lenses) |
+| 7 | **Worktrees for code.** Every code worker creates a worktree. | **`ENFORCED`** (partial) — `.claude/hooks/schema-lint.js` warns when `isolation: worktree` lacks the worktree block |
+| 8 | **QA gate is sacred.** No merge without QA-Lead PASS + user confirmation. | **`SHADOW`** — `.github/workflows/qa-lead-pass.yml` computes the verdict and logs `would_block`. Promoted to blocking in Phase 3 |
+
+Additionally enforced, and blocking today: agent schema (`schema-lint.js`), QA verdict logic
+(`gate-logic.test.mjs`), skills manifest drift (`build-skills-manifest.mjs --check`), and registration
+completeness (`check-registration.mjs`) — all four run by [.github/workflows/ci.yml](.github/workflows/ci.yml).
+Dangerous shell and `.env`/migration writes are blocked in-session by
+[.claude/hooks/pre-tool-use.sh](.claude/hooks/pre-tool-use.sh) (`exit 2`).
 
 ---
 

@@ -11,6 +11,37 @@ decision paths — not by pattern-matching. Each is marked **VERIFIED** (file op
 
 ---
 
+## Corrections — recorded 2026-08-11 during Phase 1 execution
+
+**This diagnostic broke its own rule in seven places.** Where it says VERIFIED below, some numbers were in
+fact produced by pattern-matching, and re-checking them against the implementing file changed the answer.
+The original claims are left in place unedited so the before-measurement stays auditable; each is corrected
+here.
+
+| # | Original claim | Verified truth | How it was found |
+|---|---|---|---|
+| §3.1 | 12 GSD execution agents "all 12 missing repo-wide" | All 12 exist in `~/.claude/agents/`, which the runtime searches alongside `.claude/agents/`. **Not a fabrication** — an environment dependency a fresh clone will not have | listed the global agent dir |
+| §3.2 | 6 Lead agent files missing | All 6 exist in `~/.claude/agents/`. The real defect was different: `AGENTS.md` declares the 9-lead model retired and then routes to those leads anyway | same |
+| §3.3 | `/build` dispatches three Leads that "none exist" | Same as above. Real defect: the commands contradicted the retirement note | same |
+| §3.4 | README's "51 `.md`" agents wrong; actual 26/60 | 26 top-level + 25 war-room = **51. Correct as written.** The "60" counted the 9 `_seeds` orphans | counted both directories |
+| §3.5 | "147 skills" wrong; 143 SKILL.md, MANIFEST claims 154 | **147 is correct** — the unique-skill count. 154 counted 7 self-nested directories twice. 143 was a `maxdepth` artifact | `find` at full depth, then dedupe by name |
+| §3.6 | MANIFEST lists 4 `aws-*` skills with no directory | All 4 existed at `.claude/skills/security/aws-*/`. **All 154 paths resolved.** Now flattened to top level, and the runtime discovers them | `os.path.isfile` on every manifest path |
+| §4 | `qa-lead-pass.yml` is 176 lines with 4 blocking `exit 1`s | **343 lines, 6 `exit 1`s**, and it reads a `CONNECTIONS.md` that exists nowhere | `wc -l`, `grep -n` |
+
+Two further defects the diagnostic missed entirely:
+
+- **Every one of MANIFEST's 154 paths pointed into `.agent/skills/`** — the directory this diagnostic
+  recommended deleting. Deleting it first would have broken the skills system in the same commit.
+- **`AGENTS.md`'s model column disagreed with the agent files in 7 rows**, not the 1 reported. Two cited
+  "Opus 4.6", which is not in `schema-lint.js`'s `VALID_MODELS` at all.
+
+**Net: of 16 reported fabrications, 6 were not fabrications, 9 were real, and 1 (nested spawn) was resolved
+by probe.** The lesson is the one this file already states and did not follow: a count produced by
+pattern-matching is a hypothesis. `scripts/check-registration.mjs` now performs these checks by execution on
+every PR, which is the only durable fix.
+
+---
+
 ## Headline
 
 | Measure | Reference system | **This system** | Mark |
@@ -143,21 +174,66 @@ hence five generations and nine `.bak.<timestamp>` files, three of which lost th
 
 ---
 
+## After Phase 1 — measured 2026-08-11
+
+| Measure | Before | After | Mark |
+|---|---|---|---|
+| Mechanisms that can block | **1** | **5** | VERIFIED (each file opened, exit path read) |
+| CI runs executed, ever | **0** | every PR | VERIFIED (`gh run list`) |
+| `schema-lint.js` | exit 1 — 11 pass / 15 fail, registered nowhere | exit 0 — 26 pass / 0 fail, in CI + Stop hook + npm | VERIFIED |
+| `gate-logic.mjs` 23 tests | passing, run by nothing | run on every PR | VERIFIED |
+| Real fabrications | **9** (of 16 reported) | **0** | VERIFIED — 6 were miscounts, 1 resolved by probe |
+| Tracked files | 2,290 | 644 | VERIFIED (`git ls-files`) |
+| Rules in the governing set | — | **30** | VERIFIED (CLAUDE.md + AGENTS.md + commands) |
+| Rules, full scope | ~1,452 | 1,353 | ESTIMATED (grep) |
+
+**The blocking five,** each verified by opening the file and reading its exit path:
+`pre-tool-use.sh` (`exit 2`) · `schema-lint.js` (`exit 1`) · `gate-logic.test.mjs` (nonzero on failure) ·
+`build-skills-manifest.mjs --check` (`exit 1`) · `check-registration.mjs` (`exit 1`). The last four block
+through [.github/workflows/ci.yml](../../.github/workflows/ci.yml).
+
+**Rules ≤ 400 was not met and was not attempted.** It is unreachable by Phase 1's own work: 601 of the
+1,353 remaining imperatives live in `.claude/agents/**` (collapsed in Phase 4) and 569 in
+`.claude/skills/**` (curated in Phase 7). Phase 1's deletions touch almost none of it. The criterion was
+re-scoped, with the founder's agreement, to the governing set Phase 1 controls — **30 rules, every one now
+naming its mechanism or marked ADVISORY with the phase that will give it one** (see CLAUDE.md § Rules).
+The ≤ 400 total moves to Phases 4 and 7.
+
+**Proof of the gate.** PR #1: run `31505991227` **failed** (sha `a72ac4e`), run `31506094985` **passed**
+(sha `d82d517c`). The red was not staged — `check-registration.mjs` caught `docs/04-product/specs/`
+existing locally as an untracked empty directory and therefore absent from a fresh clone. The local run
+passed; CI did not.
+
+---
+
 ## How to reproduce
 
-Re-run at each phase boundary and diff against this file. Phase 1 exit criteria: stated rules ≤ 400 ·
-blocking mechanisms ≥ 4 · fabrications = 0 · `schema-lint` exit 0 · CI executes code on every PR.
+Re-run at each phase boundary and diff against this file.
+
+**The reproduce script below did not reproduce the headline number** it was published with: it yielded
+1,433 against a stated ~1,736 because it omitted `war-room/`, `README.md` and `TEMPLATE-USAGE.md`, which
+the §1 table includes. The scope is corrected below. Phase 1 exit criteria as executed: governing-set rules
+each naming a mechanism · blocking mechanisms ≥ 4 · fabrications = 0 · `schema-lint` exit 0 · CI executes
+code on every PR · one PR observed red then green.
 
 ```bash
-# 1 · stated rules
+# 1 · stated rules — full scope, matching the §1 table (war-room and root docs included)
 grep -rEc "always|never|must|MUST|DO NOT|required|before any" \
-  CLAUDE.md AGENTS.md .claude/agents .claude/skills .claude/commands docs | awk -F: '{s+=$2} END {print s}'
+  CLAUDE.md AGENTS.md README.md TEMPLATE-USAGE.md \
+  .claude/agents .claude/skills .claude/commands docs war-room \
+  2>/dev/null | awk -F: '{s+=$2} END {print "full scope:", s}'
+
+# 1b · governing set — the subset Phase 1 is accountable for
+grep -rEc "always|never|must|MUST|DO NOT|required|before any" \
+  CLAUDE.md AGENTS.md .claude/commands 2>/dev/null | awk -F: '{s+=$2} END {print "governing:", s}'
 
 # 2 · mechanisms that can block — open each and read the exit path. Do not grep for this.
-grep -rl "exit 2\|process.exit(1)\|decision.*block" .claude/hooks .github/workflows 2>/dev/null
+#     Expected 5: pre-tool-use.sh, schema-lint.js, gate-logic.test.mjs,
+#     build-skills-manifest.mjs --check, check-registration.mjs
+grep -rl "exit 2\|process.exit(1)\|exit 1" .claude/hooks scripts .github/workflows 2>/dev/null
 
-# 3 · the linter that gates the agent roster
-node .claude/hooks/schema-lint.js; echo "exit=$?"
+# 3 · everything CI enforces, run exactly as CI runs it
+npm run check; echo "exit=$?"
 
 # 4 · fleet drift
 for p in acme adamos aiclub beamix beeond etsyc evalove finfun ghostb noam-website realestate agentvibe; do
