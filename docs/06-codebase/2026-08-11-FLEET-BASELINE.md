@@ -1,7 +1,7 @@
 # Fleet Baseline — 2026-08-11
 
-**Purpose:** the verified before-measurement for **Phase 2 (Fleet: one program, many configs)**, and the
-readiness brief for starting it.
+**Purpose:** the verified before-measurement for the fleet work — **Phase 2** (build the machinery on
+`agentvibe`) and **Phase 9** (roll it out) — and the readiness brief for starting Phase 2.
 
 **Why this file exists.** Phase 2's numbers came from
 [the enforcement diagnostic](2026-08-11-ENFORCEMENT-DIAGNOSTIC.md), and Phase 1 found **seven of that
@@ -58,10 +58,9 @@ entry preamble, agent lists, project config. The launcher is a universal program
 project data compiled into it, distributed as 100% copy.
 
 `hitstampjavagame` (35 fn) and `test1` (33 fn) are not forks — they are **earlier generations that never
-received an update**, which is the same disease at a later stage. `test1` looks like a scratch project;
-confirm before spending effort on it.
+received an update**, which is the same disease at a later stage. Both are out of scope (§4b).
 
-## 3 · The `adamos` fork (VERIFIED — needs a verdict in Phase 2)
+## 3 · The `adamos` fork (VERIFIED — **excluded from scope**, no verdict required)
 
 Renames the core abstraction CEO → **CATO** and **deletes worktree isolation entirely**.
 
@@ -70,8 +69,9 @@ Renames the core abstraction CEO → **CATO** and **deletes worktree isolation e
 - **Added (3):** `inject_cato_prompt()` · `register_cato()` · `clear_cato_state()`
 
 Shipped 27 Jul with no record of whether it worked. Deleting worktree isolation is not a small opinion —
-worktrees are what make parallel agent streams safe. **Adopt, revert, or document.** An unrecorded
-architectural fork is a lapsed commitment.
+worktrees are what make parallel agent streams safe. ~~Adopt, revert, or document.~~ **Founder decision
+2026-08-11: leave it as-is.** It is out of scope, and recorded here only so the fork is not rediscovered as
+a surprise later.
 
 ## 4 · Distribution state (VERIFIED)
 
@@ -83,7 +83,7 @@ architectural fork is a lapsed commitment.
 | No per-project config file | No `.warroom.yml` anywhere |
 | Backups accumulating unmanaged | 12 `.bak.<timestamp>` files in `~/bin/` |
 
-Phase 2 is greenfield on the target side: nothing to migrate off, only the 15 copies to converge.
+Phase 2 is greenfield on the target side: nothing to migrate off. Phase 2 builds the machinery on `agentvibe`; the 12 copies converge in Phase 9.
 
 ---
 
@@ -131,11 +131,16 @@ rather than assumed.
 |---|---|---|
 | 1 | **Extract the preamble verbatim first; converge its content in a separate diff.** | Phase 2 stays a behaviour-preserving refactor. Each project's existing preamble moves to `.claude/entry/<role>.md` unchanged, so a regression is unambiguously the mechanism. The falsified nesting constraint and retired leads are fixed in a second, reviewable change |
 | 2 | **The program's source of truth is `bin/warroom` in this repo**, installed to `~/.warroom/bin/`. | The fleet's single point of failure comes under the enforcement Phase 1 built — `npm run check`, schema-lint and the registration test gate every change, and CI runs on every PR |
-| 3 | **Rollout: `agentvibe` → one pilot project → all 10 remaining at once.** | The pilot catches what `agentvibe`'s dev-repo status hides, then convergence completes in a single pass |
+| 3 | **Rollout: `agentvibe` → one pilot project → all 10 remaining at once**, executed in **Phase 9, after all 8 phases are complete.** | The pilot catches what `agentvibe`'s dev-repo status hides. Deferring to the end means one propagation of a finished system rather than seven of intermediate ones |
+| 4 | **No project except `agentvibe` is written to before Phase 9.** | Phase 2 builds the propagation machinery and proves it on `agentvibe` alone. The check-only pass across the other 11 is read-only |
 
-**Still open:** which project is the pilot. It should come from generation E — that cohort is 7 of the 12 and
-differs from `agentvibe` by 39 lines, so it exercises a real delta. `evalove` is a poor pilot precisely
-because it is byte-identical to `agentvibe` and would prove nothing.
+**Deferred, not open:** the pilot project is chosen at the start of Phase 9, not now. It should come from
+generation E — that cohort is 7 of the 12 and differs from `agentvibe` by 39 lines, so it exercises a real
+delta. `evalove` is a poor pilot precisely because it is byte-identical to `agentvibe` and would prove nothing.
+
+**The cost of deferring, stated plainly:** 11 projects run the old launcher for the whole rebuild and keep
+drifting while it runs. Re-run the reproduce script monthly; **if the generation count rises, the price of
+waiting is going up** and the decision should be revisited (stop condition 5b).
 
 ---
 
