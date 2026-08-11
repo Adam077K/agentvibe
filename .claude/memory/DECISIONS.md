@@ -193,3 +193,50 @@ are exactly the ones nobody remembers to update. Cost of checking: one read-only
 **Owner:** ceo
 **Affects:** Phase 2 scope, stop condition #5 (five → eight generations), `newproject`, all 15 launchers
 **See:** [FLEET-BASELINE.md](../../docs/06-codebase/2026-08-11-FLEET-BASELINE.md)
+
+## 2026-08-11 — Phase 2 scope: 12 launchers; adamos, test1, hitstampjavagame excluded
+
+**Context:** The verified fleet baseline found 15 launchers on 8 generations. Three were outliers: `adamos`
+(CEO→CATO fork with worktree isolation deleted, 1,029 differing lines) and `test1`/`hitstampjavagame`
+(ancient generations, 33 and 35 functions).
+**Options considered:** Converge all 15 / Give `adamos` a verdict then converge / Exclude the three outliers.
+**Decision (founder):** **Leave all three untouched.** No `adamos` verdict is required — it is neither
+converged, reverted, nor further documented. Phase 2's scope is the remaining **12 launchers, 5 generations**.
+**Rationale:** Removes the riskiest target — `adamos` was the only launcher whose convergence would have meant
+re-introducing an abstraction someone deliberately deleted — and the two ancient generations are not worth
+porting. The remaining 12 are homogeneous: 11 of 12 share an identical 47-function set.
+**Reversibility:** reversible (they can be converged later)
+**Owner:** founder
+**Affects:** Phase 2 scope, stop condition #5, `newproject`
+
+## 2026-08-11 — Phase 2 sequencing: extract verbatim, repo-owned program, pilot then all
+
+**Context:** Three sequencing choices had to be made before touching the launcher every project starts from.
+**Decision (founder), three parts:**
+1. **Extract the `CEO_PREAMBLE` verbatim first; converge its content separately.** Phase 2 stays a
+   behaviour-preserving refactor — each project's existing preamble moves to `.claude/entry/<role>.md`
+   unchanged. The falsified nesting constraint and retired leads are corrected in a second reviewable diff.
+2. **The program's source of truth is `bin/warroom` in this repo**, installed to `~/.warroom/bin/`.
+3. **Rollout is `agentvibe` → one pilot → all 10 remaining at once.**
+**Rationale:** (1) keeps a regression unambiguously attributable to the mechanism rather than the prose, on
+the highest-blast-radius change in the plan. (2) puts the fleet's single point of failure under the
+enforcement Phase 1 built — `npm run check` and CI gate every change to it. (3) the pilot catches what
+`agentvibe`'s dev-repo status hides before the change reaches every project at once.
+**Reversibility:** hard-to-reverse (2 sets where the program lives); reversible (1 and 3)
+**Owner:** founder
+**Affects:** all 12 in-scope launchers, `newproject`, `bin/install-war-room.sh`, entry prompts, CI
+
+## 2026-08-11 — Two Phase 2 risks closed by measurement, not by assumption
+
+**Context:** The baseline flagged `acme` (2,768 lines — longer than the newest build) as possibly holding
+unique work, and `ml2` as capability-divergent.
+**Decision:** Both read directly. **`acme`'s 53 divergent lines are an older `CEO_PREAMBLE`** — retired
+9-lead model, `.agent/` paths, and the "subagents cannot spawn subagents" line Phase 1 falsified. Nothing
+unique; overwrite freely. **`ml2` lacks `send_launch_claude()` and `wait_for_shell_prompt()` and adds
+nothing** — it only gains from convergence.
+**Rationale:** Both were framed as "read before acting" cautions. Reading cost one command each and removed
+two unknowns from the highest-blast-radius phase. The result also confirms the thesis: across all 12 in-scope
+launchers the only differences are the preamble generation, per-project config, and `ml2`'s two omissions.
+**Reversibility:** n/a (measurement)
+**Owner:** ceo
+**Affects:** Phase 2 execution plan

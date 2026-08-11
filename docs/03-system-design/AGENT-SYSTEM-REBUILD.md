@@ -154,8 +154,15 @@ symlink preservation; **refuse outright to update a hard-linked file**; rollback
 missing backup; an `installation_modified` guard; and on apply, re-run linter + classifier against the
 **receiving** project and refuse on failure.
 
-**`adamos` needs a verdict** — adopt, revert, or document. An unrecorded architectural fork is a lapsed
-commitment.
+~~**`adamos` needs a verdict** — adopt, revert, or document.~~ **Superseded 2026-08-11:** the founder
+excluded `adamos`, `test1` and `hitstampjavagame` from Phase 2 entirely. They are left untouched and no
+verdict is required. Scope is the remaining **12 launchers, 5 generations** — see
+[FLEET-BASELINE.md §4b](../06-codebase/2026-08-11-FLEET-BASELINE.md).
+
+**Sequencing, decided 2026-08-11:** extract the preamble **verbatim** first so Phase 2 stays a
+behaviour-preserving refactor, and converge its content in a separate diff · the program's source of truth
+is **`bin/warroom` in this repo**, installed to `~/.warroom/bin/`, so `npm run check` and CI gate every
+change to it · rollout is **`agentvibe` → one pilot → all 10 remaining at once**.
 
 ### 3.4 Roster — derived from 38 jobs
 
@@ -284,7 +291,7 @@ Add ~6 namespace router skills so the discovery tier stops growing linearly.
 | # | Phase | Gate to proceed |
 |---|---|---|
 | 1 | **Subtract and wire** · *externally verified* — ✅ **DONE** | ~~Rules ≤ 400~~ *(re-scoped — see below)* · blocking mechanisms ≥ 4 → **5** · fabrications = 0 → **0** · schema-lint exit 0 → **✅** · one PR observed RED then GREEN → **✅ runs `31505991227` → `31506094985`** |
-| 2 | **Fleet: one program, many configs** — *next* | Launcher behaviour unchanged on `agentvibe`; check-only run across all **15** launchers; `adamos` verdict recorded. Baseline: [FLEET-BASELINE.md](../06-codebase/2026-08-11-FLEET-BASELINE.md) |
+| 2 | **Fleet: one program, many configs** — *next, scoped* | Launcher behaviour unchanged on `agentvibe`; check-only run across the **12 in-scope** launchers; pilot converged before the remaining 10. `adamos`/`test1`/`hitstampjavagame` excluded by founder — no verdict required. Baseline + decisions: [FLEET-BASELINE.md](../06-codebase/2026-08-11-FLEET-BASELINE.md) |
 | 3 | **Spine** — claims, resolvers, ledger, shadow mode | Dead URL + expired `valid_until` both fire as `would_block`; `ledger rebuild` byte-identical from clean clone |
 | 4 | **Roster collapse** — 7 engines + lenses | schema-lint exit 0 across 7 files; single-model "independent" panel fails the lint; read-only engine cannot write, verified by attempt |
 | 5 | **Playbooks** | Six seed playbooks lint clean; `/build` `/ship` `/design` `/research` are invocations, not prose |
