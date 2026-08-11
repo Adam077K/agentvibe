@@ -48,3 +48,14 @@ jobs:
       # missing files, README counts that drifted, skills declared but absent.
       - name: Registration completeness
         run: node scripts/check-registration.mjs
+
+      # The launcher every project starts from. A syntax error here means no
+      # session can start, so it is checked on every PR.
+      #
+      # NOTE: scripts/warroom-parity.sh proves byte-identical behaviour against
+      # the standalone launcher it replaces, but that launcher lives in ~/bin
+      # and does not exist on a CI runner. Parity is therefore verified locally
+      # and recorded in the PR; CI verifies syntax only. This limit is stated
+      # rather than papered over.
+      - name: Warroom launcher syntax
+        run: npm run check:warroom

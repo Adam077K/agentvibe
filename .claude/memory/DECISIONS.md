@@ -282,3 +282,36 @@ by running one script that already exists.
 **Reversibility:** reversible
 **Owner:** ceo
 **Affects:** stop conditions, monthly harness-health routine (Phase 6)
+
+## 2026-08-11 — `_seeds/ceo.md` is the preamble convention; Phase 1's "zero references" was wrong
+
+**Context:** Phase 1 deleted `.claude/agents/_seeds/` (9 files) as "orphans, zero references." Building Phase 2
+revealed that **8 of the 12 in-scope launchers read `$PROJECT_DIR/.claude/agents/_seeds/ceo.md` at startup**,
+with a minimal fallback. The Phase 1 reference search covered the repository and not `~/bin/`.
+**Impact:** None. `agentvibe`'s launcher uses an inline literal, so deleting `_seeds/` here broke nothing, and
+the 8 seed-file projects hold their own copies which Phase 1 never touched. The claim was false; the outcome
+was not harmful.
+**Decision:** Treat `_seeds/ceo.md` as **existing prior art, not an orphan.** `warroom` resolves the preamble
+in order: `entry_ceo` from `.warroom.yml` (default `.claude/entry/ceo.md`) → `.claude/agents/_seeds/ceo.md` →
+minimal built-in with a warning.
+**Rationale:** 8 projects already externalise the preamble exactly as the plan proposed to. Honouring that path
+means they need no migration at Phase 9, which shrinks the riskiest step of the rollout. The lesson generalises:
+a reference search scoped to the repo cannot see the fleet, and this system's mechanisms live in both.
+**Reversibility:** reversible
+**Owner:** ceo
+**Affects:** `bin/warroom`, Phase 9 rollout, the Phase 1 fabrication record
+
+## 2026-08-11 — Behaviour preservation is proven by three artefacts, not asserted
+
+**Context:** Phase 2 refactors the program every working session starts from — the plan's own highest-blast-
+radius change. `cmd_start` cannot be executed without launching tmux, so a live test cannot cover it.
+**Options considered:** Manual review / live testing of the runnable commands only / a layered proof.
+**Decision:** Three proofs, all reproducible: **(1) semantic equivalence** — the body renders byte-identically
+with `SESSION=agentvibe` (67 + 6 literals parameterised, 6 pre-existing refs untouched), which covers every
+command including `cmd_start`; **(2) config resolution** — all 8 variables plus the preamble hash resolve
+identically; **(3) live parity** — 6 read-only commands byte-identical in output and exit code.
+**Rationale:** 1 and 2 together are stronger than any feasible live test: identical program body plus identical
+inputs. Parity alone would have covered only what is safe to run.
+**Reversibility:** n/a (verification)
+**Owner:** ceo
+**Affects:** Phase 2 gate, Phase 9 rollout confidence, `scripts/warroom-parity.sh`
