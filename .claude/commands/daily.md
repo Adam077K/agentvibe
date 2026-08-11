@@ -9,11 +9,11 @@ Start the day with context loaded and priorities clear.
 
 ## What This Does
 
-1. Iris reads `.claude/memory/DECISIONS.md` for overnight context
-2. Iris reads `CLAUDE.md` for current project state
-3. Iris reads `.claude/memory/CODEBASE-MAP.md` for any active dev work
-4. Iris checks context: if > 50%, recommend `/compact` before starting
-5. Iris proposes:
+1. CEO reads `.claude/memory/DECISIONS.md` for overnight context
+2. CEO reads `CLAUDE.md` for current project state
+3. CEO reads `.claude/memory/CODEBASE-MAP.md` for any active dev work
+4. CEO checks context: if > 50%, recommend `/compact` before starting
+5. CEO proposes:
    - **Today's Focus** — 1-3 high-leverage tasks with done-when criteria
    - **Blockers** — anything that needs clearing before work starts
    - **Decisions needed** — open questions that will unblock the team
@@ -38,11 +38,11 @@ Start the day with context loaded and priorities clear.
 - [Open question + owner + deadline]
 
 ### Agents Routing Today
-Iris → [plan for the day]
+CEO → [plan for the day]
 ```
 
 ## Notes
 
-- If no CLAUDE.md exists: Iris asks 3 questions to understand the project
+- If no CLAUDE.md exists: CEO asks 3 questions to understand the project
 - Always ends with: "Who do you want to start with?"
 - If > 70% context: recommend starting with `/clear` and `/compact`

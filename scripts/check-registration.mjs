@@ -19,6 +19,7 @@
  *   5. WARN: capability-bearing files that nothing registers.
  *   6. WARN: agents declaring mcpServers while no MCP config exists.
  *   7. WARN: agent names that also exist in ~/.claude/agents (machine state CI cannot see).
+ *   8. Slash commands may not name a retired persona that is not an agent here.
  *
  * Usage: node scripts/check-registration.mjs
  */
@@ -171,6 +172,36 @@ if (mcpDeclared && !mcpConfigured) {
     `${mcpDeclared} agents declare mcpServers, but no MCP config exists (no mcpServers key in settings.json, no .mcp.json). ` +
       'These declarations grant nothing — Phase 4 removes or enforces them.'
   );
+}
+
+// ── 8 · slash commands may not name an agent that does not exist ───────────
+//
+// BLOCKS. Phase 1 declared "fabrications = 0" and this class survived it: `/ship`
+// assigned its steps to Scout, Atlas, Guardian and Nexus, `/daily` to Iris, and `/debug`
+// to Atlas — 23 references to five agents that have never existed in this repository.
+// They are persona names from a different system that came in with the template.
+//
+// The reason the audit missed them is worth keeping: check 2 above verifies that every
+// *path* named in a governing doc exists, and nobody had written the equivalent for
+// *names*. A checker's coverage is not the same as its subject.
+//
+// LIMIT, stated rather than implied: this is a denylist of names known to have been
+// retired, not general detection. Deciding whether an arbitrary capitalised word is meant
+// to be an agent is not tractable, so this catches the recurrence — someone pasting
+// template-era prose back in — and not a newly invented name. Occurrences inside a `>`
+// blockquote are allowed, so a doc can discuss the repair without tripping it.
+const RETIRED_PERSONAS = ['Scout', 'Atlas', 'Iris', 'Rex', 'Nova', 'Morgan', 'Axiom', 'Lyra', 'Nexus', 'Spark', 'Sage', 'Guardian'];
+const retiredRe = new RegExp(`\\b(${RETIRED_PERSONAS.join('|')})\\b`, 'g');
+
+for (const cmd of listMd('.claude/commands')) {
+  const rel = `.claude/commands/${cmd}`;
+  for (const [n, line] of read(rel).split('\n').entries()) {
+    if (/^\s*>/.test(line)) continue; // commentary about the repair, not an instruction
+    const hits = [...new Set([...line.matchAll(retiredRe)].map((m) => m[1]))];
+    if (hits.length) {
+      fail('phantom-agent', `${rel}:${n + 1} names ${hits.join(', ')} — no such agent exists in .claude/agents/`);
+    }
+  }
 }
 
 // ── 7 · agent definitions that also exist in ~/.claude/agents ──────────────

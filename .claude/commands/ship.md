@@ -1,52 +1,34 @@
-# /ship — Pre-Deploy Pipeline
+---
+playbook: ship-feature
+enter_at: review
+---
 
-Full quality gate + deploy pipeline for production. Requires QA-Lead PASS before any deploy.
+# /ship — take work through the gate to production
+
+Runs the **`ship-feature`** playbook from its `review` stage:
+[.claude/playbooks/ship-feature.yml](../playbooks/ship-feature.yml).
 
 ## Usage
+
 ```
-/ship [feature-name or "all"]
+/ship [branch or feature name]
 ```
 
-## Pipeline Steps
+## What happens
 
-### Step 1 — Scout Review
-Scout audits recently changed files:
-- Code quality + severity ratings (🔴 BLOCK / 🟡 WARN / 🔵 NOTE)
-- Stub detection: any `TODO`, `return null`, empty handlers, placeholder text?
-- Wiring check: APIs connected? State rendered? Forms submitting?
-- API documentation current?
+The `review` and `ship` stages: independent review under the `correctness`, `security` and
+`scope` lenses, then the QA verdict gate, then merge on founder approval.
 
-If 🔴 BLOCK found → **STOP**, route to Atlas for fixes.
+## Two things this command cannot do
 
-### Step 2 — Guardian Gate
-Guardian runs:
-- `npm audit --audit-level=high`
-- OWASP checklist for changed routes
-- 3-level verification: exists → substantive → wired
-- Auth tests on new endpoints
-- LLM eval if AI features changed
+**Override the gate.** The QA verdict is not advisory and not overridable by whoever
+requested the ship. That is enforced in `.github/workflows/qa-lead-pass.yml`, which blocks,
+with `main` under branch protection.
 
-Verdict: **PASS** or **BLOCK**
+**Deploy without confirmation.** The `ship` stage carries `gate: founder-approval`.
 
-If BLOCK → **STOP**, route to Atlas for security fixes.
-
-### Step 3 — Nexus Deploy
-If PASS:
-- Deploy to staging
-- Smoke test: auth + payment + core feature
-- Deploy to production
-- Health check + error rate baseline
-- **Verify deploy succeeded** (don't just kick it off — confirm it's live and healthy)
-
-### Step 4 — Confirm
-- Verify: `curl -s -o /dev/null -w "%{http_code}" https://[app-url]/api/health`
-- Notify: "[feature] deployed to production"
-- Log to `.claude/memory/DECISIONS.md` if architecture changed
-
-## Abort Conditions
-
-- Stubs found by Scout → Fix required before continuing
-- 🔴 BLOCK from Scout → Atlas fixes first
-- BLOCK from Guardian → Security fix required
-- Build failure → Atlas to fix
-- Health check fails after deploy → Auto-rollback via `vercel rollback`
+> **Repaired 2026-08-11.** This file previously assigned its steps to `Scout`, `Atlas`,
+> `Guardian` and `Nexus` — four agents that do not exist in this repository. They are names
+> from a different system that survived into this one. Phase 1 declared "fabrications = 0"
+> and missed them, because `check-registration.mjs` verified paths and not agent names. It
+> now verifies both.

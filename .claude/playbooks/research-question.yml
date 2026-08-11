@@ -1,0 +1,29 @@
+# Rehoused from: .claude/agents/research-lead.md (Steps 1-7) and
+# .claude/agents/researcher.md (Steps 1-5).
+playbook: research-question
+summary: "Answer one bounded question with sources, confidence levels, and the gaps named"
+
+stages:
+  - id: bound
+    goal: "Clarify which decision the question informs, and refuse it if it is unbounded"
+    lenses: [research]
+    exit:
+      - "criterion(question-is-bounded)"
+      - "criterion(prior-research-checked)"
+
+  - id: gather
+    goal: "Consult primary and official sources before general search, one thread per sub-question"
+    lenses: [research, evidence]
+    exit:
+      - "claim(kind=external-fact, verified_by=source)"
+      - "criterion(every-claim-carries-source-date-and-confidence)"
+    dispatch:
+      - task: "One bounded sub-question, answered deeply with sources"
+        engine: sourcer
+
+  - id: synthesise
+    goal: "Report findings with their confidence, and name what could not be found"
+    lenses: [research]
+    exit:
+      - "criterion(gaps-reported-explicitly)"
+      - "review(lens=evidence)"

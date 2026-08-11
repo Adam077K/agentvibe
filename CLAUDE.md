@@ -64,6 +64,26 @@ lens citing a `sources:` file that does not exist fails.
 A review lens marked `independent: true` must name **≥2 distinct model families** — the same predicate that
 governs `risk: high` claim panels, shared from `scripts/lib/claims.js` rather than written twice.
 
+---
+
+## Playbooks — the operating standard
+
+Six seed playbooks at [.claude/playbooks/](.claude/playbooks/): `ship-feature` ·
+`launch-landing-page` · `price-a-product` · `validate-a-market` · `design-pass` ·
+`research-question`.
+
+A playbook declares the **stages** a category of work passes and the **claims and criteria required to exit
+each**. It **never declares method** — the engine picks its own path inside a stage, and `schema-lint.js`
+refuses a stage carrying `steps:`, `how:`, `method:` or `implementation:`. Without that rule a playbook drifts
+back into the pipeline prose it replaced.
+
+Every reference resolves or the lint fails: `review(lens=X)` against `review-lenses.yml`, `claim(kind=K,
+verified_by=V)` against the ledger's own kinds and resolvers.
+
+**Slash commands are invocations, not descriptions.** `/build` `/fix` `/ship` `/design` `/research` each name
+a playbook and stop. The pipeline is described once, in the playbook — `/build` alone previously restated it
+in 50 lines, which is two descriptions of one pipeline, and two descriptions of one thing disagree silently.
+
 **Capabilities are real or absent.** No agent declares `mcpServers` — all 52 did, while no MCP config existed
 anywhere, so the field granted nothing. `schema-lint.js` now fails any declaration that no configuration
 backs. Read-only reviewers (`code-reviewer`, `security-engineer`, `design-critic`, `researcher`,

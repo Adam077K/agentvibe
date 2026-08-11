@@ -84,6 +84,32 @@ review_lenses:
     model_families: [anthropic, openai]
     sources: [".claude/agents/researcher.md", ".claude/agents/research-lead.md"]
 
+  - id: voice
+    summary: "Does customer-facing copy sound like this company and like its customers"
+    checks:
+      - "At least one phrase drawn verbatim from captured customer language"
+      - "No buzzword from the banned list: leverage, unlock, seamless, robust, best-in-class, synergy"
+      - "No AI self-labelling such as AI-generated or powered by AI"
+      - "The call to action names the specific outcome, measured against what the page delivers"
+    blocking_severities: [p1]
+    scope: rendered-output
+    independent: false
+    model_families: [anthropic]
+    sources: [".claude/agents/cmo.md"]
+
+  - id: accessibility
+    summary: "Can this be used by someone not using it the way you do"
+    checks:
+      - "Interactive elements reachable and operable by keyboard alone"
+      - "Text contrast measured against the stated ratio, not judged by eye"
+      - "Images and icons carry text alternatives where they carry meaning"
+      - "Small-screen rendering verified, not assumed from the wide layout"
+    blocking_severities: [p1]
+    scope: rendered-output
+    independent: false
+    model_families: [anthropic]
+    sources: [".claude/agents/design-critic.md"]
+
   - id: scope
     summary: "Did the change stay inside what was asked for"
     checks:

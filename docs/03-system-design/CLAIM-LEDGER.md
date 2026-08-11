@@ -295,6 +295,25 @@ claims:
     valid_until: 2026-11-09
     confidence: 1
 
+  - id: c-playbooks-declare-no-method
+    assert: "Every playbook declares stages and exit criteria only — a stage carrying steps, how or method fails the lint"
+    kind: behavior
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node --test scripts/playbooks.test.mjs", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+    supports: [d-001]
+
+  - id: c-commands-name-no-phantom-agents
+    assert: "No slash command assigns work to an agent that does not exist in this repository"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node scripts/check-registration.mjs", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+
   - id: c-qa-gate-blocks
     assert: "The QA-Lead gate blocks: qa-lead-pass.yml no longer carries continue-on-error"
     kind: internal-fact
