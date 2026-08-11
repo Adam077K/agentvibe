@@ -46,6 +46,12 @@ const VERIFIERS = ['source', 'command', 'judge'];
 const RISKS = ['low', 'high'];
 const VERDICTS = ['pass', 'fail', 'unresolved'];
 
+// ADR-001 and §3.1: "On expiry, exactly one disposition is recorded — Refresh · Deprecate ·
+// Waive(new deadline)." Phase 3 shipped `valid_until` without this, which leaves an expired
+// claim producing the same warning forever — and a warning that repeats unchanged is a
+// warning nobody reads. A disposition is the record that somebody decided.
+const DISPOSITIONS = ['refresh', 'deprecate', 'waive'];
+
 const ID_RE = /^c-[a-z0-9][a-z0-9-]*$/;
 // `supports:` entries must be resolvable, not decorative. Exactly two forms:
 //   d-NNN   an ADR — must exist at docs/03-system-design/adr/NNN-*.md
@@ -482,6 +488,35 @@ function validateEvidence(c, issues, where) {
   }
 }
 
+// A disposition is a dated promise, not an excuse. `waive` therefore REQUIRES a date —
+// a waiver with no end is just the claim being switched off, which is the thing the
+// expiry mechanism exists to prevent. `refresh` and `deprecate` require a reason,
+// because both are assertions about the world that someone should be able to check.
+function validateDisposition(c, issues, where) {
+  const d = c.disposition;
+  if (!isPlainObject(d)) {
+    issues.push(`${where}: disposition must be a mapping — {action, until, reason}`);
+    return;
+  }
+  if (!DISPOSITIONS.includes(d.action)) {
+    issues.push(`${where}: disposition.action must be one of (${DISPOSITIONS.join('|')}), got ${JSON.stringify(d.action)}`);
+  }
+  if (d.action === 'waive') {
+    if (typeof d.until !== 'string' || !isRealDate(d.until)) {
+      issues.push(`${where}: disposition.action:waive requires "until" (YYYY-MM-DD) — a waiver with no end date is the claim being switched off`);
+    }
+  } else if (d.until !== undefined && d.until !== null) {
+    issues.push(`${where}: disposition.until only applies to action:waive`);
+  }
+  if (typeof d.reason !== 'string' || d.reason.trim() === '') {
+    issues.push(`${where}: disposition.reason is required — record why, so the next reader can check it`);
+  }
+  const known = new Set(['action', 'until', 'reason']);
+  for (const k of Object.keys(d)) {
+    if (!known.has(k)) issues.push(`${where}: unknown disposition field "${k}"`);
+  }
+}
+
 /** Validate one claim object. Returns a list of human-readable issue strings. */
 function validateClaim(c, where) {
   const issues = [];
@@ -532,9 +567,10 @@ function validateClaim(c, where) {
   }
 
   if (VERIFIERS.includes(c.verified_by)) validateEvidence(c, issues, where);
+  if (c.disposition !== undefined && c.disposition !== null) validateDisposition(c, issues, where);
 
   const known = new Set(['id', 'assert', 'kind', 'scope', 'verified_by', 'evidence',
-    'valid_until', 'confidence', 'supports']);
+    'valid_until', 'confidence', 'supports', 'disposition']);
   for (const k of Object.keys(c)) {
     if (!known.has(k)) issues.push(`${where}: unknown field "${k}" — the schema is closed`);
   }
@@ -602,6 +638,7 @@ module.exports = {
   VERIFIERS,
   RISKS,
   VERDICTS,
+  DISPOSITIONS,
   parseYamlSubset,
   extractClaimBlocks,
   validateClaim,

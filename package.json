@@ -13,6 +13,7 @@
     "test:ledger": "node --test scripts/ledger.test.mjs",
     "ledger:build": "node scripts/ledger.mjs build",
     "ledger:verify": "node scripts/ledger.mjs verify",
+    "ledger:events": "node scripts/ledger.mjs events --since 30d",
     "ledger:views": "node scripts/ledger.mjs views",
     "check:warroom": "bash -n bin/warroom && node --check scripts/warroom-install.mjs && bash -n scripts/warroom-parity.sh && npm run test:warroom",
     "test:warroom": "node --test scripts/warroom-install.test.mjs",
