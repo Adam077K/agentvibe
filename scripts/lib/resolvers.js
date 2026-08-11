@@ -62,8 +62,50 @@ function dateMs(s) {
 // it for months after it stopped being true. Freshness converts "nobody noticed" into a
 // dated, forced decision: Refresh, Deprecate, or Waive with a new deadline.
 
+// ── Dispositions ────────────────────────────────────────────────────────────
+// A disposition is what somebody decided when a claim came due. It changes the outcome
+// of a resolver, so it is evaluated first — and it is deliberately not a mute button:
+//
+//   deprecate  the claim is retired. It resolves `pass` and says so. Nothing is checked
+//              because nothing is claimed any more.
+//   waive      checking is postponed until a date. Live → `pass` with the deadline shown.
+//              EXPIRED → `fail`, and worse than having no disposition at all, because
+//              somebody promised to come back to it and did not. A waiver that quietly
+//              lapses is how "we'll look at it next sprint" became eight weeks of green
+//              builds over a false claim.
+//   refresh    the evidence was renewed. It does NOT short-circuit anything — the
+//              resolver still runs. Saying you refreshed it is not the same as it
+//              passing, and only one of those is checkable.
+function dispositionOutcome(claim, now, resolverName) {
+  const d = claim.disposition;
+  if (!d || !d.action) return null;
+  if (d.action === 'refresh') return null;
+  if (d.action === 'deprecate') {
+    return result(resolverName, claim, 'pass', `deprecated — no longer claimed (${d.reason})`);
+  }
+  if (d.action === 'waive') {
+    const until = dateMs(d.until);
+    if (Number.isNaN(until)) {
+      return result(resolverName, claim, 'fail', `disposition.until "${d.until}" is not a date`);
+    }
+    const deadline = until + DAY_MS;
+    if (now < deadline) {
+      const left = daysBetween(deadline, now);
+      return result(resolverName, claim, 'pass', `waived for ${left} more day${left === 1 ? '' : 's'} (until ${d.until}) — ${d.reason}`);
+    }
+    const over = daysBetween(now, deadline);
+    return result(resolverName, claim, 'fail',
+      `WAIVER LAPSED ${over} day${over === 1 ? '' : 's'} ago (until ${d.until}) — "${d.reason}". ` +
+      `A lapsed waiver is worse than no disposition: somebody promised to come back to this and did not. ` +
+      `Refresh it, deprecate it, or waive it again with a new date and a reason that has changed.`);
+  }
+  return null;
+}
+
 function freshness(claim, opts = {}) {
   const now = opts.now === undefined ? Date.now() : opts.now;
+  const disp = dispositionOutcome(claim, now, 'claim-freshness');
+  if (disp) return disp;
   if (claim.valid_until === undefined || claim.valid_until === null) {
     if (claim.scope === 'task') {
       return result('claim-freshness', claim, 'pass', 'task-scoped claim — expires with the branch');
@@ -245,6 +287,15 @@ function command(claim, opts = {}) {
 function judge(claim, opts = {}) {
   const ev = claim.evidence || {};
   const panel = Array.isArray(ev.judged_by) ? ev.judged_by : [];
+  const now = opts.now === undefined ? Date.now() : opts.now;
+
+  // A waiver covers "we cannot judge this yet" — the case that actually occurs, since
+  // judging needs models this process may not be able to call. It never covers a panel
+  // that judged and DISSENTED: that is an answer, and you do not get to waive an answer.
+  if (!panel.some((j) => j && j.verdict === 'fail')) {
+    const disp = dispositionOutcome(claim, now, 'claim-judge');
+    if (disp) return disp;
+  }
 
   if (panel.length === 0) {
     return result('claim-judge', claim, 'unresolved',

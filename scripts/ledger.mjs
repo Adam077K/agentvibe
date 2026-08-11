@@ -387,6 +387,111 @@ function cmdJudge(argv) {
   return 0;
 }
 
+// ── ledger events — the reader ──────────────────────────────────────────────
+// Stop condition 2 is "the run log exists four weeks with no reader." Phase 3 shipped a
+// log and nothing that reads it, which is that condition starting its clock. This is the
+// minimum thing that makes the shadow window reviewable: which claims fired, how often,
+// through which resolver, and how recently.
+//
+// It reports what it SKIPPED as well as what it read. events.jsonl is shared with the
+// launcher, so a reader that silently ignores non-claim lines would make the log look
+// smaller than it is.
+
+function parseSince(spec, now) {
+  if (!spec) return null;
+  const rel = String(spec).match(/^(\d+)([dhw])$/);
+  if (rel) {
+    const n = parseInt(rel[1], 10);
+    const unit = { h: 3600, d: 86400, w: 604800 }[rel[2]];
+    return Math.floor(now / 1000) - n * unit;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(spec)) {
+    const [y, m, d] = spec.split('-').map(Number);
+    return Math.floor(Date.UTC(y, m - 1, d) / 1000);
+  }
+  throw new Error(`--since "${spec}" must be like 30d, 12h, 2w or 2026-08-01`);
+}
+
+function cmdEvents(argv) {
+  const sinceSpec = (argv.find((a) => a.startsWith('--since')) || '').split('=')[1]
+    || (argv.includes('--since') ? argv[argv.indexOf('--since') + 1] : null);
+  const now = Date.now();
+  const since = parseSince(sinceSpec, now);
+  const p = eventsPath();
+
+  process.stdout.write(`ledger events: ${p}\n`);
+  if (!fs.existsSync(p)) {
+    // Not an error, and not silence either: "no log" and "no events" are different
+    // states and the reader must not render them the same way.
+    process.stdout.write('  the log does not exist yet — nothing has run, or WARROOM_EVENTS points elsewhere\n');
+    return 0;
+  }
+
+  const lines = fs.readFileSync(p, 'utf8').split('\n').filter(Boolean);
+  let malformed = 0;
+  let nonClaim = 0;
+  let outsideWindow = 0;
+  const rows = [];
+  for (const l of lines) {
+    let e;
+    try { e = JSON.parse(l); } catch { malformed++; continue; }
+    if (!e.event || !String(e.event).startsWith('claim.')) { nonClaim++; continue; }
+    if (since !== null && Number(e.ts) < since) { outsideWindow++; continue; }
+    rows.push(e);
+  }
+
+  const windowLabel = since === null
+    ? 'all time'
+    : `since ${new Date(since * 1000).toISOString().slice(0, 10)}`;
+  process.stdout.write(`  window: ${windowLabel} · ${rows.length} claim events`);
+  if (outsideWindow) process.stdout.write(` · ${outsideWindow} older`);
+  if (nonClaim) process.stdout.write(` · ${nonClaim} non-claim (launcher)`);
+  if (malformed) process.stdout.write(` · ${malformed} unparseable`);
+  process.stdout.write('\n\n');
+
+  if (rows.length === 0) {
+    process.stdout.write('  no claim events in this window.\n');
+    process.stdout.write('  For the resolvers, that is the promotion signal. For the canary, it is an alarm:\n');
+    process.stdout.write('  docs/06-codebase/ledger-canary.md is supposed to fire on every single run.\n');
+    return 0;
+  }
+
+  const byClaim = new Map();
+  const byResolver = new Map();
+  for (const e of rows) {
+    const k = `${e.claim} ${e.resolver}`;
+    const c = byClaim.get(k) || { claim: e.claim, resolver: e.resolver, n: 0, blocked: 0, last: 0, reason: '' };
+    c.n++;
+    if (e.event === 'claim.block') c.blocked++;
+    if (Number(e.ts) >= c.last) { c.last = Number(e.ts); c.reason = e.reason || ''; }
+    byClaim.set(k, c);
+
+    const r = byResolver.get(e.resolver) || { would: 0, block: 0, claims: new Set() };
+    if (e.event === 'claim.block') r.block++; else r.would++;
+    r.claims.add(e.claim);
+    byResolver.set(e.resolver, r);
+  }
+
+  process.stdout.write('BY CLAIM\n');
+  const sorted = [...byClaim.values()].sort((a, b) => b.n - a.n || (a.claim < b.claim ? -1 : 1));
+  for (const c of sorted) {
+    const when = new Date(c.last * 1000).toISOString().slice(0, 10);
+    process.stdout.write(`  ${String(c.n).padStart(4)}×  ${c.claim} [${c.resolver}]${c.blocked ? `  (${c.blocked} BLOCKING)` : ''}\n`);
+    process.stdout.write(`        last ${when} — ${c.reason.slice(0, 110)}\n`);
+  }
+
+  process.stdout.write('\nBY RESOLVER\n');
+  for (const [name, r] of [...byResolver.entries()].sort()) {
+    process.stdout.write(`  ${name.padEnd(18)} ${String(r.would).padStart(4)} would_block · ${String(r.block).padStart(3)} block · ${r.claims.size} distinct claim(s)\n`);
+  }
+
+  process.stdout.write('\nWHAT TO DO WITH THIS\n');
+  process.stdout.write('  A resolver whose only would_blocks come from the canary has fired correctly and cost\n');
+  process.stdout.write('  nothing all window — that is the evidence that promotes it to blocking.\n');
+  process.stdout.write('  A resolver with zero events, canary included, is not quiet: it is not running.\n');
+  return 0;
+}
+
 function cmdViews() {
   const { claims } = collectProjectClaims();
   const glob = collectGlobalClaims();
@@ -426,10 +531,12 @@ async function main() {
       return cmdVerify(argv);
     case 'judge':
       return cmdJudge(argv);
+    case 'events':
+      return cmdEvents(argv);
     case 'views':
       return cmdViews();
     default:
-      process.stderr.write('usage: ledger.mjs <build [--check] | rebuild | lint | verify [--offline] [--no-exec] [--scope=X] | judge <id> | views>\n');
+      process.stderr.write('usage: ledger.mjs <build [--check] | rebuild | lint | verify [--offline] [--no-exec] [--scope=X] | judge <id> | events [--since 30d] | views>\n');
       return 2;
   }
 }

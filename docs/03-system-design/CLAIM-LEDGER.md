@@ -93,6 +93,41 @@ Network-dependent resolvers never guard a blocking path — every `enforcement: 
 uses `claim-command` only — so an outage produces an honest log line, not a red build for an
 unrelated reason.
 
+### Dispositions — what happens when a claim comes due
+
+On expiry, exactly one disposition is recorded:
+
+| `action` | Effect | Requires |
+|---|---|---|
+| `refresh` | The evidence was renewed. **Does not short-circuit anything** — the resolver still runs, because saying you refreshed it is not the same as it passing, and only one of those is checkable | `reason` |
+| `deprecate` | The claim is retired and resolves clean. Nothing is checked because nothing is claimed | `reason` |
+| `waive` | Checking is postponed to a date. Live → passes, showing the deadline. **Lapsed → fails harder than no disposition at all**, because somebody promised to come back and did not | `until` + `reason` |
+
+A waiver with no end date is refused by the schema. That is not pedantry: an open-ended waiver is the claim
+being switched off, which is the exact thing the expiry mechanism exists to prevent.
+
+### The promotion decision — due 2026-09-08
+
+A shadow window with no end date is not a measurement, it is a disabled check with better manners. Phase 3
+shipped one without a date; this is the correction.
+
+**The deadline enforces itself.** `c-shadow-window-open` below carries `valid_until: 2026-09-08`. On that
+date `claim-freshness` fails it, and the only way to clear it is to record a disposition. No scheduler, no
+reminder, no calendar entry anyone can ignore — the ledger's own expiry mechanism books its own review.
+
+**Read the evidence with `node scripts/ledger.mjs events --since 30d`.** Then, per resolver:
+
+| Resolver | Promote to `enforcement: block` when… | Keep in shadow if… |
+|---|---|---|
+| `claim-freshness` | Its only would_blocks came from the canary and from claims that were genuinely stale. Deterministic, no network, no model — the cheapest to promote | It fired on claims that were *fine*, meaning the expiry windows are set too short |
+| `claim-command` | Every would_block corresponded to a real broken command | It produced flakes — a timeout, a machine-specific path, anything that failed for a reason the change did not cause |
+| `claim-source` | **Not promotable on this evidence alone.** It needs the network, so an outage makes it `unresolved` and promoting it would fail builds for reasons unrelated to the diff | Always, until either an offline evidence cache exists or it is scoped to paths where a network failure is an acceptable build failure |
+| `claim-judge` | It has judged something. As of this writing it has resolved exactly one claim, `unresolved` | It stays unexercised — a mechanism nothing invokes is stop condition 7, not a gate |
+
+The bar is the one used to promote `qa-lead-pass.yml`: **promote only what fired correctly and cost nothing.**
+A resolver that produced no events at all is not quiet, it is not running — that is a bug report, not a
+promotion.
+
 ## 5 · One classifier
 
 [`.claude/qa-tier-floor.yml`](../../.claude/qa-tier-floor.yml) answers all four questions
@@ -127,7 +162,9 @@ Stated rather than implied, so nobody has to discover it:
   generated views.** ADR-001 says they become one; `ledger views` proves the rendering
   works, but migrating four hand-maintained files carrying real founder memory is a data
   migration, not a Phase 3 deliverable. Losing that content to a conversion bug would cost
-  more than the staleness it fixes.
+  more than the staleness it fixes. **Owner: Phase 6**, whose gate now includes proving the
+  migration non-lossy against the pre-migration files — recorded in
+  [AGENT-SYSTEM-REBUILD.md §4](AGENT-SYSTEM-REBUILD.md) rather than left as a shrug.
 - **No `claim-arithmetic` resolver.** §3.2 of the rebuild plan shows one. It is deliberately
   absent from the tier map: the classifier's registry is closed and throws on a resolver
   name nothing implements.
@@ -209,6 +246,26 @@ claims:
     valid_until: 2026-11-09
     confidence: 1
     supports: [d-001]
+
+  - id: c-shadow-window-open
+    assert: "Claim resolvers on documentation paths are still in shadow mode; the promotion decision is due on this claim's valid_until"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node scripts/classify.mjs docs/02-competitive/any.md | grep -q 'enforcement=shadow'", expect_exit: 0}
+    valid_until: 2026-09-08
+    confidence: 1
+    supports: [d-001]
+
+  - id: c-run-log-has-a-reader
+    assert: "The run log is read by something — `ledger events` summarises it by claim, resolver and status"
+    kind: behavior
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node scripts/ledger.mjs events --since 30d", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+    supports: [c-shadow-window-open]
 
   - id: c-qa-gate-blocks
     assert: "The QA-Lead gate blocks: qa-lead-pass.yml no longer carries continue-on-error"

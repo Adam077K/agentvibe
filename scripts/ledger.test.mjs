@@ -75,6 +75,65 @@ test('a task-scoped claim needs no expiry — it dies with the branch', () => {
   assert.equal(r.status, 'pass');
 });
 
+// ── Dispositions ────────────────────────────────────────────────────────────
+// ADR-001: "On expiry, exactly one disposition is recorded — Refresh · Deprecate ·
+// Waive(new deadline)." The test that matters is the LAPSED waiver: a disposition that
+// silently stops mattering is worse than none, because it consumed the one decision the
+// expiry mechanism was built to force.
+
+const expired = (over = {}) => claim({ valid_until: '2026-06-01', ...over });
+
+test('a live waiver postpones an expired claim and shows the deadline', () => {
+  const r = R.freshness(expired({ disposition: { action: 'waive', until: '2026-09-08', reason: 'shadow window still open' } }), { now: NOW });
+  assert.equal(r.status, 'pass');
+  assert.match(r.reason, /waived for 29 more days \(until 2026-09-08\)/);
+  assert.match(r.reason, /shadow window still open/);
+});
+
+test('a LAPSED waiver fails, and says it is worse than no disposition', () => {
+  const r = R.freshness(expired({ disposition: { action: 'waive', until: '2026-07-01', reason: 'meant to revisit' } }), { now: NOW });
+  assert.equal(r.status, 'fail');
+  assert.match(r.reason, /WAIVER LAPSED 40 days ago/); // 2026-07-02 deadline → 2026-08-11
+  assert.match(r.reason, /worse than no disposition/);
+});
+
+test('deprecate retires a claim instead of leaving it failing forever', () => {
+  const r = R.freshness(expired({ disposition: { action: 'deprecate', reason: 'the API it described was removed' } }), { now: NOW });
+  assert.equal(r.status, 'pass');
+  assert.match(r.reason, /deprecated — no longer claimed/);
+});
+
+test('refresh does NOT short-circuit the resolver — saying you renewed it is not it passing', () => {
+  const r = R.freshness(expired({ disposition: { action: 'refresh', reason: 're-checked the source' } }), { now: NOW });
+  assert.equal(r.status, 'fail', 'refresh must not mask a still-expired valid_until');
+  assert.match(r.reason, /expired/);
+});
+
+test('a waiver covers an unjudged claim', () => {
+  const c = claim({
+    verified_by: 'judge',
+    evidence: { lenses: ['x'], risk: 'high', judged_by: [] },
+    disposition: { action: 'waive', until: '2026-09-08', reason: 'cannot spawn judges in this process' },
+  });
+  assert.equal(R.judge(c, { now: NOW }).status, 'pass');
+});
+
+test('a waiver does NOT cover a panel that judged and dissented', () => {
+  // You do not get to waive an answer.
+  const c = claim({
+    verified_by: 'judge',
+    evidence: {
+      lenses: ['x'],
+      risk: 'low',
+      judged_by: [{ model_family: 'anthropic', model_id: 'a', verdict: 'fail', at: '2026-08-11' }],
+    },
+    disposition: { action: 'waive', until: '2026-12-01', reason: 'not now' },
+  });
+  const r = R.judge(c, { now: NOW });
+  assert.equal(r.status, 'fail');
+  assert.match(r.reason, /judges returned fail/);
+});
+
 // ── claim-source ────────────────────────────────────────────────────────────
 
 const sourceClaim = (ev = {}) => claim({
@@ -273,6 +332,79 @@ test('the canary claim is present and still shaped to fail both resolvers', asyn
 });
 
 // ── events.jsonl ────────────────────────────────────────────────────────────
+
+// ── ledger events — the reader ──────────────────────────────────────────────
+
+function runEvents(file, extra = []) {
+  return execFileSync('node', ['scripts/ledger.mjs', 'events', ...extra], {
+    cwd: REPO_ROOT, encoding: 'utf8', env: { ...process.env, WARROOM_EVENTS: file },
+  });
+}
+
+test('a missing log reads differently from an empty one', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ev-'));
+  try {
+    const missing = runEvents(path.join(tmp, 'nope.jsonl'));
+    assert.match(missing, /the log does not exist yet/);
+
+    const empty = path.join(tmp, 'empty.jsonl');
+    fs.writeFileSync(empty, '');
+    assert.match(runEvents(empty), /no claim events in this window/);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('non-claim and unparseable lines are counted, not silently dropped', () => {
+  // events.jsonl is shared with the launcher. A reader that quietly ignores what it does
+  // not understand makes the log look smaller than it is.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ev-'));
+  const f = path.join(tmp, 'events.jsonl');
+  try {
+    fs.writeFileSync(f, [
+      JSON.stringify({ ts: 1786474674, event: 'war_room_kill', details: 'x' }),
+      '{not json',
+      JSON.stringify({ ts: 1786474674, event: 'claim.would_block', claim: 'c-a', resolver: 'claim-source', status: 'fail', reason: 'r' }),
+    ].join('\n') + '\n');
+    const out = runEvents(f);
+    assert.match(out, /1 non-claim \(launcher\)/);
+    assert.match(out, /1 unparseable/);
+    assert.match(out, /1 claim events/);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('--since excludes older events and reports how many it excluded', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ev-'));
+  const f = path.join(tmp, 'events.jsonl');
+  const nowS = Math.floor(Date.now() / 1000);
+  try {
+    fs.writeFileSync(f, [
+      JSON.stringify({ ts: nowS - 60 * 86400, event: 'claim.would_block', claim: 'c-old', resolver: 'claim-source', status: 'fail', reason: 'old' }),
+      JSON.stringify({ ts: nowS - 3600, event: 'claim.block', claim: 'c-new', resolver: 'claim-command', status: 'fail', reason: 'new' }),
+    ].join('\n') + '\n');
+    const out = runEvents(f, ['--since', '7d']);
+    assert.match(out, /1 claim events/);
+    assert.match(out, /1 older/);
+    assert.match(out, /c-new/);
+    assert.doesNotMatch(out, /c-old/);
+    assert.match(out, /1 BLOCKING/, 'a blocking event must be distinguishable from a shadow one');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('a bad --since is refused rather than silently meaning "all time"', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ev-'));
+  const f = path.join(tmp, 'events.jsonl');
+  try {
+    fs.writeFileSync(f, '');
+    assert.throws(() => runEvents(f, ['--since', 'yesterday']), /must be like 30d/);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
 
 test('verify writes a would_block line per failing resolver, and exits 0 in shadow', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ledger-events-'));

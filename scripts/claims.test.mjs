@@ -364,6 +364,40 @@ test('a risk:high judge panel from two model families passes', () => {
   assert.deepEqual(issues, []);
 });
 
+// ── Dispositions ────────────────────────────────────────────────────────────
+
+test('a waive disposition validates when it carries a date and a reason', () => {
+  assert.deepEqual(validateClaim(base({
+    disposition: { action: 'waive', until: '2026-09-08', reason: 'shadow window still open' },
+  }), 'w'), []);
+});
+
+test('a waiver with no end date fails — that is the claim being switched off', () => {
+  const issues = validateClaim(base({ disposition: { action: 'waive', reason: 'later' } }), 'w');
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /requires "until".*switched off/);
+});
+
+test('every disposition needs a reason', () => {
+  const issues = validateClaim(base({ disposition: { action: 'deprecate' } }), 'w');
+  assert.match(issues[0], /disposition\.reason is required/);
+});
+
+test('an invented disposition action is rejected — only ADR-001s three exist', () => {
+  const issues = validateClaim(base({ disposition: { action: 'ignore', reason: 'x' } }), 'w');
+  assert.match(issues[0], /must be one of \(refresh\|deprecate\|waive\)/);
+});
+
+test('until on a non-waive disposition is rejected rather than quietly ignored', () => {
+  const issues = validateClaim(base({ disposition: { action: 'refresh', until: '2026-09-08', reason: 'x' } }), 'w');
+  assert.match(issues[0], /only applies to action:waive/);
+});
+
+test('the disposition sub-schema is closed too', () => {
+  const issues = validateClaim(base({ disposition: { action: 'refresh', reason: 'x', notes: 'y' } }), 'w');
+  assert.match(issues[0], /unknown disposition field "notes"/);
+});
+
 test('a judge claim with an empty panel is schema-valid but unjudged (the resolver blocks it)', () => {
   const issues = validateClaim(base({
     verified_by: 'judge',
