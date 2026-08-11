@@ -284,7 +284,7 @@ Add ~6 namespace router skills so the discovery tier stops growing linearly.
 | # | Phase | Gate to proceed |
 |---|---|---|
 | 1 | **Subtract and wire** · *externally verified* — ✅ **DONE** | ~~Rules ≤ 400~~ *(re-scoped — see below)* · blocking mechanisms ≥ 4 → **5** · fabrications = 0 → **0** · schema-lint exit 0 → **✅** · one PR observed RED then GREEN → **✅ runs `31505991227` → `31506094985`** |
-| 2 | **Fleet: one program, many configs** | Launcher behaviour unchanged on `agentvibe`; check-only run across all 13 projects; `adamos` verdict recorded |
+| 2 | **Fleet: one program, many configs** — *next* | Launcher behaviour unchanged on `agentvibe`; check-only run across all **15** launchers; `adamos` verdict recorded. Baseline: [FLEET-BASELINE.md](../06-codebase/2026-08-11-FLEET-BASELINE.md) |
 | 3 | **Spine** — claims, resolvers, ledger, shadow mode | Dead URL + expired `valid_until` both fire as `would_block`; `ledger rebuild` byte-identical from clean clone |
 | 4 | **Roster collapse** — 7 engines + lenses | schema-lint exit 0 across 7 files; single-model "independent" panel fails the lint; read-only engine cannot write, verified by attempt |
 | 5 | **Playbooks** | Six seed playbooks lint clean; `/build` `/ship` `/design` `/research` are invocations, not prose |
@@ -368,7 +368,9 @@ Each needs a checker and a date. A stop condition written as a sentence is not a
 2. The run log exists four weeks with no reader.
 3. A run burns > 200k tokens and returns no structured output *after* the stall envelope ships.
 4. The build extends past Phase 6 without an explicit decision to continue.
-5. The fleet is still on five launcher generations after Phase 2.
+5. The fleet is still on **eight** launcher generations after Phase 2 (re-measured 2026-08-11 across 15
+   launchers, not the 5-across-13 originally recorded — see
+   [FLEET-BASELINE.md](../06-codebase/2026-08-11-FLEET-BASELINE.md)).
 6. No user-facing venture work ships during the rebuild.
 7. **A new mechanism is added that nothing invokes within two weeks** — the condition that catches this plan's
    own worst failure mode: building mechanisms because they are satisfying to build.

@@ -176,3 +176,20 @@ less than one that shows its own error. The durable fix is not a better document
 **Reversibility:** reversible
 **Owner:** ceo
 **Affects:** all later phase boundaries, which diff against this file
+
+## 2026-08-11 — Phase 2 scope is 15 launchers on 8 generations, not 13 on 5
+
+**Context:** Phase 2 refactors `~/bin/<project>`, the program every project is launched with — the highest
+blast radius in the rebuild. Its numbers came from the enforcement diagnostic, seven of whose figures Phase 1
+proved wrong. Re-measured from `~/bin/` directly before committing to the plan.
+**Options considered:** Trust the recorded 13 projects / 5 generations and start / Re-measure first.
+**Decision:** Re-measured. **15 launchers, 8 generations.** `ml2`, `hitstampjavagame` and `test1` had never
+been counted. `adamos` drops 5 functions, not 4 (`inject_ceo_prompt` was missed). The core thesis held and is
+now stronger: **11 of 15 share an identical 47-function set**, so the divergence is content baked into the
+program, not capability.
+**Rationale:** Converging a fleet you have miscounted means leaving copies behind, and the ones left behind
+are exactly the ones nobody remembers to update. Cost of checking: one read-only pass.
+**Reversibility:** reversible (measurement only)
+**Owner:** ceo
+**Affects:** Phase 2 scope, stop condition #5 (five → eight generations), `newproject`, all 15 launchers
+**See:** [FLEET-BASELINE.md](../../docs/06-codebase/2026-08-11-FLEET-BASELINE.md)
