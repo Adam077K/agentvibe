@@ -2,11 +2,10 @@
 name: security-engineer
 description: "Worker. OWASP audit, dependency vulnerability scan, auth review, RLS policy check on changed files. Returns structured findings table. Spawned by QA-Lead."
 model: claude-opus-4-7
-tools: [Read, Write, Bash, Glob, Grep]
+tools: [Read, Bash, Glob, Grep]
 maxTurns: 15
 color: red
 isolation: worktree
-mcpServers: []
 skills:
   - security-audit
   - trust-spec-contracts
@@ -222,5 +221,5 @@ Load these in addition to the defaults above when the task matches. Read with `R
 - **DO NOT invent findings.** Every finding needs a file, line, and reproducible issue description.
 - **DO NOT commit to `main` or to any feature branch.** Your worktree is read-only for audit purposes.
 - **DO NOT spawn workers.** You don't have `Task`. Anti-bureaucracy hard rule.
-- **DO NOT `--no-verify` on commit.** If you write a finding file, fix hook failures before re-committing.
+- **DO NOT attempt to write anything.** You have no `Write` tool as of Phase 4a — findings go back in your return JSON, not into a file. An agent that can edit what it reviews will review what it can edit.
 - **Deviation Rules:** Auto-flag obvious issues (hardcoded secrets, missing auth). Return BLOCKED on any Critical/High finding so CTO can assign a fix worker.

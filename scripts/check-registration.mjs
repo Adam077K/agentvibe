@@ -18,6 +18,7 @@
  *      does not walk — exists in MANIFEST.json.
  *   5. WARN: capability-bearing files that nothing registers.
  *   6. WARN: agents declaring mcpServers while no MCP config exists.
+ *   7. WARN: agent names that also exist in ~/.claude/agents (machine state CI cannot see).
  *
  * Usage: node scripts/check-registration.mjs
  */
@@ -170,6 +171,55 @@ if (mcpDeclared && !mcpConfigured) {
     `${mcpDeclared} agents declare mcpServers, but no MCP config exists (no mcpServers key in settings.json, no .mcp.json). ` +
       'These declarations grant nothing — Phase 4 removes or enforces them.'
   );
+}
+
+// ── 7 · agent definitions that also exist in ~/.claude/agents ──────────────
+//
+// WARNS, never blocks. `~/.claude/agents/` is machine state: it is not in the repository,
+// CI runners have none of it, and blocking on it would fail every build for a reason the
+// PR did not cause.
+//
+// It still has to be visible, because it is the `_seeds/` failure wearing a different
+// hat. Phase 1 deleted `.claude/agents/_seeds/` as "9 orphans, zero references" — a
+// repo-scoped search said so, and 8 of 12 launchers were reading it at startup. The
+// mechanism lived outside the directory the search covered. So does this.
+//
+// Measured 2026-08-11: 44 agents live in ~/.claude/agents/. Eleven collide by name with a
+// repo agent and all eleven have drifted substantially. Project definitions shadow global
+// ones — verified by comparing a live session's loaded agent descriptions against both
+// copies — so the colliding ones are inert HERE and are the only copy in every other
+// project on the machine. Reconciling them changes ~14 projects at once, which is Phase 9's
+// job. This check exists so Phase 9 inherits a measured list instead of a surprise.
+const globalAgentsDir = path.join(process.env.HOME || '', '.claude', 'agents');
+if (fs.existsSync(globalAgentsDir)) {
+  const globalNames = fs.readdirSync(globalAgentsDir).filter((f) => f.endsWith('.md'));
+  const repoNames = new Set(listMd('.claude/agents'));
+  const collisions = [];
+  for (const name of globalNames) {
+    if (!repoNames.has(name)) continue;
+    const a = read(`.claude/agents/${name}`);
+    const b = fs.readFileSync(path.join(globalAgentsDir, name), 'utf8');
+    collisions.push({ name, drifted: a !== b });
+  }
+  const drifted = collisions.filter((c) => c.drifted);
+  if (collisions.length) {
+    warn(
+      'shadowed-agent',
+      `${collisions.length} agent name(s) exist in BOTH .claude/agents/ and ~/.claude/agents/, ` +
+        `${drifted.length} of them with different content: ${drifted.map((c) => c.name.replace(/\.md$/, '')).join(', ')}. ` +
+        'The repo copy wins here, so these are inert in this project — but they are the only copy in every ' +
+        'other project on this machine. Editing the repo file does not change what those projects run. ' +
+        'Reconciliation is Phase 9 (fleet rollout); this warning exists so it is a measured list, not a surprise.'
+    );
+  }
+  const globalOnly = globalNames.filter((n) => !repoNames.has(n)).length;
+  if (globalOnly) {
+    warn(
+      'shadowed-agent',
+      `${globalOnly} further agent(s) exist ONLY in ~/.claude/agents/ and are absent from a fresh clone of this repo. ` +
+        'They are out of scope until Phase 9 — named here so nobody assumes the repo is the whole roster.'
+    );
+  }
 }
 
 // ── 5 · capability-bearing files nothing registers ─────────────────────────

@@ -6,10 +6,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep, SendMessage, TaskCreate, TaskUpdate
 maxTurns: 30
 color: pink
 isolation: worktree
-mcpServers:
-  - playwright
-  - refero
-  - pencil
 skills:
   - high-end-visual-design
   - emilkowal-animations

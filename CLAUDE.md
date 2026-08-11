@@ -49,6 +49,29 @@ Skills load **on demand only** — never preload.
 
 ---
 
+## Lenses — the encoded expertise, as data
+
+| File | Holds | Linted by |
+|------|-------|-----------|
+| [.claude/lenses.yml](.claude/lenses.yml) | Domain procedure: how to *produce* work in business, customer, growth, product, engineering, research, design — plus `evidence`, which every engine inherits | `schema-lint.js` |
+| [.claude/review-lenses.yml](.claude/review-lenses.yml) | Review dimensions: how to *judge* it — correctness, security, adversarial, craft, evidence, scope | `schema-lint.js` |
+
+Prose rots; a linted data file cannot. Fifteen of twenty-six agent files failed their own validator before
+Phase 1 — the expertise was real and the container was not holding it. The linter checks **content**, not
+only shape: a vague step ("looks reasonable") with no measurable anchor fails, a placeholder fails, and a
+lens citing a `sources:` file that does not exist fails.
+
+A review lens marked `independent: true` must name **≥2 distinct model families** — the same predicate that
+governs `risk: high` claim panels, shared from `scripts/lib/claims.js` rather than written twice.
+
+**Capabilities are real or absent.** No agent declares `mcpServers` — all 52 did, while no MCP config existed
+anywhere, so the field granted nothing. `schema-lint.js` now fails any declaration that no configuration
+backs. Read-only reviewers (`code-reviewer`, `security-engineer`, `design-critic`, `researcher`,
+`adversary-engineer`) carry no `Write` or `Edit`: an agent that can edit what it reviews will review what it
+can edit.
+
+---
+
 ## Stack
 
 > Replace this block with your actual stack. The defaults below were inherited from the source project and are reasonable starting points; agents reference them when generating code.

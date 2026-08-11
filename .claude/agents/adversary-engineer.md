@@ -6,8 +6,6 @@ tools: [Read, Glob, Grep, Bash, WebSearch]
 maxTurns: 15
 color: red
 isolation: worktree
-mcpServers:
-  - github
 skills:
   - security-audit
   - api-security-testing

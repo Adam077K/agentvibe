@@ -9,8 +9,6 @@ color: gray
 spawned_by: cto-daily-plan
 isolation: none
 maxTurns: 20
-mcpServers:
-  - supabase
 skills:
   - multi-agent-patterns
   - api-design-principles

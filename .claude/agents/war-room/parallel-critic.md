@@ -13,9 +13,6 @@ budget:
   max_cost_usd: 0.75
   max_runtime_minutes: 15
   max_tool_calls: 40
-mcpServers:
-  - linear
-  - github
 skills:
   - code-review-excellence
   - find-bugs

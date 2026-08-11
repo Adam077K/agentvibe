@@ -6,10 +6,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep]
 maxTurns: 20
 color: blue
 isolation: worktree
-mcpServers:
-  - supabase
-  - ide
-  - context7
 skills:
   - nodejs-backend-patterns
   - nextjs-app-router-patterns

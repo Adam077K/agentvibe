@@ -6,10 +6,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep, Task, WebSearch, WebFetch]
 maxTurns: 25
 color: yellow
 isolation: worktree
-mcpServers:
-  - linear
-  - framer-mcp
-  - mem0
 skills:
   - copywriting
   - marketing-psychology

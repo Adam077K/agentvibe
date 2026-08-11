@@ -6,9 +6,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep, Task]
 maxTurns: 25
 color: emerald
 isolation: worktree
-mcpServers:
-  - linear
-  - supabase
 skills:
   - startup-financial-modeling
   - pricing-strategy

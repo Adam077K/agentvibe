@@ -6,10 +6,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep, Task]
 maxTurns: 25
 color: amber
 isolation: worktree
-mcpServers:
-  - linear
-  - supabase
-  - mem0
 skills:
   - onboarding-cro
   - marketing-psychology

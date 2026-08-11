@@ -6,9 +6,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep]
 maxTurns: 20
 color: orange
 isolation: worktree
-mcpServers:
-  - github
-  - supabase
 skills:
   - vercel-deployment
   - deploy-to-vercel

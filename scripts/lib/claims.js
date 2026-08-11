@@ -412,6 +412,23 @@ function isPlainObject(v) {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
 }
 
+/**
+ * The independence rule, in one place.
+ *
+ * A panel of one model family is one opinion wearing several hats. It is used twice —
+ * for `risk: high` judge claims here, and for `independent: true` review lenses in
+ * `.claude/hooks/schema-lint.js` — so it lives in one function rather than being
+ * reimplemented, for the same reason there is exactly one risk classifier.
+ *
+ * Returns null when the panel is independent, or an explanatory string when it is not.
+ */
+function independenceIssue(families, minimum, label) {
+  const distinct = [...new Set((families || []).filter(Boolean))];
+  if (distinct.length >= minimum) return null;
+  return `${label} requires >=${minimum} distinct model families, got ${distinct.length} ` +
+    `(${distinct.join(', ') || 'none'}) — one family agreeing with itself is one opinion`;
+}
+
 function isRealDate(s) {
   if (!DATE_RE.test(s)) return false;
   const [y, m, d] = s.split('-').map(Number);
@@ -477,13 +494,10 @@ function validateEvidence(c, issues, where) {
       }
       if (typeof j.model_family === 'string') families.add(j.model_family);
     });
-    // The independence rule. A "panel" of one model family is one opinion wearing
-    // several hats; the lint refuses it rather than letting it read as agreement.
-    if (ev.risk === 'high' && ev.judged_by.length > 0 && families.size < 2) {
-      issues.push(
-        `${where}: risk:high requires >=2 distinct model families, got ${families.size} ` +
-        `(${[...families].join(', ') || 'none'}) — a single-family panel is not independent`
-      );
+    // The independence rule — shared with review-lens linting, see independenceIssue().
+    if (ev.risk === 'high' && ev.judged_by.length > 0) {
+      const problem = independenceIssue([...families], 2, `${where}: risk:high`);
+      if (problem) issues.push(problem);
     }
   }
 }
@@ -644,4 +658,5 @@ module.exports = {
   validateClaim,
   parseClaimsFromText,
   isRealDate,
+  independenceIssue,
 };

@@ -6,9 +6,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep, Task]
 maxTurns: 25
 color: green
 isolation: worktree
-mcpServers:
-  - linear
-  - github
 skills:
   - product-manager-toolkit
   - linear-mvp-recipe

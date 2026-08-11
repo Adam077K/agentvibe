@@ -16,11 +16,6 @@ budget:
   max_runtime_minutes: 12
   max_tool_calls: 30
 delivery: linear-ticket
-mcpServers:
-  - linear
-  - supabase
-  - mem0
-  - github
 skills:
   - documentation-templates
   - startup-metrics-framework

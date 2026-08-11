@@ -16,11 +16,6 @@ budget:
   max_runtime_minutes: 10
   max_tool_calls: 25
 delivery: linear-ticket
-mcpServers:
-  - linear
-  - supabase
-  - mem0
-  - github  # Q6 read-only — diagnose CI failures
 skills:
   - multi-agent-patterns
   - error-handling-patterns

@@ -1,0 +1,97 @@
+# Review lenses — the dimensions work is judged along.
+#
+# Distinct from .claude/lenses.yml: a domain lens says how to PRODUCE something, a review
+# lens says how to JUDGE it. The reviewer engine is read-only and loads only these.
+#
+# THE RULE THIS FILE EXISTS TO ENFORCE
+# A lens marked `independent: true` must name at least two distinct model families. A panel
+# of one family is one opinion wearing several hats, and reading it as agreement is how a
+# review comes back confidently wrong. The check is `independenceIssue()` in
+# scripts/lib/claims.js — the same function that enforces it for `risk: high` claims,
+# because two implementations of an independence rule will disagree.
+#
+# `blocking_severities` is deliberately narrow. Every source agent for these lenses says
+# the same thing in its own words: keep the blocking signal clean, or reviewers learn to
+# route around it.
+#
+# Lint: node .claude/hooks/schema-lint.js
+
+version: 1
+
+review_lenses:
+  - id: correctness
+    summary: "Does the code do what it claims, on the paths that matter"
+    checks:
+      - "Business logic matches the stated intent, not merely the tests"
+      - "Inputs crossing a trust boundary are validated"
+      - "Error paths return rather than continuing on bad state"
+      - "The change does not silently alter behaviour outside its stated scope"
+    blocking_severities: [p1]
+    scope: diff-only
+    independent: false
+    model_families: [anthropic]
+    sources: [".claude/agents/code-reviewer.md"]
+
+  - id: security
+    summary: "Is the change exploitable"
+    checks:
+      - "No secret, key or token committed in the diff"
+      - "No user-controlled value reaching a query or a shell without escaping"
+      - "Authorisation checked at the boundary, not assumed from the caller"
+      - "New dependencies carry no known high-severity advisory"
+    blocking_severities: [critical, high]
+    scope: diff-only
+    independent: true
+    model_families: [anthropic, openai]
+    sources: [".claude/agents/security-engineer.md", ".claude/agents/adversary-engineer.md"]
+
+  - id: adversarial
+    summary: "How would a hostile user weaponise this"
+    checks:
+      - "Name a concrete attacker and what they gain"
+      - "Give reproduction steps a reader can follow"
+      - "Prefer three specific scenarios over ten vague ones"
+      - "Label a scenario low-confidence when it cannot be reproduced"
+    blocking_severities: [critical, high]
+    scope: diff-only
+    independent: true
+    model_families: [anthropic, openai]
+    sources: [".claude/agents/adversary-engineer.md"]
+
+  - id: craft
+    summary: "Does the rendered result meet the design system"
+    checks:
+      - "Spacing, type scale and colour match the written system"
+      - "All states are handled: empty, loading, error, populated"
+      - "Small-screen rendering checked, not only wide"
+      - "Every finding is a measured difference from a stated rule"
+    blocking_severities: [p1]
+    scope: rendered-output
+    independent: false
+    model_families: [anthropic]
+    sources: [".claude/agents/design-critic.md"]
+
+  - id: evidence
+    summary: "Is every assertion in the change actually checked"
+    checks:
+      - "Each figure is marked verified or estimated"
+      - "Each external fact carries a source and an access date"
+      - "Each durable claim carries an expiry and a way to recheck it"
+      - "Claims about library or runtime behaviour were executed, not recalled"
+    blocking_severities: [p1]
+    scope: diff-only
+    independent: true
+    model_families: [anthropic, openai]
+    sources: [".claude/agents/researcher.md", ".claude/agents/research-lead.md"]
+
+  - id: scope
+    summary: "Did the change stay inside what was asked for"
+    checks:
+      - "Files outside the stated scope are untouched"
+      - "Findings raised outside the diff are noted once, not expanded into a second review"
+      - "No placeholder, stub or TODO shipped as a deliverable"
+    blocking_severities: [p1]
+    scope: diff-only
+    independent: false
+    model_families: [anthropic]
+    sources: [".claude/agents/code-reviewer.md", ".claude/agents/security-engineer.md"]

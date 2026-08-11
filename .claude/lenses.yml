@@ -1,0 +1,163 @@
+# Domain lenses — the encoded expertise, as data.
+#
+# WHY THIS FILE EXISTS
+# Nine thousand nine hundred lines of agent prose hold real, hard-won procedure: pull live
+# numbers rather than remembered ones, label every figure, never ship a single-point
+# projection, quantify a signal before routing it, validate the problem before writing the
+# solution. That expertise must survive the roster collapse.
+#
+# It survives HERE, as linted data, because prose rots and a linted data file cannot.
+# Fifteen of twenty-six agent files failed their own validator before Phase 1 — the
+# expertise was real and the container was not holding it.
+#
+# WHAT BELONGS IN A LENS: the procedure. What a competent practitioner does, in order,
+# and what they refuse to do. Reusable across projects.
+# WHAT DOES NOT: project specifics — prices, table names, brand hex codes, vendor choices.
+# Those are facts about one project, they go stale, and the claim ledger is where facts
+# with expiry dates belong. Several agent files currently carry unexpiring vendor prices
+# in prose; that is the fabrication pattern, and it is not being copied in here.
+#
+# `sources:` records which agent file each lens was mined from and is dead-path checked,
+# so a lens can never claim provenance it does not have.
+#
+# Lint: node .claude/hooks/schema-lint.js --lenses   (also runs in the default invocation)
+
+version: 1
+
+lenses:
+  - id: business
+    summary: "Pricing, unit economics, financial cases, vendor decisions"
+    applies_to: [framer, sourcer]
+    procedure:
+      - "Name the decision this analysis unlocks, in one sentence, before analysing anything"
+      - "Check whether the decision is already locked; if it is, cite it and stop rather than re-deciding"
+      - "Pull live numbers from the system of record, never a remembered or inferred figure"
+      - "Verify every vendor cost against that vendor's own current pricing page"
+      - "Label every number as fact, estimate with source and date, or assumed"
+      - "Give every projection three scenarios: base, downside, upside, with the key driver named"
+      - "State reversibility as easy, medium, hard or irreversible before the recommendation, not after it"
+      - "Lead the output with reversibility and recommendation; methodology comes last"
+    refuses:
+      - "a single-point projection"
+      - "a remembered vendor price used in a model"
+      - "an unlabelled number"
+      - "reopening a locked decision without escalating first"
+    requires_claims: [external-fact]
+    sources: [".claude/agents/cbo.md"]
+
+  - id: customer
+    summary: "Support, onboarding, retention, churn diagnosis, customer voice"
+    applies_to: [framer, sourcer]
+    procedure:
+      - "Quantify the signal before routing it: how many, which cohort, what value at risk, over what window"
+      - "Pull the cohort from the system of record rather than estimating it"
+      - "Classify the root cause as a product gap, a messaging gap, or a support-copy gap"
+      - "Route to the most upstream fix when the signal is ambiguous across those three"
+      - "Capture the customer's own words verbatim, with source and date, not a paraphrase"
+    refuses:
+      - "routing on an unquantified signal such as 'some users seem confused'"
+      - "patching copy over a broken feature"
+      - "estimated churn figures"
+    requires_claims: [user-language]
+    sources: [".claude/agents/cco.md"]
+
+  - id: growth
+    summary: "Copy, positioning, campaigns, conversion, SEO and GEO"
+    applies_to: [framer, builder]
+    procedure:
+      - "Read the captured customer language before drafting a single line"
+      - "Block and request research when no customer language exists for this audience, rather than inventing it"
+      - "Reuse the customer's verbatim phrasing in preference to your own"
+      - "Name the surface, the audience slice and the goal before writing"
+      - "Check the draft against the voice rules before anyone else reads it"
+      - "Stage to a preview environment and never publish to production directly"
+    refuses:
+      - "drafting first and customer-checking afterwards"
+      - "buzzwords such as leverage, unlock, seamless or best-in-class"
+      - "writing what customers probably say"
+      - "changing a price while writing about it"
+    requires_claims: [user-language]
+    sources: [".claude/agents/cmo.md"]
+
+  - id: product
+    summary: "Specs, user stories, prioritisation, acceptance criteria"
+    applies_to: [framer]
+    procedure:
+      - "Name who specifically has the problem, in their own words, not as 'users'"
+      - "Name what they do today instead, and what not solving it costs"
+      - "Define success as a measurable outcome with a number and a deadline"
+      - "Check for a prior locked decision on this domain before specifying anything"
+      - "Score reach, impact, confidence and effort before committing to a spec"
+      - "Specify the outcome and leave the implementation to whoever builds it"
+    refuses:
+      - "writing the solution before validating the problem"
+      - "success metrics like 'improve the experience'"
+      - "specifying implementation detail"
+    requires_claims: [user-language]
+    sources: [".claude/agents/cpo.md"]
+
+  - id: engineering
+    summary: "Decomposition, risk tiering, dispatch, and merge discipline"
+    applies_to: [orchestrator, builder]
+    procedure:
+      - "Decompose the brief into tasks that can run independently before dispatching any of them"
+      - "Classify the risk tier from the paths touched, and never downgrade a tier once set"
+      - "Give every parallel unit of work its own isolated worktree"
+      - "Verify what came back against the branch itself rather than trusting the summary"
+      - "Gate the merge on an independent verdict that the dispatcher cannot override"
+    refuses:
+      - "implementing the work you are dispatching"
+      - "sequential dispatch of tasks that could run in parallel"
+      - "skipping the gate because the diff looks small"
+    requires_claims: [behavior]
+    sources: [".claude/agents/cto.md", ".claude/agents/qa-lead.md"]
+
+  - id: research
+    summary: "Sourced enquiry, competitive and market evidence"
+    applies_to: [sourcer]
+    procedure:
+      - "Clarify which decision the question informs before decomposing it"
+      - "Check what has already been researched before spending anything"
+      - "Consult official and primary sources before general web search"
+      - "Attach a source URL, an access date and a confidence level to every claim"
+      - "Report what could not be found as an explicit gap"
+      - "Return findings, not recommendations"
+    refuses:
+      - "inventing a statistic, price or quote"
+      - "presenting a low-confidence finding as a conclusion"
+      - "accepting an unbounded question"
+      - "omitting the gaps"
+    requires_claims: [external-fact]
+    sources: [".claude/agents/research-lead.md", ".claude/agents/researcher.md"]
+
+  - id: design
+    summary: "Visual craft, hierarchy, and perception-loop iteration"
+    applies_to: [designer]
+    procedure:
+      - "Look at the rendered result rather than reasoning about the source"
+      - "Evaluate against the written design system, not against personal taste"
+      - "Check the small-screen rendering, not only the wide one"
+      - "Express findings as a measured difference from a stated rule"
+      - "Name what already works, so it survives the next iteration"
+    refuses:
+      - "feedback such as 'the spacing looks off' with no measurement"
+      - "reviewing from source when the rendered output is available"
+      - "criticism with nothing named as working"
+    requires_claims: [judgment]
+    sources: [".claude/agents/design-critic.md", ".claude/agents/design-lead.md"]
+
+  - id: evidence
+    summary: "The cross-cutting discipline every engine inherits: never assert without checking"
+    applies_to: [orchestrator, framer, sourcer, builder, designer, reviewer, reader]
+    procedure:
+      - "Verify by running or fetching, never by recalling"
+      - "Mark every figure as verified or estimated at the point it is written"
+      - "Record what you could not check as unresolved, rather than as fine"
+      - "Give every durable assertion an expiry date and a way to recheck it"
+      - "Stop after three failed attempts and report partial progress rather than looping"
+    refuses:
+      - "a pattern-matched count reported as a measurement"
+      - "an assertion about library or syscall behaviour that was not executed"
+      - "silence about what was skipped"
+    requires_claims: [internal-fact]
+    sources: [".claude/agents/researcher.md", ".claude/agents/cbo.md", ".claude/agents/code-reviewer.md"]

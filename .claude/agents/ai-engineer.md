@@ -6,9 +6,6 @@ tools: [Read, Write, Edit, Bash, Glob, Grep]
 maxTurns: 20
 color: purple
 isolation: worktree
-mcpServers:
-  - context7
-  - ide
 skills:
   - prompt-engineering-patterns
   - llm-evaluation

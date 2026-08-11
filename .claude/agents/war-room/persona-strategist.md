@@ -9,7 +9,6 @@ color: blue
 invoke_via: "@strategist"
 round_protocol: "round-1-execution"
 maxTurns: 10
-mcpServers: []
 skills:
   - startup-metrics-framework
   - board-meeting-protocol

@@ -7,7 +7,6 @@ tools: [Read, Write, Glob, Grep]
 maxTurns: 12
 color: bronze
 isolation: none
-mcpServers: []
 skills:
   - board-meeting-protocol
   - marketing-psychology

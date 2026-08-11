@@ -13,10 +13,6 @@ budget:
   max_cost_usd: 1.00
   max_runtime_minutes: 20
   max_tool_calls: 50
-mcpServers:
-  - supabase
-  - github
-  - playwright
 skills:
   - playwright-skill
   - e2e-testing-patterns
