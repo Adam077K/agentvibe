@@ -2,9 +2,19 @@
 //
 // scripts/session-start.test.mjs — the SessionStart hook.
 //
-// WHAT THIS PINS. The hook does two jobs the founder chose in Phase 6: it makes the lens
-// and playbook files mechanically loaded rather than discretionary, and it reports when the
-// ledger sweep has stopped running.
+// WHAT THIS PINS — AND, JUST AS IMPORTANTLY, WHAT IT DOES NOT.
+//
+// The hook does two jobs from Phase 6: it EMITS the lens and playbook content, and it
+// reports when the ledger sweep has stopped running. This file used to say the first job
+// made loading "mechanically loaded rather than discretionary". It does not, and this file
+// could never have caught that, because **every assertion here is about the hook's stdout,
+// never about what a session receives.** Measured 2026-08-12: 25,613 bytes emitted, ~2KB
+// inlined, the remainder handed over as a file path — so loading stayed discretionary while
+// this suite stayed green. Standing rule 3, and this is the file it was written about.
+//
+// The payload-size half now lives in c-lenses-and-playbooks-are-loaded, whose evidence runs
+// this suite AND checks the emitted size, so it fails until the router fix lands. Do not
+// re-add a claim of mechanical loading here; this vantage point cannot see it.
 //
 // The second job is the one worth testing hardest. A health reporter that silently degrades
 // reads exactly like a healthy system — the failure mode this whole phase exists to catch.

@@ -132,16 +132,16 @@
     },
     {
       "id": "c-lenses-and-playbooks-are-loaded",
-      "assert": "The lens files and every playbook are injected into each session by .claude/hooks/session-start.js, so loading them is mechanical rather than discretionary",
+      "assert": "The lens files and every playbook REACH AGENT CONTEXT at session start — the hook emits them and the payload stays within the runtime's inline threshold, so loading is mechanical rather than discretionary",
       "kind": "behavior",
       "scope": "project",
       "verified_by": "command",
       "evidence": {
-        "cmd": "node --test scripts/session-start.test.mjs",
+        "cmd": "node --test scripts/session-start.test.mjs && test $(AGENTVIBE_HOOK_NO_REFRESH=1 node .claude/hooks/session-start.js | wc -c) -le 4096",
         "expect_exit": 0
       },
       "valid_until": "2026-11-09",
-      "confidence": 1,
+      "confidence": 0.3,
       "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
       "source_line": 182
     },
@@ -367,7 +367,7 @@
     },
     {
       "id": "c-sessionstart-injection-unverified",
-      "assert": "Whether Claude Code honours hookSpecificOutput.additionalContext on SessionStart is unverified — confirming it needs a NEW session, which cannot be observed from inside this one",
+      "assert": "Claude Code honours hookSpecificOutput.additionalContext at SessionStart — the hook's output IS delivered to the session — but a payload above the runtime's inline threshold arrives as a persisted file path plus a short preview rather than as inline context",
       "kind": "runtime-capability",
       "scope": "project",
       "verified_by": "judge",
@@ -378,8 +378,8 @@
         "risk": "high",
         "judged_by": []
       },
-      "valid_until": "2026-09-08",
-      "confidence": 0.5,
+      "valid_until": "2026-11-09",
+      "confidence": 0.7,
       "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
       "source_line": 182
     },
