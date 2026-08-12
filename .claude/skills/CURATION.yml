@@ -81,7 +81,27 @@ added:
   - name: writing-skills
     source: "https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md"
     fetched: 2026-08-12
-    why: "679 lines, 33 tables, 52 examples, 5 MUST/NEVER rules. Needed directly: Notion, Playwright, Supabase and a Higgsfield-for-MCP skill all have to be authored. Chosen over Anthropic's skill-creator (485 lines, 11 examples) as the more encoded of a genuine duplicate pair — these two ARE the same job, unlike the taste-skill family"
+    why: "679 lines, 33 tables, 52 examples, 5 MUST/NEVER rules. Needed directly: Notion, Playwright, Supabase and a Higgsfield-for-MCP skill all have to be authored. Pairs with skill-creator; see below"
+
+  - name: skill-creator
+    source: "https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md"
+    fetched: 2026-08-12
+    why: |
+      REVERSAL, recorded in full because it is the same mistake twice. This was rejected one
+      commit ago as "the less-encoded half of a genuine duplicate pair" with writing-skills.
+      That was wrong, and wrong the SAME WAY the taste-skill family was: two files with
+      adjacent names were assumed to be one job. They are not.
+        skill-creator  = the EVAL HARNESS. Paired with-skill/baseline subagents dispatched in
+                         the SAME turn (never staggered); a grading.json schema whose field
+                         names text/passed/evidence are load-bearing because the viewer breaks
+                         on others; a description-optimisation loop splitting eval queries
+                         60/40 train/test, running each 3x for a reliable trigger rate, and
+                         selecting on TEST score to avoid overfitting, capped at 5 iterations.
+        writing-skills = the AUTHORING DISCIPLINE. RED-GREEN-REFACTOR applied to documentation,
+                         and the observed failure that a description SUMMARISING the workflow
+                         makes agents follow the description instead of reading the body.
+      Neither reconstructs the other. The lesson generalises: name adjacency is not evidence of
+      duplication, and this file now carries two instances of that error.
 
   - name: doc-coauthoring
     source: "https://github.com/anthropics/skills/blob/main/skills/doc-coauthoring/SKILL.md"
@@ -342,6 +362,7 @@ namespaces:
     - verification-before-completion
     - subagent-driven-development
     - writing-skills
+    - skill-creator
     - brainstorming
     - writing-plans
 
