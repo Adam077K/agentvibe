@@ -33,17 +33,22 @@ See [AGENTS.md](AGENTS.md) for the full routing table and [.claude/agents/](.cla
 
 ## Skills Library
 
-**147 curated skills** at `.claude/skills/[skill-name]/SKILL.md`.
+**134 curated skills** at `.claude/skills/[skill-name]/SKILL.md`, in 7 namespaces. Every cut and every
+reversal is recorded in [CURATION.yml](.claude/skills/CURATION.yml) with the test that made it, and
+`npm run check:curation` fails when the directory drifts from that decision.
 
-**Discovery — read MANIFEST.json, never `ls | grep`:**
+**Discovery is two-tier — start at the routers, not the manifest:**
 
 ```
-Step 1: Read .claude/skills/MANIFEST.json — match the task against each entry's `name` and
-        `description`. (`tags` are present on only 16 of 147 entries, so filtering by tag
-        alone silently misses most of the library.)
-Step 2: Load 3-5 matching SKILL.md files (CEO, C-suite, leads)
-        Load 2-3 matching SKILL.md files (workers)
+Step 1: Read .claude/skills/routers/INDEX.md — six namespaces, one line each (~370 tokens)
+Step 2: Read the ONE namespace that matches (~700 tokens)
+Step 3: Load 3-5 matching SKILL.md files (orchestrator, leads) · 2-3 (workers)
 ```
+
+Reading `MANIFEST.json` whole cost **~15,000 tokens across 147 entries** and grew with every
+skill added, so a good new skill made every unrelated task more expensive. A typical lookup is
+now **~1,070 tokens**. The manifest remains the exhaustive index and is what `check:manifest`
+verifies — it is not where a lookup starts. Never `ls | grep`.
 
 Skills load **on demand only** — never preload.
 

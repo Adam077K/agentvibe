@@ -1,9 +1,15 @@
 {
   "version": "3.0.0",
-  "generated": "2026-08-11",
+  "generated": "2026-08-12",
   "note": "Generated from disk by scripts/build-skills-manifest.mjs. Every path resolves to a top-level .claude/skills/<name>/SKILL.md. Do not hand-edit — run the script.",
-  "totalSkills": 147,
+  "totalSkills": 134,
   "skills": [
+    {
+      "name": "12-principles-of-animation",
+      "description": "Audit animation code against Disney's 12 principles adapted for web. Use when reviewing motion, implementing animations, or checking animation quality. Outputs file:line findings.",
+      "tags": [],
+      "path": ".claude/skills/12-principles-of-animation/SKILL.md"
+    },
     {
       "name": "agent-evaluation",
       "description": "\"Testing and benchmarking LLM agents including behavioral testing, capability assessment, reliability metrics, and production monitoring\\u2014where even top agents achieve less than 50% on re...\"",
@@ -17,75 +23,16 @@
       "path": ".claude/skills/agent-memory-systems/SKILL.md"
     },
     {
-      "name": "agent-tool-builder",
-      "description": "\"Tools are how AI agents interact with the world. A well-designed tool is the difference between an agent that works and one that hallucinates, fails silently, or costs 10x more tokens than necessar...\"",
-      "tags": [],
-      "path": ".claude/skills/agent-tool-builder/SKILL.md"
-    },
-    {
-      "name": "ai-agents-architect",
-      "description": "\"Expert in designing and building autonomous AI agents. Masters tool use, memory systems, planning strategies, and multi-agent orchestration. Use when: build agent, AI agent, autonomous agent, tool ...\"",
-      "tags": [],
-      "path": ".claude/skills/ai-agents-architect/SKILL.md"
-    },
-    {
-      "name": "ai-engineer",
-      "description": "| Build production-ready LLM applications, advanced RAG systems, and intelligent agents. Implements vector search, multimodal AI, agent orchestration, and enterprise AI integrations. Use PROACTIVELY for LLM features, chatbots, AI agents, or AI-powered applications.",
-      "tags": [],
-      "path": ".claude/skills/ai-engineer/SKILL.md"
-    },
-    {
-      "name": "anthropic-routines",
-      "description": "\"How to write a Agentvibe Routine .md file: required frontmatter fields (schedule, routine_id_env_key, budget, trust-spec parsing), body conventions, and MCP grant patterns. Use when authoring or refining any file under .claude/agents/_routines/.\"",
-      "tags": [
-        "orchestration",
-        "agentvibe-specific",
-        "agents",
-        "routines"
-      ],
-      "path": ".claude/skills/anthropic-routines/SKILL.md"
-    },
-    {
       "name": "api-design-principles",
       "description": "\"Master REST and GraphQL API design principles to build intuitive, scalable, and maintainable APIs that delight developers. Use when designing new APIs, reviewing API specifications, or establishing...\"",
       "tags": [],
       "path": ".claude/skills/api-design-principles/SKILL.md"
     },
     {
-      "name": "api-documentation",
-      "description": "\"API documentation workflow for generating OpenAPI specs, creating developer guides, and maintaining comprehensive API documentation.\"",
-      "tags": [],
-      "path": ".claude/skills/api-documentation/SKILL.md"
-    },
-    {
-      "name": "api-documentation-generator",
-      "description": "\"Generate comprehensive, developer-friendly API documentation from code, including endpoints, parameters, examples, and best practices\"",
-      "tags": [],
-      "path": ".claude/skills/api-documentation-generator/SKILL.md"
-    },
-    {
-      "name": "api-security-testing",
-      "description": "\"API security testing workflow for REST and GraphQL APIs covering authentication, authorization, rate limiting, input validation, and security best practices.\"",
-      "tags": [],
-      "path": ".claude/skills/api-security-testing/SKILL.md"
-    },
-    {
-      "name": "architecture",
-      "description": "\"Architectural decision-making framework. Requirements analysis, trade-off evaluation, ADR documentation. Use when making architecture decisions or analyzing system design.\"",
-      "tags": [],
-      "path": ".claude/skills/architecture/SKILL.md"
-    },
-    {
       "name": "architecture-decision-records",
       "description": "\"Write and maintain Architecture Decision Records (ADRs) following best practices for technical decision documentation. Use when documenting significant technical decisions, reviewing past architect...\"",
       "tags": [],
       "path": ".claude/skills/architecture-decision-records/SKILL.md"
-    },
-    {
-      "name": "architecture-patterns",
-      "description": "\"Implement proven backend architecture patterns including Clean Architecture, Hexagonal Architecture, and Domain-Driven Design. Use when architecting complex backend systems or refactoring existing ...\"",
-      "tags": [],
-      "path": ".claude/skills/architecture-patterns/SKILL.md"
     },
     {
       "name": "auth-implementation-patterns",
@@ -134,30 +81,6 @@
       "path": ".claude/skills/aws-secrets-rotation/SKILL.md"
     },
     {
-      "name": "aws-security-audit",
-      "description": "Comprehensive AWS security posture assessment using AWS CLI and security best practices",
-      "tags": [
-        "aws",
-        "security",
-        "audit",
-        "compliance",
-        "kiro-cli",
-        "security-assessment"
-      ],
-      "path": ".claude/skills/aws-security-audit/SKILL.md"
-    },
-    {
-      "name": "board-meeting-protocol",
-      "description": "\"The Agentvibe 4-round board-meeting protocol: R0 framing, R1 independent verdicts, R2 cross-critique, R3 fresh-context synthesis. Includes JSON output schema per round, persona routing rules, and Zod validation requirements. Use for any strategic or irreversible decision.\"",
-      "tags": [
-        "orchestration",
-        "agentvibe-specific",
-        "strategy",
-        "decision-making"
-      ],
-      "path": ".claude/skills/board-meeting-protocol/SKILL.md"
-    },
-    {
       "name": "brainstorming",
       "description": "\"Use before creative or constructive work (features, architecture, behavior). Transforms vague ideas into validated designs through disciplined reasoning and collaboration.\"",
       "tags": [],
@@ -188,40 +111,10 @@
       "path": ".claude/skills/clerk-auth/SKILL.md"
     },
     {
-      "name": "cloud-devops",
-      "description": "\"Cloud infrastructure and DevOps workflow covering AWS, Azure, GCP, Kubernetes, Terraform, CI/CD, monitoring, and cloud-native development.\"",
-      "tags": [],
-      "path": ".claude/skills/cloud-devops/SKILL.md"
-    },
-    {
-      "name": "code-documentation-code-explain",
-      "description": "\"You are a code education expert specializing in explaining complex code through clear narratives, visual diagrams, and step-by-step breakdowns. Transform difficult concepts into understandable expl...\"",
-      "tags": [],
-      "path": ".claude/skills/code-documentation-code-explain/SKILL.md"
-    },
-    {
       "name": "code-refactoring-tech-debt",
       "description": "\"You are a technical debt expert specializing in identifying, quantifying, and prioritizing technical debt in software projects. Analyze the codebase to uncover debt, assess its impact, and create acti\"",
       "tags": [],
       "path": ".claude/skills/code-refactoring-tech-debt/SKILL.md"
-    },
-    {
-      "name": "code-review-excellence",
-      "description": "\"Master effective code review practices to provide constructive feedback, catch bugs early, and foster knowledge sharing while maintaining team morale. Use when reviewing pull requests, establishing...\"",
-      "tags": [],
-      "path": ".claude/skills/code-review-excellence/SKILL.md"
-    },
-    {
-      "name": "code-reviewer",
-      "description": "Elite code review expert specializing in modern AI-powered code analysis, security vulnerabilities, performance optimization, and production reliability. Masters static analysis tools, security scanning, and configuration review with 2024/2025 best practices. Use PROACTIVELY for code quality assurance.",
-      "tags": [],
-      "path": ".claude/skills/code-reviewer/SKILL.md"
-    },
-    {
-      "name": "commit",
-      "description": "\"Create commit messages following Sentry conventions. Use when committing code changes, writing commit messages, or formatting git history. Follows conventional commits with Sentry-specific issue re...\"",
-      "tags": [],
-      "path": ".claude/skills/commit/SKILL.md"
     },
     {
       "name": "competitive-landscape",
@@ -236,58 +129,10 @@
       "path": ".claude/skills/context-compression/SKILL.md"
     },
     {
-      "name": "copywriting",
-      "description": "> Use this skill when writing, rewriting, or improving marketing copy for any page (homepage, landing page, pricing, feature, product, or about page). This skill produces clear, compelling, and testable copy while enforcing alignment, honesty, and conversion best practices.",
-      "tags": [],
-      "path": ".claude/skills/copywriting/SKILL.md"
-    },
-    {
-      "name": "core-components",
-      "description": "\"Core component library and design system patterns. Use when building UI, using design tokens, or working with the component library.\"",
-      "tags": [],
-      "path": ".claude/skills/core-components/SKILL.md"
-    },
-    {
-      "name": "create-pr",
-      "description": "\"Create pull requests following Sentry conventions. Use when opening PRs, writing PR descriptions, or preparing changes for review. Follows Sentry's code review guidelines.\"",
-      "tags": [],
-      "path": ".claude/skills/create-pr/SKILL.md"
-    },
-    {
-      "name": "data-engineer",
-      "description": "| Build scalable data pipelines, modern data warehouses, and real-time streaming architectures. Implements Apache Spark, dbt, Airflow, and cloud-native data platforms. Use PROACTIVELY for data pipeline design, analytics infrastructure, or modern data stack implementation.",
-      "tags": [],
-      "path": ".claude/skills/data-engineer/SKILL.md"
-    },
-    {
-      "name": "data-storytelling",
-      "description": "\"Transform data into compelling narratives using visualization, context, and persuasive structure. Use when presenting analytics to stakeholders, creating data reports, or building executive present...\"",
-      "tags": [],
-      "path": ".claude/skills/data-storytelling/SKILL.md"
-    },
-    {
-      "name": "database",
-      "description": "\"Database development and operations workflow covering SQL, NoSQL, database design, migrations, optimization, and data engineering.\"",
-      "tags": [],
-      "path": ".claude/skills/database/SKILL.md"
-    },
-    {
       "name": "database-design",
       "description": "\"Database design principles and decision-making. Schema design, indexing strategy, ORM selection, serverless databases.\"",
       "tags": [],
       "path": ".claude/skills/database-design/SKILL.md"
-    },
-    {
-      "name": "debugger",
-      "description": "| Debugging specialist for errors, test failures, and unexpected behavior. Use proactively when encountering any issues.",
-      "tags": [],
-      "path": ".claude/skills/debugger/SKILL.md"
-    },
-    {
-      "name": "debugging-strategies",
-      "description": "\"Master systematic debugging techniques, profiling tools, and root cause analysis to efficiently track down bugs across any codebase or technology stack. Use when investigating bugs, performance iss...\"",
-      "tags": [],
-      "path": ".claude/skills/debugging-strategies/SKILL.md"
     },
     {
       "name": "deep-research",
@@ -296,16 +141,16 @@
       "path": ".claude/skills/deep-research/SKILL.md"
     },
     {
-      "name": "deploy-to-vercel",
-      "description": "Deploy applications and websites to Vercel. Use when the user requests deployment actions like \"deploy my app\", \"deploy and give me the link\", \"push this live\", or \"create a preview deployment\".",
-      "tags": [],
-      "path": ".claude/skills/deploy-to-vercel/SKILL.md"
-    },
-    {
       "name": "deployment-procedures",
       "description": "\"Production deployment principles and decision-making. Safe deployment workflows, rollback strategies, and verification. Teaches thinking, not scripts.\"",
       "tags": [],
       "path": ".claude/skills/deployment-procedures/SKILL.md"
+    },
+    {
+      "name": "design-mirror",
+      "description": "\"Replicate the visual style of any website and apply it to your existing codebase. Use this skill whenever the user wants to match a site's design, mirror a UI aesthetic, make their app look like another site, or replicate a specific visual style from a URL. Trigger on phrases like 'make it look like', 'match the design of', 'copy the style from', 'I want my app to look like X', 'mirror this design', 'inspired by [url]', or any time the user points at a website and says they want their frontend to match it.\"",
+      "tags": [],
+      "path": ".claude/skills/design-mirror/SKILL.md"
     },
     {
       "name": "design-orchestration",
@@ -326,16 +171,10 @@
       "path": ".claude/skills/dispatching-parallel-agents/SKILL.md"
     },
     {
-      "name": "documentation",
-      "description": "\"Documentation generation workflow covering API docs, architecture docs, README files, code comments, and technical writing.\"",
+      "name": "doc-coauthoring",
+      "description": "Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration, and verify the doc works for readers. Trigger when user mentions writing docs, creating proposals, drafting specs, or similar documentation tasks.",
       "tags": [],
-      "path": ".claude/skills/documentation/SKILL.md"
-    },
-    {
-      "name": "documentation-templates",
-      "description": "\"Documentation templates and structure guidelines. README, API docs, code comments, and AI-friendly documentation.\"",
-      "tags": [],
-      "path": ".claude/skills/documentation-templates/SKILL.md"
+      "path": ".claude/skills/doc-coauthoring/SKILL.md"
     },
     {
       "name": "domain-driven-design",
@@ -347,12 +186,6 @@
         "architecture"
       ],
       "path": ".claude/skills/domain-driven-design/SKILL.md"
-    },
-    {
-      "name": "e2e-testing",
-      "description": "\"End-to-end testing workflow with Playwright for browser automation, visual regression, cross-browser testing, and CI/CD integration.\"",
-      "tags": [],
-      "path": ".claude/skills/e2e-testing/SKILL.md"
     },
     {
       "name": "e2e-testing-patterns",
@@ -385,12 +218,6 @@
       "path": ".claude/skills/error-handling-patterns/SKILL.md"
     },
     {
-      "name": "find-bugs",
-      "description": "\"Find bugs, security vulnerabilities, and code quality issues in local branch changes. Use when asked to review changes, find bugs, security review, or audit code on the current branch.\"",
-      "tags": [],
-      "path": ".claude/skills/find-bugs/SKILL.md"
-    },
-    {
       "name": "finishing-a-development-branch",
       "description": "\"Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup\"",
       "tags": [],
@@ -401,24 +228,6 @@
       "description": "> Optimize any form that is NOT signup or account registration — including lead capture, contact, demo request, application, survey, quote, and checkout forms. Use when the goal is to increase form completion rate, reduce friction, or improve lead quality without breaking compliance or downstream workflows.",
       "tags": [],
       "path": ".claude/skills/form-cro/SKILL.md"
-    },
-    {
-      "name": "frontend-design",
-      "description": "\"Create distinctive, production-grade frontend interfaces with intentional aesthetics, high craft, and non-generic visual identity. Use when building or styling web UIs, components, pages, dashboard...\"",
-      "tags": [],
-      "path": ".claude/skills/frontend-design/SKILL.md"
-    },
-    {
-      "name": "frontend-dev-guidelines",
-      "description": "\"Opinionated frontend development standards for modern React + TypeScript applications. Covers Suspense-first data fetching, lazy loading, feature-based architecture, MUI v7 styling, TanStack Router...\"",
-      "tags": [],
-      "path": ".claude/skills/frontend-dev-guidelines/SKILL.md"
-    },
-    {
-      "name": "frontend-developer",
-      "description": "| Build React components, implement responsive layouts, and handle client-side state management. Masters React 19, Next.js 15, and modern frontend architecture. Optimizes performance and ensures accessibility. Use PROACTIVELY when creating UI components or fixing frontend issues.",
-      "tags": [],
-      "path": ".claude/skills/frontend-developer/SKILL.md"
     },
     {
       "name": "full-output-enforcement",
@@ -433,12 +242,6 @@
       "path": ".claude/skills/gdpr-data-handling/SKILL.md"
     },
     {
-      "name": "git-pr-workflows-git-workflow",
-      "description": "\"Orchestrate a comprehensive git workflow from code review through PR creation, leveraging specialized agents for quality assurance, testing, and deployment readiness. This workflow implements modern g\"",
-      "tags": [],
-      "path": ".claude/skills/git-pr-workflows-git-workflow/SKILL.md"
-    },
-    {
       "name": "github-actions-templates",
       "description": "\"Create production-ready GitHub Actions workflows for automated testing, building, and deploying applications. Use when setting up CI/CD with GitHub Actions, automating development workflows, or cre...\"",
       "tags": [],
@@ -451,10 +254,16 @@
       "path": ".claude/skills/high-end-visual-design/SKILL.md"
     },
     {
-      "name": "humanizer",
-      "description": "| Remove signs of AI-generated writing from text. Use when editing or reviewing text to make it sound more natural and human-written. Based on Wikipedia's comprehensive \"Signs of AI writing\" guide. Detects and fixes patterns including: inflated symbolism, promotional language, superficial -ing analyses, vague attributions, em dash overuse, rule of three, AI vocabulary words, negative parallelisms, and excessive conjunctive phrases.",
+      "name": "impeccable",
+      "description": "Use when the user wants to design, redesign, shape, critique, audit, polish, clarify, distill, harden, optimize, adapt, animate, colorize, extract, or otherwise improve a frontend interface. Covers websites, landing pages, dashboards, product UI, app shells, components, forms, settings, onboarding, and empty states. Handles UX review, visual hierarchy, information architecture, cognitive load, accessibility, performance, responsive behavior, theming, anti-patterns, typography, fonts, spacing, layout, alignment, color, motion, micro-interactions, UX copy, error states, edge cases, i18n, and reusable design systems or tokens. Also use for bland designs that need to become bolder or more delightful, loud designs that should become quieter, live browser iteration on UI elements, or ambitious visual effects that should feel technically extraordinary. Not for backend-only or non-UI tasks.",
       "tags": [],
-      "path": ".claude/skills/humanizer/SKILL.md"
+      "path": ".claude/skills/impeccable/SKILL.md"
+    },
+    {
+      "name": "industrial-brutalist-ui",
+      "description": "Raw mechanical interfaces fusing Swiss typographic print with military terminal aesthetics. Rigid grids, extreme type scale contrast, utilitarian color, analog degradation effects. For data-heavy dashboards, portfolios, or editorial sites that need to feel like declassified blueprints.",
+      "tags": [],
+      "path": ".claude/skills/industrial-brutalist-ui/SKILL.md"
     },
     {
       "name": "inngest",
@@ -469,27 +278,10 @@
       "path": ".claude/skills/launch-strategy/SKILL.md"
     },
     {
-      "name": "linear-mvp-recipe",
-      "description": "\"Agentvibe's locked Linear label vocabulary, sub-ticket creation pattern, and single-synthesis-comment style. Use whenever any CEO or C-suite agent interacts with Linear tickets, creates sub-tickets, or posts comments.\"",
-      "tags": [
-        "workflow",
-        "agentvibe-specific",
-        "linear",
-        "orchestration"
-      ],
-      "path": ".claude/skills/linear-mvp-recipe/SKILL.md"
-    },
-    {
       "name": "llm-app-patterns",
       "description": "\"Production-ready patterns for building LLM applications. Covers RAG pipelines, agent architectures, prompt IDEs, and LLMOps monitoring. Use when designing AI applications, implementing RAG, buildin...\"",
       "tags": [],
       "path": ".claude/skills/llm-app-patterns/SKILL.md"
-    },
-    {
-      "name": "llm-evaluation",
-      "description": "\"Implement comprehensive evaluation strategies for LLM applications using automated metrics, human feedback, and benchmarking. Use when testing LLM performance, measuring AI application quality, or ...\"",
-      "tags": [],
-      "path": ".claude/skills/llm-evaluation/SKILL.md"
     },
     {
       "name": "market-sizing-analysis",
@@ -527,12 +319,6 @@
       "path": ".claude/skills/minimalist-ui/SKILL.md"
     },
     {
-      "name": "multi-agent-brainstorming",
-      "description": "Use this skill when a design or idea requires higher confidence, risk reduction, or formal review. This skill orchestrates a structured, sequential multi-agent design review where each agent has a strict, non-overlapping role. It prevents blind spots, false confidence, and premature convergence.",
-      "tags": [],
-      "path": ".claude/skills/multi-agent-brainstorming/SKILL.md"
-    },
-    {
       "name": "multi-agent-patterns",
       "description": "\"Master orchestrator, peer-to-peer, and hierarchical multi-agent architectures\"",
       "tags": [],
@@ -563,6 +349,12 @@
       "path": ".claude/skills/nodejs-backend-patterns/SKILL.md"
     },
     {
+      "name": "object-calisthenics",
+      "description": "Use when writing or refactoring object-oriented code and wanting hard structural constraints rather than style advice. Jeff Bay nine rules as enforceable limits — max two instance variables, no getters or setters on domain objects, first-class collections, one level of indentation.",
+      "tags": [],
+      "path": ".claude/skills/object-calisthenics/SKILL.md"
+    },
+    {
       "name": "onboarding-cro",
       "description": "\"When the user wants to optimize post-signup onboarding, user activation, first-run experience, or time-to-value. Also use when the user mentions \\\"onboarding flow,\\\" \\\"activation rate,\\\" \\\"u...\"",
       "tags": [],
@@ -584,12 +376,6 @@
       "description": "> Analyze and optimize individual pages for conversion performance. Use when the user wants to improve conversion rates, diagnose why a page is underperforming, or increase the effectiveness of marketing pages (homepage, landing pages, pricing, feature pages, or blog posts). This skill focuses on diagnosis, prioritization, and testable recommendations— not blind optimization.",
       "tags": [],
       "path": ".claude/skills/page-cro/SKILL.md"
-    },
-    {
-      "name": "parallel-agents",
-      "description": "\"Multi-agent orchestration patterns. Use when multiple independent tasks can run with different domain expertise or when comprehensive analysis requires multiple perspectives.\"",
-      "tags": [],
-      "path": ".claude/skills/parallel-agents/SKILL.md"
     },
     {
       "name": "payment-integration",
@@ -658,33 +444,10 @@
       "path": ".claude/skills/prompt-caching/SKILL.md"
     },
     {
-      "name": "prompt-engineering-patterns",
-      "description": "\"Master advanced prompt engineering techniques to maximize LLM performance, reliability, and controllability in production. Use when optimizing prompts, improving LLM outputs, or designing productio...\"",
-      "tags": [],
-      "path": ".claude/skills/prompt-engineering-patterns/SKILL.md"
-    },
-    {
-      "name": "qa-gate-protocol",
-      "description": "\"Agentvibe's 4-tier QA gate: Trivial/Lite/Full/Irreversible classification, reviewer assignment, evaluator-optimizer pattern, multi-judge setup, Codex CLI graceful degradation, and bypass rules. Use when QA-Lead is classifying a PR or CTO is routing a task to the correct tier.\"",
-      "tags": [
-        "quality",
-        "agentvibe-specific",
-        "testing",
-        "security"
-      ],
-      "path": ".claude/skills/qa-gate-protocol/SKILL.md"
-    },
-    {
       "name": "radix-ui-design-system",
       "description": "\"Build accessible design systems with Radix UI primitives. Headless component customization, theming strategies, and compound component patterns for production-grade UI libraries.\"",
       "tags": [],
       "path": ".claude/skills/radix-ui-design-system/SKILL.md"
-    },
-    {
-      "name": "rag-engineer",
-      "description": "\"Expert in building Retrieval-Augmented Generation systems. Masters embedding models, vector databases, chunking strategies, and retrieval optimization for LLM applications. Use when: building RAG, ...\"",
-      "tags": [],
-      "path": ".claude/skills/rag-engineer/SKILL.md"
     },
     {
       "name": "react-patterns",
@@ -693,16 +456,16 @@
       "path": ".claude/skills/react-patterns/SKILL.md"
     },
     {
-      "name": "react-ui-patterns",
-      "description": "\"Modern React UI patterns for loading states, error handling, and data fetching. Use when building UI components, handling async data, or managing UI states.\"",
+      "name": "react19-test-patterns",
+      "description": "'Provides before/after patterns for migrating test files to React 19 compatibility, including act() imports, Simulate removal, and StrictMode call count changes.'",
       "tags": [],
-      "path": ".claude/skills/react-ui-patterns/SKILL.md"
+      "path": ".claude/skills/react19-test-patterns/SKILL.md"
     },
     {
-      "name": "readme",
-      "description": "\"When the user wants to create or update a README.md file for a project. Also use when the user says 'write readme,' 'create readme,' 'document this project,' 'project documentation,' or asks for he...\"",
+      "name": "receiving-code-review",
+      "description": "Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation",
       "tags": [],
-      "path": ".claude/skills/readme/SKILL.md"
+      "path": ".claude/skills/receiving-code-review/SKILL.md"
     },
     {
       "name": "redesign-existing-projects",
@@ -712,21 +475,9 @@
     },
     {
       "name": "requesting-code-review",
-      "description": "\"Use when completing tasks, implementing major features, or before merging to verify work meets requirements\"",
+      "description": "Use when completing tasks, implementing major features, or before merging to verify work meets requirements",
       "tags": [],
       "path": ".claude/skills/requesting-code-review/SKILL.md"
-    },
-    {
-      "name": "screenshots",
-      "description": "\"Generate marketing screenshots of your app using Playwright. Use when the user wants to create screenshots for Product Hunt, social media, landing pages, or documentation.\"",
-      "tags": [],
-      "path": ".claude/skills/screenshots/SKILL.md"
-    },
-    {
-      "name": "search-specialist",
-      "description": "Expert web researcher using advanced search techniques and synthesis. Masters search operators, result filtering, and multi-source verification. Handles competitive analysis and fact-checking. Use PROACTIVELY for deep research, information gathering, or trend analysis.",
-      "tags": [],
-      "path": ".claude/skills/search-specialist/SKILL.md"
     },
     {
       "name": "secrets-management",
@@ -739,12 +490,6 @@
       "description": "\"Comprehensive security auditing workflow covering web application testing, API security, penetration testing, vulnerability scanning, and security hardening.\"",
       "tags": [],
       "path": ".claude/skills/security-audit/SKILL.md"
-    },
-    {
-      "name": "security-scanning-security-dependencies",
-      "description": "\"You are a security expert specializing in dependency vulnerability analysis, SBOM generation, and supply chain security. Scan project dependencies across ecosystems to identify vulnerabilities, ass...\"",
-      "tags": [],
-      "path": ".claude/skills/security-scanning-security-dependencies/SKILL.md"
     },
     {
       "name": "segment-cdp",
@@ -763,6 +508,12 @@
       "description": "\"Identify error-prone APIs and dangerous configurations\"",
       "tags": [],
       "path": ".claude/skills/sharp-edges/SKILL.md"
+    },
+    {
+      "name": "skill-creator",
+      "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.",
+      "tags": [],
+      "path": ".claude/skills/skill-creator/SKILL.md"
     },
     {
       "name": "social-content",
@@ -801,6 +552,12 @@
       "path": ".claude/skills/stripe-integration/SKILL.md"
     },
     {
+      "name": "subagent-driven-development",
+      "description": "Use when executing implementation plans with independent tasks in the current session",
+      "tags": [],
+      "path": ".claude/skills/subagent-driven-development/SKILL.md"
+    },
+    {
       "name": "supabase-rls-conventions",
       "description": "\"Agentvibe RLS conventions: per-user row-level security, service-role bypass patterns for Inngest jobs, war-room table deny-all policies, and audit_log write permissions. Use when writing or reviewing any Supabase migration or RLS policy in this project.\"",
       "tags": [
@@ -830,22 +587,178 @@
       "path": ".claude/skills/tailwind-patterns/SKILL.md"
     },
     {
-      "name": "tdd-orchestrator",
-      "description": "| Master TDD orchestrator specializing in red-green-refactor discipline, multi-agent workflow coordination, and comprehensive test-driven development practices. Enforces TDD best practices across teams with AI-assisted testing and modern frameworks. Use PROACTIVELY for TDD implementation and governance.",
-      "tags": [],
-      "path": ".claude/skills/tdd-orchestrator/SKILL.md"
-    },
-    {
       "name": "tdd-workflow",
       "description": "\"Test-Driven Development workflow principles. RED-GREEN-REFACTOR cycle.\"",
       "tags": [],
       "path": ".claude/skills/tdd-workflow/SKILL.md"
     },
     {
-      "name": "testing-patterns",
-      "description": "\"Jest testing patterns, factory functions, mocking strategies, and TDD workflow. Use when writing unit tests, creating test factories, or following TDD red-green-refactor cycle.\"",
+      "name": "thinking-bounded-rationality",
+      "description": "Use when search or investigation could run forever. Set an explicit good-enough threshold first, then stop at the first option that clears it.",
       "tags": [],
-      "path": ".claude/skills/testing-patterns/SKILL.md"
+      "path": ".claude/skills/thinking-bounded-rationality/SKILL.md"
+    },
+    {
+      "name": "thinking-circle-of-competence",
+      "description": "Use when a specific claim may lack grounding. Check evidence boundary, size wrongness cost, then answer, fetch, or abstain — never confabulate.",
+      "tags": [],
+      "path": ".claude/skills/thinking-circle-of-competence/SKILL.md"
+    },
+    {
+      "name": "thinking-cynefin",
+      "description": "When the right response mode is unclear, classify the cause-effect domain first; decompose disorder.",
+      "tags": [],
+      "path": ".claude/skills/thinking-cynefin/SKILL.md"
+    },
+    {
+      "name": "thinking-effectuation",
+      "description": "Under genuine uncertainty with no reliable forecast, inventory means, cap downside at affordable loss, act for commitments, and let goals emerge from controllable moves.",
+      "tags": [],
+      "path": ".claude/skills/thinking-effectuation/SKILL.md"
+    },
+    {
+      "name": "thinking-first-principles",
+      "description": "When a constraint is treated as fixed, separate physics from convention, keep only independently supported primitives, and rebuild the simplest solution that satisfies real constraints.",
+      "tags": [],
+      "path": ".claude/skills/thinking-first-principles/SKILL.md"
+    },
+    {
+      "name": "thinking-five-whys-plus",
+      "description": "When a fault is localized and the proximate cause is known but the systemic root is not, chain evidence-linked whys with a counterfactual stop and a countermeasure.",
+      "tags": [],
+      "path": ".claude/skills/thinking-five-whys-plus/SKILL.md"
+    },
+    {
+      "name": "thinking-jobs-to-be-done",
+      "description": "Deciding what to build or why adoption fails. Recover the progress users hire a solution for under a circumstance, then rank by outcome and competing workarounds.",
+      "tags": [],
+      "path": ".claude/skills/thinking-jobs-to-be-done/SKILL.md"
+    },
+    {
+      "name": "thinking-kepner-tregoe",
+      "description": "Use when a selective defect needs IS/IS-NOT difference analysis or a consequential option choice needs must/want weighting and adverse-consequence comparison.",
+      "tags": [],
+      "path": ".claude/skills/thinking-kepner-tregoe/SKILL.md"
+    },
+    {
+      "name": "thinking-lindy-effect",
+      "description": "Use when longevity of a non-perishable option matters. Treat survival duration as a remaining-life prior, then check domain drift before favoring the proven.",
+      "tags": [],
+      "path": ".claude/skills/thinking-lindy-effect/SKILL.md"
+    },
+    {
+      "name": "thinking-map-territory",
+      "description": "When a claim, doc, test, metric, or assumption conflicts with observed behavior, stop theorizing from the map and verify the live code or data; let territory overrule.",
+      "tags": [],
+      "path": ".claude/skills/thinking-map-territory/SKILL.md"
+    },
+    {
+      "name": "thinking-margin-of-safety",
+      "description": "When provisioning, setting a limit, or committing an estimate under uncertainty, size a buffer to residual error and the cost of breach—not to the optimistic edge.",
+      "tags": [],
+      "path": ".claude/skills/thinking-margin-of-safety/SKILL.md"
+    },
+    {
+      "name": "thinking-model-combination",
+      "description": "When one mental model leaves a material blind spot on a multi-domain or high-stakes problem, sequence complementary models with named roles and a conflict rule.",
+      "tags": [],
+      "path": ".claude/skills/thinking-model-combination/SKILL.md"
+    },
+    {
+      "name": "thinking-model-router",
+      "description": "When unsure which thinking skill fits, map domain and problem type, then return NONE or one primary skill by default (at most three complementary).",
+      "tags": [],
+      "path": ".claude/skills/thinking-model-router/SKILL.md"
+    },
+    {
+      "name": "thinking-ooda",
+      "description": "Use under time pressure when the situation is still changing and you must act before certainty — cycle Observe→Orient→Decide→Act on ~70% confidence, then re-observe.",
+      "tags": [],
+      "path": ".claude/skills/thinking-ooda/SKILL.md"
+    },
+    {
+      "name": "thinking-opportunity-cost",
+      "description": "Before committing scarce time, people, or money, name the best forgone use of those resources and the value delta of the chosen path versus that alternative.",
+      "tags": [],
+      "path": ".claude/skills/thinking-opportunity-cost/SKILL.md"
+    },
+    {
+      "name": "thinking-pre-mortem",
+      "description": "Before committing to a plan or launch, assume it already failed and reason backward through concrete causes — convert failure paths into mitigations, gates, and stop checks.",
+      "tags": [],
+      "path": ".claude/skills/thinking-pre-mortem/SKILL.md"
+    },
+    {
+      "name": "thinking-probabilistic",
+      "description": "Use when forecasting, estimating, or sizing risk — anchor on base rates, give ranges, update prior→likelihood→posterior on evidence, and factor unmeasured quantities into order-of-magnitude bounds.",
+      "tags": [],
+      "path": ".claude/skills/thinking-probabilistic/SKILL.md"
+    },
+    {
+      "name": "thinking-red-team",
+      "description": "For authorized security review of code, auth, or APIs you control, model the attacker, map the attack surface, and report only findings with a reproducible exploit path and verified mitigation.",
+      "tags": [],
+      "path": ".claude/skills/thinking-red-team/SKILL.md"
+    },
+    {
+      "name": "thinking-reversibility",
+      "description": "Before heavy deliberation, classify the decision as cheap or costly to undo; decide two-way doors fast and stage one-way doors to preserve options.",
+      "tags": [],
+      "path": ".claude/skills/thinking-reversibility/SKILL.md"
+    },
+    {
+      "name": "thinking-scientific-method",
+      "description": "When a symptom has several plausible causes, rank falsifiable hypotheses and run the cheapest discriminating observation first; prefer least-assumptive survivors only after evidence fit.",
+      "tags": [],
+      "path": ".claude/skills/thinking-scientific-method/SKILL.md"
+    },
+    {
+      "name": "thinking-second-order",
+      "description": "When a change has effects past the immediate fix—incentives, scale, feedback—trace consequence chains with timing and probability before committing.",
+      "tags": [],
+      "path": ".claude/skills/thinking-second-order/SKILL.md"
+    },
+    {
+      "name": "thinking-socratic",
+      "description": "When a request is vague, assumption-laden, or \"obvious,\" ask the few load-bearing questions that expose hidden requirements before building or committing.",
+      "tags": [],
+      "path": ".claude/skills/thinking-socratic/SKILL.md"
+    },
+    {
+      "name": "thinking-steel-manning",
+      "description": "Before rejecting a proposal or reflexively agreeing, build the strongest faithful opposing case, state agreement conditions, then update or reaffirm.",
+      "tags": [],
+      "path": ".claude/skills/thinking-steel-manning/SKILL.md"
+    },
+    {
+      "name": "thinking-systems",
+      "description": "When behavior is emergent across components—fixes elsewhere break, loops/delays dominate—map boundary, stocks/flows, feedback, archetypes, then rank leverage.",
+      "tags": [],
+      "path": ".claude/skills/thinking-systems/SKILL.md"
+    },
+    {
+      "name": "thinking-theory-of-constraints",
+      "description": "When throughput or latency is pipeline-limited, identify the single binding constraint and exploit, subordinate, elevate, then recheck—ignore non-constraints.",
+      "tags": [],
+      "path": ".claude/skills/thinking-theory-of-constraints/SKILL.md"
+    },
+    {
+      "name": "thinking-thought-experiment",
+      "description": "'When a real test is too rare, large, or irreversible, run a controlled counterfactual: isolate one variable, fix conditions, trace the mechanistic chain, and bound what the result implies.'",
+      "tags": [],
+      "path": ".claude/skills/thinking-thought-experiment/SKILL.md"
+    },
+    {
+      "name": "thinking-triz",
+      "description": "When two design requirements seem mutually exclusive, name the contradiction, separate conflicting states, then invent a concrete no-compromise resolution.",
+      "tags": [],
+      "path": ".claude/skills/thinking-triz/SKILL.md"
+    },
+    {
+      "name": "thinking-via-negativa",
+      "description": "Use when the reflex is to add a feature, layer, or process. Prefer removing harmful or nonessential elements first, with an irreversibility guard before deletion.",
+      "tags": [],
+      "path": ".claude/skills/thinking-via-negativa/SKILL.md"
     },
     {
       "name": "tool-design",
@@ -865,34 +778,16 @@
       "path": ".claude/skills/trust-spec-contracts/SKILL.md"
     },
     {
+      "name": "ui-typography",
+      "description": "> Professional typography rules for UI design, web applications, software interfaces, and all screen-based text. Enforces timeless typographic correctness that LLMs consistently get wrong: proper quote marks, dashes, spacing, hierarchy, and layout. ENFORCEMENT MODE: When generating ANY HTML, CSS, React, JSX, or UI code containing visible text, auto-apply every rule in this skill silently — do not ask, do not explain, just produce correct typography. AUDIT MODE: When reviewing or improving existing interfaces or legacy code, flag violations and provide fixes. Trigger on: any HTML/CSS/React artifact creation, \"build a landing page\", \"create a component\", \"design a UI\", \"fix the typography\", \"make this look professional\", \"review this layout\", web design, presentation design, dashboard creation, document generation, or any task producing visible text for humans. Even if the user doesn't mention typography, apply these rules whenever generating UI output.",
+      "tags": [],
+      "path": ".claude/skills/ui-typography/SKILL.md"
+    },
+    {
       "name": "ui-visual-validator",
       "description": "| Rigorous visual validation expert specializing in UI testing, design system compliance, and accessibility verification. Masters screenshot analysis, visual regression testing, and component validation. Use PROACTIVELY to verify UI modifications have achieved their intended goals through comprehensive visual analysis.",
       "tags": [],
       "path": ".claude/skills/ui-visual-validator/SKILL.md"
-    },
-    {
-      "name": "unit-testing-test-generate",
-      "description": "\"Generate comprehensive, maintainable unit tests across languages with strong coverage and edge case focus.\"",
-      "tags": [],
-      "path": ".claude/skills/unit-testing-test-generate/SKILL.md"
-    },
-    {
-      "name": "using-git-worktrees",
-      "description": "\"Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verifi...\"",
-      "tags": [],
-      "path": ".claude/skills/using-git-worktrees/SKILL.md"
-    },
-    {
-      "name": "vector-database-engineer",
-      "description": "\"Expert in vector databases, embedding strategies, and semantic search implementation. Masters Pinecone, Weaviate, Qdrant, Milvus, and pgvector for RAG applications, recommendation systems, and similar\"",
-      "tags": [],
-      "path": ".claude/skills/vector-database-engineer/SKILL.md"
-    },
-    {
-      "name": "vercel-cli-with-tokens",
-      "description": "Deploy and manage projects on Vercel using token-based authentication. Use when working with Vercel CLI using access tokens rather than interactive login — e.g. \"deploy to vercel\", \"set up vercel\", \"add environment variables to vercel\".",
-      "tags": [],
-      "path": ".claude/skills/vercel-cli-with-tokens/SKILL.md"
     },
     {
       "name": "vercel-composition-patterns",
@@ -907,33 +802,16 @@
       "path": ".claude/skills/vercel-deployment/SKILL.md"
     },
     {
-      "name": "vercel-react-best-practices",
-      "description": "React and Next.js performance optimization guidelines from Vercel Engineering. This skill should be used when writing, reviewing, or refactoring React/Next.js code to ensure optimal performance patterns. Triggers on tasks involving React components, Next.js pages, data fetching, bundle optimization, or performance improvements.",
-      "tags": [],
-      "path": ".claude/skills/vercel-react-best-practices/SKILL.md"
-    },
-    {
       "name": "vercel-react-native-skills",
       "description": "React Native and Expo best practices for building performant mobile apps. Use when building React Native components, optimizing list performance, implementing animations, or working with native modules. Triggers on tasks involving React Native, Expo, mobile performance, or native platform APIs.",
       "tags": [],
       "path": ".claude/skills/vercel-react-native-skills/SKILL.md"
     },
     {
-      "name": "vercel-react-view-transitions",
-      "description": "Guide for implementing smooth, native-feeling animations using React's View Transition API (`<ViewTransition>` component, `addTransitionType`, and CSS view transition pseudo-elements). Use this skill whenever the user wants to add page transitions, animate route changes, create shared element animations, animate enter/exit of components, animate list reorder, implement directional (forward/back) navigation animations, or integrate view transitions in Next.js. Also use when the user mentions view transitions, `startViewTransition`, `ViewTransition`, transition types, or asks about animating between UI states in React without third-party animation libraries.",
+      "name": "verification-before-completion",
+      "description": "Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always",
       "tags": [],
-      "path": ".claude/skills/vercel-react-view-transitions/SKILL.md"
-    },
-    {
-      "name": "war-room-orchestration",
-      "description": "\"How CEO and C-suite dispatch work through the Agentvibe war-room trust-spec system: Linear label routing, Cloudflare bridge, HMAC-signed specs, fan-out/fan-in via Inngest, and audit_log enforcement. Use when authoring or debugging any CEO/C-suite dispatch flow.\"",
-      "tags": [
-        "orchestration",
-        "agentvibe-specific",
-        "agents",
-        "war-room"
-      ],
-      "path": ".claude/skills/war-room-orchestration/SKILL.md"
+      "path": ".claude/skills/verification-before-completion/SKILL.md"
     },
     {
       "name": "wcag-audit-patterns",
@@ -943,7 +821,7 @@
     },
     {
       "name": "web-design-guidelines",
-      "description": "\"Review UI code for Web Interface Guidelines compliance. Use when asked to \\\\\\\"review my UI\\\\\\\", \\\\\\\"check accessibility\\\\\\\", \\\\\\\"audit design\\\\\\\", \\\\\\\"review UX\\\\\\\", or \\\\\\\"check my site aga...\"",
+      "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\".",
       "tags": [],
       "path": ".claude/skills/web-design-guidelines/SKILL.md"
     },
@@ -965,10 +843,22 @@
       "path": ".claude/skills/worktree-isolation-pattern/SKILL.md"
     },
     {
+      "name": "writing-good-tests",
+      "description": "Use when writing or changing tests, adding mocks, or reviewing test quality. Bans mirror assertions and change-detector tests, and gates on a mutation check — verified to have zero overlap with tdd-workflow, which covers only the red-green-refactor loop.",
+      "tags": [],
+      "path": ".claude/skills/writing-good-tests/SKILL.md"
+    },
+    {
       "name": "writing-plans",
       "description": "\"Use when you have a spec or requirements for a multi-step task, before touching code\"",
       "tags": [],
       "path": ".claude/skills/writing-plans/SKILL.md"
+    },
+    {
+      "name": "writing-skills",
+      "description": "Use when creating new skills, editing existing skills, or verifying skills work before deployment",
+      "tags": [],
+      "path": ".claude/skills/writing-skills/SKILL.md"
     },
     {
       "name": "xss-html-injection",

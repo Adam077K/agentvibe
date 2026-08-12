@@ -291,6 +291,50 @@ for (const f of exists('.claude/hooks') ? fs.readdirSync(abs('.claude/hooks')) :
   }
 }
 
+// ── 10 · skills that also exist in ~/.claude/skills ────────────────────────
+//
+// WARN, never block: `~/.claude` is machine state and a CI runner has none of it, so failing
+// here would fail every run for a reason the PR did not cause.
+//
+// Phase 7 found this the way Phase 4b found it for agents — by the runtime continuing to
+// offer five skills after they were deleted. Deleting a repo skill does not remove the name;
+// it un-shadows the global copy. Seven of 63 cuts landed here and five of those globals are
+// drifted, so the name now resolves to different text than the file that was removed.
+//
+// statSync, NOT withFileTypes: 32 of the 42 globals are symlinks, and isDirectory() reports
+// false for a symlink. The first measurement used withFileTypes and confidently reported
+// zero collisions where there are seven.
+const globalSkillsDir = path.join(process.env.HOME || '', '.claude', 'skills');
+if (fs.existsSync(globalSkillsDir)) {
+  const globalNames = [];
+  for (const n of fs.readdirSync(globalSkillsDir)) {
+    try {
+      if (fs.statSync(path.join(globalSkillsDir, n)).isDirectory()) globalNames.push(n);
+    } catch { /* dangling symlink — not a usable skill either way */ }
+  }
+  const repoSkills = new Set(
+    fs.existsSync(abs('.claude/skills'))
+      ? fs.readdirSync(abs('.claude/skills'), { withFileTypes: true })
+          .filter((d) => d.isDirectory() && exists(`.claude/skills/${d.name}/SKILL.md`))
+          .map((d) => d.name)
+      : []
+  );
+  const shadowing = globalNames.filter((n) => repoSkills.has(n));
+  const globalOnly = globalNames.filter((n) => !repoSkills.has(n));
+  if (globalOnly.length) {
+    warn(
+      'shadowed-skill',
+      `${globalOnly.length} skill name(s) resolve to ~/.claude/skills and are absent from this repo: ` +
+        `${globalOnly.slice(0, 12).join(', ')}${globalOnly.length > 12 ? ', …' : ''}. ` +
+        'A skill deleted here is not gone if the name exists there — it now means whatever the global copy says. ' +
+        'Reconciliation is Phase 9; this warning keeps the list measured rather than rediscovered.'
+    );
+  }
+  if (shadowing.length) {
+    warn('shadowed-skill', `${shadowing.length} skill name(s) exist in both; the repo copy wins here.`);
+  }
+}
+
 // ── 9 · no text source file may contain a NUL byte ─────────────────────────
 //
 // Phase 6, found by accident. `scripts/ledger.mjs` carried a literal 0x00 written as a
