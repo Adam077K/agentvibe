@@ -33,6 +33,42 @@ version: 1
 curated_on: 2026-08-12
 source_count: 147
 
+# ── ADDED from outside the original 147 ─────────────────────────────────────
+# Provenance recorded because these did not come from the curated corpus. `source_count`
+# above still means "the library this curation started from", so the two numbers stay
+# honest rather than one absorbing the other.
+added:
+  - name: impeccable
+    source: "https://github.com/pbakaus/impeccable/tree/main/.claude/skills/impeccable"
+    fetched: 2026-08-12
+    why: "85-line body dispatching to 36 bundled reference files (4,959 lines, 64 px/rem values, 9 timing values) — the size-discipline shape §3.10 asks for, done properly. All 12 referenced paths verified present; a dispatcher with dead links would be the exact failure check-registration blocks. Descends from Anthropic's frontend-design"
+
+  - name: ui-typography
+    source: "~/.claude/skills/ui-typography (machine-local; distilled from Butterick's Practical Typography)"
+    fetched: 2026-08-12
+    why: "344 lines plus css-templates.md and html-entities.md, targeting what LLMs measurably get wrong — quote marks, dashes, spacing. Content a model does not reconstruct correctly unaided is the test"
+
+  - name: 12-principles-of-animation
+    source: "~/.claude/skills/12-principles-of-animation (machine-local)"
+    fetched: 2026-08-12
+    why: "15 concrete timing values (150/200/300/400ms) across 56 CSS blocks. Models guess easing; they do not reconstruct these"
+
+  - name: design-mirror
+    source: "~/.claude/skills/design-mirror (machine-local)"
+    fetched: 2026-08-12
+    why: "8 hex values, 9 px/rem, bundled references and scripts"
+
+  - name: web-design-guidelines
+    source: "~/.claude/skills/web-design-guidelines (machine-local; the Vercel guidelines GOGH cites as its audit layer)"
+    fetched: 2026-08-12
+    why: "Re-added deliberately. It was cut as a near-duplicate folding into frontend-design, and that whole cluster then turned out to be sibling variants rather than duplicates"
+
+  - name: industrial-brutalist-ui
+    source: "https://github.com/Leonxlnx/taste-skill/blob/main/skills/brutalist-skill/SKILL.md"
+    fetched: 2026-08-12
+    why: "92 lines carrying 13 hex values, 12 px/rem and 5 named typefaces — the most concrete design skill measured in this phase. Requested by the founder; the sibling variant the collapse was missing"
+
+
 # ── SEVEN OF THE 63 CUTS DID NOT REMOVE THE NAME ────────────────────────────
 #
 # `~/.claude/skills/` exists on this machine with 42 skill directories, 32 of them symlinks.
@@ -104,7 +140,9 @@ near_duplicate:
   - code-documentation-code-explain # → documentation-templates
   - react-ui-patterns               # → react-patterns
   - frontend-dev-guidelines         # → frontend-design
-  - web-design-guidelines           # → frontend-design
+  # web-design-guidelines REVERSED 2026-08-12 — re-added from the machine-local copy. It was
+  # folded into frontend-design, and that whole cluster turned out to be sibling variants of
+  # one framework rather than duplicates. It is also the audit layer GOGH cites by name.
   - tailwind-patterns               # → tailwind-design-system
   - nextjs-best-practices           # → nextjs-app-router-patterns
   - code-review-excellence          # → production-code-audit
@@ -113,9 +151,24 @@ near_duplicate:
   - architecture-patterns           # → architecture-decision-records + domain-driven-design
   - multi-agent-brainstorming       # → multi-agent-patterns
   - parallel-agents                 # → dispatching-parallel-agents
-  - design-taste-frontend           # → high-end-visual-design
-  - stitch-design-taste             # → high-end-visual-design
-  - minimalist-ui                   # → high-end-visual-design
+  # REVERSED 2026-08-12, before merge. These two were cut as duplicates of
+  # high-end-visual-design and that collapse was BACKWARDS — measured on the same screen
+  # used everywhere else in this file:
+  #     design-taste-frontend  226 lines · 3 hex · 13 px/rem   CUT
+  #     stitch-design-taste    184 lines · 7 hex · 11 px/rem   CUT
+  #     high-end-visual-design  98 lines · 2 hex · 12 px/rem   KEPT
+  # The stated rule was "kept the one carrying the most procedure" and the least concrete of
+  # the three was kept. They are also not duplicates: stitch-design-taste generates DESIGN.md
+  # files for Google Stitch — an MCP server configured in this session — and
+  # design-taste-frontend carries component architecture and hardware-acceleration rules.
+  # All three exist to override default LLM design bias, which is the encoded-procedure
+  # property itself. Both restored; high-end-visual-design stays.
+  # minimalist-ui ALSO REVERSED — see the note above. Confirmed at source: Leonxlnx/taste-skill
+  # ships minimalist-skill, brutalist-skill, soft-skill, stitch-skill and taste-skill as
+  # SIBLING STYLE VARIANTS of one framework, not as competing versions of one idea. Collapsing
+  # them treated a menu as redundancy. minimalist-ui is the Notion/Linear editorial direction;
+  # industrial-brutalist-ui is the Swiss/military one; high-end-visual-design is the premium
+  # one. You pick the direction — that is the whole point of the framework.
   - deploy-to-vercel                # → vercel-deployment
   - vercel-cli-with-tokens          # → vercel-deployment
   - vercel-react-best-practices     # → vercel-composition-patterns
@@ -207,6 +260,15 @@ namespaces:
 
   frontend-design:
     - high-end-visual-design
+    - design-taste-frontend
+    - stitch-design-taste
+    - minimalist-ui
+    - industrial-brutalist-ui
+    - impeccable
+    - ui-typography
+    - 12-principles-of-animation
+    - design-mirror
+    - web-design-guidelines
     - radix-ui-design-system
     - tailwind-design-system
     - react-patterns

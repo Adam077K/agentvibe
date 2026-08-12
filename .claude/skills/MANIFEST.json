@@ -2,8 +2,14 @@
   "version": "3.0.0",
   "generated": "2026-08-12",
   "note": "Generated from disk by scripts/build-skills-manifest.mjs. Every path resolves to a top-level .claude/skills/<name>/SKILL.md. Do not hand-edit — run the script.",
-  "totalSkills": 84,
+  "totalSkills": 93,
   "skills": [
+    {
+      "name": "12-principles-of-animation",
+      "description": "Audit animation code against Disney's 12 principles adapted for web. Use when reviewing motion, implementing animations, or checking animation quality. Outputs file:line findings.",
+      "tags": [],
+      "path": ".claude/skills/12-principles-of-animation/SKILL.md"
+    },
     {
       "name": "agent-evaluation",
       "description": "\"Testing and benchmarking LLM agents including behavioral testing, capability assessment, reliability metrics, and production monitoring\\u2014where even top agents achieve less than 50% on re...\"",
@@ -135,10 +141,22 @@
       "path": ".claude/skills/deployment-procedures/SKILL.md"
     },
     {
+      "name": "design-mirror",
+      "description": "\"Replicate the visual style of any website and apply it to your existing codebase. Use this skill whenever the user wants to match a site's design, mirror a UI aesthetic, make their app look like another site, or replicate a specific visual style from a URL. Trigger on phrases like 'make it look like', 'match the design of', 'copy the style from', 'I want my app to look like X', 'mirror this design', 'inspired by [url]', or any time the user points at a website and says they want their frontend to match it.\"",
+      "tags": [],
+      "path": ".claude/skills/design-mirror/SKILL.md"
+    },
+    {
       "name": "design-orchestration",
       "description": "Orchestrates design workflows by routing work through brainstorming, multi-agent review, and execution readiness in the correct order. Prevents premature implementation, skipped validation, and unreviewed high-risk designs.",
       "tags": [],
       "path": ".claude/skills/design-orchestration/SKILL.md"
+    },
+    {
+      "name": "design-taste-frontend",
+      "description": "Senior UI/UX Engineer. Architect digital interfaces overriding default LLM biases. Enforces metric-based rules, strict component architecture, CSS hardware acceleration, and balanced design engineering.",
+      "tags": [],
+      "path": ".claude/skills/design-taste-frontend/SKILL.md"
     },
     {
       "name": "dispatching-parallel-agents",
@@ -224,6 +242,18 @@
       "path": ".claude/skills/high-end-visual-design/SKILL.md"
     },
     {
+      "name": "impeccable",
+      "description": "Use when the user wants to design, redesign, shape, critique, audit, polish, clarify, distill, harden, optimize, adapt, animate, colorize, extract, or otherwise improve a frontend interface. Covers websites, landing pages, dashboards, product UI, app shells, components, forms, settings, onboarding, and empty states. Handles UX review, visual hierarchy, information architecture, cognitive load, accessibility, performance, responsive behavior, theming, anti-patterns, typography, fonts, spacing, layout, alignment, color, motion, micro-interactions, UX copy, error states, edge cases, i18n, and reusable design systems or tokens. Also use for bland designs that need to become bolder or more delightful, loud designs that should become quieter, live browser iteration on UI elements, or ambitious visual effects that should feel technically extraordinary. Not for backend-only or non-UI tasks.",
+      "tags": [],
+      "path": ".claude/skills/impeccable/SKILL.md"
+    },
+    {
+      "name": "industrial-brutalist-ui",
+      "description": "Raw mechanical interfaces fusing Swiss typographic print with military terminal aesthetics. Rigid grids, extreme type scale contrast, utilitarian color, analog degradation effects. For data-heavy dashboards, portfolios, or editorial sites that need to feel like declassified blueprints.",
+      "tags": [],
+      "path": ".claude/skills/industrial-brutalist-ui/SKILL.md"
+    },
+    {
       "name": "inngest",
       "description": "\"Inngest expert for serverless-first background jobs, event-driven workflows, and durable execution without managing queues or workers. Use when: inngest, serverless background job, event-driven wor...\"",
       "tags": [],
@@ -269,6 +299,12 @@
         "ai"
       ],
       "path": ".claude/skills/mem0-patterns/SKILL.md"
+    },
+    {
+      "name": "minimalist-ui",
+      "description": "Clean editorial-style interfaces. Warm monochrome palette, typographic contrast, flat bento grids, muted pastels. No gradients, no heavy shadows.",
+      "tags": [],
+      "path": ".claude/skills/minimalist-ui/SKILL.md"
     },
     {
       "name": "multi-agent-patterns",
@@ -456,6 +492,12 @@
       "path": ".claude/skills/startup-metrics-framework/SKILL.md"
     },
     {
+      "name": "stitch-design-taste",
+      "description": "Semantic Design System Skill for Google Stitch. Generates agent-friendly DESIGN.md files that enforce premium, anti-generic UI standards — strict typography, calibrated color, asymmetric layouts, perpetual micro-motion, and hardware-accelerated performance.",
+      "tags": [],
+      "path": ".claude/skills/stitch-design-taste/SKILL.md"
+    },
+    {
       "name": "stripe-integration",
       "description": "\"Implement Stripe payment processing for robust, PCI-compliant payment flows including checkout, subscriptions, and webhooks. Use when integrating Stripe payments, building subscription systems, or ...\"",
       "tags": [],
@@ -508,6 +550,12 @@
       "path": ".claude/skills/trust-spec-contracts/SKILL.md"
     },
     {
+      "name": "ui-typography",
+      "description": "> Professional typography rules for UI design, web applications, software interfaces, and all screen-based text. Enforces timeless typographic correctness that LLMs consistently get wrong: proper quote marks, dashes, spacing, hierarchy, and layout. ENFORCEMENT MODE: When generating ANY HTML, CSS, React, JSX, or UI code containing visible text, auto-apply every rule in this skill silently — do not ask, do not explain, just produce correct typography. AUDIT MODE: When reviewing or improving existing interfaces or legacy code, flag violations and provide fixes. Trigger on: any HTML/CSS/React artifact creation, \"build a landing page\", \"create a component\", \"design a UI\", \"fix the typography\", \"make this look professional\", \"review this layout\", web design, presentation design, dashboard creation, document generation, or any task producing visible text for humans. Even if the user doesn't mention typography, apply these rules whenever generating UI output.",
+      "tags": [],
+      "path": ".claude/skills/ui-typography/SKILL.md"
+    },
+    {
       "name": "ui-visual-validator",
       "description": "| Rigorous visual validation expert specializing in UI testing, design system compliance, and accessibility verification. Masters screenshot analysis, visual regression testing, and component validation. Use PROACTIVELY to verify UI modifications have achieved their intended goals through comprehensive visual analysis.",
       "tags": [],
@@ -536,6 +584,12 @@
       "description": "\"Conduct WCAG 2.2 accessibility audits with automated testing, manual verification, and remediation guidance. Use when auditing websites for accessibility, fixing WCAG violations, or implementing ac...\"",
       "tags": [],
       "path": ".claude/skills/wcag-audit-patterns/SKILL.md"
+    },
+    {
+      "name": "web-design-guidelines",
+      "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\".",
+      "tags": [],
+      "path": ".claude/skills/web-design-guidelines/SKILL.md"
     },
     {
       "name": "web-security-testing",

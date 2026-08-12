@@ -9,11 +9,11 @@ expensive. Read the six lines below, open the ONE namespace that matches, then l
 | Namespace | Covers | Skills |
 |---|---|---|
 | [`engineering`](engineering.md) | Backend, data modelling, refactoring, debugging — how the thing is built | 16 |
-| [`frontend-design`](frontend-design.md) | UI, visual design, component systems, accessibility — what the user sees | 13 |
+| [`frontend-design`](frontend-design.md) | UI, visual design, component systems, accessibility — what the user sees | 22 |
 | [`quality-security`](quality-security.md) | Testing, review, auth, secrets, compliance — what stops it shipping broken | 15 |
 | [`ai-agents`](ai-agents.md) | LLM applications, agents, retrieval, prompts, tools — the AI layer itself | 14 |
 | [`ops-delivery`](ops-delivery.md) | Deploy, CI, jobs, payments, email, analytics — running it in production | 13 |
 | [`business-growth`](business-growth.md) | Pricing, metrics, market, positioning, conversion — why anyone pays | 13 |
 
-84 skills total. `MANIFEST.json` remains the exhaustive index and is what
+93 skills total. `MANIFEST.json` remains the exhaustive index and is what
 `npm run check:manifest` verifies; it is not the place to start a lookup.
