@@ -52,6 +52,7 @@ const HEADLINE = {
   'ai-agents': 'LLM applications, agents, retrieval, prompts, tools — the AI layer itself',
   'ops-delivery': 'Deploy, CI, jobs, payments, email, analytics — running it in production',
   'business-growth': 'Pricing, metrics, market, positioning, conversion — why anyone pays',
+  thinking: 'Named mental models for diagnosis, decision and critique — each with a stop rule and an over-application guard. Start at thinking-model-router, which may return NONE',
 };
 
 const doc = parseYamlSubset(fs.readFileSync(path.join(SKILLS, 'CURATION.yml'), 'utf8')) || {};

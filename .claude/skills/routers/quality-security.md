@@ -14,13 +14,17 @@ Testing, review, auth, secrets, compliance — what stops it shipping broken
 | `cc-skill-security-review` | Use this skill when adding authentication, handling user input, working with secrets, creating API endpoints, or implementing payment/sensitive… |
 | `e2e-testing-patterns` | Master end-to-end testing with Playwright and Cypress to build reliable test suites that catch bugs, improve confidence, and enable fast deployment.… |
 | `gdpr-data-handling` | Implement GDPR-compliant data handling with consent management, data subject rights, and privacy by design. Use when building systems that process… |
+| `object-calisthenics` | Use when writing or refactoring object-oriented code and wanting hard structural constraints rather than style advice. Jeff Bay nine rules as… |
 | `playwright-skill` | Complete browser automation with Playwright. Auto-detects dev servers, writes clean test scripts to /tmp. Test pages, fill forms, take screenshots,… |
 | `production-code-audit` | Autonomously deep-scan entire codebase line-by-line, understand architecture and patterns, then systematically transform it to production-grade,… |
+| `react19-test-patterns` | Provides before/after patterns for migrating test files to React 19 compatibility, including act() imports, Simulate removal, and StrictMode call… |
 | `receiving-code-review` | Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable -… |
+| `requesting-code-review` | Use when completing tasks, implementing major features, or before merging to verify work meets requirements |
 | `secrets-management` | Implement secure secrets management for CI/CD pipelines using Vault, AWS Secrets Manager, or native platform solutions. Use when handling sensitive… |
 | `security-audit` | Comprehensive security auditing workflow covering web application testing, API security, penetration testing, vulnerability scanning, and security… |
 | `tdd-workflow` | Test-Driven Development workflow principles. RED-GREEN-REFACTOR cycle. |
 | `web-security-testing` | Web application security testing workflow for OWASP Top 10 vulnerabilities including injection, XSS, authentication flaws, and access control issues. |
+| `writing-good-tests` | Use when writing or changing tests, adding mocks, or reviewing test quality. Bans mirror assertions and change-detector tests, and gates on a… |
 | `xss-html-injection` | This skill should be used when the user asks to \"test for XSS vulnerabilities\", \"perform cross-site scripting attacks\", \"identify HTML… |
 
 [← all namespaces](INDEX.md)

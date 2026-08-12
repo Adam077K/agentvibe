@@ -191,7 +191,14 @@ near_duplicate:
   - tailwind-patterns               # → tailwind-design-system
   - nextjs-best-practices           # → nextjs-app-router-patterns
   - code-review-excellence          # → production-code-audit
-  - requesting-code-review          # → production-code-audit
+  # requesting-code-review REVERSED 2026-08-12 — THIRD near_duplicate cut proven wrong, and
+  # the reason is the same every time: adjacent names assumed to be one job. It is not a
+  # thinner production-code-audit; it encodes a dispatch protocol that repo has nowhere else —
+  # hand the reviewer "precisely crafted context for evaluation, never your session's history",
+  # so the reviewer is not contaminated by the implementer's own rationalisations — plus a
+  # read-only contract on the review checkout ("do not mutate the working tree, the index,
+  # HEAD, or branch state"). That is the same principle as this repo's read-only reviewer
+  # engine, written portably. Re-added with its code-reviewer.md template.
   - using-git-worktrees             # → worktree-isolation-pattern
   - architecture-patterns           # → architecture-decision-records + domain-driven-design
   - multi-agent-brainstorming       # → multi-agent-patterns
@@ -330,10 +337,14 @@ namespaces:
 
   quality-security:
     - e2e-testing-patterns
+    - writing-good-tests
+    - react19-test-patterns
     - tdd-workflow
     - playwright-skill
     - production-code-audit
     - receiving-code-review
+    - requesting-code-review
+    - object-calisthenics
     - security-audit
     - web-security-testing
     - xss-html-injection
@@ -395,3 +406,33 @@ namespaces:
     - form-cro
     - onboarding-cro
     - product-manager-toolkit
+
+  thinking:
+    - thinking-bounded-rationality
+    - thinking-circle-of-competence
+    - thinking-cynefin
+    - thinking-effectuation
+    - thinking-first-principles
+    - thinking-five-whys-plus
+    - thinking-jobs-to-be-done
+    - thinking-kepner-tregoe
+    - thinking-lindy-effect
+    - thinking-map-territory
+    - thinking-margin-of-safety
+    - thinking-model-combination
+    - thinking-model-router
+    - thinking-ooda
+    - thinking-opportunity-cost
+    - thinking-pre-mortem
+    - thinking-probabilistic
+    - thinking-red-team
+    - thinking-reversibility
+    - thinking-scientific-method
+    - thinking-second-order
+    - thinking-socratic
+    - thinking-steel-manning
+    - thinking-systems
+    - thinking-theory-of-constraints
+    - thinking-thought-experiment
+    - thinking-triz
+    - thinking-via-negativa
