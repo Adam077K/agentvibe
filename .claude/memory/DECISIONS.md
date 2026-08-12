@@ -389,3 +389,61 @@ fixes. `ledger views` proves the rendering works; the migration waits for a phas
 **Reversibility:** reversible (restore `continue-on-error: true`)
 **Owner:** ceo · **Founder decision outstanding:** branch protection on `main` is a repo setting, not a file
 **Affects:** every future PR, `.claude/memory/*`, Phase 4
+
+## 2026-08-12 — Phase 8 chosen over Phase 9 and over venture work; split into 8a read plane and 8b dispatch
+
+**Context:** The Phase 8 handoff recommended neither Phase 8 nor Phase 9, but one real venture task, because
+stop condition 6 is live and nothing built in seven phases has met a task it did not author. Founder chose
+Phase 8. Two measurements then reshaped it. The monthly fleet baseline (stop condition 5b, unrun since Phase
+2) came back **flat — 8 generations total, 5 in scope, unchanged**; the 15→14 launcher drop is `agentvibe`
+itself leaving the standalone set, so Phase 9's debt is measurably not growing. And **no sibling project has
+a claim ledger** — zero `scripts/ledger.mjs`, zero `CLAIM-LEDGER.md` across all 13, all still on the
+pre-collapse 26–32 agent rosters.
+**Decision:** Build Phase **8a**, the read plane, now. Defer **8b** (Dispatch, the only view that writes)
+until Phase 9 gives it targets. Six views ship: Fleet · Sessions · Belief · Conflicts on real data; Project
+and Inbox as *honest* empty states naming the specific missing emitter. Greenfield under `mission-control/`
+on **Bun + Hono + React + Vite**, folded into `npm run check`. Gate: every displayed figure reproducible by
+an independent command, a mutated fixture turns a test red, live data from ≥3 non-`agentvibe` projects, cold
+start < 3 s and refresh < 250 ms.
+**Rationale:** Phase 8's stated gate — *"claims land in that repo's ledger"* — is **unreachable as written**,
+because no second project has a ledger for a claim to land in. Making it reachable means installing the spine
+elsewhere first, which is propagation, which is Phase 9, which the 2026-08-11 founder decision forbids before
+Phase 9. Phase 8's gate therefore depends on Phase 9. Six of the seven views only read, and reads need no
+spine in the target, so the phase splits cleanly at the seam where the conflict actually lives. The speed
+budget is grounded rather than guessed: a cold full parse of all 72 transcripts measures **1,283 ms** and an
+incremental refresh **13 ms**, which is also why **no persistent store is built** — the transcripts already
+are the history, so `initDb()`-with-zero-`INSERT`s is not repeated.
+**Costs accepted by the founder, against recommendation:** Bun+React are this repo's **first dependencies
+ever** (`dependencies: {}`, no lockfile, no `node_modules`, CI never runs an install), and folding
+`check:mc` into `npm run check` means `.github/workflows/ci.yml` must gain `setup-bun` — so the clean-clone
+property becomes "clone, `bun install`, `npm run check`" and PR1 is irreversible tier. Shipping two empty
+views is in tension with rule 6; resolved by making each empty state state its own reason and name what
+would fill it, which is a report rather than a stub.
+**Reversibility:** reversible — `mission-control/` is additive and nothing else imports it; the CI and
+`package.json` edits revert cleanly. The dependency precedent is the part that does not revert.
+**Owner:** ceo · **Open, needed before PR3:** what counts as "the fleet" — defaulting to every git repo
+under the roots, flagging the 8 with a live `.worktrees/.registry` as agent-active
+**Affects:** `mission-control/**`, `package.json`, `.github/workflows/ci.yml`, Phase 9 sequencing
+
+## 2026-08-12 — Two enforcement mechanisms found green over untested capabilities
+
+**Context:** Clearing the two cheap claims due 2026-09-08 meant actually running their checks rather than
+reading them.
+**Decision:** Treat both as defects to fix, not as claims to dispose of. `c-read-only-binding-unverified`
+stays **unresolved** — not passed. `c-lenses-and-playbooks-are-loaded` needs a corrected assert and a
+resolver that can observe the failure mode.
+**Rationale:** `scripts/probe-readonly-engine.sh --verify` printed *"PASS — the restriction binds at runtime,
+not only on paper"* purely because the probe file was absent. The `reviewer` engine reported that `Bash` was
+bound and fully capable of the write, that nothing blocked it, and that the file was absent **because it
+declined on its own judgement**. The script cannot distinguish *could not* from *chose not to* — standing
+rule 11. Separately, `c-lenses-and-playbooks-are-loaded` asserts at `confidence: 1` that lenses are injected
+"mechanically rather than discretionarily", verified by a command that tests **the hook's output**. The hook
+emits 25,613 bytes correctly; this session received a **~2 KB preview plus a file path**, so an agent must
+now *choose* to open a file — which is the definition of discretionary. Standing rule 3, on Phase 6 work.
+Both are mine, from Phases 4 and 6, and both are the exact failure the rebuild exists to eliminate: a green
+check over something nobody observed.
+**Reversibility:** n/a — corrections
+**Owner:** ceo · fix in flight on `fix/readonly-probe-evidence`
+**Affects:** `scripts/probe-readonly-engine.sh`, `docs/03-system-design/CLAIM-LEDGER.md`, the Phase 6
+completion record in `AGENT-SYSTEM-REBUILD.md`, `.claude/hooks/session-start.js` (payload must become a
+router, ~1.5 KB, not a 25 KB dump — same cure Phase 7 found for skills)
