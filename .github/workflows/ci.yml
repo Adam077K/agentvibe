@@ -39,11 +39,13 @@ jobs:
           node-version: '20'
 
       # Mission Control (mission-control/) is Bun/Hono, not Node — this is the only
-      # thing in the repo that needs it. bun-version: latest rather than pinned because
-      # this step has no blocking dependents yet; pin it the day that changes.
+      # thing in the repo that needs it. Pinned to match the version bun.lock was
+      # generated and validated against locally (1.3.10) — this step is inside a
+      # required status check on protected main, so `latest` drifting to a newer
+      # Bun release could turn main red on a PR that changed nothing.
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.3.10
 
       # Validates agent frontmatter, mandatory body sections, model IDs, maxTurns
       # ranges, and every declared skill against MANIFEST.json.
