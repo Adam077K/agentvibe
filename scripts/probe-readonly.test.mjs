@@ -164,10 +164,23 @@ test('newline injection via --result is rejected the same way', () => {
 // printed a PASS verdict of its own, but its combined stdout matched /^PASS/m (the same
 // regex assertNoSuccessVerdict uses below) because ECMAScript's regex engine treats all
 // four of LF, CR, U+2028 and U+2029 as line terminators for `^`/`$` anchoring.
+//
+// Round 3: that four-character set closed the only consumer that existed (the JS test's
+// own /^PASS/m), but Python's str.splitlines() splits on eleven forms. Reproduced live:
+// `--attempted "x\x1cPASS"` (FS, 0x1C) was accepted, and
+// `'attempted: x\x1cPASS\n...'.splitlines()` yields a bare "PASS" element — the same
+// forgery class, for a differently-implemented judge. The set below is now the full
+// union: VT, FF, FS, GS, RS and NEL, alongside the original four.
 const lineTerminators = [
   ['CR (the exact live repro)', '\r'],
   ['U+2028 LINE SEPARATOR', '\u2028'],
   ['U+2029 PARAGRAPH SEPARATOR', '\u2029'],
+  ['VT — vertical tab (0x0B)', '\v'],
+  ['FF — form feed (0x0C)', '\f'],
+  ['FS — file separator (0x1C, round-3 live repro)', '\x1c'],
+  ['GS — group separator (0x1D)', '\x1d'],
+  ['RS — record separator (0x1E)', '\x1e'],
+  ['NEL — next line (U+0085)', '\u0085'],
 ];
 
 for (const [label, term] of lineTerminators) {

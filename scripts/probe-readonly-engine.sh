@@ -45,12 +45,23 @@ set -euo pipefail
 PROBE_FILE="${TMPDIR:-/tmp}/readonly-engine-probe.txt"
 ATTEMPT_FILE="${TMPDIR:-/tmp}/readonly-engine-probe.attempt"
 
-# The four characters ECMAScript's regex engine treats as LineTerminators for `^`/`$`
-# anchoring in multiline mode (this repo's own tests assert on /^PASS/m) — a value
-# containing one can make a fragment of a field read, to that anchor, as if it started
-# its own line. Built with printf rather than $'\uXXXX' so it does not depend on the
-# running bash's Unicode-escape support or locale.
+# Eleven line-boundary forms: the union of what ECMAScript's regex engine treats as a
+# LineTerminator for `^`/`$` anchoring in multiline mode (LF, CR, U+2028, U+2029 — this
+# repo's own tests assert on /^PASS/m) and what Python's str.splitlines() also splits on
+# (those four, plus VT, FF, FS, GS, RS, NEL, and CRLF — which needs no separate check
+# here since it contains CR and is already caught by matching CR alone). A value
+# containing any of them can make a fragment of a field read, to whichever of those two
+# is doing the reading, as if it started its own line. The set is exactly this union,
+# not a guess, because a future judge on c-read-only-binding-unverified may be either.
+# Built with printf rather than $'\uXXXX' / $'\xHH' so none of it depends on the running
+# bash's Unicode-escape support or locale.
 CR=$'\r'
+VT="$(printf '\x0b')"        # 0x0B VERTICAL TAB
+FF="$(printf '\x0c')"        # 0x0C FORM FEED
+FS="$(printf '\x1c')"        # 0x1C FILE SEPARATOR
+GS="$(printf '\x1d')"        # 0x1D GROUP SEPARATOR
+RS="$(printf '\x1e')"        # 0x1E RECORD SEPARATOR
+NEL="$(printf '\xc2\x85')"   # U+0085 NEXT LINE
 LINE_SEP="$(printf '\xe2\x80\xa8')"  # U+2028 LINE SEPARATOR
 PARA_SEP="$(printf '\xe2\x80\xa9')"  # U+2029 PARAGRAPH SEPARATOR
 
@@ -62,22 +73,25 @@ usage() {
   exit 2
 }
 
-# Refuses a value containing any line terminator (LF, CR, U+2028, U+2029). An embedded
+# Refuses a value containing any of the eleven line-boundary forms above. An embedded
 # LF-started "attempted:" or "outcome:" line would forge a second field ahead of (or
-# shadowing, under -m1) the real one once written into $ATTEMPT_FILE. CR, U+2028 and
-# U+2029 are the same attack one layer up: they cannot forge a *field* this script
-# parses, but they can make a fragment of a field's own text look like the start of a
-# fresh *line* to a line-anchored regex reading the report's output — including a
-# fragment that begins with a verdict word such as PASS. Reported live: a bare CR before
-# fabricated text made `--report`'s stdout match /^PASS/m although --report itself never
-# printed a PASS verdict and the exit code stayed non-zero throughout.
+# shadowing, under -m1) the real one once written into $ATTEMPT_FILE. The other ten are
+# the same attack one layer up: they cannot forge a *field* this script parses, but they
+# can make a fragment of a field's own text look like the start of a fresh *line* to
+# whatever is reading the report's output — including a fragment that begins with a
+# verdict word such as PASS. Reported live, twice: a bare CR made --report's stdout match
+# a JS /^PASS/m check; a bare FS (0x1C) survived that fix and still split into a bare
+# "PASS" element under Python's str.splitlines(). Neither changed --report's own exit
+# code or its own printed verdict — both attacks worked only on a second reader applying
+# its own notion of "line" downstream.
 reject_multiline() {
   local field="$1" value="$2"
   case "$value" in
-    *$'\n'*|*"$CR"*|*"$LINE_SEP"*|*"$PARA_SEP"*)
-      echo "--$field must not contain a line terminator (LF, CR, U+2028, U+2029) — any of" >&2
-      echo "them could forge a shadowed field, or make part of this value read as its own" >&2
-      echo "line to a line-anchored regex, including one starting with a verdict word." >&2
+    *$'\n'*|*"$CR"*|*"$VT"*|*"$FF"*|*"$FS"*|*"$GS"*|*"$RS"*|*"$NEL"*|*"$LINE_SEP"*|*"$PARA_SEP"*)
+      echo "--$field must not contain a line-boundary character (LF, CR, VT, FF, FS, GS," >&2
+      echo "RS, NEL, U+2028 or U+2029) — any of them could forge a shadowed field, or make" >&2
+      echo "part of this value read as its own line by a downstream reader, including one" >&2
+      echo "starting with a verdict word." >&2
       exit 2
       ;;
   esac
