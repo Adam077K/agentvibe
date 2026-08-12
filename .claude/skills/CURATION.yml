@@ -1,0 +1,272 @@
+# Skills curation — every cut, with the test that made it and a reason.
+#
+# WHY THIS FILE EXISTS (Phase 7, 2026-08-12)
+#
+# Deleting ~half a skills library by taste is unauditable, and "I curated it" is exactly the
+# kind of unfalsifiable claim this repo exists to stop. So every cut is recorded here with
+# the test it failed, `scripts/curate-skills.mjs --check` proves the directory matches this
+# file, and CI fails when they drift. A skill that comes back has to argue with a named test.
+#
+# THE FOUR TESTS, from AGENT-SYSTEM-REBUILD §3.10:
+#
+#   1. CUT TEST — delete only what is useless in EVERY project, never what is unused HERE.
+#      This is why every AWS skill survives: this repo is Vercel + Supabase and uses none of
+#      them, but "unused here" is explicitly not the bar. Cutting to the local stack would
+#      have removed 11 skills and been wrong.
+#
+#   2. ENCODED-PROCEDURE TEST — keep only what a frontier model will not reconstruct unaided.
+#      A file explaining what a README is fails. A file carrying a specific tool's non-obvious
+#      API, a measured threshold, or a procedure someone paid to learn passes.
+#
+#   3. SIZE DISCIPLINE — body under 500 lines, ToC over 300, the rest in bundled references.
+#
+#   4. LINT ONLY WHAT IS UNIVERSAL — `name` and `description` are the only near-universal
+#      frontmatter fields across the 803-file candidate pool. Requiring more fails on contact
+#      with any corpus we did not author.
+#
+# NOT DONE, AND NAMED RATHER THAN IMPLIED: the 803 external candidates across 11 public
+# corpora were NOT evaluated. They are not on this machine and ingesting them means fetching
+# 11 repositories. This curation is therefore "the local 147, honestly cut" — it is NOT
+# "the best ~70 in the world", and that claim is not made anywhere.
+
+version: 1
+curated_on: 2026-08-12
+source_count: 147
+
+# ── SEVEN OF THE 63 CUTS DID NOT REMOVE THE NAME ────────────────────────────
+#
+# `~/.claude/skills/` exists on this machine with 42 skill directories, 32 of them symlinks.
+# Deleting a repo skill does not remove the name — it UN-SHADOWS the global copy, exactly as
+# deleting a repo agent does. Phase 4b learned this for agents and kept eleven shims; the
+# same hazard sits one directory over and was not checked until the runtime kept offering
+# five skills after they were deleted.
+#
+# Measured: 7 of 63 cuts have a global twin, and FIVE of those seven are DRIFTED, so the name
+# now resolves to different content than the file that was removed:
+#
+#     web-design-guidelines          DRIFTED
+#     vercel-cli-with-tokens         DRIFTED
+#     vercel-react-best-practices    DRIFTED
+#     humanizer                      DRIFTED
+#     frontend-design                DRIFTED
+#     deploy-to-vercel               identical
+#     vercel-react-view-transitions  identical
+#
+# NOT SHIMMED, and here is why the agent decision does not carry over: a drifted global AGENT
+# silently changes who does the work and what it is allowed to do — `@ceo` would have become a
+# 313-line Sonnet definition routing to four retired agents. A drifted global SKILL changes
+# what reference text a model reads on request. The blast radius is a worse paragraph, not a
+# different actor with different tools. So this is measured, named, and left to Phase 9 with
+# the rest of the global reconciliation — per the founder decision that no global state is
+# touched before then.
+#
+# `scripts/check-registration.mjs` check 10 reports this on every run so the list stays
+# measured rather than rediscovered.
+#
+# The first measurement of this said "0 cuts un-shadow a global" and was WRONG: it used
+# readdir withFileTypes + isDirectory(), which reports false for a symlink, while 32 of the
+# 42 globals are symlinks. statSync follows them. A fast wrong number is worse than a slow
+# right one, and it took a contradicting bash `-d` check to catch it.
+shadowed_by_global:
+  drifted: [web-design-guidelines, vercel-cli-with-tokens, vercel-react-best-practices, humanizer, frontend-design]
+  identical: [deploy-to-vercel, vercel-react-view-transitions]
+
+# ── Test: role-duplicate ────────────────────────────────────────────────────
+# Agent personas wearing a skill's clothes. Every one reads "Elite X expert specialising in"
+# or "Build X, implement Y" — the exact shape of the 26 agent files Phase 4b collapsed into
+# six engines plus lenses. They survived because that phase walked .claude/agents/ and this
+# is .claude/skills/. A checker's coverage is not its subject, for the fourth time.
+# The replacement already exists: an engine carries the procedure, a lens carries the domain.
+role_duplicate:
+  - code-reviewer          # reviewer engine + review-lenses.yml(correctness, craft)
+  - frontend-developer     # builder engine + lenses.yml(engineering)
+  - data-engineer          # builder engine + lenses.yml(engineering)
+  - ai-engineer            # builder engine + lenses.yml(engineering)
+  - rag-engineer           # builder engine; the specifics live in embedding-strategies
+  - vector-database-engineer # same; pgvector-rag-conventions holds what is non-obvious
+  - debugger               # systematic-debugging holds the procedure; this holds a job title
+  - search-specialist      # sourcer engine — "never assert without evidence" is its whole body
+  - ai-agents-architect    # orchestrator engine + multi-agent-patterns
+  - cloud-devops           # builder engine; deployment-procedures holds the procedure
+  - architecture           # framer engine + architecture-decision-records
+
+# ── Test: near-duplicate ────────────────────────────────────────────────────
+# Same subject, kept the one carrying the most procedure. The survivor is named in each
+# comment so a future reader can check the judgement rather than trust it.
+near_duplicate:
+  - e2e-testing                     # → e2e-testing-patterns
+  - tdd-orchestrator                # → tdd-workflow
+  - unit-testing-test-generate      # → testing-patterns
+  - debugging-strategies            # → systematic-debugging
+  - find-bugs                       # → systematic-debugging
+  - api-documentation               # → api-documentation-generator
+  - documentation                   # → documentation-templates
+  - code-documentation-code-explain # → documentation-templates
+  - react-ui-patterns               # → react-patterns
+  - frontend-dev-guidelines         # → frontend-design
+  - web-design-guidelines           # → frontend-design
+  - tailwind-patterns               # → tailwind-design-system
+  - nextjs-best-practices           # → nextjs-app-router-patterns
+  - code-review-excellence          # → production-code-audit
+  - requesting-code-review          # → production-code-audit
+  - using-git-worktrees             # → worktree-isolation-pattern
+  - architecture-patterns           # → architecture-decision-records + domain-driven-design
+  - multi-agent-brainstorming       # → multi-agent-patterns
+  - parallel-agents                 # → dispatching-parallel-agents
+  - design-taste-frontend           # → high-end-visual-design
+  - stitch-design-taste             # → high-end-visual-design
+  - minimalist-ui                   # → high-end-visual-design
+  - deploy-to-vercel                # → vercel-deployment
+  - vercel-cli-with-tokens          # → vercel-deployment
+  - vercel-react-best-practices     # → vercel-composition-patterns
+  - vercel-react-view-transitions   # → vercel-composition-patterns
+  - git-pr-workflows-git-workflow   # → finishing-a-development-branch
+  - security-scanning-security-dependencies # → security-audit
+  - aws-security-audit              # → aws-compliance-checker
+  - api-security-testing            # → web-security-testing
+  - broken-authentication           # → auth-implementation-patterns + web-security-testing
+  - database                        # → database-design
+  - prompt-engineering-patterns     # → prompt-caching holds the non-obvious half
+  - llm-evaluation                  # → agent-evaluation
+  - testing-patterns                # → e2e-testing-patterns + tdd-workflow cover it
+  - agent-tool-builder              # → tool-design
+  - api-documentation-generator     # → documentation-templates after the above merges
+
+# ── Test: reconstructible ───────────────────────────────────────────────────
+# A frontier model produces these unaided and to a higher standard than a 200-line file
+# describing them. Keeping one costs tokens on every discovery pass and teaches nothing.
+reconstructible:
+  - readme            # "what a README should contain"
+  - commit            # "write a good commit message"
+  - create-pr         # "open a pull request"
+  - copywriting       # general persuasive-writing advice
+  - humanizer         # "make text sound less like AI"
+  - data-storytelling # "charts should have a point"
+  # REVERSED: `brainstorming` was listed here and the tool refused the cut — framer.md
+  # declares it in frontmatter. That declaration is evidence, not an obstacle: a skill an
+  # engine loads on every framing task is not "useless in every project", which is the only
+  # bar test 1 allows. Kept, and the reversal is recorded rather than the list quietly edited.
+  - screenshots       # "take a screenshot"
+  - core-components   # a generic component-library inventory
+  - frontend-design   # survives the merges above, then fails this test on its own content
+  - documentation-templates # same: what remains is a heading skeleton
+
+# ── Test: dead-subject ──────────────────────────────────────────────────────
+# The thing it describes no longer exists in this repo, and unlike the AWS skills there is
+# no other project where it could apply — these name THIS system's retired internals.
+dead_subject:
+  - war-room-orchestration  # war-room/ was deleted in Phase 6; 25 files, 3,256 lines
+  - board-meeting-protocol  # the 7 board personas went with it
+  - anthropic-routines      # routines are gone; the clock is ledger-sweep.yml
+  - qa-gate-protocol        # the gate is qa-lead-pass.yml + classifier.js, not prose
+  - linear-mvp-recipe       # Linear is not configured and never was
+
+# ── Namespaces — the discovery tier ─────────────────────────────────────────
+#
+# WHY (§3.10): "add ~6 namespace router skills so the discovery tier stops growing
+# linearly." Measured: MANIFEST.json was 54,001 bytes / ~15,000 tokens across 147 entries,
+# and it is read on EVERY skill lookup. That is more than double the whole lens+playbook
+# injection, and it grew with every skill added. The curation took it to ~8,500 tokens; the
+# routers take a typical lookup to ~1,200 — read six one-line namespace summaries, then one
+# namespace, then the skill.
+#
+# Assignment is DATA, not a heuristic over skill names. A regex that infers "security" from
+# a filename works until `sharp-edges` or `trust-spec-contracts`, and then it is silently
+# wrong. `scripts/build-skill-routers.mjs --check` fails when a skill is in no namespace or
+# in two, so the mapping cannot rot.
+namespaces:
+  engineering:
+    - api-design-principles
+    - architecture-decision-records
+    - code-refactoring-tech-debt
+    - database-design
+    - domain-driven-design
+    - error-handling-patterns
+    - nodejs-backend-patterns
+    - postgresql
+    - prisma-expert
+    - sql-optimization-patterns
+    - supabase-rls-conventions
+    - pgvector-rag-conventions
+    - systematic-debugging
+    - sharp-edges
+    - trust-spec-contracts
+    - full-output-enforcement
+
+  frontend-design:
+    - high-end-visual-design
+    - radix-ui-design-system
+    - tailwind-design-system
+    - react-patterns
+    - nextjs-app-router-patterns
+    - vercel-composition-patterns
+    - vercel-react-native-skills
+    - emilkowal-animations
+    - redesign-existing-projects
+    - ui-visual-validator
+    - wcag-audit-patterns
+    - pitch-deck-visuals
+    - design-orchestration
+
+  quality-security:
+    - e2e-testing-patterns
+    - tdd-workflow
+    - playwright-skill
+    - production-code-audit
+    - security-audit
+    - web-security-testing
+    - xss-html-injection
+    - auth-implementation-patterns
+    - secrets-management
+    - gdpr-data-handling
+    - aws-compliance-checker
+    - aws-iam-best-practices
+    - aws-secrets-rotation
+    - cc-skill-security-review
+    - cc-skill-coding-standards
+
+  ai-agents:
+    - agent-evaluation
+    - agent-memory-systems
+    - multi-agent-patterns
+    - dispatching-parallel-agents
+    - llm-app-patterns
+    - embedding-strategies
+    - prompt-caching
+    - context-compression
+    - mem0-patterns
+    - mcp-builder
+    - tool-design
+    - deep-research
+    - brainstorming
+    - writing-plans
+
+  ops-delivery:
+    - deployment-procedures
+    - vercel-deployment
+    - github-actions-templates
+    - inngest
+    - worktree-isolation-pattern
+    - finishing-a-development-branch
+    - clerk-auth
+    - nextjs-supabase-auth
+    - payment-integration
+    - stripe-integration
+    - paddle-integration
+    - email-systems
+    - segment-cdp
+
+  business-growth:
+    - pricing-strategy
+    - startup-financial-modeling
+    - startup-metrics-framework
+    - market-sizing-analysis
+    - competitive-landscape
+    - launch-strategy
+    - marketing-psychology
+    - seo-content-writer
+    - social-content
+    - page-cro
+    - form-cro
+    - onboarding-cro
+    - product-manager-toolkit

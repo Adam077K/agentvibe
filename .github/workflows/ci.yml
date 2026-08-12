@@ -53,6 +53,15 @@ jobs:
       - name: Skills manifest matches disk
         run: node scripts/build-skills-manifest.mjs --check
 
+      # The skills curation and the two-tier discovery layer. Every cut names the test it
+      # failed in CURATION.yml, and these fail when the directory drifts from that decision
+      # — so a skill cannot creep back in, and a survivor cannot quietly vanish.
+      - name: Skills curation matches CURATION.yml
+        run: npm run check:curation
+
+      - name: Skill routers match namespaces
+        run: npm run check:routers
+
       # Fabrication catcher: dead paths in governing docs, hooks registered to
       # missing files, README counts that drifted, skills declared but absent.
       - name: Registration completeness

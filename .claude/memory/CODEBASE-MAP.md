@@ -35,12 +35,16 @@ it, so a hook that changes posture changes this map with it.
 |---|---|
 | `npm run build:manifest` | `node scripts/build-skills-manifest.mjs` |
 | `npm run build:map` | `node scripts/gen-codebase-map.mjs` |
-| `npm run check` | `npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:registration && npm run ch` |
+| `npm run build:routers` | `node scripts/build-skill-routers.mjs` |
+| `npm run check` | `npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:curation && npm run check:` |
+| `npm run check:curation` | `node scripts/curate-skills.mjs --check` |
 | `npm run check:ledger` | `npm run test:claims && npm run test:classifier && npm run test:ledger && node scripts/ledger.mjs lint && node ` |
 | `npm run check:manifest` | `node scripts/build-skills-manifest.mjs --check` |
 | `npm run check:map` | `node scripts/gen-codebase-map.mjs --check` |
 | `npm run check:registration` | `node scripts/check-registration.mjs` |
+| `npm run check:routers` | `node scripts/build-skill-routers.mjs --check` |
 | `npm run check:warroom` | `bash -n bin/warroom && node --check scripts/warroom-install.mjs && bash -n scripts/warroom-parity.sh && npm ru` |
+| `npm run curate:skills` | `node scripts/curate-skills.mjs` |
 | `npm run ledger:build` | `node scripts/ledger.mjs build` |
 | `npm run ledger:events` | `node scripts/ledger.mjs events --since 30d` |
 | `npm run ledger:sweep` | `node scripts/ledger.mjs sweep` |
@@ -87,15 +91,15 @@ it, so a hook that changes posture changes this map with it.
 
 ## What the system asserts
 
-25 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
+29 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
 `~/.warroom/ledger/global.yml` — machine state a fresh clone does not have, which the ledger reports
 rather than skipping silently.
 
 | Kind | Count |
 |---|---|
-| behavior | 10 |
+| behavior | 13 |
 | external-fact | 1 |
-| internal-fact | 12 |
+| internal-fact | 13 |
 | runtime-capability | 2 |
 
 Browse them with `npm run ledger:views`; sweep for expiry with `npm run ledger:sweep`.

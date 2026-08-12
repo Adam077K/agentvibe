@@ -299,6 +299,42 @@ claims:
     confidence: 0.5
     disposition: {action: waive, until: 2026-09-08, reason: "the hook emits the documented shape and its own output is unit-tested; only the runtime honouring it is unconfirmed, and observing that requires starting a fresh session — revisit with the shadow-window review"}
 
+  - id: c-skills-curation-is-auditable
+    assert: "Every one of the 63 skill cuts names the test it failed in CURATION.yml, and CI fails when the directory drifts from that decision — a skill cannot creep back in, nor a survivor quietly vanish"
+    kind: behavior
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node scripts/curate-skills.mjs --check", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+
+  - id: c-skill-discovery-is-two-tier
+    assert: "Skill discovery costs ~1,070 tokens via routers/INDEX.md plus one namespace, against ~15,000 for reading MANIFEST.json whole, and the routers cannot drift from the namespace mapping"
+    kind: behavior
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node scripts/build-skill-routers.mjs --check", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+
+  - id: c-skills-lint-only-universal-fields
+    assert: "Only name and description are required of a skill, because they are the two fields near-universal across the 803-file candidate pool — requiring more fails on contact with any corpus we did not author"
+    kind: behavior
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node scripts/curate-skills.mjs --check", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+
+  - id: c-external-skill-corpora-not-evaluated
+    assert: "The 803 external candidates across 11 public corpora were NOT evaluated in this curation — this is the local 147 honestly cut, and no claim of best-in-the-world is made anywhere"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence: {cmd: "grep -q 'were NOT evaluated' .claude/skills/CURATION.yml", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+
   - id: c-codebase-map-is-generated
     assert: "CODEBASE-MAP.md is generated from disk and the ledger, and CI fails when it drifts — a hand-maintained map is trusted and wrong the moment someone forgets"
     kind: behavior
