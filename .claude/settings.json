@@ -55,6 +55,14 @@
             "command": ".claude/hooks/pre-tool-use.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/budget-guard.js"
+          }
+        ]
       }
     ],
     "PostToolUse": [
