@@ -110,6 +110,32 @@ review_lenses:
     model_families: [anthropic]
     sources: ["git:.claude/agents/design-critic.md@cda6de9"]
 
+  - id: risk
+    summary: "What are the failure modes, ranked by probability times severity"
+    checks:
+      - "Enumerate failure modes as a numbered catalog, not a paragraph of worries"
+      - "Score each on probability and severity, and say which input drove the score"
+      - "Prescribe one mitigation per mode, owned and dated"
+      - "State the modes you considered and dismissed, with why"
+    blocking_severities: [critical]
+    scope: whole-artifact
+    independent: false
+    model_families: [anthropic]
+    sources: ["git:.claude/agents/war-room/persona-risk-modeler.md@ac88494"]
+
+  - id: customer-value
+    summary: "Does the person paying get value, and what would make them leave"
+    checks:
+      - "Name the archetype affected, not 'the user'"
+      - "State the churn trigger this creates or removes, in the customer's own words"
+      - "Quantify the cost of the failure to them: time, money, or trust"
+      - "Say when the answer is 'no customer is affected' rather than inventing one"
+    blocking_severities: [high]
+    scope: whole-artifact
+    independent: false
+    model_families: [anthropic]
+    sources: ["git:.claude/agents/war-room/persona-customer-voice.md@ac88494"]
+
   - id: scope
     summary: "Did the change stay inside what was asked for"
     checks:

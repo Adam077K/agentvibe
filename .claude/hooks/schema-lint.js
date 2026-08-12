@@ -3,7 +3,7 @@
 // failure; the Stop-hook registration only surfaces it, since Stop cannot block.
 // .claude/hooks/schema-lint.js — Agentvibe agent file schema lint
 //
-// Validates .claude/agents/*.md (top-level only — NOT war-room/ which uses
+// Validates .claude/agents/*.md. (Phase 6 deleted war-room/, which used
 // the bespoke Routine schema acceptable per 07b §4) against the canonical
 // 07b-AGENT-TEMPLATE.md spec.
 //

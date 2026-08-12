@@ -1,6 +1,6 @@
 # AGENTS.md — Routing Table
 
-*Seven engines, derived from a 38-job inventory. Domain expertise is a lens, not an agent.*
+*Six engines, derived from a 38-job inventory. Domain expertise is a lens, not an agent.*
 
 ---
 
@@ -90,13 +90,26 @@ it with `git cat-file`.
 
 ---
 
-## War-room routines
+## War-room routines — removed in Phase 6
 
-25 scheduled routines remain under [.claude/agents/war-room/](.claude/agents/war-room/) with their own
-schema, deliberately outside `schema-lint`'s walk. **24 of the 25 call services this repo has no
-configuration for.** They are cut to roughly three in Phase 6; nothing has been done to them yet, and that is
-stated rather than implied.
+The directory is gone: **25 files, 3,256 lines.** It was three unrelated populations, and each had an
+existing home:
+
+| Population | Files | Lines | Where it went |
+|---|---|---|---|
+| `parallel-*` workers | 6 | 860 | They **were** the engines, written twice — `parallel-builder`≈`builder`, `parallel-critic`≈`reviewer`, `parallel-researcher`≈`sourcer` |
+| board personas | 7 | 857 | Two genuinely distinct judging dimensions became review lenses (`risk`, `customer-value`); the rest duplicated `adversarial`, `security`, `evidence` and `scope` |
+| clock/event routines | 12 | 1,435 | Deleted. Measured: 20 called Supabase, 19 Linear, 16 Mem0 — none configured — and **nothing scheduled any of them** |
+
+The three `harness-health` routines §3.8 asked for all turned out to be scripts, not agents: `reader` is
+`ledger sweep`, `claim-refresh` is that same sweep plus the `claim-freshness` resolver, and `fleet-drift`
+already existed as `npm run warroom:fleet`.
+
+That directory was also where a decorative `budget:` block survived the phase that deleted 44 decorative
+`mcpServers` declarations — 16 routines declared `max_cost_usd`, `max_runtime_minutes` and `max_tool_calls`,
+and nothing read any of them. It survived because `schema-lint.js` deliberately did not walk there. A
+checker's coverage is not its subject.
 
 ---
 
-*Updated Phase 4b · 2026-08-11 · supersedes the 3-layer CEO → C-suite → worker topology*
+*Updated Phase 6 · 2026-08-12 · supersedes the 3-layer CEO → C-suite → worker topology*

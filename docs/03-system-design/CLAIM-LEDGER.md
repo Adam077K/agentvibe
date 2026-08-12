@@ -299,6 +299,33 @@ claims:
     confidence: 0.5
     disposition: {action: waive, until: 2026-09-08, reason: "the hook emits the documented shape and its own output is unit-tested; only the runtime honouring it is unconfirmed, and observing that requires starting a fresh session — revisit with the shadow-window review"}
 
+  - id: c-codebase-map-is-generated
+    assert: "CODEBASE-MAP.md is generated from disk and the ledger, and CI fails when it drifts — a hand-maintained map is trusted and wrong the moment someone forgets"
+    kind: behavior
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node scripts/gen-codebase-map.mjs --check", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+
+  - id: c-decisions-not-ledger-derivable
+    assert: "DECISIONS.md is NOT a generated view: it records rejected options and rationale, and the claim schema has no field for either, so a non-lossy migration is impossible by construction rather than by difficulty"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node scripts/ledger.mjs lint", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+
+  - id: c-war-room-removed
+    assert: "The war-room directory is gone — 25 files and 3,256 lines whose three populations each had an existing home, including 16 decorative budget: blocks that nothing read"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence: {cmd: "test ! -d .claude/agents/war-room", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+
   - id: c-no-nul-bytes-in-tracked-source
     assert: "No tracked text file contains a NUL byte, so no grep-based check can silently return nothing and exit 1 on a file it appears to have searched"
     kind: internal-fact

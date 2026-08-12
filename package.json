@@ -6,7 +6,7 @@
     "gsa-startup-kit": "bin/install.js"
   },
   "scripts": {
-    "check": "npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:registration && npm run check:warroom && npm run test:hooks && npm run test:budget && npm run test:lenses && npm run test:playbooks && npm run check:ledger",
+    "check": "npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:registration && npm run check:map && npm run check:warroom && npm run test:hooks && npm run test:budget && npm run test:lenses && npm run test:playbooks && npm run check:ledger",
     "test:lenses": "node --test scripts/lenses.test.mjs",
     "check:ledger": "npm run test:claims && npm run test:classifier && npm run test:ledger && node scripts/ledger.mjs lint && node scripts/ledger.mjs build --check && node scripts/ledger.mjs verify",
     "test:claims": "node --test scripts/claims.test.mjs",
@@ -29,7 +29,9 @@
     "ledger:sweep": "node scripts/ledger.mjs sweep",
     "test:hooks": "node --test scripts/session-start.test.mjs",
     "test:budget": "node --test scripts/usage.test.mjs",
-    "usage": "node -e \"const u=require('./scripts/lib/usage.js');const w=u.windowUsage({});console.log(w.output_tokens.toLocaleString()+' output tokens in the rolling '+w.window_hours+'h window')\""
+    "usage": "node -e \"const u=require('./scripts/lib/usage.js');const w=u.windowUsage({});console.log(w.output_tokens.toLocaleString()+' output tokens in the rolling '+w.window_hours+'h window')\"",
+    "build:map": "node scripts/gen-codebase-map.mjs",
+    "check:map": "node scripts/gen-codebase-map.mjs --check"
   },
   "files": [
     "bin/",
