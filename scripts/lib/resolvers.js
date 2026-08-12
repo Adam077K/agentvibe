@@ -84,22 +84,37 @@ function dispositionOutcome(claim, now, resolverName) {
     return result(resolverName, claim, 'pass', `deprecated — no longer claimed (${d.reason})`);
   }
   if (d.action === 'waive') {
-    const until = dateMs(d.until);
-    if (Number.isNaN(until)) {
+    const w = waiverState(claim, now);
+    if (w.invalid) {
       return result(resolverName, claim, 'fail', `disposition.until "${d.until}" is not a date`);
     }
-    const deadline = until + DAY_MS;
-    if (now < deadline) {
-      const left = daysBetween(deadline, now);
-      return result(resolverName, claim, 'pass', `waived for ${left} more day${left === 1 ? '' : 's'} (until ${d.until}) — ${d.reason}`);
+    if (!w.lapsed) {
+      return result(resolverName, claim, 'pass', `waived for ${w.days} more day${w.days === 1 ? '' : 's'} (until ${d.until}) — ${d.reason}`);
     }
-    const over = daysBetween(now, deadline);
     return result(resolverName, claim, 'fail',
-      `WAIVER LAPSED ${over} day${over === 1 ? '' : 's'} ago (until ${d.until}) — "${d.reason}". ` +
+      `WAIVER LAPSED ${w.days} day${w.days === 1 ? '' : 's'} ago (until ${d.until}) — "${d.reason}". ` +
       `A lapsed waiver is worse than no disposition: somebody promised to come back to this and did not. ` +
       `Refresh it, deprecate it, or waive it again with a new date and a reason that has changed.`);
   }
   return null;
+}
+
+// Whether a waiver is still in force, as data rather than as a rendered sentence.
+//
+// `ledger sweep` needs the same answer this resolver needs, and computed it independently
+// for exactly one commit. Two implementations of one date rule agree until a leap year or
+// a timezone, and then disagree during the incident they were built to prevent — the same
+// argument that gave the repo one risk classifier instead of two.
+//
+// Returns { invalid } | { lapsed: false, days } | { lapsed: true, days }.
+function waiverState(claim, now) {
+  const d = (claim && claim.disposition) || {};
+  const until = dateMs(d.until);
+  if (Number.isNaN(until)) return { invalid: true };
+  const deadline = until + DAY_MS;
+  return now < deadline
+    ? { invalid: false, lapsed: false, days: daysBetween(deadline, now) }
+    : { invalid: false, lapsed: true, days: daysBetween(now, deadline) };
 }
 
 function freshness(claim, opts = {}) {
@@ -382,4 +397,5 @@ module.exports = {
   resolversFor,
   run,
   normaliseText,
+  waiverState,
 };

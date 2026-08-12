@@ -17,11 +17,18 @@ You do not usually name an engine. You name the work; the playbook names the eng
 
 ---
 
-## The seven engines
+## The six engines
 
 The roster collapsed from 26 agents in Phase 4b. They were never distinct procedures — they were one
 procedure per shape of work, repeated once per domain, with the domain knowledge baked into prose that
 rotted. The domain knowledge is now [.claude/lenses.yml](.claude/lenses.yml), which a linter can check.
+
+Phase 6 removed a seventh. `reader` was defined as a periodic sweep whose return contract was `status ·
+window · expired · expiring_soon · lapsed_waivers · silent_resolvers` — six deterministic queries — and whose
+own anti-patterns forbade the single judgement in scope: *"DO NOT record a disposition; that is a decision,
+and decisions have owners."* An engine that never judges anything is a script that has not been written yet.
+It is now `node scripts/ledger.mjs sweep`, run by [a schedule](.github/workflows/ledger-sweep.yml) and by
+[the session-start hook](.claude/hooks/session-start.js).
 
 | Engine | Distinct because | Tools | Model |
 |---|---|---|---|
@@ -31,10 +38,9 @@ rotted. The domain knowledge is now [.claude/lenses.yml](.claude/lenses.yml), wh
 | **builder** | Artifact in isolation → structured return | write + `Bash`, worktree | Sonnet 4.6 |
 | **designer** | The only producing engine with a perception loop: render → look → iterate | write + `Bash`, worktree | Sonnet 4.6 |
 | **reviewer** | Read-only and out-of-band. **No `Write`, no `Edit`** | **read-only** | Sonnet 4.6 |
-| **reader** | Not task-triggered — a periodic sweep over the ledger and the run log | **read-only** | Haiku 4.5 |
 
-`reviewer` and `reader` have no write tools at all. *An agent that can edit what it reviews will review what
-it can edit* — and before Phase 4a, four of the five read-only reviewers declared `Write`.
+`reviewer` has no write tools at all. *An agent that can edit what it reviews will review what it can edit* —
+and before Phase 4a, four of the five read-only reviewers declared `Write`.
 
 ---
 

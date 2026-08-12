@@ -47,7 +47,7 @@ const { parseYamlSubset, KINDS, VERIFIERS, independenceIssue } = require('../../
 // The seven engines of the Phase 4 roster. Held here as a constant rather than read from
 // disk because the lens files are authored BEFORE the engine files exist — 4a proves the
 // expertise survives, and only then does 4b delete what it replaced.
-const ENGINES = ['orchestrator', 'framer', 'sourcer', 'builder', 'designer', 'reviewer', 'reader'];
+const ENGINES = ['orchestrator', 'framer', 'sourcer', 'builder', 'designer', 'reviewer'];
 
 // Engines that must never be able to change what they look at.
 //
@@ -59,7 +59,7 @@ const ENGINES = ['orchestrator', 'framer', 'sourcer', 'builder', 'designer', 're
 //
 // Treating this lint as the gate criterion would be exactly the decorative-capability
 // failure §3.7 names: a field that looks like a boundary and enforces nothing.
-const READ_ONLY_ENGINES = ['reviewer', 'reader'];
+const READ_ONLY_ENGINES = ['reviewer'];
 
 // ── 07b template checks ────────────────────────────────────────────────────
 

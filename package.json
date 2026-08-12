@@ -1,12 +1,12 @@
 {
   "name": "gsa-startup-kit",
   "version": "1.1.0",
-  "description": "AI Agent Kit for Claude Code & Antigravity \u2014 autonomous startup team (CEO, C-suite, Workers) with 147 expert skills",
+  "description": "AI Agent Kit for Claude Code & Antigravity — autonomous startup team (CEO, C-suite, Workers) with 147 expert skills",
   "bin": {
     "gsa-startup-kit": "bin/install.js"
   },
   "scripts": {
-    "check": "npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:registration && npm run check:warroom && npm run test:lenses && npm run test:playbooks && npm run check:ledger",
+    "check": "npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:registration && npm run check:warroom && npm run test:hooks && npm run test:lenses && npm run test:playbooks && npm run check:ledger",
     "test:lenses": "node --test scripts/lenses.test.mjs",
     "check:ledger": "npm run test:claims && npm run test:classifier && npm run test:ledger && node scripts/ledger.mjs lint && node scripts/ledger.mjs build --check && node scripts/ledger.mjs verify",
     "test:claims": "node --test scripts/claims.test.mjs",
@@ -25,7 +25,9 @@
     "check:manifest": "node scripts/build-skills-manifest.mjs --check",
     "check:registration": "node scripts/check-registration.mjs",
     "build:manifest": "node scripts/build-skills-manifest.mjs",
-    "test:playbooks": "node --test scripts/playbooks.test.mjs"
+    "test:playbooks": "node --test scripts/playbooks.test.mjs",
+    "ledger:sweep": "node scripts/ledger.mjs sweep",
+    "test:hooks": "node --test scripts/session-start.test.mjs"
   },
   "files": [
     "bin/",

@@ -24,6 +24,47 @@
 
 <!-- Entries below this line, most-recent first. -->
 
+## 2026-08-12 — The reader engine becomes a script, and the roster drops to six
+
+**Context:** Phase 6 opened with a stop-condition-7 clock running: `.claude/agents/reader.md` was created in
+Phase 4b and nothing invoked it. Reading it against the decision to wire it revealed the file specified an
+agent that never judges anything — its return contract (`status · window · expired · expiring_soon ·
+lapsed_waivers · silent_resolvers`) is six deterministic queries, and its own anti-patterns forbid the single
+judgement in scope: *"DO NOT record a disposition; that is a decision, and decisions have owners."*
+**Options considered:** Wire the agent into a scheduled CI job (needs an API key and per-run billing outside
+the subscription, and yields a non-deterministic report no test can pin) / Script the sweep and keep the agent
+to interpret it (real but speculative value, and the trigger would be prose rather than mechanical, so §0
+stays half-satisfied) / Script it and delete the agent / Record it as unconsumed and defer.
+**Decision:** `node scripts/ledger.mjs sweep`, and `.claude/agents/reader.md` is deleted. Roster is six
+engines. The sweep runs on a schedule ([ledger-sweep.yml](../../.github/workflows/ledger-sweep.yml)) and at
+session start, where the same hook also injects the lens and playbook files.
+**Rationale:** Deletion is the strongest answer to the new §0 gate criterion — the unconsumed mechanism is
+removed rather than pretended-consumed. Deterministic, keyless, testable, and it makes the roster smaller,
+which is the whole thesis of Phase 4. Verified safe first: no `reader.md` exists in `~/.claude/agents/`, so
+unlike the eleven shimmed names, deleting this one actually removes it.
+**Reversibility:** hard-to-reverse (git history holds the file; the roster count is referenced in four docs)
+**Owner:** ceo
+**Affects:** every engine consumer, schema-lint's ENGINES registry, AGENTS.md, README counts, the claim ledger
+
+## 2026-08-12 — Three Phase 6 gate criteria amended, each by a measurement
+
+**Context:** The Phase 6 gate was written in the Phase 6 handoff — by me — before any of the runtime was
+measured. Three of its criteria turned out to describe mechanisms that could not fire or could not be proven.
+**Options considered:** Implement the criteria literally and ship mechanisms that pass their own gate while
+guarding nothing / Amend the criteria quietly / Amend them and record the measurement that forced each.
+**Decision:** Amend, with the number attached. (1) *"The ceiling fires before dispatch"* → **before the next
+unit of work**: measured 0 of this session's 414M tokens passed through `Task`, so a dispatch-gated budget
+would never have fired once in 1,314 turns. (2) *"per session"* → **per rolling 5-hour window**, the actual
+subscription constraint; peak measured across 99 transcripts and 16,900 turns is **1,961,285 output tokens**,
+so warn at 2M and block at 3M. (3) *"the four memory files are generated views, proven non-lossy"* → only
+`CODEBASE-MAP.md` becomes a generated view; the ledger has no field for rejected options or rationale, so
+"non-lossy" fails by construction for `DECISIONS.md`, and three of the four files are empty templates anyway.
+**Rationale:** A gate criterion that cannot be met honestly is worse than no criterion — it forces either a
+false pass or a quiet edit. Recording the measurement makes the amendment auditable.
+**Reversibility:** reversible
+**Owner:** ceo
+**Affects:** Phase 6 acceptance, the budget and stall design, anyone reading the handoff's gate section
+
 ## 2026-08-11 — Claim ledger replaces the diff gate as the enforcement spine
 
 **Context:** The system must serve any venture work, not only code. A measured diagnostic found ~1,736 stated imperative rules against 1 mechanism that can block, and 16 verified fabrications. The obvious fix — a merge gate bound to a commit SHA with CI executing compilers — gates diffs, and most venture work (pricing, market sizing, positioning, GTM) has no diff.

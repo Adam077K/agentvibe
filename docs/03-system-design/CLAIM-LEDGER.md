@@ -258,14 +258,55 @@ claims:
     supports: [d-001]
 
   - id: c-run-log-has-a-reader
-    assert: "The run log is read by something — `ledger events` summarises it by claim, resolver and status"
+    assert: "The run log is read on a schedule — `ledger sweep` reports expiry, lapsed waivers and dead resolvers, and is run by a cron workflow and by the session-start hook"
     kind: behavior
     scope: project
     verified_by: command
-    evidence: {cmd: "node scripts/ledger.mjs events --since 30d", expect_exit: 0}
+    evidence: {cmd: "node scripts/ledger.mjs sweep --since 30d", expect_exit: 0}
     valid_until: 2026-11-09
     confidence: 1
     supports: [c-shadow-window-open]
+
+  - id: c-sweep-never-fails-what-it-cannot-check
+    assert: "An absent run log makes the sweep PARTIAL with zero findings; only a log that EXISTS and is empty counts as a dead resolver"
+    kind: behavior
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node --test scripts/ledger.test.mjs", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+    supports: [c-resolvers-never-pass-unchecked]
+
+  - id: c-lenses-and-playbooks-are-loaded
+    assert: "The lens files and every playbook are injected into each session by .claude/hooks/session-start.js, so loading them is mechanical rather than discretionary"
+    kind: behavior
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node --test scripts/session-start.test.mjs", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+
+  - id: c-sessionstart-injection-unverified
+    assert: "Whether Claude Code honours hookSpecificOutput.additionalContext on SessionStart is unverified — confirming it needs a NEW session, which cannot be observed from inside this one"
+    kind: runtime-capability
+    scope: project
+    verified_by: judge
+    evidence:
+      lenses: [reproducibility]
+      risk: high
+      judged_by: []
+    valid_until: 2026-09-08
+    confidence: 0.5
+    disposition: {action: waive, until: 2026-09-08, reason: "the hook emits the documented shape and its own output is unit-tested; only the runtime honouring it is unconfirmed, and observing that requires starting a fresh session — revisit with the shadow-window review"}
+
+  - id: c-no-nul-bytes-in-tracked-source
+    assert: "No tracked text file contains a NUL byte, so no grep-based check can silently return nothing and exit 1 on a file it appears to have searched"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node scripts/check-registration.mjs", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
 
   - id: c-lens-content-is-linted
     assert: "Lens files are checked for content, not only shape — vagueness, placeholders and dead provenance all fail"
@@ -315,7 +356,7 @@ claims:
     confidence: 1
 
   - id: c-read-only-engines-declare-no-write
-    assert: "The reviewer and reader engines declare no Write or Edit tool — verified as a declaration, NOT as a runtime binding"
+    assert: "The reviewer engine declares no Write or Edit tool — verified as a declaration, NOT as a runtime binding"
     kind: internal-fact
     scope: project
     verified_by: command

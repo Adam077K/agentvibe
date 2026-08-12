@@ -1,0 +1,64 @@
+# POSTURE: BLOCKS (its own job). A run with findings fails, which is how the notification
+# happens — there is no other escalation path, and a green-but-noisy job is one nobody reads.
+#
+# THE CLOCK THIS REPO DID NOT HAVE (Phase 6, 2026-08-12)
+#
+# Measured before writing this: no crontab, no launchd agent, no Actions `schedule:`, and no
+# Inngest configuration existed anywhere. Twelve war-room routines declared cron strings like
+# `schedule: "35 5 * * 2-5"` and nothing fired any of them. This is the first real clock.
+#
+# WHY IT DUPLICATES THE SESSION HOOK. `.claude/hooks/session-start.js` also sweeps, so an
+# active founder sees findings without waiting for this. The two cover different failures:
+# the hook catches nothing when no session is opened for a week, which is exactly the window
+# in which a claim expires and a waiver lapses unnoticed. This job is the answer to "what if
+# nobody looks".
+#
+# WHY IT DOES NOT COMMIT ANYTHING. The stamp it writes lives on the runner and is discarded.
+# That is deliberate: a workflow that pushes to main is a workflow that can rewrite main, and
+# the stamp's only consumer is local. The scheduled run's output is the job status.
+
+name: Ledger sweep
+
+on:
+  schedule:
+    # 06:20 UTC daily. Deliberately not on the hour: shared runner capacity is worst at :00.
+    - cron: '20 6 * * *'
+  workflow_dispatch: # so it can be proven to work without waiting a day
+
+permissions:
+  contents: read
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Load-bearing. Lens provenance is git-history based (`git:<path>@<rev>`) and
+          # verified with `git cat-file -e`; a shallow clone fails those lookups.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # The sweep reads the ledger index and the run log. On a fresh runner there is no run
+      # log, so resolver liveness is genuinely uncheckable here and the sweep reports PARTIAL
+      # rather than pretending. Rebuilding the index first means the claims themselves are
+      # current — the one half this environment CAN answer.
+      - name: Rebuild the claim index
+        run: node scripts/ledger.mjs build
+
+      - name: Sweep the ledger
+        run: |
+          set -o pipefail
+          node scripts/ledger.mjs sweep --since 30d | tee sweep.txt
+
+      - name: Explain a failure in the log rather than only in the exit code
+        if: failure()
+        run: |
+          echo "::error::The ledger sweep found something that needs a disposition."
+          echo "Every finding below resolves in exactly one way: record Refresh, Deprecate,"
+          echo "or Waive with a new date. A lapsed waiver fails harder than no disposition."
+          echo ""
+          cat sweep.txt || true
