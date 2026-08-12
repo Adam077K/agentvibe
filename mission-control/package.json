@@ -1,0 +1,17 @@
+{
+  "name": "mission-control",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local read-only multi-project control plane. This PR ships the rail only — no views, no collectors.",
+  "type": "module",
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/bun": "^1.1.14"
+  }
+}
