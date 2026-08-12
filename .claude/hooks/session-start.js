@@ -1,6 +1,10 @@
 #!/usr/bin/env node
-// POSTURE: ADVISES — SessionStart cannot block, and this never tries to. It injects the
-// lens and playbook data into the session, and warns when the ledger sweep has stopped.
+// POSTURE: ADVISES — SessionStart cannot block, and this never tries to. It EMITS the lens
+// and playbook data for the session, and warns when the ledger sweep has stopped.
+//
+// READ THE CORRECTION AT THE BOTTOM OF THIS BLOCK BEFORE TRUSTING THE WORD "INJECTS".
+// Emitting is not the same as arriving, and for most of this file's life the difference
+// was invisible because nothing measured it.
 //
 // WHY THIS EXISTS (Phase 6, 2026-08-12)
 //
@@ -23,11 +27,32 @@
 // is reported loudly: a health check that quietly stops running reads exactly like a
 // healthy system.
 //
-// UNVERIFIED, DELIBERATELY NAMED: whether Claude Code honours
-// hookSpecificOutput.additionalContext on SessionStart the way it does on PostToolUse has
-// not been confirmed by observation in this session — a new session is needed to see it.
-// Recorded as c-sessionstart-injection-unverified with an expiry rather than assumed.
-// Standing rule 4: never assert runtime behaviour you have not run.
+// ─── CORRECTED 2026-08-12, BY OBSERVATION FROM A FRESH SESSION ──────────────────────
+//
+// The block above used to say the loading was "mechanical rather than discretionary", and
+// this block used to say the runtime's handling of hookSpecificOutput.additionalContext was
+// unconfirmed. Half of that is now settled and the other half is worse than unconfirmed —
+// it is disproved.
+//
+// SETTLED: Claude Code DOES honour additionalContext at SessionStart. The hook fires and
+// its output is delivered. That was the one thing a fresh session was needed to see.
+//
+// DISPROVED: delivery is not inlining. This file emitted 25,613 bytes; 24,490 of them were
+// persisted to a file under the session's tool-results directory and roughly 2KB of preview
+// was inlined alongside the path. So an agent starting a session receives a POINTER, and
+// must CHOOSE to open it — which is the definition of discretionary, the exact property
+// this hook was built to remove.
+//
+// WHY IT WENT UNNOTICED FOR A PHASE: c-lenses-and-playbooks-are-loaded was verified by
+// `node --test scripts/session-start.test.mjs`, which tests WHAT THIS FILE EMITS. Nothing
+// tested what the session receives. Standing rule 3 — test the artifact a guard produces,
+// not just the guard. The claim now also gates on payload size and FAILS until the fix
+// lands; see docs/03-system-design/CLAIM-LEDGER.md.
+//
+// THE FIX IS A ROUTER, NOT A BIGGER DUMP. Emit lens ids plus one-line summaries and the
+// pointer to .claude/skills/routers/INDEX.md — roughly 1.5KB, under the threshold — the
+// same cure Phase 7 found when reading MANIFEST.json whole cost ~15,000 tokens a lookup.
+// Until that ships, treat the cost note above as measuring bytes emitted, not bytes read.
 
 const fs = require('fs');
 const path = require('path');
