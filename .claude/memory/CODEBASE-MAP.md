@@ -41,6 +41,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:ledger` | `npm run test:claims && npm run test:classifier && npm run test:ledger && node scripts/ledger.mjs lint && node ` |
 | `npm run check:manifest` | `node scripts/build-skills-manifest.mjs --check` |
 | `npm run check:map` | `node scripts/gen-codebase-map.mjs --check` |
+| `npm run check:mc` | `node mission-control/check.mjs` |
 | `npm run check:registration` | `node scripts/check-registration.mjs` |
 | `npm run check:routers` | `node scripts/build-skill-routers.mjs --check` |
 | `npm run check:warroom` | `bash -n bin/warroom && node --check scripts/warroom-install.mjs && bash -n scripts/warroom-parity.sh && npm ru` |
@@ -91,13 +92,13 @@ it, so a hook that changes posture changes this map with it.
 
 ## What the system asserts
 
-29 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
+30 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
 `~/.warroom/ledger/global.yml` — machine state a fresh clone does not have, which the ledger reports
 rather than skipping silently.
 
 | Kind | Count |
 |---|---|
-| behavior | 13 |
+| behavior | 14 |
 | external-fact | 1 |
 | internal-fact | 13 |
 | runtime-capability | 2 |
