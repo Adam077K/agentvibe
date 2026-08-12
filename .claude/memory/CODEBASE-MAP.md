@@ -60,6 +60,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:ledger` | `node --test scripts/ledger.test.mjs` |
 | `npm run test:lenses` | `node --test scripts/lenses.test.mjs` |
 | `npm run test:playbooks` | `node --test scripts/playbooks.test.mjs` |
+| `npm run test:probe-readonly` | `node --test scripts/probe-readonly.test.mjs` |
 | `npm run test:warroom` | `node --test scripts/warroom-install.test.mjs` |
 | `npm run usage` | `node -e "const u=require('./scripts/lib/usage.js');const w=u.windowUsage({});console.log(w.output_tokens.toLoc` |
 | `npm run warroom:check` | `node scripts/warroom-install.mjs check` |
@@ -86,6 +87,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/ledger.test.mjs` | the resolvers, and the invariant that holds the ledger up. |
 | `scripts/lenses.test.mjs` | the lens linter, tested by constructing its failures. |
 | `scripts/playbooks.test.mjs` | the playbook linter, tested by constructing its failures. |
+| `scripts/probe-readonly.test.mjs` | — |
 | `scripts/session-start.test.mjs` | the SessionStart hook. |
 | `scripts/usage.test.mjs` | the spend measurement and the ceiling that acts on it. |
 | `scripts/warroom-install.test.mjs` | — |
