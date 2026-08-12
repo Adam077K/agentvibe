@@ -148,7 +148,19 @@ reconstructible:
   # bar test 1 allows. Kept, and the reversal is recorded rather than the list quietly edited.
   - screenshots       # "take a screenshot"
   - core-components   # a generic component-library inventory
-  - frontend-design   # survives the merges above, then fails this test on its own content
+  # RE-EXAMINED before merge, because the drifted global copy looked good enough to reverse
+  # the cut. It does not — it is a DIFFERENT document, not a drifted one. Measured on the
+  # 277-line repo copy that was deleted: 30 headings, ZERO hex values, ZERO px/rem values,
+  # 2 code fences, and an invented "Design Feasibility & Impact Index (DFII)" with a scoring
+  # formula. 277 lines of design guidance without a single measurable anchor is the exact
+  # failure the lens linter catches in a lens ("a vague step with no measurable anchor fails").
+  # The cut stands, and now on a number rather than an impression.
+  #
+  # The 55-line GLOBAL frontend-design is a different matter and should be IMPORTED: it names
+  # the three looks AI-generated design clusters into, with a hex value (#F4F1EA), warns about
+  # .section/.cta specificity cancelling padding, and gives a concrete token rubric. A model
+  # does not reconstruct a critique of its own default aesthetic — that is the test, passed.
+  - frontend-design
   - documentation-templates # same: what remains is a heading skeleton
 
 # ── Test: dead-subject ──────────────────────────────────────────────────────
