@@ -2,7 +2,7 @@
   "version": "3.0.0",
   "generated": "2026-08-12",
   "note": "Generated from disk by scripts/build-skills-manifest.mjs. Every path resolves to a top-level .claude/skills/<name>/SKILL.md. Do not hand-edit — run the script.",
-  "totalSkills": 93,
+  "totalSkills": 98,
   "skills": [
     {
       "name": "12-principles-of-animation",
@@ -163,6 +163,12 @@
       "description": "\"Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies\"",
       "tags": [],
       "path": ".claude/skills/dispatching-parallel-agents/SKILL.md"
+    },
+    {
+      "name": "doc-coauthoring",
+      "description": "Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration, and verify the doc works for readers. Trigger when user mentions writing docs, creating proposals, drafting specs, or similar documentation tasks.",
+      "tags": [],
+      "path": ".claude/skills/doc-coauthoring/SKILL.md"
     },
     {
       "name": "domain-driven-design",
@@ -432,6 +438,12 @@
       "path": ".claude/skills/react-patterns/SKILL.md"
     },
     {
+      "name": "receiving-code-review",
+      "description": "Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation",
+      "tags": [],
+      "path": ".claude/skills/receiving-code-review/SKILL.md"
+    },
+    {
       "name": "redesign-existing-projects",
       "description": "Upgrades existing websites and apps to premium quality. Audits current design, identifies generic AI patterns, and applies high-end design standards without breaking functionality. Works with any CSS framework or vanilla CSS.",
       "tags": [],
@@ -502,6 +514,12 @@
       "description": "\"Implement Stripe payment processing for robust, PCI-compliant payment flows including checkout, subscriptions, and webhooks. Use when integrating Stripe payments, building subscription systems, or ...\"",
       "tags": [],
       "path": ".claude/skills/stripe-integration/SKILL.md"
+    },
+    {
+      "name": "subagent-driven-development",
+      "description": "Use when executing implementation plans with independent tasks in the current session",
+      "tags": [],
+      "path": ".claude/skills/subagent-driven-development/SKILL.md"
     },
     {
       "name": "supabase-rls-conventions",
@@ -580,6 +598,12 @@
       "path": ".claude/skills/vercel-react-native-skills/SKILL.md"
     },
     {
+      "name": "verification-before-completion",
+      "description": "Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always",
+      "tags": [],
+      "path": ".claude/skills/verification-before-completion/SKILL.md"
+    },
+    {
       "name": "wcag-audit-patterns",
       "description": "\"Conduct WCAG 2.2 accessibility audits with automated testing, manual verification, and remediation guidance. Use when auditing websites for accessibility, fixing WCAG violations, or implementing ac...\"",
       "tags": [],
@@ -613,6 +637,12 @@
       "description": "\"Use when you have a spec or requirements for a multi-step task, before touching code\"",
       "tags": [],
       "path": ".claude/skills/writing-plans/SKILL.md"
+    },
+    {
+      "name": "writing-skills",
+      "description": "Use when creating new skills, editing existing skills, or verifying skills work before deployment",
+      "tags": [],
+      "path": ".claude/skills/writing-skills/SKILL.md"
     },
     {
       "name": "xss-html-injection",

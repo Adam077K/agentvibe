@@ -18,7 +18,10 @@ LLM applications, agents, retrieval, prompts, tools — the AI layer itself
 | `mem0-patterns` | Mem0 episodic memory write/read patterns for Agentvibe agents: mandatory metadata fields, retry policy, and fallback to Anthropic Memory Tool after… |
 | `multi-agent-patterns` | Master orchestrator, peer-to-peer, and hierarchical multi-agent architectures |
 | `prompt-caching` | Caching strategies for LLM prompts including Anthropic prompt caching, response caching, and CAG (Cache Augmented Generation) Use when: prompt… |
+| `subagent-driven-development` | Use when executing implementation plans with independent tasks in the current session |
 | `tool-design` | Build tools that agents can use effectively, including architectural reduction patterns |
+| `verification-before-completion` | Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and… |
 | `writing-plans` | Use when you have a spec or requirements for a multi-step task, before touching code |
+| `writing-skills` | Use when creating new skills, editing existing skills, or verifying skills work before deployment |
 
 [← all namespaces](INDEX.md)
