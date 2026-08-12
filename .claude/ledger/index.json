@@ -137,7 +137,7 @@
       "scope": "project",
       "verified_by": "command",
       "evidence": {
-        "cmd": "node --test scripts/session-start.test.mjs && test $(AGENTVIBE_HOOK_NO_REFRESH=1 node .claude/hooks/session-start.js | wc -c) -le 2048",
+        "cmd": "node --test scripts/session-start.test.mjs && test $(AGENTVIBE_HOOK_NO_REFRESH=1 node .claude/hooks/session-start.js | wc -c) -le 4096",
         "expect_exit": 0
       },
       "valid_until": "2026-11-09",
@@ -379,7 +379,7 @@
         "judged_by": []
       },
       "valid_until": "2026-11-09",
-      "confidence": 0.9,
+      "confidence": 0.7,
       "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
       "source_line": 182
     },

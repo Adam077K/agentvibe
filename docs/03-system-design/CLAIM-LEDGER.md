@@ -287,14 +287,23 @@ claims:
   # below now checks both halves, so the claim can only pass once the payload actually fits.
   # It FAILS today and logs claim.would_block, which is the correct state for known debt:
   # visible, dated, and not asserted away. The fix is a router — lens ids and one-line
-  # summaries, ~1.5KB — the same cure Phase 7 found for skills. Threshold 2048 is ESTIMATED
-  # from the runtime's own "Preview (first 2KB)" message, observed once.
+  # summaries, ~1.5KB — the same cure Phase 7 found for skills.
+  #
+  # THRESHOLD 4096 IS A SAFETY MARGIN, NOT THE REAL LIMIT, and the distinction matters.
+  # The runtime's actual cutoff is undocumented; "~2KB" is inferred from one sighting of a
+  # rounded UI label ("Preview (first 2KB)"). `wc -c` also measures the whole hook JSON —
+  # including the ~65-100 byte hookSpecificOutput wrapper — not the bare additionalContext
+  # string, so it is a proxy, not the quantity the runtime actually gates on. At today's
+  # 25,613 bytes the imprecision is irrelevant: it is 6x over even the generous line. It
+  # would matter once the router lands near 1.5KB, which is why the gate sits at 4096
+  # rather than the guessed 2048 — a claim must not flip on an unverified boundary. Confirm
+  # the real threshold before the router ships, and tighten this then.
   - id: c-lenses-and-playbooks-are-loaded
     assert: "The lens files and every playbook REACH AGENT CONTEXT at session start — the hook emits them and the payload stays within the runtime's inline threshold, so loading is mechanical rather than discretionary"
     kind: behavior
     scope: project
     verified_by: command
-    evidence: {cmd: "node --test scripts/session-start.test.mjs && test $(AGENTVIBE_HOOK_NO_REFRESH=1 node .claude/hooks/session-start.js | wc -c) -le 2048", expect_exit: 0}
+    evidence: {cmd: "node --test scripts/session-start.test.mjs && test $(AGENTVIBE_HOOK_NO_REFRESH=1 node .claude/hooks/session-start.js | wc -c) -le 4096", expect_exit: 0}
     valid_until: 2026-11-09
     confidence: 0.3
 
@@ -317,7 +326,12 @@ claims:
       risk: high
       judged_by: []
     valid_until: 2026-11-09
-    confidence: 0.9
+    # 0.7, not the 0.9 first written. This is a risk: high, verified_by: judge claim, which
+    # the design gates behind an independent panel spanning ≥2 model families. The evidence
+    # is one observation, by the same agent that wrote the hook, with no panel. That is
+    # strong for a BINARY question — was the output delivered at all — and weak as a basis
+    # for a near-settled number a skimming reader would trust.
+    confidence: 0.7
     disposition: {action: refresh, reason: "observed directly from a fresh session on 2026-08-12: the hook emitted 25,613 bytes, 24,490 were persisted to tool-results and a ~2KB preview was inlined with the file path. Delivery confirmed; inlining disproved. The remaining risk moved to c-lenses-and-playbooks-are-loaded, which now checks payload size and fails until the router fix lands"}
 
   - id: c-skills-curation-is-auditable
