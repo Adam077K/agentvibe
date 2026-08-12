@@ -14,8 +14,7 @@
  *   1. Every hook/statusLine command in settings.json resolves to a file.
  *   2. Every repo-relative path named in a governing document exists.
  *   3. Every count in README's "What's inside" table matches what is on disk.
- *   4. Every skill declared by an agent — including war-room, which schema-lint
- *      does not walk — exists in MANIFEST.json.
+ *   4. Every skill declared by an agent exists in MANIFEST.json.
  *   5. WARN: capability-bearing files that nothing registers.
  *   6. WARN: agents declaring mcpServers while no MCP config exists.
  *   7. WARN: agent names that also exist in ~/.claude/agents (machine state CI cannot see).
@@ -120,7 +119,7 @@ for (const doc of GOVERNING) {
 
 // ── 3 · README counts match disk ───────────────────────────────────────────
 const countOnDisk = {
-  agents: listMd('.claude/agents').length + listMd('.claude/agents/war-room').filter((f) => f !== 'INDEX.md').length,
+  agents: listMd('.claude/agents').length,
   skills: fs
     .readdirSync(abs('.claude/skills'), { withFileTypes: true })
     .filter((d) => d.isDirectory() && exists(`.claude/skills/${d.name}/SKILL.md`)).length,
@@ -150,7 +149,7 @@ for (const [label, key] of [
   }
 }
 
-// ── 4 · declared skills exist in MANIFEST (incl. war-room) ─────────────────
+// ── 4 · declared skills exist in MANIFEST ─────────────────────────────────
 let manifestNames = null;
 try {
   const m = JSON.parse(read('.claude/skills/MANIFEST.json'));
@@ -161,7 +160,6 @@ try {
 
 const agentFiles = [
   ...listMd('.claude/agents').map((f) => `.claude/agents/${f}`),
-  ...listMd('.claude/agents/war-room').map((f) => `.claude/agents/war-room/${f}`),
 ];
 let mcpDeclared = 0;
 const mcpConfigured = exists('.mcp.json') || 'mcpServers' in settings;

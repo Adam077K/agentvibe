@@ -58,6 +58,12 @@ jobs:
       - name: Registration completeness
         run: node scripts/check-registration.mjs
 
+      # CODEBASE-MAP.md is generated, not written. A hand-maintained map is accurate exactly
+      # until the first person forgets, and then it is trusted and wrong — which is worse
+      # than no map. This fails when it drifts from disk.
+      - name: Codebase map matches disk
+        run: npm run check:map
+
       # The launcher every project starts from, plus the install/rollback guard
       # rails. Syntax, then 11 tests that run the installer against a temporary
       # HOME — including the regression for a backup restored without its
