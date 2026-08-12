@@ -93,6 +93,12 @@ jobs:
       - name: SessionStart hook
         run: npm run test:hooks
 
+      # Spend measurement and the ceiling that acts on it. Every transcript in these tests
+      # is constructed: a test reading real usage would pass or fail for reasons it did not
+      # choose, and ~/.claude/projects does not exist on a CI runner at all.
+      - name: Budget and stall
+        run: npm run test:budget
+
       # The claim ledger. Four things, all deterministic:
       #   · the parser and schema (43 tests, most of them "this must REFUSE")
       #   · the tier map, run against a path list rather than read
