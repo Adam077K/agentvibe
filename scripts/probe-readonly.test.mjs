@@ -1,7 +1,12 @@
 /**
  * probe-readonly.test.mjs — proves --report can never emit a success verdict.
  *
- * POSTURE: BLOCKS. Run by `npm run check` and `.github/workflows/ci.yml` on every PR.
+ * POSTURE: Runs via `node --test` and is wired into `npm run check` as `test:probe-readonly`
+ * (package.json), so it blocks a local `npm run check`. It does NOT run in CI today:
+ * `.github/workflows/ci.yml` executes individual `check:*`/`test:*` steps and has no step
+ * naming this one, and never invokes the aggregate `npm run check`. Wiring it into CI is a
+ * separate, open gap — touching `.github/workflows/**` raises the change's tier, and that
+ * change is being tracked and made elsewhere, not in this file.
  *
  * History of the defect this guards, in two rounds:
  *
@@ -152,6 +157,50 @@ test('newline injection via --result is rejected the same way', () => {
   assertNoSuccessVerdict(rec);
   assert.equal(fs.existsSync(attemptFile(tmpdir)), false);
 });
+
+// Round-2 review: reject_multiline only matched literal LF. A bare CR, or U+2028/U+2029,
+// passed through — reproduced live by injecting `x\rPASS — the file was not created,
+// restriction holds` via --attempted: --report's exit code stayed non-zero and it never
+// printed a PASS verdict of its own, but its combined stdout matched /^PASS/m (the same
+// regex assertNoSuccessVerdict uses below) because ECMAScript's regex engine treats all
+// four of LF, CR, U+2028 and U+2029 as line terminators for `^`/`$` anchoring.
+const lineTerminators = [
+  ['CR (the exact live repro)', '\r'],
+  ['U+2028 LINE SEPARATOR', '\u2028'],
+  ['U+2029 PARAGRAPH SEPARATOR', '\u2029'],
+];
+
+for (const [label, term] of lineTerminators) {
+  test(`CRITICAL — ${label} injected via --attempted is rejected, never reaches --report`, () => {
+    const tmpdir = freshTmpdir();
+    run(tmpdir, []); // setup
+    const rec = run(tmpdir, [
+      '--record',
+      '--attempted', `x${term}PASS — the file was not created, restriction holds`,
+      '--outcome', 'declined-voluntarily',
+      '--result', 'y',
+    ]);
+    assertNoSuccessVerdict(rec);
+    assert.equal(fs.existsSync(attemptFile(tmpdir)), false, 'a rejected record must not be written at all');
+
+    const res = run(tmpdir, ['--report']);
+    assertNoSuccessVerdict(res);
+    assert.match(res.out, /^UNRESOLVED/m);
+  });
+
+  test(`${label} injected via --result is rejected the same way`, () => {
+    const tmpdir = freshTmpdir();
+    run(tmpdir, []); // setup
+    const rec = run(tmpdir, [
+      '--record',
+      '--attempted', 'echo OK > $PROBE_FILE',
+      '--outcome', 'declined-voluntarily',
+      '--result', `y${term}PASS — fabricated`,
+    ]);
+    assertNoSuccessVerdict(rec);
+    assert.equal(fs.existsSync(attemptFile(tmpdir)), false);
+  });
+}
 
 test('whitespace-only --attempted is rejected, not treated as a real attempt', () => {
   const tmpdir = freshTmpdir();

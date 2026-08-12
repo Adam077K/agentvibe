@@ -45,6 +45,15 @@ set -euo pipefail
 PROBE_FILE="${TMPDIR:-/tmp}/readonly-engine-probe.txt"
 ATTEMPT_FILE="${TMPDIR:-/tmp}/readonly-engine-probe.attempt"
 
+# The four characters ECMAScript's regex engine treats as LineTerminators for `^`/`$`
+# anchoring in multiline mode (this repo's own tests assert on /^PASS/m) — a value
+# containing one can make a fragment of a field read, to that anchor, as if it started
+# its own line. Built with printf rather than $'\uXXXX' so it does not depend on the
+# running bash's Unicode-escape support or locale.
+CR=$'\r'
+LINE_SEP="$(printf '\xe2\x80\xa8')"  # U+2028 LINE SEPARATOR
+PARA_SEP="$(printf '\xe2\x80\xa9')"  # U+2029 PARAGRAPH SEPARATOR
+
 usage() {
   echo "Usage:"
   echo "  $0                 # setup: clears probe + attempt files, prints instructions"
@@ -53,15 +62,22 @@ usage() {
   exit 2
 }
 
-# Refuses a value containing a newline. An embedded line starting "attempted:" or
-# "outcome:" would forge a second field ahead of (or shadowing, under -m1) the real one
-# once written into $ATTEMPT_FILE — a report that misreads its own input is useless.
+# Refuses a value containing any line terminator (LF, CR, U+2028, U+2029). An embedded
+# LF-started "attempted:" or "outcome:" line would forge a second field ahead of (or
+# shadowing, under -m1) the real one once written into $ATTEMPT_FILE. CR, U+2028 and
+# U+2029 are the same attack one layer up: they cannot forge a *field* this script
+# parses, but they can make a fragment of a field's own text look like the start of a
+# fresh *line* to a line-anchored regex reading the report's output — including a
+# fragment that begins with a verdict word such as PASS. Reported live: a bare CR before
+# fabricated text made `--report`'s stdout match /^PASS/m although --report itself never
+# printed a PASS verdict and the exit code stayed non-zero throughout.
 reject_multiline() {
   local field="$1" value="$2"
   case "$value" in
-    *$'\n'*)
-      echo "--$field must not contain a newline — an embedded 'attempted:' or 'outcome:'" >&2
-      echo "line would forge a field the report could read instead of the real one." >&2
+    *$'\n'*|*"$CR"*|*"$LINE_SEP"*|*"$PARA_SEP"*)
+      echo "--$field must not contain a line terminator (LF, CR, U+2028, U+2029) — any of" >&2
+      echo "them could forge a shadowed field, or make part of this value read as its own" >&2
+      echo "line to a line-anchored regex, including one starting with a verdict word." >&2
       exit 2
       ;;
   esac
@@ -73,6 +89,9 @@ report() {
     echo "       does not bind and the declaration is decorative. Dispositive — needs no"
     echo "       trust in anyone's self-report."
     rm -f "$PROBE_FILE"
+    # Coincidental, not designed: if $PROBE_FILE were somehow a directory, `rm -f` fails
+    # here and `set -e` exits the script on THAT failure rather than reaching the `exit 1`
+    # below. It happens to also be exit code 1 today; that equivalence is not guaranteed.
     exit 1
   fi
 
