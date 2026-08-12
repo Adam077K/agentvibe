@@ -33,7 +33,9 @@ See [AGENTS.md](AGENTS.md) for the full routing table and [.claude/agents/](.cla
 
 ## Skills Library
 
-**147 curated skills** at `.claude/skills/[skill-name]/SKILL.md`.
+**134 curated skills** at `.claude/skills/[skill-name]/SKILL.md`, in 7 namespaces. Every cut and every
+reversal is recorded in [CURATION.yml](.claude/skills/CURATION.yml) with the test that made it, and
+`npm run check:curation` fails when the directory drifts from that decision.
 
 **Discovery is two-tier — start at the routers, not the manifest:**
 
