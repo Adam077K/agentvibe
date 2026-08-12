@@ -85,6 +85,14 @@ jobs:
       - name: Playbooks
         run: npm run test:playbooks
 
+      # The SessionStart hook. It is the mechanical consumer of the lens and playbook
+      # files — before Phase 6 both were linted on every PR and loaded by nothing — and it
+      # is what reports a ledger sweep that has stopped running. Every test below is a case
+      # where saying nothing would have been indistinguishable from saying "all clear",
+      # which is the failure this phase exists to catch.
+      - name: SessionStart hook
+        run: npm run test:hooks
+
       # The claim ledger. Four things, all deterministic:
       #   · the parser and schema (43 tests, most of them "this must REFUSE")
       #   · the tier map, run against a path list rather than read

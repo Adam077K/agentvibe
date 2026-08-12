@@ -459,7 +459,7 @@ function cmdEvents(argv) {
   const byClaim = new Map();
   const byResolver = new Map();
   for (const e of rows) {
-    const k = `${e.claim} ${e.resolver}`;
+    const k = `${e.claim}\u0000${e.resolver}`;
     const c = byClaim.get(k) || { claim: e.claim, resolver: e.resolver, n: 0, blocked: 0, last: 0, reason: '' };
     c.n++;
     if (e.event === 'claim.block') c.blocked++;
@@ -517,6 +517,216 @@ function cmdViews() {
   return 0;
 }
 
+// ── sweep ───────────────────────────────────────────────────────────────────
+//
+// The periodic read. Phase 6 replaced `.claude/agents/reader.md` with this
+// subcommand: every field of that agent's return contract was a deterministic
+// query, and its own anti-patterns forbade the single judgement in scope —
+// "DO NOT record a disposition; that is a decision, and decisions have owners".
+// An engine that never judges anything is a script that has not been written yet.
+//
+// Findings come from CURRENT resolver state, never from the event log. `events`
+// reports the last event per claim, and that includes failures fixed weeks ago:
+// c-one-risk-classifier still shows "exit 1, expected 0" there while the claim
+// passes today. A sweep built on the log reports resolved problems as live ones,
+// and a report full of false alarms is how a reader becomes the next mechanism
+// nobody consumes.
+//
+// The log is used for the one question it is authoritative about: which resolvers
+// produced no events at all. Even that is qualified — only failures are logged, so
+// "no events" means "all passing" OR "not running", and only a resolver the canary
+// exercises can tell those apart. The rest are reported as unverifiable rather than
+// as healthy. Rule 10 applied to the sweep itself: never report what you could not check.
+
+const CANARY_ID = 'c-canary-unresolvable';
+const EXPIRING_SOON_DAYS = 14;
+const DAY = 86400000;
+
+function stampPath() {
+  return path.join(path.dirname(eventsPath()), 'reader-stamp.json');
+}
+
+function dayMs(spec) {
+  const t = Date.parse(`${spec}T00:00:00Z`);
+  return Number.isNaN(t) ? NaN : t;
+}
+
+function cmdSweep(argv) {
+  const asJson = argv.includes('--json');
+  const sinceSpec = (argv.find((a) => a.startsWith('--since=')) || '').split('=')[1]
+    || (argv.includes('--since') ? argv[argv.indexOf('--since') + 1] : null)
+    || '7d';
+  const now = Date.now();
+  const since = parseSince(sinceSpec, now);
+
+  const proj = collectProjectClaims();
+  const glob = collectGlobalClaims();
+  const all = [...proj.claims, ...glob.claims];
+
+  const expired = [];
+  const expiringSoon = [];
+  const lapsedWaivers = [];
+
+  for (const c of all) {
+    const d = c.disposition;
+    if (d && d.action === 'waive') {
+      // resolvers.waiverState is the ONE implementation of this date rule; the sweep
+      // asks it rather than recomputing, for the same reason there is one classifier.
+      const w = resolvers.waiverState(c, now);
+      if (w.lapsed) {
+        // A lapsed waiver IS the finding. Do not also count it as expired — one
+        // problem reported twice reads as two problems and dilutes both.
+        lapsedWaivers.push({
+          id: c.id,
+          until: d.until,
+          days_over: w.days,
+          reason: d.reason || '',
+          source_file: c.source_file,
+        });
+        continue;
+      }
+    }
+    // The canary is BUILT to fail; its expiry is not a finding, its absence is.
+    if (c.id === CANARY_ID) continue;
+
+    const f = resolvers.freshness(c, { now });
+    if (f.status !== 'pass') {
+      expired.push({ id: c.id, valid_until: c.valid_until || null, reason: f.reason, source_file: c.source_file });
+      continue;
+    }
+    if (c.valid_until) {
+      const vu = dayMs(c.valid_until);
+      if (!Number.isNaN(vu)) {
+        const daysLeft = Math.ceil((vu + DAY - now) / DAY);
+        if (daysLeft <= EXPIRING_SOON_DAYS) {
+          expiringSoon.push({ id: c.id, valid_until: c.valid_until, days_left: daysLeft, source_file: c.source_file });
+        }
+      }
+    }
+  }
+
+  // ── the log: resolver liveness only ──
+  const evPath = eventsPath();
+  const logPresent = fs.existsSync(evPath);
+  const seen = new Map();
+  let canaryEvents = 0;
+  let malformed = 0;
+  if (logPresent) {
+    for (const l of fs.readFileSync(evPath, 'utf8').split('\n').filter(Boolean)) {
+      let e;
+      try { e = JSON.parse(l); } catch { malformed++; continue; }
+      if (!e.event || !String(e.event).startsWith('claim.')) continue;
+      if (since !== null && Number(e.ts) < since) continue;
+      seen.set(e.resolver, (seen.get(e.resolver) || 0) + 1);
+      if (e.claim === CANARY_ID) canaryEvents++;
+    }
+  }
+
+  const canaryClaim = all.find((c) => c.id === CANARY_ID);
+  const canaryCovers = canaryClaim ? resolvers.resolversFor(canaryClaim, resolvers.RESOLVER_NAMES) : [];
+  const silent = [];
+  const silenceUnverifiable = [];
+  for (const name of resolvers.RESOLVER_NAMES) {
+    if (seen.has(name)) continue;
+    // NO LOG is not the same as AN EMPTY LOG. Without the file there is nothing to be
+    // silent in, so every resolver is unknown rather than dead. Found by running the CI
+    // path before shipping it: a fresh runner has no log, so this branch would have filed
+    // two findings and failed the scheduled job every single day. A job that is always red
+    // is a job nobody reads — the same alarm fatigue that makes an unread report worthless.
+    // The invariant is symmetric: never pass what you could not check, and never fail it.
+    if (logPresent && canaryCovers.includes(name)) silent.push(name);
+    else silenceUnverifiable.push(name);
+  }
+
+  const canaryDead = logPresent && canaryEvents === 0;
+  const status = logPresent ? 'COMPLETE' : 'PARTIAL';
+  const findings = expired.length + lapsedWaivers.length + silent.length + (canaryDead ? 1 : 0);
+
+  const report = {
+    status,
+    window: sinceSpec,
+    swept_at: new Date(now).toISOString(),
+    claims_checked: all.length,
+    expired: expired.map((e) => e.id),
+    expiring_soon: expiringSoon.map((e) => e.id),
+    lapsed_waivers: lapsedWaivers.map((e) => e.id),
+    silent_resolvers: silent,
+    silence_unverifiable: silenceUnverifiable,
+    canary_events: canaryEvents,
+    canary_alive: !canaryDead,
+    log_present: logPresent,
+    findings,
+  };
+
+  // The stamp is what SessionStart reads to know the sweep is still running.
+  // Written on every path, including findings — a stamp records recency, not health.
+  try {
+    fs.mkdirSync(path.dirname(stampPath()), { recursive: true });
+    fs.writeFileSync(stampPath(), `${JSON.stringify(report, null, 2)}\n`);
+  } catch (e) {
+    process.stderr.write(`ledger sweep: could not write stamp ${stampPath()}: ${e.message}\n`);
+  }
+
+  if (asJson) {
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+    return findings > 0 ? 1 : 0;
+  }
+
+  const w = (s) => process.stdout.write(s);
+  w(`ledger sweep: ${all.length} claims · window ${sinceSpec} · log ${logPresent ? evPath : 'ABSENT'}\n\n`);
+
+  if (!logPresent) {
+    w('PARTIAL — the run log does not exist, so resolver liveness could not be checked.\n');
+    w('  "no log" and "no events" are different states and this sweep will not render them the same.\n\n');
+  }
+  if (canaryDead) {
+    w('!! CANARY SILENT — zero events from the canary claim in this window.\n');
+    w('   The canary is designed to fail on every single run. Zero events does not mean\n');
+    w('   everything passed; it means the resolvers are not running. Nothing else in this\n');
+    w('   report can be trusted until that is explained.\n\n');
+  }
+  if (lapsedWaivers.length) {
+    w(`LAPSED WAIVERS (${lapsedWaivers.length}) — someone promised to come back and did not\n`);
+    for (const l of lapsedWaivers) w(`  ${l.id}  ${l.days_over}d over (until ${l.until}) — ${l.reason}\n     ${l.source_file}\n`);
+    w('\n');
+  }
+  if (expired.length) {
+    w(`EXPIRED (${expired.length}) — each needs one disposition: Refresh, Deprecate, or Waive with a date\n`);
+    for (const e of expired) w(`  ${e.id}  ${e.reason}\n     ${e.source_file}\n`);
+    w('\n');
+  }
+  if (expiringSoon.length) {
+    w(`EXPIRING WITHIN ${EXPIRING_SOON_DAYS}d (${expiringSoon.length}) — flagged early so it is a decision, not a scramble\n`);
+    for (const e of expiringSoon) w(`  ${e.id}  ${e.days_left}d left (${e.valid_until})\n`);
+    w('\n');
+  }
+  if (silent.length) {
+    w(`SILENT RESOLVERS (${silent.length}) — the canary exercises these and they produced nothing\n`);
+    for (const s of silent) w(`  ${s}\n`);
+    w('\n');
+  }
+  if (silenceUnverifiable.length) {
+    w(`NO EVENTS, UNVERIFIABLE (${silenceUnverifiable.length}) — ${silenceUnverifiable.join(', ')}\n`);
+    // Two different reasons produce this list, and reporting the wrong one is its own small
+    // fabrication: with no log there is nothing to be silent in, which is not the same as
+    // having a log that no canary exercises.
+    w(logPresent
+      ? '  Only failures are logged, and no canary exercises these resolvers, so "all passing"\n  and "not running" are indistinguishable here. Reported as unknown, not as healthy.\n\n'
+      : '  There is no log on this machine, so liveness is unknowable here rather than bad.\n  Reported as unknown, not as healthy — and not counted as a finding.\n\n');
+  }
+  if (malformed) w(`  (${malformed} unparseable log line(s) skipped)\n\n`);
+
+  if (findings > 0) {
+    w(`${findings} finding(s) need a decision. This sweep reports; it does not fix.\n`);
+  } else if (logPresent) {
+    w(`CLEAN — ${all.length} claims checked over ${sinceSpec}; canary fired ${canaryEvents}×.\n`);
+  } else {
+    // Never render a partial run as a clean one. The claims were checked; liveness was not.
+    w(`PARTIAL — ${all.length} claims checked over ${sinceSpec}, none failing. Resolver liveness NOT checked (no log).\n`);
+  }
+  return findings > 0 ? 1 : 0;
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -535,8 +745,10 @@ async function main() {
       return cmdEvents(argv);
     case 'views':
       return cmdViews();
+    case 'sweep':
+      return cmdSweep(argv);
     default:
-      process.stderr.write('usage: ledger.mjs <build [--check] | rebuild | lint | verify [--offline] [--no-exec] [--scope=X] | judge <id> | events [--since 30d] | views>\n');
+      process.stderr.write('usage: ledger.mjs <build [--check] | rebuild | lint | verify [--offline] [--no-exec] [--scope=X] | judge <id> | events [--since 30d] | views | sweep [--since 7d] [--json]>\n');
       return 2;
   }
 }

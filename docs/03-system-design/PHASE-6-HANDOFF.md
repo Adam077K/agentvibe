@@ -39,10 +39,19 @@ Measured, not claimed.
 |---|---|---|
 | Mechanisms that can block | 1 | **9** |
 | Tests, run | 0 (23 existed, unrun) | **155** |
-| Agent roster | 26 files / 6,487 lines | **7 engines + 11 shims / 1,099** |
+| Agent roster | 26 files / 6,487 lines | **6 engines + 11 shims / 1,099** ⚠ see correction |
 | Slash-command prose | 891 lines | **690, and invocations rather than descriptions** |
 | Tracked files | 2,290 | 675 |
 | `main` protected | no | **yes — both checks required, admins exempt** |
+
+> **CORRECTION, 2026-08-12 — the roster figure above was misleading and I wrote it.**
+> "26 files / 6,487 lines → 7 engines + 11 shims / 1,099 lines" is true of `.claude/agents/` and reads as a
+> statement about the roster. Measured: `.claude/agents/war-room/` holds **3,256 further lines across 25
+> files**, so the real roster is **4,355 lines across 42 files**. The original Phase 4 scope was all 52 files /
+> 9,912 lines; war-room was deferred to Phase 6 by plan, so the collapse is **55% done, not 83%**. It sat
+> outside every count because `schema-lint.js` deliberately does not walk that directory — which is also why
+> a decorative `budget:` block survived there through the phase that deleted 44 decorative `mcpServers`.
+> A checker's coverage is not its subject, again.
 
 **What blocks today:** `pre-tool-use.sh` (`exit 2`) · `schema-lint.js` (agents, lenses, playbooks, shims) ·
 `gate-logic.test.mjs` · `build-skills-manifest.mjs --check` · `check-registration.mjs` ·

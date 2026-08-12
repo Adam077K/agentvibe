@@ -20,6 +20,8 @@
  *   6. WARN: agents declaring mcpServers while no MCP config exists.
  *   7. WARN: agent names that also exist in ~/.claude/agents (machine state CI cannot see).
  *   8. Slash commands may not name a retired persona that is not an agent here.
+ *   9. No tracked text file contains a NUL byte — a file grep cannot read is a
+ *      file every grep-based check silently passes.
  *
  * Usage: node scripts/check-registration.mjs
  */
@@ -27,6 +29,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const failures = [];
@@ -39,6 +42,19 @@ const exists = (p) => fs.existsSync(abs(p));
 const read = (p) => fs.readFileSync(abs(p), 'utf8');
 const listMd = (dir) =>
   exists(dir) ? fs.readdirSync(abs(dir)).filter((f) => f.endsWith('.md')) : [];
+
+// Tracked files, from git rather than a directory walk: node_modules and .worktrees are
+// then excluded by the same rule the repo already uses, not by a second exclude list that
+// would drift from .gitignore.
+const tracked = () => {
+  try {
+    return execFileSync('git', ['ls-files'], { cwd: ROOT, encoding: 'utf8' })
+      .split('\n')
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+};
 
 // ── 1 · settings.json registrations resolve ────────────────────────────────
 const settings = JSON.parse(read('.claude/settings.json'));
@@ -247,9 +263,11 @@ if (fs.existsSync(globalAgentsDir)) {
       'shadowed-agent',
       `${collisions.length} agent name(s) exist in BOTH .claude/agents/ and ~/.claude/agents/, ` +
         `${drifted.length} of them with different content: ${drifted.map((c) => c.name.replace(/\.md$/, '')).join(', ')}. ` +
-        'The repo copy wins here, so these are inert in this project — but they are the only copy in every ' +
-        'other project on this machine. Editing the repo file does not change what those projects run. ' +
-        'Reconciliation is Phase 9 (fleet rollout); this warning exists so it is a measured list, not a surprise.'
+        'The repo copy wins here, so these are inert in this project. Measured 2026-08-11: 14 of 16 projects ' +
+        'under ~/VibeCoding carry their own .claude/agents/ and shadow the globals the same way, so the ' +
+        'globals are live in TWO projects (obsidian-claude-code-mcp, overstory). The local hazard is the real ' +
+        'one: DELETING a repo agent un-shadows its global twin, so the name keeps working and quietly means ' +
+        'the older definition. Reconciliation is Phase 9; this warning exists so it is a measured list.'
     );
   }
   const globalOnly = globalNames.filter((n) => !repoNames.has(n)).length;
@@ -272,6 +290,36 @@ for (const f of exists('.claude/hooks') ? fs.readdirSync(abs('.claude/hooks')) :
   const usedInPkg = read('package.json').includes(f);
   if (!usedInCi && !usedInPkg) {
     warn('unregistered', `${rel} is registered in no hook, no workflow, and no npm script`);
+  }
+}
+
+// ── 9 · no text source file may contain a NUL byte ─────────────────────────
+//
+// Phase 6, found by accident. `scripts/ledger.mjs` carried a literal 0x00 written as a
+// map-key separator instead of the \u0000 escape. Node read it fine, every test passed,
+// and the code was correct. What broke was invisible: `file` classified it as binary, so
+// grep SUPPRESSED ALL MATCHES AND EXITED 1 — indistinguishable from "no matches found".
+// Several greps against that file returned nothing during this session and were read as
+// evidence of absence.
+//
+// No shipped checker was fooled (check-registration reads directories, schema-lint
+// requires modules, CI greps only markdown). The next grep-based check would have been,
+// and it would have reported clean. A file our own tools cannot read is a hole shaped
+// exactly like the ones this script exists to catch, so it is checked here.
+const NUL_EXEMPT = /\.(png|jpe?g|gif|ico|webp|pdf|zip|woff2?|ttf|otf|mp4|wasm)$/i;
+let nulScanned = 0;
+for (const rel of tracked()) {
+  if (NUL_EXEMPT.test(rel)) continue;
+  let buf;
+  try { buf = fs.readFileSync(abs(rel)); } catch { continue; }
+  nulScanned++;
+  const at = buf.indexOf(0);
+  if (at !== -1) {
+    fail(
+      'binary-source',
+      `${rel} contains a NUL byte at offset ${at}, so file(1) calls it binary and grep ` +
+        `silently returns nothing and exits 1 on it. Write the escape (\\u0000), not the byte.`
+    );
   }
 }
 

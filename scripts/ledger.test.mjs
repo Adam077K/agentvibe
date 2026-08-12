@@ -452,3 +452,182 @@ test('verify writes a would_block line per failing resolver, and exits 0 in shad
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+// ── sweep ───────────────────────────────────────────────────────────────────
+//
+// Phase 6 replaced `.claude/agents/reader.md` with `ledger sweep`. These tests pin the
+// two properties that make it worth running: it reports CURRENT state rather than log
+// history, and it never renders "no events" as health.
+
+function runSweep(file, extra = []) {
+  const res = { out: '', code: 0 };
+  try {
+    res.out = execFileSync('node', ['scripts/ledger.mjs', 'sweep', ...extra], {
+      cwd: REPO_ROOT, encoding: 'utf8', env: { ...process.env, WARROOM_EVENTS: file },
+    });
+  } catch (e) {
+    res.out = (e.stdout || '') + (e.stderr || '');
+    res.code = e.status;
+  }
+  return res;
+}
+
+const sweepJson = (file, extra = []) => JSON.parse(runSweep(file, ['--json', ...extra]).out.trim());
+
+const CANARY = 'c-canary-unresolvable';
+
+test('sweep does NOT report a claim whose last event was a failure but which passes today', () => {
+  // The regression that motivated the subcommand. `ledger events` shows the last event per
+  // claim, so c-one-risk-classifier still reads "exit 1, expected 0" there long after the
+  // claim was fixed. A sweep that inherited that would file resolved problems as live ones,
+  // and a report of false alarms is how a reader becomes the mechanism nobody consumes.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-'));
+  const f = path.join(tmp, 'events.jsonl');
+  try {
+    const nowS = Math.floor(Date.now() / 1000);
+    fs.writeFileSync(f, [
+      // a real, currently-passing repo claim with a stale FAILURE in the log
+      JSON.stringify({ ts: nowS - 3600, event: 'claim.would_block', claim: 'c-one-risk-classifier', resolver: 'claim-command', status: 'fail', reason: 'exit 1, expected 0' }),
+      JSON.stringify({ ts: nowS - 3600, event: 'claim.would_block', claim: CANARY, resolver: 'claim-freshness', status: 'fail', reason: 'expired' }),
+      JSON.stringify({ ts: nowS - 3600, event: 'claim.would_block', claim: CANARY, resolver: 'claim-source', status: 'unresolved', reason: 'dns' }),
+    ].join('\n') + '\n');
+    const r = sweepJson(f);
+    assert.ok(!r.expired.includes('c-one-risk-classifier'),
+      'a claim that passes now must not be reported because the log remembers an old failure');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('sweep never files the canary as expired — it is built to fail', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-'));
+  const f = path.join(tmp, 'events.jsonl');
+  try {
+    const nowS = Math.floor(Date.now() / 1000);
+    fs.writeFileSync(f, JSON.stringify({ ts: nowS, event: 'claim.would_block', claim: CANARY, resolver: 'claim-freshness', status: 'fail', reason: 'expired' }) + '\n');
+    const r = sweepJson(f);
+    assert.ok(!r.expired.includes(CANARY), 'the canary expiring is the design, not a finding');
+    assert.equal(r.canary_alive, true);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('a canary that produced no events is the loudest finding, not a clean run', () => {
+  // Only failures are logged, so an empty log LOOKS like everything passed. The canary is
+  // the one claim guaranteed to fail every run; its silence means the resolvers are dead.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-'));
+  const f = path.join(tmp, 'events.jsonl');
+  try {
+    fs.writeFileSync(f, '');
+    const r = sweepJson(f);
+    assert.equal(r.canary_alive, false, 'zero canary events must never read as healthy');
+    assert.ok(r.findings > 0);
+    const human = runSweep(f);
+    assert.match(human.out, /CANARY SILENT/);
+    assert.equal(human.code, 1, 'findings must exit non-zero so a scheduled run goes red');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('silence is only a finding for resolvers the canary exercises; the rest are unknown', () => {
+  // Rule 10 applied to the sweep. claim-command and claim-judge have no canary, so
+  // "no events" cannot distinguish all-passing from not-running. Reporting them as
+  // healthy would be the resolver fail-open shape, one layer up.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-'));
+  const f = path.join(tmp, 'events.jsonl');
+  try {
+    const nowS = Math.floor(Date.now() / 1000);
+    fs.writeFileSync(f, [
+      JSON.stringify({ ts: nowS, event: 'claim.would_block', claim: CANARY, resolver: 'claim-freshness', status: 'fail', reason: 'x' }),
+      JSON.stringify({ ts: nowS, event: 'claim.would_block', claim: CANARY, resolver: 'claim-source', status: 'unresolved', reason: 'x' }),
+    ].join('\n') + '\n');
+    const r = sweepJson(f);
+    assert.deepEqual(r.silent_resolvers, [], 'both canary-covered resolvers fired');
+    assert.ok(r.silence_unverifiable.includes('claim-command'), 'no canary covers claim-command');
+    assert.ok(r.silence_unverifiable.includes('claim-judge'), 'no canary covers claim-judge');
+    assert.match(runSweep(f).out, /UNVERIFIABLE/);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('a missing log makes the sweep PARTIAL — it does not report zero findings', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-'));
+  try {
+    const r = sweepJson(path.join(tmp, 'nope.jsonl'));
+    assert.equal(r.status, 'PARTIAL');
+    assert.equal(r.log_present, false);
+    assert.match(runSweep(path.join(tmp, 'nope.jsonl')).out, /run log does not exist/);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('sweep writes a stamp on every run, including runs with findings', () => {
+  // The stamp records recency, not health. SessionStart warns when it goes stale, so a
+  // sweep that skipped the stamp whenever it found something would silence the staleness
+  // warning at exactly the moment the ledger needed attention.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-'));
+  const f = path.join(tmp, 'events.jsonl');
+  try {
+    fs.writeFileSync(f, '');
+    runSweep(f);
+    const stamp = path.join(tmp, 'reader-stamp.json');
+    assert.ok(fs.existsSync(stamp), 'stamp must be written next to the log');
+    const s = JSON.parse(fs.readFileSync(stamp, 'utf8'));
+    assert.ok(s.findings > 0, 'this run had findings');
+    assert.ok(s.swept_at, 'stamp carries the time the sweep ran');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('waiverState is the one implementation of the lapse rule, and sweep uses it', () => {
+  // The sweep computed this date maths independently for exactly one commit. Two
+  // implementations of one rule agree until a leap year and then disagree during the
+  // incident they exist to prevent — the argument that gave the repo one risk classifier.
+  const live = { disposition: { action: 'waive', until: '2026-09-08', reason: 'r' } };
+  const dead = { disposition: { action: 'waive', until: '2026-07-01', reason: 'r' } };
+  const bad = { disposition: { action: 'waive', until: 'soon', reason: 'r' } };
+
+  assert.equal(R.waiverState(live, NOW).lapsed, false);
+  assert.equal(R.waiverState(live, NOW).days, 29, 'inclusive of the until-date itself');
+  assert.equal(R.waiverState(dead, NOW).lapsed, true);
+  assert.equal(R.waiverState(dead, NOW).days, 40);
+  assert.equal(R.waiverState(bad, NOW).invalid, true, 'an unparseable date is never silently in-force');
+
+  // and the resolver renders that same state
+  const f = R.freshness({ ...claim(), ...dead }, { now: NOW });
+  assert.equal(f.status, 'fail');
+  assert.match(f.reason, /WAIVER LAPSED 40 days ago/);
+});
+
+test('an ABSENT log is unknowable, an EMPTY log is a dead resolver — and only one is a finding', () => {
+  // Found by running the scheduled-CI path before shipping it. A fresh runner has no log,
+  // so the first version filed both canary-covered resolvers as silent and failed the job
+  // every single day. A job that is always red is a job nobody reads — the same alarm
+  // fatigue that makes an unread report worthless, arriving via the mechanism built to
+  // prevent it. The invariant is symmetric: never pass what you could not check, and
+  // never fail it either.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-'));
+  try {
+    const absent = sweepJson(path.join(tmp, 'no-such-log.jsonl'));
+    assert.equal(absent.log_present, false);
+    assert.equal(absent.status, 'PARTIAL');
+    assert.deepEqual(absent.silent_resolvers, [], 'nothing can be silent in a log that does not exist');
+    assert.equal(absent.findings, 0, 'CI must not go red for something it could not check');
+    assert.equal(runSweep(path.join(tmp, 'no-such-log.jsonl')).code, 0);
+
+    const emptyPath = path.join(tmp, 'events.jsonl');
+    fs.writeFileSync(emptyPath, '');
+    const empty = sweepJson(emptyPath);
+    assert.equal(empty.log_present, true);
+    assert.ok(empty.silent_resolvers.length > 0, 'a log that exists and is empty means the resolvers died');
+    assert.ok(empty.findings > 0);
+    assert.equal(runSweep(emptyPath).code, 1);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});

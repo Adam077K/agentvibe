@@ -148,7 +148,7 @@ lenses:
 
   - id: evidence
     summary: "The cross-cutting discipline every engine inherits: never assert without checking"
-    applies_to: [orchestrator, framer, sourcer, builder, designer, reviewer, reader]
+    applies_to: [orchestrator, framer, sourcer, builder, designer, reviewer]
     procedure:
       - "Verify by running or fetching, never by recalling"
       - "Mark every figure as verified or estimated at the point it is written"
