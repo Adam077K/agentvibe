@@ -38,6 +38,13 @@ jobs:
         with:
           node-version: '20'
 
+      # Mission Control (mission-control/) is Bun/Hono, not Node — this is the only
+      # thing in the repo that needs it. bun-version: latest rather than pinned because
+      # this step has no blocking dependents yet; pin it the day that changes.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       # Validates agent frontmatter, mandatory body sections, model IDs, maxTurns
       # ranges, and every declared skill against MANIFEST.json.
       - name: Agent schema lint
@@ -132,3 +139,9 @@ jobs:
       # would_block lines on every run. Zero means the resolvers stopped firing.
       - name: Claim ledger
         run: npm run check:ledger
+
+      # Mission Control's rail: bun install pinned to the committed lockfile (a drifted
+      # lockfile fails here rather than silently resolving something else), then the
+      # same check:mc that runs locally — bun/deps probe, then bun test.
+      - name: Mission Control
+        run: bun install --frozen-lockfile --cwd mission-control && npm run check:mc
