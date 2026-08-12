@@ -25,6 +25,12 @@ war-room-dashboard/
 # Local Claude permissions (machine-specific)
 .claude/settings.local.json
 
+# Installed dependencies (mission-control/ — the first thing in this repo with a lockfile)
+node_modules/
+
+# Mission Control's built client — server + rail only in this PR, no client build yet
+mission-control/client/dist/
+
 # IDE / tool caches (keep config, ignore caches)
 .claude/memory/*.local.md
 .planning/state.local.json
