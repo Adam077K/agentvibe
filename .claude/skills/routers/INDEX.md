@@ -9,12 +9,12 @@ expensive. Read the six lines below, open the ONE namespace that matches, then l
 | Namespace | Covers | Skills |
 |---|---|---|
 | [`engineering`](engineering.md) | Backend, data modelling, refactoring, debugging — how the thing is built | 17 |
-| [`frontend-design`](frontend-design.md) | UI, visual design, component systems, accessibility — what the user sees | 22 |
-| [`quality-security`](quality-security.md) | Testing, review, auth, secrets, compliance — what stops it shipping broken | 20 |
+| [`frontend-design`](frontend-design.md) | UI, visual design, component systems, accessibility — what the user sees | 24 |
+| [`quality-security`](quality-security.md) | Testing, review, auth, secrets, compliance — what stops it shipping broken | 21 |
 | [`ai-agents`](ai-agents.md) | LLM applications, agents, retrieval, prompts, tools — the AI layer itself | 18 |
 | [`ops-delivery`](ops-delivery.md) | Deploy, CI, jobs, payments, email, analytics — running it in production | 13 |
 | [`business-growth`](business-growth.md) | Pricing, metrics, market, positioning, conversion — why anyone pays | 13 |
 | [`thinking`](thinking.md) | Named mental models for diagnosis, decision and critique — each with a stop rule and an over-application guard. Start at thinking-model-router, which may return NONE | 28 |
 
-131 skills total. `MANIFEST.json` remains the exhaustive index and is what
+134 skills total. `MANIFEST.json` remains the exhaustive index and is what
 `npm run check:manifest` verifies; it is not the place to start a lookup.

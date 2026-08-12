@@ -10,6 +10,7 @@ Testing, review, auth, secrets, compliance — what stops it shipping broken
 | `aws-compliance-checker` | Automated compliance checking against CIS, PCI-DSS, HIPAA, and SOC 2 benchmarks |
 | `aws-iam-best-practices` | IAM policy review, hardening, and least privilege implementation |
 | `aws-secrets-rotation` | Automate AWS secrets rotation for RDS, API keys, and credentials |
+| `broken-authentication` | This skill should be used when the user asks to \"test for broken authentication vulnerabilities\", \"assess session management security\",… |
 | `cc-skill-coding-standards` | Universal coding standards, best practices, and patterns for TypeScript, JavaScript, React, and Node.js development. |
 | `cc-skill-security-review` | Use this skill when adding authentication, handling user input, working with secrets, creating API endpoints, or implementing payment/sensitive… |
 | `e2e-testing-patterns` | Master end-to-end testing with Playwright and Cypress to build reliable test suites that catch bugs, improve confidence, and enable fast deployment.… |

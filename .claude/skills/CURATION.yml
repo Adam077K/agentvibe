@@ -177,19 +177,24 @@ role_duplicate:
 near_duplicate:
   - e2e-testing                     # → e2e-testing-patterns
   - tdd-orchestrator                # → tdd-workflow
-  - unit-testing-test-generate      # → testing-patterns
+  - unit-testing-test-generate      # → writing-good-tests (RE-POINTED: the original target, testing-patterns, was itself cut)
   - debugging-strategies            # → systematic-debugging
   - find-bugs                       # → systematic-debugging
-  - api-documentation               # → api-documentation-generator
-  - documentation                   # → documentation-templates
-  - code-documentation-code-explain # → documentation-templates
+  - api-documentation               # → doc-coauthoring (RE-POINTED: original target was itself cut)
+  - documentation                   # → doc-coauthoring (RE-POINTED: original target was itself cut)
+  - code-documentation-code-explain # → doc-coauthoring (RE-POINTED: original target was itself cut)
   - react-ui-patterns               # → react-patterns
-  - frontend-dev-guidelines         # → frontend-design
+  - frontend-dev-guidelines         # → impeccable (RE-POINTED: frontend-design was itself cut; impeccable descends from it)
   # web-design-guidelines REVERSED 2026-08-12 — re-added from the machine-local copy. It was
   # folded into frontend-design, and that whole cluster turned out to be sibling variants of
   # one framework rather than duplicates. It is also the audit layer GOGH cites by name.
-  - tailwind-patterns               # → tailwind-design-system
-  - nextjs-best-practices           # → nextjs-app-router-patterns
+  # tailwind-patterns REVERSED — the survivor scored ZERO concrete markers against this
+  # file's 154. tailwind-design-system is 35 lines of abstraction ("build production-ready
+  # design systems… design tokens, component variants"); tailwind-patterns carries Tailwind
+  # V4 specifics — CSS-first configuration, container queries, token architecture. v4 moved
+  # config out of JS into CSS, which is exactly the kind of version change a model gets
+  # wrong. Both kept: one is the concept, one is the mechanics. Not duplicates.
+  # nextjs-best-practices REVERSED — survivor scored 0 concrete markers against this file's 57.
   - code-review-excellence          # → production-code-audit
   # requesting-code-review REVERSED 2026-08-12 — THIRD near_duplicate cut proven wrong, and
   # the reason is the same every time: adjacent names assumed to be one job. It is not a
@@ -229,13 +234,29 @@ near_duplicate:
   - security-scanning-security-dependencies # → security-audit
   - aws-security-audit              # → aws-compliance-checker
   - api-security-testing            # → web-security-testing
-  - broken-authentication           # → auth-implementation-patterns + web-security-testing
+  # broken-authentication REVERSED — survivor scored 0 concrete markers against this file's 65.
   - database                        # → database-design
   - prompt-engineering-patterns     # → prompt-caching holds the non-obvious half
   - llm-evaluation                  # → agent-evaluation
   - testing-patterns                # → e2e-testing-patterns + tdd-workflow cover it
   - agent-tool-builder              # → tool-design
-  - api-documentation-generator     # → documentation-templates after the above merges
+  - api-documentation-generator     # → doc-coauthoring (RE-POINTED: original target was itself cut)
+
+
+# ── THE CHAIN DEFECT, found by re-screening all 37 near_duplicate cuts ──────
+#
+# Six cuts folded into a survivor that was ITSELF cut. documentation →
+# documentation-templates → also cut. api-documentation → api-documentation-generator →
+# also cut. unit-testing-test-generate → testing-patterns → also cut. The content did not
+# move anywhere; it vanished, and the documentation category emptied through a chain where
+# every link was removed. That is why five doc skills disappeared and nothing replaced them.
+#
+# "Kept the one carrying the most procedure" is only true if the one kept was KEPT. Nothing
+# checked that. `curate-skills.mjs` now refuses any cut whose named survivor is absent, and
+# that check fired exactly six times the moment it was written.
+#
+# All six are re-pointed at survivors that exist AND are better than the originals —
+# doc-coauthoring, writing-good-tests, impeccable — rather than restoring dead chains.
 
 # ── Test: reconstructible ───────────────────────────────────────────────────
 # A frontier model produces these unaided and to a higher standard than a 200-line file
@@ -324,8 +345,10 @@ namespaces:
     - web-design-guidelines
     - radix-ui-design-system
     - tailwind-design-system
+    - tailwind-patterns
     - react-patterns
     - nextjs-app-router-patterns
+    - nextjs-best-practices
     - vercel-composition-patterns
     - vercel-react-native-skills
     - emilkowal-animations
@@ -349,6 +372,7 @@ namespaces:
     - web-security-testing
     - xss-html-injection
     - auth-implementation-patterns
+    - broken-authentication
     - secrets-management
     - gdpr-data-handling
     - aws-compliance-checker

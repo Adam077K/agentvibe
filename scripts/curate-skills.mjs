@@ -93,11 +93,40 @@ const declared = declaredSkills();
 const checkOnly = process.argv.includes('--check');
 
 // ── refuse an incoherent curation before touching anything ──
+//
+// CHECK 2 (added after the fact, because it fired six times when written): a near_duplicate
+// cut names its survivor in a trailing `# → name` comment. That survivor must still be on
+// disk. Six cuts folded into a skill that was ITSELF cut — documentation → documentation-
+// templates → also cut; api-documentation → api-documentation-generator → also cut. The
+// content did not move anywhere, it vanished, and the whole documentation category emptied
+// through a chain where every link was removed.
+//
+// "Kept the one carrying the most procedure" is only true if the one kept was kept. Nothing
+// checked that, so nothing caught it.
+const survivorOf = new Map();
+{
+  const sec = (fs.readFileSync(CURATION, 'utf8').split('near_duplicate:')[1] || '').split('\n# ──')[0];
+  for (const m of sec.matchAll(/^\s*-\s+(\S+)\s*#\s*→\s*(.+)$/gm)) {
+    survivorOf.set(m[1], m[2].trim().split(/\s*\+\s*/)[0].trim().split(/\s+/)[0]);
+  }
+}
+
 const problems = [];
 for (const c of cuts) {
   if (declared.has(c.name)) {
     problems.push(`${c.name} is CUT but declared by ${declared.get(c.name).join(', ')} — that would break the build`);
   }
+  const surv = survivorOf.get(c.name);
+  if (surv && !presentSetLazy().has(surv)) {
+    problems.push(
+      `${c.name} was folded into "${surv}", which is NOT on disk — the content did not move, it vanished. ` +
+        `Either restore ${c.name}, or point it at a survivor that exists.`
+    );
+  }
+}
+function presentSetLazy() {
+  if (!presentSetLazy._c) presentSetLazy._c = new Set(onDisk());
+  return presentSetLazy._c;
 }
 if (problems.length) {
   for (const p of problems) process.stderr.write(`✗ ${p}\n`);
