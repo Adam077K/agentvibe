@@ -176,12 +176,19 @@ describe('per-launcher generation hash', () => {
 // brief: the only project with one) ──────────────────────────────────────────────────
 describe('claim counts by verdict', () => {
   // `ledger.mjs verify` runs every claim-command resolver, several of which shell out to
-  // real test suites — ~5.5s measured for one invocation. This test runs it twice
-  // (once directly, once through runLedgerVerify), so it needs headroom past bun's 5s
-  // default.
+  // real test suites. This test runs it TWICE — once directly, once through runLedgerVerify.
+  //
+  // THE TIMEOUT WAS WRITTEN AGAINST A WRONG MEASUREMENT. It said "~5.5s measured for one
+  // invocation" and allowed 30s for two. Re-measured 2026-08-13 with the exit code and the
+  // output length actually checked: 10,385 ms for one run idle, 17,547 ms under load (8.2
+  // load average) — so two runs is 21-35 s and this test was failing on a busy machine for
+  // no reason connected to the code under test. That is the §0 defect class in a test
+  // budget: a number nobody verified, treated as fact. 120 s is 3.4x the measured
+  // worst-case, and the figure it is derived from is written here so the next person can
+  // check it rather than guess again.
   test(
     "MC's ledger summary equals `node scripts/ledger.mjs verify --offline`, parsed independently",
-    () => {
+    async () => {
       const stdout = execFileSync('node', [path.join(REPO_ROOT, 'scripts', 'ledger.mjs'), 'verify', '--offline'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
@@ -197,7 +204,7 @@ describe('claim counts by verdict', () => {
         block: Number(m![3]),
       };
 
-      const mc = runLedgerVerify(REPO_ROOT, { offline: true });
+      const mc = await runLedgerVerify(REPO_ROOT, { offline: true });
       expect('pass' in mc ? mc : null).not.toBeNull();
       if ('pass' in mc) {
         expect(mc.totalClaims).toBe(independent.totalClaims); // pins belief.ts's HEADER_RE fallback path too
@@ -206,7 +213,7 @@ describe('claim counts by verdict', () => {
         expect(mc.block).toBe(independent.block);
       }
     },
-    30_000
+    120_000
   );
 });
 
@@ -304,14 +311,69 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
   // Single source of truth for both tests below: the real-file scan, and the direct
   // pattern-efficacy check against known bypass shapes (so the two cannot silently
   // diverge from each other).
+  // WHAT CHANGED IN PR4, AND WHY IT IS A NARROWING RATHER THAN A WEAKENING.
+  //
+  // This list used to carry `/(?<!\.)\bexecFile\s*\(/` — bare execFile, flagged with the
+  // comment "new spawn surface this codebase doesn't use". That was true when it was
+  // written and it is no longer: PR4 converts the conflicts sweep and the ledger verify from
+  // the *Sync forms to the promisified async ones, because both were blocking Bun's single
+  // JS thread for seventeen and nineteen seconds respectively and stalling the SSE tick for
+  // every connected client while they ran.
+  //
+  // The invariant this file defends is NO SHELL. `execFile(binary, [args])` spawns the
+  // binary directly — it is exactly as shell-free as `execFileSync(binary, [args])`, which
+  // this list has always permitted, and the two are matched the same way now: flagged when
+  // the binary is a shell literal, not flagged for being the API. The alternative was to
+  // switch to `spawn`, which no pattern here matches at all — i.e. to pick an API for the
+  // property of being invisible to the guard. That is the move this codebase must never
+  // make, so it was not made.
+  //
+  // A regex over source text is gameable by construction (finding 26), and relaxing any
+  // pattern widens that. So the relaxation does not stand alone: test/collectors.test.ts
+  // carries a BEHAVIOURAL barrier that reads no source at all — it builds a real worktree
+  // named `evilproj;touch <marker>;echo done`, runs the real sweep across it, and asserts
+  // the marker file does not exist afterwards. §0: two cheap independent checks beat one
+  // careful one, and the source-text guard is now the cheap one.
+  // THE NARROWING, CORRECTED — the first version of it was worse than useless.
+  //
+  // Round 1 replaced `\bexecFile\s*\(` with `\bexecFile\s*\(\s*['"`](bash|sh|…)`. That
+  // requires `(` IMMEDIATELY after `execFile`, so it matched none of the `execFileAsync(`
+  // calls this PR introduces — it stopped matching the exact spelling `server/**` now uses
+  // everywhere, and the pinning test beneath it asserted the discrimination for
+  // `execFile('bash', …)`, a spelling this tree no longer contains. Verified by the
+  // reviewer: a synthetic server file doing `promisify(execFile)` and then
+  // `execFileAsync('bash', ['-lc', cmd])` scored ZERO offenders across the whole scan.
+  //
+  // Three widenings, each closing a hole that version had:
+  //   1. A FAMILY NAME FOLLOWED BY IDENTIFIER CHARACTERS — named from the body, not from the
+  //      intention. This comment previously said "ANY ALIAS", which is not what the pattern
+  //      does: `const run = execFile; run('bash', …)` is an alias and is invisible to it.
+  //      What it does catch is the shape this codebase actually produces — exec/execFile/
+  //      spawn promisified into execAsync/execFileAsync/spawnAsync, where the family name is
+  //      still a prefix of the identifier that runs. An AST walk (finding 26) is what would
+  //      cover real aliasing.
+  //   2. ANY PATH to a shell, not two enumerated prefixes. `/usr/local/bin/bash` and
+  //      `/opt/homebrew/bin/bash` — the latter is the real bash on this machine — sat
+  //      outside `/bin/` and `/usr/bin/` and were invisible.
+  //   3. The whole `-c` FAMILY. `sh -lc`, `-ic` and `-ec` execute a string exactly as `-c`
+  //      does; the old rule matched those two characters literally.
+  const SHELL_BINARY = String.raw`['"\`](?:[^'"\`]*\/)?(?:bash|sh|zsh|dash|ksh|fish)['"\`]`;
+  const SPAWN_FAMILY = String.raw`(?:exec|execFile|execFileSync|execSync|spawn|spawnSync)[A-Za-z0-9_$]*`;
+
   const SHELL_INVOCATION_PATTERNS = [
     /\bexecSync\s*\(/, // always shells out, unlike execFileSync
-    /(?<!\.)\bexec\s*\(/, // bare exec( — always shells out; excludes someRegex.exec(...)
-    /(?<!\.)\bexecFile\s*\(/, // bare execFile( (the callback form) — new spawn surface this codebase doesn't use
+    // Bare exec( plus the three promisified spellings this codebase would plausibly use.
+    // ENUMERATED, not open-ended: the previous `exec[A-Za-z0-9_$]*\(` matched executeQuery(
+    // and executionPlan( — issue #27's false-positive-on-unrelated-identifiers failure mode,
+    // reappearing inside the widened pattern. `(?<!\.)` keeps it off someRegex.exec(str).
+    /(?<!\.)\bexec(?:Async|Promise|P)?\s*\(/,
     /shell\s*:\s*true/, // the opt-in shell flag on exec/spawn, as an object-literal property
-    /execFileSync\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
-    /spawnSync\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
-    /(['"`])-c\1/, // the telltale flag that turns any binary into "run this string"
+    // A shell binary as the first argument of any spawn-family identifier, by any path.
+    // Open-ended suffix is safe HERE in a way it was not above, because this rule only fires
+    // when the first argument is a literal shell name — `executeQuery('bash')` is not a
+    // shape anyone writes by accident.
+    new RegExp(String.raw`\b${SPAWN_FAMILY}\s*\(\s*${SHELL_BINARY}`),
+    /(['"`])-[a-z]*c\1/, // -c and -lc/-ic/-ec: the flags that turn any binary into "run this string"
     /\bBun\.\$/, // Bun's own shell-execution tag
   ];
 
@@ -378,10 +440,21 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
     const knownBypasses = [
       "execFileSync('bash', ['-c', probe], { encoding: 'utf8' })", // the original RCE
       'exec(`grep -rl playbook_stage ${root}`, cb)', // MAJOR: bare exec() defeated the first version
-      "execFile('grep', args, cb)", // bare execFile() callback form
+      "execFile('bash', ['-c', probe], cb)", // the async form of the original RCE
+      "execFile('/bin/sh', ['-c', probe], cb)", // …and by absolute path
+      // THE SHAPE ROUND 1 OF THE NARROWING MISSED ENTIRELY, in every spelling the reviewer
+      // demonstrated. This is the alias `server/**` itself uses, so a regression of the code
+      // this PR ships would look exactly like one of these lines.
+      "execFileAsync('bash', ['-c', cmd])",
+      "execFileAsync('bash', ['-lc', cmd])", // -lc, which the two-character -c rule missed
+      "execFileAsync('/opt/homebrew/bin/bash', ['-lc', cmd])", // the real bash on this machine
+      "execFileAsync('/usr/local/bin/bash', ['-ic', cmd])",
+      "execAsync(`git status ${root}`)", // promisified bare exec
+      "spawnAsync('zsh', ['-ec', cmd])",
       'execSync(`grep -rl playbook_stage ${root}`)',
       "spawnSync('bash', ['-c', probe])",
       "execFileSync(bin, argsArr, { encoding: 'utf8', shell: true })", // object-literal shell:true
+      "execFileAsync('git', args, { shell: true })", // the promisified form, opted into a shell
       'Bun.$`grep -rl playbook_stage ${root}`',
     ];
     for (const line of knownBypasses) {
@@ -393,12 +466,113 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
       "execFileSync('node', [script, 'fleet'], { cwd: repoRoot, encoding: 'utf8' })",
       "execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: project.root })",
       "execFileSync(probeCmd.cmd, probeCmd.args, { encoding: 'utf8' })",
+      // The two calls PR4 introduces. Both spawn a named binary with an args array and no
+      // shell — the same shape as the three lines above, in the async form.
+      "execFileAsync('git', ['--no-optional-locks', 'status', '--porcelain'], { cwd: worktreePath })",
+      "execFileAsync('node', args, { cwd: projectRoot, encoding: 'utf8' })",
+      'const execFileAsync = promisify(execFile);',
       'const m = CEILING_RE.exec(reason);',
       'const header = HEADER_RE.exec(text);',
+      // Unrelated identifiers that merely START with a family name. The widened pattern
+      // flagged both — issue #27's failure mode reappearing inside the fix for #38.
+      'const rows = await executeQuery(sql);',
+      'const plan = executionPlan(query);',
+      'const s = spawnPointFor(entity);',
     ];
     for (const line of legitimate) {
       const falsePositive = SHELL_INVOCATION_PATTERNS.some((p) => p.test(line));
       expect(falsePositive).toBe(false);
     }
+  });
+
+  // THE PATTERN THAT WAS RELAXED, PINNED FROM BOTH SIDES — and pinned for the spelling
+  // `server/**` ACTUALLY USES, which is what round 1 of this test got wrong: it asserted the
+  // discrimination for `execFile('bash', …)` while every call site in the tree had become
+  // `execFileAsync(…)`, so it certified a rule against a spelling that no longer existed.
+  test('the spawn-family rule catches a shell binary under every alias and path, and only a shell binary', () => {
+    const shellLiterals = [
+      // The exact identifier…
+      "execFile('bash', a, cb)",
+      "execFileSync('sh', a)",
+      "spawnSync('zsh', a)",
+      "execFile('/usr/bin/dash', a, cb)",
+      // …and the promisified aliases, which are what this codebase now contains.
+      "execFileAsync('bash', a)",
+      "execFileAsync('/opt/homebrew/bin/bash', a)",
+      "execFileAsync('/usr/local/bin/zsh', a)",
+      "spawnAsync('sh', a)",
+      "execFileP('ksh', a)",
+    ];
+    for (const line of shellLiterals) {
+      expect(SHELL_INVOCATION_PATTERNS.some((p) => p.test(line))).toBe(true);
+    }
+    // A named non-shell binary with an args array is the permitted shape, under every alias.
+    const permitted = [
+      "execFile('git', a, cb)",
+      "execFile('node', a, cb)",
+      "execFile('grep', a, cb)",
+      "execFileAsync('git', a)",
+      "execFileAsync('node', a)",
+      "execFileAsync('/usr/bin/git', a)",
+    ];
+    for (const line of permitted) {
+      expect(SHELL_INVOCATION_PATTERNS.some((p) => p.test(line))).toBe(false);
+    }
+  });
+
+  // The -c family, pinned separately because it is the second half of every shell-string
+  // exploit and the old rule matched exactly two characters.
+  test('the -c rule covers the whole family, and does not fire on ordinary flags', () => {
+    for (const flag of ["'-c'", "'-lc'", "'-ic'", "'-ec'", '"-lc"']) {
+      expect(SHELL_INVOCATION_PATTERNS.some((p) => p.test(`args = [${flag}, cmd]`))).toBe(true);
+    }
+    // Real flags this codebase passes. None may trip it.
+    for (const flag of ["'--porcelain'", "'--no-optional-locks'", "'--offline'", "'-rl'", "'verify'", "'--'"]) {
+      expect(SHELL_INVOCATION_PATTERNS.some((p) => p.test(`args = [${flag}]`))).toBe(false);
+    }
+  });
+
+  // THE GUARD, RUN AGAINST A DELIBERATELY VULNERABLE FILE. Every test above checks the
+  // patterns against string literals; this one checks the SCAN — the thing that actually runs
+  // in CI — against a file on disk written in the shape the reviewer used to defeat round 1.
+  // Without it, a bug in findOffenders rather than in the patterns goes unnoticed.
+  test('the scan itself flags a synthetic server file using promisify(execFile) with bash -lc', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-guard-synthetic-'));
+    cleanupDirs.push(dir);
+    const file = path.join(dir, 'vulnerable.ts');
+    fs.writeFileSync(
+      file,
+      [
+        "import { execFile } from 'node:child_process';",
+        "import { promisify } from 'node:util';",
+        'const execFileAsync = promisify(execFile);',
+        'export async function sweep(root: string) {',
+        "  const { stdout } = await execFileAsync('/opt/homebrew/bin/bash', ['-lc', `git status ${root}`]);",
+        '  return stdout;',
+        '}',
+        '',
+      ].join('\n')
+    );
+
+    const offenders = SHELL_INVOCATION_PATTERNS.flatMap((p) => findOffenders(p, [file]));
+    expect(offenders.length).toBeGreaterThan(0);
+
+    // And the mirror, so this is not passing because findOffenders flags everything: the
+    // real, safe shape in the same position produces nothing.
+    const safe = path.join(dir, 'safe.ts');
+    fs.writeFileSync(
+      safe,
+      [
+        "import { execFile } from 'node:child_process';",
+        "import { promisify } from 'node:util';",
+        'const execFileAsync = promisify(execFile);',
+        'export async function sweep(cwd: string) {',
+        "  const { stdout } = await execFileAsync('git', ['--no-optional-locks', 'status', '--porcelain'], { cwd });",
+        '  return stdout;',
+        '}',
+        '',
+      ].join('\n')
+    );
+    expect(SHELL_INVOCATION_PATTERNS.flatMap((p) => findOffenders(p, [safe]))).toEqual([]);
   });
 });

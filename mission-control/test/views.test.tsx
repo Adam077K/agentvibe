@@ -11,6 +11,7 @@
 // out of the payload the route actually returned in the same test.
 
 import { describe, test, expect, afterAll } from 'bun:test';
+import fs from 'node:fs';
 import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Hono } from 'hono';
@@ -26,8 +27,13 @@ import {
 import { discoverProjects } from '../server/projects.ts';
 import { IndexStore } from '../server/index-store.ts';
 import type { SessionsSlice } from '../server/state.ts';
+import { summarizeClaims, type BeliefSummary, type ClaimsSummary, type VerdictCounts, type Waiver } from '../server/collectors/belief.ts';
+import type { ConflictReport } from '../server/collectors/conflicts.ts';
+import type { LedgerClaim } from '../server/projects.ts';
 import { FleetTable, FleetHeadline, GenerationFigure, sortFleet } from '../client/src/views/FleetView.tsx';
 import { SessionsTable, SessionsView } from '../client/src/views/SessionsView.tsx';
+import { BeliefView, ExpiringTable, WaiverList } from '../client/src/views/BeliefView.tsx';
+import { ConflictsTable, ConflictsView, totalsFor } from '../client/src/views/ConflictsView.tsx';
 import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo, writeRegistry, addWorktree } from './fixtures.ts';
 import { machineGate, notVerified } from './gate.ts';
 
@@ -773,6 +779,453 @@ describe('render parity — Sessions', () => {
     const rows = bodyRows(renderToStaticMarkup(<SessionsTable slice={payload} now={now} limit={1} />));
     expect(rows).toHaveLength(1);
     expect(payload.sessions[0]!.sessionId.includes(rows[0]![1]!)).toBe(true);
+  });
+});
+
+// ── render parity — Conflicts ────────────────────────────────────────────────────────
+// The figure under the header ("N worktrees not swept") and the figure in the rows come
+// from ONE array in ONE pass (totalsFor), and this reverses both out of the rendered HTML
+// back to the payload the route returned. The §0 corollary being defended: the Fleet
+// headline once rendered "2 of 11" for an answer of 4 because its numerator and denominator
+// were drawn from two populations.
+describe('render parity — Conflicts', () => {
+  /** A real /api/conflicts payload over a fixture fleet with a genuine two-worktree clash. */
+  async function conflictsPayload(prefix: string): Promise<ConflictReport[]> {
+    const projectsRoot = mkTmpDir(`mc-views-conflicts-${prefix}-`);
+    const claudeRoot = mkTmpDir(`mc-views-conflicts-claude-${prefix}-`);
+    cleanupDirs.push(projectsRoot, claudeRoot);
+
+    const root = path.join(projectsRoot, 'ashcroft');
+    initGitRepo(root);
+    const wtA = path.join(root, '.worktrees', 'ceo-1-100');
+    const wtB = path.join(root, '.worktrees', 'ceo-2-200');
+    addWorktree(root, wtA, 'ceo-1-100');
+    addWorktree(root, wtB, 'ceo-2-200');
+    // A third worktree no registry names — the excluded population, non-zero on purpose so
+    // the header's figure is not 0 === 0.
+    addWorktree(root, path.join(root, '.worktrees', 'by-hand'), 'by-hand');
+    writeRegistry(root, [
+      { name: 'ceo-1', token: '100' },
+      { name: 'ceo-2', token: '200' },
+    ]);
+
+    fs.writeFileSync(path.join(wtA, 'shared.ts'), 'from A\n');
+    fs.writeFileSync(path.join(wtB, 'shared.ts'), 'from B\n');
+    fs.writeFileSync(path.join(wtA, 'only-a.ts'), 'a\n');
+
+    const state = new LiveState({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot });
+    const app = new Hono();
+    app.route('/api', createApi(state));
+    const res = await app.fetch(new Request('http://127.0.0.1/api/conflicts'));
+    expect(res.status).toBe(200);
+    return ((await res.json()) as { reports: ConflictReport[] }).reports;
+  }
+
+  test('the conflict table reverses to the /api/conflicts payload', async () => {
+    const reports = await conflictsPayload('table');
+    const report = reports.find((r) => r.project === 'ashcroft')!;
+    expect(report).toBeDefined();
+    expect(report.conflicts.length).toBeGreaterThan(0); // it compared something real
+
+    const rows = bodyRows(renderToStaticMarkup(<ConflictsTable report={report} />));
+    expect(rows).toHaveLength(report.conflicts.length); // nothing silently dropped
+
+    let compared = 0;
+    for (const conflict of report.conflicts) {
+      const row = rows.find((cells) => cells[0] === conflict.file);
+      expect(row).toBeDefined();
+      expect(asNumber(row![1]!)).toBe(conflict.worktrees.length);
+      for (const w of conflict.worktrees) {
+        if (w.branch !== null) expect(row![2]).toContain(w.branch);
+      }
+      compared++;
+    }
+    expect(compared).toBeGreaterThan(0);
+  });
+
+  test('the excluded figure under the header is the number the sweep excluded', async () => {
+    const reports = await conflictsPayload('excluded');
+    const totals = totalsFor(reports);
+    // The premise: something really was excluded, so the assertion below is not 0 === 0.
+    expect(totals.excluded).toBeGreaterThan(0);
+    expect(totals.excluded).toBe(reports.reduce((n, r) => n + r.excluded.count, 0));
+
+    const html = renderToStaticMarkup(
+      <ConflictsView reports={reports} loading={false} error={null} onRefresh={() => {}} />
+    );
+    const text = textOf(html);
+    expect(text).toContain(`${totals.excluded} worktrees not swept (not agent-started)`);
+    // And the attempted count on screen is the number of worktree entries the payload
+    // carries — the other half of the same partition.
+    expect(text).toContain(`${totals.attempted} agent worktrees swept`);
+    expect(totals.attempted + totals.excluded).toBe(
+      reports.reduce((n, r) => n + r.worktrees.length + r.excluded.count, 0)
+    );
+
+    // ONE WORD, ONE QUANTITY. `swept` used to mean "attempted" in the header and "attempted
+    // minus unreadable" in each project line, so the project lines never summed to the
+    // headline and a reader could not tell which meaning was in front of them. The two
+    // quantities now have two names, and the identity between them is asserted.
+    expect(totals.read).toBe(totals.attempted - totals.unreadable);
+  });
+
+  // NOTHING CHECKED IS NOT AN ALL-CLEAR. With no registry file anywhere the sweep has an
+  // empty scope, and this rendered "0 agent-started worktrees … every one of them was
+  // readable, so this is a measured all-clear" — the exact shape FleetView's GenerationFigure
+  // documents and forbids. One missing .registry away from being the normal state.
+  test('zero worktrees swept renders as nothing-checked, never as a measured all-clear', () => {
+    const nothingSwept: ConflictReport[] = [
+      { project: 'ashcroft', worktrees: [], conflicts: [], excluded: { count: 7, reason: 'not agent-started' }, enumerated: { readable: true } },
+      { project: 'tessellate', worktrees: [], conflicts: [], excluded: { count: 0, reason: 'not agent-started' }, enumerated: { readable: true } },
+    ];
+    expect(totalsFor(nothingSwept).attempted).toBe(0); // the premise
+    const text = textOf(
+      renderToStaticMarkup(<ConflictsView reports={nothingSwept} loading={false} error={null} onRefresh={() => {}} />)
+    );
+    expect(text).toContain('Nothing was checked');
+    expect(text).not.toContain('measured all-clear');
+    expect(text).toContain('7 worktrees exist and were excluded'); // it says what it skipped
+
+    // An empty reports array is the same condition and must answer the same way — it used to
+    // print the all-clear across "0 of 0 projects" too.
+    const emptyText = textOf(
+      renderToStaticMarkup(<ConflictsView reports={[]} loading={false} error={null} onRefresh={() => {}} />)
+    );
+    expect(emptyText).toContain('Nothing was checked');
+    expect(emptyText).not.toContain('measured all-clear');
+  });
+
+  // C2 AT THE PIXEL. A project git refused to enumerate arrives as `worktrees: []` with
+  // `excluded.count: 0`, which is byte-identical to a healthy project that simply has no
+  // agent worktrees — so the view must read `enumerated`, or it renders an all-clear over a
+  // population nobody could list.
+  test('a project that could not be enumerated is never folded into the all-clear', () => {
+    const unknown: ConflictReport[] = [
+      {
+        project: 'orphaned',
+        worktrees: [],
+        conflicts: [],
+        excluded: { count: 0, reason: 'not agent-started' },
+        enumerated: { readable: false, reason: 'git worktree list --porcelain exited 128 in /x (fatal: not a git repository) — this project\'s worktrees could not be enumerated, so the list is UNKNOWN rather than empty.' },
+      },
+      {
+        project: 'healthy',
+        worktrees: [{ path: '/y/.worktrees/ceo-1-1', branch: 'ceo-1-1', changedFiles: ['a.ts'] }],
+        conflicts: [],
+        excluded: { count: 0, reason: 'not agent-started' },
+        enumerated: { readable: true },
+      },
+    ];
+    expect(totalsFor(unknown).unenumerated).toBe(1); // the premise
+    const text = textOf(
+      renderToStaticMarkup(<ConflictsView reports={unknown} loading={false} error={null} onRefresh={() => {}} />)
+    );
+
+    expect(text).toContain('1 of 2 projects could not be enumerated at all');
+    expect(text).toContain('exited 128'); // the reason reaches the screen
+    expect(text).toContain('worktree list unreadable');
+    // The all-clear's exact wording must NOT appear — the honest headline is used instead.
+    expect(text).not.toContain('measured all-clear');
+    expect(text).toContain('No conflicts among the worktrees that could be checked');
+    expect(text).toContain('NOT an all-clear for the fleet');
+  });
+
+  // The all-clear's own branch, so the tests above are not merely asserting the absence of a
+  // string that no input ever produces.
+  test('…and with worktrees actually read, the all-clear IS printed', async () => {
+    const reports = (await conflictsPayload('allclear')).map((r) => ({ ...r, conflicts: [] }));
+    expect(totalsFor(reports).read).toBeGreaterThan(0); // the premise
+    const text = textOf(
+      renderToStaticMarkup(<ConflictsView reports={reports} loading={false} error={null} onRefresh={() => {}} />)
+    );
+    expect(text).toContain('measured all-clear');
+    expect(text).not.toContain('Nothing was checked');
+  });
+
+  // ONE WORDING, ONE PLACE. The excluded explanation is the collector's constant, rendered —
+  // not a second sentence maintained in the view. The two had already drifted apart, and the
+  // view's copy quoted "17 seconds per request": a measurement of the SYNCHRONOUS sweep this
+  // PR deleted, printed next to a computed worktree count as though it applied to it.
+  test("the excluded explanation on screen is the collector's own string, and prices nothing", async () => {
+    const reports = await conflictsPayload('reason');
+    const withExclusion = reports.find((r) => r.excluded.count > 0)!;
+    expect(withExclusion).toBeDefined();
+
+    const text = textOf(
+      renderToStaticMarkup(<ConflictsView reports={reports} loading={false} error={null} onRefresh={() => {}} />)
+    );
+    expect(text).toContain(withExclusion.excluded.reason);
+    expect(text).not.toContain('17 seconds');
+    expect(text).not.toMatch(/cost \d+ seconds/);
+
+    // Every non-zero exclusion carries the identical constant, which is what makes "render
+    // the first one" correct in the view rather than a lucky guess.
+    const reasons = new Set(reports.filter((r) => r.excluded.count > 0).map((r) => r.excluded.reason));
+    expect(reasons.size).toBe(1);
+  });
+
+  // COULD-NOT-LOOK MUST NOT RENDER AS CLEAN. Defect 2 of the conflicts collector, checked at
+  // the pixel rather than at the payload — the collector returning `readable: false` is worth
+  // nothing if the view draws it the same as a clean worktree.
+  test('an unreadable worktree renders as could-not-look, with its reason, and is not counted clean', () => {
+    const report: ConflictReport = {
+      project: 'ashcroft',
+      worktrees: [
+        { path: '/x/.worktrees/ceo-1-100', branch: 'ceo-1-100', changedFiles: ['a.ts'] },
+        {
+          path: '/x/.worktrees/ceo-2-200',
+          branch: 'ceo-2-200',
+          changedFiles: [],
+          readable: false,
+          reason: 'git status --porcelain exited 128 in /x/.worktrees/ceo-2-200 (fatal: error opening .git)',
+        },
+      ],
+      conflicts: [],
+      excluded: { count: 0, reason: 'none' },
+      enumerated: { readable: true },
+    };
+    const html = renderToStaticMarkup(
+      <ConflictsView reports={[report]} loading={false} error={null} onRefresh={() => {}} />
+    );
+    const text = textOf(html);
+
+    // THE SECTION LABEL, capitalised — not the lowercase phrase. The footnote at the bottom
+    // of this view ends with the sentence "…because “I could not look” and “there is nothing
+    // here” are different answers", so a case-insensitive check for that phrase passes on
+    // EVERY render including the clean one. Caught by the mirror assertion below going red:
+    // the positive check was vacuous and the negative check is what proved it.
+    expect(text).toContain('Could not look');
+    expect(text).toContain('exited 128'); // the reason reaches the screen, not just the payload
+    // Stated as a fraction of what was attempted, so the unreadable count and the swept
+    // count on screen are visibly drawn from the same population.
+    expect(text).toContain('1 of the 2 swept worktrees could not be read');
+    expect(text).toContain('1 worktree read · 1 unreadable'); // and the project line agrees
+    // The all-clear must NOT be printed while one worktree could not be read.
+    expect(text).not.toContain('measured all-clear');
+
+    // And the mirror: with both worktrees readable and no conflicts, the all-clear IS shown.
+    const clean: ConflictReport = {
+      ...report,
+      worktrees: [{ path: '/x/.worktrees/ceo-1-100', branch: 'ceo-1-100', changedFiles: ['a.ts'] }],
+    };
+    const cleanText = textOf(
+      renderToStaticMarkup(<ConflictsView reports={[clean]} loading={false} error={null} onRefresh={() => {}} />)
+    );
+    expect(cleanText).toContain('measured all-clear');
+    expect(cleanText).not.toContain('Could not look');
+    expect(cleanText).not.toContain('could not be read');
+  });
+});
+
+// ── render parity — Belief ───────────────────────────────────────────────────────────
+describe('render parity — Belief', () => {
+  const NOW = Date.parse('2026-08-13T12:00:00Z');
+
+  /** A payload shaped exactly like the route's, with both bands populated. */
+  function beliefPayload(waivers: Waiver[]): BeliefSummary {
+    return {
+      project: 'agentvibe',
+      fleet: { projectsDiscovered: 19, projectsWithLedgerIndex: 1 },
+      ledger: { totalClaims: 35, pass: 64, wouldBlock: 6, block: 0, raw: '' },
+      bands: [
+        {
+          scope: 'project',
+          source: '/x/.claude/ledger/index.json',
+          claims: {
+            total: 31,
+            byKind: { behavior: 20, 'internal-fact': 11 },
+            byScope: { project: 31 },
+            expiringWithin30Days: [
+              {
+                id: 'c-shadow-window-open',
+                assert: 'the shadow window is open',
+                kind: 'behavior',
+                scope: 'project',
+                verified_by: 'command',
+                valid_until: '2026-09-08',
+                source_file: 'docs/x.md',
+                source_line: 12,
+              },
+            ],
+          },
+          verdicts: { pass: 57, wouldBlock: 5, block: 0 },
+          waivers: { present: false, reason: 'Project-scope waivers are not in the built index: …' },
+        },
+        {
+          scope: 'global',
+          source: '/home/x/.warroom/ledger/global.yml',
+          claims: {
+            total: 4,
+            byKind: { 'runtime-capability': 3, 'external-fact': 1 },
+            byScope: { global: 4 },
+            expiringWithin30Days: [
+              {
+                id: 'c-rolling-five-hour-window',
+                assert: 'usage is governed by a rolling 5h window',
+                kind: 'external-fact',
+                scope: 'global',
+                verified_by: 'judge',
+                valid_until: '2026-09-08',
+                source_file: '~/.warroom/ledger/global.yml',
+                source_line: 0,
+              },
+            ],
+          },
+          verdicts: { pass: 7, wouldBlock: 1, block: 0 },
+          waivers,
+        },
+      ],
+    };
+  }
+
+  test('every band figure reverses to the payload, and the header is the computed N of M', () => {
+    const payload = beliefPayload([
+      { claimId: 'c-rolling-five-hour-window', until: '2026-09-08', reason: 'vendor fact', lapsed: false, days: 26 },
+    ]);
+    const html = renderToStaticMarkup(
+      <BeliefView belief={payload} loading={false} error={null} now={NOW} onRefresh={() => {}} />
+    );
+    const text = textOf(html);
+
+    // The coverage figure, both halves, from the collector's own computed pair.
+    expect(text).toContain(
+      `${payload.fleet.projectsWithLedgerIndex} of ${payload.fleet.projectsDiscovered}`
+    );
+
+    for (const band of payload.bands) {
+      const verdicts = band.verdicts as VerdictCounts;
+      const claims = band.claims as ClaimsSummary;
+      // Verdict counts, reversed out of the rendered text.
+      expect(text).toContain(`${verdicts.pass} pass`);
+      expect(text).toContain(`${verdicts.wouldBlock} would_block`);
+      expect(text).toContain(`${verdicts.block} block`);
+      expect(text).toContain(`${claims.total} claims`);
+      // Every expiring claim is on screen with its date — the four landing 2026-09-08 are
+      // the whole reason this section exists.
+      for (const c of claims.expiringWithin30Days) {
+        expect(text).toContain(c.id);
+        expect(text).toContain(c.valid_until!);
+      }
+    }
+    // Both scopes are labelled, so a global claim cannot read as a repository detail.
+    expect(text).toContain('Project scope');
+    expect(text).toContain('Global scope');
+  });
+
+  test('expiring claims render in date order, soonest first', () => {
+    const claims: LedgerClaim[] = [
+      { id: 'c-later', assert: 'x', kind: 'behavior', scope: 'project', verified_by: 'command', valid_until: '2026-09-08', source_file: 'a.md', source_line: 1 },
+      { id: 'c-sooner', assert: 'x', kind: 'behavior', scope: 'project', verified_by: 'command', valid_until: '2026-08-20', source_file: 'a.md', source_line: 2 },
+    ];
+    // summarizeClaims is what sorts; the table must not reorder behind it.
+    const sorted = summarizeClaims(claims, NOW).expiringWithin30Days;
+    const rows = bodyRows(renderToStaticMarkup(<ExpiringTable claims={sorted} now={NOW} />));
+    expect(rows.map((r) => r[0])).toEqual(['c-sooner', 'c-later']);
+    // 7, by the same floor rule resolvers.js's waiverState uses: the claim is live through
+    // the end of 2026-08-20, so the deadline is 2026-08-21T00:00Z and 7.5 whole days remain
+    // from noon on 2026-08-13. See daysUntil for why this is floor and not ceil.
+    expect(asNumber(rows[0]![3]!)).toBe(7);
+  });
+
+  // A LAPSED WAIVER MUST BE VISUALLY DISTINCT FROM AN UNEXPIRED ONE — rule 9, and the
+  // distinction is the entire point of the disposition mechanism. This machine has no lapsed
+  // waiver today (the one live waiver runs to 2026-09-08 and c-runtime-nested-spawn was
+  // Refreshed on 2026-08-13), so without this fixture the lapsed branch would ship having
+  // never once been rendered. §0: an assertion inside a branch that never runs reads as
+  // coverage and is not.
+  test('a lapsed waiver renders differently from a live one, in words and not only in colour', () => {
+    const live = renderToStaticMarkup(
+      <WaiverList waivers={[{ claimId: 'c-live', until: '2026-09-08', reason: 'still in force', lapsed: false, days: 26 }]} />
+    );
+    const lapsed = renderToStaticMarkup(
+      <WaiverList waivers={[{ claimId: 'c-lapsed', until: '2026-07-01', reason: 'nobody came back', lapsed: true, days: 43 }]} />
+    );
+
+    expect(textOf(live)).toContain('waived until 2026-09-08');
+    expect(textOf(live)).toContain('26d left');
+    expect(textOf(live)).not.toContain('LAPSED');
+
+    // The lapsed one says so IN WORDS — a reader on a greyscale screenshot, or a screen
+    // reader, gets the same signal a colour conveys.
+    expect(textOf(lapsed)).toContain('WAIVER LAPSED');
+    expect(textOf(lapsed)).toContain('43d ago');
+    expect(textOf(lapsed)).toContain('worse than no disposition');
+
+    // …and it is ALSO encoded structurally, not only in the sentence: the two render
+    // different markup, so the distinction survives a reader who is skimming.
+    expect(lapsed).toContain('border-l-bad');
+    expect(live).not.toContain('border-l-bad');
+  });
+
+  test('an absent global ledger states why, and never renders as an empty band', () => {
+    const payload = beliefPayload([]);
+    const reason =
+      '/home/x/.warroom/ledger/global.yml does not exist on this machine, so no claim reaches every project here.';
+    payload.bands[1]!.claims = { present: false, reason };
+    payload.bands[1]!.waivers = { present: false, reason };
+    payload.bands[1]!.verdicts = { present: false, reason };
+
+    const text = textOf(
+      renderToStaticMarkup(<BeliefView belief={payload} loading={false} error={null} now={NOW} onRefresh={() => {}} />)
+    );
+    expect(text).toContain('does not exist on this machine');
+    // The empty-but-present wording must NOT appear — that is the sentence a genuinely empty
+    // ledger gets, and absent must not borrow it.
+    expect(text).not.toContain('No claim in this scope carries a waiver');
+  });
+
+  test('an empty-but-present waiver list says something different from an absent one', () => {
+    // The other side of the same distinction, so neither wording can drift into the other.
+    const text = textOf(renderToStaticMarkup(<WaiverList waivers={[]} />));
+    expect(text).toContain('No claim in this scope carries a waiver');
+    expect(text).not.toContain('does not exist');
+  });
+
+  // The heading promised "within 30 days" while the list has no lower bound, so the canary
+  // (valid_until 2026-01-02, deliberately in the past) sat under it beside a cell reading
+  // "expired 224d ago". The filter is correct and unchanged — an overdue claim is what a
+  // reader needs most — so the heading is what had to say so.
+  test('the expiry heading admits that the list includes already-expired claims', () => {
+    const payload = beliefPayload([]);
+    const overdue: LedgerClaim = {
+      id: 'c-canary-unresolvable',
+      assert: 'built to fail',
+      kind: 'behavior',
+      scope: 'project',
+      verified_by: 'command',
+      valid_until: '2026-01-02',
+      source_file: 'docs/x.md',
+      source_line: 1,
+    };
+    (payload.bands[0]!.claims as ClaimsSummary).expiringWithin30Days = summarizeClaims([overdue], NOW).expiringWithin30Days;
+    expect((payload.bands[0]!.claims as ClaimsSummary).expiringWithin30Days).toHaveLength(1); // the premise
+
+    const text = textOf(
+      renderToStaticMarkup(<BeliefView belief={payload} loading={false} error={null} now={NOW} onRefresh={() => {}} />)
+    );
+    expect(text).toContain('Expired, or expiring within 30 days');
+    expect(text).toMatch(/expired \d+d ago/); // the row states it too, in words not only colour
+  });
+
+  // Same shape as the Conflicts zero-swept all-clear: a band that holds no claims must not
+  // report that nothing is expiring, and must not leave a dangling "0 claims ·" separator.
+  test('a band with zero claims says so, instead of printing an all-clear over nothing', () => {
+    const payload = beliefPayload([]);
+    payload.bands[1]!.claims = { total: 0, byKind: {}, byScope: {}, expiringWithin30Days: [] };
+    const text = textOf(
+      renderToStaticMarkup(<BeliefView belief={payload} loading={false} error={null} now={NOW} onRefresh={() => {}} />)
+    );
+    expect(text).toContain('no claims in this scope');
+    expect(text).not.toContain('0 claims ·');
+    expect(text).not.toContain('0 claims were checked');
+  });
+
+  test('the pending state names what is running rather than showing a bare spinner', () => {
+    const text = textOf(
+      renderToStaticMarkup(<BeliefView belief={null} loading={true} error={null} now={NOW} onRefresh={() => {}} />)
+    );
+    expect(text).toContain('scripts/ledger.mjs verify');
+    expect(text).toContain('ten seconds');
   });
 });
 

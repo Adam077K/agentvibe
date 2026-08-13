@@ -11,13 +11,23 @@
 // can never have: adding a field to FleetRow and forgetting the view is a type error, not a
 // column that silently renders `undefined`.
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FleetSummary } from '../../server/collectors/fleet.ts';
 import type { SessionsSlice } from '../../server/state.ts';
 
 export type { FleetSummary, SessionsSlice };
 export type { FleetRow, LauncherInfo, ModalGeneration } from '../../server/collectors/fleet.ts';
 export type { SessionSummary } from '../../server/index-store.ts';
+export type {
+  BeliefSummary,
+  ScopeBand,
+  ClaimsSummary,
+  VerdictCounts,
+  Waiver,
+  Absent,
+} from '../../server/collectors/belief.ts';
+export type { ConflictReport, FileConflict, WorktreeChanges } from '../../server/collectors/conflicts.ts';
+export type { LedgerClaim } from '../../server/projects.ts';
 
 /**
  * `connecting` — no frame has arrived yet on this connection.
@@ -93,6 +103,86 @@ export function useMissionControlStream(url = '/events'): StreamState {
   }, [url]);
 
   return state;
+}
+
+/**
+ * One fetch of one route, for the views that are NOT on the stream.
+ *
+ * WHY BELIEF AND CONFLICTS ARE NOT ON THE SSE TICK, in measured numbers rather than taste.
+ * The stream pushes a slice whenever its content hash moves, and the tick recomputes every
+ * subscribed slice. Measured on this machine 2026-08-13, through the real routes:
+ *
+ *   sessions      16 ms      on the tick
+ *   fleet        430 ms      on the tick, which is why it polls at 10 s and not 1 s
+ *   conflicts  1,034 ms      NOT on the tick   (17,007 ms before PR4 fixed the sweep)
+ *   belief    18,781 ms      NOT on the tick   (10.4 s of it is `ledger.mjs verify` itself)
+ *
+ * Putting an 18-second collector on a 1-second tick does not produce a fresher screen; it
+ * produces a permanently saturated server that recomputes an answer nobody is looking at,
+ * for every connected client, forever. Belief in particular re-runs the whole claim ledger —
+ * which shells out to real test suites — so ticking it would turn a passive dashboard into a
+ * load generator. These two are read when their tab is opened, and refreshed when a human
+ * asks. That is the honest cadence for a figure that changes when somebody edits a claim.
+ *
+ * Fetches on mount, so opening a tab is the trigger. Every field is null until the first
+ * response, and `loading` is true only while a request is genuinely in flight — the views
+ * render a real pending state for that window (an 18-second one, in Belief's case, which is
+ * long enough that saying nothing would read as a hung page).
+ */
+export interface Endpoint<T> {
+  data: T | null;
+  error: string | null;
+  loading: boolean;
+  /** When `data` arrived — how stale what you are reading is, measured, not assumed. */
+  loadedAt: number | null;
+  refetch: () => void;
+}
+
+export function useEndpoint<T>(url: string): Endpoint<T> {
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadedAt, setLoadedAt] = useState<number | null>(null);
+  const [nonce, setNonce] = useState(0);
+
+  // A tab switch away mid-request unmounts this hook while an 18-second fetch is still in
+  // flight. Without the abort the response lands on a dead component, and without the
+  // `cancelled` flag a slow first request can overwrite a fast second one — the classic
+  // out-of-order-response bug, which on this screen would show yesterday's ledger.
+  useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    fetch(url, { signal: controller.signal })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        return (await res.json()) as T;
+      })
+      .then((payload) => {
+        if (cancelled) return;
+        setData(payload);
+        setLoadedAt(Date.now());
+        setLoading(false);
+      })
+      .catch((e: unknown) => {
+        if (cancelled || (e instanceof DOMException && e.name === 'AbortError')) return;
+        // The message states the route, because "Failed to fetch" alone does not tell a
+        // reader which of four views is the one that could not load.
+        setError(e instanceof Error ? `GET ${url} failed: ${e.message}` : `GET ${url} failed`);
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [url, nonce]);
+
+  const refetch = useCallback(() => setNonce((n) => n + 1), []);
+
+  return { data, error, loading, loadedAt, refetch };
 }
 
 /**

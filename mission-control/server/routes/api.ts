@@ -37,19 +37,27 @@ export function createApi(state: LiveState = live): Hono {
     return c.json({ project: projectId, sessions: collectSessions(project, state.index) });
   });
 
-  api.get('/belief', (c) => {
+  // ASYNC, and it matters. Both handlers below shell out, and both were synchronous: they
+  // blocked Bun's single JS thread for 18.8 s (belief) and 17.0 s (conflicts) per call,
+  // measured through this route on 2026-08-13. While either ran, the SSE tick in
+  // routes/stream.ts stopped for every connected client — a control plane freezing the
+  // screens it exists to keep live. The collectors do the awaiting; these handlers just
+  // stopped pretending the work was instant.
+  api.get('/belief', async (c) => {
     const projects = state.refresh();
     const projectId = c.req.query('project');
     const target = projectId
       ? findProject(projects, projectId)
       : (projects.find((p) => p.ledgerIndex.present) ?? projects[0]);
     if (!target) return c.json({ error: projectId ? `unknown project "${projectId}"` : 'no projects discovered' }, 404);
-    return c.json(collectBelief(target));
+    // `projects` is passed in whole so the "N of M projects carry a claim ledger" figure is
+    // counted from the same array this request discovered, never recomputed by the view.
+    return c.json(await collectBelief(target, projects));
   });
 
-  api.get('/conflicts', (c) => {
+  api.get('/conflicts', async (c) => {
     const projects = state.refresh();
-    const reports = projects.map((p) => detectConflicts(p));
+    const reports = await Promise.all(projects.map((p) => detectConflicts(p)));
     return c.json({ reports });
   });
 
