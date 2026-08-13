@@ -15,12 +15,37 @@ import type { Project } from '../projects.ts';
 import { LiveState, live, REPO_ROOT } from '../state.ts';
 import { detectConflicts } from '../collectors/conflicts.ts';
 import { collectBelief } from '../collectors/belief.ts';
-import { collectSessions, collectProjectStats } from '../collectors/transcripts.ts';
-import { summarizeEvents } from '../collectors/events.ts';
-import { projectEmptyState, inboxEmptyState } from '../collectors/empty.ts';
+import { collectSessions, collectProjectStats, type ProjectTranscriptStats } from '../collectors/transcripts.ts';
+import { summarizeEvents, type EventsSummary } from '../collectors/events.ts';
+import { projectEmptyState, inboxEmptyState, type EmptyState } from '../collectors/empty.ts';
 
 function findProject(projects: Project[], id: string): Project | undefined {
   return projects.find((p) => p.id === id);
+}
+
+/**
+ * The wire shapes for the two routes PR5 gives a view to. Declared here, where the handler
+ * builds them, and imported by the client through client/src/api.ts — so adding a field and
+ * forgetting the view is a compile error rather than a cell rendering `undefined`. Same
+ * reasoning as FleetSummary; these two were the last routes still shaped only by inference.
+ */
+export interface ProjectDetail {
+  project: {
+    id: string;
+    root: string;
+    agentActive: boolean;
+    stats: ProjectTranscriptStats;
+    events: EventsSummary;
+  };
+  empty: EmptyState;
+}
+
+export interface InboxProject extends EmptyState {
+  project: string;
+}
+
+export interface InboxPayload {
+  projects: InboxProject[];
 }
 
 export function createApi(state: LiveState = live): Hono {
@@ -69,7 +94,7 @@ export function createApi(state: LiveState = live): Hono {
     const projects = state.refresh();
     const project = findProject(projects, c.req.param('id'));
     if (!project) return c.json({ error: `unknown project "${c.req.param('id')}"` }, 404);
-    return c.json({
+    const payload: ProjectDetail = {
       project: {
         id: project.id,
         root: project.root,
@@ -78,7 +103,8 @@ export function createApi(state: LiveState = live): Hono {
         events: summarizeEvents(project.eventsPath, REPO_ROOT),
       },
       empty: await projectEmptyState(project),
-    });
+    };
+    return c.json(payload);
   });
 
   // DELIBERATELY STILL SYNCHRONOUS. inboxEmptyState is one readdirSync of one directory per
@@ -89,7 +115,8 @@ export function createApi(state: LiveState = live): Hono {
   // the readdir is what to convert, and this comment is where to start.
   api.get('/inbox', (c) => {
     const projects = state.refresh();
-    return c.json({ projects: projects.map((p) => ({ project: p.id, ...inboxEmptyState(p) })) });
+    const payload: InboxPayload = { projects: projects.map((p) => ({ project: p.id, ...inboxEmptyState(p) })) };
+    return c.json(payload);
   });
 
   return api;

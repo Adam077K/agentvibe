@@ -28,6 +28,10 @@ export type {
 } from '../../server/collectors/belief.ts';
 export type { ConflictReport, FileConflict, WorktreeChanges } from '../../server/collectors/conflicts.ts';
 export type { LedgerClaim } from '../../server/projects.ts';
+export type { ProjectDetail, InboxPayload, InboxProject } from '../../server/routes/api.ts';
+export type { EmptyState } from '../../server/collectors/empty.ts';
+export type { EventsSummary } from '../../server/collectors/events.ts';
+export type { ProjectTranscriptStats } from '../../server/collectors/transcripts.ts';
 
 /**
  * `connecting` — no frame has arrived yet on this connection.
@@ -135,6 +139,12 @@ export interface Endpoint<T> {
   loading: boolean;
   /** When `data` arrived — how stale what you are reading is, measured, not assumed. */
   loadedAt: number | null;
+  /**
+   * When the last FAILED attempt ended. Distinct from `loadedAt` on purpose: a request that
+   * errored has an end time but produced no data, and collapsing the two let the app bar say
+   * "fetched" over a panel reporting an error (#39).
+   */
+  failedAt: number | null;
   refetch: () => void;
 }
 
@@ -143,6 +153,7 @@ export function useEndpoint<T>(url: string): Endpoint<T> {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadedAt, setLoadedAt] = useState<number | null>(null);
+  const [failedAt, setFailedAt] = useState<number | null>(null);
   const [nonce, setNonce] = useState(0);
 
   // A tab switch away mid-request unmounts this hook while an 18-second fetch is still in
@@ -164,6 +175,7 @@ export function useEndpoint<T>(url: string): Endpoint<T> {
         if (cancelled) return;
         setData(payload);
         setLoadedAt(Date.now());
+        setFailedAt(null); // a success clears the previous failure's stamp
         setLoading(false);
       })
       .catch((e: unknown) => {
@@ -172,6 +184,14 @@ export function useEndpoint<T>(url: string): Endpoint<T> {
         // reader which of four views is the one that could not load.
         setError(e instanceof Error ? `GET ${url} failed: ${e.message}` : `GET ${url} failed`);
         setLoading(false);
+        // AND THE ATTEMPT IS STAMPED, which it was not (#39). On a failed fetch `loadedAt`
+        // stayed null while `loading` went false, so the app bar rendered the resting word
+        // "fetched" with no timestamp beside it — directly above a panel saying the ledger
+        // could not be read. Two elements describing one request, disagreeing about whether
+        // it worked. `failedAt` is a separate field rather than a reused `loadedAt` because
+        // "when data arrived" and "when the attempt ended" are different facts, and the badge
+        // needs to say which one it is showing.
+        setFailedAt(Date.now());
       });
 
     return () => {
@@ -182,7 +202,7 @@ export function useEndpoint<T>(url: string): Endpoint<T> {
 
   const refetch = useCallback(() => setNonce((n) => n + 1), []);
 
-  return { data, error, loading, loadedAt, refetch };
+  return { data, error, loading, loadedAt, failedAt, refetch };
 }
 
 /**

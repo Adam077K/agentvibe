@@ -22,6 +22,8 @@ import {
   type BeliefSummary,
   type ConflictReport,
   type ConnectionState,
+  type InboxPayload,
+  type ProjectDetail,
   type StreamState,
 } from './api.ts';
 import { formatRelative } from './format.ts';
@@ -29,21 +31,36 @@ import { FleetView } from './views/FleetView.tsx';
 import { SessionsView } from './views/SessionsView.tsx';
 import { BeliefView } from './views/BeliefView.tsx';
 import { ConflictsView } from './views/ConflictsView.tsx';
+import { InboxView } from './views/InboxView.tsx';
+import { ProjectView } from './views/ProjectView.tsx';
 
-/** What a fetched (non-stream) view knows about its own data's age. */
+/**
+ * What a fetched (non-stream) view knows about its own data's age.
+ *
+ * `failedAt` is here and separate from `loadedAt` because the badge has to distinguish "this
+ * is when your data arrived" from "this is when the attempt gave up". Without it the bar read
+ * the resting word "fetched" with no timestamp above a panel reporting an error (#39).
+ */
 export interface Freshness {
   loadedAt: number | null;
+  failedAt: number | null;
   loading: boolean;
 }
 
-interface ViewContext {
+export interface ViewContext {
   stream: StreamState;
   now: number;
   /** A fetched view reports its own freshness here; stream views never call it. */
   onFreshness: (f: Freshness) => void;
+  /** Drill-down: Fleet calls this with a project id to open the Project view on it. */
+  openProject: (id: string) => void;
+  /** The project the Project view is showing, set by the drill-down above. */
+  projectId: string | null;
+  /** Back out of a drill-down to the list that led here. */
+  openTab: (id: Tab) => void;
 }
 
-interface ViewDef {
+export interface ViewDef {
   id: string;
   label: string;
   /**
@@ -54,6 +71,13 @@ interface ViewDef {
    * had nothing to do with what was on screen — freshness asserted for the wrong population.
    */
   stream: boolean;
+  /**
+   * False for a view that is reachable but not a tab. Project is the only one: it is opened
+   * by clicking a Fleet row, so a nav entry for it would either be dead until something was
+   * selected or would need a second project picker — and the Fleet table already IS the
+   * picker, with the figures that tell you which project you want.
+   */
+  nav: boolean;
   render: (ctx: ViewContext) => ReactNode;
 }
 
@@ -64,23 +88,81 @@ interface ViewDef {
  * expressed where React can see it.
  */
 function BeliefPanel({ now, onFreshness }: { now: number; onFreshness: (f: Freshness) => void }) {
-  const { data, loading, error, loadedAt, refetch } = useEndpoint<BeliefSummary>('/api/belief');
-  useEffect(() => onFreshness({ loadedAt, loading }), [loadedAt, loading, onFreshness]);
+  const { data, loading, error, loadedAt, failedAt, refetch } = useEndpoint<BeliefSummary>('/api/belief');
+  useEffect(() => onFreshness({ loadedAt, failedAt, loading }), [loadedAt, failedAt, loading, onFreshness]);
   return <BeliefView belief={data} loading={loading} error={error} now={now} onRefresh={refetch} />;
 }
 
 function ConflictsPanel({ onFreshness }: { onFreshness: (f: Freshness) => void }) {
-  const { data, loading, error, loadedAt, refetch } = useEndpoint<{ reports: ConflictReport[] }>('/api/conflicts');
-  useEffect(() => onFreshness({ loadedAt, loading }), [loadedAt, loading, onFreshness]);
+  const { data, loading, error, loadedAt, failedAt, refetch } = useEndpoint<{ reports: ConflictReport[] }>('/api/conflicts');
+  useEffect(() => onFreshness({ loadedAt, failedAt, loading }), [loadedAt, failedAt, loading, onFreshness]);
   return <ConflictsView reports={data?.reports ?? null} loading={loading} error={error} onRefresh={refetch} />;
 }
 
+function InboxPanel({ onFreshness }: { onFreshness: (f: Freshness) => void }) {
+  const { data, loading, error, loadedAt, failedAt, refetch } = useEndpoint<InboxPayload>('/api/inbox');
+  useEffect(() => onFreshness({ loadedAt, failedAt, loading }), [loadedAt, failedAt, loading, onFreshness]);
+  return <InboxView projects={data?.projects ?? null} loading={loading} error={error} onRefresh={refetch} />;
+}
+
+/**
+ * The URL is built from an id that came off disk, so it is encoded — a project directory may
+ * legitimately contain a space, a `#`, or the shell metacharacters the injection tests use.
+ */
+function ProjectPanel({
+  projectId,
+  now,
+  onFreshness,
+  onBack,
+}: {
+  projectId: string;
+  now: number;
+  onFreshness: (f: Freshness) => void;
+  onBack: () => void;
+}) {
+  const { data, loading, error, loadedAt, failedAt, refetch } = useEndpoint<ProjectDetail>(
+    `/api/project/${encodeURIComponent(projectId)}`
+  );
+  useEffect(() => onFreshness({ loadedAt, failedAt, loading }), [loadedAt, failedAt, loading, onFreshness]);
+  return (
+    <ProjectView
+      detail={data}
+      loading={loading}
+      error={error}
+      now={now}
+      onRefresh={refetch}
+      onBack={onBack}
+    />
+  );
+}
+
 // THE ONE LIST. Order here is the order in the nav.
-const VIEWS = [
-  { id: 'fleet', label: 'Fleet', stream: true, render: ({ stream, now }) => <FleetView fleet={stream.fleet} now={now} /> },
-  { id: 'sessions', label: 'Sessions', stream: true, render: ({ stream, now }) => <SessionsView slice={stream.sessions} now={now} /> },
-  { id: 'belief', label: 'Belief', stream: false, render: ({ now, onFreshness }) => <BeliefPanel now={now} onFreshness={onFreshness} /> },
-  { id: 'conflicts', label: 'Conflicts', stream: false, render: ({ onFreshness }) => <ConflictsPanel onFreshness={onFreshness} /> },
+//
+// All four routes now have a view, so the note that used to sit here — "Project and Inbox are
+// PR5 and are deliberately absent rather than stubbed" — no longer describes anything. What
+// replaces it is the rule that outlived it: a view enters this array when it has real data to
+// show, and `nav: false` is how a view that is reachable without being a tab says so.
+//
+// EXPORTED so views.test.tsx can render each entry against two different stream slices and
+// check that `stream:` agrees with whether the entry's output actually moved. The field was
+// declared here and read nowhere a test could see it, so flipping any one of them to `true`
+// restored #39's original defect with the whole suite green.
+export const VIEWS = [
+  { id: 'fleet', label: 'Fleet', stream: true, nav: true, render: ({ stream, now, openProject }) => <FleetView fleet={stream.fleet} now={now} onOpenProject={openProject} /> },
+  { id: 'sessions', label: 'Sessions', stream: true, nav: true, render: ({ stream, now }) => <SessionsView slice={stream.sessions} now={now} /> },
+  { id: 'belief', label: 'Belief', stream: false, nav: true, render: ({ now, onFreshness }) => <BeliefPanel now={now} onFreshness={onFreshness} /> },
+  { id: 'conflicts', label: 'Conflicts', stream: false, nav: true, render: ({ onFreshness }) => <ConflictsPanel onFreshness={onFreshness} /> },
+  { id: 'inbox', label: 'Inbox', stream: false, nav: true, render: ({ onFreshness }) => <InboxPanel onFreshness={onFreshness} /> },
+  {
+    id: 'project',
+    label: 'Project',
+    stream: false,
+    nav: false,
+    render: ({ projectId, now, onFreshness, openTab }) =>
+      projectId === null ? null : (
+        <ProjectPanel projectId={projectId} now={now} onFreshness={onFreshness} onBack={() => openTab('fleet')} />
+      ),
+  },
 ] as const satisfies readonly ViewDef[];
 
 /** Derived from the registry — there is no second list of view ids to keep in step. */
@@ -130,7 +212,7 @@ function ConnectionBadge({ state, lastEventAt, now }: { state: ConnectionState; 
  * socket is healthy — and it is the question a reader of Belief or Conflicts is actually
  * asking, because nothing refreshes those figures until they ask for it.
  */
-function FetchedBadge({ freshness, now }: { freshness: Freshness | null; now: number }) {
+export function FetchedBadge({ freshness, now }: { freshness: Freshness | null; now: number }) {
   if (freshness === null || (freshness.loading && freshness.loadedAt === null)) {
     return (
       <div className="flex items-center gap-2 text-[11.5px]" title="This view fetches once when its tab is opened. The first response has not arrived yet.">
@@ -139,17 +221,69 @@ function FetchedBadge({ freshness, now }: { freshness: Freshness | null; now: nu
       </div>
     );
   }
+  // A FAILED ATTEMPT IS NOT A FETCH. The badge said "fetched" with no timestamp whenever a
+  // request errored — `loadedAt` stayed null while `loading` went false — so the app bar
+  // asserted success directly above a panel explaining the failure (#39). The two states are
+  // now distinct in word, colour and shape, and the failure carries the time it gave up.
+  const failedWithNoData = freshness.loadedAt === null && freshness.failedAt !== null && !freshness.loading;
+  if (failedWithNoData) {
+    return (
+      <div
+        className="flex items-center gap-2 text-[11.5px]"
+        title="The last request for this view failed, and no earlier response is being shown. The panel below carries the reason."
+      >
+        <span className="inline-block h-[7px] w-[7px] rounded-full bg-bad" />
+        <span className="text-bad">fetch failed</span>
+        <span className="fig text-dim">· {formatRelative(freshness.failedAt, now)}</span>
+      </div>
+    );
+  }
+
+  // Data on screen AND a later failure: the figures are real but older than they look, and
+  // the refresh that would have updated them did not land.
+  const staleAfterFailure =
+    freshness.loadedAt !== null && freshness.failedAt !== null && freshness.failedAt > freshness.loadedAt;
+
   return (
     <div
       className="flex items-center gap-2 text-[11.5px]"
-      title="This view is not on the live stream — it fetched once when you opened the tab, for the measured reason recorded in client/src/api.ts. Nothing refreshes it until you press the refresh button in the panel, so this is the age of what you are reading."
+      title={
+        staleAfterFailure
+          ? 'These figures arrived earlier and are still on screen; the most recent refresh failed, so they are older than a successful fetch would have made them. The panel below carries the reason.'
+          : 'This view is not on the live stream — it fetched once when you opened the tab, for the measured reason recorded in client/src/api.ts. Nothing refreshes it until you press the refresh button in the panel, so this is the age of what you are reading.'
+      }
     >
-      <span className={`inline-block h-[7px] w-[7px] rounded-full ${freshness.loading ? 'bg-live breathe' : 'border border-muted bg-transparent'}`} />
-      <span className="text-muted">{freshness.loading ? 'refreshing' : 'fetched'}</span>
+      <span
+        className={`inline-block h-[7px] w-[7px] rounded-full ${
+          freshness.loading ? 'bg-live breathe' : staleAfterFailure ? 'bg-warn' : 'border border-muted bg-transparent'
+        }`}
+      />
+      <span className={staleAfterFailure ? 'text-warn' : 'text-muted'}>
+        {freshness.loading ? 'refreshing' : staleAfterFailure ? 'stale · refresh failed' : 'fetched'}
+      </span>
       {freshness.loadedAt !== null && (
         <span className="fig text-dim">· {formatRelative(freshness.loadedAt, now)}</span>
       )}
     </div>
+  );
+}
+
+/**
+ * WHICH badge the app bar shows for the active view — the one place that decision is made.
+ *
+ * It was an inline ternary in the header's JSX, which is unreachable from a test without a
+ * DOM: rendering <App/> statically only ever exercises the default tab. Lifted out, it is a
+ * pure function of the registry entry, so the test can ask it the same question the header
+ * asks, for every view, and catch a flipped `stream:` or a flipped ternary (#39).
+ */
+export function badgeFor(
+  view: Pick<ViewDef, 'stream'>,
+  ctx: { stream: StreamState; freshness: Freshness | null; now: number }
+): ReactNode {
+  return view.stream ? (
+    <ConnectionBadge state={ctx.stream.connection} lastEventAt={ctx.stream.lastEventAt} now={ctx.now} />
+  ) : (
+    <FetchedBadge freshness={ctx.freshness} now={ctx.now} />
   );
 }
 
@@ -166,6 +300,16 @@ export default function App() {
   // shown against the tab you just opened.
   useEffect(() => setFreshness(null), [tab]);
 
+  // The drill-down target. Held here rather than in the Project view because the view is
+  // unmounted when you leave the tab, and coming back to a project you had open is the
+  // expected behaviour — the id outlives the panel.
+  const [projectId, setProjectId] = useState<string | null>(null);
+  const openProject = useCallback((id: string) => {
+    setProjectId(id);
+    setTab('project');
+  }, []);
+  const openTab = useCallback((id: Tab) => setTab(id), []);
+
   return (
     <div className="min-h-[100dvh]">
       {/* Fixed height, read from the same --mc-header-h the sticky column headers offset by.
@@ -178,7 +322,7 @@ export default function App() {
         <div className="flex h-full items-center gap-6 px-6">
           <div className="label text-text">Mission Control</div>
           <nav className="flex h-full items-center gap-1" aria-label="Views">
-            {VIEWS.map((t) => (
+            {VIEWS.filter((t) => t.nav).map((t) => (
               <button
                 key={t.id}
                 type="button"
@@ -192,14 +336,22 @@ export default function App() {
                 {tab === t.id && <span className="absolute inset-x-2.5 bottom-0 h-px bg-live" />}
               </button>
             ))}
-          </nav>
-          <div className="ml-auto">
-            {active.stream ? (
-              <ConnectionBadge state={stream.connection} lastEventAt={stream.lastEventAt} now={now} />
-            ) : (
-              <FetchedBadge freshness={freshness} now={now} />
+            {/* A non-nav view is still WHERE YOU ARE, and the nav must say so or the bar
+                claims you are on Fleet while Project fills the screen. Rendered as a
+                breadcrumb rather than a tab, because it is not one: there is no way back to
+                it once you leave. */}
+            {!active.nav && (
+              <span className="flex h-full items-center gap-1.5 px-2.5 text-[12.5px]">
+                <span className="text-dim">/</span>
+                <span className="relative flex h-full items-center text-text">
+                  {active.label}
+                  {projectId !== null && <span className="fig ml-1.5 text-dim">{projectId}</span>}
+                  <span className="absolute inset-x-0 bottom-0 h-px bg-live" />
+                </span>
+              </span>
             )}
-          </div>
+          </nav>
+          <div className="ml-auto">{badgeFor(active, { stream, freshness, now })}</div>
         </div>
       </header>
 
@@ -225,7 +377,7 @@ export default function App() {
         </div>
       )}
 
-      <main>{active.render({ stream, now, onFreshness })}</main>
+      <main>{active.render({ stream, now, onFreshness, openProject, projectId, openTab })}</main>
     </div>
   );
 }
