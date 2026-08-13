@@ -61,15 +61,15 @@ function renderProbe({ cmd, args }: ProbeCommand): string {
  * return a boolean based on that. `--` costs one array element and closes the whole
  * class regardless of how project.root is ever constructed later.
  */
-const PROJECT_WOULD_FILL =
-  'Goals, playbook stage progress, open claims, expired claims, blocked items — once something in this project emits playbook stage progress, this view has real data to show.';
-
 export function projectEmptyStateProbe(project: Project): ProbeCommand {
   return {
     cmd: 'grep',
     args: ['-rl', '--exclude-dir=.git', '--exclude-dir=node_modules', '--exclude-dir=.worktrees', 'playbook_stage', '--', project.root],
   };
 }
+
+const PROJECT_WOULD_FILL =
+  'Goals, playbook stage progress, open claims, expired claims, blocked items — once something in this project emits playbook stage progress, this view has real data to show.';
 
 export function projectEmptyState(project: Project): EmptyState {
   const probeCmd = projectEmptyStateProbe(project);
@@ -78,22 +78,30 @@ export function projectEmptyState(project: Project): EmptyState {
     const out = execFileSync(probeCmd.cmd, probeCmd.args, { encoding: 'utf8' });
     return { ...base, found: out.trim().length > 0 };
   } catch (e) {
-    const err = e as { status?: number; stderr?: string };
+    const err = e as { status?: number; stdout?: string; stderr?: string };
     if (err.status === 1) {
       // grep's genuine "no match" exit — the honest, checked answer, not a failure.
       return { ...base, found: false };
     }
     // Anything else — exit >=2 (unreadable/nonexistent directory, permission denied) or
-    // the process failing to spawn at all — is NOT "nothing here"; it is "the probe
-    // could not look". Reporting found:false here would be the exact failure the
-    // honest-empty-state rule exists to prevent. Same distinction check-cold-start.ts
-    // makes with its own exit 2 (UNCHECKED) for the cold-build claim.
+    // the process failing to spawn at all. This is NOT simply "nothing here"; it is
+    // "the probe could not look at everything". Critically, grep still writes any
+    // matches it DID find to stdout before it reports the unreadable subdirectory on
+    // stderr and exits 2 -- verified directly (a readable file with a real match, plus
+    // a chmod 000 sibling directory: exit 2, stdout non-empty). execFileSync throws on
+    // any non-zero exit, so `out` above is never assigned; the match has to be read
+    // from the thrown error's own .stdout, or it is silently discarded -- which would
+    // be the exact failure this function exists to prevent, just inverted: reporting
+    // absence when it means "I found something AND I also couldn't see everything".
+    // Both truths are reported. Same UNCHECKED distinction check-cold-start.ts makes
+    // with its own exit 2, but that script has no partial-success case to preserve.
+    const stdout = (err.stdout ?? '').toString();
     const stderrTail = (err.stderr ?? '').toString().trim().slice(0, 300);
     return {
       ...base,
-      found: false,
+      found: stdout.trim().length > 0,
       readable: false,
-      reason: `grep exited ${err.status ?? 'unknown'} against ${project.root} — could not check${stderrTail ? `: ${stderrTail}` : ''}`,
+      reason: `grep exited ${err.status ?? 'unknown'} against ${project.root} (${stderrTail || 'no stderr'})`,
     };
   }
 }

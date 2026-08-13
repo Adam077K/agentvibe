@@ -47,6 +47,26 @@ export function parseLedgerVerifyOutput(text: string): LedgerVerifySummary {
 }
 
 /**
+ * Builds the argv passed to `node`. Exported so a test can assert the '--' sentinel
+ * shape directly, without mocking execFileSync.
+ *
+ * The leading '--' guards `ledgerScript` — a path derived from projectRoot
+ * (project.root, read straight off disk by discoverProjects()) — passed to `node` as a
+ * bare positional. Inert today for the same reason server/collectors/empty.ts's grep
+ * sentinel was inert before it was added — project.root is always absolute under the
+ * shipped default — but the reasoning is identical: it closes the class
+ * unconditionally regardless of how project.root is ever constructed later, for one
+ * array element. `node -- <path> <args...>` still passes everything after <path>
+ * through to the script's own argv (verified directly: `node -- scripts/ledger.mjs
+ * verify --offline` behaves exactly like `node scripts/ledger.mjs verify --offline`).
+ */
+export function ledgerVerifyArgs(ledgerScript: string, offline: boolean): string[] {
+  const args = ['--', ledgerScript, 'verify'];
+  if (offline) args.push('--offline');
+  return args;
+}
+
+/**
  * Runs `node scripts/ledger.mjs verify` for a project, if it has one.
  *
  * `offline` defaults to true here (fast, deterministic for a live route — the only
@@ -60,8 +80,7 @@ export function runLedgerVerify(projectRoot: string, opts: { offline?: boolean }
   if (!fs.existsSync(ledgerScript)) {
     return { present: false, reason: `no scripts/ledger.mjs in ${projectRoot} — this project has no claim ledger` };
   }
-  const args = [ledgerScript, 'verify'];
-  if (offline) args.push('--offline');
+  const args = ledgerVerifyArgs(ledgerScript, offline);
   let out: string;
   try {
     out = execFileSync('node', args, { cwd: projectRoot, encoding: 'utf8' });

@@ -8,7 +8,7 @@ import { IndexStore } from '../server/index-store.ts';
 import { listWorktrees, parseWorktreePorcelain } from '../server/collectors/worktrees.ts';
 import { detectConflicts, parseStatusPorcelain } from '../server/collectors/conflicts.ts';
 import { parseWarroomFleetOutput } from '../server/collectors/fleet.ts';
-import { parseLedgerVerifyOutput, summarizeClaims } from '../server/collectors/belief.ts';
+import { parseLedgerVerifyOutput, summarizeClaims, ledgerVerifyArgs } from '../server/collectors/belief.ts';
 import { summarizeEvents, bucketBudgetBlock, readConfiguredCeilings } from '../server/collectors/events.ts';
 import { projectEmptyState, projectEmptyStateProbe, inboxEmptyState } from '../server/collectors/empty.ts';
 import { mkTmpDir, rmTmp, writeTranscript, fixtureClaudeProjectsDir, initGitRepo, addWorktree, writeRegistry } from './fixtures.ts';
@@ -206,6 +206,23 @@ describe('parseLedgerVerifyOutput', () => {
   });
 });
 
+describe('ledgerVerifyArgs', () => {
+  // MINOR from review round 3: ledgerScript is derived from project.root (an
+  // attacker-influenceable directory name), passed to `node` as a bare positional argv
+  // element — the same shape empty.ts's grep sentinel guards against. Inert under the
+  // shipped default (roots always absolute) but closes the class unconditionally.
+  test("inserts '--' immediately before the ledger script path", () => {
+    const args = ledgerVerifyArgs('/some/project/scripts/ledger.mjs', true);
+    expect(args[0]).toBe('--');
+    expect(args[1]).toBe('/some/project/scripts/ledger.mjs');
+    expect(args).toEqual(['--', '/some/project/scripts/ledger.mjs', 'verify', '--offline']);
+  });
+
+  test('omits --offline when offline:false', () => {
+    expect(ledgerVerifyArgs('/x/scripts/ledger.mjs', false)).toEqual(['--', '/x/scripts/ledger.mjs', 'verify']);
+  });
+});
+
 describe('summarizeClaims', () => {
   test('buckets by kind/scope and flags claims expiring within 30 days', () => {
     const now = Date.parse('2026-08-13T00:00:00Z');
@@ -342,6 +359,34 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
       expect(unreadable.reason).toContain(noPermDir);
     } finally {
       fs.chmodSync(noPermDir, 0o755); // restore so afterAll's rmTmp can clean it up
+    }
+  });
+
+  // MAJOR from review round 3: a wholly-unreadable input is not the only unreadable
+  // shape. GNU grep writes any matches it DID find to stdout BEFORE reporting an
+  // unreadable subdirectory on stderr and exiting 2 — so a real match and a real
+  // "couldn't see everything" can both be true at once. execFileSync throws on exit 2,
+  // discarding `out`, so the match has to come from the thrown error's own .stdout or it
+  // is silently lost — reporting absence when it means "I found something AND I also
+  // couldn't check everything". The two prior tests only covered wholly-unreadable
+  // inputs (nothing to find either way), which is exactly why this survived them.
+  test('projectEmptyState reports a real match even when a sibling directory is unreadable', () => {
+    const root = mkTmpDir('mc-mixed-match-');
+    cleanupDirs.push(root);
+    const readableDir = path.join(root, 'subdir-readable');
+    const lockedDir = path.join(root, 'subdir-locked');
+    fs.mkdirSync(readableDir, { recursive: true });
+    fs.mkdirSync(lockedDir, { recursive: true });
+    fs.writeFileSync(path.join(readableDir, 'visible-match.txt'), 'playbook_stage: yes\n');
+    fs.chmodSync(lockedDir, 0o000);
+
+    try {
+      const state = projectEmptyState({ id: 'mixed', root } as Project);
+      expect(state.found).toBe(true); // the real match must not be discarded
+      expect(state.readable).toBe(false); // and the partial blindness must still be reported
+      expect(state.reason).toMatch(/grep exited 2/);
+    } finally {
+      fs.chmodSync(lockedDir, 0o755); // restore so afterAll's rmTmp can clean it up
     }
   });
 

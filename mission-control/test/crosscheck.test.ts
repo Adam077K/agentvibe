@@ -221,7 +221,12 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
     return files;
   }
 
-  function findOffenders(pattern: RegExp, files: string[]): string[] {
+  // Per-line scan: gives a human a line number to look at, but is blind to a call split
+  // across lines (`execSync\n  (cmd)` — each line tested alone contains neither
+  // "execSync(" nor anything else a single-line pattern matches). Found live in review
+  // round 3: this alone let a real, executing execSync(...) call sit in server/** with
+  // the guard at 8/8 green.
+  function findOffendersPerLine(pattern: RegExp, files: string[]): string[] {
     const offenders: string[] = [];
     for (const f of files) {
       const text = fs.readFileSync(f, 'utf8');
@@ -231,6 +236,32 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
       });
     }
     return offenders;
+  }
+
+  // Whole-file scan with every run of whitespace — including newlines — collapsed to a
+  // single space, so a call artificially split across lines cannot hide from a pattern
+  // that reads fine as one line. No line number; findOffendersPerLine above is what
+  // points a human at the spot when it can. `//` line comments are stripped first
+  // (same limitation as the per-line scan: a `/* ... */` block comment mentioning one of
+  // these tokens in prose is not distinguished from code — none exist in server/** today).
+  function findOffendersCollapsed(pattern: RegExp, files: string[]): string[] {
+    const offenders: string[] = [];
+    for (const f of files) {
+      const withoutLineComments = fs
+        .readFileSync(f, 'utf8')
+        .split('\n')
+        .map((line) => line.replace(/\/\/.*$/, ''))
+        .join('\n');
+      const collapsed = withoutLineComments.replace(/\s+/g, ' ');
+      if (pattern.test(collapsed)) {
+        offenders.push(`${path.relative(serverDir, f)}: matched only after collapsing whitespace/newlines (a call split across lines)`);
+      }
+    }
+    return offenders;
+  }
+
+  function findOffenders(pattern: RegExp, files: string[]): string[] {
+    return [...findOffendersPerLine(pattern, files), ...findOffendersCollapsed(pattern, files)];
   }
 
   // Single source of truth for both tests below: the real-file scan, and the direct
@@ -284,7 +315,11 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
   //   - `exec`/`execFile` (see below) are matched as BARE calls only
   //     (`(?<!\.)\bexec\s*\(`, chosen specifically so it does not fire on the many
   //     legitimate `someRegex.exec(str)` calls in this codebase) — a namespace-qualified
-  //     call (`childProcess.exec(...)`) is not matched.
+  //     call (`childProcess.exec(...)`) is not matched, and neither is `exec?.(...)`
+  //     (optional chaining) or `(0, exec)(...)` (the comma-operator indirection trick) —
+  //     both execute identically to `exec(...)` and neither is "namespace-qualified", so
+  //     this list is documenting them as real gaps, not claiming they're covered by the
+  //     "namespace-qualified" line above.
   // An AST-based check (walk real CallExpression nodes, flag any call whose callee
   // resolves to a child_process exec family member or Bun.$, regardless of aliasing)
   // would close all of these at once and is the durable fix. Not built in this PR — that
