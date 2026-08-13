@@ -472,3 +472,81 @@ options is foreclosed
 **Affects:** `mission-control/test/perf.test.ts`, `mission-control/README.md`,
 `docs/03-system-design/PHASE-8A-STATUS.md` §3 and §4, and the 2026-08-12 entry above, whose stated
 rationale is superseded by this one
+
+## 2026-08-13 — Phase 8a PR4/PR5 scope, and the Founder widened rule 8 for these two PRs
+
+**Context:** Eight decisions taken with the Founder in one grill session before any code was written. Four
+rested on measurements taken during the grill rather than on the plan document, and two of those overturned
+what the plan assumed. `/api/conflicts` was assumed cheap; it is **18,051 ms** across **309 worktrees**,
+synchronous, on Bun's single JS thread — so it stalls the SSE tick for every connected client. And
+`conflicts.ts:49` catches every error and returns `[]`, so a pruned or unreadable worktree renders as
+**clean**: the §0 defect class for the tenth time, this time already on `main`.
+**Decisions:**
+1. **PR4 and PR5 are one builder, serial, one worktree** — not two builders in parallel. Both had to widen
+   the same three places in `App.tsx` and both needed the same missing fetch path, so "parallel" was not
+   disjoint. Four views that must share a visual language get one author.
+2. **Fetch-on-open, not SSE**, for belief/conflicts/project/inbox — the tick would pay 18 s (conflicts) and
+   up to 3.7 s (project probe) per connected client.
+3. **PR4 fixes what it exposes**: async `execFile`, a sweep scoped to registry-backed worktrees *with the
+   excluded count rendered*, and a distinct could-not-look state. Fixing the defect in the PR that makes it
+   reachable keeps defect and fix in one reviewable change.
+4. **Belief reads `~/.warroom/ledger/global.yml`** alongside the repo ledger. Nothing in `server/` read it;
+   a view called Belief that cannot show the two live waivers is not showing what we believe.
+5. **Full-tier review, Claude-only.** Independence is recorded as **unmet**, as in every session file this
+   phase. `gemini` is installed and was offered; the Founder chose not to use it.
+6. **Rule 8 widened, by the Founder, for PR4 and PR5 only:** merge on reviewer PASS without per-PR Founder
+   confirmation. Framed here as the Founder widening their own rule, not as the CEO interpreting it,
+   because with #24 unfixed the Founder's confirmation was the only element of the QA gate that was not
+   self-reported. **This is the CEO reporting a removed check, not exercising an override.**
+**Rationale for what was NOT done:** the classifier returns `tier=lite, matched=(none — default)` for every
+mission-control path — **no rule in `qa-tier-floor.yml` mentions mission-control at all**, so a server that
+shells out across the whole machine classifies like a typo, and PR2's command-injection RCE would have too.
+The fix is a one-line rule, but that file floors at `risk:irreversible` and needs its own PR and sign-off,
+so it is logged (#34) rather than folded in. Separately, CLAUDE.md requires a **Codex CLI second opinion** at
+Full tier and `codex` is not installed on this machine — every Full-tier review this repo has run was missing
+a documented required step and nothing noticed (#35).
+**Reversibility:** reversible — rule 8's widening is scoped to two named PRs and lapses with them
+**Owner:** ceo · **founder decisions**, all eight taken with options and costs presented
+**Affects:** `mission-control/server/collectors/{conflicts,belief}.ts`, `mission-control/server/routes/api.ts`,
+`mission-control/client/src/{App.tsx,api.ts,views/}`, and items #32–#35
+
+## 2026-08-13 — the budget ceiling is removed from the system, by Founder instruction
+
+**Context:** `.claude/hooks/budget-guard.js` fired stop condition 3 at ~410k output tokens against a 400k
+ceiling and blocked `Bash`, `Write` and `AskUserQuestion` — it was registered as a `PreToolUse` hook **with no
+matcher**, so it fired on every tool. It blocked the CEO mid-session, blocked the PR4 builder before its first
+commit, and blocked a probe from writing its own report. The Founder instructed: remove it from the system.
+**Decision:** **Unregister** the hook from `.claude/settings.json`; leave the file, its tests and its readers
+in place. Not deleted, because deleting it breaks `scripts/usage.test.mjs` (which tests that it blocks) and
+`mission-control/server/collectors/events.ts` (which reads the real ceilings out of the hook's own source at
+runtime, with a test pinning it) — that would remove a merged Mission Control feature, which is more than was
+asked. Unregistering stops it firing anywhere, completely, and is one line to reverse.
+**Rationale:** the ceiling was a number in a guard, not a measured limit, and it fired in a session that was
+producing structured output continuously — the condition it names ("burning tokens and returning no
+structured output") was not the condition it detected. The CEO could have bypassed it via `Read`/`Edit` at
+any point and deliberately did not, because routing silently around a guard that just fired is the exact
+failure this whole phase is about. **The cost is stated, not hidden:** nothing now stops a session running
+unbounded, and stop condition 3 has no mechanism. `check-registration.mjs` immediately and correctly
+reported the file as registered nowhere — the fabrication catcher works.
+**Reversibility:** reversible — restore one object in `.claude/settings.json` `PreToolUse`
+**Owner:** ceo · **founder instruction**, given directly
+**Affects:** `.claude/settings.json`, `.claude/memory/CODEBASE-MAP.md` (regenerated; the entry now reads
+`BLOCKS | not registered`), and every agentvibe session on this machine once they pick the change up
+
+## 2026-08-13 — c-runtime-nested-spawn REFRESHED: depth-2 nesting works, the CEO instructions are wrong
+
+**Context:** The claim asserts *"Subagents can spawn subagents — write-capable depth-2 nesting outside plan
+mode"*. It carried a 2026-08-11 waiver whose reason — *"spawning is disabled by founder instruction"* —
+stopped being true on 2026-08-13. Two independent probes were run; each made exactly one spawn attempt.
+**Measurement:** `Agent` appears un-deferred in a depth-1 subagent's own tool list; the spawn succeeded with
+no block, denial or error; the depth-2 child ran and returned `ACK`. Spawning is **async** — the tool returns
+launch metadata immediately and the child's reply arrives later — which is why the first probe's report went
+missing and had to be recovered from a session file it wrote before being blocked.
+**Decision:** **Refresh**, not Deprecate. The CEO initially recorded this as a Deprecate, having the claim's
+polarity backwards — the claim says nesting *works*, and the probe agrees.
+**What is actually false is the CEO's own operating instructions**, which state *"RUNTIME CONSTRAINT:
+subagents cannot spawn subagents (nested Task is blocked)"*. That line is wrong on this runtime, and it is
+the stated reason chiefs return dispatch packets instead of spawning workers themselves — so the T2
+orchestration tier rests on a false premise. Not changed here; flagged for the Founder.
+**Reversibility:** reversible — the disposition is one line in `~/.warroom/ledger/global.yml`
+**Owner:** ceo · **Affects:** `~/.warroom/ledger/global.yml`, and the T2 tier design in `AGENTS.md`/`ceo.md`

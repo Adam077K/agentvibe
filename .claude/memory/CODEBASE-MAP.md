@@ -15,7 +15,7 @@ it, so a hook that changes posture changes this map with it.
 
 | File | Posture | Runs on |
 |---|---|---|
-| `.claude/hooks/budget-guard.js` | BLOCKS | PreToolUse |
+| `.claude/hooks/budget-guard.js` | BLOCKS | not registered |
 | `.claude/hooks/gsa-check-update.js` | ADVISES | SessionStart |
 | `.claude/hooks/gsa-context-monitor.js` | ADVISES | PostToolUse |
 | `.claude/hooks/gsa-statusline.js` | ADVISES | statusLine |
