@@ -79,7 +79,20 @@ export type ModalGeneration =
        */
       driftedLaunchers: number;
     }
-  | { kind: 'tie'; candidates: string[]; inScopeLaunchers: number }
+  | {
+      kind: 'tie';
+      /**
+       * The generations TIED FOR THE LEAD — not every generation present. Launchers on
+       * a,a,b,b,c tie a and b at two each; `c` is a straggler and appears in neither this
+       * list nor the lead count, which is why `generations` exists beside it.
+       */
+      candidates: string[];
+      /** How many launchers each tied leader carries. */
+      leaderCount: number;
+      /** DISTINCT generations across all in-scope launchers — leaders and stragglers alike. */
+      generations: number;
+      inScopeLaunchers: number;
+    }
   | { kind: 'none-in-scope'; launchers: number }
   | { kind: 'no-launchers' };
 
@@ -153,7 +166,13 @@ export function modalInScopeGeneration(launchers: LauncherRow[]): ModalGeneratio
   const leaders = [...counts.entries()].filter(([, count]) => count === bestCount).map(([gen]) => gen);
 
   if (leaders.length > 1) {
-    return { kind: 'tie', candidates: leaders.sort(), inScopeLaunchers: inScope.length };
+    return {
+      kind: 'tie',
+      candidates: leaders.sort(),
+      leaderCount: bestCount,
+      generations: counts.size,
+      inScopeLaunchers: inScope.length,
+    };
   }
   const generation = leaders[0] as string;
   return {

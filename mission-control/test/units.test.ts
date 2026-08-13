@@ -75,6 +75,8 @@ describe('modalInScopeGeneration', () => {
     expect(modalInScopeGeneration([row('a', 'aaaaaaaa', 'in scope'), row('b', 'bbbbbbbb', 'in scope')])).toEqual({
       kind: 'tie',
       candidates: ['aaaaaaaa', 'bbbbbbbb'],
+      leaderCount: 1,
+      generations: 2,
       inScopeLaunchers: 2,
     });
   });

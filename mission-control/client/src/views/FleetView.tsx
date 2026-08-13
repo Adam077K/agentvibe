@@ -37,7 +37,7 @@ function GenerationCell({ row }: { row: FleetRow }) {
 }
 
 const NO_MODAL_REASON: Record<Exclude<ModalGeneration['kind'], 'modal'>, string> = {
-  tie: 'In-scope launchers are split evenly across several generations, so there is no current one to compare against.',
+  tie: 'In-scope launchers are spread across several generations with no single most common one, so there is nothing to compare against.',
   'none-in-scope': 'Every launcher is excluded from the managed set, so there is no generation the fleet is expected to converge on.',
   'no-launchers': 'No launchers were listed at all — typically a machine with no ~/bin — so there is nothing to compare against.',
 };
@@ -86,6 +86,16 @@ export function FleetTable({ fleet, now }: { fleet: FleetSummary | null; now: nu
   );
 
   const firstDormant = rows.findIndex((r) => !r.agentActive);
+  const hasBreak = firstDormant > 0;
+
+  /** The one row that opens the dormant group, if there is one on screen. */
+  const isBreak = (i: number) => hasBreak && i === firstDormant;
+  /**
+   * Banding restarts at the break, so the dormant group always begins unbanded regardless of
+   * how many projects were active above it. Without this the group below inherited whichever
+   * phase the group above happened to end on, and the divider read differently by the hour.
+   */
+  const banded = (i: number) => (hasBreak && i >= firstDormant ? (i - firstDormant) % 2 === 1 : i % 2 === 1);
 
   return (
     <table className="w-full border-collapse text-[12.5px]">
@@ -117,19 +127,21 @@ export function FleetTable({ fleet, now }: { fleet: FleetSummary | null; now: nu
         {rows.map((row, i) => (
           <tr
             key={row.id}
-            // Zebra, not hairlines. Contrast RATIO is the wrong metric for the comparison —
-            // it is defined for text legibility, and a 1px rule and a full-row fill are not
-            // comparable on it (measured: the separator is 1.438:1, the zebra fill 1.039:1,
-            // and the fill is the one you can actually track). What carries a row across a
-            // 1600px, eight-column table is AREA, not edge contrast.
+            // Zebra, not hairlines, for row tracking: contrast ratio is the wrong metric for
+            // a 1px rule versus a full-row fill (see styles.css), and what carries an eye
+            // across a 1600px, nine-column table is area.
             //
-            // The agent-active/dormant break is carried by SPACE, and that row is never
-            // striped. Under `even:` the break landed on the zebra parity or not depending
-            // on how many projects happened to be active, so the same divider read as a gap
-            // or as one abnormally tall band, and flipped between them hourly.
+            // THE BREAK IS DRAWN, NOT IMPLIED. Two earlier versions left it to the absence of
+            // a band, and both changed shape with the number of active projects: `even:`
+            // could put a band ON the break, and skipping the band could leave three
+            // consecutive unbanded rows around it. Either way the same divider read
+            // differently hour to hour. It now has its own visible rule (--color-divider,
+            // 3.139:1) plus the space, so it looks the same whatever the parity — and the
+            // dormant group restarts its own banding, so the group below reads consistently
+            // rather than inheriting whichever phase the active group happened to end on.
             className={`transition-colors hover:bg-raised ${row.agentActive ? '' : 'text-muted'} ${
-              i === firstDormant && firstDormant > 0 ? '[&>td]:pt-5' : i % 2 === 1 ? 'bg-row-alt' : ''
-            }`}
+              isBreak(i) ? 'border-t border-t-divider [&>td]:pt-5' : ''
+            } ${banded(i) ? 'bg-row-alt' : ''}`}
           >
             <Td className="pr-0 pl-4">
               <StatusDot
@@ -302,16 +314,31 @@ export function GenerationFigure({ modal }: { modal: ModalGeneration }) {
   }
 
   if (modal.kind === 'tie') {
+    // SAY WHAT WAS ACTUALLY COUNTED. This read "N in-scope launchers are split evenly across
+    // M generations (a, b)", which for launchers on a,a,b,b,c is false twice: five are not
+    // split evenly across two, and `c` was named nowhere. `candidates` holds the generations
+    // tied FOR THE LEAD, not the whole distribution — so the sentence has to distinguish the
+    // total, the number of distinct generations, and which ones are level at the front.
+    const { candidates, leaderCount, generations, inScopeLaunchers } = modal;
+    const trailing = generations - candidates.length;
     return (
       <Figure
         label={label}
         value={
           <Unavailable
+            tone="warn"
             short="not compared"
-            why={`${modal.inScopeLaunchers} in-scope launchers are split evenly across ${modal.candidates.length} generations (${modal.candidates.join(', ')}), so there is no current generation to measure against. No project was compared and none is marked drifted — this is not a clean bill of health. Rolling the fleet onto one generation would fill this.`}
+            why={
+              `${inScopeLaunchers} in-scope launchers sit on ${generations} different generations. ` +
+              `${candidates.length} are level at the front with ${leaderCount} launcher${leaderCount === 1 ? '' : 's'} each (${candidates.join(', ')})` +
+              (trailing > 0
+                ? `, and ${trailing} further generation${trailing === 1 ? ' trails' : 's trail'} behind`
+                : '') +
+              '. With no single most-common generation there is nothing to measure against, so no launcher was compared and none is marked drifted — this is not a clean bill of health. Rolling the fleet onto one generation would fill this.'
+            }
           />
         }
-        sub={`${formatCount(modal.candidates.length)} generations tied across ${formatCount(modal.inScopeLaunchers)} in-scope launchers`}
+        sub={`${formatCount(generations)} generations across ${formatCount(inScopeLaunchers)} in-scope launchers, ${formatCount(candidates.length)} tied for the lead`}
         tone="warn"
       />
     );
@@ -324,7 +351,7 @@ export function GenerationFigure({ modal }: { modal: ModalGeneration }) {
         value={
           <Unavailable
             short="not compared"
-            why={`All ${modal.launchers} launchers are marked excluded from the managed set, so none is expected to converge and a difference between them is not drift. No project was compared. One in-scope launcher would fill this.`}
+            why={`All ${modal.launchers} launchers are marked excluded from the managed set, so none is expected to converge and a difference between them is not drift. No launcher was compared. One in-scope launcher would fill this.`}
           />
         }
         sub={`${formatCount(modal.launchers)} launchers, every one excluded`}
@@ -338,7 +365,7 @@ export function GenerationFigure({ modal }: { modal: ModalGeneration }) {
       value={
         <Unavailable
           short="not compared"
-          why="`node scripts/warroom-install.mjs fleet` listed no launchers at all — typically a machine with no ~/bin, such as a CI runner. Nothing was compared and no project is marked drifted. Installing a standalone launcher would fill this."
+          why="`node scripts/warroom-install.mjs fleet` listed no launchers at all — typically a machine with no ~/bin, such as a CI runner. No launcher was compared and none is marked drifted. Installing a standalone launcher would fill this."
         />
       }
       sub="no launchers listed on this machine"
