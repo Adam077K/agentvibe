@@ -93,11 +93,35 @@ export async function runTicks(
   }
 }
 
+/**
+ * Bun reaps a connection after `idleTimeout` seconds of silence, and silence is exactly what
+ * this stream produces — so the 10s default killed every real SSE connection the moment the
+ * fleet went quiet, with `[Bun.serve]: request timed out after 10 seconds` in the log.
+ * EventSource then reconnected, so nothing LOOKED broken: it silently reconnected every ten
+ * seconds forever, re-pushing both slices and re-spawning the fleet collector's subprocesses
+ * each time.
+ *
+ * The first fix set `idleTimeout: 0` on the whole server, which is a much bigger change than
+ * the defect required: it also let a finished `GET /api/health` hold its keep-alive socket
+ * open forever, and `/events` has no Origin check, so any page the user happens to visit
+ * could open its six-per-origin connections and pin them. This disables the reaper for THIS
+ * REQUEST only, leaving every other route on the server's normal timeout.
+ *
+ * `c.env` is the Bun `Server` under the Bun adapter. It is absent when the app is driven
+ * directly through `app.fetch(new Request(...))` — which is how most of the tests run — so
+ * the call is guarded and its absence is not an error.
+ */
+function disableIdleReaperForThisRequest(env: unknown, request: Request): void {
+  const server = env as { timeout?: (req: Request, seconds: number) => void } | undefined;
+  if (typeof server?.timeout === 'function') server.timeout(request, 0);
+}
+
 export function createStream(state: LiveState = live, opts: StreamOptions = {}): Hono {
   const route = new Hono();
 
-  route.get('/events', (c) =>
-    streamSSE(c, async (stream) => {
+  route.get('/events', (c) => {
+    disableIdleReaperForThisRequest(c.env, c.req.raw);
+    return streamSSE(c, async (stream) => {
       let open = true;
       stream.onAbort(() => {
         open = false;
@@ -109,8 +133,8 @@ export function createStream(state: LiveState = live, opts: StreamOptions = {}):
         (ms) => stream.sleep(ms),
         opts
       );
-    })
-  );
+    });
+  });
 
   return route;
 }

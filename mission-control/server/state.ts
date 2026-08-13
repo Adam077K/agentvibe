@@ -35,19 +35,43 @@ export interface Hashed<T> {
 }
 
 /**
- * Keys that carry "when was this computed", not "what does it say". Both move on every
- * single tick by construction — `generatedAt` on the slice, `now` inside the budget figure
- * windowUsage() returns — so hashing them would mark every slice changed and defeat the
- * whole point of the tick: an idle fleet must produce an idle wire. Nothing else is
- * stripped; a token count that shifts because turns aged out of the rolling 5h window is a
- * real change and must be pushed.
+ * Stable content hash. Takes the already-projected object — see hashableFleet /
+ * hashableSessions below for what each slice excludes, and why.
  */
-const VOLATILE_KEYS = new Set(['generatedAt', 'now']);
+export function sliceHash(hashable: unknown): string {
+  return createHash('sha1').update(JSON.stringify(hashable) ?? '').digest('hex');
+}
 
-/** Stable content hash over a slice, ignoring VOLATILE_KEYS. */
-export function sliceHash(payload: unknown): string {
-  const stripped = JSON.stringify(payload, (key, value) => (VOLATILE_KEYS.has(key) ? undefined : value));
-  return createHash('sha1').update(stripped ?? '').digest('hex');
+/**
+ * What a fleet slice's hash covers, written as an EXPLICIT PROJECTION rather than a set of
+ * key names stripped at any depth. Two reasons, both found in review:
+ *
+ * 1. A name-based stripper removes every `now` anywhere in the tree. The only one today is
+ *    the budget's, but the next collector to add a field called `now` would have it silently
+ *    excluded from change detection, and nothing would say so. Spreading instead means a new
+ *    field is INCLUDED by default — the fail-safe direction, since an over-eager push costs
+ *    bytes and a missed one costs correctness.
+ *
+ * 2. `filesScanned` and `bytesRead` are diagnostics of the scan, not the figure it produced.
+ *    They move whenever any byte is appended to any transcript — including a turn with no
+ *    usage record at all — so leaving them in the hash pushed a full 19-project payload on
+ *    writes that changed no displayed number. Traced in review: a non-usage append moved
+ *    only `bytesRead` (140 → 320) and pushed the whole slice. They stay in the PAYLOAD, as
+ *    provenance behind the burn figure; they are simply not what "changed" means.
+ *
+ * `output_tokens` and `subagent_output_tokens` are NOT stripped: those shift as turns age
+ * out of the rolling 5h window, which is a real change to a number on screen.
+ */
+export function hashableFleet(payload: FleetSummary): unknown {
+  const { generatedAt: _generatedAt, budget, ...rest } = payload;
+  const { now: _now, filesScanned: _filesScanned, bytesRead: _bytesRead, ...budgetFigures } = budget;
+  return { ...rest, budget: budgetFigures };
+}
+
+/** Everything a sessions slice says, minus when it was said. */
+export function hashableSessions(payload: SessionsSlice): unknown {
+  const { generatedAt: _generatedAt, ...rest } = payload;
+  return rest;
 }
 
 export class LiveState {
@@ -85,7 +109,7 @@ export class LiveState {
   sessionsSlice(now: number = Date.now()): Hashed<SessionsSlice> {
     this.refresh();
     const payload: SessionsSlice = { generatedAt: now, sessions: this.store.allSessions() };
-    return { hash: sliceHash(payload), payload };
+    return { hash: sliceHash(hashableSessions(payload)), payload };
   }
 
   fleetSlice(repoRoot: string = REPO_ROOT): Hashed<FleetSummary> {
@@ -95,7 +119,7 @@ export class LiveState {
     const payload = buildFleet(projects, this.store, repoRoot, {
       claudeProjectsRoot: this.discoverOpts.claudeProjectsRoot,
     });
-    return { hash: sliceHash(payload), payload };
+    return { hash: sliceHash(hashableFleet(payload)), payload };
   }
 }
 
