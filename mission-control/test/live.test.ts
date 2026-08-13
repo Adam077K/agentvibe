@@ -1,20 +1,17 @@
 // test/live.test.ts — the routes the views read from, against the REAL roots on this
 // machine.
 //
-// EVERY TEST HERE IS ENVIRONMENT-GATED, and the gate is on the ENVIRONMENT ONLY — the
-// existence of ~/.claude/projects and of a non-empty discovered fleet — checked BEFORE any
-// assertion runs. It never catches a thrown assertion: a catch-all around a real comparison
-// turns a cross-check into decoration, which is the failure this suite exists to prevent.
-// When a gate fires it prints its reason to stdout unconditionally, because `bun test`
-// renders an early return as a pass and silence would read as "verified" to anyone skimming
-// CI output.
+// The gate is test/gate.ts, shared with test/views.test.tsx so there is ONE implementation of
+// "can this machine answer" — read its header for the rule and for the live failure that
+// produced it. In short: it fires only when ~/.claude/projects is absent. Once the corpus
+// exists, everything else — including discovery returning zero projects — is a RESULT and
+// gets asserted, not excused.
 //
 // "Cold" below means a cold INDEX, not a cold page cache: nothing here can evict the OS's
 // file cache, so the figure is what a daemon restart costs, not what a machine reboot costs.
 
 import { describe, test, expect } from 'bun:test';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { Hono } from 'hono';
 import { LiveState } from '../server/state.ts';
@@ -22,24 +19,7 @@ import { createApi } from '../server/routes/api.ts';
 import type { FleetSummary } from '../server/collectors/fleet.ts';
 import type { SessionsSlice } from '../server/state.ts';
 import { discoverProjects } from '../server/projects.ts';
-
-const CLAUDE_ROOT = path.join(os.homedir(), '.claude', 'projects');
-
-/** Returns a reason string when this machine cannot answer the question, else null. */
-function machineGate(): string | null {
-  if (!fs.existsSync(CLAUDE_ROOT)) {
-    return `${CLAUDE_ROOT} does not exist on this machine (e.g. a CI runner with no local transcript corpus)`;
-  }
-  if (discoverProjects().length === 0) {
-    return 'discovery found 0 git repositories under the configured roots on this machine';
-  }
-  return null;
-}
-
-function notVerified(what: string, reason: string): void {
-  // eslint-disable-next-line no-console
-  console.log(`${what} NOT VERIFIED — ${reason}. Nothing was compared; this is not a pass on the merits.`);
-}
+import { machineGate, notVerified, corpusPresent, CLAUDE_PROJECTS_ROOT } from './gate.ts';
 
 function liveApp(): Hono {
   const app = new Hono();
@@ -68,12 +48,15 @@ describe('GET /api/fleet against the real roots', () => {
           .join(', ')}`
       );
 
+      // Asserted, never skipped: with the corpus present, "discovery returned nothing" is a
+      // failure of the thing under test. Pointing MC_PROJECT_ROOTS at an empty or missing
+      // directory turns this suite RED, which is the whole point.
+      expect(payload.projects.length).toBeGreaterThan(0);
       expect(withData.length).toBeGreaterThanOrEqual(3);
-      // Discovered, never configured: the fleet must not be a list someone typed. finfun is
-      // the project a hand-typed list actually omitted, so its presence is the specific
-      // regression this asserts against — but only when it exists on this machine at all.
-      const roots = payload.projects.map((p) => p.root);
-      for (const root of roots) expect(fs.existsSync(path.join(root, '.git'))).toBe(true);
+      // Discovered, never configured: the fleet must not be a list someone typed.
+      for (const project of payload.projects) {
+        expect(fs.existsSync(path.join(project.root, '.git'))).toBe(true);
+      }
     },
     120_000
   );
@@ -115,16 +98,40 @@ describe('GET /api/sessions performance against the real corpus', () => {
   );
 });
 
-describe('the environment gate itself', () => {
-  // The gate above is the thing most likely to rot into "always skips", so its own
-  // predicate is pinned: it fires only on the two conditions it documents.
-  test('reports a reason when the corpus is absent, and null when it is present', () => {
+describe('the machine gate itself', () => {
+  // The gate is the component most likely to rot into "always skips", so its predicate is
+  // pinned AGAINST THE FILESYSTEM rather than against the wording of its own excuse. The
+  // previous version asserted `reason.toMatch(/does not exist|found 0 git repositories/)`,
+  // which validated the excuse and passed happily while every real test was being skipped.
+  test('a reason exists only when the corpus directory really is absent', () => {
     const reason = machineGate();
-    if (reason === null) {
-      expect(fs.existsSync(CLAUDE_ROOT)).toBe(true);
-      expect(discoverProjects().length).toBeGreaterThan(0);
-    } else {
-      expect(reason).toMatch(/does not exist|found 0 git repositories/);
+    const present = fs.existsSync(CLAUDE_PROJECTS_ROOT);
+
+    expect(corpusPresent()).toBe(present); // the helper reads the same disk fact
+    expect(reason === null).toBe(present); // skipping and absence are the same condition
+
+    if (reason !== null) {
+      expect(present).toBe(false);
+      expect(reason).toContain(CLAUDE_PROJECTS_ROOT);
+    }
+  });
+
+  test('the gate does not consult discovery — an empty root fails the suite, it does not excuse it', () => {
+    if (!corpusPresent()) {
+      notVerified('machine-gate independence check', `${CLAUDE_PROJECTS_ROOT} does not exist on this machine`);
+      return;
+    }
+    // Point discovery at a directory that cannot exist. The gate must STILL be open (the
+    // corpus is what it looks at), even though discovery now returns nothing — so the real
+    // tests above would run their assertions and go red rather than print a skip.
+    const previous = process.env.MC_PROJECT_ROOTS;
+    process.env.MC_PROJECT_ROOTS = path.join(path.sep, 'mission-control-no-such-root');
+    try {
+      expect(discoverProjects()).toHaveLength(0);
+      expect(machineGate()).toBeNull();
+    } finally {
+      if (previous === undefined) delete process.env.MC_PROJECT_ROOTS;
+      else process.env.MC_PROJECT_ROOTS = previous;
     }
   });
 });
