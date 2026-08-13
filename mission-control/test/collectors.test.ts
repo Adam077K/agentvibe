@@ -11,7 +11,7 @@ import { parseWarroomFleetOutput } from '../server/collectors/fleet.ts';
 import { parseLedgerVerifyOutput, summarizeClaims, ledgerVerifyArgs } from '../server/collectors/belief.ts';
 import { summarizeEvents, bucketBudgetBlock, readConfiguredCeilings } from '../server/collectors/events.ts';
 import { projectEmptyState, projectEmptyStateProbe, inboxEmptyState } from '../server/collectors/empty.ts';
-import { mkTmpDir, rmTmp, writeTranscript, fixtureClaudeProjectsDir, initGitRepo, addWorktree, writeRegistry } from './fixtures.ts';
+import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo, addWorktree, writeRegistry } from './fixtures.ts';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '..', '..');
 const cleanupDirs: string[] = [];

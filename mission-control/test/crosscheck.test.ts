@@ -23,6 +23,11 @@ import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo } from './fixtur
 // from scripts/lib/usage.js:159-172 as 12,345 + 6,789. The fleet-gen and ledger-verdict
 // crosschecks further down ARE genuinely independent — each parses real command stdout
 // with its own regex, sharing no code with the collector it checks.
+//
+// @ts-expect-error — plain CommonJS with no .d.ts; `allowJs` is off project-wide by design
+// and scripts/lib/ is not this project's to change. Same suppression, same reason, as
+// server/lib/usage.ts's own import of this module. Every use below casts to an explicit
+// shape, so nothing here is silently `any`.
 // eslint-disable-next-line
 import * as rawUsage from '../../scripts/lib/usage.js';
 

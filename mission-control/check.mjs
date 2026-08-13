@@ -5,13 +5,23 @@
 // BEFORE we know bun is even installed, so it cannot itself depend on bun.
 //
 //   --probe   just answer "can this environment run Mission Control at all" — used by
-//             the negative-path acceptance test and by CI before it commits to `bun test`.
-//   (none)    probe first, then hand off to `bun test` with inherited stdio, and exit
-//             with whatever `bun test` exits with.
+//             the negative-path acceptance test and by CI before it commits to running
+//             anything heavier.
+//   (none)    probe, then TYPECHECK, then `bun test`, each with inherited stdio, exiting
+//             on the first failure with that step's status.
 //
-// Both failure paths print ONE line to stderr naming what's missing and exit 1. Neither
-// path lets a stack trace escape — a Node ESM crash trace is not an actionable message
+// Both probe failure paths print ONE line to stderr naming what's missing and exit 1.
+// Neither lets a stack trace escape — a Node ESM crash trace is not an actionable message
 // for someone who just doesn't have bun on PATH yet.
+//
+// WHY TYPECHECK IS IN THE GATE (added with PR3, and it should have been here from PR1).
+// `bun test` runs TypeScript by STRIPPING types, never by checking them, so for two PRs
+// nothing anywhere in `npm run check` or CI ever ran `tsc`. That was survivable while this
+// was a few hundred lines of server code with heavy runtime tests. It stopped being
+// survivable the moment the client landed: the client imports its wire types straight from
+// the server specifically so that adding a field to FleetRow and forgetting the view is a
+// compile error — a guarantee whose entire enforcement was a comment saying it existed.
+// A rule enforced only by a sentence is a wish.
 
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -48,6 +58,13 @@ function probe() {
   return true;
 }
 
+/** Runs one step with inherited stdio. Returns its exit status, never null. */
+function run(label, command, args) {
+  process.stdout.write(`mission-control: ${label}\n`);
+  const res = spawnSync(command, args, { cwd: HERE, stdio: 'inherit' });
+  return res.status === null ? 1 : res.status;
+}
+
 function main() {
   const probeOnly = process.argv.includes('--probe');
 
@@ -58,8 +75,15 @@ function main() {
     process.exit(0);
   }
 
-  const res = spawnSync('bun', ['test'], { cwd: HERE, stdio: 'inherit' });
-  process.exit(res.status === null ? 1 : res.status);
+  // Typecheck FIRST: it is the faster of the two and a type error makes the test run's
+  // output harder to read, not easier.
+  const typecheck = run('typecheck (tsc --noEmit)', 'bunx', ['tsc', '--noEmit']);
+  if (typecheck !== 0) {
+    process.stderr.write('mission-control: typecheck failed — see the errors above\n');
+    process.exit(typecheck);
+  }
+
+  process.exit(run('tests (bun test)', 'bun', ['test']));
 }
 
 try {
