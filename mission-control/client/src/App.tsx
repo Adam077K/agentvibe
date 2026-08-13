@@ -1,21 +1,72 @@
-// client/src/App.tsx — the shell: one subscription, one nav, two views.
+// client/src/App.tsx — the shell: one subscription, one nav, ONE VIEW REGISTRY.
 //
-// Project and Inbox are PR5 and are deliberately absent rather than stubbed. A greyed-out
-// tab that opens a "coming soon" panel is a promise the UI cannot keep, and this codebase
-// has already paid for one guard whose name outran its reach.
+// PR3 hardcoded the view list in three places — a `type Tab` union, a `TABS` array, and a
+// two-branch ternary in <main>. Two views made that survivable; four does not, and the shape
+// of the bug it produces is a tab that renders the wrong panel because one of the three lists
+// was updated and another was not. THE REGISTRY IS THE ONLY LIST. `Tab` is derived from it,
+// the nav maps it, and <main> looks up the active entry — so adding a view is adding one
+// entry, and forgetting a place is a compile error rather than a blank screen.
+//
+// EACH VIEW OWNS ITS OWN DATA, and they do not all get it the same way. Fleet and Sessions
+// read the SSE stream (see api.ts for the measured reason belief and conflicts do not).
+// Belief and Conflicts fetch when their tab is opened. A view is MOUNTED only while it is
+// active, so opening a tab is what triggers its fetch — and switching away and back refetches
+// rather than showing a cached figure from ten minutes ago. On a control plane, a stale
+// number that looks live is the more expensive of the two failures.
 
-import { useState } from 'react';
-import { useMissionControlStream, useNow, type ConnectionState } from './api.ts';
+import { useState, type ReactNode } from 'react';
+import {
+  useEndpoint,
+  useMissionControlStream,
+  useNow,
+  type BeliefSummary,
+  type ConflictReport,
+  type ConnectionState,
+  type StreamState,
+} from './api.ts';
 import { formatRelative } from './format.ts';
 import { FleetView } from './views/FleetView.tsx';
 import { SessionsView } from './views/SessionsView.tsx';
+import { BeliefView } from './views/BeliefView.tsx';
+import { ConflictsView } from './views/ConflictsView.tsx';
 
-type Tab = 'fleet' | 'sessions';
+interface ViewContext {
+  stream: StreamState;
+  now: number;
+}
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'fleet', label: 'Fleet' },
-  { id: 'sessions', label: 'Sessions' },
-];
+interface ViewDef {
+  id: string;
+  label: string;
+  render: (ctx: ViewContext) => ReactNode;
+}
+
+/**
+ * Belief and Conflicts are wrapped in components rather than called inline because they own
+ * hooks. A hook cannot live in a `render` arm that only runs for the active tab — but it can
+ * live inside a component that is only mounted for the active tab, which is the same thing
+ * expressed where React can see it.
+ */
+function BeliefPanel({ now }: { now: number }) {
+  const { data, loading, error, refetch } = useEndpoint<BeliefSummary>('/api/belief');
+  return <BeliefView belief={data} loading={loading} error={error} now={now} onRefresh={refetch} />;
+}
+
+function ConflictsPanel() {
+  const { data, loading, error, refetch } = useEndpoint<{ reports: ConflictReport[] }>('/api/conflicts');
+  return <ConflictsView reports={data?.reports ?? null} loading={loading} error={error} onRefresh={refetch} />;
+}
+
+// THE ONE LIST. Order here is the order in the nav.
+const VIEWS = [
+  { id: 'fleet', label: 'Fleet', render: ({ stream, now }) => <FleetView fleet={stream.fleet} now={now} /> },
+  { id: 'sessions', label: 'Sessions', render: ({ stream, now }) => <SessionsView slice={stream.sessions} now={now} /> },
+  { id: 'belief', label: 'Belief', render: ({ now }) => <BeliefPanel now={now} /> },
+  { id: 'conflicts', label: 'Conflicts', render: () => <ConflictsPanel /> },
+] as const satisfies readonly ViewDef[];
+
+/** Derived from the registry — there is no second list of view ids to keep in step. */
+export type Tab = (typeof VIEWS)[number]['id'];
 
 const CONNECTION_COPY: Record<ConnectionState, { text: string; tone: string; title: string }> = {
   connecting: {
@@ -60,6 +111,8 @@ export default function App() {
   const stream = useMissionControlStream();
   const now = useNow();
 
+  const active = VIEWS.find((v) => v.id === tab) ?? VIEWS[0];
+
   return (
     <div className="min-h-[100dvh]">
       {/* Fixed height, read from the same --mc-header-h the sticky column headers offset by.
@@ -72,7 +125,7 @@ export default function App() {
         <div className="flex h-full items-center gap-6 px-6">
           <div className="label text-text">Mission Control</div>
           <nav className="flex h-full items-center gap-1" aria-label="Views">
-            {TABS.map((t) => (
+            {VIEWS.map((t) => (
               <button
                 key={t.id}
                 type="button"
@@ -111,13 +164,7 @@ export default function App() {
         </div>
       )}
 
-      <main>
-        {tab === 'fleet' ? (
-          <FleetView fleet={stream.fleet} now={now} />
-        ) : (
-          <SessionsView slice={stream.sessions} now={now} />
-        )}
-      </main>
+      <main>{active.render({ stream, now })}</main>
     </div>
   );
 }
