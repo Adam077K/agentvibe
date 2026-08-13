@@ -5,10 +5,20 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { discoverProjects, encodeProjectDir, type Project } from '../server/projects.ts';
 import { IndexStore } from '../server/index-store.ts';
-import { listWorktrees, parseWorktreePorcelain } from '../server/collectors/worktrees.ts';
-import { detectConflicts, parseStatusPorcelain } from '../server/collectors/conflicts.ts';
+import { listWorktrees, parseWorktreePorcelain, type WorktreeEntry } from '../server/collectors/worktrees.ts';
+import { changedFilesFor, detectConflicts, parseStatusPorcelain, scopeSweep } from '../server/collectors/conflicts.ts';
 import { parseWarroomFleetOutput } from '../server/collectors/fleet.ts';
-import { parseLedgerVerifyOutput, summarizeClaims, ledgerVerifyArgs } from '../server/collectors/belief.ts';
+import {
+  attributeVerdicts,
+  collectWaivers,
+  ledgerVerifyArgs,
+  parseLedgerVerifyLines,
+  parseLedgerVerifyOutput,
+  readGlobalLedger,
+  summarizeClaims,
+  type GlobalClaim,
+  type LedgerVerifySummary,
+} from '../server/collectors/belief.ts';
 import { summarizeEvents, bucketBudgetBlock, readConfiguredCeilings } from '../server/collectors/events.ts';
 import { projectEmptyState, projectEmptyStateProbe, inboxEmptyState } from '../server/collectors/empty.ts';
 import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo, addWorktree, writeRegistry } from './fixtures.ts';
@@ -158,16 +168,210 @@ describe('listWorktrees + detectConflicts against a real git repo', () => {
     expect(entries).toHaveLength(3);
   });
 
-  test('two worktrees editing the same file are flagged as a conflict', () => {
+  test('two worktrees editing the same file are flagged as a conflict', async () => {
     fs.writeFileSync(path.join(wtA, 'shared.txt'), 'from A\n');
     fs.writeFileSync(path.join(wtB, 'shared.txt'), 'from B\n');
     fs.writeFileSync(path.join(wtA, 'only-a.txt'), 'a only\n');
-    const report = detectConflicts(project);
+    const report = await detectConflicts(project);
     expect(report.conflicts.map((c) => c.file)).toContain('shared.txt');
     const sharedConflict = report.conflicts.find((c) => c.file === 'shared.txt')!;
     expect(sharedConflict.worktrees).toHaveLength(2);
     // only-a.txt touches one worktree only — not a conflict.
     expect(report.conflicts.some((c) => c.file === 'only-a.txt')).toBe(false);
+  });
+
+  // ONE POPULATION, ONE FIGURE. The count rendered under the Conflicts header has to be the
+  // count this sweep actually skipped — the §0 corollary the Fleet headline broke when it
+  // drew a numerator from projects and a denominator from launchers. listWorktrees is called
+  // again here, independently of the collector, and the partition is checked against it.
+  test('excluded.count + swept worktrees === every non-main worktree, counted independently', async () => {
+    const report = await detectConflicts(project);
+    const nonMain = listWorktrees(project).filter((w) => !w.isMain);
+    expect(nonMain.length).toBeGreaterThan(0); // the arithmetic below is not 0 === 0
+    expect(report.worktrees.length + report.excluded.count).toBe(nonMain.length);
+    // Both fixture worktrees are named by .worktrees/.registry, so nothing is excluded here.
+    expect(report.worktrees).toHaveLength(2);
+    expect(report.excluded.count).toBe(0);
+  });
+
+  test('a worktree the registry does not name is excluded, and the exclusion is reported', async () => {
+    // The real machine shape, in miniature: a hand-made worktree nobody's registry knows
+    // about. Before PR4 the sweep took all of them — 285 on this machine, of which 30 are
+    // agent-started — and said nothing about having done so.
+    const handMade = path.join(root, '.worktrees', 'hand-made-by-a-human');
+    addWorktree(root, handMade, 'hand-made-by-a-human');
+    const report = await detectConflicts(project);
+
+    expect(report.worktrees.map((w) => w.path)).not.toContain(handMade);
+    expect(report.excluded.count).toBe(1);
+    expect(report.excluded.reason).toContain('.worktrees/.registry');
+    // The reason names both halves of the fraction, so the figure on screen is legible
+    // without reading this source file.
+    expect(report.excluded.reason).toContain('1 of 3');
+  });
+});
+
+// ── the sweep's scope: narrowing must be visible, never silent ────────────────────────
+describe('scopeSweep', () => {
+  function entry(over: Partial<WorktreeEntry>): WorktreeEntry {
+    return {
+      path: '/x/.worktrees/w',
+      head: 'aaaa',
+      branch: 'feat/x',
+      isMain: false,
+      locked: false,
+      prunable: false,
+      registryMatch: { name: 'ceo-1', token: '1' },
+      ...over,
+    };
+  }
+
+  test('sweeps registry-named, non-prunable, non-main worktrees and excludes the rest', () => {
+    const entries = [
+      entry({ path: '/x', isMain: true }),
+      entry({ path: '/x/.worktrees/agent' }),
+      entry({ path: '/x/.worktrees/hand-made', registryMatch: null }),
+      entry({ path: '/x/.worktrees/stale', prunable: true }),
+    ];
+    const { swept, excluded } = scopeSweep(entries);
+    expect(swept.map((w) => w.path)).toEqual(['/x/.worktrees/agent']);
+    expect(excluded.map((w) => w.path)).toEqual(['/x/.worktrees/hand-made', '/x/.worktrees/stale']);
+  });
+
+  test('the partition is total: every non-main entry lands in exactly one side', () => {
+    const entries = [
+      entry({ path: '/x', isMain: true }),
+      entry({ path: '/a' }),
+      entry({ path: '/b', registryMatch: null }),
+      entry({ path: '/c', prunable: true }),
+      entry({ path: '/d', registryMatch: null, prunable: true }),
+    ];
+    const { swept, excluded } = scopeSweep(entries);
+    const nonMain = entries.filter((e) => !e.isMain).length;
+    expect(swept.length + excluded.length).toBe(nonMain);
+    expect(new Set([...swept, ...excluded]).size).toBe(nonMain); // no entry counted twice
+  });
+});
+
+// ── "I could not look" is not "there is nothing here" ────────────────────────────────
+// Defect 2 in server/collectors/conflicts.ts: `catch { return [] }` rendered a pruned or
+// unreadable worktree as CLEAN — the one answer nobody investigates. Modelled on the exit-2
+// handling in empty.ts, which shipped this distinction first.
+describe('changedFilesFor reports could-not-look separately from clean', () => {
+  test('a path that does not exist returns readable:false with a real reason', async () => {
+    const parent = mkTmpDir('mc-conflicts-gone-');
+    cleanupDirs.push(parent);
+    const gone = path.join(parent, 'no-such-worktree');
+    expect(fs.existsSync(gone)).toBe(false); // the premise of this test is true
+
+    const result = await changedFilesFor(gone);
+
+    expect(result.readable).toBe(false);
+    expect(result.reason).toBeDefined();
+    expect(result.reason!.length).toBeGreaterThan(0);
+    expect(result.reason).toContain(gone);
+    // NON-VACUITY. The defect being pinned is not "readable is false" — it is that the
+    // could-not-look flag exists AT ALL rather than the shape `{changedFiles: [], readable:
+    // undefined}`, which is byte-for-byte what a clean worktree returns. An empty file list
+    // on its own must never be the whole answer here.
+    expect(result.readable).not.toBeUndefined();
+    expect({ changedFiles: result.changedFiles, readable: result.readable }).not.toEqual({
+      changedFiles: [],
+      readable: undefined,
+    });
+  });
+
+  test('a real, readable worktree returns readable:undefined — the flag is not always set', async () => {
+    // The mirror image, and the reason the test above is not vacuous: if `readable: false`
+    // were returned unconditionally, this assertion goes red.
+    const root = mkTmpDir('mc-conflicts-clean-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    const result = await changedFilesFor(root);
+    expect(result.readable).toBeUndefined();
+    expect(result.reason).toBeUndefined();
+    expect(result.changedFiles).toEqual([]);
+  });
+
+  test('an unreadable worktree survives the whole detectConflicts path as readable:false', async () => {
+    // Through the real collector, not the helper — the three-state has to reach the payload
+    // the view renders, not merely exist in a function no data flows through.
+    const parent = mkTmpDir('mc-conflicts-noperm-parent-');
+    cleanupDirs.push(parent);
+    const root = path.join(parent, 'proj');
+    initGitRepo(root);
+    const wt = path.join(root, '.worktrees', 'ceo-9-900');
+    addWorktree(root, wt, 'ceo-9-900');
+    writeRegistry(root, [{ name: 'ceo-9', token: '900' }]);
+    const claudeRoot = mkTmpDir('mc-conflicts-noperm-claude-');
+    cleanupDirs.push(claudeRoot);
+    const proj = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot }).find((p) => p.root === root)!;
+
+    // The `.git` FILE, not the worktree directory — and the difference is load-bearing.
+    // Probed directly: `chmod 000` on the directory makes `git worktree list --porcelain`
+    // report `prunable gitdir file points to non-existent location`, so scopeSweep excludes
+    // it and it never reaches the sweep at all (correctly — git considers it dead). Making
+    // the `.git` pointer file unreadable leaves the worktree live in git's own listing while
+    // `git status` there exits 128, which is the real could-not-look shape.
+    const gitPointer = path.join(wt, '.git');
+    fs.chmodSync(gitPointer, 0o000);
+    try {
+      const report = await detectConflicts(proj);
+      // realpath, not the fixture string: mkdtemp hands back /var/folders/… while macOS
+      // routes that through a symlink, so git reports the same worktree as /private/var/…
+      // and a direct comparison finds nothing. Same trap worktrees.ts's isMain documents.
+      const swept = report.worktrees.find((w) => fs.realpathSync(w.path) === fs.realpathSync(wt));
+      expect(swept).toBeDefined(); // it WAS swept — not silently excluded
+      expect(swept!.readable).toBe(false);
+      expect(swept!.reason).toBeTruthy();
+      expect(report.conflicts).toEqual([]); // and it is NOT reported as clean-with-nothing-to-say
+      expect(report.excluded.count).toBe(0);
+    } finally {
+      fs.chmodSync(gitPointer, 0o644);
+    }
+  });
+});
+
+// ── the sweep must not become a shell ─────────────────────────────────────────────────
+// THE SECOND, INDEPENDENT BARRIER behind the source-text guard in crosscheck.test.ts.
+// PR4 converts this collector from execFileSync to the async form, which meant relaxing one
+// pattern in that regex guard — and a regex over source text is gameable by construction.
+// This test reads no source: it builds a real worktree whose path carries shell
+// metacharacters, runs the real sweep over it, and checks the filesystem for the marker a
+// shell would have created. §0: two cheap independent checks beat one careful one.
+describe('detectConflicts is not vulnerable to shell injection via a worktree path', () => {
+  test('a project directory built from shell metacharacters executes nothing', async () => {
+    const parent = mkTmpDir('mc-conflicts-security-');
+    cleanupDirs.push(parent);
+    const bareMarker = `PWNED_CONFLICTS_${crypto.randomUUID()}`;
+    const markerPath = path.join(process.cwd(), bareMarker);
+    const maliciousRoot = path.join(parent, `evilproj;touch ${bareMarker};echo done`);
+
+    initGitRepo(maliciousRoot);
+    const wt = path.join(maliciousRoot, '.worktrees', 'ceo-1-1');
+    addWorktree(maliciousRoot, wt, 'ceo-1-1');
+    writeRegistry(maliciousRoot, [{ name: 'ceo-1', token: '1' }]);
+    fs.writeFileSync(path.join(wt, 'touched.txt'), 'x\n');
+
+    const claudeRoot = mkTmpDir('mc-conflicts-security-claude-');
+    cleanupDirs.push(claudeRoot);
+    const proj = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot }).find((p) => p.root === maliciousRoot)!;
+
+    try {
+      const report = await detectConflicts(proj);
+      expect(fs.existsSync(markerPath)).toBe(false); // nothing was executed
+      // and the read-only answer is still CORRECT, not merely safe — a guard that works by
+      // breaking the feature is not a guard.
+      expect(report.worktrees).toHaveLength(1);
+      expect(report.worktrees[0]!.readable).toBeUndefined();
+      expect(report.worktrees[0]!.changedFiles).toEqual(['touched.txt']);
+    } finally {
+      try {
+        fs.rmSync(markerPath);
+      } catch {
+        /* never created — the expected, safe outcome */
+      }
+    }
   });
 });
 
@@ -220,6 +424,209 @@ describe('ledgerVerifyArgs', () => {
 
   test('omits --offline when offline:false', () => {
     expect(ledgerVerifyArgs('/x/scripts/ledger.mjs', false)).toEqual(['--', '/x/scripts/ledger.mjs', 'verify']);
+  });
+});
+
+// The global ledger — ~/.warroom/ledger/global.yml. Nothing in server/ read this file
+// before PR4, so the Belief view could not show either of the waivers holding claims open.
+// ABSENT AND EMPTY MUST NOT RENDER IDENTICALLY: every failure path below returns
+// {present: false, reason} and none of them returns an empty claim list.
+describe('readGlobalLedger', () => {
+  function writeGlobal(body: string): string {
+    const dir = mkTmpDir('mc-global-ledger-');
+    cleanupDirs.push(dir);
+    const file = path.join(dir, 'global.yml');
+    fs.writeFileSync(file, body);
+    return file;
+  }
+
+  const ONE_CLAIM = [
+    'claims:',
+    '  - id: c-example-global',
+    '    assert: "something true of this machine"',
+    '    kind: runtime-capability',
+    '    scope: global',
+    '    verified_by: command',
+    '    evidence:',
+    '      cmd: "true"',
+    '      expect_exit: 0',
+    '    valid_until: 2026-11-09',
+    '    confidence: 1',
+    '',
+  ].join('\n');
+
+  test('a file that does not exist is present:false with a reason — never an empty list', () => {
+    const missing = path.join(mkTmpDir('mc-global-missing-'), 'global.yml');
+    cleanupDirs.push(path.dirname(missing));
+    const result = readGlobalLedger(missing);
+
+    expect(result.present).toBe(false);
+    if (result.present) throw new Error('unreachable — narrowing only');
+    expect(result.reason).toContain(missing);
+    expect(result.reason).toMatch(/does not exist/);
+    // NON-VACUITY: the shape must not carry a claims array at all. An absent ledger that
+    // answered `{claims: []}` would render as "this machine believes nothing globally",
+    // which is a completely different statement from "there is no global ledger here".
+    expect((result as unknown as { claims?: unknown }).claims).toBeUndefined();
+  });
+
+  test('a real file parses through the ledger\'s own parser and keeps scope:global claims', () => {
+    const result = readGlobalLedger(writeGlobal(ONE_CLAIM));
+    expect(result.present).toBe(true);
+    if (!result.present) throw new Error('unreachable — narrowing only');
+    expect(result.claims).toHaveLength(1);
+    expect(result.claims[0]!.id).toBe('c-example-global');
+    // ledger.mjs stamps the same two fields onto these claims; a row in the view names
+    // where a claim lives exactly as the ledger would.
+    expect(result.claims[0]!.source_file).toBe('~/.warroom/ledger/global.yml');
+    expect(result.rejected).toBe(0);
+  });
+
+  test('a file the strict parser refuses is present:false, not silently zero claims', () => {
+    // A tab in indentation — one of the shapes scripts/lib/claims.js throws on rather than
+    // guessing at. A parser that returned [] here would report "0 global claims, all good"
+    // for a file full of real ones, which is the exact failure the ledger exists to prevent.
+    const file = writeGlobal('claims:\n\t- id: c-tabbed\n');
+    const result = readGlobalLedger(file);
+    expect(result.present).toBe(false);
+    if (result.present) throw new Error('unreachable — narrowing only');
+    expect(result.reason).toContain(file);
+    expect(result.reason).toMatch(/refused/);
+  });
+
+  test('a parseable file with no claims: list is present:false, and says why', () => {
+    const result = readGlobalLedger(writeGlobal('something_else: 1\n'));
+    expect(result.present).toBe(false);
+    if (result.present) throw new Error('unreachable — narrowing only');
+    expect(result.reason).toMatch(/no "claims:" list/);
+  });
+
+  test('an entry the schema rejects is counted, not silently kept or silently dropped', () => {
+    const result = readGlobalLedger(writeGlobal(ONE_CLAIM + '  - id: c-broken\n    kind: nonsense\n'));
+    expect(result.present).toBe(true);
+    if (!result.present) throw new Error('unreachable — narrowing only');
+    expect(result.claims).toHaveLength(1); // the good one survives
+    expect(result.rejected).toBeGreaterThan(0); // and the bad one is REPORTED
+    // validateClaim locates a bad entry by index, not by id — an entry can be malformed
+    // precisely because it has no usable id, so the index is the thing that always exists.
+    expect(result.issues.join('\n')).toContain('claims[1]');
+    expect(result.issues.join('\n')).toContain('nonsense');
+  });
+});
+
+// A LAPSED WAIVER MUST BE DISTINGUISHABLE FROM A LIVE ONE — rule 9's whole point, and the
+// state this machine cannot demonstrate today: the one live waiver here expires 2026-09-08
+// and c-runtime-nested-spawn was Refreshed on 2026-08-13. So the lapsed branch would ship
+// having never been executed unless a fixture forces it.
+describe('collectWaivers', () => {
+  const NOW = Date.parse('2026-08-13T12:00:00Z');
+  function claim(id: string, disposition: unknown): GlobalClaim {
+    return {
+      id,
+      assert: 'x',
+      kind: 'runtime-capability',
+      scope: 'global',
+      verified_by: 'command',
+      source_file: '~/.warroom/ledger/global.yml',
+      source_line: 0,
+      ...(disposition === undefined ? {} : { disposition }),
+    } as GlobalClaim;
+  }
+
+  test('an unexpired waiver is lapsed:false with days remaining', () => {
+    const [w] = collectWaivers([claim('c-live', { action: 'waive', until: '2026-09-08', reason: 'r' })], NOW);
+    expect(w!.lapsed).toBe(false);
+    expect(w!.days).toBe(26);
+    expect(w!.until).toBe('2026-09-08');
+  });
+
+  test('a waiver past its date is lapsed:true with days overdue', () => {
+    const [w] = collectWaivers([claim('c-lapsed', { action: 'waive', until: '2026-07-01', reason: 'r' })], NOW);
+    expect(w!.lapsed).toBe(true);
+    expect(w!.days).toBeGreaterThan(0);
+  });
+
+  test('a waiver whose until is not a date is lapsed, with days null — never quietly live', () => {
+    const [w] = collectWaivers([claim('c-bad', { action: 'waive', until: 'someday', reason: 'r' })], NOW);
+    expect(w!.lapsed).toBe(true);
+    expect(w!.days).toBeNull();
+  });
+
+  test('refresh and deprecate dispositions are not waivers, and neither is no disposition', () => {
+    const claims = [
+      claim('c-refreshed', { action: 'refresh', reason: 'r' }),
+      claim('c-deprecated', { action: 'deprecate', reason: 'r' }),
+      claim('c-plain', undefined),
+    ];
+    expect(collectWaivers(claims, NOW)).toEqual([]);
+  });
+
+  test('lapsed waivers sort first — the triage order, not the file order', () => {
+    const ids = collectWaivers(
+      [
+        claim('c-live', { action: 'waive', until: '2026-09-08', reason: 'r' }),
+        claim('c-lapsed', { action: 'waive', until: '2026-07-01', reason: 'r' }),
+      ],
+      NOW
+    ).map((w) => w.claimId);
+    expect(ids).toEqual(['c-lapsed', 'c-live']);
+  });
+});
+
+// Per-scope verdict counts are attributed from the per-claim lines of ONE verify run —
+// never a second `verify --scope=` invocation, because verify appends to events.jsonl and
+// running it twice doubles the writes. The attribution is then checked against the SAME
+// run's own summary line, which is the second, independent reading.
+describe('attributeVerdicts', () => {
+  const RAW = [
+    'ledger verify: 3 claims · offline',
+    '  events → /tmp/x',
+    '',
+    '  ✓ c-proj-one [claim-freshness] ok',
+    '  ✓ c-proj-one [claim-command] ok',
+    '  ⚠ would_block c-proj-two [claim-source] unresolved: offline',
+    '  ✓ c-glob-one [claim-freshness] ok',
+    '',
+    'ledger verify: 3 pass · 1 would_block (shadow) · 0 block',
+  ].join('\n');
+
+  const summary: LedgerVerifySummary = parseLedgerVerifyOutput(RAW);
+  const scopeOf = new Map<string, 'project' | 'global'>([
+    ['c-proj-one', 'project'],
+    ['c-proj-two', 'project'],
+    ['c-glob-one', 'global'],
+  ]);
+
+  test('parses one entry per RESOLVER RUN, not per claim', () => {
+    const lines = parseLedgerVerifyLines(RAW);
+    expect(lines).toHaveLength(4); // 3 claims, 4 runs — c-proj-one has two resolvers
+    expect(lines.filter((l) => l.claimId === 'c-proj-one')).toHaveLength(2);
+    expect(lines.find((l) => l.claimId === 'c-proj-two')!.verdict).toBe('would_block');
+  });
+
+  test('splits by scope and agrees with the run\'s own summary line', () => {
+    const attributed = attributeVerdicts(summary, scopeOf);
+    expect(attributed.consistent).toBe(true);
+    expect(attributed.unattributed).toBe(0);
+    expect(attributed.byScope.project).toEqual({ pass: 2, wouldBlock: 1, block: 0 });
+    expect(attributed.byScope.global).toEqual({ pass: 1, wouldBlock: 0, block: 0 });
+  });
+
+  // THE SECOND BARRIER, PROVEN ABLE TO FIRE. Without this the consistency check is a
+  // branch nothing ever executes, which reads as coverage and is not.
+  test('a claim in neither scope set makes the split inconsistent rather than wrong', () => {
+    const attributed = attributeVerdicts(summary, new Map([['c-proj-one', 'project' as const]]));
+    expect(attributed.unattributed).toBe(2);
+    expect(attributed.consistent).toBe(false);
+    expect(attributed.reason).toContain('unattributed');
+  });
+
+  test('a summary that disagrees with its own per-claim lines is caught', () => {
+    // The shape a reworded verdict prefix would produce: lines parse, totals do not match.
+    const drifted: LedgerVerifySummary = { ...summary, pass: 99 };
+    const attributed = attributeVerdicts(drifted, scopeOf);
+    expect(attributed.consistent).toBe(false);
+    expect(attributed.reason).toMatch(/disagree/);
   });
 });
 

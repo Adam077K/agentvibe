@@ -176,12 +176,19 @@ describe('per-launcher generation hash', () => {
 // brief: the only project with one) ──────────────────────────────────────────────────
 describe('claim counts by verdict', () => {
   // `ledger.mjs verify` runs every claim-command resolver, several of which shell out to
-  // real test suites — ~5.5s measured for one invocation. This test runs it twice
-  // (once directly, once through runLedgerVerify), so it needs headroom past bun's 5s
-  // default.
+  // real test suites. This test runs it TWICE — once directly, once through runLedgerVerify.
+  //
+  // THE TIMEOUT WAS WRITTEN AGAINST A WRONG MEASUREMENT. It said "~5.5s measured for one
+  // invocation" and allowed 30s for two. Re-measured 2026-08-13 with the exit code and the
+  // output length actually checked: 10,385 ms for one run idle, 17,547 ms under load (8.2
+  // load average) — so two runs is 21-35 s and this test was failing on a busy machine for
+  // no reason connected to the code under test. That is the §0 defect class in a test
+  // budget: a number nobody verified, treated as fact. 120 s is 3.4x the measured
+  // worst-case, and the figure it is derived from is written here so the next person can
+  // check it rather than guess again.
   test(
     "MC's ledger summary equals `node scripts/ledger.mjs verify --offline`, parsed independently",
-    () => {
+    async () => {
       const stdout = execFileSync('node', [path.join(REPO_ROOT, 'scripts', 'ledger.mjs'), 'verify', '--offline'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
@@ -197,7 +204,7 @@ describe('claim counts by verdict', () => {
         block: Number(m![3]),
       };
 
-      const mc = runLedgerVerify(REPO_ROOT, { offline: true });
+      const mc = await runLedgerVerify(REPO_ROOT, { offline: true });
       expect('pass' in mc ? mc : null).not.toBeNull();
       if ('pass' in mc) {
         expect(mc.totalClaims).toBe(independent.totalClaims); // pins belief.ts's HEADER_RE fallback path too
@@ -206,7 +213,7 @@ describe('claim counts by verdict', () => {
         expect(mc.block).toBe(independent.block);
       }
     },
-    30_000
+    120_000
   );
 });
 
@@ -304,12 +311,37 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
   // Single source of truth for both tests below: the real-file scan, and the direct
   // pattern-efficacy check against known bypass shapes (so the two cannot silently
   // diverge from each other).
+  // WHAT CHANGED IN PR4, AND WHY IT IS A NARROWING RATHER THAN A WEAKENING.
+  //
+  // This list used to carry `/(?<!\.)\bexecFile\s*\(/` — bare execFile, flagged with the
+  // comment "new spawn surface this codebase doesn't use". That was true when it was
+  // written and it is no longer: PR4 converts the conflicts sweep and the ledger verify from
+  // the *Sync forms to the promisified async ones, because both were blocking Bun's single
+  // JS thread for seventeen and nineteen seconds respectively and stalling the SSE tick for
+  // every connected client while they ran.
+  //
+  // The invariant this file defends is NO SHELL. `execFile(binary, [args])` spawns the
+  // binary directly — it is exactly as shell-free as `execFileSync(binary, [args])`, which
+  // this list has always permitted, and the two are matched the same way now: flagged when
+  // the binary is a shell literal, not flagged for being the API. The alternative was to
+  // switch to `spawn`, which no pattern here matches at all — i.e. to pick an API for the
+  // property of being invisible to the guard. That is the move this codebase must never
+  // make, so it was not made.
+  //
+  // A regex over source text is gameable by construction (finding 26), and relaxing any
+  // pattern widens that. So the relaxation does not stand alone: test/collectors.test.ts
+  // carries a BEHAVIOURAL barrier that reads no source at all — it builds a real worktree
+  // named `evilproj;touch <marker>;echo done`, runs the real sweep across it, and asserts
+  // the marker file does not exist afterwards. §0: two cheap independent checks beat one
+  // careful one, and the source-text guard is now the cheap one.
   const SHELL_INVOCATION_PATTERNS = [
     /\bexecSync\s*\(/, // always shells out, unlike execFileSync
     /(?<!\.)\bexec\s*\(/, // bare exec( — always shells out; excludes someRegex.exec(...)
-    /(?<!\.)\bexecFile\s*\(/, // bare execFile( (the callback form) — new spawn surface this codebase doesn't use
     /shell\s*:\s*true/, // the opt-in shell flag on exec/spawn, as an object-literal property
     /execFileSync\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
+    // The async form, matched by the same rule as its sync twin above. `\b` before execFile
+    // keeps this from firing on execFileSync, whose own pattern is the line above.
+    /\bexecFile\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
     /spawnSync\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
     /(['"`])-c\1/, // the telltale flag that turns any binary into "run this string"
     /\bBun\.\$/, // Bun's own shell-execution tag
@@ -378,10 +410,12 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
     const knownBypasses = [
       "execFileSync('bash', ['-c', probe], { encoding: 'utf8' })", // the original RCE
       'exec(`grep -rl playbook_stage ${root}`, cb)', // MAJOR: bare exec() defeated the first version
-      "execFile('grep', args, cb)", // bare execFile() callback form
+      "execFile('bash', ['-c', probe], cb)", // the async form of the original RCE
+      "execFile('/bin/sh', ['-c', probe], cb)", // …and by absolute path
       'execSync(`grep -rl playbook_stage ${root}`)',
       "spawnSync('bash', ['-c', probe])",
       "execFileSync(bin, argsArr, { encoding: 'utf8', shell: true })", // object-literal shell:true
+      "execFileAsync('git', args, { shell: true })", // the promisified form, opted into a shell
       'Bun.$`grep -rl playbook_stage ${root}`',
     ];
     for (const line of knownBypasses) {
@@ -393,12 +427,31 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
       "execFileSync('node', [script, 'fleet'], { cwd: repoRoot, encoding: 'utf8' })",
       "execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: project.root })",
       "execFileSync(probeCmd.cmd, probeCmd.args, { encoding: 'utf8' })",
+      // The two calls PR4 introduces. Both spawn a named binary with an args array and no
+      // shell — the same shape as the three lines above, in the async form.
+      "execFileAsync('git', ['--no-optional-locks', 'status', '--porcelain'], { cwd: worktreePath })",
+      "execFileAsync('node', args, { cwd: projectRoot, encoding: 'utf8' })",
+      'const execFileAsync = promisify(execFile);',
       'const m = CEILING_RE.exec(reason);',
       'const header = HEADER_RE.exec(text);',
     ];
     for (const line of legitimate) {
       const falsePositive = SHELL_INVOCATION_PATTERNS.some((p) => p.test(line));
       expect(falsePositive).toBe(false);
+    }
+  });
+
+  // THE PATTERN THAT WAS RELAXED, PINNED FROM BOTH SIDES. A narrowing is only safe if the
+  // dangerous half of what it used to catch is still caught — so this asserts the specific
+  // discrimination the change introduced, rather than trusting the paragraph above it.
+  test('the execFile narrowing still catches a shell binary, and only a shell binary', () => {
+    const shellLiterals = ["execFile('bash', a, cb)", "execFile('sh', a, cb)", "execFile('zsh', a, cb)", "execFile('/usr/bin/dash', a, cb)"];
+    for (const line of shellLiterals) {
+      expect(SHELL_INVOCATION_PATTERNS.some((p) => p.test(line))).toBe(true);
+    }
+    // A named non-shell binary with an args array is the permitted shape, sync or async.
+    for (const line of ["execFile('git', a, cb)", "execFile('node', a, cb)", "execFile('grep', a, cb)"]) {
+      expect(SHELL_INVOCATION_PATTERNS.some((p) => p.test(line))).toBe(false);
     }
   });
 });
