@@ -620,39 +620,69 @@ describe('changedFilesFor reports could-not-look separately from clean', () => {
 // metacharacters, runs the real sweep over it, and checks the filesystem for the marker a
 // shell would have created. §0: two cheap independent checks beat one careful one.
 describe('detectConflicts is not vulnerable to shell injection via a worktree path', () => {
-  test('a project directory built from shell metacharacters executes nothing, anywhere', async () => {
+  // ACROSS ALL THREE STATES, not just the happy one.
+  //
+  // The first version of this barrier built a HEALTHY worktree, so it exercised exactly one
+  // of changedFilesFor's three outcomes. A reviewer wrote variant C: safe execFile on the
+  // happy path, a shell string only in the CATCH branch — "git failed, so try harder" — and
+  // this barrier passed it on both assertions, because the fixture never made git fail. That
+  // is §0's own corollary aimed at the barrier: an assertion inside a branch that never runs
+  // reads as coverage, and the branch that never ran was the error path the three-state fix
+  // exists for.
+  //
+  // So one malicious project now carries all three: a healthy worktree, an unreadable one
+  // (the catch branch, reached by making the `.git` pointer unreadable — chmod 000 on the
+  // DIRECTORY instead makes git report it prunable, which excludes it and never enters the
+  // sweep), and one the registry does not name (excluded). The states are asserted to have
+  // actually occurred, so the fixture cannot quietly stop covering them.
+  test('a malicious project executes nothing on ANY of the three sweep outcomes', async () => {
     const parent = mkTmpDir('mc-conflicts-security-');
     cleanupDirs.push(parent);
     const bareMarker = `PWNED_CONFLICTS_${crypto.randomUUID()}`;
     const maliciousRoot = path.join(parent, `evilproj;touch ${bareMarker};echo done`);
 
     initGitRepo(maliciousRoot);
-    const wt = path.join(maliciousRoot, '.worktrees', 'ceo-1-1');
-    addWorktree(maliciousRoot, wt, 'ceo-1-1');
-    writeRegistry(maliciousRoot, [{ name: 'ceo-1', token: '1' }]);
-    fs.writeFileSync(path.join(wt, 'touched.txt'), 'x\n');
+    const healthy = path.join(maliciousRoot, '.worktrees', 'ceo-1-1');
+    const unreadable = path.join(maliciousRoot, '.worktrees', 'ceo-2-2');
+    const excluded = path.join(maliciousRoot, '.worktrees', 'by-hand');
+    addWorktree(maliciousRoot, healthy, 'ceo-1-1');
+    addWorktree(maliciousRoot, unreadable, 'ceo-2-2');
+    addWorktree(maliciousRoot, excluded, 'by-hand');
+    writeRegistry(maliciousRoot, [
+      { name: 'ceo-1', token: '1' },
+      { name: 'ceo-2', token: '2' },
+    ]);
+    fs.writeFileSync(path.join(healthy, 'touched.txt'), 'x\n');
+    fs.writeFileSync(path.join(excluded, 'ignored.txt'), 'x\n');
 
     const claudeRoot = mkTmpDir('mc-conflicts-security-claude-');
     cleanupDirs.push(claudeRoot);
     const proj = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot }).find((p) => p.root === maliciousRoot)!;
 
+    const gitPointer = path.join(unreadable, '.git');
+    fs.chmodSync(gitPointer, 0o000);
     let markers: string[] = [];
     try {
       const report = await detectConflicts(proj);
 
       // ANYWHERE, not one guessed path. changedFilesFor passes `cwd: worktreePath`, so a
-      // shell it spawned would drop the marker in the WORKTREE — which the previous version
-      // of this assertion never looked at. See findMarkerAnywhere for the reviewer's
-      // two-variant repro that proved the old barrier passed against a live RCE.
+      // shell it spawned would drop the marker in the WORKTREE — which the first version of
+      // this assertion never looked at. See findMarkerAnywhere for the two-variant repro
+      // proving that version passed against a live RCE.
       markers = findMarkerAnywhere(bareMarker, [parent]);
       expect(markers).toEqual([]);
 
-      // and the read-only answer is still CORRECT, not merely safe — a guard that works by
-      // breaking the feature is not a guard.
-      expect(report.worktrees).toHaveLength(1);
-      expect(report.worktrees[0]!.readable).toBeUndefined();
-      expect(report.worktrees[0]!.changedFiles).toEqual(['touched.txt']);
+      // THE THREE STATES REALLY OCCURRED. Without these the marker check above could be
+      // passing because the sweep silently did nothing — a barrier certifying an empty run.
+      const ok = report.worktrees.find((w) => w.readable === undefined);
+      const failed = report.worktrees.find((w) => w.readable === false);
+      expect(ok).toBeDefined(); // happy path
+      expect(failed).toBeDefined(); // catch branch — variant C's hiding place
+      expect(report.excluded.count).toBe(1); // excluded path
+      expect(ok!.changedFiles).toEqual(['touched.txt']); // …and the answer is still correct
+      expect(failed!.reason).toBeTruthy();
     } finally {
+      fs.chmodSync(gitPointer, 0o644);
       removeMarkers(markers);
     }
   });

@@ -345,9 +345,13 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
   // `execFileAsync('bash', ['-lc', cmd])` scored ZERO offenders across the whole scan.
   //
   // Three widenings, each closing a hole that version had:
-  //   1. ANY ALIAS, not one exact identifier. exec/execFile/spawn are routinely promisified
-  //      into execAsync/execFileAsync/spawnAsync, and the alias is the call site that
-  //      actually runs. Matched by allowing an identifier suffix.
+  //   1. A FAMILY NAME FOLLOWED BY IDENTIFIER CHARACTERS — named from the body, not from the
+  //      intention. This comment previously said "ANY ALIAS", which is not what the pattern
+  //      does: `const run = execFile; run('bash', …)` is an alias and is invisible to it.
+  //      What it does catch is the shape this codebase actually produces — exec/execFile/
+  //      spawn promisified into execAsync/execFileAsync/spawnAsync, where the family name is
+  //      still a prefix of the identifier that runs. An AST walk (finding 26) is what would
+  //      cover real aliasing.
   //   2. ANY PATH to a shell, not two enumerated prefixes. `/usr/local/bin/bash` and
   //      `/opt/homebrew/bin/bash` — the latter is the real bash on this machine — sat
   //      outside `/bin/` and `/usr/bin/` and were invisible.
@@ -358,13 +362,16 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
 
   const SHELL_INVOCATION_PATTERNS = [
     /\bexecSync\s*\(/, // always shells out, unlike execFileSync
-    // Bare exec( and any promisified alias of it (execAsync, execP…). The `(?!File|Sync)`
-    // keeps this off execFile*/execSync, which have their own rules; `(?<!\.)` keeps it off
-    // the many legitimate someRegex.exec(str) calls.
-    /(?<!\.)\bexec(?!File|Sync)[A-Za-z0-9_$]*\s*\(/,
+    // Bare exec( plus the three promisified spellings this codebase would plausibly use.
+    // ENUMERATED, not open-ended: the previous `exec[A-Za-z0-9_$]*\(` matched executeQuery(
+    // and executionPlan( — issue #27's false-positive-on-unrelated-identifiers failure mode,
+    // reappearing inside the widened pattern. `(?<!\.)` keeps it off someRegex.exec(str).
+    /(?<!\.)\bexec(?:Async|Promise|P)?\s*\(/,
     /shell\s*:\s*true/, // the opt-in shell flag on exec/spawn, as an object-literal property
-    // A shell binary as the first argument of ANY member of the spawn family, under any
-    // alias, by any path. Replaces the old three per-function lines.
+    // A shell binary as the first argument of any spawn-family identifier, by any path.
+    // Open-ended suffix is safe HERE in a way it was not above, because this rule only fires
+    // when the first argument is a literal shell name — `executeQuery('bash')` is not a
+    // shape anyone writes by accident.
     new RegExp(String.raw`\b${SPAWN_FAMILY}\s*\(\s*${SHELL_BINARY}`),
     /(['"`])-[a-z]*c\1/, // -c and -lc/-ic/-ec: the flags that turn any binary into "run this string"
     /\bBun\.\$/, // Bun's own shell-execution tag
@@ -466,6 +473,11 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
       'const execFileAsync = promisify(execFile);',
       'const m = CEILING_RE.exec(reason);',
       'const header = HEADER_RE.exec(text);',
+      // Unrelated identifiers that merely START with a family name. The widened pattern
+      // flagged both — issue #27's failure mode reappearing inside the fix for #38.
+      'const rows = await executeQuery(sql);',
+      'const plan = executionPlan(query);',
+      'const s = spawnPointFor(entity);',
     ];
     for (const line of legitimate) {
       const falsePositive = SHELL_INVOCATION_PATTERNS.some((p) => p.test(line));
