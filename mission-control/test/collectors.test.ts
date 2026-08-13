@@ -1,0 +1,354 @@
+// test/collectors.test.ts — unit and fixture-integration coverage for every collector.
+import { describe, test, expect, afterAll } from 'bun:test';
+import fs from 'node:fs';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { discoverProjects, encodeProjectDir, type Project } from '../server/projects.ts';
+import { IndexStore } from '../server/index-store.ts';
+import { listWorktrees, parseWorktreePorcelain } from '../server/collectors/worktrees.ts';
+import { detectConflicts, parseStatusPorcelain } from '../server/collectors/conflicts.ts';
+import { parseWarroomFleetOutput } from '../server/collectors/fleet.ts';
+import { parseLedgerVerifyOutput, summarizeClaims } from '../server/collectors/belief.ts';
+import { summarizeEvents, bucketBudgetBlock, readConfiguredCeilings } from '../server/collectors/events.ts';
+import { projectEmptyState, inboxEmptyState } from '../server/collectors/empty.ts';
+import { mkTmpDir, rmTmp, writeTranscript, fixtureClaudeProjectsDir, initGitRepo, addWorktree, writeRegistry } from './fixtures.ts';
+
+const REPO_ROOT = path.resolve(import.meta.dir, '..', '..');
+const cleanupDirs: string[] = [];
+afterAll(() => {
+  for (const d of cleanupDirs) rmTmp(d);
+});
+
+// ── encodeProjectDir ─────────────────────────────────────────────────────────────────
+describe('encodeProjectDir', () => {
+  test('replaces every non-alnum char, including the dot before .worktrees', () => {
+    const p = '/Users/adamks/VibeCoding/agentvibe/.worktrees/ceo-1-1786445435';
+    expect(encodeProjectDir(p)).toBe('-Users-adamks-VibeCoding-agentvibe--worktrees-ceo-1-1786445435');
+  });
+
+  test('matches the real directory observed under ~/.claude/projects for this repo', () => {
+    // Ground truth, captured with `ls ~/.claude/projects | od -c` against a real worktree
+    // session — pinned here so a future change to the encoding logic is caught even
+    // though the real ~/.claude/projects layout is not fixtured.
+    expect(encodeProjectDir('/Users/adamks/VibeCoding/agentvibe')).toBe('-Users-adamks-VibeCoding-agentvibe');
+  });
+});
+
+// ── discoverProjects ─────────────────────────────────────────────────────────────────
+describe('discoverProjects', () => {
+  const root = mkTmpDir('mc-discover-');
+  const claudeRoot = mkTmpDir('mc-claude-');
+  cleanupDirs.push(root, claudeRoot);
+
+  // Two sibling projects whose names share a prefix but not at a hyphen boundary —
+  // "widget" must not swallow "widgetfoo"'s transcripts, and vice versa. (Note: a
+  // hyphenated sibling like "widget-other" is genuinely ambiguous under this encoding —
+  // a literal hyphen in a directory name is indistinguishable from the hyphen the
+  // encoding substitutes for '/', so "widget" vs "widget-other" is not a fair test of
+  // the boundary logic; "widget" vs "widgetfoo" is.)
+  const projA = path.join(root, 'widget');
+  const projB = path.join(root, 'widgetfoo');
+  const notGit = path.join(root, 'not-a-repo');
+  initGitRepo(projA);
+  initGitRepo(projB);
+  fs.mkdirSync(notGit, { recursive: true });
+
+  writeRegistry(projA, [{ name: 'ceo-1', token: '1111' }]);
+
+  fixtureClaudeProjectsDir(claudeRoot, projA, 'session-a', [{ ts: new Date().toISOString(), output_tokens: 10 }]);
+  fixtureClaudeProjectsDir(claudeRoot, projB, 'session-b', [{ ts: new Date().toISOString(), output_tokens: 20 }]);
+
+  const projects = discoverProjects({ roots: [root], claudeProjectsRoot: claudeRoot });
+
+  test('only real git repos are discovered', () => {
+    const ids = projects.map((p) => p.id).sort();
+    expect(ids).toEqual(['widget', 'widgetfoo']);
+  });
+
+  test('a project with .worktrees/.registry is agentActive; one without is not', () => {
+    const a = projects.find((p) => p.id === 'widget')!;
+    const b = projects.find((p) => p.id === 'widgetfoo')!;
+    expect(a.agentActive).toBe(true);
+    expect(a.registry.entries).toEqual([{ name: 'ceo-1', token: '1111' }]);
+    expect(b.agentActive).toBe(false);
+  });
+
+  test('transcript-dir prefix matching does not let "widget" swallow "widgetfoo"', () => {
+    const a = projects.find((p) => p.id === 'widget')!;
+    const b = projects.find((p) => p.id === 'widgetfoo')!;
+    expect(a.transcriptDirs).toHaveLength(1);
+    expect(a.transcriptDirs[0]).toBe(path.join(claudeRoot, encodeProjectDir(projA)));
+    expect(b.transcriptDirs).toHaveLength(1);
+    expect(b.transcriptDirs[0]).toBe(path.join(claudeRoot, encodeProjectDir(projB)));
+  });
+
+  test('a project with no scripts/ledger.mjs reports present:false with a reason, not zero claims', () => {
+    const a = projects.find((p) => p.id === 'widget')!;
+    expect(a.ledgerIndex.present).toBe(false);
+    expect(a.ledgerIndex.reason).toMatch(/no scripts\/ledger\.mjs/);
+    expect(a.ledgerIndex.claims).toEqual([]);
+  });
+
+  test('a project WITH scripts/ledger.mjs and a built index.json loads its claims', () => {
+    const projC = path.join(root, 'proj-with-ledger');
+    initGitRepo(projC);
+    fs.mkdirSync(path.join(projC, 'scripts'), { recursive: true });
+    fs.writeFileSync(path.join(projC, 'scripts', 'ledger.mjs'), '// fixture stand-in\n');
+    fs.mkdirSync(path.join(projC, '.claude', 'ledger'), { recursive: true });
+    fs.writeFileSync(
+      path.join(projC, '.claude', 'ledger', 'index.json'),
+      JSON.stringify({ claims: [{ id: 'c-x', assert: 'x', kind: 'behavior', scope: 'project', verified_by: 'command', source_file: 'a.md', source_line: 1 }] })
+    );
+    const [proj] = discoverProjects({ roots: [root], claudeProjectsRoot: claudeRoot }).filter((p) => p.id === 'proj-with-ledger');
+    expect(proj!.ledgerIndex.present).toBe(true);
+    expect(proj!.ledgerIndex.claims).toHaveLength(1);
+  });
+});
+
+// ── worktrees ────────────────────────────────────────────────────────────────────────
+describe('parseWorktreePorcelain', () => {
+  const fakeProject = { id: 'x', root: '/tmp/x', registry: { present: true, path: '', entries: [{ name: 'ceo-1', token: '999' }] } } as unknown as Project;
+
+  test('parses worktree/HEAD/branch/detached/locked/prunable blocks', () => {
+    const text = [
+      'worktree /tmp/x',
+      'HEAD aaaa',
+      'branch refs/heads/main',
+      '',
+      'worktree /tmp/x/.worktrees/ceo-1-999',
+      'HEAD bbbb',
+      'branch refs/heads/feat/thing',
+      '',
+      'worktree /tmp/x/.worktrees/detached-one',
+      'HEAD cccc',
+      'detached',
+      'locked',
+      'prunable gitdir file points to non-existent location',
+      '',
+    ].join('\n');
+    const entries = parseWorktreePorcelain(text, fakeProject);
+    expect(entries).toHaveLength(3);
+    expect(entries[0]).toMatchObject({ path: '/tmp/x', branch: 'main', isMain: true });
+    expect(entries[1]).toMatchObject({ path: '/tmp/x/.worktrees/ceo-1-999', branch: 'feat/thing', isMain: false, registryMatch: { name: 'ceo-1', token: '999' } });
+    expect(entries[2]).toMatchObject({ branch: null, locked: true, prunable: true, registryMatch: null });
+  });
+
+  test('a registry entry only matches a worktree whose basename is exactly name-token', () => {
+    const text = ['worktree /tmp/x', 'HEAD aaaa', 'branch refs/heads/main', '', 'worktree /tmp/x/.worktrees/ceo-1-999-extra', 'HEAD bbbb', 'branch refs/heads/feat/thing', ''].join('\n');
+    const entries = parseWorktreePorcelain(text, fakeProject);
+    expect(entries[1]!.registryMatch).toBeNull();
+  });
+});
+
+describe('listWorktrees + detectConflicts against a real git repo', () => {
+  const root = mkTmpDir('mc-git-');
+  cleanupDirs.push(root);
+  initGitRepo(root);
+  const wtA = path.join(root, '.worktrees', 'ceo-1-100');
+  const wtB = path.join(root, '.worktrees', 'ceo-2-200');
+  addWorktree(root, wtA, 'ceo-1-100');
+  addWorktree(root, wtB, 'ceo-2-200');
+  writeRegistry(root, [{ name: 'ceo-1', token: '100' }, { name: 'ceo-2', token: '200' }]);
+  const project = discoverProjects({ roots: [path.dirname(root)], claudeProjectsRoot: mkTmpDir('mc-empty-claude-') }).find((p) => p.root === root)
+    ?? { id: path.basename(root), root, registry: { present: true, path: '', entries: [{ name: 'ceo-1', token: '100' }, { name: 'ceo-2', token: '200' }] } } as Project;
+
+  test('lists the main worktree plus both added worktrees', () => {
+    const entries = listWorktrees(project);
+    expect(entries.map((e) => e.isMain)).toContain(true);
+    expect(entries).toHaveLength(3);
+  });
+
+  test('two worktrees editing the same file are flagged as a conflict', () => {
+    fs.writeFileSync(path.join(wtA, 'shared.txt'), 'from A\n');
+    fs.writeFileSync(path.join(wtB, 'shared.txt'), 'from B\n');
+    fs.writeFileSync(path.join(wtA, 'only-a.txt'), 'a only\n');
+    const report = detectConflicts(project);
+    expect(report.conflicts.map((c) => c.file)).toContain('shared.txt');
+    const sharedConflict = report.conflicts.find((c) => c.file === 'shared.txt')!;
+    expect(sharedConflict.worktrees).toHaveLength(2);
+    // only-a.txt touches one worktree only — not a conflict.
+    expect(report.conflicts.some((c) => c.file === 'only-a.txt')).toBe(false);
+  });
+});
+
+describe('parseStatusPorcelain', () => {
+  test('handles plain changes and renames', () => {
+    const text = ' M modified.txt\n?? untracked.txt\nR  old.txt -> new.txt\n';
+    expect(parseStatusPorcelain(text)).toEqual(['modified.txt', 'untracked.txt', 'new.txt']);
+  });
+});
+
+// ── fleet ────────────────────────────────────────────────────────────────────────────
+describe('parseWarroomFleetOutput', () => {
+  test('parses the LAUNCHER/LINES/FN/GEN/SCOPE table', () => {
+    const text = [
+      'warroom fleet — READ-ONLY, nothing is written',
+      '',
+      '  LAUNCHER          LINES  FN   GEN       SCOPE',
+      '  acme               2769  47   c146d297  in scope',
+      '  adamos             2407  45   30e0c7aa  excluded',
+      '',
+      '  2 launchers, 2 generations total',
+    ].join('\n');
+    const rows = parseWarroomFleetOutput(text);
+    expect(rows).toEqual([
+      { name: 'acme', lines: 2769, fns: 47, gen: 'c146d297', scope: 'in scope' },
+      { name: 'adamos', lines: 2407, fns: 45, gen: '30e0c7aa', scope: 'excluded' },
+    ]);
+  });
+});
+
+// ── belief ───────────────────────────────────────────────────────────────────────────
+describe('parseLedgerVerifyOutput', () => {
+  test('parses the summary line and the claim-count header', () => {
+    const text = 'ledger verify: 34 claims · offline\n  events → /tmp/x\n\n  ✓ c-a [claim-command] ok\n\nledger verify: 30 pass · 4 would_block (shadow) · 0 block\n';
+    expect(parseLedgerVerifyOutput(text)).toMatchObject({ totalClaims: 34, pass: 30, wouldBlock: 4, block: 0 });
+  });
+});
+
+describe('summarizeClaims', () => {
+  test('buckets by kind/scope and flags claims expiring within 30 days', () => {
+    const now = Date.parse('2026-08-13T00:00:00Z');
+    const claims = [
+      { id: 'c-1', assert: 'a', kind: 'behavior', scope: 'project', verified_by: 'command', valid_until: '2026-08-20', source_file: 'a.md', source_line: 1 },
+      { id: 'c-2', assert: 'b', kind: 'behavior', scope: 'global', verified_by: 'command', valid_until: '2027-08-20', source_file: 'b.md', source_line: 1 },
+    ];
+    const summary = summarizeClaims(claims, now);
+    expect(summary.total).toBe(2);
+    expect(summary.byKind).toEqual({ behavior: 2 });
+    expect(summary.byScope).toEqual({ project: 1, global: 1 });
+    expect(summary.expiringWithin30Days.map((c) => c.id)).toEqual(['c-1']);
+  });
+});
+
+// ── events ───────────────────────────────────────────────────────────────────────────
+describe('readConfiguredCeilings + bucketBudgetBlock', () => {
+  test('reads the real ceilings out of .claude/hooks/budget-guard.js', () => {
+    const ceilings = readConfiguredCeilings(REPO_ROOT);
+    expect(ceilings).toEqual({ window: 3_000_000, stall: 400_000 });
+  });
+
+  test('buckets a matching ceiling as real, a mismatched one as synthetic, unparseable as unknown', () => {
+    const ceilings = { window: 3_000_000, stall: 400_000 };
+    expect(bucketBudgetBlock('rolling 5h window at 3,100,000 output tokens (ceiling 3,000,000)', 'window', ceilings)).toBe('real');
+    expect(bucketBudgetBlock('rolling 5h window at 105 output tokens (ceiling 100)', 'window', ceilings)).toBe('synthetic');
+    expect(bucketBudgetBlock(undefined, 'window', ceilings)).toBe('unknown');
+    expect(bucketBudgetBlock('no ceiling text here', 'window', ceilings)).toBe('unknown');
+  });
+});
+
+describe('summarizeEvents', () => {
+  const dir = mkTmpDir('mc-events-');
+  cleanupDirs.push(dir);
+  const file = path.join(dir, 'events.jsonl');
+
+  test('counts by event kind and buckets budget.block real vs synthetic vs unknown', () => {
+    const lines = [
+      JSON.stringify({ event: 'claim.would_block' }),
+      JSON.stringify({ event: 'budget.block', kind: 'window', reason: 'rolling 5h window at 3,050,000 output tokens (ceiling 3,000,000)' }),
+      JSON.stringify({ event: 'budget.block', kind: 'window', reason: 'rolling 5h window at 105 output tokens (ceiling 100)' }),
+      JSON.stringify({ event: 'budget.block' }), // no reason at all — unknown
+      'not json at all',
+    ];
+    fs.writeFileSync(file, lines.join('\n') + '\n');
+    const summary = summarizeEvents(file, REPO_ROOT);
+    expect(summary.found).toBe(true);
+    expect(summary.totalLines).toBe(5);
+    expect(summary.unparseableLines).toBe(1);
+    expect(summary.byEvent['claim.would_block']).toBe(1);
+    expect(summary.byEvent['budget.block']).toBe(3);
+    expect(summary.budgetBlock).toEqual({ real: 1, synthetic: 1, unknown: 1 });
+  });
+
+  test('a missing events file is an honest empty summary, not an error', () => {
+    const summary = summarizeEvents(path.join(dir, 'does-not-exist.jsonl'), REPO_ROOT);
+    expect(summary.found).toBe(false);
+    expect(summary.totalLines).toBe(0);
+  });
+});
+
+// ── empty states — the probe is executed, not trusted ──────────────────────────────────
+describe('empty.ts probes are executed, matching what the collector reports', () => {
+  test('projectEmptyState: found=false when nothing matches, found=true when a marker exists', () => {
+    const root = mkTmpDir('mc-project-empty-');
+    cleanupDirs.push(root);
+    const projectNoMarker = { id: 'p1', root } as Project;
+    const before = projectEmptyState(projectNoMarker);
+    expect(before.found).toBe(false);
+    // Independently execute the exact probe string this returned.
+    let independentlyFound = false;
+    try {
+      const out = execFileSync('bash', ['-c', before.probe], { encoding: 'utf8' });
+      independentlyFound = out.trim().length > 0;
+    } catch {
+      independentlyFound = false;
+    }
+    expect(independentlyFound).toBe(before.found);
+
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'progress.md'), 'playbook_stage: build\n');
+    const after = projectEmptyState(projectNoMarker);
+    expect(after.found).toBe(true);
+    const outAfter = execFileSync('bash', ['-c', after.probe], { encoding: 'utf8' });
+    expect(outAfter.trim().length > 0).toBe(after.found);
+  });
+
+  test('inboxEmptyState: found=false for a missing/empty messages dir, true once a message is written', () => {
+    const home = mkTmpDir('mc-home-');
+    cleanupDirs.push(home);
+    const project = { id: 'p2' } as Project;
+
+    const before = inboxEmptyState(project, home);
+    expect(before.found).toBe(false);
+    expect(fs.existsSync(before.probe.replace(/\*$/, ''))).toBe(false); // dir doesn't even exist yet
+
+    fs.mkdirSync(path.join(home, '.p2', 'messages'), { recursive: true });
+    fs.writeFileSync(path.join(home, '.p2', 'messages', 'msg-1.json'), '{}');
+    const after = inboxEmptyState(project, home);
+    expect(after.found).toBe(true);
+    // Independently execute the glob the probe names.
+    const dirEntries = fs.readdirSync(path.dirname(after.probe));
+    expect(dirEntries.length > 0).toBe(after.found);
+  });
+});
+
+// ── index-store ──────────────────────────────────────────────────────────────────────
+describe('IndexStore incremental refresh', () => {
+  const root = mkTmpDir('mc-store-root-');
+  const claudeRoot = mkTmpDir('mc-store-claude-');
+  cleanupDirs.push(root, claudeRoot);
+  initGitRepo(root);
+  const now = new Date();
+  fixtureClaudeProjectsDir(claudeRoot, root, 'sess-1', [{ ts: now.toISOString(), output_tokens: 100 }]);
+  const project = discoverProjects({ roots: [path.dirname(root)], claudeProjectsRoot: claudeRoot }).find((p) => p.root === root)!;
+
+  test('cold build reads the fixture session', () => {
+    const store = new IndexStore();
+    const result = store.buildCold([project]);
+    expect(result.filesScanned).toBe(1);
+    const sessions = store.sessionsFor(project.id);
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0]!.outputTokens).toBe(100);
+  });
+
+  test('refresh() skips an untouched file (filesChanged: 0) and picks up an append', async () => {
+    const store = new IndexStore();
+    store.buildCold([project]);
+
+    const untouched = store.refresh([project]);
+    expect(untouched.filesChanged).toBe(0);
+
+    // Append more turns to the same transcript file, forcing mtime forward.
+    await new Promise((r) => setTimeout(r, 10));
+    const file = project.transcriptDirs[0]!;
+    const target = fs.readdirSync(file).find((f) => f.endsWith('.jsonl'))!;
+    const full = path.join(file, target);
+    fs.appendFileSync(full, JSON.stringify({ type: 'assistant', timestamp: new Date().toISOString(), isSidechain: false, message: { usage: { output_tokens: 50 } } }) + '\n');
+    fs.utimesSync(full, new Date(), new Date());
+
+    const appended = store.refresh([project]);
+    expect(appended.filesChanged).toBe(1);
+    const sessions = store.sessionsFor(project.id);
+    expect(sessions[0]!.outputTokens).toBe(150);
+  });
+});
