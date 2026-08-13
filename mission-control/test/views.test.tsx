@@ -34,6 +34,14 @@ import { FleetTable, FleetHeadline, GenerationFigure, sortFleet } from '../clien
 import { SessionsTable, SessionsView } from '../client/src/views/SessionsView.tsx';
 import { BeliefView, ExpiringTable, WaiverList } from '../client/src/views/BeliefView.tsx';
 import { ConflictsTable, ConflictsView, totalsFor } from '../client/src/views/ConflictsView.tsx';
+import { ProjectEvents, ProjectHeadline, ProjectStageProbe, ProjectView } from '../client/src/views/ProjectView.tsx';
+import { InboxHeadline, InboxTable, InboxView, inboxTotals } from '../client/src/views/InboxView.tsx';
+import { HeadlineBar } from '../client/src/ui.tsx';
+import { VIEWS, FetchedBadge, badgeFor, type Freshness, type ViewDef } from '../client/src/App.tsx';
+import type { StreamState } from '../client/src/api.ts';
+import type { ProjectDetail, InboxPayload, InboxProject } from '../server/routes/api.ts';
+import { inboxEmptyState } from '../server/collectors/empty.ts';
+import type { Project } from '../server/projects.ts';
 import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo, writeRegistry, addWorktree } from './fixtures.ts';
 import { machineGate, notVerified } from './gate.ts';
 
@@ -81,6 +89,45 @@ function rowLabels(html: string, rowIndex: number): string[] {
   return [...row.matchAll(/aria-label="([^"]*)"/g)].map((m) =>
     (m[1] ?? '').replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x2F;/g, '/')
   );
+}
+
+/**
+ * Every `<Figure>` in a fragment, in document order, split into its three parts.
+ *
+ * `numbersIn` is enough for a headline whose sub-lines are pure prose, and wrong for one
+ * whose sub-line is a filesystem path: the Project band's `~/…/mc-views-projects-7f3a1/…`
+ * contributed six numbers ahead of the first figure, so a positional read of the whole band
+ * compared the tmp directory's random suffix against a session count. This scopes the read to
+ * the value elements the component actually renders figures into.
+ *
+ * `<div class="label">` with no other class is Figure's own signature — the other three
+ * `label` usages in the client are `<span>`s or carry `mb-1.5`.
+ */
+interface RenderedFigure {
+  label: string;
+  value: string;
+  sub: string;
+  title: string;
+}
+function figuresIn(html: string): RenderedFigure[] {
+  return html
+    .split('<div class="label">')
+    .slice(1)
+    .map((chunk) => {
+      const valueDiv = /<div\b([^>]*\bclass="fig mt-1[^"]*"[^>]*)>([\s\S]*?)<\/div>/.exec(chunk);
+      return {
+        label: textOf(/^([\s\S]*?)<\/div>/.exec(chunk)?.[1] ?? ''),
+        value: textOf(valueDiv?.[2] ?? ''),
+        sub: textOf(/<div class="mt-1\.5 truncate[^"]*">([\s\S]*?)<\/div>/.exec(chunk)?.[1] ?? ''),
+        title: (/title="([^"]*)"/.exec(valueDiv?.[1] ?? '')?.[1] ?? '')
+          .replace(/&#x27;/g, "'")
+          .replace(/&quot;/g, '"')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&#x2F;/g, '/'),
+      };
+    });
 }
 
 /** Every grouped number in a fragment, in document order. */
@@ -1018,11 +1065,14 @@ describe('render parity — Conflicts', () => {
 });
 
 // ── render parity — Belief ───────────────────────────────────────────────────────────
-describe('render parity — Belief', () => {
-  const NOW = Date.parse('2026-08-13T12:00:00Z');
 
-  /** A payload shaped exactly like the route's, with both bands populated. */
-  function beliefPayload(waivers: Waiver[]): BeliefSummary {
+/**
+ * A payload shaped exactly like the route's, with both bands populated.
+ *
+ * At module scope because the headline-band block at the bottom of this file renders Belief
+ * too, and a second copy of this fixture would be a second thing to keep in step.
+ */
+function beliefPayload(waivers: Waiver[]): BeliefSummary {
     return {
       project: 'agentvibe',
       fleet: { projectsDiscovered: 19, projectsWithLedgerIndex: 1 },
@@ -1076,7 +1126,10 @@ describe('render parity — Belief', () => {
         },
       ],
     };
-  }
+}
+
+describe('render parity — Belief', () => {
+  const NOW = Date.parse('2026-08-13T12:00:00Z');
 
   test('every band figure reverses to the payload, and the header is the computed N of M', () => {
     const payload = beliefPayload([
@@ -1226,6 +1279,568 @@ describe('render parity — Belief', () => {
     );
     expect(text).toContain('scripts/ledger.mjs verify');
     expect(text).toContain('ten seconds');
+  });
+});
+
+// ── render parity — Project ──────────────────────────────────────────────────────────
+describe('render parity — Project', () => {
+  /**
+   * A real /api/project/:id payload. `events` optionally points the project's `.warroom.yml`
+   * at a state dir this test writes, which is how the events-found branch gets exercised:
+   * `resolveEventsPath` reads that file per project, and the route re-discovers on every
+   * request, so writing it after the state is constructed still takes effect.
+   */
+  async function projectPayload(
+    prefix: string,
+    events?: string[]
+  ): Promise<{ payload: ProjectDetail; now: number; projectsRoot: string }> {
+    const { app, now, projectsRoot } = buildFixtureState(prefix);
+    if (events !== undefined) {
+      const stateDir = mkTmpDir(`mc-views-events-${prefix}-`);
+      cleanupDirs.push(stateDir);
+      fs.writeFileSync(path.join(projectsRoot, 'ashcroft', '.warroom.yml'), `state_dir: ${stateDir}\n`);
+      fs.writeFileSync(path.join(stateDir, 'events.jsonl'), `${events.join('\n')}\n`);
+    }
+    const res = await app.fetch(new Request('http://127.0.0.1/api/project/ashcroft'));
+    expect(res.status).toBe(200);
+    return { payload: (await res.json()) as ProjectDetail, now, projectsRoot };
+  }
+
+  test('every headline figure reverses to the /api/project payload, in order', async () => {
+    const { payload, now } = await projectPayload('project-headline');
+    const { stats } = payload.project;
+    // Premises: the fixture really has sessions, real output, and a subagent share, so none
+    // of the equalities below is 0 === 0.
+    expect(stats.sessionCount).toBeGreaterThan(0);
+    expect(stats.totalOutputTokens).toBeGreaterThan(0);
+    expect(stats.totalSubagentOutputTokens).toBeGreaterThan(0);
+    expect(stats.totalOutputTokens).not.toBe(stats.totalSubagentOutputTokens); // a swap is detectable
+
+    const html = renderToStaticMarkup(
+      <ProjectHeadline project={payload.project} now={now} loading={false} onRefresh={() => {}} />
+    );
+    const figures = figuresIn(html);
+    // Document order: project · sessions · output tokens. Read POSITIONALLY, which is what
+    // catches the swap a set-membership check would pass.
+    expect(figures.map((f) => f.label)).toEqual(['Project', 'Sessions · all time', 'Output tokens · all time']);
+    expect(figures[0]!.value).toBe(payload.project.id);
+    expect(asNumber(figures[1]!.value)).toBe(stats.sessionCount);
+    expect(asNumber(figures[2]!.value)).toBe(stats.totalOutputTokens);
+    // The sub-line under the largest figure is the subagent split of that same figure — one
+    // population, stated twice, so a reader can see the share is of what is above it.
+    expect(numbersIn(figures[2]!.sub)).toEqual([
+      stats.totalSubagentOutputTokens,
+      Math.round((stats.totalSubagentOutputTokens / stats.totalOutputTokens) * 100),
+    ]);
+    // Last activity is the visible relative string, reversed with this file's own formatter.
+    expect(stats.lastActivityAt).not.toBeNull();
+    expect(figures[1]!.sub).toBe(`last activity ${expectedRelative(stats.lastActivityAt, now)}`);
+    // The root is shown, home-collapsed, so two same-named projects under different roots are
+    // distinguishable — the id alone does not identify a project on this screen.
+    expect(figures[0]!.sub.replace(/^~/, '')).toBe(
+      payload.project.root.replace(/^\/(?:Users|home)\/[^/]+/, '')
+    );
+  });
+
+  test('MUTATION GATE: changing one stat changes the figure rendered', async () => {
+    const { payload, now } = await projectPayload('project-mutation');
+    const original = payload.project.stats.totalOutputTokens;
+    const mutated: ProjectDetail = {
+      ...payload,
+      project: { ...payload.project, stats: { ...payload.project.stats, totalOutputTokens: original + 61_197 } },
+    };
+    const figureAt = (d: ProjectDetail) =>
+      asNumber(
+        figuresIn(
+          renderToStaticMarkup(<ProjectHeadline project={d.project} now={now} loading={false} onRefresh={() => {}} />)
+        )[2]!.value
+      );
+    expect(figureAt(payload)).toBe(original);
+    expect(figureAt(mutated)).toBe(original + 61_197);
+  });
+
+  // THE PROBE'S THREE STATES AT THE PIXEL. `readable: false` is the state this PR added to
+  // projectEmptyState — the 10 s bound firing on a 34 GB tree — and it is worth nothing if
+  // the view draws it the same as a probe that finished and matched nothing.
+  test('a probe that was cut off never renders as a completed empty state', async () => {
+    const { payload } = await projectPayload('project-probe');
+    // The real fixture probe RAN — small tmp tree, well inside the bound — so the
+    // could-not-look strings below are absent from a genuine completed run, not merely from
+    // a hand-written object.
+    expect(payload.empty.readable).toBeUndefined();
+    expect(payload.empty.found).toBe(false);
+
+    const completed = textOf(renderToStaticMarkup(<ProjectStageProbe empty={payload.empty} />));
+    expect(completed).toContain('ran to completion and matched nothing');
+    expect(completed).toContain(payload.empty.probe); // the argv a reader can re-run
+    expect(completed).not.toContain('could not look at all of it');
+
+    const cutOff = textOf(
+      renderToStaticMarkup(
+        <ProjectStageProbe
+          empty={{
+            ...payload.empty,
+            readable: false,
+            reason: 'grep did not finish within 10000 ms and was killed — the tree was NOT fully searched.',
+          }}
+        />
+      )
+    );
+    expect(cutOff).toContain('could not look at all of it');
+    expect(cutOff).toContain('did not finish within 10000 ms'); // the reason reaches the screen
+    expect(cutOff).toContain('not the same as none existing');
+    expect(cutOff).not.toContain('ran to completion');
+
+    // And the third state: a marker found in the part that WAS searched is neither of the
+    // above — it is a partial yes, and says so.
+    const partial = textOf(
+      renderToStaticMarkup(
+        <ProjectStageProbe empty={{ ...payload.empty, found: true, readable: false, reason: 'stopped early' }} />
+      )
+    );
+    expect(partial).toContain('the count below it is simply incomplete');
+    expect(partial).not.toContain('not the same as none existing');
+  });
+
+  test('an absent event log states what would write it, and is never rendered as zero events', async () => {
+    const { payload } = await projectPayload('project-no-events');
+    expect(payload.project.events.found).toBe(false); // premise: ~/.ashcroft/ does not exist
+    const text = textOf(renderToStaticMarkup(<ProjectEvents events={payload.project.events} />));
+    expect(text).toContain('no event log');
+    expect(text).toContain(payload.project.events.path); // where it would appear
+    expect(text).toContain('NOT that both ran clean');
+    expect(text).not.toContain('0 lines');
+  });
+
+  test('the event rows reverse to the payload, and unparseable lines are counted not dropped', async () => {
+    const { payload } = await projectPayload('project-events', [
+      JSON.stringify({ event: 'claim.would_block', claim: 'c-one' }),
+      JSON.stringify({ event: 'claim.would_block', claim: 'c-two' }),
+      JSON.stringify({ event: 'budget.block', reason: 'stall ceiling 999999 exceeded' }),
+      '{ this line is not json',
+      JSON.stringify({ event: 'session.start' }),
+    ]);
+    const events = payload.project.events;
+    expect(events.found).toBe(true); // premise: the .warroom.yml redirect took effect
+    expect(events.totalLines).toBe(5);
+    expect(events.unparseableLines).toBe(1);
+
+    const html = renderToStaticMarkup(<ProjectEvents events={events} />);
+    const rows = bodyRows(html);
+    // Every event kind in the payload has exactly one row, and no row exists that the
+    // payload does not carry — a dropped kind and an invented one both fail here.
+    expect(rows.map((cells) => cells[0])).toEqual(
+      expect.arrayContaining(Object.keys(events.byEvent))
+    );
+    expect(rows).toHaveLength(Object.keys(events.byEvent).length);
+    for (const [event, count] of Object.entries(events.byEvent)) {
+      const row = rows.find((cells) => cells[0] === event);
+      expect(row).toBeDefined();
+      expect(asNumber(row![1]!)).toBe(count);
+    }
+
+    const text = textOf(html);
+    expect(text).toContain(`${events.totalLines} lines`);
+    expect(text).toContain(`${events.unparseableLines} unparseable`);
+    // The budget-block split, and the word that keeps a fixture's own block out of the real
+    // column: this reason cites a ceiling nothing is configured with, so it is synthetic.
+    expect(events.budgetBlock.synthetic + events.budgetBlock.unknown).toBe(1);
+    expect(events.budgetBlock.real).toBe(0);
+    expect(text).toContain('0 real');
+  });
+
+  test('the pending state names what is running rather than showing a bare spinner', () => {
+    const text = textOf(
+      renderToStaticMarkup(
+        <ProjectView detail={null} loading={true} error={null} now={Date.now()} onRefresh={() => {}} onBack={() => {}} />
+      )
+    );
+    expect(text).toContain('recursive');
+    expect(text).toContain('bounded at ten seconds');
+  });
+
+  test('a project that vanished renders the error, not an empty project', () => {
+    const text = textOf(
+      renderToStaticMarkup(
+        <ProjectView
+          detail={null}
+          loading={false}
+          error='GET /api/project/gone failed: 404 Not Found'
+          now={Date.now()}
+          onRefresh={() => {}}
+          onBack={() => {}}
+        />
+      )
+    );
+    expect(text).toContain('404 Not Found');
+    expect(text).toContain('could not be read');
+    expect(text).not.toContain('Run log');
+  });
+
+  // The route itself: an unknown id is a 404 with the id in it, not a 200 carrying an empty
+  // project — the view above renders whichever of the two arrives.
+  test('/api/project/:id 404s on an unknown id rather than inventing a project', async () => {
+    const { app } = buildFixtureState('project-404');
+    const res = await app.fetch(new Request('http://127.0.0.1/api/project/no-such-project'));
+    expect(res.status).toBe(404);
+    expect(await res.text()).toContain('no-such-project');
+  });
+});
+
+// ── render parity — Inbox ────────────────────────────────────────────────────────────
+//
+// THE VACUITY TRAP THIS BLOCK IS BUILT AROUND: the view's footnote ends with the sentence
+// "A row reading could not look is neither", so `textOf(html)).toContain('could not look')`
+// passes on EVERY render including the all-clear. PR4 shipped exactly that assertion in the
+// Conflicts block and it took a mirror assertion to expose it. So the row states here are
+// read out of the table body with bodyRows(), never out of the page text.
+describe('render parity — Inbox', () => {
+  /** Real inboxEmptyState output for a fake home dir — three rows, three states. */
+  function inboxRows(prefix: string): InboxProject[] {
+    const home = mkTmpDir(`mc-views-inbox-${prefix}-`);
+    cleanupDirs.push(home);
+
+    // waiting: a real message file in a real directory
+    fs.mkdirSync(path.join(home, '.ashcroft', 'messages'), { recursive: true });
+    fs.writeFileSync(path.join(home, '.ashcroft', 'messages', 'approval-1.json'), '{}');
+    // could not look: a plain file where the directory belongs → ENOTDIR
+    fs.mkdirSync(path.join(home, '.brackish'), { recursive: true });
+    fs.writeFileSync(path.join(home, '.brackish', 'messages'), 'not a directory\n');
+    // none: nothing at all, which for this feature is the honest empty answer
+
+    return ['ashcroft', 'brackish', 'tessellate'].map((id) => ({
+      project: id,
+      ...inboxEmptyState({ id } as Project, home),
+    }));
+  }
+
+  test('one row per discovered project, and the headline counts the same array', async () => {
+    const { app } = buildFixtureState('inbox-route');
+    const res = await app.fetch(new Request('http://127.0.0.1/api/inbox'));
+    expect(res.status).toBe(200);
+    const payload = (await res.json()) as InboxPayload;
+    expect(payload.projects.length).toBeGreaterThan(0); // premise: something was discovered
+
+    const totals = inboxTotals(payload.projects);
+    expect(totals.projects).toBe(payload.projects.length);
+
+    const rows = bodyRows(renderToStaticMarkup(<InboxTable projects={payload.projects} />));
+    expect(rows).toHaveLength(payload.projects.length); // nothing silently dropped
+    expect(rows.map((cells) => cells[0]).sort()).toEqual(payload.projects.map((p) => p.project).sort());
+
+    const headline = numbersIn(
+      renderToStaticMarkup(<InboxHeadline totals={totals} loading={false} onRefresh={() => {}} />)
+    );
+    // Numerator then denominator, and they come from the one array counted in one pass.
+    expect(headline).toEqual([totals.withMessages, totals.projects]);
+  });
+
+  test('a directory that could not be read is not counted as an empty inbox', () => {
+    const projects = inboxRows('unreadable');
+    const totals = inboxTotals(projects);
+    // Premises: all three states are really present, so nothing below is vacuous.
+    expect(totals.projects).toBe(3);
+    expect(totals.withMessages).toBe(1);
+    expect(totals.unreadable).toBe(1);
+
+    const html = renderToStaticMarkup(<InboxView projects={projects} loading={false} error={null} onRefresh={() => {}} />);
+    // ROW CELLS, not page text — see the block comment above.
+    const messagesCells = bodyRows(html).map((cells) => cells[1]);
+    expect(messagesCells.filter((c) => c === 'could not look')).toHaveLength(1);
+    expect(messagesCells.filter((c) => c === 'waiting')).toHaveLength(1);
+    expect(messagesCells.filter((c) => c === 'none')).toHaveLength(1);
+
+    const text = textOf(html);
+    expect(text).toContain('1 could not be read'); // the headline says so too
+    expect(text).not.toContain('measured all-clear'); // and no all-clear is printed over it
+
+    // THE MIRROR. With the unreadable project dropped, no row reads could-not-look — which is
+    // what proves the assertion above is reading the row and not the footnote.
+    const cleanCells = bodyRows(
+      renderToStaticMarkup(
+        <InboxView projects={projects.filter((p) => p.readable !== false)} loading={false} error={null} onRefresh={() => {}} />
+      )
+    ).map((cells) => cells[1]);
+    expect(cleanCells).not.toContain('could not look');
+  });
+
+  test('the all-clear is printed only when every directory was actually read', () => {
+    const projects = inboxRows('allclear').filter((p) => p.readable !== false && !p.found);
+    expect(projects.length).toBeGreaterThan(0); // premise
+    expect(inboxTotals(projects)).toEqual({ projects: projects.length, withMessages: 0, unreadable: 0 });
+
+    const text = textOf(
+      renderToStaticMarkup(<InboxView projects={projects} loading={false} error={null} onRefresh={() => {}} />)
+    );
+    expect(text).toContain('measured all-clear');
+    expect(text).toContain('Nothing in this repository writes into those directories yet');
+    expect(text).not.toContain('Nothing was checked');
+  });
+
+  // ZERO PROJECTS IS NOT ZERO MESSAGES. The same distinction the Conflicts sweep draws, in
+  // the view where it is likeliest to be reached: one mis-set MC_PROJECT_ROOTS away.
+  test('no projects discovered renders as nothing-checked, never as an empty inbox', () => {
+    expect(inboxTotals([]).projects).toBe(0); // premise
+    const text = textOf(renderToStaticMarkup(<InboxView projects={[]} loading={false} error={null} onRefresh={() => {}} />));
+    expect(text).toContain('Nothing was checked');
+    expect(text).toContain('MC_PROJECT_ROOTS');
+    expect(text).not.toContain('measured all-clear');
+    expect(text).not.toContain('No project has a message waiting');
+  });
+
+  test('a project with a message waiting is called out, and the all-clear is withheld', () => {
+    const projects = inboxRows('waiting').filter((p) => p.readable !== false);
+    const totals = inboxTotals(projects);
+    expect(totals.withMessages).toBe(1); // premise
+    const html = renderToStaticMarkup(<InboxView projects={projects} loading={false} error={null} onRefresh={() => {}} />);
+    expect(numbersIn(renderToStaticMarkup(<InboxHeadline totals={totals} loading={false} onRefresh={() => {}} />))).toEqual([
+      totals.withMessages,
+      totals.projects,
+    ]);
+    const text = textOf(html);
+    expect(text).not.toContain('measured all-clear');
+    expect(text).not.toContain('Nothing was checked');
+    // The probe column carries the literal glob for the project that has one.
+    const waitingRow = bodyRows(html).find((cells) => cells[1] === 'waiting')!;
+    expect(waitingRow).toBeDefined();
+    expect(waitingRow[2]).toBe(projects.find((p) => p.found)!.probe);
+  });
+});
+
+// ── the app bar's freshness, and the registry field that selects it (#39) ────────────
+//
+// D4 split "when the data arrived" from "when the attempt gave up" and NOTHING referenced
+// Freshness, FetchedBadge, loadedAt or `stream:` in any test — so flipping `stream: false` to
+// `true` on Belief restored the original defect (a live-stream age displayed above figures
+// fetched once at mount) with the suite green.
+//
+// A DELIBERATE DECISION ABOUT DOM: these tests add no jsdom/happy-dom dependency. Instead
+// App.tsx exports the registry and the badge, and the header's inline ternary became the
+// named `badgeFor`, so the whole chain is reachable from renderToStaticMarkup. What that
+// leaves unpinned is one line of JSX — `{badgeFor(active, …)}` — which no test executes
+// through the header itself; both branches it can produce, and the field it branches on, are
+// pinned below. A DOM dependency would close that last line at the cost of a test runtime
+// that renders differently from production; this seemed the wrong trade for one expression.
+describe('the app bar says where the figures on screen came from', () => {
+  const NOW = Date.parse('2026-08-14T12:00:00Z');
+  const EMPTY_STREAM: StreamState = { fleet: null, sessions: null, connection: 'connecting', lastEventAt: null };
+
+  function renderEntry(view: ViewDef, stream: StreamState): string {
+    return renderToStaticMarkup(
+      <>
+        {view.render({
+          stream,
+          now: NOW, // FIXED, so a relative timestamp can never be the difference detected below
+          onFreshness: () => {},
+          openProject: () => {},
+          projectId: 'ashcroft',
+          openTab: () => {},
+        })}
+      </>
+    );
+  }
+
+  /**
+   * Whether a view's own output actually moves when the stream slice does — measured by
+   * rendering it twice, NOT read off the `stream:` field it is being compared against. That
+   * independence is the whole point: the flag is config, this is behaviour.
+   */
+  async function respondsToStream(): Promise<Map<string, boolean>> {
+    const { app } = buildFixtureState('app-bar');
+    const fleet = (await (await app.fetch(new Request('http://127.0.0.1/api/fleet'))).json()) as FleetSummary;
+    const sessions = (await (await app.fetch(new Request('http://127.0.0.1/api/sessions'))).json()) as SessionsSlice;
+    expect(fleet.projects.length).toBeGreaterThan(0); // premise: the two slices differ from null
+    expect(sessions.sessions.length).toBeGreaterThan(0);
+    const full: StreamState = { fleet, sessions, connection: 'live', lastEventAt: NOW - 6_000 };
+
+    return new Map(VIEWS.map((v) => [v.id, renderEntry(v, EMPTY_STREAM) !== renderEntry(v, full)]));
+  }
+
+  test('`stream:` is true for exactly the views whose output changes when the stream does', async () => {
+    const responds = await respondsToStream();
+    // NON-VACUITY: the biconditional below is satisfiable by "nothing ever responds", so both
+    // sides must actually occur in this run.
+    expect([...responds.values()].filter(Boolean).length).toBeGreaterThan(0);
+    expect([...responds.values()].filter((r) => !r).length).toBeGreaterThan(0);
+
+    for (const view of VIEWS) {
+      expect({ id: view.id, stream: view.stream }).toEqual({ id: view.id, stream: responds.get(view.id)! });
+    }
+  });
+
+  test('the badge follows that field: a fetched view never shows the stream’s age', async () => {
+    const responds = await respondsToStream();
+    const freshness: Freshness = { loadedAt: NOW - 90_000, failedAt: null, loading: false };
+    const stream: StreamState = { fleet: null, sessions: null, connection: 'live', lastEventAt: NOW - 6_000 };
+
+    for (const view of VIEWS) {
+      const text = textOf(renderToStaticMarkup(<>{badgeFor(view, { stream, freshness, now: NOW })}</>));
+      if (responds.get(view.id)) {
+        // A stream view reports the SUBSCRIPTION's age — 6s — because that is what its
+        // figures are.
+        expect(text).toBe(`live · updated ${expectedRelative(stream.lastEventAt, NOW)}`);
+      } else {
+        // A fetched view reports ITS OWN fetch's age — 2m — and must never claim the
+        // stream's, which is the exact wording #39 was filed about.
+        expect(text).toBe(`fetched · ${expectedRelative(freshness.loadedAt, NOW)}`);
+        expect(text).not.toContain('updated');
+        expect(text).not.toContain('live');
+      }
+    }
+  });
+
+  test('a failed fetch never reads as a fetch', () => {
+    const states: { name: string; freshness: Freshness | null }[] = [
+      { name: 'first load', freshness: { loadedAt: null, failedAt: null, loading: true } },
+      { name: 'failed, no data', freshness: { loadedAt: null, failedAt: NOW - 5_000, loading: false } },
+      { name: 'fetched', freshness: { loadedAt: NOW - 5_000, failedAt: null, loading: false } },
+      { name: 'stale after a failed refresh', freshness: { loadedAt: NOW - 300_000, failedAt: NOW - 5_000, loading: false } },
+      { name: 'refreshing', freshness: { loadedAt: NOW - 300_000, failedAt: null, loading: true } },
+    ];
+    const rendered = states.map((s) => ({
+      name: s.name,
+      text: textOf(renderToStaticMarkup(<FetchedBadge freshness={s.freshness} now={NOW} />)),
+    }));
+    const by = (name: string) => rendered.find((r) => r.name === name)!.text;
+
+    // THE DEFECT: `loadedAt` null with `loading` false rendered the resting word "fetched"
+    // and no timestamp, directly above the panel explaining the failure.
+    expect(by('failed, no data')).toBe(`fetch failed · ${expectedRelative(NOW - 5_000, NOW)}`);
+    expect(by('failed, no data')).not.toContain('fetched');
+
+    expect(by('fetched')).toBe(`fetched · ${expectedRelative(NOW - 5_000, NOW)}`);
+    expect(by('stale after a failed refresh')).toContain('stale · refresh failed');
+    expect(by('stale after a failed refresh')).toContain(expectedRelative(NOW - 300_000, NOW));
+    expect(by('first load')).toBe('loading');
+    expect(by('refreshing')).toContain('refreshing');
+
+    // FIVE INPUTS, FIVE DISTINCT READINGS. Any collapse — the state machine folding two of
+    // these together — fails here rather than shipping a badge that is right four times out
+    // of five.
+    expect(new Set(rendered.map((r) => r.text)).size).toBe(rendered.length);
+
+    // And with nothing reported at all, the bar does not assert a fetch happened.
+    expect(textOf(renderToStaticMarkup(<FetchedBadge freshness={null} now={NOW} />))).toBe('loading');
+  });
+});
+
+// ── one headline band, and every figure in it says where it came from (#40) ──────────
+//
+// D7/D8. Belief and Conflicts hand-rolled the same three elements HeadlineBar renders, with
+// `py-3` and no divider against Fleet's `py-1` — ~8 px taller, so switching tabs moved
+// everything below the bar and read as a page reload. And none of the new figures carried a
+// provenance `title`, while every Fleet figure did, so the largest numbers on three of five
+// screens were the only ones a reader could not ask "counted how, over what?" of.
+//
+// Neither is checkable by rendering one view: both are statements about all of them.
+describe('every view uses the one headline band, and titles its figures', () => {
+  const NOW = Date.parse('2026-08-14T12:00:00Z');
+
+  /** HeadlineBar's own opening tag, taken from the component — never written out here. */
+  const BAND_TAG = /^<div[^>]*>/.exec(
+    renderToStaticMarkup(
+      <HeadlineBar>
+        <span />
+      </HeadlineBar>
+    )
+  )![0];
+
+  async function everyViewWithAFigure(): Promise<{ view: string; html: string }[]> {
+    const { app, now } = buildFixtureState('headline-band');
+    const json = async (url: string) => (await app.fetch(new Request(`http://127.0.0.1${url}`))).json();
+    const fleet = (await json('/api/fleet')) as FleetSummary;
+    const project = (await json('/api/project/ashcroft')) as ProjectDetail;
+    const inbox = (await json('/api/inbox')) as InboxPayload;
+    const conflicts = ((await json('/api/conflicts')) as { reports: ConflictReport[] }).reports;
+    const belief = beliefPayload([]);
+    // Premises: every payload below is a real one with something in it, so no band is empty.
+    expect(fleet.projects.length).toBeGreaterThan(0);
+    expect(inbox.projects.length).toBeGreaterThan(0);
+    expect(conflicts.length).toBeGreaterThan(0);
+
+    return [
+      { view: 'fleet', html: renderToStaticMarkup(<FleetHeadline fleet={fleet} />) },
+      {
+        view: 'project',
+        html: renderToStaticMarkup(
+          <ProjectHeadline project={project.project} now={now} loading={false} onRefresh={() => {}} />
+        ),
+      },
+      {
+        view: 'inbox',
+        html: renderToStaticMarkup(
+          <InboxHeadline totals={inboxTotals(inbox.projects)} loading={false} onRefresh={() => {}} />
+        ),
+      },
+      {
+        view: 'belief',
+        html: renderToStaticMarkup(
+          <BeliefView belief={belief} loading={false} error={null} now={NOW} onRefresh={() => {}} />
+        ),
+      },
+      {
+        view: 'conflicts',
+        html: renderToStaticMarkup(
+          <ConflictsView reports={conflicts} loading={false} error={null} onRefresh={() => {}} />
+        ),
+      },
+    ];
+  }
+
+  test('the band is HeadlineBar on every view — no view rolls its own', async () => {
+    const views = await everyViewWithAFigure();
+    expect(views.length).toBeGreaterThan(1); // the claim is about more than one screen
+
+    for (const { view, html } of views) {
+      const bands = html.split(BAND_TAG).length - 1;
+      // EXACTLY ONE. Zero means a hand-rolled band; two means a second band was added beside
+      // it, which is the same 8 px problem with an extra step.
+      expect({ view, bands }).toEqual({ view, bands: 1 });
+      // …and the figures are INSIDE it. A hand-rolled row above a real HeadlineBar would
+      // satisfy the count above and still shift the page.
+      expect({ view, figureBeforeBand: html.indexOf('<div class="label">') < html.indexOf(BAND_TAG) }).toEqual({
+        view,
+        figureBeforeBand: false,
+      });
+    }
+  });
+
+  test('every headline figure carries a provenance title that is not its own label', async () => {
+    const views = await everyViewWithAFigure();
+    let checked = 0;
+
+    for (const { view, html } of views) {
+      const figures = figuresIn(html);
+      expect({ view, figures: figures.length > 0 }).toEqual({ view, figures: true });
+      for (const figure of figures) {
+        // NOT "has a title" — a title reading "Sessions" is a tooltip that answers nothing.
+        // What a reader needs is the population and the method, which does not fit in a
+        // label-length string.
+        expect({ view, label: figure.label, titled: figure.title.length >= 40 }).toEqual({
+          view,
+          label: figure.label,
+          titled: true,
+        });
+        expect(figure.title).not.toBe(figure.label);
+        checked++;
+      }
+    }
+    // NON-VACUITY: an empty `figures` array on every view would pass the loop silently.
+    expect(checked).toBeGreaterThanOrEqual(views.length);
+  });
+
+  // D9's other half, and the reason the wording matters: `ledgerIndex.present` is a BUILT
+  // index — .claude/ledger/index.json — not "has a ledger". A project can hold claims in
+  // markdown and have never run `ledger.mjs index`, and the old sub-line counted it as
+  // having none.
+  test('the ledger-index figure is worded as the built index it counts', () => {
+    const text = textOf(
+      renderToStaticMarkup(
+        <BeliefView belief={beliefPayload([])} loading={false} error={null} now={NOW} onRefresh={() => {}} />
+      )
+    );
+    expect(text).toContain('projects have a built ledger index');
+    expect(text).not.toContain('projects carry a claim ledger');
   });
 });
 
