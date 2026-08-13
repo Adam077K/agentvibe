@@ -23,7 +23,34 @@ describe('modalInScopeGeneration', () => {
         row('b', 'a86770a9', 'in scope'),
         row('c', '6eb0f729', 'in scope'),
       ])
-    ).toEqual({ kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 3 });
+    ).toEqual({ kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 3, driftedLaunchers: 1 });
+  });
+
+  // THE NUMERATOR AND THE DENOMINATOR COME OUT OF ONE ARRAY, which is why they live in one
+  // return value. `driftedLaunchers` used to be computed in the view over PROJECT rows while
+  // `inScopeLaunchers` counted launchers, and the sentence "N of M in-scope launchers" put
+  // one on each side of it. On this machine that read "2 of 11" while four in-scope
+  // launchers were genuinely off-modal: a launcher with no discovered project produces no
+  // row and could never be counted, and a case-differing directory name lost another.
+  test('counts drifted launchers over launchers, including ones no project matches', () => {
+    const result = modalInScopeGeneration([
+      row('quarry', 'a86770a9', 'in scope'),
+      row('sundial', 'a86770a9', 'in scope'),
+      row('lodestar', 'c146d297', 'in scope'),
+      row('orphaned', 'b0000001', 'in scope'),
+      row('brackish', '30e0c7aa', 'excluded'),
+    ]);
+    expect(result).toEqual({
+      kind: 'modal',
+      generation: 'a86770a9',
+      inScopeLaunchers: 4, // excluded is out of BOTH halves
+      driftedLaunchers: 2, // lodestar and orphaned
+    });
+    if (result.kind === 'modal') {
+      // The invariant the CRITICAL violated: a part cannot exceed its whole, and it only
+      // cannot when both are drawn from the same population.
+      expect(result.driftedLaunchers).toBeLessThanOrEqual(result.inScopeLaunchers);
+    }
   });
 
   test('ignores excluded launchers entirely — they are not expected to converge', () => {
@@ -37,7 +64,7 @@ describe('modalInScopeGeneration', () => {
         row('a', 'a86770a9', 'in scope'),
         row('b', 'a86770a9', 'in scope'),
       ])
-    ).toEqual({ kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 2 });
+    ).toEqual({ kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 2, driftedLaunchers: 0 });
   });
 
   // THE THREE NO-COMPARISON CASES ARE DISTINCT VALUES, not one shared null. They used to
@@ -79,6 +106,7 @@ describe('modalInScopeGeneration', () => {
       kind: 'modal',
       generation: 'a86770a9',
       inScopeLaunchers: 4,
+      driftedLaunchers: 1, // acme, on c146d297
     });
   });
 });

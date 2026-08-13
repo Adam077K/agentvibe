@@ -117,15 +117,19 @@ export function FleetTable({ fleet, now }: { fleet: FleetSummary | null; now: nu
         {rows.map((row, i) => (
           <tr
             key={row.id}
-            // Zebra, not hairlines. A 1px separator at 1.17:1 across a 1600px eight-column
-            // row is not something an eye can track; alternating fill is.
+            // Zebra, not hairlines. Contrast RATIO is the wrong metric for the comparison —
+            // it is defined for text legibility, and a 1px rule and a full-row fill are not
+            // comparable on it (measured: the separator is 1.438:1, the zebra fill 1.039:1,
+            // and the fill is the one you can actually track). What carries a row across a
+            // 1600px, eight-column table is AREA, not edge contrast.
             //
-            // The agent-active/dormant break is carried by SPACE. It had a rule too, at
-            // 1.42:1 — invisible, and therefore a line that claimed to divide and did not.
-            // The padding is what a reader actually perceives, so the padding is what stayed.
-            className={`transition-colors even:bg-row-alt hover:bg-raised ${
-              row.agentActive ? '' : 'text-muted'
-            } ${i === firstDormant && firstDormant > 0 ? '[&>td]:pt-5' : ''}`}
+            // The agent-active/dormant break is carried by SPACE, and that row is never
+            // striped. Under `even:` the break landed on the zebra parity or not depending
+            // on how many projects happened to be active, so the same divider read as a gap
+            // or as one abnormally tall band, and flipped between them hourly.
+            className={`transition-colors hover:bg-raised ${row.agentActive ? '' : 'text-muted'} ${
+              i === firstDormant && firstDormant > 0 ? '[&>td]:pt-5' : i % 2 === 1 ? 'bg-row-alt' : ''
+            }`}
           >
             <Td className="pr-0 pl-4">
               <StatusDot
@@ -217,7 +221,6 @@ export function FleetHeadline({ fleet }: { fleet: FleetSummary | null }) {
   }
 
   const active = fleet.projects.filter((p) => p.agentActive).length;
-  const drifted = fleet.projects.filter((p) => p.launcherDrift === true).length;
   const budget = fleet.budget;
   const subagentShare = formatShare(budget.subagent_output_tokens, budget.output_tokens);
 
@@ -236,14 +239,19 @@ export function FleetHeadline({ fleet }: { fleet: FleetSummary | null }) {
             ? `${formatCount(budget.subagent_output_tokens)} subagent (${subagentShare}) · every project on this account`
             : `no output tokens in the last ${budget.window_hours}h · every project on this account`
         }
-        title={`${formatCount(budget.filesScanned)} transcripts scanned, ${formatCount(budget.bytesRead)} bytes read for this figure`}
+        // NOT the scan diagnostics. `filesScanned` and `bytesRead` are excluded from the
+        // slice hash (server/state.ts) precisely because they move without any displayed
+        // figure moving — so rendering them meant the one thing on screen guaranteed to be
+        // stale. What this figure IS, and where it comes from, does not go stale.
+        title={`Output tokens across every project's transcripts in the rolling ${budget.window_hours}-hour window, from scripts/lib/usage.js — the same figure the budget guard caps`}
       />
       <Figure
         label="Projects"
         value={formatCount(fleet.projects.length)}
         sub={`${formatCount(active)} agent-active · ${formatCount(fleet.projects.length - active)} dormant`}
+        title="Every git repository discovered directly under the configured roots"
       />
-      <GenerationFigure modal={fleet.modalGeneration} drifted={drifted} />
+      <GenerationFigure modal={fleet.modalGeneration} />
     </div>
   );
 }
@@ -261,28 +269,34 @@ export function FleetHeadline({ fleet }: { fleet: FleetSummary | null }) {
  * an explicitly unavailable figure naming what would fill it, and the convergence sentence
  * exists in one branch only: `kind === 'modal'`.
  */
-export function GenerationFigure({ modal, drifted }: { modal: ModalGeneration; drifted: number }) {
+export function GenerationFigure({ modal }: { modal: ModalGeneration }) {
   // The FIGURE IS THE DRIFT COUNT, not the generation hash. Amber previously landed on the
   // modal generation — the healthy target every launcher is supposed to match — while the
   // number that actually needs attention was a small word further down each drifted row.
   // The colour of alarm now sits on the count of things wrong, and the target it is measured
   // against moves to the caption, where a hash belongs.
+  //
+  // THIS COMPONENT TAKES NO SECOND COUNT, deliberately. It used to accept a `drifted` prop
+  // the caller derived from the PROJECT rows, and rendered it as the numerator of a sentence
+  // whose denominator counted LAUNCHERS — reading "2 of 11" on a machine where four in-scope
+  // launchers were off-modal. Both numbers now arrive together inside `modal`, from one pass
+  // over one array, so there is no second population within reach of this function.
   const label = 'Launcher drift';
 
   if (modal.kind === 'modal') {
+    const { driftedLaunchers, inScopeLaunchers, generation } = modal;
+    const launcherWord = `in-scope launcher${inScopeLaunchers === 1 ? '' : 's'}`;
     return (
       <Figure
         label={label}
-        value={formatCount(drifted)}
+        value={formatCount(driftedLaunchers)}
         sub={
-          drifted === 0
-            ? `all ${formatCount(modal.inScopeLaunchers)} in-scope launchers on ${modal.generation}`
-            : `of ${formatCount(modal.inScopeLaunchers)} in-scope launcher${
-                modal.inScopeLaunchers === 1 ? '' : 's'
-              }, off ${modal.generation}`
+          driftedLaunchers === 0
+            ? `all ${formatCount(inScopeLaunchers)} ${launcherWord} on ${generation}`
+            : `of ${formatCount(inScopeLaunchers)} ${launcherWord}, off ${generation}`
         }
-        tone={drifted > 0 ? 'warn' : 'default'}
-        title={`Launchers whose generation differs from ${modal.generation}, the most common among in-scope launchers`}
+        tone={driftedLaunchers > 0 ? 'warn' : 'default'}
+        title={`In-scope launchers whose generation differs from ${generation}, the most common among them. Counted over launchers, not over the projects below — a launcher with no discovered project still needs updating, and is still counted here.`}
       />
     );
   }
