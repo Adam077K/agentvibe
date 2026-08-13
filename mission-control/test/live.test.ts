@@ -42,10 +42,11 @@ describe('GET /api/fleet against the real roots', () => {
       const payload = (await (await liveApp().fetch(new Request('http://127.0.0.1/api/fleet'))).json()) as FleetSummary;
       const others = payload.projects.filter((p) => p.id.toLowerCase() !== 'agentvibe');
       const withData = others.filter((p) => p.sessionCount > 0 || p.worktreeCount > 0);
+      const withSessions = others.filter((p) => p.sessionCount > 0);
 
       // eslint-disable-next-line no-console
       console.log(
-        `  [fleet] ${payload.projects.length} projects discovered; ${withData.length} non-agentvibe with data: ${withData
+        `  [fleet] ${payload.projects.length} projects discovered; ${withData.length} non-agentvibe with data (${withSessions.length} with sessions): ${withData
           .map((p) => `${p.id}(${p.sessionCount}s/${p.worktreeCount}w)`)
           .join(', ')}`
       );
@@ -55,6 +56,18 @@ describe('GET /api/fleet against the real roots', () => {
       // directory turns this suite RED, which is the whole point.
       expect(payload.projects.length).toBeGreaterThan(0);
       expect(withData.length).toBeGreaterThanOrEqual(3);
+      // THE CORPUS MUST BE LOAD-BEARING IN A TEST THE CORPUS GATES. `withData` is an `||`,
+      // and `worktreeCount` comes from git, not from transcripts — so under a decoy corpus
+      // (one unrelated transcript, enough to open the gate) this test passed while printing
+      // every project at zero sessions: Beamix(0s/65w), etsyc(0s/62w), evalove(0s/104w).
+      // The gate certified the corpus and the assertion did not need it. The `||` above is
+      // kept because the test's name promises "session OR worktree data" and that reading is
+      // honest; this line is what the gate is actually standing behind.
+      //
+      // One, not three: one is the whole claim — that the corpus reached the figures. A
+      // higher bar would encode this machine's particular project mix (6 of 10 today) into
+      // the pass condition without making the guarantee any stronger.
+      expect(withSessions.length).toBeGreaterThanOrEqual(1);
       // Discovered, never configured: the fleet must not be a list someone typed.
       for (const project of payload.projects) {
         expect(fs.existsSync(path.join(project.root, '.git'))).toBe(true);

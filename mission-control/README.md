@@ -150,10 +150,15 @@ claiming it existed.
 
 ### Machine-gated tests
 
-`test/gate.ts` is the one implementation of "can this machine answer", imported by
-`live.test.ts`, `views.test.tsx` and `crosscheck.test.ts`. It fires on exactly one condition —
-the corpus, resolved the way the code under test resolves it, holds no transcript — and prints
+`test/gate.ts` holds two things, and they are not the same thing. `machineGate()` is the one
+implementation of "can this machine answer" — used by `live.test.ts` and `views.test.tsx`, and
+firing on exactly one condition: the corpus, resolved the way the code under test resolves it,
+holds no transcript. `notVerified()` is only the printer, and emits
 `… NOT VERIFIED — <reason>. Nothing was compared; this is not a pass on the merits.`
+
+`crosscheck.test.ts` imports the printer alone. Its subject is `~/bin`, not the corpus, so it
+has its own predicate and should — one wording for "nothing was compared" is worth sharing; one
+predicate across two different subjects would be the same conflation this section is about.
 
 It deliberately does **not** consult discovery. An earlier version skipped whenever discovery
 returned zero projects, which is the *result of the operation under test*, not a property of
