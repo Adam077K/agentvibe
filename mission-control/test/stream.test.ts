@@ -8,6 +8,7 @@
 import { describe, test, expect, afterAll } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { Hono } from 'hono';
 import { LiveState } from '../server/state.ts';
 import { runTicks, createStream } from '../server/routes/stream.ts';
 import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo } from './fixtures.ts';
@@ -154,7 +155,69 @@ describe('GET /events tick', () => {
   });
 });
 
-// ── the idle connection survives longer than the server's own reaper ─────────────────
+// ── a non-usage append moves no displayed number, and so moves no bytes ──────────────
+describe('scan diagnostics are not "change"', () => {
+  // Found in review. `budget.bytesRead` and `budget.filesScanned` were inside the fleet
+  // slice's hash, and they move whenever ANY byte is appended to ANY transcript — including
+  // a line carrying no usage record at all. So a write that changed no figure on screen
+  // pushed the entire 19-project payload. Traced: bytesRead 140 -> 320, everything else
+  // identical. server/state.ts's hashableFleet() now excludes them by explicit projection.
+  // Both cases mutate the transcript DURING one run, from inside the sleep the loop already
+  // awaits. Calling drive() twice would not test this at all: each call is a fresh
+  // connection with no previous hashes, so it re-pushes everything by design.
+  async function driveWithMutation(state: LiveState, ticks: number, mutate: () => void): Promise<Sent[]> {
+    const sent: Sent[] = [];
+    let mutated = false;
+    await runTicks(
+      state,
+      async (message) => {
+        sent.push(message);
+      },
+      () => true,
+      async () => {
+        if (mutated) return;
+        mutated = true;
+        mutate();
+      },
+      { maxTicks: ticks, sessionsTickMs: 0, fleetTickMs: 0 }
+    );
+    expect(mutated).toBe(true); // the mutation really ran, mid-connection
+    return sent;
+  }
+
+  function append(file: string, line: unknown) {
+    fs.appendFileSync(file, JSON.stringify(line) + '\n');
+    fs.utimesSync(file, new Date(), new Date());
+  }
+
+  test('appending a line with no usage record pushes nothing after the first tick', async () => {
+    const { state, file } = fixtureFleet('diagnostics');
+    const sent = await driveWithMutation(state, 3, () =>
+      append(file, { type: 'user', timestamp: new Date().toISOString(), message: { role: 'user', content: 'no usage here' } })
+    );
+    // Tick 1's two frames are the initial state. Ticks 2 and 3 see a file that grew on disk,
+    // and write nothing, because nothing a view displays changed.
+    expect(sent.map((s) => s.event)).toEqual(['sessions', 'fleet']);
+  });
+
+  test('but a usage-bearing line on the same file still pushes', async () => {
+    // The guard above must not be satisfiable by a hash that stopped noticing anything.
+    const { state, file } = fixtureFleet('diagnostics-positive');
+    const sent = await driveWithMutation(state, 3, () =>
+      append(file, {
+        type: 'assistant',
+        timestamp: new Date().toISOString(),
+        isSidechain: false,
+        message: { model: 'claude-opus-5', usage: { output_tokens: 11 } },
+      })
+    );
+    expect(sent.map((s) => s.event)).toEqual(['sessions', 'fleet', 'sessions', 'fleet']);
+    const last = JSON.parse(sent[2]!.data) as { sessions: { outputTokens: number }[] };
+    expect(last.sessions[0]!.outputTokens).toBe(511);
+  });
+});
+
+// ── the idle connection survives the server's reaper, and only /events opts out ──────
 describe('an idle SSE connection over a real socket', () => {
   // FOUND BY RUNNING IT, 2026-08-13. Bun.serve's default idleTimeout is 10 seconds, and a
   // quiet wire is exactly what this stream produces — so every real connection died with
@@ -163,12 +226,12 @@ describe('an idle SSE connection over a real socket', () => {
   // reconnected every ten seconds forever, re-pushing both slices and re-spawning the fleet
   // collector's subprocesses each time.
   //
-  // This test asserts the behaviour, not the config value. Asserting `idleTimeout === 0`
-  // would only prove the number is written down; it would not notice if Bun changed what
-  // that number means. So it binds a real socket, holds a genuinely silent stream open past
-  // the reaper's window, and reads afterwards.
+  // The first fix set `idleTimeout: 0` on the whole server, and this test set it here too —
+  // so it proved the value worked, not that the SHIPPED configuration does. The server now
+  // keeps Bun's default and `/events` alone opts out per request, so this serves with the
+  // DEFAULT and the opt-out has to carry the whole result.
   test(
-    'stays open with no bytes written for longer than the default 10s idle timeout',
+    'a silent stream survives past the default 10s reaper, with the server left at its default',
     async () => {
       const { state } = fixtureFleet('idle-socket');
       // Two ticks 13 seconds apart: tick 1 writes both slices, then the loop sits in its
@@ -179,7 +242,8 @@ describe('an idle SSE connection over a real socket', () => {
       const server = Bun.serve({
         port: 0, // ephemeral — never collides with a developer's running instance
         hostname: '127.0.0.1',
-        idleTimeout: 0, // the setting under test; server/index.ts sets the same one
+        // NO idleTimeout override. Bun's default (10s) is in force, exactly as in
+        // server/index.ts. Surviving below is the per-request opt-out doing its job.
         fetch: app.fetch,
       });
 
@@ -191,7 +255,7 @@ describe('an idle SSE connection over a real socket', () => {
         const first = await reader.read();
         expect(new TextDecoder().decode(first.value)).toContain('event: sessions');
 
-        // Under the 10s default this read rejects with ECONNRESET part-way through the
+        // Without the opt-out this read rejects with ECONNRESET part-way through the
         // silence. Surviving it, and then ending cleanly when the loop finishes, is the
         // whole assertion.
         let reaped: string | null = null;
@@ -210,4 +274,28 @@ describe('an idle SSE connection over a real socket', () => {
     },
     40_000
   );
+
+  // The opt-out has to be SCOPED. A server-wide `idleTimeout: 0` also let a finished
+  // `GET /api/health` hold its keep-alive socket open forever, and `/events` has no Origin
+  // check — so any page the user visits could open its per-origin connections and pin them.
+  test('only /events disables the reaper; other routes are untouched', async () => {
+    const { state } = fixtureFleet('scoping');
+    const app = new Hono();
+    app.get('/api/health', (c) => c.json({ ok: true }));
+    app.route('/', createStream(state, { maxTicks: 1, sessionsTickMs: 0, fleetTickMs: 600_000 }));
+
+    const calls: number[] = [];
+    const fakeServer = {
+      timeout: (_req: Request, seconds: number) => {
+        calls.push(seconds);
+      },
+    };
+
+    await app.fetch(new Request('http://127.0.0.1/api/health'), fakeServer);
+    expect(calls).toEqual([]); // the health route never touches the timeout
+
+    const events = await app.fetch(new Request('http://127.0.0.1/events'), fakeServer);
+    await events.text();
+    expect(calls).toEqual([0]); // exactly one route opts out, exactly once
+  });
 });

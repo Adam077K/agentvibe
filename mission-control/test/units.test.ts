@@ -5,7 +5,7 @@
 import { describe, test, expect } from 'bun:test';
 import { modalInScopeGeneration, parseWarroomFleetOutput, type LauncherRow } from '../server/collectors/fleet.ts';
 import { latestModelFrom } from '../server/index-store.ts';
-import { formatCount, formatRelative, formatPercent, shortId, isLive, LIVE_WINDOW_MS } from '../client/src/format.ts';
+import { formatCount, formatRelative, formatShare, shortId, isLive, LIVE_WINDOW_MS } from '../client/src/format.ts';
 
 const row = (name: string, gen: string, scope: 'in scope' | 'excluded'): LauncherRow => ({
   name,
@@ -17,34 +17,47 @@ const row = (name: string, gen: string, scope: 'in scope' | 'excluded'): Launche
 
 describe('modalInScopeGeneration', () => {
   test('is the most common generation among in-scope launchers', () => {
-    const gen = modalInScopeGeneration([
-      row('a', 'a86770a9', 'in scope'),
-      row('b', 'a86770a9', 'in scope'),
-      row('c', '6eb0f729', 'in scope'),
-    ]);
-    expect(gen).toBe('a86770a9');
+    expect(
+      modalInScopeGeneration([
+        row('a', 'a86770a9', 'in scope'),
+        row('b', 'a86770a9', 'in scope'),
+        row('c', '6eb0f729', 'in scope'),
+      ])
+    ).toEqual({ kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 3 });
   });
 
   test('ignores excluded launchers entirely — they are not expected to converge', () => {
     // Three excluded copies of one generation must not out-vote two in-scope copies of
     // another, or the "current" generation names something nothing updates to.
-    const gen = modalInScopeGeneration([
-      row('x', '30e0c7aa', 'excluded'),
-      row('y', '30e0c7aa', 'excluded'),
-      row('z', '30e0c7aa', 'excluded'),
-      row('a', 'a86770a9', 'in scope'),
-      row('b', 'a86770a9', 'in scope'),
-    ]);
-    expect(gen).toBe('a86770a9');
+    expect(
+      modalInScopeGeneration([
+        row('x', '30e0c7aa', 'excluded'),
+        row('y', '30e0c7aa', 'excluded'),
+        row('z', '30e0c7aa', 'excluded'),
+        row('a', 'a86770a9', 'in scope'),
+        row('b', 'a86770a9', 'in scope'),
+      ])
+    ).toEqual({ kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 2 });
   });
 
-  test('returns null on a tie rather than picking a side', () => {
-    expect(modalInScopeGeneration([row('a', 'aaaaaaaa', 'in scope'), row('b', 'bbbbbbbb', 'in scope')])).toBeNull();
+  // THE THREE NO-COMPARISON CASES ARE DISTINCT VALUES, not one shared null. They used to
+  // collapse into `null`, and the headline could tell none of them apart — from each other,
+  // or from "compared, and everything agrees". So it rendered a convergence claim for all
+  // three. Named cases make that unrepresentable.
+  test('a tie is its own answer, naming the candidates, never a side picked at random', () => {
+    expect(modalInScopeGeneration([row('a', 'aaaaaaaa', 'in scope'), row('b', 'bbbbbbbb', 'in scope')])).toEqual({
+      kind: 'tie',
+      candidates: ['aaaaaaaa', 'bbbbbbbb'],
+      inScopeLaunchers: 2,
+    });
   });
 
-  test('returns null when nothing in scope was listed', () => {
-    expect(modalInScopeGeneration([])).toBeNull();
-    expect(modalInScopeGeneration([row('x', '30e0c7aa', 'excluded')])).toBeNull();
+  test('all-excluded and no-launchers-at-all are different answers', () => {
+    expect(modalInScopeGeneration([])).toEqual({ kind: 'no-launchers' });
+    expect(modalInScopeGeneration([row('x', '30e0c7aa', 'excluded')])).toEqual({
+      kind: 'none-in-scope',
+      launchers: 1,
+    });
   });
 
   test('agrees with the real `warroom-install.mjs fleet` table format', () => {
@@ -62,7 +75,11 @@ describe('modalInScopeGeneration', () => {
       ].join('\n')
     );
     expect(parsed).toHaveLength(5);
-    expect(modalInScopeGeneration(parsed)).toBe('a86770a9');
+    expect(modalInScopeGeneration(parsed)).toEqual({
+      kind: 'modal',
+      generation: 'a86770a9',
+      inScopeLaunchers: 4,
+    });
   });
 });
 
@@ -108,9 +125,13 @@ describe('format', () => {
     expect(formatCount(4_000_000_000)).not.toMatch(/[kMB]/);
   });
 
-  test('percentages guard against a zero denominator', () => {
-    expect(formatPercent(0, 0)).toBe('0%');
-    expect(formatPercent(417_902, 1_238_441)).toBe('34%');
+  test('a share of nothing is null, not 0% — the caller must say so, not imply it', () => {
+    // `'0%'` reads as a computed answer. It is not: nobody computed a ratio, because there
+    // was no denominator. Every call site renders the null branch as an explicit absence.
+    expect(formatShare(0, 0)).toBeNull();
+    expect(formatShare(5, 0)).toBeNull();
+    expect(formatShare(417_902, 1_238_441)).toBe('34%');
+    expect(formatShare(0, 100)).toBe('0%'); // a real zero share still reads as 0%
   });
 
   test('relative time uses one unit and never renders a negative age', () => {
