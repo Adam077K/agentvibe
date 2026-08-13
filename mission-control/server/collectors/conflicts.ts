@@ -37,7 +37,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import type { Project } from '../projects.ts';
-import { listWorktrees, type WorktreeEntry } from './worktrees.ts';
+import { listWorktreesAsync, type Enumeration, type WorktreeEntry } from './worktrees.ts';
 
 // The promisified callback form. NO SHELL: the binary is a literal and every argument is a
 // separate array element, exactly as the sync form this replaced. `promisify` is applied
@@ -86,6 +86,18 @@ export interface ConflictReport {
   worktrees: WorktreeChanges[];
   conflicts: FileConflict[];
   excluded: ExcludedWorktrees;
+  /**
+   * Whether `git worktree list` could enumerate this project at all.
+   *
+   * WITHOUT THIS, THE NARROWING MECHANISM ITSELF LIES. listWorktrees returned `[]` on a real
+   * git failure, so an orphaned worktree pointing at a deleted gitdir produced
+   * `{worktrees: [], excluded: {count: 0}}` — and the view rendered a measured all-clear over
+   * a population git had refused to enumerate, with "0 of 0 not swept" underneath it. The
+   * guarantee that narrowing is never silent was itself silent about the one case where the
+   * whole list is unknown. §0's single-point-fix pattern, live: the three-state was correct
+   * about the hole it was shown and left one a level up.
+   */
+  enumerated: Enumeration;
 }
 
 /** Parses `git status --porcelain` short-format lines into plain file paths. */
@@ -194,7 +206,12 @@ export async function changedFilesFor(worktreePath: string): Promise<Omit<Worktr
  * project's registry names (30 across the whole machine, measured), not by how many exist.
  */
 export async function detectConflicts(project: Project): Promise<ConflictReport> {
-  const entries = listWorktrees(project);
+  // AWAITED, and that is the whole of C3. Every call in this function is now async, so the
+  // synchronous prefix of the request is the argument marshalling and nothing else. When this
+  // was `listWorktrees` (execFileSync), /api/conflicts spent 603 ms of a 606 ms request
+  // blocking the event loop across 19 projects — the collector was async and the request was
+  // not, because ONE sync call before the first await keeps the whole thing synchronous.
+  const { entries, enumerated } = await listWorktreesAsync(project);
   const { swept, excluded } = scopeSweep(entries);
 
   const worktrees: WorktreeChanges[] = await Promise.all(
@@ -224,5 +241,6 @@ export async function detectConflicts(project: Project): Promise<ConflictReport>
     // count rendered under the header is by construction the count the sweep skipped; there
     // is no second traversal that could drift from it.
     excluded: { count: excluded.length, reason: EXCLUDED_REASON },
+    enumerated,
   };
 }

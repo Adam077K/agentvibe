@@ -8,8 +8,11 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
+import { promisify } from 'node:util';
 import type { Project, RegistryEntry } from '../projects.ts';
+
+const execFileAsync = promisify(execFile);
 
 /** realpath, falling back to a plain resolve if the path can't be stat'd (e.g. a fixture). */
 function real(p: string): string {
@@ -76,7 +79,75 @@ export function parseWorktreePorcelain(text: string, project: Project): Worktree
   return entries;
 }
 
-/** Runs `git worktree list --porcelain` in the project root. Read-only. */
+/**
+ * Whether `git worktree list` could enumerate at all.
+ *
+ * "Git returned no worktrees" and "git refused to answer" are different facts, and collapsing
+ * them is how a control plane prints an all-clear over a population nobody looked at.
+ */
+export type Enumeration = { readable: true } | { readable: false; reason: string };
+
+export interface WorktreeListing {
+  entries: WorktreeEntry[];
+  enumerated: Enumeration;
+}
+
+function enumerationFailure(project: Project, e: unknown): WorktreeListing {
+  const err = e as { stderr?: string; status?: number; code?: number | string; message?: string };
+  const stderrTail = (err.stderr ?? '').toString().trim().slice(0, 300);
+  return {
+    entries: [],
+    enumerated: {
+      readable: false,
+      reason:
+        `git worktree list --porcelain exited ${err.status ?? err.code ?? 'unknown'} in ${project.root} ` +
+        `(${stderrTail || err.message || 'no stderr'}) — this project's worktrees could not be enumerated, so the ` +
+        'list is UNKNOWN rather than empty.',
+    },
+  };
+}
+
+/**
+ * `git worktree list --porcelain` in the project root, ASYNC and three-state. Read-only.
+ *
+ * WHY THIS EXISTS ALONGSIDE THE SYNC ONE BELOW, which it does not replace: `listWorktrees` is
+ * also called by collectors/fleet.ts on the SSE tick, and converting that means changing
+ * /api/fleet's own 778 ms synchronous block — logged for PR5 and deliberately not widened into
+ * this PR. Both share parseWorktreePorcelain, so there is exactly one parser and only the
+ * spawn differs; when PR5 converts fleet, the sync one goes and this is what remains.
+ *
+ * The conflicts sweep uses this one because a SINGLE sync call before the first await keeps
+ * the whole request synchronous no matter how async the rest is: across 19 projects,
+ * `listWorktrees` alone accounted for 603 ms of a 606 ms /api/conflicts request. The collector
+ * was async and the request was not.
+ */
+export async function listWorktreesAsync(project: Project): Promise<WorktreeListing> {
+  let out: string;
+  try {
+    const result = await execFileAsync('git', ['worktree', 'list', '--porcelain'], {
+      cwd: project.root,
+      encoding: 'utf8',
+      maxBuffer: 8 * 1024 * 1024,
+      timeout: 10_000,
+    });
+    out = result.stdout;
+  } catch (e) {
+    return enumerationFailure(project, e);
+  }
+  return { entries: parseWorktreePorcelain(out, project), enumerated: { readable: true } };
+}
+
+/**
+ * The synchronous form, still used by collectors/fleet.ts.
+ *
+ * KNOWN, AND PART OF WHY listWorktreesAsync EXISTS: this `catch` returns `[]` for a real git
+ * failure — the same "reported absence when it meant I could not look" defect the conflicts
+ * sweep was fixed for. Reproduced end to end: an orphaned worktree whose `.git` points at a
+ * deleted gitdir makes git exit non-zero, and every caller of THIS function reads that as
+ * "the project has no worktrees" (Fleet renders a worktree count of 0). That is real, it is
+ * logged, and it is not fixed here — the conflicts path, where it produced a false all-clear
+ * over an unknown population, is.
+ */
 export function listWorktrees(project: Project): WorktreeEntry[] {
   let out: string;
   try {
@@ -85,7 +156,7 @@ export function listWorktrees(project: Project): WorktreeEntry[] {
       encoding: 'utf8',
     });
   } catch {
-    return []; // not a worktree-capable checkout, or git failed — honestly empty, not an error
+    return [];
   }
   return parseWorktreePorcelain(out, project);
 }

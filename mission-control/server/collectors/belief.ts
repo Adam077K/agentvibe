@@ -252,14 +252,36 @@ export async function runLedgerVerify(
     // to run — its stdout still carries the full report. Only a run that produced no stdout
     // at all could not be read. (This is also the shape that produced the 25 ms figure in
     // the brief: a crash with empty stdout, timed and reported as a successful measurement.)
-    const err = e as { stdout?: string; message?: string };
+    const err = e as { stdout?: string; message?: string; killed?: boolean };
     const stdout = (err.stdout ?? '').toString();
     if (!stdout) {
-      return { present: false, reason: `scripts/ledger.mjs verify failed to run: ${err.message ?? 'unknown error'}` };
+      const how = err.killed
+        ? `timed out after ${VERIFY_TIMEOUT_MS}ms and produced no output`
+        : `failed to run: ${err.message ?? 'unknown error'}`;
+      return { present: false, reason: `scripts/ledger.mjs verify ${how}` };
     }
     out = stdout;
   }
-  return parseLedgerVerifyOutput(out);
+  // PARSING IS PART OF THE FAILURE PATH, not something after it. parseLedgerVerifyOutput
+  // THROWS when the summary line is absent, and the branch above deliberately keeps PARTIAL
+  // stdout — so a verify that printed some claims and then died, including via the very
+  // timeout this file defines for that case, threw straight out of the collector, past the
+  // route, and reached the browser as HTTP 500 "Internal Server Error". This function's own
+  // return type promises `{present: false, reason}` for exactly this situation and was not
+  // honouring it. A type that says "I report my failures" while the implementation throws is
+  // worse than no type at all, because every caller was written against the promise.
+  try {
+    return parseLedgerVerifyOutput(out);
+  } catch (e) {
+    const err = e as { message?: string };
+    return {
+      present: false,
+      reason:
+        `scripts/ledger.mjs verify produced ${out.length} bytes that do not contain its own summary line, so no ` +
+        `verdict could be read from them (${err.message?.split('\n')[0] ?? 'unparseable'}). That is a partial or ` +
+        'interrupted run — typically the 60s timeout — and not a ledger with nothing in it.',
+    };
+  }
 }
 
 export interface ClaimsSummary {

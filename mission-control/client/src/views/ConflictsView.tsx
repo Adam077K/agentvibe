@@ -34,6 +34,12 @@ export interface ConflictTotals {
   unreadable: number;
   conflicts: number;
   projectsWithConflicts: number;
+  /**
+   * Projects whose worktree LIST could not be read at all. Distinct from `unreadable`, which
+   * counts worktrees the sweep knew about and could not stat — here the population itself is
+   * unknown, so for that project neither `attempted` nor `excluded` means anything.
+   */
+  unenumerated: number;
 }
 
 /**
@@ -57,12 +63,14 @@ export function totalsFor(reports: ConflictReport[]): ConflictTotals {
   let unreadable = 0;
   let conflicts = 0;
   let projectsWithConflicts = 0;
+  let unenumerated = 0;
   for (const r of reports) {
     attempted += r.worktrees.length;
     excluded += r.excluded.count;
     unreadable += r.worktrees.filter((w) => w.readable === false).length;
     conflicts += r.conflicts.length;
     if (r.conflicts.length > 0) projectsWithConflicts++;
+    if (!r.enumerated.readable) unenumerated++;
   }
   return {
     projects: reports.length,
@@ -72,7 +80,28 @@ export function totalsFor(reports: ConflictReport[]): ConflictTotals {
     unreadable,
     conflicts,
     projectsWithConflicts,
+    unenumerated,
   };
+}
+
+/** Projects git refused to enumerate — the population is unknown, not empty. */
+export function UnenumeratedList({ reports }: { reports: ConflictReport[] }) {
+  return (
+    <ul className="space-y-1.5">
+      {reports.map((r) => (
+        <li key={r.project} className="border-l-2 border-l-bad pl-3">
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <StatusDot tone="warn" title="git could not list this project's worktrees" />
+            <span className="fig text-[12.5px] text-text">{r.project}</span>
+            <span className="fig text-[11.5px] text-bad">worktree list unreadable</span>
+          </div>
+          <p className="mt-1 max-w-[78ch] text-[12px] leading-relaxed text-muted">
+            {r.enumerated.readable ? null : r.enumerated.reason}
+          </p>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 /** Worktrees the sweep could not read — never folded in with the ones that were clean. */
@@ -204,6 +233,8 @@ export function ConflictsView({
     [reports]
   );
 
+  const unenumeratedReports = useMemo(() => (reports ?? []).filter((r) => !r.enumerated.readable), [reports]);
+
   // Every project with something to say — a conflict, or a worktree it could not read.
   // A project with neither is genuinely nothing to report and is left out rather than
   // printed as a row of zeros nineteen times.
@@ -293,6 +324,24 @@ export function ConflictsView({
         </p>
       )}
 
+      {/* THE POPULATION ITSELF IS UNKNOWN HERE, which is worse than an unreadable worktree
+          and was rendering as better. `git worktree list` failing returned an empty list, so
+          the project reported "0 of 0 not swept" and fed a measured all-clear — the narrowing
+          mechanism reporting completeness over a set git had refused to enumerate. */}
+      {totals.unenumerated > 0 && (
+        <div className="border-t border-bad/40 bg-bad/10 px-6 py-3">
+          <p className="text-[12px] text-bad">
+            {formatCount(totals.unenumerated)} of {formatCount(totals.projects)} project
+            {totals.projects === 1 ? '' : 's'} could not be enumerated at all — git would not list their worktrees, so
+            for those projects this panel does not know how many worktrees exist, let alone whether they conflict.
+            Nothing below speaks for them.
+          </p>
+          <div className="mt-2">
+            <UnenumeratedList reports={unenumeratedReports} />
+          </div>
+        </div>
+      )}
+
       {/* NOTHING CHECKED IS NOT AN ALL-CLEAR. With zero worktrees swept this rendered "0
           agent-started worktrees across 19 projects were swept and every one of them was
           readable, so this is a measured all-clear" — a positive finding about a population
@@ -305,8 +354,19 @@ export function ConflictsView({
           headline="Nothing was checked."
           body={
             <>
-              No worktree on this machine is named by a project&rsquo;s <code>.worktrees/.registry</code>, so the sweep
-              had nothing in scope and this panel is not reporting that your worktrees are clean —{' '}
+              {totals.unenumerated > 0 ? (
+                <>
+                  The sweep has no population to report on: git would not enumerate{' '}
+                  {formatCount(totals.unenumerated)} of {formatCount(totals.projects)} projects, and no worktree it
+                  could see is named by a <code>.worktrees/.registry</code>.
+                </>
+              ) : (
+                <>
+                  No worktree on this machine is named by a project&rsquo;s <code>.worktrees/.registry</code>, so the
+                  sweep had nothing in scope.
+                </>
+              )}{' '}
+              This panel is not reporting that your worktrees are clean —{' '}
               {totals.excluded > 0 ? (
                 <>
                   it is reporting that it looked at none of them. {formatCount(totals.excluded)} worktree
@@ -322,13 +382,30 @@ export function ConflictsView({
         />
       ) : shown.length === 0 ? (
         <EmptyState
-          headline="No two agent worktrees are editing the same file."
+          // THE ALL-CLEAR EXISTS IN ONE BRANCH, and that branch requires every project to
+          // have been enumerated. With `unenumerated > 0` the sentence below would be
+          // counting the worktrees it happened to see while silently omitting projects whose
+          // list git refused to produce — an all-clear whose denominator is unknown.
+          headline={
+            totals.unenumerated > 0
+              ? 'No conflicts among the worktrees that could be checked.'
+              : 'No two agent worktrees are editing the same file.'
+          }
           body={
             <>
               {formatCount(totals.read)} agent-started worktree{totals.read === 1 ? '' : 's'} across{' '}
-              {formatCount(totals.projects)} projects were read successfully, so this is a measured all-clear rather
-              than an empty list. A conflict appears here when two worktrees hold uncommitted changes to the same path
-              — before either one merges, which is when it is still cheap to resolve.
+              {formatCount(totals.projects - totals.unenumerated)} of {formatCount(totals.projects)} projects were read
+              successfully
+              {totals.unenumerated > 0 ? (
+                <>
+                  , and {formatCount(totals.unenumerated)} project{totals.unenumerated === 1 ? '' : 's'} could not be
+                  enumerated at all — so this is NOT an all-clear for the fleet, only for the part of it that answered.
+                </>
+              ) : (
+                <>, so this is a measured all-clear rather than an empty list.</>
+              )}{' '}
+              A conflict appears here when two worktrees hold uncommitted changes to the same path — before either one
+              merges, which is when it is still cheap to resolve.
             </>
           }
         />

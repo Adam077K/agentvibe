@@ -232,6 +232,132 @@ describe('listWorktrees + detectConflicts against a real git repo', () => {
   });
 });
 
+// ── THE SWEEP MUST NOT BLOCK THE EVENT LOOP ──────────────────────────────────────────
+//
+// THE HEADLINE FIX OF THIS PR WAS PINNED BY NOTHING. A reviewer reverted changedFilesFor to
+// execFileSync — reintroducing the full 17,007 ms stall — and all 140 tests passed with tsc
+// clean. Every test asserted on the CONTENT of the report, which a synchronous implementation
+// produces identically; the source-text guard only ever looked for a *shell*, and the async
+// conversion was deliberately made invisible to it. §0 exactly: the second barrier was built
+// and there was never a first one.
+//
+// So this asserts the OBSERVABLE PROPERTY — not source text, not wall-clock cost: while the
+// sweep is in flight, the event loop still runs other work. That is the entire reason the
+// conversion exists (a blocking sweep stalls the SSE tick for every connected client), and it
+// is false for any implementation that does its subprocess work synchronously, however fast
+// that work happens to be against a fixture.
+describe('the conflicts sweep leaves the event loop free', () => {
+  const parent = mkTmpDir('mc-async-proof-');
+  cleanupDirs.push(parent);
+  const root = path.join(parent, 'proj');
+  initGitRepo(root);
+  const registry: { name: string; token: string }[] = [];
+  // Several worktrees, so a synchronous implementation has a real block to produce and the
+  // measurement is not decided by a single process spawn.
+  for (let i = 1; i <= 4; i++) {
+    const wt = path.join(root, '.worktrees', `ceo-${i}-${i}00`);
+    addWorktree(root, wt, `ceo-${i}-${i}00`);
+    fs.writeFileSync(path.join(wt, 'shared.txt'), `from ${i}\n`);
+    registry.push({ name: `ceo-${i}`, token: `${i}00` });
+  }
+  writeRegistry(root, registry);
+  const claudeRoot = mkTmpDir('mc-async-proof-claude-');
+  cleanupDirs.push(claudeRoot);
+  const project = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot }).find((p) => p.root === root)!;
+
+  test('a timer queued before the sweep runs BEFORE the sweep resolves', async () => {
+    let timerFired = false;
+    let timerFiredBeforeSweep = false;
+
+    // A macrotask with no delay. It cannot run until the call stack unwinds, so if any part of
+    // the sweep blocks — execFileSync anywhere in the path, listWorktrees included — this does
+    // not fire until the whole sweep is over and the flag below is false.
+    const timer = new Promise<void>((resolve) => {
+      setTimeout(() => {
+        timerFired = true;
+        resolve();
+      }, 0);
+    });
+
+    const sweep = detectConflicts(project).then((r) => {
+      timerFiredBeforeSweep = timerFired;
+      return r;
+    });
+
+    const [report] = await Promise.all([sweep, timer]);
+
+    expect(timerFiredBeforeSweep).toBe(true);
+    // And the sweep really did the work — this is not passing because it returned early.
+    expect(report.worktrees).toHaveLength(4);
+    expect(report.conflicts.map((c) => c.file)).toContain('shared.txt');
+  });
+
+  test('the synchronous prefix is a small fraction of the whole sweep', async () => {
+    // A second, independent reading of the same property, in case a runtime ever orders
+    // timers differently: how long the call blocks before yielding, against how long the
+    // sweep takes in total. A synchronous implementation makes these two equal.
+    const t0 = performance.now();
+    const pending = detectConflicts(project);
+    const syncPrefixMs = performance.now() - t0;
+    const report = await pending;
+    const totalMs = performance.now() - t0;
+
+    // eslint-disable-next-line no-console
+    console.log(`  [async] sweep sync prefix ${syncPrefixMs.toFixed(1)}ms of ${totalMs.toFixed(1)}ms total`);
+
+    expect(report.worktrees).toHaveLength(4); // it measured a sweep that did the work
+    expect(totalMs).toBeGreaterThan(1); // …and there was real work to be non-blocking about
+    expect(syncPrefixMs).toBeLessThan(totalMs / 2);
+  });
+});
+
+// ── "git would not list them" is not "there are none" ────────────────────────────────
+// C2, and it is the level above the three-state: listWorktrees returned [] for a real git
+// failure, so a project whose worktrees could not be enumerated produced
+// `{worktrees: [], excluded: {count: 0}}` — and the view printed a measured all-clear with
+// "0 of 0 not swept" beneath it. The mechanism built to make narrowing visible was itself
+// silent about the one case where the entire population is unknown.
+describe('detectConflicts reports a failed enumeration rather than an empty one', () => {
+  test('a project git refuses to enumerate returns enumerated.readable === false with a reason', async () => {
+    const parent = mkTmpDir('mc-enum-fail-');
+    cleanupDirs.push(parent);
+    const root = path.join(parent, 'notarepo');
+    // A directory carrying a `.git` FILE that points nowhere: discoverProjects sees a project
+    // (it tests for the presence of .git), and `git worktree list` exits non-zero inside it.
+    // This is the orphaned-worktree shape the reviewer reproduced, in miniature.
+    fs.mkdirSync(root, { recursive: true });
+    fs.writeFileSync(path.join(root, '.git'), 'gitdir: /nonexistent/gitdir/for/this/test\n');
+    const claudeRoot = mkTmpDir('mc-enum-fail-claude-');
+    cleanupDirs.push(claudeRoot);
+    const project = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot }).find((p) => p.root === root)!;
+    expect(project).toBeDefined(); // the premise: this IS discovered as a project
+
+    const report = await detectConflicts(project);
+
+    expect(report.enumerated.readable).toBe(false);
+    if (!report.enumerated.readable) {
+      expect(report.enumerated.reason).toContain(root);
+      expect(report.enumerated.reason).toMatch(/UNKNOWN rather than empty/);
+    }
+    // The empty list is still empty — the point is that it now carries the reason it is
+    // empty, so nothing downstream can read it as "this project has no worktrees".
+    expect(report.worktrees).toEqual([]);
+    expect(report.excluded.count).toBe(0);
+  });
+
+  test('a healthy project reports enumerated.readable === true — the flag is not always false', async () => {
+    const parent = mkTmpDir('mc-enum-ok-');
+    cleanupDirs.push(parent);
+    const root = path.join(parent, 'proj');
+    initGitRepo(root);
+    const claudeRoot = mkTmpDir('mc-enum-ok-claude-');
+    cleanupDirs.push(claudeRoot);
+    const project = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot }).find((p) => p.root === root)!;
+    const report = await detectConflicts(project);
+    expect(report.enumerated.readable).toBe(true);
+  });
+});
+
 // ── the sweep's scope: narrowing must be visible, never silent ────────────────────────
 describe('scopeSweep', () => {
   function entry(over: Partial<WorktreeEntry>): WorktreeEntry {
@@ -700,6 +826,76 @@ describe('attributeVerdicts', () => {
     const attributed = attributeVerdicts(drifted, scopeOf);
     expect(attributed.consistent).toBe(false);
     expect(attributed.reason).toMatch(/disagree/);
+  });
+});
+
+// C4. runLedgerVerify's return type promises {present: false, reason} for a run it could not
+// read, and the implementation threw instead: parseLedgerVerifyOutput throws when the summary
+// line is missing, and the partial-stdout branch deliberately feeds it partial output. A
+// verify that printed some claims and then died — including via this file's own 60 s timeout,
+// which exists for exactly that case — escaped the collector, passed the route, and reached
+// the browser as HTTP 500. A type that says "I report my failures" while throwing is worse
+// than no type, because every caller was written against the promise.
+describe('runLedgerVerify never throws where its type promises an absence', () => {
+  function fixtureProject(prefix: string, script: string): string {
+    const parent = mkTmpDir(prefix);
+    cleanupDirs.push(parent);
+    const root = path.join(parent, 'proj');
+    fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'scripts', 'ledger.mjs'), script);
+    return root;
+  }
+
+  test('partial stdout with no summary line returns {present:false, reason}, not a throw', async () => {
+    // The exact shape of an interrupted run: real claim lines, then death before the summary.
+    const root = fixtureProject(
+      'mc-verify-partial-',
+      [
+        "process.stdout.write('ledger verify: 35 claims · offline\\n');",
+        "process.stdout.write('  ✓ c-alpha [claim-freshness] ok\\n');",
+        'process.exit(1);',
+        '',
+      ].join('\n')
+    );
+
+    const result = await runLedgerVerify(root, { offline: true });
+
+    expect('present' in result).toBe(true);
+    if ('present' in result) {
+      expect(result.present).toBe(false);
+      expect(result.reason).toMatch(/do not contain its own summary line/);
+      expect(result.reason).toMatch(/partial or interrupted run/);
+    }
+  });
+
+  test('a run that emits nothing parseable at all is also reported, not thrown', async () => {
+    const root = fixtureProject('mc-verify-garbage-', "process.stdout.write('not a ledger at all\\n');\n");
+    const result = await runLedgerVerify(root, { offline: true });
+    expect('present' in result && result.present === false).toBe(true);
+  });
+
+  test('a run that produces no stdout at all names the failure', async () => {
+    const root = fixtureProject('mc-verify-crash-', "throw new Error('boom');\n");
+    const result = await runLedgerVerify(root, { offline: true });
+    expect('present' in result && result.present === false).toBe(true);
+    if ('present' in result && result.present === false) {
+      expect(result.reason).toMatch(/failed to run/);
+    }
+  });
+
+  test('…and a complete run still parses — the failure paths did not swallow the success one', async () => {
+    const root = fixtureProject(
+      'mc-verify-ok-',
+      [
+        "process.stdout.write('ledger verify: 2 claims · offline\\n');",
+        "process.stdout.write('  ✓ c-alpha [claim-freshness] ok\\n');",
+        "process.stdout.write('\\nledger verify: 1 pass · 1 would_block (shadow) · 0 block\\n');",
+        '',
+      ].join('\n')
+    );
+    const result = await runLedgerVerify(root, { offline: true });
+    expect('pass' in result).toBe(true);
+    if ('pass' in result) expect(result.totalClaims).toBe(2);
   });
 });
 

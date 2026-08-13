@@ -875,8 +875,8 @@ describe('render parity — Conflicts', () => {
   // documents and forbids. One missing .registry away from being the normal state.
   test('zero worktrees swept renders as nothing-checked, never as a measured all-clear', () => {
     const nothingSwept: ConflictReport[] = [
-      { project: 'ashcroft', worktrees: [], conflicts: [], excluded: { count: 7, reason: 'not agent-started' } },
-      { project: 'tessellate', worktrees: [], conflicts: [], excluded: { count: 0, reason: 'not agent-started' } },
+      { project: 'ashcroft', worktrees: [], conflicts: [], excluded: { count: 7, reason: 'not agent-started' }, enumerated: { readable: true } },
+      { project: 'tessellate', worktrees: [], conflicts: [], excluded: { count: 0, reason: 'not agent-started' }, enumerated: { readable: true } },
     ];
     expect(totalsFor(nothingSwept).attempted).toBe(0); // the premise
     const text = textOf(
@@ -895,7 +895,42 @@ describe('render parity — Conflicts', () => {
     expect(emptyText).not.toContain('measured all-clear');
   });
 
-  // The all-clear's own branch, so the test above is not merely asserting the absence of a
+  // C2 AT THE PIXEL. A project git refused to enumerate arrives as `worktrees: []` with
+  // `excluded.count: 0`, which is byte-identical to a healthy project that simply has no
+  // agent worktrees — so the view must read `enumerated`, or it renders an all-clear over a
+  // population nobody could list.
+  test('a project that could not be enumerated is never folded into the all-clear', () => {
+    const unknown: ConflictReport[] = [
+      {
+        project: 'orphaned',
+        worktrees: [],
+        conflicts: [],
+        excluded: { count: 0, reason: 'not agent-started' },
+        enumerated: { readable: false, reason: 'git worktree list --porcelain exited 128 in /x (fatal: not a git repository) — this project\'s worktrees could not be enumerated, so the list is UNKNOWN rather than empty.' },
+      },
+      {
+        project: 'healthy',
+        worktrees: [{ path: '/y/.worktrees/ceo-1-1', branch: 'ceo-1-1', changedFiles: ['a.ts'] }],
+        conflicts: [],
+        excluded: { count: 0, reason: 'not agent-started' },
+        enumerated: { readable: true },
+      },
+    ];
+    expect(totalsFor(unknown).unenumerated).toBe(1); // the premise
+    const text = textOf(
+      renderToStaticMarkup(<ConflictsView reports={unknown} loading={false} error={null} onRefresh={() => {}} />)
+    );
+
+    expect(text).toContain('1 of 2 projects could not be enumerated at all');
+    expect(text).toContain('exited 128'); // the reason reaches the screen
+    expect(text).toContain('worktree list unreadable');
+    // The all-clear's exact wording must NOT appear — the honest headline is used instead.
+    expect(text).not.toContain('measured all-clear');
+    expect(text).toContain('No conflicts among the worktrees that could be checked');
+    expect(text).toContain('NOT an all-clear for the fleet');
+  });
+
+  // The all-clear's own branch, so the tests above are not merely asserting the absence of a
   // string that no input ever produces.
   test('…and with worktrees actually read, the all-clear IS printed', async () => {
     const reports = (await conflictsPayload('allclear')).map((r) => ({ ...r, conflicts: [] }));
@@ -947,6 +982,7 @@ describe('render parity — Conflicts', () => {
       ],
       conflicts: [],
       excluded: { count: 0, reason: 'none' },
+      enumerated: { readable: true },
     };
     const html = renderToStaticMarkup(
       <ConflictsView reports={[report]} loading={false} error={null} onRefresh={() => {}} />
