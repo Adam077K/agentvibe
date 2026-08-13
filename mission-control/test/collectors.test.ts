@@ -435,42 +435,52 @@ describe('the conflicts sweep leaves the event loop free', () => {
       return;
     }
 
-    // WHAT THIS THRESHOLD CAN AND CANNOT SEPARATE, measured on two machines rather than
-    // assumed. The async sweep's worst stall is not zero: `swept.map(…)` issues every spawn
-    // in one synchronous turn, so the stall is N x the spawn syscall. The control's stall is
-    // N x (spawn + wait). The ratio between them is therefore spawn/(spawn+wait) — a
-    // property of how fast git is on the machine, not of the code:
+    // THE BOUND IS 0.75, AND THE QUANTITY THAT DECIDES IT IS GIT'S SPEED. The async sweep's
+    // worst stall is not zero: `swept.map(…)` issues every spawn in one synchronous turn, so
+    // it is N x the spawn syscall, while the control is N x (spawn + wait). The baseline
+    // ratio is therefore
+    //
+    //     spawn / (spawn + wait)
+    //
+    // which is a property of the machine, not of the code:
     //
     //   this machine (git ~12 ms):  async 2.6 ms · control 70.0 ms · ratio 0.037
-    //   CI runner    (git ~2 ms):   async 6.0 ms · control 13.1 ms · ratio 0.460
+    //   CI runner    (git  ~2 ms):  async 6.0 ms · control 13.1 ms · ratio 0.460
     //
-    // So an eighth held here and was red on CI against CORRECT code. Three quarters holds on
-    // both with margin, and still fails hard on the mutations that matter to it:
-    // changedFilesFor blocking lands at 1.02, both blocking at 1.26.
+    // An eighth held here and was RED ON CI against correct code. 0.75 holds on both and
+    // still fails hard on the mutations this test binds: changedFilesFor blocking lands at
+    // 1.02, both blocking at 1.27.
     //
-    // It does NOT bind `listWorktreesAsync` reverted alone, and no timing test at this scale
-    // can: that mutation blocks for exactly one `git worktree list` per PROJECT, which is
-    // 11.8 ms here and ~2 ms on CI against a one-project fixture — smaller than the baseline
-    // spawn burst it would have to exceed. Its production magnitude (359 ms observed on the
-    // real fleet) comes from being called once per project across nineteen, not from any one
-    // call. Scaling the fixture up does not help, because more projects enlarge the baseline
-    // spawn burst too. That mutation is bound by the structural test below instead, which is
-    // deterministic and machine-independent — and the honest division of labour is written
-    // here rather than left for the next person to discover with a stopwatch.
+    // THE RESIDUAL RISK IS FALSE-RED, NOT FALSE-GREEN, and the variable is git speed rather
+    // than load: a runner with faster git or slower process spawning pushes the baseline
+    // ratio UP toward the bound, and CI's 1.6x margin is thinner than this machine's 20x. If
+    // this goes red on a new runner, read the three printed numbers before touching the
+    // threshold — a baseline ratio drifted to ~0.7 means spawn now costs as much as git, not
+    // that the sweep regressed. Load is measured and is not the risk: 0.033-0.049 unloaded,
+    // 0.036-0.070 under eight busy CPU processes, idle gate never firing.
+    //
+    // This test binds the STATUS phase. The enumeration phase — one `git worktree list` per
+    // project, which is where reverting listWorktreesAsync does its damage — is bound by the
+    // multi-project test below, because at one project that phase is a single git call.
     expect(asyncStallMs).toBeLessThan(controlStallMs * 0.75);
   });
 
-  // THE PIN FOR `listWorktreesAsync`, and the reason it is structural rather than timed is
-  // the paragraph above: at one project its stall is a single git call, which no threshold
-  // can separate from the baseline spawn burst on a fast machine.
+  // NAMED FROM ITS BODY. This reads the source text of ONE file and checks that it does not
+  // NAME the synchronous helpers. That is all it does, and it is worth having: reverting the
+  // call site in conflicts.ts is the most likely accidental regression, it is what a careless
+  // merge produces, and this fires on it deterministically on every machine.
   //
-  // A source-text assertion is a weaker KIND of evidence than a behavioural one and this
-  // codebase says so repeatedly. It is used here because it is the only form that fires on
-  // every machine for this mutation, and because it is checking something narrow and
-  // literal: that this one file does not reach for the synchronous git helpers. It is not
-  // standing in for the behavioural tests — those bind the other two mutations — it is
-  // covering the one case they provably cannot.
-  test('conflicts.ts uses no synchronous git helper', () => {
+  // WHAT IT DOES NOT DO — and an earlier version of this comment claimed it bound the
+  // enumeration mutation outright, which was wrong twice over. The mutation the reviewer ran
+  // edits `worktrees.ts`, not this file, so nothing here reads it at all. And the pin was
+  // defeated three ways, all tsc-clean: an aliased import (`listWorktrees as readWorktrees`,
+  // one `as`), a new module re-exporting the same enumeration (full suite green, 157 pass),
+  // and the computed-property shape from F5. The first two are what PR5 unifying the two
+  // listers looks like on an ordinary Tuesday.
+  //
+  // The enumeration phase is bound BEHAVIOURALLY by the multi-project test below. This is
+  // the cheap literal check beside it, not a substitute for it.
+  test('conflicts.ts calls no synchronous git helper AT ITS OWN CALL SITES', () => {
     const source = fs.readFileSync(
       path.join(import.meta.dir, '..', 'server', 'collectors', 'conflicts.ts'),
       'utf8'
@@ -491,6 +501,112 @@ describe('the conflicts sweep leaves the event loop free', () => {
     // …and the async forms ARE used, so this cannot pass because the file stopped calling git.
     expect(code).toMatch(/\blistWorktreesAsync\s*\(/);
     expect(code).toMatch(/\bexecFileAsync\s*\(/);
+  });
+});
+
+// ── THE ENUMERATION PHASE, WHERE THE OTHER HALF OF THE CONVERSION LIVES ───────────────
+//
+// I argued that no timing test at fixture scale could bind a synchronous enumeration, and
+// that was wrong. The claim rested on "more projects enlarge the baseline spawn burst too" —
+// true, and irrelevant: BOTH terms scale linearly with the project count, so the ratio is
+// scale-INVARIANT. Baseline stays spawn/(spawn+wait); a synchronous enumeration goes to 1.0.
+//
+// The real defect in my fixture was its SHAPE, not its size. One project with six worktrees
+// puts the enumeration phase at exactly one git call, so it scaled the wrong axis. Twelve
+// projects with one worktree each scales the right one, and the control measures THE
+// ENUMERATION PHASE ONLY — one `git worktree list` per project, sequentially — rather than
+// the status phase the test above already covers.
+//
+// Measured by the reviewer, reproduced here:
+//   baseline            async   9.5 ms · control 129.5 ms · ratio 0.074
+//   listWorktrees sync  async 141.1 ms · control 138.7 ms · ratio 1.018
+// which the existing 0.75 bound separates with 10x margin below and 1.4x above — no new
+// threshold, same instrument. This is what actually binds the enumeration half; the
+// structural pin above catches only the call-site revert in one file.
+describe('enumerating many projects leaves the event loop free', () => {
+  const PROJECTS = 12;
+  const parent = mkTmpDir('mc-enum-scale-');
+  cleanupDirs.push(parent);
+  const claudeRoot = mkTmpDir('mc-enum-scale-claude-');
+  cleanupDirs.push(claudeRoot);
+
+  for (let i = 0; i < PROJECTS; i++) {
+    const root = path.join(parent, `proj-${i}`);
+    initGitRepo(root);
+    const wt = path.join(root, '.worktrees', `ceo-1-${i}`);
+    addWorktree(root, wt, `ceo-1-${i}`);
+    writeRegistry(root, [{ name: 'ceo-1', token: String(i) }]);
+    fs.writeFileSync(path.join(wt, 'touched.txt'), 'x\n');
+  }
+  const projects = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot });
+
+  test('sweeping N projects stalls the loop far less than enumerating them synchronously', async () => {
+    expect(projects).toHaveLength(PROJECTS); // the fixture is the shape this test needs
+
+    let gaps: number[] = [];
+    let last = performance.now();
+    let sampling = true;
+    const sample = () => {
+      if (!sampling) return;
+      const now = performance.now();
+      gaps.push(now - last);
+      last = now;
+      setImmediate(sample);
+    };
+    const worstGapSince = () => {
+      const worst = Math.max(...gaps, 0);
+      gaps = [];
+      last = performance.now();
+      return worst;
+    };
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 5));
+
+    setImmediate(sample);
+    await new Promise((resolve) => setTimeout(resolve, 20)); // warm-up, discarded
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const idleNoiseMs = worstGapSince();
+
+    // THE MEASUREMENT — every project swept the way the route does it: concurrently.
+    const t0 = performance.now();
+    const reports = await Promise.all(projects.map((p) => detectConflicts(p)));
+    const sweepMs = performance.now() - t0;
+    await settle();
+    const asyncStallMs = worstGapSince();
+
+    // THE CONTROL — the ENUMERATION PHASE ONLY, sequential and synchronous: exactly what
+    // reverting listWorktreesAsync produces, and nothing else.
+    const c0 = performance.now();
+    for (const p of projects) {
+      execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' });
+    }
+    const controlMs = performance.now() - c0;
+    await settle();
+    const controlStallMs = worstGapSince();
+    sampling = false;
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `  [async] ${PROJECTS} projects — async ${asyncStallMs.toFixed(1)}ms (sweep ${sweepMs.toFixed(1)}ms) · ` +
+        `sync enumeration control ${controlStallMs.toFixed(1)}ms (${controlMs.toFixed(1)}ms) · ` +
+        `idle noise ${idleNoiseMs.toFixed(1)}ms · ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
+    );
+
+    expect(reports).toHaveLength(PROJECTS); // every project really was swept
+    expect(reports.every((r) => r.enumerated.readable)).toBe(true); // …and really enumerated
+    expect(controlStallMs).toBeGreaterThan(1); // NON-VACUITY: the control really blocked
+
+    if (idleNoiseMs > controlStallMs / 4) {
+      notVerified(
+        'enumeration event-loop binding',
+        `this process was already blocking for ${idleNoiseMs.toFixed(1)}ms at a time while idle, against a ` +
+          `${controlStallMs.toFixed(1)}ms synchronous control — too noisy here to attribute a stall to the sweep`
+      );
+      return;
+    }
+
+    // Same bound as the status-phase test, for the same reason and with the same failure
+    // direction. Both terms scale with PROJECTS, so this holds on any machine.
+    expect(asyncStallMs).toBeLessThan(controlStallMs * 0.75);
   });
 });
 
