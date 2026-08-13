@@ -150,9 +150,9 @@ claiming it existed.
 
 ### Machine-gated tests
 
-`test/gate.ts` is the one implementation of "can this machine answer", imported by both
-`live.test.ts` and `views.test.tsx`. It fires on exactly one condition — `~/.claude/projects`
-absent, the CI-runner case — and prints
+`test/gate.ts` is the one implementation of "can this machine answer", imported by
+`live.test.ts`, `views.test.tsx` and `crosscheck.test.ts`. It fires on exactly one condition —
+the corpus, resolved the way the code under test resolves it, holds no transcript — and prints
 `… NOT VERIFIED — <reason>. Nothing was compared; this is not a pass on the merits.`
 
 It deliberately does **not** consult discovery. An earlier version skipped whenever discovery
@@ -160,10 +160,27 @@ returned zero projects, which is the *result of the operation under test*, not a
 the machine: `MC_PROJECT_ROOTS=/nonexistent bun test test/live.test.ts` reported **3 pass, 1
 expect() call** — every real assertion skipped, the gate's own pin still green.
 
-Extracting the gate did not by itself finish the job. For one round `views.test.tsx` kept an
-inline copy carrying the same defect, so that command turned `live.test.ts` red and left
-`views.test.tsx` at **17 pass / 0 fail** — while this section, and two code comments, said
-the consolidation was complete. Both files fail now.
+Extracting the gate did not by itself finish the job, twice over.
+
+For one round `views.test.tsx` kept an inline copy carrying that same defect, so the command
+above turned `live.test.ts` red and left `views.test.tsx` at **17 pass / 0 fail** — while this
+section, and two code comments, said the consolidation was complete.
+
+Then, with one implementation of the *predicate*, there were still two of the **value it
+consumes**: the gate recomputed `~/.claude/projects` while everything under test resolves the
+corpus through `scripts/lib/usage.js`'s `projectsDir()`, which honours
+`AGENTVIBE_PROJECTS_DIR`. Point that at an empty directory and the gate inspected the real
+corpus, opened, and the real-fleet parity test compared nineteen rows of zeros to nineteen
+rows of zeros: **25 pass / 0 fail**, no NOT VERIFIED printed. The path is now imported rather
+than recomputed; "is there a corpus" means *contains a transcript* — the same condition
+`check-cold-start.ts` already exits 2 on — rather than *the directory exists*; `live.test.ts`
+pins that the gate's path and `projectsDir()` are the same string; and the real-fleet test
+additionally asserts it compared something non-zero, so a vacuous comparison cannot report
+success even if the gate is fooled again.
+
+The lesson worth carrying: the header's own advice — grep `test/` for `existsSync` — could not
+have caught the second one. The divergence was not in the predicate. It was one level down, in
+a value the predicate read.
 
 ## One claim, one population
 
