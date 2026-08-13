@@ -5,6 +5,7 @@
 
 import { describe, test, expect, afterAll } from 'bun:test';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { discoverProjects } from '../server/projects.ts';
@@ -102,9 +103,35 @@ describe('per-launcher generation hash', () => {
   // ~2,000 files in the fleet this repo runs on) — past bun's 5s default, so this needs
   // headroom too. The perf test (test/perf.test.ts) is what pins "under 3s" — against
   // fixtures, not this real, unbounded directory.
+  //
+  // CI FAILURE, real, caught 2026-08-13: `node scripts/warroom-install.mjs fleet` exits
+  // 1 and prints "✗ /home/runner/bin does not exist" on a runner with no standalone
+  // launchers — this test's subject does not exist there, so it failed for a reason the
+  // PR did not cause. Same shape as check-registration.mjs's own precedent: CI has none
+  // of the machine-specific launcher state, so blocking on its absence fails every run.
+  // Fixed the same way check-cold-start.ts handles "no corpus": detect the environment
+  // condition BEFORE asserting anything, and when it holds, print the reason to stdout
+  // (unconditionally — bun test renders an early `return` as a pass, so silence would
+  // read as "verified" to anyone skimming CI output) and stop, never asserting a result
+  // it could not check.
+  //
+  // The gate is deliberately narrow and environment-only: it checks whether ~/bin exists
+  // — the exact condition the CI failure demonstrated — and nothing else. It must never
+  // widen to catch a thrown assertion or a genuine mismatch from the real comparison
+  // below; doing that would turn a real cross-check into decoration, which is the
+  // failure this whole PR exists to prevent. The comparison logic itself is untouched.
   test(
     "MC's fleet.gen for each launcher equals the GEN column of `node scripts/warroom-install.mjs fleet`, parsed independently",
     () => {
+      const binDir = path.join(os.homedir(), 'bin');
+      if (!fs.existsSync(binDir)) {
+        // eslint-disable-next-line no-console
+        console.log(
+          `fleet cross-check NOT VERIFIED — ${binDir} does not exist on this machine (e.g. a CI runner with no standalone launchers installed). Nothing was compared; this is not a pass on the merits.`
+        );
+        return;
+      }
+
       const stdout = execFileSync('node', [path.join(REPO_ROOT, 'scripts', 'warroom-install.mjs'), 'fleet'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
