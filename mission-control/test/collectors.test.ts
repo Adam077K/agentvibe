@@ -480,12 +480,16 @@ describe('the conflicts sweep leaves the event loop free', () => {
       .map((line) => line.replace(/\/\/.*$/, ''))
       .join('\n');
 
-    // The sync worktree lister: its `catch { return [] }` is why C2 existed, and calling it
-    // here puts a blocking git call in front of every project on the route.
-    expect(code).not.toMatch(/\blistWorktrees\s*\(/);
-    expect(code).toMatch(/\blistWorktreesAsync\s*\(/); // …and the async one IS used
-    // execFileSync in any spelling, including an aliased import.
-    expect(code).not.toMatch(/\bexecFileSync\b/);
+    // Matched tokens rather than the whole file, so a failure names the offending call
+    // instead of printing 250 lines of source into the test output.
+    //   listWorktrees(  — the sync lister, whose `catch { return [] }` is why C2 existed and
+    //                    which puts a blocking git call in front of every project on the route
+    //   execFileSync    — in any spelling, including an aliased import
+    const syncGitCalls = [...code.matchAll(/\blistWorktrees\s*\(|\bexecFileSync\b/g)].map((m) => m[0]);
+    expect(syncGitCalls).toEqual([]);
+
+    // …and the async forms ARE used, so this cannot pass because the file stopped calling git.
+    expect(code).toMatch(/\blistWorktreesAsync\s*\(/);
     expect(code).toMatch(/\bexecFileAsync\s*\(/);
   });
 });
