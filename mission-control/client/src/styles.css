@@ -28,25 +28,34 @@
    do not carry a figure forward because it was in the comment. */
 @theme {
   --color-ink: #0d0e11;
-  /* 1.039:1. The low figure is not an argument against it. Contrast RATIO is defined for
-     text legibility, and comparing a 1px rule to a full-row fill on that scale is a category
-     error: the row separator measures HIGHER (1.438:1) and is still the thing an eye cannot
-     track across a 1600px, eight-column row, because what carries you there is area, not
-     edge contrast. The band is deliberately faint for the opposite reason — anything
-     stronger becomes a second grid competing with the data it exists to guide you through. */
-  --color-row-alt: #111318;
-  --color-raised: #171a20; /* 1.108:1 — hover only, never the sole carrier of anything */
+  /* 1.077:1, ΔE76 4.82 from --color-ink. THE RATIO IS THE WRONG METRIC HERE and the ΔE is
+     the right one. Contrast ratio is defined for text legibility; comparing a 1px rule to a
+     full-row fill on it is a category error — the row separator measures HIGHER (1.438:1)
+     and is still the thing an eye cannot track across a 1600px, nine-column row, because
+     what carries you there is area. ΔE answers "are these two fills distinguishable", and
+     the first value (#111318) sat at 2.71 — barely over the ~2.3 just-noticeable difference,
+     so it was likely invisible on an uncalibrated panel while being the ONLY row-tracking
+     aid left once the separator was dropped. One step out; still well short of becoming a
+     second grid. */
+  --color-row-alt: #15171d;
+  /* Hover. Has to be distinct from BOTH bands or it stops reading as a hover: ΔE76 10.49
+     from ink, 5.80 from row-alt. */
+  --color-raised: #1e222b; /* 1.212:1 — hover only, never the sole carrier of anything */
   --color-line: #2a2f39; /* 1.438:1 */
   --color-line-strong: #3d4451; /* 1.971:1 — borders and rules, never text */
+  /* The one horizontal rule in the app: the agent-active/dormant break. At 3.139:1 it is a
+     line you can actually see, and that is what lets the break stop depending on whether its
+     neighbours happen to be banded. Nothing else here draws a rule this strong. */
+  --color-divider: #5a6270; /* 3.139:1 */
   --color-text: #e6e8ec; /* 15.734:1 */
   --color-muted: #9aa1ad; /* 7.422:1 */
   /* #6a7280 measured 3.982:1 — under AA, while carrying every column header, every footnote
      (including the whole "why there is no cost column" statement), every `n/a`, and the
-     filter placeholder. #7b8494 is 5.121:1 in the same cool neutral. Nothing that carries
+     filter placeholder. #7b8494 is 5.120:1 in the same cool neutral. Nothing that carries
      meaning is allowed below 4.5:1. */
   --color-dim: #7b8494;
   --color-live: #3fbf8f; /* 8.327:1 as text; see mc-breathe for the animated floor */
-  --color-warn: #d9a441; /* 8.581:1 */
+  --color-warn: #d9a441; /* 8.582:1 */
   --color-bad: #e2727a; /* 6.362:1 */
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;

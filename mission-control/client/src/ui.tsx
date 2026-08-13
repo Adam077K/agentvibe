@@ -129,9 +129,29 @@ export function Td({
  * is: an element whose *whole purpose* is to explain an absence must be focusable; a title
  * that merely adds precision to a value already on screen need not be.
  */
-export function Unavailable({ short, why }: { short: string; why: string }) {
+export function Unavailable({
+  short,
+  why,
+  tone = 'default',
+}: {
+  short: string;
+  why: string;
+  /**
+   * `.unavailable` sets `color` on THIS span, which beats any colour inherited from a Figure
+   * wrapping it — so `<Figure tone="warn">` around one of these was silently inert, and all
+   * three no-comparison branches rendered identical grey including the tie, which is the one
+   * that wants attention. The tone has to be applied here or it is not applied at all.
+   */
+  tone?: 'default' | 'warn';
+}) {
   return (
-    <span className="unavailable" tabIndex={0} role="note" aria-label={`${short}: ${why}`} title={why}>
+    <span
+      className={`unavailable${tone === 'warn' ? ' text-warn decoration-warn/60' : ''}`}
+      tabIndex={0}
+      role="note"
+      aria-label={`${short}: ${why}`}
+      title={why}
+    >
       {short}
     </span>
   );
