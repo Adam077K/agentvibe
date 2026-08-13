@@ -18,14 +18,16 @@
 // silent, which is what the idle-wire test pins.
 //
 // TWO CADENCES, because the two slices cost three orders of magnitude apart. Measured on
-// the real fleet (19 projects, 2,036 transcripts):
+// the real fleet (19 projects, 2,037 transcripts):
 //   sessions   16 ms  — IndexStore.refresh(), stat-only when nothing moved
 //   fleet     430 ms  — one `node scripts/warroom-install.mjs fleet` spawn, one `git
 //                       worktree list` spawn per project, and the account-wide rolling-5h
 //                       token scan
 // A 1 s fleet tick would hold ~45% of a core forever on a tool meant to sit open all day,
 // so fleet polls every 10 s (~4% duty cycle). That is a polling interval, not a staleness
-// guarantee, and the client labels the figure with the time it was computed.
+// guarantee. What the client shows is how long ago it last RECEIVED a frame (the connection
+// badge in App.tsx) — `generatedAt` is stripped from the hash and rendered nowhere in
+// client/, so do not describe this as the client labelling the figure with it.
 //
 // No heartbeat comment frames. Those exist to stop an intermediary proxy from reaping an
 // idle connection; the only hop here is loopback (server/config.ts binds 127.0.0.1 as a
@@ -120,6 +122,18 @@ export function createStream(state: LiveState = live, opts: StreamOptions = {}):
   const route = new Hono();
 
   route.get('/events', (c) => {
+    // HEAD is answered here, first, and NOT by a separate `route.on('HEAD', …)` — Hono
+    // dispatches HEAD to the GET handler and ignores an explicit HEAD registration for the
+    // same path, verified directly. So the check has to live inside the handler that will
+    // actually run, or it does nothing at all.
+    //
+    // Without it, a bare `HEAD /events` disabled the idle reaper for that connection AND
+    // started the whole tick loop — discovery, index refresh, one subprocess per project —
+    // to produce a body the protocol immediately discards. One cheap request, unbounded work.
+    if (c.req.method === 'HEAD') {
+      return c.body(null, 200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' });
+    }
+
     disableIdleReaperForThisRequest(c.env, c.req.raw);
     return streamSSE(c, async (stream) => {
       let open = true;

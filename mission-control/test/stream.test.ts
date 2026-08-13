@@ -298,4 +298,25 @@ describe('an idle SSE connection over a real socket', () => {
     await events.text();
     expect(calls).toEqual([0]); // exactly one route opts out, exactly once
   });
+
+  test('HEAD /events answers without opting out of the reaper or starting the tick loop', async () => {
+    // Hono routes HEAD to the GET handler, so `HEAD /events` used to disable the idle timeout
+    // for that connection AND run a full discovery, index refresh and subprocess spawn to
+    // build a body the protocol then discards. One cheap request, unbounded work.
+    const { state } = fixtureFleet('head');
+    const calls: number[] = [];
+    const fakeServer = {
+      timeout: (_req: Request, seconds: number) => {
+        calls.push(seconds);
+      },
+    };
+    const app = createStream(state, { maxTicks: 1, sessionsTickMs: 0, fleetTickMs: 600_000 });
+
+    const res = await app.fetch(new Request('http://127.0.0.1/events', { method: 'HEAD' }), fakeServer);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/event-stream');
+    expect(await res.text()).toBe('');
+    expect(calls).toEqual([]); // no opt-out
+    expect(state.isBuilt).toBe(false); // and no index was built — the loop never ran
+  });
 });
