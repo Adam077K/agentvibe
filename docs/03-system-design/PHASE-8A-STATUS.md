@@ -73,26 +73,47 @@ Eight, made 2026-08-12. Five went against the recommendation, which is recorded 
    Control never recomputes a figure the repo already computes — it imports or shells out.
 2. **Mutating a fixture turns a test red.** A cross-check that cannot fail is not a cross-check.
 3. **Live data from ≥3 projects other than `agentvibe`.**
-4. **Cold start < 3 s, incremental refresh < 250 ms.**
+4. **Cold start < 10 s, incremental refresh < 250 ms.** ~~< 3 s~~ — raised 2026-08-13 by founder decision
+   after the corpus was recounted (§4). Measured: **3.6–4.1 s** cold, **4 ms** incremental. The 3 s figure
+   was set against a corpus 28× smaller than the real one, so it was never a budget anything had been
+   measured against. Bound to `c-mission-control-cold-start` with an expiry, so growth forces a decision.
 5. **`npm run check` exit 0** from a clean clone after `bun install`.
 
 ---
 
 ## 4 · Measurements the build rests on
 
-All VERIFIED 2026-08-12 by execution, not estimated.
+> **CORRECTED 2026-08-13. The first version of this table was wrong by 28×, and the "no database"
+> decision below was made on it.** The original scan walked `~/.claude/projects/` only two levels deep and
+> reported **72 files / 0.44 GB / 1,283 ms**. Transcripts nest deeper than that. A recursive count gives
+> **2,029 files / 2.83 GB**, and a raw full parse **9,252 ms** — the same ~9 s Phase 6 hit on the same
+> corpus before it adopted mtime-skip. The wrong figures reached this file, two PR bodies, `README.md` and
+> the brief the builder worked from. Caught by the builder measuring the real corpus instead of trusting
+> the number it was handed.
+
+All VERIFIED 2026-08-13 by execution, not estimated.
 
 | | |
 |---|---|
-| Transcript corpus | **72 files, 0.44 GB** (`~/.claude/projects/` is 2.7 GB total; the rest is not transcripts) |
-| Cold full parse | **1,283 ms** — 71,319 lines, 26,134 assistant turns, 42.1M output tokens, **0 unparseable** |
-| Stat-all / incremental | **2 ms** / **11 ms** (13 files touched in 5h, 89.9 MB) |
+| Transcript corpus | **2,029 files, 2.83 GB** — counted recursively |
+| Raw cold full parse | **9,252 ms** — 257,834 lines, 90,805,765 output tokens, **0 unparseable** |
+| Mission Control cold build | **3,633 / 3,870 / 4,060 ms** over three runs, 19 projects, 54 transcript dirs |
+| Stat-all / incremental | **4 ms** / **4 ms** (14 files touched in 5h) |
 | Live worktree registries | **8 projects** — etsyc 7, agentvibe 4, Beamix 4, evalove 4, finfun 4, noam-website 4, adamos 3, ghostb 3 |
 | Fleet | 14 launchers, 8 generations, 11 in scope, 5 generations in scope |
 
-**This is why there is no database.** History is derived on demand in ~1.3 s; the transcripts already *are*
-the history. A store would add a schema to migrate and a second source of truth to disagree with them — and
-would repeat the `initDb()`-with-zero-`INSERT`s shape already sitting unused in `war-room/dashboard/`.
+**There is still no database, but the reason is narrower than it was.** The original reason — "history is
+derived in ~1.3 s" — was false. The real reason is that **cold start is paid once per daemon launch and the
+incremental refresh is 4 ms**, so the lived cost is the 4 ms, not the 4 s. A store would add a schema to
+migrate and a second source of truth to disagree with the transcripts, and would repeat the
+`initDb()`-with-zero-`INSERT`s shape sitting unused in `war-room/dashboard/`.
+
+**This is an accepted cost, not a solved problem.** Founder decision 2026-08-13, taken with the alternatives
+on the table (lazy per-project loading, Mission Control keeping its own cache as `scripts/lib/usage.js`
+already does, parallelising the cold read). **The corpus only grows** — 2,029 files today. So the budget is
+bound to `c-mission-control-cold-start` with an expiry rather than left as a comment: when the build crosses
+10 s the ledger fails and forces a Refresh, Deprecate or Waive, instead of the budget quietly becoming
+fiction.
 
 ---
 

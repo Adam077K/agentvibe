@@ -447,3 +447,28 @@ check over something nobody observed.
 **Affects:** `scripts/probe-readonly-engine.sh`, `docs/03-system-design/CLAIM-LEDGER.md`, the Phase 6
 completion record in `AGENT-SYSTEM-REBUILD.md`, `.claude/hooks/session-start.js` (payload must become a
 router, ~1.5 KB, not a 25 KB dump — same cure Phase 7 found for skills)
+
+## 2026-08-13 — the transcript corpus was measured 28× too small; cold-start budget raised to 10s
+
+**Context:** The 2026-08-12 entry above justifies "no persistent store" with *"a cold full parse of all 72
+transcripts measures 1,283 ms"*. **That measurement was wrong.** The scan walked `~/.claude/projects/` only
+two levels deep; transcripts nest deeper. Recursive count, verified 2026-08-13: **2,029 files / 2.83 GB**,
+raw full parse **9,252 ms** — the same ~9 s Phase 6 hit on this corpus before adopting mtime-skip. Mission
+Control's own `IndexStore` measures 3,633 / 3,870 / 4,060 ms over three runs, against a 3 s gate. Found by
+the builder measuring the real corpus rather than trusting the number in its brief.
+**Decision:** Raise the cold-start budget to **10 s**. Do **not** add a store, lazy-load per project, or
+parallelise the cold read. Bind the budget to a claim, `c-mission-control-cold-start`, with `valid_until`.
+**Rationale:** Cold start is paid once per daemon launch and the incremental refresh is **4 ms**, so the
+lived cost is the 4 ms. The alternatives were all on the table and all cost more than they buy right now:
+a cache is what `scripts/lib/usage.js` already does and would reverse the no-store decision for a path
+users hit once; lazy loading is real work for a boot-time problem; parallelising trades concurrency bugs
+for seconds nobody waits on twice. **The weakness is stated rather than hidden:** the corpus only grows, and
+a budget in a comment rots silently. A budget in a claim with an expiry cannot — when the build crosses 10 s
+the ledger fails and forces Refresh, Deprecate or Waive. That is the difference between accepting a cost and
+forgetting one.
+**Reversibility:** reversible — the budget is one number in a test and one claim; none of the rejected
+options is foreclosed
+**Owner:** ceo · **founder decision** taken with all four options and their costs presented
+**Affects:** `mission-control/test/perf.test.ts`, `mission-control/README.md`,
+`docs/03-system-design/PHASE-8A-STATUS.md` §3 and §4, and the 2026-08-12 entry above, whose stated
+rationale is superseded by this one
