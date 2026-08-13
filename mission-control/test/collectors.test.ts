@@ -1487,6 +1487,46 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     expect(dirEntries.length > 0).toBe(after.found);
   });
 
+  // THE SAME PARTITION grep's exit codes force on projectEmptyState, at the readdir. An
+  // absent directory is a real "nothing here" — the feature that would create it has never
+  // run — but a directory that exists and cannot be opened is "I could not look", and the
+  // catch swallowed both into found:false. This is the file that exists to prevent exactly
+  // that, so an unreachable third state here was worse than one anywhere else.
+  test('inboxEmptyState: an unreadable messages dir is could-not-look, an absent one is not', () => {
+    const home = mkTmpDir('mc-home-3state-');
+    cleanupDirs.push(home);
+
+    // ABSENT → found:false with NO readable flag. The honest empty answer.
+    const absent = inboxEmptyState({ id: 'gone' } as Project, home);
+    expect(absent.found).toBe(false);
+    expect(absent.readable).toBeUndefined();
+    expect(absent.reason).toBeUndefined();
+
+    // EXISTS BUT UNOPENABLE → readable:false. A plain file where the directory belongs
+    // gives ENOTDIR deterministically on every platform and without depending on the test
+    // user's privileges — chmod 000 is a no-op for root, which is how CI often runs.
+    fs.mkdirSync(path.join(home, '.blocked'), { recursive: true });
+    fs.writeFileSync(path.join(home, '.blocked', 'messages'), 'not a directory\n');
+    const blocked = inboxEmptyState({ id: 'blocked' } as Project, home);
+    expect(blocked.readable).toBe(false);
+    expect(blocked.found).toBe(false);
+    expect(blocked.reason).toContain('ENOTDIR');
+    expect(blocked.reason).toContain(path.join(home, '.blocked', 'messages'));
+
+    // Independently: the path the probe names really is unreadable as a directory, and the
+    // error code the reason quotes is the one the OS gave.
+    let independentCode: string | undefined;
+    try {
+      fs.readdirSync(path.dirname(blocked.probe));
+    } catch (e) {
+      independentCode = (e as NodeJS.ErrnoException).code;
+    }
+    expect(independentCode).toBe('ENOTDIR');
+    // NON-VACUITY: the two calls above really did take different branches. Without this the
+    // whole test passes with `readable: false` returned unconditionally.
+    expect(blocked.readable).not.toBe(absent.readable);
+  });
+
   // grep exits 1 on a genuine no-match (the honest found:false) and exits >=2 when it
   // could not even read the directory — a nonexistent path or a permission error. The
   // two must not collapse into the same found:false, or an unreadable project reports

@@ -160,23 +160,34 @@ export async function projectEmptyState(project: Project): Promise<EmptyState> {
   }
 }
 
+const INBOX_WOULD_FILL =
+  'Pending outbound approvals, escalations, binary pings — once this project writes into its messages/ directory, this view has real data to show.';
+
 /**
  * Inbox view: "no project has a populated ~/.<name>/messages/ dir" (PR2 brief). The
  * probe is the literal glob a human would run to check.
+ *
+ * THE CATCH USED TO SWALLOW EVERY ERROR into `found: false`. An absent directory really is
+ * the honest "nothing here" — the feature that would create it has never run — but EACCES
+ * and ENOTDIR are not: they are "I could not look", reported as a clean inbox. That is the
+ * §0 defect this file was written to prevent, in the file that prevents it, and it also left
+ * the view's could-not-look branch unreachable by any input. ENOENT is the ONLY code that
+ * means absence; everything else three-states.
  */
 export function inboxEmptyState(project: Project, homeDir: string = os.homedir()): EmptyState {
   const dir = path.join(homeDir, `.${project.id}`, 'messages');
   const probe = `${dir}/*`;
-  let found = false;
+  const base = { probe, would_fill: INBOX_WOULD_FILL };
   try {
-    found = fs.readdirSync(dir).length > 0;
-  } catch {
-    found = false; // directory absent is the same honest "nothing here" as directory empty
+    return { ...base, found: fs.readdirSync(dir).length > 0 };
+  } catch (e) {
+    const code = (e as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') return { ...base, found: false }; // absent === empty, for a reader waiting
+    return {
+      ...base,
+      found: false,
+      readable: false,
+      reason: `${dir} could not be read (${code ?? 'unknown error'}) — this project's messages were NOT checked, so "none" below would be a claim about a directory nobody opened.`,
+    };
   }
-  return {
-    probe,
-    found,
-    would_fill:
-      'Pending outbound approvals, escalations, binary pings — once this project writes into its messages/ directory, this view has real data to show.',
-  };
 }
