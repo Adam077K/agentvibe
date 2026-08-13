@@ -42,20 +42,37 @@ during any transition.
 browser's own `EventSource` reconnects with backoff and no client library — PR 8b's write
 path is plain HTTP POST and reuses this stream for its reads.
 
-The tick pushes **differences, not snapshots**: each slice is hashed (ignoring the
-"generated at" fields) and written only when the hash moves, so an idle fleet costs an idle
-socket. Two cadences, because the two slices cost three orders of magnitude apart —
-measured on this machine's fleet of 19 projects and 2,036 transcripts:
+The tick pushes **differences, not snapshots**: each slice is hashed and written only when
+the hash moves. Two cadences, because the two slices cost three orders of magnitude apart —
+measured on this machine's fleet of 19 projects and 2,037 transcripts:
 
 | Slice | Cost per tick | Cadence | Why |
 |---|---|---|---|
 | `sessions` | ~16 ms | 1 s | `IndexStore.refresh()` — a `stat()` per transcript, and a read only of appended bytes |
 | `fleet` | ~430 ms | 10 s | spawns `warroom-install.mjs fleet` once and `git worktree list` per project, plus the account-wide rolling-5h scan |
 
-`Bun.serve`'s `idleTimeout` is set to `0` in `server/index.ts`. Its 10-second default reaped
-every SSE connection the moment the fleet went quiet — which `EventSource` hid, by silently
-reconnecting every ten seconds forever. `test/stream.test.ts` holds a real silent socket
-open past that window rather than asserting the config value.
+**What "an idle fleet costs an idle socket" does and does not mean.** The `sessions` slice
+goes completely silent — appending a line that carries no usage record moves no figure and
+writes no bytes, which `test/stream.test.ts` pins in both directions. The `fleet` slice does
+**not** go permanently silent even on a wholly idle machine: it carries the account-wide
+rolling-5h token figure, and that changes as turns age *out* of the window with nothing
+happening at all. An occasional `fleet` frame on an idle fleet is a number that really did
+change, not a spurious push.
+
+What is excluded from the hash is written as an explicit projection in `server/state.ts`
+rather than a set of key names stripped at any depth — a name-based stripper would silently
+exclude the next field anyone happens to call `now`. `filesScanned` and `bytesRead` are
+excluded too: they are diagnostics of the scan, not the figure it produced, and they move on
+*any* append to *any* transcript, which pushed the whole 19-project payload on writes that
+changed nothing on screen. They stay in the payload as provenance.
+
+**The idle reaper.** `Bun.serve` closes a connection after 10 idle seconds by default, which
+killed every SSE connection the moment the fleet went quiet — hidden by `EventSource`
+silently reconnecting every ten seconds forever. `/events` opts out **per request** via
+`server.timeout(req, 0)`; the server keeps Bun's default for every other route, because a
+server-wide `idleTimeout: 0` also lets a finished `GET /api/health` hold its keep-alive
+socket open indefinitely. `test/stream.test.ts` serves with the default and holds a real
+silent socket past the window, rather than asserting a config value.
 
 ## What the views will not show you
 
@@ -94,13 +111,34 @@ claim with an expiry (`c-mission-control-cold-start`, below): when the real cold
 10 s, the ledger fails and forces a Refresh, Deprecate or Waive instead of silence. A database
 would still be a cache for a read that stays fast between those checkpoints. The live figure
 as of PR3, measured through the route the views actually read: `/api/sessions` answers in
-**3.9 s** cold and **26 ms** on the next call, across 2,036 sessions.
+**3.9–4.1 s** cold and **16–26 ms** on the next call, across 2,037 sessions.
 
 ## Checking it
 
 `npm run check:mc` from the repo root runs `mission-control/check.mjs`, which confirms bun
-and its dependencies are present (`--probe`) and then runs `bun test`. It fails with a named
-message — never a stack trace — when bun or `node_modules` is missing.
+and its dependencies are present (`--probe`), then **typechecks** (`tsc --noEmit`), then runs
+`bun test`. It fails with a named message — never a stack trace — when bun or `node_modules`
+is missing.
+
+The typecheck is in the gate as of PR3, and it should have been there from PR1: `bun test`
+runs TypeScript by *stripping* types, never checking them, so for two PRs nothing in
+`npm run check` or CI ever ran `tsc`. That was survivable for server code with heavy runtime
+tests. It stopped being survivable when the client landed, because the client imports its
+wire types straight from the server specifically so that adding a field to `FleetRow` and
+forgetting the view is a compile error — a guarantee whose entire enforcement was a comment
+claiming it existed.
+
+### Machine-gated tests
+
+`test/gate.ts` is the one implementation of "can this machine answer". It fires on exactly
+one condition — `~/.claude/projects` absent, the CI-runner case — and prints
+`… NOT VERIFIED — <reason>. Nothing was compared; this is not a pass on the merits.`
+
+It deliberately does **not** consult discovery. An earlier version skipped whenever discovery
+returned zero projects, which is the *result of the operation under test*, not a property of
+the machine: `MC_PROJECT_ROOTS=/nonexistent bun test test/live.test.ts` reported **3 pass, 1
+expect() call** — every real assertion skipped, the gate's own pin still green. The same
+command now fails, which is the correct answer.
 
 ```claims
 claims:
