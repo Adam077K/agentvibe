@@ -190,24 +190,43 @@ function ClaimsBlock({ claims, now }: { claims: ClaimsSummary | { present: false
   if ('present' in claims) {
     return <AbsentSection short="no claim catalog" reason={claims.reason} />;
   }
+  // A BAND WITH NO CLAIMS IS NOT A BAND WITH NOTHING DUE. Same defect as the Conflicts
+  // zero-swept all-clear: at `total: 0` this rendered "0 claims ·" — a dangling separator
+  // with nothing after it — above "0 claims were checked, so this is a measured all-clear",
+  // which is a positive finding about a population of nothing.
+  if (claims.total === 0) {
+    return (
+      <AbsentSection
+        short="no claims in this scope"
+        reason="This ledger was read successfully and holds no claims at all, so nothing here is expiring — and that is not an all-clear, because there is nothing to be clear about. A row appears once a claim is written into an artifact this scope covers."
+      />
+    );
+  }
+
   const kinds = Object.entries(claims.byKind).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   return (
     <div className="space-y-4">
       <div className="fig text-[12.5px] text-muted">
-        <span className="text-text">{formatCount(claims.total)}</span> claims ·{' '}
-        {kinds.map(([kind, n], i) => (
+        <span className="text-text">{formatCount(claims.total)}</span> claims
+        {kinds.map(([kind, n]) => (
           <span key={kind}>
-            {i > 0 && ' · '}
+            {' · '}
             {formatCount(n)} {kind}
           </span>
         ))}
       </div>
       <div>
-        <div className="label mb-1.5">Expiring within 30 days</div>
+        {/* THE LABEL NAMES WHAT THE LIST ACTUALLY HOLDS. summarizeClaims filters on
+            `t - now < THIRTY_DAYS`, which has no lower bound, so an ALREADY-EXPIRED claim
+            satisfies it — the canary (valid_until 2026-01-02, deliberately in the past) sat
+            under a heading promising the next 30 days beside a cell reading "expired 224d
+            ago". The filter is right and stays: an overdue claim is precisely what a reader
+            of this panel needs to see. It was the heading that was lying. */}
+        <div className="label mb-1.5">Expired, or expiring within 30 days</div>
         {claims.expiringWithin30Days.length === 0 ? (
           <p className="text-[12.5px] text-muted">
-            Nothing in this scope comes due in the next 30 days. {formatCount(claims.total)} claims were checked, so
-            this is a measured all-clear rather than an empty list.
+            Nothing in this scope is overdue or comes due in the next 30 days. {formatCount(claims.total)} claims were
+            checked, so this is a measured all-clear rather than an empty list.
           </p>
         ) : (
           <ExpiringTable claims={claims.expiringWithin30Days} now={now} />

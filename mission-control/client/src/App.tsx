@@ -14,7 +14,7 @@
 // rather than showing a cached figure from ten minutes ago. On a control plane, a stale
 // number that looks live is the more expensive of the two failures.
 
-import { useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import {
   useEndpoint,
   useMissionControlStream,
@@ -30,14 +30,30 @@ import { SessionsView } from './views/SessionsView.tsx';
 import { BeliefView } from './views/BeliefView.tsx';
 import { ConflictsView } from './views/ConflictsView.tsx';
 
+/** What a fetched (non-stream) view knows about its own data's age. */
+export interface Freshness {
+  loadedAt: number | null;
+  loading: boolean;
+}
+
 interface ViewContext {
   stream: StreamState;
   now: number;
+  /** A fetched view reports its own freshness here; stream views never call it. */
+  onFreshness: (f: Freshness) => void;
 }
 
 interface ViewDef {
   id: string;
   label: string;
+  /**
+   * True when this view's data arrives on the SSE tick. It decides WHICH badge the app bar
+   * shows, and it exists because the badge was previously unconditional: ConnectionBadge
+   * tracks the stream, so sitting on Belief for ten minutes displayed "updated 6s ago" above
+   * figures fetched once at mount. The badge was telling the truth about a subscription that
+   * had nothing to do with what was on screen — freshness asserted for the wrong population.
+   */
+  stream: boolean;
   render: (ctx: ViewContext) => ReactNode;
 }
 
@@ -47,22 +63,24 @@ interface ViewDef {
  * live inside a component that is only mounted for the active tab, which is the same thing
  * expressed where React can see it.
  */
-function BeliefPanel({ now }: { now: number }) {
-  const { data, loading, error, refetch } = useEndpoint<BeliefSummary>('/api/belief');
+function BeliefPanel({ now, onFreshness }: { now: number; onFreshness: (f: Freshness) => void }) {
+  const { data, loading, error, loadedAt, refetch } = useEndpoint<BeliefSummary>('/api/belief');
+  useEffect(() => onFreshness({ loadedAt, loading }), [loadedAt, loading, onFreshness]);
   return <BeliefView belief={data} loading={loading} error={error} now={now} onRefresh={refetch} />;
 }
 
-function ConflictsPanel() {
-  const { data, loading, error, refetch } = useEndpoint<{ reports: ConflictReport[] }>('/api/conflicts');
+function ConflictsPanel({ onFreshness }: { onFreshness: (f: Freshness) => void }) {
+  const { data, loading, error, loadedAt, refetch } = useEndpoint<{ reports: ConflictReport[] }>('/api/conflicts');
+  useEffect(() => onFreshness({ loadedAt, loading }), [loadedAt, loading, onFreshness]);
   return <ConflictsView reports={data?.reports ?? null} loading={loading} error={error} onRefresh={refetch} />;
 }
 
 // THE ONE LIST. Order here is the order in the nav.
 const VIEWS = [
-  { id: 'fleet', label: 'Fleet', render: ({ stream, now }) => <FleetView fleet={stream.fleet} now={now} /> },
-  { id: 'sessions', label: 'Sessions', render: ({ stream, now }) => <SessionsView slice={stream.sessions} now={now} /> },
-  { id: 'belief', label: 'Belief', render: ({ now }) => <BeliefPanel now={now} /> },
-  { id: 'conflicts', label: 'Conflicts', render: () => <ConflictsPanel /> },
+  { id: 'fleet', label: 'Fleet', stream: true, render: ({ stream, now }) => <FleetView fleet={stream.fleet} now={now} /> },
+  { id: 'sessions', label: 'Sessions', stream: true, render: ({ stream, now }) => <SessionsView slice={stream.sessions} now={now} /> },
+  { id: 'belief', label: 'Belief', stream: false, render: ({ now, onFreshness }) => <BeliefPanel now={now} onFreshness={onFreshness} /> },
+  { id: 'conflicts', label: 'Conflicts', stream: false, render: ({ onFreshness }) => <ConflictsPanel onFreshness={onFreshness} /> },
 ] as const satisfies readonly ViewDef[];
 
 /** Derived from the registry — there is no second list of view ids to keep in step. */
@@ -106,12 +124,47 @@ function ConnectionBadge({ state, lastEventAt, now }: { state: ConnectionState; 
   );
 }
 
+/**
+ * The freshness badge for a view that FETCHED its data rather than subscribing. Says when the
+ * bytes on screen arrived, which for these tabs is a different question from whether the SSE
+ * socket is healthy — and it is the question a reader of Belief or Conflicts is actually
+ * asking, because nothing refreshes those figures until they ask for it.
+ */
+function FetchedBadge({ freshness, now }: { freshness: Freshness | null; now: number }) {
+  if (freshness === null || (freshness.loading && freshness.loadedAt === null)) {
+    return (
+      <div className="flex items-center gap-2 text-[11.5px]" title="This view fetches once when its tab is opened. The first response has not arrived yet.">
+        <span className="inline-block h-[7px] w-[7px] rounded-full bg-live breathe" />
+        <span className="text-muted">loading</span>
+      </div>
+    );
+  }
+  return (
+    <div
+      className="flex items-center gap-2 text-[11.5px]"
+      title="This view is not on the live stream — it fetched once when you opened the tab, for the measured reason recorded in client/src/api.ts. Nothing refreshes it until you press the refresh button in the panel, so this is the age of what you are reading."
+    >
+      <span className={`inline-block h-[7px] w-[7px] rounded-full ${freshness.loading ? 'bg-live breathe' : 'border border-muted bg-transparent'}`} />
+      <span className="text-muted">{freshness.loading ? 'refreshing' : 'fetched'}</span>
+      {freshness.loadedAt !== null && (
+        <span className="fig text-dim">· {formatRelative(freshness.loadedAt, now)}</span>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState<Tab>('fleet');
   const stream = useMissionControlStream();
   const now = useNow();
 
   const active = VIEWS.find((v) => v.id === tab) ?? VIEWS[0];
+
+  const [freshness, setFreshness] = useState<Freshness | null>(null);
+  const onFreshness = useCallback((f: Freshness) => setFreshness(f), []);
+  // Clear on every tab change, so a stale figure from the tab you just left can never be
+  // shown against the tab you just opened.
+  useEffect(() => setFreshness(null), [tab]);
 
   return (
     <div className="min-h-[100dvh]">
@@ -141,14 +194,18 @@ export default function App() {
             ))}
           </nav>
           <div className="ml-auto">
-            <ConnectionBadge state={stream.connection} lastEventAt={stream.lastEventAt} now={now} />
+            {active.stream ? (
+              <ConnectionBadge state={stream.connection} lastEventAt={stream.lastEventAt} now={now} />
+            ) : (
+              <FetchedBadge freshness={freshness} now={now} />
+            )}
           </div>
         </div>
       </header>
 
       {/* The first slice waits on a full cold index build — several seconds on a large
           transcript corpus. Without saying so, that window looks like a hung page. */}
-      {stream.fleet === null && stream.sessions === null && stream.connection !== 'failed' && (
+      {active.stream && stream.fleet === null && stream.sessions === null && stream.connection !== 'failed' && (
         <div className="border-b border-line px-6 py-2 text-[12px] text-muted">
           Building the session index — one full read of every transcript under{' '}
           <code className="fig">~/.claude/projects</code>, a few seconds on a large corpus. Every refresh after this one
@@ -156,7 +213,11 @@ export default function App() {
         </div>
       )}
 
-      {stream.connection === 'failed' && (
+      {/* Both notices are gated on the active view being stream-backed. They describe the SSE
+          subscription and the session index, and neither is a fact about Belief or Conflicts
+          — "Everything below is the last state received" is simply false above a panel that
+          fetched its own bytes a moment ago. */}
+      {active.stream && stream.connection === 'failed' && (
         <div className="border-b border-bad/40 bg-bad/10 px-6 py-2 text-[12px] text-bad">
           The live stream is closed and will not retry. Start the server with{' '}
           <code className="fig">bun run server</code> in <code className="fig">mission-control/</code>, then reload.
@@ -164,7 +225,7 @@ export default function App() {
         </div>
       )}
 
-      <main>{active.render({ stream, now })}</main>
+      <main>{active.render({ stream, now, onFreshness })}</main>
     </div>
   );
 }

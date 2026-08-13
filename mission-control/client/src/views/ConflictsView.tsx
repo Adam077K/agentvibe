@@ -18,8 +18,6 @@ import type { ConflictReport, WorktreeChanges } from '../api.ts';
 import { formatCount } from '../format.ts';
 import { EmptyState, Footnote, StatusDot, Td, Th, Unavailable } from '../ui.tsx';
 
-const COLUMNS = 3;
-
 /** The last two path segments — enough to tell `.worktrees/ceo-1-178…` from its siblings. */
 export function worktreeLabel(absPath: string): string {
   const parts = absPath.split('/').filter(Boolean);
@@ -28,7 +26,10 @@ export function worktreeLabel(absPath: string): string {
 
 export interface ConflictTotals {
   projects: number;
-  swept: number;
+  /** Worktrees the sweep ATTEMPTED — readable and unreadable alike. */
+  attempted: number;
+  /** Of those, the ones git answered for. `attempted - read === unreadable`, always. */
+  read: number;
   excluded: number;
   unreadable: number;
   conflicts: number;
@@ -41,23 +42,37 @@ export interface ConflictTotals {
  * Exported and pure so a test can assert the header's numbers against the rows on screen.
  * The §0 corollary this exists to obey: a numerator and a denominator drawn from two
  * populations disagree eventually, and the Fleet headline shipped "2 of 11" for an answer of
- * 4 exactly that way. `swept` counts worktree rows; `excluded` sums the collector's own
- * per-project exclusion counts; nothing here recounts anything the server already counted.
+ * 4 exactly that way.
+ *
+ * ONE WORD, ONE QUANTITY. "Swept" used to name two different numbers on one screen: the
+ * header counted every attempted worktree, and each project line counted attempted-minus-
+ * unreadable while using the same word — so adding up the project lines never reached the
+ * header, and a reader had no way to see which meaning was in front of them. There is now no
+ * field called `swept` at all: `attempted` is what the sweep tried, `read` is what git
+ * answered for, and the invariant `attempted - read === unreadable` is pinned by a test.
  */
 export function totalsFor(reports: ConflictReport[]): ConflictTotals {
-  let swept = 0;
+  let attempted = 0;
   let excluded = 0;
   let unreadable = 0;
   let conflicts = 0;
   let projectsWithConflicts = 0;
   for (const r of reports) {
-    swept += r.worktrees.length;
+    attempted += r.worktrees.length;
     excluded += r.excluded.count;
     unreadable += r.worktrees.filter((w) => w.readable === false).length;
     conflicts += r.conflicts.length;
     if (r.conflicts.length > 0) projectsWithConflicts++;
   }
-  return { projects: reports.length, swept, excluded, unreadable, conflicts, projectsWithConflicts };
+  return {
+    projects: reports.length,
+    attempted,
+    read: attempted - unreadable,
+    excluded,
+    unreadable,
+    conflicts,
+    projectsWithConflicts,
+  };
 }
 
 /** Worktrees the sweep could not read — never folded in with the ones that were clean. */
@@ -91,8 +106,13 @@ export function ConflictsTable({ report }: { report: ConflictReport }) {
     <table className="w-full border-collapse text-[12.5px]">
       <thead>
         <tr>
-          <Th>File</Th>
-          <Th width="10ch" align="right" title="How many swept worktrees hold uncommitted edits to this path">
+          {/* Capped, like every other free-text column in this codebase. A repository path
+              runs to any length, and uncapped it pushed the Branches column — the part that
+              says WHO is about to collide — off the right edge of the screen. The full path
+              stays in the title, and CSS truncation never removes text from the
+              accessibility tree. */}
+          <Th width="52ch">File</Th>
+          <Th width="10ch" align="right" title="How many worktrees hold uncommitted edits to this path">
             Worktrees
           </Th>
           <Th>Branches</Th>
@@ -102,7 +122,7 @@ export function ConflictsTable({ report }: { report: ConflictReport }) {
         {report.conflicts.map((c, i) => (
           <tr key={c.file} className={`transition-colors hover:bg-raised ${i % 2 === 1 ? 'bg-row-alt' : ''}`}>
             <Td mono className="text-text" title={c.file}>
-              {c.file}
+              <span className="block max-w-[52ch] truncate">{c.file}</span>
             </Td>
             <Td align="right" mono className="text-warn">
               {formatCount(c.worktrees.length)}
@@ -126,15 +146,18 @@ export function ConflictsTable({ report }: { report: ConflictReport }) {
 
 function ProjectSection({ report }: { report: ConflictReport }) {
   const unreadable = report.worktrees.filter((w) => w.readable === false);
-  const clean = report.worktrees.length - unreadable.length;
+  const read = report.worktrees.length - unreadable.length;
 
   return (
     <section className="border-t border-line px-6 py-5">
       <div className="flex flex-wrap items-baseline gap-x-3">
         <h2 className="fig text-[13.5px] text-text">{report.project}</h2>
+        {/* "read", not "swept". This line used to subtract the unreadable ones and still call
+            the remainder "swept" while the header called the un-subtracted total the same
+            thing, so the project lines never summed to the headline. */}
         <span className="text-[11.5px] text-dim">
           {formatCount(report.conflicts.length)} conflicting file{report.conflicts.length === 1 ? '' : 's'} ·{' '}
-          {formatCount(clean)} worktree{clean === 1 ? '' : 's'} swept
+          {formatCount(read)} worktree{read === 1 ? '' : 's'} read
           {unreadable.length > 0 && (
             <>
               {' · '}
@@ -172,6 +195,14 @@ export function ConflictsView({
   onRefresh: () => void;
 }) {
   const totals = useMemo(() => (reports ? totalsFor(reports) : null), [reports]);
+
+  // The collector's own sentence, rendered rather than restated. Every report with a non-zero
+  // exclusion carries the identical EXCLUDED_REASON constant (pinned in
+  // test/collectors.test.ts), so taking the first one is taking the only one.
+  const excludedReason = useMemo(
+    () => (reports ?? []).find((r) => r.excluded.count > 0)?.excluded.reason ?? null,
+    [reports]
+  );
 
   // Every project with something to say — a conflict, or a worktree it could not read.
   // A project with neither is genuinely nothing to report and is left out rather than
@@ -225,7 +256,8 @@ export function ConflictsView({
           </div>
           <div className="mt-1.5 text-[11px] text-dim">
             across {formatCount(totals.projectsWithConflicts)} of {formatCount(totals.projects)} projects ·{' '}
-            {formatCount(totals.swept)} agent worktrees swept
+            {formatCount(totals.attempted)} agent worktree{totals.attempted === 1 ? '' : 's'} swept
+            {totals.unreadable > 0 && <>, {formatCount(totals.read)} of them read</>}
           </div>
         </div>
         <button
@@ -242,35 +274,61 @@ export function ConflictsView({
       {/* THE NARROWING, STATED UNDER THE HEADER. The sweep looks at 30 of 285 worktrees on
           this machine; a reader who does not know that would take "3 conflicts" as a
           statement about every worktree they have, which it is not. */}
+      {/* THE NARROWING, STATED UNDER THE HEADER. The sweep looks at 30 of 285 worktrees on
+          this machine; a reader who does not know that would take "3 conflicts" as a
+          statement about every worktree they have, which it is not. The explanation is the
+          collector's own string, rendered — not a second wording maintained here. */}
       {totals.excluded > 0 && (
         <p className="border-t border-line px-6 py-2 text-[12px] text-muted">
           <span className="fig text-warn">{formatCount(totals.excluded)}</span> worktrees not swept (not
-          agent-started).{' '}
-          <span className="text-dim">
-            A worktree is swept when its project&rsquo;s <code className="fig">.worktrees/.registry</code> names it and
-            git does not report it prunable. The rest are real worktrees that may hold uncommitted work — they are
-            outside what an agent-conflict view can speak for, and sweeping all {formatCount(totals.swept + totals.excluded)}{' '}
-            cost 17 seconds per request.
-          </span>
+          agent-started). <span className="text-dim">{excludedReason}</span>
         </p>
       )}
 
       {totals.unreadable > 0 && (
         <p className="border-t border-line px-6 py-2 text-[12px] text-warn">
-          {formatCount(totals.unreadable)} swept worktree{totals.unreadable === 1 ? '' : 's'} could not be read. Those
-          are listed below with the reason — they are NOT counted as clean.
+          {formatCount(totals.unreadable)} of the {formatCount(totals.attempted)} swept worktree
+          {totals.attempted === 1 ? '' : 's'} could not be read. Those are listed below with the reason — they are NOT
+          counted as clean.
         </p>
       )}
 
-      {shown.length === 0 ? (
+      {/* NOTHING CHECKED IS NOT AN ALL-CLEAR. With zero worktrees swept this rendered "0
+          agent-started worktrees across 19 projects were swept and every one of them was
+          readable, so this is a measured all-clear" — a positive finding about a population
+          of nothing, in the largest type on the panel, and one missing .registry file away
+          from being the normal state. Same defect FleetView's GenerationFigure documents and
+          fixes for the drift headline: the all-clear exists in ONE branch, the one where a
+          comparison happened. */}
+      {totals.attempted === 0 ? (
+        <EmptyState
+          headline="Nothing was checked."
+          body={
+            <>
+              No worktree on this machine is named by a project&rsquo;s <code>.worktrees/.registry</code>, so the sweep
+              had nothing in scope and this panel is not reporting that your worktrees are clean —{' '}
+              {totals.excluded > 0 ? (
+                <>
+                  it is reporting that it looked at none of them. {formatCount(totals.excluded)} worktree
+                  {totals.excluded === 1 ? '' : 's'} exist and were excluded.
+                </>
+              ) : (
+                <>it is reporting that there were none to look at. {formatCount(totals.projects)} projects were scanned.</>
+              )}{' '}
+              A registry file appears when a CEO launcher starts a session; until then this view has no population to
+              speak for.
+            </>
+          }
+        />
+      ) : shown.length === 0 ? (
         <EmptyState
           headline="No two agent worktrees are editing the same file."
           body={
             <>
-              {formatCount(totals.swept)} agent-started worktrees across {formatCount(totals.projects)} projects were
-              swept and every one of them was readable, so this is a measured all-clear rather than an empty list. A
-              conflict appears here when two worktrees hold uncommitted changes to the same path — before either one
-              merges, which is when it is still cheap to resolve.
+              {formatCount(totals.read)} agent-started worktree{totals.read === 1 ? '' : 's'} across{' '}
+              {formatCount(totals.projects)} projects were read successfully, so this is a measured all-clear rather
+              than an empty list. A conflict appears here when two worktrees hold uncommitted changes to the same path
+              — before either one merges, which is when it is still cheap to resolve.
             </>
           }
         />
@@ -290,5 +348,3 @@ export function ConflictsView({
     </section>
   );
 }
-
-export { COLUMNS as CONFLICT_COLUMNS };

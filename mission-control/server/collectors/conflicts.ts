@@ -125,15 +125,26 @@ export function scopeSweep(entries: WorktreeEntry[]): { swept: WorktreeEntry[]; 
   return { swept, excluded };
 }
 
-/** The one sentence explaining a non-zero exclusion count. Exported so the test reads it too. */
-export function excludedReason(count: number, total: number): string {
-  return (
-    `${count} of ${total} non-main worktrees are not swept: this project's .worktrees/.registry does not name them ` +
-    '(so no agent session started them), or git reports them prunable. They are real worktrees and may well hold ' +
-    'uncommitted work — they are simply outside what an agent-conflict view can speak for, and sweeping every ' +
-    'worktree on the machine cost 17 seconds per request.'
-  );
-}
+/**
+ * THE sentence explaining an exclusion, and the only place it is written.
+ *
+ * It carries no count and no timing figure, deliberately. The count belongs to
+ * `excluded.count`, which the view sums itself. The first version of this string ended
+ * "…sweeping every worktree on the machine cost 17 seconds per request" — a hardcoded
+ * measurement of the SYNCHRONOUS implementation this PR deleted, rendered beside a computed
+ * worktree count so it read as though the 17 s had been measured for that number. It had
+ * not been, and on a larger fleet it asserted a figure nobody ever took. A constant is a
+ * fact about the rule; a duration is a measurement, and a measurement nobody can recompute
+ * does not belong in a string.
+ *
+ * The view RENDERS this rather than restating it, so there is one wording instead of two
+ * that drift. test/collectors.test.ts pins that every non-zero exclusion carries exactly
+ * this text, so "one wording" is checked rather than merely intended.
+ */
+export const EXCLUDED_REASON =
+  "these worktrees are not named by their project's .worktrees/.registry — so no agent session started them — " +
+  'or git reports them prunable. They are real worktrees and may hold uncommitted work; they are simply outside ' +
+  'what an agent-conflict view can speak for.';
 
 /**
  * `git status --porcelain` in one worktree. Never throws; returns the three-state shape.
@@ -212,9 +223,6 @@ export async function detectConflicts(project: Project): Promise<ConflictReport>
     // ONE POPULATION, ONE FIGURE. Both numbers come from the single partition above, so the
     // count rendered under the header is by construction the count the sweep skipped; there
     // is no second traversal that could drift from it.
-    excluded: {
-      count: excluded.length,
-      reason: excludedReason(excluded.length, swept.length + excluded.length),
-    },
+    excluded: { count: excluded.length, reason: EXCLUDED_REASON },
   };
 }

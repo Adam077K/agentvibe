@@ -855,12 +855,78 @@ describe('render parity — Conflicts', () => {
     );
     const text = textOf(html);
     expect(text).toContain(`${totals.excluded} worktrees not swept (not agent-started)`);
-    // And the swept count on screen is the number of worktree entries the payload carries —
-    // the other half of the same partition.
-    expect(text).toContain(`${totals.swept} agent worktrees swept`);
-    expect(totals.swept + totals.excluded).toBe(
+    // And the attempted count on screen is the number of worktree entries the payload
+    // carries — the other half of the same partition.
+    expect(text).toContain(`${totals.attempted} agent worktrees swept`);
+    expect(totals.attempted + totals.excluded).toBe(
       reports.reduce((n, r) => n + r.worktrees.length + r.excluded.count, 0)
     );
+
+    // ONE WORD, ONE QUANTITY. `swept` used to mean "attempted" in the header and "attempted
+    // minus unreadable" in each project line, so the project lines never summed to the
+    // headline and a reader could not tell which meaning was in front of them. The two
+    // quantities now have two names, and the identity between them is asserted.
+    expect(totals.read).toBe(totals.attempted - totals.unreadable);
+  });
+
+  // NOTHING CHECKED IS NOT AN ALL-CLEAR. With no registry file anywhere the sweep has an
+  // empty scope, and this rendered "0 agent-started worktrees … every one of them was
+  // readable, so this is a measured all-clear" — the exact shape FleetView's GenerationFigure
+  // documents and forbids. One missing .registry away from being the normal state.
+  test('zero worktrees swept renders as nothing-checked, never as a measured all-clear', () => {
+    const nothingSwept: ConflictReport[] = [
+      { project: 'ashcroft', worktrees: [], conflicts: [], excluded: { count: 7, reason: 'not agent-started' } },
+      { project: 'tessellate', worktrees: [], conflicts: [], excluded: { count: 0, reason: 'not agent-started' } },
+    ];
+    expect(totalsFor(nothingSwept).attempted).toBe(0); // the premise
+    const text = textOf(
+      renderToStaticMarkup(<ConflictsView reports={nothingSwept} loading={false} error={null} onRefresh={() => {}} />)
+    );
+    expect(text).toContain('Nothing was checked');
+    expect(text).not.toContain('measured all-clear');
+    expect(text).toContain('7 worktrees exist and were excluded'); // it says what it skipped
+
+    // An empty reports array is the same condition and must answer the same way — it used to
+    // print the all-clear across "0 of 0 projects" too.
+    const emptyText = textOf(
+      renderToStaticMarkup(<ConflictsView reports={[]} loading={false} error={null} onRefresh={() => {}} />)
+    );
+    expect(emptyText).toContain('Nothing was checked');
+    expect(emptyText).not.toContain('measured all-clear');
+  });
+
+  // The all-clear's own branch, so the test above is not merely asserting the absence of a
+  // string that no input ever produces.
+  test('…and with worktrees actually read, the all-clear IS printed', async () => {
+    const reports = (await conflictsPayload('allclear')).map((r) => ({ ...r, conflicts: [] }));
+    expect(totalsFor(reports).read).toBeGreaterThan(0); // the premise
+    const text = textOf(
+      renderToStaticMarkup(<ConflictsView reports={reports} loading={false} error={null} onRefresh={() => {}} />)
+    );
+    expect(text).toContain('measured all-clear');
+    expect(text).not.toContain('Nothing was checked');
+  });
+
+  // ONE WORDING, ONE PLACE. The excluded explanation is the collector's constant, rendered —
+  // not a second sentence maintained in the view. The two had already drifted apart, and the
+  // view's copy quoted "17 seconds per request": a measurement of the SYNCHRONOUS sweep this
+  // PR deleted, printed next to a computed worktree count as though it applied to it.
+  test("the excluded explanation on screen is the collector's own string, and prices nothing", async () => {
+    const reports = await conflictsPayload('reason');
+    const withExclusion = reports.find((r) => r.excluded.count > 0)!;
+    expect(withExclusion).toBeDefined();
+
+    const text = textOf(
+      renderToStaticMarkup(<ConflictsView reports={reports} loading={false} error={null} onRefresh={() => {}} />)
+    );
+    expect(text).toContain(withExclusion.excluded.reason);
+    expect(text).not.toContain('17 seconds');
+    expect(text).not.toMatch(/cost \d+ seconds/);
+
+    // Every non-zero exclusion carries the identical constant, which is what makes "render
+    // the first one" correct in the view rather than a lucky guess.
+    const reasons = new Set(reports.filter((r) => r.excluded.count > 0).map((r) => r.excluded.reason));
+    expect(reasons.size).toBe(1);
   });
 
   // COULD-NOT-LOOK MUST NOT RENDER AS CLEAN. Defect 2 of the conflicts collector, checked at
@@ -894,7 +960,10 @@ describe('render parity — Conflicts', () => {
     // the positive check was vacuous and the negative check is what proved it.
     expect(text).toContain('Could not look');
     expect(text).toContain('exited 128'); // the reason reaches the screen, not just the payload
-    expect(text).toContain('1 swept worktree could not be read');
+    // Stated as a fraction of what was attempted, so the unreadable count and the swept
+    // count on screen are visibly drawn from the same population.
+    expect(text).toContain('1 of the 2 swept worktrees could not be read');
+    expect(text).toContain('1 worktree read · 1 unreadable'); // and the project line agrees
     // The all-clear must NOT be printed while one worktree could not be read.
     expect(text).not.toContain('measured all-clear');
 
@@ -1074,6 +1143,45 @@ describe('render parity — Belief', () => {
     const text = textOf(renderToStaticMarkup(<WaiverList waivers={[]} />));
     expect(text).toContain('No claim in this scope carries a waiver');
     expect(text).not.toContain('does not exist');
+  });
+
+  // The heading promised "within 30 days" while the list has no lower bound, so the canary
+  // (valid_until 2026-01-02, deliberately in the past) sat under it beside a cell reading
+  // "expired 224d ago". The filter is correct and unchanged — an overdue claim is what a
+  // reader needs most — so the heading is what had to say so.
+  test('the expiry heading admits that the list includes already-expired claims', () => {
+    const payload = beliefPayload([]);
+    const overdue: LedgerClaim = {
+      id: 'c-canary-unresolvable',
+      assert: 'built to fail',
+      kind: 'behavior',
+      scope: 'project',
+      verified_by: 'command',
+      valid_until: '2026-01-02',
+      source_file: 'docs/x.md',
+      source_line: 1,
+    };
+    (payload.bands[0]!.claims as ClaimsSummary).expiringWithin30Days = summarizeClaims([overdue], NOW).expiringWithin30Days;
+    expect((payload.bands[0]!.claims as ClaimsSummary).expiringWithin30Days).toHaveLength(1); // the premise
+
+    const text = textOf(
+      renderToStaticMarkup(<BeliefView belief={payload} loading={false} error={null} now={NOW} onRefresh={() => {}} />)
+    );
+    expect(text).toContain('Expired, or expiring within 30 days');
+    expect(text).toMatch(/expired \d+d ago/); // the row states it too, in words not only colour
+  });
+
+  // Same shape as the Conflicts zero-swept all-clear: a band that holds no claims must not
+  // report that nothing is expiring, and must not leave a dangling "0 claims ·" separator.
+  test('a band with zero claims says so, instead of printing an all-clear over nothing', () => {
+    const payload = beliefPayload([]);
+    payload.bands[1]!.claims = { total: 0, byKind: {}, byScope: {}, expiringWithin30Days: [] };
+    const text = textOf(
+      renderToStaticMarkup(<BeliefView belief={payload} loading={false} error={null} now={NOW} onRefresh={() => {}} />)
+    );
+    expect(text).toContain('no claims in this scope');
+    expect(text).not.toContain('0 claims ·');
+    expect(text).not.toContain('0 claims were checked');
   });
 
   test('the pending state names what is running rather than showing a bare spinner', () => {
