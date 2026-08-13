@@ -16,7 +16,7 @@ import type { FleetSummary } from '../../server/collectors/fleet.ts';
 import type { SessionsSlice } from '../../server/state.ts';
 
 export type { FleetSummary, SessionsSlice };
-export type { FleetRow, LauncherInfo } from '../../server/collectors/fleet.ts';
+export type { FleetRow, LauncherInfo, ModalGeneration } from '../../server/collectors/fleet.ts';
 export type { SessionSummary } from '../../server/index-store.ts';
 
 /**

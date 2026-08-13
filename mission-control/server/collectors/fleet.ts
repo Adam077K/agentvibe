@@ -47,16 +47,26 @@ export interface FleetRow {
   launcherDrift: boolean | null;
 }
 
+/**
+ * Whether there IS a generation the fleet converges on, and when there is not, WHICH of the
+ * three reasons applies. This replaced a bare `string | null`, and the null was the defect:
+ * three different situations collapsed into one absence, so the view could not tell "every
+ * launcher agrees on nothing to report" from "nothing was compared". It rendered the former
+ * for all three — a convergence claim in the case where no comparison happened. Named cases
+ * make that unrepresentable.
+ */
+export type ModalGeneration =
+  | { kind: 'modal'; generation: string; inScopeLaunchers: number }
+  | { kind: 'tie'; candidates: string[]; inScopeLaunchers: number }
+  | { kind: 'none-in-scope'; launchers: number }
+  | { kind: 'no-launchers' };
+
 export interface FleetSummary {
   generatedAt: number;
   projects: FleetRow[];
   budget: WindowUsage;
-  /**
-   * The most common generation among IN-SCOPE launchers — the one a fleet-wide update
-   * converges on. Null when no in-scope launcher was listed, or when two generations tie
-   * (there is then no single "current", and calling either one drift would be arbitrary).
-   */
-  modalGeneration: string | null;
+  /** The generation a fleet-wide update converges on, or why there is not one. */
+  modalGeneration: ModalGeneration;
 }
 
 const ROW_RE = /^\s*(\S+)\s+(\d+)\s+(\d+)\s+([0-9a-f]{8})\s+(in scope|excluded)\s*$/;
@@ -101,25 +111,26 @@ export function runWarroomFleet(repoRoot: string): LauncherRow[] {
  * A tie returns null: with two equally common generations there is no current one, and
  * flagging either side as drift would be a coin toss presented as a finding.
  */
-export function modalInScopeGeneration(launchers: LauncherRow[]): string | null {
+export function modalInScopeGeneration(launchers: LauncherRow[]): ModalGeneration {
+  if (launchers.length === 0) return { kind: 'no-launchers' };
+
   const counts = new Map<string, number>();
+  let inScopeLaunchers = 0;
   for (const l of launchers) {
     if (l.scope !== 'in scope') continue;
+    inScopeLaunchers++;
     counts.set(l.gen, (counts.get(l.gen) ?? 0) + 1);
   }
-  let best: string | null = null;
+  if (counts.size === 0) return { kind: 'none-in-scope', launchers: launchers.length };
+
   let bestCount = 0;
-  let tied = false;
-  for (const [gen, count] of counts) {
-    if (count > bestCount) {
-      best = gen;
-      bestCount = count;
-      tied = false;
-    } else if (count === bestCount) {
-      tied = true;
-    }
+  for (const count of counts.values()) if (count > bestCount) bestCount = count;
+  const leaders = [...counts.entries()].filter(([, count]) => count === bestCount).map(([gen]) => gen);
+
+  if (leaders.length > 1) {
+    return { kind: 'tie', candidates: leaders.sort(), inScopeLaunchers };
   }
-  return tied ? null : best;
+  return { kind: 'modal', generation: leaders[0] as string, inScopeLaunchers };
 }
 
 export function buildFleet(
@@ -151,7 +162,9 @@ export function buildFleet(
       launcher,
       ledgerPresent: p.ledgerIndex.present,
       launcherDrift:
-        row && row.scope === 'in scope' && modalGeneration !== null ? row.gen !== modalGeneration : null,
+        row && row.scope === 'in scope' && modalGeneration.kind === 'modal'
+          ? row.gen !== modalGeneration.generation
+          : null,
     };
   });
 
