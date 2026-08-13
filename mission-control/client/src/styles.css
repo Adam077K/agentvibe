@@ -21,25 +21,33 @@
 
 @import 'tailwindcss';
 
+/* CONTRAST FIGURES IN THIS FILE ARE MEASURED, and were all re-measured on 2026-08-13 after
+   review found every one of them wrong — by 0.06 to 0.3, in both directions. Every
+   conclusion survived the correction, which is exactly why the numbers had gone unchecked.
+   WCAG 2.x ratio against --color-ink unless stated. Re-measure before changing a colour;
+   do not carry a figure forward because it was in the comment. */
 @theme {
   --color-ink: #0d0e11;
-  /* Zebra banding for long tables — 1.10:1 against --color-ink on purpose. It has to guide
-     the eye across a 1600px, eight-column row without becoming a second grid competing with
-     the data. Row separators alone measured 1.17:1 and did neither job. */
+  /* 1.039:1. The low figure is not an argument against it. Contrast RATIO is defined for
+     text legibility, and comparing a 1px rule to a full-row fill on that scale is a category
+     error: the row separator measures HIGHER (1.438:1) and is still the thing an eye cannot
+     track across a 1600px, eight-column row, because what carries you there is area, not
+     edge contrast. The band is deliberately faint for the opposite reason — anything
+     stronger becomes a second grid competing with the data it exists to guide you through. */
   --color-row-alt: #111318;
-  --color-raised: #171a20;
-  --color-line: #2a2f39;
-  --color-line-strong: #3d4451;
-  --color-text: #e6e8ec;
-  --color-muted: #9aa1ad;
-  /* #6a7280 measured 3.98:1 on --color-ink — under AA, while carrying every column header,
-     every footnote (including the whole "why there is no cost column" statement), every
-     `n/a`, and the filter placeholder. #7b8494 is 4.8:1 in the same cool neutral. Nothing
-     that carries meaning is allowed below 4.5:1. */
+  --color-raised: #171a20; /* 1.108:1 — hover only, never the sole carrier of anything */
+  --color-line: #2a2f39; /* 1.438:1 */
+  --color-line-strong: #3d4451; /* 1.971:1 — borders and rules, never text */
+  --color-text: #e6e8ec; /* 15.734:1 */
+  --color-muted: #9aa1ad; /* 7.422:1 */
+  /* #6a7280 measured 3.982:1 — under AA, while carrying every column header, every footnote
+     (including the whole "why there is no cost column" statement), every `n/a`, and the
+     filter placeholder. #7b8494 is 5.121:1 in the same cool neutral. Nothing that carries
+     meaning is allowed below 4.5:1. */
   --color-dim: #7b8494;
-  --color-live: #3fbf8f;
-  --color-warn: #d9a441;
-  --color-bad: #e2727a;
+  --color-live: #3fbf8f; /* 8.327:1 as text; see mc-breathe for the animated floor */
+  --color-warn: #d9a441; /* 8.581:1 */
+  --color-bad: #e2727a; /* 6.362:1 */
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
@@ -137,9 +145,10 @@
   }
 }
 
-/* Bottoms out at 0.7, not 0.35. At 0.35 the live dot spent part of every cycle at 1.98:1
- * against the background — below the 3:1 a non-text indicator needs — so the one element
- * whose entire job is saying "this is running right now" periodically became unreadable. */
+/* Bottoms out at 0.7, not 0.35. Composited over --color-ink, 0.35 puts the live dot at
+ * 1.985:1 for part of every cycle — below the 3:1 a non-text indicator needs — so the one
+ * element whose entire job is saying "this is running right now" periodically became
+ * unreadable. 0.7 measures 4.563:1 at the floor. */
 @keyframes mc-breathe {
   0%,
   100% {

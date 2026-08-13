@@ -9,11 +9,11 @@ import type { ReactNode } from 'react';
 
 /**
  * Live vs dormant, encoded by SHAPE as well as colour: live is a filled disc, dormant a
- * hollow ring. The first version varied only colour, and the dormant one (`line-strong`) sat
- * at 1.66:1 against the 3:1 a non-text indicator needs — so in the rendered fleet that
- * column read as a run of empty cells, and the sole encoding of "is an agent running here"
- * was invisible. Disc-versus-ring survives low contrast and colour blindness both, and the
- * ring is drawn in `muted` (7:1) rather than a hairline nobody can see.
+ * hollow ring. The first version varied only colour, and the dormant fill (`line-strong` as
+ * it then was, #333944) measured 1.663:1 against the 3:1 a non-text indicator needs — so in
+ * the rendered fleet that column read as a run of empty cells, and the sole encoding of "is
+ * an agent running here" was invisible. Disc-versus-ring survives low contrast and colour
+ * blindness both, and the ring is drawn in `muted` (7.422:1), not a hairline nobody can see.
  */
 export function StatusDot({ tone, breathing = false, title }: { tone: 'live' | 'idle' | 'warn'; breathing?: boolean; title: string }) {
   const shape =
@@ -109,10 +109,29 @@ export function Td({
   );
 }
 
-/** The value is genuinely not available. Says so, and says what would fill it. */
+/**
+ * The value is genuinely not available. Says so, and says what would fill it — TO EVERYONE.
+ *
+ * This carries the whole design principle of the view, and for one round it delivered it to
+ * a pointer only. `title` is not reachable by keyboard, is not in the accessibility tree as
+ * anything a screen reader will volunteer, and vanishes on touch. A keyboard user got the
+ * absence without the reason, which is strictly worse than showing no reason at all: it
+ * names a gap and withholds the one sentence that makes it actionable.
+ *
+ * So: `tabIndex={0}` puts it in the tab order, and `aria-label` carries the short form AND
+ * the full reason as the element's accessible name, announced on focus. `title` stays for
+ * the pointer. Nothing is added to the DOM text, so what the parity tests read out of a cell
+ * is still exactly what a sighted reader sees.
+ *
+ * Deliberately NOT applied to all ~900 `title` attributes in the two tables. Making every
+ * exact-token-count and every timestamp a tab stop would put hundreds of them between the
+ * reader and the next control, which is its own accessibility failure. The rule drawn here
+ * is: an element whose *whole purpose* is to explain an absence must be focusable; a title
+ * that merely adds precision to a value already on screen need not be.
+ */
 export function Unavailable({ short, why }: { short: string; why: string }) {
   return (
-    <span className="unavailable" title={why}>
+    <span className="unavailable" tabIndex={0} role="note" aria-label={`${short}: ${why}`} title={why}>
       {short}
     </span>
   );

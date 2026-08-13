@@ -131,10 +131,13 @@ export function SessionsTable({
       </thead>
       <tbody>
         {slice === null && <LoadingRows columns={COLUMNS} />}
-        {shown.map((s) => {
+        {shown.map((s, i) => {
           const live = isLive(s.lastTurnAt, now);
           return (
-            <tr key={s.file} className="transition-colors even:bg-row-alt hover:bg-raised">
+            <tr
+              key={s.file}
+              className={`transition-colors hover:bg-raised ${i % 2 === 1 ? 'bg-row-alt' : ''}`}
+            >
               <Td className="pr-0 pl-4">
                 <StatusDot
                   tone={live ? 'live' : 'idle'}
@@ -145,10 +148,15 @@ export function SessionsTable({
               <Td mono className={live ? 'text-text' : 'text-muted'} title={`${s.sessionId}\n${s.file}`}>
                 <span className="block max-w-[21ch] truncate">{shortId(s.sessionId)}</span>
               </Td>
-              <Td className="fig">
+              {/* Every capped column carries its full value in a title. The rule existed and
+                  was applied to Session alone; Model and Project truncated into an ellipsis
+                  with no way back — `claude-haiku-4-5-20251001` was unrecoverable on 7 of
+                  200 rows. (CSS truncation never removes text from the accessibility tree,
+                  so this is specifically a pointer-user fix.) */}
+              <Td className="fig" title={s.projectId}>
                 <span className="block max-w-[12ch] truncate">{s.projectId}</span>
               </Td>
-              <Td mono className="text-muted">
+              <Td mono className="text-muted" title={s.latestModel ?? undefined}>
                 <span className="block max-w-[20ch] truncate">
                   {s.latestModel === null ? (
                     <Unavailable
