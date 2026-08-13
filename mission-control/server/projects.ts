@@ -151,14 +151,19 @@ function resolveEventsPath(root: string, id: string): { path: string; source: 'w
     text = null;
   }
   if (text) {
-    const stateDir = /^\s*state_dir\s*:\s*(\S+)/m.exec(text);
-    if (stateDir) {
-      const dir = stateDir[1].replace(/^~/, os.homedir());
+    // Capture groups are read through a local binding rather than `m[1]` inline: under
+    // `noUncheckedIndexedAccess` the indexed access is `string | undefined`, and the
+    // `.replace()` below was an unguarded call on it. Never fired — the group is not
+    // optional in either pattern — but tsc was right that nothing proved that, and this
+    // was one of three type errors nothing in CI was running tsc to catch.
+    const stateDir = /^\s*state_dir\s*:\s*(\S+)/m.exec(text)?.[1];
+    if (stateDir !== undefined) {
+      const dir = stateDir.replace(/^~/, os.homedir());
       return { path: path.join(dir, 'events.jsonl'), source: 'warroom.yml' };
     }
-    const session = /^\s*session\s*:\s*(\S+)/m.exec(text);
-    if (session) {
-      return { path: path.join(os.homedir(), `.${session[1]}`, 'events.jsonl'), source: 'warroom.yml' };
+    const session = /^\s*session\s*:\s*(\S+)/m.exec(text)?.[1];
+    if (session !== undefined) {
+      return { path: path.join(os.homedir(), `.${session}`, 'events.jsonl'), source: 'warroom.yml' };
     }
   }
   return { path: path.join(os.homedir(), `.${id}`, 'events.jsonl'), source: 'default' };

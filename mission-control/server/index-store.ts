@@ -17,6 +17,7 @@ interface FileEntry {
   size: number;
   mtimeMs: number;
   turns: Turn[];
+  latestModel: string | null;
   projectId: string;
   sessionId: string;
   file: string;
@@ -31,12 +32,48 @@ export interface SessionSummary {
   subagentOutputTokens: number;
   firstTurnAt: number | null;
   lastTurnAt: number | null;
+  /**
+   * `message.model` on the session's most recent usage-bearing turn — the LATEST model,
+   * not every model the session used. Null when no turn in the file carries one.
+   * The Sessions view labels the column accordingly; see latestModelFrom() below for why
+   * the cheap-and-exact answer is preferred over the complete-and-expensive one.
+   */
+  latestModel: string | null;
 }
 
 export interface RefreshResult {
   filesScanned: number;
   filesChanged: number;
   filesRemoved: number;
+}
+
+/**
+ * The model on the last usage-bearing turn in a transcript, read by locating that one line
+ * and JSON.parsing only it — so the answer is `message.model` exactly, never a `"model"`
+ * key that happened to appear in some tool call's arguments.
+ *
+ * WHY THE LATEST TURN AND NOT EVERY MODEL THE SESSION USED. Measured on the real corpus
+ * (2,036 files, 2.83 GB): collecting the distinct set costs a full second pass — 2.6 s
+ * line-scoped, 2.2 s as one whole-text regex — on top of a 4.1 s cold build against a
+ * 10 s budget (c-mission-control-cold-start). This costs **52 ms** for all 2,036 files.
+ * The whole-text variant was also wrong on its own terms: it returned `nano_banana_pro`,
+ * `kling3_0_turbo` and other MCP tool parameters as though they were session models.
+ * A session that switched models mid-run shows only its latest here, and the view says so
+ * rather than implying the column is exhaustive.
+ */
+export function latestModelFrom(text: string): string | null {
+  const idx = text.lastIndexOf('"output_tokens"');
+  if (idx === -1) return null;
+  const start = text.lastIndexOf('\n', idx) + 1;
+  const nl = text.indexOf('\n', idx);
+  const end = nl === -1 ? text.length : nl;
+  try {
+    const parsed = JSON.parse(text.slice(start, end)) as { message?: { model?: unknown } };
+    const model = parsed.message?.model;
+    return typeof model === 'string' ? model : null;
+  } catch {
+    return null; // a partial trailing line, same as turnsFrom treats it
+  }
 }
 
 function summarize(entry: FileEntry): SessionSummary {
@@ -59,6 +96,7 @@ function summarize(entry: FileEntry): SessionSummary {
     subagentOutputTokens: subagent,
     firstTurnAt: first,
     lastTurnAt: last,
+    latestModel: entry.latestModel,
   };
 }
 
@@ -154,6 +192,7 @@ export class IndexStore {
       size: st.size,
       mtimeMs: st.mtimeMs,
       turns: turnsFrom(text),
+      latestModel: latestModelFrom(text),
       projectId,
       sessionId: path.basename(file, '.jsonl'),
       file,
@@ -176,6 +215,10 @@ export class IndexStore {
       size: st.size,
       mtimeMs: st.mtimeMs,
       turns: [...prev.turns, ...turnsFrom(chunk)],
+      // The appended bytes are the newest turns, so a model found in them IS the latest.
+      // When the chunk carries no usage-bearing turn, the previous answer still stands —
+      // it is not superseded by an absence.
+      latestModel: latestModelFrom(chunk) ?? prev.latestModel,
       projectId,
       sessionId: prev.sessionId,
       file,

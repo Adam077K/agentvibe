@@ -1,0 +1,198 @@
+/* client/src/styles.css — the whole design system, as tokens.
+ *
+ * Dark-only, not dark-by-default: this is an instrument you leave open for hours next to a
+ * terminal, and a light mode nobody asked for is a second palette to keep honest. There is
+ * no toggle and no `dark:` variant anywhere in the client.
+ *
+ * Palette rules, held to deliberately:
+ *   · Never #000. The base is a cool charcoal, so a 1px divider at #22262e reads as a line
+ *     rather than as glare, and an OLED panel does not smear the edges.
+ *   · One accent — emerald — and it means exactly one thing: an agent is live here.
+ *     Amber and rose are not accents; they are the two states that need attention
+ *     (generation drift, and a figure that could not be computed). Nothing else gets hue.
+ *   · No glow, no gradient, no purple. A control plane that decorates its own alarms
+ *     teaches you to stop reading them.
+ *
+ * Type: system sans for prose, system mono for every figure. No webfont, because this page
+ * is served over loopback and must render identically with the network unplugged. Figures
+ * are `tabular-nums` everywhere so a column of numbers lines up on the decimal and a
+ * changing value does not jitter its neighbours.
+ */
+
+@import 'tailwindcss';
+
+/* CONTRAST FIGURES IN THIS FILE ARE MEASURED, and were all re-measured on 2026-08-13 after
+   review found every one of them wrong — by 0.06 to 0.3, in both directions. Every
+   conclusion survived the correction, which is exactly why the numbers had gone unchecked.
+   WCAG 2.x ratio against --color-ink unless stated. Re-measure before changing a colour;
+   do not carry a figure forward because it was in the comment. */
+@theme {
+  --color-ink: #0d0e11;
+  /* 1.077:1, ΔE76 4.82 from --color-ink. THE RATIO IS THE WRONG METRIC HERE and the ΔE is
+     the right one. Contrast ratio is defined for text legibility; comparing a 1px rule to a
+     full-row fill on it is a category error — the row separator measures HIGHER (1.438:1)
+     and is still the thing an eye cannot track across a 1600px, nine-column row, because
+     what carries you there is area. ΔE answers "are these two fills distinguishable", and
+     the first value (#111318) sat at 2.71 — barely over the ~2.3 just-noticeable difference,
+     so it was likely invisible on an uncalibrated panel while being the ONLY row-tracking
+     aid left once the separator was dropped. One step out; still well short of becoming a
+     second grid. */
+  --color-row-alt: #15171d;
+  /* Hover. Has to be distinct from BOTH bands or it stops reading as a hover: ΔE76 10.49
+     from ink, 5.80 from row-alt. */
+  --color-raised: #1e222b; /* 1.212:1 — hover only, never the sole carrier of anything */
+  --color-line: #2a2f39; /* 1.438:1 */
+  --color-line-strong: #3d4451; /* 1.971:1 — borders and rules, never text */
+  /* The one horizontal rule in the app: the agent-active/dormant break. At 3.139:1 it is a
+     line you can actually see, and that is what lets the break stop depending on whether its
+     neighbours happen to be banded. Nothing else here draws a rule this strong. */
+  --color-divider: #5a6270; /* 3.139:1 */
+  --color-text: #e6e8ec; /* 15.734:1 */
+  --color-muted: #9aa1ad; /* 7.422:1 */
+  /* #6a7280 measured 3.982:1 — under AA, while carrying every column header, every footnote
+     (including the whole "why there is no cost column" statement), every `n/a`, and the
+     filter placeholder. #7b8494 is 5.120:1 in the same cool neutral. Nothing that carries
+     meaning is allowed below 4.5:1. */
+  --color-dim: #7b8494;
+  --color-live: #3fbf8f; /* 8.327:1 as text; see mc-breathe for the animated floor */
+  --color-warn: #d9a441; /* 8.582:1 */
+  --color-bad: #e2727a; /* 6.362:1 */
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+}
+
+/* The app bar's height, in ONE place, because two things depend on it. The sticky column
+   headers used to pin at `top-0` underneath a `top-0 z-20` bar: on a 2,037-row table the
+   column labels were 100% occluded the moment you scrolled, which on a table that long is
+   the most expensive defect in the view. A magic 47px written in two files would have come
+   apart the first time the bar's padding changed. */
+:root {
+  --mc-header-h: 44px;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-ink);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'kern' 1, 'liga' 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Every figure in this app is a number in a column. Lining, tabular, always. */
+  .fig {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* Caps are harder to read than lowercase, so they are used only for short labels and
+   * only with the letterspacing that makes them legible at all. */
+  .label {
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--color-dim);
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--color-live) 30%, transparent);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--color-live);
+    outline-offset: 2px;
+  }
+
+  /* A value the UI knows it cannot show. Dotted underline invites the pointer to the
+   * title attribute that says why, without turning the cell into a link. */
+  .unavailable {
+    color: var(--color-dim);
+    text-decoration: underline dotted color-mix(in oklch, var(--color-dim) 70%, transparent);
+    text-underline-offset: 3px;
+    cursor: help;
+  }
+
+  /* ONE control surface for the select and the text input, because they sit side by side and
+   * must read as the same kind of thing. Before this, the select got native chrome while the
+   * input's fill measured 1.06:1 and its border 1.27:1 — so the more important of the two
+   * read as not-a-control at all, and looked like a caption next to a real widget. */
+  .control {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-text);
+    background-color: var(--color-raised);
+    border: 1px solid var(--color-line-strong);
+    border-radius: 3px;
+    padding: 3px 8px;
+    transition:
+      border-color 120ms ease,
+      background-color 120ms ease;
+  }
+
+  .control:hover {
+    border-color: var(--color-muted);
+  }
+
+  .control:focus {
+    outline: none;
+    border-color: var(--color-live);
+  }
+
+  .control::placeholder {
+    color: var(--color-dim);
+  }
+}
+
+/* Bottoms out at 0.7, not 0.35. Composited over --color-ink, 0.35 puts the live dot at
+ * 1.985:1 for part of every cycle — below the 3:1 a non-text indicator needs — so the one
+ * element whose entire job is saying "this is running right now" periodically became
+ * unreadable. 0.7 measures 4.563:1 at the floor. */
+@keyframes mc-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Only the live dot moves, and only because "is this running right now" is the one question
+ * a still image cannot answer. Opacity only — no layout property is animated. */
+.breathe {
+  animation: mc-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes mc-shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background-image: linear-gradient(90deg, var(--color-raised) 25%, var(--color-line) 50%, var(--color-raised) 75%);
+  background-size: 200% 100%;
+  animation: mc-shimmer 1.6s linear infinite;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breathe,
+  .skeleton {
+    animation: none;
+  }
+}

@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
     "types": ["bun-types"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -17,5 +18,5 @@
     "allowJs": false,
     "noEmit": true
   },
-  "include": ["server/**/*.ts", "test/**/*.ts"]
+  "include": ["server/**/*.ts", "client/**/*.ts", "client/**/*.tsx", "test/**/*.ts", "test/**/*.tsx", "scripts/**/*.ts"]
 }

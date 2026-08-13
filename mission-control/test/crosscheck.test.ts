@@ -14,6 +14,7 @@ import { buildFleet } from '../server/collectors/fleet.ts';
 import { runLedgerVerify } from '../server/collectors/belief.ts';
 import { windowUsage as mcWindowUsage } from '../server/lib/usage.ts';
 import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo } from './fixtures.ts';
+import { notVerified } from './gate.ts';
 
 // Imported directly from the module under test, exactly as scripts/lib/usage.js exports
 // it — NOT independent of server/lib/usage.ts, whose windowUsage() is a thin pass-
@@ -23,6 +24,11 @@ import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo } from './fixtur
 // from scripts/lib/usage.js:159-172 as 12,345 + 6,789. The fleet-gen and ledger-verdict
 // crosschecks further down ARE genuinely independent — each parses real command stdout
 // with its own regex, sharing no code with the collector it checks.
+//
+// @ts-expect-error — plain CommonJS with no .d.ts; `allowJs` is off project-wide by design
+// and scripts/lib/ is not this project's to change. Same suppression, same reason, as
+// server/lib/usage.ts's own import of this module. Every use below casts to an explicit
+// shape, so nothing here is silently `any`.
 // eslint-disable-next-line
 import * as rawUsage from '../../scripts/lib/usage.js';
 
@@ -123,11 +129,15 @@ describe('per-launcher generation hash', () => {
   test(
     "MC's fleet.gen for each launcher equals the GEN column of `node scripts/warroom-install.mjs fleet`, parsed independently",
     () => {
+      // Same shape as every other machine gate, so it uses the same helper: one sentence, one
+      // wording, so a reader skimming CI output sees a consistent line whatever the absent
+      // subject was. The PREDICATE stays local because the subject is local — ~/bin is what
+      // this test needs, not the transcript corpus test/gate.ts speaks for.
       const binDir = path.join(os.homedir(), 'bin');
       if (!fs.existsSync(binDir)) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `fleet cross-check NOT VERIFIED — ${binDir} does not exist on this machine (e.g. a CI runner with no standalone launchers installed). Nothing was compared; this is not a pass on the merits.`
+        notVerified(
+          'fleet cross-check',
+          `${binDir} does not exist on this machine (e.g. a CI runner with no standalone launchers installed)`
         );
         return;
       }
