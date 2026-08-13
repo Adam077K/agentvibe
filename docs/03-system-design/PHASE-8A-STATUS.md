@@ -1,7 +1,8 @@
 # Phase 8a — Mission Control, read plane
 
 **Living status.** Updated at each PR. Phase 8b (Dispatch) is deferred — see §1.
-**State:** PR1 of 5 merged. `main` = `cb87cc6`. `npm run check` exit 0 after `bun install` in `mission-control/`.
+**State:** **PR3 of 5 merged.** `main` = `0a23471`. `npm run check` exit 0 after `bun install` in `mission-control/`.
+Handoff for whoever continues: [PHASE-8A-HANDOFF.md](PHASE-8A-HANDOFF.md).
 
 ---
 
@@ -10,14 +11,19 @@
 | PR | Contents | Tier | State |
 |---|---|---|---|
 | **1** | The rail — Bun/Hono, `check:mc`, CI `setup-bun` | irreversible | ✅ **merged** ([#21](https://github.com/Adam077K/agentvibe/pull/21)) |
-| **2** | Collectors, project discovery, cross-check tests | lite | 🔨 building |
-| 3 | Fleet + Sessions views | lite | not started |
+| **2** | Collectors, project discovery, cross-check tests | lite | ✅ **merged** ([#26](https://github.com/Adam077K/agentvibe/pull/26)) — 4 review rounds, 1 CRITICAL (command-injection RCE) |
+| **3** | The client, SSE, Fleet + Sessions views | lite | ✅ **merged** ([#27](https://github.com/Adam077K/agentvibe/pull/27)) — 5 review rounds, 3 CRITICAL |
 | 4 | Belief + Conflicts views | lite | not started |
 | 5 | Project + Inbox honest empty states | lite | not started |
 
+**Where it is: 108 tests / 558 assertions, `tsc --noEmit` clean and inside the gate, cold index 3.7–4.1 s
+against a 10 s budget, incremental 16 ms, 19 projects and ~2,000 sessions rendered.** Fleet and Sessions
+work end to end. Belief, Conflicts, Project and Inbox have collectors and routes but no view.
+
 Merged alongside, out of Phase 8a's own scope but found by it:
 [#20](https://github.com/Adam077K/agentvibe/pull/20) the read-only probe · [#22](https://github.com/Adam077K/agentvibe/pull/22) two claim corrections ·
-[#23](https://github.com/Adam077K/agentvibe/pull/23) the Bun lock-in recorded in `LONG-TERM.md`.
+[#23](https://github.com/Adam077K/agentvibe/pull/23) the Bun lock-in in `LONG-TERM.md` · [#24](https://github.com/Adam077K/agentvibe/pull/24) this status doc and the Phase 8 gate amendment ·
+[#25](https://github.com/Adam077K/agentvibe/pull/25) the corpus measured 28× too small.
 
 ---
 
