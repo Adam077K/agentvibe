@@ -11,6 +11,12 @@
 // so an idle fleet costs an idle socket rather than a snapshot per second. On an idle
 // machine the sessions tick is a stat() per transcript and no read.
 //
+// One honest exception, and it is not a bug: the fleet slice carries the account-wide
+// rolling-5h token figure, which changes as turns age OUT of that window even when nothing
+// at all is happening. So a genuinely idle fleet still emits an occasional `fleet` frame —
+// the number really did change. The `sessions` slice has no such term and goes completely
+// silent, which is what the idle-wire test pins.
+//
 // TWO CADENCES, because the two slices cost three orders of magnitude apart. Measured on
 // the real fleet (19 projects, 2,036 transcripts):
 //   sessions   16 ms  — IndexStore.refresh(), stat-only when nothing moved
