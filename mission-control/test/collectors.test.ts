@@ -38,6 +38,7 @@ import {
   removeMarkers,
   writeRegistry,
 } from './fixtures.ts';
+import { notVerified } from './gate.ts';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '..', '..');
 const cleanupDirs: string[] = [];
@@ -325,34 +326,75 @@ describe('the conflicts sweep leaves the event loop free', () => {
   // ticks. A blocking call anywhere — before the first await, between awaits, or inside a
   // `.map` whose callbacks run synchronously — appears as one long gap.
   //
-  // The `setTimeout` after the sweep is load-bearing, and leaving it out was itself a bug in
-  // the first version of this probe: when the sweep resolves, the continuation and
-  // `clearInterval` run as MICROTASKS, which drain before the loop reaches the timers phase,
-  // so the tick that would have recorded the big gap never fires. That version reported a
-  // 2.4 ms maximum against an implementation that blocked for 71 ms. One macrotask of grace
-  // lets the timer phase run first.
+  // THE SAMPLER IS setImmediate, NOT setInterval(…, 1), and that is the difference between a
+  // test that works and one that only works on a slow machine. The first version used a 1 ms
+  // interval. It caught the revert here (71.6 ms gap of an 83.3 ms sweep) and then FAILED ON
+  // CI against the CORRECT implementation: that runner sweeps six worktrees in 6.9 ms, too
+  // short for a 1 ms timer to resolve, so it recorded a 6.3 ms "gap" spanning nearly the
+  // whole sweep and the ratio assertion went red. Its validity depended on the machine being
+  // slow enough to observe — a property of the runner, not of the code, which is precisely a
+  // mechanism reporting about something it could not measure. A self-rescheduling
+  // setImmediate fires as fast as the loop allows, so the resolution scales with the machine
+  // instead of being fixed at 1 ms.
+  //
+  // The trailing macrotask is load-bearing too, and its absence was a bug in that same first
+  // version: when the sweep resolves, the continuation and the sampler teardown run as
+  // MICROTASKS, which drain before the loop reaches the timers phase — so the tick that would
+  // record the big gap never fires. That version reported a 2.4 ms maximum against an
+  // implementation blocking for 71 ms.
   test('the event loop keeps running THROUGHOUT the sweep, not only before it', async () => {
-    const gaps: number[] = [];
+    let gaps: number[] = [];
     let last = performance.now();
-    const sampler = setInterval(() => {
+    let sampling = true;
+    const sample = () => {
+      if (!sampling) return;
       const now = performance.now();
       gaps.push(now - last);
       last = now;
-    }, 1);
+      setImmediate(sample);
+    };
+    setImmediate(sample);
+
+    // A CONTROL WINDOW FIRST — pure idling, nothing under test running. Whatever the loop
+    // does here is this process's own background noise, and it is a property of the
+    // ENVIRONMENT rather than a result of the code under test, which is what makes gating on
+    // it legitimate (test/gate.ts: gate on the environment, never on an assertion failing).
+    // Observed real: run under the full suite, the sweep window stretched to 421 ms with a
+    // 42.5 ms gap contributed by other files' synchronous work. Without this the test would
+    // eventually go red for something the sweep did not do.
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const controlMaxMs = Math.max(...gaps, 0);
+    gaps = [];
+    last = performance.now();
 
     const t0 = performance.now();
     const report = await detectConflicts(project);
     const totalMs = performance.now() - t0;
     await new Promise((resolve) => setTimeout(resolve, 5));
-    clearInterval(sampler);
+    sampling = false;
 
     const maxGapMs = Math.max(...gaps);
     // eslint-disable-next-line no-console
-    console.log(`  [async] worst event-loop gap ${maxGapMs.toFixed(1)}ms of a ${totalMs.toFixed(1)}ms sweep`);
+    console.log(
+      `  [async] worst event-loop gap ${maxGapMs.toFixed(1)}ms of a ${totalMs.toFixed(1)}ms sweep ` +
+        `(${gaps.length} samples, control noise ${controlMaxMs.toFixed(1)}ms)`
+    );
 
     expect(report.worktrees).toHaveLength(WORKTREES); // the sweep really ran
-    expect(gaps.length).toBeGreaterThan(3); // …the sampler really sampled
-    expect(totalMs).toBeGreaterThan(20); // …over a window long enough for a block to show
+
+    if (controlMaxMs > totalMs / 4) {
+      notVerified(
+        'sweep event-loop binding',
+        `this process was already blocking for ${controlMaxMs.toFixed(1)}ms at a time before the sweep started, ` +
+          `which is more than a quarter of the ${totalMs.toFixed(1)}ms sweep window — the loop is too noisy here to ` +
+          'attribute a gap to the sweep'
+      );
+      return;
+    }
+
+    // The sampler resolved the window finely enough to speak about it. Also an environment
+    // property, and it fails loudly rather than passing vacuously if setImmediate is starved.
+    expect(gaps.length).toBeGreaterThan(20);
     expect(maxGapMs).toBeLessThan(totalMs / 2);
   });
 });
