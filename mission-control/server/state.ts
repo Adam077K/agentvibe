@@ -17,7 +17,7 @@
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { discoverProjects, type Project } from './projects.ts';
+import { discoverProjects, type DiscoverOptions, type Project } from './projects.ts';
 import { IndexStore, type SessionSummary } from './index-store.ts';
 import { buildFleet, type FleetSummary } from './collectors/fleet.ts';
 
@@ -54,6 +54,14 @@ export class LiveState {
   private store = new IndexStore();
   private built = false;
 
+  /**
+   * `discoverOpts` is forwarded verbatim to discoverProjects() — the same roots/claude-root
+   * overrides that function already takes, not a test-only seam. The live singleton passes
+   * nothing and gets the real fleet; a test points one at a fixture tree and gets a
+   * complete, deterministic state including its own budget figure.
+   */
+  constructor(private readonly discoverOpts: DiscoverOptions = {}) {}
+
   get index(): IndexStore {
     return this.store;
   }
@@ -64,7 +72,7 @@ export class LiveState {
 
   /** Discovers the current fleet and keeps the session index in sync with it. */
   refresh(): Project[] {
-    const projects = discoverProjects();
+    const projects = discoverProjects(this.discoverOpts);
     if (!this.built) {
       this.store.buildCold(projects);
       this.built = true;
@@ -82,7 +90,11 @@ export class LiveState {
 
   fleetSlice(repoRoot: string = REPO_ROOT): Hashed<FleetSummary> {
     const projects = this.refresh();
-    const payload = buildFleet(projects, this.store, repoRoot);
+    // The account-wide budget figure must read the same transcript root discovery did, or a
+    // fixtured state would report the real machine's usage next to fixture projects.
+    const payload = buildFleet(projects, this.store, repoRoot, {
+      claudeProjectsRoot: this.discoverOpts.claudeProjectsRoot,
+    });
     return { hash: sliceHash(payload), payload };
   }
 }
