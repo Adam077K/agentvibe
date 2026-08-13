@@ -1,6 +1,13 @@
 // test/gate.ts — THE machine gate. One implementation, the way scripts/lib/classifier.js is
 // the one implementation of risk. Not a `.test.` file, so `bun test` does not collect it.
 //
+// IT WAS NOT ONE IMPLEMENTATION FOR A ROUND. This file was extracted and `live.test.ts`
+// imported it, while `views.test.tsx` kept an inline copy carrying the exact defect described
+// below — and three comments, this one included, stated the consolidation was complete.
+// Measured then: `MC_PROJECT_ROOTS=/mc-no-such-root` turned live.test.ts red and left
+// views.test.tsx at 17 pass / 0 fail. Before trusting this paragraph again, grep `test/` for
+// `existsSync` and for `projects.length === 0`.
+//
 // A test must never assert what it could not check — and it must never SKIP what it could.
 // The first version of this gate got the second half wrong, and the bug is worth writing down
 // because it is the shape every "skip when the environment is missing" helper drifts into:

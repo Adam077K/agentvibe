@@ -11,18 +11,25 @@
 // out of the payload the route actually returned in the same test.
 
 import { describe, test, expect, afterAll } from 'bun:test';
-import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Hono } from 'hono';
 import { LiveState } from '../server/state.ts';
 import { createApi } from '../server/routes/api.ts';
-import type { FleetSummary, ModalGeneration } from '../server/collectors/fleet.ts';
+import {
+  buildFleet,
+  modalInScopeGeneration,
+  type FleetSummary,
+  type LauncherRow,
+  type ModalGeneration,
+} from '../server/collectors/fleet.ts';
+import { discoverProjects } from '../server/projects.ts';
+import { IndexStore } from '../server/index-store.ts';
 import type { SessionsSlice } from '../server/state.ts';
-import { FleetTable, FleetHeadline, GenerationFigure } from '../client/src/views/FleetView.tsx';
+import { FleetTable, FleetHeadline, GenerationFigure, sortFleet } from '../client/src/views/FleetView.tsx';
 import { SessionsTable, SessionsView } from '../client/src/views/SessionsView.tsx';
 import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo, writeRegistry, addWorktree } from './fixtures.ts';
+import { machineGate, notVerified } from './gate.ts';
 
 const cleanupDirs: string[] = [];
 afterAll(() => {
@@ -57,6 +64,15 @@ function rowTitles(html: string, rowIndex: number): string[] {
   const tbody = /<tbody\b[^>]*>([\s\S]*?)<\/tbody>/.exec(html)?.[1] ?? '';
   const row = [...tbody.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)][rowIndex]?.[1] ?? '';
   return [...row.matchAll(/title="([^"]*)"/g)].map((m) =>
+    (m[1] ?? '').replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x2F;/g, '/')
+  );
+}
+
+/** Every `aria-label` in one row, in document order — where the status dots say their state. */
+function rowLabels(html: string, rowIndex: number): string[] {
+  const tbody = /<tbody\b[^>]*>([\s\S]*?)<\/tbody>/.exec(html)?.[1] ?? '';
+  const row = [...tbody.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)][rowIndex]?.[1] ?? '';
+  return [...row.matchAll(/aria-label="([^"]*)"/g)].map((m) =>
     (m[1] ?? '').replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x2F;/g, '/')
   );
 }
@@ -134,7 +150,54 @@ function buildFixtureState(prefix: string) {
   const state = new LiveState({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot });
   const app = new Hono();
   app.route('/api', createApi(state));
-  return { app, now };
+  return { app, now, projectsRoot, claudeRoot, state };
+}
+
+/**
+ * A fleet payload whose launcher table is INJECTED, so `launcherDrift` takes its `true` and
+ * `false` values instead of the `null` every other fixture produces.
+ *
+ * Why this exists: `buildFleet` shells out to the real `warroom-install.mjs fleet`, which
+ * reads `~/bin` and has no env override. So no fixture project ever matched a launcher, so
+ * every fixture row had `launcherDrift === null`, so the Drift column's two informative
+ * branches were never executed by any test. Inverting `DriftCell`'s condition — making
+ * drifted launchers read "current" and current ones read "drift" — left the suite green.
+ *
+ * The payload is JSON round-tripped, so it is the collector's real return over the wire,
+ * not a hand-written object.
+ */
+function fleetWithLaunchers(prefix: string): FleetSummary {
+  const claudeRoot = mkTmpDir(`mc-views-claude-${prefix}-`);
+  const projectsRoot = mkTmpDir(`mc-views-projects-${prefix}-`);
+  cleanupDirs.push(claudeRoot, projectsRoot);
+
+  // `Sundial` is deliberately capitalised while its launcher is lowercase: `warroom fleet`
+  // names launchers by the .warroom.yml session name, and a case-sensitive lookup reported
+  // "no launcher" for a launcher the very same command was listing.
+  for (const id of ['Sundial', 'quarry', 'lodestar', 'brackish']) {
+    const dir = path.join(projectsRoot, id);
+    initGitRepo(dir);
+    fixtureClaudeProjectsDir(claudeRoot, dir, `${id.toLowerCase()}-0000-1111-2222-333344445555`, [
+      { ts: new Date(Date.now() - 3_600_000).toISOString(), output_tokens: 1_000 },
+    ]);
+  }
+  writeRegistry(path.join(projectsRoot, 'quarry'), [{ name: 'ceo-1', token: '1786445435' }]);
+
+  const launchers: LauncherRow[] = [
+    { name: 'sundial', lines: 2741, fns: 47, gen: 'a86770a9', scope: 'in scope' }, // on modal, case-mismatched
+    { name: 'quarry', lines: 2741, fns: 47, gen: 'a86770a9', scope: 'in scope' }, // on modal
+    { name: 'lodestar', lines: 2769, fns: 47, gen: 'c146d297', scope: 'in scope' }, // DRIFTED
+    { name: 'brackish', lines: 2407, fns: 45, gen: '30e0c7aa', scope: 'excluded' }, // excluded → n/a
+    // No project on disk for this one. It is drifted, it needs updating, and it produces no
+    // row — which is exactly why the headline count must come from launchers.
+    { name: 'orphaned', lines: 2769, fns: 47, gen: 'b0000001', scope: 'in scope' },
+  ];
+
+  const projects = discoverProjects({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot });
+  const store = new IndexStore();
+  store.buildCold(projects);
+  const payload = buildFleet(projects, store, '', { launchers, claudeProjectsRoot: claudeRoot });
+  return JSON.parse(JSON.stringify(payload)) as FleetSummary;
 }
 
 describe('render parity — Fleet', () => {
@@ -172,20 +235,84 @@ describe('render parity — Fleet', () => {
     expect(compared).toBe(payload.projects.length);
   });
 
-  test('the exact instant behind each relative time is the payload timestamp', async () => {
-    const { app, now } = buildFixtureState('fleet-instants');
+  // TITLES ARE CONTENT TOO, and were checked in 2 of 6 places. A mutation battery got four
+  // through: the generation cell's `lines` and `fns` swapped, the burn provenance swapped,
+  // the subagent share inverted so a row could read "296% of this project's output tokens",
+  // and first/last turn instants exchanged. Everything a title asserts is now reversed to
+  // the payload the same way a visible figure is.
+  test('every title in a Fleet row reverses to the payload', async () => {
+    const { app, now } = buildFixtureState('fleet-titles');
     const payload = (await (await app.fetch(new Request('http://127.0.0.1/api/fleet'))).json()) as FleetSummary;
     const html = renderToStaticMarkup(<FleetTable fleet={payload} now={now} />);
-    const ordered = payload.projects.slice().sort((a, b) => {
-      if (a.agentActive !== b.agentActive) return a.agentActive ? -1 : 1;
-      return (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0) || a.id.localeCompare(b.id);
-    });
+    const ordered = sortFleet(payload.projects);
 
     ordered.forEach((project, i) => {
-      const titles = rowTitles(html, i);
-      const expected = project.lastActivityAt === null ? 'no recorded turn' : new Date(project.lastActivityAt).toISOString();
-      expect(titles).toContain(expected);
+      const titles = rowTitles(html, i).join('\n');
+
+      // Last activity: the exact instant.
+      expect(titles).toContain(
+        project.lastActivityAt === null ? 'no recorded turn' : new Date(project.lastActivityAt).toISOString()
+      );
+      // Project root.
+      expect(titles).toContain(project.root);
+      // Generation: lines and functions, in that order and not exchanged.
+      if ('gen' in project.launcher) {
+        expect(titles).toContain(`${project.launcher.lines} lines · ${project.launcher.fns} functions`);
+      } else {
+        expect(titles).toContain(project.launcher.reason);
+      }
+      // Subagent share: a real ratio, or an explicit statement that there is none. It can
+      // never exceed 100%, which the inverted version did.
+      if (project.outputTokens > 0) {
+        const share = Math.round((project.subagentOutputTokens / project.outputTokens) * 100);
+        expect(share).toBeLessThanOrEqual(100);
+        expect(titles).toContain(`${share}% of this project's all-time output tokens`);
+      } else {
+        expect(titles).toContain('no output tokens recorded');
+      }
     });
+  });
+
+  test('every title in a Sessions row reverses to the payload', async () => {
+    const { app, now } = buildFixtureState('sessions-titles');
+    const payload = (await (await app.fetch(new Request('http://127.0.0.1/api/sessions'))).json()) as SessionsSlice;
+    const html = renderToStaticMarkup(<SessionsTable slice={payload} now={now} limit={payload.sessions.length} />);
+
+    payload.sessions.forEach((session, i) => {
+      const titles = rowTitles(html, i).join('\n');
+      expect(titles).toContain(session.sessionId);
+      expect(titles).toContain(session.file);
+      expect(titles).toContain(session.projectId);
+      // first and last, each labelled, each the right one — the swap made these identical
+      // strings in the old fixture and so was undetectable.
+      expect(titles).toContain(
+        `first turn ${session.firstTurnAt === null ? 'no recorded turn' : new Date(session.firstTurnAt).toISOString()}`
+      );
+      expect(titles).toContain(
+        `last turn ${session.lastTurnAt === null ? 'no recorded turn' : new Date(session.lastTurnAt).toISOString()}`
+      );
+      if (session.latestModel !== null) expect(titles).toContain(session.latestModel);
+    });
+  });
+
+  test('the burn tooltip describes the burn, and does not go stale', async () => {
+    const { app } = buildFixtureState('fleet-burn-title');
+    const payload = (await (await app.fetch(new Request('http://127.0.0.1/api/fleet'))).json()) as FleetSummary;
+    const html = renderToStaticMarkup(<FleetHeadline fleet={payload} />);
+    const titles = [...html.matchAll(/title="([^"]*)"/g)].map((m) => m[1] ?? '');
+    const burnTitle = titles.find((t) => t.includes('rolling')) ?? '';
+
+    expect(burnTitle).toContain(`${payload.budget.window_hours}-hour window`);
+    expect(burnTitle).toContain('scripts/lib/usage.js');
+    // filesScanned and bytesRead are EXCLUDED from the slice hash, so no frame is pushed
+    // when only they move. Rendering them would put the one guaranteed-stale value on
+    // screen, which the previous version of this tooltip did. Asserted by phrasing, not by
+    // the numbers themselves — `filesScanned` is 5 in this fixture and "5-hour window"
+    // contains a 5, so a bare substring check on the value is not a check on anything.
+    expect(burnTitle).not.toContain('transcripts scanned');
+    expect(burnTitle).not.toContain('bytes read');
+    // And nothing else in the headline renders them either.
+    expect(textOf(html)).not.toContain('bytes read');
   });
 
   // B1. The headline used to print "every in-scope launcher on the modal generation" whenever
@@ -201,25 +328,99 @@ describe('render parity — Fleet', () => {
 
     for (const { name, modal } of cases) {
       test(`${name} renders "not compared" and names what would fill it`, () => {
-        const text = textOf(renderToStaticMarkup(<GenerationFigure modal={modal} drifted={0} />));
+        const html = renderToStaticMarkup(<GenerationFigure modal={modal} />);
+        const text = textOf(html);
         expect(text).toContain('not compared');
         expect(text.toLowerCase()).not.toContain('all '); // no "all N launchers on …"
         // The reason is reachable, and it says what would resolve the case.
-        const why = renderToStaticMarkup(<GenerationFigure modal={modal} drifted={0} />);
-        expect(/title="[^"]*would fill this[^"]*"/.test(why)).toBe(true);
-        expect(/title="[^"]*[Nn]o project was compared|title="[^"]*Nothing was compared/.test(why)).toBe(true);
+        expect(/title="[^"]*would fill this[^"]*"/.test(html)).toBe(true);
+        expect(/title="[^"]*[Nn]o project was compared|title="[^"]*Nothing was compared/.test(html)).toBe(true);
+        // …and reachable WITHOUT a pointer: focusable, with the reason as its accessible name.
+        expect(/tabindex="0"/i.test(html)).toBe(true);
+        expect(/aria-label="[^"]*would fill this[^"]*"/.test(html)).toBe(true);
       });
     }
 
     test('a real comparison, and only then, states convergence', () => {
-      const modal: ModalGeneration = { kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 11 };
-      const clean = textOf(renderToStaticMarkup(<GenerationFigure modal={modal} drifted={0} />));
+      const clean = textOf(
+        renderToStaticMarkup(
+          <GenerationFigure
+            modal={{ kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 11, driftedLaunchers: 0 }}
+          />
+        )
+      );
       expect(clean).toContain('all 11 in-scope launchers on a86770a9');
       expect(clean).not.toContain('not compared');
 
-      const dirty = textOf(renderToStaticMarkup(<GenerationFigure modal={modal} drifted={2} />));
-      expect(numbersIn(dirty)[0]).toBe(2); // the figure is the drift count, not the hash
+      const dirty = textOf(
+        renderToStaticMarkup(
+          <GenerationFigure
+            modal={{ kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 11, driftedLaunchers: 4 }}
+          />
+        )
+      );
+      expect(numbersIn(dirty)[0]).toBe(4); // the figure is the drift count, not the hash
       expect(dirty).toContain('of 11 in-scope launchers, off a86770a9');
+    });
+
+    test('a fleet of one reads "launcher", not "launchers"', () => {
+      const one = textOf(
+        renderToStaticMarkup(
+          <GenerationFigure modal={{ kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 1, driftedLaunchers: 0 }} />
+        )
+      );
+      expect(one).toContain('all 1 in-scope launcher on a86770a9');
+      expect(one).not.toContain('launchers');
+    });
+  });
+
+  // ── THE CRITICAL: one claim, one population ────────────────────────────────────────
+  describe('the drift sentence counts launchers on both sides', () => {
+    test('a drifted launcher with no discovered project is still counted', () => {
+      const payload = fleetWithLaunchers('drift-population');
+      const modal = payload.modalGeneration;
+      expect(modal.kind).toBe('modal');
+      if (modal.kind !== 'modal') return;
+
+      // Five launchers: 4 in scope (sundial, quarry on a86770a9; lodestar and orphaned off
+      // it), 1 excluded. `orphaned` has no project on disk, so it produces no row.
+      const driftedProjects = payload.projects.filter((p) => p.launcherDrift === true).length;
+      expect(driftedProjects).toBe(1); // lodestar only — orphaned has no row to count
+      expect(modal.driftedLaunchers).toBe(2); // lodestar AND orphaned
+      expect(modal.inScopeLaunchers).toBe(4);
+
+      // The rendered sentence must use the launcher figure, not the project figure. Reading
+      // "1 of 4" here would be the defect: numerator projects, denominator launchers.
+      const text = textOf(renderToStaticMarkup(<GenerationFigure modal={modal} />));
+      expect(numbersIn(text)[0]).toBe(modal.driftedLaunchers);
+      expect(text).toContain('2');
+      expect(text).toContain('of 4 in-scope launchers');
+      expect(text).not.toContain('of 1 ');
+    });
+
+    test('the all-clear is unreachable while any in-scope launcher is off modal', () => {
+      // The precise shape of the CRITICAL: zero drifted PROJECTS, non-zero drifted
+      // LAUNCHERS. The old code rendered "all N in-scope launchers on X" here.
+      const launchers: LauncherRow[] = [
+        { name: 'quarry', lines: 2741, fns: 47, gen: 'a86770a9', scope: 'in scope' },
+        { name: 'sundial', lines: 2741, fns: 47, gen: 'a86770a9', scope: 'in scope' },
+        { name: 'ghosted-a', lines: 2769, fns: 47, gen: 'c146d297', scope: 'in scope' },
+        { name: 'ghosted-b', lines: 2769, fns: 47, gen: 'b0000001', scope: 'in scope' },
+      ];
+      const modal = modalInScopeGeneration(launchers);
+      expect(modal).toEqual({
+        kind: 'modal',
+        generation: 'a86770a9',
+        inScopeLaunchers: 4,
+        driftedLaunchers: 2,
+      });
+
+      // GenerationFigure receives no project data at all — there is no second population it
+      // could reach for even if a future edit tried. That is the structural half of the fix.
+      const text = textOf(renderToStaticMarkup(<GenerationFigure modal={modal} />));
+      expect(text).not.toContain('all '); // no convergence claim
+      expect(text).toContain('2');
+      expect(text).toContain('of 4 in-scope launchers, off a86770a9');
     });
   });
 
@@ -314,6 +515,68 @@ describe('render parity — Fleet', () => {
     const html = renderToStaticMarkup(<FleetTable fleet={null} now={Date.now()} />);
     expect(html).toContain('skeleton');
     expect(bodyRows(html).every((cells) => cells.every((c) => c === ''))).toBe(true);
+  });
+
+  // ── the two state columns, which no test rendered ──────────────────────────────────
+  // A 24-mutation battery caught 17. The survivors were not titles: inverting DriftCell's
+  // condition made drifted launchers read "current" and current ones read "drift" with the
+  // suite green, because every fixture row had launcherDrift === null and neither
+  // informative branch ever executed. Same for both status dots.
+  describe('state columns', () => {
+    test('Drift renders each of its three states from the payload, not from a shared null', () => {
+      const payload = fleetWithLaunchers('drift-states');
+      const rows = bodyRows(renderToStaticMarkup(<FleetTable fleet={payload} now={Date.now()} />));
+
+      const seen = new Map<string, string>();
+      for (const project of payload.projects) {
+        const cells = rows.find((r) => (r[1] ?? '').split(' ')[0] === project.id)!;
+        expect(cells).toBeDefined();
+        const rendered = cells[3]!;
+        seen.set(project.id, rendered);
+        if (project.launcherDrift === true) expect(rendered).toBe('drift');
+        else if (project.launcherDrift === false) expect(rendered).toBe('current');
+        else expect(rendered).toBe('n/a');
+      }
+
+      // All three branches were executed — the point of the injected launcher table.
+      expect(new Set(seen.values())).toEqual(new Set(['drift', 'current', 'n/a']));
+      expect(seen.get('lodestar')).toBe('drift');
+      expect(seen.get('quarry')).toBe('current');
+      expect(seen.get('brackish')).toBe('n/a'); // excluded launcher — a difference is not drift
+    });
+
+    test('a case-differing directory still matches its launcher, and does not claim otherwise', () => {
+      // `Sundial` on disk, `~/bin/sundial` in the table. The case-sensitive lookup rendered
+      // "no launcher" and gave, as its reason, that warroom fleet did not list it — untrue
+      // about the very table it had just read.
+      const payload = fleetWithLaunchers('drift-case');
+      const sundial = payload.projects.find((p) => p.id === 'Sundial')!;
+      expect('gen' in sundial.launcher).toBe(true);
+      expect(sundial.launcherDrift).toBe(false);
+
+      const rows = bodyRows(renderToStaticMarkup(<FleetTable fleet={payload} now={Date.now()} />));
+      const cells = rows.find((r) => (r[1] ?? '').split(' ')[0] === 'Sundial')!;
+      expect(cells[2]).toBe('a86770a9');
+      expect(cells[3]).toBe('current');
+    });
+
+    test('the agent dot reflects agentActive on every row, by shape not only colour', () => {
+      const payload = fleetWithLaunchers('dots');
+      const html = renderToStaticMarkup(<FleetTable fleet={payload} now={Date.now()} />);
+      const ordered = sortFleet(payload.projects);
+      expect(ordered.some((p) => p.agentActive)).toBe(true);
+      expect(ordered.some((p) => !p.agentActive)).toBe(true);
+
+      ordered.forEach((project, i) => {
+        const labels = rowLabels(html, i);
+        expect(labels[0]).toBe(
+          project.agentActive ? 'Agent-active — live .worktrees/.registry' : 'Dormant — no registry file'
+        );
+      });
+      // Shape, not just colour: the dormant marker is a ring, the live one a filled disc.
+      expect(html).toContain('border-muted');
+      expect(html).toContain('bg-live');
+    });
   });
 });
 
@@ -442,26 +705,24 @@ describe('render parity against the real local fleet', () => {
   test(
     'the Fleet table reverses to the real /api/fleet payload',
     async () => {
-      const claudeRoot = path.join(os.homedir(), '.claude', 'projects');
-      if (!fs.existsSync(claudeRoot)) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `real-fleet render parity NOT VERIFIED — ${claudeRoot} does not exist on this machine (e.g. a CI runner with no local transcript corpus). Nothing was compared; this is not a pass on the merits.`
-        );
+      // THE SHARED GATE, imported. This test used to re-implement it inline, and the
+      // re-implementation still contained the exact defect gate.ts was extracted to remove:
+      // an early return on `payload.projects.length === 0`, which is the result of the
+      // operation under test. Measured before the fix: MC_PROJECT_ROOTS=/mc-no-such-root
+      // turned live.test.ts red (correct) and left this file at 17 pass / 0 fail — one file
+      // fixed, the other still skipping green, while three comments said the consolidation
+      // was done.
+      const blocked = machineGate();
+      if (blocked) {
+        notVerified('real-fleet render parity', blocked);
         return;
       }
 
       const app = new Hono();
       app.route('/api', createApi(new LiveState()));
       const payload = (await (await app.fetch(new Request('http://127.0.0.1/api/fleet'))).json()) as FleetSummary;
-      if (payload.projects.length === 0) {
-        // eslint-disable-next-line no-console
-        console.log(
-          'real-fleet render parity NOT VERIFIED — discovery found 0 projects under the configured roots on this machine. Nothing was compared; this is not a pass on the merits.'
-        );
-        return;
-      }
 
+      expect(payload.projects.length).toBeGreaterThan(0); // asserted, never excused
       const rows = bodyRows(renderToStaticMarkup(<FleetTable fleet={payload} now={Date.now()} />));
       expect(rows).toHaveLength(payload.projects.length);
       for (const project of payload.projects) {
