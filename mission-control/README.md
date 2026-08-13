@@ -74,6 +74,26 @@ server-wide `idleTimeout: 0` also lets a finished `GET /api/health` hold its kee
 socket open indefinitely. `test/stream.test.ts` serves with the default and holds a real
 silent socket past the window, rather than asserting a config value.
 
+## Explanations are not mouse-only
+
+Every absent value in this UI says what would fill it, and for one round that sentence was
+delivered exclusively through `title` — 118 attributes on Fleet, 806 on Sessions, none on a
+focusable element. `title` is unreachable by keyboard, is not volunteered by a screen reader,
+and does not exist on touch. Naming a gap and withholding the one sentence that makes it
+actionable is worse than showing no explanation at all.
+
+`Unavailable` — the component that renders every such value — is now `tabIndex={0}` with the
+full reason as its `aria-label`, so it is in the tab order and announced on focus. `title`
+stays for the pointer.
+
+This is deliberately **not** applied to all ~900 titles. Making every exact token count and
+every timestamp a tab stop would put hundreds of stops between a keyboard user and the next
+control, which is its own failure. The line drawn: an element whose *whole purpose* is to
+explain an absence must be focusable; a title that merely adds precision to a value already
+on screen need not be. Every capped column (`Session`, `Project`, `Model`) does carry its full
+value in a title, which is a pointer-user fix — CSS truncation never removes text from the
+accessibility tree.
+
 ## What the views will not show you
 
 - **Dollar cost.** The transcript index records token counts, not prices, and this repo has
@@ -130,15 +150,36 @@ claiming it existed.
 
 ### Machine-gated tests
 
-`test/gate.ts` is the one implementation of "can this machine answer". It fires on exactly
-one condition — `~/.claude/projects` absent, the CI-runner case — and prints
+`test/gate.ts` is the one implementation of "can this machine answer", imported by both
+`live.test.ts` and `views.test.tsx`. It fires on exactly one condition — `~/.claude/projects`
+absent, the CI-runner case — and prints
 `… NOT VERIFIED — <reason>. Nothing was compared; this is not a pass on the merits.`
 
 It deliberately does **not** consult discovery. An earlier version skipped whenever discovery
 returned zero projects, which is the *result of the operation under test*, not a property of
 the machine: `MC_PROJECT_ROOTS=/nonexistent bun test test/live.test.ts` reported **3 pass, 1
-expect() call** — every real assertion skipped, the gate's own pin still green. The same
-command now fails, which is the correct answer.
+expect() call** — every real assertion skipped, the gate's own pin still green.
+
+Extracting the gate did not by itself finish the job. For one round `views.test.tsx` kept an
+inline copy carrying the same defect, so that command turned `live.test.ts` red and left
+`views.test.tsx` at **17 pass / 0 fail** — while this section, and two code comments, said
+the consolidation was complete. Both files fail now.
+
+## One claim, one population
+
+The Fleet headline reads *"N of M in-scope launchers, off X"*. For one round its numerator
+counted **projects** (`projects.filter(p => p.launcherDrift)`) and its denominator counted
+**launchers**. On this machine it rendered `2 of 11` while four in-scope launchers were
+genuinely off-modal — `acme` has no discovered project and so could never be counted, and
+`beamix` was lost to a case-sensitive lookup against a `Beamix` directory. The all-clear
+branch was reachable with launchers still off-modal, re-entering the sentence the named
+`ModalGeneration` union exists to prevent.
+
+Both figures now come out of `modalInScopeGeneration()`, one pass over one array, and travel
+together inside the `modal` variant. `GenerationFigure` takes no second count, so there is no
+other population within reach of the component that renders the sentence. Per-project
+`launcherDrift` still exists and is still a fact about that project's launcher — it is simply
+not what the headline counts.
 
 ```claims
 claims:
