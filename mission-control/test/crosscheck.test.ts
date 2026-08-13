@@ -233,6 +233,20 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
     return offenders;
   }
 
+  // Single source of truth for both tests below: the real-file scan, and the direct
+  // pattern-efficacy check against known bypass shapes (so the two cannot silently
+  // diverge from each other).
+  const SHELL_INVOCATION_PATTERNS = [
+    /\bexecSync\s*\(/, // always shells out, unlike execFileSync
+    /(?<!\.)\bexec\s*\(/, // bare exec( — always shells out; excludes someRegex.exec(...)
+    /(?<!\.)\bexecFile\s*\(/, // bare execFile( (the callback form) — new spawn surface this codebase doesn't use
+    /shell\s*:\s*true/, // the opt-in shell flag on exec/spawn, as an object-literal property
+    /execFileSync\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
+    /spawnSync\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
+    /(['"`])-c\1/, // the telltale flag that turns any binary into "run this string"
+    /\bBun\.\$/, // Bun's own shell-execution tag
+  ];
+
   test('no writeFile/mkdir/rm/unlink/git-commit/git-push call sites', () => {
     // This is a TEXT grep, not a semantic check: it cannot catch a write assembled from
     // a runtime string (e.g. execFileSync('sh', ['-c', someComputedString])). It only
@@ -251,20 +265,68 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
   // anyone requested GET /api/project/:id, in a component whose entire job is being
   // read-only. The write-guard test above did not catch it: that call site contains
   // none of writeFile/mkdir/rm/unlink/git-commit/git-push, which is exactly the blind
-  // spot its own comment names. This assertion closes that specific gap. Legitimate
-  // uses (execFileSync('node'|'git'|'grep', [...argv], {...})) are unaffected — the
-  // patterns below match a shell binary or a `-c` flag, never a plain argv array.
-  test('no shell is invoked: no execSync, no shell:true, no bash/sh/zsh -c, no bare -c flag', () => {
+  // spot its own comment names.
+  //
+  // NAMED FOR WHAT IT ACTUALLY DOES, not what it would be nice for it to do: this pins
+  // the literal shell-invocation SHAPES known today. It is a text grep over source, not
+  // a semantic check, and ANY regex over source text is gameable by construction — this
+  // is the third guard in two days whose name outran its reach (the read-only probe
+  // passing on file absence, the write-guard's original token list missing this exact
+  // RCE), so the fix here is to stop writing the name aspirationally. Known, accepted
+  // gaps, left as a list rather than a false sense of coverage:
+  //   - a shell binary held in a variable (`const bin = 'bash'; execFileSync(bin, ...)`)
+  //     defeats the literal-string patterns below entirely.
+  //   - `obj.shell = true` set by property assignment, rather than as an object literal,
+  //     has no `:` and is invisible to the `shell\s*:\s*true` pattern.
+  //   - `Bun.$` is flagged (below) but its interpolations are auto-escaped by Bun, so
+  //     they are not a live injection today; that is Bun's behavior, not this guard's
+  //     coverage, and would stop being true if Bun's own escaping ever changed.
+  //   - `exec`/`execFile` (see below) are matched as BARE calls only
+  //     (`(?<!\.)\bexec\s*\(`, chosen specifically so it does not fire on the many
+  //     legitimate `someRegex.exec(str)` calls in this codebase) — a namespace-qualified
+  //     call (`childProcess.exec(...)`) is not matched.
+  // An AST-based check (walk real CallExpression nodes, flag any call whose callee
+  // resolves to a child_process exec family member or Bun.$, regardless of aliasing)
+  // would close all of these at once and is the durable fix. Not built in this PR — that
+  // is a scope decision for review, not a silent gap: this test buys time, it does not
+  // replace that work.
+  test('pins known literal shell-invocation forms (regex grep — see gaps listed above)', () => {
     const files = walkServerTs();
     expect(files.length).toBeGreaterThan(0);
-    const patterns = [
-      /\bexecSync\s*\(/, // always shells out, unlike execFileSync
-      /shell\s*:\s*true/, // the opt-in shell flag on exec/spawn
-      /execFileSync\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
-      /spawnSync\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
-      /(['"`])-c\1/, // the telltale flag that turns any binary into "run this string"
-    ];
-    const offenders = patterns.flatMap((p) => findOffenders(p, files));
+    const offenders = SHELL_INVOCATION_PATTERNS.flatMap((p) => findOffenders(p, files));
     expect(offenders).toEqual([]);
+  });
+
+  // The test above proves ABSENCE in the current files, which says nothing about
+  // whether the patterns actually catch the failure shapes they claim to. This test
+  // proves the other half directly, against synthetic lines — including the exact bare
+  // exec() bypass the reviewer used to defeat the previous version of this guard, and
+  // the original 'bash', ['-c', probe] line before it was removed.
+  test('the patterns above catch every known bypass shape, tested directly', () => {
+    const knownBypasses = [
+      "execFileSync('bash', ['-c', probe], { encoding: 'utf8' })", // the original RCE
+      'exec(`grep -rl playbook_stage ${root}`, cb)', // MAJOR: bare exec() defeated the first version
+      "execFile('grep', args, cb)", // bare execFile() callback form
+      'execSync(`grep -rl playbook_stage ${root}`)',
+      "spawnSync('bash', ['-c', probe])",
+      "execFileSync(bin, argsArr, { encoding: 'utf8', shell: true })", // object-literal shell:true
+      'Bun.$`grep -rl playbook_stage ${root}`',
+    ];
+    for (const line of knownBypasses) {
+      const caught = SHELL_INVOCATION_PATTERNS.some((p) => p.test(line));
+      expect(caught).toBe(true);
+    }
+    // And the negative: legitimate calls this codebase actually makes must NOT trip it.
+    const legitimate = [
+      "execFileSync('node', [script, 'fleet'], { cwd: repoRoot, encoding: 'utf8' })",
+      "execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: project.root })",
+      "execFileSync(probeCmd.cmd, probeCmd.args, { encoding: 'utf8' })",
+      'const m = CEILING_RE.exec(reason);',
+      'const header = HEADER_RE.exec(text);',
+    ];
+    for (const line of legitimate) {
+      const falsePositive = SHELL_INVOCATION_PATTERNS.some((p) => p.test(line));
+      expect(falsePositive).toBe(false);
+    }
   });
 });

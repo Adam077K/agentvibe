@@ -313,6 +313,59 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     const dirEntries = fs.readdirSync(path.dirname(after.probe));
     expect(dirEntries.length > 0).toBe(after.found);
   });
+
+  // grep exits 1 on a genuine no-match (the honest found:false) and exits >=2 when it
+  // could not even read the directory — a nonexistent path or a permission error. The
+  // two must not collapse into the same found:false, or an unreadable project reports
+  // as "nothing here" instead of "the probe could not look" — the exact failure the
+  // honest-empty-state rule exists to prevent.
+  test('projectEmptyState distinguishes "no match" from "could not check" (grep exit 1 vs >=2)', () => {
+    const noMatchDir = mkTmpDir('mc-noperm-nomatch-');
+    cleanupDirs.push(noMatchDir);
+    const clean = projectEmptyState({ id: 'clean', root: noMatchDir } as Project);
+    expect(clean.found).toBe(false);
+    expect(clean.readable).toBeUndefined(); // ran cleanly — no "could not check" flag at all
+
+    const nonexistent = projectEmptyState({ id: 'gone', root: path.join(noMatchDir, 'does-not-exist') } as Project);
+    expect(nonexistent.found).toBe(false);
+    expect(nonexistent.readable).toBe(false);
+    expect(nonexistent.reason).toMatch(/grep exited 2/);
+
+    const noPermDir = mkTmpDir('mc-noperm-actual-');
+    cleanupDirs.push(noPermDir);
+    fs.chmodSync(noPermDir, 0o000);
+    try {
+      const unreadable = projectEmptyState({ id: 'locked', root: noPermDir } as Project);
+      expect(unreadable.found).toBe(false);
+      expect(unreadable.readable).toBe(false);
+      expect(unreadable.reason).toMatch(/grep exited 2/);
+      expect(unreadable.reason).toContain(noPermDir);
+    } finally {
+      fs.chmodSync(noPermDir, 0o755); // restore so afterAll's rmTmp can clean it up
+    }
+  });
+
+  // A directory NAME starting with '-' must reach grep as a path, not a flag — the `--`
+  // sentinel in projectEmptyStateProbe is what makes that true regardless of how
+  // project.root is ever constructed. Under the shipped default (roots always absolute)
+  // this is inert; asserted directly here rather than only in a code comment.
+  test("projectEmptyStateProbe inserts '--' before project.root (argument-injection guard)", () => {
+    const probe = projectEmptyStateProbe({ id: 'x', root: '--include=*.env' } as Project);
+    const sentinelIndex = probe.args.indexOf('--');
+    expect(sentinelIndex).toBeGreaterThan(-1);
+    expect(probe.args[sentinelIndex + 1]).toBe('--include=*.env');
+    expect(probe.args[probe.args.length - 1]).toBe('--include=*.env'); // root is the last, post-sentinel arg
+
+    // And the behavioral proof: a real directory named like a grep flag is searched as
+    // a path (found: false, empty dir) rather than misparsed as an option.
+    const parent = mkTmpDir('mc-argsentinel-');
+    cleanupDirs.push(parent);
+    const dashDir = path.join(parent, '--include=*.env');
+    fs.mkdirSync(dashDir, { recursive: true });
+    const state = projectEmptyState({ id: 'dashy', root: dashDir } as Project);
+    expect(state.readable).toBeUndefined(); // grep ran cleanly against it as a real path
+    expect(state.found).toBe(false);
+  });
 });
 
 // ── security: project.root is attacker-influenceable (a real directory name read off
