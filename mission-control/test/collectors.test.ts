@@ -253,8 +253,10 @@ describe('the conflicts sweep leaves the event loop free', () => {
   initGitRepo(root);
   const registry: { name: string; token: string }[] = [];
   // Several worktrees, so a synchronous implementation has a real block to produce and the
-  // measurement is not decided by a single process spawn.
-  for (let i = 1; i <= 4; i++) {
+  // measurement is not decided by a single process spawn. Six measures ~71 ms of blocking
+  // git calls on this machine, comfortably above timer noise.
+  const WORKTREES = 6;
+  for (let i = 1; i <= WORKTREES; i++) {
     const wt = path.join(root, '.worktrees', `ceo-${i}-${i}00`);
     addWorktree(root, wt, `ceo-${i}-${i}00`);
     fs.writeFileSync(path.join(wt, 'shared.txt'), `from ${i}\n`);
@@ -288,14 +290,13 @@ describe('the conflicts sweep leaves the event loop free', () => {
 
     expect(timerFiredBeforeSweep).toBe(true);
     // And the sweep really did the work — this is not passing because it returned early.
-    expect(report.worktrees).toHaveLength(4);
+    expect(report.worktrees).toHaveLength(WORKTREES);
     expect(report.conflicts.map((c) => c.file)).toContain('shared.txt');
   });
 
   test('the synchronous prefix is a small fraction of the whole sweep', async () => {
-    // A second, independent reading of the same property, in case a runtime ever orders
-    // timers differently: how long the call blocks before yielding, against how long the
-    // sweep takes in total. A synchronous implementation makes these two equal.
+    // Catches a block BEFORE the first await — where listWorktrees (execFileSync) sat, and
+    // why /api/conflicts was 603 ms synchronous of a 606 ms request.
     const t0 = performance.now();
     const pending = detectConflicts(project);
     const syncPrefixMs = performance.now() - t0;
@@ -305,9 +306,54 @@ describe('the conflicts sweep leaves the event loop free', () => {
     // eslint-disable-next-line no-console
     console.log(`  [async] sweep sync prefix ${syncPrefixMs.toFixed(1)}ms of ${totalMs.toFixed(1)}ms total`);
 
-    expect(report.worktrees).toHaveLength(4); // it measured a sweep that did the work
+    expect(report.worktrees).toHaveLength(WORKTREES); // it measured a sweep that did the work
     expect(totalMs).toBeGreaterThan(1); // …and there was real work to be non-blocking about
     expect(syncPrefixMs).toBeLessThan(totalMs / 2);
+  });
+
+  // THE TWO TESTS ABOVE ARE NOT ENOUGH, and that is measured rather than suspected.
+  //
+  // Both observe only the window BEFORE the first `await`. Reverting `changedFilesFor` alone
+  // to execFileSync — the exact C1 revert the reviewer performed — leaves
+  // `await listWorktreesAsync(…)` in front of it, so the loop yields once, the queued timer
+  // fires, the prefix records 0.4 ms, and BOTH tests pass while the sweep blocks for ~71 ms
+  // immediately afterwards. Verified with that revert applied: `bun test -t "event loop"`
+  // reported 2 pass / 0 fail. A test that only watches the start of a function cannot speak
+  // for the middle of it.
+  //
+  // So this samples the loop THROUGHOUT the sweep and takes the worst gap between successive
+  // ticks. A blocking call anywhere — before the first await, between awaits, or inside a
+  // `.map` whose callbacks run synchronously — appears as one long gap.
+  //
+  // The `setTimeout` after the sweep is load-bearing, and leaving it out was itself a bug in
+  // the first version of this probe: when the sweep resolves, the continuation and
+  // `clearInterval` run as MICROTASKS, which drain before the loop reaches the timers phase,
+  // so the tick that would have recorded the big gap never fires. That version reported a
+  // 2.4 ms maximum against an implementation that blocked for 71 ms. One macrotask of grace
+  // lets the timer phase run first.
+  test('the event loop keeps running THROUGHOUT the sweep, not only before it', async () => {
+    const gaps: number[] = [];
+    let last = performance.now();
+    const sampler = setInterval(() => {
+      const now = performance.now();
+      gaps.push(now - last);
+      last = now;
+    }, 1);
+
+    const t0 = performance.now();
+    const report = await detectConflicts(project);
+    const totalMs = performance.now() - t0;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    clearInterval(sampler);
+
+    const maxGapMs = Math.max(...gaps);
+    // eslint-disable-next-line no-console
+    console.log(`  [async] worst event-loop gap ${maxGapMs.toFixed(1)}ms of a ${totalMs.toFixed(1)}ms sweep`);
+
+    expect(report.worktrees).toHaveLength(WORKTREES); // the sweep really ran
+    expect(gaps.length).toBeGreaterThan(3); // …the sampler really sampled
+    expect(totalMs).toBeGreaterThan(20); // …over a window long enough for a block to show
+    expect(maxGapMs).toBeLessThan(totalMs / 2);
   });
 });
 
