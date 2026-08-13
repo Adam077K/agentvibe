@@ -6,5 +6,5 @@ tier: lite
 qa_verdict: PENDING_REVIEW
 ---
 
-Phase 8a PR2: `server/projects.ts` (discovery, 8 registry-active projects incl. `finfun`, matching the brief), `server/index-store.ts` (disk-write-free in-memory session index, mtime-skip incremental refresh), 7 collectors (`transcripts`/`fleet`/`worktrees`/`conflicts`/`belief`/`events`/`empty`), `server/routes/api.ts`. No UI — React/Vite not added.
-36 bun tests pass (`collectors`/`crosscheck`/`perf`/`smoke`); mutation gate confirmed (mutating a fixture's `output_tokens` moves the rolling-5h figure; `npm run check` exits 0. No review has run yet — `qa_verdict` is honestly PENDING_REVIEW, not self-granted PASS (repo's standing gap, task #24).
+`server/projects.ts` (discovery, 8 registry-active incl. `finfun`), `server/index-store.ts` (disk-write-free, mtime-skip refresh), 7 collectors, `server/routes/api.ts`. No UI. 36 bun tests pass, incl. write-guard (test/crosscheck.test.ts:194-220, walks server/** from disk) and mutation gate.
+Fixture perf (24 files) passes <3000ms/<250ms — CI-safe, no `~/.claude/projects` on a runner. REAL corpus measured once (not asserted): 2,029 files / 2.7GB cold-builds in 3.6-4.1s across 3 runs — OVER the 3000ms target, reported plainly, not tuned to pass. `qa_verdict` stays PENDING_REVIEW (task #24).
