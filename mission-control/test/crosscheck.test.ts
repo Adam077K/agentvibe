@@ -14,8 +14,14 @@ import { runLedgerVerify } from '../server/collectors/belief.ts';
 import { windowUsage as mcWindowUsage } from '../server/lib/usage.ts';
 import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo } from './fixtures.ts';
 
-// Independent of server/lib/usage.ts's wrapper — imported directly from the module under
-// test, exactly as scripts/lib/usage.js exports it, so this is not comparing MC to itself.
+// Imported directly from the module under test, exactly as scripts/lib/usage.js exports
+// it — NOT independent of server/lib/usage.ts, whose windowUsage() is a thin pass-
+// through (see that file): calling both here mostly proves the wrapper forwards its
+// options, which is real but modest. The number that actually carries assurance is the
+// hardcoded anchor below (expect(...).toBe(19_134)), independently re-derived by hand
+// from scripts/lib/usage.js:159-172 as 12,345 + 6,789. The fleet-gen and ledger-verdict
+// crosschecks further down ARE genuinely independent — each parses real command stdout
+// with its own regex, sharing no code with the collector it checks.
 // eslint-disable-next-line
 import * as rawUsage from '../../scripts/lib/usage.js';
 
@@ -145,11 +151,19 @@ describe('claim counts by verdict', () => {
       });
       const m = /ledger verify: (\d+) pass · (\d+) would_block \(shadow\) · (\d+) block/.exec(stdout);
       expect(m).not.toBeNull();
-      const independent = { pass: Number(m![1]), wouldBlock: Number(m![2]), block: Number(m![3]) };
+      const header = /^ledger verify: (\d+) claims/m.exec(stdout);
+      expect(header).not.toBeNull();
+      const independent = {
+        totalClaims: Number(header![1]),
+        pass: Number(m![1]),
+        wouldBlock: Number(m![2]),
+        block: Number(m![3]),
+      };
 
       const mc = runLedgerVerify(REPO_ROOT, { offline: true });
       expect('pass' in mc ? mc : null).not.toBeNull();
       if ('pass' in mc) {
+        expect(mc.totalClaims).toBe(independent.totalClaims); // pins belief.ts's HEADER_RE fallback path too
         expect(mc.pass).toBe(independent.pass);
         expect(mc.wouldBlock).toBe(independent.wouldBlock);
         expect(mc.block).toBe(independent.block);
@@ -190,13 +204,11 @@ describe('budget-guard cache file', () => {
   });
 });
 
-// ── no disk writes anywhere in server/** ────────────────────────────────────────────
-describe('server/** performs no disk mutation', () => {
-  test('no writeFile/mkdir/rm/unlink/git-commit/git-push call sites', () => {
-    // This is a TEXT grep, not a semantic check: it cannot catch a write assembled from
-    // a runtime string (e.g. execFileSync('sh', ['-c', someComputedString])). It only
-    // pins the literal call sites this PR introduces.
-    const serverDir = path.join(REPO_ROOT, 'mission-control', 'server');
+// ── no disk writes, and no shell, anywhere in server/** ─────────────────────────────
+describe('server/** performs no disk mutation, and never invokes a shell', () => {
+  const serverDir = path.join(REPO_ROOT, 'mission-control', 'server');
+
+  function walkServerTs(): string[] {
     const files: string[] = [];
     const walk = (d: string) => {
       for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
@@ -206,9 +218,10 @@ describe('server/** performs no disk mutation', () => {
       }
     };
     walk(serverDir);
-    expect(files.length).toBeGreaterThan(0);
+    return files;
+  }
 
-    const pattern = /\b(writeFile(Sync)?|mkdir(Sync)?|rm(Sync)?|unlink(Sync)?|appendFile(Sync)?|git\s+commit|git\s+push)\b/;
+  function findOffenders(pattern: RegExp, files: string[]): string[] {
     const offenders: string[] = [];
     for (const f of files) {
       const text = fs.readFileSync(f, 'utf8');
@@ -217,6 +230,41 @@ describe('server/** performs no disk mutation', () => {
         if (pattern.test(code)) offenders.push(`${path.relative(serverDir, f)}:${i + 1}: ${line.trim()}`);
       });
     }
+    return offenders;
+  }
+
+  test('no writeFile/mkdir/rm/unlink/git-commit/git-push call sites', () => {
+    // This is a TEXT grep, not a semantic check: it cannot catch a write assembled from
+    // a runtime string (e.g. execFileSync('sh', ['-c', someComputedString])). It only
+    // pins the literal call sites this PR introduces. See the test below for that
+    // specific blind spot — it is not hypothetical, it shipped once already.
+    const files = walkServerTs();
+    expect(files.length).toBeGreaterThan(0);
+    const pattern = /\b(writeFile(Sync)?|mkdir(Sync)?|rm(Sync)?|unlink(Sync)?|appendFile(Sync)?|git\s+commit|git\s+push)\b/;
+    expect(findOffenders(pattern, files)).toEqual([]);
+  });
+
+  // Found live 2026-08-13: server/collectors/empty.ts built a shell string from
+  // project.root — a real, attacker-influenceable directory name read straight off disk
+  // by discoverProjects() — and ran it via execFileSync('bash', ['-c', probe]). A
+  // directory named `x;touch PWNED;echo done` executed arbitrary shell the moment
+  // anyone requested GET /api/project/:id, in a component whose entire job is being
+  // read-only. The write-guard test above did not catch it: that call site contains
+  // none of writeFile/mkdir/rm/unlink/git-commit/git-push, which is exactly the blind
+  // spot its own comment names. This assertion closes that specific gap. Legitimate
+  // uses (execFileSync('node'|'git'|'grep', [...argv], {...})) are unaffected — the
+  // patterns below match a shell binary or a `-c` flag, never a plain argv array.
+  test('no shell is invoked: no execSync, no shell:true, no bash/sh/zsh -c, no bare -c flag', () => {
+    const files = walkServerTs();
+    expect(files.length).toBeGreaterThan(0);
+    const patterns = [
+      /\bexecSync\s*\(/, // always shells out, unlike execFileSync
+      /shell\s*:\s*true/, // the opt-in shell flag on exec/spawn
+      /execFileSync\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
+      /spawnSync\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
+      /(['"`])-c\1/, // the telltale flag that turns any binary into "run this string"
+    ];
+    const offenders = patterns.flatMap((p) => findOffenders(p, files));
     expect(offenders).toEqual([]);
   });
 });

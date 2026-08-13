@@ -10,7 +10,7 @@ import { detectConflicts, parseStatusPorcelain } from '../server/collectors/conf
 import { parseWarroomFleetOutput } from '../server/collectors/fleet.ts';
 import { parseLedgerVerifyOutput, summarizeClaims } from '../server/collectors/belief.ts';
 import { summarizeEvents, bucketBudgetBlock, readConfiguredCeilings } from '../server/collectors/events.ts';
-import { projectEmptyState, inboxEmptyState } from '../server/collectors/empty.ts';
+import { projectEmptyState, projectEmptyStateProbe, inboxEmptyState } from '../server/collectors/empty.ts';
 import { mkTmpDir, rmTmp, writeTranscript, fixtureClaudeProjectsDir, initGitRepo, addWorktree, writeRegistry } from './fixtures.ts';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '..', '..');
@@ -275,10 +275,12 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     const projectNoMarker = { id: 'p1', root } as Project;
     const before = projectEmptyState(projectNoMarker);
     expect(before.found).toBe(false);
-    // Independently execute the exact probe string this returned.
+    // Independently re-run the exact {cmd, args} the collector used — no shell, ever
+    // (see the "shell injection" describe block below for why that matters).
+    const probeCmd = projectEmptyStateProbe(projectNoMarker);
     let independentlyFound = false;
     try {
-      const out = execFileSync('bash', ['-c', before.probe], { encoding: 'utf8' });
+      const out = execFileSync(probeCmd.cmd, probeCmd.args, { encoding: 'utf8' });
       independentlyFound = out.trim().length > 0;
     } catch {
       independentlyFound = false;
@@ -289,7 +291,8 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     fs.writeFileSync(path.join(root, 'docs', 'progress.md'), 'playbook_stage: build\n');
     const after = projectEmptyState(projectNoMarker);
     expect(after.found).toBe(true);
-    const outAfter = execFileSync('bash', ['-c', after.probe], { encoding: 'utf8' });
+    const afterProbeCmd = projectEmptyStateProbe(projectNoMarker);
+    const outAfter = execFileSync(afterProbeCmd.cmd, afterProbeCmd.args, { encoding: 'utf8' });
     expect(outAfter.trim().length > 0).toBe(after.found);
   });
 
@@ -309,6 +312,110 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     // Independently execute the glob the probe names.
     const dirEntries = fs.readdirSync(path.dirname(after.probe));
     expect(dirEntries.length > 0).toBe(after.found);
+  });
+});
+
+// ── security: project.root is attacker-influenceable (a real directory name read off
+// disk) and must never reach a shell. Regression coverage for the command-injection
+// finding of 2026-08-13 — see server/collectors/empty.ts and the write-guard extension
+// in test/crosscheck.test.ts. ─────────────────────────────────────────────────────────
+describe('projectEmptyState is not vulnerable to shell injection via project.root', () => {
+  // A filesystem directory NAME cannot contain '/', so the marker `touch` targets must
+  // be bare filenames, not paths — otherwise fs.mkdirSync({recursive:true}) would
+  // silently create a chain of real nested directories instead of one adversarial name
+  // (found the hard way: an earlier version of this file used an absolute marker path
+  // and every test passed for the wrong reason). If the old shell-string bug were still
+  // present, `touch <bareName>` runs with the CALLING PROCESS's cwd (bun test's cwd,
+  // i.e. mission-control/) — that is exactly where these tests look for the marker.
+  function markerPathIfExploited(bareName: string): string {
+    return path.join(process.cwd(), bareName);
+  }
+  function cleanupMarker(p: string) {
+    try {
+      fs.rmSync(p);
+    } catch {
+      /* it was never created — the expected, safe outcome */
+    }
+  }
+
+  test('a directory name built from shell metacharacters executes nothing', () => {
+    const parent = mkTmpDir('mc-security-parent-');
+    cleanupDirs.push(parent);
+    const bareMarker = `PWNED_MARKER_${crypto.randomUUID()}`;
+    const markerPath = markerPathIfExploited(bareMarker);
+    // Mirrors the reviewer's live repro: semicolons, a space, and a trailing command —
+    // the exact directory-name shape that popped a shell under the old implementation.
+    const maliciousDir = path.join(parent, `evilproj;touch ${bareMarker};echo done`);
+    fs.mkdirSync(maliciousDir, { recursive: true });
+
+    try {
+      const state = projectEmptyState({ id: 'evil', root: maliciousDir } as Project);
+      expect(fs.existsSync(markerPath)).toBe(false); // nothing was executed
+      expect(state.found).toBe(false); // and the read-only answer is still correct: no marker file inside
+    } finally {
+      cleanupMarker(markerPath);
+    }
+  });
+
+  test('...and the same directory, containing a real playbook_stage marker, still answers found=true (not a crash, not a false negative)', () => {
+    const parent = mkTmpDir('mc-security-parent2-');
+    cleanupDirs.push(parent);
+    const bareMarker = `PWNED_MARKER_${crypto.randomUUID()}`;
+    const markerPath = markerPathIfExploited(bareMarker);
+    const maliciousDir = path.join(parent, `evilproj;touch ${bareMarker};echo done`);
+    fs.mkdirSync(path.join(maliciousDir, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(maliciousDir, 'docs', 'progress.md'), 'playbook_stage: build\n');
+
+    try {
+      const state = projectEmptyState({ id: 'evil2', root: maliciousDir } as Project);
+      expect(fs.existsSync(markerPath)).toBe(false);
+      expect(state.found).toBe(true);
+    } finally {
+      cleanupMarker(markerPath);
+    }
+  });
+
+  // MINOR 1 from review: same root cause, non-adversarial — a plain space in a real
+  // project name ("My Project") word-split under the old shell-string implementation,
+  // so grep silently failed and the answer was wrong (found:false) rather than a crash.
+  test('a directory name containing a space is handled correctly, not silently wrong', () => {
+    const parent = mkTmpDir('mc-security-spaced-');
+    cleanupDirs.push(parent);
+    const spacedDir = path.join(parent, 'My Project');
+    fs.mkdirSync(path.join(spacedDir, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(spacedDir, 'docs', 'progress.md'), 'playbook_stage: build\n');
+
+    expect(projectEmptyState({ id: 'spaced', root: spacedDir } as Project).found).toBe(true);
+  });
+
+  // Full round-trip through the real Hono app — the reviewer's exact demonstration
+  // (created a malicious directory, issued a real GET /api/project/:id, confirmed a
+  // marker file was written) reproduced as a regression test rather than left as a
+  // one-off finding.
+  test('GET /api/project/:id against a maliciously-named real project executes nothing', async () => {
+    const projectsRoot = mkTmpDir('mc-security-e2e-root-');
+    cleanupDirs.push(projectsRoot);
+    const bareMarker = `PWNED_MARKER_E2E_${crypto.randomUUID()}`;
+    const markerPath = markerPathIfExploited(bareMarker);
+    const maliciousName = `evilproj;touch ${bareMarker};echo done`;
+    const maliciousDir = path.join(projectsRoot, maliciousName);
+    initGitRepo(maliciousDir);
+
+    const savedRoots = process.env.MC_PROJECT_ROOTS;
+    process.env.MC_PROJECT_ROOTS = projectsRoot;
+    try {
+      const mc = (await import('../server/index.ts')).default;
+      const res = await mc.fetch(new Request(`http://127.0.0.1/api/project/${encodeURIComponent(maliciousName)}`));
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { project: { id: string }; empty: { found: boolean } };
+      expect(body.project.id).toBe(maliciousName);
+      expect(body.empty.found).toBe(false);
+      expect(fs.existsSync(markerPath)).toBe(false); // the real, end-to-end path executed nothing
+    } finally {
+      if (savedRoots === undefined) delete process.env.MC_PROJECT_ROOTS;
+      else process.env.MC_PROJECT_ROOTS = savedRoots;
+      cleanupMarker(markerPath);
+    }
   });
 });
 
