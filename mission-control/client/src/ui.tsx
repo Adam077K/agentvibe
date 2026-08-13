@@ -7,14 +7,23 @@
 
 import type { ReactNode } from 'react';
 
+/**
+ * Live vs dormant, encoded by SHAPE as well as colour: live is a filled disc, dormant a
+ * hollow ring. The first version varied only colour, and the dormant one (`line-strong`) sat
+ * at 1.66:1 against the 3:1 a non-text indicator needs — so in the rendered fleet that
+ * column read as a run of empty cells, and the sole encoding of "is an agent running here"
+ * was invisible. Disc-versus-ring survives low contrast and colour blindness both, and the
+ * ring is drawn in `muted` (7:1) rather than a hairline nobody can see.
+ */
 export function StatusDot({ tone, breathing = false, title }: { tone: 'live' | 'idle' | 'warn'; breathing?: boolean; title: string }) {
-  const color = tone === 'live' ? 'bg-live' : tone === 'warn' ? 'bg-warn' : 'bg-line-strong';
+  const shape =
+    tone === 'live' ? 'bg-live' : tone === 'warn' ? 'bg-warn' : 'border border-muted bg-transparent';
   return (
     <span
       title={title}
       aria-label={title}
       role="img"
-      className={`inline-block h-[7px] w-[7px] shrink-0 rounded-full ${color} ${breathing ? 'breathe' : ''}`}
+      className={`inline-block h-[7px] w-[7px] shrink-0 rounded-full ${shape} ${breathing ? 'breathe' : ''}`}
     />
   );
 }
@@ -62,8 +71,11 @@ export function Th({
     <th
       scope="col"
       title={title}
-      style={width ? { width } : undefined}
-      className={`label sticky top-0 z-10 border-b border-line bg-ink px-3 py-2 font-medium whitespace-nowrap ${
+      // Pinned BELOW the app bar, not underneath it. `top-0` here against a `top-0 z-20`
+      // header meant the column labels were painted over the instant the table scrolled —
+      // total occlusion on a 2,037-row view. The offset is the shared --mc-header-h.
+      style={{ ...(width ? { width } : {}), top: 'var(--mc-header-h)' }}
+      className={`label sticky z-10 border-b border-line bg-ink px-3 py-2 font-medium whitespace-nowrap ${
         align === 'right' ? 'text-right' : 'text-left'
       }`}
     >

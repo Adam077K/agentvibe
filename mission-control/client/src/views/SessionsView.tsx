@@ -8,9 +8,9 @@
 // SessionsTable is pure and stateless for the same reason FleetTable is — test/views.test.tsx
 // renders it against a real /api/sessions payload and reverses every displayed figure.
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import type { SessionSummary, SessionsSlice } from '../api.ts';
-import { formatAbsolute, formatCount, formatRelative, isLive, shortId } from '../format.ts';
+import { formatAbsolute, formatCount, formatRelative, formatShare, isLive, shortId } from '../format.ts';
 import { EmptyState, Footnote, LoadingRows, StatusDot, Td, Th, Unavailable } from '../ui.tsx';
 
 const COLUMNS = 8;
@@ -22,6 +22,52 @@ const PAGE = 200;
 // The absence is stated ONCE, below the table, where it can carry the whole reason.
 const NO_COST_REASON =
   'The transcript index records token counts, not prices: scripts/lib/usage.js counts output tokens, which is what the budget guard caps. This repository holds no per-model price table, and a hardcoded one would be a guess that goes stale silently the next time rates move. A checked-in, versioned USD rate table keyed by model id is what would fill this.';
+
+/**
+ * `<synthetic>` is a real value Claude Code writes into `message.model`, and rendering it
+ * raw put literal angle brackets in a column of model ids — it read as a broken tag next to
+ * `claude-opus-5`, which is exactly the impression a control plane must not give about its
+ * own data. The `unrecorded` case beside it was already handled properly; this is the same
+ * treatment for a value that IS recorded but is not a model.
+ */
+export function modelLabel(model: string): ReactNode {
+  if (model.startsWith('<') && model.endsWith('>')) {
+    return (
+      <Unavailable
+        short={model.slice(1, -1)}
+        why={`Claude Code recorded the literal value "${model}" as this session's model. It marks a turn the client generated itself rather than one a model produced, so there is no model id to show.`}
+      />
+    );
+  }
+  return model;
+}
+
+/**
+ * WHAT THE COLUMN ACTUALLY SAYS, instead of a number said twice. A raw "Subagent tokens"
+ * column sat next to "Output tokens" and repeated it exactly: measured across the whole real
+ * corpus, 1,918 of 2,037 sessions are entirely subagent output and 66 entirely main, with
+ * ZERO mixed. Two adjacent identical eight-digit numbers to encode one bit.
+ *
+ * "Zero mixed today" is an observation, not a guarantee, so the mixed branch is real and
+ * tested: when a transcript does carry both, the share is shown rather than a label that
+ * would be false. Exact figures stay in the title on every branch.
+ */
+export function KindCell({ session }: { session: SessionSummary }) {
+  const { outputTokens, subagentOutputTokens } = session;
+  const exact = `${formatCount(subagentOutputTokens)} of ${formatCount(outputTokens)} output tokens are subagent (isSidechain) turns`;
+
+  if (outputTokens === 0) {
+    return (
+      <Unavailable
+        short="no output"
+        why="This transcript records no output tokens at all, so there is no split between main and subagent turns to report."
+      />
+    );
+  }
+  if (subagentOutputTokens === 0) return <span title={exact}>main</span>;
+  if (subagentOutputTokens === outputTokens) return <span title={exact}>subagent</span>;
+  return <span title={exact}>{formatShare(subagentOutputTokens, outputTokens)} subagent</span>;
+}
 
 export function filterSessions(sessions: SessionSummary[], projectId: string, query: string): SessionSummary[] {
   const q = query.trim().toLowerCase();
@@ -62,25 +108,33 @@ export function SessionsTable({
           <Th width="26px" title="Filled when the most recent turn is within the live window">
             <span className="sr-only">Live</span>
           </Th>
-          <Th>Session</Th>
-          <Th>Project</Th>
-          <Th title="message.model on this session's most recent recorded turn">Model · latest turn</Th>
+          {/* Capped, not sized by its longest value. Session ids run from 8 characters to
+              40; letting the outlier set the column gave Session and Model half the table
+              between them while every numeric column was squeezed. The full id stays in the
+              title, and CSS truncation is visual only — the text in the DOM is complete. */}
+          <Th width="21ch">Session</Th>
+          <Th width="12ch">Project</Th>
+          <Th width="20ch" title="message.model on this session's most recent recorded turn">
+            Model · latest turn
+          </Th>
           <Th align="right" title="Turns carrying a usage record">
             Turns
           </Th>
-          <Th align="right">Output tokens</Th>
-          <Th align="right" title="Output tokens on this session's subagent (isSidechain) turns">
-            Subagent
+          <Th align="right" title="Output tokens across this session's turns">
+            Output tokens
+          </Th>
+          <Th align="right" title="Whether this transcript's output came from subagent (isSidechain) turns">
+            Kind
           </Th>
           <Th align="right">Last turn</Th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-line/70">
+      <tbody>
         {slice === null && <LoadingRows columns={COLUMNS} />}
         {shown.map((s) => {
           const live = isLive(s.lastTurnAt, now);
           return (
-            <tr key={s.file} className="transition-colors hover:bg-raised">
+            <tr key={s.file} className="transition-colors even:bg-row-alt hover:bg-raised">
               <Td className="pr-0 pl-4">
                 <StatusDot
                   tone={live ? 'live' : 'idle'}
@@ -89,16 +143,22 @@ export function SessionsTable({
                 />
               </Td>
               <Td mono className={live ? 'text-text' : 'text-muted'} title={`${s.sessionId}\n${s.file}`}>
-                {shortId(s.sessionId)}
+                <span className="block max-w-[21ch] truncate">{shortId(s.sessionId)}</span>
               </Td>
-              <Td className="fig">{s.projectId}</Td>
+              <Td className="fig">
+                <span className="block max-w-[12ch] truncate">{s.projectId}</span>
+              </Td>
               <Td mono className="text-muted">
-                {s.latestModel ?? (
-                  <Unavailable
-                    short="unrecorded"
-                    why="No turn in this transcript carries a message.model field — typically a session with no assistant turn yet, or one written by a tool that does not record the model."
-                  />
-                )}
+                <span className="block max-w-[20ch] truncate">
+                  {s.latestModel === null ? (
+                    <Unavailable
+                      short="unrecorded"
+                      why="No turn in this transcript carries a message.model field — typically a session with no assistant turn yet, or one written by a tool that does not record the model."
+                    />
+                  ) : (
+                    modelLabel(s.latestModel)
+                  )}
+                </span>
               </Td>
               <Td align="right" mono className={s.turnCount > 0 ? '' : 'text-dim'}>
                 {formatCount(s.turnCount)}
@@ -106,8 +166,8 @@ export function SessionsTable({
               <Td align="right" mono className={s.outputTokens > 0 ? '' : 'text-dim'}>
                 {formatCount(s.outputTokens)}
               </Td>
-              <Td align="right" mono className="text-muted">
-                {formatCount(s.subagentOutputTokens)}
+              <Td align="right" className="text-muted">
+                <KindCell session={s} />
               </Td>
               <Td align="right" className="text-muted" title={`first turn ${formatAbsolute(s.firstTurnAt)}\nlast turn ${formatAbsolute(s.lastTurnAt)}`}>
                 {formatRelative(s.lastTurnAt, now)}
@@ -147,7 +207,7 @@ export function SessionsView({ slice, now }: { slice: SessionsSlice | null; now:
               setProjectId(e.target.value);
               setLimit(PAGE);
             }}
-            className="fig rounded-[3px] border border-line bg-raised px-2 py-1 text-[12px] text-text"
+            className="control"
           >
             <option value="all">all</option>
             {projects.map((p) => (
@@ -166,7 +226,9 @@ export function SessionsView({ slice, now }: { slice: SessionsSlice | null; now:
               setLimit(PAGE);
             }}
             placeholder="session id, project or model"
-            className="fig min-w-0 flex-1 rounded-[3px] border border-line bg-raised px-2 py-1 text-[12px] text-text placeholder:text-dim"
+            // `.control` is shared with the select beside it — see styles.css. They are two
+            // sibling controls and must read as the same kind of thing.
+            className="control min-w-0 flex-1"
           />
         </label>
         <div className="fig text-[11.5px] text-dim">
@@ -228,8 +290,10 @@ export function SessionsView({ slice, now }: { slice: SessionsSlice | null; now:
       <Footnote>
         A session is <span className="text-live">live</span> when its most recent recorded turn is within 5 minutes;
         everything else is historical, and both are listed here. Model is the one on that most recent turn — a session
-        that switched models mid-run shows only its latest. A row whose subagent total equals its output total is a
-        subagent transcript, written under its parent session&rsquo;s directory.{' '}
+        that switched models mid-run shows only its latest. <span className="text-muted">Kind</span> reads{' '}
+        <span className="text-muted">subagent</span> for a transcript written under a parent session&rsquo;s
+        <code>subagents/</code> directory and <span className="text-muted">main</span> for the parent itself; a
+        transcript carrying both shows the subagent share instead. Hover it for the exact token counts.{' '}
         <span className="text-muted">There is no cost column</span>, and this is why: {NO_COST_REASON}
       </Footnote>
     </section>

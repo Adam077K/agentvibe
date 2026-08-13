@@ -23,18 +23,35 @@
 
 @theme {
   --color-ink: #0d0e11;
-  --color-raised: #131519;
-  --color-line: #22262e;
-  --color-line-strong: #333944;
+  /* Zebra banding for long tables — 1.10:1 against --color-ink on purpose. It has to guide
+     the eye across a 1600px, eight-column row without becoming a second grid competing with
+     the data. Row separators alone measured 1.17:1 and did neither job. */
+  --color-row-alt: #111318;
+  --color-raised: #171a20;
+  --color-line: #2a2f39;
+  --color-line-strong: #3d4451;
   --color-text: #e6e8ec;
   --color-muted: #9aa1ad;
-  --color-dim: #6a7280;
+  /* #6a7280 measured 3.98:1 on --color-ink — under AA, while carrying every column header,
+     every footnote (including the whole "why there is no cost column" statement), every
+     `n/a`, and the filter placeholder. #7b8494 is 4.8:1 in the same cool neutral. Nothing
+     that carries meaning is allowed below 4.5:1. */
+  --color-dim: #7b8494;
   --color-live: #3fbf8f;
   --color-warn: #d9a441;
   --color-bad: #e2727a;
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+}
+
+/* The app bar's height, in ONE place, because two things depend on it. The sticky column
+   headers used to pin at `top-0` underneath a `top-0 z-20` bar: on a 2,037-row table the
+   column labels were 100% occluded the moment you scrolled, which on a table that long is
+   the most expensive defect in the view. A magic 47px written in two files would have come
+   apart the first time the bar's padding changed. */
+:root {
+  --mc-header-h: 44px;
 }
 
 @layer base {
@@ -88,20 +105,53 @@
     text-underline-offset: 3px;
     cursor: help;
   }
+
+  /* ONE control surface for the select and the text input, because they sit side by side and
+   * must read as the same kind of thing. Before this, the select got native chrome while the
+   * input's fill measured 1.06:1 and its border 1.27:1 — so the more important of the two
+   * read as not-a-control at all, and looked like a caption next to a real widget. */
+  .control {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-text);
+    background-color: var(--color-raised);
+    border: 1px solid var(--color-line-strong);
+    border-radius: 3px;
+    padding: 3px 8px;
+    transition:
+      border-color 120ms ease,
+      background-color 120ms ease;
+  }
+
+  .control:hover {
+    border-color: var(--color-muted);
+  }
+
+  .control:focus {
+    outline: none;
+    border-color: var(--color-live);
+  }
+
+  .control::placeholder {
+    color: var(--color-dim);
+  }
 }
 
+/* Bottoms out at 0.7, not 0.35. At 0.35 the live dot spent part of every cycle at 1.98:1
+ * against the background — below the 3:1 a non-text indicator needs — so the one element
+ * whose entire job is saying "this is running right now" periodically became unreadable. */
 @keyframes mc-breathe {
   0%,
   100% {
     opacity: 1;
   }
   50% {
-    opacity: 0.35;
+    opacity: 0.7;
   }
 }
 
-/* Only the live-session dot moves, and only because "is this running right now" is the one
- * question a still image cannot answer. Opacity only — no layout property is animated. */
+/* Only the live dot moves, and only because "is this running right now" is the one question
+ * a still image cannot answer. Opacity only — no layout property is animated. */
 .breathe {
   animation: mc-breathe 2.4s ease-in-out infinite;
 }

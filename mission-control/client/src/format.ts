@@ -12,9 +12,13 @@ export function formatCount(n: number): string {
   return n.toLocaleString('en-US');
 }
 
-/** A share of a whole, for the one place a ratio is more useful than a second raw count. */
-export function formatPercent(part: number, whole: number): string {
-  if (whole <= 0) return '0%';
+/**
+ * A share of a whole. Returns null — not `'0%'` — when the whole is zero: a share of nothing
+ * is undefined, and printing 0% is a computed-looking claim about a ratio nobody computed.
+ * Every caller renders the null case as an explicit absence instead.
+ */
+export function formatShare(part: number, whole: number): string | null {
+  if (whole <= 0) return null;
   return `${Math.round((part / whole) * 100)}%`;
 }
 

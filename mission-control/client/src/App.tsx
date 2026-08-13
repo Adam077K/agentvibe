@@ -62,22 +62,28 @@ export default function App() {
 
   return (
     <div className="min-h-[100dvh]">
-      <header className="sticky top-0 z-20 border-b border-line bg-ink/95 backdrop-blur-sm">
-        <div className="flex items-center gap-6 px-6 py-2.5">
+      {/* Fixed height, read from the same --mc-header-h the sticky column headers offset by.
+          If the bar's height and that offset are ever derived separately they will disagree,
+          and the symptom is a table's column labels painted underneath this element. */}
+      <header
+        className="sticky top-0 z-20 border-b border-line bg-ink/95 backdrop-blur-sm"
+        style={{ height: 'var(--mc-header-h)' }}
+      >
+        <div className="flex h-full items-center gap-6 px-6">
           <div className="label text-text">Mission Control</div>
-          <nav className="flex items-center gap-1" aria-label="Views">
+          <nav className="flex h-full items-center gap-1" aria-label="Views">
             {TABS.map((t) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => setTab(t.id)}
                 aria-current={tab === t.id ? 'page' : undefined}
-                className={`relative px-2.5 py-1 text-[12.5px] transition-colors ${
+                className={`relative flex h-full items-center px-2.5 text-[12.5px] transition-colors ${
                   tab === t.id ? 'text-text' : 'text-dim hover:text-muted'
                 }`}
               >
                 {t.label}
-                {tab === t.id && <span className="absolute inset-x-2.5 -bottom-[11px] h-px bg-live" />}
+                {tab === t.id && <span className="absolute inset-x-2.5 bottom-0 h-px bg-live" />}
               </button>
             ))}
           </nav>
