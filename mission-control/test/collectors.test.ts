@@ -6,7 +6,13 @@ import { execFileSync } from 'node:child_process';
 import { discoverProjects, encodeProjectDir, type Project } from '../server/projects.ts';
 import { IndexStore } from '../server/index-store.ts';
 import { listWorktrees, parseWorktreePorcelain, type WorktreeEntry } from '../server/collectors/worktrees.ts';
-import { changedFilesFor, detectConflicts, parseStatusPorcelain, scopeSweep } from '../server/collectors/conflicts.ts';
+import {
+  changedFilesFor,
+  detectConflicts,
+  parseStatusPorcelain,
+  scopeSweep,
+  EXCLUDED_REASON,
+} from '../server/collectors/conflicts.ts';
 import { parseWarroomFleetOutput } from '../server/collectors/fleet.ts';
 import {
   attributeVerdicts,
@@ -15,13 +21,23 @@ import {
   parseLedgerVerifyLines,
   parseLedgerVerifyOutput,
   readGlobalLedger,
+  runLedgerVerify,
   summarizeClaims,
   type GlobalClaim,
   type LedgerVerifySummary,
 } from '../server/collectors/belief.ts';
 import { summarizeEvents, bucketBudgetBlock, readConfiguredCeilings } from '../server/collectors/events.ts';
 import { projectEmptyState, projectEmptyStateProbe, inboxEmptyState } from '../server/collectors/empty.ts';
-import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo, addWorktree, writeRegistry } from './fixtures.ts';
+import {
+  mkTmpDir,
+  rmTmp,
+  fixtureClaudeProjectsDir,
+  findMarkerAnywhere,
+  initGitRepo,
+  addWorktree,
+  removeMarkers,
+  writeRegistry,
+} from './fixtures.ts';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '..', '..');
 const cleanupDirs: string[] = [];
@@ -204,10 +220,15 @@ describe('listWorktrees + detectConflicts against a real git repo', () => {
 
     expect(report.worktrees.map((w) => w.path)).not.toContain(handMade);
     expect(report.excluded.count).toBe(1);
+
+    // THE COUNT IS A FIELD; THE REASON IS A CONSTANT. They were fused into one interpolated
+    // sentence ("1 of 3 non-main worktrees are not swept: …"), which meant the view either
+    // restated the explanation or rendered a count it had already computed itself. It also
+    // ended with "…cost 17 seconds per request" — a hardcoded measurement of the synchronous
+    // sweep this PR deleted, and one that would have been asserted about any fleet size.
+    expect(report.excluded.reason).toBe(EXCLUDED_REASON);
     expect(report.excluded.reason).toContain('.worktrees/.registry');
-    // The reason names both halves of the fraction, so the figure on screen is legible
-    // without reading this source file.
-    expect(report.excluded.reason).toContain('1 of 3');
+    expect(report.excluded.reason).not.toMatch(/\d/); // no counts, and no durations
   });
 });
 
@@ -340,11 +361,10 @@ describe('changedFilesFor reports could-not-look separately from clean', () => {
 // metacharacters, runs the real sweep over it, and checks the filesystem for the marker a
 // shell would have created. §0: two cheap independent checks beat one careful one.
 describe('detectConflicts is not vulnerable to shell injection via a worktree path', () => {
-  test('a project directory built from shell metacharacters executes nothing', async () => {
+  test('a project directory built from shell metacharacters executes nothing, anywhere', async () => {
     const parent = mkTmpDir('mc-conflicts-security-');
     cleanupDirs.push(parent);
     const bareMarker = `PWNED_CONFLICTS_${crypto.randomUUID()}`;
-    const markerPath = path.join(process.cwd(), bareMarker);
     const maliciousRoot = path.join(parent, `evilproj;touch ${bareMarker};echo done`);
 
     initGitRepo(maliciousRoot);
@@ -357,20 +377,73 @@ describe('detectConflicts is not vulnerable to shell injection via a worktree pa
     cleanupDirs.push(claudeRoot);
     const proj = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot }).find((p) => p.root === maliciousRoot)!;
 
+    let markers: string[] = [];
     try {
       const report = await detectConflicts(proj);
-      expect(fs.existsSync(markerPath)).toBe(false); // nothing was executed
+
+      // ANYWHERE, not one guessed path. changedFilesFor passes `cwd: worktreePath`, so a
+      // shell it spawned would drop the marker in the WORKTREE — which the previous version
+      // of this assertion never looked at. See findMarkerAnywhere for the reviewer's
+      // two-variant repro that proved the old barrier passed against a live RCE.
+      markers = findMarkerAnywhere(bareMarker, [parent]);
+      expect(markers).toEqual([]);
+
       // and the read-only answer is still CORRECT, not merely safe — a guard that works by
       // breaking the feature is not a guard.
       expect(report.worktrees).toHaveLength(1);
       expect(report.worktrees[0]!.readable).toBeUndefined();
       expect(report.worktrees[0]!.changedFiles).toEqual(['touched.txt']);
     } finally {
-      try {
-        fs.rmSync(markerPath);
-      } catch {
-        /* never created — the expected, safe outcome */
+      removeMarkers(markers);
+    }
+  });
+});
+
+// runLedgerVerify had NO behavioural barrier — only ledgerVerifyArgs' `--` shape test, which
+// checks an array literal and executes nothing. Its inputs are just as attacker-influenceable
+// as the sweep's: `projectRoot` is a directory name read off disk by discoverProjects(), and
+// it reaches the call twice — joined into the script path, and as `cwd`. A shape test cannot
+// tell you what the process did; only running it can.
+describe('runLedgerVerify is not vulnerable to shell injection via the project root', () => {
+  test('a project directory built from shell metacharacters executes nothing, anywhere', async () => {
+    const parent = mkTmpDir('mc-belief-security-');
+    cleanupDirs.push(parent);
+    const bareMarker = `PWNED_BELIEF_${crypto.randomUUID()}`;
+    const maliciousRoot = path.join(parent, `evilproj;touch ${bareMarker};echo done`);
+
+    // A real, runnable stand-in for scripts/ledger.mjs that prints the exact two lines
+    // parseLedgerVerifyOutput reads. The verify has to genuinely SUCCEED here, or "no marker"
+    // would be satisfied by the command never running at all — which is a pass for the wrong
+    // reason, and the failure mode this whole review round is about.
+    fs.mkdirSync(path.join(maliciousRoot, 'scripts'), { recursive: true });
+    fs.writeFileSync(
+      path.join(maliciousRoot, 'scripts', 'ledger.mjs'),
+      [
+        "process.stdout.write('ledger verify: 2 claims · offline\\n');",
+        "process.stdout.write('  ✓ c-alpha [claim-freshness] ok\\n');",
+        "process.stdout.write('  ⚠ would_block c-beta [claim-source] unresolved: offline\\n');",
+        "process.stdout.write('\\nledger verify: 1 pass · 1 would_block (shadow) · 0 block\\n');",
+        '',
+      ].join('\n')
+    );
+
+    let markers: string[] = [];
+    try {
+      const result = await runLedgerVerify(maliciousRoot, { offline: true });
+
+      markers = findMarkerAnywhere(bareMarker, [parent]);
+      expect(markers).toEqual([]);
+
+      // The command really ran and really parsed — this barrier is not passing because the
+      // subprocess failed to start.
+      expect('pass' in result).toBe(true);
+      if ('pass' in result) {
+        expect(result.pass).toBe(1);
+        expect(result.wouldBlock).toBe(1);
+        expect(result.totalClaims).toBe(2);
       }
+    } finally {
+      removeMarkers(markers);
     }
   });
 });
