@@ -56,6 +56,55 @@ export function Figure({
   );
 }
 
+/**
+ * The headline band every view puts its figures in — ONE definition, so the band is the same
+ * height on every tab.
+ *
+ * It was not. Fleet used `<Figure>` inside `divide-x … px-6 py-1`; Belief and Conflicts
+ * hand-rolled the same three elements with `px-6 py-3` and no divider, which renders ~8 px
+ * taller. Switching tabs moved everything below the bar, which reads as the page reloading
+ * when nothing has. Two implementations of one component is the defect this codebase keeps
+ * finding in its data; here it was in the layout.
+ *
+ * `action` is separate from the figures because a button is not a figure: it sits at the far
+ * end and must not inherit Figure's baseline spacing.
+ */
+export function HeadlineBar({ children, action }: { children: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-stretch divide-x divide-line px-6 py-1">
+      {children}
+      {action !== undefined && <div className="ml-auto flex items-center pl-5">{action}</div>}
+    </div>
+  );
+}
+
+/** The refresh control the fetched views share — same shape, same disabled semantics. */
+export function RefreshButton({
+  onClick,
+  busy,
+  idleLabel,
+  busyLabel,
+  title,
+}: {
+  onClick: () => void;
+  busy: boolean;
+  idleLabel: string;
+  busyLabel: string;
+  title: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      title={title}
+      className="rounded-[3px] border border-line-strong px-3 py-1.5 text-[12px] text-muted transition-colors hover:border-live hover:text-text active:translate-y-[1px] disabled:cursor-wait disabled:opacity-50"
+    >
+      {busy ? busyLabel : idleLabel}
+    </button>
+  );
+}
+
 export function Th({
   children,
   align = 'left',
