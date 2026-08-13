@@ -435,12 +435,58 @@ describe('the conflicts sweep leaves the event loop free', () => {
       return;
     }
 
-    expect(gaps.length >= 0).toBe(true); // gaps was drained by design; kept explicit
-    // Measured separation on this machine: baseline lands ~0.03 of the control, reverting
-    // listWorktreesAsync alone lands ~0.18, reverting changedFilesFor ~0.85. An eighth sits
-    // between the first two with headroom on both sides, and it moves with the machine
-    // because both numbers do.
-    expect(asyncStallMs).toBeLessThan(controlStallMs / 8);
+    // WHAT THIS THRESHOLD CAN AND CANNOT SEPARATE, measured on two machines rather than
+    // assumed. The async sweep's worst stall is not zero: `swept.map(…)` issues every spawn
+    // in one synchronous turn, so the stall is N x the spawn syscall. The control's stall is
+    // N x (spawn + wait). The ratio between them is therefore spawn/(spawn+wait) — a
+    // property of how fast git is on the machine, not of the code:
+    //
+    //   this machine (git ~12 ms):  async 2.6 ms · control 70.0 ms · ratio 0.037
+    //   CI runner    (git ~2 ms):   async 6.0 ms · control 13.1 ms · ratio 0.460
+    //
+    // So an eighth held here and was red on CI against CORRECT code. Three quarters holds on
+    // both with margin, and still fails hard on the mutations that matter to it:
+    // changedFilesFor blocking lands at 1.02, both blocking at 1.26.
+    //
+    // It does NOT bind `listWorktreesAsync` reverted alone, and no timing test at this scale
+    // can: that mutation blocks for exactly one `git worktree list` per PROJECT, which is
+    // 11.8 ms here and ~2 ms on CI against a one-project fixture — smaller than the baseline
+    // spawn burst it would have to exceed. Its production magnitude (359 ms observed on the
+    // real fleet) comes from being called once per project across nineteen, not from any one
+    // call. Scaling the fixture up does not help, because more projects enlarge the baseline
+    // spawn burst too. That mutation is bound by the structural test below instead, which is
+    // deterministic and machine-independent — and the honest division of labour is written
+    // here rather than left for the next person to discover with a stopwatch.
+    expect(asyncStallMs).toBeLessThan(controlStallMs * 0.75);
+  });
+
+  // THE PIN FOR `listWorktreesAsync`, and the reason it is structural rather than timed is
+  // the paragraph above: at one project its stall is a single git call, which no threshold
+  // can separate from the baseline spawn burst on a fast machine.
+  //
+  // A source-text assertion is a weaker KIND of evidence than a behavioural one and this
+  // codebase says so repeatedly. It is used here because it is the only form that fires on
+  // every machine for this mutation, and because it is checking something narrow and
+  // literal: that this one file does not reach for the synchronous git helpers. It is not
+  // standing in for the behavioural tests — those bind the other two mutations — it is
+  // covering the one case they provably cannot.
+  test('conflicts.ts uses no synchronous git helper', () => {
+    const source = fs.readFileSync(
+      path.join(import.meta.dir, '..', 'server', 'collectors', 'conflicts.ts'),
+      'utf8'
+    );
+    const code = source
+      .split('\n')
+      .map((line) => line.replace(/\/\/.*$/, ''))
+      .join('\n');
+
+    // The sync worktree lister: its `catch { return [] }` is why C2 existed, and calling it
+    // here puts a blocking git call in front of every project on the route.
+    expect(code).not.toMatch(/\blistWorktrees\s*\(/);
+    expect(code).toMatch(/\blistWorktreesAsync\s*\(/); // …and the async one IS used
+    // execFileSync in any spelling, including an aliased import.
+    expect(code).not.toMatch(/\bexecFileSync\b/);
+    expect(code).toMatch(/\bexecFileAsync\s*\(/);
   });
 });
 
