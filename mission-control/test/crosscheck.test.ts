@@ -334,16 +334,39 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
   // named `evilproj;touch <marker>;echo done`, runs the real sweep across it, and asserts
   // the marker file does not exist afterwards. §0: two cheap independent checks beat one
   // careful one, and the source-text guard is now the cheap one.
+  // THE NARROWING, CORRECTED — the first version of it was worse than useless.
+  //
+  // Round 1 replaced `\bexecFile\s*\(` with `\bexecFile\s*\(\s*['"`](bash|sh|…)`. That
+  // requires `(` IMMEDIATELY after `execFile`, so it matched none of the `execFileAsync(`
+  // calls this PR introduces — it stopped matching the exact spelling `server/**` now uses
+  // everywhere, and the pinning test beneath it asserted the discrimination for
+  // `execFile('bash', …)`, a spelling this tree no longer contains. Verified by the
+  // reviewer: a synthetic server file doing `promisify(execFile)` and then
+  // `execFileAsync('bash', ['-lc', cmd])` scored ZERO offenders across the whole scan.
+  //
+  // Three widenings, each closing a hole that version had:
+  //   1. ANY ALIAS, not one exact identifier. exec/execFile/spawn are routinely promisified
+  //      into execAsync/execFileAsync/spawnAsync, and the alias is the call site that
+  //      actually runs. Matched by allowing an identifier suffix.
+  //   2. ANY PATH to a shell, not two enumerated prefixes. `/usr/local/bin/bash` and
+  //      `/opt/homebrew/bin/bash` — the latter is the real bash on this machine — sat
+  //      outside `/bin/` and `/usr/bin/` and were invisible.
+  //   3. The whole `-c` FAMILY. `sh -lc`, `-ic` and `-ec` execute a string exactly as `-c`
+  //      does; the old rule matched those two characters literally.
+  const SHELL_BINARY = String.raw`['"\`](?:[^'"\`]*\/)?(?:bash|sh|zsh|dash|ksh|fish)['"\`]`;
+  const SPAWN_FAMILY = String.raw`(?:exec|execFile|execFileSync|execSync|spawn|spawnSync)[A-Za-z0-9_$]*`;
+
   const SHELL_INVOCATION_PATTERNS = [
     /\bexecSync\s*\(/, // always shells out, unlike execFileSync
-    /(?<!\.)\bexec\s*\(/, // bare exec( — always shells out; excludes someRegex.exec(...)
+    // Bare exec( and any promisified alias of it (execAsync, execP…). The `(?!File|Sync)`
+    // keeps this off execFile*/execSync, which have their own rules; `(?<!\.)` keeps it off
+    // the many legitimate someRegex.exec(str) calls.
+    /(?<!\.)\bexec(?!File|Sync)[A-Za-z0-9_$]*\s*\(/,
     /shell\s*:\s*true/, // the opt-in shell flag on exec/spawn, as an object-literal property
-    /execFileSync\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
-    // The async form, matched by the same rule as its sync twin above. `\b` before execFile
-    // keeps this from firing on execFileSync, whose own pattern is the line above.
-    /\bexecFile\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
-    /spawnSync\s*\(\s*['"`](?:\/bin\/|\/usr\/bin\/)?(bash|sh|zsh|dash)['"`]/,
-    /(['"`])-c\1/, // the telltale flag that turns any binary into "run this string"
+    // A shell binary as the first argument of ANY member of the spawn family, under any
+    // alias, by any path. Replaces the old three per-function lines.
+    new RegExp(String.raw`\b${SPAWN_FAMILY}\s*\(\s*${SHELL_BINARY}`),
+    /(['"`])-[a-z]*c\1/, // -c and -lc/-ic/-ec: the flags that turn any binary into "run this string"
     /\bBun\.\$/, // Bun's own shell-execution tag
   ];
 
@@ -412,6 +435,15 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
       'exec(`grep -rl playbook_stage ${root}`, cb)', // MAJOR: bare exec() defeated the first version
       "execFile('bash', ['-c', probe], cb)", // the async form of the original RCE
       "execFile('/bin/sh', ['-c', probe], cb)", // …and by absolute path
+      // THE SHAPE ROUND 1 OF THE NARROWING MISSED ENTIRELY, in every spelling the reviewer
+      // demonstrated. This is the alias `server/**` itself uses, so a regression of the code
+      // this PR ships would look exactly like one of these lines.
+      "execFileAsync('bash', ['-c', cmd])",
+      "execFileAsync('bash', ['-lc', cmd])", // -lc, which the two-character -c rule missed
+      "execFileAsync('/opt/homebrew/bin/bash', ['-lc', cmd])", // the real bash on this machine
+      "execFileAsync('/usr/local/bin/bash', ['-ic', cmd])",
+      "execAsync(`git status ${root}`)", // promisified bare exec
+      "spawnAsync('zsh', ['-ec', cmd])",
       'execSync(`grep -rl playbook_stage ${root}`)',
       "spawnSync('bash', ['-c', probe])",
       "execFileSync(bin, argsArr, { encoding: 'utf8', shell: true })", // object-literal shell:true
@@ -441,17 +473,94 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
     }
   });
 
-  // THE PATTERN THAT WAS RELAXED, PINNED FROM BOTH SIDES. A narrowing is only safe if the
-  // dangerous half of what it used to catch is still caught — so this asserts the specific
-  // discrimination the change introduced, rather than trusting the paragraph above it.
-  test('the execFile narrowing still catches a shell binary, and only a shell binary', () => {
-    const shellLiterals = ["execFile('bash', a, cb)", "execFile('sh', a, cb)", "execFile('zsh', a, cb)", "execFile('/usr/bin/dash', a, cb)"];
+  // THE PATTERN THAT WAS RELAXED, PINNED FROM BOTH SIDES — and pinned for the spelling
+  // `server/**` ACTUALLY USES, which is what round 1 of this test got wrong: it asserted the
+  // discrimination for `execFile('bash', …)` while every call site in the tree had become
+  // `execFileAsync(…)`, so it certified a rule against a spelling that no longer existed.
+  test('the spawn-family rule catches a shell binary under every alias and path, and only a shell binary', () => {
+    const shellLiterals = [
+      // The exact identifier…
+      "execFile('bash', a, cb)",
+      "execFileSync('sh', a)",
+      "spawnSync('zsh', a)",
+      "execFile('/usr/bin/dash', a, cb)",
+      // …and the promisified aliases, which are what this codebase now contains.
+      "execFileAsync('bash', a)",
+      "execFileAsync('/opt/homebrew/bin/bash', a)",
+      "execFileAsync('/usr/local/bin/zsh', a)",
+      "spawnAsync('sh', a)",
+      "execFileP('ksh', a)",
+    ];
     for (const line of shellLiterals) {
       expect(SHELL_INVOCATION_PATTERNS.some((p) => p.test(line))).toBe(true);
     }
-    // A named non-shell binary with an args array is the permitted shape, sync or async.
-    for (const line of ["execFile('git', a, cb)", "execFile('node', a, cb)", "execFile('grep', a, cb)"]) {
+    // A named non-shell binary with an args array is the permitted shape, under every alias.
+    const permitted = [
+      "execFile('git', a, cb)",
+      "execFile('node', a, cb)",
+      "execFile('grep', a, cb)",
+      "execFileAsync('git', a)",
+      "execFileAsync('node', a)",
+      "execFileAsync('/usr/bin/git', a)",
+    ];
+    for (const line of permitted) {
       expect(SHELL_INVOCATION_PATTERNS.some((p) => p.test(line))).toBe(false);
     }
+  });
+
+  // The -c family, pinned separately because it is the second half of every shell-string
+  // exploit and the old rule matched exactly two characters.
+  test('the -c rule covers the whole family, and does not fire on ordinary flags', () => {
+    for (const flag of ["'-c'", "'-lc'", "'-ic'", "'-ec'", '"-lc"']) {
+      expect(SHELL_INVOCATION_PATTERNS.some((p) => p.test(`args = [${flag}, cmd]`))).toBe(true);
+    }
+    // Real flags this codebase passes. None may trip it.
+    for (const flag of ["'--porcelain'", "'--no-optional-locks'", "'--offline'", "'-rl'", "'verify'", "'--'"]) {
+      expect(SHELL_INVOCATION_PATTERNS.some((p) => p.test(`args = [${flag}]`))).toBe(false);
+    }
+  });
+
+  // THE GUARD, RUN AGAINST A DELIBERATELY VULNERABLE FILE. Every test above checks the
+  // patterns against string literals; this one checks the SCAN — the thing that actually runs
+  // in CI — against a file on disk written in the shape the reviewer used to defeat round 1.
+  // Without it, a bug in findOffenders rather than in the patterns goes unnoticed.
+  test('the scan itself flags a synthetic server file using promisify(execFile) with bash -lc', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-guard-synthetic-'));
+    cleanupDirs.push(dir);
+    const file = path.join(dir, 'vulnerable.ts');
+    fs.writeFileSync(
+      file,
+      [
+        "import { execFile } from 'node:child_process';",
+        "import { promisify } from 'node:util';",
+        'const execFileAsync = promisify(execFile);',
+        'export async function sweep(root: string) {',
+        "  const { stdout } = await execFileAsync('/opt/homebrew/bin/bash', ['-lc', `git status ${root}`]);",
+        '  return stdout;',
+        '}',
+        '',
+      ].join('\n')
+    );
+
+    const offenders = SHELL_INVOCATION_PATTERNS.flatMap((p) => findOffenders(p, [file]));
+    expect(offenders.length).toBeGreaterThan(0);
+
+    // And the mirror, so this is not passing because findOffenders flags everything: the
+    // real, safe shape in the same position produces nothing.
+    const safe = path.join(dir, 'safe.ts');
+    fs.writeFileSync(
+      safe,
+      [
+        "import { execFile } from 'node:child_process';",
+        "import { promisify } from 'node:util';",
+        'const execFileAsync = promisify(execFile);',
+        'export async function sweep(cwd: string) {',
+        "  const { stdout } = await execFileAsync('git', ['--no-optional-locks', 'status', '--porcelain'], { cwd });",
+        '  return stdout;',
+        '}',
+        '',
+      ].join('\n')
+    );
+    expect(SHELL_INVOCATION_PATTERNS.flatMap((p) => findOffenders(p, [safe]))).toEqual([]);
   });
 });
