@@ -125,18 +125,20 @@ function buildFixtureState(prefix: string) {
   // corpus are mixed (measured: 1,918 all-subagent, 66 main, 0 mixed), so without this
   // fixture the Kind column's mixed branch would ship never having been executed.
   fixtureClaudeProjectsDir(claudeRoot, busy, 'a1b2c3d4-1111-2222-3333-444455556666', [
-    { ts: new Date(now - 5 * 86_400_000).toISOString(), output_tokens: 1_238_441 },
-    { ts: new Date(now - 95_000).toISOString(), output_tokens: 417_902, isSidechain: true },
+    { ts: new Date(now - 5 * 86_400_000).toISOString(), output_tokens: 1_238_441, model: 'claude-sonnet-4-6' },
+    { ts: new Date(now - 95_000).toISOString(), output_tokens: 417_902, isSidechain: true, model: 'claude-opus-5' },
   ]);
-  // MAIN ONLY.
+  // MAIN ONLY, and the long model id — the one that truncates in a 20ch column.
   fixtureClaudeProjectsDir(claudeRoot, busy, 'ffeeddcc-9999-8888-7777-666655554444', [
-    { ts: new Date(now - 3 * 3_600_000).toISOString(), output_tokens: 92_614 },
+    { ts: new Date(now - 3 * 3_600_000).toISOString(), output_tokens: 92_614, model: 'claude-haiku-4-5-20251001' },
   ]);
   // SUBAGENT ONLY, in the `agent-a<role>-<slug>-<16 hex>` shape the real corpus uses.
   fixtureClaudeProjectsDir(claudeRoot, busy, 'agent-acode-reviewer-mc-views-4b13769c18ece5b0', [
-    { ts: new Date(now - 26 * 3_600_000).toISOString(), output_tokens: 58_296, isSidechain: true },
+    { ts: new Date(now - 26 * 3_600_000).toISOString(), output_tokens: 58_296, isSidechain: true, model: 'claude-opus-5' },
   ]);
-  // NO OUTPUT AT ALL — a real turn record carrying zero output tokens.
+  // NO OUTPUT AT ALL — a real turn record carrying zero output tokens — and NO MODEL, so the
+  // Model column's `unrecorded` branch has a row. Every fixture omitted the model until now,
+  // which meant the opposite branch was the one nothing exercised.
   fixtureClaudeProjectsDir(claudeRoot, busy, 'bbbbcccc-0000-1111-2222-333344445555', [
     { ts: new Date(now - 7 * 3_600_000).toISOString(), output_tokens: 0 },
   ]);
@@ -240,24 +242,41 @@ describe('render parity — Fleet', () => {
   // the subagent share inverted so a row could read "296% of this project's output tokens",
   // and first/last turn instants exchanged. Everything a title asserts is now reversed to
   // the payload the same way a visible figure is.
-  test('every title in a Fleet row reverses to the payload', async () => {
-    const { app, now } = buildFixtureState('fleet-titles');
-    const payload = (await (await app.fetch(new Request('http://127.0.0.1/api/fleet'))).json()) as FleetSummary;
+  // BOTH FIXTURES, because neither alone exercises every branch. buildFixtureState's two
+  // projects match no launcher, so `'gen' in launcher` was false on 2 of 2 rows and the
+  // lines/fns assertion below was DEAD CODE — swapping the two left the suite green, while
+  // the commit message listed that swap as caught. fleetWithLaunchers supplies the matched
+  // rows. An assertion inside a branch that never runs is worse than no assertion: it reads
+  // as coverage.
+  test.each([
+    ['no launchers matched', () => buildFixtureState('fleet-titles').app],
+    ['launchers matched', null],
+  ])('every title in a Fleet row reverses to the payload (%s)', async (_name, makeApp) => {
+    const payload = makeApp
+      ? ((await (await makeApp().fetch(new Request('http://127.0.0.1/api/fleet'))).json()) as FleetSummary)
+      : fleetWithLaunchers('fleet-titles-matched');
+    const now = Date.now();
     const html = renderToStaticMarkup(<FleetTable fleet={payload} now={now} />);
-    const ordered = sortFleet(payload.projects);
+    // INDEPENDENT ordering. Using sortFleet here made the row-to-project mapping
+    // self-fulfilling: any sort bug moved both sides together and nothing could disagree.
+    const ordered = payload.projects.slice().sort((a, b) => {
+      if (a.agentActive !== b.agentActive) return a.agentActive ? -1 : 1;
+      const byActivity = (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0);
+      return byActivity !== 0 ? byActivity : a.id.localeCompare(b.id);
+    });
 
+    let launcherRowsChecked = 0;
     ordered.forEach((project, i) => {
       const titles = rowTitles(html, i).join('\n');
 
-      // Last activity: the exact instant.
       expect(titles).toContain(
         project.lastActivityAt === null ? 'no recorded turn' : new Date(project.lastActivityAt).toISOString()
       );
-      // Project root.
       expect(titles).toContain(project.root);
-      // Generation: lines and functions, in that order and not exchanged.
       if ('gen' in project.launcher) {
         expect(titles).toContain(`${project.launcher.lines} lines · ${project.launcher.fns} functions`);
+        expect(titles).toContain(project.launcher.scope);
+        launcherRowsChecked++;
       } else {
         expect(titles).toContain(project.launcher.reason);
       }
@@ -271,6 +290,9 @@ describe('render parity — Fleet', () => {
         expect(titles).toContain('no output tokens recorded');
       }
     });
+
+    // The branch coverage this test previously only appeared to have.
+    if (!makeApp) expect(launcherRowsChecked).toBeGreaterThan(0);
   });
 
   test('every title in a Sessions row reverses to the payload', async () => {
@@ -278,11 +300,16 @@ describe('render parity — Fleet', () => {
     const payload = (await (await app.fetch(new Request('http://127.0.0.1/api/sessions'))).json()) as SessionsSlice;
     const html = renderToStaticMarkup(<SessionsTable slice={payload} now={now} limit={payload.sessions.length} />);
 
+    let unrecordedModelRows = 0;
     payload.sessions.forEach((session, i) => {
-      const titles = rowTitles(html, i).join('\n');
+      const cellTitles = rowTitles(html, i);
+      const titles = cellTitles.join('\n');
       expect(titles).toContain(session.sessionId);
       expect(titles).toContain(session.file);
-      expect(titles).toContain(session.projectId);
+      // PER-CELL, not against the joined blob: `projectId` is a substring of `file`, so
+      // asserting it against everything was satisfied by the Session cell's own title and
+      // said nothing about the Project cell. The Project cell's title must BE the id.
+      expect(cellTitles).toContain(session.projectId);
       // first and last, each labelled, each the right one — the swap made these identical
       // strings in the old fixture and so was undetectable.
       expect(titles).toContain(
@@ -291,8 +318,12 @@ describe('render parity — Fleet', () => {
       expect(titles).toContain(
         `last turn ${session.lastTurnAt === null ? 'no recorded turn' : new Date(session.lastTurnAt).toISOString()}`
       );
-      if (session.latestModel !== null) expect(titles).toContain(session.latestModel);
+      if (session.latestModel !== null) expect(cellTitles).toContain(session.latestModel);
+      else unrecordedModelRows++;
     });
+
+    // `latestModel === null` was 0 of 2 fixtures, so that branch never ran here either.
+    expect(unrecordedModelRows).toBeGreaterThan(0);
   });
 
   test('the burn tooltip describes the burn, and does not go stale', async () => {
@@ -321,7 +352,7 @@ describe('render parity — Fleet', () => {
   // three cases where nothing was compared.
   describe('the drift headline never claims convergence without a comparison', () => {
     const cases: { name: string; modal: ModalGeneration }[] = [
-      { name: 'a tie', modal: { kind: 'tie', candidates: ['aaaaaaaa', 'bbbbbbbb'], inScopeLaunchers: 2 } },
+      { name: 'a tie', modal: { kind: 'tie', candidates: ['aaaaaaaa', 'bbbbbbbb'], leaderCount: 1, generations: 2, inScopeLaunchers: 2 } },
       { name: 'every launcher excluded', modal: { kind: 'none-in-scope', launchers: 3 } },
       { name: 'no launchers at all', modal: { kind: 'no-launchers' } },
     ];
@@ -334,7 +365,9 @@ describe('render parity — Fleet', () => {
         expect(text.toLowerCase()).not.toContain('all '); // no "all N launchers on …"
         // The reason is reachable, and it says what would resolve the case.
         expect(/title="[^"]*would fill this[^"]*"/.test(html)).toBe(true);
-        expect(/title="[^"]*[Nn]o project was compared|title="[^"]*Nothing was compared/.test(html)).toBe(true);
+        // Every branch says it in the same population — launchers — because that is what the
+        // headline counts. Three different wordings for one fact is how the CRITICAL started.
+        expect(/title="[^"]*[Nn]o launcher was compared/.test(html)).toBe(true);
         // …and reachable WITHOUT a pointer: focusable, with the reason as its accessible name.
         expect(/tabindex="0"/i.test(html)).toBe(true);
         expect(/aria-label="[^"]*would fill this[^"]*"/.test(html)).toBe(true);
@@ -361,6 +394,49 @@ describe('render parity — Fleet', () => {
       );
       expect(numbersIn(dirty)[0]).toBe(4); // the figure is the drift count, not the hash
       expect(dirty).toContain('of 11 in-scope launchers, off a86770a9');
+    });
+
+    test('the tooltip that documents the population rule says what the code does', () => {
+      // Inverting this one sentence — "counted over the projects below" — survived the whole
+      // suite green. It is the only place the CRITICAL's rule is written down for a reader,
+      // so an inversion is a lie in the UI even while the arithmetic underneath is right.
+      const html = renderToStaticMarkup(
+        <GenerationFigure modal={{ kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 11, driftedLaunchers: 4 }} />
+      );
+      const title = /title="([^"]*)"/.exec(html)?.[1] ?? '';
+      expect(title).toContain('Counted over launchers, not over the projects below');
+      expect(title).toContain('a launcher with no discovered project still needs updating');
+      expect(title).not.toContain('Counted over the projects');
+    });
+
+    test('the tie names the real distribution, not an evenness it never counted', () => {
+      // a,a,b,b,c: five launchers, three generations, two tied at two each. The old label
+      // read "5 in-scope launchers are split evenly across 2 generations (a, b)" — false
+      // twice: five are not split evenly across two, and `c` was named nowhere.
+      const modal = modalInScopeGeneration([
+        { name: 'l1', lines: 1, fns: 1, gen: 'aaaaaaaa', scope: 'in scope' },
+        { name: 'l2', lines: 1, fns: 1, gen: 'aaaaaaaa', scope: 'in scope' },
+        { name: 'l3', lines: 1, fns: 1, gen: 'bbbbbbbb', scope: 'in scope' },
+        { name: 'l4', lines: 1, fns: 1, gen: 'bbbbbbbb', scope: 'in scope' },
+        { name: 'l5', lines: 1, fns: 1, gen: 'cccccccc', scope: 'in scope' },
+      ]);
+      expect(modal).toEqual({
+        kind: 'tie',
+        candidates: ['aaaaaaaa', 'bbbbbbbb'],
+        leaderCount: 2,
+        generations: 3,
+        inScopeLaunchers: 5,
+      });
+
+      const html = renderToStaticMarkup(<GenerationFigure modal={modal} />);
+      const label = /aria-label="([^"]*)"/.exec(html)?.[1] ?? '';
+      expect(label).toContain('5 in-scope launchers sit on 3 different generations');
+      expect(label).toContain('2 are level at the front with 2 launchers each');
+      expect(label).toContain('1 further generation trails behind'); // `c` is accounted for
+      expect(label).not.toContain('split evenly');
+      // And the tie is visibly a warning, not the same grey as the two benign cases —
+      // `.unavailable` sets its own colour, so a tone on the Figure around it was inert.
+      expect(html).toContain('text-warn');
     });
 
     test('a fleet of one reads "launcher", not "launchers"', () => {
@@ -731,6 +807,14 @@ describe('render parity against the real local fleet', () => {
         expect(asNumber(cells[5]!)).toBe(project.sessionCount);
         expect(asNumber(cells[6]!)).toBe(project.outputTokens);
       }
+
+      // AND IT COMPARED SOMETHING. Nineteen zeros equal nineteen zeros, so the loop above
+      // passes just as happily against an empty corpus as against a real one — which is
+      // precisely what it did when AGENTVIBE_PROJECTS_DIR was pointed at an empty directory.
+      // The gate now catches that case; this asserts the same thing from the other side, so
+      // a vacuous comparison cannot report success even if the gate is fooled again.
+      expect(payload.projects.some((p) => p.outputTokens > 0)).toBe(true);
+      expect(payload.projects.some((p) => p.sessionCount > 0)).toBe(true);
     },
     60_000
   );

@@ -2,16 +2,17 @@
 // machine.
 //
 // The gate is test/gate.ts, shared with test/views.test.tsx so there is ONE implementation of
-// "can this machine answer" — read its header for the rule and for the live failure that
-// produced it. In short: it fires only when ~/.claude/projects is absent. Once the corpus
-// exists, everything else — including discovery returning zero projects — is a RESULT and
-// gets asserted, not excused.
+// "can this machine answer" — read its header for the rule and for the three separate live
+// failures that produced it. In short: it fires only when the corpus, resolved the way the
+// code under test resolves it, holds no transcripts. Once it does, everything else —
+// including discovery returning zero projects — is a RESULT and gets asserted, not excused.
 //
 // "Cold" below means a cold INDEX, not a cold page cache: nothing here can evict the OS's
 // file cache, so the figure is what a daemon restart costs, not what a machine reboot costs.
 
 import { describe, test, expect } from 'bun:test';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { Hono } from 'hono';
 import { LiveState } from '../server/state.ts';
@@ -19,7 +20,8 @@ import { createApi } from '../server/routes/api.ts';
 import type { FleetSummary } from '../server/collectors/fleet.ts';
 import type { SessionsSlice } from '../server/state.ts';
 import { discoverProjects } from '../server/projects.ts';
-import { machineGate, notVerified, corpusPresent, CLAUDE_PROJECTS_ROOT } from './gate.ts';
+import { listTranscripts, projectsDir } from '../server/lib/usage.ts';
+import { machineGate, notVerified, corpusPresent, claudeProjectsRoot } from './gate.ts';
 
 function liveApp(): Hono {
   const app = new Hono();
@@ -98,27 +100,71 @@ describe('GET /api/sessions performance against the real corpus', () => {
   );
 });
 
+describe('the machine gate reads the same corpus the code under test reads', () => {
+  // THE FOURTH TIME THIS CLASS SHIPPED, and the first three fixes could not have caught it.
+  // The gate held one implementation of the RULE and a second implementation of the VALUE
+  // that rule consumes: it recomputed `~/.claude/projects`, while every collector resolves
+  // the corpus through scripts/lib/usage.js's projectsDir(), which honours
+  // AGENTVIBE_PROJECTS_DIR. Point that at an empty directory and the gate inspected the real
+  // corpus, opened, and the real-fleet parity test compared nineteen rows of zeros to
+  // nineteen rows of zeros: 25 pass, 0 fail, no NOT VERIFIED printed.
+  test('the path is projectsDir() itself, not a second copy of its default', () => {
+    expect(claudeProjectsRoot()).toBe(projectsDir());
+  });
+
+  test('AGENTVIBE_PROJECTS_DIR moves the gate, because it moves the corpus', () => {
+    const previous = process.env.AGENTVIBE_PROJECTS_DIR;
+    const empty = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-gate-empty-'));
+    try {
+      process.env.AGENTVIBE_PROJECTS_DIR = empty;
+      expect(claudeProjectsRoot()).toBe(empty);
+      expect(corpusPresent()).toBe(false); // the directory exists; it holds no transcripts
+      expect(machineGate()).not.toBeNull();
+      expect(machineGate()).toContain(empty);
+    } finally {
+      if (previous === undefined) delete process.env.AGENTVIBE_PROJECTS_DIR;
+      else process.env.AGENTVIBE_PROJECTS_DIR = previous;
+      fs.rmSync(empty, { recursive: true, force: true });
+    }
+  });
+
+  test('a directory that exists but holds no transcript is not a corpus', () => {
+    // Existence alone was the old predicate, and it is exactly what let an empty override
+    // through — the directory was there, so the gate opened on nothing.
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-gate-shape-'));
+    try {
+      expect(fs.existsSync(dir)).toBe(true);
+      expect(listTranscripts(dir)).toHaveLength(0);
+      fs.mkdirSync(path.join(dir, 'someproject'));
+      fs.writeFileSync(path.join(dir, 'someproject', 's.jsonl'), '{}\n');
+      expect(listTranscripts(dir)).toHaveLength(1);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('the machine gate itself', () => {
   // The gate is the component most likely to rot into "always skips", so its predicate is
-  // pinned AGAINST THE FILESYSTEM rather than against the wording of its own excuse. The
-  // previous version asserted `reason.toMatch(/does not exist|found 0 git repositories/)`,
+  // pinned AGAINST THE FILESYSTEM rather than against the wording of its own excuse. An
+  // earlier version asserted `reason.toMatch(/does not exist|found 0 git repositories/)`,
   // which validated the excuse and passed happily while every real test was being skipped.
-  test('a reason exists only when the corpus directory really is absent', () => {
+  test('a reason exists only when the corpus really holds nothing', () => {
     const reason = machineGate();
-    const present = fs.existsSync(CLAUDE_PROJECTS_ROOT);
+    const present = listTranscripts(claudeProjectsRoot()).length > 0;
 
     expect(corpusPresent()).toBe(present); // the helper reads the same disk fact
     expect(reason === null).toBe(present); // skipping and absence are the same condition
 
     if (reason !== null) {
       expect(present).toBe(false);
-      expect(reason).toContain(CLAUDE_PROJECTS_ROOT);
+      expect(reason).toContain(claudeProjectsRoot());
     }
   });
 
   test('the gate does not consult discovery — an empty root fails the suite, it does not excuse it', () => {
     if (!corpusPresent()) {
-      notVerified('machine-gate independence check', `${CLAUDE_PROJECTS_ROOT} does not exist on this machine`);
+      notVerified('machine-gate independence check', `${claudeProjectsRoot()} holds no transcripts on this machine`);
       return;
     }
     // Point discovery at a directory that cannot exist. The gate must STILL be open (the

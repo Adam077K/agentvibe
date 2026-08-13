@@ -32,26 +32,59 @@
 // The pin in live.test.ts checks that predicate against the filesystem, not against the
 // wording of the excuse: a reason string is only allowed to exist when the directory really
 // is absent.
+//
+// AND THE PREDICATE IS NOT THE ONLY THING THAT HAS TO BE SHARED. This file held one
+// implementation of the RULE and a second implementation of the VALUE it consumes: it
+// recomputed the corpus path as `~/.claude/projects` while everything under test resolves it
+// through scripts/lib/usage.js's `projectsDir()`, which honours `AGENTVIBE_PROJECTS_DIR`.
+// Point that variable at an empty directory and the gate looked at the real corpus, saw it,
+// and opened — while the code under test read the empty one. Measured:
+// `AGENTVIBE_PROJECTS_DIR=<empty> bun test test/views.test.tsx` reported 25 pass / 0 fail,
+// comparing nineteen rows of zeros and printing no NOT VERIFIED.
+//
+// That was the fourth time this class shipped, and the header's own advice — grep `test/`
+// for `existsSync` — could not have caught it: the divergence was not in the predicate, it
+// was one level down, in a value the predicate read. So the path is now IMPORTED from the
+// same module the collectors use, and `test/live.test.ts` pins that the two agree rather
+// than trusting this paragraph.
 
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
+import { listTranscripts, projectsDir } from '../server/lib/usage.ts';
 
-/** The one condition under which this machine cannot answer: no transcript corpus at all. */
-export const CLAUDE_PROJECTS_ROOT = path.join(os.homedir(), '.claude', 'projects');
+/**
+ * Where the corpus is, resolved exactly as the code under test resolves it — including the
+ * `AGENTVIBE_PROJECTS_DIR` override.
+ *
+ * A FUNCTION, not a constant, because `projectsDir()` reads that variable at call time. A
+ * module-level constant would freeze whatever it was at import, which is the same divergence
+ * in a slower form.
+ */
+export function claudeProjectsRoot(): string {
+  return projectsDir();
+}
 
+/**
+ * "Does this machine have a corpus" — a directory containing at least one transcript, not
+ * merely a directory. Read with `listTranscripts`, the same function the index itself walks
+ * with, so there is one implementation of the question rather than one for the tests.
+ *
+ * Existence alone was not enough: pointed at an empty directory, an existence check opens the
+ * gate, the real-fleet parity test then compares nineteen rows of zeros to nineteen rows of
+ * zeros, and passes. This is the same condition `scripts/check-cold-start.ts` already exits 2
+ * on ("0 .jsonl files found … No corpus, nothing measured"), and it is a property of the
+ * machine, not a result Mission Control produced.
+ */
 export function corpusPresent(): boolean {
-  return fs.existsSync(CLAUDE_PROJECTS_ROOT);
+  return listTranscripts(claudeProjectsRoot()).length > 0;
 }
 
 /**
  * Returns a reason when this machine genuinely lacks the subject, else null. Deliberately
- * takes no arguments and consults no result: adding a "…and discovery found something"
- * clause here is exactly the regression this file exists to prevent.
+ * takes no arguments and consults no result of the code under test: adding a "…and discovery
+ * found something" clause here is exactly the regression this file exists to prevent.
  */
 export function machineGate(): string | null {
   if (!corpusPresent()) {
-    return `${CLAUDE_PROJECTS_ROOT} does not exist on this machine (e.g. a CI runner with no local transcript corpus)`;
+    return `${claudeProjectsRoot()} holds no transcripts on this machine (e.g. a CI runner with no local corpus, or AGENTVIBE_PROJECTS_DIR pointed somewhere empty)`;
   }
   return null;
 }

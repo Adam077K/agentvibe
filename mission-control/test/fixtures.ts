@@ -15,6 +15,13 @@ export interface FixtureTurn {
   ts: string;
   output_tokens: number;
   isSidechain?: boolean;
+  /**
+   * Written as `message.model` when given, omitted entirely when not. Both are real shapes on
+   * disk and the index reports `latestModel: null` for the second — but EVERY fixture
+   * transcript omitted it, so the Model column's recorded branch was never once exercised by
+   * a test that reads a fixture.
+   */
+  model?: string;
 }
 
 /** Writes one .jsonl transcript with real per-turn `usage` records. Returns its path. */
@@ -26,7 +33,10 @@ export function writeTranscript(dir: string, sessionId: string, turns: FixtureTu
       type: 'assistant',
       timestamp: t.ts,
       isSidechain: !!t.isSidechain,
-      message: { usage: { input_tokens: 10, output_tokens: t.output_tokens } },
+      message: {
+        ...(t.model === undefined ? {} : { model: t.model }),
+        usage: { input_tokens: 10, output_tokens: t.output_tokens },
+      },
     })
   );
   fs.writeFileSync(file, lines.join('\n') + '\n');
