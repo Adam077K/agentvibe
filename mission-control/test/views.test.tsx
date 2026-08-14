@@ -38,7 +38,14 @@ import { ProjectEvents, ProjectHeadline, ProjectStageProbe, ProjectView } from '
 import { InboxHeadline, InboxTable, InboxView, inboxTotals } from '../client/src/views/InboxView.tsx';
 import { HeadlineBar } from '../client/src/ui.tsx';
 import App, { VIEWS, AppBar, StreamNotices, FetchedBadge, badgeFor, type Freshness, type ViewDef } from '../client/src/App.tsx';
-import type { StreamState } from '../client/src/api.ts';
+import {
+  failureMessage,
+  initialEndpointState,
+  requestBegan,
+  requestSettled,
+  type EndpointState,
+  type StreamState,
+} from '../client/src/api.ts';
 import type { ProjectDetail, InboxPayload, InboxProject } from '../server/routes/api.ts';
 import { inboxEmptyState } from '../server/collectors/empty.ts';
 import { PROJECT_PROBE_TIMEOUT_MS, PROJECT_PROBE_TIMEOUT_SECONDS } from '../server/collectors/probe-bounds.ts';
@@ -1855,16 +1862,29 @@ describe('render parity — Inbox', () => {
 // on that wrong number. What is reachable has since been pulled out and IS covered — the nav
 // filter, the breadcrumb, the badge selection, both notices and the shell's first paint.
 //
-// WHAT REMAINS UNREACHABLE WITHOUT A DOM, precisely, and it is now two lines rather than 91:
-// `openProject`'s body, App.tsx 403-404 — `setProjectId(id); setTab('project')`. Plus the
-// effect bodies, which the coverage tool counts as run because the hook is called but whose
-// work never happens: `useEffect(() => setFreshness(null), [tab])`, the rule that a figure
-// from the tab you just left is never shown against the tab you just opened.
-// `renderToStaticMarkup` renders once and fires no effect, so every state TRANSITION is out
-// of reach — that is the whole of the remaining gap, stated so the next reader does not have
-// to re-measure it. The decision stands because a DOM shim renders differently from a browser
-// and parity with what ships is the point of this file; the cost is that one correctness rule
-// is enforced by reading it, not by running it.
+// WHAT REMAINS UNREACHABLE WITHOUT A DOM — and the honest sentence is not the percentage.
+//
+// App.tsx measures 215/217 lines, uncovered [403, 404]. That number is exact and it CERTIFIES
+// MORE THAN IT MEASURES: line coverage marks a line hit when the HOOK CALL runs, not when the
+// callback it was handed runs. Three one-line callback bodies sit inside the 99.08% and every
+// one of them mutates green:
+//
+//   397  useEffect(() => setFreshness(null), [tab])   delete it — stale freshness carries
+//                                                     across tabs, the rule D4 exists for
+//   405  setTab('project')                            drill-down never opens the tab
+//   407  openTab                                      Back becomes a no-op
+//
+// (405 is inside `openProject`'s body, so that body is 403-405, not 403-404 as an earlier
+// version of this comment said.)
+//
+// So: 99.08% of lines, AND EVERY CALLBACK BODY IN THE COMPONENT IS UNEXECUTED — the number
+// counts the hook calls that create them. `renderToStaticMarkup` renders once and fires no
+// effect, so every state TRANSITION is out of reach, and that is the whole of the gap.
+//
+// The decision not to add a DOM stands: a shim renders differently from a browser and parity
+// with what ships is the point of this file. What does not stand is quoting a coverage
+// percentage as though it settled the question — that is a green check over an untested
+// capability, which is the entry already in DECISIONS.md under my own name.
 describe('the app bar says where the figures on screen came from', () => {
   const NOW = Date.parse('2026-08-14T12:00:00Z');
   const EMPTY_STREAM: StreamState = { fleet: null, sessions: null, connection: 'connecting', lastEventAt: null };
@@ -2009,6 +2029,65 @@ describe('the app bar says where the figures on screen came from', () => {
     expect(textOf(html)).not.toContain('fetched');
     expect(textOf(html)).toContain('Building the session index'); // the cold-start notice
     expect((html.match(/aria-current="page"/g) ?? []).length).toBe(1);
+  });
+
+  // THE PRODUCER, which nothing reached. `useEndpoint`'s fetch effect — every line of it —
+  // was uncovered, so the code that COMPUTES the freshness this bar renders was invertible
+  // underneath seven consumer-side assertions. Three mutations restored #39 with the suite
+  // green, one of them the original defect verbatim. Third PR running in which a rendered
+  // fact was pinned and its producer was free; the fix that worked the last two times is the
+  // same one — make the decision a pure function of what came in.
+  test('the stamps a settled request produces are the ones the badge needs', () => {
+    const loaded: EndpointState<string> = {
+      data: 'first',
+      error: null,
+      loading: false,
+      loadedAt: NOW - 300_000,
+      failedAt: null,
+    };
+
+    // A SUCCESS stamps arrival and CLEARS any earlier failure — otherwise "could not fetch"
+    // hangs over data that arrived after it.
+    const recovered = requestSettled({ ...loaded, failedAt: NOW - 60_000 }, { ok: true, payload: 'second' }, NOW);
+    expect(recovered).toEqual({ data: 'second', error: null, loading: false, loadedAt: NOW, failedAt: null });
+
+    // A FAILURE stamps the attempt and LEAVES the arrival, because the figures on screen
+    // really did arrive when they say they did — it is the refresh that failed. Stamping
+    // `loadedAt` here is #39 verbatim.
+    const failed = requestSettled(loaded, { ok: false, message: 'GET /api/belief failed: 500' }, NOW);
+    expect(failed).toEqual({
+      data: 'first', // the panel below is still showing it
+      error: 'GET /api/belief failed: 500',
+      loading: false,
+      loadedAt: NOW - 300_000, // untouched
+      failedAt: NOW,
+    });
+
+    // FIRST-LOAD FAILURE: nothing ever arrived, so `loadedAt` stays null — which is what
+    // makes the bar say "fetch failed" instead of the resting word with no timestamp.
+    const firstLoadFailed = requestSettled(initialEndpointState<string>(), { ok: false, message: 'x' }, NOW);
+    expect(firstLoadFailed.loadedAt).toBeNull();
+    expect(firstLoadFailed.failedAt).toBe(NOW);
+
+    // A REQUEST BEGINNING keeps what is on screen — clearing it would blank the view on every
+    // refresh — and clears only the error it is retrying.
+    expect(requestBegan(failed)).toEqual({ ...failed, loading: true, error: null });
+
+    // PRODUCER AND CONSUMER IN ONE ASSERTION, which is what neither side had: the badge reads
+    // each produced state the way that state says.
+    const badge = (s: EndpointState<string>) =>
+      textOf(renderToStaticMarkup(<FetchedBadge freshness={{ ...s, loading: false }} now={NOW} />));
+    expect(badge(failed)).toContain('stale · refresh failed');
+    expect(badge(firstLoadFailed)).toContain('fetch failed');
+    expect(badge(recovered)).toBe(`fetched · ${expectedRelative(NOW, NOW)}`);
+  });
+
+  test('the failure message names the route, so five views are distinguishable', () => {
+    expect(failureMessage('/api/belief', new Error('500 Internal Server Error'))).toBe(
+      'GET /api/belief failed: 500 Internal Server Error'
+    );
+    // A non-Error rejection still names the route rather than rendering "[object Object]".
+    expect(failureMessage('/api/inbox', { nope: true })).toBe('GET /api/inbox failed');
   });
 
   test('a failed fetch never reads as a fetch', () => {

@@ -184,7 +184,19 @@ export async function projectEmptyState(
   // closes a footgun the upper one opens — `timeout: 0` is Node's "no timeout", so a caller
   // asking for zero would silently get an unbounded scan, which is the failure this option
   // exists to make testable.
-  const timeoutMs = Math.max(1, Math.min(opts.timeoutMs ?? PROJECT_PROBE_TIMEOUT_MS, PROJECT_PROBE_TIMEOUT_MS));
+  //
+  // AND A NON-NUMBER DOES NOT SURVIVE THE CLAMP. `Math.max(1, NaN)` is `NaN`, so `NaN`,
+  // `'abc'` and `{}` all passed straight through it; Node then rejected the spawn with
+  // ERR_OUT_OF_RANGE and the catch below three-stated it correctly — never unbounded, never a
+  // false all-clear — but wrote "grep exited ERR_OUT_OF_RANGE" for a grep THAT NEVER RAN, in
+  // 0 ms. A mechanism reporting about something that did not happen, in the file that exists
+  // to prevent exactly that. `1.9` is the realistic caller: Node refuses a fractional timeout,
+  // so it is floored rather than rejected, and anything not a finite number falls back to the
+  // default the machine is protected by.
+  const requested = opts.timeoutMs;
+  const usable =
+    typeof requested === 'number' && Number.isFinite(requested) ? Math.floor(requested) : PROJECT_PROBE_TIMEOUT_MS;
+  const timeoutMs = Math.max(1, Math.min(usable, PROJECT_PROBE_TIMEOUT_MS));
   const probeCmd = projectEmptyStateProbe(project);
   const base = { probe: renderProbe(probeCmd), would_fill: PROJECT_WOULD_FILL };
 

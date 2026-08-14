@@ -778,6 +778,29 @@ describe('projectEmptyState stops rather than scanning forever', () => {
     expect(zero.readable).toBe(false);
     expect(zero.reason).toContain('1ms');
 
+    // A CALLER'S BAD ARGUMENT IS NOT ATTRIBUTED TO GREP. `Math.max(1, NaN)` is `NaN`, so
+    // these all passed straight through the clamp; Node then rejected the spawn with
+    // ERR_OUT_OF_RANGE and the catch three-stated it correctly — never unbounded, never a
+    // false all-clear — but the reason read "grep exited ERR_OUT_OF_RANGE" for a grep that
+    // never ran, in 0 ms. Reporting about something that did not happen, in the file that
+    // exists to prevent exactly that.
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, 'abc', {}, null] as unknown as number[]) {
+      const answered = await projectEmptyState({ id: 'huge', root } as Project, { timeoutMs: bad });
+      const where = { bad: String(bad) };
+      // Falls back to the default the machine is protected by, so this tree completes.
+      expect({ ...where, readable: answered.readable }).toEqual({ ...where, readable: undefined });
+      expect({ ...where, found: answered.found }).toEqual({ ...where, found: true });
+      expect(answered.reason ?? '').not.toContain('ERR_OUT_OF_RANGE');
+      expect(answered.reason ?? '').not.toContain('grep exited');
+    }
+
+    // …and `1.9`, the realistic caller: Node refuses a fractional timeout, so it is floored to
+    // 1 ms and really does cut the scan off — neither refused nor blamed on grep.
+    const fractional = await projectEmptyState({ id: 'huge', root } as Project, { timeoutMs: 1.9 });
+    expect(fractional.readable).toBe(false);
+    expect(fractional.reason).toContain('1ms');
+    expect(fractional.reason).not.toContain('ERR_OUT_OF_RANGE');
+
     // The upper clamp — a caller cannot lengthen the bound past the constant — is asserted in
     // the FIFO test below, because observing it needs a scan that would otherwise run longer
     // than the constant, and this tree finishes in milliseconds.
