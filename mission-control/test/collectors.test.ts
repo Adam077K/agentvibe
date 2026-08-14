@@ -535,7 +535,25 @@ describe('the conflicts sweep leaves the event loop free', () => {
 // threshold, same instrument. This is what actually binds the enumeration half; the
 // structural pin above catches only the call-site revert in one file.
 describe('enumerating many projects leaves the event loop free', () => {
-  const PROJECTS = 12;
+  /**
+   * THE RATIO IS SCALE-INVARIANT; ITS DISCRIMINATING POWER IS NOT. That distinction is what
+   * twelve missed, and it is why this number moved rather than the bound.
+   *
+   * Both terms scale linearly with the project count, so `async / control` does not move with
+   * N — which is what makes the 0.75 line valid on any machine. But the room correct code has
+   * is `0.75 * control - floor`, and per child that is a fixed positive quantity, so the room
+   * grows LINEARLY with N while the machine's resolution does not. On the runner, per child:
+   * control 1.63 ms, floor 0.87 ms, room 0.35 ms. Twelve children give 4.3 ms of room against
+   * a 3.3 ms resolution — a coin flip, which is exactly what five CI runs looked like. Forty
+   * eight give 17.2 ms against the same resolution.
+   *
+   * The other lever does not exist here, and I measured it rather than assuming: `git worktree
+   * list --porcelain` is irreducibly spawn-dominated, so 1 / 8 / 24 worktrees in a repo cost
+   * 31.8 / 33.7 / 38.2 ms per call. Twenty-four times the subject buys twenty percent more
+   * time. Nothing about the fixture's SHAPE can make this command's work outweigh its spawn;
+   * only its COUNT can.
+   */
+  const PROJECTS = 48;
   const parent = mkTmpDir('mc-enum-scale-');
   cleanupDirs.push(parent);
   const claudeRoot = mkTmpDir('mc-enum-scale-claude-');
@@ -606,7 +624,7 @@ describe('enumerating many projects leaves the event loop free', () => {
     let sweepMs = 0;
     let controlMs = 0;
     let floorMs = 0;
-    const ROUNDS = 5;
+    const ROUNDS = 3;
 
     for (let round = 0; round < ROUNDS; round++) {
       const t0 = performance.now();
@@ -623,10 +641,17 @@ describe('enumerating many projects leaves the event loop free', () => {
       await settle();
       controlStalls.push(worstGapSince());
 
+      // THE REJECTION IS CAUGHT, because what is timed here is the cost of ASKING, not the
+      // answer. At this concurrency a spawn can fail with EAGAIN, and an uncaught rejection
+      // takes the whole suite down with "Unhandled error between tests" — which is how the
+      // first run at this project count failed, my defect and not the collector's. Whether a
+      // child succeeded is `detectConflicts`'s business and is asserted above.
       const f0 = performance.now();
       await Promise.all(
         projects.map((p) =>
-          execFileAsync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' })
+          execFileAsync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' }).catch(
+            () => undefined
+          )
         )
       );
       floorMs = performance.now() - f0;
@@ -696,7 +721,9 @@ describe('enumerating many projects leaves the event loop free', () => {
     // Same bound as the status-phase test, for the same reason and with the same failure
     // direction. Both terms scale with PROJECTS, so this holds on any machine.
     expect(asyncStallMs).toBeLessThan(controlStallMs * 0.75);
-  });
+  }, 120_000); // EXPLICIT, because three rounds over 48 projects exceeds bun's 5s default —
+  // which is how this first failed at the larger count: the runner SIGTERMed the child mid-
+  // measurement and the error read as a git failure rather than as a test timeout.
 });
 
 // ── THE PROJECT PROBE, SAME SHAPE AS THE ENUMERATION PIN ──────────────────────────────
