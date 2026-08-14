@@ -97,7 +97,7 @@ export const STATUS_ARGV = ['--no-optional-locks', 'status', '--porcelain'] as c
  * `GIT_CONFIG_SYSTEM`, and an inherited hostile `GIT_CONFIG_PARAMETERS`.
  */
 export function statusConfigEnv(ambient: NodeJS.ProcessEnv = process.env): Record<string, string> {
-  const ours = ["'core.quotePath=true'", "'status.showUntrackedFiles=normal'"].join(' ');
+  const ours = ["'core.quotePath=true'", "'status.showUntrackedFiles=all'"].join(' ');
   const existing = ambient.GIT_CONFIG_PARAMETERS;
   return {
     // Kept as well as the append: these lose to PARAMETERS but beat everything else, so on a
@@ -109,9 +109,55 @@ export function statusConfigEnv(ambient: NodeJS.ProcessEnv = process.env): Recor
     // the untracked file vanished from the sweep with `readable: undefined` — a clean read
     // reported over a population git had been told not to look at. That is worse than the
     // fabrication this file was opened to fix, because absence is the answer nobody
-    // investigates. Executed: 0 records with it set, 1 with this forced.
+    // investigates. Executed: 0 records with `no`, 1 with this forced.
+    //
+    // `all`, NOT `normal`, AND THE DIFFERENCE IS THE WHOLE POINT. FORCING A VALUE IS A CLAMP IN
+    // BOTH DIRECTIONS, and the first version of this forced `normal` — an INTERIOR value of
+    // `no | normal | all` — so it raised `no` as intended and silently LOWERED `all`. `all` is
+    // an ENDPOINT, so forcing it can only ever raise; the clamp is one-directional by
+    // construction rather than by luck. That is the general rule: forcing an interior value
+    // clamps both ways and needs a test on each side; forcing an endpoint does not.
+    //
+    // AND LOWERING TO `normal` INVENTS CONFLICTS, which is the defect class this file exists to
+    // remove. Measured (`git -c status.showUntrackedFiles=X status --porcelain`, two new files
+    // under one new directory):
+    //
+    //   no      (nothing)
+    //   normal  `?? newdir/`                        <- git's DEFAULT
+    //   all     `?? newdir/a.ts`  `?? newdir/b.ts`
+    //
+    // `detectConflicts` keys on the exact string, so under `normal` two worktrees that added
+    // DIFFERENT files under one new directory both report `newdir/` and collide — a conflict
+    // nobody has. Note that this is git's default, so the false positive was PRE-EXISTING and
+    // unconditional; forcing `normal` did not create it, it removed the accidental escape that
+    // a user with `all` happened to have.
+    //
+    // WHAT `all` FIXES, AND WHAT IT CANNOT. It splits untracked DIRECTORIES within one
+    // repository, which is the common case above. It CANNOT split a nested REPOSITORY: git
+    // reports another repo inside this one as a single entry no matter what this setting says,
+    // because the setting governs directory recursion and a nested repo is not recursed into at
+    // all. So two worktrees vendoring DIFFERENT nested repos at `vendor/thing` both still report
+    // `vendor/thing/` and still collide — reproduced through real `detectConflicts`. THE DEFECT
+    // CLASS SURVIVES THERE and this comment must not read as though it does not.
+    //
+    // agentvibe itself is mitigated only INCIDENTALLY, because it gitignores `.worktrees/` so
+    // its own nested worktrees never reach the untracked list. That is an accident of this
+    // repo's ignore file, not a property of the fix, and it would stop being true the day
+    // somebody vendors a dependency
+    //
+    // THE COST, MEASURED ON TWO SHAPES, because one of them is a best case and quoting it alone
+    // would be a severity with no command behind it:
+    //
+    //   5,000 files in ONE directory        143,893 B     1.7% of the 8 MiB ceiling, 32 vs 33 ms
+    //   a `node_modules`-shaped tree     10,094,000 B   120.3% of it — crossover near 116k files
+    //
+    // So on a large dependency tree this DOES exceed the ceiling. That degradation is honest and
+    // is why the code is unchanged: the call reports `readable: false` carrying the bytes it
+    // recovered and an `ERR_CHILD_PROCESS_STDIO_MAXBUFFER` reason — correctly attributed, not
+    // mislabelled as a timeout, and not the silent miss `no` produced. It is a bounded, visible
+    // failure rather than a wrong answer.
     GIT_CONFIG_KEY_1: 'status.showUntrackedFiles',
-    GIT_CONFIG_VALUE_1: 'normal',
+    GIT_CONFIG_VALUE_1: 'all',
     GIT_CONFIG_PARAMETERS: existing ? `${existing} ${ours}` : ours,
   };
 }
