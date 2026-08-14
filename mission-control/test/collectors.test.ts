@@ -1705,36 +1705,68 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
       }
     }
 
-    // MAKE THE SUBJECT LONGER RATHER THAN THE SAMPLER FASTER. At ~19 MB the runner's probes
-    // lasted 26 ms against 15.2 ms samples, the ratio failed its own gate, and the overlap
-    // went unobserved on the one machine that matters most. The alternative — counting
-    // children through /proc on Linux — would have been a platform branch nothing on this
-    // laptop can execute, which is a worse trade than an honest gate. ~56 MB is
-    // platform-neutral and runs everywhere.
+    // MAKE THE SUBJECT LONGER RATHER THAN THE SAMPLER FASTER — and let the machine say how
+    // much longer, because guessing got it wrong twice. At ~19 MB the runner's probe lasted
+    // 26 ms against 15.2 ms samples and the overlap went unobserved; tripling the BYTES to
+    // 56 MB moved it only to 35 ms, because the runner is not byte-bound — 3x the data bought
+    // 1.35x the time, so its cost is per-file traversal, not per-byte scanning, and this
+    // laptop's grep is the opposite (1,086 ms on the same tree). No single fixture size is
+    // right for both.
+    //
+    // The alternative — counting children through /proc on Linux — was rejected: a platform
+    // branch nothing here can execute, shipped to close a gate that was telling the truth, is
+    // an unexecuted branch reading as coverage.
+    //
+    // So the tree GROWS UNTIL THIS MACHINE'S PROBE OUTLASTS THIS MACHINE'S SAMPLER, in small
+    // files because that is the axis a fast runner actually feels, bounded so a pathological
+    // machine stops rather than filling a disk.
     const root = mkTmpDir('mc-cap-');
     cleanupDirs.push(root);
-    for (let d = 0; d < 8; d++) {
-      const dir = path.join(root, `d${d}`);
+    const pgrepAsync = promisify(execFile);
+
+    let files = 0;
+    let dirs = 0;
+    const addFiles = (n: number) => {
+      const dir = path.join(root, `d${dirs++}`);
       fs.mkdirSync(dir, { recursive: true });
-      for (let f = 0; f < 220; f++) {
-        fs.writeFileSync(path.join(dir, `f${f}.txt`), 'lorem ipsum dolor sit amet '.repeat(1200));
+      for (let f = 0; f < n; f++) fs.writeFileSync(path.join(dir, `f${f}.txt`), 'lorem ipsum dolor sit amet\n');
+      files += n;
+    };
+    const timeOneProbe = async () => {
+      const t0 = Date.now();
+      await projectEmptyState({ id: 'cap', root } as Project);
+      return Math.max(1, Date.now() - t0);
+    };
+
+    addFiles(2_000);
+
+    // THE SAMPLER'S OWN COST, measured with nothing else running — the ruler, before the
+    // thing being measured. `pgrep` forks and scans every process on the box, so this is tens
+    // of milliseconds on a laptop and single digits on a runner, and it is the number the
+    // tree has to beat.
+    const cadenceStart = Date.now();
+    for (let i = 0; i < 10; i++) {
+      try {
+        await pgrepAsync('pgrep', ['-f', root], { encoding: 'utf8' });
+      } catch {
+        /* exit 1, no matches — expected, nothing is running yet */
       }
     }
+    const idleCadenceMs = Math.max(0.5, (Date.now() - cadenceStart) / 10);
 
-    // THE CONTROL: how long ONE probe lasts on THIS machine. The sampler's resolution has to
-    // be compared against something measured here, not against a number written on a laptop —
-    // this test failed on the CI runner at `maxSeen: 0` with the cap working perfectly,
-    // because the runner's greps were shorter than the gap between samples.
-    const probeStart = Date.now();
-    await projectEmptyState({ id: 'cap', root } as Project);
-    const probeMs = Math.max(1, Date.now() - probeStart);
+    let probeMs = await timeOneProbe();
+    let grew = 0;
+    while (probeMs < idleCadenceMs * 4 && grew < 6) {
+      addFiles(6_000);
+      grew++;
+      probeMs = await timeOneProbe();
+    }
 
     // AND THE SAMPLER DOES NOT BLOCK THE THREAD IT IS WATCHING. `execFileSync` here was worse
     // than slow: starting the next grep needs this same JS thread (the semaphore hands the
     // slot over in a microtask), so a blocking sampler and the probe lifecycle interleaved —
     // greps ran entirely inside the sampler's own sleep and it saw none of them. Async pgrep,
     // back to back with no sleep, leaves the loop free between samples.
-    const pgrepAsync = promisify(execFile);
     let sampling = true;
     let maxSeen = 0;
     let samples = 0;
@@ -1771,7 +1803,8 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     // eslint-disable-next-line no-console
     console.log(
       `  [cap] ${N} probes in ${runMs}ms · max concurrent greps ${maxSeen} (cap ${PROJECT_PROBE_MAX_CONCURRENT}) · ` +
-        `one probe ${probeMs}ms · ${samples} samples at ${cadenceMs.toFixed(1)}ms`
+        `one probe ${probeMs}ms over ${files} files (grew ${grew}x, idle pgrep ${idleCadenceMs.toFixed(1)}ms) · ` +
+        `${samples} samples at ${cadenceMs.toFixed(1)}ms`
     );
 
     // GATE ON THE INSTRUMENT, not on the answer. If this machine cannot take several samples
