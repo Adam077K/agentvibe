@@ -1496,7 +1496,7 @@ describe('render parity — Project', () => {
     const completed = textOf(renderToStaticMarkup(<ProjectStageProbe empty={payload.empty} />));
     expect(completed).toContain('ran to completion and matched nothing');
     expect(completed).toContain(payload.empty.probe); // the argv a reader can re-run
-    expect(completed).not.toContain('could not look at all of it');
+    expect(completed).not.toContain('could not look');
 
     const cutOff = textOf(
       renderToStaticMarkup(
@@ -1509,10 +1509,32 @@ describe('render parity — Project', () => {
         />
       )
     );
-    expect(cutOff).toContain('could not look at all of it');
+    expect(cutOff).toContain('could not look');
     expect(cutOff).toContain('did not finish within 10000 ms'); // the reason reaches the screen
-    expect(cutOff).toContain('not the same as none existing');
+    expect(cutOff).toContain('not the same as nothing existing');
     expect(cutOff).not.toContain('ran to completion');
+
+    // THE QUEUE'S STATE, which shares this branch and must not inherit a heading that claims
+    // partial coverage. It looked at NONE of the tree, so "could not look at all of it" was
+    // wrong for it in the one line a reader takes the panel from — and "in the part that was
+    // searched" was wrong for it too, because there is no such part. Both now hold at any
+    // coverage, including none, and the reason underneath is what says which.
+    const neverStarted = textOf(
+      renderToStaticMarkup(
+        <ProjectStageProbe
+          empty={{
+            ...payload.empty,
+            readable: false,
+            reason: 'the probe never started: 2 probes were already running … so NO part of /x was searched.',
+          }}
+        />
+      )
+    );
+    expect(neverStarted).toContain('could not look');
+    expect(neverStarted).not.toContain('could not look at all of it'); // it looked at none of it
+    expect(neverStarted).not.toContain('in the part that was searched');
+    expect(neverStarted).toContain('NO part of /x was searched'); // the distinction, in the body
+    expect(neverStarted).toContain('whatever this probe covered'); // true at zero coverage
 
     // And the third state: a marker found in the part that WAS searched is neither of the
     // above — it is a partial yes, and says so.
@@ -1522,7 +1544,7 @@ describe('render parity — Project', () => {
       )
     );
     expect(partial).toContain('the count below it is simply incomplete');
-    expect(partial).not.toContain('not the same as none existing');
+    expect(partial).not.toContain('not the same as nothing existing');
   });
 
   test('an absent event log states what would write it, and is never rendered as zero events', async () => {

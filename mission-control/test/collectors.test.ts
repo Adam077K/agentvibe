@@ -1810,13 +1810,22 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     // GATE ON THE INSTRUMENT, not on the answer. If this machine cannot take several samples
     // inside one probe's lifetime, an overlap it never saw is a fact about the sampler's
     // resolution — reporting that as a pass would be the §0 defect, and reporting it as a
-    // failure would be blaming the code for the ruler. The cap assertions below still run;
-    // only the "we observed overlap" ones are withheld, and loudly.
+    // failure would be blaming the code for the ruler.
+    //
+    // AND THE WITHHELD HALF IS THE ENFORCEMENT ITSELF, not a nicety. With the sampler blind,
+    // `maxSeen` is 0 and every remaining assertion passes trivially: 0 <= 2, 0 < N, 2 <= 4.
+    // So on a coarse runner a RAISED CONSTANT is still caught, by the static `<= 4` check
+    // below — but a cap DECLARED AND NOT APPLIED is caught by nothing. The reviewer proved
+    // that by disabling the semaphore in place, constant untouched: it fails here (maxSeen 20
+    // against a cap of 2) and would pass on a machine that cannot see. Saying "the cap
+    // assertions still run" was true and misleading; run is not verify.
     const canObserve = cadenceMs * 3 <= probeMs;
     if (!canObserve) {
       notVerified(
-        'probe concurrency overlap',
-        `one probe lasts ${probeMs}ms and samples are ${cadenceMs.toFixed(1)}ms apart, too coarse to catch two at once`
+        'probe concurrency cap',
+        `one probe lasts ${probeMs}ms and samples are ${cadenceMs.toFixed(1)}ms apart, too coarse to catch two at ` +
+          'once — so ENFORCEMENT IS NOT VERIFIED ON THIS RUNNER AT ALL. A semaphore that was declared and never ' +
+          'applied would look identical from here. What remains checked is only that the declared constant is small'
       );
     } else {
       // NON-VACUITY: the sampler really looked, and it really saw greps overlapping — so the
@@ -1831,12 +1840,14 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     // checking: raising the constant to 64 raises this assertion with it, and the test stays
     // green while 20 greps run at once. Measured — that mutation passed 71/0 before this
     // line existed. So the contract is checked against the declared cap AND against a ceiling
-    // the declaration cannot move.
+    // the declaration cannot move. BOTH ARE VACUOUS AT maxSeen 0 — they bound an observation,
+    // and an unobserved run has none.
     expect(maxSeen).toBeLessThanOrEqual(PROJECT_PROBE_MAX_CONCURRENT);
     expect(maxSeen).toBeLessThan(N); // a cap that does not cap fails here regardless of its value
-    // And the declared cap is a SMALL number, which is the actual decision under review — the
-    // limit exists to bound 8 MB and ten seconds per child, and widening it is a change that
-    // should have to argue for itself here rather than pass silently.
+    // The one assertion that holds without observing anything: the declared cap is a SMALL
+    // number. That is the decision under review — the limit exists to bound 8 MB and ten
+    // seconds per child — and it is also the ONLY thing this test still enforces on a machine
+    // whose sampler could not see, which is what the gate above now says out loud.
     expect(PROJECT_PROBE_MAX_CONCURRENT).toBeLessThanOrEqual(4);
 
     // Every queued probe still ran and still answered, with no marker in this tree — which is

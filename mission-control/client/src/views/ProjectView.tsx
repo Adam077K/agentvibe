@@ -116,15 +116,27 @@ export function ProjectStageProbe({ empty }: { empty: ProjectDetail['empty'] }) 
   // THE PROBE COULD NOT COMPLETE — distinct from "it completed and found nothing", and the
   // 34 GB project on this machine is exactly the case: 107,806 ms of scanning, cut off at the
   // 10 s bound. Rendering that as an empty state would be a claim about a tree nobody read.
+  //
+  // THE HEADING IS "COULD NOT LOOK", not "could not look at all of it". Two states arrive
+  // here: a scan stopped at the bound, which read PART of the tree, and a probe the queue
+  // turned away, which read NONE of it. "at all of it" is true of the first and false of the
+  // second, and it is the heading a reader takes the whole panel from. The reasons underneath
+  // carry the difference precisely — "part of the tree was never searched" against "NO part
+  // of … was searched" — so the heading is the one that has to cover both. It is also the
+  // same two words Inbox and Conflicts use for this state, which is worth more than the
+  // nuance those four extra words were carrying.
   if (empty.readable === false) {
     return (
       <div className="border-l-2 border-l-warn pl-3">
-        <div className="fig text-[12px] text-warn">could not look at all of it</div>
+        <div className="fig text-[12px] text-warn">could not look</div>
         <p className="mt-1 max-w-[78ch] text-[12.5px] leading-relaxed text-muted">{empty.reason}</p>
         <p className="mt-2 max-w-[78ch] text-[12px] leading-relaxed text-dim">
+          {/* "in the part that was searched" was equally wrong for a probe that never ran:
+              there is no such part. Phrased against COVERAGE instead, which is honest at any
+              coverage including none — and the reason above is what says which. */}
           {empty.found
             ? 'A marker WAS found in the part that was searched, so this project does emit stage progress — the count below it is simply incomplete.'
-            : 'No marker was found in the part that was searched, which is not the same as none existing.'}{' '}
+            : 'Nothing was matched in whatever this probe covered, which is not the same as nothing existing.'}{' '}
           The probe is <code className="fig">{empty.probe}</code> — run it yourself to see the same answer.
         </p>
       </div>
