@@ -114,6 +114,16 @@ Corollaries, each earned:
   fix would have been aimed at the wrong thing while the entry closed green. **When you write down why
   something failed, either reproduce it or mark the cause UNTESTED.** The cheap instrument is to try to make
   it fail on purpose; a failure you cannot reproduce under the condition you blamed is not explained.
+- **A computed margin is not an exposure.** A bucket boundary is only a risk once you have shown the two
+  sides come from *different reads*; otherwise it is arithmetic about a comparison that never happens. F3
+  was reported as a 55 s margin derived from a formatter's bucket width, before anyone checked whether any
+  test reads the clock twice. None does — the sites asserting a relative string pass one captured `now` to
+  both the expectation and the component, so skew cancels exactly. Under a clock jumping 60 s on *every*
+  read, 71 of 71 passed.
+- **Check the experiment before believing it, especially when it confirms you.** That F3 probe would have
+  produced an identical clean result if the preload had silently failed to load. It was validated first:
+  an assertion that two consecutive reads differ by ≥60 s passes with the preload and fails without it. **A
+  negative result from an instrument you have not shown to be live is not a negative result.**
 - **When a runner kills a child, the child's error arrives first and looks like the cause. Check for a
   signal before believing a stack.** The #47 failures were read as a broken git fixture because the log
   ended in a multi-line stack at `initGitRepo`. It carried `signal: "SIGTERM", status: null` — git was
