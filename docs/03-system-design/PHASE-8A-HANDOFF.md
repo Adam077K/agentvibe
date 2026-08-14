@@ -1,8 +1,9 @@
 # Handoff — Phase 8a, complete
 
 **For:** whoever picks this up next.
-**State: all 5 PRs merged. `main` = `30f6c35`.** 193 tests / 1,213 assertions, `npm run check` exits 0 after
-`bun install` in `mission-control/`. All six views work end to end.
+**State: all 5 PRs merged; `main` has since moved to `01fcadd`** (#29, #34, #36 landed after phase close).
+**205 tests / 1,246 assertions, 0 fail** (VERIFIED on `01fcadd`, 82.4 s — it was 193 / 1,213 at close),
+`npm run check` exits 0 after `bun install` in `mission-control/`. All six views work end to end.
 **Read [SECURITY-FINDINGS-2026-08-14.md](SECURITY-FINDINGS-2026-08-14.md) before running the server** —
 three confirmed RCEs are open on `main`, and until they are closed, do not point Mission Control at a tree
 containing repositories you did not write.
@@ -105,6 +106,18 @@ Corollaries, each earned:
   writes matches to stdout*; the catch read only `status`. `check-cold-start.ts` gets this right — exit 2 is
   UNCHECKED, never a vacuous pass.
 - **An assertion inside a branch that never runs reads as coverage.** Add a counter that fails at zero.
+- **A cause you attributed but never tried to reproduce is a claim with no mechanism** — and it is the same
+  defect class as everything above, aimed at a diagnosis instead of a value. #47 sat in the status doc for a
+  day asserting three tests "failed under ~200% CPU load." Nobody had induced load and watched. When someone
+  did, **81 of 81 passed at load average 42** and the historical failures were 43×–190× beyond anything CPU
+  or fork contention could produce. The entry named a cause, a reader would have fixed *that* cause, and the
+  fix would have been aimed at the wrong thing while the entry closed green. **When you write down why
+  something failed, either reproduce it or mark the cause UNTESTED.** The cheap instrument is to try to make
+  it fail on purpose; a failure you cannot reproduce under the condition you blamed is not explained.
+- **A test with no explicit timeout still has one, and it is an unwritten duration assertion.** 71 tests on
+  bun's implicit 5 s default, 25 of them forking 12–18 git processes: the budget is real, nobody chose it,
+  and when it blows it surfaces *inside the fixture* as a git throw — indistinguishable from a broken
+  fixture. Hoist the fixture out of the timed region. Raising the timeout only moves the line.
 
 ---
 
