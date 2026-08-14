@@ -162,15 +162,29 @@ function releaseSlot(): void {
 }
 
 /**
- * `queueWaitMs` is the CALLER's to shorten — how long it is willing to wait for a slot before
- * being told the probe never ran. The scan bound is not: that one protects the machine and is
- * not a per-call preference.
+ * Both bounds are the CALLER's to SHORTEN and neither is the caller's to lengthen.
+ *
+ * `queueWaitMs` — how long this call will wait for a slot before being told the probe never
+ * ran.
+ *
+ * `timeoutMs` — how long the scan itself may take, CLAMPED to the default. That clamp is the
+ * whole design: the constant protects the machine, so passing a larger number cannot weaken
+ * it, and passing a smaller one can only make this call give up sooner. Injectable because a
+ * bound that can only be reached by waiting ten real seconds is a bound no test reaches — and
+ * measured, it reached none: `empty.ts` lines 124-134, the entire timeout branch, had zero
+ * coverage while the test named after it asserted the OPPOSITE branch. That is #30's C1 in
+ * this file: a barrier at the pixel with the producer invertible underneath it.
  */
 export async function projectEmptyState(
   project: Project,
-  opts: { queueWaitMs?: number } = {}
+  opts: { queueWaitMs?: number; timeoutMs?: number } = {}
 ): Promise<EmptyState> {
   const queueWaitMs = opts.queueWaitMs ?? PROJECT_PROBE_QUEUE_WAIT_MS;
+  // Clamped into [1, default]. The upper clamp is the machine protection; the LOWER one
+  // closes a footgun the upper one opens — `timeout: 0` is Node's "no timeout", so a caller
+  // asking for zero would silently get an unbounded scan, which is the failure this option
+  // exists to make testable.
+  const timeoutMs = Math.max(1, Math.min(opts.timeoutMs ?? PROJECT_PROBE_TIMEOUT_MS, PROJECT_PROBE_TIMEOUT_MS));
   const probeCmd = projectEmptyStateProbe(project);
   const base = { probe: renderProbe(probeCmd), would_fill: PROJECT_WOULD_FILL };
 
@@ -192,7 +206,7 @@ export async function projectEmptyState(
   try {
     const { stdout } = await execFileAsync(probeCmd.cmd, probeCmd.args, {
       encoding: 'utf8',
-      timeout: PROJECT_PROBE_TIMEOUT_MS,
+      timeout: timeoutMs,
       maxBuffer: PROJECT_PROBE_MAX_BUFFER,
     });
     return { ...base, found: stdout.trim().length > 0 };
@@ -226,7 +240,9 @@ export async function projectEmptyState(
         found: false,
         readable: false,
         reason:
-          `grep did not finish within ${PROJECT_PROBE_TIMEOUT_MS}ms against ${project.root} and was stopped, so ` +
+          // The EFFECTIVE bound, not the constant: a caller that shortened it must see the
+          // number that actually stopped the scan, or the sentence explains the wrong thing.
+          `grep did not finish within ${timeoutMs}ms against ${project.root} and was stopped, so ` +
           'part of the tree was never searched and nothing it may have matched there was recovered. This is "I ' +
           'could not look at all of it", not "there is nothing here" — a 34 GB project measured 107,806ms for ' +
           'this scan on 2026-08-14, and an unbounded probe on a live dashboard has no upper bound at all.',

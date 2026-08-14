@@ -732,13 +732,23 @@ describe('probing many projects leaves the event loop free', () => {
 
 // ── the probe is bounded, and says so when the bound is hit ───────────────────────────
 describe('projectEmptyState stops rather than scanning forever', () => {
-  test('a probe that exceeds the timeout reports readable:false naming the bound', async () => {
-    // A real timeout, forced by pointing the probe at a tree far larger than the bound can
-    // scan. Rather than build 34 GB, the bound itself is what this asserts against: the
-    // reason must name the timeout and must NOT read as "nothing here".
+  // THE COLLECTOR HITS ITS OWN BOUND. This test previously did not: it called `execFile`
+  // directly with a 1 ms budget to show that `killed: true` is the shape — a fact about Node,
+  // not about projectEmptyState — and then called the collector with the shipped 10 s bound,
+  // which this tree finishes inside, and asserted the OPPOSITE branch. Its own comment
+  // conceded that. Coverage agreed: empty.ts 124-134, the whole timeout branch, was never
+  // executed, so three mutations left the suite green — the killed branch returning a genuine
+  // no-match (the exact defect the bound exists to prevent), `timeout:` deleted outright, and
+  // the constant set to 0, which is Node's "no timeout".
+  //
+  // The bound is now injectable, CLAMPED so injection can only tighten it, and the branch is
+  // driven through the real function in milliseconds.
+  test('the collector hits its own bound, and says so in the honest three-state', async () => {
     const root = mkTmpDir('mc-probe-timeout-');
     cleanupDirs.push(root);
-    // ~4,000 files of real content — enough that a 1 ms budget cannot finish them.
+    // ~4,000 files of real content — enough that a 1 ms budget cannot finish them, on any
+    // machine. A MARKER IS PLANTED TOO, so the answer below is not trivially "nothing here":
+    // this tree really does contain what the probe looks for, and a completed scan says so.
     for (let d = 0; d < 20; d++) {
       const dir = path.join(root, `d-${d}`);
       fs.mkdirSync(dir, { recursive: true });
@@ -746,25 +756,31 @@ describe('projectEmptyState stops rather than scanning forever', () => {
         fs.writeFileSync(path.join(dir, `f-${f}.txt`), 'const x = 1;\n'.repeat(200));
       }
     }
+    fs.writeFileSync(path.join(root, 'aaa-marker.md'), 'playbook_stage: build\n');
 
-    const cmd = projectEmptyStateProbe({ id: 'huge', root } as Project);
-    // The timeout path, exercised through execFile directly with a 1 ms budget — the same
-    // rejection shape (`killed: true`) projectEmptyState branches on, without making this
-    // suite wait ten real seconds to observe it.
-    let killed = false;
-    try {
-      await promisify(execFile)(cmd.cmd, cmd.args, { encoding: 'utf8', timeout: 1 });
-    } catch (e) {
-      killed = (e as { killed?: boolean }).killed === true;
-    }
-    expect(killed).toBe(true); // the premise: this shape really is what a timeout produces
+    const cut = await projectEmptyState({ id: 'huge', root } as Project, { timeoutMs: 1 });
+    expect(cut.readable).toBe(false);
+    expect(cut.found).toBe(false); // no partial recovery — see the comment in empty.ts
+    expect(cut.reason).toContain('1ms'); // the EFFECTIVE bound, not the constant
+    expect(cut.reason).toContain('part of the tree was never searched');
+    expect(cut.reason).toContain(root);
 
-    // …and the collector turns exactly that shape into the honest three-state.
-    const state = await projectEmptyState({ id: 'huge', root } as Project);
-    // With the shipped 10s bound this tree finishes, so the assertion here is the mirror:
-    // a probe that COMPLETES must not claim it was cut short.
-    expect(state.readable).toBeUndefined();
-    expect(state.found).toBe(false);
+    // THE MIRROR, and it is what makes the assertions above about the BOUND rather than about
+    // this tree: the same probe with the shipped bound completes and finds the marker.
+    const completed = await projectEmptyState({ id: 'huge', root } as Project);
+    expect(completed.readable).toBeUndefined();
+    expect(completed.found).toBe(true);
+
+    // THE LOWER CLAMP. `timeout: 0` is Node's "no timeout", so a caller passing zero would
+    // silently get an unbounded scan — the exact condition this option exists to test for.
+    // Zero is floored to 1 ms, so it cuts off rather than running free.
+    const zero = await projectEmptyState({ id: 'huge', root } as Project, { timeoutMs: 0 });
+    expect(zero.readable).toBe(false);
+    expect(zero.reason).toContain('1ms');
+
+    // The upper clamp — a caller cannot lengthen the bound past the constant — is asserted in
+    // the FIFO test below, because observing it needs a scan that would otherwise run longer
+    // than the constant, and this tree finishes in milliseconds.
   }, 60_000);
 
   // THE BRANCH ITSELF, driven end to end — which the test above does NOT do. It observes the
@@ -809,12 +825,17 @@ describe('projectEmptyState stops rather than scanning forever', () => {
     fs.writeFileSync(path.join(root, 'aaa-marker.md'), 'playbook_stage: build\n');
     execFileSync('mkfifo', [path.join(root, 'zzz-blocker')]);
 
+    // ASKED FOR AN HOUR — the upper clamp is what stops it at ten seconds, and this scan
+    // would genuinely run forever otherwise, which is the only condition under which that
+    // clamp is observable. A caller cannot lengthen the bound that protects the machine.
     const startedAt = Date.now();
-    const state = await projectEmptyState({ id: 'blocked', root } as Project);
+    const state = await projectEmptyState({ id: 'blocked', root } as Project, { timeoutMs: 3_600_000 });
     const elapsed = Date.now() - startedAt;
 
     expect(state.readable).toBe(false);
-    expect(state.reason).toContain(`${PROJECT_PROBE_TIMEOUT_MS}ms`); // the bound, interpolated
+    expect(state.reason).toContain(`${PROJECT_PROBE_TIMEOUT_MS}ms`); // the constant, not the hour asked for
+    expect(state.reason).not.toContain('3600000ms');
+    expect(elapsed).toBeLessThan(PROJECT_PROBE_TIMEOUT_MS * 2); // it really did stop at the constant
     expect(state.reason).toContain('part of the tree was never searched');
     // NOT RECOVERED, and the code says so rather than a comment claiming otherwise. Measured
     // directly on a 219 MB tree with the marker first-visited: bun 0 bytes, node 0 bytes.
