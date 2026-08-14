@@ -629,16 +629,23 @@ describe('enumerating many projects leaves the event loop free', () => {
     const asyncStalls: number[] = [];
     const controlStalls: number[] = [];
     const floorStalls: number[] = [];
+    // PER ROUND, NOT LAST-ROUND SURVIVORS. These were three `let`s reassigned every iteration,
+    // so every duration printed below belonged to round 5 while the reported async stall is
+    // the max over all five — and the diagnostic then contradicted itself on precisely the
+    // regression it exists to report. Captured under the memoised mutation:
+    // `async worst 147.6ms (sweep 40.6ms, spread 139.6)` — a 147.6 ms stall inside a 40.6 ms
+    // sweep. Whoever reads that during a real regression disbelieves the number, and a
+    // diagnostic nobody believes is worse than no diagnostic.
+    const sweepMsBy: number[] = [];
+    const controlMsBy: number[] = [];
+    const floorMsBy: number[] = [];
     let reports: Awaited<ReturnType<typeof detectConflicts>>[] = [];
-    let sweepMs = 0;
-    let controlMs = 0;
-    let floorMs = 0;
     const ROUNDS = 5;
 
     for (let round = 0; round < ROUNDS; round++) {
       const t0 = performance.now();
       reports = await Promise.all(projects.map((p) => detectConflicts(p)));
-      sweepMs = performance.now() - t0;
+      sweepMsBy.push(performance.now() - t0);
       await settle();
       asyncStalls.push(worstGapSince());
 
@@ -646,7 +653,7 @@ describe('enumerating many projects leaves the event loop free', () => {
       for (const p of projects) {
         execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' });
       }
-      controlMs = performance.now() - c0;
+      controlMsBy.push(performance.now() - c0);
       await settle();
       controlStalls.push(worstGapSince());
 
@@ -663,7 +670,7 @@ describe('enumerating many projects leaves the event loop free', () => {
           )
         )
       );
-      floorMs = performance.now() - f0;
+      floorMsBy.push(performance.now() - f0);
       await settle();
       floorStalls.push(worstGapSince());
     }
@@ -686,12 +693,25 @@ describe('enumerating many projects leaves the event loop free', () => {
     const controlStallMs = median(controlStalls);
     const floorStallMs = median(floorStalls);
 
+    // WHICH ROUND EACH REPORTED STALL CAME FROM, so every duration printed beside a stall is
+    // that same round's duration and the line cannot contradict itself. `median` returns an
+    // element of the array rather than an interpolation, so both lookups find a real round.
+    const asyncRound = asyncStalls.indexOf(asyncStallMs);
+    const controlRound = controlStalls.indexOf(controlStallMs);
+    const floorRound = floorStalls.indexOf(floorStallMs);
+    // The gate's actual input, printed because it is the number that decides whether this
+    // measurement is trusted at all — and it is NOT the median floor shown beside it.
+    const floorWorstMs = Math.max(...floorStalls);
+
     // eslint-disable-next-line no-console
     console.log(
-      `  [async] ${PROJECTS} projects x${ROUNDS} — async worst ${asyncStallMs.toFixed(1)}ms (sweep ` +
-        `${sweepMs.toFixed(1)}ms, spread ${spread(asyncStalls).toFixed(1)}) · sync enumeration control ` +
-        `${controlStallMs.toFixed(1)}ms (${controlMs.toFixed(1)}ms, spread ${spread(controlStalls).toFixed(1)}) · ` +
-        `spawn floor ${floorStallMs.toFixed(1)}ms (${floorMs.toFixed(1)}ms, spread ${spread(floorStalls).toFixed(1)}) · ` +
+      `  [async] ${PROJECTS} projects x${ROUNDS} — async WORST ${asyncStallMs.toFixed(1)}ms ` +
+        `(round ${asyncRound + 1}, sweep ${sweepMsBy[asyncRound]!.toFixed(1)}ms, spread ` +
+        `${spread(asyncStalls).toFixed(1)}) · sync enumeration control MEDIAN ${controlStallMs.toFixed(1)}ms ` +
+        `(round ${controlRound + 1}, ${controlMsBy[controlRound]!.toFixed(1)}ms, spread ` +
+        `${spread(controlStalls).toFixed(1)}) · spawn floor MEDIAN ${floorStallMs.toFixed(1)}ms ` +
+        `(round ${floorRound + 1}, ${floorMsBy[floorRound]!.toFixed(1)}ms, spread ` +
+        `${spread(floorStalls).toFixed(1)}, worst ${floorWorstMs.toFixed(1)}ms — the gate reads this) · ` +
         `idle noise ${idleNoiseMs.toFixed(1)}ms · ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
     );
 
@@ -731,15 +751,37 @@ describe('enumerating many projects leaves the event loop free', () => {
     // That is a false-GREEN, and the flake this PR replaced was a false-RED. For a guarantee
     // the first is strictly worse, and it is not a trade I would have taken knowingly.
     //
-    // The resolution term is now the spread of the CONTROL and the FLOOR only. Both are this
-    // test's own loops; neither calls the collector; so nothing the subject does can move
-    // this threshold.
+    // THERE IS NO RESOLUTION TERM AT ALL. An earlier revision of this comment said it was
+    // "now the spread of the CONTROL and the FLOOR only", which was false as written and
+    // contradicted by the paragraph below it: the variance term was removed outright, not
+    // narrowed. Two claims about one gate, disagreeing silently, which is the failure this
+    // file keeps having.
     //
-    // AND THE GENERAL RULE, because no reducer or fixture fixes it: ANY STATISTIC COMPUTED
-    // FROM THE SUBJECT'S OWN TIMINGS IS UNDER THE SUBJECT'S INFLUENCE. Removing it from the
-    // gate closes the escape that exists; only an instrument with no variance term at all
-    // closes the class, which is #45 — intercept `child_process` and assert the specific
+    // AND "NOTHING THE SUBJECT DOES CAN MOVE THIS THRESHOLD" WAS FALSE TOO — SYNTACTICALLY
+    // TRUE, CAUSALLY REFUTED, and this is the honest statement of what the gate binds. No
+    // gate input reads a value `detectConflicts` returned; that was verified by trace. It
+    // leaks through the MACHINE instead. A review lens built a stale-while-revalidate lister
+    // — the async answer returned immediately, a synchronous `execFileSync` revalidation
+    // fired later on a timer — and measured:
+    //
+    //   revalidate at 100 ms    1 of 4 runs caught, 3 escaped
+    //   revalidate at 220 ms    4 of 4 `1 pass 0 fail`, FULLY INVISIBLE — and the leak RAISED
+    //                           the gate. Landing inside the control window, it pushed
+    //                           median(control) 129 -> 190 ms, so lineMs went 96 -> 143 ms.
+    //                           The code under test widened its own pass bound by ~48%.
+    //
+    // SO THE GENERAL RULE IS BIGGER THAN THE ONE THIS PR FIXED. Not merely "any statistic
+    // computed from the subject's own timings is under the subject's influence" — also ANY
+    // STATISTIC TAKEN FROM A WINDOW THE SUBJECT MAY STILL BE RUNNING IN. Removing the
+    // variance term closed the escape that existed. No reducer and no fixture closes the
+    // class, because the contamination is causal rather than arithmetic; only an instrument
+    // with no clock does, which is #45 — intercept `child_process` and assert the specific
     // `*Sync` exports were never called.
+    //
+    // WHAT THIS TEST BINDS, THEN: an implementation that BLOCKS. It does not bind one that
+    // LEAKS synchronous work into a neighbouring measurement window. That is a real limit of
+    // any timing instrument and it is stated here rather than in a PR body, because this is
+    // where the next person will look.
     //
     // THE THRESHOLD IS MEASURED, NOT PICKED, AND IT COMPARES LIKE WITH LIKE. The assertion
     // below is on the subject's WORST round, so the question the gate must answer is: how high
@@ -757,7 +799,7 @@ describe('enumerating many projects leaves the event loop free', () => {
     // it is the worst thing that happened; the median control is stable across those same
     // runs (363-399ms) precisely because a median is not.
     const lineMs = controlStallMs * 0.75;
-    const correctCodeCeilingMs = Math.max(...floorStalls);
+    const correctCodeCeilingMs = floorWorstMs; // the same number the diagnostic printed
     if (lineMs < correctCodeCeilingMs * 2) {
       notVerified(
         'enumeration event-loop binding',
