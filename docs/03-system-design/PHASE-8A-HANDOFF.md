@@ -116,6 +116,33 @@ Corollaries, each earned:
   fix would have been aimed at the wrong thing while the entry closed green. **When you write down why
   something failed, either reproduce it or mark the cause UNTESTED.** The cheap instrument is to try to make
   it fail on purpose; a failure you cannot reproduce under the condition you blamed is not explained.
+- **An instrument left running becomes part of the environment it was measuring — and a teardown that
+  prints its own success is not a teardown.** A load probe from #47 answered its question, then kept ~14
+  spinners alive for 47 minutes at load average 47, and became the confound for every timing taken on this
+  machine afterwards: a suite that runs in 77 s read 168 s and was published as VERIFIED in two documents,
+  and a 2.4 s cold call read 14.3 s and nearly became a finding that the corpus had grown into a budget with
+  an expiring claim attached. **Neither the author nor the CEO looked at the machine before trusting a
+  timing.** The teardown had printed `cleaned` unconditionally and never checked — this phase's own defect
+  class, committed inside the cleanup of an audit hunting that class. Two mechanical causes, both invisible
+  to reasoning and instant to `pgrep`: **each Bash call is a separate shell, so `jobs -p` cannot see jobs
+  started in an earlier call**, and **`pkill -f 'while true; do …'` never matches, because a subshell's
+  command line is not the string you typed.** So: `pgrep` after the kill and fail loudly if anything
+  survives, and **record the load average beside every timing you report.**
+  **Two instruments, and they do different jobs — take both.** *Prevention:* not a `pgrep` helper someone
+  must remember to call, which is a discipline with a nicer surface, but one that owns the whole lifetime —
+  `withLoad(n, fn)` starts the generators, runs `fn`, and in a `finally` kills them **and asserts none
+  survive**. Then there is no teardown to forget because there is none to write, and the check can fail at
+  the point of the offence rather than 45 minutes later inside someone else's measurement. Same move as
+  extracting `stallGateVerdict`: the branch could not be tested until it stopped being inline, and could not
+  be got wrong once it was a function with its own tests. *Detection:* print `uptime` either side of every
+  timing run. **The helper does not close the class** — today's leak came from ad-hoc shell during an audit,
+  where no helper is in scope, and that is the common case for exploratory work. The helper covers the
+  repeatable path; `uptime` catches contamination from any source, including the ones nobody instrumented.
+- **Say what you are NOT covering.** "No Category-1 duration assertions found in either file" was exactly
+  true of the two files audited and was read as a statement about the repo; the only such assertion lives in
+  the third file, which nobody had scoped in (#50). The scope was drawn from where failures had been *seen*
+  rather than from where the property lives. Grep the whole suite for the property first, then choose — and
+  name the exclusion in the verdict line. It costs one sentence.
 - **Forcing a value that is not an extreme of its domain is a clamp in BOTH directions.** Enumerate the
   domain before writing a single mutation: if the forced value is interior, the downward case is mandatory;
   if it is an endpoint, skip it *with a stated reason*. `core.quotePath` is boolean, forced to an endpoint,
