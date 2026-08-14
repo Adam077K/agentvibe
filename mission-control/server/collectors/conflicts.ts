@@ -73,18 +73,41 @@ export const STATUS_ARGV = ['--no-optional-locks', 'status', '--porcelain'] as c
  * grep cannot tell git's config override from a shell's, and the right response is not to teach
  * a security guard an exception so this file can use the prettier spelling.
  *
- * `GIT_CONFIG_COUNT` carries identical precedence — git documents it as the same as passing the
- * override on the command line — and trips no such pattern.
+ * `GIT_CONFIG_COUNT` TRIPS NO SUCH PATTERN, AND ITS PRECEDENCE IS NOT IDENTICAL. An earlier
+ * version of this comment said it was — git's own wording is "the same as using the override on
+ * the command line" — and that is true against every config a *user edits* and false against the
+ * one that arrives by INHERITANCE. Measured, on a repo whose local config turns quoting off:
  *
- * VERIFIED to beat both a repo-local `core.quotePath=false` and a hostile `GIT_CONFIG_GLOBAL`,
- * which is the whole point: what this collector reports must not depend on whose machine it
- * runs on.
+ *   COUNT pairs alone                        -> "\302\240nbsp-lead.ts"   override wins
+ *   COUNT pairs + GIT_CONFIG_PARAMETERS      ->  \302\240 raw            OVERRIDE LOSES
+ *   command-line form + PARAMETERS           -> "\302\240nbsp-lead.ts"   wins
+ *   PARAMETERS with ours APPENDED            -> "\302\240nbsp-lead.ts"   wins
+ *
+ * Git reads `GIT_CONFIG_PARAMETERS` AFTER the COUNT pairs, and it EXPORTS that variable into
+ * every child of a command-line override — and into aliases, hooks, `rebase -x`, `bisect run`
+ * and `submodule foreach`. Since the sweep spreads `...process.env`, Mission Control run from
+ * inside a hook would silently lose its own override. Not exotic; inherited.
+ *
+ * So the setting is APPENDED to whatever `GIT_CONFIG_PARAMETERS` already holds, which puts it
+ * last in the list git reads last. A FUNCTION rather than a constant because it has to read the
+ * ambient value at call time: a module-level object would freeze whatever was set at import,
+ * which is the same divergence in a slower form.
+ *
+ * VERIFIED to beat a repo-local `core.quotePath=false`, a hostile `GIT_CONFIG_GLOBAL`,
+ * `GIT_CONFIG_SYSTEM`, and an inherited hostile `GIT_CONFIG_PARAMETERS`.
  */
-export const STATUS_CONFIG_ENV = {
-  GIT_CONFIG_COUNT: '1',
-  GIT_CONFIG_KEY_0: 'core.quotePath',
-  GIT_CONFIG_VALUE_0: 'true',
-} as const;
+export function statusConfigEnv(ambient: NodeJS.ProcessEnv = process.env): Record<string, string> {
+  const ours = "'core.quotePath=true'";
+  const existing = ambient.GIT_CONFIG_PARAMETERS;
+  return {
+    // Kept as well as the append: these lose to PARAMETERS but beat everything else, so on a
+    // git too old to read PARAMETERS the override still binds. Belt AND braces, cheaply.
+    GIT_CONFIG_COUNT: '1',
+    GIT_CONFIG_KEY_0: 'core.quotePath',
+    GIT_CONFIG_VALUE_0: 'true',
+    GIT_CONFIG_PARAMETERS: existing ? `${existing} ${ours}` : ours,
+  };
+}
 
 export interface WorktreeChanges {
   path: string;
@@ -151,8 +174,9 @@ export interface ConflictReport {
  * `Array.from` splits on code points, so an astral character is ONE element and survives. Every
  * escape git emits is ASCII, so index arithmetic over that array is still exact.
  *
- * THE CALLER ALSO FORCES `-c core.quotePath=true`, and the redundancy is deliberate rather than
- * belt-and-braces theatre: the flag decides what the parser RECEIVES, this decides what the
+ * THE CALLER ALSO FORCES `core.quotePath=true` (see statusConfigEnv — through the environment,
+ * not the command line), and the redundancy is deliberate rather than
+ * belt-and-braces theatre: the forced config decides what the parser RECEIVES, this decides what the
  * parser DOES with what arrives. They fail for different reasons — the flag to a future edit of
  * the argv, this to a future edit of the loop — so neither one alone is the guarantee.
  *
@@ -216,7 +240,13 @@ function unquoteCStyle(token: string): string {
     }
     pushLiteral(next); // unknown escape: keep the character rather than invent or drop one
   }
-  return new TextDecoder('utf-8').decode(new Uint8Array(bytes));
+  // `ignoreBOM: true` IS NOT ABOUT IGNORING A BOM — the flag is named backwards. False, the
+  // default, makes the decoder STRIP a leading U+FEFF; true makes it keep it as a character.
+  // A filename may legitimately begin with U+FEFF, and stripping it renames the file:
+  // `"\357\273\277bom-lead.ts"` decoded to `bom-lead.ts`, which does not exist. Measured
+  // through changedFilesFor with the forced config active: 4 parsed, 2 MISSING. A BOM in the
+  // MIDDLE always survived, which is exactly what makes it easy to miss.
+  return new TextDecoder('utf-8', { ignoreBOM: true }).decode(new Uint8Array(bytes));
 }
 
 /**
@@ -270,7 +300,19 @@ export function parseStatusPorcelain(text: string): string[] {
   const files: string[] = [];
   for (const line of text.split('\n')) {
     if (!line) continue;
-    const rest = line.slice(2).trimStart(); // strip the 2-char XY status code and its separator
+    // FIXED WIDTH, NOT `trimStart()`. Porcelain v1 is `XY<space>PATH` — two status characters
+    // and exactly one separator — so the path starts at index 3 and the width is known. The
+    // previous `slice(2).trimStart()` ate the first character of any name beginning with
+    // Unicode whitespace, because JS `trimStart` strips the whole WhiteSpace class: U+00A0,
+    // U+2003, U+2028, U+3000, U+FEFF. Under `core.quotePath=false` git emits such names RAW and
+    // unquoted, so they arrive here intact and leave renamed. Measured on the raw form: 6
+    // parsed, 5 MISSING. Slicing a known width cannot do that.
+    //
+    // KNOWN AND NOT FIXED HERE: a name consisting ONLY of Unicode whitespace still reaches the
+    // `if (!file)` guard below and is silently dropped under the raw form. It is a real hole,
+    // it needs a way to distinguish "empty field" from "field of spaces", and it is smaller
+    // than the fix that hides it.
+    const rest = line.slice(3);
     if (!rest) continue;
     const first = readPathField(rest, 0);
     const file = rest.startsWith(' -> ', first.next) ? readPathField(rest, first.next + 4).path : first.path;
@@ -402,7 +444,7 @@ export async function changedFilesFor(
       // GIT_CONFIG_GLOBAL / GIT_CONFIG_SYSTEM stay visible so this overrides them rather than
       // pretending they are absent — which is the same answer either way, and one fewer thing
       // that behaves differently under a test harness than in production.
-      env: { ...process.env, ...STATUS_CONFIG_ENV },
+      env: { ...process.env, ...statusConfigEnv() },
     });
     return { changedFiles: parseStatusPorcelain(stdout) };
   } catch (e) {
@@ -437,6 +479,12 @@ export async function changedFilesFor(
       readable: false,
       reason:
         `git status --porcelain ${how} in ${worktreePath} (${stderrTail || err.message || 'no stderr'}) — ` +
+        // KNOWN AND NOT FIXED: this accounting is exact only for the ESCAPED stream, where
+        // `recovered + discarded === maxBuffer`. On a raw non-ASCII stream Node slices the
+        // DECODED string by a BYTE budget, so the recovered figure can exceed the budget —
+        // measured, 1125 against 1000. The number is still a true count of what was recovered;
+        // it is the relationship to `maxBuffer` that does not hold. Logged rather than fixed
+        // because the sweep forces the escaped form, so the live path is the exact one.
         `${recoveredBytes} bytes recovered as whole lines` +
         (discardedBytes > 0 ? `, ${discardedBytes} trailing bytes discarded as a partial path` : '') +
         // ONLY WHEN SOMETHING WAS ACTUALLY READ. On ENOENT or a not-a-repo path git writes no

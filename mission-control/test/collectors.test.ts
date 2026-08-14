@@ -18,7 +18,7 @@ import {
   wholeLinesOf,
   EXCLUDED_REASON,
   STATUS_ARGV,
-  STATUS_CONFIG_ENV,
+  statusConfigEnv,
 } from '../server/collectors/conflicts.ts';
 import { parseWarroomFleetOutput } from '../server/collectors/fleet.ts';
 import {
@@ -1162,6 +1162,31 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
     expect(parseStatusPorcelain('?? "a\\tb 🔥 caf\\303\\251.ts"\n')).toEqual(['a\tb 🔥 café.ts']);
   });
 
+  // A LEADING BOM IS PART OF THE NAME, and `TextDecoder`'s flag for it is named backwards:
+  // `ignoreBOM: false` — the DEFAULT — makes the decoder STRIP a leading U+FEFF, which renames
+  // the file. Measured through changedFilesFor with the forced config on: 4 parsed, 2 MISSING.
+  // A BOM in the MIDDLE always survived, which is what made this easy to miss.
+  test('a leading BOM is kept, not swallowed by the decoder', () => {
+    expect(parseStatusPorcelain('?? "\\357\\273\\277bom-lead.ts"\n')).toEqual(['﻿bom-lead.ts']);
+    expect(parseStatusPorcelain('?? "\\357\\273\\277 lead bom space.ts"\n')).toEqual(['﻿ lead bom space.ts']);
+    expect(parseStatusPorcelain('?? "mid\\357\\273\\277bom.ts"\n')).toEqual(['mid﻿bom.ts']); // never broken
+  });
+
+  // THE STATUS FIELD IS FIXED WIDTH, so the path is sliced at a known offset rather than
+  // trimmed. `slice(2).trimStart()` ate the first character of any name starting with Unicode
+  // whitespace — JS `trimStart` strips the entire WhiteSpace class — and under
+  // `core.quotePath=false` git emits such names RAW and unquoted. Measured on the raw form:
+  // 6 parsed, 5 MISSING.
+  test('a name beginning with Unicode whitespace keeps its first character', () => {
+    expect(parseStatusPorcelain('??  nbsp-lead.ts\n')).toEqual([' nbsp-lead.ts']);
+    expect(parseStatusPorcelain('?? 　ideographic.ts\n')).toEqual(['　ideographic.ts']);
+    expect(parseStatusPorcelain('??  emsp.ts\n')).toEqual([' emsp.ts']);
+    expect(parseStatusPorcelain('?? ﻿bom-raw.ts\n')).toEqual(['﻿bom-raw.ts']);
+    // …and ordinary names are unaffected, so the slice is not off by one.
+    expect(parseStatusPorcelain('?? plain.ts\n')).toEqual(['plain.ts']);
+    expect(parseStatusPorcelain(' M src/alpha.ts\n')).toEqual(['src/alpha.ts']);
+  });
+
   // GROUND TRUTH for renames, same capture. Note git's v1 text form is `orig -> new` while
   // `-z` emits the pair in the OPPOSITE order; the new path is the one on disk.
   test('a rename yields the new path, with either side quoted or bare', () => {
@@ -1205,58 +1230,64 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
     'newline\ninside.ts', // the name that makes wholeLinesOf sound: git C-quotes it
   ];
 
-  // THE ARGV IS PINNED AGAINST THE COLLECTOR'S OWN, not retyped. A test that spells out its
-  // own git flags is testing a different command from the one that ships — and the flag this
-  // asserts, `-c core.quotePath=true`, is exactly the one whose absence caused the defect.
-  test('the sweep forces core.quotePath so a user config cannot change what is reported', () => {
-    expect(STATUS_CONFIG_ENV).toEqual({
-      GIT_CONFIG_COUNT: '1',
-      GIT_CONFIG_KEY_0: 'core.quotePath',
-      GIT_CONFIG_VALUE_0: 'true',
-    });
-
-    // ASSERTED BY ITS EFFECT, not only by its presence in the object — and against a repo that
-    // has explicitly turned quoting OFF, which is the case that matters. This fails if the
-    // override stops working, not merely if someone edits the literal above.
+  test('the forced config beats every channel that can set it, including an inherited one', () => {
     const root = mkTmpDir('mc-quote-flag-');
     cleanupDirs.push(root);
     initGitRepo(root);
     execFileSync('git', ['config', 'core.quotePath', 'false'], { cwd: root });
     fs.writeFileSync(path.join(root, 'fire 🔥 space.ts'), 'x\n');
+    const escaped = '\\360\\237\\224\\245';
+    const run = (env: NodeJS.ProcessEnv) => execFileSync('git', [...STATUS_ARGV], { cwd: root, encoding: 'utf8', env });
 
-    const forced = execFileSync('git', [...STATUS_ARGV], {
-      cwd: root,
-      encoding: 'utf8',
-      env: { ...process.env, ...STATUS_CONFIG_ENV },
-    });
-    const bare = execFileSync('git', [...STATUS_ARGV], { cwd: root, encoding: 'utf8' });
-    expect(forced).toContain('\\360\\237\\224\\245'); // the override won over the repo's config
-    expect(bare).not.toContain('\\360\\237\\224\\245'); // …and without it the repo's config wins
+    // The repo's own config is beaten…
+    expect(run({ ...process.env, ...statusConfigEnv() })).toContain(escaped);
+    // …and so is a hostile GIT_CONFIG_PARAMETERS, WHICH THE FIRST VERSION OF THIS DID NOT DO.
+    // `GIT_CONFIG_COUNT` alone loses to it: git reads PARAMETERS afterwards, and EXPORTS that
+    // variable into every child of a command-line override, into aliases, hooks, `rebase -x`,
+    // `bisect run` and `submodule foreach`. Since the sweep spreads `...process.env`, Mission
+    // Control run from inside a hook silently lost its own override. Measured, and the reason
+    // "identical precedence to the command line" was false as written: true against every
+    // config a user EDITS, false against the one that arrives by INHERITANCE.
+    const hostile = { ...process.env, GIT_CONFIG_PARAMETERS: "'core.quotePath=false'" };
+    expect(run({ ...hostile, ...statusConfigEnv(hostile) })).toContain(escaped);
+    // NON-VACUITY: that ambient really does defeat the COUNT pairs on their own, so the line
+    // above is testing the append rather than a hostile value that never had any effect.
+    expect(run({ ...hostile, GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'core.quotePath', GIT_CONFIG_VALUE_0: 'true' })).not.toContain(escaped);
+    // …and with no override at all the repo's config wins, so the fixture is genuinely hostile.
+    expect(run({ ...process.env })).not.toContain(escaped);
+
+    // The ambient value is APPENDED, never replaced — dropping someone else's git config on the
+    // floor would be its own silent behaviour change.
+    expect(statusConfigEnv(hostile).GIT_CONFIG_PARAMETERS).toBe("'core.quotePath=false' 'core.quotePath=true'");
+    expect(statusConfigEnv({}).GIT_CONFIG_PARAMETERS).toBe("'core.quotePath=true'");
   });
 
-  // AND THAT THE SWEEP ACTUALLY PASSES IT, which the test above does NOT establish — it builds
-  // its own spawn and would keep passing with the collector no longer using the constant at
-  // all. Measured: deleting the `env:` line from changedFilesFor left the whole suite green,
-  // 84 pass 0 fail, under both a clean and a hostile git config. That is the same vacuity this
-  // PR already fixed once at the consumer barrier, reappearing in the test written for the fix.
+  // THAT THE SWEEP ACTUALLY PASSES IT — BEHAVIOURALLY, which I previously said was impossible.
   //
-  // WHY THIS IS A SOURCE-TEXT PIN AND NOT A BEHAVIOURAL ONE, stated plainly because the
-  // weakness is real: with the parser correct, the override is not observable in what
-  // changedFilesFor RETURNS. Both input formats decode to the same path — that is precisely
-  // what makes the parser a second barrier rather than a duplicate of the first. So the only
-  // honest assertion left is that the collector passes the config, and the only place to make
-  // it is the source. It moves if someone restructures the call; the astral tests above are
-  // what still catch the fabrication if they do.
-  test('changedFilesFor passes the forced config to git, not just declares it', () => {
-    const source = fs.readFileSync(
-      path.join(import.meta.dir, '..', 'server', 'collectors', 'conflicts.ts'),
-      'utf8'
-    );
-    const code = source
-      .split('\n')
-      .map((line) => line.replace(/\/\/.*$/, ''))
-      .join('\n');
-    expect(code).toMatch(/env:\s*\{\s*\.\.\.process\.env,\s*\.\.\.STATUS_CONFIG_ENV\s*\}/);
+  // I was wrong in a specific way worth writing down: I reasoned that the override is invisible
+  // because both input formats decode to the same PATH SET, and that is true. It is not true of
+  // the RETURN. The octal form is roughly four times the bytes of the raw form, so against a
+  // small `maxBuffer` the two recover DIFFERENT NUMBERS OF RECORDS and differ in `readable`.
+  // The path set is identical; how much of it survives a fixed budget is not.
+  //
+  // So this needs no source grep and no env manipulation, and it kills the mutation that
+  // deleting the `env:` line from changedFilesFor used to survive — which left the whole suite
+  // green at 84 pass 0 fail, the same vacuity this PR already fixed once at the consumer
+  // barrier, reappearing inside the test written for that fix.
+  test('changedFilesFor passes the forced config to git, not just declares it', async () => {
+    const root = mkTmpDir('mc-quote-passed-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    execFileSync('git', ['config', 'core.quotePath', 'false'], { cwd: root });
+    for (let i = 0; i < 60; i++) fs.writeFileSync(path.join(root, `café-${String(i).padStart(2, '0')}-ünïcödé.ts`), 'x\n');
+
+    // A budget that the ESCAPED stream overruns and the RAW stream does not.
+    const cut = await changedFilesFor(root, { maxBuffer: 2000 });
+    expect(cut.readable).toBe(false); // …which only happens if git was asked to escape
+    expect(cut.changedFiles.length).toBeGreaterThan(0);
+    expect(cut.changedFiles.length).toBeLessThan(60);
+    // Whatever survived is still real — the truncation must not have invented anything.
+    expect(cut.changedFiles.filter((f) => !fs.existsSync(path.join(root, f)))).toEqual([]);
   });
 
   // THE LIVE END, against real git rather than pinned bytes: every path git reports must be a
@@ -1277,7 +1308,7 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
     const raw = execFileSync('git', [...STATUS_ARGV], {
       cwd: root,
       encoding: 'utf8',
-      env: { ...process.env, ...STATUS_CONFIG_ENV },
+      env: { ...process.env, ...statusConfigEnv() },
     });
     // THE PREMISE: git really did quote these, so the decoder is being exercised. Without
     // this the test would still pass against a git that quoted nothing.
@@ -1457,6 +1488,14 @@ describe('a truncated git status never invents a filename', () => {
     // EVERY NAME GIT QUOTES, in both worktrees. All sort before the `zzz_` bulk below, so they
     // survive the cut and the exists-on-disk barrier is actually applied to quoted paths —
     // the old fixture was pure ASCII, which is why F2 sailed through it.
+    //
+    // AND THE PRECONDITION, because the mutation table in the PR body omitted it and read as
+    // though this fires unconditionally: reverting BOTH quoting halves only renders a bad path
+    // on a machine that already has `core.quotePath=false` somewhere ambient. In a clean
+    // environment git's default quoting saves it and nothing bad renders. The property is still
+    // true — no SINGLE mutation lets a fabricated path through — but this barrier is only
+    // reachable on a machine configured the way the bug requires, which is a weaker statement
+    // than the table made and is the honest one.
     //
     // AND THE FIXTURE IS WHY THE BARRIER STAYED GREEN THROUGH THE SURROGATE DEFECT TOO: a
     // space-and-astral name is the combination that reaches the decoder with a raw astral
