@@ -1,0 +1,13 @@
+---
+date: 2026-08-14
+role: ceo
+task: phase-8a-close
+tier: lite
+qa_verdict: PASS
+---
+
+Phase 8a closed: all 5 PRs merged, `main` = `30f6c35`, **193 tests / 1,213 assertions VERIFIED by running them** rather than quoted from a report — three figures I reported this phase were wrong for exactly that reason. Status doc and handoff updated to the complete phase; the handoff now leads with the security findings and says plainly not to run the server against a tree containing repositories you did not write.
+**The handoff's §0 changed from a count to a taxonomy**, because PR4 and PR5 added sixteen more instances and the count stopped being the useful part. What the last two PRs established is which shapes recur: **the dominant one is a rendered fact pinned while the thing computing it runs free** — three separate occurrences, each with five or more assertions on the consumer while inverting one line in the producer left the suite green, and one of those inversions restored a reviewed-and-fixed defect verbatim. The fix never needed a DOM: extract the decision into a pure function, assert producer and consumer in one place. Recorded with the builder's own tell, which is cheaper than any review — *"I wrote the producer and the consumer in the same PR, and only one of them appeared in a test file."*
+Also recorded: **coverage is the cheapest instrument and it disagrees with careful prose** (a residue described in good faith as "one line" measured 91; a 99.08% figure counts unexecuted callback bodies because line coverage marks the hook call); **three defects were in guards rather than code**, including a guard importing its threshold from the module it guards; **never gate on the environment unless the test needs the environment**, with the rule that if a test renders markup every input must be one it names; **a ratio against a run's own total cannot catch work that inflates its own denominator**, so read the quantity as a gate rather than a divisor because only the gate fails safe; and **the signal for "this is partial" is the rejection, never the buffer**.
+`c-runtime-nested-spawn` marked resolved-by-measurement rather than by date, with the consequence stated: the CEO operating instructions assert the opposite, and that line is why chiefs return dispatch packets, so **the T2 tier rests on a false premise** — flagged, not changed. Four items on `main` need work and are tabulated with the reason each matters: #36 (three RCEs, Founder decision), #43 (a pin flaking at 0.5%, and a flaky pin is worse than a missing one), #41 (a fabricated filename reaching a rendered conflict), #42/#44/#34/#35.
+Docs-only; no code touched. Author-declared verdict, no reviewer — #24, and the discretion it names.

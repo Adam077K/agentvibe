@@ -1,7 +1,13 @@
-# Handoff — Phase 8a, after PR3
+# Handoff — Phase 8a, complete
 
 **For:** whoever picks this up next.
-**State:** PR1–PR3 of 5 merged. `main` = `0a23471`. `npm run check` exits 0 after `bun install` in `mission-control/`.
+**State: all 5 PRs merged; `main` has since moved to `01fcadd`** (#29, #34, #36 landed after phase close).
+**205 tests, 0 fail** (VERIFIED on `01fcadd`, 82.4 s — 193 at close). Do not quote an assertion total:
+identical runs differ (386 vs 360 on one file), because the live fleet tests loop over what is on disk.
+`npm run check` exits 0 after `bun install` in `mission-control/`. All six views work end to end.
+**Read [SECURITY-FINDINGS-2026-08-14.md](SECURITY-FINDINGS-2026-08-14.md) before running the server** —
+three confirmed RCEs are open on `main`, and until they are closed, do not point Mission Control at a tree
+containing repositories you did not write.
 **Read first:** [PHASE-8A-STATUS.md](PHASE-8A-STATUS.md) · [AGENT-SYSTEM-REBUILD.md](AGENT-SYSTEM-REBUILD.md) · [CLAIM-LEDGER.md](CLAIM-LEDGER.md)
 
 ---
@@ -34,6 +40,65 @@ and running against an empty corpus — it still failed.
 **So: when you add a guard, add the barrier that catches the guard being wrong.** Two cheap independent checks
 beat one careful one. This is the single most transferable thing this phase produced.
 
+**PR4 and PR5 added sixteen more instances, and the count is no longer the point.** What the last two PRs
+established is *which* shapes recur and what actually catches them. Read this before writing a test:
+
+- **The dominant shape is: a rendered fact is pinned while the thing computing it runs free.** It appeared
+  three separate times — the async sweep, the 10 s bound, the freshness stamp — and each time the consumer
+  had five or more assertions on it while inverting one line in the producer left the whole suite green.
+  Once, that inversion restored a defect we had already fixed and reviewed, verbatim. **The fix never needed
+  a DOM or new tooling: extract the decision into a pure function and assert producer and consumer in one
+  place.** The builder's own tell, which is cheaper than any review: *"I wrote the producer and the consumer
+  in the same PR, and only one of them appeared in a test file."*
+- **Coverage is the cheapest instrument that exists, and it disagrees with careful prose.** A residue
+  described in good faith as "one line of JSX" measured **91 lines** — the entire component. A 99.08% figure
+  counted three unexecuted callback bodies as covered, because line coverage marks the **hook call**, not the
+  body. Run it on the branch you are most confident about, not the one you doubt.
+- **Three defects were in guards rather than in code.** A guard that imported its threshold from the module
+  it guards (raising the cap 2→64 kept the suite green while 20 processes ran). A sampler that never
+  overlapped its subject, because the thing it measured needed the same JS thread it was sleeping on. And a
+  non-vacuity guard aimed at the premise that did not need it, leaving the one that did reduce to `2 === 2`.
+- **Never gate a test on the environment unless it genuinely needs the environment.** Two tests correctly
+  print `NOT VERIFIED — nothing was compared` because they need a real fleet and a real corpus. A third
+  consulted the machine while only rendering markup — that one was never testing what it claimed on *either*
+  machine, and passing locally was the accident. **If a test renders components and reads markup, every input
+  it uses must be one it names.**
+- **A threshold anyone can tune is a threshold that gets tuned until it is quiet.** Prefer a comparison
+  against a control measured in the same run on the same machine — and note that a **ratio against the run's
+  own total cannot catch work that inflates its own denominator**. Where a ratio is the wrong instrument,
+  read the quantity as a *gate* rather than a *divisor*; only the gate fails safe.
+- **Run the mutation on the test you just wrote — especially when you are confident.** This is the
+  mechanical form of everything above, and it is not a matter of instinct. Twice in this phase a builder
+  found a vacuous barrier in its own brand-new test, and both times it was because the brief demanded a
+  mutation *per barrier* and one came back `0 fail` — not because anyone suspected it. Confidence is
+  precisely the state in which an unfiring check survives review, since nobody re-reads what they just
+  reasoned carefully about. The rule is cheap and it does not depend on being clever that day.
+- **An environment override you set can be beaten by one the parent exported.** Forcing
+  `core.quotePath=true` through `GIT_CONFIG_COUNT`/`KEY_0`/`VALUE_0` was verified to beat repo-local,
+  `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` — and to **lose** to `GIT_CONFIG_PARAMETERS`, which git reads
+  afterwards **and exports into every child** of `git -c …`, aliases, hooks, `rebase -x`, `bisect run` and
+  `submodule foreach`. Anything spreading `...process.env` inherits it. So "equivalent to the command line"
+  was true against the three configs anyone thinks to test and false against the one that arrives by
+  inheritance. When you force a setting, enumerate every channel that can set it *later*, not just the ones
+  a user edits.
+- **A prior PASS covers a later commit only when the mechanism is unchanged — "it's test-only" is not the
+  test.** Two PRs in this phase merged on an earlier verdict, and the justification was narrow both times:
+  the delta was additive tests each proven by its own mutation, *plus* one substitution already shown
+  bit-identical across 20,163 differential cases. That holds because the mechanism was provably the same,
+  **not because tests are harmless**. The counter-example is in this very phase: making an unfired branch
+  testable *required* extracting the arithmetic into a pure function — a mechanism change wearing the
+  costume of a test addition. When a new test needs the code touched to become testable, the verdict is
+  stale even though the diff looks like more of the same. This is the enforceable half of #24: nothing in
+  the gate notices that a PR number's earlier PASS was passed on different code.
+- **A comment arguing why code is correct is a claim with no mechanism.** One PR argued at length — in the
+  source and in its report — that `!(a < b)` was chosen over `>=` *because they differ on NaN*, then pinned
+  it with nothing: flipping the operator left the suite green. **The argument was standing in for the
+  evidence.** If a comment explains why a choice matters, the test that makes it matter belongs beside it,
+  or the next refactor discards both silently.
+- **The signal for "this is partial" is the rejection, never the buffer.** A truncated read that happens to
+  end on a record boundary is byte-identical to a complete one. Inspecting output to decide whether an
+  operation succeeded is the same error as every entry in the table above; the operation already told you.
+
 Corollaries, each earned:
 - **A guard's name gets written aspirationally and its body literally.** Name it from the body.
 - **A claim's numerator and denominator must be drawn from the same population.** The drift headline counted
@@ -42,6 +107,42 @@ Corollaries, each earned:
   writes matches to stdout*; the catch read only `status`. `check-cold-start.ts` gets this right — exit 2 is
   UNCHECKED, never a vacuous pass.
 - **An assertion inside a branch that never runs reads as coverage.** Add a counter that fails at zero.
+- **A cause you attributed but never tried to reproduce is a claim with no mechanism** — and it is the same
+  defect class as everything above, aimed at a diagnosis instead of a value. #47 sat in the status doc for a
+  day asserting three tests "failed under ~200% CPU load." Nobody had induced load and watched. When someone
+  did, **81 of 81 passed at load average 42** and the historical failures were 43×–190× beyond anything CPU
+  or fork contention could produce. The entry named a cause, a reader would have fixed *that* cause, and the
+  fix would have been aimed at the wrong thing while the entry closed green. **When you write down why
+  something failed, either reproduce it or mark the cause UNTESTED.** The cheap instrument is to try to make
+  it fail on purpose; a failure you cannot reproduce under the condition you blamed is not explained.
+- **Before reporting that a number moved, check that it holds still.** Assertion counts across this suite's
+  three hostile-config runs read 396 / 360 / 390, which looks exactly like "the hostile config is covering
+  less" — the phase's own defect class, a green run that measured less. It is not. Two *identical* clean runs
+  give 386 and 360, because the live fleet tests loop over whatever projects are on disk. **A difference is
+  only evidence once you have measured the noise floor**, and the control run costs one command. The
+  corollary: `expect()` totals are not a coverage metric here, and this handoff quoted one as a headline
+  figure twice before checking.
+- **A computed margin is not an exposure.** A bucket boundary is only a risk once you have shown the two
+  sides come from *different reads*; otherwise it is arithmetic about a comparison that never happens. F3
+  was reported as a 55 s margin derived from a formatter's bucket width, before anyone checked whether any
+  test reads the clock twice. None does — the sites asserting a relative string pass one captured `now` to
+  both the expectation and the component, so skew cancels exactly. Under a clock jumping 60 s on *every*
+  read, 71 of 71 passed.
+- **Check the experiment before believing it, especially when it confirms you.** That F3 probe would have
+  produced an identical clean result if the preload had silently failed to load. It was validated first:
+  an assertion that two consecutive reads differ by ≥60 s passes with the preload and fails without it. **A
+  negative result from an instrument you have not shown to be live is not a negative result.**
+- **When a runner kills a child, the child's error arrives first and looks like the cause. Check for a
+  signal before believing a stack.** The #47 failures were read as a broken git fixture because the log
+  ended in a multi-line stack at `initGitRepo`. It carried `signal: "SIGTERM", status: null` — git was
+  *killed*, not failing — and bun had already printed `^ this test timed out after 5000ms`. One of the two
+  failures printed no git stack at all. The diagnosis was in bytes we already had; a stack is visually
+  louder than the one line that says what happened, and we read the loud one. **`status: null` with a
+  signal set means someone else ended it — that is teardown, not a defect.**
+- **A test with no explicit timeout still has one, and it is an unwritten duration assertion.** 71 tests on
+  bun's implicit 5 s default, 25 of them forking 12–18 git processes: the budget is real, nobody chose it,
+  and when it blows it surfaces *inside the fixture* as a git throw — indistinguishable from a broken
+  fixture. Hoist the fixture out of the timed region. Raising the timeout only moves the line.
 
 ---
 
