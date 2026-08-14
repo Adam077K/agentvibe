@@ -577,55 +577,76 @@ describe('enumerating many projects leaves the event loop free', () => {
     await new Promise((resolve) => setTimeout(resolve, 30));
     const idleNoiseMs = worstGapSince();
 
-    // THE MEASUREMENT — every project swept the way the route does it: concurrently.
-    const t0 = performance.now();
-    const reports = await Promise.all(projects.map((p) => detectConflicts(p)));
-    const sweepMs = performance.now() - t0;
-    await settle();
-    const asyncStallMs = worstGapSince();
+    // THREE QUANTITIES, MEASURED REPEATEDLY AND INTERLEAVED.
+    //
+    //   async   — the sweep, the way the route does it: concurrently
+    //   control — the ENUMERATION PHASE ONLY, sequential and synchronous: exactly what
+    //             reverting listWorktreesAsync produces, and nothing else
+    //   floor   — THE CONFOUND THIS TEST WAS NOT MEASURING, and the reason it flaked. Both
+    //             paths pay the same synchronous cost of ASKING for twelve children; the
+    //             parent's side of a spawn is synchronous wherever it happens. The control's
+    //             stall is that floor PLUS the blocking wait, the async path's is the floor
+    //             and nothing else — so as git's real work shrinks the floor becomes most of
+    //             both terms and the ratio walks toward 1 with nothing wrong. It is the SAME
+    //             twelve commands in the same directories, asked for concurrently instead of
+    //             blocked on; not `git --version`, which skips repo discovery and would
+    //             under-state it.
+    //
+    // REPEATED, because the flake was variance and one sample cannot see its own. Measured on
+    // CI across five runs: 0.613 · 0.622 · 0.655 · 0.746 · 0.835, the last red, against a
+    // 0.750 bound — a spread of 0.22 on a quantity being compared to a fixed line.
+    //
+    // INTERLEAVED, so a machine that slows down halfway through moves all three together
+    // rather than making one of them look bad. Medians rather than means: one descheduled
+    // iteration should not move the answer, and on this measurement it otherwise would.
+    const asyncStalls: number[] = [];
+    const controlStalls: number[] = [];
+    const floorStalls: number[] = [];
+    let reports: Awaited<ReturnType<typeof detectConflicts>>[] = [];
+    let sweepMs = 0;
+    let controlMs = 0;
+    let floorMs = 0;
+    const ROUNDS = 5;
 
-    // THE CONTROL — the ENUMERATION PHASE ONLY, sequential and synchronous: exactly what
-    // reverting listWorktreesAsync produces, and nothing else.
-    const c0 = performance.now();
-    for (const p of projects) {
-      execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' });
+    for (let round = 0; round < ROUNDS; round++) {
+      const t0 = performance.now();
+      reports = await Promise.all(projects.map((p) => detectConflicts(p)));
+      sweepMs = performance.now() - t0;
+      await settle();
+      asyncStalls.push(worstGapSince());
+
+      const c0 = performance.now();
+      for (const p of projects) {
+        execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' });
+      }
+      controlMs = performance.now() - c0;
+      await settle();
+      controlStalls.push(worstGapSince());
+
+      const f0 = performance.now();
+      await Promise.all(
+        projects.map((p) =>
+          execFileAsync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' })
+        )
+      );
+      floorMs = performance.now() - f0;
+      await settle();
+      floorStalls.push(worstGapSince());
     }
-    const controlMs = performance.now() - c0;
-    await settle();
-    const controlStallMs = worstGapSince();
-
-    // THE SPAWN FLOOR — the confound this test was not measuring, and the reason it flaked.
-    //
-    // Both paths pay the same synchronous cost of ASKING for twelve children: the parent's
-    // side of twelve spawns is synchronous wherever it happens. The control's stall is that
-    // floor PLUS the blocking wait; the async path's is the floor and nothing else. So as
-    // git's real work shrinks — a fast runner with everything in page cache — the floor
-    // becomes most of both terms and the ratio walks toward 1 with nothing wrong.
-    //
-    // Measured on CI across five runs: 0.613 · 0.622 · 0.655 · 0.746 · 0.835, the last one
-    // failing, against a 0.750 bound. The existing gate compares against IDLE noise, which
-    // was 0.4 ms — it watches a confound that is not the one operating.
-    //
-    // The floor is the SAME twelve commands, in the same directories, asked for concurrently
-    // instead of blocked on. Not `git --version`: that skips repo discovery and would
-    // under-state the floor, which errs toward asserting when the measurement cannot carry it.
-    const f0 = performance.now();
-    await Promise.all(
-      projects.map((p) =>
-        execFileAsync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' })
-      )
-    );
-    const floorMs = performance.now() - f0;
-    await settle();
-    const floorStallMs = worstGapSince();
     sampling = false;
+
+    const median = (xs: number[]) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)]!;
+    const spread = (xs: number[]) => Math.max(...xs) - Math.min(...xs);
+    const asyncStallMs = median(asyncStalls);
+    const controlStallMs = median(controlStalls);
+    const floorStallMs = median(floorStalls);
 
     // eslint-disable-next-line no-console
     console.log(
-      `  [async] ${PROJECTS} projects — async ${asyncStallMs.toFixed(1)}ms (sweep ${sweepMs.toFixed(1)}ms) · ` +
-        `sync enumeration control ${controlStallMs.toFixed(1)}ms (${controlMs.toFixed(1)}ms) · ` +
-        `spawn floor ${floorStallMs.toFixed(1)}ms (${floorMs.toFixed(1)}ms) · idle noise ${idleNoiseMs.toFixed(1)}ms · ` +
-        `ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
+      `  [async] ${PROJECTS} projects x${ROUNDS} — async ${asyncStallMs.toFixed(1)}ms (sweep ${sweepMs.toFixed(1)}ms, ` +
+        `spread ${spread(asyncStalls).toFixed(1)}) · sync enumeration control ${controlStallMs.toFixed(1)}ms ` +
+        `(${controlMs.toFixed(1)}ms) · spawn floor ${floorStallMs.toFixed(1)}ms (${floorMs.toFixed(1)}ms) · ` +
+        `idle noise ${idleNoiseMs.toFixed(1)}ms · ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
     );
 
     expect(reports).toHaveLength(PROJECTS); // every project really was swept
@@ -652,12 +673,22 @@ describe('enumerating many projects leaves the event loop free', () => {
     // synchronous loop and the floor is this test's own asynchronous one. Neither touches the
     // collector, so the code under test cannot make this gate fire and hide itself. That is
     // the property that makes a gate honest rather than an escape hatch.
-    if (controlStallMs < floorStallMs * 2) {
+    //
+    // THE THRESHOLD IS MEASURED, NOT PICKED. What correct code needs is room between the
+    // floor it cannot go below and the line it must stay under: `0.75 * control - floor`. What
+    // the machine can resolve is the spread across rounds. Requiring the first to be at least
+    // twice the second says, in the machine's own numbers, that a pass is a pass rather than a
+    // coin landing well — and it is why an arbitrary "control must exceed twice the floor"
+    // was the wrong shape: it asks about the fixture when the question is about the ruler.
+    const headroomMs = controlStallMs * 0.75 - floorStallMs;
+    const resolutionMs = Math.max(spread(asyncStalls), spread(controlStalls));
+    if (headroomMs < resolutionMs * 2) {
       notVerified(
         'enumeration event-loop binding',
-        `the synchronous control stalled ${controlStallMs.toFixed(1)}ms against a ${floorStallMs.toFixed(1)}ms floor ` +
-          `for asking for the same ${PROJECTS} children — the blocking wait is ${(controlStallMs - floorStallMs).toFixed(1)}ms ` +
-          'of that, too little above the cost both paths share for a ratio between them to mean anything on this machine'
+        `correct code has ${headroomMs.toFixed(1)}ms of room here — a ${controlStallMs.toFixed(1)}ms control against ` +
+          `a ${floorStallMs.toFixed(1)}ms floor for asking for the same ${PROJECTS} children — while this machine ` +
+          `resolves the measurement to ${resolutionMs.toFixed(1)}ms across ${ROUNDS} rounds. A ratio between them ` +
+          'would be reporting the noise'
       );
       return;
     }
