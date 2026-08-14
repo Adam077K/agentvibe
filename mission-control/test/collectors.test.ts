@@ -536,24 +536,33 @@ describe('the conflicts sweep leaves the event loop free', () => {
 // structural pin above catches only the call-site revert in one file.
 describe('enumerating many projects leaves the event loop free', () => {
   /**
-   * THE RATIO IS SCALE-INVARIANT; ITS DISCRIMINATING POWER IS NOT. That distinction is what
-   * twelve missed, and it is why this number moved rather than the bound.
+   * TWELVE — AND BOTH LEVERS FOR MAKING THE RUNNER ABLE TO RESOLVE THIS WERE TRIED THERE AND
+   * MEASURED TO FAIL. Written down so the next reader does not spend the afternoon I did.
    *
-   * Both terms scale linearly with the project count, so `async / control` does not move with
-   * N — which is what makes the 0.75 line valid on any machine. But the room correct code has
-   * is `0.75 * control - floor`, and per child that is a fixed positive quantity, so the room
-   * grows LINEARLY with N while the machine's resolution does not. On the runner, per child:
-   * control 1.63 ms, floor 0.87 ms, room 0.35 ms. Twelve children give 4.3 ms of room against
-   * a 3.3 ms resolution — a coin flip, which is exactly what five CI runs looked like. Forty
-   * eight give 17.2 ms against the same resolution.
+   * 1. MORE WORK PER SPAWN. Unavailable: `git worktree list --porcelain` is irreducibly
+   *    spawn-dominated. Measured — 1 / 8 / 24 worktrees in a repo cost 31.8 / 33.7 / 38.2 ms
+   *    per call, so twenty-four times the subject buys twenty percent more time. No fixture
+   *    SHAPE makes this command's work outweigh its own startup.
    *
-   * The other lever does not exist here, and I measured it rather than assuming: `git worktree
-   * list --porcelain` is irreducibly spawn-dominated, so 1 / 8 / 24 worktrees in a repo cost
-   * 31.8 / 33.7 / 38.2 ms per call. Twenty-four times the subject buys twenty percent more
-   * time. Nothing about the fixture's SHAPE can make this command's work outweigh its spawn;
-   * only its COUNT can.
+   * 2. MORE CHILDREN. The argument was that `async / control` is scale-invariant — true, and
+   *    what makes 0.75 valid anywhere — while the room correct code has, `0.75 * control -
+   *    floor`, is a fixed positive quantity per child and so grows linearly with N, against a
+   *    resolution that stays put. The first half is right. The second is not:
+   *
+   *      N=12   control 19.6ms  floor 10.4ms  room 4.3ms  resolution 3.3ms
+   *      N=48   control 73.3ms  floor 46.3ms  room 8.7ms  resolution 9.7ms
+   *
+   *    Room doubled and NOISE TRIPLED. Worse, the ratio at N=48 measured 0.784 on correct
+   *    code — above the 0.750 line, the exact red this change exists to remove, arriving from
+   *    the direction I had just argued would fix it. It also cost fifteen seconds of local
+   *    suite time to buy that.
+   *
+   * So the pin enforces where the difference can be resolved — a developer machine, ratio
+   * 0.141 against a mutated 1.136 — and says so honestly where it cannot. The bound is
+   * untouched at 0.75. This is not a loosened threshold; it is a refusal to report a coin
+   * toss as a verdict.
    */
-  const PROJECTS = 48;
+  const PROJECTS = 12;
   const parent = mkTmpDir('mc-enum-scale-');
   cleanupDirs.push(parent);
   const claudeRoot = mkTmpDir('mc-enum-scale-claude-');
@@ -624,7 +633,7 @@ describe('enumerating many projects leaves the event loop free', () => {
     let sweepMs = 0;
     let controlMs = 0;
     let floorMs = 0;
-    const ROUNDS = 3;
+    const ROUNDS = 5;
 
     for (let round = 0; round < ROUNDS; round++) {
       const t0 = performance.now();
