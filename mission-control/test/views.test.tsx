@@ -37,7 +37,7 @@ import { ConflictsTable, ConflictsView, totalsFor } from '../client/src/views/Co
 import { ProjectEvents, ProjectHeadline, ProjectStageProbe, ProjectView } from '../client/src/views/ProjectView.tsx';
 import { InboxHeadline, InboxTable, InboxView, inboxTotals } from '../client/src/views/InboxView.tsx';
 import { HeadlineBar } from '../client/src/ui.tsx';
-import { VIEWS, FetchedBadge, badgeFor, type Freshness, type ViewDef } from '../client/src/App.tsx';
+import App, { VIEWS, AppBar, StreamNotices, FetchedBadge, badgeFor, type Freshness, type ViewDef } from '../client/src/App.tsx';
 import type { StreamState } from '../client/src/api.ts';
 import type { ProjectDetail, InboxPayload, InboxProject } from '../server/routes/api.ts';
 import { inboxEmptyState } from '../server/collectors/empty.ts';
@@ -47,7 +47,16 @@ import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo, writeRegistry, 
 import { machineGate, notVerified } from './gate.ts';
 
 const cleanupDirs: string[] = [];
+/** Paths chmod-ed to 000 by a fixture — restored before rmTmp, which cannot delete them. */
+const cleanupChmods: string[] = [];
 afterAll(() => {
+  for (const p of cleanupChmods) {
+    try {
+      fs.chmodSync(p, 0o644);
+    } catch {
+      /* already restored by the fixture's own finally */
+    }
+  }
   for (const d of cleanupDirs) rmTmp(d);
 });
 
@@ -914,8 +923,21 @@ describe('render parity — Sessions', () => {
 // headline once rendered "2 of 11" for an answer of 4 because its numerator and denominator
 // were drawn from two populations.
 describe('render parity — Conflicts', () => {
-  /** A real /api/conflicts payload over a fixture fleet with a genuine two-worktree clash. */
-  async function conflictsPayload(prefix: string): Promise<ConflictReport[]> {
+  /**
+   * A real /api/conflicts payload over a fixture fleet with a genuine two-worktree clash —
+   * AND, when asked, a genuinely unreadable third one.
+   *
+   * `withUnreadable` exists because `read === attempted - unreadable` was asserted on a
+   * fixture where `unreadable` was always 0, so the identity reduced to `2 === 2` and
+   * `read: attempted` passed the whole suite. The premise two lines below it was guarded
+   * explicitly — "so the assertion below is not 0 === 0" — but aimed at `excluded`, which did
+   * not need it, and not at `unreadable`, which is the entire point of the split.
+   *
+   * Unreadable is made by chmod-ing the `.git` POINTER FILE, not the directory: chmod 000 on
+   * the directory makes `git worktree list --porcelain` report it prunable, so it is dropped
+   * from the sweep before it can be unreadable, and the branch is never reached.
+   */
+  async function conflictsPayload(prefix: string, withUnreadable = false): Promise<ConflictReport[]> {
     const projectsRoot = mkTmpDir(`mc-views-conflicts-${prefix}-`);
     const claudeRoot = mkTmpDir(`mc-views-conflicts-claude-${prefix}-`);
     cleanupDirs.push(projectsRoot, claudeRoot);
@@ -929,21 +951,36 @@ describe('render parity — Conflicts', () => {
     // A third worktree no registry names — the excluded population, non-zero on purpose so
     // the header's figure is not 0 === 0.
     addWorktree(root, path.join(root, '.worktrees', 'by-hand'), 'by-hand');
-    writeRegistry(root, [
+    const registry = [
       { name: 'ceo-1', token: '100' },
       { name: 'ceo-2', token: '200' },
-    ]);
+    ];
 
     fs.writeFileSync(path.join(wtA, 'shared.ts'), 'from A\n');
     fs.writeFileSync(path.join(wtB, 'shared.ts'), 'from B\n');
     fs.writeFileSync(path.join(wtA, 'only-a.ts'), 'a\n');
 
+    let blindedPointer: string | null = null;
+    if (withUnreadable) {
+      const wtC = path.join(root, '.worktrees', 'ceo-3-300');
+      addWorktree(root, wtC, 'ceo-3-300');
+      registry.push({ name: 'ceo-3', token: '300' });
+      blindedPointer = path.join(wtC, '.git');
+      fs.chmodSync(blindedPointer, 0o000);
+      cleanupChmods.push(blindedPointer);
+    }
+    writeRegistry(root, registry);
+
     const state = new LiveState({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot });
     const app = new Hono();
     app.route('/api', createApi(state));
-    const res = await app.fetch(new Request('http://127.0.0.1/api/conflicts'));
-    expect(res.status).toBe(200);
-    return ((await res.json()) as { reports: ConflictReport[] }).reports;
+    try {
+      const res = await app.fetch(new Request('http://127.0.0.1/api/conflicts'));
+      expect(res.status).toBe(200);
+      return ((await res.json()) as { reports: ConflictReport[] }).reports;
+    } finally {
+      if (blindedPointer !== null) fs.chmodSync(blindedPointer, 0o644);
+    }
   }
 
   test('the conflict table reverses to the /api/conflicts payload', async () => {
@@ -969,7 +1006,7 @@ describe('render parity — Conflicts', () => {
   });
 
   test('the excluded figure under the header is the number the sweep excluded', async () => {
-    const reports = await conflictsPayload('excluded');
+    const reports = await conflictsPayload('excluded', true);
     const totals = totalsFor(reports);
     // The premise: something really was excluded, so the assertion below is not 0 === 0.
     expect(totals.excluded).toBeGreaterThan(0);
@@ -991,7 +1028,15 @@ describe('render parity — Conflicts', () => {
     // minus unreadable" in each project line, so the project lines never summed to the
     // headline and a reader could not tell which meaning was in front of them. The two
     // quantities now have two names, and the identity between them is asserted.
+    //
+    // THE PREMISE THAT MAKES THAT IDENTITY MEAN ANYTHING: something really was unreadable.
+    // Without it `unreadable` is 0, the identity reduces to `attempted === attempted`, and
+    // `read: attempted` — the collapse the split exists to prevent — passes the whole suite.
+    // Measured: 181 pass, and the one failure was pre-existing. The premise below was guarded
+    // for `excluded`, which did not need it, and not for `unreadable`, which is the point.
+    expect(totals.unreadable).toBeGreaterThan(0);
     expect(totals.read).toBe(totals.attempted - totals.unreadable);
+    expect(totals.read).toBeLessThan(totals.attempted); // …and the two are now distinguishable
   });
 
   // NOTHING CHECKED IS NOT AN ALL-CLEAR. With no registry file anywhere the sweep has an
@@ -1778,13 +1823,26 @@ describe('render parity — Inbox', () => {
 // `true` on Belief restored the original defect (a live-stream age displayed above figures
 // fetched once at mount) with the suite green.
 //
-// A DELIBERATE DECISION ABOUT DOM: these tests add no jsdom/happy-dom dependency. Instead
-// App.tsx exports the registry and the badge, and the header's inline ternary became the
-// named `badgeFor`, so the whole chain is reachable from renderToStaticMarkup. What that
-// leaves unpinned is one line of JSX — `{badgeFor(active, …)}` — which no test executes
-// through the header itself; both branches it can produce, and the field it branches on, are
-// pinned below. A DOM dependency would close that last line at the cost of a test runtime
-// that renders differently from production; this seemed the wrong trade for one expression.
+// A DELIBERATE DECISION ABOUT DOM, AND AN HONEST ACCOUNTING OF WHAT IT COSTS. These tests
+// add no jsdom/happy-dom dependency. App.tsx exports the registry, the badge, `badgeFor`,
+// `AppBar` and `StreamNotices` instead, so every pure part of the shell is reachable from
+// renderToStaticMarkup and is rendered below.
+//
+// THE FIRST VERSION OF THIS PARAGRAPH SAID the gap was "one line of JSX". It was 91 lines:
+// App.tsx measured 135/226, with the whole of `App()` unexecuted, and the trade was accepted
+// on that wrong number. What is reachable has since been pulled out and IS covered — the nav
+// filter, the breadcrumb, the badge selection, both notices and the shell's first paint.
+//
+// WHAT REMAINS UNREACHABLE WITHOUT A DOM, precisely, and it is now two lines rather than 91:
+// `openProject`'s body, App.tsx 403-404 — `setProjectId(id); setTab('project')`. Plus the
+// effect bodies, which the coverage tool counts as run because the hook is called but whose
+// work never happens: `useEffect(() => setFreshness(null), [tab])`, the rule that a figure
+// from the tab you just left is never shown against the tab you just opened.
+// `renderToStaticMarkup` renders once and fires no effect, so every state TRANSITION is out
+// of reach — that is the whole of the remaining gap, stated so the next reader does not have
+// to re-measure it. The decision stands because a DOM shim renders differently from a browser
+// and parity with what ships is the point of this file; the cost is that one correctness rule
+// is enforced by reading it, not by running it.
 describe('the app bar says where the figures on screen came from', () => {
   const NOW = Date.parse('2026-08-14T12:00:00Z');
   const EMPTY_STREAM: StreamState = { fleet: null, sessions: null, connection: 'connecting', lastEventAt: null };
@@ -1851,6 +1909,84 @@ describe('the app bar says where the figures on screen came from', () => {
         expect(text).not.toContain('live');
       }
     }
+  });
+
+  // THE SHELL, rendered. The bar's nav filter, the breadcrumb for a non-nav view and the
+  // gating on both notices are all inside the app shell, and nothing rendered it: App.tsx was
+  // 135/226 lines covered with the whole of `App()` — 91 lines — unexecuted. Splitting the
+  // pure parts out is what makes them reachable without a DOM.
+  test('the bar names the view you are actually on, tab or not', async () => {
+    const { app } = buildFixtureState('app-bar-shell');
+    const fleet = (await (await app.fetch(new Request('http://127.0.0.1/api/fleet'))).json()) as FleetSummary;
+    const stream: StreamState = { fleet, sessions: null, connection: 'live', lastEventAt: NOW - 6_000 };
+    const bar = (active: ViewDef, projectId: string | null) =>
+      renderToStaticMarkup(
+        <AppBar
+          active={active}
+          tab={active.id}
+          projectId={projectId}
+          stream={stream}
+          freshness={null}
+          now={NOW}
+          onSelect={() => {}}
+        />
+      );
+
+    const navViews = VIEWS.filter((v) => v.nav);
+    const hidden = VIEWS.filter((v) => !v.nav);
+    // Premises: the registry really does hold both kinds, so neither branch below is vacuous.
+    expect(navViews.length).toBeGreaterThan(1);
+    expect(hidden.length).toBeGreaterThan(0);
+
+    // A NAV VIEW: one button per nav entry, none for the hidden ones, and the active one is
+    // the only `aria-current`.
+    const fleetHtml = bar(VIEWS[0], null);
+    const buttons = [...fleetHtml.matchAll(/<button\b[\s\S]*?<\/button>/g)].map((m) => textOf(m[0]));
+    expect(buttons).toEqual(navViews.map((v) => v.label));
+    for (const h of hidden) expect(buttons).not.toContain(h.label);
+    expect((fleetHtml.match(/aria-current="page"/g) ?? []).length).toBe(1);
+
+    // A NON-NAV VIEW: it gets no button, and the bar says where you are anyway — with the
+    // project it is showing. Without this the bar claimed you were on Fleet while Project
+    // filled the screen.
+    const project = hidden[0]!;
+    const projectHtml = bar(project, 'ashcroft');
+    const projectButtons = [...projectHtml.matchAll(/<button\b[\s\S]*?<\/button>/g)].map((m) => textOf(m[0]));
+    expect(projectButtons).toEqual(navViews.map((v) => v.label)); // still no button of its own
+    expect(projectHtml).not.toContain('aria-current'); // and no nav tab claims to be current
+    expect(textOf(projectHtml)).toContain(`/ ${project.label} ashcroft`);
+    // The breadcrumb is absent on a nav view, which is what makes the line above about the
+    // hidden branch rather than about something the bar always draws.
+    expect(textOf(fleetHtml)).not.toContain(`/ ${project.label}`);
+  });
+
+  test('the stream notices never appear over a view that fetched its own bytes', async () => {
+    const streamView = VIEWS.find((v) => v.stream)!;
+    const fetchedView = VIEWS.find((v) => !v.stream)!;
+    const cold: StreamState = { fleet: null, sessions: null, connection: 'connecting', lastEventAt: null };
+    const dead: StreamState = { fleet: null, sessions: null, connection: 'failed', lastEventAt: null };
+    const notices = (active: ViewDef, stream: StreamState) =>
+      textOf(renderToStaticMarkup(<StreamNotices active={active} stream={stream} />));
+
+    // On a stream view both notices are facts about what is on screen.
+    expect(notices(streamView, cold)).toContain('Building the session index');
+    expect(notices(streamView, dead)).toContain('The live stream is closed');
+
+    // On a fetched view neither is — "Everything below is the last state received" is simply
+    // false above a panel that fetched a moment ago. Same stream states, no notice.
+    expect(notices(fetchedView, cold)).toBe('');
+    expect(notices(fetchedView, dead)).toBe('');
+  });
+
+  test('the shell renders, and its default tab is a stream view with the stream badge', () => {
+    // renderToStaticMarkup runs the component; effects do not fire, so the stream is at its
+    // initial state and no fetch is issued — which is exactly the first paint a reader sees.
+    const html = renderToStaticMarkup(<App />);
+    expect(html).toContain('Mission Control');
+    expect(textOf(html)).toContain('connecting'); // the stream badge, not the fetched one
+    expect(textOf(html)).not.toContain('fetched');
+    expect(textOf(html)).toContain('Building the session index'); // the cold-start notice
+    expect((html.match(/aria-current="page"/g) ?? []).length).toBe(1);
   });
 
   test('a failed fetch never reads as a fetch', () => {

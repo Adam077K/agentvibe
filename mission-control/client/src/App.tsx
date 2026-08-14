@@ -287,6 +287,102 @@ export function badgeFor(
   );
 }
 
+/**
+ * The app bar: the nav, the breadcrumb for a non-nav view, and the badge.
+ *
+ * A COMPONENT, not JSX inside `App()`, because inside `App()` none of it is reachable without
+ * a DOM — reaching the breadcrumb means switching tabs, and switching tabs means a click. As
+ * a pure function of `active`, every state it has can be rendered directly. The honest
+ * accounting that prompted this: `App.tsx` was 135/226 lines covered, 91 uncovered, the whole
+ * of `App()`. Splitting the parts that are pure from the parts that need a live React tree is
+ * what makes the remaining gap small enough to state precisely.
+ */
+export function AppBar({
+  active,
+  tab,
+  projectId,
+  stream,
+  freshness,
+  now,
+  onSelect,
+}: {
+  active: ViewDef;
+  tab: string;
+  projectId: string | null;
+  stream: StreamState;
+  freshness: Freshness | null;
+  now: number;
+  onSelect: (id: Tab) => void;
+}) {
+  return (
+    <div className="flex h-full items-center gap-6 px-6">
+      <div className="label text-text">Mission Control</div>
+      <nav className="flex h-full items-center gap-1" aria-label="Views">
+        {VIEWS.filter((t) => t.nav).map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => onSelect(t.id)}
+            aria-current={tab === t.id ? 'page' : undefined}
+            className={`relative flex h-full items-center px-2.5 text-[12.5px] transition-colors ${
+              tab === t.id ? 'text-text' : 'text-dim hover:text-muted'
+            }`}
+          >
+            {t.label}
+            {tab === t.id && <span className="absolute inset-x-2.5 bottom-0 h-px bg-live" />}
+          </button>
+        ))}
+        {/* A non-nav view is still WHERE YOU ARE, and the nav must say so or the bar
+            claims you are on Fleet while Project fills the screen. Rendered as a
+            breadcrumb rather than a tab, because it is not one: there is no way back to
+            it once you leave. */}
+        {!active.nav && (
+          <span className="flex h-full items-center gap-1.5 px-2.5 text-[12.5px]">
+            <span className="text-dim">/</span>
+            <span className="relative flex h-full items-center text-text">
+              {active.label}
+              {projectId !== null && <span className="fig ml-1.5 text-dim">{projectId}</span>}
+              <span className="absolute inset-x-0 bottom-0 h-px bg-live" />
+            </span>
+          </span>
+        )}
+      </nav>
+      <div className="ml-auto">{badgeFor(active, { stream, freshness, now })}</div>
+    </div>
+  );
+}
+
+/**
+ * The two notices under the bar, both gated on the active view being stream-backed. They
+ * describe the SSE subscription and the session index, and neither is a fact about Belief or
+ * Conflicts — "Everything below is the last state received" is simply false above a panel
+ * that fetched its own bytes a moment ago. Extracted for the same reason as AppBar: the
+ * gating is a correctness fix and it was executed by nothing.
+ */
+export function StreamNotices({ active, stream }: { active: ViewDef; stream: StreamState }) {
+  return (
+    <>
+      {/* The first slice waits on a full cold index build — several seconds on a large
+          transcript corpus. Without saying so, that window looks like a hung page. */}
+      {active.stream && stream.fleet === null && stream.sessions === null && stream.connection !== 'failed' && (
+        <div className="border-b border-line px-6 py-2 text-[12px] text-muted">
+          Building the session index — one full read of every transcript under{' '}
+          <code className="fig">~/.claude/projects</code>, a few seconds on a large corpus. Every refresh after this one
+          reads only the bytes that were appended.
+        </div>
+      )}
+
+      {active.stream && stream.connection === 'failed' && (
+        <div className="border-b border-bad/40 bg-bad/10 px-6 py-2 text-[12px] text-bad">
+          The live stream is closed and will not retry. Start the server with{' '}
+          <code className="fig">bun run server</code> in <code className="fig">mission-control/</code>, then reload.
+          Everything below is the last state received, not the current one.
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState<Tab>('fleet');
   const stream = useMissionControlStream();
@@ -319,63 +415,18 @@ export default function App() {
         className="sticky top-0 z-20 border-b border-line bg-ink/95 backdrop-blur-sm"
         style={{ height: 'var(--mc-header-h)' }}
       >
-        <div className="flex h-full items-center gap-6 px-6">
-          <div className="label text-text">Mission Control</div>
-          <nav className="flex h-full items-center gap-1" aria-label="Views">
-            {VIEWS.filter((t) => t.nav).map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                aria-current={tab === t.id ? 'page' : undefined}
-                className={`relative flex h-full items-center px-2.5 text-[12.5px] transition-colors ${
-                  tab === t.id ? 'text-text' : 'text-dim hover:text-muted'
-                }`}
-              >
-                {t.label}
-                {tab === t.id && <span className="absolute inset-x-2.5 bottom-0 h-px bg-live" />}
-              </button>
-            ))}
-            {/* A non-nav view is still WHERE YOU ARE, and the nav must say so or the bar
-                claims you are on Fleet while Project fills the screen. Rendered as a
-                breadcrumb rather than a tab, because it is not one: there is no way back to
-                it once you leave. */}
-            {!active.nav && (
-              <span className="flex h-full items-center gap-1.5 px-2.5 text-[12.5px]">
-                <span className="text-dim">/</span>
-                <span className="relative flex h-full items-center text-text">
-                  {active.label}
-                  {projectId !== null && <span className="fig ml-1.5 text-dim">{projectId}</span>}
-                  <span className="absolute inset-x-0 bottom-0 h-px bg-live" />
-                </span>
-              </span>
-            )}
-          </nav>
-          <div className="ml-auto">{badgeFor(active, { stream, freshness, now })}</div>
-        </div>
+        <AppBar
+          active={active}
+          tab={tab}
+          projectId={projectId}
+          stream={stream}
+          freshness={freshness}
+          now={now}
+          onSelect={setTab}
+        />
       </header>
 
-      {/* The first slice waits on a full cold index build — several seconds on a large
-          transcript corpus. Without saying so, that window looks like a hung page. */}
-      {active.stream && stream.fleet === null && stream.sessions === null && stream.connection !== 'failed' && (
-        <div className="border-b border-line px-6 py-2 text-[12px] text-muted">
-          Building the session index — one full read of every transcript under{' '}
-          <code className="fig">~/.claude/projects</code>, a few seconds on a large corpus. Every refresh after this one
-          reads only the bytes that were appended.
-        </div>
-      )}
-
-      {/* Both notices are gated on the active view being stream-backed. They describe the SSE
-          subscription and the session index, and neither is a fact about Belief or Conflicts
-          — "Everything below is the last state received" is simply false above a panel that
-          fetched its own bytes a moment ago. */}
-      {active.stream && stream.connection === 'failed' && (
-        <div className="border-b border-bad/40 bg-bad/10 px-6 py-2 text-[12px] text-bad">
-          The live stream is closed and will not retry. Start the server with{' '}
-          <code className="fig">bun run server</code> in <code className="fig">mission-control/</code>, then reload.
-          Everything below is the last state received, not the current one.
-        </div>
-      )}
+      <StreamNotices active={active} stream={stream} />
 
       <main>{active.render({ stream, now, onFreshness, openProject, projectId, openTab })}</main>
     </div>
