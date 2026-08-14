@@ -7,8 +7,14 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import type { Project } from '../projects.ts';
+import { PROJECT_PROBE_TIMEOUT_MS } from './probe-bounds.ts';
+
+// NO SHELL: a literal binary, an args array, and a `--` sentinel before the one path
+// positional (see projectEmptyStateProbe). Same shape as the conflicts sweep.
+const execFileAsync = promisify(execFile);
 
 export interface EmptyState {
   /** Human-readable rendering of the probe, for display/logging only — never executed. */
@@ -71,15 +77,190 @@ export function projectEmptyStateProbe(project: Project): ProbeCommand {
 const PROJECT_WOULD_FILL =
   'Goals, playbook stage progress, open claims, expired claims, blocked items — once something in this project emits playbook stage progress, this view has real data to show.';
 
-export function projectEmptyState(project: Project): EmptyState {
+/**
+ * The bound, and the measurements behind it, live in `probe-bounds.ts` — a leaf module with
+ * no imports, so the VIEW can state the same number instead of spelling it out in prose. It
+ * said "bounded at ten seconds" while this file interpolated the constant, which made the
+ * pending state a lie waiting on somebody changing the number. Re-exported so every existing
+ * importer of this module keeps working.
+ */
+export { PROJECT_PROBE_TIMEOUT_MS } from './probe-bounds.ts';
+
+/** grep can emit a lot of paths on a large tree; 8 MB rather than Node's 1 MB default. */
+const PROJECT_PROBE_MAX_BUFFER = 8 * 1024 * 1024;
+
+/**
+ * How many probes may have a grep running at the same time.
+ *
+ * THIS PR CREATED THE NEED FOR IT. Under `execFileSync` two probes could not overlap — one
+ * grep at a time, by construction of the blocking call. That accidental limit of 1 went away
+ * with the stall, and nothing replaced it: measured, 20 simultaneous requests produced 20
+ * concurrent greps, each entitled to 8 MB and 10 seconds. `/api/project/:id` is a GET with no
+ * Origin check (F6), so a visited page can issue those without ever reading a response — and
+ * it is not only adversarial, because by the same measurement that motivated the bound, a
+ * large project holds a probe for the full 10 s PER REQUEST, so ordinary tab-switching stacks
+ * them.
+ *
+ * Two rather than one: the old limit of 1 was an accident of the blocking call, not a
+ * decision, and serialising a second browser tab behind a 10-second scan is a worse dashboard
+ * than allowing one to overlap. Two bounds the damage at 16 MB and two children while keeping
+ * a second reader responsive.
+ */
+export const PROJECT_PROBE_MAX_CONCURRENT = 2;
+
+/**
+ * How long a probe may wait for a slot before giving up WITHOUT RUNNING.
+ *
+ * Equal to the probe's own bound, so the worst case a request can experience is one full wait
+ * plus one full scan — bounded, and stated here rather than discovered in production. Piling
+ * up work that will be abandoned anyway is what a queue with no limit does.
+ */
+export const PROJECT_PROBE_QUEUE_WAIT_MS = PROJECT_PROBE_TIMEOUT_MS;
+
+interface Waiter {
+  settled: boolean;
+  admit: (ok: boolean) => void;
+}
+const waiting: Waiter[] = [];
+let running = 0;
+
+/** Resolves true when a slot is held, false when the wait ran out and nothing was started. */
+function acquireSlot(waitMs: number): Promise<boolean> {
+  if (running < PROJECT_PROBE_MAX_CONCURRENT) {
+    running++;
+    return Promise.resolve(true);
+  }
+  return new Promise<boolean>((resolve) => {
+    const waiter: Waiter = { settled: false, admit: () => {} };
+    const timer = setTimeout(() => {
+      if (waiter.settled) return;
+      waiter.settled = true;
+      const i = waiting.indexOf(waiter);
+      if (i >= 0) waiting.splice(i, 1);
+      resolve(false);
+    }, waitMs);
+    // A pending probe must never be the reason a process stays alive.
+    timer.unref?.();
+    waiter.admit = (ok: boolean) => {
+      if (waiter.settled) return;
+      waiter.settled = true;
+      clearTimeout(timer);
+      resolve(ok);
+    };
+    waiting.push(waiter);
+  });
+}
+
+/** Hands the slot to the next waiter, or gives it back. `running` never goes negative. */
+function releaseSlot(): void {
+  const next = waiting.shift();
+  if (next === undefined) {
+    running = Math.max(0, running - 1);
+    return;
+  }
+  next.admit(true); // handed straight over — the slot was never free, so `running` is unchanged
+}
+
+/**
+ * Both bounds are the CALLER's to SHORTEN and neither is the caller's to lengthen.
+ *
+ * `queueWaitMs` — how long this call will wait for a slot before being told the probe never
+ * ran.
+ *
+ * `timeoutMs` — how long the scan itself may take, CLAMPED to the default. That clamp is the
+ * whole design: the constant protects the machine, so passing a larger number cannot weaken
+ * it, and passing a smaller one can only make this call give up sooner. Injectable because a
+ * bound that can only be reached by waiting ten real seconds is a bound no test reaches — and
+ * measured, it reached none: `empty.ts` lines 124-134, the entire timeout branch, had zero
+ * coverage while the test named after it asserted the OPPOSITE branch. That is #30's C1 in
+ * this file: a barrier at the pixel with the producer invertible underneath it.
+ */
+export async function projectEmptyState(
+  project: Project,
+  opts: { queueWaitMs?: number; timeoutMs?: number } = {}
+): Promise<EmptyState> {
+  const queueWaitMs = opts.queueWaitMs ?? PROJECT_PROBE_QUEUE_WAIT_MS;
+  // Clamped into [1, default]. The upper clamp is the machine protection; the LOWER one
+  // closes a footgun the upper one opens — `timeout: 0` is Node's "no timeout", so a caller
+  // asking for zero would silently get an unbounded scan, which is the failure this option
+  // exists to make testable.
+  //
+  // AND A NON-NUMBER DOES NOT SURVIVE THE CLAMP. `Math.max(1, NaN)` is `NaN`, so `NaN`,
+  // `'abc'` and `{}` all passed straight through it; Node then rejected the spawn with
+  // ERR_OUT_OF_RANGE and the catch below three-stated it correctly — never unbounded, never a
+  // false all-clear — but wrote "grep exited ERR_OUT_OF_RANGE" for a grep THAT NEVER RAN, in
+  // 0 ms. A mechanism reporting about something that did not happen, in the file that exists
+  // to prevent exactly that. `1.9` is the realistic caller: Node refuses a fractional timeout,
+  // so it is floored rather than rejected, and anything not a finite number falls back to the
+  // default the machine is protected by.
+  const requested = opts.timeoutMs;
+  const usable =
+    typeof requested === 'number' && Number.isFinite(requested) ? Math.floor(requested) : PROJECT_PROBE_TIMEOUT_MS;
+  const timeoutMs = Math.max(1, Math.min(usable, PROJECT_PROBE_TIMEOUT_MS));
   const probeCmd = projectEmptyStateProbe(project);
   const base = { probe: renderProbe(probeCmd), would_fill: PROJECT_WOULD_FILL };
+
+  // NEVER STARTED is its own answer, and it is not "nothing found". A reader has to be able
+  // to tell "I searched and there is no marker" from "so many probes were already running
+  // that this one never got to look", or the queue quietly manufactures empty states.
+  if (!(await acquireSlot(queueWaitMs))) {
+    return {
+      ...base,
+      found: false,
+      readable: false,
+      reason:
+        `the probe never started: ${PROJECT_PROBE_MAX_CONCURRENT} probes were already running and a slot did not ` +
+        `come free within ${queueWaitMs}ms, so NO part of ${project.root} was searched. This is not "nothing is ` +
+        'here" — nothing was looked at. Re-running when the fleet is quieter will answer it.',
+    };
+  }
+
   try {
-    const out = execFileSync(probeCmd.cmd, probeCmd.args, { encoding: 'utf8' });
-    return { ...base, found: out.trim().length > 0 };
+    const { stdout } = await execFileAsync(probeCmd.cmd, probeCmd.args, {
+      encoding: 'utf8',
+      timeout: timeoutMs,
+      maxBuffer: PROJECT_PROBE_MAX_BUFFER,
+    });
+    return { ...base, found: stdout.trim().length > 0 };
   } catch (e) {
-    const err = e as { status?: number; stdout?: string; stderr?: string };
-    if (err.status === 1) {
+    const err = e as { code?: number | string; status?: number; killed?: boolean; stdout?: string; stderr?: string };
+    // TIMEOUT IS CHECKED FIRST, and the order matters: a killed process also carries a
+    // non-zero code, so testing the code first would file a timeout as a grep exit status
+    // and lose the one fact that explains the answer.
+    //
+    // `found` IS UNCONDITIONALLY FALSE HERE, and this branch used to compute it from
+    // `err.stdout` with a comment claiming parity with the exit-2 path below. It does not
+    // have that parity. Measured on a 219 MB tree with the marker planted in the
+    // FIRST-VISITED directory and the bound then firing — the branch's own best case:
+    //
+    //   bun  killed=true stdout_bytes=0
+    //   node killed=true stdout_bytes=0
+    //
+    // grep block-buffers a pipe, and `-rl` on a marker that matches almost nothing emits far
+    // less than one buffer before SIGTERM, so there is nothing in flight to recover. (The
+    // runtimes DO differ once the match set is megabytes — bun recovered 524,288 bytes and
+    // node 1,441,790 for a pattern matching nearly every file — but that is not this probe's
+    // pattern, and a probe whose answer is one boolean does not get streaming plumbing to
+    // chase a byte count it will reduce to `false` anyway.) So the code says what it does:
+    // a killed probe found nothing, and could not look at everything.
+    //
+    // The exit-2 path below is different and its recovery is real — verified under both
+    // runtimes, same tree, stdout preserved identically — so that branch keeps it.
+    if (err.killed) {
+      return {
+        ...base,
+        found: false,
+        readable: false,
+        reason:
+          // The EFFECTIVE bound, not the constant: a caller that shortened it must see the
+          // number that actually stopped the scan, or the sentence explains the wrong thing.
+          `grep did not finish within ${timeoutMs}ms against ${project.root} and was stopped, so ` +
+          'part of the tree was never searched and nothing it may have matched there was recovered. This is "I ' +
+          'could not look at all of it", not "there is nothing here" — a 34 GB project measured 107,806ms for ' +
+          'this scan on 2026-08-14, and an unbounded probe on a live dashboard has no upper bound at all.',
+      };
+    }
+    if (err.code === 1 || err.status === 1) {
       // grep's genuine "no match" exit — the honest, checked answer, not a failure.
       return { ...base, found: false };
     }
@@ -101,28 +282,41 @@ export function projectEmptyState(project: Project): EmptyState {
       ...base,
       found: stdout.trim().length > 0,
       readable: false,
-      reason: `grep exited ${err.status ?? 'unknown'} against ${project.root} (${stderrTail || 'no stderr'})`,
+      reason: `grep exited ${err.code ?? err.status ?? 'unknown'} against ${project.root} (${stderrTail || 'no stderr'})`,
     };
+  } finally {
+    releaseSlot();
   }
 }
+
+const INBOX_WOULD_FILL =
+  'Pending outbound approvals, escalations, binary pings — once this project writes into its messages/ directory, this view has real data to show.';
 
 /**
  * Inbox view: "no project has a populated ~/.<name>/messages/ dir" (PR2 brief). The
  * probe is the literal glob a human would run to check.
+ *
+ * THE CATCH USED TO SWALLOW EVERY ERROR into `found: false`. An absent directory really is
+ * the honest "nothing here" — the feature that would create it has never run — but EACCES
+ * and ENOTDIR are not: they are "I could not look", reported as a clean inbox. That is the
+ * §0 defect this file was written to prevent, in the file that prevents it, and it also left
+ * the view's could-not-look branch unreachable by any input. ENOENT is the ONLY code that
+ * means absence; everything else three-states.
  */
 export function inboxEmptyState(project: Project, homeDir: string = os.homedir()): EmptyState {
   const dir = path.join(homeDir, `.${project.id}`, 'messages');
   const probe = `${dir}/*`;
-  let found = false;
+  const base = { probe, would_fill: INBOX_WOULD_FILL };
   try {
-    found = fs.readdirSync(dir).length > 0;
-  } catch {
-    found = false; // directory absent is the same honest "nothing here" as directory empty
+    return { ...base, found: fs.readdirSync(dir).length > 0 };
+  } catch (e) {
+    const code = (e as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') return { ...base, found: false }; // absent === empty, for a reader waiting
+    return {
+      ...base,
+      found: false,
+      readable: false,
+      reason: `${dir} could not be read (${code ?? 'unknown error'}) — this project's messages were NOT checked, so "none" below would be a claim about a directory nobody opened.`,
+    };
   }
-  return {
-    probe,
-    found,
-    would_fill:
-      'Pending outbound approvals, escalations, binary pings — once this project writes into its messages/ directory, this view has real data to show.',
-  };
 }

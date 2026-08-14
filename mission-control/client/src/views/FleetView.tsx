@@ -12,7 +12,7 @@
 import { useMemo } from 'react';
 import type { FleetRow, FleetSummary, ModalGeneration } from '../api.ts';
 import { formatCount, formatShare, formatRelative, formatAbsolute, tildeHome } from '../format.ts';
-import { EmptyState, Figure, Footnote, LoadingRows, StatusDot, Td, Th, Unavailable } from '../ui.tsx';
+import { EmptyState, Figure, Footnote, HeadlineBar, LoadingRows, StatusDot, Td, Th, Unavailable } from '../ui.tsx';
 
 const COLUMNS = 9;
 
@@ -69,7 +69,16 @@ function parentDir(absPath: string): string {
   return absPath.replace(/\/[^/]+$/, '');
 }
 
-export function FleetTable({ fleet, now }: { fleet: FleetSummary | null; now: number }) {
+export function FleetTable({
+  fleet,
+  now,
+  onOpenProject,
+}: {
+  fleet: FleetSummary | null;
+  now: number;
+  /** Drill-down. Optional so the render-parity tests can mount this table without a shell. */
+  onOpenProject?: (id: string) => void;
+}) {
   const rows = useMemo(() => (fleet ? sortFleet(fleet.projects) : []), [fleet]);
   const home = useMemo(() => {
     const first = fleet?.projects[0]?.root ?? '';
@@ -151,9 +160,31 @@ export function FleetTable({ fleet, now }: { fleet: FleetSummary | null; now: nu
               />
             </Td>
             <Td>
-              <span className={`fig ${row.agentActive ? 'text-text' : ''}`} title={row.root}>
+              {/* THE ROW IS NOT THE CONTROL — this cell is. Making the whole <tr> clickable
+                  would put a click target over every figure in it, including the ones with
+                  their own title text a reader hovers to read, and would give a keyboard user
+                  one stop that announces nine columns. A button on the identifier is the
+                  thing you would point at anyway.
+
+                  SOLID UNDERLINE, NOT DOTTED, and `cursor-pointer` rather than the default.
+                  This was `decoration-dotted underline-offset-[3px]` — which is `.unavailable`'s
+                  own grammar in styles.css, "a value the UI knows it cannot show", right down
+                  to the offset and with `cursor: help`. Rendered, the one activatable thing in
+                  the table wore the marker for the things that cannot be shown, two cells away
+                  from `no launcher` and `n/a` wearing it literally, differing only in colour.
+                  A solid underline is the affordance every reader already knows, and it is
+                  also the only announcement this drill-down gets — nothing else on screen says
+                  the identifier opens anything. */}
+              <button
+                type="button"
+                onClick={() => onOpenProject?.(row.id)}
+                title={`${row.root}\nOpen this project`}
+                className={`fig cursor-pointer rounded-[2px] underline decoration-line-strong underline-offset-[3px] transition-colors hover:decoration-live hover:text-text ${
+                  row.agentActive ? 'text-text' : ''
+                }`}
+              >
                 {row.id}
-              </span>
+              </button>
               {/* Marked when PRESENT, not when absent. One project in nineteen has a built
                   ledger, so flagging the absence tagged eighteen rows with the same words
                   and turned the identifier column into noise. */}
@@ -221,14 +252,14 @@ export function FleetTable({ fleet, now }: { fleet: FleetSummary | null; now: nu
 export function FleetHeadline({ fleet }: { fleet: FleetSummary | null }) {
   if (fleet === null) {
     return (
-      <div className="flex items-stretch divide-x divide-line px-6 py-1">
+      <HeadlineBar>
         {[0, 1, 2].map((i) => (
           <div key={i} className="px-5 py-3 first:pl-0">
             <div className="skeleton h-[8px] w-16" />
             <div className="skeleton mt-2 h-[16px] w-28" />
           </div>
         ))}
-      </div>
+      </HeadlineBar>
     );
   }
 
@@ -237,7 +268,7 @@ export function FleetHeadline({ fleet }: { fleet: FleetSummary | null }) {
   const subagentShare = formatShare(budget.subagent_output_tokens, budget.output_tokens);
 
   return (
-    <div className="flex flex-wrap items-stretch divide-x divide-line px-6 py-1">
+    <HeadlineBar>
       {/* "Burn", not "Output tokens". This figure sat directly above a column headed
           `OUTPUT TOKENS` meaning something ~30x larger and scoped completely differently —
           one is account-wide over five hours, the other is per-project over all time. Two
@@ -264,7 +295,7 @@ export function FleetHeadline({ fleet }: { fleet: FleetSummary | null }) {
         title="Every git repository discovered directly under the configured roots"
       />
       <GenerationFigure modal={fleet.modalGeneration} />
-    </div>
+    </HeadlineBar>
   );
 }
 
@@ -373,7 +404,15 @@ export function GenerationFigure({ modal }: { modal: ModalGeneration }) {
   );
 }
 
-export function FleetView({ fleet, now }: { fleet: FleetSummary | null; now: number }) {
+export function FleetView({
+  fleet,
+  now,
+  onOpenProject,
+}: {
+  fleet: FleetSummary | null;
+  now: number;
+  onOpenProject?: (id: string) => void;
+}) {
   const empty = fleet !== null && fleet.projects.length === 0;
   return (
     <section>
@@ -391,7 +430,7 @@ export function FleetView({ fleet, now }: { fleet: FleetSummary | null; now: num
           }
         />
       ) : (
-        <FleetTable fleet={fleet} now={now} />
+        <FleetTable fleet={fleet} now={now} onOpenProject={onOpenProject} />
       )}
     </section>
   );

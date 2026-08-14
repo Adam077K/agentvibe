@@ -2,7 +2,8 @@
 import { describe, test, expect, afterAll } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
+import { promisify } from 'node:util';
 import { discoverProjects, encodeProjectDir, type Project } from '../server/projects.ts';
 import { IndexStore } from '../server/index-store.ts';
 import { listWorktrees, parseWorktreePorcelain, type WorktreeEntry } from '../server/collectors/worktrees.ts';
@@ -27,7 +28,14 @@ import {
   type LedgerVerifySummary,
 } from '../server/collectors/belief.ts';
 import { summarizeEvents, bucketBudgetBlock, readConfiguredCeilings } from '../server/collectors/events.ts';
-import { projectEmptyState, projectEmptyStateProbe, inboxEmptyState } from '../server/collectors/empty.ts';
+import {
+  projectEmptyState,
+  projectEmptyStateProbe,
+  inboxEmptyState,
+  PROJECT_PROBE_MAX_CONCURRENT,
+  PROJECT_PROBE_TIMEOUT_MS,
+  PROJECT_PROBE_QUEUE_WAIT_MS,
+} from '../server/collectors/empty.ts';
 import {
   mkTmpDir,
   rmTmp,
@@ -608,6 +616,267 @@ describe('enumerating many projects leaves the event loop free', () => {
     // direction. Both terms scale with PROJECTS, so this holds on any machine.
     expect(asyncStallMs).toBeLessThan(controlStallMs * 0.75);
   });
+});
+
+// ── THE PROJECT PROBE, SAME SHAPE AS THE ENUMERATION PIN ──────────────────────────────
+//
+// projectEmptyState shelled out to a recursive grep with execFileSync. Measured 2026-08-14,
+// the probe alone, independently of Mission Control:
+//
+//   agentvibe (1.1 GB)      331 ms
+//   Beamix    (34 GB)   107,806 ms
+//
+// and `GET /api/project/Beamix` was 113,158 ms end to end with 100% of it synchronous. The
+// brief carried 3,657 ms for that project; the real figure is thirty times larger.
+//
+// The lesson the enumeration fixture taught, applied directly: the CONTROL MUST ISOLATE THE
+// PHASE THE MUTATION LIVES IN, and the ratio must be scale-invariant. So the control here is
+// the grep phase only — one synchronous probe per project, sequentially — against N projects
+// probed concurrently. Both terms scale linearly with N, so the ratio is a property of the
+// code and not of the fixture size or the machine: baseline stays spawn/(spawn+scan), a
+// synchronous probe goes to 1.0. Same 0.75 bound as the other two, same instrument, same
+// false-RED-not-false-green failure direction.
+describe('probing many projects leaves the event loop free', () => {
+  const PROBE_PROJECTS = 10;
+  const parent = mkTmpDir('mc-probe-scale-');
+  cleanupDirs.push(parent);
+  const claudeRoot = mkTmpDir('mc-probe-scale-claude-');
+  cleanupDirs.push(claudeRoot);
+
+  for (let i = 0; i < PROBE_PROJECTS; i++) {
+    const root = path.join(parent, `proj-${i}`);
+    initGitRepo(root);
+    // Enough files that one grep is a measurable scan rather than pure process startup —
+    // otherwise the control does no real work and the comparison is vacuous.
+    const src = path.join(root, 'src');
+    fs.mkdirSync(src, { recursive: true });
+    for (let f = 0; f < 120; f++) {
+      fs.writeFileSync(path.join(src, `file-${f}.ts`), `// fixture ${f}\n${'const x = 1;\n'.repeat(40)}`);
+    }
+  }
+  const projects = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot });
+
+  test('probing N projects stalls the loop far less than probing them synchronously', async () => {
+    expect(projects).toHaveLength(PROBE_PROJECTS); // the fixture is the shape this test needs
+
+    let gaps: number[] = [];
+    let last = performance.now();
+    let sampling = true;
+    const sample = () => {
+      if (!sampling) return;
+      const now = performance.now();
+      gaps.push(now - last);
+      last = now;
+      setImmediate(sample);
+    };
+    const worstGapSince = () => {
+      const worst = Math.max(...gaps, 0);
+      gaps = [];
+      last = performance.now();
+      return worst;
+    };
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 5));
+
+    setImmediate(sample);
+    await new Promise((resolve) => setTimeout(resolve, 20)); // warm-up, discarded
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const idleNoiseMs = worstGapSince();
+
+    // THE MEASUREMENT — every project probed concurrently, as /api/project/:id does one at a
+    // time but the loop must survive either way.
+    const t0 = performance.now();
+    const states = await Promise.all(projects.map((p) => projectEmptyState(p)));
+    const probeMs = performance.now() - t0;
+    await settle();
+    const asyncStallMs = worstGapSince();
+
+    // THE CONTROL — the grep phase only, sequential and synchronous: exactly what the
+    // execFileSync implementation produced, and nothing else.
+    const c0 = performance.now();
+    for (const p of projects) {
+      const cmd = projectEmptyStateProbe(p);
+      try {
+        execFileSync(cmd.cmd, cmd.args, { encoding: 'utf8' });
+      } catch {
+        /* grep exits 1 on no-match, which is the expected answer for these fixtures */
+      }
+    }
+    const controlMs = performance.now() - c0;
+    await settle();
+    const controlStallMs = worstGapSince();
+    sampling = false;
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `  [async] ${PROBE_PROJECTS} project probes — async ${asyncStallMs.toFixed(1)}ms (${probeMs.toFixed(1)}ms) · ` +
+        `sync grep control ${controlStallMs.toFixed(1)}ms (${controlMs.toFixed(1)}ms) · ` +
+        `idle noise ${idleNoiseMs.toFixed(1)}ms · ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
+    );
+
+    expect(states).toHaveLength(PROBE_PROJECTS); // every project really was probed
+    expect(states.every((s) => s.readable === undefined)).toBe(true); // …and every probe ran clean
+    expect(controlStallMs).toBeGreaterThan(1); // NON-VACUITY: the control really blocked
+
+    if (idleNoiseMs > controlStallMs / 4) {
+      notVerified(
+        'project probe event-loop binding',
+        `this process was already blocking for ${idleNoiseMs.toFixed(1)}ms at a time while idle, against a ` +
+          `${controlStallMs.toFixed(1)}ms synchronous control — too noisy here to attribute a stall to the probe`
+      );
+      return;
+    }
+
+    expect(asyncStallMs).toBeLessThan(controlStallMs * 0.75);
+  });
+});
+
+// ── the probe is bounded, and says so when the bound is hit ───────────────────────────
+describe('projectEmptyState stops rather than scanning forever', () => {
+  // THE COLLECTOR HITS ITS OWN BOUND. This test previously did not: it called `execFile`
+  // directly with a 1 ms budget to show that `killed: true` is the shape — a fact about Node,
+  // not about projectEmptyState — and then called the collector with the shipped 10 s bound,
+  // which this tree finishes inside, and asserted the OPPOSITE branch. Its own comment
+  // conceded that. Coverage agreed: empty.ts 124-134, the whole timeout branch, was never
+  // executed, so three mutations left the suite green — the killed branch returning a genuine
+  // no-match (the exact defect the bound exists to prevent), `timeout:` deleted outright, and
+  // the constant set to 0, which is Node's "no timeout".
+  //
+  // The bound is now injectable, CLAMPED so injection can only tighten it, and the branch is
+  // driven through the real function in milliseconds.
+  test('the collector hits its own bound, and says so in the honest three-state', async () => {
+    const root = mkTmpDir('mc-probe-timeout-');
+    cleanupDirs.push(root);
+    // ~4,000 files of real content — enough that a 1 ms budget cannot finish them, on any
+    // machine. A MARKER IS PLANTED TOO, so the answer below is not trivially "nothing here":
+    // this tree really does contain what the probe looks for, and a completed scan says so.
+    for (let d = 0; d < 20; d++) {
+      const dir = path.join(root, `d-${d}`);
+      fs.mkdirSync(dir, { recursive: true });
+      for (let f = 0; f < 200; f++) {
+        fs.writeFileSync(path.join(dir, `f-${f}.txt`), 'const x = 1;\n'.repeat(200));
+      }
+    }
+    fs.writeFileSync(path.join(root, 'aaa-marker.md'), 'playbook_stage: build\n');
+
+    const cut = await projectEmptyState({ id: 'huge', root } as Project, { timeoutMs: 1 });
+    expect(cut.readable).toBe(false);
+    expect(cut.found).toBe(false); // no partial recovery — see the comment in empty.ts
+    expect(cut.reason).toContain('1ms'); // the EFFECTIVE bound, not the constant
+    expect(cut.reason).toContain('part of the tree was never searched');
+    expect(cut.reason).toContain(root);
+
+    // THE MIRROR, and it is what makes the assertions above about the BOUND rather than about
+    // this tree: the same probe with the shipped bound completes and finds the marker.
+    const completed = await projectEmptyState({ id: 'huge', root } as Project);
+    expect(completed.readable).toBeUndefined();
+    expect(completed.found).toBe(true);
+
+    // THE LOWER CLAMP. `timeout: 0` is Node's "no timeout", so a caller passing zero would
+    // silently get an unbounded scan — the exact condition this option exists to test for.
+    // Zero is floored to 1 ms, so it cuts off rather than running free.
+    const zero = await projectEmptyState({ id: 'huge', root } as Project, { timeoutMs: 0 });
+    expect(zero.readable).toBe(false);
+    expect(zero.reason).toContain('1ms');
+
+    // A CALLER'S BAD ARGUMENT IS NOT ATTRIBUTED TO GREP. `Math.max(1, NaN)` is `NaN`, so
+    // these all passed straight through the clamp; Node then rejected the spawn with
+    // ERR_OUT_OF_RANGE and the catch three-stated it correctly — never unbounded, never a
+    // false all-clear — but the reason read "grep exited ERR_OUT_OF_RANGE" for a grep that
+    // never ran, in 0 ms. Reporting about something that did not happen, in the file that
+    // exists to prevent exactly that.
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, 'abc', {}, null] as unknown as number[]) {
+      const answered = await projectEmptyState({ id: 'huge', root } as Project, { timeoutMs: bad });
+      const where = { bad: String(bad) };
+      // Falls back to the default the machine is protected by, so this tree completes.
+      expect({ ...where, readable: answered.readable }).toEqual({ ...where, readable: undefined });
+      expect({ ...where, found: answered.found }).toEqual({ ...where, found: true });
+      expect(answered.reason ?? '').not.toContain('ERR_OUT_OF_RANGE');
+      expect(answered.reason ?? '').not.toContain('grep exited');
+    }
+
+    // …and `1.9`, the realistic caller: Node refuses a fractional timeout, so it is floored to
+    // 1 ms and really does cut the scan off — neither refused nor blamed on grep.
+    const fractional = await projectEmptyState({ id: 'huge', root } as Project, { timeoutMs: 1.9 });
+    expect(fractional.readable).toBe(false);
+    expect(fractional.reason).toContain('1ms');
+    expect(fractional.reason).not.toContain('ERR_OUT_OF_RANGE');
+
+    // The upper clamp — a caller cannot lengthen the bound past the constant — is asserted in
+    // the FIFO test below, because observing it needs a scan that would otherwise run longer
+    // than the constant, and this tree finishes in milliseconds.
+  }, 60_000);
+
+  // THE BRANCH ITSELF, driven end to end — which the test above does NOT do. It observes the
+  // rejection shape through execFile and then asserts the mirror, so `projectEmptyState`'s
+  // killed branch was executed by nothing, which is how a comment claiming partial-stdout
+  // recovery survived in it while the code recovered nothing.
+  //
+  // A FIFO is the deterministic way to make a probe unable to finish: a reader blocks on it
+  // forever, so the bound is what ends the scan rather than the size of the tree. The marker
+  // is planted in a file that sorts BEFORE the FIFO, so this is also the non-recovery claim's
+  // own best case — a real match, matched before the block, and still not in `stdout` when
+  // SIGTERM arrives, because grep block-buffers a pipe and `-rl` never fills one.
+  test('a probe stopped at the bound reports could-not-look, and recovers no partial match', async () => {
+    // GATE ON THE MECHANISM, not on the result: GNU grep skips FIFOs when recursing
+    // (`--devices` defaults to reading them only on the command line), so on such a machine
+    // there is no way to build a probe that cannot finish, and nothing to measure.
+    const gateDir = mkTmpDir('mc-fifo-gate-');
+    cleanupDirs.push(gateDir);
+    try {
+      execFileSync('mkfifo', [path.join(gateDir, 'blocker')]);
+    } catch {
+      notVerified('probe bound', 'mkfifo is unavailable, so a never-finishing probe could not be constructed');
+      return;
+    }
+    const gateCmd = projectEmptyStateProbe({ id: 'gate', root: gateDir } as Project);
+    let blocks = false;
+    try {
+      await promisify(execFile)(gateCmd.cmd, gateCmd.args, { encoding: 'utf8', timeout: 700 });
+    } catch (e) {
+      blocks = (e as { killed?: boolean }).killed === true;
+    }
+    if (!blocks) {
+      notVerified(
+        'probe bound',
+        `${gateCmd.cmd} on this machine skips FIFOs when recursing, so a probe that cannot finish is not constructible here`
+      );
+      return;
+    }
+
+    const root = mkTmpDir('mc-fifo-bound-');
+    cleanupDirs.push(root);
+    fs.writeFileSync(path.join(root, 'aaa-marker.md'), 'playbook_stage: build\n');
+    execFileSync('mkfifo', [path.join(root, 'zzz-blocker')]);
+
+    // ASKED FOR AN HOUR — the upper clamp is what stops it at ten seconds, and this scan
+    // would genuinely run forever otherwise, which is the only condition under which that
+    // clamp is observable. A caller cannot lengthen the bound that protects the machine.
+    const startedAt = Date.now();
+    const state = await projectEmptyState({ id: 'blocked', root } as Project, { timeoutMs: 3_600_000 });
+    const elapsed = Date.now() - startedAt;
+
+    expect(state.readable).toBe(false);
+    expect(state.reason).toContain(`${PROJECT_PROBE_TIMEOUT_MS}ms`); // the constant, not the hour asked for
+    expect(state.reason).not.toContain('3600000ms');
+    expect(elapsed).toBeLessThan(PROJECT_PROBE_TIMEOUT_MS * 2); // it really did stop at the constant
+    expect(state.reason).toContain('part of the tree was never searched');
+    // NOT RECOVERED, and the code says so rather than a comment claiming otherwise. Measured
+    // directly on a 219 MB tree with the marker first-visited: bun 0 bytes, node 0 bytes.
+    expect(state.found).toBe(false);
+    expect(state.reason).toContain('nothing it may have matched there was recovered');
+
+    // NON-VACUITY: the bound is what ended this, not a fast failure that never scanned. Half
+    // the bound is a floor no spawn error or immediate exit can reach.
+    expect(elapsed).toBeGreaterThan(PROJECT_PROBE_TIMEOUT_MS / 2);
+
+    // THE MIRROR: the same tree without the blocker completes, finds the marker, and never
+    // claims it was cut short — so the assertions above read the killed branch and not a
+    // state this input produces regardless.
+    fs.rmSync(path.join(root, 'zzz-blocker'));
+    const completed = await projectEmptyState({ id: 'blocked', root } as Project);
+    expect(completed.readable).toBeUndefined();
+    expect(completed.found).toBe(true);
+  }, 60_000);
 });
 
 // ── "git would not list them" is not "there are none" ────────────────────────────────
@@ -1291,11 +1560,11 @@ describe('summarizeEvents', () => {
 
 // ── empty states — the probe is executed, not trusted ──────────────────────────────────
 describe('empty.ts probes are executed, matching what the collector reports', () => {
-  test('projectEmptyState: found=false when nothing matches, found=true when a marker exists', () => {
+  test('projectEmptyState: found=false when nothing matches, found=true when a marker exists', async () => {
     const root = mkTmpDir('mc-project-empty-');
     cleanupDirs.push(root);
     const projectNoMarker = { id: 'p1', root } as Project;
-    const before = projectEmptyState(projectNoMarker);
+    const before = await projectEmptyState(projectNoMarker);
     expect(before.found).toBe(false);
     // Independently re-run the exact {cmd, args} the collector used — no shell, ever
     // (see the "shell injection" describe block below for why that matters).
@@ -1311,7 +1580,7 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
 
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'progress.md'), 'playbook_stage: build\n');
-    const after = projectEmptyState(projectNoMarker);
+    const after = await projectEmptyState(projectNoMarker);
     expect(after.found).toBe(true);
     const afterProbeCmd = projectEmptyStateProbe(projectNoMarker);
     const outAfter = execFileSync(afterProbeCmd.cmd, afterProbeCmd.args, { encoding: 'utf8' });
@@ -1336,19 +1605,59 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     expect(dirEntries.length > 0).toBe(after.found);
   });
 
+  // THE SAME PARTITION grep's exit codes force on projectEmptyState, at the readdir. An
+  // absent directory is a real "nothing here" — the feature that would create it has never
+  // run — but a directory that exists and cannot be opened is "I could not look", and the
+  // catch swallowed both into found:false. This is the file that exists to prevent exactly
+  // that, so an unreachable third state here was worse than one anywhere else.
+  test('inboxEmptyState: an unreadable messages dir is could-not-look, an absent one is not', () => {
+    const home = mkTmpDir('mc-home-3state-');
+    cleanupDirs.push(home);
+
+    // ABSENT → found:false with NO readable flag. The honest empty answer.
+    const absent = inboxEmptyState({ id: 'gone' } as Project, home);
+    expect(absent.found).toBe(false);
+    expect(absent.readable).toBeUndefined();
+    expect(absent.reason).toBeUndefined();
+
+    // EXISTS BUT UNOPENABLE → readable:false. A plain file where the directory belongs
+    // gives ENOTDIR deterministically on every platform and without depending on the test
+    // user's privileges — chmod 000 is a no-op for root, which is how CI often runs.
+    fs.mkdirSync(path.join(home, '.blocked'), { recursive: true });
+    fs.writeFileSync(path.join(home, '.blocked', 'messages'), 'not a directory\n');
+    const blocked = inboxEmptyState({ id: 'blocked' } as Project, home);
+    expect(blocked.readable).toBe(false);
+    expect(blocked.found).toBe(false);
+    expect(blocked.reason).toContain('ENOTDIR');
+    expect(blocked.reason).toContain(path.join(home, '.blocked', 'messages'));
+
+    // Independently: the path the probe names really is unreadable as a directory, and the
+    // error code the reason quotes is the one the OS gave.
+    let independentCode: string | undefined;
+    try {
+      fs.readdirSync(path.dirname(blocked.probe));
+    } catch (e) {
+      independentCode = (e as NodeJS.ErrnoException).code;
+    }
+    expect(independentCode).toBe('ENOTDIR');
+    // NON-VACUITY: the two calls above really did take different branches. Without this the
+    // whole test passes with `readable: false` returned unconditionally.
+    expect(blocked.readable).not.toBe(absent.readable);
+  });
+
   // grep exits 1 on a genuine no-match (the honest found:false) and exits >=2 when it
   // could not even read the directory — a nonexistent path or a permission error. The
   // two must not collapse into the same found:false, or an unreadable project reports
   // as "nothing here" instead of "the probe could not look" — the exact failure the
   // honest-empty-state rule exists to prevent.
-  test('projectEmptyState distinguishes "no match" from "could not check" (grep exit 1 vs >=2)', () => {
+  test('projectEmptyState distinguishes "no match" from "could not check" (grep exit 1 vs >=2)', async () => {
     const noMatchDir = mkTmpDir('mc-noperm-nomatch-');
     cleanupDirs.push(noMatchDir);
-    const clean = projectEmptyState({ id: 'clean', root: noMatchDir } as Project);
+    const clean = await projectEmptyState({ id: 'clean', root: noMatchDir } as Project);
     expect(clean.found).toBe(false);
     expect(clean.readable).toBeUndefined(); // ran cleanly — no "could not check" flag at all
 
-    const nonexistent = projectEmptyState({ id: 'gone', root: path.join(noMatchDir, 'does-not-exist') } as Project);
+    const nonexistent = await projectEmptyState({ id: 'gone', root: path.join(noMatchDir, 'does-not-exist') } as Project);
     expect(nonexistent.found).toBe(false);
     expect(nonexistent.readable).toBe(false);
     expect(nonexistent.reason).toMatch(/grep exited 2/);
@@ -1357,7 +1666,7 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     cleanupDirs.push(noPermDir);
     fs.chmodSync(noPermDir, 0o000);
     try {
-      const unreadable = projectEmptyState({ id: 'locked', root: noPermDir } as Project);
+      const unreadable = await projectEmptyState({ id: 'locked', root: noPermDir } as Project);
       expect(unreadable.found).toBe(false);
       expect(unreadable.readable).toBe(false);
       expect(unreadable.reason).toMatch(/grep exited 2/);
@@ -1375,7 +1684,7 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
   // is silently lost — reporting absence when it means "I found something AND I also
   // couldn't check everything". The two prior tests only covered wholly-unreadable
   // inputs (nothing to find either way), which is exactly why this survived them.
-  test('projectEmptyState reports a real match even when a sibling directory is unreadable', () => {
+  test('projectEmptyState reports a real match even when a sibling directory is unreadable', async () => {
     const root = mkTmpDir('mc-mixed-match-');
     cleanupDirs.push(root);
     const readableDir = path.join(root, 'subdir-readable');
@@ -1386,7 +1695,7 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     fs.chmodSync(lockedDir, 0o000);
 
     try {
-      const state = projectEmptyState({ id: 'mixed', root } as Project);
+      const state = await projectEmptyState({ id: 'mixed', root } as Project);
       expect(state.found).toBe(true); // the real match must not be discarded
       expect(state.readable).toBe(false); // and the partial blindness must still be reported
       expect(state.reason).toMatch(/grep exited 2/);
@@ -1395,11 +1704,236 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     }
   });
 
+  // THE LIMIT THIS PR DELETED, PUT BACK ON PURPOSE. `execFileSync` could not overlap: one
+  // grep at a time, by construction. Going async removed that accidental cap of 1 and put
+  // nothing in its place — measured before the fix, 20 simultaneous calls produced 20
+  // concurrent greps, each entitled to 8 MB and 10 seconds, reachable from a visited page
+  // because /api/project/:id is a GET with no Origin check.
+  //
+  // COUNTED AT THE OS, not from a counter this module owns: `pgrep -f <tmp root>` asks the
+  // kernel how many grep processes exist with that path in their argv. A test that read an
+  // exported `running` variable would pass just as happily if the semaphore were decremented
+  // twice and four children ran.
+  test('N concurrent probes never put more than the cap of greps on the machine', async () => {
+    // GATE ON THE ENVIRONMENT, never on the result (test/gate.ts). pgrep is present on macOS
+    // and on GitHub's ubuntu runners; if some machine lacks it, say so loudly rather than
+    // reporting a pass nobody measured.
+    try {
+      execFileSync('pgrep', ['-f', 'mc-cap-no-such-process-xyz'], { stdio: 'ignore' });
+    } catch (e) {
+      const code = (e as { status?: number; code?: string }).status;
+      if (code !== 1) {
+        notVerified('probe concurrency cap', 'pgrep is not available on this machine, so children could not be counted');
+        return;
+      }
+    }
+
+    // MAKE THE SUBJECT LONGER RATHER THAN THE SAMPLER FASTER — and let the machine say how
+    // much longer, because guessing got it wrong twice. At ~19 MB the runner's probe lasted
+    // 26 ms against 15.2 ms samples and the overlap went unobserved; tripling the BYTES to
+    // 56 MB moved it only to 35 ms, because the runner is not byte-bound — 3x the data bought
+    // 1.35x the time, so its cost is per-file traversal, not per-byte scanning, and this
+    // laptop's grep is the opposite (1,086 ms on the same tree). No single fixture size is
+    // right for both.
+    //
+    // The alternative — counting children through /proc on Linux — was rejected: a platform
+    // branch nothing here can execute, shipped to close a gate that was telling the truth, is
+    // an unexecuted branch reading as coverage.
+    //
+    // So the tree GROWS UNTIL THIS MACHINE'S PROBE OUTLASTS THIS MACHINE'S SAMPLER, in small
+    // files because that is the axis a fast runner actually feels, bounded so a pathological
+    // machine stops rather than filling a disk.
+    const root = mkTmpDir('mc-cap-');
+    cleanupDirs.push(root);
+    const pgrepAsync = promisify(execFile);
+
+    let files = 0;
+    let dirs = 0;
+    const addFiles = (n: number) => {
+      const dir = path.join(root, `d${dirs++}`);
+      fs.mkdirSync(dir, { recursive: true });
+      for (let f = 0; f < n; f++) fs.writeFileSync(path.join(dir, `f${f}.txt`), 'lorem ipsum dolor sit amet\n');
+      files += n;
+    };
+    const timeOneProbe = async () => {
+      const t0 = Date.now();
+      await projectEmptyState({ id: 'cap', root } as Project);
+      return Math.max(1, Date.now() - t0);
+    };
+
+    addFiles(2_000);
+
+    // THE SAMPLER'S OWN COST, measured with nothing else running — the ruler, before the
+    // thing being measured. `pgrep` forks and scans every process on the box, so this is tens
+    // of milliseconds on a laptop and single digits on a runner, and it is the number the
+    // tree has to beat.
+    const cadenceStart = Date.now();
+    for (let i = 0; i < 10; i++) {
+      try {
+        await pgrepAsync('pgrep', ['-f', root], { encoding: 'utf8' });
+      } catch {
+        /* exit 1, no matches — expected, nothing is running yet */
+      }
+    }
+    const idleCadenceMs = Math.max(0.5, (Date.now() - cadenceStart) / 10);
+
+    let probeMs = await timeOneProbe();
+    let grew = 0;
+    while (probeMs < idleCadenceMs * 4 && grew < 6) {
+      addFiles(6_000);
+      grew++;
+      probeMs = await timeOneProbe();
+    }
+
+    // AND THE SAMPLER DOES NOT BLOCK THE THREAD IT IS WATCHING. `execFileSync` here was worse
+    // than slow: starting the next grep needs this same JS thread (the semaphore hands the
+    // slot over in a microtask), so a blocking sampler and the probe lifecycle interleaved —
+    // greps ran entirely inside the sampler's own sleep and it saw none of them. Async pgrep,
+    // back to back with no sleep, leaves the loop free between samples.
+    let sampling = true;
+    let maxSeen = 0;
+    let samples = 0;
+    const samplerStart = Date.now();
+    const sampler = (async () => {
+      while (sampling) {
+        try {
+          const { stdout } = await pgrepAsync('pgrep', ['-f', root], { encoding: 'utf8' });
+          const n = stdout.trim().split('\n').filter(Boolean).length;
+          if (n > maxSeen) maxSeen = n;
+        } catch {
+          /* pgrep exits 1 with no matches — zero children, nothing to record */
+        }
+        samples++;
+      }
+    })();
+
+    // N IS DERIVED FROM THE CONTROL, because a bigger tree moves the OTHER bound: at 56 MB
+    // twenty probes took 11 s here, overran PROJECT_PROBE_QUEUE_WAIT_MS, and the queue
+    // correctly turned the last ones away — so the test was measuring the wait rather than
+    // the cap. Sizing N to fit inside 60% of that wait keeps both premises true on a fast
+    // runner and a slow laptop without either number being written down for one machine.
+    // Floor of 4 so `maxSeen < N` still says something; ceiling of 20, the reviewer's figure.
+    const N = Math.max(4, Math.min(20, Math.floor((PROJECT_PROBE_QUEUE_WAIT_MS * 0.6 * PROJECT_PROBE_MAX_CONCURRENT) / probeMs)));
+    const runStart = Date.now();
+    const results = await Promise.all(
+      Array.from({ length: N }, () => projectEmptyState({ id: 'cap', root } as Project))
+    );
+    const runMs = Date.now() - runStart;
+    sampling = false;
+    await sampler;
+    const cadenceMs = (Date.now() - samplerStart) / Math.max(1, samples);
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `  [cap] ${N} probes in ${runMs}ms · max concurrent greps ${maxSeen} (cap ${PROJECT_PROBE_MAX_CONCURRENT}) · ` +
+        `one probe ${probeMs}ms over ${files} files (grew ${grew}x, idle pgrep ${idleCadenceMs.toFixed(1)}ms) · ` +
+        `${samples} samples at ${cadenceMs.toFixed(1)}ms`
+    );
+
+    // GATE ON THE INSTRUMENT, not on the answer. If this machine cannot take several samples
+    // inside one probe's lifetime, an overlap it never saw is a fact about the sampler's
+    // resolution — reporting that as a pass would be the §0 defect, and reporting it as a
+    // failure would be blaming the code for the ruler.
+    //
+    // AND THE WITHHELD HALF IS THE ENFORCEMENT ITSELF, not a nicety. With the sampler blind,
+    // `maxSeen` is 0 and every remaining assertion passes trivially: 0 <= 2, 0 < N, 2 <= 4.
+    // So on a coarse runner a RAISED CONSTANT is still caught, by the static `<= 4` check
+    // below — but a cap DECLARED AND NOT APPLIED is caught by nothing. The reviewer proved
+    // that by disabling the semaphore in place, constant untouched: it fails here (maxSeen 20
+    // against a cap of 2) and would pass on a machine that cannot see. Saying "the cap
+    // assertions still run" was true and misleading; run is not verify.
+    const canObserve = cadenceMs * 3 <= probeMs;
+    if (!canObserve) {
+      notVerified(
+        'probe concurrency cap',
+        `one probe lasts ${probeMs}ms and samples are ${cadenceMs.toFixed(1)}ms apart, too coarse to catch two at ` +
+          'once — so ENFORCEMENT IS NOT VERIFIED ON THIS RUNNER AT ALL. A semaphore that was declared and never ' +
+          'applied would look identical from here. What remains checked is only that the declared constant is small'
+      );
+    } else {
+      // NON-VACUITY: the sampler really looked, and it really saw greps overlapping — so the
+      // ceiling below is holding something back rather than describing probes that happened
+      // to run one after another.
+      expect(samples).toBeGreaterThan(3);
+      expect(maxSeen).toBeGreaterThan(1);
+    }
+
+    // TWO BOUNDS, AND THE SECOND ONE IS NOT THE CONSTANT. Asserting only
+    // `maxSeen <= PROJECT_PROBE_MAX_CONCURRENT` reads the value it is supposed to be
+    // checking: raising the constant to 64 raises this assertion with it, and the test stays
+    // green while 20 greps run at once. Measured — that mutation passed 71/0 before this
+    // line existed. So the contract is checked against the declared cap AND against a ceiling
+    // the declaration cannot move. BOTH ARE VACUOUS AT maxSeen 0 — they bound an observation,
+    // and an unobserved run has none.
+    expect(maxSeen).toBeLessThanOrEqual(PROJECT_PROBE_MAX_CONCURRENT);
+    expect(maxSeen).toBeLessThan(N); // a cap that does not cap fails here regardless of its value
+    // The one assertion that holds without observing anything: the declared cap is a SMALL
+    // number. That is the decision under review — the limit exists to bound 8 MB and ten
+    // seconds per child — and it is also the ONLY thing this test still enforces on a machine
+    // whose sampler could not see, which is what the gate above now says out loud.
+    expect(PROJECT_PROBE_MAX_CONCURRENT).toBeLessThanOrEqual(4);
+
+    // Every queued probe still ran and still answered, with no marker in this tree — which is
+    // only the right assertion while the whole run fits inside the queue's own wait. At a
+    // 56 MB tree it did not: twenty probes took 11 s, the last ones were correctly turned
+    // away, and this loop failed for a reason that had nothing to do with the cap. So the
+    // premise is checked rather than assumed, and a machine slow enough to break it says so.
+    expect(results).toHaveLength(N);
+    if (runMs < PROJECT_PROBE_QUEUE_WAIT_MS * 0.8) {
+      for (const r of results) {
+        expect(r.found).toBe(false);
+        expect(r.readable).toBeUndefined(); // none of them was turned away
+      }
+    } else {
+      notVerified(
+        'queued probes all complete',
+        `${N} probes took ${runMs}ms against a ${PROJECT_PROBE_QUEUE_WAIT_MS}ms queue wait, so being turned away is the correct behaviour here rather than a defect`
+      );
+    }
+  }, 120_000);
+
+  // AND THE QUEUE'S OWN ANSWER IS NOT AN EMPTY ONE. A probe turned away because the cap was
+  // full never looked at anything, so reporting `found: false` alone would be the queue
+  // manufacturing empty states under load — the same §0 failure the timeout branch avoids,
+  // arriving through the mechanism added to prevent a different one.
+  test('a probe that never got a slot says so, and is not an all-clear', async () => {
+    const busy = mkTmpDir('mc-cap-busy-');
+    cleanupDirs.push(busy);
+    for (let d = 0; d < 6; d++) {
+      const dir = path.join(busy, `d${d}`);
+      fs.mkdirSync(dir, { recursive: true });
+      for (let f = 0; f < 200; f++) {
+        fs.writeFileSync(path.join(dir, `f${f}.txt`), 'lorem ipsum dolor sit amet '.repeat(400));
+      }
+    }
+
+    // Fill every slot, then ask for one with a wait far shorter than those scans.
+    const holding = Array.from({ length: PROJECT_PROBE_MAX_CONCURRENT }, () =>
+      projectEmptyState({ id: 'holder', root: busy } as Project)
+    );
+    const turnedAway = await projectEmptyState({ id: 'waiter', root: busy } as Project, { queueWaitMs: 1 });
+
+    expect(turnedAway.readable).toBe(false);
+    expect(turnedAway.found).toBe(false);
+    expect(turnedAway.reason).toContain('never started');
+    expect(turnedAway.reason).toContain('NO part of'); // nothing was searched, not "nothing is here"
+    expect(turnedAway.reason).not.toContain('did not finish'); // NOR the timeout's wording
+
+    const held = await Promise.all(holding);
+    // THE MIRROR: the same probe, uncontended, answers cleanly with no could-not-look flag —
+    // which is what proves the assertions above read the queue's branch and not a state this
+    // input produces anyway.
+    for (const r of held) expect(r.readable).toBeUndefined();
+    const uncontended = await projectEmptyState({ id: 'waiter', root: busy } as Project, { queueWaitMs: 1 });
+    expect(uncontended.readable).toBeUndefined();
+    expect(uncontended.found).toBe(false);
+  }, 120_000);
+
   // A directory NAME starting with '-' must reach grep as a path, not a flag — the `--`
   // sentinel in projectEmptyStateProbe is what makes that true regardless of how
   // project.root is ever constructed. Under the shipped default (roots always absolute)
   // this is inert; asserted directly here rather than only in a code comment.
-  test("projectEmptyStateProbe inserts '--' before project.root (argument-injection guard)", () => {
+  test("projectEmptyStateProbe inserts '--' before project.root (argument-injection guard)", async () => {
     const probe = projectEmptyStateProbe({ id: 'x', root: '--include=*.env' } as Project);
     const sentinelIndex = probe.args.indexOf('--');
     expect(sentinelIndex).toBeGreaterThan(-1);
@@ -1412,7 +1946,7 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     cleanupDirs.push(parent);
     const dashDir = path.join(parent, '--include=*.env');
     fs.mkdirSync(dashDir, { recursive: true });
-    const state = projectEmptyState({ id: 'dashy', root: dashDir } as Project);
+    const state = await projectEmptyState({ id: 'dashy', root: dashDir } as Project);
     expect(state.readable).toBeUndefined(); // grep ran cleanly against it as a real path
     expect(state.found).toBe(false);
   });
@@ -1441,7 +1975,7 @@ describe('projectEmptyState is not vulnerable to shell injection via project.roo
     }
   }
 
-  test('a directory name built from shell metacharacters executes nothing', () => {
+  test('a directory name built from shell metacharacters executes nothing', async () => {
     const parent = mkTmpDir('mc-security-parent-');
     cleanupDirs.push(parent);
     const bareMarker = `PWNED_MARKER_${crypto.randomUUID()}`;
@@ -1452,7 +1986,7 @@ describe('projectEmptyState is not vulnerable to shell injection via project.roo
     fs.mkdirSync(maliciousDir, { recursive: true });
 
     try {
-      const state = projectEmptyState({ id: 'evil', root: maliciousDir } as Project);
+      const state = await projectEmptyState({ id: 'evil', root: maliciousDir } as Project);
       expect(fs.existsSync(markerPath)).toBe(false); // nothing was executed
       expect(state.found).toBe(false); // and the read-only answer is still correct: no marker file inside
     } finally {
@@ -1460,7 +1994,7 @@ describe('projectEmptyState is not vulnerable to shell injection via project.roo
     }
   });
 
-  test('...and the same directory, containing a real playbook_stage marker, still answers found=true (not a crash, not a false negative)', () => {
+  test('...and the same directory, containing a real playbook_stage marker, still answers found=true (not a crash, not a false negative)', async () => {
     const parent = mkTmpDir('mc-security-parent2-');
     cleanupDirs.push(parent);
     const bareMarker = `PWNED_MARKER_${crypto.randomUUID()}`;
@@ -1470,7 +2004,7 @@ describe('projectEmptyState is not vulnerable to shell injection via project.roo
     fs.writeFileSync(path.join(maliciousDir, 'docs', 'progress.md'), 'playbook_stage: build\n');
 
     try {
-      const state = projectEmptyState({ id: 'evil2', root: maliciousDir } as Project);
+      const state = await projectEmptyState({ id: 'evil2', root: maliciousDir } as Project);
       expect(fs.existsSync(markerPath)).toBe(false);
       expect(state.found).toBe(true);
     } finally {
@@ -1481,14 +2015,14 @@ describe('projectEmptyState is not vulnerable to shell injection via project.roo
   // MINOR 1 from review: same root cause, non-adversarial — a plain space in a real
   // project name ("My Project") word-split under the old shell-string implementation,
   // so grep silently failed and the answer was wrong (found:false) rather than a crash.
-  test('a directory name containing a space is handled correctly, not silently wrong', () => {
+  test('a directory name containing a space is handled correctly, not silently wrong', async () => {
     const parent = mkTmpDir('mc-security-spaced-');
     cleanupDirs.push(parent);
     const spacedDir = path.join(parent, 'My Project');
     fs.mkdirSync(path.join(spacedDir, 'docs'), { recursive: true });
     fs.writeFileSync(path.join(spacedDir, 'docs', 'progress.md'), 'playbook_stage: build\n');
 
-    expect(projectEmptyState({ id: 'spaced', root: spacedDir } as Project).found).toBe(true);
+    expect((await projectEmptyState({ id: 'spaced', root: spacedDir } as Project)).found).toBe(true);
   });
 
   // Full round-trip through the real Hono app — the reviewer's exact demonstration

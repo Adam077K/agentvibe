@@ -16,7 +16,7 @@
 import { useMemo } from 'react';
 import type { ConflictReport, WorktreeChanges } from '../api.ts';
 import { formatCount } from '../format.ts';
-import { EmptyState, Footnote, StatusDot, Td, Th, Unavailable } from '../ui.tsx';
+import { EmptyState, Figure, Footnote, HeadlineBar, RefreshButton, StatusDot, Td, Th, Unavailable } from '../ui.tsx';
 
 /** The last two path segments — enough to tell `.worktrees/ceo-1-178…` from its siblings. */
 export function worktreeLabel(absPath: string): string {
@@ -279,28 +279,31 @@ export function ConflictsView({
 
   return (
     <section>
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-6 py-3">
-        <div>
-          <div className="label">Files two worktrees are both editing</div>
-          <div className={`fig mt-1 text-xl leading-none ${totals.conflicts > 0 ? 'text-warn' : 'text-text'}`}>
-            {formatCount(totals.conflicts)}
-          </div>
-          <div className="mt-1.5 text-[11px] text-dim">
-            across {formatCount(totals.projectsWithConflicts)} of {formatCount(totals.projects)} projects ·{' '}
-            {formatCount(totals.attempted)} agent worktree{totals.attempted === 1 ? '' : 's'} swept
-            {totals.unreadable > 0 && <>, {formatCount(totals.read)} of them read</>}
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={onRefresh}
-          disabled={loading}
-          className="ml-auto rounded-[3px] border border-line-strong px-3 py-1.5 text-[12px] text-muted transition-colors hover:border-live hover:text-text active:translate-y-[1px] disabled:cursor-wait disabled:opacity-50"
-          title="Re-runs git status --porcelain in every swept worktree"
-        >
-          {loading ? 'Sweeping…' : 'Re-sweep'}
-        </button>
-      </div>
+      <HeadlineBar
+        action={
+          <RefreshButton
+            onClick={onRefresh}
+            busy={loading}
+            idleLabel="Re-sweep"
+            busyLabel="Sweeping…"
+            title="Re-runs git status --porcelain in every swept worktree"
+          />
+        }
+      >
+        <Figure
+          label="Files two worktrees are both editing"
+          value={formatCount(totals.conflicts)}
+          tone={totals.conflicts > 0 ? 'warn' : 'default'}
+          sub={
+            <>
+              across {formatCount(totals.projectsWithConflicts)} of {formatCount(totals.projects)} projects ·{' '}
+              {formatCount(totals.attempted)} agent worktree{totals.attempted === 1 ? '' : 's'} swept
+              {totals.unreadable > 0 && <>, {formatCount(totals.read)} of them read</>}
+            </>
+          }
+          title="Paths with uncommitted edits in more than one swept worktree at the same time, from `git status --porcelain` in each. This is a PREDICTION, not a git state — nothing has been merged and git reports no problem in either worktree yet. Only worktrees a project's .worktrees/.registry names are swept."
+        />
+      </HeadlineBar>
 
       {/* THE NARROWING, STATED UNDER THE HEADER. The sweep looks at 30 of 285 worktrees on
           this machine; a reader who does not know that would take "3 conflicts" as a

@@ -12,7 +12,7 @@
 
 import type { BeliefSummary, ClaimsSummary, LedgerClaim, ScopeBand, VerdictCounts, Waiver } from '../api.ts';
 import { formatCount } from '../format.ts';
-import { EmptyState, Footnote, Td, Th, Unavailable } from '../ui.tsx';
+import { EmptyState, Figure, Footnote, HeadlineBar, RefreshButton, Td, Th, Unavailable } from '../ui.tsx';
 
 const SCOPE_COPY: Record<ScopeBand['scope'], { title: string; blurb: string }> = {
   project: {
@@ -326,30 +326,36 @@ export function BeliefView({
 
   return (
     <section>
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-6 py-3">
-        <div>
-          {/* THE FIGURE IS COMPUTED, and both halves come from one array in one pass on the
-              server (see collectBelief) — never a numerator counted over one population and
-              a denominator over another, which is what put "2 of 11" on the Fleet headline
-              when the answer was 4. */}
-          <div className="label">Ledger coverage</div>
-          <div className="fig mt-1 text-xl leading-none text-text">
-            {formatCount(projectsWithLedgerIndex)} of {formatCount(projectsDiscovered)}
-          </div>
-          <div className="mt-1.5 text-[11px] text-dim">
-            projects carry a claim ledger · showing <span className="fig">{belief.project}</span>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={onRefresh}
-          disabled={loading}
-          className="ml-auto rounded-[3px] border border-line-strong px-3 py-1.5 text-[12px] text-muted transition-colors hover:border-live hover:text-text active:translate-y-[1px] disabled:cursor-wait disabled:opacity-50"
-          title="Re-runs scripts/ledger.mjs verify against both scopes — about twenty seconds"
-        >
-          {loading ? 'Verifying…' : 'Re-verify'}
-        </button>
-      </div>
+      <HeadlineBar
+        action={
+          <RefreshButton
+            onClick={onRefresh}
+            busy={loading}
+            idleLabel="Re-verify"
+            busyLabel="Verifying…"
+            title="Re-runs scripts/ledger.mjs verify against both scopes — about twenty seconds"
+          />
+        }
+      >
+        {/* THE FIGURE IS COMPUTED, and both halves come from one array in one pass on the
+            server (see collectBelief) — never a numerator counted over one population and a
+            denominator over another, which is what put "2 of 11" on the Fleet headline when
+            the answer was 4.
+            AND IT IS NOW WORDED AS WHAT IT COUNTS. "projects carry a claim ledger" is looser
+            than the predicate behind it: `ledgerIndex.present` is true only when
+            .claude/ledger/index.json has been BUILT. A project can hold claims in its
+            artifacts and be counted here as not carrying one. */}
+        <Figure
+          label="Ledger coverage"
+          value={`${formatCount(projectsWithLedgerIndex)} of ${formatCount(projectsDiscovered)}`}
+          sub={
+            <>
+              projects have a built ledger index · showing <span className="fig">{belief.project}</span>
+            </>
+          }
+          title="Discovered projects whose .claude/ledger/index.json exists and parsed, counted from the same array this request discovered. A project holding claims in its artifacts but with no built index is NOT counted — `node scripts/ledger.mjs build` in that project is what changes it."
+        />
+      </HeadlineBar>
 
       <BeliefBands belief={belief} now={now} />
 

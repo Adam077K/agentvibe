@@ -28,6 +28,10 @@ export type {
 } from '../../server/collectors/belief.ts';
 export type { ConflictReport, FileConflict, WorktreeChanges } from '../../server/collectors/conflicts.ts';
 export type { LedgerClaim } from '../../server/projects.ts';
+export type { ProjectDetail, InboxPayload, InboxProject } from '../../server/routes/api.ts';
+export type { EmptyState } from '../../server/collectors/empty.ts';
+export type { EventsSummary } from '../../server/collectors/events.ts';
+export type { ProjectTranscriptStats } from '../../server/collectors/transcripts.ts';
 
 /**
  * `connecting` — no frame has arrived yet on this connection.
@@ -135,25 +139,93 @@ export interface Endpoint<T> {
   loading: boolean;
   /** When `data` arrived — how stale what you are reading is, measured, not assumed. */
   loadedAt: number | null;
+  /**
+   * When the last FAILED attempt ended. Distinct from `loadedAt` on purpose: a request that
+   * errored has an end time but produced no data, and collapsing the two let the app bar say
+   * "fetched" over a panel reporting an error (#39).
+   */
+  failedAt: number | null;
   refetch: () => void;
 }
 
+/** Everything `useEndpoint` knows, as data — so the transitions between them are testable. */
+export interface EndpointState<T> {
+  data: T | null;
+  error: string | null;
+  loading: boolean;
+  loadedAt: number | null;
+  failedAt: number | null;
+}
+
+/** How one request ended, independent of how it was performed. */
+export type Settled<T> = { ok: true; payload: T } | { ok: false; message: string };
+
+export function initialEndpointState<T>(): EndpointState<T> {
+  return { data: null, error: null, loading: true, loadedAt: null, failedAt: null };
+}
+
+/**
+ * A request has STARTED. Data and stamps survive it, because a refetch shows the figures you
+ * already had while the new ones are in flight — that is the badge's "refreshing" state, and
+ * clearing them here would blank the screen on every refresh.
+ */
+export function requestBegan<T>(prev: EndpointState<T>): EndpointState<T> {
+  return { ...prev, loading: true, error: null };
+}
+
+/**
+ * THE STAMPING DECISION, and the whole reason it is a function rather than four setState
+ * calls inside an effect.
+ *
+ * `useEndpoint`'s fetch effect was uncovered — every line of it — so the producer of the
+ * freshness the app bar renders was reachable by no test, while the consumer was pinned
+ * seven ways. Three mutations restored #39 with the full suite green, including the exact
+ * original: stamping a failure as `loadedAt`, which renders "fetched · 3s ago" above a panel
+ * saying the ledger could not be read. A barrier at the pixel with the producer invertible
+ * underneath it is the third instance of this shape in three PRs, and this is the fix that
+ * worked the last two times: make the decision a pure function of what came in.
+ *
+ * The rules, each of which a mutation can now break:
+ *   · a success stamps `loadedAt` and CLEARS `failedAt` — otherwise "could not fetch" hangs
+ *     over data that arrived after it
+ *   · a failure stamps `failedAt` and LEAVES `loadedAt` — the figures on screen really did
+ *     arrive when they say they did; it is the refresh that failed
+ *   · a failure keeps `data`, because the panel below is still showing it
+ */
+export function requestSettled<T>(prev: EndpointState<T>, settled: Settled<T>, at: number): EndpointState<T> {
+  if (settled.ok) {
+    return { data: settled.payload, error: null, loading: false, loadedAt: at, failedAt: null };
+  }
+  return { data: prev.data, error: settled.message, loading: false, loadedAt: prev.loadedAt, failedAt: at };
+}
+
+/**
+ * The message states the route, because "Failed to fetch" alone does not tell a reader which
+ * of five views is the one that could not load.
+ */
+export function failureMessage(url: string, e: unknown): string {
+  return e instanceof Error ? `GET ${url} failed: ${e.message}` : `GET ${url} failed`;
+}
+
 export function useEndpoint<T>(url: string): Endpoint<T> {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadedAt, setLoadedAt] = useState<number | null>(null);
+  const [state, setState] = useState<EndpointState<T>>(initialEndpointState<T>);
   const [nonce, setNonce] = useState(0);
 
   // A tab switch away mid-request unmounts this hook while an 18-second fetch is still in
   // flight. Without the abort the response lands on a dead component, and without the
   // `cancelled` flag a slow first request can overwrite a fast second one — the classic
   // out-of-order-response bug, which on this screen would show yesterday's ledger.
+  //
+  // WHAT IS STILL UNCOVERED HERE, stated rather than left to be discovered: this effect body
+  // (api.ts 218-238) needs a DOM and a live React tree, so no test runs it. Every DECISION it
+  // used to make has moved above — `requestBegan`, `requestSettled`, `failureMessage` — and
+  // all three are pinned. What remains is plumbing: which branch a settled fetch lands in,
+  // the abort/cancel guards, and the cleanup. Those are the lines to read carefully in review,
+  // because nothing else will.
   useEffect(() => {
     const controller = new AbortController();
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+    setState(requestBegan);
 
     fetch(url, { signal: controller.signal })
       .then(async (res) => {
@@ -162,16 +234,11 @@ export function useEndpoint<T>(url: string): Endpoint<T> {
       })
       .then((payload) => {
         if (cancelled) return;
-        setData(payload);
-        setLoadedAt(Date.now());
-        setLoading(false);
+        setState((prev) => requestSettled(prev, { ok: true, payload }, Date.now()));
       })
       .catch((e: unknown) => {
         if (cancelled || (e instanceof DOMException && e.name === 'AbortError')) return;
-        // The message states the route, because "Failed to fetch" alone does not tell a
-        // reader which of four views is the one that could not load.
-        setError(e instanceof Error ? `GET ${url} failed: ${e.message}` : `GET ${url} failed`);
-        setLoading(false);
+        setState((prev) => requestSettled(prev, { ok: false, message: failureMessage(url, e) }, Date.now()));
       });
 
     return () => {
@@ -182,7 +249,7 @@ export function useEndpoint<T>(url: string): Endpoint<T> {
 
   const refetch = useCallback(() => setNonce((n) => n + 1), []);
 
-  return { data, error, loading, loadedAt, refetch };
+  return { ...state, refetch };
 }
 
 /**
