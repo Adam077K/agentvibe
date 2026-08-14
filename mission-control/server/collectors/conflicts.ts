@@ -100,15 +100,126 @@ export interface ConflictReport {
   enumerated: Enumeration;
 }
 
-/** Parses `git status --porcelain` short-format lines into plain file paths. */
+/**
+ * Decodes one C-quoted path exactly as git writes it (`quote.c:quote_c_style`).
+ *
+ * OCTAL ESCAPES ARE BYTES, NOT CHARACTERS, and that is why this accumulates a byte array and
+ * decodes once at the end rather than appending per escape. `é` reaches us as `\303\251` —
+ * two escapes for the two bytes of one UTF-8 code point — so decoding each in isolation
+ * yields `Ã©`, which names a file that does not exist. That is the same defect one level down.
+ *
+ * A path that is not valid UTF-8 is the documented limit here, not an oversight: it decodes
+ * with U+FFFD and will not match on disk. Node's string-based `fs` API cannot address such a
+ * file at all without Buffer paths, so there is no string this could return that would be
+ * more correct.
+ */
+function unquoteCStyle(token: string): string {
+  const body = token.length >= 2 && token.endsWith('"') ? token.slice(1, -1) : token.slice(1);
+  const bytes: number[] = [];
+  const encoder = new TextEncoder();
+  const pushLiteral = (s: string) => {
+    for (const b of encoder.encode(s)) bytes.push(b);
+  };
+  const SIMPLE = new Map<string, number>([
+    ['a', 0x07],
+    ['b', 0x08],
+    ['t', 0x09],
+    ['n', 0x0a],
+    ['v', 0x0b],
+    ['f', 0x0c],
+    ['r', 0x0d],
+    ['"', 0x22],
+    ['\\', 0x5c],
+  ]);
+
+  for (let i = 0; i < body.length; i++) {
+    const ch = body[i]!;
+    if (ch !== '\\') {
+      pushLiteral(ch);
+      continue;
+    }
+    const next = body[++i];
+    if (next === undefined) {
+      bytes.push(0x5c); // a trailing backslash git never emits — kept, never dropped
+      break;
+    }
+    const simple = SIMPLE.get(next);
+    if (simple !== undefined) {
+      bytes.push(simple);
+      continue;
+    }
+    if (next >= '0' && next <= '7') {
+      let oct = next;
+      while (oct.length < 3) {
+        const peek = body[i + 1];
+        if (peek === undefined || peek < '0' || peek > '7') break;
+        oct += peek;
+        i++;
+      }
+      bytes.push(parseInt(oct, 8) & 0xff);
+      continue;
+    }
+    pushLiteral(next); // unknown escape: keep the character rather than invent or drop one
+  }
+  return new TextDecoder('utf-8').decode(new Uint8Array(bytes));
+}
+
+/**
+ * Reads ONE path field starting at `i` — quoted or bare — decoded, with the index past it.
+ *
+ * THE ARROW CANNOT BE FOUND BY SEARCHING FOR IT, which is exactly what the old parser did.
+ * A file named `arrow -> looking.ts` is quoted by git precisely because it contains spaces,
+ * so `indexOf(' -> ')` finds the arrow INSIDE the name and yields `looking.ts"`. Scanning the
+ * quoted span first — respecting backslash escapes, so an escaped `\"` does not end it —
+ * makes the arrow findable only where it is a separator. A bare field needs no such care: a
+ * path git left unquoted contains no space, so the first ` -> ` after it is the separator.
+ */
+function readPathField(rest: string, i: number): { path: string; next: number } {
+  if (rest[i] === '"') {
+    let j = i + 1;
+    while (j < rest.length) {
+      if (rest[j] === '\\') {
+        j += 2;
+        continue;
+      }
+      if (rest[j] === '"') break;
+      j++;
+    }
+    return { path: unquoteCStyle(rest.slice(i, Math.min(j + 1, rest.length))), next: j + 1 };
+  }
+  const arrow = rest.indexOf(' -> ', i);
+  const end = arrow === -1 ? rest.length : arrow;
+  return { path: rest.slice(i, end), next: end };
+}
+
+/**
+ * Parses `git status --porcelain` short-format lines into plain file paths.
+ *
+ * UN-C-QUOTING IS NOT COSMETIC, AND ITS ABSENCE WAS A SECOND FABRICATION — same class as the
+ * truncation defect below, reached with no truncation at all. Git quotes any path holding a
+ * space, a quote, a backslash, a control character or a non-ASCII byte, which is most real
+ * names the moment one has a space in it. This parser handed the quotes and octal escapes
+ * straight through, so `"with space.ts"` and `"nonascii-caf\303\251.ts"` reached the conflict
+ * map verbatim and the view rendered conflicts on files nobody has. Measured on a
+ * four-file fixture with no truncation: 3 of 4 rendered paths did not exist.
+ *
+ * For a rename (`R  <orig> -> <new>`) this returns the NEW path: it is the one on disk, and
+ * the one another worktree can collide with. Note git's own inconsistency — `-z` emits that
+ * pair in the OPPOSITE order — which is one reason this parses the v1 text form only.
+ *
+ * Every line reaching here is COMPLETE: on the success path git wrote all of it, and on the
+ * recovery path `wholeLinesOf` has already dropped any partial tail. So a quoted field always
+ * carries its closing quote and this never has to guess at half an escape.
+ */
 export function parseStatusPorcelain(text: string): string[] {
   const files: string[] = [];
   for (const line of text.split('\n')) {
     if (!line) continue;
-    const rest = line.slice(2).trim(); // strip the 2-char XY status code
+    const rest = line.slice(2).trimStart(); // strip the 2-char XY status code and its separator
     if (!rest) continue;
-    const arrow = rest.indexOf(' -> ');
-    files.push(arrow === -1 ? rest : rest.slice(arrow + 4));
+    const first = readPathField(rest, 0);
+    const file = rest.startsWith(' -> ', first.next) ? readPathField(rest, first.next + 4).path : first.path;
+    if (file) files.push(file);
   }
   return files;
 }
@@ -242,7 +353,12 @@ export async function changedFilesFor(
     const err = e as { stdout?: string; stderr?: string; code?: number | string; killed?: boolean; message?: string };
     const stdout = (err.stdout ?? '').toString();
     const recovered = wholeLinesOf(stdout);
-    const discarded = stdout.length - recovered.length;
+    // BYTES, TAKEN RATHER THAN ASSUMED. `String.length` is UTF-16 code units, and while git's
+    // C-quoting makes porcelain v1 pure ASCII — so the two agree today — "bytes" is a
+    // measurement claim and this is the line that has to actually take it. `core.quotePath`
+    // is configurable, and the day it is off the old number would have been quietly wrong.
+    const recoveredBytes = Buffer.byteLength(recovered, 'utf8');
+    const discardedBytes = Buffer.byteLength(stdout, 'utf8') - recoveredBytes;
     const stderrTail = (err.stderr ?? '').toString().trim().slice(0, 300);
     const how = err.killed ? `timed out after ${STATUS_TIMEOUT_MS}ms` : `exited ${err.code ?? 'unknown'}`;
     return {
@@ -250,9 +366,15 @@ export async function changedFilesFor(
       readable: false,
       reason:
         `git status --porcelain ${how} in ${worktreePath} (${stderrTail || err.message || 'no stderr'}) — ` +
-        `${recovered.length} bytes recovered as whole lines` +
-        (discarded > 0 ? `, ${discarded} trailing bytes discarded as a partial path` : '') +
-        ". What was read is a PREFIX of this worktree's changes, never all of them.",
+        `${recoveredBytes} bytes recovered as whole lines` +
+        (discardedBytes > 0 ? `, ${discardedBytes} trailing bytes discarded as a partial path` : '') +
+        // ONLY WHEN SOMETHING WAS ACTUALLY READ. On ENOENT or a not-a-repo path git writes no
+        // stdout at all, and appending "what was read is a PREFIX" there claims a prefix of a
+        // read that never happened — a smaller version of the same "reporting on something it
+        // did not measure" this whole file exists to remove.
+        (recoveredBytes > 0
+          ? ". What was read is a PREFIX of this worktree's changes, never all of them."
+          : '. Nothing was read, so this worktree\'s changes are UNKNOWN rather than empty.'),
     };
   }
 }
@@ -263,8 +385,21 @@ export async function changedFilesFor(
  * The per-worktree calls run concurrently — the sweep is one `git status` per worktree with
  * no ordering between them, and after scoping the fan-out is bounded by how many worktrees a
  * project's registry names (30 across the whole machine, measured), not by how many exist.
+ *
+ * `opts` FORWARDS TO changedFilesFor, AND THE REASON IS THAT ITS ABSENCE MADE A TEST VACUOUS.
+ * The consumer barrier — "no rendered conflict names a file that does not exist" — exists to
+ * catch the producer being free underneath it. With no seam here it swept at the full 8 MiB
+ * ceiling against a fixture producing 8,600 bytes, 0.10% of the bound, so the recovery branch
+ * never ran and the barrier passed with the truncation defect FULLY RESTORED. A barrier that
+ * cannot reach the branch it guards is the same shape as the defect it guards against.
+ *
+ * Lowering only, never raising: changedFilesFor clamps to STATUS_MAX_BUFFER itself, so this
+ * forwards a request and cannot widen the machine's protection.
  */
-export async function detectConflicts(project: Project): Promise<ConflictReport> {
+export async function detectConflicts(
+  project: Project,
+  opts: { maxBuffer?: number } = {}
+): Promise<ConflictReport> {
   // AWAITED, and that is the whole of C3. Every call in this function is now async, so the
   // synchronous prefix of the request is the argument marshalling and nothing else. When this
   // was `listWorktrees` (execFileSync), /api/conflicts spent 603 ms of a 606 ms request
@@ -274,7 +409,7 @@ export async function detectConflicts(project: Project): Promise<ConflictReport>
   const { swept, excluded } = scopeSweep(entries);
 
   const worktrees: WorktreeChanges[] = await Promise.all(
-    swept.map(async (w) => ({ path: w.path, branch: w.branch, ...(await changedFilesFor(w.path)) }))
+    swept.map(async (w) => ({ path: w.path, branch: w.branch, ...(await changedFilesFor(w.path, opts)) }))
   );
 
   const byFile = new Map<string, { path: string; branch: string | null }[]>();
