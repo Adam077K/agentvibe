@@ -114,6 +114,13 @@ Corollaries, each earned:
   fix would have been aimed at the wrong thing while the entry closed green. **When you write down why
   something failed, either reproduce it or mark the cause UNTESTED.** The cheap instrument is to try to make
   it fail on purpose; a failure you cannot reproduce under the condition you blamed is not explained.
+- **When a runner kills a child, the child's error arrives first and looks like the cause. Check for a
+  signal before believing a stack.** The #47 failures were read as a broken git fixture because the log
+  ended in a multi-line stack at `initGitRepo`. It carried `signal: "SIGTERM", status: null` — git was
+  *killed*, not failing — and bun had already printed `^ this test timed out after 5000ms`. One of the two
+  failures printed no git stack at all. The diagnosis was in bytes we already had; a stack is visually
+  louder than the one line that says what happened, and we read the loud one. **`status: null` with a
+  signal set means someone else ended it — that is teardown, not a defect.**
 - **A test with no explicit timeout still has one, and it is an unwritten duration assertion.** 71 tests on
   bun's implicit 5 s default, 25 of them forking 12–18 git processes: the budget is real, nobody chose it,
   and when it blows it surfaces *inside the fixture* as a git throw — indistinguishable from a broken
