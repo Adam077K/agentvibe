@@ -97,7 +97,7 @@ export const STATUS_ARGV = ['--no-optional-locks', 'status', '--porcelain'] as c
  * `GIT_CONFIG_SYSTEM`, and an inherited hostile `GIT_CONFIG_PARAMETERS`.
  */
 export function statusConfigEnv(ambient: NodeJS.ProcessEnv = process.env): Record<string, string> {
-  const ours = ["'core.quotePath=true'", "'status.showUntrackedFiles=normal'"].join(' ');
+  const ours = ["'core.quotePath=true'", "'status.showUntrackedFiles=all'"].join(' ');
   const existing = ambient.GIT_CONFIG_PARAMETERS;
   return {
     // Kept as well as the append: these lose to PARAMETERS but beat everything else, so on a
@@ -109,9 +109,36 @@ export function statusConfigEnv(ambient: NodeJS.ProcessEnv = process.env): Recor
     // the untracked file vanished from the sweep with `readable: undefined` — a clean read
     // reported over a population git had been told not to look at. That is worse than the
     // fabrication this file was opened to fix, because absence is the answer nobody
-    // investigates. Executed: 0 records with it set, 1 with this forced.
+    // investigates. Executed: 0 records with `no`, 1 with this forced.
+    //
+    // `all`, NOT `normal`, AND THE DIFFERENCE IS THE WHOLE POINT. FORCING A VALUE IS A CLAMP IN
+    // BOTH DIRECTIONS, and the first version of this forced `normal` — an INTERIOR value of
+    // `no | normal | all` — so it raised `no` as intended and silently LOWERED `all`. `all` is
+    // an ENDPOINT, so forcing it can only ever raise; the clamp is one-directional by
+    // construction rather than by luck. That is the general rule: forcing an interior value
+    // clamps both ways and needs a test on each side; forcing an endpoint does not.
+    //
+    // AND LOWERING TO `normal` INVENTS CONFLICTS, which is the defect class this file exists to
+    // remove. Measured (`git -c status.showUntrackedFiles=X status --porcelain`, two new files
+    // under one new directory):
+    //
+    //   no      (nothing)
+    //   normal  `?? newdir/`                        <- git's DEFAULT
+    //   all     `?? newdir/a.ts`  `?? newdir/b.ts`
+    //
+    // `detectConflicts` keys on the exact string, so under `normal` two worktrees that added
+    // DIFFERENT files under one new directory both report `newdir/` and collide — a conflict
+    // nobody has. Note that this is git's default, so the false positive was PRE-EXISTING and
+    // unconditional; forcing `normal` did not create it, it removed the accidental escape that
+    // a user with `all` happened to have. Forcing `all` fixes it for everyone.
+    //
+    // THE COST, MEASURED, because `all` expands a collapsed directory into one record per file:
+    // 5,000 untracked files in one directory produce 143,893 bytes against the 8 MiB ceiling
+    // (1.7%), in 32 ms versus 33 ms for `normal` — no time cost. A tree large enough to exceed
+    // the ceiling reports `readable: false` with the bytes it recovered, which is the honest
+    // three-state, not the silent miss `no` produced.
     GIT_CONFIG_KEY_1: 'status.showUntrackedFiles',
-    GIT_CONFIG_VALUE_1: 'normal',
+    GIT_CONFIG_VALUE_1: 'all',
     GIT_CONFIG_PARAMETERS: existing ? `${existing} ${ours}` : ours,
   };
 }

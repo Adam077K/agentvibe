@@ -1217,7 +1217,7 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
    * their fixtures and fail them on their premise instead of on the behaviour under test.
    */
   const showUntrackedNormal = () => {
-    const ours = "'status.showUntrackedFiles=normal'";
+    const ours = "'status.showUntrackedFiles=all'";
     const existing = process.env.GIT_CONFIG_PARAMETERS;
     return existing ? `${existing} ${ours}` : ours;
   };
@@ -1269,9 +1269,79 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
 
     // The ambient value is APPENDED, never replaced — dropping someone else's git config on the
     // floor would be its own silent behaviour change.
-    const OURS = "'core.quotePath=true' 'status.showUntrackedFiles=normal'";
+    const OURS = "'core.quotePath=true' 'status.showUntrackedFiles=all'";
     expect(statusConfigEnv(hostile).GIT_CONFIG_PARAMETERS).toBe(`'core.quotePath=false' ${OURS}`);
     expect(statusConfigEnv({}).GIT_CONFIG_PARAMETERS).toBe(OURS);
+  });
+
+  // EACH SIDE OF THE PIN, WHICH IS THE TEST THE LAST ROUND DID NOT HAVE. Forcing a value is a
+  // clamp in BOTH directions, and the previous forced value — `normal` — was an INTERIOR point
+  // of `no | normal | all`, so it raised `no` as intended and silently LOWERED `all`. The
+  // mutation matrix only ever asked "what if the setting is absent?", which samples a point
+  // rather than the space. `all` is an ENDPOINT, so the clamp is one-directional by
+  // construction; this asserts that over the whole domain rather than trusting the argument.
+  test('the forced untracked setting raises every ambient value and lowers none', async () => {
+    const outcomes: { ambient: string; files: string[] }[] = [];
+    for (const ambient of ['no', 'normal', 'all', '(absent)']) {
+      const root = mkTmpDir(`mc-clamp-${ambient.replace(/[^a-z]/g, '')}-`);
+      cleanupDirs.push(root);
+      initGitRepo(root);
+      if (ambient !== '(absent)') execFileSync('git', ['config', 'status.showUntrackedFiles', ambient], { cwd: root });
+      fs.mkdirSync(path.join(root, 'newdir'), { recursive: true });
+      fs.writeFileSync(path.join(root, 'newdir', 'a.ts'), 'x\n');
+      fs.writeFileSync(path.join(root, 'newdir', 'b.ts'), 'x\n');
+      const swept = await changedFilesFor(root);
+      expect(swept.readable).toBeUndefined();
+      outcomes.push({ ambient, files: [...swept.changedFiles].sort() });
+    }
+    // IDENTICAL FOR EVERY AMBIENT VALUE — that is what "the collector does not depend on the
+    // user's config" means, asserted rather than asserted-about.
+    for (const o of outcomes) {
+      expect({ ambient: o.ambient, files: o.files }).toEqual({
+        ambient: o.ambient,
+        files: ['newdir/a.ts', 'newdir/b.ts'],
+      });
+    }
+  });
+
+  // THE FALSE POSITIVE THE INTERIOR VALUE CREATED, pinned at the consumer. Under `normal` —
+  // which is GIT'S OWN DEFAULT, so this was unconditional and pre-existing rather than
+  // introduced — git collapses an untracked directory to `?? newdir/`, and detectConflicts keys
+  // on the exact string. Two worktrees adding DIFFERENT files under one new directory therefore
+  // both reported `newdir/` and collided: a conflict nobody has, which is the class this file
+  // exists to remove.
+  test('two worktrees adding different files under one new directory do not collide', async () => {
+    const parent = mkTmpDir('mc-clamp-conflicts-');
+    cleanupDirs.push(parent);
+    const projectRoot = path.join(parent, 'ashcroft');
+    initGitRepo(projectRoot);
+    const wtA = path.join(projectRoot, '.worktrees', 'ceo-1-1');
+    const wtB = path.join(projectRoot, '.worktrees', 'ceo-2-2');
+    addWorktree(projectRoot, wtA, 'ceo-1-1');
+    addWorktree(projectRoot, wtB, 'ceo-2-2');
+    writeRegistry(projectRoot, [
+      { name: 'ceo-1', token: '1' },
+      { name: 'ceo-2', token: '2' },
+    ]);
+    fs.mkdirSync(path.join(wtA, 'newdir'), { recursive: true });
+    fs.mkdirSync(path.join(wtB, 'newdir'), { recursive: true });
+    fs.writeFileSync(path.join(wtA, 'newdir', 'only-a.ts'), 'a\n');
+    fs.writeFileSync(path.join(wtB, 'newdir', 'only-b.ts'), 'b\n');
+    // …and one genuinely shared file, so the test proves it still finds REAL conflicts rather
+    // than passing because it found none.
+    fs.writeFileSync(path.join(wtA, 'shared.ts'), 'a\n');
+    fs.writeFileSync(path.join(wtB, 'shared.ts'), 'b\n');
+
+    const claudeRoot = mkTmpDir('mc-clamp-conflicts-claude-');
+    cleanupDirs.push(claudeRoot);
+    const project = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot }).find(
+      (p) => p.root === projectRoot
+    )!;
+    const report = await detectConflicts(project);
+
+    expect(report.conflicts.map((c) => c.file)).toEqual(['shared.ts']);
+    // Stated as the negative too, because that is the defect: the directory must not be a key.
+    expect(report.conflicts.map((c) => c.file)).not.toContain('newdir/');
   });
 
   // THE OTHER CONFIG THAT SURVIVED THE OVERRIDE, and it fails in the quieter direction:
@@ -1322,7 +1392,19 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
     // mutation it exists to kill. The same fixture-margin shape the barrier above already had
     // twice, now in the pin that replaced the source-text one.
     const BUDGET = 2000;
-    const raw = execFileSync('git', [...STATUS_ARGV], { cwd: root, encoding: 'utf8' });
+    // `showUntrackedFiles` PINNED, `quotePath` DELIBERATELY NOT — pinning quoting here would
+    // destroy the raw stream this comparison exists to measure. Without the pin this read
+    // returned 130 bytes clean and **0 bytes** under an ambient `=no`, so `0 < BUDGET` passed
+    // for the exact opposite of the stated reason: the headroom was asserted against nothing.
+    const raw = execFileSync('git', [...STATUS_ARGV], {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, GIT_CONFIG_PARAMETERS: showUntrackedNormal() },
+    });
+    // NON-VACUITY, and it is the assertion whose absence let the above happen: the raw read has
+    // to have read something before its size means anything. `0 < 2000` should never have been
+    // writable as a pass.
+    expect(Buffer.byteLength(raw, 'utf8')).toBeGreaterThan(0);
     const escaped = execFileSync('git', [...STATUS_ARGV], {
       cwd: root,
       encoding: 'utf8',
