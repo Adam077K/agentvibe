@@ -20,8 +20,13 @@ Handoff for whoever continues: [PHASE-8A-HANDOFF.md](PHASE-8A-HANDOFF.md).
 | **4** | The view registry, Belief over both ledgers, Conflicts async + three-state + scoped | **full** | ✅ **merged** ([#30](https://github.com/Adam077K/agentvibe/pull/30)) — 4 fix rounds, all 3 lenses FAIL on the first pass |
 | **5** | Project + Inbox, `projectEmptyState` async **and bounded**, the #39/#40 debt | **full** | ✅ **merged** ([#32](https://github.com/Adam077K/agentvibe/pull/32)) — 6 fix rounds, correctness FAILed twice before clearing |
 
-**Where it is: 205 tests / 1,246 assertions across 8 files** (VERIFIED on `main` = `01fcadd`, `bun test`,
-82.4 s, exit 0 — it was 193 / 1,213 at phase close on `30f6c35`; #34 and #36 added the difference), `tsc --noEmit`
+**Where it is: 205 tests / 0 fail across 8 files** (VERIFIED on `main` = `01fcadd`, `bun test`, 82.4 s,
+exit 0 — 193 at phase close on `30f6c35`; #34 and #36 added the difference). **The test count is stable; the
+assertion count is not, and quoting one is a mistake this doc made twice.** Two *identical* clean runs of
+`collectors.test.ts` alone returned **386 and 360** `expect()` calls — the live fleet tests loop over real
+projects, so the number moves with what is on disk. The suite reported 1,246 on the run above and 1,213 at
+phase close, and **the difference between those two figures is not a measurement of anything**. Use pass/fail
+counts; treat any `expect()` total here as one sample, `tsc --noEmit`
 clean and inside the gate, cold index 3.7–4.1 s against a 10 s budget, incremental 16 ms, 19 projects and
 ~2,000 sessions rendered. **All six views work end to end.**
 

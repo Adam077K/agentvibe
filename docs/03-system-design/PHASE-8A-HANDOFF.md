@@ -2,7 +2,8 @@
 
 **For:** whoever picks this up next.
 **State: all 5 PRs merged; `main` has since moved to `01fcadd`** (#29, #34, #36 landed after phase close).
-**205 tests / 1,246 assertions, 0 fail** (VERIFIED on `01fcadd`, 82.4 s — it was 193 / 1,213 at close),
+**205 tests, 0 fail** (VERIFIED on `01fcadd`, 82.4 s — 193 at close). Do not quote an assertion total:
+identical runs differ (386 vs 360 on one file), because the live fleet tests loop over what is on disk.
 `npm run check` exits 0 after `bun install` in `mission-control/`. All six views work end to end.
 **Read [SECURITY-FINDINGS-2026-08-14.md](SECURITY-FINDINGS-2026-08-14.md) before running the server** —
 three confirmed RCEs are open on `main`, and until they are closed, do not point Mission Control at a tree
@@ -114,6 +115,13 @@ Corollaries, each earned:
   fix would have been aimed at the wrong thing while the entry closed green. **When you write down why
   something failed, either reproduce it or mark the cause UNTESTED.** The cheap instrument is to try to make
   it fail on purpose; a failure you cannot reproduce under the condition you blamed is not explained.
+- **Before reporting that a number moved, check that it holds still.** Assertion counts across this suite's
+  three hostile-config runs read 396 / 360 / 390, which looks exactly like "the hostile config is covering
+  less" — the phase's own defect class, a green run that measured less. It is not. Two *identical* clean runs
+  give 386 and 360, because the live fleet tests loop over whatever projects are on disk. **A difference is
+  only evidence once you have measured the noise floor**, and the control run costs one command. The
+  corollary: `expect()` totals are not a coverage metric here, and this handoff quoted one as a headline
+  figure twice before checking.
 - **A computed margin is not an exposure.** A bucket boundary is only a risk once you have shown the two
   sides come from *different reads*; otherwise it is arithmetic about a comparison that never happens. F3
   was reported as a 55 s margin derived from a formatter's bucket width, before anyone checked whether any
