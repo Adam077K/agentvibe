@@ -71,6 +71,14 @@ established is *which* shapes recur and what actually catches them. Read this be
   mutation *per barrier* and one came back `0 fail` — not because anyone suspected it. Confidence is
   precisely the state in which an unfiring check survives review, since nobody re-reads what they just
   reasoned carefully about. The rule is cheap and it does not depend on being clever that day.
+- **An environment override you set can be beaten by one the parent exported.** Forcing
+  `core.quotePath=true` through `GIT_CONFIG_COUNT`/`KEY_0`/`VALUE_0` was verified to beat repo-local,
+  `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` — and to **lose** to `GIT_CONFIG_PARAMETERS`, which git reads
+  afterwards **and exports into every child** of `git -c …`, aliases, hooks, `rebase -x`, `bisect run` and
+  `submodule foreach`. Anything spreading `...process.env` inherits it. So "equivalent to the command line"
+  was true against the three configs anyone thinks to test and false against the one that arrives by
+  inheritance. When you force a setting, enumerate every channel that can set it *later*, not just the ones
+  a user edits.
 - **A prior PASS covers a later commit only when the mechanism is unchanged — "it's test-only" is not the
   test.** Two PRs in this phase merged on an earlier verdict, and the justification was narrow both times:
   the delta was additive tests each proven by its own mutation, *plus* one substitution already shown
