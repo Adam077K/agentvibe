@@ -17,6 +17,8 @@ import {
   scopeSweep,
   wholeLinesOf,
   EXCLUDED_REASON,
+  STATUS_ARGV,
+  STATUS_CONFIG_ENV,
 } from '../server/collectors/conflicts.ts';
 import { parseWarroomFleetOutput } from '../server/collectors/fleet.ts';
 import {
@@ -1143,6 +1145,23 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
     expect(parseStatusPorcelain('?? "caf\\303\\251.ts"\n')[0]).not.toContain('Ã');
   });
 
+  // A RAW ASTRAL CHARACTER INSIDE A QUOTED BODY — the shape `core.quotePath=false` produces,
+  // pinned as bytes so it is checked without depending on any git config at all.
+  //
+  // Indexing a JS string yields UTF-16 CODE UNITS, so `🔥` comes back as two lone surrogates,
+  // and encoding a lone surrogate gives `EF BF BD` — U+FFFD. Measured through changedFilesFor
+  // before the fix, readable === undefined and nothing truncated: `"fire 🔥 space.ts"` parsed
+  // to `"fire �� space.ts"`, and 3 of 6 paths named files that do not exist.
+  test('a raw astral character inside a quoted path is not destroyed', () => {
+    expect(parseStatusPorcelain('?? "fire 🔥 space.ts"\n')).toEqual(['fire 🔥 space.ts']);
+    expect(parseStatusPorcelain('?? "math 𝛼 space.ts"\n')).toEqual(['math 𝛼 space.ts']);
+    // The replacement character must not appear — that IS the defect's signature.
+    expect(parseStatusPorcelain('?? "fire 🔥 space.ts"\n')[0]).not.toContain('�');
+    // …and it survives alongside escapes in the same body, which is where index arithmetic
+    // over a code-point array could still go wrong.
+    expect(parseStatusPorcelain('?? "a\\tb 🔥 caf\\303\\251.ts"\n')).toEqual(['a\tb 🔥 café.ts']);
+  });
+
   // GROUND TRUTH for renames, same capture. Note git's v1 text form is `orig -> new` while
   // `-z` emits the pair in the OPPOSITE order; the new path is the one on disk.
   test('a rename yields the new path, with either side quoted or bare', () => {
@@ -1167,41 +1186,142 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
     expect(parseStatusPorcelain('?? "a\\"b -> c.ts"\n')).toEqual(['a"b -> c.ts']);
   });
 
+  /** Every name git has a reason to quote, including the two that broke the decoder. */
+  const EXOTIC_NAMES = [
+    'plain.ts',
+    'with space.ts',
+    'nonascii-café.ts',
+    'emoji-🔥.ts',
+    // BOTH A SPACE AND AN ASTRAL CHARACTER, which is the exact gap the surrogate defect lived
+    // in: `emoji-🔥.ts` alone has no reason to be quoted when core.quotePath is off, so it
+    // arrives bare and never reaches the decoder. The space is what forces quoting; the astral
+    // character inside that quoted body is what the code-unit loop destroyed.
+    'fire 🔥 space.ts',
+    'math 𝛼 space.ts', // outside the BMP too, and not an emoji — a lone surrogate pair
+    'arrow -> looking.ts',
+    'quote".ts',
+    'back\\slash.ts',
+    'tab\tinside.ts',
+    'newline\ninside.ts', // the name that makes wholeLinesOf sound: git C-quotes it
+  ];
+
+  // THE ARGV IS PINNED AGAINST THE COLLECTOR'S OWN, not retyped. A test that spells out its
+  // own git flags is testing a different command from the one that ships — and the flag this
+  // asserts, `-c core.quotePath=true`, is exactly the one whose absence caused the defect.
+  test('the sweep forces core.quotePath so a user config cannot change what is reported', () => {
+    expect(STATUS_CONFIG_ENV).toEqual({
+      GIT_CONFIG_COUNT: '1',
+      GIT_CONFIG_KEY_0: 'core.quotePath',
+      GIT_CONFIG_VALUE_0: 'true',
+    });
+
+    // ASSERTED BY ITS EFFECT, not only by its presence in the object — and against a repo that
+    // has explicitly turned quoting OFF, which is the case that matters. This fails if the
+    // override stops working, not merely if someone edits the literal above.
+    const root = mkTmpDir('mc-quote-flag-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    execFileSync('git', ['config', 'core.quotePath', 'false'], { cwd: root });
+    fs.writeFileSync(path.join(root, 'fire 🔥 space.ts'), 'x\n');
+
+    const forced = execFileSync('git', [...STATUS_ARGV], {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, ...STATUS_CONFIG_ENV },
+    });
+    const bare = execFileSync('git', [...STATUS_ARGV], { cwd: root, encoding: 'utf8' });
+    expect(forced).toContain('\\360\\237\\224\\245'); // the override won over the repo's config
+    expect(bare).not.toContain('\\360\\237\\224\\245'); // …and without it the repo's config wins
+  });
+
+  // AND THAT THE SWEEP ACTUALLY PASSES IT, which the test above does NOT establish — it builds
+  // its own spawn and would keep passing with the collector no longer using the constant at
+  // all. Measured: deleting the `env:` line from changedFilesFor left the whole suite green,
+  // 84 pass 0 fail, under both a clean and a hostile git config. That is the same vacuity this
+  // PR already fixed once at the consumer barrier, reappearing in the test written for the fix.
+  //
+  // WHY THIS IS A SOURCE-TEXT PIN AND NOT A BEHAVIOURAL ONE, stated plainly because the
+  // weakness is real: with the parser correct, the override is not observable in what
+  // changedFilesFor RETURNS. Both input formats decode to the same path — that is precisely
+  // what makes the parser a second barrier rather than a duplicate of the first. So the only
+  // honest assertion left is that the collector passes the config, and the only place to make
+  // it is the source. It moves if someone restructures the call; the astral tests above are
+  // what still catch the fabrication if they do.
+  test('changedFilesFor passes the forced config to git, not just declares it', () => {
+    const source = fs.readFileSync(
+      path.join(import.meta.dir, '..', 'server', 'collectors', 'conflicts.ts'),
+      'utf8'
+    );
+    const code = source
+      .split('\n')
+      .map((line) => line.replace(/\/\/.*$/, ''))
+      .join('\n');
+    expect(code).toMatch(/env:\s*\{\s*\.\.\.process\.env,\s*\.\.\.STATUS_CONFIG_ENV\s*\}/);
+  });
+
   // THE LIVE END, against real git rather than pinned bytes: every path git reports must be a
   // path that exists. Existence rather than name equality, because macOS normalises Unicode
   // in filenames and the pinned test above is where exact decoding is asserted.
+  //
+  // HERMETIC WITH RESPECT TO GIT CONFIG, because it was not. It ran plain `git status` and
+  // asserted its own premise on `\303\251`, so a developer with `core.quotePath=false` set
+  // globally — or `GIT_CONFIG_GLOBAL` pointed anywhere — failed on the premise rather than on
+  // the behaviour. It now runs the collector's own argv, so the test and the collector cannot
+  // disagree about what git was asked.
   test('every path real git reports for exotic names exists on disk', () => {
     const root = mkTmpDir('mc-quote-live-');
     cleanupDirs.push(root);
     initGitRepo(root);
-    const names = [
-      'plain.ts',
-      'with space.ts',
-      'nonascii-café.ts',
-      'emoji-🔥.ts',
-      'arrow -> looking.ts',
-      'quote".ts',
-      'back\\slash.ts',
-      'tab\tinside.ts',
-      'newline\ninside.ts', // the name that makes wholeLinesOf sound: git C-quotes it
-    ];
-    for (const n of names) fs.writeFileSync(path.join(root, n), 'x\n');
+    for (const n of EXOTIC_NAMES) fs.writeFileSync(path.join(root, n), 'x\n');
 
-    const raw = execFileSync('git', ['--no-optional-locks', 'status', '--porcelain'], {
+    const raw = execFileSync('git', [...STATUS_ARGV], {
       cwd: root,
       encoding: 'utf8',
+      env: { ...process.env, ...STATUS_CONFIG_ENV },
     });
     // THE PREMISE: git really did quote these, so the decoder is being exercised. Without
     // this the test would still pass against a git that quoted nothing.
     expect(raw).toContain('\\303\\251'); // non-ASCII went out as octal bytes
+    expect(raw).toContain('\\360\\237\\224\\245'); // …including the four bytes of an astral one
     expect(raw.split('\n').filter((l) => l.includes('"')).length).toBeGreaterThan(5);
     // …and no record contains a raw newline, which is what lets wholeLinesOf split on one.
-    expect(raw.split('\n').filter((l) => l).length).toBe(names.length);
+    expect(raw.split('\n').filter((l) => l).length).toBe(EXOTIC_NAMES.length);
 
     const parsed = parseStatusPorcelain(raw);
-    expect(parsed).toHaveLength(names.length);
+    expect(parsed).toHaveLength(EXOTIC_NAMES.length);
     const missing = parsed.filter((f) => !fs.existsSync(path.join(root, f)));
     expect(missing).toEqual([]);
+  });
+
+  // THE SECOND BARRIER, and it must hold with the flag deliberately turned OFF. The flag
+  // decides what the parser RECEIVES; this decides what the parser DOES with what arrives.
+  // They fail for different reasons — the flag to an edit of the argv, the loop to an edit of
+  // the loop — so a test that only ever sees C-quoted ASCII cannot tell you the parser is
+  // correct, only that the flag is still there.
+  test('a RAW astral character survives, even with core.quotePath off', () => {
+    const root = mkTmpDir('mc-quote-raw-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    execFileSync('git', ['config', 'core.quotePath', 'false'], { cwd: root });
+    for (const n of EXOTIC_NAMES) fs.writeFileSync(path.join(root, n), 'x\n');
+
+    // Deliberately NOT the collector's argv: plain status, so the repo's own config wins and
+    // git emits non-ASCII raw while still quoting for the space.
+    const raw = execFileSync('git', ['--no-optional-locks', 'status', '--porcelain'], {
+      cwd: root,
+      encoding: 'utf8',
+    });
+    // THE PREMISE: this really is the raw form. `\360\237\224\245` must NOT appear, and a
+    // quoted record holding a literal astral character must — otherwise the surrogate path is
+    // not being exercised and this test proves nothing.
+    expect(raw).not.toContain('\\360\\237\\224\\245');
+    expect(raw).toContain('"fire 🔥 space.ts"');
+
+    const parsed = parseStatusPorcelain(raw);
+    const missing = parsed.filter((f) => !fs.existsSync(path.join(root, f)));
+    expect(missing).toEqual([]);
+    expect(parsed).toContain('fire 🔥 space.ts');
+    expect(parsed.join('')).not.toContain('�'); // no character was replaced
   });
 });
 
@@ -1337,10 +1457,18 @@ describe('a truncated git status never invents a filename', () => {
     // EVERY NAME GIT QUOTES, in both worktrees. All sort before the `zzz_` bulk below, so they
     // survive the cut and the exists-on-disk barrier is actually applied to quoted paths —
     // the old fixture was pure ASCII, which is why F2 sailed through it.
+    //
+    // AND THE FIXTURE IS WHY THE BARRIER STAYED GREEN THROUGH THE SURROGATE DEFECT TOO: a
+    // space-and-astral name is the combination that reaches the decoder with a raw astral
+    // character in it, and the first version of this list did not have one. That is twice now
+    // that this barrier was only as good as the names someone thought to write down, which is
+    // the argument for #46 — assert against `git status -z`, where git supplies the names.
     const exotic = [
       'with space.ts',
       'nonascii-café.ts',
       'emoji-🔥.ts',
+      'fire 🔥 space.ts', // space FORCES the quoting; the astral char is what got destroyed
+      'math 𝛼 space.ts', // outside the BMP, and not an emoji
       'arrow -> looking.ts',
       'quote".ts',
       'back\\slash.ts',

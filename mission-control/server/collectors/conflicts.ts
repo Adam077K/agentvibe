@@ -55,6 +55,37 @@ const execFileAsync = promisify(execFile);
 const STATUS_MAX_BUFFER = 8 * 1024 * 1024;
 const STATUS_TIMEOUT_MS = 10_000;
 
+/**
+ * The exact argv of the sweep's `git status`, EXPORTED so the tests assert against the same
+ * array the collector runs rather than a copy of it that agrees today.
+ */
+export const STATUS_ARGV = ['--no-optional-locks', 'status', '--porcelain'] as const;
+
+/**
+ * `core.quotePath=true` forced onto git THROUGH THE ENVIRONMENT, and the spelling is not a
+ * preference.
+ *
+ * The obvious form passes the config as a command-line override before the subcommand, and
+ * that is what the review asked for. It cannot be used here. `test/crosscheck.test.ts` greps
+ * `server/**` for a quoted run-this-string flag in any spawn, because a synchronous spawn of
+ * `bash` with exactly that flag, over a string built from a directory name, was a REAL
+ * command-injection RCE in this codebase — found live 2026-08-13 in collectors/empty.ts. A text
+ * grep cannot tell git's config override from a shell's, and the right response is not to teach
+ * a security guard an exception so this file can use the prettier spelling.
+ *
+ * `GIT_CONFIG_COUNT` carries identical precedence — git documents it as the same as passing the
+ * override on the command line — and trips no such pattern.
+ *
+ * VERIFIED to beat both a repo-local `core.quotePath=false` and a hostile `GIT_CONFIG_GLOBAL`,
+ * which is the whole point: what this collector reports must not depend on whose machine it
+ * runs on.
+ */
+export const STATUS_CONFIG_ENV = {
+  GIT_CONFIG_COUNT: '1',
+  GIT_CONFIG_KEY_0: 'core.quotePath',
+  GIT_CONFIG_VALUE_0: 'true',
+} as const;
+
 export interface WorktreeChanges {
   path: string;
   branch: string | null;
@@ -108,10 +139,33 @@ export interface ConflictReport {
  * two escapes for the two bytes of one UTF-8 code point — so decoding each in isolation
  * yields `Ã©`, which names a file that does not exist. That is the same defect one level down.
  *
+ * ITERATED BY CODE POINT, NOT BY CODE UNIT, AND THAT IS LOAD-BEARING WHENEVER A RAW NON-ASCII
+ * CHARACTER ARRIVES. `core.quotePath=false` — a config any user can set globally or per repo —
+ * makes git emit non-ASCII RAW while still quoting for spaces, quotes, backslashes and control
+ * characters, so a quoted body can contain a literal astral character. Indexing a JS string
+ * hands back one UTF-16 code unit, which for `🔥` is a LONE SURROGATE, and encoding a lone
+ * surrogate yields `EF BF BD` — U+FFFD. Measured through `changedFilesFor`, `readable ===
+ * undefined`, nothing truncated: `"fire 🔥 space.ts"` came back as `"fire �� space.ts"` and 3 of
+ * 6 paths did not exist. That is this file's own fabrication defect, one level further down.
+ *
+ * `Array.from` splits on code points, so an astral character is ONE element and survives. Every
+ * escape git emits is ASCII, so index arithmetic over that array is still exact.
+ *
+ * THE CALLER ALSO FORCES `-c core.quotePath=true`, and the redundancy is deliberate rather than
+ * belt-and-braces theatre: the flag decides what the parser RECEIVES, this decides what the
+ * parser DOES with what arrives. They fail for different reasons — the flag to a future edit of
+ * the argv, this to a future edit of the loop — so neither one alone is the guarantee.
+ *
  * A path that is not valid UTF-8 is the documented limit here, not an oversight: it decodes
  * with U+FFFD and will not match on disk. Node's string-based `fs` API cannot address such a
  * file at all without Buffer paths, so there is no string this could return that would be
- * more correct.
+ * more correct. WORTH KNOWING, because the consequence is larger than a missing file: two
+ * DISTINCT invalid names both decode to U+FFFD, and `byFile` below keys on the decoded string
+ * with no dedupe, so they merge into a single rendered conflict — which can show one worktree
+ * conflicting with ITSELF. Unreachable on APFS, which rejects invalid UTF-8 filenames with
+ * EILSEQ (executed); reachable on Linux, where the kernel takes any byte sequence. Not fixed
+ * here: dedupe would hide the collision rather than report it, and the honest repair is a
+ * Buffer-keyed path type, which is a larger change than this file.
  */
 function unquoteCStyle(token: string): string {
   const body = token.length >= 2 && token.endsWith('"') ? token.slice(1, -1) : token.slice(1);
@@ -132,13 +186,14 @@ function unquoteCStyle(token: string): string {
     ['\\', 0x5c],
   ]);
 
-  for (let i = 0; i < body.length; i++) {
-    const ch = body[i]!;
+  const chars = Array.from(body); // code points — an astral character is one element, not two
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i]!;
     if (ch !== '\\') {
       pushLiteral(ch);
       continue;
     }
-    const next = body[++i];
+    const next = chars[++i];
     if (next === undefined) {
       bytes.push(0x5c); // a trailing backslash git never emits — kept, never dropped
       break;
@@ -151,7 +206,7 @@ function unquoteCStyle(token: string): string {
     if (next >= '0' && next <= '7') {
       let oct = next;
       while (oct.length < 3) {
-        const peek = body[i + 1];
+        const peek = chars[i + 1];
         if (peek === undefined || peek < '0' || peek > '7') break;
         oct += peek;
         i++;
@@ -278,6 +333,17 @@ export const EXCLUDED_REASON =
  * to skip that. Output is byte-identical either way (checked against the same worktree with
  * and without it).
  *
+ * STATUS_CONFIG_ENV MAKES THE INPUT DETERMINISTIC RATHER THAN A PROPERTY OF WHOEVER OWNS THE
+ * REPO. `core.quotePath` is git's default-on, but it is a config — settable globally, per repo,
+ * or through `GIT_CONFIG_GLOBAL` — and with it off git emits non-ASCII RAW while still quoting
+ * for spaces, quotes, backslashes and control characters. That produced a quoted body holding
+ * a literal astral character, which the parser then destroyed: `"fire 🔥 space.ts"` came back
+ * as `"fire �� space.ts"`, 3 of 6 paths naming files that do not exist, with `readable ===
+ * undefined` and nothing truncated. Forcing it means the parser sees one format on every
+ * machine, so a developer's git config cannot change what this collector reports. See
+ * STATUS_CONFIG_ENV for why it is set through the environment rather than as a command-line
+ * override.
+ *
  * The path reaches git as ONE argv element via `cwd`, never as text in a command line, and
  * no shell is involved — see the injection regression test in test/collectors.test.ts, which
  * sweeps a real worktree named with shell metacharacters and asserts nothing executed.
@@ -327,11 +393,16 @@ export async function changedFilesFor(
   const maxBuffer = Math.max(1, Math.min(usable, STATUS_MAX_BUFFER));
 
   try {
-    const { stdout } = await execFileAsync('git', ['--no-optional-locks', 'status', '--porcelain'], {
+    const { stdout } = await execFileAsync('git', STATUS_ARGV, {
       cwd: worktreePath,
       encoding: 'utf8',
       maxBuffer,
       timeout: STATUS_TIMEOUT_MS,
+      // Spread, not replaced: git still needs PATH to be found at all, and the parent's
+      // GIT_CONFIG_GLOBAL / GIT_CONFIG_SYSTEM stay visible so this overrides them rather than
+      // pretending they are absent — which is the same answer either way, and one fewer thing
+      // that behaves differently under a test harness than in production.
+      env: { ...process.env, ...STATUS_CONFIG_ENV },
     });
     return { changedFiles: parseStatusPorcelain(stdout) };
   } catch (e) {
