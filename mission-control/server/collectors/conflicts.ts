@@ -130,13 +130,32 @@ export function statusConfigEnv(ambient: NodeJS.ProcessEnv = process.env): Recor
     // DIFFERENT files under one new directory both report `newdir/` and collide — a conflict
     // nobody has. Note that this is git's default, so the false positive was PRE-EXISTING and
     // unconditional; forcing `normal` did not create it, it removed the accidental escape that
-    // a user with `all` happened to have. Forcing `all` fixes it for everyone.
+    // a user with `all` happened to have.
     //
-    // THE COST, MEASURED, because `all` expands a collapsed directory into one record per file:
-    // 5,000 untracked files in one directory produce 143,893 bytes against the 8 MiB ceiling
-    // (1.7%), in 32 ms versus 33 ms for `normal` — no time cost. A tree large enough to exceed
-    // the ceiling reports `readable: false` with the bytes it recovered, which is the honest
-    // three-state, not the silent miss `no` produced.
+    // WHAT `all` FIXES, AND WHAT IT CANNOT. It splits untracked DIRECTORIES within one
+    // repository, which is the common case above. It CANNOT split a nested REPOSITORY: git
+    // reports another repo inside this one as a single entry no matter what this setting says,
+    // because the setting governs directory recursion and a nested repo is not recursed into at
+    // all. So two worktrees vendoring DIFFERENT nested repos at `vendor/thing` both still report
+    // `vendor/thing/` and still collide — reproduced through real `detectConflicts`. THE DEFECT
+    // CLASS SURVIVES THERE and this comment must not read as though it does not.
+    //
+    // agentvibe itself is mitigated only INCIDENTALLY, because it gitignores `.worktrees/` so
+    // its own nested worktrees never reach the untracked list. That is an accident of this
+    // repo's ignore file, not a property of the fix, and it would stop being true the day
+    // somebody vendors a dependency
+    //
+    // THE COST, MEASURED ON TWO SHAPES, because one of them is a best case and quoting it alone
+    // would be a severity with no command behind it:
+    //
+    //   5,000 files in ONE directory        143,893 B     1.7% of the 8 MiB ceiling, 32 vs 33 ms
+    //   a `node_modules`-shaped tree     10,094,000 B   120.3% of it — crossover near 116k files
+    //
+    // So on a large dependency tree this DOES exceed the ceiling. That degradation is honest and
+    // is why the code is unchanged: the call reports `readable: false` carrying the bytes it
+    // recovered and an `ERR_CHILD_PROCESS_STDIO_MAXBUFFER` reason — correctly attributed, not
+    // mislabelled as a timeout, and not the silent miss `no` produced. It is a bounded, visible
+    // failure rather than a wrong answer.
     GIT_CONFIG_KEY_1: 'status.showUntrackedFiles',
     GIT_CONFIG_VALUE_1: 'all',
     GIT_CONFIG_PARAMETERS: existing ? `${existing} ${ours}` : ours,

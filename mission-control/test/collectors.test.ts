@@ -1212,11 +1212,11 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
   });
 
   /**
-   * `status.showUntrackedFiles=normal` appended to whatever the ambient value is, for the tests
+   * `status.showUntrackedFiles=all` appended to whatever the ambient value is, for the tests
    * that deliberately read BARE git. They must not inherit a hostile `=no`, which would empty
    * their fixtures and fail them on their premise instead of on the behaviour under test.
    */
-  const showUntrackedNormal = () => {
+  const forceShowUntrackedAll = () => {
     const ours = "'status.showUntrackedFiles=all'";
     const existing = process.env.GIT_CONFIG_PARAMETERS;
     return existing ? `${existing} ${ours}` : ours;
@@ -1281,19 +1281,50 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
   // rather than the space. `all` is an ENDPOINT, so the clamp is one-directional by
   // construction; this asserts that over the whole domain rather than trusting the argument.
   test('the forced untracked setting raises every ambient value and lowers none', async () => {
+    // FOUR VALUES x FIVE CHANNELS. The first version swept the values but set them only through
+    // repo-local config — one channel of five — which is a coverage gap that narrows silently
+    // the moment someone adds a channel. `GIT_CONFIG_PARAMETERS` is the one that already beat an
+    // earlier override, so it is not hypothetical.
+    const channels = ['repo-local', 'GLOBAL', 'SYSTEM', 'PARAMETERS', 'COUNT'] as const;
     const outcomes: { ambient: string; files: string[] }[] = [];
-    for (const ambient of ['no', 'normal', 'all', '(absent)']) {
+    for (const ambient of ['no', 'normal', 'all', '(absent)'])
+    for (const channel of channels) {
+      if (ambient === '(absent)' && channel !== 'repo-local') continue; // absent is one case
       const root = mkTmpDir(`mc-clamp-${ambient.replace(/[^a-z]/g, '')}-`);
       cleanupDirs.push(root);
       initGitRepo(root);
-      if (ambient !== '(absent)') execFileSync('git', ['config', 'status.showUntrackedFiles', ambient], { cwd: root });
+      // OUTSIDE the repo: written inside it, this config file is itself an untracked file and
+      // lands in the swept list, failing the comparison for a reason that has nothing to do with
+      // the clamp. Caught by running it.
+      const envDir = mkTmpDir(`mc-clamp-cfg-${channel}-`);
+      cleanupDirs.push(envDir);
+      const envFile = path.join(envDir, 'gitconfig');
+      const prior = { ...process.env };
+      if (ambient !== '(absent)') {
+        if (channel === 'repo-local') execFileSync('git', ['config', 'status.showUntrackedFiles', ambient], { cwd: root });
+        else if (channel === 'GLOBAL' || channel === 'SYSTEM') {
+          fs.writeFileSync(envFile, `[status]\n\tshowUntrackedFiles = ${ambient}\n`);
+          process.env[`GIT_CONFIG_${channel}`] = envFile;
+        } else if (channel === 'PARAMETERS') process.env.GIT_CONFIG_PARAMETERS = `'status.showUntrackedFiles=${ambient}'`;
+        else {
+          process.env.GIT_CONFIG_COUNT = '1';
+          process.env.GIT_CONFIG_KEY_0 = 'status.showUntrackedFiles';
+          process.env.GIT_CONFIG_VALUE_0 = ambient;
+        }
+      }
+      try {
       fs.mkdirSync(path.join(root, 'newdir'), { recursive: true });
       fs.writeFileSync(path.join(root, 'newdir', 'a.ts'), 'x\n');
       fs.writeFileSync(path.join(root, 'newdir', 'b.ts'), 'x\n');
-      const swept = await changedFilesFor(root);
-      expect(swept.readable).toBeUndefined();
-      outcomes.push({ ambient, files: [...swept.changedFiles].sort() });
+        const swept = await changedFilesFor(root);
+        expect(swept.readable).toBeUndefined();
+        outcomes.push({ ambient: `${ambient} via ${channel}`, files: [...swept.changedFiles].sort() });
+      } finally {
+        for (const k of Object.keys(process.env)) if (k.startsWith('GIT_CONFIG')) delete process.env[k];
+        Object.assign(process.env, prior);
+      }
     }
+    expect(outcomes.length).toBe(4 * 5 - 4); // NON-VACUITY: every channel/value pair really ran
     // IDENTICAL FOR EVERY AMBIENT VALUE — that is what "the collector does not depend on the
     // user's config" means, asserted rather than asserted-about.
     for (const o of outcomes) {
@@ -1399,7 +1430,7 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
     const raw = execFileSync('git', [...STATUS_ARGV], {
       cwd: root,
       encoding: 'utf8',
-      env: { ...process.env, GIT_CONFIG_PARAMETERS: showUntrackedNormal() },
+      env: { ...process.env, GIT_CONFIG_PARAMETERS: forceShowUntrackedAll() },
     });
     // NON-VACUITY, and it is the assertion whose absence let the above happen: the raw read has
     // to have read something before its size means anything. `0 < 2000` should never have been
@@ -1474,7 +1505,7 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
     const raw = execFileSync('git', ['--no-optional-locks', 'status', '--porcelain'], {
       cwd: root,
       encoding: 'utf8',
-      env: { ...process.env, GIT_CONFIG_PARAMETERS: showUntrackedNormal() },
+      env: { ...process.env, GIT_CONFIG_PARAMETERS: forceShowUntrackedAll() },
     });
     // THE PREMISE: this really is the raw form. `\360\237\224\245` must NOT appear, and a
     // quoted record holding a literal astral character must — otherwise the surrogate path is
