@@ -164,12 +164,22 @@ export function FleetTable({
                   would put a click target over every figure in it, including the ones with
                   their own title text a reader hovers to read, and would give a keyboard user
                   one stop that announces nine columns. A button on the identifier is the
-                  thing you would point at anyway. */}
+                  thing you would point at anyway.
+
+                  SOLID UNDERLINE, NOT DOTTED, and `cursor-pointer` rather than the default.
+                  This was `decoration-dotted underline-offset-[3px]` — which is `.unavailable`'s
+                  own grammar in styles.css, "a value the UI knows it cannot show", right down
+                  to the offset and with `cursor: help`. Rendered, the one activatable thing in
+                  the table wore the marker for the things that cannot be shown, two cells away
+                  from `no launcher` and `n/a` wearing it literally, differing only in colour.
+                  A solid underline is the affordance every reader already knows, and it is
+                  also the only announcement this drill-down gets — nothing else on screen says
+                  the identifier opens anything. */}
               <button
                 type="button"
                 onClick={() => onOpenProject?.(row.id)}
                 title={`${row.root}\nOpen this project`}
-                className={`fig rounded-[2px] underline decoration-line-strong decoration-dotted underline-offset-[3px] transition-colors hover:decoration-live hover:text-text ${
+                className={`fig cursor-pointer rounded-[2px] underline decoration-line-strong underline-offset-[3px] transition-colors hover:decoration-live hover:text-text ${
                   row.agentActive ? 'text-text' : ''
                 }`}
               >

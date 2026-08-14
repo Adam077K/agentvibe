@@ -10,7 +10,7 @@
 import { useMemo } from 'react';
 import type { InboxProject } from '../api.ts';
 import { formatCount } from '../format.ts';
-import { EmptyState, Figure, Footnote, HeadlineBar, RefreshButton, Td, Th } from '../ui.tsx';
+import { EmptyState, Figure, Footnote, HeadlineBar, RefreshButton, Td, Th, Unavailable } from '../ui.tsx';
 
 export interface InboxTotals {
   projects: number;
@@ -50,10 +50,13 @@ export function InboxTable({ projects }: { projects: InboxProject[] }) {
           <tr key={p.project} className={`transition-colors hover:bg-raised ${i % 2 === 1 ? 'bg-row-alt' : ''}`}>
             <Td className="fig text-text">{p.project}</Td>
             <Td>
+              {/* `Unavailable`, not a bare `<span title>`. ui.tsx states the rule this broke:
+                  a reason reachable only by hovering is a reason a keyboard reader never
+                  gets, and every other could-not-look in this codebase honours it. The
+                  population is one row per project — bounded — which is the proportionate
+                  case the rule was written for. */}
               {p.readable === false ? (
-                <span className="fig text-warn" title={p.reason}>
-                  could not look
-                </span>
+                <Unavailable tone="warn" short="could not look" why={p.reason ?? 'no reason was recorded'} />
               ) : p.found ? (
                 <span className="fig text-live">waiting</span>
               ) : (
@@ -195,17 +198,58 @@ export function InboxView({
         />
       ) : null}
 
-      <div className="border-t border-line">
-        <InboxTable projects={projects} />
-      </div>
+      {/* THE ALL-CLEAR HAS A THIRD CASE, and it had no sentence at all. With nothing waiting
+          but some directory unreadable, neither branch above fires, so the only trace of "we
+          could not check everything" was an 11px sub-line in the headline — while Conflicts
+          gives the identical fact a bordered warn band one tab away. Same class of fact, a
+          quarter of the prominence, which is how a reader learns to trust one screen and not
+          the other. */}
+      {totals.projects > 0 && totals.unreadable > 0 && (
+        <div className="border-t border-line px-6 py-4">
+          <div className="border-l-2 border-l-warn pl-3">
+            <div className="fig text-[12px] text-warn">
+              {formatCount(totals.unreadable)} of {formatCount(totals.projects)} projects could not be checked
+            </div>
+            <p className="mt-1 max-w-[78ch] text-[12.5px] leading-relaxed text-muted">
+              {totals.withMessages === 0 ? (
+                <>
+                  Nothing is waiting in the {formatCount(totals.projects - totals.unreadable)} that were read — and
+                  this is NOT an all-clear for your inbox, because {formatCount(totals.unreadable)} of them were never
+                  opened.
+                </>
+              ) : (
+                <>
+                  {formatCount(totals.withMessages)} of the projects that were read has something waiting, and{' '}
+                  {formatCount(totals.unreadable)} was never opened, so the real count is at least that.
+                </>
+              )}{' '}
+              Each unreadable row below says why, in the <span className="text-warn">could not look</span> marker on
+              its own line.
+            </p>
+          </div>
+        </div>
+      )}
 
-      <Footnote>
-        Each row is one directory read at request time, and the <span className="text-muted">Probe</span> column is
-        the literal glob that produced its answer. A directory that does not exist and one that exists empty both read
-        as <span className="text-dim">none</span> — they are the same fact for a reader waiting on a message, and
-        neither is inferred: both were looked at. A row reading{' '}
-        <span className="text-warn">could not look</span> is neither, and hovering it gives the reason.
-      </Footnote>
+      {/* A TABLE OF NOTHING IS NOT AN EMPTY STATE. With no projects discovered this rendered
+          the headline "Nothing was checked." above three column labels and no rows — the same
+          shape Fleet and Sessions deliberately avoid by rendering the empty state INSTEAD of
+          the table. */}
+      {projects.length > 0 && (
+        <div className="border-t border-line">
+          <InboxTable projects={projects} />
+        </div>
+      )}
+
+      {projects.length > 0 && (
+        <Footnote>
+          Each row is one directory read at request time, and the <span className="text-muted">Probe</span> column is
+          the literal glob that produced its answer. A directory that does not exist and one that exists empty both
+          read as <span className="text-dim">none</span> — they are the same fact for a reader waiting on a message,
+          and neither is inferred: both were looked at. A row reading{' '}
+          <span className="text-warn">could not look</span> is neither; its marker carries the reason, and reaches it
+          by keyboard as well as by pointer.
+        </Footnote>
+      )}
     </section>
   );
 }

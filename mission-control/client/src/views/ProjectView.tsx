@@ -12,6 +12,7 @@
 // can re-run, not as an empty panel implying there is nothing to report.
 
 import type { ProjectDetail } from '../api.ts';
+import { PROJECT_PROBE_TIMEOUT_SECONDS } from '../../../server/collectors/probe-bounds.ts';
 import { formatCount, formatRelative, formatShare, tildeHome } from '../format.ts';
 import { EmptyState, Figure, Footnote, HeadlineBar, RefreshButton, StatusDot, Td, Th, Unavailable } from '../ui.tsx';
 
@@ -265,10 +266,15 @@ export function ProjectView({
             <span className="inline-block h-[7px] w-[7px] rounded-full bg-live breathe" />
             <span className="text-[15px] font-medium text-text">Reading this project.</span>
           </div>
+          {/* The bound is READ FROM THE CONSTANT the collector enforces, never spelled out.
+              This sentence said "ten seconds" in prose while empty.ts interpolated the
+              constant into its reason string — so changing the constant left the pending
+              state announcing a bound that no longer existed. */}
           <p className="mt-2 text-[13px] leading-relaxed text-muted">
             Session rollups come from the in-memory index and are instant; the stage probe is a recursive{' '}
             <code className="fig">grep</code> over the project tree, which is milliseconds on a small repository and
-            seconds on a large one. It is bounded at ten seconds and will say so if it hits that.
+            seconds on a large one. It is bounded at {PROJECT_PROBE_TIMEOUT_SECONDS} seconds and will say so if it
+            hits that.
           </p>
         </div>
       </div>
