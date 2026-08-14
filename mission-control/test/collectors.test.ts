@@ -1705,18 +1705,19 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
       }
     }
 
-    // SIZED BETWEEN TWO BOUNDS, and it really is a narrow window. Big enough that one probe
-    // outlasts several samples (56 MB gave 1,129 ms here, comfortable) — and small enough
-    // that N probes at the cap finish inside PROJECT_PROBE_QUEUE_WAIT_MS, because at 56 MB
-    // twenty of them took 11 s, the queue correctly turned the last ones away, and the test
-    // was then measuring the wait rather than the cap. ~19 MB sits between the two.
+    // MAKE THE SUBJECT LONGER RATHER THAN THE SAMPLER FASTER. At ~19 MB the runner's probes
+    // lasted 26 ms against 15.2 ms samples, the ratio failed its own gate, and the overlap
+    // went unobserved on the one machine that matters most. The alternative — counting
+    // children through /proc on Linux — would have been a platform branch nothing on this
+    // laptop can execute, which is a worse trade than an honest gate. ~56 MB is
+    // platform-neutral and runs everywhere.
     const root = mkTmpDir('mc-cap-');
     cleanupDirs.push(root);
     for (let d = 0; d < 8; d++) {
       const dir = path.join(root, `d${d}`);
       fs.mkdirSync(dir, { recursive: true });
       for (let f = 0; f < 220; f++) {
-        fs.writeFileSync(path.join(dir, `f${f}.txt`), 'lorem ipsum dolor sit amet '.repeat(400));
+        fs.writeFileSync(path.join(dir, `f${f}.txt`), 'lorem ipsum dolor sit amet '.repeat(1200));
       }
     }
 
@@ -1751,7 +1752,13 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
       }
     })();
 
-    const N = 20;
+    // N IS DERIVED FROM THE CONTROL, because a bigger tree moves the OTHER bound: at 56 MB
+    // twenty probes took 11 s here, overran PROJECT_PROBE_QUEUE_WAIT_MS, and the queue
+    // correctly turned the last ones away — so the test was measuring the wait rather than
+    // the cap. Sizing N to fit inside 60% of that wait keeps both premises true on a fast
+    // runner and a slow laptop without either number being written down for one machine.
+    // Floor of 4 so `maxSeen < N` still says something; ceiling of 20, the reviewer's figure.
+    const N = Math.max(4, Math.min(20, Math.floor((PROJECT_PROBE_QUEUE_WAIT_MS * 0.6 * PROJECT_PROBE_MAX_CONCURRENT) / probeMs)));
     const runStart = Date.now();
     const results = await Promise.all(
       Array.from({ length: N }, () => projectEmptyState({ id: 'cap', root } as Project))
