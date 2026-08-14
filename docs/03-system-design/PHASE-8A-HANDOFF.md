@@ -2,7 +2,7 @@
 
 **For:** whoever picks this up next.
 **State: all 5 PRs merged; `main` has since moved to `28626d8`** (#29, #34, #36, #31, #33, #35 landed after phase close).
-**222 tests, 0 fail** (VERIFIED on `28626d8`, 77.2 s at load 13.7→5.9 — 205 at `01fcadd`, 193 at close). Record the load average beside any timing: the same suite read 168 s under orphaned load-test spinners. Do not quote an
+**222 tests, 0 fail** (VERIFIED on `28626d8`; independently reproduced). **Do not quote a wall time** — the same suite has read 77.2 s, 166.63 s and 177.88 s on quiet machines, so the runtime varies ≥2× on its own and no single reading evidences anything. 205 tests at `01fcadd`, 193 at close. Do not quote an
 assertion total: identical runs differ (386 vs 360 on one file), because the live fleet tests loop over
 what is on disk.
 `npm run check` exits 0 after `bun install` in `mission-control/`. All six views work end to end.
@@ -150,11 +150,16 @@ Corollaries, each earned:
   support different claims. Corollary, and it is why the trace still matters: `fleetSlice(repoRoot: string =
   REPO_ROOT)` is a *defaulted parameter*, so the seam for a future caller to pass a discovered root exists
   even though none does. A latent shape is worth recording precisely because no execution can find it.
-- **Say what you are NOT covering.** "No Category-1 duration assertions found in either file" was exactly
-  true of the two files audited and was read as a statement about the repo; the only such assertion lives in
-  the third file, which nobody had scoped in (#50). The scope was drawn from where failures had been *seen*
-  rather than from where the property lives. Grep the whole suite for the property first, then choose — and
-  name the exclusion in the verdict line. It costs one sentence.
+- **Say what you are NOT covering — and note that the correction to an incomplete search is usually another
+  incomplete search.** This one has three rounds and is the clearest instance in the phase. An audit reported
+  **no** Category-1 duration assertions, exactly true of the two files it was scoped to, and was read as a
+  statement about the repo. The correction said **one**, in `live.test.ts`. A fact-check found **three files
+  and ~10 assertions** — `perf.test.ts` carries three with identical thresholds, `collectors.test.ts` five
+  (#50). Each answer was produced by someone who had just been told the previous one was too narrow. **"Only
+  one" reads like the end of an investigation, which is exactly why nobody ran the grep** — and the grep is
+  one command. Scope from where the *property* lives, never from where failures were *seen*; name the
+  exclusion in the verdict line; and when you correct someone else's scope, run the exhaustive search rather
+  than the next-widest one.
 - **Forcing a value that is not an extreme of its domain is a clamp in BOTH directions.** Enumerate the
   domain before writing a single mutation: if the forced value is interior, the downward case is mandatory;
   if it is an endpoint, skip it *with a stated reason*. `core.quotePath` is boolean, forced to an endpoint,
