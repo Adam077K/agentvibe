@@ -138,6 +138,18 @@ Corollaries, each earned:
   timing run. **The helper does not close the class** — today's leak came from ad-hoc shell during an audit,
   where no helper is in scope, and that is the common case for exploratory work. The helper covers the
   repeatable path; `uptime` catches contamination from any source, including the ones nobody instrumented.
+- **Execution proves existence; enumeration proves absence. Do not demand the wrong one.** This handoff is
+  otherwise a long argument for running things rather than reasoning about them, and that argument has a
+  boundary. Asked whether a fourth RCE existed at `fleet.ts:131`, the CEO's brief said *"execute it or say
+  plainly that you could not."* **That was the wrong instrument**: a payload can only show that the *one*
+  input you chose does or does not reach the sink, while the question — can *any* request-controlled value
+  reach it — is answered only by enumerating every call site. A negative from execution would have been the
+  **weaker** evidence and would have read as the stronger. The trace settled it (`REPO_ROOT` is computed
+  from `import.meta.url`, and `/api/fleet` reads no query parameter), and it is checkable because the trace
+  is printed rather than summarised. **Mark it CONFIRMED-by-trace, not CONFIRMED-by-execution** — the two
+  support different claims. Corollary, and it is why the trace still matters: `fleetSlice(repoRoot: string =
+  REPO_ROOT)` is a *defaulted parameter*, so the seam for a future caller to pass a discovered root exists
+  even though none does. A latent shape is worth recording precisely because no execution can find it.
 - **Say what you are NOT covering.** "No Category-1 duration assertions found in either file" was exactly
   true of the two files audited and was read as a statement about the repo; the only such assertion lives in
   the third file, which nobody had scoped in (#50). The scope was drawn from where failures had been *seen*
