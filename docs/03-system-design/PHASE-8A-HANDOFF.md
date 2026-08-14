@@ -1,8 +1,8 @@
 # Handoff — Phase 8a, complete
 
 **For:** whoever picks this up next.
-**State: all 5 PRs merged; `main` has since moved to `28626d8`** (#29, #34, #36, #31, #33, #35 landed after phase close).
-**222 tests, 0 fail** (VERIFIED on `28626d8`; independently reproduced). **Do not quote a wall time** — the same suite has read 77.2 s, 166.63 s and 177.88 s on quiet machines, so the runtime varies ≥2× on its own and no single reading evidences anything. 205 tests at `01fcadd`, 193 at close. Do not quote an
+**State: all 5 PRs merged; `main` has since moved to `0bd7625`** (#29, #34, #36, #31, #33, #35, #37 landed after phase close).
+**222 tests, 0 fail** (VERIFIED on `28626d8`, independently reproduced; #37 added 2 more since). **Do not quote a wall time** — the same suite has read 77.2 s, 166.63 s and 177.88 s on quiet machines, so the runtime varies ≥2× on its own and no single reading evidences anything. 205 tests at `01fcadd`, 193 at close. Do not quote an
 assertion total: identical runs differ (386 vs 360 on one file), because the live fleet tests loop over
 what is on disk.
 `npm run check` exits 0 after `bun install` in `mission-control/`. All six views work end to end.

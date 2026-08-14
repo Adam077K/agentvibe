@@ -2,12 +2,13 @@
 
 **Living status.** Updated at each PR. Phase 8b (Dispatch) is deferred — see §1.
 **State: PHASE 8a COMPLETE — all 5 PRs merged** at `main` = `30f6c35`; six follow-on PRs have landed since,
-so `main` is now `28626d8` ([#29](https://github.com/Adam077K/agentvibe/pull/29) budget-guard,
+so seven have landed since ([#29](https://github.com/Adam077K/agentvibe/pull/29) budget-guard,
 [#34](https://github.com/Adam077K/agentvibe/pull/34) stall gate,
 [#36](https://github.com/Adam077K/agentvibe/pull/36) gate extraction,
 [#31](https://github.com/Adam077K/agentvibe/pull/31) the RCE record,
 [#33](https://github.com/Adam077K/agentvibe/pull/33) this doc + the handoff,
-[#35](https://github.com/Adam077K/agentvibe/pull/35) the truncated-status fix). `npm run check` exit 0 after
+[#35](https://github.com/Adam077K/agentvibe/pull/35) the truncated-status fix,
+[#37](https://github.com/Adam077K/agentvibe/pull/37) the untracked clamp). **`main` = `0bd7625`.** `npm run check` exit 0 after
 `bun install` in `mission-control/`.
 Handoff for whoever continues: [PHASE-8A-HANDOFF.md](PHASE-8A-HANDOFF.md).
 
