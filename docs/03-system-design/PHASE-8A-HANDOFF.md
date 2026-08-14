@@ -65,6 +65,17 @@ established is *which* shapes recur and what actually catches them. Read this be
   against a control measured in the same run on the same machine — and note that a **ratio against the run's
   own total cannot catch work that inflates its own denominator**. Where a ratio is the wrong instrument,
   read the quantity as a *gate* rather than a *divisor*; only the gate fails safe.
+- **Run the mutation on the test you just wrote — especially when you are confident.** This is the
+  mechanical form of everything above, and it is not a matter of instinct. Twice in this phase a builder
+  found a vacuous barrier in its own brand-new test, and both times it was because the brief demanded a
+  mutation *per barrier* and one came back `0 fail` — not because anyone suspected it. Confidence is
+  precisely the state in which an unfiring check survives review, since nobody re-reads what they just
+  reasoned carefully about. The rule is cheap and it does not depend on being clever that day.
+- **A comment arguing why code is correct is a claim with no mechanism.** One PR argued at length — in the
+  source and in its report — that `!(a < b)` was chosen over `>=` *because they differ on NaN*, then pinned
+  it with nothing: flipping the operator left the suite green. **The argument was standing in for the
+  evidence.** If a comment explains why a choice matters, the test that makes it matter belongs beside it,
+  or the next refactor discards both silently.
 - **The signal for "this is partial" is the rejection, never the buffer.** A truncated read that happens to
   end on a record boundary is byte-identical to a complete one. Inspecting output to decide whether an
   operation succeeded is the same error as every entry in the table above; the operation already told you.
