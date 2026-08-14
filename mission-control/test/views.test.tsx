@@ -41,6 +41,7 @@ import { VIEWS, FetchedBadge, badgeFor, type Freshness, type ViewDef } from '../
 import type { StreamState } from '../client/src/api.ts';
 import type { ProjectDetail, InboxPayload, InboxProject } from '../server/routes/api.ts';
 import { inboxEmptyState } from '../server/collectors/empty.ts';
+import { PROJECT_PROBE_TIMEOUT_MS, PROJECT_PROBE_TIMEOUT_SECONDS } from '../server/collectors/probe-bounds.ts';
 import type { Project } from '../server/projects.ts';
 import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo, writeRegistry, addWorktree } from './fixtures.ts';
 import { machineGate, notVerified } from './gate.ts';
@@ -94,11 +95,23 @@ function rowLabels(html: string, rowIndex: number): string[] {
 /**
  * Every `<Figure>` in a fragment, in document order, split into its three parts.
  *
- * `numbersIn` is enough for a headline whose sub-lines are pure prose, and wrong for one
- * whose sub-line is a filesystem path: the Project band's `~/…/mc-views-projects-7f3a1/…`
- * contributed six numbers ahead of the first figure, so a positional read of the whole band
- * compared the tmp directory's random suffix against a session count. This scopes the read to
- * the value elements the component actually renders figures into.
+ * READ A BAND WITH THIS, NEVER WITH `numbersIn`. `numbersIn` is a digit scanner, and a
+ * headline is full of things that contain digits without being figures. Two live examples,
+ * both measured:
+ *
+ *   Project band sub-line   `~/…/mc-views-projects-7f3a1/…`   → six numbers before figure #1
+ *   Fleet drift sub-line    `off a86770a9`                    → [11, 86770, 9]
+ *                           `30e0c7aa`                        → [2, 30, 0, 7]
+ *
+ * A generation hash is not prose, and the Fleet assertions that used `numbersIn` survived
+ * only because every index they read — `[0]`, `[1]`, `slice(0, 7)` — happened to fall before
+ * the hash. That is a property of the current band's ORDER, not of the data: add a figure,
+ * reorder the band, or extend the slice by one and the comparison silently starts reading
+ * hexadecimal. Nothing stated the invariant those assertions depended on, so nothing could
+ * enforce it.
+ *
+ * `numbersIn` survives for ONE job: reading a single figure's `sub` when that sub is known to
+ * hold no identifier. Never a whole band.
  *
  * `<div class="label">` with no other class is Figure's own signature — the other three
  * `label` usages in the client are `<span>`s or carry `mb-1.5`.
@@ -468,15 +481,13 @@ describe('render parity — Fleet', () => {
       expect(clean).toContain('all 11 in-scope launchers on a86770a9');
       expect(clean).not.toContain('not compared');
 
-      const dirty = textOf(
-        renderToStaticMarkup(
-          <GenerationFigure
-            modal={{ kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 11, driftedLaunchers: 4 }}
-          />
-        )
+      const dirtyHtml = renderToStaticMarkup(
+        <GenerationFigure modal={{ kind: 'modal', generation: 'a86770a9', inScopeLaunchers: 11, driftedLaunchers: 4 }} />
       );
-      expect(numbersIn(dirty)[0]).toBe(4); // the figure is the drift count, not the hash
-      expect(dirty).toContain('of 11 in-scope launchers, off a86770a9');
+      // THE VALUE ELEMENT, not the first number on screen. `numbersIn` on this fragment
+      // returns [4, 11, 86770, 9] — the last two mined out of the generation hash.
+      expect(asNumber(figuresIn(dirtyHtml)[0]!.value)).toBe(4);
+      expect(textOf(dirtyHtml)).toContain('of 11 in-scope launchers, off a86770a9');
     });
 
     test('the tooltip that documents the population rule says what the code does', () => {
@@ -550,8 +561,9 @@ describe('render parity — Fleet', () => {
 
       // The rendered sentence must use the launcher figure, not the project figure. Reading
       // "1 of 4" here would be the defect: numerator projects, denominator launchers.
-      const text = textOf(renderToStaticMarkup(<GenerationFigure modal={modal} />));
-      expect(numbersIn(text)[0]).toBe(modal.driftedLaunchers);
+      const html = renderToStaticMarkup(<GenerationFigure modal={modal} />);
+      const text = textOf(html);
+      expect(asNumber(figuresIn(html)[0]!.value)).toBe(modal.driftedLaunchers);
       expect(text).toContain('2');
       expect(text).toContain('of 4 in-scope launchers');
       expect(text).not.toContain('of 1 ');
@@ -590,26 +602,34 @@ describe('render parity — Fleet', () => {
     const { app } = buildFixtureState('fleet-headline');
     const payload = (await (await app.fetch(new Request('http://127.0.0.1/api/fleet'))).json()) as FleetSummary;
     const html = renderToStaticMarkup(<FleetHeadline fleet={payload} />);
-    const numbers = numbersIn(html);
+    const figures = figuresIn(html);
 
     const active = payload.projects.filter((p) => p.agentActive).length;
     expect(payload.budget.output_tokens).toBeGreaterThan(0); // the shape below assumes a share is shown
 
-    // Document order: burn window hours · burn · subagent · share% · projects · active ·
-    // dormant. Reading them POSITIONALLY is what catches a swap; a set membership check
-    // would pass with output and subagent exchanged. The drift figure that follows depends
-    // on this machine's ~/bin, so it is asserted by the GenerationFigure tests above, which
-    // pass an explicit ModalGeneration and need no machine state.
-    expect(numbers.slice(0, 7)).toEqual([
-      payload.budget.window_hours,
-      payload.budget.output_tokens,
+    // FIGURE BY FIGURE, each read positionally WITHIN its own element. This was one
+    // `numbersIn(html).slice(0, 7)` over the whole band, which worked only because seven was
+    // where the generation hash started — `off a86770a9` scans as [86770, 9]. The slice was
+    // the invariant and nothing said so; one more figure in the band and it read hex.
+    expect(figures.map((f) => f.label)).toEqual([
+      `Burn · rolling ${payload.budget.window_hours}h · account-wide`,
+      'Projects',
+      'Launcher drift',
+    ]);
+    expect(asNumber(figures[0]!.value)).toBe(payload.budget.output_tokens);
+    // Subagent then share%, in the sub of the figure they are a share OF — the two are read
+    // together so a numerator from one population and a denominator from another cannot pass.
+    expect(numbersIn(figures[0]!.sub)).toEqual([
       payload.budget.subagent_output_tokens,
       Math.round((payload.budget.subagent_output_tokens / payload.budget.output_tokens) * 100),
-      payload.projects.length,
-      active,
-      payload.projects.length - active,
     ]);
+    expect(asNumber(figures[1]!.value)).toBe(payload.projects.length);
+    expect(numbersIn(figures[1]!.sub)).toEqual([active, payload.projects.length - active]);
     expect(payload.budget.output_tokens).not.toBe(payload.budget.subagent_output_tokens); // the swap is detectable
+    // The drift figure's content depends on this machine's ~/bin, so it is asserted by the
+    // GenerationFigure tests above, which pass an explicit ModalGeneration and need no
+    // machine state. Its LABEL is asserted here, because a band that lost the figure
+    // entirely would otherwise still pass.
 
     // And the label collision is gone: the headline no longer shares a name with the column
     // headed "Output tokens · all time", which means something ~30x larger and scoped
@@ -626,8 +646,9 @@ describe('render parity — Fleet', () => {
       ...payload,
       budget: { ...payload.budget, output_tokens: payload.budget.subagent_output_tokens },
     };
-    expect(numbersIn(renderToStaticMarkup(<FleetHeadline fleet={payload} />))[1]).toBe(payload.budget.output_tokens);
-    expect(numbersIn(renderToStaticMarkup(<FleetHeadline fleet={swapped} />))[1]).toBe(
+    const burnOf = (f: FleetSummary) => asNumber(figuresIn(renderToStaticMarkup(<FleetHeadline fleet={f} />))[0]!.value);
+    expect(burnOf(payload)).toBe(payload.budget.output_tokens);
+    expect(burnOf(swapped)).toBe(
       payload.budget.subagent_output_tokens
     );
     expect(payload.budget.output_tokens).not.toBe(payload.budget.subagent_output_tokens);
@@ -674,6 +695,33 @@ describe('render parity — Fleet', () => {
     const html = renderToStaticMarkup(<FleetTable fleet={null} now={Date.now()} />);
     expect(html).toContain('skeleton');
     expect(bodyRows(html).every((cells) => cells.every((c) => c === ''))).toBe(true);
+  });
+
+  // THE ONE ACTIVATABLE THING IN THE TABLE MUST NOT WEAR THE CANNOT-SHOW MARKER. The
+  // drill-down button was `underline decoration-dotted underline-offset-[3px]`, which is
+  // `.unavailable`'s own grammar in styles.css — "a value the UI knows it cannot show",
+  // `cursor: help`, same offset — and it renders two cells away from `no launcher` and `n/a`
+  // wearing it literally, differing only in colour. It is also the drill-down's ONLY
+  // announcement, so the affordance was borrowed from the vocabulary of things you cannot do.
+  test('the drill-down reads as activatable, not as a value that cannot be shown', () => {
+    const payload = fleetWithLaunchers('drill-affordance');
+    const html = renderToStaticMarkup(<FleetTable fleet={payload} now={Date.now()} onOpenProject={() => {}} />);
+
+    const button = /<button\b[^>]*>/.exec(html)?.[0] ?? '';
+    expect(button).not.toBe(''); // premise: the drill-down is rendered at all
+    expect(button).toContain('underline'); // it announces itself as activatable
+    expect(button).toContain('cursor-pointer');
+    expect(button).not.toContain('decoration-dotted'); // …in the link vocabulary, not the help one
+    expect(button).not.toContain('unavailable');
+
+    // NON-VACUITY: this fixture really does render `.unavailable` cells in the same table, so
+    // the collision the assertion forbids is one this input could actually produce.
+    expect(html).toContain('class="unavailable');
+    // And they are still distinguishable after the change: the cannot-show cells keep the
+    // dotted decoration that the button no longer has.
+    const unavailableSpan = /<span[^>]*class="unavailable[^>]*>/.exec(html)?.[0] ?? '';
+    expect(unavailableSpan).not.toBe('');
+    expect(unavailableSpan).toContain('role="note"');
   });
 
   // ── the two state columns, which no test rendered ──────────────────────────────────
@@ -1486,7 +1534,12 @@ describe('render parity — Project', () => {
       )
     );
     expect(text).toContain('recursive');
-    expect(text).toContain('bounded at ten seconds');
+    // THE BOUND, FROM THE CONSTANT THE COLLECTOR ENFORCES. This assertion used to read
+    // 'bounded at ten seconds' — a third spelling of one quantity, in the test that was
+    // supposed to be watching the other two agree. Changing PROJECT_PROBE_TIMEOUT_MS now
+    // fails here unless the view moved with it.
+    expect(text).toContain(`bounded at ${PROJECT_PROBE_TIMEOUT_SECONDS} seconds`);
+    expect(PROJECT_PROBE_TIMEOUT_SECONDS * 1000).toBe(PROJECT_PROBE_TIMEOUT_MS); // one quantity, two units
   });
 
   test('a project that vanished renders the error, not an empty project', () => {
@@ -1563,11 +1616,12 @@ describe('render parity — Inbox', () => {
     expect(rows).toHaveLength(payload.projects.length); // nothing silently dropped
     expect(rows.map((cells) => cells[0]).sort()).toEqual(payload.projects.map((p) => p.project).sort());
 
-    const headline = numbersIn(
+    const headline = figuresIn(
       renderToStaticMarkup(<InboxHeadline totals={totals} loading={false} onRefresh={() => {}} />)
     );
-    // Numerator then denominator, and they come from the one array counted in one pass.
-    expect(headline).toEqual([totals.withMessages, totals.projects]);
+    // Numerator in the value, denominator in the sub beneath it — one array, counted once.
+    expect(asNumber(headline[0]!.value)).toBe(totals.withMessages);
+    expect(numbersIn(headline[0]!.sub)).toEqual([totals.projects]);
   });
 
   test('a directory that could not be read is not counted as an empty inbox', () => {
@@ -1599,6 +1653,80 @@ describe('render parity — Inbox', () => {
     expect(cleanCells).not.toContain('could not look');
   });
 
+  // THE REASON MUST BE REACHABLE WITHOUT A POINTER. It was a bare `<span title>`: no tab
+  // stop, no aria-label, so a keyboard reader got the words "could not look" and no way to
+  // learn why — while every sibling could-not-look in this codebase uses `Unavailable`, which
+  // exists to satisfy exactly that rule (ui.tsx).
+  test('an unreadable row states its reason to a keyboard reader, not only to a hover', () => {
+    const projects = inboxRows('a11y');
+    const unreadable = projects.find((p) => p.readable === false)!;
+    expect(unreadable).toBeDefined(); // premise
+    expect(unreadable.reason).toBeTruthy();
+
+    const html = renderToStaticMarkup(<InboxTable projects={projects} />);
+    const rowIndex = projects.findIndex((p) => p.readable === false);
+    const labels = rowLabels(html, rowIndex);
+    expect(labels.some((l) => l.includes(unreadable.reason!))).toBe(true);
+    expect(labels.some((l) => l.startsWith('could not look:'))).toBe(true);
+    // …and it is focusable, which a title attribute is not.
+    expect(html).toContain('tabindex="0"');
+
+    // THE MIRROR: a readable row has no such marker, so the assertions above are reading the
+    // unreadable branch rather than something every row carries.
+    const readableIndex = projects.findIndex((p) => p.readable !== false);
+    expect(rowLabels(html, readableIndex)).toHaveLength(0);
+  });
+
+  // A TABLE OF NOTHING IS NOT AN EMPTY STATE. Fleet and Sessions render the empty state
+  // INSTEAD of the table; this rendered "Nothing was checked." above three column labels and
+  // no rows, which reads as a table that failed to load rather than a question not asked.
+  test('with nothing discovered there is no table, only the reason there is none', () => {
+    const html = renderToStaticMarkup(<InboxView projects={[]} loading={false} error={null} onRefresh={() => {}} />);
+    expect(textOf(html)).toContain('Nothing was checked');
+    expect(html).not.toContain('<table'); // no header row over an empty body
+    expect(textOf(html)).not.toContain('Probe'); // nor the column labels on their own
+
+    // THE MIRROR: with projects, the table IS rendered — so the assertion above is about the
+    // empty case and not about a table this view never draws.
+    const withRows = renderToStaticMarkup(
+      <InboxView projects={inboxRows('has-rows')} loading={false} error={null} onRefresh={() => {}} />
+    );
+    expect(withRows).toContain('<table');
+    expect(bodyRows(withRows).length).toBeGreaterThan(0);
+  });
+
+  // THE THIRD CASE OF THE ALL-CLEAR HAD NO SENTENCE. Nothing waiting, but something
+  // unreadable: neither empty-state branch fires, so the only trace of "we could not check
+  // everything" was an 11px sub-line — while Conflicts gives the same fact a bordered band.
+  test('nothing waiting but something unreadable gets a stated summary, not just a sub-line', () => {
+    const projects = inboxRows('quiet-but-blind').filter((p) => !p.found);
+    const totals = inboxTotals(projects);
+    // Premises: this is exactly the state that fell between the two branches.
+    expect(totals.withMessages).toBe(0);
+    expect(totals.unreadable).toBe(1);
+    expect(totals.projects).toBeGreaterThan(1);
+
+    const text = textOf(
+      renderToStaticMarkup(<InboxView projects={projects} loading={false} error={null} onRefresh={() => {}} />)
+    );
+    expect(text).toContain(`${totals.unreadable} of ${totals.projects} projects could not be checked`);
+    expect(text).toContain('NOT an all-clear for your inbox');
+    expect(text).toContain(`${totals.projects - totals.unreadable} that were read`);
+    // And the measured all-clear must NOT be claimed over it.
+    expect(text).not.toContain('measured all-clear');
+    expect(text).not.toContain('No project has a message waiting');
+
+    // THE MIRROR: with every directory readable, that band is absent and the all-clear is the
+    // one that speaks.
+    const allRead = textOf(
+      renderToStaticMarkup(
+        <InboxView projects={projects.filter((p) => p.readable !== false)} loading={false} error={null} onRefresh={() => {}} />
+      )
+    );
+    expect(allRead).not.toContain('could not be checked');
+    expect(allRead).toContain('measured all-clear');
+  });
+
   test('the all-clear is printed only when every directory was actually read', () => {
     const projects = inboxRows('allclear').filter((p) => p.readable !== false && !p.found);
     expect(projects.length).toBeGreaterThan(0); // premise
@@ -1628,10 +1756,11 @@ describe('render parity — Inbox', () => {
     const totals = inboxTotals(projects);
     expect(totals.withMessages).toBe(1); // premise
     const html = renderToStaticMarkup(<InboxView projects={projects} loading={false} error={null} onRefresh={() => {}} />);
-    expect(numbersIn(renderToStaticMarkup(<InboxHeadline totals={totals} loading={false} onRefresh={() => {}} />))).toEqual([
-      totals.withMessages,
-      totals.projects,
-    ]);
+    const figure = figuresIn(
+      renderToStaticMarkup(<InboxHeadline totals={totals} loading={false} onRefresh={() => {}} />)
+    )[0]!;
+    expect(asNumber(figure.value)).toBe(totals.withMessages);
+    expect(numbersIn(figure.sub)).toEqual([totals.projects]);
     const text = textOf(html);
     expect(text).not.toContain('measured all-clear');
     expect(text).not.toContain('Nothing was checked');
