@@ -6,6 +6,7 @@ import { describe, test, expect } from 'bun:test';
 import { modalInScopeGeneration, parseWarroomFleetOutput, type LauncherRow } from '../server/collectors/fleet.ts';
 import { latestModelFrom } from '../server/index-store.ts';
 import { formatCount, formatRelative, formatShare, shortId, isLive, LIVE_WINDOW_MS } from '../client/src/format.ts';
+import { median, stallGateVerdict, STALL_BOUND, RESOLUTION_FACTOR } from './gate.ts';
 
 const row = (name: string, gen: string, scope: 'in scope' | 'excluded'): LauncherRow => ({
   name,
@@ -205,5 +206,128 @@ describe('format', () => {
     ids.forEach((id, i) => expect(id.includes(labels[i] as string)).toBe(true));
     expect(labels[1]).toBe('design-critic-kol-designsystem-1c07');
     expect(labels[0]).toBe('8e85914b'); // no name recorded — the hex is what there is
+  });
+});
+
+// ── THE STALL GATE'S WITHHOLD BRANCH, WHICH HAD NEVER FIRED ───────────────────────────
+//
+// `stallGateVerdict` decides whether the enumeration stall test's assertion is trusted or
+// withheld — so it guards the trustworthiness of every other assertion in that test. Until
+// this file it had never executed its withhold branch: not in 20 clean runs, not in any of
+// the eight mutations run against it. Reaching it through a real measurement needs a machine
+// marginal enough that asking for 12 children costs most of what blocking on them costs, and
+// a suite cannot arrange that. With the arithmetic extracted it takes synthetic samples.
+//
+// AND ITS OWN ASSUMPTION IS ALREADY VIOLATED ON CLEAN RUNS: the gate assumes correct code's
+// worst round stays under twice the floor's worst, and over 20 clean runs that ratio hit a
+// max of 3.15, exceeding the factor of 2 in 3 of them. Only a `lineMs/fmax` margin of
+// 5.4–16.3 kept the withhold from firing. On a runner with less headroom those two meet, and
+// this branch decides what happens then.
+describe('stallGateVerdict', () => {
+  // 400 is chosen so every number below is exact in binary floating point: 400 × 0.75 = 300
+  // exactly, and F × 2 is exact for every F on a 0.5 grid. The boundary case is therefore
+  // genuinely the boundary and not a rounding artefact.
+  //
+  // Three unequal values, so the reducer is pinned as well as the threshold: the median of
+  // this is 400 — not the mean (466.7) and not the max (900).
+  const CONTROL = [100, 400, 900];
+
+  test('the withhold ratio is STALL_BOUND / RESOLUTION_FACTOR, and it is 0.375', () => {
+    // The sweep below derives its expectation from the constants rather than hardcoding
+    // 0.375, so retuning either constant retunes the expectation instead of silently leaving
+    // a test of the old design. This is the assertion that pins what 0.375 currently is.
+    expect(STALL_BOUND / RESOLUTION_FACTOR).toBe(0.375);
+  });
+
+  test('median is the middle element — not the mean, not the max', () => {
+    expect(median(CONTROL)).toBe(400);
+    expect(median([1, 2, 3, 4])).toBe(3); // even-length: the UPPER of the two middles
+    expect(median([7])).toBe(7);
+  });
+
+  test('withholds exactly when max(floor) > 0.375 × median(control), swept across the range', () => {
+    const withholdRatio = STALL_BOUND / RESOLUTION_FACTOR;
+    const threshold = withholdRatio * 400; // 150
+    const disagreements: { floor: number; got: boolean; expected: boolean }[] = [];
+    const seen = new Set<boolean>();
+
+    for (let f = 0.5; f <= 200; f += 0.5) {
+      const verdict = stallGateVerdict(CONTROL, [0.5, f], 12);
+      const expected = !(f > threshold);
+      seen.add(verdict.resolves);
+      if (verdict.resolves !== expected) disagreements.push({ floor: f, got: verdict.resolves, expected });
+    }
+
+    expect(disagreements).toEqual([]);
+    // NON-VACUITY OF THE SWEEP ITSELF: both outcomes really occur in it, so this cannot pass
+    // by checking one side 400 times.
+    expect(seen).toEqual(new Set([true, false]));
+  });
+
+  test('the boundary itself resolves, and a hair past it withholds', () => {
+    // lineMs is 300 and RESOLUTION_FACTOR × 150 is 300, so the comparison is `300 < 300`.
+    // The gate opens on equality — it withholds only when the line is strictly under.
+    expect(stallGateVerdict(CONTROL, [150], 12).resolves).toBe(true);
+    expect(stallGateVerdict(CONTROL, [149.5], 12).resolves).toBe(true);
+    expect(stallGateVerdict(CONTROL, [150.5], 12).resolves).toBe(false);
+  });
+
+  // THE FLOOR IS REDUCED BY MAX, and this is the test that says so. A gate reading the floor's
+  // median would call this machine fine on the strength of four good rounds.
+  test('one bad floor round withholds even when the median floor is tiny', () => {
+    const floor = [4, 4, 4, 4, 200];
+    expect(median(floor)).toBe(4); // …which would have resolved
+    expect(stallGateVerdict(CONTROL, floor, 12).resolves).toBe(false);
+  });
+
+  // THE CONTROL IS REDUCED BY MEDIAN, likewise. Reading its max here would give a line of
+  // 6750 ms and open the gate on one descheduled round.
+  test('one slow control round does not open the gate on its own', () => {
+    const control = [400, 400, 400, 400, 9000];
+    expect(median(control)).toBe(400);
+    expect(stallGateVerdict(control, [200], 12).resolves).toBe(false);
+  });
+
+  // THE TWO REAL MACHINES THIS GATE HAS SEEN, as the numbers that were actually measured.
+  test('the CI runner behind the original flake is withheld; this laptop is not', () => {
+    // floor/control ran ≈0.61–0.84 on the CI runs that produced the flake — far above 0.375,
+    // so the gate abstains there rather than asserting. That is the mechanism working, and it
+    // is why the PR body's "nothing is skipped on fast machines" had to be struck.
+    for (const ratio of [0.61, 0.84]) {
+      const verdict = stallGateVerdict([356.4], [356.4 * ratio], 12);
+      expect({ ratio, resolves: verdict.resolves }).toEqual({ ratio, resolves: false });
+    }
+    // …and a real clean local run — control 131.7 ms, floor worst 7.3 ms — asserts.
+    expect(stallGateVerdict([131.7], [7.3], 12).resolves).toBe(true);
+  });
+
+  test('lineMs, ceilingMs and controlStallMs are the documented quantities', () => {
+    const verdict = stallGateVerdict(CONTROL, [4, 4, 30], 12);
+    expect(verdict.controlStallMs).toBe(400); // median(control)
+    expect(verdict.lineMs).toBe(300); // STALL_BOUND × median(control)
+    expect(verdict.ceilingMs).toBe(30); // max(floor)
+  });
+
+  test('the reason is null when resolving, and names every number when withholding', () => {
+    expect(stallGateVerdict(CONTROL, [10], 12).reason).toBeNull();
+
+    const withheld = stallGateVerdict(CONTROL, [200], 12);
+    expect(withheld.resolves).toBe(false);
+    expect(withheld.reason).toContain('300.0ms'); // the line
+    expect(withheld.reason).toContain('400.0ms'); // the control it came from
+    expect(withheld.reason).toContain('200.0ms'); // the floor's worst round
+    expect(withheld.reason).toContain('12 children'); // the fixture size it was measured at
+  });
+
+  // THE DEGENERATE INPUT, and the reason it throws rather than returning something.
+  test('an empty sample throws instead of silently opening the gate', () => {
+    expect(() => stallGateVerdict([], [10], 12)).toThrow(/needs both samples/);
+    expect(() => stallGateVerdict([400], [], 12)).toThrow(/needs both samples/);
+    expect(() => median([])).toThrow(/empty sample/);
+
+    // WHY IT MATTERS, stated as the fact that makes it dangerous: the max of nothing is
+    // -Infinity, so `lineMs < -Infinity × 2` is false and the gate would OPEN — asserting on
+    // a measurement that never happened, which is the failure this whole gate exists to stop.
+    expect(Math.max(...([] as number[]))).toBe(-Infinity);
   });
 });
