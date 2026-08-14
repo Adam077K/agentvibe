@@ -71,6 +71,15 @@ established is *which* shapes recur and what actually catches them. Read this be
   mutation *per barrier* and one came back `0 fail` — not because anyone suspected it. Confidence is
   precisely the state in which an unfiring check survives review, since nobody re-reads what they just
   reasoned carefully about. The rule is cheap and it does not depend on being clever that day.
+- **A prior PASS covers a later commit only when the mechanism is unchanged — "it's test-only" is not the
+  test.** Two PRs in this phase merged on an earlier verdict, and the justification was narrow both times:
+  the delta was additive tests each proven by its own mutation, *plus* one substitution already shown
+  bit-identical across 20,163 differential cases. That holds because the mechanism was provably the same,
+  **not because tests are harmless**. The counter-example is in this very phase: making an unfired branch
+  testable *required* extracting the arithmetic into a pure function — a mechanism change wearing the
+  costume of a test addition. When a new test needs the code touched to become testable, the verdict is
+  stale even though the diff looks like more of the same. This is the enforceable half of #24: nothing in
+  the gate notices that a PR number's earlier PASS was passed on different code.
 - **A comment arguing why code is correct is a claim with no mechanism.** One PR argued at length — in the
   source and in its report — that `!(a < b)` was chosen over `>=` *because they differ on NaN*, then pinned
   it with nothing: flipping the operator left the suite green. **The argument was standing in for the
