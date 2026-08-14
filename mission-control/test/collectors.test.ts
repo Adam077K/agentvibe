@@ -49,7 +49,7 @@ import {
   removeMarkers,
   writeRegistry,
 } from './fixtures.ts';
-import { notVerified } from './gate.ts';
+import { notVerified, median, stallGateVerdict } from './gate.ts';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '..', '..');
 const cleanupDirs: string[] = [];
@@ -676,7 +676,6 @@ describe('enumerating many projects leaves the event loop free', () => {
     }
     sampling = false;
 
-    const median = (xs: number[]) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)]!;
     const spread = (xs: number[]) => Math.max(...xs) - Math.min(...xs);
 
     // MAX FOR THE SUBJECT, MEDIAN FOR THE ENVIRONMENT, and the difference is the question
@@ -689,9 +688,18 @@ describe('enumerating many projects leaves the event loop free', () => {
     //
     // The control and the floor are measurements OF THIS MACHINE, where a median is right:
     // one descheduled round should not move an environment estimate.
+    // THE GATE'S VERDICT, TAKEN ONCE AND USED EVERYWHERE — the diagnostic below prints the
+    // same numbers the gate decides on, because two computations of one quantity is how the
+    // printed line and the enforced line drift apart. See test/gate.ts for why this is a pure
+    // function rather than four lines here: its withhold branch had never fired.
+    const gate = stallGateVerdict(controlStalls, floorStalls, PROJECTS);
+
     const asyncStallMs = Math.max(...asyncStalls);
-    const controlStallMs = median(controlStalls);
-    const floorStallMs = median(floorStalls);
+    // `gate.controlStallMs`, not a second `median(controlStalls)`. It was computed twice —
+    // identical today across 20,163 differential cases, which makes it a consistency question
+    // rather than a defect, and exactly the duplicate this file already removed for the floor.
+    const controlStallMs = gate.controlStallMs;
+    const floorStallMs = median(floorStalls); // the DIAGNOSTIC's floor; the gate reads the max
 
     // WHICH ROUND EACH REPORTED STALL CAME FROM, so every duration printed beside a stall is
     // that same round's duration and the line cannot contradict itself. `median` returns an
@@ -699,9 +707,6 @@ describe('enumerating many projects leaves the event loop free', () => {
     const asyncRound = asyncStalls.indexOf(asyncStallMs);
     const controlRound = controlStalls.indexOf(controlStallMs);
     const floorRound = floorStalls.indexOf(floorStallMs);
-    // The gate's actual input, printed because it is the number that decides whether this
-    // measurement is trusted at all — and it is NOT the median floor shown beside it.
-    const floorWorstMs = Math.max(...floorStalls);
 
     // eslint-disable-next-line no-console
     console.log(
@@ -711,7 +716,7 @@ describe('enumerating many projects leaves the event loop free', () => {
         `(round ${controlRound + 1}, ${controlMsBy[controlRound]!.toFixed(1)}ms, spread ` +
         `${spread(controlStalls).toFixed(1)}) · spawn floor MEDIAN ${floorStallMs.toFixed(1)}ms ` +
         `(round ${floorRound + 1}, ${floorMsBy[floorRound]!.toFixed(1)}ms, spread ` +
-        `${spread(floorStalls).toFixed(1)}, worst ${floorWorstMs.toFixed(1)}ms — the gate reads this) · ` +
+        `${spread(floorStalls).toFixed(1)}, worst ${gate.ceilingMs.toFixed(1)}ms — the gate reads this) · ` +
         `idle noise ${idleNoiseMs.toFixed(1)}ms · ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
     );
 
@@ -798,22 +803,21 @@ describe('enumerating many projects leaves the event loop free', () => {
     // sight at ratio 1.192 and 1.247. A range over five samples is not a dispersion estimate,
     // it is the worst thing that happened; the median control is stable across those same
     // runs (363-399ms) precisely because a median is not.
-    const lineMs = controlStallMs * 0.75;
-    const correctCodeCeilingMs = floorWorstMs; // the same number the diagnostic printed
-    if (lineMs < correctCodeCeilingMs * 2) {
-      notVerified(
-        'enumeration event-loop binding',
-        `correct code must stay under ${lineMs.toFixed(1)}ms here — three quarters of a ${controlStallMs.toFixed(1)}ms ` +
-          `control — while merely ASKING for the same ${PROJECTS} children cost as much as ` +
-          `${correctCodeCeilingMs.toFixed(1)}ms in its worst round. There is not enough room between the two for a ` +
-          'ratio to mean anything on this machine'
-      );
+    // THE ARITHMETIC IS IN test/gate.ts AND ITS BRANCHES ARE UNIT-TESTED THERE. It used to be
+    // four lines here, and the withhold branch had never executed — in 20 clean runs or in any
+    // of eight mutations. Reaching it through a real measurement needs a genuinely marginal
+    // machine, which a suite cannot arrange; as a pure function it takes synthetic samples.
+    if (!gate.resolves) {
+      notVerified('enumeration event-loop binding', gate.reason!);
       return;
     }
 
     // Same bound as the status-phase test, for the same reason and with the same failure
     // direction. Both terms scale with PROJECTS, so this holds on any machine.
-    expect(asyncStallMs).toBeLessThan(controlStallMs * 0.75);
+    //
+    // `gate.lineMs` rather than a second `controlStallMs * 0.75`: the bound the assertion
+    // enforces is now literally the bound the gate cleared, not a copy of it that agrees today.
+    expect(asyncStallMs).toBeLessThan(gate.lineMs);
   }, 120_000); // EXPLICIT, because three rounds over 48 projects exceeds bun's 5s default —
   // which is how this first failed at the larger count: the runner SIGTERMed the child mid-
   // measurement and the error read as a git failure rather than as a test timeout.

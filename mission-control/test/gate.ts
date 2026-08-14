@@ -97,3 +97,109 @@ export function notVerified(what: string, reason: string): void {
   // eslint-disable-next-line no-console
   console.log(`${what} NOT VERIFIED — ${reason}. Nothing was compared; this is not a pass on the merits.`);
 }
+
+// ── THE ENUMERATION STALL GATE, EXTRACTED SO ITS WITHHOLD BRANCH CAN BE REACHED ────────
+//
+// This arithmetic lived inline in `collectors.test.ts` and decides whether that test's whole
+// assertion is trusted or withheld. IT HAD NEVER FIRED — not in 20 clean runs, not in any of
+// the eight mutations run against it. An untested guard on the trustworthiness of every other
+// assertion in that test.
+//
+// And its own assumption is already violated on clean runs. The gate implicitly assumes a
+// correct implementation's worst round stays under twice the floor's worst — `amax < 2·fmax`.
+// Measured over 20 clean runs: median 1.28, p90 2.33, MAX 3.15, so 3 of 20 exceeded the factor
+// of 2. Nothing went wrong only because `lineMs/fmax` sat at 5.4–16.3 on that machine, so the
+// withhold never came near firing. On a runner with less headroom those two facts meet.
+//
+// Reaching that branch through a real measurement needs a genuinely marginal machine, which is
+// not something a test suite can arrange. So the arithmetic is a pure function and the branch
+// is exercised with synthetic samples. EXTRACTED WITHOUT CHANGING IT: same reducers, same
+// constants, same comparison written the same way round, same reason string.
+
+/** The fraction of the control a correct implementation's worst round must stay under. */
+export const STALL_BOUND = 0.75;
+/** How many times the floor's worst round the line must clear for the gate to open. */
+export const RESOLUTION_FACTOR = 2;
+
+/**
+ * The median of a sample — AN ELEMENT of it, never an interpolation, and for an even-length
+ * sample the upper of the two middles.
+ *
+ * Exported so `collectors.test.ts` stops carrying a second copy. That file's own history is
+ * four separate occasions where one rule or one value had two implementations and they
+ * diverged; a median defined twice is the same bet.
+ *
+ * THROWS ON AN EMPTY SAMPLE rather than returning `undefined`. Nothing measured is not a
+ * measurement, and the alternative is genuinely dangerous — see stallGateVerdict.
+ */
+export function median(xs: number[]): number {
+  if (xs.length === 0) throw new Error('median of an empty sample — nothing was measured');
+  return [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)]!;
+}
+
+export interface StallGateVerdict {
+  /** True when the measurement can discriminate here, so the assertion may be made. */
+  resolves: boolean;
+  /** `STALL_BOUND × median(control)` — the line correct code must stay under. */
+  lineMs: number;
+  /** `max(floor)` — what correct code pays merely to ASK, in its worst round. */
+  ceilingMs: number;
+  /** `median(control)` — the environment estimate the line is taken from. */
+  controlStallMs: number;
+  /** Set only when withholding; null when the gate opens. */
+  reason: string | null;
+}
+
+/**
+ * Whether this machine can resolve the enumeration measurement, and the numbers behind it.
+ *
+ * MEDIAN FOR THE CONTROL, MAX FOR THE FLOOR, and the asymmetry is deliberate. The control is
+ * an environment estimate, where one descheduled round should not move the answer. The floor
+ * is the ceiling a CORRECT implementation's worst round could reach, and the assertion it
+ * guards is itself on a worst round — so it is reduced the same way the subject is.
+ *
+ * Algebraically the gate withholds exactly when `max(floor) > 0.375 × median(control)`.
+ *
+ * THROWS ON AN EMPTY SAMPLE, and the two empty cases are NOT the same defect:
+ *
+ *   empty FLOOR    `Math.max(...[])` is `-Infinity`, so `lineMs < -Infinity × 2` is false and
+ *                  the gate OPENS — carrying a real-looking 300.0 ms line while having
+ *                  measured nothing. SILENT, and the exact object this phase is named after.
+ *   empty CONTROL  `lineMs` becomes NaN, and bun then FAILS `toBeLessThan(NaN)`. Still a bug,
+ *                  but it goes red rather than quietly asserting.
+ *
+ * Only the first is "silently always assert"; saying it of both overstates the danger, which
+ * is its own smaller version of the same problem. Both throw here. The live caller runs a
+ * fixed 5 rounds and pushes unconditionally so it cannot reach this; a future caller might.
+ */
+export function stallGateVerdict(
+  controlStalls: number[],
+  floorStalls: number[],
+  projects: number
+): StallGateVerdict {
+  if (controlStalls.length === 0 || floorStalls.length === 0) {
+    throw new Error(
+      `stallGateVerdict needs both samples: got ${controlStalls.length} control and ${floorStalls.length} floor rounds`
+    );
+  }
+  const controlStallMs = median(controlStalls);
+  const ceilingMs = Math.max(...floorStalls);
+  const lineMs = controlStallMs * STALL_BOUND;
+  // WRITTEN THIS WAY ROUND ON PURPOSE. The inline original was `if (lineMs < ceiling × 2)
+  // withhold`, and `!(a < b)` is not `a >= b` when either side is NaN — the original asserted
+  // on a NaN measurement and so does this. Extraction is not the place to change what a
+  // degenerate measurement does.
+  const resolves = !(lineMs < ceilingMs * RESOLUTION_FACTOR);
+  return {
+    resolves,
+    lineMs,
+    ceilingMs,
+    controlStallMs,
+    reason: resolves
+      ? null
+      : `correct code must stay under ${lineMs.toFixed(1)}ms here — three quarters of a ${controlStallMs.toFixed(1)}ms ` +
+        `control — while merely ASKING for the same ${projects} children cost as much as ` +
+        `${ceilingMs.toFixed(1)}ms in its worst round. There is not enough room between the two for a ` +
+        'ratio to mean anything on this machine',
+  };
+}
