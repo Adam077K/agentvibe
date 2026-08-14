@@ -671,15 +671,27 @@ describe('enumerating many projects leaves the event loop free', () => {
 
     const median = (xs: number[]) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)]!;
     const spread = (xs: number[]) => Math.max(...xs) - Math.min(...xs);
-    const asyncStallMs = median(asyncStalls);
+
+    // MAX FOR THE SUBJECT, MEDIAN FOR THE ENVIRONMENT, and the difference is the question
+    // each one answers. "Did this ever block" is a question about the WORST round, so a
+    // median is the wrong reducer for it: a memoised lister that blocks only on a cache miss
+    // — an ordinary optimisation, a shape that already exists twice in this repo — puts one
+    // slow round among four warm ones, and the median reports the warm ones. Measured by the
+    // review lens: 5 runs of 5 rounds, ratio 0.081-0.153, `1 pass 0 fail` on an
+    // implementation that blocks 350 ms on every cold path.
+    //
+    // The control and the floor are measurements OF THIS MACHINE, where a median is right:
+    // one descheduled round should not move an environment estimate.
+    const asyncStallMs = Math.max(...asyncStalls);
     const controlStallMs = median(controlStalls);
     const floorStallMs = median(floorStalls);
 
     // eslint-disable-next-line no-console
     console.log(
-      `  [async] ${PROJECTS} projects x${ROUNDS} — async ${asyncStallMs.toFixed(1)}ms (sweep ${sweepMs.toFixed(1)}ms, ` +
-        `spread ${spread(asyncStalls).toFixed(1)}) · sync enumeration control ${controlStallMs.toFixed(1)}ms ` +
-        `(${controlMs.toFixed(1)}ms) · spawn floor ${floorStallMs.toFixed(1)}ms (${floorMs.toFixed(1)}ms) · ` +
+      `  [async] ${PROJECTS} projects x${ROUNDS} — async worst ${asyncStallMs.toFixed(1)}ms (sweep ` +
+        `${sweepMs.toFixed(1)}ms, spread ${spread(asyncStalls).toFixed(1)}) · sync enumeration control ` +
+        `${controlStallMs.toFixed(1)}ms (${controlMs.toFixed(1)}ms, spread ${spread(controlStalls).toFixed(1)}) · ` +
+        `spawn floor ${floorStallMs.toFixed(1)}ms (${floorMs.toFixed(1)}ms, spread ${spread(floorStalls).toFixed(1)}) · ` +
         `idle noise ${idleNoiseMs.toFixed(1)}ms · ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
     );
 
@@ -703,26 +715,56 @@ describe('enumerating many projects leaves the event loop free', () => {
     // replaces, in the direction that reads as a real failure. Read as a gate instead, the
     // same quantity fails safe.
     //
-    // AND BOTH ITS INPUTS ARE MUTATION-INDEPENDENT — the control is this test's own
-    // synchronous loop and the floor is this test's own asynchronous one. Neither touches the
-    // collector, so the code under test cannot make this gate fire and hide itself. That is
-    // the property that makes a gate honest rather than an escape hatch.
+    // EVERY INPUT TO THIS GATE IS AN ENVIRONMENT MEASUREMENT, and it took a review to make
+    // that true. An earlier version of this comment claimed both inputs were
+    // mutation-independent. THERE WERE THREE, and the third was `spread(asyncStalls)` — the
+    // subject's own variance, taken straight from `detectConflicts`. So the code under test
+    // could widen the gate and hide behind it, and it did:
     //
-    // THE THRESHOLD IS MEASURED, NOT PICKED. What correct code needs is room between the
-    // floor it cannot go below and the line it must stay under: `0.75 * control - floor`. What
-    // the machine can resolve is the spread across rounds. Requiring the first to be at least
-    // twice the second says, in the machine's own numbers, that a pass is a pass rather than a
-    // coin landing well — and it is why an arbitrary "control must exceed twice the floor"
-    // was the wrong shape: it asks about the fixture when the question is about the ruler.
-    const headroomMs = controlStallMs * 0.75 - floorStallMs;
-    const resolutionMs = Math.max(spread(asyncStalls), spread(controlStalls));
-    if (headroomMs < resolutionMs * 2) {
+    //   plain sync revert     13 runs, 12 caught, ONE ESCAPED — spread 174.8ms against
+    //                         244ms of headroom, gate fired, `1 pass 0 fail` with a
+    //                         blocking enumeration, on the machine with the MOST headroom
+    //   memoised lister       blocks on a cache miss, async on a hit — an ordinary
+    //                         optimisation, a shape this repo already has twice — escaped
+    //                         5 runs out of 5
+    //
+    // That is a false-GREEN, and the flake this PR replaced was a false-RED. For a guarantee
+    // the first is strictly worse, and it is not a trade I would have taken knowingly.
+    //
+    // The resolution term is now the spread of the CONTROL and the FLOOR only. Both are this
+    // test's own loops; neither calls the collector; so nothing the subject does can move
+    // this threshold.
+    //
+    // AND THE GENERAL RULE, because no reducer or fixture fixes it: ANY STATISTIC COMPUTED
+    // FROM THE SUBJECT'S OWN TIMINGS IS UNDER THE SUBJECT'S INFLUENCE. Removing it from the
+    // gate closes the escape that exists; only an instrument with no variance term at all
+    // closes the class, which is #45 — intercept `child_process` and assert the specific
+    // `*Sync` exports were never called.
+    //
+    // THE THRESHOLD IS MEASURED, NOT PICKED, AND IT COMPARES LIKE WITH LIKE. The assertion
+    // below is on the subject's WORST round, so the question the gate must answer is: how high
+    // can a CORRECT implementation's worst round reach? That is the floor, reduced the same
+    // way — `max(floorStalls)` — because the floor is exactly what correct code pays and
+    // nothing more. The line it must stay under is `0.75 * control`. Requiring the line to be
+    // at least twice the floor's worst round says, in the machine's own numbers, that a pass
+    // is a pass rather than a coin landing well.
+    //
+    // AN EARLIER VERSION COMPARED HEADROOM AGAINST `max - min` ACROSS ROUNDS, and that
+    // estimator is the reason two mutations still escaped after the subject's own term was
+    // removed: one slow round inflates a range without limit, and measured here, a control
+    // spread of 160.9ms and one of 426.0ms fired the gate while the mutation sat in plain
+    // sight at ratio 1.192 and 1.247. A range over five samples is not a dispersion estimate,
+    // it is the worst thing that happened; the median control is stable across those same
+    // runs (363-399ms) precisely because a median is not.
+    const lineMs = controlStallMs * 0.75;
+    const correctCodeCeilingMs = Math.max(...floorStalls);
+    if (lineMs < correctCodeCeilingMs * 2) {
       notVerified(
         'enumeration event-loop binding',
-        `correct code has ${headroomMs.toFixed(1)}ms of room here — a ${controlStallMs.toFixed(1)}ms control against ` +
-          `a ${floorStallMs.toFixed(1)}ms floor for asking for the same ${PROJECTS} children — while this machine ` +
-          `resolves the measurement to ${resolutionMs.toFixed(1)}ms across ${ROUNDS} rounds. A ratio between them ` +
-          'would be reporting the noise'
+        `correct code must stay under ${lineMs.toFixed(1)}ms here — three quarters of a ${controlStallMs.toFixed(1)}ms ` +
+          `control — while merely ASKING for the same ${PROJECTS} children cost as much as ` +
+          `${correctCodeCeilingMs.toFixed(1)}ms in its worst round. There is not enough room between the two for a ` +
+          'ratio to mean anything on this machine'
       );
       return;
     }
