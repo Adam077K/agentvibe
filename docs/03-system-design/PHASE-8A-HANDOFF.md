@@ -1,7 +1,11 @@
-# Handoff — Phase 8a, after PR3
+# Handoff — Phase 8a, complete
 
 **For:** whoever picks this up next.
-**State:** PR1–PR3 of 5 merged. `main` = `0a23471`. `npm run check` exits 0 after `bun install` in `mission-control/`.
+**State: all 5 PRs merged. `main` = `30f6c35`.** 193 tests / 1,213 assertions, `npm run check` exits 0 after
+`bun install` in `mission-control/`. All six views work end to end.
+**Read [SECURITY-FINDINGS-2026-08-14.md](SECURITY-FINDINGS-2026-08-14.md) before running the server** —
+three confirmed RCEs are open on `main`, and until they are closed, do not point Mission Control at a tree
+containing repositories you did not write.
 **Read first:** [PHASE-8A-STATUS.md](PHASE-8A-STATUS.md) · [AGENT-SYSTEM-REBUILD.md](AGENT-SYSTEM-REBUILD.md) · [CLAIM-LEDGER.md](CLAIM-LEDGER.md)
 
 ---
@@ -33,6 +37,37 @@ and running against an empty corpus — it still failed.
 
 **So: when you add a guard, add the barrier that catches the guard being wrong.** Two cheap independent checks
 beat one careful one. This is the single most transferable thing this phase produced.
+
+**PR4 and PR5 added sixteen more instances, and the count is no longer the point.** What the last two PRs
+established is *which* shapes recur and what actually catches them. Read this before writing a test:
+
+- **The dominant shape is: a rendered fact is pinned while the thing computing it runs free.** It appeared
+  three separate times — the async sweep, the 10 s bound, the freshness stamp — and each time the consumer
+  had five or more assertions on it while inverting one line in the producer left the whole suite green.
+  Once, that inversion restored a defect we had already fixed and reviewed, verbatim. **The fix never needed
+  a DOM or new tooling: extract the decision into a pure function and assert producer and consumer in one
+  place.** The builder's own tell, which is cheaper than any review: *"I wrote the producer and the consumer
+  in the same PR, and only one of them appeared in a test file."*
+- **Coverage is the cheapest instrument that exists, and it disagrees with careful prose.** A residue
+  described in good faith as "one line of JSX" measured **91 lines** — the entire component. A 99.08% figure
+  counted three unexecuted callback bodies as covered, because line coverage marks the **hook call**, not the
+  body. Run it on the branch you are most confident about, not the one you doubt.
+- **Three defects were in guards rather than in code.** A guard that imported its threshold from the module
+  it guards (raising the cap 2→64 kept the suite green while 20 processes ran). A sampler that never
+  overlapped its subject, because the thing it measured needed the same JS thread it was sleeping on. And a
+  non-vacuity guard aimed at the premise that did not need it, leaving the one that did reduce to `2 === 2`.
+- **Never gate a test on the environment unless it genuinely needs the environment.** Two tests correctly
+  print `NOT VERIFIED — nothing was compared` because they need a real fleet and a real corpus. A third
+  consulted the machine while only rendering markup — that one was never testing what it claimed on *either*
+  machine, and passing locally was the accident. **If a test renders components and reads markup, every input
+  it uses must be one it names.**
+- **A threshold anyone can tune is a threshold that gets tuned until it is quiet.** Prefer a comparison
+  against a control measured in the same run on the same machine — and note that a **ratio against the run's
+  own total cannot catch work that inflates its own denominator**. Where a ratio is the wrong instrument,
+  read the quantity as a *gate* rather than a *divisor*; only the gate fails safe.
+- **The signal for "this is partial" is the rejection, never the buffer.** A truncated read that happens to
+  end on a record boundary is byte-identical to a complete one. Inspecting output to decide whether an
+  operation succeeded is the same error as every entry in the table above; the operation already told you.
 
 Corollaries, each earned:
 - **A guard's name gets written aspirationally and its body literally.** Name it from the body.

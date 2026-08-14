@@ -1,7 +1,8 @@
 # Phase 8a — Mission Control, read plane
 
 **Living status.** Updated at each PR. Phase 8b (Dispatch) is deferred — see §1.
-**State:** **PR3 of 5 merged.** `main` = `0a23471`. `npm run check` exit 0 after `bun install` in `mission-control/`.
+**State: PHASE 8a COMPLETE — all 5 PRs merged.** `main` = `30f6c35`. `npm run check` exit 0 after
+`bun install` in `mission-control/`.
 Handoff for whoever continues: [PHASE-8A-HANDOFF.md](PHASE-8A-HANDOFF.md).
 
 ---
@@ -13,17 +14,26 @@ Handoff for whoever continues: [PHASE-8A-HANDOFF.md](PHASE-8A-HANDOFF.md).
 | **1** | The rail — Bun/Hono, `check:mc`, CI `setup-bun` | irreversible | ✅ **merged** ([#21](https://github.com/Adam077K/agentvibe/pull/21)) |
 | **2** | Collectors, project discovery, cross-check tests | lite | ✅ **merged** ([#26](https://github.com/Adam077K/agentvibe/pull/26)) — 4 review rounds, 1 CRITICAL (command-injection RCE) |
 | **3** | The client, SSE, Fleet + Sessions views | lite | ✅ **merged** ([#27](https://github.com/Adam077K/agentvibe/pull/27)) — 5 review rounds, 3 CRITICAL |
-| 4 | Belief + Conflicts views | lite | not started |
-| 5 | Project + Inbox honest empty states | lite | not started |
+| **4** | The view registry, Belief over both ledgers, Conflicts async + three-state + scoped | **full** | ✅ **merged** ([#30](https://github.com/Adam077K/agentvibe/pull/30)) — 4 fix rounds, all 3 lenses FAIL on the first pass |
+| **5** | Project + Inbox, `projectEmptyState` async **and bounded**, the #39/#40 debt | **full** | ✅ **merged** ([#32](https://github.com/Adam077K/agentvibe/pull/32)) — 6 fix rounds, correctness FAILed twice before clearing |
 
-**Where it is: 108 tests / 558 assertions, `tsc --noEmit` clean and inside the gate, cold index 3.7–4.1 s
-against a 10 s budget, incremental 16 ms, 19 projects and ~2,000 sessions rendered.** Fleet and Sessions
-work end to end. Belief, Conflicts, Project and Inbox have collectors and routes but no view.
+**Where it is: 193 tests / 1,213 assertions across 8 files** (VERIFIED on `main` = `30f6c35`), `tsc --noEmit`
+clean and inside the gate, cold index 3.7–4.1 s against a 10 s budget, incremental 16 ms, 19 projects and
+~2,000 sessions rendered. **All six views work end to end.**
+
+Two figures the phase corrected about itself, both first reported by the CEO and both caught by a worker:
+`/api/belief` is **10,385 ms**, not the 25 ms briefed; the project probe on Beamix is **107,806 ms**, not
+3,657 ms. Both wrong for the same reason — a command timed without checking it ran to completion — and the
+second changed a design: async alone cannot bound an unbounded recursive scan, so the probe stops at 10 s
+and says so (`GET /api/project/Beamix`, **113,158 ms → 28 ms**).
 
 Merged alongside, out of Phase 8a's own scope but found by it:
 [#20](https://github.com/Adam077K/agentvibe/pull/20) the read-only probe · [#22](https://github.com/Adam077K/agentvibe/pull/22) two claim corrections ·
 [#23](https://github.com/Adam077K/agentvibe/pull/23) the Bun lock-in in `LONG-TERM.md` · [#24](https://github.com/Adam077K/agentvibe/pull/24) this status doc and the Phase 8 gate amendment ·
-[#25](https://github.com/Adam077K/agentvibe/pull/25) the corpus measured 28× too small.
+[#25](https://github.com/Adam077K/agentvibe/pull/25) the corpus measured 28× too small ·
+[#28](https://github.com/Adam077K/agentvibe/pull/28) the post-PR3 handoff ·
+[#29](https://github.com/Adam077K/agentvibe/pull/29) **the budget ceiling removed from the system**, by Founder instruction ·
+[#31](https://github.com/Adam077K/agentvibe/pull/31) the three confirmed RCEs, recorded before the evidence expired.
 
 ---
 
@@ -176,10 +186,24 @@ mechanism with no subject is as dead as a rule with no mechanism.
   rather than letting the next reader assume more.
 - **Every review in this phase has been single-model.** Rule 3 above would have failed both CEO-authored PRs,
   correctly.
-- **`c-runtime-nested-spawn` rests on a stale reason.** Waived because *"subagent spawning is disabled by
-  founder instruction"* — that instruction was lifted 2026-08-12 and seven subagents ran. Cheaply resolvable
-  now by probing; do not wait for 2026-09-08.
-- **Four claims still land on 2026-09-08**: `c-shadow-window-open` (expiry — the promotion decision),
-  `c-read-only-binding-unverified`, `c-runtime-nested-spawn`, `c-rolling-five-hour-window`.
+- ~~**`c-runtime-nested-spawn` rests on a stale reason.**~~ **RESOLVED 2026-08-13 by measurement, not by
+  date.** Two independent probes, one spawn attempt each: `Agent` is un-deferred in a depth-1 subagent's own
+  tool list, the spawn succeeded with no block or error, and the depth-2 child ran and returned `ACK`.
+  Disposition **Refresh** — the claim asserts nesting *works* and is correct. **What is false is the CEO's
+  own operating instructions**, which state *"subagents cannot spawn subagents (nested Task is blocked)"* —
+  and that line is the stated reason chiefs return dispatch packets instead of spawning workers, so **the T2
+  orchestration tier rests on a false premise.** Flagged for the Founder, not changed.
+- **Three claims still land on 2026-09-08**: `c-shadow-window-open` (expiry — the promotion decision),
+  `c-read-only-binding-unverified`, `c-rolling-five-hour-window`.
+
+### Found on `main` by the Phase 8a reviews, needing work
+
+| # | |
+|---|---|
+| **#36** | **Three confirmed RCEs**, each executed: git `core.fsmonitor` via the conflicts sweep — *and that request renders the worktree as clean*; `node <discovered-project>/scripts/ledger.mjs` via `/api/belief`, with `?project=` choosing whose code runs; a claim's `evidence.cmd` reaching `/bin/sh -c`. Plus no Origin check on side-effecting GETs, which makes all three drive-by. **Recorded in [SECURITY-FINDINGS-2026-08-14.md](SECURITY-FINDINGS-2026-08-14.md); awaiting a Founder design decision.** The finding behind them: *"`server/**` invokes no shell" is literally true and operationally void* |
+| **#43** | A PR4 pin flakes at **0.5%** margin (0.835 against a 0.750 bound, having passed at 0.746). Its gate watches idle noise while the confound is the **shared spawn floor** both paths pay. Use the floor as a gate, never as a divisor — subtracting it divides two small differences of noisy quantities and flakes harder. **A flaky pin is worse than a missing one: the first thing anyone does to one is loosen it** |
+| **#41** | `changedFilesFor`'s partial recovery truncates **mid-line** and puts a fabricated filename (`dir_with_a_re`) into `changedFiles` and the conflict map — a conflict rendered against a file that does not exist. Needs whole-line parsing **and** `readable:false` on rejection: *the signal for "this is partial" is the rejection, never the buffer* |
+| **#42 · #44** | The probe semaphore is module-global, coupling every project's tab to the slowest; and deleting `api.ts`'s `!res.ok` throw leaves the suite green and restores #39's symptom |
+| **#34 · #35** | No `qa-tier-floor.yml` rule mentions mission-control, so every path in it classifies `lite / matched: (none — default)` — PR2's RCE would have too, and both PR4 and PR5 were tiered **by hand, which is not a mechanism**. And CLAUDE.md requires a Codex CLI second opinion at Full tier; `codex` is not installed, so every Full-tier review this repo has run was missing a documented required step |
 - **The SessionStart payload still needs a router**, not a dump — lens ids plus one-line summaries under the
   inline threshold. Until then `c-lenses-and-playbooks-are-loaded` fails, by design.
