@@ -102,12 +102,34 @@ function rowLabels(html: string, rowIndex: number): string[] {
  *
  * `<div class="label">` with no other class is Figure's own signature — the other three
  * `label` usages in the client are `<span>`s or carry `mb-1.5`.
+ *
+ * A FIGURE STATES ITS PROVENANCE IN ONE OF TWO PLACES, and which one depends on what the
+ * value is. A measured value carries it as `Figure`'s own `title`, on the value div. A value
+ * that could not be measured is an `<Unavailable>`, which carries the same kind of sentence
+ * on the span itself, alongside an `aria-label` and a tab stop — more than the div `title`
+ * gives, not less. So `provenance` is read from whichever element holds it, and `unavailable`
+ * records which shape this figure took, because the two are asserted differently.
  */
 interface RenderedFigure {
   label: string;
   value: string;
   sub: string;
+  /** `Figure`'s own title, on the value div. Empty for an Unavailable value. */
   title: string;
+  /** Whichever of the two elements states it. */
+  provenance: string;
+  /** Present only on an Unavailable value — a title attribute alone is not announced. */
+  ariaLabel: string;
+  unavailable: boolean;
+}
+function unescape(s: string): string {
+  return s
+    .replace(/&#x27;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#x2F;/g, '/');
 }
 function figuresIn(html: string): RenderedFigure[] {
   return html
@@ -115,17 +137,20 @@ function figuresIn(html: string): RenderedFigure[] {
     .slice(1)
     .map((chunk) => {
       const valueDiv = /<div\b([^>]*\bclass="fig mt-1[^"]*"[^>]*)>([\s\S]*?)<\/div>/.exec(chunk);
+      const valueMarkup = valueDiv?.[2] ?? '';
+      const title = unescape(/title="([^"]*)"/.exec(valueDiv?.[1] ?? '')?.[1] ?? '');
+      // Scoped to the VALUE, never the sub-line: Project's subagent share is an Unavailable
+      // in the sub of a figure whose value is a perfectly ordinary number.
+      const unavailable = /<span[^>]*class="unavailable/.test(valueMarkup);
+      const valueTitle = unescape(/<span[^>]*\btitle="([^"]*)"/.exec(valueMarkup)?.[1] ?? '');
       return {
         label: textOf(/^([\s\S]*?)<\/div>/.exec(chunk)?.[1] ?? ''),
-        value: textOf(valueDiv?.[2] ?? ''),
+        value: textOf(valueMarkup),
         sub: textOf(/<div class="mt-1\.5 truncate[^"]*">([\s\S]*?)<\/div>/.exec(chunk)?.[1] ?? ''),
-        title: (/title="([^"]*)"/.exec(valueDiv?.[1] ?? '')?.[1] ?? '')
-          .replace(/&#x27;/g, "'")
-          .replace(/&quot;/g, '"')
-          .replace(/&amp;/g, '&')
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&#x2F;/g, '/'),
+        title,
+        provenance: title !== '' ? title : valueTitle,
+        ariaLabel: unescape(/<span[^>]*\baria-label="([^"]*)"/.exec(valueMarkup)?.[1] ?? ''),
+        unavailable,
       };
     });
 }
@@ -208,6 +233,16 @@ function buildFixtureState(prefix: string) {
   return { app, now, projectsRoot, claudeRoot, state };
 }
 
+const DEFAULT_LAUNCHERS: LauncherRow[] = [
+  { name: 'sundial', lines: 2741, fns: 47, gen: 'a86770a9', scope: 'in scope' }, // on modal, case-mismatched
+  { name: 'quarry', lines: 2741, fns: 47, gen: 'a86770a9', scope: 'in scope' }, // on modal
+  { name: 'lodestar', lines: 2769, fns: 47, gen: 'c146d297', scope: 'in scope' }, // DRIFTED
+  { name: 'brackish', lines: 2407, fns: 45, gen: '30e0c7aa', scope: 'excluded' }, // excluded → n/a
+  // No project on disk for this one. It is drifted, it needs updating, and it produces no
+  // row — which is exactly why the headline count must come from launchers.
+  { name: 'orphaned', lines: 2769, fns: 47, gen: 'b0000001', scope: 'in scope' },
+];
+
 /**
  * A fleet payload whose launcher table is INJECTED, so `launcherDrift` takes its `true` and
  * `false` values instead of the `null` every other fixture produces.
@@ -220,8 +255,13 @@ function buildFixtureState(prefix: string) {
  *
  * The payload is JSON round-tripped, so it is the collector's real return over the wire,
  * not a hand-written object.
+ *
+ * `launchers` is a parameter because the machine's own answer is not one state, it is four:
+ * a modal generation, a tie, everything excluded, and NO LAUNCHERS AT ALL — which is what a
+ * CI runner with no ~/bin produces, and is the state that turned PR5's title assertion red.
+ * A test that wants to cover them cannot ask the machine; it has to say which one it means.
  */
-function fleetWithLaunchers(prefix: string): FleetSummary {
+function fleetWithLaunchers(prefix: string, launchers: LauncherRow[] = DEFAULT_LAUNCHERS): FleetSummary {
   const claudeRoot = mkTmpDir(`mc-views-claude-${prefix}-`);
   const projectsRoot = mkTmpDir(`mc-views-projects-${prefix}-`);
   cleanupDirs.push(claudeRoot, projectsRoot);
@@ -237,16 +277,6 @@ function fleetWithLaunchers(prefix: string): FleetSummary {
     ]);
   }
   writeRegistry(path.join(projectsRoot, 'quarry'), [{ name: 'ceo-1', token: '1786445435' }]);
-
-  const launchers: LauncherRow[] = [
-    { name: 'sundial', lines: 2741, fns: 47, gen: 'a86770a9', scope: 'in scope' }, // on modal, case-mismatched
-    { name: 'quarry', lines: 2741, fns: 47, gen: 'a86770a9', scope: 'in scope' }, // on modal
-    { name: 'lodestar', lines: 2769, fns: 47, gen: 'c146d297', scope: 'in scope' }, // DRIFTED
-    { name: 'brackish', lines: 2407, fns: 45, gen: '30e0c7aa', scope: 'excluded' }, // excluded → n/a
-    // No project on disk for this one. It is drifted, it needs updating, and it produces no
-    // row — which is exactly why the headline count must come from launchers.
-    { name: 'orphaned', lines: 2769, fns: 47, gen: 'b0000001', scope: 'in scope' },
-  ];
 
   const projects = discoverProjects({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot });
   const store = new IndexStore();
@@ -1487,6 +1517,30 @@ describe('render parity — Project', () => {
   });
 });
 
+/**
+ * Real `inboxEmptyState` output against a home directory this test builds — three rows in
+ * the three states the collector can return. At module scope, and taking `homeDir` rather
+ * than reading `os.homedir()`, because the headline block at the bottom of this file needs
+ * the same rows and a test that renders markup should not depend on whose machine it is on.
+ */
+function inboxRows(prefix: string): InboxProject[] {
+  const home = mkTmpDir(`mc-views-inbox-${prefix}-`);
+  cleanupDirs.push(home);
+
+  // waiting: a real message file in a real directory
+  fs.mkdirSync(path.join(home, '.ashcroft', 'messages'), { recursive: true });
+  fs.writeFileSync(path.join(home, '.ashcroft', 'messages', 'approval-1.json'), '{}');
+  // could not look: a plain file where the directory belongs → ENOTDIR
+  fs.mkdirSync(path.join(home, '.brackish'), { recursive: true });
+  fs.writeFileSync(path.join(home, '.brackish', 'messages'), 'not a directory\n');
+  // none: nothing at all, which for this feature is the honest empty answer
+
+  return ['ashcroft', 'brackish', 'tessellate'].map((id) => ({
+    project: id,
+    ...inboxEmptyState({ id } as Project, home),
+  }));
+}
+
 // ── render parity — Inbox ────────────────────────────────────────────────────────────
 //
 // THE VACUITY TRAP THIS BLOCK IS BUILT AROUND: the view's footnote ends with the sentence
@@ -1495,25 +1549,6 @@ describe('render parity — Project', () => {
 // Conflicts block and it took a mirror assertion to expose it. So the row states here are
 // read out of the table body with bodyRows(), never out of the page text.
 describe('render parity — Inbox', () => {
-  /** Real inboxEmptyState output for a fake home dir — three rows, three states. */
-  function inboxRows(prefix: string): InboxProject[] {
-    const home = mkTmpDir(`mc-views-inbox-${prefix}-`);
-    cleanupDirs.push(home);
-
-    // waiting: a real message file in a real directory
-    fs.mkdirSync(path.join(home, '.ashcroft', 'messages'), { recursive: true });
-    fs.writeFileSync(path.join(home, '.ashcroft', 'messages', 'approval-1.json'), '{}');
-    // could not look: a plain file where the directory belongs → ENOTDIR
-    fs.mkdirSync(path.join(home, '.brackish'), { recursive: true });
-    fs.writeFileSync(path.join(home, '.brackish', 'messages'), 'not a directory\n');
-    // none: nothing at all, which for this feature is the honest empty answer
-
-    return ['ashcroft', 'brackish', 'tessellate'].map((id) => ({
-      project: id,
-      ...inboxEmptyState({ id } as Project, home),
-    }));
-  }
-
   test('one row per discovered project, and the headline counts the same array', async () => {
     const { app } = buildFixtureState('inbox-route');
     const res = await app.fetch(new Request('http://127.0.0.1/api/inbox'));
@@ -1733,6 +1768,15 @@ describe('the app bar says where the figures on screen came from', () => {
 // screens were the only ones a reader could not ask "counted how, over what?" of.
 //
 // Neither is checkable by rendering one view: both are statements about all of them.
+//
+// AND NEITHER IS CHECKABLE BY ASKING THE MACHINE. The first version of this block took its
+// fleet payload from `/api/fleet`, which shells out to `warroom-install.mjs fleet` and reads
+// the real `~/bin` — so on this laptop the drift figure rendered its measured branch and on a
+// CI runner with no ~/bin it rendered "not compared", and the assertion below was written
+// against whichever one the author happened to have. It went red on the runner, correctly.
+//
+// This test needs no machine data: it renders components and reads their markup. So it names
+// its states — all four launcher states, including the runner's — and renders each.
 describe('every view uses the one headline band, and titles its figures', () => {
   const NOW = Date.parse('2026-08-14T12:00:00Z');
 
@@ -1745,41 +1789,83 @@ describe('every view uses the one headline band, and titles its figures', () => 
     )
   )![0];
 
-  async function everyViewWithAFigure(): Promise<{ view: string; html: string }[]> {
+  /**
+   * Every headline, in every state its figures take shape in — from fixtures, never from
+   * this machine. The four fleet entries are the four `ModalGeneration` kinds, and the kind
+   * each one produced is asserted, so a state silently collapsing into another (which is how
+   * this test could quietly stop covering the runner's case) fails rather than passes.
+   */
+  async function everyHeadlineState(): Promise<{ state: string; html: string }[]> {
     const { app, now } = buildFixtureState('headline-band');
     const json = async (url: string) => (await app.fetch(new Request(`http://127.0.0.1${url}`))).json();
-    const fleet = (await json('/api/fleet')) as FleetSummary;
     const project = (await json('/api/project/ashcroft')) as ProjectDetail;
-    const inbox = (await json('/api/inbox')) as InboxPayload;
     const conflicts = ((await json('/api/conflicts')) as { reports: ConflictReport[] }).reports;
-    const belief = beliefPayload([]);
-    // Premises: every payload below is a real one with something in it, so no band is empty.
-    expect(fleet.projects.length).toBeGreaterThan(0);
-    expect(inbox.projects.length).toBeGreaterThan(0);
-    expect(conflicts.length).toBeGreaterThan(0);
+    expect(conflicts.length).toBeGreaterThan(0); // premise: a real sweep, not an empty one
+
+    const fleets = {
+      modal: fleetWithLaunchers('band-modal'),
+      // THE CI RUNNER'S STATE: `warroom-install.mjs fleet` lists nothing at all.
+      'no launchers': fleetWithLaunchers('band-none', []),
+      tie: fleetWithLaunchers('band-tie', [
+        { name: 'quarry', lines: 2741, fns: 47, gen: 'a86770a9', scope: 'in scope' },
+        { name: 'lodestar', lines: 2769, fns: 47, gen: 'c146d297', scope: 'in scope' },
+      ]),
+      'all excluded': fleetWithLaunchers('band-excluded', [
+        { name: 'quarry', lines: 2741, fns: 47, gen: 'a86770a9', scope: 'excluded' },
+        { name: 'brackish', lines: 2407, fns: 45, gen: '30e0c7aa', scope: 'excluded' },
+      ]),
+    };
+    // The four states really are four different kinds — asserted, not assumed.
+    expect(Object.values(fleets).map((f) => f.modalGeneration.kind)).toEqual([
+      'modal',
+      'no-launchers',
+      'tie',
+      'none-in-scope',
+    ]);
+
+    // A project with nothing recorded — the runner's transcript corpus, and the state whose
+    // subagent share has no denominator to be a share of.
+    const emptyProject: ProjectDetail['project'] = {
+      ...project.project,
+      stats: { ...project.project.stats, totalOutputTokens: 0, totalSubagentOutputTokens: 0, lastActivityAt: null },
+    };
+    expect(project.project.stats.totalOutputTokens).toBeGreaterThan(0); // and its opposite
+
+    const inbox = inboxRows('band');
 
     return [
-      { view: 'fleet', html: renderToStaticMarkup(<FleetHeadline fleet={fleet} />) },
+      ...Object.entries(fleets).map(([state, fleet]) => ({
+        state: `fleet · ${state}`,
+        html: renderToStaticMarkup(<FleetHeadline fleet={fleet} />),
+      })),
       {
-        view: 'project',
+        state: 'project · with transcripts',
         html: renderToStaticMarkup(
           <ProjectHeadline project={project.project} now={now} loading={false} onRefresh={() => {}} />
         ),
       },
       {
-        view: 'inbox',
+        state: 'project · nothing recorded',
         html: renderToStaticMarkup(
-          <InboxHeadline totals={inboxTotals(inbox.projects)} loading={false} onRefresh={() => {}} />
+          <ProjectHeadline project={emptyProject} now={now} loading={false} onRefresh={() => {}} />
         ),
       },
       {
-        view: 'belief',
+        state: 'inbox · one waiting, one unreadable',
+        html: renderToStaticMarkup(<InboxHeadline totals={inboxTotals(inbox)} loading={false} onRefresh={() => {}} />),
+      },
+      {
+        state: 'inbox · nothing discovered',
+        html: renderToStaticMarkup(<InboxHeadline totals={inboxTotals([])} loading={false} onRefresh={() => {}} />),
+      },
+      {
+        state: 'belief',
         html: renderToStaticMarkup(
-          <BeliefView belief={belief} loading={false} error={null} now={NOW} onRefresh={() => {}} />
+          <BeliefView belief={beliefPayload([])} loading={false} error={null} now={NOW} onRefresh={() => {}} />
         ),
       },
       {
-        view: 'conflicts',
+        state: 'conflicts',
         html: renderToStaticMarkup(
           <ConflictsView reports={conflicts} loading={false} error={null} onRefresh={() => {}} />
         ),
@@ -1788,45 +1874,67 @@ describe('every view uses the one headline band, and titles its figures', () => 
   }
 
   test('the band is HeadlineBar on every view — no view rolls its own', async () => {
-    const views = await everyViewWithAFigure();
-    expect(views.length).toBeGreaterThan(1); // the claim is about more than one screen
+    const states = await everyHeadlineState();
+    expect(states.length).toBeGreaterThan(1); // the claim is about more than one screen
 
-    for (const { view, html } of views) {
+    for (const { state, html } of states) {
       const bands = html.split(BAND_TAG).length - 1;
       // EXACTLY ONE. Zero means a hand-rolled band; two means a second band was added beside
       // it, which is the same 8 px problem with an extra step.
-      expect({ view, bands }).toEqual({ view, bands: 1 });
+      expect({ state, bands }).toEqual({ state, bands: 1 });
       // …and the figures are INSIDE it. A hand-rolled row above a real HeadlineBar would
       // satisfy the count above and still shift the page.
-      expect({ view, figureBeforeBand: html.indexOf('<div class="label">') < html.indexOf(BAND_TAG) }).toEqual({
-        view,
+      expect({ state, figureBeforeBand: html.indexOf('<div class="label">') < html.indexOf(BAND_TAG) }).toEqual({
+        state,
         figureBeforeBand: false,
       });
     }
   });
 
-  test('every headline figure carries a provenance title that is not its own label', async () => {
-    const views = await everyViewWithAFigure();
-    let checked = 0;
+  // ONE RULE, TWO SHAPES, ASSERTED SEPARATELY. A measured figure states its provenance in
+  // `Figure`'s own `title`, on the value div. A figure that COULD NOT be measured states it
+  // on the `<Unavailable>` that replaces the value — where it also gets a tab stop and an
+  // aria-label, which the div title does not have. Asserting the div title over both states
+  // is what turned this red on CI, and duplicating the sentence onto the div to satisfy it
+  // would put one explanation in two places.
+  test('every headline figure states its provenance, wherever that figure keeps it', async () => {
+    const states = await everyHeadlineState();
+    let measured = 0;
+    let notCompared = 0;
 
-    for (const { view, html } of views) {
+    for (const { state, html } of states) {
       const figures = figuresIn(html);
-      expect({ view, figures: figures.length > 0 }).toEqual({ view, figures: true });
+      expect({ state, figures: figures.length > 0 }).toEqual({ state, figures: true });
       for (const figure of figures) {
+        const where = { state, label: figure.label };
         // NOT "has a title" — a title reading "Sessions" is a tooltip that answers nothing.
         // What a reader needs is the population and the method, which does not fit in a
         // label-length string.
-        expect({ view, label: figure.label, titled: figure.title.length >= 40 }).toEqual({
-          view,
-          label: figure.label,
-          titled: true,
-        });
-        expect(figure.title).not.toBe(figure.label);
-        checked++;
+        expect({ ...where, stated: figure.provenance.length >= 40 }).toEqual({ ...where, stated: true });
+        expect(figure.provenance).not.toBe(figure.label);
+
+        if (figure.unavailable) {
+          // The sentence must be the one on the value, and it must also be announced: a
+          // `title` attribute is not read out, and this is the state where the figure IS the
+          // explanation.
+          expect({ ...where, onTheDiv: figure.title }).toEqual({ ...where, onTheDiv: '' });
+          expect(figure.ariaLabel).toContain(figure.provenance);
+          // "not compared" is not "zero". Whatever the short word is, it must not read as a
+          // measurement, and every one of these branches says the same thing.
+          expect(figure.value).toBe('not compared');
+          notCompared++;
+        } else {
+          expect(figure.provenance).toBe(figure.title);
+          measured++;
+        }
       }
     }
-    // NON-VACUITY: an empty `figures` array on every view would pass the loop silently.
-    expect(checked).toBeGreaterThanOrEqual(views.length);
+
+    // NON-VACUITY, twice over. An empty `figures` array everywhere would pass the loop
+    // silently, and asserting a rule about two shapes while only one of them ever renders is
+    // the branch-that-never-runs problem this file keeps finding.
+    expect(measured).toBeGreaterThan(0);
+    expect(notCompared).toBeGreaterThan(0);
   });
 
   // D9's other half, and the reason the wording matters: `ledgerIndex.present` is a BUILT
