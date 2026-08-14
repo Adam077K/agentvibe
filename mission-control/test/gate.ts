@@ -160,12 +160,17 @@ export interface StallGateVerdict {
  *
  * Algebraically the gate withholds exactly when `max(floor) > 0.375 × median(control)`.
  *
- * THROWS ON AN EMPTY SAMPLE, and this is where the guard earns its keep: `Math.max(...[])` is
- * `-Infinity`, which makes `lineMs < ceilingMs × 2` false, which OPENS the gate. An empty
- * sample would therefore make it silently always assert while having measured nothing —
- * reporting success about something it did not measure, which is the exact object this phase
- * is named after. The live caller runs a fixed 5 rounds and pushes unconditionally so it
- * cannot reach this; a future caller might.
+ * THROWS ON AN EMPTY SAMPLE, and the two empty cases are NOT the same defect:
+ *
+ *   empty FLOOR    `Math.max(...[])` is `-Infinity`, so `lineMs < -Infinity × 2` is false and
+ *                  the gate OPENS — carrying a real-looking 300.0 ms line while having
+ *                  measured nothing. SILENT, and the exact object this phase is named after.
+ *   empty CONTROL  `lineMs` becomes NaN, and bun then FAILS `toBeLessThan(NaN)`. Still a bug,
+ *                  but it goes red rather than quietly asserting.
+ *
+ * Only the first is "silently always assert"; saying it of both overstates the danger, which
+ * is its own smaller version of the same problem. Both throw here. The live caller runs a
+ * fixed 5 rounds and pushes unconditionally so it cannot reach this; a future caller might.
  */
 export function stallGateVerdict(
   controlStalls: number[],

@@ -245,6 +245,20 @@ describe('stallGateVerdict', () => {
     expect(median([7])).toBe(7);
   });
 
+  // THE COMPARATOR, PINNED BY THE ONE SAMPLE THAT CAN SEE IT. `[...xs].sort()` with no
+  // comparator sorts LEXICOGRAPHICALLY — JavaScript's most famous single defect — and every
+  // other sample in this file is blind to it. `[100,400,900]`, `[4,4,4,4,200]`,
+  // `[400,400,400,400,9000]` and `[1,2,3,4]` all sort identically either way, so deleting
+  // `(a, b) => a - b` left the entire suite green. Measured, not supposed.
+  //
+  // `[2, 10]` is the smallest sample that separates them: numerically it sorts to [2, 10] and
+  // the median is 10; lexicographically to [10, 2] and the median is 2.
+  test('median sorts numerically, not lexicographically', () => {
+    expect(median([2, 10])).toBe(10);
+    // …and at the scale this actually runs at, where '9' would outrank '100'.
+    expect(median([100, 9, 80])).toBe(80);
+  });
+
   test('withholds exactly when max(floor) > 0.375 × median(control), swept across the range', () => {
     const withholdRatio = STALL_BOUND / RESOLUTION_FACTOR;
     const threshold = withholdRatio * 400; // 150
@@ -308,26 +322,69 @@ describe('stallGateVerdict', () => {
     expect(verdict.ceilingMs).toBe(30); // max(floor)
   });
 
+  // NaN IS PINNED BECAUSE THE FORM WAS CHOSEN FOR IT. `stallGateVerdict` writes its comparison
+  // as `!(lineMs < ceilingMs × RESOLUTION_FACTOR)` rather than `>=` specifically because the
+  // two differ when either side is NaN, and the extraction preserved what the inline original
+  // did. Nothing pinned that: replacing the form with `>=` SURVIVED the whole suite. An
+  // argument made at length in a comment and guarded by nothing is the defect class this phase
+  // is named for, so here it is as two assertions.
+  //
+  //   !(NaN < 20)  === true   -> resolves      NaN >= 20  === false -> withholds
+  //   !(300 < NaN) === true   -> resolves      300 >= NaN === false -> withholds
+  //
+  // This pins the CURRENT behaviour, and it is not an endorsement of it: a NaN measurement
+  // resolving means the assertion is attempted on a degenerate sample. It is recorded here so
+  // that changing it is a decision someone makes, rather than a side effect of tidying an
+  // operator.
+  test('a NaN measurement resolves — the comparison form is load-bearing, not stylistic', () => {
+    expect(stallGateVerdict([NaN], [10], 12).resolves).toBe(true);
+    expect(stallGateVerdict([400], [NaN], 12).resolves).toBe(true);
+    // …and the numbers that produced it are NaN, so a reader can see why rather than guessing.
+    expect(stallGateVerdict([NaN], [10], 12).lineMs).toBeNaN();
+    expect(stallGateVerdict([400], [NaN], 12).ceilingMs).toBeNaN();
+  });
+
   test('the reason is null when resolving, and names every number when withholding', () => {
     expect(stallGateVerdict(CONTROL, [10], 12).reason).toBeNull();
 
     const withheld = stallGateVerdict(CONTROL, [200], 12);
     expect(withheld.resolves).toBe(false);
-    expect(withheld.reason).toContain('300.0ms'); // the line
-    expect(withheld.reason).toContain('400.0ms'); // the control it came from
-    expect(withheld.reason).toContain('200.0ms'); // the floor's worst round
-    expect(withheld.reason).toContain('12 children'); // the fixture size it was measured at
+
+    // THE WHOLE SENTENCE, NOT THREE INDEPENDENT `toContain` CALLS. Those pass whichever number
+    // lands in whichever slot, so swapping lineMs and ceilingMs inside the template survived —
+    // and the message would then read "must stay under 200.0ms … cost as much as 300.0ms",
+    // inverted, sending a reader to tune the wrong knob. This matters more now than before:
+    // the inline copy in collectors.test.ts is gone, so this is the only guardian left of that
+    // entire human-readable output.
+    expect(withheld.reason).toBe(
+      'correct code must stay under 300.0ms here — three quarters of a 400.0ms control — while merely ASKING ' +
+        'for the same 12 children cost as much as 200.0ms in its worst round. There is not enough room between ' +
+        'the two for a ratio to mean anything on this machine'
+    );
   });
 
   // THE DEGENERATE INPUT, and the reason it throws rather than returning something.
+  //
+  // THE TWO EMPTY CASES ARE NOT THE SAME DEFECT, and the first draft of this comment said they
+  // were. Only the FLOOR fails silently:
+  //
+  //   empty FLOOR    max of nothing is -Infinity, so `lineMs < -Infinity × 2` is false, the
+  //                  gate OPENS, and it opens carrying a real-looking 300.0 ms line while
+  //                  having measured nothing. Silent, and the failure this gate exists to stop.
+  //   empty CONTROL  median of nothing makes lineMs NaN, and bun FAILS `toBeLessThan(NaN)`.
+  //                  Still a bug, but it goes red rather than quietly asserting.
+  //
+  // Both throw now. The distinction is recorded because "silently always assert" is precise
+  // for one of them and wrong for the other, and a comment that overstates its own danger is
+  // the thing this file keeps being asked to stop doing.
   test('an empty sample throws instead of silently opening the gate', () => {
     expect(() => stallGateVerdict([], [10], 12)).toThrow(/needs both samples/);
     expect(() => stallGateVerdict([400], [], 12)).toThrow(/needs both samples/);
     expect(() => median([])).toThrow(/empty sample/);
 
-    // WHY IT MATTERS, stated as the fact that makes it dangerous: the max of nothing is
-    // -Infinity, so `lineMs < -Infinity × 2` is false and the gate would OPEN — asserting on
-    // a measurement that never happened, which is the failure this whole gate exists to stop.
+    // The two facts behind the table above, pinned so the reasoning is checkable rather than
+    // asserted: the max of nothing is -Infinity, and -Infinity opens the comparison.
     expect(Math.max(...([] as number[]))).toBe(-Infinity);
+    expect(300 < -Infinity * RESOLUTION_FACTOR).toBe(false); // …so `!(…)` resolves
   });
 });

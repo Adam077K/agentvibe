@@ -688,9 +688,18 @@ describe('enumerating many projects leaves the event loop free', () => {
     //
     // The control and the floor are measurements OF THIS MACHINE, where a median is right:
     // one descheduled round should not move an environment estimate.
+    // THE GATE'S VERDICT, TAKEN ONCE AND USED EVERYWHERE — the diagnostic below prints the
+    // same numbers the gate decides on, because two computations of one quantity is how the
+    // printed line and the enforced line drift apart. See test/gate.ts for why this is a pure
+    // function rather than four lines here: its withhold branch had never fired.
+    const gate = stallGateVerdict(controlStalls, floorStalls, PROJECTS);
+
     const asyncStallMs = Math.max(...asyncStalls);
-    const controlStallMs = median(controlStalls);
-    const floorStallMs = median(floorStalls);
+    // `gate.controlStallMs`, not a second `median(controlStalls)`. It was computed twice —
+    // identical today across 20,163 differential cases, which makes it a consistency question
+    // rather than a defect, and exactly the duplicate this file already removed for the floor.
+    const controlStallMs = gate.controlStallMs;
+    const floorStallMs = median(floorStalls); // the DIAGNOSTIC's floor; the gate reads the max
 
     // WHICH ROUND EACH REPORTED STALL CAME FROM, so every duration printed beside a stall is
     // that same round's duration and the line cannot contradict itself. `median` returns an
@@ -698,11 +707,6 @@ describe('enumerating many projects leaves the event loop free', () => {
     const asyncRound = asyncStalls.indexOf(asyncStallMs);
     const controlRound = controlStalls.indexOf(controlStallMs);
     const floorRound = floorStalls.indexOf(floorStallMs);
-    // THE GATE'S VERDICT, TAKEN ONCE AND USED BOTH PLACES — the diagnostic below prints the
-    // same numbers the gate decides on, because two computations of one quantity is how the
-    // printed line and the enforced line drift apart. See test/gate.ts for why this is a pure
-    // function rather than four lines here: its withhold branch had never fired.
-    const gate = stallGateVerdict(controlStalls, floorStalls, PROJECTS);
 
     // eslint-disable-next-line no-console
     console.log(
