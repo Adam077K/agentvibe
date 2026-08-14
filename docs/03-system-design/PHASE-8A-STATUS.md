@@ -1,7 +1,10 @@
 # Phase 8a — Mission Control, read plane
 
 **Living status.** Updated at each PR. Phase 8b (Dispatch) is deferred — see §1.
-**State: PHASE 8a COMPLETE — all 5 PRs merged.** `main` = `30f6c35`. `npm run check` exit 0 after
+**State: PHASE 8a COMPLETE — all 5 PRs merged** at `main` = `30f6c35`; three follow-on fixes have landed
+since, so `main` is now `01fcadd` ([#29](https://github.com/Adam077K/agentvibe/pull/29) budget-guard,
+[#34](https://github.com/Adam077K/agentvibe/pull/34) stall gate,
+[#36](https://github.com/Adam077K/agentvibe/pull/36) gate extraction). `npm run check` exit 0 after
 `bun install` in `mission-control/`.
 Handoff for whoever continues: [PHASE-8A-HANDOFF.md](PHASE-8A-HANDOFF.md).
 
@@ -17,7 +20,8 @@ Handoff for whoever continues: [PHASE-8A-HANDOFF.md](PHASE-8A-HANDOFF.md).
 | **4** | The view registry, Belief over both ledgers, Conflicts async + three-state + scoped | **full** | ✅ **merged** ([#30](https://github.com/Adam077K/agentvibe/pull/30)) — 4 fix rounds, all 3 lenses FAIL on the first pass |
 | **5** | Project + Inbox, `projectEmptyState` async **and bounded**, the #39/#40 debt | **full** | ✅ **merged** ([#32](https://github.com/Adam077K/agentvibe/pull/32)) — 6 fix rounds, correctness FAILed twice before clearing |
 
-**Where it is: 193 tests / 1,213 assertions across 8 files** (VERIFIED on `main` = `30f6c35`), `tsc --noEmit`
+**Where it is: 205 tests / 1,246 assertions across 8 files** (VERIFIED on `main` = `01fcadd`, `bun test`,
+82.4 s, exit 0 — it was 193 / 1,213 at phase close on `30f6c35`; #34 and #36 added the difference), `tsc --noEmit`
 clean and inside the gate, cold index 3.7–4.1 s against a 10 s budget, incremental 16 ms, 19 projects and
 ~2,000 sessions rendered. **All six views work end to end.**
 
