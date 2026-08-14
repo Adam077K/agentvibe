@@ -4,6 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFile, execFileSync } from 'node:child_process';
 import { promisify } from 'node:util';
+
+/** The test's own async spawner — used to measure what asking for a child costs. */
+const execFileAsync = promisify(execFile);
 import { discoverProjects, encodeProjectDir, type Project } from '../server/projects.ts';
 import { IndexStore } from '../server/index-store.ts';
 import { listWorktrees, parseWorktreePorcelain, type WorktreeEntry } from '../server/collectors/worktrees.ts';
@@ -590,13 +593,39 @@ describe('enumerating many projects leaves the event loop free', () => {
     const controlMs = performance.now() - c0;
     await settle();
     const controlStallMs = worstGapSince();
+
+    // THE SPAWN FLOOR — the confound this test was not measuring, and the reason it flaked.
+    //
+    // Both paths pay the same synchronous cost of ASKING for twelve children: the parent's
+    // side of twelve spawns is synchronous wherever it happens. The control's stall is that
+    // floor PLUS the blocking wait; the async path's is the floor and nothing else. So as
+    // git's real work shrinks — a fast runner with everything in page cache — the floor
+    // becomes most of both terms and the ratio walks toward 1 with nothing wrong.
+    //
+    // Measured on CI across five runs: 0.613 · 0.622 · 0.655 · 0.746 · 0.835, the last one
+    // failing, against a 0.750 bound. The existing gate compares against IDLE noise, which
+    // was 0.4 ms — it watches a confound that is not the one operating.
+    //
+    // The floor is the SAME twelve commands, in the same directories, asked for concurrently
+    // instead of blocked on. Not `git --version`: that skips repo discovery and would
+    // under-state the floor, which errs toward asserting when the measurement cannot carry it.
+    const f0 = performance.now();
+    await Promise.all(
+      projects.map((p) =>
+        execFileAsync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' })
+      )
+    );
+    const floorMs = performance.now() - f0;
+    await settle();
+    const floorStallMs = worstGapSince();
     sampling = false;
 
     // eslint-disable-next-line no-console
     console.log(
       `  [async] ${PROJECTS} projects — async ${asyncStallMs.toFixed(1)}ms (sweep ${sweepMs.toFixed(1)}ms) · ` +
         `sync enumeration control ${controlStallMs.toFixed(1)}ms (${controlMs.toFixed(1)}ms) · ` +
-        `idle noise ${idleNoiseMs.toFixed(1)}ms · ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
+        `spawn floor ${floorStallMs.toFixed(1)}ms (${floorMs.toFixed(1)}ms) · idle noise ${idleNoiseMs.toFixed(1)}ms · ` +
+        `ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
     );
 
     expect(reports).toHaveLength(PROJECTS); // every project really was swept
@@ -608,6 +637,27 @@ describe('enumerating many projects leaves the event loop free', () => {
         'enumeration event-loop binding',
         `this process was already blocking for ${idleNoiseMs.toFixed(1)}ms at a time while idle, against a ` +
           `${controlStallMs.toFixed(1)}ms synchronous control — too noisy here to attribute a stall to the sweep`
+      );
+      return;
+    }
+
+    // THE FLOOR AS A GATE, DELIBERATELY NOT AS A DIVISOR. Subtracting it from both terms —
+    // `(async - floor) / (control - floor)` — is arithmetically tidy and numerically wrong
+    // here: where the floor is most of both terms it divides two small differences of noisy
+    // quantities, so the variance explodes and the bound flakes HARDER than the one it
+    // replaces, in the direction that reads as a real failure. Read as a gate instead, the
+    // same quantity fails safe.
+    //
+    // AND BOTH ITS INPUTS ARE MUTATION-INDEPENDENT — the control is this test's own
+    // synchronous loop and the floor is this test's own asynchronous one. Neither touches the
+    // collector, so the code under test cannot make this gate fire and hide itself. That is
+    // the property that makes a gate honest rather than an escape hatch.
+    if (controlStallMs < floorStallMs * 2) {
+      notVerified(
+        'enumeration event-loop binding',
+        `the synchronous control stalled ${controlStallMs.toFixed(1)}ms against a ${floorStallMs.toFixed(1)}ms floor ` +
+          `for asking for the same ${PROJECTS} children — the blocking wait is ${(controlStallMs - floorStallMs).toFixed(1)}ms ` +
+          'of that, too little above the cost both paths share for a ratio between them to mean anything on this machine'
       );
       return;
     }
