@@ -1728,7 +1728,19 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     // …and concurrency genuinely occurred, so the cap is holding something back rather than
     // the probes happening to run one after another.
     expect(maxSeen).toBeGreaterThan(1);
+
+    // TWO BOUNDS, AND THE SECOND ONE IS NOT THE CONSTANT. Asserting only
+    // `maxSeen <= PROJECT_PROBE_MAX_CONCURRENT` reads the value it is supposed to be
+    // checking: raising the constant to 64 raises this assertion with it, and the test stays
+    // green while 20 greps run at once. Measured — that mutation passed 71/0 before this
+    // line existed. So the contract is checked against the declared cap AND against a ceiling
+    // the declaration cannot move.
     expect(maxSeen).toBeLessThanOrEqual(PROJECT_PROBE_MAX_CONCURRENT);
+    expect(maxSeen).toBeLessThan(N); // a cap that does not cap fails here regardless of its value
+    // And the declared cap is a SMALL number, which is the actual decision under review — the
+    // limit exists to bound 8 MB and ten seconds per child, and widening it is a change that
+    // should have to argue for itself here rather than pass silently.
+    expect(PROJECT_PROBE_MAX_CONCURRENT).toBeLessThanOrEqual(4);
 
     // Every queued probe still ran and still answered, with no marker in this tree.
     expect(results).toHaveLength(N);
