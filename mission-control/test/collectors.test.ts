@@ -34,6 +34,7 @@ import {
   inboxEmptyState,
   PROJECT_PROBE_MAX_CONCURRENT,
   PROJECT_PROBE_TIMEOUT_MS,
+  PROJECT_PROBE_QUEUE_WAIT_MS,
 } from '../server/collectors/empty.ts';
 import {
   mkTmpDir,
@@ -1683,9 +1684,11 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
       }
     }
 
-    // A tree big enough that each grep is observable for tens of milliseconds — otherwise
-    // the children come and go between samples and the maximum reads 0 or 1 for a reason
-    // that has nothing to do with the cap.
+    // SIZED BETWEEN TWO BOUNDS, and it really is a narrow window. Big enough that one probe
+    // outlasts several samples (56 MB gave 1,129 ms here, comfortable) — and small enough
+    // that N probes at the cap finish inside PROJECT_PROBE_QUEUE_WAIT_MS, because at 56 MB
+    // twenty of them took 11 s, the queue correctly turned the last ones away, and the test
+    // was then measuring the wait rather than the cap. ~19 MB sits between the two.
     const root = mkTmpDir('mc-cap-');
     cleanupDirs.push(root);
     for (let d = 0; d < 8; d++) {
@@ -1696,38 +1699,71 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
       }
     }
 
+    // THE CONTROL: how long ONE probe lasts on THIS machine. The sampler's resolution has to
+    // be compared against something measured here, not against a number written on a laptop —
+    // this test failed on the CI runner at `maxSeen: 0` with the cap working perfectly,
+    // because the runner's greps were shorter than the gap between samples.
+    const probeStart = Date.now();
+    await projectEmptyState({ id: 'cap', root } as Project);
+    const probeMs = Math.max(1, Date.now() - probeStart);
+
+    // AND THE SAMPLER DOES NOT BLOCK THE THREAD IT IS WATCHING. `execFileSync` here was worse
+    // than slow: starting the next grep needs this same JS thread (the semaphore hands the
+    // slot over in a microtask), so a blocking sampler and the probe lifecycle interleaved —
+    // greps ran entirely inside the sampler's own sleep and it saw none of them. Async pgrep,
+    // back to back with no sleep, leaves the loop free between samples.
+    const pgrepAsync = promisify(execFile);
     let sampling = true;
     let maxSeen = 0;
     let samples = 0;
+    const samplerStart = Date.now();
     const sampler = (async () => {
       while (sampling) {
         try {
-          const out = execFileSync('pgrep', ['-f', root], { encoding: 'utf8' });
-          const n = out.trim().split('\n').filter(Boolean).length;
+          const { stdout } = await pgrepAsync('pgrep', ['-f', root], { encoding: 'utf8' });
+          const n = stdout.trim().split('\n').filter(Boolean).length;
           if (n > maxSeen) maxSeen = n;
         } catch {
           /* pgrep exits 1 with no matches — zero children, nothing to record */
         }
         samples++;
-        await new Promise((r) => setTimeout(r, 10));
       }
     })();
 
     const N = 20;
+    const runStart = Date.now();
     const results = await Promise.all(
       Array.from({ length: N }, () => projectEmptyState({ id: 'cap', root } as Project))
     );
+    const runMs = Date.now() - runStart;
     sampling = false;
     await sampler;
+    const cadenceMs = (Date.now() - samplerStart) / Math.max(1, samples);
 
-    // NON-VACUITY, and it is the assertion that matters most here: the sampler really looked,
-    // and it really saw greps. Without these, `maxSeen <= cap` is satisfied by a sampler that
-    // never ran and a machine that never spawned anything.
-    expect(samples).toBeGreaterThan(3);
-    expect(maxSeen).toBeGreaterThan(0);
-    // …and concurrency genuinely occurred, so the cap is holding something back rather than
-    // the probes happening to run one after another.
-    expect(maxSeen).toBeGreaterThan(1);
+    // eslint-disable-next-line no-console
+    console.log(
+      `  [cap] ${N} probes in ${runMs}ms · max concurrent greps ${maxSeen} (cap ${PROJECT_PROBE_MAX_CONCURRENT}) · ` +
+        `one probe ${probeMs}ms · ${samples} samples at ${cadenceMs.toFixed(1)}ms`
+    );
+
+    // GATE ON THE INSTRUMENT, not on the answer. If this machine cannot take several samples
+    // inside one probe's lifetime, an overlap it never saw is a fact about the sampler's
+    // resolution — reporting that as a pass would be the §0 defect, and reporting it as a
+    // failure would be blaming the code for the ruler. The cap assertions below still run;
+    // only the "we observed overlap" ones are withheld, and loudly.
+    const canObserve = cadenceMs * 3 <= probeMs;
+    if (!canObserve) {
+      notVerified(
+        'probe concurrency overlap',
+        `one probe lasts ${probeMs}ms and samples are ${cadenceMs.toFixed(1)}ms apart, too coarse to catch two at once`
+      );
+    } else {
+      // NON-VACUITY: the sampler really looked, and it really saw greps overlapping — so the
+      // ceiling below is holding something back rather than describing probes that happened
+      // to run one after another.
+      expect(samples).toBeGreaterThan(3);
+      expect(maxSeen).toBeGreaterThan(1);
+    }
 
     // TWO BOUNDS, AND THE SECOND ONE IS NOT THE CONSTANT. Asserting only
     // `maxSeen <= PROJECT_PROBE_MAX_CONCURRENT` reads the value it is supposed to be
@@ -1742,11 +1778,22 @@ describe('empty.ts probes are executed, matching what the collector reports', ()
     // should have to argue for itself here rather than pass silently.
     expect(PROJECT_PROBE_MAX_CONCURRENT).toBeLessThanOrEqual(4);
 
-    // Every queued probe still ran and still answered, with no marker in this tree.
+    // Every queued probe still ran and still answered, with no marker in this tree — which is
+    // only the right assertion while the whole run fits inside the queue's own wait. At a
+    // 56 MB tree it did not: twenty probes took 11 s, the last ones were correctly turned
+    // away, and this loop failed for a reason that had nothing to do with the cap. So the
+    // premise is checked rather than assumed, and a machine slow enough to break it says so.
     expect(results).toHaveLength(N);
-    for (const r of results) {
-      expect(r.found).toBe(false);
-      expect(r.readable).toBeUndefined(); // none of them was turned away
+    if (runMs < PROJECT_PROBE_QUEUE_WAIT_MS * 0.8) {
+      for (const r of results) {
+        expect(r.found).toBe(false);
+        expect(r.readable).toBeUndefined(); // none of them was turned away
+      }
+    } else {
+      notVerified(
+        'queued probes all complete',
+        `${N} probes took ${runMs}ms against a ${PROJECT_PROBE_QUEUE_WAIT_MS}ms queue wait, so being turned away is the correct behaviour here rather than a defect`
+      );
     }
   }, 120_000);
 
