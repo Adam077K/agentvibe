@@ -4,6 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFile, execFileSync } from 'node:child_process';
 import { promisify } from 'node:util';
+
+/** The test's own async spawner — used to measure what asking for a child costs. */
+const execFileAsync = promisify(execFile);
 import { discoverProjects, encodeProjectDir, type Project } from '../server/projects.ts';
 import { IndexStore } from '../server/index-store.ts';
 import { listWorktrees, parseWorktreePorcelain, type WorktreeEntry } from '../server/collectors/worktrees.ts';
@@ -532,6 +535,33 @@ describe('the conflicts sweep leaves the event loop free', () => {
 // threshold, same instrument. This is what actually binds the enumeration half; the
 // structural pin above catches only the call-site revert in one file.
 describe('enumerating many projects leaves the event loop free', () => {
+  /**
+   * TWELVE — AND BOTH LEVERS FOR MAKING THE RUNNER ABLE TO RESOLVE THIS WERE TRIED THERE AND
+   * MEASURED TO FAIL. Written down so the next reader does not spend the afternoon I did.
+   *
+   * 1. MORE WORK PER SPAWN. Unavailable: `git worktree list --porcelain` is irreducibly
+   *    spawn-dominated. Measured — 1 / 8 / 24 worktrees in a repo cost 31.8 / 33.7 / 38.2 ms
+   *    per call, so twenty-four times the subject buys twenty percent more time. No fixture
+   *    SHAPE makes this command's work outweigh its own startup.
+   *
+   * 2. MORE CHILDREN. The argument was that `async / control` is scale-invariant — true, and
+   *    what makes 0.75 valid anywhere — while the room correct code has, `0.75 * control -
+   *    floor`, is a fixed positive quantity per child and so grows linearly with N, against a
+   *    resolution that stays put. The first half is right. The second is not:
+   *
+   *      N=12   control 19.6ms  floor 10.4ms  room 4.3ms  resolution 3.3ms
+   *      N=48   control 73.3ms  floor 46.3ms  room 8.7ms  resolution 9.7ms
+   *
+   *    Room doubled and NOISE TRIPLED. Worse, the ratio at N=48 measured 0.784 on correct
+   *    code — above the 0.750 line, the exact red this change exists to remove, arriving from
+   *    the direction I had just argued would fix it. It also cost fifteen seconds of local
+   *    suite time to buy that.
+   *
+   * So the pin enforces where the difference can be resolved — a developer machine, ratio
+   * 0.141 against a mutated 1.136 — and says so honestly where it cannot. The bound is
+   * untouched at 0.75. This is not a loosened threshold; it is a refusal to report a coin
+   * toss as a verdict.
+   */
   const PROJECTS = 12;
   const parent = mkTmpDir('mc-enum-scale-');
   cleanupDirs.push(parent);
@@ -574,28 +604,114 @@ describe('enumerating many projects leaves the event loop free', () => {
     await new Promise((resolve) => setTimeout(resolve, 30));
     const idleNoiseMs = worstGapSince();
 
-    // THE MEASUREMENT — every project swept the way the route does it: concurrently.
-    const t0 = performance.now();
-    const reports = await Promise.all(projects.map((p) => detectConflicts(p)));
-    const sweepMs = performance.now() - t0;
-    await settle();
-    const asyncStallMs = worstGapSince();
+    // THREE QUANTITIES, MEASURED REPEATEDLY AND INTERLEAVED.
+    //
+    //   async   — the sweep, the way the route does it: concurrently
+    //   control — the ENUMERATION PHASE ONLY, sequential and synchronous: exactly what
+    //             reverting listWorktreesAsync produces, and nothing else
+    //   floor   — THE CONFOUND THIS TEST WAS NOT MEASURING, and the reason it flaked. Both
+    //             paths pay the same synchronous cost of ASKING for twelve children; the
+    //             parent's side of a spawn is synchronous wherever it happens. The control's
+    //             stall is that floor PLUS the blocking wait, the async path's is the floor
+    //             and nothing else — so as git's real work shrinks the floor becomes most of
+    //             both terms and the ratio walks toward 1 with nothing wrong. It is the SAME
+    //             twelve commands in the same directories, asked for concurrently instead of
+    //             blocked on; not `git --version`, which skips repo discovery and would
+    //             under-state it.
+    //
+    // REPEATED, because the flake was variance and one sample cannot see its own. Measured on
+    // CI across five runs: 0.613 · 0.622 · 0.655 · 0.746 · 0.835, the last red, against a
+    // 0.750 bound — a spread of 0.22 on a quantity being compared to a fixed line.
+    //
+    // INTERLEAVED, so a machine that slows down halfway through moves all three together
+    // rather than making one of them look bad. Medians rather than means: one descheduled
+    // iteration should not move the answer, and on this measurement it otherwise would.
+    const asyncStalls: number[] = [];
+    const controlStalls: number[] = [];
+    const floorStalls: number[] = [];
+    // PER ROUND, NOT LAST-ROUND SURVIVORS. These were three `let`s reassigned every iteration,
+    // so every duration printed below belonged to round 5 while the reported async stall is
+    // the max over all five — and the diagnostic then contradicted itself on precisely the
+    // regression it exists to report. Captured under the memoised mutation:
+    // `async worst 147.6ms (sweep 40.6ms, spread 139.6)` — a 147.6 ms stall inside a 40.6 ms
+    // sweep. Whoever reads that during a real regression disbelieves the number, and a
+    // diagnostic nobody believes is worse than no diagnostic.
+    const sweepMsBy: number[] = [];
+    const controlMsBy: number[] = [];
+    const floorMsBy: number[] = [];
+    let reports: Awaited<ReturnType<typeof detectConflicts>>[] = [];
+    const ROUNDS = 5;
 
-    // THE CONTROL — the ENUMERATION PHASE ONLY, sequential and synchronous: exactly what
-    // reverting listWorktreesAsync produces, and nothing else.
-    const c0 = performance.now();
-    for (const p of projects) {
-      execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' });
+    for (let round = 0; round < ROUNDS; round++) {
+      const t0 = performance.now();
+      reports = await Promise.all(projects.map((p) => detectConflicts(p)));
+      sweepMsBy.push(performance.now() - t0);
+      await settle();
+      asyncStalls.push(worstGapSince());
+
+      const c0 = performance.now();
+      for (const p of projects) {
+        execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' });
+      }
+      controlMsBy.push(performance.now() - c0);
+      await settle();
+      controlStalls.push(worstGapSince());
+
+      // THE REJECTION IS CAUGHT, because what is timed here is the cost of ASKING, not the
+      // answer. At this concurrency a spawn can fail with EAGAIN, and an uncaught rejection
+      // takes the whole suite down with "Unhandled error between tests" — which is how the
+      // first run at this project count failed, my defect and not the collector's. Whether a
+      // child succeeded is `detectConflicts`'s business and is asserted above.
+      const f0 = performance.now();
+      await Promise.all(
+        projects.map((p) =>
+          execFileAsync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' }).catch(
+            () => undefined
+          )
+        )
+      );
+      floorMsBy.push(performance.now() - f0);
+      await settle();
+      floorStalls.push(worstGapSince());
     }
-    const controlMs = performance.now() - c0;
-    await settle();
-    const controlStallMs = worstGapSince();
     sampling = false;
+
+    const median = (xs: number[]) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)]!;
+    const spread = (xs: number[]) => Math.max(...xs) - Math.min(...xs);
+
+    // MAX FOR THE SUBJECT, MEDIAN FOR THE ENVIRONMENT, and the difference is the question
+    // each one answers. "Did this ever block" is a question about the WORST round, so a
+    // median is the wrong reducer for it: a memoised lister that blocks only on a cache miss
+    // — an ordinary optimisation, a shape that already exists twice in this repo — puts one
+    // slow round among four warm ones, and the median reports the warm ones. Measured by the
+    // review lens: 5 runs of 5 rounds, ratio 0.081-0.153, `1 pass 0 fail` on an
+    // implementation that blocks 350 ms on every cold path.
+    //
+    // The control and the floor are measurements OF THIS MACHINE, where a median is right:
+    // one descheduled round should not move an environment estimate.
+    const asyncStallMs = Math.max(...asyncStalls);
+    const controlStallMs = median(controlStalls);
+    const floorStallMs = median(floorStalls);
+
+    // WHICH ROUND EACH REPORTED STALL CAME FROM, so every duration printed beside a stall is
+    // that same round's duration and the line cannot contradict itself. `median` returns an
+    // element of the array rather than an interpolation, so both lookups find a real round.
+    const asyncRound = asyncStalls.indexOf(asyncStallMs);
+    const controlRound = controlStalls.indexOf(controlStallMs);
+    const floorRound = floorStalls.indexOf(floorStallMs);
+    // The gate's actual input, printed because it is the number that decides whether this
+    // measurement is trusted at all — and it is NOT the median floor shown beside it.
+    const floorWorstMs = Math.max(...floorStalls);
 
     // eslint-disable-next-line no-console
     console.log(
-      `  [async] ${PROJECTS} projects — async ${asyncStallMs.toFixed(1)}ms (sweep ${sweepMs.toFixed(1)}ms) · ` +
-        `sync enumeration control ${controlStallMs.toFixed(1)}ms (${controlMs.toFixed(1)}ms) · ` +
+      `  [async] ${PROJECTS} projects x${ROUNDS} — async WORST ${asyncStallMs.toFixed(1)}ms ` +
+        `(round ${asyncRound + 1}, sweep ${sweepMsBy[asyncRound]!.toFixed(1)}ms, spread ` +
+        `${spread(asyncStalls).toFixed(1)}) · sync enumeration control MEDIAN ${controlStallMs.toFixed(1)}ms ` +
+        `(round ${controlRound + 1}, ${controlMsBy[controlRound]!.toFixed(1)}ms, spread ` +
+        `${spread(controlStalls).toFixed(1)}) · spawn floor MEDIAN ${floorStallMs.toFixed(1)}ms ` +
+        `(round ${floorRound + 1}, ${floorMsBy[floorRound]!.toFixed(1)}ms, spread ` +
+        `${spread(floorStalls).toFixed(1)}, worst ${floorWorstMs.toFixed(1)}ms — the gate reads this) · ` +
         `idle noise ${idleNoiseMs.toFixed(1)}ms · ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
     );
 
@@ -612,10 +728,95 @@ describe('enumerating many projects leaves the event loop free', () => {
       return;
     }
 
+    // THE FLOOR AS A GATE, DELIBERATELY NOT AS A DIVISOR. Subtracting it from both terms —
+    // `(async - floor) / (control - floor)` — is arithmetically tidy and numerically wrong
+    // here: where the floor is most of both terms it divides two small differences of noisy
+    // quantities, so the variance explodes and the bound flakes HARDER than the one it
+    // replaces, in the direction that reads as a real failure. Read as a gate instead, the
+    // same quantity fails safe.
+    //
+    // EVERY INPUT TO THIS GATE IS AN ENVIRONMENT MEASUREMENT, and it took a review to make
+    // that true. An earlier version of this comment claimed both inputs were
+    // mutation-independent. THERE WERE THREE, and the third was `spread(asyncStalls)` — the
+    // subject's own variance, taken straight from `detectConflicts`. So the code under test
+    // could widen the gate and hide behind it, and it did:
+    //
+    //   plain sync revert     13 runs, 12 caught, ONE ESCAPED — spread 174.8ms against
+    //                         244ms of headroom, gate fired, `1 pass 0 fail` with a
+    //                         blocking enumeration, on the machine with the MOST headroom
+    //   memoised lister       blocks on a cache miss, async on a hit — an ordinary
+    //                         optimisation, a shape this repo already has twice — escaped
+    //                         5 runs out of 5
+    //
+    // That is a false-GREEN, and the flake this PR replaced was a false-RED. For a guarantee
+    // the first is strictly worse, and it is not a trade I would have taken knowingly.
+    //
+    // THERE IS NO RESOLUTION TERM AT ALL. An earlier revision of this comment said it was
+    // "now the spread of the CONTROL and the FLOOR only", which was false as written and
+    // contradicted by the paragraph below it: the variance term was removed outright, not
+    // narrowed. Two claims about one gate, disagreeing silently, which is the failure this
+    // file keeps having.
+    //
+    // AND "NOTHING THE SUBJECT DOES CAN MOVE THIS THRESHOLD" WAS FALSE TOO — SYNTACTICALLY
+    // TRUE, CAUSALLY REFUTED, and this is the honest statement of what the gate binds. No
+    // gate input reads a value `detectConflicts` returned; that was verified by trace. It
+    // leaks through the MACHINE instead. A review lens built a stale-while-revalidate lister
+    // — the async answer returned immediately, a synchronous `execFileSync` revalidation
+    // fired later on a timer — and measured:
+    //
+    //   revalidate at 100 ms    1 of 4 runs caught, 3 escaped
+    //   revalidate at 220 ms    4 of 4 `1 pass 0 fail`, FULLY INVISIBLE — and the leak RAISED
+    //                           the gate. Landing inside the control window, it pushed
+    //                           median(control) 129 -> 190 ms, so lineMs went 96 -> 143 ms.
+    //                           The code under test widened its own pass bound by ~48%.
+    //
+    // SO THE GENERAL RULE IS BIGGER THAN THE ONE THIS PR FIXED. Not merely "any statistic
+    // computed from the subject's own timings is under the subject's influence" — also ANY
+    // STATISTIC TAKEN FROM A WINDOW THE SUBJECT MAY STILL BE RUNNING IN. Removing the
+    // variance term closed the escape that existed. No reducer and no fixture closes the
+    // class, because the contamination is causal rather than arithmetic; only an instrument
+    // with no clock does, which is #45 — intercept `child_process` and assert the specific
+    // `*Sync` exports were never called.
+    //
+    // WHAT THIS TEST BINDS, THEN: an implementation that BLOCKS. It does not bind one that
+    // LEAKS synchronous work into a neighbouring measurement window. That is a real limit of
+    // any timing instrument and it is stated here rather than in a PR body, because this is
+    // where the next person will look.
+    //
+    // THE THRESHOLD IS MEASURED, NOT PICKED, AND IT COMPARES LIKE WITH LIKE. The assertion
+    // below is on the subject's WORST round, so the question the gate must answer is: how high
+    // can a CORRECT implementation's worst round reach? That is the floor, reduced the same
+    // way — `max(floorStalls)` — because the floor is exactly what correct code pays and
+    // nothing more. The line it must stay under is `0.75 * control`. Requiring the line to be
+    // at least twice the floor's worst round says, in the machine's own numbers, that a pass
+    // is a pass rather than a coin landing well.
+    //
+    // AN EARLIER VERSION COMPARED HEADROOM AGAINST `max - min` ACROSS ROUNDS, and that
+    // estimator is the reason two mutations still escaped after the subject's own term was
+    // removed: one slow round inflates a range without limit, and measured here, a control
+    // spread of 160.9ms and one of 426.0ms fired the gate while the mutation sat in plain
+    // sight at ratio 1.192 and 1.247. A range over five samples is not a dispersion estimate,
+    // it is the worst thing that happened; the median control is stable across those same
+    // runs (363-399ms) precisely because a median is not.
+    const lineMs = controlStallMs * 0.75;
+    const correctCodeCeilingMs = floorWorstMs; // the same number the diagnostic printed
+    if (lineMs < correctCodeCeilingMs * 2) {
+      notVerified(
+        'enumeration event-loop binding',
+        `correct code must stay under ${lineMs.toFixed(1)}ms here — three quarters of a ${controlStallMs.toFixed(1)}ms ` +
+          `control — while merely ASKING for the same ${PROJECTS} children cost as much as ` +
+          `${correctCodeCeilingMs.toFixed(1)}ms in its worst round. There is not enough room between the two for a ` +
+          'ratio to mean anything on this machine'
+      );
+      return;
+    }
+
     // Same bound as the status-phase test, for the same reason and with the same failure
     // direction. Both terms scale with PROJECTS, so this holds on any machine.
     expect(asyncStallMs).toBeLessThan(controlStallMs * 0.75);
-  });
+  }, 120_000); // EXPLICIT, because three rounds over 48 projects exceeds bun's 5s default —
+  // which is how this first failed at the larger count: the runner SIGTERMed the child mid-
+  // measurement and the error read as a git failure rather than as a test timeout.
 });
 
 // ── THE PROJECT PROBE, SAME SHAPE AS THE ENUMERATION PIN ──────────────────────────────
