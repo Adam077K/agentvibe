@@ -1211,6 +1211,17 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
     expect(parseStatusPorcelain('?? "a\\"b -> c.ts"\n')).toEqual(['a"b -> c.ts']);
   });
 
+  /**
+   * `status.showUntrackedFiles=normal` appended to whatever the ambient value is, for the tests
+   * that deliberately read BARE git. They must not inherit a hostile `=no`, which would empty
+   * their fixtures and fail them on their premise instead of on the behaviour under test.
+   */
+  const showUntrackedNormal = () => {
+    const ours = "'status.showUntrackedFiles=normal'";
+    const existing = process.env.GIT_CONFIG_PARAMETERS;
+    return existing ? `${existing} ${ours}` : ours;
+  };
+
   /** Every name git has a reason to quote, including the two that broke the decoder. */
   const EXOTIC_NAMES = [
     'plain.ts',
@@ -1258,8 +1269,30 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
 
     // The ambient value is APPENDED, never replaced — dropping someone else's git config on the
     // floor would be its own silent behaviour change.
-    expect(statusConfigEnv(hostile).GIT_CONFIG_PARAMETERS).toBe("'core.quotePath=false' 'core.quotePath=true'");
-    expect(statusConfigEnv({}).GIT_CONFIG_PARAMETERS).toBe("'core.quotePath=true'");
+    const OURS = "'core.quotePath=true' 'status.showUntrackedFiles=normal'";
+    expect(statusConfigEnv(hostile).GIT_CONFIG_PARAMETERS).toBe(`'core.quotePath=false' ${OURS}`);
+    expect(statusConfigEnv({}).GIT_CONFIG_PARAMETERS).toBe(OURS);
+  });
+
+  // THE OTHER CONFIG THAT SURVIVED THE OVERRIDE, and it fails in the quieter direction:
+  // `status.showUntrackedFiles=no` does not corrupt a path, it makes the path DISAPPEAR — with
+  // `readable: undefined`, so the sweep reports a clean read over a population git was told not
+  // to look at. Absence is the answer nobody investigates, which makes this worse than the
+  // fabrication this PR was opened for.
+  test('a repo that hides untracked files cannot make the sweep report a clean read', async () => {
+    const root = mkTmpDir('mc-untracked-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    execFileSync('git', ['config', 'status.showUntrackedFiles', 'no'], { cwd: root });
+    fs.writeFileSync(path.join(root, 'untracked.ts'), 'x\n');
+
+    // NON-VACUITY: the setting really does hide it from a bare status, so the assertion below
+    // is about the override rather than about a config that never had any effect.
+    expect(execFileSync('git', [...STATUS_ARGV], { cwd: root, encoding: 'utf8' }).trim()).toBe('');
+
+    const swept = await changedFilesFor(root);
+    expect(swept.readable).toBeUndefined(); // it really did run clean…
+    expect(swept.changedFiles).toEqual(['untracked.ts']); // …and it really did see the file
   });
 
   // THAT THE SWEEP ACTUALLY PASSES IT — BEHAVIOURALLY, which I previously said was impossible.
@@ -1281,8 +1314,24 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
     execFileSync('git', ['config', 'core.quotePath', 'false'], { cwd: root });
     for (let i = 0; i < 60; i++) fs.writeFileSync(path.join(root, `café-${String(i).padStart(2, '0')}-ünïcödé.ts`), 'x\n');
 
-    // A budget that the ESCAPED stream overruns and the RAW stream does not.
-    const cut = await changedFilesFor(root, { maxBuffer: 2000 });
+    // THE MARGIN THIS PIN RESTS ON, ASSERTED RATHER THAN ASSUMED. It kills the mutation only
+    // because the RAW stream fits under the budget while the ESCAPED one does not — measured
+    // 1620 B raw against 3540 B escaped at a 2000 B budget. That is 380 B of headroom, about
+    // 19%, and roughly 14 more fixture files would close it silently: the raw stream would
+    // overrun too, `readable` would be false either way, and this test would go GREEN with the
+    // mutation it exists to kill. The same fixture-margin shape the barrier above already had
+    // twice, now in the pin that replaced the source-text one.
+    const BUDGET = 2000;
+    const raw = execFileSync('git', [...STATUS_ARGV], { cwd: root, encoding: 'utf8' });
+    const escaped = execFileSync('git', [...STATUS_ARGV], {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, ...statusConfigEnv() },
+    });
+    expect(Buffer.byteLength(raw, 'utf8')).toBeLessThan(BUDGET); // the mutation's path fits
+    expect(Buffer.byteLength(escaped, 'utf8')).toBeGreaterThan(BUDGET); // …and the real one does not
+
+    const cut = await changedFilesFor(root, { maxBuffer: BUDGET });
     expect(cut.readable).toBe(false); // …which only happens if git was asked to escape
     expect(cut.changedFiles.length).toBeGreaterThan(0);
     expect(cut.changedFiles.length).toBeLessThan(60);
@@ -1336,11 +1385,14 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
     execFileSync('git', ['config', 'core.quotePath', 'false'], { cwd: root });
     for (const n of EXOTIC_NAMES) fs.writeFileSync(path.join(root, n), 'x\n');
 
-    // Deliberately NOT the collector's argv: plain status, so the repo's own config wins and
-    // git emits non-ASCII raw while still quoting for the space.
+    // Deliberately NOT forcing quotePath: the repo's own config must win so git emits non-ASCII
+    // raw while still quoting for the space. But `status.showUntrackedFiles` IS forced, because
+    // an ambient `=no` empties this fixture and the test then fails on its premise rather than
+    // on the behaviour — vary one variable, pin the rest.
     const raw = execFileSync('git', ['--no-optional-locks', 'status', '--porcelain'], {
       cwd: root,
       encoding: 'utf8',
+      env: { ...process.env, GIT_CONFIG_PARAMETERS: showUntrackedNormal() },
     });
     // THE PREMISE: this really is the raw form. `\360\237\224\245` must NOT appear, and a
     // quoted record holding a literal astral character must — otherwise the surrogate path is
@@ -1439,9 +1491,13 @@ describe('a truncated git status never invents a filename', () => {
     // emit `?? directory_…/` at the same width. Two assumptions, both silent, and the second
     // is now false in general: a quoted path's raw record is longer than the path it parses
     // to. Take the bytes git actually wrote and count them.
-    const raw = execFileSync('git', ['--no-optional-locks', 'status', '--porcelain'], {
+    const raw = execFileSync('git', [...STATUS_ARGV], {
       cwd: root,
       encoding: 'utf8',
+      // THE COLLECTOR'S OWN ENV, because the boundary has to be the one changedFilesFor really
+      // receives. Reading bare git here measured a different stream from the one being cut, and
+      // an ambient `status.showUntrackedFiles=no` emptied it outright.
+      env: { ...process.env, ...statusConfigEnv() },
     });
     const records = raw.split('\n').filter((l) => l);
     expect(records.length).toBeGreaterThan(3); // premise: there is somewhere to cut between
@@ -1488,6 +1544,14 @@ describe('a truncated git status never invents a filename', () => {
     // EVERY NAME GIT QUOTES, in both worktrees. All sort before the `zzz_` bulk below, so they
     // survive the cut and the exists-on-disk barrier is actually applied to quoted paths —
     // the old fixture was pure ASCII, which is why F2 sailed through it.
+    //
+    // THE PROPERTY IS NOT A RUNTIME INVARIANT, AND MUST NEVER BE PROMOTED TO ONE. "No rendered
+    // conflict names a file that does not exist" is FALSE on the success path for DELETED
+    // files: `changedFilesFor` correctly returns `deleted.ts` with `readable: undefined` and
+    // the path is genuinely absent from disk. Reporting a deletion is right — two worktrees
+    // deleting the same file is a real conflict — so the absence is the answer, not a defect.
+    // This test holds only because its fixture contains no deletions. It is a FIXTURE-SCOPED
+    // barrier against fabrication, not a claim about every path the collector can emit.
     //
     // AND THE PRECONDITION, because the mutation table in the PR body omitted it and read as
     // though this fires unconditionally: reverting BOTH quoting halves only renders a bad path

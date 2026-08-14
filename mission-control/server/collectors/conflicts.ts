@@ -97,14 +97,21 @@ export const STATUS_ARGV = ['--no-optional-locks', 'status', '--porcelain'] as c
  * `GIT_CONFIG_SYSTEM`, and an inherited hostile `GIT_CONFIG_PARAMETERS`.
  */
 export function statusConfigEnv(ambient: NodeJS.ProcessEnv = process.env): Record<string, string> {
-  const ours = "'core.quotePath=true'";
+  const ours = ["'core.quotePath=true'", "'status.showUntrackedFiles=normal'"].join(' ');
   const existing = ambient.GIT_CONFIG_PARAMETERS;
   return {
     // Kept as well as the append: these lose to PARAMETERS but beat everything else, so on a
     // git too old to read PARAMETERS the override still binds. Belt AND braces, cheaply.
-    GIT_CONFIG_COUNT: '1',
+    GIT_CONFIG_COUNT: '2',
     GIT_CONFIG_KEY_0: 'core.quotePath',
     GIT_CONFIG_VALUE_0: 'true',
+    // `status.showUntrackedFiles=no` SURVIVED THE QUOTING OVERRIDE and produced a SILENT MISS:
+    // the untracked file vanished from the sweep with `readable: undefined` — a clean read
+    // reported over a population git had been told not to look at. That is worse than the
+    // fabrication this file was opened to fix, because absence is the answer nobody
+    // investigates. Executed: 0 records with it set, 1 with this forced.
+    GIT_CONFIG_KEY_1: 'status.showUntrackedFiles',
+    GIT_CONFIG_VALUE_1: 'normal',
     GIT_CONFIG_PARAMETERS: existing ? `${existing} ${ours}` : ours,
   };
 }
@@ -308,10 +315,10 @@ export function parseStatusPorcelain(text: string): string[] {
     // unquoted, so they arrive here intact and leave renamed. Measured on the raw form: 6
     // parsed, 5 MISSING. Slicing a known width cannot do that.
     //
-    // KNOWN AND NOT FIXED HERE: a name consisting ONLY of Unicode whitespace still reaches the
-    // `if (!file)` guard below and is silently dropped under the raw form. It is a real hole,
-    // it needs a way to distinguish "empty field" from "field of spaces", and it is smaller
-    // than the fix that hides it.
+    // AND IT CLOSED A HOLE THE PREVIOUS COMMENT SAID WAS STILL OPEN: a name consisting only of
+    // Unicode whitespace used to be dropped, because trimming reduced it to '' and the empty
+    // guard below discarded it. Slicing a fixed width keeps it. Executed: NBSP, plain space,
+    // ideographic space and the quoted forms `" "` and `"\040"` all survive.
     const rest = line.slice(3);
     if (!rest) continue;
     const first = readPathField(rest, 0);
@@ -375,15 +382,20 @@ export const EXCLUDED_REASON =
  * to skip that. Output is byte-identical either way (checked against the same worktree with
  * and without it).
  *
- * STATUS_CONFIG_ENV MAKES THE INPUT DETERMINISTIC RATHER THAN A PROPERTY OF WHOEVER OWNS THE
+ * statusConfigEnv MAKES THE INPUT DETERMINISTIC RATHER THAN A PROPERTY OF WHOEVER OWNS THE
  * REPO. `core.quotePath` is git's default-on, but it is a config — settable globally, per repo,
  * or through `GIT_CONFIG_GLOBAL` — and with it off git emits non-ASCII RAW while still quoting
  * for spaces, quotes, backslashes and control characters. That produced a quoted body holding
  * a literal astral character, which the parser then destroyed: `"fire 🔥 space.ts"` came back
  * as `"fire �� space.ts"`, 3 of 6 paths naming files that do not exist, with `readable ===
  * undefined` and nothing truncated. Forcing it means the parser sees one format on every
- * machine, so a developer's git config cannot change what this collector reports. See
- * STATUS_CONFIG_ENV for why it is set through the environment rather than as a command-line
+ * machine. It does NOT make the collector immune to git config in general — that claim was
+ * made here and is false. `status.showUntrackedFiles=no` survived the quoting override and
+ * made untracked files VANISH with `readable: undefined`, a silent miss dressed as a clean
+ * read; it is forced too now. Any future `status.*` setting that changes WHICH paths git
+ * reports is the same hole, and the honest statement is that each channel is closed as it
+ * is found rather than that the class is sealed. See
+ * statusConfigEnv for why it is set through the environment rather than as a command-line
  * override.
  *
  * The path reaches git as ONE argv element via `cwd`, never as text in a command line, and
@@ -482,7 +494,7 @@ export async function changedFilesFor(
         // KNOWN AND NOT FIXED: this accounting is exact only for the ESCAPED stream, where
         // `recovered + discarded === maxBuffer`. On a raw non-ASCII stream Node slices the
         // DECODED string by a BYTE budget, so the recovered figure can exceed the budget —
-        // measured, 1125 against 1000. The number is still a true count of what was recovered;
+        // measured, 1226 against a 1000 budget. The number is still a true count of what was recovered;
         // it is the relationship to `maxBuffer` that does not hold. Logged rather than fixed
         // because the sweep forces the escaped form, so the live path is the exact one.
         `${recoveredBytes} bytes recovered as whole lines` +
