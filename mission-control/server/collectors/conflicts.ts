@@ -171,12 +171,55 @@ export const EXCLUDED_REASON =
  * no shell is involved — see the injection regression test in test/collectors.test.ts, which
  * sweeps a real worktree named with shell metacharacters and asserts nothing executed.
  */
-export async function changedFilesFor(worktreePath: string): Promise<Omit<WorktreeChanges, 'path' | 'branch'>> {
+/**
+ * Only the part of a buffer that is definitely COMPLETE: everything up to and including the
+ * last newline, and nothing after it.
+ *
+ * A recovered buffer is a PREFIX of what git was writing, and a prefix cuts wherever the pipe
+ * happened to stop — which is mid-path far more often than not. Measured on a real busy
+ * worktree: 30,000 modified files, 2.4 MB of status output, 1,048,576 bytes recovered,
+ * parsing to 13,108 entries of which the last was `dir_with_a_re` — a path that does not
+ * exist, invented by the cut. It entered `changedFiles`, and from there the `byFile` map that
+ * computes conflicts, so Mission Control could render a conflict on a file nobody has.
+ * Fabricated data reaching a displayed figure is the worst thing this collector can do.
+ *
+ * `--porcelain` v1 C-quotes any path containing a newline, so a literal `\n` in the byte
+ * stream is always a record separator and never part of a name. That is what makes this sound
+ * rather than a heuristic.
+ *
+ * DELIBERATELY NOT APPLIED ON THE SUCCESS PATH, and deliberately not moved inside
+ * `parseStatusPorcelain`. Only the caller knows whether a buffer is a prefix or the whole
+ * thing; a parser that always dropped an unterminated final line would silently discard a
+ * real entry if git ever emitted one. What is being encoded here is "this buffer is partial",
+ * and it belongs where that is known.
+ */
+export function wholeLinesOf(buffer: string): string {
+  const lastBreak = buffer.lastIndexOf('\n');
+  return lastBreak === -1 ? '' : buffer.slice(0, lastBreak + 1);
+}
+
+/**
+ * `maxBuffer` is the CALLER's to lower and never to raise — the same shape, and the same
+ * reason, as the project probe's bound: the constant protects the machine from an unbounded
+ * read, so a larger number cannot weaken it. It is injectable because the truncation branch
+ * is otherwise reachable only by producing megabytes of real `git status` output, and a
+ * branch that expensive to reach is a branch nothing tests — which is how this defect lived.
+ * A non-finite argument falls back to the default rather than reaching Node as `NaN`.
+ */
+export async function changedFilesFor(
+  worktreePath: string,
+  opts: { maxBuffer?: number } = {}
+): Promise<Omit<WorktreeChanges, 'path' | 'branch'>> {
+  const requested = opts.maxBuffer;
+  const usable =
+    typeof requested === 'number' && Number.isFinite(requested) ? Math.floor(requested) : STATUS_MAX_BUFFER;
+  const maxBuffer = Math.max(1, Math.min(usable, STATUS_MAX_BUFFER));
+
   try {
     const { stdout } = await execFileAsync('git', ['--no-optional-locks', 'status', '--porcelain'], {
       cwd: worktreePath,
       encoding: 'utf8',
-      maxBuffer: STATUS_MAX_BUFFER,
+      maxBuffer,
       timeout: STATUS_TIMEOUT_MS,
     });
     return { changedFiles: parseStatusPorcelain(stdout) };
@@ -186,14 +229,30 @@ export async function changedFilesFor(worktreePath: string): Promise<Omit<Worktr
     // form attaches it to the rejection rather than returning it. Discarding it would
     // report absence when the truth is "I found something AND I also could not see
     // everything" — both are reported here.
+    //
+    // BUT ONLY THE WHOLE LINES OF IT. See wholeLinesOf: the tail of a recovered buffer is a
+    // path cut wherever the pipe stopped, and parsing it invents a filename.
+    //
+    // AND `readable: false` RIDES ALONG UNCONDITIONALLY, not only when the tail was ragged.
+    // A buffer that happens to end exactly on a newline is byte-identical to a complete one,
+    // so nothing IN the bytes can tell you it is whole — the only evidence that this is a
+    // prefix is that the process rejected. Deciding from the buffer would flip the failure
+    // from a conflict fabricated to a conflict silently MISSED, which is quieter and worse.
+    // The signal for "this is partial" is the rejection, never the buffer.
     const err = e as { stdout?: string; stderr?: string; code?: number | string; killed?: boolean; message?: string };
     const stdout = (err.stdout ?? '').toString();
+    const recovered = wholeLinesOf(stdout);
+    const discarded = stdout.length - recovered.length;
     const stderrTail = (err.stderr ?? '').toString().trim().slice(0, 300);
     const how = err.killed ? `timed out after ${STATUS_TIMEOUT_MS}ms` : `exited ${err.code ?? 'unknown'}`;
     return {
-      changedFiles: parseStatusPorcelain(stdout),
+      changedFiles: parseStatusPorcelain(recovered),
       readable: false,
-      reason: `git status --porcelain ${how} in ${worktreePath} (${stderrTail || err.message || 'no stderr'})`,
+      reason:
+        `git status --porcelain ${how} in ${worktreePath} (${stderrTail || err.message || 'no stderr'}) — ` +
+        `${recovered.length} bytes recovered as whole lines` +
+        (discarded > 0 ? `, ${discarded} trailing bytes discarded as a partial path` : '') +
+        ". What was read is a PREFIX of this worktree's changes, never all of them.",
     };
   }
 }

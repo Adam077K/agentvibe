@@ -15,6 +15,7 @@ import {
   detectConflicts,
   parseStatusPorcelain,
   scopeSweep,
+  wholeLinesOf,
   EXCLUDED_REASON,
 } from '../server/collectors/conflicts.ts';
 import { parseWarroomFleetOutput } from '../server/collectors/fleet.ts';
@@ -1090,6 +1091,145 @@ describe('projectEmptyState stops rather than scanning forever', () => {
 // `{worktrees: [], excluded: {count: 0}}` — and the view printed a measured all-clear with
 // "0 of 0 not swept" beneath it. The mechanism built to make narrowing visible was itself
 // silent about the one case where the entire population is unknown.
+// ── a recovered buffer is a PREFIX, and a prefix cuts mid-path ────────────────────────
+//
+// The partial-recovery branch parsed `err.stdout` whole. Measured on a real busy worktree:
+// 30,000 modified files, 2.4 MB of status output, 1,048,576 bytes recovered, 13,108 entries
+// parsed — the last of them `dir_with_a_re`, a path that does not exist, invented by the cut.
+// It entered `changedFiles` and from there the `byFile` map, so a conflict could be rendered
+// against a file nobody has. Fabricated data reaching a displayed figure.
+//
+// PINNED AT THE PRODUCER, not at the render. The producer is this recovery path and the
+// consumer is the conflict map; the shape that got past three lenses three times is a barrier
+// on the consumer with the producer free underneath it.
+describe('a truncated git status never invents a filename', () => {
+  /** A worktree with enough modified files that a small maxBuffer cuts mid-path. */
+  function busyWorktree(prefix: string): { root: string; files: string[] } {
+    const root = mkTmpDir(`mc-truncate-${prefix}-`);
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    // Deliberately LONG names: a cut lands inside one, which is the whole defect. Short names
+    // would let a buffer boundary fall between records by luck and hide it.
+    const files: string[] = [];
+    for (let i = 0; i < 400; i++) {
+      const name = `directory_with_a_really_long_name_${String(i).padStart(4, '0')}/source_file_with_a_long_name.ts`;
+      fs.mkdirSync(path.join(root, path.dirname(name)), { recursive: true });
+      fs.writeFileSync(path.join(root, name), 'x\n');
+      files.push(name);
+    }
+    return { root, files };
+  }
+
+  test('wholeLinesOf keeps every complete record and nothing else', () => {
+    const full = ' M src/alpha.ts\n M src/beta.ts\n M dir_with_a_really_long_name/gamma.ts\n';
+    expect(wholeLinesOf(full)).toBe(full); // a complete buffer is untouched
+
+    const cut = full.slice(0, full.indexOf('dir_with_a_re') + 'dir_with_a_re'.length);
+    expect(parseStatusPorcelain(cut)).toContain('dir_with_a_re'); // THE DEFECT, reproduced
+    expect(parseStatusPorcelain(wholeLinesOf(cut))).toEqual(['src/alpha.ts', 'src/beta.ts']);
+
+    // A buffer with no complete record at all yields nothing rather than half a path.
+    expect(wholeLinesOf(' M dir_with')).toBe('');
+    expect(parseStatusPorcelain(wholeLinesOf(' M dir_with'))).toEqual([]);
+  });
+
+  test('a buffer cut mid-path yields a prefix of the real files, never a new one', async () => {
+    const { root, files } = busyWorktree('midpath');
+    const complete = await changedFilesFor(root);
+    expect(complete.readable).toBeUndefined();
+    expect(complete.changedFiles).toHaveLength(files.length); // the premise: a real, full answer
+
+    // A buffer far too small for the output, so Node kills the child and hands back a prefix.
+    const truncated = await changedFilesFor(root, { maxBuffer: 4_096 });
+
+    // THE FABRICATION IS GONE. Every recovered entry is one git really reported — checked
+    // against the complete answer, not against this test's own idea of the names.
+    const real = new Set(complete.changedFiles);
+    const invented = truncated.changedFiles.filter((f) => !real.has(f));
+    expect(invented).toEqual([]);
+
+    // NON-VACUITY: the cut really happened, and it really landed mid-path — so the assertion
+    // above is about the fix rather than about a buffer that never needed one.
+    expect(truncated.changedFiles.length).toBeGreaterThan(0);
+    expect(truncated.changedFiles.length).toBeLessThan(complete.changedFiles.length);
+    expect(truncated.reason).toContain('trailing bytes discarded as a partial path');
+
+    // AND IT IS REPORTED AS PARTIAL, which is the half no parsing can supply.
+    expect(truncated.readable).toBe(false);
+    expect(truncated.reason).toContain('PREFIX');
+  });
+
+  // THE HALF THAT CANNOT COME FROM THE BYTES. A recovered buffer ending exactly on a newline
+  // is byte-identical to a complete one, so an implementation that decided "partial" by
+  // inspecting the tail would call this clean — flipping the failure from a conflict
+  // fabricated to a conflict silently MISSED, which is quieter and worse.
+  test('a truncation that lands exactly on a record boundary is still reported as partial', async () => {
+    const { root } = busyWorktree('boundary');
+    const complete = await changedFilesFor(root);
+    expect(complete.readable).toBeUndefined();
+
+    // Find a maxBuffer that cuts exactly at a newline: take the real output's own record
+    // lengths, so the boundary is git's rather than one this test invented.
+    const line = ` M ${complete.changedFiles[0]!}\n`;
+    const exact = line.length * 3; // three whole records, no remainder
+
+    const truncated = await changedFilesFor(root, { maxBuffer: exact });
+    expect(truncated.readable).toBe(false); // …even though the bytes look complete
+    expect(truncated.reason).not.toContain('trailing bytes discarded'); // nothing WAS discarded
+    expect(truncated.changedFiles.length).toBeLessThan(complete.changedFiles.length);
+    for (const f of truncated.changedFiles) expect(complete.changedFiles).toContain(f);
+  });
+
+  // THE CONSUMER, and the assertion is independent of the parser: every file a conflict names
+  // must EXIST ON DISK in the worktrees it names. A path invented by a cut does not.
+  test('no rendered conflict names a file that does not exist', async () => {
+    const parent = mkTmpDir('mc-truncate-conflicts-');
+    cleanupDirs.push(parent);
+    const projectRoot = path.join(parent, 'ashcroft');
+    initGitRepo(projectRoot);
+
+    const wtA = path.join(projectRoot, '.worktrees', 'ceo-1-1');
+    const wtB = path.join(projectRoot, '.worktrees', 'ceo-2-2');
+    addWorktree(projectRoot, wtA, 'ceo-1-1');
+    addWorktree(projectRoot, wtB, 'ceo-2-2');
+    writeRegistry(projectRoot, [
+      { name: 'ceo-1', token: '1' },
+      { name: 'ceo-2', token: '2' },
+    ]);
+    // The SAME long-named files in both worktrees, so there are real conflicts to find and a
+    // cut has something to land in the middle of.
+    for (const wt of [wtA, wtB]) {
+      for (let i = 0; i < 200; i++) {
+        const name = `directory_with_a_really_long_name_${String(i).padStart(4, '0')}/shared_source_file.ts`;
+        fs.mkdirSync(path.join(wt, path.dirname(name)), { recursive: true });
+        fs.writeFileSync(path.join(wt, name), `from ${path.basename(wt)}\n`);
+      }
+    }
+
+    const claudeRoot = mkTmpDir('mc-truncate-conflicts-claude-');
+    cleanupDirs.push(claudeRoot);
+    const project = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot }).find(
+      (p) => p.root === projectRoot
+    )!;
+    const report = await detectConflicts(project);
+
+    // Premise: this fixture really does produce conflicts, so the loop below is not empty.
+    expect(report.conflicts.length).toBeGreaterThan(0);
+
+    let checked = 0;
+    for (const conflict of report.conflicts) {
+      for (const w of conflict.worktrees) {
+        expect({ file: conflict.file, exists: fs.existsSync(path.join(w.path, conflict.file)) }).toEqual({
+          file: conflict.file,
+          exists: true,
+        });
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
+  }, 60_000);
+});
+
 describe('detectConflicts reports a failed enumeration rather than an empty one', () => {
   test('a project git refuses to enumerate returns enumerated.readable === false with a reason', async () => {
     const parent = mkTmpDir('mc-enum-fail-');
