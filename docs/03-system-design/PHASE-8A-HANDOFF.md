@@ -1,9 +1,10 @@
 # Handoff — Phase 8a, complete
 
 **For:** whoever picks this up next.
-**State: all 5 PRs merged; `main` has since moved to `01fcadd`** (#29, #34, #36 landed after phase close).
-**205 tests, 0 fail** (VERIFIED on `01fcadd`, 82.4 s — 193 at close). Do not quote an assertion total:
-identical runs differ (386 vs 360 on one file), because the live fleet tests loop over what is on disk.
+**State: all 5 PRs merged; `main` has since moved to `28626d8`** (#29, #34, #36, #31, #33, #35 landed after phase close).
+**222 tests, 0 fail** (VERIFIED on `28626d8`, 77.2 s at load 13.7→5.9 — 205 at `01fcadd`, 193 at close). Record the load average beside any timing: the same suite read 168 s under orphaned load-test spinners. Do not quote an
+assertion total: identical runs differ (386 vs 360 on one file), because the live fleet tests loop over
+what is on disk.
 `npm run check` exits 0 after `bun install` in `mission-control/`. All six views work end to end.
 **Read [SECURITY-FINDINGS-2026-08-14.md](SECURITY-FINDINGS-2026-08-14.md) before running the server** —
 three confirmed RCEs are open on `main`, and until they are closed, do not point Mission Control at a tree
@@ -115,6 +116,24 @@ Corollaries, each earned:
   fix would have been aimed at the wrong thing while the entry closed green. **When you write down why
   something failed, either reproduce it or mark the cause UNTESTED.** The cheap instrument is to try to make
   it fail on purpose; a failure you cannot reproduce under the condition you blamed is not explained.
+- **Forcing a value that is not an extreme of its domain is a clamp in BOTH directions.** Enumerate the
+  domain before writing a single mutation: if the forced value is interior, the downward case is mandatory;
+  if it is an endpoint, skip it *with a stated reason*. `core.quotePath` is boolean, forced to an endpoint,
+  and was therefore safe structurally rather than by luck. `showUntrackedFiles` is `no|normal|all` and
+  `normal` is interior — the upward clamp was the intent, the downward one invented a conflict (#48). Every
+  mutation written for it asked *"what if the setting is absent?"*, the fix's own axis; **none asked what
+  happens on the far side of the pin. That is mutating the fix rather than the space the fix clamps.**
+- **A severity is a measurement or it is a guess wearing a number. Before quoting one, name the command
+  that produced it.** Four severities were quoted in one day with no command behind any of them — "12–18
+  spawns inside a 5 s budget", "55 s of margin", "~200% CPU load", "1,246 assertions" — and all four
+  dissolved when someone finally ran something. None needed a new instrument: a stopwatch, a control run,
+  a preload, and a log that had already been printed.
+- **Independent review is not ceremony, and here is the evidence rather than the principle.** The author and
+  the CEO each ran a mutation matrix over `statusConfigEnv`, on the same afternoon, both holding the rule
+  above, and both asked the *same incomplete question* — does the guard fire when the setting is absent?
+  Both got a satisfying red and called it verified. The downward clamp was found by a reader who had briefed
+  none of it. **Two people who share a frame will share its blind spot, and running the check twice does not
+  find what the frame excludes.**
 - **Before reporting that a number moved, check that it holds still.** Assertion counts across this suite's
   three hostile-config runs read 396 / 360 / 390, which looks exactly like "the hostile config is covering
   less" — the phase's own defect class, a green run that measured less. It is not. Two *identical* clean runs
