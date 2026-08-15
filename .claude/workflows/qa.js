@@ -69,6 +69,19 @@ const GATE_SCHEMA = {
   },
 }
 
+// EVERY dispatch in this file runs as `reviewer`, and that is load-bearing rather than tidy.
+//
+// Until 2026-08-16 all four `agent()` calls here omitted `agentType`, so the binary defaulted
+// them to `general-purpose` — tools `*`. Every dimension reviewer, every adversarial verifier,
+// and the ONE judge whose verdict binds held `Write` and `Edit` on the diff they were judging.
+// An agent that can edit what it reviews will review what it can edit. `reviewer` declares
+// `tools: [Read, Glob, Grep, Bash]` — no Write, no Edit.
+//
+// This does not make the container airtight: `tools:` is not known to bind `Bash`, so a
+// determined reviewer can still write through a shell. It closes the accidental path, not the
+// deliberate one, and the deliberate one closes with the OS sandbox (see GRANT-HOLDERS.md).
+const REVIEW_AGENT = 'reviewer'
+
 const DIMENSIONS = [
   { key: 'correctness', critical: true, lens: 'logic errors, edge cases, broken contracts, regressions, wrong async/await, unhandled nulls' },
   { key: 'security', critical: true, lens: 'authz/RLS gaps, injection, secret leakage, unsafe input handling, OWASP, Supabase RLS policy holes, prompt-injection in any LLM-facing strings' },
@@ -133,7 +146,7 @@ Your default verdict is binding and the CEO cannot override it. Adam (board) may
 // Review one dimension with one retry; never throw — a persistent failure becomes a tracked coverage gap.
 async function reviewDim(d) {
   for (let attempt = 0; attempt < 2; attempt++) {
-    const r = await agent(reviewPrompt(d, attempt), { label: `review:${d.key}${attempt ? ':retry' : ''}`, phase: 'Review', model: 'sonnet', schema: FINDINGS_SCHEMA }).catch(() => null)
+    const r = await agent(reviewPrompt(d, attempt), { label: `review:${d.key}${attempt ? ':retry' : ''}`, phase: 'Review', model: 'sonnet', agentType: REVIEW_AGENT, schema: FINDINGS_SCHEMA }).catch(() => null)
     if (r && Array.isArray(r.findings)) return { dimension: d.key, critical: d.critical, ok: true, findings: r.findings }
   }
   log(`Dimension ${d.key} returned no structured findings after 2 attempts — flagged as a coverage gap.`)
@@ -143,7 +156,7 @@ async function reviewDim(d) {
 // 3-way adversarial verification of one finding; tolerant of individual verifier dropout.
 function verifyFinding(f, phaseName) {
   return parallel([0, 1, 2].map(i => () =>
-    agent(verifyPrompt(f, i), { label: `verify:${f.dimension}:${f.id}#${i}`, phase: phaseName, model: 'sonnet', schema: VERDICT_SCHEMA }).catch(() => null)
+    agent(verifyPrompt(f, i), { label: `verify:${f.dimension}:${f.id}#${i}`, phase: phaseName, model: 'sonnet', agentType: REVIEW_AGENT, schema: VERDICT_SCHEMA }).catch(() => null)
   )).then(votes => {
     const valid = votes.filter(Boolean)
     // strict majority + quorum: need >=2 votes cast AND a strict majority real.
@@ -191,7 +204,7 @@ if (TIER === 'irreversible') {
     round++
     const fresh = await parallel(DIMENSIONS.map(d => () =>
       agent(`${reviewPrompt(d, 0)}\nThis is fresh-eyes sweep round ${round}. These finding ids are already known — find only NEW defects not in this list: ${[...seen].join(', ') || '(none yet)'}.`,
-        { label: `sweep${round}:${d.key}`, phase: 'Sweep', model: 'sonnet', schema: FINDINGS_SCHEMA }).catch(() => null)
+        { label: `sweep${round}:${d.key}`, phase: 'Sweep', model: 'sonnet', agentType: REVIEW_AGENT, schema: FINDINGS_SCHEMA }).catch(() => null)
     ))
     const newOnes = fresh.filter(Boolean).flatMap(r => (r.findings || [])).filter(f => !seen.has(f.id)).map(f => ({ ...f, dimension: 'sweep' }))
     if (!newOnes.length) { dry++; log(`Sweep round ${round}: dry (${dry}/2)`); continue }
@@ -210,7 +223,7 @@ phase('Judge')
 const confirmed = allFindings.filter(f => f.confirmed)
 // The judge is the ONE agent whose output controls PASS/BLOCK. If it drops out, fail SAFE to
 // BLOCK — never throw (that would be fail-open for a binding gate).
-const verdict = (await agent(judgePrompt(confirmed, TIER, failedDims, advisory), { label: 'judge', phase: 'Judge', model: 'opus', schema: GATE_SCHEMA }).catch(() => null))
+const verdict = (await agent(judgePrompt(confirmed, TIER, failedDims, advisory), { label: 'judge', phase: 'Judge', model: 'opus', agentType: REVIEW_AGENT, schema: GATE_SCHEMA }).catch(() => null))
   || { verdict: 'BLOCK', summary: 'Judge agent dropped out — auto-BLOCK to protect the binding gate.', blockers: [{ id: 'judge-dropout', file: '(gate)', title: 'Opus judge returned no structured verdict', fix: 'Re-run qa.js.' }] }
 
 const criticalGap = failedDims.filter(d => DIMENSIONS.find(x => x.key === d && x.critical))

@@ -191,6 +191,40 @@ function loadSkills() {
   return LIVE_SKILLS;
 }
 
+// Return the raw `allowed-tools` value of a skill, or null when it declares none.
+// Reads the SKILL.md directly rather than the manifest: the manifest is a generated index and
+// does not carry the field, and a rule that depends on a generated file inherits its staleness.
+const SKILL_CLAMP_CACHE = new Map();
+function skillToolClamp(name) {
+  if (SKILL_CLAMP_CACHE.has(name)) return SKILL_CLAMP_CACHE.get(name);
+  let clamp = null;
+  try {
+    const p = path.join(REPO_ROOT, '.claude', 'skills', name, 'SKILL.md');
+    const text = fs.readFileSync(p, 'utf8');
+    const fmEnd = text.indexOf('\n---', 3);
+    const head = fmEnd === -1 ? text : text.slice(0, fmEnd);
+    const m = head.match(/^allowed-tools:[ \t]*(.*)$/m);
+    if (m) {
+      // Inline form (`allowed-tools: Read, Write`) or block list on following lines.
+      const inline = m[1].trim();
+      if (inline) {
+        clamp = inline;
+      } else {
+        const after = head.slice(head.indexOf(m[0]) + m[0].length);
+        const items = [];
+        for (const line of after.split('\n')) {
+          const li = line.match(/^[ \t]*-[ \t]+(.*)$/);
+          if (li) items.push(li[1].trim());
+          else if (line.trim()) break;
+        }
+        clamp = items.length ? items.join(', ') : null;
+      }
+    }
+  } catch { clamp = null; }
+  SKILL_CLAMP_CACHE.set(name, clamp);
+  return clamp;
+}
+
 // ── Body section scan ──────────────────────────────────────────────────────
 function scanSections(text) {
   return text.split('\n').filter((l) => /^## [^#]/.test(l)).map((l) => l.trim());
@@ -317,6 +351,27 @@ function lintFile(filePath) {
         }
       } else {
         warnings++;
+      }
+      // A skill carrying `allowed-tools` SUBTRACTS from the agent that loads it.
+      //
+      // The binary calls this "capability frontmatter" and describes it as "Tools available to
+      // the model while this file is active" — a ceiling, not a grant. Attaching such a skill
+      // therefore clamps the agent to that list for as long as the skill is active. Two of the
+      // eight skills that declare it clamp to a single Bash pattern: `impeccable` to
+      // `Bash(npx impeccable *)`, `pitch-deck-visuals` to `Bash(belt *)` — no Read, no Write,
+      // no MCP. `impeccable` is the skill the roster spec assigns to `designer`, whose whole
+      // purpose is a browser perception loop it would no longer be able to reach.
+      //
+      // No agent declares one today, so this rule costs nothing now and fires exactly when the
+      // roster migration attaches them. Strip the field from the skill first; it does something.
+      for (const s of fm.skills) {
+        const clamp = skillToolClamp(s);
+        if (clamp) {
+          issues.push(
+            `frontmatter: skill "${s}" declares allowed-tools (${clamp}), which SUBTRACTS from this agent's tools while active — ` +
+            `strip the field from .claude/skills/${s}/SKILL.md before attaching it, or attach a different skill`
+          );
+        }
       }
     }
   }

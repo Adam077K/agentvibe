@@ -46,12 +46,14 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:routers` | `node scripts/build-skill-routers.mjs --check` |
 | `npm run check:warroom` | `bash -n bin/warroom && node --check scripts/warroom-install.mjs && bash -n scripts/warroom-parity.sh && npm ru` |
 | `npm run curate:skills` | `node scripts/curate-skills.mjs` |
+| `npm run gate` | `node scripts/run-gate.mjs` |
 | `npm run ledger:build` | `node scripts/ledger.mjs build` |
 | `npm run ledger:events` | `node scripts/ledger.mjs events --since 30d` |
 | `npm run ledger:sweep` | `node scripts/ledger.mjs sweep` |
 | `npm run ledger:verify` | `node scripts/ledger.mjs verify` |
 | `npm run ledger:views` | `node scripts/ledger.mjs views` |
 | `npm run lint:agents` | `node .claude/hooks/schema-lint.js` |
+| `npm run probe:stop-reason` | `node scripts/probe-stop-reason.mjs` |
 | `npm run test:budget` | `node --test scripts/usage.test.mjs` |
 | `npm run test:claims` | `node --test scripts/claims.test.mjs` |
 | `npm run test:classifier` | `node --test scripts/classifier.test.mjs` |
@@ -62,6 +64,8 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:playbooks` | `node --test scripts/playbooks.test.mjs` |
 | `npm run test:pre-tool-use` | `node --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-readonly` | `node --test scripts/probe-readonly.test.mjs` |
+| `npm run test:run-gate` | `node --test scripts/run-gate.test.mjs` |
+| `npm run test:skill-clamp` | `node --test scripts/skill-clamp.test.mjs` |
 | `npm run test:warroom` | `node --test scripts/warroom-install.test.mjs` |
 | `npm run usage` | `node -e "const u=require('./scripts/lib/usage.js');const w=u.windowUsage({});console.log(w.output_tokens.toLoc` |
 | `npm run warroom:check` | `node scripts/warroom-install.mjs check` |
@@ -90,7 +94,9 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/playbooks.test.mjs` | the playbook linter, tested by constructing its failures. |
 | `scripts/pre-tool-use.test.mjs` | — |
 | `scripts/probe-readonly.test.mjs` | — |
+| `scripts/run-gate.test.mjs` | the router that decides whether the binding gate runs. |
 | `scripts/session-start.test.mjs` | the SessionStart hook. |
+| `scripts/skill-clamp.test.mjs` | a skill that subtracts must not be attached silently. |
 | `scripts/usage.test.mjs` | the spend measurement and the ceiling that acts on it. |
 | `scripts/warroom-install.test.mjs` | — |
 

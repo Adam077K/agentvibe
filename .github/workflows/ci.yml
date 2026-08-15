@@ -123,6 +123,27 @@ jobs:
       - name: Budget and stall
         run: npm run test:budget
 
+      # The router that decides whether the binding gate (.claude/workflows/qa.js) must run
+      # for a diff. qa.js works and has run; until 2026-08-16 NOTHING routed to it, so the
+      # merge gate fell back to grepping a `qa_verdict: PASS` string written by the author of
+      # the change under review. That is why its record was 34 PASS and 0 refusals.
+      #
+      # These tests pin the DECISION: docs stay ungated, one hook path floors an otherwise
+      # harmless PR at irreversible, and an unreadable ref exits 2 rather than reporting
+      # "nothing to gate" — fail-open in a router is indistinguishable from no router.
+      - name: Gate routing
+        run: npm run test:run-gate
+
+      # A SKILL.md carrying `allowed-tools` SUBTRACTS from whatever agent loads it — the binary
+      # documents the field as "Tools available to the model while this file is active", which
+      # is a ceiling, not a grant. Eight skills declare it; two clamp to a single Bash pattern.
+      # `impeccable` is the skill the roster spec assigns to `designer`, and it would leave that
+      # agent unable to Read, Write, or reach a browser.
+      #
+      # Currently vacuous — no agent declares one — which is precisely when it is cheap to pin.
+      - name: Skill tool clamps
+        run: npm run test:skill-clamp
+
       # The claim ledger. Four things, all deterministic:
       #   · the parser and schema (43 tests, most of them "this must REFUSE")
       #   · the tier map, run against a path list rather than read
