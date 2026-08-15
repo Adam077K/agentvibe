@@ -1,0 +1,406 @@
+<title>Seven Containers</title>
+<style>
+  :root{
+    --ground:#F5F6F8; --surface:#FFFFFF; --surface-2:#EDEFF3;
+    --line:#DCE0E6; --line-strong:#C3CAD3;
+    --text:#161C24; --text-2:#4C5764; --text-3:#77828F;
+    --accent:#9A6A12; --accent-bg:#F7EFDD; --accent-line:#E0CDA4;
+    --ok:#256B4A; --ok-bg:#E6F1EB; --ok-line:#9CC7B2;
+    --bad:#9E2B26; --bad-bg:#F8E7E6;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#0F141A; --surface:#161C24; --surface-2:#1D242E;
+      --line:#28313C; --line-strong:#3A4552;
+      --text:#E5E9EE; --text-2:#A7B1BD; --text-3:#7C8794;
+      --accent:#D9A442; --accent-bg:#241D10; --accent-line:#4A3C1C;
+      --ok:#5FBF8F; --ok-bg:#122019; --ok-line:#27503C;
+      --bad:#E2726B; --bad-bg:#28150F;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0F141A; --surface:#161C24; --surface-2:#1D242E;
+    --line:#28313C; --line-strong:#3A4552;
+    --text:#E5E9EE; --text-2:#A7B1BD; --text-3:#7C8794;
+    --accent:#D9A442; --accent-bg:#241D10; --accent-line:#4A3C1C;
+    --ok:#5FBF8F; --ok-bg:#122019; --ok-line:#27503C;
+    --bad:#E2726B; --bad-bg:#28150F;
+  }
+
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--ground); color:var(--text); font-family:var(--sans); font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px 96px;}
+  .lbl{font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-3);}
+
+  header{padding:64px 0 40px; border-bottom:1px solid var(--line);}
+  h1{font-size:clamp(38px,6vw,60px); line-height:1.02; margin:14px 0 0; letter-spacing:-.03em; font-weight:680; text-wrap:balance;}
+  .sub{margin:18px 0 0; font-size:19px; color:var(--text-2); max-width:62ch;}
+  .count{display:flex; gap:36px; flex-wrap:wrap; margin-top:32px;}
+  .count div{display:flex; flex-direction:column; gap:4px;}
+  .count b{font-family:var(--mono); font-size:26px; font-weight:600; font-variant-numeric:tabular-nums;}
+
+  .note{margin:32px 0 0; padding:20px 22px; border:1px solid var(--line-strong); border-left-width:3px; border-radius:3px; background:var(--surface);}
+  .note p{margin:8px 0 0; font-size:15px;}
+  .note.good{background:var(--ok-bg); border-color:var(--ok-line); border-left-color:var(--ok);}
+  .note.good .lbl{color:var(--ok);}
+  .note.warn{background:var(--bad-bg); border-color:var(--bad);}
+  .note.warn .lbl{color:var(--bad);}
+  .note.acc{background:var(--accent-bg); border-color:var(--accent-line); border-left-color:var(--accent);}
+  .note.acc .lbl{color:var(--accent);}
+
+  h2{font-size:13px; font-family:var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--text-3); font-weight:600; margin:0 0 4px; padding-top:56px;}
+  .h2sub{margin:0 0 22px; font-size:22px; font-weight:620; letter-spacing:-.015em;}
+  .lede{font-size:15px; color:var(--text-2); max-width:78ch; margin:0 0 18px;}
+
+  .rule{background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:26px 28px;}
+  .rule .big{font-size:19px; line-height:1.45; margin:0; font-weight:520;}
+  .rule .big em{color:var(--accent); font-style:normal; font-weight:660;}
+  .rule .fine{margin:16px 0 0; font-size:14.5px; color:var(--text-2);}
+  code{font-family:var(--mono); font-size:.9em; background:var(--surface-2); padding:1px 5px; border-radius:3px;}
+  .rule code{background:var(--ground);}
+  pre{margin:0; padding:18px 20px; background:var(--surface-2); border-radius:4px; overflow-x:auto; font-family:var(--mono); font-size:12.5px; line-height:1.65;}
+
+  .band{margin-top:34px;}
+  .bandhead{display:flex; align-items:baseline; gap:14px; margin-bottom:14px; flex-wrap:wrap;}
+  .bandhead .name{font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); font-weight:600;}
+  .bandhead .what{font-size:14px; color:var(--text-3);}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:14px;}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:22px; display:flex; flex-direction:column; gap:14px;}
+  .card.new{border-color:var(--accent-line);}
+  .cardtop{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .cardtop h3{margin:0; font-family:var(--mono); font-size:17px; font-weight:620; letter-spacing:-.01em;}
+  .chip{font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; padding:3px 7px; border-radius:2px; border:1px solid var(--line-strong); color:var(--text-3); white-space:nowrap;}
+  .chip.new,.chip.acc{border-color:var(--accent); color:var(--accent); background:var(--accent-bg);}
+  .chip.ok{border-color:var(--ok); color:var(--ok); background:var(--ok-bg);}
+  .role{margin:0; font-size:14.5px; color:var(--text-2);}
+
+  .spec{display:grid; grid-template-columns:auto 1fr; gap:7px 16px; font-size:13.5px; align-items:baseline; margin:0;}
+  .spec dt{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3); white-space:nowrap;}
+  .spec dd{margin:0; font-family:var(--mono); font-size:12.5px; color:var(--text);}
+  .spec dd.prose{font-family:var(--sans); font-size:13.5px; color:var(--text-2);}
+  .was{color:var(--text-3);}
+
+  .why{margin:0; padding:12px 14px; background:var(--surface-2); border-radius:3px; font-size:13.5px; color:var(--text-2); border-left:2px solid var(--line-strong);}
+  .why.flag{border-left-color:var(--accent);}
+
+  .ans{display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:14px;}
+  .ans .card{gap:12px;}
+  .verdict{font-size:17px; font-weight:600; margin:0; letter-spacing:-.01em;}
+  .ans p{margin:0; font-size:14px; color:var(--text-2);}
+
+  .tw{overflow-x:auto; border:1px solid var(--line); border-radius:4px; background:var(--surface);}
+  table{border-collapse:collapse; width:100%; font-size:13.5px; min-width:640px;}
+  th,td{text-align:left; padding:11px 16px; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3); font-weight:600;}
+  tr:last-child td{border-bottom:none;}
+  td.reason{color:var(--text-2);}
+  td .n{font-family:var(--mono); font-size:10.5px; color:var(--text-3); display:block; margin-top:3px;}
+
+  .probe{background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:20px 22px; display:flex; flex-direction:column; gap:9px;}
+  .probe.done{border-color:var(--ok-line); background:var(--ok-bg);}
+  .probe h4{margin:0; font-size:16px; font-weight:620; letter-spacing:-.01em;}
+  .probe p{margin:0; font-size:14px; color:var(--text-2);}
+  .probe .cost{font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3);}
+  .probe.done .cost{color:var(--ok);}
+  .stack{display:flex; flex-direction:column; gap:12px;}
+
+  footer{margin-top:72px; padding-top:24px; border-top:1px solid var(--line); font-size:13px; color:var(--text-3);}
+  footer p{margin:0 0 8px;}
+  strong{font-weight:640; color:var(--text);}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="lbl">Agentvibe · Roster specification · 15 Aug 2026</div>
+  <h1>Seven Containers</h1>
+  <p class="sub">Three boards, 62 agents and 7,000 lines of specification to settle how many agents this system needs, what each one knows, and what actually stops it. The number is set by what the runtime can grant — not by how complicated the work feels.</p>
+  <div class="count">
+    <div><span class="lbl">Roster</span><b>7</b></div>
+    <div><span class="lbl">Agent files today</span><b>17</b></div>
+    <div><span class="lbl">Proposed, then cut</span><b>26</b></div>
+    <div><span class="lbl">Skills each</span><b>6–8</b></div>
+    <div><span class="lbl">Spec lines</span><b>7,006</b></div>
+  </div>
+
+  <div class="note good">
+    <div class="lbl">The premise held</div>
+    <p>Seven rests on one claim: <strong>a capability grant exists in exactly one place — agent-file frontmatter.</strong> A <code>SKILL.md</code> also carries <code>allowed-tools</code>, which looked like a second channel and would have cut the roster toward five. It is not. The binary's own schema resolves it: that field <em>subtracts</em>, it never grants. <strong>The number survives</strong> — and the field turns out to be a live hazard in the opposite direction.</p>
+  </div>
+</header>
+
+<h2>The rule</h2>
+<p class="h2sub">Why the count is what it is</p>
+<div class="rule">
+  <p class="big">This runtime prices denials and grants differently. A capability <em>denial</em> is settable at a dispatch, and on a skill. A capability <em>grant</em> exists in one place only: the agent file.</p>
+  <p class="fine">The binary describes <code>allowed-tools</code> on a skill as <em>"tools available to the model while this file is active"</em> — the same wording as <code>tools:</code> on an agent, the field already proven to subtract with the strongest evidence in the corpus (<code>sourcer</code>: 0 Bash calls in 284; <code>reviewer</code>: 0 Write and 0 Edit across 4,373). So the floor is <strong>the number of capability grant-classes that must not share a container</strong>: read the public web, see a rendered surface, read the business's own systems of record, act irreversibly on the world. This repo holds one.</p>
+</div>
+
+<h2>The roster</h2>
+<p class="h2sub">Grouped by what each one reaches</p>
+
+<div class="band">
+  <div class="bandhead"><span class="name">Control plane</span><span class="what">Decides and judges. Holds no outward capability.</span></div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="cardtop"><h3>orchestrator</h3><span class="chip">exists</span><span class="chip">8 skills</span></div>
+      <p class="role">The session itself, not a spawn target. Picks the work, dispatches, validates what comes back, and is the only thing that ends a turn on a human.</p>
+      <dl class="spec">
+        <dt>Model</dt><dd>claude-opus-5</dd>
+        <dt>Effort</dt><dd>xhigh</dd>
+        <dt>Isolation</dt><dd>none</dd>
+        <dt>Grant</dt><dd class="prose">None — it dispatches, it does not reach</dd>
+      </dl>
+      <p class="why flag">Its frontmatter binds nothing on the session path: the launcher starts a bare session and never passes the agent file. The file stays — three live consumers reference it — but what has to change is its honesty, not its existence.</p>
+    </div>
+
+    <div class="card">
+      <div class="cardtop"><h3>reviewer</h3><span class="chip">exists</span><span class="chip">8 skills</span></div>
+      <p class="role">Read-only judgement of work someone else produced. An agent that can edit what it reviews will review what it can edit.</p>
+      <dl class="spec">
+        <dt>Model</dt><dd>claude-opus-5 <span class="was">← sonnet-4-6</span></dd>
+        <dt>Effort</dt><dd>xhigh <span class="was">← clamped to high</span></dd>
+        <dt>Isolation</dt><dd>worktree at PR SHA</dd>
+        <dt>Grant</dt><dd class="prose">None — it reads a git range</dd>
+      </dl>
+      <p class="why flag">The roster's deepest work on its weakest settings: all 269 runs executed a stale model pin at <code>high</code>, inside sessions defaulting to opus-5. And every <code>qa.js</code> dispatch site omits <code>agentType</code> — so verdicts are currently made by a general-purpose agent holding write access to the diff it is judging.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="band">
+  <div class="bandhead"><span class="name">Producers</span><span class="what">Write code. Contained by the worktree. They differ in knowledge, not capability.</span></div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="cardtop"><h3>builder</h3><span class="chip">exists</span><span class="chip">8 + index</span></div>
+      <p class="role">Backend, frontend, schema, infrastructure, tests, docs, copy — plus the framing artifacts, now that <code>framer</code> is cut. Capable of the whole stack; nothing is taken away.</p>
+      <dl class="spec">
+        <dt>Model</dt><dd>claude-opus-5</dd>
+        <dt>Effort</dt><dd>high · xhigh per dispatch</dd>
+        <dt>Isolation</dt><dd>worktree per dispatch</dd>
+        <dt>Grant</dt><dd class="prose">None outward — filesystem only</dd>
+      </dl>
+      <p class="why">Never removes its own worktree and never merges: a failed run has to leave its evidence behind. It also carries a <strong>second layer</strong> — a generated index mapping job to skill to path, read on demand, so it is never dropped into an unfamiliar domain with nothing.</p>
+    </div>
+
+    <div class="card">
+      <div class="cardtop"><h3>designer</h3><span class="chip ok">the default</span><span class="chip">8 skills</span></div>
+      <p class="role">Writes code while designing. UI, UX, animation, colour, spacing, <em>who this is for</em> — and shipping the actual surface. Not a spec-producer that hands off.</p>
+      <dl class="spec">
+        <dt>Model</dt><dd>claude-opus-5</dd>
+        <dt>Effort</dt><dd>xhigh</dd>
+        <dt>Isolation</dt><dd>worktree per dispatch</dd>
+        <dt>Grant</dt><dd class="prose">Rendered-surface perception (playwright)</dd>
+      </dl>
+      <p class="why flag"><strong>Anything a customer will look at is designer's, unless it is explicitly a throwaway prototype</strong> — and builder-alone must be named as the exception in the brief. Its container is earned by the browser grant; its <em>value</em> is the knowledge base, which is a different claim and is argued separately.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="band">
+  <div class="bandhead"><span class="name">Grant holders</span><span class="what">Reach outside the repo. Two do not exist yet — and they are why the roster is seven.</span></div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="cardtop"><h3>sourcer</h3><span class="chip">exists</span><span class="chip">7 skills</span></div>
+      <p class="role">Reads the public web. Returns URL, access date, confidence and named gaps — never asserts without checking, never recommends.</p>
+      <dl class="spec">
+        <dt>Model</dt><dd>claude-opus-5</dd>
+        <dt>Effort</dt><dd>high</dd>
+        <dt>Isolation</dt><dd>none</dd>
+        <dt>Credentials</dt><dd class="prose">None — and that is the point</dd>
+      </dl>
+      <p class="why">Not <code>xhigh</code>: its work is breadth-shaped, many fetches with shallow reasoning each, so the binding constraint is wall-clock across a fan-out rather than depth on any one.</p>
+    </div>
+
+    <div class="card new">
+      <div class="cardtop"><h3>instrument</h3><span class="chip new">new</span><span class="chip">7 skills</span></div>
+      <p class="role">Reads the business's own systems of record — revenue, database, analytics, inbox. Proposed by no agent in either earlier board.</p>
+      <dl class="spec">
+        <dt>Model</dt><dd>claude-sonnet-5</dd>
+        <dt>Effort</dt><dd>high</dd>
+        <dt>Isolation</dt><dd>none</dd>
+        <dt>Credentials</dt><dd class="prose">Four, all read-only: Stripe, DB role, analytics, inbox</dd>
+      </dl>
+      <p class="why">Not medium: the characteristic failure is a <em>subtly wrong query</em> — a cohort boundary off by one — and a wrong number that gets acted on is unrecoverable in a way a bad diff is not.</p>
+    </div>
+
+    <div class="card new">
+      <div class="cardtop"><h3>operator</h3><span class="chip new">new</span><span class="chip">8 skills</span></div>
+      <p class="role">Acts irreversibly on the world: deploys, migrations, money. Cut by the previous board on a premise its own enforcement table disproved two hundred lines earlier.</p>
+      <dl class="spec">
+        <dt>Model</dt><dd>claude-sonnet-5</dd>
+        <dt>Effort</dt><dd>medium</dd>
+        <dt>Isolation</dt><dd>none</dd>
+        <dt>Credentials</dt><dd class="prose">Deploy token · DB admin · Stripe live</dd>
+      </dl>
+      <p class="why flag">The lowest effort in the roster, deliberately — a safety property, not a saving. <strong>An operator clever enough to reason its way past a failing precondition is worse than one that is not.</strong></p>
+    </div>
+
+  </div>
+</div>
+
+<h2>Skills</h2>
+<p class="h2sub">Six to eight each, injected before the first turn</p>
+<p class="lede"><code>skills:</code> is the one arrival channel measured working — 288 of 431 transcripts carry the payload before turn one — and it is <strong>file-only</strong>. Every name resolves in the manifest, which the build enforces. Each earns its slot by naming a failure it prevents.</p>
+<div class="tw">
+  <table>
+    <thead><tr><th>Agent</th><th>Skills</th><th>The one that matters most</th></tr></thead>
+    <tbody>
+      <tr><td><code>orchestrator</code><span class="n">8</span></td><td><code>multi-agent-patterns</code> · <code>dispatching-parallel-agents</code> · <code>writing-plans</code> · <code>verification-before-completion</code> · <code>subagent-driven-development</code> · <code>brainstorming</code> · <code>product-manager-toolkit</code> · <code>thinking-reversibility</code></td><td class="reason"><strong><code>subagent-driven-development</code> — the largest single omission in the previous spec.</strong> That spec cited this skill's own measurement — a real dispatch reaching 42,000 characters, 99% of it pasted history — as the failure the orchestrator produces by default, then did not attach the 28 KB of procedure that fixes it.</td></tr>
+      <tr><td><code>builder</code><span class="n">8 + index</span></td><td><code>verification-before-completion</code> · <code>systematic-debugging</code> · <code>worktree-isolation-pattern</code> · <code>writing-good-tests</code> · <code>full-output-enforcement</code> · <code>requesting-code-review</code> · <code>cc-skill-coding-standards</code> · <code>thinking-map-territory</code></td><td class="reason"><code>full-output-enforcement</code> bans placeholders and truncation. The house rule "no stubs, zero tolerance" is marked <em>advisory, no mechanism</em> — this is the nearest thing to one, and unlike a rule it arrives before turn 1 rather than being hoped for.</td></tr>
+      <tr><td><code>designer</code><span class="n">8</span></td><td><code>impeccable</code> · <code>better-ui</code> · <code>better-colors</code> · <code>better-layout</code> · <code>ui-typography</code> · <code>emilkowal-animations</code> · <code>design-tokens</code> · <code>ui-visual-validator</code></td><td class="reason">Four of the eight you named turned out to be <em>judging</em> postures, not producing ones, and moved to <code>reviewer</code> — see below. <code>impeccable</code> ships only after its <code>allowed-tools</code> line is stripped.</td></tr>
+      <tr><td><code>reviewer</code><span class="n">8</span></td><td><code>security-audit</code> · <code>production-code-audit</code> · <code>verification-before-completion</code> · <code>writing-good-tests</code> · <code>thinking-red-team</code> · <code>wcag-audit-patterns</code> · <code>stride-analysis-patterns</code> · <code>thinking-circle-of-competence</code></td><td class="reason"><strong><code>thinking-circle-of-competence</code>:</strong> check the evidence boundary, size the cost of being wrong, then answer, fetch, or <em>abstain</em>. The gate's record is 34 PASS and 0 BLOCK — <em>a reviewer with no abstention procedure produces exactly that distribution.</em></td></tr>
+      <tr><td><code>sourcer</code><span class="n">7</span></td><td><code>deep-research</code> · <code>competitive-landscape</code> · <code>market-sizing-analysis</code> · <code>thinking-circle-of-competence</code> · <code>thinking-probabilistic</code> · <code>thinking-bounded-rationality</code> · <code>thinking-steel-manning</code></td><td class="reason"><code>thinking-probabilistic</code>: every finding must carry a confidence, and nothing said how to produce one — so it was a vibe rendered as a number. <code>thinking-bounded-rationality</code> is the stop condition for research that could otherwise run forever.</td></tr>
+      <tr><td><code>instrument</code><span class="n">7</span></td><td><code>startup-metrics-framework</code> · <code>sql-optimization-patterns</code> · <code>thinking-map-territory</code> · <code>gdpr-data-handling</code> · <code>data-quality-frameworks</code> · <code>postgres-best-practices</code> · <code>kpi-dashboard-design</code></td><td class="reason"><code>gdpr-data-handling</code> — the only container holding private customer data, in a runtime where everything an agent reads is written permanently to a transcript. The hook blocks <code>.env</code> for everyone; <strong>nothing blocks a customer table.</strong></td></tr>
+      <tr><td><code>operator</code><span class="n">8, 7 now</span></td><td><code>verification-before-completion</code> · <code>secrets-management</code> · <code>thinking-reversibility</code> · <code>thinking-margin-of-safety</code> · <code>incident-runbook-templates</code> · <code>deployment-pipeline-design</code> · <code>database-migration</code> · <span style="color:var(--accent)"><code>deployment-procedures</code> held</span></td><td class="reason"><code>incident-runbook-templates</code> is the most on-thesis import here. Operator is deliberately shallow — <em>a deliberately shallow executor with no runbook is not shallow, it is guessing.</em> This is the artifact that makes shallowness safe.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="lede"><strong><code>verification-before-completion</code> is on four of seven</strong> — the anti-sycophancy payload, carried as injected procedure rather than a line in a prompt, because instructions to "be critical" are the thing that does not work.</p>
+
+<div class="note acc">
+  <div class="lbl">A distinction that reassigned four skills</div>
+  <p>Read their own descriptions: <code>web-design-guidelines</code> is <em>"review UI code for compliance"</em>. <code>design-audit</code> <em>"conducts systematic visual audits"</em>. <code>12-principles-of-animation</code> <em>"audits animation code, outputs file:line findings"</em>. These are <strong>judging postures, not producing ones</strong> — and attaching them to the producer <em>put a judge inside the thing being judged</em>. They move to <code>reviewer</code>, where the same knowledge does work that binds.</p>
+</div>
+
+<div class="note warn">
+  <div class="lbl">Three skills are broken in ways nothing currently checks</div>
+  <p><strong><code>web-design-guidelines</code></strong> — its entire procedure is four <code>WebFetch</code> calls to a raw GitHub URL, and <em>neither designer nor reviewer holds <code>WebFetch</code></em>. A pointer to a page no assigned container can open.</p>
+  <p><strong><code>pitch-deck-visuals</code></strong> declares <code>allowed-tools: Bash(belt *)</code> for a CLI that is not on this machine — a capability declaration nothing backs, which is exactly what the linter refuses for <em>agents</em>, inside a file class the linter never reads.</p>
+  <p><strong><code>impeccable</code></strong> declares two <code>Bash(...)</code> forms and <em>no read tools at all</em>. Now that <code>allowed-tools</code> is known to subtract, attaching it to <code>designer</code> would strip the browser grant that container exists for. Strip the line first.</p>
+</div>
+
+<h2>The design process</h2>
+<p class="h2sub">A per-project structure, built so an agent that did not create it can trust it six weeks later</p>
+<pre>design/                    ← repo root, a peer of docs/
+  INDEX.md                 ← the only file designer must read to know what is here
+  system/                  ← the rules. rule first, reasoning after
+    principles.md          ←   what this product looks like, and why
+    palette.md             ←   colour, in OKLCH, with the meaning of each token
+    type.md · space.md · motion.md
+    audience.md            ←   DEMOGRAPHICS. who this is for, and what that forbids
+  tokens/
+    tokens.json            ← AUTHORED. the source of truth. one flat map
+    tokens.css · tokens.ts ← GENERATED. never hand-edited
+    contrast.md            ← GENERATED. every pair, computed, dated
+  references/
+    &lt;slug&gt;/SOURCE.yml      ←   url · access_date · captured_by · attribution · expires
+           capture.png
+           notes.md        ←   what we take, what we reject, and why
+    inbox/                 ←   drop zone; a script slugs and files whatever lands here
+  visuals/                 ← OUTPUT. marketing visuals, OG images, deck art, social cards
+  decisions/               ← NNN-&lt;slug&gt;.md, same shape as an ADR
+  captures/                ← GITIGNORED. the perception loop's output. never committed</pre>
+<p class="lede">Every part is labelled <strong>authored</strong> or <strong>generated</strong>, so nothing rots quietly and no one hand-edits a derived file. References carry attribution and an expiry. The <code>inbox/</code> is how visual references get in — drop them, or send an agent to fetch them, and a script files them with their source.</p>
+
+<h2>MCP servers</h2>
+<p class="h2sub">Every agent gets every server — and the dangerous ones are denied per agent</p>
+<p class="lede">The recommendation gives you the instruction almost verbatim: <strong>every engine's <code>tools:</code> names every server</strong>, with a server-level denial in the same file for the small set that must not be universal. One line per file. Three options are specified in full — strictest, recommended, and the literal instruction — so the choice is yours with the cost visible.</p>
+<div class="tw">
+  <table>
+    <thead><tr><th>Class</th><th>Servers</th><th>Grant</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A</strong><span class="n">no dangerous secret</span></td><td><code>playwright</code> · <code>miro</code> · <code>notion</code> · <code>mem0</code> · <code>figma</code> · <code>context7</code> · <code>refero</code> · <code>pencil</code> · <code>stitch</code></td><td><span class="chip ok">universal</span></td></tr>
+      <tr><td><strong>B</strong><span class="n">credential; reads safe</span></td><td><code>supabase --read-only</code> · analytics · billing read · inbox read</td><td><span class="chip acc">universal read, scoped write</span></td></tr>
+      <tr><td><strong>C</strong><span class="n">never universal</span></td><td><code>vercel</code> deploy · DB admin · payments write · <code>claude-in-chrome</code></td><td><span class="chip">denied per agent</span></td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="note warn">
+  <div class="lbl">Why class C is denied rather than granted</div>
+  <p>A <code>sourcer</code> that ingests attacker-controllable web text while holding a secrets tool and an outbound mail tool is <strong>a one-hop exfiltration chain with a channel attached</strong>: fetch a page, the page's text instructs a call, the answer leaves by the next one. A <code>builder</code> holding deploy can make its own deploy pass — the single failure the whole review apparatus exists to prevent.</p>
+  <p>And <code>claude-in-chrome</code> is unlike the others: its credential is your own logged-in browser. <strong>There is no key to revoke, because the key is a person.</strong></p>
+</div>
+
+<h2>When an agent is out of its depth</h2>
+<p class="h2sub">A ladder with the cost of each rung, not an instruction to "ask for help"</p>
+<div class="tw">
+  <table>
+    <thead><tr><th>Rung</th><th>Action</th><th>Wall-clock</th><th>Stop climbing when</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>Re-read the namespace router; check near-misses in the manifest</td><td>&lt; 5 s</td><td class="reason">a skill matches</td></tr>
+      <tr><td>1</td><td><strong>Load a skill that is not in frontmatter</strong> — a plain <code>Read</code></td><td>&lt; 10 s</td><td class="reason">the procedure covers the step</td></tr>
+      <tr><td>2</td><td>Library and API docs, no credential</td><td>5–15 s</td><td class="reason">the documented answer is found</td></tr>
+      <tr><td>3</td><td>One web search, results only</td><td>5–20 s</td><td class="reason">a primary source is identified</td></tr>
+      <tr><td>4</td><td>Fetch that one source; extract ≤ 3 quoted spans</td><td>10–30 s</td><td class="reason">a quote answers the question</td></tr>
+      <tr><td>5</td><td><strong>Dispatch <code>sourcer</code></strong> with a bounded question and the decision it informs</td><td>2–8 min</td><td class="reason">it returns, or names its gaps</td></tr>
+      <tr><td>6</td><td><strong>Dispatch a visual-reference search</strong> — screens, screenshots, design systems</td><td>1–4 min</td><td class="reason">3–5 references gathered</td></tr>
+      <tr><td>7</td><td>Ask the human</td><td>unbounded</td><td class="reason">—</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="lede">Rungs 5 and 6 are your <em>"send an agent to do a search"</em> and <em>"send an agent to search photos"</em>, exactly. And the sharpest observation in it: <strong>rung 1 needs no capability at all</strong> — every engine already holds <code>Read</code> — <em>it is the rung most tasks should end on, and the one the current system never tells an agent it may use.</em></p>
+
+<h2>Two questions, answered</h2>
+<p class="h2sub">The ones you asked directly</p>
+<div class="ans">
+  <div class="card">
+    <div class="lbl">Does each agent get its own worktree?</div>
+    <p class="verdict">One per dispatch, not one per agent.</p>
+    <p>The unit of isolation is the work slice, which already carries an <code>id</code>. Two builders running at once get two worktrees; the same builder dispatched twice gets two.</p>
+    <p><code>EnterWorktree</code> and <code>ExitWorktree</code> are live in this CLI, and <code>ExitWorktree</code> refuses to remove a tree holding uncommitted or unmerged work unless discarding is explicit — runtime enforcement where we currently have prose.</p>
+  </div>
+  <div class="card">
+    <div class="lbl">Who owns scheduled work and checkups?</div>
+    <p class="verdict">A script and a real clock. No agent.</p>
+    <p><code>instrument</code> is a callee of the clock, never its owner: 365 unattended credentialed runs a year, for work a script does deterministically, is the largest avoidable credential exposure in the design. Not <code>operator</code>, because <em>a timer is not an approver</em>. Not the orchestrator, whose defining property is ending a turn on a human that a scheduled run does not have.</p>
+    <p>The clock is <code>launchd</code> — it runs a window missed while the laptop slept. The existing Actions schedule stays as a second, independent clock, because two clocks that fail for different reasons is the point.</p>
+  </div>
+</div>
+
+<h2>Deletions</h2>
+<p class="h2sub">Converged on independently</p>
+<div class="tw">
+  <table>
+    <thead><tr><th>Delete</th><th>Where</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code>maxTurns</code></td><td>Both files, required-frontmatter, both range checks</td><td class="reason">Does not bind. 196 of 269 runs exceeded a declared cap of 20. A number everyone reads as a control, that controls nothing, is worse than no number.</td></tr>
+      <tr><td><code>--dangerously-skip-permissions</code></td><td><code>bin/warroom:235,237</code></td><td class="reason">The autonomy dial, welded to maximum. The variable autonomy you asked for is currently pinned at none.</td></tr>
+      <tr><td>The QA gate's slug glob</td><td><code>qa-lead-pass.yml:87-91</code>, <code>:313-317</code></td><td class="reason">A branch inherits a PASS written for different work. Eight lines — and the correct path already sits directly beneath it.</td></tr>
+      <tr><td><code>Task</code> from tools</td><td><code>orchestrator.md:6</code></td><td class="reason">Zero calls in 84,029 tool-use blocks. The real dispatch tool is <code>Agent</code>.</td></tr>
+      <tr><td><code>framer</code></td><td>The roster</td><td class="reason">Cut by both boards independently. It needs no grant, and its only real property is a denial — better carried by a frozen artifact than a container.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>Still open</h2>
+<p class="h2sub">One resolved, three that need an experiment</p>
+<div class="stack">
+  <div class="probe done">
+    <h4>Does <code>allowed-tools</code> in a skill grant capability? — <strong>Resolved</strong></h4>
+    <p>It <em>subtracts</em>. The binary describes it as "tools available to the model while this file is active" — the same wording as the agent field already proven to subtract. The roster number survives. The earlier spec called it "decoration"; right premise, dangerous conclusion. The action changes from <em>strip it eventually, it does nothing</em> to <strong>strip it before attaching, because it does something.</strong></p>
+    <span class="cost">Settled from the installed binary — no probe needed</span>
+  </div>
+  <div class="probe">
+    <h4>What actually stops a run?</h4>
+    <p><code>maxTurns</code> does not bind, stop reasons are recorded nowhere, and the silent-empty-return failure has been hit nine or more times — including three times by subagents during the sessions that produced these specs, each going idle reporting "available" while incomplete.</p>
+    <p><strong>Probe:</strong> add <code>stop_reason</code> to the turn indexer — one field — reindex the corpus, cross-tabulate against runs that returned nothing. The data already exists in every transcript. Nothing reads it.</p>
+    <span class="cost">Half a day · turns the oldest open defect into a measurement</span>
+  </div>
+  <div class="probe">
+    <h4>Does the design pass produce a better product?</h4>
+    <p>Twenty seeded rendered defects; a browser-holding reviewer against a source-reading one. This probe governs the browser grant, and therefore whether <code>designer</code> is a container at all.</p>
+    <span class="cost">Unrun · governs the grant</span>
+  </div>
+  <div class="probe">
+    <h4>Do eight skills beat three?</h4>
+    <p>Nobody in the field has an A/B harness for skill sets, any more than for rosters. Anthropic's <code>skill-creator</code> ships the instrument — evals, an isolated subagent per case, grading, and a benchmark comparing with-X against without-X. Point it at the list one skill at a time. <strong>It can kill any of the eight as easily as vindicate it, and either result is worth having.</strong></p>
+    <span class="cost">Per-skill · the only honest test of a knowledge base</span>
+  </div>
+</div>
+
+<footer>
+  <p><strong>Provenance.</strong> Six planners on Opus across three rounds, each specifying its agents across 17 dimensions — the ten named in the brief, plus effort, return contract, stop behaviour, autonomy and escalation, credentials and network boundary, observability, and QA of the agent definition itself.</p>
+  <p>Conventions were inherited rather than invented — BMAD-METHOD, YC's QM, GitHub Spec Kit, Agent OS, GSD, obra/superpowers, Cloudflare's agents, anthropics/skills, and the Oczkowski and Krehel design packs — each recorded with what was taken, what was rejected, and why. Where the field disagreed with what was measured in this runtime, the measurement won.</p>
+  <p>Full specs in <code>docs/03-system-design/agents/</code> — CONTROL-PLANE · PRODUCERS · GRANT-HOLDERS · SKILLS · CAPABILITY · DESIGNER. Nothing is committed.</p>
+</footer>
+
+</div>
