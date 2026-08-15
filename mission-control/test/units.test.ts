@@ -2,9 +2,14 @@
 // what "drift" means, what the model column reads, and what the formatter is allowed to do
 // to a figure.
 
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect, afterAll } from 'bun:test';
+import fs from 'node:fs';
+import path from 'node:path';
 import { modalInScopeGeneration, parseWarroomFleetOutput, type LauncherRow } from '../server/collectors/fleet.ts';
-import { latestModelFrom } from '../server/index-store.ts';
+import { IndexStore, latestModelFrom } from '../server/index-store.ts';
+import { discoverProjects, type Project } from '../server/projects.ts';
+import { listTranscripts } from '../server/lib/usage.ts';
+import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo } from './fixtures.ts';
 import { formatCount, formatRelative, formatShare, shortId, isLive, LIVE_WINDOW_MS } from '../client/src/format.ts';
 import { median, stallGateVerdict, STALL_BOUND, RESOLUTION_FACTOR } from './gate.ts';
 
@@ -386,5 +391,99 @@ describe('stallGateVerdict', () => {
     // asserted: the max of nothing is -Infinity, and -Infinity opens the comparison.
     expect(Math.max(...([] as number[]))).toBe(-Infinity);
     expect(300 < -Infinity * RESOLUTION_FACTOR).toBe(false); // …so `!(…)` resolves
+  });
+});
+
+// ── the read counters, on a fixture where every byte is known ─────────────────────────
+//
+// `RefreshResult.filesRead/bytesRead/distinctFilesRead` exist so test/live.test.ts can assert
+// "a cold build reads each transcript exactly once" WITHOUT a clock — #50 established that the
+// clock on that path reports OS memory reclaim (r = 0.915 against pageins) rather than code
+// quality, so the deterministic invariant is what actually guards the algorithm.
+//
+// PINNED HERE TOO, AND NOT ONLY THERE, because two of the properties are unreachable from the
+// live test and its mutation matrix said so rather than my guessing: N5 (counters never reset
+// between builds) SURVIVED there, because that test performs exactly one cold build. Repeated
+// builds are this file's job. So is the refresh-side property, which live.test.ts never
+// exercises at all.
+describe('IndexStore read counters', () => {
+  const roots: string[] = [];
+  afterAll(() => {
+    for (const r of roots) rmTmp(r);
+  });
+
+  /** A project whose transcripts are written here, so the exact byte total is known. */
+  function fixture(sizes: number[]): { project: Project; bytes: number } {
+    const claudeRoot = mkTmpDir('mc-counters-claude-');
+    const projectRoot = mkTmpDir('mc-counters-project-');
+    roots.push(claudeRoot, projectRoot);
+    initGitRepo(projectRoot);
+    let bytes = 0;
+    sizes.forEach((n, i) => {
+      // Turns carrying real usage records, so the index has something to summarise; the byte
+      // total is whatever these lines actually are, measured rather than assumed.
+      const turns = Array.from({ length: n }, () => ({ ts: new Date().toISOString(), output_tokens: 5 }));
+      const file = fixtureClaudeProjectsDir(claudeRoot, projectRoot, `s-${i}`, turns);
+      bytes += fs.statSync(file).size;
+    });
+    const project = discoverProjects({ roots: [path.dirname(projectRoot)], claudeProjectsRoot: claudeRoot }).find(
+      (p) => p.root === projectRoot
+    )!;
+    return { project, bytes };
+  }
+
+  test('a cold build reads each transcript exactly once, and the bytes are the files on disk', () => {
+    const { project, bytes } = fixture([3, 5, 1]);
+    const r = new IndexStore().buildCold([project]);
+    expect(r.filesScanned).toBe(3);
+    expect(r.filesRead).toBe(3);
+    expect(r.distinctFilesRead).toBe(3);
+    // EXACT, not bracketed: unlike the live corpus, nothing is appending to this fixture while
+    // the test runs, so an approximate comparison here would be hiding a real guarantee.
+    expect(r.bytesRead).toBe(bytes);
+  });
+
+  // N5, CLOSED. The counters are per-build state on a long-lived object, so a second build must
+  // report its own work and not the sum of both. Deleting `startCounting`'s body leaves the live
+  // test green — it builds once — and fails this.
+  test('a second build reports its own reads, not the running total', () => {
+    const { project, bytes } = fixture([2, 2]);
+    const store = new IndexStore();
+    const first = store.buildCold([project]);
+    const second = store.buildCold([project]);
+    expect(first.filesRead).toBe(2);
+    expect(second.filesRead).toBe(2); // not 4
+    expect(second.bytesRead).toBe(bytes); // not 2x bytes
+    expect(store.lastResult).toEqual(second);
+  });
+
+  // THE REFRESH-SIDE PROPERTY, and it is deliberately NOT `filesRead === filesScanned`: the
+  // whole point of refresh() is that an untouched file is skipped without being read. The
+  // corresponding invariant is that it reads exactly what changed.
+  test('a refresh reads only what changed, so filesRead tracks filesChanged and not filesScanned', () => {
+    const { project } = fixture([2, 2, 2]);
+    const store = new IndexStore();
+    store.buildCold([project]);
+
+    const unchanged = store.refresh([project]);
+    expect(unchanged.filesScanned).toBe(3);
+    expect(unchanged.filesChanged).toBe(0);
+    expect(unchanged.filesRead).toBe(0); // nothing was opened at all
+    expect(unchanged.bytesRead).toBe(0);
+
+    const target = listTranscripts(project.transcriptDirs[0]!)[0]!;
+    const before = fs.statSync(target).size;
+    fs.appendFileSync(target, JSON.stringify({ type: 'assistant', timestamp: new Date().toISOString(), message: { usage: { input_tokens: 1, output_tokens: 7 } } }) + '\n');
+    const added = fs.statSync(target).size - before;
+
+    const appended = store.refresh([project]);
+    expect(appended.filesScanned).toBe(3);
+    expect(appended.filesChanged).toBe(1);
+    expect(appended.filesRead).toBe(1);
+    expect(appended.distinctFilesRead).toBe(1);
+    // ONLY THE APPENDED BYTES — this is the tail-read path, and reading the whole file here
+    // would be a silent performance regression that no timing assertion on a 6-line fixture
+    // could ever detect.
+    expect(appended.bytesRead).toBe(added);
   });
 });

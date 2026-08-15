@@ -11,6 +11,28 @@
 // stat-all and a real 5h-window tail-read. This file still pins the fixture technique on
 // a controlled, reproducible input — the real-corpus numbers are what the claim checks,
 // not this test, since a CI runner has no ~/.claude/projects to measure against.
+//
+// ── DELIBERATELY NOT CHANGED BY #50, AND HERE IS THE REASON ───────────────────────────
+//
+// #50 rebuilt the cold-start assertion in test/live.test.ts: the clock came out of the
+// blocking assertion entirely, because the same code doing the same work varies 2–2.5x from OS
+// memory reclaim and the old 10 s line sat INSIDE the observed 2,158–12,610 ms spread. Two
+// duration assertions now look different, so the next reader would reasonably suspect one was
+// missed. It was not.
+//
+// THE TWO ARE NOT EXPOSED TO THE SAME THING, and the difference is the working set:
+//
+//   live.test.ts   the real corpus — 3.04 GB, 2,536 transcripts, GROWING ~0.8 GB a week.
+//                  Exposed to corpus growth AND to machine state, and both are large:
+//                  measured 2,024 ms for a bare build, up to 5,422 ms through the route.
+//   perf.test.ts   24 synthetic fixture files. Cold build 4.7–12.1 ms. IMMUNE to corpus
+//                  growth by construction — the fixture is a fixed shape this file creates —
+//                  and while the same reclaim mechanism applies, a 2.5x multiplier on 12 ms
+//                  is 18 ms against a 10 s budget. Six orders of magnitude of headroom.
+//
+// So the flakiness that justified the rebuild does not exist here, and changing this file
+// would be motion with no finding behind it. If this test ever DOES start varying, the cause
+// will not be the one #50 found — it would mean the fixture stopped being 24 small files.
 
 import { describe, test, expect, afterAll } from 'bun:test';
 import fs from 'node:fs';
