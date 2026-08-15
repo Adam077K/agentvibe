@@ -101,6 +101,11 @@ This is reached *through* F2 and also directly by any ledger run over an untrust
 
 `mission-control/server/routes/api.ts`
 
+> **Status: closed for the cross-site browser vector** (`server/routes/guard.ts`, 2026-08-15). The
+> paragraph below is the finding as found. "Drive-by" in it describes what was *possible then* and is
+> still true of every caller a header cannot see — a local process, a different port on this loopback.
+> What is closed is the browser half.
+
 Every route is a `GET` that spawns processes, and there is no Origin validation anywhere. Loopback binding
 is correct and insufficient: **a page the user visits can fire `fetch('http://127.0.0.1:4300/api/conflicts',
 {mode:'no-cors'})` or an `<img>` tag** — it never needs to read the response, only to trigger the work.
@@ -121,8 +126,24 @@ The reviewer's framing, which is the useful one: **the problem is not sanitisati
 3. **Accept and bound it** — Origin check, a documented "own repositories only" constraint, and a claim in
    the ledger with an expiry so the acceptance is re-decided rather than forgotten.
 
-**Whichever is chosen, F6 should be closed regardless** — an Origin check is cheap and it removes the
-drive-by vector from all three.
+**Whichever is chosen, F6 should be closed regardless** — ~~an Origin check is cheap and it removes the
+drive-by vector from all three.~~
+
+> **SUPERSEDED 2026-08-15, and the correction is the point.** Both halves of that sentence were wrong,
+> and it is left struck through rather than deleted because it is the recommendation this document
+> shipped with.
+>
+> **An `Origin` check does not remove the vector.** Measured in a real browser three times, twice by the
+> reviewer and once through the shipped middleware: `Origin` is **absent** on `<img>`, `<script>`,
+> `<link rel=stylesheet>`, form GET and no-cors `fetch` — 5 of the 6 attack shapes. Only a CORS `fetch`
+> sends it, and the app's own same-origin GETs send none either, so the check must allow *absent* and
+> every subresource vector above walks straight through. That is a guard satisfied while the property it
+> protects is violated: §0, in the sentence recommending the fix for §0.
+>
+> **And "the drive-by vector" is not a thing a header check can remove.** What shipped rejects
+> `Sec-Fetch-Site: cross-site` and closes the **cross-site browser** vector. `same-site` is allowed, so
+> any other service on the user's loopback keeps all three RCEs, and a non-browser client sends no such
+> header at all.
 
 **And the invariant must be rewritten.** Leaving *"`server/**` invokes no shell"* in the README and the
 handoff while these are open teaches the next reader to check the wrong thing. Whatever guard survives
