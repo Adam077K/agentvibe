@@ -29,6 +29,7 @@ import { IndexStore } from '../server/index-store.ts';
 import type { SessionsSlice } from '../server/state.ts';
 import { summarizeClaims, type BeliefSummary, type ClaimsSummary, type VerdictCounts, type Waiver } from '../server/collectors/belief.ts';
 import type { ConflictReport } from '../server/collectors/conflicts.ts';
+import type { ConflictsPayload } from '../server/routes/api.ts';
 import type { LedgerClaim } from '../server/projects.ts';
 import { FleetTable, FleetHeadline, GenerationFigure, sortFleet } from '../client/src/views/FleetView.tsx';
 import { SessionsTable, SessionsView } from '../client/src/views/SessionsView.tsx';
@@ -50,7 +51,7 @@ import type { ProjectDetail, InboxPayload, InboxProject } from '../server/routes
 import { inboxEmptyState } from '../server/collectors/empty.ts';
 import { PROJECT_PROBE_TIMEOUT_MS, PROJECT_PROBE_TIMEOUT_SECONDS } from '../server/collectors/probe-bounds.ts';
 import type { Project } from '../server/projects.ts';
-import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo, writeRegistry, addWorktree } from './fixtures.ts';
+import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo, writeRegistry, addWorktree, writeTrustFile } from './fixtures.ts';
 import { machineGate, notVerified } from './gate.ts';
 
 const cleanupDirs: string[] = [];
@@ -256,10 +257,15 @@ function buildFixtureState(prefix: string) {
     { ts: new Date(now - 9 * 86_400_000).toISOString(), output_tokens: 7_305 },
   ]);
 
-  const state = new LiveState({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot });
+  // BOTH FIXTURE PROJECTS ARE TRUSTED, deliberately: this state exists to reverse rendered
+  // figures against a real sweep, and an untrusted fixture would produce an empty one. The
+  // untrusted rendering is covered by its own tests in test/trust.test.ts, which is where the
+  // "excluded, and why" strings are asserted.
+  const trustFile = writeTrustFile(mkTmpDir(`mc-views-trust-${prefix}-`), [busy, quiet]);
+  const state = new LiveState({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot, trustFile });
   const app = new Hono();
   app.route('/api', createApi(state));
-  return { app, now, projectsRoot, claudeRoot, state };
+  return { app, now, projectsRoot, claudeRoot, state, trustFile };
 }
 
 const DEFAULT_LAUNCHERS: LauncherRow[] = [
@@ -978,13 +984,20 @@ describe('render parity — Conflicts', () => {
     }
     writeRegistry(root, registry);
 
-    const state = new LiveState({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot });
+    // TRUSTED, so the sweep really runs. Without this the payload would be `reports: []` and
+    // every reversal below would be comparing an empty table to an empty payload — a passing
+    // test over a measurement that never happened.
+    const trustFile = writeTrustFile(mkTmpDir(`mc-views-conflicts-trust-${prefix}-`), [root]);
+    const state = new LiveState({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot, trustFile });
     const app = new Hono();
     app.route('/api', createApi(state));
     try {
       const res = await app.fetch(new Request('http://127.0.0.1/api/conflicts'));
       expect(res.status).toBe(200);
-      return ((await res.json()) as { reports: ConflictReport[] }).reports;
+      const payload = (await res.json()) as ConflictsPayload;
+      // The premise this whole describe rests on: the gate let the fixture project through.
+      expect(payload.untrusted).toEqual([]);
+      return payload.reports;
     } finally {
       if (blindedPointer !== null) fs.chmodSync(blindedPointer, 0o644);
     }

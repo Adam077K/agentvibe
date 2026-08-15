@@ -79,6 +79,26 @@ export function rmTmp(dir: string): void {
 }
 
 /**
+ * Writes a trusted-projects file listing `roots`, and returns its path for
+ * `DiscoverOptions.trustFile`.
+ *
+ * EVERY FIXTURE STATE NEEDS ONE, and that is the mechanism working rather than friction. The
+ * allowlist fails closed: with no trust file, no project gets a program run for it, so a test
+ * that wants a real sweep has to say which fixture directories it trusts. A test that forgets
+ * gets an empty sweep and a red assertion, which is the correct direction for a security
+ * control to be wrong in.
+ *
+ * Never point this at the real ~/.warroom/trusted-projects: `trustFile` exists so a test never
+ * reads or writes the machine's own trust decision.
+ */
+export function writeTrustFile(dir: string, roots: string[]): string {
+  const file = path.join(dir, 'trusted-projects');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(file, `# fixture trust list\n${roots.join('\n')}\n`);
+  return file;
+}
+
+/**
  * Every file named `name` anywhere a shell spawned by the code under test could have created
  * it. Returns the paths found — an empty array is the safe outcome.
  *
