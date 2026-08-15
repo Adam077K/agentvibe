@@ -345,6 +345,16 @@ function readPathField(rest: string, i: number): { path: string; next: number } 
  * the one another worktree can collide with. Note git's own inconsistency — `-z` emits that
  * pair in the OPPOSITE order — which is one reason this parses the v1 text form only.
  *
+ * WHAT CHECKS THIS IS NO LONGER A LIST OF NAMES. `-z` is NUL-separated and emits paths
+ * VERBATIM, so it needs no un-quoting and git itself supplies the right answer for whatever
+ * names are actually present. test/collectors.test.ts runs this function against that output
+ * over two populations NOBODY CURATED — the repository's own tracked paths, and a seeded draw
+ * over the code-point space — in both `core.quotePath` modes. That matters because the fixture
+ * guarding this was wrong twice, both times because no entry happened to carry the combination
+ * the defect lived in. Executed: with the suite rolled back to its state before the astral fix
+ * (d841cc7^) and that defect re-applied, every pre-existing test passes and only the `-z` arm
+ * fails. This function is unchanged by that work — the differential found no defect in it.
+ *
  * Every line reaching here is COMPLETE: on the success path git wrote all of it, and on the
  * recovery path `wholeLinesOf` has already dropped any partial tail. So a quoted field always
  * carries its closing quote and this never has to guess at half an escape.

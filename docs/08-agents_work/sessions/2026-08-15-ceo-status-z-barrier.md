@@ -1,0 +1,29 @@
+---
+date: 2026-08-15
+role: ceo
+task: status-z-barrier
+tier: lite
+qa_verdict: PASS
+---
+
+Closes **#46**. `test/collectors.test.ts` +444, `server/collectors/conflicts.ts` +10 (doc comment only). Additive; nothing deleted from production code.
+
+**The instrument caught no live defect, and that is stated first because burying it under an eleven-row mutation matrix would let the matrix imply otherwise.** 2,550 randomized status records across 120 generated repositories (a development harness, not the shipped test), both `core.quotePath` modes, nested exotic directories, renames, modifications, deletions: **zero divergence, zero fabrication**. `parseStatusPorcelain` on `main` is correct over every name the author could generate. CONFIRMED.
+
+**What justifies the change is a demonstration rather than the argument #46 was filed on.** The filed rationale — *"a fixture cannot enumerate what nobody thought of"* — was reasoning. Executed instead: roll the suite back to before `d841cc7` (verified factually that the commit added **both** the astral tests **and** the astral fixture entries), re-apply the shipped code-unit defect (`Array.from(body)` → `body.split('')`), and the result is **91 pass / 1 fail with the sole failure in the new `-z` arm**. The entire pre-existing suite goes green on the exact defect that shipped. Independently reproduced by the reviewer.
+
+`git status -z` is NUL-separated and unquoted, so it needs no C-unquoting and git supplies ground truth. Two arms, **neither drawing from `EXOTIC_NAMES`**: arm 1 over the repo's own 670 tracked paths; arm 2 a seeded draw of 294 names/run, **134 carrying both a space and an astral character** against the fixture's 2 — that combination being exactly where the shipped defect lived.
+
+**Review: PASS at `716960c` and again at `dfc7437`, correctness lens, single anthropic model family** — not the ≥2-model-family independent panel the `adversarial` lens requires, and no review in this phase has been. Every load-bearing claim was reproduced independently: the rollback demonstration, all eleven mutations dying (including M9), floors confirmed tight rather than decorative, zero temp-dir and process leaks, renames confirmed covered.
+
+**The MEDIUM finding is the one worth carrying: the vacuity class this PR exists to remove, found inside the PR.** Arm 1's `for (const mode of ['forced','raw'])` loop was a **no-op** — `differential(root,'forced').text === differential(root,'raw').text`, byte-identical at 33,760 bytes, because no tracked path holds a non-ASCII byte so `core.quotePath` has nothing to act on. **Arm 2 asserts its two modes really are two, and that assertion is documented as having caught a real vacuity; arm 1 made the identical gesture with no such assertion, and the assertion would have failed there.** Fixed by *removing* the loop rather than annotating it — a comment saying "this is really one mode" beside a loop that iterates twice is two descriptions of one thing.
+
+Three LOWs also fixed: the comment's M3/M4 claim was too broad (the sharp limit is **arm 1 tests quote-stripping and nothing else** — it dies to M3 and M4, not to M4b, not to M5); the `records.length >= created.length` floor was replaced by naming the **missing set**, so a failure identifies the file rather than a count, and the reviewer confirmed the new assertion is **strictly stronger**; and two wall-time figures were withdrawn as noise — before 72.4–82.3 s versus after 71.6–87.3 s overlap, with two "after" runs faster than a "before", so the defensible number is the new block **in isolation, ~3.3–4.5 s on a ~75 s suite**. The author found a fifth wrong figure unprompted (a census paragraph quoting the harness's 337/157 where the shipped block draws 294/134, which its own constants already said).
+
+**Two corrections to the CEO, recorded because they are the pattern rather than the exception.** The brief listed renames as residue; they are **covered** — `-z` frames them `R  <new>` NUL `<orig>` NUL, opposite order from the text form, pinned against a real `git mv`, with M7 proving the oracle fails loudly if reversed. And the brief said ~120 git repos: `PER_REPO = 120` is *files* per repo, so the shipped block creates **6** repos and ~1,030 files. Separately, the CEO relayed the author's claim that **M8 still kills arm 1** as the safety check on the loop removal; the reviewer found **M8 never killed arm 1 on either tree** — arm 1's temp repo holds only untracked files, so no `R` record can exist and M8 is unreachable from it. The removal is still sound (six mutations show identical kill sets before and after), but the evidence offered for it was wrong and nobody checked it before it was repeated.
+
+**Residue, stated rather than implied.** Arm 2's code-point *ranges* remain author-chosen — git decides correctness for every draw, so it samples the domain rather than enumerating imagined answers, but a plane nobody listed is outside it. Arm 1 buys exactly one quoted path and zero escapes today. Non-UTF-8 paths decode to U+FFFD on **both** sides, so the differential **agrees about a wrong answer** (unreachable on APFS — EILSEQ, executed; reachable on Linux). The nested-repo clamp (#52) is identical in both formats, so a format differential is blind to it **by construction**. One new LOW left open: a comment sentence overstating what the loop removal recovers.
+
+**Unmeasured and deliberately not acted on:** this diff adds ~4 s of IO-heavy work upstream of the probe-cadence test and `perf.test.ts`. The reviewer named the mechanism and could not demonstrate it; the author noted its own #50 result refuted *"the suite as a whole"* at n=11 but never tested *"this specific block placed upstream of a later measurement"* — different claims. Folded into #50 rather than fixed here on a guess.
+
+`node mission-control/check.mjs` exit 0 · `npm run check` exit 0 · **224 → 228 pass / 0 fail**. Classifier floor `lite`.

@@ -1521,6 +1521,485 @@ describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
   });
 });
 
+// ── GIT IS THE ORACLE, BECAUSE A FIXTURE'S COVERAGE IS WHOEVER WROTE IT ───────────────
+//
+// Every barrier above checks the text parser against a LIST OF NAMES SOMEBODY THOUGHT OF, and
+// that list has been wrong twice, both times for the same reason. It caught the C-quoting
+// fabrication only BECAUSE someone had added a space and an octal escape to it. It then MISSED
+// the astral-under-`core.quotePath=false` defect, because no entry carried BOTH a space and an
+// astral character — the one combination the defect lived in — and `emoji-🔥.ts` alone never
+// reaches the decoder, since without a space git has no reason to quote it. The entry that
+// closed it (`fire 🔥 space.ts`) was added AFTER the defect was found, by the person who found
+// it. A fixture cannot enumerate what nobody thought of, and no amount of care makes it able
+// to; the ceiling is a property of enumeration, not of the enumerator.
+//
+// `git status -z` REMOVES THE ENUMERATOR FROM THE LOOP. It is NUL-separated and the paths are
+// emitted VERBATIM — no C-quoting at all, so there is nothing to un-quote and no decoder to get
+// wrong. NUL is sound as a separator in a way `\n` is not: a filename can contain a newline (see
+// `newline\ninside.ts` above) and cannot contain a NUL, because the kernel's own path API is
+// NUL-terminated. So git itself supplies the right answer for whatever names are actually there,
+// and coverage stops being a list and starts being a population.
+//
+// THE TRAP, NAMED SO IT IS NOT WALKED INTO: running this comparison over EXOTIC_NAMES would
+// build a second instrument carrying the first one's blind spot, while looking like progress.
+// Both arms below therefore draw their population from somewhere OTHER than a hand-written list
+// — the repository's own path set, and a seeded random draw over the code-point space — and
+// neither one is EXOTIC_NAMES.
+//
+// WHAT THIS DOES NOT COVER, stated here rather than discovered later:
+//   · NON-UTF-8 PATHS. `-z` hands back raw bytes and this decodes them as UTF-8, so an invalid
+//     name still becomes U+FFFD on both sides and the differential agrees about a wrong answer.
+//     Unreachable on APFS (EILSEQ, executed) and reachable on Linux. Same limit as unquoteCStyle
+//     documents; `-z` moves it no closer.
+//   · THE `showUntrackedFiles` CLAMP. `all` cannot split a NESTED REPOSITORY, so two worktrees
+//     vendoring different repos at `vendor/thing` still collide. That is a property of what git
+//     REPORTS, identical in both formats, so a format differential is blind to it by
+//     construction. Filed as #52.
+//   · A FIXED SEED IS A SAMPLE, NOT THE DOMAIN. The random arm draws ~120 names per repo from
+//     the code-point ranges below; ranges nobody listed (Deseret, Linear B, private-use planes)
+//     are outside it. This is a much larger sample than a hand list and it is still a sample.
+describe('git status -z is the oracle the text parser is checked against', () => {
+  /** The sweep's own argv plus `-z`, DERIVED so the two forms cannot drift apart. */
+  const STATUS_Z_ARGV = [...STATUS_ARGV, '-z'] as const;
+
+  interface ZRecord {
+    xy: string;
+    path: string;
+  }
+
+  /**
+   * Reads `git status --porcelain -z` from BYTES.
+   *
+   * BYTES, NOT A STRING, because the point of this reader is to be a source of truth: decoding
+   * the whole buffer to UTF-8 first and then splitting would be one more decode step that could
+   * be wrong in the same way the thing under test is wrong. Split on NUL over the raw buffer,
+   * decode each field once.
+   *
+   * A RENAME IS TWO RECORDS AND `-z` PUTS THEM IN THE OPPOSITE ORDER FROM THE TEXT FORM. Text
+   * writes `R  <orig> -> <new>`; `-z` writes `R  <new>` NUL `<orig>` NUL. Executed against
+   * `git mv` (git 2.50.1): `["R  moved 🔥 there.ts", "fire 🔥 space.ts", ""]`. Taking the first
+   * and consuming the second matches parseStatusPorcelain's "return the NEW path" contract — and
+   * getting this backwards is the one way the oracle could be wrong, so it is pinned by its own
+   * test below rather than argued for here.
+   */
+  function recordsFromStatusZ(buf: Buffer): ZRecord[] {
+    const fields: Buffer[] = [];
+    let start = 0;
+    for (let i = 0; i < buf.length; i++) {
+      if (buf[i] === 0) {
+        fields.push(buf.subarray(start, i));
+        start = i + 1;
+      }
+    }
+    const out: ZRecord[] = [];
+    for (let i = 0; i < fields.length; i++) {
+      const rec = fields[i]!;
+      if (rec.length === 0) continue;
+      const xy = rec.subarray(0, 2).toString('latin1');
+      out.push({ xy, path: rec.subarray(3).toString('utf8') });
+      // The original path of a rename or copy follows in its own field — consumed, never read
+      // as a record of its own.
+      if (xy.includes('R') || xy.includes('C')) i++;
+    }
+    return out;
+  }
+
+  /** Appended, never replaced — the precedence lesson statusConfigEnv already paid for. */
+  const appendParams = (...settings: string[]) => {
+    const ours = settings.map((s) => `'${s}'`).join(' ');
+    const existing = process.env.GIT_CONFIG_PARAMETERS;
+    return existing ? `${existing} ${ours}` : ours;
+  };
+
+  /**
+   * BOTH QUOTING MODES, AND RUNNING ONLY ONE MADE THIS INSTRUMENT VACUOUS ONCE ALREADY.
+   *
+   * The standalone harness this test grew out of forced `statusConfigEnv()` on every run, so git
+   * emitted octal escapes every time and unquoteCStyle's code-point loop was never exercised at
+   * all — every escape git writes is ASCII, so iterating by code UNIT gives the same answer.
+   * Executed against that harness with `Array.from(body)` mutated back to `body.split('')`: **0
+   * divergences over 413 records**, green on the exact defect it was written for. With `raw`
+   * added it found **4 diverging trials and 58 fabricated paths over 257 records**.
+   *
+   * `forced` is what production runs. `raw` is the only mode in which the decoder is under test.
+   * The draw arm below asserts per repo that the two really are two — see the premise there.
+   */
+  const MODE_ENV = {
+    forced: () => ({ ...process.env, ...statusConfigEnv() }),
+    raw: () => ({
+      ...process.env,
+      // Through PARAMETERS rather than repo-local `git config`, so an inherited hostile
+      // PARAMETERS cannot beat it and fail this test on its premise instead of its behaviour.
+      GIT_CONFIG_PARAMETERS: appendParams('core.quotePath=false', 'status.showUntrackedFiles=all'),
+    }),
+  } as const;
+
+  /** One `git status` in each format over the same tree, with the same environment. */
+  function differential(root: string, mode: keyof typeof MODE_ENV) {
+    const env = MODE_ENV[mode]();
+    const opts = { cwd: root, env, maxBuffer: 64 * 1024 * 1024 };
+    const text = execFileSync('git', [...STATUS_ARGV], { ...opts, encoding: 'utf8' });
+    const records = recordsFromStatusZ(execFileSync('git', [...STATUS_Z_ARGV], opts));
+    const sorted = (xs: string[]) => [...xs].sort();
+    return { text, records, fromText: sorted(parseStatusPorcelain(text)), fromZ: sorted(records.map((r) => r.path)) };
+  }
+
+  /**
+   * A SECOND, INDEPENDENT ORACLE, restricted to the records it can speak for. A deletion
+   * legitimately names a path that is gone, so `fs.existsSync` is only the truth for everything
+   * else — and this was a real bug in the harness that found it: the first run reported 20
+   * "fabrications" that were all ` D ` records, i.e. the check was wrong, not the parser.
+   */
+  function nonexistentAmongSurvivors(root: string, records: ZRecord[]): string[] {
+    return records.filter((r) => !r.xy.includes('D')).map((r) => r.path).filter((p) => !fs.existsSync(path.join(root, p)));
+  }
+
+  // ── the seeded draw ────────────────────────────────────────────────────────────────
+  // mulberry32. SEEDED AND FIXED, so a failure is reproducible and CI does not flake; the cost
+  // is that this is a sample of the domain rather than the domain, which the header states.
+  function rng(seed: number): () => number {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /**
+   * The code-point ranges drawn from. Chosen to span the CLASSES git and JS treat specially —
+   * C0 controls, ASCII, Latin-1, combining marks, RTL, the Unicode whitespace block, CJK,
+   * variation selectors, the BOM, and three ASTRAL blocks — rather than to name any particular
+   * character. What lands in a name is the draw's business, not this list's.
+   */
+  const RANGES: [number, number][] = [
+    [0x01, 0x1f], // C0 controls: tab, newline, ESC — everything git C-quotes unconditionally
+    [0x20, 0x7e], // ASCII, including space, `"`, `\`, `-` and `>`
+    [0x80, 0xff], // Latin-1 / C1
+    [0x0300, 0x036f], // combining marks
+    [0x0590, 0x08ff], // RTL scripts
+    [0x2000, 0x206f], // Unicode whitespace + bidi controls, incl. U+2028/U+2029
+    [0x3000, 0x303f], // CJK punctuation, incl. the ideographic space
+    [0x4e00, 0x9fff], // CJK
+    [0xfe00, 0xfe0f], // variation selectors
+    [0xfeff, 0xfeff], // BOM — the character the decoder used to swallow
+    [0x1f300, 0x1f6ff], // emoji — ASTRAL
+    [0x1d400, 0x1d7ff], // math alphanumerics — ASTRAL, and not emoji
+    [0xe0000, 0xe007f], // tag characters — ASTRAL and invisible
+  ];
+
+  /**
+   * Multi-character tokens drawn as WHOLE UNITS. Without these the separator ` -> ` appears
+   * inside a name only by drawing four specific code points in order — probability ~1e-9 per
+   * name, i.e. never. Weighting them in is not enumerating the ANSWER (git still supplies that);
+   * it is making the population reach the shapes at all. The census below asserts it did.
+   */
+  const SPECIALS = [' -> ', ' ', '"', '\\', '\n', '\t', ' -> "', '" -> ', '->', '  ', '\\"'];
+
+  function randomSegment(r: () => number): string {
+    const len = 1 + Math.floor(r() * 8);
+    let s = '';
+    for (let i = 0; i < len; i++) {
+      if (r() < 0.28) {
+        s += SPECIALS[Math.floor(r() * SPECIALS.length)]!;
+        continue;
+      }
+      const [lo, hi] = RANGES[Math.floor(r() * RANGES.length)]!;
+      const cp = lo + Math.floor(r() * (hi - lo + 1));
+      if (cp === 0x2f || (cp >= 0xd800 && cp <= 0xdfff)) continue; // `/` separates; lone surrogates are not code points
+      s += String.fromCodePoint(cp);
+    }
+    return s;
+  }
+
+  /** A nested path, so directory components are drawn from the same space as leaf names. */
+  function randomPath(r: () => number): string | null {
+    const parts: string[] = [];
+    for (let d = 0, depth = 1 + Math.floor(r() * 3); d < depth; d++) parts.push(randomSegment(r) || `d${d}`);
+    const p = parts.join('/') + '.ts';
+    // Never let the draw escape the temp tree or corrupt the repo it is being read from.
+    if (/(^|\/)\.{1,2}(\/|$)/.test(p) || /(^|\/)\.git(\/|$)/.test(p)) return null;
+    return p;
+  }
+
+  /** Writes `name` under `root`; returns false when the filesystem refuses it (EILSEQ etc.). */
+  function tryCreate(root: string, name: string): boolean {
+    try {
+      fs.mkdirSync(path.join(root, path.dirname(name)), { recursive: true });
+      fs.writeFileSync(path.join(root, name), 'x\n');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // THE TWO PROPERTIES THE WHOLE INSTRUMENT RESTS ON. If either were false the differential
+  // would be comparing two escaped streams — two readings of one format — and would inherit
+  // exactly the blind spot it exists to remove.
+  test('-z is verbatim under either quotePath setting, and frames a rename new-then-orig', () => {
+    const root = mkTmpDir('mc-z-props-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    fs.writeFileSync(path.join(root, 'fire 🔥 space.ts'), 'x\n');
+
+    for (const mode of ['forced', 'raw'] as const) {
+      const zbuf = execFileSync('git', [...STATUS_Z_ARGV], { cwd: root, env: MODE_ENV[mode]() });
+      // NOT C-quoted: no octal escape, no wrapping quotes, the astral character intact.
+      expect(zbuf.toString('latin1')).not.toContain('\\360');
+      expect(zbuf.toString('utf8')).not.toContain('"');
+      expect(recordsFromStatusZ(zbuf).map((r) => r.path)).toEqual(['fire 🔥 space.ts']);
+    }
+    // NON-VACUITY: the TEXT form really does differ between the two modes, so "verbatim under
+    // either" is a property of `-z` rather than of a config that never had any effect.
+    const textForced = execFileSync('git', [...STATUS_ARGV], { cwd: root, encoding: 'utf8', env: MODE_ENV.forced() });
+    const textRaw = execFileSync('git', [...STATUS_ARGV], { cwd: root, encoding: 'utf8', env: MODE_ENV.raw() });
+    expect(textForced).toContain('\\360\\237\\224\\245');
+    expect(textRaw).toContain('fire 🔥 space.ts');
+    expect(textForced).not.toBe(textRaw);
+
+    // …and the rename framing, against a real `git mv` rather than against this test's idea of it.
+    execFileSync('git', ['add', '-A'], { cwd: root });
+    execFileSync('git', ['commit', '-qm', 'base'], { cwd: root });
+    execFileSync('git', ['mv', 'fire 🔥 space.ts', 'moved 🔥 there.ts'], { cwd: root });
+    const renamed = execFileSync('git', [...STATUS_Z_ARGV], { cwd: root, env: MODE_ENV.forced() });
+    expect(renamed.toString('utf8').split('\0')).toEqual(['R  moved 🔥 there.ts', 'fire 🔥 space.ts', '']);
+    // The reader takes the NEW path and consumes the original — the same answer the text parser
+    // gives, which is what makes them comparable at all.
+    expect(recordsFromStatusZ(renamed).map((r) => r.path)).toEqual(['moved 🔥 there.ts']);
+    expect(differential(root, 'forced').fromText).toEqual(['moved 🔥 there.ts']);
+  });
+
+  // THE FAILURE MODE EVERY ARM BELOW GUARDS AGAINST, EXHIBITED RATHER THAN ASSERTED ABOUT. On a
+  // clean tree both sides are `[]`, the comparison passes, and it has compared NOTHING. That is
+  // why each arm asserts a record floor, and why the floor is the load-bearing line rather than
+  // the equality.
+  test('a clean repo makes the comparison pass having compared nothing', () => {
+    const root = mkTmpDir('mc-z-vacuous-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    const d = differential(root, 'forced');
+    expect(d.records).toHaveLength(0);
+    expect(d.fromText).toEqual(d.fromZ); // …and it passes. `0 === 0` is not evidence.
+    expect(d.fromText).toEqual([]);
+  });
+
+  // ARM 1 — THE POPULATION IS THIS REPOSITORY'S OWN PATH SET, so nobody chose it and it grows
+  // with the repo. If someone commits a file with a space in it next month this arm covers it
+  // with no edit here, which is the property a fixture cannot have.
+  //
+  // A RECONSTRUCTION, NOT THE LIVE TREE, and the distinction is not cosmetic: reading `git
+  // status` in the real checkout would compare `[]` to `[]` on a clean CI clone — the vacuous
+  // pass above. The names are real; the dirt is manufactured, so every one of them yields a
+  // record.
+  //
+  // AND IT IS ALREADY DOING WORK NOBODY ARRANGED. Of the 670 paths tracked here today, exactly
+  // ONE needs C-quoting — `war-room/dashboard/client/public/Office Background.png`, a real asset
+  // with a space in it that no fixture author put there.
+  //
+  // WHAT THAT ONE PATH BUYS, STATED SHARPLY, BECAUSE A LOOSER VERSION OF THIS SENTENCE WAS
+  // WRONG. It has a space and NOTHING else: no backslash, no escape, no non-ASCII byte. So
+  // **this arm tests quote-stripping and nothing else.** It dies to a mutation that leaves the
+  // quotes on (executed: M3, and M4 as written here, which replaces the whole path-field read).
+  // It does NOT die to a mutation that strips the quotes but breaks ESCAPE decoding — executed
+  // against exactly that variant, 0 of 670 paths went missing — nor to the per-character octal
+  // mutation M5, since no tracked path holds a non-ASCII byte. Escapes and multi-byte decoding
+  // are arm 2's job. The earlier wording ("dies to a mutation handing quoted paths through
+  // un-decoded") blurred quote-stripping and escape-decoding into one claim and overstated this.
+  //
+  // ONE EFFECTIVE MODE TODAY, NOT TWO, AND THAT IS WHY THE LOOP IS GONE. This arm used to run
+  // `forced` and `raw` exactly as arm 2 does. With no non-ASCII byte anywhere in the tracked set,
+  // `core.quotePath` has nothing to act on: the two streams are BYTE-IDENTICAL — executed, 33,760
+  // bytes each, `forced === raw` true. The second iteration re-compared the same input and
+  // reported it as a second mode. Arm 2 asserts per repo that its two modes really are two, and
+  // that assertion is documented there as having caught a real vacuity; the same assertion
+  // written here would FAIL. Rather than make a gesture at coverage this arm cannot provide, it
+  // runs the one mode that exists and says so. It becomes two modes the moment a non-ASCII path
+  // is tracked — at which point the assertion below starts distinguishing them for free.
+  //
+  // NOT ASSERTED, DELIBERATELY: "the repo contains at least one quoted path" would fail the day
+  // someone renames one PNG, for a reason with nothing to do with the parser. The arm's strength
+  // tracks the repository, which is the point of drawing from it and also its weakness.
+  test('every path git reports for the repository\'s own file set round-trips against -z', () => {
+    const repoPaths = execFileSync('git', ['ls-files', '-z'], { cwd: REPO_ROOT, maxBuffer: 64 * 1024 * 1024 })
+      .toString('utf8')
+      .split('\0')
+      .filter(Boolean);
+    // NON-VACUITY at the source: a checkout that returned nothing would make the arm empty.
+    expect(repoPaths.length).toBeGreaterThan(100);
+
+    const root = mkTmpDir('mc-z-repopaths-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    const created = repoPaths.filter((p) => tryCreate(root, p));
+    expect(created.length).toBe(repoPaths.length); // every real path was materialisable
+
+    const d = differential(root, 'forced');
+    expect({ mode: 'forced', paths: d.fromText }).toEqual({ mode: 'forced', paths: d.fromZ });
+    expect(nonexistentAmongSurvivors(root, d.records)).toEqual([]);
+
+    // NON-VACUITY, AND IT NAMES THE PATH RATHER THAN A COUNT. The previous form was
+    // `records.length >= created.length` — 670 >= 670, tight to the file, and a TRIPWIRE: the
+    // materialised set includes the repo's own tracked `.gitignore` files, so the day someone
+    // tracks a path matching a tracked ignore pattern (`*.local`, `.env.*`, `node_modules/`,
+    // `.worktrees/`) git stops reporting it, the count drops by one and this arm goes red for a
+    // reason with nothing to do with the parser. Nothing matches today — checked. Asserting the
+    // MISSING SET instead means that failure arrives naming the file, and
+    // `git status --porcelain --ignored` in the temp root confirms it in one command. The floor
+    // is not loosened, because a silently smaller comparison is the vacuity this block exists to
+    // prevent; only the diagnosis is made legible.
+    const reported = new Set(d.records.map((r) => r.path));
+    expect(created.filter((p) => !reported.has(p))).toEqual([]);
+  }, 60_000);
+
+  // ARM 2 — THE POPULATION IS A DRAW OVER THE CODE-POINT SPACE, and this is the arm that would
+  // have caught the astral defect without anybody knowing to look for it.
+  //
+  // THE COMPARISON WITH THE FIXTURE, IN NUMBERS THIS BLOCK ACTUALLY PRODUCES: EXOTIC_NAMES
+  // contains TWO names carrying both a space and an astral character, and both were added after
+  // the defect they cover was found by hand. One run of the three seeds below draws **294 names,
+  // 134 of them carrying both** — plus 151 containing the ` -> ` separator, 82 containing a
+  // newline and 66 beginning with a JS-WhiteSpace character. (An earlier version of this
+  // paragraph quoted 337/157/150/74/54, which were the DEVELOPMENT HARNESS's figures, not this
+  // block's. The census constants under FLOORS are the shipped ones and these now match them.)
+  // The census below asserts that richness on every run rather than trusting this paragraph,
+  // because a generator that quietly stopped producing astral characters would leave the arm
+  // green and empty.
+  //
+  // WHAT THIS BLOCK COSTS, MEASURED RATHER THAN GUESSED: **~3.3–4.5 s** for all four tests in
+  // isolation (3.31 / 3.33 / 3.42 s at load 1.8 here; 3.40 / 3.83 / 4.53 s at load 4.1–4.2 on
+  // the reviewer's runs), against a suite of roughly 75 s. It creates **6 git repositories and
+  // ~1,030 files**. A before/after comparison of total suite wall time does NOT resolve this
+  // cost — measured before 72.4–82.3 s and after 71.6–87.3 s, overlapping ranges with some
+  // "after" runs faster than some "before" — so the isolated figure is the only defensible one.
+  //
+  // ASSERTING THE CENSUS IS NOT RE-ENUMERATING THE ANSWER. It asserts the POPULATION is rich;
+  // git still decides what is CORRECT for each name. The distinction is the whole difference
+  // between this and a fixture.
+  test('a seeded draw over the code-point space agrees with -z, in both quoting modes', () => {
+    const SEEDS = [0x5eed, 0xc0ffee, 0x9e3779b9];
+    const PER_REPO = 120;
+    const population: string[] = [];
+    let records = 0;
+    let renames = 0;
+
+    for (const seed of SEEDS) {
+      const r = rng(seed);
+      const root = mkTmpDir(`mc-z-draw-${seed.toString(16)}-`);
+      cleanupDirs.push(root);
+      initGitRepo(root);
+      execFileSync('git', ['config', 'status.renames', 'copies'], { cwd: root });
+
+      const made: string[] = [];
+      for (let i = 0; i < PER_REPO; i++) {
+        const name = randomPath(r);
+        if (name && tryCreate(root, name)) made.push(name);
+      }
+      // A RENAME, A MODIFICATION AND A DELETION, so `XY` is not always `??` — the rename is
+      // the record whose framing differs between the two formats, and an arm that only ever
+      // saw untracked files would never exercise it.
+      if (made.length > 3) {
+        execFileSync('git', ['add', '--', made[0]!, made[1]!, made[2]!], { cwd: root });
+        execFileSync('git', ['commit', '-qm', 'base'], { cwd: root });
+        const to = randomPath(r);
+        if (to) {
+          try {
+            fs.mkdirSync(path.join(root, path.dirname(to)), { recursive: true });
+            execFileSync('git', ['mv', made[0]!, to], { cwd: root, stdio: 'pipe' });
+            renames++;
+          } catch {
+            // The filesystem refused the destination — APFS returns EILSEQ for some byte
+            // sequences, which is a fact about the draw and not about the parser. The
+            // modification and the deletion below still stand, and `renames` is asserted
+            // non-zero across the whole run so this cannot quietly swallow every one.
+          }
+        }
+        fs.appendFileSync(path.join(root, made[1]!), 'y\n');
+        fs.rmSync(path.join(root, made[2]!));
+      }
+      population.push(...made);
+
+      // ONE TREE, BOTH MODES, so the two text streams are directly comparable — and that
+      // comparison is what makes "both modes" a fact rather than a label.
+      const runs = { forced: differential(root, 'forced'), raw: differential(root, 'raw') };
+
+      // THE PREMISE, ASSERTED PER REPO, AND IT CAUGHT A REAL VACUITY IN THIS TEST. A mutation
+      // that collapsed `raw` onto `forced` left every assertion below green — the arm would
+      // have been running the escaped stream twice and calling it two modes, which is exactly
+      // the blind spot that let `Array.from` regress in the first place. Two independent
+      // statements: the streams DIFFER, and the forced one really is escaped (`\3xx` is the
+      // lead byte of any non-ASCII UTF-8 sequence, so it appears iff git escaped one).
+      expect(runs.forced.text).not.toBe(runs.raw.text);
+      expect(runs.forced.text).toMatch(/\\3[0-7][0-7]/);
+
+      for (const mode of ['forced', 'raw'] as const) {
+        const d = runs[mode];
+        // NON-VACUITY, per repo: a draw that created nothing would compare nothing.
+        expect(d.records.length).toBeGreaterThan(PER_REPO / 2);
+        records += d.records.length;
+        // The seed rides along so a failure names the run that produced it.
+        expect({ seed: seed.toString(16), mode, paths: d.fromText }).toEqual({
+          seed: seed.toString(16),
+          mode,
+          paths: d.fromZ,
+        });
+        expect(nonexistentAmongSurvivors(root, d.records)).toEqual([]);
+      }
+    }
+
+    // THE CENSUS. Floors, not exact counts — the draw is seeded so these are stable, and stating
+    // them as floors means a generator improvement does not have to edit them.
+    const astral = (s: string) => [...s].some((c) => c.codePointAt(0)! > 0xffff);
+    // The JS WhiteSpace class, spelled in escapes: these are the characters `trimStart` used to
+    // eat off the front of a name, which is the defect the fixed-width slice replaced.
+    const leadingJsWhitespace = /^[\t\v\f \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]/;
+    const count = (pred: (s: string) => boolean) => population.filter(pred).length;
+    const shapes = {
+      total: population.length,
+      records,
+      // The record whose FRAMING differs between the two formats. If every `git mv` were
+      // refused this would be 0 and the rename half of the oracle would be untested — the
+      // arm would still be green, which is exactly the shape of vacuity being guarded here.
+      renames,
+      spaceAndAstral: count((s) => s.includes(' ') && astral(s)),
+      arrowSeparatorInsideAName: count((s) => s.includes(' -> ')),
+      doubleQuote: count((s) => s.includes('"')),
+      backslash: count((s) => s.includes('\\')),
+      newline: count((s) => s.includes('\n')),
+      tab: count((s) => s.includes('\t')),
+      leadingJsWhitespace: count((s) => leadingJsWhitespace.test(s)),
+      bom: count((s) => s.includes('\ufeff')),
+      nested: count((s) => s.includes('/')),
+    };
+    // FLOORS WITH HEADROOM, not the observed figures. The draw is seeded, so on this machine
+    // the census is exact and reproducible — measured 2026-08-15, git 2.50.1, APFS:
+    // total 294 · records 586 · renames 2 · spaceAndAstral 134 · arrow 151 · doubleQuote 160 ·
+    // backslash 112 · newline 82 · tab 72 · leadingJsWhitespace 66 · bom 102 · nested 181.
+    // The floors sit roughly 40% below because WHICH DRAWS THE FILESYSTEM ACCEPTS is not
+    // portable: APFS rejects some byte sequences with EILSEQ that ext4 takes, so a Linux CI
+    // box legitimately lands on different totals from the same seeds. Pinning the exact
+    // numbers would fail there for a reason that has nothing to do with the parser.
+    const FLOORS: Record<keyof typeof shapes, number> = {
+      total: 200,
+      records: 400,
+      renames: 1,
+      spaceAndAstral: 80, // EXOTIC_NAMES carries exactly 2, and both were added after the fact
+      arrowSeparatorInsideAName: 80, // …and exactly 1
+      doubleQuote: 80,
+      backslash: 60,
+      newline: 40,
+      tab: 30,
+      leadingJsWhitespace: 30,
+      bom: 50,
+      nested: 100,
+    };
+    // Asserted as ONE object rather than per-shape, so a failure prints the whole census beside
+    // the floors it missed instead of stopping at the first one and naming a boolean.
+    const met = Object.fromEntries(Object.entries(FLOORS).map(([k, v]) => [k, shapes[k as keyof typeof shapes] >= v]));
+    expect({ shapes, met }).toEqual({ shapes, met: Object.fromEntries(Object.keys(FLOORS).map((k) => [k, true])) });
+  }, 120_000);
+});
+
 // ── a recovered buffer is a PREFIX, and a prefix cuts mid-path ────────────────────────
 //
 // The partial-recovery branch parsed `err.stdout` whole. Measured on a real busy worktree:
