@@ -550,3 +550,30 @@ the stated reason chiefs return dispatch packets instead of spawning workers the
 orchestration tier rests on a false premise. Not changed here; flagged for the Founder.
 **Reversibility:** reversible — the disposition is one line in `~/.warroom/ledger/global.yml`
 **Owner:** ceo · **Affects:** `~/.warroom/ledger/global.yml`, and the T2 tier design in `AGENTS.md`/`ceo.md`
+
+## 2026-08-15 — RCEs closed by allowlist, not by an Origin check; and the Origin check was a CEO error
+
+**Context:** Three confirmed RCEs on `main` (git `core.fsmonitor` via the conflicts sweep — *and that request
+renders the worktree as clean*; `node <discovered-project>/scripts/ledger.mjs` via `/api/belief` with
+`?project=` choosing whose code runs; a claim's `evidence.cmd` reaching `/bin/sh -c`). A suspected fourth at
+`fleet.ts:131` was traced and **ruled out** — `script` resolves to `REPO_ROOT` from `import.meta.url`, and
+both reachable entry points (`/api/fleet`, `routes/stream.ts:86`) hard-pass it. Enumeration confirmed
+exhaustive. All three share one premise: **discovery implies trust.**
+**Decision:** **Allowlist trusted roots**, seeded from the 19 discovered projects, **plus** reject
+`Sec-Fetch-Site: cross-site`. Founder decision, 2026-08-15. Rejected: stop-shelling (`conflicts.ts` cannot
+survive it — `git status` has no honest in-process equivalent); accept-and-bound alone (closes the cross-site
+browser vector *only*).
+**Measurement that changed the design:** the CEO proposed an `Origin` check as "no-regret" and asked for it to
+be checked rather than assumed. It was, twice, in a real browser: **`Origin` is absent on `<img>`, `<script>`,
+`<link rel=stylesheet>`, form GET and no-cors `fetch` — only CORS `fetch` sends it.** So the check must treat
+absent as allowed and every drive-by subresource vector passes — *a guard satisfied while the property it
+protects is violated*, proposed while quoting the section that names that class. `Sec-Fetch-Site` is sent on
+all of them and discriminates correctly.
+**Binding constraint on wording:** describe it as *"blocks cross-site browser requests"*, **never** *"blocks
+drive-by"*. `same-site` is allowed, so any other service on the user's loopback retains all three RCEs, and a
+non-browser client sends no such header at all. No header check can reach that case.
+**Second binding constraint:** an unlisted project must never render as *absent* — reuse `EXCLUDED_REASON` so
+narrowing is visible. A security control that silently hides data is a new instance of the defect class.
+**Reversibility:** reversible — the allowlist is config; the header check is one middleware
+**Owner:** ceo · **founder decision** · **Affects:** `mission-control/server/projects.ts`,
+`mission-control/server/routes/*`, and anyone running Mission Control against a multi-project tree
