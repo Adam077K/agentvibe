@@ -14,8 +14,10 @@
 # rule to blocking.
 #
 # What it enforces:
-#   1. A session file matching the branch slug carries `qa_verdict: PASS`,
+#   1. A session file ADDED OR MODIFIED IN THIS PR carries `qa_verdict: PASS`,
 #      or the founder posted an explicit `BYPASS REASON:` under a bypass label.
+#      (Slug matching against the whole sessions directory was removed 2026-08-15 —
+#      it let a branch inherit a PASS written for work already merged to main.)
 #   2. A PR touching a path the tier map floors at `irreversible` carries the
 #      `risk:irreversible` label.
 #   3. Such a PR's session file declares `tier: full` or `tier: irreversible`.
@@ -69,28 +71,23 @@ jobs:
 
           echo "=== QA Gate check for PR #${PR_NUMBER} on branch ${HEAD_BRANCH} ==="
 
-          # ── Step 1: Extract task slug from branch name ──────────────────────
-          # Branch patterns: feat/<slug>, fix/<slug>, chore/<slug>
-          # F10: Use tr to collapse internal slashes to dashes so multi-segment
-          # branches (feat/scope/slug) produce a single flat slug that matches
-          # the session file naming pattern *-scope-slug.md.
-          TASK_SLUG=$(echo "$HEAD_BRANCH" | sed -E 's|^(feat\|fix\|chore)/||' | tr / -)
-          echo "Task slug: ${TASK_SLUG}"
-
           # ── Step 2: Look for session file ───────────────────────────────────
-          # First try slug match: docs/08-agents_work/sessions/*-<task-slug>.md
-          # Fallback: any session file added/modified in this PR's diff (handles
-          # multi-phase PRs and CEO-orchestrator branches that don't follow the
-          # feat/<slug> convention — session files are named per phase, not per branch).
+          # THE VERDICT MUST COME FROM THIS PR'S OWN DIFF, AND ONLY FROM IT.
+          #
+          # Removed 2026-08-15: a slug match over the whole sessions directory. It resolved
+          # the branch name against session files ALREADY MERGED TO MAIN, so a branch whose
+          # slug happened to match an earlier phase inherited a `qa_verdict: PASS` written
+          # for entirely different work — and `sort | tail -1` picked one arbitrarily when
+          # several matched. This gate's record is 34 PASS and 0 refusals on the substance
+          # of any change; that glob is one of the three reasons.
+          #
+          # The PR-diff path below was already the fallback and was already correct. Deleting
+          # the glob makes it unconditional. This is a pure subtraction — no new logic.
           SESSION_DIR="docs/08-agents_work/sessions"
           SESSION_FILE=""
 
-          if [ -d "$SESSION_DIR" ]; then
-            SESSION_FILE=$(find "$SESSION_DIR" -maxdepth 1 -name "*-${TASK_SLUG}.md" -type f | sort | tail -1)
-          fi
-
           if [ -z "$SESSION_FILE" ]; then
-            echo "No session file matching slug '${TASK_SLUG}'. Falling back to PR diff."
+            echo "Reading the verdict from this PR's own session files (slug matching removed — it inherited verdicts from merged work)."
             # List session files added/modified in this PR.
             # F14: use gh api --paginate (gh pr view --json files caps at 100 files;
             # large rethink/refactor PRs touching 300+ files would silently miss
@@ -136,7 +133,7 @@ jobs:
               fi
             fi
           else
-            echo "✗ No session file found for slug or in PR diff"
+            echo "✗ No session file added or modified in this PR"
           fi
 
           # ── Step 4: Check for bypass label ─────────────────────────────────
@@ -189,13 +186,15 @@ jobs:
           echo ""
           echo "To pass this check, ONE of the following must be true:"
           echo ""
-          echo "  1. A session file at docs/08-agents_work/sessions/*-${TASK_SLUG}.md"
+          echo "  1. A session file ADDED OR MODIFIED IN THIS PR, under"
+          echo "     docs/08-agents_work/sessions/,"
           echo "     must contain the line: qa_verdict: PASS"
           echo ""
           echo "  2. The PR must have the 'qa-lead-bypass' label AND a comment from"
           echo "     the authorized user containing 'BYPASS REASON:'"
           echo ""
-          echo "Session file searched for: ${SESSION_DIR}/*-${TASK_SLUG}.md"
+          echo "Searched: session files in this PR's diff under ${SESSION_DIR}/"
+          echo "          (slug matching was removed — it inherited verdicts from merged work)"
           echo "Session file found:        ${SESSION_FILE:-none}"
           exit 1
 
@@ -306,20 +305,17 @@ jobs:
 
           echo "risk:irreversible label detected — checking for tier: full|irreversible in session file"
 
-          # Re-derive slug the same way as the QA gate step
-          TASK_SLUG=$(echo "$HEAD_BRANCH" | sed -E 's|^(feat\|fix\|chore)/||' | tr / -)
+          # Slug matching removed 2026-08-15 here too — see the QA gate step above. This is
+          # the irreversible-tier check, so inheriting a merged PASS matters MORE here, not
+          # less: this is the path that decides whether a migration or a workflow edit gets
+          # through.
           SESSION_DIR="docs/08-agents_work/sessions"
           SESSION_FILE=""
 
-          if [ -d "$SESSION_DIR" ]; then
-            SESSION_FILE=$(find "$SESSION_DIR" -maxdepth 1 -name "*-${TASK_SLUG}.md" -type f | sort | tail -1)
-          fi
-
-          # F14: fallback to PR diff via paginated gh api when slug doesn't match
-          # (large rethink/refactor PRs touching 300+ files exceed gh pr view's
-          # 100-file cap; use --paginate on the raw API to inspect all files)
+          # F14: read the PR diff via paginated gh api (large refactor PRs touching 300+
+          # files exceed gh pr view's 100-file cap; --paginate on the raw API sees all).
           if [ -z "$SESSION_FILE" ]; then
-            echo "No session file matching slug '${TASK_SLUG}'. Falling back to PR diff."
+            echo "Reading the tier from this PR's own session files."
             CHANGED_SESSIONS=$(gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate \
               --jq '.[].filename | select(test("^docs/08-agents_work/sessions/.*\\.md$"))' || echo "")
             if [ -n "$CHANGED_SESSIONS" ]; then
@@ -334,7 +330,7 @@ jobs:
           if [ -z "$SESSION_FILE" ] || [ ! -f "$SESSION_FILE" ]; then
             echo ""
             echo "BLOCKED — the risk:irreversible label requires a session file with tier: full or tier: irreversible."
-            echo "   No session file found for slug: ${TASK_SLUG} or in PR diff"
+            echo "   No session file found in this PR's diff"
             echo "   Per 2026-05-16 board decision #3: risk:irreversible requires full or irreversible tier review."
             exit 1
           fi

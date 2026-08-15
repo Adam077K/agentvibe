@@ -593,9 +593,28 @@ function lintLensFile(filePath, kind) {
       const families = Array.isArray(l.model_families) ? l.model_families : [];
       if (families.length === 0) issues.push(`${at}: model_families is required`);
       if (l.independent === true) {
-        // Shared with risk:high claim panels — see independenceIssue() in claims.js.
-        const problem = independenceIssue(families, 2, `${at}: independent:true`);
-        if (problem) issues.push(problem);
+        // A lens claiming independence must say HOW, because the two modes are checked
+        // differently and an unstated mode defaults to the one that cannot be satisfied here.
+        // See the header of review-lenses.yml for why `provenance` exists.
+        if (l.independence === 'vendor' || l.independence === undefined) {
+          // Shared with risk:high claim panels — see independenceIssue() in claims.js.
+          const problem = independenceIssue(families, 2, `${at}: independent:true`);
+          if (problem) issues.push(problem);
+        } else if (l.independence === 'provenance') {
+          // One family is fine; what must hold is that the judge never saw the producer's
+          // case. That is a property of the DISPATCH, not of this file, so the lint's job
+          // is to refuse a lens that claims provenance independence while also declaring a
+          // scope the reviewer cannot obtain without the producer handing it over.
+          if (l.scope === 'whole-artifact') {
+            issues.push(`${at}: independence:provenance is incompatible with scope:whole-artifact — ` +
+              `judging the whole artifact requires the producer's own account of it, which is the ` +
+              `priming this mode exists to prevent. Use scope:diff-only or independence:vendor`);
+          }
+        } else {
+          issues.push(`${at}: independence must be 'vendor' or 'provenance', got '${l.independence}'`);
+        }
+      } else if (l.independence !== undefined) {
+        issues.push(`${at}: independence is declared but independent is not true`);
       }
     }
   });

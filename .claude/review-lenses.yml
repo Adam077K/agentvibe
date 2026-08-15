@@ -4,11 +4,31 @@
 # lens says how to JUDGE it. The reviewer engine is read-only and loads only these.
 #
 # THE RULE THIS FILE EXISTS TO ENFORCE
-# A lens marked `independent: true` must name at least two distinct model families. A panel
-# of one family is one opinion wearing several hats, and reading it as agreement is how a
-# review comes back confidently wrong. The check is `independenceIssue()` in
-# scripts/lib/claims.js — the same function that enforces it for `risk: high` claims,
-# because two implementations of an independence rule will disagree.
+# A lens marked `independent: true` must say HOW it is independent, via `independence:`.
+# A panel of one family is one opinion wearing several hats, and reading it as agreement is
+# how a review comes back confidently wrong. That diagnosis is right and is not being
+# softened. What changed on 2026-08-15 is the cure.
+#
+#   independence: vendor      — >= 2 distinct model families, checked by independenceIssue()
+#                               in scripts/lib/claims.js, the same function that enforces it
+#                               for `risk: high` claims.
+#   independence: provenance  — ONE family is permitted, but the judge must not see the
+#                               producer's reasoning, its self-assessment, or its claims
+#                               about its own work. Independence of EVIDENCE, not of vendor.
+#
+# WHY THE SECOND MODE EXISTS. `vendor` was unsatisfiable here — no second family is
+# configured, so three lenses declared a capability that could not run, which is worse than
+# not declaring it. And the evidence says vendor identity is a weak proxy for error
+# independence: correlation persists across providers, while FRAMING dominates. In one
+# study, telling a reviewer the code was believed correct collapsed defect detection from
+# 97.2% to 3.6%; redacting that framing recovered it to 94-100%
+# (arXiv:2603.18740, accessed 2026-08-15). A judge that never saw the producer's case
+# cannot be primed by it. That is buildable today, for nothing.
+#
+# THE SECOND-FAMILY QUESTION IS DEFERRED, NOT CLOSED. Founder decision 2026-08-15: revisit
+# after this gate has actually refused something. Its record is 34 PASS and 0 BLOCK.
+# `independence: vendor` remains valid and is what a lens should declare if a second family
+# is ever provisioned.
 #
 # `blocking_severities` is deliberately narrow. Every source agent for these lenses says
 # the same thing in its own words: keep the blocking signal clean, or reviewers learn to
@@ -42,7 +62,8 @@ review_lenses:
     blocking_severities: [critical, high]
     scope: diff-only
     independent: true
-    model_families: [anthropic, openai]
+    independence: provenance
+    model_families: [anthropic]
     sources: ["git:.claude/agents/security-engineer.md@cda6de9", "git:.claude/agents/adversary-engineer.md@cda6de9"]
 
   - id: adversarial
@@ -55,7 +76,8 @@ review_lenses:
     blocking_severities: [critical, high]
     scope: diff-only
     independent: true
-    model_families: [anthropic, openai]
+    independence: provenance
+    model_families: [anthropic]
     sources: ["git:.claude/agents/adversary-engineer.md@cda6de9"]
 
   - id: craft
@@ -81,7 +103,8 @@ review_lenses:
     blocking_severities: [p1]
     scope: diff-only
     independent: true
-    model_families: [anthropic, openai]
+    independence: provenance
+    model_families: [anthropic]
     sources: ["git:.claude/agents/researcher.md@cda6de9", "git:.claude/agents/research-lead.md@cda6de9"]
 
   - id: voice
