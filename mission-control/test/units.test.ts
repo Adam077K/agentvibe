@@ -524,4 +524,67 @@ describe('IndexStore read counters', () => {
     // could ever detect.
     expect(appended.bytesRead).toBe(added);
   });
+
+  // ── THE BUCKETS PARTITION THE SCAN ────────────────────────────────────────────────────
+  //
+  // `filesScanned === filesRead + filesSkipped + filesUnread` is the cold-path invariant, and
+  // it is deterministic: a file is scanned once and lands in exactly one bucket, on every
+  // machine, whatever the clock is doing. It exists because the pre-existing
+  // `filesScanned === filesRead` stops being true the moment a build can skip — and a sum that
+  // silently fails to close is how "the skip logic has a bug" gets diagnosed for an hour when
+  // the answer was one unreadable transcript.
+  test('every scanned file lands in exactly one bucket: read, skipped, or unread', () => {
+    const { project } = fixture([2, 2, 2]);
+    const store = new IndexStore();
+
+    const cold = store.buildCold([project]);
+    expect(cold.filesScanned).toBe(cold.filesRead + cold.filesSkipped + cold.filesUnread);
+    expect(cold.filesSkipped).toBe(0); // no prior state exists, so nothing CAN be skipped…
+    expect(cold.filesRead).toBe(3); // …and the old equality still holds exactly as before
+    expect(cold.filesScanned).toBe(cold.filesRead);
+
+    const warm = store.refresh([project]);
+    expect(warm.filesScanned).toBe(warm.filesRead + warm.filesSkipped + warm.filesUnread);
+    // NON-VACUITY: the invariant above is trivially true when every bucket is 0. This is the
+    // assertion that the skip bucket actually filled — i.e. the sum was tested on real work.
+    expect(warm.filesSkipped).toBe(3);
+    expect(warm.filesRead).toBe(0);
+  });
+
+  // A cold build performs NO boundary probes, and that is what keeps `bytesRead` a clean
+  // transcript-byte count there — which test/live.test.ts brackets against an independent walk
+  // of the corpus. A probe folded into that figure would quietly break the oracle.
+  test('a cold build verifies nothing, so its byte count is transcript bytes only', () => {
+    const { project, bytes } = fixture([4, 4]);
+    const r = new IndexStore().buildCold([project]);
+    expect(r.filesVerified).toBe(0);
+    expect(r.verifyBytesRead).toBe(0);
+    expect(r.filesStale).toBe(0);
+    expect(r.bytesRead).toBe(bytes);
+  });
+
+  // The mtime-moved-but-size-unchanged case, which is NOT hypothetical: measured on the real
+  // corpus 2026-08-16, five transcripts across two unrelated projects had their mtimes
+  // rewritten to the same millisecond (four by exactly 3600.0 s) with byte-identical content.
+  // The cheap key calls that "changed"; the disk says nothing was added. It must not be
+  // reported as a read, because nothing was read.
+  test('a metadata touch with no new bytes is counted as unread, not as a read', () => {
+    const { project } = fixture([3, 3]);
+    const store = new IndexStore();
+    store.buildCold([project]);
+
+    const target = listTranscripts(project.transcriptDirs[0]!)[0]!;
+    const sizeBefore = fs.statSync(target).size;
+    const future = new Date(Date.now() + 3600_000);
+    fs.utimesSync(target, future, future);
+    // NON-VACUITY: the touch really did move mtime and really did not change the size.
+    expect(fs.statSync(target).size).toBe(sizeBefore);
+
+    const r = store.refresh([project]);
+    expect(r.filesChanged).toBe(1); // the key says changed…
+    expect(r.filesRead).toBe(0); // …and not one transcript byte was read
+    expect(r.bytesRead).toBe(0);
+    expect(r.filesUnread).toBe(1);
+    expect(r.filesScanned).toBe(r.filesRead + r.filesSkipped + r.filesUnread);
+  });
 });
