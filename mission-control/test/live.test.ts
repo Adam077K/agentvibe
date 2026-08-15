@@ -271,6 +271,23 @@ describe('GET /api/sessions performance against the real corpus', () => {
    * band and below the assertion, so a genuinely pathological run — the 4,162 ms/GB class —
    * is captured with its pageins and swapout deltas attached rather than passing silently and
    * costing another investigation. Evidence without a flaky red.
+   *
+   * THIS IS NOT AN UNFINISHED ASSERTION, AND PROMOTING IT TO ONE WAS PROPOSED AND DECLINED —
+   * written down here because the next person to read a threshold that does not fail anything
+   * will reasonably assume someone forgot, and "fixing" it would undo the whole point of this
+   * rewrite. The reasoning, in full:
+   *
+   *   The only run known to exceed this level is the 12,610 ms outlier, ~4,162 ms/GB. #50
+   *   could not reproduce it and could not attribute it — it needs ~0.24 GB/s, 2.5x worse
+   *   than anything reachable by evicting page cache, and zero swapouts were seen across 30+
+   *   instrumented builds. So it is machine state that nobody has yet explained. Failing on
+   *   it would be this assertion reporting machine state as code quality ONE MORE TIME, in
+   *   the file rewritten to stop doing exactly that. Warning on it produces the pageins and
+   *   swapout deltas that would settle the question, at the cost of nothing.
+   *
+   * The bar for turning this red is not "it fired again". It is "the diagnostic below shows
+   * the cause is in the code" — at which point the deterministic assertions above should be
+   * catching it instead, and this constant is still not the right instrument.
    */
   const WARN_MS_PER_GB = 2_500;
   /** Below this the divisor dominates and a ms/GB figure means nothing; the rate is withheld. */
