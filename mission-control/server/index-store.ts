@@ -45,6 +45,44 @@ export interface RefreshResult {
   filesScanned: number;
   filesChanged: number;
   filesRemoved: number;
+  /**
+   * How many times a transcript was actually opened and read during this build, and how many
+   * bytes came back — COUNTED AT THE READ ITSELF, not inferred from the scan.
+   *
+   * PROVENANCE FIRST, ASSERTION SECOND. `filesScanned` and `bytesRead` are already what this
+   * codebase reports about a scan: `WindowUsage` carries both (server/lib/usage.ts:32) and
+   * `hashableFleet` deliberately keeps them in the fleet payload as "provenance behind the
+   * burn figure" while excluding them from the change hash (server/state.ts:55-61). These are
+   * the same two figures for the session index — the component whose entire performance
+   * problem is that a cold build reads the whole corpus, and which until now reported how many
+   * files it *looked at* and never how much it *read*.
+   *
+   * AND THEY MAKE A DETERMINISTIC INVARIANT AVAILABLE, which is why they exist in this shape.
+   * A cold build must open each scanned transcript EXACTLY ONCE, which is the PAIR
+   * `filesScanned === filesRead === distinctFilesRead` — see `distinctFilesRead` for why the
+   * first equality alone is not enough. That is a property of the algorithm rather than of the
+   * machine: a re-read, a retry loop or a lost early exit breaks it immediately and identically
+   * on every machine, where the clock cannot tell a 2x regression from a busy afternoon. See
+   * test/live.test.ts for why that distinction is the whole point.
+   *
+   * Counted at the read site so the two cannot drift: nothing outside `readFull`/`readAppended`
+   * may increment them.
+   */
+  filesRead: number;
+  bytesRead: number;
+  /**
+   * How many DISTINCT paths were read. `filesRead === distinctFilesRead` is the half of "exactly
+   * once" that a plain count cannot express, and leaving it out made the invariant weaker than
+   * the sentence describing it:
+   *
+   *   · a transcript read twice inside one `readFull` moves `filesRead` twice and this once;
+   *   · a directory listed twice in `transcriptDirs` moves `filesScanned` AND `filesRead`
+   *     together, so `filesRead === filesScanned` stays true while the corpus is read twice.
+   *
+   * Both are exactly the re-read regression the counter exists to catch, and both are invisible
+   * without this field.
+   */
+  distinctFilesRead: number;
 }
 
 /**
@@ -103,6 +141,20 @@ function summarize(entry: FileEntry): SessionSummary {
 export class IndexStore {
   private files = new Map<string, FileEntry>();
   private builtAt = 0;
+  /** Incremented ONLY by readFull/readAppended; zeroed per build by `startCounting`. */
+  private reads = 0;
+  private bytes = 0;
+  private readPaths = new Set<string>();
+
+  /**
+   * What the last build actually did — the same object it returned.
+   *
+   * Kept so a caller that did not invoke the build directly can still see its provenance:
+   * `/api/sessions` goes through `LiveState.sessionsSlice`, which calls `refresh()` and keeps
+   * the payload, so without this the figures would be produced and immediately discarded.
+   * Null until the first build.
+   */
+  private last: RefreshResult | null = null;
 
   get lastBuiltAt(): number {
     return this.builtAt;
@@ -112,9 +164,21 @@ export class IndexStore {
     return this.files.size;
   }
 
+  get lastResult(): RefreshResult | null {
+    return this.last;
+  }
+
+  /** Zeroes the per-build counters. Called at the top of every build, never elsewhere. */
+  private startCounting(): void {
+    this.reads = 0;
+    this.bytes = 0;
+    this.readPaths.clear();
+  }
+
   /** Full read of every transcript in every project. No prior state is reused. */
   buildCold(projects: Project[]): RefreshResult {
     this.files.clear();
+    this.startCounting();
     let scanned = 0;
     for (const project of projects) {
       for (const dir of project.transcriptDirs) {
@@ -125,7 +189,15 @@ export class IndexStore {
       }
     }
     this.builtAt = Date.now();
-    return { filesScanned: scanned, filesChanged: scanned, filesRemoved: 0 };
+    this.last = {
+      filesScanned: scanned,
+      filesChanged: scanned,
+      filesRemoved: 0,
+      filesRead: this.reads,
+      bytesRead: this.bytes,
+      distinctFilesRead: this.readPaths.size,
+    };
+    return this.last;
   }
 
   /**
@@ -135,6 +207,7 @@ export class IndexStore {
    * the index.
    */
   refresh(projects: Project[]): RefreshResult {
+    this.startCounting();
     let scanned = 0;
     let changed = 0;
     const seen = new Set<string>();
@@ -176,7 +249,19 @@ export class IndexStore {
     }
 
     this.builtAt = Date.now();
-    return { filesScanned: scanned, filesChanged: changed, filesRemoved: removed };
+    // A REFRESH IS NOT A COLD BUILD, and `filesRead === filesScanned` deliberately does NOT
+    // hold here: the whole point of refresh() is that an untouched file is skipped without
+    // being read. `filesRead === filesChanged` is the corresponding property, and it is
+    // asserted in test/units.test.ts rather than here.
+    this.last = {
+      filesScanned: scanned,
+      filesChanged: changed,
+      filesRemoved: removed,
+      filesRead: this.reads,
+      bytesRead: this.bytes,
+      distinctFilesRead: this.readPaths.size,
+    };
+    return this.last;
   }
 
   private readFull(file: string, projectId: string, stKnown?: fs.Stats) {
@@ -185,8 +270,18 @@ export class IndexStore {
     try {
       st = stKnown ?? fs.statSync(file);
       text = fs.readFileSync(file, 'utf8');
+      // COUNTED IMMEDIATELY AFTER THE READ ITSELF, not once per call to this method, and the
+      // difference is the whole point: a second `readFileSync` added inside this try block
+      // moves `reads` twice while `readPaths` stays at one, so the re-read shows up. Counting
+      // per call would have missed it. Bytes are taken with Buffer.byteLength rather than
+      // `text.length`, which is UTF-16 code units — the two agree only for ASCII, and
+      // transcripts are not.
+      this.reads++;
+      this.bytes += Buffer.byteLength(text, 'utf8');
+      this.readPaths.add(file);
     } catch {
-      return;
+      return; // NOT counted: a read that threw is not a read, and counting it would make
+      // `filesRead === filesScanned` true on a corpus half of which could not be opened.
     }
     this.files.set(file, {
       size: st.size,
@@ -208,8 +303,11 @@ export class IndexStore {
       fs.readSync(fd, buf, 0, len, prev.size);
       fs.closeSync(fd);
       chunk = buf.toString('utf8');
+      this.reads++;
+      this.bytes += Buffer.byteLength(chunk, 'utf8');
+      this.readPaths.add(file);
     } catch {
-      chunk = '';
+      chunk = ''; // as in readFull: a failed read is not counted
     }
     this.files.set(file, {
       size: st.size,
