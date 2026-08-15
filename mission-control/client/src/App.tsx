@@ -20,7 +20,7 @@ import {
   useMissionControlStream,
   useNow,
   type BeliefSummary,
-  type ConflictReport,
+  type ConflictsPayload,
   type ConnectionState,
   type InboxPayload,
   type ProjectDetail,
@@ -94,9 +94,21 @@ function BeliefPanel({ now, onFreshness }: { now: number; onFreshness: (f: Fresh
 }
 
 function ConflictsPanel({ onFreshness }: { onFreshness: (f: Freshness) => void }) {
-  const { data, loading, error, loadedAt, failedAt, refetch } = useEndpoint<{ reports: ConflictReport[] }>('/api/conflicts');
+  const { data, loading, error, loadedAt, failedAt, refetch } = useEndpoint<ConflictsPayload>('/api/conflicts');
   useEffect(() => onFreshness({ loadedAt, failedAt, loading }), [loadedAt, failedAt, loading, onFreshness]);
-  return <ConflictsView reports={data?.reports ?? null} loading={loading} error={error} onRefresh={refetch} />;
+  // `untrusted` and `trust.issues` are FORWARDED, not defaulted away. A payload carrying
+  // sixteen excluded projects, rendered as none, is the silent narrowing the allowlist exists
+  // to avoid — arriving one level above the server that got it right.
+  return (
+    <ConflictsView
+      reports={data?.reports ?? null}
+      untrusted={data?.untrusted ?? []}
+      trustIssues={data?.trust.issues ?? []}
+      loading={loading}
+      error={error}
+      onRefresh={refetch}
+    />
+  );
 }
 
 function InboxPanel({ onFreshness }: { onFreshness: (f: Freshness) => void }) {

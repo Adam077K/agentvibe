@@ -9,11 +9,19 @@
 // Roots default to ~/VibeCoding, overridable (colon-separated, like PATH) via
 // MC_PROJECT_ROOTS so this is testable against a fixture tree without touching the real
 // one.
+//
+// DISCOVERY IS NOT TRUST, as of the allowlist. Every project found is still returned — a
+// project that vanishes from this list because it is untrusted would be a silent narrowing,
+// and "you have no such project" is the answer nobody investigates. What each project now
+// carries is `trust`: whether Mission Control may run a program for it, and when it may not,
+// the reason and the file to edit. Nothing in this file executes anything; the callers that
+// do are the ones that read `trust`. See server/trust.ts for the three RCEs behind it.
 
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { projectsDir as claudeProjectsDir } from './lib/usage.ts';
+import { readTrustList, trustFilePath, trustStateFor, type TrustList, type TrustState } from './trust.ts';
 
 export interface RegistryEntry {
   /** e.g. "ceo-1" in the line "ceo-1:1786445435". */
@@ -61,6 +69,13 @@ export interface Project {
   ledgerIndex: LedgerIndexInfo;
   eventsPath: string;
   eventsPathSource: 'warroom.yml' | 'default';
+  /**
+   * Whether Mission Control may run a program for this project, and why not when it may not.
+   * Read from the trusted-projects list; see server/trust.ts. A collector or route that
+   * spawns a subprocess against `root` checks this first — the field exists so the answer is
+   * carried WITH the project rather than recomputed at each call site.
+   */
+  trust: TrustState;
 }
 
 export interface DiscoverOptions {
@@ -68,6 +83,11 @@ export interface DiscoverOptions {
   roots?: string[];
   /** Overrides where ~/.claude/projects is read from (usage.js's own override too). */
   claudeProjectsRoot?: string;
+  /**
+   * Overrides the trusted-projects file. An in-process seam for tests and for the CLI, so a
+   * fixture tree can be trusted without writing to the real ~/.warroom/trusted-projects.
+   */
+  trustFile?: string;
 }
 
 /**
@@ -197,7 +217,7 @@ function transcriptDirsFor(root: string, claudeRoot: string): string[] {
     .sort();
 }
 
-function buildProject(root: string, claudeRoot: string): Project {
+function buildProject(root: string, claudeRoot: string, trustList: TrustList): Project {
   const id = path.basename(root);
   const registry = readRegistry(root);
   const events = resolveEventsPath(root, id);
@@ -210,13 +230,35 @@ function buildProject(root: string, claudeRoot: string): Project {
     ledgerIndex: readLedgerIndex(root),
     eventsPath: events.path,
     eventsPathSource: events.source,
+    trust: trustStateFor(root, trustList),
   };
 }
 
-/** Discover every git repo directly under the configured roots. Read-only. */
-export function discoverProjects(opts: DiscoverOptions = {}): Project[] {
+export interface Fleet {
+  projects: Project[];
+  /**
+   * The trust list every project above was judged against — RETURNED rather than re-read by
+   * the caller, so a route reporting "these 3 were excluded, here is the file and the lines it
+   * refused" cannot be describing a different read of that file than the one that excluded
+   * them. Two reads of one file disagree eventually; this codebase has that defect written up
+   * nine times.
+   */
+  trustList: TrustList;
+}
+
+/**
+ * Discover every git repo directly under the configured roots, with the trust decision for
+ * each. Read-only — this function executes nothing, and writes nothing, including the trust
+ * file (seeding is explicit; see server/app.ts and scripts/trust.ts).
+ *
+ * The trust list is read ONCE per call and handed to every project, not re-read per project:
+ * one discovery pass must not be able to answer with two different trust lists, and a file
+ * edited mid-walk would do exactly that.
+ */
+export function discoverFleet(opts: DiscoverOptions = {}): Fleet {
   const roots = opts.roots ?? defaultRoots();
   const claudeRoot = opts.claudeProjectsRoot ?? claudeProjectsDir();
+  const trustList = readTrustList(opts.trustFile ?? trustFilePath());
   const projects: Project[] = [];
   const seenIds = new Set<string>();
 
@@ -231,12 +273,20 @@ export function discoverProjects(opts: DiscoverOptions = {}): Project[] {
       if (!entry.isDirectory()) continue;
       const dir = path.join(root, entry.name);
       if (!isGitRepo(dir)) continue;
-      const project = buildProject(dir, claudeRoot);
+      const project = buildProject(dir, claudeRoot, trustList);
       if (seenIds.has(project.id)) continue; // first root wins on an id collision
       seenIds.add(project.id);
       projects.push(project);
     }
   }
 
-  return projects.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  projects.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return { projects, trustList };
 }
+
+/** Every discovered project, trust stamped on each. The list itself is on discoverFleet(). */
+export function discoverProjects(opts: DiscoverOptions = {}): Project[] {
+  return discoverFleet(opts).projects;
+}
+
+export type { TrustList, TrustState };

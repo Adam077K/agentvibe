@@ -28,7 +28,8 @@ export type {
 } from '../../server/collectors/belief.ts';
 export type { ConflictReport, FileConflict, WorktreeChanges } from '../../server/collectors/conflicts.ts';
 export type { LedgerClaim } from '../../server/projects.ts';
-export type { ProjectDetail, InboxPayload, InboxProject } from '../../server/routes/api.ts';
+export type { ProjectDetail, InboxPayload, InboxProject, ConflictsPayload, UntrustedProject } from '../../server/routes/api.ts';
+export type { TrustState } from '../../server/trust.ts';
 export type { EmptyState } from '../../server/collectors/empty.ts';
 export type { EventsSummary } from '../../server/collectors/events.ts';
 export type { ProjectTranscriptStats } from '../../server/collectors/transcripts.ts';

@@ -17,7 +17,7 @@
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { discoverProjects, type DiscoverOptions, type Project } from './projects.ts';
+import { discoverFleet, type DiscoverOptions, type Project, type TrustList } from './projects.ts';
 import { IndexStore, type SessionSummary } from './index-store.ts';
 import { buildFleet, type FleetSummary } from './collectors/fleet.ts';
 
@@ -77,6 +77,12 @@ export function hashableSessions(payload: SessionsSlice): unknown {
 export class LiveState {
   private store = new IndexStore();
   private built = false;
+  /**
+   * The trust list of the LAST refresh — the very same read that decided every project's
+   * `trust`, kept rather than re-read, so a route can name the file and its refused lines
+   * without a second read of that file that could disagree with the first.
+   */
+  private lastTrustList: TrustList | null = null;
 
   /**
    * `discoverOpts` is forwarded verbatim to discoverProjects() — the same roots/claude-root
@@ -94,9 +100,19 @@ export class LiveState {
     return this.built;
   }
 
+  /**
+   * The trust list behind the projects the last refresh() returned, or null before the first
+   * one. Never re-reads the file: a route that calls refresh() and then asks for this is
+   * describing that refresh, not a newer one.
+   */
+  get trustList(): TrustList | null {
+    return this.lastTrustList;
+  }
+
   /** Discovers the current fleet and keeps the session index in sync with it. */
   refresh(): Project[] {
-    const projects = discoverProjects(this.discoverOpts);
+    const { projects, trustList } = discoverFleet(this.discoverOpts);
+    this.lastTrustList = trustList;
     if (!this.built) {
       this.store.buildCold(projects);
       this.built = true;

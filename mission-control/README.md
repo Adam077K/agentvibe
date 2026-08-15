@@ -25,6 +25,94 @@ Then open <http://127.0.0.1:4301>. `curl http://127.0.0.1:4300/api/health` →
 `bun run build` produces `client/dist/`. Nothing serves it yet — a single-port production
 mode lands with PR5; the build is here because it is what proves the client compiles.
 
+## Trusted projects — which directories may have programs run for them
+
+Mission Control shells out. `git status` runs with its working directory **inside** a
+discovered worktree, and git there honours that repository's own `.git/config` — where
+`core.fsmonitor` names a program git executes. `node <project>/scripts/ledger.mjs` runs the
+project's own file. On 2026-08-14 that produced three confirmed RCEs, reachable by any
+repository under `~/VibeCoding` that you did not write
+([SECURITY-FINDINGS-2026-08-14.md](../docs/03-system-design/SECURITY-FINDINGS-2026-08-14.md)).
+
+All three shared one premise: **discovery implied trust.** So discovery no longer does.
+
+```bash
+bun run trust list            # what is trusted, and what was discovered and is not
+bun run trust seed            # write the list from what is discovered right now
+bun run trust add <path>      # trust one project
+bun run trust remove <path>   # stop trusting one
+```
+
+The list is `~/.warroom/trusted-projects` — one absolute path per line, `#` for comments,
+hand-editable. It lives there and not in this repository for two reasons: `mission-control`
+itself sits inside `~/VibeCoding/agentvibe`, which is one of the directories the list
+governs, so a file in the tree would be inside the boundary it defines; and the paths are
+machine-specific, so committing them makes one person's fleet another person's trust
+decision. `MC_TRUSTED_FILE` points at a different file (tests, a second instance); it does
+not carry the list.
+
+Matching is **exact path equality** after canonicalisation. No globs, no prefixes — a prefix
+rule spells "everything under `~/VibeCoding` is trusted", which is the premise above wearing
+a config file.
+
+**On a machine with no list, nothing is trusted, and nothing is hidden.** Every project is
+still discovered and still shown; each one renders with the reason it was excluded and the
+command that includes it. `bun run trust seed` writes the whole discovered fleet in one go so
+nobody types nineteen paths — and the file it writes says, in its own header, that seeding
+trusted whatever was already on disk and checked none of it. What the list buys is that every
+project appearing *after* the seed is a decision.
+
+The server does not write this file. `bun run trust` does. `server/**` mutates no disk at all
+— `test/crosscheck.test.ts` fails on a write call site anywhere under it — and a trust
+decision made silently at first boot would be the one thing a trust list must never do.
+
+**What this does not fix.** An allowlisted project that later becomes hostile — a dependency
+you pulled, a clone you forgot writing — is still full RCE. This converts *trust what you
+find* into *trust what you named*. That is a real reduction and it is not a fix.
+
+**What is still ungated, stated rather than left to be found.** `/api/fleet` runs
+`git worktree list --porcelain` with its working directory inside every discovered project,
+trusted or not, to produce each row's worktree count. Measured on 2026-08-15 through that
+route: the `core.fsmonitor` payload that F1 executes through `/api/conflicts` did **not** run
+under `git worktree list`. That is one measurement of one subcommand, not an audit of git's
+config surface, and it is the reason this section says "collectors that execute project code"
+rather than "every subprocess".
+
+## Cross-site browser requests are refused
+
+Every route answers `403` to a request carrying `Sec-Fetch-Site: cross-site`
+(`server/routes/guard.ts`, registered above the router in `server/app.ts` so a route added
+later is covered by default).
+
+Measured on 2026-08-15 in Chromium, attacker page on `localhost:4312` against the server on
+`127.0.0.1:4311`, read from the server side because the browser does not expose `sec-*` to
+page script:
+
+| request | `Sec-Fetch-Dest` | `Origin` | `Sec-Fetch-Site` | result |
+|---|---|---|---|---|
+| `<img src>` | `image` | **absent** | `cross-site` | 403 |
+| `<script src>` | `script` | **absent** | `cross-site` | 403 |
+| `<link rel=stylesheet>` | `style` | **absent** | `cross-site` | 403 |
+| form GET into an iframe | `iframe` | **absent** | `cross-site` | 403 |
+| `fetch(…, {mode:'no-cors'})` | `empty` | **absent** | `cross-site` | 403 |
+| `fetch(…)` with CORS | `empty` | `http://localhost:4312` | `cross-site` | 403 |
+| the user typing the URL | `document` | absent | `none` | **200** |
+
+**`Origin` was absent on five of the six attack vectors.** That is why this is not an Origin
+check: an Origin check must allow *absent* — the app's own same-origin GETs send none either
+— and once it does, the `<img>` vector walks straight through. `Origin` is checked alongside
+as defence in depth only.
+
+**It blocks cross-site browser requests. It does not "block drive-by".** `same-site` is
+allowed, so any other service on your loopback still reaches everything here, and a
+non-browser client (curl, any local script) sends no such header at all and is allowed. No
+header check can reach the loopback case. The wording in the code says the same thing.
+
+Verified end to end with the hostile project *deliberately trusted*, so the header guard was
+the only thing standing between the attacker's `<img>` and execution: the marker file was
+**not** written by the attacker's page, and **was** written by the user's own navigation to
+the same URL in the same browser against the same server.
+
 ## Ports
 
 | Port | What |
@@ -213,6 +301,22 @@ claims:
     evidence: {cmd: "node mission-control/check.mjs --probe", expect_exit: 0, expect_stdout: "bun .* ok"}
     valid_until: 2027-02-12
     confidence: 0.95
+  - id: c-mission-control-trusted-roots
+    assert: "Mission Control runs no program for a project absent from the trusted-projects list, and the three RCEs of 2026-08-14 execute through the real routes when it is present — so the barrier is measured against a live exploit rather than an inert fixture"
+    kind: behavior
+    scope: project
+    verified_by: command
+    evidence: {cmd: "cd mission-control && bun test test/trust.test.ts", expect_exit: 0}
+    valid_until: 2027-02-15
+    confidence: 0.9
+  - id: c-mission-control-cross-site-refused
+    assert: "Every route Mission Control serves answers 403 to Sec-Fetch-Site: cross-site, and performs no work for such a request — this blocks cross-site BROWSER requests only, since same-site is allowed and a non-browser client sends no such header"
+    kind: behavior
+    scope: project
+    verified_by: command
+    evidence: {cmd: "cd mission-control && bun test test/trust.test.ts -t 'guard is registered above every route'", expect_exit: 0}
+    valid_until: 2027-02-15
+    confidence: 0.9
   - id: c-mission-control-cold-start
     assert: "Mission Control's cold index build over the full local transcript corpus completes within the 10s budget"
     kind: behavior

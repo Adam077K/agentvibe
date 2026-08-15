@@ -28,6 +28,13 @@
 //    a SECOND ten-second event-loop stall, and it is now async for the same reason
 //    conflicts.ts is.
 //
+// AND IT ONLY RUNS FOR A TRUSTED PROJECT, as of the allowlist. `node <project>/scripts/
+// ledger.mjs` executes a file the project supplies — findings F2 and F3 — so collectBelief
+// checks project.trust before spawning and otherwise returns the same `{present: false,
+// reason}` shape every other failure here uses. See server/trust.ts. The rest of this
+// collector reads files and still runs, so Belief degrades to "no verdicts, and here is why"
+// rather than to a blank panel.
+//
 // EXACTLY ONE VERIFY INVOCATION, deliberately. `ledger.mjs verify` calls logEvent() for
 // every non-pass, appending to ~/.agentvibe/events.jsonl — so this route already mutates
 // disk transitively, through merged code, by a path the server/** write guard cannot see
@@ -41,7 +48,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import type { Project, LedgerClaim } from '../projects.ts';
+import type { Project, LedgerClaim, TrustState } from '../projects.ts';
 import { parseYamlSubset, validateClaim, waiverState, type ClaimDisposition } from '../lib/claims.ts';
 
 const execFileAsync = promisify(execFile);
@@ -459,6 +466,13 @@ export interface ScopeBand {
 export interface BeliefSummary {
   project: string;
   /**
+   * Whether a program was allowed to run for this project. CARRIED AS ITS OWN FIELD rather
+   * than left to be inferred from `ledger.present === false`: "the verify failed" and "the
+   * verify was never permitted to start" are different facts, and the view states the second
+   * one at the top of the panel instead of in a tooltip on a band halfway down.
+   */
+  trust: TrustState;
+  /**
    * COMPUTED, never configured: how many projects discovery walked off disk, and how many of
    * them carry a built claim ledger index. One is one population counted twice, so the
    * header's "N of M" cannot drift the way the Fleet headline's did.
@@ -483,7 +497,26 @@ export async function collectBelief(
 ): Promise<BeliefSummary> {
   const now = opts.now ?? Date.now();
   const global = readGlobalLedger(opts.globalLedgerPath ?? globalLedgerPath());
-  const ledger = await runLedgerVerify(project.root, opts);
+
+  // THE GATE FOR F2 AND F3, AND IT IS HERE RATHER THAN IN THE ROUTE BECAUSE THIS IS WHERE THE
+  // SPAWN IS. runLedgerVerify runs `node <project>/scripts/ledger.mjs` — the project's own
+  // file, as the user — and that script reaches `/bin/sh -c <string>` for any claim carrying
+  // an `evidence.cmd`, which is read from the project's own markdown. Both were re-executed
+  // through the real /api/belief route on 2026-08-15 before this line existed; the markers
+  // held `ran as 501` and `uid=501(adamks)`.
+  //
+  // `!== true` rather than `=== false`: a Project assembled without a trust decision at all
+  // (a hand-built object in a future caller) is UNTRUSTED, not trusted. Fail-closed is the
+  // only direction that survives somebody forgetting.
+  const trusted = project.trust?.trusted === true;
+  const ledger: LedgerVerifyResult = trusted
+    ? await runLedgerVerify(project.root, opts)
+    : {
+        present: false,
+        reason:
+          project.trust?.reason ??
+          `${project.root} carries no trust decision, so no program was run for it. See server/trust.ts.`,
+      };
 
   const projectClaims = project.ledgerIndex.present ? project.ledgerIndex.claims : [];
   const globalClaims = global.present ? global.claims : [];
@@ -525,6 +558,11 @@ export async function collectBelief(
 
   return {
     project: project.id,
+    trust: project.trust ?? {
+      trusted: false,
+      source: 'unknown',
+      reason: 'this Project carries no trust decision at all, so nothing was run for it',
+    },
     fleet: {
       projectsDiscovered: projects.length,
       projectsWithLedgerIndex: projects.filter((p) => p.ledgerIndex.present).length,
