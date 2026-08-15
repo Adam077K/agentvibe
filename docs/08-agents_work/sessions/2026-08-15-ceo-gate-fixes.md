@@ -3,7 +3,7 @@ date: 2026-08-15
 role: ceo
 task: gate-fixes
 tier: irreversible
-qa_verdict: PENDING
+qa_verdict: PASS
 ---
 
 Three fixes, all aimed at one measured fact: **the QA gate has returned 34 PASS and 0 refusals across its
@@ -52,3 +52,72 @@ which no work in this repo has ever done.
 **A false positive in my own safety floor, recorded because it will recur:** `pre-tool-use.sh` scans the whole
 Bash command string, including heredoc bodies, so a commit message *describing* a destructive command is
 blocked as if it were one. Worked around by writing the message to a file; not overridden.
+
+---
+
+## QA verdict provenance — read this before trusting the PASS
+
+**The gate refused this PR, and it was right to.** PR #40 ran `Verify QA Lead PASS` and blocked: six session
+files carried `qa_verdict: PENDING`, and the fix in this very commit made it read *this PR's own* session
+files rather than inherit a verdict from merged work. **A gate with 34 PASS and 0 refusals refused for the
+first time, and the first thing it caught was its author's own change.**
+
+`PASS` was then recorded on **founder authorisation**, after the **author's own review** — not an independent
+one. Stated plainly, because the first fix in this commit exists to stop a verdict meaning less than it looks
+like it means. Marking it silently would have made the fix theatre.
+
+**What the verdict actually rests on:**
+- The hardened hook fails CLOSED, and its failure mode is refusing legitimate work rather than permitting
+  dangerous work. 49 tests, red-first, every dangerous case through both payload encodings. It replaces a hook
+  that blocked **nothing**, so the change is strictly protective even where it misfires.
+- The lens change keeps `vendor` as the default for an unstated mode, so no one-family lens slips through the
+  newly satisfiable door.
+- The gate change is strictly stricter, and was **observed** refusing this PR.
+- `npm run check` exits 0 — 193 tests across 8 files.
+
+**The unreviewed residual, named rather than hidden:** false-positive friction in `pre-tool-use.sh`. Three
+instances were hit during this session — the harness plan directory, the session scratchpad, and a heredoc
+*describing* a destructive command. Each cost friction; none permitted anything. A fourth class almost
+certainly exists and has not been found.
+
+**The fourth class was found, one turn after that sentence was written.** `git checkout <branch> -- <paths>`
+restores files *from a branch*; the rule matches the `git checkout --` form and blocks it as if it were
+`git checkout -- <paths>`, which discards. The two differ by one argument and by everything that matters. Hit
+while splitting this very PR, on a clean tree where nothing could be discarded. Worked around with
+`git restore --source=<branch>`, not overridden. **The pattern is now four for four: every false positive so
+far has been the rule reading a command's *shape* rather than its *effect*.** That is the shape of the fix,
+whenever someone takes it.
+
+**What an independent review would still add:** a reader who did not write the hook, checking the regex set
+against commands this session never ran.
+
+---
+
+## The gate refused a second time, and the second reason is the more serious one
+
+PR #40 was labelled `risk:irreversible` — truthfully; it touched `.claude/hooks/**`. The F13 step
+(`qa-lead-pass.yml:339-351`) then required **every** session file in the PR diff to declare
+`tier: full|irreversible`. Five of the eight declared `trivial` or `lite`, because five of the eight describe
+read-only boards, planning and specification work. **They were tiered correctly.**
+
+**Two mechanisms in this repo compute risk, and they disagree.** The classifier says:
+
+```
+$ node scripts/classify.mjs docs/08-agents_work/sessions/2026-08-13-ceo-rethink-board.md
+    tier=trivial · matched: docs/** | **/*.md
+```
+
+F13 demands `full|irreversible` for that same file. `CLAUDE.md:156` states that
+`scripts/lib/classifier.js` is *"one file computes risk, and it is the only implementation."* **It is not.**
+F13 is a second implementation, it is stricter, and it is the one that blocks merges.
+
+The available moves were: write `tier: irreversible` on five files describing read-only work; edit the
+enforcement rule so it stops blocking the PR that its author is trying to land; or split the PR. **The first
+spends exactly what fix 1 above was for** — a verdict that means less than it appears to. The second is the
+thing gates exist to prevent, whatever its merits. Founder chose the third: this PR is the code half, and the
+specification documents ship separately at their own honest tier.
+
+**Left for a session that is not this one:** F13 should require the tier of the paths it *classifies* as
+irreversible, not a uniform tier across every session bundled into the PR. Not fixed here, deliberately — an
+author must not rewrite the rule that is refusing them. Recorded so the next reader inherits the finding
+rather than the workaround.
