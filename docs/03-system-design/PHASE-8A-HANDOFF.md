@@ -116,6 +116,34 @@ Corollaries, each earned:
   fix would have been aimed at the wrong thing while the entry closed green. **When you write down why
   something failed, either reproduce it or mark the cause UNTESTED.** The cheap instrument is to try to make
   it fail on purpose; a failure you cannot reproduce under the condition you blamed is not explained.
+- **Calibrate against the subject, not its neighbour.** A rate ceiling was set at 3,000 ms/GB from
+  `buildCold` (660–700 ms/GB), then re-measured against the thing actually being asserted on — the
+  `/api/sessions` route, which also pays discovery, the slice hash and a JSON round-trip — at **736–1,786
+  ms/GB**. 3,000 would have sat **inside the noise band**, which is the exact mistake the 10 s line made.
+  The two look like the same measurement and differ by ~2×. This is the same shape as the control-ratio
+  failure below (*a control that resembles the subject is not a control*) and as the producer/consumer split
+  that let five defects through this phase.
+- **A clock-based assertion inherits everything the clock is exposed to, so stop asserting on the clock.**
+  Proven twice at different scales. #43b: a timing gate cannot be made *subject*-independent, because work
+  the subject starts contaminates any window the test measures. #50: it cannot be made *machine*-independent
+  either — **any assertion tight enough to catch a 2× code regression will also fire on machine state, and
+  any loose enough to survive machine state cannot catch 2×**. The escape both times is the same: assert the
+  invariant you actually care about. Here that is *every transcript read exactly once, bytes read equal
+  corpus bytes*, and the two measurements that justify it are the ones to remember — **truncating every read
+  made the clock go 3722 → 2048 ms** (the stopwatch would have called it a win), and **duplicating a
+  directory dropped the rate to the warm floor**, so reading the corpus twice looked *better* on the clock.
+- **The repo's own best pattern does not always transfer, and "we already have a pattern for this" is not a
+  measurement.** `stallGateVerdict`'s control-ratio shape is good and was correctly reached for first — and
+  applied to cold start it made things **worse**: an 8.58× ratio spread against a 1.90× raw spread, because
+  directory sizes are skewed so the small half stays cache-resident, plus a clean order effect. It measures
+  milliseconds and megabytes; this subject is seconds and gigabytes, and at that scale **the measurement
+  perturbs the state the control exists to measure.** Two designs were built and measured before either was
+  proposed. That is what saved a build.
+- **When you decline a change, record the bar for revisiting it, not just the reason.** A warn threshold
+  that fails nothing reads as unfinished, and the next person's argument will be "it fired again". Recurrence
+  is the wrong bar; the right one is *the diagnostic showing the cause is in the code*, at which point the
+  deterministic assertions are the instrument and the constant still is not. A decision without a
+  falsifiability criterion is a decision someone will quietly reverse.
 - **An instrument left running becomes part of the environment it was measuring — and a teardown that
   prints its own success is not a teardown.** A load probe from #47 answered its question, then kept ~14
   spinners alive for 47 minutes at load average 47, and became the confound for every timing taken on this
