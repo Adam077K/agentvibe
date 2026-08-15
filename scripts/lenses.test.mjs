@@ -203,15 +203,50 @@ test('two distinct families satisfy the independence rule', () => {
   assert.deepEqual(lintYaml(ok, 'review'), []);
 });
 
-test('every shipped review lens marked independent actually is', () => {
+test('every shipped review lens marked independent actually is, by its declared mode', () => {
+  // The rule did not weaken on 2026-08-15, it gained a second satisfiable mode. `vendor`
+  // still means >=2 families. `provenance` means one family is fine BUT the judge must not
+  // see the producer's case — which is only obtainable when the lens judges an artifact the
+  // reviewer can read for itself. A lens claiming provenance over `whole-artifact` would be
+  // reading the producer's own account of its work, which is the priming the mode prevents.
   const yaml = fs.readFileSync(path.join(REPO_ROOT, '.claude', 'review-lenses.yml'), 'utf8');
   const { parseYamlSubset } = require('./lib/claims.js');
   const doc = parseYamlSubset(yaml);
   const independent = doc.review_lenses.filter((l) => l.independent === true);
   assert.ok(independent.length >= 2, 'at least some lenses should claim independence');
   for (const l of independent) {
-    assert.ok(new Set(l.model_families).size >= 2, `${l.id} claims independence with one family`);
+    assert.ok(['vendor', 'provenance'].includes(l.independence),
+      `${l.id} claims independence without saying how (independence: vendor|provenance)`);
+    if (l.independence === 'vendor') {
+      assert.ok(new Set(l.model_families).size >= 2, `${l.id} claims vendor independence with one family`);
+    } else {
+      assert.notEqual(l.scope, 'whole-artifact',
+        `${l.id} claims provenance independence over the whole artifact, which requires the producer's account of it`);
+    }
   }
+});
+
+test('a lens claiming independence without saying how FAILS the lint', () => {
+  // The default must not silently become the satisfiable mode. An unstated mode is checked
+  // as `vendor`, so a one-family lens that forgets to declare `independence:` still fails.
+  const issues = lintYaml(GOOD_REVIEW
+    .replace('independent: false', 'independent: true'), 'review');
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /requires >=2 distinct model families/);
+});
+
+test('provenance independence is refused over scope: whole-artifact', () => {
+  const issues = lintYaml(GOOD_REVIEW
+    .replace('independent: false', 'independent: true\n    independence: provenance')
+    .replace('scope: diff-only', 'scope: whole-artifact'), 'review');
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /incompatible with scope:whole-artifact/);
+});
+
+test('provenance independence with one family PASSES — the mode that made three lenses runnable', () => {
+  const ok = GOOD_REVIEW
+    .replace('independent: false', 'independent: true\n    independence: provenance');
+  assert.deepEqual(lintYaml(ok, 'review'), []);
 });
 
 // ── Failing closed ──────────────────────────────────────────────────────────

@@ -50,24 +50,75 @@ softwarn() {
 
 payload=$(cat)
 
-# Fast parse: awk-based extraction (no jq dependency)
-tool_name=$(printf '%s' "$payload" | awk -F'"' '/"tool_name"/{print $4; exit}')
+# ── Parse the payload ONCE, structurally, and FAIL CLOSED ─────────────────────
+#
+# The previous implementation used `awk -F'"' '/"tool_name"/{print $4; exit}'`, which is
+# line-oriented text matching over a JSON document. Claude Code sends COMPACT single-line JSON
+# (documented in the STDIN contract above), so `session_id` precedes `tool_name` on the same
+# line and field 4 resolved to the session-id VALUE. `tool_name` was therefore never "Bash",
+# the case statement fell through to `*)`, and EVERY rule in this file was skipped. Verified
+# 2026-08-13: a compact payload carrying `rm -rf /` exited 0.
+#
+# Three properties now hold, and scripts/pre-tool-use.test.mjs asserts each:
+#   1. Parsing is structural (json.load), so payload FORMATTING cannot change the verdict.
+#   2. One python3 process extracts all three fields — the hook must stay under 200ms.
+#   3. An unparseable payload BLOCKS. "I could not look" is not "nothing to see": a guard that
+#      waves through what it cannot read is the failure mode this repo has catalogued nine times.
+parsed=$(printf '%s' "$payload" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    if not isinstance(d, dict): raise ValueError('payload is not an object')
+    ti = d.get('tool_input') or {}
+    if not isinstance(ti, dict): ti = {}
+    # A field that is PRESENT but not a string is malformed, not absent. Coercing it to ''
+    # would hand the rules an empty command and every pattern below would miss — so a
+    # {'command': {'\$': 'rm -rf /'}} payload would sail through. Fail closed instead.
+    for k in ('command', 'file_path'):
+        if k in ti and not isinstance(ti[k], str):
+            raise ValueError(k + ' is present but not a string')
+    def flat(v): return v if isinstance(v, str) else ''
+    print(flat(d.get('tool_name')))
+    print(flat(ti.get('command')).replace(chr(10), ' '))
+    print(flat(ti.get('file_path')))
+except Exception:
+    sys.exit(1)
+" 2>/dev/null) || block "payload could not be parsed as JSON. Refusing the call: a guard that cannot read its input must not allow it."
+
+tool_name=$(printf '%s\n' "$parsed" | sed -n '1p')
+raw_command=$(printf '%s\n' "$parsed" | sed -n '2p')
+file_path=$(printf '%s\n' "$parsed" | sed -n '3p')
+
+[ -n "$tool_name" ] || block "payload carried no tool_name. Refusing the call rather than guessing which rules apply."
+
+# ── Normalise the command before matching ─────────────────────────────────────
+#
+# Rules below are regexes over the command text, so `rm -rf /` and `rm -r -f /` were two
+# different strings to them and only the first was blocked. Normalisation collapses the
+# spelling variants an attacker (or a careless agent) reaches for first: split short flags are
+# merged, so `-r -f` becomes `-rf`, and repeated whitespace collapses. Matching happens against
+# `command`; `raw_command` is preserved for the message so the founder sees what they typed.
+command=$(printf '%s' "$raw_command" | awk '{
+  out = ""
+  for (i = 1; i <= NF; i++) {
+    tok = $i
+    # merge a bare short-flag cluster into the previous one: "rm -r -f" -> "rm -rf"
+    if (tok ~ /^-[a-zA-Z]+$/ && out ~ /-[a-zA-Z]+$/) { sub(/^-/, "", tok); printf ""; out = out tok }
+    else { out = (out == "" ? tok : out " " tok) }
+  }
+  print out
+}' | tr -s ' ')
 
 # ── Route by tool type ────────────────────────────────────────────────────────
 
 case "$tool_name" in
   Bash)
-    command=$(printf '%s' "$payload" | python3 -c "
-import sys, json
-try:
-    data = json.load(sys.stdin)
-    print(data.get('tool_input', {}).get('command', ''))
-except Exception:
-    print('')
-" 2>/dev/null || printf '%s' "$payload" | awk -F'"' '/"command"/{print $4; exit}')
 
     # ── BLOCK: rm -rf dangerous variants ─────────────────────────────────────
-    if printf '%s' "$command" | grep -qE 'rm\s+-[a-zA-Z]*r[a-zA-Z]*f|rm\s+-[a-zA-Z]*f[a-zA-Z]*r'; then
+    # Flag letters are matched case-insensitively: `rm -fR /` is the same command as `rm -rf /`
+    # and was allowed because the class filler accepted any case while the r and f themselves
+    # were literal lowercase.
+    if printf '%s' "$command" | grep -qE 'rm\s+-[a-zA-Z]*[rR][a-zA-Z]*[fF]|rm\s+-[a-zA-Z]*[fF][a-zA-Z]*[rR]'; then
       # Specifically block rm -rf targeting /, ~, *, /tmp broad, etc.
       if printf '%s' "$command" | grep -qE 'rm\s+(-[a-zA-Z]+\s+)*(\/[^a-zA-Z]?|~|\.\.\/|\*|\/tmp\/?\*|\/var|\/etc|\/home|\/usr)'; then
         block "rm -rf on a dangerous path. Use targeted removal instead: rm -f <specific-file>."
@@ -76,6 +127,40 @@ except Exception:
       if printf '%s' "$command" | grep -qE 'rm\s+-rf\s*$'; then
         block "Bare rm -rf with no path. Specify the exact file or directory."
       fi
+    fi
+
+    # ── BLOCK: destruction that never spells "rm" ────────────────────────────
+    #
+    # The rm rules above match the word `rm`. These four commands destroy just as much and
+    # were all auto-approved, three of them by the blanket `Bash(git *)` allow entry:
+    #   git clean -fdx   removes .worktrees/.registry, the per-CEO task files, AND
+    #                    .claude/memory/sessions/ — which is the directory qa-lead-pass.yml
+    #                    greps for its verdict, so it destroys the coordination state and the
+    #                    audit evidence in one auto-approved turn.
+    #   git checkout . / git restore .   discard every uncommitted change in the tree.
+    #   find <path> -delete              deletes without naming rm.
+    #   node -e "...rmSync..."           destruction through an allowlisted interpreter.
+    if printf '%s' "$command" | grep -qE '\bgit\b[^|;]*\bclean\b[^|;]*-[a-zA-Z]*[fdx]'; then
+      block "git clean removes untracked files, including .worktrees/.registry and .claude/memory/sessions/ (the session files the QA gate reads). Remove specific paths instead."
+    fi
+    if printf '%s' "$command" | grep -qE '\bgit\b[^|;]*\b(checkout|restore)\b\s+\.\s*$'; then
+      block "git ${command#*git } discards every uncommitted change in the tree. Use 'git stash' to save work first, or name the specific file."
+    fi
+    if printf '%s' "$command" | grep -qE '\bfind\b[^|;]*\s-(delete|exec\s+rm)\b'; then
+      block "find with -delete/-exec rm removes files in bulk with no confirmation. List them first, then remove the specific paths."
+    fi
+    if printf '%s' "$command" | grep -qE '\b(node|python3?|ruby|perl)\b[^|;]*(rmSync|rmdirSync|unlinkSync|shutil\.rmtree|os\.remove|FileUtils\.rm_r)'; then
+      block "filesystem destruction through an interpreter (-e / -c) bypasses every rule in this hook. Use the file tools, or a script committed to the repo."
+    fi
+
+    # ── BLOCK: reading secrets into the transcript ───────────────────────────
+    #
+    # `Write .env` was blocked while `cat .env` was allowed via Bash(cat *) — the file was
+    # protected in one direction and leaked in the other. A read is the more damaging half:
+    # the contents land in ~/.claude/projects/*.jsonl as permanent plaintext (2,126 such files
+    # on this machine), and every agent that later reads that transcript sees the keys.
+    if printf '%s' "$command" | grep -qE '\b(cat|less|more|head|tail|sed|awk|grep|xxd|od|strings|cp|mv|base64)\b[^|;]*(^|[ /"'"'"'=])\.env($|[ ."'"'"'/])'; then
+      block "reading a .env file into the transcript is refused — its contents would be written to ~/.claude/projects/*.jsonl in plaintext, permanently. Read the specific variable from the environment instead, or open the file in your own editor."
     fi
 
     # ── BLOCK: chmod +x ──────────────────────────────────────────────────────
@@ -117,8 +202,12 @@ except Exception:
     fi
 
     # ── BLOCK: git push --force to main/master ────────────────────────────────
+    # Both orderings need the trailing \b. Without it the second pattern matches `-f` inside
+    # any hyphenated word following the literal "main" — `--body-file`, `risk-full` — so a
+    # `git push` sharing a command line with `gh pr create --base main` was refused as a
+    # force-push. The first pattern always had the boundary; the second did not.
     if printf '%s' "$command" | grep -qE 'git\b.*push\b.*(--force|-f)\b.*(main|master)' || \
-       printf '%s' "$command" | grep -qE 'git\b.*push\b.*(main|master).*(--force|-f)'; then
+       printf '%s' "$command" | grep -qE 'git\b.*push\b.*(main|master).*(--force|-f)\b'; then
       block "Force-push to main/master is blocked. Create a PR instead, or ask the CEO to approve the force-push explicitly."
     fi
 
@@ -150,14 +239,74 @@ except Exception:
     ;;
 
   Edit|Write|NotebookEdit)
-    file_path=$(python3 -c "
-import sys, json
-try:
-    data = json.load(sys.stdin)
-    print(data.get('tool_input', {}).get('file_path', ''))
-except Exception:
-    print('')
-" 2>/dev/null <<< "$payload" || printf '%s' "$payload" | awk -F'"' '/"file_path"/{print $4; exit}')
+    # file_path comes from the single structural parse at the top of this file.
+
+    # ── BLOCK: anything outside the project root ─────────────────────────────
+    #
+    # Until now this hook had no concept of WHERE a write landed — only of what the filename
+    # looked like. `Write ~/.ssh/id_rsa`, `Write ~/.aws/credentials` and `Write
+    # ~/.claude/settings.json` all exited 0. The last of those is the one that matters most:
+    # settings.json is where this hook is registered, so a single write disarms every rule in
+    # it and makes the whole permission model advisory. (An earlier version of this comment
+    # cited a 2026-08-13 read-only agent doing exactly that; that was a misreading of PR #29's
+    # merge — see docs/08-agents_work/sessions/2026-08-14-ceo-safety-floor.md. The reason the
+    # rule exists is structural, not anecdotal, and does not depend on the retracted incident.)
+    #
+    # Deny-by-default outside the project. Resolve symlinks first so `proj/link-to-home/.ssh`
+    # cannot walk out; resolve the PARENT for files that do not exist yet, since a new file has
+    # no realpath of its own.
+    if [ -n "$file_path" ]; then
+      # A symlink's final component: the write follows the link, so scope the TARGET, not the link.
+      _target="$file_path"
+      if [ -L "$_target" ]; then
+        _link=$(readlink "$_target" 2>/dev/null) || _link=""
+        case "$_link" in
+          /*) _target="$_link" ;;
+          ?*) _target="$(dirname "$_target")/$_link" ;;
+        esac
+      fi
+
+      # Resolve the nearest EXISTING ancestor: a new file in a new subdirectory has no realpath
+      # of its own, and neither does its parent.
+      _dir=$(dirname "$_target")
+      while [ ! -d "$_dir" ]; do
+        _parent=$(dirname "$_dir")
+        [ "$_parent" = "$_dir" ] && break
+        _dir="$_parent"
+      done
+      _abs=$(cd "$_dir" 2>/dev/null && pwd -P) || _abs=""
+      _root=$(cd "${CLAUDE_PROJECT_DIR:-$PWD}" 2>/dev/null && pwd -P) || _root=""
+
+      # Containment is decided by device+inode identity, NOT string prefix. A case-insensitive
+      # filesystem reaches one directory under many spellings — `agentvibe` and `Agentvibe` are
+      # the same directory on macOS, and this repo is routinely opened under both — so a
+      # case-sensitive glob refuses writes that are genuinely inside the project. `-ef` compares
+      # what the filesystem itself considers identical, leaving case folding and symlink
+      # resolution to the kernel rather than guessing at either here.
+      #
+      # There is exactly ONE allowed root outside the project: $HOME/.claude/plans/, where the
+      # harness stores plan-mode plans. Without it plan mode cannot be used in this repo at all —
+      # the agent is asked to write a plan and its own guard refuses. The exemption is the
+      # DIRECTORY plans/, never its parent: $HOME/.claude/settings.json registers this hook, so
+      # opening $HOME/.claude/ would let a turn disarm every rule in this file, which is the single
+      # thing this check exists to prevent. Siblings — agents/, hooks/ — stay refused.
+      _inside=no
+      for _allowed in "$_root" "${HOME:-/nonexistent}/.claude/plans"; do
+        [ -n "$_abs" ] && [ -n "$_allowed" ] && [ -d "$_allowed" ] || continue
+        _probe="$_abs"
+        while : ; do
+          if [ "$_probe" -ef "$_allowed" ]; then _inside=yes; break; fi
+          _parent=$(dirname "$_probe")
+          [ "$_parent" = "$_probe" ] && break
+          _probe="$_parent"
+        done
+        [ "$_inside" = yes ] && break
+      done
+      # Fails CLOSED: an unresolvable path stays `no` and is refused.
+      [ "$_inside" = yes ] || block "write outside the project root is refused: $file_path
+   The project root is $_root. Nothing outside it — credentials, SSH keys, shell profiles, or
+   the hook configuration that enforces this rule — is writable from an agent turn."
+    fi
 
     # ── BLOCK: .env* files ───────────────────────────────────────────────────
     if printf '%s' "$file_path" | grep -qE '(^|/)\.(env)(\.|$|local|production|staging|test|development)'; then

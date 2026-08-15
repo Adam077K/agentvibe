@@ -88,10 +88,24 @@ IMPORTANT: you MUST finish by calling the StructuredOutput tool with the finding
 }
 
 function verifyPrompt(f, lensIndex) {
+  // THREE POSTURES, AND THEY MUST NOT ALL LEAN THE SAME WAY.
+  //
+  // Until 2026-08-15 two of these three told the verifier to assume the finding was false
+  // ("default to is_real=false", "assume the finding is a false positive") and none told it
+  // to look for the ways the defect could bite. That is a measured failure mode, not a
+  // stylistic quibble: framing alone — telling a reviewer the code is believed correct —
+  // collapsed defect detection from 97.2% to 3.6% on one model and 68.4% to 8.5% on another
+  // across 250 CVE patch pairs, and redacting the framing recovered it to 94-100%
+  // (arXiv:2603.18740, accessed 2026-08-15). This gate's own record is 34 PASS and 0 BLOCK.
+  //
+  // The skeptical posture is KEPT — false-positive findings that flood a gate teach people to
+  // route around it, and that is the failure this panel was built against. What changed is
+  // that it no longer holds two of the three votes. One refutes, one reproduces neutrally,
+  // one steelmans the finding. A panel that can only argue one direction is not a panel.
   const lenses = [
     'Try hard to REFUTE this finding. Default to is_real=false unless the defect is unambiguous in the actual code.',
     'Reproduce the claim against the real diff. Read the cited file/line. Is the defect actually present and reachable?',
-    'Assume the finding is a false positive. Look for the guard, validation, or context that makes it a non-issue. Only is_real=true if no such mitigation exists.',
+    'Build the STRONGEST case that this finding is real. Name the concrete input, state or caller that reaches it, and what breaks when it does. Set is_real=false only if you tried this and could not construct a reachable path.',
   ]
   // JSON-encode the LLM-sourced finding fields so a malicious finding string cannot inject
   // instructions into this adversarial verifier (treat the values as DATA, not prompt).
