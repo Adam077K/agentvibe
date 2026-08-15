@@ -32,7 +32,7 @@ import { LiveState } from '../server/state.ts';
 import { createApi, partitionByTrust, type ConflictsPayload, type ProjectDetail } from '../server/routes/api.ts';
 import { createApp } from '../server/app.ts';
 import { siteVerdict, allowedOrigins, crossSiteGuard } from '../server/routes/guard.ts';
-import { canonicalRoot, parseTrustList, readTrustList, trustStateFor } from '../server/trust.ts';
+import { canonicalRoot, parseTrustList, readTrustList, stripComment, trustStateFor } from '../server/trust.ts';
 import { addTrustedRoot, removeTrustedRoot, seedTrustList } from '../scripts/trust-store.ts';
 import { discoverFleet, discoverProjects } from '../server/projects.ts';
 import type { BeliefSummary } from '../server/collectors/belief.ts';
@@ -428,6 +428,28 @@ describe('the trusted-projects file', () => {
   test('a trailing comment on a path line does not become part of the path', () => {
     const parsed = parseTrustList('/abs/one # the main repo\n');
     expect(parsed.roots).toEqual([canonicalRoot('/abs/one')]);
+  });
+
+  test('a directory legitimately named with a # is NOT truncated at it', () => {
+    // Splitting on the first `#` anywhere turns /a/my#project into /a/my — a path that does
+    // not exist, so the project silently stays untrusted and nothing anywhere says why. Fails
+    // closed, and looks exactly like the trust file not working.
+    expect(stripComment('/a/my#project')).toBe('/a/my#project');
+    expect(stripComment('/a/my#project # a note')).toBe('/a/my#project');
+    expect(stripComment('# a whole-line comment')).toBe('');
+    expect(stripComment('   # indented comment')).toBe('');
+    expect(parseTrustList('/a/my#project\n').roots).toEqual([canonicalRoot('/a/my#project')]);
+  });
+
+  test('remove and read agree about where a path ends', () => {
+    const dir = mkTmpDir('mc-trust-hash-');
+    cleanupDirs.push(dir);
+    const file = path.join(dir, 'trusted-projects');
+    fs.writeFileSync(file, '# header\n/a/my#project\n/b/plain # a note\n');
+    expect(readTrustList(file).roots).toEqual([canonicalRoot('/a/my#project'), canonicalRoot('/b/plain')]);
+    expect(removeTrustedRoot(file, '/a/my#project').removed).toBe(true);
+    expect(readTrustList(file).roots).toEqual([canonicalRoot('/b/plain')]);
+    expect(fs.readFileSync(file, 'utf8')).toContain('# header');
   });
 
   test('canonicalisation is applied to both sides, so /tmp and /private/tmp agree', () => {

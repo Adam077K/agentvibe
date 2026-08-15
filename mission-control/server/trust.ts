@@ -107,6 +107,26 @@ export interface ParsedTrustList {
 }
 
 /**
+ * One line, minus its comment. THE ONE PLACE that decides where a path ends, so the reader and
+ * `removeTrustedRoot` cannot disagree about which line names which directory.
+ *
+ * `#` STARTS A COMMENT ONLY AT THE START OF A LINE OR AFTER WHITESPACE. The obvious rule —
+ * split on the first `#` anywhere — truncates a directory legitimately named `my#project` to
+ * `my`, which then canonicalises to a path that does not exist. That fails closed (the project
+ * stays untrusted), so it would never look like a security hole; it would look like the trust
+ * file not working, with nothing anywhere saying why. Same convention as `.gitignore` and
+ * `known_hosts`.
+ *
+ * The documented limit: a directory whose name contains a space followed by `#` cannot be
+ * written on one of these lines. No such directory exists on this machine and the alternative
+ * is an escaping syntax in a file whose whole virtue is that it is obvious.
+ */
+export function stripComment(raw: string): string {
+  const match = /(^|\s)#/.exec(raw);
+  return (match === null ? raw : raw.slice(0, match.index)).trim();
+}
+
+/**
  * Parses the file. Exported so a test can pin the format without touching disk.
  *
  * A RELATIVE PATH IS REFUSED RATHER THAN RESOLVED. `path.resolve('foo')` would resolve it
@@ -120,7 +140,7 @@ export function parseTrustList(text: string): ParsedTrustList {
   const seen = new Set<string>();
 
   text.split('\n').forEach((raw, i) => {
-    const line = raw.split('#')[0]?.trim() ?? '';
+    const line = stripComment(raw);
     if (!line) return;
     const lineNo = i + 1;
     if (!line.startsWith('/') && !line.startsWith('~')) {

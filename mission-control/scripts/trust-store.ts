@@ -14,7 +14,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { canonicalRoot, readTrustList } from '../server/trust.ts';
+import { canonicalRoot, readTrustList, stripComment } from '../server/trust.ts';
 
 
 export interface SeedResult {
@@ -112,6 +112,10 @@ export function addTrustedRoot(file: string, root: string, now: Date = new Date(
 /**
  * Removes one root. Comments are preserved; only lines whose path canonicalises to the target
  * are dropped, so a comment mentioning the path survives.
+ *
+ * `stripComment` is IMPORTED, not re-derived. This function and the reader have to agree on
+ * where a path ends or `remove` deletes a line the reader was trusting — or, worse, leaves one
+ * it was. One implementation, in server/trust.ts.
  */
 export function removeTrustedRoot(file: string, root: string): { removed: boolean; path: string; canonical: string } {
   const canonical = canonicalRoot(root);
@@ -119,7 +123,7 @@ export function removeTrustedRoot(file: string, root: string): { removed: boolea
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let removed = false;
   const kept = lines.filter((raw) => {
-    const line = raw.split('#')[0]?.trim() ?? '';
+    const line = stripComment(raw);
     if (!line) return true;
     if (canonicalRoot(line) !== canonical) return true;
     removed = true;
