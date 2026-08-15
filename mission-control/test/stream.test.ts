@@ -33,7 +33,14 @@ function fixtureFleet(prefix: string) {
   const file = fixtureClaudeProjectsDir(claudeRoot, proj, 'sess-1', [
     { ts: new Date().toISOString(), output_tokens: 500 },
   ]);
-  const state = new LiveState({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot });
+  // Cache path inside the fixture: a test must not write to the developer's real
+  // ~/.agentvibe. (It would be REFUSED on the next real start anyway — the corpus root would
+  // not match — but a test that litters $HOME is still a test with a side effect.)
+  const state = new LiveState({
+    roots: [projectsRoot],
+    claudeProjectsRoot: claudeRoot,
+    indexCachePath: path.join(projectsRoot, 'index-cache.json'),
+  });
   return { state, file };
 }
 

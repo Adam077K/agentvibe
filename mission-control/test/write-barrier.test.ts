@@ -140,7 +140,17 @@ describe('BEHAVIOURAL BARRIER: exercising every route mutates nothing on disk', 
   const roots = [projectsRoot, claudeRoot];
 
   test('no route adds, removes or modifies any file under the fixture fleet or the repo', async () => {
-    const state = new LiveState({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot });
+    // THE CACHE LIVES OUTSIDE THE WALKED ROOTS, so this test still asserts what its name says:
+    // exercising the routes changes NOTHING here. The cache file is the one path the server is
+    // allowed to write, and it gets its own assertion in the test below rather than an
+    // exception carved out of this one — an exception is how a guard stops guarding.
+    const cacheDir = mkTmpDir('mc-barrier-cache-');
+    cleanupDirs.push(cacheDir);
+    const state = new LiveState({
+      roots: [projectsRoot],
+      claudeProjectsRoot: claudeRoot,
+      indexCachePath: path.join(cacheDir, 'index.json'),
+    });
     const app = new Hono();
     app.route('/api', createApi(state));
 
@@ -182,6 +192,59 @@ describe('BEHAVIOURAL BARRIER: exercising every route mutates nothing on disk', 
 
     expect(fixtureDiff).toEqual({ added: [], removed: [], modified: [] });
     expect(repoDiff).toEqual({ added: [], removed: [], modified: [] });
+  });
+});
+
+// ── The one path the server is allowed to write, pinned as EXACTLY one ────────────────────
+//
+// This is the half of "mutates nothing outside its own cache directory" that the regex in
+// test/crosscheck.test.ts cannot express. That regex can say which FILE contains a write call;
+// only running the thing can say where the write LANDED. Here the cache directory is inside
+// the walked roots, so the cache file appears in the diff and every other path must not.
+describe('BEHAVIOURAL BARRIER: the index cache is the only path the server writes', () => {
+  const { claudeRoot, projectsRoot } = buildFleetFixture();
+  const cacheDir = mkTmpDir('mc-barrier-onlypath-');
+  cleanupDirs.push(cacheDir);
+  const cacheFile = path.join(cacheDir, 'index.json');
+  const roots = [projectsRoot, claudeRoot, cacheDir];
+
+  test('after serving every route, the cache file is the ONLY thing that changed', async () => {
+    const state = new LiveState({
+      roots: [projectsRoot],
+      claudeProjectsRoot: claudeRoot,
+      indexCachePath: cacheFile,
+    });
+    const app = new Hono();
+    app.route('/api', createApi(state));
+
+    const before = snapshotTree(roots);
+    expect(before.size).toBeGreaterThan(8); // non-vacuity: the walk found the fixture
+    expect(before.has(cacheFile)).toBe(false); // …and the cache does not exist yet
+
+    for (const p of ['/api/fleet', '/api/sessions', '/api/conflicts', '/api/project/alpha', '/api/inbox']) {
+      const res = await app.fetch(new Request(`http://127.0.0.1${p}`));
+      expect(res.status).toBe(200);
+      await res.json();
+    }
+
+    // THE WRITE REALLY HAPPENED. Without this the assertion below would also pass if the cache
+    // were never written at all — "nothing changed" is the trivial way to satisfy "only the
+    // cache changed", and it is exactly the vacuous pass this codebase keeps finding.
+    expect(state.cacheSave?.ok).toBe(true);
+    expect(state.cacheSave && state.cacheSave.ok && state.cacheSave.entries).toBeGreaterThan(0);
+
+    const diff = diffTrees(before, snapshotTree(roots));
+    expect(diff.added).toEqual([cacheFile]);
+    expect(diff.removed).toEqual([]);
+    expect(diff.modified).toEqual([]);
+  });
+
+  test('the temp file used for the atomic rename does not survive the write', () => {
+    // A .tmp left behind is a real defect: it is a second file the server wrote, it accumulates
+    // one per process, and the diff above would have caught it — this names it so a failure
+    // reads as "the rename did not happen" rather than "some extra file appeared".
+    const strays = fs.readdirSync(cacheDir).filter((n) => n.includes('.tmp'));
+    expect(strays).toEqual([]);
   });
 });
 

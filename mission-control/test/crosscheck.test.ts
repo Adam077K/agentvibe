@@ -248,8 +248,34 @@ describe('budget-guard cache file', () => {
   });
 });
 
-// ── no disk writes, and no shell, anywhere in server/** ─────────────────────────────
-describe('server/** performs no disk mutation, and never invokes a shell', () => {
+// ── no disk writes outside the cache module, and no shell, anywhere in server/** ────────
+//
+// THIS DESCRIBE USED TO SAY "performs no disk mutation". That stopped being true the moment
+// Mission Control began persisting its session index, and the honest move was to re-scope the
+// guard and rename it — not to keep the words and carve an exception underneath them. A guard
+// whose name outruns its body reads as rigour while asserting something weaker, which is the
+// defect this phase has found most often; "writes nothing, except…" is that defect in its most
+// persuasive form.
+//
+// SO THE CLAIM IS NOW SPLIT ACROSS TWO INDEPENDENT CHECKS, because neither can make it alone:
+//
+//   this file        WHICH FILE may contain a write call. A regex over source text: it can see
+//                    a call site, and can say nothing whatever about where the bytes go.
+//   write-barrier    WHERE THE BYTES LANDED. Runs the server against a real fixture fleet,
+//                    snapshots the tree by CONTENT before and after, and asserts the cache file
+//                    is the only path that changed. Reads no source at all.
+//
+// That is the same demotion the shell guard got: the source-text check is the cheap one and a
+// behavioural probe stands behind it. Two cheap independent checks beat one careful one.
+//
+// AND THE CHEAP ONE IS DEMONSTRABLY NOT SUFFICIENT. Executed 2026-08-16, before the re-scope:
+// `fs.copyFileSync(project.root + '/README.md', project.root + '/X.txt')` injected into the
+// /api/project/:id handler scored ZERO offenders across this entire scan — a plainly spelled
+// write API, no aliasing, simply absent from the token list — while the behavioural barrier
+// failed and named both files it created. The token list below has since been widened with the
+// write-only APIs that omission exposed; the barrier is what covers the ones nobody has
+// thought of yet.
+describe('server/** mutates nothing outside server/index-cache.ts, and never invokes a shell', () => {
   const serverDir = path.join(REPO_ROOT, 'mission-control', 'server');
 
   function walkServerTs(): string[] {
@@ -265,6 +291,32 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
     return files;
   }
 
+  /**
+   * Source text with comments removed — `/* … *\/` blocks first, then `//` to end of line.
+   *
+   * CLOSES ISSUE #27, which is logged in PHASE-8A-HANDOFF.md §5: "that guard false-positives
+   * on prose merely mentioning `exec(` across a line wrap". Only `//` comments were stripped,
+   * so a JSDoc block explaining why a shell must never be spawned could trip the guard that
+   * forbids spawning one. server/** is heavily documented in `/** … *\/` blocks, and this file
+   * is about to gain write-API tokens whose plain-English words (rename, truncate, copy)
+   * appear in that prose constantly — so leaving block comments in the scan would have turned
+   * a strengthening into a guard that cries wolf until someone weakens it.
+   *
+   * Each block is replaced by its own newlines rather than deleted, so line numbers stay true
+   * and the per-line scan below still points a human at the right line.
+   *
+   * Known limitation, unchanged: this is text processing, not parsing. A `/*` inside a string
+   * literal or a regex would be mistaken for a comment opener. None exists in server/** today,
+   * and an AST walk (issue #26) is what removes the caveat rather than another regex.
+   */
+  function stripComments(text: string): string {
+    return text
+      .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+      .split('\n')
+      .map((line) => line.replace(/\/\/.*$/, ''))
+      .join('\n');
+  }
+
   // Per-line scan: gives a human a line number to look at, but is blind to a call split
   // across lines (`execSync\n  (cmd)` — each line tested alone contains neither
   // "execSync(" nor anything else a single-line pattern matches). Found live in review
@@ -273,11 +325,13 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
   function findOffendersPerLine(pattern: RegExp, files: string[]): string[] {
     const offenders: string[] = [];
     for (const f of files) {
-      const text = fs.readFileSync(f, 'utf8');
-      text.split('\n').forEach((line, i) => {
-        const code = line.replace(/\/\/.*$/, '');
-        if (pattern.test(code)) offenders.push(`${path.relative(serverDir, f)}:${i + 1}: ${line.trim()}`);
-      });
+      const raw = fs.readFileSync(f, 'utf8');
+      const rawLines = raw.split('\n');
+      stripComments(raw)
+        .split('\n')
+        .forEach((code, i) => {
+          if (pattern.test(code)) offenders.push(`${path.relative(serverDir, f)}:${i + 1}: ${(rawLines[i] ?? '').trim()}`);
+        });
     }
     return offenders;
   }
@@ -285,18 +339,13 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
   // Whole-file scan with every run of whitespace — including newlines — collapsed to a
   // single space, so a call artificially split across lines cannot hide from a pattern
   // that reads fine as one line. No line number; findOffendersPerLine above is what
-  // points a human at the spot when it can. `//` line comments are stripped first
-  // (same limitation as the per-line scan: a `/* ... */` block comment mentioning one of
-  // these tokens in prose is not distinguished from code — none exist in server/** today).
+  // points a human at the spot when it can. Comments — BOTH kinds — are stripped first by
+  // stripComments above; this note used to record a block-comment blind spot that no longer
+  // exists (issue #27), and the reason it had to go is written there.
   function findOffendersCollapsed(pattern: RegExp, files: string[]): string[] {
     const offenders: string[] = [];
     for (const f of files) {
-      const withoutLineComments = fs
-        .readFileSync(f, 'utf8')
-        .split('\n')
-        .map((line) => line.replace(/\/\/.*$/, ''))
-        .join('\n');
-      const collapsed = withoutLineComments.replace(/\s+/g, ' ');
+      const collapsed = stripComments(fs.readFileSync(f, 'utf8')).replace(/\s+/g, ' ');
       if (pattern.test(collapsed)) {
         offenders.push(`${path.relative(serverDir, f)}: matched only after collapsing whitespace/newlines (a call split across lines)`);
       }
@@ -377,15 +426,71 @@ describe('server/** performs no disk mutation, and never invokes a shell', () =>
     /\bBun\.\$/, // Bun's own shell-execution tag
   ];
 
-  test('no writeFile/mkdir/rm/unlink/git-commit/git-push call sites', () => {
+  /**
+   * The one file allowed to contain a write call, and it is one file rather than a directory.
+   *
+   * server/index-cache.ts is the whole of the persistence: load, save, atomic rename. Scoping
+   * the permission to that path means adding a write anywhere else in server/** is still a
+   * failing test, which is the only property that makes an allowlist worth having.
+   */
+  const WRITE_OWNER = 'index-cache.ts';
+
+  /**
+   * Write-family APIs. WIDENED 2026-08-16 with every token after `appendFile`, each one a real
+   * write API that the previous list could not see.
+   *
+   * NOT A THEORETICAL WIDENING. `fs.copyFileSync` was injected into the /api/project/:id
+   * handler and this scan reported ZERO offenders while the file was demonstrably being
+   * created — no aliasing, no computed string, just an API nobody had enumerated. The same was
+   * true of renameSync, truncateSync, symlinkSync, cpSync and createWriteStream.
+   *
+   * `openSync` IS DELIBERATELY ABSENT and cannot be added: server/index-store.ts opens files
+   * read-only with it on the append and boundary-probe paths, so banning it would forbid the
+   * read path. `fs.openSync(p, 'w')` is therefore a live blind spot in THIS check — named
+   * here, and covered by test/write-barrier.test.ts, which sees the file appear regardless of
+   * which API made it.
+   */
+  const WRITE_PATTERN =
+    /\b(writeFile(Sync)?|writeSync|mkdir(Sync)?|rm(Sync)?|rmdir(Sync)?|unlink(Sync)?|appendFile(Sync)?|copyFile(Sync)?|cpSync|rename(Sync)?|truncate(Sync)?|ftruncate(Sync)?|symlink(Sync)?|link(Sync)?|createWriteStream|git\s+commit|git\s+push)\b/;
+
+  test(`no write-API call sites in server/** outside ${WRITE_OWNER}`, () => {
     // This is a TEXT grep, not a semantic check: it cannot catch a write assembled from
-    // a runtime string (e.g. execFileSync('sh', ['-c', someComputedString])). It only
-    // pins the literal call sites this PR introduces. See the test below for that
-    // specific blind spot — it is not hypothetical, it shipped once already.
-    const files = walkServerTs();
+    // a runtime string (e.g. execFileSync('sh', ['-c', someComputedString])), and it cannot
+    // tell WHERE a write it does see would land. test/write-barrier.test.ts answers the
+    // second question by running the server and looking at the disk.
+    const files = walkServerTs().filter((f) => path.basename(f) !== WRITE_OWNER);
     expect(files.length).toBeGreaterThan(0);
-    const pattern = /\b(writeFile(Sync)?|mkdir(Sync)?|rm(Sync)?|unlink(Sync)?|appendFile(Sync)?|git\s+commit|git\s+push)\b/;
-    expect(findOffenders(pattern, files)).toEqual([]);
+    expect(findOffenders(WRITE_PATTERN, files)).toEqual([]);
+  });
+
+  // AN ALLOWLIST WITH NO TEST THAT IT IS NARROW IS JUST A HOLE. Both halves are asserted:
+  // the exempt file really does contain the writes (so the exemption is load-bearing and not
+  // a leftover), and the exemption really is scoped to that one path (so the same code in any
+  // other server file still fails).
+  test(`the ${WRITE_OWNER} exemption is load-bearing, and is scoped to that one file`, () => {
+    const all = walkServerTs();
+    const owner = all.filter((f) => path.basename(f) === WRITE_OWNER);
+    expect(owner).toHaveLength(1); // the exempt file exists and is unique — the allowlist cannot rot
+
+    // Load-bearing: without the exemption this scan is red. If this ever goes green the
+    // exemption is dead weight and should be deleted rather than carried.
+    expect(findOffenders(WRITE_PATTERN, owner).length).toBeGreaterThan(0);
+
+    // Scoped: the SAME source text under any other name in server/** is still an offender.
+    // Proven by scanning the exempt file's own bytes through the non-exempt code path, so the
+    // two cannot drift — this is not a synthetic line that resembles the real one.
+    const ownerText = fs.readFileSync(owner[0]!, 'utf8');
+    const decoy = path.join(serverDir, '__scope-probe.ts');
+    fs.writeFileSync(decoy, ownerText);
+    try {
+      const rescan = walkServerTs().filter((f) => path.basename(f) !== WRITE_OWNER);
+      expect(rescan).toContain(decoy);
+      expect(findOffenders(WRITE_PATTERN, rescan).length).toBeGreaterThan(0);
+    } finally {
+      fs.rmSync(decoy, { force: true });
+    }
+    // …and the decoy is gone, so a later run of this suite scans the real tree.
+    expect(fs.existsSync(decoy)).toBe(false);
   });
 
   // Found live 2026-08-13: server/collectors/empty.ts built a shell string from

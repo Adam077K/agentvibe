@@ -11,13 +11,17 @@
 // handler itself, not a re-implementation of it) without a reset() hook that exists only
 // for tests.
 //
-// Writes nothing. The only thing this file adds to PR2's behaviour is a content hash per
-// slice, so the stream can tell "recomputed" from "changed".
+// WRITES EXACTLY ONE PATH, AND THIS COMMENT USED TO SAY "WRITES NOTHING". That was true until
+// the session index started being persisted, and leaving the old sentence in place would have
+// made this header a claim the code no longer honours. The one path is the index cache — see
+// server/index-cache.ts for where and why. Everything else here still only reads.
 
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { discoverFleet, type DiscoverOptions, type Project, type TrustList } from './projects.ts';
+import { projectsDir } from './lib/usage.ts';
+import * as indexCache from './index-cache.ts';
 import { IndexStore, type SessionSummary } from './index-store.ts';
 import { buildFleet, type FleetSummary } from './collectors/fleet.ts';
 
@@ -74,6 +78,22 @@ export function hashableSessions(payload: SessionsSlice): unknown {
   return rest;
 }
 
+/**
+ * `indexCache: false` turns persistence off entirely, and it is not a convenience.
+ *
+ * test/live.test.ts measures a genuine full read of the real corpus and cross-checks
+ * `bytesRead` against an independently walked snapshot of it. With a cache present that build
+ * would read three files, the oracle would compare against nothing, and the assertion would go
+ * green having measured a start that skipped the corpus. That test needs a real cold build, so
+ * it says so. `path` exists for the same reason AGENTVIBE_PROJECTS_DIR does in usage.js: a test
+ * that writes to the machine's real cache passes or fails for reasons it did not choose.
+ */
+export interface StateOptions extends DiscoverOptions {
+  indexCache?: boolean;
+  indexCachePath?: string;
+  maxFullBuildAgeMs?: number;
+}
+
 export class LiveState {
   private store = new IndexStore();
   private built = false;
@@ -83,6 +103,10 @@ export class LiveState {
    * without a second read of that file that could disagree with the first.
    */
   private lastTrustList: TrustList | null = null;
+  /** When the index was last built by reading the whole corpus. See MAX_FULL_BUILD_AGE_MS. */
+  private fullBuildAt = 0;
+  private lastCacheDecline: indexCache.LoadFailure | null = null;
+  private lastSave: indexCache.SaveResult | null = null;
 
   /**
    * `discoverOpts` is forwarded verbatim to discoverProjects() — the same roots/claude-root
@@ -90,7 +114,15 @@ export class LiveState {
    * nothing and gets the real fleet; a test points one at a fixture tree and gets a
    * complete, deterministic state including its own budget figure.
    */
-  constructor(private readonly discoverOpts: DiscoverOptions = {}) {}
+  constructor(private readonly opts: StateOptions = {}) {}
+
+  private get discoverOpts(): DiscoverOptions {
+    return this.opts;
+  }
+
+  private get cacheEnabled(): boolean {
+    return this.opts.indexCache !== false;
+  }
 
   get index(): IndexStore {
     return this.store;
@@ -109,17 +141,90 @@ export class LiveState {
     return this.lastTrustList;
   }
 
-  /** Discovers the current fleet and keeps the session index in sync with it. */
+  /** Why the last start declined the persisted index, or null if it used one (or none exists). */
+  get cacheDecline(): indexCache.LoadFailure | null {
+    return this.lastCacheDecline;
+  }
+
+  /** What the last write of the persisted index did. Null when persistence is off. */
+  get cacheSave(): indexCache.SaveResult | null {
+    return this.lastSave;
+  }
+
+  /**
+   * Discovers the current fleet and keeps the session index in sync with it.
+   *
+   * THE FIRST CALL IS THE EXPENSIVE ONE, AND THIS IS WHERE THAT STOPS BEING TRUE. Restoring a
+   * persisted index turns the cold start into a refresh. Measured 2026-08-16 against the real
+   * corpus (2,582 files, 3.05 GB) through this exact path:
+   *
+   *   cold                     2,405-4,675 ms  (the spread is #50's memory-reclaim band)
+   *   warm, steady             84-98 ms, median 87
+   *   warm, first after boot   158-255 ms  (the boundary windows are not in page cache yet)
+   *   transcript bytes read    3,048 MB -> 0-0.02 MB
+   *
+   * BOTH warm figures are quoted. The steady-state median alone is true and misleading: the
+   * first start after a boot is the run that matters most and is 2-3x slower.
+   *
+   * The restored entries are NOT trusted. Every one arrives marked `needsVerify`, and the
+   * refresh below checks each against the disk before it is used. `hydrate` on its own would be
+   * an index nobody had validated, which is why the two always happen together and why `built`
+   * is only set once the refresh has run.
+   */
   refresh(): Project[] {
     const { projects, trustList } = discoverFleet(this.discoverOpts);
     this.lastTrustList = trustList;
     if (!this.built) {
-      this.store.buildCold(projects);
+      this.firstBuild(projects);
       this.built = true;
     } else {
       this.store.refresh(projects);
+      this.persist();
     }
     return projects;
+  }
+
+  private firstBuild(projects: Project[]): void {
+    if (!this.cacheEnabled) {
+      this.store.buildCold(projects);
+      this.fullBuildAt = Date.now();
+      return;
+    }
+    const loaded = indexCache.load({
+      file: this.opts.indexCachePath,
+      corpusRoot: this.corpusRoot(),
+      maxFullBuildAgeMs: this.opts.maxFullBuildAgeMs,
+    });
+    if (loaded.ok) {
+      this.store.hydrate(loaded.entries);
+      this.fullBuildAt = loaded.fullBuildAt;
+      this.store.refresh(projects);
+    } else {
+      // The decline always names itself. "There was no cache" and "I could not read the cache"
+      // are different facts that end in the same full build, so this is the only place the
+      // difference can survive.
+      this.lastCacheDecline = loaded.reason;
+      this.store.buildCold(projects);
+      this.fullBuildAt = Date.now();
+    }
+    this.persist();
+  }
+
+  private persist(): void {
+    if (!this.cacheEnabled) return;
+    this.lastSave = indexCache.save(this.store.entries(), this.fullBuildAt, {
+      file: this.opts.indexCachePath,
+      corpusRoot: this.corpusRoot(),
+    });
+  }
+
+  /**
+   * The transcript root this index describes. A cache built against a different one belongs to
+   * a different corpus, and `load` refuses it rather than resolving every stored path to
+   * nothing and calling the resulting empty index a fast start.
+   */
+  private corpusRoot(): string {
+    return this.opts.claudeProjectsRoot ?? projectsDir();
   }
 
   sessionsSlice(now: number = Date.now()): Hashed<SessionsSlice> {

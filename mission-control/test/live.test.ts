@@ -32,7 +32,8 @@ import { machineGate, notVerified, corpusPresent, claudeProjectsRoot } from './g
 
 function liveApp(): Hono {
   const app = new Hono();
-  app.route('/api', createApi(new LiveState()));
+  // indexCache: false — see the call site in the cold-start test below for the full reason.
+  app.route('/api', createApi(new LiveState({ indexCache: false })));
   return app;
 }
 
@@ -335,7 +336,14 @@ describe('GET /api/sessions performance against the real corpus', () => {
       const before = corpusSnapshot();
       const vmBefore = readMachineState();
 
-      const state = new LiveState(); // a genuinely unbuilt index — this app has served nothing
+      // PERSISTENCE OFF, AND THAT IS THE POINT OF THIS TEST RATHER THAN AN EXEMPTION FROM IT.
+      // This measures a genuine full read of the real corpus and brackets `bytesRead` against
+      // an independently walked snapshot of it. With the persisted index enabled the build
+      // would read three files, the byte oracle would bracket ~0 against 3.04 GB, and the run
+      // would go green having measured a start that never touched the corpus. The cached start
+      // is measured in test/index-cache.test.ts, where the fixture is controlled.
+      // It also keeps the suite from writing to ~/.agentvibe on the developer's machine.
+      const state = new LiveState({ indexCache: false }); // genuinely unbuilt: served nothing
       const app = new Hono();
       app.route('/api', createApi(state));
 
