@@ -65,11 +65,32 @@ Then apply it: rewrite the seven, delete the rest, in the order in the migration
 
 ## Current state
 
-- **Branch `ceo-2-1786445435`, 3 commits ahead of `origin/main`, unpushed, no PR.** Working tree clean.
-- **`npm run check` exits 0** — 193 tests across 8 files, after `bun install` in `mission-control/`.
+**This work ships as two PRs, not one.** The original single PR (#40) was labelled `risk:irreversible` —
+truthfully; it touched `.claude/hooks/**` — and the gate then required *every* session file in the diff to
+declare `tier: full|irreversible`. Five of the eight honestly declared `trivial` or `lite`, because five of
+the eight describe read-only boards and specification work. Raising them would have recorded a false tier;
+editing the rule would have been an author rewriting the gate that was refusing them. Founder chose the split.
+
+| PR | Contains | Tier | Merge |
+|---|---|---|---|
+| **#42** `fix/safety-floor-and-gate` | The hook rebuild, three unregistered hooks, the three gate fixes, and the 3 session files describing them | `risk:irreversible` | **First** |
+| **#43** `docs/the-roster-is-seven` | The eleven specification documents, this handoff, and the 5 session files describing them | trivial / lite | Second |
+
+- **`npm run check` exits 0 on both branches** — zero failures across 11 test files, after `bun install` in
+  `mission-control/`. The safety-floor suite is **62/62** on #42.
+- **Merge #42 before #43.** The redive-plan session file states the safety-floor fix is unmerged — true
+  until #42 lands, and misleading if #43 lands alone.
 - Two known flakes can fire on any run and are not yours: a mission-control cold-start performance test
   (it is timing a live corpus; it fails under concurrent load and passes on a quiet machine), and a
   `crosscheck.test.ts` mtime assertion.
+
+**A finding the split produced, and it is not small.** `scripts/lib/classifier.js` tiers every `docs/**` file
+`trivial`; the F13 step of `qa-lead-pass.yml` demands `full|irreversible` for those same files on any
+`risk:irreversible` PR. **Two mechanisms compute risk and they disagree**, while `CLAUDE.md:156` states the
+classifier is *"one file computes risk, and it is the only implementation."* It is not — F13 is a second
+implementation, and it is the one that blocks merges. It should require the tier of the paths it *classifies*
+as irreversible, not a uniform tier across every session bundled into a PR. Left deliberately unfixed; the
+reasoning is in #42's session file.
 
 ## What was done
 
@@ -148,7 +169,10 @@ playbook. Both boards converge on this as the experiment that settles whether se
 4. **The 44 files in `~/.claude/agents/`** — precondition for deleting the 11 shims, and **order matters**:
    deleting a shim first un-shadows a drifted global, so the name keeps working and quietly means something
    older.
-5. **Whether to push and open a PR** for the three commits.
+5. ~~Whether to push and open a PR.~~ **Resolved** — pushed and split into #42 and #43; see *Current state*.
+6. **Whether F13 or the classifier is right** about a mixed-tier PR. Not urgent, but it is now the only
+   mechanism that has ever refused a merge in this repo, so how it is fixed matters more than most things
+   on this list.
 
 ## Gotchas
 
