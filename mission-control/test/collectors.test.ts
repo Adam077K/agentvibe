@@ -1795,11 +1795,27 @@ describe('git status -z is the oracle the text parser is checked against', () =>
   //
   // AND IT IS ALREADY DOING WORK NOBODY ARRANGED. Of the 670 paths tracked here today, exactly
   // ONE needs C-quoting — `war-room/dashboard/client/public/Office Background.png`, a real asset
-  // with a space in it that no fixture author put there. It is enough: this arm dies to a
-  // mutation that hands quoted paths through un-decoded (executed, M3 and M4). What it does NOT
-  // reach is multi-byte decoding — no tracked path holds a non-ASCII byte, so the per-character
-  // octal mutation (M5) walks past this arm untouched. That is arm 2's job, and the split is
-  // stated rather than assumed.
+  // with a space in it that no fixture author put there.
+  //
+  // WHAT THAT ONE PATH BUYS, STATED SHARPLY, BECAUSE A LOOSER VERSION OF THIS SENTENCE WAS
+  // WRONG. It has a space and NOTHING else: no backslash, no escape, no non-ASCII byte. So
+  // **this arm tests quote-stripping and nothing else.** It dies to a mutation that leaves the
+  // quotes on (executed: M3, and M4 as written here, which replaces the whole path-field read).
+  // It does NOT die to a mutation that strips the quotes but breaks ESCAPE decoding — executed
+  // against exactly that variant, 0 of 670 paths went missing — nor to the per-character octal
+  // mutation M5, since no tracked path holds a non-ASCII byte. Escapes and multi-byte decoding
+  // are arm 2's job. The earlier wording ("dies to a mutation handing quoted paths through
+  // un-decoded") blurred quote-stripping and escape-decoding into one claim and overstated this.
+  //
+  // ONE EFFECTIVE MODE TODAY, NOT TWO, AND THAT IS WHY THE LOOP IS GONE. This arm used to run
+  // `forced` and `raw` exactly as arm 2 does. With no non-ASCII byte anywhere in the tracked set,
+  // `core.quotePath` has nothing to act on: the two streams are BYTE-IDENTICAL — executed, 33,760
+  // bytes each, `forced === raw` true. The second iteration re-compared the same input and
+  // reported it as a second mode. Arm 2 asserts per repo that its two modes really are two, and
+  // that assertion is documented there as having caught a real vacuity; the same assertion
+  // written here would FAIL. Rather than make a gesture at coverage this arm cannot provide, it
+  // runs the one mode that exists and says so. It becomes two modes the moment a non-ASCII path
+  // is tracked — at which point the assertion below starts distinguishing them for free.
   //
   // NOT ASSERTED, DELIBERATELY: "the repo contains at least one quoted path" would fail the day
   // someone renames one PNG, for a reason with nothing to do with the parser. The arm's strength
@@ -1818,25 +1834,44 @@ describe('git status -z is the oracle the text parser is checked against', () =>
     const created = repoPaths.filter((p) => tryCreate(root, p));
     expect(created.length).toBe(repoPaths.length); // every real path was materialisable
 
-    for (const mode of ['forced', 'raw'] as const) {
-      const d = differential(root, mode);
-      // NON-VACUITY: the comparison really compared the whole set.
-      expect(d.records.length).toBeGreaterThanOrEqual(created.length);
-      expect({ mode, paths: d.fromText }).toEqual({ mode, paths: d.fromZ });
-      expect(nonexistentAmongSurvivors(root, d.records)).toEqual([]);
-    }
+    const d = differential(root, 'forced');
+    expect({ mode: 'forced', paths: d.fromText }).toEqual({ mode: 'forced', paths: d.fromZ });
+    expect(nonexistentAmongSurvivors(root, d.records)).toEqual([]);
+
+    // NON-VACUITY, AND IT NAMES THE PATH RATHER THAN A COUNT. The previous form was
+    // `records.length >= created.length` — 670 >= 670, tight to the file, and a TRIPWIRE: the
+    // materialised set includes the repo's own tracked `.gitignore` files, so the day someone
+    // tracks a path matching a tracked ignore pattern (`*.local`, `.env.*`, `node_modules/`,
+    // `.worktrees/`) git stops reporting it, the count drops by one and this arm goes red for a
+    // reason with nothing to do with the parser. Nothing matches today — checked. Asserting the
+    // MISSING SET instead means that failure arrives naming the file, and
+    // `git status --porcelain --ignored` in the temp root confirms it in one command. The floor
+    // is not loosened, because a silently smaller comparison is the vacuity this block exists to
+    // prevent; only the diagnosis is made legible.
+    const reported = new Set(d.records.map((r) => r.path));
+    expect(created.filter((p) => !reported.has(p))).toEqual([]);
   }, 60_000);
 
   // ARM 2 — THE POPULATION IS A DRAW OVER THE CODE-POINT SPACE, and this is the arm that would
   // have caught the astral defect without anybody knowing to look for it.
   //
-  // THE COMPARISON WITH THE FIXTURE, IN NUMBERS: EXOTIC_NAMES contains TWO names carrying both a
-  // space and an astral character, and both were added after the defect they cover was found by
-  // hand. One draw of 337 names produced 157 of them (`census`, executed) — plus 150 containing
-  // the ` -> ` separator, 74 containing a newline and 54 beginning with a JS-WhiteSpace
-  // character. The census below asserts that richness on every run rather than trusting this
-  // paragraph, because a generator that quietly stopped producing astral characters would leave
-  // the arm green and empty.
+  // THE COMPARISON WITH THE FIXTURE, IN NUMBERS THIS BLOCK ACTUALLY PRODUCES: EXOTIC_NAMES
+  // contains TWO names carrying both a space and an astral character, and both were added after
+  // the defect they cover was found by hand. One run of the three seeds below draws **294 names,
+  // 134 of them carrying both** — plus 151 containing the ` -> ` separator, 82 containing a
+  // newline and 66 beginning with a JS-WhiteSpace character. (An earlier version of this
+  // paragraph quoted 337/157/150/74/54, which were the DEVELOPMENT HARNESS's figures, not this
+  // block's. The census constants under FLOORS are the shipped ones and these now match them.)
+  // The census below asserts that richness on every run rather than trusting this paragraph,
+  // because a generator that quietly stopped producing astral characters would leave the arm
+  // green and empty.
+  //
+  // WHAT THIS BLOCK COSTS, MEASURED RATHER THAN GUESSED: **~3.3–4.5 s** for all four tests in
+  // isolation (3.31 / 3.33 / 3.42 s at load 1.8 here; 3.40 / 3.83 / 4.53 s at load 4.1–4.2 on
+  // the reviewer's runs), against a suite of roughly 75 s. It creates **6 git repositories and
+  // ~1,030 files**. A before/after comparison of total suite wall time does NOT resolve this
+  // cost — measured before 72.4–82.3 s and after 71.6–87.3 s, overlapping ranges with some
+  // "after" runs faster than some "before" — so the isolated figure is the only defensible one.
   //
   // ASSERTING THE CENSUS IS NOT RE-ENUMERATING THE ANSWER. It asserts the POPULATION is rich;
   // git still decides what is CORRECT for each name. The distinction is the whole difference
