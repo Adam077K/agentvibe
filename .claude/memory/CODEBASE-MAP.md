@@ -17,12 +17,12 @@ it, so a hook that changes posture changes this map with it.
 |---|---|---|
 | `.claude/hooks/budget-guard.js` | BLOCKS | not registered |
 | `.claude/hooks/gsa-check-update.js` | ADVISES | SessionStart |
-| `.claude/hooks/gsa-context-monitor.js` | ADVISES | PostToolUse |
+| `.claude/hooks/gsa-context-monitor.js` | ADVISES | not registered |
 | `.claude/hooks/gsa-statusline.js` | ADVISES | statusLine |
 | `.claude/hooks/pre-tool-use.sh` | BLOCKS | PreToolUse |
-| `.claude/hooks/schema-lint.js` | BLOCKS | Stop |
+| `.claude/hooks/schema-lint.js` | BLOCKS | not registered |
 | `.claude/hooks/session-start.js` | ADVISES | SessionStart |
-| `.claude/hooks/stop.sh` | ADVISES | Stop |
+| `.claude/hooks/stop.sh` | ADVISES | not registered |
 | `.github/workflows/ci.yml` | BLOCKS | pull_request |
 | `.github/workflows/ledger-sweep.yml` | BLOCKS | schedule |
 | `.github/workflows/qa-lead-pass.yml` | BLOCKS | pull_request |
@@ -60,6 +60,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:ledger` | `node --test scripts/ledger.test.mjs` |
 | `npm run test:lenses` | `node --test scripts/lenses.test.mjs` |
 | `npm run test:playbooks` | `node --test scripts/playbooks.test.mjs` |
+| `npm run test:pre-tool-use` | `node --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-readonly` | `node --test scripts/probe-readonly.test.mjs` |
 | `npm run test:warroom` | `node --test scripts/warroom-install.test.mjs` |
 | `npm run usage` | `node -e "const u=require('./scripts/lib/usage.js');const w=u.windowUsage({});console.log(w.output_tokens.toLoc` |
@@ -87,6 +88,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/ledger.test.mjs` | the resolvers, and the invariant that holds the ledger up. |
 | `scripts/lenses.test.mjs` | the lens linter, tested by constructing its failures. |
 | `scripts/playbooks.test.mjs` | the playbook linter, tested by constructing its failures. |
+| `scripts/pre-tool-use.test.mjs` | — |
 | `scripts/probe-readonly.test.mjs` | — |
 | `scripts/session-start.test.mjs` | the SessionStart hook. |
 | `scripts/usage.test.mjs` | the spend measurement and the ceiling that acts on it. |
