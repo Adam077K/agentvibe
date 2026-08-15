@@ -103,6 +103,28 @@ rules:
     tier: irreversible
     enforcement: block
     reason: "Payment processing endpoints"
+  - pattern: "mission-control/server/config.ts"
+    tier: irreversible
+    enforcement: shadow
+    reason: "Mission Control's network binding — HOST is a literal here so nothing can override it; moving it off 127.0.0.1 converts three local RCEs into remote ones, and no revert un-executes what already ran"
+    # WHY IRREVERSIBLE AND NOT FULL. This is the same category as `.claude/settings.json`
+    # above — a runtime permission boundary, not application code. The file is thirteen
+    # lines and has changed exactly once (e29f2c0, the PR that created it), so Founder
+    # sign-off costs approximately nothing here and buys the one review a `lite` pass would
+    # wave through as a one-word diff.
+    #
+    # WHY `enforcement: shadow` WHEN EVERY OTHER IRREVERSIBLE ENTRY BLOCKS. `enforcement`
+    # governs CLAIM resolution, and only claim-bearing files feel it. scripts/ledger.mjs
+    # collects claims from `*.md`/`*.markdown` alone (candidateMarkdown()), so no `.ts` path
+    # can carry a claim at all — `block` here would be a mechanism that fires on nothing,
+    # which is exactly what the note below this group refuses to do for outbound send. It
+    # goes to `block` the day a claim can live in a TypeScript file.
+    #
+    # NOT LISTED, on the same principle as outbound send: `mission-control/server/trust.ts`,
+    # the allowlist deciding whose code may be executed. It is the strongest candidate in
+    # this tree for `irreversible` and it does not exist on `main` — it arrives with PR #44.
+    # The `mission-control/server/**` rule below lands it at `full`, which is the tier a
+    # human already assigned it by judgement. The pattern is added the day the file is.
   # NOT LISTED, deliberately: an outbound-send pattern. ADR-001 names outbound send as a
   # day-one blocker, but this repository has no outbound-send path to name. A pattern
   # matching nothing would read as coverage it does not have. It is added the day the
@@ -150,6 +172,31 @@ rules:
     resolvers: [claim-command]
     reason: "The launcher every project starts from"
 
+  # ──────────────── FULL · mission-control ────────────────
+  # Until this group existed, every path under mission-control/ matched NOTHING and
+  # classified `lite` by default — including the code that decides whose programs get
+  # executed on this machine. Four PRs (#30, #32, #44 by label; #41 not) were tiered by a
+  # human remembering to, which this repository's own rules table calls a wish.
+  #
+  # The split is deliberate and the whole tree is NOT floored at `full`. Flooring
+  # client/** would make a CSS edit a full-tier review, and a gate that fires on
+  # everything is a gate people route around — see docs/09-metrics and #42 for what that
+  # looks like once it has happened.
+  - pattern: "mission-control/server/**"
+    tier: full
+    reason: "The server decides whose code runs here — routes, trust, discovery, and six of eight collectors shell out to git with cwd inside a repository they merely found on disk"
+    # Named because reading the glob is not the same as knowing what it matches: this is
+    # server/{config,index,index-store,projects,state}.ts, server/lib/**, server/routes/**
+    # and server/collectors/** — twenty files on `main`, twenty-three after PR #44 adds
+    # app.ts, trust.ts and routes/guard.ts. Pinned by execution in
+    # scripts/classifier.test.mjs; `node scripts/classify.mjs --json --stdin` reproduces it.
+  - pattern: "mission-control/scripts/**"
+    tier: full
+    reason: "Operator tooling — it edits the trusted-projects allowlist and spawns the server; the `scripts/**` rule above is anchored at the repository root and never reached this tree"
+  - pattern: "mission-control/check.mjs"
+    tier: full
+    reason: "Runs inside `npm run check` and spawns the server — a gate that lies about its own subject is worse than no gate"
+
   # ──────────────── LITE ────────────────
   # General app code: UI components, pages, utilities.
   - pattern: "**/components/**"
@@ -177,6 +224,24 @@ rules:
     tier: lite
     resolvers: [claim-freshness]
     reason: "Durable memory — the surface that went stale invisibly and started this rebuild"
+  # These two change no tier — `lite` is already the default. They exist so that "the
+  # client and the tests are lite" is a decision on the record with a reason attached,
+  # rather than the silence that let the whole tree default for five PRs. The classifier
+  # reports `matched:` for them now instead of `(none — default)`, which is the difference
+  # between a considered answer and an absent one. Precedent: `src/**` and `packages/**`
+  # above are documentary in exactly the same way.
+  - pattern: "mission-control/client/**"
+    tier: lite
+    reason: "Browser render only — no filesystem access, no process spawn, no trust decision; the views read an API they cannot widen"
+  - pattern: "mission-control/test/**"
+    tier: lite
+    reason: "Tests. A test change that matters arrives beside the code it covers, and that code floors the whole change set at full — classifyFiles() takes the maximum, so the tier cannot be dodged by splitting the diff"
+    # THE RESIDUAL, NAMED RATHER THAN LEFT TO BE DISCOVERED: a test-ONLY pull request that
+    # weakens mission-control/test/trust.test.ts still classifies `lite`. That is the known
+    # hole in this rule. The alternative — flooring 10 test files at `full` so that a view
+    # snapshot update needs a security reviewer — buys one case and pays for it on every
+    # other, and `scripts/**` covers its own tests only as a side effect of covering the
+    # directory, not as a decision anyone made.
 
   # ──────────────── TRIVIAL ────────────────
   # Docs, planning, brand guidelines — text only, no executable risk.
