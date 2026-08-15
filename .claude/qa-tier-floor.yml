@@ -120,11 +120,30 @@ rules:
     # which is exactly what the note below this group refuses to do for outbound send. It
     # goes to `block` the day a claim can live in a TypeScript file.
     #
-    # NOT LISTED, on the same principle as outbound send: `mission-control/server/trust.ts`,
-    # the allowlist deciding whose code may be executed. It is the strongest candidate in
-    # this tree for `irreversible` and it does not exist on `main` — it arrives with PR #44.
-    # The `mission-control/server/**` rule below lands it at `full`, which is the tier a
-    # human already assigned it by judgement. The pattern is added the day the file is.
+  - pattern: "mission-control/server/trust.ts"
+    tier: irreversible
+    enforcement: shadow
+    reason: "The allowlist deciding whose code may be executed on this machine — a regression re-opens the three RCEs of 2026-08-14, and a revert restores the file without un-executing what ran"
+    # ADDED THE DAY THE FILE ARRIVED, not before. This entry was written out of the first
+    # draft of these rules with its reason recorded — the file did not exist on `main` and a
+    # pattern matching nothing reads as coverage it does not have, per the outbound-send note
+    # below. PR #44 landed it (85a9eb9) and the objection is now void, so the rule goes in.
+    #
+    # `routes/guard.ts` is deliberately NOT here and stays `full`. Its own header states the
+    # case: it is "not a second, independent answer to the three RCEs; it is the other half
+    # of one". Weakening the cross-site check does not by itself grant execution — the
+    # allowlist still gates that — so it is a `full` review, not a Founder decision.
+    #
+    # THE COST, MEASURED RATHER THAN WAVED AT. This is the second path in the tree that can
+    # demand the `risk:irreversible` label, and that label arms the F13 step of
+    # qa-lead-pass.yml, which requires EVERY session file in the PR diff to declare
+    # `tier: full|irreversible` (:339-351). PR #42 recorded that as two mechanisms computing
+    # risk and disagreeing, and left the fix for a later session. Executing F13's own
+    # predicate over the four merged PRs that carried more than one session file: #25, #29
+    # and #43 would be REFUSED, #42 would pass. So this entry raises exposure to a known
+    # defect it does not create. It is bounded — the hazard needs a PR that touches trust.ts
+    # AND bundles an honestly-lite session — and a change to this file has an honest tier of
+    # `full` anyway. Named here so a red build is actionable rather than mysterious.
   # NOT LISTED, deliberately: an outbound-send pattern. ADR-001 names outbound send as a
   # day-one blocker, but this repository has no outbound-send path to name. A pattern
   # matching nothing would read as coverage it does not have. It is added the day the

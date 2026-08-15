@@ -71,10 +71,11 @@ test('plain docs classify trivial', () => {
 });
 
 // ── mission-control ─────────────────────────────────────────────────────────
-// Before these rules existed, every one of the 47 tracked paths under mission-control/
-// matched nothing and classified `lite` by default — the collectors that shell out to git
-// inside repositories they merely found on disk, and the routes handling the requests that
-// trigger them. Four PRs got their tier from a human remembering.
+// Before these rules existed, every tracked path under mission-control/ matched nothing and
+// classified `lite` by default — the collectors that shell out to git inside repositories
+// they merely found on disk, the routes handling the requests that trigger them, and (once
+// PR #44 landed) the allowlist deciding whose code may be executed at all. Four PRs got
+// their tier from a human remembering.
 //
 // Reproduce the whole picture with:
 //   git ls-files mission-control | node scripts/classify.mjs --json --stdin
@@ -82,6 +83,7 @@ test('plain docs classify trivial', () => {
 test('the mission-control server classifies full — routes, discovery, and the collectors that shell out', () => {
   for (const f of [
     'mission-control/server/index.ts',
+    'mission-control/server/app.ts',
     'mission-control/server/state.ts',
     'mission-control/server/projects.ts',
     'mission-control/server/routes/api.ts',
@@ -89,15 +91,36 @@ test('the mission-control server classifies full — routes, discovery, and the 
     'mission-control/server/lib/claims.ts',
     'mission-control/server/collectors/conflicts.ts',
     'mission-control/server/collectors/worktrees.ts',
-    // Not on `main` — they arrive with PR #44. Asserted here so the rule is known to cover
-    // the allowlist and the cross-site guard on the day they land, rather than found out.
-    'mission-control/server/trust.ts',
+    // `full`, NOT irreversible, and the distinction is the point: guard.ts's own header
+    // says it is "not a second, independent answer to the three RCEs; it is the other half
+    // of one". Weakening it does not by itself grant execution — trust.ts still gates that.
     'mission-control/server/routes/guard.ts',
+    'mission-control/scripts/trust.ts',
     'mission-control/scripts/trust-store.ts',
     'mission-control/check.mjs',
   ]) {
     assert.equal(tierOf(f), 'full', `${f} must be full`);
   }
+});
+
+test('the trust allowlist classifies irreversible — the file this whole rule set exists for', () => {
+  const c = classifyFile('mission-control/server/trust.ts', RULES);
+  assert.equal(c.tier, 'irreversible');
+  assert.ok(c.matched_patterns.includes('mission-control/server/**'), 'the full rule also matches; strictest must win');
+  assert.equal(c.enforcement, 'shadow');
+  // The two paths in this tree that can demand the risk:irreversible label, and therefore
+  // arm the F13 step of qa-lead-pass.yml. Pinned at two so a third is a deliberate act.
+  const irreversible = ['mission-control/server/trust.ts', 'mission-control/server/config.ts'];
+  const sweep = [
+    'mission-control/server/routes/guard.ts', 'mission-control/server/app.ts',
+    'mission-control/server/projects.ts', 'mission-control/server/state.ts',
+    'mission-control/server/index.ts', 'mission-control/server/index-store.ts',
+    'mission-control/scripts/trust.ts', 'mission-control/scripts/trust-store.ts',
+    'mission-control/check.mjs', 'mission-control/client/src/App.tsx',
+    'mission-control/test/trust.test.ts', 'mission-control/README.md',
+  ];
+  for (const f of sweep) assert.notEqual(tierOf(f), 'irreversible', `${f} must not demand the label`);
+  for (const f of irreversible) assert.equal(tierOf(f), 'irreversible', f);
 });
 
 test('the repo-root scripts/** rule does not reach mission-control/scripts/**', () => {
