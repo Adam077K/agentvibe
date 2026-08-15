@@ -50,6 +50,12 @@
 // MATCHING IS EXACT PATH EQUALITY AFTER CANONICALISATION. No globs and no prefixes: a prefix
 // rule spells "everything under ~/VibeCoding is trusted", which is the premise at the top of
 // this file wearing a config file as a disguise.
+//
+// READ ON EVERY DISCOVERY PASS, WHICH IS EVERY SSE TICK — deliberately, and cheap enough to
+// say so with a number. Measured on this machine 2026-08-15, 19 roots, mean of 500 calls:
+// `readTrustList` is **0.136 ms**, and `discoverFleet` moves 1.0 → 1.1 ms. Against the 16 ms
+// sessions tick that is noise, and it buys the property a cached list would not have: editing
+// the file takes effect on the next request, with no restart.
 
 import fs from 'node:fs';
 import os from 'node:os';

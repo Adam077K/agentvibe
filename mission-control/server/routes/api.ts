@@ -137,6 +137,7 @@ export function createApi(state: LiveState = live): Hono {
   // routes/stream.ts stopped for every connected client — a control plane freezing the
   // screens it exists to keep live. The collectors do the awaiting; these handlers just
   // stopped pretending the work was instant.
+  //
   // TRUST-GATED ONE LEVEL DOWN, in collectBelief, which is where the spawn is. The gate is
   // NOT in this handler on purpose: `node <project>/scripts/ledger.mjs` is the thing being
   // stopped, and a guard next to the spawn survives a second caller of collectBelief in a way
@@ -167,14 +168,14 @@ export function createApi(state: LiveState = live): Hono {
     const projects = state.refresh();
     const { trusted, untrusted } = partitionByTrust(projects);
     const reports = await Promise.all(trusted.map((p) => detectConflicts(p)));
-    const list = state.trustList;
+    // Non-null by construction: refresh() above sets it, from the SAME read that decided every
+    // project's `trust`. Reading the file again here would let the panel name a list that is
+    // not the one it just excluded three projects with.
+    const list = state.trustList as NonNullable<typeof state.trustList>;
     const payload: ConflictsPayload = {
       reports,
       untrusted,
-      trust: {
-        source: list?.path ?? untrusted[0]?.source ?? 'unknown',
-        issues: list?.issues ?? [],
-      },
+      trust: { source: list.path, issues: list.issues },
     };
     return c.json(payload);
   });
