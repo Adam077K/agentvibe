@@ -443,6 +443,44 @@ describe('IndexStore read counters', () => {
     expect(r.bytesRead).toBe(bytes);
   });
 
+  // ── THE ORACLE'S INDEPENDENCE, PINNED ─────────────────────────────────────────────
+  //
+  // The whole design rests on `bytesRead` and the filesystem walk it is compared against coming
+  // from DIFFERENT SOURCES: the store counts `Buffer.byteLength` of what it decoded, the checks
+  // sum `statSync().size`. Change index-store.ts to `this.bytes += st.size` and the comparison
+  // silently becomes stat-vs-stat — an identity, true no matter what the reader actually does.
+  // Reported in review, and nothing went red: units 31 pass, live 7 pass. Worse, with that one
+  // line changed, a reader truncated to 10 characters ALSO passed everything, because the rate
+  // assertion is a CEILING and doing less work is faster.
+  //
+  // Independence was a fact about the code and not a property anything checked. This checks it.
+  //
+  // AND THE DIVERGENCE IT RELIES ON IS A FEATURE HERE, NOT A LURKING INCONSISTENCY. `bytesRead`
+  // is a decoded-text count and `st.size` is an on-disk count; the two agree for valid UTF-8 and
+  // only for valid UTF-8. Today 0 of the real corpus's 2,536 transcripts diverge, so the live
+  // test's byte bracket holds — the day one does, that test fails for a reason about ENCODING
+  // rather than about the code, and this is where that is written down. The fixture below makes
+  // the divergence deliberate and tiny so it pins the independence instead of lurking.
+  test('bytesRead counts DECODED bytes, so the byte oracle is not stat-vs-stat', () => {
+    const { project } = fixture([2]);
+    const dir = project.transcriptDirs[0]!;
+    // 0x80 is a lone UTF-8 continuation byte and cannot begin a valid sequence, so
+    // readFileSync(..., 'utf8') yields U+FFFD — which re-encodes to THREE bytes where the file
+    // holds one. The decoded count and st.size therefore cannot be equal.
+    fs.writeFileSync(path.join(dir, 'invalid-utf8.jsonl'), Buffer.from([0x78, 0x80, 0x0a]));
+
+    const files = listTranscripts(dir);
+    const statBytes = files.reduce((s, f) => s + fs.statSync(f).size, 0);
+    const decodedBytes = files.reduce((s, f) => s + Buffer.byteLength(fs.readFileSync(f, 'utf8'), 'utf8'), 0);
+    // NON-VACUITY: the fixture really does make the two disagree, so the assertions below
+    // distinguish two sources rather than comparing a number with itself.
+    expect(decodedBytes).not.toBe(statBytes);
+
+    const r = new IndexStore().buildCold([project]);
+    expect(r.bytesRead).toBe(decodedBytes); // the read-side count…
+    expect(r.bytesRead).not.toBe(statBytes); // …and provably NOT the stat-side one
+  });
+
   // N5, CLOSED. The counters are per-build state on a long-lived object, so a second build must
   // report its own work and not the sum of both. Deleting `startCounting`'s body leaves the live
   // test green — it builds once — and fails this.
