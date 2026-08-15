@@ -70,6 +70,87 @@ test('plain docs classify trivial', () => {
   assert.equal(tierOf('CHANGELOG.md'), 'trivial');
 });
 
+// ── mission-control ─────────────────────────────────────────────────────────
+// Before these rules existed, every one of the 47 tracked paths under mission-control/
+// matched nothing and classified `lite` by default — the collectors that shell out to git
+// inside repositories they merely found on disk, and the routes handling the requests that
+// trigger them. Four PRs got their tier from a human remembering.
+//
+// Reproduce the whole picture with:
+//   git ls-files mission-control | node scripts/classify.mjs --json --stdin
+
+test('the mission-control server classifies full — routes, discovery, and the collectors that shell out', () => {
+  for (const f of [
+    'mission-control/server/index.ts',
+    'mission-control/server/state.ts',
+    'mission-control/server/projects.ts',
+    'mission-control/server/routes/api.ts',
+    'mission-control/server/routes/stream.ts',
+    'mission-control/server/lib/claims.ts',
+    'mission-control/server/collectors/conflicts.ts',
+    'mission-control/server/collectors/worktrees.ts',
+    // Not on `main` — they arrive with PR #44. Asserted here so the rule is known to cover
+    // the allowlist and the cross-site guard on the day they land, rather than found out.
+    'mission-control/server/trust.ts',
+    'mission-control/server/routes/guard.ts',
+    'mission-control/scripts/trust-store.ts',
+    'mission-control/check.mjs',
+  ]) {
+    assert.equal(tierOf(f), 'full', `${f} must be full`);
+  }
+});
+
+test('the repo-root scripts/** rule does not reach mission-control/scripts/**', () => {
+  // `scripts/**` is anchored at the root, so mission-control/scripts/ needs its own rule.
+  // Without it the trust-list editor would have classified lite.
+  assert.ok(!globToRegex('scripts/**').test('mission-control/scripts/trust.ts'));
+  assert.equal(classifyFile('mission-control/scripts/trust.ts', RULES).pattern, 'mission-control/scripts/**');
+});
+
+test('the mission-control network binding classifies irreversible', () => {
+  const c = classifyFile('mission-control/server/config.ts', RULES);
+  assert.equal(c.tier, 'irreversible');
+  assert.ok(c.matched_patterns.includes('mission-control/server/**'), 'the full rule also matches; strictest must win');
+  // Shadow, not block, unlike every other irreversible entry: enforcement governs claim
+  // resolution and the ledger reads claims from markdown only, so `block` on a .ts path
+  // would be a mechanism that fires on nothing.
+  assert.equal(c.enforcement, 'shadow');
+});
+
+test('the mission-control client and tests stay lite, and its README stays trivial', () => {
+  // Mutation-tested and it still passes when the client/test rules are deleted — said here
+  // because that is the point, not a gap. Those two rules are documentary (lite is already
+  // the default). What this test guards is the opposite direction: someone widening the
+  // tree to `mission-control/**: full` later, which would make a CSS edit a security review
+  // and would raise README.md — a claim-bearing file — above trivial. It fails then.
+  for (const f of [
+    'mission-control/client/src/App.tsx',
+    'mission-control/client/src/views/FleetView.tsx',
+    'mission-control/client/src/styles.css',
+    'mission-control/test/units.test.ts',
+    'mission-control/test/views.test.tsx',
+  ]) {
+    assert.equal(tierOf(f), 'lite', `${f} must stay lite — a CSS edit is not a security review`);
+  }
+  // Docs inside mission-control must NOT be swept up by the tree rules. README.md carries
+  // two project claims; raising it would change which claims the ledger enforces.
+  assert.equal(tierOf('mission-control/README.md'), 'trivial');
+  assert.equal(classifyFile('mission-control/README.md', RULES).enforcement, 'shadow');
+});
+
+test('a mission-control change set floors at full without demanding the irreversible label', () => {
+  // The shape of PR #30/#32/#41/#44: client + collectors + tests. `full` is advisory in
+  // qa-lead-pass.yml; only `irreversible` demands a label that CI cannot add itself.
+  const r = classifyFiles([
+    'docs/08-agents_work/sessions/2026-08-14-ceo-mc-belief-conflicts.md',
+    'mission-control/client/src/App.tsx',
+    'mission-control/server/collectors/belief.ts',
+    'mission-control/test/collectors.test.ts',
+  ], RULES);
+  assert.equal(r.floor.tier, 'full');
+  assert.equal(r.floor.file, 'mission-control/server/collectors/belief.ts');
+});
+
 test('an unmatched path defaults to lite, not trivial', () => {
   // The bash this replaced started its accumulator at trivial, so package.json —
   // which nothing matches — classified as a typo-grade change.
