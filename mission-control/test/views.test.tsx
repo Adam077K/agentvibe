@@ -1205,6 +1205,7 @@ describe('render parity — Conflicts', () => {
 function beliefPayload(waivers: Waiver[]): BeliefSummary {
     return {
       project: 'agentvibe',
+      trust: { trusted: true, source: '/x/.warroom/trusted-projects' },
       fleet: { projectsDiscovered: 19, projectsWithLedgerIndex: 1 },
       ledger: { totalClaims: 35, pass: 64, wouldBlock: 6, block: 0, raw: '' },
       bands: [

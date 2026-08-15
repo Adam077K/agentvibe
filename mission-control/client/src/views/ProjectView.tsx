@@ -137,7 +137,9 @@ export function ProjectStageProbe({ empty }: { empty: ProjectDetail['empty'] }) 
           {empty.found
             ? 'A marker WAS found in the part that was searched, so this project does emit stage progress — the count below it is simply incomplete.'
             : 'Nothing was matched in whatever this probe covered, which is not the same as nothing existing.'}{' '}
-          The probe is <code className="fig">{empty.probe}</code> — run it yourself to see the same answer.
+          {/* "the same answer" is FALSE when the probe never ran — running it by hand would
+              produce the real answer, which is the one this panel does not have. */}
+          The probe is <code className="fig">{empty.probe}</code> — run it yourself to see what this panel could not.
         </p>
       </div>
     );
@@ -298,6 +300,22 @@ export function ProjectView({
   return (
     <section>
       <ProjectHeadline project={project} now={now} loading={loading} onRefresh={onRefresh} />
+
+      {/* STATED ONCE, AT THE TOP, AND NOT LEFT TO BE INFERRED FROM A PANEL BEING EMPTY. The
+          stage probe already renders "could not look" with this same reason, but a reader who
+          only sees that reads it as a probe failure. The fact above it — that Mission Control
+          is not permitted to run a program for this project at all — is a different statement
+          and belongs where the project is named. */}
+      {!project.trust.trusted && (
+        <div className="border-t border-warn/40 bg-warn/10 px-6 py-3">
+          <p className="fig text-[12px] text-warn">not a trusted project — no program was run for it</p>
+          <p className="mt-1 max-w-[78ch] text-[12.5px] leading-relaxed text-muted">{project.trust.reason}</p>
+          <p className="mt-2 max-w-[78ch] text-[12px] leading-relaxed text-dim">
+            Everything on this page that comes from a FILE is still real: session rollups, and the run log below.
+            Anything that needed a subprocess was skipped and says so where it would have been.
+          </p>
+        </div>
+      )}
 
       <div className="border-t border-line px-6 py-2">
         <button
