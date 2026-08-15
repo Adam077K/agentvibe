@@ -128,6 +128,49 @@ for (const command of MUST_ALLOW) {
   })
 }
 
+// ── the force-push rule: both orderings, and the word boundary that was missing ──────────────
+// The rule is written twice, once per argument order. Only the first carried `\b` after the
+// `-f` alternation, so the second matched `-f` inside ANY hyphenated word appearing after the
+// literal "main" — `--body-file`, `risk-full`, `notes-final`. Found when `gh pr create
+// --base main --body-file ...` in the same command as a `git push` was refused as a
+// force-push to main. Both orderings are pinned here so a future edit cannot fix one and
+// leave the other, which is exactly how this defect survived.
+
+const FORCE_PUSH_MUST_BLOCK = [
+  'git push --force origin main',
+  'git push origin main --force',
+  'git push -f origin main',
+  'git push origin main -f',
+  'git push --force origin master',
+  'git push origin master -f',
+  'git push --force-with-lease origin main',
+]
+
+for (const command of FORCE_PUSH_MUST_BLOCK) {
+  test(`BLOCKS force-push to a protected branch — ${command}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, 'a genuine force-push to main/master was allowed')
+  })
+}
+
+const FORCE_PUSH_MUST_ALLOW = [
+  // The exact shape that exposed the bug: a push, then a PR opened against main, one command.
+  'git push -u origin feat/thing && gh pr create --base main --body-file /tmp/body.md',
+  // `-f` inside a hyphenated word after "main" — the unbounded alternation matched all of these.
+  'git push origin feat/thing && gh pr edit --base main --add-label risk-full',
+  'git push origin feat/thing && echo "merged to main" > notes-final.txt',
+  // A force-push to a branch that is not main/master is the author's own business.
+  'git push --force origin feat/my-topic-branch',
+  // Ordinary pushes, including to a branch whose name merely contains the word.
+  'git push -u origin fix/safety-floor-and-gate',
+  'git push origin feat/domain-model',
+]
+
+for (const command of FORCE_PUSH_MUST_ALLOW) {
+  test(`ALLOWS non-force-push work — ${command}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, 'hook blocked a legitimate push; the false-positive budget is blown')
+  })
+}
+
 test('ALLOWS writes inside the project root', () => {
   assert.equal(runHook(compact(write(path.join(REPO, 'docs', 'scratch.md')))), ALLOW)
 })

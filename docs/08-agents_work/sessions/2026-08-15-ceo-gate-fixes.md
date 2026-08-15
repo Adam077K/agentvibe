@@ -84,9 +84,27 @@ certainly exists and has not been found.
 restores files *from a branch*; the rule matches the `git checkout --` form and blocks it as if it were
 `git checkout -- <paths>`, which discards. The two differ by one argument and by everything that matters. Hit
 while splitting this very PR, on a clean tree where nothing could be discarded. Worked around with
-`git restore --source=<branch>`, not overridden. **The pattern is now four for four: every false positive so
-far has been the rule reading a command's *shape* rather than its *effect*.** That is the shape of the fix,
-whenever someone takes it.
+`git restore --source=<branch>`, not overridden.
+
+**And a fifth, which was not a scoping artefact but an outright bug in the rule — fixed here, red-first.**
+The force-push guard is written twice, once per argument order, and only the first carried `\b` after the
+`-f` alternation:
+
+```
+'git\b.*push\b.*(--force|-f)\b.*(main|master)'   ← bounded
+'git\b.*push\b.*(main|master).*(--force|-f)'     ← not
+```
+
+So the second matched `-f` inside **any** hyphenated word following the literal `main` — `--body-file`,
+`risk-full`, `notes-final`. A `git push` sharing a command line with `gh pr create --base main --body-file`
+was refused as *"Force-push to main/master is blocked."* Three red tests reproduce it, seven pin that every
+genuine force-push to `main`/`master` still blocks in both argument orders, and six pin the legitimate
+shapes. **62/62.** Both orderings are now pinned, because fixing one and leaving the other is precisely how
+this survived.
+
+**The tally is five for five: every false positive so far has been the rule reading a command's *shape*
+rather than its *effect*.** Four remain unfixed and are scoping artefacts of scanning the whole command
+string; this one was a missing character and is gone.
 
 **What an independent review would still add:** a reader who did not write the hook, checking the regex set
 against commands this session never ran.

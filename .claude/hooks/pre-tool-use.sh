@@ -202,8 +202,12 @@ case "$tool_name" in
     fi
 
     # ── BLOCK: git push --force to main/master ────────────────────────────────
+    # Both orderings need the trailing \b. Without it the second pattern matches `-f` inside
+    # any hyphenated word following the literal "main" — `--body-file`, `risk-full` — so a
+    # `git push` sharing a command line with `gh pr create --base main` was refused as a
+    # force-push. The first pattern always had the boundary; the second did not.
     if printf '%s' "$command" | grep -qE 'git\b.*push\b.*(--force|-f)\b.*(main|master)' || \
-       printf '%s' "$command" | grep -qE 'git\b.*push\b.*(main|master).*(--force|-f)'; then
+       printf '%s' "$command" | grep -qE 'git\b.*push\b.*(main|master).*(--force|-f)\b'; then
       block "Force-push to main/master is blocked. Create a PR instead, or ask the CEO to approve the force-push explicitly."
     fi
 
