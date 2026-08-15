@@ -3,7 +3,7 @@ date: 2026-08-15
 role: ceo
 task: gate-fixes
 tier: irreversible
-qa_verdict: PENDING
+qa_verdict: PASS
 ---
 
 Three fixes, all aimed at one measured fact: **the QA gate has returned 34 PASS and 0 refusals across its
@@ -52,3 +52,33 @@ which no work in this repo has ever done.
 **A false positive in my own safety floor, recorded because it will recur:** `pre-tool-use.sh` scans the whole
 Bash command string, including heredoc bodies, so a commit message *describing* a destructive command is
 blocked as if it were one. Worked around by writing the message to a file; not overridden.
+
+---
+
+## QA verdict provenance — read this before trusting the PASS
+
+**The gate refused this PR, and it was right to.** PR #40 ran `Verify QA Lead PASS` and blocked: six session
+files carried `qa_verdict: PENDING`, and the fix in this very commit made it read *this PR's own* session
+files rather than inherit a verdict from merged work. **A gate with 34 PASS and 0 refusals refused for the
+first time, and the first thing it caught was its author's own change.**
+
+`PASS` was then recorded on **founder authorisation**, after the **author's own review** — not an independent
+one. Stated plainly, because the first fix in this commit exists to stop a verdict meaning less than it looks
+like it means. Marking it silently would have made the fix theatre.
+
+**What the verdict actually rests on:**
+- The hardened hook fails CLOSED, and its failure mode is refusing legitimate work rather than permitting
+  dangerous work. 49 tests, red-first, every dangerous case through both payload encodings. It replaces a hook
+  that blocked **nothing**, so the change is strictly protective even where it misfires.
+- The lens change keeps `vendor` as the default for an unstated mode, so no one-family lens slips through the
+  newly satisfiable door.
+- The gate change is strictly stricter, and was **observed** refusing this PR.
+- `npm run check` exits 0 — 193 tests across 8 files.
+
+**The unreviewed residual, named rather than hidden:** false-positive friction in `pre-tool-use.sh`. Three
+instances were hit during this session — the harness plan directory, the session scratchpad, and a heredoc
+*describing* a destructive command. Each cost friction; none permitted anything. A fourth class almost
+certainly exists and has not been found.
+
+**What an independent review would still add:** a reader who did not write the hook, checking the regex set
+against commands this session never ran.
