@@ -4,6 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFile, execFileSync } from 'node:child_process';
 import { promisify } from 'node:util';
+
+/** The test's own async spawner — used to measure what asking for a child costs. */
+const execFileAsync = promisify(execFile);
 import { discoverProjects, encodeProjectDir, type Project } from '../server/projects.ts';
 import { IndexStore } from '../server/index-store.ts';
 import { listWorktrees, parseWorktreePorcelain, type WorktreeEntry } from '../server/collectors/worktrees.ts';
@@ -12,7 +15,10 @@ import {
   detectConflicts,
   parseStatusPorcelain,
   scopeSweep,
+  wholeLinesOf,
   EXCLUDED_REASON,
+  STATUS_ARGV,
+  statusConfigEnv,
 } from '../server/collectors/conflicts.ts';
 import { parseWarroomFleetOutput } from '../server/collectors/fleet.ts';
 import {
@@ -46,7 +52,7 @@ import {
   removeMarkers,
   writeRegistry,
 } from './fixtures.ts';
-import { notVerified } from './gate.ts';
+import { notVerified, median, stallGateVerdict } from './gate.ts';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '..', '..');
 const cleanupDirs: string[] = [];
@@ -532,6 +538,33 @@ describe('the conflicts sweep leaves the event loop free', () => {
 // threshold, same instrument. This is what actually binds the enumeration half; the
 // structural pin above catches only the call-site revert in one file.
 describe('enumerating many projects leaves the event loop free', () => {
+  /**
+   * TWELVE — AND BOTH LEVERS FOR MAKING THE RUNNER ABLE TO RESOLVE THIS WERE TRIED THERE AND
+   * MEASURED TO FAIL. Written down so the next reader does not spend the afternoon I did.
+   *
+   * 1. MORE WORK PER SPAWN. Unavailable: `git worktree list --porcelain` is irreducibly
+   *    spawn-dominated. Measured — 1 / 8 / 24 worktrees in a repo cost 31.8 / 33.7 / 38.2 ms
+   *    per call, so twenty-four times the subject buys twenty percent more time. No fixture
+   *    SHAPE makes this command's work outweigh its own startup.
+   *
+   * 2. MORE CHILDREN. The argument was that `async / control` is scale-invariant — true, and
+   *    what makes 0.75 valid anywhere — while the room correct code has, `0.75 * control -
+   *    floor`, is a fixed positive quantity per child and so grows linearly with N, against a
+   *    resolution that stays put. The first half is right. The second is not:
+   *
+   *      N=12   control 19.6ms  floor 10.4ms  room 4.3ms  resolution 3.3ms
+   *      N=48   control 73.3ms  floor 46.3ms  room 8.7ms  resolution 9.7ms
+   *
+   *    Room doubled and NOISE TRIPLED. Worse, the ratio at N=48 measured 0.784 on correct
+   *    code — above the 0.750 line, the exact red this change exists to remove, arriving from
+   *    the direction I had just argued would fix it. It also cost fifteen seconds of local
+   *    suite time to buy that.
+   *
+   * So the pin enforces where the difference can be resolved — a developer machine, ratio
+   * 0.141 against a mutated 1.136 — and says so honestly where it cannot. The bound is
+   * untouched at 0.75. This is not a loosened threshold; it is a refusal to report a coin
+   * toss as a verdict.
+   */
   const PROJECTS = 12;
   const parent = mkTmpDir('mc-enum-scale-');
   cleanupDirs.push(parent);
@@ -574,28 +607,119 @@ describe('enumerating many projects leaves the event loop free', () => {
     await new Promise((resolve) => setTimeout(resolve, 30));
     const idleNoiseMs = worstGapSince();
 
-    // THE MEASUREMENT — every project swept the way the route does it: concurrently.
-    const t0 = performance.now();
-    const reports = await Promise.all(projects.map((p) => detectConflicts(p)));
-    const sweepMs = performance.now() - t0;
-    await settle();
-    const asyncStallMs = worstGapSince();
+    // THREE QUANTITIES, MEASURED REPEATEDLY AND INTERLEAVED.
+    //
+    //   async   — the sweep, the way the route does it: concurrently
+    //   control — the ENUMERATION PHASE ONLY, sequential and synchronous: exactly what
+    //             reverting listWorktreesAsync produces, and nothing else
+    //   floor   — THE CONFOUND THIS TEST WAS NOT MEASURING, and the reason it flaked. Both
+    //             paths pay the same synchronous cost of ASKING for twelve children; the
+    //             parent's side of a spawn is synchronous wherever it happens. The control's
+    //             stall is that floor PLUS the blocking wait, the async path's is the floor
+    //             and nothing else — so as git's real work shrinks the floor becomes most of
+    //             both terms and the ratio walks toward 1 with nothing wrong. It is the SAME
+    //             twelve commands in the same directories, asked for concurrently instead of
+    //             blocked on; not `git --version`, which skips repo discovery and would
+    //             under-state it.
+    //
+    // REPEATED, because the flake was variance and one sample cannot see its own. Measured on
+    // CI across five runs: 0.613 · 0.622 · 0.655 · 0.746 · 0.835, the last red, against a
+    // 0.750 bound — a spread of 0.22 on a quantity being compared to a fixed line.
+    //
+    // INTERLEAVED, so a machine that slows down halfway through moves all three together
+    // rather than making one of them look bad. Medians rather than means: one descheduled
+    // iteration should not move the answer, and on this measurement it otherwise would.
+    const asyncStalls: number[] = [];
+    const controlStalls: number[] = [];
+    const floorStalls: number[] = [];
+    // PER ROUND, NOT LAST-ROUND SURVIVORS. These were three `let`s reassigned every iteration,
+    // so every duration printed below belonged to round 5 while the reported async stall is
+    // the max over all five — and the diagnostic then contradicted itself on precisely the
+    // regression it exists to report. Captured under the memoised mutation:
+    // `async worst 147.6ms (sweep 40.6ms, spread 139.6)` — a 147.6 ms stall inside a 40.6 ms
+    // sweep. Whoever reads that during a real regression disbelieves the number, and a
+    // diagnostic nobody believes is worse than no diagnostic.
+    const sweepMsBy: number[] = [];
+    const controlMsBy: number[] = [];
+    const floorMsBy: number[] = [];
+    let reports: Awaited<ReturnType<typeof detectConflicts>>[] = [];
+    const ROUNDS = 5;
 
-    // THE CONTROL — the ENUMERATION PHASE ONLY, sequential and synchronous: exactly what
-    // reverting listWorktreesAsync produces, and nothing else.
-    const c0 = performance.now();
-    for (const p of projects) {
-      execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' });
+    for (let round = 0; round < ROUNDS; round++) {
+      const t0 = performance.now();
+      reports = await Promise.all(projects.map((p) => detectConflicts(p)));
+      sweepMsBy.push(performance.now() - t0);
+      await settle();
+      asyncStalls.push(worstGapSince());
+
+      const c0 = performance.now();
+      for (const p of projects) {
+        execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' });
+      }
+      controlMsBy.push(performance.now() - c0);
+      await settle();
+      controlStalls.push(worstGapSince());
+
+      // THE REJECTION IS CAUGHT, because what is timed here is the cost of ASKING, not the
+      // answer. At this concurrency a spawn can fail with EAGAIN, and an uncaught rejection
+      // takes the whole suite down with "Unhandled error between tests" — which is how the
+      // first run at this project count failed, my defect and not the collector's. Whether a
+      // child succeeded is `detectConflicts`'s business and is asserted above.
+      const f0 = performance.now();
+      await Promise.all(
+        projects.map((p) =>
+          execFileAsync('git', ['worktree', 'list', '--porcelain'], { cwd: p.root, encoding: 'utf8' }).catch(
+            () => undefined
+          )
+        )
+      );
+      floorMsBy.push(performance.now() - f0);
+      await settle();
+      floorStalls.push(worstGapSince());
     }
-    const controlMs = performance.now() - c0;
-    await settle();
-    const controlStallMs = worstGapSince();
     sampling = false;
+
+    const spread = (xs: number[]) => Math.max(...xs) - Math.min(...xs);
+
+    // MAX FOR THE SUBJECT, MEDIAN FOR THE ENVIRONMENT, and the difference is the question
+    // each one answers. "Did this ever block" is a question about the WORST round, so a
+    // median is the wrong reducer for it: a memoised lister that blocks only on a cache miss
+    // — an ordinary optimisation, a shape that already exists twice in this repo — puts one
+    // slow round among four warm ones, and the median reports the warm ones. Measured by the
+    // review lens: 5 runs of 5 rounds, ratio 0.081-0.153, `1 pass 0 fail` on an
+    // implementation that blocks 350 ms on every cold path.
+    //
+    // The control and the floor are measurements OF THIS MACHINE, where a median is right:
+    // one descheduled round should not move an environment estimate.
+    // THE GATE'S VERDICT, TAKEN ONCE AND USED EVERYWHERE — the diagnostic below prints the
+    // same numbers the gate decides on, because two computations of one quantity is how the
+    // printed line and the enforced line drift apart. See test/gate.ts for why this is a pure
+    // function rather than four lines here: its withhold branch had never fired.
+    const gate = stallGateVerdict(controlStalls, floorStalls, PROJECTS);
+
+    const asyncStallMs = Math.max(...asyncStalls);
+    // `gate.controlStallMs`, not a second `median(controlStalls)`. It was computed twice —
+    // identical today across 20,163 differential cases, which makes it a consistency question
+    // rather than a defect, and exactly the duplicate this file already removed for the floor.
+    const controlStallMs = gate.controlStallMs;
+    const floorStallMs = median(floorStalls); // the DIAGNOSTIC's floor; the gate reads the max
+
+    // WHICH ROUND EACH REPORTED STALL CAME FROM, so every duration printed beside a stall is
+    // that same round's duration and the line cannot contradict itself. `median` returns an
+    // element of the array rather than an interpolation, so both lookups find a real round.
+    const asyncRound = asyncStalls.indexOf(asyncStallMs);
+    const controlRound = controlStalls.indexOf(controlStallMs);
+    const floorRound = floorStalls.indexOf(floorStallMs);
 
     // eslint-disable-next-line no-console
     console.log(
-      `  [async] ${PROJECTS} projects — async ${asyncStallMs.toFixed(1)}ms (sweep ${sweepMs.toFixed(1)}ms) · ` +
-        `sync enumeration control ${controlStallMs.toFixed(1)}ms (${controlMs.toFixed(1)}ms) · ` +
+      `  [async] ${PROJECTS} projects x${ROUNDS} — async WORST ${asyncStallMs.toFixed(1)}ms ` +
+        `(round ${asyncRound + 1}, sweep ${sweepMsBy[asyncRound]!.toFixed(1)}ms, spread ` +
+        `${spread(asyncStalls).toFixed(1)}) · sync enumeration control MEDIAN ${controlStallMs.toFixed(1)}ms ` +
+        `(round ${controlRound + 1}, ${controlMsBy[controlRound]!.toFixed(1)}ms, spread ` +
+        `${spread(controlStalls).toFixed(1)}) · spawn floor MEDIAN ${floorStallMs.toFixed(1)}ms ` +
+        `(round ${floorRound + 1}, ${floorMsBy[floorRound]!.toFixed(1)}ms, spread ` +
+        `${spread(floorStalls).toFixed(1)}, worst ${gate.ceilingMs.toFixed(1)}ms — the gate reads this) · ` +
         `idle noise ${idleNoiseMs.toFixed(1)}ms · ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
     );
 
@@ -612,10 +736,94 @@ describe('enumerating many projects leaves the event loop free', () => {
       return;
     }
 
+    // THE FLOOR AS A GATE, DELIBERATELY NOT AS A DIVISOR. Subtracting it from both terms —
+    // `(async - floor) / (control - floor)` — is arithmetically tidy and numerically wrong
+    // here: where the floor is most of both terms it divides two small differences of noisy
+    // quantities, so the variance explodes and the bound flakes HARDER than the one it
+    // replaces, in the direction that reads as a real failure. Read as a gate instead, the
+    // same quantity fails safe.
+    //
+    // EVERY INPUT TO THIS GATE IS AN ENVIRONMENT MEASUREMENT, and it took a review to make
+    // that true. An earlier version of this comment claimed both inputs were
+    // mutation-independent. THERE WERE THREE, and the third was `spread(asyncStalls)` — the
+    // subject's own variance, taken straight from `detectConflicts`. So the code under test
+    // could widen the gate and hide behind it, and it did:
+    //
+    //   plain sync revert     13 runs, 12 caught, ONE ESCAPED — spread 174.8ms against
+    //                         244ms of headroom, gate fired, `1 pass 0 fail` with a
+    //                         blocking enumeration, on the machine with the MOST headroom
+    //   memoised lister       blocks on a cache miss, async on a hit — an ordinary
+    //                         optimisation, a shape this repo already has twice — escaped
+    //                         5 runs out of 5
+    //
+    // That is a false-GREEN, and the flake this PR replaced was a false-RED. For a guarantee
+    // the first is strictly worse, and it is not a trade I would have taken knowingly.
+    //
+    // THERE IS NO RESOLUTION TERM AT ALL. An earlier revision of this comment said it was
+    // "now the spread of the CONTROL and the FLOOR only", which was false as written and
+    // contradicted by the paragraph below it: the variance term was removed outright, not
+    // narrowed. Two claims about one gate, disagreeing silently, which is the failure this
+    // file keeps having.
+    //
+    // AND "NOTHING THE SUBJECT DOES CAN MOVE THIS THRESHOLD" WAS FALSE TOO — SYNTACTICALLY
+    // TRUE, CAUSALLY REFUTED, and this is the honest statement of what the gate binds. No
+    // gate input reads a value `detectConflicts` returned; that was verified by trace. It
+    // leaks through the MACHINE instead. A review lens built a stale-while-revalidate lister
+    // — the async answer returned immediately, a synchronous `execFileSync` revalidation
+    // fired later on a timer — and measured:
+    //
+    //   revalidate at 100 ms    1 of 4 runs caught, 3 escaped
+    //   revalidate at 220 ms    4 of 4 `1 pass 0 fail`, FULLY INVISIBLE — and the leak RAISED
+    //                           the gate. Landing inside the control window, it pushed
+    //                           median(control) 129 -> 190 ms, so lineMs went 96 -> 143 ms.
+    //                           The code under test widened its own pass bound by ~48%.
+    //
+    // SO THE GENERAL RULE IS BIGGER THAN THE ONE THIS PR FIXED. Not merely "any statistic
+    // computed from the subject's own timings is under the subject's influence" — also ANY
+    // STATISTIC TAKEN FROM A WINDOW THE SUBJECT MAY STILL BE RUNNING IN. Removing the
+    // variance term closed the escape that existed. No reducer and no fixture closes the
+    // class, because the contamination is causal rather than arithmetic; only an instrument
+    // with no clock does, which is #45 — intercept `child_process` and assert the specific
+    // `*Sync` exports were never called.
+    //
+    // WHAT THIS TEST BINDS, THEN: an implementation that BLOCKS. It does not bind one that
+    // LEAKS synchronous work into a neighbouring measurement window. That is a real limit of
+    // any timing instrument and it is stated here rather than in a PR body, because this is
+    // where the next person will look.
+    //
+    // THE THRESHOLD IS MEASURED, NOT PICKED, AND IT COMPARES LIKE WITH LIKE. The assertion
+    // below is on the subject's WORST round, so the question the gate must answer is: how high
+    // can a CORRECT implementation's worst round reach? That is the floor, reduced the same
+    // way — `max(floorStalls)` — because the floor is exactly what correct code pays and
+    // nothing more. The line it must stay under is `0.75 * control`. Requiring the line to be
+    // at least twice the floor's worst round says, in the machine's own numbers, that a pass
+    // is a pass rather than a coin landing well.
+    //
+    // AN EARLIER VERSION COMPARED HEADROOM AGAINST `max - min` ACROSS ROUNDS, and that
+    // estimator is the reason two mutations still escaped after the subject's own term was
+    // removed: one slow round inflates a range without limit, and measured here, a control
+    // spread of 160.9ms and one of 426.0ms fired the gate while the mutation sat in plain
+    // sight at ratio 1.192 and 1.247. A range over five samples is not a dispersion estimate,
+    // it is the worst thing that happened; the median control is stable across those same
+    // runs (363-399ms) precisely because a median is not.
+    // THE ARITHMETIC IS IN test/gate.ts AND ITS BRANCHES ARE UNIT-TESTED THERE. It used to be
+    // four lines here, and the withhold branch had never executed — in 20 clean runs or in any
+    // of eight mutations. Reaching it through a real measurement needs a genuinely marginal
+    // machine, which a suite cannot arrange; as a pure function it takes synthetic samples.
+    if (!gate.resolves) {
+      notVerified('enumeration event-loop binding', gate.reason!);
+      return;
+    }
+
     // Same bound as the status-phase test, for the same reason and with the same failure
     // direction. Both terms scale with PROJECTS, so this holds on any machine.
-    expect(asyncStallMs).toBeLessThan(controlStallMs * 0.75);
-  });
+    //
+    // `gate.lineMs` rather than a second `controlStallMs * 0.75`: the bound the assertion
+    // enforces is now literally the bound the gate cleared, not a copy of it that agrees today.
+    expect(asyncStallMs).toBeLessThan(gate.lineMs);
+  }, 120_000); // EXPLICIT, because three rounds over 48 projects exceeds bun's 5s default —
+  // which is how this first failed at the larger count: the runner SIGTERMed the child mid-
+  // measurement and the error read as a git failure rather than as a test timeout.
 });
 
 // ── THE PROJECT PROBE, SAME SHAPE AS THE ENUMERATION PIN ──────────────────────────────
@@ -885,6 +1093,666 @@ describe('projectEmptyState stops rather than scanning forever', () => {
 // `{worktrees: [], excluded: {count: 0}}` — and the view printed a measured all-clear with
 // "0 of 0 not swept" beneath it. The mechanism built to make narrowing visible was itself
 // silent about the one case where the entire population is unknown.
+// ── A QUOTED PATH IS NOT THE PATH ─────────────────────────────────────────────────────
+//
+// THE SECOND FABRICATION, AND IT NEEDED NO TRUNCATION AT ALL. parseStatusPorcelain split on
+// ` -> ` and never un-C-quoted, so every path git quotes — anything holding a space, a quote,
+// a backslash, a control character or a non-ASCII byte — reached the conflict map with its
+// quotes and octal escapes still on it. Measured on a four-file fixture, nothing truncated,
+// `readable === undefined` throughout: 3 of 4 rendered paths did not exist.
+//
+//   MISSING  "\"nonascii-caf\\303\\251.ts\""     <- octal escapes, undecoded
+//   MISSING  "\"with space.ts\""                 <- quotes, unstripped
+//   MISSING  "looking.ts\""                      <- ` -> ` found INSIDE a quoted name
+//   EXISTS   "plain.ts"
+//
+// The third line is the nastiest: a file named `arrow -> looking.ts` is quoted BECAUSE it has
+// spaces, and searching for the rename separator finds the one in the name.
+describe('parseStatusPorcelain un-C-quotes the paths git quotes', () => {
+  // GROUND TRUTH, captured verbatim from `git status --porcelain` (git 2.50.1) against a
+  // worktree holding exactly these names. Pinned as the bytes git actually wrote so the
+  // decoder is checked against git's format rather than against this test's idea of it —
+  // the same technique as the encodeProjectDir pin above.
+  const REAL_PORCELAIN =
+    [
+      '?? "arrow -> looking.ts"',
+      '?? "back\\\\slash.ts"',
+      '?? "emoji-\\360\\237\\224\\245.ts"',
+      '?? "nonascii-caf\\303\\251.ts"',
+      '?? plain.ts',
+      '?? "quote\\".ts"',
+      '?? "tab\\tinside.ts"',
+      '?? "with space.ts"',
+    ].join('\n') + '\n';
+
+  test('every quoted form decodes to the name on disk', () => {
+    expect(parseStatusPorcelain(REAL_PORCELAIN)).toEqual([
+      'arrow -> looking.ts', // the arrow is part of the NAME, not a separator
+      'back\\slash.ts',
+      'emoji-🔥.ts', // \360\237\224\245 — four BYTES of one code point, decoded together
+      'nonascii-café.ts', // \303\251 — two bytes of one code point, likewise
+      'plain.ts', // unquoted paths still pass through untouched
+      'quote".ts',
+      'tab\tinside.ts',
+      'with space.ts',
+    ]);
+  });
+
+  // OCTAL ESCAPES ARE BYTES. Decoding each one to its own character yields `Ã©` — a name that
+  // does not exist, which is the fabrication moved rather than removed.
+  test('a multi-byte code point is decoded from its bytes, not per escape', () => {
+    expect(parseStatusPorcelain('?? "caf\\303\\251.ts"\n')).toEqual(['café.ts']);
+    expect(parseStatusPorcelain('?? "caf\\303\\251.ts"\n')[0]).not.toContain('Ã');
+  });
+
+  // A RAW ASTRAL CHARACTER INSIDE A QUOTED BODY — the shape `core.quotePath=false` produces,
+  // pinned as bytes so it is checked without depending on any git config at all.
+  //
+  // Indexing a JS string yields UTF-16 CODE UNITS, so `🔥` comes back as two lone surrogates,
+  // and encoding a lone surrogate gives `EF BF BD` — U+FFFD. Measured through changedFilesFor
+  // before the fix, readable === undefined and nothing truncated: `"fire 🔥 space.ts"` parsed
+  // to `"fire �� space.ts"`, and 3 of 6 paths named files that do not exist.
+  test('a raw astral character inside a quoted path is not destroyed', () => {
+    expect(parseStatusPorcelain('?? "fire 🔥 space.ts"\n')).toEqual(['fire 🔥 space.ts']);
+    expect(parseStatusPorcelain('?? "math 𝛼 space.ts"\n')).toEqual(['math 𝛼 space.ts']);
+    // The replacement character must not appear — that IS the defect's signature.
+    expect(parseStatusPorcelain('?? "fire 🔥 space.ts"\n')[0]).not.toContain('�');
+    // …and it survives alongside escapes in the same body, which is where index arithmetic
+    // over a code-point array could still go wrong.
+    expect(parseStatusPorcelain('?? "a\\tb 🔥 caf\\303\\251.ts"\n')).toEqual(['a\tb 🔥 café.ts']);
+  });
+
+  // A LEADING BOM IS PART OF THE NAME, and `TextDecoder`'s flag for it is named backwards:
+  // `ignoreBOM: false` — the DEFAULT — makes the decoder STRIP a leading U+FEFF, which renames
+  // the file. Measured through changedFilesFor with the forced config on: 4 parsed, 2 MISSING.
+  // A BOM in the MIDDLE always survived, which is what made this easy to miss.
+  test('a leading BOM is kept, not swallowed by the decoder', () => {
+    expect(parseStatusPorcelain('?? "\\357\\273\\277bom-lead.ts"\n')).toEqual(['﻿bom-lead.ts']);
+    expect(parseStatusPorcelain('?? "\\357\\273\\277 lead bom space.ts"\n')).toEqual(['﻿ lead bom space.ts']);
+    expect(parseStatusPorcelain('?? "mid\\357\\273\\277bom.ts"\n')).toEqual(['mid﻿bom.ts']); // never broken
+  });
+
+  // THE STATUS FIELD IS FIXED WIDTH, so the path is sliced at a known offset rather than
+  // trimmed. `slice(2).trimStart()` ate the first character of any name starting with Unicode
+  // whitespace — JS `trimStart` strips the entire WhiteSpace class — and under
+  // `core.quotePath=false` git emits such names RAW and unquoted. Measured on the raw form:
+  // 6 parsed, 5 MISSING.
+  test('a name beginning with Unicode whitespace keeps its first character', () => {
+    expect(parseStatusPorcelain('??  nbsp-lead.ts\n')).toEqual([' nbsp-lead.ts']);
+    expect(parseStatusPorcelain('?? 　ideographic.ts\n')).toEqual(['　ideographic.ts']);
+    expect(parseStatusPorcelain('??  emsp.ts\n')).toEqual([' emsp.ts']);
+    expect(parseStatusPorcelain('?? ﻿bom-raw.ts\n')).toEqual(['﻿bom-raw.ts']);
+    // …and ordinary names are unaffected, so the slice is not off by one.
+    expect(parseStatusPorcelain('?? plain.ts\n')).toEqual(['plain.ts']);
+    expect(parseStatusPorcelain(' M src/alpha.ts\n')).toEqual(['src/alpha.ts']);
+  });
+
+  // GROUND TRUTH for renames, same capture. Note git's v1 text form is `orig -> new` while
+  // `-z` emits the pair in the OPPOSITE order; the new path is the one on disk.
+  test('a rename yields the new path, with either side quoted or bare', () => {
+    const renames =
+      [
+        'R  "old caf\\303\\251.ts" -> "new caf\\303\\251.ts"',
+        'R  "old plain.ts" -> "new plain.ts"',
+        'R  oldsimple.ts -> newsimple.ts',
+      ].join('\n') + '\n';
+    expect(parseStatusPorcelain(renames)).toEqual(['new café.ts', 'new plain.ts', 'newsimple.ts']);
+  });
+
+  // THE MIXED FORM, because git quotes each side independently and a fixture that only ever
+  // quotes both would not notice a parser that assumed symmetry.
+  test('a rename with only one side quoted parses both ways round', () => {
+    expect(parseStatusPorcelain('R  bare.ts -> "new name.ts"\n')).toEqual(['new name.ts']);
+    expect(parseStatusPorcelain('R  "old name.ts" -> bare.ts\n')).toEqual(['bare.ts']);
+  });
+
+  // An escaped quote must not end the quoted span early.
+  test('an escaped quote does not terminate the path', () => {
+    expect(parseStatusPorcelain('?? "a\\"b -> c.ts"\n')).toEqual(['a"b -> c.ts']);
+  });
+
+  /**
+   * `status.showUntrackedFiles=all` appended to whatever the ambient value is, for the tests
+   * that deliberately read BARE git. They must not inherit a hostile `=no`, which would empty
+   * their fixtures and fail them on their premise instead of on the behaviour under test.
+   */
+  const forceShowUntrackedAll = () => {
+    const ours = "'status.showUntrackedFiles=all'";
+    const existing = process.env.GIT_CONFIG_PARAMETERS;
+    return existing ? `${existing} ${ours}` : ours;
+  };
+
+  /** Every name git has a reason to quote, including the two that broke the decoder. */
+  const EXOTIC_NAMES = [
+    'plain.ts',
+    'with space.ts',
+    'nonascii-café.ts',
+    'emoji-🔥.ts',
+    // BOTH A SPACE AND AN ASTRAL CHARACTER, which is the exact gap the surrogate defect lived
+    // in: `emoji-🔥.ts` alone has no reason to be quoted when core.quotePath is off, so it
+    // arrives bare and never reaches the decoder. The space is what forces quoting; the astral
+    // character inside that quoted body is what the code-unit loop destroyed.
+    'fire 🔥 space.ts',
+    'math 𝛼 space.ts', // outside the BMP too, and not an emoji — a lone surrogate pair
+    'arrow -> looking.ts',
+    'quote".ts',
+    'back\\slash.ts',
+    'tab\tinside.ts',
+    'newline\ninside.ts', // the name that makes wholeLinesOf sound: git C-quotes it
+  ];
+
+  test('the forced config beats every channel that can set it, including an inherited one', () => {
+    const root = mkTmpDir('mc-quote-flag-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    execFileSync('git', ['config', 'core.quotePath', 'false'], { cwd: root });
+    fs.writeFileSync(path.join(root, 'fire 🔥 space.ts'), 'x\n');
+    const escaped = '\\360\\237\\224\\245';
+    const run = (env: NodeJS.ProcessEnv) => execFileSync('git', [...STATUS_ARGV], { cwd: root, encoding: 'utf8', env });
+
+    // The repo's own config is beaten…
+    expect(run({ ...process.env, ...statusConfigEnv() })).toContain(escaped);
+    // …and so is a hostile GIT_CONFIG_PARAMETERS, WHICH THE FIRST VERSION OF THIS DID NOT DO.
+    // `GIT_CONFIG_COUNT` alone loses to it: git reads PARAMETERS afterwards, and EXPORTS that
+    // variable into every child of a command-line override, into aliases, hooks, `rebase -x`,
+    // `bisect run` and `submodule foreach`. Since the sweep spreads `...process.env`, Mission
+    // Control run from inside a hook silently lost its own override. Measured, and the reason
+    // "identical precedence to the command line" was false as written: true against every
+    // config a user EDITS, false against the one that arrives by INHERITANCE.
+    const hostile = { ...process.env, GIT_CONFIG_PARAMETERS: "'core.quotePath=false'" };
+    expect(run({ ...hostile, ...statusConfigEnv(hostile) })).toContain(escaped);
+    // NON-VACUITY: that ambient really does defeat the COUNT pairs on their own, so the line
+    // above is testing the append rather than a hostile value that never had any effect.
+    expect(run({ ...hostile, GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'core.quotePath', GIT_CONFIG_VALUE_0: 'true' })).not.toContain(escaped);
+    // …and with no override at all the repo's config wins, so the fixture is genuinely hostile.
+    expect(run({ ...process.env })).not.toContain(escaped);
+
+    // The ambient value is APPENDED, never replaced — dropping someone else's git config on the
+    // floor would be its own silent behaviour change.
+    const OURS = "'core.quotePath=true' 'status.showUntrackedFiles=all'";
+    expect(statusConfigEnv(hostile).GIT_CONFIG_PARAMETERS).toBe(`'core.quotePath=false' ${OURS}`);
+    expect(statusConfigEnv({}).GIT_CONFIG_PARAMETERS).toBe(OURS);
+  });
+
+  // EACH SIDE OF THE PIN, WHICH IS THE TEST THE LAST ROUND DID NOT HAVE. Forcing a value is a
+  // clamp in BOTH directions, and the previous forced value — `normal` — was an INTERIOR point
+  // of `no | normal | all`, so it raised `no` as intended and silently LOWERED `all`. The
+  // mutation matrix only ever asked "what if the setting is absent?", which samples a point
+  // rather than the space. `all` is an ENDPOINT, so the clamp is one-directional by
+  // construction; this asserts that over the whole domain rather than trusting the argument.
+  test('the forced untracked setting raises every ambient value and lowers none', async () => {
+    // FOUR VALUES x FIVE CHANNELS. The first version swept the values but set them only through
+    // repo-local config — one channel of five — which is a coverage gap that narrows silently
+    // the moment someone adds a channel. `GIT_CONFIG_PARAMETERS` is the one that already beat an
+    // earlier override, so it is not hypothetical.
+    const channels = ['repo-local', 'GLOBAL', 'SYSTEM', 'PARAMETERS', 'COUNT'] as const;
+    const outcomes: { ambient: string; files: string[] }[] = [];
+    for (const ambient of ['no', 'normal', 'all', '(absent)'])
+    for (const channel of channels) {
+      if (ambient === '(absent)' && channel !== 'repo-local') continue; // absent is one case
+      const root = mkTmpDir(`mc-clamp-${ambient.replace(/[^a-z]/g, '')}-`);
+      cleanupDirs.push(root);
+      initGitRepo(root);
+      // OUTSIDE the repo: written inside it, this config file is itself an untracked file and
+      // lands in the swept list, failing the comparison for a reason that has nothing to do with
+      // the clamp. Caught by running it.
+      const envDir = mkTmpDir(`mc-clamp-cfg-${channel}-`);
+      cleanupDirs.push(envDir);
+      const envFile = path.join(envDir, 'gitconfig');
+      const prior = { ...process.env };
+      if (ambient !== '(absent)') {
+        if (channel === 'repo-local') execFileSync('git', ['config', 'status.showUntrackedFiles', ambient], { cwd: root });
+        else if (channel === 'GLOBAL' || channel === 'SYSTEM') {
+          fs.writeFileSync(envFile, `[status]\n\tshowUntrackedFiles = ${ambient}\n`);
+          process.env[`GIT_CONFIG_${channel}`] = envFile;
+        } else if (channel === 'PARAMETERS') process.env.GIT_CONFIG_PARAMETERS = `'status.showUntrackedFiles=${ambient}'`;
+        else {
+          process.env.GIT_CONFIG_COUNT = '1';
+          process.env.GIT_CONFIG_KEY_0 = 'status.showUntrackedFiles';
+          process.env.GIT_CONFIG_VALUE_0 = ambient;
+        }
+      }
+      try {
+      fs.mkdirSync(path.join(root, 'newdir'), { recursive: true });
+      fs.writeFileSync(path.join(root, 'newdir', 'a.ts'), 'x\n');
+      fs.writeFileSync(path.join(root, 'newdir', 'b.ts'), 'x\n');
+        const swept = await changedFilesFor(root);
+        expect(swept.readable).toBeUndefined();
+        outcomes.push({ ambient: `${ambient} via ${channel}`, files: [...swept.changedFiles].sort() });
+      } finally {
+        for (const k of Object.keys(process.env)) if (k.startsWith('GIT_CONFIG')) delete process.env[k];
+        Object.assign(process.env, prior);
+      }
+    }
+    expect(outcomes.length).toBe(4 * 5 - 4); // NON-VACUITY: every channel/value pair really ran
+    // IDENTICAL FOR EVERY AMBIENT VALUE — that is what "the collector does not depend on the
+    // user's config" means, asserted rather than asserted-about.
+    for (const o of outcomes) {
+      expect({ ambient: o.ambient, files: o.files }).toEqual({
+        ambient: o.ambient,
+        files: ['newdir/a.ts', 'newdir/b.ts'],
+      });
+    }
+  });
+
+  // THE FALSE POSITIVE THE INTERIOR VALUE CREATED, pinned at the consumer. Under `normal` —
+  // which is GIT'S OWN DEFAULT, so this was unconditional and pre-existing rather than
+  // introduced — git collapses an untracked directory to `?? newdir/`, and detectConflicts keys
+  // on the exact string. Two worktrees adding DIFFERENT files under one new directory therefore
+  // both reported `newdir/` and collided: a conflict nobody has, which is the class this file
+  // exists to remove.
+  test('two worktrees adding different files under one new directory do not collide', async () => {
+    const parent = mkTmpDir('mc-clamp-conflicts-');
+    cleanupDirs.push(parent);
+    const projectRoot = path.join(parent, 'ashcroft');
+    initGitRepo(projectRoot);
+    const wtA = path.join(projectRoot, '.worktrees', 'ceo-1-1');
+    const wtB = path.join(projectRoot, '.worktrees', 'ceo-2-2');
+    addWorktree(projectRoot, wtA, 'ceo-1-1');
+    addWorktree(projectRoot, wtB, 'ceo-2-2');
+    writeRegistry(projectRoot, [
+      { name: 'ceo-1', token: '1' },
+      { name: 'ceo-2', token: '2' },
+    ]);
+    fs.mkdirSync(path.join(wtA, 'newdir'), { recursive: true });
+    fs.mkdirSync(path.join(wtB, 'newdir'), { recursive: true });
+    fs.writeFileSync(path.join(wtA, 'newdir', 'only-a.ts'), 'a\n');
+    fs.writeFileSync(path.join(wtB, 'newdir', 'only-b.ts'), 'b\n');
+    // …and one genuinely shared file, so the test proves it still finds REAL conflicts rather
+    // than passing because it found none.
+    fs.writeFileSync(path.join(wtA, 'shared.ts'), 'a\n');
+    fs.writeFileSync(path.join(wtB, 'shared.ts'), 'b\n');
+
+    const claudeRoot = mkTmpDir('mc-clamp-conflicts-claude-');
+    cleanupDirs.push(claudeRoot);
+    const project = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot }).find(
+      (p) => p.root === projectRoot
+    )!;
+    const report = await detectConflicts(project);
+
+    expect(report.conflicts.map((c) => c.file)).toEqual(['shared.ts']);
+    // Stated as the negative too, because that is the defect: the directory must not be a key.
+    expect(report.conflicts.map((c) => c.file)).not.toContain('newdir/');
+  });
+
+  // THE OTHER CONFIG THAT SURVIVED THE OVERRIDE, and it fails in the quieter direction:
+  // `status.showUntrackedFiles=no` does not corrupt a path, it makes the path DISAPPEAR — with
+  // `readable: undefined`, so the sweep reports a clean read over a population git was told not
+  // to look at. Absence is the answer nobody investigates, which makes this worse than the
+  // fabrication this PR was opened for.
+  test('a repo that hides untracked files cannot make the sweep report a clean read', async () => {
+    const root = mkTmpDir('mc-untracked-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    execFileSync('git', ['config', 'status.showUntrackedFiles', 'no'], { cwd: root });
+    fs.writeFileSync(path.join(root, 'untracked.ts'), 'x\n');
+
+    // NON-VACUITY: the setting really does hide it from a bare status, so the assertion below
+    // is about the override rather than about a config that never had any effect.
+    expect(execFileSync('git', [...STATUS_ARGV], { cwd: root, encoding: 'utf8' }).trim()).toBe('');
+
+    const swept = await changedFilesFor(root);
+    expect(swept.readable).toBeUndefined(); // it really did run clean…
+    expect(swept.changedFiles).toEqual(['untracked.ts']); // …and it really did see the file
+  });
+
+  // THAT THE SWEEP ACTUALLY PASSES IT — BEHAVIOURALLY, which I previously said was impossible.
+  //
+  // I was wrong in a specific way worth writing down: I reasoned that the override is invisible
+  // because both input formats decode to the same PATH SET, and that is true. It is not true of
+  // the RETURN. The octal form is roughly four times the bytes of the raw form, so against a
+  // small `maxBuffer` the two recover DIFFERENT NUMBERS OF RECORDS and differ in `readable`.
+  // The path set is identical; how much of it survives a fixed budget is not.
+  //
+  // So this needs no source grep and no env manipulation, and it kills the mutation that
+  // deleting the `env:` line from changedFilesFor used to survive — which left the whole suite
+  // green at 84 pass 0 fail, the same vacuity this PR already fixed once at the consumer
+  // barrier, reappearing inside the test written for that fix.
+  test('changedFilesFor passes the forced config to git, not just declares it', async () => {
+    const root = mkTmpDir('mc-quote-passed-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    execFileSync('git', ['config', 'core.quotePath', 'false'], { cwd: root });
+    for (let i = 0; i < 60; i++) fs.writeFileSync(path.join(root, `café-${String(i).padStart(2, '0')}-ünïcödé.ts`), 'x\n');
+
+    // THE MARGIN THIS PIN RESTS ON, ASSERTED RATHER THAN ASSUMED. It kills the mutation only
+    // because the RAW stream fits under the budget while the ESCAPED one does not — measured
+    // 1620 B raw against 3540 B escaped at a 2000 B budget. That is 380 B of headroom, about
+    // 19%, and roughly 14 more fixture files would close it silently: the raw stream would
+    // overrun too, `readable` would be false either way, and this test would go GREEN with the
+    // mutation it exists to kill. The same fixture-margin shape the barrier above already had
+    // twice, now in the pin that replaced the source-text one.
+    const BUDGET = 2000;
+    // `showUntrackedFiles` PINNED, `quotePath` DELIBERATELY NOT — pinning quoting here would
+    // destroy the raw stream this comparison exists to measure. Without the pin this read
+    // returned 130 bytes clean and **0 bytes** under an ambient `=no`, so `0 < BUDGET` passed
+    // for the exact opposite of the stated reason: the headroom was asserted against nothing.
+    const raw = execFileSync('git', [...STATUS_ARGV], {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, GIT_CONFIG_PARAMETERS: forceShowUntrackedAll() },
+    });
+    // NON-VACUITY, and it is the assertion whose absence let the above happen: the raw read has
+    // to have read something before its size means anything. `0 < 2000` should never have been
+    // writable as a pass.
+    expect(Buffer.byteLength(raw, 'utf8')).toBeGreaterThan(0);
+    const escaped = execFileSync('git', [...STATUS_ARGV], {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, ...statusConfigEnv() },
+    });
+    expect(Buffer.byteLength(raw, 'utf8')).toBeLessThan(BUDGET); // the mutation's path fits
+    expect(Buffer.byteLength(escaped, 'utf8')).toBeGreaterThan(BUDGET); // …and the real one does not
+
+    const cut = await changedFilesFor(root, { maxBuffer: BUDGET });
+    expect(cut.readable).toBe(false); // …which only happens if git was asked to escape
+    expect(cut.changedFiles.length).toBeGreaterThan(0);
+    expect(cut.changedFiles.length).toBeLessThan(60);
+    // Whatever survived is still real — the truncation must not have invented anything.
+    expect(cut.changedFiles.filter((f) => !fs.existsSync(path.join(root, f)))).toEqual([]);
+  });
+
+  // THE LIVE END, against real git rather than pinned bytes: every path git reports must be a
+  // path that exists. Existence rather than name equality, because macOS normalises Unicode
+  // in filenames and the pinned test above is where exact decoding is asserted.
+  //
+  // HERMETIC WITH RESPECT TO GIT CONFIG, because it was not. It ran plain `git status` and
+  // asserted its own premise on `\303\251`, so a developer with `core.quotePath=false` set
+  // globally — or `GIT_CONFIG_GLOBAL` pointed anywhere — failed on the premise rather than on
+  // the behaviour. It now runs the collector's own argv, so the test and the collector cannot
+  // disagree about what git was asked.
+  test('every path real git reports for exotic names exists on disk', () => {
+    const root = mkTmpDir('mc-quote-live-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    for (const n of EXOTIC_NAMES) fs.writeFileSync(path.join(root, n), 'x\n');
+
+    const raw = execFileSync('git', [...STATUS_ARGV], {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, ...statusConfigEnv() },
+    });
+    // THE PREMISE: git really did quote these, so the decoder is being exercised. Without
+    // this the test would still pass against a git that quoted nothing.
+    expect(raw).toContain('\\303\\251'); // non-ASCII went out as octal bytes
+    expect(raw).toContain('\\360\\237\\224\\245'); // …including the four bytes of an astral one
+    expect(raw.split('\n').filter((l) => l.includes('"')).length).toBeGreaterThan(5);
+    // …and no record contains a raw newline, which is what lets wholeLinesOf split on one.
+    expect(raw.split('\n').filter((l) => l).length).toBe(EXOTIC_NAMES.length);
+
+    const parsed = parseStatusPorcelain(raw);
+    expect(parsed).toHaveLength(EXOTIC_NAMES.length);
+    const missing = parsed.filter((f) => !fs.existsSync(path.join(root, f)));
+    expect(missing).toEqual([]);
+  });
+
+  // THE SECOND BARRIER, and it must hold with the flag deliberately turned OFF. The flag
+  // decides what the parser RECEIVES; this decides what the parser DOES with what arrives.
+  // They fail for different reasons — the flag to an edit of the argv, the loop to an edit of
+  // the loop — so a test that only ever sees C-quoted ASCII cannot tell you the parser is
+  // correct, only that the flag is still there.
+  test('a RAW astral character survives, even with core.quotePath off', () => {
+    const root = mkTmpDir('mc-quote-raw-');
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    execFileSync('git', ['config', 'core.quotePath', 'false'], { cwd: root });
+    for (const n of EXOTIC_NAMES) fs.writeFileSync(path.join(root, n), 'x\n');
+
+    // Deliberately NOT forcing quotePath: the repo's own config must win so git emits non-ASCII
+    // raw while still quoting for the space. But `status.showUntrackedFiles` IS forced, because
+    // an ambient `=no` empties this fixture and the test then fails on its premise rather than
+    // on the behaviour — vary one variable, pin the rest.
+    const raw = execFileSync('git', ['--no-optional-locks', 'status', '--porcelain'], {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, GIT_CONFIG_PARAMETERS: forceShowUntrackedAll() },
+    });
+    // THE PREMISE: this really is the raw form. `\360\237\224\245` must NOT appear, and a
+    // quoted record holding a literal astral character must — otherwise the surrogate path is
+    // not being exercised and this test proves nothing.
+    expect(raw).not.toContain('\\360\\237\\224\\245');
+    expect(raw).toContain('"fire 🔥 space.ts"');
+
+    const parsed = parseStatusPorcelain(raw);
+    const missing = parsed.filter((f) => !fs.existsSync(path.join(root, f)));
+    expect(missing).toEqual([]);
+    expect(parsed).toContain('fire 🔥 space.ts');
+    expect(parsed.join('')).not.toContain('�'); // no character was replaced
+  });
+});
+
+// ── a recovered buffer is a PREFIX, and a prefix cuts mid-path ────────────────────────
+//
+// The partial-recovery branch parsed `err.stdout` whole. Measured on a real busy worktree:
+// 30,000 modified files, 2.4 MB of status output, 1,048,576 bytes recovered, 13,108 entries
+// parsed — the last of them `dir_with_a_re`, a path that does not exist, invented by the cut.
+// It entered `changedFiles` and from there the `byFile` map, so a conflict could be rendered
+// against a file nobody has. Fabricated data reaching a displayed figure.
+//
+// PINNED AT THE PRODUCER, not at the render. The producer is this recovery path and the
+// consumer is the conflict map; the shape that got past three lenses three times is a barrier
+// on the consumer with the producer free underneath it.
+describe('a truncated git status never invents a filename', () => {
+  /** A worktree with enough modified files that a small maxBuffer cuts mid-path. */
+  function busyWorktree(prefix: string): { root: string; files: string[] } {
+    const root = mkTmpDir(`mc-truncate-${prefix}-`);
+    cleanupDirs.push(root);
+    initGitRepo(root);
+    // Deliberately LONG names: a cut lands inside one, which is the whole defect. Short names
+    // would let a buffer boundary fall between records by luck and hide it.
+    const files: string[] = [];
+    for (let i = 0; i < 400; i++) {
+      const name = `directory_with_a_really_long_name_${String(i).padStart(4, '0')}/source_file_with_a_long_name.ts`;
+      fs.mkdirSync(path.join(root, path.dirname(name)), { recursive: true });
+      fs.writeFileSync(path.join(root, name), 'x\n');
+      files.push(name);
+    }
+    return { root, files };
+  }
+
+  test('wholeLinesOf keeps every complete record and nothing else', () => {
+    const full = ' M src/alpha.ts\n M src/beta.ts\n M dir_with_a_really_long_name/gamma.ts\n';
+    expect(wholeLinesOf(full)).toBe(full); // a complete buffer is untouched
+
+    const cut = full.slice(0, full.indexOf('dir_with_a_re') + 'dir_with_a_re'.length);
+    expect(parseStatusPorcelain(cut)).toContain('dir_with_a_re'); // THE DEFECT, reproduced
+    expect(parseStatusPorcelain(wholeLinesOf(cut))).toEqual(['src/alpha.ts', 'src/beta.ts']);
+
+    // A buffer with no complete record at all yields nothing rather than half a path.
+    expect(wholeLinesOf(' M dir_with')).toBe('');
+    expect(parseStatusPorcelain(wholeLinesOf(' M dir_with'))).toEqual([]);
+  });
+
+  test('a buffer cut mid-path yields a prefix of the real files, never a new one', async () => {
+    const { root, files } = busyWorktree('midpath');
+    const complete = await changedFilesFor(root);
+    expect(complete.readable).toBeUndefined();
+    expect(complete.changedFiles).toHaveLength(files.length); // the premise: a real, full answer
+
+    // A buffer far too small for the output, so Node kills the child and hands back a prefix.
+    const truncated = await changedFilesFor(root, { maxBuffer: 4_096 });
+
+    // THE FABRICATION IS GONE. Every recovered entry is one git really reported — checked
+    // against the complete answer, not against this test's own idea of the names.
+    const real = new Set(complete.changedFiles);
+    const invented = truncated.changedFiles.filter((f) => !real.has(f));
+    expect(invented).toEqual([]);
+
+    // NON-VACUITY: the cut really happened, and it really landed mid-path — so the assertion
+    // above is about the fix rather than about a buffer that never needed one.
+    expect(truncated.changedFiles.length).toBeGreaterThan(0);
+    expect(truncated.changedFiles.length).toBeLessThan(complete.changedFiles.length);
+    expect(truncated.reason).toContain('trailing bytes discarded as a partial path');
+
+    // AND IT IS REPORTED AS PARTIAL, which is the half no parsing can supply.
+    expect(truncated.readable).toBe(false);
+    expect(truncated.reason).toContain('PREFIX');
+  });
+
+  // THE HALF THAT CANNOT COME FROM THE BYTES. A recovered buffer ending exactly on a newline
+  // is byte-identical to a complete one, so an implementation that decided "partial" by
+  // inspecting the tail would call this clean — flipping the failure from a conflict
+  // fabricated to a conflict silently MISSED, which is quieter and worse.
+  test('a truncation that lands exactly on a record boundary is still reported as partial', async () => {
+    const { root } = busyWorktree('boundary');
+    const complete = await changedFilesFor(root);
+    expect(complete.readable).toBeUndefined();
+
+    // THE BOUNDARY MUST BE GIT'S, AND IT IS READ FROM GIT. An earlier version rebuilt the
+    // record as ` M ${complete.changedFiles[0]}\n` — an invented ` M ` prefix wrapped around
+    // an already-PARSED field — and landed on git's real 43 bytes only because git happens to
+    // emit `?? directory_…/` at the same width. Two assumptions, both silent, and the second
+    // is now false in general: a quoted path's raw record is longer than the path it parses
+    // to. Take the bytes git actually wrote and count them.
+    const raw = execFileSync('git', [...STATUS_ARGV], {
+      cwd: root,
+      encoding: 'utf8',
+      // THE COLLECTOR'S OWN ENV, because the boundary has to be the one changedFilesFor really
+      // receives. Reading bare git here measured a different stream from the one being cut, and
+      // an ambient `status.showUntrackedFiles=no` emptied it outright.
+      env: { ...process.env, ...statusConfigEnv() },
+    });
+    const records = raw.split('\n').filter((l) => l);
+    expect(records.length).toBeGreaterThan(3); // premise: there is somewhere to cut between
+    // maxBuffer is counted in BYTES by Node, so the boundary is measured in bytes too.
+    const exact = Buffer.byteLength(records.slice(0, 3).join('\n') + '\n', 'utf8');
+
+    const truncated = await changedFilesFor(root, { maxBuffer: exact });
+    expect(truncated.changedFiles).toHaveLength(3); // the cut landed exactly where intended
+    expect(truncated.readable).toBe(false); // …even though the bytes look complete
+    expect(truncated.reason).not.toContain('trailing bytes discarded'); // nothing WAS discarded
+    expect(truncated.changedFiles.length).toBeLessThan(complete.changedFiles.length);
+    for (const f of truncated.changedFiles) expect(complete.changedFiles).toContain(f);
+  });
+
+  // THE CONSUMER, and the assertion is independent of the parser: every file a conflict names
+  // must EXIST ON DISK in the worktrees it names. A path invented by a cut does not, and
+  // neither does one still wearing its C-quotes.
+  //
+  // THIS TEST WAS VACUOUS AND IT WAS THE EXACT SHAPE IT EXISTS TO PREVENT. detectConflicts
+  // took no opts, so the sweep ran at the full 8 MiB ceiling against a fixture producing 8,600
+  // bytes — 0.10% of the bound. Both worktrees came back `readable === undefined`; the
+  // recovery branch never executed. PROVEN by restoring the defect in full
+  // (`parseStatusPorcelain(stdout)`): this test still passed, and only the direct producer
+  // test failed. A barrier that cannot reach the branch it guards is the defect it guards
+  // against, one level up.
+  //
+  // Two things fix it, and both are asserted below rather than assumed: the maxBuffer seam so
+  // the cut really happens, and exotic names so the quoting path is really exercised.
+  test('no rendered conflict names a file that does not exist', async () => {
+    const parent = mkTmpDir('mc-truncate-conflicts-');
+    cleanupDirs.push(parent);
+    const projectRoot = path.join(parent, 'ashcroft');
+    initGitRepo(projectRoot);
+
+    const wtA = path.join(projectRoot, '.worktrees', 'ceo-1-1');
+    const wtB = path.join(projectRoot, '.worktrees', 'ceo-2-2');
+    addWorktree(projectRoot, wtA, 'ceo-1-1');
+    addWorktree(projectRoot, wtB, 'ceo-2-2');
+    writeRegistry(projectRoot, [
+      { name: 'ceo-1', token: '1' },
+      { name: 'ceo-2', token: '2' },
+    ]);
+
+    // EVERY NAME GIT QUOTES, in both worktrees. All sort before the `zzz_` bulk below, so they
+    // survive the cut and the exists-on-disk barrier is actually applied to quoted paths —
+    // the old fixture was pure ASCII, which is why F2 sailed through it.
+    //
+    // THE PROPERTY IS NOT A RUNTIME INVARIANT, AND MUST NEVER BE PROMOTED TO ONE. "No rendered
+    // conflict names a file that does not exist" is FALSE on the success path for DELETED
+    // files: `changedFilesFor` correctly returns `deleted.ts` with `readable: undefined` and
+    // the path is genuinely absent from disk. Reporting a deletion is right — two worktrees
+    // deleting the same file is a real conflict — so the absence is the answer, not a defect.
+    // This test holds only because its fixture contains no deletions. It is a FIXTURE-SCOPED
+    // barrier against fabrication, not a claim about every path the collector can emit.
+    //
+    // AND THE PRECONDITION, because the mutation table in the PR body omitted it and read as
+    // though this fires unconditionally: reverting BOTH quoting halves only renders a bad path
+    // on a machine that already has `core.quotePath=false` somewhere ambient. In a clean
+    // environment git's default quoting saves it and nothing bad renders. The property is still
+    // true — no SINGLE mutation lets a fabricated path through — but this barrier is only
+    // reachable on a machine configured the way the bug requires, which is a weaker statement
+    // than the table made and is the honest one.
+    //
+    // AND THE FIXTURE IS WHY THE BARRIER STAYED GREEN THROUGH THE SURROGATE DEFECT TOO: a
+    // space-and-astral name is the combination that reaches the decoder with a raw astral
+    // character in it, and the first version of this list did not have one. That is twice now
+    // that this barrier was only as good as the names someone thought to write down, which is
+    // the argument for #46 — assert against `git status -z`, where git supplies the names.
+    const exotic = [
+      'with space.ts',
+      'nonascii-café.ts',
+      'emoji-🔥.ts',
+      'fire 🔥 space.ts', // space FORCES the quoting; the astral char is what got destroyed
+      'math 𝛼 space.ts', // outside the BMP, and not an emoji
+      'arrow -> looking.ts',
+      'quote".ts',
+      'back\\slash.ts',
+      'tab\tinside.ts',
+      'newline\ninside.ts',
+    ];
+    // The SAME files in both worktrees, so there are real conflicts to find and a cut has
+    // something long to land in the middle of.
+    for (const wt of [wtA, wtB]) {
+      for (const n of exotic) fs.writeFileSync(path.join(wt, n), `from ${path.basename(wt)}\n`);
+      for (let i = 0; i < 200; i++) {
+        const name = `zzz_directory_with_a_really_long_name_${String(i).padStart(4, '0')}/shared_source_file.ts`;
+        fs.mkdirSync(path.join(wt, path.dirname(name)), { recursive: true });
+        fs.writeFileSync(path.join(wt, name), `from ${path.basename(wt)}\n`);
+      }
+    }
+    // A REAL RENAME, committed then moved, so the ` -> ` branch is on the swept path too.
+    for (const wt of [wtA, wtB]) {
+      fs.writeFileSync(path.join(wt, 'old renamed.ts'), 'shared\n');
+      execFileSync('git', ['add', '--', 'old renamed.ts'], { cwd: wt });
+      execFileSync('git', ['-c', 'user.email=t@t.t', '-c', 'user.name=t', 'commit', '-qm', 'seed'], { cwd: wt });
+      execFileSync('git', ['mv', '--', 'old renamed.ts', 'new renamed.ts'], { cwd: wt });
+    }
+
+    const claudeRoot = mkTmpDir('mc-truncate-conflicts-claude-');
+    cleanupDirs.push(claudeRoot);
+    const project = discoverProjects({ roots: [parent], claudeProjectsRoot: claudeRoot }).find(
+      (p) => p.root === projectRoot
+    )!;
+
+    // THE SEAM, AND THE WHOLE POINT OF IT: small enough that git's output really is cut, so
+    // the recovery branch this test exists to guard actually runs.
+    const report = await detectConflicts(project, { maxBuffer: 4_096 });
+
+    // NON-VACUITY 1 — the cut happened. Without this the test can silently go back to
+    // measuring nothing the moment the fixture or the ceiling changes.
+    expect(report.worktrees.length).toBe(2);
+    expect(report.worktrees.every((w) => w.readable === false)).toBe(true);
+    for (const w of report.worktrees) {
+      expect(w.reason).toContain('trailing bytes discarded as a partial path');
+      expect(w.changedFiles.length).toBeLessThan(200); // a prefix, not the whole answer
+      expect(w.changedFiles.length).toBeGreaterThan(exotic.length);
+    }
+
+    // NON-VACUITY 2 — the quoted names really are in what got rendered, so the barrier below
+    // is applied to paths that needed decoding rather than only to plain ASCII.
+    const conflictFiles = new Set(report.conflicts.map((c) => c.file));
+    for (const n of exotic) expect(conflictFiles).toContain(n);
+    expect(conflictFiles).toContain('new renamed.ts'); // the rename's NEW path, decoded
+
+    // Premise: this fixture really does produce conflicts, so the loop below is not empty.
+    expect(report.conflicts.length).toBeGreaterThan(0);
+
+    // THE BARRIER. Collected and asserted once, so a failure names every bad path instead of
+    // stopping at the first.
+    const missing: string[] = [];
+    let checked = 0;
+    for (const conflict of report.conflicts) {
+      for (const w of conflict.worktrees) {
+        if (!fs.existsSync(path.join(w.path, conflict.file))) missing.push(conflict.file);
+        checked++;
+      }
+    }
+    expect(missing).toEqual([]);
+    expect(checked).toBeGreaterThan(0);
+  }, 60_000);
+});
+
 describe('detectConflicts reports a failed enumeration rather than an empty one', () => {
   test('a project git refuses to enumerate returns enumerated.readable === false with a reason', async () => {
     const parent = mkTmpDir('mc-enum-fail-');
