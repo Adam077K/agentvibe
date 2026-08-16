@@ -164,9 +164,16 @@ function apiFor(fleet: EvilFleet, trusted: string[]): Hono {
       roots: [fleet.projectsRoot],
       claudeProjectsRoot: fleet.claudeRoot,
       trustFile,
-      // Inside the fixture, never $HOME: LiveState persists its session index, and a test
-      // that writes a multi-megabyte index of the developer's real corpus into their home
-      // directory is a test with a side effect. check.mjs fails the run if one does.
+      // Inside the fixture, never $HOME: LiveState persists its session index, and a test that
+      // writes into the developer's home directory is a test with a side effect. check.mjs
+      // fails the run if one does.
+      //
+      // SIZE, MEASURED, BECAUSE THE FIRST VERSION OF THIS COMMENT INFLATED IT. These sites point
+      // `claudeProjectsRoot` at a temp dir, so what they would leak is an index of the FIXTURE:
+      // 899 bytes for 2 entries. The 4.38 MB figure belongs to the sites that take the real
+      // corpus (a bare `new LiveState()` — 2,609 entries), which is 4,876x larger. Both are
+      // $HOME pollution and both are worth the guard; only one of them is multi-megabyte, and
+      // repeating the bigger number for the smaller case is the habit this PR keeps catching.
       indexCachePath: path.join(fleet.projectsRoot, 'index-cache.json'),
     })));
   return app;
@@ -372,9 +379,16 @@ describe('an untrusted project is reported, never absent', () => {
       roots: [fleet.projectsRoot],
       claudeProjectsRoot: fleet.claudeRoot,
       trustFile,
-      // Inside the fixture, never $HOME: LiveState persists its session index, and a test
-      // that writes a multi-megabyte index of the developer's real corpus into their home
-      // directory is a test with a side effect. check.mjs fails the run if one does.
+      // Inside the fixture, never $HOME: LiveState persists its session index, and a test that
+      // writes into the developer's home directory is a test with a side effect. check.mjs
+      // fails the run if one does.
+      //
+      // SIZE, MEASURED, BECAUSE THE FIRST VERSION OF THIS COMMENT INFLATED IT. These sites point
+      // `claudeProjectsRoot` at a temp dir, so what they would leak is an index of the FIXTURE:
+      // 899 bytes for 2 entries. The 4.38 MB figure belongs to the sites that take the real
+      // corpus (a bare `new LiveState()` — 2,609 entries), which is 4,876x larger. Both are
+      // $HOME pollution and both are worth the guard; only one of them is multi-megabyte, and
+      // repeating the bigger number for the smaller case is the habit this PR keeps catching.
       indexCachePath: path.join(fleet.projectsRoot, 'index-cache.json'),
     })));
 
@@ -583,9 +597,16 @@ describe('the guard is registered above every route the process serves', () => {
       roots: [fleet.projectsRoot],
       claudeProjectsRoot: fleet.claudeRoot,
       trustFile,
-      // Inside the fixture, never $HOME: LiveState persists its session index, and a test
-      // that writes a multi-megabyte index of the developer's real corpus into their home
-      // directory is a test with a side effect. check.mjs fails the run if one does.
+      // Inside the fixture, never $HOME: LiveState persists its session index, and a test that
+      // writes into the developer's home directory is a test with a side effect. check.mjs
+      // fails the run if one does.
+      //
+      // SIZE, MEASURED, BECAUSE THE FIRST VERSION OF THIS COMMENT INFLATED IT. These sites point
+      // `claudeProjectsRoot` at a temp dir, so what they would leak is an index of the FIXTURE:
+      // 899 bytes for 2 entries. The 4.38 MB figure belongs to the sites that take the real
+      // corpus (a bare `new LiveState()` — 2,609 entries), which is 4,876x larger. Both are
+      // $HOME pollution and both are worth the guard; only one of them is multi-megabyte, and
+      // repeating the bigger number for the smaller case is the habit this PR keeps catching.
       indexCachePath: path.join(fleet.projectsRoot, 'index-cache.json'),
     })),
       fleet,
@@ -649,9 +670,16 @@ describe('the guard is registered above every route the process serves', () => {
       roots: [fleet.projectsRoot],
       claudeProjectsRoot: fleet.claudeRoot,
       trustFile,
-      // Inside the fixture, never $HOME: LiveState persists its session index, and a test
-      // that writes a multi-megabyte index of the developer's real corpus into their home
-      // directory is a test with a side effect. check.mjs fails the run if one does.
+      // Inside the fixture, never $HOME: LiveState persists its session index, and a test that
+      // writes into the developer's home directory is a test with a side effect. check.mjs
+      // fails the run if one does.
+      //
+      // SIZE, MEASURED, BECAUSE THE FIRST VERSION OF THIS COMMENT INFLATED IT. These sites point
+      // `claudeProjectsRoot` at a temp dir, so what they would leak is an index of the FIXTURE:
+      // 899 bytes for 2 entries. The 4.38 MB figure belongs to the sites that take the real
+      // corpus (a bare `new LiveState()` — 2,609 entries), which is 4,876x larger. Both are
+      // $HOME pollution and both are worth the guard; only one of them is multi-megabyte, and
+      // repeating the bigger number for the smaller case is the habit this PR keeps catching.
       indexCachePath: path.join(fleet.projectsRoot, 'index-cache.json'),
     }));
     let markers: string[] = [];

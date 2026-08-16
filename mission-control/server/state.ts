@@ -181,12 +181,21 @@ export class LiveState {
    * corpus (2,582 files, 3.05 GB) through this exact path:
    *
    *   cold                     2,405-4,675 ms  (the spread is #50's memory-reclaim band)
-   *   warm, steady             84-98 ms, median 87
-   *   warm, first after boot   158-255 ms  (the boundary windows are not in page cache yet)
+   *   warm, steady             78-107 ms       (see below: a RANGE across two machines' load)
+   *   warm, first of a session 254 ms          (page-cache-cold boundary windows)
    *   transcript bytes read    3,048 MB -> 0-0.02 MB
    *
-   * BOTH warm figures are quoted. The steady-state median alone is true and misleading: the
-   * first start after a boot is the run that matters most and is 2-3x slower.
+   * THE WARM FIGURE IS A RANGE AND NOT A MEDIAN, because a single median was wrong twice in
+   * opposite directions. Mine was 78-90 at load 2.70 (n=8); an independent reviewer first
+   * measured 141 at load 3.5-4.5 and then, re-measured at load 1.99-3.21, got 90-107 (n=6).
+   * Same code every time. The 141 was a load artefact — the identical confound #50 documented,
+   * and the fourth time this project has been caught by it — so the honest figure spans both
+   * corrected sets rather than picking either party's number.
+   *
+   * AN AFTER-A-REBOOT FIGURE IS NOT QUOTED. An earlier version of this comment carried
+   * "158-255 ms, first after boot" as though it had been measured. It had not: verifying it
+   * needs a reboot, which nobody performed. The 254 ms above is the first run of a SESSION,
+   * which is a different and checkable thing.
    *
    * The restored entries are NOT trusted. Every one arrives marked `needsVerify`, and the
    * refresh below checks each against the disk before it is used. `hydrate` on its own would be

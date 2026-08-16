@@ -596,28 +596,82 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
   // process and is not how these files run.
   test('every LiveState in test/** says where its index cache goes', () => {
     const testDir = path.join(REPO_ROOT, 'mission-control', 'test');
-    const files = fs
+    const all = fs
       .readdirSync(testDir)
       .filter((n) => n.endsWith('.ts') || n.endsWith('.tsx'))
       .map((n) => path.join(testDir, n));
+    // THIS FILE IS EXCLUDED, AND THE EXCLUSION IS MADE SAFE RATHER THAN CONVENIENT. The scan
+    // pattern below is a regex literal containing the exact text it searches for, so the
+    // scanner matches its own source and `argsOf` cannot balance a regex. Rather than spell the
+    // pattern in pieces to dodge the match — cleverness that ages badly — the file is skipped
+    // and the assertion beneath proves skipping it hides nothing: it does not import LiveState,
+    // so it cannot construct one.
+    const SELF = 'crosscheck.test.ts';
+    // Line-scoped, over the COMMENT-STRIPPED source. The first version was
+    // `/import[^;]*\bLiveState\b/` over the raw text, which matched the "import" inside the
+    // word "important" in a comment and then ran on to a later prose mention of LiveState —
+    // a check that failed on correct code, in the same test run that taught the same lesson
+    // twice already. Imports in this codebase are one per line.
+    const selfLines = stripComments(fs.readFileSync(path.join(testDir, SELF), 'utf8')).split('\n');
+    expect(selfLines.filter((l) => /^\s*import\b.*\bLiveState\b/.test(l))).toEqual([]);
+    const files = all.filter((f) => path.basename(f) !== SELF);
     expect(files.length).toBeGreaterThan(5); // non-vacuity: the scan found the test tree
 
+    /**
+     * The full argument list, found by BALANCING PARENTHESES rather than by a fixed lookahead.
+     *
+     * This was `/new LiveState\(([\s\S]{0,400}?)\)\s*[;,)]/`, and the window was a defect: a
+     * construction whose options carried a long comment pushed `indexCachePath` past 400
+     * characters and the guard reported the call site as an offender. It fired on correct code
+     * — which is how a guard gets disabled — and the fix is NOT to shorten the comment, because
+     * that is tuning the subject to fit the instrument. Nested parens and braces are counted,
+     * and string literals are skipped so a `)` inside one cannot close the list early.
+     */
+    const argsOf = (text: string, from: number): string | null => {
+      let depth = 0;
+      let quote: string | null = null;
+      for (let i = from; i < text.length; i++) {
+        const c = text[i]!;
+        if (quote) {
+          if (c === '\\') i++;
+          else if (c === quote) quote = null;
+          continue;
+        }
+        if (c === "'" || c === '"' || c === '`') { quote = c; continue; }
+        if (c === '(' || c === '{' || c === '[') depth++;
+        else if (c === ')' || c === '}' || c === ']') {
+          depth--;
+          if (depth === 0) return text.slice(from + 1, i);
+        }
+      }
+      return null; // unbalanced: reported below rather than silently skipped
+    };
+
     const offenders: string[] = [];
+    const unparsed: string[] = [];
     let constructions = 0;
     for (const f of files) {
-      const text = fs.readFileSync(f, 'utf8');
-      for (const m of text.matchAll(/new LiveState\(([\s\S]{0,400}?)\)\s*[;,)]/g)) {
+      // COMMENTS STRIPPED FIRST, and this is the same lesson as the block-comment regression
+      // above, found the same way — by the guard firing on correct code. `argsOf` treats a
+      // quote character as a string delimiter, so an apostrophe in a comment INSIDE the options
+      // object ("the developer's home directory") swallowed the closing braces and the two real
+      // call sites beneath it were reported as offenders. stripComments preserves line numbers,
+      // so the reporting below is unaffected, and `indexCachePath` is code and survives it.
+      const text = stripComments(fs.readFileSync(f, 'utf8'));
+      for (const m of text.matchAll(/new LiveState(?=\()/g)) {
         constructions++;
-        const args = m[1] ?? '';
-        if (!args.includes('indexCache')) {
-          const line = text.slice(0, m.index).split('\n').length;
-          offenders.push(`${path.basename(f)}:${line}`);
-        }
+        const line = text.slice(0, m.index).split('\n').length;
+        const args = argsOf(text, m.index! + 'new LiveState'.length);
+        // A construction this scan could not parse is NOT a pass. It is the one shape that
+        // would let a real offender through silently, so it is reported as its own failure.
+        if (args === null) unparsed.push(`${path.basename(f)}:${line}`);
+        else if (!args.includes('indexCache')) offenders.push(`${path.basename(f)}:${line}`);
       }
     }
     // NON-VACUITY: the scan actually matched constructors. A regex that silently stopped
     // matching would leave this green forever while every new test wrote to $HOME.
     expect(constructions).toBeGreaterThanOrEqual(6);
+    expect(unparsed).toEqual([]);
     expect(offenders).toEqual([]);
   });
 
