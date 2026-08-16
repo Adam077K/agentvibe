@@ -761,47 +761,30 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
   // process and is not how these files run.
   test('every LiveState in test/** says where its index cache goes', () => {
     const testDir = path.join(REPO_ROOT, 'mission-control', 'test');
-    const all = fs
+    const files = fs
       .readdirSync(testDir)
       .filter((n) => n.endsWith('.ts') || n.endsWith('.tsx'))
       .map((n) => path.join(testDir, n));
-    // THIS FILE IS EXCLUDED, AND THE EXCLUSION IS THE HOLE THE FIX CREATED.
+    // THERE IS NO EXCLUSION ANY MORE, AND THAT IS THE FIX. This file is scanned like every
+    // other, because the exclusion was narrowed three times and each narrowing had a hole:
     //
-    // Worth stating plainly: the scan pattern below is a regex literal containing the exact text
-    // it searches for, so the scanner matches its own source. THE PREVIOUS PATTERN DID NOT —
-    // `new LiveState\(([\s\S]{0,400}?)\)` needed a following `(`, which its own source did not
-    // supply. Replacing it with `new LiveState(?=\()` to fix the lookahead bug created the
-    // self-match, and the exclusion added to handle that is now the weakest point in this check.
-    // A fix that introduces the exemption it then needs is worth naming as such.
+    //   v1  "no line matches ^import.*LiveState", defended by "imports here are one per line".
+    //       FALSE: test/collectors.test.ts has four multi-line imports and a dynamic import.
+    //   v2  "this file never mentions the specifier `state.ts`", defended by "that is the
+    //       substring every specifier ends with". FALSE FOUR WAYS: `'../server/state'`,
+    //       `'../server/state.js'`, an extensionless dynamic import, and a re-export through a
+    //       barrel in test/ (which walkServerTs() never looks at).
+    //   v3  "exactly one `new LiveState(` in this file, and it is the scan pattern". Better —
+    //       a property, not a shape — but INDIRECT CONSTRUCTION evades it:
+    //       `new ((await import('../server/state')).LiveState)({})` constructs one and the
+    //       text `new LiveState(` never appears. Found by injecting it.
     //
-    // SO THE EXCLUSION IS PROVEN SAFE BY A SYNTAX-INDEPENDENT PROPERTY, not by a style rule.
-    // The first version asserted "no line matches ^import.*LiveState" and defended itself with
-    // "imports in this codebase are one per line" — a sentence that is CHECKABLE AND FALSE:
-    // test/collectors.test.ts has four multi-line imports and a dynamic `await import()` today.
-    // Both styles walked straight through it. A reason that does not describe the thing it
-    // covers is how a gap survives a reading.
-    //
-    // What holds regardless of syntax: constructing a LiveState requires the identifier in
-    // scope, which requires naming the MODULE that exports it — static, multi-line, dynamic or
-    // otherwise. So the check is "this file does not mention that module", and the premise that
-    // there is exactly one such module is asserted rather than assumed.
-    const SELF = 'crosscheck.test.ts';
-    const stateModules = walkServerTs().filter((f) => /export\s+class\s+LiveState\b/.test(fs.readFileSync(f, 'utf8')));
-    // PREMISE, ASSERTED. If LiveState ever gains a second export site or a re-export, the
-    // specifier check below stops being sufficient and this fails first.
-    expect(stateModules.map((f) => path.basename(f))).toEqual(['state.ts']);
-    const reExports = walkServerTs().filter((f) => {
-      const t = stripComments(fs.readFileSync(f, 'utf8'));
-      return path.basename(f) !== 'state.ts' && /\bLiveState\b/.test(t) && /\bexport\b/.test(t) && /export\s*\{[^}]*\bLiveState\b/.test(t);
-    });
-    expect(reExports).toEqual([]);
-
-    const selfCode = stripComments(fs.readFileSync(path.join(testDir, SELF), 'utf8'));
-    // No mention of the module, by any import syntax — and `state.ts` is the substring every
-    // form of the specifier ends with, so this cannot be routed around by spelling the path
-    // differently.
-    expect(selfCode.includes('state.ts')).toBe(false);
-    const files = all.filter((f) => path.basename(f) !== SELF);
+    // The exclusion existed for one reason: the pattern `new LiveState(?=\()` contains its own
+    // search text, so the scanner matched its own source. Writing that one character as a class
+    // removes the self-match, so the file needs no exemption, no compensating assertion and no
+    // premise about how modules are named. I argued earlier against spelling the pattern in
+    // pieces as "cleverness that ages badly" — three holes in three attempts is the evidence
+    // that the exemption ages worse. `LiveStat[e]` matches `LiveState`; the source text does not.
     expect(files.length).toBeGreaterThan(5); // non-vacuity: the scan found the test tree
 
     /**
@@ -845,7 +828,7 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
       // call sites beneath it were reported as offenders. stripComments preserves line numbers,
       // so the reporting below is unaffected, and `indexCachePath` is code and survives it.
       const text = stripComments(fs.readFileSync(f, 'utf8'));
-      for (const m of text.matchAll(/new LiveState(?=\()/g)) {
+      for (const m of text.matchAll(/new LiveStat[e](?=\()/g)) {
         constructions++;
         const line = text.slice(0, m.index).split('\n').length;
         const args = argsOf(text, m.index! + 'new LiveState'.length);

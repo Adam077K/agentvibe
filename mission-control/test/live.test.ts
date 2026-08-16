@@ -23,6 +23,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { Hono } from 'hono';
 import { LiveState } from '../server/state.ts';
+import { BOUNDARY_BYTES } from '../server/index-store.ts';
 import { createApi } from '../server/routes/api.ts';
 import type { FleetSummary } from '../server/collectors/fleet.ts';
 import type { SessionsSlice } from '../server/state.ts';
@@ -524,6 +525,86 @@ describe('the machine gate itself', () => {
     } finally {
       if (previous === undefined) delete process.env.MC_PROJECT_ROOTS;
       else process.env.MC_PROJECT_ROOTS = previous;
+    }
+  });
+});
+
+// ── THE WARM START, GATED ON WORK RATHER THAN ON THE CLOCK ────────────────────────────────
+//
+// This is the assertion the PR's headline rests on, and until now that headline lived only in
+// prose. perf.test.ts:93 gates a cold build at 10 s and :107/:129 gate an IN-PROCESS
+// incremental refresh at 250 ms — a different quantity from a persisted warm start, which no
+// test asserted at all. So the range quoted in the documentation was never a gate, and it was
+// breached by ordinary noise within a day of being written: a set taken minutes later returned
+// 64 ms against a quoted floor of 65.
+//
+// WHAT IS STABLE IS THE WORK, and it is stable by three orders of magnitude more than the
+// clock. Across six measurement sets on this branch: filesRead 0 every time, probe bytes
+// 10.64-10.68 MB (0.4% spread), cache 4.39 MB — while wall time moved 5x, 64 to 386 ms. So the
+// gate is the work, and the milliseconds are printed and not asserted.
+//
+// This is #50's own conclusion applied to the change that came out of #50: stop asserting on
+// the clock, assert what you actually care about. The clock is what varies with the afternoon.
+describe('a warm start reads almost nothing, and that is asserted rather than described', () => {
+  test('hydrating a persisted index skips the corpus instead of reading it', () => {
+    const blocked = machineGate();
+    if (blocked) {
+      notVerified('warm-start work', blocked);
+      return;
+    }
+
+    // The cache goes in a temp dir, never ~/.agentvibe: check.mjs fails the run if the suite
+    // writes to the developer's home directory, and this test would otherwise do exactly that.
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-live-warm-'));
+    try {
+      const cachePath = path.join(dir, 'index.json');
+
+      const cold = new LiveState({ indexCachePath: cachePath });
+      cold.refresh();
+      const c = cold.index.lastResult!;
+      // NON-VACUITY: a real corpus was read, and a real index was written. Without these the
+      // ratios below are 0/0 and every assertion holds against an empty machine.
+      expect(c.filesRead).toBeGreaterThan(100);
+      expect(c.bytesRead).toBeGreaterThan(100_000_000);
+      expect(cold.cacheSave?.ok).toBe(true);
+      expect(fs.existsSync(cachePath)).toBe(true);
+
+      const warm = new LiveState({ indexCachePath: cachePath });
+      warm.refresh();
+      const w = warm.index.lastResult!;
+
+      // THE GATE. A warm start must not re-read the corpus. Bracketed rather than pinned at
+      // zero because this corpus is LIVE — agents append while the test runs, and a handful of
+      // genuinely changed files is correct behaviour, not a regression. 1% of a 2,600-file
+      // corpus is ~26 files; every observed run read 0-4.
+      expect(w.filesScanned).toBeGreaterThan(100);
+      expect(w.filesRead).toBeLessThan(w.filesScanned * 0.01);
+      expect(w.bytesRead).toBeLessThan(c.bytesRead * 0.01);
+      expect(w.filesSkipped).toBeGreaterThan(w.filesScanned * 0.99);
+
+      // Every restored entry was CHECKED against the disk — the property that makes skipping
+      // them defensible. A regression that trusted the cache without verifying would show up
+      // here and nowhere else, because it would look identical on the clock.
+      expect(w.filesVerified).toBe(w.filesScanned);
+      expect(w.verifyBytesRead).toBeGreaterThan(0);
+      expect(w.verifyBytesRead).toBeLessThanOrEqual(w.filesScanned * BOUNDARY_BYTES);
+      expect(w.filesStale).toBe(0);
+
+      // The buckets still partition the scan on the real corpus, not only on fixtures.
+      expect(w.filesScanned).toBe(w.filesRead + w.filesSkipped + w.filesUnread);
+
+      // …and the answer is the same one the full read produced. Bracketed: sessions can appear
+      // between the two builds on a live corpus.
+      expect(warm.index.allSessions().length).toBeGreaterThanOrEqual(cold.index.allSessions().length);
+
+      // eslint-disable-next-line no-console
+      console.log(
+        `  [perf] warm start read ${w.filesRead}/${w.filesScanned} files, ` +
+          `${(w.bytesRead / 1e6).toFixed(2)}MB transcript + ${(w.verifyBytesRead / 1e6).toFixed(2)}MB probes ` +
+          `vs ${(c.bytesRead / 1e6).toFixed(0)}MB cold — milliseconds deliberately not asserted here`
+      );
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
     }
   });
 });
