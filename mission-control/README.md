@@ -219,7 +219,13 @@ claim with an expiry (`c-mission-control-cold-start`, below): when the real cold
 10 s, the ledger fails and forces a Refresh, Deprecate or Waive instead of silence. A database
 would still be a cache for a read that stays fast between those checkpoints. The live figure
 as of PR3, measured through the route the views actually read: `/api/sessions` answers in
-**3.9–4.1 s** cold and **16–26 ms** on the next call, across 2,037 sessions.
+**2,405–4,675 ms** cold and, since PR #48, a **warm start that reads 4 KB per transcript instead of the
+corpus** — `filesRead` 0 of 2,610, transcript bytes 0 against 3,059 MB cold, cache 4.39 MB. Wall clock on
+the warm path is deliberately **not asserted**: it moved 5× across measurement sets on one machine in a
+day while the work held to under 0.5%, so `live.test.ts` gates the work and prints the milliseconds.
+**REFRESHED 2026-08-16.** The claim below still measures the *cold* build, which #48 did not change — it
+added a warm path in front of it. A genuinely cold build still runs on first launch, after a corpus change
+beyond threshold, and whenever the cache is rejected, so the 10 s budget still describes something real.
 
 ## Checking it
 
@@ -323,7 +329,7 @@ claims:
     scope: project
     verified_by: command
     evidence: {cmd: "bun run mission-control/scripts/check-cold-start.ts", expect_exit: 0}
-    valid_until: 2026-11-13
+    valid_until: 2027-02-16
     confidence: 0.8
 ```
 
