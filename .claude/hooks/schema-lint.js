@@ -210,11 +210,30 @@ function skillToolClamp(name) {
   try {
     const skillsRoot = path.resolve(REPO_ROOT, '.claude', 'skills');
     const p = path.resolve(skillsRoot, name, 'SKILL.md');
+    // Lexical containment first — cheap, and correct for the `../` string case.
     if (!p.startsWith(skillsRoot + path.sep)) {
       SKILL_CLAMP_CACHE.set(name, null);
       return null;
     }
-    const text = fs.readFileSync(p, 'utf8');
+    // Then containment ON THE FILESYSTEM. path.resolve is pure string arithmetic: it never
+    // touches disk and cannot see a symlink, so `.claude/skills/<validname>` pointing at
+    // /etc satisfies the lexical check while readFileSync follows the link straight out of the
+    // tree. The binding gate found this on the SECOND pass — the `../` fix was real, and it
+    // did not close the symlink route to the same disclosure. Reproduced before fixing:
+    // lexical check true, realpath /private/tmp/evil-target/SKILL.md, canary readable.
+    // realpathSync dereferences every component; lstat additionally refuses a symlinked skill
+    // directory outright rather than following it anywhere.
+    if (fs.lstatSync(path.join(skillsRoot, name)).isSymbolicLink()) {
+      SKILL_CLAMP_CACHE.set(name, null);
+      return null;
+    }
+    const realRoot = fs.realpathSync(skillsRoot);
+    const realP = fs.realpathSync(p);
+    if (!realP.startsWith(realRoot + path.sep)) {
+      SKILL_CLAMP_CACHE.set(name, null);
+      return null;
+    }
+    const text = fs.readFileSync(realP, 'utf8');
     const fmEnd = text.indexOf('\n---', 3);
     const head = fmEnd === -1 ? text : text.slice(0, fmEnd);
     const m = head.match(/^allowed-tools:[ \t]*(.*)$/m);

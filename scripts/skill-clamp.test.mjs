@@ -67,6 +67,8 @@ Fixture.
   }
 }
 
+const isLink = (p) => { try { return fs.lstatSync(p).isSymbolicLink(); } catch { return false; } };
+
 const clampIssues = (issues) => issues.filter((i) => /allowed-tools/.test(i));
 
 test('attaching a skill that clamps to one Bash pattern is refused, and the message names the clamp', () => {
@@ -212,4 +214,61 @@ test('no traversal fixture is left behind', () => {
   const strays = fs.readdirSync(AGENTS_DIR).filter((n) => n.startsWith('zz-traversal-fixture'));
   assert.deepEqual(strays, []);
   assert.equal(fs.existsSync(path.join(REPO, 'SKILL.md')), false, 'bait file survived the test');
+});
+
+// ── Symlink route to the same disclosure — found by the gate's SECOND pass ────────────────
+// The `../` fix was real and did not close this. `path.resolve` is string arithmetic: it never
+// touches disk and cannot see a symlink, so `.claude/skills/<valid-name>` pointing outside the
+// tree satisfied the lexical containment check while readFileSync followed the link out.
+// Reproduced before fixing: lexical check true, realpath /private/tmp/evil-target/SKILL.md,
+// canary readable. Fixed with lstat (refuse a symlinked skill dir) + realpathSync containment.
+
+test('a symlinked skill directory is refused, and leaks nothing', () => {
+  const SYM = 'zz-symlink-fixture';
+  const skillsRoot = path.join(REPO, '.claude', 'skills');
+  const link = path.join(skillsRoot, SYM);
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-clamp-outside-'));
+  const CANARY = 'ZZ-SYMLINK-CANARY-MUST-NOT-LEAK';
+  fs.writeFileSync(path.join(outside, 'SKILL.md'), `allowed-tools: ${CANARY}\n`);
+  // Self-heal a fixture left by a crashed prior run, but NEVER clobber a real directory:
+  // a leftover symlink is ours; anything else is not, and the test refuses rather than delete it.
+  if (fs.existsSync(link) || isLink(link)) {
+    assert.equal(isLink(link), true, `refusing to run: ${link} exists and is not a symlink`);
+    fs.unlinkSync(link);
+  }
+  try {
+    fs.symlinkSync(outside, link);
+    // Prove the lexical check alone would have passed — otherwise this test could pass for
+    // the wrong reason if the name guard changed.
+    const lexical = path.resolve(skillsRoot, SYM, 'SKILL.md').startsWith(path.resolve(skillsRoot) + path.sep);
+    assert.equal(lexical, true, 'fixture no longer exercises the lexical-check bypass');
+
+    const issues = lintAgentWith([SYM]);
+    assert.deepEqual(
+      issues.filter((i) => i.includes(CANARY)), [],
+      'symlinked skill leaked file contents into issue text'
+    );
+    assert.deepEqual(
+      issues.filter((i) => /declares allowed-tools/.test(i)), [],
+      'symlinked skill was treated as a clamping skill'
+    );
+  } finally {
+    // unlinkSync, not rmSync: rmSync does not remove a symlink pointing at a directory, which
+    // is how the first run of this very test leaked a fixture into .claude/skills/ and got it
+    // advertised as a loadable skill.
+    if (isLink(link)) fs.unlinkSync(link);
+    fs.rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+test('the symlink fixture is gone — including from the skills directory', () => {
+  const strays = fs.readdirSync(path.join(REPO, '.claude', 'skills')).filter((n) => n.startsWith('zz-'));
+  assert.deepEqual(strays, [], 'a fixture symlink survived and is now an advertised skill');
+});
+
+test('a real (non-symlinked) skill directory still resolves — the fix is not a blanket refusal', () => {
+  // Guarding against the lazy fix: refusing everything would pass the test above and destroy
+  // the rule's actual purpose.
+  const found = clampIssues(lintAgentWith(['impeccable']));
+  assert.equal(found.length, 1, 'the symlink guard must not break ordinary skill resolution');
 });
