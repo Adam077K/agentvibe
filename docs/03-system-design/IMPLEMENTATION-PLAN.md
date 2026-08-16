@@ -1,6 +1,16 @@
 # Implementation Plan — Agentvibe Harness
 
-**Author:** framer · **Date:** 2026-08-14 · **State of repo:** Phase 8a, PR3/5 merged, `main` = `0a23471`
+> ## ⚠️ SUPERSEDED — do not follow this numbering
+>
+> **Superseded 2026-08-16 by [AGENT-SYSTEM-REBUILD.md](AGENT-SYSTEM-REBUILD.md)** (founder decision).
+> Two live plans numbering the same work differently is two statements of one fact with nothing checking
+> them against each other — the defect class this repo spent Phase 8a cataloguing. The rebuild plan wins:
+> it is ADR-backed and carries phase-by-phase evidence.
+>
+> Kept for its reasoning, not its sequence. Its Wave/Phase numbers do **not** map onto the rebuild plan's
+> Phases 1–9. Its Phase 5 (Mission Control 8a) is done; most of its Phase 0 landed in #42 and #44.
+
+**Author:** framer · **Date:** 2026-08-14 · **State of repo:** ~~Phase 8a, PR3/5 merged, `main` = `0a23471`~~ — stale; `main` = `08e7981` and 8a is complete
 
 ---
 

@@ -1,7 +1,9 @@
 # Handoff — Phase 8a, complete
 
 **For:** whoever picks this up next.
-**State: all 5 PRs merged; `main` has since moved to `2442cbc`** — thirteen follow-on PRs, of which the
+**State: all 5 PRs merged; `main` has since moved to ~~`2442cbc`~~ `08e7981`** (2026-08-16 — #49 tier floor,
+#51 close-out and #52 ledger index landed after this line was written). **Phase 8a is now closed** — see
+[PHASE-8A-CLOSE.md](PHASE-8A-CLOSE.md) for the close-out and the two active tracks. Sixteen follow-on PRs, of which the
 substantive ones are #35 (a truncated `git status` no longer invents a filename), #37 (the untracked clamp),
 #41 (`git status -z` as the parser's oracle), #44 (**three confirmed RCEs closed** — discovery no longer
 implies trust), #46 (#50: assert what was read, not how long it took) and #48 (**incremental cold start** —
@@ -418,4 +420,6 @@ Mark every figure **VERIFIED** or **ESTIMATED**. A builder does not self-grant P
 
 ---
 
-*Handoff written by: ceo · 2026-08-13 · `main` = `0a23471`*
+*Handoff written by: ceo · 2026-08-13 · ~~`main` = `0a23471`~~ — body updated 2026-08-16 against `main` = `08e7981`.
+The footer stayed stale for three days after the body was corrected, which is its own small instance of the
+defect this phase catalogued: two statements of one fact, with nothing checking them against each other.*
