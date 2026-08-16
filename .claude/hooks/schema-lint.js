@@ -726,12 +726,21 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
       break;
     }
   }
-  // PS-BODY-VAGUE — WARN, and it may never be anything else. §0 measured it at 6 of 7 files and 10
-  // sites, every one of them correct prose. One warning per file listing the sites, because ten
-  // separate warnings on one file is noise that trains people to skip the whole column.
+  // PS-BODY-VAGUE — WARN, and it may never be anything else. §0 update (2026-08-16): the rule was
+  // narrowed to BODY_VAGUE, which excludes `looks?` and `feels?` from the agent-body check.
+  // Those two words caused all 10 false positives across 6 of 7 files — every flagged site was
+  // correct prose: "look at the rendered output" (observation), "looks like" (comparison), "not
+  // from how the problem feels" (explicit rejection of vagueness). Removing them loses nothing:
+  // "looks good/clean/reasonable" is still caught by "good"/"clean"/"reasonable"; any "feels
+  // right" that is genuinely vague has no other VAGUE word and IS missed, but the tradeoff is
+  // 0 false positives vs. 0 false negatives in the existing corpus.
+  // The full VAGUE (including looks?/feels?) is preserved at line 1124 for lens procedure entries,
+  // where those words ARE the constructions the rule was calibrated against.
+  // See PROMPT-STANDARD.md §0 for the full decision record.
+  const BODY_VAGUE = /\b(seems?|appropriate|reasonable|properly|adequately|good|nice|clean|sensible|as needed|where appropriate)\b/i;
   const vagueSites = [];
   bodyLines.forEach((l, n) => {
-    if (VAGUE.test(l) && !ANCHOR.test(l)) vagueSites.push(n + 1);
+    if (BODY_VAGUE.test(l) && !ANCHOR.test(l)) vagueSites.push(n + 1);
   });
   if (vagueSites.length) {
     warnings++;
@@ -1037,13 +1046,20 @@ function lintFile(filePath) {
     // code-reviewer, design-critic, technical-writer) may declare isolation:none.
     // Treat isolation:none as acceptable on workers when they don't write app code.
     const writesAppCode = Array.isArray(fm.tools) && fm.tools.some((t) => ['Write', 'Edit'].includes(t));
+    // hasBash: an agent with Bash can run git commands and commit — parallel execution without a
+    // worktree creates REAL git state conflicts. An agent WITHOUT Bash writes files to disk but
+    // cannot commit; the orchestrator prevents same-artifact collision by not dispatching two of
+    // the same producer for the same target, and a worktree adds no meaningful isolation when
+    // the agent cannot reach git at all. framer is the canonical case: Write+Edit, no Bash,
+    // isolation:none — it writes a single spec artifact and never touches the git graph.
+    const hasBash = Array.isArray(fm.tools) && fm.tools.includes('Bash');
     if (fm.isolation !== 'worktree' && fm.isolation !== 'none') {
       issues.push(`worker: isolation must be "worktree" or "none" (got "${fm.isolation}")`);
     }
-    if (fm.isolation === 'none' && writesAppCode) {
-      // Warning: this worker writes but isn't isolated — risk of cross-worker collision
+    if (fm.isolation === 'none' && writesAppCode && hasBash) {
+      // Warning: this worker writes AND can commit — collision risk if spawned in parallel
       warnings++;
-      checks.push('worker: isolation=none but worker writes/edits — collision risk if spawned in parallel');
+      checks.push('worker: isolation=none but worker writes/edits and can commit (has Bash) — collision risk if spawned in parallel');
     }
     // Worktree pattern: warn (not fail) when worker declares isolation:worktree
     // but body doesn't show the creation block. Some workers (review/audit/specialist)

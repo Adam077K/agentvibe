@@ -530,7 +530,10 @@ test('PS-BODY-VAGUE is a WARNING and can never fail a build', () => {
   assert.match(r.checks.join('\n'), /PS-BODY-VAGUE/);
 });
 
-test('PS-BODY-VAGUE still measures 6 of 7 live files and 10 sites — the §0 number, pinned', () => {
+test('PS-BODY-VAGUE fires 0 of 7 live files — §0 update: looks?/feels? removed from BODY_VAGUE', () => {
+  // 2026-08-16: BODY_VAGUE excludes `looks?` and `feels?` from the agent-body check.
+  // All 10 formerly-flagged sites were confirmed correct prose (see PROMPT-STANDARD.md §0).
+  // The rule still fires on constructed vagueness (below) via "reasonable" and other words.
   let files = 0;
   let sites = 0;
   for (const p of LIVE) {
@@ -538,15 +541,21 @@ test('PS-BODY-VAGUE still measures 6 of 7 live files and 10 sites — the §0 nu
     const hit = checks.find((c) => c.startsWith('PS-BODY-VAGUE'));
     if (hit) { files++; sites += hit.match(/\d+/g).length; }
   }
-  assert.equal(files, 6, 'PROMPT-STANDARD.md §0 measured 6 of 7 files');
-  assert.equal(sites, 10, 'PROMPT-STANDARD.md §0 measured 10 sites');
+  assert.equal(files, 0, 'BODY_VAGUE §0 update: fires on 0 of 7 live files');
+  assert.equal(sites, 0, 'BODY_VAGUE §0 update: 0 false-positive sites');
 });
 
-test('PS-SECTION-ORDER is a WARNING because reviewer-readonly is a better file for breaking it', () => {
+test('PS-SECTION-ORDER is silent on reviewer-readonly after section order fix (2026-08-16)', () => {
+  // Before: reviewer-readonly had Pre-flight reads before Workflow position.
+  // That was intentional structure (the file explains its own existence first) but produced
+  // a lint noise that obscured the two real warnings. Reordered to canonical order in the
+  // same PR that fixed those warnings. The rule itself stays — it still catches violations
+  // in constructed fixtures; it just no longer fires on correct files.
   const { issues, checks } = ps(
     fs.readFileSync(path.join(AGENTS, 'reviewer-readonly.md'), 'utf8'), 'reviewer-readonly');
   assert.deepEqual(issues, []);
-  assert.match(checks.join('\n'), /PS-SECTION-ORDER/);
+  assert.ok(!checks.some((c) => c.startsWith('PS-SECTION-ORDER')),
+    'PS-SECTION-ORDER should not fire on correctly ordered reviewer-readonly.md');
 });
 
 test('PS-LENGTH-BAND · PS-STEP-COUNT · PS-ANTIPATTERN-COUNT are silent on all seven', () => {
