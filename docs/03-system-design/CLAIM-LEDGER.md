@@ -680,6 +680,33 @@ claims:
     valid_until: 2026-11-14
     confidence: 0.9
     supports: [c-tools-subtraction-binds]
+
+  # REGISTERED 2026-08-16 to close a dangling citation, and the dangle was itself the point.
+  # PROMPT-STANDARD.md:526 (#64) cites this id; the checker that resolves citations landed
+  # separately in #66. Both are on main, so `ledger lint` fails on main — two PRs each
+  # correct alone, red together, which is the shape #66 was built to catch and then caught
+  # on its own release.
+  #
+  # The claim is deliberately about the ABSENCE of evidence, and it is checkable precisely
+  # because the channel has never been exercised: zero agent files declare `effort:`, so
+  # nothing has ever been able to honour or ignore it. PS-EFFORT-ENUM validates the value
+  # when the field is present and says nothing about whether the field binds — those are
+  # different questions, and conflating them is how `mcpServers` reached 52 files granting
+  # nothing.
+  #
+  # It FAILS the day someone adds `effort:` to an agent file. That is correct and intended:
+  # the standard says "adding the field is how that gets tested", so the first file to
+  # declare it is exactly the moment this claim must be re-decided rather than carried.
+  - id: c-effort-frontmatter-binding-unverified
+    assert: "Whether an agent's frontmatter effort: field binds at runtime is UNVERIFIED, and unverifiable from this repository as it stands: zero files under .claude/agents/ declare effort:, so the channel has never been exercised. PS-EFFORT-ENUM validates the value when present, which is a different question from whether the field is honoured"
+    kind: runtime-capability
+    scope: project
+    verified_by: command
+    evidence:
+      cmd: "! grep -lE '^effort:' .claude/agents/*.md"
+      expect_exit: 0
+    valid_until: 2026-11-14
+    confidence: 1
 ```
 
 ---

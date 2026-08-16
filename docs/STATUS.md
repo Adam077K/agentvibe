@@ -112,9 +112,9 @@ built it.
    registered claims now — `c-mcp-grant-binds-through-agent-dispatch`,
    `c-maxturns-binds-when-agenttype-named`, `c-mcp-hook-matcher-must-name-the-tool` and
    `c-nested-subagent-spawn-works` — all `verified_by: command`, so each fails a check when it stops being
-   true rather than sitting in a paragraph. `c-nested-subagent-spawn-works` fails until the false
-   *"subagents cannot spawn subagents"* line leaves `.claude/entry/ceo.md`, which is the correct signal and
-   not a defect in the claim. Issue **#56** is decided in the same pass: `c-lenses-and-playbooks-are-loaded`
+   true rather than sitting in a paragraph. `c-nested-subagent-spawn-works` failed until #63 removed the
+   false *"subagents cannot spawn subagents"* line from `.claude/entry/ceo.md`, and went green the moment it
+   did — the claim did the job a paragraph could not. Issue **#56** is decided in the same pass: `c-lenses-and-playbooks-are-loaded`
    carries a `refresh` disposition — shrink the 27,069-byte session-start payload with a router, do not raise
    the 4,096 budget to fit it.
 3. **`AGENT-ARCHITECTURE.md`'s binding table says `maxTurns:` does **NOT** bind, and the ledger now says it

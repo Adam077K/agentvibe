@@ -338,13 +338,20 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   added *in the PR* must carry `qa_verdict: PASS`.
 - **Shadow (computed, does not block):** claim resolvers, except migration · deploy · harness self-edit,
   which block from day one because `git revert` does not undo them.
-- **Durable facts are claims now, not prose.** Seven registered 2026-08-16 in
+- **Durable facts are claims now, not prose.** Eight registered 2026-08-16 in
   [CLAIM-LEDGER.md](docs/03-system-design/CLAIM-LEDGER.md): the MCP grant binds and narrows across an `Agent`
   dispatch (`c-mcp-grant-binds-through-agent-dispatch`), `maxTurns` binds
   (`c-maxturns-binds-when-agenttype-named`), an MCP call reaches `pre-tool-use.sh` only if the matcher names
   that exact tool (`c-mcp-hook-matcher-must-name-the-tool`), nested spawning works
-  (`c-nested-subagent-spawn-works`), and the three `tools:` claims below. All seven are `verified_by: command`
-  — a `judge` claim with an empty panel resolves `unresolved` forever, and two of those already exist.
+  (`c-nested-subagent-spawn-works`), the frontmatter `effort:` channel is unverified because nothing has ever
+  declared it (`c-effort-frontmatter-binding-unverified`), and the three `tools:` claims below. All eight are
+  `verified_by: command` — a `judge` claim with an empty panel resolves `unresolved` forever, and two of those
+  already exist. **All eight pass; the ledger's 5 remaining would_blocks are the pre-existing set** (canary
+  ×2, two unjudged judge claims, #56).
+- **Two PRs can each be correct and be red together.** #64 cited claim
+  `c-effort-frontmatter-binding-unverified`; #66 added the checker that resolves prose citations. Both landed,
+  neither knew about the other, and `ledger lint` failed on `main` until the claim was registered. When you
+  add a citation and someone else adds the checker, the break appears in neither PR.
 - **`tools:` binds one way only. Never state the two halves as one rule.** **Subtraction binds** — verified by
   *attempt*, not argument: `reviewer-readonly` was dispatched and reported write/bash/edit as **`NOT_PRESENT`**
   (no call path at all, which is stronger than a refused call), with a successful control read proving it
