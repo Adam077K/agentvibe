@@ -36,13 +36,14 @@ it, so a hook that changes posture changes this map with it.
 | `npm run build:manifest` | `node scripts/build-skills-manifest.mjs` |
 | `npm run build:map` | `node scripts/gen-codebase-map.mjs` |
 | `npm run build:routers` | `node scripts/build-skill-routers.mjs` |
-| `npm run check` | `npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:curation && npm run check:` |
+| `npm run check` | `npm run lint:agents && npm run check:prompt-standard && npm run test:gate && npm run check:manifest && npm run` |
 | `npm run check:curation` | `node scripts/curate-skills.mjs --check` |
 | `npm run check:dispatch` | `npm run test:dispatch && node scripts/check-dispatch-agenttype.mjs` |
 | `npm run check:ledger` | `npm run test:claims && npm run test:classifier && npm run test:ledger && node scripts/ledger.mjs lint && node ` |
 | `npm run check:manifest` | `node scripts/build-skills-manifest.mjs --check` |
 | `npm run check:map` | `node scripts/gen-codebase-map.mjs --check` |
 | `npm run check:mc` | `node mission-control/check.mjs` |
+| `npm run check:prompt-standard` | `node --test scripts/prompt-standard.test.mjs` |
 | `npm run check:registration` | `node scripts/check-registration.mjs` |
 | `npm run check:routers` | `node scripts/build-skill-routers.mjs --check` |
 | `npm run check:warroom` | `bash -n bin/warroom && node --check scripts/warroom-install.mjs && bash -n scripts/warroom-parity.sh && npm ru` |
@@ -102,6 +103,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/pre-tool-use.test.mjs` | — |
 | `scripts/probe-readonly.test.mjs` | — |
 | `scripts/probe-stop-reason.test.mjs` | the aggregation that answers what ends a run. |
+| `scripts/prompt-standard.test.mjs` | the PS-* rules of |
 | `scripts/run-gate.test.mjs` | the router that decides whether the binding gate runs. |
 | `scripts/session-start.test.mjs` | the SessionStart hook. |
 | `scripts/skill-clamp.test.mjs` | a skill that subtracts must not be attached silently. |
