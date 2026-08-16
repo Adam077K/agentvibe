@@ -262,7 +262,15 @@ function buildFixtureState(prefix: string) {
   // untrusted rendering is covered by its own tests in test/trust.test.ts, which is where the
   // "excluded, and why" strings are asserted.
   const trustFile = writeTrustFile(mkTmpDir(`mc-views-trust-${prefix}-`), [busy, quiet]);
-  const state = new LiveState({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot, trustFile });
+  const state = new LiveState({
+    roots: [projectsRoot],
+    claudeProjectsRoot: claudeRoot,
+    trustFile,
+    // Inside the fixture, never $HOME. A cache written here would be REFUSED on the next real
+    // start (the corpus root would not match) but a test that litters a home directory is
+    // still a test with a side effect.
+    indexCachePath: path.join(projectsRoot, 'index-cache.json'),
+  });
   const app = new Hono();
   app.route('/api', createApi(state));
   return { app, now, projectsRoot, claudeRoot, state, trustFile };
@@ -988,7 +996,13 @@ describe('render parity — Conflicts', () => {
     // every reversal below would be comparing an empty table to an empty payload — a passing
     // test over a measurement that never happened.
     const trustFile = writeTrustFile(mkTmpDir(`mc-views-conflicts-trust-${prefix}-`), [root]);
-    const state = new LiveState({ roots: [projectsRoot], claudeProjectsRoot: claudeRoot, trustFile });
+    const state = new LiveState({
+      roots: [projectsRoot],
+      claudeProjectsRoot: claudeRoot,
+      trustFile,
+      // Inside the fixture, never $HOME. See the note on the state above.
+      indexCachePath: path.join(projectsRoot, 'index-cache.json'),
+    });
     const app = new Hono();
     app.route('/api', createApi(state));
     try {
@@ -2351,7 +2365,10 @@ describe('render parity against the real local fleet', () => {
       }
 
       const app = new Hono();
-      app.route('/api', createApi(new LiveState()));
+      // indexCache: false — this renders the REAL fleet, and a test must not write to the
+      // developer's ~/.agentvibe on its way to doing so. Persistence is exercised in
+      // test/index-cache.test.ts against a fixture it owns.
+      app.route('/api', createApi(new LiveState({ indexCache: false })));
       const payload = (await (await app.fetch(new Request('http://127.0.0.1/api/fleet'))).json()) as FleetSummary;
 
       expect(payload.projects.length).toBeGreaterThan(0); // asserted, never excused

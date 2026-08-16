@@ -463,6 +463,47 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
     expect(findOffenders(WRITE_PATTERN, files)).toEqual([]);
   });
 
+  // A TEST MUST NOT WRITE TO THE DEVELOPER'S HOME DIRECTORY, and this exists because one did.
+  //
+  // `LiveState` persists its index to ~/.agentvibe/mission-control/index.json by default. Every
+  // test that builds one therefore has to say where its cache goes — `indexCache: false` for the
+  // ones measuring a genuine full read, `indexCachePath` for the ones that want persistence in
+  // a fixture they own. Three sites in test/views.test.tsx did neither, and a full `npm run
+  // check` left a 4.3 MB index of the real corpus in $HOME. It was found by looking at the
+  // filesystem afterwards, not by any assertion — the earlier sweep for these call sites
+  // globbed `test/*.ts` and this file is `.tsx`, so it was never examined.
+  //
+  // Named for what it does: a TEXT scan for the constructor. It cannot see a LiveState built
+  // through a helper or from a variable holding the options; the durable check would be an
+  // afterAll asserting the default path was not created, which needs the whole suite in one
+  // process and is not how these files run.
+  test('every LiveState in test/** says where its index cache goes', () => {
+    const testDir = path.join(REPO_ROOT, 'mission-control', 'test');
+    const files = fs
+      .readdirSync(testDir)
+      .filter((n) => n.endsWith('.ts') || n.endsWith('.tsx'))
+      .map((n) => path.join(testDir, n));
+    expect(files.length).toBeGreaterThan(5); // non-vacuity: the scan found the test tree
+
+    const offenders: string[] = [];
+    let constructions = 0;
+    for (const f of files) {
+      const text = fs.readFileSync(f, 'utf8');
+      for (const m of text.matchAll(/new LiveState\(([\s\S]{0,400}?)\)\s*[;,)]/g)) {
+        constructions++;
+        const args = m[1] ?? '';
+        if (!args.includes('indexCache')) {
+          const line = text.slice(0, m.index).split('\n').length;
+          offenders.push(`${path.basename(f)}:${line}`);
+        }
+      }
+    }
+    // NON-VACUITY: the scan actually matched constructors. A regex that silently stopped
+    // matching would leave this green forever while every new test wrote to $HOME.
+    expect(constructions).toBeGreaterThanOrEqual(6);
+    expect(offenders).toEqual([]);
+  });
+
   // AN ALLOWLIST WITH NO TEST THAT IT IS NARROW IS JUST A HOLE. Both halves are asserted:
   // the exempt file really does contain the writes (so the exemption is load-bearing and not
   // a leftover), and the exemption really is scoped to that one path (so the same code in any
