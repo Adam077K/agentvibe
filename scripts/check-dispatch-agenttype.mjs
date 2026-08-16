@@ -55,6 +55,11 @@
  *     quote would derail the scan from that point in the file. None exist in these files today.
  *   · Only `.claude/workflows/*.js` is parsed. `design-screen.md` in the same directory
  *     documents dispatches in prose and is checked by nothing.
+ *   · Rule 4 enumerates files with `git ls-files`, so an UNTRACKED file violating containment is
+ *     invisible until it is staged. That is the right source — it inherits .gitignore rather
+ *     than growing a second exclude list — and CI only ever sees tracked files, so the gap is
+ *     local-only. It is stated because it was found the honest way: this file's own rationale
+ *     comment tripped the rule the moment the file became tracked, and not one moment earlier.
  *
  * The non-vacuity floor is the guard for every one of those: a parser that quietly stops finding
  * call sites must fail, not report clean. This repo has been bitten more than once by a check
@@ -463,14 +468,23 @@ if (sites.length < MIN_SITES) {
 
 // ── 4 · containment: credentialed agentTypes stay inside .claude/workflows/ ─
 //
-// docs/ is excluded on purpose: GRANT-HOLDERS.md §4 and §6 quote `agentType: 'instrument'` and
-// `agentType: 'operator'` while specifying them, and prose about a dispatch is not a dispatch.
-// What is scanned is everything executable, plus everything under .claude/ that an agent reads
-// as instruction.
+// docs/ is excluded on purpose: GRANT-HOLDERS.md §4 and §6 quote the dispatch shape for both
+// credentialed names while specifying them, and prose about a dispatch is not a dispatch. What
+// is scanned is everything executable, plus everything under .claude/ that an agent reads as
+// instruction.
+//
+// The rule is not vacuous even before those agents exist, and this file proved it: the first
+// version of THIS comment quoted the pattern literally, and the check flagged its own source the
+// moment the file was tracked. Do not write the shape out in a scanned file — name it instead.
 function scannableFiles() {
   let list = [];
   try {
-    list = execFileSync('git', ['ls-files'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean);
+    // stderr is ignored deliberately: when ROOT is not a checkout (a --root fixture) git prints
+    // "fatal: not a git repository" to the parent's stderr, which reads like a failure of this
+    // check rather than a fallback it handles.
+    list = execFileSync('git', ['ls-files'], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+      .split('\n')
+      .filter(Boolean);
   } catch { /* not a git checkout (a test fixture, say) — fall through to a walk */ }
   if (!list.length) {
     const walk = (relDir) => {
