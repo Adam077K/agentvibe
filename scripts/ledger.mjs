@@ -212,7 +212,7 @@ function checkSupports(claims, byId) {
   return issues;
 }
 
-// Where a global claim's `- id:` entry sits, measured from the file, or null.
+// Every `- id:` line in the global ledger, as id → [line, …], measured from the file.
 //
 // This replaces a stamped `source_line: 0`. Zero was not a line, it was a placeholder that
 // `locate` then printed as `~/.warroom/ledger/global.yml:0` for all four global claims —
@@ -220,18 +220,28 @@ function checkSupports(claims, byId) {
 // exact defect this whole change exists to remove, so it went out on the CLI in the same
 // series that deleted it from the Mission Control tooltip.
 //
-// Null when the entry cannot be found, and null when it appears more than once: two matches
-// mean the position is ambiguous, and a caller must not be handed the first of two guesses.
-// Callers print the file alone when this is null — never a `0`, a `?` or a dash, because a
-// character standing in for a measurement is the thing being removed.
-function globalClaimLine(text, id) {
-  const want = new RegExp(`^\\s*-\\s*id:\\s*["']?${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']?\\s*$`);
-  const hits = [];
+// IT RETURNS EVERY HIT, and that is issue #58. The previous shape took one id, collected
+// exactly these hits, and returned `null` whenever there was more than one — right for the
+// caller that wanted a position, and it discarded the only evidence in the program that two
+// entries shared an address. So the global ledger accepted a duplicate id in silence while
+// the project path had failed on it since Phase 3: one concept, two loaders, one of them
+// checking. The measurement is made once, here, and both consumers read it — the collision
+// is reported, and a position is taken only when there is exactly one hit.
+//
+// A POSITION STAYS ABSENT WHEN IT IS AMBIGUOUS. Callers print the file alone — never a `0`,
+// a `?` or a dash, because a character standing in for a measurement is the thing this
+// removes. Reporting the duplicate does not change that: the first of two guesses is still
+// a guess, and now the reason it cannot be guessed is on the console instead of nowhere.
+function globalClaimLines(text) {
+  const byId = new Map();
   const lines = text.split('\n');
   for (let i = 0; i < lines.length; i++) {
-    if (want.test(lines[i])) hits.push(i + 1);
+    const m = /^\s*-\s*id:\s*["']?([^"'\s]+)["']?\s*$/.exec(lines[i]);
+    if (!m) continue;
+    if (!byId.has(m[1])) byId.set(m[1], []);
+    byId.get(m[1]).push(i + 1);
   }
-  return hits.length === 1 ? hits[0] : null;
+  return byId;
 }
 
 function collectGlobalClaims() {
@@ -245,26 +255,202 @@ function collectGlobalClaims() {
   if (!doc || !Array.isArray(doc.claims)) {
     return { claims: [], issues: [`${GLOBAL_LEDGER}: no "claims:" list`], present: true };
   }
+  const lineMap = globalClaimLines(text);
+  // Which occurrence of this id the current entry is. The parser returns entries in file
+  // order, so the nth entry carrying an id sits on the nth line declaring it — and an entry
+  // with no id at all cannot desynchronise the rest, because the counter is per id.
+  const nth = new Map();
   doc.claims.forEach((c, i) => {
     const where = `${GLOBAL_LABEL} claims[${i}]`;
     const problems = validateClaim(c, where);
     issues.push(...problems);
-    if (problems.length === 0) {
-      if (c.scope !== 'global') issues.push(`${where}: the global ledger may only hold scope:global claims`);
-      else {
-        const line = globalClaimLine(text, c.id);
-        claims.push({
-          ...c,
-          source_file: GLOBAL_LABEL,
-          // Absent rather than zero when unmeasurable. `undefined` survives into `locate`,
-          // which prints the file alone; a `0` would have printed as a position.
-          ...(line === null ? {} : { source_line: line }),
-          form: 'global',
-        });
-      }
+    if (problems.length > 0) return;
+    const hits = lineMap.get(c.id) || [];
+    const seenBefore = nth.get(c.id) || 0;
+    nth.set(c.id, seenBefore + 1);
+    // Reported once, on the second entry, naming BOTH lines — the shape the project path
+    // already uses, where it names both files. Reporting it on every colliding entry would
+    // render one collision as N-1 findings.
+    if (seenBefore > 0) {
+      const at = (n) => (n === undefined ? '' : `:${n}`);
+      issues.push(
+        `duplicate claim id "${c.id}" in ${GLOBAL_LABEL}${at(hits[seenBefore])} — already defined at `
+        + `${GLOBAL_LABEL}${at(hits[0])}. An id is the address of a claim: \`supports:\` targets resolve by it, `
+        + 'the index is keyed on it, and `locate` refuses to guess between two — so one of these is a claim '
+        + 'nothing ever checks while the count reconciles perfectly over the other.'
+      );
     }
+    if (c.scope !== 'global') {
+      issues.push(`${where}: the global ledger may only hold scope:global claims`);
+      return;
+    }
+    const line = hits.length === 1 ? hits[0] : null;
+    claims.push({
+      ...c,
+      source_file: GLOBAL_LABEL,
+      // Absent rather than zero when unmeasurable. `undefined` survives into `locate`,
+      // which prints the file alone; a `0` would have printed as a position.
+      ...(line === null ? {} : { source_line: line }),
+      form: 'global',
+    });
   });
   return { claims, issues, present: true };
+}
+
+// ONE sentence, two callers — and issue #57 is what it cost to have had two.
+//
+// `verify` printed this and `sweep` printed nothing. Same repo, same commit, only $HOME
+// differs — which is the CI condition, where `~/.warroom/ledger/global.yml` does not exist.
+// `verify` said so. `sweep` dropped four claims from its working set and printed a bare
+// total as though it had checked them, while spending a whole paragraph declaring its OTHER
+// blind spot, the missing run log. A tool that declares some of its blind spots teaches you
+// it declares all of them, and the care taken over the first absence is exactly what made
+// the silence about the second misleading.
+//
+// The wording is verify's, unchanged — it was already right. The fix is that there is now
+// one copy of it, so the two cannot drift apart again.
+function globalAbsenceNotice() {
+  return `  global scope: ${GLOBAL_LABEL} not present on this machine`
+    + ' — 0 global claims checked (this is reported, not skipped silently)\n';
+}
+
+// ── prose → claim citations ─────────────────────────────────────────────────
+//
+// Issue #59. `check-registration.mjs` checks every PATH a governing doc names; `checkSupports`
+// above checks every claim→claim `supports:` target. A `c-…` id written in PROSE was checked
+// by nothing, so citing `c-tpyo` in a handoff was silent.
+//
+// WHY THE PATTERN IS WORTH PROTECTING. Prose that cites a claim id instead of restating what
+// the claim asserts has two properties a vocabulary search cannot give you: correcting the
+// claim corrects every reader at once, and finding every reference is `git grep c-x` — exact,
+// with a completion criterion. PR #52 deleted a behaviour and a false warning about it
+// survived two independently-authored searches (~25 phrasings, then ~20 disjoint terms)
+// because the surviving sentence said "line numbers" where the searches said `source_line`.
+// A token search catches tokens; a belief survives paraphrase. But the moment the repo leans
+// on citations, they can rot in a new way — which is what makes this check the price of
+// recommending them.
+//
+// DETERMINISTIC, NEVER A MODEL SWEEP. Under Rule 10 a resolver never passes what it could not
+// check, and a semantic sweep can honestly report `unresolved` and never `pass`. This is a
+// scan: it either resolved the id or it did not.
+//
+// WHAT COUNTS AS A CITATION — the rule, stated because the false positives are the whole
+// difficulty:
+//
+//   1. Fenced code blocks are SKIPPED entirely. Inside a fence an id is a definition or an
+//      example — `claims` blocks define claims, and the agent files carry JSON return-contract
+//      samples full of invented ids like `c-rate-limit-enforced`. Nesting is honoured
+//      (a ````markdown fence wrapping a ```claims one closes only on the longer fence), or
+//      the inner fence would close the outer and every following line would read as prose.
+//   2. YAML frontmatter is SKIPPED. The parser reads `claims:` there too; that is a
+//      definition site, not a citation.
+//   3. Everything else is prose, and an id in it must resolve.
+//
+// AND THE ESCAPE, because two legitimate cases exist and neither is a mistake: an id proposed
+// but not yet registered (MODEL-DIVERSITY.md §11 lists three), and a historical document
+// naming a claim that has since been retired. Both mark the line:
+//
+//     `c-venture-task-complete` <!-- ledger:unregistered: gated on the Z1 run; not compiled yet -->
+//
+// The marker is greppable, which is the same property the citation pattern is being defended
+// for: `git grep ledger:unregistered` enumerates every deferred citation, with a completion
+// criterion. A marker on a line whose ids all resolve is reported as stale — an exemption
+// that has stopped suppressing anything is the lapsed-waiver shape, and the set only stays
+// honest if it shrinks when the reason does.
+//
+// THE RESIDUAL, NAMED RATHER THAN HIDDEN. Global claims live in `~/.warroom/ledger/global.yml`,
+// which no CI runner has, and 19 of this repo's prose citations point at them. Without that
+// file a dead id and a global one are indistinguishable, so on such a machine those citations
+// are counted and REPORTED as unchecked rather than failed — the same discipline, and the same
+// wording, as globalAbsenceNotice() above. That makes the check fully enforcing wherever the
+// global ledger exists (every developer machine, via `npm run check`) and honest about its
+// blind spot where it does not. Closing that gap needs a decision this file should not make
+// alone: it means either committing the global ids into the repo, or requiring every citation
+// of a non-project claim to carry a marker.
+//
+// LIMITS. Indented (four-space) code blocks are read as prose — no such block in this repo
+// names a claim id, and marking one is the escape if that changes. The pattern requires two
+// segments after `c-` (`c-a-b`), which is what keeps `c-suite` and friends out; an id of the
+// form `c-foo` would be cited unchecked rather than falsely flagged.
+
+const CITATION_RE = /\bc-[a-z0-9]+(?:-[a-z0-9]+)+\b/g;
+const CITATION_EXEMPT_RE = /<!--\s*ledger:unregistered:\s*\S[^]*?-->/;
+
+function scanMarkdownCitations(text) {
+  const lines = text.split('\n');
+  const out = [];
+  let fence = null;
+  let inFrontmatter = lines[0] === '---';
+  for (let i = inFrontmatter ? 1 : 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (inFrontmatter) {
+      if (/^---\s*$/.test(line)) inFrontmatter = false;
+      continue;
+    }
+    const f = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+    if (f) {
+      // A fence closes only on the same character, at least as long, with no info string.
+      if (fence === null) fence = { ch: f[1][0], len: f[1].length };
+      else if (f[1][0] === fence.ch && f[1].length >= fence.len && f[2].trim() === '') fence = null;
+      continue;
+    }
+    if (fence) continue;
+    const exempt = CITATION_EXEMPT_RE.test(line);
+    // Ids inside an HTML comment are not citations — nobody reads them. Stripping them is
+    // what lets a marker's reason name the id it exempts: the first version of the marker on
+    // CLAIM-LEDGER.md:50 said "c-kebab-case names the id FORMAT", and the scanner counted the
+    // reason as an eighth citation. A check whose own remedy moves its numbers is a check
+    // whose numbers cannot be reconciled against anything.
+    const visible = line.replace(/<!--[^]*?-->/g, ' ');
+    CITATION_RE.lastIndex = 0;
+    for (const m of visible.matchAll(CITATION_RE)) out.push({ id: m[0], line: i + 1, exempt });
+  }
+  return out;
+}
+
+function collectProseCitations(known, globalPresent) {
+  const issues = [];
+  const unchecked = new Map(); // id → ["file:line", …], only when the global ledger is absent
+  const files = new Set();
+  let cited = 0;
+  let exempt = 0;
+  for (const rel of candidateMarkdown()) {
+    let text;
+    try { text = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'); }
+    catch { continue; } // unreadability is already reported by collectProjectClaims
+    if (!/\bc-[a-z0-9]+-/.test(text)) continue;
+    const hits = scanMarkdownCitations(text);
+    const byLine = new Map();
+    for (const h of hits) {
+      cited++;
+      files.add(rel);
+      if (!byLine.has(h.line)) byLine.set(h.line, []);
+      byLine.get(h.line).push(h);
+      if (known.has(h.id)) continue;
+      if (h.exempt) { exempt++; continue; }
+      if (!globalPresent) {
+        if (!unchecked.has(h.id)) unchecked.set(h.id, []);
+        unchecked.get(h.id).push(`${rel}:${h.line}`);
+        continue;
+      }
+      issues.push(
+        `${rel}:${h.line}: cites claim "${h.id}", which is in no ledger — not the project index, `
+        + `not ${GLOBAL_LABEL}. Register it, fix the id, or mark the line `
+        + '`<!-- ledger:unregistered: why -->`.'
+      );
+    }
+    // Stale exemptions. Checkable everywhere, global ledger or not: an id that resolves
+    // against the project index resolves on every machine.
+    for (const [line, hs] of byLine) {
+      if (!hs[0].exempt || hs.some((h) => !known.has(h.id))) continue;
+      issues.push(
+        `${rel}:${line}: carries \`ledger:unregistered\` but every claim id on the line resolves `
+        + `(${hs.map((h) => h.id).join(', ')}) — remove the marker. An exemption that suppresses `
+        + 'nothing is the lapsed-waiver shape: it reads as a live reason and is not one.'
+      );
+    }
+  }
+  return { issues, unchecked, cited, exempt, files: files.size };
 }
 
 // ── The index ───────────────────────────────────────────────────────────────
@@ -478,10 +664,30 @@ function cmdBuild(argv) {
 function cmdLint() {
   const proj = collectProjectClaims();
   const glob = collectGlobalClaims();
-  const issues = [...proj.issues, ...glob.issues];
+  const known = new Set([...proj.claims, ...glob.claims].map((c) => c.id));
+  const prose = collectProseCitations(known, glob.present);
+  const issues = [...proj.issues, ...glob.issues, ...prose.issues];
   for (const n of proj.notes || []) process.stdout.write(`ledger lint: note — ${n}\n`);
   process.stdout.write(`ledger lint: ${proj.claims.length} project claims · ${glob.claims.length} global claims`);
   process.stdout.write(glob.present ? `\n` : ` (no ${GLOBAL_LABEL} on this machine)\n`);
+  process.stdout.write(`ledger lint: ${prose.cited} prose citation(s) in ${prose.files} file(s)`);
+  if (prose.exempt) process.stdout.write(` · ${prose.exempt} marked ledger:unregistered`);
+  process.stdout.write('\n');
+  if (prose.unchecked.size > 0) {
+    // The #57 shape one level up: these citations resolve to no project claim, and without
+    // the global ledger "global claim" and "dead id" are the same observation. Counted and
+    // named rather than passed over, because a check that silently drops what it cannot
+    // adjudicate is the thing this repo keeps finding in its own tools.
+    const sites = [...prose.unchecked.values()].reduce((n, v) => n + v.length, 0);
+    process.stdout.write(
+      `ledger lint: ${sites} citation(s) of ${prose.unchecked.size} id(s) could not be checked — `
+      + `they name no project claim and ${GLOBAL_LABEL} is not present on this machine, so a global `
+      + 'claim and a dead id are indistinguishable here (this is reported, not skipped silently):\n'
+    );
+    for (const [id, at] of [...prose.unchecked].sort()) {
+      process.stdout.write(`    ${id}  ${at.length} site(s), first ${at[0]}\n`);
+    }
+  }
   if (issues.length === 0) {
     process.stdout.write('ledger lint: clean\n');
     return 0;
@@ -506,9 +712,7 @@ async function cmdVerify(argv) {
   process.stdout.write(`ledger verify: ${all.length} claims`);
   if (offline) process.stdout.write(' · offline (network resolvers report unresolved, never pass)');
   process.stdout.write(`\n  events → ${evPath}\n`);
-  if (!glob.present) {
-    process.stdout.write(`  global scope: ${GLOBAL_LABEL} not present on this machine — 0 global claims checked (this is reported, not skipped silently)\n`);
-  }
+  if (!glob.present) process.stdout.write(globalAbsenceNotice());
   process.stdout.write('\n');
 
   let blocked = 0;
@@ -913,7 +1117,11 @@ function cmdSweep(argv) {
   }
 
   const canaryDead = logPresent && canaryEvents === 0;
-  const status = logPresent ? 'COMPLETE' : 'PARTIAL';
+  // TWO absences, one status. The run log was already accounted for here; the global ledger
+  // was not, and on a runner it is always missing — so the sweep reported COMPLETE over 31 of
+  // 35 claims. Issue #57. Neither absence is a FINDING: nothing can be wrong in a file that
+  // is not there, and a job that is red every day is a job nobody reads. Both are declared.
+  const status = logPresent && glob.present ? 'COMPLETE' : 'PARTIAL';
   const findings = expired.length + lapsedWaivers.length + silent.length + (canaryDead ? 1 : 0);
 
   const report = {
@@ -921,6 +1129,9 @@ function cmdSweep(argv) {
     window: sinceSpec,
     swept_at: new Date(now).toISOString(),
     claims_checked: all.length,
+    project_claims: proj.claims.length,
+    global_claims: glob.claims.length,
+    global_present: glob.present,
     expired: expired.map((e) => e.id),
     expiring_soon: expiringSoon.map((e) => e.id),
     lapsed_waivers: lapsedWaivers.map((e) => e.id),
@@ -947,8 +1158,18 @@ function cmdSweep(argv) {
   }
 
   const w = (s) => process.stdout.write(s);
-  w(`ledger sweep: ${all.length} claims · window ${sinceSpec} · log ${logPresent ? evPath : 'ABSENT'}\n\n`);
+  // The count is SPLIT. A bare "31 claims" was the whole of issue #57: it is the number the
+  // sweep checked, printed in the place a reader looks for the number of claims there are.
+  const split = glob.present
+    ? `${proj.claims.length} project · ${glob.claims.length} global`
+    : `${proj.claims.length} project · global ledger ABSENT`;
+  w(`ledger sweep: ${all.length} claims (${split}) · window ${sinceSpec} · log ${logPresent ? evPath : 'ABSENT'}\n\n`);
 
+  if (!glob.present) {
+    w(globalAbsenceNotice());
+    w('  Rule 9 therefore holds here for project claims only: a lapsed waiver on a global claim\n');
+    w('  is caught by nothing on this machine. c-runtime-nested-spawn is exactly that shape.\n\n');
+  }
   if (!logPresent) {
     w('PARTIAL — the run log does not exist, so resolver liveness could not be checked.\n');
     w('  "no log" and "no events" are different states and this sweep will not render them the same.\n\n');
@@ -990,13 +1211,19 @@ function cmdSweep(argv) {
   }
   if (malformed) w(`  (${malformed} unparseable log line(s) skipped)\n\n`);
 
+  // Never render a partial run as a clean one, and name EVERY gap rather than the first one.
+  // The closing line previously attributed the whole of PARTIAL to the missing log, so a
+  // reader who had one concluded the sweep was complete while four claims sat outside it.
+  const gaps = [];
+  if (!logPresent) gaps.push('resolver liveness (no run log)');
+  if (!glob.present) gaps.push(`global claims (no ${GLOBAL_LABEL})`);
+
   if (findings > 0) {
     w(`${findings} finding(s) need a decision. This sweep reports; it does not fix.\n`);
-  } else if (logPresent) {
+  } else if (gaps.length === 0) {
     w(`CLEAN — ${all.length} claims checked over ${sinceSpec}; canary fired ${canaryEvents}×.\n`);
   } else {
-    // Never render a partial run as a clean one. The claims were checked; liveness was not.
-    w(`PARTIAL — ${all.length} claims checked over ${sinceSpec}, none failing. Resolver liveness NOT checked (no log).\n`);
+    w(`PARTIAL — ${all.length} claims checked over ${sinceSpec}, none failing. NOT checked: ${gaps.join(' · ')}.\n`);
   }
   return findings > 0 ? 1 : 0;
 }
