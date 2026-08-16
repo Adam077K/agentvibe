@@ -159,15 +159,36 @@ if (!stamp) {
   }
 }
 
-// ── lenses and playbooks: the mechanical consumer ───────────────────────────
-const lensFiles = ['.claude/lenses.yml', '.claude/review-lenses.yml'];
-const loaded = [];
-const missing = [];
-for (const rel of lensFiles) {
-  const text = rd(path.join(REPO, rel));
-  if (text) loaded.push(`### ${rel}\n\n${text.trim()}`);
-  else missing.push(rel);
+// ── lenses and playbooks: compact router ─────────────────────────────────────
+// The original approach dumped the full YAML files (~27KB total). The runtime inlines
+// only ~2KB and persists the rest as a file pointer — so the full files never reached
+// agent context. Fix (issue #56): emit a compact router (ids + one-line summaries +
+// paths) that stays well under the 4,096 byte inline threshold. Full files are read
+// on demand. See the correction block at the top of this file.
+
+function parseIdSummaryRows(yaml, extraField) {
+  const rows = [];
+  const blocks = yaml.split(/\n  - id:\s+/);
+  for (let i = 1; i < blocks.length; i++) {
+    const b = blocks[i];
+    const id = (b.match(/^(\S+)/) || [])[1];
+    const summary = (b.match(/\n {4}summary:\s+"([^"]+)"/) || [])[1] || '';
+    let extra = '';
+    if (extraField) {
+      const m = b.match(new RegExp(`\n {4}${extraField}:\\s+(.+?)(?:\\n|$)`));
+      if (m) extra = m[1].replace(/^\[|\]$/g, '').trim();
+    }
+    if (id) rows.push({ id, summary, extra });
+  }
+  return rows;
 }
+
+const missing = [];
+const lensesYml = rd(path.join(REPO, '.claude/lenses.yml'));
+const reviewYml = rd(path.join(REPO, '.claude/review-lenses.yml'));
+
+if (!lensesYml) missing.push('.claude/lenses.yml');
+if (!reviewYml) missing.push('.claude/review-lenses.yml');
 
 const pbDir = path.join(REPO, '.claude', 'playbooks');
 let pbNames = [];
@@ -176,25 +197,52 @@ try {
 } catch {
   missing.push('.claude/playbooks/');
 }
-for (const f of pbNames) {
-  const text = rd(path.join(pbDir, f));
-  if (text) loaded.push(`### .claude/playbooks/${f}\n\n${text.trim()}`);
-}
 
 if (missing.length) {
   parts.push(
-    `LENSES/PLAYBOOKS: could not read ${missing.join(', ')}. The encoded expertise is NOT loaded ` +
+    `LENSES/PLAYBOOKS: could not read ${missing.join(', ')}. The encoded expertise is NOT available ` +
       'this session — say so rather than working as though it were.'
   );
 }
 
-if (loaded.length) {
+const domainRows = lensesYml ? parseIdSummaryRows(lensesYml, 'applies_to') : [];
+const reviewRows = reviewYml ? parseIdSummaryRows(reviewYml, 'scope') : [];
+
+const pbRows = [];
+for (const f of pbNames) {
+  const text = rd(path.join(pbDir, f));
+  if (!text) continue;
+  const id = (text.match(/^playbook:\s+(\S+)/m) || [])[1] || f.replace('.yml', '');
+  const summary = (text.match(/^summary:\s+"([^"]+)"/m) || [])[1] || '';
+  pbRows.push({ id, filePath: `.claude/playbooks/${f}`, summary });
+}
+
+if (domainRows.length || reviewRows.length || pbRows.length) {
+  const fmtTable = (rows, cols) => {
+    const header = cols.join(' | ');
+    const sep = cols.map(() => '---').join(' | ');
+    return [header, sep, ...rows].join('\n');
+  };
+
+  const domainTable = fmtTable(
+    domainRows.map((r) => `${r.id} | ${r.summary} | ${r.extra}`),
+    ['id', 'summary', 'applies_to']
+  );
+  const reviewTable = fmtTable(
+    reviewRows.map((r) => `${r.id} | ${r.summary} | ${r.extra}`),
+    ['id', 'summary', 'scope']
+  );
+  const pbTable = fmtTable(
+    pbRows.map((r) => `${r.id} | ${r.filePath} | ${r.summary}`),
+    ['id', 'path', 'summary']
+  );
+
   parts.push(
-    '## Lenses and playbooks (injected at session start)\n\n' +
-      'Domain lenses are how work is produced; review lenses are how it is judged; playbooks declare the ' +
-      'stages a category of work passes and the claims required to exit each — never the method. These are ' +
-      'the canonical copies; do not restate them from memory.\n\n' +
-      loaded.join('\n\n')
+    '## Lenses and playbooks (session-start index)\n\n' +
+      'Read the full file for any lens or playbook that applies to the current task — not before.\n\n' +
+      `### Domain lenses (.claude/lenses.yml) — how to produce work\n\n${domainTable}\n\n` +
+      `### Review lenses (.claude/review-lenses.yml) — how to judge work\n\n${reviewTable}\n\n` +
+      `### Playbooks — staged exit criteria\n\n${pbTable}`
   );
 }
 
