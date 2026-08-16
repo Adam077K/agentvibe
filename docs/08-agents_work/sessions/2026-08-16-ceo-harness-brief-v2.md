@@ -1,0 +1,13 @@
+---
+date: 2026-08-16
+role: ceo
+task: harness-brief-v2
+tier: lite
+qa_verdict: PASS
+---
+
+Reconciled the build brief against `docs/STATUS.md` from the parallel session and against PR #47, which merged after revision 1 was written and closed most of its critical path. Verified every claim rather than accepting either document: #47 is **MERGED** (`main` = `c180cfe`), `run-gate.mjs` / `reviewer-readonly.md` / `.mcp.json` all exist on `main`, and the two remaining `--dangerously-skip-permissions` hits in `bin/warroom` are **comments recording its removal** — my earlier grep counted the string, not the behaviour, which is the same defect class as everything else this week.
+**The correction that matters, and it inverts an item of mine: `maxTurns` BINDS when a dispatch names an `agentType`, and not otherwise.** This repo recorded the opposite as measured fact; that corpus named no agent file. Revision 1 told the next session to delete the field as inert — wrong in both action and reason. It is now live at 30, the `schema-lint` ceiling, on every engine. Naming `agentType` at four sites silently capped every reviewer at 20 tool calls and cost the other session three failed gate runs. Bounded honestly by them: 20 explained 13 of 20 dropouts, 7 unexplained.
+Three further corrections folded in from their session: MCP calls reach a hook only if the matcher names them (a false "the hook still fires" claim had propagated into four files); a subagent that stops early reports as *available*, not *incomplete* — which both sessions hit independently, and which I hit three times; and none of these durable facts were written to `CLAIM-LEDGER.md`, which is exactly where the wrong `maxTurns` belief lived while it was wrong.
+**The gate is no longer hypothetical.** `qa.js` ran three times against #47 and blocked every time, on its own author's work; three independent reviewers then returned FAIL and found a CWE-22 path traversal echoing files into fork-visible CI logs, a symlink bypass of its own fix, eleven SSRF bypasses of a guard whose comment claimed the address was refused, two more in the rewrite that closed those eleven, and an auto-approved RCE path added in a change described as tightening — all in work already called finished. That discharges stop condition 7 for the gate specifically.
+Brief rewritten to revision 2: what not to rebuild, four corrections, a four-step critical path, six parallel lanes with disjoint ownership, seven measured traps, and a done-definition that is behavioural. Recorded that both sessions independently recommended one real venture task next and that the founder overruled it — so it reads as a choice with its cost known rather than as something nobody noticed.

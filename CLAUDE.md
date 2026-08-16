@@ -319,6 +319,14 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   touched). See [the build brief](docs/08-agents_work/handoffs/2026-08-16-harness-completion.md).
 - **Step one is the prompt-craft standard** — it gates every edit under `.claude/agents/`, and the roster
   migration (17 files → 7) is blocked until it exists and is approved.
+- **The gate refuses now.** `qa.js` ran three times against PR #47 and **blocked every time, on its own
+  author's work**; three independent reviewers then returned FAIL and found a path traversal, eleven SSRF
+  bypasses, two more in the fix for those, and an auto-approved RCE path — all in work already called
+  finished. It is no longer a mechanism nothing invokes.
+- **`maxTurns` BINDS when a dispatch names an `agentType`, and not otherwise.** This repo recorded the
+  opposite as measured fact; the corpus behind that belief named no agent file. Now that `qa.js` names
+  `agentType`, the cap is live — it is 30 (the lint ceiling) on every engine. Do not "clean up" this field
+  believing it inert.
 - **Known and accepted:** **no venture work has ever run through this harness** (stop condition 6). The
   founder's decision is to finish the harness first. Recorded so it is a choice, not an oversight.
 - **Enforced today (fails a build):** schema-lint · gate tests · manifest drift · registration · launcher
@@ -326,8 +334,10 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   added *in the PR* must carry `qa_verdict: PASS`.
 - **Shadow (computed, does not block):** claim resolvers, except migration · deploy · harness self-edit,
   which block from day one because `git revert` does not undo them.
-- **Blockers:** none blocking. Founder decisions pending: **#56** (is 4,096 bytes the right session-start
-  budget?) and the two `--dangerously-skip-permissions` invocations in `bin/warroom` (lines 235 and 237).
+- **Blockers:** none blocking. `--dangerously-skip-permissions` was removed by #47 — the 26 allow/deny rules
+  in `settings.json` are live now, so a command that used to pass silently may prompt. Founder decisions
+  pending: **#56** (is 4,096 bytes the right session-start budget?), the OS sandbox policy, and the credential
+  scopes for `instrument`/`operator`.
 - **Before you trust any local measurement:** `cd mission-control && bun install`. Without it
   `ledger verify` reports 8 would_block instead of 5 and three mission-control claims look like regressions
   when they are missing dependencies. Measure from a clean checkout, never a stale working tree.

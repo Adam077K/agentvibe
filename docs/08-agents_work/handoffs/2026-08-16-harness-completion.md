@@ -1,7 +1,10 @@
 # Build brief — complete the harness, one session
 
-**Task:** Finish the agent harness autonomously. **From:** ceo (session `ceo-1-1786445435`) · **To:** the build session
-**Date:** 2026-08-16 · **Against:** `main` = `08e7981` · **Priority:** critical path first, everything else in parallel
+**Task:** Finish the agent harness autonomously. **From:** ceo (`ceo-1-1786445435`) · **To:** the build session
+**Date:** 2026-08-16 · **Against:** `main` = `c180cfe` · **Revision 2** — rewritten after PR #47 merged
+
+> **Read [docs/STATUS.md](../../STATUS.md) first.** It is the parallel session's living status and it corrects
+> at least one thing this repo recorded as measured fact. This brief is written to agree with it.
 
 ---
 
@@ -9,146 +12,166 @@
 
 Founder, 2026-08-16, after being given and rejecting the recommendation to stop building and run a real task:
 
-> Keep building the harness. The **processes** are overengineered, not the work. Combine both sessions' state,
-> then **one session completes the system autonomously** — as many agents as it needs, no overengineered
-> reviews or check-ins — then test it and confirm quality, **without missing any part of the harness.**
+> Keep building the harness. The **processes** are overengineered, not the work. **One session completes the
+> system autonomously** — as many agents as it needs, no overengineered reviews or check-ins — then test it
+> and confirm quality, **without missing any part of the harness.**
 
-**So: cut the ceremony, not the coverage.** Two review rounds maximum, no third. No status check-ins. Report
-once at the end. The QA gate still blocks and cannot be overridden — that is the one process that stays,
-because it is the one that has never actually run.
+**Cut the ceremony, not the coverage.** Two review rounds maximum. No status check-ins. Report once at the
+end. The QA gate stays and cannot be overridden — it is the one process that now demonstrably works.
 
 ---
 
-## Non-negotiable decisions (founder, 2026-08-16 — do not reopen)
+## Already done — do NOT rebuild these
 
-| | |
+PR #47 landed after this brief's first revision and closed most of its critical path.
+
+| Was on the list | Status |
 |---|---|
-| **PR #47 clears by a REAL `qa.js` run** — not by authorisation, not by bypass label | The gate's first genuine invocation is the change that creates it |
-| **Prompt standard first**, then founder approval, *then* anything under `.claude/agents/` | The one human checkpoint. Everything else runs without asking |
-| **Scope stops before Phase 9.** No project outside `agentvibe` is touched | Excludes fleet rollout and the 44 global agent files |
-| **#56 and `--dangerously-skip-permissions` are delegated to you** — decide and record | Two fewer stalls |
-| Build everything; **activate nothing needing founder secrets or binding founder sessions** | MCP credential values and the sandbox switch are one documented step each |
+| `agentType` at qa.js's dispatch sites | **Done.** Evidence-gatherers run as `reviewer`; the judge runs as `reviewer-readonly`, which has no shell |
+| `run-gate.mjs` — route something to the gate | **Done**, with `run-gate.test.mjs` |
+| `stop_reason` probe | **Done** — `probe-stop-reason.mjs`, 2,538 transcripts. The output ceiling ended **zero** runs |
+| `.mcp.json` + per-server allowlist | **Done, in one commit** — the trap was avoided; the old check was a boolean that would have opened MCP to every agent at once |
+| `--dangerously-skip-permissions` | **Removed.** The two remaining hits in `bin/warroom` are comments recording the removal. The 26 allow/deny rules are live now |
+| `designer` has no browser | **Granted `playwright`.** Policy: open web allowed, local network refused |
+| `allowed-tools` subtraction hazard | `schema-lint.js` now refuses the attachment · `skill-clamp.test.mjs` |
+| `pre-tool-use.sh` blocked nothing | **Fixed** — it parsed JSON with a line-oriented `awk` split, so `rm -rf /` exited 0. Structural parse, fails closed, 134 tests |
+
+**The gate refuses now.** It ran three times against #47 and blocked every time — on its own author's work.
+Three independent reviewers then returned FAIL, finding in already-"finished" work: a CWE-22 path traversal
+echoing files into fork-visible CI logs, a symlink bypass of its fix, **eleven SSRF bypasses** of a guard whose
+comment claimed the address was refused, two more in the rewrite that closed those eleven, an auto-approved
+RCE path added in a change described as tightening, and four false claims in the docs. All reproduced by hand,
+fixed, and pinned.
 
 ---
 
-## Read in this order
+## Corrections to what this repo believes
 
-| # | Doc | What it settles |
-|---|---|---|
-| 1 | [PHASE-8A-CLOSE.md](../../03-system-design/PHASE-8A-CLOSE.md) | Measured state, the defect catalogue, the traps |
-| 2 | [2026-08-15-implementation.md](2026-08-15-implementation.md) | The 7-item remaining list this brief supersedes and expands |
-| 3 | [AGENT-SYSTEM-REBUILD.md](../../03-system-design/AGENT-SYSTEM-REBUILD.md) §4, §6 | **Authoritative plan.** `IMPLEMENTATION-PLAN.md` is superseded |
-| 4 | [GRANT-HOLDERS.md](../../03-system-design/agents/GRANT-HOLDERS.md) §4.7 | What `instrument` and `operator` are for, and their credential sequencing |
-| 5 | PR #47 body | Items 1–4 already built; read before duplicating |
+**1 · `maxTurns` BINDS when a dispatch names an `agentType`, and not otherwise.** The repo recorded the
+opposite as measured fact. That measurement came from a corpus where **no agent file was named**. Naming
+`agentType` at four sites silently capped every reviewer at 20 tool calls and cost three failed gate runs.
+Now at **30 — the `schema-lint` ceiling — on every engine.** Do not delete this field believing it inert; the
+open question is whether 30 is enough. *Bounded honestly by the session that found it: 20 explained 13 of 20
+dropouts; the other 7 exceeded the cap and are unexplained.*
+
+**2 · MCP tool calls only reach a hook if the matcher names them.** Any sentence of the form *"the hook still
+fires"* is false for MCP unless the matcher says so. That claim propagated into four files before it was caught.
+
+**3 · A subagent that stops early reports as "available", not "incomplete".** Two of three independent
+reviewers went idle without sending reports; taken at face value that reads as *"reviewed it, found nothing."*
+**Never trust a subagent's silence — or its report — without checking.** Both sessions hit this independently.
+
+**4 · Durable facts are living in prose.** Nothing from any of this was added to `CLAIM-LEDGER.md` — which is
+exactly where the wrong `maxTurns` belief lived while it was wrong. Rule 9 exists for this.
 
 ---
 
-## Critical path — do these in order, nothing else unblocks without them
+## Critical path
 
 ```
-[11 prompt standard] ──► FOUNDER APPROVAL ──► [12 roster 17→7] ──► [16 MCP wiring] ──► done
-        ▲                                            ▲
-   start here                                  14+15 must already be in
+[prompt standard] ──► FOUNDER APPROVAL ──► [roster 17→7] ──► [MCP servers] ──► done
+      ▲                                          ▲
+  start here                              [OS sandbox] gates operator/instrument
 ```
 
-**1 · The prompt standard (item 11).** Write `docs/03-system-design/agents/PROMPT-STANDARD.md` — structure,
+**1 · The prompt-craft standard.** Write `docs/03-system-design/agents/PROMPT-STANDARD.md` — structure,
 length, word choice, anti-sycophancy, the never-appear list — **and a `schema-lint` rule that enforces it.**
-A standard with no linter rule is a wish. Then stop and get founder approval. This is the only stop.
+A standard with no linter rule is a wish. Then stop for founder approval. **This is the only stop.**
 
-**2 · Roster 17 → 7 (item 12).** Rewrite `orchestrator, builder, designer, reviewer, sourcer` against the
-standard. Create `instrument.md` and `operator.md`. Delete `framer.md` (safe — no global twin, no `agentType`
-references). **Do NOT delete the 11 shims** — see Traps.
+**2 · Roster 17 → 7.** Rewrite `orchestrator, builder, designer, reviewer, sourcer` against the standard.
+Create `instrument.md` and `operator.md`. Delete `framer.md` (safe — no global twin, no `agentType` refs).
+**Do NOT delete the 11 shims** — see Traps.
 
-**3 · MCP reality (items 14 → 15 → 16 → 17).** In this order, and 14+15 in **one commit**.
+**3 · MCP servers — "the real distance between the specification and a working system."** Six credentialed
+servers are absent (`billing-read`, `analytics`, `deploy`, `db-admin`, `payments`, `db-read`), plus `context7`
+and `github` which the capability matrix grants. `playwright` is the one grant actually installed.
+**Wire everything; leave credential values blank** — issuing them is founder-present work with real money.
+
+**4 · OS sandbox.** Configured nowhere. `operator` and `instrument` are deliberately uncreated until it
+exists, because they would hold payment keys and deploy tokens in a container that cannot hold them. **Build
+it; leave it off by default** — it binds the founder's own sessions.
 
 ---
 
-## Parallel lanes — run these concurrently, before and during the critical path
+## Parallel lanes — run concurrently, one agent each, disjoint files
 
-No two lanes touch the same file. One agent per lane.
-
-| Lane | Items | Owns |
+| Lane | Work | Owns |
 |---|---|---|
-| **A · gate engine** | Merge PR #47 (items 1, 2), then 3 (`.claude/workflows/**` into `qa-tier-floor.yml`), 8 (de-duplicate `DIMENSIONS`), 35 (bind the verdict to a commit SHA) | `.claude/workflows/**`, `.claude/qa-tier-floor.yml`, `.github/workflows/qa-lead-pass.yml` |
-| **B · instrumentation** | 5 — `stop_reason` into `turnsFrom()`, reindex, cross-tab against empty-return runs | `scripts/lib/usage.js`, `scripts/usage.test.mjs` |
-| **C · ledger** | 29 (#55), 30 (#57), 31 (#58), 32 (#59), 23 (`warn`→`fail` on unregistered) | `scripts/ledger.mjs`, `scripts/check-registration.mjs`, `.github/workflows/ledger-sweep.yml` |
-| **D · mission-control** | 33 (#53), 34 (#54) | `mission-control/server/projects.ts`, `mission-control/test/**` |
-| **E · safety floor** | 21 (`execFileSync('/bin/sh', ...)` injection in `resolvers.js:261`), 22 (register `budget-guard`), 24 (the permissions flag), 25 (sandbox, built-not-enabled) | `scripts/lib/resolvers.js`, `.claude/settings.json`, `bin/warroom` |
-| **F · truth** | 26 (delete the false "subagents cannot spawn subagents" constraint — measured false 2026-08-13), 27 (F13 vs `classifier.js`), 38 | `.claude/entry/ceo.md`, `docs/03-system-design/**` |
-| **G · skills** | 9 (3 broken skills), 10 (strip `allowed-tools` from the 8 that carry it) | `.claude/skills/**`, `CURATION.yml` |
-| **SOLO** | 11, then 12 + 6 + 7 + 13 + 14 + 15 | `.claude/agents/**`, `.claude/hooks/schema-lint.js` |
+| **A · ledger** | #55 · #57 (`sweep` never consults `glob.present`; `ledger.mjs:916`) · #58 · #59 · promote `warn('unregistered')` → `fail` | `scripts/ledger.mjs`, `scripts/check-registration.mjs`, `.github/workflows/ledger-sweep.yml` |
+| **B · mission-control** | #53 (`readLedgerIndex` casts instead of validating) · #54 (fixtures unbound to producer shape) | `mission-control/server/projects.ts`, `mission-control/test/**` |
+| **C · claim ledger debt** | Register the durable facts above as claims — `maxTurns` binding, the MCP matcher rule, `tools:` binding | `CLAIM-LEDGER.md`, `.claude/ledger/**` |
+| **D · safety floor** | `execFileSync('/bin/sh', ['-c', ev.cmd])` at `resolvers.js:261` — command injection in the resolver that runs claim evidence · register `budget-guard.js` | `scripts/lib/resolvers.js`, `.claude/settings.json` |
+| **E · truth** | Delete the false *"subagents cannot spawn subagents"* constraint (measured false 2026-08-13) · resolve F13 vs `classifier.js` | `.claude/entry/ceo.md`, `docs/03-system-design/**` |
+| **F · phantom dispatch** | `design.js` and `coding.js` dispatch six `agentType`s that exist nowhere; `research.js` dispatches `researcher`, the one shim a workflow uses. Repoint **before** the roster moves | `.claude/workflows/design.js`, `coding.js`, `research.js` |
+| **SOLO** | prompt standard, then roster + `schema-lint.js` | `.claude/agents/**`, `.claude/hooks/schema-lint.js` |
 
-**`.claude/hooks/schema-lint.js` is the contention point** — items 6, 11 and 15 all edit it. One owner, never concurrent.
-
----
-
-## Traps — each of these is measured, not theoretical
-
-1. **Deleting the 11 shims is a silent substitution, not a removal.** All 11 have drifted twins in
-   `~/.claude/agents/` (`ceo` 313 lines, routing to four retired agents). Deletion un-shadows them and
-   **nothing reports an error** — the names keep working and quietly mean the older definition. Blocked on
-   Phase 9. **Leave them.**
-2. **`.mcp.json` turns `schema-lint` permissive for every agent at once.** `mcpConfigured()` is a repo-wide
-   boolean. Ship item 15 (per-agent `MCP_ALLOWLIST`) **in the same commit** as item 14, or every
-   `mcpServers:` declaration passes unchecked.
-3. **`maxTurns` is in `REQUIRED_FRONTMATTER`.** Delete it from the six agent files and from
-   `schema-lint.js:64-74` **together**, or lint fails. It is provably non-binding: declared 20, exceeded in
-   196 of 269 runs.
-4. **`design.js` and `coding.js` dispatch to six `agentType`s that exist nowhere** — `product-designer`,
-   `design-critic`, `backend-engineer`, `frontend-engineer`, `devops-engineer`, `design-polisher`.
-   `check-registration.mjs` only scans `.claude/commands`, so workflows escape the phantom-name check.
-   Repoint them **before** the roster changes under them.
-5. **`research.js:121,134` dispatches `agentType: 'researcher'`** — the one shim a workflow actually uses.
-   Repoint to `sourcer` before touching it.
-6. **Verify `--dangerously-skip-permissions` semantics before removing it.** The plan itself flags them as
-   assumed, not measured. Removing it means every `settings.json` rule becomes live at once.
-7. **`register the hook, then make the check fail`** — item 22 before item 23, or `npm run check` goes red
-   mid-flight.
-8. **Measure from a clean checkout with `bun install` run.** Without it the ledger reports 8 would_block
-   instead of 5 and three mission-control claims look like regressions. This produced two wrong readings
-   during the close-out.
-9. **zsh does not word-split unquoted expansions.** Use `xargs`; `xargs -a` is GNU-only, BSD needs `<`.
+`.claude/hooks/schema-lint.js` is the contention point — **one owner, never concurrent.**
 
 ---
 
-## Batch these for the founder — do NOT stall on them
+## Traps — measured, not theoretical
 
-Do everything around them, then present all of them **once**, at the end, with your recommendation:
+1. **Deleting the 11 shims is a silent substitution, not a removal.** Each has a drifted twin in
+   `~/.claude/agents/` (`ceo` is 313 lines, routing to four retired agents). Deletion un-shadows them and
+   **nothing reports an error.** Blocked on Phase 9, which is out of scope. **Leave them.**
+2. **`maxTurns` is in `REQUIRED_FRONTMATTER` and capped 5–30 by lint.** It binds. See correction 1.
+3. **Repoint workflow `agentType`s before the roster changes under them**, not after.
+4. **The permission model is live now.** A command that passed silently before #47 may prompt. If a lane
+   stalls, check for a permission prompt before assuming a hang.
+5. **Measure from a clean checkout with `bun install` run.** Without it the ledger reports 8 would_block
+   instead of 5 and three mission-control claims look like regressions. This produced two wrong readings.
+6. **A string count is not a behaviour count.** `grep -c dangerously-skip-permissions bin/warroom` returns 2
+   on current `main`; both are comments recording its removal. Check context before concluding.
+7. **zsh does not word-split unquoted expansions.** Use `xargs`; `xargs -a` is GNU-only, BSD needs `<`.
 
-| # | Decision |
-|---|---|
-| 16 | Which credential scopes to issue (Stripe restricted vs live, Supabase anon vs service role) and whether `operator` gets live payments at all. **Wire everything; leave values blank** |
-| 25 | Sandbox egress policy and whether to enable it — it binds founder sessions. **Build it; default off** |
-| 27 | F13 or `classifier.js` — two mechanisms compute risk and disagree, while CLAUDE.md claims one classifier |
-| 36 | The 44 files in `~/.claude/agents/` — affects two other live projects |
-| 37 | Install Codex, or delete CLAUDE.md's Full-tier Codex requirement |
-| — | `designer`'s browser grant: give it `playwright` or delete `designer`. Leaving it is the one indefensible option |
+---
+
+## Batch for the founder — do not stall
+
+Do everything around these, then present them **once**, at the end, with a recommendation:
+
+| Decision |
+|---|
+| Credential scopes for `instrument`/`operator` — Stripe restricted vs live, Supabase anon vs service role, and whether `operator` touches live payments at all |
+| OS sandbox: egress policy, and whether to enable it (it binds founder sessions) |
+| **#56** — the 4,096-byte session-start budget: Refresh, Deprecate, or Waive |
+| **#55** — index churn vs extension counter vs sweep report vs hard cap |
+| F13 vs `classifier.js` — two mechanisms compute risk and disagree while CLAUDE.md claims one |
+| The 44 files in `~/.claude/agents/` — affects two other live projects |
+| Codex: install it, or delete CLAUDE.md's Full-tier requirement |
 
 ---
 
 ## Definition of done
 
-The harness is complete when **a dispatch runs through a container that actually constrains it, a gate that
-can actually refuse, and a grant that actually exists.**
-
-Concretely, all of these must hold:
+**A dispatch runs through a container that actually constrains it, a gate that can actually refuse, and a
+grant that actually exists.** The middle one is now true. The other two are the work.
 
 - [ ] `npm run check` exit 0 from a **clean detached worktree** at `origin/main`, after `bun install`
-- [ ] `node scripts/ledger.mjs verify` → `0 block`, and every `would_block` has a recorded `disposition`
-- [ ] **`qa.js` has actually run and actually refused something** — plant a P1 in a scratch diff, gate goes
-      red; remove it, gate goes green. Paste both.
-- [ ] `node scripts/classify.mjs .claude/workflows/qa.js` → `full` or higher
-- [ ] Zero `maxTurns` in the repo; `npm run lint:agents` exit 0
-- [ ] 7 agent files, each conforming to the approved prompt standard, each passing the new lint rule
+- [ ] `node scripts/ledger.mjs verify` → `0 block`, every `would_block` carrying a recorded `disposition`
+- [ ] 7 agent files, each conforming to the approved prompt standard, each passing its new lint rule
 - [ ] Every `agentType` dispatched anywhere resolves to a file in `.claude/agents/`
-- [ ] `.mcp.json` exists **and** an un-allowlisted `mcpServers:` declaration fails lint
+- [ ] An un-allowlisted `mcpServers:` declaration fails lint
 - [ ] An `mcp__*` payload through `pre-tool-use.sh` exits 2 rather than falling through to `allow`
+- [ ] `tools:` binding **verified by attempt**, not by lint — the judge's "no shell" guarantee rests on it and
+      its own prompt asserts it. Tracked as `c-read-only-binding-unverified`
+- [ ] The corrections above exist as claims in `CLAIM-LEDGER.md`, not as prose
 - [ ] `git grep "subagents cannot spawn"` returns only historical records
 - [ ] Session file with `qa_verdict: PASS` per merged PR, tier declared
 
-**Report once, at the end.** State what you did not cover and what you could not verify — a report that reads
-uniformly confident is worth less than one that marks its own soft spots.
+**Report once, at the end. State what you did not cover and what you could not verify.** Both sessions
+independently learned that a report which reads uniformly confident is worth less than one that marks its own
+soft spots.
 
 ---
 
-*Written by: ceo · 2026-08-16 · against `main` = `08e7981` · inventory of 39 items measured, not recalled*
+## The thing both sessions agree on, recorded because the founder overruled it
+
+`docs/STATUS.md` and this brief independently concluded the next step should be **one real venture task, end
+to end**. Every one of the 44 session files is infrastructure; no venture work has ever run through this
+harness. The founder's decision on 2026-08-16 — made after that recommendation was put and argued — is to
+finish the harness first. Recorded so it reads as a choice with its cost known.
+
+---
+
+*Written by: ceo · 2026-08-16 · against `main` = `c180cfe` · revision 2, reconciled with `docs/STATUS.md`*
