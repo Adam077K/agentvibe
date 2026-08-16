@@ -61,7 +61,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash|Edit|Write|NotebookEdit|mcp__playwright__browser_navigate",
+        "matcher": "Bash|Edit|Write|NotebookEdit|mcp__",
         "hooks": [
           {
             "type": "command",

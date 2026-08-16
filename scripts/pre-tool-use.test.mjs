@@ -27,6 +27,12 @@ const HOOK = path.join(REPO, '.claude', 'hooks', 'pre-tool-use.sh')
 const ALLOW = 0
 const BLOCK = 2
 
+// A test run must never write into the REAL events log. The MCP policy cases below record one
+// line per governed call, and ~30 of those per run would land in ~/.agentvibe/events.jsonl — the
+// file mission-control reads — turning the measurement this feature exists to produce into test
+// noise. Pinned at module scope so both runners inherit it and neither had to be edited to get it.
+process.env.WARROOM_EVENTS = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'pre-tool-use-events-')), 'events.jsonl')
+
 /** Claude Code sends compact JSON on one line; the hook's own header documents this shape. */
 const compact = (obj) => JSON.stringify(obj)
 /** Pretty-printed — the only shape the pre-fix hook's line-oriented awk could route correctly. */
@@ -475,4 +481,248 @@ test('the guard fails CLOSED if its own parser breaks', () => {
   // it is pinned so a future edit that breaks the parser cannot fail OPEN instead.
   assert.equal(runHook(compact(nav('http://169.254.169.254/'))), BLOCK)
   assert.equal(runHook(compact(nav('https://example.com/'))), ALLOW)
+})
+
+// ── The MCP blind spot: enforcement was a chain with the middle links missing ─────────────
+//
+// Before 2026-08-16 the PreToolUse matcher in .claude/settings.json read
+// "Bash|Edit|Write|NotebookEdit|mcp__playwright__browser_navigate", so TWO tools on one server
+// reached this hook and every other MCP call reached no safety control at all — including
+// `browser_run_code_unsafe`, which runs arbitrary code in a browser holding live session
+// cookies (69 real calls of it on this machine, ROSTER-SIZE.md:285). The matcher is now `mcp__`,
+// which subsumes the old entry because it is an unanchored regex over the tool name — the same
+// property that already routed `..._back`, pinned above at 'navigate_back is gated too'.
+//
+// The rule the hook enforces is SCOPE, not server name. The carve-out this replaces defended
+// allowing every MCP tool on the grounds that the servers are the founder's own. True of the
+// user-scope servers in ~/.claude.json; false of whatever this repo puts in its own .mcp.json.
+//
+// Every case below pins one row of the decision table in .claude/mcp-policy.json's `_doc`.
+
+import { spawnSync } from 'node:child_process'
+
+/** Exit code AND stderr — the shadow-mode cases are only meaningful if the log line is there. */
+function runHookVerbose(payload, env = {}) {
+  const r = spawnSync('bash', [HOOK], {
+    input: payload,
+    encoding: 'utf8',
+    env: { ...process.env, CLAUDE_PROJECT_DIR: REPO, ...env },
+  })
+  return { code: r.status, stderr: r.stderr || '' }
+}
+
+const TEMP_ROOTS = []
+process.on('exit', () => {
+  for (const d of TEMP_ROOTS) { try { fs.rmSync(d, { recursive: true, force: true }) } catch { /* best effort */ } }
+})
+
+/**
+ * A throwaway project root carrying its own policy, so a case can be pinned without editing the
+ * policy this repo actually ships — and so a test can never be green because of a local edit.
+ * `policy: undefined` writes no policy file at all, which is the "mechanism is off" row.
+ */
+function projectWith({ policy, mcp } = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-policy-'))
+  TEMP_ROOTS.push(dir)
+  fs.mkdirSync(path.join(dir, '.claude'), { recursive: true })
+  const put = (p, v) => fs.writeFileSync(p, typeof v === 'string' ? v : JSON.stringify(v, null, 2))
+  if (policy !== undefined) put(path.join(dir, '.claude', 'mcp-policy.json'), policy)
+  if (mcp !== undefined) put(path.join(dir, '.mcp.json'), mcp)
+  return dir
+}
+
+const mcpCall = (tool_name, tool_input = {}) => ({ session_id: 'test-session', tool_name, tool_input })
+
+const GOVERNED = {
+  servers: {
+    playwright: {
+      credentialed: false,
+      allow: ['browser_navigate', 'browser_snapshot'],
+      deny: ['browser_run_code_unsafe'],
+    },
+  },
+}
+const shadowPolicy = { mode: 'shadow', ...GOVERNED }
+const blockPolicy = { mode: 'block', ...GOVERNED }
+
+const UNSAFE = compact(mcpCall('mcp__playwright__browser_run_code_unsafe', { code: 'fetch("http://evil")' }))
+
+// 1 ── the deny list refuses, once the mode says to
+test('MCP policy BLOCKS a denied project-scope tool when mode is block', () => {
+  const root = projectWith({ policy: blockPolicy })
+  const { code, stderr } = runHookVerbose(UNSAFE, { CLAUDE_PROJECT_DIR: root })
+  assert.equal(code, BLOCK, 'browser_run_code_unsafe was allowed under mode: block')
+  assert.match(stderr, /rule=deny, mode=block/, 'the refusal must name the rule that fired')
+})
+
+// 2 ── ...and in shadow it proceeds, but it is on the record
+test('MCP policy in shadow ALLOWS the same call and says so on stderr', () => {
+  // ADR-001:123-125 — every gate ships in shadow first so the friction is measured, not guessed.
+  const root = projectWith({ policy: shadowPolicy })
+  const { code, stderr } = runHookVerbose(UNSAFE, { CLAUDE_PROJECT_DIR: root })
+  assert.equal(code, ALLOW, 'shadow mode must not block — that is what makes it shadow')
+  assert.match(stderr, /would_block/, 'a shadow verdict that logs nothing is a gate nobody can promote')
+  assert.match(stderr, /rule=deny/)
+})
+
+// 3 ── the asymmetry: one class of server does not get a shadow period
+test('a credentialed server BLOCKS under shadow — the one rule mode cannot soften', () => {
+  // ADR-001:123-125 exempts outbound send, deploy, migration and harness self-edit from shadow
+  // because git revert does not undo them. A credentialed server is all four at once.
+  const root = projectWith({
+    policy: { mode: 'shadow', servers: { gmail: { credentialed: true, allow: ['send_message'], deny: [] } } },
+  })
+  const { code, stderr } = runHookVerbose(compact(mcpCall('mcp__gmail__send_message')), { CLAUDE_PROJECT_DIR: root })
+  assert.equal(code, BLOCK, 'a credentialed server was allowed to send because mode said shadow')
+  assert.match(stderr, /REGARDLESS of mode/, 'the message must say why shadow did not apply')
+})
+
+// 4 ── the carve-out that had to survive
+test('a user-scope server is untouched even with a policy file present', () => {
+  // This is the same guarantee as 'other MCP servers are untouched' above, re-pinned against a
+  // policy file that exists. figma is in neither the policy nor .mcp.json, so the repo does not
+  // govern it and never sees the call.
+  const root = projectWith({ policy: shadowPolicy, mcp: { mcpServers: { playwright: {} } } })
+  for (const t of ['mcp__figma__get_design_context', 'mcp__notion__notion-search']) {
+    const { code, stderr } = runHookVerbose(compact(mcpCall(t, { q: 'x' })), { CLAUDE_PROJECT_DIR: root })
+    assert.equal(code, ALLOW, `${t} was gated — the user-scope carve-out is gone`)
+    assert.equal(stderr, '', `${t} was logged — the repo must not record calls it does not govern`)
+  }
+})
+
+// 5 ── no policy means the mechanism is off, not that it guesses
+test('policy file absent — every MCP call is allowed, exactly the pre-policy behaviour', () => {
+  const root = projectWith({})
+  assert.equal(runHookVerbose(UNSAFE, { CLAUDE_PROJECT_DIR: root }).code, ALLOW,
+    'an absent policy must reproduce the behaviour before the policy existed, not invent one')
+})
+
+// 6 ── unreadable is not empty
+test('a malformed policy BLOCKS every MCP call — including ones it would have allowed', () => {
+  // "I could not look" is not "nothing to see" — the same posture as the payload parse at L86.
+  // The figma case is the sharp end: when the policy will not parse, the hook cannot know which
+  // servers are project scope, so it refuses rather than assuming they are all the founder's.
+  const root = projectWith({ policy: '{ "mode": "shadow", "servers": { oops' })
+  for (const t of ['mcp__playwright__browser_navigate', 'mcp__figma__get_design_context']) {
+    const { code, stderr } = runHookVerbose(compact(mcpCall(t, { url: 'http://localhost:3000' })), { CLAUDE_PROJECT_DIR: root })
+    assert.equal(code, BLOCK, `hook failed OPEN on a policy it could not parse (${t})`)
+    assert.match(stderr, /unreadable or invalid/)
+  }
+})
+
+test('a policy whose mode is neither shadow nor block is malformed, not a third mode', () => {
+  const root = projectWith({ policy: { mode: 'warn', ...GOVERNED } })
+  assert.equal(runHookVerbose(UNSAFE, { CLAUDE_PROJECT_DIR: root }).code, BLOCK,
+    'an unrecognised mode must fail closed rather than fall through to allow')
+})
+
+// 7 ── enumeration is the bug this file already learned once
+test('a tool on NEITHER list is treated as denied, not as unknown-therefore-fine', () => {
+  // The SSRF guard above was rewritten precisely because it enumerated spellings and a reviewer
+  // walked past it five ways. A playwright release that adds a new dangerous tool must be covered
+  // by construction. In shadow this logs; under block it refuses.
+  const brandNew = compact(mcpCall('mcp__playwright__browser_install_extension'))
+  const shadowRoot = projectWith({ policy: shadowPolicy })
+  const blockRoot = projectWith({ policy: blockPolicy })
+  const s = runHookVerbose(brandNew, { CLAUDE_PROJECT_DIR: shadowRoot })
+  assert.equal(s.code, ALLOW)
+  assert.match(s.stderr, /rule=unlisted/, 'an unlisted tool must be distinguishable from a denied one in the log')
+  assert.equal(runHookVerbose(brandNew, { CLAUDE_PROJECT_DIR: blockRoot }).code, BLOCK)
+})
+
+// 8 ── the drift hole: two sources of "is this ours" would disagree
+test('a server configured in .mcp.json but missing from the policy is REFUSED', () => {
+  // Otherwise adding a server to .mcp.json silently grants it the user-scope carve-out, and the
+  // policy file becomes advisory the moment someone edits the other file. schema-lint.js:104
+  // reads the same .mcp.json to decide whether an agent's mcpServers grant is real.
+  const root = projectWith({
+    policy: { mode: 'shadow', servers: {} },
+    mcp: { mcpServers: { playwright: { command: 'npx' } } },
+  })
+  const call = compact(mcpCall('mcp__playwright__browser_navigate', { url: 'http://localhost:3000' }))
+  const { code, stderr } = runHookVerbose(call, { CLAUDE_PROJECT_DIR: root })
+  assert.equal(code, BLOCK, 'an ungoverned project-scope server was treated as user scope')
+  assert.match(stderr, /no entry in \.claude\/mcp-policy\.json/)
+})
+
+test('a governed entry that does not declare credentialed is refused', () => {
+  const root = projectWith({ policy: { mode: 'shadow', servers: { playwright: { allow: [], deny: [] } } } })
+  assert.equal(runHookVerbose(UNSAFE, { CLAUDE_PROJECT_DIR: root }).code, BLOCK,
+    'a server whose credential status is undeclared must not be assumed harmless')
+})
+
+// 9 ── the observability gap GRANT-HOLDERS.md 4.14/5.14 names: no per-call record of an MCP call
+test('every governed call writes one events.jsonl line; an ungoverned call writes none', () => {
+  const root = projectWith({ policy: shadowPolicy })
+  const events = path.join(root, 'events-probe.jsonl')
+  runHookVerbose(UNSAFE, { CLAUDE_PROJECT_DIR: root, WARROOM_EVENTS: events })
+  runHookVerbose(compact(mcpCall('mcp__figma__get_design_context')), { CLAUDE_PROJECT_DIR: root, WARROOM_EVENTS: events })
+
+  const rows = fs.readFileSync(events, 'utf8').trim().split('\n').map((l) => JSON.parse(l))
+  assert.equal(rows.length, 1, 'expected exactly one record — the governed call, not the user-scope one')
+  assert.equal(rows[0].event, 'mcp.call', 'mission-control/server/collectors/events.ts buckets on `event`')
+  assert.equal(rows[0].server, 'playwright')
+  assert.equal(rows[0].tool, 'browser_run_code_unsafe')
+  assert.equal(rows[0].decision, 'would_block')
+  assert.equal(rows[0].rule, 'deny')
+})
+
+test('a broken events destination never changes the verdict', () => {
+  // Logging is observability, not enforcement. If the log cannot be written the call must still
+  // get the verdict the policy says — in either direction.
+  const root = projectWith({ policy: blockPolicy })
+  const unwritable = path.join(root, '.claude', 'mcp-policy.json', 'not-a-dir', 'events.jsonl')
+  assert.equal(runHookVerbose(UNSAFE, { CLAUDE_PROJECT_DIR: root, WARROOM_EVENTS: unwritable }).code, BLOCK)
+  const ok = compact(mcpCall('mcp__playwright__browser_snapshot'))
+  assert.equal(runHookVerbose(ok, { CLAUDE_PROJECT_DIR: root, WARROOM_EVENTS: unwritable }).code, ALLOW)
+})
+
+// 10 ── the URL guard and the policy are different questions, and both get asked
+test('the navigate arm runs the URL guard FIRST and the policy after it', () => {
+  // The guard asks where this navigation goes; the policy asks whether the tool may be called at
+  // all. A `case` arm does not fall through in bash 3.2, so the policy is a function called from
+  // both arms — these two cases prove neither call site was lost.
+  const permissive = projectWith({
+    policy: { mode: 'block', servers: { playwright: { credentialed: false, allow: ['browser_navigate'], deny: [] } } },
+  })
+  assert.equal(runHookVerbose(compact(nav('http://169.254.169.254/')), { CLAUDE_PROJECT_DIR: permissive }).code, BLOCK,
+    'the SSRF guard stopped running when the policy allowed the tool')
+
+  const restrictive = projectWith({
+    policy: { mode: 'block', servers: { playwright: { credentialed: false, allow: [], deny: ['browser_navigate'] } } },
+  })
+  assert.equal(runHookVerbose(compact(nav('http://localhost:3000/')), { CLAUDE_PROJECT_DIR: restrictive }).code, BLOCK,
+    'a URL the guard allows must still face the policy')
+})
+
+// 11 ── the policy this repo actually ships, not a fixture
+test('the SHIPPED policy: run_code_unsafe is would_block today, the perception loop is untouched', () => {
+  // Fixtures prove the mechanism; this proves the configuration. If .claude/mcp-policy.json is
+  // ever edited into something that allows arbitrary in-page code silently, this goes red.
+  const unsafe = runHookVerbose(UNSAFE)
+  assert.equal(unsafe.code, ALLOW, 'the shipped policy is mode: shadow — blocking here means it was promoted')
+  assert.match(unsafe.stderr, /would_block playwright\/browser_run_code_unsafe/)
+
+  for (const tool of ['browser_snapshot', 'browser_take_screenshot', 'browser_evaluate']) {
+    const r = runHookVerbose(compact(mcpCall(`mcp__playwright__${tool}`)))
+    assert.equal(r.code, ALLOW, `${tool} is the perception loop and must not be refused`)
+    assert.equal(r.stderr, '', `${tool} logged to stderr — 154 browser_evaluate calls per session is how a guard gets switched off`)
+  }
+})
+
+// 12 ── absent and corrupt are different answers, and only one of them is safe
+test('an UNREADABLE .mcp.json blocks; an ABSENT one does not', () => {
+  // Project scope is read from .mcp.json, so a corrupt .mcp.json means scope is unknown. The
+  // first cut of this rule wrapped that read in a bare try/except, which folded "I could not
+  // read it" into "not configured" into "user scope" into allow — the exact fail-open shape this
+  // hook has been burned by before, rebuilt inside the fix for it.
+  const corrupt = projectWith({ policy: { mode: 'shadow', servers: {} }, mcp: '{ "mcpServers": {' })
+  const { code, stderr } = runHookVerbose(compact(mcpCall('mcp__anything__do_thing')), { CLAUDE_PROJECT_DIR: corrupt })
+  assert.equal(code, BLOCK, 'an unreadable .mcp.json was treated as "this repo configures nothing"')
+  assert.match(stderr, /Project scope cannot be determined/)
+
+  // Absent is a real answer: this repo configures no MCP servers, so every server is user scope.
+  const absent = projectWith({ policy: { mode: 'shadow', servers: {} } })
+  assert.equal(runHookVerbose(compact(mcpCall('mcp__anything__do_thing')), { CLAUDE_PROJECT_DIR: absent }).code, ALLOW,
+    'no .mcp.json means no project-scope servers, which is not an error')
 })

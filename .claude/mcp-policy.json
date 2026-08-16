@@ -1,0 +1,50 @@
+{
+  "_doc": "Project-scope MCP policy, read by .claude/hooks/pre-tool-use.sh. THE RULE IS SCOPE, NOT SERVER NAME. A server named here is one THIS REPO configures (see .mcp.json) and therefore governs. A server absent from here AND from .mcp.json is user scope -- the founder's own figma, notion, gmail, miro, higgsfield -- and this repo does not govern it, which is what the carve-out comment in pre-tool-use.sh always MEANT and never said. A server present in .mcp.json but absent from `servers` below is an ungoverned project server and is REFUSED, so adding a server to .mcp.json cannot silently outflank this file.",
+
+  "_mode": "shadow = compute the verdict, log it, let the call through. block = refuse it. Per ADR-001 (docs/03-system-design/adr/001-claim-ledger-as-enforcement-spine.md:123-125) every gate ships in shadow EXCEPT outbound send, deploy, migration and harness self-edit, which block from day one because git revert does not undo them. A playwright tool gate is none of those, so it ships in shadow. ONE asymmetry is hard-coded in the hook and this field cannot soften it: a server marked credentialed:true is all four at once, and blocks REGARDLESS of mode.",
+  "mode": "shadow",
+
+  "_deleting_this_file": "turns the mechanism off -- absent means no project-scope server is governed, which is exactly the behaviour before this policy existed. That is a stated limit, not a hidden one, and it is the same limit that already applies to pre-tool-use.sh itself: both are ordinary files inside the project root. Harness self-edits are tier `irreversible` in .claude/qa-tier-floor.yml and block from day one.",
+
+  "servers": {
+    "playwright": {
+
+      "_scope": "Configured in .mcp.json. Granted to `designer` via `mcpServers: [playwright]`. Measured 2026-08-16: dispatching `designer` through the Agent tool yields all 24 mcp__playwright__* tools; dispatching `builder`, which declares no mcpServers, yields zero. The grant is real and it narrows.",
+      "credentialed": false,
+
+      "_deny_why": "browser_run_code_unsafe runs arbitrary code in a browser carrying live session cookies -- 69 real calls on this machine (ROSTER-SIZE.md:285). browser_file_upload sends a LOCAL file to a remote page: exfiltration that never names curl. browser_network_request issues an arbitrary HTTP request from the browser, which is the SSRF surface the browser_navigate URL guard closes, reached through a tool name that guard never sees. The brief named only the first; the other two are the same capability wearing different tool names, and leaving them off would make the measurement understate the surface. All three LOG and proceed while mode is shadow, so naming them costs nothing today.",
+      "deny": [
+        "browser_run_code_unsafe",
+        "browser_file_upload",
+        "browser_network_request"
+      ],
+
+      "_allow_why": "The perception loop: render, look at what rendered, iterate. browser_evaluate is on this list deliberately and it is the one entry that conflicts with prose elsewhere -- AGENT-ARCHITECTURE.md:363 and ROSTER-SIZE.md:288 both say designer `must not` call it, and neither sentence has a mechanism behind it. Direction on this task is allow-and-log, so the prose rule now has a MEASUREMENT where it had nothing; moving this one string to `deny` is the whole change if the log says it fires more than the perception loop needs.",
+      "allow": [
+        "browser_click",
+        "browser_close",
+        "browser_console_messages",
+        "browser_drag",
+        "browser_drop",
+        "browser_evaluate",
+        "browser_fill_form",
+        "browser_find",
+        "browser_handle_dialog",
+        "browser_hover",
+        "browser_navigate",
+        "browser_navigate_back",
+        "browser_network_requests",
+        "browser_press_key",
+        "browser_resize",
+        "browser_select_option",
+        "browser_snapshot",
+        "browser_tabs",
+        "browser_take_screenshot",
+        "browser_type",
+        "browser_wait_for"
+      ],
+
+      "_unlisted": "A tool on this server that is on NEITHER list is treated as denied: it did not exist when this policy was written. Enumeration is exactly what the SSRF guard in pre-tool-use.sh was rewritten to stop relying on -- it matched one spelling per address and an independent reviewer walked past it five ways. A playwright release that adds a new dangerous tool is covered here by construction rather than by an edit nobody remembers to make. In shadow mode this logs `rule=unlisted` instead of refusing, so the cost of the strictness is measured before it is paid."
+    }
+  }
+}
