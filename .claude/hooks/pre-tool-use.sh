@@ -163,6 +163,22 @@ case "$tool_name" in
       block "reading a .env file into the transcript is refused — its contents would be written to ~/.claude/projects/*.jsonl in plaintext, permanently. Read the specific variable from the environment instead, or open the file in your own editor."
     fi
 
+    # -- BLOCK: fetch-and-run a remote package --------------------------------
+    #
+    # npx, bunx, "npm exec", "bun x" and "pnpm dlx" each download an arbitrary package from a
+    # registry and execute it. That is the same capability the HTTP-client rules further down
+    # exist to refuse, reached through a package manager instead.
+    #
+    # Found by an independent reviewer of PR #47: that PR widened the allow list to cover the
+    # package managers wholesale -- auto-approving exactly this -- in the same change that
+    # removed the skip-permissions flag and was described as tightening. The allow entries are
+    # now narrowed to the verbs actually measured (npm run, bun test, ...) and the fetch-and-run
+    # verbs are denied in settings.json. This rule is the second half of that fix: a settings
+    # deny can be bypassed by a launch flag, and this hook is the backstop that cannot.
+    if printf '%s' "$command" | grep -qE '(^|[;&|]\s*)(npx|bunx)\b|\bnpm\s+exec\b|\bbun\s+x\b|\bpnpm\s+dlx\b'; then
+      block "npx / bunx / npm exec / bun x / pnpm dlx download and execute a remote package - the same capability the HTTP-client rules refuse. Add the dependency to package.json and run it from node_modules, or ask the founder."
+    fi
+
     # ── BLOCK: chmod +x ──────────────────────────────────────────────────────
     if printf '%s' "$command" | grep -qE 'chmod\s+\+x'; then
       block "chmod +x is blocked. Use 'chmod 755 <file>' for explicit permissions, or ask the CEO to approve."
@@ -343,91 +359,103 @@ except Exception:
 
     ;;
 
-  mcp__playwright__browser_navigate)
+  mcp__playwright__browser_navigate|mcp__playwright__browser_navigate_back)
     # ── BLOCK: browser navigation into the local network ──────────────────────
     #
-    # THE OPEN WEB IS ALLOWED. This is a denylist, not an allowlist, and the direction is a
-    # founder decision made against my recommendation — correctly.
+    # THE OPEN WEB IS ALLOWED. Denylist, not allowlist — founder decision, overruling a
+    # localhost-only proposal. `sourcer` answers questions with sourced evidence and WebFetch
+    # returns almost nothing on a JS-rendered site; agents already hold WebSearch and WebFetch,
+    # so blocking the browser closes no prompt-injection risk and only makes the agent worse.
+    # Loopback IS allowed — that is designer's perception loop.
     #
-    # My first cut was localhost-only, reasoned from `designer`'s perception loop ("render, look
-    # at what rendered"). That reasoning was right about designer and wrong as a policy: `sourcer`
-    # answers questions with sourced evidence, and WebFetch returns almost nothing useful on a
-    # JS-rendered site. No pricing page behind a client-side render, no scrolling a competitor's
-    # landing page to judge how it feels. An autonomous company that cannot look at the web is
-    # crippled at the work it exists to do.
+    # THE FIRST VERSION OF THIS GUARD WAS BYPASSABLE FIVE WAYS AND AN INDEPENDENT REVIEWER
+    # FOUND ALL OF THEM. It pattern-matched ONE SPELLING of each address with shell globs
+    # (`169.254.*`), so every other textual form Chromium accepts walked past a guard whose own
+    # comment claimed the address was refused. All five verified against this hook before fixing:
+    #   http://2852039166/            decimal    -> 169.254.169.254   ALLOWED
+    #   http://0xa9fea9fe/            hex        -> 169.254.169.254   ALLOWED
+    #   http://169.254.43518/         3-part     -> 169.254.169.254   ALLOWED
+    #   http://0251.0376.0251.0376/   octal      -> 169.254.169.254   ALLOWED
+    #   http://[fd00:ec2::254]/       IPv6 IMDS  ->                   ALLOWED
     #
-    # The argument that decided it: agents ALREADY hold WebSearch and WebFetch, so untrusted text
-    # from the open internet already reaches context. Blocking the browser does not close prompt
-    # injection — it just makes the agent worse while leaving the real risk untouched.
-    #
-    # WHAT IS STILL REFUSED, AND WHY IT COSTS NOTHING:
-    # The local network is not the web. 169.254.169.254 is the cloud metadata endpoint;
-    # 10/8, 172.16/12 and 192.168/16 are the founder's router, NAS and printer. No research task
-    # wants them, and SSRF is the one browser risk a URL guard can actually close. `file://` is a
-    # local file read wearing a browser costume, and this hook already refuses reading secrets
-    # through Bash — the same content must not be reachable through a different door.
-    # Loopback (localhost, 127.0.0.1, [::1]) IS allowed: that is the perception loop.
-    #
-    # STATED LIMIT, because a guard that oversells itself is worse than none: this matches on the
-    # URL STRING. A hostname that resolves to a private address (DNS rebinding, a public name
-    # pointed at 169.254.169.254) passes it. Closing that needs resolution-time enforcement,
-    # which belongs to the OS sandbox, not to a regex. And no URL guard closes prompt injection:
-    # that is handled by not giving the browsing agent deploy or payment credentials, which is
-    # exactly why `operator` and `instrument` are separate engines.
-    url=$(printf '%s' "$payload" | python3 -c "
-import sys, json
+    # An address is now CANONICALISED and then classified rather than compared against a list of
+    # spellings. `ipaddress` decides private / loopback / link-local / reserved, so IPv4 in any
+    # encoding and every IPv6 private range are covered by construction instead of by
+    # enumeration — which is what the glob version was attempting, and failing.
+    _verdict=$(printf '%s' "$payload" | python3 -c "
+import sys, json, ipaddress
+
+def canon(host):
+    # Return an ip_address for any textual IPv4/IPv6 form a browser accepts, else None.
+    h = host.strip().rstrip('.').lower()
+    if h.startswith('[') and h.endswith(']'):
+        try: return ipaddress.ip_address(h[1:-1])
+        except ValueError: return None
+    parts = h.split('.')
+    if 1 <= len(parts) <= 4 and all(parts):
+        nums = []
+        for p in parts:
+            try:
+                if p.startswith('0x'): nums.append(int(p, 16))
+                elif p.startswith('0') and len(p) > 1: nums.append(int(p, 8))
+                else: nums.append(int(p, 10))
+            except ValueError:
+                return None
+        try:
+            n = 0
+            for i, v in enumerate(nums[:-1]):
+                if v > 255: return None
+                n |= v << (8 * (3 - i))
+            if nums[-1] >= (1 << (8 * (5 - len(nums)))): return None
+            n |= nums[-1]
+            return ipaddress.ip_address(n)
+        except (ValueError, IndexError):
+            return None
+    try: return ipaddress.ip_address(h)
+    except ValueError: return None
+
 try:
     d = json.load(sys.stdin)
-    print((d.get('tool_input') or {}).get('url', ''))
+    url = (d.get('tool_input') or {}).get('url') or ''
 except Exception:
-    print('')
-" 2>/dev/null)
+    print('BLOCK|payload unreadable'); raise SystemExit(0)
 
-    # Fail CLOSED: an unparseable or absent URL is refused, matching this hook everywhere else.
-    if [ -z "$url" ]; then
-      block "browser_navigate with no readable url — refused. This hook fails closed: a navigation it cannot inspect is not one it can allow."
-    fi
+if not url:
+    print('BLOCK|no url given'); raise SystemExit(0)
 
-    _host=$(printf '%s' "$url" | sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://##; s#^[^@]*@##; s#[/?\#].*$##; s#:[0-9]+$##' | tr '[:upper:]' '[:lower:]')
+low = url.strip().lower()
+if low == 'about:blank':
+    print('ALLOW|'); raise SystemExit(0)
+scheme = low.split(':', 1)[0] if ':' in low else ''
+if scheme not in ('http', 'https'):
+    print('BLOCK|' + url + ' - only http and https reach the network'); raise SystemExit(0)
 
-    case "$url" in
-      file://*|about:*|data:*|javascript:*|chrome://*|view-source:*)
-        case "$url" in
-          about:blank) : ;;
-          *) block "navigation to '$url' is refused — only http and https reach the network. file://, data: and javascript: are local or in-page reads wearing a browser costume, and this hook already refuses that content through Bash." ;;
-        esac
-        ;;
+rest = url.split('://', 1)[1] if '://' in url else url
+authority = rest.split('/', 1)[0].split('?', 1)[0].split('#', 1)[0]
+if '@' in authority:
+    authority = authority.rsplit('@', 1)[1]
+if authority.startswith('['):
+    host = authority[:authority.find(']') + 1] if ']' in authority else authority
+else:
+    host = authority.split(':', 1)[0]
+
+if not host:
+    print('BLOCK|' + url + ' - host could not be parsed'); raise SystemExit(0)
+
+ip = canon(host)
+if ip is None or ip.is_loopback:
+    print('ALLOW|')
+elif ip.is_private or ip.is_link_local or ip.is_reserved or ip.is_unspecified or ip.is_multicast:
+    print('BLOCK|' + url + ' resolves to ' + str(ip) + ', which is the local network, not the web')
+else:
+    print('ALLOW|')
+" 2>/dev/null) || block "browser navigation could not be evaluated — refusing. This hook fails closed."
+
+    case "$_verdict" in
+      ALLOW*) : ;;
+      BLOCK*) block "browser navigation refused: ${_verdict#BLOCK|}" ;;
+      *)      block "browser navigation guard returned nothing readable — refusing. This hook fails closed." ;;
     esac
-
-    # Private-range checks apply ONLY to literal IPv4 addresses. Matching them as glob patterns
-    # against the hostname blocks real public sites: `10.great.example.com` and
-    # `192.168.marketing.io` are ordinary domains that happen to begin with those digits, and the
-    # first cut of this rule refused both. A denylist that blocks legitimate research is the same
-    # failure as one that allows the metadata endpoint — it just fails in the other direction.
-    _is_ipv4=no
-    case "$_host" in
-      *[!0-9.]*) : ;;                 # any non-digit, non-dot character → a hostname, not an IP
-      *.*.*.*)   _is_ipv4=yes ;;      # four dot-separated numeric parts
-    esac
-
-    case "$_host" in
-      # Loopback — the perception loop. Allowed.
-      localhost|\[::1\]|::1) _is_ipv4=no ;;
-    esac
-
-    if [ "$_is_ipv4" = yes ]; then
-      case "$_host" in
-        127.*) : ;;   # loopback, allowed
-        169.254.*)   block "navigation to '$url' is refused — 169.254/16 is link-local and includes the cloud metadata endpoint. No research task needs it." ;;
-        10.*)        block "navigation to '$url' is refused — 10/8 is your local network, not the web." ;;
-        192.168.*)   block "navigation to '$url' is refused — 192.168/16 is your local network, not the web." ;;
-        172.1[6-9].*|172.2[0-9].*|172.3[0-1].*) block "navigation to '$url' is refused — 172.16/12 is your local network, not the web." ;;
-        0.*)         block "navigation to '$url' is refused — unroutable host." ;;
-        *) : ;;      # any other literal IP is public. Allowed.
-      esac
-    fi
-
-    [ -n "$_host" ] || block "navigation to '$url' is refused — the host could not be parsed."
     ;;
 
   *)

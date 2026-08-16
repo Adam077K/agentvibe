@@ -3,11 +3,14 @@
     "allow": [
       "Bash(git *)",
       "Bash(pnpm *)",
-      "Bash(npm *)",
-      "Bash(bun *)",
-      "Bash(bunx *)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(npm ci)",
+      "Bash(bun run *)",
+      "Bash(bun test *)",
+      "Bash(bun install *)",
+      "Bash(bun install)",
       "Bash(printf *)",
-      "Bash(timeout *)",
       "Bash(sleep *)",
       "Bash(gh *)",
       "Bash(node *)",
@@ -34,7 +37,11 @@
       "Bash(wget *)",
       "Bash(chmod +x *)",
       "Bash(npm install -g *)",
-      "Bash(pip install *)"
+      "Bash(pip install *)",
+      "Bash(npx *)",
+      "Bash(bunx *)",
+      "Bash(npm exec *)",
+      "Bash(bun x *)"
     ]
   },
   "hooks": {
