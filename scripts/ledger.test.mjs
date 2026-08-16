@@ -1208,3 +1208,167 @@ test('a duplicate is reported even when one of the two also fails its schema', (
   }
 });
 
+// ── #59 · prose → claim citations ───────────────────────────────────────────
+//
+// `check-registration.mjs` catches dead paths. `ledger lint` resolves `supports:`, which is
+// claim→claim. Prose→claim was the third direction and nothing checked it, so citing
+// `c-tpyo` in a handoff was silent — and the citation pattern is the one thing that gives
+// documentation a completion criterion (`git grep c-x` is exact; a vocabulary search is
+// never finished, only stopped).
+//
+// These run against the THROWAWAY repo, so a citation is a real file read through the real
+// CLI over a corpus the test controls. In that repo nothing cites the declared exemptions,
+// so the ratchet fires on all of them — which is the subject of the last test here and
+// noise in the others, hence assertions on specific messages rather than on totals.
+
+function citeRepo(body) {
+  const dir = scratchRepo(scratchDoc());
+  fs.writeFileSync(path.join(dir, 'prose.md'), body.join('\n'));
+  return dir;
+}
+
+function lintIn(dir, env = {}) {
+  try {
+    return { code: 0, out: execFileSync('node', [path.join(dir, 'scripts', 'ledger.mjs'), 'lint'],
+      { cwd: dir, encoding: 'utf8', env: { ...process.env, ...env } }) };
+  } catch (e) {
+    return { code: e.status, out: `${e.stdout || ''}${e.stderr || ''}` };
+  }
+}
+
+test('a claim id cited in prose that resolves to nothing fails lint, with file and line', () => {
+  const dir = citeRepo([
+    '# A handoff',                       // 1
+    '',                                  // 2
+    'This still works because of `c-scratch-one`.', // 3 — a real claim in this repo
+    '',                                  // 4
+    'And this is the trap: `c-tpyo` explains why.', // 5 — nothing
+  ]);
+  try {
+    const r = lintIn(dir);
+    assert.equal(r.code, 1, `lint must fail on a dead citation:\n${r.out}`);
+    assert.match(r.out, /prose\.md:5: prose cites claim "c-tpyo", which is not in the ledger/);
+    // Proven non-empty in the other direction too: the live citation must NOT be reported,
+    // or the check would be failing everything and this would prove nothing.
+    assert.doesNotMatch(r.out, /c-scratch-one/, 'a citation that resolves must pass silently');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a c- id inside a fence is a DEFINITION, not a citation — nesting included', () => {
+  const F4 = '`'.repeat(4);
+  const dir = citeRepo([
+    '# Documentation of the format',
+    '',
+    'A live citation, so this sample is not empty: `c-scratch-one`.',
+    '',
+    F4 + 'markdown',                  // the CLAIM-LEDGER.md shape: a fence inside a fence
+    FENCE + 'claims',
+    'claims:',
+    '  - id: c-documented-example',
+    FENCE,
+    '',
+    // The line that makes the fence rule load-bearing rather than decorative. A bare
+    // `- id:` inside a fence is already excluded by the inline-code rule, so a fixture
+    // holding only those would pass with the fence handling deleted — proving nothing.
+    // Documentation that SHOWS how to cite a claim writes a backticked id inside a fence.
+    'Cite it in prose as `c-shown-in-an-example`.',
+    F4,
+    '',
+    FENCE + 'json',
+    '{"claims_emitted": ["c-emitted-example"]}',
+    FENCE,
+  ]);
+  try {
+    const r = lintIn(dir);
+    // The count first. Three assertions of absence are all satisfied by a scanner that
+    // sees nothing at all — the empty-sample defect — so the sample is proven non-empty
+    // before any of them is believed: exactly one of the four ids here is a citation.
+    assert.match(r.out, /1 prose citation\(s\) of 1 distinct claim id\(s\)/,
+      'the one prose citation must be counted, or the absences below prove nothing');
+    assert.doesNotMatch(r.out, /c-shown-in-an-example/, 'an id shown inside a fence is documentation, not a reference');
+    assert.doesNotMatch(r.out, /c-documented-example/, 'a nested ```claims example is not a citation');
+    assert.doesNotMatch(r.out, /c-emitted-example/, 'a json fence shows the shape, it does not cite a claim');
+    assert.doesNotMatch(r.out, /c-scratch-one/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('an id in running prose is not a citation — "c-suite" is an English word', () => {
+  // 83 `c-…` tokens sit outside fences in this repo and 80 are in backticks; two of the
+  // three that are not are the word "c-suite", which matches the id grammar exactly. A
+  // scanner without the inline-code rule reports the org chart as a dead claim.
+  const dir = citeRepo([
+    '# Prose',
+    '',
+    'The c-suite meets weekly, and c-level reporting rolls up to it.',
+    '',
+    'A real citation, so the scanner is proven to be running: `c-scratch-one`.',
+  ]);
+  try {
+    const r = lintIn(dir);
+    assert.doesNotMatch(r.out, /"c-suite"/, 'the org chart is not a claim');
+    assert.doesNotMatch(r.out, /"c-level"/);
+    assert.match(r.out, /1 prose citation\(s\) of 1 distinct claim id\(s\)/,
+      'the one backticked id must be counted, or the absence above proves nothing');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a code span holding more than the id is an example, not a citation', () => {
+  const dir = citeRepo([
+    '# Usage',
+    '',
+    'Run `node scripts/ledger.mjs locate c-scratch-one` to find it.',
+    '',
+    'A real citation: `c-scratch-one`.',
+  ]);
+  try {
+    const r = lintIn(dir);
+    assert.match(r.out, /1 prose citation\(s\)/, 'the shell example must not be counted as a second citation');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the citation grammar is the one claims.js enforces, read from both files', () => {
+  // Two statements of one fact, checked against each other rather than trusted — the same
+  // move as G_LINE against GLOBAL_FIXTURE above. claims.js owns the id grammar and does not
+  // export it, so ledger.mjs carries a copy; this is what stops the copy drifting.
+  const read = (file, name) => {
+    const src = fs.readFileSync(path.join(REPO_ROOT, file), 'utf8');
+    const m = src.match(new RegExp(`^const ${name} = (/.*/);$`, 'm'));
+    assert.ok(m, `${name} must be a single-line regex literal in ${file} so this test can read the real one`);
+    return m[1];
+  };
+  assert.equal(read('scripts/ledger.mjs', 'CITED_ID_RE'), read('scripts/lib/claims.js', 'ID_RE'),
+    'the citation scanner and the claim parser must agree on what a claim id looks like');
+
+  // And the grammar must actually admit every id in the built index — a regex the two files
+  // agree on could still be wrong about the real corpus.
+  const re = new RegExp(read('scripts/ledger.mjs', 'CITED_ID_RE').slice(1, -1));
+  const index = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, '.claude', 'ledger', 'index.json'), 'utf8'));
+  assert.ok(index.claims.length > 0, 'an empty index would make the loop below prove nothing');
+  for (const c of index.claims) assert.match(c.id, re, `${c.id} is a real claim id the scanner would not recognise`);
+});
+
+test('a declared exemption with nothing under it fails — the list is a ratchet, not a rug', () => {
+  // UNRESOLVABLE_CITATIONS exists so the check could go in blocking today rather than after
+  // a documentation sweep that nothing would itself check. It can only shrink: an entry no
+  // prose cites any more is a failure, so it cannot outlive its subject and quietly become
+  // permission. In the throwaway repo nothing cites any of them, so every entry fires.
+  const dir = citeRepo(['# Nothing here cites a claim', '', 'Plain prose.']);
+  try {
+    const r = lintIn(dir);
+    assert.equal(r.code, 1);
+    assert.match(r.out, /UNRESOLVABLE_CITATIONS declares "c-[a-z0-9-]+", which no prose cites any more/);
+    // And the real repo, where every entry IS cited, must be clean — otherwise this rule
+    // would be a permanent failure rather than a ratchet.
+    assert.equal(runLedgerEnv({}, ['lint']).code, 0, 'the declared exemptions must all still be cited here');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

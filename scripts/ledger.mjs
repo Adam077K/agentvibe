@@ -332,6 +332,212 @@ function collectGlobalClaims() {
   return { claims, issues, present: true };
 }
 
+// ── prose → claim citations ─────────────────────────────────────────────────
+//
+// WHAT THIS CATCHES, AND WHY IT IS NOT A GREP. PR #52 deleted a behaviour and a false
+// warning about it survived in a handoff, under a heading called "Traps", addressed to
+// whoever picked the work up next. It survived two independently-authored vocabulary
+// searches — ~25 phrasings from one agent, ~20 disjoint terms from another — because the
+// stale sentence said "line numbers" where the searches said `source_line`. A token search
+// catches tokens; a belief survives paraphrase.
+//
+// Prose that CITES A CLAIM ID instead of restating what the claim asserts has the two
+// properties a vocabulary search cannot give you: correcting the claim corrects every
+// reader at once, and finding all the references is `git grep c-x` — exact, with a
+// completion criterion. The pattern is already used across this repo. Nothing checked it,
+// so citing `c-tpyo` in a handoff was silent, and the pattern could rot in a new way the
+// moment anyone leaned on it. Issue #59.
+//
+// DETERMINISTIC, NEVER A MODEL SWEEP. Rule 10: a resolver never passes what it could not
+// check, and a semantic sweep can honestly report `unresolved` but never `pass`. This is a
+// scan and a set lookup.
+//
+// WHAT COUNTS AS A CITATION — the rule, and the measurements behind it:
+//
+//   1. It is INLINE CODE. `c-runtime-nested-spawn` in backticks is a citation; the same
+//      characters in running prose may be English. Measured over the repo: 83 `c-…` tokens
+//      appear outside fenced blocks, 80 of them inside backticks. Of the three that are
+//      not, two are the word "c-suite" — which matches the id grammar exactly and is not a
+//      claim. The span must be the id ALONE, so `ledger locate c-fixture-alpha` is read as
+//      the shell example it is.
+//   2. It is OUTSIDE a fenced block. A ```claims fence is a DEFINITION, and a ```json or
+//      ```yaml fence showing `"claims_emitted": ["c-rate-limit-enforced"]` is an example of
+//      the shape, not a reference to a claim that must exist. Fences use CommonMark
+//      nesting, exactly as extractClaimBlocks() in scripts/lib/claims.js does — a scanner
+//      that ignores the outer fence reads CLAIM-LEDGER.md's ````markdown-wrapped example as
+//      real, which is a mistake that file has already caused once, to the parser.
+//      Definitions inside fences are not unchecked: the parser compiles them, and
+//      checkSupports() resolves every claim→claim reference among them.
+//   3. It is outside YAML frontmatter, which is the other place claims are DEFINED.
+//
+// WHAT IS DECLARED RATHER THAN RESOLVED — see UNRESOLVABLE_CITATIONS below.
+
+// A claim id, exactly as ID_RE in scripts/lib/claims.js defines it. That file owns the
+// grammar and does not export it, so this is a second statement of one fact — and the test
+// asserts every id in the built index matches this copy, which is how the two are kept from
+// drifting apart in silence.
+const CITED_ID_RE = /^c-[a-z0-9][a-z0-9-]*$/;
+
+/**
+ * Every inline-code span in a markdown file that is not inside a fenced block or the
+ * frontmatter, with the line it sits on.
+ */
+function proseCodeSpans(text) {
+  const src = String(text);
+  const lines = src.split('\n');
+  const out = [];
+
+  // Frontmatter, delimited the same way extractClaimBlocks() delimits it, so the two agree
+  // about where a file's definitions end and its prose begins.
+  const fm = src.match(/^---\n([\s\S]*?)\n---/);
+  let i = fm ? fm[0].split('\n').length : 0;
+
+  for (; i < lines.length; i++) {
+    const open = lines[i].trim().match(/^(`{3,})\s*([^`]*?)\s*$/);
+    if (open) {
+      const ticks = open[1].length;
+      let close = -1;
+      for (let j = i + 1; j < lines.length; j++) {
+        const m = lines[j].trim().match(/^(`{3,})\s*$/);
+        if (m && m[1].length >= ticks) { close = j; break; }
+      }
+      // An unclosed fence makes the rest of the file opaque, which is what CommonMark says
+      // and what the parser does. Guessing otherwise would read code as prose.
+      if (close < 0) break;
+      i = close;
+      continue;
+    }
+    for (const m of lines[i].matchAll(/`([^`\n]+)`/g)) {
+      out.push({ line: i + 1, code: m[1].trim() });
+    }
+  }
+  return out;
+}
+
+// ── The ids this repo cites that the project ledger cannot resolve ──────────
+//
+// Every entry is debt, declared. There are two honest reasons for one and they are not the
+// same reason, so they are marked rather than blurred:
+//
+//   scope: 'global'  The claim is real and lives in ~/.warroom/ledger/global.yml, which is
+//                    MACHINE STATE — no CI runner has it. Resolving these against the live
+//                    file would make the check pass locally and fail in CI, which is the
+//                    defect class this whole file exists to remove. So the repo declares
+//                    them, and on any machine that HAS the global ledger the declaration is
+//                    checked against it. A declaration nothing verifies is the shape of the
+//                    original defect; this one is verified wherever verification is
+//                    possible, and says so when it is not.
+//
+//   scope: 'none'    No claim exists anywhere. The prose names an id that was planned, or
+//                    illustrates the id FORMAT. These are real rot of the mild kind: a
+//                    reader who greps for one finds nothing. They are grandfathered with a
+//                    reason so the check can go in blocking today rather than after a
+//                    documentation sweep that would not itself be checked.
+//
+// THIS LIST IS A RATCHET, NOT A RUG. An entry that is no longer cited fails. An entry whose
+// id has since become a real claim fails. An entry marked `global` that the global ledger
+// does not have fails, on every machine that can tell. So it can only shrink, and it cannot
+// outlive its subject — which is the property that separates a declared exemption from the
+// silent one it replaced.
+const UNRESOLVABLE_CITATIONS = {
+  'c-runtime-nested-spawn': {
+    scope: 'global',
+    why: 'the nested-spawn capability claim — global scope, waived, and the exact claim issue #57 is about',
+  },
+  'c-rolling-five-hour-window': {
+    scope: 'global',
+    why: 'the usage-window assumption the budget ceiling rests on — global scope, waived',
+  },
+  'c-zsh-no-word-split-on-expansion': {
+    scope: 'global',
+    why: 'a shell behaviour that reaches every project on the machine — global scope',
+  },
+  'c-kebab-case': {
+    scope: 'none',
+    why: 'CLAIM-LEDGER.md\'s field table, describing the FORMAT of an id rather than naming one',
+  },
+  'c-venture-task-complete': {
+    scope: 'none',
+    why: 'the Z1 debrief gate in IMPLEMENTATION-PLAN.md, which is superseded — the claim was never written',
+  },
+  'c-no-second-family-runtime': {
+    scope: 'none',
+    why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded',
+  },
+  'c-qa-panel-single-family': {
+    scope: 'none',
+    why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded',
+  },
+  'c-lens-independence-unbacked': {
+    scope: 'none',
+    why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded',
+  },
+};
+
+/**
+ * Resolve every claim id cited in the repo's markdown prose.
+ *
+ * `globalIds` is null when the global scope could not be consulted — which is different
+ * from an empty set, and is reported rather than treated as "no global claim exists".
+ * `unknownWhy` says which of the two reasons it was, because "no ledger on this machine"
+ * and "pointed at a fixture" are not the same state and rendering them the same way is the
+ * defect in issue #57.
+ */
+function checkCitations(projectIds, globalIds, unknownWhy) {
+  const issues = [];
+  const notes = [];
+  const cited = new Map(); // id → ["file:line", …]
+
+  for (const rel of candidateMarkdown()) {
+    let text;
+    try { text = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'); }
+    catch { continue; } // collectProjectClaims already reports an unreadable file
+    if (!text.includes('`c-')) continue; // cheap pre-filter; proseCodeSpans decides
+    for (const s of proseCodeSpans(text)) {
+      if (!CITED_ID_RE.test(s.code)) continue;
+      if (!cited.has(s.code)) cited.set(s.code, []);
+      cited.get(s.code).push(`${rel}:${s.line}`);
+    }
+  }
+
+  for (const [id, where] of [...cited].sort()) {
+    if (projectIds.has(id)) continue;
+    if (Object.prototype.hasOwnProperty.call(UNRESOLVABLE_CITATIONS, id)) continue;
+    issues.push(
+      `${where[0]}: prose cites claim "${id}", which is not in the ledger`
+      + (where.length > 1 ? ` (and at ${where.slice(1).join(', ')})` : '')
+      + '. Register it, fix the id, or declare it in UNRESOLVABLE_CITATIONS with a reason.'
+    );
+  }
+
+  // The ratchet, in both directions.
+  let uncheckedGlobals = 0;
+  for (const [id, entry] of Object.entries(UNRESOLVABLE_CITATIONS)) {
+    if (!cited.has(id)) {
+      issues.push(`UNRESOLVABLE_CITATIONS declares "${id}", which no prose cites any more — delete the entry rather than leaving an exemption with nothing under it`);
+      continue;
+    }
+    if (projectIds.has(id)) {
+      issues.push(`UNRESOLVABLE_CITATIONS declares "${id}", but it is a real claim in the ledger now — delete the entry; the citation resolves`);
+      continue;
+    }
+    if (entry.scope !== 'global') continue;
+    if (globalIds === null) { uncheckedGlobals++; continue; }
+    if (!globalIds.has(id)) {
+      issues.push(`UNRESOLVABLE_CITATIONS says "${id}" is a global claim, and ${GLOBAL_LABEL} does not have it — the exemption has outlived its subject`);
+    }
+  }
+  if (uncheckedGlobals > 0) {
+    notes.push(
+      `${uncheckedGlobals} citation(s) declared scope:global were not checked — ${unknownWhy}. `
+      + 'Reported, not assumed correct'
+    );
+  }
+
+  const total = [...cited.values()].reduce((n, w) => n + w.length, 0);
+  return { issues, notes, total, distinct: cited.size };
+}
+
 // ── The index ───────────────────────────────────────────────────────────────
 
 // NO `source_line`. The parser still computes one and it stays useful in memory — issue
@@ -543,10 +749,27 @@ function cmdBuild(argv) {
 function cmdLint() {
   const proj = collectProjectClaims();
   const glob = collectGlobalClaims();
-  const issues = [...proj.issues, ...glob.issues];
-  for (const n of proj.notes || []) process.stdout.write(`ledger lint: note — ${n}\n`);
+  // `supports:` is claim→claim and was already checked. This is prose→claim, the third
+  // reference direction and the one nothing validated (issue #59).
+  //
+  // The scope:global exemptions are judged against THIS MACHINE'S global ledger and no
+  // other. An injected WARROOM_GLOBAL_LEDGER is a fixture — asking a fixture whether a real
+  // global claim still exists gets an answer about the fixture, and every test that injects
+  // one would fail with "the exemption has outlived its subject" about claims that are
+  // fine. This is the same distinction GLOBAL_LABEL already draws, for the same reason.
+  const globalIsReal = !process.env.WARROOM_GLOBAL_LEDGER && glob.present;
+  const cites = checkCitations(
+    new Set(proj.claims.map((c) => c.id)),
+    globalIsReal ? new Set(glob.claims.map((c) => c.id)) : null,
+    glob.present
+      ? `WARROOM_GLOBAL_LEDGER points at ${GLOBAL_LABEL}, which is a fixture rather than this machine's global ledger`
+      : `~/.warroom/ledger/global.yml is not present on this machine`,
+  );
+  const issues = [...proj.issues, ...glob.issues, ...cites.issues];
+  for (const n of [...(proj.notes || []), ...cites.notes]) process.stdout.write(`ledger lint: note — ${n}\n`);
   process.stdout.write(`ledger lint: ${proj.claims.length} project claims · ${glob.claims.length} global claims`);
   process.stdout.write(glob.present ? `\n` : ` (no ${GLOBAL_LABEL} on this machine)\n`);
+  process.stdout.write(`ledger lint: ${cites.total} prose citation(s) of ${cites.distinct} distinct claim id(s)\n`);
   if (issues.length === 0) {
     process.stdout.write('ledger lint: clean\n');
     return 0;
