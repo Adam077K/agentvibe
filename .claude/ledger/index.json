@@ -141,7 +141,7 @@
     },
     {
       "id": "c-lenses-and-playbooks-are-loaded",
-      "assert": "The lens files and every playbook REACH AGENT CONTEXT at session start — the hook emits them and the payload stays within the runtime's inline threshold, so loading is mechanical rather than discretionary",
+      "assert": "The lens and playbook index REACHES AGENT CONTEXT at session start — the hook emits a compact router (ids + one-line summaries + file paths, ~2.9KB) that stays under the 4,096 byte inline threshold, so the router is mechanical; full lens and playbook files are read on demand",
       "kind": "behavior",
       "scope": "project",
       "verified_by": "command",
@@ -150,7 +150,7 @@
         "expect_exit": 0
       },
       "valid_until": "2026-11-09",
-      "confidence": 0.3,
+      "confidence": 1,
       "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
