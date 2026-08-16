@@ -637,6 +637,29 @@ claims:
       expect_exit: 0
     valid_until: 2026-11-14
     confidence: 1
+    disposition: {action: deprecate, reason: "THE CHANGE-DETECTOR FIRED, AND IT WAS RIGHT. PR #73 (merged 2026-08-16) moved both pinned strings: the matcher became 'Bash|Edit|Write|NotebookEdit|mcp__' — a prefix, so every MCP tool now reaches the hook rather than one — and the '# Unknown tool — allow' fall-through was replaced by mcp_policy_check(), which decides by server scope. The assert above is retained UNEDITED because it is now false in both halves, and a stale assert preserved beside its correction is this ledger's own argument for expiry. Deprecate rather than refresh: the question this claim asked — 'is every other MCP tool unhooked?' — was retired by the fix, not re-answered. Verified by the CEO on 2026-08-16 while auditing a would_block that first read as a regression and was not one. Succeeded by c-mcp-matcher-names-the-prefix-and-policy-decides"}
+
+  # The successor to c-mcp-hook-matcher-must-name-the-tool, registered 2026-08-16 the same
+  # day its predecessor was deprecated. PR #73 fixed the defect that claim documented and
+  # registered NOTHING in its place, which left the new containment behaviour unclaimed —
+  # the gap is easy to miss precisely because the ledger got quieter, not louder.
+  #
+  # Kept as a change-detector in the same spirit: it pins the matcher AND the decision
+  # function AND the tests, so it fails the day any of the three moves. A claim that only
+  # ran the test suite would not have caught a matcher revert, because the suite exercises
+  # the hook script and not the settings wiring that routes calls into it — the "check
+  # looked somewhere the answer was always yes" defect this repo keeps finding.
+  - id: c-mcp-matcher-names-the-prefix-and-policy-decides
+    assert: "Every mcp__* tool call reaches pre-tool-use.sh, because settings.json's PreToolUse matcher names the mcp__ PREFIX rather than one exact tool; the hook then decides by server scope in mcp_policy_check() instead of falling through to allow. An absent policy file allows every MCP call (the pre-policy behaviour) and an unreadable one blocks, so the failure mode is closed rather than open"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence:
+      cmd: "grep -qE 'matcher.: .Bash[|]Edit[|]Write[|]NotebookEdit[|]mcp__.' .claude/settings.json && grep -qF 'mcp_policy_check' .claude/hooks/pre-tool-use.sh && node scripts/pre-tool-use.test.mjs"
+      expect_exit: 0
+    valid_until: 2026-11-14
+    confidence: 1
+    supports: [c-mcp-hook-matcher-must-name-the-tool]
 
   # The founding fabrication, registered at last. "Subagents cannot spawn subagents
   # (nested Task is blocked)" is FALSE on this runtime — probed 2026-08-11 and again
