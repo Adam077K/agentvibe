@@ -139,8 +139,9 @@ deeper: it is about **the agents themselves**.
 - **Never hand-edit generated files** — `.claude/ledger/index.json`, `CODEBASE-MAP.md`. Regenerate:
   `npm run ledger:build` **then** `npm run build:map`, in that order.
 - **`PHASE-8A-STATUS.md` is stale** — it still reads "PR3 of 5 merged" with PRs 4 and 5 "not started", though
-  both merged. It carries claim blocks, so fixing it is a deliberate act with a line-number cost, not a
-  drive-by edit.
+  both merged. ~~It carries claim blocks, so fixing it is a deliberate act with a line-number cost, not a
+  drive-by edit.~~ **There is no line-number cost any more** — the index stopped recording `source_line`, so
+  editing the prose around a claim block costs nothing. Just fix it.
 - **The hardened hook's path scoping resolves the project root from `CLAUDE_PROJECT_DIR`**, which can differ
   from the worktree you are working in — a restarted session resolved to a sibling worktree and the hook
   refused my writes. That is the guard behaving correctly; know it exists before you fight it. **It also

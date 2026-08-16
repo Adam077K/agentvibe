@@ -677,7 +677,8 @@ test('locate prints the file alone when a position cannot be measured — never 
   // and `:-` are all a character standing in for a measurement.
   const ambiguous = GLOBAL_FIXTURE.replace('  - id: c-fixture-beta', '  - id: c-fixture-alpha');
   withGlobalLedger((run, ledger) => {
-    const rows = run('locate').split('\n').filter((l) => l.includes(ledger));
+    const out = run('locate');
+    const rows = out.split('\n').filter((l) => l.includes(ledger));
     // Asserting "no number" over an empty set would be the empty-sample defect wearing
     // this option's clothes, so the sample is proven non-empty first: two entries share
     // the id, and both must be listed.
@@ -688,6 +689,25 @@ test('locate prints the file alone when a position cannot be measured — never 
     }
     // And the single-id lookup takes the same path.
     assert.equal(run('locate', 'c-fixture-alpha').trim(), ledger);
+
+    // THE FOOTER'S SECOND BRANCH, asserted here because this is the only state that
+    // produces it. The other footer test runs over a fixture where everything is
+    // measurable, so it only ever reached the first branch — the branch that exists
+    // precisely to report unmeasured positions was read by no test at all, and corrupting
+    // its arithmetic to `unlocated + 99` left the suite green over a footer whose own two
+    // numbers did not add up.
+    const all = out.split('\n').filter((l) => /\s{2}c-/.test(l));
+    const withPos = all.filter((l) => /:\d+\s{2,}c-/.test(l)).length;
+    const unmeasured = all.length - withPos;
+    assert.equal(unmeasured, 2, 'the two ambiguous rows are the unmeasured ones');
+    assert.match(out, new RegExp(`${all.length} claims · ${withPos} with a position resolved`));
+    assert.match(out, new RegExp(`${unmeasured} whose position could not be measured`));
+    assert.doesNotMatch(out, /none recorded, none guessed/, 'that line is only true when nothing is unmeasured');
+    // The two counts must reconcile against the total they are printed under — the
+    // corrupted arithmetic was self-contradictory on its face and nothing read it.
+    const m = out.match(/(\d+) claims · (\d+) with a position resolved[^·]*· (\d+) whose position/);
+    assert.ok(m, 'the footer must state all three numbers');
+    assert.equal(Number(m[2]) + Number(m[3]), Number(m[1]), `${m[2]} + ${m[3]} ≠ ${m[1]}`);
   }, ambiguous);
 });
 

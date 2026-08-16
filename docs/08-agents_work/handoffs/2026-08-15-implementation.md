@@ -202,8 +202,9 @@ playbook. Both boards converge on this as the experiment that settles whether se
   `node scripts/ledger.mjs locate <id>`. **Never** hand-edit `CODEBASE-MAP.md` or
   `.claude/ledger/index.json`; regenerate with `npm run ledger:build` then `npm run build:map`, in that order.
 - Bash working directory persists between calls. A stray `cd` breaks relative paths for the rest of the session.
-- `PHASE-8A-STATUS.md` is stale — it still says PR3 of 5 with 4 and 5 not started; both merged. It carries
-  claim blocks, so fixing it has a line-number cost.
+- `PHASE-8A-STATUS.md` is stale — it still says PR3 of 5 with 4 and 5 not started; both merged. ~~It carries
+  claim blocks, so fixing it has a line-number cost.~~ **No line-number cost any more** — the index stopped
+  recording `source_line`, so editing prose around a claim block costs nothing. Just fix it.
 
 ---
 
