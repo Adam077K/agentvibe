@@ -251,6 +251,16 @@ them.
 
 **Net: 17 agent files → 5.** Zero added.
 
+> **Superseded as a statement of current state — kept as the record of what this analysis concluded.**
+> The roster is **7 engines out of 18 files** as of 2026-08-16 (`ls .claude/agents/*.md` → 18; `ENGINES` at
+> `.claude/hooks/schema-lint.js:59` → 7). Two were added after this analysis, each by an explicit decision
+> rather than by drift: `reviewer-readonly` landed in #47 under a capability-only exception (the binding QA
+> gate needs a judge with no shell), and `framer` was **kept** by founder decision on 2026-08-16 — it is the
+> only engine carrying the `business`, `customer`, `growth` and `product` lenses, and `product` names framer
+> and nothing else, so retiring it would have orphaned that lens outright.
+> The eleven shims are not engines and are not deletable: deleting one silently hands its name to a drifted
+> copy in `~/.claude/agents/`, with no error reported.
+
 ---
 
 ### Enforcement primitives, named once

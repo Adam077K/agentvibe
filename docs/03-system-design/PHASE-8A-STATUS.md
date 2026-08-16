@@ -10,8 +10,12 @@ so seven have landed since ([#29](https://github.com/Adam077K/agentvibe/pull/29)
 [#35](https://github.com/Adam077K/agentvibe/pull/35) the truncated-status fix,
 [#37](https://github.com/Adam077K/agentvibe/pull/37) the untracked clamp). ~~**`main` = `0bd7625`**~~ → **`main` = `08e7981`**
 (2026-08-16; `0bd7625` was 13 commits behind when this line was last read). `npm run check` exit 0 after
-`bun install` in `mission-control/` — **without that install the ledger reports 8 would_block instead of 5 and
-three mission-control claims fail for missing dependencies, not for defects.**
+`bun install` in `mission-control/` — **without that install three mission-control claims fail for missing
+dependencies, not for defects.** Stated as a *delta*, deliberately: this line carried the absolute pair
+"8 would_block instead of 5" until 2026-08-16, and both numbers had drifted (the clean baseline is **6** as
+of #72, which added one *correct* `unresolved` rather than a regression). The count of claims moves with
+every merge; the fact that three of them need `bun install` does not. Absolutes in prose rot silently —
+measure the current number with `node scripts/ledger.mjs verify`, never read it from here.
 **Phase 8a is closed.** See [PHASE-8A-CLOSE.md](PHASE-8A-CLOSE.md).
 Handoff for whoever continues: [PHASE-8A-HANDOFF.md](PHASE-8A-HANDOFF.md).
 
