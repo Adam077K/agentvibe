@@ -484,7 +484,65 @@ claims:
       judged_by: []
     valid_until: 2026-09-08
     confidence: 0.5
-    disposition: {action: waive, until: 2026-09-08, reason: "scripts/probe-readonly-engine.sh must be run by hand; revisit with the shadow-window review"}
+    # DISPOSITION 2026-08-16 — Refresh. BOTH HALVES OF THE ASSERT ABOVE ARE NOW FALSE, and
+    # the assert is left standing on purpose: it is the evidence for why expiry discipline
+    # exists. A claim that sat waived for a month, reasoning from a constraint that had been
+    # deleted from the live prompts, is worth more as a preserved record than as a tidy edit.
+    #
+    # False half 1: "subagent spawning is disabled in these sessions" — PR #63 removed that
+    # constraint from the entry prompts and `c-nested-subagent-spawn-works` records depth 2
+    # confirmed by direct probe.
+    # False half 2: "whether the tools field BINDS is unverified" — it was measured today.
+    # See `c-read-only-binding-verified-by-attempt` below for the probe and its bound.
+    #
+    # `refresh` is chosen over `deprecate` deliberately. Refresh does NOT short-circuit the
+    # resolver, so this claim's `claim-judge` still reports `unresolved` against its empty
+    # panel — which is correct and costs one `would_block`. The verification lives in a
+    # command claim now; this entry is the history, not the evidence. Deprecating it would
+    # buy a green line by asserting the question was retired, and it was not: it was answered
+    # somewhere else, on a path this claim never named.
+    disposition: {action: refresh, reason: "Superseded in substance by c-read-only-binding-verified-by-attempt, measured 2026-08-16: reviewer-readonly was dispatched and instructed to ATTEMPT Write, Bash and Edit; all three returned NOT_PRESENT (absent, not refused), the control Read succeeded, and the reported tool list was exactly [Read, Glob, Grep]. The assert above is retained unedited because both of its halves are now false — subagent spawning is not disabled (PR #63 deleted that constraint from the live prompts) and the binding is no longer unverified — and a stale assert preserved beside its correction is the ledger's own argument for expiry. This claim stays UNRESOLVED rather than passing: its judged_by is empty, and rule 10 says a resolver never passes what it could not check"}
+    supports: [c-read-only-engines-declare-no-write]
+
+  # MEASURED 2026-08-16 by dispatching `reviewer-readonly` — the container the binding QA
+  # judge runs in — and instructing it to genuinely ATTEMPT the forbidden actions rather than
+  # reason about whether it could. Reasoning about a capability is not a measurement of it;
+  # that distinction is the whole reason the claim above sat unverified for a month.
+  #
+  #   write NOT_PRESENT · bash NOT_PRESENT · edit NOT_PRESENT
+  #   tools_i_actually_have  ["Read","Glob","Grep"]
+  #   control_read SUCCEEDED  ("# Agentvibe — Project Context")
+  #
+  # Three properties make it strong. The tools were ABSENT, not present-and-refused — a
+  # refusal would mean the capability exists and a hook is the only thing standing in front
+  # of it, and hooks fail (see c-mcp-hook-matcher-must-name-the-tool, where the matcher's
+  # fall-through allows every tool it does not name). The control read SUCCEEDED, so the
+  # probe could demonstrably act and its silence on write was not inability to do anything.
+  # And the reported tool list matched the declaration exactly, with nothing extra.
+  #
+  # THE BOUND, AND IT IS NOT A FORMALITY: the probe ran through the `Agent` TOOL path.
+  # `qa.js` dispatches its judge through `agent()` on the WORKFLOW surface (qa.js:321-324).
+  # Those are very likely the same mechanism — MCP grant probes behaved identically across
+  # both — but the workflow path was NOT measured, and this claim certifies the containment
+  # of the gate that runs on that path. Reporting success about a path nobody exercised is
+  # the exact defect this ledger exists to catch, so the gap is written into the assert
+  # rather than left to a reader's charity.
+  #
+  # The command cannot re-run the dispatch — no resolver can. It pins the DECLARATION side:
+  # the tool list is exactly [Read, Glob, Grep], JUDGE_AGENT still resolves to this engine,
+  # and the judge dispatch still names an agentType (without which nothing binds at all, per
+  # c-maxturns-binds-when-agenttype-named). Each of the three was mutation-tested and fails
+  # on its own.
+  - id: c-read-only-binding-verified-by-attempt
+    assert: "The tools field BINDS at runtime on the Agent dispatch path, measured 2026-08-16 rather than reasoned about: reviewer-readonly was dispatched and instructed to attempt the forbidden actions, and Write, Bash and Edit all returned NOT_PRESENT — absent, not present-and-refused — while a control Read succeeded and the reported tool list was exactly [Read, Glob, Grep]. BOUND: this measured the Agent tool path only. qa.js dispatches its judge via agent() on the Workflow surface, which was NOT measured, so the gate's containment rests on the two paths behaving alike — likely, and unverified. The command checks the declaration side only: reviewer-readonly declares exactly [Read, Glob, Grep], JUDGE_AGENT routes to it, and the judge dispatch names an agentType"
+    kind: runtime-capability
+    scope: project
+    verified_by: command
+    evidence:
+      cmd: "grep -qxF 'tools: [Read, Glob, Grep]' .claude/agents/reviewer-readonly.md && grep -qxF \"const JUDGE_AGENT = 'reviewer-readonly'\" .claude/workflows/qa.js && grep -qF 'agentType: JUDGE_AGENT' .claude/workflows/qa.js"
+      expect_exit: 0
+    valid_until: 2026-11-14
+    confidence: 0.8
     supports: [c-read-only-engines-declare-no-write]
 
   - id: c-effort-frontmatter-binding-unverified

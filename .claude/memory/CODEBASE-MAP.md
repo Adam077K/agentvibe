@@ -114,7 +114,7 @@ it, so a hook that changes posture changes this map with it.
 
 ## What the system asserts
 
-38 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
+39 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
 `~/.warroom/ledger/global.yml` — machine state a fresh clone does not have, which the ledger reports
 rather than skipping silently.
 
@@ -123,7 +123,7 @@ rather than skipping silently.
 | behavior | 17 |
 | external-fact | 1 |
 | internal-fact | 14 |
-| runtime-capability | 6 |
+| runtime-capability | 7 |
 
 Browse them with `npm run ledger:views`; sweep for expiry with `npm run ledger:sweep`.
 
