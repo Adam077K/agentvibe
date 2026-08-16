@@ -3,7 +3,7 @@ date: 2026-08-16
 role: ceo
 task: gate-routing
 tier: irreversible
-qa_verdict: PENDING
+qa_verdict: PASS
 ---
 
 Items 1–4 of the implementation handoff. Founder merged #42 and #43 first; both landed clean.
@@ -277,3 +277,36 @@ agent, which is why `operator` and `instrument` are separate engines.
 *"The PreToolUse hook still fired, so the system was not unprotected."* True for Bash and file writes. False
 for MCP, whose calls matched no matcher. It had been written into `DECISIONS.md`, this session file, and the
 header of `launcher-permissions.test.mjs`. All three corrected.
+
+---
+
+## Verdict: PASS, on independent review — and what that does and does not mean
+
+Founder authorised the merge. `PASS` is recorded on the strength of **three independent reviewers**, not on
+the author's own say-so, which is what the field was worth on the two previous PRs.
+
+**All three returned FAIL, and every finding was real.** Between them:
+
+| Reviewer | Found |
+|---|---|
+| security | 5 SSRF bypasses; an auto-approved remote-code-execution path added in the same change described as tightening |
+| correctness | 2 further bypasses **in the rewrite that closed the first five**; a judge retry that accepted a malformed verdict and dereferenced it |
+| evidence | 4 false or overstated claims, including a fourth surviving copy of a premise already corrected three times; one unfalsifiable number quoted in five files |
+
+Every finding was **reproduced by hand before being accepted** — none was taken on the reviewer's word. Every
+one is fixed and pinned by a test that fails if it regresses. `npm run check` exits 0 across 15 test files.
+
+**What this PASS does not mean.** The hook took four attempts to get right, and I was wrong about it every
+time until someone else looked — including one attempt that broke the guard into refusing everything,
+localhost included. The verdict says three hostile readers found problems and the problems were fixed. It
+does not say the file is now beyond question.
+
+**Two residuals, named rather than closed:**
+- The judge's "no shell" guarantee rests on `tools:` binding at runtime, which this repo tracks as unverified
+  (`c-read-only-binding-unverified`). Its prompt asserts it has no shell. If `tools:` does not bind, that
+  statement is false to the one agent whose verdict cannot be overridden.
+- Nothing was added to `CLAIM-LEDGER.md`. The durable facts this session established live only in prose —
+  exactly where the `maxTurns` belief lived while it was wrong.
+
+**Stated limit on the panel itself:** three reviewers, one model family. This is not a multi-family
+independent panel, and none of them claimed to be.
