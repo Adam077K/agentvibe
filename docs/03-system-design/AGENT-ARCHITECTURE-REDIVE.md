@@ -212,6 +212,7 @@ Earned in the two prior boards.
 
 1. `git status` — clean apart from the new files; nothing under `mission-control/` modified.
 2. `npm run check` exits 0 after `bun install` in `mission-control/`.
-3. `node scripts/ledger.mjs build --check` exits 0 — no claim line numbers moved.
+3. `node scripts/ledger.mjs build --check` exits 0 — no claim's text, expiry, evidence, kind or scope
+   changed. (The index no longer records line numbers, so moving one is not a thing this can detect.)
 4. Every proposed agent names its model, effort, tools, permission boundary, **what enforces that boundary**,
    turn budget, and escalation path. An agent missing any of these is not specified.
