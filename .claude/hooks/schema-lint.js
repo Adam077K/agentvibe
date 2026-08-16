@@ -47,7 +47,7 @@ const { parseYamlSubset, KINDS, VERIFIERS, independenceIssue } = require('../../
 // The seven engines of the Phase 4 roster. Held here as a constant rather than read from
 // disk because the lens files are authored BEFORE the engine files exist — 4a proves the
 // expertise survives, and only then does 4b delete what it replaced.
-const ENGINES = ['orchestrator', 'framer', 'sourcer', 'builder', 'designer', 'reviewer'];
+const ENGINES = ['orchestrator', 'framer', 'sourcer', 'builder', 'designer', 'reviewer', 'reviewer-readonly'];
 
 // Engines that must never be able to change what they look at.
 //
@@ -59,7 +59,10 @@ const ENGINES = ['orchestrator', 'framer', 'sourcer', 'builder', 'designer', 're
 //
 // Treating this lint as the gate criterion would be exactly the decorative-capability
 // failure §3.7 names: a field that looks like a boundary and enforces nothing.
-const READ_ONLY_ENGINES = ['reviewer'];
+// Engines that must never be able to change what they look at. `reviewer-readonly` is the
+// no-shell variant the binding QA gate dispatches into: `tools:` is not known to bind Bash, so
+// the gate's judge — whose verdict cannot be overridden — must not declare it at all.
+const READ_ONLY_ENGINES = ['reviewer', 'reviewer-readonly'];
 
 // ── 07b template checks ────────────────────────────────────────────────────
 
@@ -81,15 +84,30 @@ const REQUIRED_FRONTMATTER = [
 // confidence, not to zero." The declarations are deleted, and the check below makes the
 // field fail the build unless real MCP config exists, so it cannot return as decoration.
 
-/** Is there any MCP configuration in this repo at all? */
-function mcpConfigured() {
-  if (fs.existsSync(path.join(REPO_ROOT, '.mcp.json'))) return true;
+/**
+ * The MCP servers this repo actually configures, by name.
+ *
+ * THIS USED TO BE A BOOLEAN, AND THE BOOLEAN WAS A TRAP. `mcpConfigured()` answered "does any
+ * MCP config exist anywhere", so the moment a single `.mcp.json` appeared, EVERY agent could
+ * declare ANY server name and pass the lint — one file flipping the check permissive for the
+ * whole roster at once. The specs flagged this as a sequencing hazard before it could fire:
+ * the per-agent allowlist had to land in the same change as the config, or the grant would be
+ * silently universal. It did, and this is it.
+ *
+ * Returns a Set. An empty Set means no MCP is configured, which is a different thing from
+ * "configured with nothing" only in theory — both correctly refuse every declaration.
+ */
+function configuredMcpServers() {
+  const names = new Set();
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, '.mcp.json'), 'utf8'));
+    for (const k of Object.keys(j.mcpServers || {})) names.add(k);
+  } catch { /* absent or unreadable — contributes nothing, never throws */ }
   try {
     const s = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, '.claude', 'settings.json'), 'utf8'));
-    return Object.prototype.hasOwnProperty.call(s, 'mcpServers');
-  } catch {
-    return false;
-  }
+    for (const k of Object.keys(s.mcpServers || {})) names.add(k);
+  } catch { /* same */ }
+  return names;
 }
 // escalates_to + escalates_when are required for non-personas
 // return_contract + pre_flight_reads are required for everyone
@@ -363,12 +381,27 @@ function lintFile(filePath) {
   if (fm.mcpServers !== undefined) {
     if (!Array.isArray(fm.mcpServers)) {
       issues.push(`frontmatter: mcpServers must be a YAML list`);
-    } else if (fm.mcpServers.length > 0 && !mcpConfigured()) {
-      issues.push(
-        `frontmatter: declares mcpServers [${fm.mcpServers.join(', ')}] but this repo has no MCP config ` +
-        `(no .mcp.json, no mcpServers key in .claude/settings.json) — the declaration grants nothing. ` +
-        `Configure MCP or delete the field.`
-      );
+    } else if (fm.mcpServers.length > 0) {
+      const configured = configuredMcpServers();
+      if (configured.size === 0) {
+        issues.push(
+          `frontmatter: declares mcpServers [${fm.mcpServers.join(', ')}] but this repo has no MCP config ` +
+          `(no .mcp.json, no mcpServers key in .claude/settings.json) — the declaration grants nothing. ` +
+          `Configure MCP or delete the field.`
+        );
+      } else {
+        // Per-SERVER, not merely per-repo. A declaration naming a server nobody configured is
+        // the same decorative-capability failure the old boolean allowed back in wholesale.
+        for (const want of fm.mcpServers) {
+          if (!configured.has(want)) {
+            issues.push(
+              `frontmatter: declares mcpServer "${want}", which is not configured in .mcp.json or ` +
+              `.claude/settings.json (configured: ${[...configured].sort().join(', ') || 'none'}) — ` +
+              `the declaration grants nothing. Configure it or remove it.`
+            );
+          }
+        }
+      }
     }
   }
 

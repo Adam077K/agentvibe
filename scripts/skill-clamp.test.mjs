@@ -272,3 +272,107 @@ test('a real (non-symlinked) skill directory still resolves — the fix is not a
   const found = clampIssues(lintAgentWith(['impeccable']));
   assert.equal(found.length, 1, 'the symlink guard must not break ordinary skill resolution');
 });
+
+// ── MCP grants are per-SERVER, not per-repo ──────────────────────────────────────────────
+// `mcpConfigured()` was a boolean: "does any MCP config exist anywhere". So the moment a single
+// .mcp.json appeared, EVERY agent could declare ANY server name and pass — one file flipping
+// the check permissive for the whole roster at once. The specs flagged this as a sequencing
+// hazard before it could fire: the per-agent allowlist had to land in the same change as the
+// config. These pin that it did.
+
+function lintAgentWithMcp(servers) {
+  const agent = `zz-mcp-fixture-${process.pid}`;
+  const file = path.join(AGENTS_DIR, `${agent}.md`);
+  fs.writeFileSync(file, `---
+name: ${agent}
+description: |
+  Throwaway MCP fixture written by scripts/skill-clamp.test.mjs.
+model: claude-sonnet-4-6
+tools: [Read, Glob, Grep]
+mcpServers: [${servers.join(', ')}]
+maxTurns: 20
+color: gray
+isolation: none
+skills:
+  - security-audit
+risk_tier_default: lite
+escalates_to: orchestrator
+escalates_when: |
+  Never — fixture.
+return_contract:
+  required_fields:
+    - status
+pre_flight_reads:
+  - nothing
+---
+
+## Identity & mission
+
+Fixture.
+
+## Workflow position
+
+Fixture.
+
+## Key distinctions
+
+Fixture.
+
+## Pre-flight reads
+
+Fixture.
+
+## Operating procedure
+
+Fixture.
+
+## Output evidence
+
+Fixture.
+
+## Return contract
+
+Fixture.
+
+## Anti-patterns
+
+Fixture.
+`);
+  try {
+    return (lintFile(file) || {}).issues || [];
+  } finally {
+    fs.rmSync(file, { force: true });
+  }
+}
+
+const mcpIssues = (issues) => issues.filter((i) => /mcpServer/.test(i));
+
+test('a configured MCP server may be declared', () => {
+  assert.deepEqual(mcpIssues(lintAgentWithMcp(['playwright'])), []);
+});
+
+test('an unconfigured MCP server is refused, and the message names what IS configured', () => {
+  const found = mcpIssues(lintAgentWithMcp(['notaserver']));
+  assert.equal(found.length, 1, `expected one issue, got ${JSON.stringify(found)}`);
+  assert.match(found[0], /notaserver/);
+  assert.match(found[0], /playwright/, 'the message must tell the reader what is available');
+});
+
+test('one valid server does not launder an invalid one alongside it', () => {
+  // The failure the old boolean allowed: any declaration passing because SOMETHING was configured.
+  const found = mcpIssues(lintAgentWithMcp(['playwright', 'notaserver']));
+  assert.equal(found.length, 1);
+  assert.match(found[0], /notaserver/);
+});
+
+test('designer holds the browser grant its own description depends on', () => {
+  // designer is described as "the only producing engine with a perception loop — render, look at
+  // what rendered, iterate". It held no browser at all until 2026-08-16, so the loop could not close.
+  const src = fs.readFileSync(path.join(AGENTS_DIR, 'designer.md'), 'utf8');
+  assert.match(src, /^mcpServers: \[.*playwright.*\]$/m, 'designer lost its browser grant');
+});
+
+test('the MCP fixture leaves nothing behind', () => {
+  const strays = fs.readdirSync(AGENTS_DIR).filter((n) => n.startsWith('zz-mcp-fixture'));
+  assert.deepEqual(strays, []);
+});

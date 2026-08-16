@@ -4,6 +4,7 @@ description: |
   Engine. The only producing engine with a perception loop — render, look at what rendered, iterate. Builds and refines screens against a written design system. Replaces product-designer and design-polisher.
 model: claude-sonnet-4-6
 tools: [Read, Write, Edit, Bash, Glob, Grep]
+mcpServers: [playwright]
 maxTurns: 30
 color: pink
 isolation: worktree

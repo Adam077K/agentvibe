@@ -69,34 +69,38 @@ const GATE_SCHEMA = {
   },
 }
 
-// EVERY dispatch in this file runs as `reviewer`, and that is load-bearing rather than tidy.
+// TWO CONTAINERS, SPLIT ON WHETHER THE OUTPUT BINDS A MERGE.
 //
 // Until 2026-08-16 all four `agent()` calls here omitted `agentType`, so the binary defaulted
 // them to `general-purpose` — tools `*`. Every dimension reviewer, every adversarial verifier,
 // and the ONE judge whose verdict binds held `Write` and `Edit` on the diff they were judging.
-// An agent that can edit what it reviews will review what it can edit. `reviewer` declares
-// `tools: [Read, Glob, Grep, Bash]` — no Write, no Edit.
+// An agent that can edit what it reviews will review what it can edit.
 //
-// THE GAP THAT REMAINS, NAMED HONESTLY BECAUSE THE FIRST VERSION OF THIS COMMENT DID NOT.
-// `reviewer` declares `Bash`, and `tools:` is not known to bind it — so the binding judge, whose
-// verdict this repo says cannot be overridden, still holds a write-capable shell. The binding
-// gate raised exactly this against this file's own PR, and it was right to.
+// Naming `reviewer` at all four sites removed Write and Edit. It left `Bash`, and `tools:` is
+// not known to bind `Bash` — so the binding judge still held a write-capable shell. The gate
+// raised exactly that against this file's own PR and was right to; a comment is documentation,
+// not a mechanism, and the OS sandbox the first draft deferred to is configured NOWHERE.
 //
-// The first draft of this comment deferred to "the OS sandbox". That sandbox is configured
-// NOWHERE — GRANT-HOLDERS.md records 0 sandbox keys in settings.json and containment listed as
-// "Unenforced until E7". Citing a backstop that does not exist is worse than citing none: it
-// reads as containment to anyone who does not go looking.
+// The split follows the actual requirement rather than applying one container everywhere:
 //
-// Two fixes are available and BOTH need a founder decision, so neither is taken here:
-//   (a) Drop `Bash` from the reviewer used on this path — one line, but `.claude/agents/**` is
-//       closed by the prompt-craft gate until a written prompt standard is approved.
-//   (b) Make pre-tool-use.sh refuse write-capable Bash when the caller is a reviewer. This
-//       assumes the hook can see the agent type, which is UNVERIFIED — `agent_type` appears in
-//       transcripts, but that is dispatch metadata, not proof it reaches hook stdin. The probe
-//       is ten minutes: log the raw payload from inside a dispatched subagent and read it.
+//   EVIDENCE GATHERERS (reviewers, verifiers, sweeps) → `reviewer`, which has Bash.
+//     They must run `git diff` and read changed files. Take away the shell and they cannot see
+//     the artifact they are reviewing, and the honest failure mode of a reviewer that cannot
+//     read the diff is to invent one. Their output does not bind anything: it is evidence,
+//     and every block-eligible finding is then attacked by three independent verifiers.
 //
-// Until one of those lands, this line buys isolation from Write and Edit, and nothing more.
+//   THE JUDGE (one dispatch, verdict binding, CEO cannot override) → `reviewer-readonly`,
+//     which has NO Bash, no Write, no Edit.
+//     It needs none. Its entire input — the confirmed findings, the advisory findings, the
+//     coverage gaps — is serialised into its prompt below. It reads nothing from disk and runs
+//     nothing. So the one agent whose decision cannot be overridden is also the one agent with
+//     no way to touch the repository, which is the property the gate was asking for.
+//
+// The remaining exposure is stated rather than hidden: a dimension reviewer still has a shell.
+// It cannot pass its own finding through — three verifiers and the judge sit between it and a
+// verdict — but it is not contained, and it will not be until the sandbox exists.
 const REVIEW_AGENT = 'reviewer'
+const JUDGE_AGENT = 'reviewer-readonly'
 
 const DIMENSIONS = [
   { key: 'correctness', critical: true, lens: 'logic errors, edge cases, broken contracts, regressions, wrong async/await, unhandled nulls' },
@@ -151,6 +155,8 @@ ${confirmed.length} block-eligible findings survived 3-way adversarial verificat
 ${JSON.stringify(confirmed.map(f => ({ id: f.id, severity: f.severity, file: f.file, title: f.title, detail: f.detail })), null, 2)}
 ${advisory.length} additional findings were reported but NOT verified (non-blocking at this tier — P3${tier === 'full' ? '/P2' : ''}): ${JSON.stringify(advisory.map(f => ({ id: f.id, severity: f.severity, file: f.file, title: f.title })))}.
 Coverage gaps (dimensions that failed to complete a review): ${failedDims.length ? failedDims.join(', ') : 'none'}.
+
+You run WITHOUT a shell, deliberately: you are the one agent here whose verdict cannot be overridden, so you hold no way to alter what you are judging. Everything you need is in this prompt. Do not attempt to run commands, and do not treat "I could not verify this myself" as grounds to dismiss a finding — three independent verifiers already attacked each confirmed finding against the real diff, and that is the evidence you are weighing.
 
 Rules:
 - BLOCK if ANY confirmed finding exists (all confirmed findings are block-eligible by construction), OR a critical dimension (correctness or security) is in the coverage gaps.
@@ -262,7 +268,7 @@ phase('Judge')
 const confirmed = allFindings.filter(f => f.confirmed)
 // The judge is the ONE agent whose output controls PASS/BLOCK. If it drops out, fail SAFE to
 // BLOCK — never throw (that would be fail-open for a binding gate).
-const verdict = (await agent(judgePrompt(confirmed, TIER, failedDims, advisory), { label: 'judge', phase: 'Judge', model: 'opus', agentType: REVIEW_AGENT, schema: GATE_SCHEMA }).catch(() => null))
+const verdict = (await agent(judgePrompt(confirmed, TIER, failedDims, advisory), { label: 'judge', phase: 'Judge', model: 'opus', agentType: JUDGE_AGENT, schema: GATE_SCHEMA }).catch(() => null))
   || { verdict: 'BLOCK', summary: 'Judge agent dropped out — auto-BLOCK to protect the binding gate.', blockers: [{ id: 'judge-dropout', file: '(gate)', title: 'Opus judge returned no structured verdict', fix: 'Re-run qa.js.' }] }
 
 const criticalGap = failedDims.filter(d => DIMENSIONS.find(x => x.key === d && x.critical))

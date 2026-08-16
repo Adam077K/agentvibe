@@ -101,7 +101,74 @@ a staleness failure mode to buy nothing.
 
 `npm run check` exits 0 — **14 test files**, zero failures.
 
+## Second run: BLOCK again, and it found a bypass of my own fix
+
+Four findings became two. The new one was a **symlink route to the same disclosure the `../` fix had just
+closed**: `path.resolve` is string arithmetic, never touches disk, and cannot see a symlink — so
+`.claude/skills/<valid-name>` pointing outside the tree satisfied the lexical containment check while
+`readFileSync` followed the link out. Reproduced before accepting (lexical check `true`, realpath
+`/private/tmp/evil-target/SKILL.md`, canary readable). Closed with `lstat` refusal plus `realpathSync`
+containment, and the regression asserts the lexical check alone would still have passed, so the test cannot
+pass for the wrong reason. **My own test then leaked a fixture symlink into `.claude/skills/`, where the
+harness immediately advertised it as a loadable skill** — `rmSync` does not unlink a symlink to a directory.
+The test now self-heals, refuses to clobber a real directory, and asserts no strays.
+
+## Why the gate could never pass, and what it cost to find out
+
+Both runs blocked partly on a coverage gap. Reading the journals: **15 of 31 dispatched agents returned
+nothing**, `agents_error: 0`, **100% ending on `stop_reason: tool_use`** — mid-tool, never reaching
+StructuredOutput. The pending calls were ordinary: `grep`, `sed`, `git status`, `npm run lint:agents`.
+Nothing the safety hook blocks.
+
+Four explanations were tested against the transcripts and **all four refuted**: a turn cap (successes reached
+43 turns, failures started at 37), context exhaustion (30–84k vs 53–88k), output tokens, and a wall-clock
+timeout (median 113 s vs 123 s). The dropout is ~48% and **unexplained by anything on disk.** At 2 attempts a
+dimension fails ~23% of the time, so some critical dimension failed nearly every run — which is why this gate
+had never returned PASS. `REVIEW_ATTEMPTS` is now 4 (~5%), and the code says plainly that this is mitigation:
+the defect is in the runtime, not in this repo.
+
+## The containment finding, fixed properly rather than by comment
+
+Founder authorised an explicit exception to the prompt-craft gate. The fix is **not** one container
+everywhere — it follows what each dispatch actually needs:
+
+| Dispatch | Container | Why |
+|---|---|---|
+| reviewers · verifiers · sweeps | `reviewer` (has `Bash`) | They must run `git diff` and read changed files. A reviewer that cannot see the artifact invents one. Their output is evidence, not a verdict |
+| **the judge** | **`reviewer-readonly`** (no `Bash`, no `Write`, no `Edit`) | Its entire input is serialised into its prompt. It reads nothing and runs nothing — so the one agent whose verdict cannot be overridden is the one agent that cannot touch the repository |
+
+The judge's prompt now states it has no shell and that "I could not verify this myself" is not grounds to
+dismiss a finding — three verifiers already attacked each one against the real diff. **Residual stated, not
+hidden:** a dimension reviewer still holds a shell. It cannot pass its own finding through, but it is not
+contained until the sandbox exists.
+
+## Designer can finally see
+
+`designer` is described as *"the only producing engine with a perception loop — render, look at what
+rendered, iterate."* It held **no browser at all**: no `.mcp.json` existed anywhere and no agent declared
+`mcpServers`. Granted `playwright`, founder decision.
+
+**The sequencing hazard was real and is closed in the same commit.** `mcpConfigured()` was a boolean — "does
+any MCP config exist" — so creating one `.mcp.json` would have let **every** agent declare **any** server and
+pass. It is now `configuredMcpServers()`, returning the actual names, and each declaration is checked against
+them. Proven both ways: `notaserver` fails and names what is available; one valid server does not launder an
+invalid one beside it.
+
+## Also landed
+
+**The permission model started applying.** `bin/warroom` passed `--dangerously-skip-permissions`, making all
+26 allow/deny rules in `settings.json` inert. Removed. Six allow entries added, chosen from **11,342 Bash
+calls across 400 transcripts** — 8,603 already matched; the real gaps were `bun` (160), `npm` (78), `bunx`
+(66), plus `printf`, `timeout`, `sleep`. A first pass at this measurement said "47% would prompt", was
+tokenising heredoc bodies, and was **discarded rather than reported**.
+
+**Risk stopped being computed twice.** F13 required `tier: full|irreversible` on *every* session file in a
+mixed PR — including files `classifier.js` tiers `trivial`. It now requires it on **at least one**.
+`CLAUDE.md:156` corrected: it claimed one implementation while two existed.
+
+`npm run check` exits 0 — **15 test files**, zero failures.
+
 ## Why the verdict still says PENDING
 
-The fixes above are not self-certified. The gate must run again and pass on its own terms before anything
-here says `PASS`.
+Nothing here is self-certified. The gate runs once more, on the complete change, and its verdict is what
+goes in this field.
