@@ -21,6 +21,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { projectsDir as claudeProjectsDir } from './lib/usage.ts';
+import { isMapping, validateIndexClaim } from './lib/claim-shape.ts';
 import { readTrustList, trustFilePath, trustStateFor, type TrustList, type TrustState } from './trust.ts';
 
 export interface RegistryEntry {
@@ -58,6 +59,15 @@ export interface LedgerIndexInfo {
   /** Always set when present is false — "why", never a bare absence. */
   reason?: string;
   claims: LedgerClaim[];
+  /**
+   * Entries the index projection refused. REPORTED, never silently dropped — the same posture
+   * as readGlobalLedger's, and the reason a validator was added at all: a producer that stops
+   * emitting a field must show up as a number somebody can assert on, not as `undefined` in a
+   * tooltip. Counts ENTRIES, not problems; one entry can be wrong in several ways at once.
+   */
+  rejected: number;
+  /** One human-readable line per problem found, in entry order. */
+  issues: string[];
 }
 
 export interface Project {
@@ -137,24 +147,69 @@ function readRegistry(root: string): RegistryInfo {
   return { present: true, path: regPath, entries };
 }
 
-function readLedgerIndex(root: string): LedgerIndexInfo {
+/**
+ * Load `.claude/ledger/index.json`, CHECKING each entry rather than asserting it.
+ *
+ * This used to read `JSON.parse(raw) as { claims?: LedgerClaim[] }`, and the cast is the whole
+ * of issue #53: it satisfies tsc while checking nothing at runtime, so a producer dropping a
+ * field from scripts/ledger.mjs's KEY_ORDER cost nothing at compile time and arrived at the UI
+ * as `undefined`. That already happened once, to `source_line`, past tsc and 319 green tests.
+ * See server/lib/claim-shape.ts for the projection and why validateClaim alone cannot do this.
+ *
+ * A REFUSED ENTRY IS DROPPED AND COUNTED, mirroring readGlobalLedger — partial data is still
+ * worth showing and the count is what makes the loss assertable. But TOTAL refusal is not
+ * "this project has no claims": an index holding entries where none matched the projection is
+ * a file this reader cannot read, which belongs with the JSON-parse failure below it rather
+ * than with an empty band. Absent and empty must not render identically, and neither must
+ * "empty" and "unreadable".
+ */
+export function readLedgerIndex(root: string): LedgerIndexInfo {
   const ledgerScript = path.join(root, 'scripts', 'ledger.mjs');
   const indexPath = path.join(root, '.claude', 'ledger', 'index.json');
+  const absent = (reason: string): LedgerIndexInfo => ({ present: false, path: indexPath, reason, claims: [], rejected: 0, issues: [] });
   if (!fs.existsSync(ledgerScript)) {
-    return { present: false, path: indexPath, reason: 'no scripts/ledger.mjs in this project — the claim ledger has not been installed here', claims: [] };
+    return absent('no scripts/ledger.mjs in this project — the claim ledger has not been installed here');
   }
   let raw: string;
   try {
     raw = fs.readFileSync(indexPath, 'utf8');
   } catch {
-    return { present: false, path: indexPath, reason: 'scripts/ledger.mjs exists but .claude/ledger/index.json has not been built yet (run `node scripts/ledger.mjs build`)', claims: [] };
+    return absent('scripts/ledger.mjs exists but .claude/ledger/index.json has not been built yet (run `node scripts/ledger.mjs build`)');
   }
+  let parsed: unknown;
   try {
-    const parsed = JSON.parse(raw) as { claims?: LedgerClaim[] };
-    return { present: true, path: indexPath, claims: parsed.claims ?? [] };
+    parsed = JSON.parse(raw);
   } catch {
-    return { present: false, path: indexPath, reason: '.claude/ledger/index.json exists but did not parse as JSON', claims: [] };
+    return absent('.claude/ledger/index.json exists but did not parse as JSON');
   }
+  const list = isMapping(parsed) ? parsed.claims : undefined;
+  if (!Array.isArray(list)) {
+    return absent('.claude/ledger/index.json parsed as JSON but carries no "claims" list — that is a different statement from "this project has no claims"');
+  }
+
+  const claims: LedgerClaim[] = [];
+  const issues: string[] = [];
+  let rejected = 0;
+  list.forEach((entry, i) => {
+    const result = validateIndexClaim(entry, `${indexPath} claims[${i}]`);
+    if (result.ok) claims.push(result.claim);
+    else {
+      rejected += 1;
+      issues.push(...result.problems);
+    }
+  });
+
+  if (claims.length === 0 && rejected > 0) {
+    return {
+      present: false,
+      path: indexPath,
+      reason: `.claude/ledger/index.json holds ${rejected} entr${rejected === 1 ? 'y' : 'ies'} and none matched the shape this reader understands — the producer and Mission Control disagree about what an indexed claim is. First problem: ${issues[0] ?? 'unknown'}`,
+      claims: [],
+      rejected,
+      issues,
+    };
+  }
+  return { present: true, path: indexPath, claims, rejected, issues };
 }
 
 /**
