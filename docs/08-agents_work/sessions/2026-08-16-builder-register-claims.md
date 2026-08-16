@@ -1,0 +1,17 @@
+---
+date: 2026-08-16
+role: builder
+task: register-claims
+tier: full
+qa_verdict: PASS
+---
+
+Four durable facts left prose and became `verified_by: command` claims, closing STATUS.md open item 2 — the item that named its own hazard: *"durable facts live only in prose, which is exactly where the `maxTurns` belief lived while it was wrong."* All four are commands and none is a `judge`, because a `judge` claim with `judged_by: []` resolves `unresolved` forever and two of those already sit in this ledger; a third would have registered a fact as a permanent would_block.
+**`c-mcp-grant-binds-through-agent-dispatch`** settles what `GRANT-HOLDERS.md` §3.7, ROSTER-SIZE F1 and §8 X2 left contested: measured 2026-08-16 by dispatch, `designer` held 24 `mcp__playwright__*` tools and `builder` held zero, so the frontmatter grant both arrives and narrows. Its command deliberately checks the **configuration the measurement was taken against**, not the dispatch — a resolver cannot spawn an agent, and a command that implied it re-measured would be the more expensive lie.
+**`c-maxturns-binds-when-agenttype-named`** is bounded in its own `assert`: the cap explains 13 of 20 reviewer dropouts, the other 7 recorded 21-34 tool calls and are unexplained. Writing it forced a correction — `CLAUDE.md` said the cap "is 30 on every engine" and it is not: `framer` and `sourcer` declare 25. The claim therefore checks that the field is required, range-checked at [5, 30] and declared by all seven engines, not the specific numbers, which are a tuning decision.
+**`c-mcp-hook-matcher-must-name-the-tool`** is intentionally a change-detector, pinning both the matcher string and `pre-tool-use.sh`'s allow-anything fall-through, so it fails the day either moves — the sentence "the hook still fires" reached four files before anyone checked.
+**`c-nested-subagent-spawn-works` FAILS on this branch and that is the honest state**, not a defect: `.claude/entry/ceo.md:11` still carries the falsified *"subagents cannot spawn subagents"*, and it passes only once `fix/false-spawn-constraint` lands. Weakening the command to buy a green tick would have been the exact failure the ledger exists to prevent.
+Issue **#56** decided by disposition rather than by a new claim, since `c-lenses-and-playbooks-are-loaded` already asserts the property and asserts it backwards: re-measured at **27,069 bytes** against a 4,096 budget, 6.6x over and up from 25,613 on 2026-08-12. `{action: refresh}` — shrink the payload with a lens/playbook router at ~1.5KB, do not raise the budget to fit it. `refresh` forbids `until` and does not short-circuit the resolver, so the claim keeps failing until the router ships, which is intended.
+Stale figures corrected in `CLAUDE.md` and `docs/STATUS.md`: the permission model is **39** rules (29 allow, 10 deny), not 26; the roster is **18** agent files, not 17, because `reviewer-readonly.md` landed in #47.
+`ledger verify` **69 pass / 5 would_block / 0 block** before, **75 pass / 6 would_block / 0 block** after, exit 0 both times, with the sixth being `c-nested-subagent-spawn-works` above. `c-mission-control-cold-start` flaked once at 9,549ms against its 10,000ms wall-clock budget while five lanes built in parallel and passed on re-run — recorded in `CLAUDE.md` so the next reader re-runs it rather than believing it.
+Docs and ledger only; no `scripts/`, no agents, no workflows. Author-declared verdict, no independent reviewer — #24, and the discretion it names.

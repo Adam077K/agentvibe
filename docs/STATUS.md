@@ -33,7 +33,8 @@ structural parse that fails closed — 134 tests, every dangerous case through b
 written for other work; two of its three adversarial verifiers were told to assume findings were false; and
 three review lenses declared an unsatisfiable independence predicate so they could never run.
 
-**The permission model was inert.** `.claude/settings.json` carried 26 allow/deny rules and `bin/warroom`
+**The permission model was inert.** `.claude/settings.json` carried its allow/deny rules — **39** today, 29
+allow and 10 deny; the figure read 26 here until it was counted on 2026-08-16 — and `bin/warroom`
 launched every session with `--dangerously-skip-permissions`. Removed, with the allow list narrowed to verbs
 that were measured rather than guessed — reproduce with `npm run measure:bash`.
 
@@ -92,8 +93,15 @@ built it.
 1. **`tools:` binding is unverified.** The judge's "no shell" guarantee rests on it, and its own prompt tells
    it that it has no shell. If `tools:` does not bind, that statement is false to the one agent whose verdict
    cannot be overridden. Tracked as `c-read-only-binding-unverified`.
-2. **Nothing was added to `CLAIM-LEDGER.md`.** Durable facts above live only in prose — which is exactly where
-   the `maxTurns` belief lived while it was wrong. Rule 9 exists for this.
+2. ~~**Nothing was added to `CLAIM-LEDGER.md`.**~~ **CLOSED 2026-08-16.** Four of the facts above are
+   registered claims now — `c-mcp-grant-binds-through-agent-dispatch`,
+   `c-maxturns-binds-when-agenttype-named`, `c-mcp-hook-matcher-must-name-the-tool` and
+   `c-nested-subagent-spawn-works` — all `verified_by: command`, so each fails a check when it stops being
+   true rather than sitting in a paragraph. `c-nested-subagent-spawn-works` fails until the false
+   *"subagents cannot spawn subagents"* line leaves `.claude/entry/ceo.md`, which is the correct signal and
+   not a defect in the claim. Issue **#56** is decided in the same pass: `c-lenses-and-playbooks-are-loaded`
+   carries a `refresh` disposition — shrink the 27,069-byte session-start payload with a router, do not raise
+   the 4,096 budget to fit it.
 3. **The OS sandbox is configured nowhere.** `operator` and `instrument` are specified and deliberately
    uncreated until it exists; they would hold payment keys and deploy tokens in a container that cannot hold
    them.
@@ -105,6 +113,6 @@ built it.
 
 1. **One real venture task, end to end** — price something, build the page, promote it, test a payment, read
    the result back. Both boards call this the experiment that settles whether seven is the right number.
-2. **The prompt-craft deep dive**, which unblocks the roster migration (17 files → 7).
+2. **The prompt-craft deep dive**, which unblocks the roster migration (**18** files → 7; `reviewer-readonly.md` landed in #47).
 3. **Five of six MCP servers do not exist** — billing, analytics, deploy, DB admin, payments. This is the real
    distance between the specification and a working system.
