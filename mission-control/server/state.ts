@@ -181,16 +181,22 @@ export class LiveState {
    * corpus (2,582 files, 3.05 GB) through this exact path:
    *
    *   cold                     2,405-4,675 ms  (the spread is #50's memory-reclaim band)
-   *   warm, steady             78-107 ms       (see below: a RANGE across two machines' load)
+   *   warm, steady             65-109 ms       (see below: a RANGE across four measurement sets)
    *   warm, first of a session 254 ms          (page-cache-cold boundary windows)
-   *   transcript bytes read    3,048 MB -> 0-0.02 MB
+   *   transcript bytes read    3,058 MB -> 0-0.02 MB
    *
-   * THE WARM FIGURE IS A RANGE AND NOT A MEDIAN, because a single median was wrong twice in
-   * opposite directions. Mine was 78-90 at load 2.70 (n=8); an independent reviewer first
-   * measured 141 at load 3.5-4.5 and then, re-measured at load 1.99-3.21, got 90-107 (n=6).
-   * Same code every time. The 141 was a load artefact — the identical confound #50 documented,
-   * and the fourth time this project has been caught by it — so the honest figure spans both
-   * corrected sets rather than picking either party's number.
+   * THE WARM FIGURE IS A RANGE AND NOT A MEDIAN, because every median taken so far has been
+   * wrong for a reason that was not the code. Four sets, all of the same commit, ordered by the
+   * machine load at the time:
+   *
+   *   load 2.20-3.08   median  73, min 65   (independent)
+   *   load 2.70        78-90   (n=8)
+   *   load 1.99-3.21   median 106, 90-107   (independent)
+   *   load 3.67-3.78   median  98, 93-109   (n=8)
+   *
+   * An earlier independent reading of 141 at load 3.5-4.5 was withdrawn after re-measurement.
+   * The figure tracks machine state, exactly as #50 established, and quoting any single median
+   * from that spread is picking an afternoon rather than reporting a cost.
    *
    * AN AFTER-A-REBOOT FIGURE IS NOT QUOTED. An earlier version of this comment carried
    * "158-255 ms, first after boot" as though it had been measured. It had not: verifying it

@@ -494,8 +494,18 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
    * invisible to the behavioural barrier, which compares CONTENT — that gap is now closed on
    * both sides (see test/write-barrier.test.ts, which reports mtime drift).
    *
-   * THE COMPLETE LIST OF KNOWN BLIND SPOTS IN THIS CHECK, because a partial list of gaps is
-   * worse than none — it reads as exhaustive:
+   * `f`/`l` VARIANTS COME AS A SET, and forgetting that is how the list stayed short. `futimes`
+   * and `lutimes` were added with `utimes` and the same courtesy was not extended to `chmod`
+   * and `chown`; `mkdtempSync` and `writevSync` were simply missed. All six were verified
+   * invisible to BOTH guards before being added — `fs.lchmodSync` on a transcript and
+   * `fs.mkdtempSync` in a project root each scored 0 offenders and 0 barrier failures.
+   *
+   * KNOWN BLIND SPOTS IN THIS CHECK — a list of what is NOT covered, and deliberately not
+   * titled "complete". The previous version said COMPLETE and was missing six tokens, which is
+   * a worse artefact than no list: a list labelled complete stops people looking. That is the
+   * argument I made about `openSync` and then failed to apply to the list itself.
+   *
+   * What is named here is what is known TODAY:
    *   · `fs.openSync(p, 'w')`. `openSync` cannot be added: server/index-store.ts opens files
    *     read-only with it on the append and boundary-probe paths, so banning the token would
    *     forbid the read path and a guard that fires on correct code gets disabled.
@@ -507,7 +517,7 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
    * is the second check, not an excuse for this one — the two are independent on purpose.
    */
   const WRITE_PATTERN =
-    /\b(writeFile(Sync)?|writeSync|mkdir(Sync)?|rm(Sync)?|rmdir(Sync)?|unlink(Sync)?|appendFile(Sync)?|copyFile(Sync)?|cpSync|rename(Sync)?|truncate(Sync)?|ftruncate(Sync)?|symlink(Sync)?|link(Sync)?|createWriteStream|utimes(Sync)?|futimes(Sync)?|lutimes(Sync)?|chmod(Sync)?|chown(Sync)?|Bun\.write|git\s+commit|git\s+push)\b/;
+    /\b(writeFile(Sync)?|writeSync|mkdir(Sync)?|rm(Sync)?|rmdir(Sync)?|unlink(Sync)?|appendFile(Sync)?|copyFile(Sync)?|cpSync|rename(Sync)?|truncate(Sync)?|ftruncate(Sync)?|symlink(Sync)?|link(Sync)?|createWriteStream|utimes(Sync)?|futimes(Sync)?|lutimes(Sync)?|chmod(Sync)?|chown(Sync)?|fchmod(Sync)?|fchown(Sync)?|lchmod(Sync)?|lchown(Sync)?|mkdtemp(Sync)?|writev(Sync)?|Bun\.write|git\s+commit|git\s+push)\b/;
 
   test(`no write-API call sites in server/** outside ${WRITE_OWNER}`, () => {
     // This is a TEXT grep, not a semantic check: it cannot catch a write assembled from
@@ -553,31 +563,94 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
     expect(stripComments(multi).split('\n')).toHaveLength(multi.split('\n').length);
   });
 
-  // THE SCANNER MUST NEVER MAKE THE GUARD BLINDER ON THE REAL TREE. Stripping may only remove
-  // offenders that are PROSE. If a line the scanner left as code loses its match, the scanner
-  // mis-read something — a regex literal holding `//` is the known way that can happen — and
-  // the guard just went quiet without saying so.
-  test('stripComments preserves every offender on a line it did not treat as a comment', () => {
+  // THE SCANNER MUST NEVER MAKE THE GUARD BLINDER ON THE REAL TREE — and the first version of
+  // this test COULD NOT FAIL, which is worse than not having written it.
+  //
+  // It asked `line === after && !WRITE_PATTERN.test(after)`. Those cannot both hold: if the
+  // scanner left the line untouched then `after` IS `line`, and `line` matched to get here. So
+  // `lost` was always empty. Proven twice — a stripComments that blanks the ENTIRE FILE left it
+  // green, and injecting the exact case this test exists to bound scored 15 pass / 0 fail.
+  //
+  // THIS WAS THE MITIGATION FOR A BLIND SPOT I DECLARED. Declaring the regex-literal gap instead
+  // of claiming coverage was right; the check meant to bound it then could not fail. A declared
+  // blind spot with a vacuous mitigation is WORSE than an undeclared one, because the
+  // declaration reads as handled.
+  //
+  // The satisfiable question is: did stripping leave CODE on the line while removing the match?
+  //   · match survives            -> preserved, fine
+  //   · line became blank         -> the whole line was a comment, fine
+  //   · line still holds code but the match is gone -> the scanner ate part of a code line
+  // That third case is exactly what the regex-literal gap produces: `const re = /a\/\//;` makes
+  // the scanner treat the final `//` as a line comment and blank the rest, leaving
+  // `const re = /a\/\` behind — non-blank, and no longer matching.
+  test('stripping never removes a match from a line it left code on', () => {
     const files = walkServerTs();
     expect(files.length).toBeGreaterThan(0);
     const lost: string[] = [];
     let rawHits = 0;
     for (const f of files) {
-      const raw = fs.readFileSync(f, 'utf8').split('\n');
-      const stripped = stripComments(fs.readFileSync(f, 'utf8')).split('\n');
+      const text = fs.readFileSync(f, 'utf8');
+      const raw = text.split('\n');
+      const stripped = stripComments(text).split('\n');
+      // ALIGNMENT, PINNED. Every reading of `stripped[i]` against `raw[i]` below assumes the
+      // scanner preserves line structure; if it ever stopped doing so, the comparison would be
+      // between unrelated lines and would quietly mean nothing.
+      expect(stripped).toHaveLength(raw.length);
       raw.forEach((line, i) => {
         if (!WRITE_PATTERN.test(line)) return;
         rawHits++;
         const after = stripped[i] ?? '';
-        // The scanner left this line untouched, so it classified it as code — and a code line
-        // that held a match must still hold it.
-        if (line === after && !WRITE_PATTERN.test(after)) lost.push(`${path.relative(serverDir, f)}:${i + 1}`);
+        if (WRITE_PATTERN.test(after)) return; // preserved
+        if (after.trim() === '') return; // the line was entirely comment
+        lost.push(`${path.relative(serverDir, f)}:${i + 1}: ${line.trim()}`);
       });
     }
     // NON-VACUITY: the real tree does contain write tokens (index-cache.ts is full of them), so
     // this compared something. A scan finding none would pass by having nothing to lose.
     expect(rawHits).toBeGreaterThan(0);
     expect(lost).toEqual([]);
+
+    // AND THE ONE A "DID CODE SURVIVE" TEST CANNOT SEE BY ITSELF. A stripper that blanks the
+    // ENTIRE FILE removes no match from a line it left code on — because it leaves code on no
+    // line at all, so every case above takes the "line was entirely comment" exit. That exact
+    // mutation passed the check above, which is the second time this test has been vacuous in a
+    // way its own name did not reveal.
+    //
+    // Import statements are unambiguous code and are never comments, so they must survive
+    // stripping BYTE FOR BYTE. Blanking the file fails this instantly, and so does any scanner
+    // that starts eating code from the top.
+    let importsChecked = 0;
+    for (const f of files) {
+      const text = fs.readFileSync(f, 'utf8');
+      const raw = text.split('\n');
+      const stripped = stripComments(text).split('\n');
+      raw.forEach((line, i) => {
+        if (!/^\s*import\b/.test(line)) return;
+        importsChecked++;
+        expect(`${path.relative(serverDir, f)}:${i + 1}: ${stripped[i]}`).toBe(`${path.relative(serverDir, f)}:${i + 1}: ${line}`);
+      });
+    }
+    expect(importsChecked).toBeGreaterThan(10); // non-vacuity: real imports were compared
+  });
+
+  // AND THE PRECONDITION FOR THE DECLARED GAP, checked directly rather than inferred from its
+  // consequences. The scanner cannot tell a regex literal from division, so a regex holding `//`
+  // reads as a line comment. Nothing in server/** contains one today — this is what fails on the
+  // day one appears, which is the day the gap stops being theoretical.
+  test('no file in server/** contains a regex literal holding //, the shape the scanner misreads', () => {
+    const files = walkServerTs();
+    const hazards: string[] = [];
+    for (const f of files) {
+      fs.readFileSync(f, 'utf8')
+        .split('\n')
+        .forEach((line, i) => {
+          // A regex literal, non-greedy, containing an escaped-or-bare `//` before its close.
+          if (/[=(,[]\s*\/(?![/*])(?:\\.|[^/\\\n])*\\\/\\?\/[^\n]*\//.test(line)) {
+            hazards.push(`${path.relative(serverDir, f)}:${i + 1}`);
+          }
+        });
+    }
+    expect(hazards).toEqual([]);
   });
 
   // A TEST MUST NOT WRITE TO THE DEVELOPER'S HOME DIRECTORY, and this exists because one did.

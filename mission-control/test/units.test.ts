@@ -551,6 +551,43 @@ describe('IndexStore read counters', () => {
     expect(warm.filesRead).toBe(0);
   });
 
+  // N4: THE `statSync` BRANCH, WHICH HAD NO FIXTURE. `filesUnread`'s first documented cause —
+  // "statSync threw, nothing could be learned about the path" — was reachable only in prose
+  // until this. A dangling symlink is the cheapest real instance: `listTranscripts` finds the
+  // name (readdir does not follow it) and the stat then fails.
+  //
+  // WHY IT MATTERS BEYOND COVERAGE: without this branch exercised, `filesScanned === filesRead +
+  // filesSkipped + filesUnread` had never once been tested with a non-zero `filesUnread` on a
+  // COLD build, so the third bucket was carrying no weight in the only place it exists for.
+  test('a transcript that cannot be stat-ed is counted unread, and the sum still closes', () => {
+    const { project } = fixture([3, 3]);
+    const dir = project.transcriptDirs[0]!;
+    const dangling = path.join(dir, 'vanished.jsonl');
+    fs.symlinkSync(path.join(dir, 'no-such-target.jsonl'), dangling);
+    // NON-VACUITY, BOTH HALVES: the corpus really lists it, and stat-ing it really fails.
+    expect(listTranscripts(dir)).toContain(dangling);
+    expect(() => fs.statSync(dangling)).toThrow();
+
+    const cold = new IndexStore().buildCold([project]);
+    expect(cold.filesScanned).toBe(3); // two real transcripts plus the broken link
+    expect(cold.filesRead).toBe(2);
+    expect(cold.filesSkipped).toBe(0);
+    expect(cold.filesUnread).toBe(1);
+    expect(cold.filesScanned).toBe(cold.filesRead + cold.filesSkipped + cold.filesUnread);
+    // …and the old equality is now FALSE, which is exactly why the third bucket exists. Before
+    // it, a corpus holding one unreadable file made `filesScanned === filesRead` quietly wrong.
+    expect(cold.filesRead).not.toBe(cold.filesScanned);
+
+    // The same on a refresh: the unreadable path is still not a read and still not a skip.
+    const store = new IndexStore();
+    store.buildCold([project]);
+    const warm = store.refresh([project]);
+    expect(warm.filesUnread).toBe(1);
+    expect(warm.filesScanned).toBe(warm.filesRead + warm.filesSkipped + warm.filesUnread);
+
+    fs.rmSync(dangling);
+  });
+
   // A cold build performs NO boundary probes, and that is what keeps `bytesRead` a clean
   // transcript-byte count there — which test/live.test.ts brackets against an independent walk
   // of the corpus. A probe folded into that figure would quietly break the oracle.
