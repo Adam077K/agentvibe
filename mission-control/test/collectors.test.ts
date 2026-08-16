@@ -528,30 +528,56 @@ describe('the conflicts sweep leaves the event loop free', () => {
     await new Promise((resolve) => setTimeout(resolve, 30));
     const idleNoiseMs = worstGapSince();
 
-    // THE MEASUREMENT — the real, shipped sweep.
-    const t0 = performance.now();
-    const report = await detectConflicts(project);
-    const sweepMs = performance.now() - t0;
-    await settle();
-    const asyncStallMs = worstGapSince();
+    // THREE ROUNDS — INTERLEAVED AND REPEATED. A single-round measurement cannot see its own
+    // variance: on CI (git ~2ms, async stall ~6ms, control ~13ms, ratio 0.460), one OS
+    // pre-emption during the sweep inflates asyncStallMs from 6ms to 10ms without raising the
+    // idle measurement taken before it. The existing idle gate does not fire (idleNoiseMs was
+    // low when measured) and the ratio goes 0.77 > 0.75, red. Median of three rounds absorbs
+    // a single bad round: [10ms, 6ms, 7ms] → median 7ms, passes; a blocking implementation
+    // [71ms, 71ms, 71ms] → median 71ms, still fails. The multi-project enumeration test below
+    // uses 5 rounds for the same reason; three suffice here because each round is shorter.
+    // INTERLEAVED, so a machine that slows or quickens mid-test moves async and control together.
+    const asyncStalls: number[] = [];
+    const controlStalls: number[] = [];
+    const sweepMsByRound: number[] = [];
+    let report!: Awaited<ReturnType<typeof detectConflicts>>;
+    let sweptPaths: string[] = [];
+    const ROUNDS = 3;
 
-    // THE CONTROL — the same git calls, sequential and synchronous. This is the blocking
-    // implementation, measured under identical conditions moments later.
-    const sweptPaths = report.worktrees.map((w) => w.path);
-    const c0 = performance.now();
-    for (const wt of sweptPaths) {
-      execFileSync('git', ['--no-optional-locks', 'status', '--porcelain'], { cwd: wt, encoding: 'utf8' });
+    for (let round = 0; round < ROUNDS; round++) {
+      // THE MEASUREMENT — the real, shipped sweep.
+      const t0 = performance.now();
+      report = await detectConflicts(project);
+      sweepMsByRound.push(performance.now() - t0);
+      await settle();
+      asyncStalls.push(worstGapSince());
+
+      // THE CONTROL — the same git calls, sequential and synchronous. This is the blocking
+      // implementation, measured each round so load changes move both terms together.
+      if (round === 0) sweptPaths = report.worktrees.map((w) => w.path);
+      for (const wt of sweptPaths) {
+        execFileSync('git', ['--no-optional-locks', 'status', '--porcelain'], { cwd: wt, encoding: 'utf8' });
+      }
+      await settle();
+      controlStalls.push(worstGapSince());
     }
-    const controlMs = performance.now() - c0;
-    await settle();
-    const controlStallMs = worstGapSince();
     sampling = false;
+
+    // MEDIAN FOR BOTH, and the asymmetry of the multi-project test (max for subject, median for
+    // environment) does not apply here: at one project the status-phase subject's stall is one
+    // spawn syscall, not N concurrent ones, so a per-round max is already the round's answer.
+    const asyncStallMs = median(asyncStalls);
+    const controlStallMs = median(controlStalls);
+    const asyncRound = asyncStalls.indexOf(asyncStallMs);
 
     // eslint-disable-next-line no-console
     console.log(
-      `  [async] worst stall: async ${asyncStallMs.toFixed(1)}ms (sweep ${sweepMs.toFixed(1)}ms) · ` +
-        `sync control ${controlStallMs.toFixed(1)}ms (${controlMs.toFixed(1)}ms) · idle noise ${idleNoiseMs.toFixed(1)}ms · ` +
-        `ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
+      `  [async] status-phase stall: async median ${asyncStallMs.toFixed(1)}ms ` +
+        `(round ${asyncRound + 1}, sweep ${sweepMsByRound[asyncRound]!.toFixed(1)}ms, ` +
+        `all ${asyncStalls.map((x) => x.toFixed(1)).join('/')}ms) · ` +
+        `sync control median ${controlStallMs.toFixed(1)}ms ` +
+        `(all ${controlStalls.map((x) => x.toFixed(1)).join('/')}ms) · ` +
+        `idle noise ${idleNoiseMs.toFixed(1)}ms · ratio ${(asyncStallMs / controlStallMs).toFixed(3)}`
     );
 
     expect(report.worktrees).toHaveLength(WORKTREES); // the sweep really ran
@@ -595,8 +621,7 @@ describe('the conflicts sweep leaves the event loop free', () => {
     // ratio UP toward the bound, and CI's 1.6x margin is thinner than this machine's 20x. If
     // this goes red on a new runner, read the three printed numbers before touching the
     // threshold — a baseline ratio drifted to ~0.7 means spawn now costs as much as git, not
-    // that the sweep regressed. Load is measured and is not the risk: 0.033-0.049 unloaded,
-    // 0.036-0.070 under eight busy CPU processes, idle gate never firing.
+    // that the sweep regressed.
     //
     // This test binds the STATUS phase. The enumeration phase — one `git worktree list` per
     // project, which is where reverting listWorktreesAsync does its damage — is bound by the
