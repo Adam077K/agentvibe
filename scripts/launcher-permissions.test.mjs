@@ -5,8 +5,14 @@
 // `bin/warroom` launched every session with `--dangerously-skip-permissions`, so the 20 allow
 // rules and 6 deny rules in `.claude/settings.json` applied to nothing. Every deny rule in that
 // file — rm -rf, curl, chmod +x, global installs — was decoration in any warroom-started
-// session. The PreToolUse hook still fired, so the system was not unprotected; it was protected
-// by one mechanism where it was documented as two.
+// session. The PreToolUse hook still fired **for Bash and file writes**, so the system was not
+// unprotected there; it was protected by one mechanism where it was documented as two.
+//
+// That qualifier is load-bearing and was missing from the first version of this comment. The
+// hook fired for what its matcher named and for nothing else, so when `designer` was granted a
+// browser the same day, the new capability reached NO content-level control at all. The binding
+// QA gate caught the gap and the false premise together. Both are fixed: the matcher now routes
+// the browser, and the browser is localhost-only.
 //
 // Removed 2026-08-16 by founder decision. Pinned here because a single word restores it
 // silently and nothing else in the suite would notice.
@@ -76,5 +82,31 @@ test('every allow entry is a Bash pattern, not a bare tool grant', () => {
   const s = JSON.parse(fs.readFileSync(SETTINGS, 'utf8'));
   for (const a of s.permissions.allow) {
     assert.match(a, /^Bash\(.+ \*\)$/, `allow entry ${JSON.stringify(a)} is not a scoped Bash pattern`);
+  }
+});
+
+// ── The rule must also be REGISTERED ─────────────────────────────────────────────────────
+// pre-tool-use.test.mjs proves the browser rule works by invoking the hook directly. That does
+// not prove Claude Code ever calls it: the matcher in settings.json decides which tools reach
+// the hook at all, and until 2026-08-16 it read "Bash|Edit|Write|NotebookEdit", which no MCP
+// tool name matches. A correct rule that never fires is precisely the defect being fixed, so
+// the registration is pinned separately from the behaviour.
+
+test('the browser tool actually reaches the hook', () => {
+  const s = JSON.parse(fs.readFileSync(SETTINGS, 'utf8'));
+  const matcher = s.hooks.PreToolUse[0].matcher;
+  const re = new RegExp(matcher);
+  assert.ok(re.test('mcp__playwright__browser_navigate'), `matcher ${JSON.stringify(matcher)} does not route the browser to the hook`);
+  for (const t of ['Bash', 'Edit', 'Write', 'NotebookEdit']) {
+    assert.ok(re.test(t), `matcher stopped routing ${t}`);
+  }
+});
+
+test('the matcher does not sweep in MCP servers the hook has no rules for', () => {
+  // Gating figma/notion/gmail here would be theatre with an outage attached.
+  const s = JSON.parse(fs.readFileSync(SETTINGS, 'utf8'));
+  const re = new RegExp(s.hooks.PreToolUse[0].matcher);
+  for (const t of ['mcp__figma__get_design_context', 'mcp__notion__notion-search', 'mcp__miro__board_create']) {
+    assert.equal(re.test(t), false, `${t} is routed to a hook that has no rule for it`);
   }
 });

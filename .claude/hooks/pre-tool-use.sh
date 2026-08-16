@@ -343,8 +343,77 @@ except Exception:
 
     ;;
 
+  mcp__playwright__browser_navigate)
+    # ── BLOCK: browser navigation outside the local machine ───────────────────
+    #
+    # `designer` was granted the playwright MCP on 2026-08-16 — the first live MCP capability in
+    # this repo. The binding QA gate immediately found that MCP tool calls reached NO safety
+    # control at all: this hook was registered with `"matcher": "Bash|Edit|Write|NotebookEdit"`,
+    # and `mcp__playwright__browser_navigate` matches none of those. Verified by running the
+    # matcher as a regex against real tool names. So the curl-to-external-URL block, the .env
+    # read block and the write-outside-project-root block all applied to Bash and to nothing
+    # else — while DECISIONS.md justified removing --dangerously-skip-permissions partly on the
+    # claim that "the PreToolUse hook still fired". True for Bash. False for this.
+    #
+    # SCOPE: LOCALHOST ONLY, AND THAT IS NOT A COMPROMISE.
+    # designer's perception loop is "render, look at what rendered, iterate" — that is localhost
+    # by definition. Visual references come from the refero / figma / stitch / higgsfield MCP
+    # servers, which are better at it than driving a browser; documentation comes from WebFetch.
+    # The one genuine future need is a deployed preview URL, and nothing is deployed yet. When
+    # something is, add its host to EXTRA_BROWSER_HOSTS below — one line, not an allowlist to
+    # maintain.
+    #
+    # Deliberately narrow: ONLY this tool. Every other MCP server the founder has configured
+    # (figma, notion, miro, gmail, higgsfield, …) is untouched, because a guard that only
+    # understands playwright must not silently gate tools it cannot reason about.
+    url=$(printf '%s' "$payload" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print((d.get('tool_input') or {}).get('url', ''))
+except Exception:
+    print('')
+" 2>/dev/null)
+
+    # Fail CLOSED: an unparseable or absent URL is refused, matching this hook's posture
+    # everywhere else. A navigation we could not inspect is not a navigation we may allow.
+    if [ -z "$url" ]; then
+      block "browser_navigate with no readable url — refused. This hook fails closed: a navigation it cannot inspect is not one it can allow."
+    fi
+
+    # Add a deployed preview host here when one exists, space-separated. Keep it short; if this
+    # ever grows into a real list, that is the signal the browser is being used for something
+    # other than looking at our own output.
+    EXTRA_BROWSER_HOSTS="${AGENTVIBE_BROWSER_HOSTS:-}"
+
+    _allowed=no
+    case "$url" in
+      http://localhost|http://localhost:*|http://localhost/*|https://localhost|https://localhost:*|https://localhost/*) _allowed=yes ;;
+      http://127.0.0.1|http://127.0.0.1:*|http://127.0.0.1/*|https://127.0.0.1|https://127.0.0.1:*|https://127.0.0.1/*) _allowed=yes ;;
+      "http://[::1]"*|"https://[::1]"*) _allowed=yes ;;
+      about:blank) _allowed=yes ;;
+    esac
+
+    if [ "$_allowed" = no ] && [ -n "$EXTRA_BROWSER_HOSTS" ]; then
+      for _h in $EXTRA_BROWSER_HOSTS; do
+        case "$url" in
+          "http://$_h"|"http://$_h/"*|"http://$_h:"*|"https://$_h"|"https://$_h/"*|"https://$_h:"*) _allowed=yes; break ;;
+        esac
+      done
+    fi
+
+    if [ "$_allowed" = no ]; then
+      block "browser navigation to '$url' is refused — the browser grant is localhost-only. designer's perception loop looks at what it just rendered. Use the refero/figma/stitch MCP servers for visual references and WebFetch for documentation. To allow a deployed preview host, set AGENTVIBE_BROWSER_HOSTS."
+    fi
+    ;;
+
   *)
-    # Unknown tool — allow
+    # Unknown tool — allow.
+    #
+    # STATED LIMIT: this includes every MCP tool other than the one cased above. Those servers
+    # are the founder's own (figma, notion, gmail, miro, higgsfield, …) and this hook has no
+    # rules that would mean anything for them; gating them here would be theatre with an outage
+    # attached. The boundary that matters — a browser reaching off the machine — is closed above.
     ;;
 esac
 

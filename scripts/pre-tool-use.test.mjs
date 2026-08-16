@@ -262,3 +262,68 @@ for (const [label, payload] of [
     assert.equal(runHook(payload), BLOCK, 'hook failed OPEN on input it could not parse')
   })
 }
+
+// ── The browser grant: localhost only ────────────────────────────────────────────────────
+// designer got the playwright MCP on 2026-08-16 — the first live MCP capability here. The
+// binding QA gate found that MCP calls reached NO safety control: the hook was registered with
+// matcher "Bash|Edit|Write|NotebookEdit", which no MCP tool name matches. Meanwhile DECISIONS.md
+// justified removing the permissions flag partly on "the PreToolUse hook still fired". True for
+// Bash; false for this.
+//
+// Localhost-only is the whole grant, and it is not a compromise: the perception loop is "look at
+// what I just rendered". References come from the refero/figma/stitch MCP servers; docs from
+// WebFetch. A deployed preview host goes in AGENTVIBE_BROWSER_HOSTS when one exists.
+
+const nav = (url) => ({ session_id: 'test-session', tool_name: 'mcp__playwright__browser_navigate', tool_input: { url } })
+
+const BROWSER_ALLOWED = [
+  'http://localhost:3000',
+  'http://localhost:3000/pricing',
+  'http://localhost',
+  'https://localhost:8443/x',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5173/a/b?c=d',
+  'http://[::1]:3000/',
+  'about:blank',
+]
+
+for (const url of BROWSER_ALLOWED) {
+  test(`ALLOWS browsing our own output — ${url}`, () => {
+    assert.equal(runHook(compact(nav(url))), ALLOW, 'the perception loop must be able to look at localhost')
+  })
+}
+
+const BROWSER_BLOCKED = [
+  ['https://example.com', 'the open internet'],
+  ['http://169.254.169.254/latest/meta-data/', 'cloud metadata endpoint'],
+  ['http://192.168.1.1/', 'the local network is not the local machine'],
+  ['http://10.0.0.5:8080/', 'private range'],
+  ['file:///etc/passwd', 'local file read through the browser'],
+  ['https://localhost.evil.com/', 'a hostname that merely STARTS with localhost'],
+  ['http://127.0.0.1.evil.com/', 'the same trick on the IP form'],
+]
+
+for (const [url, why] of BROWSER_BLOCKED) {
+  test(`BLOCKS browsing off-machine — ${url} (${why})`, () => {
+    assert.equal(runHook(compact(nav(url))), BLOCK, `hook allowed navigation to ${url}`)
+  })
+}
+
+test('BLOCKS a navigation whose url cannot be read — fails closed like every other rule here', () => {
+  assert.equal(runHook(compact({ session_id: 'test-session', tool_name: 'mcp__playwright__browser_navigate', tool_input: {} })), BLOCK)
+})
+
+test('a deployed preview host can be permitted without touching the hook', () => {
+  const env = { AGENTVIBE_BROWSER_HOSTS: 'agentvibe.vercel.app' }
+  assert.equal(runHook(compact(nav('https://agentvibe.vercel.app/pricing')), env), ALLOW)
+  // and it does not become a wildcard
+  assert.equal(runHook(compact(nav('https://evil.com')), env), BLOCK)
+  assert.equal(runHook(compact(nav('https://agentvibe.vercel.app.evil.com')), env), BLOCK)
+})
+
+test('other MCP servers are untouched — the guard only understands the browser', () => {
+  // Gating tools this hook has no rules for would be theatre with an outage attached.
+  for (const t of ['mcp__figma__get_design_context', 'mcp__notion__notion-search']) {
+    assert.equal(runHook(compact({ session_id: 'test-session', tool_name: t, tool_input: { q: 'x' } })), ALLOW, `${t} was gated`)
+  }
+})
