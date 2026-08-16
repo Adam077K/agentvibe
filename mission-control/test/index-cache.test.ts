@@ -537,6 +537,164 @@ describe('the loader refuses anything it cannot justify, and names the reason', 
   });
 });
 
+// ── Does the persisted index carry anything past the trust boundary? ──────────────────────
+//
+// #44 gave Mission Control an allowlist: an untrusted project is reported but no program is run
+// for it. This index survives a process restart, so the question is fair — and it was NOT part
+// of the design that produced this file, because trust did not exist then. A cache built while
+// a project was trusted, read back after it was untrusted, would be a channel carrying data
+// past a boundary, and NONE of the nine staleness cases above would see it: the file does not
+// change when a trust decision does.
+//
+// THE COMPARISON THAT ANSWERS IT IS COLD vs WARM, not "does warm contain the project". If a
+// cold start — no cache in the picture at all — serves it too, then the session index does not
+// gate on trust and the cache changed nothing. Asking only the warm half produces a finding
+// with no denominator.
+//
+// THE ANSWER, EXECUTED: identical. Trust gates program EXECUTION — the conflicts sweep, the
+// belief ledger spawn, the empty-state probe, all through partitionByTrust in routes/api.ts —
+// and the session index is not one of those. It reads transcripts under ~/.claude/projects,
+// which is the user's own Claude Code history rather than content from the untrusted
+// repository, and reading it runs nothing. `trustStateFor`'s own reason string says as much:
+// "Nothing below is a measurement of this project — it is what could be read without executing
+// anything."
+//
+// SO THIS PINS A PROPERTY RATHER THAN FIXING A HOLE. If sessions are ever made trust-filtered,
+// these assertions go red and say what to do: the trust list must join the cache's invalidation
+// key, because a cache keyed on corpus bytes cannot see a policy change.
+describe('the persisted index is not a channel past the trust boundary', () => {
+  const f = frozenFixture('trust');
+  const trustFile = path.join(f.projectsRoot, 'trusted-projects');
+  const repo = path.join(f.projectsRoot, 'frozen');
+  const cacheFile = path.join(f.projectsRoot, 'trust-cache.json');
+
+  const setTrust = (roots: string[]) => fs.writeFileSync(trustFile, `# fixture\n${roots.join('\n')}\n`);
+  const start = (mode: 'cold' | 'warm') => {
+    const state = new LiveState({
+      roots: [f.projectsRoot],
+      claudeProjectsRoot: f.claudeRoot,
+      trustFile,
+      ...(mode === 'cold' ? { indexCache: false } : { indexCachePath: cacheFile }),
+    });
+    const projects = state.refresh();
+    return { sessions: state.index.allSessions(), projects, result: state.index.lastResult! };
+  };
+
+  test('a cache built while the project was TRUSTED serves exactly what a cold start serves once it is untrusted', () => {
+    f.reset();
+    fs.rmSync(cacheFile, { force: true });
+
+    setTrust([repo]);
+    const built = start('warm'); // writes the cache while trusted
+    expect(built.projects[0]!.trust.trusted).toBe(true);
+    expect(built.sessions.length).toBe(SESSIONS);
+    expect(fs.existsSync(cacheFile)).toBe(true);
+
+    setTrust([]); // untrusted now — and not one byte of any transcript changed
+
+    const cold = start('cold');
+    const warm = start('warm');
+
+    // NON-VACUITY, BOTH HALVES. The trust flag really flipped, and both starts really did
+    // produce sessions — an equality between two empty lists would prove nothing.
+    expect(cold.projects[0]!.trust.trusted).toBe(false);
+    expect(warm.projects[0]!.trust.trusted).toBe(false);
+    expect(cold.sessions.length).toBe(SESSIONS);
+    expect(warm.sessions.length).toBe(SESSIONS);
+
+    // …and the two really did take different paths to get there, or "identical" would only
+    // mean both had read the corpus.
+    expect(cold.result.filesRead).toBe(SESSIONS);
+    expect(warm.result.filesRead).toBe(0);
+    expect(warm.result.filesSkipped).toBe(SESSIONS);
+
+    // THE ASSERTION. The cache adds nothing a full read does not already produce.
+    expect(warm.sessions).toEqual(cold.sessions);
+  });
+
+  test('and a cache built while it was UNTRUSTED does not mask it once it is trusted', () => {
+    f.reset();
+    fs.rmSync(cacheFile, { force: true });
+
+    setTrust([]);
+    const built = start('warm');
+    expect(built.projects[0]!.trust.trusted).toBe(false);
+
+    setTrust([repo]);
+    const cold = start('cold');
+    const warm = start('warm');
+
+    expect(warm.projects[0]!.trust.trusted).toBe(true);
+    expect(cold.sessions.length).toBe(SESSIONS);
+    expect(warm.sessions).toEqual(cold.sessions);
+  });
+
+  // THE STRUCTURAL REASON THE WHOLE CLASS IS SAFE, and it is worth more than the two tests
+  // above because it does not depend on trust at all.
+  //
+  // `refresh()` ends with a removal pass: any entry whose path was not seen in THIS scan is
+  // deleted from the index. So a restored entry can only survive if the current discovery still
+  // reaches its file. A project that leaves the scan — untrusted, deleted, root reconfigured,
+  // or for a reason nobody has thought of — takes its cached sessions with it.
+  //
+  // Found by mutating `LiveState.refresh()` to filter projects by trust and re-running the
+  // probe: the warm start dropped the project too, cold and warm still agreed. That is the
+  // answer to "would this leak if sessions ever became trust-filtered" — it would not, and the
+  // reason is this pass rather than anything about trust. Pinned here so the removal pass
+  // cannot be optimised away by someone who sees only that it costs a Set and a loop.
+  test('a restored entry whose file is no longer in the scan is dropped, whatever put it out of scope', () => {
+    f.reset();
+    fs.rmSync(cacheFile, { force: true });
+    setTrust([repo]);
+
+    const built = start('warm');
+    expect(built.sessions.length).toBe(SESSIONS); // non-vacuity: a real index was persisted
+    expect(fs.existsSync(cacheFile)).toBe(true);
+
+    // Same cache, but discovery now points somewhere the project is not. Nothing about the
+    // transcripts changed; only what the scan can reach.
+    const elsewhere = mkTmpDir('mc-cache-trust-elsewhere-');
+    cleanupDirs.push(elsewhere);
+    const state = new LiveState({
+      roots: [elsewhere],
+      claudeProjectsRoot: f.claudeRoot,
+      trustFile,
+      indexCachePath: cacheFile,
+    });
+    state.refresh();
+
+    const r = state.index.lastResult!;
+    expect(r.filesRemoved).toBe(SESSIONS); // every restored entry was dropped…
+    expect(state.index.allSessions()).toEqual([]); // …and none of them is served
+    expect(state.index.fileCount).toBe(0);
+  });
+
+  test('the invalidation key does not mention trust, and that is recorded rather than assumed', () => {
+    f.reset();
+    fs.rmSync(cacheFile, { force: true });
+    setTrust([repo]);
+    start('warm');
+
+    const meta = JSON.parse(fs.readFileSync(cacheFile, 'utf8').split('\n')[0]!) as Record<string, unknown>;
+    // KEYS, not a substring search of the whole envelope: the first version of this check
+    // scanned `JSON.stringify(meta)` and reported a match because the fixture's temp path
+    // contained the word "trust". A keyword hit inside a path is not a field.
+    expect(Object.keys(meta).sort()).toEqual([
+      'corpusRoot',
+      'entries',
+      'fingerprint',
+      'fullBuildAt',
+      'payloadHash',
+      'savedAt',
+      'v',
+    ]);
+    expect(Object.keys(meta).some((k) => k.toLowerCase().includes('trust'))).toBe(false);
+    // Correct only as long as the two tests above hold: nothing the index serves depends on
+    // trust, so keying on it would discard a valid cache for a change that alters no output.
+    // The day those go red, this expectation is the first one to change.
+  });
+});
+
 // ── The round trip, and what the fast start costs ─────────────────────────────────────────
 describe('a saved index restores to the same answer, and the start does almost no reading', () => {
   const f = frozenFixture('roundtrip');
