@@ -341,6 +341,223 @@ test('the committed index reproduces exactly from the artifacts', () => {
   assert.match(out, /index matches/);
 });
 
+// ── build --check is coupled to what claims SAY, not to where they sit ──────
+//
+// `.claude/ledger/index.json` used to carry a `source_line` per claim. Inserting one
+// sentence into the prose of mission-control/README.md moved four claims from 295 to 296
+// and failed CI with every claim byte-identical — a build failure for an edit that changed
+// no claim. The remedy on offer was "remember to rebuild", and it failed the first time it
+// was relied on, hours after someone had warned about it.
+//
+// These tests run against a THROWAWAY git repo built in tmpdir, so a mutation is a real
+// file edit through the real CLI and never touches this repository. Every mutation asserts
+// that it landed before its verdict is believed: an edit whose anchor missed is
+// indistinguishable from a guard that works, and the second reads as good news.
+
+const FENCE = '`'.repeat(3);
+
+function scratchClaim(over = {}) {
+  const c = {
+    id: 'c-scratch-one', assert: 'the first scratch claim', kind: 'behavior',
+    scope: 'project', verified_by: 'command', evidence: '{cmd: "true", expect_exit: 0}',
+    valid_until: '2027-01-01', confidence: '0.9', ...over,
+  };
+  return [
+    `  - id: ${c.id}`,
+    `    assert: "${c.assert}"`,
+    `    kind: ${c.kind}`,
+    `    scope: ${c.scope}`,
+    `    verified_by: ${c.verified_by}`,
+    `    evidence: ${c.evidence}`,
+    `    valid_until: ${c.valid_until}`,
+    `    confidence: ${c.confidence}`,
+  ].join('\n');
+}
+
+function scratchDoc(claims = [scratchClaim()]) {
+  return ['# Scratch artifact', '', 'Prose that sits above the claims.', '',
+    `${FENCE}claims`, 'claims:', ...claims, FENCE, ''].join('\n');
+}
+
+/** A throwaway repo holding one artifact and a copy of the ledger. Caller removes it. */
+function scratchRepo(doc = scratchDoc()) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ledger-idx-'));
+  fs.mkdirSync(path.join(dir, 'scripts', 'lib'), { recursive: true });
+  fs.copyFileSync(path.join(REPO_ROOT, 'scripts', 'ledger.mjs'), path.join(dir, 'scripts', 'ledger.mjs'));
+  for (const f of ['claims.js', 'classifier.js', 'resolvers.js']) {
+    fs.copyFileSync(path.join(REPO_ROOT, 'scripts', 'lib', f), path.join(dir, 'scripts', 'lib', f));
+  }
+  fs.writeFileSync(path.join(dir, 'doc.md'), doc);
+  // The index is built from `git ls-files`, so there must be a repository for it to list.
+  execFileSync('git', ['init', '-q'], { cwd: dir, stdio: 'pipe' });
+  return dir;
+}
+
+function ledger(dir, ...args) {
+  try {
+    const out = execFileSync('node', [path.join(dir, 'scripts', 'ledger.mjs'), ...args],
+      { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    return { exit: 0, out };
+  } catch (e) {
+    return { exit: e.status, out: `${e.stdout || ''}${e.stderr || ''}` };
+  }
+}
+
+/** Edit a file and REFUSE to continue unless the edit changed it. */
+function mustEdit(file, from, to) {
+  const before = fs.readFileSync(file, 'utf8');
+  assert.ok(before.includes(from), `mutation anchor not found — the test would prove nothing: ${from}`);
+  const after = before.replace(from, to);
+  assert.notEqual(after, before, 'mutation was a no-op — the test would prove nothing');
+  fs.writeFileSync(file, after);
+  assert.equal(fs.readFileSync(file, 'utf8'), after, 'mutation did not reach disk');
+}
+
+test('a prose edit above a claim does not fail the check — the index holds no positions', () => {
+  const dir = scratchRepo();
+  try {
+    assert.equal(ledger(dir, 'build').exit, 0);
+    const doc = path.join(dir, 'doc.md');
+    const fenceLine = (t) => t.split('\n').findIndex((l) => l.trim() === `${FENCE}claims`) + 1;
+    const was = fenceLine(fs.readFileSync(doc, 'utf8'));
+
+    mustEdit(doc, 'Prose that sits above the claims.',
+      'Prose that sits above the claims.\n\nA second paragraph, added later.\n\nAnd a third.');
+
+    // Without this the test could pass while proving nothing: an edit BELOW the claims
+    // would not shift them, and the check would be green for the wrong reason.
+    const now = fenceLine(fs.readFileSync(doc, 'utf8'));
+    assert.ok(now > was, `the edit must actually move the claims (${was} -> ${now})`);
+
+    const r = ledger(dir, 'build', '--check');
+    assert.equal(r.exit, 0, `a documentation edit must not fail the ledger:\n${r.out}`);
+    assert.match(r.out, /index matches/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+for (const [field, from, to] of [
+  ['assert', 'assert: "the first scratch claim"', 'assert: "the first scratch claim, reworded"'],
+  ['valid_until', 'valid_until: 2027-01-01', 'valid_until: 2028-01-01'],
+  ['evidence.cmd', 'cmd: "true"', 'cmd: "false"'],
+  ['evidence.expect_exit', 'expect_exit: 0', 'expect_exit: 1'],
+  ['kind', 'kind: behavior', 'kind: internal-fact'],
+  ['scope', 'scope: project', 'scope: task'],
+  ['confidence', 'confidence: 0.9', 'confidence: 0.4'],
+]) {
+  test(`changing a claim's ${field} fails the check, and the message names the claim and the field`, () => {
+    const dir = scratchRepo();
+    try {
+      assert.equal(ledger(dir, 'build').exit, 0);
+      mustEdit(path.join(dir, 'doc.md'), from, to);
+      const r = ledger(dir, 'build', '--check');
+      assert.equal(r.exit, 1, `mutating ${field} must fail the check:\n${r.out}`);
+      assert.match(r.out, /c-scratch-one/, 'the message must name the claim');
+      assert.match(r.out, new RegExp(field.replace('.', '\\.')), 'the message must name the field');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+}
+
+test('an added claim and a removed claim are each named, and neither is confused for the other', () => {
+  const dir = scratchRepo(scratchDoc([scratchClaim(), scratchClaim({ id: 'c-scratch-two' })]));
+  try {
+    assert.equal(ledger(dir, 'build').exit, 0);
+    const doc = path.join(dir, 'doc.md');
+    const both = fs.readFileSync(doc, 'utf8');
+
+    mustEdit(doc, '  - id: c-scratch-two', '  - id: c-scratch-three');
+    const swapped = ledger(dir, 'build', '--check');
+    assert.equal(swapped.exit, 1);
+    assert.match(swapped.out, /\+ c-scratch-three — in the artifacts, missing from the index/);
+    assert.match(swapped.out, /- c-scratch-two — in the index, no longer in any artifact/);
+
+    fs.writeFileSync(doc, both.replace(scratchClaim({ id: 'c-scratch-two' }), '').replace(/\n\n+/g, '\n'));
+    const removed = ledger(dir, 'build', '--check');
+    assert.equal(removed.exit, 1);
+    assert.match(removed.out, /- c-scratch-two/);
+    assert.doesNotMatch(removed.out, /\+ /, 'nothing was added; the message must not say otherwise');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the failure message never offers a byte count as evidence', () => {
+  // The old message printed `on disk: 19749 bytes · regenerated: 19749 bytes` — the same
+  // number twice, because a claim shifting one line rewrites 295 as 296 and that is the
+  // same width. A diagnostic that cannot discriminate is worse than none: it occupies the
+  // place a reader looks for evidence. sha256 is printed instead, and cannot be equal.
+  const dir = scratchRepo();
+  try {
+    assert.equal(ledger(dir, 'build').exit, 0);
+    mustEdit(path.join(dir, 'doc.md'), 'assert: "the first scratch claim"', 'assert: "changed"');
+    const r = ledger(dir, 'build', '--check');
+    assert.equal(r.exit, 1);
+    assert.doesNotMatch(r.out, /\d+ bytes/, 'a byte count is equal on both sides for most edits');
+    const shas = [...r.out.matchAll(/sha256 \w+:\s+([0-9a-f]{64})/g)].map((m) => m[1]);
+    assert.equal(shas.length, 2, 'both sides must be anchored');
+    assert.notEqual(shas[0], shas[1], 'two files that differ cannot share a sha256');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('an index that differs only in formatting says so, instead of blaming the claims', () => {
+  const dir = scratchRepo();
+  try {
+    assert.equal(ledger(dir, 'build').exit, 0);
+    const idx = path.join(dir, '.claude', 'ledger', 'index.json');
+    mustEdit(idx, '"version": 1', '"version":  1');
+    const r = ledger(dir, 'build', '--check');
+    assert.equal(r.exit, 1);
+    assert.match(r.out, /every claim is identical/);
+    assert.match(r.out, /first difference at byte \d+/);
+    assert.doesNotMatch(r.out, /c-scratch-one/, 'no claim changed, so no claim may be named');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a truncated index is reported as unparseable, not as a claim that changed', () => {
+  const dir = scratchRepo();
+  try {
+    assert.equal(ledger(dir, 'build').exit, 0);
+    const idx = path.join(dir, '.claude', 'ledger', 'index.json');
+    fs.writeFileSync(idx, fs.readFileSync(idx, 'utf8').slice(0, 120));
+    const r = ledger(dir, 'build', '--check');
+    assert.equal(r.exit, 1);
+    assert.match(r.out, /not valid JSON/);
+    assert.match(r.out, /hand-edited or truncated/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the committed index records no positions at all', () => {
+  const raw = fs.readFileSync(path.join(REPO_ROOT, '.claude', 'ledger', 'index.json'), 'utf8');
+  assert.doesNotMatch(raw, /source_line/, 'a position in the index re-couples the check to where claims sit');
+  for (const c of JSON.parse(raw).claims) {
+    assert.equal(c.source_line, undefined, `${c.id} carries a position`);
+    assert.ok(c.source_file, `${c.id} must still say which artifact it lives in`);
+  }
+});
+
+test('locate resolves a position on demand — the affordance source_line used to serve', () => {
+  const hit = execFileSync('node', ['scripts/ledger.mjs', 'locate', 'c-canary-unresolvable'],
+    { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
+  assert.match(hit, /^docs\/06-codebase\/ledger-canary\.md:\d+$/);
+  // The line it names must really open that claim's block, or `locate` is the old field
+  // with extra steps: confidently precise and wrong.
+  const [file, line] = hit.split(':');
+  const lines = fs.readFileSync(path.join(REPO_ROOT, file), 'utf8').split('\n');
+  assert.equal(lines[Number(line) - 1].trim(), 'claims:', 'locate must point at the head of the claim block');
+
+  assert.throws(() => execFileSync('node', ['scripts/ledger.mjs', 'locate', 'c-no-such-claim'],
+    { cwd: REPO_ROOT, encoding: 'utf8', stdio: 'pipe' }), /Command failed/, 'an unknown id must exit non-zero, not print nothing and pass');
+});
+
 test('the canary claim is present and still shaped to fail both resolvers', async () => {
   const index = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, '.claude', 'ledger', 'index.json'), 'utf8'));
   const canary = index.claims.find((c) => c.id === 'c-canary-unresolvable');
