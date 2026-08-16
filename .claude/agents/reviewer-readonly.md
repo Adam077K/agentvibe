@@ -2,7 +2,8 @@
 name: reviewer-readonly
 description: |
   Engine. `reviewer` with no shell. Used by the binding QA gate, where the judge's verdict cannot be overridden and a write-capable shell would defeat the isolation the gate depends on. Identical lens procedure to `reviewer`; the only difference is that Bash is absent.
-model: claude-sonnet-4-6
+model: claude-opus-5
+effort: xhigh
 tools: [Read, Glob, Grep]
 maxTurns: 30
 color: gray

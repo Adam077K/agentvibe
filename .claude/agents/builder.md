@@ -2,7 +2,8 @@
 name: builder
 description: |
   Engine. Produces an artifact in isolation and returns exactly what landed. Code, schema, docs, copy — one focused task, one worktree, structured return. Replaces backend-engineer, frontend-engineer, database-engineer, ai-engineer, devops-engineer, data-engineer, test-engineer, technical-writer and supabase-cleaner, which shared one procedure and differed only in what verified them.
-model: claude-sonnet-4-6
+model: claude-opus-5
+effort: high
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 maxTurns: 30
 color: blue

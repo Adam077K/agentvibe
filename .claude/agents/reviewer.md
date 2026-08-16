@@ -2,7 +2,8 @@
 name: reviewer
 description: |
   Engine. Read-only, out-of-band judgement of work someone else produced. Loads one or more review lenses from .claude/review-lenses.yml and returns findings — never fixes. Replaces code-reviewer, security-engineer, adversary-engineer, design-critic and qa-engineer, which differed only in which lens they carried.
-model: claude-sonnet-4-6
+model: claude-opus-5
+effort: xhigh
 tools: [Read, Glob, Grep, Bash]
 maxTurns: 30
 color: gray

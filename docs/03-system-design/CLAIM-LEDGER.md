@@ -487,6 +487,16 @@ claims:
     disposition: {action: waive, until: 2026-09-08, reason: "scripts/probe-readonly-engine.sh must be run by hand; revisit with the shadow-window review"}
     supports: [c-read-only-engines-declare-no-write]
 
+  - id: c-effort-frontmatter-binding-unverified
+    assert: "Whether the frontmatter effort field is READ at all is unverified — the VALUE binds where it is set, but zero agent files declared it before 2026-08-16, so that channel has never been exercised"
+    kind: runtime-capability
+    scope: project
+    verified_by: command
+    evidence: {cmd: "test $(grep -lE '^effort: (low|medium|high|xhigh|max)$' .claude/agents/*.md | wc -l) -eq $(grep -L 'kind: shim' .claude/agents/*.md | wc -l) && grep -q 'WHAT IS NOT VERIFIED: whether the FRONTMATTER FIELD is read at all' .claude/hooks/schema-lint.js", expect_exit: 0}
+    valid_until: 2026-09-08
+    confidence: 0.5
+    supports: [c-read-only-binding-unverified]
+
   - id: c-qa-gate-blocks
     assert: "The QA-Lead gate blocks: qa-lead-pass.yml no longer carries continue-on-error"
     kind: internal-fact
@@ -541,12 +551,12 @@ claims:
   # declare one — not the specific numbers, which are a tuning decision and would make
   # this claim fail on a legitimate edit.
   - id: c-maxturns-binds-when-agenttype-named
-    assert: "maxTurns binds when a dispatch names an agentType and not otherwise, so the field is live rather than decorative: schema-lint.js requires it on every agent, refuses any value outside [5, 30], and all seven engines declare one. Bounded honestly — the cap explains 13 of 20 observed reviewer dropouts; the other 7 recorded 21-34 tool calls, above the cap, and are unexplained"
+    assert: "maxTurns binds when a dispatch names an agentType and not otherwise, so the field is live rather than decorative: schema-lint.js requires it on every agent, refuses any value outside [5, 120], and all seven engines declare one. Bounded honestly — the cap explains 13 of 20 observed reviewer dropouts; the other 7 recorded 21-34 tool calls, above the cap, and are unexplained. The dropout measurement is against the DECLARED values (25-30), which this branch did not change; only the lint ceiling moved, 30 to 120"
     kind: runtime-capability
     scope: project
     verified_by: command
     evidence:
-      cmd: "sed -n '/const REQUIRED_FRONTMATTER/,/^];/p' .claude/hooks/schema-lint.js | grep -qF maxTurns && grep -qF 'fm.maxTurns < 5 || fm.maxTurns > 30' .claude/hooks/schema-lint.js && test $(grep -lE '^maxTurns: [0-9]+$' .claude/agents/builder.md .claude/agents/designer.md .claude/agents/framer.md .claude/agents/orchestrator.md .claude/agents/reviewer.md .claude/agents/reviewer-readonly.md .claude/agents/sourcer.md | wc -l) -eq 7"
+      cmd: "sed -n '/const REQUIRED_FRONTMATTER/,/^];/p' .claude/hooks/schema-lint.js | grep -qF maxTurns && grep -qF 'fm.maxTurns < 5 || fm.maxTurns > 120' .claude/hooks/schema-lint.js && test $(grep -lE '^maxTurns: [0-9]+$' .claude/agents/builder.md .claude/agents/designer.md .claude/agents/framer.md .claude/agents/orchestrator.md .claude/agents/reviewer.md .claude/agents/reviewer-readonly.md .claude/agents/sourcer.md | wc -l) -eq 7"
       expect_exit: 0
     valid_until: 2026-11-14
     confidence: 0.8
