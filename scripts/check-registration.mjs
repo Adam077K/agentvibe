@@ -21,6 +21,10 @@
  *   8. Slash commands may not name a retired persona that is not an agent here.
  *   9. No tracked text file contains a NUL byte — a file grep cannot read is a
  *      file every grep-based check silently passes.
+ *  11. Every top-level .claude/*.json a hook READS exists. Check 1 guards the hook
+ *      command; this guards the data the hook decides with, which was the silent
+ *      half — deleting .claude/mcp-policy.json turned MCP governance off and
+ *      failed nothing.
  *
  * Usage: node scripts/check-registration.mjs
  */
@@ -361,6 +365,47 @@ for (const rel of tracked()) {
       'binary-source',
       `${rel} contains a NUL byte at offset ${at}, so file(1) calls it binary and grep ` +
         `silently returns nothing and exits 1 on it. Write the escape (\\u0000), not the byte.`
+    );
+  }
+}
+
+// ── 11 · a data file a hook READS must exist ───────────────────────────────
+//
+// BLOCKS. Check 1 above verifies that a hook COMMAND resolves to a file, so deleting
+// `.claude/hooks/pre-tool-use.sh` turns CI red. Nothing made the same guarantee about the
+// data a hook reads, and as of 2026-08-16 the hook reads a file that decides whether an MCP
+// call is refused: `.claude/mcp-policy.json`. Its absence is not inert — it is
+// `[ -f "$_policy" ] || return 0`, which turns MCP governance entirely off, including for the
+// project-scope servers the per-server path otherwise BLOCKs as ungoverned. The hook's own
+// BLOCK message advertises the off-switch: "delete it to return to ungoverned MCP."
+//
+// The design is deliberate and is NOT what this check changes: absent means ungoverned rather
+// than silently hardened, so a fresh checkout is neither secretly locked down nor secretly
+// opened. What was wrong is that the off-switch was SILENT. One file was guarded and the other
+// was not, and the unguarded one was the one holding the rules.
+//
+// The rule is derived from the hook rather than hardcoded here, so there is one source of
+// truth: whatever top-level `.claude/*.json` a hook script names, that file must exist. Remove
+// the capability and its containment together — delete the `mcp__` matcher and the policy
+// reference, and this check goes quiet on its own — but you may not delete the containment and
+// keep the capability.
+for (const f of exists('.claude/hooks') ? fs.readdirSync(abs('.claude/hooks')) : []) {
+  const rel = `.claude/hooks/${f}`;
+  let text;
+  try {
+    text = read(rel);
+  } catch {
+    continue; // a directory or an unreadable entry is not a hook script
+  }
+  // Top-level `.claude/<name>.json` only. A nested path (.claude/skills/MANIFEST.json) has its
+  // own checker at 4 and must not be swept in here.
+  for (const p of new Set([...text.matchAll(/\.claude\/[A-Za-z0-9._-]+\.json/g)].map((m) => m[0]))) {
+    if (exists(p)) continue;
+    fail(
+      'hook-data-file',
+      `${rel} reads ${p}, which does not exist. If this is the MCP policy, every project-scope ` +
+        'MCP call is now ungoverned. Restore it, or remove the mcp__ matcher from settings.json so ' +
+        'the capability and its containment leave together.'
     );
   }
 }

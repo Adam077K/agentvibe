@@ -76,6 +76,14 @@ jobs:
       - name: Registration completeness
         run: node scripts/check-registration.mjs
 
+      # Check 11 of that script guards the DATA a hook reads, not just the hook command:
+      # .claude/mcp-policy.json decides whether an MCP call is refused, and deleting it used
+      # to turn governance off while failing nothing. These tests move the file off disk for
+      # real and run the real checker, because a check for a silent failure that is itself
+      # only asserted has the same shape as the bug it prevents.
+      - name: Registration checker guards hook data files
+        run: npm run test:registration
+
       # CODEBASE-MAP.md is generated, not written. A hand-maintained map is accurate exactly
       # until the first person forgets, and then it is trusted and wrong — which is worse
       # than no map. This fails when it drifts from disk.
