@@ -151,7 +151,7 @@ function build() {
     'scripts/lib/classifier.js': 'The ONE risk implementation. Two would disagree during the incident',
     'scripts/lib/resolvers.js': 'Four resolvers. `unresolved` is never `pass` — the invariant the ledger rests on',
     'scripts/lib/usage.js': 'Spend measurement from session transcripts; append-only is what makes it fast',
-    'scripts/ledger.mjs': 'build · rebuild · lint · verify · judge · events · views · sweep',
+    'scripts/ledger.mjs': 'build · rebuild · lint · verify · judge · locate · events · views · sweep',
     'scripts/check-registration.mjs': 'The fabrication catcher: dead paths, drifted counts, phantom agents, NUL bytes',
     'scripts/gen-codebase-map.mjs': 'This file',
   };

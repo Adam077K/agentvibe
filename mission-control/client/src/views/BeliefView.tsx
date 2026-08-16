@@ -96,7 +96,13 @@ export function ExpiringTable({ claims, now }: { claims: LedgerClaim[]; now: num
           const overdue = left !== null && left <= 0;
           return (
             <tr key={c.id} className={`transition-colors hover:bg-raised ${i % 2 === 1 ? 'bg-row-alt' : ''}`}>
-              <Td mono title={`${c.assert}\n\n${c.source_file}:${c.source_line}`}>
+              {/* The file, and no line. The ledger index stopped recording `source_line`
+                  because a committed position is stale the moment anything above it moves;
+                  positions are resolved on demand by `node scripts/ledger.mjs locate <id>`.
+                  There is no number to print here that would be a measurement, and a
+                  plausible-looking `:0` or `:?` in a tooltip is the same defect the drop
+                  was made to remove — so this names the artifact and stops. */}
+              <Td mono title={`${c.assert}\n\n${c.source_file}`}>
                 <span className={overdue ? 'text-bad' : 'text-text'}>{c.id}</span>
               </Td>
               <Td className="text-muted">{c.kind}</Td>

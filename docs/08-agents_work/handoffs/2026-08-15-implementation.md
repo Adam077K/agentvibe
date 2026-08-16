@@ -196,12 +196,15 @@ playbook. Both boards converge on this as the experiment that settles whether se
   *describing* a destructive command is blocked as if it were one. Write the message to a file.
 - `~/.claude/plans/` is allowed; the session scratchpad is not. Both are outside the project root.
 - Every worktree needs `bun install` in `mission-control/` before `npm run check`.
-- **Never** edit files carrying ```claims blocks — editing moves `source_line` and fails `ledger build
-  --check`. **Never** hand-edit `CODEBASE-MAP.md` or `.claude/ledger/index.json`; regenerate with
-  `npm run ledger:build` then `npm run build:map`, in that order.
+- ~~**Never** edit files carrying ```claims blocks — editing moves `source_line` and fails `ledger build
+  --check`.~~ **No longer true.** The index stopped recording `source_line`, so prose edits to
+  claim-bearing files are safe; changing a *claim* still fails the check, by design. Positions come from
+  `node scripts/ledger.mjs locate <id>`. **Never** hand-edit `CODEBASE-MAP.md` or
+  `.claude/ledger/index.json`; regenerate with `npm run ledger:build` then `npm run build:map`, in that order.
 - Bash working directory persists between calls. A stray `cd` breaks relative paths for the rest of the session.
-- `PHASE-8A-STATUS.md` is stale — it still says PR3 of 5 with 4 and 5 not started; both merged. It carries
-  claim blocks, so fixing it has a line-number cost.
+- `PHASE-8A-STATUS.md` is stale — it still says PR3 of 5 with 4 and 5 not started; both merged. ~~It carries
+  claim blocks, so fixing it has a line-number cost.~~ **No line-number cost any more** — the index stopped
+  recording `source_line`, so editing prose around a claim block costs nothing. Just fix it.
 
 ---
 

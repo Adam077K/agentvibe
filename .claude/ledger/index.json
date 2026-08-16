@@ -16,8 +16,7 @@
       },
       "valid_until": "2026-01-02",
       "confidence": 0.01,
-      "source_file": "docs/06-codebase/ledger-canary.md",
-      "source_line": 32
+      "source_file": "docs/06-codebase/ledger-canary.md"
     },
     {
       "id": "c-classifier-tested-by-execution",
@@ -34,8 +33,7 @@
       "supports": [
         "c-one-risk-classifier"
       ],
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-codebase-map-is-generated",
@@ -49,8 +47,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-commands-name-no-phantom-agents",
@@ -64,8 +61,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-decisions-not-ledger-derivable",
@@ -79,8 +75,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-external-skill-corpora-not-evaluated",
@@ -94,8 +89,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-gate-logic-tested",
@@ -109,8 +103,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-lens-content-is-linted",
@@ -127,8 +120,7 @@
       "supports": [
         "d-001"
       ],
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-lenses-and-playbooks-are-loaded",
@@ -142,8 +134,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 0.3,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-mission-control-cold-start",
@@ -157,8 +148,7 @@
       },
       "valid_until": "2027-02-16",
       "confidence": 0.8,
-      "source_file": "mission-control/README.md",
-      "source_line": 301
+      "source_file": "mission-control/README.md"
     },
     {
       "id": "c-mission-control-cross-site-refused",
@@ -172,8 +162,7 @@
       },
       "valid_until": "2027-02-15",
       "confidence": 0.9,
-      "source_file": "mission-control/README.md",
-      "source_line": 301
+      "source_file": "mission-control/README.md"
     },
     {
       "id": "c-mission-control-rail",
@@ -188,8 +177,7 @@
       },
       "valid_until": "2027-02-12",
       "confidence": 0.95,
-      "source_file": "mission-control/README.md",
-      "source_line": 301
+      "source_file": "mission-control/README.md"
     },
     {
       "id": "c-mission-control-trusted-roots",
@@ -203,8 +191,7 @@
       },
       "valid_until": "2027-02-15",
       "confidence": 0.9,
-      "source_file": "mission-control/README.md",
-      "source_line": 301
+      "source_file": "mission-control/README.md"
     },
     {
       "id": "c-no-dead-registrations",
@@ -221,8 +208,7 @@
       "supports": [
         "d-001"
       ],
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-no-decorative-capabilities",
@@ -236,8 +222,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-no-nul-bytes-in-tracked-source",
@@ -251,8 +236,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-one-risk-classifier",
@@ -269,8 +253,7 @@
       "supports": [
         "d-001"
       ],
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-playbooks-declare-no-method",
@@ -287,8 +270,7 @@
       "supports": [
         "d-001"
       ],
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-qa-gate-blocks",
@@ -305,8 +287,7 @@
       "supports": [
         "d-001"
       ],
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-read-only-binding-unverified",
@@ -326,8 +307,7 @@
       "supports": [
         "c-read-only-engines-declare-no-write"
       ],
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-read-only-engines-declare-no-write",
@@ -341,8 +321,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-resolvers-never-pass-unchecked",
@@ -359,8 +338,7 @@
       "supports": [
         "d-001"
       ],
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-reviewers-cannot-write",
@@ -374,8 +352,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-run-log-has-a-reader",
@@ -392,8 +369,7 @@
       "supports": [
         "c-shadow-window-open"
       ],
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-schema-lint-clean",
@@ -407,8 +383,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-sessionstart-injection-unverified",
@@ -425,8 +400,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 0.7,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-shadow-window-open",
@@ -443,8 +417,7 @@
       "supports": [
         "d-001"
       ],
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-skill-discovery-is-two-tier",
@@ -458,8 +431,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-skills-curation-is-auditable",
@@ -473,8 +445,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-skills-lint-only-universal-fields",
@@ -488,8 +459,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-skills-manifest-matches-disk",
@@ -503,8 +473,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-sweep-never-fails-what-it-cannot-check",
@@ -521,8 +490,7 @@
       "supports": [
         "c-resolvers-never-pass-unchecked"
       ],
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
       "id": "c-war-room-removed",
@@ -536,8 +504,7 @@
       },
       "valid_until": "2026-11-09",
       "confidence": 1,
-      "source_file": "docs/03-system-design/CLAIM-LEDGER.md",
-      "source_line": 182
+      "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     }
   ]
 }
