@@ -54,6 +54,7 @@ export const INDEX_KEY_ORDER = [
   'valid_until',
   'confidence',
   'supports',
+  'first_waived',
   'source_file',
 ] as const;
 
@@ -115,7 +116,7 @@ function schemaPartOf(o: Record<string, unknown>, projection: ReadonlySet<string
  * the schema disagree about a field, which is the drift this whole file exists to catch.
  */
 function readLedgerClaim(o: Record<string, unknown>, where: string): ClaimShapeResult<LedgerClaim> {
-  const { id, assert, kind, scope, verified_by, evidence, valid_until, confidence, supports, source_file } = o;
+  const { id, assert, kind, scope, verified_by, evidence, valid_until, confidence, supports, first_waived, source_file } = o;
   if (
     typeof id !== 'string' ||
     typeof assert !== 'string' ||
@@ -125,13 +126,14 @@ function readLedgerClaim(o: Record<string, unknown>, where: string): ClaimShapeR
     typeof source_file !== 'string' ||
     (valid_until !== undefined && typeof valid_until !== 'string') ||
     (confidence !== undefined && typeof confidence !== 'number') ||
-    (supports !== undefined && !isStringArray(supports))
+    (supports !== undefined && !isStringArray(supports)) ||
+    (first_waived !== undefined && typeof first_waived !== 'string')
   ) {
     return {
       ok: false,
       problems: [
         `${where}: does not satisfy LedgerClaim — id/assert/kind/scope/verified_by/source_file must ` +
-          'be strings, valid_until a string when present, confidence a number, supports a list of ' +
+          'be strings, valid_until/first_waived strings when present, confidence a number, supports a list of ' +
           'strings. Every consumer of this claim is typed on that and would read undefined instead.',
       ],
     };
@@ -152,6 +154,7 @@ function readLedgerClaim(o: Record<string, unknown>, where: string): ClaimShapeR
       ...(valid_until === undefined ? {} : { valid_until }),
       ...(confidence === undefined ? {} : { confidence }),
       ...(supports === undefined ? {} : { supports }),
+      ...(first_waived === undefined ? {} : { first_waived }),
     },
   };
 }
