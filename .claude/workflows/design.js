@@ -1,9 +1,9 @@
 export const meta = {
   name: 'design',
-  description: 'Agentvibe T5 design workflow — generates N independent design variations from different angles, scores each with parallel design-critic judges against the brand bar, and synthesizes a winning direction (grafting the best ideas from runners-up). Optimizes for craft/quality, not speed.',
+  description: 'Agentvibe T5 design workflow — generates N independent design variations from different angles, scores each with parallel read-only judges against the brand bar, and synthesizes a winning direction (grafting the best ideas from runners-up). Optimizes for craft/quality, not speed.',
   phases: [
     { title: 'Explore', detail: 'N independent design directions, distinct angles' },
-    { title: 'Critique', detail: 'design-critic scores each variation' },
+    { title: 'Critique', detail: 'a read-only reviewer scores each variation' },
     { title: 'Synthesize', detail: 'pick winner + graft best runner-up ideas', model: 'opus' },
   ],
 }
@@ -66,7 +66,7 @@ const SYNTH_SCHEMA = {
     winning_angle: { type: 'string' },
     final_direction: { type: 'string' },
     grafted_ideas: { type: 'array', items: { type: 'string' }, description: 'ideas pulled from runner-up variations' },
-    spec: { type: 'string', description: 'a build-ready description product-designer/frontend-engineer can implement' },
+    spec: { type: 'string', description: 'a build-ready description the designer/builder engines can implement' },
   },
 }
 
@@ -81,17 +81,28 @@ Honor the project's brand bar (accent color, type scale, spacing, motion budget)
 }
 
 // ── Phase 1+2: explore variations → critique each (pipelined) ──
+//
+// TWO CONTAINERS, SPLIT ON WHETHER THE PHASE PRODUCES OR JUDGES.
+// Until 2026-08-16 these named `product-designer` and `design-critic`. Neither file exists —
+// both were collapsed in Phase 4b — so both dispatches resolved to nothing and ran as
+// `general-purpose`, tools `*`. The grader held Write on the work it was grading.
 phase('Explore')
 const judged = await pipeline(
   chosen,
-  angle => agent(explorePrompt(angle), { label: `explore:${angle.split(' ')[0]}`, phase: 'Explore', agentType: 'product-designer', model: 'sonnet', schema: VARIATION_SCHEMA }).catch(() => null),
+  // EXPLORE → `designer`: the only engine carrying `mcpServers: [playwright]` AND `Write`.
+  // This phase has to produce a rendered artifact and then look at what rendered; an engine
+  // without a browser can only describe a design it has never seen.
+  angle => agent(explorePrompt(angle), { label: `explore:${angle.split(' ')[0]}`, phase: 'Explore', agentType: 'designer', model: 'sonnet', schema: VARIATION_SCHEMA }).catch(() => null),
+  // CRITIQUE → `reviewer-readonly`: no Write, no Edit, no Bash. Its whole input is the
+  // serialized variation below and its whole output is a score, so it reads nothing from disk
+  // and runs nothing. The grader must not be able to edit what it grades.
   (variation) => variation
     ? agent(
         `Score this Agentvibe design variation against the brand quality bar and the brief.
 Brief: ${BRIEF}
 Variation: ${JSON.stringify(variation, null, 2)}
 Score each axis 0-10 (brand_fidelity, craft, usability, brief_fit), give total, name the single best idea worth keeping even if this loses, and a one-line verdict. Be a demanding critic — billion-dollar bar.`,
-        { label: `critique:${variation.angle?.split(' ')[0] ?? 'unknown'}`, phase: 'Critique', agentType: 'design-critic', model: 'sonnet', schema: SCORE_SCHEMA }
+        { label: `critique:${variation.angle?.split(' ')[0] ?? 'unknown'}`, phase: 'Critique', agentType: 'reviewer-readonly', model: 'sonnet', schema: SCORE_SCHEMA }
       ).then(score => ({ variation, score })).catch(() => null)
     : null
 )
@@ -113,7 +124,11 @@ Brief: ${BRIEF}
 Ranked variations (best first):
 ${JSON.stringify(ranked.map(r => ({ angle: r.variation.angle, concept: r.variation.concept, total: r.score.total, best_idea: r.score.best_idea })), null, 2)}
 Pick the winning angle, but graft the strongest ideas from the runners-up where they strengthen it. Produce a build-ready spec.`,
-  { label: 'synthesize', phase: 'Synthesize', model: 'opus', schema: SYNTH_SCHEMA }
+  // SYNTHESIZE → `reviewer-readonly` for the same reason as Critique: everything it needs is
+  // the ranked array serialized into the prompt above, and everything it emits leaves through
+  // SYNTH_SCHEMA. The caller writes the spec file; this dispatch has no reason to hold a pen.
+  // Before 2026-08-16 this site named no agentType at all, so it ran as `general-purpose`.
+  { label: 'synthesize', phase: 'Synthesize', agentType: 'reviewer-readonly', model: 'opus', schema: SYNTH_SCHEMA }
 ).catch(() => null)
 
 if (!synthesis) {

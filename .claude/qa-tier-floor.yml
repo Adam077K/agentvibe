@@ -76,6 +76,31 @@ rules:
     tier: irreversible
     enforcement: block
     reason: "Harness self-edit — runtime permission boundary"
+  - pattern: ".mcp.json"
+    tier: irreversible
+    enforcement: block
+    reason: "Harness self-edit — the OTHER runtime permission boundary. Every entry here starts a process for every session in this repository, with this repository's arguments; a credentialed entry is a live secret-bearing process, not configuration"
+    # WHY IRREVERSIBLE, AND WHY IT SITS NEXT TO settings.json. Same artifact class as the
+    # entry directly above — a runtime permission boundary, not application code. It matched
+    # NOTHING until now and so classified `lite` by default: the file that spawns a process
+    # per session was reviewed at the tier of a CSS change.
+    #
+    # ARGUED FROM WHAT THE FILE DOES TODAY, not from what it might hold. Its single entry is
+    # `npx -y @playwright/mcp@latest --isolated`, added by #47 (c180cfe). `-y` with `@latest`
+    # resolves and executes whatever version of a third-party package is published at session
+    # start, so the code that runs is not the code that was reviewed. No credential is in the
+    # file today. The tier is for what the file GRANTS — process spawn on every session — and
+    # a revert restores the JSON without un-executing what already ran, which is the ADR-001
+    # test. A credentialed server (Stripe, Supabase, a deploy token) adds secret custody to
+    # that grant; it does not create it.
+    #
+    # WHY `block` ON A FILE THAT CANNOT CARRY A CLAIM. It is inert today, exactly as it is on
+    # `.claude/settings.json` above and `.claude/hooks/**` below: enforcement governs CLAIM
+    # resolution and scripts/ledger.mjs collects claims from markdown only, so no `.json` path
+    # can carry one. `mission-control/server/config.ts` below chose `shadow` on precisely that
+    # reasoning, and that argument applies here too. This entry follows the nearer precedent —
+    # the harness self-edit carve-out at the head of this group, which every sibling boundary
+    # file already takes — so the group reads as one decision rather than two.
   - pattern: ".claude/qa-tier-floor.yml"
     tier: irreversible
     enforcement: block
@@ -86,6 +111,63 @@ rules:
     enforcement: block
     resolvers: [claim-command]
     reason: "Harness self-edit — PostToolUse / SessionStart hooks execute on every action"
+  - pattern: ".claude/workflows/qa.js"
+    tier: irreversible
+    enforcement: block
+    resolvers: [claim-command]
+    reason: "Harness self-edit — the binding merge gate's own source. A change here changes what can merge, and the CEO cannot override the verdict it emits"
+  - pattern: ".claude/workflows/lib/gate-logic.mjs"
+    tier: irreversible
+    enforcement: block
+    resolvers: [claim-command]
+    reason: "Harness self-edit — the verdict arithmetic. decideVerdict() is what turns findings into PASS or BLOCK"
+    # THESE TWO WERE `lite` BY DEFAULT — nothing in this file matched `.claude/workflows/`
+    # at all. The source of the gate that blocks merges was tiered BELOW `scripts/lib/**`,
+    # which is the same class of file one directory over, and below `mission-control/test/
+    # gate.ts`, which is floored at `full` for being "the shared implementation the tests
+    # gate on". The gate's own implementation had no rule.
+    #
+    # WHY BOTH, AND NOT JUST qa.js. gate-logic.mjs is NOT imported by qa.js. Its own header:
+    # "the Workflow runtime runs each .claude/workflows/*.js script in a sandbox with NO
+    # module import. So qa.js cannot `import` from here at runtime — it MIRRORS these
+    # implementations inline." Two copies of the verdict arithmetic, kept in sync by hand.
+    # That is the exact shape scripts/lib/classifier.js's header warns about — "two
+    # implementations of risk classification will disagree, and you find out during the
+    # incident" — and it RAISES the tier of an edit here rather than lowering it, because a
+    # change to either copy is only correct if the other is changed with it.
+    #
+    # WHY IRREVERSIBLE AND NOT FULL, on the ADR-001 test. A weakened gate does not fail
+    # loudly; it PASSES things. The merges it waved through are already on main by the time
+    # anyone reads the diff that weakened it, so reverting this file does not un-merge them.
+    # That is the same argument as `.github/workflows/**` above, applied to the gate the
+    # workflow calls.
+  - pattern: ".claude/sandbox/**"
+    tier: irreversible
+    enforcement: block
+    resolvers: [claim-command]
+    reason: "Harness self-edit — the containment policy. A weakened sandbox is not undone by a revert, because whatever escaped it has already run"
+    # THIS PATTERN MATCHES NOTHING TODAY, AND THAT IS A DEPARTURE FROM THIS FILE'S OWN
+    # PRECEDENT — stated here rather than left for review to find. Twice above, this file
+    # refuses exactly this: the outbound-send note ("a pattern matching nothing would read as
+    # coverage it does not have. It is added the day the mechanism is") and the trust.ts note
+    # ("ADDED THE DAY THE FILE ARRIVED, not before"). Both refusals still look right to me.
+    #
+    # THE ARGUMENT FOR OVERRIDING THEM, which is narrower than those two cases. Outbound send
+    # names a capability this repository does not have; trust.ts named a file that a specific
+    # PR was about to add, so the rule could ride in with it. The sandbox is different in one
+    # respect that matters: it is the containment every OTHER deferred decision is waiting on
+    # — qa.js:101 ("it is not contained, and it will not be until the sandbox exists"),
+    # reviewer-readonly.md:50, DECISIONS.md:624 — so the PR that creates it is the one PR most
+    # likely to be written under time pressure and by an author who did not read this file. A
+    # tier rule that arrives in that PR is a tier rule the author chose for their own work.
+    #
+    # THE KNOWN WEAKNESS, because it is the same one the precedent warns about: nothing in
+    # this repository has decided that the policy lands at `.claude/sandbox/`. The founder
+    # decision is still open (CLAUDE.md, "Blockers"), and the shape referenced elsewhere is a
+    # settings KEY, not a directory — ROSTER-SIZE.md:289 points at `sandbox.network.
+    # deniedDomains`, which lives in `.claude/settings.json` and is ALREADY irreversible via
+    # the entry above. If the decision goes that way, this rule matches nothing forever and
+    # is the dead coverage the outbound-send note refuses. Delete it then; do not leave it.
   - pattern: "scripts/lib/**"
     tier: irreversible
     enforcement: block
@@ -198,6 +280,37 @@ rules:
     # is the exact defect this rebuild was called to fix. It goes in the day it runs.
     # `resolvers:` accepts only implemented names — scripts/lib/resolvers.js is the
     # registry, and an unknown name makes the classifier throw.
+  - pattern: ".claude/workflows/**"
+    tier: full
+    enforcement: block
+    resolvers: [claim-command]
+    reason: "Dispatch identity — every agent() call in this tree names the agentType that decides which container the work runs in, and a wrong name silently swaps a contained engine for a general-purpose agent holding Write and Edit"
+    # MEASURED, NOT FEARED. From abf26c2 (2026-08-11) to c180cfe (2026-08-16), all four
+    # `agent()` calls in qa.js omitted `agentType`, so the binary defaulted them to
+    # `general-purpose` — tools `*`. qa.js:74-77 records the consequence: "Every dimension
+    # reviewer, every adversarial verifier, and the ONE judge whose verdict binds held `Write`
+    # and `Edit` on the diff they were judging." Five days, not months, and the whole tree
+    # classified `lite` throughout. A one-word field decides containment here, which is why
+    # the floor is `full` and not the default.
+    #
+    # DELIBERATELY NOT FLOORED AT IRREVERSIBLE, and the carve-out above qa.js is the whole
+    # reason this is two rules instead of one. design.js and research.js decide nothing that a
+    # revert cannot undo and are edited often; Founder sign-off on a prompt-wording change is
+    # the ceremony that makes people route around the gate. The mission-control group below
+    # splits on exactly this line and says so — "a gate that fires on everything is a gate
+    # people route around". Same reasoning, same shape, so it is drawn the same way here.
+    #
+    # THE COST OF THE `**`, COUNTED. Eight files are tracked under this tree; two are markdown
+    # and both rise from `trivial` to `full`, because the strictest matching rule wins and
+    # there is no way for a narrower rule to LOWER a tier. For design-screen.md that is
+    # correct and intended — it is a workflow definition, the artifact itself, exactly as
+    # `.claude/agents/**` above covers markdown agent definitions. For README.md it is a cost,
+    # named here rather than discovered: `mission-control/README.md` is deliberately kept at
+    # trivial by classifier.test.mjs, and this README is not. The difference is that this one
+    # documents the dispatch surface the rule exists to protect, so a wrong README here
+    # misroutes the next editor. `enforcement: block` is also NOT inert on those two files —
+    # they are markdown and can carry claims — which is the intended reading: a claim about
+    # what the gate does should block, not shadow.
   - pattern: "scripts/**"
     tier: full
     resolvers: [claim-command]
