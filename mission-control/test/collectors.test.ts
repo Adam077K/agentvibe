@@ -7,7 +7,9 @@ import { promisify } from 'node:util';
 
 /** The test's own async spawner — used to measure what asking for a child costs. */
 const execFileAsync = promisify(execFile);
-import { discoverProjects, encodeProjectDir, type Project } from '../server/projects.ts';
+import { discoverProjects, encodeProjectDir, readLedgerIndex, type Project } from '../server/projects.ts';
+import { INDEX_KEY_ORDER, STAMPED_FIELDS } from '../server/lib/claim-shape.ts';
+import { validateClaim } from '../server/lib/claims.ts';
 import { IndexStore } from '../server/index-store.ts';
 import { listWorktrees, parseWorktreePorcelain, type WorktreeEntry } from '../server/collectors/worktrees.ts';
 import {
@@ -51,6 +53,9 @@ import {
   addWorktree,
   removeMarkers,
   writeRegistry,
+  indexClaim,
+  globalClaim,
+  writeLedgerFixture,
 } from './fixtures.ts';
 import { notVerified, median, stallGateVerdict } from './gate.ts';
 
@@ -133,16 +138,136 @@ describe('discoverProjects', () => {
   test('a project WITH scripts/ledger.mjs and a built index.json loads its claims', () => {
     const projC = path.join(root, 'proj-with-ledger');
     initGitRepo(projC);
-    fs.mkdirSync(path.join(projC, 'scripts'), { recursive: true });
-    fs.writeFileSync(path.join(projC, 'scripts', 'ledger.mjs'), '// fixture stand-in\n');
-    fs.mkdirSync(path.join(projC, '.claude', 'ledger'), { recursive: true });
-    fs.writeFileSync(
-      path.join(projC, '.claude', 'ledger', 'index.json'),
-      JSON.stringify({ claims: [{ id: 'c-x', assert: 'x', kind: 'behavior', scope: 'project', verified_by: 'command', source_file: 'a.md' }] })
-    );
+    writeLedgerFixture(projC, [indexClaim({ id: 'c-x', source_file: 'a.md' })]);
     const [proj] = discoverProjects({ roots: [root], claudeProjectsRoot: claudeRoot }).filter((p) => p.id === 'proj-with-ledger');
     expect(proj!.ledgerIndex.present).toBe(true);
     expect(proj!.ledgerIndex.claims).toHaveLength(1);
+    // Nothing was refused, and the field the UI renders as the claim's origin survived the read.
+    expect(proj!.ledgerIndex.rejected).toBe(0);
+    expect(proj!.ledgerIndex.claims[0]!.source_file).toBe('a.md');
+  });
+
+  // ── the boundary #53 is about ──────────────────────────────────────────────────────
+  //
+  // These write RAW entries on purpose — the whole point is what happens when a producer
+  // emits something `indexClaim()` would refuse to build, which is exactly the state the
+  // builder exists to make impossible to reach by accident.
+
+  test('an entry missing source_file is REFUSED and counted, not passed through as undefined', () => {
+    const proj = path.join(root, 'proj-index-nosource');
+    initGitRepo(proj);
+    const good = indexClaim({ id: 'c-good' });
+    const { source_file: _dropped, ...withoutSourceFile } = good;
+    writeLedgerFixture(proj, [], [good, withoutSourceFile]);
+    const found = discoverProjects({ roots: [root], claudeProjectsRoot: claudeRoot }).find((p) => p.id === 'proj-index-nosource');
+    expect(found!.ledgerIndex.present).toBe(true);
+    expect(found!.ledgerIndex.claims).toHaveLength(1); // the good one survives
+    expect(found!.ledgerIndex.rejected).toBe(1); // and the bad one is REPORTED
+    expect(found!.ledgerIndex.issues.join('\n')).toContain('claims[1]');
+    expect(found!.ledgerIndex.issues.join('\n')).toContain('source_file');
+    // Nothing typed `source_file: string` ever holds undefined — the defect that reached
+    // the UI as `file:undefined` when source_line was dropped from KEY_ORDER.
+    for (const c of found!.ledgerIndex.claims) expect(typeof c.source_file).toBe('string');
+  });
+
+  test('a field outside the index projection is refused — the projection is closed', () => {
+    const proj = path.join(root, 'proj-index-extra');
+    initGitRepo(proj);
+    // `source_line` is the field PR #52 removed from KEY_ORDER. An index still carrying it is
+    // a producer this reader does not understand, and saying so beats rendering it.
+    writeLedgerFixture(proj, [], [{ ...indexClaim({ id: 'c-extra' }), source_line: 12 }]);
+    const found = discoverProjects({ roots: [root], claudeProjectsRoot: claudeRoot }).find((p) => p.id === 'proj-index-extra');
+    expect(found!.ledgerIndex.rejected).toBe(1);
+    expect(found!.ledgerIndex.issues.join('\n')).toContain('source_line');
+    expect(found!.ledgerIndex.issues.join('\n')).toMatch(/projection is closed/);
+  });
+
+  test('an index whose every entry is refused is present:false with a reason, never an empty band', () => {
+    const proj = path.join(root, 'proj-index-allbad');
+    initGitRepo(proj);
+    writeLedgerFixture(proj, [], [{ id: 'c-a' }, { id: 'c-b' }]);
+    const found = discoverProjects({ roots: [root], claudeProjectsRoot: claudeRoot }).find((p) => p.id === 'proj-index-allbad');
+    // "33 claims, none of which I could read" must not render as "this project has no claims".
+    expect(found!.ledgerIndex.present).toBe(false);
+    expect(found!.ledgerIndex.rejected).toBe(2);
+    expect(found!.ledgerIndex.reason).toMatch(/none matched the shape this reader understands/);
+  });
+
+  test('a JSON file with no claims list is present:false — different from a project with none', () => {
+    const proj = path.join(root, 'proj-index-noclaims');
+    initGitRepo(proj);
+    fs.mkdirSync(path.join(proj, 'scripts'), { recursive: true });
+    fs.writeFileSync(path.join(proj, 'scripts', 'ledger.mjs'), '// fixture stand-in\n');
+    fs.mkdirSync(path.join(proj, '.claude', 'ledger'), { recursive: true });
+    fs.writeFileSync(path.join(proj, '.claude', 'ledger', 'index.json'), JSON.stringify({ version: 1 }));
+    const found = discoverProjects({ roots: [root], claudeProjectsRoot: claudeRoot }).find((p) => p.id === 'proj-index-noclaims');
+    expect(found!.ledgerIndex.present).toBe(false);
+    expect(found!.ledgerIndex.reason).toMatch(/no "claims" list/);
+  });
+});
+
+// ── THE MUTATION GATE: the fixtures are bound to the real artifact ────────────────────
+//
+// Issue #54's acceptance criterion, stated as a test rather than as a procedure someone has
+// to remember to run: strip a required field from the REAL `.claude/ledger/index.json` and
+// the mission-control suite must go red. Before this existed it did not — measured at
+// 320 pass / 0 fail with `source_file` gone from all 33 claims — because every test that
+// reached readLedgerIndex wrote its own fixture that still supplied the field, and the one
+// test reading the real repo (crosscheck) compared a COUNT, which a vanishing field does not
+// change.
+//
+// It reads the repo this checkout is in, through the production reader, and asserts on claim
+// FIELDS. That is the binding: no fixture stands between the producer and this assertion.
+describe('the real .claude/ledger/index.json, through the production reader', () => {
+  const indexPath = path.join(REPO_ROOT, '.claude', 'ledger', 'index.json');
+
+  // Gate on whether the SUBJECT exists on this machine, never on what looking at it returned —
+  // test/gate.ts's rule. A checkout always has this file; a consumer of this repo as a
+  // template might not, and "the index is missing" is a property of the tree, not a result.
+  const present = fs.existsSync(indexPath);
+
+  test('every claim in the built index satisfies the shape Mission Control reads it with', () => {
+    if (!present) {
+      notVerified('real ledger index', `${indexPath} does not exist in this checkout`);
+      expect(present).toBe(false); // the gate's own premise, asserted rather than assumed
+      return;
+    }
+    const info = readLedgerIndex(REPO_ROOT);
+    expect(info.present).toBe(true);
+    // Zero refusals. A producer that drops a field from KEY_ORDER fails HERE, on its own PR.
+    expect(info.issues).toEqual([]);
+    expect(info.rejected).toBe(0);
+    // And the file really did hold claims — an empty list would satisfy every line above
+    // while comparing nothing, which is the shape of failure this file keeps finding.
+    expect(info.claims.length).toBeGreaterThan(0);
+    for (const c of info.claims) {
+      expect(typeof c.source_file).toBe('string');
+      expect(c.source_file.length).toBeGreaterThan(0);
+    }
+  });
+
+  test('the index projection this reader enforces IS the producer KEY_ORDER, read from it', () => {
+    // scripts/ledger.mjs is read, never imported and never edited: another agent owns it, and
+    // a KEY_ORDER edit must fail on ITS pull request rather than silently re-shape this
+    // reader's idea of a claim. Matching the literal is the whole check.
+    const src = fs.readFileSync(path.join(REPO_ROOT, 'scripts', 'ledger.mjs'), 'utf8');
+    const literal = /const KEY_ORDER = \[([^\]]*)\]/.exec(src);
+    expect(literal).not.toBeNull();
+    const producerKeys = [...literal![1]!.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+    expect(producerKeys).toEqual([...INDEX_KEY_ORDER]);
+  });
+
+  test('STAMPED_FIELDS really are the ones validateClaim refuses — pinned, not assumed', () => {
+    // The split between "validateClaim owns this field" and "the ledger stamps it after
+    // validation" is a fact about scripts/lib/claims.js, so it is measured against the real
+    // validator. If that schema ever adopts source_file, or drops another index field, this
+    // goes red instead of claim-shape.ts's comment going quietly stale.
+    const wellFormed = { id: 'c-probe', assert: 'x', kind: 'behavior', scope: 'task', verified_by: 'command', evidence: { cmd: 'true' }, confidence: 0.5 };
+    for (const field of INDEX_KEY_ORDER) {
+      const refused = validateClaim({ ...wellFormed, [field]: wellFormed[field as keyof typeof wellFormed] ?? 'x' }, 'probe')
+        .some((p) => p.includes(`unknown field "${field}"`));
+      expect([field, refused]).toEqual([field, (STAMPED_FIELDS as readonly string[]).includes(field)]);
+    }
   });
 });
 
@@ -2664,16 +2789,12 @@ describe('readGlobalLedger', () => {
 // having never been executed unless a fixture forces it.
 describe('collectWaivers', () => {
   const NOW = Date.parse('2026-08-13T12:00:00Z');
+  // Built through validateGlobalClaim — the same function readGlobalLedger uses — so a waiver
+  // fixture cannot describe a claim the global ledger would refuse. As a literal with `as
+  // GlobalClaim` it carried no confidence and no valid_until, both of which the schema
+  // requires of a scope:global claim.
   function claim(id: string, disposition: unknown): GlobalClaim {
-    return {
-      id,
-      assert: 'x',
-      kind: 'runtime-capability',
-      scope: 'global',
-      verified_by: 'command',
-      source_file: '~/.warroom/ledger/global.yml',
-      ...(disposition === undefined ? {} : { disposition }),
-    } as GlobalClaim;
+    return globalClaim({ id, assert: 'x', ...(disposition === undefined ? {} : { disposition }) });
   }
 
   test('an unexpired waiver is lapsed:false with days remaining', () => {
@@ -2689,8 +2810,15 @@ describe('collectWaivers', () => {
     expect(w!.days).toBeGreaterThan(0);
   });
 
+  // THE ONE FIXTURE HERE THE VALIDATOR WOULD REFUSE, and deliberately so. `validateClaim`
+  // requires a real YYYY-MM-DD `until` on action:waive, so readGlobalLedger can no longer hand
+  // this shape to collectWaivers — which makes this a defense-in-depth branch, not a reachable
+  // one. It is kept, and built around the builder with the reason stated, because "an
+  // unparseable deadline reads as still in force" is the one way this function could be wrong
+  // that nobody would notice: it fails silently, in the safe-looking direction.
   test('a waiver whose until is not a date is lapsed, with days null — never quietly live', () => {
-    const [w] = collectWaivers([claim('c-bad', { action: 'waive', until: 'someday', reason: 'r' })], NOW);
+    const bad: GlobalClaim = { ...claim('c-bad', undefined), disposition: { action: 'waive', until: 'someday', reason: 'r' } };
+    const [w] = collectWaivers([bad], NOW);
     expect(w!.lapsed).toBe(true);
     expect(w!.days).toBeNull();
   });
@@ -2847,8 +2975,8 @@ describe('summarizeClaims', () => {
   test('buckets by kind/scope and flags claims expiring within 30 days', () => {
     const now = Date.parse('2026-08-13T00:00:00Z');
     const claims = [
-      { id: 'c-1', assert: 'a', kind: 'behavior', scope: 'project', verified_by: 'command', valid_until: '2026-08-20', source_file: 'a.md' },
-      { id: 'c-2', assert: 'b', kind: 'behavior', scope: 'global', verified_by: 'command', valid_until: '2027-08-20', source_file: 'b.md' },
+      indexClaim({ id: 'c-1', assert: 'a', valid_until: '2026-08-20', source_file: 'a.md' }),
+      indexClaim({ id: 'c-2', assert: 'b', scope: 'global', valid_until: '2027-08-20', source_file: 'b.md' }),
     ];
     const summary = summarizeClaims(claims, now);
     expect(summary.total).toBe(2);

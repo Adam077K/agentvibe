@@ -5,10 +5,132 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { encodeProjectDir } from '../server/projects.ts';
+import { encodeProjectDir, type LedgerClaim } from '../server/projects.ts';
+import {
+  validateGlobalClaim,
+  validateIndexClaim,
+  type GlobalClaimShape,
+} from '../server/lib/claim-shape.ts';
 
 export function mkTmpDir(prefix: string): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+}
+
+// ── claim fixtures, BUILT THROUGH THE PRODUCTION VALIDATOR ────────────────────────────
+//
+// Issue #54: every claim fixture in this suite used to be a hand-written literal typed as
+// `LedgerClaim[]`. A literal satisfies tsc by construction and describes whatever shape its
+// author last typed — which may be a shape the producer can no longer emit, or never could.
+// That is not a hypothetical: `source_line` was dropped from scripts/ledger.mjs's KEY_ORDER,
+// the fixtures went on supplying `source_line: 12`, and 319 tests stayed green over a live UI
+// break. Measured again on this branch before the fix: stripping `source_file` from all 33
+// claims of the real index left 320/320 passing.
+//
+// So a fixture is now BUILT, not written: every one goes through the same validator
+// server/projects.ts and collectors/belief.ts use, and a fixture describing a claim the
+// producer could not emit THROWS. The throw is the point — an unbuildable fixture must fail
+// the suite rather than quietly describe an impossible world.
+//
+// The bases below are minimal claims that really do satisfy the schema: `verified_by: command`
+// requires `evidence.cmd`, and scope project/global requires `valid_until`. The old fixtures
+// carried neither, which is how far they had drifted from anything the ledger would accept.
+
+/** Overrides are deliberately loosely typed: a BAD fixture must be caught at run time by the
+ * validator, not rejected at compile time by a type that would hide the very drift under test.
+ * A key set to `undefined` means OMIT that field — the way to write "this claim is missing
+ * source_file" without reaching around the builder. */
+export type ClaimOverrides = Record<string, unknown>;
+
+function applyOverrides(base: Record<string, unknown>, overrides: ClaimOverrides): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...base, ...overrides };
+  for (const [k, v] of Object.entries(out)) if (v === undefined) delete out[k];
+  return out;
+}
+
+const INDEX_CLAIM_BASE: Record<string, unknown> = {
+  id: 'c-fixture',
+  assert: 'a fixture claim shaped like one the producer could actually emit',
+  kind: 'behavior',
+  scope: 'project',
+  verified_by: 'command',
+  evidence: { cmd: 'true' },
+  valid_until: '2026-12-31',
+  confidence: 0.9,
+  source_file: 'docs/fixture.md',
+};
+
+const GLOBAL_CLAIM_BASE: Record<string, unknown> = {
+  id: 'c-fixture-global',
+  assert: 'a fixture global claim shaped like one the producer could actually emit',
+  kind: 'runtime-capability',
+  scope: 'global',
+  verified_by: 'command',
+  evidence: { cmd: 'true' },
+  valid_until: '2026-12-31',
+  confidence: 0.9,
+};
+
+/** Where the global builder stamps from — the same literal collectors/belief.ts passes in. */
+export const GLOBAL_LEDGER_LABEL = '~/.warroom/ledger/global.yml';
+
+/**
+ * One claim as `.claude/ledger/index.json` carries it, validated by
+ * server/lib/claim-shape.ts's `validateIndexClaim` — the same function the real reader uses.
+ * THROWS when the result would not be a claim the producer could emit.
+ */
+export function indexClaim(overrides: ClaimOverrides = {}): LedgerClaim {
+  const raw = applyOverrides(INDEX_CLAIM_BASE, overrides);
+  const result = validateIndexClaim(raw, 'test/fixtures.ts indexClaim()');
+  if (!result.ok) {
+    throw new Error(
+      `indexClaim() fixture is not a claim the ledger could produce:\n  ${result.problems.join('\n  ')}\n` +
+        'Fix the fixture, or — if the producer really did change — fix the producer and the ' +
+        'validator together. A fixture that describes an impossible claim tests nothing.'
+    );
+  }
+  return result.claim;
+}
+
+/**
+ * One claim as `~/.warroom/ledger/global.yml` carries it, through `validateGlobalClaim`.
+ * `source_file` is NOT an input: the ledger stamps it after validation and the closed schema
+ * refuses it in the file, so the builder stamps it exactly as the collector does.
+ */
+export function globalClaim(overrides: ClaimOverrides = {}): GlobalClaimShape {
+  const raw = applyOverrides(GLOBAL_CLAIM_BASE, overrides);
+  const result = validateGlobalClaim(raw, 'test/fixtures.ts globalClaim()', GLOBAL_LEDGER_LABEL);
+  if (!result.ok) {
+    throw new Error(
+      `globalClaim() fixture is not a claim the global ledger could hold:\n  ${result.problems.join('\n  ')}`
+    );
+  }
+  return result.claim;
+}
+
+/**
+ * A project with `scripts/ledger.mjs` and a built `index.json` — written in the producer's own
+ * envelope (version/note/total/claims), from claims that went through the validator. Returns
+ * the index path.
+ *
+ * `rawClaims` exists for the tests that must write something the validator would REFUSE; it
+ * bypasses the builder on purpose and every call site says why.
+ */
+export function writeLedgerFixture(
+  projectRoot: string,
+  claims: LedgerClaim[],
+  rawClaims?: unknown[]
+): string {
+  fs.mkdirSync(path.join(projectRoot, 'scripts'), { recursive: true });
+  fs.writeFileSync(path.join(projectRoot, 'scripts', 'ledger.mjs'), '// fixture stand-in\n');
+  const dir = path.join(projectRoot, '.claude', 'ledger');
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, 'index.json');
+  const body = rawClaims ?? claims;
+  fs.writeFileSync(
+    file,
+    JSON.stringify({ version: 1, note: 'fixture — see test/fixtures.ts', total: body.length, claims: body }, null, 2) + '\n'
+  );
+  return file;
 }
 
 export interface FixtureTurn {

@@ -51,7 +51,7 @@ import type { ProjectDetail, InboxPayload, InboxProject } from '../server/routes
 import { inboxEmptyState } from '../server/collectors/empty.ts';
 import { PROJECT_PROBE_TIMEOUT_MS, PROJECT_PROBE_TIMEOUT_SECONDS } from '../server/collectors/probe-bounds.ts';
 import type { Project } from '../server/projects.ts';
-import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo, writeRegistry, addWorktree, writeTrustFile } from './fixtures.ts';
+import { mkTmpDir, rmTmp, fixtureClaudeProjectsDir, initGitRepo, writeRegistry, addWorktree, writeTrustFile, indexClaim, globalClaim } from './fixtures.ts';
 import { machineGate, notVerified } from './gate.ts';
 
 const cleanupDirs: string[] = [];
@@ -1244,15 +1244,15 @@ function beliefPayload(waivers: Waiver[]): BeliefSummary {
             byKind: { behavior: 20, 'internal-fact': 11 },
             byScope: { project: 31 },
             expiringWithin30Days: [
-              {
+              // BUILT, not written — see test/fixtures.ts. As a literal this claim carried no
+              // `confidence` and no `evidence.cmd`, so the ledger would have refused it: the
+              // fixture described a claim the producer could not emit, which is issue #54.
+              indexClaim({
                 id: 'c-shadow-window-open',
                 assert: 'the shadow window is open',
-                kind: 'behavior',
-                scope: 'project',
-                verified_by: 'command',
                 valid_until: '2026-09-08',
                 source_file: 'docs/x.md',
-              },
+              }),
             ],
           },
           verdicts: { pass: 57, wouldBlock: 5, block: 0 },
@@ -1266,15 +1266,15 @@ function beliefPayload(waivers: Waiver[]): BeliefSummary {
             byKind: { 'runtime-capability': 3, 'external-fact': 1 },
             byScope: { global: 4 },
             expiringWithin30Days: [
-              {
+              // The global band renders the same LedgerClaim shape, so it is built through the
+              // global builder — which stamps source_file the way collectors/belief.ts does
+              // rather than letting a fixture hand-supply what production computes.
+              globalClaim({
                 id: 'c-rolling-five-hour-window',
                 assert: 'usage is governed by a rolling 5h window',
                 kind: 'external-fact',
-                scope: 'global',
-                verified_by: 'judge',
                 valid_until: '2026-09-08',
-                source_file: '~/.warroom/ledger/global.yml',
-              },
+              }),
             ],
           },
           verdicts: { pass: 7, wouldBlock: 1, block: 0 },
@@ -1375,8 +1375,8 @@ describe('render parity — Belief', () => {
 
   test('expiring claims render in date order, soonest first', () => {
     const claims: LedgerClaim[] = [
-      { id: 'c-later', assert: 'x', kind: 'behavior', scope: 'project', verified_by: 'command', valid_until: '2026-09-08', source_file: 'a.md' },
-      { id: 'c-sooner', assert: 'x', kind: 'behavior', scope: 'project', verified_by: 'command', valid_until: '2026-08-20', source_file: 'a.md' },
+      indexClaim({ id: 'c-later', valid_until: '2026-09-08', source_file: 'a.md' }),
+      indexClaim({ id: 'c-sooner', valid_until: '2026-08-20', source_file: 'a.md' }),
     ];
     // summarizeClaims is what sorts; the table must not reorder behind it.
     const sorted = summarizeClaims(claims, NOW).expiringWithin30Days;
@@ -1448,15 +1448,12 @@ describe('render parity — Belief', () => {
   // reader needs most — so the heading is what had to say so.
   test('the expiry heading admits that the list includes already-expired claims', () => {
     const payload = beliefPayload([]);
-    const overdue: LedgerClaim = {
+    const overdue: LedgerClaim = indexClaim({
       id: 'c-canary-unresolvable',
       assert: 'built to fail',
-      kind: 'behavior',
-      scope: 'project',
-      verified_by: 'command',
       valid_until: '2026-01-02',
       source_file: 'docs/x.md',
-    };
+    });
     (payload.bands[0]!.claims as ClaimsSummary).expiringWithin30Days = summarizeClaims([overdue], NOW).expiringWithin30Days;
     expect((payload.bands[0]!.claims as ClaimsSummary).expiringWithin30Days).toHaveLength(1); // the premise
 
