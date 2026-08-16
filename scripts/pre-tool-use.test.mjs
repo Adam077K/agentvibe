@@ -434,3 +434,45 @@ for (const cmd of PACKAGE_WORK_ALLOWED) {
     assert.equal(runHook(compact(bash(cmd))), ALLOW, `${cmd} is ordinary work and must not prompt`)
   })
 }
+
+// ── Two more bypasses, found by an independent reviewer against the REWRITTEN guard ──────
+// The canonicalisation rewrite closed eleven bypasses and introduced two of its own. Both were
+// wrong in BOTH directions, verified against Node's own URL parser:
+//
+//   http://169.254.169.254\@evil.com/   browser -> 169.254.169.254   guard said ALLOW
+//   http://evil.com\@169.254.169.254/   browser -> evil.com          guard said BLOCK
+//
+// WHATWG treats a backslash as a path delimiter for http/https, so the authority ends there.
+// The guard split on '/' only, kept the backslash inside the authority, found the '@' and took
+// the wrong side of it.
+//
+// Fullwidth digits are the same class: Chromium applies UTS-46 before parsing the host, so
+// http://１６９．２５４．１６９．２５４/ resolves to the metadata endpoint. The guard split on ASCII '.'
+// only, so the host never looked like an address at all and fell through as a hostname.
+//
+// The mirror cases matter as much as the bypasses. A guard that blocks evil.com because the URL
+// merely CONTAINS a private address is broken for research, which is the whole point of allowing
+// the open web.
+
+const DELIMITER_CASES = [
+  ['http://169.254.169.254\\@evil.com/', BLOCK, 'backslash: the browser connects to the metadata endpoint'],
+  ['http://evil.com\\@169.254.169.254/', ALLOW, 'backslash mirror: the browser connects to a public host'],
+  ['http://１６９．２５４．１６９．２５４/', BLOCK, 'fullwidth digits map to the metadata endpoint under UTS-46'],
+  ['http://169.254.169.254\\@evil.com:8080/x', BLOCK, 'backslash with a port and path'],
+  ['https://ｅｘａｍｐｌｅ.com/', ALLOW, 'fullwidth letters are an ordinary hostname, not an address'],
+]
+
+for (const [url, want, why] of DELIMITER_CASES) {
+  test(`URL delimiter handling — ${why}`, () => {
+    assert.equal(runHook(compact(nav(url))), want, `wrong verdict for ${url}`)
+  })
+}
+
+test('the guard fails CLOSED if its own parser breaks', () => {
+  // Not hypothetical: the first attempt at the backslash fix wrote a bare backslash into python
+  // embedded in a double-quoted bash string. The shell ate it, python raised a syntax error, and
+  // every navigation blocked — including localhost. That is the correct direction to fail, and
+  // it is pinned so a future edit that breaks the parser cannot fail OPEN instead.
+  assert.equal(runHook(compact(nav('http://169.254.169.254/'))), BLOCK)
+  assert.equal(runHook(compact(nav('https://example.com/'))), ALLOW)
+})

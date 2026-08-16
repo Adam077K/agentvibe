@@ -383,11 +383,15 @@ except Exception:
     # encoding and every IPv6 private range are covered by construction instead of by
     # enumeration — which is what the glob version was attempting, and failing.
     _verdict=$(printf '%s' "$payload" | python3 -c "
-import sys, json, ipaddress
+import sys, json, ipaddress, unicodedata
 
 def canon(host):
     # Return an ip_address for any textual IPv4/IPv6 form a browser accepts, else None.
-    h = host.strip().rstrip('.').lower()
+    # NFKC first: Chromium applies UTS-46 before parsing the host, so the fullwidth digits in
+    # http://１６９．２５４．１６９．２５４/ become 169.254.169.254 before it ever resolves. Without this the
+    # string splits on no ASCII dot, int() raises, canon returns None, and the guard reads it as
+    # an ordinary hostname. Found by an independent reviewer against the rewritten guard.
+    h = unicodedata.normalize('NFKC', host).strip().rstrip('.').lower()
     if h.startswith('[') and h.endswith(']'):
         try: return ipaddress.ip_address(h[1:-1])
         except ValueError: return None
@@ -431,6 +435,16 @@ if scheme not in ('http', 'https'):
     print('BLOCK|' + url + ' - only http and https reach the network'); raise SystemExit(0)
 
 rest = url.split('://', 1)[1] if '://' in url else url
+# WHATWG treats a backslash as a path delimiter for special schemes (http/https), so the
+# authority ENDS at the first backslash. Without this substitution the guard was wrong in BOTH
+# directions, verified against Node's own URL parser:
+#   169.254.169.254 [backslash] @evil.com   browser -> 169.254.169.254   guard said ALLOW
+#   evil.com [backslash] @169.254.169.254   browser -> evil.com          guard said BLOCK
+# Found by an independent reviewer against the rewritten guard. The literal is written as
+# chr(92) below because this python is embedded in a double-quoted bash string, where a
+# backslash literal is consumed by the shell before python ever sees it -- which is exactly
+# how the first attempt at this fix broke the guard into failing closed on everything.
+rest = rest.replace(chr(92), '/')   # chr(92) is a backslash; a literal here is eaten by bash
 authority = rest.split('/', 1)[0].split('?', 1)[0].split('#', 1)[0]
 if '@' in authority:
     authority = authority.rsplit('@', 1)[1]

@@ -311,16 +311,22 @@ const confirmed = allFindings.filter(f => f.confirmed)
 //
 // Retrying does NOT weaken the fail-safe: exhausting every attempt still lands on the same
 // auto-BLOCK below.
+// The loop retries until it has a verdict WITH A VERDICT FIELD, not merely a truthy return.
+// An independent reviewer found the first version accepted any truthy value: a malformed `{}`
+// on attempt 1 consumed the whole budget and reached `verdict.verdict` as undefined, so the
+// gate returned neither PASS nor BLOCK to its consumer. `reviewDim` already validates shape
+// (`Array.isArray(r.findings)`); the binding judge was the one dispatch that did not.
 let verdict = null
-for (let attempt = 0; attempt < JUDGE_ATTEMPTS && !verdict; attempt++) {
+for (let attempt = 0; attempt < JUDGE_ATTEMPTS && !(verdict && verdict.verdict); attempt++) {
   verdict = await agent(judgePrompt(confirmed, TIER, failedDims, advisory), {
     label: `judge${attempt ? `:retry${attempt}` : ''}`, phase: 'Judge', model: 'opus',
     agentType: JUDGE_AGENT, schema: GATE_SCHEMA,
   }).catch(() => null)
-  if (verdict && attempt) log(`Judge completed on attempt ${attempt + 1}/${JUDGE_ATTEMPTS} — ${attempt} dropout(s) absorbed.`)
+  if (verdict && !verdict.verdict) log(`Judge returned a malformed verdict on attempt ${attempt + 1} — retrying.`)
+  if (verdict && verdict.verdict && attempt) log(`Judge completed on attempt ${attempt + 1}/${JUDGE_ATTEMPTS} — ${attempt} dropout(s) absorbed.`)
 }
-if (!verdict) {
-  log(`Judge returned no structured verdict after ${JUDGE_ATTEMPTS} attempts — auto-BLOCK.`)
+if (!verdict || !verdict.verdict) {
+  log(`Judge returned no usable verdict after ${JUDGE_ATTEMPTS} attempts — auto-BLOCK.`)
   verdict = { verdict: 'BLOCK', summary: `Judge agent dropped out on all ${JUDGE_ATTEMPTS} attempts — auto-BLOCK to protect the binding gate. This is a harness failure, NOT a judgement about the diff.`, blockers: [{ id: 'judge-dropout', file: '(gate)', title: `Opus judge returned no structured verdict in ${JUDGE_ATTEMPTS} attempts`, fix: 'Re-run qa.js. If this recurs, the dropout rate has risen — read the run journal before trusting any verdict from this gate.' }] }
 }
 
