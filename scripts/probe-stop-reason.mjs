@@ -5,12 +5,16 @@
 // scripts/probe-stop-reason.mjs — what actually ends a run.
 //
 // THE QUESTION THIS EXISTS TO ANSWER
-// `maxTurns` is declared in six agent files and was measured not to bind: 196 of 269 reviewer
-// runs exceeded a cap of 20, and the longest reached 68. So the one field the repo believed
-// stopped a run does not stop it, and nothing else on disk recorded why a turn ended. The
-// practical cost is specific and recurring: a subagent that quits early reports as "available",
-// not "incomplete", and three sessions in a row were caught only by reading the agent's output
-// against the filesystem.
+// `maxTurns` was long believed not to bind, on a 196-of-269 measurement taken where NO agent
+// file was named. That belief is WRONG as a general statement and was refuted on 2026-08-16:
+// when a dispatch names an `agentType`, that agent's `maxTurns` binds hard and silently. The
+// original measurement, for context: 196 of 269 reviewer runs exceeded a cap of 20 and the
+// longest reached 68 — taken on a path where the dispatch named no agent type, which is the
+// condition under which it genuinely does not bind.
+//
+// Nothing else on disk records why a turn ended. The practical cost is specific and recurring:
+// a subagent that quits early reports as "available", not "incomplete", and three sessions in a
+// row were caught only by reading the agent's output against the filesystem.
 //
 // `message.stop_reason` is present on every assistant turn in the transcripts and was simply
 // never parsed. `turnsFrom()` now carries it. This script cross-tabulates it.

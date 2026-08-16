@@ -20,7 +20,7 @@
 // The friction was MEASURED before the flag came out, not guessed: 11,342 Bash calls across 400
 // recent transcripts, of which 8,603 already matched the allow list. The real gap was
 // bun/bunx/npm — 304 calls — plus printf, timeout and sleep. Those six went in with the removal,
-// because a permission model that prompts constantly gets disabled again within a week.
+// because a permission model that prompts constantly gets disabled again within a week. Reproduce with `npm run measure:bash` (the figure moves with the corpus; 2026-08-16 was the reading that informed this decision).
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

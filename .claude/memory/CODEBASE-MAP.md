@@ -53,6 +53,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run ledger:verify` | `node scripts/ledger.mjs verify` |
 | `npm run ledger:views` | `node scripts/ledger.mjs views` |
 | `npm run lint:agents` | `node .claude/hooks/schema-lint.js` |
+| `npm run measure:bash` | `node scripts/measure-bash-usage.mjs` |
 | `npm run probe:stop-reason` | `node scripts/probe-stop-reason.mjs` |
 | `npm run test:budget` | `node --test scripts/usage.test.mjs` |
 | `npm run test:claims` | `node --test scripts/claims.test.mjs` |

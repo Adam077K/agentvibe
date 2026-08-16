@@ -234,8 +234,15 @@ send_launch_claude() {
   # .claude/settings.json carries 20 allow rules and 6 deny rules — a permission model someone
   # sat down and wrote. This launcher passed --dangerously-skip-permissions, which made all 26
   # of them inert in every warroom-started session. Every deny rule in the file (rm -rf, curl,
-  # chmod +x, global installs) was decoration. The PreToolUse hook still fired, so the system was
-  # not unprotected; it was protected by one mechanism where it was documented as two.
+  # chmod +x, global installs) was decoration. The PreToolUse hook still fired **for Bash and
+  # file writes**, so the system was not unprotected there; it was protected by one mechanism
+  # where it was documented as two.
+  #
+  # That qualifier is load-bearing. The hook fires for what its matcher names and NOTHING else,
+  # so when designer was granted a browser the same day, the new capability reached no
+  # content-level control at all until the matcher was extended. An independent reviewer found
+  # this sentence surviving here, unqualified, after it had been corrected in three other files
+  # — in the file whose change it justifies.
   #
   # The friction was measured before removing it rather than guessed: 11,342 Bash calls across
   # 400 recent transcripts, of which 8,603 already matched the allow list. The real gap was

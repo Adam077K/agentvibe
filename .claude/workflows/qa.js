@@ -114,8 +114,15 @@ const DIMENSIONS = [
 //
 // Measured across three runs of this gate: agents that made ≤17 tool calls returned findings;
 // agents that reached 20 returned NOTHING. Clean separation, no overlap — 13 of 20 dropouts sat
-// at exactly 20, which is what `maxTurns` was set to on the reviewer containers. Not a
-// stochastic failure: a declared cap, cutting agents off mid-work with findings in hand.
+// at exactly 20, which is what `maxTurns` was set to on the reviewer containers — a declared
+// cap, cutting agents off mid-work with findings in hand, rather than a stochastic failure.
+//
+// HONEST BOUND ON THAT CLAIM, from an independent audit: the cap explains the 13 dropouts that
+// sat at exactly 20 and it does NOT explain the other 7, which recorded 21, 32, 32, 32, 32, 34
+// and 34 tool calls — above the cap. The separation is real (max success 17 < min failure 20);
+// the conclusion that the cap CAUSED every dropout is not supported for roughly a third of them,
+// and no post-fix run has yet confirmed the diagnosis. Treat this as the best current
+// explanation, not a settled mechanism.
 //
 // The cap is raised to 30 (the schema maximum), but a cap that is merely higher still binds on
 // a large diff. So the instruction changed too: `git diff` is the PRIMARY evidence and reading

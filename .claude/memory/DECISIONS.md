@@ -593,7 +593,7 @@ block, not the `.env` read block, not the write-outside-project-root block. The 
 file writes and was stated as though it were general.
 **Measurement that set the six:** 11,342 Bash calls across 400 recent transcripts. 8,603 already matched the
 allow list. The uncovered real commands were `bun` (160), `npm` (78), `bunx` (66), then `printf`, `timeout`,
-`sleep`. `rm` and `curl` appear too and stay denied — that is the point of a deny list. A first pass at this
+`sleep`. `rm` and `curl` appear too and stay denied — that is the point of a deny list. Reproduce with `npm run measure:bash` (the figure moves with the corpus; 2026-08-16 was the reading that informed this decision). A first pass at this
 measurement reported "47% would prompt"; it was tokenising heredoc bodies and was discarded rather than
 reported.
 **Reversibility:** reversible — one word in `bin/warroom`. Pinned by `scripts/launcher-permissions.test.mjs`
