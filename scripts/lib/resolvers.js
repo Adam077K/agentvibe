@@ -164,6 +164,11 @@ function normaliseText(s) {
 
 async function source(claim, opts = {}) {
   const now = opts.now === undefined ? Date.now() : opts.now;
+  // Issue: dispositionOutcome was only called by freshness and judge, not source. A
+  // deprecated source-claim kept fetching its URL and failing after the source was retired.
+  // `refresh` still does not short-circuit — see the comment at line 76.
+  const disp = dispositionOutcome(claim, now, 'claim-source');
+  if (disp) return disp;
   const doFetch = opts.fetchImpl || (typeof fetch === 'function' ? fetch : null);
   const ev = claim.evidence || {};
 
@@ -241,6 +246,13 @@ async function source(claim, opts = {}) {
 // adding one is a reviewed change, not a doc edit.
 
 function command(claim, opts = {}) {
+  const now = opts.now === undefined ? Date.now() : opts.now;
+  // Issue: dispositionOutcome was only called by freshness and judge, not command. A
+  // deprecated command-claim kept running its command and failing after being retired —
+  // making `deprecate` unusable for command-claims, which are the ones most likely to go
+  // stale when the code they pin moves. `refresh` still does not short-circuit.
+  const disp = dispositionOutcome(claim, now, 'claim-command');
+  if (disp) return disp;
   const ev = claim.evidence || {};
   const expectExit = ev.expect_exit === undefined ? 0 : ev.expect_exit;
   const cwd = opts.cwd || process.cwd();

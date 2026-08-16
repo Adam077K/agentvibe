@@ -246,6 +246,58 @@ test('command execution can be disabled, and then reports unresolved rather than
   assert.equal(r.status, 'unresolved');
 });
 
+test('a deprecated command-claim passes without running the command — deprecate was unusable before this fix', () => {
+  // Pre-fix: dispositionOutcome() was never called by claim-command. A deprecated command-claim
+  // kept running its command and failing after the thing it pinned was removed. That made
+  // `deprecate` unusable for command-claims, which are the ones most likely to go stale.
+  // Constructed failure: `false` exits 1, which fails the default expect_exit:0. With the fix,
+  // the deprecation short-circuits and the command never runs.
+  const deprecated = claim({
+    verified_by: 'command',
+    evidence: { cmd: 'false', expect_exit: 0 },
+    disposition: { action: 'deprecate', reason: 'the thing this pinned was removed' },
+  });
+  const r = R.command(deprecated, { cwd: REPO_ROOT });
+  assert.equal(r.status, 'pass', `a deprecated command must pass (not run), got: ${r.reason}`);
+  assert.match(r.reason, /deprecated/);
+});
+
+test('a live waiver on a command-claim passes without running the command', () => {
+  const waived = claim({
+    verified_by: 'command',
+    evidence: { cmd: 'false', expect_exit: 0 },
+    disposition: { action: 'waive', until: '2026-09-08', reason: 'blocked by incident' },
+  });
+  const r = R.command(waived, { cwd: REPO_ROOT, now: NOW });
+  assert.equal(r.status, 'pass', `a live waiver must pass, got: ${r.reason}`);
+  assert.match(r.reason, /waived/);
+});
+
+test('refresh on a command-claim does NOT short-circuit — the command still runs', () => {
+  // refresh says the evidence was renewed. "Renewed" is not the same as "passing". The
+  // command runs; if it fails, the claim fails. This mirrors what freshness does.
+  const refreshed = claim({
+    verified_by: 'command',
+    evidence: { cmd: 'false', expect_exit: 0 },
+    disposition: { action: 'refresh', reason: 're-tested on 2026-08-16' },
+  });
+  const r = R.command(refreshed, { cwd: REPO_ROOT });
+  assert.equal(r.status, 'fail', `refresh must not mask a still-failing command: ${r.reason}`);
+  assert.doesNotMatch(r.reason, /deprecated|waived/);
+});
+
+test('a deprecated source-claim passes without fetching — same fix as command', async () => {
+  const deprecated = claim({
+    verified_by: 'source',
+    evidence: { url: 'https://example.invalid/gone', quote: 'text', accessed: '2026-01-01' },
+    disposition: { action: 'deprecate', reason: 'the source was taken down' },
+  });
+  // fetchImpl that always throws — if it runs, the test fails
+  const r = await R.source(deprecated, { now: NOW, fetchImpl: () => { throw new Error('should not fetch a deprecated claim'); } });
+  assert.equal(r.status, 'pass', `a deprecated source must pass without fetching: ${r.reason}`);
+  assert.match(r.reason, /deprecated/);
+});
+
 // ── claim-judge ─────────────────────────────────────────────────────────────
 
 const judged = (risk, panel) => claim({
