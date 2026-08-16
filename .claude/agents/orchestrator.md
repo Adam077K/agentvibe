@@ -2,7 +2,8 @@
 name: orchestrator
 description: |
   Engine. The entry point and the only thing that ends a turn on human approval. Owns state, picks the playbook, dispatches the other engines, validates what comes back, and synthesises. Never implements. Replaces ceo, cto, cpo, cmo, cbo, cco, qa-lead, research-lead and design-lead, which differed by domain — and domain is a lens, not an agent.
-model: claude-opus-4-7
+model: claude-opus-5
+effort: xhigh
 tools: [Read, Write, Edit, Bash, Glob, Grep, Task]
 maxTurns: 30
 color: gold
