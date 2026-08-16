@@ -557,54 +557,88 @@ test('the committed index records no positions at all', () => {
 // from the region where the property is true. Same family as the selector defect in
 // views.test.tsx (rows picked by the content under test); different mechanism.
 //
-// So: the global ledger is INJECTED via $HOME, which os.homedir() honours. Depending on
-// the real ~/.warroom/ledger/global.yml would mean the global half silently vanishes on
-// any machine without one — CI included — which is the same defect wearing a third hat.
+// So: the global ledger is INJECTED, via WARROOM_GLOBAL_LEDGER.
+//
+// THE REAL LEDGER CANNOT SERVE THIS TEST, in either direction. Its contents differ per
+// machine, so there is no known line to expect — and on a runner with no
+// ~/.warroom/ledger/global.yml there are no global claims at all. Measured:
+// `HOME=<empty> ledger locate` lists 33 claims where this machine lists 37. A test that
+// exercised globals against the real file would iterate an empty set in CI and pass. That
+// is the empty-sample defect, and it would have landed inside the fix for the sampling
+// defect — a fourth variant of the same family, in the same change.
+//
+// $HOME would also have worked, and is not what this uses: eventsPath() resolves through
+// os.homedir() too, so moving HOME to reach the ledger silently moves the run log with it.
+// One knob, one thing.
 
+// Line numbers are asserted as EXACT VALUES against this literal, not as /\d+/. "Matches a
+// number" is the assertion shape that let `:0` through for four claims — 0 is a number.
+const G_LINE = { 'c-fixture-alpha': 4, 'c-fixture-beta': 13 };
 const GLOBAL_FIXTURE = [
-  '# a fixture global ledger',
-  '',
-  'claims:',
-  '  - id: c-fixture-alpha',                                        // line 4
-  '    assert: "the first fixture claim"',
-  '    kind: runtime-capability',
-  '    scope: global',
-  '    verified_by: command',
-  '    evidence: {cmd: "true", expect_exit: 0}',
-  '    valid_until: 2027-01-01',
-  '    confidence: 1',
-  '',
-  '  - id: c-fixture-beta',                                         // line 13
-  '    assert: "the second fixture claim"',
-  '    kind: runtime-capability',
-  '    scope: global',
-  '    verified_by: command',
-  '    evidence: {cmd: "true", expect_exit: 0}',
-  '    valid_until: 2027-01-01',
-  '    confidence: 1',
-  '',
+  '# a fixture global ledger',                                      // 1
+  '',                                                               // 2
+  'claims:',                                                        // 3
+  '  - id: c-fixture-alpha',                                        // 4
+  '    assert: "the first fixture claim"',                          // 5
+  '    kind: runtime-capability',                                   // 6
+  '    scope: global',                                              // 7
+  '    verified_by: command',                                       // 8
+  '    evidence: {cmd: "true", expect_exit: 0}',                    // 9
+  '    valid_until: 2027-01-01',                                    // 10
+  '    confidence: 1',                                              // 11
+  '',                                                               // 12
+  '  - id: c-fixture-beta',                                         // 13
+  '    assert: "the second fixture claim"',                         // 14
+  '    kind: runtime-capability',                                   // 15
+  '    scope: global',                                              // 16
+  '    verified_by: command',                                       // 17
+  '    evidence: {cmd: "true", expect_exit: 0}',                    // 18
+  '    valid_until: 2027-01-01',                                    // 19
+  '    confidence: 1',                                              // 20
+  '',                                                               // 21
 ].join('\n');
 
+// The map above is a second statement of the same fact as the fixture, and two statements
+// of one fact drift. This checks them against each other before any test uses either.
+test('the global fixture really puts its claims where the expectation map says', () => {
+  const lines = GLOBAL_FIXTURE.split('\n');
+  for (const [id, n] of Object.entries(G_LINE)) {
+    assert.equal(lines[n - 1], `  - id: ${id}`, `G_LINE says ${id} is at ${n}; the fixture disagrees`);
+  }
+});
+
 function withGlobalLedger(body, yaml = GLOBAL_FIXTURE) {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'wr-home-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wr-global-'));
+  const ledger = path.join(dir, 'global.yml');
   try {
-    fs.mkdirSync(path.join(home, '.warroom', 'ledger'), { recursive: true });
-    fs.writeFileSync(path.join(home, '.warroom', 'ledger', 'global.yml'), yaml);
+    fs.writeFileSync(ledger, yaml);
     const run = (...args) => execFileSync('node', ['scripts/ledger.mjs', ...args],
-      { cwd: REPO_ROOT, encoding: 'utf8', env: { ...process.env, HOME: home } });
-    return body(run, home);
+      { cwd: REPO_ROOT, encoding: 'utf8', env: { ...process.env, WARROOM_GLOBAL_LEDGER: ledger } });
+    return body(run, ledger);
   } finally {
-    fs.rmSync(home, { recursive: true, force: true });
+    fs.rmSync(dir, { recursive: true, force: true });
   }
 }
 
+test('the injected ledger is the one being read — the seam is real, not assumed', () => {
+  // A claim that exists in no other file on this machine. If it comes back, the override
+  // took effect; without this, every global assertion below could be reading the real
+  // ledger and nobody would know.
+  withGlobalLedger((run, ledger) => {
+    assert.equal(run('locate', 'c-fixture-alpha').trim(), `${ledger}:4`);
+    // And the label is the real path, not the tilde form — an override rendered as
+    // `~/.warroom/ledger/global.yml` would name a file it did not read.
+    assert.doesNotMatch(run('locate'), /~\/\.warroom/);
+  });
+});
+
 test('locate points at a real line for EVERY claim it prints, in both scopes', () => {
-  withGlobalLedger((run) => {
+  withGlobalLedger((run, ledger) => {
     const out = run('locate');
     const rows = out.split('\n').filter((l) => /\s{2}c-/.test(l));
 
     let project = 0;
-    let global = 0;
+    const globalsSeen = [];
     for (const row of rows) {
       const [loc, id] = row.trim().split(/\s{2,}/);
       const m = loc.match(/^(.*):(\d+)$/);
@@ -612,32 +646,28 @@ test('locate points at a real line for EVERY claim it prints, in both scopes', (
       const [, file, lineNo] = m;
       assert.notEqual(lineNo, '0', `${id}: ":0" is a placeholder, not a position`);
 
-      // Resolve the artifact and read the line it names. A position that does not open
-      // what it claims to open is the old field with extra steps.
-      const abs = file.startsWith('~/')
-        ? path.join(os.homedir(), file.slice(2)) // never taken: the fixture path is absolute-ised below
-        : path.join(REPO_ROOT, file);
-      const src = file.includes('.warroom')
-        ? GLOBAL_FIXTURE
-        : fs.readFileSync(abs, 'utf8');
-      const line = src.split('\n')[Number(lineNo) - 1];
-      assert.ok(line !== undefined, `${id}: line ${lineNo} is past the end of ${file}`);
-
-      if (file.includes('.warroom')) {
-        // Global: the claim's OWN entry.
-        assert.match(line, new RegExp(`^\\s*-\\s*id:\\s*${id}\\s*$`),
-          `${id}: global position must name that claim's own "- id:" line, got ${JSON.stringify(line)}`);
-        global++;
+      if (file === ledger) {
+        // Global: the EXACT line the fixture wrote, not merely some number. `/\d+/` would
+        // have accepted `:0`, which is how four claims shipped a position nobody measured.
+        assert.equal(Number(lineNo), G_LINE[id], `${id}: expected line ${G_LINE[id]}, got ${lineNo}`);
+        assert.equal(GLOBAL_FIXTURE.split('\n')[Number(lineNo) - 1], `  - id: ${id}`);
+        globalsSeen.push(id);
       } else {
-        // Project: the head of the block the claim lives in.
+        // Project: the head of the block the claim lives in. There is no known-good line to
+        // hardcode across 33 claims in a moving repo, so the line is resolved back into the
+        // artifact and must open a claim block — a stronger check than any fixed number.
+        const src = fs.readFileSync(path.join(REPO_ROOT, file), 'utf8');
+        const line = src.split('\n')[Number(lineNo) - 1];
+        assert.ok(line !== undefined, `${id}: line ${lineNo} is past the end of ${file}`);
         assert.equal(line.trim(), 'claims:', `${id}: project position must open a claim block`);
         project++;
       }
     }
 
-    // Both halves must be non-empty, or this test is the defect it was written to catch.
+    // Both halves non-empty, or this test is the defect it was written to catch.
     assert.ok(project > 0, 'no project claim was sampled');
-    assert.equal(global, 2, 'both fixture globals must be sampled — a hardcoded path is how this went wrong');
+    assert.deepEqual(globalsSeen.sort(), Object.keys(G_LINE).sort(),
+      'every fixture global must be sampled — a hardcoded project path is how this went wrong');
   });
 });
 
@@ -646,15 +676,18 @@ test('locate prints the file alone when a position cannot be measured — never 
   // return the first of two guesses. The row must then carry no number at all: `:0`, `:?`
   // and `:-` are all a character standing in for a measurement.
   const ambiguous = GLOBAL_FIXTURE.replace('  - id: c-fixture-beta', '  - id: c-fixture-alpha');
-  withGlobalLedger((run) => {
-    const rows = run('locate').split('\n').filter((l) => l.includes('.warroom'));
-    assert.ok(rows.length > 0, 'the ambiguous fixture must still be listed');
+  withGlobalLedger((run, ledger) => {
+    const rows = run('locate').split('\n').filter((l) => l.includes(ledger));
+    // Asserting "no number" over an empty set would be the empty-sample defect wearing
+    // this option's clothes, so the sample is proven non-empty first: two entries share
+    // the id, and both must be listed.
+    assert.equal(rows.length, 2, 'both ambiguous entries must be listed');
     for (const r of rows) {
       assert.doesNotMatch(r, /:\d+/, `an unmeasurable position must print no number: ${r.trim()}`);
       assert.match(r, /global\.yml\s{2,}c-fixture-alpha/, 'the file must still be named');
     }
     // And the single-id lookup takes the same path.
-    assert.equal(run('locate', 'c-fixture-alpha').trim(), '~/.warroom/ledger/global.yml');
+    assert.equal(run('locate', 'c-fixture-alpha').trim(), ledger);
   }, ambiguous);
 });
 

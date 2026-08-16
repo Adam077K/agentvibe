@@ -56,7 +56,34 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..');
 const TIER_MAP = path.join(REPO_ROOT, '.claude', 'qa-tier-floor.yml');
 const INDEX_PATH = path.join(REPO_ROOT, '.claude', 'ledger', 'index.json');
-const GLOBAL_LEDGER = path.join(os.homedir(), '.warroom', 'ledger', 'global.yml');
+// The global ledger, and an explicit seam for pointing at a different one.
+//
+// This was `path.join(os.homedir(), ...)` with no override, which made the producer the
+// only uninjectable side of the system: `belief.ts` already takes `readGlobalLedger(
+// ledgerPath = globalLedgerPath())` and an `opts.globalLedgerPath`. The consumer could be
+// aimed at a fixture and the producer could not.
+//
+// A test could still move it by setting $HOME on the child, and that works — but $HOME is
+// a blunt knob. `eventsPath()` also resolves through `os.homedir()`, so moving HOME to
+// reach the ledger silently moves the run log too. One control that moves two things is
+// how a test ends up asserting against a file it did not mean to write. This names the one
+// thing, following the `WARROOM_EVENTS` precedent eight lines below.
+//
+// WHY THIS IS NOT OPTIONAL. On a machine with no `~/.warroom/ledger/global.yml` — every CI
+// runner — there are zero global claims. Measured: `HOME=<empty> ledger locate` lists 33
+// claims where this machine lists 37. So a test that exercises global behaviour by reading
+// the REAL ledger iterates an empty set in CI and passes. Green locally for the right
+// reason, green in CI for the wrong one, and CI's is the green nobody inspects.
+const GLOBAL_LEDGER = process.env.WARROOM_GLOBAL_LEDGER
+  || path.join(os.homedir(), '.warroom', 'ledger', 'global.yml');
+
+// What to CALL it. `~/.warroom/ledger/global.yml` is the form people recognise, and it is
+// only true when the path really is the default under this machine's home. An override
+// displayed under the tilde name would be a label asserting something it did not check —
+// which is the defect class this file has spent three commits removing.
+const GLOBAL_LABEL = process.env.WARROOM_GLOBAL_LEDGER
+  ? GLOBAL_LEDGER
+  : '~/.warroom/ledger/global.yml';
 const INDEX_VERSION = 1;
 
 // ── Where events go ─────────────────────────────────────────────────────────
@@ -219,7 +246,7 @@ function collectGlobalClaims() {
     return { claims: [], issues: [`${GLOBAL_LEDGER}: no "claims:" list`], present: true };
   }
   doc.claims.forEach((c, i) => {
-    const where = `~/.warroom/ledger/global.yml claims[${i}]`;
+    const where = `${GLOBAL_LABEL} claims[${i}]`;
     const problems = validateClaim(c, where);
     issues.push(...problems);
     if (problems.length === 0) {
@@ -228,7 +255,7 @@ function collectGlobalClaims() {
         const line = globalClaimLine(text, c.id);
         claims.push({
           ...c,
-          source_file: '~/.warroom/ledger/global.yml',
+          source_file: GLOBAL_LABEL,
           // Absent rather than zero when unmeasurable. `undefined` survives into `locate`,
           // which prints the file alone; a `0` would have printed as a position.
           ...(line === null ? {} : { source_line: line }),
@@ -454,7 +481,7 @@ function cmdLint() {
   const issues = [...proj.issues, ...glob.issues];
   for (const n of proj.notes || []) process.stdout.write(`ledger lint: note — ${n}\n`);
   process.stdout.write(`ledger lint: ${proj.claims.length} project claims · ${glob.claims.length} global claims`);
-  process.stdout.write(glob.present ? '\n' : ' (no ~/.warroom/ledger/global.yml on this machine)\n');
+  process.stdout.write(glob.present ? `\n` : ` (no ${GLOBAL_LABEL} on this machine)\n`);
   if (issues.length === 0) {
     process.stdout.write('ledger lint: clean\n');
     return 0;
@@ -480,7 +507,7 @@ async function cmdVerify(argv) {
   if (offline) process.stdout.write(' · offline (network resolvers report unresolved, never pass)');
   process.stdout.write(`\n  events → ${evPath}\n`);
   if (!glob.present) {
-    process.stdout.write('  global scope: ~/.warroom/ledger/global.yml not present on this machine — 0 global claims checked (this is reported, not skipped silently)\n');
+    process.stdout.write(`  global scope: ${GLOBAL_LABEL} not present on this machine — 0 global claims checked (this is reported, not skipped silently)\n`);
   }
   process.stdout.write('\n');
 
