@@ -74,5 +74,22 @@
   "statusLine": {
     "type": "command",
     "command": "node .claude/hooks/gsa-statusline.js"
+  },
+  "sandbox": {
+    "enabled": false,
+    "failIfUnavailable": false,
+    "filesystem": {
+      "denyRead": [
+        "~/.ssh",
+        "~/.aws",
+        "~/.config/gh",
+        "~/.netrc",
+        "**/.env",
+        "**/.env.*"
+      ],
+      "allowWrite": [
+        "~/.agentvibe"
+      ]
+    }
   }
 }
