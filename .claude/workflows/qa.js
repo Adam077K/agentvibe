@@ -77,9 +77,25 @@ const GATE_SCHEMA = {
 // An agent that can edit what it reviews will review what it can edit. `reviewer` declares
 // `tools: [Read, Glob, Grep, Bash]` — no Write, no Edit.
 //
-// This does not make the container airtight: `tools:` is not known to bind `Bash`, so a
-// determined reviewer can still write through a shell. It closes the accidental path, not the
-// deliberate one, and the deliberate one closes with the OS sandbox (see GRANT-HOLDERS.md).
+// THE GAP THAT REMAINS, NAMED HONESTLY BECAUSE THE FIRST VERSION OF THIS COMMENT DID NOT.
+// `reviewer` declares `Bash`, and `tools:` is not known to bind it — so the binding judge, whose
+// verdict this repo says cannot be overridden, still holds a write-capable shell. The binding
+// gate raised exactly this against this file's own PR, and it was right to.
+//
+// The first draft of this comment deferred to "the OS sandbox". That sandbox is configured
+// NOWHERE — GRANT-HOLDERS.md records 0 sandbox keys in settings.json and containment listed as
+// "Unenforced until E7". Citing a backstop that does not exist is worse than citing none: it
+// reads as containment to anyone who does not go looking.
+//
+// Two fixes are available and BOTH need a founder decision, so neither is taken here:
+//   (a) Drop `Bash` from the reviewer used on this path — one line, but `.claude/agents/**` is
+//       closed by the prompt-craft gate until a written prompt standard is approved.
+//   (b) Make pre-tool-use.sh refuse write-capable Bash when the caller is a reviewer. This
+//       assumes the hook can see the agent type, which is UNVERIFIED — `agent_type` appears in
+//       transcripts, but that is dispatch metadata, not proof it reaches hook stdin. The probe
+//       is ten minutes: log the raw payload from inside a dispatched subagent and read it.
+//
+// Until one of those lands, this line buys isolation from Write and Edit, and nothing more.
 const REVIEW_AGENT = 'reviewer'
 
 const DIMENSIONS = [

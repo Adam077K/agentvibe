@@ -15,6 +15,9 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
+
+const fsExists = (p) => fs.existsSync(p);
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(REPO, 'scripts', 'run-gate.mjs');
@@ -84,4 +87,58 @@ test('a bad ref fails loudly rather than reporting an empty diff as nothing to g
   // Silently returning "no files, nothing to gate" on a broken ref is fail-OPEN for a router.
   const r = run(['--ref', 'definitely-not-a-real-ref-xyz...HEAD']);
   assert.equal(r.code, 2, 'an unreadable diff must exit 2, never 0');
+});
+
+// ── The `full` tier boundary — found missing by the binding QA gate on this file's own PR ────
+// GATE_REQUIRED_TIERS (run-gate.mjs) has TWO members. The suite above exercised only
+// `irreversible`. Narrowing the set to ['irreversible'], or typoing 'full', passed every test
+// while silently un-gating the common case the router exists to catch: API, DB, auth, billing.
+// A set boundary must be asserted from both sides or it is not asserted at all.
+
+test('a full-tier path requires the gate — the common API/DB/auth case', () => {
+  const r = json(['--files', 'scripts/foo.mjs']);
+  assert.equal(r.floor, 'full');
+  assert.equal(r.gateRequired, true, 'the full tier must require the binding gate');
+  assert.equal(r.invocation.args.tier, 'full', 'qa.js must be told full, not irreversible');
+});
+
+test('--require exits 1 at full tier too, not only at irreversible', () => {
+  assert.equal(run(['--files', 'scripts/foo.mjs', '--require']).code, 1);
+});
+
+test('a lite-tier path does NOT require the gate — the other side of the boundary', () => {
+  const r = json(['--files', 'package.json']);
+  assert.equal(r.floor, 'lite');
+  assert.equal(r.gateRequired, false, 'lite is code-reviewer + qa-engineer + semgrep, not the panel');
+  assert.equal(r.invocation, null);
+  assert.equal(run(['--files', 'package.json', '--require']).code, 0);
+});
+
+test('both members of GATE_REQUIRED_TIERS are exercised, and both non-members', () => {
+  // The explicit statement of what this file now covers, so a future reader can see the set is
+  // closed rather than inferring it from scattered cases.
+  const seen = {
+    irreversible: json(['--files', '.claude/hooks/pre-tool-use.sh']),
+    full:         json(['--files', 'scripts/foo.mjs']),
+    lite:         json(['--files', 'package.json']),
+    trivial:      json(['--files', 'docs/a.md']),
+  };
+  assert.deepEqual(
+    Object.fromEntries(Object.entries(seen).map(([k, v]) => [k, v.gateRequired])),
+    { irreversible: true, full: true, lite: false, trivial: false }
+  );
+  for (const [tier, r] of Object.entries(seen)) {
+    assert.equal(r.floor, tier, `${tier} fixture no longer floors at ${tier} — update the fixture, not the assertion`);
+  }
+});
+
+test('a ref beginning with "-" is refused before it reaches git as an option', () => {
+  // P3 from the binding gate. No shell is involved, so this is not shell injection — but git
+  // reads a leading dash as an option, and some options write files.
+  // Note the SINGLE dash: arg() already refuses a following token starting with `--`, so the
+  // double-dash form never reaches git. The single-dash form did.
+  const r = run(['--ref', '-O/tmp/run-gate-should-never-exist']);
+  assert.equal(r.code, 2, 'a dash-leading ref must exit 2');
+  assert.match(r.stderr, /refusing a ref/);
+  assert.equal(fsExists('/tmp/run-gate-should-never-exist'), false, 'git was allowed to act on the option');
 });

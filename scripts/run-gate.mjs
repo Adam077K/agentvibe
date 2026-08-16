@@ -58,6 +58,15 @@ function arg(name, fallback = null) {
 }
 
 function changedFiles(ref) {
+  // `ref` reaches git as a positional argument. execFileSync uses no shell, so there is no shell
+  // injection here — but git itself reads a leading `-` as an OPTION, and options like
+  // `--output=<path>` write files. Today the only caller is a human on a terminal; the router is
+  // meant to be wired into CI, where the ref could come from a branch name. Refuse the shape now,
+  // while the blast radius is zero. Raised as P3 by the binding gate on this router's own PR.
+  if (ref.startsWith('-')) {
+    console.error(`run-gate: refusing a ref that begins with "-" (${ref}) — git would read it as an option.`);
+    process.exit(2);
+  }
   try {
     const out = execFileSync('git', ['diff', '--name-only', ref], {
       cwd: REPO_ROOT,

@@ -198,8 +198,22 @@ const SKILL_CLAMP_CACHE = new Map();
 function skillToolClamp(name) {
   if (SKILL_CLAMP_CACHE.has(name)) return SKILL_CLAMP_CACHE.get(name);
   let clamp = null;
+  // Two independent guards, because the caller's manifest check is a different function that a
+  // later edit could reorder away — and did, in this function's first cut.
+  //   1. Shape: a skill name is a lowercase slug. `..`, `/`, `\` and absolute paths cannot match.
+  //   2. Containment: resolve and assert the result is genuinely under .claude/skills/, so a
+  //      future loosening of the pattern cannot silently re-open a traversal.
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
+    SKILL_CLAMP_CACHE.set(name, null);
+    return null;
+  }
   try {
-    const p = path.join(REPO_ROOT, '.claude', 'skills', name, 'SKILL.md');
+    const skillsRoot = path.resolve(REPO_ROOT, '.claude', 'skills');
+    const p = path.resolve(skillsRoot, name, 'SKILL.md');
+    if (!p.startsWith(skillsRoot + path.sep)) {
+      SKILL_CLAMP_CACHE.set(name, null);
+      return null;
+    }
     const text = fs.readFileSync(p, 'utf8');
     const fmEnd = text.indexOf('\n---', 3);
     const head = fmEnd === -1 ? text : text.slice(0, fmEnd);
@@ -345,13 +359,12 @@ function lintFile(filePath) {
       issues.push(`frontmatter: skills must be a YAML list`);
     } else {
       const live = loadSkills();
-      if (live) {
+      if (!live) {
+        warnings++;
+      } else {
         for (const s of fm.skills) {
           if (!live.has(s)) issues.push(`frontmatter: skill "${s}" not in MANIFEST.json`);
         }
-      } else {
-        warnings++;
-      }
       // A skill carrying `allowed-tools` SUBTRACTS from the agent that loads it.
       //
       // The binary calls this "capability frontmatter" and describes it as "Tools available to
@@ -364,13 +377,23 @@ function lintFile(filePath) {
       //
       // No agent declares one today, so this rule costs nothing now and fires exactly when the
       // roster migration attaches them. Strip the field from the skill first; it does something.
+      //
+      // SCOPED TO KNOWN SKILL NAMES ON PURPOSE. The first cut of this loop ran over every
+      // declared name before any of them had been checked against the manifest, so a name like
+      // `../..` reached path.join + readFileSync — arbitrary file read, with the matched line
+      // echoed back into the issue text and therefore into CI logs, in a linter CI runs on
+      // every pull_request including forks. The binding QA gate caught it; it is pinned in
+      // scripts/skill-clamp.test.mjs. An unknown name already emits its own "not in
+      // MANIFEST.json" issue above and must never reach a disk read.
       for (const s of fm.skills) {
+        if (!live.has(s)) continue;
         const clamp = skillToolClamp(s);
         if (clamp) {
           issues.push(
             `frontmatter: skill "${s}" declares allowed-tools (${clamp}), which SUBTRACTS from this agent's tools while active — ` +
             `strip the field from .claude/skills/${s}/SKILL.md before attaching it, or attach a different skill`
           );
+        }
         }
       }
     }

@@ -64,6 +64,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:playbooks` | `node --test scripts/playbooks.test.mjs` |
 | `npm run test:pre-tool-use` | `node --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-readonly` | `node --test scripts/probe-readonly.test.mjs` |
+| `npm run test:probe-stop-reason` | `node --test scripts/probe-stop-reason.test.mjs` |
 | `npm run test:run-gate` | `node --test scripts/run-gate.test.mjs` |
 | `npm run test:skill-clamp` | `node --test scripts/skill-clamp.test.mjs` |
 | `npm run test:warroom` | `node --test scripts/warroom-install.test.mjs` |
@@ -94,6 +95,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/playbooks.test.mjs` | the playbook linter, tested by constructing its failures. |
 | `scripts/pre-tool-use.test.mjs` | — |
 | `scripts/probe-readonly.test.mjs` | — |
+| `scripts/probe-stop-reason.test.mjs` | the aggregation that answers what ends a run. |
 | `scripts/run-gate.test.mjs` | the router that decides whether the binding gate runs. |
 | `scripts/session-start.test.mjs` | the SessionStart hook. |
 | `scripts/skill-clamp.test.mjs` | a skill that subtracts must not be attached silently. |

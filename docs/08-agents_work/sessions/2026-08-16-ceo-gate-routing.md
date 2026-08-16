@@ -57,9 +57,51 @@ The two lists share only two names. So `adversarial`, `evidence` and `scope` —
 because the gate does not read the file they live in. `MODEL-DIVERSITY.md:293` recorded this before I did.
 Fixing it changes what the gate reviews, which is a decision, not a cleanup.
 
-## Why this says PENDING
+## The gate ran, and it blocked its own author
 
-The router added in item 2 classifies **this PR** as `irreversible` and prints that the binding gate is
-required. Writing `PASS` here without running it would be the exact behaviour the router exists to refuse,
-in the same commit that adds it. The verdict is left open pending either a real `qa.js` run or the founder's
-explicit author-review authorisation, as on #42.
+Founder authorised the run. **`qa.js` judged a pull request for the first time in its existence** — 37
+agents, 2.24M tokens, 26 minutes — and returned **BLOCK** on PR #47, the PR that added the router pointing
+at it. Four findings survived 3-way adversarial verification. I reproduced the most serious one by hand
+before accepting it.
+
+**1 · CWE-22 path traversal in my own security-hardening change.** `schema-lint.js`'s clamp loop ran over
+every declared skill name *before* any had been checked against the manifest, so `skills: ["../.."]` reached
+`path.join` + `readFileSync`. Confirmed first-hand with a canary at the repo root: the file was read **and
+its contents echoed into the issue text**, which lands in CI logs — in a linter that runs on every
+`pull_request`, including from forks. Fixed three ways: the loop is now inside the manifest guard and skips
+unknown names; `skillToolClamp` refuses any name that is not a lowercase slug; and the resolved path is
+asserted to sit under `.claude/skills/`. Five traversal shapes pinned, plus a test that a bad name still
+gets its ordinary "not in MANIFEST.json" complaint — silently ignoring it would trade one defect for another.
+
+**2 · The probe shipped with zero tests.** 135 lines, absent from `npm run check`. The objection was not
+procedural: **this file's bucketing had already been silently wrong once** — it split on "contains a subagent
+turn anywhere" rather than "the final turn was one" — and was caught by reading output, not by a test.
+9 tests now, including the discriminating fixture (a transcript holding a subagent turn but ending on the
+main thread) and a pin that a *missing* corpus exits non-zero rather than reporting zero stranded subagents,
+which would read as good news.
+
+**3 · Half the tier boundary was unasserted.** `GATE_REQUIRED_TIERS` has two members; my suite exercised only
+`irreversible`. Narrowing it to `['irreversible']` passed every test while silently un-gating the common
+API/DB/auth case. Now pinned from both sides — all four tiers, `full` included.
+
+**4 · The reviewer still holds `Bash`.** True, and not fixed here. My original comment deferred to "the OS
+sandbox", which is **configured nowhere**. Citing a backstop that does not exist is worse than citing none.
+The comment now names the real state and the two available fixes, both of which need a founder decision:
+dropping `Bash` from the reviewer touches `.claude/agents/**`, closed by the prompt-craft gate; the hook
+alternative assumes the hook can see the agent type, which is **unverified**.
+
+**Also: three of five dimensions failed to complete** — `correctness`, `patterns`, `tests` — which is an
+automatic coverage-gap BLOCK independent of the findings. 20 of 37 agents returned empty. **That is the
+defect item 3 measured, occurring live inside the gate that was measuring it.**
+
+Two P3 advisories were recorded as non-blocking. One is fixed anyway (`--ref` beginning with `-` reaches
+`git diff` as an option; refused now, with the reachable single-dash form pinned). The other — the probe's
+unbounded synchronous scan — is left: it is a manual measurement tool, ~40 s over 3 GB, and a cache would add
+a staleness failure mode to buy nothing.
+
+`npm run check` exits 0 — **14 test files**, zero failures.
+
+## Why the verdict still says PENDING
+
+The fixes above are not self-certified. The gate must run again and pass on its own terms before anything
+here says `PASS`.

@@ -125,3 +125,91 @@ test('a skill directory that does not exist is not reported as a clamp', () => {
   assert.deepEqual(found, []);
   assert.ok(os.tmpdir(), 'os import kept meaningful');
 });
+
+// ── Path traversal: found by the binding QA gate on this file's own PR ────────────────────
+// The first cut ran the clamp loop over every declared skill name BEFORE any had been checked
+// against the manifest. `skills: ["../.."]` therefore reached path.join + readFileSync, read a
+// file outside .claude/skills/, and echoed the matched line into the issue text — which lands
+// in CI logs, in a linter that runs on every pull_request including from forks. CWE-22.
+//
+// Reproduced first-hand before fixing: a canary file at the repo root was read and its contents
+// appeared verbatim in the linter's output.
+
+function lintWithRawSkillName(name) {
+  const agent = `zz-traversal-fixture-${process.pid}`;
+  const file = path.join(AGENTS_DIR, `${agent}.md`);
+  fs.writeFileSync(file, `---
+name: ${agent}
+description: |
+  Throwaway traversal fixture written by scripts/skill-clamp.test.mjs.
+model: claude-sonnet-4-6
+tools: [Read]
+color: gray
+isolation: none
+skills:
+  - ${JSON.stringify(name)}
+risk_tier_default: lite
+escalates_to: orchestrator
+escalates_when: |
+  Never — fixture.
+---
+
+## Purpose
+
+Fixture.
+`);
+  try {
+    return (lintFile(file) || {}).issues || [];
+  } finally {
+    fs.rmSync(file, { force: true });
+  }
+}
+
+const CANARY = 'ZZ-CANARY-MUST-NEVER-BE-READ';
+
+test('a traversing skill name reads nothing and echoes nothing', () => {
+  // Plant a file the traversal would have hit, containing an allowed-tools line.
+  const bait = path.join(REPO, 'SKILL.md');
+  const preexisting = fs.existsSync(bait);
+  assert.equal(preexisting, false, 'refusing to run: a real SKILL.md exists at the repo root');
+  fs.writeFileSync(bait, `allowed-tools: ${CANARY}\n`);
+  try {
+    for (const name of ['../..', 'a/../../b', '../../etc', '/etc', '..\\..']) {
+      const issues = lintWithRawSkillName(name);
+      const leaked = issues.filter((i) => i.includes(CANARY));
+      assert.deepEqual(leaked, [], `name ${JSON.stringify(name)} leaked file contents: ${leaked[0] || ''}`);
+      assert.deepEqual(
+        issues.filter((i) => /declares allowed-tools/.test(i)), [],
+        `name ${JSON.stringify(name)} was treated as a clamping skill`
+      );
+    }
+  } finally {
+    fs.rmSync(bait, { force: true });
+  }
+});
+
+test('a traversing name still gets its ordinary "not in MANIFEST.json" complaint', () => {
+  // Silently ignoring a bad name would trade one defect for another: the reader must still be
+  // told the skill does not resolve.
+  const issues = lintWithRawSkillName('../..');
+  assert.ok(
+    issues.some((i) => /not in MANIFEST\.json/.test(i)),
+    `expected an unresolved-skill issue, got: ${JSON.stringify(issues)}`
+  );
+});
+
+test('the name-shape guard holds independently of the manifest check', () => {
+  // Direct unit test of the guard, so reordering the caller cannot quietly disarm it.
+  const { lintFile: _lf } = require(path.join(REPO, '.claude', 'hooks', 'schema-lint.js'));
+  assert.ok(typeof _lf === 'function');
+  for (const bad of ['../..', '/etc/passwd', 'a/b', 'UPPER', '.hidden', '-leading']) {
+    const issues = lintWithRawSkillName(bad).filter((i) => /declares allowed-tools/.test(i));
+    assert.deepEqual(issues, [], `${bad} passed the shape guard`);
+  }
+});
+
+test('no traversal fixture is left behind', () => {
+  const strays = fs.readdirSync(AGENTS_DIR).filter((n) => n.startsWith('zz-traversal-fixture'));
+  assert.deepEqual(strays, []);
+  assert.equal(fs.existsSync(path.join(REPO, 'SKILL.md')), false, 'bait file survived the test');
+});
