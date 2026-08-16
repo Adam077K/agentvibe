@@ -53,6 +53,21 @@ Every one of those is *correct prose*. `designer`'s whole reason to exist as a s
 **looks at** rendered output. A linter that fails `### Step 4 — Render and look` is not enforcing quality; it
 is enforcing a grammar the corpus never used.
 
+**Decision (2026-08-16, lane-roster):** Option (b) — narrowed the predicate, not the prose. `BODY_VAGUE`
+(used in PS-BODY-VAGUE) excludes `looks?` and `feels?` from the agent-body check. Every flagged site used
+those words as literal observation verbs ("look at the rendered output"), comparison constructors ("looks
+like"), or explicit rejections of vagueness ("not from how the problem feels"). No meaningful vagueness is
+missed: "looks good/clean/reasonable" is caught by "good"/"clean"/"reasonable"; "feels right" is the only
+uncovered case and it does not appear in the corpus. The full `VAGUE` pattern (including `looks?`/`feels?`)
+is preserved at line ~1124 for lens procedure checks, where those words ARE the constructions it was
+calibrated against. Pinned test updated from 6 files/10 sites to 0/0.
+
+**What it means that a rule shipped firing on every engine it governs:** the gap between calibration and
+deployment was the scope change — `VAGUE` was calibrated on YAML procedure entries (one imperative sentence
+each) and then applied, unchanged, to full-paragraph agent body prose. A grammar rule that is correct for
+one register is not automatically correct for another. The lesson is not "never reuse a pattern"; it is
+"record what the pattern was calibrated on and re-measure when the scope changes."
+
 So this standard binds itself to a method:
 
 > **Calibration.** Before a rule may be proposed as `FAIL`, it is run against all seven live engine files and
