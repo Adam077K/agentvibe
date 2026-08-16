@@ -367,15 +367,44 @@ test('a risk:high judge panel from two model families passes', () => {
 // ── Dispositions ────────────────────────────────────────────────────────────
 
 test('a waive disposition validates when it carries a date and a reason', () => {
+  // first_waived is required for scope:project waivers (issue #55) — the clock must start
+  // somewhere so the 90-day cap in cmdLint can enforce it.
   assert.deepEqual(validateClaim(base({
     disposition: { action: 'waive', until: '2026-09-08', reason: 'shadow window still open' },
+    first_waived: '2026-01-01',
   }), 'w'), []);
 });
 
 test('a waiver with no end date fails — that is the claim being switched off', () => {
-  const issues = validateClaim(base({ disposition: { action: 'waive', reason: 'later' } }), 'w');
+  // first_waived is present so this test isolates the missing-until error.
+  const issues = validateClaim(base({
+    disposition: { action: 'waive', reason: 'later' },
+    first_waived: '2026-01-01',
+  }), 'w');
   assert.equal(issues.length, 1);
   assert.match(issues[0], /requires "until".*switched off/);
+});
+
+test('a scope:project waiver without first_waived fails — the 90-day clock needs a start date', () => {
+  // Issue #55: the cap cannot be enforced without first_waived. Global claims are excluded
+  // because ~/.warroom/ledger/global.yml is machine state a PR cannot migrate.
+  const issues = validateClaim(base({
+    disposition: { action: 'waive', until: '2026-09-08', reason: 'x' },
+    // no first_waived
+  }), 'w');
+  assert.equal(issues.length, 1, `expected exactly one issue, got: ${issues.join(', ')}`);
+  assert.match(issues[0], /first_waived/);
+});
+
+test('first_waived is not required for a global-scope waiver', () => {
+  // The global ledger is machine state — a PR cannot retroactively migrate a first_waived date
+  // into it. Requiring it for global claims would break the real global ledger.
+  const issues = validateClaim(base({
+    scope: 'global',
+    disposition: { action: 'waive', until: '2026-09-08', reason: 'x' },
+    // no first_waived — allowed for global
+  }), 'w');
+  assert.deepEqual(issues, []);
 });
 
 test('every disposition needs a reason', () => {

@@ -246,6 +246,58 @@ test('command execution can be disabled, and then reports unresolved rather than
   assert.equal(r.status, 'unresolved');
 });
 
+test('a deprecated command-claim passes without running the command — deprecate was unusable before this fix', () => {
+  // Pre-fix: dispositionOutcome() was never called by claim-command. A deprecated command-claim
+  // kept running its command and failing after the thing it pinned was removed. That made
+  // `deprecate` unusable for command-claims, which are the ones most likely to go stale.
+  // Constructed failure: `false` exits 1, which fails the default expect_exit:0. With the fix,
+  // the deprecation short-circuits and the command never runs.
+  const deprecated = claim({
+    verified_by: 'command',
+    evidence: { cmd: 'false', expect_exit: 0 },
+    disposition: { action: 'deprecate', reason: 'the thing this pinned was removed' },
+  });
+  const r = R.command(deprecated, { cwd: REPO_ROOT });
+  assert.equal(r.status, 'pass', `a deprecated command must pass (not run), got: ${r.reason}`);
+  assert.match(r.reason, /deprecated/);
+});
+
+test('a live waiver on a command-claim passes without running the command', () => {
+  const waived = claim({
+    verified_by: 'command',
+    evidence: { cmd: 'false', expect_exit: 0 },
+    disposition: { action: 'waive', until: '2026-09-08', reason: 'blocked by incident' },
+  });
+  const r = R.command(waived, { cwd: REPO_ROOT, now: NOW });
+  assert.equal(r.status, 'pass', `a live waiver must pass, got: ${r.reason}`);
+  assert.match(r.reason, /waived/);
+});
+
+test('refresh on a command-claim does NOT short-circuit — the command still runs', () => {
+  // refresh says the evidence was renewed. "Renewed" is not the same as "passing". The
+  // command runs; if it fails, the claim fails. This mirrors what freshness does.
+  const refreshed = claim({
+    verified_by: 'command',
+    evidence: { cmd: 'false', expect_exit: 0 },
+    disposition: { action: 'refresh', reason: 're-tested on 2026-08-16' },
+  });
+  const r = R.command(refreshed, { cwd: REPO_ROOT });
+  assert.equal(r.status, 'fail', `refresh must not mask a still-failing command: ${r.reason}`);
+  assert.doesNotMatch(r.reason, /deprecated|waived/);
+});
+
+test('a deprecated source-claim passes without fetching — same fix as command', async () => {
+  const deprecated = claim({
+    verified_by: 'source',
+    evidence: { url: 'https://example.invalid/gone', quote: 'text', accessed: '2026-01-01' },
+    disposition: { action: 'deprecate', reason: 'the source was taken down' },
+  });
+  // fetchImpl that always throws — if it runs, the test fails
+  const r = await R.source(deprecated, { now: NOW, fetchImpl: () => { throw new Error('should not fetch a deprecated claim'); } });
+  assert.equal(r.status, 'pass', `a deprecated source must pass without fetching: ${r.reason}`);
+  assert.match(r.reason, /deprecated/);
+});
+
 // ── claim-judge ─────────────────────────────────────────────────────────────
 
 const judged = (risk, panel) => claim({
@@ -1158,10 +1210,13 @@ test('two global entries sharing one id fail lint, and the message names BOTH li
 });
 
 test('and the same ledger without the duplicate lints clean — the check is not always-on', () => {
+  // Exit may be non-zero because the ratchet fires for uncited UNRESOLVABLE_CITATIONS entries
+  // in a scratch repo — that is expected and orthogonal to duplicate-id detection. What this
+  // test pins: no duplicate-id error on the unmutated fixture.
   withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
     const r = run('lint');
-    assert.equal(r.exit, 0, `the unmutated fixture must pass, or the failure above is unattributable:\n${r.out}`);
-    assert.doesNotMatch(r.out, /duplicate claim id/);
+    assert.doesNotMatch(r.out, /duplicate claim id/,
+      `the unmutated fixture must not report a duplicate:\n${r.out}`);
   });
 });
 
@@ -1179,6 +1234,10 @@ test('a duplicate is reported ONCE, not once per colliding entry', () => {
 // every claim→claim `supports:` target. A `c-…` id written in prose was checked by nothing,
 // so the reference pattern could rot the moment the repo leaned on it — and leaning on it is
 // the only thing that beats vocabulary search, which has no completion criterion.
+//
+// The pre-fix approach used HTML markers (`<!-- ledger:unregistered: reason -->`). Those are
+// replaced by UNRESOLVABLE_CITATIONS: a centralized map in ledger.mjs, checked and ratcheted
+// at lint time. The HTML comments have been removed from the docs they inhabited.
 
 const proseDoc = (...lines) => [
   '# Scratch artifact', '', ...lines, '',
@@ -1189,24 +1248,35 @@ test('a prose citation of an id in no ledger fails lint, and the message names f
   withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
     const r = run('lint');
     assert.equal(r.exit, 1, `a dangling citation must fail:\n${r.out}`);
-    assert.match(r.out, /doc\.md:3: cites claim "c-does-not-exist"/);
-    assert.match(r.out, /ledger:unregistered/, 'the message must name the escape it offers');
+    assert.match(r.out, /doc\.md:3: prose cites claim "c-does-not-exist"/);
+    assert.match(r.out, /UNRESOLVABLE_CITATIONS/, 'the message must name the escape it offers');
   }, proseDoc('The behaviour is recorded as `c-does-not-exist`.'));
 });
 
 test('a citation that RESOLVES passes — otherwise the check above only proves it fails', () => {
+  // c-scratch-one is in the project ledger — citing it must NOT produce a "not in the ledger"
+  // error. The ratchet fires for uncited UNRESOLVABLE_CITATIONS entries in a scratch repo, so
+  // we assert the resolved citation is silent rather than that lint is entirely clean.
   withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
     const r = run('lint');
-    assert.equal(r.exit, 0, `a live citation must not fail:\n${r.out}`);
-    // Non-vacuity: a scanner that found nothing would also exit 0 here.
-    assert.match(r.out, /2 prose citation\(s\) in 1 file\(s\)/);
+    assert.doesNotMatch(r.out, /c-scratch-one.*not in the ledger/,
+      `a live citation must not produce a dangling-citation error:\n${r.out}`);
+    // Non-vacuity: a scanner that found nothing would also not report c-scratch-one.
+    assert.match(r.out, /2 prose citation\(s\) of 1 distinct claim id\(s\)/,
+      'both citations must be counted, or this proves nothing');
   }, proseDoc('Recorded as `c-scratch-one`, and again as `c-scratch-one`.'));
 });
 
-test('a global claim is a valid citation target — the two scopes are one namespace', () => {
+test('a claim in UNRESOLVABLE_CITATIONS is not reported as a dead citation', () => {
+  // The previous test ("a global claim is a valid citation target") relied on fixture injection:
+  // WARROOM_GLOBAL_LEDGER was set to a fixture and the cited id was expected to resolve through
+  // it. The new approach: known global ids are listed in UNRESOLVABLE_CITATIONS, so the check
+  // runs without the real global ledger — which no CI runner has (issue #69).
   withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
-    assert.equal(run('lint').exit, 0, 'a citation of a global claim must resolve when the ledger is readable');
-  }, proseDoc('Recorded as `c-fixture-alpha`.'));
+    const r = run('lint');
+    assert.doesNotMatch(r.out, /c-runtime-nested-spawn.*not in the ledger/,
+      'a UNRESOLVABLE_CITATIONS entry must not fire as a dead citation');
+  }, proseDoc('See `c-runtime-nested-spawn`.'));
 });
 
 test('inside a fence an id is a definition or an example, never a citation', () => {
@@ -1215,48 +1285,256 @@ test('inside a fence an id is a definition or an example, never a citation', () 
   // fenced, and neither is a claim about the world that a reader could follow.
   withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
     const r = run('lint');
-    assert.equal(r.exit, 0, `a fenced id must not be read as a citation:\n${r.out}`);
-    assert.match(r.out, /0 prose citation\(s\)/, 'the fenced ids must not even be counted');
+    assert.doesNotMatch(r.out, /c-inside-a-fence.*not in the ledger/,
+      `a fenced id must not be read as a citation:\n${r.out}`);
+    assert.match(r.out, /0 prose citation\(s\) of 0 distinct claim id\(s\)/,
+      'the fenced ids must not even be counted');
   }, proseDoc(`${FENCE}json`, '{"claim": "c-inside-a-fence"}', FENCE));
-});
-
-test('a marked citation is exempt, and the marker is counted rather than hidden', () => {
-  withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
-    const r = run('lint');
-    assert.equal(r.exit, 0, `a marked citation must not fail:\n${r.out}`);
-    assert.match(r.out, /1 marked ledger:unregistered/, 'an exemption that is not counted is an exemption nobody audits');
-  }, proseDoc('Proposed: `c-proposed-later` <!-- ledger:unregistered: not compiled yet -->'));
-});
-
-test('a marker whose ids all resolve is reported as stale — the lapsed-waiver shape', () => {
-  // An exemption that has stopped suppressing anything reads as a live reason and is not
-  // one. The set only stays honest if it shrinks when the reason does.
-  withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
-    const r = run('lint');
-    assert.equal(r.exit, 1, `a stale marker must be reported:\n${r.out}`);
-    assert.match(r.out, /carries `ledger:unregistered` but every claim id on the line resolves/);
-    assert.match(r.out, /c-scratch-one/);
-  }, proseDoc('Now registered: `c-scratch-one` <!-- ledger:unregistered: stale -->'));
-});
-
-test('the marker\'s own reason may name the id it exempts without becoming a citation', () => {
-  // The first marker written for CLAIM-LEDGER.md:50 said "c-kebab-case names the id FORMAT",
-  // and the scanner counted the reason as an eighth citation. A check whose own remedy moves
-  // its numbers is a check whose numbers reconcile against nothing.
-  withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
-    const r = run('lint');
-    assert.equal(r.exit, 0, r.out);
-    assert.match(r.out, /1 prose citation\(s\)/, 'the id inside the comment must not be counted');
-  }, proseDoc('Format only: `c-kebab-case` <!-- ledger:unregistered: c-kebab-case is the FORMAT -->'));
 });
 
 test('the citation scan is not empty over THIS repository', () => {
   // Every test above runs in a scratch repo. A scanner that worked only there — a wrong
   // file list, a fence rule that swallows real docs — would leave all of them green while
-  // checking nothing that ships. Measured 2026-08-16: 81 citations across 37 files.
+  // checking nothing that ships. Measured 2026-08-16: 114 citations of 23 distinct claim ids.
   const out = execFileSync('node', ['scripts/ledger.mjs', 'lint'], { cwd: REPO_ROOT, encoding: 'utf8' });
-  const m = out.match(/(\d+) prose citation\(s\) in (\d+) file\(s\)/);
+  const m = out.match(/(\d+) prose citation\(s\) of (\d+) distinct claim id\(s\)/);
   assert.ok(m, `lint must report the citation count:\n${out}`);
   assert.ok(Number(m[1]) >= 40, `only ${m[1]} citations found — an empty-ish scan proves nothing`);
-  assert.ok(Number(m[2]) >= 15, `only ${m[2]} files contributed — the file list is too narrow`);
+  assert.ok(Number(m[2]) >= 15, `only ${m[2]} distinct ids found — the file list is too narrow`);
+});
+
+// ── #69 · dead citations fail on CI, with no global ledger ──────────────────
+//
+// Pre-fix: lint exited 0 on a CI runner because (a) no ~/.warroom/ledger/global.yml existed,
+// so the global scope was empty, and (b) the old scanner treated a missing global scope as
+// "nothing to check" rather than "nothing found" — every global-scope citation passed silently.
+//
+// The fix: ids that ARE known global claims are listed in UNRESOLVABLE_CITATIONS so the check
+// can run without the global ledger; ids in NEITHER the project ledger NOR UNRESOLVABLE_CITATIONS
+// fail regardless. Enforcement is the same on every machine.
+
+test('a dead citation fails lint even without the global ledger — CI has the same enforcement as a laptop', () => {
+  const dir = scratchRepo(proseDoc('Dead ref: `c-does-not-exist`.'));
+  try {
+    // No WARROOM_GLOBAL_LEDGER at all — simulates a CI runner with no ~/.warroom/ledger
+    const r = ledger(dir, 'lint');
+    assert.equal(r.exit, 1, `dead citation must fail even without a global ledger:\n${r.out}`);
+    assert.match(r.out, /c-does-not-exist.*not in the ledger/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a c-… token in plain prose (no backticks) is not a citation — English words are safe', () => {
+  // Rule 1 of the citation grammar: must be an inline code span. This eliminates false
+  // positives — "c-suite" is never a citation, even in repos that use that word heavily.
+  const dir = scratchRepo(proseDoc('The c-suite approved this; so did c-level staff.'));
+  try {
+    const r = ledger(dir, 'lint');
+    assert.match(r.out, /0 prose citation\(s\) of 0 distinct claim id\(s\)/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a span holding more than just the id is an example, not a citation', () => {
+  // Rule 2 of the citation grammar: the whole span must match CITED_ID_RE.
+  // `node scripts/ledger.mjs locate c-scratch-one` is a shell example — the span holds
+  // more than an id, so it is never a citation of c-scratch-one.
+  const dir = scratchRepo(proseDoc('Run `node scripts/ledger.mjs locate c-scratch-one` to find it.'));
+  try {
+    const r = ledger(dir, 'lint');
+    assert.match(r.out, /0 prose citation\(s\) of 0 distinct claim id\(s\)/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('CITED_ID_RE uses the same grammar as ID_RE in claims.js — they cannot drift apart silently', () => {
+  // Two statements of one fact drift. The test asserts they match, which is what stops them.
+  const claimsSrc = fs.readFileSync(path.join(REPO_ROOT, 'scripts', 'lib', 'claims.js'), 'utf8');
+  const ledgerSrc = fs.readFileSync(path.join(REPO_ROOT, 'scripts', 'ledger.mjs'), 'utf8');
+  const idM = claimsSrc.match(/const ID_RE = (\/[^/]+\/);/);
+  const citedM = ledgerSrc.match(/const CITED_ID_RE = (\/[^/]+\/);/);
+  assert.ok(idM, 'ID_RE must be findable in claims.js');
+  assert.ok(citedM, 'CITED_ID_RE must be findable in ledger.mjs');
+  assert.equal(citedM[1], idM[1], `CITED_ID_RE ${citedM[1]} must match ID_RE ${idM[1]}`);
+});
+
+test('a declared UNRESOLVABLE_CITATIONS entry with nothing citing it fails lint — the list is a ratchet', () => {
+  // An exemption that has stopped suppressing anything is a blanket permission with nothing
+  // under it. The list can only shrink, and cannot outlive its subjects.
+  const dir = scratchRepo(proseDoc('No claim ids cited here at all.'));
+  try {
+    const r = ledger(dir, 'lint');
+    assert.equal(r.exit, 1, `an uncited exemption must fail lint:\n${r.out}`);
+    assert.match(r.out, /UNRESOLVABLE_CITATIONS declares.*no prose cites any more/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a four-backtick outer fence wrapping a three-backtick inner one keeps both opaque', () => {
+  // CLAIM-LEDGER.md shows the claim format by wrapping a ```claims block inside ````markdown.
+  // A scanner that ignores nesting would count the inner fence closing as prose and scan what
+  // follows as inline content. This verifies nesting is honoured.
+  const doc = [
+    '# Scratch',
+    '',
+    '````markdown',
+    '```json',
+    '{"claim": "c-inside-nested"}',
+    '```',
+    '````',
+    '',
+    `${FENCE}claims`,
+    'claims:',
+    scratchClaim(),
+    FENCE,
+    '',
+  ].join('\n');
+  const dir = scratchRepo(doc);
+  try {
+    const r = ledger(dir, 'lint');
+    assert.match(r.out, /0 prose citation\(s\) of 0 distinct claim id\(s\)/,
+      `ids inside nested fences must not be counted:\n${r.out}`);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── #55 · waiver deadlines cannot be extended indefinitely without a CI signal ─
+//
+// `disposition` is intentionally absent from KEY_ORDER — a reason edit must not produce an
+// index diff — but that means `build --check` never sees a changed `until`. The fix:
+// `first_waived` enters the index the FIRST time a claim is waived and stays there.
+// Extending `until` without changing `first_waived` is invisible until the 90-day cap is
+// exceeded, at which point lint fails — and that is the only CI-observable signal for
+// something that `build --check` cannot see between changes.
+
+/** A project-scope waived claim with an explicit first_waived date, as a YAML block string. */
+function waivedClaim(firstWaived) {
+  return [
+    '  - id: c-scratch-one',
+    '    assert: "a test waiver claim"',
+    '    kind: behavior',
+    '    scope: project',
+    '    verified_by: command',
+    '    evidence: {cmd: "true", expect_exit: 0}',
+    '    valid_until: 2027-01-01',
+    '    confidence: 0.9',
+    '    disposition:',
+    '      action: waive',
+    '      reason: "testing the 90-day cap"',
+    '      until: 2099-01-01',
+    `    first_waived: ${firstWaived}`,
+  ].join('\n');
+}
+
+test('a claim waived more than 90 days ago fails lint', () => {
+  // 2025-01-01 is always > 90 days before any reasonable run date in 2026+.
+  const dir = scratchRepo(scratchDoc([waivedClaim('2025-01-01')]));
+  try {
+    const r = ledger(dir, 'lint');
+    assert.equal(r.exit, 1, `a cap-exceeded waiver must fail lint:\n${r.out}`);
+    assert.match(r.out, /cap is exceeded/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a claim waived within the 90-day cap passes the cap check', () => {
+  // 10 days ago is always within 90 days.
+  const firstWaived = new Date(Date.now() - 10 * 86400000).toISOString().slice(0, 10);
+  const dir = scratchRepo(scratchDoc([waivedClaim(firstWaived)]));
+  try {
+    const r = ledger(dir, 'lint');
+    assert.doesNotMatch(r.out, /cap is exceeded/, `a recent waiver must not trip the cap:\n${r.out}`);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a scope:project waiver without first_waived fails schema validation', () => {
+  // The clock cannot start if the start date is absent.
+  const claimNoFirstWaived = [
+    '  - id: c-scratch-one',
+    '    assert: "a waiver missing first_waived"',
+    '    kind: behavior',
+    '    scope: project',
+    '    verified_by: command',
+    '    evidence: {cmd: "true", expect_exit: 0}',
+    '    valid_until: 2027-01-01',
+    '    confidence: 0.9',
+    '    disposition:',
+    '      action: waive',
+    '      reason: "missing first_waived on purpose"',
+    '      until: 2099-01-01',
+  ].join('\n');
+  const dir = scratchRepo(scratchDoc([claimNoFirstWaived]));
+  try {
+    const r = ledger(dir, 'lint');
+    assert.equal(r.exit, 1, `missing first_waived must fail schema:\n${r.out}`);
+    assert.match(r.out, /first_waived/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── #68 · a malformed global ledger produces a clean error, not a stack trace ─
+//
+// Before this fix: `parseYamlSubset` throws a ClaimError on a duplicate key, a tab in
+// indentation, or an unterminated quote; the throw propagated all the way to main(), and
+// every subcommand died with a raw Node.js stack trace naming scripts/ call sites rather
+// than the line in the global ledger that was actually wrong.
+//
+// After: `collectGlobalClaims()` catches the ClaimError, wraps it in a one-line message
+// naming the file and the line, and re-throws. Three states remain structurally distinct:
+//   absent  → {present: false}
+//   corrupt → throws with a clean message
+//   valid   → {present: true, claims: [...]}
+
+test('a global ledger with a duplicate key is reported cleanly — no raw stack trace', () => {
+  const yaml = [
+    'claims:',
+    '  - id: c-test',
+    '    assert: "test"',
+    '    kind: runtime-capability',
+    '    scope: global',
+    '    verified_by: command',
+    '    evidence: {cmd: "true", expect_exit: 0}',
+    '    valid_until: 2027-01-01',
+    '    confidence: 1',
+    'claims:',      // duplicate key — triggers ClaimError
+    '  - id: c-test2',
+  ].join('\n');
+  withScratchAndGlobal(yaml, (run) => {
+    const r = run('lint');
+    assert.ok(r.exit !== 0, `a corrupt global ledger must not exit 0:\n${r.out}`);
+    assert.match(r.out, /is malformed and cannot be parsed/);
+    assert.match(r.out, /global\.yml/);
+    assert.doesNotMatch(r.out, /at Object\.|at file:\/\//, 'must not expose a raw stack trace');
+  });
+});
+
+test('a global ledger with a tab in indentation is reported cleanly', () => {
+  const yaml = 'claims:\n\t- id: c-test\n    assert: "tab fail"';
+  withScratchAndGlobal(yaml, (run) => {
+    const r = run('lint');
+    assert.ok(r.exit !== 0, `a corrupt global ledger must not exit 0:\n${r.out}`);
+    assert.match(r.out, /is malformed and cannot be parsed/);
+    assert.match(r.out, /tab in indentation/);
+    assert.doesNotMatch(r.out, /at Object\.|at file:\/\//);
+  });
+});
+
+test('a global ledger with an unterminated quote is reported cleanly', () => {
+  const yaml = 'claims:\n  - id: c-test\n    assert: "unterminated\n    kind: runtime-capability';
+  withScratchAndGlobal(yaml, (run) => {
+    const r = run('lint');
+    assert.ok(r.exit !== 0, `a corrupt global ledger must not exit 0:\n${r.out}`);
+    assert.match(r.out, /is malformed and cannot be parsed/);
+    assert.match(r.out, /unterminated quote/);
+    assert.doesNotMatch(r.out, /at Object\.|at file:\/\//);
+  });
 });
