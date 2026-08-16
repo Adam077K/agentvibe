@@ -3387,6 +3387,14 @@ describe('projectEmptyState is not vulnerable to shell injection via project.roo
 
     const savedRoots = process.env.MC_PROJECT_ROOTS;
     process.env.MC_PROJECT_ROOTS = projectsRoot;
+    // MC_INDEX_CACHE too, and it is not incidental. This test boots the REAL server module —
+    // that is its whole point, since the RCE it pins was only reachable end to end — so it gets
+    // the real `live` singleton, which persists its session index to ~/.agentvibe by default.
+    // Without this the suite leaves a multi-megabyte index of the developer's actual corpus in
+    // their home directory. Found by looking at the filesystem after a full `npm run check`,
+    // not by any assertion; check.mjs now asserts it.
+    const savedCache = process.env.MC_INDEX_CACHE;
+    process.env.MC_INDEX_CACHE = path.join(projectsRoot, 'index-cache.json');
     try {
       const mc = (await import('../server/index.ts')).default;
       const res = await mc.fetch(new Request(`http://127.0.0.1/api/project/${encodeURIComponent(maliciousName)}`));
@@ -3398,6 +3406,8 @@ describe('projectEmptyState is not vulnerable to shell injection via project.roo
     } finally {
       if (savedRoots === undefined) delete process.env.MC_PROJECT_ROOTS;
       else process.env.MC_PROJECT_ROOTS = savedRoots;
+      if (savedCache === undefined) delete process.env.MC_INDEX_CACHE;
+      else process.env.MC_INDEX_CACHE = savedCache;
       cleanupMarker(markerPath);
     }
   });

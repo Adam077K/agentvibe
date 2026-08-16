@@ -10,10 +10,22 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { listTranscripts, turnsFrom, type Turn } from './lib/usage.ts';
 import type { Project } from './projects.ts';
 
-interface FileEntry {
+/**
+ * How many bytes at the end of a file the boundary hash covers.
+ *
+ * 4 KB, measured rather than picked. Across the real corpus (2,538 files, 3.04 GB,
+ * 2026-08-16) a stat-only pass costs 4–6 ms and hashing a trailing window costs 40–55 ms at
+ * 4 KB, 63 ms at 16 KB, 118 ms at 64 KB — against the 4,659 ms full build this whole
+ * mechanism exists to avoid. 4 KB buys the detection at ~1% of what it replaces; the larger
+ * windows buy no additional CLASS of detection, only a wider sample of the same one.
+ */
+export const BOUNDARY_BYTES = 4096;
+
+export interface FileEntry {
   size: number;
   mtimeMs: number;
   turns: Turn[];
@@ -21,6 +33,51 @@ interface FileEntry {
   projectId: string;
   sessionId: string;
   file: string;
+  /**
+   * sha256 of the last {@link BOUNDARY_BYTES} bytes as of this entry's `size` — that is, of
+   * `bytes[max(0, size - 4096) … size)`.
+   *
+   * WHAT IT IS FOR. `size + mtimeMs` is the key this store has always used, and it misses two
+   * things. Both were REPRODUCED on a frozen fixture before this field existed, and both are
+   * defects on `main` today rather than anything persistence introduced:
+   *
+   *   1. A file rewritten in place with size AND mtime preserved. The key sees nothing at all:
+   *      0 files read, 0 bytes read, stale answer served.
+   *   2. A file whose prefix is rewritten while it also grows. `readAppended` reads from the
+   *      old offset on the assumption that `bytes[0, prev.size)` are unchanged — an assumption
+   *      nothing checked until this field. The changed prefix is never re-read.
+   *
+   * Persistence creates neither; it widens the window in which they can happen from the ~1 s
+   * between SSE ticks to however long Mission Control was shut down. That is why the check is
+   * spent on entries restored from disk (see `needsVerify`) rather than on every tick.
+   *
+   * WHAT IT DOES NOT CATCH, at full strength, because the limit is structural: a rewrite that
+   * changes only bytes before `size - 4096` and leaves the final 4 KB byte-identical is
+   * invisible to it. YOU CANNOT VERIFY BYTES YOU DO NOT READ, and reading them all is the cost
+   * being avoided. This is a sample, not a proof. What a sample misses is recovered by a full
+   * rebuild, not by this field.
+   */
+  boundaryHash: string;
+  /**
+   * True only for an entry restored from a persisted index and not yet checked against the
+   * disk. Set by `hydrate`, cleared the first time `refresh` either verifies the boundary or
+   * re-reads the file.
+   *
+   * WHY NOT SIMPLY "ALWAYS VERIFY". In-process entries were produced by this process and
+   * re-stat'd every ~1 s by the SSE tick; entries off disk describe a window nobody watched,
+   * of unbounded length. Different trust situations, and the cheap check is spent on the one
+   * that needs it. Always-verifying would add the measured 40–55 ms to every 1 s tick — 4x the
+   * cost of a 16 ms refresh — to re-answer a question answered a second ago.
+   */
+  needsVerify: boolean;
+}
+
+/** sha256 of the trailing {@link BOUNDARY_BYTES} of `buf`, truncated to 32 hex chars. */
+export function boundaryHashOf(buf: Buffer): string {
+  return createHash('sha256')
+    .update(buf.subarray(Math.max(0, buf.length - BOUNDARY_BYTES)))
+    .digest('hex')
+    .slice(0, 32);
 }
 
 export interface SessionSummary {
@@ -83,6 +140,71 @@ export interface RefreshResult {
    * without this field.
    */
   distinctFilesRead: number;
+  /**
+   * Scanned, determined unchanged, and NOT opened. A skipped file is not a read file, and
+   * keeping them in separate counters is what lets `filesRead` keep meaning what it says once
+   * a build can skip most of the corpus.
+   */
+  filesSkipped: number;
+  /**
+   * Scanned, but no transcript bytes were read and it was not skipped either. Three ways in,
+   * and the third is not an error:
+   *
+   *   · `statSync` threw — nothing could be learned about the path at all;
+   *   · the read itself threw;
+   *   · **the file's mtime moved while its size did not**, so the append is zero bytes long.
+   *     This is not hypothetical: measured on the real corpus 2026-08-16, five transcripts
+   *     across two unrelated projects had their mtimes rewritten to the same millisecond (four
+   *     by exactly 3600.0 s) with byte-identical content — a bulk metadata touch by something
+   *     that wrote nothing. The cheap key says "changed", the disk says otherwise, and calling
+   *     that a read would be the counter agreeing with the key instead of with the disk.
+   *
+   * COUNTED, NEVER DERIVED. This was `filesScanned - filesRead - filesSkipped`, which is an
+   * identity rather than a check: a file counted in two buckets simply pushed this negative and
+   * the sum still balanced. A reviewer demonstrated it — double-counting a read file as skipped
+   * passed all 266 tests. Each branch below now increments it explicitly, so the invariant can
+   * fail in BOTH directions: a missing bucket makes the sum short, a double count makes it long.
+   *
+   * THE COLD-PATH INVARIANT, and it is deterministic on every machine:
+   *
+   *     filesScanned === filesRead + filesSkipped + filesUnread
+   *
+   * A file is scanned exactly once and lands in exactly one bucket. Without this third bucket
+   * the sum would silently fall short on any corpus holding an unreadable transcript, and a
+   * reader would reasonably conclude the skip logic had a bug. Compare the pre-existing
+   * `filesScanned === filesRead === distinctFilesRead`, which still holds EXACTLY as before
+   * for a true cold build (no prior index: nothing is skipped, so `filesSkipped` is 0).
+   */
+  filesUnread: number;
+  /**
+   * How many boundary-hash probes were performed — a 4 KB read at a recorded offset, to answer
+   * "is this file still the file this entry describes".
+   *
+   * KEPT SEPARATE FROM `filesRead` DELIBERATELY. A 4 KB probe is not a transcript read: it
+   * parses nothing and contributes no turns. Counting it in `filesRead` would make that
+   * counter mean two different things at once, which is the exact defect this codebase keeps
+   * finding. Its bytes DO land in `bytesRead`, because they were genuinely read off the disk —
+   * and a true cold build performs zero probes, so `bytesRead` there is unpolluted and still
+   * cross-checks against an independent corpus walk (test/live.test.ts).
+   */
+  filesVerified: number;
+  /**
+   * Of those probes, how many found the file had changed underneath an unchanged `size` +
+   * `mtimeMs`, or an altered prefix beneath an append — i.e. how many times the cheap key was
+   * WRONG and the boundary hash caught it. Zero is the expected value; a non-zero value is the
+   * mechanism reporting that it earned its cost.
+   */
+  filesStale: number;
+  /**
+   * Bytes read for boundary hashing — probes, plus the anchor window re-read after an append.
+   *
+   * SEPARATE FROM `bytesRead` FOR THE SAME REASON `filesVerified` IS SEPARATE FROM `filesRead`.
+   * `bytesRead` is a DECODED-TEXT count of transcript content, and test/units.test.ts pins it
+   * to exactly the appended slice on the tail-read path — an assertion that would stop meaning
+   * anything if a fixed 4 KB of anchor bytes were folded in. These bytes are real disk reads
+   * and are reported; they are simply not the same quantity.
+   */
+  verifyBytesRead: number;
 }
 
 /**
@@ -145,6 +267,11 @@ export class IndexStore {
   private reads = 0;
   private bytes = 0;
   private readPaths = new Set<string>();
+  private skips = 0;
+  private unread = 0;
+  private verifies = 0;
+  private stales = 0;
+  private verifyBytes = 0;
 
   /**
    * What the last build actually did — the same object it returned.
@@ -173,6 +300,25 @@ export class IndexStore {
     this.reads = 0;
     this.bytes = 0;
     this.readPaths.clear();
+    this.skips = 0;
+    this.unread = 0;
+    this.verifies = 0;
+    this.stales = 0;
+    this.verifyBytes = 0;
+  }
+
+  /**
+   * Restores entries from a persisted index, replacing whatever this store held.
+   *
+   * Every restored entry is marked `needsVerify`, so the NEXT `refresh` checks each one
+   * against the disk before trusting it. Hydrating does not itself make the index usable: it
+   * makes a cheap `refresh` possible, and `refresh` is what establishes freshness. Callers go
+   * hydrate → refresh, never hydrate alone; `LiveState` is the only such caller.
+   */
+  hydrate(entries: Iterable<FileEntry>): number {
+    this.files.clear();
+    for (const e of entries) this.files.set(e.file, { ...e, needsVerify: true });
+    return this.files.size;
   }
 
   /** Full read of every transcript in every project. No prior state is reused. */
@@ -184,7 +330,7 @@ export class IndexStore {
       for (const dir of project.transcriptDirs) {
         for (const file of listTranscripts(dir)) {
           scanned++;
-          this.readFull(file, project.id);
+          if (!this.readFull(file, project.id)) this.unread++;
         }
       }
     }
@@ -196,6 +342,14 @@ export class IndexStore {
       filesRead: this.reads,
       bytesRead: this.bytes,
       distinctFilesRead: this.readPaths.size,
+      // Nothing is skipped when there is no prior state, so `filesScanned === filesRead`
+      // survives here exactly as it did before the skip counters existed. `filesUnread` picks
+      // up any read that threw — previously those made the equality quietly false.
+      filesSkipped: 0,
+      filesUnread: this.unread,
+      filesVerified: 0,
+      filesStale: 0,
+      verifyBytesRead: 0,
     };
     return this.last;
   }
@@ -222,19 +376,41 @@ export class IndexStore {
           try {
             st = fs.statSync(file);
           } catch {
+            this.unread++; // scanned, but nothing could be learned about it
             continue;
           }
 
           const prev = this.files.get(file);
           if (prev && prev.mtimeMs === st.mtimeMs && prev.size === st.size) {
-            continue; // untouched since last read — contributes exactly what it did then
+            // Untouched by the cheap key. For an entry this process produced, that settles it.
+            // For one restored from disk it does not: the key is blind to a rewrite that
+            // preserves both fields, so the boundary is checked once before the entry is
+            // trusted, and a file that fails it is re-read in full.
+            if (!prev.needsVerify || this.boundaryStillMatches(file, prev)) {
+              prev.needsVerify = false;
+              this.skips++;
+              continue;
+            }
+            this.stales++;
+            changed++;
+            if (!this.readFull(file, project.id, st)) this.unread++;
+            continue;
           }
           changed++;
 
+          // The append path reads from `prev.size` on the assumption that everything before it
+          // is unchanged. For a restored entry that assumption spans a shutdown of unbounded
+          // length, so it is TESTED rather than assumed — and a failure means the prefix moved,
+          // which only a full read can resolve.
           if (prev && st.size >= prev.size) {
-            this.readAppended(file, project.id, prev, st);
+            if (!prev.needsVerify || this.boundaryStillMatches(file, prev)) {
+              if (!this.readAppended(file, project.id, prev, st)) this.unread++;
+            } else {
+              this.stales++;
+              if (!this.readFull(file, project.id, st)) this.unread++;
+            }
           } else {
-            this.readFull(file, project.id, st);
+            if (!this.readFull(file, project.id, st)) this.unread++;
           }
         }
       }
@@ -260,27 +436,101 @@ export class IndexStore {
       filesRead: this.reads,
       bytesRead: this.bytes,
       distinctFilesRead: this.readPaths.size,
+      filesSkipped: this.skips,
+      // COUNTED AT THE SITE, NOT DERIVED FROM THE OTHERS. It was `scanned - reads - skips`,
+      // which made the invariant an identity: it could not fail, because the residual absorbed
+      // any error. Found in review — a mutation that counted one file as BOTH read and skipped
+      // passed the entire suite, because `filesUnread` silently went negative to balance it.
+      // Now every branch that ends without reading transcript bytes increments this, so the sum
+      // over-runs `filesScanned` when a file lands in two buckets and the assertion fails.
+      //
+      // NO TEST PINS "COUNTED RATHER THAN DERIVED", AND NO TEST CAN. On correct code the two
+      // produce the SAME NUMBER for every input — that is what made the old version look fine —
+      // so reverting this line to the residual leaves the suite green. The property is real and
+      // is verified by MUTATION, not by assertion, and the executed result is recorded here so
+      // nobody has to re-derive it:
+      //
+      //   revert to `scanned - this.reads - this.skips`  -> suite green (the vacuity)
+      //   then add `this.skips++` beside a read          -> 3 tests red with this line,
+      //                                                     0 red with the residual
+      //
+      // Anyone changing this line should re-run that pair rather than trust the green.
+      filesUnread: this.unread,
+      filesVerified: this.verifies,
+      filesStale: this.stales,
+      verifyBytesRead: this.verifyBytes,
     };
     return this.last;
   }
 
-  private readFull(file: string, projectId: string, stKnown?: fs.Stats) {
+  /**
+   * Re-reads the {@link BOUNDARY_BYTES} ending at `prev.size` and compares them against the
+   * hash recorded when that entry was built. True means the file still looks like the file the
+   * entry describes; false means it demonstrably does not.
+   *
+   * A PROBE THAT COULD NOT RUN RETURNS FALSE, NEVER TRUE. An unreadable file, a short read, a
+   * file that shrank below the recorded offset — none of those are evidence the entry is
+   * still good, and returning true on them would make this a mechanism reporting success about
+   * something it did not measure. False costs a full re-read, which is correct by construction.
+   */
+  private boundaryStillMatches(file: string, prev: FileEntry): boolean {
+    const off = Math.max(0, prev.size - BOUNDARY_BYTES);
+    const len = prev.size - off;
+    if (len <= 0) return false; // a zero-length recorded entry anchors nothing
+    let fd: number | null = null;
+    try {
+      fd = fs.openSync(file, 'r');
+      const buf = Buffer.alloc(len);
+      const got = fs.readSync(fd, buf, 0, len, off);
+      if (got !== len) return false; // the file no longer reaches the offset it was hashed at
+      this.verifies++;
+      this.verifyBytes += got;
+      return boundaryHashOf(buf) === prev.boundaryHash;
+    } catch {
+      return false;
+    } finally {
+      if (fd !== null) {
+        try {
+          fs.closeSync(fd);
+        } catch {
+          /* already gone */
+        }
+      }
+    }
+  }
+
+  /** True when transcript bytes were read. False means nothing was learned from the file. */
+  private readFull(file: string, projectId: string, stKnown?: fs.Stats): boolean {
     let text: string;
+    let buf: Buffer;
     let st: fs.Stats;
     try {
       st = stKnown ?? fs.statSync(file);
-      text = fs.readFileSync(file, 'utf8');
+      // READ AS A BUFFER, DECODED AFTER. Same syscall, same bytes, one extra reason: the
+      // boundary hash must cover the bytes that are ON DISK. Hashing `Buffer.from(text)`
+      // instead would hash a RE-ENCODING — and for any transcript holding invalid UTF-8 the
+      // round trip is lossy (each bad byte becomes a 3-byte replacement character), so the
+      // stored hash would not match what a later probe reads back, and the file would be
+      // re-read in full forever without anything saying why.
+      buf = fs.readFileSync(file);
+      text = buf.toString('utf8');
       // COUNTED IMMEDIATELY AFTER THE READ ITSELF, not once per call to this method, and the
       // difference is the whole point: a second `readFileSync` added inside this try block
       // moves `reads` twice while `readPaths` stays at one, so the re-read shows up. Counting
-      // per call would have missed it. Bytes are taken with Buffer.byteLength rather than
-      // `text.length`, which is UTF-16 code units — the two agree only for ASCII, and
-      // transcripts are not.
+      // per call would have missed it.
+      //
+      // STILL `Buffer.byteLength(text)` AND NOT `buf.length`, THOUGH THE BUFFER IS RIGHT HERE.
+      // Changing it to the buffer's length was tried and reverted: `bytesRead` is deliberately
+      // a DECODED-TEXT count, because test/live.test.ts brackets it against a stat-side walk of
+      // the corpus and that comparison is only an independent oracle while the two counts have
+      // independent sources. `buf.length` would make it stat-vs-stat — a number compared with
+      // itself. See test/units.test.ts, "bytesRead counts DECODED bytes", which pins exactly
+      // this with a deliberately invalid-UTF-8 fixture.
       this.reads++;
       this.bytes += Buffer.byteLength(text, 'utf8');
       this.readPaths.add(file);
     } catch {
-      return; // NOT counted: a read that threw is not a read, and counting it would make
+      return false; // NOT counted: a read that threw is not a read, and counting it would make
       // `filesRead === filesScanned` true on a corpus half of which could not be opened.
     }
     this.files.set(file, {
@@ -291,23 +541,59 @@ export class IndexStore {
       projectId,
       sessionId: path.basename(file, '.jsonl'),
       file,
+      boundaryHash: boundaryHashOf(buf),
+      needsVerify: false, // just read in full: this entry IS the disk
     });
+    return true;
   }
 
-  private readAppended(file: string, projectId: string, prev: FileEntry, st: fs.Stats) {
+  /** True when appended transcript bytes were read. False for a zero-length append. */
+  private readAppended(file: string, projectId: string, prev: FileEntry, st: fs.Stats): boolean {
     const len = st.size - prev.size;
+    let didRead = false;
     let chunk = '';
+    // The new boundary window ends at the NEW size, and when the appended chunk is shorter
+    // than BOUNDARY_BYTES it reaches back into bytes this call never read. Read the window
+    // explicitly rather than deriving it from the chunk: a hash computed over "the chunk,
+    // padded with whatever we happen to have" would not match what a later probe reads at the
+    // same offset, and the mismatch would look like corruption.
+    let boundary = prev.boundaryHash;
+    let fd: number | null = null;
     try {
-      const fd = fs.openSync(file, 'r');
-      const buf = Buffer.alloc(len);
-      fs.readSync(fd, buf, 0, len, prev.size);
-      fs.closeSync(fd);
-      chunk = buf.toString('utf8');
-      this.reads++;
-      this.bytes += Buffer.byteLength(chunk, 'utf8');
-      this.readPaths.add(file);
+      fd = fs.openSync(file, 'r');
+      if (len > 0) {
+        const buf = Buffer.alloc(len);
+        const got = fs.readSync(fd, buf, 0, len, prev.size);
+        chunk = buf.subarray(0, got).toString('utf8');
+        didRead = true;
+        this.reads++;
+        this.bytes += Buffer.byteLength(chunk, 'utf8'); // decoded, as in readFull
+        this.readPaths.add(file);
+      }
+      const off = Math.max(0, st.size - BOUNDARY_BYTES);
+      const wlen = st.size - off;
+      if (wlen > 0) {
+        const wbuf = Buffer.alloc(wlen);
+        const wgot = fs.readSync(fd, wbuf, 0, wlen, off);
+        // A short read leaves the recorded hash unable to describe the recorded size, so the
+        // entry must not claim one. Zeroing it forces the next refresh down the full-read
+        // path — the safe direction, and never a silent pass.
+        boundary = wgot === wlen ? boundaryHashOf(wbuf.subarray(0, wgot)) : '';
+        this.verifyBytes += wgot; // anchor bytes, NOT transcript bytes — see verifyBytesRead
+      } else {
+        boundary = '';
+      }
     } catch {
       chunk = ''; // as in readFull: a failed read is not counted
+      boundary = '';
+    } finally {
+      if (fd !== null) {
+        try {
+          fs.closeSync(fd);
+        } catch {
+          /* already gone */
+        }
+      }
     }
     this.files.set(file, {
       size: st.size,
@@ -320,7 +606,19 @@ export class IndexStore {
       projectId,
       sessionId: prev.sessionId,
       file,
+      boundaryHash: boundary,
+      needsVerify: false, // either verified above or re-read; either way, checked against disk
     });
+    return didRead;
+  }
+
+  /**
+   * The entries as they stand, for a caller that persists them. Returns the live objects
+   * rather than copies — the only caller serialises them immediately and a defensive copy of
+   * 166,374 turns would cost more than the write does.
+   */
+  entries(): IterableIterator<FileEntry> {
+    return this.files.values();
   }
 
   sessionsFor(projectId: string): SessionSummary[] {

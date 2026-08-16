@@ -25,6 +25,7 @@
 
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -83,7 +84,45 @@ function main() {
     process.exit(typecheck);
   }
 
-  process.exit(run('tests (bun test)', 'bun', ['test']));
+  // WHERE THE SUITE'S SIDE EFFECTS ARE CAUGHT, and it has to be here rather than in a test.
+  //
+  // LiveState persists the session index to ~/.agentvibe/mission-control/index.json unless it
+  // is told otherwise. A test that builds one — or that boots the real server module, which the
+  // end-to-end RCE regression test does deliberately — will write a multi-megabyte index of the
+  // developer's actual corpus into their home directory. It happened: found only by looking at
+  // the filesystem after a full run, because nothing asserted otherwise.
+  //
+  // A test file cannot police this. `bun test` runs each file as its own process (demonstrated
+  // by bisecting for the writer: only one file's run changed the file's mtime), so no afterAll
+  // can observe what a different file did. This wrapper sees the whole run, so this is the only
+  // place the check can live. It reads no source and enumerates no API — it looks at the path.
+  const homeIndex = path.join(os.homedir(), '.agentvibe', 'mission-control', 'index.json');
+  const before = statSig(homeIndex);
+  const status = run('tests (bun test)', 'bun', ['test']);
+  const after = statSig(homeIndex);
+  if (before !== after) {
+    process.stderr.write(
+      `mission-control: THE TEST SUITE WROTE TO YOUR HOME DIRECTORY — ${homeIndex}\n` +
+        `  before: ${before}\n  after:  ${after}\n` +
+        '  A test built a LiveState without saying where its index cache goes. Pass\n' +
+        '  `indexCache: false` (for a test measuring a real full read) or `indexCachePath`\n' +
+        '  (for one that wants persistence in its own fixture). A test that boots the real\n' +
+        '  server module must set the MC_INDEX_CACHE env var instead — see the malicious\n' +
+        '  project-name test in test/collectors.test.ts.\n'
+    );
+    process.exit(1);
+  }
+  process.exit(status);
+}
+
+/** `absent`, or a size+mtime signature. Distinguishes "not there" from "not readable". */
+function statSig(file) {
+  try {
+    const st = fs.statSync(file);
+    return `${st.size}@${st.mtimeMs}`;
+  } catch (err) {
+    return err.code === 'ENOENT' ? 'absent' : `unreadable(${err.code})`;
+  }
 }
 
 try {

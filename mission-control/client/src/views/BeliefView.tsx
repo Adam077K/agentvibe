@@ -357,6 +357,27 @@ export function BeliefView({
         />
       </HeadlineBar>
 
+      {/* NOT A TOOLTIP. Both verdict bands below already render `Unavailable` carrying this
+          same reason, but that reason lives in a title attribute — a reader has to hover the
+          right two words to learn that the ledger was never run. "No verdicts were produced"
+          and "no verdicts were PERMITTED" are different facts, and only one of them is about
+          this project's claims, so the second is stated in the panel, in text. */}
+      {!belief.trust.trusted && (
+        <div className="border-t border-warn/40 bg-warn/10 px-6 py-3">
+          <p className="fig text-[12px] text-warn">
+            no verify was run — <span className="text-text">{belief.project}</span> is not a trusted project
+          </p>
+          <p className="mt-1 max-w-[78ch] text-[12.5px] leading-relaxed text-muted">{belief.trust.reason}</p>
+          <p className="mt-2 max-w-[78ch] text-[12px] leading-relaxed text-dim">
+            The claim catalogs below are still real — they are read from{' '}
+            <code className="fig">.claude/ledger/index.json</code> and{' '}
+            <code className="fig">~/.warroom/ledger/global.yml</code>, both files. What is missing is every VERDICT,
+            because producing one means running this project&rsquo;s own{' '}
+            <code className="fig">scripts/ledger.mjs</code> as you.
+          </p>
+        </div>
+      )}
+
       <BeliefBands belief={belief} now={now} />
 
       <Footnote>

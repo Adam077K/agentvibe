@@ -103,6 +103,63 @@ rules:
     tier: irreversible
     enforcement: block
     reason: "Payment processing endpoints"
+  - pattern: "mission-control/server/config.ts"
+    tier: irreversible
+    enforcement: shadow
+    reason: "Mission Control's network binding — HOST is a literal here so nothing can override it; moving it off 127.0.0.1 converts three local RCEs into remote ones, and no revert un-executes what already ran"
+    # WHY IRREVERSIBLE AND NOT FULL. This is the same category as `.claude/settings.json`
+    # above — a runtime permission boundary, not application code. The file is thirteen
+    # lines and has changed exactly once (e29f2c0, the PR that created it), so Founder
+    # sign-off costs approximately nothing here and buys the one review a `lite` pass would
+    # wave through as a one-word diff.
+    #
+    # WHY `enforcement: shadow` WHEN EVERY OTHER IRREVERSIBLE ENTRY BLOCKS. `enforcement`
+    # governs CLAIM resolution, and only claim-bearing files feel it. scripts/ledger.mjs
+    # collects claims from `*.md`/`*.markdown` alone (candidateMarkdown()), so no `.ts` path
+    # can carry a claim at all — `block` here would be a mechanism that fires on nothing,
+    # which is exactly what the note below this group refuses to do for outbound send. It
+    # goes to `block` the day a claim can live in a TypeScript file.
+    #
+  - pattern: "mission-control/client/vite.config.ts"
+    tier: irreversible
+    enforcement: shadow
+    reason: "The OTHER loopback binding — the dev server on 4301 proxies /api and /events straight to 4300, so moving this host off 127.0.0.1 exposes the same surface server/config.ts is floored to protect"
+    # FOUND BY REVIEW, and it was hiding inside a reason rather than inside a gap. The
+    # `mission-control/client/**` rule below justified `lite` with "no filesystem access, no
+    # process spawn", which is true of the views and false of this file. Its own header:
+    # "host is pinned to 127.0.0.1 for the same reason server/config.ts pins it… a default
+    # is a thing that changes and a literal is not." A reason that does not describe a file
+    # it covers is how a tier map goes quietly wrong, so the reason below is narrowed too.
+    #
+    # Same tier as server/config.ts because it is the same hazard reached one hop earlier —
+    # `changeOrigin: false` means an attacker who reaches 4301 reaches the API behind it.
+    # Cost: one file, one commit in its history (0a23471). It is the THIRD path that can
+    # demand `risk:irreversible`; see the F13 note on the next entry for what that arms, and
+    # scripts/classifier.test.mjs pins the set at three so a fourth is a deliberate act.
+  - pattern: "mission-control/server/trust.ts"
+    tier: irreversible
+    enforcement: shadow
+    reason: "The allowlist deciding whose code may be executed on this machine — a regression re-opens the three RCEs of 2026-08-14, and a revert restores the file without un-executing what ran"
+    # ADDED THE DAY THE FILE ARRIVED, not before. This entry was written out of the first
+    # draft of these rules with its reason recorded — the file did not exist on `main` and a
+    # pattern matching nothing reads as coverage it does not have, per the outbound-send note
+    # below. PR #44 landed it (85a9eb9) and the objection is now void, so the rule goes in.
+    #
+    # `routes/guard.ts` is deliberately NOT here and stays `full`. Its own header states the
+    # case: it is "not a second, independent answer to the three RCEs; it is the other half
+    # of one". Weakening the cross-site check does not by itself grant execution — the
+    # allowlist still gates that — so it is a `full` review, not a Founder decision.
+    #
+    # THE COST, MEASURED RATHER THAN WAVED AT. This is the second path in the tree that can
+    # demand the `risk:irreversible` label, and that label arms the F13 step of
+    # qa-lead-pass.yml, which requires EVERY session file in the PR diff to declare
+    # `tier: full|irreversible` (:339-351). PR #42 recorded that as two mechanisms computing
+    # risk and disagreeing, and left the fix for a later session. Executing F13's own
+    # predicate over the four merged PRs that carried more than one session file: #25, #29
+    # and #43 would be REFUSED, #42 would pass. So this entry raises exposure to a known
+    # defect it does not create. It is bounded — the hazard needs a PR that touches trust.ts
+    # AND bundles an honestly-lite session — and a change to this file has an honest tier of
+    # `full` anyway. Named here so a red build is actionable rather than mysterious.
   # NOT LISTED, deliberately: an outbound-send pattern. ADR-001 names outbound send as a
   # day-one blocker, but this repository has no outbound-send path to name. A pattern
   # matching nothing would read as coverage it does not have. It is added the day the
@@ -150,6 +207,56 @@ rules:
     resolvers: [claim-command]
     reason: "The launcher every project starts from"
 
+  # ──────────────── FULL · mission-control ────────────────
+  # Until this group existed, every path under mission-control/ matched NOTHING and
+  # classified `lite` by default — including the code that decides whose programs get
+  # executed on this machine. Four PRs (#30, #32, #44 by label; #41 not) were tiered by a
+  # human remembering to, which this repository's own rules table calls a wish.
+  #
+  # The split is deliberate and the whole tree is NOT floored at `full`. Flooring
+  # client/** would make a CSS edit a full-tier review, and a gate that fires on
+  # everything is a gate people route around — see docs/09-metrics and #42 for what that
+  # looks like once it has happened.
+  #
+  # The price of splitting is that a directory-shaped reason can cover a file it does not
+  # describe, and review found two: client/vite.config.ts and test/gate.ts. Both are now
+  # carved out by name. That is the maintenance this granularity costs, and it is cheaper
+  # than the alternative it buys.
+  - pattern: "mission-control/server/**"
+    tier: full
+    reason: "The server decides whose code runs here — routes, trust, discovery, and five of eight collectors execute a program with cwd inside a repository they merely found on disk; two of those run a script belonging to that repository, not a system binary"
+    # THE COLLECTOR COUNT IS EXECUTED, NOT ESTIMATED. An earlier draft of this reason said
+    # "six of eight collectors shell out to git". Both halves were wrong, and the second was
+    # wrong in the direction that flatters the rule:
+    #
+    #   git, a system binary            conflicts.ts (git status), worktrees.ts (git
+    #                                   worktree list)                          2 of 8
+    #   node <script FROM the found     belief.ts (node <projectRoot>/scripts/ledger.mjs,
+    #   repository>                     cwd=projectRoot), fleet.ts (node <script> fleet)
+    #                                                                           2 of 8
+    #   a configured probe              empty.ts (execFileAsync(probeCmd.cmd, probeCmd.args)
+    #                                   from projectEmptyStateProbe(project))    1 of 8
+    #   nothing                         events.ts, transcripts.ts, probe-bounds.ts
+    #
+    # So five of eight execute, not six, and the hazard is worse than "runs git in it":
+    # RCE-2 of 2026-08-14 was exactly belief.ts running a discovered repository's own
+    # ledger.mjs. Running a script you found is a different act from running a system
+    # binary near it, and the true sentence is the stronger argument for this rule.
+    #
+    # WHAT THE GLOB MATCHES, counted rather than read: server/{config,index,index-store,
+    # projects,state}.ts, server/lib/**, server/routes/** and server/collectors/** —
+    # SEVENTEEN files before PR #44 and TWENTY after; #44 added THREE under server/
+    # (app.ts, trust.ts, routes/guard.ts) plus two under mission-control/scripts/, which
+    # the next rule covers. Reproduce:
+    #   git ls-tree -r --name-only 0f5a9ff -- mission-control/server | wc -l   -> 17
+    #   git ls-tree -r --name-only origin/main -- mission-control/server | wc -l -> 20
+  - pattern: "mission-control/scripts/**"
+    tier: full
+    reason: "Operator tooling — it edits the trusted-projects allowlist and spawns the server; the `scripts/**` rule above is anchored at the repository root and never reached this tree"
+  - pattern: "mission-control/check.mjs"
+    tier: full
+    reason: "Runs inside `npm run check` and spawns the server — a gate that lies about its own subject is worse than no gate"
+
   # ──────────────── LITE ────────────────
   # General app code: UI components, pages, utilities.
   - pattern: "**/components/**"
@@ -177,6 +284,40 @@ rules:
     tier: lite
     resolvers: [claim-freshness]
     reason: "Durable memory — the surface that went stale invisibly and started this rebuild"
+  # These two change no tier — `lite` is already the default. They exist so that "the views
+  # and the test cases are lite" is a decision on the record with a reason attached, rather
+  # than the silence that let the whole tree default for five PRs. The classifier reports
+  # `matched:` for them now instead of `(none — default)`, which is the difference between a
+  # considered answer and an absent one. Precedent: `src/**` and `packages/**` above are
+  # documentary in exactly the same way.
+  #
+  # BOTH REASONS ARE NARROWER THAN THEY WERE, because review found each of them covering a
+  # file it did not describe: `client/vite.config.ts` (a loopback binding, now irreversible)
+  # and `test/gate.ts` (not a test, now full). A blanket reason over a directory is the
+  # cheapest way for a tier map to be confidently wrong.
+  - pattern: "mission-control/client/**"
+    tier: lite
+    reason: "The browser views and their styles — render only, no filesystem access, no process spawn, no trust decision; they read an API they cannot widen. Scope is the views: vite.config.ts is carved out above, and this reason does not describe build or dev-server configuration"
+  - pattern: "mission-control/test/gate.ts"
+    tier: full
+    reason: "Not a test — the shared implementation the tests gate on. Its own header: 'THE machine gate. One implementation, the way scripts/lib/classifier.js is the one implementation of risk. Not a `.test.` file'"
+    # WHY FULL AND NOT IRREVERSIBLE, since the header invites the comparison with
+    # scripts/lib/** and that group is irreversible. The two differ on the ADR-001 test —
+    # whether `git revert` undoes it. A defect here makes assertions SKIP while the suite
+    # reports success: the header records the measured instance, `MC_PROJECT_ROOTS=
+    # /nonexistent bun test test/live.test.ts` reporting "3 pass, 1 expect() call" with every
+    # real assertion silently skipped. That is severe and it is fully revertible — nothing
+    # was executed as a consequence, you re-run the suite. `full` is the honest tier, and
+    # `lite` under a reason that read "Tests." was not.
+  - pattern: "mission-control/test/**"
+    tier: lite
+    reason: "Test CASES. A test change that matters arrives beside the code it covers, and that code floors the whole change set at full — classifyFiles() takes the maximum, so the tier cannot be dodged by splitting the diff. The shared gate they run through is carved out above; this covers the *.test.ts files and their fixtures"
+    # THE RESIDUAL, NAMED RATHER THAN LEFT TO BE DISCOVERED: a test-ONLY pull request that
+    # weakens mission-control/test/trust.test.ts still classifies `lite`. That is the known
+    # hole in this rule. The alternative — flooring 11 test files at `full` so that a view
+    # snapshot update needs a security reviewer — buys one case and pays for it on every
+    # other, and `scripts/**` covers its own tests only as a side effect of covering the
+    # directory, not as a decision anyone made.
 
   # ──────────────── TRIVIAL ────────────────
   # Docs, planning, brand guidelines — text only, no executable risk.

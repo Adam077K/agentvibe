@@ -1,15 +1,43 @@
 # Security findings — Mission Control, 2026-08-14
 
-**Status: OPEN.** Found during the Full-tier review of PR #30, confirmed on `main` at `a3189ed`.
-None was introduced by PR4; all pre-date it. Tracked as **#36**.
+**Status: NARROWED, not closed.** Found during the Full-tier review of PR #30, confirmed on `main` at
+`a3189ed`. None was introduced by PR4; all pre-date it. Tracked as **#36**.
+
+| Finding | Status | What changed |
+|---|---|---|
+| F1 `core.fsmonitor` via `/api/conflicts` | **Gated** | The sweep runs only in projects on the trusted list |
+| F2 `node <project>/scripts/ledger.mjs` | **Gated** | `collectBelief` checks trust before spawning |
+| F3 claim markdown → `/bin/sh -c` | **Gated** | Reachable only through F2, so gated with it |
+| F6 no Origin/CSRF check | **Closed for the browser vector** | `Sec-Fetch-Site: cross-site` → 403 on every route |
+
+**"Gated" is not "fixed", and the difference is the whole of what was bought.** A project on the
+trusted list still executes all three. The premise changed from *trust what you find* to *trust what
+you named*; the code that runs once you have named something is unchanged. An allowlisted repository
+that later turns hostile — a dependency, a clone you forgot writing — is still full RCE.
+
+**F6's wording is load-bearing.** It blocks **cross-site browser requests**. `same-site` is allowed,
+so any other service on the user's loopback still reaches every route, and a non-browser client sends
+no such header at all. Anything that can run a local process is past this control. That sentence is
+kept next to the check, in `mission-control/server/routes/guard.ts`.
 
 **Every finding below was executed, not reasoned.** The reviewer's repro scripts lived in a session
 scratchpad under `/tmp` and are gone; what they proved is recorded here so the fix can be verified
-against the same conditions.
+against the same conditions. **All three were re-executed through the real routes on 2026-08-15
+before any gate was written**, and each barrier now holding them is paired with a **live-exploit
+control** — the same fixture, the same route, the project *trusted*, asserting the payload does land.
+Without that pair, "no marker was written" is satisfied by a git that stopped honouring
+`core.fsmonitor` or a verify that failed to start. See `mission-control/test/trust.test.ts`.
 
-**Operational guidance until this is closed:** Mission Control binds loopback only, so the realistic
-vector is a repository you did not write sitting under `MC_PROJECT_ROOTS` (default `~/VibeCoding`).
-Do not run the server against a tree containing repos you did not author.
+**Still ungated, deliberately, and measured rather than assumed:** `/api/fleet` runs
+`git worktree list --porcelain` with `cwd` inside every discovered project, trusted or not, for each
+row's worktree count. Measured 2026-08-15 through that route: the `core.fsmonitor` payload that F1
+executes through `/api/conflicts` did **not** run under `git worktree list`. That is one measurement
+of one subcommand, not an audit of git's config surface for it.
+
+**Operational guidance, unchanged in substance:** Mission Control binds loopback only. Put a
+repository on the trusted list only if you wrote it or have read it — that list is now what the
+earlier advice ("do not run the server against a tree containing repos you did not author") was
+asking you to hold in your head.
 
 ---
 
@@ -73,6 +101,11 @@ This is reached *through* F2 and also directly by any ledger run over an untrust
 
 `mission-control/server/routes/api.ts`
 
+> **Status: closed for the cross-site browser vector** (`server/routes/guard.ts`, 2026-08-15). The
+> paragraph below is the finding as found. "Drive-by" in it describes what was *possible then* and is
+> still true of every caller a header cannot see — a local process, a different port on this loopback.
+> What is closed is the browser half.
+
 Every route is a `GET` that spawns processes, and there is no Origin validation anywhere. Loopback binding
 is correct and insufficient: **a page the user visits can fire `fetch('http://127.0.0.1:4300/api/conflicts',
 {mode:'no-cors'})` or an `<img>` tag** — it never needs to read the response, only to trigger the work.
@@ -93,8 +126,24 @@ The reviewer's framing, which is the useful one: **the problem is not sanitisati
 3. **Accept and bound it** — Origin check, a documented "own repositories only" constraint, and a claim in
    the ledger with an expiry so the acceptance is re-decided rather than forgotten.
 
-**Whichever is chosen, F6 should be closed regardless** — an Origin check is cheap and it removes the
-drive-by vector from all three.
+**Whichever is chosen, F6 should be closed regardless** — ~~an Origin check is cheap and it removes the
+drive-by vector from all three.~~
+
+> **SUPERSEDED 2026-08-15, and the correction is the point.** Both halves of that sentence were wrong,
+> and it is left struck through rather than deleted because it is the recommendation this document
+> shipped with.
+>
+> **An `Origin` check does not remove the vector.** Measured in a real browser three times, twice by the
+> reviewer and once through the shipped middleware: `Origin` is **absent** on `<img>`, `<script>`,
+> `<link rel=stylesheet>`, form GET and no-cors `fetch` — 5 of the 6 attack shapes. Only a CORS `fetch`
+> sends it, and the app's own same-origin GETs send none either, so the check must allow *absent* and
+> every subresource vector above walks straight through. That is a guard satisfied while the property it
+> protects is violated: §0, in the sentence recommending the fix for §0.
+>
+> **And "the drive-by vector" is not a thing a header check can remove.** What shipped rejects
+> `Sec-Fetch-Site: cross-site` and closes the **cross-site browser** vector. `same-site` is allowed, so
+> any other service on the user's loopback keeps all three RCEs, and a non-browser client sends no such
+> header at all.
 
 **And the invariant must be rewritten.** Leaving *"`server/**` invokes no shell"* in the README and the
 handoff while these are open teaches the next reader to check the wrong thing. Whatever guard survives

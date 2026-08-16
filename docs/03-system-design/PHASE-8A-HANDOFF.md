@@ -1,14 +1,21 @@
 # Handoff — Phase 8a, complete
 
 **For:** whoever picks this up next.
-**State: all 5 PRs merged; `main` has since moved to `0bd7625`** (#29, #34, #36, #31, #33, #35, #37 landed after phase close).
-**222 tests, 0 fail** (VERIFIED on `28626d8`, independently reproduced; #37 added 2 more since). **Do not quote a wall time** — the same suite has read 77.2 s, 166.63 s and 177.88 s on quiet machines, so the runtime varies ≥2× on its own and no single reading evidences anything. 205 tests at `01fcadd`, 193 at close. Do not quote an
-assertion total: identical runs differ (386 vs 360 on one file), because the live fleet tests loop over
-what is on disk.
+**State: all 5 PRs merged; `main` has since moved to `2442cbc`** — thirteen follow-on PRs, of which the
+substantive ones are #35 (a truncated `git status` no longer invents a filename), #37 (the untracked clamp),
+#41 (`git status -z` as the parser's oracle), #44 (**three confirmed RCEs closed** — discovery no longer
+implies trust), #46 (#50: assert what was read, not how long it took) and #48 (**incremental cold start** —
+a warm start reads 4 KB per transcript, not the corpus).
+**319 tests, 0 fail with 0 NOT VERIFIED** (VERIFIED on `2442cbc`). **Report the NOT VERIFIED count beside**
+**the pass count** — a suite with the corpus absent reports 319 pass / 0 fail / 5 NOT VERIFIED, which is the
+same headline while five tests never ran. Do not quote a wall time: it moves ≥2× on quiet machines.
 `npm run check` exits 0 after `bun install` in `mission-control/`. All six views work end to end.
-**Read [SECURITY-FINDINGS-2026-08-14.md](SECURITY-FINDINGS-2026-08-14.md) before running the server** —
-three confirmed RCEs are open on `main`, and until they are closed, do not point Mission Control at a tree
-containing repositories you did not write.
+**The three confirmed RCEs are CLOSED** as of #44 — discovery no longer implies trust. Collectors run only
+against allowlisted roots, an untrusted project is **reported with its reason rather than hidden**, and
+`Sec-Fetch-Site: cross-site` is rejected before any `Origin` check. **The limit, stated in the code:** it
+blocks *cross-site browser requests* — `same-site` is allowed, so another service on your own loopback
+still reaches everything, and a non-browser client sends no such header at all. Read
+[SECURITY-FINDINGS-2026-08-14.md](SECURITY-FINDINGS-2026-08-14.md) for what was found and how it was proved.
 **Read first:** [PHASE-8A-STATUS.md](PHASE-8A-STATUS.md) · [AGENT-SYSTEM-REBUILD.md](AGENT-SYSTEM-REBUILD.md) · [CLAIM-LEDGER.md](CLAIM-LEDGER.md)
 
 ---
@@ -116,6 +123,56 @@ Corollaries, each earned:
   fix would have been aimed at the wrong thing while the entry closed green. **When you write down why
   something failed, either reproduce it or mark the cause UNTESTED.** The cheap instrument is to try to make
   it fail on purpose; a failure you cannot reproduce under the condition you blamed is not explained.
+- **A green suite and a green suite where four tests never ran print identically.** Measured: with the corpus
+  pointed at an empty directory, `bun test` reports **319 pass / 0 fail with 5 NOT VERIFIED** — the same
+  headline as a full local run, while five tests declined to execute. `machineGate()` is *correct* to withhold
+  when the subject is absent; the defect is that the count nobody reads is the only thing distinguishing the
+  two cases. **Both a builder and the CEO cited "CI green on that SHA" six times between them as evidence for
+  work CI has never once executed.** The cheap instrument is not stdout capture: `notVerified()` is a single
+  shared function every call site routes through, so it can append to a marker file that `check.mjs` reads,
+  reports and deletes — and in its strongest form **fails** when the count is non-zero on a machine that has a
+  corpus. **Any test behind a machine gate makes "the suite passed" mean less than it appears to.**
+- **Assert the edit landed — and that covers repair edits, not just mutations.** A timeout anchored on a
+  non-unique `finally { … } }); });` shape attached 120 s to an unrelated test sixty lines earlier while the
+  real one kept failing at 5 s. **The fix appeared applied, was not, and left the symptom intact**, so the next
+  two diagnoses were made against evidence that had never changed — strictly worse than a wrong diagnosis,
+  because the evidence looked fresh. The injection-landing habit had been applied to mutations only; extend it
+  to every edit whose effect you are about to reason from.
+- **A bracket whose soundness depends on where it runs must say where it runs.** A 99% tolerance on
+  `filesVerified === filesScanned` is sound against 2,611 transcripts, where one arrival is 0.04% — and wrong
+  against a 4-file fixture, where one arrival is 25%. Same assertion, opposite verdict, decided entirely by the
+  corpus it meets. Copying it into a fixture suite would fail for a reason nobody could act on.
+- **A mutation that does not apply is indistinguishable from a guard that works.** The strongest rule this
+  phase produced, and it arrived last. A builder proving its own fix injected a multi-line import into a file
+  that had none — **nothing was inserted**, the suite went green, and it reported one of three styles as
+  caught having never tested it. Green means "the injection did not break anything", and an injection that
+  never happened cannot. **Every mutation must assert it landed before the run.** This is the defect class
+  one level out from where we kept finding it: not a check that cannot fail, but a *proof* that cannot fail.
+- **A declared blind spot with a vacuous mitigation is worse than an undeclared one**, because the
+  declaration reads as handled. A guard honestly documented a gap it could not see past, then bounded it with
+  `line === after && !WRITE_PATTERN.test(after)` — **unsatisfiable**, so the residual was always empty and a
+  stripper blanking the entire file passed. Then the one-line repair *also* passed that mutation, because a
+  file with code on no line takes the "was all comment" exit. **Bound a gap with the question the gap
+  actually produces, and prove it with the mutation that motivated it AND one that did not.**
+- **A reason that does not describe the thing it covers is how a gap survives a reading.** Twice in one day.
+  `client/**` was floored `lite` because *"no filesystem access, no process spawn"* — false for
+  `client/vite.config.ts`, which pins a loopback binding. A guard's exclusion was justified by *"imports in
+  this codebase are one per line"* — the neighbouring test file had six multi-line imports. **Both sentences
+  were checkable and wrong, and both were read past repeatedly because they sounded like reasons.** If a
+  justification makes a claim about the codebase, assert it; if it cannot be asserted, it is not a reason.
+- **Attack the premise, not the pattern.** When a check rests on a stated property ("constructing X requires
+  naming its module"), the pattern is rarely where it breaks — the property is. Re-exports, barrel files,
+  namespace imports, globals. **And the premise must itself be asserted**, so it fails when it stops holding
+  rather than when it bites.
+- **A fix can create the self-match it then has to exclude, and the exclusion becomes the weakest point.**
+  A widened scanner pattern contained its own search text where the previous one had not, forcing an
+  exclusion for its own source file — and that exclusion was then the hole. **When a fix requires a new
+  exemption, the exemption is the thing to review, not the fix.**
+- **Do not mix measurements taken across a code change and attribute the spread to the environment.** A warm
+  range quoted 90–107 ms from a commit measured *before* the fix that removed a 13 ms write from that very
+  path — so part of a spread blamed on machine load was the PR's own defect. **Label every measurement with
+  the SHA it was taken on**, and requote from post-fix commits only. The counter-case is equally real: the
+  same commit on the same machine at load 3.67 and 3.17, twenty minutes apart, gave medians 98 and 77.
 - **Calibrate against the subject, not its neighbour.** A rate ceiling was set at 3,000 ms/GB from
   `buildCold` (660–700 ms/GB), then re-measured against the thing actually being asserted on — the
   `/api/sessions` route, which also pays discovery, the slice hash and a JSON round-trip — at **736–1,786
