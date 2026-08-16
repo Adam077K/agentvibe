@@ -1020,3 +1020,132 @@ test('an ABSENT log is unknowable, an EMPTY log is a dead resolver — and only 
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+// ── #57 · the blind spot the sweep did not declare ──────────────────────────
+//
+// `verify` reported an absent global ledger; `sweep` printed a bare total instead. Same
+// repo, same commit, only HOME differing — 35 claims read as 31 and nothing said so. The
+// silence was worse for the company it kept: the sweep spends a paragraph distinguishing
+// "no log" from "no events", and a tool that declares some of its blind spots teaches you
+// it declares all of them.
+//
+// Both directions are asserted. The message must appear when the ledger is absent, and it
+// must NOT appear when it is there — an unconditional notice becomes noise and gets read
+// past, which is how the run-log message would have failed if it were unconditional.
+
+/** Run a command with both seams injected. Neither writes repo or ~/.agentvibe state. */
+function runLedgerEnv(env, args) {
+  try {
+    return { code: 0, out: execFileSync('node', ['scripts/ledger.mjs', ...args],
+      { cwd: REPO_ROOT, encoding: 'utf8', env: { ...process.env, ...env } }) };
+  } catch (e) {
+    return { code: e.status, out: `${e.stdout || ''}${e.stderr || ''}` };
+  }
+}
+
+/** The sentence `verify` and `sweep` must both print, with the path left out. */
+const ABSENCE_TAIL = 'not present on this machine — 0 global claims checked (this is reported, not skipped silently)';
+
+test('sweep declares an absent global ledger in the same sentence verify already used', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-glob-'));
+  try {
+    const env = {
+      WARROOM_EVENTS: path.join(tmp, 'events.jsonl'),
+      WARROOM_GLOBAL_LEDGER: path.join(tmp, 'no-such-global.yml'),
+    };
+    const sweep = runLedgerEnv(env, ['sweep', '--since', '30d']);
+    const verify = runLedgerEnv(env, ['verify', '--offline', '--no-exec']);
+
+    // The point of the fix: the two must not diverge again, so the assertion is that they
+    // print the SAME sentence rather than that each prints something about absence.
+    assert.ok(sweep.out.includes(ABSENCE_TAIL), `sweep did not declare the absence:\n${sweep.out}`);
+    assert.ok(verify.out.includes(ABSENCE_TAIL), 'verify must keep saying it — this is the wording being shared');
+
+    // And the count is no longer bare. `31 claims` reads exactly like `35 claims`.
+    assert.match(sweep.out, /\d+ claims \(\d+ project · 0 global\)/, 'the total must split by scope');
+    assert.match(sweep.out, /global ledger ABSENT/);
+
+    const r = JSON.parse(runLedgerEnv(env, ['sweep', '--json']).out.trim());
+    assert.equal(r.global_ledger_present, false);
+    assert.equal(r.global_claims_checked, 0);
+    assert.equal(r.claims_checked, r.project_claims_checked, 'with no global ledger the total IS the project count');
+    assert.equal(r.status, 'PARTIAL', 'a sweep that saw one scope of two is not COMPLETE');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('the absence notice does NOT appear when a global ledger is there — or it is noise', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-glob-'));
+  try {
+    const ledger = path.join(tmp, 'global.yml');
+    fs.writeFileSync(ledger, GLOBAL_FIXTURE);
+    const env = { WARROOM_EVENTS: path.join(tmp, 'events.jsonl'), WARROOM_GLOBAL_LEDGER: ledger };
+    const out = runLedgerEnv(env, ['sweep', '--since', '30d']).out;
+
+    assert.ok(!out.includes(ABSENCE_TAIL), `the notice fired over a ledger that exists:\n${out}`);
+    assert.doesNotMatch(out, /global ledger ABSENT/);
+    // Proven non-empty: the fixture's two claims must actually be in the count, or this
+    // test would pass over a run that read no global ledger at all.
+    assert.match(out, /claims \(\d+ project · 2 global\)/, 'the fixture globals must be counted');
+
+    const r = JSON.parse(runLedgerEnv(env, ['sweep', '--json']).out.trim());
+    assert.equal(r.global_ledger_present, true);
+    assert.equal(r.global_claims_checked, 2);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('an absent global ledger is declared, never counted as a finding', () => {
+  // Symmetric with the run log, for the same reason: on a fresh runner neither file exists,
+  // so a finding would make the scheduled job red every single day, and a job that is
+  // always red is a job nobody reads. Never pass what you could not check, never fail it.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-glob-'));
+  try {
+    const env = {
+      WARROOM_EVENTS: path.join(tmp, 'events.jsonl'),
+      WARROOM_GLOBAL_LEDGER: path.join(tmp, 'no-such-global.yml'),
+    };
+    const r = JSON.parse(runLedgerEnv(env, ['sweep', '--json']).out.trim());
+    assert.equal(r.findings, 0, 'CI must not go red for a file it was never going to have');
+    assert.equal(runLedgerEnv(env, ['sweep']).code, 0);
+    // The tail must name BOTH things it could not see. Naming only the log is what read as
+    // a complete account of the blind spots while a whole scope was missing from the total.
+    const out = runLedgerEnv(env, ['sweep']).out;
+    assert.match(out, /NOT checked: resolver liveness \(no run log\); global claims \(no /);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('a lapsed waiver on a GLOBAL claim is a finding — this is what the silence hid', () => {
+  // The consequence issue #57 is actually about. Rule 9's automation is ledger-sweep.yml,
+  // whose failure message says "a lapsed waiver fails harder than no disposition" — and
+  // that held for project claims only, because the global ones were not in the set.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-glob-'));
+  try {
+    const lapsed = GLOBAL_FIXTURE.replace(
+      '    confidence: 1\n\n  - id: c-fixture-beta',
+      '    confidence: 1\n    disposition: {action: waive, until: 2026-01-01, reason: "meant to revisit"}\n\n  - id: c-fixture-beta',
+    );
+    assert.notEqual(lapsed, GLOBAL_FIXTURE, 'the fixture edit missed — the test would prove nothing');
+    const ledger = path.join(tmp, 'global.yml');
+    fs.writeFileSync(ledger, lapsed);
+    const env = { WARROOM_EVENTS: path.join(tmp, 'events.jsonl'), WARROOM_GLOBAL_LEDGER: ledger };
+
+    const seen = JSON.parse(runLedgerEnv(env, ['sweep', '--json']).out.trim());
+    assert.ok(seen.lapsed_waivers.includes('c-fixture-alpha'),
+      `a lapsed global waiver must be found when the ledger can be read: ${JSON.stringify(seen.lapsed_waivers)}`);
+
+    // And with no global ledger the same claim is simply not in the set — which is exactly
+    // why the absence has to be declared rather than printed as a smaller total.
+    const blind = JSON.parse(runLedgerEnv(
+      { ...env, WARROOM_GLOBAL_LEDGER: path.join(tmp, 'gone.yml') }, ['sweep', '--json']).out.trim());
+    assert.deepEqual(blind.lapsed_waivers, [], 'nothing catches it — and the report now says so');
+    assert.equal(blind.global_ledger_present, false);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+

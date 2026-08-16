@@ -86,6 +86,24 @@ const GLOBAL_LABEL = process.env.WARROOM_GLOBAL_LEDGER
   : '~/.warroom/ledger/global.yml';
 const INDEX_VERSION = 1;
 
+// What a command says when the global ledger is not on this machine — every CI runner,
+// where HOME is fresh.
+//
+// `verify` said this and `sweep` said nothing, which is issue #57. Same repo, same commit,
+// only HOME differing: 35 claims became 31 and the sweep printed the bare total as though
+// it had checked all of them. The silence was worse for the company it kept — the sweep
+// spends a whole paragraph distinguishing "no log" from "no events", and a tool that
+// declares some of its blind spots teaches you it declares all of them.
+//
+// The consequence is not cosmetic: `.github/workflows/ledger-sweep.yml` is the automation
+// behind Rule 9, and a lapsed waiver on a GLOBAL claim was caught by nothing there.
+//
+// One sentence, one function, both call sites. Two renderings of one fact drift — which is
+// how they came to disagree in the first place.
+function globalAbsenceNotice() {
+  return `  global scope: ${GLOBAL_LABEL} not present on this machine — 0 global claims checked (this is reported, not skipped silently)\n`;
+}
+
 // ── Where events go ─────────────────────────────────────────────────────────
 // The run log the launcher already writes. Resolution order is explicit and the chosen
 // path is always printed, because "which log did it write to" is the first question
@@ -506,9 +524,7 @@ async function cmdVerify(argv) {
   process.stdout.write(`ledger verify: ${all.length} claims`);
   if (offline) process.stdout.write(' · offline (network resolvers report unresolved, never pass)');
   process.stdout.write(`\n  events → ${evPath}\n`);
-  if (!glob.present) {
-    process.stdout.write(`  global scope: ${GLOBAL_LABEL} not present on this machine — 0 global claims checked (this is reported, not skipped silently)\n`);
-  }
+  if (!glob.present) process.stdout.write(globalAbsenceNotice());
   process.stdout.write('\n');
 
   let blocked = 0;
@@ -913,7 +929,15 @@ function cmdSweep(argv) {
   }
 
   const canaryDead = logPresent && canaryEvents === 0;
-  const status = logPresent ? 'COMPLETE' : 'PARTIAL';
+  // TWO blind spots, not one. The run log is the one this command has always declared; the
+  // global ledger is the one it hid (issue #57). A sweep is COMPLETE only when it could see
+  // both, or the word means "complete over whatever happened to be here".
+  //
+  // Absence is NOT a finding, in either case and for the same reason: on a fresh runner
+  // neither file exists, so a finding would make the scheduled job red every single day,
+  // and a job that is always red is a job nobody reads. Never pass what you could not
+  // check, and never fail it either.
+  const status = logPresent && glob.present ? 'COMPLETE' : 'PARTIAL';
   const findings = expired.length + lapsedWaivers.length + silent.length + (canaryDead ? 1 : 0);
 
   const report = {
@@ -921,6 +945,11 @@ function cmdSweep(argv) {
     window: sinceSpec,
     swept_at: new Date(now).toISOString(),
     claims_checked: all.length,
+    // `claims_checked` alone is the bare total issue #57 is about: 31 reads exactly like 35
+    // and only one of them is the whole ledger. The split says which scopes it covers.
+    project_claims_checked: proj.claims.length,
+    global_claims_checked: glob.claims.length,
+    global_ledger_present: glob.present,
     expired: expired.map((e) => e.id),
     expiring_soon: expiringSoon.map((e) => e.id),
     lapsed_waivers: lapsedWaivers.map((e) => e.id),
@@ -947,11 +976,22 @@ function cmdSweep(argv) {
   }
 
   const w = (s) => process.stdout.write(s);
-  w(`ledger sweep: ${all.length} claims · window ${sinceSpec} · log ${logPresent ? evPath : 'ABSENT'}\n\n`);
+  // The bare total is the whole of issue #57: `31 claims` reads exactly like `35 claims`,
+  // and only one of them is the ledger. Both sources are named, present or absent.
+  w(`ledger sweep: ${all.length} claims (${proj.claims.length} project · ${glob.claims.length} global) · window ${sinceSpec}\n`);
+  w(`  log ${logPresent ? evPath : 'ABSENT'} · global ledger ${glob.present ? GLOBAL_LABEL : 'ABSENT'}\n\n`);
 
   if (!logPresent) {
     w('PARTIAL — the run log does not exist, so resolver liveness could not be checked.\n');
     w('  "no log" and "no events" are different states and this sweep will not render them the same.\n\n');
+  }
+  if (!glob.present) {
+    // Verbatim the line `verify` prints, from the one function both call. It was correct
+    // there and silent here, and a second wording of it would drift the way the silence did.
+    w('PARTIAL — the global ledger is not on this machine, so its claims are not in the count above.\n');
+    w(globalAbsenceNotice());
+    w('  A lapsed waiver on a global claim is therefore caught by nothing in this run, which is\n');
+    w('  the half of Rule 9 that no automation covers when HOME is fresh.\n\n');
   }
   if (canaryDead) {
     w('!! CANARY SILENT — zero events from the canary claim in this window.\n');
@@ -992,11 +1032,16 @@ function cmdSweep(argv) {
 
   if (findings > 0) {
     w(`${findings} finding(s) need a decision. This sweep reports; it does not fix.\n`);
-  } else if (logPresent) {
-    w(`CLEAN — ${all.length} claims checked over ${sinceSpec}; canary fired ${canaryEvents}×.\n`);
+  } else if (status === 'COMPLETE') {
+    w(`CLEAN — ${all.length} claims checked over ${sinceSpec} (${proj.claims.length} project · ${glob.claims.length} global); canary fired ${canaryEvents}×.\n`);
   } else {
-    // Never render a partial run as a clean one. The claims were checked; liveness was not.
-    w(`PARTIAL — ${all.length} claims checked over ${sinceSpec}, none failing. Resolver liveness NOT checked (no log).\n`);
+    // Never render a partial run as a clean one, and name EVERY thing it could not see.
+    // The old version named only the log — which read as a complete account of the blind
+    // spots while a whole scope was missing from the number in the same sentence.
+    const unchecked = [];
+    if (!logPresent) unchecked.push('resolver liveness (no run log)');
+    if (!glob.present) unchecked.push(`global claims (no ${GLOBAL_LABEL})`);
+    w(`PARTIAL — ${all.length} claims checked over ${sinceSpec}, none failing. NOT checked: ${unchecked.join('; ')}.\n`);
   }
   return findings > 0 ? 1 : 0;
 }
