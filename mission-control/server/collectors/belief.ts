@@ -402,9 +402,11 @@ export function readGlobalLedger(ledgerPath: string = globalLedgerPath()): Globa
       issues.push(`${where}: the global ledger may only hold scope:global claims`);
       return;
     }
-    // source_file/source_line are what ledger.mjs stamps onto these same claims, so a row in
-    // the view can name where a claim lives exactly as the ledger would.
-    claims.push({ ...claim, source_file: '~/.warroom/ledger/global.yml', source_line: 0 });
+    // source_file is what ledger.mjs stamps onto these same claims, so a row in the view can
+    // name where a claim lives exactly as the ledger would. There is deliberately no line:
+    // the ledger index no longer carries one, and the `source_line: 0` this used to stamp
+    // was never a measurement — it was a placeholder that rendered as `:0` in the tooltip.
+    claims.push({ ...claim, source_file: '~/.warroom/ledger/global.yml' });
   });
 
   return { present: true, path: ledgerPath, claims, rejected: issues.length, issues };

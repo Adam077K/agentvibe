@@ -219,11 +219,24 @@ function collectGlobalClaims() {
 // remedy on offer was "remember to rebuild" — which the rules table in CLAUDE.md classifies
 // as a wish rather than a rule, and which duly failed the first time it was relied on.
 //
-// Dropping it costs no code: nothing read the field. `grep -rn source_line` finds the two
-// write sites and three documents warning readers about this exact failure. What it cost a
-// HUMAN was jumping from the index to a claim, and `ledger locate` replaces that by
-// resolving the position when asked. Resolved-on-demand beats committed: a committed line
-// number is right only until the next edit, and then points confidently at the wrong line.
+// It HAD three consumers, and the first version of this comment said it had none. That
+// claim came from `grep -rn source_line --include=*.mjs --include=*.js --include=*.json
+// --include=*.md --include=*.yml` — five extensions, no `.ts`, no `.tsx` — so the search
+// never covered `mission-control/`, where BeliefView.tsx interpolated the field into a
+// tooltip, projects.ts typed it, and collectors/belief.ts stamped it. A search reporting
+// completeness about ground it never covered is the same defect this change exists to fix,
+// committed in the verification of the fix. `git grep source_line` with no filter is what
+// should have been run, and is what found them. All three are updated in this commit.
+//
+// 319 mission-control tests passed over the break, because the fixtures in views.test.tsx
+// and collectors.test.ts hand-supplied `source_line: 12` and `source_line: 1`. A fixture
+// that supplies what the producer omits is testing a world that does not exist, and no
+// amount of green says otherwise. Those fixtures now carry what production carries.
+//
+// What the field cost a HUMAN was jumping from the index to a claim, and `ledger locate`
+// replaces that by resolving the position when asked. Resolved-on-demand beats committed:
+// a committed line number is right only until the next edit, then points confidently at
+// the wrong line.
 const KEY_ORDER = ['id', 'assert', 'kind', 'scope', 'verified_by', 'evidence',
   'valid_until', 'confidence', 'supports', 'source_file'];
 

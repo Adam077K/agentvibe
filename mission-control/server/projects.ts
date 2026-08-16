@@ -47,7 +47,9 @@ export interface LedgerClaim {
   confidence?: number;
   supports?: string[];
   source_file: string;
-  source_line: number;
+  // No `source_line`. The index records what a claim says, never where it sits — a
+  // committed line number moves whenever text above it does. `scripts/ledger.mjs locate`
+  // resolves a position from the artifacts on demand.
 }
 
 export interface LedgerIndexInfo {
