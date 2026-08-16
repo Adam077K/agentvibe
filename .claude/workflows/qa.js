@@ -159,13 +159,36 @@ Rules:
 Your default verdict is binding and the CEO cannot override it. Adam (board) may file a LOGGED, finding-by-finding false-positive appeal — never a blanket override of a confirmed real defect. Emit verdict, a one-paragraph summary (mention advisory count + any coverage gaps), and a blockers array (empty on PASS).`
 }
 
-// Review one dimension with one retry; never throw — a persistent failure becomes a tracked coverage gap.
+// Review one dimension, retrying on dropout; never throw — a persistent failure becomes a
+// tracked coverage gap.
+//
+// ATTEMPTS IS 4, AND THE NUMBER IS MEASURED RATHER THAN CHOSEN.
+// Two consecutive runs of this gate were blocked by a coverage gap on `correctness`. Reading
+// the run journal: 15 of 31 dispatched agents returned nothing, every one of them ending on
+// `stop_reason: tool_use` — mid-tool, never reaching StructuredOutput — while the runtime
+// reported `agents_error: 0`. The pending calls were ordinary (`grep`, `sed`, `git status`).
+// Four explanations were tested against the transcripts and all four were refuted: a turn cap
+// (successes reached 43 turns, failures started at 37), context exhaustion (30-84k vs 53-88k,
+// overlapping), output tokens (overlapping), and a wall-clock timeout (median 113s vs 123s).
+//
+// So the dropout is ~48% and unexplained by anything on disk. At 2 attempts a dimension fails
+// ~23% of the time and SOME critical dimension fails most runs, which is why this gate had
+// never returned PASS. At 4 attempts that falls to ~5%.
+//
+// This is MITIGATION, not a fix. The defect is in the runtime, not in this file, and retrying
+// costs real tokens. It is here so a binding gate can finish; it does not make the dropout go
+// away, and the coverage gap remains a BLOCK when it exhausts.
+const REVIEW_ATTEMPTS = 4
+
 async function reviewDim(d) {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const r = await agent(reviewPrompt(d, attempt), { label: `review:${d.key}${attempt ? ':retry' : ''}`, phase: 'Review', model: 'sonnet', agentType: REVIEW_AGENT, schema: FINDINGS_SCHEMA }).catch(() => null)
-    if (r && Array.isArray(r.findings)) return { dimension: d.key, critical: d.critical, ok: true, findings: r.findings }
+  for (let attempt = 0; attempt < REVIEW_ATTEMPTS; attempt++) {
+    const r = await agent(reviewPrompt(d, attempt), { label: `review:${d.key}${attempt ? `:retry${attempt}` : ''}`, phase: 'Review', model: 'sonnet', agentType: REVIEW_AGENT, schema: FINDINGS_SCHEMA }).catch(() => null)
+    if (r && Array.isArray(r.findings)) {
+      if (attempt) log(`Dimension ${d.key} completed on attempt ${attempt + 1}/${REVIEW_ATTEMPTS} — ${attempt} dropout(s) absorbed.`)
+      return { dimension: d.key, critical: d.critical, ok: true, findings: r.findings }
+    }
   }
-  log(`Dimension ${d.key} returned no structured findings after 2 attempts — flagged as a coverage gap.`)
+  log(`Dimension ${d.key} returned no structured findings after ${REVIEW_ATTEMPTS} attempts — flagged as a coverage gap.`)
   return { dimension: d.key, critical: d.critical, ok: false, findings: [] }
 }
 
