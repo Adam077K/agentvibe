@@ -196,8 +196,9 @@ Earned in the two prior boards.
 - **`mission-control/` is now readable and should be read.** Phase 8a closed at `30f6c35`; the parallel team
   is done. Seven views, ~2,000 sessions and 19 projects of real observability — A5 and A6 should treat it as
   evidence of what the system actually does, not as a no-go zone. Still do not *write* there.
-- **Never edit files carrying claim blocks** (`PHASE-8A-STATUS.md`, `mission-control/README.md`,
-  `CLAIM-LEDGER.md`, `ledger-canary.md`) — editing moves `source_line` and fails `ledger build --check`.
+- **Editing files that carry claim blocks is now safe.** The index no longer records `source_line`, so
+  prose edits to `PHASE-8A-STATUS.md`, `mission-control/README.md`, `CLAIM-LEDGER.md` and
+  `ledger-canary.md` no longer fail `ledger build --check`. Changing a *claim* still does, by design.
 - **Never edit generated files** — `.claude/ledger/index.json`, `CODEBASE-MAP.md`.
 - Sync to `origin/main` before starting; re-check at synthesis.
 - Use `Explore` for finders — read-only by tool grant, and free of `reviewer`'s 20-turn cap.

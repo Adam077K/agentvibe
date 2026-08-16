@@ -13,12 +13,20 @@
 //   node scripts/ledger.mjs verify           run every resolver, log, block where required
 //   node scripts/ledger.mjs verify --offline skip network; report unresolved, never pass
 //   node scripts/ledger.mjs judge <claim-id> print the lens pack for a judged claim
+//   node scripts/ledger.mjs locate [id]      resolve claim positions from the artifacts now
 //   node scripts/ledger.mjs views            render the generated views over the ledger
 //
 // THE INDEX IS NEVER HAND-EDITED. It is compiled from claims that live inside the
 // artifacts they support, so a claim cannot drift away from the thing it is about.
 // `--check` is what makes that true rather than aspirational: edit the index by hand and
 // CI fails, exactly as it does for .claude/skills/MANIFEST.json.
+//
+// IT RECORDS WHAT A CLAIM SAYS, NEVER WHERE IT SITS. The index held a `source_line` per
+// claim until this was fixed, and a line number moves whenever text above it moves — so a
+// prose edit in a file's introduction failed the build with every claim byte-identical.
+// The check must be coupled to content, or it fails for reasons the author cannot act on
+// and teaches everyone to rebuild-and-commit reflexively, which is how a gate stops being
+// read. Positions are still available; `locate` computes them on demand. See KEY_ORDER.
 //
 // BYTE-IDENTICAL FROM A CLEAN CLONE is a design constraint, not a nice-to-have. The
 // index therefore contains NO timestamp, no absolute path, no hostname and no machine
@@ -35,6 +43,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
@@ -201,8 +210,22 @@ function collectGlobalClaims() {
 
 // ── The index ───────────────────────────────────────────────────────────────
 
+// NO `source_line`. The parser still computes one and it stays useful in memory — issue
+// messages point at it — but a line number is a POSITION, and positions move when text
+// above them moves. Committing one coupled this check to where claims sit rather than to
+// what they say: inserting a single sentence into the prose of `mission-control/README.md`
+// shifted four claims from 295 to 296 and failed `build --check` with every claim
+// byte-identical. That is a build failure for an edit that changed no claim, and the only
+// remedy on offer was "remember to rebuild" — which the rules table in CLAUDE.md classifies
+// as a wish rather than a rule, and which duly failed the first time it was relied on.
+//
+// Dropping it costs no code: nothing read the field. `grep -rn source_line` finds the two
+// write sites and three documents warning readers about this exact failure. What it cost a
+// HUMAN was jumping from the index to a claim, and `ledger locate` replaces that by
+// resolving the position when asked. Resolved-on-demand beats committed: a committed line
+// number is right only until the next edit, and then points confidently at the wrong line.
 const KEY_ORDER = ['id', 'assert', 'kind', 'scope', 'verified_by', 'evidence',
-  'valid_until', 'confidence', 'supports', 'source_file', 'source_line'];
+  'valid_until', 'confidence', 'supports', 'source_file'];
 
 function canonical(claim) {
   const out = {};
@@ -227,6 +250,118 @@ function renderIndex(claims) {
   return JSON.stringify(body, null, 2) + '\n';
 }
 
+// ── What actually differs ───────────────────────────────────────────────────
+//
+// The old failure message had two defects and the second is the worse one.
+//
+// It said "the committed index does not match the claims in the artifacts", which named
+// the wrong cause every time only a position had moved — the claims matched exactly. And
+// it offered as evidence `on disk: 19749 bytes · regenerated: 19749 bytes`: the same
+// number twice. That is not a near-miss. A one-line shift rewrites 295 as 296, which is
+// the same width, so for the whole class of failure this message existed to explain, the
+// byte count was guaranteed to be equal. A diagnostic that cannot discriminate is worse
+// than no diagnostic, because it occupies the place a reader looks for evidence and
+// answers with a number that means nothing.
+//
+// So: compute the difference and name it — which claim, which field, both values. sha256
+// replaces the byte count, because two files with different contents cannot share one.
+
+const MAX_VALUE = 100;
+
+function sha256(text) {
+  return createHash('sha256').update(text).digest('hex');
+}
+
+function show(v) {
+  if (v === undefined) return '(absent)';
+  const s = JSON.stringify(v);
+  return s.length > MAX_VALUE ? `${s.slice(0, MAX_VALUE)}…` : s;
+}
+
+// Field paths, so a changed command is reported as `evidence.cmd` rather than as the
+// whole `evidence` mapping printed twice for the reader to diff by eye.
+function fieldDiffs(a, b, prefix = '') {
+  const out = [];
+  const keys = [...new Set([...Object.keys(a || {}), ...Object.keys(b || {})])].sort();
+  for (const k of keys) {
+    const va = a ? a[k] : undefined;
+    const vb = b ? b[k] : undefined;
+    if (JSON.stringify(va) === JSON.stringify(vb)) continue;
+    const field = prefix ? `${prefix}.${k}` : k;
+    const bothMappings = va && vb && typeof va === 'object' && typeof vb === 'object'
+      && !Array.isArray(va) && !Array.isArray(vb);
+    if (bothMappings) { out.push(...fieldDiffs(va, vb, field)); continue; }
+    out.push({ field, disk: va, rebuilt: vb });
+  }
+  return out;
+}
+
+// Structurally equal but textually different — whitespace, key order, a missing trailing
+// newline. Rare, and always a hand-edit. Reported as itself rather than as a claim change,
+// with the offset, because "the claims are identical" and "the file is identical" are
+// different statements and rendering them the same way is how the old message went wrong.
+function firstTextDifference(a, b) {
+  const n = Math.min(a.length, b.length);
+  let i = 0;
+  while (i < n && a[i] === b[i]) i++;
+  const window = (s) => JSON.stringify(s.slice(Math.max(0, i - 30), i + 30));
+  return [
+    `every claim is identical — the difference is in how the file is written, not what it says`,
+    `first difference at byte ${i}:`,
+    `    index:     ${window(a)}`,
+    `    artifacts: ${window(b)}`,
+  ];
+}
+
+/**
+ * Explain how the committed index differs from a freshly rendered one.
+ * Returns a list of lines, each naming something specific. Never returns an empty list:
+ * the caller only calls it when the two texts differ, so "no difference found" would be a
+ * bug in this function and is reported as one rather than printed as silence.
+ */
+function diffIndex(onDiskText, rebuiltText) {
+  let disk;
+  try {
+    disk = JSON.parse(onDiskText);
+  } catch (e) {
+    return [`the committed index is not valid JSON (${e.message}) — it has been hand-edited or truncated`];
+  }
+  const built = JSON.parse(rebuiltText);
+  const byId = (v) => new Map((Array.isArray(v) ? v : []).map((c) => [c.id, c]));
+  const D = byId(disk.claims);
+  const B = byId(built.claims);
+  const lines = [];
+
+  for (const id of [...B.keys()].filter((k) => !D.has(k)).sort()) {
+    lines.push(`+ ${id} — in the artifacts, missing from the index (${B.get(id).source_file})`);
+  }
+  for (const id of [...D.keys()].filter((k) => !B.has(k)).sort()) {
+    lines.push(`- ${id} — in the index, no longer in any artifact (was ${D.get(id).source_file})`);
+  }
+  for (const id of [...B.keys()].filter((k) => D.has(k)).sort()) {
+    for (const f of fieldDiffs(D.get(id), B.get(id))) {
+      lines.push(`~ ${id} — ${f.field} changed`);
+      lines.push(`    index:     ${show(f.disk)}`);
+      lines.push(`    artifacts: ${show(f.rebuilt)}`);
+    }
+  }
+  const claimLevel = lines.length > 0;
+
+  for (const k of ['version', 'note']) {
+    if (JSON.stringify(disk[k]) !== JSON.stringify(built[k])) {
+      lines.push(`~ index header — ${k}: ${show(disk[k])} → ${show(built[k])}`);
+    }
+  }
+  // `total` is derived from the claim list. When claims were added or removed the +/-
+  // lines above already say so, and repeating it as a second finding reads as two problems.
+  if (!claimLevel && disk.total !== built.total) {
+    lines.push(`~ index header — total: ${show(disk.total)} → ${show(built.total)}`);
+  }
+
+  if (lines.length === 0) return firstTextDifference(onDiskText, rebuiltText);
+  return lines;
+}
+
 // ── Commands ────────────────────────────────────────────────────────────────
 
 function cmdBuild(argv) {
@@ -248,9 +383,12 @@ function cmdBuild(argv) {
     }
     const onDisk = fs.readFileSync(INDEX_PATH, 'utf8');
     if (onDisk !== text) {
-      process.stderr.write('ledger: the committed index does not match the claims in the artifacts.\n');
+      const rel = path.relative(REPO_ROOT, INDEX_PATH);
+      process.stderr.write(`ledger: ${rel} disagrees with the artifacts.\n`);
+      for (const l of diffIndex(onDisk, text)) process.stderr.write(`  ${l}\n`);
+      process.stderr.write(`  sha256 index:     ${sha256(onDisk)}\n`);
+      process.stderr.write(`  sha256 artifacts: ${sha256(text)}\n`);
       process.stderr.write('  The index is generated. Run `node scripts/ledger.mjs build` and commit the result.\n');
-      process.stderr.write(`  on disk: ${onDisk.length} bytes · regenerated: ${text.length} bytes\n`);
       return 1;
     }
     process.stdout.write(`ledger: index matches — ${claims.length} claims\n`);
@@ -354,6 +492,45 @@ async function cmdVerify(argv) {
     process.stderr.write('  These are the ADR-001 carve-outs — migration, deploy, harness self-edit — which block from day one.\n');
     return 1;
   }
+  return 0;
+}
+
+// ── locate — the position, resolved when asked ──────────────────────────────
+//
+// This is what replaces `source_line` in the index. The old field answered "where is this
+// claim?" with a number recorded at build time, which is correct until the next edit above
+// it and silently wrong afterwards — and keeping it correct meant rebuilding the index
+// after every prose edit, which is what made a documentation change fail the build.
+//
+// Here the same question is answered by parsing the artifacts now. It cannot be stale,
+// and the output is `file:line`, which every editor and terminal will jump to.
+function cmdLocate(argv) {
+  const id = argv.find((a) => !a.startsWith('--'));
+  const { claims } = collectProjectClaims();
+  const glob = collectGlobalClaims();
+  const all = [...claims, ...glob.claims];
+
+  if (!id) {
+    for (const c of all.sort((a, b) => (a.id < b.id ? -1 : 1))) {
+      process.stdout.write(`${c.source_file}:${c.source_line}  ${c.id}\n`);
+    }
+    process.stdout.write(`\n${all.length} claims. Positions are resolved from the artifacts on this run, not recorded.\n`);
+    return 0;
+  }
+
+  const claim = all.find((c) => c.id === id);
+  if (!claim) {
+    process.stderr.write(`ledger locate: no claim "${id}"\n`);
+    // A near-miss list, because the usual reason for a miss is a typo or a renamed claim,
+    // and "no such claim" alone sends the reader back to grep for what this already knows.
+    const near = all.map((c) => c.id).filter((k) => k.includes(id) || id.includes(k));
+    if (near.length) process.stderr.write(`  did you mean: ${near.slice(0, 5).join(', ')}\n`);
+    return 1;
+  }
+  // The line is the head of the claim BLOCK, which is what the parser records — claims in
+  // one block share it. Said plainly rather than implied, so nobody reads it as the line of
+  // the `id:` key and concludes the ledger is off by a few.
+  process.stdout.write(`${claim.source_file}:${claim.source_line}\n`);
   return 0;
 }
 
@@ -741,6 +918,8 @@ async function main() {
       return cmdVerify(argv);
     case 'judge':
       return cmdJudge(argv);
+    case 'locate':
+      return cmdLocate(argv);
     case 'events':
       return cmdEvents(argv);
     case 'views':
@@ -748,7 +927,7 @@ async function main() {
     case 'sweep':
       return cmdSweep(argv);
     default:
-      process.stderr.write('usage: ledger.mjs <build [--check] | rebuild | lint | verify [--offline] [--no-exec] [--scope=X] | judge <id> | events [--since 30d] | views | sweep [--since 7d] [--json]>\n');
+      process.stderr.write('usage: ledger.mjs <build [--check] | rebuild | lint | verify [--offline] [--no-exec] [--scope=X] | judge <id> | locate [id] | events [--since 30d] | views | sweep [--since 7d] [--json]>\n');
       return 2;
   }
 }
