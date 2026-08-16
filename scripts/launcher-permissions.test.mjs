@@ -12,7 +12,7 @@
 // hook fired for what its matcher named and for nothing else, so when `designer` was granted a
 // browser the same day, the new capability reached NO content-level control at all. The binding
 // QA gate caught the gap and the false premise together. Both are fixed: the matcher now routes
-// the browser, and the browser is localhost-only.
+// the browser, and the browser refuses the local network while allowing the open web.
 //
 // Removed 2026-08-16 by founder decision. Pinned here because a single word restores it
 // silently and nothing else in the suite would notice.

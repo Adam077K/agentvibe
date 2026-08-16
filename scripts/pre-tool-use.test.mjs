@@ -263,66 +263,84 @@ for (const [label, payload] of [
   })
 }
 
-// ── The browser grant: localhost only ────────────────────────────────────────────────────
+// ── The browser grant: the open web is allowed, the local network is not ─────────────────
 // designer got the playwright MCP on 2026-08-16 — the first live MCP capability here. The
-// binding QA gate found that MCP calls reached NO safety control: the hook was registered with
-// matcher "Bash|Edit|Write|NotebookEdit", which no MCP tool name matches. Meanwhile DECISIONS.md
-// justified removing the permissions flag partly on "the PreToolUse hook still fired". True for
-// Bash; false for this.
+// binding QA gate found MCP calls reached NO safety control: the matcher read
+// "Bash|Edit|Write|NotebookEdit", which no MCP tool name matches.
 //
-// Localhost-only is the whole grant, and it is not a compromise: the perception loop is "look at
-// what I just rendered". References come from the refero/figma/stitch MCP servers; docs from
-// WebFetch. A deployed preview host goes in AGENTVIBE_BROWSER_HOSTS when one exists.
+// The first rule written here was localhost-only, reasoned from designer's perception loop.
+// FOUNDER OVERRULED IT, correctly: `sourcer` answers questions with sourced evidence and
+// WebFetch returns almost nothing useful on a JS-rendered site. The deciding argument is that
+// agents ALREADY hold WebSearch and WebFetch, so untrusted web text already reaches context —
+// blocking the browser does not close prompt injection, it only makes the agent worse.
+//
+// What remains refused is the local network, which is not the web and which no research task
+// wants. That is the one browser risk a URL guard can actually close.
 
 const nav = (url) => ({ session_id: 'test-session', tool_name: 'mcp__playwright__browser_navigate', tool_input: { url } })
 
 const BROWSER_ALLOWED = [
+  // The perception loop.
   'http://localhost:3000',
   'http://localhost:3000/pricing',
-  'http://localhost',
-  'https://localhost:8443/x',
-  'http://127.0.0.1:5173',
   'http://127.0.0.1:5173/a/b?c=d',
   'http://[::1]:3000/',
   'about:blank',
+  // The open web — autonomous agency. These are the point of the reversal.
+  'https://example.com',
+  'https://stripe.com/pricing',
+  'https://news.ycombinator.com/item?id=1',
+  'https://competitor.io/pricing?plan=pro#compare',
+  'http://plain-http-site.org/page',
+  'https://sub.domain.co.uk:8443/deep/path',
+  // Hostnames that merely CONTAIN a private-range string are public names.
+  'https://10.great.example.com/',
+  'https://192.168.marketing.io/',
 ]
 
 for (const url of BROWSER_ALLOWED) {
-  test(`ALLOWS browsing our own output — ${url}`, () => {
-    assert.equal(runHook(compact(nav(url))), ALLOW, 'the perception loop must be able to look at localhost')
+  test(`ALLOWS browsing — ${url}`, () => {
+    assert.equal(runHook(compact(nav(url))), ALLOW, `hook blocked legitimate browsing to ${url}`)
   })
 }
 
 const BROWSER_BLOCKED = [
-  ['https://example.com', 'the open internet'],
   ['http://169.254.169.254/latest/meta-data/', 'cloud metadata endpoint'],
-  ['http://192.168.1.1/', 'the local network is not the local machine'],
+  ['http://192.168.1.1/', 'the router — local network, not the web'],
   ['http://10.0.0.5:8080/', 'private range'],
-  ['file:///etc/passwd', 'local file read through the browser'],
-  ['https://localhost.evil.com/', 'a hostname that merely STARTS with localhost'],
-  ['http://127.0.0.1.evil.com/', 'the same trick on the IP form'],
+  ['http://172.16.0.9/', 'private range, low edge'],
+  ['http://172.31.255.1/', 'private range, high edge'],
+  ['file:///etc/passwd', 'local file read wearing a browser costume'],
+  ['data:text/html,<script>1</script>', 'in-page content, never reaches the network'],
+  ['javascript:alert(1)', 'in-page execution'],
+  ['http://0.0.0.0/', 'unroutable'],
 ]
 
 for (const [url, why] of BROWSER_BLOCKED) {
-  test(`BLOCKS browsing off-machine — ${url} (${why})`, () => {
+  test(`BLOCKS ${url} — ${why}`, () => {
     assert.equal(runHook(compact(nav(url))), BLOCK, `hook allowed navigation to ${url}`)
   })
 }
+
+test('172.15 and 172.32 are PUBLIC — the private range is 172.16-31 only', () => {
+  // Off-by-one on this range is the classic SSRF filter bug in both directions: blocking real
+  // public space, or letting 172.16 through.
+  assert.equal(runHook(compact(nav('https://172.15.0.1/'))), ALLOW)
+  assert.equal(runHook(compact(nav('https://172.32.0.1/'))), ALLOW)
+  assert.equal(runHook(compact(nav('https://172.16.0.1/'))), BLOCK)
+  assert.equal(runHook(compact(nav('https://172.31.0.1/'))), BLOCK)
+})
+
+test('userinfo in the URL cannot smuggle a private host past the check', () => {
+  // http://example.com@169.254.169.254/ connects to the METADATA endpoint, not to example.com.
+  assert.equal(runHook(compact(nav('http://example.com@169.254.169.254/latest/'))), BLOCK)
+})
 
 test('BLOCKS a navigation whose url cannot be read — fails closed like every other rule here', () => {
   assert.equal(runHook(compact({ session_id: 'test-session', tool_name: 'mcp__playwright__browser_navigate', tool_input: {} })), BLOCK)
 })
 
-test('a deployed preview host can be permitted without touching the hook', () => {
-  const env = { AGENTVIBE_BROWSER_HOSTS: 'agentvibe.vercel.app' }
-  assert.equal(runHook(compact(nav('https://agentvibe.vercel.app/pricing')), env), ALLOW)
-  // and it does not become a wildcard
-  assert.equal(runHook(compact(nav('https://evil.com')), env), BLOCK)
-  assert.equal(runHook(compact(nav('https://agentvibe.vercel.app.evil.com')), env), BLOCK)
-})
-
 test('other MCP servers are untouched — the guard only understands the browser', () => {
-  // Gating tools this hook has no rules for would be theatre with an outage attached.
   for (const t of ['mcp__figma__get_design_context', 'mcp__notion__notion-search']) {
     assert.equal(runHook(compact({ session_id: 'test-session', tool_name: t, tool_input: { q: 'x' } })), ALLOW, `${t} was gated`)
   }

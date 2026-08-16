@@ -344,28 +344,36 @@ except Exception:
     ;;
 
   mcp__playwright__browser_navigate)
-    # ── BLOCK: browser navigation outside the local machine ───────────────────
+    # ── BLOCK: browser navigation into the local network ──────────────────────
     #
-    # `designer` was granted the playwright MCP on 2026-08-16 — the first live MCP capability in
-    # this repo. The binding QA gate immediately found that MCP tool calls reached NO safety
-    # control at all: this hook was registered with `"matcher": "Bash|Edit|Write|NotebookEdit"`,
-    # and `mcp__playwright__browser_navigate` matches none of those. Verified by running the
-    # matcher as a regex against real tool names. So the curl-to-external-URL block, the .env
-    # read block and the write-outside-project-root block all applied to Bash and to nothing
-    # else — while DECISIONS.md justified removing --dangerously-skip-permissions partly on the
-    # claim that "the PreToolUse hook still fired". True for Bash. False for this.
+    # THE OPEN WEB IS ALLOWED. This is a denylist, not an allowlist, and the direction is a
+    # founder decision made against my recommendation — correctly.
     #
-    # SCOPE: LOCALHOST ONLY, AND THAT IS NOT A COMPROMISE.
-    # designer's perception loop is "render, look at what rendered, iterate" — that is localhost
-    # by definition. Visual references come from the refero / figma / stitch / higgsfield MCP
-    # servers, which are better at it than driving a browser; documentation comes from WebFetch.
-    # The one genuine future need is a deployed preview URL, and nothing is deployed yet. When
-    # something is, add its host to EXTRA_BROWSER_HOSTS below — one line, not an allowlist to
-    # maintain.
+    # My first cut was localhost-only, reasoned from `designer`'s perception loop ("render, look
+    # at what rendered"). That reasoning was right about designer and wrong as a policy: `sourcer`
+    # answers questions with sourced evidence, and WebFetch returns almost nothing useful on a
+    # JS-rendered site. No pricing page behind a client-side render, no scrolling a competitor's
+    # landing page to judge how it feels. An autonomous company that cannot look at the web is
+    # crippled at the work it exists to do.
     #
-    # Deliberately narrow: ONLY this tool. Every other MCP server the founder has configured
-    # (figma, notion, miro, gmail, higgsfield, …) is untouched, because a guard that only
-    # understands playwright must not silently gate tools it cannot reason about.
+    # The argument that decided it: agents ALREADY hold WebSearch and WebFetch, so untrusted text
+    # from the open internet already reaches context. Blocking the browser does not close prompt
+    # injection — it just makes the agent worse while leaving the real risk untouched.
+    #
+    # WHAT IS STILL REFUSED, AND WHY IT COSTS NOTHING:
+    # The local network is not the web. 169.254.169.254 is the cloud metadata endpoint;
+    # 10/8, 172.16/12 and 192.168/16 are the founder's router, NAS and printer. No research task
+    # wants them, and SSRF is the one browser risk a URL guard can actually close. `file://` is a
+    # local file read wearing a browser costume, and this hook already refuses reading secrets
+    # through Bash — the same content must not be reachable through a different door.
+    # Loopback (localhost, 127.0.0.1, [::1]) IS allowed: that is the perception loop.
+    #
+    # STATED LIMIT, because a guard that oversells itself is worse than none: this matches on the
+    # URL STRING. A hostname that resolves to a private address (DNS rebinding, a public name
+    # pointed at 169.254.169.254) passes it. Closing that needs resolution-time enforcement,
+    # which belongs to the OS sandbox, not to a regex. And no URL guard closes prompt injection:
+    # that is handled by not giving the browsing agent deploy or payment credentials, which is
+    # exactly why `operator` and `instrument` are separate engines.
     url=$(printf '%s' "$payload" | python3 -c "
 import sys, json
 try:
@@ -375,36 +383,51 @@ except Exception:
     print('')
 " 2>/dev/null)
 
-    # Fail CLOSED: an unparseable or absent URL is refused, matching this hook's posture
-    # everywhere else. A navigation we could not inspect is not a navigation we may allow.
+    # Fail CLOSED: an unparseable or absent URL is refused, matching this hook everywhere else.
     if [ -z "$url" ]; then
       block "browser_navigate with no readable url — refused. This hook fails closed: a navigation it cannot inspect is not one it can allow."
     fi
 
-    # Add a deployed preview host here when one exists, space-separated. Keep it short; if this
-    # ever grows into a real list, that is the signal the browser is being used for something
-    # other than looking at our own output.
-    EXTRA_BROWSER_HOSTS="${AGENTVIBE_BROWSER_HOSTS:-}"
+    _host=$(printf '%s' "$url" | sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://##; s#^[^@]*@##; s#[/?\#].*$##; s#:[0-9]+$##' | tr '[:upper:]' '[:lower:]')
 
-    _allowed=no
     case "$url" in
-      http://localhost|http://localhost:*|http://localhost/*|https://localhost|https://localhost:*|https://localhost/*) _allowed=yes ;;
-      http://127.0.0.1|http://127.0.0.1:*|http://127.0.0.1/*|https://127.0.0.1|https://127.0.0.1:*|https://127.0.0.1/*) _allowed=yes ;;
-      "http://[::1]"*|"https://[::1]"*) _allowed=yes ;;
-      about:blank) _allowed=yes ;;
+      file://*|about:*|data:*|javascript:*|chrome://*|view-source:*)
+        case "$url" in
+          about:blank) : ;;
+          *) block "navigation to '$url' is refused — only http and https reach the network. file://, data: and javascript: are local or in-page reads wearing a browser costume, and this hook already refuses that content through Bash." ;;
+        esac
+        ;;
     esac
 
-    if [ "$_allowed" = no ] && [ -n "$EXTRA_BROWSER_HOSTS" ]; then
-      for _h in $EXTRA_BROWSER_HOSTS; do
-        case "$url" in
-          "http://$_h"|"http://$_h/"*|"http://$_h:"*|"https://$_h"|"https://$_h/"*|"https://$_h:"*) _allowed=yes; break ;;
-        esac
-      done
+    # Private-range checks apply ONLY to literal IPv4 addresses. Matching them as glob patterns
+    # against the hostname blocks real public sites: `10.great.example.com` and
+    # `192.168.marketing.io` are ordinary domains that happen to begin with those digits, and the
+    # first cut of this rule refused both. A denylist that blocks legitimate research is the same
+    # failure as one that allows the metadata endpoint — it just fails in the other direction.
+    _is_ipv4=no
+    case "$_host" in
+      *[!0-9.]*) : ;;                 # any non-digit, non-dot character → a hostname, not an IP
+      *.*.*.*)   _is_ipv4=yes ;;      # four dot-separated numeric parts
+    esac
+
+    case "$_host" in
+      # Loopback — the perception loop. Allowed.
+      localhost|\[::1\]|::1) _is_ipv4=no ;;
+    esac
+
+    if [ "$_is_ipv4" = yes ]; then
+      case "$_host" in
+        127.*) : ;;   # loopback, allowed
+        169.254.*)   block "navigation to '$url' is refused — 169.254/16 is link-local and includes the cloud metadata endpoint. No research task needs it." ;;
+        10.*)        block "navigation to '$url' is refused — 10/8 is your local network, not the web." ;;
+        192.168.*)   block "navigation to '$url' is refused — 192.168/16 is your local network, not the web." ;;
+        172.1[6-9].*|172.2[0-9].*|172.3[0-1].*) block "navigation to '$url' is refused — 172.16/12 is your local network, not the web." ;;
+        0.*)         block "navigation to '$url' is refused — unroutable host." ;;
+        *) : ;;      # any other literal IP is public. Allowed.
+      esac
     fi
 
-    if [ "$_allowed" = no ]; then
-      block "browser navigation to '$url' is refused — the browser grant is localhost-only. designer's perception loop looks at what it just rendered. Use the refero/figma/stitch MCP servers for visual references and WebFetch for documentation. To allow a deployed preview host, set AGENTVIBE_BROWSER_HOSTS."
-    fi
+    [ -n "$_host" ] || block "navigation to '$url' is refused — the host could not be parsed."
     ;;
 
   *)
