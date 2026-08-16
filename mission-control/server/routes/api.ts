@@ -23,6 +23,7 @@
 // class this codebase is named after; a security control that hides data silently is a new
 // instance of it, not a fix for one.
 
+import { randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import type { Project, TrustState } from '../projects.ts';
 import { LiveState, live, REPO_ROOT } from '../state.ts';
@@ -31,6 +32,7 @@ import { collectBelief } from '../collectors/belief.ts';
 import { collectSessions, collectProjectStats, type ProjectTranscriptStats } from '../collectors/transcripts.ts';
 import { summarizeEvents, type EventsSummary } from '../collectors/events.ts';
 import { projectEmptyState, projectEmptyStateProbe, inboxEmptyState, type EmptyState } from '../collectors/empty.ts';
+import { appendDispatch, readDispatch, type DispatchEntry } from '../index-cache.ts';
 
 function findProject(projects: Project[], id: string): Project | undefined {
   return projects.find((p) => p.id === id);
@@ -115,6 +117,37 @@ export interface InboxProject extends EmptyState {
 
 export interface InboxPayload {
   projects: InboxProject[];
+}
+
+// Re-export so client/src/api.ts can import the type through the same path as all others.
+export type { DispatchEntry };
+
+/**
+ * The body the client POSTs to /api/dispatch. Validated strictly server-side before the
+ * entry is written: a queue written from unvalidated input is an injection surface.
+ */
+export interface DispatchRequest {
+  /** Must match a discovered project's id. */
+  project: string;
+  /** 1–2000 characters, trimmed. */
+  goal: string;
+}
+
+/** What /api/dispatch POST returns on success. */
+export interface DispatchResult {
+  ok: true;
+  id: string;
+  enqueuedAt: number;
+}
+
+/** What /api/dispatch POST returns on validation failure. */
+export interface DispatchError {
+  error: string;
+}
+
+/** What GET /api/dispatch returns. */
+export interface DispatchPayload {
+  entries: DispatchEntry[];
 }
 
 export function createApi(state: LiveState = live): Hono {
@@ -220,6 +253,90 @@ export function createApi(state: LiveState = live): Hono {
       empty,
     };
     return c.json(payload);
+  });
+
+  // ── Dispatch queue ──────────────────────────────────────────────────────────────────────
+  //
+  // PHASE 8B: the only Mission Control route that writes. All writes go through index-cache.ts
+  // (the one server file allowed write APIs by crosscheck.test.ts). This handler is limited to:
+  //   · parse and validate the request body
+  //   · confirm the project exists in the live fleet
+  //   · call appendDispatch() — which holds the actual appendFileSync
+  //
+  // INPUT VALIDATION IS THE TRUST BOUNDARY HERE. The project id and goal arrive over HTTP
+  // from any tab with access to localhost. The project is checked against the live discovered
+  // list (not just string-sanitised) so the root path in the entry is always one discoverFleet
+  // returned, never one the caller constructed. The goal is stored verbatim as a JSON string
+  // with no shell interpolation anywhere in the server — the consumer script is what runs a
+  // command, and it does so outside the server process.
+
+  // POST /api/dispatch — validate and enqueue a goal
+  //
+  // WHY NOT ASYNC: c.req.json() is a micro-task, not a real I/O operation at this scale. The
+  // subsequent appendFileSync is synchronous and intentional: it is a single append to a small
+  // file, not a corpus scan, and the synchronous guarantee that the entry is on disk before
+  // the 200 is returned is exactly the property the client needs — a 200 that might mean
+  // "probably queued" is not a confirmation.
+  api.post('/dispatch', async (c) => {
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: 'request body must be JSON' } satisfies DispatchError, 400);
+    }
+    if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+      return c.json({ error: 'request body must be a JSON object' } satisfies DispatchError, 400);
+    }
+    const raw = body as Record<string, unknown>;
+
+    // Project validation: must name a project the server discovered, so the root in the
+    // queue entry is always a real path discoverFleet returned — never a caller-supplied path.
+    if (typeof raw.project !== 'string' || !raw.project.trim()) {
+      return c.json({ error: 'project must be a non-empty string' } satisfies DispatchError, 400);
+    }
+    const projects = state.refresh();
+    const target = projects.find((p) => p.id === raw.project);
+    if (!target) {
+      return c.json({ error: `unknown project "${raw.project}"` } satisfies DispatchError, 404);
+    }
+
+    // Goal validation: non-empty, capped at 2000 characters after trimming.
+    if (typeof raw.goal !== 'string' || !raw.goal.trim()) {
+      return c.json({ error: 'goal must be a non-empty string' } satisfies DispatchError, 400);
+    }
+    const goal = raw.goal.trim();
+    if (goal.length > 2000) {
+      return c.json({ error: 'goal must not exceed 2000 characters' } satisfies DispatchError, 400);
+    }
+
+    const entry: DispatchEntry = {
+      id: randomUUID(),
+      project: target.id,
+      root: target.root,
+      goal,
+      enqueuedAt: Date.now(),
+      status: 'pending',
+    };
+
+    try {
+      appendDispatch(entry);
+    } catch (err) {
+      return c.json({ error: `could not write to queue: ${String(err)}` } satisfies DispatchError, 500);
+    }
+
+    return c.json({ ok: true, id: entry.id, enqueuedAt: entry.enqueuedAt } satisfies DispatchResult);
+  });
+
+  // GET /api/dispatch — list the current queue
+  //
+  // READ-ONLY. The queue is an append-only JSONL file; this reads it and returns every valid
+  // entry. The consumer script manages entries that have been acted on, not this route.
+  api.get('/dispatch', (c) => {
+    try {
+      return c.json({ entries: readDispatch() } satisfies DispatchPayload);
+    } catch (err) {
+      return c.json({ error: `could not read queue: ${String(err)}` } satisfies DispatchError, 500);
+    }
   });
 
   // DELIBERATELY STILL SYNCHRONOUS. inboxEmptyState is one readdirSync of one directory per
