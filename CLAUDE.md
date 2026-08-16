@@ -338,13 +338,20 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   added *in the PR* must carry `qa_verdict: PASS`.
 - **Shadow (computed, does not block):** claim resolvers, except migration · deploy · harness self-edit,
   which block from day one because `git revert` does not undo them.
-- **Durable facts are claims now, not prose.** Registered 2026-08-16 in
+- **Durable facts are claims now, not prose.** Seven registered 2026-08-16 in
   [CLAIM-LEDGER.md](docs/03-system-design/CLAIM-LEDGER.md): the MCP grant binds and narrows across an `Agent`
   dispatch (`c-mcp-grant-binds-through-agent-dispatch`), `maxTurns` binds
   (`c-maxturns-binds-when-agenttype-named`), an MCP call reaches `pre-tool-use.sh` only if the matcher names
-  that exact tool (`c-mcp-hook-matcher-must-name-the-tool`), and nested spawning works
-  (`c-nested-subagent-spawn-works`). All four are `verified_by: command` — a `judge` claim with an empty panel
-  resolves `unresolved` forever, and two of those already exist.
+  that exact tool (`c-mcp-hook-matcher-must-name-the-tool`), nested spawning works
+  (`c-nested-subagent-spawn-works`), and the three `tools:` claims below. All seven are `verified_by: command`
+  — a `judge` claim with an empty panel resolves `unresolved` forever, and two of those already exist.
+- **`tools:` binds one way only. Never state the two halves as one rule.** **Subtraction binds** — verified by
+  *attempt*, not argument: `reviewer-readonly` was dispatched and reported write/bash/edit as **`NOT_PRESENT`**
+  (no call path at all, which is stronger than a refused call), with a successful control read proving it
+  could act (`c-read-only-binding-verified-by-attempt`; measured on the `Agent` path, **not** the workflow
+  `agent()` path the gate uses). **Addition does not** — `reviewer` declares four tools and emitted
+  `StructuredOutput` in 259 of 269 runs (`c-tools-addition-does-not-bind`). So `tools:` is a **ceiling on
+  removal, not an inventory**: trust it for what an agent cannot do, never for what it can.
 - **#56 is decided: shrink the payload, do not raise the budget.** `session-start.js` emits **27,069 bytes**
   against a 4,096 budget (6.6x). `c-lenses-and-playbooks-are-loaded` carries a `refresh` disposition recording
   the fix — a lens/playbook router at ~1.5KB, the same cure that took skills discovery from ~15,000 tokens to
@@ -355,8 +362,16 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   credential scopes for `instrument`/`operator`.
 - **Before you trust any local measurement:** `cd mission-control && bun install`. Without it three
   mission-control claims look like regressions when they are only missing dependencies. Measure from a clean
-  checkout, never a stale working tree. `c-mission-control-cold-start` is a **wall-clock** check (9.5s against
-  a 10s budget) and flakes when several lanes build at once — re-run it before believing it.
+  checkout, never a stale working tree.
+- **Two checks are wall-clock, and a loaded machine fails them for reasons no diff caused.** Measure the load
+  before you believe either. `c-mission-control-cold-start` allows 10s and measures ~9.5s. Worse,
+  `node scripts/ledger.mjs verify --offline` takes **49.6s idle and 65-67s under parallel-lane load**, against
+  the hard **60s `VERIFY_TIMEOUT_MS`** in `mission-control/server/collectors/belief.ts` — so
+  `crosscheck.test.ts` ("MC's ledger summary equals `ledger verify --offline`") fails, and `npm run check`
+  exits 1, whenever the machine is busy. Measured 2026-08-16 on a **stashed clean baseline at 66.68s**, so it
+  is not caused by the claims added that day, which contribute 0.35s of the total. The headroom is thin and
+  shrinks with every command-verified claim; the fix is a bigger timeout or a cheaper cross-check, not a
+  smaller ledger.
 
 ---
 

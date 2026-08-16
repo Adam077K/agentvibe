@@ -68,6 +68,14 @@ went idle without sending their reports. Taken at face value that reads as *"rev
 **MCP tool calls only reach a hook if the matcher names them.** Any claim of the form "the hook still fires"
 is false for MCP unless the matcher says so. That sentence propagated into four files before it was caught.
 
+**`tools:` binds one way only, and the two halves must never be stated as one rule.** Subtraction binds:
+`reviewer` (no `Write`/`Edit`) made 4,373 tool calls across 269 runs with **0 Write and 0 Edit**; `sourcer`
+284 calls, 0 Bash; `framer` 30 calls, 0 Bash. Addition does not: `reviewer` declares four tools and emitted
+**`StructuredOutput` in 259 of those 269 runs**, because the runtime augments any dispatch carrying a
+`schema:`. So `tools:` is a **ceiling on removal, not an inventory** — safe to reason from when asking what an
+agent *cannot* do, worthless when asking what it *can*. Registered as `c-tools-subtraction-binds` and
+`c-tools-addition-does-not-bind`.
+
 ---
 
 ## The gate now refuses things
@@ -90,9 +98,16 @@ built it.
 
 ## Open — needs a decision
 
-1. **`tools:` binding is unverified.** The judge's "no shell" guarantee rests on it, and its own prompt tells
-   it that it has no shell. If `tools:` does not bind, that statement is false to the one agent whose verdict
-   cannot be overridden. Tracked as `c-read-only-binding-unverified`.
+1. ~~**`tools:` binding is unverified.**~~ **ANSWERED 2026-08-16 by attempt, not by argument.**
+   `reviewer-readonly` — the container the binding judge runs in — was dispatched and told to *attempt* the
+   forbidden actions: write, bash and edit each came back **`NOT_PRESENT`**, which is strictly stronger than
+   `PRESENT_BUT_REFUSED` (that would mean the capability exists and only a hook stands between it and the
+   repo). The control read succeeded, so the probe could act; a silent probe and a contained probe are not the
+   same signal. Its tool list was exactly `[Read, Glob, Grep]`. `c-read-only-binding-unverified` is
+   **deprecated** — kept verbatim, because the record that it sat open from Phase 4 is worth more than a tidy
+   file — and replaced by `c-read-only-binding-verified-by-attempt`. **The bound is part of the claim:** the
+   probe ran on the `Agent` path; `qa.js` dispatches its judge through `agent()` on the Workflow surface,
+   which is probably the same mechanism and was **not** measured.
 2. ~~**Nothing was added to `CLAIM-LEDGER.md`.**~~ **CLOSED 2026-08-16.** Four of the facts above are
    registered claims now — `c-mcp-grant-binds-through-agent-dispatch`,
    `c-maxturns-binds-when-agenttype-named`, `c-mcp-hook-matcher-must-name-the-tool` and
@@ -102,10 +117,15 @@ built it.
    not a defect in the claim. Issue **#56** is decided in the same pass: `c-lenses-and-playbooks-are-loaded`
    carries a `refresh` disposition — shrink the 27,069-byte session-start payload with a router, do not raise
    the 4,096 budget to fit it.
-3. **The OS sandbox is configured nowhere.** `operator` and `instrument` are specified and deliberately
+3. **`AGENT-ARCHITECTURE.md`'s binding table says `maxTurns:` does **NOT** bind, and the ledger now says it
+   does.** Both cannot stand. The reconciliation is that the table's census covered the `Agent` path, where no
+   dispatch named an agent file and so nothing could have been capped; `c-maxturns-binds-when-agenttype-named`
+   is scoped to dispatches that name an `agentType`. One row of that table needs rewriting to say so — it is
+   under `docs/03-system-design/**`, which the truth lane owns, so it is flagged here rather than edited.
+4. **The OS sandbox is configured nowhere.** `operator` and `instrument` are specified and deliberately
    uncreated until it exists; they would hold payment keys and deploy tokens in a container that cannot hold
    them.
-4. **The prompt-craft gate is still closed.** Nothing under `.claude/agents/` may be created, rewritten or
+5. **The prompt-craft gate is still closed.** Nothing under `.claude/agents/` may be created, rewritten or
    deleted until a written prompt standard exists and is approved. Two narrow capability-only exceptions were
    granted explicitly and neither is a precedent.
 

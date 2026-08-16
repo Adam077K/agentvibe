@@ -484,7 +484,21 @@ claims:
       judged_by: []
     valid_until: 2026-09-08
     confidence: 0.5
-    disposition: {action: waive, until: 2026-09-08, reason: "scripts/probe-readonly-engine.sh must be run by hand; revisit with the shadow-window review"}
+    # DISPOSITION CHANGED 2026-08-16, waive -> DEPRECATE. The claim text above is kept
+    # verbatim, because the record that this sat open from Phase 4 to 2026-08-16 is worth
+    # more than a tidy file. What changed is that it was answered: see
+    # c-read-only-binding-verified-by-attempt below.
+    #
+    # DEPRECATE RATHER THAN REFRESH, and the distinction is not bookkeeping. This claim
+    # asserts "whether tools: binds is UNVERIFIED". You cannot refresh that assertion with
+    # evidence that it IS verified — refreshing means the same claim with renewed evidence,
+    # and the new evidence is the negation of the claim. Mechanically it matters too:
+    # `refresh` does not short-circuit the resolver (resolvers.js:83), so on a
+    # verified_by: judge claim with judged_by: [] it would resolve `unresolved` forever and
+    # book a permanent would_block that nobody can clear, since no panel will ever be
+    # convened to judge a sentence already known to be false. `deprecate` resolves clean
+    # and says why, which is what a retired claim should do.
+    disposition: {action: deprecate, reason: "ANSWERED 2026-08-16, superseding the waiver. reviewer-readonly was dispatched and told to ATTEMPT the forbidden actions rather than reason about them: write/bash/edit each returned NOT_PRESENT (no call path at all — strictly stronger than PRESENT_BUT_REFUSED, where the capability exists and only a hook stands in the way), the control read SUCCEEDED so the probe was demonstrably able to act, and the reported tool list was exactly [Read, Glob, Grep], matching the declaration. Both halves of this claim's stated reason are now false: the probe no longer needs hand-running, and spawning is not disabled. Registered as c-read-only-binding-verified-by-attempt, which carries the bound this one cannot: the measurement was taken on the Agent path, not the workflow agent() path the gate actually uses"}
     supports: [c-read-only-engines-declare-no-write]
 
   - id: c-qa-gate-blocks
@@ -595,6 +609,77 @@ claims:
     valid_until: 2026-11-14
     confidence: 0.85
     supports: [d-001]
+
+  # MEASURED 2026-08-16 by dispatching `reviewer-readonly` — the container the BINDING QA
+  # judge runs in — and instructing it to genuinely ATTEMPT the forbidden actions rather
+  # than reason about whether it could. Three properties make this dispositive rather than
+  # suggestive:
+  #
+  #   1. NOT_PRESENT, not PRESENT_BUT_REFUSED. Refusal would mean the capability exists and
+  #      a hook is the only thing standing in the way, and a hook can fail or be bypassed.
+  #      Absence means there is no call path. This is the stronger of the two passes.
+  #   2. The control read SUCCEEDED ("# Agentvibe — Project Context"), so the probe was
+  #      demonstrably capable of acting. A silent probe and a contained probe produce the
+  #      same transcript, and this repo has already been caught by that.
+  #   3. The reported list was exactly ["Read","Glob","Grep"] — the declaration, not a
+  #      superset of it.
+  #
+  # THE BOUND IS PART OF THE CLAIM. The probe went through the `Agent` tool path. qa.js
+  # dispatches its judge through `agent()` on the Workflow surface (the `agentType:
+  # JUDGE_AGENT` call in its judge loop). Those are very likely one mechanism — the MCP
+  # probes behaved identically across both — but "very likely" was not measured, and
+  # writing this claim as though it were is the precise defect PHASE-8A-CLOSE.md §2
+  # catalogues eight instances of: reporting success about something you did not measure.
+  #
+  # The command checks the declaration and the routing, deterministically, because a
+  # dispatch cannot run in a resolver. If reviewer-readonly's tool list changes, or the
+  # gate stops routing its judge there, the measurement stops describing this repository.
+  - id: c-read-only-binding-verified-by-attempt
+    assert: "tools: BINDS as a subtraction at runtime, verified by attempt rather than by reasoning: reviewer-readonly, dispatched 2026-08-16, reported write/bash/edit as NOT_PRESENT (no call path, not a refused call), succeeded at a control read proving it could act, and held exactly [Read, Glob, Grep] — the declaration itself. MEASURED ON THE Agent TOOL PATH ONLY; qa.js dispatches its binding judge through agent() on the Workflow surface, which is probably the same mechanism and was not measured"
+    kind: runtime-capability
+    scope: project
+    verified_by: command
+    evidence:
+      cmd: "grep -qxF 'tools: [Read, Glob, Grep]' .claude/agents/reviewer-readonly.md && grep -qE 'JUDGE_AGENT = .reviewer-readonly.' .claude/workflows/qa.js && grep -qF 'agentType: JUDGE_AGENT' .claude/workflows/qa.js"
+      expect_exit: 0
+    valid_until: 2026-11-14
+    confidence: 0.9
+    supports: [c-read-only-engines-declare-no-write]
+
+  # The asymmetry below is load-bearing and was recorded nowhere as a claim. It is two
+  # facts, not one, because they fail differently and would be dispositioned separately:
+  # subtraction is a security property the QA gate rests on, addition is a warning about
+  # reading `tools:` as an inventory. Census re-run 2026-08-14 over all agent-*.jsonl;
+  # the table it came from is AGENT-ARCHITECTURE.md "The binding table".
+  - id: c-tools-subtraction-binds
+    assert: "A tool absent from an agent's tools: list is never called — measured across the whole transcript census: reviewer (no Write/Edit) 269 runs and 4,373 tool calls with 0 Write and 0 Edit; sourcer (no Bash) 7 runs and 284 calls with 0 Bash; framer (no Bash) 3 runs and 30 calls with 0 Bash. Behavioural over a large N, not a proof of the mechanism"
+    kind: runtime-capability
+    scope: project
+    verified_by: command
+    evidence:
+      cmd: "grep -qxF 'tools: [Read, Glob, Grep, Bash]' .claude/agents/reviewer.md && ! grep -qE '^tools:.*(Write|Edit)' .claude/agents/reviewer.md && ! grep -qE '^tools:.*Bash' .claude/agents/sourcer.md && ! grep -qE '^tools:.*Bash' .claude/agents/framer.md"
+      expect_exit: 0
+    valid_until: 2026-11-14
+    confidence: 0.95
+    supports: [c-read-only-binding-verified-by-attempt]
+
+  # Read this one before trusting any sentence that treats `tools:` as an inventory.
+  # `reviewer` declares four tools and called a fifth, StructuredOutput, in 259 of its 269
+  # runs — the runtime adds it when the dispatch passes a `schema:`, which qa.js does at
+  # every one of its four dispatch sites. So the declaration is a CEILING ON REMOVAL and
+  # not the tool set, and the two halves of this asymmetry must never be stated as one
+  # rule.
+  - id: c-tools-addition-does-not-bind
+    assert: "An agent's tools: list does NOT bound what the runtime may add: reviewer declares four tools and emitted StructuredOutput in 259 of 269 runs, a tool it never declares, because the runtime augments a dispatch that passes a schema:. tools: is a ceiling on subtraction, not an inventory of what an agent can call"
+    kind: runtime-capability
+    scope: project
+    verified_by: command
+    evidence:
+      cmd: "grep -qxF 'tools: [Read, Glob, Grep, Bash]' .claude/agents/reviewer.md && ! grep -q StructuredOutput .claude/agents/reviewer.md && grep -qF 'schema: GATE_SCHEMA' .claude/workflows/qa.js"
+      expect_exit: 0
+    valid_until: 2026-11-14
+    confidence: 0.9
+    supports: [c-tools-subtraction-binds]
 ```
 
 ---
