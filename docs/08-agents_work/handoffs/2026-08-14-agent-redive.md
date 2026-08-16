@@ -132,8 +132,10 @@ deeper: it is about **the agents themselves**.
   **Still use `Explore` for finders**; it works. Just don't cite the cap as the reason.
 - **Every worktree needs `bun install` in `mission-control/`** before `npm run check`, or typecheck fails on
   the React client deps. This is documented and still catches people.
-- **Never edit files carrying claim blocks** — `PHASE-8A-STATUS.md`, `mission-control/README.md`,
-  `CLAIM-LEDGER.md`, `ledger-canary.md`. Editing moves `source_line` and fails `ledger build --check`.
+- ~~**Never edit files carrying claim blocks** — `PHASE-8A-STATUS.md`, `mission-control/README.md`,
+  `CLAIM-LEDGER.md`, `ledger-canary.md`. Editing moves `source_line` and fails `ledger build --check`.~~
+  **No longer true.** The index stopped recording `source_line`, so these files are safe to edit; changing
+  a *claim* still fails the check, by design. Positions come from `node scripts/ledger.mjs locate <id>`.
 - **Never hand-edit generated files** — `.claude/ledger/index.json`, `CODEBASE-MAP.md`. Regenerate:
   `npm run ledger:build` **then** `npm run build:map`, in that order.
 - **`PHASE-8A-STATUS.md` is stale** — it still reads "PR3 of 5 merged" with PRs 4 and 5 "not started", though

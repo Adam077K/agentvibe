@@ -185,6 +185,28 @@ function checkSupports(claims, byId) {
   return issues;
 }
 
+// Where a global claim's `- id:` entry sits, measured from the file, or null.
+//
+// This replaces a stamped `source_line: 0`. Zero was not a line, it was a placeholder that
+// `locate` then printed as `~/.warroom/ledger/global.yml:0` for all four global claims —
+// c-runtime-nested-spawn really lives at line 36. Shipping a number nobody measured is the
+// exact defect this whole change exists to remove, so it went out on the CLI in the same
+// series that deleted it from the Mission Control tooltip.
+//
+// Null when the entry cannot be found, and null when it appears more than once: two matches
+// mean the position is ambiguous, and a caller must not be handed the first of two guesses.
+// Callers print the file alone when this is null — never a `0`, a `?` or a dash, because a
+// character standing in for a measurement is the thing being removed.
+function globalClaimLine(text, id) {
+  const want = new RegExp(`^\\s*-\\s*id:\\s*["']?${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']?\\s*$`);
+  const hits = [];
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    if (want.test(lines[i])) hits.push(i + 1);
+  }
+  return hits.length === 1 ? hits[0] : null;
+}
+
 function collectGlobalClaims() {
   if (!fs.existsSync(GLOBAL_LEDGER)) {
     return { claims: [], issues: [], present: false };
@@ -202,7 +224,17 @@ function collectGlobalClaims() {
     issues.push(...problems);
     if (problems.length === 0) {
       if (c.scope !== 'global') issues.push(`${where}: the global ledger may only hold scope:global claims`);
-      else claims.push({ ...c, source_file: '~/.warroom/ledger/global.yml', source_line: 0, form: 'global' });
+      else {
+        const line = globalClaimLine(text, c.id);
+        claims.push({
+          ...c,
+          source_file: '~/.warroom/ledger/global.yml',
+          // Absent rather than zero when unmeasurable. `undefined` survives into `locate`,
+          // which prints the file alone; a `0` would have printed as a position.
+          ...(line === null ? {} : { source_line: line }),
+          form: 'global',
+        });
+      }
     }
   });
   return { claims, issues, present: true };
@@ -517,6 +549,21 @@ async function cmdVerify(argv) {
 //
 // Here the same question is answered by parsing the artifacts now. It cannot be stale,
 // and the output is `file:line`, which every editor and terminal will jump to.
+//
+// WHAT THE LINE MEANS, per scope, because the two differ and a reader must not have to
+// discover that:
+//   project — the head of the claim BLOCK (the `claims:` line inside the fence). Claims
+//             sharing a block share it, which is what the parser records.
+//   global  — the claim's own `- id:` line, measured by globalClaimLine().
+//
+// AND WHEN THERE IS NO LINE, THERE IS NO NUMBER. A claim whose position could not be
+// measured prints its file and stops. It used to print `:0` for every global claim, which
+// is the placeholder this change exists to abolish, so both output sites below go through
+// `where()` rather than interpolating `source_line` and hoping it is set.
+function where(c) {
+  return c.source_line === undefined ? c.source_file : `${c.source_file}:${c.source_line}`;
+}
+
 function cmdLocate(argv) {
   const id = argv.find((a) => !a.startsWith('--'));
   const { claims } = collectProjectClaims();
@@ -525,9 +572,19 @@ function cmdLocate(argv) {
 
   if (!id) {
     for (const c of all.sort((a, b) => (a.id < b.id ? -1 : 1))) {
-      process.stdout.write(`${c.source_file}:${c.source_line}  ${c.id}\n`);
+      process.stdout.write(`${where(c)}  ${c.id}\n`);
     }
-    process.stdout.write(`\n${all.length} claims. Positions are resolved from the artifacts on this run, not recorded.\n`);
+    // The footer says what is true of the rows above it. It previously read "Positions are
+    // resolved from the artifacts on this run, not recorded" while four rows carried a
+    // position that was neither — a summary asserting a property of a set that part of the
+    // set does not have. Both counts are printed, so the claim is checkable against the
+    // listing rather than taken on trust.
+    const located = all.filter((c) => c.source_line !== undefined).length;
+    const unlocated = all.length - located;
+    process.stdout.write(`\n${all.length} claims · ${located} with a position resolved from the artifacts on this run`);
+    process.stdout.write(unlocated === 0
+      ? ' (none recorded, none guessed).\n'
+      : ` · ${unlocated} whose position could not be measured, printed as the file alone.\n`);
     return 0;
   }
 
@@ -540,10 +597,10 @@ function cmdLocate(argv) {
     if (near.length) process.stderr.write(`  did you mean: ${near.slice(0, 5).join(', ')}\n`);
     return 1;
   }
-  // The line is the head of the claim BLOCK, which is what the parser records — claims in
-  // one block share it. Said plainly rather than implied, so nobody reads it as the line of
-  // the `id:` key and concludes the ledger is off by a few.
-  process.stdout.write(`${claim.source_file}:${claim.source_line}\n`);
+  // See where(): a project claim's line is the head of its BLOCK and is shared by the
+  // claims in it, a global claim's line is its own `- id:` entry, and a claim whose
+  // position could not be measured prints its file with no line at all.
+  process.stdout.write(`${where(claim)}\n`);
   return 0;
 }
 

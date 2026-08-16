@@ -544,18 +544,137 @@ test('the committed index records no positions at all', () => {
   }
 });
 
-test('locate resolves a position on demand — the affordance source_line used to serve', () => {
-  const hit = execFileSync('node', ['scripts/ledger.mjs', 'locate', 'c-canary-unresolvable'],
-    { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
-  assert.match(hit, /^docs\/06-codebase\/ledger-canary\.md:\d+$/);
-  // The line it names must really open that claim's block, or `locate` is the old field
-  // with extra steps: confidently precise and wrong.
-  const [file, line] = hit.split(':');
-  const lines = fs.readFileSync(path.join(REPO_ROOT, file), 'utf8').split('\n');
-  assert.equal(lines[Number(line) - 1].trim(), 'claims:', 'locate must point at the head of the claim block');
+// ── locate, over BOTH scopes ────────────────────────────────────────────────
+//
+// The first version of this test asserted `/^docs\/06-codebase\/ledger-canary\.md:\d+$/`.
+// The project path was baked into the regex, so no global claim could ever enter the
+// sample — and `locate` was printing `~/.warroom/ledger/global.yml:0` for all four of
+// them, a number nobody measured, inside the change whose whole argument is against
+// exactly that. The assertion underneath it was the right one; it was aimed at the only
+// ground where it already held.
+//
+// That is not the empty-sample defect. The sample was not empty — it was drawn entirely
+// from the region where the property is true. Same family as the selector defect in
+// views.test.tsx (rows picked by the content under test); different mechanism.
+//
+// So: the global ledger is INJECTED via $HOME, which os.homedir() honours. Depending on
+// the real ~/.warroom/ledger/global.yml would mean the global half silently vanishes on
+// any machine without one — CI included — which is the same defect wearing a third hat.
 
+const GLOBAL_FIXTURE = [
+  '# a fixture global ledger',
+  '',
+  'claims:',
+  '  - id: c-fixture-alpha',                                        // line 4
+  '    assert: "the first fixture claim"',
+  '    kind: runtime-capability',
+  '    scope: global',
+  '    verified_by: command',
+  '    evidence: {cmd: "true", expect_exit: 0}',
+  '    valid_until: 2027-01-01',
+  '    confidence: 1',
+  '',
+  '  - id: c-fixture-beta',                                         // line 13
+  '    assert: "the second fixture claim"',
+  '    kind: runtime-capability',
+  '    scope: global',
+  '    verified_by: command',
+  '    evidence: {cmd: "true", expect_exit: 0}',
+  '    valid_until: 2027-01-01',
+  '    confidence: 1',
+  '',
+].join('\n');
+
+function withGlobalLedger(body, yaml = GLOBAL_FIXTURE) {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'wr-home-'));
+  try {
+    fs.mkdirSync(path.join(home, '.warroom', 'ledger'), { recursive: true });
+    fs.writeFileSync(path.join(home, '.warroom', 'ledger', 'global.yml'), yaml);
+    const run = (...args) => execFileSync('node', ['scripts/ledger.mjs', ...args],
+      { cwd: REPO_ROOT, encoding: 'utf8', env: { ...process.env, HOME: home } });
+    return body(run, home);
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+}
+
+test('locate points at a real line for EVERY claim it prints, in both scopes', () => {
+  withGlobalLedger((run) => {
+    const out = run('locate');
+    const rows = out.split('\n').filter((l) => /\s{2}c-/.test(l));
+
+    let project = 0;
+    let global = 0;
+    for (const row of rows) {
+      const [loc, id] = row.trim().split(/\s{2,}/);
+      const m = loc.match(/^(.*):(\d+)$/);
+      assert.ok(m, `${id}: printed no position — this test is for rows that claim one (${loc})`);
+      const [, file, lineNo] = m;
+      assert.notEqual(lineNo, '0', `${id}: ":0" is a placeholder, not a position`);
+
+      // Resolve the artifact and read the line it names. A position that does not open
+      // what it claims to open is the old field with extra steps.
+      const abs = file.startsWith('~/')
+        ? path.join(os.homedir(), file.slice(2)) // never taken: the fixture path is absolute-ised below
+        : path.join(REPO_ROOT, file);
+      const src = file.includes('.warroom')
+        ? GLOBAL_FIXTURE
+        : fs.readFileSync(abs, 'utf8');
+      const line = src.split('\n')[Number(lineNo) - 1];
+      assert.ok(line !== undefined, `${id}: line ${lineNo} is past the end of ${file}`);
+
+      if (file.includes('.warroom')) {
+        // Global: the claim's OWN entry.
+        assert.match(line, new RegExp(`^\\s*-\\s*id:\\s*${id}\\s*$`),
+          `${id}: global position must name that claim's own "- id:" line, got ${JSON.stringify(line)}`);
+        global++;
+      } else {
+        // Project: the head of the block the claim lives in.
+        assert.equal(line.trim(), 'claims:', `${id}: project position must open a claim block`);
+        project++;
+      }
+    }
+
+    // Both halves must be non-empty, or this test is the defect it was written to catch.
+    assert.ok(project > 0, 'no project claim was sampled');
+    assert.equal(global, 2, 'both fixture globals must be sampled — a hardcoded path is how this went wrong');
+  });
+});
+
+test('locate prints the file alone when a position cannot be measured — never a 0', () => {
+  // Two entries share an id, so the position is ambiguous and globalClaimLine() refuses to
+  // return the first of two guesses. The row must then carry no number at all: `:0`, `:?`
+  // and `:-` are all a character standing in for a measurement.
+  const ambiguous = GLOBAL_FIXTURE.replace('  - id: c-fixture-beta', '  - id: c-fixture-alpha');
+  withGlobalLedger((run) => {
+    const rows = run('locate').split('\n').filter((l) => l.includes('.warroom'));
+    assert.ok(rows.length > 0, 'the ambiguous fixture must still be listed');
+    for (const r of rows) {
+      assert.doesNotMatch(r, /:\d+/, `an unmeasurable position must print no number: ${r.trim()}`);
+      assert.match(r, /global\.yml\s{2,}c-fixture-alpha/, 'the file must still be named');
+    }
+    // And the single-id lookup takes the same path.
+    assert.equal(run('locate', 'c-fixture-alpha').trim(), '~/.warroom/ledger/global.yml');
+  }, ambiguous);
+});
+
+test('the locate footer is true of every row it is printed over', () => {
+  withGlobalLedger((run) => {
+    const out = run('locate');
+    const rows = out.split('\n').filter((l) => /\s{2}c-/.test(l));
+    const withPos = rows.filter((l) => /:\d+\s{2,}c-/.test(l)).length;
+    // The footer used to assert "positions are resolved from the artifacts on this run"
+    // over four rows whose position was neither resolved nor recorded. Its counts must now
+    // reconcile against the listing above it.
+    assert.match(out, new RegExp(`${rows.length} claims · ${withPos} with a position resolved`));
+    assert.equal(withPos, rows.length, 'every row here is measurable, so none may be reported otherwise');
+    assert.match(out, /none recorded, none guessed/);
+  });
+});
+
+test('locate refuses an unknown id rather than printing nothing and passing', () => {
   assert.throws(() => execFileSync('node', ['scripts/ledger.mjs', 'locate', 'c-no-such-claim'],
-    { cwd: REPO_ROOT, encoding: 'utf8', stdio: 'pipe' }), /Command failed/, 'an unknown id must exit non-zero, not print nothing and pass');
+    { cwd: REPO_ROOT, encoding: 'utf8', stdio: 'pipe' }), /Command failed/);
 });
 
 test('the canary claim is present and still shaped to fail both resolvers', async () => {
