@@ -306,12 +306,31 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
 
 ## Project State
 
-> **Fill this in per project.** This is the only section the agents read to know "where are we right now."
+> This is the only section the agents read to know "where are we right now." It was an unfilled template
+> through Phase 8a — eight phases shipped while it said "Sprint 1 — foundation." **If you change the phase,
+> change this block in the same PR.**
 
-- **Current focus:** Building MVP
-- **Active sprint:** Sprint 1 — foundation
-- **Blockers:** None
-- **Next milestone:** First demo
+- **Where we are:** Phases 1–7 complete · **Phase 8a (Mission Control read plane) complete** · 8b (Dispatch)
+  deferred — it is the only view that writes and needs Phase 9 to give it targets · **Phase 9 (fleet rollout)
+  not started.** Authoritative plan: [AGENT-SYSTEM-REBUILD.md](docs/03-system-design/AGENT-SYSTEM-REBUILD.md).
+  `IMPLEMENTATION-PLAN.md` is **superseded** — do not follow its numbering.
+- **Active now — one session, completing the harness.** Founder decision 2026-08-16: finish the harness in a
+  single autonomous pass, heavy review process cut, **scope stops before Phase 9** (no other project is
+  touched). See [the build brief](docs/08-agents_work/handoffs/2026-08-16-harness-completion.md).
+- **Step one is the prompt-craft standard** — it gates every edit under `.claude/agents/`, and the roster
+  migration (17 files → 7) is blocked until it exists and is approved.
+- **Known and accepted:** **no venture work has ever run through this harness** (stop condition 6). The
+  founder's decision is to finish the harness first. Recorded so it is a choice, not an oversight.
+- **Enforced today (fails a build):** schema-lint · gate tests · manifest drift · registration · launcher
+  guard rails · the claim ledger (`npm run check:ledger`) · **`qa-lead-pass.yml` blocks** — a session file
+  added *in the PR* must carry `qa_verdict: PASS`.
+- **Shadow (computed, does not block):** claim resolvers, except migration · deploy · harness self-edit,
+  which block from day one because `git revert` does not undo them.
+- **Blockers:** none blocking. Founder decisions pending: **#56** (is 4,096 bytes the right session-start
+  budget?) and the two `--dangerously-skip-permissions` invocations in `bin/warroom` (lines 235 and 237).
+- **Before you trust any local measurement:** `cd mission-control && bun install`. Without it
+  `ledger verify` reports 8 would_block instead of 5 and three mission-control claims look like regressions
+  when they are missing dependencies. Measure from a clean checkout, never a stale working tree.
 
 ---
 
