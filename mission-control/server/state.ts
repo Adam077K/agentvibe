@@ -11,13 +11,17 @@
 // handler itself, not a re-implementation of it) without a reset() hook that exists only
 // for tests.
 //
-// Writes nothing. The only thing this file adds to PR2's behaviour is a content hash per
-// slice, so the stream can tell "recomputed" from "changed".
+// WRITES EXACTLY ONE PATH, AND THIS COMMENT USED TO SAY "WRITES NOTHING". That was true until
+// the session index started being persisted, and leaving the old sentence in place would have
+// made this header a claim the code no longer honours. The one path is the index cache — see
+// server/index-cache.ts for where and why. Everything else here still only reads.
 
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { discoverFleet, type DiscoverOptions, type Project, type TrustList } from './projects.ts';
+import { projectsDir } from './lib/usage.ts';
+import * as indexCache from './index-cache.ts';
 import { IndexStore, type SessionSummary } from './index-store.ts';
 import { buildFleet, type FleetSummary } from './collectors/fleet.ts';
 
@@ -74,6 +78,24 @@ export function hashableSessions(payload: SessionsSlice): unknown {
   return rest;
 }
 
+/**
+ * `indexCache: false` turns persistence off entirely, and it is not a convenience.
+ *
+ * test/live.test.ts measures a genuine full read of the real corpus and cross-checks
+ * `bytesRead` against an independently walked snapshot of it. With a cache present that build
+ * would read three files, the oracle would compare against nothing, and the assertion would go
+ * green having measured a start that skipped the corpus. That test needs a real cold build, so
+ * it says so. `path` exists for the same reason AGENTVIBE_PROJECTS_DIR does in usage.js: a test
+ * that writes to the machine's real cache passes or fails for reasons it did not choose.
+ */
+export interface StateOptions extends DiscoverOptions {
+  indexCache?: boolean;
+  indexCachePath?: string;
+  maxFullBuildAgeMs?: number;
+  /** Overrides SAVE_MIN_INTERVAL_MS. 0 disables throttling; the dirty check still applies. */
+  saveMinIntervalMs?: number;
+}
+
 export class LiveState {
   private store = new IndexStore();
   private built = false;
@@ -83,6 +105,14 @@ export class LiveState {
    * without a second read of that file that could disagree with the first.
    */
   private lastTrustList: TrustList | null = null;
+  /** When the index was last built by reading the whole corpus. See MAX_FULL_BUILD_AGE_MS. */
+  private fullBuildAt = 0;
+  private lastCacheDecline: indexCache.LoadFailure | null = null;
+  private lastSave: indexCache.SaveResult | null = null;
+  private lastSaveAt = 0;
+  private lastSkip: 'unchanged' | 'throttled' | null = null;
+  /** How many times the index has actually been WRITTEN. Monotonic; never reset. */
+  private writes = 0;
 
   /**
    * `discoverOpts` is forwarded verbatim to discoverProjects() — the same roots/claude-root
@@ -90,7 +120,15 @@ export class LiveState {
    * nothing and gets the real fleet; a test points one at a fixture tree and gets a
    * complete, deterministic state including its own budget figure.
    */
-  constructor(private readonly discoverOpts: DiscoverOptions = {}) {}
+  constructor(private readonly opts: StateOptions = {}) {}
+
+  private get discoverOpts(): DiscoverOptions {
+    return this.opts;
+  }
+
+  private get cacheEnabled(): boolean {
+    return this.opts.indexCache !== false;
+  }
 
   get index(): IndexStore {
     return this.store;
@@ -109,17 +147,179 @@ export class LiveState {
     return this.lastTrustList;
   }
 
-  /** Discovers the current fleet and keeps the session index in sync with it. */
+  /** Why the last start declined the persisted index, or null if it used one (or none exists). */
+  get cacheDecline(): indexCache.LoadFailure | null {
+    return this.lastCacheDecline;
+  }
+
+  /** What the last write of the persisted index did. Null when persistence is off. */
+  get cacheSave(): indexCache.SaveResult | null {
+    return this.lastSave;
+  }
+
+  /**
+   * How many times the index has actually been written to disk. Monotonic.
+   *
+   * A COUNT RATHER THAN A FLAG, because the property worth asserting is "this tick performed no
+   * write", and only a number that fails to move can express that. `cacheSave` cannot: it holds
+   * the LAST write's result and stays truthy across every tick that skipped one.
+   */
+  get cacheWrites(): number {
+    return this.writes;
+  }
+
+  /** Why the last refresh did not write, or null if it did. */
+  get cacheSkip(): 'unchanged' | 'throttled' | null {
+    return this.lastSkip;
+  }
+
+  /**
+   * Discovers the current fleet and keeps the session index in sync with it.
+   *
+   * THE FIRST CALL IS THE EXPENSIVE ONE, AND THIS IS WHERE THAT STOPS BEING TRUE. What changes
+   * is measured in WORK, not in milliseconds:
+   *
+   *   filesRead              every transcript  ->  0
+   *   transcript bytes read  the whole corpus  ->  0
+   *   read instead           4 KB per transcript — 10.65 MB across 2,610 today, 0.35% of corpus
+   *   persisted index        ~1.7 KB per transcript — 4.39 MB today
+   *
+   * THOSE LAST TWO ARE RATES, NOT CONSTANTS, and writing them as constants is how "reads
+   * 10.6 MB" quietly becomes false: the probe cost is BOUNDARY_BYTES per file, so at twice the
+   * transcripts it is 21 MB. The invariants are the per-file figures and the 0.35% ratio. Only
+   * `filesRead -> 0` is a constant, and it is the load-bearing half.
+   *
+   * THE COUNTERS ARE THE FIGURE AND THE CLOCK IS A CONSEQUENCE, which is #50's conclusion
+   * applied to the change that came out of #50. Across every run taken on this branch the work
+   * was stable to under 0.5% — filesRead 0, probes 10.64-10.68 MB at a fixed corpus size, cache
+   * 4.39 MB — while the milliseconds moved 5x, 64 to 386 ms. Quoting the clock first meant
+   * defending a number that varies with the afternoon while owning one that does not.
+   *
+   * The wall-clock figure, kept as a load-conditioned range and not a headline:
+   *
+   *   cold                     2,405-4,675 ms
+   *   warm, steady             65-158 ms (typically 75-110)
+   *   warm, first of a session 254-386 ms  (page-cache-cold boundary windows)
+   *
+   * EVERY FIGURE ABOVE IS FROM CODE THAT HAS THE PER-TICK SAVE FIX, and that qualification is a
+   * correction rather than a footnote. An earlier version folded in a reading taken on 824bf69,
+   * BEFORE that fix, when a warm start still paid a ~13 ms save of the whole index — attributing
+   * to machine load part of a spread this code's own defect had caused. Post-fix sets only, each
+   * with the commit it was taken on:
+   *
+   *   dbe2e70   65-94   median 73   (independent, load 2.20-3.08)
+   *   dbe2e70   78-90               (load 2.70, n=8)
+   *   afd23d6   72-130  median 93   (independent; one run at load ~4.0 reached 130)
+   *   14d5f47   93-109  median 98   (load 3.67-3.78, n=8)
+   *   14d5f47   75-79               (load 3.17, n=5) and a 115-158 burst minutes earlier
+   *
+   * The two 14d5f47 readings twenty minutes apart at nearly the same load — 98 and 77, with a
+   * 158 between — are why no median is quoted. A reading that does real work is legitimately
+   * slower: one 106 ms run read 2 changed files and wrote the index.
+   *
+   * The restored entries are NOT trusted. Every one arrives marked `needsVerify`, and the
+   * refresh below checks each against the disk before it is used. `hydrate` on its own would be
+   * an index nobody had validated, which is why the two always happen together and why `built`
+   * is only set once the refresh has run.
+   */
   refresh(): Project[] {
     const { projects, trustList } = discoverFleet(this.discoverOpts);
     this.lastTrustList = trustList;
     if (!this.built) {
-      this.store.buildCold(projects);
+      this.firstBuild(projects);
       this.built = true;
     } else {
       this.store.refresh(projects);
+      this.persist();
     }
     return projects;
+  }
+
+  private firstBuild(projects: Project[]): void {
+    if (!this.cacheEnabled) {
+      this.store.buildCold(projects);
+      this.fullBuildAt = Date.now();
+      return;
+    }
+    // THE SECOND BARRIER, AND IT IS NOT REDUNDANT WITH load()'s OWN CHECKS. `load` validates
+    // every field it knows about and wraps its decode — but it parses a file it did not write,
+    // and the checks can only reject malformations someone thought of. A throw from here used
+    // to escape refresh() and turn EVERY ROUTE into a 500: a cache able to take the server down
+    // is worse than no cache. Whatever gets past load(), the answer is still a full cold build.
+    let loaded: indexCache.LoadResult;
+    try {
+      loaded = indexCache.load({
+        file: this.opts.indexCachePath,
+        corpusRoot: this.corpusRoot(),
+        maxFullBuildAgeMs: this.opts.maxFullBuildAgeMs,
+      });
+    } catch {
+      loaded = { ok: false, reason: 'malformed', detail: 'load() threw' };
+    }
+    if (loaded.ok) {
+      this.store.hydrate(loaded.entries);
+      this.fullBuildAt = loaded.fullBuildAt;
+      this.store.refresh(projects);
+    } else {
+      // The decline always names itself. "There was no cache" and "I could not read the cache"
+      // are different facts that end in the same full build, so this is the only place the
+      // difference can survive.
+      this.lastCacheDecline = loaded.reason;
+      this.store.buildCold(projects);
+      this.fullBuildAt = Date.now();
+    }
+    this.persist();
+  }
+
+  /**
+   * Writes the index — WHEN THERE IS SOMETHING TO WRITE, AND NOT MORE THAN ONCE PER INTERVAL.
+   *
+   * This used to run on every refresh. routes/stream.ts ticks sessions at 1 s, so a running
+   * Mission Control rewrote the whole 4.38 MB index once a second — 12-15 ms per save, roughly
+   * doubling a 12 ms tick, 378 GB/day. Found in review. The design costed the write once, at
+   * startup; frequency appeared nowhere in it.
+   *
+   * TWO CONDITIONS, AND THE ORDER MATTERS. The dirty check is the one that makes an idle
+   * Mission Control write NOTHING AT ALL, which no interval can achieve on its own — a floor
+   * alone would still rewrite an unchanged 4.38 MB every five minutes forever. The interval
+   * then bounds the busy case, where something changes on every tick and the dirty check is
+   * always true.
+   *
+   * `filesChanged` and `filesRemoved` are the whole of "dirty" because they are the whole of
+   * what a save would record: a refresh that reads nothing and removes nothing leaves every
+   * entry exactly as the file on disk already describes it.
+   */
+  private persist(): void {
+    if (!this.cacheEnabled) return;
+    const r = this.store.lastResult;
+    if (r && r.filesChanged === 0 && r.filesRemoved === 0) {
+      this.lastSkip = 'unchanged';
+      return;
+    }
+    const now = Date.now();
+    const interval = this.opts.saveMinIntervalMs ?? indexCache.SAVE_MIN_INTERVAL_MS;
+    if (this.lastSaveAt !== 0 && now - this.lastSaveAt < interval) {
+      this.lastSkip = 'throttled';
+      return;
+    }
+    this.lastSkip = null;
+    this.lastSave = indexCache.save(this.store.entries(), this.fullBuildAt, {
+      file: this.opts.indexCachePath,
+      corpusRoot: this.corpusRoot(),
+    });
+    if (this.lastSave.ok) {
+      this.lastSaveAt = now;
+      this.writes++;
+    }
+  }
+
+  /**
+   * The transcript root this index describes. A cache built against a different one belongs to
+   * a different corpus, and `load` refuses it rather than resolving every stored path to
+   * nothing and calling the resulting empty index a fast start.
+   */
+  private corpusRoot(): string {
+    return this.opts.claudeProjectsRoot ?? projectsDir();
   }
 
   sessionsSlice(now: number = Date.now()): Hashed<SessionsSlice> {

@@ -23,6 +23,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { Hono } from 'hono';
 import { LiveState } from '../server/state.ts';
+import { BOUNDARY_BYTES } from '../server/index-store.ts';
 import { createApi } from '../server/routes/api.ts';
 import type { FleetSummary } from '../server/collectors/fleet.ts';
 import type { SessionsSlice } from '../server/state.ts';
@@ -32,7 +33,8 @@ import { machineGate, notVerified, corpusPresent, claudeProjectsRoot } from './g
 
 function liveApp(): Hono {
   const app = new Hono();
-  app.route('/api', createApi(new LiveState()));
+  // indexCache: false — see the call site in the cold-start test below for the full reason.
+  app.route('/api', createApi(new LiveState({ indexCache: false })));
   return app;
 }
 
@@ -335,7 +337,14 @@ describe('GET /api/sessions performance against the real corpus', () => {
       const before = corpusSnapshot();
       const vmBefore = readMachineState();
 
-      const state = new LiveState(); // a genuinely unbuilt index — this app has served nothing
+      // PERSISTENCE OFF, AND THAT IS THE POINT OF THIS TEST RATHER THAN AN EXEMPTION FROM IT.
+      // This measures a genuine full read of the real corpus and brackets `bytesRead` against
+      // an independently walked snapshot of it. With the persisted index enabled the build
+      // would read three files, the byte oracle would bracket ~0 against 3.04 GB, and the run
+      // would go green having measured a start that never touched the corpus. The cached start
+      // is measured in test/index-cache.test.ts, where the fixture is controlled.
+      // It also keeps the suite from writing to ~/.agentvibe on the developer's machine.
+      const state = new LiveState({ indexCache: false }); // genuinely unbuilt: served nothing
       const app = new Hono();
       app.route('/api', createApi(state));
 
@@ -518,4 +527,123 @@ describe('the machine gate itself', () => {
       else process.env.MC_PROJECT_ROOTS = previous;
     }
   });
+});
+
+// ── THE WARM START, GATED ON WORK RATHER THAN ON THE CLOCK ────────────────────────────────
+//
+// This is the assertion the PR's headline rests on, and until now that headline lived only in
+// prose. perf.test.ts:93 gates a cold build at 10 s and :107/:129 gate an IN-PROCESS
+// incremental refresh at 250 ms — a different quantity from a persisted warm start, which no
+// test asserted at all. So the range quoted in the documentation was never a gate, and it was
+// breached by ordinary noise within a day of being written: a set taken minutes later returned
+// 64 ms against a quoted floor of 65.
+//
+// WHAT IS STABLE IS THE WORK, and it is stable by three orders of magnitude more than the
+// clock. Across six measurement sets on this branch: filesRead 0 every time, probe bytes
+// 10.64-10.68 MB at a fixed corpus size (0.4% spread), cache 4.39 MB — while wall time moved 5x,
+// 64 to 386 ms. So the gate is the work, and the milliseconds are printed and not asserted.
+//
+// AND THE PROBE FIGURE IS A RATE. It is BOUNDARY_BYTES per transcript — 4 KB, ~0.35% of corpus
+// bytes — so it GROWS with the corpus and "reads 10.6 MB" is true only of today's 2,610 files.
+// The assertions below are written against filesScanned and against the cold build's own byte
+// count for exactly that reason: a ratio survives corpus growth, a megabyte figure does not.
+//
+// This is #50's own conclusion applied to the change that came out of #50: stop asserting on
+// the clock, assert what you actually care about. The clock is what varies with the afternoon.
+describe('a warm start reads almost nothing, and that is asserted rather than described', () => {
+  test('hydrating a persisted index skips the corpus instead of reading it', () => {
+    const blocked = machineGate();
+    if (blocked) {
+      // THIS IS THE PATH CI ALWAYS TAKES, and it is worth saying out loud: a runner has no
+      // ~/.claude/projects, so every test in this file prints NOT VERIFIED and never executes.
+      // "CI green on that SHA" is therefore NO EVIDENCE ABOUT ANYTHING HERE — it only reports
+      // that the corpus-independent suites passed. This test runs exactly where it is exposed
+      // to a live corpus and a busy machine, and nowhere else.
+      notVerified('warm-start work', `${blocked} — and CI always lands here, so a green CI run says nothing about this test`);
+      return;
+    }
+
+    // The cache goes in a temp dir, never ~/.agentvibe: check.mjs fails the run if the suite
+    // writes to the developer's home directory, and this test would otherwise do exactly that.
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-live-warm-'));
+    try {
+      const cachePath = path.join(dir, 'index.json');
+
+      const cold = new LiveState({ indexCachePath: cachePath });
+      cold.refresh();
+      const c = cold.index.lastResult!;
+      // NON-VACUITY: a real corpus was read, and a real index was written. Without these the
+      // ratios below are 0/0 and every assertion holds against an empty machine.
+      expect(c.filesRead).toBeGreaterThan(100);
+      expect(c.bytesRead).toBeGreaterThan(100_000_000);
+      expect(cold.cacheSave?.ok).toBe(true);
+      expect(fs.existsSync(cachePath)).toBe(true);
+
+      const warm = new LiveState({ indexCachePath: cachePath });
+      warm.refresh();
+      const w = warm.index.lastResult!;
+
+      // THE GATE. A warm start must not re-read the corpus. Bracketed rather than pinned at
+      // zero because this corpus is LIVE — agents append while the test runs, and a handful of
+      // genuinely changed files is correct behaviour, not a regression. 1% of a 2,600-file
+      // corpus is ~26 files; every observed run read 0-4.
+      expect(w.filesScanned).toBeGreaterThan(100);
+      expect(w.filesRead).toBeLessThan(w.filesScanned * 0.01);
+      expect(w.bytesRead).toBeLessThan(c.bytesRead * 0.01);
+      expect(w.filesSkipped).toBeGreaterThan(w.filesScanned * 0.99);
+
+      // Every restored entry was CHECKED against the disk — the property that makes skipping
+      // them defensible. A regression that trusted the cache without verifying shows up here and
+      // nowhere else, because it looks identical on the clock: the mutation that hydrates
+      // without verifying gives Expected 2610 / Received 0 right here.
+      //
+      // BRACKETED, NOT EXACT, AND THE EXACT FORM WAS A LATENT FLAKE. `filesVerified` counts
+      // probes of RESTORED entries; `filesScanned` counts paths found now. A transcript created
+      // between the two builds is scanned and has no entry to probe, so scanned=N+1 while
+      // verified=N — demonstrated on a fixture running this exact sequence: nothing-changed
+      // holds, an append holds, a NEW FILE goes red. Not observed in any run here, which makes
+      // it a mechanism rather than an incident — and this runs against a live corpus with ~17
+      // agents writing transcripts, so the mechanism is reachable on any afternoon.
+      //
+      // REPRODUCED, not taken on trust — the gate's own sequence on a 3-file fixture:
+      //   nothing changed        scanned=3 verified=3   exact holds
+      //   append to existing     scanned=3 verified=3   exact holds  (still probed)
+      //   NEW transcript arrives scanned=4 verified=3   exact RED
+      //
+      // AND THE BRACKET IS SCALE-DEPENDENT, which that fixture also shows: 3 of 4 is 75% and
+      // would fail this too. It is sound HERE because this test only ever runs against the real
+      // corpus — machineGate() blocks it otherwise — where one new transcript is 2,610 of 2,611,
+      // and 99% tolerates ~26 arrivals. On a small fixture the right bracket would be different,
+      // which is why this assertion belongs in the live file and not in a fixture suite.
+      //
+      // 99% keeps every regression this is for: hydrate-without-verify gives 0 (Expected > 2583.9,
+      // Received 0), and verifying only every other entry fails too — both executed.
+      expect(w.filesVerified).toBeGreaterThan(w.filesScanned * 0.99);
+      expect(w.filesVerified).toBeLessThanOrEqual(w.filesScanned);
+      expect(w.verifyBytesRead).toBeGreaterThan(0);
+      expect(w.verifyBytesRead).toBeLessThanOrEqual(w.filesScanned * BOUNDARY_BYTES);
+      expect(w.filesStale).toBe(0);
+
+      // The buckets still partition the scan on the real corpus, not only on fixtures.
+      expect(w.filesScanned).toBe(w.filesRead + w.filesSkipped + w.filesUnread);
+
+      // …and the answer is the same one the full read produced. Bracketed: sessions can appear
+      // between the two builds on a live corpus.
+      expect(warm.index.allSessions().length).toBeGreaterThanOrEqual(cold.index.allSessions().length);
+
+      // eslint-disable-next-line no-console
+      console.log(
+        `  [perf] warm start read ${w.filesRead}/${w.filesScanned} files, ` +
+          `${(w.bytesRead / 1e6).toFixed(2)}MB transcript + ${(w.verifyBytesRead / 1e6).toFixed(2)}MB probes ` +
+          `(${(w.verifyBytesRead / w.filesScanned).toFixed(0)} B/file, ${((100 * w.verifyBytesRead) / c.bytesRead).toFixed(2)}% of corpus) ` +
+          `vs ${(c.bytesRead / 1e6).toFixed(0)}MB cold — milliseconds deliberately not asserted here`
+      );
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+    // EXPLICIT TIMEOUT, because this builds the real 3 GB index TWICE and bun's default is 5 s.
+    // It passed in isolation at 3.1 s and failed in the full run at 6.1 s — a TIMEOUT, not an
+    // assertion, which is the failure mode that reads as "the gate is wrong" when it means "the
+    // machine was busy". test/collectors.test.ts carries 60-120 s timeouts for the same reason.
+  }, 120_000);
 });
