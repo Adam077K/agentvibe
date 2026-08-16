@@ -11,7 +11,7 @@ Counts below are verified by `npm run check:registration`, which fails the build
 
 | Layer | Path | Count |
 |-------|------|-------|
-| Agents (6 engines + 11 shims) | `.claude/agents/` | 17 `.md` |
+| Agents (7 engines + 11 shims) | `.claude/agents/` | 18 `.md` |
 | Skills (curated, on-demand, MANIFEST-indexed) | `.claude/skills/` | 134 |
 | Hooks (pre-tool, stop, schema-lint, context monitor, statusline, update check, session-start, budget-guard) | `.claude/hooks/` | 8 |
 | Slash commands | `.claude/commands/` | 13 |

@@ -46,22 +46,29 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:routers` | `node scripts/build-skill-routers.mjs --check` |
 | `npm run check:warroom` | `bash -n bin/warroom && node --check scripts/warroom-install.mjs && bash -n scripts/warroom-parity.sh && npm ru` |
 | `npm run curate:skills` | `node scripts/curate-skills.mjs` |
+| `npm run gate` | `node scripts/run-gate.mjs` |
 | `npm run ledger:build` | `node scripts/ledger.mjs build` |
 | `npm run ledger:events` | `node scripts/ledger.mjs events --since 30d` |
 | `npm run ledger:sweep` | `node scripts/ledger.mjs sweep` |
 | `npm run ledger:verify` | `node scripts/ledger.mjs verify` |
 | `npm run ledger:views` | `node scripts/ledger.mjs views` |
 | `npm run lint:agents` | `node .claude/hooks/schema-lint.js` |
+| `npm run measure:bash` | `node scripts/measure-bash-usage.mjs` |
+| `npm run probe:stop-reason` | `node scripts/probe-stop-reason.mjs` |
 | `npm run test:budget` | `node --test scripts/usage.test.mjs` |
 | `npm run test:claims` | `node --test scripts/claims.test.mjs` |
 | `npm run test:classifier` | `node --test scripts/classifier.test.mjs` |
 | `npm run test:gate` | `node --test .claude/workflows/lib/gate-logic.test.mjs` |
 | `npm run test:hooks` | `node --test scripts/session-start.test.mjs` |
+| `npm run test:launcher-permissions` | `node --test scripts/launcher-permissions.test.mjs` |
 | `npm run test:ledger` | `node --test scripts/ledger.test.mjs` |
 | `npm run test:lenses` | `node --test scripts/lenses.test.mjs` |
 | `npm run test:playbooks` | `node --test scripts/playbooks.test.mjs` |
 | `npm run test:pre-tool-use` | `node --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-readonly` | `node --test scripts/probe-readonly.test.mjs` |
+| `npm run test:probe-stop-reason` | `node --test scripts/probe-stop-reason.test.mjs` |
+| `npm run test:run-gate` | `node --test scripts/run-gate.test.mjs` |
+| `npm run test:skill-clamp` | `node --test scripts/skill-clamp.test.mjs` |
 | `npm run test:warroom` | `node --test scripts/warroom-install.test.mjs` |
 | `npm run usage` | `node -e "const u=require('./scripts/lib/usage.js');const w=u.windowUsage({});console.log(w.output_tokens.toLoc` |
 | `npm run warroom:check` | `node scripts/warroom-install.mjs check` |
@@ -85,12 +92,16 @@ it, so a hook that changes posture changes this map with it.
 |---|---|
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
+| `scripts/launcher-permissions.test.mjs` | the autonomy dial, and the model it made inert. |
 | `scripts/ledger.test.mjs` | the resolvers, and the invariant that holds the ledger up. |
 | `scripts/lenses.test.mjs` | the lens linter, tested by constructing its failures. |
 | `scripts/playbooks.test.mjs` | the playbook linter, tested by constructing its failures. |
 | `scripts/pre-tool-use.test.mjs` | — |
 | `scripts/probe-readonly.test.mjs` | — |
+| `scripts/probe-stop-reason.test.mjs` | the aggregation that answers what ends a run. |
+| `scripts/run-gate.test.mjs` | the router that decides whether the binding gate runs. |
 | `scripts/session-start.test.mjs` | the SessionStart hook. |
+| `scripts/skill-clamp.test.mjs` | a skill that subtracts must not be attached silently. |
 | `scripts/usage.test.mjs` | the spend measurement and the ceiling that acts on it. |
 | `scripts/warroom-install.test.mjs` | — |
 

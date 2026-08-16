@@ -63,34 +63,55 @@ Then apply it: rewrite the seven, delete the rest, in the order in the migration
 
 ---
 
-## Current state
+## Current state — updated 2026-08-16
 
-**This work ships as two PRs, not one.** The original single PR (#40) was labelled `risk:irreversible` —
-truthfully; it touched `.claude/hooks/**` — and the gate then required *every* session file in the diff to
-declare `tier: full|irreversible`. Five of the eight honestly declared `trivial` or `lite`, because five of
-the eight describe read-only boards and specification work. Raising them would have recorded a false tier;
-editing the rule would have been an author rewriting the gate that was refusing them. Founder chose the split.
+**#42 and #43 are MERGED.** The safety floor, the three gate fixes and the eleven specification documents are
+on `main`.
 
-| PR | Contains | Tier | Merge |
-|---|---|---|---|
-| **#42** `fix/safety-floor-and-gate` | The hook rebuild, three unregistered hooks, the three gate fixes, and the 3 session files describing them | `risk:irreversible` | **First** |
-| **#43** `docs/the-roster-is-seven` | The eleven specification documents, this handoff, and the 5 session files describing them | trivial / lite | Second |
+**PR #47 `fix/gate-routing-and-probe` is open and deliberately red.** It carries handoff items 1-4 plus six
+founder decisions. `npm run check` exits 0; `Verify QA Lead PASS` fails because `qa_verdict: PENDING`, which
+is honest — see below.
 
-- **`npm run check` exits 0 on both branches** — zero failures across 11 test files, after `bun install` in
-  `mission-control/`. The safety-floor suite is **62/62** on #42.
-- **Merge #42 before #43.** The redive-plan session file states the safety-floor fix is unmerged — true
-  until #42 lands, and misleading if #43 lands alone.
-- Two known flakes can fire on any run and are not yours: a mission-control cold-start performance test
-  (it is timing a live corpus; it fails under concurrent load and passes on a quiet machine), and a
-  `crosscheck.test.ts` mtime assertion.
+**The binding gate ran for the first time in its existence, three times, and BLOCKED every time.** It earned
+it. Across those runs it found, in the CEO's own work: a **CWE-22 path traversal** that read files outside
+`.claude/skills/` and echoed their contents into fork-visible CI logs; a **symlink bypass of the fix for
+that**; a 135-line script shipped with **zero tests**; an unasserted **tier boundary** that would have
+silently un-gated every `full` PR; and a **false premise** repeated in three files. Every one reproduced by
+hand before being accepted.
 
-**A finding the split produced, and it is not small.** `scripts/lib/classifier.js` tiers every `docs/**` file
-`trivial`; the F13 step of `qa-lead-pass.yml` demands `full|irreversible` for those same files on any
-`risk:irreversible` PR. **Two mechanisms compute risk and they disagree**, while `CLAUDE.md:156` states the
-classifier is *"one file computes risk, and it is the only implementation."* It is not — F13 is a second
-implementation, and it is the one that blocks merges. It should require the tier of the paths it *classifies*
-as irreversible, not a uniform tier across every session bundled into a PR. Left deliberately unfixed; the
-reasoning is in #42's session file.
+**Then the third run's judge dropped out, and diagnosing that produced the session's largest finding.**
+
+### `maxTurns` binds, and this repo believed it did not
+
+Tool-call count separates the two populations perfectly where turns, context and wall-clock all overlapped:
+agents making ≤17 calls returned findings, agents reaching 20 returned nothing, and **13 of 20 dropouts sat at
+exactly 20** — the `maxTurns` on the reviewer containers.
+
+**The CEO caused it** by adding `agentType` at the four `qa.js` dispatch sites. `general-purpose` declares no
+cap, which is why the eight historical runs completed. This **refutes the recorded claim** that *"`maxTurns`
+does not bind — 196 of 269 runs exceeded a cap of 20"*: that was measured where no agent file was named. It
+binds hard the moment a dispatch names an `agentType`.
+
+**Consequence for you: any dispatch naming an `agentType` inherits that agent's `maxTurns`.** Check it before
+you blame the runtime, and read the run journal before trusting any multi-agent result.
+
+### What changed on this branch beyond items 1-4
+
+| Change | Note |
+|---|---|
+| `--dangerously-skip-permissions` removed from `bin/warroom` | Six allow entries added, chosen from 11,342 measured Bash calls. Pinned so restoring the flag fails CI |
+| F13 requires the tier on **one** session file, not all | It was a second implementation of risk and disagreed with `classifier.js`. `CLAUDE.md:156` corrected |
+| `reviewer-readonly` created | The binding judge has no shell; evidence-gatherers keep `Bash` because they must run `git diff` |
+| `designer` granted `playwright` | Per-server MCP allowlist landed in the same commit — `mcpConfigured()` was a boolean that would have opened MCP to every agent at once |
+| Browser policy | **Open web allowed**, local network refused. Founder overruled a localhost-only proposal; agents already hold WebSearch/WebFetch, so blocking the browser closes nothing and costs research |
+| `maxTurns` 20 → 30 on reviewers, judge gains retry | Above |
+
+- Two known flakes are not yours: a mission-control cold-start performance test and a `crosscheck.test.ts`
+  mtime assertion.
+
+**Still open and needing the founder:** the `qa_verdict` on #47 (the gate cannot bless it — its judge is
+subject to the same dropout), and whether `operator`/`instrument` wait for the OS sandbox (recorded in
+`DECISIONS.md` as: ship five, defer two).
 
 ## What was done
 

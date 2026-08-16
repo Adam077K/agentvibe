@@ -4,7 +4,7 @@ description: |
   Engine. Read-only, out-of-band judgement of work someone else produced. Loads one or more review lenses from .claude/review-lenses.yml and returns findings — never fixes. Replaces code-reviewer, security-engineer, adversary-engineer, design-critic and qa-engineer, which differed only in which lens they carried.
 model: claude-sonnet-4-6
 tools: [Read, Glob, Grep, Bash]
-maxTurns: 20
+maxTurns: 30
 color: gray
 isolation: none
 skills:

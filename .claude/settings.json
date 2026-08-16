@@ -3,6 +3,15 @@
     "allow": [
       "Bash(git *)",
       "Bash(pnpm *)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(npm ci)",
+      "Bash(bun run *)",
+      "Bash(bun test *)",
+      "Bash(bun install *)",
+      "Bash(bun install)",
+      "Bash(printf *)",
+      "Bash(sleep *)",
       "Bash(gh *)",
       "Bash(node *)",
       "Bash(python3 *)",
@@ -28,7 +37,11 @@
       "Bash(wget *)",
       "Bash(chmod +x *)",
       "Bash(npm install -g *)",
-      "Bash(pip install *)"
+      "Bash(pip install *)",
+      "Bash(npx *)",
+      "Bash(bunx *)",
+      "Bash(npm exec *)",
+      "Bash(bun x *)"
     ]
   },
   "hooks": {
@@ -48,7 +61,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash|Edit|Write|NotebookEdit",
+        "matcher": "Bash|Edit|Write|NotebookEdit|mcp__playwright__browser_navigate",
         "hooks": [
           {
             "type": "command",

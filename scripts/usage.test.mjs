@@ -223,3 +223,40 @@ test('the guard fails OPEN on internal error, and says so rather than dying quie
   );
   assert.equal(r.code, 0, 'a broken guard must not block the session');
 });
+
+// ── stop_reason: the field that answers what actually ends a run ──────────────────────────
+// `maxTurns` was measured not to bind (196 of 269 reviewer runs exceeded a cap of 20, max 68),
+// and nothing else on disk records why a turn stopped. Without this, a subagent that quit early
+// is indistinguishable from one that finished — which is why "reports available while
+// incomplete" could only ever be caught by reading its output.
+
+test('turnsFrom carries stop_reason through, and distinguishes absent from unread', () => {
+  const line = (extra) => JSON.stringify({
+    type: 'assistant',
+    timestamp: new Date().toISOString(),
+    message: { usage: { output_tokens: 10 }, ...extra },
+  });
+  const text = [
+    line({ stop_reason: 'end_turn' }),
+    line({ stop_reason: 'max_tokens' }),
+    line({ stop_reason: 'tool_use' }),
+    line({}), // no stop_reason on the line at all
+  ].join('\n');
+
+  const turns = U.turnsFrom(text);
+  assert.equal(turns.length, 4, 'every usage-bearing line must still be parsed');
+  assert.deepEqual(turns.map((t) => t.stop), ['end_turn', 'max_tokens', 'tool_use', null]);
+});
+
+test('adding stop_reason did not disturb the fields the budget guard reads', () => {
+  const text = JSON.stringify({
+    type: 'assistant',
+    timestamp: new Date(0).toISOString(),
+    isSidechain: true,
+    message: { usage: { output_tokens: 4321 }, stop_reason: 'end_turn' },
+  });
+  const [t] = U.turnsFrom(text);
+  assert.equal(t.out, 4321, 'output_tokens must survive');
+  assert.equal(t.side, 1, 'sidechain flag must survive');
+  assert.equal(t.t, 0, 'timestamp must survive');
+});

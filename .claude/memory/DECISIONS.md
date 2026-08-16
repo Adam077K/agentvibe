@@ -577,3 +577,110 @@ narrowing is visible. A security control that silently hides data is a new insta
 **Reversibility:** reversible — the allowlist is config; the header check is one middleware
 **Owner:** ceo · **founder decision** · **Affects:** `mission-control/server/projects.ts`,
 `mission-control/server/routes/*`, and anyone running Mission Control against a multi-project tree
+
+## 2026-08-16 — The autonomy dial comes out, and the permission model starts applying
+
+**Context:** `.claude/settings.json` carried 20 allow rules and 6 deny rules. `bin/warroom:235,237`
+launched every session with `--dangerously-skip-permissions`, making all 26 inert. The `PreToolUse` hook
+still fired, so the system was protected by one mechanism where it was documented as two.
+**Decision:** Flag removed; six entries added to the allow list. Founder decision, 2026-08-16.
+**CORRECTION, same day, found by the binding gate:** the sentence above — *"the `PreToolUse` hook still fired,
+so the system was protected by one mechanism"* — **is false for MCP tool calls.** The hook is registered with
+`"matcher": "Bash|Edit|Write|NotebookEdit"`, and an MCP tool name (`mcp__playwright__browser_navigate`) matches
+none of those. Verified by running the matcher as a regex against real tool names. So for the browser
+capability granted in the entry below, there is **no** content-level control: not the curl-to-external-URL
+block, not the `.env` read block, not the write-outside-project-root block. The claim was true for Bash and
+file writes and was stated as though it were general.
+**Measurement that set the six:** 11,342 Bash calls across 400 recent transcripts. 8,603 already matched the
+allow list. The uncovered real commands were `bun` (160), `npm` (78), `bunx` (66), then `printf`, `timeout`,
+`sleep`. `rm` and `curl` appear too and stay denied — that is the point of a deny list. Reproduce with `npm run measure:bash` (the figure moves with the corpus; 2026-08-16 was the reading that informed this decision). A first pass at this
+measurement reported "47% would prompt"; it was tokenising heredoc bodies and was discarded rather than
+reported.
+**Reversibility:** reversible — one word in `bin/warroom`. Pinned by `scripts/launcher-permissions.test.mjs`
+so restoring it fails CI rather than passing silently.
+**Owner:** ceo · **founder decision** · **Affects:** `bin/warroom`, `.claude/settings.json`
+
+## 2026-08-16 — Two implementations of risk, reconciled
+
+**Context:** `CLAUDE.md:156` stated that `scripts/lib/classifier.js` is *"one file computes risk, and it is
+the only implementation."* The F13 step of `qa-lead-pass.yml` was a second one, and stricter: it required
+`tier: full|irreversible` on **every** session file in a `risk:irreversible` PR, including files the
+classifier tiers `trivial`. A PR mixing three sessions of irreversible code work with five of read-only
+specification work could only merge by writing a false tier onto the five.
+**Decision:** F13 now requires the tier on **at least one** session file. `CLAUDE.md` corrected to claim only
+what is true — one file computes the tier of a path — and to record why the broad version was struck.
+**Rejected:** having F13 call `classify.mjs` per session file (most correct, but needs a session-file → paths
+mapping that does not exist); keeping it strict and always splitting PRs (yesterday's split was good; as a
+standing rule it makes every mixed change a two-PR ceremony).
+**Reversibility:** reversible — the step is 30 lines of bash in one workflow file.
+**Owner:** ceo · **founder decision** · **Affects:** `.github/workflows/qa-lead-pass.yml`, `CLAUDE.md`
+
+## 2026-08-16 — Ship five engines, defer the two that hold credentials
+
+**Context:** `operator` and `instrument` are specified to hold payment keys and deploy tokens. `tools:` is
+not known to bind `Bash`, so a container declared read-only can still write through a shell. The OS sandbox
+those two depend on is configured **nowhere** — `GRANT-HOLDERS.md` records 0 sandbox keys in settings.json.
+**Decision:** Build `orchestrator · builder · designer · reviewer · sourcer`. `operator` and `instrument`
+stay specified and **uncreated** until a sandbox exists. Founder decision, 2026-08-16.
+**The roster answer is still seven** — the argument for the number never depended on creating them all at
+once, and deferring the two does not reopen `ROSTER-SIZE.md`.
+**Reversibility:** reversible — the specifications are written and unchanged.
+**Owner:** ceo · **founder decision** · **Affects:** the roster migration, `docs/03-system-design/agents/`
+
+## 2026-08-16 — The eleven shims stay until nothing references their names
+
+**Context:** 17 agent files here, 44 in `~/.claude/agents/`; 11 names exist in both with **different
+content**, and 33 more are absent from a clean clone. Deleting a repo shim **un-shadows** its global twin, so
+the name keeps working and quietly means the older definition. Nothing errors — the worst failure shape.
+**Decision:** Keep the 11 shims through the roster migration. They are occupying the name, which is their
+job. Delete only once nothing references those names.
+**The constraint that decided it:** those globals are **live in two other projects**
+(`obsidian-claude-code-mcp`, `overstory`), measured 2026-08-11. Archiving them fixes Agentvibe and reaches
+into work that is not Agentvibe, so it is not this repo's call to make unilaterally.
+**Reversibility:** fully reversible — nothing is deleted.
+**Owner:** ceo · **founder decision** · **Affects:** the roster migration, `~/.claude/agents/`
+
+## 2026-08-16 — `maxTurns` does bind, and the belief that it did not cost three gate runs
+
+**Context:** Three consecutive runs of the binding QA gate failed with a coverage gap on `correctness`, and
+~48% of dispatched agents returned nothing with `agents_error: 0`. Four explanations were tested against the
+run transcripts and refuted: a turn cap, context exhaustion, output tokens, wall-clock timeout — all
+overlapping distributions.
+**The measurement that settled it:** tool-call count separates the two populations **perfectly**. Agents
+making ≤17 calls returned findings; agents reaching 20 returned nothing; **13 of 20 dropouts sat at exactly
+20** — the `maxTurns` declared on the reviewer containers. No overlap.
+**Decision:** `maxTurns` raised 20 → 30 on `reviewer` and `reviewer-readonly`, and `reviewPrompt` rewritten
+around a finite budget (`git diff` as primary evidence, whole-file reads the exception, emit partial findings
+rather than be killed holding a complete set). The judge gained the retry the reviewers already had — it ran
+with **one** attempt while every dimension retried four times, so at that dropout rate it coin-flipped into
+`auto-BLOCK`, which is what run three recorded.
+**Correction to a recorded repo belief:** this repo states *"`maxTurns` does not bind — 196 of 269 runs
+exceeded a cap of 20."* That measurement was taken where **no agent file was named**. It does not bind then.
+It binds hard the moment a dispatch names an `agentType`. The CEO introduced the regression by adding
+`agentType` at the four `qa.js` sites and then repeated the false belief while diagnosing it.
+**Reversibility:** reversible — two frontmatter numbers and a prompt.
+**Owner:** ceo · **Affects:** `.claude/agents/reviewer*.md`, `.claude/workflows/qa.js`, and any future dispatch
+that names an agent type
+
+## 2026-08-16 — The browser reaches the open web; the local network is refused
+
+**Context:** `designer` was granted the playwright MCP — the first live MCP capability here — and MCP tool
+calls reached **no safety control at all**: `PreToolUse` was registered with
+`"matcher": "Bash|Edit|Write|NotebookEdit"`, which no MCP tool name matches. `DECISIONS.md`, the session file
+and a test header all justified removing `--dangerously-skip-permissions` partly on *"the PreToolUse hook
+still fired"* — true for Bash, false for the capability the same change activated.
+**Decision:** **Denylist, not allowlist. The open web is allowed.** Founder decision, 2026-08-16, overruling
+the CEO's localhost-only proposal.
+**Why the CEO was wrong:** localhost-only was reasoned from `designer`'s perception loop and applied as
+system policy. `sourcer` answers questions with sourced evidence, and `WebFetch` returns almost nothing on a
+JS-rendered site. The deciding argument is that agents **already** hold `WebSearch` and `WebFetch`, so
+untrusted web text already reaches context — blocking the browser does not close prompt injection, it only
+makes the agent worse at the work it exists to do.
+**Refused, because it is not the web:** `169.254/16` (cloud metadata), `10/8`, `172.16/12`, `192.168/16`,
+`0.0.0.0`, and the `file:` / `data:` / `javascript:` schemes. Loopback is allowed — that is the perception loop.
+**Two limits stated in the hook rather than oversold:** the check matches the **URL string**, so a hostname
+that *resolves* to a private address passes it (resolution-time enforcement belongs to the OS sandbox); and
+**no URL guard closes prompt injection** — that is answered by keeping deploy and payment credentials away
+from the browsing agent, which is why `operator` and `instrument` are separate engines.
+**Reversibility:** reversible — one `case` block and one matcher string.
+**Owner:** ceo · **founder decision** · **Affects:** `.claude/hooks/pre-tool-use.sh`, `.claude/settings.json`

@@ -72,7 +72,15 @@ function turnsFrom(text) {
     if (!u || !o.timestamp) continue;
     const t = Date.parse(o.timestamp);
     if (Number.isNaN(t)) continue;
-    turns.push({ t, out: u.output_tokens || 0, side: o.isSidechain ? 1 : 0 });
+    // `stop` answers the repo's oldest open question: what actually ends a run. `maxTurns` was
+    // believed not to bind (196 of 269 runs exceeded a cap of 20) — a belief refuted 2026-08-16:
+    // it does not bind when no agent file is named, and binds hard when one is. No other
+    // field records why a turn stopped — so a subagent that quits early is indistinguishable on
+    // disk from one that finished, which is why "reports available while incomplete" was
+    // diagnosable only by reading its output. Null when the line carries no stop_reason: absent
+    // and "we did not look" must not collapse into the same value.
+    const stop = (o.message && o.message.stop_reason) || null;
+    turns.push({ t, out: u.output_tokens || 0, side: o.isSidechain ? 1 : 0, stop });
   }
   return turns;
 }

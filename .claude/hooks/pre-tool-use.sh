@@ -163,6 +163,22 @@ case "$tool_name" in
       block "reading a .env file into the transcript is refused — its contents would be written to ~/.claude/projects/*.jsonl in plaintext, permanently. Read the specific variable from the environment instead, or open the file in your own editor."
     fi
 
+    # -- BLOCK: fetch-and-run a remote package --------------------------------
+    #
+    # npx, bunx, "npm exec", "bun x" and "pnpm dlx" each download an arbitrary package from a
+    # registry and execute it. That is the same capability the HTTP-client rules further down
+    # exist to refuse, reached through a package manager instead.
+    #
+    # Found by an independent reviewer of PR #47: that PR widened the allow list to cover the
+    # package managers wholesale -- auto-approving exactly this -- in the same change that
+    # removed the skip-permissions flag and was described as tightening. The allow entries are
+    # now narrowed to the verbs actually measured (npm run, bun test, ...) and the fetch-and-run
+    # verbs are denied in settings.json. This rule is the second half of that fix: a settings
+    # deny can be bypassed by a launch flag, and this hook is the backstop that cannot.
+    if printf '%s' "$command" | grep -qE '(^|[;&|]\s*)(npx|bunx)\b|\bnpm\s+exec\b|\bbun\s+x\b|\bpnpm\s+dlx\b'; then
+      block "npx / bunx / npm exec / bun x / pnpm dlx download and execute a remote package - the same capability the HTTP-client rules refuse. Add the dependency to package.json and run it from node_modules, or ask the founder."
+    fi
+
     # ── BLOCK: chmod +x ──────────────────────────────────────────────────────
     if printf '%s' "$command" | grep -qE 'chmod\s+\+x'; then
       block "chmod +x is blocked. Use 'chmod 755 <file>' for explicit permissions, or ask the CEO to approve."
@@ -343,8 +359,126 @@ except Exception:
 
     ;;
 
+  mcp__playwright__browser_navigate|mcp__playwright__browser_navigate_back)
+    # ── BLOCK: browser navigation into the local network ──────────────────────
+    #
+    # THE OPEN WEB IS ALLOWED. Denylist, not allowlist — founder decision, overruling a
+    # localhost-only proposal. `sourcer` answers questions with sourced evidence and WebFetch
+    # returns almost nothing on a JS-rendered site; agents already hold WebSearch and WebFetch,
+    # so blocking the browser closes no prompt-injection risk and only makes the agent worse.
+    # Loopback IS allowed — that is designer's perception loop.
+    #
+    # THE FIRST VERSION OF THIS GUARD WAS BYPASSABLE FIVE WAYS AND AN INDEPENDENT REVIEWER
+    # FOUND ALL OF THEM. It pattern-matched ONE SPELLING of each address with shell globs
+    # (`169.254.*`), so every other textual form Chromium accepts walked past a guard whose own
+    # comment claimed the address was refused. All five verified against this hook before fixing:
+    #   http://2852039166/            decimal    -> 169.254.169.254   ALLOWED
+    #   http://0xa9fea9fe/            hex        -> 169.254.169.254   ALLOWED
+    #   http://169.254.43518/         3-part     -> 169.254.169.254   ALLOWED
+    #   http://0251.0376.0251.0376/   octal      -> 169.254.169.254   ALLOWED
+    #   http://[fd00:ec2::254]/       IPv6 IMDS  ->                   ALLOWED
+    #
+    # An address is now CANONICALISED and then classified rather than compared against a list of
+    # spellings. `ipaddress` decides private / loopback / link-local / reserved, so IPv4 in any
+    # encoding and every IPv6 private range are covered by construction instead of by
+    # enumeration — which is what the glob version was attempting, and failing.
+    _verdict=$(printf '%s' "$payload" | python3 -c "
+import sys, json, ipaddress, unicodedata
+
+def canon(host):
+    # Return an ip_address for any textual IPv4/IPv6 form a browser accepts, else None.
+    # NFKC first: Chromium applies UTS-46 before parsing the host, so the fullwidth digits in
+    # http://１６９．２５４．１６９．２５４/ become 169.254.169.254 before it ever resolves. Without this the
+    # string splits on no ASCII dot, int() raises, canon returns None, and the guard reads it as
+    # an ordinary hostname. Found by an independent reviewer against the rewritten guard.
+    h = unicodedata.normalize('NFKC', host).strip().rstrip('.').lower()
+    if h.startswith('[') and h.endswith(']'):
+        try: return ipaddress.ip_address(h[1:-1])
+        except ValueError: return None
+    parts = h.split('.')
+    if 1 <= len(parts) <= 4 and all(parts):
+        nums = []
+        for p in parts:
+            try:
+                if p.startswith('0x'): nums.append(int(p, 16))
+                elif p.startswith('0') and len(p) > 1: nums.append(int(p, 8))
+                else: nums.append(int(p, 10))
+            except ValueError:
+                return None
+        try:
+            n = 0
+            for i, v in enumerate(nums[:-1]):
+                if v > 255: return None
+                n |= v << (8 * (3 - i))
+            if nums[-1] >= (1 << (8 * (5 - len(nums)))): return None
+            n |= nums[-1]
+            return ipaddress.ip_address(n)
+        except (ValueError, IndexError):
+            return None
+    try: return ipaddress.ip_address(h)
+    except ValueError: return None
+
+try:
+    d = json.load(sys.stdin)
+    url = (d.get('tool_input') or {}).get('url') or ''
+except Exception:
+    print('BLOCK|payload unreadable'); raise SystemExit(0)
+
+if not url:
+    print('BLOCK|no url given'); raise SystemExit(0)
+
+low = url.strip().lower()
+if low == 'about:blank':
+    print('ALLOW|'); raise SystemExit(0)
+scheme = low.split(':', 1)[0] if ':' in low else ''
+if scheme not in ('http', 'https'):
+    print('BLOCK|' + url + ' - only http and https reach the network'); raise SystemExit(0)
+
+rest = url.split('://', 1)[1] if '://' in url else url
+# WHATWG treats a backslash as a path delimiter for special schemes (http/https), so the
+# authority ENDS at the first backslash. Without this substitution the guard was wrong in BOTH
+# directions, verified against Node's own URL parser:
+#   169.254.169.254 [backslash] @evil.com   browser -> 169.254.169.254   guard said ALLOW
+#   evil.com [backslash] @169.254.169.254   browser -> evil.com          guard said BLOCK
+# Found by an independent reviewer against the rewritten guard. The literal is written as
+# chr(92) below because this python is embedded in a double-quoted bash string, where a
+# backslash literal is consumed by the shell before python ever sees it -- which is exactly
+# how the first attempt at this fix broke the guard into failing closed on everything.
+rest = rest.replace(chr(92), '/')   # chr(92) is a backslash; a literal here is eaten by bash
+authority = rest.split('/', 1)[0].split('?', 1)[0].split('#', 1)[0]
+if '@' in authority:
+    authority = authority.rsplit('@', 1)[1]
+if authority.startswith('['):
+    host = authority[:authority.find(']') + 1] if ']' in authority else authority
+else:
+    host = authority.split(':', 1)[0]
+
+if not host:
+    print('BLOCK|' + url + ' - host could not be parsed'); raise SystemExit(0)
+
+ip = canon(host)
+if ip is None or ip.is_loopback:
+    print('ALLOW|')
+elif ip.is_private or ip.is_link_local or ip.is_reserved or ip.is_unspecified or ip.is_multicast:
+    print('BLOCK|' + url + ' resolves to ' + str(ip) + ', which is the local network, not the web')
+else:
+    print('ALLOW|')
+" 2>/dev/null) || block "browser navigation could not be evaluated — refusing. This hook fails closed."
+
+    case "$_verdict" in
+      ALLOW*) : ;;
+      BLOCK*) block "browser navigation refused: ${_verdict#BLOCK|}" ;;
+      *)      block "browser navigation guard returned nothing readable — refusing. This hook fails closed." ;;
+    esac
+    ;;
+
   *)
-    # Unknown tool — allow
+    # Unknown tool — allow.
+    #
+    # STATED LIMIT: this includes every MCP tool other than the one cased above. Those servers
+    # are the founder's own (figma, notion, gmail, miro, higgsfield, …) and this hook has no
+    # rules that would mean anything for them; gating them here would be theatre with an outage
+    # attached. The boundary that matters — a browser reaching off the machine — is closed above.
     ;;
 esac
 

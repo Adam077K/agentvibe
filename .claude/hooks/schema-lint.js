@@ -47,7 +47,7 @@ const { parseYamlSubset, KINDS, VERIFIERS, independenceIssue } = require('../../
 // The seven engines of the Phase 4 roster. Held here as a constant rather than read from
 // disk because the lens files are authored BEFORE the engine files exist — 4a proves the
 // expertise survives, and only then does 4b delete what it replaced.
-const ENGINES = ['orchestrator', 'framer', 'sourcer', 'builder', 'designer', 'reviewer'];
+const ENGINES = ['orchestrator', 'framer', 'sourcer', 'builder', 'designer', 'reviewer', 'reviewer-readonly'];
 
 // Engines that must never be able to change what they look at.
 //
@@ -59,7 +59,10 @@ const ENGINES = ['orchestrator', 'framer', 'sourcer', 'builder', 'designer', 're
 //
 // Treating this lint as the gate criterion would be exactly the decorative-capability
 // failure §3.7 names: a field that looks like a boundary and enforces nothing.
-const READ_ONLY_ENGINES = ['reviewer'];
+// Engines that must never be able to change what they look at. `reviewer-readonly` is the
+// no-shell variant the binding QA gate dispatches into: `tools:` is not known to bind Bash, so
+// the gate's judge — whose verdict cannot be overridden — must not declare it at all.
+const READ_ONLY_ENGINES = ['reviewer', 'reviewer-readonly'];
 
 // ── 07b template checks ────────────────────────────────────────────────────
 
@@ -81,15 +84,30 @@ const REQUIRED_FRONTMATTER = [
 // confidence, not to zero." The declarations are deleted, and the check below makes the
 // field fail the build unless real MCP config exists, so it cannot return as decoration.
 
-/** Is there any MCP configuration in this repo at all? */
-function mcpConfigured() {
-  if (fs.existsSync(path.join(REPO_ROOT, '.mcp.json'))) return true;
+/**
+ * The MCP servers this repo actually configures, by name.
+ *
+ * THIS USED TO BE A BOOLEAN, AND THE BOOLEAN WAS A TRAP. `mcpConfigured()` answered "does any
+ * MCP config exist anywhere", so the moment a single `.mcp.json` appeared, EVERY agent could
+ * declare ANY server name and pass the lint — one file flipping the check permissive for the
+ * whole roster at once. The specs flagged this as a sequencing hazard before it could fire:
+ * the per-agent allowlist had to land in the same change as the config, or the grant would be
+ * silently universal. It did, and this is it.
+ *
+ * Returns a Set. An empty Set means no MCP is configured, which is a different thing from
+ * "configured with nothing" only in theory — both correctly refuse every declaration.
+ */
+function configuredMcpServers() {
+  const names = new Set();
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, '.mcp.json'), 'utf8'));
+    for (const k of Object.keys(j.mcpServers || {})) names.add(k);
+  } catch { /* absent or unreadable — contributes nothing, never throws */ }
   try {
     const s = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, '.claude', 'settings.json'), 'utf8'));
-    return Object.prototype.hasOwnProperty.call(s, 'mcpServers');
-  } catch {
-    return false;
-  }
+    for (const k of Object.keys(s.mcpServers || {})) names.add(k);
+  } catch { /* same */ }
+  return names;
 }
 // escalates_to + escalates_when are required for non-personas
 // return_contract + pre_flight_reads are required for everyone
@@ -189,6 +207,73 @@ function loadSkills() {
     LIVE_SKILLS = null;
   }
   return LIVE_SKILLS;
+}
+
+// Return the raw `allowed-tools` value of a skill, or null when it declares none.
+// Reads the SKILL.md directly rather than the manifest: the manifest is a generated index and
+// does not carry the field, and a rule that depends on a generated file inherits its staleness.
+const SKILL_CLAMP_CACHE = new Map();
+function skillToolClamp(name) {
+  if (SKILL_CLAMP_CACHE.has(name)) return SKILL_CLAMP_CACHE.get(name);
+  let clamp = null;
+  // Two independent guards, because the caller's manifest check is a different function that a
+  // later edit could reorder away — and did, in this function's first cut.
+  //   1. Shape: a skill name is a lowercase slug. `..`, `/`, `\` and absolute paths cannot match.
+  //   2. Containment: resolve and assert the result is genuinely under .claude/skills/, so a
+  //      future loosening of the pattern cannot silently re-open a traversal.
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
+    SKILL_CLAMP_CACHE.set(name, null);
+    return null;
+  }
+  try {
+    const skillsRoot = path.resolve(REPO_ROOT, '.claude', 'skills');
+    const p = path.resolve(skillsRoot, name, 'SKILL.md');
+    // Lexical containment first — cheap, and correct for the `../` string case.
+    if (!p.startsWith(skillsRoot + path.sep)) {
+      SKILL_CLAMP_CACHE.set(name, null);
+      return null;
+    }
+    // Then containment ON THE FILESYSTEM. path.resolve is pure string arithmetic: it never
+    // touches disk and cannot see a symlink, so `.claude/skills/<validname>` pointing at
+    // /etc satisfies the lexical check while readFileSync follows the link straight out of the
+    // tree. The binding gate found this on the SECOND pass — the `../` fix was real, and it
+    // did not close the symlink route to the same disclosure. Reproduced before fixing:
+    // lexical check true, realpath /private/tmp/evil-target/SKILL.md, canary readable.
+    // realpathSync dereferences every component; lstat additionally refuses a symlinked skill
+    // directory outright rather than following it anywhere.
+    if (fs.lstatSync(path.join(skillsRoot, name)).isSymbolicLink()) {
+      SKILL_CLAMP_CACHE.set(name, null);
+      return null;
+    }
+    const realRoot = fs.realpathSync(skillsRoot);
+    const realP = fs.realpathSync(p);
+    if (!realP.startsWith(realRoot + path.sep)) {
+      SKILL_CLAMP_CACHE.set(name, null);
+      return null;
+    }
+    const text = fs.readFileSync(realP, 'utf8');
+    const fmEnd = text.indexOf('\n---', 3);
+    const head = fmEnd === -1 ? text : text.slice(0, fmEnd);
+    const m = head.match(/^allowed-tools:[ \t]*(.*)$/m);
+    if (m) {
+      // Inline form (`allowed-tools: Read, Write`) or block list on following lines.
+      const inline = m[1].trim();
+      if (inline) {
+        clamp = inline;
+      } else {
+        const after = head.slice(head.indexOf(m[0]) + m[0].length);
+        const items = [];
+        for (const line of after.split('\n')) {
+          const li = line.match(/^[ \t]*-[ \t]+(.*)$/);
+          if (li) items.push(li[1].trim());
+          else if (line.trim()) break;
+        }
+        clamp = items.length ? items.join(', ') : null;
+      }
+    }
+  } catch { clamp = null; }
+  SKILL_CLAMP_CACHE.set(name, clamp);
+  return clamp;
 }
 
 // ── Body section scan ──────────────────────────────────────────────────────
@@ -296,12 +381,27 @@ function lintFile(filePath) {
   if (fm.mcpServers !== undefined) {
     if (!Array.isArray(fm.mcpServers)) {
       issues.push(`frontmatter: mcpServers must be a YAML list`);
-    } else if (fm.mcpServers.length > 0 && !mcpConfigured()) {
-      issues.push(
-        `frontmatter: declares mcpServers [${fm.mcpServers.join(', ')}] but this repo has no MCP config ` +
-        `(no .mcp.json, no mcpServers key in .claude/settings.json) — the declaration grants nothing. ` +
-        `Configure MCP or delete the field.`
-      );
+    } else if (fm.mcpServers.length > 0) {
+      const configured = configuredMcpServers();
+      if (configured.size === 0) {
+        issues.push(
+          `frontmatter: declares mcpServers [${fm.mcpServers.join(', ')}] but this repo has no MCP config ` +
+          `(no .mcp.json, no mcpServers key in .claude/settings.json) — the declaration grants nothing. ` +
+          `Configure MCP or delete the field.`
+        );
+      } else {
+        // Per-SERVER, not merely per-repo. A declaration naming a server nobody configured is
+        // the same decorative-capability failure the old boolean allowed back in wholesale.
+        for (const want of fm.mcpServers) {
+          if (!configured.has(want)) {
+            issues.push(
+              `frontmatter: declares mcpServer "${want}", which is not configured in .mcp.json or ` +
+              `.claude/settings.json (configured: ${[...configured].sort().join(', ') || 'none'}) — ` +
+              `the declaration grants nothing. Configure it or remove it.`
+            );
+          }
+        }
+      }
     }
   }
 
@@ -311,12 +411,42 @@ function lintFile(filePath) {
       issues.push(`frontmatter: skills must be a YAML list`);
     } else {
       const live = loadSkills();
-      if (live) {
+      if (!live) {
+        warnings++;
+      } else {
         for (const s of fm.skills) {
           if (!live.has(s)) issues.push(`frontmatter: skill "${s}" not in MANIFEST.json`);
         }
-      } else {
-        warnings++;
+      // A skill carrying `allowed-tools` SUBTRACTS from the agent that loads it.
+      //
+      // The binary calls this "capability frontmatter" and describes it as "Tools available to
+      // the model while this file is active" — a ceiling, not a grant. Attaching such a skill
+      // therefore clamps the agent to that list for as long as the skill is active. Two of the
+      // eight skills that declare it clamp to a single Bash pattern: `impeccable` to
+      // `Bash(npx impeccable *)`, `pitch-deck-visuals` to `Bash(belt *)` — no Read, no Write,
+      // no MCP. `impeccable` is the skill the roster spec assigns to `designer`, whose whole
+      // purpose is a browser perception loop it would no longer be able to reach.
+      //
+      // No agent declares one today, so this rule costs nothing now and fires exactly when the
+      // roster migration attaches them. Strip the field from the skill first; it does something.
+      //
+      // SCOPED TO KNOWN SKILL NAMES ON PURPOSE. The first cut of this loop ran over every
+      // declared name before any of them had been checked against the manifest, so a name like
+      // `../..` reached path.join + readFileSync — arbitrary file read, with the matched line
+      // echoed back into the issue text and therefore into CI logs, in a linter CI runs on
+      // every pull_request including forks. The binding QA gate caught it; it is pinned in
+      // scripts/skill-clamp.test.mjs. An unknown name already emits its own "not in
+      // MANIFEST.json" issue above and must never reach a disk read.
+      for (const s of fm.skills) {
+        if (!live.has(s)) continue;
+        const clamp = skillToolClamp(s);
+        if (clamp) {
+          issues.push(
+            `frontmatter: skill "${s}" declares allowed-tools (${clamp}), which SUBTRACTS from this agent's tools while active — ` +
+            `strip the field from .claude/skills/${s}/SKILL.md before attaching it, or attach a different skill`
+          );
+        }
+        }
       }
     }
   }

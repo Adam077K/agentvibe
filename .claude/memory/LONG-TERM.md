@@ -41,3 +41,24 @@
   needed upgrade · **Export path:** `mission-control/` is additive and nothing else imports it;
   every other check in the repo still runs on bare Node 20, so the blast radius of removing Bun is
   one directory.
+
+## 2026-08-16 — Runtime facts that outlive this session
+
+- **`maxTurns` binds when, and only when, a dispatch names an `agentType`.** With no agent file named the
+  runtime ignores it (196 of 269 runs once exceeded a cap of 20, which is where the repo's "it does not bind"
+  belief came from). Name an `agentType` and its frontmatter `maxTurns` cuts the agent off mid-tool with no
+  error and `agents_error: 0`. Cost three failed gate runs before it was found. **Check the agent file's
+  `maxTurns` before blaming the runtime**, and read `journal.jsonl` before trusting any multi-agent result.
+- **A `SKILL.md` carrying `allowed-tools` SUBTRACTS from the agent that loads it.** Two shipped skills clamp
+  to a single Bash pattern. `schema-lint.js` now refuses the attachment; the rule is vacuous today, which is
+  why it was cheap to add.
+- **MCP tool calls only reach a hook if the matcher names them.** `Bash|Edit|Write|NotebookEdit` matches no
+  MCP tool. Any claim of the form "the hook still fires" is false for MCP unless the matcher says otherwise.
+- **The founder's standing direction on agency:** agents get the open web, not a curated allowlist. Blocking
+  the browser does not close prompt injection while WebSearch/WebFetch exist — it only makes the agent worse.
+  The line is drawn at the local network, which is not the web.
+- **Founder prefers a couple of directly-dispatched agents over a Workflow** for anything short of a big or
+  mid-to-large change. Workflows are for main changes only.
+- **The prompt-craft gate is live:** nothing under `.claude/agents/` is created, rewritten or deleted until a
+  written prompt standard exists and the founder approves it. Two narrow capability-only exceptions were
+  granted explicitly (`reviewer-readonly`, designer's `mcpServers`) and neither is a precedent.
