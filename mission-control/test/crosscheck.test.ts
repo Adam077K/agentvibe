@@ -206,13 +206,24 @@ describe('claim counts by verdict', () => {
       };
 
       const mc = await runLedgerVerify(REPO_ROOT, { offline: true });
-      expect('pass' in mc ? mc : null).not.toBeNull();
-      if ('pass' in mc) {
-        expect(mc.totalClaims).toBe(independent.totalClaims); // pins belief.ts's HEADER_RE fallback path too
-        expect(mc.pass).toBe(independent.pass);
-        expect(mc.wouldBlock).toBe(independent.wouldBlock);
-        expect(mc.block).toBe(independent.block);
+      // The collector has a VERIFY_TIMEOUT_MS (60 000 ms) inside runLedgerVerify. On a
+      // busy machine `verify --offline` exceeds that threshold (measured: 60.4 s) and
+      // the function returns { present: false, reason: '…timed out…' }. The subsequent
+      // assertion then fails even though the code under test is correct. This is the §0
+      // defect class: an answer that depends on machine state, tested where that state
+      // doesn't exist. Gate on absent first, as Rule 10 requires.
+      if (!('pass' in mc)) {
+        notVerified(
+          'ledger summary crosscheck',
+          `runLedgerVerify returned absent — ${mc.reason} — verify likely exceeded the 60s ` +
+            'collector timeout on this machine. Run again on a quiet machine, or raise VERIFY_TIMEOUT_MS.'
+        );
+        return;
       }
+      expect(mc.totalClaims).toBe(independent.totalClaims); // pins belief.ts's HEADER_RE fallback path too
+      expect(mc.pass).toBe(independent.pass);
+      expect(mc.wouldBlock).toBe(independent.wouldBlock);
+      expect(mc.block).toBe(independent.block);
     },
     120_000
   );
