@@ -294,27 +294,70 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
   /**
    * Source text with comments removed — `/* … *\/` blocks first, then `//` to end of line.
    *
-   * CLOSES ISSUE #27, which is logged in PHASE-8A-HANDOFF.md §5: "that guard false-positives
-   * on prose merely mentioning `exec(` across a line wrap". Only `//` comments were stripped,
-   * so a JSDoc block explaining why a shell must never be spawned could trip the guard that
-   * forbids spawning one. server/** is heavily documented in `/** … *\/` blocks, and this file
-   * is about to gain write-API tokens whose plain-English words (rename, truncate, copy)
-   * appear in that prose constantly — so leaving block comments in the scan would have turned
-   * a strengthening into a guard that cries wolf until someone weakens it.
+   * CLOSES ISSUE #27, logged in PHASE-8A-HANDOFF.md §5: "that guard false-positives on prose
+   * merely mentioning `exec(` across a line wrap". Only `//` comments were stripped, so a JSDoc
+   * block explaining why a shell must never be spawned could trip the guard that forbids
+   * spawning one. server/** is heavily documented in block comments, and this file carries
+   * write-API tokens whose plain-English words (rename, truncate, copy, link) appear in that
+   * prose constantly — leaving block comments in the scan turns a strengthening into a guard
+   * that cries wolf until someone disables it.
    *
-   * Each block is replaced by its own newlines rather than deleted, so line numbers stay true
-   * and the per-line scan below still points a human at the right line.
+   * A SINGLE-PASS SCANNER, AND THE TWO-REGEX VERSION IT REPLACES WAS A SECURITY REGRESSION.
+   * That version blanked `/* … *\/` first and `//…` second, so a block-comment OPENER sitting
+   * inside a line comment — `// the cache uses /* an opener in prose` — began a match that ran
+   * to the next `*\/` anywhere later in the file and blanked every line between, real code
+   * included. Reproduced against the pre-existing stripper, which catches it:
    *
-   * Known limitation, unchanged: this is text processing, not parsing. A `/*` inside a string
-   * literal or a regex would be mistaken for a comment opener. None exists in server/** today,
-   * and an AST walk (issue #26) is what removes the caveat rather than another regex.
+   *     // the cache uses /* a block-comment opener in prose
+   *     fs.writeFileSync(target, payload);        <-- main: 1 offender. Two-regex version: 0.
+   *     /** a normal doc block *\/
+   *
+   * So the fix for #27 had widened the token list and narrowed what the scanner could see, in
+   * the same commit. The barrier in test/write-barrier.test.ts does catch that write — and
+   * "the barrier covers it" is precisely the argument that lets a text guard rot, which is why
+   * it is not the answer here.
+   *
+   * The scanner tracks one state at a time, so neither comment form can start inside the other,
+   * and string literals are traversed rather than interpreted — `const s = "/*"` opens nothing.
+   * Comment bodies become spaces and newlines are preserved, so line numbers stay true.
+   *
+   * KNOWN LIMITATION, SHARED WITH THE IMPLEMENTATION THIS REPLACES: a regex literal containing
+   * `//` (e.g. `/https:\/\//`) is read as a line comment, because telling division from a regex
+   * literal needs a parser. The pre-existing per-line `//` strip has exactly the same blind
+   * spot, so this is not a new gap — and `stripComments preserves every offender the raw text
+   * holds` below fails if any real file in server/** ever hits it. An AST walk (issue #26)
+   * removes the caveat; another regex does not.
    */
   function stripComments(text: string): string {
-    return text
-      .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
-      .split('\n')
-      .map((line) => line.replace(/\/\/.*$/, ''))
-      .join('\n');
+    let out = '';
+    let state: 'code' | 'line' | 'block' | "'" | '"' | '`' = 'code';
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i]!;
+      const c2 = text[i + 1];
+      if (state === 'code') {
+        if (c === '/' && c2 === '/') { state = 'line'; out += '  '; i++; continue; }
+        if (c === '/' && c2 === '*') { state = 'block'; out += '  '; i++; continue; }
+        if (c === "'" || c === '"' || c === '`') { state = c; out += c; continue; }
+        out += c;
+        continue;
+      }
+      if (state === 'line') {
+        if (c === '\n') { state = 'code'; out += '\n'; continue; }
+        out += ' ';
+        continue;
+      }
+      if (state === 'block') {
+        if (c === '*' && c2 === '/') { state = 'code'; out += '  '; i++; continue; }
+        out += c === '\n' ? '\n' : ' ';
+        continue;
+      }
+      // inside a string literal: copied verbatim, so a write token in a string still counts —
+      // the conservative direction for a guard, and `fs[\'writeFileSync\']` stays visible.
+      if (c === '\\') { out += c + (c2 ?? ''); i++; continue; }
+      if (c === state) { state = 'code'; out += c; continue; }
+      out += c;
+    }
+    return out;
   }
 
   // Per-line scan: gives a human a line number to look at, but is blind to a call split
@@ -437,21 +480,34 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
 
   /**
    * Write-family APIs. WIDENED 2026-08-16 with every token after `appendFile`, each one a real
-   * write API that the previous list could not see.
+   * write API the previous list could not see.
    *
    * NOT A THEORETICAL WIDENING. `fs.copyFileSync` was injected into the /api/project/:id
    * handler and this scan reported ZERO offenders while the file was demonstrably being
    * created — no aliasing, no computed string, just an API nobody had enumerated. The same was
    * true of renameSync, truncateSync, symlinkSync, cpSync and createWriteStream.
    *
-   * `openSync` IS DELIBERATELY ABSENT and cannot be added: server/index-store.ts opens files
-   * read-only with it on the append and boundary-probe paths, so banning it would forbid the
-   * read path. `fs.openSync(p, 'w')` is therefore a live blind spot in THIS check — named
-   * here, and covered by test/write-barrier.test.ts, which sees the file appear regardless of
-   * which API made it.
+   * `Bun.write` and the `utimes` family were added in review. Both are writes, both were
+   * invisible, and `utimes` is the one that matters most here: MTIME IS THIS INDEX'S
+   * INVALIDATION KEY, so a call that moves a transcript's mtime without changing its bytes is
+   * a direct attack on the freshness model rather than a generic disk mutation. It was also
+   * invisible to the behavioural barrier, which compares CONTENT — that gap is now closed on
+   * both sides (see test/write-barrier.test.ts, which reports mtime drift).
+   *
+   * THE COMPLETE LIST OF KNOWN BLIND SPOTS IN THIS CHECK, because a partial list of gaps is
+   * worse than none — it reads as exhaustive:
+   *   · `fs.openSync(p, 'w')`. `openSync` cannot be added: server/index-store.ts opens files
+   *     read-only with it on the append and boundary-probe paths, so banning the token would
+   *     forbid the read path and a guard that fires on correct code gets disabled.
+   *   · `Bun.file(x).writer()`, and any other write reached through a value rather than a
+   *     named API — `const w = fs.writeFileSync; w(p, d)` defeats every pattern here.
+   *   · a write performed by a spawned process (covered by the shell-invocation rules below,
+   *     which have their own listed gaps).
+   * All of these land on disk, which is what test/write-barrier.test.ts looks at. That barrier
+   * is the second check, not an excuse for this one — the two are independent on purpose.
    */
   const WRITE_PATTERN =
-    /\b(writeFile(Sync)?|writeSync|mkdir(Sync)?|rm(Sync)?|rmdir(Sync)?|unlink(Sync)?|appendFile(Sync)?|copyFile(Sync)?|cpSync|rename(Sync)?|truncate(Sync)?|ftruncate(Sync)?|symlink(Sync)?|link(Sync)?|createWriteStream|git\s+commit|git\s+push)\b/;
+    /\b(writeFile(Sync)?|writeSync|mkdir(Sync)?|rm(Sync)?|rmdir(Sync)?|unlink(Sync)?|appendFile(Sync)?|copyFile(Sync)?|cpSync|rename(Sync)?|truncate(Sync)?|ftruncate(Sync)?|symlink(Sync)?|link(Sync)?|createWriteStream|utimes(Sync)?|futimes(Sync)?|lutimes(Sync)?|chmod(Sync)?|chown(Sync)?|Bun\.write|git\s+commit|git\s+push)\b/;
 
   test(`no write-API call sites in server/** outside ${WRITE_OWNER}`, () => {
     // This is a TEXT grep, not a semantic check: it cannot catch a write assembled from
@@ -461,6 +517,67 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
     const files = walkServerTs().filter((f) => path.basename(f) !== WRITE_OWNER);
     expect(files.length).toBeGreaterThan(0);
     expect(findOffenders(WRITE_PATTERN, files)).toEqual([]);
+  });
+
+  // THE COMMENT SCANNER, PINNED FROM BOTH SIDES. It has to hide prose (#27) without hiding code
+  // (the regression above) — and the implementation it replaces got the first right by breaking
+  // the second, in the same commit that widened the token list.
+  test('stripComments hides prose but never hides code', () => {
+    const hits = (src: string) => {
+      const stripped = stripComments(src);
+      return stripped.split('\n').some((l) => WRITE_PATTERN.test(l)) || WRITE_PATTERN.test(stripped.replace(/\s+/g, ' '));
+    };
+
+    // THE REGRESSION, first. A block-comment opener inside a LINE comment must not swallow the
+    // code beneath it. The two-regex version scored 0 offenders on exactly this input while the
+    // write executed; the guard it replaced caught it.
+    expect(hits(['// the cache uses /* an opener in prose', 'fs.writeFileSync(t, p);', '/** doc */'].join('\n'))).toBe(true);
+    // …and the mirror: a line-comment marker inside a BLOCK comment must not end it early.
+    expect(hits('/* explains // why we never\n   call fs.writeFileSync here */\nconst x = 1;')).toBe(false);
+
+    // #27, the thing the stripper exists for: prose naming a forbidden API is not a call site.
+    expect(hits('/** never call fs.writeFileSync here */\nexport const y = 2;')).toBe(false);
+    expect(hits('// do not fs.writeFileSync from this module\nexport const z = 3;')).toBe(false);
+
+    // A string literal is not a comment, and its contents stay VISIBLE — the conservative
+    // direction, so a computed-property write is still an offender.
+    expect(hits('const opener = "/*";\nfs.writeFileSync(t, p);')).toBe(true);
+    expect(hits("fs['writeFileSync'](t, p);")).toBe(true);
+
+    // Controls, so none of the above passes because the pattern matches everything or nothing.
+    expect(hits('fs.writeFileSync(t, p);')).toBe(true);
+    expect(hits('export const q = 4;')).toBe(false);
+
+    // Line count preserved, so the per-line scan's line numbers stay true.
+    const multi = 'a\n/* one\n   two */\nb\n// three\nc';
+    expect(stripComments(multi).split('\n')).toHaveLength(multi.split('\n').length);
+  });
+
+  // THE SCANNER MUST NEVER MAKE THE GUARD BLINDER ON THE REAL TREE. Stripping may only remove
+  // offenders that are PROSE. If a line the scanner left as code loses its match, the scanner
+  // mis-read something — a regex literal holding `//` is the known way that can happen — and
+  // the guard just went quiet without saying so.
+  test('stripComments preserves every offender on a line it did not treat as a comment', () => {
+    const files = walkServerTs();
+    expect(files.length).toBeGreaterThan(0);
+    const lost: string[] = [];
+    let rawHits = 0;
+    for (const f of files) {
+      const raw = fs.readFileSync(f, 'utf8').split('\n');
+      const stripped = stripComments(fs.readFileSync(f, 'utf8')).split('\n');
+      raw.forEach((line, i) => {
+        if (!WRITE_PATTERN.test(line)) return;
+        rawHits++;
+        const after = stripped[i] ?? '';
+        // The scanner left this line untouched, so it classified it as code — and a code line
+        // that held a match must still hold it.
+        if (line === after && !WRITE_PATTERN.test(after)) lost.push(`${path.relative(serverDir, f)}:${i + 1}`);
+      });
+    }
+    // NON-VACUITY: the real tree does contain write tokens (index-cache.ts is full of them), so
+    // this compared something. A scan finding none would pass by having nothing to lose.
+    expect(rawHits).toBeGreaterThan(0);
+    expect(lost).toEqual([]);
   });
 
   // A TEST MUST NOT WRITE TO THE DEVELOPER'S HOME DIRECTORY, and this exists because one did.

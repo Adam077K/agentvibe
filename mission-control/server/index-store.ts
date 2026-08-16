@@ -159,7 +159,11 @@ export interface RefreshResult {
    *     that wrote nothing. The cheap key says "changed", the disk says otherwise, and calling
    *     that a read would be the counter agreeing with the key instead of with the disk.
    *
-   * Exists so the invariant below CLOSES rather than quietly not adding up.
+   * COUNTED, NEVER DERIVED. This was `filesScanned - filesRead - filesSkipped`, which is an
+   * identity rather than a check: a file counted in two buckets simply pushed this negative and
+   * the sum still balanced. A reviewer demonstrated it — double-counting a read file as skipped
+   * passed all 266 tests. Each branch below now increments it explicitly, so the invariant can
+   * fail in BOTH directions: a missing bucket makes the sum short, a double count makes it long.
    *
    * THE COLD-PATH INVARIANT, and it is deterministic on every machine:
    *
@@ -326,7 +330,7 @@ export class IndexStore {
       for (const dir of project.transcriptDirs) {
         for (const file of listTranscripts(dir)) {
           scanned++;
-          this.readFull(file, project.id);
+          if (!this.readFull(file, project.id)) this.unread++;
         }
       }
     }
@@ -342,7 +346,7 @@ export class IndexStore {
       // survives here exactly as it did before the skip counters existed. `filesUnread` picks
       // up any read that threw — previously those made the equality quietly false.
       filesSkipped: 0,
-      filesUnread: scanned - this.reads,
+      filesUnread: this.unread,
       filesVerified: 0,
       filesStale: 0,
       verifyBytesRead: 0,
@@ -389,7 +393,7 @@ export class IndexStore {
             }
             this.stales++;
             changed++;
-            this.readFull(file, project.id, st);
+            if (!this.readFull(file, project.id, st)) this.unread++;
             continue;
           }
           changed++;
@@ -400,13 +404,13 @@ export class IndexStore {
           // which only a full read can resolve.
           if (prev && st.size >= prev.size) {
             if (!prev.needsVerify || this.boundaryStillMatches(file, prev)) {
-              this.readAppended(file, project.id, prev, st);
+              if (!this.readAppended(file, project.id, prev, st)) this.unread++;
             } else {
               this.stales++;
-              this.readFull(file, project.id, st);
+              if (!this.readFull(file, project.id, st)) this.unread++;
             }
           } else {
-            this.readFull(file, project.id, st);
+            if (!this.readFull(file, project.id, st)) this.unread++;
           }
         }
       }
@@ -433,9 +437,13 @@ export class IndexStore {
       bytesRead: this.bytes,
       distinctFilesRead: this.readPaths.size,
       filesSkipped: this.skips,
-      // Derived, not counted separately, so it cannot drift from the other three: every
-      // scanned path either was read, was skipped, or is this. See RefreshResult.filesUnread.
-      filesUnread: scanned - this.reads - this.skips,
+      // COUNTED AT THE SITE, NOT DERIVED FROM THE OTHERS. It was `scanned - reads - skips`,
+      // which made the invariant an identity: it could not fail, because the residual absorbed
+      // any error. Found in review — a mutation that counted one file as BOTH read and skipped
+      // passed the entire suite, because `filesUnread` silently went negative to balance it.
+      // Now every branch that ends without reading transcript bytes increments this, so the sum
+      // over-runs `filesScanned` when a file lands in two buckets and the assertion fails.
+      filesUnread: this.unread,
       filesVerified: this.verifies,
       filesStale: this.stales,
       verifyBytesRead: this.verifyBytes,
@@ -479,7 +487,8 @@ export class IndexStore {
     }
   }
 
-  private readFull(file: string, projectId: string, stKnown?: fs.Stats) {
+  /** True when transcript bytes were read. False means nothing was learned from the file. */
+  private readFull(file: string, projectId: string, stKnown?: fs.Stats): boolean {
     let text: string;
     let buf: Buffer;
     let st: fs.Stats;
@@ -509,7 +518,7 @@ export class IndexStore {
       this.bytes += Buffer.byteLength(text, 'utf8');
       this.readPaths.add(file);
     } catch {
-      return; // NOT counted: a read that threw is not a read, and counting it would make
+      return false; // NOT counted: a read that threw is not a read, and counting it would make
       // `filesRead === filesScanned` true on a corpus half of which could not be opened.
     }
     this.files.set(file, {
@@ -523,10 +532,13 @@ export class IndexStore {
       boundaryHash: boundaryHashOf(buf),
       needsVerify: false, // just read in full: this entry IS the disk
     });
+    return true;
   }
 
-  private readAppended(file: string, projectId: string, prev: FileEntry, st: fs.Stats) {
+  /** True when appended transcript bytes were read. False for a zero-length append. */
+  private readAppended(file: string, projectId: string, prev: FileEntry, st: fs.Stats): boolean {
     const len = st.size - prev.size;
+    let didRead = false;
     let chunk = '';
     // The new boundary window ends at the NEW size, and when the appended chunk is shorter
     // than BOUNDARY_BYTES it reaches back into bytes this call never read. Read the window
@@ -541,6 +553,7 @@ export class IndexStore {
         const buf = Buffer.alloc(len);
         const got = fs.readSync(fd, buf, 0, len, prev.size);
         chunk = buf.subarray(0, got).toString('utf8');
+        didRead = true;
         this.reads++;
         this.bytes += Buffer.byteLength(chunk, 'utf8'); // decoded, as in readFull
         this.readPaths.add(file);
@@ -584,6 +597,7 @@ export class IndexStore {
       boundaryHash: boundary,
       needsVerify: false, // either verified above or re-read; either way, checked against disk
     });
+    return didRead;
   }
 
   /**

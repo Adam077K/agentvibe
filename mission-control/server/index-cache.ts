@@ -60,6 +60,27 @@ export const FORMAT_VERSION = 2;
 export const MAX_FULL_BUILD_AGE_MS = 24 * 60 * 60 * 1000;
 
 /**
+ * The shortest gap between two writes of the index.
+ *
+ * WHY A FLOOR EXISTS AT ALL, and this is the defect that made it necessary. The index was saved
+ * on EVERY refresh, and routes/stream.ts ticks sessions at 1 s — so a running Mission Control
+ * wrote the whole 4.38 MB index once a second: measured 12-15 ms per save, roughly DOUBLING a
+ * 12 ms tick, and **378 GB/day** to disk. The design costed the write once, at startup;
+ * frequency appears nowhere in it. Optimising a 3 GB read at launch while adding a 4.38 MB
+ * write every second is not a trade anyone made deliberately.
+ *
+ * THE COST OF A FLOOR IS BOUNDED AND SMALL, which is why five minutes rather than five seconds.
+ * Whatever is not yet saved is simply re-read on the next start, and the append rate is
+ * measured: 1.64 MB across 24.9 minutes on this corpus with ~17 agents active, so a five-minute
+ * window is ~0.33 MB of extra reading on a start that already costs ~95 ms. Against that, the
+ * write rate falls from 378 GB/day to at most 1.26 GB/day — and to ZERO while nothing changes,
+ * because the dirty check comes first and no floor can substitute for it.
+ *
+ * Not a constant in state.ts: it belongs with the file whose size makes it necessary.
+ */
+export const SAVE_MIN_INTERVAL_MS = 5 * 60 * 1000;
+
+/**
  * `~/.agentvibe/mission-control/index.json`, overridable in full by MC_INDEX_CACHE.
  *
  * Beside `~/.agentvibe/usage-cache.json`, which is the precedent this repo already set. NOT in
@@ -215,22 +236,58 @@ export function load(opts: CacheOptions): LoadResult {
     return { ok: false, reason: 'malformed', detail: 'payload line is not an entry array' };
   }
 
+  // EVERY FIELD CHECKED, AND THE WHOLE LOOP WRAPPED. The shape check used to stop at "is an
+  // 8-tuple whose first element is a string" and then called `.map` on element 7 — so a cache
+  // whose `turns` was a string, a number or null THREW. That throw escaped `load`, escaped
+  // `LiveState.refresh()`, and turned every route into a 500: a cache that could take the whole
+  // server down, in a function whose stated contract is that any failure falls back to a full
+  // cold build. Found in review; the existing malformed test only covered whole-file garbage.
+  //
+  // The per-field checks are the specific fix. The try/catch is the general one, and it is here
+  // deliberately rather than instead: the checks can only reject the malformations someone
+  // thought of, and this file parses input it did not write.
   const entries: FileEntry[] = [];
-  for (const e of stored) {
-    if (!Array.isArray(e) || e.length !== 8 || typeof e[0] !== 'string') {
-      return { ok: false, reason: 'malformed', detail: 'entry is not an 8-tuple' };
+  try {
+    for (const e of stored) {
+      if (!Array.isArray(e) || e.length !== 8) {
+        return { ok: false, reason: 'malformed', detail: 'entry is not an 8-tuple' };
+      }
+      const [file, size, mtimeMs, boundaryHash, projectId, sessionId, latestModel, turns] = e;
+      if (
+        typeof file !== 'string' ||
+        typeof size !== 'number' ||
+        !Number.isFinite(size) ||
+        typeof mtimeMs !== 'number' ||
+        !Number.isFinite(mtimeMs) ||
+        typeof boundaryHash !== 'string' ||
+        typeof projectId !== 'string' ||
+        typeof sessionId !== 'string' ||
+        (latestModel !== null && typeof latestModel !== 'string') ||
+        !Array.isArray(turns)
+      ) {
+        return { ok: false, reason: 'malformed', detail: `entry field types (${String(file)})` };
+      }
+      const parsedTurns = [];
+      for (const t of turns) {
+        if (!Array.isArray(t) || t.length !== 3 || t.some((n) => typeof n !== 'number' || !Number.isFinite(n))) {
+          return { ok: false, reason: 'malformed', detail: `turn tuple (${file})` };
+        }
+        parsedTurns.push({ t: t[0] as number, out: t[1] as number, side: t[2] as number });
+      }
+      entries.push({
+        file,
+        size,
+        mtimeMs,
+        boundaryHash,
+        projectId,
+        sessionId,
+        latestModel,
+        turns: parsedTurns,
+        needsVerify: true, // hydrate() sets this too; stated here so the shape is honest at birth
+      });
     }
-    entries.push({
-      file: e[0],
-      size: e[1],
-      mtimeMs: e[2],
-      boundaryHash: e[3],
-      projectId: e[4],
-      sessionId: e[5],
-      latestModel: e[6],
-      turns: e[7].map(([t, out, side]) => ({ t, out, side })),
-      needsVerify: true, // hydrate() sets this too; stated here so the shape is honest at birth
-    });
+  } catch (err) {
+    return { ok: false, reason: 'malformed', detail: `threw while decoding: ${String(err)}` };
   }
   return { ok: true, entries, fullBuildAt: meta.fullBuildAt };
 }

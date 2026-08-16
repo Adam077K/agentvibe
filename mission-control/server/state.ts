@@ -92,6 +92,8 @@ export interface StateOptions extends DiscoverOptions {
   indexCache?: boolean;
   indexCachePath?: string;
   maxFullBuildAgeMs?: number;
+  /** Overrides SAVE_MIN_INTERVAL_MS. 0 disables throttling; the dirty check still applies. */
+  saveMinIntervalMs?: number;
 }
 
 export class LiveState {
@@ -107,6 +109,10 @@ export class LiveState {
   private fullBuildAt = 0;
   private lastCacheDecline: indexCache.LoadFailure | null = null;
   private lastSave: indexCache.SaveResult | null = null;
+  private lastSaveAt = 0;
+  private lastSkip: 'unchanged' | 'throttled' | null = null;
+  /** How many times the index has actually been WRITTEN. Monotonic; never reset. */
+  private writes = 0;
 
   /**
    * `discoverOpts` is forwarded verbatim to discoverProjects() — the same roots/claude-root
@@ -152,6 +158,22 @@ export class LiveState {
   }
 
   /**
+   * How many times the index has actually been written to disk. Monotonic.
+   *
+   * A COUNT RATHER THAN A FLAG, because the property worth asserting is "this tick performed no
+   * write", and only a number that fails to move can express that. `cacheSave` cannot: it holds
+   * the LAST write's result and stays truthy across every tick that skipped one.
+   */
+  get cacheWrites(): number {
+    return this.writes;
+  }
+
+  /** Why the last refresh did not write, or null if it did. */
+  get cacheSkip(): 'unchanged' | 'throttled' | null {
+    return this.lastSkip;
+  }
+
+  /**
    * Discovers the current fleet and keeps the session index in sync with it.
    *
    * THE FIRST CALL IS THE EXPENSIVE ONE, AND THIS IS WHERE THAT STOPS BEING TRUE. Restoring a
@@ -190,11 +212,21 @@ export class LiveState {
       this.fullBuildAt = Date.now();
       return;
     }
-    const loaded = indexCache.load({
-      file: this.opts.indexCachePath,
-      corpusRoot: this.corpusRoot(),
-      maxFullBuildAgeMs: this.opts.maxFullBuildAgeMs,
-    });
+    // THE SECOND BARRIER, AND IT IS NOT REDUNDANT WITH load()'s OWN CHECKS. `load` validates
+    // every field it knows about and wraps its decode — but it parses a file it did not write,
+    // and the checks can only reject malformations someone thought of. A throw from here used
+    // to escape refresh() and turn EVERY ROUTE into a 500: a cache able to take the server down
+    // is worse than no cache. Whatever gets past load(), the answer is still a full cold build.
+    let loaded: indexCache.LoadResult;
+    try {
+      loaded = indexCache.load({
+        file: this.opts.indexCachePath,
+        corpusRoot: this.corpusRoot(),
+        maxFullBuildAgeMs: this.opts.maxFullBuildAgeMs,
+      });
+    } catch {
+      loaded = { ok: false, reason: 'malformed', detail: 'load() threw' };
+    }
     if (loaded.ok) {
       this.store.hydrate(loaded.entries);
       this.fullBuildAt = loaded.fullBuildAt;
@@ -210,12 +242,46 @@ export class LiveState {
     this.persist();
   }
 
+  /**
+   * Writes the index — WHEN THERE IS SOMETHING TO WRITE, AND NOT MORE THAN ONCE PER INTERVAL.
+   *
+   * This used to run on every refresh. routes/stream.ts ticks sessions at 1 s, so a running
+   * Mission Control rewrote the whole 4.38 MB index once a second — 12-15 ms per save, roughly
+   * doubling a 12 ms tick, 378 GB/day. Found in review. The design costed the write once, at
+   * startup; frequency appeared nowhere in it.
+   *
+   * TWO CONDITIONS, AND THE ORDER MATTERS. The dirty check is the one that makes an idle
+   * Mission Control write NOTHING AT ALL, which no interval can achieve on its own — a floor
+   * alone would still rewrite an unchanged 4.38 MB every five minutes forever. The interval
+   * then bounds the busy case, where something changes on every tick and the dirty check is
+   * always true.
+   *
+   * `filesChanged` and `filesRemoved` are the whole of "dirty" because they are the whole of
+   * what a save would record: a refresh that reads nothing and removes nothing leaves every
+   * entry exactly as the file on disk already describes it.
+   */
   private persist(): void {
     if (!this.cacheEnabled) return;
+    const r = this.store.lastResult;
+    if (r && r.filesChanged === 0 && r.filesRemoved === 0) {
+      this.lastSkip = 'unchanged';
+      return;
+    }
+    const now = Date.now();
+    const interval = this.opts.saveMinIntervalMs ?? indexCache.SAVE_MIN_INTERVAL_MS;
+    if (this.lastSaveAt !== 0 && now - this.lastSaveAt < interval) {
+      this.lastSkip = 'throttled';
+      return;
+    }
+    this.lastSkip = null;
     this.lastSave = indexCache.save(this.store.entries(), this.fullBuildAt, {
       file: this.opts.indexCachePath,
       corpusRoot: this.corpusRoot(),
     });
+    if (this.lastSave.ok) {
+      this.lastSaveAt = now;
+      this.writes++;
+    }
   }
 
   /**

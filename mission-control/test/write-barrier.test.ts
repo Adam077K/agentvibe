@@ -88,6 +88,59 @@ export function snapshotTree(roots: string[], skipGit = false): Map<string, stri
   return out;
 }
 
+/**
+ * path -> mtimeMs, over the same walk. SEPARATE FROM CONTENT ON PURPOSE.
+ *
+ * The header explains why the content comparison does not assert on mtime: five real
+ * transcripts had their mtimes rewritten to the same millisecond with byte-identical content,
+ * so "mtime moved => content changed" is false on this machine. That justified REPORTING mtime
+ * rather than asserting it — and then nothing reported it, which left the sentence as a claim
+ * with no implementation behind it. This is the implementation.
+ *
+ * It is not merely a print. MTIME IS THE INDEX'S INVALIDATION KEY, so a call that moves a
+ * transcript's mtime without changing its bytes attacks freshness directly and is invisible to
+ * a content diff. Drift inside the TRANSCRIPT CORPUS is therefore asserted — nothing legitimate
+ * touches those files while a request is served — while drift elsewhere in the fixture is
+ * printed, because git plumbing legitimately touches its own metadata.
+ */
+export function mtimeMap(roots: string[], skipGit = false): Map<string, number> {
+  const out = new Map<string, number>();
+  const walk = (dir: string, depth: number) => {
+    if (depth > 12) return;
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (SKIP_DIRS.has(entry.name)) continue;
+      if (skipGit && entry.name === '.git') continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full, depth + 1);
+      else if (entry.isFile()) {
+        try {
+          out.set(full, fs.statSync(full).mtimeMs);
+        } catch {
+          /* vanished between listing and stat */
+        }
+      }
+    }
+  };
+  for (const root of roots) walk(root, 0);
+  return out;
+}
+
+/** Paths present in both readings whose mtime moved. */
+export function mtimeDrift(before: Map<string, number>, after: Map<string, number>): string[] {
+  const moved: string[] = [];
+  for (const [p, t] of after) {
+    const prev = before.get(p);
+    if (prev !== undefined && prev !== t) moved.push(p);
+  }
+  return moved.sort();
+}
+
 export interface TreeDiff {
   added: string[];
   removed: string[];
@@ -156,6 +209,8 @@ describe('BEHAVIOURAL BARRIER: exercising every route mutates nothing on disk', 
 
     const before = snapshotTree(roots);
     const beforeRepo = snapshotTree([REPO_ROOT], true);
+    const beforeCorpusMtimes = mtimeMap([claudeRoot]);
+    const beforeFixtureMtimes = mtimeMap(roots);
 
     // NON-VACUITY, FIRST CLASS. An empty walk would make every assertion below pass by having
     // compared nothing — the exact shape §0 of the handoff calls "an assertion inside a branch
@@ -186,6 +241,21 @@ describe('BEHAVIOURAL BARRIER: exercising every route mutates nothing on disk', 
 
     const after = snapshotTree(roots);
     const afterRepo = snapshotTree([REPO_ROOT], true);
+
+    // MTIME, THE INVALIDATION KEY — asserted where it matters and printed where it does not.
+    // A `utimesSync` on a transcript changes no bytes, so the content diff below cannot see it,
+    // and it would make the index consider a changed file unchanged (or the reverse). Nothing
+    // legitimate touches the corpus while a request is served, so drift there is a failure.
+    expect(beforeCorpusMtimes.size).toBeGreaterThan(0); // non-vacuity: transcripts were watched
+    expect(mtimeDrift(beforeCorpusMtimes, mtimeMap([claudeRoot]))).toEqual([]);
+
+    // Elsewhere in the fixture, git plumbing may legitimately touch its own metadata, so this
+    // is the report the header promises rather than an assertion.
+    const fixtureDrift = mtimeDrift(beforeFixtureMtimes, mtimeMap(roots));
+    if (fixtureDrift.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log(`  [barrier] mtime moved on ${fixtureDrift.length} fixture path(s), content unchanged: ${fixtureDrift.slice(0, 5).join(', ')}`);
+    }
 
     const fixtureDiff = diffTrees(before, after);
     const repoDiff = diffTrees(beforeRepo, afterRepo);

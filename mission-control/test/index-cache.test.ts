@@ -28,6 +28,7 @@
 
 import { describe, test, expect, afterAll } from 'bun:test';
 import fs from 'node:fs';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { discoverProjects, type Project } from '../server/projects.ts';
 import { IndexStore, BOUNDARY_BYTES, type FileEntry, type SessionSummary } from '../server/index-store.ts';
@@ -528,6 +529,73 @@ describe('the loader refuses anything it cannot justify, and names the reason', 
     expect(cache.load({ file: f.cacheFile, corpusRoot: f.claudeRoot }).ok).toBe(true);
   });
 
+  // C3, FOUND IN REVIEW. The shape check stopped at "8-tuple whose first element is a string"
+  // and then called `.map` on element 7, so a cache whose `turns` was a string, a number or
+  // null THREW — out of load(), out of LiveState.refresh(), and into every route as a 500.
+  // The pre-existing malformed test only covered whole-file garbage, which never reached the
+  // decode loop. A cache that can take the whole server down is worse than no cache.
+  test('a structurally valid cache with a corrupt entry is refused, never thrown', () => {
+    f.reset();
+    const corruptions: [string, (e: unknown[]) => void][] = [
+      ['turns is a string', (e) => { e[7] = 'not an array'; }],
+      ['turns is null', (e) => { e[7] = null; }],
+      ['turns is a number', (e) => { e[7] = 42; }],
+      ['a turn is not a triple', (e) => { e[7] = [[1, 2]]; }],
+      ['a turn holds a string', (e) => { e[7] = [['a', 2, 0]]; }],
+      ['size is a string', (e) => { e[1] = '100'; }],
+      ['latestModel is an object', (e) => { e[6] = { model: 'x' }; }],
+      ['boundaryHash is missing', (e) => { e[3] = undefined; }],
+    ];
+
+    for (const [name, corrupt] of corruptions) {
+      saveCurrent(f);
+      const raw = fs.readFileSync(f.cacheFile, 'utf8');
+      const nl = raw.indexOf('\n');
+      const meta = JSON.parse(raw.slice(0, nl)) as Record<string, unknown>;
+      const payload = JSON.parse(raw.slice(nl + 1)) as unknown[][];
+      corrupt(payload[0]!);
+      const line = JSON.stringify(payload);
+      // Re-stamp the payload hash, so this tests the DECODER and not the hash check that would
+      // otherwise reject the file first — the two guards must each work alone.
+      meta.payloadHash = createHash('sha256').update(line).digest('hex').slice(0, 32);
+      fs.writeFileSync(f.cacheFile, `${JSON.stringify(meta)}\n${line}`);
+
+      let result: cache.LoadResult | undefined;
+      expect(() => {
+        result = cache.load({ file: f.cacheFile, corpusRoot: f.claudeRoot });
+      }).not.toThrow();
+      expect(`${name}: ${result!.ok}`).toBe(`${name}: false`);
+      expect(result!.ok === false && result!.reason).toBe('malformed');
+    }
+  });
+
+  test('and the server still serves: a corrupt cache degrades to a full cold build', () => {
+    f.reset();
+    saveCurrent(f);
+    const raw = fs.readFileSync(f.cacheFile, 'utf8');
+    const nl = raw.indexOf('\n');
+    const meta = JSON.parse(raw.slice(0, nl)) as Record<string, unknown>;
+    const payload = JSON.parse(raw.slice(nl + 1)) as unknown[][];
+    payload[0]![7] = 'not an array';
+    const line = JSON.stringify(payload);
+    meta.payloadHash = createHash('sha256').update(line).digest('hex').slice(0, 32);
+    fs.writeFileSync(f.cacheFile, `${JSON.stringify(meta)}\n${line}`);
+
+    // THROUGH THE ROUTE, because "load returns false" is not the property that matters — the
+    // property is that a user gets their sessions instead of a 500.
+    const state = new LiveState({
+      roots: [f.projectsRoot],
+      claudeProjectsRoot: f.claudeRoot,
+      indexCachePath: f.cacheFile,
+    });
+    expect(() => state.refresh()).not.toThrow();
+    expect(state.cacheDecline).toBe('malformed');
+    const r = state.index.lastResult!;
+    expect(r.filesRead).toBe(SESSIONS); // it read the corpus rather than trusting the cache
+    expect(r.filesSkipped).toBe(0);
+    expect(state.index.allSessions()).toEqual(groundTruth(f)); // …and the answer is correct
+  });
+
   test('a malformed file is refused, not thrown', () => {
     f.reset();
     fs.writeFileSync(f.cacheFile, 'this is not a cache');
@@ -692,6 +760,93 @@ describe('the persisted index is not a channel past the trust boundary', () => {
     // Correct only as long as the two tests above hold: nothing the index serves depends on
     // trust, so keying on it would discard a valid cache for a change that alters no output.
     // The day those go red, this expectation is the first one to change.
+  });
+});
+
+// ── What the index costs while the server is RUNNING, not just at startup ────────────────
+//
+// The design costed the write once, at launch. Frequency appeared nowhere in it — and
+// routes/stream.ts ticks sessions at 1 s, so the first version of this feature rewrote the
+// whole 4.38 MB index every second: 12-15 ms per save against a 12 ms refresh, ~378 GB/day.
+// Optimising a 3 GB read at launch by adding a 4.38 MB write per second is not a trade anyone
+// made deliberately. Found in review.
+//
+// THE ASSERTION IS THAT NO WRITE HAPPENS, not that a flag says so. `cacheSave` holds the LAST
+// write's result and stays truthy across every tick that skipped one, so a count is the only
+// thing that can express "this tick wrote nothing".
+describe('the index is not rewritten on every tick', () => {
+  const f = frozenFixture('ticks');
+  const cacheFile = path.join(f.projectsRoot, 'tick-cache.json');
+
+  const live = (saveMinIntervalMs: number) =>
+    new LiveState({
+      roots: [f.projectsRoot],
+      claudeProjectsRoot: f.claudeRoot,
+      indexCachePath: cacheFile,
+      saveMinIntervalMs,
+    });
+
+  test('an unchanged tick performs NO write, however many ticks there are', () => {
+    f.reset();
+    fs.rmSync(cacheFile, { force: true });
+    const state = live(0); // throttling OFF, so only the dirty check can prevent a write
+
+    state.refresh();
+    expect(state.cacheWrites).toBe(1); // the first build persists…
+    expect(state.cacheSave?.ok).toBe(true);
+    const bytesOnDisk = fs.statSync(cacheFile).size;
+    expect(bytesOnDisk).toBeGreaterThan(0); // non-vacuity: a real index was written
+
+    for (let i = 0; i < 20; i++) state.refresh();
+
+    // …and twenty ticks over an unchanged corpus write nothing at all.
+    expect(state.cacheWrites).toBe(1);
+    expect(state.cacheSkip).toBe('unchanged');
+    expect(fs.statSync(cacheFile).size).toBe(bytesOnDisk);
+  });
+
+  test('a changed tick DOES write, so the skip is a decision and not a broken save', () => {
+    f.reset();
+    fs.rmSync(cacheFile, { force: true });
+    const state = live(0);
+    state.refresh();
+    expect(state.cacheWrites).toBe(1);
+
+    state.refresh();
+    expect(state.cacheWrites).toBe(1); // unchanged: still nothing
+
+    fs.appendFileSync(path.join(f.transcriptDir, 'sess-0.jsonl'), turnLine(BASE + 9e6, 777) + '\n');
+    state.refresh();
+    expect(state.cacheWrites).toBe(2); // changed: written
+    expect(state.cacheSkip).toBeNull();
+  });
+
+  test('a busy corpus is bounded by the write floor, which is what caps 378 GB/day', () => {
+    f.reset();
+    fs.rmSync(cacheFile, { force: true });
+    const state = live(60_000); // a floor no test run can cross
+    state.refresh();
+    expect(state.cacheWrites).toBe(1);
+
+    // Something changes on EVERY tick — the case the dirty check cannot help with, and the one
+    // that produced the 378 GB/day figure.
+    for (let i = 0; i < 10; i++) {
+      fs.appendFileSync(path.join(f.transcriptDir, 'sess-1.jsonl'), turnLine(BASE + 2e6 + i * 1000, 5) + '\n');
+      state.refresh();
+      expect(state.index.lastResult!.filesChanged).toBeGreaterThan(0); // non-vacuity: really dirty
+    }
+
+    expect(state.cacheWrites).toBe(1); // ten dirty ticks, one write
+    expect(state.cacheSkip).toBe('throttled');
+  });
+
+  test('the floor never suppresses the FIRST write, so a fresh install gets a cache at once', () => {
+    f.reset();
+    fs.rmSync(cacheFile, { force: true });
+    const state = live(60 * 60_000); // an hour
+    state.refresh();
+    expect(state.cacheWrites).toBe(1);
+    expect(fs.existsSync(cacheFile)).toBe(true);
   });
 });
 
