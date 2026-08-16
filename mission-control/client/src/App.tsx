@@ -33,6 +33,7 @@ import { BeliefView } from './views/BeliefView.tsx';
 import { ConflictsView } from './views/ConflictsView.tsx';
 import { InboxView } from './views/InboxView.tsx';
 import { ProjectView } from './views/ProjectView.tsx';
+import { DispatchView } from './views/DispatchView.tsx';
 
 /**
  * What a fetched (non-stream) view knows about its own data's age.
@@ -165,6 +166,11 @@ export const VIEWS = [
   { id: 'belief', label: 'Belief', stream: false, nav: true, render: ({ now, onFreshness }) => <BeliefPanel now={now} onFreshness={onFreshness} /> },
   { id: 'conflicts', label: 'Conflicts', stream: false, nav: true, render: ({ onFreshness }) => <ConflictsPanel onFreshness={onFreshness} /> },
   { id: 'inbox', label: 'Inbox', stream: false, nav: true, render: ({ onFreshness }) => <InboxPanel onFreshness={onFreshness} /> },
+  // PHASE 8B — the only Mission Control view that writes. `stream: false` because the queue
+  // is fetched on demand, not pushed via SSE: the queue changes only on explicit submission or
+  // when the consumer acts, not on every transcript tick, so a streaming subscription would
+  // push unchanged data on every fleet or session update.
+  { id: 'dispatch', label: 'Dispatch', stream: false, nav: true, render: ({ now, onFreshness }) => <DispatchView now={now} onFreshness={onFreshness} /> },
   {
     id: 'project',
     label: 'Project',

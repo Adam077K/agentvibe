@@ -346,3 +346,102 @@ export function save(entries: Iterable<FileEntry>, fullBuildAt: number, opts: Ca
     return { ok: false, reason: String((err as NodeJS.ErrnoException).code ?? err) };
   }
 }
+
+// ── Dispatch queue ────────────────────────────────────────────────────────────────────────
+//
+// The only other path the server is allowed to write, in the only file the cross-check
+// test permits to contain write APIs. The queue and the index cache share a directory
+// (~/.agentvibe/) for the same reason: NOT in the repo (churns git status and the
+// conflicts collector), NOT under ~/.claude/projects (the transcript corpus).
+//
+// APPEND-ONLY BY DESIGN. Each line is one complete JSON entry terminated by a newline,
+// so a crash mid-write leaves a corrupt line that readDispatch() skips rather than
+// partially parses. Lines are never removed here — the consumer owns the queue file's
+// lifecycle. Concurrent writers on the same POSIX filesystem get line-level atomicity
+// from O_APPEND writes, which is the strongest guarantee available without a lock file.
+
+/**
+ * `~/.agentvibe/dispatch-queue.jsonl`, overridable by MC_DISPATCH_QUEUE.
+ *
+ * The env override is the same escape hatch as MC_INDEX_CACHE: a test that writes to the
+ * machine's real queue passes or fails for reasons it did not choose.
+ */
+export function dispatchQueuePath(): string {
+  return process.env.MC_DISPATCH_QUEUE ?? path.join(os.homedir(), '.agentvibe', 'dispatch-queue.jsonl');
+}
+
+/**
+ * One entry in the dispatch queue.
+ *
+ * `status` is always `'pending'` when written by the server; the consume-dispatch script
+ * rewrites a line with `'consumed'` once it has acted. Both values are preserved on read so
+ * a UI can distinguish "waiting" from "handled" without the server making that call.
+ */
+export interface DispatchEntry {
+  /** Stable identifier for this request — a UUID, assigned by the server at enqueue time. */
+  id: string;
+  /** Project ID — matches discoverProjects() output, validated against the live fleet. */
+  project: string;
+  /** Absolute path to the project root — copied from the discovered project at enqueue time. */
+  root: string;
+  /** The goal the agent is asked to pursue. 1–2000 characters, trimmed. */
+  goal: string;
+  /** Unix timestamp in ms when this entry was appended. */
+  enqueuedAt: number;
+  /** `pending` until the consumer acts; `consumed` afterwards. */
+  status: 'pending' | 'consumed';
+}
+
+/**
+ * Appends one entry to the queue file, creating the directory if needed.
+ *
+ * FAILURE IS NOT SWALLOWED. The caller (routes/api.ts) converts this throw into a 500
+ * response so the client knows the entry was not queued — a silent failure in a write queue
+ * is worse than an explicit error.
+ */
+export function appendDispatch(entry: DispatchEntry, file?: string): void {
+  const p = file ?? dispatchQueuePath();
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.appendFileSync(p, JSON.stringify(entry) + '\n', 'utf8');
+}
+
+/**
+ * Reads the entire queue file and returns all structurally valid entries.
+ *
+ * Invalid or corrupt lines (partial writes, schema mismatches) are skipped with no error:
+ * a queue reader must be resilient to partial writes and forward-compatible with new fields.
+ * ENOENT (no queue yet) is not an error — it is returned as an empty array.
+ */
+export function readDispatch(file?: string): DispatchEntry[] {
+  const p = file ?? dispatchQueuePath();
+  let text: string;
+  try {
+    text = fs.readFileSync(p, 'utf8');
+  } catch (e: unknown) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    throw e;
+  }
+  const entries: DispatchEntry[] = [];
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      continue; // corrupt line — skip
+    }
+    if (
+      parsed !== null &&
+      typeof parsed === 'object' &&
+      typeof (parsed as Record<string, unknown>).id === 'string' &&
+      typeof (parsed as Record<string, unknown>).project === 'string' &&
+      typeof (parsed as Record<string, unknown>).root === 'string' &&
+      typeof (parsed as Record<string, unknown>).goal === 'string' &&
+      typeof (parsed as Record<string, unknown>).enqueuedAt === 'number'
+    ) {
+      entries.push(parsed as DispatchEntry);
+    }
+  }
+  return entries;
+}
