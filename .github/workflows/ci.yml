@@ -108,6 +108,16 @@ jobs:
       - name: Dispatch agentType
         run: npm run check:dispatch
 
+      # PS-DISPATCH-BRIEF-SIZE: warns on inline literals ≥30,000 chars or fenced blocks >200 lines
+      # in .claude/workflows/*.js dispatch sites. WARN posture — exits 0 on violations, 1 only on
+      # the non-vacuity floor (scanner broken). Memory budget: DECISIONS.md ≤50 entries + ≤40,000 bytes;
+      # LONG-TERM.md ≤100 lines. Both fail the build (exits 1) on a real violation.
+      - name: Dispatch prompt size
+        run: npm run check:dispatch-prompt
+
+      - name: Memory budget
+        run: npm run check:memory
+
       # CODEBASE-MAP.md is generated, not written. A hand-maintained map is accurate exactly
       # until the first person forgets, and then it is trusted and wrong — which is worse
       # than no map. This fails when it drifts from disk.
