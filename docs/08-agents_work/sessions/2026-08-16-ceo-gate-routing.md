@@ -168,7 +168,45 @@ mixed PR — including files `classifier.js` tiers `trivial`. It now requires it
 
 `npm run check` exits 0 — **15 test files**, zero failures.
 
-## Why the verdict still says PENDING
+## Third run: BLOCK — and it caught a false premise in this very file
 
-Nothing here is self-certified. The gate runs once more, on the complete change, and its verdict is what
-goes in this field.
+**The finding is real and it is mine.** Granting `designer` a browser activated the first live MCP capability
+in this repo, and **MCP tool calls do not reach the safety hook at all.** `.claude/settings.json` registers
+`PreToolUse` with `"matcher": "Bash|Edit|Write|NotebookEdit"`; `mcp__playwright__browser_navigate` matches
+none of them. Verified by running the matcher as a regex against real tool names:
+
+```
+Bash                                 matches=True
+mcp__playwright__browser_navigate    matches=False
+```
+
+So for the browser, none of the hook's protections apply — not the curl-to-external-URL block, not the
+`.env` read block, not the write-outside-project-root block. **And this file, and `DECISIONS.md`, justified
+removing `--dangerously-skip-permissions` partly on the sentence "the PreToolUse hook still fired, so the
+system was not unprotected."** That sentence is true for Bash and file writes and was written as though it
+were general. It is false for the exact capability the same change activated. Corrected in both places.
+
+The reviewer that found it also stated its own limit — that Claude Code's interactive permission prompt may
+still gate first use of an unlisted MCP tool, but that it could not verify this from the diff and would not
+lean on it to downgrade the finding. That is the standard this gate is supposed to hold, met.
+
+**The grant is therefore left in place but is NOT defensible on the old justification.** It needs either a
+control that sees MCP calls, or an explicit founder decision to accept an uncontrolled browser. That is a
+decision, not a cleanup, and it is not mine to make silently.
+
+## The mitigation did not work, and saying so is the point
+
+`REVIEW_ATTEMPTS` 2 → 4 was supposed to cut coverage-gap odds from ~23% to ~5%. **It did not.** `correctness`
+failed for the third consecutive run, empty results rose from 20 to 22, and this time **the judge itself
+dropped out** — so the recorded verdict is `auto-BLOCK to protect the binding gate`, a fail-safe rather than a
+judgement. The gate never actually judged this change.
+
+Three runs, ~6.3M tokens, and the binding gate has still never returned a verdict it reached by reasoning.
+Retrying is not the fix; the ~48% dropout is a runtime defect and this repo cannot patch around it. **The next
+person should not spend another 2M tokens re-running this hoping for a different roll.**
+
+## Why the verdict says PENDING
+
+Three runs, three BLOCKs, and the third was a dropout rather than a decision. Nothing here is self-certified,
+and nothing here has been blessed either. The verdict field stays open, honestly, rather than being filled by
+the author of the change it would bless.

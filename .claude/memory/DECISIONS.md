@@ -584,6 +584,13 @@ narrowing is visible. A security control that silently hides data is a new insta
 launched every session with `--dangerously-skip-permissions`, making all 26 inert. The `PreToolUse` hook
 still fired, so the system was protected by one mechanism where it was documented as two.
 **Decision:** Flag removed; six entries added to the allow list. Founder decision, 2026-08-16.
+**CORRECTION, same day, found by the binding gate:** the sentence above — *"the `PreToolUse` hook still fired,
+so the system was protected by one mechanism"* — **is false for MCP tool calls.** The hook is registered with
+`"matcher": "Bash|Edit|Write|NotebookEdit"`, and an MCP tool name (`mcp__playwright__browser_navigate`) matches
+none of those. Verified by running the matcher as a regex against real tool names. So for the browser
+capability granted in the entry below, there is **no** content-level control: not the curl-to-external-URL
+block, not the `.env` read block, not the write-outside-project-root block. The claim was true for Bash and
+file writes and was stated as though it were general.
 **Measurement that set the six:** 11,342 Bash calls across 400 recent transcripts. 8,603 already matched the
 allow list. The uncovered real commands were `bun` (160), `npm` (78), `bunx` (66), then `printf`, `timeout`,
 `sleep`. `rm` and `curl` appear too and stay denied — that is the point of a deny list. A first pass at this
