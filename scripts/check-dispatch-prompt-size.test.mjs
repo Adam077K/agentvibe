@@ -1,12 +1,11 @@
-// POSTURE: BLOCKS (via npm run check:dispatch-prompt which includes this test).
+// POSTURE: the non-vacuity check FAILS (exits 1); PS-DISPATCH-BRIEF-SIZE itself WARNS (exits 0).
 //
-// scripts/check-dispatch-prompt-size.test.mjs — mutation gate for the dispatch-prompt-size checker.
+// scripts/check-dispatch-prompt-size.test.mjs — mutation gate for the PS-DISPATCH-BRIEF-SIZE checker.
+// Rule spec: docs/03-system-design/agents/PROMPT-STANDARD.md §6.2.
 //
-// Every case below CONSTRUCTS the defect and asserts the checker refuses it. The case asserting
-// a pass runs against the real repo (no --root fixture) to pin the real floor.
-//
-// Fixtures are written to a temp directory with a minimal agent stub so the checker can find
-// the workflow directory. --threshold is lowered for the size tests so fixtures stay small.
+// Every case below CONSTRUCTS the defect and asserts the checker warns on it. The "exits 0" cases
+// verify the WARN posture: the script must NOT fail the build on oversized briefs, only warn.
+// The non-vacuity failure is the one case that exits 1 — it means the scanner is broken.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -48,93 +47,82 @@ function check(root, extra = []) {
   return { code: r.code, ...JSON.parse(r.out) };
 }
 
-// A threshold low enough to make small fixtures testable.
-const TEST_THRESHOLD = '100';
+// Use small overrides so fixtures don't need to carry 30k+ chars of source.
+const TEST_THRESHOLD = '100';      // override the 30,000-char default
+const TEST_FENCED = '5';           // override the 200-line fenced-block default
 
-// A prompt just under the threshold — should pass.
-const SMALL_PROMPT = "'x'.repeat(90)";
-
-// A clean dispatch with a small prompt — the base fixture.
 const CLEAN = (prompt = `'do the thing'`) =>
   `export const meta = { name: 'fx' }
 phase('Go')
 const r = await agent(${prompt}, { label: 'go', agentType: 'builder' })`;
 
-// ── the clean fixture must pass ──────────────────────────────────────────────
+// ── WARN posture: oversized inline brief WARNS but exits 0 ───────────────────
+// This is the core property: PS-DISPATCH-BRIEF-SIZE cannot block per PROMPT-STANDARD.md §6.2.
 
-test('clean fixture with a short inline string passes', () => {
-  const r = check(fixture({ workflows: { 'fx.js': CLEAN("'short prompt'") } }), ['--threshold', TEST_THRESHOLD]);
-  assert.equal(r.code, 0, `expected pass, got: ${JSON.stringify(r.failures)}`);
-  assert.equal(r.sites.length, 1);
-  assert.equal(r.sites[0].prompt_is_inline_literal, true);
+test('oversized inline string WARNS and exits 0 — posture is WARN not FAIL', () => {
+  const big = `'${'x'.repeat(110)}'`; // 112 chars, over test threshold of 100
+  const r = check(fixture({ workflows: { 'fx.js': CLEAN(big) } }), ['--threshold', TEST_THRESHOLD, '--fenced-lines', TEST_FENCED]);
+  // Exit 0 even with an oversized brief
+  assert.equal(r.code, 0, `PS-DISPATCH-BRIEF-SIZE must WARN (exit 0), not FAIL (exit 1): ${JSON.stringify(r.failures)}`);
+  // But a warning must be emitted
+  assert.ok(r.warnings.some((w) => w.includes('PS-DISPATCH-BRIEF-SIZE')),
+    `expected a PS-DISPATCH-BRIEF-SIZE warning, got: ${JSON.stringify(r.warnings)}`);
+  assert.equal(r.failures.length, 0, 'no hard failures expected for an oversized brief');
 });
 
-test('clean fixture with a function-call prompt passes (runtime size is out of reach)', () => {
+test('oversized template literal WARNS and exits 0', () => {
+  const big = `\`${'x'.repeat(110)}\``; // 112 chars, over threshold
+  const r = check(fixture({ workflows: { 'fx.js': CLEAN(big) } }), ['--threshold', TEST_THRESHOLD, '--fenced-lines', TEST_FENCED]);
+  assert.equal(r.code, 0);
+  assert.ok(r.warnings.some((w) => w.includes('PS-DISPATCH-BRIEF-SIZE') && w.includes('template literal')),
+    `expected template literal warning: ${JSON.stringify(r.warnings)}`);
+});
+
+test('inline brief exactly at the threshold passes silently', () => {
+  const content = 'x'.repeat(98); // + 2 quotes = 100 chars, not > 100
+  const atLimit = `'${content}'`;
+  assert.equal(atLimit.length, 100);
+  const r = check(fixture({ workflows: { 'fx.js': CLEAN(atLimit) } }), ['--threshold', TEST_THRESHOLD, '--fenced-lines', TEST_FENCED]);
+  assert.equal(r.code, 0);
+  assert.equal(r.warnings.length, 0, `exactly at threshold should produce no warning: ${JSON.stringify(r.warnings)}`);
+});
+
+// ── fenced block over limit WARNS and exits 0 ────────────────────────────────
+
+test('inline brief with oversized fenced block WARNS and exits 0', () => {
+  // Build a template literal containing a fenced block of 6 lines (> fenced limit of 5)
+  const fenced = '\`some prompt\n```js\n' + 'line\n'.repeat(6) + '```\`';
+  const r = check(fixture({ workflows: { 'fx.js': CLEAN(fenced) } }), ['--threshold', TEST_THRESHOLD, '--fenced-lines', TEST_FENCED]);
+  assert.equal(r.code, 0, `oversized fenced block must WARN not FAIL: ${JSON.stringify(r.failures)}`);
+  assert.ok(r.warnings.some((w) => w.includes('PS-DISPATCH-BRIEF-SIZE') && w.includes('fenced')),
+    `expected fenced-block warning: ${JSON.stringify(r.warnings)}`);
+});
+
+// ── function-call prompts are not checked for size ───────────────────────────
+
+test('function-call prompt passes without warning (runtime size is out of reach)', () => {
   const src = CLEAN('buildPrompt(s)');
-  const r = check(fixture({ workflows: { 'fx.js': src } }), ['--threshold', TEST_THRESHOLD]);
-  assert.equal(r.code, 0, `expected pass for function-call prompt, got: ${JSON.stringify(r.failures)}`);
-  assert.equal(r.sites.length, 1);
-  // Function calls are NOT marked as inline literals — their size is not checked.
+  const r = check(fixture({ workflows: { 'fx.js': src } }), ['--threshold', TEST_THRESHOLD, '--fenced-lines', TEST_FENCED]);
+  assert.equal(r.code, 0);
+  assert.equal(r.warnings.length, 0);
   assert.equal(r.sites[0].prompt_is_inline_literal, false);
 });
 
-// ── MUTATION: oversized inline string ────────────────────────────────────────
+// ── non-vacuity floor FAILS (exits 1) ────────────────────────────────────────
+// The hard failure: if the scanner finds no dispatch sites, it is broken.
 
-test('MUTATION: inline string over the threshold is flagged', () => {
-  // 110-char string, threshold is 100
-  const bigPrompt = `'${'x'.repeat(110)}'`;
-  const r = check(fixture({ workflows: { 'fx.js': CLEAN(bigPrompt) } }), ['--threshold', TEST_THRESHOLD]);
-  assert.equal(r.code, 1);
-  const hasFail = r.failures.some((f) => f.includes('oversized-inline-prompt'));
-  assert.ok(hasFail, `expected oversized-inline-prompt, got: ${JSON.stringify(r.failures)}`);
-  // The failure message must name the char count and the threshold.
-  assert.ok(r.failures.some((f) => f.includes('110') || f.includes('chars')),
-    'message should mention char count');
-});
-
-test('MUTATION: inline template literal over the threshold is flagged', () => {
-  const big = 'x'.repeat(110);
-  const src = CLEAN(`\`${big}\``);
-  const r = check(fixture({ workflows: { 'fx.js': src } }), ['--threshold', TEST_THRESHOLD]);
-  assert.equal(r.code, 1);
-  assert.ok(r.failures.some((f) => f.includes('oversized-inline-prompt')),
-    `expected oversized-inline-prompt, got: ${JSON.stringify(r.failures)}`);
-  assert.ok(r.failures.some((f) => f.includes('template literal')),
-    'message should name template literal');
-});
-
-test('inline string exactly at the threshold passes', () => {
-  // Source text of the argument is `'` + N chars + `'`. At threshold=100, we want total=100,
-  // so content is 98 chars. 100 chars in source is NOT > 100, so it passes.
-  const content = 'x'.repeat(98); // + 2 quotes = 100 chars of source text
-  const atLimit = `'${content}'`;
-  assert.equal(atLimit.length, 100, 'fixture must be exactly at the threshold');
-  const r = check(fixture({ workflows: { 'fx.js': CLEAN(atLimit) } }), ['--threshold', TEST_THRESHOLD]);
-  const hasFail = r.failures.some((f) => f.includes('oversized-inline-prompt'));
-  assert.ok(!hasFail, `exactly at threshold should pass: ${JSON.stringify(r.failures)}`);
-});
-
-// ── non-vacuity floor ────────────────────────────────────────────────────────
-
-test('no workflow files triggers non-vacuity failure', () => {
-  const r = check(fixture({ workflows: {} }), ['--threshold', TEST_THRESHOLD]);
+test('no workflow files triggers non-vacuity hard failure (exits 1)', () => {
+  const r = check(fixture({ workflows: {} }), ['--threshold', TEST_THRESHOLD, '--fenced-lines', TEST_FENCED]);
   assert.equal(r.code, 1);
   assert.ok(r.failures.some((f) => f.includes('non-vacuity')),
-    `expected non-vacuity, got: ${JSON.stringify(r.failures)}`);
+    `expected non-vacuity failure, got: ${JSON.stringify(r.failures)}`);
 });
 
-// ── the script does not flag its own source ──────────────────────────────────
-//
-// check-dispatch-agenttype.mjs was bitten by its first version flagging its own constants.
-// This check uses a different scan surface (.claude/workflows/*.js only), so the script's own
-// source is never scanned. But verify it explicitly to pin the invariant.
+// ── script does not flag its own source ──────────────────────────────────────
 
 test('the script itself is not in the scan surface (.claude/workflows/ only)', () => {
-  // If the script is scanned, any large constant string in it would trip the check.
-  // Run against the real repo to confirm it passes.
   const r = run(['--json']);
   const parsed = JSON.parse(r.out);
-  // All scanned files must be under .claude/workflows/
   for (const site of parsed.sites) {
     assert.ok(
       site.file.startsWith('.claude/workflows/'),
@@ -143,17 +131,22 @@ test('the script itself is not in the scan surface (.claude/workflows/ only)', (
   }
 });
 
-// ── real repo must pass ──────────────────────────────────────────────────────
+// ── real repo must pass and meet the non-vacuity floor ───────────────────────
 
-test('the actual repo workflow files pass the default threshold — pins the real floor', () => {
+test('real repo workflow files pass the 30,000-char threshold — pins the real floor', () => {
   const r = run(['--json']);
   const parsed = JSON.parse(r.out);
+  // Script must exit 0 (warnings are fine; hard failures are not)
   assert.equal(r.code, 0,
-    `real repo has oversized inline dispatch prompts: ${JSON.stringify(parsed.failures)}`
+    `real repo has a hard failure in dispatch-prompt check: ${JSON.stringify(parsed.failures)}`
   );
-  // Must have found at least 12 sites (the real min-sites floor).
+  // Must have found enough sites to satisfy the non-vacuity floor
   assert.ok(
     parsed.sites.length >= 12,
     `non-vacuity floor (12) not met: found ${parsed.sites.length} sites`
+  );
+  // No oversized inline literals in the current codebase
+  assert.equal(parsed.warnings.length, 0,
+    `unexpected PS-DISPATCH-BRIEF-SIZE warnings on real repo: ${JSON.stringify(parsed.warnings)}`
   );
 });

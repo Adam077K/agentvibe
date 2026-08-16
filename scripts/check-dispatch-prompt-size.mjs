@@ -1,51 +1,44 @@
 #!/usr/bin/env node
 /**
- * check-dispatch-prompt-size.mjs — dispatch-by-reference convention checker.
+ * check-dispatch-prompt-size.mjs — implements PS-DISPATCH-BRIEF-SIZE from
+ * docs/03-system-design/agents/PROMPT-STANDARD.md §6.2.
  *
- * POSTURE: BLOCKS. Run by `.github/workflows/ci.yml` on every PR via
- * `npm run check:dispatch-prompt`.
+ * POSTURE: WARN (exits 0 even when warnings fire). The spec states this explicitly:
+ *   "the payload is composed at runtime from free text, so a static check sees the template and
+ *    not the brief. p95 is 28,855 chars and legitimate large briefs exist. Blocking on a byte
+ *    count over free text is exactly the false positive §0 forbids."
  *
- * WHY THIS EXISTS.
- * TOKEN-EFFICIENCY.md §2.4 (VERIFIED, 2026-08-15, 2,412 measured dispatches):
- *   p99 prompt size = 212,282 chars. The mechanism is verbatim peer-output paste, not history
- *   replay. The fix is a convention: above ~8,000 chars, pass a file path rather than pasting
- *   the body inline. Below 8,000, inlining is fine and avoids the cost of an extra file read.
+ * So this script WARNS — it does not block the build — but it does EXIT 1 on the one hard failure:
+ * the non-vacuity floor (finding zero dispatch sites means the scanner is broken, not the files).
  *
- * WHAT THIS CHECKS.
- * The SOURCE TEXT of the first argument to every `agent()` call in `.claude/workflows/*.js`.
- * If the inline source text of a prompt literal exceeds PROMPT_CHAR_THRESHOLD, the dispatch
- * should instead write the content to a file and pass its path — this check fails it.
+ * WHY IT LIVES HERE AND NOT IN schema-lint.js.
+ * `schema-lint.js` lints `.claude/agents/*.md`. This rule scans `.claude/workflows/*.js`, which is
+ * a different surface. Implementing it in a separate script keeps the two surfaces separate and
+ * keeps schema-lint.js's scope narrow. The PS-* rule id is the same in both places; the script
+ * file is not.
  *
- * WHAT THIS CANNOT CHECK.
- * Runtime prompt size. A template literal that is 500 chars in source can expand to 500,000
- * chars at runtime if the interpolated variables are large (e.g., pasting in full agent outputs).
- * That failure mode is out of reach for a static linter. This check is honest about it: it catches
- * the case where someone writes a massive inline prompt in source; it does not catch the case where
- * a small template grows large at runtime. Say so in the PR body rather than implying full coverage.
+ * WHAT IT CHECKS (per PROMPT-STANDARD.md §6.2 table row `PS-DISPATCH-BRIEF-SIZE`):
+ *   1. A dispatch brief in `.claude/workflows/*.js` over ~30,000 chars in SOURCE TEXT.
+ *   2. A dispatch brief containing a fenced code block (``` ... ```) over 200 lines.
  *
- * HOW IT PARSES.
- * Uses the same tokenizer as check-dispatch-agenttype.mjs — brace-matched, comment-stripped,
- * string-literal-aware. It is a textual scan, not evaluation, because these files are not
- * importable (top-level `await`, free globals `agent`/`phase`/`parallel`/etc.).
+ * THRESHOLD: ~30,000 chars (the spec value). p95 of measured dispatch prompts is 28,855 chars.
+ *   The team-lead brief mentioned ~8,000 chars; the spec wins. Reported in the return JSON.
  *
- * BLIND SPOTS (stated here so they become discoveries, not incidents).
- *   · A prompt assembled at runtime from function calls (e.g., `buildPrompt(s)`) — the function
- *     body is NOT resolved; only the call-site source length is checked.
- *   · A prompt built by string concatenation across many lines is measured at total source length,
- *     but only if the checker can see it as the first argument; a very complex expression may not
- *     be fully extracted.
- *   · Template interpolations (`${someVariable}`) can expand arbitrarily at runtime; their
- *     runtime size is out of reach. The static check sees the template source only.
- *   · Only `.claude/workflows/*.js` is parsed. A dispatch composed entirely at runtime by an
- *     orchestrator (e.g., passed as a JS string from `warroom`) is invisible to this check.
+ * WHAT IT CANNOT CHECK (stated, not hidden).
+ *   Runtime prompt size. A template literal that is 400 chars in source can expand to 400,000 chars
+ *   at runtime if the interpolated variables carry full agent outputs. That failure mode is out of
+ *   reach for a static linter. The spec's own table row names this: "the payload is composed at
+ *   runtime from free text." This check catches the case where someone writes a brief that is already
+ *   large in source, which is a sufficient (though not necessary) condition for the problem.
  *
  * NON-VACUITY.
- * The check asserts it found at least --min-sites dispatch sites. A checker that scans nothing
- * and reports clean is the exact failure mode this repo keeps catching — see the pre-history of
- * check-dispatch-agenttype.mjs.
+ * The check asserts it found at least --min-sites dispatch sites. A scanner that finds nothing and
+ * reports clean is this repo's documented failure mode; see check-dispatch-agenttype.mjs pre-history.
  *
- * Usage: node scripts/check-dispatch-prompt-size.mjs [--root DIR] [--min-sites N] [--json]
- *   --threshold N   override the 8,000-char default (for testing)
+ * Usage:
+ *   node scripts/check-dispatch-prompt-size.mjs [--root DIR] [--min-sites N] [--json]
+ *   --threshold N      override the 30,000-char default (for testing only)
+ *   --fenced-lines N   override the 200-line fenced-block limit (for testing only)
  */
 
 import fs from 'node:fs';
@@ -60,15 +53,18 @@ const optOf = (name, dflt) => {
 };
 const ROOT = path.resolve(optOf('--root', REPO));
 const MIN_SITES = Number(optOf('--min-sites', '12'));
-const PROMPT_CHAR_THRESHOLD = Number(optOf('--threshold', '8000'));
+const BRIEF_CHAR_THRESHOLD = Number(optOf('--threshold', '30000'));
+const FENCED_LINE_LIMIT = Number(optOf('--fenced-lines', '200'));
 const JSON_OUT = argv.includes('--json');
 
-const failures = [];
-const warnings = [];
+const failures = [];  // non-vacuity failures only — these exit 1
+const warnings = [];  // PS-DISPATCH-BRIEF-SIZE fires — these exit 0
 const fail = (check, msg) => failures.push(`[${check}] ${msg}`);
 const warn = (check, msg) => warnings.push(`[${check}] ${msg}`);
 
 // ── tokenizer (same design as check-dispatch-agenttype.mjs) ──────────────────
+// Textual scan, not evaluation: these workflow files use top-level `await` and
+// free globals (`agent`, `phase`, `parallel`, etc.) that make them not importable.
 
 function skipToken(src, i, stack) {
   const c = src[i];
@@ -97,7 +93,6 @@ function skipToken(src, i, stack) {
 
 function matchBracket(src, open) {
   const openCh = src[open];
-  const closeCh = openCh === '(' ? ')' : openCh === '[' ? ']' : '}';
   const stack = [openCh];
   let i = open + 1;
   while (i < src.length) {
@@ -141,8 +136,8 @@ function splitTop(text, sep) {
 }
 
 /**
- * Blank comment spans (not string/template bodies) so a search for `agent(` does not match
- * the word inside a comment or a prompt string.
+ * Blank comment spans so a search for `agent(` in masked source does not match
+ * the string inside a comment or a prompt body.
  */
 function maskCode(src) {
   const out = src.split('');
@@ -174,6 +169,21 @@ function maskCode(src) {
 }
 
 const lineOf = (src, idx) => src.slice(0, idx).split('\n').length;
+
+/**
+ * Count the maximum consecutive-line run inside any fenced block (``` ... ```)
+ * in `text`. Returns the max run length, or 0 if no fenced blocks exist.
+ */
+function maxFencedBlockLines(text) {
+  let max = 0;
+  const re = /^```[^\n]*\n([\s\S]*?)^```/gm;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const lines = m[1].split('\n').length;
+    if (lines > max) max = lines;
+  }
+  return max;
+}
 
 // ── scan workflow files ───────────────────────────────────────────────────────
 
@@ -217,30 +227,48 @@ for (const file of workflowFiles) {
     const promptArg = args.length > 0 ? args[0].trim() : '';
     const promptChars = promptArg.length;
 
-    const site = { file: rel, line, prompt_chars: promptChars, prompt_is_inline_literal: false };
+    const site = {
+      file: rel,
+      line,
+      prompt_source_chars: promptChars,
+      prompt_is_inline_literal: false,
+      fenced_max_lines: 0,
+    };
     sites.push(site);
 
-    // Is the first argument an inline string or template literal (starts with ' " or `)?
-    // Function calls, identifiers, and complex expressions are left as-is — we cannot know
-    // their runtime size.
+    // Determine whether the first argument is an inline literal (starts with ' " or `).
+    // Function calls and variable references are not checked for size — runtime size is
+    // out of reach for a static linter, and that is the whole reason this rule is WARN.
     const firstChar = promptArg[0];
     const isInlineLiteral = firstChar === "'" || firstChar === '"' || firstChar === '`';
     site.prompt_is_inline_literal = isInlineLiteral;
 
-    if (isInlineLiteral && promptChars > PROMPT_CHAR_THRESHOLD) {
-      fail(
-        'oversized-inline-prompt',
-        `${where}: the prompt argument is an inline ${firstChar === '`' ? 'template literal' : 'string'} ` +
-          `of ${promptChars.toLocaleString()} chars in source (threshold: ${PROMPT_CHAR_THRESHOLD.toLocaleString()}). ` +
-          `Above ${PROMPT_CHAR_THRESHOLD.toLocaleString()} chars, write the content to a file and pass its path ` +
-          `— the agent reads the file on turn 1, which costs one tool call, not ${Math.round(promptChars / 3.7).toLocaleString()} extra tokens ` +
-          `on every one of its turns. See TOKEN-EFFICIENCY.md §7.3.`
-      );
+    if (isInlineLiteral) {
+      if (promptChars > BRIEF_CHAR_THRESHOLD) {
+        warn(
+          'PS-DISPATCH-BRIEF-SIZE',
+          `${where}: the prompt argument is an inline ${firstChar === '`' ? 'template literal' : 'string'} ` +
+            `of ${promptChars.toLocaleString()} chars in source (threshold ~${BRIEF_CHAR_THRESHOLD.toLocaleString()}). ` +
+            `A dispatch brief should pass file paths, branch names and identifiers — not paste an artifact ` +
+            `or peer-agent output by value. See PROMPT-STANDARD.md §2.3 and §6.2.`
+        );
+      }
+
+      const fencedMax = maxFencedBlockLines(promptArg);
+      site.fenced_max_lines = fencedMax;
+      if (fencedMax > FENCED_LINE_LIMIT) {
+        warn(
+          'PS-DISPATCH-BRIEF-SIZE',
+          `${where}: the inline prompt contains a fenced block of ${fencedMax} lines ` +
+            `(limit: ${FENCED_LINE_LIMIT}). A fenced block that long is almost certainly a pasted ` +
+            `artifact — pass a file path instead. See PROMPT-STANDARD.md §2.3 and §6.2.`
+        );
+      }
     }
   }
 }
 
-// ── non-vacuity floor ─────────────────────────────────────────────────────────
+// ── non-vacuity floor (FAILS, not WARNS) ─────────────────────────────────────
 if (sites.length < MIN_SITES) {
   fail(
     'non-vacuity',
@@ -254,25 +282,34 @@ if (sites.length < MIN_SITES) {
 if (JSON_OUT) {
   console.log(JSON.stringify({
     root: ROOT,
-    threshold: PROMPT_CHAR_THRESHOLD,
+    threshold: BRIEF_CHAR_THRESHOLD,
+    fenced_line_limit: FENCED_LINE_LIMIT,
     sites,
     failures,
     warnings,
     files_scanned: workflowFiles.length,
   }, null, 2));
+  // WARN = exit 0; hard FAIL (non-vacuity, parser) = exit 1.
   process.exit(failures.length ? 1 : 0);
 }
 
-for (const w of warnings) console.log(`⚠ ${w}`);
+for (const w of warnings) console.log(`⚠ [PS-DISPATCH-BRIEF-SIZE] ${w}`);
 for (const f of failures) console.error(`✗ ${f}`);
 
 if (failures.length) {
   console.error(
-    `\n✗ dispatch-prompt-size check failed — ${failures.length} problem(s) across ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s).`
+    `\n✗ dispatch-prompt-size check failed — ${failures.length} hard problem(s) across ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s).`
   );
   process.exit(1);
 }
-console.log(
-  `\n✓ dispatch-prompt-size check passed — ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s), ` +
-    `all inline prompt literals ≤ ${PROMPT_CHAR_THRESHOLD.toLocaleString()} chars in source.`
-);
+
+if (warnings.length) {
+  console.log(
+    `\n⚠ dispatch-prompt-size (PS-DISPATCH-BRIEF-SIZE): ${warnings.length} warning(s) across ${sites.length} site(s) in ${workflowFiles.length} file(s). Posture: WARN — does not block.`
+  );
+} else {
+  console.log(
+    `\n✓ dispatch-prompt-size (PS-DISPATCH-BRIEF-SIZE) passed — ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s), ` +
+      `no inline literals >${BRIEF_CHAR_THRESHOLD.toLocaleString()} chars or fenced blocks >${FENCED_LINE_LIMIT} lines.`
+  );
+}
