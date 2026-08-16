@@ -4,7 +4,7 @@ description: |
   Engine. `reviewer` with no shell. Used by the binding QA gate, where the judge's verdict cannot be overridden and a write-capable shell would defeat the isolation the gate depends on. Identical lens procedure to `reviewer`; the only difference is that Bash is absent.
 model: claude-sonnet-4-6
 tools: [Read, Glob, Grep]
-maxTurns: 20
+maxTurns: 30
 color: gray
 isolation: none
 skills:
