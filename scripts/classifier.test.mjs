@@ -70,6 +70,137 @@ test('plain docs classify trivial', () => {
   assert.equal(tierOf('CHANGELOG.md'), 'trivial');
 });
 
+// ── mission-control ─────────────────────────────────────────────────────────
+// Before these rules existed, every tracked path under mission-control/ matched nothing and
+// classified `lite` by default — the collectors that shell out to git inside repositories
+// they merely found on disk, the routes handling the requests that trigger them, and (once
+// PR #44 landed) the allowlist deciding whose code may be executed at all. Four PRs got
+// their tier from a human remembering.
+//
+// Reproduce the whole picture with:
+//   git ls-files mission-control | node scripts/classify.mjs --json --stdin
+
+test('the mission-control server classifies full — routes, discovery, and the collectors that shell out', () => {
+  for (const f of [
+    'mission-control/server/index.ts',
+    'mission-control/server/app.ts',
+    'mission-control/server/state.ts',
+    'mission-control/server/projects.ts',
+    'mission-control/server/routes/api.ts',
+    'mission-control/server/routes/stream.ts',
+    'mission-control/server/lib/claims.ts',
+    'mission-control/server/collectors/conflicts.ts',
+    'mission-control/server/collectors/worktrees.ts',
+    // `full`, NOT irreversible, and the distinction is the point: guard.ts's own header
+    // says it is "not a second, independent answer to the three RCEs; it is the other half
+    // of one". Weakening it does not by itself grant execution — trust.ts still gates that.
+    'mission-control/server/routes/guard.ts',
+    'mission-control/scripts/trust.ts',
+    'mission-control/scripts/trust-store.ts',
+    'mission-control/check.mjs',
+  ]) {
+    assert.equal(tierOf(f), 'full', `${f} must be full`);
+  }
+});
+
+test('the trust allowlist classifies irreversible — the file this whole rule set exists for', () => {
+  const c = classifyFile('mission-control/server/trust.ts', RULES);
+  assert.equal(c.tier, 'irreversible');
+  assert.ok(c.matched_patterns.includes('mission-control/server/**'), 'the full rule also matches; strictest must win');
+  assert.equal(c.enforcement, 'shadow');
+  // The three paths in this tree that can demand the risk:irreversible label, and therefore
+  // arm the F13 step of qa-lead-pass.yml. Pinned at three so a fourth is a deliberate act.
+  // Both loopback bindings are in the set: the server's, and the dev proxy's — which reaches
+  // the same API one hop out through `changeOrigin: false`.
+  const irreversible = [
+    'mission-control/server/trust.ts',
+    'mission-control/server/config.ts',
+    'mission-control/client/vite.config.ts',
+  ];
+  const sweep = [
+    'mission-control/server/routes/guard.ts', 'mission-control/server/app.ts',
+    'mission-control/server/projects.ts', 'mission-control/server/state.ts',
+    'mission-control/server/index.ts', 'mission-control/server/index-store.ts',
+    'mission-control/scripts/trust.ts', 'mission-control/scripts/trust-store.ts',
+    'mission-control/check.mjs', 'mission-control/client/src/App.tsx',
+    'mission-control/test/gate.ts', 'mission-control/test/trust.test.ts',
+    'mission-control/README.md',
+  ];
+  for (const f of sweep) assert.notEqual(tierOf(f), 'irreversible', `${f} must not demand the label`);
+  for (const f of irreversible) assert.equal(tierOf(f), 'irreversible', f);
+});
+
+test('the two files a directory-shaped reason was silently covering', () => {
+  // Both found by review rather than by the sweep, because each sat under a rule whose
+  // `reason:` described something else. A blanket reason over a directory is the cheapest
+  // way for a tier map to be confidently wrong, so both are now pinned by name.
+  //
+  // vite.config.ts pins host 127.0.0.1 "for the same reason server/config.ts pins it", and
+  // proxies /api and /events to 4300 with changeOrigin:false — same surface, one hop out.
+  // It was covered by "Browser render only — no filesystem access, no process spawn".
+  assert.equal(tierOf('mission-control/client/vite.config.ts'), 'irreversible');
+  assert.equal(classifyFile('mission-control/client/vite.config.ts', RULES).pattern,
+    'mission-control/client/vite.config.ts');
+  // gate.ts is not a `.test.` file; it is the shared implementation the tests gate on, and a
+  // defect in it makes assertions SKIP while the suite reports success. `full`, not
+  // irreversible: unlike scripts/lib/**, a git revert fully undoes it — nothing executed.
+  // It was covered by a reason that read, in full, "Tests."
+  assert.equal(tierOf('mission-control/test/gate.ts'), 'full');
+  assert.equal(classifyFile('mission-control/test/gate.ts', RULES).pattern, 'mission-control/test/gate.ts');
+  assert.equal(tierOf('mission-control/test/live.test.ts'), 'lite', 'the cases themselves stay lite');
+});
+
+test('the repo-root scripts/** rule does not reach mission-control/scripts/**', () => {
+  // `scripts/**` is anchored at the root, so mission-control/scripts/ needs its own rule.
+  // Without it the trust-list editor would have classified lite.
+  assert.ok(!globToRegex('scripts/**').test('mission-control/scripts/trust.ts'));
+  assert.equal(classifyFile('mission-control/scripts/trust.ts', RULES).pattern, 'mission-control/scripts/**');
+});
+
+test('the mission-control network binding classifies irreversible', () => {
+  const c = classifyFile('mission-control/server/config.ts', RULES);
+  assert.equal(c.tier, 'irreversible');
+  assert.ok(c.matched_patterns.includes('mission-control/server/**'), 'the full rule also matches; strictest must win');
+  // Shadow, not block, unlike every other irreversible entry: enforcement governs claim
+  // resolution and the ledger reads claims from markdown only, so `block` on a .ts path
+  // would be a mechanism that fires on nothing.
+  assert.equal(c.enforcement, 'shadow');
+});
+
+test('the mission-control client and tests stay lite, and its README stays trivial', () => {
+  // Mutation-tested and it still passes when the client/test rules are deleted — said here
+  // because that is the point, not a gap. Those two rules are documentary (lite is already
+  // the default). What this test guards is the opposite direction: someone widening the
+  // tree to `mission-control/**: full` later, which would make a CSS edit a security review
+  // and would raise README.md — a claim-bearing file — above trivial. It fails then.
+  for (const f of [
+    'mission-control/client/src/App.tsx',
+    'mission-control/client/src/views/FleetView.tsx',
+    'mission-control/client/src/styles.css',
+    'mission-control/test/units.test.ts',
+    'mission-control/test/views.test.tsx',
+  ]) {
+    assert.equal(tierOf(f), 'lite', `${f} must stay lite — a CSS edit is not a security review`);
+  }
+  // Docs inside mission-control must NOT be swept up by the tree rules. README.md carries
+  // two project claims; raising it would change which claims the ledger enforces.
+  assert.equal(tierOf('mission-control/README.md'), 'trivial');
+  assert.equal(classifyFile('mission-control/README.md', RULES).enforcement, 'shadow');
+});
+
+test('a mission-control change set floors at full without demanding the irreversible label', () => {
+  // The shape of PR #30/#32/#41/#44: client + collectors + tests. `full` is advisory in
+  // qa-lead-pass.yml; only `irreversible` demands a label that CI cannot add itself.
+  const r = classifyFiles([
+    'docs/08-agents_work/sessions/2026-08-14-ceo-mc-belief-conflicts.md',
+    'mission-control/client/src/App.tsx',
+    'mission-control/server/collectors/belief.ts',
+    'mission-control/test/collectors.test.ts',
+  ], RULES);
+  assert.equal(r.floor.tier, 'full');
+  assert.equal(r.floor.file, 'mission-control/server/collectors/belief.ts');
+});
+
 test('an unmatched path defaults to lite, not trivial', () => {
   // The bash this replaced started its accumulator at trivial, so package.json —
   // which nothing matches — classified as a typo-grade change.
