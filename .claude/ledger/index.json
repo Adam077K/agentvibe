@@ -155,10 +155,10 @@
         "cmd": "bun run mission-control/scripts/check-cold-start.ts",
         "expect_exit": 0
       },
-      "valid_until": "2026-11-13",
+      "valid_until": "2027-02-16",
       "confidence": 0.8,
       "source_file": "mission-control/README.md",
-      "source_line": 295
+      "source_line": 301
     },
     {
       "id": "c-mission-control-cross-site-refused",
@@ -173,7 +173,7 @@
       "valid_until": "2027-02-15",
       "confidence": 0.9,
       "source_file": "mission-control/README.md",
-      "source_line": 295
+      "source_line": 301
     },
     {
       "id": "c-mission-control-rail",
@@ -189,7 +189,7 @@
       "valid_until": "2027-02-12",
       "confidence": 0.95,
       "source_file": "mission-control/README.md",
-      "source_line": 295
+      "source_line": 301
     },
     {
       "id": "c-mission-control-trusted-roots",
@@ -204,7 +204,7 @@
       "valid_until": "2027-02-15",
       "confidence": 0.9,
       "source_file": "mission-control/README.md",
-      "source_line": 295
+      "source_line": 301
     },
     {
       "id": "c-no-dead-registrations",
