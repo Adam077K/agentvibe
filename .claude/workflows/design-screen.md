@@ -50,11 +50,13 @@ relays it to the founder and re-invokes if changes are requested.
 
 ## Runtime mode
 
-Subagents cannot spawn subagents (nested Task is blocked), so this Workflow is the
-deterministic orchestrator: it calls `agent(..., { agentType })` for each role directly.
-This is the alternative to the design-lead dispatch-packet mode — use the Workflow when
-you want the loop run mechanically; use design-lead when a human-in-the-loop chief is
-steering. Both are documented in the design OS spec.
+This Workflow is the deterministic orchestrator: it calls `agent(..., { agentType })` for
+each role directly. That is **not** because nesting is blocked — subagents CAN spawn
+subagents (measured to depth 2 on 2026-08-11; a depth-3 chain is in the corpus). It is
+because a committed script is the only dispatch surface that enforces a return `schema:`,
+and its spawns are still depth 1, so the loop stays inspectable. Use the Workflow when you
+want the loop run mechanically; use the orchestrator directly when a human is steering it.
+Both are documented in the design OS spec.
 
 ---
 
