@@ -76,6 +76,18 @@ jobs:
       - name: Registration completeness
         run: node scripts/check-registration.mjs
 
+      # Dispatch identity. `agentType` is the entire container — tool grant, model, isolation —
+      # and omitting it, naming a shim, or naming a file that no longer exists all land on the
+      # same runtime default: `general-purpose`, tools `*`, holding Write, Edit and Bash. All
+      # three fail silently. Measured 2026-08-16: eight of twelve dispatch sites were in one of
+      # those states, including every research dispatch — the containers that read the open web.
+      #
+      # This is the regression test for the `agentType: 'reviewer'` repair in qa.js, and it runs
+      # its own mutation gate first: a fixture with a known-bad site the checker must flag, so a
+      # parser that silently stops seeing dispatches fails here rather than reporting clean.
+      - name: Dispatch agentType
+        run: npm run check:dispatch
+
       # CODEBASE-MAP.md is generated, not written. A hand-maintained map is accurate exactly
       # until the first person forgets, and then it is trusted and wrong — which is worse
       # than no map. This fails when it drifts from disk.
