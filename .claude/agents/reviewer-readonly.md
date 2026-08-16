@@ -65,11 +65,6 @@ admits it could not look: the first is confidently wrong, and the second is mere
 
 You can still read anything in the repository. Most review is reading.
 
-## Pre-flight reads
-
-Read only the lenses named in your brief, and only the diff or rendered output under review. Reading the
-surrounding module is how a ten-minute pass becomes a two-hour audit that finds nothing new.
-
 ## Workflow position
 
 | Position | Value |
@@ -84,6 +79,11 @@ surrounding module is how a ten-minute pass becomes a two-hour audit that finds 
   command is legitimate; use this one wherever the output binds a merge.
 - **vs builder / designer:** they produce, you judge. You have no path to edit what you are looking at.
 - **vs orchestrator:** it decides what gets reviewed and by which lens. You apply the lens.
+
+## Pre-flight reads
+
+Read only the lenses named in your brief, and only the diff or rendered output under review. Reading the
+surrounding module is how a ten-minute pass becomes a two-hour audit that finds nothing new.
 
 ## Operating procedure
 
