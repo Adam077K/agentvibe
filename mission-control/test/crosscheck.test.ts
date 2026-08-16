@@ -673,20 +673,42 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
       .readdirSync(testDir)
       .filter((n) => n.endsWith('.ts') || n.endsWith('.tsx'))
       .map((n) => path.join(testDir, n));
-    // THIS FILE IS EXCLUDED, AND THE EXCLUSION IS MADE SAFE RATHER THAN CONVENIENT. The scan
-    // pattern below is a regex literal containing the exact text it searches for, so the
-    // scanner matches its own source and `argsOf` cannot balance a regex. Rather than spell the
-    // pattern in pieces to dodge the match — cleverness that ages badly — the file is skipped
-    // and the assertion beneath proves skipping it hides nothing: it does not import LiveState,
-    // so it cannot construct one.
+    // THIS FILE IS EXCLUDED, AND THE EXCLUSION IS THE HOLE THE FIX CREATED.
+    //
+    // Worth stating plainly: the scan pattern below is a regex literal containing the exact text
+    // it searches for, so the scanner matches its own source. THE PREVIOUS PATTERN DID NOT —
+    // `new LiveState\(([\s\S]{0,400}?)\)` needed a following `(`, which its own source did not
+    // supply. Replacing it with `new LiveState(?=\()` to fix the lookahead bug created the
+    // self-match, and the exclusion added to handle that is now the weakest point in this check.
+    // A fix that introduces the exemption it then needs is worth naming as such.
+    //
+    // SO THE EXCLUSION IS PROVEN SAFE BY A SYNTAX-INDEPENDENT PROPERTY, not by a style rule.
+    // The first version asserted "no line matches ^import.*LiveState" and defended itself with
+    // "imports in this codebase are one per line" — a sentence that is CHECKABLE AND FALSE:
+    // test/collectors.test.ts has four multi-line imports and a dynamic `await import()` today.
+    // Both styles walked straight through it. A reason that does not describe the thing it
+    // covers is how a gap survives a reading.
+    //
+    // What holds regardless of syntax: constructing a LiveState requires the identifier in
+    // scope, which requires naming the MODULE that exports it — static, multi-line, dynamic or
+    // otherwise. So the check is "this file does not mention that module", and the premise that
+    // there is exactly one such module is asserted rather than assumed.
     const SELF = 'crosscheck.test.ts';
-    // Line-scoped, over the COMMENT-STRIPPED source. The first version was
-    // `/import[^;]*\bLiveState\b/` over the raw text, which matched the "import" inside the
-    // word "important" in a comment and then ran on to a later prose mention of LiveState —
-    // a check that failed on correct code, in the same test run that taught the same lesson
-    // twice already. Imports in this codebase are one per line.
-    const selfLines = stripComments(fs.readFileSync(path.join(testDir, SELF), 'utf8')).split('\n');
-    expect(selfLines.filter((l) => /^\s*import\b.*\bLiveState\b/.test(l))).toEqual([]);
+    const stateModules = walkServerTs().filter((f) => /export\s+class\s+LiveState\b/.test(fs.readFileSync(f, 'utf8')));
+    // PREMISE, ASSERTED. If LiveState ever gains a second export site or a re-export, the
+    // specifier check below stops being sufficient and this fails first.
+    expect(stateModules.map((f) => path.basename(f))).toEqual(['state.ts']);
+    const reExports = walkServerTs().filter((f) => {
+      const t = stripComments(fs.readFileSync(f, 'utf8'));
+      return path.basename(f) !== 'state.ts' && /\bLiveState\b/.test(t) && /\bexport\b/.test(t) && /export\s*\{[^}]*\bLiveState\b/.test(t);
+    });
+    expect(reExports).toEqual([]);
+
+    const selfCode = stripComments(fs.readFileSync(path.join(testDir, SELF), 'utf8'));
+    // No mention of the module, by any import syntax — and `state.ts` is the substring every
+    // form of the specifier ends with, so this cannot be routed around by spelling the path
+    // differently.
+    expect(selfCode.includes('state.ts')).toBe(false);
     const files = all.filter((f) => path.basename(f) !== SELF);
     expect(files.length).toBeGreaterThan(5); // non-vacuity: the scan found the test tree
 

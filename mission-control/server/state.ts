@@ -181,22 +181,28 @@ export class LiveState {
    * corpus (2,582 files, 3.05 GB) through this exact path:
    *
    *   cold                     2,405-4,675 ms  (the spread is #50's memory-reclaim band)
-   *   warm, steady             65-109 ms       (see below: a RANGE across four measurement sets)
-   *   warm, first of a session 254 ms          (page-cache-cold boundary windows)
+   *   warm, steady             65-158 ms       (typically 75-110; see the sets below)
+   *   warm, first of a session 254-386 ms      (page-cache-cold boundary windows)
    *   transcript bytes read    3,058 MB -> 0-0.02 MB
    *
-   * THE WARM FIGURE IS A RANGE AND NOT A MEDIAN, because every median taken so far has been
-   * wrong for a reason that was not the code. Four sets, all of the same commit, ordered by the
-   * machine load at the time:
+   * EVERY FIGURE ABOVE IS FROM CODE THAT HAS THE PER-TICK SAVE FIX, and that qualification is
+   * the correction rather than a footnote. An earlier version of this range folded in a reading
+   * taken on 824bf69 — BEFORE that fix — when a warm start still paid a ~13 ms save of the whole
+   * index. It attributed to machine load part of a spread this code's own defect had caused, and
+   * it missed both the post-fix minimum and the high-load maximum. Post-fix sets only, each with
+   * the commit it was taken on:
    *
-   *   load 2.20-3.08   median  73, min 65   (independent)
-   *   load 2.70        78-90   (n=8)
-   *   load 1.99-3.21   median 106, 90-107   (independent)
-   *   load 3.67-3.78   median  98, 93-109   (n=8)
+   *   dbe2e70   65-94   median 73   (independent, load 2.20-3.08)
+   *   dbe2e70   78-90               (load 2.70, n=8)
+   *   afd23d6   72-130  median 93   (independent; first-of-session 335)
+   *   14d5f47   93-109  median 98   (load 3.67-3.78, n=8)
+   *   14d5f47   75-79               (load 3.17, n=5) and a 115-158 burst minutes earlier
    *
-   * An earlier independent reading of 141 at load 3.5-4.5 was withdrawn after re-measurement.
-   * The figure tracks machine state, exactly as #50 established, and quoting any single median
-   * from that spread is picking an afternoon rather than reporting a cost.
+   * NO SINGLE MEDIAN SURVIVES THAT SPREAD, and the two readings 20 minutes apart on the SAME
+   * commit at nearly the same load average — 98 and 77, with a 158 in between — are the clearest
+   * statement of why. The figure tracks machine state, exactly as #50 established. A reading
+   * that does real work is legitimately slower: the 106 ms above read 2 changed files and wrote
+   * the index.
    *
    * AN AFTER-A-REBOOT FIGURE IS NOT QUOTED. An earlier version of this comment carried
    * "158-255 ms, first after boot" as though it had been measured. It had not: verifying it
