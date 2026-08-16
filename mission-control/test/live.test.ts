@@ -540,8 +540,13 @@ describe('the machine gate itself', () => {
 //
 // WHAT IS STABLE IS THE WORK, and it is stable by three orders of magnitude more than the
 // clock. Across six measurement sets on this branch: filesRead 0 every time, probe bytes
-// 10.64-10.68 MB (0.4% spread), cache 4.39 MB — while wall time moved 5x, 64 to 386 ms. So the
-// gate is the work, and the milliseconds are printed and not asserted.
+// 10.64-10.68 MB at a fixed corpus size (0.4% spread), cache 4.39 MB — while wall time moved 5x,
+// 64 to 386 ms. So the gate is the work, and the milliseconds are printed and not asserted.
+//
+// AND THE PROBE FIGURE IS A RATE. It is BOUNDARY_BYTES per transcript — 4 KB, ~0.35% of corpus
+// bytes — so it GROWS with the corpus and "reads 10.6 MB" is true only of today's 2,610 files.
+// The assertions below are written against filesScanned and against the cold build's own byte
+// count for exactly that reason: a ratio survives corpus growth, a megabyte figure does not.
 //
 // This is #50's own conclusion applied to the change that came out of #50: stop asserting on
 // the clock, assert what you actually care about. The clock is what varies with the afternoon.
@@ -601,10 +606,15 @@ describe('a warm start reads almost nothing, and that is asserted rather than de
       console.log(
         `  [perf] warm start read ${w.filesRead}/${w.filesScanned} files, ` +
           `${(w.bytesRead / 1e6).toFixed(2)}MB transcript + ${(w.verifyBytesRead / 1e6).toFixed(2)}MB probes ` +
+          `(${(w.verifyBytesRead / w.filesScanned).toFixed(0)} B/file, ${((100 * w.verifyBytesRead) / c.bytesRead).toFixed(2)}% of corpus) ` +
           `vs ${(c.bytesRead / 1e6).toFixed(0)}MB cold — milliseconds deliberately not asserted here`
       );
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
-  });
+    // EXPLICIT TIMEOUT, because this builds the real 3 GB index TWICE and bun's default is 5 s.
+    // It passed in isolation at 3.1 s and failed in the full run at 6.1 s — a TIMEOUT, not an
+    // assertion, which is the failure mode that reads as "the gate is wrong" when it means "the
+    // machine was busy". test/collectors.test.ts carries 60-120 s timeouts for the same reason.
+  }, 120_000);
 });

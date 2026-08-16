@@ -179,16 +179,21 @@ export class LiveState {
    * THE FIRST CALL IS THE EXPENSIVE ONE, AND THIS IS WHERE THAT STOPS BEING TRUE. What changes
    * is measured in WORK, not in milliseconds:
    *
-   *   filesRead              2,609 of 2,609  ->  0 of 2,609
-   *   transcript bytes read  3,058 MB        ->  0 (10.6 MB of 4 KB boundary probes instead)
-   *   persisted index        4.39 MB
+   *   filesRead              every transcript  ->  0
+   *   transcript bytes read  the whole corpus  ->  0
+   *   read instead           4 KB per transcript — 10.65 MB across 2,610 today, 0.35% of corpus
+   *   persisted index        ~1.7 KB per transcript — 4.39 MB today
+   *
+   * THOSE LAST TWO ARE RATES, NOT CONSTANTS, and writing them as constants is how "reads
+   * 10.6 MB" quietly becomes false: the probe cost is BOUNDARY_BYTES per file, so at twice the
+   * transcripts it is 21 MB. The invariants are the per-file figures and the 0.35% ratio. Only
+   * `filesRead -> 0` is a constant, and it is the load-bearing half.
    *
    * THE COUNTERS ARE THE FIGURE AND THE CLOCK IS A CONSEQUENCE, which is #50's conclusion
    * applied to the change that came out of #50. Across every run taken on this branch the work
-   * was stable to under 0.5% — filesRead 0, probes 10.64-10.68 MB, cache 4.39 MB — while the
-   * milliseconds moved by a factor of two for reasons that were never the code. Quoting the
-   * clock first meant defending a number that varies with the afternoon while owning one that
-   * does not.
+   * was stable to under 0.5% — filesRead 0, probes 10.64-10.68 MB at a fixed corpus size, cache
+   * 4.39 MB — while the milliseconds moved 5x, 64 to 386 ms. Quoting the clock first meant
+   * defending a number that varies with the afternoon while owning one that does not.
    *
    * The wall-clock figure, kept as a load-conditioned range and not a headline:
    *

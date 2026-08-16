@@ -5,6 +5,7 @@
 
 import { describe, test, expect, afterAll } from 'bun:test';
 import fs from 'node:fs';
+import * as fsp from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -479,44 +480,6 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
   const WRITE_OWNER = 'index-cache.ts';
 
   /**
-   * Write-family APIs. WIDENED 2026-08-16 with every token after `appendFile`, each one a real
-   * write API the previous list could not see.
-   *
-   * NOT A THEORETICAL WIDENING. `fs.copyFileSync` was injected into the /api/project/:id
-   * handler and this scan reported ZERO offenders while the file was demonstrably being
-   * created — no aliasing, no computed string, just an API nobody had enumerated. The same was
-   * true of renameSync, truncateSync, symlinkSync, cpSync and createWriteStream.
-   *
-   * `Bun.write` and the `utimes` family were added in review. Both are writes, both were
-   * invisible, and `utimes` is the one that matters most here: MTIME IS THIS INDEX'S
-   * INVALIDATION KEY, so a call that moves a transcript's mtime without changing its bytes is
-   * a direct attack on the freshness model rather than a generic disk mutation. It was also
-   * invisible to the behavioural barrier, which compares CONTENT — that gap is now closed on
-   * both sides (see test/write-barrier.test.ts, which reports mtime drift).
-   *
-   * `f`/`l` VARIANTS COME AS A SET, and forgetting that is how the list stayed short. `futimes`
-   * and `lutimes` were added with `utimes` and the same courtesy was not extended to `chmod`
-   * and `chown`; `mkdtempSync` and `writevSync` were simply missed. All six were verified
-   * invisible to BOTH guards before being added — `fs.lchmodSync` on a transcript and
-   * `fs.mkdtempSync` in a project root each scored 0 offenders and 0 barrier failures.
-   *
-   * KNOWN BLIND SPOTS IN THIS CHECK — a list of what is NOT covered, and deliberately not
-   * titled "complete". The previous version said COMPLETE and was missing six tokens, which is
-   * a worse artefact than no list: a list labelled complete stops people looking. That is the
-   * argument I made about `openSync` and then failed to apply to the list itself.
-   *
-   * What is named here is what is known TODAY:
-   *   · `fs.openSync(p, 'w')`. `openSync` cannot be added: server/index-store.ts opens files
-   *     read-only with it on the append and boundary-probe paths, so banning the token would
-   *     forbid the read path and a guard that fires on correct code gets disabled.
-   *   · `Bun.file(x).writer()`, and any other write reached through a value rather than a
-   *     named API — `const w = fs.writeFileSync; w(p, d)` defeats every pattern here.
-   *   · a write performed by a spawned process (covered by the shell-invocation rules below,
-   *     which have their own listed gaps).
-   * All of these land on disk, which is what test/write-barrier.test.ts looks at. That barrier
-   * is the second check, not an excuse for this one — the two are independent on purpose.
-   */
-  /**
    * Tokens matched on WORD BOUNDARIES. Every family here carries both its sync and async
    * spellings, except those listed in SYNC_ONLY_BY_DESIGN below — and that symmetry is not left
    * to care: `write-API tokens cover both spellings` asserts it, because this list has now been
@@ -524,7 +487,7 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
    * did not (N2); four families got their async form and `cp` did not (N7). The audit that found
    * the second also found `writeSync` standing alone, which no reviewer had reported.
    */
-  const WRITE_TOKENS = String.raw`writeFile(Sync)?|writeSync|mkdir(Sync)?|rm(Sync)?|rmdir(Sync)?|unlink(Sync)?|appendFile(Sync)?|copyFile(Sync)?|cpSync|rename(Sync)?|truncate(Sync)?|ftruncate(Sync)?|symlink(Sync)?|link(Sync)?|createWriteStream|utimes(Sync)?|futimes(Sync)?|lutimes(Sync)?|chmod(Sync)?|chown(Sync)?|fchmod(Sync)?|fchown(Sync)?|lchmod(Sync)?|lchown(Sync)?|mkdtemp(Sync)?|mkdtempDisposableSync|writev(Sync)?|git\s+commit|git\s+push`;
+  const WRITE_TOKENS = String.raw`writeFile(Sync)?|writeSync|mkdir(Sync)?|rm(Sync)?|rmdir(Sync)?|unlink(Sync)?|appendFile(Sync)?|copyFile(Sync)?|cpSync|rename(Sync)?|truncate(Sync)?|ftruncate(Sync)?|symlink(Sync)?|link(Sync)?|createWriteStream|utimes(Sync)?|futimes(Sync)?|lutimes(Sync)?|chmod(Sync)?|chown(Sync)?|fchmod(Sync)?|fchown(Sync)?|lchmod(Sync)?|lchown(Sync)?|mkdtemp(Sync)?|mkdtempDisposable(Sync)?|writev(Sync)?|git\s+commit|git\s+push`;
 
   /**
    * Forms that CANNOT be word-anchored, because the bare identifier is ordinary elsewhere.
@@ -536,10 +499,27 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
   const WRITE_ANCHORED = String.raw`(?:fs|fsp|promises)\s*\.\s*(?:cp|write)\s*\(|Bun\.write`;
 
   /**
-   * Sync-only because the API has no async counterpart, not because the list is short.
-   * `fs.mkdtempDisposableSync` returns a disposable and exists in no promise form.
+   * Tokens with genuinely no async counterpart. EMPTY, AND THAT IS THE FIX.
+   *
+   * It held `mkdtempDisposableSync`, justified as "returns a disposable and exists in no promise
+   * form". Measured, and that justification is RUNTIME-DEPENDENT rather than false:
+   *
+   *   bun 1.3.10    fsp.mkdtempDisposable  undefined    <- what server/** actually runs on
+   *   node 24.11.1  fsp.mkdtempDisposable  function
+   *
+   * So the entry was right under Bun and wrong under Node, and an exemption whose truth depends
+   * on which binary runs the suite will be silently wrong on someone's machine. The repair is
+   * not to pick a runtime and document it — it is to stop needing the exemption:
+   * `mkdtempDisposable(Sync)?` covers both spellings and is correct in both.
+   *
+   * The same measurement embarrasses a neighbouring assumption, recorded here rather than
+   * rediscovered: `fsp.write` is a function in Bun and UNDEFINED in Node — the exact reverse.
+   * Any rule of the form "this runtime does not expose X" needs the runtime named.
+   *
+   * The validator in the test below stays, empty list and all: the next person to add an entry
+   * is who it exists for.
    */
-  const SYNC_ONLY_BY_DESIGN = ['mkdtempDisposableSync'];
+  const SYNC_ONLY_BY_DESIGN: string[] = [];
 
   /**
    * Write-family APIs. WIDENED 2026-08-16 with every token after `appendFile`, each one a real
@@ -593,8 +573,21 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
     }
     // NON-VACUITY: there really are sync-only tokens to check, so the loop above ran.
     expect(lonely.length).toBeGreaterThan(0);
-    // …and the by-design exceptions are real tokens, not a place to hide an omission.
-    for (const t of SYNC_ONLY_BY_DESIGN) expect(alternatives).toContain(t);
+
+    // THE ESCAPE HATCH IS VALIDATED, because a mechanism that fails on the next omission is
+    // worth nothing if it can be silenced by editing a list. Adding `renameSync` to
+    // SYNC_ONLY_BY_DESIGN used to buy silence AND miss `await fs.promises.rename(a, b)`; the
+    // claim "this API has no async form" is now checked against the runtime, not believed.
+    const asyncFormExists = (stem: string) => typeof (fsp as unknown as Record<string, unknown>)[stem] === 'function';
+    for (const token of SYNC_ONLY_BY_DESIGN) {
+      const stem = token.slice(0, -'Sync'.length);
+      expect(`${token}: async form exists = ${asyncFormExists(stem)}`).toBe(`${token}: async form exists = false`);
+      expect(alternatives).toContain(token); // a real token, not a place to hide an omission
+    }
+    // NOT VACUOUS WITH AN EMPTY LIST — the validator is exercised against a known-present stem
+    // and a known-absent one, so "nothing to check" cannot be mistaken for "the check works".
+    expect(asyncFormExists('rename')).toBe(true); // so a bogus renameSync exemption is refused
+    expect(asyncFormExists('definitelyNotAnFsApi')).toBe(false);
   });
 
   test(`no write-API call sites in server/** outside ${WRITE_OWNER}`, () => {
