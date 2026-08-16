@@ -554,7 +554,12 @@ describe('a warm start reads almost nothing, and that is asserted rather than de
   test('hydrating a persisted index skips the corpus instead of reading it', () => {
     const blocked = machineGate();
     if (blocked) {
-      notVerified('warm-start work', blocked);
+      // THIS IS THE PATH CI ALWAYS TAKES, and it is worth saying out loud: a runner has no
+      // ~/.claude/projects, so every test in this file prints NOT VERIFIED and never executes.
+      // "CI green on that SHA" is therefore NO EVIDENCE ABOUT ANYTHING HERE — it only reports
+      // that the corpus-independent suites passed. This test runs exactly where it is exposed
+      // to a live corpus and a busy machine, and nowhere else.
+      notVerified('warm-start work', `${blocked} — and CI always lands here, so a green CI run says nothing about this test`);
       return;
     }
 
@@ -588,9 +593,33 @@ describe('a warm start reads almost nothing, and that is asserted rather than de
       expect(w.filesSkipped).toBeGreaterThan(w.filesScanned * 0.99);
 
       // Every restored entry was CHECKED against the disk — the property that makes skipping
-      // them defensible. A regression that trusted the cache without verifying would show up
-      // here and nowhere else, because it would look identical on the clock.
-      expect(w.filesVerified).toBe(w.filesScanned);
+      // them defensible. A regression that trusted the cache without verifying shows up here and
+      // nowhere else, because it looks identical on the clock: the mutation that hydrates
+      // without verifying gives Expected 2610 / Received 0 right here.
+      //
+      // BRACKETED, NOT EXACT, AND THE EXACT FORM WAS A LATENT FLAKE. `filesVerified` counts
+      // probes of RESTORED entries; `filesScanned` counts paths found now. A transcript created
+      // between the two builds is scanned and has no entry to probe, so scanned=N+1 while
+      // verified=N — demonstrated on a fixture running this exact sequence: nothing-changed
+      // holds, an append holds, a NEW FILE goes red. Not observed in any run here, which makes
+      // it a mechanism rather than an incident — and this runs against a live corpus with ~17
+      // agents writing transcripts, so the mechanism is reachable on any afternoon.
+      //
+      // REPRODUCED, not taken on trust — the gate's own sequence on a 3-file fixture:
+      //   nothing changed        scanned=3 verified=3   exact holds
+      //   append to existing     scanned=3 verified=3   exact holds  (still probed)
+      //   NEW transcript arrives scanned=4 verified=3   exact RED
+      //
+      // AND THE BRACKET IS SCALE-DEPENDENT, which that fixture also shows: 3 of 4 is 75% and
+      // would fail this too. It is sound HERE because this test only ever runs against the real
+      // corpus — machineGate() blocks it otherwise — where one new transcript is 2,610 of 2,611,
+      // and 99% tolerates ~26 arrivals. On a small fixture the right bracket would be different,
+      // which is why this assertion belongs in the live file and not in a fixture suite.
+      //
+      // 99% keeps every regression this is for: hydrate-without-verify gives 0 (Expected > 2583.9,
+      // Received 0), and verifying only every other entry fails too — both executed.
+      expect(w.filesVerified).toBeGreaterThan(w.filesScanned * 0.99);
+      expect(w.filesVerified).toBeLessThanOrEqual(w.filesScanned);
       expect(w.verifyBytesRead).toBeGreaterThan(0);
       expect(w.verifyBytesRead).toBeLessThanOrEqual(w.filesScanned * BOUNDARY_BYTES);
       expect(w.filesStale).toBe(0);
