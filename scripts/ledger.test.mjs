@@ -1020,3 +1020,243 @@ test('an ABSENT log is unknowable, an EMPTY log is a dead resolver — and only 
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+// ── #57 · sweep declares an absent global ledger, in verify's own words ──────
+//
+// `verify` reported the absence and `sweep` did not, so on a runner — where $HOME is fresh
+// and ~/.warroom/ledger/global.yml does not exist — four claims left the working set and the
+// sweep printed a bare total as though it had checked them. The tell was that the same report
+// spent a whole paragraph declaring its OTHER blind spot, the missing run log: a tool that
+// declares some of its blind spots teaches you it declares all of them.
+//
+// Both directions are tested. An unconditional notice would be noise, and noise is read past —
+// which is exactly how the run-log paragraph would have failed had it been printed always.
+
+function runSweepEnv(env, extra = []) {
+  const res = { out: '', code: 0 };
+  try {
+    res.out = execFileSync('node', ['scripts/ledger.mjs', 'sweep', ...extra], {
+      cwd: REPO_ROOT, encoding: 'utf8', env: { ...process.env, ...env },
+    });
+  } catch (e) {
+    res.out = (e.stdout || '') + (e.stderr || '');
+    res.code = e.status;
+  }
+  return res;
+}
+
+/** A temp dir holding an events path and a global-ledger path. Caller's body runs inside. */
+function withSweepEnv(body, globalYaml = null) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-glob-'));
+  try {
+    const g = path.join(dir, 'global.yml');
+    if (globalYaml !== null) fs.writeFileSync(g, globalYaml);
+    return body({ WARROOM_EVENTS: path.join(dir, 'events.jsonl'), WARROOM_GLOBAL_LEDGER: g }, g);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('sweep reports an absent global ledger instead of quietly checking fewer claims', () => {
+  withSweepEnv((env) => {
+    const j = JSON.parse(runSweepEnv(env, ['--json']).out.trim());
+    assert.equal(j.global_present, false);
+    assert.equal(j.global_claims, 0);
+    assert.equal(j.claims_checked, j.project_claims, 'the total must reconcile against its parts');
+    assert.equal(j.status, 'PARTIAL', 'a sweep over 31 of 35 claims is not COMPLETE');
+    assert.equal(j.findings, 0,
+      'an absence is declared, never counted as a finding — a scheduled job that is red every day is a job nobody reads');
+
+    const human = runSweepEnv(env);
+    assert.equal(human.code, 0);
+    assert.match(human.out, /not present on this machine/);
+    assert.match(human.out, /this is reported, not skipped silently/);
+    // The header count was the defect itself: the number checked, printed where a reader
+    // looks for the number there is.
+    assert.match(human.out, /global ledger ABSENT/);
+    // And the closing line must name BOTH gaps, not attribute PARTIAL entirely to the log.
+    assert.match(human.out, /NOT checked:.*run log.*global claims/);
+  });
+});
+
+test('sweep says nothing about the global ledger when it is there — an always-on notice is noise', () => {
+  withSweepEnv((env) => {
+    const j = JSON.parse(runSweepEnv(env, ['--json']).out.trim());
+    assert.equal(j.global_present, true);
+    // Non-vacuity: the negative would also hold over an empty global set, and would prove
+    // nothing. The two fixture claims must actually have entered the working set.
+    assert.equal(j.global_claims, 2, 'the fixture globals must be counted, or this proves nothing');
+    assert.equal(j.claims_checked, j.project_claims + j.global_claims);
+
+    const human = runSweepEnv(env);
+    assert.doesNotMatch(human.out, /not present on this machine/);
+    assert.match(human.out, /2 global\)/, 'the header states the split it actually swept');
+  }, GLOBAL_FIXTURE);
+});
+
+test('sweep and verify print the SAME sentence about the absence — one copy, not two', () => {
+  // The defect was never that sweep's wording was wrong; it was that sweep had no wording.
+  // Pinning the two together is what stops them drifting apart a second time — the same
+  // argument that gave this repo one risk classifier.
+  withSweepEnv((env) => {
+    const sweepOut = runSweepEnv(env).out;
+    const verifyOut = execFileSync('node', ['scripts/ledger.mjs', 'verify', '--offline', '--no-exec'],
+      { cwd: REPO_ROOT, encoding: 'utf8', env: { ...process.env, ...env } });
+    const notice = (s) => (s.split('\n').find((l) => l.includes('not present on this machine')) || '').trim();
+    assert.ok(notice(sweepOut), 'sweep must say it at all');
+    assert.ok(notice(verifyOut), 'verify must still say it');
+    assert.equal(notice(sweepOut), notice(verifyOut), 'two copies of one sentence drift');
+  });
+});
+
+// ── #58 · the global ledger refuses a duplicate id, as the project path does ─
+//
+// `validateClaim` is a CLOSED PER-ENTRY schema, and a closed per-entry schema cannot see a
+// collision BETWEEN entries. So the project loader failed on a duplicate id and named both
+// files, while the global loader accepted it in silence: one concept, two loaders, one of
+// them checking. `globalClaimLine()` even detected the case — and returned null, throwing
+// the only evidence away.
+
+function ledgerEnv(dir, env, ...args) {
+  try {
+    const out = execFileSync('node', [path.join(dir, 'scripts', 'ledger.mjs'), ...args],
+      { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, ...env } });
+    return { exit: 0, out };
+  } catch (e) {
+    return { exit: e.status, out: `${e.stdout || ''}${e.stderr || ''}` };
+  }
+}
+
+/** A scratch repo plus a global ledger written from `yaml`. Caller's body runs inside. */
+function withScratchAndGlobal(yaml, body, doc = scratchDoc()) {
+  const dir = scratchRepo(doc);
+  const gdir = fs.mkdtempSync(path.join(os.tmpdir(), 'wr-dup-'));
+  const g = path.join(gdir, 'global.yml');
+  try {
+    fs.writeFileSync(g, yaml);
+    return body((...args) => ledgerEnv(dir, { WARROOM_GLOBAL_LEDGER: g }, ...args), g, dir);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(gdir, { recursive: true, force: true });
+  }
+}
+
+test('two global entries sharing one id fail lint, and the message names BOTH lines', () => {
+  const dup = GLOBAL_FIXTURE.replace('  - id: c-fixture-beta', '  - id: c-fixture-alpha');
+  assert.notEqual(dup, GLOBAL_FIXTURE, 'the mutation must land or the test proves nothing');
+  assert.equal(dup.split('  - id: c-fixture-alpha').length - 1, 2, 'the fixture must really hold two');
+
+  withScratchAndGlobal(dup, (run, g) => {
+    const r = run('lint');
+    assert.equal(r.exit, 1, `a duplicate id must fail the global lint:\n${r.out}`);
+    assert.match(r.out, /duplicate claim id "c-fixture-alpha"/);
+    // EXACT lines, not /\d+/: G_LINE is checked against the fixture above, so 4 and 13 are
+    // measured values rather than a shape that any number would satisfy.
+    assert.ok(r.out.includes(`${g}:13`), `the second entry's line must be named:\n${r.out}`);
+    assert.ok(r.out.includes(`already defined at ${g}:4`), `the first entry's line must be named:\n${r.out}`);
+  });
+});
+
+test('and the same ledger without the duplicate lints clean — the check is not always-on', () => {
+  withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
+    const r = run('lint');
+    assert.equal(r.exit, 0, `the unmutated fixture must pass, or the failure above is unattributable:\n${r.out}`);
+    assert.doesNotMatch(r.out, /duplicate claim id/);
+  });
+});
+
+test('a duplicate is reported ONCE, not once per colliding entry', () => {
+  const dup = GLOBAL_FIXTURE.replace('  - id: c-fixture-beta', '  - id: c-fixture-alpha');
+  withScratchAndGlobal(dup, (run) => {
+    const hits = [...run('lint').out.matchAll(/duplicate claim id/g)].length;
+    assert.equal(hits, 1, 'one collision rendered as two findings dilutes both');
+  });
+});
+
+// ── #59 · a claim id cited in PROSE must resolve ────────────────────────────
+//
+// check-registration.mjs checks every PATH a governing doc names; checkSupports() checks
+// every claim→claim `supports:` target. A `c-…` id written in prose was checked by nothing,
+// so the reference pattern could rot the moment the repo leaned on it — and leaning on it is
+// the only thing that beats vocabulary search, which has no completion criterion.
+
+const proseDoc = (...lines) => [
+  '# Scratch artifact', '', ...lines, '',
+  `${FENCE}claims`, 'claims:', scratchClaim(), FENCE, '',
+].join('\n');
+
+test('a prose citation of an id in no ledger fails lint, and the message names file, line and id', () => {
+  withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
+    const r = run('lint');
+    assert.equal(r.exit, 1, `a dangling citation must fail:\n${r.out}`);
+    assert.match(r.out, /doc\.md:3: cites claim "c-does-not-exist"/);
+    assert.match(r.out, /ledger:unregistered/, 'the message must name the escape it offers');
+  }, proseDoc('The behaviour is recorded as `c-does-not-exist`.'));
+});
+
+test('a citation that RESOLVES passes — otherwise the check above only proves it fails', () => {
+  withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
+    const r = run('lint');
+    assert.equal(r.exit, 0, `a live citation must not fail:\n${r.out}`);
+    // Non-vacuity: a scanner that found nothing would also exit 0 here.
+    assert.match(r.out, /2 prose citation\(s\) in 1 file\(s\)/);
+  }, proseDoc('Recorded as `c-scratch-one`, and again as `c-scratch-one`.'));
+});
+
+test('a global claim is a valid citation target — the two scopes are one namespace', () => {
+  withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
+    assert.equal(run('lint').exit, 0, 'a citation of a global claim must resolve when the ledger is readable');
+  }, proseDoc('Recorded as `c-fixture-alpha`.'));
+});
+
+test('inside a fence an id is a definition or an example, never a citation', () => {
+  // The agent files carry JSON return-contract samples full of invented ids like
+  // `c-rate-limit-enforced`; the claims blocks carry the definitions themselves. Both are
+  // fenced, and neither is a claim about the world that a reader could follow.
+  withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
+    const r = run('lint');
+    assert.equal(r.exit, 0, `a fenced id must not be read as a citation:\n${r.out}`);
+    assert.match(r.out, /0 prose citation\(s\)/, 'the fenced ids must not even be counted');
+  }, proseDoc(`${FENCE}json`, '{"claim": "c-inside-a-fence"}', FENCE));
+});
+
+test('a marked citation is exempt, and the marker is counted rather than hidden', () => {
+  withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
+    const r = run('lint');
+    assert.equal(r.exit, 0, `a marked citation must not fail:\n${r.out}`);
+    assert.match(r.out, /1 marked ledger:unregistered/, 'an exemption that is not counted is an exemption nobody audits');
+  }, proseDoc('Proposed: `c-proposed-later` <!-- ledger:unregistered: not compiled yet -->'));
+});
+
+test('a marker whose ids all resolve is reported as stale — the lapsed-waiver shape', () => {
+  // An exemption that has stopped suppressing anything reads as a live reason and is not
+  // one. The set only stays honest if it shrinks when the reason does.
+  withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
+    const r = run('lint');
+    assert.equal(r.exit, 1, `a stale marker must be reported:\n${r.out}`);
+    assert.match(r.out, /carries `ledger:unregistered` but every claim id on the line resolves/);
+    assert.match(r.out, /c-scratch-one/);
+  }, proseDoc('Now registered: `c-scratch-one` <!-- ledger:unregistered: stale -->'));
+});
+
+test('the marker\'s own reason may name the id it exempts without becoming a citation', () => {
+  // The first marker written for CLAIM-LEDGER.md:50 said "c-kebab-case names the id FORMAT",
+  // and the scanner counted the reason as an eighth citation. A check whose own remedy moves
+  // its numbers is a check whose numbers reconcile against nothing.
+  withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
+    const r = run('lint');
+    assert.equal(r.exit, 0, r.out);
+    assert.match(r.out, /1 prose citation\(s\)/, 'the id inside the comment must not be counted');
+  }, proseDoc('Format only: `c-kebab-case` <!-- ledger:unregistered: c-kebab-case is the FORMAT -->'));
+});
+
+test('the citation scan is not empty over THIS repository', () => {
+  // Every test above runs in a scratch repo. A scanner that worked only there — a wrong
+  // file list, a fence rule that swallows real docs — would leave all of them green while
+  // checking nothing that ships. Measured 2026-08-16: 81 citations across 37 files.
+  const out = execFileSync('node', ['scripts/ledger.mjs', 'lint'], { cwd: REPO_ROOT, encoding: 'utf8' });
+  const m = out.match(/(\d+) prose citation\(s\) in (\d+) file\(s\)/);
+  assert.ok(m, `lint must report the citation count:\n${out}`);
+  assert.ok(Number(m[1]) >= 40, `only ${m[1]} citations found — an empty-ish scan proves nothing`);
+  assert.ok(Number(m[2]) >= 15, `only ${m[2]} files contributed — the file list is too narrow`);
+});

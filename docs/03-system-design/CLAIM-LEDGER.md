@@ -47,7 +47,7 @@ compiles every claim into `.claude/ledger/index.json`. **The index is never hand
 
 | Field | Notes |
 |---|---|
-| `id` | `c-kebab-case`, unique across the ledger |
+| `id` | `c-kebab-case`, unique across the ledger |<!-- ledger:unregistered: c-kebab-case names the id FORMAT, not a claim -->
 | `kind` | `external-fact` · `internal-fact` · `behavior` · `user-language` · `judgment` · `runtime-capability` · `preference` |
 | `scope` | `global` (all projects, `~/.warroom/ledger/`) · `project` (this repo) · `task` (dies with the branch) |
 | `verified_by` | `source` · `command` · `judge` — picks the resolver |
