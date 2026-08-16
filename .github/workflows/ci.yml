@@ -52,6 +52,18 @@ jobs:
       - name: Agent schema lint
         run: node .claude/hooks/schema-lint.js
 
+      # The prompt standard — docs/03-system-design/agents/PROMPT-STANDARD.md §6, as PS-* rules
+      # inside the same linter. Its §0 binds every rule to a method, and this step is what keeps
+      # the method honest: each blocking rule is asserted to hit ZERO on the seven live engines AND
+      # to FIRE on a constructed violation. A rule that fires on nothing is not a rule, and that is
+      # not a hypothetical here — a `maxTurns` range check sat in this repo for months while any
+      # quoted value walked straight past it, because nothing ever constructed the string case.
+      #
+      # It also pins the two numbers the standard measured: PS-BODY-VAGUE fires on 6 of 7 files at
+      # 10 sites, every one of them correct prose, which is why it can only ever warn.
+      - name: Prompt standard
+        run: npm run check:prompt-standard
+
       # 23 tests over the QA verdict logic: severity eligibility, tier gating,
       # confirmation parsing, finding caps. They passed all along; nothing ran them.
       - name: Gate logic tests
@@ -83,6 +95,18 @@ jobs:
       # only asserted has the same shape as the bug it prevents.
       - name: Registration checker guards hook data files
         run: npm run test:registration
+
+      # Dispatch identity. `agentType` is the entire container — tool grant, model, isolation —
+      # and omitting it, naming a shim, or naming a file that no longer exists all land on the
+      # same runtime default: `general-purpose`, tools `*`, holding Write, Edit and Bash. All
+      # three fail silently. Measured 2026-08-16: eight of twelve dispatch sites were in one of
+      # those states, including every research dispatch — the containers that read the open web.
+      #
+      # This is the regression test for the `agentType: 'reviewer'` repair in qa.js, and it runs
+      # its own mutation gate first: a fixture with a known-bad site the checker must flag, so a
+      # parser that silently stops seeing dispatches fails here rather than reporting clean.
+      - name: Dispatch agentType
+        run: npm run check:dispatch
 
       # CODEBASE-MAP.md is generated, not written. A hand-maintained map is accurate exactly
       # until the first person forgets, and then it is trusted and wrong — which is worse

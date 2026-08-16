@@ -36,12 +36,14 @@ it, so a hook that changes posture changes this map with it.
 | `npm run build:manifest` | `node scripts/build-skills-manifest.mjs` |
 | `npm run build:map` | `node scripts/gen-codebase-map.mjs` |
 | `npm run build:routers` | `node scripts/build-skill-routers.mjs` |
-| `npm run check` | `npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:curation && npm run check:` |
+| `npm run check` | `npm run lint:agents && npm run check:prompt-standard && npm run test:gate && npm run check:manifest && npm run` |
 | `npm run check:curation` | `node scripts/curate-skills.mjs --check` |
+| `npm run check:dispatch` | `npm run test:dispatch && node scripts/check-dispatch-agenttype.mjs` |
 | `npm run check:ledger` | `npm run test:claims && npm run test:classifier && npm run test:ledger && node scripts/ledger.mjs lint && node ` |
 | `npm run check:manifest` | `node scripts/build-skills-manifest.mjs --check` |
 | `npm run check:map` | `node scripts/gen-codebase-map.mjs --check` |
 | `npm run check:mc` | `node mission-control/check.mjs` |
+| `npm run check:prompt-standard` | `node --test scripts/prompt-standard.test.mjs` |
 | `npm run check:registration` | `node scripts/check-registration.mjs` |
 | `npm run check:routers` | `node scripts/build-skill-routers.mjs --check` |
 | `npm run check:warroom` | `bash -n bin/warroom && node --check scripts/warroom-install.mjs && bash -n scripts/warroom-parity.sh && npm ru` |
@@ -58,6 +60,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:budget` | `node --test scripts/usage.test.mjs` |
 | `npm run test:claims` | `node --test scripts/claims.test.mjs` |
 | `npm run test:classifier` | `node --test scripts/classifier.test.mjs` |
+| `npm run test:dispatch` | `node --test scripts/check-dispatch-agenttype.test.mjs` |
 | `npm run test:gate` | `node --test .claude/workflows/lib/gate-logic.test.mjs` |
 | `npm run test:hooks` | `node --test scripts/session-start.test.mjs` |
 | `npm run test:launcher-permissions` | `node --test scripts/launcher-permissions.test.mjs` |
@@ -91,6 +94,7 @@ it, so a hook that changes posture changes this map with it.
 
 | File | Subject |
 |---|---|
+| `scripts/check-dispatch-agenttype.test.mjs` | the mutation gate for the dispatch-identity checker. |
 | `scripts/check-registration.test.mjs` | — |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
@@ -101,6 +105,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/pre-tool-use.test.mjs` | — |
 | `scripts/probe-readonly.test.mjs` | — |
 | `scripts/probe-stop-reason.test.mjs` | the aggregation that answers what ends a run. |
+| `scripts/prompt-standard.test.mjs` | the PS-* rules of |
 | `scripts/run-gate.test.mjs` | the router that decides whether the binding gate runs. |
 | `scripts/session-start.test.mjs` | the SessionStart hook. |
 | `scripts/skill-clamp.test.mjs` | a skill that subtracts must not be attached silently. |
@@ -109,7 +114,7 @@ it, so a hook that changes posture changes this map with it.
 
 ## What the system asserts
 
-33 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
+38 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
 `~/.warroom/ledger/global.yml` — machine state a fresh clone does not have, which the ledger reports
 rather than skipping silently.
 
@@ -117,8 +122,8 @@ rather than skipping silently.
 |---|---|
 | behavior | 17 |
 | external-fact | 1 |
-| internal-fact | 13 |
-| runtime-capability | 2 |
+| internal-fact | 14 |
+| runtime-capability | 6 |
 
 Browse them with `npm run ledger:views`; sweep for expiry with `npm run ledger:sweep`.
 

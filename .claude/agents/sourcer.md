@@ -2,7 +2,8 @@
 name: sourcer
 description: |
   Engine. Answers bounded questions with sourced evidence — URL, access date, confidence, and the gaps named. Never asserts without checking, never recommends. Replaces researcher and research-lead, which were the same discipline at two scopes.
-model: claude-sonnet-4-6
+model: claude-opus-5
+effort: high
 tools: [Read, Glob, Grep, WebSearch, WebFetch]
 maxTurns: 25
 color: purple

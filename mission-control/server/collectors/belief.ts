@@ -49,7 +49,14 @@ import os from 'node:os';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import type { Project, LedgerClaim, TrustState } from '../projects.ts';
-import { parseYamlSubset, validateClaim, waiverState, type ClaimDisposition } from '../lib/claims.ts';
+import { parseYamlSubset, waiverState, type ClaimDisposition } from '../lib/claims.ts';
+import { validateGlobalClaim } from '../lib/claim-shape.ts';
+
+/**
+ * The label scripts/ledger.mjs stamps as `source_file` on a global claim — the same literal,
+ * written once. It is not read from the file; the closed schema would refuse it if it were.
+ */
+const GLOBAL_LEDGER_LABEL = '~/.warroom/ledger/global.yml';
 
 const execFileAsync = promisify(execFile);
 
@@ -392,21 +399,28 @@ export function readGlobalLedger(ledgerPath: string = globalLedgerPath()): Globa
   const issues: string[] = [];
   claimsList.forEach((c, i) => {
     const where = `${ledgerPath} claims[${i}]`;
-    const problems = validateClaim(c, where);
-    if (problems.length > 0) {
-      issues.push(...problems);
+    // VALIDATE, THEN KEEP WHAT WAS VALIDATED. This read `validateClaim(c)` and then
+    // `const claim = c as GlobalClaim` — a cast re-asserting `source_file: string` about an
+    // object the validator had just guaranteed does not carry it, since that schema is closed
+    // and `source_file` is not in it. Only the stamp below made the assertion true, and
+    // nothing forced the stamp to stay: delete it and tsc stays silent while every global row
+    // renders `undefined`. The last step gave back exactly what the first two bought.
+    //
+    // source_file is what ledger.mjs stamps onto these same claims, so a row in the view can
+    // name where a claim lives exactly as the ledger would — passed IN, because it is not in
+    // the file. There is deliberately no line: the ledger index no longer carries one, and the
+    // `source_line: 0` this used to stamp was never a measurement, it was a placeholder that
+    // rendered as `:0` in the tooltip.
+    const result = validateGlobalClaim(c, where, GLOBAL_LEDGER_LABEL);
+    if (!result.ok) {
+      issues.push(...result.problems);
       return;
     }
-    const claim = c as GlobalClaim;
-    if (claim.scope !== 'global') {
+    if (result.claim.scope !== 'global') {
       issues.push(`${where}: the global ledger may only hold scope:global claims`);
       return;
     }
-    // source_file is what ledger.mjs stamps onto these same claims, so a row in the view can
-    // name where a claim lives exactly as the ledger would. There is deliberately no line:
-    // the ledger index no longer carries one, and the `source_line: 0` this used to stamp
-    // was never a measurement — it was a placeholder that rendered as `:0` in the tooltip.
-    claims.push({ ...claim, source_file: '~/.warroom/ledger/global.yml' });
+    claims.push(result.claim);
   });
 
   return { present: true, path: ledgerPath, claims, rejected: issues.length, issues };

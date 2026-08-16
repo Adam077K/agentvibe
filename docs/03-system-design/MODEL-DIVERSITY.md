@@ -588,9 +588,9 @@ Three `verified_by: command` claims, all reproducible, none requiring a model:
 
 | id | assert | cmd | expect |
 |---|---|---|---|
-| `c-no-second-family-runtime` | No non-Claude model runtime is callable on this machine | `command -v codex` | exit ≠ 0 |
-| `c-qa-panel-single-family` | Every model dispatch in `qa.js` is Anthropic | `grep -c "model: 'sonnet'\|model: 'opus'" .claude/workflows/qa.js` | equals total `agent(` dispatches |
-| `c-lens-independence-unbacked` | No workflow dispatches a non-Anthropic family for any `independent` lens | `grep -rn "openai\|gemini\|codex" .claude/workflows/` | exit ≠ 0 |
+| `c-no-second-family-runtime` | No non-Claude model runtime is callable on this machine | `command -v codex` | exit ≠ 0 |<!-- ledger:unregistered: proposed by this section, not yet compiled -->
+| `c-qa-panel-single-family` | Every model dispatch in `qa.js` is Anthropic | `grep -c "model: 'sonnet'\|model: 'opus'" .claude/workflows/qa.js` | equals total `agent(` dispatches |<!-- ledger:unregistered: proposed by this section, not yet compiled -->
+| `c-lens-independence-unbacked` | No workflow dispatches a non-Anthropic family for any `independent` lens | `grep -rn "openai\|gemini\|codex" .claude/workflows/` | exit ≠ 0 |<!-- ledger:unregistered: proposed by this section, not yet compiled -->
 
 All three are `scope: project` and therefore require `valid_until`. Set it to **2026-11-15**: §1.4
 shows three runtimes changing eligibility in under five months, so a one-year expiry on any statement

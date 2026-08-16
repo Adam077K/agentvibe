@@ -219,9 +219,9 @@ This is the critic's correction that most surprised the layer designers: waiting
 | 6-A | `docs/03-system-design/Z1-PREDICTIONS.md` (new) | Before running, write down exactly what you predict the system will do: which engine will be dispatched, what claims it will emit, where it will get stuck, whether it will produce a verified artifact. This file is written BEFORE the run. It is not amended during the run. | none | 1h |
 | 6-B | Task selection | Pick a task with a verifiable artifact: a pricing spec, a market-size calculation, a landing page copy brief. Not code (code has CI; the interesting thing is whether the framing, sourcing, and claim verification work without CI). The task should require at least framer + sourcer + one claim with a `verified_by: command` resolver. | none | 30min |
 | 6-C | Run + observe | Dispatch from orchestrator with the task. Watch in Mission Control Belief view. Do not intervene unless an unrecoverable action is about to fire. Record what actually happened, where it diverged from Z1-PREDICTIONS.md. | none | half day |
-| 6-D | `docs/03-system-design/Z1-DEBRIEF.md` (new) | Write the delta between predictions and actuals. Every divergence is either a bug to fix or a belief to update. If the system produced a verified artifact, the claim `c-venture-task-complete` is emitted with `enforcement: block` — nothing that depends on Z1 can proceed until this claim verifies. | none | 2h |
+| 6-D | `docs/03-system-design/Z1-DEBRIEF.md` (new) | Write the delta between predictions and actuals. Every divergence is either a bug to fix or a belief to update. If the system produced a verified artifact, the claim `c-venture-task-complete` is emitted with `enforcement: block` — nothing that depends on Z1 can proceed until this claim verifies. | none | 2h |<!-- ledger:unregistered: gate of the superseded Z1 plan; the run never happened, so the claim was never compiled -->
 
-**Gate:** `c-venture-task-complete` claim exists in `docs/03-system-design/Z1-DEBRIEF.md`, is compiled into the ledger, verifies with `enforcement: block`, and is not authored by the same agent that ran the task.
+**Gate:** `c-venture-task-complete` claim exists in `docs/03-system-design/Z1-DEBRIEF.md`, is compiled into the ledger, verifies with `enforcement: block`, and is not authored by the same agent that ran the task.<!-- ledger:unregistered: gate of the superseded Z1 plan; the run never happened, so the claim was never compiled -->
 
 **What it unblocks:** Phase 7 (fleet rollout). You do not propagate a system to 12 projects until you have seen it complete a task it did not author.
 
@@ -551,7 +551,7 @@ If a normal heavy session costs more than $20 (the proposed block threshold), Ph
 **5. The lens generator (Phase 3-C) adds more complexity than the 25 KB runtime dump costs.**
 If the generator fails silently in CI, every agent runs on stale compiled lenses and nobody notices until a procedure diverges from the YAML. The cross-check that detects this (generator `--verify` flag + CI step) must exist before the generator ships, not after. If it cannot be written, the generator should not ship.
 
-**6. The claim `c-venture-task-complete` cannot be verified by command.**
+**6. The claim `c-venture-task-complete` cannot be verified by command.**<!-- ledger:unregistered: gate of the superseded Z1 plan; the run never happened, so the claim was never compiled -->
 The Z1 debrief claim will have `verified_by: judge` (two independent models agree the artifact is a real venture output). A `judge` resolver that calls a model in CI requires model credentials in CI. The plan currently has no model credentials in CI (this was the reason Phase 3 deferred the judge resolver). If Z1 produces a `judge` claim and CI cannot verify it, stop condition 6 never closes automatically — it stays an assertion. This is acceptable as a deferred Phase 7 problem only if Z1's claim is recorded with `enforcement: shadow` until CI gets credentials.
 
 ---
