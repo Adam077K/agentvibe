@@ -583,8 +583,28 @@ function validateClaim(c, where) {
   if (VERIFIERS.includes(c.verified_by)) validateEvidence(c, issues, where);
   if (c.disposition !== undefined && c.disposition !== null) validateDisposition(c, issues, where);
 
+  // Issue #55. `first_waived` records the date a claim was first waived and is used to enforce
+  // the 90-day cap in `scripts/ledger.mjs`. It is set ONCE on the first waiver and left alone
+  // when `disposition.until` is extended — so the index sees it only at waiver-start, keeping
+  // reason edits out of diffs.
+  //
+  // WHY ONLY scope:project. Global claims live in ~/.warroom/ledger/global.yml — machine state
+  // that this repo cannot own or migrate in a PR. Requiring first_waived there would break lint
+  // for every developer until they manually update their local global ledger, and a lint that
+  // is red for reasons outside the PR is a lint nobody reads. The cap is enforced where the
+  // index lives: project claims, which are the only ones compiled into .claude/ledger/index.json.
+  if (c.disposition && c.disposition.action === 'waive' && c.scope === 'project') {
+    if (typeof c.first_waived !== 'string' || !isRealDate(c.first_waived)) {
+      issues.push(`${where}: first_waived (YYYY-MM-DD) is required when disposition.action is "waive" — set it to the date the claim was first waived and do not change it when extending "until"`);
+    }
+  } else if (c.first_waived !== undefined && c.first_waived !== null) {
+    if (typeof c.first_waived !== 'string' || !isRealDate(c.first_waived)) {
+      issues.push(`${where}: first_waived must be a real YYYY-MM-DD date`);
+    }
+  }
+
   const known = new Set(['id', 'assert', 'kind', 'scope', 'verified_by', 'evidence',
-    'valid_until', 'confidence', 'supports', 'disposition']);
+    'valid_until', 'confidence', 'supports', 'disposition', 'first_waived']);
   for (const k of Object.keys(c)) {
     if (!known.has(k)) issues.push(`${where}: unknown field "${k}" — the schema is closed`);
   }

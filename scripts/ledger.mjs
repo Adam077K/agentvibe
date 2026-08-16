@@ -249,7 +249,32 @@ function collectGlobalClaims() {
     return { claims: [], issues: [], present: false };
   }
   const text = fs.readFileSync(GLOBAL_LEDGER, 'utf8');
-  const doc = parseYamlSubset(text);
+  // Issue #68. `parseYamlSubset` is strict by design — a tab in indentation, a duplicate
+  // key, or an unterminated quote each throw a ClaimError. Without this catch, that throw
+  // propagates all the way to main(), and every subcommand dies with a raw stack trace
+  // naming files in scripts/ rather than the line in the global ledger that is actually wrong.
+  //
+  // WHY WE RE-THROW rather than returning {claims:[], issues:[...]}:
+  //   A corrupt file rendered as zero global claims is indistinguishable from an absent one
+  //   (issue #57's shape, one level down). The throw keeps "corrupt" and "empty" structurally
+  //   distinct. The only defect the current code has is the quality of the message, not the
+  //   posture. Wrapping the message names the file and the line — both of which the
+  //   ClaimError already carries in its message — so the output is actionable.
+  //
+  // VERIFICATION (three states, three renderings):
+  //   absent  → {present: false} → callers print "not present on this machine"
+  //   corrupt → throws            → main() prints "ledger: [file]: line N: [problem]"
+  //   valid   → {present: true}  → callers proceed normally
+  let doc;
+  try {
+    doc = parseYamlSubset(text);
+  } catch (e) {
+    // Replace the stack with a one-line message naming the file. The parser error already
+    // names the line; e.message is the only field the main() handler needs.
+    const err = new Error(`${GLOBAL_LABEL} is malformed and cannot be parsed — ${e.message}`);
+    err.stack = err.message;
+    throw err;
+  }
   const issues = [];
   const claims = [];
   if (!doc || !Array.isArray(doc.claims)) {
@@ -334,123 +359,209 @@ function globalAbsenceNotice() {
 // check, and a semantic sweep can honestly report `unresolved` and never `pass`. This is a
 // scan: it either resolved the id or it did not.
 //
-// WHAT COUNTS AS A CITATION — the rule, stated because the false positives are the whole
-// difficulty:
+// WHAT COUNTS AS A CITATION — three rules, each load-bearing:
 //
-//   1. Fenced code blocks are SKIPPED entirely. Inside a fence an id is a definition or an
-//      example — `claims` blocks define claims, and the agent files carry JSON return-contract
-//      samples full of invented ids like `c-rate-limit-enforced`. Nesting is honoured
-//      (a ````markdown fence wrapping a ```claims one closes only on the longer fence), or
-//      the inner fence would close the outer and every following line would read as prose.
-//   2. YAML frontmatter is SKIPPED. The parser reads `claims:` there too; that is a
-//      definition site, not a citation.
-//   3. Everything else is prose, and an id in it must resolve.
+//   1. Must be an INLINE CODE SPAN (backtick-wrapped, not fenced). Every citation this repo
+//      writes already uses backticks; requiring them costs nothing and eliminates the
+//      English-word collision entirely — "c-suite" is never a citation, even in repos that
+//      use that word heavily, because it appears bare.
+//   2. The span must hold ONLY the id. `node scripts/ledger.mjs locate c-scratch-one` is a
+//      shell example, not a citation of c-scratch-one. The span content must satisfy
+//      CITED_ID_RE, which is the same grammar claims.js uses for id validation.
+//   3. The span must be OUTSIDE a fenced block and outside YAML frontmatter. Inside a fence
+//      an id is a definition or example; `claims` blocks define claims, and the agent files
+//      carry JSON return-contract samples full of invented ids like `c-rate-limit-enforced`.
+//      Nesting is honoured (a ````markdown fence wrapping a ```claims one closes only on the
+//      longer fence), or the inner fence would close the outer and every following line reads
+//      as prose. CLAIM-LEDGER.md documents the claim format by wrapping a ```claims block
+//      inside a ````markdown block, and a scanner that ignores the outer fence has already
+//      caused this exact mistake once, to the parser.
 //
-// AND THE ESCAPE, because two legitimate cases exist and neither is a mistake: an id proposed
-// but not yet registered (MODEL-DIVERSITY.md §11 lists three), and a historical document
-// naming a claim that has since been retired. Both mark the line:
+// WHAT IS DECLARED RATHER THAN RESOLVED — see UNRESOLVABLE_CITATIONS below.
 //
-//     `c-venture-task-complete` <!-- ledger:unregistered: gated on the Z1 run; not compiled yet -->
-//
-// The marker is greppable, which is the same property the citation pattern is being defended
-// for: `git grep ledger:unregistered` enumerates every deferred citation, with a completion
-// criterion. A marker on a line whose ids all resolve is reported as stale — an exemption
-// that has stopped suppressing anything is the lapsed-waiver shape, and the set only stays
-// honest if it shrinks when the reason does.
-//
-// THE RESIDUAL, NAMED RATHER THAN HIDDEN. Global claims live in `~/.warroom/ledger/global.yml`,
-// which no CI runner has, and 19 of this repo's prose citations point at them. Without that
-// file a dead id and a global one are indistinguishable, so on such a machine those citations
-// are counted and REPORTED as unchecked rather than failed — the same discipline, and the same
-// wording, as globalAbsenceNotice() above. That makes the check fully enforcing wherever the
-// global ledger exists (every developer machine, via `npm run check`) and honest about its
-// blind spot where it does not. Closing that gap needs a decision this file should not make
-// alone: it means either committing the global ids into the repo, or requiring every citation
-// of a non-project claim to carry a marker.
-//
-// LIMITS. Indented (four-space) code blocks are read as prose — no such block in this repo
-// names a claim id, and marking one is the escape if that changes. The pattern requires two
-// segments after `c-` (`c-a-b`), which is what keeps `c-suite` and friends out; an id of the
-// form `c-foo` would be cited unchecked rather than falsely flagged.
+// Issue #69. The previous approach (any `c-[a-z]+(-[a-z]+)+` token in prose) reported ids
+// only when the global ledger was present, making lint always-clean on CI where
+// ~/.warroom/ledger/global.yml does not exist. The current approach:
+//   - commits the known global claim ids (NOT their content) into UNRESOLVABLE_CITATIONS, so
+//     a runner can distinguish "known global claim" from "dead reference"
+//   - requires backtick wrapping, eliminating the English-word false positives
+//   - fails on any cited id not in the project ledger and not in UNRESOLVABLE_CITATIONS,
+//     regardless of whether the global ledger is present
+//   - verifies UNRESOLVABLE_CITATIONS entries against the real global ledger when it IS
+//     present, so the declared list cannot outlive its subjects
 
-const CITATION_RE = /\bc-[a-z0-9]+(?:-[a-z0-9]+)+\b/g;
-const CITATION_EXEMPT_RE = /<!--\s*ledger:unregistered:\s*\S[^]*?-->/;
+// A claim id, exactly as ID_RE in scripts/lib/claims.js defines it. That file owns the
+// grammar and does not export it, so this is a second statement of one fact — the test
+// in ledger.test.mjs asserts they match, which is what stops them drifting apart in silence.
+const CITED_ID_RE = /^c-[a-z0-9][a-z0-9-]*$/;
 
-function scanMarkdownCitations(text) {
-  const lines = text.split('\n');
+/**
+ * Every inline-code span in a markdown file that is outside a fenced block or frontmatter,
+ * with the line it sits on.
+ */
+function proseCodeSpans(text) {
+  const src = String(text);
+  const lines = src.split('\n');
   const out = [];
-  let fence = null;
-  let inFrontmatter = lines[0] === '---';
-  for (let i = inFrontmatter ? 1 : 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (inFrontmatter) {
-      if (/^---\s*$/.test(line)) inFrontmatter = false;
+
+  // Frontmatter, delimited the same way extractClaimBlocks() delimits it.
+  const fm = src.match(/^---\n[\s\S]*?\n---/);
+  let i = fm ? fm[0].split('\n').length : 0;
+
+  for (; i < lines.length; i++) {
+    // Fence detection: a fence opens on N backticks (or tildes) and closes only on the same
+    // character at >= N length with no info string. An unclosed fence makes the rest opaque.
+    const open = lines[i].trim().match(/^(`{3,})\s*([^`]*?)\s*$/);
+    if (open) {
+      const ticks = open[1].length;
+      let close = -1;
+      for (let j = i + 1; j < lines.length; j++) {
+        const m = lines[j].trim().match(/^(`{3,})\s*$/);
+        if (m && m[1].length >= ticks) { close = j; break; }
+      }
+      if (close < 0) break; // unclosed fence — the rest reads as inside the fence
+      i = close;
       continue;
     }
-    const f = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
-    if (f) {
-      // A fence closes only on the same character, at least as long, with no info string.
-      if (fence === null) fence = { ch: f[1][0], len: f[1].length };
-      else if (f[1][0] === fence.ch && f[1].length >= fence.len && f[2].trim() === '') fence = null;
-      continue;
+    // Each `...` span on the line.
+    for (const m of lines[i].matchAll(/`([^`\n]+)`/g)) {
+      out.push({ line: i + 1, code: m[1].trim() });
     }
-    if (fence) continue;
-    const exempt = CITATION_EXEMPT_RE.test(line);
-    // Ids inside an HTML comment are not citations — nobody reads them. Stripping them is
-    // what lets a marker's reason name the id it exempts: the first version of the marker on
-    // CLAIM-LEDGER.md:50 said "c-kebab-case names the id FORMAT", and the scanner counted the
-    // reason as an eighth citation. A check whose own remedy moves its numbers is a check
-    // whose numbers cannot be reconciled against anything.
-    const visible = line.replace(/<!--[^]*?-->/g, ' ');
-    CITATION_RE.lastIndex = 0;
-    for (const m of visible.matchAll(CITATION_RE)) out.push({ id: m[0], line: i + 1, exempt });
   }
   return out;
 }
 
-function collectProseCitations(known, globalPresent) {
+// ── The ids this repo cites that the project ledger cannot resolve ──────────
+//
+// Every entry is debt, declared. Two honest reasons, not blurred:
+//
+//   scope: 'global'  The claim is real and lives in ~/.warroom/ledger/global.yml — machine
+//                    state that no CI runner has. On any machine that HAS the global ledger
+//                    the declaration is checked against it: an entry whose id the real
+//                    global ledger does not have fails lint ("the exemption has outlived its
+//                    subject"). On a machine without the global ledger the check is skipped
+//                    and reported. So the check is fully enforcing wherever it CAN be, and
+//                    honest about the remaining gap (issue #69).
+//
+//   scope: 'none'    No claim exists anywhere. The prose names an id that was planned, or
+//                    illustrates the id FORMAT. Real rot of the mild kind, grandfathered with
+//                    a reason so the check can go in blocking today rather than after a
+//                    documentation sweep that would not itself be checked.
+//
+// THIS LIST IS A RATCHET, NOT A RUG. Lint fails when:
+//   1. An entry is no longer cited anywhere → delete it; there is nothing under it.
+//   2. An entry's id has since become a real project claim → delete it; the citation resolves.
+//   3. An entry marked scope:global that the real global ledger does not have → the exemption
+//      has outlived its subject (check 3 is skipped, and reported, when no global ledger is
+//      present, or when WARROOM_GLOBAL_LEDGER is set to a fixture — a fixture-based answer
+//      about a real global claim is an answer about the fixture).
+//
+// The list can only shrink, and cannot outlive its subjects.
+const UNRESOLVABLE_CITATIONS = {
+  'c-runtime-nested-spawn': {
+    scope: 'global',
+    why: 'the nested-spawn capability claim — global scope, lives in ~/.warroom/ledger/global.yml',
+  },
+  'c-rolling-five-hour-window': {
+    scope: 'global',
+    why: 'the usage-window assumption the budget ceiling rests on — global scope, currently waived',
+  },
+  'c-zsh-no-word-split-on-expansion': {
+    scope: 'global',
+    why: 'a shell behaviour that reaches every project on the machine — global scope',
+  },
+  'c-kebab-case': {
+    scope: 'none',
+    why: 'CLAIM-LEDGER.md\'s field table uses it to illustrate the FORMAT of an id, not as a real claim',
+  },
+  'c-venture-task-complete': {
+    scope: 'none',
+    why: 'the Z1 debrief gate in IMPLEMENTATION-PLAN.md, which is superseded — the claim was never written',
+  },
+  'c-no-second-family-runtime': {
+    scope: 'none',
+    why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded',
+  },
+  'c-qa-panel-single-family': {
+    scope: 'none',
+    why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded',
+  },
+  'c-lens-independence-unbacked': {
+    scope: 'none',
+    why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded',
+  },
+};
+
+/**
+ * Resolve every claim id cited in the repo's markdown prose.
+ *
+ * `globalIds` is null when the global scope could not be consulted — different from an empty
+ * set — and is reported rather than treated as "no global claim exists."
+ * `unknownWhy` says which of the two reasons it was.
+ */
+function checkCitations(projectIds, globalIds, unknownWhy) {
   const issues = [];
-  const unchecked = new Map(); // id → ["file:line", …], only when the global ledger is absent
-  const files = new Set();
-  let cited = 0;
-  let exempt = 0;
+  const notes = [];
+  const cited = new Map(); // id → ["file:line", …]
+
   for (const rel of candidateMarkdown()) {
     let text;
     try { text = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'); }
     catch { continue; } // unreadability is already reported by collectProjectClaims
-    if (!/\bc-[a-z0-9]+-/.test(text)) continue;
-    const hits = scanMarkdownCitations(text);
-    const byLine = new Map();
-    for (const h of hits) {
-      cited++;
-      files.add(rel);
-      if (!byLine.has(h.line)) byLine.set(h.line, []);
-      byLine.get(h.line).push(h);
-      if (known.has(h.id)) continue;
-      if (h.exempt) { exempt++; continue; }
-      if (!globalPresent) {
-        if (!unchecked.has(h.id)) unchecked.set(h.id, []);
-        unchecked.get(h.id).push(`${rel}:${h.line}`);
-        continue;
-      }
-      issues.push(
-        `${rel}:${h.line}: cites claim "${h.id}", which is in no ledger — not the project index, `
-        + `not ${GLOBAL_LABEL}. Register it, fix the id, or mark the line `
-        + '`<!-- ledger:unregistered: why -->`.'
-      );
+    if (!text.includes('`c-')) continue; // cheap pre-filter; proseCodeSpans decides
+    for (const s of proseCodeSpans(text)) {
+      if (!CITED_ID_RE.test(s.code)) continue;
+      if (!cited.has(s.code)) cited.set(s.code, []);
+      cited.get(s.code).push(`${rel}:${s.line}`);
     }
-    // Stale exemptions. Checkable everywhere, global ledger or not: an id that resolves
-    // against the project index resolves on every machine.
-    for (const [line, hs] of byLine) {
-      if (!hs[0].exempt || hs.some((h) => !known.has(h.id))) continue;
+  }
+
+  for (const [id, where] of [...cited].sort()) {
+    if (projectIds.has(id)) continue;
+    if (Object.prototype.hasOwnProperty.call(UNRESOLVABLE_CITATIONS, id)) continue;
+    issues.push(
+      `${where[0]}: prose cites claim "${id}", which is not in the ledger`
+      + (where.length > 1 ? ` (and at ${where.slice(1).join(', ')})` : '')
+      + '. Register it, fix the id, or declare it in UNRESOLVABLE_CITATIONS with a reason.'
+    );
+  }
+
+  // The ratchet, in both directions. Entries that no longer apply fail lint — so the list
+  // cannot outlive its subjects and cannot quietly become a permanent blanket permission.
+  let uncheckedGlobals = 0;
+  for (const [id, entry] of Object.entries(UNRESOLVABLE_CITATIONS)) {
+    if (!cited.has(id)) {
       issues.push(
-        `${rel}:${line}: carries \`ledger:unregistered\` but every claim id on the line resolves `
-        + `(${hs.map((h) => h.id).join(', ')}) — remove the marker. An exemption that suppresses `
-        + 'nothing is the lapsed-waiver shape: it reads as a live reason and is not one.'
+        `UNRESOLVABLE_CITATIONS declares "${id}", which no prose cites any more — `
+        + 'delete the entry rather than leaving an exemption with nothing under it.'
+      );
+      continue;
+    }
+    if (projectIds.has(id)) {
+      issues.push(
+        `UNRESOLVABLE_CITATIONS declares "${id}", but it is a real project claim now — `
+        + 'delete the entry; the citation resolves.'
+      );
+      continue;
+    }
+    if (entry.scope !== 'global') continue;
+    if (globalIds === null) { uncheckedGlobals++; continue; }
+    if (!globalIds.has(id)) {
+      issues.push(
+        `UNRESOLVABLE_CITATIONS says "${id}" is a global claim, `
+        + `and the real global ledger does not have it — the exemption has outlived its subject.`
       );
     }
   }
-  return { issues, unchecked, cited, exempt, files: files.size };
+  if (uncheckedGlobals > 0) {
+    notes.push(
+      `${uncheckedGlobals} UNRESOLVABLE_CITATIONS scope:global entries were not checked against `
+      + `the global ledger — ${unknownWhy}. Reported, not assumed correct.`
+    );
+  }
+
+  const total = [...cited.values()].reduce((n, w) => n + w.length, 0);
+  return { issues, notes, total, distinct: cited.size };
 }
 
 // ── The index ───────────────────────────────────────────────────────────────
@@ -482,8 +593,12 @@ function collectProseCitations(known, globalPresent) {
 // replaces that by resolving the position when asked. Resolved-on-demand beats committed:
 // a committed line number is right only until the next edit, then points confidently at
 // the wrong line.
+// `first_waived` is included so that the FIRST time a claim is waived is visible in index
+// diffs — a reviewer can see when the clock started. The full `disposition` is intentionally
+// absent: a reason edit must not produce an index diff, or the index stops being read.
+// See issue #55.
 const KEY_ORDER = ['id', 'assert', 'kind', 'scope', 'verified_by', 'evidence',
-  'valid_until', 'confidence', 'supports', 'source_file'];
+  'valid_until', 'confidence', 'supports', 'first_waived', 'source_file'];
 
 function canonical(claim) {
   const out = {};
@@ -661,33 +776,56 @@ function cmdBuild(argv) {
   return 0;
 }
 
+// Issue #55. A waiver deadline can be pushed out indefinitely with no CI signal: `disposition`
+// is intentionally absent from KEY_ORDER (a reason edit must not produce an index diff), but
+// that means `build --check` never sees a changed `until`. The fix: a 90-day cap from
+// `first_waived`, which IS in the index — the first time a claim is waived, `first_waived`
+// enters the index diff and stays there. Extending `until` without changing `first_waived`
+// is visible only when the 90-day cap is exceeded, at which point lint fails, and that is
+// the only signal a CI gate can produce for something it cannot see between changes.
+const WAIVER_CAP_DAYS = 90;
+const MS_PER_DAY = 86400000;
+
+function waiverCapIssues(claims, now) {
+  const issues = [];
+  for (const c of claims) {
+    if (!c.first_waived) continue;
+    const start = Date.parse(`${c.first_waived}T00:00:00Z`);
+    if (Number.isNaN(start)) continue; // schema already reports a bad date
+    const days = Math.ceil((now - start) / MS_PER_DAY);
+    if (days > WAIVER_CAP_DAYS) {
+      issues.push(
+        `${c.source_file}: claim "${c.id}" has been waived for ${days} days from `
+        + `first_waived ${c.first_waived} — the ${WAIVER_CAP_DAYS}-day cap is exceeded. `
+        + 'Refresh the claim, Deprecate it, or Waive again with a new first_waived date that '
+        + 'restarts the clock only after the underlying condition has genuinely changed.'
+      );
+    }
+  }
+  return issues;
+}
+
 function cmdLint() {
   const proj = collectProjectClaims();
   const glob = collectGlobalClaims();
-  const known = new Set([...proj.claims, ...glob.claims].map((c) => c.id));
-  const prose = collectProseCitations(known, glob.present);
-  const issues = [...proj.issues, ...glob.issues, ...prose.issues];
-  for (const n of proj.notes || []) process.stdout.write(`ledger lint: note — ${n}\n`);
+  // Issue #69: scope:global exemptions are judged against the REAL global ledger, not a
+  // fixture. An injected WARROOM_GLOBAL_LEDGER points at a fixture — asking a fixture whether
+  // a real global claim still exists gets an answer about the fixture. So globalIsReal is
+  // false whenever the variable is set, even if the file exists.
+  const globalIsReal = !process.env.WARROOM_GLOBAL_LEDGER && glob.present;
+  const cites = checkCitations(
+    new Set(proj.claims.map((c) => c.id)),
+    globalIsReal ? new Set(glob.claims.map((c) => c.id)) : null,
+    glob.present
+      ? `WARROOM_GLOBAL_LEDGER points at ${GLOBAL_LABEL}, which is a fixture rather than the real global ledger`
+      : `~/.warroom/ledger/global.yml is not present on this machine`,
+  );
+  const capIssues = waiverCapIssues([...proj.claims, ...glob.claims], Date.now());
+  const issues = [...proj.issues, ...glob.issues, ...cites.issues, ...capIssues];
+  for (const n of [...(proj.notes || []), ...cites.notes]) process.stdout.write(`ledger lint: note — ${n}\n`);
   process.stdout.write(`ledger lint: ${proj.claims.length} project claims · ${glob.claims.length} global claims`);
   process.stdout.write(glob.present ? `\n` : ` (no ${GLOBAL_LABEL} on this machine)\n`);
-  process.stdout.write(`ledger lint: ${prose.cited} prose citation(s) in ${prose.files} file(s)`);
-  if (prose.exempt) process.stdout.write(` · ${prose.exempt} marked ledger:unregistered`);
-  process.stdout.write('\n');
-  if (prose.unchecked.size > 0) {
-    // The #57 shape one level up: these citations resolve to no project claim, and without
-    // the global ledger "global claim" and "dead id" are the same observation. Counted and
-    // named rather than passed over, because a check that silently drops what it cannot
-    // adjudicate is the thing this repo keeps finding in its own tools.
-    const sites = [...prose.unchecked.values()].reduce((n, v) => n + v.length, 0);
-    process.stdout.write(
-      `ledger lint: ${sites} citation(s) of ${prose.unchecked.size} id(s) could not be checked — `
-      + `they name no project claim and ${GLOBAL_LABEL} is not present on this machine, so a global `
-      + 'claim and a dead id are indistinguishable here (this is reported, not skipped silently):\n'
-    );
-    for (const [id, at] of [...prose.unchecked].sort()) {
-      process.stdout.write(`    ${id}  ${at.length} site(s), first ${at[0]}\n`);
-    }
-  }
+  process.stdout.write(`ledger lint: ${cites.total} prose citation(s) of ${cites.distinct} distinct claim id(s)\n`);
   if (issues.length === 0) {
     process.stdout.write('ledger lint: clean\n');
     return 0;
