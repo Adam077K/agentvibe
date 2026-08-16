@@ -14,6 +14,8 @@ Writes `docs/03-system-design/agents/PROMPT-STANDARD.md` (+1 file, no code). The
 
 **The one exception is stated, not hidden.** `PS-MODEL-ENUM` specifies the target Claude 5 set and measures **7 of 7** — every engine is pinned to a superseded model, and a stale pin silently clamps `effort` ([GRANT-HOLDERS.md:176](../../03-system-design/agents/GRANT-HOLDERS.md)). It is explicitly **not blocking until the roster is re-pinned in the linter PR**, because a blocking rule that fails every good file is what §0 exists to prevent.
 
+**`PS-EFFORT-ENUM` validates the value and claims nothing about binding.** Whether the frontmatter `effort:` field is honoured is written **UNVERIFIED** in §6.1 — zero agent files declare it, so the channel has never been exercised — and tracked as `c-effort-frontmatter-binding-unverified`. Implying it binds is precisely how `mcpServers` reached 52 files.
+
 **The calibration constraint held and changed two rules.** Reusing `schema-lint.js:574`'s `VAGUE` over agent bodies fails **6 of 7** good files (10 sites) — so it is demoted to `WARN` and the finding is written into the standard as its method: *a rule inherits the grammar of the thing it was calibrated on.* `PS-BODY-TOOL-AFFIRM` at line scope fires on 2 legitimate negations in `reviewer-readonly.md:45-46`; at paragraph scope it reaches 0, because a line is not a sentence in a hard-wrapped file.
 
 **One correction carried into the standard:** [AGENT-ARCHITECTURE.md:56](../../03-system-design/AGENT-ARCHITECTURE.md) still records `maxTurns:` as non-binding. §1.5 states the corrected version — it binds when the dispatch names an `agentType` — because a standard that forwards a stale row propagates it.

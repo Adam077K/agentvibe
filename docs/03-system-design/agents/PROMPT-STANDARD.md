@@ -508,20 +508,23 @@ VERIFIED  TOKEN-EFFICIENCY.md §6 "Model split", python3 scratchpad/econ.py § b
 ```
 
 A stale pin is not cosmetic: it **silently clamps `effort`**, the one quality dial that binds
-([GRANT-HOLDERS.md:176](GRANT-HOLDERS.md)). All seven engines are pinned to superseded models today, so this
-rule measures **7 of 7** against the target set.
+([GRANT-HOLDERS.md §3.1, :176](GRANT-HOLDERS.md)). All seven engines are pinned to superseded models today,
+so this rule measures **7 of 7** against the target set.
 
 **It is therefore not blocking yet, and it must not be turned on before the roster is re-pinned** — a
-blocking rule that fails every good file is precisely what §0 exists to prevent. The two converge in one
-change, already planned as `irreversible`: *"`VALID_MODELS` → Claude 5 set; add `effort` to
-`REQUIRED_FRONTMATTER`; drop `maxTurns`"* ([GRANT-HOLDERS.md:1705](GRANT-HOLDERS.md)). Until that lands, the
-standard specifies the target and `schema-lint.js` enforces the old set. **Whoever lands the linter PR
-re-pins the seven engine files in the same change, then flips this row to `0`.**
+blocking rule that fails every good file is precisely what §0 exists to prevent. The two converge in the
+linter PR (`feat/prompt-standard-lint`), already planned as `irreversible`: *"`VALID_MODELS` → Claude 5 set;
+add `effort` to `REQUIRED_FRONTMATTER`; drop `maxTurns`"* ([GRANT-HOLDERS.md:1705](GRANT-HOLDERS.md)). Until
+that lands, **the standard specifies the target set and `schema-lint.js:115` still holds the old one.**
+Whoever lands `feat/prompt-standard-lint` re-pins the seven engine files in the same change, then flips this
+row to `0`.
 
 `PS-EFFORT-ENUM` validates the *value* whenever `effort:` is present — a closed enum, so it is safe to block
-on from day one. It says nothing about whether the field is honoured. **Zero agent files declare `effort:`
-today, so the frontmatter channel for it has never been exercised, and this standard does not assert that it
-binds.** Adding the field is how that gets tested; asserting it works is how `mcpServers` got onto 52 files.
+on from day one. It says nothing about whether the field is honoured. **Whether the frontmatter `effort:`
+field actually binds is UNVERIFIED:** zero agent files declare it today, so that channel has never been
+exercised, and its support in subagent frontmatter could not be confirmed from documentation. Tracked as
+claim `c-effort-frontmatter-binding-unverified`. Adding the field is how that gets tested; asserting it works
+is how `mcpServers` got onto 52 files.
 
 **Reproduce the existing-rule column:**
 
