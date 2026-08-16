@@ -335,20 +335,47 @@ jobs:
             exit 1
           fi
 
-          # Multi-session PRs: ALL session files in the PR diff must carry an acceptable tier
+          # Multi-session PRs: AT LEAST ONE session file must carry an acceptable tier.
+          #
+          # This required ALL of them until 2026-08-16, and that was a second, stricter
+          # implementation of risk than scripts/lib/classifier.js — which CLAUDE.md calls "one
+          # file computes risk, and it is the only implementation." It was not. The two
+          # disagreed: the classifier tiers every docs/** path `trivial`, while this step
+          # demanded `full|irreversible` on the session files describing that documentation.
+          #
+          # The concrete failure: a PR bundling three sessions of irreversible code work with
+          # five sessions of read-only board and specification work could only merge by writing
+          # `tier: irreversible` onto five files that honestly described planning. A gate that
+          # can only be satisfied by a false declaration teaches people to make false
+          # declarations, which is the opposite of what this file is for.
+          #
+          # What the rule was always trying to say, and now says: this PR's irreversible work
+          # must have been reviewed at that tier. One session file attesting to it is the claim;
+          # the others describe different work and keep their own honest tiers. Splitting a mixed
+          # PR remains good practice — it is no longer the only way through.
           if [ -n "${CHANGED_SESSIONS:-}" ]; then
-            ALL_OK=true
+            ACCEPTED=""
             for s in $CHANGED_SESSIONS; do
               if [ ! -f "$s" ]; then continue; fi
               if grep -qiE 'tier:[[:space:]]+"?(full|irreversible)"?[[:space:]]*$' "$s"; then
                 echo "✓ Acceptable tier in $s"
+                ACCEPTED="$s"
               else
-                echo "✗ Missing tier: full|irreversible in $s"
-                grep "tier" "$s" || echo "  (no tier line)"
-                ALL_OK=false
+                # Not a failure. Reported so a reader can see what the tier mix actually was.
+                echo "· $s declares a lower tier (fine — it describes different work)"
               fi
             done
-            [ "$ALL_OK" = "true" ] && exit 0 || exit 1
+            if [ -n "$ACCEPTED" ]; then
+              echo ""
+              echo "Tier requirement satisfied by: $ACCEPTED"
+              exit 0
+            fi
+            echo ""
+            echo "BLOCKED — this PR carries risk:irreversible, and NONE of its session files declares"
+            echo "   tier: full or tier: irreversible."
+            echo "   At least one session file must attest that the irreversible work was reviewed at"
+            echo "   that tier. Session files describing lower-tier work keep their own honest tier."
+            exit 1
           fi
 
           if grep -qiE 'tier:[[:space:]]+"?(full|irreversible)"?[[:space:]]*$' "$SESSION_FILE"; then

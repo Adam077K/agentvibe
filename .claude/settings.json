@@ -3,6 +3,12 @@
     "allow": [
       "Bash(git *)",
       "Bash(pnpm *)",
+      "Bash(npm *)",
+      "Bash(bun *)",
+      "Bash(bunx *)",
+      "Bash(printf *)",
+      "Bash(timeout *)",
+      "Bash(sleep *)",
       "Bash(gh *)",
       "Bash(node *)",
       "Bash(python3 *)",

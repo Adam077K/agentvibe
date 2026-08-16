@@ -228,13 +228,27 @@ wait_for_shell_prompt() {
 
 send_launch_claude() {
   # Usage: send_launch_claude <target> [resume_session_id]
+  #
+  # NO --dangerously-skip-permissions. Removed 2026-08-16, founder decision.
+  #
+  # .claude/settings.json carries 20 allow rules and 6 deny rules — a permission model someone
+  # sat down and wrote. This launcher passed --dangerously-skip-permissions, which made all 26
+  # of them inert in every warroom-started session. Every deny rule in the file (rm -rf, curl,
+  # chmod +x, global installs) was decoration. The PreToolUse hook still fired, so the system was
+  # not unprotected; it was protected by one mechanism where it was documented as two.
+  #
+  # The friction was measured before removing it rather than guessed: 11,342 Bash calls across
+  # 400 recent transcripts, of which 8,603 already matched the allow list. The real gap was
+  # bun/bunx/npm — 304 calls — plus printf, timeout and sleep. Those six entries were added to
+  # settings.json in the same change, so ordinary work still flows and anything that prompts is
+  # now a genuine signal about what agents reach for.
   local target=$1
   local resume=$2
   wait_for_shell_prompt "$target"
   if [ -n "$resume" ]; then
-    tmux send-keys -t "$target" "claude --dangerously-skip-permissions --resume $resume" Enter
+    tmux send-keys -t "$target" "claude --resume $resume" Enter
   else
-    tmux send-keys -t "$target" "claude --dangerously-skip-permissions" Enter
+    tmux send-keys -t "$target" "claude" Enter
   fi
 }
 

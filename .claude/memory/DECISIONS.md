@@ -577,3 +577,58 @@ narrowing is visible. A security control that silently hides data is a new insta
 **Reversibility:** reversible — the allowlist is config; the header check is one middleware
 **Owner:** ceo · **founder decision** · **Affects:** `mission-control/server/projects.ts`,
 `mission-control/server/routes/*`, and anyone running Mission Control against a multi-project tree
+
+## 2026-08-16 — The autonomy dial comes out, and the permission model starts applying
+
+**Context:** `.claude/settings.json` carried 20 allow rules and 6 deny rules. `bin/warroom:235,237`
+launched every session with `--dangerously-skip-permissions`, making all 26 inert. The `PreToolUse` hook
+still fired, so the system was protected by one mechanism where it was documented as two.
+**Decision:** Flag removed; six entries added to the allow list. Founder decision, 2026-08-16.
+**Measurement that set the six:** 11,342 Bash calls across 400 recent transcripts. 8,603 already matched the
+allow list. The uncovered real commands were `bun` (160), `npm` (78), `bunx` (66), then `printf`, `timeout`,
+`sleep`. `rm` and `curl` appear too and stay denied — that is the point of a deny list. A first pass at this
+measurement reported "47% would prompt"; it was tokenising heredoc bodies and was discarded rather than
+reported.
+**Reversibility:** reversible — one word in `bin/warroom`. Pinned by `scripts/launcher-permissions.test.mjs`
+so restoring it fails CI rather than passing silently.
+**Owner:** ceo · **founder decision** · **Affects:** `bin/warroom`, `.claude/settings.json`
+
+## 2026-08-16 — Two implementations of risk, reconciled
+
+**Context:** `CLAUDE.md:156` stated that `scripts/lib/classifier.js` is *"one file computes risk, and it is
+the only implementation."* The F13 step of `qa-lead-pass.yml` was a second one, and stricter: it required
+`tier: full|irreversible` on **every** session file in a `risk:irreversible` PR, including files the
+classifier tiers `trivial`. A PR mixing three sessions of irreversible code work with five of read-only
+specification work could only merge by writing a false tier onto the five.
+**Decision:** F13 now requires the tier on **at least one** session file. `CLAUDE.md` corrected to claim only
+what is true — one file computes the tier of a path — and to record why the broad version was struck.
+**Rejected:** having F13 call `classify.mjs` per session file (most correct, but needs a session-file → paths
+mapping that does not exist); keeping it strict and always splitting PRs (yesterday's split was good; as a
+standing rule it makes every mixed change a two-PR ceremony).
+**Reversibility:** reversible — the step is 30 lines of bash in one workflow file.
+**Owner:** ceo · **founder decision** · **Affects:** `.github/workflows/qa-lead-pass.yml`, `CLAUDE.md`
+
+## 2026-08-16 — Ship five engines, defer the two that hold credentials
+
+**Context:** `operator` and `instrument` are specified to hold payment keys and deploy tokens. `tools:` is
+not known to bind `Bash`, so a container declared read-only can still write through a shell. The OS sandbox
+those two depend on is configured **nowhere** — `GRANT-HOLDERS.md` records 0 sandbox keys in settings.json.
+**Decision:** Build `orchestrator · builder · designer · reviewer · sourcer`. `operator` and `instrument`
+stay specified and **uncreated** until a sandbox exists. Founder decision, 2026-08-16.
+**The roster answer is still seven** — the argument for the number never depended on creating them all at
+once, and deferring the two does not reopen `ROSTER-SIZE.md`.
+**Reversibility:** reversible — the specifications are written and unchanged.
+**Owner:** ceo · **founder decision** · **Affects:** the roster migration, `docs/03-system-design/agents/`
+
+## 2026-08-16 — The eleven shims stay until nothing references their names
+
+**Context:** 17 agent files here, 44 in `~/.claude/agents/`; 11 names exist in both with **different
+content**, and 33 more are absent from a clean clone. Deleting a repo shim **un-shadows** its global twin, so
+the name keeps working and quietly means the older definition. Nothing errors — the worst failure shape.
+**Decision:** Keep the 11 shims through the roster migration. They are occupying the name, which is their
+job. Delete only once nothing references those names.
+**The constraint that decided it:** those globals are **live in two other projects**
+(`obsidian-claude-code-mcp`, `overstory`), measured 2026-08-11. Archiving them fixes Agentvibe and reaches
+into work that is not Agentvibe, so it is not this repo's call to make unilaterally.
+**Reversibility:** fully reversible — nothing is deleted.
+**Owner:** ceo · **founder decision** · **Affects:** the roster migration, `~/.claude/agents/`

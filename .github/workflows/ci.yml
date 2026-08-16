@@ -151,6 +151,14 @@ jobs:
       - name: Stop-reason probe
         run: npm run test:probe-stop-reason
 
+      # The launcher passed --dangerously-skip-permissions, which made all 26 allow/deny rules in
+      # settings.json inert in every warroom-started session. Removed 2026-08-16 by founder
+      # decision, after measuring the friction: 11,342 Bash calls over 400 transcripts, 8,603
+      # already covered; bun/bunx/npm were the real gap and went into the allow list with it.
+      # Pinned because one word restores the flag silently and nothing else would fail.
+      - name: Launcher permissions
+        run: npm run test:launcher-permissions
+
       # The claim ledger. Four things, all deterministic:
       #   · the parser and schema (43 tests, most of them "this must REFUSE")
       #   · the tier map, run against a path list rather than read

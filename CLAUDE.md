@@ -153,8 +153,18 @@ Every PR is risk-tiered. **No merge without QA-Lead PASS.** The CEO and CTO cann
 | **Irreversible** | DB migration, workflow file, agent definition, billing flow | Full + 2-of-3 multi-judge + Founder sign-off | `risk:irreversible` |
 
 Auto-classification: [.claude/qa-tier-floor.yml](.claude/qa-tier-floor.yml), read through
-[scripts/lib/classifier.js](scripts/lib/classifier.js) — **one file computes risk**, and it is the only
-implementation. Query it with `node scripts/classify.mjs <paths...>`.
+[scripts/lib/classifier.js](scripts/lib/classifier.js) — **one file computes the tier of a path.** Query it
+with `node scripts/classify.mjs <paths...>`, or ask whether a diff needs the binding gate with
+`npm run gate`.
+
+This line used to read *"one file computes risk, and it is the only implementation."* **It was not true**, and
+it cost a PR split to find out: the `risk:irreversible` step in
+[qa-lead-pass.yml](.github/workflows/qa-lead-pass.yml) computed a second, stricter answer and demanded
+`tier: full|irreversible` on session files the classifier tiers `trivial`. The two are reconciled as of
+2026-08-16 — that step now requires the tier on **at least one** session file rather than all of them — but
+the claim is stated narrowly now, because the broad version is exactly the kind of sentence that reads as
+enforcement while nothing checks it. `scripts/classify.mjs`'s own header warned about this before it
+happened: *"Two implementations of risk classification will disagree, and you find out during the incident."*
 
 [.github/workflows/ci.yml](.github/workflows/ci.yml) **blocks** on schema-lint, the gate tests, the manifest
 check, the registration check, the launcher guard rails, and the claim ledger.
