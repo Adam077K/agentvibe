@@ -310,17 +310,29 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
 > through Phase 8a — eight phases shipped while it said "Sprint 1 — foundation." **If you change the phase,
 > change this block in the same PR.**
 
-- **Where we are:** Phases 1–7 complete · **Phase 8a (Mission Control read plane) complete** · 8b (Dispatch)
-  deferred — it is the only view that writes and needs Phase 9 to give it targets · **Phase 9 (fleet rollout)
-  not started.** Authoritative plan: [AGENT-SYSTEM-REBUILD.md](docs/03-system-design/AGENT-SYSTEM-REBUILD.md).
+- **Where we are:** Phases 1–7 complete · **Phase 8a complete** · **8b (Dispatch) BUILT 2026-08-16 against
+  `agentvibe` as its only target** — the loop is end to end (the server enqueues to a queue file, a
+  founder-run consumer in `mission-control/scripts/` reads it; the server still never spawns, and
+  `crosscheck.test.ts`'s shell ban stays at zero exceptions) · **Phase 9 (fleet rollout) not started.**
+  **8b's original exit gate is UNDISCHARGED and cannot be reached yet:** it requires dispatching into a
+  *second* project whose ledger receives the claims, and no sibling project has a ledger — measured
+  2026-08-12, zero of thirteen. That gate needs Phase 9. Built ≠ gate met; do not read one as the other.
+  Authoritative plan: [AGENT-SYSTEM-REBUILD.md](docs/03-system-design/AGENT-SYSTEM-REBUILD.md).
   `IMPLEMENTATION-PLAN.md` is **superseded** — do not follow its numbering.
 - **Active now — one session, completing the harness.** Founder decision 2026-08-16: finish the harness in a
   single autonomous pass, heavy review process cut, **scope stops before Phase 9** (no other project is
   touched). See [the build brief](docs/08-agents_work/handoffs/2026-08-16-harness-completion.md).
-- **Step one is the prompt-craft standard** — it gates every edit under `.claude/agents/`, and the roster
-  migration (**18 files → 7**) is blocked until it exists and is approved. Eighteen, not the seventeen this
-  block said until 2026-08-16: `reviewer-readonly.md` landed in #47. Count it with `ls .claude/agents/*.md`,
-  never from memory.
+- **The prompt-craft standard exists, is enforced, and the roster migration is DONE.** It landed as
+  `PROMPT-STANDARD.md` (#64) and became `PS-*` lint rules (#71). The roster is **7 engines of 18 files** —
+  eighteen, not the seventeen this block said until 2026-08-16, because `reviewer-readonly.md` landed in #47.
+  Count with `ls .claude/agents/*.md` and the `ENGINES` list in `.claude/hooks/schema-lint.js`, never from
+  memory — and note that the dead-path check refused a pinned line number here, correctly: a line number in
+  prose rots the next time anyone edits the file above it.
+  `schema-lint` is **18 pass · 0 fail · 0 warnings** as of #75. The eight warnings that stood before it were
+  not eight defects: **six were `PS-BODY-VAGUE`, a rule whose own message admitted it "cannot tell a
+  perception loop from a hand-wave."** It was firing on six of six engines. The fix narrowed the *predicate*
+  and left the prose alone — deleting judgement words to green a rule that cannot judge would have made the
+  prompts worse and the output cleaner, which is the trade this repo exists to refuse.
 - **The gate refuses now.** `qa.js` ran three times against PR #47 and **blocked every time, on its own
   author's work**; three independent reviewers then returned FAIL and found a path traversal, eleven SSRF
   bypasses, two more in the fix for those, and an auto-approved RCE path — all in work already called
@@ -347,14 +359,41 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   that exact tool (`c-mcp-hook-matcher-must-name-the-tool`), and nested spawning works
   (`c-nested-subagent-spawn-works`). All four are `verified_by: command` — a `judge` claim with an empty panel
   resolves `unresolved` forever, and two of those already exist.
-- **#56 is decided: shrink the payload, do not raise the budget.** `session-start.js` emits **27,069 bytes**
-  against a 4,096 budget (6.6x). `c-lenses-and-playbooks-are-loaded` carries a `refresh` disposition recording
-  the fix — a lens/playbook router at ~1.5KB, the same cure that took skills discovery from ~15,000 tokens to
-  ~1,300. `refresh` does not short-circuit the resolver, so the claim keeps failing until the router lands.
+- **#56 is CLOSED — the payload was shrunk, the budget was not raised.** `session-start.js` emitted **27,069
+  bytes** against a 4,096 budget; it now emits **2,941** (#76), a 9.2x cut, and the claim passes. The point
+  was never the number: at 27KB the runtime *truncated* the output and inlined a ~2KB preview, so the lenses
+  and playbooks **never reached agent context at all** — a file pointer did, and whether anyone opened it was
+  discretionary. Under the ceiling the index actually arrives. Same two-tier cure that took skills discovery
+  from ~15,000 tokens to ~1,300: ids, one-line summaries, and the path to read on demand.
+- **The claim ledger's shadow list is CLEAN, and 5 is the number.** `ledger verify` → **5 would_block · 0
+  block**, and **none of the five is a real defect**: two are one deliberate canary (`example.invalid`,
+  deliberately expired) that exists to prove a resolver reports `unresolved` rather than passing, and three
+  are `verified_by: judge` claims with empty panels. Those three may be **structurally unresolvable in this
+  runtime** — `risk: high` requires ≥2 distinct model families and there is no non-Anthropic model inside
+  Claude Code. That is a founder decision, not a bug: accept permanent shadow, or re-register as `command`
+  where a deterministic test exists. Do not "fix" the canary.
+- **The prose-citation check can fail on CI now (#69, #83).** It previously could not: with no
+  `~/.warroom/ledger/global.yml` — structurally always true on a runner — `lint` downgraded unresolvable
+  citations to a warning and exited 0. Verified after the fix by simulating a runner with an empty `HOME`:
+  a dead citation exits **1**, a clean tree exits **0**. This is why `main` was once red locally and green in
+  CI on the same commit for forty minutes.
+- **The OS sandbox is BUILT and UNARMED (#84).** `sandbox.enabled: false` in `.claude/settings.json`, with
+  `denyRead` over `~/.ssh`, `~/.aws`, `~/.config/gh`, `~/.netrc`, `**/.env*`. "Unarmed" is a **checked fact**,
+  not a comment: `npm run test:sandbox` fails if `enabled` is flipped, and CI runs it. Two facts that decide
+  how you arm it, both sourced from the Claude Code docs 2026-08-16 and recorded in
+  [SANDBOX.md](docs/03-system-design/SANDBOX.md): **(1) `failIfUnavailable` defaults to `false`, which is
+  fail-OPEN** — if the sandbox cannot start, commands run *unsandboxed* with a warning; **(2) there is an
+  escape hatch, `dangerouslyDisableSandbox`** — Claude Code may retry a sandbox-denied command with the
+  sandbox off. So it is a **guardrail against accident, not containment against the agent.** Do not describe
+  it as containment. It is also the **Bash** sandbox: it governs Bash and its children, not the file-edit
+  tools, and not a whole session. **Do not hand-write a `.sb` profile** — Seatbelt (macOS) and bubblewrap
+  (Linux/WSL2) are already implemented in the binary.
 - **Blockers:** none blocking. `--dangerously-skip-permissions` was removed by #47 — the **39** allow/deny
   rules in `settings.json` (29 allow · 10 deny) are live now, so a command that used to pass silently may
-  prompt. This block said 26 until 2026-08-16. Founder decisions pending: the OS sandbox policy and the
-  credential scopes for `instrument`/`operator`.
+  prompt. This block said 26 until 2026-08-16. Founder decisions pending: **whether to merge PR #77** (it
+  binds the QA verdict to a diff hash, and merging it means every irreversible PR needs a real local `qa.js`
+  run — it already refused its own author's PR, which is the mechanism working); whether to arm the sandbox;
+  the three unresolvable judge claims above; and the credential scopes for `instrument`/`operator`.
 - **Before you trust any local measurement:** `cd mission-control && bun install`. Without it three
   mission-control claims look like regressions when they are only missing dependencies. Measure from a clean
   checkout, never a stale working tree. `c-mission-control-cold-start` is a **wall-clock** check (9.5s against
