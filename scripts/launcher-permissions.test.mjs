@@ -123,11 +123,28 @@ test('the browser tool actually reaches the hook', () => {
   }
 });
 
-test('the matcher does not sweep in MCP servers the hook has no rules for', () => {
-  // Gating figma/notion/gmail here would be theatre with an outage attached.
+test('the matcher routes every MCP tool — being routed is not being gated', () => {
+  // This test asserted the OPPOSITE until 2026-08-16: that the matcher must NOT match
+  // figma/notion/miro, because "gating them here would be theatre with an outage attached".
+  // The premise was that reaching the hook means being gated. It is no longer true. The matcher
+  // now reads `mcp__` and .claude/hooks/pre-tool-use.sh decides by SCOPE: a server this repo does
+  // not configure in .mcp.json is the founder's own, and is allowed untouched and unlogged.
+  //
+  // The narrow matcher was buying that no-outage property at a price nobody priced: it left 22 of
+  // playwright's 24 tools unable to reach any safety control at all, `browser_run_code_unsafe`
+  // among them. The property is now provided by the hook, which can tell the two cases apart,
+  // instead of by a matcher, which cannot.
+  //
+  // The no-outage guarantee is still pinned — where the behaviour actually is, in
+  // scripts/pre-tool-use.test.mjs: 'a user-scope server is untouched even with a policy present'.
   const s = JSON.parse(fs.readFileSync(SETTINGS, 'utf8'));
   const re = new RegExp(s.hooks.PreToolUse[0].matcher);
-  for (const t of ['mcp__figma__get_design_context', 'mcp__notion__notion-search', 'mcp__miro__board_create']) {
-    assert.equal(re.test(t), false, `${t} is routed to a hook that has no rule for it`);
+  for (const t of [
+    'mcp__figma__get_design_context',
+    'mcp__notion__notion-search',
+    'mcp__miro__board_create',
+    'mcp__playwright__browser_run_code_unsafe',
+  ]) {
+    assert.ok(re.test(t), `${t} never reaches the hook, so no policy can be applied to it`);
   }
 });

@@ -46,6 +46,170 @@ softwarn() {
   # exit 0 so Claude Code still executes — warning surfaces in next turn
 }
 
+# ── MCP policy: this repo governs the servers this REPO configures ────────────
+#
+# THE RULE IS SCOPE, NOT SERVER NAME. The carve-out at the bottom of this file allowed every
+# MCP tool, and defended it by saying those servers are the founder's own (figma, notion,
+# gmail, miro, higgsfield, …). That is true of the user-scope servers in ~/.claude.json and
+# FALSE of anything this repo configures in its own .mcp.json — which, since 2026-08-16, is
+# playwright, granted to `designer`, carrying `browser_run_code_unsafe`: arbitrary code in a
+# browser holding live session cookies, 69 real calls of it on this machine. The sentence that
+# comment MEANT is "founder-owned servers are not this hook's business". This function is that
+# sentence with a mechanism under it, and the mechanism draws the line by scope.
+#
+# DECISION TABLE — .claude/mcp-policy.json:
+#   file absent                        ALLOW, no log. The mechanism is off, which is exactly the
+#                                      behaviour before the policy existed. A checkout without
+#                                      the file is neither silently hardened nor silently opened.
+#   file unreadable or invalid         BLOCK every MCP call. "I could not look" is not "nothing
+#                                      to see" — the same posture as the payload parse at L86.
+#   server in neither policy nor
+#     .mcp.json                        ALLOW, no log. User scope. Not this repo's business.
+#   server in .mcp.json, not in policy BLOCK. An ungoverned project server. Deciding scope from
+#                                      .mcp.json — the same file schema-lint.js:104 reads to
+#                                      judge whether an agent's `mcpServers` grant is real —
+#                                      means adding a server there cannot silently outflank this
+#                                      policy. Two sources of "is this ours" would disagree, and
+#                                      you find out during the incident.
+#   credentialed: true                 BLOCK, regardless of mode. See below.
+#   tool on the server's allow list    ALLOW + one events.jsonl line.
+#   tool on deny, or on NEITHER list   mode=block → BLOCK; mode=shadow → ALLOW + events line +
+#                                      stderr. Unlisted is treated as denied because a tool
+#                                      absent from both lists is one that did not exist when the
+#                                      policy was written — the enumeration failure this file's
+#                                      own SSRF guard was rewritten to stop repeating.
+#
+# WHY ONE RULE IGNORES `mode`. ADR-001:123-125 ships every gate in shadow EXCEPT outbound send,
+# deploy, migration and harness self-edit, because `git revert` does not undo those. A
+# credentialed server is all four at once — a sent mail is sent — so `credentialed: true` blocks
+# from day one and `mode` cannot soften it. The asymmetry lives in the mechanism, not in a review
+# process that has to remember it.
+#
+# WHERE THE LOG GOES. Every governed call appends one line to events.jsonl, which
+# mission-control/server/collectors/events.ts already reads and buckets by `event`. stderr is
+# reserved for would_block and block: designer's perception loop made 154 `browser_evaluate`
+# calls on this machine, and 154 lines of stderr per session is how a guard gets switched off.
+mcp_policy_check() {
+  local _root _policy _v
+  _root="${CLAUDE_PROJECT_DIR:-$PWD}"
+  _policy="$_root/.claude/mcp-policy.json"
+
+  [ -f "$_policy" ] || return 0
+
+  # Declared and assigned on separate lines on purpose: `local _v=$(...)` reports the exit status
+  # of `local`, which is always 0, so the `||` below would never fire and a crashed policy check
+  # would read as success.
+  _v=$(python3 -c "
+import sys, json, os, time
+
+pol_path, mcp_path, proj, tool = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+
+def out(s):
+    print(s)
+    raise SystemExit(0)
+
+try:
+    with open(pol_path) as f:
+        pol = json.load(f)
+    if not isinstance(pol, dict): raise ValueError('policy is not a JSON object')
+    mode = pol.get('mode')
+    if mode not in ('shadow', 'block'): raise ValueError('mode must be exactly shadow or block')
+    servers = pol.get('servers')
+    if not isinstance(servers, dict): raise ValueError('servers must be a JSON object')
+except Exception as e:
+    out('BLOCK|.claude/mcp-policy.json is unreadable or invalid (' + str(e) + '). Every MCP call is refused until it parses. Fix the policy, or delete it to return to ungoverned MCP.')
+
+rest = tool[5:] if tool.startswith('mcp__') else tool
+server, _sep, name = rest.partition('__')
+
+entry = servers.get(server)
+
+if entry is None:
+    # Project scope is decided by .mcp.json, so an unreadable .mcp.json means scope is UNKNOWN —
+    # and a bare try/except around this read would swallow that into 'not configured', i.e. into
+    # 'user scope', i.e. into allow. Absent and corrupt are different answers and only one of them
+    # is safe. os.path.exists separates them before json.load can blur them together.
+    m = None
+    if os.path.exists(mcp_path):
+        try:
+            with open(mcp_path) as f:
+                m = json.load(f)
+            if not isinstance(m, dict): raise ValueError('.mcp.json is not a JSON object')
+        except Exception as e:
+            out('BLOCK|.mcp.json is present but unreadable (' + str(e) + '). Project scope cannot be determined, so this hook cannot tell a founder-owned server from one this repo configures. Refusing rather than guessing.')
+    if m is not None and server in (m.get('mcpServers') or {}):
+        out('BLOCK|' + server + ' is configured in .mcp.json but has no entry in .claude/mcp-policy.json. A project-scope server with no policy is ungoverned. Add it — credentialed, allow, deny — rather than leaving the gap open.')
+    out('ALLOW|')
+
+if not isinstance(entry, dict):
+    out('BLOCK|the .claude/mcp-policy.json entry for ' + server + ' is not a JSON object.')
+
+cred = entry.get('credentialed')
+if not isinstance(cred, bool):
+    out('BLOCK|the .claude/mcp-policy.json entry for ' + server + ' does not declare credentialed as true or false. A server whose credential status is unknown is treated as credentialed.')
+
+allow = entry.get('allow')
+deny = entry.get('deny')
+if not isinstance(allow, list) or not isinstance(deny, list):
+    out('BLOCK|the .claude/mcp-policy.json entry for ' + server + ' must carry allow and deny as JSON lists.')
+
+if cred:
+    rule, decision = 'credentialed', 'block'
+elif name in deny:
+    rule, decision = 'deny', ('block' if mode == 'block' else 'would_block')
+elif name in allow:
+    rule, decision = 'allow', 'allow'
+else:
+    rule, decision = 'unlisted', ('block' if mode == 'block' else 'would_block')
+
+def events_path():
+    p = os.environ.get('WARROOM_EVENTS')
+    if p:
+        return p
+    try:
+        with open(os.path.join(proj, '.warroom.yml')) as f:
+            lines = [l.strip() for l in f]
+        for l in lines:
+            if l.startswith('state_dir:'):
+                return os.path.join(os.path.expanduser(l.split(':', 1)[1].strip()), 'events.jsonl')
+        for l in lines:
+            if l.startswith('session:'):
+                return os.path.join(os.path.expanduser('~'), '.' + l.split(':', 1)[1].strip(), 'events.jsonl')
+    except Exception:
+        pass
+    return os.path.join(proj, '.ledger-events.jsonl')
+
+try:
+    ep = events_path()
+    d = os.path.dirname(ep)
+    if d:
+        os.makedirs(d, exist_ok=True)
+    with open(ep, 'a') as f:
+        f.write(json.dumps({'ts': int(time.time()), 'event': 'mcp.call', 'server': server,
+                            'tool': name, 'rule': rule, 'decision': decision, 'mode': mode}) + chr(10))
+except Exception:
+    pass
+
+if decision == 'block':
+    if rule == 'credentialed':
+        out('BLOCK|' + server + ' is marked credentialed: true in .claude/mcp-policy.json, so ' + server + '/' + name + ' is refused REGARDLESS of mode. A credentialed call is outbound send: git revert does not undo it, and ADR-001:123-125 blocks that class from day one.')
+    out('BLOCK|' + server + '/' + name + ' is refused by .claude/mcp-policy.json (rule=' + rule + ', mode=block).')
+
+if decision == 'would_block':
+    out('LOG|would_block ' + server + '/' + name + ' rule=' + rule + ' mode=shadow — the call PROCEEDS and the verdict is recorded. Set mode to block in .claude/mcp-policy.json to refuse it.')
+
+out('ALLOW|')
+" "$_policy" "$_root/.mcp.json" "$_root" "$tool_name" 2>/dev/null) \
+    || block "the MCP policy at .claude/mcp-policy.json could not be evaluated — refusing. This hook fails closed."
+
+  case "$_v" in
+    ALLOW*) : ;;
+    LOG*)   echo "[pre-tool-use] mcp: ${_v#LOG|}" >&2 ;;
+    BLOCK*) block "${_v#BLOCK|}" ;;
+    *)      block "the MCP policy returned nothing readable — refusing. This hook fails closed." ;;
+  esac
+}
+
 # ── Read payload ──────────────────────────────────────────────────────────────
 
 payload=$(cat)
@@ -470,15 +634,35 @@ else:
       BLOCK*) block "browser navigation refused: ${_verdict#BLOCK|}" ;;
       *)      block "browser navigation guard returned nothing readable — refusing. This hook fails closed." ;;
     esac
+
+    # The URL guard runs FIRST and the policy second, because they answer different questions:
+    # the guard asks where this navigation goes, the policy asks whether this tool may be called
+    # at all. A `case` arm does not fall through in bash 3.2 (`;;&` is bash 4+, and this hook runs
+    # under /bin/bash on macOS), so the shared rule is a function called from both arms rather
+    # than a pattern that matches twice.
+    mcp_policy_check
+    ;;
+
+  mcp__*)
+    # EVERY OTHER MCP TOOL. Until 2026-08-16 nothing reached here: the PreToolUse matcher in
+    # .claude/settings.json named `mcp__playwright__browser_navigate`, so exactly two tools were
+    # routed to this hook and the other twenty-two on the same server — `browser_run_code_unsafe`
+    # among them — were unhookable. The matcher now reads `mcp__`, which subsumes the old entry
+    # (it is an unanchored regex over the tool name; that is already why `..._back` matched, and
+    # scripts/pre-tool-use.test.mjs:406 pins it).
+    mcp_policy_check
     ;;
 
   *)
     # Unknown tool — allow.
     #
-    # STATED LIMIT: this includes every MCP tool other than the one cased above. Those servers
-    # are the founder's own (figma, notion, gmail, miro, higgsfield, …) and this hook has no
-    # rules that would mean anything for them; gating them here would be theatre with an outage
-    # attached. The boundary that matters — a browser reaching off the machine — is closed above.
+    # STATED LIMIT, RESTATED: this no longer includes MCP tools. It used to, and the comment here
+    # defended that by saying those servers are the founder's own — true of the user-scope servers
+    # in ~/.claude.json, false of anything this repo configures in its own .mcp.json. MCP tools go
+    # to `mcp_policy_check` above, which tells the two apart by SCOPE rather than by name.
+    #
+    # What still lands here is every non-MCP tool this hook has no rules for: Read, Glob, Grep,
+    # Task and the rest. They run no commands and write no files, which is what this hook is about.
     ;;
 esac
 

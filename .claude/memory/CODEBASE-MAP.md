@@ -70,6 +70,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:pre-tool-use` | `node --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-readonly` | `node --test scripts/probe-readonly.test.mjs` |
 | `npm run test:probe-stop-reason` | `node --test scripts/probe-stop-reason.test.mjs` |
+| `npm run test:registration` | `node --test scripts/check-registration.test.mjs` |
 | `npm run test:run-gate` | `node --test scripts/run-gate.test.mjs` |
 | `npm run test:skill-clamp` | `node --test scripts/skill-clamp.test.mjs` |
 | `npm run test:warroom` | `node --test scripts/warroom-install.test.mjs` |
@@ -94,6 +95,7 @@ it, so a hook that changes posture changes this map with it.
 | File | Subject |
 |---|---|
 | `scripts/check-dispatch-agenttype.test.mjs` | the mutation gate for the dispatch-identity checker. |
+| `scripts/check-registration.test.mjs` | — |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
 | `scripts/launcher-permissions.test.mjs` | the autonomy dial, and the model it made inert. |
