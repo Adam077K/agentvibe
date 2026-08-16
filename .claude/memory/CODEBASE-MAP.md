@@ -39,10 +39,12 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check` | `npm run lint:agents && npm run check:prompt-standard && npm run test:gate && npm run check:manifest && npm run` |
 | `npm run check:curation` | `node scripts/curate-skills.mjs --check` |
 | `npm run check:dispatch` | `npm run test:dispatch && node scripts/check-dispatch-agenttype.mjs` |
+| `npm run check:dispatch-prompt` | `npm run test:dispatch-prompt && node scripts/check-dispatch-prompt-size.mjs` |
 | `npm run check:ledger` | `npm run test:claims && npm run test:classifier && npm run test:ledger && node scripts/ledger.mjs lint && node ` |
 | `npm run check:manifest` | `node scripts/build-skills-manifest.mjs --check` |
 | `npm run check:map` | `node scripts/gen-codebase-map.mjs --check` |
 | `npm run check:mc` | `node mission-control/check.mjs` |
+| `npm run check:memory` | `npm run test:memory && node scripts/check-memory-budget.mjs` |
 | `npm run check:prompt-standard` | `node --test scripts/prompt-standard.test.mjs` |
 | `npm run check:registration` | `node scripts/check-registration.mjs` |
 | `npm run check:routers` | `node scripts/build-skill-routers.mjs --check` |
@@ -61,11 +63,13 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:claims` | `node --test scripts/claims.test.mjs` |
 | `npm run test:classifier` | `node --test scripts/classifier.test.mjs` |
 | `npm run test:dispatch` | `node --test scripts/check-dispatch-agenttype.test.mjs` |
+| `npm run test:dispatch-prompt` | `node --test scripts/check-dispatch-prompt-size.test.mjs` |
 | `npm run test:gate` | `node --test .claude/workflows/lib/gate-logic.test.mjs` |
 | `npm run test:hooks` | `node --test scripts/session-start.test.mjs` |
 | `npm run test:launcher-permissions` | `node --test scripts/launcher-permissions.test.mjs` |
 | `npm run test:ledger` | `node --test scripts/ledger.test.mjs` |
 | `npm run test:lenses` | `node --test scripts/lenses.test.mjs` |
+| `npm run test:memory` | `node --test scripts/check-memory-budget.test.mjs` |
 | `npm run test:playbooks` | `node --test scripts/playbooks.test.mjs` |
 | `npm run test:pre-tool-use` | `node --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-readonly` | `node --test scripts/probe-readonly.test.mjs` |
@@ -95,6 +99,8 @@ it, so a hook that changes posture changes this map with it.
 | File | Subject |
 |---|---|
 | `scripts/check-dispatch-agenttype.test.mjs` | the mutation gate for the dispatch-identity checker. |
+| `scripts/check-dispatch-prompt-size.test.mjs` | mutation gate for the PS-DISPATCH-BRIEF-SIZE checker. |
+| `scripts/check-memory-budget.test.mjs` | mutation gate for the memory-budget checker. |
 | `scripts/check-registration.test.mjs` | — |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
@@ -114,7 +120,7 @@ it, so a hook that changes posture changes this map with it.
 
 ## What the system asserts
 
-39 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
+40 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
 `~/.warroom/ledger/global.yml` — machine state a fresh clone does not have, which the ledger reports
 rather than skipping silently.
 
@@ -122,7 +128,7 @@ rather than skipping silently.
 |---|---|
 | behavior | 17 |
 | external-fact | 1 |
-| internal-fact | 14 |
+| internal-fact | 15 |
 | runtime-capability | 7 |
 
 Browse them with `npm run ledger:views`; sweep for expiry with `npm run ledger:sweep`.
