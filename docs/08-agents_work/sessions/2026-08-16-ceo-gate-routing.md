@@ -210,3 +210,70 @@ person should not spend another 2M tokens re-running this hoping for a different
 Three runs, three BLOCKs, and the third was a dropout rather than a decision. Nothing here is self-certified,
 and nothing here has been blessed either. The verdict field stays open, honestly, rather than being filled by
 the author of the change it would bless.
+
+---
+
+## The dropout was mine, and it was not a runtime defect
+
+Everything above about a "~48% unexplained dropout" was **wrong in its diagnosis** and is corrected here
+rather than left standing.
+
+Tool-call count separates the two populations **perfectly**, where turns, context and wall-clock all
+overlapped:
+
+| | tool calls |
+|---|---|
+| returned findings | 8, 16, 16, **17** |
+| returned nothing | **20**, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 21, 32, 32, 32, 32, 34, 34 |
+
+**13 of 20 dropouts sat at exactly 20** — the `maxTurns` declared on the reviewer containers. Not stochastic:
+a declared cap, cutting agents off mid-work with findings in hand. **The CEO introduced it** by adding
+`agentType` at the four `qa.js` dispatch sites; `general-purpose` declares no cap, which is why the eight
+historical runs completed and all three of mine did not.
+
+It also **refutes a belief this repo had written down as measured fact** — *"`maxTurns` does not bind, 196 of
+269 runs exceeded a cap of 20."* It does not bind when no agent file is named. It binds hard the moment one
+is. I repeated that false belief while diagnosing the symptom it caused.
+
+Fixed: cap → 30 (schema max); `reviewPrompt` rewritten around a finite budget — `git diff` as primary
+evidence, whole-file reads the exception, and an explicit instruction to **emit partial findings rather than
+be killed holding a complete set**, because a reviewer that never calls `StructuredOutput` is recorded as a
+coverage gap and blocks the merge on a technicality. The judge gained the retry the reviewers already had: it
+ran with **one** attempt against their four, so it coin-flipped into `auto-BLOCK` — which is exactly what run
+three recorded.
+
+## The browser: the open web, not localhost
+
+The first rule written was localhost-only, reasoned from `designer`'s perception loop and applied as if it
+were system policy. **Founder overruled it, correctly.** `sourcer` answers questions with sourced evidence and
+`WebFetch` returns almost nothing on a JS-rendered site. The deciding argument: agents **already** hold
+`WebSearch` and `WebFetch`, so untrusted web text already reaches context — blocking the browser does not
+close prompt injection, it only makes the agent worse at the work it exists to do.
+
+Refused instead, because it is not the web: `169.254/16` (cloud metadata), `10/8`, `172.16/12`, `192.168/16`,
+`0.0.0.0`, and the `file:` / `data:` / `javascript:` schemes.
+
+**A bug I introduced and caught in the same pass:** the first denylist blocked `10.great.example.com` and
+`192.168.marketing.io` — real public domains matched as if they were private IPs. Private-range checks now
+apply only to literal IPv4 addresses. A denylist that blocks legitimate research fails as badly as one that
+allows the metadata endpoint; it just fails in the other direction.
+
+**95 tests**, including the two that would have caught me: `172.15`/`172.32` must be public while
+`172.16`/`172.31` are private (the classic SSRF off-by-one, in both directions), and
+`http://example.com@169.254.169.254/`, where userinfo smuggles you to the metadata endpoint while the URL
+reads as `example.com`.
+
+**Registration is pinned separately from behaviour.** The rule tests invoke the hook directly, which proves
+nothing about whether Claude Code ever calls it — the matcher decides that, and until today it named no MCP
+tool. A correct rule that never fires is precisely the defect being fixed.
+
+**Two limits written into the hook rather than oversold:** it matches the URL *string*, so a hostname that
+resolves to a private address passes (resolution-time enforcement belongs to the OS sandbox); and no URL guard
+closes prompt injection — that is answered by keeping deploy and payment credentials away from the browsing
+agent, which is why `operator` and `instrument` are separate engines.
+
+## The false premise propagated to three files before the gate caught it
+
+*"The PreToolUse hook still fired, so the system was not unprotected."* True for Bash and file writes. False
+for MCP, whose calls matched no matcher. It had been written into `DECISIONS.md`, this session file, and the
+header of `launcher-permissions.test.mjs`. All three corrected.

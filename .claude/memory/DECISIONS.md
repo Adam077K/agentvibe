@@ -639,3 +639,48 @@ job. Delete only once nothing references those names.
 into work that is not Agentvibe, so it is not this repo's call to make unilaterally.
 **Reversibility:** fully reversible — nothing is deleted.
 **Owner:** ceo · **founder decision** · **Affects:** the roster migration, `~/.claude/agents/`
+
+## 2026-08-16 — `maxTurns` does bind, and the belief that it did not cost three gate runs
+
+**Context:** Three consecutive runs of the binding QA gate failed with a coverage gap on `correctness`, and
+~48% of dispatched agents returned nothing with `agents_error: 0`. Four explanations were tested against the
+run transcripts and refuted: a turn cap, context exhaustion, output tokens, wall-clock timeout — all
+overlapping distributions.
+**The measurement that settled it:** tool-call count separates the two populations **perfectly**. Agents
+making ≤17 calls returned findings; agents reaching 20 returned nothing; **13 of 20 dropouts sat at exactly
+20** — the `maxTurns` declared on the reviewer containers. No overlap.
+**Decision:** `maxTurns` raised 20 → 30 on `reviewer` and `reviewer-readonly`, and `reviewPrompt` rewritten
+around a finite budget (`git diff` as primary evidence, whole-file reads the exception, emit partial findings
+rather than be killed holding a complete set). The judge gained the retry the reviewers already had — it ran
+with **one** attempt while every dimension retried four times, so at that dropout rate it coin-flipped into
+`auto-BLOCK`, which is what run three recorded.
+**Correction to a recorded repo belief:** this repo states *"`maxTurns` does not bind — 196 of 269 runs
+exceeded a cap of 20."* That measurement was taken where **no agent file was named**. It does not bind then.
+It binds hard the moment a dispatch names an `agentType`. The CEO introduced the regression by adding
+`agentType` at the four `qa.js` sites and then repeated the false belief while diagnosing it.
+**Reversibility:** reversible — two frontmatter numbers and a prompt.
+**Owner:** ceo · **Affects:** `.claude/agents/reviewer*.md`, `.claude/workflows/qa.js`, and any future dispatch
+that names an agent type
+
+## 2026-08-16 — The browser reaches the open web; the local network is refused
+
+**Context:** `designer` was granted the playwright MCP — the first live MCP capability here — and MCP tool
+calls reached **no safety control at all**: `PreToolUse` was registered with
+`"matcher": "Bash|Edit|Write|NotebookEdit"`, which no MCP tool name matches. `DECISIONS.md`, the session file
+and a test header all justified removing `--dangerously-skip-permissions` partly on *"the PreToolUse hook
+still fired"* — true for Bash, false for the capability the same change activated.
+**Decision:** **Denylist, not allowlist. The open web is allowed.** Founder decision, 2026-08-16, overruling
+the CEO's localhost-only proposal.
+**Why the CEO was wrong:** localhost-only was reasoned from `designer`'s perception loop and applied as
+system policy. `sourcer` answers questions with sourced evidence, and `WebFetch` returns almost nothing on a
+JS-rendered site. The deciding argument is that agents **already** hold `WebSearch` and `WebFetch`, so
+untrusted web text already reaches context — blocking the browser does not close prompt injection, it only
+makes the agent worse at the work it exists to do.
+**Refused, because it is not the web:** `169.254/16` (cloud metadata), `10/8`, `172.16/12`, `192.168/16`,
+`0.0.0.0`, and the `file:` / `data:` / `javascript:` schemes. Loopback is allowed — that is the perception loop.
+**Two limits stated in the hook rather than oversold:** the check matches the **URL string**, so a hostname
+that *resolves* to a private address passes it (resolution-time enforcement belongs to the OS sandbox); and
+**no URL guard closes prompt injection** — that is answered by keeping deploy and payment credentials away
+from the browsing agent, which is why `operator` and `instrument` are separate engines.
+**Reversibility:** reversible — one `case` block and one matcher string.
+**Owner:** ceo · **founder decision** · **Affects:** `.claude/hooks/pre-tool-use.sh`, `.claude/settings.json`
