@@ -76,6 +76,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:probe-stop-reason` | `node --test scripts/probe-stop-reason.test.mjs` |
 | `npm run test:registration` | `node --test scripts/check-registration.test.mjs` |
 | `npm run test:run-gate` | `node --test scripts/run-gate.test.mjs` |
+| `npm run test:sandbox` | `node --test scripts/sandbox-config.test.mjs` |
 | `npm run test:skill-clamp` | `node --test scripts/skill-clamp.test.mjs` |
 | `npm run test:warroom` | `node --test scripts/warroom-install.test.mjs` |
 | `npm run usage` | `node -e "const u=require('./scripts/lib/usage.js');const w=u.windowUsage({});console.log(w.output_tokens.toLoc` |
@@ -113,6 +114,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/probe-stop-reason.test.mjs` | the aggregation that answers what ends a run. |
 | `scripts/prompt-standard.test.mjs` | the PS-* rules of |
 | `scripts/run-gate.test.mjs` | the router that decides whether the binding gate runs. |
+| `scripts/sandbox-config.test.mjs` | proves the Bash sandbox is built but unarmed. |
 | `scripts/session-start.test.mjs` | the SessionStart hook. |
 | `scripts/skill-clamp.test.mjs` | a skill that subtracts must not be attached silently. |
 | `scripts/usage.test.mjs` | the spend measurement and the ceiling that acts on it. |

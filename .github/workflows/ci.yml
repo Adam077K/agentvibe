@@ -201,6 +201,15 @@ jobs:
       - name: Launcher permissions
         run: npm run test:launcher-permissions
 
+      # The sandbox block in .claude/settings.json is built but unarmed (enabled: false).
+      # Founder standing instruction: "build everything; activate nothing needing founder
+      # secrets or binding founder sessions. OS sandbox off by default." This test fails
+      # if sandbox.enabled is set to true without following the arming procedure in
+      # docs/03-system-design/SANDBOX.md. It also verifies the denyRead credential paths
+      # are present so they cannot be silently removed.
+      - name: Sandbox config unarmed
+        run: npm run test:sandbox
+
       # The claim ledger. Four things, all deterministic:
       #   · the parser and schema (43 tests, most of them "this must REFUSE")
       #   · the tier map, run against a path list rather than read
