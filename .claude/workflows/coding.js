@@ -8,7 +8,7 @@ export const meta = {
 }
 
 // args: { slices: [{ id, agentType, brief, files }], tier?: "full"|"irreversible", ref?: string }
-// agentType ∈ backend-engineer | frontend-engineer | database-engineer | ai-engineer | devops-engineer
+// agentType ∈ DISPATCHABLE, below. Optional — it defaults to `builder`.
 // args may arrive as an object OR a JSON string — normalize either way.
 // NOTE: this normalizer is duplicated across all .claude/workflows/*.js — keep the 4 copies in sync (the Workflow runtime has no shared-module import).
 let A = args
@@ -20,6 +20,34 @@ const REF = A.ref || 'origin/main...HEAD'
 
 if (!SLICES.length) {
   return { error: 'coding.js requires args.slices = [{id, agentType, brief, files}] — nothing to build.' }
+}
+
+// DISPATCH IDENTITY IS NOT THE CALLER'S TO CHOOSE FREELY.
+//
+// Until 2026-08-16 this file passed `s.agentType || 'backend-engineer'` straight to `agent()`,
+// and that one expression carried two defects.
+//
+//   The default was a phantom. No `.claude/agents/backend-engineer.md` exists — it was collapsed
+//   into `builder` in Phase 4b — so every slice that did not name an agentType dispatched a name
+//   the runtime could not resolve and fell back to `general-purpose`, tools `*`.
+//
+//   The caller-supplied half was unvalidated. `agentType` decides the tool grant, the model and
+//   the isolation, so a workflow that forwards an arbitrary name from its caller lets the caller
+//   pick its own container — dispatch-identity injection, and it gets worse the day a
+//   credentialed engine (`operator`, `instrument`) exists to be named.
+//
+// The list is frozen, it is checked BEFORE anything is dispatched, and
+// scripts/check-dispatch-agenttype.mjs verifies that every member is a real, non-shim engine —
+// so a name that rots out of .claude/agents/ fails CI here rather than silently widening a grant.
+const DISPATCHABLE = Object.freeze(['builder', 'designer'])
+
+const badTypes = SLICES.filter(s => s.agentType && !DISPATCHABLE.includes(s.agentType)).map(s => `${s.id} -> ${s.agentType}`)
+if (badTypes.length) {
+  return {
+    status: 'BLOCKED',
+    error: `coding.js refuses to dispatch an agentType outside its frozen allowlist [${DISPATCHABLE.join(', ')}]. Offending slice(s): ${badTypes.join('; ')}. agentType selects the tool grant, so it is not a caller-chosen field.`,
+    dispatchable: DISPATCHABLE,
+  }
 }
 
 const SLICE_SCHEMA = {
@@ -51,7 +79,10 @@ const built = await parallel(SLICES.map(s => () =>
   agent(buildPrompt(s), {
     label: `build:${s.id}`,
     phase: 'Build',
-    agentType: s.agentType || 'backend-engineer',
+    // `builder` is the engine that produces an artifact in an isolated worktree and returns
+    // exactly what landed — it is the only default that matches what this phase does. The
+    // caller may override it, but only with a member of DISPATCHABLE, checked above.
+    agentType: s.agentType || 'builder',
     model: 'sonnet',
     isolation: 'worktree',
     schema: SLICE_SCHEMA,
