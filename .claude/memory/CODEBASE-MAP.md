@@ -99,7 +99,7 @@ it, so a hook that changes posture changes this map with it.
 | File | Subject |
 |---|---|
 | `scripts/check-dispatch-agenttype.test.mjs` | the mutation gate for the dispatch-identity checker. |
-| `scripts/check-dispatch-prompt-size.test.mjs` | mutation gate for the dispatch-prompt-size checker. |
+| `scripts/check-dispatch-prompt-size.test.mjs` | mutation gate for the PS-DISPATCH-BRIEF-SIZE checker. |
 | `scripts/check-memory-budget.test.mjs` | mutation gate for the memory-budget checker. |
 | `scripts/check-registration.test.mjs` | — |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
