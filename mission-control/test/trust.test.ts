@@ -160,7 +160,15 @@ function writeLedgerScript(root: string, payload: string[]): void {
 function apiFor(fleet: EvilFleet, trusted: string[]): Hono {
   const trustFile = writeTrustFile(path.join(fleet.projectsRoot, '..', 'trust'), trusted);
   const app = new Hono();
-  app.route('/api', createApi(new LiveState({ roots: [fleet.projectsRoot], claudeProjectsRoot: fleet.claudeRoot, trustFile })));
+  app.route('/api', createApi(new LiveState({
+      roots: [fleet.projectsRoot],
+      claudeProjectsRoot: fleet.claudeRoot,
+      trustFile,
+      // Inside the fixture, never $HOME: LiveState persists its session index, and a test
+      // that writes a multi-megabyte index of the developer's real corpus into their home
+      // directory is a test with a side effect. check.mjs fails the run if one does.
+      indexCachePath: path.join(fleet.projectsRoot, 'index-cache.json'),
+    })));
   return app;
 }
 
@@ -360,7 +368,15 @@ describe('an untrusted project is reported, never absent', () => {
     const trustFile = path.join(dir, 'trusted-projects');
     fs.writeFileSync(trustFile, `${fleet.good}\nrelative/path/project\n`);
     const app = new Hono();
-    app.route('/api', createApi(new LiveState({ roots: [fleet.projectsRoot], claudeProjectsRoot: fleet.claudeRoot, trustFile })));
+    app.route('/api', createApi(new LiveState({
+      roots: [fleet.projectsRoot],
+      claudeProjectsRoot: fleet.claudeRoot,
+      trustFile,
+      // Inside the fixture, never $HOME: LiveState persists its session index, and a test
+      // that writes a multi-megabyte index of the developer's real corpus into their home
+      // directory is a test with a side effect. check.mjs fails the run if one does.
+      indexCachePath: path.join(fleet.projectsRoot, 'index-cache.json'),
+    })));
 
     const payload = (await json(app, '/api/conflicts')) as ConflictsPayload;
     expect(payload.trust.source).toBe(trustFile);
@@ -563,7 +579,15 @@ describe('the guard is registered above every route the process serves', () => {
     const fleet = buildEvilFleet('guard');
     const trustFile = writeTrustFile(path.join(fleet.projectsRoot, '..', 'trust-guard'), [fleet.good]);
     return {
-      app: createApp(new LiveState({ roots: [fleet.projectsRoot], claudeProjectsRoot: fleet.claudeRoot, trustFile })),
+      app: createApp(new LiveState({
+      roots: [fleet.projectsRoot],
+      claudeProjectsRoot: fleet.claudeRoot,
+      trustFile,
+      // Inside the fixture, never $HOME: LiveState persists its session index, and a test
+      // that writes a multi-megabyte index of the developer's real corpus into their home
+      // directory is a test with a side effect. check.mjs fails the run if one does.
+      indexCachePath: path.join(fleet.projectsRoot, 'index-cache.json'),
+    })),
       fleet,
     };
   }
@@ -621,7 +645,15 @@ describe('the guard is registered above every route the process serves', () => {
     // does not fire on a cross-site request.
     const fleet = buildEvilFleet('guard-work');
     const trustFile = writeTrustFile(path.join(fleet.projectsRoot, '..', 'trust-work'), [fleet.evilFsmonitor]);
-    const app = createApp(new LiveState({ roots: [fleet.projectsRoot], claudeProjectsRoot: fleet.claudeRoot, trustFile }));
+    const app = createApp(new LiveState({
+      roots: [fleet.projectsRoot],
+      claudeProjectsRoot: fleet.claudeRoot,
+      trustFile,
+      // Inside the fixture, never $HOME: LiveState persists its session index, and a test
+      // that writes a multi-megabyte index of the developer's real corpus into their home
+      // directory is a test with a side effect. check.mjs fails the run if one does.
+      indexCachePath: path.join(fleet.projectsRoot, 'index-cache.json'),
+    }));
     let markers: string[] = [];
     try {
       const res = await app.fetch(crossSite('/api/conflicts'));
