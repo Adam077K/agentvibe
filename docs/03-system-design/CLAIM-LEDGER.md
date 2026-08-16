@@ -306,6 +306,17 @@ claims:
     evidence: {cmd: "node --test scripts/session-start.test.mjs && test $(AGENTVIBE_HOOK_NO_REFRESH=1 node .claude/hooks/session-start.js | wc -c) -le 4096", expect_exit: 0}
     valid_until: 2026-11-09
     confidence: 0.3
+    # DISPOSITION 2026-08-16, issue #56, founder-delegated. Re-measured this session:
+    # `AGENTVIBE_HOOK_NO_REFRESH=1 node .claude/hooks/session-start.js | wc -c` -> 27,069
+    # bytes against a 4,096 budget, 6.6x over and up from the 25,613 recorded on
+    # 2026-08-12. The decision is Refresh WITH A FIX, and the direction matters: do not
+    # raise the budget to fit the payload — shrink the payload.
+    #
+    # `refresh` forbids `until` and does not short-circuit the resolver, so this claim
+    # keeps FAILING until the router lands. That is intended. The alternative — a waiver —
+    # would buy silence for a deadline nobody is working toward, and the alternative to
+    # that — raising the threshold — would make a false claim true by moving the goalposts.
+    disposition: {action: refresh, reason: "Re-measured 2026-08-16: the hook emits 27,069 bytes against the 4,096 budget (6.6x over, up from 25,613 on 2026-08-12), so the claimed property is still the opposite of what happens — the runtime inlines a ~2KB preview and persists the rest, meaning a POINTER reaches context rather than the payload. Fix chosen: a lens/playbook router carrying ids and one-line summaries at ~1.5KB, the same cure that took skills discovery from ~15,000 tokens to ~1,300 — NOT raising the budget to fit the payload. The claim stays failing and logging claim.would_block until the router ships, which is the correct state for dated, visible debt"}
 
   # REFRESHED 2026-08-12, by direct observation from a fresh session — the one thing the
   # waiver said it was waiting for. The runtime DOES honour hookSpecificOutput.additionalContext:
@@ -484,6 +495,105 @@ claims:
     evidence: {cmd: "! grep -q 'continue-on-error' .github/workflows/qa-lead-pass.yml", expect_exit: 0}
     valid_until: 2026-11-09
     confidence: 1
+    supports: [d-001]
+
+  # ── Registered 2026-08-16 ──────────────────────────────────────────────────
+  # Four facts that were living in prose. STATUS.md named the problem exactly:
+  # "durable facts live only in prose — which is exactly where the maxTurns belief
+  # lived while it was wrong."
+  #
+  # Every one is verified_by: command, deliberately. A `judge` claim with judged_by: []
+  # resolves `unresolved` forever, and two already sit in that state
+  # (c-sessionstart-injection-unverified, and c-runtime-nested-spawn in the global
+  # scope). A third would be registering a fact as a permanent would_block.
+
+  # MEASURED 2026-08-16 by two probes dispatched through the `Agent` tool: `designer`
+  # held 24 mcp__playwright__* tools including browser_navigate; `builder` held zero
+  # mcp__* tools. That settles a question three documents left contested —
+  # GRANT-HOLDERS.md §3.7, ROSTER-SIZE F1, GRANT-HOLDERS.md §8 X2.
+  #
+  # The command below CANNOT re-run that probe — a runtime dispatch is not available to
+  # a resolver. It checks the CONFIGURATION the measurement was taken against: that
+  # designer still declares playwright, that .mcp.json still backs it, and that builder
+  # still declares nothing. If any of the three changes, the measurement no longer
+  # describes this repository and the grant must be re-probed.
+  - id: c-mcp-grant-binds-through-agent-dispatch
+    assert: "An agent file's mcpServers: grant both ARRIVES and NARROWS across an Agent dispatch — measured 2026-08-16 by dispatching two probes: designer (declares mcpServers: [playwright]) held 24 mcp__playwright__* tools including browser_navigate, and builder (declares no mcpServers) held zero mcp__* tools, so the file is the capability boundary. The command verifies only the configuration that measurement was taken against; it does not re-measure the dispatch"
+    kind: runtime-capability
+    scope: project
+    verified_by: command
+    evidence:
+      cmd: "grep -qF 'mcpServers: [playwright]' .claude/agents/designer.md && grep -qF '\"playwright\"' .mcp.json && ! grep -q '^mcpServers:' .claude/agents/builder.md"
+      expect_exit: 0
+    valid_until: 2026-11-14
+    confidence: 0.9
+    supports: [c-no-decorative-capabilities]
+
+  # CORRECTED 2026-08-16. This repository recorded the OPPOSITE as measured fact. The
+  # corpus behind that belief named no agent file, so nothing in it could have been
+  # capped. Naming `agentType` at four dispatch sites in qa.js made the cap live and
+  # cost three failed gate runs before anyone looked at the field. Do not "clean up"
+  # maxTurns believing it inert.
+  #
+  # Observed ceilings on the seven engines as of this writing: builder, designer,
+  # orchestrator, reviewer and reviewer-readonly at 30; framer and sourcer at 25. The
+  # command checks that the field is required and range-checked and that all seven
+  # declare one — not the specific numbers, which are a tuning decision and would make
+  # this claim fail on a legitimate edit.
+  - id: c-maxturns-binds-when-agenttype-named
+    assert: "maxTurns binds when a dispatch names an agentType and not otherwise, so the field is live rather than decorative: schema-lint.js requires it on every agent, refuses any value outside [5, 30], and all seven engines declare one. Bounded honestly — the cap explains 13 of 20 observed reviewer dropouts; the other 7 recorded 21-34 tool calls, above the cap, and are unexplained"
+    kind: runtime-capability
+    scope: project
+    verified_by: command
+    evidence:
+      cmd: "sed -n '/const REQUIRED_FRONTMATTER/,/^];/p' .claude/hooks/schema-lint.js | grep -qF maxTurns && grep -qF 'fm.maxTurns < 5 || fm.maxTurns > 30' .claude/hooks/schema-lint.js && test $(grep -lE '^maxTurns: [0-9]+$' .claude/agents/builder.md .claude/agents/designer.md .claude/agents/framer.md .claude/agents/orchestrator.md .claude/agents/reviewer.md .claude/agents/reviewer-readonly.md .claude/agents/sourcer.md | wc -l) -eq 7"
+      expect_exit: 0
+    valid_until: 2026-11-14
+    confidence: 0.8
+    supports: [c-schema-lint-clean]
+
+  # The sentence "the hook still fires" propagated into four files before anyone checked
+  # the matcher. It is false for every MCP tool the matcher does not name, because
+  # pre-tool-use.sh's final case is `*)` with the comment "Unknown tool — allow."
+  #
+  # This claim is deliberately a change-detector: it pins the matcher string AND the
+  # fall-through, so it fails the day either one moves. That is the point — the cost of
+  # this fact going stale unnoticed has already been paid once.
+  - id: c-mcp-hook-matcher-must-name-the-tool
+    assert: "An mcp__* tool call reaches pre-tool-use.sh only if settings.json's PreToolUse matcher names that exact tool. The matcher names exactly one — mcp__playwright__browser_navigate — and the hook's final case allows any tool it does not recognise, so every other MCP tool on this machine is unhooked"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence:
+      cmd: "grep -qE 'matcher.: .Bash[|]Edit[|]Write[|]NotebookEdit[|]mcp__playwright__browser_navigate.' .claude/settings.json && grep -qxF '  *)' .claude/hooks/pre-tool-use.sh && grep -qF 'Unknown tool — allow' .claude/hooks/pre-tool-use.sh"
+      expect_exit: 0
+    valid_until: 2026-11-14
+    confidence: 1
+
+  # The founding fabrication, registered at last. "Subagents cannot spawn subagents
+  # (nested Task is blocked)" is FALSE on this runtime — probed 2026-08-11 and again
+  # 2026-08-13, depth 2 confirmed, depth 3 observed in the fleet corpus
+  # (AGENT-ARCHITECTURE.md:386-387: main → cto → qa-lead → adversary-engineer).
+  #
+  # The measured half lives in the global ledger as c-runtime-nested-spawn, which is
+  # verified_by: judge with an empty panel and therefore permanently unresolved. This
+  # claim is the CHECKABLE half: that the repository's own operating instructions no
+  # longer assert the falsified constraint. A false belief contradicted only in a status
+  # document still ships inside the prompt.
+  #
+  # OPEN CAVEAT, preserved rather than rounded off: the probe ran in plan mode with a
+  # read-only child. Write-capable nesting outside plan mode still needs one confirming
+  # test before the caveat can be dropped.
+  - id: c-nested-subagent-spawn-works
+    assert: "Subagents CAN spawn subagents on this runtime — depth 2 confirmed by direct probe on 2026-08-13, depth 3 observed in the fleet corpus — and no live operating instruction under .claude/entry/ asserts the contrary. Caveat: the probe ran in plan mode with a read-only child, so write-capable nesting outside plan mode is still unconfirmed"
+    kind: runtime-capability
+    scope: project
+    verified_by: command
+    evidence:
+      cmd: "! git grep -q 'subagents cannot spawn' -- .claude/entry/"
+      expect_exit: 0
+    valid_until: 2026-11-14
+    confidence: 0.85
     supports: [d-001]
 ```
 
