@@ -176,38 +176,41 @@ export class LiveState {
   /**
    * Discovers the current fleet and keeps the session index in sync with it.
    *
-   * THE FIRST CALL IS THE EXPENSIVE ONE, AND THIS IS WHERE THAT STOPS BEING TRUE. Restoring a
-   * persisted index turns the cold start into a refresh. Measured 2026-08-16 against the real
-   * corpus (2,582 files, 3.05 GB) through this exact path:
+   * THE FIRST CALL IS THE EXPENSIVE ONE, AND THIS IS WHERE THAT STOPS BEING TRUE. What changes
+   * is measured in WORK, not in milliseconds:
    *
-   *   cold                     2,405-4,675 ms  (the spread is #50's memory-reclaim band)
-   *   warm, steady             65-158 ms       (typically 75-110; see the sets below)
-   *   warm, first of a session 254-386 ms      (page-cache-cold boundary windows)
-   *   transcript bytes read    3,058 MB -> 0-0.02 MB
+   *   filesRead              2,609 of 2,609  ->  0 of 2,609
+   *   transcript bytes read  3,058 MB        ->  0 (10.6 MB of 4 KB boundary probes instead)
+   *   persisted index        4.39 MB
    *
-   * EVERY FIGURE ABOVE IS FROM CODE THAT HAS THE PER-TICK SAVE FIX, and that qualification is
-   * the correction rather than a footnote. An earlier version of this range folded in a reading
-   * taken on 824bf69 — BEFORE that fix — when a warm start still paid a ~13 ms save of the whole
-   * index. It attributed to machine load part of a spread this code's own defect had caused, and
-   * it missed both the post-fix minimum and the high-load maximum. Post-fix sets only, each with
-   * the commit it was taken on:
+   * THE COUNTERS ARE THE FIGURE AND THE CLOCK IS A CONSEQUENCE, which is #50's conclusion
+   * applied to the change that came out of #50. Across every run taken on this branch the work
+   * was stable to under 0.5% — filesRead 0, probes 10.64-10.68 MB, cache 4.39 MB — while the
+   * milliseconds moved by a factor of two for reasons that were never the code. Quoting the
+   * clock first meant defending a number that varies with the afternoon while owning one that
+   * does not.
+   *
+   * The wall-clock figure, kept as a load-conditioned range and not a headline:
+   *
+   *   cold                     2,405-4,675 ms
+   *   warm, steady             65-158 ms (typically 75-110)
+   *   warm, first of a session 254-386 ms  (page-cache-cold boundary windows)
+   *
+   * EVERY FIGURE ABOVE IS FROM CODE THAT HAS THE PER-TICK SAVE FIX, and that qualification is a
+   * correction rather than a footnote. An earlier version folded in a reading taken on 824bf69,
+   * BEFORE that fix, when a warm start still paid a ~13 ms save of the whole index — attributing
+   * to machine load part of a spread this code's own defect had caused. Post-fix sets only, each
+   * with the commit it was taken on:
    *
    *   dbe2e70   65-94   median 73   (independent, load 2.20-3.08)
    *   dbe2e70   78-90               (load 2.70, n=8)
-   *   afd23d6   72-130  median 93   (independent; first-of-session 335)
+   *   afd23d6   72-130  median 93   (independent; one run at load ~4.0 reached 130)
    *   14d5f47   93-109  median 98   (load 3.67-3.78, n=8)
    *   14d5f47   75-79               (load 3.17, n=5) and a 115-158 burst minutes earlier
    *
-   * NO SINGLE MEDIAN SURVIVES THAT SPREAD, and the two readings 20 minutes apart on the SAME
-   * commit at nearly the same load average — 98 and 77, with a 158 in between — are the clearest
-   * statement of why. The figure tracks machine state, exactly as #50 established. A reading
-   * that does real work is legitimately slower: the 106 ms above read 2 changed files and wrote
-   * the index.
-   *
-   * AN AFTER-A-REBOOT FIGURE IS NOT QUOTED. An earlier version of this comment carried
-   * "158-255 ms, first after boot" as though it had been measured. It had not: verifying it
-   * needs a reboot, which nobody performed. The 254 ms above is the first run of a SESSION,
-   * which is a different and checkable thing.
+   * The two 14d5f47 readings twenty minutes apart at nearly the same load — 98 and 77, with a
+   * 158 between — are why no median is quoted. A reading that does real work is legitimately
+   * slower: one 106 ms run read 2 changed files and wrote the index.
    *
    * The restored entries are NOT trusted. Every one arrives marked `needsVerify`, and the
    * refresh below checks each against the disk before it is used. `hydrate` on its own would be

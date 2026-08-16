@@ -516,8 +516,86 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
    * All of these land on disk, which is what test/write-barrier.test.ts looks at. That barrier
    * is the second check, not an excuse for this one — the two are independent on purpose.
    */
-  const WRITE_PATTERN =
-    /\b(writeFile(Sync)?|writeSync|mkdir(Sync)?|rm(Sync)?|rmdir(Sync)?|unlink(Sync)?|appendFile(Sync)?|copyFile(Sync)?|cpSync|rename(Sync)?|truncate(Sync)?|ftruncate(Sync)?|symlink(Sync)?|link(Sync)?|createWriteStream|utimes(Sync)?|futimes(Sync)?|lutimes(Sync)?|chmod(Sync)?|chown(Sync)?|fchmod(Sync)?|fchown(Sync)?|lchmod(Sync)?|lchown(Sync)?|mkdtemp(Sync)?|writev(Sync)?|Bun\.write|git\s+commit|git\s+push)\b/;
+  /**
+   * Tokens matched on WORD BOUNDARIES. Every family here carries both its sync and async
+   * spellings, except those listed in SYNC_ONLY_BY_DESIGN below — and that symmetry is not left
+   * to care: `write-API tokens cover both spellings` asserts it, because this list has now been
+   * short twice for exactly that reason. `utimes` got its `f`/`l` variants and `chmod`/`chown`
+   * did not (N2); four families got their async form and `cp` did not (N7). The audit that found
+   * the second also found `writeSync` standing alone, which no reviewer had reported.
+   */
+  const WRITE_TOKENS = String.raw`writeFile(Sync)?|writeSync|mkdir(Sync)?|rm(Sync)?|rmdir(Sync)?|unlink(Sync)?|appendFile(Sync)?|copyFile(Sync)?|cpSync|rename(Sync)?|truncate(Sync)?|ftruncate(Sync)?|symlink(Sync)?|link(Sync)?|createWriteStream|utimes(Sync)?|futimes(Sync)?|lutimes(Sync)?|chmod(Sync)?|chown(Sync)?|fchmod(Sync)?|fchown(Sync)?|lchmod(Sync)?|lchown(Sync)?|mkdtemp(Sync)?|mkdtempDisposableSync|writev(Sync)?|git\s+commit|git\s+push`;
+
+  /**
+   * Forms that CANNOT be word-anchored, because the bare identifier is ordinary elsewhere.
+   * `cp` is a conventional child_process alias and `write` appears in a dozen unrelated senses,
+   * so both are required to be reached through the module object. That is narrower than the
+   * word-boundary rule and deliberately so: a guard that fires on `const cp = require(...)`
+   * gets disabled, and a disabled guard catches nothing at all.
+   */
+  const WRITE_ANCHORED = String.raw`(?:fs|fsp|promises)\s*\.\s*(?:cp|write)\s*\(|Bun\.write`;
+
+  /**
+   * Sync-only because the API has no async counterpart, not because the list is short.
+   * `fs.mkdtempDisposableSync` returns a disposable and exists in no promise form.
+   */
+  const SYNC_ONLY_BY_DESIGN = ['mkdtempDisposableSync'];
+
+  /**
+   * Write-family APIs. WIDENED 2026-08-16 with every token after `appendFile`, each one a real
+   * write API the previous list could not see.
+   *
+   * NOT A THEORETICAL WIDENING. `fs.copyFileSync` was injected into the /api/project/:id
+   * handler and this scan reported ZERO offenders while the file was demonstrably being
+   * created — no aliasing, no computed string, just an API nobody had enumerated.
+   *
+   * `Bun.write` and the `utimes` family were added in review. utimes is the one that matters
+   * most: MTIME IS THIS INDEX'S INVALIDATION KEY, so a call that moves a transcript's mtime
+   * without changing its bytes attacks freshness directly rather than being a generic disk
+   * mutation — and it was invisible to the behavioural barrier too, which compares CONTENT.
+   *
+   * KNOWN BLIND SPOTS IN THIS CHECK — what is NOT covered, and deliberately not titled
+   * "complete". An earlier version said COMPLETE while missing six tokens, which is a worse
+   * artefact than no list: a list labelled complete stops people looking. What is named here is
+   * what is known TODAY:
+   *   · `fs.openSync(p, 'w')`. `openSync` cannot be added: server/index-store.ts opens files
+   *     read-only with it on the append and boundary-probe paths, so banning the token would
+   *     forbid the read path, and a guard that fires on correct code gets disabled.
+   *   · `Bun.file(x).writer()`, and any write reached through a value rather than a named API —
+   *     `const w = fs.writeFileSync; w(p, d)` defeats every pattern here.
+   *   · `cp`/`write` reached other than through `fs`/`promises` (see WRITE_ANCHORED).
+   *   · a write performed by a spawned process (covered by the shell rules below, which have
+   *     their own listed gaps).
+   * All of these land on disk, which is what test/write-barrier.test.ts looks at. That barrier
+   * is the second check, not an excuse for this one.
+   */
+  const WRITE_PATTERN = new RegExp(String.raw`\b(?:${WRITE_TOKENS})\b|${WRITE_ANCHORED}`);
+
+  // THE ASYMMETRY THAT KEPT THIS LIST SHORT, made structural instead of found by review twice.
+  //
+  // N2: `utimes` got its `f`/`l` variants; `chmod` and `chown` did not. N7: four families got
+  // their async form; `cp` did not. Both were caught by a person reading carefully, which is not
+  // a mechanism. This enumerates the list and fails on the next one — including `writeSync`,
+  // which the audit surfaced and no reviewer had reported.
+  test('write-API tokens cover both spellings, or say why they cannot', () => {
+    const alternatives = WRITE_TOKENS.split('|').map((a) => a.trim());
+    expect(alternatives.length).toBeGreaterThan(20); // non-vacuity: the list really was parsed
+
+    const lonely = alternatives.filter((a) => a.endsWith('Sync') && !a.includes('(Sync)?'));
+    for (const token of lonely) {
+      if (SYNC_ONLY_BY_DESIGN.includes(token)) continue;
+      const stem = token.slice(0, -'Sync'.length);
+      // Either the bare form is word-matched, or it is reached through the module object
+      // because the bare identifier is ordinary elsewhere. Anything else is the omission.
+      const covered =
+        alternatives.includes(`${stem}(Sync)?`) || new RegExp(`[(:|]${stem}\\b`).test(WRITE_ANCHORED);
+      expect(`${token} async form covered: ${covered}`).toBe(`${token} async form covered: true`);
+    }
+    // NON-VACUITY: there really are sync-only tokens to check, so the loop above ran.
+    expect(lonely.length).toBeGreaterThan(0);
+    // …and the by-design exceptions are real tokens, not a place to hide an omission.
+    for (const t of SYNC_ONLY_BY_DESIGN) expect(alternatives).toContain(t);
+  });
 
   test(`no write-API call sites in server/** outside ${WRITE_OWNER}`, () => {
     // This is a TEXT grep, not a semantic check: it cannot catch a write assembled from
@@ -625,12 +703,26 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
       const raw = text.split('\n');
       const stripped = stripComments(text).split('\n');
       raw.forEach((line, i) => {
-        if (!/^\s*import\b/.test(line)) return;
+        // Imports AND top-level declarations. Imports alone shared a blind spot with the check
+        // above: a stripper that blanks everything EXCEPT import lines survives both, and four
+        // other tests catching it is luck rather than design. These three shapes are
+        // unambiguous code, never comments, and cheap to sample.
+        if (!/^\s*(import\b|export (const|function|class|interface)\b|(const|function) \w)/.test(line)) return;
         importsChecked++;
-        expect(`${path.relative(serverDir, f)}:${i + 1}: ${stripped[i]}`).toBe(`${path.relative(serverDir, f)}:${i + 1}: ${line}`);
+        // THE CODE PREFIX SURVIVES — not byte-identity, which was the first version and was
+        // wrong: a code line with a TRAILING comment legitimately differs, because the comment
+        // becomes spaces. It failed on `const chars = Array.from(body); // code points …`,
+        // correct stripper behaviour reported as a defect. What must hold is that whatever
+        // survives is a prefix of the original and is not empty — so a stripper eating code from
+        // the top, or blanking the file, fails while a stripper doing its job does not.
+        const survived = (stripped[i] ?? '').trimEnd();
+        const where = `${path.relative(serverDir, f)}:${i + 1}`;
+        expect(`${where} nonempty:${survived.trim() !== ''} prefix:${line.startsWith(survived)}`).toBe(
+          `${where} nonempty:true prefix:true`
+        );
       });
     }
-    expect(importsChecked).toBeGreaterThan(10); // non-vacuity: real imports were compared
+    expect(importsChecked).toBeGreaterThan(40); // non-vacuity: real code lines were compared
   });
 
   // AND THE PRECONDITION FOR THE DECLARED GAP, checked directly rather than inferred from its
