@@ -341,6 +341,395 @@ test('the committed index reproduces exactly from the artifacts', () => {
   assert.match(out, /index matches/);
 });
 
+// ── build --check is coupled to what claims SAY, not to where they sit ──────
+//
+// `.claude/ledger/index.json` used to carry a `source_line` per claim. Inserting one
+// sentence into the prose of mission-control/README.md moved four claims from 295 to 296
+// and failed CI with every claim byte-identical — a build failure for an edit that changed
+// no claim. The remedy on offer was "remember to rebuild", and it failed the first time it
+// was relied on, hours after someone had warned about it.
+//
+// These tests run against a THROWAWAY git repo built in tmpdir, so a mutation is a real
+// file edit through the real CLI and never touches this repository. Every mutation asserts
+// that it landed before its verdict is believed: an edit whose anchor missed is
+// indistinguishable from a guard that works, and the second reads as good news.
+
+const FENCE = '`'.repeat(3);
+
+function scratchClaim(over = {}) {
+  const c = {
+    id: 'c-scratch-one', assert: 'the first scratch claim', kind: 'behavior',
+    scope: 'project', verified_by: 'command', evidence: '{cmd: "true", expect_exit: 0}',
+    valid_until: '2027-01-01', confidence: '0.9', ...over,
+  };
+  return [
+    `  - id: ${c.id}`,
+    `    assert: "${c.assert}"`,
+    `    kind: ${c.kind}`,
+    `    scope: ${c.scope}`,
+    `    verified_by: ${c.verified_by}`,
+    `    evidence: ${c.evidence}`,
+    `    valid_until: ${c.valid_until}`,
+    `    confidence: ${c.confidence}`,
+  ].join('\n');
+}
+
+function scratchDoc(claims = [scratchClaim()]) {
+  return ['# Scratch artifact', '', 'Prose that sits above the claims.', '',
+    `${FENCE}claims`, 'claims:', ...claims, FENCE, ''].join('\n');
+}
+
+/** A throwaway repo holding one artifact and a copy of the ledger. Caller removes it. */
+function scratchRepo(doc = scratchDoc()) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ledger-idx-'));
+  fs.mkdirSync(path.join(dir, 'scripts', 'lib'), { recursive: true });
+  fs.copyFileSync(path.join(REPO_ROOT, 'scripts', 'ledger.mjs'), path.join(dir, 'scripts', 'ledger.mjs'));
+  for (const f of ['claims.js', 'classifier.js', 'resolvers.js']) {
+    fs.copyFileSync(path.join(REPO_ROOT, 'scripts', 'lib', f), path.join(dir, 'scripts', 'lib', f));
+  }
+  fs.writeFileSync(path.join(dir, 'doc.md'), doc);
+  // The index is built from `git ls-files`, so there must be a repository for it to list.
+  execFileSync('git', ['init', '-q'], { cwd: dir, stdio: 'pipe' });
+  return dir;
+}
+
+function ledger(dir, ...args) {
+  try {
+    const out = execFileSync('node', [path.join(dir, 'scripts', 'ledger.mjs'), ...args],
+      { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    return { exit: 0, out };
+  } catch (e) {
+    return { exit: e.status, out: `${e.stdout || ''}${e.stderr || ''}` };
+  }
+}
+
+/** Edit a file and REFUSE to continue unless the edit changed it. */
+function mustEdit(file, from, to) {
+  const before = fs.readFileSync(file, 'utf8');
+  assert.ok(before.includes(from), `mutation anchor not found — the test would prove nothing: ${from}`);
+  const after = before.replace(from, to);
+  assert.notEqual(after, before, 'mutation was a no-op — the test would prove nothing');
+  fs.writeFileSync(file, after);
+  assert.equal(fs.readFileSync(file, 'utf8'), after, 'mutation did not reach disk');
+}
+
+test('a prose edit above a claim does not fail the check — the index holds no positions', () => {
+  const dir = scratchRepo();
+  try {
+    assert.equal(ledger(dir, 'build').exit, 0);
+    const doc = path.join(dir, 'doc.md');
+    const fenceLine = (t) => t.split('\n').findIndex((l) => l.trim() === `${FENCE}claims`) + 1;
+    const was = fenceLine(fs.readFileSync(doc, 'utf8'));
+
+    mustEdit(doc, 'Prose that sits above the claims.',
+      'Prose that sits above the claims.\n\nA second paragraph, added later.\n\nAnd a third.');
+
+    // Without this the test could pass while proving nothing: an edit BELOW the claims
+    // would not shift them, and the check would be green for the wrong reason.
+    const now = fenceLine(fs.readFileSync(doc, 'utf8'));
+    assert.ok(now > was, `the edit must actually move the claims (${was} -> ${now})`);
+
+    const r = ledger(dir, 'build', '--check');
+    assert.equal(r.exit, 0, `a documentation edit must not fail the ledger:\n${r.out}`);
+    assert.match(r.out, /index matches/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+for (const [field, from, to] of [
+  ['assert', 'assert: "the first scratch claim"', 'assert: "the first scratch claim, reworded"'],
+  ['valid_until', 'valid_until: 2027-01-01', 'valid_until: 2028-01-01'],
+  ['evidence.cmd', 'cmd: "true"', 'cmd: "false"'],
+  ['evidence.expect_exit', 'expect_exit: 0', 'expect_exit: 1'],
+  ['kind', 'kind: behavior', 'kind: internal-fact'],
+  ['scope', 'scope: project', 'scope: task'],
+  ['confidence', 'confidence: 0.9', 'confidence: 0.4'],
+]) {
+  test(`changing a claim's ${field} fails the check, and the message names the claim and the field`, () => {
+    const dir = scratchRepo();
+    try {
+      assert.equal(ledger(dir, 'build').exit, 0);
+      mustEdit(path.join(dir, 'doc.md'), from, to);
+      const r = ledger(dir, 'build', '--check');
+      assert.equal(r.exit, 1, `mutating ${field} must fail the check:\n${r.out}`);
+      assert.match(r.out, /c-scratch-one/, 'the message must name the claim');
+      assert.match(r.out, new RegExp(field.replace('.', '\\.')), 'the message must name the field');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+}
+
+test('an added claim and a removed claim are each named, and neither is confused for the other', () => {
+  const dir = scratchRepo(scratchDoc([scratchClaim(), scratchClaim({ id: 'c-scratch-two' })]));
+  try {
+    assert.equal(ledger(dir, 'build').exit, 0);
+    const doc = path.join(dir, 'doc.md');
+    const both = fs.readFileSync(doc, 'utf8');
+
+    mustEdit(doc, '  - id: c-scratch-two', '  - id: c-scratch-three');
+    const swapped = ledger(dir, 'build', '--check');
+    assert.equal(swapped.exit, 1);
+    assert.match(swapped.out, /\+ c-scratch-three — in the artifacts, missing from the index/);
+    assert.match(swapped.out, /- c-scratch-two — in the index, no longer in any artifact/);
+
+    fs.writeFileSync(doc, both.replace(scratchClaim({ id: 'c-scratch-two' }), '').replace(/\n\n+/g, '\n'));
+    const removed = ledger(dir, 'build', '--check');
+    assert.equal(removed.exit, 1);
+    assert.match(removed.out, /- c-scratch-two/);
+    assert.doesNotMatch(removed.out, /\+ /, 'nothing was added; the message must not say otherwise');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the failure message never offers a byte count as evidence', () => {
+  // The old message printed `on disk: 19749 bytes · regenerated: 19749 bytes` — the same
+  // number twice, because a claim shifting one line rewrites 295 as 296 and that is the
+  // same width. A diagnostic that cannot discriminate is worse than none: it occupies the
+  // place a reader looks for evidence. sha256 is printed instead, and cannot be equal.
+  const dir = scratchRepo();
+  try {
+    assert.equal(ledger(dir, 'build').exit, 0);
+    mustEdit(path.join(dir, 'doc.md'), 'assert: "the first scratch claim"', 'assert: "changed"');
+    const r = ledger(dir, 'build', '--check');
+    assert.equal(r.exit, 1);
+    assert.doesNotMatch(r.out, /\d+ bytes/, 'a byte count is equal on both sides for most edits');
+    const shas = [...r.out.matchAll(/sha256 \w+:\s+([0-9a-f]{64})/g)].map((m) => m[1]);
+    assert.equal(shas.length, 2, 'both sides must be anchored');
+    assert.notEqual(shas[0], shas[1], 'two files that differ cannot share a sha256');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('an index that differs only in formatting says so, instead of blaming the claims', () => {
+  const dir = scratchRepo();
+  try {
+    assert.equal(ledger(dir, 'build').exit, 0);
+    const idx = path.join(dir, '.claude', 'ledger', 'index.json');
+    mustEdit(idx, '"version": 1', '"version":  1');
+    const r = ledger(dir, 'build', '--check');
+    assert.equal(r.exit, 1);
+    assert.match(r.out, /every claim is identical/);
+    assert.match(r.out, /first difference at byte \d+/);
+    assert.doesNotMatch(r.out, /c-scratch-one/, 'no claim changed, so no claim may be named');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a truncated index is reported as unparseable, not as a claim that changed', () => {
+  const dir = scratchRepo();
+  try {
+    assert.equal(ledger(dir, 'build').exit, 0);
+    const idx = path.join(dir, '.claude', 'ledger', 'index.json');
+    fs.writeFileSync(idx, fs.readFileSync(idx, 'utf8').slice(0, 120));
+    const r = ledger(dir, 'build', '--check');
+    assert.equal(r.exit, 1);
+    assert.match(r.out, /not valid JSON/);
+    assert.match(r.out, /hand-edited or truncated/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the committed index records no positions at all', () => {
+  const raw = fs.readFileSync(path.join(REPO_ROOT, '.claude', 'ledger', 'index.json'), 'utf8');
+  assert.doesNotMatch(raw, /source_line/, 'a position in the index re-couples the check to where claims sit');
+  for (const c of JSON.parse(raw).claims) {
+    assert.equal(c.source_line, undefined, `${c.id} carries a position`);
+    assert.ok(c.source_file, `${c.id} must still say which artifact it lives in`);
+  }
+});
+
+// ── locate, over BOTH scopes ────────────────────────────────────────────────
+//
+// The first version of this test asserted `/^docs\/06-codebase\/ledger-canary\.md:\d+$/`.
+// The project path was baked into the regex, so no global claim could ever enter the
+// sample — and `locate` was printing `~/.warroom/ledger/global.yml:0` for all four of
+// them, a number nobody measured, inside the change whose whole argument is against
+// exactly that. The assertion underneath it was the right one; it was aimed at the only
+// ground where it already held.
+//
+// That is not the empty-sample defect. The sample was not empty — it was drawn entirely
+// from the region where the property is true. Same family as the selector defect in
+// views.test.tsx (rows picked by the content under test); different mechanism.
+//
+// So: the global ledger is INJECTED, via WARROOM_GLOBAL_LEDGER.
+//
+// THE REAL LEDGER CANNOT SERVE THIS TEST, in either direction. Its contents differ per
+// machine, so there is no known line to expect — and on a runner with no
+// ~/.warroom/ledger/global.yml there are no global claims at all. Measured:
+// `HOME=<empty> ledger locate` lists 33 claims where this machine lists 37. A test that
+// exercised globals against the real file would iterate an empty set in CI and pass. That
+// is the empty-sample defect, and it would have landed inside the fix for the sampling
+// defect — a fourth variant of the same family, in the same change.
+//
+// $HOME would also have worked, and is not what this uses: eventsPath() resolves through
+// os.homedir() too, so moving HOME to reach the ledger silently moves the run log with it.
+// One knob, one thing.
+
+// Line numbers are asserted as EXACT VALUES against this literal, not as /\d+/. "Matches a
+// number" is the assertion shape that let `:0` through for four claims — 0 is a number.
+const G_LINE = { 'c-fixture-alpha': 4, 'c-fixture-beta': 13 };
+const GLOBAL_FIXTURE = [
+  '# a fixture global ledger',                                      // 1
+  '',                                                               // 2
+  'claims:',                                                        // 3
+  '  - id: c-fixture-alpha',                                        // 4
+  '    assert: "the first fixture claim"',                          // 5
+  '    kind: runtime-capability',                                   // 6
+  '    scope: global',                                              // 7
+  '    verified_by: command',                                       // 8
+  '    evidence: {cmd: "true", expect_exit: 0}',                    // 9
+  '    valid_until: 2027-01-01',                                    // 10
+  '    confidence: 1',                                              // 11
+  '',                                                               // 12
+  '  - id: c-fixture-beta',                                         // 13
+  '    assert: "the second fixture claim"',                         // 14
+  '    kind: runtime-capability',                                   // 15
+  '    scope: global',                                              // 16
+  '    verified_by: command',                                       // 17
+  '    evidence: {cmd: "true", expect_exit: 0}',                    // 18
+  '    valid_until: 2027-01-01',                                    // 19
+  '    confidence: 1',                                              // 20
+  '',                                                               // 21
+].join('\n');
+
+// The map above is a second statement of the same fact as the fixture, and two statements
+// of one fact drift. This checks them against each other before any test uses either.
+test('the global fixture really puts its claims where the expectation map says', () => {
+  const lines = GLOBAL_FIXTURE.split('\n');
+  for (const [id, n] of Object.entries(G_LINE)) {
+    assert.equal(lines[n - 1], `  - id: ${id}`, `G_LINE says ${id} is at ${n}; the fixture disagrees`);
+  }
+});
+
+function withGlobalLedger(body, yaml = GLOBAL_FIXTURE) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wr-global-'));
+  const ledger = path.join(dir, 'global.yml');
+  try {
+    fs.writeFileSync(ledger, yaml);
+    const run = (...args) => execFileSync('node', ['scripts/ledger.mjs', ...args],
+      { cwd: REPO_ROOT, encoding: 'utf8', env: { ...process.env, WARROOM_GLOBAL_LEDGER: ledger } });
+    return body(run, ledger);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('the injected ledger is the one being read — the seam is real, not assumed', () => {
+  // A claim that exists in no other file on this machine. If it comes back, the override
+  // took effect; without this, every global assertion below could be reading the real
+  // ledger and nobody would know.
+  withGlobalLedger((run, ledger) => {
+    assert.equal(run('locate', 'c-fixture-alpha').trim(), `${ledger}:4`);
+    // And the label is the real path, not the tilde form — an override rendered as
+    // `~/.warroom/ledger/global.yml` would name a file it did not read.
+    assert.doesNotMatch(run('locate'), /~\/\.warroom/);
+  });
+});
+
+test('locate points at a real line for EVERY claim it prints, in both scopes', () => {
+  withGlobalLedger((run, ledger) => {
+    const out = run('locate');
+    const rows = out.split('\n').filter((l) => /\s{2}c-/.test(l));
+
+    let project = 0;
+    const globalsSeen = [];
+    for (const row of rows) {
+      const [loc, id] = row.trim().split(/\s{2,}/);
+      const m = loc.match(/^(.*):(\d+)$/);
+      assert.ok(m, `${id}: printed no position — this test is for rows that claim one (${loc})`);
+      const [, file, lineNo] = m;
+      assert.notEqual(lineNo, '0', `${id}: ":0" is a placeholder, not a position`);
+
+      if (file === ledger) {
+        // Global: the EXACT line the fixture wrote, not merely some number. `/\d+/` would
+        // have accepted `:0`, which is how four claims shipped a position nobody measured.
+        assert.equal(Number(lineNo), G_LINE[id], `${id}: expected line ${G_LINE[id]}, got ${lineNo}`);
+        assert.equal(GLOBAL_FIXTURE.split('\n')[Number(lineNo) - 1], `  - id: ${id}`);
+        globalsSeen.push(id);
+      } else {
+        // Project: the head of the block the claim lives in. There is no known-good line to
+        // hardcode across 33 claims in a moving repo, so the line is resolved back into the
+        // artifact and must open a claim block — a stronger check than any fixed number.
+        const src = fs.readFileSync(path.join(REPO_ROOT, file), 'utf8');
+        const line = src.split('\n')[Number(lineNo) - 1];
+        assert.ok(line !== undefined, `${id}: line ${lineNo} is past the end of ${file}`);
+        assert.equal(line.trim(), 'claims:', `${id}: project position must open a claim block`);
+        project++;
+      }
+    }
+
+    // Both halves non-empty, or this test is the defect it was written to catch.
+    assert.ok(project > 0, 'no project claim was sampled');
+    assert.deepEqual(globalsSeen.sort(), Object.keys(G_LINE).sort(),
+      'every fixture global must be sampled — a hardcoded project path is how this went wrong');
+  });
+});
+
+test('locate prints the file alone when a position cannot be measured — never a 0', () => {
+  // Two entries share an id, so the position is ambiguous and globalClaimLine() refuses to
+  // return the first of two guesses. The row must then carry no number at all: `:0`, `:?`
+  // and `:-` are all a character standing in for a measurement.
+  const ambiguous = GLOBAL_FIXTURE.replace('  - id: c-fixture-beta', '  - id: c-fixture-alpha');
+  withGlobalLedger((run, ledger) => {
+    const out = run('locate');
+    const rows = out.split('\n').filter((l) => l.includes(ledger));
+    // Asserting "no number" over an empty set would be the empty-sample defect wearing
+    // this option's clothes, so the sample is proven non-empty first: two entries share
+    // the id, and both must be listed.
+    assert.equal(rows.length, 2, 'both ambiguous entries must be listed');
+    for (const r of rows) {
+      assert.doesNotMatch(r, /:\d+/, `an unmeasurable position must print no number: ${r.trim()}`);
+      assert.match(r, /global\.yml\s{2,}c-fixture-alpha/, 'the file must still be named');
+    }
+    // And the single-id lookup takes the same path.
+    assert.equal(run('locate', 'c-fixture-alpha').trim(), ledger);
+
+    // THE FOOTER'S SECOND BRANCH, asserted here because this is the only state that
+    // produces it. The other footer test runs over a fixture where everything is
+    // measurable, so it only ever reached the first branch — the branch that exists
+    // precisely to report unmeasured positions was read by no test at all, and corrupting
+    // its arithmetic to `unlocated + 99` left the suite green over a footer whose own two
+    // numbers did not add up.
+    const all = out.split('\n').filter((l) => /\s{2}c-/.test(l));
+    const withPos = all.filter((l) => /:\d+\s{2,}c-/.test(l)).length;
+    const unmeasured = all.length - withPos;
+    assert.equal(unmeasured, 2, 'the two ambiguous rows are the unmeasured ones');
+    assert.match(out, new RegExp(`${all.length} claims · ${withPos} with a position resolved`));
+    assert.match(out, new RegExp(`${unmeasured} whose position could not be measured`));
+    assert.doesNotMatch(out, /none recorded, none guessed/, 'that line is only true when nothing is unmeasured');
+    // The two counts must reconcile against the total they are printed under — the
+    // corrupted arithmetic was self-contradictory on its face and nothing read it.
+    const m = out.match(/(\d+) claims · (\d+) with a position resolved[^·]*· (\d+) whose position/);
+    assert.ok(m, 'the footer must state all three numbers');
+    assert.equal(Number(m[2]) + Number(m[3]), Number(m[1]), `${m[2]} + ${m[3]} ≠ ${m[1]}`);
+  }, ambiguous);
+});
+
+test('the locate footer is true of every row it is printed over', () => {
+  withGlobalLedger((run) => {
+    const out = run('locate');
+    const rows = out.split('\n').filter((l) => /\s{2}c-/.test(l));
+    const withPos = rows.filter((l) => /:\d+\s{2,}c-/.test(l)).length;
+    // The footer used to assert "positions are resolved from the artifacts on this run"
+    // over four rows whose position was neither resolved nor recorded. Its counts must now
+    // reconcile against the listing above it.
+    assert.match(out, new RegExp(`${rows.length} claims · ${withPos} with a position resolved`));
+    assert.equal(withPos, rows.length, 'every row here is measurable, so none may be reported otherwise');
+    assert.match(out, /none recorded, none guessed/);
+  });
+});
+
+test('locate refuses an unknown id rather than printing nothing and passing', () => {
+  assert.throws(() => execFileSync('node', ['scripts/ledger.mjs', 'locate', 'c-no-such-claim'],
+    { cwd: REPO_ROOT, encoding: 'utf8', stdio: 'pipe' }), /Command failed/);
+});
+
 test('the canary claim is present and still shaped to fail both resolvers', async () => {
   const index = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, '.claude', 'ledger', 'index.json'), 'utf8'));
   const canary = index.claims.find((c) => c.id === 'c-canary-unresolvable');

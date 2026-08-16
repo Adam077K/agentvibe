@@ -360,8 +360,10 @@ when it crosses 10 s the ledger fails and forces a disposition instead of the bu
   aggregate step**. Folding something into the chain puts it in the local chain only.
 - **Every worktree needs `bun install` in `mission-control/`** before `npm run check` passes.
 - **`ledger:build` before `build:map`** — the map reads the ledger index.
-- **Editing `mission-control/README.md` moves the claim block's line numbers**, so `ledger build --check`
-  fails until you rebuild the index.
+- ~~**Editing `mission-control/README.md` moves the claim block's line numbers**, so `ledger build --check`
+  fails until you rebuild the index.~~ **No longer a trap.** The index stopped recording `source_line`, so
+  prose edits to claim-bearing files cost nothing. Changing a *claim* still fails the check, by design;
+  positions come from `node scripts/ledger.mjs locate <id>`.
 - **Bun's default `idleTimeout` is 10 s and reaps idle SSE connections** — the failure hides behind
   `EventSource` reconnecting forever. `/events` opts out **per request**; do not set it server-wide.
 - **Hono dispatches `HEAD` to the `GET` handler**, so a `route.on('HEAD', …)` guard does nothing.

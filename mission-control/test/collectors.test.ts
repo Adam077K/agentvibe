@@ -138,7 +138,7 @@ describe('discoverProjects', () => {
     fs.mkdirSync(path.join(projC, '.claude', 'ledger'), { recursive: true });
     fs.writeFileSync(
       path.join(projC, '.claude', 'ledger', 'index.json'),
-      JSON.stringify({ claims: [{ id: 'c-x', assert: 'x', kind: 'behavior', scope: 'project', verified_by: 'command', source_file: 'a.md', source_line: 1 }] })
+      JSON.stringify({ claims: [{ id: 'c-x', assert: 'x', kind: 'behavior', scope: 'project', verified_by: 'command', source_file: 'a.md' }] })
     );
     const [proj] = discoverProjects({ roots: [root], claudeProjectsRoot: claudeRoot }).filter((p) => p.id === 'proj-with-ledger');
     expect(proj!.ledgerIndex.present).toBe(true);
@@ -2672,7 +2672,6 @@ describe('collectWaivers', () => {
       scope: 'global',
       verified_by: 'command',
       source_file: '~/.warroom/ledger/global.yml',
-      source_line: 0,
       ...(disposition === undefined ? {} : { disposition }),
     } as GlobalClaim;
   }
@@ -2848,8 +2847,8 @@ describe('summarizeClaims', () => {
   test('buckets by kind/scope and flags claims expiring within 30 days', () => {
     const now = Date.parse('2026-08-13T00:00:00Z');
     const claims = [
-      { id: 'c-1', assert: 'a', kind: 'behavior', scope: 'project', verified_by: 'command', valid_until: '2026-08-20', source_file: 'a.md', source_line: 1 },
-      { id: 'c-2', assert: 'b', kind: 'behavior', scope: 'global', verified_by: 'command', valid_until: '2027-08-20', source_file: 'b.md', source_line: 1 },
+      { id: 'c-1', assert: 'a', kind: 'behavior', scope: 'project', verified_by: 'command', valid_until: '2026-08-20', source_file: 'a.md' },
+      { id: 'c-2', assert: 'b', kind: 'behavior', scope: 'global', verified_by: 'command', valid_until: '2027-08-20', source_file: 'b.md' },
     ];
     const summary = summarizeClaims(claims, now);
     expect(summary.total).toBe(2);
