@@ -1330,9 +1330,21 @@ describe('render parity — Belief', () => {
   // passed over it, because every fixture here hand-supplied `source_line: 12` or
   // `source_line: 1` — testing a world where the producer still emitted the field.
   //
-  // Asserting on rendered TEXT could not have caught it either: a title attribute is not
-  // text content. So this reads the attribute out of the markup, which is the only place
-  // the defect was ever visible.
+  // Asserting on rendered TEXT could not have caught it either: `textOf(html)` extracts
+  // text content and never reaches a `title` attribute, and both fields live only in the
+  // attribute. So this reads the attribute out of the markup — assert on text content and
+  // you reproduce the blind spot exactly.
+  //
+  // It asserts on the rendered STRING, never on `c.source_line`. `source_file` is the twin:
+  // same origin in index.json, same non-optional type, equally absent from validateClaim's
+  // closed schema, equally unvalidated by readLedgerIndex. A field-shaped assertion would
+  // guard one and stay blind to the one beside it; a string-shaped one covers both, because
+  // the tooltip losing its path fails the same expectation as the tooltip gaining a number.
+  //
+  // The rows are selected by their ASSERT text, not by whether they contain a path. Picking
+  // them by "contains .md" would make the selector depend on the field under test: drop
+  // `source_file` and the list empties, the loop runs zero times, and the test passes for
+  // the reason it exists to catch.
   test('the claim tooltip names the artifact and never a position it does not have', () => {
     const payload = beliefPayload([
       { claimId: 'c-rolling-five-hour-window', until: '2026-09-08', reason: 'vendor fact', lapsed: false, days: 26 },
@@ -1342,20 +1354,23 @@ describe('render parity — Belief', () => {
     );
 
     const titles = [...html.matchAll(/title="([^"]*)"/g)].map((m) => m[1] ?? '');
-    const claimTitles = titles.filter((t) => t.includes('.md') || t.includes('global.yml'));
-    expect(claimTitles.length).toBeGreaterThan(0); // or the assertions below vacuously hold
+    const expected: [string, string][] = [
+      ['the shadow window is open', 'docs/x.md'],
+      ['usage is governed by a rolling 5h window', '~/.warroom/ledger/global.yml'],
+    ];
 
-    for (const t of claimTitles) {
-      expect(t).not.toContain('undefined');
-      // `:0` and `:12` are both positions, and neither is a measurement any more. Match a
-      // colon followed by digits so a re-introduced line number fails whatever its value —
-      // pinning only `:0` would pass the day someone stamps `:1` instead.
-      expect(t).not.toMatch(/:\d+/);
+    for (const [assertText, sourceFile] of expected) {
+      const title = titles.find((t) => t.includes(assertText));
+      expect(title).toBeDefined(); // the row rendered at all
+      // The path must be there. This is the half that fails if `source_file` is ever
+      // dropped from the producer's KEY_ORDER, or from the type, or from the tooltip.
+      expect(title).toContain(sourceFile);
+      // And nothing that looks like a position. `:0` and `:12` are both positions and
+      // neither is a measurement any more, so match a colon followed by digits — pinning
+      // the literal `:0` would pass the day someone stamps `:1` instead.
+      expect(title).not.toContain('undefined');
+      expect(title).not.toMatch(/:\d+/);
     }
-
-    // Positive half: dropping the line must not have dropped the file with it.
-    expect(claimTitles.some((t) => t.includes('docs/x.md'))).toBe(true);
-    expect(claimTitles.some((t) => t.includes('~/.warroom/ledger/global.yml'))).toBe(true);
   });
 
   test('expiring claims render in date order, soonest first', () => {
