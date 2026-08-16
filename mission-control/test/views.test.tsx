@@ -361,7 +361,7 @@ describe('render parity — Fleet', () => {
       compared++;
     }
     expect(compared).toBe(payload.projects.length);
-  });
+  }, 30_000); // /api/fleet shells out to warroom-install.mjs fleet; ~4-5s on a quiet machine
 
   // TITLES ARE CONTENT TOO, and were checked in 2 of 6 places. A mutation battery got four
   // through: the generation cell's `lines` and `fns` swapped, the burn provenance swapped,
@@ -419,7 +419,7 @@ describe('render parity — Fleet', () => {
 
     // The branch coverage this test previously only appeared to have.
     if (!makeApp) expect(launcherRowsChecked).toBeGreaterThan(0);
-  });
+  }, 30_000); // 'no launchers matched' case calls /api/fleet → shells out
 
   test('every title in a Sessions row reverses to the payload', async () => {
     const { app, now } = buildFixtureState('sessions-titles');
@@ -470,7 +470,7 @@ describe('render parity — Fleet', () => {
     expect(burnTitle).not.toContain('bytes read');
     // And nothing else in the headline renders them either.
     expect(textOf(html)).not.toContain('bytes read');
-  });
+  }, 30_000); // calls /api/fleet → shells out to warroom-install.mjs
 
   // B1. The headline used to print "every in-scope launcher on the modal generation" whenever
   // `drifted === 0` — and with no modal generation, every row's drift is null, so `drifted`
@@ -667,7 +667,7 @@ describe('render parity — Fleet', () => {
     const text = textOf(html);
     expect(text).toContain('Burn · rolling 5h · account-wide');
     expect(text).not.toContain('Output tokens ·');
-  });
+  }, 30_000); // calls /api/fleet → shells out
 
   test('MUTATION GATE: swapping the headline burn for its subagent share turns it red', async () => {
     const { app } = buildFixtureState('fleet-headline-mutation');
@@ -682,7 +682,7 @@ describe('render parity — Fleet', () => {
       payload.budget.subagent_output_tokens
     );
     expect(payload.budget.output_tokens).not.toBe(payload.budget.subagent_output_tokens);
-  });
+  }, 30_000); // calls /api/fleet → shells out
 
   test('MUTATION GATE: changing one payload figure changes what is rendered', async () => {
     const { app, now } = buildFixtureState('fleet-mutation');
@@ -700,7 +700,7 @@ describe('render parity — Fleet', () => {
     const find = (rows: string[][]) => rows.find((cells) => (cells[1] ?? '').split(' ')[0] === target.id)!;
     expect(asNumber(find(before)[6]!)).toBe(original);
     expect(asNumber(find(after)[6]!)).toBe(original + 61_197);
-  });
+  }, 30_000); // calls /api/fleet → shells out
 
   test('agent-active projects sort above dormant ones, and dormant ones are never dropped', async () => {
     const { app, now } = buildFixtureState('fleet-order');
@@ -719,7 +719,7 @@ describe('render parity — Fleet', () => {
         expect(ids.indexOf(id)).toBeLessThan(ids.indexOf(other));
       }
     }
-  });
+  }, 30_000); // calls /api/fleet → shells out
 
   test('a null fleet renders skeleton rows, never a table of zeroes', () => {
     const html = renderToStaticMarkup(<FleetTable fleet={null} now={Date.now()} />);
@@ -2004,9 +2004,9 @@ describe('the app bar says where the figures on screen came from', () => {
     for (const view of VIEWS) {
       expect({ id: view.id, stream: view.stream }).toEqual({ id: view.id, stream: responds.get(view.id)! });
     }
-  });
+  }, 30_000); // respondsToStream() fetches /api/fleet → shells out
 
-  test('the badge follows that field: a fetched view never shows the stream’s age', async () => {
+  test("the badge follows that field: a fetched view never shows the stream’s age", async () => {
     const responds = await respondsToStream();
     const freshness: Freshness = { loadedAt: NOW - 90_000, failedAt: null, loading: false };
     const stream: StreamState = { fleet: null, sessions: null, connection: 'live', lastEventAt: NOW - 6_000 };
@@ -2025,7 +2025,7 @@ describe('the app bar says where the figures on screen came from', () => {
         expect(text).not.toContain('live');
       }
     }
-  });
+  }, 30_000); // calls respondsToStream() which fetches /api/fleet → shells out
 
   // THE SHELL, rendered. The bar's nav filter, the breadcrumb for a non-nav view and the
   // gating on both notices are all inside the app shell, and nothing rendered it: App.tsx was
@@ -2074,7 +2074,7 @@ describe('the app bar says where the figures on screen came from', () => {
     // The breadcrumb is absent on a nav view, which is what makes the line above about the
     // hidden branch rather than about something the bar always draws.
     expect(textOf(fleetHtml)).not.toContain(`/ ${project.label}`);
-  });
+  }, 30_000); // fetches /api/fleet → shells out to warroom-install.mjs
 
   test('the stream notices never appear over a view that fetched its own bytes', async () => {
     const streamView = VIEWS.find((v) => v.stream)!;
