@@ -5,7 +5,16 @@
 //
 // Validates .claude/agents/*.md. (Phase 6 deleted war-room/, which used
 // the bespoke Routine schema acceptable per 07b §4) against the canonical
-// 07b-AGENT-TEMPLATE.md spec.
+// spec at docs/03-system-design/agents/PROMPT-STANDARD.md.
+//
+// THAT CITATION USED TO READ `07b-AGENT-TEMPLATE.md`, WHICH DOES NOT EXIST AND NEVER DID —
+// not in this tree, not in git history. This file spent its whole life claiming to enforce a
+// document nobody could open, which is the same dead-path defect check-registration.mjs was
+// written to catch in governing docs and does not check here.
+//
+// The PS-* rules below are §6.1 of PROMPT-STANDARD.md, id for id. That document lands from
+// branch `docs/prompt-standard` in the same session as this change; if it is not merged, this
+// header cites a file that does not exist and the fix is to merge it, not to re-point this line.
 //
 // Usage:
 //   node .claude/hooks/schema-lint.js                          # lint all top-level agents
@@ -70,6 +79,7 @@ const REQUIRED_FRONTMATTER = [
   'name',
   'description',
   'model',
+  'effort',
   'tools',
   'maxTurns',
   'color',
@@ -77,6 +87,23 @@ const REQUIRED_FRONTMATTER = [
   'skills',
   'risk_tier_default',
 ];
+
+// `effort` — REQUIRED as of the prompt standard, and the honesty note is the point of this block.
+//
+// WHAT IS VERIFIED: the VALUE binds where it is set. `low|medium|high|xhigh|max` are real, and
+// `max` is real at 95 recorded turns (model×effort census, TOKEN-EFFICIENCY.md). It is settable on
+// the workflow surface — `agent(prompt, opts?: {label, phase, schema, model, effort, isolation,
+// agentType})`, from `strings -a` on binary 2.1.232 (GRANT-HOLDERS.md §3.1, CONTROL-PLANE.md §2.1).
+//
+// WHAT IS NOT VERIFIED: whether the FRONTMATTER FIELD is read at all. Zero agent files declared it
+// before this change, so that channel has never been exercised, and documented support for `effort:`
+// in subagent frontmatter could not be confirmed. The census measured effort as it ARRIVED at the
+// runtime, not as an agent file DECLARED it.
+//
+// So this field is required, enum-checked, and MUST NOT be described anywhere as a grant. This repo
+// shipped `mcpServers` as decoration across 52 files on exactly that mistake — a field that looks
+// like a boundary and enforces nothing. Tracked as claim `c-effort-frontmatter-binding-unverified`
+// in docs/03-system-design/CLAIM-LEDGER.md, modelled on `c-read-only-binding-unverified`.
 // `mcpServers` was required here and is no longer. Every one of the 52 agent files
 // declared it while `settings.json` had no `mcpServers` key and no `.mcp.json` existed
 // anywhere, so the field granted nothing to anybody. §3.7: "a capability field
@@ -112,7 +139,14 @@ function configuredMcpServers() {
 // escalates_to + escalates_when are required for non-personas
 // return_contract + pre_flight_reads are required for everyone
 
-const VALID_MODELS = ['claude-opus-4-7', 'claude-sonnet-4-6', 'claude-haiku-4-5'];
+// PS-MODEL-ENUM. The set this fleet actually runs, per TOKEN-EFFICIENCY.md §6 "Model split" —
+// the only VERIFIED inventory of the corpus by model. `claude-opus-4-7` and `claude-sonnet-4-6`
+// are superseded and are refused, because a superseded pin is not inert: it SILENTLY CLAMPS
+// `effort`, the one quality dial that binds (GRANT-HOLDERS.md §3.1; CONTROL-PLANE.md §3.1 — 269
+// of 269 reviewer runs executed sonnet-4-6 at `high` inside sessions defaulting to opus-5).
+const VALID_MODELS = ['claude-opus-5', 'claude-sonnet-5', 'claude-fable-5', 'claude-haiku-4-5'];
+// PS-EFFORT-ENUM. Enum only — see the REQUIRED_FRONTMATTER note on what this field does not prove.
+const VALID_EFFORT = ['low', 'medium', 'high', 'xhigh', 'max'];
 const VALID_ISOLATION = ['worktree', 'none'];
 const VALID_TIERS = ['trivial', 'lite', 'full', 'irreversible'];
 
@@ -180,6 +214,19 @@ function parseFrontmatter(text) {
           let sv = sk[2].trim();
           if (sv.startsWith('[') && sv.endsWith(']')) {
             sv = sv.slice(1, -1).split(',').map((s) => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+          } else if (sv === '') {
+            // A nested BLOCK LIST — `return_contract:` → `required_fields:` → `- status`.
+            // Without this branch those `- item` lines fell through the sub-key regex and were
+            // silently dropped, so `return_contract.required_fields` parsed to the empty string
+            // and PS-STATUS-FIELD / PS-RETURN-EXAMPLE-MATCHES would have had nothing to read —
+            // and would have passed on every file, which is the vacuous-rule failure §6.4 forbids.
+            const items = [];
+            let j = i + 1;
+            while (j < lines.length && /^\s+-\s+/.test(lines[j])) {
+              items.push(lines[j].replace(/^\s+-\s+/, '').trim().replace(/^["']|["']$/g, ''));
+              j++;
+            }
+            if (items.length > 0) { sv = items; i = j - 1; }
           }
           sub[sk[1]] = sv;
         }
@@ -281,6 +328,461 @@ function scanSections(text) {
   return text.split('\n').filter((l) => /^## [^#]/.test(l)).map((l) => l.trim());
 }
 
+// ── The prompt standard — PS-* ─────────────────────────────────────────────
+//
+// docs/03-system-design/agents/PROMPT-STANDARD.md §6.1 (FAIL) and §6.2 (WARN), id for id.
+// The rules that already existed before that document are cited there with line numbers and are
+// NOT reimplemented here; this block is only the ones it marks **new**.
+//
+// THE CALIBRATION RULE GOVERNS EVERY ADDITION BELOW (§0). Before a rule may FAIL it is run against
+// all seven live engine files and narrowed until it hits ZERO, and it must then fire on a
+// constructed violation or it is vacuous and is deleted. Both numbers are pinned in
+// scripts/prompt-standard.test.mjs. The split between FAIL and WARN is NOT by severity — it is by
+// whether a false positive is possible:
+//
+//   FAIL over closed sets   — an enum, the tool universe, a literal phrase list, a key-set compare
+//   WARN over open prose    — any pattern over English is eventually wrong about a sentence nobody
+//                             anticipated, and a linter that is wrong blocks good work
+//
+// The sharpest instance: §0 measured `VAGUE` (defined below for lens steps, where it is correct)
+// failing 6 of the 7 files it is meant to certify, including `### Step 4 — Render and look` in the
+// one engine whose reason to exist is that it looks at rendered output. It is PS-BODY-VAGUE, a
+// warning, and it may never block.
+
+// PS-FM-KEY-ALLOWLIST — the keys the schema knows. An unknown key is decoration by definition:
+// nothing reads it, and it will be mistaken for a grant. That is the `mcpServers` failure exactly,
+// which 52 files carried. 15 keys — the 14 of §5.1 plus `effort`, which this change adds.
+const KNOWN_FM_KEYS = [
+  'name', 'description', 'model', 'effort', 'tools', 'maxTurns', 'color', 'isolation',
+  'skills', 'mcpServers', 'risk_tier_default', 'escalates_to', 'escalates_when',
+  'return_contract', 'pre_flight_reads',
+];
+
+// PS-TOOL-EXISTS — the runtime tool universe. A `tools:` entry outside it grants nothing and
+// reads as a boundary, which is the whole never-appear list (§5.2). `mcp__*` entries are passed
+// through deliberately: PS-MCP-BACKED already checks those against configured servers per server,
+// and duplicating that here would give two implementations of one question.
+const TOOL_UNIVERSE = [
+  'Read', 'Write', 'Edit', 'NotebookEdit', 'Bash', 'BashOutput', 'KillShell',
+  'Glob', 'Grep', 'Task', 'Agent', 'WebSearch', 'WebFetch', 'TodoWrite',
+  'Skill', 'SlashCommand', 'ExitPlanMode', 'StructuredOutput', 'ToolSearch',
+];
+
+// Tools that appear in `.claude/agents/*.md` prose as code spans, for PS-BODY-TOOL-AFFIRM.
+const TOOL_MENTION_RE = /`(Read|Write|Edit|NotebookEdit|Bash|Glob|Grep|Task|WebSearch|WebFetch)`/g;
+// An affirmative DIRECTION to use it. Narrowed to verbs of use: `declares`, `removed`, `holding`
+// and `left` all appear beside out-of-grant tool names in reviewer-readonly.md's own explanation
+// of why it exists, and every one of those is correct prose that must survive (§5.2).
+const TOOL_DIRECTIVE_RE = /\b(use|uses|using|run|runs|running|call|calls|calling|invoke|invokes|invoking|execute|executes|executing|shell out|spawn|spawns|spawning|launch|launches|launching)\b/i;
+// A negation anywhere in the PARAGRAPH clears it. A LINE is not a sentence in a file that hard-wraps
+// at ~110 characters: line-scoped, this rule fires on 2 correct negations in reviewer-readonly.md
+// because the "no" lands on the neighbouring line. Paragraph-scoped it measures 0 on all seven.
+const TOOL_NEGATION_RE = /\b(no|not|never|cannot|can't|without|lacks?|absent|removed|omits?|omitted|denied|refuses?|refused|strips?|stripped|nothing)\b/i;
+
+// PS-DISPOSITION — a mood in place of a mechanism (§4). "Be critical" names a disposition and
+// supplies no test the agent can fail. Where a file needs adversarial behaviour it must instead name
+// the artifact it judges against and the condition under which it returns BLOCKED, which is
+// PS-JUDGE-BLOCK-CONDITION. This is NOT a ban on strong language: reviewer.md:37 says "an agent that
+// can edit what it reviews will review what it can edit" and that sentence explains a mechanism.
+const DISPOSITION = [
+  /\b(be|stay|remain|act) (critical|thorough|skeptical|sceptical|rigorous|honest|careful|objective|harsh|brutal|diligent|meticulous|paranoid|adversarial|ruthless|vigilant|aggressive)\b/i,
+  /\b(think|dig|look) (deeply|hard|carefully)\b/i,
+  /\byou are (a |an )?(world-class|senior|expert|seasoned|elite|10x)\b/i,
+  /\bact as (a|an)\b/i,
+  /\bdon'?t be (afraid|shy|gentle)\b/i,
+  /\btake your time\b/i,
+  /\b(make|be) sure to\b/i,
+  /\bdo your best\b/i,
+  /\bcarefully (review|consider|examine|check|read)\b/i,
+  /\bpay (close )?attention\b/i,
+  /\bhigh-quality\b/i,
+  /\bworld-class\b/i,
+];
+
+// PS-PRIOR-BELIEF — the sharpest number in this repository (§3.1). Telling a reviewer the code is
+// believed correct collapsed vulnerability detection from 97.2% to 3.6% on GPT-4o-mini and 68.4% to
+// 8.5% on Claude 3.5 Haiku across 250 CVE patch pairs; redacting the framing recovered it to 94-100%
+// (arXiv:2603.18740, accessed 2026-08-15, via MODEL-DIVERSITY.md:34-44). A 60-to-94-point swing from
+// one clause. Until 2026-08-15 two of three adversarial verifiers in qa.js carried exactly this, and
+// the gate's record at that point was 34 PASS and 0 BLOCK.
+//
+// Provenance is NOT prior belief: "this diff touches auth", "this is the third attempt" describe the
+// artifact rather than its verdict, and stay.
+const PRIOR_BELIEF = [
+  /\b(is|was|are|were) (believed|assumed|presumed|known|thought) to be\b/i,
+  /\bassume (the |this |it |that )?(finding|code|change|diff|work|patch|it|this) (is|was|to be)\b/i,
+  /\b(likely|probably) (correct|fine|safe|valid|a false positive)\b/i,
+  /\bknown-good\b/i,
+  /\balready (been )?(reviewed|approved|vetted|verified|audited)\b/i,
+  /\bhas (already )?passed (review|QA|the gate)\b/i,
+  /\bthe (code|change|diff|work|patch) is (correct|fine|safe|secure|valid)\b/i,
+  /\bdefault to is_real=false\b/i,
+];
+
+// PS-FALSE-CONSTRAINT — statements this repo has MEASURED false (§5.3). A false constraint is worse
+// than a missing one: it is obeyed. Every entry carries the measurement that refuted it; an entry
+// with no citation is someone's opinion wearing a rule's clothes. Adding to this list is part of
+// retiring a claim — when a resolver refutes something the repo believed, the refuted sentence lands
+// here in the same PR, and that is what stops the belief coming back.
+const FALSE_CONSTRAINT = [
+  // REFUTED BY: the nested-spawn fabrication. Subagents CAN spawn subagents; an entry prompt asserted
+  // they cannot, and CLAUDE.md rule 9 exists because of it.
+  /\bsubagents? can ?not spawn\b/i,
+  /\bcan ?not spawn (a |an )?subagents?\b/i,
+  /\bnested spawn(ing)? is (not|impossible|unsupported)\b/i,
+  /\bthere is no way to spawn\b/i,
+  /\bspawning is disabled\b/i,
+  // REFUTED BY: qa.js naming `agentType` at all four dispatch sites. maxTurns BINDS when a dispatch
+  // names an agentType and not otherwise; AGENT-ARCHITECTURE.md:56 still records the stale `NO`,
+  // measured over a corpus in which no dispatch named an agent file (PROMPT-STANDARD.md §1.5).
+  /\bmaxTurns (is|are) (not enforced|advisory|inert|ignored|not binding)\b/i,
+  /\bmaxTurns does not bind\b/i,
+  // REFUTED BY: the tool census. `tools:` SUBTRACTS but is not known to bind Bash — which is why
+  // reviewer-readonly exists at all. The hedged, true sentence "tools: is not known to bind Bash"
+  // (reviewer-readonly.md:46) must survive this list, and does: the pattern needs "binds" directly.
+  /\btools:? binds Bash\b/i,
+];
+
+// The canonical order of the five leading sections. PS-SECTION-ORDER is a WARNING because it fires
+// on 1 of 7 today: reviewer-readonly puts `## Pre-flight reads` before `## Workflow position` and
+// inserts two sections explaining why the file exists at all. That is a better file, not a worse one.
+// PS-SECTION-BOOKENDS is the part of the same idea that reaches zero, and it FAILS.
+const CANONICAL_ORDER = [
+  '## Identity & mission',
+  '## Workflow position',
+  '## Key distinctions',
+  '## Pre-flight reads',
+  '## Operating procedure',
+];
+
+// PS-PIPELINE-RESTATE needs the real stage ids, read from the playbooks rather than hard-coded —
+// a second list of stage names would disagree with the first one silently.
+let PLAYBOOK_STAGES = null;
+function playbookStages() {
+  if (PLAYBOOK_STAGES) return PLAYBOOK_STAGES;
+  PLAYBOOK_STAGES = [];
+  const dir = path.join(REPO_ROOT, '.claude', 'playbooks');
+  try {
+    for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.yml')).sort()) {
+      const doc = parseYamlSubset(fs.readFileSync(path.join(dir, f), 'utf8'));
+      const ids = (doc.stages || []).map((s) => s && s.id).filter((s) => typeof s === 'string');
+      if (ids.length) PLAYBOOK_STAGES.push({ playbook: path.basename(f, '.yml'), ids: new Set(ids) });
+    }
+  } catch { /* no playbooks readable — the rule then finds nothing, and lintAllPlaybooks reports it */ }
+  return PLAYBOOK_STAGES;
+}
+
+/** The markdown body — everything after the frontmatter block. */
+function bodyOf(text) {
+  const m = text.match(/^---\n[\s\S]*?\n---\n?/);
+  return m ? text.slice(m[0].length) : text;
+}
+
+/**
+ * Normalise prose before a literal phrase list reads it.
+ *
+ * Two transforms, each earning its place: code-span and emphasis markers are dropped so
+ * "`tools:` binds `Bash`" is reachable by a rule written in plain English, and newlines collapse to
+ * spaces because these files hard-wrap at ~110 characters and a banned phrase straddles the wrap.
+ */
+function normaliseProse(s) {
+  return s.replace(/[`*_]/g, '').replace(/\s+/g, ' ');
+}
+
+/**
+ * The PS-* rules that PROMPT-STANDARD.md §6.1/§6.2 marks **new**.
+ *
+ * Called from lintFile AFTER the shim early-return (a shim holds no procedure and must never see
+ * these) and AFTER `sections` is computed. Pushes blocking problems onto `issues`; returns the
+ * number of warnings it added, having pushed their text onto `checks`.
+ */
+function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
+  let warnings = 0;
+  const body = bodyOf(text);
+  const bodyLines = body.split('\n');
+  const paragraphs = body.split(/\n[ \t]*\n/);
+  // §3.1 scopes every phrase rule to MODEL-REACHING TEXT: the frontmatter `description` and the
+  // body. Never comments, and never this file — a rule about prior belief is not a prior belief,
+  // exactly as the lens linter learned that a rule about TODOs is not a TODO.
+  const modelReaching = normaliseProse(`${typeof fm.description === 'string' ? fm.description : ''}\n${body}`);
+
+  // ── PS-FM-KEY-ALLOWLIST ──────────────────────────────────────────────────
+  for (const k of Object.keys(fm)) {
+    if (!KNOWN_FM_KEYS.includes(k)) {
+      issues.push(
+        `PS-FM-KEY-ALLOWLIST: frontmatter key "${k}" is not one the schema knows ` +
+        `(${KNOWN_FM_KEYS.join(', ')}) — nothing reads it, so it grants nothing and will be read as a boundary`
+      );
+    }
+  }
+
+  // ── PS-TOOL-EXISTS ───────────────────────────────────────────────────────
+  if (Array.isArray(fm.tools)) {
+    for (const t of fm.tools) {
+      if (String(t).startsWith('mcp__')) continue;
+      if (!TOOL_UNIVERSE.includes(t)) {
+        issues.push(`PS-TOOL-EXISTS: tools entry "${t}" is not a runtime tool (${TOOL_UNIVERSE.join(', ')})`);
+      }
+    }
+  }
+
+  // ── PS-SECTION-BOOKENDS ──────────────────────────────────────────────────
+  if (sections.length > 0) {
+    if (!sections[0].startsWith('## Identity & mission')) {
+      issues.push(`PS-SECTION-BOOKENDS: first section is "${sections[0]}" — it must be "## Identity & mission"`);
+    }
+    const last = sections[sections.length - 1];
+    if (!last.startsWith('## Anti-patterns')) {
+      issues.push(`PS-SECTION-BOOKENDS: last section is "${last}" — it must be "## Anti-patterns"`);
+    }
+  }
+
+  // ── PS-STEP-SHAPE ────────────────────────────────────────────────────────
+  // §3.2: for agent files the enforceable residue of "instruction, not description" is structural
+  // rather than grammatical. An `## Operating procedure` is `### Step N` headings.
+  const stepHeadings = bodyLines.filter((l) => /^### Step \d+\b/.test(l));
+  if (sections.some((s) => s.startsWith('## Operating procedure')) && stepHeadings.length === 0) {
+    issues.push('PS-STEP-SHAPE: "## Operating procedure" contains no "### Step N" heading');
+  }
+  // NOT_AN_INSTRUCTION, scoped to the step heading TEXT only — never to body prose, which
+  // legitimately opens paragraphs with "The tool list above is the mission" (reviewer.md:37).
+  for (const h of stepHeadings) {
+    const label = h.replace(/^### Step \d+\s*[—–-]?\s*/, '').trim();
+    if (label && NOT_AN_INSTRUCTION.test(label)) {
+      issues.push(`PS-STEP-SHAPE: step heading reads as description, not instruction — ${JSON.stringify(label)}`);
+    }
+    if (label && PLACEHOLDER.test(label)) {
+      issues.push(`PS-STEP-SHAPE: step heading is a placeholder — ${JSON.stringify(label)}`);
+    }
+  }
+
+  // ── PS-ANTIPATTERN-SHAPE ─────────────────────────────────────────────────
+  const antiStart = bodyLines.findIndex((l) => /^## Anti-patterns\b/.test(l));
+  const antiBullets = [];
+  if (antiStart !== -1) {
+    for (let i = antiStart + 1; i < bodyLines.length; i++) {
+      if (/^## [^#]/.test(bodyLines[i])) break;
+      // Top-level bullets only. A bullet that wraps continues on an indented line, and reviewer.md
+      // has two of those; a rule that read continuation lines would fail correct files.
+      if (/^- /.test(bodyLines[i])) antiBullets.push(bodyLines[i]);
+    }
+    for (const b of antiBullets) {
+      if (!b.startsWith('- **DO NOT ')) {
+        issues.push(`PS-ANTIPATTERN-SHAPE: bullet under "## Anti-patterns" must open "- **DO NOT " — ${JSON.stringify(b.slice(0, 60))}`);
+      }
+      if (PLACEHOLDER.test(b.replace(/^- \*\*DO NOT /, ''))) {
+        issues.push(`PS-ANTIPATTERN-SHAPE: anti-pattern is a placeholder — ${JSON.stringify(b.slice(0, 60))}`);
+      }
+      if (NOT_AN_INSTRUCTION.test(b.replace(/^- \*\*DO NOT /, ''))) {
+        issues.push(`PS-ANTIPATTERN-SHAPE: anti-pattern reads as description, not instruction — ${JSON.stringify(b.slice(0, 60))}`);
+      }
+    }
+  }
+
+  // ── PS-STATUS-FIELD · PS-RETURN-EXAMPLE-MATCHES ──────────────────────────
+  // §1.5: `return_contract` does not bind. Nothing validates a return against it, and this is the
+  // one guarantee a linter can give — that the file agrees with itself.
+  const required = fm.return_contract && Array.isArray(fm.return_contract.required_fields)
+    ? fm.return_contract.required_fields
+    : null;
+  if (fm.return_contract !== undefined) {
+    if (!required) {
+      issues.push('PS-STATUS-FIELD: return_contract must carry a required_fields list');
+    } else if (!required.includes('status')) {
+      issues.push(`PS-STATUS-FIELD: return_contract.required_fields does not include "status" (has: ${required.join(', ')})`);
+    }
+  }
+  const rcIdx = bodyLines.findIndex((l) => /^## Return contract\b/.test(l));
+  if (rcIdx !== -1 && required) {
+    const rest = bodyLines.slice(rcIdx + 1);
+    const end = rest.findIndex((l) => /^## [^#]/.test(l));
+    const block = (end === -1 ? rest : rest.slice(0, end)).join('\n');
+    const fence = block.match(/```json\n([\s\S]*?)```/);
+    if (!fence) {
+      issues.push('PS-RETURN-EXAMPLE-MATCHES: "## Return contract" carries no ```json example to check against required_fields');
+    } else {
+      let parsed = null;
+      try { parsed = JSON.parse(fence[1]); } catch (e) {
+        issues.push(`PS-RETURN-EXAMPLE-MATCHES: the json example under "## Return contract" does not parse — ${e.message}`);
+      }
+      if (parsed && (typeof parsed !== 'object' || Array.isArray(parsed))) {
+        issues.push('PS-RETURN-EXAMPLE-MATCHES: the json example under "## Return contract" must be an object');
+      } else if (parsed) {
+        const have = Object.keys(parsed);
+        const missing = required.filter((k) => !have.includes(k));
+        const extra = have.filter((k) => !required.includes(k));
+        if (missing.length || extra.length) {
+          issues.push(
+            `PS-RETURN-EXAMPLE-MATCHES: the json example does not carry exactly required_fields — ` +
+            `${missing.length ? `missing [${missing.join(', ')}]` : ''}${missing.length && extra.length ? '; ' : ''}` +
+            `${extra.length ? `extra [${extra.join(', ')}]` : ''}`
+          );
+        }
+      }
+    }
+  }
+
+  // ── PS-JUDGE-BLOCK-CONDITION ─────────────────────────────────────────────
+  // §4: a file that needs adversarial behaviour may not ask for a mood. It must name the artifact it
+  // judges against and the condition under which it returns BLOCKED. Checked on the read-only
+  // engines, which is where a verdict binds a merge.
+  if (READ_ONLY_ENGINES.includes(path.basename(filePath, '.md'))) {
+    if (!/\bBLOCKED\b/.test(body) && !/per-lens verdict/i.test(body)) {
+      issues.push(
+        'PS-JUDGE-BLOCK-CONDITION: a read-only engine must name the condition under which it returns ' +
+        'BLOCKED, or the per-lens verdict it returns instead. "Be critical" is not a mechanism'
+      );
+    }
+  }
+
+  // ── PS-DISPOSITION · PS-PRIOR-BELIEF · PS-FALSE-CONSTRAINT ───────────────
+  const phraseRules = [
+    ['PS-DISPOSITION', DISPOSITION, 'a disposition instruction — name the artifact judged against and the BLOCKED condition instead'],
+    ['PS-PRIOR-BELIEF', PRIOR_BELIEF, 'a stated prior belief about the artifact under judgement — this is the 97.2% to 3.6% class (MODEL-DIVERSITY.md)'],
+    ['PS-FALSE-CONSTRAINT', FALSE_CONSTRAINT, 'a statement this repo has MEASURED false — a false constraint is worse than a missing one, because it is obeyed'],
+  ];
+  for (const [id, patterns, why] of phraseRules) {
+    for (const re of patterns) {
+      const hit = modelReaching.match(re);
+      if (hit) {
+        const at = modelReaching.indexOf(hit[0]);
+        issues.push(`${id}: ${why} — ${JSON.stringify(modelReaching.slice(Math.max(0, at - 30), at + hit[0].length + 30).trim())}`);
+      }
+    }
+  }
+
+  // ── PS-BODY-TOOL-AFFIRM ──────────────────────────────────────────────────
+  const granted = new Set(Array.isArray(fm.tools) ? fm.tools : []);
+  for (const para of paragraphs) {
+    const flat = normaliseProse(para);
+    if (TOOL_NEGATION_RE.test(flat)) continue;
+    for (const sentence of flat.split(/(?<=[.!?])\s+/)) {
+      if (!TOOL_DIRECTIVE_RE.test(sentence)) continue;
+      // Re-read the ORIGINAL paragraph for code spans: normaliseProse strips the backticks that
+      // distinguish a tool name from the ordinary English word "read".
+      for (const m of para.matchAll(TOOL_MENTION_RE)) {
+        const tool = m[1];
+        if (granted.has(tool)) continue;
+        if (!normaliseProse(para).includes(tool)) continue;
+        if (!sentence.includes(tool)) continue;
+        issues.push(
+          `PS-BODY-TOOL-AFFIRM: the body directs use of \`${tool}\`, which frontmatter does not grant ` +
+          `(tools: ${[...granted].join(', ') || 'none'}) — ${JSON.stringify(sentence.slice(0, 80))}`
+        );
+      }
+    }
+  }
+
+  // ── PS-PIPELINE-RESTATE ──────────────────────────────────────────────────
+  // §5.4: two descriptions of one thing disagree silently. Scoped tightly on purpose — the stage ids
+  // are ordinary English (build, review, ship, frame, plan, design, model, judge, evidence, copy)
+  // and any looser rule would fire on every file in the repo.
+  bodyLines.forEach((line, n) => {
+    const tokens = line.split(/→|->|,| then /).map((t) => {
+      const clean = t.trim().replace(/^[`"'*[\](){}:]+|[`"'*[\](){}:.]+$/g, '').toLowerCase();
+      // The token itself, or its LAST word: a chain's first element carries the lead-in prose
+      // ("Your pipeline is frame"), and requiring whole-token equality would let a three-id chain
+      // through on that alone. The last word is still an exact match against a stage id, so this
+      // widens what counts as a link in the chain without loosening what counts as a stage.
+      return clean.includes(' ') ? clean.slice(clean.lastIndexOf(' ') + 1) : clean;
+    });
+    for (const { playbook, ids } of playbookStages()) {
+      const hits = tokens.filter((t) => ids.has(t));
+      if (new Set(hits).size >= 3) {
+        issues.push(
+          `PS-PIPELINE-RESTATE: line ${n + 1} chains ${new Set(hits).size} stage ids of the "${playbook}" playbook ` +
+          `(${[...new Set(hits)].join(', ')}) — point at the playbook, do not restate it`
+        );
+      }
+    }
+  });
+
+  // ── Warnings (§6.2) — over open prose or an unavoidable judgement call ───
+  //
+  // PS-LENGTH-BAND. Descriptive, from the corpus: 113-149 observed across the seven. reviewer-readonly
+  // is the longest BECAUSE it justifies its own existence, which is the right reason to be long — a
+  // cap would delete the justification. `wc -l` convention: split('\n').length counts the trailing
+  // newline as a line, so it reports one more than `wc -l` and the band is stated in `wc -l` terms.
+  const wcLines = text.split('\n').length - (text.endsWith('\n') ? 1 : 0);
+  if (wcLines < 100 || wcLines > 175) {
+    warnings++;
+    checks.push(`PS-LENGTH-BAND: ${wcLines} lines, outside the observed band 100-175 (corpus: 113-149) — a signal to look, not a defect`);
+  }
+  if (stepHeadings.length && (stepHeadings.length < 4 || stepHeadings.length > 8)) {
+    warnings++;
+    checks.push(`PS-STEP-COUNT: ${stepHeadings.length} "### Step N" headings, outside 4-8 (corpus: 5-7)`);
+  }
+  if (antiBullets.length && (antiBullets.length < 4 || antiBullets.length > 8)) {
+    warnings++;
+    checks.push(`PS-ANTIPATTERN-COUNT: ${antiBullets.length} anti-patterns, outside 4-8 (corpus: 5-7)`);
+  }
+  // PS-SECTION-ORDER — WARN, and it fires on reviewer-readonly today, correctly and harmlessly.
+  const seen = sections.filter((s) => CANONICAL_ORDER.some((c) => s.startsWith(c)))
+    .map((s) => CANONICAL_ORDER.findIndex((c) => s.startsWith(c)));
+  for (let i = 1; i < seen.length; i++) {
+    if (seen[i] < seen[i - 1]) {
+      warnings++;
+      checks.push(`PS-SECTION-ORDER: "${CANONICAL_ORDER[seen[i]]}" appears after "${CANONICAL_ORDER[seen[i - 1]]}" — canonical order is ${CANONICAL_ORDER.join(' → ')}`);
+      break;
+    }
+  }
+  // PS-BODY-VAGUE — WARN, and it may never be anything else. §0 measured it at 6 of 7 files and 10
+  // sites, every one of them correct prose. One warning per file listing the sites, because ten
+  // separate warnings on one file is noise that trains people to skip the whole column.
+  const vagueSites = [];
+  bodyLines.forEach((l, n) => {
+    if (VAGUE.test(l) && !ANCHOR.test(l)) vagueSites.push(n + 1);
+  });
+  if (vagueSites.length) {
+    warnings++;
+    checks.push(`PS-BODY-VAGUE: judgement words with no measurable anchor at line(s) ${vagueSites.join(', ')} — advisory only; this rule cannot tell a perception loop from a hand-wave`);
+  }
+
+  return warnings;
+}
+
+/**
+ * checkEngineRoster — ENGINES against disk, in both directions.
+ *
+ * ENGINES is hand-maintained (and must be: the lens files are authored BEFORE the engine files
+ * exist). A hand-maintained list drifts from disk silently, and this repository has the instance:
+ * `framer` was cut in ROSTER-SIZE.md §7.6 and stayed an engine in this constant, so the linter and
+ * the spec disagreed about what the roster is, with nothing to notice. The founder's decision of
+ * 2026-08-16 keeps `framer`; this check is what makes any future disagreement fail a build rather
+ * than sit there.
+ *
+ * `instrument` and `operator` are specified but do not exist yet. They join ENGINES in the PR that
+ * creates their files — not before, or this check would demand files nobody wrote.
+ *
+ * The parameters exist so scripts/prompt-standard.test.mjs can construct drift in BOTH directions
+ * against a temporary directory. Constructing the "ENGINES names a file that is absent" half by
+ * deleting a real engine file from the repo tree is not a test, it is a hazard.
+ */
+function checkEngineRoster(agentsDir = AGENTS_DIR, engines = ENGINES) {
+  const issues = [];
+  let onDisk;
+  try {
+    onDisk = fs.readdirSync(agentsDir).filter((f) => f.endsWith('.md'));
+  } catch (e) {
+    return { rel: path.relative(REPO_ROOT, agentsDir), issues: [`${agentsDir}: unreadable — ${e.message}`], count: 0 };
+  }
+  const nonShim = onDisk.filter((f) => {
+    try { return !/^\s*kind:\s*shim\s*$/m.test(fs.readFileSync(path.join(agentsDir, f), 'utf8')); } catch { return true; }
+  }).map((f) => path.basename(f, '.md')).sort();
+
+  for (const e of engines) {
+    if (!nonShim.includes(e)) {
+      issues.push(`ENGINES lists "${e}" but ${e}.md is absent from ${path.relative(REPO_ROOT, agentsDir) || agentsDir} or is a shim — the linter and disk disagree about the roster`);
+    }
+  }
+  for (const f of nonShim) {
+    if (!engines.includes(f)) {
+      issues.push(`${f}.md is a non-shim agent that ENGINES does not list — add it to ENGINES or make it a shim`);
+    }
+  }
+  return { rel: '.claude/agents (roster)', issues, count: nonShim.length, label: `${nonShim.length} engines, ENGINES matches disk` };
+}
+
 // ── Lint one file ──────────────────────────────────────────────────────────
 function lintFile(filePath) {
   const checks = [];
@@ -334,7 +836,7 @@ function lintFile(filePath) {
     if (fm.retires_at !== undefined && !/^phase-\d+$/.test(String(fm.retires_at))) {
       issues.push(`shim: retires_at must name the phase that removes it, e.g. phase-9 (got ${JSON.stringify(fm.retires_at)})`);
     }
-    for (const banned of ['tools', 'model', 'maxTurns', 'skills']) {
+    for (const banned of ['tools', 'model', 'effort', 'maxTurns', 'skills']) {
       if (fm[banned] !== undefined) {
         issues.push(`shim: must not declare "${banned}" — a shim routes, it does not run. Put it on the engine`);
       }
@@ -366,9 +868,38 @@ function lintFile(filePath) {
     issues.push(`frontmatter: tools must be a YAML list, got ${typeof fm.tools}`);
   }
 
-  // maxTurns
-  if (typeof fm.maxTurns === 'number' && (fm.maxTurns < 5 || fm.maxTurns > 30)) {
-    issues.push(`frontmatter: maxTurns=${fm.maxTurns} outside range [5, 30]`);
+  // PS-EFFORT-ENUM. Guarded for type before value, for the same reason maxTurns is below: a
+  // field that arrives as an unexpected type must FAIL, never fall through the check.
+  if (fm.effort !== undefined && fm.effort !== null) {
+    if (typeof fm.effort !== 'string') {
+      issues.push(`frontmatter: effort=${JSON.stringify(fm.effort)} is not a string — expected one of (${VALID_EFFORT.join('|')})`);
+    } else if (!VALID_EFFORT.includes(fm.effort)) {
+      issues.push(`frontmatter: effort="${fm.effort}" not in (${VALID_EFFORT.join('|')})`);
+    }
+  }
+
+  // PS-MAXTURNS-RANGE.
+  //
+  // THE TYPE GUARD IS THE BUG FIX. This read `typeof fm.maxTurns === 'number' && (…)`, and
+  // parseFrontmatter coerces to a number ONLY when the raw value matches /^-?\d+$/. So
+  // `maxTurns: "30"` and `maxTurns: 30 # note` both arrive as STRINGS and skipped the range check
+  // entirely — the guard meant to bound an error silently disabled it. A non-numeric value now
+  // fails; it cannot be range-checked and must not be waved through.
+  //
+  // THE CEILING IS 120, RAISED FROM 30. At 30 the cap was setting the value rather than bounding
+  // an error: every engine sat at or near the ceiling (30/30/30/30/30/25/25) while a measured
+  // reviewer run needed 68 tool calls and 196 of 269 runs exceeded `maxTurns: 20`
+  // (CONTROL-PLANE.md §3.1). The floor stays at 5. This changes no file's behaviour on its own —
+  // engines keep declaring what they declare until a later PR tunes them.
+  if (fm.maxTurns !== undefined && fm.maxTurns !== null) {
+    if (typeof fm.maxTurns !== 'number') {
+      issues.push(
+        `frontmatter: maxTurns=${JSON.stringify(fm.maxTurns)} is not a number — quote it or trail it with a ` +
+        `comment and it parses as a string, which used to skip the range check silently. Write a bare integer.`
+      );
+    } else if (fm.maxTurns < 5 || fm.maxTurns > 120) {
+      issues.push(`frontmatter: maxTurns=${fm.maxTurns} outside range [5, 120]`);
+    }
   }
 
   // isolation
@@ -494,6 +1025,10 @@ function lintFile(filePath) {
   if (!sections.some((s) => SECTION_6_OPTIONS.some((opt) => s.startsWith(opt)))) {
     issues.push(`body: missing section 6 (one of: ${SECTION_6_OPTIONS.join(' | ')})`);
   }
+
+  // The prompt standard. Placed here deliberately: after the shim early-return above, which shims
+  // must never reach, and after `sections` exists, which three of the rules read.
+  warnings += lintPromptStandard(filePath, text, fm, sections, issues, checks);
 
   // Worker-specific
   if (isWorker) {
@@ -933,6 +1468,7 @@ function main() {
   // Lens files are linted whenever the whole roster is linted — never when a single
   // agent file was named, so `schema-lint <one-file>` stays a targeted query.
   const lensResults = targets.length > 0 ? [] : [
+    checkEngineRoster(),
     lintLensFile(LENSES_PATH, 'domain'),
     lintLensFile(REVIEW_LENSES_PATH, 'review'),
     ...lintAllPlaybooks(),
@@ -960,7 +1496,7 @@ function main() {
     }
     for (const r of lensResults) {
       if (r.issues.length === 0) {
-        process.stdout.write(`✓ ${r.rel} — ${r.count !== undefined ? r.count + ' lenses' : r.stages + ' stages'}\n`);
+        process.stdout.write(`✓ ${r.rel} — ${r.label || (r.count !== undefined ? r.count + ' lenses' : r.stages + ' stages')}\n`);
       } else {
         process.stdout.write(`✗ ${r.rel} — FAIL\n`);
         for (const i of r.issues) process.stdout.write(`    - ${i}\n`);
@@ -976,7 +1512,13 @@ function main() {
 // rules are tested by constructing the failures rather than by trusting that they fire.
 // Phase 2's lesson: six install guards all passed a manual pass and one still shipped
 // broken, because the mismatch the bug needed was never built.
-module.exports = { lintLensFile, lintPlaybook, lintFile, knownReviewLenses, knownDomainLenses, ENGINES, GATES };
+module.exports = {
+  lintLensFile, lintPlaybook, lintFile, knownReviewLenses, knownDomainLenses, ENGINES, GATES,
+  // Exported for scripts/prompt-standard.test.mjs, which constructs a violation of every new PS-*
+  // rule directly rather than round-tripping a whole fixture agent file through lintFile.
+  lintPromptStandard, checkEngineRoster, parseFrontmatter, scanSections,
+  VALID_MODELS, VALID_EFFORT, KNOWN_FM_KEYS, TOOL_UNIVERSE,
+};
 
 if (require.main === module) {
   try { main(); } catch (err) {
