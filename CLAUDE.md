@@ -329,8 +329,10 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   opposite as measured fact; the corpus behind that belief named no agent file. Now that `qa.js` names
   `agentType`, the cap is live — 30 on `builder`, `designer`, `orchestrator`, `reviewer` and
   `reviewer-readonly`, and **25 on `framer` and `sourcer`**, not "30 on every engine" as this block claimed
-  until 2026-08-16. The lint ceiling is 30; the declared value is a per-engine tuning decision. Do not "clean
-  up" this field believing it inert. Registered as `c-maxturns-binds-when-agenttype-named`.
+  until 2026-08-16. **The lint ceiling is 120, raised from 30** — at 30 the ceiling was setting the value
+  rather than bounding an error (every engine sat at or near it while a measured reviewer run needed 68 tool
+  calls). Raising it changed no engine's declared value. The declared value is a per-engine tuning decision.
+  Do not "clean up" this field believing it inert. Registered as `c-maxturns-binds-when-agenttype-named`.
 - **Known and accepted:** **no venture work has ever run through this harness** (stop condition 6). The
   founder's decision is to finish the harness first. Recorded so it is a choice, not an oversight.
 - **Enforced today (fails a build):** schema-lint · gate tests · manifest drift · registration · launcher
