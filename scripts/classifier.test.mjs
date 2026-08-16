@@ -48,6 +48,74 @@ test('the harness self-edit set blocks from day one; everything else is shadow',
   assert.equal(classifyFile('docs/09-metrics/x.md', RULES).enforcement, 'shadow');
 });
 
+// ── The gate's own source, the MCP config, the sandbox ──────────────────────
+// All three matched NOTHING and took DEFAULT_TIER. The binding gate's source was tiered
+// below scripts/lib/**, one directory over, and .mcp.json — which starts a process for
+// every session — sat at the tier of a CSS change.
+//
+// Note what did NOT fire when these rules were added: the `pinned at three` guard in the
+// trust-allowlist test below is scoped to the mission-control TREE, so it says nothing
+// about harness paths outside it. These assertions are that missing half.
+
+test('the binding gate\'s own source classifies irreversible; the rest of the tree is full', () => {
+  // qa.js emits the verdict; gate-logic.mjs is the arithmetic behind it, mirrored inline
+  // into qa.js by hand because the workflow runtime has no module import. Editing either
+  // without the other is the failure this tier exists to buy review time against.
+  for (const f of ['.claude/workflows/qa.js', '.claude/workflows/lib/gate-logic.mjs']) {
+    const c = classifyFile(f, RULES);
+    assert.equal(c.tier, 'irreversible', `${f} must be irreversible`);
+    assert.equal(c.pattern, f, 'the by-name rule must win, not the tree rule');
+    assert.ok(c.matched_patterns.includes('.claude/workflows/**'), 'the full rule also matches; strictest must win');
+  }
+  // The carve-out, asserted in the direction that matters: these must NOT rise. A workflow
+  // that decides nothing is edited often, and Founder sign-off on a prompt-wording change
+  // is the ceremony that makes people route around the gate. This fails if someone later
+  // floors `.claude/workflows/**` at irreversible.
+  for (const f of [
+    '.claude/workflows/design.js',
+    '.claude/workflows/research.js',
+    '.claude/workflows/coding.js',
+    '.claude/workflows/lib/gate-logic.test.mjs',
+  ]) {
+    assert.equal(tierOf(f), 'full', `${f} must stay full — a prompt edit is not a Founder decision`);
+  }
+});
+
+test('the workflows tree rule beats **/*.md, and that is a cost paid on two files', () => {
+  // Strictest wins and no narrower rule can LOWER a tier, so both markdown files under the
+  // tree rise from trivial to full. Intended for design-screen.md — it is a workflow
+  // definition, the artifact itself, exactly as `.claude/agents/**` covers agent markdown.
+  // A cost for README.md, pinned here so the next person meets it as a decision rather than
+  // a surprise; contrast mission-control/README.md, deliberately kept trivial below.
+  assert.equal(tierOf('.claude/workflows/design-screen.md'), 'full');
+  assert.equal(tierOf('.claude/workflows/README.md'), 'full');
+  // Enforcement is NOT inert on these two: markdown can carry claims, so a claim about what
+  // the gate does blocks rather than shadows.
+  assert.equal(classifyFile('.claude/workflows/README.md', RULES).enforcement, 'block');
+});
+
+test('the MCP config classifies irreversible — a process spawned for every session', () => {
+  const c = classifyFile('.mcp.json', RULES);
+  assert.equal(c.tier, 'irreversible');
+  assert.equal(c.enforcement, 'block');
+  assert.equal(c.pattern, '.mcp.json');
+  // It must not be reachable by a tree rule that could later be relaxed elsewhere.
+  assert.deepEqual(c.matched_patterns, ['.mcp.json']);
+});
+
+test('the sandbox policy is floored before the directory exists', () => {
+  // DELIBERATELY ANTICIPATORY, and the only rule in this map that is. The file's own
+  // outbound-send and trust.ts notes refuse patterns that match nothing; the comment on this
+  // rule argues the exception and names its failure mode — if the founder decision puts the
+  // policy in a settings KEY (sandbox.network.deniedDomains, already covered by
+  // .claude/settings.json) rather than this directory, this rule is dead coverage and must be
+  // deleted, not left. This test is what makes that deletion visible.
+  const c = classifyFile('.claude/sandbox/policy.sb', RULES);
+  assert.equal(c.tier, 'irreversible');
+  assert.equal(c.enforcement, 'block');
+  assert.equal(c.pattern, '.claude/sandbox/**');
+});
+
 test('api and harness machinery classify full', () => {
   assert.equal(tierOf('apps/web/src/app/api/scan/route.ts'), 'full');
   assert.equal(tierOf('src/lib/auth/session.ts'), 'full');
