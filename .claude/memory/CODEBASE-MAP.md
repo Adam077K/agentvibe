@@ -38,6 +38,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run build:routers` | `node scripts/build-skill-routers.mjs` |
 | `npm run check` | `npm run lint:agents && npm run test:gate && npm run check:manifest && npm run check:curation && npm run check:` |
 | `npm run check:curation` | `node scripts/curate-skills.mjs --check` |
+| `npm run check:dispatch` | `npm run test:dispatch && node scripts/check-dispatch-agenttype.mjs` |
 | `npm run check:ledger` | `npm run test:claims && npm run test:classifier && npm run test:ledger && node scripts/ledger.mjs lint && node ` |
 | `npm run check:manifest` | `node scripts/build-skills-manifest.mjs --check` |
 | `npm run check:map` | `node scripts/gen-codebase-map.mjs --check` |
@@ -58,6 +59,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:budget` | `node --test scripts/usage.test.mjs` |
 | `npm run test:claims` | `node --test scripts/claims.test.mjs` |
 | `npm run test:classifier` | `node --test scripts/classifier.test.mjs` |
+| `npm run test:dispatch` | `node --test scripts/check-dispatch-agenttype.test.mjs` |
 | `npm run test:gate` | `node --test .claude/workflows/lib/gate-logic.test.mjs` |
 | `npm run test:hooks` | `node --test scripts/session-start.test.mjs` |
 | `npm run test:launcher-permissions` | `node --test scripts/launcher-permissions.test.mjs` |
@@ -90,6 +92,7 @@ it, so a hook that changes posture changes this map with it.
 
 | File | Subject |
 |---|---|
+| `scripts/check-dispatch-agenttype.test.mjs` | the mutation gate for the dispatch-identity checker. |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
 | `scripts/launcher-permissions.test.mjs` | the autonomy dial, and the model it made inert. |
