@@ -242,13 +242,24 @@ function checkSupports(claims, byId) {
 // mean the position is ambiguous, and a caller must not be handed the first of two guesses.
 // Callers print the file alone when this is null — never a `0`, a `?` or a dash, because a
 // character standing in for a measurement is the thing being removed.
-function globalClaimLine(text, id) {
+//
+// EVERY match is returned, not just the unambiguous one. The single-position form below
+// collapses the list to null when it is not exactly one, which is what `locate` needs —
+// but collapsing it HERE threw away the only evidence of a duplicate id, which is why the
+// global ledger accepted two claims at one address without complaint for as long as it did
+// (issue #58). The information was measured and discarded one line before it was needed.
+function globalClaimLines(text, id) {
   const want = new RegExp(`^\\s*-\\s*id:\\s*["']?${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']?\\s*$`);
   const hits = [];
   const lines = text.split('\n');
   for (let i = 0; i < lines.length; i++) {
     if (want.test(lines[i])) hits.push(i + 1);
   }
+  return hits;
+}
+
+function globalClaimLine(text, id) {
+  const hits = globalClaimLines(text, id);
   return hits.length === 1 ? hits[0] : null;
 }
 
@@ -282,6 +293,42 @@ function collectGlobalClaims() {
       }
     }
   });
+
+  // ── two claims at one address ──
+  //
+  // `collectProjectClaims` already refuses a duplicate id and names both files. The global
+  // path did not, because `validateClaim` is a CLOSED schema applied per entry, and a
+  // closed per-entry schema cannot see a collision BETWEEN entries. That asymmetry is the
+  // defect in issue #58: two loaders for one concept, one of which enforces uniqueness.
+  //
+  // An id is a claim's ADDRESS. `supports:` resolves by it, the index is keyed by it,
+  // `locate` addresses by it, and a resolver verifies whichever one it reached first — so a
+  // duplicate can shadow a real claim, leaving it never checked while the count reconciles
+  // perfectly over the wrong set.
+  //
+  // Counted over the RAW entries rather than the validated ones, so the duplicate is still
+  // reported when one of the two also fails its schema. Otherwise the louder problem hides
+  // the quieter one, and the quieter one is the one nothing else will catch.
+  const occurrences = new Map();
+  for (const c of doc.claims) {
+    const id = c && typeof c.id === 'string' ? c.id : null;
+    if (id) occurrences.set(id, (occurrences.get(id) || 0) + 1);
+  }
+  for (const [id, n] of occurrences) {
+    if (n < 2) continue;
+    const lines = globalClaimLines(text, id);
+    // Never invent a position. When the entries cannot be located in the text — an id
+    // written in a form the line matcher does not recognise — say how many there are and
+    // stop, rather than printing numbers nobody measured.
+    const where = lines.length === n
+      ? `entries at lines ${lines.slice(0, -1).join(', ')} and ${lines[lines.length - 1]}`
+      : `${n} entries, whose lines could not be measured`;
+    issues.push(
+      `${GLOBAL_LABEL}: duplicate claim id "${id}" — ${where}. `
+      + 'An id is a claim\'s address; two claims sharing one leaves every id-addressed '
+      + 'operation with an unstated tie-break, and lets one shadow the other.'
+    );
+  }
   return { claims, issues, present: true };
 }
 

@@ -1149,3 +1149,62 @@ test('a lapsed waiver on a GLOBAL claim is a finding — this is what the silenc
   }
 });
 
+// ── #58 · two claims at one address ─────────────────────────────────────────
+//
+// The project path refuses a duplicate id and names both files. The global path did not,
+// because `validateClaim` is a CLOSED schema applied per entry, and a closed per-entry
+// schema cannot see a collision BETWEEN entries. `globalClaimLine` had already MEASURED
+// the duplicate and returned null — the information needed to report it was thrown away
+// one line before it was needed.
+
+test('the global ledger refuses a duplicate id, and names both lines', () => {
+  const dup = GLOBAL_FIXTURE.replace('  - id: c-fixture-beta', '  - id: c-fixture-alpha');
+  assert.notEqual(dup, GLOBAL_FIXTURE, 'the fixture edit missed — the test would prove nothing');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dup-'));
+  try {
+    const ledger = path.join(tmp, 'global.yml');
+    fs.writeFileSync(ledger, dup);
+    const r = runLedgerEnv({ WARROOM_GLOBAL_LEDGER: ledger }, ['lint']);
+    assert.equal(r.code, 1, `lint must fail on a duplicate id:\n${r.out}`);
+    assert.match(r.out, /duplicate claim id "c-fixture-alpha"/);
+    // Both LINES, not "a duplicate exists" — the two entries are in one file, so a file
+    // name would not tell anyone which entries to look at. G_LINE is the same literal the
+    // locate tests check the fixture against, so these numbers cannot drift from it.
+    assert.match(r.out, new RegExp(`entries at lines ${G_LINE['c-fixture-alpha']} and ${G_LINE['c-fixture-beta']}`));
+
+    // The negative: the untouched fixture has no collision and must not be reported.
+    fs.writeFileSync(ledger, GLOBAL_FIXTURE);
+    assert.doesNotMatch(runLedgerEnv({ WARROOM_GLOBAL_LEDGER: ledger }, ['lint']).out, /duplicate claim id/);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('a duplicate is reported even when one of the two also fails its schema', () => {
+  // Counted over the RAW entries rather than the validated ones. Otherwise the louder
+  // problem hides the quieter one — and the quieter one is the one nothing else catches.
+  // Edited by line, with the anchors asserted, because a near-miss here produces a YAML
+  // that fails to PARSE — and a parse error is a different failure that would have made
+  // this test pass for the wrong reason.
+  const lines = GLOBAL_FIXTURE.split('\n');
+  const idIdx = G_LINE['c-fixture-beta'] - 1;
+  const kindIdx = idIdx + 2;
+  assert.equal(lines[idIdx], '  - id: c-fixture-beta');
+  assert.equal(lines[kindIdx], '    kind: runtime-capability');
+  lines[idIdx] = '  - id: c-fixture-alpha';   // the collision
+  lines[kindIdx] = '    kind: not-a-kind';    // and a schema failure on the same entry
+  const broken = lines.join('\n');
+
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dup-'));
+  try {
+    const ledger = path.join(tmp, 'global.yml');
+    fs.writeFileSync(ledger, broken);
+    const r = runLedgerEnv({ WARROOM_GLOBAL_LEDGER: ledger }, ['lint']);
+    assert.equal(r.code, 1, `expected a lint failure, not a crash:\n${r.out}`);
+    assert.match(r.out, /kind must be one of/, 'the schema failure must still be reported');
+    assert.match(r.out, /duplicate claim id "c-fixture-alpha"/, 'and it must not swallow the collision');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
