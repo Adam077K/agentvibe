@@ -487,6 +487,16 @@ claims:
     disposition: {action: waive, until: 2026-09-08, reason: "scripts/probe-readonly-engine.sh must be run by hand; revisit with the shadow-window review"}
     supports: [c-read-only-engines-declare-no-write]
 
+  - id: c-effort-frontmatter-binding-unverified
+    assert: "Whether the frontmatter effort field is READ at all is unverified — the VALUE binds where it is set, but zero agent files declared it before 2026-08-16, so that channel has never been exercised"
+    kind: runtime-capability
+    scope: project
+    verified_by: command
+    evidence: {cmd: "test $(grep -lE '^effort: (low|medium|high|xhigh|max)$' .claude/agents/*.md | wc -l) -eq $(grep -L 'kind: shim' .claude/agents/*.md | wc -l) && grep -q 'WHAT IS NOT VERIFIED: whether the FRONTMATTER FIELD is read at all' .claude/hooks/schema-lint.js", expect_exit: 0}
+    valid_until: 2026-11-09
+    confidence: 1
+    supports: [c-read-only-binding-unverified]
+
   - id: c-qa-gate-blocks
     assert: "The QA-Lead gate blocks: qa-lead-pass.yml no longer carries continue-on-error"
     kind: internal-fact
