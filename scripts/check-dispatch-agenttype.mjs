@@ -24,9 +24,9 @@
  *      allowlist — every member a real non-shim engine, the fallback among them, and the file
  *      actually tests membership against it. A workflow that accepts an arbitrary agent name
  *      from its caller is dispatch-identity injection.
- *   4. Containment: a credentialed agentType (`operator`, `instrument`) appears nowhere outside
- *      .claude/workflows/. Vacuous today — neither agent exists — which is exactly when a
- *      containment rule is cheap to add.
+ *   4. Containment: no `agent()` call outside .claude/workflows/ dispatches a credentialed
+ *      agentType (`operator`, `instrument`). Vacuous today — neither agent exists — which is
+ *      exactly when a containment rule is cheap to add.
  *   5. WARN: a dispatch-site `isolation` that contradicts the agent file's own.
  *   6. Non-vacuity: at least --min-sites call sites were found at all.
  *
@@ -60,6 +60,11 @@
  *     than growing a second exclude list — and CI only ever sees tracked files, so the gap is
  *     local-only. It is stated because it was found the honest way: this file's own rationale
  *     comment tripped the rule the moment the file became tracked, and not one moment earlier.
+ *   · Rule 4 over CODE files inherits every limit above: a credentialed name reaching a dispatch
+ *     through a spread, an import, or a runtime-built string is not resolved and does not fail.
+ *     It is not tightened into a failure because an `agent(` call in an arbitrary script carries
+ *     no obligation to name an agentType at all, and failing every unresolvable one would make
+ *     the rule unusable long before the credentialed agents exist.
  *
  * The non-vacuity floor is the guard for every one of those: a parser that quietly stops finding
  * call sites must fail, not report clean. This repo has been bitten more than once by a check
@@ -306,6 +311,65 @@ function checkAgentName(name, where, how) {
   return true;
 }
 
+// ── call sites, read once and shared by rules 1-3 and rule 4 ───────────────
+//
+// ONE PARSE, TWO CALLERS, AND THAT IS THE POINT. Rule 4 asks "is a credentialed agentType
+// DISPATCHED from a non-workflow file?" — a question that is only meaningful at a call site.
+// The first version answered it with a substring sweep instead, so it flagged this file's own
+// `const CREDENTIALED = [...]` definition list: a name in an array is not a dispatch. A rule that
+// cannot tell a definition from an invocation is not the rule it claims to be, and the honest
+// repair is to give it the parse, not to exempt the file that embarrassed it.
+
+/** Index of the opening paren of every `agent(` call in `src`. Comments and string bodies are
+ *  masked first, so `agent()` inside a prompt or a comment is not a site. */
+function findCallSites(src) {
+  const masked = maskCode(src);
+  const re = /(^|[^\w$.])agent\s*\(/g;
+  const out = [];
+  let m;
+  while ((m = re.exec(masked)) !== null) out.push(m.index + m[0].length - 1);
+  return out;
+}
+
+/** The options object of the call opening at `open`, as key -> raw value text. */
+function readOptions(src, open) {
+  const close = matchBracket(src, open);
+  if (close === -1) return { error: 'unbalanced' };
+  const args = splitTop(src.slice(open + 1, close), ',');
+  const obj = args.length > 1 ? stripComments(args[1]).trim() : '';
+  if (!obj.startsWith('{')) return { error: 'no-object' };
+  const objClose = matchBracket(obj, 0);
+  const entries = splitTop(obj.slice(1, objClose === -1 ? obj.length : objClose), ',');
+  if (entries.some((e) => e.trim().startsWith('...'))) return { error: 'spread' };
+  const opts = new Map();
+  for (const e of entries) {
+    if (!e.trim()) continue;
+    const colon = indexOfTop(e, ':');
+    if (colon === -1) { opts.set(e.trim(), e.trim()); continue; } // shorthand `{ schema }`
+    opts.set(e.slice(0, colon).trim(), e.slice(colon + 1).trim());
+  }
+  return { opts };
+}
+
+const asLiteral = (t) => {
+  const m = /^'([^']*)'$/.exec(t.trim()) || /^"([^"]*)"$/.exec(t.trim());
+  return m ? m[1] : null;
+};
+
+/** Resolve an agentType expression to a name, or null when this scan cannot. */
+function resolveAgentType(raw, src) {
+  const t = raw.trim();
+  const lit = asLiteral(t);
+  if (lit !== null) return lit;
+  const orParts = splitTopOr(t);
+  if (orParts.length > 1) return asLiteral(orParts[orParts.length - 1]);
+  if (/^[A-Za-z_$][\w$]*$/.test(t)) {
+    const cm = new RegExp(`(?:^|\\n)\\s*(?:const|let|var)\\s+${t}\\s*=\\s*(['"])([^'"]*)\\1`).exec(src);
+    return cm ? cm[2] : null;
+  }
+  return null;
+}
+
 // ── parse the workflow dispatch sites ──────────────────────────────────────
 const WORKFLOW_DIR = '.claude/workflows';
 const wfAbs = path.join(ROOT, WORKFLOW_DIR);
@@ -322,13 +386,9 @@ const sites = [];
 for (const file of workflowFiles) {
   const rel = `${WORKFLOW_DIR}/${file}`;
   const src = fs.readFileSync(path.join(ROOT, rel), 'utf8');
-  const masked = maskCode(src);
 
   const rawHits = (src.match(/\bagent\s*\(/g) || []).length;
-  const siteRe = /(^|[^\w$.])agent\s*\(/g;
-  const found = [];
-  let m;
-  while ((m = siteRe.exec(masked)) !== null) found.push(m.index + m[0].length - 1);
+  const found = findCallSites(src);
   if (rawHits > 0 && !found.length) {
     fail('parser', `${rel}: the raw text holds ${rawHits} \`agent(\` occurrence(s) and the masked scan found none — the tokenizer is broken, not the file.`);
   }
@@ -345,17 +405,15 @@ for (const file of workflowFiles) {
   for (const open of found) {
     const line = lineOf(src, open);
     const where = `${rel}:${line}`;
-    const close = matchBracket(src, open);
-    if (close === -1) {
-      fail('parser', `${where}: could not brace-match the agent() argument list. Either the file has an unbalanced literal or this scan is wrong — do not silence it by deleting the site.`);
-      continue;
-    }
-    const args = splitTop(src.slice(open + 1, close), ',');
     const site = { file: rel, line, agentType: null, resolution: null };
     sites.push(site);
 
-    const secondArg = args.length > 1 ? stripComments(args[1]).trim() : '';
-    if (!secondArg.startsWith('{')) {
+    const parsed = readOptions(src, open);
+    if (parsed.error === 'unbalanced') {
+      fail('parser', `${where}: could not brace-match the agent() argument list. Either the file has an unbalanced literal or this scan is wrong — do not silence it by deleting the site.`);
+      continue;
+    }
+    if (parsed.error === 'no-object') {
       fail(
         'missing-options',
         `${where}: agent() has no literal options object as its second argument, so no agentType can be read. ` +
@@ -364,21 +422,11 @@ for (const file of workflowFiles) {
       );
       continue;
     }
-
-    const objText = secondArg;
-    const objClose = matchBracket(objText, objText.indexOf('{'));
-    const entries = splitTop(objText.slice(objText.indexOf('{') + 1, objClose === -1 ? objText.length : objClose), ',');
-    if (entries.some((e) => e.trim().startsWith('...'))) {
+    if (parsed.error === 'spread') {
       fail('spread-options', `${where}: the options object spreads another object. An agentType arriving through a spread is not resolvable by this scan. Fix: name agentType inline at the call site.`);
       continue;
     }
-    const opts = new Map();
-    for (const e of entries) {
-      if (!e.trim()) continue;
-      const colon = indexOfTop(e, ':');
-      if (colon === -1) { opts.set(e.trim(), e.trim()); continue; } // shorthand `{ schema }`
-      opts.set(e.slice(0, colon).trim(), e.slice(colon + 1).trim());
-    }
+    const opts = parsed.opts;
 
     if (!opts.has('agentType')) {
       fail(
@@ -468,14 +516,26 @@ if (sites.length < MIN_SITES) {
 
 // ── 4 · containment: credentialed agentTypes stay inside .claude/workflows/ ─
 //
-// docs/ is excluded on purpose: GRANT-HOLDERS.md §4 and §6 quote the dispatch shape for both
-// credentialed names while specifying them, and prose about a dispatch is not a dispatch. What
-// is scanned is everything executable, plus everything under .claude/ that an agent reads as
-// instruction.
+// TWO SCANS, SPLIT ON WHETHER THE FILE HAS CALL SITES TO PARSE.
 //
-// The rule is not vacuous even before those agents exist, and this file proved it: the first
-// version of THIS comment quoted the pattern literally, and the check flagged its own source the
-// moment the file was tracked. Do not write the shape out in a scanned file — name it instead.
+//   CODE (.js/.mjs/.cjs/.ts/.tsx/.jsx) → the same brace-matched parse rules 1-3 use. Only a real
+//     `agent()` dispatch whose agentType RESOLVES to a credentialed name fails. A name sitting in
+//     a `const CREDENTIALED = [...]` array, a comment, or a prompt string is not a dispatch, and
+//     the first version of this rule — a substring sweep — could not tell the difference. It
+//     flagged this file's own definition list. That is the "looks somewhere the answer is always
+//     yes" family inverted: a check that is wrong about its own source, which is the one file its
+//     author reads most.
+//
+//   NON-CODE under .claude/ (agent files, commands, skills, playbooks) → textual. There is no
+//     call site to parse in a markdown file, and the hazard there is exactly prose: a command
+//     telling an agent to dispatch a credentialed container is a dispatch instruction wearing
+//     documentation's clothes. So the shape is matched literally, and this is why a scanned
+//     markdown file must not quote the shape while merely discussing it.
+//
+// docs/ is excluded from both: GRANT-HOLDERS.md §4 and §6 quote `agentType: 'instrument'` and
+// `agentType: 'operator'` while specifying them, nothing executes docs/, and prose about a
+// dispatch is not a dispatch. (This comment can now say that plainly — it is in a code file, so
+// the parse reads it as the comment it is.)
 function scannableFiles() {
   let list = [];
   try {
@@ -506,26 +566,44 @@ function scannableFiles() {
   );
 }
 
+const CODE_EXT = /\.(js|mjs|cjs|ts|tsx|jsx)$/;
 const credRe = new RegExp(`agentType\\s*:\\s*['"](${CREDENTIALED.join('|')})['"]`, 'g');
+const containmentFail = (rel, line, name) =>
+  fail(
+    'containment',
+    `${rel}:${line} dispatches agentType '${name}', a credentialed container, from outside ${WORKFLOW_DIR}/. ` +
+      'A credentialed dispatch is allowed only from a workflow file, where the call site is reviewed as workflow source. ' +
+      'Fix: move the dispatch into a workflow, or drop the credentialed agentType.'
+  );
+
 let credScanned = 0;
+let credParsed = 0;
 for (const rel of scannableFiles()) {
   let text;
   try { text = fs.readFileSync(path.join(ROOT, rel), 'utf8'); } catch { continue; }
   credScanned++;
   if (rel.startsWith(`${WORKFLOW_DIR}/`)) continue;
-  for (const hit of text.matchAll(credRe)) {
-    fail(
-      'containment',
-      `${rel}:${lineOf(text, hit.index)} dispatches agentType '${hit[1]}', a credentialed container, from outside ${WORKFLOW_DIR}/. ` +
-        'A credentialed dispatch is allowed only from a workflow file, where the call site is reviewed as workflow source. ' +
-        'Fix: move the dispatch into a workflow, or drop the credentialed agentType.'
-    );
+
+  if (CODE_EXT.test(rel)) {
+    credParsed++;
+    for (const open of findCallSites(text)) {
+      const parsed = readOptions(text, open);
+      // Rules 1-3 are the WORKFLOW contract and are deliberately not applied here: an `agent(`
+      // call in an ordinary script is not required to carry an agentType at all. The only
+      // question rule 4 asks of these files is whether the one it does carry is credentialed.
+      if (parsed.error || !parsed.opts.has('agentType')) continue;
+      const name = resolveAgentType(parsed.opts.get('agentType'), text);
+      if (name && CREDENTIALED.includes(name)) containmentFail(rel, lineOf(text, open), name);
+    }
+    continue;
   }
+
+  for (const hit of text.matchAll(credRe)) containmentFail(rel, lineOf(text, hit.index), hit[1]);
 }
 
 // ── report ─────────────────────────────────────────────────────────────────
 if (JSON_OUT) {
-  console.log(JSON.stringify({ root: ROOT, sites, failures, warnings, files_scanned: workflowFiles.length, cred_files_scanned: credScanned }, null, 2));
+  console.log(JSON.stringify({ root: ROOT, sites, failures, warnings, files_scanned: workflowFiles.length, cred_files_scanned: credScanned, cred_files_parsed: credParsed }, null, 2));
   process.exit(failures.length ? 1 : 0);
 }
 
@@ -538,5 +616,6 @@ if (failures.length) {
 }
 console.log(
   `\n✓ dispatch-agentType check passed — ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s), ` +
-    `every agentType resolved to a non-shim engine; ${credScanned} file(s) scanned for credentialed containment, ${warnings.length} warning(s).`
+    `every agentType resolved to a non-shim engine; ${credScanned} file(s) scanned for credentialed containment ` +
+    `(${credParsed} parsed for call sites, the rest matched textually), ${warnings.length} warning(s).`
 );

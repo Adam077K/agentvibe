@@ -23,9 +23,11 @@ import { fileURLToPath } from 'node:url';
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(REPO, 'scripts', 'check-dispatch-agenttype.mjs');
 
-// Built rather than written, so this file's own source never contains the literal the containment
-// rule searches for. A test that trips the checker it is testing is worthless.
+// Built rather than written. Rule 4 now parses call sites in code files, so this file's fixtures
+// could safely spell the shape out — but the fixtures are also the thing under test, and building
+// them keeps the assertions about the CHECKER rather than about this file's own escaping.
 const CRED = 'operator';
+const CRED2 = 'instrument';
 
 const AGENT_FILES = {
   'builder.md': ['---', 'name: builder', 'model: claude-sonnet-4-6', 'tools: [Read, Write, Edit, Bash, Glob, Grep]', 'maxTurns: 30', 'isolation: worktree', '---', '', '# builder'].join('\n'),
@@ -243,6 +245,59 @@ test('a credentialed agentType dispatched from outside .claude/workflows/ is ref
   assert.equal(r.code, 1);
   assert.ok(flagged(r, 'containment'), JSON.stringify(r.failures));
   assert.ok(r.failures.some((f) => f.includes('scripts/side-channel.mjs')), 'the message must name the offending file');
+});
+
+// THE REGRESSION FOR RULE 4's FIRST VERSION. It was a substring sweep, so it flagged the
+// checker's own `const CREDENTIALED = [...]` definition list and failed on a clean tree. A name in
+// an array is not a dispatch; a name in a comment is not a dispatch; a name inside a prompt string
+// is not a dispatch. Each of those is asserted separately, because they fail for different reasons
+// in the parser and a single case would let two of the three rot.
+
+test('credentialed names as bare constants, with no agent() call, produce nothing', () => {
+  const src = [
+    '// a module that knows the credentialed names without ever dispatching one',
+    "const CREDENTIALED = ['" + CRED + "', '" + CRED2 + "']",
+    'export const isCredentialed = (n) => CREDENTIALED.includes(n)',
+  ].join('\n');
+  const r = check(fixture({ workflows: { 'fx.js': CLEAN }, files: { 'scripts/lib/creds.mjs': src } }));
+  assert.equal(r.code, 0, JSON.stringify(r.failures));
+  assert.equal(r.failures.length, 0);
+});
+
+test('the dispatch shape quoted inside a comment is not a dispatch', () => {
+  const src = [
+    "const CREDENTIALED = ['" + CRED + "', '" + CRED2 + "']",
+    "// the spec quotes `agentType: '" + CRED + "'` while specifying it — prose is not an invocation",
+    'export const x = 1',
+  ].join('\n');
+  const r = check(fixture({ workflows: { 'fx.js': CLEAN }, files: { 'scripts/lib/creds.mjs': src } }));
+  assert.equal(r.code, 0, JSON.stringify(r.failures));
+});
+
+test('the dispatch shape quoted inside a prompt string is not a dispatch', () => {
+  const src = "await agent(`never write agentType: '" + CRED + "' outside a workflow`, { label: 'g', agentType: 'builder' })";
+  const r = check(fixture({ workflows: { 'fx.js': CLEAN }, files: { 'scripts/warn.mjs': src } }));
+  assert.equal(r.code, 0, JSON.stringify(r.failures));
+});
+
+test('a NON-code file under .claude/ is still matched textually — no call site to parse there', () => {
+  // A command file telling an agent to dispatch a credentialed container is a dispatch
+  // instruction wearing documentation's clothes, and markdown has no call sites to parse.
+  const md = ['# /ship', '', "Dispatch the deploy step with `agentType: '" + CRED + "'`."].join('\n');
+  const r = check(fixture({ workflows: { 'fx.js': CLEAN }, files: { '.claude/commands/ship.md': md } }));
+  assert.equal(r.code, 1);
+  assert.ok(flagged(r, 'containment'), JSON.stringify(r.failures));
+  assert.ok(r.failures.some((f) => f.includes('.claude/commands/ship.md')));
+});
+
+test("the checker is right about its OWN source, which quotes the shape in a comment", () => {
+  // The sharpest form of the regression: the real file, on the real tree. It must both contain
+  // the literal pattern and pass. Exempting itself by filename would satisfy the second half and
+  // is precisely what this asserts against.
+  const self = fs.readFileSync(SCRIPT, 'utf8');
+  assert.ok(new RegExp("agentType\\s*:\\s*'" + CRED + "'").test(self), 'the checker no longer quotes the shape — this regression test has stopped testing anything');
+  assert.ok(!self.includes('check-dispatch-agenttype.mjs\''), 'the checker must not name its own file to skip it');
+  assert.equal(run([]).code, 0, 'the checker must pass on a tree whose only occurrence of the pattern is a comment');
 });
 
 test('the same credentialed agentType inside a workflow file is exempt from containment', () => {
