@@ -79,6 +79,30 @@ preference.
 Capture the rendered output. Then look at it. Source inspection is a fallback and must be labelled as one when
 it is used.
 
+**Playwright: use the locally installed package, not the MCP grant.**
+The `mcp__playwright__*` tools may not reach a subagent dispatch (observed absent across three dispatches on
+2026-08-17 while the configuration was intact — see issue #90). The workaround is reliable and was not blocked
+by `pre-tool-use.sh`:
+
+```js
+// capture.mjs — import the locally installed playwright package directly
+import pkg from '/Users/adamks/node_modules/playwright/index.js';
+const { chromium } = pkg;
+
+const browser = await chromium.launch({ headless: true });
+const page = await browser.newPage();
+await page.goto('http://127.0.0.1:4401', { waitUntil: 'domcontentloaded', timeout: 15000 });
+await page.setViewportSize({ width: 1280, height: 900 });
+await page.screenshot({ path: 'screenshots/view-1280.png' });
+await browser.close();
+```
+
+Two constraints that have cost turns:
+- Use `waitUntil: 'domcontentloaded'`, not `'networkidle'` — an SSE `/events` stream keeps networkidle from
+  ever resolving.
+- **Never use macOS `screencapture`** — it photographs whatever app is in the foreground (captured Spotify
+  in two sessions), not the browser. Use the playwright `page.screenshot()` API.
+
 ### Step 5 — Check the small screen
 
 Not only the wide one. A layout verified at one width is verified at one width.

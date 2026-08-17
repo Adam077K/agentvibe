@@ -52,6 +52,7 @@ compiles every claim into `.claude/ledger/index.json`. **The index is never hand
 | `scope` | `global` (all projects, `~/.warroom/ledger/`) · `project` (this repo) · `task` (dies with the branch) |
 | `verified_by` | `source` · `command` · `judge` — picks the resolver |
 | `evidence.unchecked_exit` | **`command` only, opt-in.** An integer exit code that means "I could not measure this" rather than "the claim is broken". Maps to `unresolved` with stderr as the reason. Must differ from `expect_exit` — a code that simultaneously means "checked, held" and "could not check" has no coherent meaning. See [issue #81](https://github.com/Adam077K/agentvibe/issues/81). |
+| `evidence.configuration_only` | **`command` only, opt-in, must be `true`.** Marks a command claim as checking only the configuration its measurement was taken against, not live behaviour. The status is still `pass` when the configuration check passes; the resolver annotates the reason with `(configuration-only: verified configuration, not live behaviour)` so `verify` output is distinguishable from a claim that re-measured the asserted behaviour. The sibling of `evidence.unchecked_exit`: both let the ledger represent "I did not actually check the thing I asserted" — the difference is that `unchecked_exit` means the check could not run at all, while `configuration_only` means the check ran and passed a proxy. See [issue #90](https://github.com/Adam077K/agentvibe/issues/90). |
 | `valid_until` | **Required** for `global` and `project`. A durable claim with no expiry never gets rechecked |
 | `confidence` | 0–1 |
 | `supports` | `d-NNN` (an ADR) or another `c-` id. Both are resolved; a dangling target fails the lint |
@@ -582,16 +583,18 @@ claims:
   # still declares nothing. If any of the three changes, the measurement no longer
   # describes this repository and the grant must be re-probed.
   - id: c-mcp-grant-binds-through-agent-dispatch
-    assert: "An agent file's mcpServers: grant both ARRIVES and NARROWS across an Agent dispatch — measured 2026-08-16 by dispatching two probes: designer (declares mcpServers: [playwright]) held 24 mcp__playwright__* tools including browser_navigate, and builder (declares no mcpServers) held zero mcp__* tools, so the file is the capability boundary. The command verifies only the configuration that measurement was taken against; it does not re-measure the dispatch"
+    assert: "An agent file's mcpServers: grant NARROWS across an Agent dispatch — builder (declares nothing) held zero mcp__* tools in all observations. Whether ARRIVES is uncertain: on 2026-08-16 a designer probe held 24 mcp__playwright__* tools; on 2026-08-17 three independent designer dispatches held zero, with configuration intact (.mcp.json and designer.md both declare playwright). Cause unknown. The command verifies only configuration, not live behaviour."
     kind: runtime-capability
     scope: project
     verified_by: command
     evidence:
       cmd: "grep -qF 'mcpServers: [playwright]' .claude/agents/designer.md && grep -qF '\"playwright\"' .mcp.json && ! grep -q '^mcpServers:' .claude/agents/builder.md"
       expect_exit: 0
+      configuration_only: true
     valid_until: 2026-11-14
-    confidence: 0.9
+    confidence: 0.6
     supports: [c-no-decorative-capabilities]
+    disposition: {action: refresh, reason: "ARRIVES contradicted — three designer dispatches on 2026-08-17 held zero playwright tools while configuration (mcp.json, designer.md) was intact; NARROWS not contradicted (builder held zero in both observations). Assert narrowed to state only what both observations agree on. Confidence lowered from 0.9 to 0.6. configuration_only:true added so verify reports this claim distinctly from claims that re-measure live behaviour. See issue #90."}
 
   # CORRECTED 2026-08-16. This repository recorded the OPPOSITE as measured fact. The
   # corpus behind that belief named no agent file, so nothing in it could have been

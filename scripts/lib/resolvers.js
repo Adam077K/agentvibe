@@ -314,7 +314,15 @@ function command(claim, opts = {}) {
         { cmd: ev.cmd, stdout_head: stdout.slice(0, 300) });
     }
   }
-  return result('claim-command', claim, 'pass', `\`${ev.cmd}\` exited ${code} as expected`);
+  // configuration_only is an opt-in flag that marks a command claim as checking
+  // only the configuration its measurement was taken against, not live behaviour.
+  // The status is still `pass` — the configuration check did pass — but the reason
+  // is annotated so `verify` output distinguishes it from a claim that re-measured
+  // the asserted behaviour. Sibling of unchecked_exit (issue #81). See issue #90.
+  const passReason = ev.configuration_only === true
+    ? `\`${ev.cmd}\` exited ${code} as expected (configuration-only: verified configuration, not live behaviour)`
+    : `\`${ev.cmd}\` exited ${code} as expected`;
+  return result('claim-command', claim, 'pass', passReason);
 }
 
 // ── claim-judge ─────────────────────────────────────────────────────────────

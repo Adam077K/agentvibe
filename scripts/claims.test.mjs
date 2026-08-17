@@ -359,6 +359,29 @@ test('unchecked_exit defaults to expect_exit:0 when checking collision', () => {
   assert.match(issues[0], /must not equal expect_exit/);
 });
 
+// ── configuration_only schema validation (issue #90) ────────────────────────
+// A configuration-only command claim read as green while its behavioural assertion
+// was false — it warned in prose, but prose is not machine-readable. The field makes
+// the distinction machine-readable: `verify` annotates the pass reason so it is
+// distinguishable from a claim that actually re-measured behaviour.
+
+test('configuration_only: true is valid for a command claim', () => {
+  const issues = validateClaim(base({ evidence: { cmd: 'true', configuration_only: true } }), 'w');
+  assert.deepEqual(issues, []);
+});
+
+test('configuration_only must be true if present — false is rejected', () => {
+  const issues = validateClaim(base({ evidence: { cmd: 'true', configuration_only: false } }), 'w');
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /must be true/);
+});
+
+test('configuration_only: "yes" is rejected — it must be boolean true', () => {
+  const issues = validateClaim(base({ evidence: { cmd: 'true', configuration_only: 'yes' } }), 'w');
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /must be true/);
+});
+
 test('a risk:high judge panel from one model family fails the lint', () => {
   const issues = validateClaim(base({
     verified_by: 'judge',
