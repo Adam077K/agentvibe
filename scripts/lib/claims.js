@@ -459,6 +459,18 @@ function validateEvidence(c, issues, where) {
     if (ev.expect_exit !== undefined && !Number.isInteger(ev.expect_exit)) {
       issues.push(`${where}: evidence.expect_exit must be an integer`);
     }
+    // unchecked_exit is an opt-in field that maps one exit code to `unresolved` rather than
+    // `fail`. It must differ from expect_exit: an exit code that is simultaneously "the claim
+    // holds" and "I could not check" has no coherent meaning.
+    if (ev.unchecked_exit !== undefined) {
+      if (!Number.isInteger(ev.unchecked_exit)) {
+        issues.push(`${where}: evidence.unchecked_exit must be an integer`);
+      }
+      const effective_expect = ev.expect_exit === undefined ? 0 : ev.expect_exit;
+      if (Number.isInteger(ev.unchecked_exit) && ev.unchecked_exit === effective_expect) {
+        issues.push(`${where}: evidence.unchecked_exit (${ev.unchecked_exit}) must not equal expect_exit — a code cannot mean both "checked, held" and "could not check"`);
+      }
+    }
     if (ev.expect_stdout !== undefined) {
       if (typeof ev.expect_stdout !== 'string') {
         issues.push(`${where}: evidence.expect_stdout must be a string (regex)`);

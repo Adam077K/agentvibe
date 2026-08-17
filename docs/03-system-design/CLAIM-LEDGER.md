@@ -51,6 +51,7 @@ compiles every claim into `.claude/ledger/index.json`. **The index is never hand
 | `kind` | `external-fact` · `internal-fact` · `behavior` · `user-language` · `judgment` · `runtime-capability` · `preference` |
 | `scope` | `global` (all projects, `~/.warroom/ledger/`) · `project` (this repo) · `task` (dies with the branch) |
 | `verified_by` | `source` · `command` · `judge` — picks the resolver |
+| `evidence.unchecked_exit` | **`command` only, opt-in.** An integer exit code that means "I could not measure this" rather than "the claim is broken". Maps to `unresolved` with stderr as the reason. Must differ from `expect_exit` — a code that simultaneously means "checked, held" and "could not check" has no coherent meaning. See [issue #81](https://github.com/Adam077K/agentvibe/issues/81). |
 | `valid_until` | **Required** for `global` and `project`. A durable claim with no expiry never gets rechecked |
 | `confidence` | 0–1 |
 | `supports` | `d-NNN` (an ADR) or another `c-` id. Both are resolved; a dangling target fails the lint |
@@ -62,7 +63,7 @@ The schema is **closed** — an unknown field is an error, not a comment.
 | `verified_by` | What runs |
 |---|---|
 | `source` | URL returns 2xx · the recorded `quote` is present in the fetched text · `accessed` is real and not in the future |
-| `command` | Runs it; asserts exit code and optionally a stdout regex |
+| `command` | Runs it; asserts exit code and optionally a stdout regex. Opt-in: declare `evidence.unchecked_exit: N` to map exit code N to `unresolved` — the corollary of Rule 10, for checks that gate on *environment* (load, corpus presence) not *result* |
 | `judge` | Checks that a judgment was recorded, that no judge dissented, and that a `risk: high` panel spans **≥2 model families** |
 
 `claim-freshness` runs over every durable claim regardless: an expiry nobody checks is the

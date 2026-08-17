@@ -226,7 +226,8 @@
       "verified_by": "command",
       "evidence": {
         "cmd": "bun run mission-control/scripts/check-cold-start.ts",
-        "expect_exit": 0
+        "expect_exit": 0,
+        "unchecked_exit": 2
       },
       "valid_until": "2027-02-16",
       "confidence": 0.8,

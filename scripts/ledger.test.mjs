@@ -286,6 +286,37 @@ test('refresh on a command-claim does NOT short-circuit — the command still ru
   assert.doesNotMatch(r.reason, /deprecated|waived/);
 });
 
+// ── unchecked_exit (issue #81) ───────────────────────────────────────────────
+// Rule 10 corollary: a resolver must not FAIL what it could not check. A command that exits
+// with its declared unchecked_exit is reporting "environment prevented measurement" — not
+// "the claim is broken". Three cases are required:
+//   1. WITH the field, correct code → unresolved (not fail, not pass)
+//   2. WITHOUT the field, same code → fail (opt-in is real, not global reservation)
+//   3. unresolved is distinct from pass (preserves the invariant for every resolver)
+
+test('unchecked_exit maps a declared exit code to unresolved, not fail', () => {
+  // Constructed failure: `exit 2` against `expect_exit: 0` would be `fail` without the field.
+  // With unchecked_exit: 2, the resolver must return unresolved.
+  const c = cmdClaim({ cmd: 'exit 2', expect_exit: 0, unchecked_exit: 2 });
+  const r = R.command(c, { cwd: REPO_ROOT });
+  assert.equal(r.status, 'unresolved', `expected unresolved, got ${r.status}: ${r.reason}`);
+  assert.match(r.reason, /unchecked_exit/);
+});
+
+test('without unchecked_exit the same exit code is still fail — opt-in is real', () => {
+  // Confirms the field is opt-in: nothing is silently reinterpreted for claims that do not
+  // declare it. A claim that legitimately expects exit 2 is unaffected.
+  const c = cmdClaim({ cmd: 'exit 2', expect_exit: 0 });
+  const r = R.command(c, { cwd: REPO_ROOT });
+  assert.equal(r.status, 'fail', `expected fail (no unchecked_exit declared), got ${r.status}: ${r.reason}`);
+});
+
+test('unchecked_exit result is unresolved not pass — invariant preserved', () => {
+  const c = cmdClaim({ cmd: 'exit 2', expect_exit: 0, unchecked_exit: 2 });
+  const r = R.command(c, { cwd: REPO_ROOT });
+  assert.notEqual(r.status, 'pass', 'unchecked_exit must never resolve to pass — that is the whole point');
+});
+
 test('a deprecated source-claim passes without fetching — same fix as command', async () => {
   const deprecated = claim({
     verified_by: 'source',

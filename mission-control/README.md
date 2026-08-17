@@ -328,13 +328,15 @@ claims:
     kind: behavior
     scope: project
     verified_by: command
-    evidence: {cmd: "bun run mission-control/scripts/check-cold-start.ts", expect_exit: 0}
+    evidence: {cmd: "bun run mission-control/scripts/check-cold-start.ts", expect_exit: 0, unchecked_exit: 2}
     valid_until: 2027-02-16
     confidence: 0.8
 ```
 
-`check-cold-start.ts` exits 2 — not 0, not the same failure as going over budget — when this
-machine has no real transcript corpus to measure (e.g. a CI runner with no
-`~/.claude/projects`): unresolved, not a vacuous pass. `expect_exit: 0` means both "over
-budget" (exit 1) and "no corpus" (exit 2) correctly fail this claim rather than silently
-passing on a machine that never actually measured anything.
+`check-cold-start.ts` has a three-state contract: exit 0 (checked, held), exit 1 (checked,
+broken — over budget), exit 2 (UNCHECKED — no corpus, or load above ceiling). `unchecked_exit:
+2` maps exit 2 to `unresolved` at the ledger boundary, so a machine that cannot reliably
+measure (CI runner with no `~/.claude/projects`, or a build running under heavy parallel load)
+is recorded as unmeasured rather than broken. Without the field, exit 2 reached the resolver
+as a plain `code !== expect_exit` failure — the ledger said "broken" when the script said
+"could not check". Exit 1 (over budget) still reaches `fail` — that is a real checked result.
