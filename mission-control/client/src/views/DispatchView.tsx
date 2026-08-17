@@ -20,7 +20,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DispatchEntry, DispatchPayload } from '../api.ts';
-import { formatRelative, formatAbsolute } from '../format.ts';
+import { formatCount, formatRelative, formatAbsolute } from '../format.ts';
 import { EmptyState, Figure, Footnote, HeadlineBar, RefreshButton, Td, Th } from '../ui.tsx';
 
 // ── Queue table ──────────────────────────────────────────────────────────────────────────
@@ -103,8 +103,8 @@ export function DispatchFormHeadline({ headline, loading, onRefresh }: { headlin
     >
       <Figure
         label="Queue entries"
-        value={headline === null ? '—' : String(headline.total)}
-        sub={headline === null ? 'loading' : `${headline.pending} pending`}
+        value={headline === null ? '—' : formatCount(headline.total)}
+        sub={headline === null ? 'loading' : `${formatCount(headline.pending)} pending`}
         tone={headline !== null && headline.pending > 0 ? 'warn' : 'default'}
         title="Total entries in ~/.agentvibe/dispatch-queue.jsonl, and how many have not yet been consumed"
       />
@@ -175,7 +175,7 @@ export function DispatchForm({
 
   return (
     <div className="border-t border-line px-6 py-5">
-      <div className="mb-3 text-[12px] font-medium uppercase tracking-wider text-muted">New dispatch</div>
+      <div className="label mb-3">New dispatch</div>
       <form onSubmit={submit} className="max-w-[76ch]">
         {/* Project selector */}
         <div className="mb-3">
@@ -191,7 +191,7 @@ export function DispatchForm({
               id="dispatch-project"
               value={project}
               onChange={(e) => setProject(e.target.value)}
-              className="w-full rounded border border-line bg-ink px-2.5 py-1.5 text-[12.5px] text-text focus:outline-none focus:ring-1 focus:ring-live"
+              className="control w-full"
               disabled={result.kind === 'submitting'}
             >
               {projects.map((p) => (
@@ -222,7 +222,7 @@ export function DispatchForm({
             }}
             rows={4}
             placeholder="Describe the goal — what should the agent accomplish?"
-            className="w-full resize-y rounded border border-line bg-ink px-2.5 py-2 font-mono text-[12.5px] text-text placeholder:text-dim focus:outline-none focus:ring-1 focus:ring-live"
+            className="control w-full resize-y"
             disabled={result.kind === 'submitting'}
           />
         </div>

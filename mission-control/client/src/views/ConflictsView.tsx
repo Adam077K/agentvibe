@@ -355,9 +355,6 @@ export function ConflictsView({
 
       {/* THE NARROWING, STATED UNDER THE HEADER. The sweep looks at 30 of 285 worktrees on
           this machine; a reader who does not know that would take "3 conflicts" as a
-          statement about every worktree they have, which it is not. */}
-      {/* THE NARROWING, STATED UNDER THE HEADER. The sweep looks at 30 of 285 worktrees on
-          this machine; a reader who does not know that would take "3 conflicts" as a
           statement about every worktree they have, which it is not. The explanation is the
           collector's own string, rendered — not a second wording maintained here. */}
       {totals.excluded > 0 && (
