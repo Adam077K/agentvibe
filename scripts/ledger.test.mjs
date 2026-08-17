@@ -317,6 +317,35 @@ test('unchecked_exit result is unresolved not pass — invariant preserved', () 
   assert.notEqual(r.status, 'pass', 'unchecked_exit must never resolve to pass — that is the whole point');
 });
 
+// ── configuration_only (issue #90) ──────────────────────────────────────────
+// A command claim that passed while its behavioural assertion was false. The configuration
+// checks (grep the agent file, grep .mcp.json) were green while three dispatches found
+// the grant absent. The field makes the distinction machine-readable: the pass reason
+// is annotated so verify output distinguishes configuration-only from live re-measurement.
+
+test('configuration_only: true annotates the pass reason, marking it as not live-behaviour', () => {
+  const c = cmdClaim({ cmd: 'true', expect_exit: 0, configuration_only: true });
+  const r = R.command(c, { cwd: REPO_ROOT });
+  assert.equal(r.status, 'pass');
+  assert.match(r.reason, /configuration-only/);
+});
+
+test('without configuration_only the pass reason does not carry the annotation', () => {
+  const c = cmdClaim({ cmd: 'true', expect_exit: 0 });
+  const r = R.command(c, { cwd: REPO_ROOT });
+  assert.equal(r.status, 'pass');
+  assert.doesNotMatch(r.reason, /configuration-only/);
+});
+
+test('configuration_only is informational — status is still pass, not unresolved', () => {
+  // The configuration check passed. The flag does not demote the status; it annotates
+  // the reason so a human reading the verify output knows it did not re-measure behaviour.
+  const c = cmdClaim({ cmd: 'true', expect_exit: 0, configuration_only: true });
+  const r = R.command(c, { cwd: REPO_ROOT });
+  assert.equal(r.status, 'pass', 'configuration_only is not a status-changer — it is a reason-annotator');
+  assert.notEqual(r.status, 'unresolved');
+});
+
 test('a deprecated source-claim passes without fetching — same fix as command', async () => {
   const deprecated = claim({
     verified_by: 'source',

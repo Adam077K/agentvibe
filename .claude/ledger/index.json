@@ -172,16 +172,17 @@
     },
     {
       "id": "c-mcp-grant-binds-through-agent-dispatch",
-      "assert": "An agent file's mcpServers: grant both ARRIVES and NARROWS across an Agent dispatch — measured 2026-08-16 by dispatching two probes: designer (declares mcpServers: [playwright]) held 24 mcp__playwright__* tools including browser_navigate, and builder (declares no mcpServers) held zero mcp__* tools, so the file is the capability boundary. The command verifies only the configuration that measurement was taken against; it does not re-measure the dispatch",
+      "assert": "An agent file's mcpServers: grant NARROWS across an Agent dispatch — builder (declares nothing) held zero mcp__* tools in all observations. Whether ARRIVES is uncertain: on 2026-08-16 a designer probe held 24 mcp__playwright__* tools; on 2026-08-17 three independent designer dispatches held zero, with configuration intact (.mcp.json and designer.md both declare playwright). Cause unknown. The command verifies only configuration, not live behaviour.",
       "kind": "runtime-capability",
       "scope": "project",
       "verified_by": "command",
       "evidence": {
         "cmd": "grep -qF 'mcpServers: [playwright]' .claude/agents/designer.md && grep -qF '\"playwright\"' .mcp.json && ! grep -q '^mcpServers:' .claude/agents/builder.md",
-        "expect_exit": 0
+        "expect_exit": 0,
+        "configuration_only": true
       },
       "valid_until": "2026-11-14",
-      "confidence": 0.9,
+      "confidence": 0.6,
       "supports": [
         "c-no-decorative-capabilities"
       ],

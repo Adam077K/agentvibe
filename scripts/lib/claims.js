@@ -479,6 +479,15 @@ function validateEvidence(c, issues, where) {
         catch (e) { issues.push(`${where}: evidence.expect_stdout is not a valid regex (${e.message})`); }
       }
     }
+    // configuration_only is an opt-in boolean that marks a command claim as checking only
+    // the configuration its measurement was taken against, not live behaviour. When the
+    // command passes, the resolver annotates the reason so `verify` output distinguishes
+    // a configuration-only pass from a claim that actually re-measured behaviour.
+    // The sibling of evidence.unchecked_exit (issue #81): both are about the ledger
+    // representing "I did not actually check the thing I asserted." See issue #90.
+    if (ev.configuration_only !== undefined && ev.configuration_only !== true) {
+      issues.push(`${where}: evidence.configuration_only must be true (or omitted) — it is a flag, not a value`);
+    }
   } else if (c.verified_by === 'judge') {
     if (!Array.isArray(ev.lenses) || ev.lenses.length === 0) {
       issues.push(`${where}: evidence.lenses must be a non-empty list`);
