@@ -333,6 +333,32 @@ test('an uncompilable expect_stdout regex is caught at lint time, not at run tim
   assert.match(issues[0], /not a valid regex/);
 });
 
+// ── unchecked_exit schema validation (issue #81) ────────────────────────────
+
+test('unchecked_exit is valid when it is an integer distinct from expect_exit', () => {
+  const issues = validateClaim(base({ evidence: { cmd: 'true', expect_exit: 0, unchecked_exit: 2 } }), 'w');
+  assert.deepEqual(issues, []);
+});
+
+test('unchecked_exit must be an integer', () => {
+  const issues = validateClaim(base({ evidence: { cmd: 'true', unchecked_exit: 'two' } }), 'w');
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /unchecked_exit must be an integer/);
+});
+
+test('unchecked_exit must not equal expect_exit — a code cannot mean both things', () => {
+  const issues = validateClaim(base({ evidence: { cmd: 'true', expect_exit: 2, unchecked_exit: 2 } }), 'w');
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /must not equal expect_exit/);
+});
+
+test('unchecked_exit defaults to expect_exit:0 when checking collision', () => {
+  // No explicit expect_exit means the default of 0 applies. unchecked_exit:0 collides with it.
+  const issues = validateClaim(base({ evidence: { cmd: 'true', unchecked_exit: 0 } }), 'w');
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /must not equal expect_exit/);
+});
+
 test('a risk:high judge panel from one model family fails the lint', () => {
   const issues = validateClaim(base({
     verified_by: 'judge',
