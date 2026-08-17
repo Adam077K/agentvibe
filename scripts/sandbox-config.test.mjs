@@ -1,30 +1,41 @@
 // POSTURE: BLOCKS. Wired to `npm run test:sandbox` and included in `npm run check`.
 //
-// scripts/sandbox-config.test.mjs — proves the Bash sandbox is built but unarmed.
+// scripts/sandbox-config.test.mjs — proves the Bash sandbox is built and ARMED.
 //
 // WHAT THIS TESTS
 // ---------------
 // The sandbox block in .claude/settings.json controls the Claude Code Bash sandbox
-// (macOS Seatbelt / Linux bubblewrap). The Founder's standing instruction is "build
-// everything; activate nothing needing founder secrets or binding founder sessions.
-// OS sandbox off by default."
+// (macOS Seatbelt / Linux bubblewrap). The Founder explicitly authorised arming
+// on 2026-08-17. This file is the machine-checked form of that state.
 //
-// This file is the machine-checked form of that instruction. It will fail the build
-// if `sandbox.enabled` is set to `true` without a corresponding Founder approval
-// recorded in docs/08-agents_work/sessions/.
+// It will fail the build if:
+//   · sandbox.enabled is set back to false  (sandbox disarmed without a decision)
+//   · sandbox.failIfUnavailable is false    (fail-open defeats the gate)
+//   · any required denyRead credential path is removed
 //
 // FAILURE CONSTRUCTION (per builder brief)
 // ----------------------------------------
-// The test is deliberately constructed so that flipping `sandbox.enabled` to `true`
-// in settings.json causes the "sandbox must remain unarmed" assertion to fail with
-// exit code 1. That is the guard that stops the sandbox being armed by accident.
+// The test is deliberately constructed so that setting `sandbox.enabled: false`
+// causes the "sandbox must remain armed" assertion to fail with exit code 1. That
+// is the guard that stops the sandbox being disarmed accidentally.
+//
+// Similarly, setting `failIfUnavailable: false` causes its assertion to fail — a
+// sandbox that silently falls back to unsandboxed operation is not a security gate.
 //
 // WHAT THIS DOES NOT TEST
 // -----------------------
 // Whether the sandbox actually sandboxes anything at runtime — that requires a live
 // Claude Code session and is outside the scope of a unit test. See
-// docs/03-system-design/SANDBOX.md for the arming procedure and a note on
-// `dangerouslyDisableSandbox` (the escape hatch that limits sandbox guarantees).
+// docs/03-system-design/SANDBOX.md for a note on `dangerouslyDisableSandbox`
+// (the escape hatch that limits sandbox guarantees) and the revert procedure.
+//
+// WHAT CANNOT BE VERIFIED FROM INSIDE THIS SESSION
+// -------------------------------------------------
+// Settings are read at session start. Flipping `enabled: true` in the worktree does
+// not sandbox the already-running Bash of the build agent that made the change. First
+// real verification happens on the Founder's next session start. This is a limit of
+// the mechanism, not an omission — stated here so the test is not misread as a
+// runtime proof.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -63,28 +74,31 @@ test('sandbox block exists in .claude/settings.json', () => {
   assert.equal(typeof settings.sandbox, 'object', 'sandbox must be an object');
 });
 
-// This is the guard that stops the sandbox being armed by accident.
-// It fails if someone sets enabled: true without following the arming procedure.
-test('sandbox.enabled is false — unarmed by design', () => {
+// This is the guard that pins the armed state.
+// It fails if someone sets enabled: false without following the disarm procedure.
+test('sandbox.enabled is true — armed by Founder decision 2026-08-17', () => {
   assert.equal(
     settings.sandbox.enabled,
-    false,
+    true,
     [
-      'sandbox.enabled must remain false until explicitly armed by the Founder.',
-      'Arming procedure: docs/03-system-design/SANDBOX.md § Arming procedure.',
-      'If you intentionally set enabled: true, add a session file with Founder sign-off',
-      'and delete this assertion (with the Founder\'s approval) at the same time.',
+      'sandbox.enabled must be true (the sandbox is armed).',
+      'Revert procedure: set sandbox.enabled: false and sandbox.failIfUnavailable: false',
+      'in .claude/settings.json and restart your Claude Code session.',
+      'See docs/03-system-design/SANDBOX.md § Emergency revert.',
     ].join(' '),
   );
 });
 
-test('sandbox.failIfUnavailable is false — fail-open is intentional until Founder arms', () => {
+// A sandbox that falls back to unsandboxed operation on startup failure is not a gate.
+test('sandbox.failIfUnavailable is true — fail-open is not acceptable for a security gate', () => {
   assert.equal(
     settings.sandbox.failIfUnavailable,
-    false,
+    true,
     [
-      'failIfUnavailable must stay false while sandbox.enabled is false.',
-      'Set it to true only when enabled is also true, and only via the arming procedure.',
+      'failIfUnavailable must be true when sandbox.enabled is true.',
+      'Setting it false means the sandbox silently does not run when it cannot start,',
+      'which is worse than no sandbox — it appears active while providing no protection.',
+      'Revert procedure: docs/03-system-design/SANDBOX.md § Emergency revert.',
     ].join(' '),
   );
 });
@@ -101,9 +115,26 @@ test('sandbox.filesystem.denyRead covers the required credential paths', () => {
   }
 });
 
-test('sandbox.filesystem.allowWrite is an array', () => {
+// The scratchpad root is required. $TMPDIR in a non-sandboxed session is
+// /var/folders/.../T/ — a different tree from /private/tmp/claude-501/... — so
+// the sandbox's default "session temp" does not cover the agent scratchpad.
+// Without this entry, every scratchpad write is a hard failure under
+// failIfUnavailable: true. See SANDBOX.md § Write-path justification.
+const REQUIRED_ALLOW_WRITES = [
+  '~/.agentvibe',
+  '/private/tmp/claude-501',
+];
+
+test('sandbox.filesystem.allowWrite covers the required paths', () => {
   const allowWrite = settings.sandbox?.filesystem?.allowWrite;
   assert.ok(Array.isArray(allowWrite), 'sandbox.filesystem.allowWrite must be an array');
+
+  for (const required of REQUIRED_ALLOW_WRITES) {
+    assert.ok(
+      allowWrite.includes(required),
+      `sandbox.filesystem.allowWrite must include '${required}' — see SANDBOX.md § Write-path justification`,
+    );
+  }
 });
 
 test('sandbox block contains no network.allowedDomains — requires Founder input', () => {

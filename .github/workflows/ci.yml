@@ -201,13 +201,14 @@ jobs:
       - name: Launcher permissions
         run: npm run test:launcher-permissions
 
-      # The sandbox block in .claude/settings.json is built but unarmed (enabled: false).
-      # Founder standing instruction: "build everything; activate nothing needing founder
-      # secrets or binding founder sessions. OS sandbox off by default." This test fails
-      # if sandbox.enabled is set to true without following the arming procedure in
-      # docs/03-system-design/SANDBOX.md. It also verifies the denyRead credential paths
-      # are present so they cannot be silently removed.
-      - name: Sandbox config unarmed
+      # The sandbox block in .claude/settings.json is armed (enabled: true,
+      # failIfUnavailable: true). Armed 2026-08-17 by Founder decision. This test fails
+      # if sandbox.enabled is turned back off, if failIfUnavailable is set to false, or
+      # if any required denyRead credential path is removed.
+      # Revert: set sandbox.enabled: false + sandbox.failIfUnavailable: false in
+      # .claude/settings.json and restart your Claude Code session.
+      # See docs/03-system-design/SANDBOX.md § Emergency revert.
+      - name: Sandbox config armed
         run: npm run test:sandbox
 
       # Tier gate unit tests (Design B, issue #85).
