@@ -78,6 +78,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:run-gate` | `node --test scripts/run-gate.test.mjs` |
 | `npm run test:sandbox` | `node --test scripts/sandbox-config.test.mjs` |
 | `npm run test:skill-clamp` | `node --test scripts/skill-clamp.test.mjs` |
+| `npm run test:tier-gate` | `node --test scripts/check-tier-gate.test.mjs` |
 | `npm run test:warroom` | `node --test scripts/warroom-install.test.mjs` |
 | `npm run usage` | `node -e "const u=require('./scripts/lib/usage.js');const w=u.windowUsage({});console.log(w.output_tokens.toLoc` |
 | `npm run warroom:check` | `node scripts/warroom-install.mjs check` |
@@ -103,6 +104,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/check-dispatch-prompt-size.test.mjs` | mutation gate for the PS-DISPATCH-BRIEF-SIZE checker. |
 | `scripts/check-memory-budget.test.mjs` | mutation gate for the memory-budget checker. |
 | `scripts/check-registration.test.mjs` | — |
+| `scripts/check-tier-gate.test.mjs` | the tier gate that replaced label-based enforcement. |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
 | `scripts/launcher-permissions.test.mjs` | the autonomy dial, and the model it made inert. |

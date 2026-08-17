@@ -18,14 +18,21 @@
 #      or the founder posted an explicit `BYPASS REASON:` under a bypass label.
 #      (Slug matching against the whole sessions directory was removed 2026-08-15 —
 #      it let a branch inherit a PASS written for work already merged to main.)
-#   2. A PR touching a path the tier map floors at `irreversible` carries the
-#      `risk:irreversible` label.
-#   3. Such a PR's session file declares `tier: full` or `tier: irreversible`.
+#   2. When the classifier floor is `irreversible`, at least one session file in this
+#      PR declares `tier: full` or `tier: irreversible`.
+#
+# NOTE: The `risk:*` label is NO LONGER REQUIRED (Design B, issue #85, 2026-08-17).
+# It is display-only — cosmetic metadata the founder can apply for visibility, but
+# nothing here reads it. The classifier floor IS the enforcement. A label was a
+# second statement of a fact the classifier already owns; it drifted silently. PR #78
+# proved this when two `run:` steps raised the floor mid-review and the label became
+# wrong. The next `synchronize` event recomputes the correct floor; a stored label does
+# not update itself.
 #
 # The tier floor comes from scripts/classify.mjs — the ONE classifier. The 25 lines
 # of bash that used to reimplement that matching inline are gone; two
 # implementations of risk classification will disagree, and you find out during the
-# incident.
+# incident. The label check was a third implementation. It is gone too.
 #
 # Making this a REQUIRED check in branch protection is a repository setting, not a
 # file, and is the founder's call. Until it is required, a failure here is visible
@@ -214,6 +221,7 @@ jobs:
       #   · a missing tier map meant "skip", silently classifying everything as
       #     trivial. The classifier now refuses to run with no rules.
       - name: Tier floor from the one classifier
+        id: classify
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -233,18 +241,16 @@ jobs:
           [ -n "$FLOOR_FILE" ] && echo "Reason: $FLOOR_FILE matches $FLOOR_PATTERN"
           jq -r '.files[] | "  \(.tier)\t\(.enforcement)\t\(.file)"' "$RUNNER_TEMP/classified.json"
 
-          if [ "$FLOOR" = "irreversible" ]; then
-            HAS_LABEL=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels \
-              --jq '[.labels[].name] | contains(["risk:irreversible"])')
-            if [ "$HAS_LABEL" != "true" ]; then
-              echo ""
-              echo "BLOCKED — the tier floor requires the risk:irreversible label."
-              echo "   Reason: $FLOOR_FILE matches $FLOOR_PATTERN"
-              echo "   Add the 'risk:irreversible' label or drop the affected file(s)."
-              exit 1
-            fi
-            echo "risk:irreversible label present — the session-file tier check below applies"
-          fi
+          # Emit the floor for downstream steps. The label is NO LONGER required (Design B,
+          # issue #85). The label is now display-only — cosmetic, not enforcement. The classifier
+          # floor IS the enforcement; the next step enforces it directly. A label is a second
+          # statement of a fact the classifier already owns, living in GitHub metadata where it
+          # drifts silently. PR #78 proved this: the label became wrong mid-review because the
+          # diff changed. The next `synchronize` event would have re-computed the correct floor;
+          # no human should have had to act on it.
+          #
+          # If you see a risk:* label on a PR, it is informational only. It is never checked here.
+          echo "floor=$FLOOR" >> "$GITHUB_OUTPUT"
 
           if [ "$FLOOR" = "full" ]; then
             echo "Floor is 'full' — the session file should declare tier: full|irreversible."
@@ -277,116 +283,70 @@ jobs:
           path: ${{ runner.temp }}/events.jsonl
           if-no-files-found: ignore
 
-      # ── F13: risk:irreversible enforcement ─────────────────────────────────
+      # ── Tier-session enforcement (Design B, issue #85) ─────────────────────
       # Per the 2026-05-16 board verdict (decision #3):
-      # a PR carrying risk:irreversible MUST have either `tier: full` or
-      # `tier: irreversible` in its session file. Lite/trivial-tier are insufficient.
-      - name: Enforce tier:full|irreversible for risk:irreversible PRs
+      # When the classifier floor is `irreversible`, at least one session file added or
+      # modified in this PR must declare `tier: full` or `tier: irreversible`.
+      #
+      # WHY THE TRIGGER IS THE CLASSIFIER FLOOR, NOT THE LABEL (Design B)
+      # The `risk:irreversible` label was a second statement of a fact the classifier
+      # already owns — it lived in GitHub metadata where it drifts silently and cannot
+      # be tested. PR #78 demonstrated this: the PR opened correctly as `risk:full`, then
+      # two `run:` steps were added to ci.yml which raised the floor to `irreversible`.
+      # The label became wrong. A human swapped it by hand. A machine reading the
+      # classifier at every sync event cannot get that wrong.
+      #
+      # The label is now display-only. If you see risk:* on a PR, it is informational.
+      # Nothing in this file reads it. The classifier floor (from the previous step's
+      # GITHUB_OUTPUT) is the only trigger.
+      #
+      # The "at least one" rule (not "all") was reconciled 2026-08-16: the classifier tiers
+      # every docs/** path `trivial`. Requiring `tier: irreversible` on ALL session files
+      # meant demanding a false declaration on sessions that honestly described planning work.
+      # A gate satisfied only by false declarations teaches people to make them.
+      - name: Enforce tier:full|irreversible when classifier floor is irreversible
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
           REPO: ${{ github.repository }}
+          FLOOR: ${{ steps.classify.outputs.floor }}
         run: |
           set -euo pipefail
 
-          # Check if the PR has the risk:irreversible label
-          HAS_IRREVERSIBLE=$(gh pr view "$PR_NUMBER" \
-            --repo "$REPO" \
-            --json labels \
-            --jq '[.labels[].name] | contains(["risk:irreversible"])')
+          echo "Classifier floor: ${FLOOR}"
 
-          echo "Has risk:irreversible label: ${HAS_IRREVERSIBLE}"
-
-          if [ "$HAS_IRREVERSIBLE" != "true" ]; then
-            echo "No risk:irreversible label — tier enforcement not required"
+          if [ "$FLOOR" != "irreversible" ]; then
+            echo "Floor is '${FLOOR}' — session-tier enforcement does not apply."
             exit 0
           fi
 
-          echo "risk:irreversible label detected — checking for tier: full|irreversible in session file"
+          echo "Floor is 'irreversible' — checking session files for tier: full|irreversible"
 
-          # Slug matching removed 2026-08-15 here too — see the QA gate step above. This is
-          # the irreversible-tier check, so inheriting a merged PASS matters MORE here, not
-          # less: this is the path that decides whether a migration or a workflow edit gets
-          # through.
-          SESSION_DIR="docs/08-agents_work/sessions"
-          SESSION_FILE=""
+          # Collect session files added or modified in this PR's diff.
+          # F14: use gh api --paginate (gh pr view caps at 100 files).
+          CHANGED_SESSIONS=$(gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate \
+            --jq '.[].filename | select(test("^docs/08-agents_work/sessions/.*\\.md$"))' || echo "")
 
-          # F14: read the PR diff via paginated gh api (large refactor PRs touching 300+
-          # files exceed gh pr view's 100-file cap; --paginate on the raw API sees all).
-          if [ -z "$SESSION_FILE" ]; then
-            echo "Reading the tier from this PR's own session files."
-            CHANGED_SESSIONS=$(gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate \
-              --jq '.[].filename | select(test("^docs/08-agents_work/sessions/.*\\.md$"))' || echo "")
-            if [ -n "$CHANGED_SESSIONS" ]; then
-              echo "Found session files in PR diff:"
-              echo "$CHANGED_SESSIONS"
-              SESSION_FILE=$(echo "$CHANGED_SESSIONS" | sort | tail -1)
-            fi
-          fi
-
-          echo "Session file: ${SESSION_FILE:-none}"
-
-          if [ -z "$SESSION_FILE" ] || [ ! -f "$SESSION_FILE" ]; then
+          if [ -z "$CHANGED_SESSIONS" ]; then
             echo ""
-            echo "BLOCKED — the risk:irreversible label requires a session file with tier: full or tier: irreversible."
-            echo "   No session file found in this PR's diff"
-            echo "   Per 2026-05-16 board decision #3: risk:irreversible requires full or irreversible tier review."
+            echo "BLOCKED — classifier floor is 'irreversible' and no session files were added or"
+            echo "   modified in this PR's diff."
+            echo "   Per 2026-05-16 board decision #3: irreversible-floor work requires at least one"
+            echo "   session file declaring tier: full or tier: irreversible."
             exit 1
           fi
 
-          # Multi-session PRs: AT LEAST ONE session file must carry an acceptable tier.
-          #
-          # This required ALL of them until 2026-08-16, and that was a second, stricter
-          # implementation of risk than scripts/lib/classifier.js — which CLAUDE.md calls "one
-          # file computes risk, and it is the only implementation." It was not. The two
-          # disagreed: the classifier tiers every docs/** path `trivial`, while this step
-          # demanded `full|irreversible` on the session files describing that documentation.
-          #
-          # The concrete failure: a PR bundling three sessions of irreversible code work with
-          # five sessions of read-only board and specification work could only merge by writing
-          # `tier: irreversible` onto five files that honestly described planning. A gate that
-          # can only be satisfied by a false declaration teaches people to make false
-          # declarations, which is the opposite of what this file is for.
-          #
-          # What the rule was always trying to say, and now says: this PR's irreversible work
-          # must have been reviewed at that tier. One session file attesting to it is the claim;
-          # the others describe different work and keep their own honest tiers. Splitting a mixed
-          # PR remains good practice — it is no longer the only way through.
-          if [ -n "${CHANGED_SESSIONS:-}" ]; then
-            ACCEPTED=""
-            for s in $CHANGED_SESSIONS; do
-              if [ ! -f "$s" ]; then continue; fi
-              if grep -qiE 'tier:[[:space:]]+"?(full|irreversible)"?[[:space:]]*$' "$s"; then
-                echo "✓ Acceptable tier in $s"
-                ACCEPTED="$s"
-              else
-                # Not a failure. Reported so a reader can see what the tier mix actually was.
-                echo "· $s declares a lower tier (fine — it describes different work)"
-              fi
-            done
-            if [ -n "$ACCEPTED" ]; then
-              echo ""
-              echo "Tier requirement satisfied by: $ACCEPTED"
-              exit 0
-            fi
-            echo ""
-            echo "BLOCKED — this PR carries risk:irreversible, and NONE of its session files declares"
-            echo "   tier: full or tier: irreversible."
-            echo "   At least one session file must attest that the irreversible work was reviewed at"
-            echo "   that tier. Session files describing lower-tier work keep their own honest tier."
-            exit 1
-          fi
+          echo "Session files in this PR:"
+          echo "$CHANGED_SESSIONS"
 
-          if grep -qiE 'tier:[[:space:]]+"?(full|irreversible)"?[[:space:]]*$' "$SESSION_FILE"; then
-            FOUND_TIER=$(grep -iE 'tier:[[:space:]]+"?(full|irreversible)"?[[:space:]]*$' "$SESSION_FILE" | head -1)
-            echo "✓ Acceptable tier found in ${SESSION_FILE}: ${FOUND_TIER}"
-            exit 0
-          else
-            echo ""
-            echo "BLOCKED — the risk:irreversible label requires tier: full or tier: irreversible per board decision #3."
-            echo "   Session file found: ${SESSION_FILE}"
-            echo "   Neither tier: full nor tier: irreversible present in session frontmatter."
-            grep "tier" "$SESSION_FILE" || echo "(no tier line found)"
-            exit 1
-          fi
+          # Build the --sessions argument list.
+          SESSION_ARGS=""
+          for s in $CHANGED_SESSIONS; do
+            SESSION_ARGS="$SESSION_ARGS $s"
+          done
+
+          # scripts/check-tier-gate.mjs: exits 0 (PASS) or 1 (BLOCKED).
+          # It is the single implementation of "floor=irreversible → session-file tier check."
+          # The same logic is unit-tested by `npm run test:tier-gate` in ci.yml.
+          # shellcheck disable=SC2086
+          node scripts/check-tier-gate.mjs --floor "$FLOOR" --sessions $SESSION_ARGS
