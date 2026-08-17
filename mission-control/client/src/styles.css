@@ -196,3 +196,46 @@
     animation: none;
   }
 }
+
+/* Horizontal overflow cue for wide tables.
+ *
+ * The tables in this app are deliberately dense — no breakpoints, no reflow, no column
+ * removal. At narrow viewports the table content extends past the viewport edge and the
+ * reader needs to scroll right to see the remaining columns. The OS default on macOS is
+ * to hide the scrollbar until the user initiates a scroll, so there is no signal that
+ * more columns exist. Silent clipping is the same failure mode as an empty table that
+ * looks identical to a failed fetch — the data is there but the reader cannot know it.
+ *
+ * This class makes the 4px scrollbar always visible when content overflows, overriding
+ * the OS "show scroll bars when scrolling only" preference in Chrome and Safari. Firefox
+ * receives the equivalent via scrollbar-width/color. The 4px height keeps the visual
+ * weight low — enough to signal "scroll right" without competing with the data.
+ *
+ * STICKY HEADER TRADE-OFF. overflow-x: auto establishes a block formatting context that
+ * becomes the sticky-positioning scroll container for elements inside it. At wide
+ * viewports where the table fits within the container (no horizontal overflow), browsers
+ * generally honour the page-level sticky for the Th elements. At narrow viewports where
+ * horizontal overflow exists, Th sticky is relative to this container — and since the
+ * container has no fixed height or vertical overflow, sticky may behave as position:
+ * relative during vertical page scroll. This is accepted: the horizontal scroll
+ * affordance (all columns reachable) outweighs the sticky-header loss at narrow widths.
+ * Sticky headers continue to work at wide viewports where they are most needed.
+ */
+.table-scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+.table-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.table-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 2px;
+}

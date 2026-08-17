@@ -12,7 +12,7 @@
 import { useMemo } from 'react';
 import type { FleetRow, FleetSummary, ModalGeneration } from '../api.ts';
 import { formatCount, formatShare, formatRelative, formatAbsolute, tildeHome } from '../format.ts';
-import { EmptyState, Figure, Footnote, HeadlineBar, LoadingRows, StatusDot, Td, Th, Unavailable } from '../ui.tsx';
+import { EmptyState, Figure, Footnote, HeadlineBar, LoadingRows, StatusDot, TableScroll, Td, Th, Unavailable } from '../ui.tsx';
 
 const COLUMNS = 9;
 
@@ -107,6 +107,7 @@ export function FleetTable({
   const banded = (i: number) => (hasBreak && i >= firstDormant ? (i - firstDormant) % 2 === 1 : i % 2 === 1);
 
   return (
+    <TableScroll>
     <table className="w-full border-collapse text-[12.5px]">
       <thead>
         <tr>
@@ -246,6 +247,7 @@ export function FleetTable({
         </caption>
       )}
     </table>
+    </TableScroll>
   );
 }
 

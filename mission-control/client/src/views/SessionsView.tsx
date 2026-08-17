@@ -11,7 +11,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import type { SessionSummary, SessionsSlice } from '../api.ts';
 import { formatAbsolute, formatCount, formatRelative, formatShare, isLive, shortId } from '../format.ts';
-import { EmptyState, Footnote, LoadingRows, StatusDot, Td, Th, Unavailable } from '../ui.tsx';
+import { EmptyState, Footnote, LoadingRows, StatusDot, TableScroll, Td, Th, Unavailable } from '../ui.tsx';
 
 const COLUMNS = 8;
 const PAGE = 200;
@@ -102,6 +102,7 @@ export function SessionsTable({
   const shown = filtered.slice(0, limit);
 
   return (
+    <TableScroll>
     <table className="w-full border-collapse text-[12.5px]">
       <thead>
         <tr>
@@ -185,6 +186,7 @@ export function SessionsTable({
         })}
       </tbody>
     </table>
+    </TableScroll>
   );
 }
 

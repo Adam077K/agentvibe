@@ -242,3 +242,18 @@ export function EmptyState({ headline, body }: { headline: string; body: ReactNo
 export function Footnote({ children }: { children: ReactNode }) {
   return <p className="max-w-[78ch] px-6 py-3 text-[11.5px] leading-relaxed text-dim">{children}</p>;
 }
+
+/**
+ * Horizontal scroll cue for wide tables.
+ *
+ * The tables in this app are dense by design — no breakpoints, no reflow. At narrow
+ * viewports the rightmost columns overflow the viewport edge with no signal that more
+ * data exists. This wrapper adds `overflow-x: auto` with a visible 4px scrollbar (via
+ * CSS in styles.css) that overrides the macOS "hide scrollbars until scrolling" default,
+ * so the reader can see at a glance that the table extends further right.
+ *
+ * See the `.table-scroll` rule in styles.css for the sticky-header trade-off note.
+ */
+export function TableScroll({ children }: { children: ReactNode }) {
+  return <div className="table-scroll">{children}</div>;
+}
