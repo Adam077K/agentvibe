@@ -286,6 +286,19 @@ function command(claim, opts = {}) {
     stderr = e.stderr ? String(e.stderr) : '';
   }
 
+  // Opt-in unchecked exit: a command can declare that one exit code means "I could not
+  // measure this" rather than "the claim is broken". The field is intentionally opt-in:
+  // reserving exit 2 globally would silently reinterpret any existing claim that legitimately
+  // expects it — a magic number, which is the same class of defect this feature fixes.
+  //
+  // This implements the corollary of Rule 10: a resolver should not FAIL what it could not
+  // check either. `unresolved` already exists for exactly this case (disabled, timeout,
+  // offline) and was unreachable from inside a running command.
+  if (ev.unchecked_exit !== undefined && code === ev.unchecked_exit) {
+    return result('claim-command', claim, 'unresolved',
+      `command exited ${code} (declared unchecked_exit) — the check reported it could not measure this`,
+      { cmd: ev.cmd, stderr: stderr.trim().split('\n').slice(-5).join('\n').slice(0, 500) });
+  }
   if (code !== expectExit) {
     return result('claim-command', claim, 'fail',
       `exit ${code}, expected ${expectExit}`,
