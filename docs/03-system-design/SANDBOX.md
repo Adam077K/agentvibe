@@ -1,6 +1,24 @@
 # Bash Sandbox — Configuration Reference
 
-*Added 2026-08-16. Status: built, not armed.*
+*Added 2026-08-16. Armed 2026-08-17 by Founder decision.*
+
+---
+
+## Emergency revert
+
+**If the sandbox breaks your session**, set these two values in `.claude/settings.json` and restart Claude Code:
+
+```jsonc
+"sandbox": {
+  "enabled": false,
+  "failIfUnavailable": false,
+  // ... rest unchanged
+}
+```
+
+That's it. No other files need changing. The test in `scripts/sandbox-config.test.mjs` will then fail
+CI until the sandbox is re-armed, which is the correct behaviour — the failure is a reminder, not a blocker
+for hotfixes.
 
 ---
 
@@ -21,13 +39,33 @@ drives the platform primitives.
 
 ---
 
+## What arming does NOT buy
+
+Two limits that are true regardless of configuration:
+
+1. **`dangerouslyDisableSandbox` is an escape hatch.** When a Bash command fails due to sandbox
+   restrictions, Claude Code may analyse the failure and retry with the sandbox disabled. This
+   means the sandbox is a guardrail against *accident*, not a containment boundary against the
+   agent itself. Do not describe it as containment.
+
+2. **This is the Bash sandbox, not the session sandbox.** It governs Bash and its children. The
+   file-edit tools (`Write`, `Edit`, `Read`) are not sandboxed by this mechanism. An agent with
+   `Write` permissions can still write to any path its permissions allow, regardless of the
+   sandbox setting.
+
+**First real verification happens on the Founder's next session start.** Settings are read at
+session start; flipping `enabled` in a worktree does not affect the already-running session.
+This is a limit of the mechanism, not an omission.
+
+---
+
 ## Configuration keys
 
 All keys live under the top-level `sandbox` object in `.claude/settings.json`:
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `enabled` | boolean | Whether the sandbox is active. **False in this repo.** |
+| `enabled` | boolean | Whether the sandbox is active. **True in this repo (armed).** |
 | `failIfUnavailable` | boolean | When `true`, Claude Code aborts the command if the sandbox cannot start. When `false` (default), it prints a warning and runs unsandboxed. |
 | `allowUnsandboxedCommands` | string[] | Commands explicitly exempted from the sandbox even when `enabled: true`. |
 | `filesystem.allowWrite` | string[] | Additional write paths beyond the default (working dir + session temp). |
@@ -64,8 +102,8 @@ The docs describe `failIfUnavailable: true` as intended for deployments that req
 as a security gate: CI runners, shared machines, audited environments where an unsandboxed run is
 a policy violation.
 
-**Implication for this repo:** Until `enabled: true` is set with `failIfUnavailable: true`, the
-sandbox provides no guarantee even when present. It is a best-effort guardrail, not a hard gate.
+**This repo sets `failIfUnavailable: true`.** A sandbox that silently falls back to unsandboxed
+operation is worse than none — it appears active while providing no protection.
 
 ---
 
@@ -85,14 +123,14 @@ is not addressed by this mechanism.
 
 ---
 
-## This repo's policy (unarmed)
+## This repo's policy (armed)
 
 ```jsonc
 // .claude/settings.json — sandbox block
 {
   "sandbox": {
-    "enabled": false,           // <-- unarmed. Do not change without the arming procedure.
-    "failIfUnavailable": false, // Keep false while enabled is false.
+    "enabled": true,            // Armed 2026-08-17. Revert: set false + restart session.
+    "failIfUnavailable": true,  // Hard failure if sandbox cannot start — fail-open is not acceptable.
     "filesystem": {
       "denyRead": [
         "~/.ssh",               // SSH private keys
@@ -107,6 +145,7 @@ is not addressed by this mechanism.
       ]
     }
     // network.allowedDomains: not set — requires Founder input.
+    // autoAllowBashIfSandboxed: not set — off by default. Do not enable; it bypasses permissions.
   }
 }
 ```
@@ -124,40 +163,48 @@ Paths **not included** despite being written by repo scripts:
 
 | Path | Script | Why omitted |
 |------|--------|-------------|
-| `~/.warroom/` | `scripts/warroom-install.mjs` | Only written during explicit `npm run warroom:fleet` install, not routine CI or agent operation. Include it when arming if `warroom:fleet` will run sandboxed. |
+| `~/.warroom/` | `scripts/warroom-install.mjs` | Only written during explicit `npm run warroom:fleet` install, not routine CI or agent operation. Add it if `warroom:fleet` will run sandboxed. |
 | `~/bin/` | `scripts/warroom-install.mjs` | Same as above. |
 
 ---
 
-## Arming procedure
+## Arming procedure (completed 2026-08-17)
 
-Do not arm the sandbox without completing these steps in order:
+Steps taken:
 
-1. **Founder decision recorded.** Add a session file at
-   `docs/08-agents_work/sessions/YYYY-MM-DD-founder-sandbox-arm.md` with explicit sign-off.
-2. **Start with one deny rule in a throwaway directory.** Never arm with the full production
-   policy first. Create a temp directory, add it to `denyWrite`, verify the sandbox actually
-   blocks a write to it before relying on any other rule.
-3. **Set `failIfUnavailable: true`** at the same time as `enabled: true`. Fail-open on sandbox
+1. **Founder decision recorded.** Session file:
+   `docs/08-agents_work/sessions/2026-08-17-builder-arm-sandbox.md`.
+2. **Policy kept exactly as reviewed.** The `denyRead`/`allowWrite` policy was reviewed and
+   accepted in #84. No paths were added or removed.
+3. **`failIfUnavailable: true` set at the same time as `enabled: true`.** Fail-open on sandbox
    unavailability is not acceptable for a production security gate.
-4. **Leave `autoAllowBashIfSandboxed` off** (it is off by default). Turning it on bypasses the
+4. **`autoAllowBashIfSandboxed` is not set** (off by default). Turning it on would bypass the
    `permissions.allow/deny` rules for sandboxed sessions.
-5. **Add `network.allowedDomains`** only after surveying every outbound host the repo's CI
-   scripts and agent hooks contact. Missing a domain breaks CI silently on the first run.
-6. **Delete the armed-check assertion** in `scripts/sandbox-config.test.mjs` only when the
-   Founder sign-off session file (step 1) exists in the same PR. The test is the machine-checked
-   guard against accidental arming; removing it without the session file means losing the guard.
+5. **`network.allowedDomains` not added** — requires Founder input after surveying every outbound
+   host CI scripts and agent hooks contact. Missing a domain breaks CI silently on the first run.
+6. **Test inverted, not deleted.** The guard test (`scripts/sandbox-config.test.mjs`) now pins
+   the armed state. It fails if `enabled` is turned back off or `failIfUnavailable` is not `true`.
+   The guard was not removed; it now watches the opposite fact.
 
 ---
 
 ## Test
 
 `scripts/sandbox-config.test.mjs` (`npm run test:sandbox`) proves the block is well-formed and
-that `enabled` is `false`. It runs in CI (`npm run test:sandbox` step in
-`.github/workflows/ci.yml`). If `sandbox.enabled` is set to `true`, the test fails with:
+that `enabled` is `true` and `failIfUnavailable` is `true`. It runs in CI (`npm run test:sandbox`
+step in `.github/workflows/ci.yml`).
+
+If `sandbox.enabled` is set back to `false`, the test fails with:
 
 ```
-AssertionError: sandbox.enabled must remain false until explicitly armed by the Founder.
+AssertionError: sandbox.enabled must be true (the sandbox is armed).
 ```
 
-That is the machine-checked form of the Founder's standing instruction.
+If `sandbox.failIfUnavailable` is set to `false`, the test fails with:
+
+```
+AssertionError: failIfUnavailable must be true when sandbox.enabled is true.
+```
+
+Both failures are asserted in the test. Both must continue to fail if the sandbox is disarmed —
+losing the check after arming is worse than never having it.

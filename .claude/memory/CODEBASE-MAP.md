@@ -116,7 +116,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/probe-stop-reason.test.mjs` | the aggregation that answers what ends a run. |
 | `scripts/prompt-standard.test.mjs` | the PS-* rules of |
 | `scripts/run-gate.test.mjs` | the router that decides whether the binding gate runs. |
-| `scripts/sandbox-config.test.mjs` | proves the Bash sandbox is built but unarmed. |
+| `scripts/sandbox-config.test.mjs` | proves the Bash sandbox is built and ARMED. |
 | `scripts/session-start.test.mjs` | the SessionStart hook. |
 | `scripts/skill-clamp.test.mjs` | a skill that subtracts must not be attached silently. |
 | `scripts/usage.test.mjs` | the spend measurement and the ceiling that acts on it. |

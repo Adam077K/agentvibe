@@ -76,8 +76,8 @@
     "command": "node .claude/hooks/gsa-statusline.js"
   },
   "sandbox": {
-    "enabled": false,
-    "failIfUnavailable": false,
+    "enabled": true,
+    "failIfUnavailable": true,
     "filesystem": {
       "denyRead": [
         "~/.ssh",
