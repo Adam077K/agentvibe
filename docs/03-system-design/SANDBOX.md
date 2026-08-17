@@ -141,7 +141,8 @@ is not addressed by this mechanism.
         "**/.env.*"             // .env.local, .env.production, etc.
       ],
       "allowWrite": [
-        "~/.agentvibe"          // scripts/lib/usage.js token-usage cache
+        "~/.agentvibe",         // scripts/lib/usage.js token-usage cache
+        "/private/tmp/claude-501" // agent scratchpad root — see Write-path justification
       ]
     }
     // network.allowedDomains: not set — requires Founder input.
@@ -175,8 +176,12 @@ Steps taken:
 
 1. **Founder decision recorded.** Session file:
    `docs/08-agents_work/sessions/2026-08-17-builder-arm-sandbox.md`.
-2. **Policy kept exactly as reviewed.** The `denyRead`/`allowWrite` policy was reviewed and
-   accepted in #84. No paths were added or removed.
+2. **`denyRead` kept exactly as reviewed in #84.** No credential paths were added or removed.
+   `allowWrite` gained one entry: `/private/tmp/claude-501` (the agent scratchpad root).
+   Without it, every `scratchpad/` write is a hard failure under `failIfUnavailable: true` — and
+   the symptom reads as "the sandbox is broken" rather than "an allow rule is missing." See the
+   Write-path justification table for the `$TMPDIR` measurement that established this is not the
+   session temp the sandbox already permits.
 3. **`failIfUnavailable: true` set at the same time as `enabled: true`.** Fail-open on sandbox
    unavailability is not acceptable for a production security gate.
 4. **`autoAllowBashIfSandboxed` is not set** (off by default). Turning it on would bypass the

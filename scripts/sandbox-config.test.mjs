@@ -115,9 +115,26 @@ test('sandbox.filesystem.denyRead covers the required credential paths', () => {
   }
 });
 
-test('sandbox.filesystem.allowWrite is an array', () => {
+// The scratchpad root is required. $TMPDIR in a non-sandboxed session is
+// /var/folders/.../T/ — a different tree from /private/tmp/claude-501/... — so
+// the sandbox's default "session temp" does not cover the agent scratchpad.
+// Without this entry, every scratchpad write is a hard failure under
+// failIfUnavailable: true. See SANDBOX.md § Write-path justification.
+const REQUIRED_ALLOW_WRITES = [
+  '~/.agentvibe',
+  '/private/tmp/claude-501',
+];
+
+test('sandbox.filesystem.allowWrite covers the required paths', () => {
   const allowWrite = settings.sandbox?.filesystem?.allowWrite;
   assert.ok(Array.isArray(allowWrite), 'sandbox.filesystem.allowWrite must be an array');
+
+  for (const required of REQUIRED_ALLOW_WRITES) {
+    assert.ok(
+      allowWrite.includes(required),
+      `sandbox.filesystem.allowWrite must include '${required}' — see SANDBOX.md § Write-path justification`,
+    );
+  }
 });
 
 test('sandbox block contains no network.allowedDomains — requires Founder input', () => {
