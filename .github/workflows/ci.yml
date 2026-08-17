@@ -210,6 +210,18 @@ jobs:
       - name: Sandbox config unarmed
         run: npm run test:sandbox
 
+      # Tier gate unit tests (Design B, issue #85).
+      # The label-based enforcement was a second implementation of a fact the classifier
+      # already owns. It drifted silently — PR #78 opened correctly as risk:full, then
+      # adding two `run:` steps raised the floor to irreversible and the label became wrong.
+      # A machine reading the classifier at every sync cannot get that wrong.
+      #
+      # These 17 tests pin the one safety property: floor=irreversible cannot be satisfied
+      # by sessions that declare lower tiers. The "cannot lower" tests run first — if they
+      # fail, the gate is broken.
+      - name: Tier gate
+        run: npm run test:tier-gate
+
       # The claim ledger. Four things, all deterministic:
       #   · the parser and schema (43 tests, most of them "this must REFUSE")
       #   · the tier map, run against a path list rather than read
