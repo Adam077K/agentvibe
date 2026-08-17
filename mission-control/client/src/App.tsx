@@ -212,7 +212,7 @@ const CONNECTION_COPY: Record<ConnectionState, { text: string; tone: string; tit
 function ConnectionBadge({ state, lastEventAt, now }: { state: ConnectionState; lastEventAt: number | null; now: number }) {
   const copy = CONNECTION_COPY[state];
   return (
-    <div className="flex items-center gap-2 text-[11.5px]" title={copy.title}>
+    <div className="flex items-center gap-2 text-[11.5px] whitespace-nowrap" title={copy.title}>
       <span
         className={`inline-block h-[7px] w-[7px] rounded-full ${
           state === 'live' ? 'bg-live breathe' : state === 'failed' ? 'bg-bad' : state === 'retrying' ? 'bg-warn' : 'bg-line-strong'
@@ -233,7 +233,7 @@ function ConnectionBadge({ state, lastEventAt, now }: { state: ConnectionState; 
 export function FetchedBadge({ freshness, now }: { freshness: Freshness | null; now: number }) {
   if (freshness === null || (freshness.loading && freshness.loadedAt === null)) {
     return (
-      <div className="flex items-center gap-2 text-[11.5px]" title="This view fetches once when its tab is opened. The first response has not arrived yet.">
+      <div className="flex items-center gap-2 text-[11.5px] whitespace-nowrap" title="This view fetches once when its tab is opened. The first response has not arrived yet.">
         <span className="inline-block h-[7px] w-[7px] rounded-full bg-live breathe" />
         <span className="text-muted">loading</span>
       </div>
@@ -247,7 +247,7 @@ export function FetchedBadge({ freshness, now }: { freshness: Freshness | null; 
   if (failedWithNoData) {
     return (
       <div
-        className="flex items-center gap-2 text-[11.5px]"
+        className="flex items-center gap-2 text-[11.5px] whitespace-nowrap"
         title="The last request for this view failed, and no earlier response is being shown. The panel below carries the reason."
       >
         <span className="inline-block h-[7px] w-[7px] rounded-full bg-bad" />
@@ -264,7 +264,7 @@ export function FetchedBadge({ freshness, now }: { freshness: Freshness | null; 
 
   return (
     <div
-      className="flex items-center gap-2 text-[11.5px]"
+      className="flex items-center gap-2 text-[11.5px] whitespace-nowrap"
       title={
         staleAfterFailure
           ? 'These figures arrived earlier and are still on screen; the most recent refresh failed, so they are older than a successful fetch would have made them. The panel below carries the reason.'
@@ -334,7 +334,7 @@ export function AppBar({
 }) {
   return (
     <div className="flex h-full items-center gap-6 px-6">
-      <div className="label text-text">Mission Control</div>
+      <div className="label text-text whitespace-nowrap shrink-0">Mission Control</div>
       <nav className="flex h-full items-center gap-1" aria-label="Views">
         {VIEWS.filter((t) => t.nav).map((t) => (
           <button
@@ -365,7 +365,7 @@ export function AppBar({
           </span>
         )}
       </nav>
-      <div className="ml-auto">{badgeFor(active, { stream, freshness, now })}</div>
+      <div className="ml-auto shrink-0">{badgeFor(active, { stream, freshness, now })}</div>
     </div>
   );
 }
