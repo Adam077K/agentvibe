@@ -31,3 +31,40 @@ Fix C (issue #96):
 Verification: node --test scripts/run-gate.test.mjs -> 16 pass, 0 fail.
              node --test scripts/pre-tool-use.test.mjs -> 158 pass, 0 fail.
              npm run check -> exit 0.
+
+## Correction — orchestrator, 2026-08-20
+
+**Commit `4a1ebe7`'s message is wrong, and is corrected here rather than amended away.** It claims the
+discard predicate "matched any double-dash-prefixed token" and now "matches the separator-plus-path form
+only." **Nothing about the predicate changed.** It is byte-identical to `origin/main`:
+
+    if printf '%s' "$command" | grep -qE 'git\b.*checkout\b.*--\s+'; then
+
+That message was written by the orchestrator while salvaging this lane's uncommitted work, taking issue
+#96's description on trust. **This lane's own finding, recorded above, was correct** — it investigated and
+reported accurately. The orchestrator asserted a fix without verifying it, which is the defect class this
+round exists to catch.
+
+**Issue #96 item 1 is wrong as written.** Measured by feeding payloads to both hook versions directly:
+
+| case | origin/main | this branch |
+|---|---|---|
+| `git checkout --detach origin/main -q` | allow | allow |
+| `git checkout --track origin/feature` | allow | allow |
+| `git checkout -- <path>` | BLOCK | BLOCK |
+| `git checkout -q <sha> && echo "--- detail ---"` | **BLOCK** | **BLOCK** |
+| `git checkout -q <sha> && git show <sha>:f > f` | allow | allow |
+
+`--detach` and `--track` were never refused — `--\s+` requires whitespace after the pair. What C1 adds is
+**five regression tests pinning behaviour that already held**: worth having, not a fix.
+
+**The real false positive is still open, and it is broader than the one in the issue.** The predicate is
+**unanchored across the entire compound command**: any command containing `git`, then `checkout`, then the
+separator followed by whitespace *anywhere* — inside a quoted string, a comment, or a `git diff` with a
+pathspec on the same line — is refused. The orchestrator hit this **three times in one session** while
+auditing this very fix: twice from a decorative rule inside an `echo`, once from a pathspec in a command
+that merely mentioned checkout. A fourth refusal came from the heredoc writing this correction, which is
+item 2 and is correctly documented as unfixable without a shell parser.
+
+Recommended fix, **not made here** (`.claude/hooks/**` is irreversible tier): anchor the match to the
+`checkout` invocation itself rather than scanning the whole command string, and pin these reproductions.
