@@ -23,6 +23,41 @@
 ---
 
 <!-- Entries below this line, most-recent first. -->
+
+## 2026-08-20 — The audit round: a pre-authorisation whose precondition never held, and three false findings caught by re-running
+
+**Context:** Seven lanes were commissioned to repair three known holes, map the reference graph, falsify the
+documentation, and challenge the design. The Founder pre-authorised holes A, B and C to **merge on reviewer
+PASS** without per-PR confirmation, and separately assigned a lane to rework PR #77.
+
+**What was decided, and by whom:**
+1. **Nothing merged.** The pre-authorisation was conditional on a reviewer PASS. The 7-agent cap was spent on
+   3 fix lanes + 4 audit lanes, so **no reviewer ever ran against the fix branches** — the precondition was
+   never satisfied. Branches are prepared and held. This is the CEO declining to treat a conditional
+   authorisation as an unconditional one, and it is recorded because the opposite reading was available.
+2. **Lane 2's branch was split.** `fix/gate-ref-95` carries the verified #95 fix alone; the RED tests for #96
+   stay on `fix/gate-ref-and-hook-fp` with no fix behind them. Merging them together would have put failing
+   tests on `main`.
+3. **The orchestrator committed two lanes' uncommitted work and authored three doc corrections itself.**
+   Lanes 1, 2 and 3 stopped emitting with work on disk and did not answer repeated pings. Committing
+   verified work is custodial; the three corrections are documentation truth-fixes in the governing file.
+   Both are recorded rather than left implicit, because the CEO is not supposed to produce artifacts.
+
+**Rationale — the finding that governed every decision above:** three of the round's findings were **false
+and were caught only by re-running them**. A scout reported `coding.js` dispatching a phantom agent (fixed
+2026-08-16; it had matched the *fix's own comment*). A lane reported branch protection disabled (it had
+queried `adamks/agentvibe`, lowercase-k, and read the 404 as `protected: False`). The commissioning handoff
+itself asserted the session-start prompt carries the stale org chart (it does not; `.claude/entry/ceo.md`
+states the opposite) and miscounted the shims as 9 against an actual 11. **In a repository whose house style
+is to preserve superseded statements beside their corrections, a fix comment and a live bug are
+indistinguishable to grep** — which makes this codebase unusually hostile to audit, and makes
+verify-by-execution non-optional rather than a virtue.
+
+**Reversibility:** reversible — nothing was merged or pushed; all work is on local branches.
+**Owner:** ceo · **Founder decisions:** 7 working lanes · pre-authorise A/B/C · assign a lane to PR #77
+**Affects:** `CLAUDE.md`, `README.md`, `AGENTS.md`, `.claude/commands/*`, `scripts/check-registration.mjs`,
+`scripts/run-gate.mjs`, `scripts/pre-tool-use.test.mjs`, and the still-open `design-screen.md` dispatch gap
+
 ## 2026-08-12 — The reader engine becomes a script, and the roster drops to six
 
 **Context:** Phase 6 opened with a stop-condition-7 clock running: `.claude/agents/reader.md` was created in
