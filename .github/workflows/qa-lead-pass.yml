@@ -350,3 +350,32 @@ jobs:
           # The same logic is unit-tested by `npm run test:tier-gate` in ci.yml.
           # shellcheck disable=SC2086
           node scripts/check-tier-gate.mjs --floor "$FLOOR" --sessions $SESSION_ARGS
+
+      # ── Gate record binding (diff_hash) ───────────────────────────────────
+      # Verifies .qa-gate/<diff_hash>.json for full/irreversible PRs.
+      #
+      # The diff_hash is SHA-256(git diff baseSha headSha -- ':(exclude).qa-gate').
+      # The .qa-gate/ exclusion means committing the record does not change the hash,
+      # so the filename is stable regardless of when this step runs.
+      #
+      # Why this step exists (PR #77 retrospective):
+      #   Before: qa-lead-pass.yml grepped `qa_verdict: PASS` from session files
+      #   written by the PR's own author. 34 PASS, 0 refusals — the gate was a formality.
+      #   P1 #1: records keyed by head_sha broke on their own commit (SHA changed).
+      #   P1 #2: base/head SHAs derived from the executor's ambient checkout, not the
+      #           reviewed ref — a PASS could be bound to a diff nobody read.
+      #   P1 #3: tier was logged but not checked — full satisfied irreversible silently.
+      #   P1 #4: the auto-detection path carried zero tests.
+      #   This step enforces the corrected contract.
+      - name: Verify QA gate record (diff_hash binding)
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          FLOOR: ${{ steps.classify.outputs.floor }}
+        run: |
+          set -euo pipefail
+          echo "Verifying gate record: tier=${FLOOR}, head=${HEAD_SHA}"
+          node scripts/verify-gate-record.mjs \
+            --cwd . \
+            --head-sha "$HEAD_SHA" \
+            --tier "$FLOOR" \
+            --record-dir .qa-gate

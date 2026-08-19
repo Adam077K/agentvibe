@@ -176,6 +176,12 @@ jobs:
       - name: Gate routing
         run: npm run test:run-gate
 
+      # Gate record binding: write + verify tests with a real git commit.
+      # The critical test commits the gate record and proves verify still resolves,
+      # which is the regression for PR #77 P1 #1 (head_sha key broke on its own commit).
+      - name: Gate record binding
+        run: npm run test:gate-record
+
       # A SKILL.md carrying `allowed-tools` SUBTRACTS from whatever agent loads it — the binary
       # documents the field as "Tools available to the model while this file is active", which
       # is a ceiling, not a grant. Eight skills declare it; two clamp to a single Bash pattern.
