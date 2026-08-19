@@ -16,7 +16,7 @@ Counts below are verified by `npm run check:registration`, which fails the build
 | Hooks (pre-tool, stop, schema-lint, context monitor, statusline, update check, session-start, budget-guard) | `.claude/hooks/` | 8 |
 | Slash commands | `.claude/commands/` | 13 |
 | QA-tier auto-classifier (4 tiers: trivial → irreversible) | `.claude/qa-tier-floor.yml` | 1 |
-| Permissions + hooks (no MCP grants — none are configured) | `.claude/settings.json` (+ `.proposed`) | 2 |
+| Permissions + hooks (one MCP grant: `designer` → playwright) | `.claude/settings.json` (+ `.proposed`) | 2 |
 | Memory templates | `.claude/memory/{DECISIONS,LONG-TERM,USER-INSIGHTS,CODEBASE-MAP}.md` | 4 |
 | CI workflows | `.github/workflows/` | 3 |
 

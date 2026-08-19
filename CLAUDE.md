@@ -95,8 +95,15 @@ verified_by=V)` against the ledger's own kinds and resolvers.
 a playbook and stop. The pipeline is described once, in the playbook — `/build` alone previously restated it
 in 50 lines, which is two descriptions of one pipeline, and two descriptions of one thing disagree silently.
 
-**Capabilities are real or absent.** No agent declares `mcpServers` — all 52 did, while no MCP config existed
-anywhere, so the field granted nothing. `schema-lint.js` now fails any declaration that no configuration
+**Capabilities are real or absent.** Exactly one agent declares `mcpServers`: `designer`, granted
+`[playwright]`, and `.mcp.json` backs it.
+
+> **Superseded 2026-08-20.** This line read *"No agent declares `mcpServers`"* — true when written, false
+> since the browser grant landed, and it sat beside a ledger claim asserting that same grant is live. Two
+> statements about one capability, disagreeing. The original point stands, and is why the count is one
+> rather than fifty-two: all 52 agents once declared the field while no MCP config existed anywhere, so it
+> granted nothing.
+ `schema-lint.js` now fails any declaration that no configuration
 backs. The **`reviewer`** engine carries no `Write` or `Edit`: an agent that can edit what it reviews
 will review what it can edit. Before Phase 4b, five per-agent read-only reviewers enforced this rule; the
 collapse into `reviewer` made it structural.
@@ -139,9 +146,15 @@ Memory:     Mem0 (primary) + Anthropic Memory Tool (auto-fallback after 3 retrie
 
 | Tier | Model | Use for |
 |------|-------|---------|
-| Opus 4.7 | `claude-opus-4-7` | `orchestrator` + `reviewer-readonly` — orchestration, synthesis, review |
-| Sonnet 4.6 | `claude-sonnet-4-6` | **Default** — `framer`, `sourcer`, `builder`, `designer`, `reviewer` |
+| Opus 5 | `claude-opus-5` | Six engines — `orchestrator`, `sourcer`, `builder`, `designer`, `reviewer`, `reviewer-readonly` |
+| Sonnet 5 | `claude-sonnet-5` | `framer` |
 | Haiku 4.5 | `claude-haiku-4-5` | Simple/lookup — test runs, lint, log parsing, classification |
+
+> **Superseded 2026-08-20.** These rows read `claude-opus-4-7` and `claude-sonnet-4-6`. Both identifiers are
+> retired, and `scripts/prompt-standard.test.mjs` pins the valid set to `claude-opus-5`, `claude-sonnet-5`,
+> `claude-fable-5`, `claude-haiku-4-5` — so an agent following this table wrote a brief that **failed a
+> blocking lint**. The rows are now derived from what the seven engine files declare. `claude-fable-5` is
+> valid and currently unused.
 
 `orchestrator` specifies the model in every brief. Other engines default to Sonnet if unspecified.
 
