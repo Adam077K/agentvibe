@@ -1,6 +1,6 @@
 # AGENTS.md — Routing Table
 
-*Six engines, derived from a 38-job inventory. Domain expertise is a lens, not an agent.*
+*Seven engines, derived from a 38-job inventory. Domain expertise is a lens, not an agent.*
 
 ---
 
@@ -17,7 +17,7 @@ You do not usually name an engine. You name the work; the playbook names the eng
 
 ---
 
-## The six engines
+## The seven engines
 
 The roster collapsed from 26 agents in Phase 4b. They were never distinct procedures — they were one
 procedure per shape of work, repeated once per domain, with the domain knowledge baked into prose that
@@ -30,6 +30,10 @@ and decisions have owners."* An engine that never judges anything is a script th
 It is now `node scripts/ledger.mjs sweep`, run by [a schedule](.github/workflows/ledger-sweep.yml) and by
 [the session-start hook](.claude/hooks/session-start.js).
 
+Phase 4a added a seventh back. `reviewer-readonly` is `reviewer` with no shell — used by the binding QA
+gate, where the judge's verdict cannot be overridden and a write-capable shell would defeat the isolation
+the gate depends on.
+
 | Engine | Distinct because | Tools | Model |
 |---|---|---|---|
 | **orchestrator** | Owns state and the human boundary — the only engine that ends a turn on approval | + `Task` | Opus 4.7 |
@@ -38,9 +42,10 @@ It is now `node scripts/ledger.mjs sweep`, run by [a schedule](.github/workflows
 | **builder** | Artifact in isolation → structured return | write + `Bash`, worktree | Sonnet 4.6 |
 | **designer** | The only producing engine with a perception loop: render → look → iterate | write + `Bash`, worktree | Sonnet 4.6 |
 | **reviewer** | Read-only and out-of-band. **No `Write`, no `Edit`** | **read-only** | Sonnet 4.6 |
+| **reviewer-readonly** | `reviewer` with no shell. The binding QA gate cannot be overridden, and a shell that could run edits would defeat that | **read-only, no `Bash`** | Opus 4.7 |
 
-`reviewer` has no write tools at all. *An agent that can edit what it reviews will review what it can edit* —
-and before Phase 4a, four of the five read-only reviewers declared `Write`.
+`reviewer` and `reviewer-readonly` have no write tools at all. *An agent that can edit what it reviews will
+review what it can edit* — and before Phase 4a, four of the five read-only reviewers declared `Write`.
 
 ---
 

@@ -7,22 +7,28 @@
 
 ## The Team
 
-This project runs as an autonomous C-suite company. **Every task starts at the CEO.**
+> **Superseded (Phases 1–4a).** This section described a 3-layer C-suite org: CEO at the top, then
+> seven C-suite roles (CTO, CPO, CMO, CBO, QA-Lead, Research-Lead, Design-Lead), then thirteen Layer 3
+> workers — twenty-one named roles total. Ten had no agent file at all; eleven existed only as routing
+> shims. Zero resolved to a real engine directly. The collapse is documented in
+> [AGENTS.md §What replaced what](AGENTS.md).
 
-```
-Layer 1 — Entry
-  CEO  (Founder-driven or ticket-triggered; orchestrates only, never implements)
+This project runs on **seven engines**. Domain expertise is a lens, not an agent.
 
-Layer 2 — C-suite
-  CTO   · CPO   · CMO   · CBO   · QA-Lead   · Research-Lead
-  Design-Lead reports under CPO.
+| Engine | Distinct because |
+|--------|-----------------|
+| **orchestrator** | Entry point — owns state and the human boundary |
+| **framer** | Fuzzy → structure → options → decision |
+| **sourcer** | Evidence and research; never asserts without it |
+| **builder** | Artifact in isolation → structured return |
+| **designer** | Perception loop: render → look → iterate |
+| **reviewer** | Read-only review, out of band |
+| **reviewer-readonly** | Review with no shell (used by the binding QA gate) |
 
-Layer 3 — Workers (13)
-  backend-engineer · frontend-engineer · database-engineer · ai-engineer
-  devops-engineer  · data-engineer     · security-engineer · test-engineer
-  code-reviewer    · researcher        · technical-writer
-  product-designer · design-critic
-```
+Eleven shim files (`ceo`, `qa-lead`, `code-reviewer`, `security-engineer`, `design-lead`,
+`research-lead`, `researcher`, `ai-engineer`, `database-engineer`, `technical-writer`,
+`test-engineer`) also exist to shadow drifted global copies — routing stubs, not team members.
+Phase 9 removes them.
 
 **Slash commands:** `/build` `/fix` `/design` `/review` `/daily` `/plan` `/ship` `/audit` `/research`
 **Identity:** `/color [name]` · `/name [session-slug]` — set at the start of every session.
@@ -91,9 +97,9 @@ in 50 lines, which is two descriptions of one pipeline, and two descriptions of 
 
 **Capabilities are real or absent.** No agent declares `mcpServers` — all 52 did, while no MCP config existed
 anywhere, so the field granted nothing. `schema-lint.js` now fails any declaration that no configuration
-backs. Read-only reviewers (`code-reviewer`, `security-engineer`, `design-critic`, `researcher`,
-`adversary-engineer`) carry no `Write` or `Edit`: an agent that can edit what it reviews will review what it
-can edit.
+backs. The **`reviewer`** engine carries no `Write` or `Edit`: an agent that can edit what it reviews
+will review what it can edit. Before Phase 4b, five per-agent read-only reviewers enforced this rule; the
+collapse into `reviewer` made it structural.
 
 ---
 
@@ -121,9 +127,9 @@ Memory:     Mem0 (primary) + Anthropic Memory Tool (auto-fallback after 3 retrie
 |------|---------|-----------|
 | `.claude/memory/DECISIONS.md` | Architecture & strategy decisions, append-only, 50-entry cap | Any agent making a decision affecting others |
 | `.claude/memory/CODEBASE-MAP.md` | Key files, patterns, tech debt | code-reviewer |
-| `.claude/memory/USER-INSIGHTS.md` | Customer language, pain phrases, JTBD | CMO + CPO (only authorized writers) |
-| `.claude/memory/LONG-TERM.md` | Cross-session facts: user prefs, recurring patterns | CEO after each session |
-| `docs/08-agents_work/sessions/` | Lead session summaries (`YYYY-MM-DD-[lead]-[task].md`) | Each C-suite / Lead |
+| `.claude/memory/USER-INSIGHTS.md` | Customer language, pain phrases, JTBD | `orchestrator` (only authorized writer) |
+| `.claude/memory/LONG-TERM.md` | Cross-session facts: user prefs, recurring patterns | `orchestrator` after each session |
+| `docs/08-agents_work/sessions/` | Engine session summaries (`YYYY-MM-DD-[engine]-[task].md`) | Each engine (write at task close) |
 
 **Hard caps:** DECISIONS.md ≤ 50 entries (archive when full); LONG-TERM.md ≤ 100 lines; session summaries ≤ 10 lines each.
 
@@ -133,23 +139,23 @@ Memory:     Mem0 (primary) + Anthropic Memory Tool (auto-fallback after 3 retrie
 
 | Tier | Model | Use for |
 |------|-------|---------|
-| Opus 4.7 | `claude-opus-4-7` | CEO + research synthesis + design + orchestration heavy |
-| Sonnet 4.6 | `claude-sonnet-4-6` | **Default** — C-suite, leads, most workers |
+| Opus 4.7 | `claude-opus-4-7` | `orchestrator` + `reviewer-readonly` — orchestration, synthesis, review |
+| Sonnet 4.6 | `claude-sonnet-4-6` | **Default** — `framer`, `sourcer`, `builder`, `designer`, `reviewer` |
 | Haiku 4.5 | `claude-haiku-4-5` | Simple/lookup — test runs, lint, log parsing, classification |
 
-CEO specifies the model in every brief. Workers default to Sonnet if unspecified.
+`orchestrator` specifies the model in every brief. Other engines default to Sonnet if unspecified.
 
 ---
 
 ## Risk-Tiered QA Gate (4-tier)
 
-Every PR is risk-tiered. **No merge without QA-Lead PASS.** The CEO and CTO cannot override.
+Every PR is risk-tiered. **No merge without `qa-lead` PASS.** No orchestrator session can override it.
 
 | Tier | Trigger | Review pipeline | Required label |
 |------|---------|-----------------|----------------|
 | **Trivial** | Typo, single-line, comment-only | `.github/workflows/ci.yml` only (schema-lint + gate tests + registration check) | none |
-| **Lite** | Isolated feature, < 300 LOC, no API/DB/auth | code-reviewer + qa-engineer + semgrep | `risk:lite` |
-| **Full** | API/DB/auth/billing touched, ≥ 300 LOC | Lite + security-engineer + craft-reviewer + Codex CLI second opinion | `risk:full` |
+| **Lite** | Isolated feature, < 300 LOC, no API/DB/auth | `reviewer` + semgrep | `risk:lite` |
+| **Full** | API/DB/auth/billing touched, ≥ 300 LOC | Lite + `reviewer` (security lens) + Codex CLI second opinion | `risk:full` |
 | **Irreversible** | DB migration, workflow file, agent definition, billing flow | Full + 2-of-3 multi-judge + Founder sign-off | `risk:irreversible` |
 
 Auto-classification: [.claude/qa-tier-floor.yml](.claude/qa-tier-floor.yml), read through
@@ -180,7 +186,7 @@ check, the registration check, the launcher guard rails, and the claim ledger.
 - `LONG-TERM.md`: ≤ 100 lines (compress quarterly)
 - Session summaries: ≤ 10 lines each
 - Agent handoffs: ≤ 500 tokens (summarize, never forward raw conversation)
-- Skills per task: **3-5 for CEO/C-suite/leads · 2-3 for workers** — never preload
+- Skills per task: **3-5 for orchestrator · 2-3 for other engines** — never preload
 - Pre-flight reads: cache as **one block** (avoid mid-session re-reads — they break 90% of prompt-cache savings)
 
 ---
@@ -197,30 +203,33 @@ check, the registration check, the launcher guard rails, and the claim ledger.
 
 ## Layer Contract — Hard Rules
 
-### CEO
+> **Superseded (Phases 1–4a).** This section described a 3-layer layer contract (CEO → C-suite + Leads →
+> Workers). Those layers no longer exist as distinct agent roles — they collapsed into seven engines. The
+> contracts below are updated for the engine model.
+
+### orchestrator
 | DO | DO NOT |
 |----|--------|
 | Plan, ask, delegate, synthesize | Write source code |
 | Structured briefs with all required fields | Vague "build the thing" |
-| Validate C-suite returns (workers_spawned, qa_verdict, session_file) | Accept returns missing required fields |
+| Validate engine returns (branch, worktree, files_changed, qa_verdict, session_file) | Accept returns missing required fields |
 | Set `/color` + `/name` at session start | Run unnamed/uncolored |
 
-### C-suite + Leads
+### framer · sourcer · builder · designer
 | DO | DO NOT |
 |----|--------|
-| Explore, plan, brief workers | Edit `.ts`, `.tsx`, `.sql` directly |
-| Spawn the right worker for each task | Do a worker's job to "save turns" |
-| Verify branches via `git branch --list` | Trust worker summaries blindly |
-| Spawn QA-Lead before merge | Merge anything without QA-Lead PASS |
+| Explore, plan, brief or produce within scope | Edit files outside stated scope |
+| Use the right engine for each task | Do another engine's job to "save turns" |
+| Verify branches via `git branch --list` | Trust summaries blindly |
 | Write session file at task close | Complete a task with no session file |
 
-### Workers (Layer 3)
+### reviewer · reviewer-readonly
 | DO | DO NOT |
 |----|--------|
-| One focused task per worktree | Touch files outside scope |
-| Return structured JSON (branch, worktree, files_changed) | Return vague "done" |
-| Auto-fix type errors, missing imports (Deviation Rules 1-3) | Make architectural decisions — return BLOCKED instead |
-| Atomic commits per logical change | Commit to `main` or a lead's branch |
+| One focused review per session | Write or edit the code under review |
+| Return structured verdict (PASS/FAIL + evidence per lens) | Return vague "looks good" |
+| Escalate when findings are outside the diff and severe | Auto-approve; the gate blocks |
+| Atomic commits per logical change | Commit to `main` |
 
 ---
 
@@ -280,19 +289,25 @@ git commit -m "feat(scope): description"
 ## Agent Identity — Colors & Session Naming
 
 ### Color
-| Role | Color |
-|------|-------|
-| CEO (primary) | `gold` |
-| CEO (parallel #2/3/4) | `orange` / `teal` / `lime` |
-| CTO | `blue` · CPO `green` · CMO `yellow` · CBO `emerald` · QA-Lead `red` · Research-Lead `purple` · Design-Lead `pink` |
-| backend-engineer | `blue` · frontend-engineer `pink` · database-engineer `teal` · ai-engineer `purple` |
-| security-engineer | `red` · test-engineer `yellow` · code-reviewer `gray` · researcher `purple` · technical-writer `gray` |
+
+> **Superseded.** The table below used to list colors by C-suite role (CTO, CPO, CMO, CBO, backend-engineer,
+> frontend-engineer, devops-engineer, data-engineer, product-designer, design-critic, etc.). The roster
+> collapsed in Phase 4b. Engine colors and the full assignment table are now in
+> [.claude/commands/color.md](.claude/commands/color.md).
+
+| Engine | Color |
+|--------|-------|
+| `orchestrator` (primary) | `gold` |
+| `orchestrator` (parallel #2/3/4) | `orange` / `teal` / `lime` |
+| `framer` | `cyan` · `sourcer` `purple` |
+| `builder` | `blue` · `designer` `pink` |
+| `reviewer` · `reviewer-readonly` | `gray` |
 
 ### Naming
 ```
-CEO:    /name ceo-[task-slug]       e.g., /name ceo-onboarding-flow
-C-suite: /name [role]-[task-slug]   e.g., /name cto-scan-engine
-Workers: /name [role]-[task-slug]   e.g., /name backend-engineer-rate-limit
+orchestrator: /name orchestrator-[task-slug]   e.g., /name orchestrator-onboarding-flow
+builder:      /name builder-[task-slug]        e.g., /name builder-rate-limit
+reviewer:     /name reviewer-[task-slug]       e.g., /name reviewer-auth-audit
 ```
 
 ### Documentation Gate
