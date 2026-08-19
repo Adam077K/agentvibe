@@ -797,3 +797,101 @@ test('BLOCKS Write outside project after scratchpad exemption — boundary is ex
   assert.equal(runHook(compact(write(path.join(os.homedir(), 'secret.txt')))), BLOCK,
     'home directory writes must stay blocked after the scratchpad exemption is added');
 });
+
+
+// C1 broader: git checkout -q <sha> (no -- separator) must be ALLOWED [C1-broader]
+//
+// Team-lead reported (2026-08-20): a command of the form
+//   git checkout -q <sha> && git show <ref>:<path> > <path>
+// was blocked with "git checkout -- <file> discards uncommitted changes".
+// The current predicate (--\s+) requires whitespace after --, which this form lacks.
+// This test pins the correct ALLOW behaviour and will go red if the predicate is
+// widened to match git checkout in general rather than the separator form specifically.
+
+test('ALLOWS git checkout -q <sha> — no separator, no discard [C1-broader]', () => {
+  assert.equal(runHook(compact(bash('git checkout -q abc123def456'))), ALLOW,
+    'git checkout to a SHA discards nothing; only separator form (-- <file>) should be blocked');
+});
+
+test('ALLOWS git checkout -q <sha> piped with git show [C1-broader]', () => {
+  assert.equal(
+    runHook(compact(bash('git checkout -q abc123def456 && git show HEAD:scripts/run-gate.mjs > /tmp/foo.mjs'))),
+    ALLOW,
+    'compound checkout+show discards nothing; must not be blocked'
+  );
+});
+
+test('ALLOWS git checkout <branch> — named branch switch, no separator [C1-broader]', () => {
+  assert.equal(runHook(compact(bash('git checkout feat/my-branch'))), ALLOW,
+    'branch switch is not a discard operation');
+});
+
+// Confirm the separator form is still blocked — the exemption must not be a blanket widening
+test('BLOCKS git checkout -q -- <file> — separator form with -q flag [C1-broader]', () => {
+  assert.equal(runHook(compact(bash('git checkout -q -- scripts/foo.mjs'))), BLOCK,
+    'separator form must stay blocked even when -q flag is present');
+});
+
+
+// ── KNOWN BUG: inherited CLAUDE_PROJECT_DIR causes wrong containment for subagents ──────────
+//
+// CLAUDE_PROJECT_DIR is inherited from the parent (spawning) session. When a subagent runs
+// in its own worktree, the hook's containment check uses the PARENT's root, producing two
+// simultaneous failures:
+//
+//   1. FALSE POSITIVE: write to the subagent's OWN worktree is BLOCKED (it's outside the
+//      inherited parent root, even though it is exactly where the agent should be writing).
+//      Reproduced live by lane 7, 2026-08-20: Write to /private/tmp/.../scratchpad/probe.txt
+//      was blocked with "project root is ceo-1-1787176362", while the lane was working in
+//      a different worktree.
+//
+//   2. FALSE NEGATIVE: write to the PARENT's worktree is ALLOWED from the subagent (it
+//      passes the inherited root check), but a subagent should only write in its own scope.
+//
+// ROOT CAUSE: `_root=$(cd "${CLAUDE_PROJECT_DIR:-$PWD}" ...)` — inheritable env var, not
+// the agent's actual cwd. Fix requires deriving the root from the actual working tree:
+// e.g., `git rev-parse --show-toplevel` from the file's directory, or resolving all worktrees
+// of the same repo and allowing any of them. Security implication: the latter would let any
+// subagent write to any sibling worktree — needs deliberate policy decision.
+//
+// PINNED as BLOCK to document the bug. Expected eventual outcome: ALLOW.
+// Do NOT fix here without a security review of the new allowed-root policy.
+
+test('KNOWN-BUG: subagent write to own worktree is BLOCK when CLAUDE_PROJECT_DIR is parent root [inherited-root]', () => {
+  // Simulate: parent spawned the agent; parent's CLAUDE_PROJECT_DIR is this REPO.
+  // The "subagent's worktree" is the sibling (any path outside REPO but inside the same repo).
+  const siblingWorktree = path.resolve(REPO, '..', 'ceo-1-1787176362');
+  if (!fs.existsSync(siblingWorktree)) return; // sibling not present — skip
+
+  // Agent is working in REPO but inherits siblingWorktree as CLAUDE_PROJECT_DIR.
+  // Write to REPO/some-file.ts should be ALLOWED (it's the agent's own workspace)
+  // but is currently BLOCKED because REPO is outside the inherited siblingWorktree root.
+  const ownFile = path.join(REPO, 'scripts', 'some-file.ts');
+  const result = runHook(
+    compact(write(ownFile)),
+    { CLAUDE_PROJECT_DIR: siblingWorktree }
+  );
+  // Pinning current (wrong) behavior. Change to ALLOW when the fix lands.
+  assert.equal(result, BLOCK,
+    'KNOWN BUG: own-worktree write is blocked when CLAUDE_PROJECT_DIR is inherited from parent. ' +
+    'Fix: derive root from the actual working tree, not the inherited env var.');
+});
+
+test('KNOWN-BUG: parent-worktree write is ALLOW from subagent — wrong direction [inherited-root]', () => {
+  // Complementary wrong direction: the subagent can write to the parent's worktree.
+  // With inherited CLAUDE_PROJECT_DIR = REPO (the "parent"), writing to REPO passes the
+  // containment check even if the subagent should not be modifying the parent's files.
+  const siblingWorktree = path.resolve(REPO, '..', 'ceo-1-1787176362');
+  if (!fs.existsSync(siblingWorktree)) return;
+
+  const parentFile = path.join(siblingWorktree, 'scripts', 'some-file.ts');
+  const result = runHook(
+    compact(write(parentFile)),
+    { CLAUDE_PROJECT_DIR: siblingWorktree }
+  );
+  // Current: ALLOW (passes containment). This is the false-negative direction of the bug.
+  // The correct policy is TBD (all worktrees of the same repo, or only own worktree).
+  assert.equal(result, ALLOW,
+    'KNOWN BUG (false-negative): parent-worktree write is allowed from subagent via inherited root. ' +
+    'Policy for the correct behavior requires a security decision.');
+});
