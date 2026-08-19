@@ -726,3 +726,20 @@ test('an UNREADABLE .mcp.json blocks; an ABSENT one does not', () => {
   assert.equal(runHookVerbose(compact(mcpCall('mcp__anything__do_thing')), { CLAUDE_PROJECT_DIR: absent }).code, ALLOW,
     'no .mcp.json means no project-scope servers, which is not an error')
 })
+
+// C1 tests
+test('ALLOWS git checkout --detach [C1]', () => {
+  assert.equal(runHook(compact(bash('git checkout --detach origin/main'))), ALLOW);
+});
+test('ALLOWS git checkout --track [C1]', () => {
+  assert.equal(runHook(compact(bash('git checkout --track origin/feature'))), ALLOW);
+});
+test('ALLOWS git checkout --orphan [C1]', () => {
+  assert.equal(runHook(compact(bash('git checkout --orphan new-branch'))), ALLOW);
+});
+test('BLOCKS separator-dot [C1]', () => {
+  assert.equal(runHook(compact(bash('git checkout -- .'))), BLOCK);
+});
+test('BLOCKS separator-file [C1]', () => {
+  assert.equal(runHook(compact(bash('git checkout -- file.txt'))), BLOCK);
+});
