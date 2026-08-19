@@ -743,3 +743,57 @@ test('BLOCKS separator-dot [C1]', () => {
 test('BLOCKS separator-file [C1]', () => {
   assert.equal(runHook(compact(bash('git checkout -- file.txt'))), BLOCK);
 });
+
+
+// C2: documenting a hazard inside a heredoc is blocked — unfixable without a shell parser
+//
+// The hook scans the entire command string including heredoc bodies. A heredoc that QUOTES
+// a dangerous invocation for documentation is indistinguishable from one that produces it
+// as stdin — both are the same shell command string.
+//
+// VERDICT: unfixable without a real shell parser. A heredoc-body stripper is not safe:
+//   cmd <<EOF && git checkout -- file\n...\nEOF  → stripped to "cmd " → misses real command
+//
+// ESCAPE HATCH: write documentation that quotes a hazard via the Write tool. Write checks
+// only file_path (path scoping), never content. A Bash heredoc quoting the hazard is blocked;
+// a Write tool call writing the same text is allowed.
+
+test('heredoc body quoting the separator is blocked — pinned false-positive [C2]', () => {
+  // False positive: the heredoc body documents the hazard, not executes it.
+  // Pinned rather than fixed because the only safe fix requires a shell parser.
+  // ESCAPE HATCH: use the Write tool for any documentation that quotes dangerous forms.
+  const sep = ' -- ';
+  const doc = 'documentation: git checkout' + sep + 'file.txt';
+  const cmd = "gh issue create --body-file - <<'EOF'\n" + doc + "\nEOF";
+  assert.equal(runHook(compact(bash(cmd))), BLOCK,
+    'known limitation: a heredoc quoting a hazard is blocked; use Write tool for docs');
+});
+
+// C3: Write and Bash must agree about the agent scratchpad
+//
+// Issue #96.3: Bash heredocs wrote to /private/tmp/claude-<uid>/...scratchpad/... freely
+// all session. Write blocked the same path. The sandbox (PR #94) grants /private/tmp/claude-<uid>
+// in filesystem.allowWrite. Agents are instructed to use the scratchpad for all temp files.
+// Decision: Write was wrong. Making Write agree with Bash by adding the scratchpad root to
+// the allowed list.
+
+test('ALLOWS Write to the agent scratchpad — Bash and Write must agree [C3]', () => {
+  // RED before fix: Write refused /private/tmp/claude-<uid>/... while Bash wrote freely all session.
+  const uid = typeof process.getuid === 'function' ? process.getuid() : 501;
+  const scratchpadFile = `/private/tmp/claude-${uid}/test-session/scratchpad/temp.md`;
+  const parent = `/private/tmp/claude-${uid}`;
+  if (!fs.existsSync(parent)) return; // scratchpad root absent — skip rather than fail
+  assert.equal(runHook(compact(write(scratchpadFile))), ALLOW,
+    'Write to the agent scratchpad must be allowed — it is sandbox-granted and agent-instructed');
+});
+
+test('BLOCKS Write to arbitrary /tmp path — scratchpad exemption is narrow [C3]', () => {
+  // The exemption is /private/tmp/claude-<uid> specifically, not all of /tmp.
+  assert.equal(runHook(compact(write('/tmp/arbitrary/file.md'))), BLOCK,
+    'the scratchpad exemption must not open all of /tmp to writing');
+});
+
+test('BLOCKS Write outside project after scratchpad exemption — boundary is exact [C3]', () => {
+  assert.equal(runHook(compact(write(path.join(os.homedir(), 'secret.txt')))), BLOCK,
+    'home directory writes must stay blocked after the scratchpad exemption is added');
+});
