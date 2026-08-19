@@ -119,3 +119,75 @@ test('a NESTED .claude path is not swept in — check 4 owns MANIFEST.json', () 
     fs.writeFileSync(hook, original)
   }
 })
+
+
+// ── check 12: org-chart docs must not name dead agent identifiers ──────────
+//
+// WHY THIS TEST EXISTS: CLAUDE.md previously described a 3-layer C-suite org with 21
+// roles, ten of which had no agent file at all. The org chart was the source of truth
+// agents read to know who their teammates are. A fabricated teammate is worse than a
+// missing one: agents route to them, briefs address them, and nothing fails.
+//
+// The test constructs the failure explicitly: it appends dead names to CLAUDE.md (which
+// is in the GOVERNING scope) and asserts exit 1. Using CLAUDE.md avoids inflating the
+// slash-command count (which would pollute the readme-count check). The `withFileMovedAside`
+// helper is not used here because we append rather than replace — the restore is a writeSync
+// of the original buffer, matching the pattern of tests 3 and 4 above.
+
+test('CLAUDE.md naming a dead agent identifier fails check 12', () => {
+  const claudeMd = path.join(REPO, 'CLAUDE.md')
+  const original = fs.readFileSync(claudeMd)
+  // Append a line with dead names in a non-blockquote, non-table context.
+  // No backticks (avoids dead-path scan), no markdown links (same), no paths.
+  const injected = `${original.toString()}
+
+INJECTED-TEST: the team includes backend-engineer, cto, and product-designer.
+`
+
+  let result
+  try {
+    fs.writeFileSync(claudeMd, injected)
+    result = runChecker()
+  } finally {
+    fs.writeFileSync(claudeMd, original)
+    assert.deepEqual(fs.readFileSync(claudeMd), original, 'CLAUDE.md was not restored')
+  }
+
+  assert.equal(result.code, 1, `dead agent names in CLAUDE.md did not fail the check. Output:\n${result.out}`)
+  assert.match(result.out, /dead-agent-name/, 'failure must identify itself as check dead-agent-name')
+  assert.ok(
+    /backend-engineer|cto|product-designer/.test(result.out),
+    `check output does not name any of the injected dead identifiers:\n${result.out}`
+  )
+})
+
+test('check 12 does not fire on dead names in blockquotes (house-style correction text)', () => {
+  // The house style puts superseded content in `>` blockquotes so corrections can mention
+  // old names without tripping the rule they explain.
+  const claudeMd = path.join(REPO, 'CLAUDE.md')
+  const original = fs.readFileSync(claudeMd)
+  // Append ONLY blockquoted dead names — should not trigger check 12.
+  const injected = `${original.toString()}
+
+> Superseded: the old roster included a backend-engineer and a cto.
+> Those roles no longer exist as agent files.
+`
+
+  let code
+  try {
+    fs.writeFileSync(claudeMd, injected)
+    ;({ code } = runChecker())
+  } finally {
+    fs.writeFileSync(claudeMd, original)
+    assert.deepEqual(fs.readFileSync(claudeMd), original, 'CLAUDE.md was not restored')
+  }
+
+  assert.equal(code, 0, 'dead names inside blockquotes should not fail check 12')
+})
+
+test("check 12 passes when the repo's GOVERNING docs are clean", () => {
+  // After the org-chart prose fix, CLAUDE.md and .claude/commands/color.md must contain no
+  // dead agent names outside blockquotes. This test verifies the current tree is clean.
+  const { code, out } = runChecker()
+  assert.equal(code, 0, `registration check failed on the unmodified tree (check 12 may be misfiring):\n${out}`)
+})
