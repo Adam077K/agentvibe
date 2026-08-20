@@ -84,9 +84,15 @@ what you want.
 | What the system **asserts** | [.claude/ledger/index.json](.claude/ledger/index.json) | `scripts/ledger.mjs` |
 | What **risk** a path carries | [.claude/qa-tier-floor.yml](.claude/qa-tier-floor.yml) | `scripts/lib/classifier.js` — one implementation |
 
-Lens provenance is recorded as `git:<path>@<rev>` where the source file was deleted in the collapse. The
-claim "this expertise came from that file" stays checkable after the file is gone, and `schema-lint` verifies
-it with `git cat-file`.
+| What each lens was **mined from** | [.claude/provenance/sources.json](.claude/provenance/sources.json) | `scripts/vendor-provenance.mjs` — generated, never hand-edited; `--check` fails on drift |
+
+Lens provenance is recorded as `git:<path>@<rev>` where the source file was deleted in the collapse, so the
+claim "this expertise came from that file" stays checkable after the file is gone. It also has to survive
+**transplant**: `~/bin/newproject` copies the tree without `.git`, so a generated project holds none of the
+objects those citations name and every one of them resolved to nothing. `schema-lint` therefore checks the
+vendored manifest — full commit, sha256, size, headings — and consults `git cat-file` only where the object
+is actually reachable, which upgrades the check from shape to bytes without making it depend on history the
+checkout may not have. Regenerate with `npm run vendor:provenance`.
 
 ---
 

@@ -18,7 +18,10 @@
 # in prose; that is the fabrication pattern, and it is not being copied in here.
 #
 # `sources:` records which agent file each lens was mined from and is dead-path checked,
-# so a lens can never claim provenance it does not have.
+# so a lens can never claim provenance it does not have. A `git:<path>@<rev>` entry names a
+# file the collapse deleted; it is checked against `.claude/provenance/sources.json`, which
+# vendors the commit, sha256, size and headings so the citation survives a tree copied
+# without its `.git`. Add or change one and run `npm run vendor:provenance`.
 #
 # Lint: node .claude/hooks/schema-lint.js --lenses   (also runs in the default invocation)
 
