@@ -30,9 +30,13 @@ jobs:
       # was. Lens provenance cites git history (`git:<path>@<rev>`), but it is checked
       # against `.claude/provenance/sources.json`, which travels with the tree — a shallow
       # clone, and a generated project with an empty object store, both PASS. What full
-      # history buys is a stronger check: where the objects are reachable, schema-lint
-      # compares their sha256 to the manifest instead of trusting the record. Keep it for
-      # that, and for `git log` in the ledger's resolvers.
+      # history buys is a stronger check, and that is the ONLY reason stated here: where the
+      # objects are reachable, schema-lint compares their sha256 to the manifest instead of
+      # trusting the record, and the provenance step's case C can run instead of skipping.
+      #
+      # An earlier version of this comment added "and the ledger's resolvers read git log".
+      # They do not — ledger.mjs uses `git ls-files`, which reads the index. Replacing one
+      # unverified justification with another is the failure this whole change is about.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
