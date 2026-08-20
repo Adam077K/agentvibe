@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { lintLensFile } = require('../.claude/hooks/schema-lint.js');
+const { lintLensFile, lintProvenanceManifest, provenanceRecordProblem } = require('../.claude/hooks/schema-lint.js');
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -145,10 +145,45 @@ test('a lens citing a source that does not exist is refused', () => {
   assert.match(lintYaml(bad, 'domain').join('\n'), /does not exist/);
 });
 
-test('a lens citing a git revision that does not contain the file is refused', () => {
-  // Provenance survives deletion by pointing into history — but only real history.
+test('a lens citing a git source nobody vendored is refused', () => {
+  // Provenance survives deletion by pointing into history — but only history somebody
+  // recorded. The manifest, not the object store, is what a generated project has.
   const bad = GOOD_DOMAIN.replace('git:.claude/agents/cbo.md@cda6de9', 'git:.claude/agents/never-existed.md@cda6de9');
-  assert.match(lintYaml(bad, 'domain').join('\n'), /does not resolve in git history/);
+  const issues = lintYaml(bad, 'domain').join('\n');
+  assert.match(issues, /not recorded in \.claude\/provenance\/sources\.json/);
+  assert.match(issues, /vendor-provenance\.mjs/);
+  // The old message sent authors to `fetch-depth: 0`, which could never fix this: a
+  // generated project's object store never held the object there is nothing to fetch.
+  assert.doesNotMatch(issues, /fetch-depth/);
+});
+
+test('the good fixtures resolve through the manifest, not through the object store', () => {
+  // Both fixtures cite `git:.claude/agents/cbo.md@cda6de9` and pass. If they only passed
+  // because this machine happens to have the blob, every test below would be measuring a
+  // full clone rather than the rule. scripts/provenance-portability.test.mjs proves the
+  // transplant case end to end; this asserts the record the fixtures depend on is present.
+  const manifest = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, '.claude', 'provenance', 'sources.json'), 'utf8'));
+  assert.ok(manifest['.claude/agents/cbo.md@cda6de9'], 'fixture citation is not vendored');
+  assert.ok(manifest['.claude/agents/code-reviewer.md@cda6de9'], 'fixture citation is not vendored');
+});
+
+test('the vendored provenance manifest lints clean', () => {
+  assert.deepEqual(lintProvenanceManifest().issues, []);
+});
+
+test('a half-filled provenance record is refused — it proves nothing', () => {
+  const good = {
+    path: '.claude/agents/cbo.md', rev: 'cda6de9',
+    commit: 'cda6de982be57c16003d82146fcdfa0cd26e7f76',
+    sha256: 'a'.repeat(64), bytes: 15588, lines: 307, headings: ['# CBO'],
+  };
+  assert.equal(provenanceRecordProblem(good), null);
+  assert.match(provenanceRecordProblem({ ...good, sha256: undefined }), /has no sha256/);
+  assert.match(provenanceRecordProblem({ ...good, sha256: 'deadbeef' }), /has no sha256/);
+  assert.match(provenanceRecordProblem({ ...good, commit: 'cda6de9' }), /full 40-char commit/);
+  assert.match(provenanceRecordProblem({ ...good, bytes: '15588' }), /byte count/);
+  assert.match(provenanceRecordProblem({ ...good, headings: '# CBO' }), /headings/);
+  assert.match(provenanceRecordProblem(null), /not a mapping/);
 });
 
 test('a lens citing a SHIM is refused — a shim holds no expertise', () => {
