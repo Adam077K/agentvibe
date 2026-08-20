@@ -32,6 +32,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 
 const REPO_ROOT = (() => {
@@ -1142,7 +1143,7 @@ function lintStep(text, where, issues, { min = 20, max = 200, mode = 'procedure'
   }
 }
 
-// Provenance that survives deletion.
+// Provenance that survives deletion, and travels.
 //
 // Phase 4b deleted the fifteen agent files the lenses were mined from, and the existence
 // check below promptly failed — correctly. The expertise really did come from
@@ -1153,9 +1154,133 @@ function lintStep(text, where, issues, { min = 20, max = 200, mode = 'procedure'
 // superseded prose into `docs/` purely to keep a path resolving — which is the "keep it
 // just in case" dead surface Phase 1 deleted 1,459 files to remove.
 //
-// So a source may name a path in git history: `git:<path>@<rev>`, verified with
-// `git cat-file -e`. The claim "this came from that file" stays true and stays checkable
-// after the file is gone. CI must fetch history for this — see fetch-depth in ci.yml.
+// So a source may name a path in git history: `git:<path>@<rev>`. That survived deletion
+// and did NOT survive transplant. `~/bin/newproject` rsyncs the tree excluding `.git` and
+// then `git init`s an empty object store, so all 26 citations pointed at objects that had
+// never been in the generated repository, and this lint exited 1 on every new project
+// before anyone touched it. `fetch-depth: 0` cannot fix that: there is nothing to fetch.
+//
+// The provenance therefore travels as data. `.claude/provenance/sources.json` records, per
+// cited blob, the full commit, a sha256 of the bytes, size, line count and headings, and
+// `scripts/vendor-provenance.mjs --check` keeps it honest the way `ledger build --check`
+// keeps the claim index honest. The check below reads the MANIFEST first and consults the
+// object store only when the object is actually reachable — so a transplanted or shallow
+// checkout passes on the recorded shape, while this repo, where the objects do exist,
+// still fails the moment a cited byte changes. fetch-depth: 0 now only upgrades the check
+// from shape to bytes; it no longer decides pass or fail.
+const PROVENANCE_REL = '.claude/provenance/sources.json';
+const GIT_SOURCE = /^git:(.+)@([0-9a-f]{7,40})$/;
+const REVENDOR = 'run `node scripts/vendor-provenance.mjs`';
+
+// Memoised: the lint reads it once per process and the file does not change mid-run.
+// It returns `{}` with an `error` string rather than throwing, so a missing manifest
+// surfaces as a named failure from lintProvenanceManifest() instead of a stack trace.
+let PROVENANCE_CACHE = null;
+function loadProvenance() {
+  if (PROVENANCE_CACHE) return PROVENANCE_CACHE;
+  const file = path.join(REPO_ROOT, '.claude', 'provenance', 'sources.json');
+  if (!fs.existsSync(file)) {
+    PROVENANCE_CACHE = { records: {}, error: `${PROVENANCE_REL}: missing — ${REVENDOR}` };
+    return PROVENANCE_CACHE;
+  }
+  try {
+    const doc = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!doc || typeof doc !== 'object' || Array.isArray(doc)) throw new Error('is not a JSON object');
+    PROVENANCE_CACHE = { records: doc, error: null };
+  } catch (e) {
+    PROVENANCE_CACHE = { records: {}, error: `${PROVENANCE_REL}: unreadable — ${e.message}. ${REVENDOR}` };
+  }
+  return PROVENANCE_CACHE;
+}
+
+/** What is wrong with one manifest record, or null. A half-filled record proves nothing. */
+function provenanceRecordProblem(rec) {
+  if (!rec || typeof rec !== 'object' || Array.isArray(rec)) return 'is not a mapping';
+  if (typeof rec.path !== 'string' || rec.path.trim() === '') return 'has no path';
+  if (typeof rec.rev !== 'string' || !/^[0-9a-f]{7,40}$/.test(rec.rev)) return 'has no short rev';
+  if (typeof rec.commit !== 'string' || !/^[0-9a-f]{40}$/.test(rec.commit)) return 'has no full 40-char commit';
+  if (typeof rec.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(rec.sha256)) return 'has no sha256 of the bytes';
+  if (!Number.isInteger(rec.bytes) || rec.bytes < 0) return 'has no byte count';
+  if (!Number.isInteger(rec.lines) || rec.lines < 0) return 'has no line count';
+  if (!Array.isArray(rec.headings)) return 'has no headings list';
+  return null;
+}
+
+// Memoised by `rev:path`. Returns null on ANY throw — a repository without the object is
+// the expected case now, not an error, and the caller distinguishes the two.
+const BLOB_CACHE = new Map();
+function gitBlob(rev, p) {
+  const spec = `${rev}:${p}`;
+  if (BLOB_CACHE.has(spec)) return BLOB_CACHE.get(spec);
+  let buf = null;
+  try {
+    // stderr is discarded: "does not exist in <commit>" is the EXPECTED result in a
+    // transplanted repo, and printing it 26 times would make a passing run look broken.
+    buf = execFileSync('git', ['cat-file', 'blob', spec], {
+      cwd: REPO_ROOT, maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'],
+    });
+  } catch { buf = null; }
+  BLOB_CACHE.set(spec, buf);
+  return buf;
+}
+
+function sha256(buf) {
+  return crypto.createHash('sha256').update(buf).digest('hex');
+}
+
+/**
+ * Every `git:<path>@<rev>` the lens files cite, as `<path>@<rev>` keys — or null when a
+ * lens file cannot be read, in which case lintLensFile is already reporting the real
+ * problem and the orphan check below stays quiet rather than failing twice.
+ */
+function citedGitSources() {
+  const out = new Set();
+  for (const [file, key] of [[LENSES_PATH, 'lenses'], [REVIEW_LENSES_PATH, 'review_lenses']]) {
+    let doc;
+    try { doc = parseYamlSubset(fs.readFileSync(file, 'utf8')); } catch { return null; }
+    const list = doc && doc[key];
+    if (!Array.isArray(list)) return null;
+    for (const l of list) {
+      for (const s of ((l && l.sources) || [])) {
+        const m = GIT_SOURCE.exec(String(s));
+        if (m) out.add(`${m[1]}@${m[2]}`);
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * The manifest itself is a lint unit, alongside the roster. Without this, a record could be
+ * malformed and only be noticed by whichever lens happened to cite it, and an entry nobody
+ * cites could sit there forever — the dead surface this system deletes rather than keeps.
+ */
+function lintProvenanceManifest() {
+  const rel = PROVENANCE_REL;
+  const { records, error } = loadProvenance();
+  if (error) return { rel, issues: [error], count: 0 };
+
+  const issues = [];
+  const keys = Object.keys(records);
+  for (const key of keys) {
+    const rec = records[key];
+    const bad = provenanceRecordProblem(rec);
+    if (bad) { issues.push(`${rel}: record "${key}" ${bad} — ${REVENDOR}`); continue; }
+    if (`${rec.path}@${rec.rev}` !== key) {
+      issues.push(`${rel}: record "${key}" is keyed inconsistently with its own path@rev ("${rec.path}@${rec.rev}") — ${REVENDOR}`);
+    }
+  }
+  const cited = citedGitSources();
+  if (cited) {
+    for (const key of keys) {
+      if (!cited.has(key)) {
+        issues.push(`${rel}: "${key}" is recorded but no lens cites it — dead surface. Delete it or cite it (${REVENDOR})`);
+      }
+    }
+  }
+  return { rel, issues, count: keys.length, label: `${keys.length} vendored sources, every one cited` };
+}
+
 function provenanceProblem(s) {
   // A shim holds no expertise — it is 24 lines pointing at an engine. A lens claiming to
   // have been mined from one is claiming provenance from a file that never had any. This
@@ -1169,15 +1294,31 @@ function provenanceProblem(s) {
     } catch { /* fall through to the existence check */ }
   }
 
-  const gitForm = /^git:(.+)@([0-9a-f]{7,40})$/.exec(s);
+  const gitForm = GIT_SOURCE.exec(s);
   if (gitForm) {
     const [, p, rev] = gitForm;
-    try {
-      execFileSync('git', ['cat-file', '-e', `${rev}:${p}`], { cwd: REPO_ROOT, stdio: 'ignore' });
-      return null;
-    } catch {
-      return `does not resolve in git history (git cat-file -e ${rev}:${p} failed — a shallow clone will do this; CI needs fetch-depth: 0)`;
+    const key = `${p}@${rev}`;
+    const rec = loadProvenance().records[key];
+    if (!rec) {
+      return `is not recorded in ${PROVENANCE_REL} — provenance must travel with the tree, ` +
+        `since a generated project has none of this repository's git objects. ${REVENDOR}`;
     }
+    const bad = provenanceRecordProblem(rec);
+    if (bad) return `has a malformed record in ${PROVENANCE_REL}: it ${bad} — ${REVENDOR}`;
+
+    // Corroborate against the object store only when the object is actually here. A
+    // transplanted or shallow checkout has no such object and passes on the record alone —
+    // that is the entire point. Prefer the full commit: a short rev can go ambiguous as
+    // history grows, and the record pins which commit was meant.
+    const buf = gitBlob(rec.commit, p);
+    if (buf === null) return null;
+    const got = sha256(buf);
+    if (got !== rec.sha256) {
+      return `does not match ${PROVENANCE_REL} — the object at ${rec.commit.slice(0, 7)}:${p} ` +
+        `hashes to ${got.slice(0, 12)}… but the manifest records ${rec.sha256.slice(0, 12)}…. ` +
+        `If the citation genuinely changed, ${REVENDOR}`;
+    }
+    return null;
   }
   return fs.existsSync(path.join(REPO_ROOT, s)) ? null : 'does not exist';
 }
@@ -1485,6 +1626,7 @@ function main() {
   // agent file was named, so `schema-lint <one-file>` stays a targeted query.
   const lensResults = targets.length > 0 ? [] : [
     checkEngineRoster(),
+    lintProvenanceManifest(),
     lintLensFile(LENSES_PATH, 'domain'),
     lintLensFile(REVIEW_LENSES_PATH, 'review'),
     ...lintAllPlaybooks(),
@@ -1534,6 +1676,10 @@ module.exports = {
   // rule directly rather than round-tripping a whole fixture agent file through lintFile.
   lintPromptStandard, checkEngineRoster, parseFrontmatter, scanSections,
   VALID_MODELS, VALID_EFFORT, KNOWN_FM_KEYS, TOOL_UNIVERSE,
+  // Exported for scripts/lenses.test.mjs and scripts/provenance-portability.test.mjs, which
+  // check the manifest rules directly rather than only through a lens that happens to cite
+  // the record in question.
+  lintProvenanceManifest, provenanceRecordProblem, citedGitSources,
 };
 
 if (require.main === module) {
