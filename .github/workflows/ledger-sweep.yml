@@ -46,8 +46,9 @@ jobs:
         with:
           # Not load-bearing for pass/fail — lens provenance is checked against
           # `.claude/provenance/sources.json`, which travels with the tree, so a shallow
-          # clone passes. Full history is kept because it upgrades that check from shape to
-          # bytes, and because the sweep's own resolvers read `git log`.
+          # clone passes. Kept for one verified reason only: full history upgrades that
+          # check from shape to bytes. The sweep's own git calls are `git ls-files`, which
+          # read the index, not history.
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
