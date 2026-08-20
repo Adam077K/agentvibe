@@ -6,9 +6,10 @@
     "gsa-startup-kit": "bin/install.js"
   },
   "scripts": {
-    "check": "npm run lint:agents && npm run check:prompt-standard && npm run test:gate && npm run check:manifest && npm run check:curation && npm run check:routers && npm run check:registration && npm run test:registration && npm run check:dispatch && npm run check:dispatch-prompt && npm run check:memory && npm run check:map && npm run check:warroom && npm run test:hooks && npm run test:budget && npm run test:lenses && npm run test:playbooks && npm run check:ledger && npm run check:mc && npm run test:probe-readonly && npm run test:pre-tool-use && npm run test:run-gate && npm run test:skill-clamp && npm run test:probe-stop-reason && npm run test:launcher-permissions && npm run test:sandbox",
+    "check": "npm run lint:agents && npm run check:prompt-standard && npm run test:gate && npm run check:manifest && npm run check:curation && npm run check:routers && npm run check:registration && npm run test:registration && npm run check:dispatch && npm run check:dispatch-prompt && npm run check:memory && npm run check:map && npm run check:warroom && npm run test:hooks && npm run test:budget && npm run test:lenses && npm run test:playbooks && npm run check:ledger && npm run check:mc && npm run test:probe-readonly && npm run test:pre-tool-use && npm run test:run-gate && npm run test:gate-record && npm run test:skill-clamp && npm run test:probe-stop-reason && npm run test:launcher-permissions && npm run test:sandbox",
     "test:tier-gate": "node --test scripts/check-tier-gate.test.mjs",
     "test:sandbox": "node --test scripts/sandbox-config.test.mjs",
+    "test:gate-record": "node --test scripts/gate-record.test.mjs",
     "check:mc": "node mission-control/check.mjs",
     "test:probe-readonly": "node --test scripts/probe-readonly.test.mjs",
     "test:pre-tool-use": "node --test scripts/pre-tool-use.test.mjs",

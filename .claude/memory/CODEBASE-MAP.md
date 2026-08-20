@@ -65,6 +65,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:dispatch` | `node --test scripts/check-dispatch-agenttype.test.mjs` |
 | `npm run test:dispatch-prompt` | `node --test scripts/check-dispatch-prompt-size.test.mjs` |
 | `npm run test:gate` | `node --test .claude/workflows/lib/gate-logic.test.mjs` |
+| `npm run test:gate-record` | `node --test scripts/gate-record.test.mjs` |
 | `npm run test:hooks` | `node --test scripts/session-start.test.mjs` |
 | `npm run test:launcher-permissions` | `node --test scripts/launcher-permissions.test.mjs` |
 | `npm run test:ledger` | `node --test scripts/ledger.test.mjs` |
@@ -107,6 +108,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/check-tier-gate.test.mjs` | the tier gate that replaced label-based enforcement. |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
+| `scripts/gate-record.test.mjs` | tests for the QA gate verdict record pipeline. |
 | `scripts/launcher-permissions.test.mjs` | the autonomy dial, and the model it made inert. |
 | `scripts/ledger.test.mjs` | the resolvers, and the invariant that holds the ledger up. |
 | `scripts/lenses.test.mjs` | the lens linter, tested by constructing its failures. |

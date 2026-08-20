@@ -283,6 +283,28 @@ jobs:
           path: ${{ runner.temp }}/events.jsonl
           if-no-files-found: ignore
 
+      # ── Gate record verification ───────────────────────────────────────────
+      # For full and irreversible tier PRs, verify that:
+      #   1. A gate record exists in .qa-gate/<head_sha>.json (the gate actually ran)
+      #   2. The record's diff_hash matches the PR's real diff (the record is current)
+      #   3. The record's verdict is PASS
+      #
+      # Trivial and lite tiers skip this step — they use CI and code-reviewer respectively,
+      # neither of which produces the adversarial panel that writes a record.
+      #
+      # This is the step that closes the defect: previously `qa_verdict: PASS` in a session
+      # file was the gate. Session files are written by the author of the change. That is not
+      # a gate. The session file check above still applies at all tiers; this step adds the
+      # binding verification for the tiers that ran the adversarial panel.
+      - name: Verify QA gate record (full and irreversible tiers)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          node scripts/verify-gate-record.mjs
+
       # ── Tier-session enforcement (Design B, issue #85) ─────────────────────
       # Per the 2026-05-16 board verdict (decision #3):
       # When the classifier floor is `irreversible`, at least one session file added or

@@ -176,6 +176,14 @@ jobs:
       - name: Gate routing
         run: npm run test:run-gate
 
+      # write-gate-record.mjs produces the machine-readable verdict record; verify-gate-record.mjs
+      # checks it in CI. These tests pin the failure cases — a test that only checks the happy
+      # path proves the path is wired; it says nothing about whether the detection detects.
+      # The three failures asserted: no record (hand-written-verdict case), stale diff_hash
+      # (commits pushed after the gate ran), and BLOCK verdict (gate returned BLOCK, not PASS).
+      - name: Gate record verification
+        run: npm run test:gate-record
+
       # A SKILL.md carrying `allowed-tools` SUBTRACTS from whatever agent loads it — the binary
       # documents the field as "Tools available to the model while this file is active", which
       # is a ceiling, not a grant. Eight skills declare it; two clamp to a single Bash pattern.
