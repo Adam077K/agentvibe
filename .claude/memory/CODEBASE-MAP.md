@@ -74,6 +74,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:pre-tool-use` | `node --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-readonly` | `node --test scripts/probe-readonly.test.mjs` |
 | `npm run test:probe-stop-reason` | `node --test scripts/probe-stop-reason.test.mjs` |
+| `npm run test:provenance` | `node --test scripts/provenance-portability.test.mjs` |
 | `npm run test:registration` | `node --test scripts/check-registration.test.mjs` |
 | `npm run test:run-gate` | `node --test scripts/run-gate.test.mjs` |
 | `npm run test:sandbox` | `node --test scripts/sandbox-config.test.mjs` |
@@ -81,6 +82,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:tier-gate` | `node --test scripts/check-tier-gate.test.mjs` |
 | `npm run test:warroom` | `node --test scripts/warroom-install.test.mjs` |
 | `npm run usage` | `node -e "const u=require('./scripts/lib/usage.js');const w=u.windowUsage({});console.log(w.output_tokens.toLoc` |
+| `npm run vendor:provenance` | `node scripts/vendor-provenance.mjs` |
 | `npm run warroom:check` | `node scripts/warroom-install.mjs check` |
 | `npm run warroom:fleet` | `node scripts/warroom-install.mjs fleet` |
 
@@ -115,6 +117,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/probe-readonly.test.mjs` | — |
 | `scripts/probe-stop-reason.test.mjs` | the aggregation that answers what ends a run. |
 | `scripts/prompt-standard.test.mjs` | the PS-* rules of |
+| `scripts/provenance-portability.test.mjs` | the lens linter, run against a repository that |
 | `scripts/run-gate.test.mjs` | the router that decides whether the binding gate runs. |
 | `scripts/sandbox-config.test.mjs` | proves the Bash sandbox is built and ARMED. |
 | `scripts/session-start.test.mjs` | the SessionStart hook. |
