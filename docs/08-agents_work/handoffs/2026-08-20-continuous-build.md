@@ -78,6 +78,36 @@ driven end to end**, which is the only thing that can show the phases worked.
 
 ---
 
+## 2.5 · The two branches conflict — the resolution, before you need it
+
+`feat/merge-gate` and `feat/provenance-that-travels` both land on `main`, and **whichever lands second eats
+two conflicts.** Verified with `git merge-tree --write-tree`:
+
+- **`.claude/memory/CODEBASE-MAP.md`** — generated. Take **either** side wholesale, then `npm run build:map`.
+  `check:map` fails if you get it wrong, so it is self-checking. **Never hand-merge it.**
+- **`package.json`** — both branches appended to the `check` chain. The chain needs **both**
+  `npm run test:merge-gate` and `npm run test:provenance`; the scripts block needs all four of
+  `test:merge-gate`, `verdict`, `test:provenance`, `vendor:provenance`. A naive "take mine" silently drops
+  the provenance test from CI — the exact un-noticed un-gating the merge-gate lane exists to prevent.
+- **`.github/workflows/ci.yml`** merges clean. Confirm both steps survive anyway; "merges clean" is not
+  "is correct".
+
+**A rebase was considered and refused.** Both conflicted files are writable, but a rebase must first check
+out the other branch's `.claude/hooks/schema-lint.js`, which is in the one directory git cannot write — and
+a rebase that dies there leaves a state that may not be abortable without the same denied write.
+
+**The check that finds this is the merge-base intersection, not a tip-to-tip diff.**
+`git diff --stat A..B` reports the *union of divergence* and cannot distinguish contamination from ordinary
+branching — it was prescribed here, produced a 20-file list, and the noise was rationalised rather than
+noticed. Use:
+
+```
+B=$(git merge-base A B)
+comm -12 <(git diff --name-only $B A | sort) <(git diff --name-only $B B | sort)
+```
+
+---
+
 ## 3 · Two holes found while closing the first one
 
 **Tier 3, the AI-assisted merge, is a second unreviewed route.** It pipes a conflicted file to a model,
