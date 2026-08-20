@@ -22,6 +22,12 @@
 // verifies nothing also fails nothing. B, C and D are what make A mean something: the check
 // still refuses an unrecorded citation, still refuses a byte that moved when the object IS
 // reachable, and still refuses a record that only looks like one.
+//
+// THIS FILE SHIPS INSIDE EVERY GENERATED PROJECT, and so does the CI step that runs it, so
+// it must pass in a repository that has none of the objects. Two cases genuinely need them
+// and SKIP with a stated reason where they are absent; the rest run everywhere. The first
+// version guarded neither, which moved a new project's red build from step 1 to step 17
+// instead of removing it.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -70,15 +76,34 @@ function makeScratch() {
   return scratch;
 }
 
-/** Prove the premise: the scratch store really does not contain the cited commit. */
-function objectIsAbsent(scratch, commit) {
+/** Does THIS checkout hold the cited objects? Answered by asking, not by assuming. */
+function objectIsAbsent(repo, commit) {
   try {
-    execFileSync('git', ['cat-file', '-e', commit], { cwd: scratch, stdio: 'ignore' });
+    execFileSync('git', ['cat-file', '-e', commit], { cwd: repo, stdio: 'ignore' });
     return false;
   } catch {
     return true;
   }
 }
+
+// TWO OF THE CASES BELOW REQUIRE THIS REPOSITORY'S OBJECT STORE, and this file ships inside
+// every generated project along with the CI step that runs it. The first version did not
+// guard them, so a brand-new project's `npm run check` was still red out of the box — the
+// failure had moved from step 1 to step 17 rather than gone, which is not what P0.5 is for.
+//
+// So the precondition is detected and the two cases SKIP with a stated reason. A silent skip
+// would be worse than the bug it papers over: it would leave the impression that case C ran.
+// Everything that proves the transplant fix — A, B, B2, D, D2 — runs everywhere.
+const A_COMMIT = (() => {
+  const m = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, MANIFEST_REL), 'utf8'));
+  const first = Object.keys(m).sort()[0];
+  return first ? m[first].commit : null;
+})();
+const OBJECTS_PRESENT = A_COMMIT !== null && !objectIsAbsent(REPO_ROOT, A_COMMIT);
+const NEEDS_OBJECTS = OBJECTS_PRESENT ? false
+  : `this checkout does not contain the cited git objects (${String(A_COMMIT).slice(0, 7)} is absent), which is ` +
+    `the normal state of a generated project. Vendored provenance is what travels; byte-level ` +
+    `corroboration only exists in a full clone of the repo the lenses were mined in`;
 
 const PROBE = `
   const path = require('path');
@@ -138,6 +163,13 @@ test('A: the lenses lint clean in a repository with an empty git object store', 
     assert.deepEqual(r.domain.issues, []);
     assert.deepEqual(r.review.issues, []);
     assert.deepEqual(r.manifest.issues, []);
+
+    // Passing is correct here; passing SILENTLY is not. Rule 10 — a resolver never passes
+    // what it could not check — is satisfied by reporting how much was taken on the record
+    // alone, so a transplant is visibly a weaker check rather than an identical green.
+    assert.equal(r.manifest.verified, 0, 'nothing can be byte-verified without the objects');
+    assert.equal(r.manifest.shapeOnly, keys.length);
+    assert.match(r.manifest.label, /0 byte-verified · \d+ shape-only/);
   });
 });
 
@@ -177,8 +209,12 @@ test('B2: an unrecorded citation is refused even though the manifest exists', ()
 // SHA is a direct object lookup, so no refs are needed in the scratch repo. Probed before
 // relying on it; the fallback (running against the real repo with a tampered manifest) was
 // not needed.
+//
+// SKIPPED where the objects are absent, and only there. Where they are present this must
+// still fail loudly — it is the case that stops A passing vacuously, so weakening it to make
+// it portable would hollow out the whole file.
 
-test('C: a citation whose bytes moved is refused where the object IS reachable', () => {
+test('C: a citation whose bytes moved is refused where the object IS reachable', { skip: NEEDS_OBJECTS }, () => {
   withScratch((scratch) => {
     const alternates = realObjectsDir();
     assert.ok(fs.existsSync(alternates), `real object store not found at ${alternates}`);
@@ -234,11 +270,24 @@ test('D2: a record no lens cites is refused as dead surface', () => {
 
 // ── The generator and the linter agree ──────────────────────────────────────
 
-test('the committed manifest is exactly what the generator would write', () => {
+test('the committed manifest is exactly what the generator would write', { skip: NEEDS_OBJECTS }, () => {
   // Folded in here rather than given its own npm step: the manifest being current is the
   // precondition for every case above, and a separate step is one more thing to forget.
+  //
+  // SKIPPED where the objects are absent. The generator READS the blobs to hash them, so
+  // outside a full clone it exits 2 by design — asking it there would only prove the tree
+  // was copied, which is not a defect in the tree.
   const r = execFileSync(process.execPath, [path.join(REPO_ROOT, 'scripts', 'vendor-provenance.mjs'), '--check'], {
     cwd: REPO_ROOT, encoding: 'utf8',
   });
   assert.match(r, /matches/);
+});
+
+test('the skip guard reflects the object store rather than a hardcoded answer', () => {
+  // The guard decides whether two cases run at all, so it gets checked itself. If this
+  // repo has the objects, NEEDS_OBJECTS must be false and C must have really executed.
+  assert.ok(A_COMMIT !== null, 'the manifest recorded no commit to probe');
+  assert.equal(OBJECTS_PRESENT, !objectIsAbsent(REPO_ROOT, A_COMMIT));
+  assert.equal(NEEDS_OBJECTS === false, OBJECTS_PRESENT);
+  if (NEEDS_OBJECTS) assert.match(NEEDS_OBJECTS, /does not contain the cited git objects/);
 });
