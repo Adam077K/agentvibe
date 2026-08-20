@@ -12,6 +12,8 @@
 //   · sandbox.enabled is set back to false  (sandbox disarmed without a decision)
 //   · sandbox.failIfUnavailable is false    (fail-open defeats the gate)
 //   · any required denyRead credential path is removed
+//   · any required allowWrite path is removed (including `**/.worktrees`, without which
+//     the Git Worktree Protocol CLAUDE.md mandates cannot be executed)
 //
 // FAILURE CONSTRUCTION (per builder brief)
 // ----------------------------------------
@@ -120,9 +122,20 @@ test('sandbox.filesystem.denyRead covers the required credential paths', () => {
 // the sandbox's default "session temp" does not cover the agent scratchpad.
 // Without this entry, every scratchpad write is a hard failure under
 // failIfUnavailable: true. See SANDBOX.md § Write-path justification.
+//
+// `**/.worktrees` is required because CLAUDE.md MANDATES the Git Worktree Protocol and
+// arming the sandbox made it unexecutable: worktrees are created under $MAIN_REPO/.worktrees/,
+// which is outside every agent's project root, because the agent's root IS a worktree under
+// it. Founder decision 2026-08-20, after `git worktree add` was observed failing with
+// "could not create leading directories … Operation not permitted". Pinned here for the same
+// reason `enabled` is: the entry arrived by decision and must not leave without one.
+//
+// GLOB, NOT ABSOLUTE PATH. This file ships to every generated project, where a hardcoded
+// /Users/... would grant nothing and mislead.
 const REQUIRED_ALLOW_WRITES = [
   '~/.agentvibe',
   '/private/tmp/claude-501',
+  '**/.worktrees',
 ];
 
 test('sandbox.filesystem.allowWrite covers the required paths', () => {

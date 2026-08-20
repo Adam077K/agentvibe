@@ -89,7 +89,8 @@
       ],
       "allowWrite": [
         "~/.agentvibe",
-        "/private/tmp/claude-501"
+        "/private/tmp/claude-501",
+        "**/.worktrees"
       ]
     }
   }

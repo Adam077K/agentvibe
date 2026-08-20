@@ -142,7 +142,8 @@ is not addressed by this mechanism.
       ],
       "allowWrite": [
         "~/.agentvibe",         // scripts/lib/usage.js token-usage cache
-        "/private/tmp/claude-501" // agent scratchpad root — see Write-path justification
+        "/private/tmp/claude-501", // agent scratchpad root — see Write-path justification
+        "**/.worktrees"         // Added 2026-08-20. Git Worktree Protocol — see below.
       ]
     }
     // network.allowedDomains: not set — requires Founder input.
@@ -159,6 +160,7 @@ The default sandbox writes only to the working directory and the session temp di
 | Path | Justified by |
 |------|-------------|
 | `~/.agentvibe` | `scripts/lib/usage.js` line 46: `cachePath = () => path.join(os.homedir(), '.agentvibe', 'usage-cache.json')`. This cache is written by `npm run usage` and the session-start hook. |
+| `**/.worktrees` | **Founder decision 2026-08-20.** CLAUDE.md § Git Worktree Protocol *mandates* that every code worker create a worktree, and Rule 7 ("Worktrees for code") is one of the few rules the repo marks `ENFORCED`. Arming the sandbox made that rule unexecutable. Worktrees are created under `$MAIN_REPO/.worktrees/`, which is outside every agent's project root — because the agent's project root **is** a worktree underneath it. Measured 2026-08-20 from a session in `.worktrees/ceo-3-…`: `git worktree add` returns `fatal: could not create leading directories of '…/.worktrees/probe-sandbox-p05/.git': Operation not permitted`, and a spawned worker cannot write into a sibling worktree either. Glob form, not an absolute path: this file ships to every generated project, where `/Users/adamks/…` would grant nothing. `.worktrees/` is gitignored (`.gitignore:16`) and exists solely as agent scratch space, so the boundary widens by a directory that already holds nothing but agent working copies. |
 | `/private/tmp/claude-501` | The Claude Code **agent scratchpad** root. Agents are instructed to put all temporary files here rather than `/tmp`, and they do — the CEO session that armed this sandbox wrote and executed merge-queue shell scripts there four times in one sitting. **This is NOT the session temp directory**, which the sandbox already permits: measured 2026-08-17, `$TMPDIR` is `/var/folders/pp/…/T/` while the scratchpad is `/private/tmp/claude-501/…` — different trees. Without this entry, every scratchpad write becomes a hard failure the moment `failIfUnavailable: true` takes effect, and the symptom reads as "the sandbox is broken" rather than "an allow rule is missing." The path is Claude-managed scratch space, not user data, so granting it widens the boundary by very little. |
 
 Paths **not included** despite being written by repo scripts:
@@ -167,6 +169,44 @@ Paths **not included** despite being written by repo scripts:
 |------|--------|-------------|
 | `~/.warroom/` | `scripts/warroom-install.mjs` | Only written during explicit `npm run warroom:fleet` install, not routine CI or agent operation. Add it if `warroom:fleet` will run sandboxed. |
 | `~/bin/` | `scripts/warroom-install.mjs` | Same as above. |
+
+---
+
+## Amendment 2026-08-20 — `**/.worktrees` — **UNVERIFIED**
+
+**What changed.** One entry added to `allowWrite`: `**/.worktrees`. Nothing else. `enabled`,
+`failIfUnavailable` and every `denyRead` entry are untouched.
+
+**Why.** Arming the sandbox on 2026-08-17 silently made CLAUDE.md's mandated Git Worktree
+Protocol unexecutable. That was not noticed at arming time because nothing tried to create a
+worktree in the same session. See the Write-path justification table for the measurement.
+
+**This fix is UNVERIFIED, and that is not a formality.** `.claude/settings.json` is read at
+**session start** — the same limit `scripts/sandbox-config.test.mjs` states about `enabled`.
+Editing the file does not re-sandbox the already-running Bash of the session that edited it,
+so nothing in the session that made this change can demonstrate it works. What has been
+verified is only the *shape*: the entry is present and `npm run test:sandbox` pins it.
+
+**Acceptance test — someone must actually run this:**
+
+```bash
+# In a FRESH Claude Code session (not the one that made the change):
+MAIN_REPO=$(git worktree list | head -1 | awk '{print $1}')
+git -C "$MAIN_REPO" worktree add "$MAIN_REPO/.worktrees/sandbox-acceptance" -b probe/sandbox-acceptance
+# PASS: the worktree is created.
+# FAIL: "could not create leading directories … Operation not permitted" — the glob does not
+#       match the way the sandbox resolves paths, and an absolute-path form must be tried
+#       (per project, since this file ships to generated projects).
+# Either way, record the result HERE and delete the probe worktree and branch.
+```
+
+Until that runs, Rule 7 should be treated as still blocked. An unverified fix asserted as
+working is the exact failure this document's own posture exists to prevent.
+
+**Not granted, deliberately.** Writing to the main repository's `.git/` directory is still
+denied. Observed in the same session: `git branch -D` deletes the ref but then reports
+`could not lock config file …/.git/config`. Worktree *creation* is what the protocol needs;
+mutating the parent repo's config is not, and it stays outside the boundary.
 
 ---
 
