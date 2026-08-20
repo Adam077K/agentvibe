@@ -26,10 +26,13 @@ jobs:
     name: Deterministic checks
     runs-on: ubuntu-latest
     steps:
-      # fetch-depth: 0 is load-bearing. Lens provenance survives the Phase 4b deletions by
-      # citing git history (`git:<path>@<rev>`), and schema-lint verifies those with
-      # `git cat-file -e`. A shallow clone cannot resolve them, so the lint would fail for
-      # a reason the PR did not cause.
+      # fetch-depth: 0 is NOT load-bearing for pass/fail, and this comment used to say it
+      # was. Lens provenance cites git history (`git:<path>@<rev>`), but it is checked
+      # against `.claude/provenance/sources.json`, which travels with the tree — a shallow
+      # clone, and a generated project with an empty object store, both PASS. What full
+      # history buys is a stronger check: where the objects are reachable, schema-lint
+      # compares their sha256 to the manifest instead of trusting the record. Keep it for
+      # that, and for `git log` in the ledger's resolvers.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -144,6 +147,16 @@ jobs:
       # "independent" review panel drawn from a single model family.
       - name: Lens files
         run: npm run test:lenses
+
+      # Lens provenance, in a repository that has none of this repository's git objects.
+      # `~/bin/newproject` generates projects by rsyncing the tree without `.git` and then
+      # `git init`-ing, so every `git:<path>@<rev>` citation resolved to nothing and this
+      # lint exited 1 on a brand-new project before anyone touched it. The remedy is
+      # `.claude/provenance/sources.json`; this step runs the real linter against a scratch
+      # repo with an empty object store, and also fails when the committed manifest has
+      # drifted from what the lens files cite.
+      - name: Lens provenance travels
+        run: npm run test:provenance
 
       # Playbooks — stages and exit criteria, never method. The rule that a playbook
       # may not carry `steps:` is what stops it drifting back into the pipeline prose
