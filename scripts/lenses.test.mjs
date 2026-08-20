@@ -171,6 +171,16 @@ test('the vendored provenance manifest lints clean', () => {
   assert.deepEqual(lintProvenanceManifest().issues, []);
 });
 
+test('the manifest reports how much of it was actually byte-verified', () => {
+  // Rule 10: a resolver never passes what it could not check. Where the objects are absent
+  // the lint still passes — that is P0.5 — so the only thing standing between that and a
+  // silent unverified green is this count being reported.
+  const r = lintProvenanceManifest();
+  assert.equal(r.verified + r.shapeOnly, r.count, 'every record must land in exactly one bucket');
+  assert.match(r.label, /\d+ byte-verified · \d+ shape-only/);
+  if (r.unavailable) assert.equal(r.verified, 0, 'nothing can be verified when git cannot run');
+});
+
 test('a half-filled provenance record is refused — it proves nothing', () => {
   const good = {
     path: '.claude/agents/cbo.md', rev: 'cda6de9',
@@ -181,6 +191,10 @@ test('a half-filled provenance record is refused — it proves nothing', () => {
   assert.match(provenanceRecordProblem({ ...good, sha256: undefined }), /has no sha256/);
   assert.match(provenanceRecordProblem({ ...good, sha256: 'deadbeef' }), /has no sha256/);
   assert.match(provenanceRecordProblem({ ...good, commit: 'cda6de9' }), /full 40-char commit/);
+  // `commit` is what the byte check resolves, and an unreachable one returns null, which
+  // PASSES — so before this rule, 39 zeroes and a one turned the byte check off with the
+  // objects sitting right there and produced zero issues, identical to pristine.
+  assert.match(provenanceRecordProblem({ ...good, commit: '0'.repeat(39) + '1' }), /does not extend its own rev/);
   assert.match(provenanceRecordProblem({ ...good, bytes: '15588' }), /byte count/);
   assert.match(provenanceRecordProblem({ ...good, headings: '# CBO' }), /headings/);
   assert.match(provenanceRecordProblem(null), /not a mapping/);

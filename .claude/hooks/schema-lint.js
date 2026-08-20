@@ -1170,7 +1170,11 @@ function lintStep(text, where, issues, { min = 20, max = 200, mode = 'procedure'
 // from shape to bytes; it no longer decides pass or fail.
 const PROVENANCE_REL = '.claude/provenance/sources.json';
 const GIT_SOURCE = /^git:(.+)@([0-9a-f]{7,40})$/;
-const REVENDOR = 'run `node scripts/vendor-provenance.mjs`';
+// The remedy has a precondition, and saying it here stops the message sending an operator
+// into a command that cannot work where they are standing: the generator READS the objects,
+// so it only runs in a full clone of the repo the lenses were mined in, and the result is
+// committed from there. vendor-provenance.mjs says the same thing when it exits 2.
+const REVENDOR = 'run `node scripts/vendor-provenance.mjs` in a full clone of this repository (it reads the objects) and commit the result';
 
 // Memoised: the lint reads it once per process and the file does not change mid-run.
 // It returns `{}` with an `error` string rather than throwing, so a missing manifest
@@ -1199,11 +1203,40 @@ function provenanceRecordProblem(rec) {
   if (typeof rec.path !== 'string' || rec.path.trim() === '') return 'has no path';
   if (typeof rec.rev !== 'string' || !/^[0-9a-f]{7,40}$/.test(rec.rev)) return 'has no short rev';
   if (typeof rec.commit !== 'string' || !/^[0-9a-f]{40}$/.test(rec.commit)) return 'has no full 40-char commit';
+  // `commit` is what the byte check actually resolves, and an unreachable commit makes
+  // gitBlob return null, which PASSES. So nothing about a wrong `commit` was visible: swap
+  // it for 39 zeroes and a one and the lint stayed at zero issues with the objects right
+  // there. Binding it to the rev the lens cites closes that — a record may not silently
+  // point the verification somewhere other than where the citation points.
+  if (!rec.commit.startsWith(rec.rev)) {
+    return `has a commit (${rec.commit.slice(0, 12)}…) that does not extend its own rev (${rec.rev}), ` +
+      `so the byte check would resolve somewhere the citation does not point`;
+  }
   if (typeof rec.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(rec.sha256)) return 'has no sha256 of the bytes';
   if (!Number.isInteger(rec.bytes) || rec.bytes < 0) return 'has no byte count';
   if (!Number.isInteger(rec.lines) || rec.lines < 0) return 'has no line count';
   if (!Array.isArray(rec.headings)) return 'has no headings list';
   return null;
+}
+
+// Rule 10: a resolver never passes what it could not check. gitBlob returning null is
+// UNRESOLVED, not PASS — and the lint deliberately does not fail on it, because failing on
+// it is the bug P0.5 exists to remove. What it must not do is stay silent: with `git` off
+// PATH this file reported "18 pass · 0 fail · 0 warnings" while byte-verifying 0 of 15
+// citations, which is a green build asserting something nothing checked. So the count of
+// what was actually verified is reported, and the reason it could not be.
+//
+// Probed once. `false` means git works; a string is why it does not.
+let GIT_UNAVAILABLE = null;
+function gitUnavailableReason() {
+  if (GIT_UNAVAILABLE !== null) return GIT_UNAVAILABLE === false ? null : GIT_UNAVAILABLE;
+  try {
+    execFileSync('git', ['rev-parse', '--git-dir'], { cwd: REPO_ROOT, stdio: 'ignore' });
+    GIT_UNAVAILABLE = false;
+  } catch (e) {
+    GIT_UNAVAILABLE = (e && e.code === 'ENOENT') ? 'git is not on PATH' : 'not a git repository';
+  }
+  return GIT_UNAVAILABLE === false ? null : GIT_UNAVAILABLE;
 }
 
 // Memoised by `rev:path`. Returns null on ANY throw — a repository without the object is
@@ -1278,7 +1311,23 @@ function lintProvenanceManifest() {
       }
     }
   }
-  return { rel, issues, count: keys.length, label: `${keys.length} vendored sources, every one cited` };
+
+  // How much of this was actually checked against bytes, and how much was taken on the
+  // record alone. Both are legitimate outcomes; only an unreported one is not.
+  let verified = 0;
+  let shapeOnly = 0;
+  const unavailable = gitUnavailableReason();
+  for (const key of keys) {
+    const rec = records[key];
+    if (provenanceRecordProblem(rec)) continue;
+    if (!unavailable && gitBlob(rec.commit, rec.path) !== null) verified += 1;
+    else shapeOnly += 1;
+  }
+  const why = unavailable ? ` (${unavailable})` : '';
+  const label = `${keys.length} vendored sources, every one cited — ` +
+    `${verified} byte-verified · ${shapeOnly} shape-only${why}`;
+
+  return { rel, issues, count: keys.length, verified, shapeOnly, unavailable, label };
 }
 
 function provenanceProblem(s) {
