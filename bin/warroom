@@ -2130,10 +2130,14 @@ cmd_merge() {
   # the only thing between a branch and main here was this function, and this function checked
   # nothing.
   #
-  # So: a QA verdict cryptographically bound to the exact diff being merged, or no merge. The
-  # whole block runs BEFORE `checkout main`, so a refusal leaves the repository exactly as it was.
-  # Every failure path below refuses — missing checker, missing node, unresolvable origin/main,
-  # missing verdict, stale verdict. A gate that fails open is not a gate.
+  # So: a QA verdict hash-bound to the exact diff being merged, or no merge. Hash-bound, not
+  # signed — a verdict cannot be moved to another diff or survive an edit to the one it approved,
+  # but anyone who can write the repo can write one. See scripts/verdict.mjs for what that does
+  # and does not buy.
+  #
+  # The whole block runs BEFORE `checkout main`, so a refusal leaves the repository exactly as it
+  # was. Every failure path below refuses — missing checker, missing node, unresolvable
+  # origin/main, missing verdict, stale verdict. A gate that fails open is not a gate.
   git -C "$PROJECT_DIR" fetch origin main 2>/dev/null
 
   local vtool
