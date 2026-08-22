@@ -21,7 +21,7 @@
 // committed — recording the record moves HEAD, so the verdict is stale on arrival. The primitive
 // was right; the anchor was wrong.
 //
-// A content subject that EXCLUDES `.qa/verdicts/**` is stable across recording the verdict itself
+// A content subject that EXCLUDES the verdict RECORDS is stable across recording the verdict itself
 // and changes the moment any reviewed byte changes. That is the property the whole design rests
 // on, and `scripts/merge-gate.test.mjs` executes it rather than asserting it.
 //

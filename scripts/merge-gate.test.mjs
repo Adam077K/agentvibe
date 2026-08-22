@@ -15,7 +15,8 @@
 // that way. So: run it, then look at the refs.
 //
 // THE PROPERTY THE WHOLE DESIGN RESTS ON
-// The verdict is keyed to sha256 of the diff, EXCLUDING `.qa/verdicts/**`. That exclusion is what
+// The verdict is keyed to sha256 of the diff, EXCLUDING the verdict records —
+// `:(exclude,glob).qa/verdicts/*.json`. That exclusion is what
 // lets the verdict be committed without invalidating itself. PR #77 keyed a verdict to a HEAD SHA,
 // which stops existing the moment the record is committed. `subject survives committing the
 // verdict` below is that difference, executed.

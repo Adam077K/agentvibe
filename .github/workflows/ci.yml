@@ -197,8 +197,10 @@ jobs:
       # ran on it and branch protection — which is on, with required contexts — could not see it.
       # The PR route was gated; this one was gated by nothing, and it is the route the fleet
       # actually uses. It now refuses unless a QA verdict is committed against
-      # sha256(diff excluding .qa/verdicts/**), an anchor that stays stable when the verdict
-      # itself is committed and moves the instant a reviewed byte does.
+      # sha256(diff excluding the verdict RECORDS, ':(exclude,glob).qa/verdicts/*.json') — an anchor
+      # that stays stable when the verdict itself is committed and moves the instant a reviewed byte
+      # does. This line said `.qa/verdicts/**` until f9eb4bc narrowed it; the wide form hid anything
+      # under that prefix from the hash AND from the tier classifier.
       #
       # These tests drive `bin/warroom merge` for real against throwaway repos and then assert on
       # where `main` points. A source-level assertion would pass equally against a fix comment.
