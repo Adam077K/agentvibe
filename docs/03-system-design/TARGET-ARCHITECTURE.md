@@ -425,7 +425,9 @@ permits `execFile(bin, argv)`; the server already spawns `git` and `node` on six
 **Delete the queue** — it has never existed on disk, and its consumer hard-filters to `agentvibe` while
 recording failures as successes (`status: ok ? 'consumed' : 'consumed'`).
 
-**Localhost is not a security boundary.** `DECISIONS.md:322-347` binds the wording: describe the control as
+**Localhost is not a security boundary.** The `DECISIONS.md` entry of **2026-08-15, “RCEs closed by allowlist,
+not by an Origin check; and the Origin check was a CEO error”** binds the wording — cited by date and title
+because line numbers into that file rot on every eviction, and this one did: describe the control as
 *"blocks cross-site browser requests"*, never *"blocks drive-by"* — `same-site` is allowed, and a non-browser
 local client sends no such header. Three confirmed RCEs (2026-08-14) survive localhost untouched, because the
 hostile input is a **filename**, not a request. Once the server spawns agents, **the trusted-projects
@@ -458,7 +460,9 @@ emitted inline (~1.5 KB), then one record read on demand (~600 B). **The 4,096-b
 this at ~25–30 patterns per project, and the cap is the feature** — it forces the eviction above.
 
 **Mem0: DELETE.** `package.json` declares **no `dependencies` key at all**. Eight sites to change; four of
-them are caught by a blocking check if missed. **Keep** `AGENTS.md:102`, `DECISIONS.md:118-124`, and
+them are caught by a blocking check if missed. **Keep** `AGENTS.md:102`, the `DECISIONS.md` entry of
+**2026-08-11, “Capabilities: enforce what the runtime enforces, delete the decoration”** (evicted 2026-08-22;
+body now in `DECISIONS_ARCHIVE.md`, stub in place — cited by date and title, not line number), and
 `.claude/workflows/research.js:134` — the last is *accurate*, describing the machine's user-scope servers
 rather than a capability any agent holds. Do not let a sweep delete a true statement.
 
