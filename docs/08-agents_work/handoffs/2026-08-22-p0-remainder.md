@@ -57,6 +57,35 @@ own commit `78caf29` says so. Use `git switch`, and avoid `--` + space in comman
 
 ---
 
+## 0.5 · One dropout, measured on both sides — and the trap that nearly hid it
+
+The repo's most-cited number is that **11 of 13 agents went idle with finished work undelivered**, fixed by
+one sentence in the brief. That number only means something if instances are recorded accurately, including
+when the agent remembers otherwise. Here is one, with evidence from both parties.
+
+A builder finished a one-line workflow edit, **went idle 76 seconds after its previous commit with the edit
+uncommitted**, and later stated it had committed before reporting. Both accounts were checkable:
+
+| event | UTC |
+|---|---|
+| `2ce7dd7` committed | 21:13:08 |
+| **agent went idle, edit uncommitted** | **21:14:24** |
+| orchestrator sampled the clone: `HEAD=2ce7dd7`, `dirty=1` | ~21:16–21:20 |
+| **`fed5faa` committed — after the chase** | **21:22:59** |
+
+**The trap: the two clocks are three hours apart.** Runtime idle notifications are **UTC** (`...Z`); `git log`
+prints **local** (UTC+3 here). Compared naively, the commit looks like it precedes the idle notification and
+the agent's account looks right. Normalise before concluding anything from a timeline — this nearly produced
+a false disagreement, and a false exoneration would have quietly biased the dropout rate downward.
+
+Two lesser instances from the same session, both self-reported once challenged: an agent ran
+`ls -la <dir> | head -5`, the listing truncated before the file it wanted, and it **reported the file absent** —
+a truncated listing read as evidence of absence. And an orchestrator check of "does every PR carry a passing
+session file" was true of the check and silent on whether the verdict covered the diff (§2.5).
+
+**The pattern across all three: a method that cannot support the conclusion drawn from it.** That is the same
+defect the gate, the ledger and the lenses all exist to catch, appearing in the agents rather than the code.
+
 ## 1 · What is pushed and waiting
 
 | Branch | Ahead | Floor | State |
