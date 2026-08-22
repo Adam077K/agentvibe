@@ -2,19 +2,37 @@
 date: 2026-08-22
 role: builder
 task: memory-eviction
-qa_verdict: FAIL
+qa_verdict: PASS
 tier: full
 risk: full
 branch: chore/memory-eviction
 ---
 
-# DECISIONS.md eviction, the archive cap — and the review that failed it
+# DECISIONS.md eviction, the archive cap — and the four rounds it took
 
-**Verdict is FAIL, and it is not a formality.** An independent reviewer judged this branch on the `evidence`
-lens and returned FAIL with two p1 blockers. The commits described below are the remediation; **no reviewer
-has yet judged the remediation.** This file therefore blocks `qa-lead-pass.yml` by design — the gate requires
-`qa_verdict: PASS` on every session file in the diff, and it should not get one from the author of the work.
-88 of 91 session files in this repo say PASS and zero say FAIL; that is the number this file exists to change.
+**Verdict is PASS, and it took four rounds to earn. It was FAIL twice.** Both are kept below, because a bare
+PASS at the end of that sequence would hide what the gate actually did.
+
+| round | verdict | what it found |
+|---|---|---|
+| 1 | **FAIL** | two p1 on `evidence` — this PR's only session file was written for a *different branch*, so the gate would have passed it on a borrowed verdict; and three eviction stubs asserted "no citations" where citations existed |
+| 2 | **PASS** | both p1 closed. New medium: the eviction had separated a superseded figure from its correction, leaving a refuted 1,283 ms measurement in the archive with no marker |
+| 3 | **FAIL** | that fix was sound but left two of this PR's *own records* stating things that no longer reproduced, plus a mischaracterised citation |
+| 4 | **PASS** | no findings. Seven stated figures reproduce exactly; conservation 6/7 with **zero** original lines lost; both mischaracterisations gone |
+
+**This verdict is the reviewer's.** It is transcribed here by the orchestrator because someone must record
+it and neither the engine that produced the work nor the engine that judged it may. Every round was an
+independent `reviewer` that did not produce the work — and **every one was a single model family**.
+`risk: irreversible` nominally wants two distinct families; this runtime has none. That is a structural
+limit on record, not a satisfied bar.
+
+**Why round 4 was the last.** The findings converged — p1 → medium → low → nothing, a descending series
+rather than a treadmill — and round 4 was the first to **return** headroom rather than spend it:
+`DECISIONS.md` went 36,573 → **35,952 bytes**, the Phase-8 stub 1,639 → 1,018 B. The prose got shorter *and*
+truer. A fifth hand-written round is precisely what the ceiling measurement below says is exhausted.
+
+88 of 91 session files in this repo said PASS and zero said FAIL. This one said FAIL for three rounds, and
+that is the number it existed to change.
 
 **What the branch does.** Evicts 7 completed entries from `.claude/memory/DECISIONS.md` to
 `DECISIONS_ARCHIVE.md` (39,909 → 35,952 bytes at branch head, back under the 40,000-byte cap), adds a
