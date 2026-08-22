@@ -310,11 +310,11 @@ function checkAgentName(name, where, how) {
 const WORKFLOW_DIR = '.claude/workflows';
 const wfAbs = path.join(ROOT, WORKFLOW_DIR);
 const workflowFiles = fs.existsSync(wfAbs)
-  ? fs.readdirSync(wfAbs).filter((f) => f.endsWith('.js')).sort()
+  ? fs.readdirSync(wfAbs).filter((f) => f.endsWith('.js') || f.endsWith('.md')).sort()
   : [];
 
 if (!workflowFiles.length) {
-  fail('non-vacuity', `${WORKFLOW_DIR}/ under ${ROOT} holds no .js files — this check would pass by looking at nothing.`);
+  fail('non-vacuity', `${WORKFLOW_DIR}/ under ${ROOT} holds no .js or .md files — this check would pass by looking at nothing.`);
 }
 
 const sites = [];
@@ -322,6 +322,28 @@ const sites = [];
 for (const file of workflowFiles) {
   const rel = `${WORKFLOW_DIR}/${file}`;
   const src = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+
+  // .md workflow files: use a shape predicate — agentType immediately followed by a quoted literal.
+  // The JS tokenizer was designed for .js; markdown code fences are not executed and there is no
+  // reliable way to tell a real dispatch from a prose example inside a code block. The shape predicate
+  // is the same predicate check-dispatch already relies on — it is just applied line-by-line rather
+  // than through the full argument-extraction path.
+  if (file.endsWith('.md')) {
+    const mdLines = src.split('\n');
+    for (let i = 0; i < mdLines.length; i++) {
+      const lineRe = /agentType\s*:\s*(['"'])([^'"]+)\1/g;
+      let m;
+      while ((m = lineRe.exec(mdLines[i])) !== null) {
+        const name = m[2];
+        const where = `${rel}:${i + 1}`;
+        const site = { file: rel, line: i + 1, agentType: name, resolution: 'md-literal' };
+        sites.push(site);
+        checkAgentName(name, where, 'agentType');
+      }
+    }
+    continue;
+  }
+
   const masked = maskCode(src);
 
   const rawHits = (src.match(/\bagent\s*\(/g) || []).length;
