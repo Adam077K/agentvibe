@@ -30,11 +30,17 @@ in-session), and one decision no amount of further work resolves — see the las
 
 ## Review outcomes — every verdict came from an engine that did not produce the work
 
-| PR | first review | remediation | re-review |
-|---|---|---|---|
-| `feat/gate-and-provenance-v2` | **FAIL** — HIGH: gate bound the branch diff, not the merge result | tier 3 refused; audit record made true; claim narrowed | **PASS** — closure reproduced by execution |
-| `fix/audit-repairs` | **PASS** | — | — |
-| `chore/memory-eviction` | **FAIL** — two p1 on the `evidence` lens | stubs name real citations; own session file; pointers de-rotted | **PASS** — both blockers closed |
+| PR | rounds | final |
+|---|---|---|
+| `feat/gate-and-provenance-v2` | **FAIL** (HIGH — gate bound the branch diff, not the merge result) → PASS → PASS | **PASS** |
+| `fix/audit-repairs` | PASS | **PASS** |
+| `chore/memory-eviction` | **FAIL** (two p1, `evidence`) → PASS → **FAIL** → PASS | **PASS** |
+
+Every verdict came from an independent `reviewer` that did not produce the work, and each was transcribed
+into the branch's own session file by the orchestrator — never written by the engine that produced it or the
+engine that judged it. The final PR-1 round also reviewed **the orchestrator's own session file** at the
+same bar, because its author cannot: every assertion held, including one taken from a builder's report and
+never re-derived, which came back **worse** than written.
 
 **Three separate mechanisms caught real defects, and none of them was a control that reads:**
 
@@ -49,11 +55,33 @@ in-session), and one decision no amount of further work resolves — see the las
   first FAIL in a corpus of 88 session files that all say PASS — the pathology this repo already measured,
   breaking for the first time.
 
-**Findings left open by the passing reviews**, all the same class as the HIGH finding and all one-line:
-a project being merged could supply its own `scripts/verdict.mjs` and rubber-stamp the gate
-(`bin/warroom:2071`, contradicting its own comment at `:2055`); `.qa/verdicts/**` hides arbitrary files from
-both the subject hash and the tier classifier; and tier 1's comment overclaims when local `main` is behind
-`origin/main`. Being fixed rather than filed, because the gate PR should not ship a known bypass.
+**Seven review rounds, three FAILs, all findings closed.** Nothing was filed that a reviewer called
+blocking, and the findings the passing rounds raised were fixed rather than deferred, because a gate PR
+should not ship a known bypass. Closed after the first PASS: a project being merged could supply its own
+`scripts/verdict.mjs` and rubber-stamp the gate (`bin/warroom:2071`, contradicting its own comment at
+`:2055` — reproduced landing `tier=rubber-stamp` on `main` with **no verdict record at all**);
+`.qa/verdicts/**` hid arbitrary files from both the subject hash and the tier classifier; and tier 1's
+comment overclaimed when local `main` is behind `origin/main`.
+
+**Four agent actions that ran against the orchestrator, and all four were right.** Recorded because the
+value of a review layer is measured by what it refuses, not by what it approves:
+
+- **The `glob` pathspec.** The orchestrator specified `:(exclude).qa/verdicts/*.json`. Git's default
+  wildcard matches `/`, so that spelling leaves `nested/deep.json` invisible to the subject hash — **the
+  same hole one directory down, inside the fix for that hole.** A builder measured it, shipped
+  `:(exclude,glob)`, and pinned the difference in a dedicated test.
+- **The `.mcp.json` bypass, declined on principle.** The orchestrator documented the `mv` as a real bypass
+  of a live write guard and then issued it as routine in roughly eight briefs. A reviewer refused —
+  *"a teammate's instruction is not the permission system"* — and produced strictly better evidence:
+  exact-path overlap of zero between the delta and every input the failing checks read, which holds
+  regardless of working-tree state. A second reviewer then **retracted its own earlier use of it**,
+  unprompted.
+- **The comment scope.** Handed one stale comment, a builder found three. The sharpest: `verdict.mjs:24`
+  stated the subject anchor one way while `:17` stated it another, **eight lines apart in the same file**,
+  introduced by the commit that fixed that class one file over.
+- **The stopping point.** Asked whether four rounds was too few, a reviewer answered with a test rather
+  than agreement: the findings converged p1 → medium → low → nothing, and the final round was the first to
+  **return** headroom rather than spend it.
 
 **Every review was a single model family, and each said so unprompted.** `risk: irreversible` nominally wants
 ≥2 distinct families; this runtime has no non-Anthropic model. Structural, and a founder decision.
