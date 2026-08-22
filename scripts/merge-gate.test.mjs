@@ -351,6 +351,86 @@ test('the conflict refusal says how to make the resolution reviewable', () => {
   assert.match(text, /verdict\.mjs record --verdict PASS/, 'the refusal did not say to re-record a verdict');
 });
 
+// ── who supplies the checker ───────────────────────────────────────────────────────
+
+test('a checker shipped by the project being merged is NOT used', () => {
+  // `_verdict_tool` fell back to $PROJECT_DIR/scripts/verdict.mjs, which let the repository being
+  // merged supply the program that decides whether it may be merged. The launcher is installed as
+  // a `~/bin/<project>` shim with the harness elsewhere, so "no harness copy beside the launcher"
+  // is the deployed shape, not a contrived one.
+  const { proj, cfg, root } = fixture();
+
+  const bin = path.join(root, 'harness', 'bin');
+  fs.mkdirSync(bin, { recursive: true });
+  const launcher = path.join(bin, 'warroom');
+  fs.copyFileSync(WARROOM, launcher);
+  assert.equal(
+    fs.existsSync(path.join(root, 'harness', 'scripts', 'verdict.mjs')), false,
+    'the fixture accidentally put a harness checker beside the launcher'
+  );
+
+  // The project ships a "QA verdict checker" that approves everything.
+  fs.mkdirSync(path.join(proj, 'scripts'), { recursive: true });
+  fs.writeFileSync(
+    path.join(proj, 'scripts', 'verdict.mjs'),
+    'console.log(JSON.stringify({ ok: true, tier: "rubber-stamp", subject: "n/a" }));\nprocess.exit(0);\n'
+  );
+  git(proj, ['add', '-A']);
+  git(proj, ['commit', '-qm', 'project ships its own verdict checker']);
+
+  const before = git(proj, ['rev-parse', 'main']).trim();
+  const r = run('bash', [launcher, '--config', cfg, 'merge', '1']);
+  const text = r.stdout + r.stderr;
+
+  assert.notEqual(r.code, 0, 'the merged repository supplied its own judge, and the merge proceeded');
+  assert.doesNotMatch(text, /rubber-stamp/, 'the project-supplied checker was executed');
+  assert.match(text, /verdict\.mjs not found/, 'the refusal did not name the missing harness checker');
+  assert.equal(git(proj, ['rev-parse', 'main']).trim(), before, 'main moved on a rubber-stamped verdict');
+  assert.ok(branchExists(proj), 'the branch was deleted by a merge that did not happen');
+
+  const events = fs.readFileSync(path.join(root, 'state', 'events.jsonl'), 'utf8');
+  assert.match(events, /reason=no-checker/, 'the refusal is invisible in the audit trail');
+  assert.doesNotMatch(events, /tier=rubber-stamp/, 'a tier no classifier can produce reached events.jsonl');
+});
+
+// ── what the verdict pathspec hides ────────────────────────────────────────────────
+
+test('a non-record file under the verdict directory CHANGES the subject', () => {
+  // The exclusion existed so that committing a verdict would not move the subject it approves. It
+  // excluded the whole directory, which is wider than that property needs: anything under the
+  // prefix was invisible to the hash AND to changedFiles(), so it could not be seen and could not
+  // raise the tier. An executable dropped here rode onto main with the subject byte-identical.
+  const { proj } = fixture();
+  git(proj, ['switch', '-q', BRANCH]);
+  const before = verdict(['subject', '--repo', proj, '--ref', BRANCH]).stdout.trim();
+
+  fs.mkdirSync(path.join(proj, '.qa', 'verdicts'), { recursive: true });
+  fs.writeFileSync(path.join(proj, '.qa', 'verdicts', 'payload.sh'), '#!/bin/sh\necho pwned\n');
+  git(proj, ['add', '-A']);
+  git(proj, ['commit', '-qm', 'inject']);
+
+  const after = verdict(['subject', '--repo', proj, '--ref', BRANCH]).stdout.trim();
+  assert.notEqual(after, before, 'a file smuggled under .qa/verdicts/ is invisible to the subject');
+});
+
+test('a NESTED .json under the verdict directory changes the subject too', () => {
+  // This one pins the `glob` in the pathspec, and fails without it. Git's default pathspec
+  // wildcards match `/`, so a bare `*.json` still hides .qa/verdicts/nested/deep.json — the same
+  // hole one directory down. Records are only ever direct children (verdict.mjs verdictPath), so
+  // nothing legitimate lives at that depth.
+  const { proj } = fixture();
+  git(proj, ['switch', '-q', BRANCH]);
+  const before = verdict(['subject', '--repo', proj, '--ref', BRANCH]).stdout.trim();
+
+  fs.mkdirSync(path.join(proj, '.qa', 'verdicts', 'nested'), { recursive: true });
+  fs.writeFileSync(path.join(proj, '.qa', 'verdicts', 'nested', 'deep.json'), '{"nested":true}\n');
+  git(proj, ['add', '-A']);
+  git(proj, ['commit', '-qm', 'inject nested']);
+
+  const after = verdict(['subject', '--repo', proj, '--ref', BRANCH]).stdout.trim();
+  assert.notEqual(after, before, 'a nested .json under .qa/verdicts/ is invisible to the subject');
+});
+
 // ── branch deletion ──────────────────────────────────────────────────────────────────────────
 
 test('the merge exits delete with -d, never -D', () => {
