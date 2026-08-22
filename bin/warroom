@@ -2052,7 +2052,66 @@ cmd_diff() {
   echo ""
 }
 
-# Feature F5 — Merge CEO-N's branch into main (4-tier escalation pipeline)
+# Locate the QA verdict checker. It lives with the HARNESS, not with the project being merged —
+# the gate is policy that travels with the launcher. Resolved through symlinks because
+# ~/bin/<project> is a shim that execs this file. Returns non-zero when it cannot be found, and
+# cmd_merge treats that as a refusal: a gate that cannot find its checker must never conclude
+# "no objection".
+_verdict_tool() {
+  local src="${BASH_SOURCE[0]}" dir
+  while [ -L "$src" ]; do
+    dir="$(cd -P "$(dirname "$src")" && pwd)"
+    src="$(readlink "$src")"
+    case "$src" in /*) ;; *) src="$dir/$src" ;; esac
+  done
+  dir="$(cd -P "$(dirname "$src")/.." 2>/dev/null && pwd)"
+  if [ -n "$dir" ] && [ -f "$dir/scripts/verdict.mjs" ]; then
+    printf '%s' "$dir/scripts/verdict.mjs"; return 0
+  fi
+  if [ -f "$PROJECT_DIR/scripts/verdict.mjs" ]; then
+    printf '%s' "$PROJECT_DIR/scripts/verdict.mjs"; return 0
+  fi
+  return 1
+}
+
+# Delete a branch that has just been merged — with `-d`, never `-D`.
+#
+# `-D` was used at all three merge exits. It force-deletes, which destroys the record of what was
+# merged whenever the merge did NOT actually incorporate the branch: a `--ff-only` that quietly
+# failed, an AI-assisted resolution that dropped a side, a `commit --no-edit` that did not run.
+# `-d` refuses in exactly those cases, which is the difference between a bookkeeping step and an
+# irreversible one. When it refuses, say so — a branch left behind is recoverable; a silent `-D`
+# is not.
+_delete_merged_branch() {
+  local branch="$1" err
+  err=$(git -C "$PROJECT_DIR" branch -d "$branch" 2>&1)
+  if [ $? -eq 0 ]; then
+    echo -e "  ✓ Branch $branch deleted"
+  else
+    echo -e "  ${C_PEACH}! Branch $branch kept${RESET} — git will not delete it as merged:"
+    echo "    ${err}"
+    echo "    That means main does not contain it. Investigate before deleting by hand."
+  fi
+}
+
+# Say plainly what just happened. This route writes to LOCAL main and does not push; the remote is
+# reached only through a PR, where .github/workflows/ci.yml and qa-lead-pass.yml apply. Adding a
+# push here would not help — main is protected with required contexts, so a direct push is
+# rejected. Silence let people believe a local merge had shipped.
+_warn_local_only_merge() {
+  echo ""
+  echo -e "  ${C_OVERLAY}This merge is LOCAL. Nothing was pushed and no CI ran.${RESET}"
+  echo -e "  ${C_OVERLAY}origin/main is reached only by opening a PR.${RESET}"
+}
+
+# Feature F5 — Merge CEO-N's branch into main (4-strategy escalation pipeline)
+#
+# "Strategy" is deliberate. This ladder is fast-forward → no-ff → AI-assisted → human, which is
+# how the merge is PERFORMED. It has nothing to do with the risk tier of the change, and the two
+# were conflated: `_log_event` used to record `tier=fast-forward`, putting a merge strategy into a
+# field named for a risk tier. Anything reading events.jsonl for tier data got a value the
+# classifier can never produce. The risk tier now comes from scripts/classify.mjs, through
+# scripts/verdict.mjs, and the strategy is logged in its own field.
 cmd_merge() {
   local n=$1
   [ -z "$n" ] && echo "Usage: ${SESSION} merge <N>" && exit 1
@@ -2065,8 +2124,57 @@ cmd_merge() {
   echo -e "  ${BOLD}${C_PEACH}Merging $branch → main${RESET}"
   echo ""
 
-  git -C "$PROJECT_DIR" checkout main 2>/dev/null || { echo "  ✗ Could not checkout main."; exit 1; }
+  # ── The gate ────────────────────────────────────────────────────────────────────────────────
+  # This route merges into LOCAL main and never pushes, so CI never runs on it and branch
+  # protection — which is on, and which does guard the PR route — cannot see it at all. For years
+  # the only thing between a branch and main here was this function, and this function checked
+  # nothing.
+  #
+  # So: a QA verdict hash-bound to the exact diff being merged, or no merge. Hash-bound, not
+  # signed — a verdict cannot be moved to another diff or survive an edit to the one it approved,
+  # but anyone who can write the repo can write one. See scripts/verdict.mjs for what that does
+  # and does not buy.
+  #
+  # The whole block runs BEFORE `checkout main`, so a refusal leaves the repository exactly as it
+  # was. Every failure path below refuses — missing checker, missing node, unresolvable
+  # origin/main, missing verdict, stale verdict. A gate that fails open is not a gate.
   git -C "$PROJECT_DIR" fetch origin main 2>/dev/null
+
+  local vtool
+  if ! vtool=$(_verdict_tool); then
+    echo -e "  ${C_RED}✗ Refusing to merge${RESET} — scripts/verdict.mjs not found."
+    echo "    The QA verdict checker is missing, so no verdict can be confirmed."
+    echo "    Refusing is the only safe answer: absence of a checker is not absence of objection."
+    _log_event "merge_refused" "branch=$branch reason=no-checker"
+    exit 1
+  fi
+  if ! command -v node >/dev/null 2>&1; then
+    echo -e "  ${C_RED}✗ Refusing to merge${RESET} — node is not on PATH."
+    echo "    The verdict checker cannot run, so the verdict cannot be confirmed."
+    _log_event "merge_refused" "branch=$branch reason=no-node"
+    exit 1
+  fi
+
+  local vjson vrc tier
+  vjson=$(node "$vtool" check --repo "$PROJECT_DIR" --ref "$branch" --json 2>/dev/null)
+  vrc=$?
+  tier=$(printf '%s' "$vjson" | sed -n 's/.*"tier"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+  [ -z "$tier" ] && tier="undetermined"
+
+  if [ "$vrc" -ne 0 ]; then
+    # Re-run without --json so the operator gets the full explanation: the subject computed, the
+    # path searched, and the exact commands that would produce a matching verdict.
+    node "$vtool" check --repo "$PROJECT_DIR" --ref "$branch" >/dev/null
+    echo -e "  ${C_RED}✗ Refusing to merge $branch → main.${RESET}"
+    echo ""
+    _log_event "merge_refused" "branch=$branch tier=$tier reason=no-matching-verdict"
+    exit 1
+  fi
+
+  echo -e "  ${C_GREEN}✓${RESET} QA verdict bound to this diff · tier=$tier"
+  echo ""
+
+  git -C "$PROJECT_DIR" checkout main 2>/dev/null || { echo "  ✗ Could not checkout main."; exit 1; }
 
   # ── Tier 1: Fast-forward ──
   local main_tip branch_tip merge_base
@@ -2079,9 +2187,9 @@ cmd_merge() {
     git -C "$PROJECT_DIR" merge --ff-only "$branch" 2>/dev/null
     if [ $? -eq 0 ]; then
       echo -e "  ✓ Fast-forward merge complete"
-      _log_event "merge_complete" "branch=$branch tier=fast-forward"
-      git -C "$PROJECT_DIR" branch -D "$branch" 2>/dev/null
-      echo -e "  ✓ Branch $branch deleted"
+      _log_event "merge_complete" "branch=$branch tier=$tier strategy=fast-forward"
+      _delete_merged_branch "$branch"
+      _warn_local_only_merge
       return 0
     fi
   fi
@@ -2091,9 +2199,9 @@ cmd_merge() {
   git -C "$PROJECT_DIR" merge "$branch" --no-edit 2>/dev/null
   if [ $? -eq 0 ]; then
     echo -e "  ✓ Auto-merge complete"
-    _log_event "merge_complete" "branch=$branch tier=auto-merge"
-    git -C "$PROJECT_DIR" branch -D "$branch" 2>/dev/null
-    echo -e "  ✓ Branch $branch deleted"
+    _log_event "merge_complete" "branch=$branch tier=$tier strategy=auto-merge"
+    _delete_merged_branch "$branch"
+    _warn_local_only_merge
     return 0
   fi
 
@@ -2158,9 +2266,9 @@ cmd_merge() {
     # All resolved — complete the merge
     git -C "$PROJECT_DIR" commit --no-edit 2>/dev/null
     echo -e "  ✓ AI resolved all $resolved conflict(s)"
-    _log_event "merge_complete" "branch=$branch tier=ai-assisted"
-    git -C "$PROJECT_DIR" branch -D "$branch" 2>/dev/null
-    echo -e "  ✓ Branch $branch deleted"
+    _log_event "merge_complete" "branch=$branch tier=$tier strategy=ai-assisted"
+    _delete_merged_branch "$branch"
+    _warn_local_only_merge
     return 0
   fi
 

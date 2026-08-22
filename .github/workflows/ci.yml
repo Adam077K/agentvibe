@@ -193,6 +193,18 @@ jobs:
       - name: Gate routing
         run: npm run test:run-gate
 
+      # The OTHER merge route. `warroom merge` wrote to LOCAL main and never pushed, so CI never
+      # ran on it and branch protection — which is on, with required contexts — could not see it.
+      # The PR route was gated; this one was gated by nothing, and it is the route the fleet
+      # actually uses. It now refuses unless a QA verdict is committed against
+      # sha256(diff excluding .qa/verdicts/**), an anchor that stays stable when the verdict
+      # itself is committed and moves the instant a reviewed byte does.
+      #
+      # These tests drive `bin/warroom merge` for real against throwaway repos and then assert on
+      # where `main` points. A source-level assertion would pass equally against a fix comment.
+      - name: Merge gate
+        run: npm run test:merge-gate
+
       # A SKILL.md carrying `allowed-tools` SUBTRACTS from whatever agent loads it — the binary
       # documents the field as "Tools available to the model while this file is active", which
       # is a ceiling, not a grant. Eight skills declare it; two clamp to a single Bash pattern.
