@@ -2128,11 +2128,19 @@ _warn_local_only_merge() {
 # stops.
 #
 # That sentence first read "move only content the branch diff already contained", full stop, and it
-# was false in the same way the tier 3 claim was: when LOCAL main is behind origin/main, a
-# fast-forward also lands the upstream range, which this verdict never covered. Reproduced — an
-# upstream file rode in on a tier=lite merge whose verdict bound one unrelated file. Those bytes are
-# ancestral to origin/main and so are already gated by the PR route, where ci.yml and
-# qa-lead-pass.yml apply; there is no unreviewed content and nothing to refuse. The claim is
+# was false in the same way the tier 3 claim was: when LOCAL main lacks part of origin/main, the
+# merge also lands the upstream range, which this verdict never covered.
+#
+# It took two corrections, because the first one said "on a fast-forward" and that qualifier was
+# wrong as well. BOTH tiers do it, and each was reproduced. With main merely behind, tier 1
+# fast-forwards and an upstream file rides in on a merge whose verdict bound one unrelated file.
+# With main DIVERGED, so ff-only cannot apply, tier 2's no-ff auto-merge lands the same file — the
+# verdict covering scripts/feature.txt alone, strategy=auto-merge. A qualifier that names one of two
+# paths is the same defect as the sentence it replaced, one size smaller, and the two comment sites
+# disagreed with each other while it stood.
+#
+# Those bytes are ancestral to origin/main and so are already gated by the PR route, where ci.yml
+# and qa-lead-pass.yml apply; there is no unreviewed content and nothing to refuse. The claim is
 # narrowed rather than the behaviour changed, because the behaviour is correct and the sentence was
 # not.
 cmd_merge() {
@@ -2246,8 +2254,8 @@ cmd_merge() {
   # ── The ladder stops here ─────────────────────────────────────────────────────
   #
   # Tiers 1 and 2 put content on main that the branch diff already held — which is what the verdict
-  # above hashed — plus, on a fast-forward, any commits already on origin/main, which the PR route
-  # has its own gate for. Tier 3 does not: it pipes each conflicted file to a model, writes
+  # above hashed — plus any commits already on origin/main, which the PR route has its own gate for.
+  # Tier 3 does not: it pipes each conflicted file to a model, writes
   # stdout back, and commits it to main. Nothing reviewed that. The old code then logged
   # `merge_complete` at the verdict's tier, so events.jsonl read as though something had.
   #
