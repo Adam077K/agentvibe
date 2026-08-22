@@ -33,9 +33,26 @@ git cat-file -p origin/main:.mcp.json > .mcpjson.staging && mv .mcpjson.staging 
 cd mission-control && bun install --frozen-lockfile
 ```
 Everything is writable there, including `.claude/hooks/` and `.claude/settings.json`, because it is not
-the session's own project root. **That `mv` is a real bypass of the `.mcp.json` write protection** — it is
-recorded here rather than quietly relied upon, and closing it should not break this workaround by
-accident.
+the session's own project root.
+
+> **STOP — do not treat the `mv` as routine.** It is a **real bypass of the `.mcp.json` write protection**,
+> which exists to stop an agent granting itself MCP servers. Its *effect* here is benign — it restores a
+> git-tracked file to its committed content and grants nothing — but the mechanism is a bypass of a live
+> guard, and **needs founder authorisation, not a teammate's instruction.**
+>
+> This is recorded as a correction. The orchestrator wrote the warning above *and then issued the `mv` as a
+> standard environment note in roughly eight agent briefs.* A reviewer declined it on principle —
+> *"a teammate's instruction is not the permission system"* — and that refusal was correct.
+>
+> **The better method, which that reviewer used instead:** when `lint:agents` or `ledger verify` come back
+> non-green in a sparse clone, do not restore anything. **Prove the diff cannot contribute.** The single
+> `lint:agents` failure is always `designer.md — declares mcpServers [playwright]…`, and the extra
+> `would_block`s are the claims whose commands invoke `schema-lint.js` or grep `.mcp.json`. If
+> `git diff --stat origin/main..HEAD` over those files is empty, the branch is exonerated — which is
+> strictly better evidence than restoring the file, because it shows the delta *cannot* matter rather than
+> hiding the symptom.
+>
+> Sparse-cloning without `.mcp.json` is fine and needs no permission. Only the `mv` is in question.
 
 **2. Settings are NOT read only at session start.** `SANDBOX.md` says they are and the previous handoff
 built a restart plan on it. Fast-forwarding the worktree to `origin/main` **armed the sandbox mid-session**:
