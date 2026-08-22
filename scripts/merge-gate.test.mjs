@@ -259,6 +259,98 @@ test('a refusal is recorded as an event, so a blocked merge is visible afterward
   assert.match(events, /reason=no-matching-verdict/);
 });
 
+// ── the conflict route ───────────────────────────────────────────────────────────────────────
+
+test('a conflicting merge is REFUSED even with a valid verdict, and main does not move', () => {
+  // The second unreviewed route into main. The verdict is bound to the BRANCH DIFF; a conflict
+  // resolution is content that diff does not contain. Tier 3 used to write a model's stdout over
+  // the conflicted file, commit it to main, and log `merge_complete` at the verdict's own tier —
+  // so events.jsonl asserted a review of bytes no reviewer ever saw.
+  const { proj, cfg, root } = fixture();
+
+  // The branch edits a line that main will also edit.
+  git(proj, ['switch', '-q', BRANCH]);
+  fs.writeFileSync(path.join(proj, 'f.txt'), 'branch side\n');
+  git(proj, ['add', '-A']);
+  git(proj, ['commit', '-qm', 'branch edits f.txt']);
+  git(proj, ['switch', '-q', 'main']);
+
+  // The verdict covers the branch as it stands, that edit included.
+  recordAndCommit(proj);
+
+  // LOCAL main edits the same line. origin/main is untouched, so the subject stays exactly what
+  // the verdict approved — the verdict is still valid, and the merge still cannot apply cleanly.
+  // That combination is the whole point: refusal here is not the gate refusing, it is the ladder.
+  fs.writeFileSync(path.join(proj, 'f.txt'), 'main side\n');
+  git(proj, ['add', '-A']);
+  git(proj, ['commit', '-qm', 'main edits f.txt']);
+
+  assert.equal(
+    verdict(['check', '--repo', proj, '--ref', BRANCH]).code, 0,
+    'the fixture verdict does not validate — a refusal here would prove nothing about tier 3'
+  );
+
+  const before = git(proj, ['rev-parse', 'main']).trim();
+  const r = merge(cfg);
+
+  assert.notEqual(r.code, 0, 'a conflicted merge exited 0');
+  assert.equal(git(proj, ['rev-parse', 'main']).trim(), before, 'main moved onto content no verdict covered');
+  assert.equal(
+    fs.readFileSync(path.join(proj, 'f.txt'), 'utf8'), 'main side\n',
+    'main carries a conflict resolution that nothing reviewed'
+  );
+  assert.equal(
+    run('git', ['rev-parse', '-q', '--verify', 'MERGE_HEAD'], proj).code, 1,
+    'the repository was left mid-merge; a refusal must leave it as it was found'
+  );
+  assert.ok(branchExists(proj), 'the branch was deleted by a merge that did not happen');
+});
+
+test('the conflict refusal is logged as a refusal, never as a merge_complete', () => {
+  // The audit half of the defect. Even a tier 3 that resolved "well" logged `merge_complete` with
+  // the verdict's tier, which is the record claiming coverage the verdict did not have.
+  const { proj, cfg, root } = fixture();
+
+  git(proj, ['switch', '-q', BRANCH]);
+  fs.writeFileSync(path.join(proj, 'f.txt'), 'branch side\n');
+  git(proj, ['add', '-A']);
+  git(proj, ['commit', '-qm', 'branch edits f.txt']);
+  git(proj, ['switch', '-q', 'main']);
+  recordAndCommit(proj);
+  fs.writeFileSync(path.join(proj, 'f.txt'), 'main side\n');
+  git(proj, ['add', '-A']);
+  git(proj, ['commit', '-qm', 'main edits f.txt']);
+
+  assert.notEqual(merge(cfg).code, 0);
+
+  const events = fs.readFileSync(path.join(root, 'state', 'events.jsonl'), 'utf8');
+  assert.match(events, /"event":"merge_refused"/, 'the refusal is invisible in the audit trail');
+  assert.match(events, /reason=conflict-outside-verdict/, 'the refusal does not name why it refused');
+  assert.doesNotMatch(events, /"event":"merge_complete"/, 'a merge that did not happen was logged as complete');
+});
+
+test('the conflict refusal says how to make the resolution reviewable', () => {
+  // A gate that refuses without naming the remedy trains people to route around it — the same
+  // reason `the refusal names the subject it computed` exists for the no-verdict path.
+  const { proj, cfg } = fixture();
+
+  git(proj, ['switch', '-q', BRANCH]);
+  fs.writeFileSync(path.join(proj, 'f.txt'), 'branch side\n');
+  git(proj, ['add', '-A']);
+  git(proj, ['commit', '-qm', 'branch edits f.txt']);
+  git(proj, ['switch', '-q', 'main']);
+  recordAndCommit(proj);
+  fs.writeFileSync(path.join(proj, 'f.txt'), 'main side\n');
+  git(proj, ['add', '-A']);
+  git(proj, ['commit', '-qm', 'main edits f.txt']);
+
+  const text = (() => { const o = merge(cfg); return o.stdout + o.stderr; })();
+  assert.match(text, /Refusing to merge/);
+  assert.match(text, /f\.txt/, 'the refusal did not name the conflicted file');
+  assert.match(text, new RegExp(`git switch ${BRANCH}`), 'the refusal did not say to resolve on the branch');
+  assert.match(text, /verdict\.mjs record --verdict PASS/, 'the refusal did not say to re-record a verdict');
+});
+
 // ── branch deletion ──────────────────────────────────────────────────────────────────────────
 
 test('the merge exits delete with -d, never -D', () => {
