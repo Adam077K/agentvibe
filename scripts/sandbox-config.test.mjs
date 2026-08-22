@@ -53,6 +53,9 @@ const REQUIRED_DENY_READS = [
   '~/.aws',
   '~/.config/gh',
   '~/.netrc',
+  '~/.gemini',
+  '~/.codex',
+  '~/.config/openai',
   '**/.env',
   '**/.env.*',
 ];
@@ -136,6 +139,7 @@ const REQUIRED_ALLOW_WRITES = [
   '~/.agentvibe',
   '/private/tmp/claude-501',
   '**/.worktrees',
+  '**/.worktrees/**',
 ];
 
 test('sandbox.filesystem.allowWrite covers the required paths', () => {

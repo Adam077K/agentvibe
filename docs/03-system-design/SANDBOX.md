@@ -137,13 +137,17 @@ is not addressed by this mechanism.
         "~/.aws",               // AWS credentials and config
         "~/.config/gh",         // GitHub CLI token
         "~/.netrc",             // FTP/HTTP credentials
+        "~/.gemini",            // Added 2026-08-23. Gemini CLI oauth_creds.json — see below.
+        "~/.codex",             // Added 2026-08-23. Codex CLI auth.json — see below.
+        "~/.config/openai",     // Added 2026-08-23. OpenAI CLI credential dir — see below.
         "**/.env",              // Any .env file (secrets)
         "**/.env.*"             // .env.local, .env.production, etc.
       ],
       "allowWrite": [
         "~/.agentvibe",         // scripts/lib/usage.js token-usage cache
         "/private/tmp/claude-501", // agent scratchpad root — see Write-path justification
-        "**/.worktrees"         // Added 2026-08-20. Git Worktree Protocol — see below.
+        "**/.worktrees",        // Added 2026-08-20. Git Worktree Protocol — see below.
+        "**/.worktrees/**"      // Added 2026-08-23. The glob above did not cover descendants — see below.
       ]
     }
     // network.allowedDomains: not set — requires Founder input.
@@ -161,6 +165,7 @@ The default sandbox writes only to the working directory and the session temp di
 |------|-------------|
 | `~/.agentvibe` | `scripts/lib/usage.js` line 46: `cachePath = () => path.join(os.homedir(), '.agentvibe', 'usage-cache.json')`. This cache is written by `npm run usage` and the session-start hook. |
 | `**/.worktrees` | **Founder decision 2026-08-20.** CLAUDE.md § Git Worktree Protocol *mandates* that every code worker create a worktree, and Rule 7 ("Worktrees for code") is one of the few rules the repo marks `ENFORCED`. Arming the sandbox made that rule unexecutable. Worktrees are created under `$MAIN_REPO/.worktrees/`, which is outside every agent's project root — because the agent's project root **is** a worktree underneath it. Measured 2026-08-20 from a session in `.worktrees/ceo-3-…`: `git worktree add` returns `fatal: could not create leading directories of '…/.worktrees/probe-sandbox-p05/.git': Operation not permitted`, and a spawned worker cannot write into a sibling worktree either. Glob form, not an absolute path: this file ships to every generated project, where `/Users/adamks/…` would grant nothing. `.worktrees/` is gitignored (`.gitignore:16`) and exists solely as agent scratch space, so the boundary widens by a directory that already holds nothing but agent working copies. |
+| `**/.worktrees/**` | **Founder decision 2026-08-20, widened 2026-08-23.** The entry above grants the directory `.worktrees` itself but a glob naming a directory does not necessarily grant its descendants — and worktree *creation* writes files and subdirectories underneath it, not to the directory node. Measured again in a session started 2026-08-23, after `**/.worktrees` had already landed: `git worktree add` still fails, now one level deeper — `fatal: could not create leading directories of '/Users/adamks/VibeCoding/agentvibe/.worktrees/probe-97756/.git': Operation not permitted`. The refused path is *inside* `.worktrees`, not `.worktrees` itself, which is exactly the gap this second glob closes. Both entries are kept: they cover different things (the directory node, and everything under it). |
 | `/private/tmp/claude-501` | The Claude Code **agent scratchpad** root. Agents are instructed to put all temporary files here rather than `/tmp`, and they do — the CEO session that armed this sandbox wrote and executed merge-queue shell scripts there four times in one sitting. **This is NOT the session temp directory**, which the sandbox already permits: measured 2026-08-17, `$TMPDIR` is `/var/folders/pp/…/T/` while the scratchpad is `/private/tmp/claude-501/…` — different trees. Without this entry, every scratchpad write becomes a hard failure the moment `failIfUnavailable: true` takes effect, and the symptom reads as "the sandbox is broken" rather than "an allow rule is missing." The path is Claude-managed scratch space, not user data, so granting it widens the boundary by very little. |
 
 Paths **not included** despite being written by repo scripts:
@@ -169,6 +174,35 @@ Paths **not included** despite being written by repo scripts:
 |------|--------|-------------|
 | `~/.warroom/` | `scripts/warroom-install.mjs` | Only written during explicit `npm run warroom:fleet` install, not routine CI or agent operation. Add it if `warroom:fleet` will run sandboxed. |
 | `~/bin/` | `scripts/warroom-install.mjs` | Same as above. |
+
+---
+
+### Deny-read justification (credential directories, added 2026-08-23)
+
+`denyRead` covered `~/.ssh`, `~/.aws`, `~/.config/gh`, `~/.netrc`, `**/.env*` and missed the CLI
+credential stores for the other two model families this repo invokes for independent review
+(`c-maxturns-binds-when-agenttype-named`'s neighbour claims, and `TARGET-ARCHITECTURE.md` §4's
+Codex second-opinion seam): `~/.gemini/oauth_creds.json` (mode `600`, live) and `~/.codex/auth.json`.
+`~/.config/openai` is added alongside them for the same class of tool. All three are **directories**,
+not the credential filename, because a rotated credential lands under a new filename and a
+file-specific deny would miss the rotation — the same reasoning `TARGET-ARCHITECTURE.md:303-304`
+already applied to `~/.codex`.
+
+**The limitation stated plainly, because it matters more than the entries.** A filesystem `denyRead`
+only stops a reader that opens a file. Measured in this session: adding `~/.config/gh` to `denyRead`
+does not slow `git push` at all — it keeps working, unaffected, because git's GitHub auth goes through
+the **macOS Keychain** (`osxkeychain` credential helper), which a filesystem deny cannot reach. The
+same deny **does** break `gh` outright: `gh api …` and friends fail with
+`failed to read configuration: open /Users/adamks/.config/gh/config.yml: operation not permitted`,
+because the `gh` CLI reads its config from that file directly. So the one mechanism produces two
+different outcomes for two tools that both authenticate to the same service: **a hard outage for a
+config-file reader, and no effect at all for a keychain-backed one.** `TARGET-ARCHITECTURE.md:303-306`
+records the identical caveat for Codex — `cli_auth_credentials_store: keyring` puts the credential in
+the macOS Keychain, where `denyRead ~/.codex` reaches nothing — and that entry landed earlier and as a
+plan, not a measurement. This session is the plan's caveat observed in practice, for a second tool. Do
+not read the three new `denyRead` entries as "these tools cannot read their credentials while
+sandboxed" — read them as "these tools cannot read their credentials **if the credential is a file
+under this path**, and only then."
 
 ---
 
@@ -207,6 +241,57 @@ working is the exact failure this document's own posture exists to prevent.
 denied. Observed in the same session: `git branch -D` deletes the ref but then reports
 `could not lock config file …/.git/config`. Worktree *creation* is what the protocol needs;
 mutating the parent repo's config is not, and it stays outside the boundary.
+
+---
+
+## Amendment 2026-08-23 — `**/.worktrees/**` — **STILL UNVERIFIED**
+
+**What changed.** One entry added to `allowWrite`: `**/.worktrees/**`, alongside the existing
+`**/.worktrees` (both are kept — see the Write-path justification table for why they cover different
+things). `enabled`, `failIfUnavailable`, and every `denyRead`/`allowWrite` entry other than this one
+are untouched by this amendment. (The `denyRead` credential additions in the same PR are a separate,
+unrelated change — see Deny-read justification above.)
+
+**Why the first glob was insufficient.** The 2026-08-20 amendment above granted `**/.worktrees`
+believing that would make `git worktree add` work. A session started fresh on 2026-08-23 — after that
+glob had already landed — still observed the failure, one level deeper:
+
+```
+fatal: could not create leading directories of '/Users/adamks/VibeCoding/agentvibe/.worktrees/probe-97756/.git': Operation not permitted
+```
+
+The refused path is `…/.worktrees/probe-97756/.git`, which is *inside* `.worktrees`, not `.worktrees`
+itself. A glob that names a directory does not necessarily grant write access to paths created
+underneath it — worktree creation writes new subdirectories and files, never to the `.worktrees` node
+directly. `**/.worktrees/**` closes that gap by matching everything under the directory as well as the
+directory.
+
+**This fix is UNVERIFIED for the same structural reason the 2026-08-20 fix was: `.claude/settings.json`
+is read at session start**, and no session that edits the file can demonstrate the edit works — only a
+fresh session, started after the edit lands, can. That is true of the change in this PR exactly as it
+was true of the change it widens. Until a fresh session runs the acceptance test below and records the
+result, **Rule 7 should be treated as still blocked**, not as fixed-and-verified by this PR. Restating
+the earlier document's own words: an unverified fix asserted as working is the exact failure this
+document's posture exists to prevent — and that applies with equal force to a fix that widens a
+previous, still-unverified fix.
+
+**Acceptance test — someone must actually run this, in a session that did not make either change:**
+
+```bash
+# In a FRESH Claude Code session (not the one that made this change, nor the one that made the
+# 2026-08-20 change):
+MAIN_REPO=$(git worktree list | head -1 | awk '{print $1}')
+git -C "$MAIN_REPO" worktree add "$MAIN_REPO/.worktrees/sandbox-acceptance-v2" -b probe/sandbox-acceptance-v2
+# PASS: the worktree is created, including its .git directory, with no "Operation not permitted".
+# FAIL: the same or a similar "could not create leading directories" error — the glob still does not
+#       match the way the sandbox resolves descendant paths, and an absolute-path form must be tried
+#       (per project, since this file ships to generated projects).
+# Either way, record the result HERE and delete the probe worktree and branch.
+```
+
+Until that runs, treat both worktree-glob entries as *shape-verified, behaviour-unverified*: present in
+`.claude/settings.json`, pinned by `npm run test:sandbox`, and not yet observed to actually let
+`git worktree add` succeed under an armed sandbox.
 
 ---
 
