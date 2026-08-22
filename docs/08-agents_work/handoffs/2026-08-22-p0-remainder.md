@@ -213,6 +213,27 @@ template generates**. This is `TARGET-ARCHITECTURE.md` §3(b) — two installers
 `warroom-install.mjs` never reached, nothing guarding the fork — with a security consequence now attached
 rather than a portability one.
 
+**Independently verified 2026-08-22, in all four parts, and it is worse than the paragraph above says:**
+
+```
+$ grep -c '_verdict_tool\|verdict.mjs\|merge_refused' war-room/bin/PROJECT_NAME.tmpl
+0                                          ← completely ungated
+$ grep -n 'tier=ai-assisted\|claude --print' war-room/bin/PROJECT_NAME.tmpl
+2068: resolved_content=$(echo "$conflict_content" | claude --print --model claude-sonnet-4-6 …
+2088: _log_event "merge_complete" "branch=$branch tier=ai-assisted"
+```
+
+`cmd_merge` extracted from both `origin/main:bin/warroom` and the template is **782 lines each**, and every
+differing line is one of two documented placeholder substitutions. Identical logic, zero gate.
+
+**"Nothing compares the two launchers" understated it.** `scripts/warroom-parity.sh` takes a *reference
+launcher as an argument* — an installed binary — **not the template**; and `check:warroom` only runs
+`bash -n scripts/warroom-parity.sh`, a **syntax check on the comparator that never executes it**. No workflow
+references the template at all. So the guard everyone assumes exists is a syntax check on an unrun script.
+
+`bin/install-war-room.sh:72` substitutes the template into `$BIN_DIR/$project_name`, which is how it reaches
+a generated project.
+
 Found by the builder that closed the hole, while closing it. Deliberately **not** fixed in that PR: the
 template is a different artifact with a different blast radius, and enlarging an already-irreversible diff
 to reach it is how a reviewer stops re-reading carefully.
