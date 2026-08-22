@@ -2112,6 +2112,11 @@ _warn_local_only_merge() {
 # field named for a risk tier. Anything reading events.jsonl for tier data got a value the
 # classifier can never produce. The risk tier now comes from scripts/classify.mjs, through
 # scripts/verdict.mjs, and the strategy is logged in its own field.
+#
+# The ladder as written is fast-forward → no-ff → AI-assisted → human. It now STOPS after no-ff.
+# Tiers 1 and 2 move only content the branch diff already contained — which is what the gate below
+# hashes. Tier 3 invents content that was in no diff any verdict covered, so it refuses. The code is
+# still here, and is marked unreachable at the point it stops.
 cmd_merge() {
   local n=$1
   [ -z "$n" ] && echo "Usage: ${SESSION} merge <N>" && exit 1
@@ -2130,10 +2135,18 @@ cmd_merge() {
   # the only thing between a branch and main here was this function, and this function checked
   # nothing.
   #
-  # So: a QA verdict hash-bound to the exact diff being merged, or no merge. Hash-bound, not
-  # signed — a verdict cannot be moved to another diff or survive an edit to the one it approved,
-  # but anyone who can write the repo can write one. See scripts/verdict.mjs for what that does
-  # and does not buy.
+  # So: a QA verdict hash-bound to the BRANCH DIFF — origin/main...branch — or no merge.
+  # Hash-bound, not signed — a verdict cannot be moved to another diff or survive an edit to the
+  # one it approved, but anyone who can write the repo can write one. See scripts/verdict.mjs for
+  # what that does and does not buy.
+  #
+  # This line used to read "hash-bound to the exact diff being merged". It was not true, and tier 3
+  # is where it stopped being true: a conflicted file was piped to a model, the model's stdout was
+  # written back, committed to main, and logged `merge_complete` at the verdict's own tier. That
+  # content was in no diff any verdict ever hashed, and the audit trail said otherwise. The claim is
+  # narrowed here to what is actually checked. CONFLICT RESOLUTION FALLS OUTSIDE IT: a verdict
+  # covers the branch as it stands, never a merge result that does not exist when it is recorded.
+  # That is why tier 3 refuses — see the Tier 3 block below.
   #
   # The whole block runs BEFORE `checkout main`, so a refusal leaves the repository exactly as it
   # was. Every failure path below refuses — missing checker, missing node, unresolvable
@@ -2174,6 +2187,13 @@ cmd_merge() {
   echo -e "  ${C_GREEN}✓${RESET} QA verdict bound to this diff · tier=$tier"
   echo ""
 
+  # Where the operator was standing. Every refusal above this line runs before main is checked
+  # out, so it leaves the repository untouched by construction. A refusal BELOW it has to put the
+  # repository back itself, or "refused" and "did nothing" stop meaning the same thing.
+  local entry_ref
+  entry_ref=$(git -C "$PROJECT_DIR" symbolic-ref --quiet --short HEAD 2>/dev/null \
+    || git -C "$PROJECT_DIR" rev-parse HEAD 2>/dev/null)
+
   git -C "$PROJECT_DIR" checkout main 2>/dev/null || { echo "  ✗ Could not checkout main."; exit 1; }
 
   # ── Tier 1: Fast-forward ──
@@ -2205,6 +2225,65 @@ cmd_merge() {
     return 0
   fi
 
+  # ── The ladder stops here ─────────────────────────────────────────────────────
+  #
+  # Tiers 1 and 2 only ever put content on main that the branch diff already held, and that diff is
+  # what the verdict above hashed. Tier 3 does not: it pipes each conflicted file to a model, writes
+  # stdout back, and commits it to main. Nothing reviewed that. The old code then logged
+  # `merge_complete` at the verdict's tier, so events.jsonl read as though something had.
+  #
+  # There is no `if` guarding this because there is no condition to test. cmd_merge is reached only
+  # from the dispatcher; the gate block above is unconditional and every one of its failure paths
+  # exits. By the time control arrives here a verdict has been required and validated — always. A
+  # guard reading `if the gate ran` would be a condition that can never be false, which reads as a
+  # policy choice while encoding none. If an ungated merge route is ever added, saying so is that
+  # route's job.
+  local conflicted
+  conflicted=$(git -C "$PROJECT_DIR" diff --name-only --diff-filter=U 2>/dev/null)
+
+  echo -e "  ${C_RED}✗ Refusing to merge $branch → main${RESET} — the merge does not apply cleanly."
+  echo ""
+  echo "  The QA verdict is bound to the BRANCH DIFF (origin/main...$branch)."
+  echo "  Resolving a conflict produces content that diff does not contain, so no verdict covers"
+  echo "  the result. Merging it anyway would put unreviewed content on main and record it as"
+  echo "  reviewed. Refusing is the only answer that keeps the audit trail true."
+  echo ""
+  if [ -n "$conflicted" ]; then
+    echo "  Conflicted:"
+    echo "$conflicted" | while read -r f; do [ -n "$f" ] && echo "    • $f"; done
+    echo ""
+  fi
+  echo "  Resolve on the BRANCH, where the resolution lands inside a diff a verdict can bind to:"
+  echo ""
+  echo "    cd $PROJECT_DIR"
+  echo "    git switch $branch"
+  echo "    git merge main                       # resolve the conflict here, by hand"
+  echo "    node scripts/run-gate.mjs --json     # re-review the resolved diff"
+  echo "    node scripts/verdict.mjs record --verdict PASS --by <reviewer> \\"
+  echo "      --evidence \"<what the panel returned>\""
+  echo "    git add .qa && git commit -m \"qa(verdict): PASS\""
+  echo "    ${SESSION} merge $n"
+  echo ""
+
+  # Put the repository back exactly as it was found: no half-merge, and standing where we started.
+  git -C "$PROJECT_DIR" merge --abort 2>/dev/null
+  if [ -n "$entry_ref" ]; then
+    git -C "$PROJECT_DIR" checkout "$entry_ref" 2>/dev/null
+  fi
+
+  # A refusal is logged as a refusal, in the shape the other refusal paths use. `merge_complete` is
+  # never emitted for content no verdict covers — that is the whole defect, stated as a rule.
+  _log_event "merge_refused" "branch=$branch tier=$tier reason=conflict-outside-verdict strategy=none"
+  exit 1
+
+  # ── Tier 3 and Tier 4: RETAINED, AND UNREACHABLE ──────────────────────────────
+  #
+  # Everything below is dead while the block above exits, and it is kept rather than deleted so the
+  # refusal can be lifted by removing one block instead of reconstructing sixty lines out of git
+  # history, and so a reader can see precisely what is being refused.
+  #
+  # It is NOT a fallback. Nothing reaches it. Do not read its presence as a capability this program
+  # has. Whether an ungated merge route should exist is a founder decision, not this function's.
   # ── Tier 3: AI-assisted merge ──
   echo -e "  ${C_PEACH}Tier 3:${RESET} AI-assisted conflict resolution"
   echo ""
