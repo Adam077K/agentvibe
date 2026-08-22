@@ -38,10 +38,13 @@ The strongest single piece of evidence, and it points *away* from buying a vendo
 > patch pairs. Redacting that framing recovered detection to **94–100%**.
 > ([arXiv:2603.18740](https://arxiv.org/html/2603.18740v1), accessed 2026-08-15)
 
-`qa.js:92-94` instructs **two of this repo's three adversarial verifiers to assume the finding is
-false**. That is the measured 60–94-point failure mode, written into the gate as its design, on one
-model family, three times. Buying a second vendor without deleting those two prompts is buying a
-second opinion about a question the panel has already been told the answer to.
+Until #42 (2026-08-15, the same day this document was first drafted), `qa.js`'s three adversarial
+verifiers were not three perspectives — two of them defaulted to `is_real=false`, which is exactly
+the measured 60–94-point failure mode above, written into the gate's own design. **That has since
+been fixed** (§1.3 below): the live lenses (`qa.js:218-220`) are refute / reproduce neutrally /
+steelman, and only one of three now pre-commits to a posture. What buying a second vendor still
+would not fix is the fact §1.3's table restates: every dispatch in this file, oracle through judge,
+is Anthropic.
 
 ---
 
@@ -82,36 +85,45 @@ untracked file not in the index. The substantive point is unchanged and stronger
 suggests: **the independence guard at `claims.js:498` has never executed once**, because it only
 fires when `judged_by` is non-empty.
 
-### 1.3 The QA gate is one family, three times, and two-thirds of it is instructed to dismiss
+### 1.3 The QA gate is one family, N times — the dismiss-bias was fixed in #42, vendor diversity was not
 
 ```
 $ grep -n "model: '" .claude/workflows/qa.js
-122:  reviewDim       … model: 'sonnet'
-132:  verifyFinding   … model: 'sonnet'   ← ×3 per finding
-180:  sweep round     … model: 'sonnet'
-199:  judge           … model: 'opus'
+281:  oracle (check-runner) … model: 'haiku'
+293:  reviewDim             … model: 'sonnet'
+306:  verifyFinding         … model: 'sonnet'   ← ×3 per finding
+395:  sweep round           … model: 'sonnet'
+434:  judge                 … model: 'opus'
 ```
 
-Five dimension reviewers, three adversarial verifiers per block-eligible finding, one binding judge.
-**Every one is Anthropic.** The `full` tier's advertised "Codex CLI second opinion"
-([CLAUDE.md:152](../../CLAUDE.md)) has no dispatch anywhere in `.claude/workflows/`.
+One deterministic check-runner oracle (added by the oracle-first change, 2026-08-23 — it BLOCKs
+before the panel below is ever dispatched, see `qa.js`'s Phase 0), five dimension reviewers, three
+adversarial verifiers per block-eligible finding, one binding judge. **Every one is Anthropic.** The
+`full` tier's advertised "Codex CLI second opinion" ([CLAUDE.md:152](../../CLAUDE.md)) has no
+dispatch anywhere in `.claude/workflows/`.
 
-And the three verifier prompts (`qa.js:92-94`) are not three perspectives — they are one perspective
-and two instructions to dismiss:
+**Correction, 2026-08-23: this section originally claimed `qa.js:92-94` instructed two of three
+adversarial verifiers to assume the finding was false. That was fixed in #42 — the same day this
+document was first drafted — and `:92-94` today sits inside the comment describing the
+reviewer/judge container split (`qa.js:120-122`), not the verifier prompts at all.** The verifier
+lenses now live at `qa.js:218-220`, and the file's own comment above them (`qa.js:202-216`) records
+the history more precisely than this document originally did: until 2026-08-15 two of three lenses
+defaulted to `is_real=false`; the current three are **refute / reproduce neutrally / steelman** —
+one skeptical posture, kept deliberately (a gate that can never argue against a finding trains
+people to route around it), but it no longer holds two of the three votes.
 
-```js
-'Try hard to REFUTE this finding. Default to is_real=false unless the defect is unambiguous…'
-'Reproduce the claim against the real diff. … Is the defect actually present and reachable?'
-'Assume the finding is a false positive. Look for the guard, validation, or context that makes it a non-issue.'
-```
+`verifyFinding` (`qa.js:309-311`) still requires a **strict majority real out of ≥2 votes**, and
+that part of the original analysis is unaffected: a genuine P1 still needs 2-of-3. What no longer
+holds is attributing **34 PASS, 0 BLOCK**
+([CONTROL-PLANE.md:120, :975](agents/CONTROL-PLANE.md)) to a panel where two of three votes were
+dismiss-biased — that panel is not the one in the file today, and the 34-0 figure predates the fix,
+so it is not evidence about the current lenses in either direction. The seeded-defect corpus (§6
+Step 3) is the only instrument that can say whether the fix moved detection.
 
-`verifyFinding` (`qa.js:135-137`) requires a **strict majority real out of ≥2 votes**. So a genuine P1
-must win 2-of-3 from a panel where two members were told to start at "not real", on a model family
-whose sibling loses ~60 points of detection under exactly that framing (§0). This is a
-mechanism-level explanation for **34 PASS, 0 BLOCK** ([CONTROL-PLANE.md:120, :975](agents/CONTROL-PLANE.md))
-that is more specific, and more fixable, than "the gate is uncalibrated".
-
-**This defect is free to fix and a second vendor does not fix it.**
+**What is unchanged, and is the defect this section actually supports: every dispatch above is
+Anthropic, oracle through judge.** That fact does not depend on the verifier-prompt fix. The framing
+defect was free to fix and #42 already fixed it; the single-vendor fact is not fixed by a prompt
+edit — it is what §8's predicate redefinition and §9's tier table are for.
 
 ### 1.4 What is actually installed — and this overturns [ROSTER-SIZE.md:707-712](ROSTER-SIZE.md)
 
