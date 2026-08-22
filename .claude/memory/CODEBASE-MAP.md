@@ -48,7 +48,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:prompt-standard` | `node --test scripts/prompt-standard.test.mjs` |
 | `npm run check:registration` | `node scripts/check-registration.mjs` |
 | `npm run check:routers` | `node scripts/build-skill-routers.mjs --check` |
-| `npm run check:warroom` | `bash -n bin/warroom && node --check scripts/warroom-install.mjs && bash -n scripts/warroom-parity.sh && npm ru` |
+| `npm run check:warroom` | `bash -n bin/warroom && bash -n war-room/bin/PROJECT_NAME.tmpl && node --check scripts/warroom-install.mjs && b` |
 | `npm run curate:skills` | `node scripts/curate-skills.mjs` |
 | `npm run gate` | `node scripts/run-gate.mjs` |
 | `npm run ledger:build` | `node scripts/ledger.mjs build` |
@@ -79,7 +79,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:sandbox` | `node --test scripts/sandbox-config.test.mjs` |
 | `npm run test:skill-clamp` | `node --test scripts/skill-clamp.test.mjs` |
 | `npm run test:tier-gate` | `node --test scripts/check-tier-gate.test.mjs` |
-| `npm run test:warroom` | `node --test scripts/warroom-install.test.mjs` |
+| `npm run test:warroom` | `node --test scripts/warroom-install.test.mjs scripts/warroom-template-guard.test.mjs` |
 | `npm run usage` | `node -e "const u=require('./scripts/lib/usage.js');const w=u.windowUsage({});console.log(w.output_tokens.toLoc` |
 | `npm run warroom:check` | `node scripts/warroom-install.mjs check` |
 | `npm run warroom:fleet` | `node scripts/warroom-install.mjs fleet` |
@@ -121,6 +121,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/skill-clamp.test.mjs` | a skill that subtracts must not be attached silently. |
 | `scripts/usage.test.mjs` | the spend measurement and the ceiling that acts on it. |
 | `scripts/warroom-install.test.mjs` | — |
+| `scripts/warroom-template-guard.test.mjs` | — |
 
 ## What the system asserts
 
