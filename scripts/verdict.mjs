@@ -14,7 +14,7 @@
 // A gate needs something to check that the author cannot trivially restate. The thing that works
 // is a verdict keyed to the CONTENT of the change:
 //
-//   subject = sha256( git diff <merge-base origin/main REF>..REF -- . ':(exclude).qa/verdicts/**' )
+//   subject = sha256( git diff <merge-base origin/main REF>..REF -- . ':(exclude,glob).qa/verdicts/*.json' )
 //
 // THE ANCHOR, AND WHY THIS ONE
 // PR #77 keyed a verdict to a HEAD SHA. That anchor stops existing the instant the verdict is
@@ -59,9 +59,20 @@ const TIER_MAP = path.join(HARNESS_ROOT, '.claude', 'qa-tier-floor.yml');
 
 export const VERDICT_DIR = path.join('.qa', 'verdicts');
 
-// Excluding the verdict directory is what makes the subject survive recording the verdict.
+// Excluding the verdict RECORDS is what makes the subject survive recording the verdict.
 // Changing this pathspec breaks the stability property; merge-gate.test.mjs will say so.
-const DIFF_PATHSPEC = ['--', '.', `:(exclude)${VERDICT_DIR}/**`];
+//
+// It excluded the whole directory — `:(exclude).qa/verdicts/**` — and that was wider than the
+// property needs. Anything under the prefix became invisible to BOTH the subject hash and
+// changedFiles(), so it could neither be seen by a verdict nor raise the tier: an executable
+// dropped at .qa/verdicts/payload.sh rode onto main with the subject byte-identical. Records are
+// only ever written as direct children, `${VERDICT_DIR}/<subject>.json` (see verdictPath below),
+// so excluding exactly those filenames preserves stability and hides nothing else.
+//
+// `glob` is load-bearing, not decoration. Git's default pathspec wildcards match `/` as well, so a
+// bare `*.json` would still hide .qa/verdicts/nested/deep.json — the same hole one directory down.
+// Measured with `git ls-files` across all three candidates before choosing this one.
+const DIFF_PATHSPEC = ['--', '.', `:(exclude,glob)${VERDICT_DIR}/*.json`];
 
 class Refusal extends Error {
   constructor(message, code = 2) {
