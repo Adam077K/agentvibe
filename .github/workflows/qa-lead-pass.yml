@@ -14,10 +14,13 @@
 # rule to blocking.
 #
 # What it enforces:
-#   1. A session file ADDED OR MODIFIED IN THIS PR carries `qa_verdict: PASS`,
-#      or the founder posted an explicit `BYPASS REASON:` under a bypass label.
-#      (Slug matching against the whole sessions directory was removed 2026-08-15 —
-#      it let a branch inherit a PASS written for work already merged to main.)
+#   1. A QA verdict bound to THIS PR'S EXACT DIFF (scripts/verdict.mjs), posted as a
+#      check-run signed by this workflow's own GITHUB_TOKEN — or the founder posted
+#      an explicit `BYPASS REASON:` comment under a bypass label.
+#      (Grepping session files for `qa_verdict: PASS` was removed 2026-08-23 (P0.1) —
+#      that trusted PR-author-authored prose as if it were review output. Before that,
+#      slug matching against the whole sessions directory was removed 2026-08-15 — it
+#      let a branch inherit a PASS written for work already merged to main.)
 #   2. When the classifier floor is `irreversible`, at least one session file in this
 #      PR declares `tier: full` or `tier: irreversible`.
 #
@@ -49,6 +52,9 @@ permissions:
   contents: read
   pull-requests: read
   issues: read   # F12: Required for gh api repos/$REPO/issues/$PR_NUMBER/comments (bypass comment check)
+  checks: write  # Required to post the diff-bound verdict as a check-run signed by this
+                 # workflow's own GITHUB_TOKEN — a PR author can write any line into a file
+                 # they author, but cannot mint a check-run without this token.
 
 jobs:
   qa-gate:
@@ -66,84 +72,24 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Check QA Lead PASS or bypass
+      - name: Check for QA gate bypass
+        id: bypass
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           ADAM_GITHUB_USER: ${{ vars.ADAM_GITHUB_USER }}
-          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
 
-          echo "=== QA Gate check for PR #${PR_NUMBER} on branch ${HEAD_BRANCH} ==="
+          echo "=== QA gate bypass check for PR #${PR_NUMBER} ==="
+          echo "The pass/fail decision is made by the 'Verdict diff-binding check' step"
+          echo "below, which reads a diff-bound verdict signed onto a GitHub check-run —"
+          echo "not by grepping session file content, which a PR author can write to say"
+          echo "anything. This step only checks whether the founder granted an explicit"
+          echo "bypass."
 
-          # ── Step 2: Look for session file ───────────────────────────────────
-          # THE VERDICT MUST COME FROM THIS PR'S OWN DIFF, AND ONLY FROM IT.
-          #
-          # Removed 2026-08-15: a slug match over the whole sessions directory. It resolved
-          # the branch name against session files ALREADY MERGED TO MAIN, so a branch whose
-          # slug happened to match an earlier phase inherited a `qa_verdict: PASS` written
-          # for entirely different work — and `sort | tail -1` picked one arbitrarily when
-          # several matched. This gate's record is 34 PASS and 0 refusals on the substance
-          # of any change; that glob is one of the three reasons.
-          #
-          # The PR-diff path below was already the fallback and was already correct. Deleting
-          # the glob makes it unconditional. This is a pure subtraction — no new logic.
-          SESSION_DIR="docs/08-agents_work/sessions"
-          SESSION_FILE=""
-
-          if [ -z "$SESSION_FILE" ]; then
-            echo "Reading the verdict from this PR's own session files (slug matching removed — it inherited verdicts from merged work)."
-            # List session files added/modified in this PR.
-            # F14: use gh api --paginate (gh pr view --json files caps at 100 files;
-            # large rethink/refactor PRs touching 300+ files would silently miss
-            # session files outside that window).
-            CHANGED_SESSIONS=$(gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate \
-              --jq '.[].filename | select(test("^docs/08-agents_work/sessions/.*\\.md$"))' || echo "")
-            if [ -n "$CHANGED_SESSIONS" ]; then
-              echo "Found session files in PR diff:"
-              echo "$CHANGED_SESSIONS"
-              # Pick the most recently dated one (sort lexically)
-              SESSION_FILE=$(echo "$CHANGED_SESSIONS" | sort | tail -1)
-            fi
-          fi
-
-          echo "Session file found: ${SESSION_FILE:-none}"
-
-          # ── Step 3: Check for qa_verdict: PASS in session file ──────────────
-          # F11: Case-insensitive, whitespace-tolerant, handles quoted YAML values.
-          # Multi-session PRs: ALL changed session files must have qa_verdict: PASS.
-          QA_PASS=false
-          if [ -n "$SESSION_FILE" ] && [ -f "$SESSION_FILE" ]; then
-            # If we fell back to PR diff, validate all changed sessions
-            if [ -n "${CHANGED_SESSIONS:-}" ]; then
-              ALL_PASS=true
-              for s in $CHANGED_SESSIONS; do
-                if [ ! -f "$s" ]; then continue; fi
-                if grep -qiE 'qa_verdict:[[:space:]]+"?PASS"?[[:space:]]*$' "$s"; then
-                  echo "✓ qa_verdict: PASS in $s"
-                else
-                  echo "✗ qa_verdict: PASS missing in $s"
-                  grep "qa_verdict" "$s" || echo "  (no qa_verdict line at all)"
-                  ALL_PASS=false
-                fi
-              done
-              if [ "$ALL_PASS" = "true" ]; then QA_PASS=true; fi
-            else
-              if grep -qiE 'qa_verdict:[[:space:]]+"?PASS"?[[:space:]]*$' "$SESSION_FILE"; then
-                echo "✓ qa_verdict: PASS found in ${SESSION_FILE}"
-                QA_PASS=true
-              else
-                echo "✗ qa_verdict: PASS not found in ${SESSION_FILE}"
-                grep "qa_verdict" "$SESSION_FILE" || echo "(no qa_verdict line at all)"
-              fi
-            fi
-          else
-            echo "✗ No session file added or modified in this PR"
-          fi
-
-          # ── Step 4: Check for bypass label ─────────────────────────────────
+          # ── Bypass label ──────────────────────────────────────────────────
           HAS_BYPASS_LABEL=$(gh pr view "$PR_NUMBER" \
             --repo "$REPO" \
             --json labels \
@@ -151,7 +97,7 @@ jobs:
 
           echo "Has qa-lead-bypass label: ${HAS_BYPASS_LABEL}"
 
-          # ── Step 5: If bypass label present, check Adam's bypass comment ────
+          # ── Bypass label present → require Adam's bypass comment ───────────
           BYPASS_APPROVED=false
           if [ "$HAS_BYPASS_LABEL" = "true" ]; then
             if [ -z "$ADAM_GITHUB_USER" ]; then
@@ -173,37 +119,7 @@ jobs:
             fi
           fi
 
-          # ── Step 6: Final decision ──────────────────────────────────────────
-          if [ "$QA_PASS" = "true" ]; then
-            echo ""
-            echo "✅ QA GATE PASSED — qa_verdict: PASS found in session file"
-            exit 0
-          fi
-
-          if [ "$BYPASS_APPROVED" = "true" ]; then
-            echo ""
-            echo "⚠️  QA GATE BYPASSED — bypass label + Adam comment with BYPASS REASON: present"
-            echo "    Note: audit_log rule_violation row will be written by Inngest on next cycle"
-            exit 0
-          fi
-
-          # ── Step 7: Fail ────────────────────────────────────────────────────
-          echo ""
-          echo "❌ QA GATE FAILED"
-          echo ""
-          echo "To pass this check, ONE of the following must be true:"
-          echo ""
-          echo "  1. A session file ADDED OR MODIFIED IN THIS PR, under"
-          echo "     docs/08-agents_work/sessions/,"
-          echo "     must contain the line: qa_verdict: PASS"
-          echo ""
-          echo "  2. The PR must have the 'qa-lead-bypass' label AND a comment from"
-          echo "     the authorized user containing 'BYPASS REASON:'"
-          echo ""
-          echo "Searched: session files in this PR's diff under ${SESSION_DIR}/"
-          echo "          (slug matching was removed — it inherited verdicts from merged work)"
-          echo "Session file found:        ${SESSION_FILE:-none}"
-          exit 1
+          echo "bypass_approved=${BYPASS_APPROVED}" >> "$GITHUB_OUTPUT"
 
       # ── Tier floor, from THE classifier ────────────────────────────────────
       # Per the 2026-05-16 board decision #4, .claude/qa-tier-floor.yml sets the
@@ -351,8 +267,12 @@ jobs:
           # shellcheck disable=SC2086
           node scripts/check-tier-gate.mjs --floor "$FLOOR" --sessions $SESSION_ARGS
 
-      # ── Shadow: verdict diff-binding check (PR route) ────────────────────────
-      # SHADOW TODAY — this step never fails the job.
+      # ── Verdict diff-binding check (PR route) ──────────────────────────────
+      # BLOCKS. Promoted out of shadow 2026-08-23 (P0.1): a missing or non-matching
+      # verdict now fails the job directly — the shell guard that made this step
+      # non-blocking is gone, and nothing has replaced it. The "Check for QA gate
+      # bypass" step above no longer grants a PASS on its own; it only computes
+      # whether the founder granted an explicit override, which this step reads.
       #
       # Route coverage (explicit, because the gap matters):
       #   · This step covers the PR route (GitHub Actions checkout + push).
@@ -361,42 +281,86 @@ jobs:
       #     and a local merge that never becomes a PR is not checked by CI.
       #
       # Binding model:
-      #   The verdict is hash-bound, not signed. Anyone with repo-write access can
-      #   author a verdict file. The hash guarantees a verdict cannot be moved to a
-      #   different diff and cannot survive an unreviewed edit — it does not prevent
-      #   a write-access holder from recording a verdict for whatever diff they
-      #   choose. Real unforgeability requires a signing key; that decision has not
-      #   been made and is not claimed here.
-      #
-      # Which guard is load-bearing:
-      #   `|| true` is the SOLE guard. It prevents `set -e` from exiting the shell
-      #   when `verdict.mjs check` exits non-zero (i.e. no bound verdict found).
-      #
-      #   The step-level key that lets a failing step not fail the job — GitHub's
-      #   escape hatch, deliberately not spelled here, see below — sat beside it and
-      #   has been REMOVED. This comment used to call it "the backstop for errors
-      #   that occur before `|| true` is reached" and called both required. Neither
-      #   claim survived being tested. All four failure modes were constructed
-      #   against this exact step body under `bash -e`: no bound verdict,
-      #   `origin/main` removed, PATH=/nonexistent, and a script-level exception.
-      #   Every one exited 0 through `|| true`, so the escape hatch was never
-      #   reached. It bought nothing measurable.
-      #
-      #   It also falsified a recorded fact. `c-qa-gate-blocks` asserts that this
-      #   file no longer carries that key, and verifies it by grepping THIS WHOLE
-      #   FILE for the literal string. Adding the field made the claim false and
-      #   `ledger verify` said so — a change-detector firing correctly. That crude
-      #   predicate is also why the token is described here rather than written: a
-      #   comment mentioning it falsifies the claim exactly as the live field did.
-      #   Stated openly rather than worked around quietly — whoever tightens the
-      #   predicate to match a YAML key instead of a substring can delete this
-      #   paragraph.
-      #
-      #   When this step is promoted out of shadow the key must not be here at all.
-      #   On a blocking step it is the difference between a gate and a log line.
-      - name: Shadow verdict diff-binding check
+      #   The verdict RECORD is hash-bound, not signed — anyone with repo-write
+      #   access can author a `.qa/verdicts/*.json` file. What IS signed is the
+      #   check-run posted below: it is created with this workflow's own
+      #   GITHUB_TOKEN, over the `checks: write` permission declared at the top of
+      #   this file. A PR author can write any line they like into a file they
+      #   author; they cannot mint a check-run without that token. The hash still
+      #   guarantees a verdict cannot be moved onto a different diff and cannot
+      #   survive an unreviewed edit to the diff it approved — it does not prove
+      #   who authored the underlying record. Real unforgeability of the record
+      #   itself needs a signing key; that decision has not been made and is not
+      #   claimed here.
+      - name: Verdict diff-binding check — blocking, posted as a signed check-run
+        id: verdict
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BYPASS_APPROVED: ${{ steps.bypass.outputs.bypass_approved }}
         run: |
-          set -euo pipefail
-          echo "=== Shadow: verdict diff-binding check (non-blocking) ==="
-          node scripts/verdict.mjs check --json 2>&1 || true
-          echo "shadow-verdict: step complete (non-blocking)"
+          set -uo pipefail
+          echo "=== Verdict diff-binding check (blocking) ==="
+
+          VERDICT_JSON=$(node scripts/verdict.mjs check --json)
+          VERDICT_EXIT=$?
+          echo "$VERDICT_JSON"
+
+          if [ -z "$VERDICT_JSON" ]; then
+            echo "❌ scripts/verdict.mjs produced no output (exit ${VERDICT_EXIT}) — refusing"
+            echo "   rather than treating silence as a pass."
+            exit 1
+          fi
+
+          OK=$(echo "$VERDICT_JSON" | jq -r '.ok')
+          SUBJECT=$(echo "$VERDICT_JSON" | jq -r '.subject')
+          TIER=$(echo "$VERDICT_JSON" | jq -r '.tier')
+          REASON=$(echo "$VERDICT_JSON" | jq -r '.reason')
+
+          if [ "$OK" = "true" ]; then
+            CONCLUSION="success"
+            SUMMARY="QA verdict PASS bound to diff subject ${SUBJECT:0:12}… (tier=${TIER})."
+          else
+            CONCLUSION="failure"
+            SUMMARY="No QA verdict bound to this diff (reason=${REASON}, subject=${SUBJECT:0:12}…). Run the tier gate, then node scripts/verdict.mjs record --verdict PASS --by <reviewer>, and commit the record."
+          fi
+
+          echo "Posting signed check-run (conclusion=${CONCLUSION})..."
+          if ! gh api "repos/${REPO}/check-runs" \
+            -f name="QA verdict (diff-bound)" \
+            -f head_sha="${HEAD_SHA}" \
+            -f status="completed" \
+            -f conclusion="${CONCLUSION}" \
+            -f "output[title]=QA verdict (diff-bound)" \
+            -f "output[summary]=${SUMMARY}" \
+            > /dev/null; then
+            echo "⚠️  Failed to post the check-run (continuing — the exit code below still gates the job)."
+          fi
+
+          if [ "$OK" = "true" ]; then
+            echo ""
+            echo "✅ QA GATE PASSED — verdict signed and bound to this diff."
+            exit 0
+          fi
+
+          if [ "$BYPASS_APPROVED" = "true" ]; then
+            echo ""
+            echo "⚠️  QA GATE BYPASSED — bypass label + Adam comment with BYPASS REASON: present."
+            echo "    The failing verdict check-run above stands for audit; it is not overwritten."
+            echo "    Note: audit_log rule_violation row will be written by Inngest on next cycle"
+            exit 0
+          fi
+
+          echo ""
+          echo "❌ QA GATE FAILED — ${SUMMARY}"
+          echo ""
+          echo "To pass this check, ONE of the following must be true:"
+          echo ""
+          echo "  1. A QA verdict bound to this PR's exact diff, recorded via"
+          echo "     node scripts/verdict.mjs record --verdict PASS --by <reviewer> ..."
+          echo "     and committed under .qa/verdicts/."
+          echo ""
+          echo "  2. The PR must have the 'qa-lead-bypass' label AND a comment from"
+          echo "     the authorized user containing 'BYPASS REASON:'"
+          exit 1
