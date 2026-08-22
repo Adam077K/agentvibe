@@ -234,3 +234,130 @@ inputs. Parity alone would have covered only what is safe to run.
 **Owner:** ceo
 **Affects:** Phase 2 gate, Phase 9 rollout confidence, `scripts/warroom-parity.sh`
 
+---
+*Eviction round 2026-08-22 — seven entries archived from DECISIONS.md. Criteria: reversible, Affects targets still exist but no citations by distinctive title phrase found in docs/·.claude/·scripts/·*.md.*
+
+## 2026-08-11 — Playbooks declare work graphs and exit gates, never method
+
+**Context:** The system is also the operating standard for building products, which implies repeatable playbooks. That collides directly with the founding principle "constrain outcomes, not methods — a worker gets a goal and a quality bar, never a procedure."
+**Options considered:** Playbook as real step-by-step procedure (re-adopts the prose that rots) / Two kinds, explicitly classified (the classification becomes an unenforced convention) / No playbooks, lenses and gates only (no repeatability) / Work graph + exit gates.
+**Decision:** A playbook declares the stages a category of work passes and the claims + criteria required to exit each. It never declares how to do a stage. Seed set: `ship-feature`, `launch-landing-page`, `price-a-product`, `validate-a-market`, `design-pass`, `research-question`.
+**Rationale:** Preserves method freedom exactly while giving a real standard, and every playbook is a linted data file rather than prose.
+**Reversibility:** reversible
+**Owner:** ceo
+**Affects:** all slash commands, the framer, the gate
+
+## 2026-08-11 — Capabilities: enforce what the runtime enforces, delete the decoration
+
+**Context:** Every agent declares `mcpServers: [linear, github, supabase, mem0, pgvector]` while `settings.json` has no `mcpServers` key and no `.mcp.json` exists anywhere. `security-engineer` and `code-reviewer` are declared read-only reviewers running with full inherited write access.
+**Options considered:** Build the full per-task capability envelope (nothing in 24 systems has done it; high risk of another declared-never-wired field) / Coarse allowlist only / Enforce what is real.
+**Decision:** Use the runtime's `tools:` field on all 7 engines, minimally scoped — reviewer and reader read-only, period. Lint that every declared MCP server resolves. Delete every decorative capability field.
+**Rationale:** A capability field auto-granted whatever it requests is worse than no field: it degrades to false confidence, not to zero. An agent that can edit what it reviews will review what it can edit.
+**Reversibility:** reversible
+**Owner:** ceo
+**Affects:** all engine definitions, settings.json, CI lint
+
+## 2026-08-11 — qa-lead-pass promoted to blocking; memory-file collapse deferred
+
+**Context:** ADR-001 says every gate ships in shadow first and is promoted on evidence. Phase 3 owed a
+promotion decision and a decision on collapsing the four memory files into generated views.
+**Decision:** Promote `qa-lead-pass.yml` to blocking. **Do not** collapse `DECISIONS.md`, `LONG-TERM.md`,
+`USER-INSIGHTS.md` or `CODEBASE-MAP.md` yet.
+**Rationale:** The gate ran in shadow across every PR of Phases 1–2, was correct each time, and demands
+nothing the documentation gate did not already require — so its measured friction is zero, which is the only
+honest reason to promote. The memory collapse is the opposite case: it is a data migration over files holding
+real founder memory, its friction is unmeasured, and a conversion bug would cost more than the staleness it
+fixes. `ledger views` proves the rendering works; the migration waits for a phase that owns it.
+**Reversibility:** reversible (restore `continue-on-error: true`)
+**Owner:** ceo · **Founder decision outstanding:** branch protection on `main` is a repo setting, not a file
+**Affects:** every future PR, `.claude/memory/*`, Phase 4
+
+## 2026-08-12 — Phase 8 chosen over Phase 9 and over venture work; split into 8a read plane and 8b dispatch
+
+**Context:** The Phase 8 handoff recommended neither Phase 8 nor Phase 9, but one real venture task, because
+stop condition 6 is live and nothing built in seven phases has met a task it did not author. Founder chose
+Phase 8. Two measurements then reshaped it. The monthly fleet baseline (stop condition 5b, unrun since Phase
+2) came back **flat — 8 generations total, 5 in scope, unchanged**; the 15→14 launcher drop is `agentvibe`
+itself leaving the standalone set, so Phase 9's debt is measurably not growing. And **no sibling project has
+a claim ledger** — zero `scripts/ledger.mjs`, zero `CLAIM-LEDGER.md` across all 13, all still on the
+pre-collapse 26–32 agent rosters.
+**Decision:** Build Phase **8a**, the read plane, now. Defer **8b** (Dispatch, the only view that writes)
+until Phase 9 gives it targets. Six views ship: Fleet · Sessions · Belief · Conflicts on real data; Project
+and Inbox as *honest* empty states naming the specific missing emitter. Greenfield under `mission-control/`
+on **Bun + Hono + React + Vite**, folded into `npm run check`. Gate: every displayed figure reproducible by
+an independent command, a mutated fixture turns a test red, live data from ≥3 non-`agentvibe` projects, cold
+start < 3 s and refresh < 250 ms.
+**Rationale:** Phase 8's stated gate — *"claims land in that repo's ledger"* — is **unreachable as written**,
+because no second project has a ledger for a claim to land in. Making it reachable means installing the spine
+elsewhere first, which is propagation, which is Phase 9, which the 2026-08-11 founder decision forbids before
+Phase 9. Phase 8's gate therefore depends on Phase 9. Six of the seven views only read, and reads need no
+spine in the target, so the phase splits cleanly at the seam where the conflict actually lives. The speed
+budget is grounded rather than guessed: a cold full parse of all 72 transcripts measures **1,283 ms** and an
+incremental refresh **13 ms**, which is also why **no persistent store is built** — the transcripts already
+are the history, so `initDb()`-with-zero-`INSERT`s is not repeated.
+**Costs accepted by the founder, against recommendation:** Bun+React are this repo's **first dependencies
+ever** (`dependencies: {}`, no lockfile, no `node_modules`, CI never runs an install), and folding
+`check:mc` into `npm run check` means `.github/workflows/ci.yml` must gain `setup-bun` — so the clean-clone
+property becomes "clone, `bun install`, `npm run check`" and PR1 is irreversible tier. Shipping two empty
+views is in tension with rule 6; resolved by making each empty state state its own reason and name what
+would fill it, which is a report rather than a stub.
+**Reversibility:** reversible — `mission-control/` is additive and nothing else imports it; the CI and
+`package.json` edits revert cleanly. The dependency precedent is the part that does not revert.
+**Owner:** ceo · **Open, needed before PR3:** what counts as "the fleet" — defaulting to every git repo
+under the roots, flagging the 8 with a live `.worktrees/.registry` as agent-active
+**Affects:** `mission-control/**`, `package.json`, `.github/workflows/ci.yml`, Phase 9 sequencing
+
+## 2026-08-12 — Two enforcement mechanisms found green over untested capabilities
+
+**Context:** Clearing the two cheap claims due 2026-09-08 meant actually running their checks rather than
+reading them.
+**Decision:** Treat both as defects to fix, not as claims to dispose of. `c-read-only-binding-unverified`
+stays **unresolved** — not passed. `c-lenses-and-playbooks-are-loaded` needs a corrected assert and a
+resolver that can observe the failure mode.
+**Rationale:** `scripts/probe-readonly-engine.sh --verify` printed *"PASS — the restriction binds at runtime,
+not only on paper"* purely because the probe file was absent. The `reviewer` engine reported that `Bash` was
+bound and fully capable of the write, that nothing blocked it, and that the file was absent **because it
+declined on its own judgement**. The script cannot distinguish *could not* from *chose not to* — standing
+rule 11. Separately, `c-lenses-and-playbooks-are-loaded` asserts at `confidence: 1` that lenses are injected
+"mechanically rather than discretionarily", verified by a command that tests **the hook's output**. The hook
+emits 25,613 bytes correctly; this session received a **~2 KB preview plus a file path**, so an agent must
+now *choose* to open a file — which is the definition of discretionary. Standing rule 3, on Phase 6 work.
+Both are mine, from Phases 4 and 6, and both are the exact failure the rebuild exists to eliminate: a green
+check over something nobody observed.
+**Reversibility:** n/a — corrections
+**Owner:** ceo · fix in flight on `fix/readonly-probe-evidence`
+**Affects:** `scripts/probe-readonly-engine.sh`, `docs/03-system-design/CLAIM-LEDGER.md`, the Phase 6
+completion record in `AGENT-SYSTEM-REBUILD.md`, `.claude/hooks/session-start.js` (payload must become a
+router, ~1.5 KB, not a 25 KB dump — same cure Phase 7 found for skills)
+
+## 2026-08-16 — Ship five engines, defer the two that hold credentials
+
+**Context:** `operator` and `instrument` are specified to hold payment keys and deploy tokens. `tools:` is
+not known to bind `Bash`, so a container declared read-only can still write through a shell. The OS sandbox
+those two depend on is configured **nowhere** — `GRANT-HOLDERS.md` records 0 sandbox keys in settings.json.
+**Decision:** Build `orchestrator · builder · designer · reviewer · sourcer`. `operator` and `instrument`
+stay specified and **uncreated** until a sandbox exists. Founder decision, 2026-08-16.
+**The roster answer is still seven** — the argument for the number never depended on creating them all at
+once, and deferring the two does not reopen `ROSTER-SIZE.md`.
+**Reversibility:** reversible — the specifications are written and unchanged.
+**Owner:** ceo · **founder decision** · **Affects:** the roster migration, `docs/03-system-design/agents/`
+
+## 2026-08-12 — Three Phase 6 gate criteria amended, each by a measurement
+
+**Context:** The Phase 6 gate was written in the Phase 6 handoff — by me — before any of the runtime was
+measured. Three of its criteria turned out to describe mechanisms that could not fire or could not be proven.
+**Options considered:** Implement the criteria literally and ship mechanisms that pass their own gate while
+guarding nothing / Amend the criteria quietly / Amend them and record the measurement that forced each.
+**Decision:** Amend, with the number attached. (1) *"The ceiling fires before dispatch"* → **before the next
+unit of work**: measured 0 of this session's 414M tokens passed through `Task`, so a dispatch-gated budget
+would never have fired once in 1,314 turns. (2) *"per session"* → **per rolling 5-hour window**, the actual
+subscription constraint; peak measured across 99 transcripts and 16,900 turns is **1,961,285 output tokens**,
+so warn at 2M and block at 3M. (3) *"the four memory files are generated views, proven non-lossy"* → only
+`CODEBASE-MAP.md` becomes a generated view; the ledger has no field for rejected options or rationale, so
+"non-lossy" fails by construction for `DECISIONS.md`, and three of the four files are empty templates anyway.
+**Rationale:** A gate criterion that cannot be met honestly is worse than no criterion — it forces either a
+false pass or a quiet edit. Recording the measurement makes the amendment auditable.
+**Reversibility:** reversible
+**Owner:** ceo
+**Affects:** Phase 6 acceptance, the budget and stall design, anyone reading the handoff's gate section
+
