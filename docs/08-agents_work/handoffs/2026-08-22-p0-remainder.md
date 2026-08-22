@@ -205,6 +205,51 @@ drifted copies of one file, so patching tier 3 across is a one-off that leaves t
 answer is P1's "one launcher generation" — until then, any fix here must be paired with a check that fails
 when the two disagree on the merge path, or the next divergence is silent too.
 
+## 2.7 · The eviction strategy has a ceiling, and it is close — measured
+
+P4's eviction works, but **stub honesty consumes the headroom eviction frees**, and the rate is now measured
+rather than suspected:
+
+```
+5b8e127  39,909 B  23 dated   origin/main
+a6d06a5  30,272 B  23 dated   evict 7 entries          -9,637
+956b685  33,133 B  24 dated   land the audit entry     +2,861
+8d6492a  35,075 B  24 dated   stubs name real citations +1,942   ← honesty commit
+183fa57  36,573 B  24 dated   supersession + refs       +1,498   ← honesty commit
+```
+
+**The two honesty commits consumed 3,440 B — 36% of what the eviction freed.** The Phase-8 stub is now
+**1,639 B** against the **3,162 B** body it replaced, so evicting that entry nets 1,523 B, under half its
+size. Both were *correct* commits: they exist because stubs asserting "no citations" were false, and a false
+negative in permanent memory is a scheduled deletion of a still-referenced record.
+
+**The constraint that follows:** a stub obliged to enumerate every citation converges on the size of the
+entry it evicts, and at that point eviction buys nothing. Two honest options, neither of which is more
+hand-written stub prose:
+
+- a stub format with a **hard byte ceiling**, enforced the way the file caps are; or
+- **citations recorded outside `DECISIONS.md`** — the ledger already resolves references, and a claim
+  citing an archived entry is exactly the `supports:` shape it has.
+
+Also measured, and it undercuts a stated position: `TARGET-ARCHITECTURE.md` §7 proposes pinning entries
+"cited by a live claim, reusing the dangling-`supports:` check." **Nothing links a claim to a DECISIONS
+entry** (§2.5 above), so that mechanism does not exist yet — and building it is the same work as the second
+option. Do them as one thing.
+
+**Do not start the next eviction round before deciding this.** Three rounds of stub rewriting have now
+happened, each correcting the last, each larger.
+
+## 2.8 · An `ENFORCED` rule does not reach a `.ts` comment
+
+Rule 3 is graded **`ENFORCED` for repo paths** — `check-registration.mjs` fails a build on a dead path cited
+in prose. Measured: `mission-control/test/crosscheck.test.ts:2` cites `docs/03-system-design/DECISIONS.md`,
+a path that has **never existed on any ref** (`git log --all -- <path>` returns nothing), and
+`check:registration` passes. The quoted text is real; it lives at `.claude/memory/DECISIONS_ARCHIVE.md:289-291`.
+
+So the checker covers prose in Markdown and does not reach a citation inside a `.ts` comment. The rule's
+grade is right about its mechanism and wrong about its reach. Narrow the claim, or widen the checker —
+but the sentence and the mechanism should agree, which is the whole point of the ENFORCED/ADVISORY split.
+
 ## 3 · Two issues to file, both pre-existing
 
 - **Path traversal, `scripts/check-dispatch-agenttype.mjs:267`.** `agentType` flows unsanitised into
