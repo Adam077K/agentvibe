@@ -17,9 +17,12 @@ has yet judged the remediation.** This file therefore blocks `qa-lead-pass.yml` 
 88 of 91 session files in this repo say PASS and zero say FAIL; that is the number this file exists to change.
 
 **What the branch does.** Evicts 7 completed entries from `.claude/memory/DECISIONS.md` to
-`DECISIONS_ARCHIVE.md` (39,909 → 35,075 bytes, back under the 40,000-byte cap), adds a 40,000-byte cap on the
-archive itself in `scripts/check-memory-budget.mjs` with tests, and corrects two false sentences in CLAUDE.md.
-Conservation was verified byte-for-byte: all seven bodies are identical in the archive, nothing deleted.
+`DECISIONS_ARCHIVE.md` (39,909 → 35,952 bytes at branch head, back under the 40,000-byte cap), adds a
+40,000-byte cap on the archive itself in `scripts/check-memory-budget.mjs` with tests, and corrects two
+false sentences in CLAUDE.md.
+Conservation was verified byte-for-byte: six of the seven bodies are identical in the archive; the
+seventh, 2026-08-12 *Phase 8 chosen over Phase 9*, carries a correction note added on purpose (its
+1,283 ms figure was refuted by the 2026-08-13 entry). Nothing was deleted — zero lines removed.
 
 **F1 — this PR had no session file of its own.** The only one in the diff,
 `2026-08-20-ceo-audit-and-challenge.md`, declares `branch: docs/ceo-audit-round`. A `full`-tier change adding

@@ -127,12 +127,13 @@ Memory:     Mem0 (primary) + Anthropic Memory Tool (auto-fallback after 3 retrie
 
 **Hard caps:** DECISIONS.md ≤ 50 entries AND ≤ 40,000 bytes — **the byte cap binds, and the entry cap will never
 fire.** The file reached 39,909 bytes at 23 entries: a **marginal cost of 1,735 bytes per entry** (39,909 ÷ 23).
-The 2026-08-22 eviction left it at 35,075 bytes over 24 headings — but do **not** read the resulting ~1,461-byte
-all-entry mean as the cost of adding an entry. Seven of those headings are ~491-byte archive stubs that
-`check-memory-budget.mjs` counts as full entries; the seventeen surviving real entries average **1,822 bytes**.
-Against 4,925 bytes of headroom both anchors agree that two more entries fit, so the cap fires on the **27th** —
-barely half way to 50. These figures move with every edit: recompute with `node scripts/check-memory-budget.mjs`
-rather than quoting them. LONG-TERM.md ≤ 100 lines. Session summaries ≤ 10 lines each.
+It now stands at **35,952 bytes over 24 headings** — but do **not** read the resulting 1,470-byte all-entry
+mean as the cost of adding an entry. Seven of those headings are archive stubs that
+`check-memory-budget.mjs` counts as full entries, averaging 549 bytes and ranging 204–1,018; the seventeen
+surviving real entries average **1,849 bytes**. Against 4,048 bytes of headroom all three anchors agree that
+two more entries fit, so the cap fires on the **27th** — barely half way to 50. These figures move with every
+edit and have gone stale twice: recompute with `node scripts/check-memory-budget.mjs` rather than quoting
+them. LONG-TERM.md ≤ 100 lines. Session summaries ≤ 10 lines each.
 
 ---
 
