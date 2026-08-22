@@ -81,10 +81,42 @@ function changedFiles(ref) {
   }
 }
 
+// Resolve HEAD to a cwd-independent ref. A bare "HEAD" in the emitted invocation resolves in
+// the WORKFLOW's working directory, not the caller's — if pasted into a different session it
+// reviews whatever branch that session happens to be on. A resolved SHA is immutable and always
+// refers to the same commit, from any directory.
+function resolvedRef() {
+  try {
+    const sha = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
+    if (!sha || sha.length < 7) return null;
+    return `origin/main...${sha}`;
+  } catch {
+    return null;
+  }
+}
+
 function main() {
   const asJson = process.argv.includes('--json');
   const requireMode = process.argv.includes('--require');
-  const ref = arg('--ref', 'origin/main...HEAD');
+  // HEAD validation: a bare HEAD in --ref is cwd-dependent (it resolves in the workflow's cwd,
+  // not the caller's). Refuse it explicitly so the mistake is loud, not silent.
+  const rawRef = arg('--ref');
+  if (rawRef !== null && rawRef.includes('HEAD')) {
+    console.error(
+      `run-gate: refusing a ref containing bare "HEAD" (${rawRef}) — HEAD resolves in the workflow's ` +
+      'working directory, not the caller\'s. Use a resolved SHA or origin/<branch> instead.'
+    );
+    process.exit(2);
+  }
+  const ref = rawRef ?? resolvedRef();
+  if (ref === null) {
+    console.error('run-gate: could not resolve a cwd-independent ref from HEAD. Pass --ref <sha or origin/branch> explicitly.');
+    process.exit(2);
+  }
 
   const explicit = [];
   const fi = process.argv.indexOf('--files');
