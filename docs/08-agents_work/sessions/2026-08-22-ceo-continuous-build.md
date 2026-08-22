@@ -16,6 +16,9 @@ corrections:
   - "'Settings are read at session start' is FALSE — the sandbox armed mid-session"
   - "af5a0c1 (**/.worktrees in allowWrite) would NOT have unblocked worktree lanes"
   - "TARGET-ARCHITECTURE's eviction design assumes claims cite DECISIONS entries; nothing does"
+  - "denyRead on ~/.config/gh is a tool outage, not containment — git keeps working via osxkeychain"
+  - "SELF: 'egress is dead' was wrong; the 403s were transient"
+  - "SELF: 'PR 2 is tier-gate BLOCKED' was wrong — zsh does not word-split unquoted expansions; bash does"
 claims_touched: []
 ---
 
@@ -84,16 +87,59 @@ hash. Whichever was recorded second orphaned the first, and §4 requires both ro
   later `--` followed by whitespace — including a benign `git sparse-checkout` next to an `echo "--- x"`.
   `fix/gate-ref-and-hook-fp` fixed only the scratchpad-parity part, and commit `78caf29` on that branch
   says so plainly.
-- **Nothing merged.** Egress died before PRs could be opened. Needs a founder decision on
-  `network.allowedDomains` (`TARGET-ARCHITECTURE.md` §9.6 item 1) — at minimum `github.com` and
-  `registry.npmjs.org` for the harness to function at all.
+- **Nothing merged — PR creation needs the founder.** All four branches are pushed. `git push` works
+  throughout because its credentials live in **osxkeychain**, which a filesystem `denyRead` cannot reach;
+  `gh` is broken because its *config file* sits under `~/.config/gh`, which the armed sandbox denies:
+  `failed to read configuration: open /Users/adamks/.config/gh/config.yml: operation not permitted`.
+  **`denyRead` on `~/.config/gh` is a tool outage, not credential containment** — the same asymmetry
+  `TARGET-ARCHITECTURE.md` §4 predicted for Codex, arriving early via a different binary. Design the P0
+  credential-scoping item against that, not against filenames.
+- **A path traversal in `scripts/check-dispatch-agenttype.mjs:267`** — `agentType` flows unsanitised into
+  `path.join(ROOT, '.claude/agents/' + name + '.md')`. Reproduced: with the traversal target present the
+  checker **silently accepts** an `agentType` resolving outside `.claude/agents/`, which defeats the
+  check's own purpose more than the file read does. `agentInfo` is byte-identical between `main` and
+  `fix/audit-repairs`, so this is **pre-existing on main**, not introduced. Needs its own issue.
+- **`network.allowedDomains` is still unset** (`TARGET-ARCHITECTURE.md` §9.6 item 1). Egress currently
+  works, so this is not urgent — but arming a sandbox whose allowlist is empty is a live risk to any
+  session that loads it, and `sourcer` is the engine it would hurt first.
+
+## Corrections this session made to its own findings
+
+Recorded because this repo's binding constraint is that a confident wrong answer costs more than an
+honest unknown — and three of the four below were produced by *me*, not by a subagent.
+
+- **"Egress is dead, the sandbox blocked it."** Wrong. The 403s were transient; pushes succeeded minutes
+  later. The sandbox arming was real and re-verified; the egress conclusion was not.
+- **"PR 2 is BLOCKED by the tier gate."** Wrong — an artifact of my own test harness. **zsh does not
+  word-split unquoted parameter expansions**; GitHub Actions runs bash, which does. Passing the paths as
+  genuine separate arguments gives `PASS: Floor "irreversible" satisfied … (tier: full)`. Any local
+  reproduction of a CI shell step in zsh inherits this trap.
+- **"PR 2's session file has no `qa_verdict`."** Wrong — a `*` glob in my `git diff -- <path>` filter
+  mismatched and hid one of two files. Both carry `qa_verdict: PASS`.
+- **"Every DECISIONS entry carries `**Reversibility:**`" looked false.** My regex required
+  `**Reversibility**`; the real format is `**Reversibility:**`, colon inside. The field does exist.
+
+## Gate preconditions — checked, not assumed
+
+All three work PRs satisfy both conditions `qa-lead-pass.yml` enforces:
+
+| Branch | classifier floor | session `qa_verdict` | `check-tier-gate` |
+|---|---|---|---|
+| `feat/gate-and-provenance` | irreversible | PASS | exit 0 (tier: irreversible) |
+| `fix/audit-repairs` | irreversible | PASS ×2 | exit 0 (satisfied by tier: full) |
+| `chore/memory-eviction` | full | PASS | exit 0 (advisory at this floor) |
 
 ## Next
 
-1. Founder decides `network.allowedDomains`; restore egress.
-2. Open PR 1 → PR 2 → PR 3 in that order; each needs CI green + QA Lead Pass + founder sign-off.
-   PR 1 is irreversible tier: 2-of-3 multi-judge, which **cannot** satisfy the ≥2-model-family predicate
-   in this runtime — that limit is structural and already recorded.
-3. Close PR #77 in favour of `verdict.mjs`; delete `feat/verdict-diff-binding` and `fix/gate-ref-95`.
-4. P0's remainder is unstarted: sign the check-run and delete the author grep, oracle-first ordering,
-   credential `denyRead` as directories, stale `MODEL-DIVERSITY.md`.
+1. **Founder opens the three PRs** — `gh` cannot run in-session (see above); `git push` already has.
+2. Each needs CI green + QA Lead Pass + founder sign-off. **PR 1 is irreversible tier**, so it wants
+   2-of-3 multi-judge — which **cannot** satisfy the ≥2-model-family predicate in this runtime. Structural,
+   already on record, and a founder decision rather than something to engineer around.
+3. Close PR #77 in favour of `verdict.mjs`; delete `feat/verdict-diff-binding` and `fix/gate-ref-95`
+   (the latter is a strict subset of `fix/gate-ref-and-hook-fp`, which carries the same commit).
+4. File two issues: the `check-dispatch-agenttype.mjs` traversal, and the still-open `git checkout --`
+   hook false positive.
+5. P0's remainder is unstarted: sign the check-run and delete the author grep, oracle-first ordering in
+   `qa.js`, credential `denyRead` as directories, `test:tier-gate` into `npm run check`, and stale
+   `MODEL-DIVERSITY.md` — the last of which re-injects a false P0 on every read, so it should ride with
+   whichever gate PR comes next.
