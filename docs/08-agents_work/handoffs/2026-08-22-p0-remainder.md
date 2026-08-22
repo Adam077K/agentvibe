@@ -107,6 +107,42 @@ Remaining:
 
 ---
 
+## 2.5 · The finding that matters most — `qa-lead-pass.yml` passes on borrowed verdicts
+
+**An integration branch inherits a `qa_verdict: PASS` written for different work, and the gate accepts it.**
+
+`qa-lead-pass.yml` selects the verdict from session files **present in the PR diff**. A branch that merges
+two finished branches inherits their session files — each of which says `PASS` and names *its own* branch
+in frontmatter. The gate finds a PASS, and passes. Measured across all three integration branches built
+this session:
+
+| branch | session file's own `branch:` |
+|---|---|
+| `feat/gate-and-provenance-v2` | *(no `branch:` field at all)* |
+| `fix/audit-repairs` | `fix/gate-ref-and-hook-fp`, `fix/org-chart-truth` |
+| `chore/memory-eviction` | `docs/ceo-audit-round` |
+
+The workflow's own comment at `:80-89` names this defect class verbatim — *"a branch whose slug happened to
+match an earlier phase inherited a `qa_verdict: PASS` written for entirely different work."* The 2026-08-15
+fix closed the **merged-to-main** door. This is the same outcome through the **added-to-diff** door, and
+nothing closes it.
+
+Two consequences worth stating separately:
+
+1. **The orchestrator's own precondition check was insufficient**, and this is recorded because it is the
+   kind of thing that repeats. Verifying "every PR carries a session file with `qa_verdict: PASS`" is true
+   of the check and says nothing about whether the verdict pertains to the diff. An independent reviewer
+   caught it on one PR; it applied to all three.
+2. **This is precisely what `scripts/verdict.mjs` fixes.** A verdict hash-bound to the diff cannot be
+   inherited, because a different diff has a different subject. The PR-route half of that binding is the
+   shadow step already on `feat/gate-and-provenance-v2` — promoting it from shadow to blocking, and
+   deleting the author grep, closes this door as a side effect of P0 item 1. Do that before trusting any
+   integration PR's verdict.
+
+**Interim mitigation, applied here:** each integration branch gets its own session file naming its own
+branch and recording its actual review outcome. That is a convention, not a mechanism — it holds only
+while someone remembers.
+
 ## 3 · Two issues to file, both pre-existing
 
 - **Path traversal, `scripts/check-dispatch-agenttype.mjs:267`.** `agentType` flows unsanitised into
