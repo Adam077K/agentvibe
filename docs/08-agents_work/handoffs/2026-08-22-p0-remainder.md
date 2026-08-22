@@ -86,6 +86,18 @@ session file" was true of the check and silent on whether the verdict covered th
 **The pattern across all three: a method that cannot support the conclusion drawn from it.** That is the same
 defect the gate, the ledger and the lenses all exist to catch, appearing in the agents rather than the code.
 
+The agent that dropped named its own error better than the orchestrator did, and the phrase is worth keeping:
+it had one observation — `HEAD == fed5faa`, clean tree, *now* — and from it manufactured a mechanism for what
+had been true eight minutes earlier ("you sampled between my `git add` and the `git commit`"), having checked
+no timestamp and compared no clocks though both were one command away.
+
+> **It offered a hypothesis in the grammar of a finding.**
+
+That is the failure mode in one sentence, and it is more useful than "verify by execution" because it names
+what the mistake *looks like from inside*: not a guess that feels like a guess, but a guess wearing the
+sentence-shape of a measurement. Every false finding this project has recorded has that shape. When reviewing
+your own output, the question is not "am I confident" but "which command produced this clause."
+
 ## 1 · What is pushed and waiting
 
 | Branch | Ahead | Floor | State |
