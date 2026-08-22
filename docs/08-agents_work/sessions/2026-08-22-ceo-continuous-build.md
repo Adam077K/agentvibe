@@ -42,7 +42,8 @@ engine that judged it. The final PR-1 round also reviewed **the orchestrator's o
 same bar, because its author cannot: every assertion held, including one taken from a builder's report and
 never re-derived, which came back **worse** than written.
 
-**Three separate mechanisms caught real defects, and none of them was a control that reads:**
+**Three separate things caught real defects, and none of them was a control that reads — two were
+mechanisms, and the third was an agent telling the truth about its own work:**
 
 - An **independent reviewer** found that `bin/warroom` tier 3 piped a conflicted file to a model, committed
   the output to `main`, and logged `merge_complete … tier=full`. Reproduction showed worse than alleged: the
@@ -51,15 +52,19 @@ never re-derived, which came back **worse** than written.
 - The **claim ledger** caught the orchestrator. A shadow step commissioned in this session used
   `continue-on-error`, which falsified `c-qa-gate-blocks`; `would_block` went 5 → 6 and named the claim. The
   guard was removed rather than the predicate narrowed to accommodate it.
-- The **session-file gate** blocked a PR because a builder wrote a truthful `qa_verdict: FAIL`. That is the
-  first FAIL in a corpus of 88 session files that all say PASS — the pathology this repo already measured,
-  breaking for the first time.
+- A **builder wrote a truthful `qa_verdict: FAIL`** about its own work (`15131f5` on
+  `chore/memory-eviction`), and the orchestrator then ran the gate's predicate against it by hand.
+  **No PR was blocked, because no PR exists:** `qa-lead-pass.yml` fires only `on: pull_request`, and
+  every branch here is pushed and unopened. So this is evidence of a builder's honesty and of a manual
+  check — not of the enforcement layer firing, which is how it was first written here. What it does
+  break is the corpus: the first FAIL among 88 session files that all say PASS, the pathology this repo
+  already measured.
 
-**Seven review rounds, three FAILs, all findings closed.** Nothing was filed that a reviewer called
-blocking, and the findings the passing rounds raised were fixed rather than deferred, because a gate PR
-should not ship a known bypass. Closed after the first PASS: a project being merged could supply its own
-`scripts/verdict.mjs` and rubber-stamp the gate (`bin/warroom:2071`, contradicting its own comment at
-`:2055` — reproduced landing `tier=rubber-stamp` on `main` with **no verdict record at all**);
+**Eight review rounds (3 + 1 + 4 above), three FAILs, all findings closed.** Nothing was filed that a
+reviewer called blocking, and the findings the passing rounds raised were fixed rather than deferred,
+because a gate PR should not ship a known bypass. Closed after the first PASS: a project being merged could
+supply its own `scripts/verdict.mjs` and rubber-stamp the gate (`bin/warroom:2071`, contradicting its own
+comment at `:2055` — reproduced landing `tier=rubber-stamp` on `main` with **no verdict record at all**);
 `.qa/verdicts/**` hid arbitrary files from both the subject hash and the tier classifier; and tier 1's
 comment overclaimed when local `main` is behind `origin/main`.
 
@@ -77,7 +82,7 @@ value of a review layer is measured by what it refuses, not by what it approves:
   regardless of working-tree state. A second reviewer then **retracted its own earlier use of it**,
   unprompted.
 - **The comment scope.** Handed one stale comment, a builder found three. The sharpest: `verdict.mjs:24`
-  stated the subject anchor one way while `:17` stated it another, **eight lines apart in the same file**,
+  stated the subject anchor one way while `:17` stated it another, **seven lines apart in the same file**,
   introduced by the commit that fixed that class one file over.
 - **The stopping point.** Asked whether four rounds was too few, a reviewer answered with a test rather
   than agreement: the findings converged p1 → medium → low → nothing, and the final round was the first to
@@ -91,7 +96,7 @@ value of a review layer is measured by what it refuses, not by what it approves:
 The handoff asked to continue toward P0→P6. It could not start there: **eight branches of finished work
 were unmerged**, five had never been pushed anywhere, and two of the eight were **two incompatible
 implementations of the same P0 primitive**. Three were the repairs #97 commissioned and the audit round
-never landed — which is why the false 20-agent org chart was still live at `CLAUDE.md:8-30` and issues
+never landed — which is why the false 21-agent org chart was still live at `CLAUDE.md:8-30` and issues
 #95/#96 were still open.
 
 **The two P0 halves mutually invalidated each other.** `feat/merge-gate` hashed the reviewed diff
@@ -105,11 +110,22 @@ hash. Whichever was recorded second orphaned the first, and §4 requires both ro
 - **Baseline: 27 of 28.** The only failure is `check:mc`'s SSE test, which cannot bind a listening socket
   in-session. `test:registration` and `test:skill-clamp` **passed** here — they fail only under an armed
   sandbox, so this is a stricter baseline than 2026-08-20's.
-- **PR 1** `feat/gate-and-provenance` — 19 commits, 22 files, +2467/−42, classifier tier **irreversible**
-  (`.claude/hooks/**`). `package.json` resolved as a true union: chain carries both `test:provenance` and
-  `test:merge-gate`; scripts carry all four keys. `CODEBASE-MAP.md` regenerated, never hand-merged.
-  Both `ci.yml` steps confirmed present rather than assumed. 27/28 green, both workflows valid YAML.
-- **PR 2** `fix/audit-repairs` — 14 commits, **zero conflicts**, 9 targeted suites pass.
+- **PR 1** `feat/gate-and-provenance-v2` — 26 commits, 18 files, +2647/−36, classifier tier
+  **irreversible** (`.claude/hooks/**`). `package.json` resolved as a true union: chain carries both
+  `test:provenance` and `test:merge-gate`; scripts carry all four keys. `CODEBASE-MAP.md` regenerated,
+  never hand-merged. Both `ci.yml` steps confirmed present rather than assumed. 27/28 green, both
+  workflows valid YAML.
+
+  **`feat/gate-and-provenance` is a superseded first attempt and must not be merged.** An earlier
+  version of this document named it as PR 1 and gave its figures (19 commits, 22 files, +2467/−42).
+  It is **not** an ancestor of v2 — `git merge-base --is-ancestor feat/gate-and-provenance
+  feat/gate-and-provenance-v2` returns false — and it is pushed to GitHub under that name, so opening
+  a PR on it is one autocomplete away. Merging it ships four defects v2 closed: tier 3 still resolves
+  conflicts with a model instead of refusing; `_verdict_tool` still falls back to
+  `$PROJECT_DIR/scripts/verdict.mjs`, so the repository being merged supplies its own gate; the shadow
+  step still carries `continue-on-error: true`; and the subject pathspec still lacks `glob`, leaving a
+  nested `.qa/verdicts/**` file invisible to the hash.
+- **PR 2** `fix/audit-repairs` — 15 commits, **zero conflicts**, 9 targeted suites pass.
 
 ## Four beliefs this session refuted
 
@@ -117,11 +133,18 @@ hash. Whichever was recorded second orphaned the first, and §4 requires both ro
    it, and prescribed a restart on that basis. Fast-forwarding the worktree to `origin/main` **armed the
    sandbox mid-session**: `~/.ssh`, `~/.aws`, `~/.config/gh` flipped readable→denied and `SANDBOX_RUNTIME`
    appeared.
-2. **The armed sandbox denies all egress, not some.** `HTTPS_PROXY=localhost:65100` returns 403 for
-   GitHub *and* npm, because `network.allowedDomains` is unset and `sandbox-config.test.mjs` asserts it
-   must stay unset without founder input. Arming (#94) therefore shipped **deny-all, not an allowlist** —
-   and `sourcer`, the one engine whose purpose is fetching web content, has no network in any session
-   that loads these settings.
+2. **The armed sandbox splits clients by proxy-awareness. It does not deny all egress.** This item
+   first read *“denies all egress, not some — `HTTPS_PROXY=localhost:65100` returns 403 for GitHub and
+   npm”*, and **neither half reproduces**. Measured in an armed session: a proxy-aware client reaches
+   the network and a non-proxy-aware one does not. `git ls-remote --heads origin` exits 0 and returns
+   the ref, because `git` honours `HTTPS_PROXY` and issues CONNECT; run the same command with the proxy
+   variables stripped and it fails `Could not resolve host: github.com`, which is what isolates
+   proxy-awareness as the cause. Node's `fetch` ignores the proxy entirely and dies at DNS —
+   `fetch('https://api.github.com/')` returns `ENOTFOUND`. No 403 was observed from either.
+   `network.allowedDomains` is still unset and `sandbox-config.test.mjs` asserts it must stay unset
+   without founder input, so nothing is allowlisted — but the effect is **client-shaped**, not blanket.
+   The consequence for `sourcer` stands, now derived from the true premise: it fetches, so it has no
+   network in any session that loads these settings, while `git` in that same session does.
 3. **`af5a0c1` would not have unblocked worktree lanes.** There are three independent denials, not one:
    writes outside the project root; **writing any file named `.mcp.json`**, which this repo tracks so
    every fresh checkout dies; and `git worktree add` needing the main repo's `.git/config`. The predicted
@@ -131,30 +154,47 @@ hash. Whichever was recorded second orphaned the first, and §4 requires both ro
    `supports:` targets are claim ids and ADR ids (`d-001`) — **nothing links a claim to a DECISIONS
    entry.** Pinning must be done by textual citation search instead.
 
-## Two containment gaps found
+## One containment gap, and one protection that is not this repository's
 
-- **`mv` bypasses the `.mcp.json` write protection.** A direct write to that name is denied; `mv` onto it
-  succeeds. The control that stops an agent granting itself MCP servers is one rename away. *(Used here
-  only to restore a legitimate checkout — recorded rather than quietly relied upon.)*
 - **`Write`/`Edit` are confined to the project root; `Bash` is not.** Containment is tool-shaped, not
-  path-shaped. This is issue #96's C2, which `fix/gate-ref-and-hook-fp` documents rather than fakes.
+  path-shaped, and it is still live on `main`: the `Edit|Write|NotebookEdit` branch of
+  `.claude/hooks/pre-tool-use.sh` refuses any path outside the project root, while the `Bash` branch
+  carries no path rule at all. This is issue #96's **C3**, and `fix/gate-ref-and-hook-fp` **fixed** it
+  rather than documenting it — that branch adds a UID-scoped scratchpad root to the allowed-roots loop
+  with three tests. The fix is unmerged, so the asymmetry is what a session on `main` still meets.
+  (#96's **C2** is the separate heredoc-body false positive, and *that* is documented rather than
+  fixed, because it is unfixable without a shell parser. This document had the two swapped.)
+- **The `.mcp.json` write denial is a Claude Code runtime protection, not a harness control** — so it
+  is not a containment gap this project has, and not this project's to close. Recorded because this
+  session repeatedly called it one. Nothing in `.claude/settings.json` (ten deny rules, every one a
+  `Bash(...)` pattern) and nothing in `pre-tool-use.sh` denies a write to that basename: the
+  `Edit|Write|NotebookEdit` branch denies by project-root containment, by `.env*` basename, and by
+  existing Supabase migration path. The repo's only `.mcp.json` logic is `mcp_policy_check`, which
+  governs **MCP calls** and reads the file to decide scope. The operational advice is unchanged and
+  still right: treat the rename as a bypass of a live guard, never issue it as routine, and prove a
+  diff cannot contribute instead of restoring the file.
 
 ## Still open
 
-- **The `git checkout --` hook false positive is NOT fixed.** It blocked three of this session's own
-  commands. The rule `git\b.*checkout\b.*--\s+` fires on any command containing a `checkout` token plus a
+- **The `git checkout --` hook false positive is NOT fixed.** It blocked **at least five** commands across
+  this session — three counted by the orchestrator, a fourth that an agent hit inside a heredoc, and a
+  fifth found by the reviewer of this document. Five is a floor, not a total: each agent sees only its
+  own blocks, so nobody is positioned to count them all.
+  The rule `git\b.*checkout\b.*--\s+` fires on any command containing a `checkout` token plus a
   later `--` followed by whitespace — including a benign `git sparse-checkout` next to an `echo "--- x"`.
   `fix/gate-ref-and-hook-fp` fixed only the scratchpad-parity part, and commit `78caf29` on that branch
   says so plainly.
-- **Nothing merged — PR creation needs the founder.** All four branches are pushed. `git push` works
+- **Nothing merged — PR creation needs the founder.** All six live branches are pushed — seven refs on
+  the remote, counting the superseded `feat/gate-and-provenance`. `git push` works
   throughout because its credentials live in **osxkeychain**, which a filesystem `denyRead` cannot reach;
   `gh` is broken because its *config file* sits under `~/.config/gh`, which the armed sandbox denies:
   `failed to read configuration: open /Users/adamks/.config/gh/config.yml: operation not permitted`.
   **`denyRead` on `~/.config/gh` is a tool outage, not credential containment** — the same asymmetry
   `TARGET-ARCHITECTURE.md` §4 predicted for Codex, arriving early via a different binary. Design the P0
   credential-scoping item against that, not against filenames.
-- **A path traversal in `scripts/check-dispatch-agenttype.mjs:267`** — `agentType` flows unsanitised into
-  `path.join(ROOT, '.claude/agents/' + name + '.md')`. Reproduced: with the traversal target present the
+- **A path traversal in `scripts/check-dispatch-agenttype.mjs:267-268`** — `agentType` flows
+  unsanitised into a template literal at `:267`, which `:268` passes straight to `path.join(ROOT, rel)`.
+  Reproduced: with the traversal target present the
   checker **silently accepts** an `agentType` resolving outside `.claude/agents/`, which defeats the
   check's own purpose more than the file read does. `agentInfo` is byte-identical between `main` and
   `fix/audit-repairs`, so this is **pre-existing on main**, not introduced. Needs its own issue.
@@ -184,18 +224,24 @@ All three work PRs satisfy both conditions `qa-lead-pass.yml` enforces:
 
 | Branch | classifier floor | session `qa_verdict` | `check-tier-gate` |
 |---|---|---|---|
-| `feat/gate-and-provenance` | irreversible | PASS | exit 0 (tier: irreversible) |
-| `fix/audit-repairs` | irreversible | PASS ×2 | exit 0 (satisfied by tier: full) |
+| `feat/gate-and-provenance-v2` | irreversible | PASS | exit 0 (tier: irreversible) |
+| `fix/audit-repairs` | irreversible | PASS ×3 | exit 0 (satisfied by tier: full) |
 | `chore/memory-eviction` | full | PASS | exit 0 (advisory at this floor) |
 
 ## Next
 
-1. **Founder opens the three PRs** — `gh` cannot run in-session (see above); `git push` already has.
+1. **Founder opens five PRs** — `gh` cannot run in-session (see above); `git push` already has. Three
+   work branches (`feat/gate-and-provenance-v2`, `fix/audit-repairs`, `chore/memory-eviction`) and the
+   two single-commit branches the session split out and then nearly stranded:
+   `feat/sandbox-worktree-allowlist` and `chore/ledger-2026-09-08-dispositions`. The second is
+   time-sensitive — it disposes claims dated 2026-09-08.
 2. Each needs CI green + QA Lead Pass + founder sign-off. **PR 1 is irreversible tier**, so it wants
    2-of-3 multi-judge — which **cannot** satisfy the ≥2-model-family predicate in this runtime. Structural,
    already on record, and a founder decision rather than something to engineer around.
-3. Close PR #77 in favour of `verdict.mjs`; delete `feat/verdict-diff-binding` and `fix/gate-ref-95`
-   (the latter is a strict subset of `fix/gate-ref-and-hook-fp`, which carries the same commit).
+3. Close PR #77 in favour of `verdict.mjs`; delete `feat/verdict-diff-binding`, `fix/gate-ref-95`
+   (a strict subset of `fix/gate-ref-and-hook-fp`, which carries the same commit) and
+   **`feat/gate-and-provenance`, locally and on the remote** — leaving a superseded branch that four
+   defects distinguish from the one to merge, under a name one character shorter, is the whole risk.
 4. File two issues: the `check-dispatch-agenttype.mjs` traversal, and the still-open `git checkout --`
    hook false positive.
 5. P0's remainder is unstarted: sign the check-run and delete the author grep, oracle-first ordering in
