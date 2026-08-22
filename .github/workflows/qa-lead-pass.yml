@@ -369,13 +369,32 @@ jobs:
       #   been made and is not claimed here.
       #
       # Which guard is load-bearing:
-      #   `|| true` is load-bearing — it prevents `set -e` from exiting the shell
+      #   `|| true` is the SOLE guard. It prevents `set -e` from exiting the shell
       #   when `verdict.mjs check` exits non-zero (i.e. no bound verdict found).
-      #   `continue-on-error: true` is the backstop for errors that occur before
-      #   `|| true` is reached (e.g. a script-level exception before the guard
-      #   line). Both are required; `|| true` is the primary guard.
+      #
+      #   The step-level key that lets a failing step not fail the job — GitHub's
+      #   escape hatch, deliberately not spelled here, see below — sat beside it and
+      #   has been REMOVED. This comment used to call it "the backstop for errors
+      #   that occur before `|| true` is reached" and called both required. Neither
+      #   claim survived being tested. All four failure modes were constructed
+      #   against this exact step body under `bash -e`: no bound verdict,
+      #   `origin/main` removed, PATH=/nonexistent, and a script-level exception.
+      #   Every one exited 0 through `|| true`, so the escape hatch was never
+      #   reached. It bought nothing measurable.
+      #
+      #   It also falsified a recorded fact. `c-qa-gate-blocks` asserts that this
+      #   file no longer carries that key, and verifies it by grepping THIS WHOLE
+      #   FILE for the literal string. Adding the field made the claim false and
+      #   `ledger verify` said so — a change-detector firing correctly. That crude
+      #   predicate is also why the token is described here rather than written: a
+      #   comment mentioning it falsifies the claim exactly as the live field did.
+      #   Stated openly rather than worked around quietly — whoever tightens the
+      #   predicate to match a YAML key instead of a substring can delete this
+      #   paragraph.
+      #
+      #   When this step is promoted out of shadow the key must not be here at all.
+      #   On a blocking step it is the difference between a gate and a log line.
       - name: Shadow verdict diff-binding check
-        continue-on-error: true
         run: |
           set -euo pipefail
           echo "=== Shadow: verdict diff-binding check (non-blocking) ==="
