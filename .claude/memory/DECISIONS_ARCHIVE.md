@@ -1,6 +1,8 @@
 # Architecture & Strategy Decisions — Archive
 *Archived from DECISIONS.md on 2026-08-16. Reason: file exceeded 40,000-byte budget (was 58,166 bytes / 38 entries). Covered Phases 1-3 specifics and superseded decisions. Nothing deleted. See DECISIONS.md for current entries.*
 
+*Second eviction 2026-08-22 (7 entries, byte cap again). **The citation check that authorised those seven was a title-phrase grep, not an exhaustive reference search.** It cannot see a citation made by date (`projects.ts:3` → “DECISIONS.md 2026-08-12”) or by paraphrase (`views.test.tsx:1961` → “the entry already in DECISIONS.md”), and four of the seven stubs asserted “no citations” when citations of exactly those kinds existed. Before deleting anything in this file — which `scripts/check-memory-budget.mjs:69-72` invites once “nothing references them any longer” — grep the entry's **date** and its distinctive **body** phrases, not only its title.*
+
 ---
 
 ## 2026-08-11 — Fleet propagation moves from last phase to Phase 2

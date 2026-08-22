@@ -124,9 +124,9 @@ unlike the eleven shimmed names, deleting this one actually removes it.
 **Affects:** all resolvers, the pre-tool hook, CI, the outbound queue
 
 ## 2026-08-11 — Playbooks declare work graphs and exit gates, never method
-*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Decision is implemented in .claude/playbooks/ and CLAUDE.md; no citations to this entry.*
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Decision is implemented in `.claude/playbooks/` and CLAUDE.md. **Checked by title-phrase grep only, and none found** — the rule itself is restated in `schema-lint.js:1428` and `ci.yml:148`, but neither references this record.*
 ## 2026-08-11 — Capabilities: enforce what the runtime enforces, delete the decoration
-*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Decision is implemented in schema-lint and agent definitions; no citations to this entry.*
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Decision is implemented in schema-lint and agent definitions. **Cited, and the original stub was wrong to say otherwise:** `docs/03-system-design/TARGET-ARCHITECTURE.md` lists this entry under **Keep** for the Mem0 deletion sweep — its `Context:` line is the record that `mcpServers: [... mem0 ...]` was declared while no MCP config existed. Do not delete: a true statement the sweep must not take with it.*
 ## 2026-08-11 — The claim is the unit; the ledger has one classifier and one parser
 
 **Context:** Phase 3 builds the enforcement spine. Three sub-decisions had real alternatives.
@@ -146,11 +146,11 @@ a decorative mechanism on the critical path.
 **Affects:** `.claude/qa-tier-floor.yml`, `scripts/lib/*`, `.github/workflows/qa-lead-pass.yml`, Phase 4 lenses
 
 ## 2026-08-11 — qa-lead-pass promoted to blocking; memory-file collapse deferred
-*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Completed action; the gate is live; no citations to this entry.*
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Completed action; the gate is live. **Checked by title-phrase grep only, and none found** — `PHASE-3-HANDOFF.md:57` and `AGENT-SYSTEM-REBUILD.md:314` record the same promotion independently, without citing this record.*
 ## 2026-08-12 — Phase 8 chosen over Phase 9 and over venture work; split into 8a read plane and 8b dispatch
-*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Phase 8a complete; scope decisions executed; no citations by distinctive phrase.*
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Phase 8a complete; scope decisions executed. **Cited by date rather than by phrase, which the title grep could not see:** `mission-control/server/projects.ts:3` reads *“Fleet scope decision (already made, see .claude/memory/DECISIONS.md 2026-08-12)”*, and the default it relies on — every git repo under the roots is a project, `.worktrees/.registry` flags it agent-active — is this entry's `Open, needed before PR3:` line, now in the archive.*
 ## 2026-08-12 — Two enforcement mechanisms found green over untested capabilities
-*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Historical defect-finding; corrections are in scripts/; no citations.*
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Historical defect-finding; corrections are in `scripts/`. **Cited in three live files, and the original stub was wrong to say none:** `docs/08-agents_work/2026-08-13-rethink-board.md:19` quotes this body verbatim (*“an agent must now choose to open a file — which is the definition of discretionary”*); `mission-control/test/collectors.test.ts:445` invokes it as *“the ‘two green checks over one untested capability’ pattern already in DECISIONS.md”* to justify deleting a barrier that never fired; and `mission-control/test/views.test.tsx:1961` as *“a green check over an untested capability, which is the entry already in DECISIONS.md”* to refuse a coverage percentage as evidence. Two tests reason from this record.*
 ## 2026-08-13 — the transcript corpus was measured 28× too small; cold-start budget raised to 10s
 
 **Context:** The 2026-08-12 entry above justifies "no persistent store" with *"a cold full parse of all 72
@@ -319,7 +319,7 @@ standing rule it makes every mixed change a two-PR ceremony).
 **Owner:** ceo · **founder decision** · **Affects:** `.github/workflows/qa-lead-pass.yml`, `CLAUDE.md`
 
 ## 2026-08-16 — Ship five engines, defer the two that hold credentials
-*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Roster decision captured in AGENTS.md and docs; no citations to this entry.*
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Roster decision captured in AGENTS.md and docs. **Cited, and the original stub was wrong to say otherwise:** `docs/08-agents_work/handoffs/2026-08-15-implementation.md:112-114` — *“whether `operator`/`instrument` wait for the OS sandbox (recorded in `DECISIONS.md` as: ship five, defer two)”* — which is an item still open on the founder, not a closed one.*
 ## 2026-08-16 — The eleven shims stay until nothing references their names
 
 **Context:** 17 agent files here, 44 in `~/.claude/agents/`; 11 names exist in both with **different
