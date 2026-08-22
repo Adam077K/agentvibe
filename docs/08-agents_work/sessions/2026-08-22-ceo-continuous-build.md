@@ -24,8 +24,39 @@ claims_touched: []
 
 # Continuous build — the backlog, the gate, and four refuted beliefs
 
-**Status:** PR 1 and PR 2 built and verified; PR 3 in flight; **all PRs blocked from merging by loss of
-network egress.** No merge was performed. Every branch is preserved.
+**Status:** Three work PRs built, verified and independently reviewed. **Nothing merged, nothing
+self-certified.** Every branch is pushed. What remains is founder action: opening the PRs (`gh` cannot run
+in-session), and one decision no amount of further work resolves — see the last section.
+
+## Review outcomes — every verdict came from an engine that did not produce the work
+
+| PR | first review | remediation | re-review |
+|---|---|---|---|
+| `feat/gate-and-provenance-v2` | **FAIL** — HIGH: gate bound the branch diff, not the merge result | tier 3 refused; audit record made true; claim narrowed | **PASS** — closure reproduced by execution |
+| `fix/audit-repairs` | **PASS** | — | — |
+| `chore/memory-eviction` | **FAIL** — two p1 on the `evidence` lens | stubs name real citations; own session file; pointers de-rotted | **PASS** — both blockers closed |
+
+**Three separate mechanisms caught real defects, and none of them was a control that reads:**
+
+- An **independent reviewer** found that `bin/warroom` tier 3 piped a conflicted file to a model, committed
+  the output to `main`, and logged `merge_complete … tier=full`. Reproduction showed worse than alleged: the
+  model's resolution kept only `main`'s side, **silently discarding the branch's reviewed line**, then deleted
+  the branch with `-d` because git considered it merged.
+- The **claim ledger** caught the orchestrator. A shadow step commissioned in this session used
+  `continue-on-error`, which falsified `c-qa-gate-blocks`; `would_block` went 5 → 6 and named the claim. The
+  guard was removed rather than the predicate narrowed to accommodate it.
+- The **session-file gate** blocked a PR because a builder wrote a truthful `qa_verdict: FAIL`. That is the
+  first FAIL in a corpus of 88 session files that all say PASS — the pathology this repo already measured,
+  breaking for the first time.
+
+**Findings left open by the passing reviews**, all the same class as the HIGH finding and all one-line:
+a project being merged could supply its own `scripts/verdict.mjs` and rubber-stamp the gate
+(`bin/warroom:2071`, contradicting its own comment at `:2055`); `.qa/verdicts/**` hides arbitrary files from
+both the subject hash and the tier classifier; and tier 1's comment overclaims when local `main` is behind
+`origin/main`. Being fixed rather than filed, because the gate PR should not ship a known bypass.
+
+**Every review was a single model family, and each said so unprompted.** `risk: irreversible` nominally wants
+≥2 distinct families; this runtime has no non-Anthropic model. Structural, and a founder decision.
 
 ## What the state actually was
 
