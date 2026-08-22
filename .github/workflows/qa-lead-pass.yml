@@ -350,3 +350,34 @@ jobs:
           # The same logic is unit-tested by `npm run test:tier-gate` in ci.yml.
           # shellcheck disable=SC2086
           node scripts/check-tier-gate.mjs --floor "$FLOOR" --sessions $SESSION_ARGS
+
+      # ── Shadow: verdict diff-binding check (PR route) ────────────────────────
+      # SHADOW TODAY — this step never fails the job.
+      #
+      # Route coverage (explicit, because the gap matters):
+      #   · This step covers the PR route (GitHub Actions checkout + push).
+      #   · `bin/warroom cmd_merge` covers the local-merge route.
+      #   · Neither covers the other — a diff that bypasses CI is not checked here,
+      #     and a local merge that never becomes a PR is not checked by CI.
+      #
+      # Binding model:
+      #   The verdict is hash-bound, not signed. Anyone with repo-write access can
+      #   author a verdict file. The hash guarantees a verdict cannot be moved to a
+      #   different diff and cannot survive an unreviewed edit — it does not prevent
+      #   a write-access holder from recording a verdict for whatever diff they
+      #   choose. Real unforgeability requires a signing key; that decision has not
+      #   been made and is not claimed here.
+      #
+      # Which guard is load-bearing:
+      #   `|| true` is load-bearing — it prevents `set -e` from exiting the shell
+      #   when `verdict.mjs check` exits non-zero (i.e. no bound verdict found).
+      #   `continue-on-error: true` is the backstop for errors that occur before
+      #   `|| true` is reached (e.g. a script-level exception before the guard
+      #   line). Both are required; `|| true` is the primary guard.
+      - name: Shadow verdict diff-binding check
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          echo "=== Shadow: verdict diff-binding check (non-blocking) ==="
+          node scripts/verdict.mjs check --json 2>&1 || true
+          echo "shadow-verdict: step complete (non-blocking)"
