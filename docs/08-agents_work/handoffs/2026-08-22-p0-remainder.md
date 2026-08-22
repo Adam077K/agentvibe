@@ -143,6 +143,27 @@ Two consequences worth stating separately:
 branch and recording its actual review outcome. That is a convention, not a mechanism — it holds only
 while someone remembers.
 
+## 2.6 · Closing tier 3 in `bin/warroom` does not close it in generated projects
+
+`war-room/bin/PROJECT_NAME.tmpl:2027` still carries the **original tier 3 verbatim**, and still logs
+`_log_event "merge_complete" "branch=$branch tier=ai-assisted"` — i.e. it also retains the
+strategy-in-the-tier-field bug that `feat/merge-gate` fixed in `bin/warroom`. **Nothing compares the two.**
+`warroom-parity.sh` diffs only six read-only commands, and `check:warroom` only syntax-checks the template.
+
+So the unreviewed-merge route is closed in this repo and **will keep being seeded into every project the
+template generates**. This is `TARGET-ARCHITECTURE.md` §3(b) — two installers, two generations,
+`warroom-install.mjs` never reached, nothing guarding the fork — with a security consequence now attached
+rather than a portability one.
+
+Found by the builder that closed the hole, while closing it. Deliberately **not** fixed in that PR: the
+template is a different artifact with a different blast radius, and enlarging an already-irreversible diff
+to reach it is how a reviewer stops re-reading carefully.
+
+**What the fix has to be, and it is not a copy-paste:** the two launchers are different *generations*, not
+drifted copies of one file, so patching tier 3 across is a one-off that leaves the fork intact. The durable
+answer is P1's "one launcher generation" — until then, any fix here must be paired with a check that fails
+when the two disagree on the merge path, or the next divergence is silent too.
+
 ## 3 · Two issues to file, both pre-existing
 
 - **Path traversal, `scripts/check-dispatch-agenttype.mjs:267`.** `agentType` flows unsanitised into
