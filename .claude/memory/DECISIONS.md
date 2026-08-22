@@ -148,17 +148,20 @@ a decorative mechanism on the critical path.
 ## 2026-08-11 — qa-lead-pass promoted to blocking; memory-file collapse deferred
 *Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Completed action; the gate is live. **Checked by title-phrase grep only, and none found** — `PHASE-3-HANDOFF.md:57` and `AGENT-SYSTEM-REBUILD.md:314` record the same promotion independently, without citing this record.*
 ## 2026-08-12 — Phase 8 chosen over Phase 9 and over venture work; split into 8a read plane and 8b dispatch
-*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Phase 8a complete; scope decisions executed. **Cited by date rather than by phrase, which the title grep could not see:** `mission-control/server/projects.ts:3` reads *“Fleet scope decision (already made, see .claude/memory/DECISIONS.md 2026-08-12)”*, and the default it relies on — every git repo under the roots is a project, `.worktrees/.registry` flags it agent-active — is this entry's `Open, needed before PR3:` line, now in the archive.*
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Phase 8a complete; scope decisions executed. **Cited by date rather than by phrase, which the title grep could not see:** `mission-control/server/projects.ts:3` reads *“Fleet scope decision (already made, see .claude/memory/DECISIONS.md 2026-08-12)”*, and the default it relies on — every git repo under the roots is a project, `.worktrees/.registry` flags it agent-active — is this entry's `Open, needed before PR3:` line, now in the archive. **Four more found 2026-08-23 by grepping the date and the body, not the title:** `mission-control/test/crosscheck.test.ts:2` cites this entry's gate verbatim — *“every displayed figure reproducible by an independent command (docs/03-system-design/DECISIONS.md, Phase 8a gate)”* — and that path has never existed; `docs/08-agents_work/sessions/2026-08-13-ceo-corpus-correction.md:10` names it as the record superseded (*“a new `DECISIONS.md` entry that supersedes the 2026-08-12 rationale rather than editing it”*); `docs/03-system-design/AGENT-ARCHITECTURE.md:608` refuses an ADR migration because it would break `projects.ts:3` and two other consumers citing `DECISIONS.md` by date; and `docs/08-agents_work/2026-08-13-rethink-board.md:53` calls the four positional links of the form *“the … entry above”* a defect in this file — two of the four pointed here, and both are date-and-title as of this branch. Its 1,283 ms / 72-transcript figure is refuted; the archive body now carries the correction note.*
 ## 2026-08-12 — Two enforcement mechanisms found green over untested capabilities
 *Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Historical defect-finding; corrections are in `scripts/`. **Cited in three live files, and the original stub was wrong to say none:** `docs/08-agents_work/2026-08-13-rethink-board.md:19` quotes this body verbatim (*“an agent must now choose to open a file — which is the definition of discretionary”*); `mission-control/test/collectors.test.ts:445` invokes it as *“the ‘two green checks over one untested capability’ pattern already in DECISIONS.md”* to justify deleting a barrier that never fired; and `mission-control/test/views.test.tsx:1961` as *“a green check over an untested capability, which is the entry already in DECISIONS.md”* to refuse a coverage percentage as evidence. Two tests reason from this record.*
 ## 2026-08-13 — the transcript corpus was measured 28× too small; cold-start budget raised to 10s
 
-**Context:** The 2026-08-12 entry above justifies "no persistent store" with *"a cold full parse of all 72
-transcripts measures 1,283 ms"*. **That measurement was wrong.** The scan walked `~/.claude/projects/` only
-two levels deep; transcripts nest deeper. Recursive count, verified 2026-08-13: **2,029 files / 2.83 GB**,
-raw full parse **9,252 ms** — the same ~9 s Phase 6 hit on this corpus before adopting mtime-skip. Mission
-Control's own `IndexStore` measures 3,633 / 3,870 / 4,060 ms over three runs, against a 3 s gate. Found by
-the builder measuring the real corpus rather than trusting the number in its brief.
+**Context:** The `DECISIONS.md` entry of **2026-08-12, “Phase 8 chosen over Phase 9 and over venture work;
+split into 8a read plane and 8b dispatch”** — archived 2026-08-22, body now in `DECISIONS_ARCHIVE.md`,
+cited by date and title because a position no longer locates it — justifies "no persistent store" with
+*"a cold full parse of all 72 transcripts measures 1,283 ms"*. **That measurement was wrong.** The scan
+walked `~/.claude/projects/` only two levels deep; transcripts nest deeper. Recursive count, verified
+2026-08-13: **2,029 files / 2.83 GB**, raw full parse **9,252 ms** — the same ~9 s Phase 6 hit on this
+corpus before adopting mtime-skip. Mission Control's own `IndexStore` measures 3,633 / 3,870 / 4,060 ms
+over three runs, against a 3 s gate. Found by the builder measuring the real corpus rather than trusting
+the number in its brief.
 **Decision:** Raise the cold-start budget to **10 s**. Do **not** add a store, lazy-load per project, or
 parallelise the cold read. Bind the budget to a claim, `c-mission-control-cold-start`, with `valid_until`.
 **Rationale:** Cold start is paid once per daemon launch and the incremental refresh is **4 ms**, so the
@@ -173,8 +176,10 @@ forgetting one.
 options is foreclosed
 **Owner:** ceo · **founder decision** taken with all four options and their costs presented
 **Affects:** `mission-control/test/perf.test.ts`, `mission-control/README.md`,
-`docs/03-system-design/PHASE-8A-STATUS.md` §3 and §4, and the 2026-08-12 entry above, whose stated
-rationale is superseded by this one
+`docs/03-system-design/PHASE-8A-STATUS.md` §3 and §4, and the `DECISIONS.md` entry of **2026-08-12,
+“Phase 8 chosen over Phase 9 and over venture work; split into 8a read plane and 8b dispatch”** (archived
+2026-08-22; body in `DECISIONS_ARCHIVE.md`, where the superseded figure now carries a correction note),
+whose stated rationale is superseded by this one
 
 ## 2026-08-13 — Phase 8a PR4/PR5 scope, and the Founder widened rule 8 for these two PRs
 

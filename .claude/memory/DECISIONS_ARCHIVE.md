@@ -297,6 +297,14 @@ spine in the target, so the phase splits cleanly at the seam where the conflict 
 budget is grounded rather than guessed: a cold full parse of all 72 transcripts measures **1,283 ms** and an
 incremental refresh **13 ms**, which is also why **no persistent store is built** — the transcripts already
 are the history, so `initDb()`-with-zero-`INSERT`s is not repeated.
+
+> **SUPERSEDED — the 1,283 ms / 72-transcript figure above is wrong.** That scan walked
+> `~/.claude/projects/` only two levels deep; transcripts nest deeper. Recursive count, verified
+> 2026-08-13: **2,029 files / 2.83 GB**, raw full parse **9,252 ms**. Corrected by the `DECISIONS.md`
+> entry of **2026-08-13, “the transcript corpus was measured 28× too small; cold-start budget raised to
+> 10s”**, which raised the budget to 10 s and left “no persistent store” standing on the corrected number.
+> Marked here, not rewritten — the wording above is what was decided on.
+
 **Costs accepted by the founder, against recommendation:** Bun+React are this repo's **first dependencies
 ever** (`dependencies: {}`, no lockfile, no `node_modules`, CI never runs an install), and folding
 `check:mc` into `npm run check` means `.github/workflows/ci.yml` must gain `setup-bun` — so the clean-clone
