@@ -2057,6 +2057,15 @@ cmd_diff() {
 # ~/bin/<project> is a shim that execs this file. Returns non-zero when it cannot be found, and
 # cmd_merge treats that as a refusal: a gate that cannot find its checker must never conclude
 # "no objection".
+#
+# That paragraph is old; the code under it used to say the opposite. A second lookup fell back to
+# $PROJECT_DIR/scripts/verdict.mjs, which let the repository being merged supply the program that
+# decides whether it may be merged. Reproduced end to end: a project shipping a three-line stamp
+# that prints {ok:true,tier:"rubber-stamp"} took a branch with no verdict record anywhere onto main
+# and logged `merge_complete ... tier=rubber-stamp` — a total bypass, plus a tier value the
+# classifier can never emit, which is the events.jsonl corruption cmd_merge's own header complains
+# about. The fallback is deleted. When the harness copy is absent this returns 1 and the caller
+# refuses with reason=no-checker, which is the correct answer and is tested.
 _verdict_tool() {
   local src="${BASH_SOURCE[0]}" dir
   while [ -L "$src" ]; do
@@ -2068,9 +2077,8 @@ _verdict_tool() {
   if [ -n "$dir" ] && [ -f "$dir/scripts/verdict.mjs" ]; then
     printf '%s' "$dir/scripts/verdict.mjs"; return 0
   fi
-  if [ -f "$PROJECT_DIR/scripts/verdict.mjs" ]; then
-    printf '%s' "$PROJECT_DIR/scripts/verdict.mjs"; return 0
-  fi
+  # No fallback to $PROJECT_DIR. See above: the merged repository does not get to supply its own
+  # gate. Refusing to find a checker is safe; finding the wrong one is not.
   return 1
 }
 
@@ -2114,9 +2122,19 @@ _warn_local_only_merge() {
 # scripts/verdict.mjs, and the strategy is logged in its own field.
 #
 # The ladder as written is fast-forward → no-ff → AI-assisted → human. It now STOPS after no-ff.
-# Tiers 1 and 2 move only content the branch diff already contained — which is what the gate below
-# hashes. Tier 3 invents content that was in no diff any verdict covered, so it refuses. The code is
-# still here, and is marked unreachable at the point it stops.
+# Tiers 1 and 2 move content the branch diff already contained — which is what the gate below
+# hashes — PLUS any commits already on origin/main. Tier 3 invents content that was in no diff any
+# verdict covered, so it refuses. The code is still here, and is marked unreachable at the point it
+# stops.
+#
+# That sentence first read "move only content the branch diff already contained", full stop, and it
+# was false in the same way the tier 3 claim was: when LOCAL main is behind origin/main, a
+# fast-forward also lands the upstream range, which this verdict never covered. Reproduced — an
+# upstream file rode in on a tier=lite merge whose verdict bound one unrelated file. Those bytes are
+# ancestral to origin/main and so are already gated by the PR route, where ci.yml and
+# qa-lead-pass.yml apply; there is no unreviewed content and nothing to refuse. The claim is
+# narrowed rather than the behaviour changed, because the behaviour is correct and the sentence was
+# not.
 cmd_merge() {
   local n=$1
   [ -z "$n" ] && echo "Usage: ${SESSION} merge <N>" && exit 1
@@ -2227,8 +2245,9 @@ cmd_merge() {
 
   # ── The ladder stops here ─────────────────────────────────────────────────────
   #
-  # Tiers 1 and 2 only ever put content on main that the branch diff already held, and that diff is
-  # what the verdict above hashed. Tier 3 does not: it pipes each conflicted file to a model, writes
+  # Tiers 1 and 2 put content on main that the branch diff already held — which is what the verdict
+  # above hashed — plus, on a fast-forward, any commits already on origin/main, which the PR route
+  # has its own gate for. Tier 3 does not: it pipes each conflicted file to a model, writes
   # stdout back, and commits it to main. Nothing reviewed that. The old code then logged
   # `merge_complete` at the verdict's tier, so events.jsonl read as though something had.
   #
