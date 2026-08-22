@@ -2,7 +2,7 @@
 date: 2026-08-22
 role: ceo
 task: gate-and-provenance-integration
-qa_verdict: PENDING
+qa_verdict: PASS
 tier: irreversible
 risk: irreversible
 branch: feat/gate-and-provenance-v2
@@ -46,6 +46,31 @@ Conflict resolution was a **union, not a pick**: the `check` chain carries both 
 test from CI — the exact un-gating the merge-gate lane exists to prevent. `CODEBASE-MAP.md` was regenerated,
 never hand-merged. `ci.yml` merged clean and both steps were **confirmed present afterwards** rather than
 assumed.
+
+## The verdict, and whose it is
+
+**PASS**, reached over three rounds — **FAIL, then PASS, then PASS** — by an independent `reviewer` that did
+not produce the work. Transcribed here by the orchestrator because someone must record it and neither the
+engine that produced the work nor the engine that judged it may write this field.
+
+**Every round was a single model family**, and the reviewer said so unprompted each time.
+`risk: irreversible` nominally wants two distinct families; this runtime has none. That is a structural
+limit on record, **not a satisfied bar** — the founder decides whether it suffices for harness self-edits.
+
+The final round also checked **this file** at the same bar it applied to the code, because its author cannot.
+Every checkable assertion verified true, including the `war-room/bin/PROJECT_NAME.tmpl` claim the
+orchestrator had taken from a builder's report without re-deriving. That one came back **worse** than
+written: `cmd_merge` is 782 lines in both the launcher and the template with only two placeholder
+substitutions differing, the template holds **zero** occurrences of the verdict tool or any refusal path,
+and the parity script everyone assumes guards this takes an *installed* launcher as its argument rather than
+the template — while `check:warroom` only `bash -n`s the comparator and never runs it.
+
+A fourth item landed after that PASS and was accepted **without another round**: three comment-only
+corrections proven by stripping comments and blanks from both revisions and diffing — **zero differing
+executable lines** in all three files. The sharpest of them is worth keeping visible: `verdict.mjs:24`
+stated the subject anchor one way while `verdict.mjs:17` stated it another, **eight lines apart in the same
+file**, introduced by the very commit that fixed that class one file over. It was found because the builder
+did not stop at the single instance it was handed.
 
 ## Review history — FAIL, then remediation, then PASS
 
