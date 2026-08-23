@@ -2,7 +2,7 @@
 date: 2026-08-23
 role: builder
 task: gate-pr-route
-qa_verdict: PENDING
+qa_verdict: PASS
 tier: irreversible
 branch: feat/gate-pr-route
 session: ceo-4-1787176363
@@ -100,3 +100,21 @@ non-zero. Added a comment at the `set` line explaining the asymmetry rather than
 Touched only `.github/workflows/qa-lead-pass.yml`, `package.json`, and this session file. Did not touch
 `.claude/agents/designer.md` or `.mcp.json` — confirmed via `git diff --stat origin/main..HEAD` before
 commit.
+
+## QA verdict — recorded 2026-08-23
+
+**PASS**, returned by an out-of-band `reviewer` engine (`review-lane1`) that did not produce this work and
+holds no Write or Edit tools. Lenses applied: see that review's own report. History: **FAIL → PASS after 1 correction round**.
+
+**This review was a single model family.** Irreversible tier nominally asks for 2-of-3 multi-judge, and the
+`risk: high` predicate requires ≥2 distinct model families — there is no non-Anthropic model inside Claude
+Code, so that bar is not reachable in this runtime today. **The founder accepted single-family review for
+harness self-edits on 2026-08-23**, after the limitation was raised unprompted on every review round across
+two sessions. It is recorded here as an accepted risk, not as a satisfied requirement.
+
+**This PASS was recorded by the orchestrator from the reviewer's return, not by the author of the code.**
+Under the gate as it stands on `main`, the verdict is an author-writable line in a file — which is exactly
+the defect `feat/gate-pr-route` replaces with a verdict bound to the diff hash and posted as a check-run.
+Until that lands, this line is a convention, and the separation above is the only thing behind it.
+
+The reviewer's final PASS was returned against this branch's head **before** this verdict line was added; appending the verdict necessarily changes the diff it was given. That is unavoidable while the verdict lives inside the reviewed tree, and is the specific problem the diff-bound verdict record solves.
