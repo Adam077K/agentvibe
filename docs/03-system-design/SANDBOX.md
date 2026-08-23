@@ -180,13 +180,19 @@ Paths **not included** despite being written by repo scripts:
 ### Deny-read justification (credential directories, added 2026-08-23)
 
 `denyRead` covered `~/.ssh`, `~/.aws`, `~/.config/gh`, `~/.netrc`, `**/.env*` and missed the CLI
-credential stores for the other two model families this repo invokes for independent review
-(`c-maxturns-binds-when-agenttype-named`'s neighbour claims, and `TARGET-ARCHITECTURE.md` §4's
-Codex second-opinion seam): `~/.gemini/oauth_creds.json` (mode `600`, live) and `~/.codex/auth.json`.
-`~/.config/openai` is added alongside them for the same class of tool. All three are **directories**,
-not the credential filename, because a rotated credential lands under a new filename and a
-file-specific deny would miss the rotation — the same reasoning `TARGET-ARCHITECTURE.md:303-304`
-already applied to `~/.codex`.
+credential stores for the model family this repo's plan names, not one it currently runs.
+`TARGET-ARCHITECTURE.md` §4 (decision 5) names **Codex CLI** as the second model family for a
+**future** second-opinion review — chosen over Gemini despite Codex being uninstalled and Gemini
+being present and authenticated on this machine — and no second-family review has ever actually
+run: both `verified_by: judge` claims in `.claude/ledger/index.json` carry `judged_by: []`.
+`TARGET-ARCHITECTURE.md:327-329` recommends this identical set, as directories, for exactly this
+reason: `~/.gemini/oauth_creds.json` is live, mode `600`, and readable by any in-session agent, and
+a rotated credential lands under a new filename that a file-specific deny would miss — the same
+reasoning `TARGET-ARCHITECTURE.md:303-304` already applied to `~/.codex` alone.
+`~/.config/openai` is added alongside them for the same class of tool. Gemini's credentials are
+denied even though Gemini is not the model chosen for the seam: it is present and authenticated on
+this machine, which is itself sufficient reason to close the read, independent of whether it is
+ever invoked.
 
 **The limitation stated plainly, because it matters more than the entries.** A filesystem `denyRead`
 only stops a reader that opens a file. Measured in this session: adding `~/.config/gh` to `denyRead`
