@@ -410,6 +410,83 @@ for (const f of exists('.claude/hooks') ? fs.readdirSync(abs('.claude/hooks')) :
   }
 }
 
+// ── 12 · org-chart documents may not name agent identifiers with no file ────
+//
+// FAILS. Any agent name that appears in a GOVERNING org-chart document must resolve to a
+// file in .claude/agents/. Names with no file — "dead" names — are the defect this check
+// guards. CLAUDE.md described a 3-layer C-suite org of 21 roles; ten had no agent file at
+// all and zero resolved to a real engine. Those names (cto, cpo, cmo, cbo, cco,
+// backend-engineer, frontend-engineer, devops-engineer, data-engineer, product-designer,
+// design-polisher, design-critic, adversary-engineer, qa-engineer, craft-reviewer,
+// supabase-cleaner) are the denylist.
+//
+// WHY THE DENYLIST IS HARDCODED. It is a finite, stable set: Phase 4b collapsed the
+// C-suite and these sixteen are the remnants with no file. New dead names cannot enter the
+// denylist by drift — they must be added deliberately, which is the right amount of
+// friction. "Dynamically detect any unrecognized kebab-case token" is not tractable and
+// would fire on legitimate identifiers (branch names, setting keys, etc.).
+//
+// SCOPE: CLAUDE.md, README.md, .claude/commands/*.md — the org-chart / operational docs.
+// NOT AGENTS.md: it is the migration-history document whose "What replaced what" table
+// names dead agents deliberately as the first column of a replacement map. Applying this
+// check to the history record that explains the migration would flag the very documentation
+// explaining it. This is a principled scope decision, not a filename exemption — the
+// predicate is "does the org-chart document claim a non-existent agent?" and AGENTS.md is
+// not an org-chart document.
+//
+// BLOCKQUOTES: lines starting with `>` are skipped. The house style puts superseded
+// content in blockquotes so corrections can mention old names without tripping the rule
+// they explain. This pattern is identical to check 8 (phantom-agent) above.
+//
+// SELF-FLAGGING: check-registration.mjs is not in the scanned set (it is not GOVERNING).
+// The denylist constant below contains the dead names as string literals in a JS file that
+// is never scanned for dead names. The predicate tests governing documents only — a dead
+// name inside a script constant is not a claim that the name is a live agent.
+
+const DEAD_AGENT_NAMES = [
+  'cto', 'cpo', 'cmo', 'cbo', 'cco',
+  'backend-engineer', 'frontend-engineer', 'devops-engineer', 'data-engineer',
+  'product-designer', 'design-polisher', 'design-critic',
+  'adversary-engineer', 'qa-engineer', 'craft-reviewer',
+  'supabase-cleaner',
+];
+
+// Scope: GOVERNING minus AGENTS.md.
+const ORGCHART_SCOPE = [
+  'CLAUDE.md',
+  'README.md',
+  ...listMd('.claude/commands').map((f) => `.claude/commands/${f}`),
+];
+
+// Build the regex once: word-boundary match on each dead name.
+// Word boundary (\b) prevents 'cto' from matching 'rector' or 'doctor'.
+// Hyphenated names need \b only at the outer edges (hyphens are already non-word chars).
+// The `i` flag catches uppercase variants (CTO, CPO, etc.) that appear in code blocks
+// and table cells along with the lowercase prose references.
+const deadRe = new RegExp(
+  `\\b(${DEAD_AGENT_NAMES.map((n) => n.replace(/-/g, '-')).join('|')})\\b`,
+  'gi',
+);
+
+for (const doc of ORGCHART_SCOPE) {
+  if (!exists(doc)) continue;
+  const lines = read(doc).split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Skip blockquotes — house style puts superseded content there.
+    if (/^\s*>/.test(line)) continue;
+    const hits = [...new Set([...line.matchAll(deadRe)].map((m) => m[1]))];
+    if (hits.length) {
+      fail(
+        'dead-agent-name',
+        `${doc}:${i + 1} names ${hits.join(', ')} — no .claude/agents/ file exists for this identifier. ` +
+          'If this is correction text referencing the old org chart, put it in a `> ` blockquote.'
+      );
+    }
+  }
+}
+
+
 // ── report ─────────────────────────────────────────────────────────────────
 for (const w of warnings) console.log(`⚠ ${w}`);
 for (const f of failures) console.error(`✗ ${f}`);

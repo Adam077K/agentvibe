@@ -16,14 +16,14 @@ Counts below are verified by `npm run check:registration`, which fails the build
 | Hooks (pre-tool, stop, schema-lint, context monitor, statusline, update check, session-start, budget-guard) | `.claude/hooks/` | 8 |
 | Slash commands | `.claude/commands/` | 13 |
 | QA-tier auto-classifier (4 tiers: trivial → irreversible) | `.claude/qa-tier-floor.yml` | 1 |
-| Permissions + hooks (no MCP grants — none are configured) | `.claude/settings.json` (+ `.proposed`) | 2 |
+| Permissions + hooks (one MCP grant: `designer` → playwright) | `.claude/settings.json` (+ `.proposed`) | 2 |
 | Memory templates | `.claude/memory/{DECISIONS,LONG-TERM,USER-INSIGHTS,CODEBASE-MAP}.md` | 4 |
 | CI workflows | `.github/workflows/` | 3 |
 
 ## 30-second pitch
 
-- **Every task starts at the CEO.** The CEO asks questions, assembles the right C-suite, delegates, synthesizes one answer.
-- **No merge without QA-Lead PASS.** 4-tier risk classification is auto-set by file-path patterns; the CEO and CTO cannot override.
+- **Every task starts at `orchestrator`.** It reads state, picks the right playbook, and dispatches to the appropriate engine.
+- **No merge without `qa-lead` PASS.** 4-tier risk classification is auto-set by file-path patterns; no engine can override it.
 - **Workers run in isolated git worktrees.** Atomic commits, structured JSON returns, no sneaky cross-scope edits.
 - **Memory is explicit.** Decisions, codebase map, user insights, and long-term facts live in 4 versioned files with hard caps. No mystery context.
 - **Models are routed deliberately.** Sonnet 4.6 default · Opus 4.7 for synthesis/design/orchestration · Haiku 4.5 for lint/lookup. Specified in every brief.

@@ -464,14 +464,21 @@ case "$tool_name" in
       # what the filesystem itself considers identical, leaving case folding and symlink
       # resolution to the kernel rather than guessing at either here.
       #
-      # There is exactly ONE allowed root outside the project: $HOME/.claude/plans/, where the
-      # harness stores plan-mode plans. Without it plan mode cannot be used in this repo at all —
-      # the agent is asked to write a plan and its own guard refuses. The exemption is the
-      # DIRECTORY plans/, never its parent: $HOME/.claude/settings.json registers this hook, so
-      # opening $HOME/.claude/ would let a turn disarm every rule in this file, which is the single
-      # thing this check exists to prevent. Siblings — agents/, hooks/ — stay refused.
+      # Two allowed roots outside the project:
+      # 1. $HOME/.claude/plans/ — harness plan-mode storage. Exemption is DIRECTORY plans/ only,
+      #    never its parent: $HOME/.claude/settings.json registers this hook, so allowing .claude/
+      #    would let a turn disarm every rule in this file. Siblings — agents/, hooks/ — refused.
+      # 2. /private/tmp/claude-<UID>/ — the agent scratchpad, sandbox-granted (PR #94 added
+      #    filesystem.allowWrite: ["/private/tmp/claude-<UID>"]). Bash wrote there freely all
+      #    session while Write refused the same path — Write was wrong. Scope: UID-scoped root
+      #    only, not all of /tmp. (Issue #96.3)
+      #
+      # C2 NOTE: the hook scans heredoc bodies as part of the command string, so a heredoc that
+      # quotes a dangerous pattern for documentation is blocked — unfixable without a shell parser.
+      # Escape hatch: use the Write tool, which checks only file_path, never content.
+      _scratch_root="/private/tmp/claude-${UID:-$(id -u 2>/dev/null)}"
       _inside=no
-      for _allowed in "$_root" "${HOME:-/nonexistent}/.claude/plans"; do
+      for _allowed in "$_root" "${HOME:-/nonexistent}/.claude/plans" "$_scratch_root"; do
         [ -n "$_abs" ] && [ -n "$_allowed" ] && [ -d "$_allowed" ] || continue
         _probe="$_abs"
         while : ; do

@@ -142,3 +142,62 @@ test('a ref beginning with "-" is refused before it reaches git as an option', (
   assert.match(r.stderr, /refusing a ref/);
   assert.equal(fsExists('/tmp/run-gate-should-never-exist'), false, 'git was allowed to act on the option');
 });
+
+// ── Fix B: the emitted ref must be cwd-independent ──────────────────────────────────────────
+//
+// Observed 2026-08-17 against PR #77: run-gate emitted "origin/main...HEAD" by default, which
+// was pasted verbatim into a different session. HEAD resolved to the parent worktree branch
+// (fix/ledger-blind-spots, 7 unrelated files), not the caller's branch (feat/qa-verdict-binding,
+// 9 changed files). The gate reviewed the wrong diff. Caught by the adversarial verifier only
+// because the two branches were unrelated enough that a cited file didn't exist.
+
+test('the emitted ref does not contain bare HEAD — cwd-dependent ref reviews the wrong branch', () => {
+  // RED before fix: the default was "origin/main...HEAD" which resolves in the WORKFLOW cwd,
+  // not the caller's. Pasting the invocation into a different session reviewed the wrong branch.
+  const r = json(['--files', '.claude/hooks/pre-tool-use.sh']);
+  assert.ok(r.invocation, 'gate must be required');
+  assert.ok(
+    !r.invocation.args.ref.includes('HEAD'),
+    `emitted ref "${r.invocation.args.ref}" contains bare HEAD — paste it into a different worktree and HEAD resolves to that tree's branch, reviewing the wrong diff`
+  );
+});
+
+test('a bare HEAD ref passed via --ref is refused — the cwd-dependence trap', () => {
+  // RED before fix: "origin/main...HEAD" was accepted and emitted verbatim. When pasted into
+  // a different session, HEAD resolved to whatever that session's HEAD was — a different branch.
+  const r = run(['--ref', 'origin/main...HEAD', '--files', 'docs/a.md']);
+  assert.equal(r.code, 2, 'a bare HEAD ref must be refused — it is cwd-dependent');
+  assert.match(r.stderr, /HEAD/);
+});
+
+test('the emitted ref is a resolved SHA — immune to which worktree you paste it into', () => {
+  // A SHA always refers to the same commit regardless of cwd.
+  // Verify from two directories to prove cwd-independence by construction.
+  const r = json(['--files', '.claude/hooks/pre-tool-use.sh']);
+  assert.ok(r.invocation, 'gate must be required');
+  const emittedRef = r.invocation.args.ref;
+
+  // Proof 1: no symbolic HEAD in the ref string
+  assert.ok(!emittedRef.includes('HEAD'),
+    `ref "${emittedRef}" is HEAD-based and therefore cwd-dependent`);
+
+  // Proof 2: same diff output from two different working directories
+  const worktreeOut = execFileSync('git', ['worktree', 'list'], { cwd: REPO, encoding: 'utf8' });
+  const mainPath = worktreeOut.trim().split('\n')[0].split(/\s+/)[0];
+
+  if (mainPath === REPO) return; // single-worktree setup — proof 1 is sufficient
+
+  try {
+    const filesHere = execFileSync('git', ['diff', '--name-only', emittedRef],
+      { cwd: REPO, encoding: 'utf8' }).trim();
+    const filesMain = execFileSync('git', ['diff', '--name-only', emittedRef],
+      { cwd: mainPath, encoding: 'utf8' }).trim();
+    assert.equal(filesHere, filesMain,
+      `ref "${emittedRef}" produced different diffs from different directories — it is cwd-dependent.\n` +
+      `  ${REPO}: [${filesHere.replace(/\n/g, ', ')}]\n` +
+      `  ${mainPath}: [${filesMain.replace(/\n/g, ', ')}]`);
+  } catch (e) {
+    if (e instanceof assert.AssertionError) throw e;
+    assert.fail(`ref "${emittedRef}" failed to resolve cwd-independently: ${e.message}`);
+  }
+});

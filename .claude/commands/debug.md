@@ -1,6 +1,6 @@
 # /debug — Scientific Bug Investigation
 
-CTO investigates a bug using systematic hypothesis testing. You report symptoms; CTO finds the cause.
+The `builder` engine investigates a bug using systematic hypothesis testing. You report symptoms; it finds the cause.
 
 ## Usage
 ```
@@ -23,7 +23,7 @@ You (the founder) provide:
 - Error messages seen
 - When it started / if it ever worked
 
-**You do NOT need to know the cause.** CTO investigates.
+**You do NOT need to know the cause.** The engine investigates.
 
 ## the debugging route's Debug Process
 

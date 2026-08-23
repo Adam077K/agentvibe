@@ -10,13 +10,13 @@ deterministic `.claude/workflows` Workflow. Given a screen name, it:
 
 1. Loads the screen's reference contract (`docs/design/references/[screen]/`) plus the
    global product-feel set (`docs/design/references/_product-feel/`) — references are
-   **vibe, not blueprint** — and design-lead distills the **DIRECTION** here (the one
+   **vibe, not blueprint** — and orchestrator distills the **DIRECTION** here (the one
    memorable element, the primary layout move, the motion-budget tier). The DIRECTION
    stage of the pipeline runs inside this first phase, feeding the build.
-2. Runs the dedicated front-end **product-designer** to BUILD the screen in Agentvibe's own
+2. Runs the dedicated front-end **designer** to BUILD the screen in Agentvibe's own
    design language.
-3. Runs a **design-critic <-> design-polisher** loop: the critic grades CRAFT-PARITY &
-   FEELING vs the references (never 1:1 copy-fidelity); the polisher closes the named
+3. Runs a **reviewer <-> designer** loop: the critic grades CRAFT-PARITY &
+   FEELING vs the references (never 1:1 copy-fidelity); the designer closes the named
    craft gaps. Repeat until PASS or the round cap, then escalate to the founder.
 4. Returns the validated screen + Playwright screenshots and the final critic verdict.
 
@@ -64,9 +64,9 @@ Both are documented in the design OS spec.
 export const meta = {
   name: "design-screen",
   description:
-    "Agentvibe design pipeline as a deterministic Workflow: load the screen's reference folder + global product-feel, run the product-designer build, then a design-critic <-> design-polisher loop until craft-parity with the references (expressed in Agentvibe's own language), and return the validated screen + screenshots. References are vibe, not blueprint. Three founder checkpoints (lock refs, 50% first-paint, judge final) are surfaced as stop points.",
+    "Agentvibe design pipeline as a deterministic Workflow: load the screen's reference folder + global product-feel, run the designer build, then a design-critic <-> design-polisher loop until craft-parity with the references (expressed in Agentvibe's own language), and return the validated screen + screenshots. References are vibe, not blueprint. Three founder checkpoints (lock refs, 50% first-paint, judge final) are surfaced as stop points.",
   phases: [
-    { title: "Reference", detail: "Load the screen folder + _product-feel; lock the contract; design-lead distills the DIRECTION (one memorable move, layout, motion budget)." },
+    { title: "Reference", detail: "Load the screen folder + _product-feel; lock the contract; orchestrator distills the DIRECTION (one memorable move, layout, motion budget)." },
     { title: "Build", detail: "product-designer builds the screen in Agentvibe's own design language." },
     { title: "First paint", detail: "Founder checkpoint #2 — surface the ~50% first-paint screenshots." },
     { title: "Validate loop", detail: "design-critic grades craft-parity; design-polisher closes the gaps; repeat to PASS or cap." },
@@ -124,7 +124,7 @@ Return JSON ONLY:
   {
     label: `reference:${screen}`,
     phase: "Reference",
-    agentType: "design-lead",
+    agentType: "orchestrator",
     schema: {
       type: "object",
       required: ["locked", "screen", "feeling_brief"],
@@ -166,7 +166,7 @@ phase("Build");
 log(`product-designer building "${screen}".`);
 
 const build = await agent(
-  `You are the dedicated front-end product-designer building the Agentvibe "${screen}" screen.
+  `You are the dedicated front-end designer (product-designer) building the Agentvibe "${screen}" screen.
 
 LOAD BOTH reference sets BEFORE any code:
 - Global product-feel: read all of "${productFeelDir}".
@@ -193,7 +193,7 @@ then capture Playwright screenshots at desktop (1440), tablet (768), and mobile 
 Return JSON ONLY:
 {
   "status": "COMPLETE"|"BLOCKED",
-  "agent": "product-designer",
+  "agent": "designer",
   "screen": "${screen}",
   "branch": "design/<slug>",
   "worktree": ".worktrees/design-<slug>",
@@ -206,7 +206,7 @@ Return JSON ONLY:
   {
     label: `build:${screen}`,
     phase: "Build",
-    agentType: "product-designer",
+    agentType: "designer",
     schema: {
       type: "object",
       required: ["status", "agent", "screen", "screenshots"],
@@ -227,7 +227,7 @@ Return JSON ONLY:
 );
 
 if (!build || build.status === "BLOCKED") {
-  log("Build BLOCKED. Returning blockers for design-lead/founder to resolve.");
+  log("Build BLOCKED. Returning blockers for orchestrator/founder to resolve.");
   return {
     status: "BLOCKED",
     screen,
@@ -268,7 +268,7 @@ while (round < MAX_ROUNDS) {
   log(`Critic pass ${round}/${MAX_ROUNDS} for "${screen}".`);
 
   const critic = await agent(
-    `You are the design-critic grading the Agentvibe "${screen}" build against its reference folder.
+    `You are the reviewer running the design-critic lens grading the Agentvibe "${screen}" build against its reference folder.
 
 GRADE CRAFT-PARITY & FEELING, NEVER COPY-FIDELITY. Forbidden question: "does this match reference X
 1:1?" Required question: "does this hit the same richness/confidence/polish as the references,
@@ -287,7 +287,7 @@ list. Be measurable ("40px gap; system specifies 24px"), never vague. Include 1-
 Return JSON ONLY:
 {
   "verdict": "PASS"|"NEEDS_WORK"|"CRITICAL_ISSUES",
-  "agent": "design-critic",
+  "agent": "reviewer",
   "screen": "${screen}",
   "round": ${round},
   "richness_gap": "1-3 sentences naming the gap to the references' craft bar",
@@ -298,7 +298,7 @@ Return JSON ONLY:
     {
       label: `critic:${screen}:r${round}`,
       phase: "Validate loop",
-      agentType: "design-critic",
+      agentType: "reviewer",
       schema: {
         type: "object",
         required: ["verdict", "agent", "screen", "findings"],
@@ -348,7 +348,7 @@ Return JSON ONLY:
   log(`design-polisher closing ${gaps.length} craft gap(s) for round ${round + 1}.`);
 
   const polish = await agent(
-    `You are the design-polisher. Your SOLE job is adding CRAFT DENSITY to the Agentvibe "${screen}" build
+    `You are the designer (design-polisher role). Your SOLE job is adding CRAFT DENSITY to the Agentvibe "${screen}" build
 to close the gaps the critic named — against the reference folder, AFTER the functional build is done.
 
 Worktree ${worktree}, branch ${branch}. Read all of "${productFeelDir}" and all of "${screenRefDir}".
@@ -370,7 +370,7 @@ desktop/tablet/mobile.
 Return JSON ONLY:
 {
   "status": "COMPLETE"|"BLOCKED",
-  "agent": "design-polisher",
+  "agent": "designer",
   "screen": "${screen}",
   "branch": "${branch}",
   "worktree": "${worktree}",
@@ -383,7 +383,7 @@ Return JSON ONLY:
     {
       label: `polish:${screen}:r${round}`,
       phase: "Validate loop",
-      agentType: "design-polisher",
+      agentType: "designer",
       schema: {
         type: "object",
         required: ["status", "agent", "screen"],
@@ -461,10 +461,10 @@ return {
 
 | Stage | Agent (`agentType`) | Output | Checkpoint |
 |-------|---------------------|--------|------------|
-| Reference | `design-lead` | locked contract + feeling brief | #1 LOCK (stops if folder unset) |
-| Build | `product-designer` | TSX/Tailwind screen + screenshots | — |
+| Reference | `orchestrator` | locked contract + feeling brief | #1 LOCK (stops if folder unset) |
+| Build | `designer` | TSX/Tailwind screen + screenshots | — |
 | First paint | — | first-paint screenshots surfaced | #2 ~50% FIRST-PAINT |
-| Validate loop | `design-critic` -> `design-polisher` | craft-parity verdict + closed gaps | — |
+| Validate loop | `reviewer` -> `designer` | craft-parity verdict + closed gaps | — |
 | Judge | — | validated screen + final verdict | #3 JUDGE FINAL |
 
 - **Pipeline shape:** the critic<->polisher loop is sequential by necessity (each polish

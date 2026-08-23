@@ -9,63 +9,59 @@ Set the badge color of the current session in the Claude Code UI. Use this to vi
 
 ## Color Palette
 
-### Layer 1 — CEO
+> **Superseded.** This command previously listed colors by C-suite role (CTO, CPO, CMO, CBO,
+> backend-engineer, frontend-engineer, etc.). The roster collapsed in Phases 4b and 6 into
+> seven engines. The tables below reflect the current roster.
+
+### Orchestrator
+
 | Instance | Color | When to use |
 |----------|-------|-------------|
-| Primary CEO | `gold` | First / only CEO session |
-| Second parallel CEO | `orange` | Second CEO in a parallel worktree |
-| Third parallel CEO | `teal` | Third CEO in a parallel worktree |
-| Fourth parallel CEO | `lime` | Fourth CEO in a parallel worktree |
+| Primary `orchestrator` | `gold` | First / only orchestrator session |
+| Second parallel | `orange` | Second orchestrator in a parallel worktree |
+| Third parallel | `teal` | Third orchestrator in a parallel worktree |
+| Fourth parallel | `lime` | Fourth orchestrator in a parallel worktree |
 
-### Layer 2 — Team Leads
-| Agent | Color |
-|-------|-------|
-| cto | `blue` |
-| research-lead | `purple` |
-| design-lead | `pink` |
-| qa-lead | `red` |
-| research-lead | `purple` |
-| design-lead | `pink` |
-| qa-lead | `red` |
-| devops-engineer | `orange` |
-| data-engineer | `teal` |
-| cpo | `green` |
-| cmo | `yellow` |
-| cbo | `emerald` |
-| cco | `amber` |
+### Producing engines
 
-### Layer 3 — Workers
-| Agent | Color |
-|-------|-------|
-| backend-engineer | `blue` |
-| frontend-engineer | `pink` |
-| database-engineer | `teal` |
-| ai-engineer | `purple` |
-| security-engineer | `red` |
-| test-engineer | `yellow` |
-| code-reviewer | `gray` |
-| researcher | `purple` |
-| technical-writer | `gray` |
-| design-critic | `gray` |
-| supabase-cleaner | `teal` |
+| Engine | Color |
+|--------|-------|
+| `framer` | `cyan` |
+| `sourcer` | `purple` |
+| `builder` | `blue` |
+| `designer` | `pink` |
+
+### Review engines
+
+| Engine | Color |
+|--------|-------|
+| `reviewer` | `gray` |
+| `reviewer-readonly` | `gray` |
+
+### Shims (routing stubs — not direct session colors)
+
+The following eleven names exist as shims to shadow drifted global copies: `ceo`, `qa-lead`,
+`code-reviewer`, `security-engineer`, `design-lead`, `research-lead`, `researcher`,
+`ai-engineer`, `database-engineer`, `technical-writer`, `test-engineer`. They route to a real
+engine and should not be used as session names — use the target engine's color instead.
 
 ## Rules
 
 1. **Every session must have a color.** Default is no color — always set it explicitly.
-2. **Parallel CEOs MUST use different colors.** This is how you tell them apart at a glance.
+2. **Parallel orchestrators MUST use different colors.** This is how you tell them apart at a glance.
 3. **Set color immediately** at the start of the identity_setup step, before any work.
-4. **Color matches role** — use the table above, don't invent new assignments.
+4. **Color matches engine** — use the table above, don't invent new assignments.
 
 ## Example
 ```
-/color gold       → CEO primary instance
-/color blue       → cto or backend-engineer
-/color red        → qa-lead or security-engineer
+/color gold       → orchestrator primary instance
+/color blue       → builder
+/color gray       → reviewer or reviewer-readonly
 ```
 
 ## Combined with /name
 Always set both color AND name together:
 ```
 /color gold
-/name ceo-auth-redesign
+/name orchestrator-auth-redesign
 ```
