@@ -38,10 +38,13 @@ The strongest single piece of evidence, and it points *away* from buying a vendo
 > patch pairs. Redacting that framing recovered detection to **94–100%**.
 > ([arXiv:2603.18740](https://arxiv.org/html/2603.18740v1), accessed 2026-08-15)
 
-`qa.js:92-94` instructs **two of this repo's three adversarial verifiers to assume the finding is
-false**. That is the measured 60–94-point failure mode, written into the gate as its design, on one
-model family, three times. Buying a second vendor without deleting those two prompts is buying a
-second opinion about a question the panel has already been told the answer to.
+Until #42 (2026-08-15, the same day this document was first drafted), `qa.js`'s three adversarial
+verifiers were not three perspectives — two of them defaulted to `is_real=false`, which is exactly
+the measured 60–94-point failure mode above, written into the gate's own design. **That has since
+been fixed** (§1.3 below): the live lenses (`qa.js:233-235`) are refute / reproduce neutrally /
+steelman, and only one of three now pre-commits to a posture. What buying a second vendor still
+would not fix is the fact §1.3's table restates: every dispatch in this file, oracle through judge,
+is Anthropic.
 
 ---
 
@@ -82,36 +85,46 @@ untracked file not in the index. The substantive point is unchanged and stronger
 suggests: **the independence guard at `claims.js:498` has never executed once**, because it only
 fires when `judged_by` is non-empty.
 
-### 1.3 The QA gate is one family, three times, and two-thirds of it is instructed to dismiss
+### 1.3 The QA gate is one family, N times — the dismiss-bias was fixed in #42, vendor diversity was not
 
 ```
 $ grep -n "model: '" .claude/workflows/qa.js
-122:  reviewDim       … model: 'sonnet'
-132:  verifyFinding   … model: 'sonnet'   ← ×3 per finding
-180:  sweep round     … model: 'sonnet'
-199:  judge           … model: 'opus'
+296:  oracle (check-runner) … model: 'haiku'
+308:  reviewDim             … model: 'sonnet'
+321:  verifyFinding         … model: 'sonnet'   ← ×3 per finding
+410:  sweep round           … model: 'sonnet'
+449:  judge                 … model: 'opus'
 ```
 
-Five dimension reviewers, three adversarial verifiers per block-eligible finding, one binding judge.
-**Every one is Anthropic.** The `full` tier's advertised "Codex CLI second opinion"
-([CLAUDE.md:152](../../CLAUDE.md)) has no dispatch anywhere in `.claude/workflows/`.
+One check-runner oracle (added by the oracle-first change, 2026-08-23 — it BLOCKs before the panel
+below is ever dispatched, see `qa.js`'s Phase 0; its *checks* are deterministic, the agent
+reporting them is not — see the comment above `oraclePrompt()`), five dimension reviewers, three
+adversarial verifiers per block-eligible finding, one binding judge. **Every one is Anthropic.** The
+`full` tier's advertised "Codex CLI second opinion" ([CLAUDE.md:152](../../CLAUDE.md)) has no
+dispatch anywhere in `.claude/workflows/`.
 
-And the three verifier prompts (`qa.js:92-94`) are not three perspectives — they are one perspective
-and two instructions to dismiss:
+**Correction, 2026-08-23: this section originally claimed `qa.js:92-94` instructed two of three
+adversarial verifiers to assume the finding was false. That was fixed in #42 — the same day this
+document was first drafted — and `:92-94` today sits inside the comment describing the
+reviewer/judge container split (`qa.js:120-122`), not the verifier prompts at all.** The verifier
+lenses now live at `qa.js:233-235`, and the file's own comment above them (`qa.js:218-231`) records
+the history more precisely than this document originally did: until 2026-08-15 two of three lenses
+defaulted to `is_real=false`; the current three are **refute / reproduce neutrally / steelman** —
+one skeptical posture, kept deliberately (a gate that can never argue against a finding trains
+people to route around it), but it no longer holds two of the three votes.
 
-```js
-'Try hard to REFUTE this finding. Default to is_real=false unless the defect is unambiguous…'
-'Reproduce the claim against the real diff. … Is the defect actually present and reachable?'
-'Assume the finding is a false positive. Look for the guard, validation, or context that makes it a non-issue.'
-```
+`verifyFinding` (`qa.js:324-326`) still requires a **strict majority real out of ≥2 votes**, and
+that part of the original analysis is unaffected: a genuine P1 still needs 2-of-3. What no longer
+holds is attributing **34 PASS, 0 BLOCK**
+([CONTROL-PLANE.md:120, :975](agents/CONTROL-PLANE.md)) to a panel where two of three votes were
+dismiss-biased — that panel is not the one in the file today, and the 34-0 figure predates the fix,
+so it is not evidence about the current lenses in either direction. The seeded-defect corpus (§6
+Step 3) is the only instrument that can say whether the fix moved detection.
 
-`verifyFinding` (`qa.js:135-137`) requires a **strict majority real out of ≥2 votes**. So a genuine P1
-must win 2-of-3 from a panel where two members were told to start at "not real", on a model family
-whose sibling loses ~60 points of detection under exactly that framing (§0). This is a
-mechanism-level explanation for **34 PASS, 0 BLOCK** ([CONTROL-PLANE.md:120, :975](agents/CONTROL-PLANE.md))
-that is more specific, and more fixable, than "the gate is uncalibrated".
-
-**This defect is free to fix and a second vendor does not fix it.**
+**What is unchanged, and is the defect this section actually supports: every dispatch above is
+Anthropic, oracle through judge.** That fact does not depend on the verifier-prompt fix. The framing
+defect was free to fix and #42 already fixed it; the single-vendor fact is not fixed by a prompt
+edit — it is what §8's predicate redefinition and §9's tier table are for.
 
 ### 1.4 What is actually installed — and this overturns [ROSTER-SIZE.md:707-712](ROSTER-SIZE.md)
 
@@ -416,24 +429,23 @@ they stop spending model calls on what `tsc` already said — not a second subsc
 
 Ordered by measured effect per dollar. **Steps 1–3 cost nothing and are the whole recommendation.**
 
-### Step 1 — Fix the verifier panel (`qa.js:92-94`) · **the single highest-value change in this document**
+### Step 1 — Fix the verifier panel · **DONE, in #42 (§1.3)**
 
-Replace two dismiss-by-default lenses with three genuinely different failure definitions, none of
-which pre-commits to a verdict:
+Was: replace two dismiss-by-default lenses with three genuinely different failure definitions, none
+of which pre-commits to a verdict. **This shipped in #42**, the same day this document was drafted —
+this step described it as outstanding, which is exactly the stale-present-tense error §1.3 corrects
+above; leaving this step unmarked would have made the document contradict itself again one section
+down. The shipped lenses (`qa.js:233-235`, comment at `qa.js:218-231`) are worded differently than
+the three proposed below — **refute / reproduce neutrally / steelman**, not reproduce/reach/guard —
+but land on the same structure this step called for: every lens demands a locatable artifact or a
+concrete attempt, and none pre-commits to a verdict except the deliberately-kept skeptical one. The
+three as originally proposed here, for reference:
 
 ```
 0. Reproduce it. Read the cited file and line. Is the defect present and reachable on a real path?
 1. Reach it. Name a concrete input and call path that triggers it, or state that none exists.
 2. Guard it. Name the specific validation, type, or invariant that already prevents it — by file:line — or state that none exists.
 ```
-
-Every lens now demands a **locatable artifact** — a path, an input, a guard at a line — instead of a
-prior. Lens 2 keeps the false-positive pressure the current design wanted, but makes it *pay* for the
-dismissal. Per §3's 60–94pp framing effect, this is the largest available improvement to detection in
-the entire system and it is a prompt edit.
-
-**Tier:** `.claude/workflows/**` currently falls to `DEFAULT_TIER` — see `CONTROL-PLANE.md:3.17` Step 1,
-which flags this as wrong. Classify before editing: `node scripts/classify.mjs .claude/workflows/qa.js`.
 
 ### Step 2 — Make provenance independence a checkable predicate (§8)
 
@@ -444,10 +456,15 @@ every later decision in this document**, including whether §5 was right. Withou
 question is unanswerable in principle: you cannot detect a lift in a number you have never measured.
 `CONTROL-PLANE.md:975` already says no code change fixes this. It is right.
 
-### Step 4 — Deterministic checks before model checks (`CONTROL-PLANE.md:3.16`)
+### Step 4 — Deterministic checks before model checks · **DONE, 2026-08-23, this same branch**
 
-Lint, typecheck and tests run *before* reviewers. Source **M** independence at zero correlation and
-zero cost, and reclaims the rate-limit headroom §5 discusses.
+Was: run lint, typecheck and tests *before* reviewers, to source **M** independence at zero
+correlation and zero cost, and reclaim the rate-limit headroom §5 discusses. **This shipped as
+`qa.js`'s oracle-first Phase 0** (`npm run check` + diff-scoped typecheck/semgrep, one check-runner
+dispatch, BLOCKs before any panel agent runs — see §1.3's model table). One caveat this step did not
+anticipate: the checks are deterministic, but running them still costs one agent dispatch, because
+the Workflow runtime has no shell of its own (see the comment above `oraclePrompt()` in `qa.js`) —
+so this is zero *panel* dispatches on a red result, not literally zero dispatches.
 
 ### Step 5 — Read `DIMENSIONS` from `review-lenses.yml` (`CONTROL-PLANE.md:3.16`)
 
@@ -470,7 +487,7 @@ Given §1.4, provision on the day of the experiment, not before — runtimes rot
 **Why an asymmetry and not a vote.** A tie-break by majority needs a third judge, and a third judge
 needs its own independence argument — the problem recurses. The asymmetry terminates it: no tie is
 possible, because agreement is not required for a decision. This is also not a new invention here —
-it is the rule `qa.js:210-217` already applies to the Opus judge, recorded at
+it is the rule `qa.js:468-475` already applies to the Opus judge, recorded at
 [CONTROL-PLANE.md:339](agents/CONTROL-PLANE.md): *"the judge can only turn a PASS into a BLOCK, never
 the reverse."* Extending the existing asymmetry costs one line and no new concept.
 
@@ -482,7 +499,7 @@ the empirical prior is one-directional: **38 verdicts, 0 refusals.** A rule that
 is aimed at the only error this gate has ever demonstrably made.
 
 **The founder is reached exactly once, through a path that already exists:** the logged,
-finding-by-finding false-positive appeal at `qa.js:116` — never a blanket override. Escalation is
+finding-by-finding false-positive appeal at `qa.js:259` — never a blanket override. Escalation is
 therefore rare by construction, and every use of it leaves a record that feeds the corpus in Step 3.
 
 **When confidence is low rather than split**, prefer cascaded selective evaluation over a bigger
@@ -589,7 +606,7 @@ Three `verified_by: command` claims, all reproducible, none requiring a model:
 | id | assert | cmd | expect |
 |---|---|---|---|
 | `c-no-second-family-runtime` | No non-Claude model runtime is callable on this machine | `command -v codex` | exit ≠ 0 |
-| `c-qa-panel-single-family` | Every model dispatch in `qa.js` is Anthropic | `grep -c "model: 'sonnet'\|model: 'opus'" .claude/workflows/qa.js` | equals total `agent(` dispatches |
+| `c-qa-panel-single-family` | Every model dispatch in `qa.js` is Anthropic | `grep "model: '" .claude/workflows/qa.js \| grep -vc "^\s*{ title:"` | 5 (verified against `232919a`: matching `model: '` alone returns 6, because `meta.phases`' display-only `{ title: 'Judge', …, model: 'opus' }` at line 9 is not an `agent()` dispatch and matches too. An earlier version of this command excluded lines carrying the bare token `title:` — which also returns 5 today, but `title` is an ordinary token elsewhere in this file (`qa.js:38, 65`, every `blockers[]` literal at `:366, 367, 457, 465, 474, 483`), so a future dispatch site that happened to put `title:` on the same physical line as `model:` would be silently excluded rather than counted — a smaller number that still reads as plausible. Anchoring on the literal shape of a `meta.phases` entry (a line starting with `{ title:`) instead of the bare token removes exactly the one display-metadata line without that fragility: none of the five real dispatch sites' `model:`-bearing lines start with `{ title:` — by this file's own convention they start with `const`, `agent(`, or a continuation key) |
 | `c-lens-independence-unbacked` | No workflow dispatches a non-Anthropic family for any `independent` lens | `grep -rn "openai\|gemini\|codex" .claude/workflows/` | exit ≠ 0 |
 
 All three are `scope: project` and therefore require `valid_until`. Set it to **2026-11-15**: §1.4
