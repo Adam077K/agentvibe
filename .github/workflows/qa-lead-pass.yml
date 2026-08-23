@@ -52,9 +52,9 @@ permissions:
   contents: read
   pull-requests: read
   issues: read   # F12: Required for gh api repos/$REPO/issues/$PR_NUMBER/comments (bypass comment check)
-  checks: write  # Required to post the diff-bound verdict as a check-run signed by this
-                 # workflow's own GITHUB_TOKEN — a PR author can write any line into a file
-                 # they author, but cannot mint a check-run without this token.
+  checks: write  # Required to post the diff-bound verdict as a check-run. What this actually
+                 # buys, and what it does not, is spelled out at the "Verdict diff-binding check"
+                 # step below — read that before assuming the token makes this unforgeable.
 
 jobs:
   qa-gate:
@@ -280,18 +280,47 @@ jobs:
       #   · Neither covers the other — a diff that bypasses CI is not checked here,
       #     and a local merge that never becomes a PR is not checked by CI.
       #
-      # Binding model:
+      # Binding model — CORRECTED 2026-08-23 after review found the original claim false:
       #   The verdict RECORD is hash-bound, not signed — anyone with repo-write
-      #   access can author a `.qa/verdicts/*.json` file. What IS signed is the
-      #   check-run posted below: it is created with this workflow's own
-      #   GITHUB_TOKEN, over the `checks: write` permission declared at the top of
-      #   this file. A PR author can write any line they like into a file they
-      #   author; they cannot mint a check-run without that token. The hash still
-      #   guarantees a verdict cannot be moved onto a different diff and cannot
-      #   survive an unreviewed edit to the diff it approved — it does not prove
-      #   who authored the underlying record. Real unforgeability of the record
-      #   itself needs a signing key; that decision has not been made and is not
-      #   claimed here.
+      #   access can author a `.qa/verdicts/*.json` file. The check-run posted
+      #   below is created with this workflow's own GITHUB_TOKEN, over the
+      #   `checks: write` permission declared at the top of this file — but that
+      #   token does NOT make the check-run unforgeable in this repo's threat
+      #   model. This workflow triggers on `pull_request`, not
+      #   `pull_request_target`, and per GitHub's documented `pull_request`
+      #   semantics the run executes the workflow definition FROM THE PR'S OWN
+      #   HEAD; elevated permissions are withheld only for PRs originating from a
+      #   FORK. This project has no forks in its normal flow — the worktree
+      #   protocol pushes branches straight to `origin` — so a same-repo PR (this
+      #   one included) gets the full declared `permissions:` block, and a PR
+      #   that rewrites this step's bash to hardcode a success conclusion is what
+      #   runs, still holding `checks: write`. (Stated from GitHub's documented
+      #   semantics, not a live reproduction — this sandbox has no network to
+      #   verify against GitHub Actions.)
+      #
+      #   What this DOES still buy: it raises the cost of forgery from "write a
+      #   line into a session file you author" (the old grep) to "modify a
+      #   workflow file in the same PR" — an `irreversible`-tier change under
+      #   .claude/qa-tier-floor.yml, and therefore conspicuous in the diff even
+      #   though nothing here mechanically stops it. Do NOT respond to this by
+      #   switching to `pull_request_target` — that runs untrusted PR code with
+      #   the BASE branch's elevated trust and secrets, which is worse than the
+      #   gap it would close.
+      #
+      #   What WOULD close it: branch protection requiring a separate human
+      #   approval on changes under `.github/workflows/**` (or CODEOWNERS on that
+      #   path, forcing review by someone other than the PR author). That is a
+      #   repository setting, not a file, and is the founder's call — consistent
+      #   with the header comment at the top of this file, which already makes
+      #   the same point about requiring this job in branch protection.
+      #
+      #   The hash on the verdict RECORD still guarantees a verdict cannot be
+      #   moved onto a different diff and cannot survive an unreviewed edit to
+      #   the diff it approved — it does not prove who authored the record, and
+      #   (per the above) the check-run does not prove the step that posted it
+      #   is the step committed to this file. Real unforgeability needs a
+      #   signing key held outside this workflow's own token; that decision has
+      #   not been made and is not claimed here.
       - name: Verdict diff-binding check — blocking, posted as a signed check-run
         id: verdict
         env:
@@ -300,7 +329,13 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           BYPASS_APPROVED: ${{ steps.bypass.outputs.bypass_approved }}
         run: |
-          set -uo pipefail
+          set -uo pipefail  # No -e (unlike the other steps in this job): VERDICT_JSON=$(...)
+                             # below must still be captured when verdict.mjs exits non-zero, so
+                             # the OK/CONCLUSION logic can read it and post an accurate check-run.
+                             # Every verdict.mjs failure mode (absent record, unresolvable
+                             # origin/main, parse failure) was traced by hand and still exits 1
+                             # via the explicit checks below — this is not a silent-continue like
+                             # the removed `|| true` was.
           echo "=== Verdict diff-binding check (blocking) ==="
 
           VERDICT_JSON=$(node scripts/verdict.mjs check --json)
