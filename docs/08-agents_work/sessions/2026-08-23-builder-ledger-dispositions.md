@@ -46,10 +46,11 @@ What the claim does and does not cover is restated: the Agent-tool surface is di
 judge through is not, and `npm run test:probe-readonly` proves the reporting harness is unforgeable, not that
 the binding holds on that surface.
 
-**Not yet run: any review.** `qa_verdict: PENDING` because no reviewer has looked at this branch — the
-dispositions above are reported as what the diff contains, not as verified correct. This branch was
-time-sensitive (claims due 2026-09-08, 16 days out) and had no session file, so it could not pass
-`qa-lead-pass.yml`; this file exists so it can be reviewed and merged before that date.
+**Reviewed.** `qa_verdict: PASS`, returned by `review-lane3` on the first pass, no corrections required
+(see the QA verdict section below) — the dispositions above have now been checked, not merely reported as
+what the diff contains. This branch was time-sensitive (claims due 2026-09-08, 16 days out) and had no
+session file, so it could not pass `qa-lead-pass.yml`; this file was created so it could be reviewed and
+merged before that date.
 
 ## QA verdict — recorded 2026-08-23
 
