@@ -4,7 +4,7 @@ task: template-merge-gate
 date: 2026-08-23
 branch: fix/template-merge-gate
 tier: irreversible
-qa_verdict: PENDING
+qa_verdict: PASS
 ---
 
 **Closed the tier-3 "AI-assisted merge" hole in `war-room/bin/PROJECT_NAME.tmpl`** — the same
@@ -61,3 +61,19 @@ new guard test), `war-room/README.md` (new "Merge gate" section), `.claude/memor
 
 **Not done / left for the sequence this depends on:** porting `bin/warroom`'s actual QA-verdict
 gate into the template — needs P1's single launcher generation, not a template patch.
+
+## QA verdict — recorded 2026-08-23
+
+**PASS**, returned by an out-of-band `reviewer` engine (`review-lane4`) that did not produce this work and
+holds no Write or Edit tools. Lenses applied: see that review's own report. History: **PASS on first pass, no corrections required**.
+
+**This review was a single model family.** Irreversible tier nominally asks for 2-of-3 multi-judge, and the
+`risk: high` predicate requires ≥2 distinct model families — there is no non-Anthropic model inside Claude
+Code, so that bar is not reachable in this runtime today. **The founder accepted single-family review for
+harness self-edits on 2026-08-23**, after the limitation was raised unprompted on every review round across
+two sessions. It is recorded here as an accepted risk, not as a satisfied requirement.
+
+**This PASS was recorded by the orchestrator from the reviewer's return, not by the author of the code.**
+Under the gate as it stands on `main`, the verdict is an author-writable line in a file — which is exactly
+the defect `feat/gate-pr-route` replaces with a verdict bound to the diff hash and posted as a check-run.
+Until that lands, this line is a convention, and the separation above is the only thing behind it.
