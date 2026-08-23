@@ -11,8 +11,10 @@ tier: irreversible
 
 **Date:** 2026-08-23
 **Lead:** builder (lane2)
-**Task:** P0.2 (oracle-first ordering in `.claude/workflows/qa.js`) + P0.5 (stale claims in `MODEL-DIVERSITY.md`)
-**Status:** Complete, unreviewed (qa_verdict PENDING — this is an irreversible-tier path, `.claude/workflows/**`)
+**Task:** P0.2 (oracle-first ordering in `.claude/workflows/qa.js`) + P0.5 (stale claims in
+`MODEL-DIVERSITY.md`), then a round of fixes from an out-of-band review (1 P1, 2 P2).
+**Status:** Complete, unreviewed since the second round (qa_verdict PENDING — irreversible tier,
+`.claude/workflows/**`)
 
 ## What Was Done
 
@@ -27,30 +29,45 @@ tier: irreversible
 - Corrected `MODEL-DIVERSITY.md` §0 and §1.3: the "two of three verifiers assume the finding is
   false" claim was fixed in #42 and was stale; re-derived the `model: '` line table from the edited
   file rather than copying anyone else's numbers.
+- **Review round 2 (P1 + 2×P2):** `oraclePrompt()` had no DATA-not-instructions injection guard,
+  unlike its two sibling prompts, despite reading back command output from a diff the PR author
+  wrote — added the same guard, and stopped calling the oracle "deterministic" unqualified (its
+  checks are; the agent reporting them is not — stated plainly in a comment, with the failure mode
+  named as degradation to panel-only, never a false PASS). Fixed a citation
+  (`CONTROL-PLANE.md:201-202` doesn't state the no-shell constraint; replaced with
+  `check-dispatch-agenttype.mjs:35-38`, which does). That fix shifted qa.js's lines a second time,
+  so every §1.3/§0 citation in `MODEL-DIVERSITY.md` was re-derived again against the final file.
+  Also closed a self-contradiction in §6 (Step 1 read as an outstanding TODO for something §1.3
+  says shipped in #42; Step 4 had the identical problem for this branch's own oracle-first change)
+  and re-derived two stale citations in §7 plus a grep pattern in §11 that would have undercounted
+  after the oracle's `model: 'haiku'` dispatch was added.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `.claude/workflows/qa.js` | New Oracle phase (schema, prompt, `runOracle()`, short-circuit block), phases metadata, container-split comment |
-| `docs/03-system-design/MODEL-DIVERSITY.md` | §0 + §1.3 rewritten to match current qa.js; sourced research untouched |
+| `.claude/workflows/qa.js` | New Oracle phase (schema, prompt, `runOracle()`, short-circuit block, injection guard, honest framing), phases metadata, container-split comment |
+| `docs/03-system-design/MODEL-DIVERSITY.md` | §0, §1.3, §6, §7, §11 brought into agreement with current `qa.js`; sourced research untouched |
 
 ## Verification
 
-- `npm run check`: every sub-check run individually (aggregate stops at first failure). Only
-  failures: `lint:agents` and `test:skill-clamp` both fail on the same known artifact — this clone
-  excludes `.mcp.json` (sparse-checkout), so `designer.md`'s `mcpServers: [playwright]` reads as
-  unconfigured. `git diff --stat origin/main..HEAD -- .claude/agents/designer.md` is empty —
-  confirmed not touched by this branch. `check:dispatch` passed at 13 sites (up from 12), confirming
-  the new oracle dispatch resolves cleanly. `check:mc` exits 0; its own `bun test` has 2 known
-  in-session failures (SSE socket bind, ledger-crosscheck timeout), both pre-existing.
+- Individual `npm run <step>` invocations, real exit codes (not piped through `tail` — caught and
+  corrected my own earlier mistake of gating `&&` on `tail`'s exit status instead of the command's).
+  4 failures across the full 27-step set, all pre-existing/environmental and unrelated to the two
+  changed files: `lint:agents` + `test:skill-clamp` (both from this clone's sparse-checkout
+  excluding `.mcp.json` — confirmed via an empty `git diff --stat origin/main..HEAD --
+  .claude/agents/designer.md`), and `check:mc` (one pre-existing SSE-socket-bind failure in
+  `mission-control/test/stream.test.ts`, nothing in `mission-control/` touched by this branch).
+  Everything else passed, including `check:dispatch` (13 sites, 0 failures — the oracle dispatch
+  resolves to `agentType: 'reviewer'`) and `check:dispatch-prompt`.
 - `npm run test:tier-gate`: 17/17 pass.
-- Short-circuit demonstrated by execution: a harness (`vm`-free, via `new Function` with mock
-  `agent/parallel/phase/log/budget/args`) ran the actual edited `qa.js` body. Red oracle → 1 total
+- Short-circuit demonstrated by execution, both before and after the review-round fixes: a harness
+  (`new Function` with mock `agent/parallel/phase/log/budget/args`, no `vm`) ran the actual edited
+  `qa.js` body and counted real journal entries, not exit codes or summaries. Red oracle → 1 total
   dispatch (the oracle itself), 0 panel dispatches, `phases_entered: ["Oracle"]`, verdict BLOCK.
   Dropout → 4 dispatches (all oracle retries), 0 panel dispatches, BLOCK. Green → panel runs in
   full (7 dispatches: oracle + 5 reviewers + judge), verdict PASS — proving the gate is not
-  permanently short-circuited.
+  permanently short-circuited. Re-ran after the P1/P2 fixes: identical counts.
 
 ## Blockers / Open Questions
 
