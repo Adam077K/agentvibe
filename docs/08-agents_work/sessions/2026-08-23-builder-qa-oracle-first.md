@@ -12,9 +12,12 @@ tier: irreversible
 **Date:** 2026-08-23
 **Lead:** builder (lane2)
 **Task:** P0.2 (oracle-first ordering in `.claude/workflows/qa.js`) + P0.5 (stale claims in
-`MODEL-DIVERSITY.md`), then a round of fixes from an out-of-band review (1 P1, 2 P2).
-**Status:** Complete, unreviewed since the second round (qa_verdict PENDING — irreversible tier,
-`.claude/workflows/**`)
+`MODEL-DIVERSITY.md`), then three correction rounds from an out-of-band review (`review-lane2`): round 1
+found 1 P1 (missing DATA-not-instructions guard on `oraclePrompt()`) and 2 P2s (a false
+`CONTROL-PLANE.md:201-202` citation, and the `MODEL-DIVERSITY.md` §6 self-contradiction); round 2 returned
+PASS but found a new P2 (the §11 claim command returned 6 where the doc said 5); round 3 confirmed the final
+one-line robustness swap.
+**Status:** Complete, reviewed and PASSED by `review-lane2` — irreversible tier, `.claude/workflows/**`.
 
 ## What Was Done
 
