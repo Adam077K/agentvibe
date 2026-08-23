@@ -22,12 +22,15 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(REPO, 'scripts', 'check-memory-budget.mjs');
 
 const roots = [];
-function fixture({ decisions = '', longTerm = '' }) {
+function fixture({ decisions = '', longTerm = '', archive = '' }) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'memory-budget-fixture-'));
   roots.push(root);
   fs.mkdirSync(path.join(root, '.claude', 'memory'), { recursive: true });
   fs.writeFileSync(path.join(root, '.claude', 'memory', 'DECISIONS.md'), decisions);
   fs.writeFileSync(path.join(root, '.claude', 'memory', 'LONG-TERM.md'), longTerm);
+  if (archive) {
+    fs.writeFileSync(path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE.md'), archive);
+  }
   return root;
 }
 
@@ -68,6 +71,7 @@ function makeLines(n) {
 
 const ENTRY_CAP = 50;
 const BYTE_CAP = 40_000;
+const ARCHIVE_BYTE_CAP = 40_000;
 const LINE_CAP = 100;
 
 // ── clean fixture must pass ─────────────────────────────────────────────────
@@ -131,6 +135,37 @@ test('MUTATION: exactly at the line cap passes', () => {
   const r = check(fixture({ decisions: makeDecisions(3, 100), longTerm: makeLines(LINE_CAP) }));
   const lineFail = r.failures.some((f) => f.includes('long-term-line-overflow'));
   assert.ok(!lineFail, `LINE_CAP itself should not trigger overflow: ${JSON.stringify(r.failures)}`);
+});
+
+// ── DECISIONS_ARCHIVE.md mutations ─────────────────────────────────────────────
+
+test('MUTATION: archive over the byte cap is flagged', () => {
+  const bigArchive = 'x'.repeat(ARCHIVE_BYTE_CAP + 1);
+  const r = check(fixture({
+    decisions: makeDecisions(3, 100),
+    longTerm: makeLines(10),
+    archive: bigArchive,
+  }));
+  assert.equal(r.code, 1);
+  const hasArchiveFail = r.failures.some((f) => f.includes('decisions-archive-byte-overflow'));
+  assert.ok(hasArchiveFail, `expected decisions-archive-byte-overflow, got: ${JSON.stringify(r.failures)}`);
+});
+
+test('MUTATION: archive exactly at the byte cap passes', () => {
+  const atCapArchive = 'x'.repeat(ARCHIVE_BYTE_CAP);
+  const r = check(fixture({
+    decisions: makeDecisions(3, 100),
+    longTerm: makeLines(10),
+    archive: atCapArchive,
+  }));
+  const hasArchiveFail = r.failures.some((f) => f.includes('decisions-archive-byte-overflow'));
+  assert.ok(!hasArchiveFail, `ARCHIVE_BYTE_CAP itself should not trigger overflow: ${JSON.stringify(r.failures)}`);
+});
+
+test('MUTATION: absent DECISIONS_ARCHIVE.md passes (archive check is optional)', () => {
+  // No archive= provided: fixture does not write the file.
+  const r = check(fixture({ decisions: makeDecisions(3, 100), longTerm: makeLines(10) }));
+  assert.equal(r.code, 0, `no archive file should pass: ${JSON.stringify(r.failures)}`);
 });
 
 // ── real repo must pass ─────────────────────────────────────────────────────

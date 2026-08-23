@@ -59,6 +59,19 @@ const DECISIONS_BYTE_CAP = 40_000;
 /** LONG-TERM.md line ceiling, as declared in CLAUDE.md. */
 const LONG_TERM_LINE_CAP = 100;
 
+/**
+ * DECISIONS_ARCHIVE.md byte ceiling.
+ *
+ * 40,000 bytes — the same ceiling as the active DECISIONS.md. Treating both files as
+ * having equal budgets keeps the combined pair ≤ 80 kB and forces a review after roughly
+ * six to eight more entries land in the archive (at ~1.4 kB/entry average). The archive
+ * grows only during deliberate eviction events, not continuously. When this cap fires:
+ * compress or delete records that are fully obsolete (e.g., Phase 2 launcher measurement
+ * entries once the fleet rollout in Phase 9 completes and nothing references them any
+ * longer). Pre-PR archive was 18,538 bytes; post-eviction it is ~30 kB.
+ */
+const DECISIONS_ARCHIVE_BYTE_CAP = 40_000;
+
 // ── helpers ─────────────────────────────────────────────────────────────────
 const failures = [];
 const fail = (check, msg) => failures.push(`[${check}] ${msg}`);
@@ -133,10 +146,34 @@ if (!fs.existsSync(longTermPath)) {
   }
 }
 
+// ── check DECISIONS_ARCHIVE.md ─────────────────────────────────────────────────
+const decisionsArchivePath = path.join(ROOT, '.claude', 'memory', 'DECISIONS_ARCHIVE.md');
+
+if (!fs.existsSync(decisionsArchivePath)) {
+  // Not required to exist; only checked when present.
+} else {
+  const text = fs.readFileSync(decisionsArchivePath, 'utf8');
+  const bytes = Buffer.byteLength(text, 'utf8');
+
+  if (bytes > DECISIONS_ARCHIVE_BYTE_CAP) {
+    fail(
+      'decisions-archive-byte-overflow',
+      `DECISIONS_ARCHIVE.md is ${bytes.toLocaleString()} bytes; cap is ${DECISIONS_ARCHIVE_BYTE_CAP.toLocaleString()} bytes. ` +
+        `Compress or delete fully superseded entries (e.g., phase-specific records after that phase ships). ` +
+        `Do not delete anything still referenced; do not touch DECISIONS.md entries.`
+    );
+  } else if (!JSON_OUT) {
+    console.log(
+      `✓ DECISIONS_ARCHIVE.md — ${bytes.toLocaleString()} bytes (cap ${DECISIONS_ARCHIVE_BYTE_CAP.toLocaleString()})`
+    );
+  }
+}
+
 // ── report ───────────────────────────────────────────────────────────────────
 if (JSON_OUT) {
   const decisionsText = fs.existsSync(decisionsPath) ? fs.readFileSync(decisionsPath, 'utf8') : '';
   const longTermText = fs.existsSync(longTermPath) ? fs.readFileSync(longTermPath, 'utf8') : '';
+  const archiveText = fs.existsSync(decisionsArchivePath) ? fs.readFileSync(decisionsArchivePath, 'utf8') : '';
   console.log(
     JSON.stringify({
       root: ROOT,
@@ -145,6 +182,10 @@ if (JSON_OUT) {
         bytes: Buffer.byteLength(decisionsText, 'utf8'),
         entry_cap: DECISIONS_ENTRY_CAP,
         byte_cap: DECISIONS_BYTE_CAP,
+      },
+      decisions_archive: {
+        bytes: Buffer.byteLength(archiveText, 'utf8'),
+        byte_cap: DECISIONS_ARCHIVE_BYTE_CAP,
       },
       long_term: {
         lines: longTermText.split('\n').length,

@@ -23,6 +23,41 @@
 ---
 
 <!-- Entries below this line, most-recent first. -->
+
+## 2026-08-20 — The audit round: a pre-authorisation whose precondition never held, and three false findings caught by re-running
+
+**Context:** Seven lanes were commissioned to repair three known holes, map the reference graph, falsify the
+documentation, and challenge the design. The Founder pre-authorised holes A, B and C to **merge on reviewer
+PASS** without per-PR confirmation, and separately assigned a lane to rework PR #77.
+
+**What was decided, and by whom:**
+1. **Nothing merged.** The pre-authorisation was conditional on a reviewer PASS. The 7-agent cap was spent on
+   3 fix lanes + 4 audit lanes, so **no reviewer ever ran against the fix branches** — the precondition was
+   never satisfied. Branches are prepared and held. This is the CEO declining to treat a conditional
+   authorisation as an unconditional one, and it is recorded because the opposite reading was available.
+2. **Lane 2's branch was split.** `fix/gate-ref-95` carries the verified #95 fix alone; the RED tests for #96
+   stay on `fix/gate-ref-and-hook-fp` with no fix behind them. Merging them together would have put failing
+   tests on `main`.
+3. **The orchestrator committed two lanes' uncommitted work and authored three doc corrections itself.**
+   Lanes 1, 2 and 3 stopped emitting with work on disk and did not answer repeated pings. Committing
+   verified work is custodial; the three corrections are documentation truth-fixes in the governing file.
+   Both are recorded rather than left implicit, because the CEO is not supposed to produce artifacts.
+
+**Rationale — the finding that governed every decision above:** three of the round's findings were **false
+and were caught only by re-running them**. A scout reported `coding.js` dispatching a phantom agent (fixed
+2026-08-16; it had matched the *fix's own comment*). A lane reported branch protection disabled (it had
+queried `adamks/agentvibe`, lowercase-k, and read the 404 as `protected: False`). The commissioning handoff
+itself asserted the session-start prompt carries the stale org chart (it does not; `.claude/entry/ceo.md`
+states the opposite) and miscounted the shims as 9 against an actual 11. **In a repository whose house style
+is to preserve superseded statements beside their corrections, a fix comment and a live bug are
+indistinguishable to grep** — which makes this codebase unusually hostile to audit, and makes
+verify-by-execution non-optional rather than a virtue.
+
+**Reversibility:** reversible — nothing was merged or pushed; all work is on local branches.
+**Owner:** ceo · **Founder decisions:** 7 working lanes · pre-authorise A/B/C · assign a lane to PR #77
+**Affects:** `CLAUDE.md`, `README.md`, `AGENTS.md`, `.claude/commands/*`, `scripts/check-registration.mjs`,
+`scripts/run-gate.mjs`, `scripts/pre-tool-use.test.mjs`, and the still-open `design-screen.md` dispatch gap
+
 ## 2026-08-12 — The reader engine becomes a script, and the roster drops to six
 
 **Context:** Phase 6 opened with a stop-condition-7 clock running: `.claude/agents/reader.md` was created in
@@ -46,24 +81,7 @@ unlike the eleven shimmed names, deleting this one actually removes it.
 **Affects:** every engine consumer, schema-lint's ENGINES registry, AGENTS.md, README counts, the claim ledger
 
 ## 2026-08-12 — Three Phase 6 gate criteria amended, each by a measurement
-
-**Context:** The Phase 6 gate was written in the Phase 6 handoff — by me — before any of the runtime was
-measured. Three of its criteria turned out to describe mechanisms that could not fire or could not be proven.
-**Options considered:** Implement the criteria literally and ship mechanisms that pass their own gate while
-guarding nothing / Amend the criteria quietly / Amend them and record the measurement that forced each.
-**Decision:** Amend, with the number attached. (1) *"The ceiling fires before dispatch"* → **before the next
-unit of work**: measured 0 of this session's 414M tokens passed through `Task`, so a dispatch-gated budget
-would never have fired once in 1,314 turns. (2) *"per session"* → **per rolling 5-hour window**, the actual
-subscription constraint; peak measured across 99 transcripts and 16,900 turns is **1,961,285 output tokens**,
-so warn at 2M and block at 3M. (3) *"the four memory files are generated views, proven non-lossy"* → only
-`CODEBASE-MAP.md` becomes a generated view; the ledger has no field for rejected options or rationale, so
-"non-lossy" fails by construction for `DECISIONS.md`, and three of the four files are empty templates anyway.
-**Rationale:** A gate criterion that cannot be met honestly is worse than no criterion — it forces either a
-false pass or a quiet edit. Recording the measurement makes the amendment auditable.
-**Reversibility:** reversible
-**Owner:** ceo
-**Affects:** Phase 6 acceptance, the budget and stall design, anyone reading the handoff's gate section
-
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Phase 6 is complete; the amended criteria are now the operative status quo.*
 ## 2026-08-11 — Claim ledger replaces the diff gate as the enforcement spine
 
 **Context:** The system must serve any venture work, not only code. A measured diagnostic found ~1,736 stated imperative rules against 1 mechanism that can block, and 16 verified fabrications. The obvious fix — a merge gate bound to a commit SHA with CI executing compilers — gates diffs, and most venture work (pricing, market sizing, positioning, GTM) has no diff.
@@ -106,25 +124,9 @@ false pass or a quiet edit. Recording the measurement makes the amendment audita
 **Affects:** all resolvers, the pre-tool hook, CI, the outbound queue
 
 ## 2026-08-11 — Playbooks declare work graphs and exit gates, never method
-
-**Context:** The system is also the operating standard for building products, which implies repeatable playbooks. That collides directly with the founding principle "constrain outcomes, not methods — a worker gets a goal and a quality bar, never a procedure."
-**Options considered:** Playbook as real step-by-step procedure (re-adopts the prose that rots) / Two kinds, explicitly classified (the classification becomes an unenforced convention) / No playbooks, lenses and gates only (no repeatability) / Work graph + exit gates.
-**Decision:** A playbook declares the stages a category of work passes and the claims + criteria required to exit each. It never declares how to do a stage. Seed set: `ship-feature`, `launch-landing-page`, `price-a-product`, `validate-a-market`, `design-pass`, `research-question`.
-**Rationale:** Preserves method freedom exactly while giving a real standard, and every playbook is a linted data file rather than prose.
-**Reversibility:** reversible
-**Owner:** ceo
-**Affects:** all slash commands, the framer, the gate
-
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Decision is implemented in `.claude/playbooks/` and CLAUDE.md. **Checked by title-phrase grep only, and none found** — the rule itself is restated in `schema-lint.js:1428` and `ci.yml:148`, but neither references this record.*
 ## 2026-08-11 — Capabilities: enforce what the runtime enforces, delete the decoration
-
-**Context:** Every agent declares `mcpServers: [linear, github, supabase, mem0, pgvector]` while `settings.json` has no `mcpServers` key and no `.mcp.json` exists anywhere. `security-engineer` and `code-reviewer` are declared read-only reviewers running with full inherited write access.
-**Options considered:** Build the full per-task capability envelope (nothing in 24 systems has done it; high risk of another declared-never-wired field) / Coarse allowlist only / Enforce what is real.
-**Decision:** Use the runtime's `tools:` field on all 7 engines, minimally scoped — reviewer and reader read-only, period. Lint that every declared MCP server resolves. Delete every decorative capability field.
-**Rationale:** A capability field auto-granted whatever it requests is worse than no field: it degrades to false confidence, not to zero. An agent that can edit what it reviews will review what it can edit.
-**Reversibility:** reversible
-**Owner:** ceo
-**Affects:** all engine definitions, settings.json, CI lint
-
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Decision is implemented in schema-lint and agent definitions. **Cited, and the original stub was wrong to say otherwise:** `docs/03-system-design/TARGET-ARCHITECTURE.md` lists this entry under **Keep** for the Mem0 deletion sweep — its `Context:` line is the record that `mcpServers: [... mem0 ...]` was declared while no MCP config existed. Do not delete: a true statement the sweep must not take with it.*
 ## 2026-08-11 — The claim is the unit; the ledger has one classifier and one parser
 
 **Context:** Phase 3 builds the enforcement spine. Three sub-decisions had real alternatives.
@@ -144,86 +146,22 @@ a decorative mechanism on the critical path.
 **Affects:** `.claude/qa-tier-floor.yml`, `scripts/lib/*`, `.github/workflows/qa-lead-pass.yml`, Phase 4 lenses
 
 ## 2026-08-11 — qa-lead-pass promoted to blocking; memory-file collapse deferred
-
-**Context:** ADR-001 says every gate ships in shadow first and is promoted on evidence. Phase 3 owed a
-promotion decision and a decision on collapsing the four memory files into generated views.
-**Decision:** Promote `qa-lead-pass.yml` to blocking. **Do not** collapse `DECISIONS.md`, `LONG-TERM.md`,
-`USER-INSIGHTS.md` or `CODEBASE-MAP.md` yet.
-**Rationale:** The gate ran in shadow across every PR of Phases 1–2, was correct each time, and demands
-nothing the documentation gate did not already require — so its measured friction is zero, which is the only
-honest reason to promote. The memory collapse is the opposite case: it is a data migration over files holding
-real founder memory, its friction is unmeasured, and a conversion bug would cost more than the staleness it
-fixes. `ledger views` proves the rendering works; the migration waits for a phase that owns it.
-**Reversibility:** reversible (restore `continue-on-error: true`)
-**Owner:** ceo · **Founder decision outstanding:** branch protection on `main` is a repo setting, not a file
-**Affects:** every future PR, `.claude/memory/*`, Phase 4
-
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Completed action; the gate is live. **Checked by title-phrase grep only, and none found** — `PHASE-3-HANDOFF.md:57` and `AGENT-SYSTEM-REBUILD.md:314` record the same promotion independently, without citing this record.*
 ## 2026-08-12 — Phase 8 chosen over Phase 9 and over venture work; split into 8a read plane and 8b dispatch
-
-**Context:** The Phase 8 handoff recommended neither Phase 8 nor Phase 9, but one real venture task, because
-stop condition 6 is live and nothing built in seven phases has met a task it did not author. Founder chose
-Phase 8. Two measurements then reshaped it. The monthly fleet baseline (stop condition 5b, unrun since Phase
-2) came back **flat — 8 generations total, 5 in scope, unchanged**; the 15→14 launcher drop is `agentvibe`
-itself leaving the standalone set, so Phase 9's debt is measurably not growing. And **no sibling project has
-a claim ledger** — zero `scripts/ledger.mjs`, zero `CLAIM-LEDGER.md` across all 13, all still on the
-pre-collapse 26–32 agent rosters.
-**Decision:** Build Phase **8a**, the read plane, now. Defer **8b** (Dispatch, the only view that writes)
-until Phase 9 gives it targets. Six views ship: Fleet · Sessions · Belief · Conflicts on real data; Project
-and Inbox as *honest* empty states naming the specific missing emitter. Greenfield under `mission-control/`
-on **Bun + Hono + React + Vite**, folded into `npm run check`. Gate: every displayed figure reproducible by
-an independent command, a mutated fixture turns a test red, live data from ≥3 non-`agentvibe` projects, cold
-start < 3 s and refresh < 250 ms.
-**Rationale:** Phase 8's stated gate — *"claims land in that repo's ledger"* — is **unreachable as written**,
-because no second project has a ledger for a claim to land in. Making it reachable means installing the spine
-elsewhere first, which is propagation, which is Phase 9, which the 2026-08-11 founder decision forbids before
-Phase 9. Phase 8's gate therefore depends on Phase 9. Six of the seven views only read, and reads need no
-spine in the target, so the phase splits cleanly at the seam where the conflict actually lives. The speed
-budget is grounded rather than guessed: a cold full parse of all 72 transcripts measures **1,283 ms** and an
-incremental refresh **13 ms**, which is also why **no persistent store is built** — the transcripts already
-are the history, so `initDb()`-with-zero-`INSERT`s is not repeated.
-**Costs accepted by the founder, against recommendation:** Bun+React are this repo's **first dependencies
-ever** (`dependencies: {}`, no lockfile, no `node_modules`, CI never runs an install), and folding
-`check:mc` into `npm run check` means `.github/workflows/ci.yml` must gain `setup-bun` — so the clean-clone
-property becomes "clone, `bun install`, `npm run check`" and PR1 is irreversible tier. Shipping two empty
-views is in tension with rule 6; resolved by making each empty state state its own reason and name what
-would fill it, which is a report rather than a stub.
-**Reversibility:** reversible — `mission-control/` is additive and nothing else imports it; the CI and
-`package.json` edits revert cleanly. The dependency precedent is the part that does not revert.
-**Owner:** ceo · **Open, needed before PR3:** what counts as "the fleet" — defaulting to every git repo
-under the roots, flagging the 8 with a live `.worktrees/.registry` as agent-active
-**Affects:** `mission-control/**`, `package.json`, `.github/workflows/ci.yml`, Phase 9 sequencing
-
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Phase 8a complete; scope decisions executed. **Cited by date rather than by phrase, which the title grep could not see:** `mission-control/server/projects.ts:3` reads *“Fleet scope decision (already made, see .claude/memory/DECISIONS.md 2026-08-12)”*, and the default it relies on — every git repo under the roots is a project, `.worktrees/.registry` flags it agent-active — is this entry's `Open, needed before PR3:` line, now in the archive. **Also cited:** `mission-control/test/crosscheck.test.ts:2` quotes this entry's Phase 8a gate; `docs/08-agents_work/sessions/2026-08-13-ceo-corpus-correction.md:10` names it as the record superseded; `docs/03-system-design/AGENT-ARCHITECTURE.md:608` names `projects.ts:3` as a by-date citer (second-order); `docs/08-agents_work/2026-08-13-rethink-board.md:53` calls this file's positional links a defect.*
 ## 2026-08-12 — Two enforcement mechanisms found green over untested capabilities
-
-**Context:** Clearing the two cheap claims due 2026-09-08 meant actually running their checks rather than
-reading them.
-**Decision:** Treat both as defects to fix, not as claims to dispose of. `c-read-only-binding-unverified`
-stays **unresolved** — not passed. `c-lenses-and-playbooks-are-loaded` needs a corrected assert and a
-resolver that can observe the failure mode.
-**Rationale:** `scripts/probe-readonly-engine.sh --verify` printed *"PASS — the restriction binds at runtime,
-not only on paper"* purely because the probe file was absent. The `reviewer` engine reported that `Bash` was
-bound and fully capable of the write, that nothing blocked it, and that the file was absent **because it
-declined on its own judgement**. The script cannot distinguish *could not* from *chose not to* — standing
-rule 11. Separately, `c-lenses-and-playbooks-are-loaded` asserts at `confidence: 1` that lenses are injected
-"mechanically rather than discretionarily", verified by a command that tests **the hook's output**. The hook
-emits 25,613 bytes correctly; this session received a **~2 KB preview plus a file path**, so an agent must
-now *choose* to open a file — which is the definition of discretionary. Standing rule 3, on Phase 6 work.
-Both are mine, from Phases 4 and 6, and both are the exact failure the rebuild exists to eliminate: a green
-check over something nobody observed.
-**Reversibility:** n/a — corrections
-**Owner:** ceo · fix in flight on `fix/readonly-probe-evidence`
-**Affects:** `scripts/probe-readonly-engine.sh`, `docs/03-system-design/CLAIM-LEDGER.md`, the Phase 6
-completion record in `AGENT-SYSTEM-REBUILD.md`, `.claude/hooks/session-start.js` (payload must become a
-router, ~1.5 KB, not a 25 KB dump — same cure Phase 7 found for skills)
-
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Historical defect-finding; corrections are in `scripts/`. **Cited in three live files, and the original stub was wrong to say none:** `docs/08-agents_work/2026-08-13-rethink-board.md:19` quotes this body verbatim (*“an agent must now choose to open a file — which is the definition of discretionary”*); `mission-control/test/collectors.test.ts:445` invokes it as *“the ‘two green checks over one untested capability’ pattern already in DECISIONS.md”* to justify deleting a barrier that never fired; and `mission-control/test/views.test.tsx:1961` as *“a green check over an untested capability, which is the entry already in DECISIONS.md”* to refuse a coverage percentage as evidence. Two tests reason from this record.*
 ## 2026-08-13 — the transcript corpus was measured 28× too small; cold-start budget raised to 10s
 
-**Context:** The 2026-08-12 entry above justifies "no persistent store" with *"a cold full parse of all 72
-transcripts measures 1,283 ms"*. **That measurement was wrong.** The scan walked `~/.claude/projects/` only
-two levels deep; transcripts nest deeper. Recursive count, verified 2026-08-13: **2,029 files / 2.83 GB**,
-raw full parse **9,252 ms** — the same ~9 s Phase 6 hit on this corpus before adopting mtime-skip. Mission
-Control's own `IndexStore` measures 3,633 / 3,870 / 4,060 ms over three runs, against a 3 s gate. Found by
-the builder measuring the real corpus rather than trusting the number in its brief.
+**Context:** The `DECISIONS.md` entry of **2026-08-12, “Phase 8 chosen over Phase 9 and over venture work;
+split into 8a read plane and 8b dispatch”** — archived 2026-08-22, body now in `DECISIONS_ARCHIVE.md`,
+cited by date and title because a position no longer locates it — justifies "no persistent store" with
+*"a cold full parse of all 72 transcripts measures 1,283 ms"*. **That measurement was wrong.** The scan
+walked `~/.claude/projects/` only two levels deep; transcripts nest deeper. Recursive count, verified
+2026-08-13: **2,029 files / 2.83 GB**, raw full parse **9,252 ms** — the same ~9 s Phase 6 hit on this
+corpus before adopting mtime-skip. Mission Control's own `IndexStore` measures 3,633 / 3,870 / 4,060 ms
+over three runs, against a 3 s gate. Found by the builder measuring the real corpus rather than trusting
+the number in its brief.
 **Decision:** Raise the cold-start budget to **10 s**. Do **not** add a store, lazy-load per project, or
 parallelise the cold read. Bind the budget to a claim, `c-mission-control-cold-start`, with `valid_until`.
 **Rationale:** Cold start is paid once per daemon launch and the incremental refresh is **4 ms**, so the
@@ -238,8 +176,10 @@ forgetting one.
 options is foreclosed
 **Owner:** ceo · **founder decision** taken with all four options and their costs presented
 **Affects:** `mission-control/test/perf.test.ts`, `mission-control/README.md`,
-`docs/03-system-design/PHASE-8A-STATUS.md` §3 and §4, and the 2026-08-12 entry above, whose stated
-rationale is superseded by this one
+`docs/03-system-design/PHASE-8A-STATUS.md` §3 and §4, and the `DECISIONS.md` entry of **2026-08-12,
+“Phase 8 chosen over Phase 9 and over venture work; split into 8a read plane and 8b dispatch”** (archived
+2026-08-22; body in `DECISIONS_ARCHIVE.md`, where the superseded figure now carries a correction note),
+whose stated rationale is superseded by this one
 
 ## 2026-08-13 — Phase 8a PR4/PR5 scope, and the Founder widened rule 8 for these two PRs
 
@@ -384,17 +324,7 @@ standing rule it makes every mixed change a two-PR ceremony).
 **Owner:** ceo · **founder decision** · **Affects:** `.github/workflows/qa-lead-pass.yml`, `CLAUDE.md`
 
 ## 2026-08-16 — Ship five engines, defer the two that hold credentials
-
-**Context:** `operator` and `instrument` are specified to hold payment keys and deploy tokens. `tools:` is
-not known to bind `Bash`, so a container declared read-only can still write through a shell. The OS sandbox
-those two depend on is configured **nowhere** — `GRANT-HOLDERS.md` records 0 sandbox keys in settings.json.
-**Decision:** Build `orchestrator · builder · designer · reviewer · sourcer`. `operator` and `instrument`
-stay specified and **uncreated** until a sandbox exists. Founder decision, 2026-08-16.
-**The roster answer is still seven** — the argument for the number never depended on creating them all at
-once, and deferring the two does not reopen `ROSTER-SIZE.md`.
-**Reversibility:** reversible — the specifications are written and unchanged.
-**Owner:** ceo · **founder decision** · **Affects:** the roster migration, `docs/03-system-design/agents/`
-
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Roster decision captured in AGENTS.md and docs. **Cited, and the original stub was wrong to say otherwise:** `docs/08-agents_work/handoffs/2026-08-15-implementation.md:112-114` — *“whether `operator`/`instrument` wait for the OS sandbox (recorded in `DECISIONS.md` as: ship five, defer two)”* — which is an item still open on the founder, not a closed one.*
 ## 2026-08-16 — The eleven shims stay until nothing references their names
 
 **Context:** 17 agent files here, 44 in `~/.claude/agents/`; 11 names exist in both with **different

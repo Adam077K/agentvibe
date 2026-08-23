@@ -119,13 +119,21 @@ Memory:     Mem0 (primary) + Anthropic Memory Tool (auto-fallback after 3 retrie
 
 | File | Purpose | Updated by |
 |------|---------|-----------|
-| `.claude/memory/DECISIONS.md` | Architecture & strategy decisions, append-only, 50-entry cap | Any agent making a decision affecting others |
+| `.claude/memory/DECISIONS.md` | Architecture & strategy decisions, append-only, 50-entry cap · 40,000-byte cap (**byte cap binds**) | Any agent making a decision affecting others |
 | `.claude/memory/CODEBASE-MAP.md` | Key files, patterns, tech debt | code-reviewer |
 | `.claude/memory/USER-INSIGHTS.md` | Customer language, pain phrases, JTBD | CMO + CPO (only authorized writers) |
 | `.claude/memory/LONG-TERM.md` | Cross-session facts: user prefs, recurring patterns | CEO after each session |
 | `docs/08-agents_work/sessions/` | Lead session summaries (`YYYY-MM-DD-[lead]-[task].md`) | Each C-suite / Lead |
 
-**Hard caps:** DECISIONS.md ≤ 50 entries (archive when full); LONG-TERM.md ≤ 100 lines; session summaries ≤ 10 lines each.
+**Hard caps:** DECISIONS.md ≤ 50 entries AND ≤ 40,000 bytes — **the byte cap binds, and the entry cap will never
+fire.** The file reached 39,909 bytes at 23 entries: a **marginal cost of 1,735 bytes per entry** (39,909 ÷ 23).
+It now stands at **35,952 bytes over 24 headings** — but do **not** read the resulting 1,470-byte all-entry
+mean as the cost of adding an entry. Seven of those headings are archive stubs that
+`check-memory-budget.mjs` counts as full entries, averaging 549 bytes and ranging 204–1,018; the seventeen
+surviving real entries average **1,849 bytes**. Against 4,048 bytes of headroom all three anchors agree that
+two more entries fit, so the cap fires on the **27th** — barely half way to 50. These figures move with every
+edit and have gone stale twice: recompute with `node scripts/check-memory-budget.mjs` rather than quoting
+them. LONG-TERM.md ≤ 100 lines. Session summaries ≤ 10 lines each.
 
 ---
 
@@ -176,7 +184,7 @@ check, the registration check, the launcher guard rails, and the claim ledger.
 
 ## Context Budget — Hard Limits
 
-- `DECISIONS.md`: ≤ 50 entries (archive when full)
+- `DECISIONS.md`: ≤ 50 entries AND ≤ 40,000 bytes — **the byte cap binds**; `scripts/check-memory-budget.mjs` enforces both
 - `LONG-TERM.md`: ≤ 100 lines (compress quarterly)
 - Session summaries: ≤ 10 lines each
 - Agent handoffs: ≤ 500 tokens (summarize, never forward raw conversation)
@@ -377,17 +385,18 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   citations to a warning and exited 0. Verified after the fix by simulating a runner with an empty `HOME`:
   a dead citation exits **1**, a clean tree exits **0**. This is why `main` was once red locally and green in
   CI on the same commit for forty minutes.
-- **The OS sandbox is BUILT and UNARMED (#84).** `sandbox.enabled: false` in `.claude/settings.json`, with
-  `denyRead` over `~/.ssh`, `~/.aws`, `~/.config/gh`, `~/.netrc`, `**/.env*`. "Unarmed" is a **checked fact**,
-  not a comment: `npm run test:sandbox` fails if `enabled` is flipped, and CI runs it. Two facts that decide
-  how you arm it, both sourced from the Claude Code docs 2026-08-16 and recorded in
-  [SANDBOX.md](docs/03-system-design/SANDBOX.md): **(1) `failIfUnavailable` defaults to `false`, which is
-  fail-OPEN** — if the sandbox cannot start, commands run *unsandboxed* with a warning; **(2) there is an
-  escape hatch, `dangerouslyDisableSandbox`** — Claude Code may retry a sandbox-denied command with the
-  sandbox off. So it is a **guardrail against accident, not containment against the agent.** Do not describe
-  it as containment. It is also the **Bash** sandbox: it governs Bash and its children, not the file-edit
-  tools, and not a whole session. **Do not hand-write a `.sb` profile** — Seatbelt (macOS) and bubblewrap
-  (Linux/WSL2) are already implemented in the binary.
+- **The OS sandbox is BUILT and ARMED (#84 built · #94 armed).** `sandbox.enabled: true` and
+  `failIfUnavailable: true` in `.claude/settings.json`, with `denyRead` over `~/.ssh`, `~/.aws`,
+  `~/.config/gh`, `~/.netrc`, `**/.env*`. "Armed" is a **checked fact**, not a comment:
+  `npm run test:sandbox` fails if `enabled` is flipped, and CI runs it. Two facts sourced from the Claude
+  Code docs 2026-08-16 and recorded in [SANDBOX.md](docs/03-system-design/SANDBOX.md): **(1)
+  `failIfUnavailable` defaults to `false` (fail-open), but is set to `true` here** — if the sandbox cannot
+  start, the command is blocked rather than running unsandboxed; **(2) there is an escape hatch,
+  `dangerouslyDisableSandbox`** — Claude Code may retry a sandbox-denied command with the sandbox off. So it
+  is a **guardrail against accident, not containment against the agent.** Do not describe it as containment.
+  It is also the **Bash** sandbox: it governs Bash and its children, not the file-edit tools, and not a whole
+  session. **Do not hand-write a `.sb` profile** — Seatbelt (macOS) and bubblewrap (Linux/WSL2) are already
+  implemented in the binary.
 - **Blockers:** none blocking. `--dangerously-skip-permissions` was removed by #47 — the **39** allow/deny
   rules in `settings.json` (29 allow · 10 deny) are live now, so a command that used to pass silently may
   prompt. This block said 26 until 2026-08-16. Founder decisions pending: **whether to merge PR #77** (it
