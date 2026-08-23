@@ -181,14 +181,13 @@ Paths **not included** despite being written by repo scripts:
 
 `denyRead` covered `~/.ssh`, `~/.aws`, `~/.config/gh`, `~/.netrc`, `**/.env*` and missed the CLI
 credential stores for the model family this repo's plan names, not one it currently runs.
-`TARGET-ARCHITECTURE.md` §4 (decision 5) names **Codex CLI** as the second model family for a
+`TARGET-ARCHITECTURE.md` §1 (decision 5) names **Codex CLI** as the second model family for a
 **future** second-opinion review — chosen over Gemini despite Codex being uninstalled and Gemini
 being present and authenticated on this machine — and no second-family review has ever actually
 run: both `verified_by: judge` claims in `.claude/ledger/index.json` carry `judged_by: []`.
-`TARGET-ARCHITECTURE.md:327-329` recommends this identical set, as directories, for exactly this
+`TARGET-ARCHITECTURE.md:327-330` recommends this identical set, as directories, for exactly this
 reason: `~/.gemini/oauth_creds.json` is live, mode `600`, and readable by any in-session agent, and
-a rotated credential lands under a new filename that a file-specific deny would miss — the same
-reasoning `TARGET-ARCHITECTURE.md:303-304` already applied to `~/.codex` alone.
+a rotated credential lands under a new filename that a file-specific deny would miss.
 `~/.config/openai` is added alongside them for the same class of tool. Gemini's credentials are
 denied even though Gemini is not the model chosen for the seam: it is present and authenticated on
 this machine, which is itself sufficient reason to close the read, independent of whether it is

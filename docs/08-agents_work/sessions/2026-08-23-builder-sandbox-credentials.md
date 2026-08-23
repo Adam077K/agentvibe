@@ -8,7 +8,7 @@ qa_verdict: PENDING
 ---
 
 Widens the `**/.worktrees` allowlist from the parent branch (`feat/sandbox-worktree-allowlist`) and adds the
-missing `denyRead` credential paths from `TARGET-ARCHITECTURE.md` §4 (P0 item 3), on `.claude/settings.json`
+missing `denyRead` credential paths `TARGET-ARCHITECTURE.md:327-330` recommends, on `.claude/settings.json`
 — `enforcement: block` per `.claude/qa-tier-floor.yml`, hence `tier: irreversible`.
 
 **(a) `**/.worktrees/**` added alongside the existing `**/.worktrees`.** Measured this session, in a fresh
@@ -23,7 +23,7 @@ edits the file can prove the edit works — only a fresh session started after t
 its own dated amendment in `docs/03-system-design/SANDBOX.md` rather than silently overwriting the still-open
 2026-08-20 amendment; both are marked UNVERIFIED and neither is asserted as fixed.
 
-**(b) P0 item 3 — `~/.gemini`, `~/.codex`, `~/.config/openai` added to `denyRead`** as directories (a rotated
+**(b) The credential-containment gap `TARGET-ARCHITECTURE.md:327-330` names — `~/.gemini`, `~/.codex`, `~/.config/openai` added to `denyRead`** as directories (a rotated
 credential lands under a new filename). Pinned in `scripts/sandbox-config.test.mjs`
 (`REQUIRED_DENY_READS`).
 
