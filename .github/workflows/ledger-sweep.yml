@@ -44,8 +44,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Load-bearing. Lens provenance is git-history based (`git:<path>@<rev>`) and
-          # verified with `git cat-file -e`; a shallow clone fails those lookups.
+          # Not load-bearing for pass/fail — lens provenance is checked against
+          # `.claude/provenance/sources.json`, which travels with the tree, so a shallow
+          # clone passes. Kept for one verified reason only: full history upgrades that
+          # check from shape to bytes. The sweep's own git calls are `git ls-files`, which
+          # read the index, not history.
           fetch-depth: 0
 
       - uses: actions/setup-node@v4

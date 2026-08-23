@@ -26,10 +26,17 @@ jobs:
     name: Deterministic checks
     runs-on: ubuntu-latest
     steps:
-      # fetch-depth: 0 is load-bearing. Lens provenance survives the Phase 4b deletions by
-      # citing git history (`git:<path>@<rev>`), and schema-lint verifies those with
-      # `git cat-file -e`. A shallow clone cannot resolve them, so the lint would fail for
-      # a reason the PR did not cause.
+      # fetch-depth: 0 is NOT load-bearing for pass/fail, and this comment used to say it
+      # was. Lens provenance cites git history (`git:<path>@<rev>`), but it is checked
+      # against `.claude/provenance/sources.json`, which travels with the tree — a shallow
+      # clone, and a generated project with an empty object store, both PASS. What full
+      # history buys is a stronger check, and that is the ONLY reason stated here: where the
+      # objects are reachable, schema-lint compares their sha256 to the manifest instead of
+      # trusting the record, and the provenance step's case C can run instead of skipping.
+      #
+      # An earlier version of this comment added "and the ledger's resolvers read git log".
+      # They do not — ledger.mjs uses `git ls-files`, which reads the index. Replacing one
+      # unverified justification with another is the failure this whole change is about.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -145,6 +152,16 @@ jobs:
       - name: Lens files
         run: npm run test:lenses
 
+      # Lens provenance, in a repository that has none of this repository's git objects.
+      # `~/bin/newproject` generates projects by rsyncing the tree without `.git` and then
+      # `git init`-ing, so every `git:<path>@<rev>` citation resolved to nothing and this
+      # lint exited 1 on a brand-new project before anyone touched it. The remedy is
+      # `.claude/provenance/sources.json`; this step runs the real linter against a scratch
+      # repo with an empty object store, and also fails when the committed manifest has
+      # drifted from what the lens files cite.
+      - name: Lens provenance travels
+        run: npm run test:provenance
+
       # Playbooks — stages and exit criteria, never method. The rule that a playbook
       # may not carry `steps:` is what stops it drifting back into the pipeline prose
       # it replaced, and the tests construct that failure rather than trusting it.
@@ -175,6 +192,20 @@ jobs:
       # "nothing to gate" — fail-open in a router is indistinguishable from no router.
       - name: Gate routing
         run: npm run test:run-gate
+
+      # The OTHER merge route. `warroom merge` wrote to LOCAL main and never pushed, so CI never
+      # ran on it and branch protection — which is on, with required contexts — could not see it.
+      # The PR route was gated; this one was gated by nothing, and it is the route the fleet
+      # actually uses. It now refuses unless a QA verdict is committed against
+      # sha256(diff excluding the verdict RECORDS, ':(exclude,glob).qa/verdicts/*.json') — an anchor
+      # that stays stable when the verdict itself is committed and moves the instant a reviewed byte
+      # does. This line said `.qa/verdicts/**` until f9eb4bc narrowed it; the wide form hid anything
+      # under that prefix from the hash AND from the tier classifier.
+      #
+      # These tests drive `bin/warroom merge` for real against throwaway repos and then assert on
+      # where `main` points. A source-level assertion would pass equally against a fix comment.
+      - name: Merge gate
+        run: npm run test:merge-gate
 
       # A SKILL.md carrying `allowed-tools` SUBTRACTS from whatever agent loads it — the binary
       # documents the field as "Tools available to the model while this file is active", which

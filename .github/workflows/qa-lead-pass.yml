@@ -350,3 +350,53 @@ jobs:
           # The same logic is unit-tested by `npm run test:tier-gate` in ci.yml.
           # shellcheck disable=SC2086
           node scripts/check-tier-gate.mjs --floor "$FLOOR" --sessions $SESSION_ARGS
+
+      # ── Shadow: verdict diff-binding check (PR route) ────────────────────────
+      # SHADOW TODAY — this step never fails the job.
+      #
+      # Route coverage (explicit, because the gap matters):
+      #   · This step covers the PR route (GitHub Actions checkout + push).
+      #   · `bin/warroom cmd_merge` covers the local-merge route.
+      #   · Neither covers the other — a diff that bypasses CI is not checked here,
+      #     and a local merge that never becomes a PR is not checked by CI.
+      #
+      # Binding model:
+      #   The verdict is hash-bound, not signed. Anyone with repo-write access can
+      #   author a verdict file. The hash guarantees a verdict cannot be moved to a
+      #   different diff and cannot survive an unreviewed edit — it does not prevent
+      #   a write-access holder from recording a verdict for whatever diff they
+      #   choose. Real unforgeability requires a signing key; that decision has not
+      #   been made and is not claimed here.
+      #
+      # Which guard is load-bearing:
+      #   `|| true` is the SOLE guard. It prevents `set -e` from exiting the shell
+      #   when `verdict.mjs check` exits non-zero (i.e. no bound verdict found).
+      #
+      #   The step-level key that lets a failing step not fail the job — GitHub's
+      #   escape hatch, deliberately not spelled here, see below — sat beside it and
+      #   has been REMOVED. This comment used to call it "the backstop for errors
+      #   that occur before `|| true` is reached" and called both required. Neither
+      #   claim survived being tested. All four failure modes were constructed
+      #   against this exact step body under `bash -e`: no bound verdict,
+      #   `origin/main` removed, PATH=/nonexistent, and a script-level exception.
+      #   Every one exited 0 through `|| true`, so the escape hatch was never
+      #   reached. It bought nothing measurable.
+      #
+      #   It also falsified a recorded fact. `c-qa-gate-blocks` asserts that this
+      #   file no longer carries that key, and verifies it by grepping THIS WHOLE
+      #   FILE for the literal string. Adding the field made the claim false and
+      #   `ledger verify` said so — a change-detector firing correctly. That crude
+      #   predicate is also why the token is described here rather than written: a
+      #   comment mentioning it falsifies the claim exactly as the live field did.
+      #   Stated openly rather than worked around quietly — whoever tightens the
+      #   predicate to match a YAML key instead of a substring can delete this
+      #   paragraph.
+      #
+      #   When this step is promoted out of shadow the key must not be here at all.
+      #   On a blocking step it is the difference between a gate and a log line.
+      - name: Shadow verdict diff-binding check
+        run: |
+          set -euo pipefail
+          echo "=== Shadow: verdict diff-binding check (non-blocking) ==="
+          node scripts/verdict.mjs check --json 2>&1 || true
+          echo "shadow-verdict: step complete (non-blocking)"
