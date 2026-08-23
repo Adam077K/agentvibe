@@ -2006,7 +2006,7 @@ cmd_merge() {
     git -C "$PROJECT_DIR" merge --ff-only "$branch" 2>/dev/null
     if [ $? -eq 0 ]; then
       echo -e "  ✓ Fast-forward merge complete"
-      _log_event "merge_complete" "branch=$branch tier=fast-forward"
+      _log_event "merge_complete" "branch=$branch strategy=fast-forward"
       git -C "$PROJECT_DIR" branch -D "$branch" 2>/dev/null
       echo -e "  ✓ Branch $branch deleted"
       return 0
@@ -2018,101 +2018,61 @@ cmd_merge() {
   git -C "$PROJECT_DIR" merge "$branch" --no-edit 2>/dev/null
   if [ $? -eq 0 ]; then
     echo -e "  ✓ Auto-merge complete"
-    _log_event "merge_complete" "branch=$branch tier=auto-merge"
+    _log_event "merge_complete" "branch=$branch strategy=auto-merge"
     git -C "$PROJECT_DIR" branch -D "$branch" 2>/dev/null
     echo -e "  ✓ Branch $branch deleted"
     return 0
   fi
 
-  # ── Tier 3: AI-assisted merge ──
-  echo -e "  ${C_PEACH}Tier 3:${RESET} AI-assisted conflict resolution"
+  # ── Tier 3: refused ──────────────────────────────────────────────────────────
+  #
+  # This used to be "AI-assisted merge": pipe each conflicted file to the `claude` CLI's
+  # non-interactive print mode, write its stdout straight back over the file, `git add` it,
+  # commit, and delete the branch — guarded only by a 2000-line size cap and a grep for leftover
+  # conflict markers. Nothing reviewed the result, and it was logged merge_complete as though
+  # something had. See bin/warroom's cmd_merge (branch feat/gate-and-provenance-v2) for the
+  # fuller reasoning this mirrors: a conflict resolution is content that exists only once both
+  # sides are merged, so no review of either side's diff ever covered it, and writing it straight
+  # to main is an unreviewed-merge route regardless of what produced the text.
+  #
+  # bin/warroom closes this by requiring a QA verdict hash-bound to the branch diff before tiers
+  # 1-2 run, and refuses tier 3 outright because a conflict resolution falls outside any diff a
+  # verdict could have hashed. This template cannot bind to that same gate: BIN_DIR is $HOME/bin,
+  # so a project generated from this template would resolve scripts/verdict.mjs against the
+  # installer's home directory rather than the project's, and bin/install-war-room.sh does not
+  # ship scripts/lib/classifier.js, which verdict.mjs requires to run at all. Porting the gate is
+  # out of scope for this fix — it needs one launcher generation shared by both, not a template
+  # patch. See docs/03-system-design/CLAIM-LEDGER.md and the note this fix adds near the top of
+  # this file. Refusing needs none of that machinery: it is strictly smaller than gating, and it
+  # closes the same hole by removing the unreviewed write instead of approving it.
+  local conflicted
+  conflicted=$(git -C "$PROJECT_DIR" diff --name-only --diff-filter=U 2>/dev/null)
+
+  echo -e "  ${C_RED}✗ Refusing to merge $branch → main${RESET} — the merge does not apply cleanly."
   echo ""
-
-  # Get list of conflicted files
-  local conflict_files
-  conflict_files=$(git -C "$PROJECT_DIR" diff --name-only --diff-filter=U 2>/dev/null)
-
-  if [ -z "$conflict_files" ]; then
-    echo "  ✗ Merge failed but no conflict markers found. Aborting."
-    git -C "$PROJECT_DIR" merge --abort 2>/dev/null
-    exit 1
-  fi
-
-  local conflict_count
-  conflict_count=$(echo "$conflict_files" | grep -c '.')
-  echo "  Found $conflict_count conflicted file(s):"
-  echo "$conflict_files" | while read -r f; do echo "    • $f"; done
+  echo "  Automatic conflict resolution is disabled. Writing model output over a conflicted file"
+  echo "  and committing it would put unreviewed content on main with no diff anyone approved."
+  echo "  Refusing is the only answer that keeps the audit trail true; the conflict is left for a"
+  echo "  human to resolve."
   echo ""
-
-  # Try to resolve each file with Claude
-  local resolved=0 failed=0
-  while IFS= read -r conflict_file; do
-    [ -z "$conflict_file" ] && continue
-    local full_path="$PROJECT_DIR/$conflict_file"
-
-    echo -n "  Resolving $conflict_file... "
-
-    # Guard: skip files that are too large to safely resolve via AI
-    local line_count
-    line_count=$(wc -l < "$full_path" 2>/dev/null || echo 0)
-    if [ "$line_count" -gt 2000 ]; then
-      echo -e "${C_RED}✗${RESET} (too large: ${line_count} lines — resolve manually)"
-      ((failed++))
-      continue
-    fi
-    local conflict_content
-    conflict_content=$(cat "$full_path" 2>/dev/null)
-
-    # Use Claude to resolve the conflict
-    local resolved_content
-    resolved_content=$(echo "$conflict_content" | claude --print --model claude-sonnet-4-6 \
-      "You are resolving a git merge conflict. The file below has <<<<<<< ======= >>>>>>> conflict markers. Output ONLY the resolved file content — no explanation, no markdown fences, no commentary. Merge both sides intelligently, keeping all intended changes from both branches. If unclear, prefer the incoming (HEAD) changes. Here is the conflicted file:" 2>/dev/null)
-
-    if [ $? -eq 0 ] && [ -n "$resolved_content" ] && ! echo "$resolved_content" | grep -q "<<<<<<<" && ! echo "$resolved_content" | grep -q "=======" && ! echo "$resolved_content" | grep -q ">>>>>>>"; then
-      echo "$resolved_content" > "$full_path"
-      git -C "$PROJECT_DIR" add "$conflict_file" 2>/dev/null
-      echo -e "${C_GREEN}✓${RESET}"
-      ((resolved++))
-    else
-      echo -e "${C_RED}✗${RESET} (AI could not resolve)"
-      ((failed++))
-    fi
-  done <<< "$conflict_files"
-
-  echo ""
-
-  if [ "$failed" -eq 0 ]; then
-    # All resolved — complete the merge
-    git -C "$PROJECT_DIR" commit --no-edit 2>/dev/null
-    echo -e "  ✓ AI resolved all $resolved conflict(s)"
-    _log_event "merge_complete" "branch=$branch tier=ai-assisted"
-    git -C "$PROJECT_DIR" branch -D "$branch" 2>/dev/null
-    echo -e "  ✓ Branch $branch deleted"
-    return 0
-  fi
-
-  # ── Tier 4: Human escalation ──
-  echo -e "  ${C_RED}Tier 4:${RESET} Human escalation required"
-  echo ""
-
-  if [ "$resolved" -eq 0 ]; then
-    echo -e "  AI could not resolve any conflicts. Aborting merge."
-    git -C "$PROJECT_DIR" merge --abort 2>/dev/null
-    echo "  Run '{{project_name}} merge $n' again after fixing conflicts manually."
-  else
-    echo "  $resolved file(s) resolved by AI, $failed remain:"
-    git -C "$PROJECT_DIR" diff --name-only --diff-filter=U 2>/dev/null | while read -r f; do
-      echo "    ✗ $f"
-    done
+  if [ -n "$conflicted" ]; then
+    echo "  Conflicted:"
+    echo "$conflicted" | while read -r f; do [ -n "$f" ] && echo "    • $f"; done
     echo ""
-    echo "  The merge is in progress. To resolve remaining files:"
-    echo "    cd $PROJECT_DIR"
-    echo "    # edit the conflicted files"
-    echo "    git add <resolved files>"
-    echo "    git merge --continue"
-    echo ""
-    echo "  Or abort: git merge --abort"
   fi
+  echo "  Resolve by hand, then merge again:"
+  echo ""
+  echo "    cd $PROJECT_DIR"
+  echo "    git switch $branch"
+  echo "    git merge main          # resolve the conflict here, by hand"
+  echo "    # review the resolution, commit it"
+  echo "    {{project_name}} merge $n"
+  echo ""
+  echo "  Or abort where you are: git merge --abort"
+
+  git -C "$PROJECT_DIR" merge --abort 2>/dev/null
+  _log_event "merge_refused" "branch=$branch reason=conflict-unresolved strategy=none"
+  exit 1
 }
 
 # Feature F9 — File ownership tracking and overlap detection
