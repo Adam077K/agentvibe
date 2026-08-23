@@ -84,12 +84,17 @@
         "~/.aws",
         "~/.config/gh",
         "~/.netrc",
+        "~/.gemini",
+        "~/.codex",
+        "~/.config/openai",
         "**/.env",
         "**/.env.*"
       ],
       "allowWrite": [
         "~/.agentvibe",
-        "/private/tmp/claude-501"
+        "/private/tmp/claude-501",
+        "**/.worktrees",
+        "**/.worktrees/**"
       ]
     }
   }
