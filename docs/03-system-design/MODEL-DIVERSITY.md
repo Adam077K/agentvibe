@@ -606,7 +606,7 @@ Three `verified_by: command` claims, all reproducible, none requiring a model:
 | id | assert | cmd | expect |
 |---|---|---|---|
 | `c-no-second-family-runtime` | No non-Claude model runtime is callable on this machine | `command -v codex` | exit ≠ 0 |
-| `c-qa-panel-single-family` | Every model dispatch in `qa.js` is Anthropic | `grep -c "model: 'sonnet'\|model: 'opus'\|model: 'haiku'" .claude/workflows/qa.js` | equals total `agent(` dispatches (5, after the 2026-08-23 oracle-first change added a 'haiku' dispatch — the original pattern here predated it and would have undercounted) |
+| `c-qa-panel-single-family` | Every model dispatch in `qa.js` is Anthropic | `grep "model: '" .claude/workflows/qa.js \| grep -vc "title:"` | 5 (verified against `232919a`: matching `model: '` alone returns 6, because `meta.phases`' display-only `{ title: 'Judge', …, model: 'opus' }` at line 9 is not an `agent()` dispatch and matches too; excluding lines carrying `title:` removes exactly that one) |
 | `c-lens-independence-unbacked` | No workflow dispatches a non-Anthropic family for any `independent` lens | `grep -rn "openai\|gemini\|codex" .claude/workflows/` | exit ≠ 0 |
 
 All three are `scope: project` and therefore require `valid_until`. Set it to **2026-11-15**: §1.4
