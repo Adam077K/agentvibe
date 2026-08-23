@@ -355,9 +355,24 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   2026-08-12, zero of thirteen. That gate needs Phase 9. Built ≠ gate met; do not read one as the other.
   Authoritative plan: [AGENT-SYSTEM-REBUILD.md](docs/03-system-design/AGENT-SYSTEM-REBUILD.md).
   `IMPLEMENTATION-PLAN.md` is **superseded** — do not follow its numbering.
-- **Active now — one session, completing the harness.** Founder decision 2026-08-16: finish the harness in a
-  single autonomous pass, heavy review process cut, **scope stops before Phase 9** (no other project is
-  touched). See [the build brief](docs/08-agents_work/handoffs/2026-08-16-harness-completion.md).
+- **P0 IS CLOSED except the Codex resolver, and `main` moved on 2026-08-23** — `5b8e127` → `413a029`,
+  nine branches in one train, the first time `main` had moved since before 2026-08-20. What landed: the
+  PR-route gate **blocks** and posts a check-run signed by `GITHUB_TOKEN` with the author grep deleted;
+  `qa.js` runs a deterministic oracle before any panel agent is dispatched; credential `denyRead` covers
+  the CLI credential stores; `test:tier-gate` is in `npm run check` (29 steps now); and
+  `war-room/bin/PROJECT_NAME.tmpl` no longer seeds an unreviewed model-resolved merge into every generated
+  project. **Only P0 item 6 remains** — `claim-judge-external` (Codex), still correctly deferred: bug
+  #19945 returns exit 0 with empty stdout when detached from a TTY, which is exactly how a resolver runs.
+  Handoff: [2026-08-23-after-p0.md](docs/08-agents_work/handoffs/2026-08-23-after-p0.md).
+- **Single-family review is an ACCEPTED RISK, decided 2026-08-23, not a satisfied requirement.**
+  Irreversible tier asks for 2-of-3 multi-judge and `risk: high` requires ≥2 distinct model families;
+  there is no non-Anthropic model inside Claude Code. Every review behind that merge said so in its own
+  session file. Revisit if the Codex resolver lands.
+- **Branch protection exists and did not bind on the path actually used.** The push that moved `main`
+  reported *"2 of 2 required status checks are expected"* — and succeeded anyway, having run no checks.
+  So required checks govern the PR route and not a direct push. Treat `.github/workflows/**` as
+  unprotected against a determined writer until CODEOWNERS or a push restriction is added; that is a
+  repository setting, not a file, and only the founder can set it.
 - **The prompt-craft standard exists, is enforced, and the roster migration is DONE.** It landed as
   `PROMPT-STANDARD.md` (#64) and became `PS-*` lint rules (#71). The roster is **7 engines of 18 files** —
   eighteen, not the seventeen this block said until 2026-08-16, because `reviewer-readonly.md` landed in #47.
