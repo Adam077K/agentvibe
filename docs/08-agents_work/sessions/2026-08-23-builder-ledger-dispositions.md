@@ -4,7 +4,7 @@ role: builder
 task: ledger-dispositions-v2
 branch: chore/ledger-dispositions-v2
 tier: lite
-qa_verdict: PENDING
+qa_verdict: PASS
 ---
 
 Carries three claim-ledger dispositions dated 2026-08-20, all due 2026-09-08, recorded early rather than at
@@ -50,3 +50,19 @@ the binding holds on that surface.
 dispositions above are reported as what the diff contains, not as verified correct. This branch was
 time-sensitive (claims due 2026-09-08, 16 days out) and had no session file, so it could not pass
 `qa-lead-pass.yml`; this file exists so it can be reviewed and merged before that date.
+
+## QA verdict — recorded 2026-08-23
+
+**PASS**, returned by an out-of-band `reviewer` engine (`review-lane3`) that did not produce this work and
+holds no Write or Edit tools. Lenses applied: see that review's own report. History: **PASS on first pass, no corrections required**.
+
+**This review was a single model family.** Irreversible tier nominally asks for 2-of-3 multi-judge, and the
+`risk: high` predicate requires ≥2 distinct model families — there is no non-Anthropic model inside Claude
+Code, so that bar is not reachable in this runtime today. **The founder accepted single-family review for
+harness self-edits on 2026-08-23**, after the limitation was raised unprompted on every review round across
+two sessions. It is recorded here as an accepted risk, not as a satisfied requirement.
+
+**This PASS was recorded by the orchestrator from the reviewer's return, not by the author of the code.**
+Under the gate as it stands on `main`, the verdict is an author-writable line in a file — which is exactly
+the defect `feat/gate-pr-route` replaces with a verdict bound to the diff hash and posted as a check-run.
+Until that lands, this line is a convention, and the separation above is the only thing behind it.
