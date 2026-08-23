@@ -92,6 +92,7 @@
       "supports": [
         "c-read-only-binding-unverified"
       ],
+      "first_waived": "2026-08-20",
       "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {
@@ -403,7 +404,7 @@
         "risk": "high",
         "judged_by": []
       },
-      "valid_until": "2026-09-08",
+      "valid_until": "2026-11-17",
       "confidence": 0.5,
       "supports": [
         "c-read-only-engines-declare-no-write"
@@ -535,6 +536,7 @@
       "supports": [
         "d-001"
       ],
+      "first_waived": "2026-08-20",
       "source_file": "docs/03-system-design/CLAIM-LEDGER.md"
     },
     {

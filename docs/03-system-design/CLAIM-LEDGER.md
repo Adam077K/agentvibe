@@ -108,7 +108,7 @@ On expiry, exactly one disposition is recorded:
 A waiver with no end date is refused by the schema. That is not pedantry: an open-ended waiver is the claim
 being switched off, which is the exact thing the expiry mechanism exists to prevent.
 
-### The promotion decision — due 2026-09-08
+### The promotion decision — taken 2026-08-20, deferred to 2026-11-17
 
 A shadow window with no end date is not a measurement, it is a disabled check with better manners. Phase 3
 shipped one without a date; this is the correction.
@@ -116,6 +116,44 @@ shipped one without a date; this is the correction.
 **The deadline enforces itself.** `c-shadow-window-open` below carries `valid_until: 2026-09-08`. On that
 date `claim-freshness` fails it, and the only way to clear it is to record a disposition. No scheduler, no
 reminder, no calendar entry anyone can ignore — the ledger's own expiry mechanism books its own review.
+
+**It worked, and the answer was "not yet."** The review happened early, on 2026-08-20, and the disposition on
+`c-shadow-window-open` is `waive` to **2026-11-17** — read the reason on the claim, not this paragraph,
+because the reason is where the cost is recorded. In summary: the corpus is **9,837 `claim.would_block` events over 42 claims and 9 days**,
+**100% the harness describing itself**, with one deliberate canary supplying 36.0% and four claims supplying
+83%. No venture workload has ever run through the harness. Three of the four resolvers are disqualified by
+the table below on their own terms. The fourth, `claim-command`, **fails its own bar** —
+`c-run-log-has-a-reader`'s evidence command exits 0 or 1 depending on whether a log file exists and is empty,
+which `ledger verify` itself decides by writing to that log, so a would_block there measures bookkeeping order
+rather than a broken command.
+
+**Those numbers were measured, and the earlier ones were quoted.** The handoff's `9,790 / 42 / four
+artifacts` went into two documents before anyone read the log. Re-measured on 2026-08-20 it is `9,837 / 42 /
+six artifact strings`, where the six are four real artifacts plus two scratchpad fixtures from an old ledger
+test — so "four" and "six" were each right about a different question, and only counting settles it. The
+count moved three times in one day (9,790 → 9,806 → 9,837) and **every new event came from someone measuring
+the corpus, not from product work.** That is not a footnote about hygiene. A body of evidence that grows when
+you look at it is evidence about looking, and promoting a gate on it would be promoting on the harness's
+opinion of itself.
+
+The date is **2026-11-17 and not later** because `first_waived: 2026-08-20` puts the two waived claims under
+the 90-day cap in `waiverCapIssues()`; a later `until` would make `ledger lint` fail *before* the waiver
+lapsed, which is a deadline that fires in the wrong order. Freshness and the cap now come due on the same day.
+
+**Two waivers and one refresh — the third claim is deliberately not waived.**
+`c-read-only-binding-unverified` had a waiver drafted and withdrawn: waiving it would have made `claim-judge`
+report `✓ waived` against an empty panel, taking `ledger verify` from 5 would_block to 4 while leaving the
+claim exactly as unverified as before. That trades **Rule 10** — *a resolver never passes what it could not
+check*, one of the few CLAUDE.md marks `ENFORCED`, pinned by `ledger.test.mjs` for every other resolver — for
+a smaller number. It stays on `refresh`, and its `valid_until` was bumped instead, because
+`dispositionOutcome` returns null for `refresh` and so **only the date can move a deadline**. The two
+mechanisms are separate; the claim now uses each for what it does. **5 is the intended count.** A later
+reader who finds 5 and tidies it to 4 will have reverted a founder decision.
+
+**The exit condition is a test, not a feeling:** at least one real sourced claim arising from non-harness
+work, and a judge panel with two distinct model families. `risk: high` requires the second, and this runtime
+supplies one family — so `claim-judge` may be structurally unresolvable rather than merely unexercised, which
+is a different problem from the one the table below anticipated.
 
 **Read the evidence with `node scripts/ledger.mjs events --since 30d`.** Then, per resolver:
 
@@ -257,6 +295,71 @@ claims:
     evidence: {cmd: "node scripts/classify.mjs docs/02-competitive/any.md | grep -q 'enforcement=shadow'", expect_exit: 0}
     valid_until: 2026-09-08
     confidence: 1
+    # DISPOSITION 2026-08-20 — Waive to 2026-11-17. Founder decision, with the cost written down.
+    #
+    # A BARE WAIVER HERE WOULD BE FULLY COMPLIANT AND WOULD CHANGE NOTHING. The rethink board's
+    # P2/K records why: the deadline enforces that a waiver was FILED, not that enforcement
+    # advanced, so Waive → Waive passes forever. The reason field is therefore the entire
+    # deliverable, and what follows is measurement rather than intention.
+    #
+    # THE CORPUS DOES NOT FIT THE DECISION IT WAS COLLECTED FOR.
+    #
+    #   Measured 2026-08-20 by reading ~/.agentvibe/events.jsonl directly. The earlier
+    #   figures in the handoff were quoted, not run, and two of them had moved:
+    #
+    #     total events         11,930   (9,837 of them claim.would_block)
+    #     distinct claims          42   handoff figure, confirmed
+    #     distinct days             9   2026-08-11 … 2026-08-20, confirmed
+    #     artifact strings          6   = 4 REAL artifacts + 2 scratchpad fixtures left by
+    #                                     an earlier ledger test. This reconciles the
+    #                                     handoff's "four" with a re-count's "six": both
+    #                                     were right about different things.
+    #     top claim             3,540   c-canary-unresolvable — 36.0%, the deliberate canary
+    #     next three            1,698   c-sessionstart-injection-unverified (17.3%)
+    #                           1,584   c-lenses-and-playbooks-are-loaded  (16.1%)
+    #                           1,342   c-runtime-nested-spawn             (13.6%)
+    #     top four together        83%  of every would_block ever recorded
+    #
+    #   It is 100% harness self-description. No venture workload has ever run through this
+    #   harness; that is stop condition 6, still open.
+    #
+    #   AND THE CORPUS GREW WHILE BEING MEASURED. Three counts in one day: 9,790 in the
+    #   handoff, 9,806 on a re-measure, 9,837 here — each larger, none of them caused by
+    #   product work, all of them caused by people looking at the ledger. 55 would_block
+    #   events were recorded on 2026-08-20 alone and every one is diagnostic. A corpus that
+    #   expands when you inspect it is measuring the inspector, and that is the clearest
+    #   evidence available that it does not resemble the workload promotion would govern.
+    #
+    #   Measured alongside this disposition: `ledger verify` → 5 would_block · 0 block. Two
+    #   are the example.invalid canary; three are `verified_by: judge` claims with empty
+    #   panels. It stays 5: a waiver on c-read-only-binding-unverified would have taken it to
+    #   4 by SILENCING a line rather than resolving it, and was withdrawn for that reason —
+    #   see that claim. Nobody should read 4 as progress, and nobody should produce it.
+    #
+    # PER RESOLVER, against the promotion table above:
+    #   claim-freshness — the only one with a clean record, and the cheapest to promote.
+    #   claim-source    — unchanged: already documented as not promotable on this evidence.
+    #   claim-judge     — unexercised, and worse than the table anticipated: `risk: high`
+    #                     demands ≥2 distinct model families and this runtime has one, so it
+    #                     may be structurally unresolvable rather than merely untested.
+    #   claim-command   — DOES NOT CLEAR ITS OWN BAR. This is the finding that decides the
+    #                     round, and it was nowhere in the repo before today. The bar is
+    #                     "every would_block corresponded to a real broken command."
+    #                     `c-run-log-has-a-reader` produced one that did not. Its evidence is
+    #                     `ledger sweep --since 30d`, which exits 0 when the events log is
+    #                     ABSENT and 1 when it EXISTS BUT IS EMPTY — both verified by
+    #                     execution, and both CORRECT, since that is exactly what
+    #                     `c-sweep-never-fails-what-it-cannot-check` asserts. But `ledger
+    #                     verify` writes to that same log while evaluating claims, so the
+    #                     exit code reports the harness's own bookkeeping order rather than
+    #                     the property the claim asserts. A resolver whose would_block
+    #                     depends on which ledger command ran first is not measuring commands.
+    #
+    # EXIT CONDITION — stated so the next review has a test and not a feeling: at least one
+    # real sourced claim arising from NON-harness work, and a judge panel with two distinct
+    # model families. Until both exist, promoting is guessing with better paperwork.
+    disposition: {action: waive, until: 2026-11-17, reason: "Founder decision 2026-08-20: waive, with the cost recorded, because a bare waiver changes nothing (P2/K — the deadline enforces that a waiver was filed, not that enforcement advanced). THE CORPUS DOES NOT FIT THE DECISION, measured 2026-08-20 by reading ~/.agentvibe/events.jsonl directly rather than quoting the handoff: 11,930 events of which 9,837 are claim.would_block, over 42 distinct claims and 9 distinct days from 2026-08-11 to 2026-08-20, across 6 artifact strings that are 4 real artifacts plus 2 scratchpad fixtures left by an earlier ledger test — which reconciles the handoff's four with a re-count's six, both right about different things. It is 100% harness self-description: the largest single contributor is the deliberate canary c-canary-unresolvable at 3,540 events or 36.0 percent, and the top four claims are 83 percent of everything. No venture workload has ever run through this harness (stop condition 6). AND THE CORPUS GREW WHILE BEING MEASURED — three counts in one day, 9,790 then 9,806 then 9,837, each larger, none caused by product work and all caused by people looking at the ledger; 55 would_block events were recorded on 2026-08-20 alone and every one is diagnostic. A corpus that expands when you inspect it is measuring the inspector, which is the clearest evidence available that it does not resemble the workload promotion would govern. Measured alongside this disposition: ledger verify gives 5 would_block and 0 block — two the example.invalid canary, three verified_by judge with empty panels. It stays 5. A waiver on c-read-only-binding-unverified would have taken it to 4 by silencing a line rather than resolving it, and was withdrawn for exactly that reason; see that claim. Per resolver: claim-freshness has the only clean record; claim-source is unchanged and still not promotable on this evidence, since an outage would fail builds for reasons unrelated to the diff; claim-judge is unexercised and risk high requires at least 2 distinct model families where this runtime has one, so it may be structurally unresolvable rather than merely untested; and claim-command DOES NOT CLEAR ITS OWN BAR. The bar is that every would_block corresponded to a real broken command, and c-run-log-has-a-reader produced one that did not — its evidence command is ledger sweep --since 30d, which exits 0 when the events log is ABSENT and 1 when it EXISTS BUT IS EMPTY (both verified by execution, and both correct, since that is what c-sweep-never-fails-what-it-cannot-check asserts), while ledger verify writes to that same log as it evaluates claims, so the exit code reports the harness's own bookkeeping order rather than the property the claim asserts. EXIT CONDITION for the next review: at least one real sourced claim arising from non-harness work, and a judge panel with two distinct model families."}
+    first_waived: 2026-08-20
     supports: [d-001]
 
   - id: c-run-log-has-a-reader
@@ -479,7 +582,10 @@ claims:
       lenses: [reproducibility]
       risk: high
       judged_by: []
-    valid_until: 2026-09-08
+    # BUMPED 2026-08-20 from 2026-09-08. THE DATE IS WHAT MOVED, NOT THE DISPOSITION — see
+    # the 2026-08-20 note below. `dispositionOutcome` returns null for `action: refresh`
+    # (resolvers.js:82), so a refresh cannot clear a deadline; only this line can.
+    valid_until: 2026-11-17
     confidence: 0.5
     # DISPOSITION 2026-08-16 — Refresh. BOTH HALVES OF THE ASSERT ABOVE ARE NOW FALSE, and
     # the assert is left standing on purpose: it is the evidence for why expiry discipline
@@ -498,7 +604,59 @@ claims:
     # command claim now; this entry is the history, not the evidence. Deprecating it would
     # buy a green line by asserting the question was retired, and it was not: it was answered
     # somewhere else, on a path this claim never named.
-    disposition: {action: refresh, reason: "Superseded in substance by c-read-only-binding-verified-by-attempt, measured 2026-08-16: reviewer-readonly was dispatched and instructed to ATTEMPT Write, Bash and Edit; all three returned NOT_PRESENT (absent, not refused), the control Read succeeded, and the reported tool list was exactly [Read, Glob, Grep]. The assert above is retained unedited because both of its halves are now false — subagent spawning is not disabled (PR #63 deleted that constraint from the live prompts) and the binding is no longer unverified — and a stale assert preserved beside its correction is the ledger's own argument for expiry. This claim stays UNRESOLVED rather than passing: its judged_by is empty, and rule 10 says a resolver never passes what it could not check"}
+    # DISPOSITION 2026-08-20 — STAYS ON REFRESH. The date moved instead.
+    #
+    # A WAIVER WAS DRAFTED HERE AND WITHDRAWN, and the reason it was withdrawn is the point
+    # of this entry. Waiving would have made `claim-judge` report `✓ waived` against an
+    # empty panel: measured, `ledger verify` went from 5 would_block to 4, and the line that
+    # disappeared was this claim's own. The claim would have been no less unverified — only
+    # the report quieter. That trades Rule 10 ("a resolver never passes what it could not
+    # check") for a smaller number, and Rule 10 is one of the few CLAUDE.md marks ENFORCED,
+    # pinned by ledger.test.mjs for every other resolver: `unresolved` must stay distinct
+    # from `pass`. Founder decision 2026-08-20, taken once the cost was surfaced: keep the
+    # honest would_block.
+    #
+    # SO THE COUNT IS 5, AND 5 IS THE INTENDED OUTCOME. If a later reader finds 5 and
+    # "fixes" it to 4, they will have undone this decision. The 2026-08-16 author already
+    # made the same call and wrote the same reasoning; it is repeated here because it was
+    # nearly overwritten.
+    #
+    # WHAT ACTUALLY CLEARED THE 2026-09-08 DEADLINE is `valid_until`, bumped above to
+    # 2026-11-17 — NOT the disposition. Verified by execution against
+    # scripts/lib/resolvers.js: `dispositionOutcome` returns null for `action: refresh`, so
+    # a refresh renews evidence and does not move a date. The 2026-08-16 refresh was the
+    # right instrument and the only thing wrong with it was that it could not do this. The
+    # two mechanisms are separate and this claim now uses each for what it does.
+    #
+    # 2026-11-17 matches the two waivers so all three come due together rather than
+    # dribbling. No `first_waived`: the schema requires it only for `action: waive` on
+    # scope:project (claims.js:617), and `waiverCapIssues()` keys the 90-day cap off its
+    # presence — leaving it on a refreshed claim would apply a waiver cap to a claim nobody
+    # waived, and report it as "waived for N days", which would be false.
+    #
+    #   PRESERVED — the 2026-08-16 refresh reason, verbatim, because it is the record of
+    #   what was measured: "Superseded in substance by
+    #   c-read-only-binding-verified-by-attempt, measured 2026-08-16: reviewer-readonly was
+    #   dispatched and instructed to ATTEMPT Write, Bash and Edit; all three returned
+    #   NOT_PRESENT (absent, not refused), the control Read succeeded, and the reported tool
+    #   list was exactly [Read, Glob, Grep]. … This claim stays UNRESOLVED rather than
+    #   passing: its judged_by is empty, and rule 10 says a resolver never passes what it
+    #   could not check"
+    #
+    # `npm run test:probe-readonly` DOES NOT DISCHARGE THIS CLAIM, and must not be read as
+    # doing so. Verified by execution: probe-readonly-engine.sh --report has exactly two
+    # outcomes, FAIL (the probe file exists) and UNRESOLVED (everything else) — there is no
+    # PASS path in the script at all. Those tests prove a fabricated or newline-injected
+    # record cannot reach a success exit, which is a property of the REPORTING HARNESS, not
+    # of the binding.
+    #
+    # THE EXPERIMENT THAT WOULD DISCHARGE IT, and it is cheap: dispatch a read-only engine
+    # on the Workflow `agent()` surface — the one qa.js routes its judge through — and have
+    # it ATTEMPT Write, Bash and Edit. That is the identical measurement already made on the
+    # Agent surface and recorded in c-read-only-binding-verified-by-attempt. Until it is
+    # run, the gate's containment rests on the two surfaces behaving alike: likely, and
+    # unverified.
+    disposition: {action: refresh, reason: "Founder decision 2026-08-20: STAY ON REFRESH and move the date instead. A waiver was drafted here and withdrawn. Waiving would have made claim-judge report waived against an empty panel — measured, ledger verify went from 5 would_block to 4 and the line that vanished was this claim's own — leaving the claim no less unverified and only the report quieter. That trades Rule 10, a resolver never passes what it could not check, for a smaller number; Rule 10 is one of the few CLAUDE.md marks ENFORCED and ledger.test.mjs pins unresolved as distinct from pass for every other resolver. So the count is 5 and 5 IS THE INTENDED OUTCOME: a later reader who finds 5 and fixes it to 4 will have undone this decision. WHAT CLEARED THE 2026-09-08 DEADLINE is valid_until, bumped to 2026-11-17, not this disposition — verified by execution against scripts/lib/resolvers.js, dispositionOutcome returns null for action refresh, so a refresh renews evidence and cannot move a date. The 2026-08-16 refresh was the right instrument and its only defect was that it could not do that; the two mechanisms are separate and this claim now uses each for what it does. No first_waived, because the schema requires it only for waivers on scope:project and waiverCapIssues keys the 90-day cap off its presence — leaving it here would cap a claim nobody waived. WHAT IS DISCHARGED: the Agent tool path, measured 2026-08-16, recorded in c-read-only-binding-verified-by-attempt. WHAT IS NOT: the Workflow surface qa.js dispatches its judge through. npm run test:probe-readonly does NOT discharge this claim — verified by execution, probe-readonly-engine.sh --report has exactly two outcomes, FAIL when the probe file exists and UNRESOLVED otherwise, with no PASS path in the script at all, so it proves the reporting harness is unforgeable rather than proving the binding. THE EXPERIMENT THAT WOULD DISCHARGE IT, and it is cheap: dispatch a read-only engine on the Workflow agent() surface and have it ATTEMPT Write, Bash and Edit — the identical measurement already made on the Agent surface. Until it runs, the gate's containment rests on the two surfaces behaving alike: likely, and unverified."}
     supports: [c-read-only-engines-declare-no-write]
 
   # MEASURED 2026-08-16 by dispatching `reviewer-readonly` — the container the binding QA
@@ -550,6 +708,23 @@ claims:
     evidence: {cmd: "test $(grep -lE '^effort: (low|medium|high|xhigh|max)$' .claude/agents/*.md | wc -l) -eq $(grep -L 'kind: shim' .claude/agents/*.md | wc -l) && grep -q 'WHAT IS NOT VERIFIED: whether the FRONTMATTER FIELD is read at all' .claude/hooks/schema-lint.js", expect_exit: 0}
     valid_until: 2026-09-08
     confidence: 0.5
+    # DISPOSITION 2026-08-20 — Waive to 2026-11-17. Still unverified, and honest about it.
+    #
+    # WHAT CHANGED is the reason it is unverified, not the verdict. When this claim was
+    # written, zero agent files declared `effort:`, so the channel could not be exercised
+    # even in principle. Measured 2026-08-20: all seven non-shim engines declare it, 7 of 7.
+    # The channel is populated now and has still never been observed being READ.
+    #
+    # The evidence command checks the DECLARATION side only, which is what it says it does.
+    # Nothing in this repo can tell "the runtime read the field and chose this effort" apart
+    # from "the runtime ignored the field", because both produce a dispatch that runs.
+    #
+    # WHAT WOULD DISCHARGE IT: two dispatches identical except for `effort:`, with a
+    # measurable difference in turns or tokens; or vendor documentation stating the
+    # frontmatter field is consumed. The first needs a real workload — the same precondition
+    # the shadow window is waiting on, which is why these two waivers share a date.
+    disposition: {action: waive, until: 2026-11-17, reason: "Founder decision 2026-08-20. Still unverified, and the reason has changed rather than the verdict: when this claim was written zero agent files declared effort, so the channel could not be exercised at all. Measured 2026-08-20, all 7 non-shim engines now declare it (7 of 7), so the channel is populated and has still never been observed being READ. The evidence command checks the declaration side only, which is what it states — nothing available here separates the runtime reading the field from the runtime ignoring it, since both produce a dispatch that runs. WHAT WOULD DISCHARGE IT: two dispatches identical except for effort, with a measurable difference in turns or tokens, or vendor documentation stating the frontmatter field is consumed. The first needs a real non-harness workload, the same precondition c-shadow-window-open is waiting on, which is why both waivers carry the same date."}
+    first_waived: 2026-08-20
     supports: [c-read-only-binding-unverified]
 
   - id: c-qa-gate-blocks
