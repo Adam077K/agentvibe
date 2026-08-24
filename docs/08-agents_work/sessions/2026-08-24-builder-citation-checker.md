@@ -23,10 +23,15 @@ path, since only 15% of locators resolve exactly and 25% get a drift check. The 
 was replaced by a differential one against `ledger.mjs` per `writing-good-tests`.
 
 **Round 4 (post-PASS residuals).** `--external-prefix` now REFUSES a prefix naming a real directory
-of this repo — it converted `scripts/reeal.js:1` into a silent tick, the exact failure its empty
-default exists to prevent. Two residual false-positive shapes documented rather than coded around
-(comment-block tops, renamed parameters). Corpus counts removed from the header entirely: the
-printed coverage block is authoritative, prose states shapes. `--json` gained a full resolution
+of this repo — it turned a misspelled `scripts/` path into a silent tick, the exact failure its
+empty default exists to prevent. Two residual false-positive shapes documented rather than coded
+around (comment-block tops, renamed parameters). Corpus counts removed from the header entirely:
+the printed coverage block is authoritative, prose states shapes. `--json` gained a full resolution
 inventory — and building it exposed that `process.exit()` never flushed async stdout, so
-`--json | jq` had been truncating at 64KB. 56 tests, five mutation-checked; 28 of 30 `check` steps
-exit 0 (`test:skill-clamp` EPERM in-sandbox, `check:mc` needs `bun install` — both pre-existing).
+`--json | jq` had been truncating at 64KB.
+
+**FOUND AND DELIBERATELY NOT FIXED HERE:** `scripts/check-dispatch-agenttype.mjs` and
+`scripts/check-dispatch-prompt-size.mjs` share that same `console.log(JSON.stringify(...))` then
+`process.exit()` shape and will truncate piped `--json` once their payloads pass 64KB. Both are
+under it today. Left alone because they are separate files and one is wired into a blocking check;
+routed as its own PR. This was not missed. 56 tests, five mutation-checked. Rebased onto `c0e52dc`.
