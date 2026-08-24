@@ -451,6 +451,10 @@ let verifyBudget = MAX_VERIFY
 // examined" — and is treated identically twelve lines below `criticalGap`: forced BLOCK, its own
 // blocker, never a silent PASS. The bound on fan-out is kept, because unbounded fan-out was also
 // real. What is not kept is the bound quietly deciding the verdict.
+// MIRRORS makeVerifyBudget() in ./lib/gate-logic.mjs — unit-tested there, including the mutation
+// that turns this back into a per-call cap. Keep in sync, exactly as blockEligible mirrors
+// isBlockEligible() above. The runtime gives this script no module import, which is the only
+// reason the code is written twice.
 const unverifiedTruncated = []
 function takeVerifyBudget(findings, phaseLabel) {
   if (findings.length <= verifyBudget) {
@@ -549,6 +553,10 @@ if (criticalGap.length) {
 // the same class of event: a block-eligible finding that nobody examined. The judge never saw
 // these — they were dropped before Phase 2's verifier pool — so this override is the only thing
 // standing between an exhausted budget and a PASS the run did not earn.
+// MIRRORS the third block condition in decideVerdict() (./lib/gate-logic.mjs). That file is the
+// canonical spec and did NOT have this condition until 2026-08-24, so `npm run test:gate` ran
+// green while certifying the fail-open this override closes. Both copies carry it now; changing
+// either alone is the defect qa-tier-floor.yml raises the tier of an edit here to catch.
 if (unverifiedTruncated.length) {
   finalVerdict = 'BLOCK'
   blockers = [...blockers, { id: 'verify-budget-exhausted', file: '(gate)', title: `${unverifiedTruncated.length} block-eligible finding(s) went unverified when the ${MAX_VERIFY}-finding verifier budget was exhausted: ${unverifiedTruncated.map(f => `${f.id}(${f.severity})`).join(', ')}`, fix: `Re-run qa.js against a smaller diff so every block-eligible finding is verified. A binding gate cannot PASS while a finding that could have blocked it was never examined.` }]

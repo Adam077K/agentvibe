@@ -534,7 +534,17 @@ a rule that fires on nothing is not a rule.
 | `PS-STEP-SHAPE` | `## Operating procedure` contains ≥ 1 `### Step N` heading | 0 | yes | **new** (§3.2) |
 | `PS-STATUS-FIELD` | `return_contract.required_fields` includes `status` | 0 | yes | **new** |
 | `PS-RETURN-EXAMPLE-MATCHES` | the JSON block under `## Return contract` carries exactly the keys in `required_fields` | 0 | yes | **new** (§1.5) |
+| `PS-JUDGE-BLOCK-CONDITION` | a read-only engine's body names a BLOCKED or per-lens-verdict condition | 0 | yes | **new** (§4); demoted and restored 2026-08-24 |
+| `PS-FALSE-CONSTRAINT` | no statement this repo has measured false — literal list of 8 executed-and-refuted sentences | 0 | 3 / 3 | **new** (§5.3); demoted and restored 2026-08-24 |
 | `PS-PIPELINE-RESTATE` | no chain of ≥ 3 stage ids of one playbook on one line | 0 | yes | **new** (§5.4) |
+
+> **The two rows above made a round trip on 2026-08-24 and this table lost them in the middle of
+> it.** The demotion commit removed all five rows; the restoration commit put the prose right in §4
+> and §5.3 and did not put these two rows back. For one commit the prose said `FAIL` and the table a
+> reader consults as *the list* did not contain them — which is the same defect as a comment
+> describing coverage that does not exist, one document over. Both are `FAIL`, both measure 0 on the
+> seven, and both are defeated by a paraphrase that is recorded in §6.2 as a sharpening target
+> rather than a demotion, because their errors run false-negative.
 
 > **Three rows left this table on 2026-08-24 and are now in §6.2:** `PS-DISPOSITION`,
 > `PS-PRIOR-BELIEF`, `PS-BODY-TOOL-AFFIRM`. Each regexes over an open category of English, which §0's
@@ -611,8 +621,8 @@ that blocks costs a correct sentence.
 
 | id | Checks | Why not `FAIL` |
 |---|---|---|
-| `PS-PRIOR-BELIEF` | no stated prior belief about the artifact under judgement — literal phrase list, over model-reaching text only | fires on *"The diff is believed to be correct."* — **silent on** *"Two senior engineers shipped this. Findings here are usually noise."* This is the rule guarding the 97.2%→3.6% priming effect, **and the phrasing the study actually measured is invisible to it.** Demoted 2026-08-24 |
-| `PS-DISPOSITION` | no disposition instruction — literal phrase list | fires on *"Be critical of every finding."* — silent on *"Be extremely critical."* The regex requires the words adjacent. Demoted 2026-08-24 |
+| `PS-PRIOR-BELIEF` | no stated prior belief about the artifact under judgement — pattern list over an open category of English, applied to model-reaching text only | fires on *"The diff is believed to be correct."* — **silent on** *"Two senior engineers shipped this. Findings here are usually noise."* This is the rule guarding the 97.2%→3.6% priming effect, **and the phrasing the study actually measured is invisible to it.** Demoted 2026-08-24 |
+| `PS-DISPOSITION` | no disposition instruction — pattern list over an open category of English | fires on *"Be critical of every finding."* — silent on *"Be extremely critical."* The regex requires the words adjacent. Demoted 2026-08-24 |
 | `PS-BODY-TOOL-AFFIRM` | no affirmative direction to use an ungranted tool, **paragraph-scoped** | fires on *"Run the suite with `Bash`…"* — silent on the same line **plus "Do not skip it."** One negation anywhere in the paragraph clears the paragraph, and **90 of 222 paragraphs (40.5%) in the live seven already contain a clearing word** (measured 2026-08-24 against `TOOL_NEGATION_RE`; this figure was **84 of 215 / 39.1%** when first recorded, and the diff that carries this revision is itself what moved it — the corpus grows every time an engine file gains a paragraph, so re-measure rather than quote). Demoted 2026-08-24 |
 | `PS-LENGTH-BAND` | file outside 100-175 lines (`wc -l` convention) | the band is descriptive — 113-149 observed (§2.4). `reviewer-readonly` is longest *because it justifies its own existence*, which is the right reason to be long. A cap would delete the justification |
 | `PS-STEP-COUNT` | `### Step N` count outside 4-8 | observed 5-7. A genuinely simpler engine may need fewer, and no evidence supports a hard floor |
