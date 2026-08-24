@@ -1,12 +1,15 @@
 /**
  * probe-readonly.test.mjs — proves --report can never emit a success verdict.
  *
- * POSTURE: Runs via `node --test` and is wired into `npm run check` as `test:probe-readonly`
- * (package.json), so it blocks a local `npm run check`. It does NOT run in CI today:
- * `.github/workflows/ci.yml` executes individual `check:*`/`test:*` steps and has no step
- * naming this one, and never invokes the aggregate `npm run check`. Wiring it into CI is a
- * separate, open gap — touching `.github/workflows/**` raises the change's tier, and that
- * change is being tracked and made elsewhere, not in this file.
+ * POSTURE: BLOCKS. Wired into `npm run check` as `test:probe-readonly` (package.json) AND into
+ * `.github/workflows/ci.yml` as the `Read-only probe` step, added 2026-08-24.
+ *
+ * SUPERSEDED — this header said "It does NOT run in CI today... Wiring it into CI is a separate,
+ * open gap - touching `.github/workflows/**` raises the change's tier, and that change is being
+ * tracked and made elsewhere, not in this file." That was true and is no longer: the gap is
+ * closed by the same commit that rewrote this paragraph. CI runs individual `check:*`/`test:*`
+ * steps and still never invokes the aggregate `npm run check`, so a suite absent from that list
+ * runs nowhere - which is exactly how this one was invisible for as long as it was.
  *
  * History of the defect this guards, in two rounds:
  *

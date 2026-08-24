@@ -168,6 +168,19 @@ jobs:
       - name: Playbooks
         run: npm run test:playbooks
 
+      # The one mechanism in this repository that can REFUSE a tool call. Every other step here
+      # reports; .claude/hooks/pre-tool-use.sh is the only thing that returns exit 2 and stops an
+      # action mid-flight. It shipped with zero tests, and a review on 2026-08-13 then reproduced
+      # four independent fail-open paths by executing it — so these cases were written red-first
+      # against the pre-fix hook and a green run proves the fix rather than the test's optimism.
+      # Every dangerous case runs through BOTH the compact JSON Claude Code actually sends and the
+      # pretty-printed shape, because a hook that parses only one fails open on the other.
+      #
+      # It was in `npm run check` and in no workflow at all until 2026-08-24. CI ran every
+      # reporting check in the repo and did not run the only enforcing one.
+      - name: Pre-tool-use hook
+        run: npm run test:pre-tool-use
+
       # The SessionStart hook. It is the mechanical consumer of the lens and playbook
       # files — before Phase 6 both were linted on every PR and loaded by nothing — and it
       # is what reports a ledger sweep that has stopped running. Every test below is a case
@@ -223,6 +236,21 @@ jobs:
       # and was caught by reading the output rather than by a test.
       - name: Stop-reason probe
         run: npm run test:probe-stop-reason
+
+      # The read-only probe's report path, which must never be able to emit a success verdict.
+      # Two rounds of one defect: `--verify` first printed PASS whenever the probe file was
+      # absent, which cannot tell "the runtime refused the write" from "the engine held Bash, a
+      # write vector, and simply did not try it". The fix for that was then shown forgeable
+      # through the public interface alone — setup, `--record --outcome refused-by-runtime`,
+      # `--verify`, PASS, exit 0, with no write ever attempted. `--report` now has exactly two
+      # outcomes, FAIL and UNRESOLVED, and these tests pin that a fabricated record and a
+      # newline-injected record both fail to reach a success exit.
+      #
+      # The test file's own header called this CI gap open and said closing it belonged in a
+      # change that touches `.github/workflows/**`. This is that change; the header is corrected
+      # in the same commit.
+      - name: Read-only probe
+        run: npm run test:probe-readonly
 
       # The launcher passed --dangerously-skip-permissions, which made all 26 allow/deny rules in
       # settings.json inert in every warroom-started session. Removed 2026-08-16 by founder
