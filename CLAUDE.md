@@ -394,10 +394,17 @@ conclusion holds — isolation between agents inside a session is a convention t
 enforces.
 
 **This section now contradicts a live lint rule, deliberately and visibly.**
-[.claude/hooks/schema-lint.js](.claude/hooks/schema-lint.js) tests agent bodies for the literal string
-`MAIN_REPO=$(git worktree list` — grep that string to find the rule, and do not pin its line number here,
-because the dead-path check refuses one and prose line numbers rot — and flags any `isolation: worktree`
-worker that lacks it, so the linter still asks for the block this section supersedes. It **warns**, it does not fail (`schema-lint` exits non-zero only on `failCount`), but
+[.claude/hooks/schema-lint.js](.claude/hooks/schema-lint.js) warns when an agent that writes app code
+declares `isolation: worktree` and its body does not carry the worktree-creation block, so the linter still
+asks for the block this section supersedes. **Find the rule by what it tests, never by where it sits:**
+`grep -n "fm.isolation === 'worktree'" .claude/hooks/schema-lint.js`.
+
+> **Superseded 2026-08-24.** This passage said the linter "tests agent bodies for the literal string
+> `MAIN_REPO=$(git worktree list`" and told you to *grep that string to find the rule*. **Grepping it
+> returns nothing** — the source holds the regex-escaped form, not the literal — so the recovery
+> instruction inside the very sentence forbidding line-number pins did not work either. The predicate
+> above is the durable handle: it survives an edit above it, and it survives the pending rename of the
+> string being tested. It **warns**, it does not fail (`schema-lint` exits non-zero only on `failCount`), but
 the repo holds itself to `18 pass · 0 fail · 0 warnings`, so the two cannot both stand. Three call sites
 still teach the superseded form and are what a worker actually executes:
 [.claude/agents/builder.md](.claude/agents/builder.md) (the creation block and the `-C "$MAIN_REPO"`
@@ -496,9 +503,20 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   `.claude/agents/**`, `.claude/commands/**` and `.mcp.json`. Adding those paths to `allowWrite` does not
   lift it: `**/.worktrees/**` already matches the refused path and it was refused anyway. That closes
   SANDBOX.md's two open acceptance questions. Escalation is required for that one command.
-- **Known contradiction, deliberate and visible:** `.claude/agents/builder.md` and `designer.md` still teach
-  the superseded worktree command as Step 1, and `schema-lint.js:1068` still REQUIRES it — `lint:agents` is
-  green only because they do. Both irreversible tier. Required follow-up with an exit criterion in
+- **Known contradiction, deliberate and visible — and this is the state on `main` as of 2026-08-24.**
+  `.claude/agents/builder.md` and `designer.md` still teach the superseded worktree command as Step 1, and
+  `schema-lint.js` still REQUIRES it: the rule warns when an agent that writes app code declares
+  `isolation: worktree` and its body lacks the worktree-creation block, so `lint:agents` is green only
+  because those bodies still carry it. Find it by what it tests —
+  `grep -n "fm.isolation === 'worktree'" .claude/hooks/schema-lint.js`.
+  *Superseded 2026-08-24: this bullet pinned `schema-lint.js:1068`. That line is now
+  `if (fm.skills !== undefined) {` — the pin had rotted, in the same file that warns prose line numbers rot.
+  It is deliberately **not** replaced with the current number, because a corrected pin rots on the next edit
+  above it.*
+  Both irreversible tier. **A change that would resolve this contradiction is in flight in this session and
+  has NOT landed on `main`** — it moves the agent bodies and the lint predicate together to the
+  `PROJECT_ROOT` form. Do not read this bullet as resolved until someone reconciles it against `main` and
+  says so here. Required follow-up with an exit criterion in
   [the handoff](docs/08-agents_work/handoffs/2026-08-25-after-the-gate-ran.md).
 - **Where we are:** Phases 1–7 complete · **Phase 8a complete** · **8b (Dispatch) BUILT 2026-08-16 against
   `agentvibe` as its only target** — the loop is end to end (the server enqueues to a queue file, a
