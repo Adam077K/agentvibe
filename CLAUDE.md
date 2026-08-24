@@ -290,20 +290,122 @@ fail the build — so the friction is measured rather than guessed. The exceptio
 
 ## Git Worktree Protocol
 
-```bash
-# Detect — you may already be inside a worktree
-git worktree list
-MAIN_REPO=$(git worktree list | head -1 | awk '{print $1}')
+> **Superseded 2026-08-24.** This block used to anchor child worktrees at the **main repository** —
+> `MAIN_REPO=$(git worktree list | head -1 | awk '{print $1}')`, then
+> `git -C "$MAIN_REPO" worktree add "$MAIN_REPO/.worktrees/[slug]"` — and closed with *"Never run
+> `git worktree add` from inside a worktree without `-C $MAIN_REPO`."* Both instructions were wrong in the
+> same way: **an agent's writes are scoped to its session project root, and `$MAIN_REPO` is above it.** An
+> orchestrator here is itself always inside a worktree, so the documented path placed every child worktree in
+> a *sibling* of the only root its own `Write`/`Edit` may reach. The `-C` sentence was the wrong rule for the
+> right worry: what makes the command safe is the **absolute path**, not the flag.
 
-# Create child worktree FROM the main repo root
-git -C "$MAIN_REPO" worktree add "$MAIN_REPO/.worktrees/[slug]" -b feat/[slug]
-cd "$MAIN_REPO/.worktrees/[slug]"
+```bash
+# Anchor at YOUR OWN toplevel — never at the main repo. Run this from a cwd INSIDE the session
+# project root (see the caveat below); `$MAIN_REPO` is above that root and is always wrong.
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+
+# ⚠ THIS COMMAND STILL FAILS UNDER THE ARMED SANDBOX. Read the next block before running it.
+git worktree add "$PROJECT_ROOT/.worktrees/[slug]" -b feat/[slug]
+cd "$PROJECT_ROOT/.worktrees/[slug]"
 
 # Atomic commits
 git commit -m "feat(scope): description"
 ```
 
-**Never** run `git worktree add` from inside a worktree without `-C $MAIN_REPO`. `.worktrees/` is gitignored.
+`.worktrees/` is gitignored.
+
+> **The location above is corrected. The command is still not a working protocol — say so, do not
+> discover it.** With `sandbox.enabled: true`, `git worktree add` cannot complete *anywhere*, including
+> inside the project root. Measured 2026-08-24 at the corrected path: **exit 128**, 32×
+> `error: unable to create file .claude/agents/<name>.md: Operation not permitted`, the same for
+> `.claude/commands/*.md` and `.mcp.json`, then `fatal: Could not reset index file to revision 'HEAD'`.
+> No worktree survived and the branch was left behind — `git worktree add` creates the branch before it
+> checks out. The same command with the sandbox disabled: **exit 0, 809 files.**
+>
+> **Why:** a full checkout must write the agent-config paths, and the runtime protects those
+> independently of this repo's configuration. It is not `permissions.deny` and not
+> `~/.claude/settings.json`. **Adding them to the write allow-list does not lift it, and this has already
+> been tried:** `sandbox.filesystem.allowWrite` in [.claude/settings.json](.claude/settings.json) already
+> carries `**/.worktrees` and `**/.worktrees/**`, which match
+> `…/.worktrees/<slug>/.claude/commands/`, and that path was still refused in the same session. Those two
+> entries do not achieve what they were added for.
+>
+> **Remedy: escalate that one command.** Create the worktree with the sandbox disabled, then work inside
+> it normally — the `Write`/`Edit` scoping this section fixes applies from then on, which is why the
+> location correction still matters. Every worktree created in this session needed that escalation.
+>
+> Fixing this properly is a sandbox change, not a documentation change, and is tracked against
+> [SANDBOX.md](docs/03-system-design/SANDBOX.md). **Until it lands, an agent that follows the corrected
+> location and hits the wall has not made a mistake** — it has hit a known, measured limit. What would be
+> a mistake is reporting the resulting partial tree as its own broken work.
+
+> **Caveat on `--show-toplevel`.** It is correct **from any cwd inside the session project root** — which
+> is where an agent always is — and that is the whole claim. It is *not* an unconditional truth: run it from
+> **the main repository above your session root** (here, `…/VibeCoding/agentvibe`) and it returns *that*
+> path, which is above the session root and reproduces the original defect exactly. The obvious hardening is unavailable: `CLAUDE_PROJECT_DIR`
+> is **empty in an agent's Bash environment**, so it cannot be used as the anchor in a shell command even
+> though `pre-tool-use.sh` reads it.
+
+**Why: the write boundary is the session project root, not the repository.**
+[.claude/hooks/pre-tool-use.sh](.claude/hooks/pre-tool-use.sh) permits `Edit`/`Write` under
+`${CLAUDE_PROJECT_DIR:-$PWD}` plus two named exemptions, and the Bash sandbox's
+`sandbox.filesystem.allowWrite` list in [.claude/settings.json](.claude/settings.json) — the field is
+`allowWrite`; there is no `allowOnly` key — is anchored the same way. Measured 2026-08-24, one real
+`Write` per row — the hook names the root itself when it refuses, and the root it named was
+`…/.worktrees/ceo-1-1787566829`, a **worktree**, not `…/agentvibe`:
+
+| Creating agent's project root | Child worktree path | Result |
+|---|---|---|
+| `…/.worktrees/ceo-1-1787566829` | `$MAIN_REPO/.worktrees/<slug>` — **the old protocol** | **refused** |
+| `…/.worktrees/ceo-1-1787566829` | `$PROJECT_ROOT/.worktrees/<slug>` — the corrected protocol | allowed |
+| a builder inside `…/.worktrees/pr5-systemic` | its own `$PROJECT_ROOT/.worktrees/<slug>` | allowed |
+
+**Three consequences, all observed 2026-08-24, none theoretical:**
+
+1. **Silent partial checkout — and the location fix does NOT cure this one.** `git worktree add` into a
+   location it may not fully write leaves a tree holding `.git`, `.github` and one file under `scripts/` —
+   no `package.json`, no `.claude/`, no `docs/`. `git status` there then reports ~800 *deletions* that read
+   as the agent's own edits, and nothing inside such a worktree can diagnose it. The old location fails
+   harder and earlier (`could not create leading directories`, zero files); the corrected location fails
+   later, on `.claude/agents/**`, `.claude/commands/**` and `.mcp.json`. **Both fail.** That is the sandbox
+   wall documented above, and escalation — not relocation — is what clears it.
+2. **False regressions.** `test:lenses` and `test:playbooks` failed in a sibling worktree and passed on the
+   same commit (`db5bf45`) inside the project root — those tests write fixtures into the repo root. Two
+   failures in one location, seven passes in the other, identical code.
+3. **Divergence by tool, not by task.** One builder succeeded where two were refused, because it used `Bash`
+   while they used `Write`/`Edit`. The hook gives `Bash` no path concept at all; only `Edit`/`Write` are
+   root-scoped. Same instruction, opposite outcomes, and the difference was invisible to all three.
+
+**Do not fix this by widening the hook.** The previous instance of this same `Bash`-vs-`Write` divergence
+(issue #96.3, recorded in `pre-tool-use.sh` beside the allowed-roots loop) was *correctly* resolved by
+widening the `Write` side with a third allowed root — `Bash` already had the scratchpad and `Write` was the
+one in the wrong. Applying that template here inverts it: allowing `$MAIN_REPO/.worktrees` would put every
+parallel session's tree inside every other session's write scope, so a subagent of `ceo-1` could overwrite
+`ceo-2`'s work. **Two instances of one divergence, opposite correct resolutions** — which is the durable
+lesson: this class has no single rule. When `Bash` and `Write` disagree about a path, decide which one is
+right *for that path* and move the other to meet it.
+
+And be clear about what this boundary is **not**. Two worktrees that share a root are mutually writable
+**when the writing agent's own project root is that shared parent** — which is the normal case for
+subagents of one session, and was measured that way the same day, by both tools. It is not a property of
+the paths: drive the hook with a different `CLAUDE_PROJECT_DIR` and the same target path flips from allowed
+to refused, because the rule is computed from the *writer's* root, not the target's. Either way the
+conclusion holds — isolation between agents inside a session is a convention they keep, not a rule anything
+enforces.
+
+**This section now contradicts a live lint rule, deliberately and visibly.**
+[.claude/hooks/schema-lint.js](.claude/hooks/schema-lint.js) tests agent bodies for the literal string
+`MAIN_REPO=$(git worktree list` — grep that string to find the rule, and do not pin its line number here,
+because the dead-path check refuses one and prose line numbers rot — and flags any `isolation: worktree`
+worker that lacks it, so the linter still asks for the block this section supersedes. It **warns**, it does not fail (`schema-lint` exits non-zero only on `failCount`), but
+the repo holds itself to `18 pass · 0 fail · 0 warnings`, so the two cannot both stand. Three call sites
+still teach the superseded form and are what a worker actually executes:
+[.claude/agents/builder.md](.claude/agents/builder.md) (the creation block and the `-C "$MAIN_REPO"`
+sentence), [.claude/agents/designer.md](.claude/agents/designer.md), and
+[.claude/skills/worktree-isolation-pattern/SKILL.md](.claude/skills/worktree-isolation-pattern/SKILL.md)
+— the last of which is marked superseded in place. The agent files and the lint predicate are **not** changed
+here on purpose: both are `irreversible` tier and would raise a documentation fix's floor. They move together
+in one follow-up PR, because changing the agent bodies without the predicate turns 0 warnings into 2.
 
 ---
 
