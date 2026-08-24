@@ -34,6 +34,11 @@ import os from 'node:os'
 import path from 'node:path'
 import fs from 'node:fs'
 
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
+const { STEPS, reachable } = require('./lib/check-suite.js')
+
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const TRIPWIRE = path.join(REPO, 'scripts', 'protected-write-tripwire.cjs')
 const PRELOAD = './scripts/protected-write-tripwire.cjs'
@@ -143,19 +148,19 @@ test('the protected list names the directories whose contents ARE the harness', 
 
 // ── The wiring, so a new test file cannot join the chain unguarded ───────────────────────────
 
-/** Every npm script reachable from `check`, following `npm run X` references. */
+/**
+ * Every npm script the suite reaches, mapped to its command.
+ *
+ * This used to walk `npm run X` out of package.json's `check` string itself. That string is now
+ * a single runner — the `&&` chain silently skipped every step after the first failure — so the
+ * walk starts from STEPS in scripts/lib/check-suite.js, which is where the suite lives. It
+ * delegates to that module's `reachable()` rather than reimplementing the traversal: two
+ * implementations of "what does the suite run" would disagree, and this file's whole job is to
+ * notice when a test joins the suite unguarded.
+ */
 function reachableScripts() {
   const pkg = JSON.parse(fs.readFileSync(path.join(REPO, 'package.json'), 'utf8'))
-  const seen = new Map()
-  const walk = (name) => {
-    if (seen.has(name)) return
-    const cmd = pkg.scripts[name]
-    if (cmd === undefined) return
-    seen.set(name, cmd)
-    for (const m of cmd.matchAll(/npm run ([\w:-]+)/g)) walk(m[1])
-  }
-  walk('check')
-  return seen
+  return new Map([...reachable(pkg.scripts, STEPS)].map((name) => [name, pkg.scripts[name]]))
 }
 
 test('every node --test step reachable from `npm run check` preloads the tripwire', () => {
@@ -175,7 +180,7 @@ test('every node --test step reachable from `npm run check` preloads the tripwir
 })
 
 test('this file is itself in the chain — a guard outside the chain guards nothing', () => {
-  assert.ok(reachableScripts().has('test:protected-write'), 'test:protected-write is not reachable from check')
+  assert.ok(reachableScripts().has('test:protected-write'), 'test:protected-write is not in STEPS — a guard outside the suite guards nothing')
 })
 
 /**
