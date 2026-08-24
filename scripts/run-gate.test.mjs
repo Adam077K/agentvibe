@@ -241,6 +241,11 @@ test('flagging the hazard does not rewrite the invocation or change the exit cod
 
 test('the inspect commands are real git commands, and they run', () => {
   // "Do not invent a command you have not tested." Run what the script tells a human to run.
+  //
+  // This must NOT make `origin/main` load-bearing. `ci.yml` documents that `fetch-depth: 0` is not
+  // required, and this file's own header (:10-11) says a test that reads live repo state passes or
+  // fails for reasons the test did not choose. Where the ref is absent git exits 128 `bad revision` —
+  // a real answer from a well-formed command, which is all this test is entitled to assert.
   const r = json(['--files', '.claude/workflows/qa.js']);
   for (const cmd of r.gateSelfReview.inspect) {
     const args = cmd.split('#')[0].trim().split(/\s+/).slice(1); // drop the trailing `# comment`
@@ -248,10 +253,30 @@ test('the inspect commands are real git commands, and they run', () => {
     try {
       execFileSync('git', args, { cwd: REPO, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
     } catch (e) {
-      // `git diff --quiet` exits 1 when the files differ — a real answer, not a broken command.
-      assert.equal(e.status, 1, `emitted command failed for a reason other than "differs": ${cmd}\n${e.stderr}`);
+      const stderr = (e.stderr || '').toString();
+      // 1   = `git diff --quiet` found a difference — a real answer.
+      // 128 = the ref does not exist in this clone (shallow CI, no `origin/main`) — also a real
+      //       answer, and not something the emitted command got wrong.
+      const refAbsent = e.status === 128 && /bad revision|unknown revision|ambiguous argument/i.test(stderr);
+      assert.ok(
+        e.status === 1 || refAbsent,
+        `emitted command failed for a reason other than "differs" or "ref absent": ${cmd}\n${stderr}`,
+      );
     }
   }
+});
+
+test('the emitted inspect commands are well-formed independently of this clone', () => {
+  // The structural half of the assertion above, with no dependence on repo state at all: whatever
+  // refs a given checkout happens to have, the strings run-gate emits must still be git invocations
+  // naming the gate directory and the gate script.
+  const r = json(['--files', '.claude/workflows/qa.js']);
+  assert.equal(r.gateSelfReview.inspect.length, 2);
+  const [showDiff, compareToMain] = r.gateSelfReview.inspect.map((c) => c.split('#')[0].trim());
+  assert.match(showDiff, /^git diff \S+ -- \.claude\/workflows\/$/,
+    'the first command must show the gate\'s own diff for the ref under review');
+  assert.match(compareToMain, /^git diff --quiet origin\/main -- \.claude\/workflows\/qa\.js$/,
+    'the second must compare this tree\'s gate against main');
 });
 
 test('the emitted ref is a resolved SHA — immune to which worktree you paste it into', () => {
