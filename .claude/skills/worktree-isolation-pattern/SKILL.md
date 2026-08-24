@@ -9,9 +9,34 @@ risk: low
 
 # Worktree Isolation Pattern
 
+> ## ⚠ SUPERSEDED 2026-08-24 — the `$MAIN_REPO` anchor in this file is wrong
+>
+> Every `$MAIN_REPO/.worktrees/<slug>` path below is superseded by
+> **`$(git rev-parse --show-toplevel)/.worktrees/<slug>`**. `CLAUDE.md` § *Git Worktree Protocol* is the
+> current instruction; read it before following any step here.
+>
+> **Why:** an agent's `Write`/`Edit` are scoped to its **session project root**, and in this harness that
+> root is itself a worktree — so `$MAIN_REPO` is *above* it and every child worktree this file produces
+> lands where its own tools are refused. Measured 2026-08-24: the old path is refused by
+> `.claude/hooks/pre-tool-use.sh` by name; the corrected path is allowed.
+>
+> Step 3's *"Never run `git worktree add` from inside a worktree path. Always reference `$MAIN_REPO`"* is
+> also superseded, and was the wrong rule for the right worry: what makes the command safe is the
+> **absolute path**, not where you run it from or which flag you pass.
+>
+> **Also read there, and not fixed by either path:** under the armed sandbox `git worktree add` cannot
+> complete at *any* location — the checkout must write `.claude/agents/**`, `.claude/commands/**` and
+> `.mcp.json`, which the runtime refuses. That step needs escalation.
+>
+> This file is left standing rather than rewritten because `.claude/hooks/schema-lint.js` still
+> requires the literal `MAIN_REPO=$(git worktree list` block in `isolation: worktree` agent bodies. The
+> skill, the two agent files that teach it, and the lint predicate move together in one follow-up PR.
+
 ## Quick reference
 
-> Every code worker creates a fresh worktree under `MAIN_REPO/.worktrees/<slug>`. Never edit main repo. Never edit another worker's worktree.
+> Every code worker creates a fresh worktree under `MAIN_REPO/.worktrees/<slug>` — **superseded, see
+> above: anchor at `$(git rev-parse --show-toplevel)`.** Never edit main repo. Never edit another worker's
+> worktree.
 
 ## When to use
 
@@ -48,6 +73,9 @@ echo "Main repo: $MAIN_REPO"
 ```
 
 ## Step 3: Create the task worktree from main repo root
+
+> **Superseded 2026-08-24.** Anchor at `PROJECT_ROOT=$(git rev-parse --show-toplevel)`, not `$MAIN_REPO`,
+> and expect this command to need sandbox escalation. See the banner at the top of this file.
 
 Never run `git worktree add` from inside a worktree path. Always reference `$MAIN_REPO`.
 

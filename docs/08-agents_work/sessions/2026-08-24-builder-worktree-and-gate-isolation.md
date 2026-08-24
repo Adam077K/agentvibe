@@ -7,13 +7,13 @@ tier: full
 qa_verdict: PENDING
 ---
 
-**(1) Worktree protocol.** `CLAUDE.md` anchored child worktrees at `$MAIN_REPO/.worktrees/`, a sibling of the
-session project root — the only root `.claude/hooks/pre-tool-use.sh` lets `Write`/`Edit` reach. Corrected to
-`$(git rev-parse --show-toplevel)/.worktrees/`, at or below that root from every position an agent can occupy.
-Verified by driving the hook per case and by real `Write` calls: the old path is refused *by name*, the new one
-allowed, and an end-to-end `git worktree add` gave 25 entries with clean `git status` — not the ~800-phantom-
-deletion tree. Superseded text kept at the point of citation; the three consequences recorded, plus why the #96.3
-"widen the hook" template is the wrong resolution here. **(2) Gate self-review.** `run-gate.mjs` now flags any
-changed path under `.claude/workflows/` in both channels (`gateSelfReview`, null when clean). It reports rather
-than resolves, and says so: reviewing copy from `main` vs oracle in the PR tree pull one cwd two ways. Emitted
-`scriptPath` deliberately unchanged. 7 tests added, 6 RED first. All seven verification commands exit 0.
+**(1) Worktree protocol — location corrected, DELIBERATELY HALF DONE.** `CLAUDE.md` anchored children at
+`$MAIN_REPO/.worktrees/`, a sibling of the session project root — the only root `pre-tool-use.sh` lets `Write`
+reach. Now `$(git rev-parse --show-toplevel)/.worktrees/`, correct from any cwd inside that root (narrowed after
+review; false from the main repo). Not presented as working: under the armed sandbox `git worktree add` fails
+everywhere (exit 128 on `.claude/agents/**`, `.claude/commands/**`, `.mcp.json`), and `allowWrite`'s
+`**/.worktrees/**` does not lift it — re-measured. Remedy is escalation. **Other half:** `schema-lint.js`
+still requires the superseded `MAIN_REPO=` block (warns, not fails), as do `builder.md`/`designer.md` —
+irreversible tier, deferred to one follow-up PR; only SKILL.md is marked here and CLAUDE.md says so outright.
+**(2) Gate self-review.** `run-gate.mjs` flags any changed `.claude/workflows/` path in both channels
+(`gateSelfReview`, null when clean), reporting rather than resolving; `scriptPath` and exit logic unchanged.
