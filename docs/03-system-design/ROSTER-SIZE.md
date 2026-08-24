@@ -710,6 +710,16 @@ Decision: build the resolver (~20 lines at `resolvers.js:307`) or keep the human
 Diverse-family generators plus a judge win 0.810 of head-to-heads; same-family, 0.512 — indistinguishable
 from a single agent. This is worth more than any additional container.
 
+**CLOSED 2026-08-23** (kept beside the original for the record, per house style): the founder
+accepted single-family review for harness self-edits as an **ACCEPTED RISK, not a satisfied
+requirement** — see [2026-08-23-after-p0.md §6](../08-agents_work/handoffs/2026-08-23-after-p0.md)
+and [MODEL-DIVERSITY.md](MODEL-DIVERSITY.md). Two things above do not hold: `resolvers.js:307` is
+not a resolver stub — as of this correction that line sits inside the `command` resolver's exit/stdout
+handling, and a search of the file for a second-family stub (`gemini`, `ollama`, "second.family")
+finds none. "The resolver stub all already exist[s]" was never true of that line; no such stub exists
+in `resolvers.js` today. If the Codex resolver (P0 item 6) ever lands, build it fresh rather than
+looking for this pointer.
+
 **D8 — Does `operator` split?** One file today. It becomes two when a live payments key and a deploy
 token stop sharing a blast radius and a gate tier. Decide from a credential inventory, after D1.
 

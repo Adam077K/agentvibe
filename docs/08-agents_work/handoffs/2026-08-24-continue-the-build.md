@@ -177,6 +177,16 @@ into a decision, and this repo is one of the few places they could actually be m
    panel. Sized against a **~48% dropout caused by `maxTurns=20`** — which was later raised to 30. The
    file's own comment admits *"no post-fix run has yet confirmed the diagnosis."* Ceremony by inertia:
    correct when written, never re-justified after its cause changed.
+   **CORRECTION, verified 2026-08-24: this item's premise is false, and its line cite is wrong.**
+   `REVIEW_ATTEMPTS = 4` lives at `qa.js:281`, not `:215-218` (that range is inside
+   `verifyPrompt()`'s template literal, unrelated to the retry ceiling). And the 4x ceiling was not
+   sized against a turn cap: `qa.js:270-272` says a turn cap was one of four explanations for the
+   ~48% dropout, "tested against the transcripts and all four were refuted" — "successes reached 43
+   turns, failures started at 37." The dropout is unexplained, not `maxTurns`-caused. What IS real is
+   the *contradiction*: `qa.js:180-198` still blames `maxTurns` for 13 of 20 dropouts (a separate,
+   earlier measurement) while `qa.js:264-280` refutes a turn cap as an explanation for a later,
+   different dropout. Two incompatible accounts of the same failure mode sit in one file. That
+   contradiction is being fixed in a separate PR — not fixed here.
 2. **Build the citation-range checker.** **Five of eight findings** over two days were locators pointing
    at real content that did not say what was claimed. `ledger lint` verifies a cited ID *exists*, never
    that the range supports the sentence. This repo has recommended the fix to itself twice and never
@@ -192,6 +202,11 @@ into a decision, and this repo is one of the few places they could actually be m
 5. **Stop re-litigating the settled model-family question.** Every irreversible session re-raises it
    unprompted; the founder **closed it on 2026-08-23** (single-family accepted as a risk). Update
    `qa-tier-floor.yml` / `review-lenses.yml` so reviewers stop spending output on a decided question.
+   **CORRECTION, verified 2026-08-24: `qa-tier-floor.yml` is not part of the fix.** It never mentions
+   model families at all (`grep -icE 'model|famil|diversity' .claude/qa-tier-floor.yml` → 0). The real
+   surface reviewers actually read is `MODEL-DIVERSITY.md:3` plus `AGENT-ARCHITECTURE.md` open
+   decision #3 and `ROSTER-SIZE.md` D7 — all three corrected in this PR (docs/correct-the-record) to
+   say the question is closed, rather than leaving `qa-tier-floor.yml` untouched as this item implied.
 6. **Sweep rounds** (up to 15 extra dispatches at irreversible tier): no defect in the record is
    attributable to a sweep round alone. Weakly evidenced either way — **re-measure, do not cut blind.**
 

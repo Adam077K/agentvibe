@@ -209,42 +209,7 @@ options is foreclosed
 whose stated rationale is superseded by this one
 
 ## 2026-08-13 — Phase 8a PR4/PR5 scope, and the Founder widened rule 8 for these two PRs
-
-**Context:** Eight decisions taken with the Founder in one grill session before any code was written. Four
-rested on measurements taken during the grill rather than on the plan document, and two of those overturned
-what the plan assumed. `/api/conflicts` was assumed cheap; it is **18,051 ms** across **309 worktrees**,
-synchronous, on Bun's single JS thread — so it stalls the SSE tick for every connected client. And
-`conflicts.ts:49` catches every error and returns `[]`, so a pruned or unreadable worktree renders as
-**clean**: the §0 defect class for the tenth time, this time already on `main`.
-**Decisions:**
-1. **PR4 and PR5 are one builder, serial, one worktree** — not two builders in parallel. Both had to widen
-   the same three places in `App.tsx` and both needed the same missing fetch path, so "parallel" was not
-   disjoint. Four views that must share a visual language get one author.
-2. **Fetch-on-open, not SSE**, for belief/conflicts/project/inbox — the tick would pay 18 s (conflicts) and
-   up to 3.7 s (project probe) per connected client.
-3. **PR4 fixes what it exposes**: async `execFile`, a sweep scoped to registry-backed worktrees *with the
-   excluded count rendered*, and a distinct could-not-look state. Fixing the defect in the PR that makes it
-   reachable keeps defect and fix in one reviewable change.
-4. **Belief reads `~/.warroom/ledger/global.yml`** alongside the repo ledger. Nothing in `server/` read it;
-   a view called Belief that cannot show the two live waivers is not showing what we believe.
-5. **Full-tier review, Claude-only.** Independence is recorded as **unmet**, as in every session file this
-   phase. `gemini` is installed and was offered; the Founder chose not to use it.
-6. **Rule 8 widened, by the Founder, for PR4 and PR5 only:** merge on reviewer PASS without per-PR Founder
-   confirmation. Framed here as the Founder widening their own rule, not as the CEO interpreting it,
-   because with #24 unfixed the Founder's confirmation was the only element of the QA gate that was not
-   self-reported. **This is the CEO reporting a removed check, not exercising an override.**
-**Rationale for what was NOT done:** the classifier returns `tier=lite, matched=(none — default)` for every
-mission-control path — **no rule in `qa-tier-floor.yml` mentions mission-control at all**, so a server that
-shells out across the whole machine classifies like a typo, and PR2's command-injection RCE would have too.
-The fix is a one-line rule, but that file floors at `risk:irreversible` and needs its own PR and sign-off,
-so it is logged (#34) rather than folded in. Separately, CLAUDE.md requires a **Codex CLI second opinion** at
-Full tier and `codex` is not installed on this machine — every Full-tier review this repo has run was missing
-a documented required step and nothing noticed (#35).
-**Reversibility:** reversible — rule 8's widening is scoped to two named PRs and lapses with them
-**Owner:** ceo · **founder decisions**, all eight taken with options and costs presented
-**Affects:** `mission-control/server/collectors/{conflicts,belief}.ts`, `mission-control/server/routes/api.ts`,
-`mission-control/client/src/{App.tsx,api.ts,views/}`, and items #32–#35
-
+*Archived to `DECISIONS_ARCHIVE.md` (2026-08-24). Phase 8a is complete and the widening was explicitly scoped to PR4/PR5 only, so the decision is spent. **Cited by phrase in three session files**, all of which restate the widening themselves rather than relying on this record: `docs/08-agents_work/sessions/2026-08-13-ceo-phase-8a-pr4-grill.md:10`, `docs/08-agents_work/sessions/2026-08-14-ceo-mc-project-inbox.md:13`, `docs/08-agents_work/sessions/2026-08-14-ceo-mc-belief-conflicts.md:13`. Note `IMPLEMENTATION-PLAN.md:198` cites "DECISIONS.md 2026-08-13" by date, but for the cold-start budget entry, not this one.*
 ## 2026-08-13 — the budget ceiling is removed from the system, by Founder instruction
 
 **Context:** `.claude/hooks/budget-guard.js` fired stop condition 3 at ~410k output tokens against a 400k
@@ -409,3 +374,24 @@ that *resolves* to a private address passes it (resolution-time enforcement belo
 from the browsing agent, which is why `operator` and `instrument` are separate engines.
 **Reversibility:** reversible — one `case` block and one matcher string.
 **Owner:** ceo · **founder decision** · **Affects:** `.claude/hooks/pre-tool-use.sh`, `.claude/settings.json`
+
+## 2026-08-24 — Act on the over-build audit, but check its premises first; split PRs by tier
+
+**Decision:** the 2026-08-24 audit (`docs/08-agents_work/handoffs/2026-08-24-continue-the-build.md` §4.4)
+ranked six items. All six were re-verified against `695800e` before any was actioned, and **two rest on false
+premises**: item 1's claim that the 4× retry ceiling was sized against `maxTurns=20` is refuted by
+`qa.js:270-272`, which records a turn cap tested **and discarded**; item 5 names `.claude/qa-tier-floor.yml`,
+which contains no mention of model families at all. Both are corrected in the handoff rather than implemented,
+and the retry values stay untouched — cutting them on a refuted premise would re-break a gate that cost three
+failed runs to fix.
+**Why this is a decision, not a detail:** the audit is the document authorising changes to the gate, and it
+carried the same citation rot it was commissioned to cure. An audit is not exempt from its own finding.
+**Work splits into three PRs by TIER, not by topic.** The tier floor is per-PR, so a single irreversible file
+drags a whole PR to a 17–70-agent gate. Grouping by tier makes the irreversible files pay that gate once
+instead of four times; it is the largest cost lever measured this session.
+**Recorded and deferred by founder decision:** `.claude/workflows/qa.js` never reads
+`.claude/review-lenses.yml` (`grep -c` → 0). The gate carries five hardcoded prose dimensions; the lens file
+declares ten structured lenses; they share two names. That is *why* `independence: provenance` goes
+unenforced — the gate cannot honour a property it never loads. Patch-and-record chosen over unification.
+**Reversibility:** reversible — documentation, lint severities, and one loop bound.
+**Owner:** ceo · **founder decision** · **Affects:** the 2026-08-24 handoff, `MODEL-DIVERSITY.md`, `qa.js`, `schema-lint.js`

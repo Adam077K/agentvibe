@@ -241,7 +241,7 @@ them.
 | `operator` (MCP reach) | Refuted by both its critics: it grants MCP through the same field it declares non-load-bearing, and duplicates designer's browser grant and sourcer's outside-reads mandate in the same document. |
 | `warden` + `breaker` | `warden`'s whole boundary is unbuildable (no agent identity in the hook). `breaker` is `scripts/pre-tool-use.test.mjs` — it exists, runs in `npm run check`, and I reproduced three of the board's containment measurements with it in one shell loop. |
 | `steward` + `auditor` | `steward` is granted no write yet its purpose is "record a disposition," and no clock in this repo can launch an agent (`.github/workflows/ledger-sweep.yml` runs `node` on a runner with no Claude session). `auditor`'s subject is a corpus a shipped collector should index. |
-| `scribe` | Its own proposed barrier (promote the DECISIONS.md non-append softwarn to `block`) blocks its own central job, because every `Edit` carries a non-empty `old_string`. And `Supersedes:` already exists, written unprompted in-run, at `DECISIONS.md:287`. |
+| `scribe` | Its own proposed barrier (promote the DECISIONS.md non-append softwarn to `block`) blocks its own central job, because every `Edit` carries a non-empty `old_string`. And `Supersedes:` already exists, written unprompted in-run, at ``DECISIONS.md` (line pointer `:287` removed 2026-08-24 — verified to resolve to an unrelated entry's footer at origin/main, so it was already rotted; the intended target is not determinable and is deliberately not guessed)`. |
 | `arbiter` (decision routing) | Its single permitted write is `~/.<project>/messages/`, outside the project root — **measured exit 2, BLOCKED** by the hook it cites as its enforcement model. It also cannot self-dispatch, so the party it exists to check decides whether it runs. |
 | `refuter` | It is the verifier `qa.js:131-140` already spawns three of. Its four real deltas are edits inside that function (§5 M2). |
 | `counter-judge` / `second-opinion` | Both are the second model family, wearing an agent's costume. Model family is a property of the executor, not of a roster slot; specifying it as a Claude agent is a fig leaf its own author named. This is founder decision 3, not an agent. |
@@ -1003,6 +1003,19 @@ Only the ones evidence cannot settle.
    call consumes zero headroom in the rolling 5h window. Against: a second key, a second failure
    mode, a data-egress decision. **If no, `independent: true` comes out of three lenses in the same
    change.**
+
+   **CLOSED 2026-08-23:** the founder accepted single-family review for harness self-edits as an
+   ACCEPTED RISK, not a satisfied requirement — see
+   [2026-08-23-after-p0.md §6](../08-agents_work/handoffs/2026-08-23-after-p0.md) and
+   [MODEL-DIVERSITY.md](MODEL-DIVERSITY.md). Its stale half: this item's premise ("three review
+   lenses ... require ≥2 families") no longer holds for `security`, `adversarial` and `evidence` —
+   they now declare `independence: provenance` — the `security`, `adversarial` and `evidence` entries
+   in `.claude/review-lenses.yml`, cited by lens id rather than line number on purpose: an earlier
+   draft of this very sentence cited `:65,79,106` and was rotted by a header edit to that file in the
+   same commit. A lens id does not move when the file above it does. This routes
+   AWAY from the ≥2-family predicate at `.claude/hooks/schema-lint.js:1472`. That predicate was not
+   deleted: it still governs `independence: vendor` lenses and every `risk: high` claim panel via
+   `independenceIssue()` in `scripts/lib/claims.js`.
 
 4. **May the 44 files in `~/.claude/agents/` be deleted or renamed?** Precondition for deleting the
    11 shims (Step 5); costs zero repo files. `check-registration.mjs` measured the blast radius: the

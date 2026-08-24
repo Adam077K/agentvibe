@@ -366,7 +366,7 @@ receipts for every load-bearing piece of it, and not one of them is a sentence i
 
 | Property | Mechanism | Evidence |
 |---|---|---|
-| The judge cannot be primed by the producer | `independence: provenance` — a lens claiming it may not also declare `scope: whole-artifact`, because judging the whole artifact requires the producer's own account of it | `schema-lint.js:729-742` |
+| The judge cannot be primed by the producer | `independence: provenance` — a lens claiming it may not also declare `scope: whole-artifact`, because judging the whole artifact requires the producer's own account of it | `schema-lint.js:1465-1489` (verified 2026-08-24; `schema-lint.js:729-742` was cited until then and is the `PS-BODY-VAGUE` comment block, not this check) |
 | The judge cannot edit what it judges | `reviewer-readonly` declares `tools: [Read, Glob, Grep]` — no Write, no Edit, **no shell** — and `qa.js` dispatches the one binding judge into it | `reviewer-readonly.md:6`, `qa.js:102` (`JUDGE_AGENT`) |
 | A read-only engine cannot quietly regain write | the lint refuses `Write`/`Edit`/`NotebookEdit` on `READ_ONLY_ENGINES` | `schema-lint.js:455-463` |
 | An LLM judge cannot grant a pass the rule denies | the verdict is arithmetic: a confirmed P1 blocks regardless of what the judge returned | `.claude/workflows/lib/gate-logic.mjs:39-46` |
