@@ -17,7 +17,10 @@ and each with a demonstrated false positive; review round 1 restored `PS-JUDGE-B
 `scripts/prompt-standard.test.mjs` at irreversible because the demotion's only blocking guarantee lives
 there — `schema-lint.js` exits on `failCount`, never `warnCount`. `qa.js`: `MAX_VERIFY` is a running total
 across Phase 2 and every sweep round; round 1 found that cap fail-open, so dropped findings are returned as
-`unverified_truncated` and force BLOCK exactly as a critical coverage gap does. The `maxTurns` account of the
+`unverified_truncated` and force BLOCK exactly as a critical coverage gap does — and round 2 found that fix
+applied to only one of the two copies of the verdict arithmetic, so `decideVerdict` in
+`workflows/lib/gate-logic.mjs` now carries the same third condition, mutation-tested both ways (30 gate
+tests, up from 23). The `maxTurns` account of the
 reviewer dropout is superseded at the point of citation and the tool-call / turn / `maxTurns` unit mismatch
 is stated, not reconciled; `ATTEMPTS` values untouched. Both reviewer engines and `orchestrator` carry the
 provenance obligation, with the citation carve-out moved to a mechanism that is observable — the brief pastes
