@@ -394,10 +394,19 @@ conclusion holds — isolation between agents inside a session is a convention t
 enforces.
 
 **This section now contradicts a live lint rule, deliberately and visibly.**
-[.claude/hooks/schema-lint.js](.claude/hooks/schema-lint.js) tests agent bodies for the literal string
-`MAIN_REPO=$(git worktree list` — grep that string to find the rule, and do not pin its line number here,
-because the dead-path check refuses one and prose line numbers rot — and flags any `isolation: worktree`
-worker that lacks it, so the linter still asks for the block this section supersedes. It **warns**, it does not fail (`schema-lint` exits non-zero only on `failCount`), but
+[.claude/hooks/schema-lint.js](.claude/hooks/schema-lint.js) warns when an agent that writes app code
+declares `isolation: worktree` and its body does not carry the worktree-creation block, so the linter still
+asks for the block this section supersedes. **Find the rule by what it tests, never by where it sits:**
+`grep -n "fm.isolation === 'worktree'" .claude/hooks/schema-lint.js`.
+
+> **Superseded 2026-08-24.** This passage said the linter "tests agent bodies for the literal string
+> `MAIN_REPO=$(git worktree list`" and told you to *grep that string to find the rule*. **Grepping it
+> returns nothing** — the source holds the regex-escaped form, not the literal — so the recovery
+> instruction inside the very sentence forbidding line-number pins did not work either. The predicate
+> above is the durable handle: it survives an edit above it, and it survives the pending rename of the
+> string being tested.
+
+It **warns**, it does not fail (`schema-lint` exits non-zero only on `failCount`), but
 the repo holds itself to `18 pass · 0 fail · 0 warnings`, so the two cannot both stand. Three call sites
 still teach the superseded form and are what a worker actually executes:
 [.claude/agents/builder.md](.claude/agents/builder.md) (the creation block and the `-C "$MAIN_REPO"`
@@ -448,14 +457,46 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
 > through Phase 8a — eight phases shipped while it said "Sprint 1 — foundation." **If you change the phase,
 > change this block in the same PR.**
 
-- **THE BINDING GATE CAN COMPLETE NOW — 2026-08-24.** `npm run check` is **29 of 29 with the sandbox armed**,
-  measured at the session root. It was 26 of 29 and the gate BLOCKed on its own oracle for every diff:
-  `test:skill-clamp` and `test:registration` built fixtures inside `.claude/agents/` and `.claude/hooks/`,
-  which the armed sandbox denies. Two individually-correct changes — arming the sandbox (#94) and
-  oracle-first ordering — collided, and nothing watched the seam. Fixed in `494c95b`, which also adds a
-  preloaded tripwire that turns the next collision into a red test. **One blocker remains:** `check:mc`
-  fails on `mission-control/test/stream.test.ts:249` (EADDRINUSE despite `port: 0`), deterministic, and
-  pre-existing. `.qa/verdicts/` is still empty — no gate run has yet completed end to end.
+- **THE BINDING GATE CAN COMPLETE NOW — 2026-08-24.** `npm run check` is **29 of 30 steps with the sandbox
+  armed**, measured at the session root. Derive the denominator, never quote it from memory:
+  `node -e "console.log(require('./package.json').scripts.check.split('&&').length)"` → **30**.
+  *Superseded 2026-08-24: this line read "29 of 29" and the P0 bullet below read "29 steps now". Both were
+  wrong in the same way, and the provenance is the point.* The builder who did the work recorded **"29 of 30
+  `check` steps pass; only `check:mc` fails"** and was right; the CEO synthesis that same day rendered it
+  "29 of 29" — dropping the one failing step out of the denominator, so a partial pass read as a clean
+  sweep — and *that* version is what propagated into this file and two handoffs. The worker measured
+  correctly; the orchestrator's summary lost it. This repo already concluded that **the orchestrator's brief
+  is a defect surface nobody reviews**; this is the second instance of it in one week.
+  **The tally is per-step, and `npm run check` cannot itself report it:** the script chains its 30 steps with
+  `&&` and `check:mc` is step 21, so one `npm run check` invocation aborts there and the final 9 steps
+  (`test:probe-readonly` through `test:sandbox`) never run. Read "29 of 30" as a per-step result, not as the
+  exit status of a single run.
+  Before the fix it was 26 by that same per-step tally, and the gate BLOCKed on its own oracle for every
+  diff: `test:skill-clamp` and `test:registration` built fixtures inside `.claude/agents/` and
+  `.claude/hooks/`, which the armed sandbox denies. Two individually-correct changes — arming the sandbox
+  (#94) and oracle-first ordering — collided, and nothing watched the seam. Fixed in `494c95b`, which also
+  adds a preloaded tripwire that turns the next collision into a red test. **One blocker remains — `check:mc`
+  — and it is not a mission-control defect; see the next bullet.** `.qa/verdicts/` is still empty: no gate
+  run has yet completed end to end.
+- **`check:mc`'s single failure is caused by the ARMED SANDBOX, not by mission-control — measured
+  2026-08-24.** Two cells at the session root, same commit, same deps, Bun 1.3.10 in both:
+  **sandboxed → 344 pass · 1 fail · exit 1** (`EADDRINUSE`, in the real-socket SSE test in
+  `mission-control/test/stream.test.ts`); **sandbox disabled → 345 pass · 0 fail · exit 0**, zero
+  `EADDRINUSE`. *This supersedes the reading that the failure was "deterministic and pre-existing" in
+  mission-control, and the 2026-08-25 handoff's hypothesis of "a leaked server from an earlier test in the
+  same file". Both are refuted by the second cell.* `grep -rn 'Bun.serve' mission-control` finds exactly
+  **one** server in the whole tree, it is stopped in a `finally`, and `port: 0` asks the kernel for an
+  ephemeral port and so cannot collide. The reported error carries **`errno: 0`**, where a genuine macOS
+  `EADDRINUSE` is errno **48** — a code synthesized by Bun, not one returned by the kernel. It is the
+  sandbox denying a loopback `bind()`, surfaced under a misleading name.
+  **Do NOT edit `stream.test.ts` to make this green.** It is a regression test for a real shipped bug that
+  was found by running it; taking away its real socket would leave it vacuous — precisely the defect class
+  this repo found and fixed last session.
+  **No network allowance can fix it either.** The sandbox's network model is an outbound domain proxy and
+  exposes **no setting for inbound or loopback binding** (Claude Code sandboxing documentation, accessed
+  2026-08-24 — <https://code.claude.com/docs/en/sandboxing>); consistent with that, the `sandbox` block in
+  `.claude/settings.json` carries only `filesystem` and has no `network` key at all. Fuller write-up:
+  [SANDBOX.md](docs/03-system-design/SANDBOX.md).
 - **The sandbox deny-set is PER SESSION ROOT, and this matters more than it sounds.** `.claude/hooks`,
   `.claude/skills` and `.claude/workflows` are denied at the session root and WRITABLE in a nested worktree.
   It hid half a finding three separate times on 2026-08-24 and produced four false "regressions". **Measure
@@ -464,9 +505,20 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   `.claude/agents/**`, `.claude/commands/**` and `.mcp.json`. Adding those paths to `allowWrite` does not
   lift it: `**/.worktrees/**` already matches the refused path and it was refused anyway. That closes
   SANDBOX.md's two open acceptance questions. Escalation is required for that one command.
-- **Known contradiction, deliberate and visible:** `.claude/agents/builder.md` and `designer.md` still teach
-  the superseded worktree command as Step 1, and `schema-lint.js:1068` still REQUIRES it — `lint:agents` is
-  green only because they do. Both irreversible tier. Required follow-up with an exit criterion in
+- **Known contradiction, deliberate and visible — and this is the state on `main` as of 2026-08-24.**
+  `.claude/agents/builder.md` and `designer.md` still teach the superseded worktree command as Step 1, and
+  `schema-lint.js` still REQUIRES it: the rule warns when an agent that writes app code declares
+  `isolation: worktree` and its body lacks the worktree-creation block, so `lint:agents` is green only
+  because those bodies still carry it. Find it by what it tests —
+  `grep -n "fm.isolation === 'worktree'" .claude/hooks/schema-lint.js`.
+  *Superseded 2026-08-24: this bullet pinned `schema-lint.js:1068`. That line is now
+  `if (fm.skills !== undefined) {` — the pin had rotted, in the same file that warns prose line numbers rot.
+  It is deliberately **not** replaced with the current number, because a corrected pin rots on the next edit
+  above it.*
+  Both irreversible tier. **A change that would resolve this contradiction is in flight in this session and
+  has NOT landed on `main`** — it moves the agent bodies and the lint predicate together to the
+  `PROJECT_ROOT` form. Do not read this bullet as resolved until someone reconciles it against `main` and
+  says so here. Required follow-up with an exit criterion in
   [the handoff](docs/08-agents_work/handoffs/2026-08-25-after-the-gate-ran.md).
 - **Where we are:** Phases 1–7 complete · **Phase 8a complete** · **8b (Dispatch) BUILT 2026-08-16 against
   `agentvibe` as its only target** — the loop is end to end (the server enqueues to a queue file, a
@@ -481,7 +533,8 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   nine branches in one train, the first time `main` had moved since before 2026-08-20. What landed: the
   PR-route gate **blocks** and posts a check-run signed by `GITHUB_TOKEN` with the author grep deleted;
   `qa.js` runs a deterministic oracle before any panel agent is dispatched; credential `denyRead` covers
-  the CLI credential stores; `test:tier-gate` is in `npm run check` (29 steps now); and
+  the CLI credential stores; `test:tier-gate` is in `npm run check` (**30** steps now — this read "29"
+  until 2026-08-24, the same dropped-step error corrected in the gate bullet above); and
   `war-room/bin/PROJECT_NAME.tmpl` no longer seeds an unreviewed model-resolved merge into every generated
   project. **Only P0 item 6 remains** — `claim-judge-external` (Codex), still correctly deferred: bug
   #19945 returns exit 0 with empty stdout when detached from a TTY, which is exactly how a resolver runs.
@@ -564,10 +617,26 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   implemented in the binary.
 - **Blockers:** none blocking. `--dangerously-skip-permissions` was removed by #47 — the **39** allow/deny
   rules in `settings.json` (29 allow · 10 deny) are live now, so a command that used to pass silently may
-  prompt. This block said 26 until 2026-08-16. Founder decisions pending: **whether to merge PR #77** (it
-  binds the QA verdict to a diff hash, and merging it means every irreversible PR needs a real local `qa.js`
-  run — it already refused its own author's PR, which is the mechanism working); whether to arm the sandbox;
-  the three unresolvable judge claims above; and the credential scopes for `instrument`/`operator`.
+  prompt. This block said 26 until 2026-08-16.
+  **Founder decisions — of the four this bullet listed, TWO were already discharged. Checked 2026-08-24.**
+  *Superseded: all four were listed as "pending", so this told the founder they owed decisions already made.
+  The list is corrected in place rather than deleted, because which entries went stale is the useful part.*
+  - ~~whether to merge PR #77~~ — **DISCHARGED; the work is live.** `scripts/verdict.mjs` exists and
+    `package.json` exposes it as `verdict`; `qa-lead-pass.yml` runs `node scripts/verdict.mjs check --json`
+    in a step that `exit 1`s on a failing verdict, so it is on the **blocking** path, not advisory. The
+    binding is `subject = sha256(diff)`. Note the bounded guarantee the workflow states about itself: the
+    verdict record is **hash-bound, not signed** — anyone with repo-write access can author a
+    `.qa/verdicts/*.json`. Hash-binding stops an *inherited* verdict, not a *forged* one.
+  - ~~whether to arm the sandbox~~ — **DISCHARGED.** `sandbox.enabled: true` and `failIfUnavailable: true`,
+    armed by #94, pinned by `npm run test:sandbox` (7 tests, exit 0), which fails if either is flipped back.
+  - **STILL OPEN — the three unresolvable judge claims.** They are `c-sessionstart-injection-unverified`,
+    `c-read-only-binding-unverified` and `c-runtime-nested-spawn`, each resolving `unresolved: no judgment
+    recorded`; naming them beats counting them. Not unexamined, though: the founder waiver of 2026-08-20 on
+    `c-shadow-window-open` reasoned about them, recorded that it *stays 5*, and set an exit condition
+    running to **2026-11-17** — one real sourced claim arising from non-harness work, plus a judge panel
+    with two distinct model families.
+  - **STILL OPEN — the credential scopes for `instrument`/`operator`**, which remain uncreated: 18 files in
+    `.claude/agents/` and neither is among them. Reasoning in `docs/STATUS.md` item 3.
 - **Before you trust any local measurement:** `cd mission-control && bun install`. Without it three
   mission-control claims look like regressions when they are only missing dependencies. Measure from a clean
   checkout, never a stale working tree. `c-mission-control-cold-start` is a **wall-clock** check (9.5s against
