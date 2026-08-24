@@ -982,7 +982,8 @@ that cannot refuse, and the repo has no evidence which it is.
 
 Three lenses declare `independent: true` with `model_families: [anthropic, openai]`: `security`
 (`review-lenses.yml:44-45`), `adversarial` (`:57-58`), `evidence` (`:83-84`). The predicate is real
-and shared — `independenceIssue(families, 2, …)` at `schema-lint.js:597`, the same function that
+and shared — `independenceIssue(families, 2, …)` at `schema-lint.js:1472` (verified 2026-08-24;
+`schema-lint.js:597` was cited until then and is return-contract parsing, not this call site), the same function that
 governs `risk: high` claim panels (`claims.js:425-430`, `:499`), deliberately so, "because two
 implementations of an independence rule will disagree." **And every review in this repo's history has
 been single-model.**
