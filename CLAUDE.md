@@ -404,7 +404,9 @@ asks for the block this section supersedes. **Find the rule by what it tests, ne
 > returns nothing** — the source holds the regex-escaped form, not the literal — so the recovery
 > instruction inside the very sentence forbidding line-number pins did not work either. The predicate
 > above is the durable handle: it survives an edit above it, and it survives the pending rename of the
-> string being tested. It **warns**, it does not fail (`schema-lint` exits non-zero only on `failCount`), but
+> string being tested.
+
+It **warns**, it does not fail (`schema-lint` exits non-zero only on `failCount`), but
 the repo holds itself to `18 pass · 0 fail · 0 warnings`, so the two cannot both stand. Three call sites
 still teach the superseded form and are what a worker actually executes:
 [.claude/agents/builder.md](.claude/agents/builder.md) (the creation block and the `-C "$MAIN_REPO"`
