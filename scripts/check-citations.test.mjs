@@ -502,6 +502,79 @@ test('a tree with no markdown at all fails as vacuous rather than passing', () =
   assert.match(res.err, /no tracked \.md files/);
 });
 
+test('an arrow is a flow connector, not a clause — the call-chain shape', () => {
+  // F9. `` `newproject` → `init-from-template.sh:124` → `install-war-room.sh` `` says the first
+  // LEADS TO the second, not that the first is AT the second. TARGET-ARCHITECTURE.md:148.
+  const root = fixture({
+    'docs/a.md': '`someCommand` → `target.js:19` → `elsewhere`.\n',
+    'src/target.js': TARGET,
+  });
+  const res = check(root);
+  assert.deepEqual(kinds(res), []);
+  assert.equal(res.stats.anchors_checked, 0);
+});
+
+// ── path-unresolved: "gone" is usually wrong ─────────────────────────────────
+
+test('a renamed file gets a did-you-mean, not a bare "no such file"', () => {
+  // F11. `ENFORCEMENT-DIAGNOSTIC.md` is really docs/06-codebase/2026-08-11-ENFORCEMENT-DIAGNOSTIC.md.
+  const root = fixture({
+    'docs/a.md': 'See `NOTES.md:1` for why.\n',
+    'docs/2026-08-11-NOTES.md': 'a\n',
+  });
+  const res = check(root);
+  assert.deepEqual(kinds(res), ['path-unresolved']);
+  assert.equal(res.findings[0].suggestion, 'docs/2026-08-11-NOTES.md');
+  assert.match(res.findings[0].message, /Did you mean `docs\/2026-08-11-NOTES\.md`\?/);
+});
+
+test('an ambiguous did-you-mean is withheld — a wrong suggestion gets acted on', () => {
+  const root = fixture({
+    'docs/a.md': 'See `NOTES.md:1` for why.\n',
+    'docs/2026-08-11-NOTES.md': 'a\n',
+    'docs/2026-08-12-NOTES.md': 'a\n',
+  });
+  const res = check(root);
+  assert.deepEqual(kinds(res), ['path-unresolved']);
+  assert.equal(res.findings[0].suggestion, undefined);
+  assert.doesNotMatch(res.findings[0].message, /Did you mean/);
+});
+
+test('a bare basename does not report a phantom directory prefix', () => {
+  // `indexOf('/')` is -1 without a slash, and slice(0,-1) chopped the last character: the first
+  // draft told the reader `ENFORCEMENT-DIAGNOSTIC.m/` was not a directory of this repository.
+  const root = fixture({
+    'docs/a.md': 'See `nosuchfile.js:1` for why.\n',
+    'src/target.js': TARGET,
+  });
+  const res = check(root);
+  assert.doesNotMatch(res.findings[0].message, /is not a directory of this repository/);
+});
+
+test('--external-prefix marks a cross-repo pointer as unchecked, not dead', () => {
+  const root = fixture({
+    'docs/a.md': 'See `otherproj/.claude/agents/x.md:6-10` there.\n',
+    'src/target.js': TARGET,
+  });
+  assert.deepEqual(kinds(check(root)), ['path-unresolved'], 'unmarked, it is a finding');
+
+  const marked = check(root, ['--external-prefix', 'otherproj']);
+  assert.deepEqual(kinds(marked), [], 'marked, it is not');
+  assert.equal(marked.unchecked[0].reason, 'external');
+  // Still visible: excused from the finding, never dropped from the report.
+  assert.equal(marked.unchecked.length, 1);
+});
+
+test('--external-prefix silences only the prefix it names', () => {
+  const root = fixture({
+    'docs/a.md': 'See `otherproj/x.md:1` and `thirdproj/y.md:1`.\n',
+    'src/target.js': TARGET,
+  });
+  const res = check(root, ['--external-prefix', 'otherproj']);
+  assert.deepEqual(kinds(res), ['path-unresolved']);
+  assert.match(res.findings[0].message, /thirdproj/);
+});
+
 // ── reporting: coverage is never omitted, resolution is never hidden ─────────
 
 test('an ambiguous locator is identifiable, not merely counted', () => {
@@ -592,14 +665,39 @@ test('a real git checkout resolves through git ls-files, and ignores untracked f
 
 // ── the harvester is the ledger's, not a second copy ──────────────────────────
 
-test('the harvester is imported from ledger.mjs rather than reimplemented', () => {
-  const src = fs.readFileSync(SCRIPT, 'utf8');
-  assert.match(
-    src,
-    /import\s*\{\s*proseCodeSpans\s*\}\s*from\s*'\.\/ledger\.mjs'/,
-    'two implementations of "what counts as prose here" disagree on the first unclosed fence',
-  );
-  assert.doesNotMatch(src, /function\s+proseCodeSpans/, 'that is the copy, not the import');
+test("the checker's notion of prose AGREES with ledger.mjs's, on the input that separates them", async () => {
+  // This replaced a test that regex-matched the import statement in the source. Per
+  // .claude/skills/writing-good-tests/SKILL.md — "Asserting that a script, skill, or config
+  // contains an exact line proves only that the source is the source... 'The source text changed'
+  // → run the artifact and assert its effects" — that was a change detector, and it would have
+  // failed on `import * as ledger` while the constraint still held.
+  //
+  // The constraint worth testing is not "is it an import" but "do the two agree". A copy that
+  // never drifts is harmless; a copy that drifts is the whole risk. So: an UNCLOSED FENCE, the
+  // input where any reimplementation diverges first, with the expected value derived from
+  // ledger.mjs rather than from the code under test.
+  const doc = [
+    '---', 'title: fm', 'x: `frontmatter.js:900`', '---', '',
+    'Prose cites `target.js:900` here.', '',
+    '```', '`fenced.js:900` is an example, not a citation.', '',
+    'and the fence is never closed, so `after.js:900` stays opaque too.', '',
+  ].join('\n');
+
+  const { proseCodeSpans } = await import('./ledger.mjs');
+  const expected = proseCodeSpans(doc)
+    .map((s) => s.code)
+    .filter((c) => /^[A-Za-z0-9._][A-Za-z0-9._/-]*\.[A-Za-z][A-Za-z0-9]{0,4}:\d+(-\d+)?$/.test(c));
+  assert.deepEqual(expected, ['target.js:900'], 'ledger sees exactly one locator in this document');
+
+  const root = fixture({
+    'docs/a.md': doc,
+    'src/target.js': TARGET, 'src/fenced.js': TARGET,
+    'src/after.js': TARGET, 'src/frontmatter.js': TARGET,
+  });
+  const res = check(root);
+  assert.equal(res.stats.locators, expected.length, 'the checker must harvest what ledger harvests');
+  assert.deepEqual(kinds(res), ['line-beyond-eof']);
+  assert.equal(res.findings[0].target, 'src/target.js', 'and it must be the one ledger named');
 });
 
 test('importing ledger.mjs does not run its CLI', () => {

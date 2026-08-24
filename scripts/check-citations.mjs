@@ -24,7 +24,10 @@
  * It checks two things, and they are reported separately because their strengths differ:
  *
  *   EXISTENCE (deterministic, no false positives by construction)
- *     path-unresolved   the cited file resolves to no tracked file
+ *     path-unresolved   the cited file resolves to no tracked file. Carries a did-you-mean when
+ *                       exactly one tracked basename ends with the cited one — a rename such as
+ *                       `ENFORCEMENT-DIAGNOSTIC.md` → `2026-08-11-ENFORCEMENT-DIAGNOSTIC.md`
+ *                       reads as "deleted" without it, and a reader told "gone" stops looking
  *     line-zero         `foo.js:0` — there is no line 0
  *     range-reversed    `foo.js:40-20`
  *     line-beyond-eof   `foo.js:9000` in a 500-line file
@@ -71,6 +74,16 @@
  *     · a BARE comma is NOT a list separator — `` (`collectors/fleet.ts:14`, `windowUsage`) `` is
  *       a parenthetical citation, and excluding every comma re-broke the first case. What marks a
  *       list is the conjunction.
+ *
+ *   THE CROSS-REFERENCE CLASS IS NARROWED BY FOUR SEPARATE RULES, NOT ONE, AND THERE IS NO GENERAL
+ *   TEST FOR IT. "This span is a see-also, not a citation" is a judgement, and each rule below
+ *   catches one SHAPE of it — path-like (`plan.js`), directory (`mission-control`), conjunction
+ *   (`, and`), arrow (`→`). A cross-reference wearing none of those four shapes still reports.
+ *   Do not read the list as coverage of the class; read it as four measured subclasses.
+ *   Measured after all four: of 75 drift findings, 1 has its symbol absent from the target
+ *   entirely — `.env.example` at 2026-08-13-rethink-board.md:48 — and that one is a TRUE positive
+ *   (line 163 of pre-tool-use.sh is unrelated; the string appears nowhere in the file). An earlier
+ *   draft excluded dotted filenames to suppress it, which would have deleted a real finding.
  *
  *   The remaining known false-positive mode: citing a range INSIDE a definition by its behaviour,
  *   where the symbol itself sits just above the range. `verifyFinding` at `qa.js:324-326` is the
@@ -144,6 +157,10 @@
  *                         (default 30)
  *     --no-anchors        existence class only
  *     --show              print the content at each flagged range
+ *     --external-prefix P a path prefix belonging to another repository (repeatable). Locators
+ *                         under it are reported as `unchecked:external` instead of dead. Empty by
+ *                         default: nothing is excused unless someone names it, because guessing
+ *                         that a prefix "looks foreign" would turn a typo into a silent pass.
  */
 
 import fs from 'node:fs';
@@ -165,6 +182,15 @@ const MIN_LOCATORS = Number(optOf('--min-locators', '400'));
 const ANCHOR_SLACK = Number(optOf('--anchor-slack', '10'));
 const ANCHOR_GAP = Number(optOf('--anchor-gap', '30'));
 const ANCHORS = !argv.includes('--no-anchors');
+/**
+ * Path prefixes belonging to OTHER repositories, declared explicitly and repeatable. Empty by
+ * default, so nothing is ever silenced by accident: a locator is excused from the dead-path check
+ * only because someone named its prefix, never because the checker guessed it looked foreign.
+ * Guessing here would turn a typo (`scriptz/foo.js:1`) into a silent pass.
+ */
+const EXTERNAL_PREFIXES = argv.reduce(
+  (acc, a, i) => (a === '--external-prefix' && argv[i + 1] ? [...acc, argv[i + 1]] : acc), [],
+);
 const STRICT = argv.includes('--strict');
 const JSON_OUT = argv.includes('--json');
 const SHOW = argv.includes('--show');
@@ -260,6 +286,24 @@ function resolvePath(cited) {
   return { how: 'unresolved' };
 }
 
+/**
+ * The one tracked file a dead locator most plausibly meant, or null.
+ *
+ * Only a UNIQUE basename-suffix match counts — `ENFORCEMENT-DIAGNOSTIC.md` resolves to
+ * `docs/06-codebase/2026-08-11-ENFORCEMENT-DIAGNOSTIC.md` because exactly one tracked basename
+ * ends with it. Two candidates means no suggestion: a wrong "did you mean" is worse than none,
+ * because it will be acted on.
+ */
+function suggestFor(cited) {
+  const base = cited.slice(cited.lastIndexOf('/') + 1);
+  if (base.length < 4) return null;
+  const hits = tracked.filter((f) => {
+    const b = path.basename(f);
+    return b !== base && (b.endsWith(`-${base}`) || b.endsWith(`.${base}`) || b.endsWith(`_${base}`));
+  });
+  return hits.length === 1 ? hits[0] : null;
+}
+
 const lineCache = new Map();
 /**
  * The lines of a file, with the trailing empty element dropped.
@@ -292,8 +336,13 @@ const record = (kind, where, message, extra = {}) =>
  * is followed by `*`, not by whitespace — so a bare `/[.;:!?]\s/` saw no boundary and paired an
  * anchor from the PREVIOUS sentence with this sentence's locator. Reproduced at
  * 2026-08-13-rethink-board.md:94, gap `" is decorative.** "`.
+ *
+ * AN ARROW IS A FLOW CONNECTOR, NOT A CLAUSE. `` `newproject` → `init-from-template.sh:124` →
+ * `install-war-room.sh` `` is a call chain: it says the first leads to the second, not that the
+ * first is AT the second. `newproject` appears nowhere in that file, so it reported as drift.
+ * TARGET-ARCHITECTURE.md:148.
  */
-const CLAUSE_BREAK = /[.;:!?][*_`)\]]*\s|\|/;
+const CLAUSE_BREAK = /[.;:!?][*_`)\]]*\s|\||→|⇒|->/;
 
 /** Two spans sit in one clause when the gap is short and holds no boundary. */
 const sameClause = (gap) => gap.length <= ANCHOR_GAP && !CLAUSE_BREAK.test(gap);
@@ -436,10 +485,31 @@ for (const doc of proseFiles) {
         continue;
       }
       if (res.how === 'unresolved') {
+        // `indexOf` returns -1 with no slash, and slice(0,-1) would silently chop the last
+        // character — which is how `ENFORCEMENT-DIAGNOSTIC.md` first reported itself as living in
+        // a directory called `ENFORCEMENT-DIAGNOSTIC.m/`.
+        const slash = citedPath.indexOf('/');
+        const prefix = slash > 0 ? citedPath.slice(0, slash) : '';
+        if (prefix && EXTERNAL_PREFIXES.includes(prefix)) {
+          unchecked.push({ where, locator, cited: citedPath, reason: 'external', candidates: [] });
+          continue;
+        }
         stats.unresolved++;
+        // DID YOU MEAN. "Matches no tracked file" is literally true and reads as "deleted", which
+        // is wrong twice as often as it is right here: `ENFORCEMENT-DIAGNOSTIC.md` is really
+        // `docs/06-codebase/2026-08-11-ENFORCEMENT-DIAGNOSTIC.md`, a date-prefixed rename, and the
+        // checker already holds the data to say so. A reader who is told "gone" stops looking.
+        const near = suggestFor(citedPath);
         record('path-unresolved', where,
           `\`${locator}\` names \`${citedPath}\`, which matches no tracked file — not as a path, ` +
-          'not as a unique basename, and not as a unique path suffix.');
+          'not as a unique basename, and not as a unique path suffix.' +
+          (near ? ` Did you mean \`${near}\`?` : '') +
+          (prefix && !topLevelDirs.has(prefix)
+            ? ` \`${prefix}/\` is not a directory of this repository; if this points into another ` +
+              'project, pass --external-prefix ' + prefix + ' to mark it rather than have it ' +
+              'reported forever.'
+            : ''),
+          near ? { suggestion: near } : {});
         continue;
       }
       stats.resolved[res.how]++;
@@ -560,11 +630,12 @@ for (const f of drift.sort((a, b) => (b.distance ?? Infinity) - (a.distance ?? I
   if (SHOW) { const e = excerpt(f); if (e) console.log(e); }
 }
 for (const u of unchecked) {
-  console.log(
-    `· [unchecked:${u.reason}] ${u.where}: \`${u.locator}\` — \`${u.cited}\` matches ` +
-    `${u.candidates.length} tracked files (${u.candidates.join(', ')}). Checked against none of ` +
-    'them: guessing which was meant is how a checker invents a finding.'
-  );
+  const why = u.reason === 'external'
+    ? `\`${u.cited}\` was declared to live in another repository (--external-prefix). Nothing ` +
+      'here can confirm or deny it; it is reported so it stays visible rather than silently clean.'
+    : `\`${u.cited}\` matches ${u.candidates.length} tracked files (${u.candidates.join(', ')}). ` +
+      'Checked against none of them: guessing which was meant is how a checker invents a finding.';
+  console.log(`· [unchecked:${u.reason}] ${u.where}: \`${u.locator}\` — ${why}`);
 }
 for (const f of failures) console.error(`✗ ${f}`);
 

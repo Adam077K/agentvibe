@@ -13,11 +13,13 @@ guard rather than copied. Two classes: EXISTENCE (deterministic; finds 2 dead pa
 line numbers across 815 locators — that result is the finding, not reassurance) and DRIFT
 (clause-anchored heuristic; 76 findings over 209 anchored citations).
 
-**Round 2 after an independent FAIL (11 findings).** Fixed: EOF off-by-one from `split('\n')`
-(every real file read one line long, and the fixture had no trailing newline so it could not
-reproduce it); anchors now read BOTH sides; clause breaks hidden by `**bold.**`; directory names
-and list continuations excluded as anchors; word-bounded token matching. Every finding now names
-the file it opened and flags basename inference, ambiguous locators are listed rather than merely
-counted, and the unqualified pass message is gone — coverage prints on every path, because only
-15% of locators resolve exactly and only 26% get a drift check at all. 47 tests; 28 of 30 `check`
-steps exit 0 (`test:skill-clamp` EPERM in-sandbox, `check:mc` needs `bun install` — both pre-existing).
+**Rounds 2-3 after an independent FAIL — all 11 findings settled.** Fixed: EOF off-by-one from
+`split('\n')` (every real file read one line long; the fixture had no trailing newline so it could
+not reproduce it); anchors read BOTH sides; clause breaks hidden by `**bold.**`; directory names,
+list continuations and arrows excluded as anchors; word-bounded matching. Findings name the file
+they opened and flag basename inference; ambiguous and cross-repo locators are listed, not merely
+counted; dead paths carry a did-you-mean; the unqualified pass is gone — coverage prints on every
+path, since only 15% of locators resolve exactly and 25% get a drift check. The source-text test
+was replaced by a differential one against `ledger.mjs` per `writing-good-tests`. 53 tests, three
+mutation-checked; 28 of 30 `check` steps exit 0 (`test:skill-clamp` EPERM in-sandbox, `check:mc`
+needs `bun install` — both pre-existing and untouched).
