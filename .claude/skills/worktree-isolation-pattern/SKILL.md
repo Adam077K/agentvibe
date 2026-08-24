@@ -9,34 +9,35 @@ risk: low
 
 # Worktree Isolation Pattern
 
-> ## ⚠ SUPERSEDED 2026-08-24 — the `$MAIN_REPO` anchor in this file is wrong
+> ## Corrected 2026-08-24 — the anchor moved from `$MAIN_REPO` to `$PROJECT_ROOT`
 >
-> Every `$MAIN_REPO/.worktrees/<slug>` path below is superseded by
-> **`$(git rev-parse --show-toplevel)/.worktrees/<slug>`**. `CLAUDE.md` § *Git Worktree Protocol* is the
-> current instruction; read it before following any step here.
+> This file taught `$MAIN_REPO/.worktrees/<slug>`, where `MAIN_REPO=$(git worktree list | head -1 | awk
+> '{print $1}')`. It is now **`$(git rev-parse --show-toplevel)/.worktrees/<slug>`** throughout, matching
+> `CLAUDE.md` § *Git Worktree Protocol*, which is the authority if the two ever disagree again.
 >
-> **Why:** an agent's `Write`/`Edit` are scoped to its **session project root**, and in this harness that
-> root is itself a worktree — so `$MAIN_REPO` is *above* it and every child worktree this file produces
-> lands where its own tools are refused. Measured 2026-08-24: the old path is refused by
-> `.claude/hooks/pre-tool-use.sh` by name; the corrected path is allowed.
+> **Why the old anchor was wrong:** an agent's `Write`/`Edit` are scoped to its **session project root**,
+> and in this harness that root is itself a worktree — so `$MAIN_REPO` is *above* it and every child
+> worktree this file produced landed where its own tools are refused. Measured 2026-08-24: the old path is
+> refused by `.claude/hooks/pre-tool-use.sh` by name; the corrected path is allowed.
 >
-> Step 3's *"Never run `git worktree add` from inside a worktree path. Always reference `$MAIN_REPO`"* is
-> also superseded, and was the wrong rule for the right worry: what makes the command safe is the
-> **absolute path**, not where you run it from or which flag you pass.
+> Step 3 used to close with *"Never run `git worktree add` from inside a worktree path. Always reference
+> `$MAIN_REPO`."* That was the wrong rule for the right worry: what makes the command safe is the
+> **absolute path**, not where you run it from or which flag you pass. Running it from inside a worktree is
+> the normal case here.
 >
-> **Also read there, and not fixed by either path:** under the armed sandbox `git worktree add` cannot
-> complete at *any* location — the checkout must write `.claude/agents/**`, `.claude/commands/**` and
-> `.mcp.json`, which the runtime refuses. That step needs escalation.
+> **Not fixed by either path:** under the armed sandbox `git worktree add` cannot complete at *any*
+> location — the checkout must write `.claude/agents/**`, `.claude/commands/**` and `.mcp.json`, which the
+> runtime refuses. Exit 128, 32 denials, branch left behind, no worktree. That step needs escalation, and
+> hitting the wall is not the running agent's mistake.
 >
-> This file is left standing rather than rewritten because `.claude/hooks/schema-lint.js` still
-> requires the literal `MAIN_REPO=$(git worktree list` block in `isolation: worktree` agent bodies. The
-> skill, the two agent files that teach it, and the lint predicate move together in one follow-up PR.
+> The frontmatter `description` above still says *"detect-or-create from main-repo-root"*. It is stale for
+> the same reason the body was, and is left for a follow-up: it is copied verbatim into
+> `.claude/skills/MANIFEST.json`, so correcting it means regenerating that file too.
 
 ## Quick reference
 
-> Every code worker creates a fresh worktree under `MAIN_REPO/.worktrees/<slug>` — **superseded, see
-> above: anchor at `$(git rev-parse --show-toplevel)`.** Never edit main repo. Never edit another worker's
-> worktree.
+> Every code worker creates a fresh worktree under `$(git rev-parse --show-toplevel)/.worktrees/<slug>` —
+> its own toplevel, never the main repo. Never edit the main repo. Never edit another worker's worktree.
 
 ## When to use
 
@@ -52,7 +53,8 @@ risk: low
 
 ## Step 1: Detect current context
 
-Run this before any `git worktree add` command. You may already be inside a worktree.
+Run this before any `git worktree add` command. You are probably already inside a worktree — that is the
+normal case in this harness, not a problem to correct.
 
 ```bash
 git worktree list
@@ -60,36 +62,42 @@ git worktree list
 # /Users/adamks/VibeCoding/Agentvibe                      abc1234 [main]
 # /Users/adamks/VibeCoding/Agentvibe/.worktrees/ceo-1-xxx  def5678 [ceo-1-xxx]
 
-# The FIRST line is always the main repo root
-# If there is more than one line, you are inside a worktree
+# The FIRST line is the main repo root. It is NOT your anchor — see Step 2.
 pwd  # confirm current directory
 ```
 
-## Step 2: Get the main repo root
+## Step 2: Get your own toplevel
 
 ```bash
-MAIN_REPO=$(git worktree list | head -1 | awk '{print $1}')
-echo "Main repo: $MAIN_REPO"
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+echo "Project root: $PROJECT_ROOT"
 ```
 
-## Step 3: Create the task worktree from main repo root
+`--show-toplevel` returns the root of the worktree containing your cwd, which is the boundary your
+`Write`/`Edit` may reach. Run it from a cwd **inside** your session project root: run it from the main
+repository above your root and it returns *that* path, reproducing the defect this correction removed.
 
-> **Superseded 2026-08-24.** Anchor at `PROJECT_ROOT=$(git rev-parse --show-toplevel)`, not `$MAIN_REPO`,
-> and expect this command to need sandbox escalation. See the banner at the top of this file.
+## Step 3: Create the task worktree under your own toplevel
 
-Never run `git worktree add` from inside a worktree path. Always reference `$MAIN_REPO`.
+The absolute path is what makes this safe. No `-C` flag is needed, and being inside a worktree is fine.
 
 ```bash
 TASK_SLUG="scan-rate-limit"  # matches Linear ticket slug
 BRANCH_PREFIX="feat"          # or "fix" or "chore"
 
-git -C "$MAIN_REPO" worktree add \
-  "$MAIN_REPO/.worktrees/$TASK_SLUG" \
+git worktree add \
+  "$PROJECT_ROOT/.worktrees/$TASK_SLUG" \
   -b "$BRANCH_PREFIX/$TASK_SLUG"
 
 # Verify
-ls "$MAIN_REPO/.worktrees/$TASK_SLUG"
+ls "$PROJECT_ROOT/.worktrees/$TASK_SLUG"
 ```
+
+> **Expect exit 128 under the armed sandbox.** Measured 2026-08-24 at this corrected path: 32 ×
+> `Operation not permitted` across `.claude/agents/**`, `.claude/commands/**` and `.mcp.json`, then a
+> failed index reset. No worktree survives; the branch is left behind because `git worktree add` creates
+> it before checking out. Escalate that one command (create with the sandbox disabled) and work inside the
+> result normally. A partial tree from this failure is a known limit, not the agent's own broken work.
 
 ## Branch naming
 
@@ -104,10 +112,10 @@ Slug format: lowercase, hyphens, matches the Linear ticket slug. Example: `feat/
 
 ## Step 4: Work in the task worktree
 
-All file reads and writes happen inside `$MAIN_REPO/.worktrees/$TASK_SLUG/`, not in the main repo.
+All file reads and writes happen inside `$PROJECT_ROOT/.worktrees/$TASK_SLUG/`, not in the main repo.
 
 ```bash
-cd "$MAIN_REPO/.worktrees/$TASK_SLUG"
+cd "$PROJECT_ROOT/.worktrees/$TASK_SLUG"
 
 # Now implement the task
 # Edit files, run type checks, etc.
@@ -171,13 +179,13 @@ Do NOT clean up the worktree yourself. CTO/QA-Lead needs to inspect it. Return:
 CTO or devops-engineer cleans the worktree after the PR is merged:
 
 ```bash
-git -C "$MAIN_REPO" worktree remove "$MAIN_REPO/.worktrees/$TASK_SLUG"
-git -C "$MAIN_REPO" branch -d "feat/$TASK_SLUG"
+git worktree remove "$PROJECT_ROOT/.worktrees/$TASK_SLUG"
+git branch -d "feat/$TASK_SLUG"
 ```
 
 ## .worktrees/ gitignore
 
-Confirm this line is in `$MAIN_REPO/.gitignore`:
+Confirm this line is in `$PROJECT_ROOT/.gitignore`:
 
 ```
 .worktrees/
@@ -213,7 +221,9 @@ Everything else (architectural mismatch, missing spec clarity, scope expansion) 
 
 ## Anti-patterns
 
-- Running `git worktree add` from inside a worktree path (creates nested worktree, confuses git)
+- Anchoring a child worktree at the main repo (`$MAIN_REPO/.worktrees/<slug>`) — it is above your session
+  project root, so your own `Write`/`Edit` are refused there. Running the command *from* inside a worktree
+  is fine; anchoring it outside your toplevel is not
 - Committing to `main` or another worker's branch
 - Using `git add -A` without reviewing the diff (can accidentally stage unrelated changes)
 - Cleaning the worktree before QA-Lead has reviewed it

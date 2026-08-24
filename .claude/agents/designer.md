@@ -61,11 +61,21 @@ written rule loses to the rule, and if the rule is wrong the rule gets changed f
 ### Step 1 — Create your worktree
 
 ```bash
-git worktree list
-MAIN_REPO=$(git worktree list | head -1 | awk '{print $1}')
-git -C "$MAIN_REPO" worktree add "$MAIN_REPO/.worktrees/[slug]" -b feat/[slug]
-cd "$MAIN_REPO/.worktrees/[slug]"
+# Anchor at YOUR OWN toplevel. Run from a cwd inside your session project root.
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+git worktree add "$PROJECT_ROOT/.worktrees/[slug]" -b feat/[slug]
+cd "$PROJECT_ROOT/.worktrees/[slug]"
 ```
+
+Never anchor a child worktree at the main repository. Your `Write`/`Edit` are scoped to your session
+project root, and the main repo is above it. The absolute path is what makes the command safe, not a `-C`
+flag.
+
+**This command exits 128 while the sandbox is armed, and that is not your mistake.** Measured 2026-08-24
+at the corrected path: 32 × `Operation not permitted` across `.claude/agents/**`, `.claude/commands/**`
+and `.mcp.json`, then a failed index reset. No worktree survives and the branch is left behind. Ask your
+dispatcher for a worktree created with the sandbox disabled, or for one that already exists — and do not
+report the partial tree as broken work of your own.
 
 ### Step 2 — Establish the standard first
 

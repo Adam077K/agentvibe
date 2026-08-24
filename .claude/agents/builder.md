@@ -63,13 +63,23 @@ Reading the surrounding tree costs context and buys nothing.
 ### Step 1 — Create your worktree
 
 ```bash
-git worktree list
-MAIN_REPO=$(git worktree list | head -1 | awk '{print $1}')
-git -C "$MAIN_REPO" worktree add "$MAIN_REPO/.worktrees/[slug]" -b feat/[slug]
-cd "$MAIN_REPO/.worktrees/[slug]"
+# Anchor at YOUR OWN toplevel. Run from a cwd inside your session project root.
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+git worktree add "$PROJECT_ROOT/.worktrees/[slug]" -b feat/[slug]
+cd "$PROJECT_ROOT/.worktrees/[slug]"
 ```
 
-Never run `git worktree add` from inside a worktree without `-C "$MAIN_REPO"`.
+Never anchor a child worktree at the main repository. Your `Write`/`Edit` are scoped to your session
+project root, and the main repo is above it — a tree placed there is one you cannot edit. What makes the
+command safe is the absolute path, not a `-C` flag. `git rev-parse --show-toplevel` returns your own root
+from any cwd inside it, and returns the main repo if you run it from above your root.
+
+**This command exits 128 while the sandbox is armed, and that is not your mistake.** Measured 2026-08-24
+at the corrected path: 32 × `Operation not permitted` across `.claude/agents/**`, `.claude/commands/**`
+and `.mcp.json`, then `fatal: Could not reset index file to revision 'HEAD'`. No worktree survives; the
+branch is left behind, because `git worktree add` creates the branch before it checks out. Ask your
+dispatcher for a worktree created with the sandbox disabled, or for one that already exists. Do not report
+the partial tree as broken work of your own, and do not work around the denial.
 
 ### Step 2 — Understand before replacing
 

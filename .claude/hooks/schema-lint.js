@@ -1183,9 +1183,18 @@ function lintFile(filePath) {
     // Worktree pattern: warn (not fail) when worker declares isolation:worktree
     // but body doesn't show the creation block. Some workers (review/audit/specialist)
     // legitimately work in-place even though isolation:worktree is declared as default.
-    if (writesAppCode && fm.isolation === 'worktree' && !/MAIN_REPO=\$\(git worktree list/.test(text)) {
+    //
+    // The literal changed on 2026-08-24, from `MAIN_REPO=$(git worktree list` to the
+    // `--show-toplevel` anchor. That old string was the superseded protocol: it anchors the child
+    // worktree at the MAIN REPOSITORY, which sits above the writing agent's session project root,
+    // so every tree it produced was one the agent's own Write/Edit could not reach. This rule
+    // REQUIRED that string, which is why `lint:agents` read 0 warnings while two engine files
+    // taught a command that cannot work — a linter demanding the defect it should catch. The
+    // predicate and the agent bodies move together or the count goes from 0 warnings to 2; see
+    // CLAUDE.md "Git Worktree Protocol" for the measurement.
+    if (writesAppCode && fm.isolation === 'worktree' && !/PROJECT_ROOT=\$\(git rev-parse --show-toplevel/.test(text)) {
       warnings++;
-      checks.push('worker: isolation=worktree but body lacks MAIN_REPO worktree-creation block — either include it or set isolation:none');
+      checks.push('worker: isolation=worktree but body lacks the PROJECT_ROOT=$(git rev-parse --show-toplevel) worktree-creation block — either include it or set isolation:none');
     }
     // Deviation Rules language — required for code-writing workers; warning for review/audit workers.
     // Accept any clear escalation/scope-boundary language as evidence the worker knows when to halt.
