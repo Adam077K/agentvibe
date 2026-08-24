@@ -24,6 +24,33 @@
 
 <!-- Entries below this line, most-recent first. -->
 
+## 2026-08-23 — P0 closed and merged; single-family review accepted as a risk, not satisfied
+
+**Context:** Nine branches had accumulated unmerged and `main` had not moved since before 2026-08-20. All
+five new ones declared `qa_verdict: PENDING`, so the gate refused every one of them. Recording PASS
+presumed a decision nobody had made: irreversible tier asks for 2-of-3 multi-judge and `risk: high`
+requires >=2 distinct model families, and there is no non-Anthropic model inside Claude Code.
+
+**Options considered:** accept single-family review and record PASS / hold everything until a Codex
+resolver exists (P0 item 6, deferred on real grounds) / record PASS only below irreversible tier.
+
+**Decision:** Founder accepted single-family review for harness self-edits. Verdicts were recorded by an
+agent that wrote none of the code, and each session file states the limitation as an **accepted risk, not
+a satisfied requirement**. All nine merged: `5b8e127` -> `413a029` -> `f5c62ba`.
+
+**Rationale:** the alternative was an indefinite freeze on a bar this runtime cannot clear. The reviews
+did real work regardless — 3 P1s and 5 P2s on code its authors had already called finished, every P1 a
+claim outrunning its mechanism ("unforgeable" check-run, "invokes" model families it does not, a
+"deterministic" oracle that is a model's report).
+
+**Also recorded, because it is checked rather than assumed:** branch protection exists and did **not**
+bind on the path used — the push reported "2 of 2 required status checks are expected" and succeeded
+having run none. Required checks govern the PR route only.
+
+**Reversibility:** hard-to-reverse (merged to `main`; revertible per-branch)
+**Owner:** ceo (`ceo-4-1787176363`)
+**Affects:** every agent that merges, reviews, or reads a QA verdict; qa-lead-pass.yml; warroom merge
+
 ## 2026-08-20 — The audit round: a pre-authorisation whose precondition never held, and three false findings caught by re-running
 
 **Context:** Seven lanes were commissioned to repair three known holes, map the reference graph, falsify the

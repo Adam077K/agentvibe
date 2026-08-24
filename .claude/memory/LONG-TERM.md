@@ -62,3 +62,23 @@
 - **The prompt-craft gate is live:** nothing under `.claude/agents/` is created, rewritten or deleted until a
   written prompt standard exists and the founder approves it. Two narrow capability-only exceptions were
   granted explicitly (`reviewer-readonly`, designer's `mcpServers`) and neither is a precedent.
+
+## 2026-08-24 — Standing recommendation the founder asked to be remembered
+
+- **Run one real venture task end to end before building more harness.** P0 closed and merged
+  2026-08-23 (`5b8e127` -> `f5c62ba`, nine branches). The argument in one line: this harness has been
+  tested exhaustively against exactly one subject — itself — and keeps finding real defects there. That
+  is evidence the machine works and none that it is useful. 45+ session files, zero customer-facing work
+  ever run through it. `STATUS.md` has listed it next-in-order for several cycles; CLAUDE.md records it
+  as stop condition 6, *known and accepted*.
+  **Founder position 2026-08-24: not yet.** Commissioned a re-think of whether the ecosystem is
+  over-restricted first. Raise this once per session when P-work is planned, with the current session
+  count, then build whatever was chosen. Do not re-litigate.
+- **The founder's suspicion, in their words:** more PRs, evals and checks drive token consumption "much,
+  much higher" while output is "no better" than a leaner process. They want the gates, guidelines, QA and
+  merge ceremony re-examined before more is layered on. Treat this as an open question with real evidence
+  on both sides, not a mandate to strip controls — the same ceremony caught a path traversal, eleven SSRF
+  bypasses and an RCE path in work already called finished.
+- **The session memory directory is unwritable from an agent turn.** `~/.claude/projects/.../memory/` is
+  refused by both the hook and the sandbox (probed 2026-08-24). Cross-session facts go here and in
+  `DECISIONS.md`, which is the repo's own mechanism anyway.

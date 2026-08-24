@@ -1,4 +1,4 @@
-# Where we stand — 16 August 2026
+# Where we stand — 24 August 2026
 
 Living status. Replaces nothing; read it before starting, and correct it when it goes stale.
 
@@ -10,8 +10,19 @@ The enforcement layer works now. Three sessions ago it did not — the safety ho
 had never refused anything, and the permission model was inert. All three are fixed and each one is pinned by
 a test that fails if it regresses.
 
-**The system still has not done any venture work.** Every one of the 44 session files is infrastructure. That
-remains the largest open item and no amount of further specification shortens it.
+**P0 is closed and merged.** On 2026-08-23 `main` moved `5b8e127` -> `f5c62ba` — nine branches in one
+train, the first time it had moved since before 2026-08-20. The gate now binds a verdict to the diff it
+reviewed, the author-written PASS grep is gone, the deterministic suite runs before any review agent is
+dispatched, and the launcher template no longer seeds an unreviewed merge into generated projects. Only
+P0 item 6 remains (the Codex second-family resolver, correctly deferred).
+
+**The system still has not done any venture work.** Every one of the **105** session files is
+infrastructure. That remains the largest open item and no amount of further specification shortens it —
+the count has more than doubled since this line first said 44.
+
+**Open, and being examined before more is built:** whether the ecosystem is over-restricted. Two agents
+were commissioned 2026-08-24 to weigh what the gates, checks, tiers and review rounds cost against what
+they have actually caught. See `docs/08-agents_work/handoffs/2026-08-24-continue-the-build.md` §4.
 
 ---
 
@@ -111,8 +122,11 @@ built it.
 
 ## Next, in order
 
+0. **Decide whether this is over-built** — the 2026-08-24 review. Acting on it, including changing the
+   plan or the system, is in scope. It comes before the items below by founder decision.
 1. **One real venture task, end to end** — price something, build the page, promote it, test a payment, read
    the result back. Both boards call this the experiment that settles whether seven is the right number.
+   Deferred 2026-08-24 pending item 0; recorded so the deferral stays a choice.
 2. **The prompt-craft deep dive**, which unblocks the roster migration (**18** files → 7; `reviewer-readonly.md` landed in #47).
 3. **Five of six MCP servers do not exist** — billing, analytics, deploy, DB admin, payments. This is the real
    distance between the specification and a working system.
