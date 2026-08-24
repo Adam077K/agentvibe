@@ -78,9 +78,19 @@ source read is a fallback and must be labelled as one.
 
 ### Step 3 — Apply each lens independently
 
-Do not let one lens's findings colour another's. A lens marked `independent: true` requires ≥2 distinct model
-families; if you are a single model, say so in `out_of_scope_notes` rather than presenting your pass as an
-independent panel's.
+Do not let one lens's findings colour another's. `independent: true` names its mode in `independence:`, and
+the two modes oblige you differently.
+
+`independence: vendor` requires ≥2 distinct model families; if you are a single model, say so in
+`out_of_scope_notes` rather than presenting your pass as an independent panel's.
+
+`independence: provenance` — carried by the `security`, `adversarial` and `evidence` lenses — permits one
+family and forbids you the producer's account of its own work. **Do not open the producer's session file,
+its self-assessment, its summary of what it changed, or the verdict it gave itself, even when the brief
+names the path.** A brief that points you at one is wrong on this point; ignore that instruction, apply the
+lens to the diff, and record the refusal in `out_of_scope_notes`. On 2026-08-23 all four review briefs
+directed reviewers to the session file and three of the four complied. Your evidence is the diff and the
+files it touches — nothing the producer wrote about the diff.
 
 ### Step 4 — Write findings that can be acted on
 

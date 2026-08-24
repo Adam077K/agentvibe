@@ -87,6 +87,14 @@ Each stage names its engines in `dispatch`. Brief each with the outcome, the len
 may touch, and the return format. Dispatch in parallel where the stage allows it. Every engine that writes
 gets its own worktree.
 
+**Fifth thing, and it is a constraint on what a brief may contain.** When a stage names a lens whose
+`independence:` is `provenance` — `security`, `adversarial` and `evidence` in `.claude/review-lenses.yml` —
+the brief you write must not cite the producer's session file, its self-assessment, or the verdict it gave
+itself. Those lenses hold one model family only because the judge's evidence is kept separate from the
+producer's account; a brief that hands over that account spends the independence the lens is claiming. On
+2026-08-23 four review briefs written here each named the session file, and three of four reviewers read it.
+Give the reviewer the diff, the changed-file list and the lens ids. Nothing the producer wrote about itself.
+
 ### Step 4 — Check the return, do not trust it
 
 Verify against the branch, the file, the rendered output — not against the summary. A return that says
