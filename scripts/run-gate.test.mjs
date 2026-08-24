@@ -55,6 +55,9 @@ test('the emitted invocation is complete enough to run — script path and tier 
   const r = json(['--files', '.github/workflows/ci.yml']);
   assert.equal(r.gateRequired, true);
   assert.equal(r.invocation.tool, 'Workflow');
+  // Deliberately UNCHANGED by the gate-self-review work below. The relative path is not the
+  // fixable half of that hazard: a path resolved at emit time points at the emitting tree, which
+  // is the PR tree — the copy you were trying to avoid. What was fixed is the silence.
   assert.equal(r.invocation.scriptPath, '.claude/workflows/qa.js');
   assert.equal(r.invocation.args.tier, r.floor, 'the tier passed to qa.js must be the floor that was computed');
   assert.ok(r.invocation.args.ref, 'a diff range must be passed or the gate reviews nothing');
@@ -168,6 +171,87 @@ test('a bare HEAD ref passed via --ref is refused — the cwd-dependence trap', 
   const r = run(['--ref', 'origin/main...HEAD', '--files', 'docs/a.md']);
   assert.equal(r.code, 2, 'a bare HEAD ref must be refused — it is cwd-dependent');
   assert.match(r.stderr, /HEAD/);
+});
+
+// ── The gate must not review its own diff silently ──────────────────────────────────────────
+//
+// Observed 2026-08-24: a launch loaded `.worktrees/.../pr3-linter-gate/.claude/workflows/qa.js` —
+// a copy whose diff altered verifier fan-out — instead of the `origin/main` copy, because
+// `scriptPath` is relative and resolves against the cwd it is pasted into. Confirmed by hash, and
+// caught only because a human read the launch output. That is the failure these pin: not that the
+// router picks the wrong copy (it cannot pick one at all), but that it said nothing.
+
+test('a diff that changes qa.js is flagged in --json, with the file named', () => {
+  const r = json(['--files', '.claude/workflows/qa.js']);
+  assert.ok(r.gateSelfReview, 'a diff editing the gate must not be reported as an ordinary diff');
+  assert.equal(r.gateSelfReview.detected, true);
+  assert.equal(r.gateSelfReview.qaScriptChanged, true);
+  assert.deepEqual(r.gateSelfReview.files, ['.claude/workflows/qa.js']);
+  assert.equal(r.gateSelfReview.humanDecisionRequired, true,
+    'the router cannot resolve the cwd conflict — it must say a human decides');
+});
+
+test('anything under .claude/workflows/ is flagged, not only qa.js itself', () => {
+  // gate-logic.mjs is the gate's verdict arithmetic. Editing it changes the gate as surely as
+  // editing qa.js does, and it floors at irreversible for the same reason.
+  const r = json(['--files', '.claude/workflows/lib/gate-logic.mjs']);
+  assert.ok(r.gateSelfReview, 'the whole directory is the gate, not just one file in it');
+  assert.equal(r.gateSelfReview.qaScriptChanged, false, 'qa.js was not the file that changed');
+  assert.deepEqual(r.gateSelfReview.files, ['.claude/workflows/lib/gate-logic.mjs']);
+});
+
+test('a diff that leaves the gate alone reports gateSelfReview: null — the key is always present', () => {
+  // Always-present-and-null, like `invocation`. A consumer that has to probe for a key will
+  // eventually forget to, and the failure mode of forgetting is silence — the original defect.
+  const r = json(['--files', 'scripts/foo.mjs']);
+  assert.equal(r.gateSelfReview, null);
+  assert.ok('gateSelfReview' in r, 'the key must be emitted even when nothing is flagged');
+});
+
+test('a ./-prefixed path is still recognised as the gate', () => {
+  // `git diff --name-only` never emits `./`, but a human passing --files does. Missing the flag
+  // because of a path prefix is exactly the silent failure this exists to stop.
+  const r = json(['--files', './.claude/workflows/qa.js']);
+  assert.ok(r.gateSelfReview, './-prefixed gate path must still be detected');
+  assert.equal(r.gateSelfReview.qaScriptChanged, true);
+});
+
+test('the human output shouts, and states the conflict rather than inventing a command', () => {
+  const out = run(['--files', '.claude/workflows/qa.js']).stdout;
+  assert.match(out, /THIS DIFF EDITS THE GATE/, 'the warning must be impossible to skim past');
+  assert.match(out, /A HUMAN DECIDES/, 'the unresolvable half must be named as unresolvable');
+  // Both halves of the tension must appear, or a reader "fixes" one and silently breaks the other.
+  assert.match(out, /must come from `main`/);
+  assert.match(out, /oracle must run `npm run check` in THIS PR's tree/);
+  assert.match(out, /not a workaround/,
+    'running from a foreign worktree must be ruled OUT explicitly — it was tried and it broke the oracle');
+});
+
+test('flagging the hazard does not rewrite the invocation or change the exit code', () => {
+  // POSTURE: ROUTES. This script reports; it does not decide, and it does not run the gate.
+  // A router that quietly rewrote scriptPath would be inventing a resolution it cannot verify.
+  const r = json(['--files', '.claude/workflows/qa.js']);
+  assert.equal(r.invocation.scriptPath, '.claude/workflows/qa.js', 'the emitted path is unchanged');
+  assert.equal(r.invocation.args.tier, 'irreversible');
+  assert.equal(run(['--files', '.claude/workflows/qa.js']).code, 0,
+    'detecting the hazard is not blocking — without --require this still exits 0');
+  assert.equal(run(['--files', '.claude/workflows/qa.js', '--require']).code, 1,
+    '--require still keys off gateRequired, not off the flag');
+});
+
+test('the inspect commands are real git commands, and they run', () => {
+  // "Do not invent a command you have not tested." Run what the script tells a human to run.
+  const r = json(['--files', '.claude/workflows/qa.js']);
+  for (const cmd of r.gateSelfReview.inspect) {
+    const args = cmd.split('#')[0].trim().split(/\s+/).slice(1); // drop the trailing `# comment`
+    assert.equal(args[0], 'diff', `expected a git diff invocation, got: ${cmd}`);
+    try {
+      execFileSync('git', args, { cwd: REPO, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    } catch (e) {
+      // `git diff --quiet` exits 1 when the files differ — a real answer, not a broken command.
+      assert.equal(e.status, 1, `emitted command failed for a reason other than "differs": ${cmd}\n${e.stderr}`);
+    }
+  }
 });
 
 test('the emitted ref is a resolved SHA — immune to which worktree you paste it into', () => {

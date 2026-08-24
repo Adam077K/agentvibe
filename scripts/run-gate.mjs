@@ -44,6 +44,57 @@ const { loadRules, classifyFiles } = require('./lib/classifier.js');
 const MAP = path.join(REPO_ROOT, '.claude', 'qa-tier-floor.yml');
 const QA_SCRIPT = '.claude/workflows/qa.js';
 
+// ── When the diff under review EDITS the gate ────────────────────────────────────────────────
+//
+// `QA_SCRIPT` is a relative path and is emitted verbatim, so it resolves against whatever cwd the
+// invocation is pasted into. When the diff changes `.claude/workflows/`, the default behaviour is
+// therefore to review the PR using the PR's own modified gate. Observed 2026-08-24: a launch
+// loaded `.worktrees/.../pr3-linter-gate/.claude/workflows/qa.js` — a copy whose diff altered
+// verifier fan-out — instead of the `origin/main` copy; confirmed by hash, and caught only because
+// a human read the launch output. That branch changes `qa.js` by +118/-28 lines.
+//
+// AN ABSOLUTE PATH DOES NOT FIX THIS, and neither does `Workflow({name:"qa"})`. A path resolved at
+// emit time points at the emitting tree, which IS the PR tree — the bad copy. The deeper problem is
+// that two requirements pull one knob in opposite directions:
+//
+//   · the reviewing copy of qa.js must come from `main`   → resolve the script somewhere else
+//   · the oracle must run `npm run check` in the PR tree  → resolve the shell HERE
+//
+// qa.js has no shell of its own (see its own header): the oracle is an agent told to run the checks
+// "from the repo root", so it follows cwd. The script follows cwd too. Measured the same day:
+// re-running the gate from a worktree that held an unmodified copy made the oracle run `npm run
+// check` in THAT tree, so it tested `main` instead of the PR and returned a BLOCK on an unrelated
+// environment failure. Running the gate from a foreign worktree is not a workaround — it trades a
+// wrong reviewer for a wrong subject.
+//
+// So this router does the only honest thing available to it, which is also the only thing its
+// posture permits (`POSTURE: ROUTES`, top of file): it REPORTS the conflict, loudly, in both
+// output channels, and names the human decision. It does not pick a copy, does not rewrite the
+// invocation, and does not change its exit code — a hazard that is announced is no longer silent,
+// and silence was the defect.
+const GATE_OWN_PATH = /^\.claude\/workflows\//;
+
+// Every path under `.claude/workflows/**` floors at `full` and qa.js itself at `irreversible`
+// (`.claude/qa-tier-floor.yml`), so this condition never occurs on a diff the gate would skip.
+function gateSelfReview(files, ref) {
+  const touched = files.map((f) => f.replace(/^\.\//, '')).filter((f) => GATE_OWN_PATH.test(f));
+  if (!touched.length) return null;
+  return {
+    detected: true,
+    files: touched,
+    qaScriptChanged: touched.includes(QA_SCRIPT),
+    conflict:
+      'The reviewing copy of the gate must come from `main`, and the oracle must run `npm run ' +
+      'check` in the PR tree. Both resolve against one cwd, so no invocation this router can emit ' +
+      'satisfies both.',
+    humanDecisionRequired: true,
+    inspect: [
+      `git diff ${ref} -- .claude/workflows/`,
+      `git diff --quiet origin/main -- ${QA_SCRIPT}   # exit 0 = this tree's gate matches main`,
+    ],
+  };
+}
+
 // The tiers whose review pipeline includes the adversarial panel. Lite is code-reviewer +
 // qa-engineer + semgrep; trivial is CI only. Both are defined in CLAUDE.md's tier table, and
 // this must not become a second place that decides tiers — it reads the floor, it never invents
@@ -154,8 +205,16 @@ function main() {
     ? { tool: 'Workflow', scriptPath: QA_SCRIPT, args: { ref, tier: floor } }
     : null;
 
+  // Null when the diff leaves the gate alone — same shape as `invocation`, so a consumer can
+  // always read the key rather than probe for it.
+  const selfReview = gateSelfReview(files, ref);
+
   if (asJson) {
-    console.log(JSON.stringify({ ref, files: files.length, floor, gateRequired, drivers, invocation }, null, 2));
+    console.log(JSON.stringify(
+      { ref, files: files.length, floor, gateRequired, drivers, gateSelfReview: selfReview, invocation },
+      null,
+      2,
+    ));
   } else {
     console.log(`ref:   ${ref}`);
     console.log(`files: ${files.length}`);
@@ -164,6 +223,27 @@ function main() {
       console.log(`set by: ${drivers.slice(0, 5).join(', ')}${drivers.length > 5 ? ` (+${drivers.length - 5} more)` : ''}`);
     }
     console.log('');
+    if (selfReview) {
+      console.log('!! THIS DIFF EDITS THE GATE — DO NOT RUN THE INVOCATION BELOW UNREAD !!');
+      console.log('');
+      console.log(`  changed under .claude/workflows/: ${selfReview.files.join(', ')}`);
+      console.log(`  qa.js itself changed:             ${selfReview.qaScriptChanged ? 'YES' : 'no'}`);
+      console.log('');
+      console.log('  The scriptPath below is RELATIVE, so it loads whichever copy of the gate lives');
+      console.log('  in the tree you paste it into — here, the copy this diff modifies. The gate would');
+      console.log('  review its own change using its own changed self.');
+      console.log('');
+      console.log('  Two requirements, one cwd, and they conflict:');
+      console.log('    · the reviewing copy of qa.js must come from `main`');
+      console.log('    · the oracle must run `npm run check` in THIS PR\'s tree');
+      console.log('  Running from a worktree that holds an unmodified gate satisfies the first and');
+      console.log('  breaks the second — measured 2026-08-24: the oracle then checked `main`, not the');
+      console.log('  PR, and BLOCKed on an unrelated environment failure. It is not a workaround.');
+      console.log('');
+      console.log('  This router cannot resolve that. A HUMAN DECIDES. Read the gate\'s own diff first:');
+      for (const cmd of selfReview.inspect) console.log(`    ${cmd}`);
+      console.log('');
+    }
     if (gateRequired) {
       console.log(`The binding QA gate IS required at tier "${floor}". Run it:`);
       console.log('');
