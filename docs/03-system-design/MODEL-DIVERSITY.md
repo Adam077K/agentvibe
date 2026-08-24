@@ -1,11 +1,6 @@
 # Model diversity — does a second family buy independent judgement, and is Codex worth $20/month?
 
-**Date:** 2026-08-15 · **Status:** recommendation, not yet decided
-**DECIDED 2026-08-23** (supersedes the line above): the founder accepted single-family review for
-harness self-edits — recorded as an **ACCEPTED RISK, not a satisfied requirement**, in
-[2026-08-23-after-p0.md §6](../08-agents_work/handoffs/2026-08-23-after-p0.md). This document's own
-§0 recommendation (below) is already implemented: `.claude/review-lenses.yml` carries
-`model_families: [anthropic]` on all 10 lenses. Revisit if the Codex resolver (P0 item 6) ever lands.
+**Date:** 2026-08-15 · **Status:** ~~recommendation, not yet decided~~ → **DECIDED 2026-08-23**: single-family review accepted as an **ACCEPTED RISK, not a satisfied requirement** ([after-p0 §6](../08-agents_work/handoffs/2026-08-23-after-p0.md)); this document's §0 recommendation is already implemented — all 10 lenses carry `model_families: [anthropic]`. Revisit if the Codex resolver lands. Figures below are as measured 2026-08-15 and several line citations in §1.1 have since rotted; this correction is deliberately ONE line so it shifts none of them.
 
 **Subject:** `review-lenses.yml:44, 57, 83` · the `full` tier's "Codex CLI second opinion"
 (`CLAUDE.md:152`) · and the open decision that appears twice under two numbers —
