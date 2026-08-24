@@ -1394,7 +1394,30 @@ async function main() {
   }
 }
 
-main().then((code) => process.exit(code)).catch((err) => {
-  process.stderr.write(`ledger: ${err.stack || err.message}\n`);
-  process.exit(2);
-});
+// `proseCodeSpans` is the fence-aware, frontmatter-aware harvester this file uses to find claim
+// ids in prose. scripts/check-citations.mjs needs the same harvest over the same surface, so it
+// imports this one rather than growing a second — two implementations of "what counts as prose
+// here" would disagree on the first unclosed fence, and the disagreement would be silent.
+// Exported, not copied.
+export { proseCodeSpans };
+
+// RUN THE CLI ONLY WHEN THIS FILE IS THE ENTRY POINT. Without this guard `main()` fires on import,
+// and an importer gets the usage message plus `process.exit(2)` instead of a module. Every caller
+// in this repo invokes ledger.mjs as a subprocess (`node scripts/ledger.mjs <cmd>`), where argv[1]
+// is this file and the guard is true, so the CLI behaviour is unchanged.
+//
+// COMPARE REALPATHS, NOT RESOLVED PATHS. Node resolves `import.meta.url` through symlinks while
+// `process.argv[1]` keeps whatever the caller typed. On macOS the scratch repos in
+// ledger.test.mjs live under `/var/folders/...`, a symlink to `/private/var/folders/...`, so the
+// two spellings differ and a plain `path.resolve` comparison silently disables the CLI. That is
+// not hypothetical: it turned twenty of this file's own tests red.
+const realpath = (p) => { try { return fs.realpathSync(p); } catch { return path.resolve(p); } };
+const invokedDirectly =
+  process.argv[1] && realpath(process.argv[1]) === realpath(fileURLToPath(import.meta.url));
+
+if (invokedDirectly) {
+  main().then((code) => process.exit(code)).catch((err) => {
+    process.stderr.write(`ledger: ${err.stack || err.message}\n`);
+    process.exit(2);
+  });
+}
