@@ -7,13 +7,33 @@
 //
 //   1. Every blocking rule is run against ALL SEVEN live engine files and must hit ZERO.
 //   2. Every blocking rule must then FIRE on a constructed violation.
+//   3. Added 2026-08-24 — every rule is also run against a NEGATIVE CONTROL: one paraphrase that
+//      means the same thing as the violation in step 2. A rule over an OPEN category of English
+//      whose paraphrase walks past may not block. A rule over a CLOSED set may: the paraphrase
+//      result is then a sharpening backlog item, not a demotion, because its errors are
+//      false-NEGATIVE and demoting it removes a floor instead of reducing wrong blocking.
 //
 // Step 2 is not ceremony. A rule that fires on nothing is not a rule — it is a sentence that reads
 // as enforcement, which is the exact defect this repository has now shipped three times: eight
 // CLAUDE.md rules with no mechanism, `mcpServers` declared on 52 files with no MCP config, and a
 // `maxTurns` range check that a quoted value walked straight past.
 //
-// Both numbers are asserted below, per rule, so neither half can rot without failing the build.
+// Step 3 is why three rules are `WARN` below and were `FAIL` before. Steps 1 and 2 alone certify a
+// rule that has simply been narrowed until it stops firing, and "zero on the corpus" then reads as
+// clean while meaning toothless.
+//
+// Step 3's qualifier is why PS-JUDGE-BLOCK-CONDITION and PS-FALSE-CONSTRAINT are NOT demoted
+// despite failing it. Neither is open prose: one is a token-presence floor over the closed
+// READ_ONLY_ENGINES set, the other a literal list of eight executed-and-refuted sentences with a
+// bounded false-positive surface that has its own test. Their paraphrase weakness is recorded
+// below as a known gap.
+//
+// THIS FILE HOLDS THE BLOCKING GUARANTEE FOR THE THREE DEMOTED RULES. schema-lint.js exits on
+// `failCount` and never on `warnCount`, so a WARN there is cosmetic; the assertion that none of
+// the three fires on a live engine is what actually fails a build. .claude/qa-tier-floor.yml puts
+// this file at the irreversible floor for that reason.
+//
+// All three numbers are asserted below, per rule, so no half can rot without failing the build.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -44,6 +64,21 @@ function ps(text, basename = 'builder') {
   );
   return { issues, checks, warnings };
 }
+
+/**
+ * The three rules demoted to WARN on 2026-08-24. Their controls below assert they still FIRE —
+ * into `checks`, never `issues`. `absent` is the other half: after a demotion, an
+ * `assert.deepEqual(r.issues, [])` on one of these is vacuously true and pins nothing, so every
+ * "does not fire" case asserts the id is missing from `checks` instead. That is a STRONGER
+ * assertion than the one it replaces, not a weaker one.
+ */
+const DEMOTED = ['PS-DISPOSITION', 'PS-PRIOR-BELIEF', 'PS-BODY-TOOL-AFFIRM'];
+/** Interleaved with them in schema-lint.js and still blocking. Not open prose; see the header. */
+const STILL_BLOCKING = ['PS-JUDGE-BLOCK-CONDITION', 'PS-FALSE-CONSTRAINT'];
+const absent = (r, id) => assert.ok(
+  !r.checks.some((c) => c.startsWith(id)) && !r.issues.some((i) => i.startsWith(id)),
+  `${id} fired: ${[...r.issues, ...r.checks].filter((x) => x.startsWith(id)).join(' | ')}`,
+);
 
 /** Write a whole agent file somewhere harmless and run the FULL lint over it. */
 function lintText(text, basename = 'builder') {
@@ -265,9 +300,40 @@ test('PS-TOOL-EXISTS fires on a tool that does not exist', () => {
   assert.match(r.issues[0], /PS-TOOL-EXISTS: tools entry "Browser" is not a runtime tool/);
 });
 
-test('PS-TOOL-EXISTS lets an mcp__ entry through — PS-MCP-BACKED owns that question', () => {
+// The four tests below replace one that read "PS-TOOL-EXISTS lets an mcp__ entry through —
+// PS-MCP-BACKED owns that question". SUPERSEDED 2026-08-24: PS-MCP-BACKED never owned it. It
+// reads `fm.mcpServers`, a different frontmatter field, so nothing checked an `mcp__` entry in
+// `tools:` and the old test pinned that hole open by asserting the pass.
+
+test('PS-TOOL-EXISTS accepts an mcp__ entry whose server IS configured', () => {
+  // .mcp.json configures `playwright`, and `designer` is the one engine granted it.
   assert.deepEqual(
     ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', 'tools: [Read, mcp__playwright__navigate]')).issues,
+    [],
+  );
+});
+
+test('PS-TOOL-EXISTS fires on an mcp__ entry naming a server nobody configured', () => {
+  // The constructed violation from TARGET-ARCHITECTURE.md. It passed HEAD's linter clean.
+  const r = ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', 'tools: [Read, mcp__nonexistent__doAnything]'));
+  assert.equal(r.issues.length, 1);
+  assert.match(r.issues[0], /PS-TOOL-EXISTS: tools entry "mcp__nonexistent__doAnything" names MCP server "nonexistent"/);
+});
+
+test('PS-TOOL-EXISTS fires on a malformed mcp__ id — it is refused, never ignored', () => {
+  // Ignoring these would leave `mcp__` and `mcp__playwright` as unchecked pass-throughs, which
+  // is the same hole one string shorter. Both halves must be present and non-empty.
+  for (const bad of ['mcp__', 'mcp__playwright', 'mcp____navigate']) {
+    const r = ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', `tools: [Read, ${bad}]`));
+    assert.match(r.issues.join('\n'), /PS-TOOL-EXISTS: .*is not a well-formed MCP tool id/, `did not fire on: ${bad}`);
+  }
+});
+
+test('PS-TOOL-EXISTS splits on the FIRST two separators — an mcp tool name may contain __', () => {
+  // `mcp__playwright__browser__navigate` is server `playwright`, tool `browser__navigate`. A
+  // strict three-part split would reject a real tool id; the server half is what is checkable.
+  assert.deepEqual(
+    ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', 'tools: [Read, mcp__playwright__browser__navigate]')).issues,
     [],
   );
 });
@@ -359,17 +425,21 @@ test('PS-JUDGE-BLOCK-CONDITION fires on a read-only engine that names no BLOCKED
   // judges against and the condition under which it refuses.
   const stripped = GOOD.replace(/BLOCKED/g, 'a note');
   const r = ps(stripped, 'reviewer');
+  // Briefly demoted on 2026-08-24 and RESTORED in the same change: a token-presence floor over a
+  // closed two-file set is not open prose, and its errors are false-negative.
   assert.match(r.issues.join('\n'), /PS-JUDGE-BLOCK-CONDITION/);
 });
 
 test('PS-JUDGE-BLOCK-CONDITION does not apply to producing engines', () => {
-  assert.deepEqual(ps(GOOD.replace(/BLOCKED/g, 'a note'), 'builder').issues, []);
+  absent(ps(GOOD.replace(/BLOCKED/g, 'a note'), 'builder'), 'PS-JUDGE-BLOCK-CONDITION');
 });
 
 test('both read-only engines name the condition today', () => {
   for (const name of ['reviewer', 'reviewer-readonly']) {
     const text = fs.readFileSync(path.join(AGENTS, `${name}.md`), 'utf8');
-    assert.deepEqual(ps(text, name).issues, []);
+    const r = ps(text, name);
+    assert.deepEqual(r.issues, [], name);
+    absent(r, 'PS-JUDGE-BLOCK-CONDITION');
   }
 });
 
@@ -385,7 +455,8 @@ const DISPOSITION_CONTROLS = [
 test('PS-DISPOSITION fires on all four constructed violations', () => {
   for (const line of DISPOSITION_CONTROLS) {
     const r = ps(GOOD.replace('One sentence, or ask once.', line));
-    assert.match(r.issues.join('\n'), /PS-DISPOSITION/, `did not fire on: ${line}`);
+    assert.deepEqual(r.issues, [], `demoted — must not block: ${line}`);
+    assert.match(r.checks.join('\n'), /PS-DISPOSITION/, `did not fire on: ${line}`);
   }
 });
 
@@ -396,12 +467,13 @@ test('PS-DISPOSITION does not ban strong language that names a mechanism', () =>
     'One sentence, or ask once.',
     'An agent that can edit what it reviews will review what it can edit, so this one holds no Write.',
   ));
-  assert.deepEqual(r.issues, []);
+  absent(r, 'PS-DISPOSITION');
 });
 
 test('PS-DISPOSITION reads the frontmatter description too — it reaches the model', () => {
   const r = ps(GOOD.replace('Engine. A fixture', 'Engine. Be thorough. A fixture'));
-  assert.match(r.issues.join('\n'), /PS-DISPOSITION/);
+  assert.deepEqual(r.issues, [], 'demoted — must not block');
+  assert.match(r.checks.join('\n'), /PS-DISPOSITION/);
 });
 
 // ── 9 · PS-PRIOR-BELIEF — the 97.2% → 3.6% class ──────────────────────────
@@ -420,7 +492,8 @@ test('PS-PRIOR-BELIEF fires on all four constructed violations', () => {
   // magnitude, and it is a word-choice finding — same model, same pairs, one clause removed.
   for (const line of PRIOR_BELIEF_CONTROLS) {
     const r = ps(GOOD.replace('One sentence, or ask once.', line));
-    assert.match(r.issues.join('\n'), /PS-PRIOR-BELIEF/, `did not fire on: ${line}`);
+    assert.deepEqual(r.issues, [], `demoted — must not block: ${line}`);
+    assert.match(r.checks.join('\n'), /PS-PRIOR-BELIEF/, `did not fire on: ${line}`);
   }
 });
 
@@ -429,7 +502,7 @@ test('PS-PRIOR-BELIEF leaves PROVENANCE alone — it describes the artifact, not
     'One sentence, or ask once.',
     'State whether this diff touches auth and whether it is the third attempt at the same failure.',
   ));
-  assert.deepEqual(r.issues, []);
+  absent(r, 'PS-PRIOR-BELIEF');
 });
 
 // ── 10 · PS-FALSE-CONSTRAINT — statements this repo has measured false ────
@@ -456,7 +529,7 @@ test('PS-FALSE-CONSTRAINT leaves the HEDGED, TRUE sentence alone', () => {
     'One sentence, or ask once.',
     'The field `tools:` is not known to bind `Bash`, which is why the judge gets a container with no shell.',
   ));
-  assert.deepEqual(r.issues, []);
+  absent(r, 'PS-FALSE-CONSTRAINT');
 });
 
 // ── 11 · PS-BODY-TOOL-AFFIRM — paragraph-scoped, and that is the point ────
@@ -464,13 +537,14 @@ test('PS-FALSE-CONSTRAINT leaves the HEDGED, TRUE sentence alone', () => {
 test('PS-BODY-TOOL-AFFIRM fires on a direction to use a tool the frontmatter does not grant', () => {
   const r = ps(GOOD.replace('Run the thing. A build that compiles is not a build that works.',
     'Run the suite with `Bash` before returning a verdict.'));
-  assert.match(r.issues.join('\n'), /PS-BODY-TOOL-AFFIRM: the body directs use of `Bash`/);
+  assert.deepEqual(r.issues, [], 'demoted — must not block');
+  assert.match(r.checks.join('\n'), /PS-BODY-TOOL-AFFIRM: the body directs use of `Bash`/);
 });
 
 test('PS-BODY-TOOL-AFFIRM leaves a NEGATION alone — all seven out-of-grant mentions today are negations', () => {
   const r = ps(GOOD.replace('One sentence, or ask once.',
     'You have no `Bash`. You cannot run the test suite or shell out to git.'));
-  assert.deepEqual(r.issues, []);
+  absent(r, 'PS-BODY-TOOL-AFFIRM');
 });
 
 test('PS-BODY-TOOL-AFFIRM is PARAGRAPH-scoped: a negation that wraps to the next line still clears it', () => {
@@ -478,12 +552,12 @@ test('PS-BODY-TOOL-AFFIRM is PARAGRAPH-scoped: a negation that wraps to the next
   // rule fires on 2 correct negations in reviewer-readonly.md. Paragraph-scoped it measures 0.
   const r = ps(GOOD.replace('One sentence, or ask once.',
     'This engine was given `general-purpose` with tools `*` — holding `Bash` on the diff under\njudgement. That grant is not one it should have; use the container that removed it.'));
-  assert.deepEqual(r.issues, []);
+  absent(r, 'PS-BODY-TOOL-AFFIRM');
 });
 
 test('PS-BODY-TOOL-AFFIRM does not fire on a granted tool', () => {
   const r = ps(GOOD.replace('One sentence, or ask once.', 'Use `Grep` to locate the call sites first.'));
-  assert.deepEqual(r.issues, []);
+  absent(r, 'PS-BODY-TOOL-AFFIRM');
 });
 
 // ── 12 · PS-PIPELINE-RESTATE ───────────────────────────────────────────────
@@ -515,6 +589,80 @@ test('PS-PIPELINE-RESTATE does not fire on the return-contract JSON of any live 
   for (const p of LIVE) {
     const { issues } = ps(fs.readFileSync(p, 'utf8'), path.basename(p, '.md'));
     assert.ok(!issues.some((i) => i.startsWith('PS-PIPELINE-RESTATE')), path.basename(p));
+  }
+});
+
+// ── 12b · Three demoted to WARN, two restored to FAIL, 2026-08-24 ─────────
+
+test('the three demoted rules can NEVER reach the blocking list, on any input', () => {
+  // One assertion per rule, each on the input that used to fail the build. If a later change
+  // pushes any of these back onto `issues`, this goes red before it can refuse anyone's merge.
+  const cases = [
+    ['PS-DISPOSITION', GOOD.replace('One sentence, or ask once.', 'Be critical when you read the diff.'), 'builder'],
+    ['PS-PRIOR-BELIEF', GOOD.replace('One sentence, or ask once.', 'The code is correct; confirm it.'), 'builder'],
+    ['PS-BODY-TOOL-AFFIRM', GOOD.replace('Run the thing. A build that compiles is not a build that works.', 'Run the suite with `Bash` before returning a verdict.'), 'builder'],
+  ];
+  assert.deepEqual(cases.map((c) => c[0]), DEMOTED, 'a rule was demoted or restored without updating this list');
+  for (const [id, text, basename] of cases) {
+    const r = ps(text, basename);
+    assert.deepEqual(r.issues, [], `${id} reached the blocking list`);
+    assert.match(r.checks.join('\n'), new RegExp(id), `${id} stopped firing entirely — a demotion is not a deletion`);
+  }
+});
+
+test('the two RESTORED rules do block — a demotion that was reversed must stay reversed', () => {
+  // The counterpart of the test above. F1 (2026-08-24): demoting these moved the teeth from an
+  // irreversible/block file to a full/shadow one. They are back on `issues` and pinned there.
+  const cases = [
+    ['PS-JUDGE-BLOCK-CONDITION', GOOD.replace(/BLOCKED/g, 'a note'), 'reviewer'],
+    ['PS-FALSE-CONSTRAINT', GOOD.replace('One sentence, or ask once.', 'Subagents cannot spawn subagents, so do the work yourself.'), 'builder'],
+  ];
+  assert.deepEqual(cases.map((c) => c[0]), STILL_BLOCKING, 'a rule changed posture without updating this list');
+  for (const [id, text, basename] of cases) {
+    const r = ps(text, basename);
+    assert.match(r.issues.join('\n'), new RegExp(id), `${id} no longer blocks`);
+  }
+});
+
+test('each demoted rule is defeated by a paraphrase — the negative control that demoted them', () => {
+  // The missing test of §0's method, built in TARGET-ARCHITECTURE.md: zero-on-corpus plus
+  // fires-on-one-control is NOT sufficient, because narrowing a predicate until it stops firing
+  // is indistinguishable from fixing it. Each line below means the same thing as a control the
+  // rule DOES catch, and every one of them walks past. This is the evidence for WARN, and it is
+  // pinned so that "we could sharpen these back into FAIL" stays an argument someone has to win
+  // with a rule that survives its own paraphrase.
+  for (const [id, line] of [
+    ['PS-DISPOSITION', 'Be extremely critical.'],
+    ['PS-PRIOR-BELIEF', 'Two senior engineers shipped this. Findings here are usually noise.'],
+  ]) {
+    absent(ps(GOOD.replace('One sentence, or ask once.', line)), id);
+  }
+  // PS-BODY-TOOL-AFFIRM: the same directive it catches, plus one negation word in the paragraph.
+  absent(ps(GOOD.replace('Run the thing. A build that compiles is not a build that works.',
+    'Run the suite with `Bash` before returning a verdict. Do not skip it.')), 'PS-BODY-TOOL-AFFIRM');
+});
+
+test('the two restored rules are ALSO defeated by a paraphrase — a known gap, not a demotion', () => {
+  // Recorded rather than hidden. These two still block, because their errors run false-NEGATIVE
+  // and demoting them removes a floor. That is not a claim that they are sharp; it is a claim
+  // that a blunt floor beats none. Anyone sharpening them starts from these two lines, and this
+  // test goes red when they succeed — which is the correct time to revisit the wording above.
+  absent(ps(GOOD.replace('One sentence, or ask once.',
+    'A subagent has no way to start another subagent, so do it yourself.')), 'PS-FALSE-CONSTRAINT');
+  // It cannot tell a named condition from the bare word appearing anywhere in the body.
+  absent(ps(GOOD.replace(/BLOCKED/g, 'a note').replace('One sentence, or ask once.',
+    'Nobody enjoys being BLOCKED by a review.'), 'reviewer'), 'PS-JUDGE-BLOCK-CONDITION');
+});
+
+test('THE BLOCKING GUARANTEE: none of the three demoted rules fires on any live engine', () => {
+  // This assertion is the entire enforcement behind the demotion. schema-lint.js exits on
+  // `failCount` and never on `warnCount` — nothing in package.json, .github/workflows/ or
+  // scripts/ gates on a warning — so once these three warn, THIS is what fails a build when one
+  // of them starts firing on a real engine. It is why .claude/qa-tier-floor.yml puts this file at
+  // the irreversible floor. Deleting this loop is a merge-blocking change, not a test tidy-up.
+  for (const p of LIVE) {
+    const r = ps(fs.readFileSync(p, 'utf8'), path.basename(p, '.md'));
+    for (const id of [...DEMOTED, ...STILL_BLOCKING]) absent(r, id);
   }
 });
 

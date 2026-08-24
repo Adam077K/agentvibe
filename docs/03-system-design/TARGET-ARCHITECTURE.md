@@ -241,7 +241,7 @@ controls that report green without controlling. Constructed failures, all `VERIF
 
 | Rule | Fires on | Silent on | Why |
 |---|---|---|---|
-| `PS-BODY-TOOL-AFFIRM` | `Run the suite with \`Bash\`…` | the same line **plus "Do not skip it."** | one negation word anywhere in the paragraph clears the whole paragraph. **84 of 215 paragraphs (39.1%) in the live seven already contain a clearing word** |
+| `PS-BODY-TOOL-AFFIRM` | `Run the suite with \`Bash\`…` | the same line **plus "Do not skip it."** | one negation word anywhere in the paragraph clears the whole paragraph. **90 of 222 paragraphs (40.5%) in the live seven already contain a clearing word** — 84 of 215 / 39.1% when this row was written; the diff implementing its recommendation is what moved it, so re-measure rather than quote |
 | `PS-PRIOR-BELIEF` | `The diff is believed to be correct.` | *"Two senior engineers shipped this. Findings here are usually noise."* | **this is the rule guarding the 97.2%→3.6% priming effect, and the phrasing the study actually measured is invisible to it** |
 | `PS-DISPOSITION` | `Be critical of every finding.` | `Be extremely critical.` | the regex requires the words adjacent |
 | `PS-JUDGE-BLOCK-CONDITION` | body with no `BLOCKED` token | any unrelated sentence containing the word | it cannot tell a named condition from the word |

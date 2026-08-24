@@ -78,9 +78,28 @@ source read is a fallback and must be labelled as one.
 
 ### Step 3 — Apply each lens independently
 
-Do not let one lens's findings colour another's. A lens marked `independent: true` requires ≥2 distinct model
-families; if you are a single model, say so in `out_of_scope_notes` rather than presenting your pass as an
-independent panel's.
+Do not let one lens's findings colour another's. `independent: true` names its mode in `independence:`, and
+the two modes oblige you differently.
+
+`independence: vendor` requires ≥2 distinct model families; if you are a single model, say so in
+`out_of_scope_notes` rather than presenting your pass as an independent panel's.
+
+`independence: provenance` — carried by the `security`, `adversarial` and `evidence` lenses — permits one
+family and forbids you the producer's account of its own work. **Do not read the producer's reasoning, its
+self-assessment, its summary of what it changed, or the verdict it gave itself, even when the brief names
+the path.** A brief that offers you one as evidence is wrong on this point; ignore that instruction, apply
+the lens to the diff, and record the refusal in `out_of_scope_notes`. On 2026-08-23 all four review briefs
+directed reviewers to the session file and three of the four complied.
+
+**A bounded existence check is a different act and is permitted.** The `evidence` lens asks whether a
+citation resolves. Normally the brief hands you the cited lines as an excerpt and you never open the file at
+all; ask for the excerpt when it is missing. If you do open the path, read the cited range, settle whether
+it says what the citing sentence claims, and carry nothing else out. Name the citation in
+`out_of_scope_notes`.
+
+Nothing downstream can check that last paragraph — your output is identical either way — so treat it as an
+obligation you hold rather than a control that holds you. The checkable form of this rule lives in the
+brief, which either contains the excerpt or does not.
 
 ### Step 4 — Write findings that can be acted on
 

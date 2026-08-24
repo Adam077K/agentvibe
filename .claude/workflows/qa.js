@@ -176,26 +176,48 @@ For each of the 3 checks return {name, pass, output}: output is "" on a clean pa
 IMPORTANT: you MUST finish by calling the StructuredOutput tool with {pass, checks}. Do not end without it.${attempt ? ' (Retry — your previous attempt did not return structured output.)' : ''}`
 }
 
-// THE TOOL BUDGET IS THE BINDING CONSTRAINT, AND THIS PROMPT IS WRITTEN AROUND IT.
+// THE TOOL BUDGET IS A REAL CONSTRAINT. IT IS NOT THE DIAGNOSIS OF THE DROPOUT.
 //
-// Measured across three runs of this gate: agents that made ≤17 tool calls returned findings;
-// agents that reached 20 returned NOTHING. Clean separation, no overlap — 13 of 20 dropouts sat
-// at exactly 20, which is what `maxTurns` was set to on the reviewer containers — a declared
-// cap, cutting agents off mid-work with findings in hand, rather than a stochastic failure.
+// SUPERSEDED 2026-08-24. This block used to open "THE TOOL BUDGET IS THE BINDING CONSTRAINT" and
+// read: "agents that made ≤17 tool calls returned findings; agents that reached 20 returned
+// NOTHING... 13 of 20 dropouts sat at exactly 20, which is what `maxTurns` was set to on the
+// reviewer containers — a declared cap, cutting agents off mid-work." It carried an honest bound
+// admitting the cap did not explain 7 of the 20 (21, 32, 32, 32, 32, 34, 34 tool calls, all above
+// the cap) and that "no post-fix run has yet confirmed the diagnosis."
 //
-// HONEST BOUND ON THAT CLAIM, from an independent audit: the cap explains the 13 dropouts that
-// sat at exactly 20 and it does NOT explain the other 7, which recorded 21, 32, 32, 32, 32, 34
-// and 34 tool calls — above the cap. The separation is real (max success 17 < min failure 20);
-// the conclusion that the cap CAUSED every dropout is not supported for roughly a third of them,
-// and no post-fix run has yet confirmed the diagnosis. Treat this as the best current
-// explanation, not a settled mechanism.
+// WHAT CHANGED: the confirming run happened, and it refuted the diagnosis rather than settling
+// it. The REVIEW_ATTEMPTS block below is the measured account and this file now has one: 15 of 31
+// dispatched agents returned nothing, every one on `stop_reason: tool_use`, and a turn cap was
+// one of four explanations tested against the transcripts and refuted — successes reached 43
+// turns while failures started at 37. A cap cannot be the cause of a dropout in a run that
+// finished with more turns than a run that succeeded. Read the dropout as ~48% and UNEXPLAINED.
 //
-// The cap is raised to 30 (the schema maximum), but a cap that is merely higher still binds on
-// a large diff. So the instruction changed too: `git diff` is the PRIMARY evidence and reading
-// whole files is the exception, and the agent is told its budget is finite and that emitting
-// partial findings beats being killed holding a complete set. A reviewer that dies before
-// calling StructuredOutput contributes exactly nothing — worse than a partial review, because
-// the gate then records it as a coverage GAP and blocks on it.
+// Two accounts of one failure mode, in one file, disagreeing, is how a reader picks whichever
+// one they read first and acts on it. The pre-2026-08-24 account is kept above as an obituary,
+// marked, at the point where it was cited — not deleted quietly, and not left standing.
+//
+// THE UNITS DO NOT OBVIOUSLY MATCH, AND THEY ARE NOT RECONCILED HERE. Three quantities appear
+// across the two accounts and nothing on disk proves any two are the same:
+//   · TOOL CALLS      — what the superseded account counted (≤17 / 20 / 34)
+//   · TURNS           — what the measured account counts (43 success / 37 failure)
+//   · `maxTurns: 30`  — the frontmatter field on reviewer.md and reviewer-readonly.md
+// An assistant turn may carry several tool calls or none, so "20 tool calls" and "20 turns" are
+// not interchangeable, and neither is known to be the unit `maxTurns` counts. The superseded
+// account equated the first and the third; that equation is the load-bearing step in its
+// conclusion and it was never checked. Anyone who wants the cap back as an explanation has to
+// establish the unit first. (The lint ceiling is [5, 120]; both reviewer engines declare 30.)
+//
+// WHAT SURVIVES, AND IT IS WHY THE PROMPT BELOW IS STILL WRITTEN THIS WAY: a finite budget of
+// some kind exists, and a reviewer that dies before calling StructuredOutput contributes exactly
+// nothing — worse than a partial review, because the gate records it as a coverage GAP and blocks
+// on it. So `git diff` is the PRIMARY evidence, reading whole files is the exception, and the
+// agent is told to emit partial findings rather than be killed holding a complete set. That
+// instruction is good practice under any of the three explanations and costs nothing under none.
+//
+// The prompt's own "about 30 calls" is an ESTIMATE stated to the reviewer, and it inherits the
+// unit problem above: it is a tool-call figure derived from a turn cap. It is left as it stands
+// because changing what the reviewer is told changes what the gate does, and this commit is
+// reconciling a comment, not retuning the panel.
 function reviewPrompt(d, attempt) {
   return `You are reviewing a Agentvibe diff for the **${d.key}** dimension only.
 
@@ -263,13 +285,20 @@ Your default verdict is binding and the CEO cannot override it. Adam (board) may
 // tracked coverage gap.
 //
 // ATTEMPTS IS 4, AND THE NUMBER IS MEASURED RATHER THAN CHOSEN.
+//
+// THIS IS THE SURVIVING ACCOUNT OF THE DROPOUT. The block above reviewPrompt() carried a second,
+// incompatible one — a `maxTurns` cap cutting reviewers off — and is marked superseded there as
+// of 2026-08-24. The turn cap is one of the four explanations refuted below; it is not a partial
+// cause held in reserve. Read that block for the unit problem it leaves open.
+//
 // Two consecutive runs of this gate were blocked by a coverage gap on `correctness`. Reading
 // the run journal: 15 of 31 dispatched agents returned nothing, every one of them ending on
 // `stop_reason: tool_use` — mid-tool, never reaching StructuredOutput — while the runtime
 // reported `agents_error: 0`. The pending calls were ordinary (`grep`, `sed`, `git status`).
 // Four explanations were tested against the transcripts and all four were refuted: a turn cap
-// (successes reached 43 turns, failures started at 37), context exhaustion (30-84k vs 53-88k,
-// overlapping), output tokens (overlapping), and a wall-clock timeout (median 113s vs 123s).
+// (successes reached 43 turns, failures started at 37 — a cap cannot cut short the run that went
+// further), context exhaustion (30-84k vs 53-88k, overlapping), output tokens (overlapping), and
+// a wall-clock timeout (median 113s vs 123s).
 //
 // So the dropout is ~48% and unexplained by anything on disk. At 2 attempts a dimension fails
 // ~23% of the time and SOME critical dimension fails most runs, which is why this gate had
@@ -359,6 +388,10 @@ if (!oracle || oracle.pass !== true) {
     advisory: [],
     dimensions_failed: [],
     critical_gap: [],
+    // Same shape as the full return below: a consumer that reads this field must find it on
+    // every path, or "absent" and "empty" become indistinguishable. The oracle short-circuits
+    // before Phase 2, so nothing was truncated — that is a fact, not a missing key.
+    unverified_truncated: [],
     verdict: 'BLOCK',
     judge_verdict: null,
     summary,
@@ -382,15 +415,63 @@ const rawFindings = dimResults.flatMap(r => r.findings.map(f => ({ ...f, dimensi
 const blockEligible = (sev) => sev === 'P1' || (TIER === 'irreversible' && sev === 'P2')
 const SEV_ORDER = { P1: 0, P2: 1, P3: 2 }
 const advisory = rawFindings.filter(f => !blockEligible(f.severity)).map(f => ({ ...f, confirmed: false, advisory: true }))
-let eligible = rawFindings.filter(f => blockEligible(f.severity))
-
-// Hard backstop on verifier fan-out (rarely hit now that only block-eligible findings verify).
+// Hard backstop on verifier fan-out. Each finding here costs THREE agent dispatches, so this
+// number is 120 dispatches, not 40.
+//
+// IT IS A RUNNING TOTAL ACROSS PHASE 2 AND EVERY SWEEP ROUND, NOT A FRESH ALLOWANCE PER ROUND.
+// Until 2026-08-24 it was applied to the Phase-2 `eligible` array and nowhere else: the Sweep
+// phase below dispatched three verifiers for every block-eligible finding it turned up, in each
+// of up to three rounds, with no bound of its own. That was the only genuinely unbounded fan-out
+// in this gate — the `round < 3` cap bounds the number of REVIEW rounds and says nothing about
+// how many findings each one hands to the verifier pool.
 const MAX_VERIFY = 40
-if (eligible.length > MAX_VERIFY) {
-  eligible = [...eligible].sort((a, b) => (SEV_ORDER[a.severity] ?? 3) - (SEV_ORDER[b.severity] ?? 3)).slice(0, MAX_VERIFY)
-  log(`Capping verification at ${MAX_VERIFY} block-eligible findings (backstop).`)
+let verifyBudget = MAX_VERIFY
+
+// Take at most what is left of the budget, worst severity first — and SAY SO when it truncates,
+// naming the findings that go unverified.
+//
+// A cap that drops findings quietly is worse than no cap: the run journal then reads as though
+// everything was examined, and the judge weighs a set it has no way to know is partial. This
+// gate's whole claim is that a verdict means what it says.
+//
+// A truncated finding is NOT verified, so it is not in `confirmed`. It is NOT reclassified as
+// advisory either — that would launder an unexamined P1 into a fast-follow. It is collected in
+// `unverifiedTruncated`, returned as a field, and it FORCES BLOCK.
+//
+// THE FIRST VERSION OF THIS CAP WAS FAIL-OPEN, AND THE COMMENT ABOVE IS WHY THAT WAS INEXCUSABLE.
+// `dropped` existed only inside the log() call below. It reached no field of the returned object,
+// so a run that verified 40 of 95 block-eligible findings and discarded 55 unexamined P1s
+// returned byte-identically to a run that examined everything and confirmed nothing. The
+// principle was stated correctly and implemented in the run journal only — and the run journal
+// is not what the caller reads. Note the direction of the regression: before the cap existed the
+// sweep was unbounded and those findings were ALWAYS verified, so the cap is where the dropping
+// was introduced.
+//
+// Budget exhaustion is the same CLASS of event as a critical coverage gap — "something was not
+// examined" — and is treated identically twelve lines below `criticalGap`: forced BLOCK, its own
+// blocker, never a silent PASS. The bound on fan-out is kept, because unbounded fan-out was also
+// real. What is not kept is the bound quietly deciding the verdict.
+// MIRRORS makeVerifyBudget() in ./lib/gate-logic.mjs — unit-tested there, including the mutation
+// that turns this back into a per-call cap. Keep in sync, exactly as blockEligible mirrors
+// isBlockEligible() above. The runtime gives this script no module import, which is the only
+// reason the code is written twice.
+const unverifiedTruncated = []
+function takeVerifyBudget(findings, phaseLabel) {
+  if (findings.length <= verifyBudget) {
+    verifyBudget -= findings.length
+    return findings
+  }
+  const ordered = [...findings].sort((a, b) => (SEV_ORDER[a.severity] ?? 3) - (SEV_ORDER[b.severity] ?? 3))
+  const taken = ordered.slice(0, verifyBudget)
+  const dropped = ordered.slice(verifyBudget)
+  unverifiedTruncated.push(...dropped.map(f => ({ id: f.id, severity: f.severity, dimension: f.dimension })))
+  log(`${phaseLabel}: verifier budget exhausted — verifying ${taken.length} of ${findings.length} block-eligible findings. ${MAX_VERIFY} is the TOTAL across Phase 2 and all sweep rounds. ${dropped.length} finding(s) are NOT verified: ${dropped.map(f => `${f.id}(${f.severity})`).join(', ')}. This FORCES BLOCK — re-run the gate on a smaller diff.`)
+  verifyBudget = 0
+  return taken
 }
-log(`${eligible.length} block-eligible findings to 3-vote verify; ${advisory.length} advisory (P3${TIER === 'full' ? '/P2' : ''}) reported unverified.`)
+
+const eligible = takeVerifyBudget(rawFindings.filter(f => blockEligible(f.severity)), 'Verify')
+log(`${eligible.length} block-eligible findings to 3-vote verify; ${advisory.length} advisory (P3${TIER === 'full' ? '/P2' : ''}) reported unverified. Verifier budget remaining for the sweep: ${verifyBudget}/${MAX_VERIFY}.`)
 
 phase('Verify')
 const verified = await parallel(eligible.map(f => () => verifyFinding(f, 'Verify')))
@@ -415,9 +496,12 @@ if (TIER === 'irreversible') {
     newOnes.forEach(f => seen.add(f.id))
     advisory.push(...newOnes.filter(f => !blockEligible(f.severity)).map(f => ({ ...f, confirmed: false, advisory: true })))
     const newEligible = newOnes.filter(f => blockEligible(f.severity))
-    const sv = await parallel(newEligible.map(f => () => verifyFinding(f, 'Sweep')))
+    // Same running budget as Phase 2 — see takeVerifyBudget. `round < 3` bounds how many review
+    // rounds run; it bounds nothing about how many verifiers each round dispatches.
+    const toVerify = takeVerifyBudget(newEligible, `Sweep round ${round}`)
+    const sv = await parallel(toVerify.map(f => () => verifyFinding(f, 'Sweep')))
     allFindings.push(...sv.filter(Boolean))
-    log(`Sweep round ${round}: ${newOnes.length} new (${newEligible.length} block-eligible), ${sv.filter(f => f && f.confirmed).length} confirmed`)
+    log(`Sweep round ${round}: ${newOnes.length} new (${newEligible.length} block-eligible, ${toVerify.length} verified), ${sv.filter(f => f && f.confirmed).length} confirmed`)
   }
 }
 
@@ -465,6 +549,19 @@ if (criticalGap.length) {
   blockers = [...blockers, { id: 'coverage-gap', file: '(gate)', title: `Critical dimension(s) did not complete review: ${criticalGap.join(', ')}`, fix: 'Re-run qa.js so correctness + security reviews complete; a binding gate cannot PASS with a critical coverage gap.' }]
 }
 
+// Verifier-budget exhaustion, treated exactly as the coverage gap above is treated, because it is
+// the same class of event: a block-eligible finding that nobody examined. The judge never saw
+// these — they were dropped before Phase 2's verifier pool — so this override is the only thing
+// standing between an exhausted budget and a PASS the run did not earn.
+// MIRRORS the third block condition in decideVerdict() (./lib/gate-logic.mjs). That file is the
+// canonical spec and did NOT have this condition until 2026-08-24, so `npm run test:gate` ran
+// green while certifying the fail-open this override closes. Both copies carry it now; changing
+// either alone is the defect qa-tier-floor.yml raises the tier of an edit here to catch.
+if (unverifiedTruncated.length) {
+  finalVerdict = 'BLOCK'
+  blockers = [...blockers, { id: 'verify-budget-exhausted', file: '(gate)', title: `${unverifiedTruncated.length} block-eligible finding(s) went unverified when the ${MAX_VERIFY}-finding verifier budget was exhausted: ${unverifiedTruncated.map(f => `${f.id}(${f.severity})`).join(', ')}`, fix: `Re-run qa.js against a smaller diff so every block-eligible finding is verified. A binding gate cannot PASS while a finding that could have blocked it was never examined.` }]
+}
+
 // Deterministic severity override — do NOT trust the Opus judge alone to apply the block rule.
 // A confirmed P1 (or P1/P2 at irreversible tier) forces BLOCK even if the judge hallucinated PASS.
 const mustBlock = confirmed.filter(f => f.severity === 'P1' || (TIER === 'irreversible' && f.severity === 'P2'))
@@ -483,6 +580,7 @@ return {
   advisory: advisory.map(f => ({ id: f.id, severity: f.severity, file: f.file, title: f.title })),
   dimensions_failed: failedDims,
   critical_gap: criticalGap,
+  unverified_truncated: unverifiedTruncated,
   verdict: finalVerdict,
   judge_verdict: verdict.verdict,
   summary: verdict.summary,

@@ -360,9 +360,22 @@ const KNOWN_FM_KEYS = [
 ];
 
 // PS-TOOL-EXISTS — the runtime tool universe. A `tools:` entry outside it grants nothing and
-// reads as a boundary, which is the whole never-appear list (§5.2). `mcp__*` entries are passed
-// through deliberately: PS-MCP-BACKED already checks those against configured servers per server,
-// and duplicating that here would give two implementations of one question.
+// reads as a boundary, which is the whole never-appear list (§5.2).
+//
+// `mcp__*` ENTRIES ARE CHECKED HERE, against configuredMcpServers(). Until 2026-08-24 they were
+// skipped, and this comment said they were skipped deliberately: "PS-MCP-BACKED already checks
+// those against configured servers per server, and duplicating that here would give two
+// implementations of one question."
+//
+// SUPERSEDED — that delegation never happened. PS-MCP-BACKED reads `fm.mcpServers`, a DIFFERENT
+// frontmatter field, so nothing ever read an `mcp__` entry in `tools:` and
+// `tools: [mcp__nonexistent__doAnything]` passed this lint clean. That is the `mcpServers`
+// fabrication this linter was written to kill, re-created one field over and hidden behind a
+// comment asserting a coverage that did not exist. Constructed and confirmed in
+// TARGET-ARCHITECTURE.md §"The prompt standard has the gate's disease, in a second organ".
+//
+// It FAILS rather than warns because the `<server>` half is a closed set — the configured-server
+// set, the same one PS-MCP-BACKED compares against — and membership in it is decidable.
 const TOOL_UNIVERSE = [
   'Read', 'Write', 'Edit', 'NotebookEdit', 'Bash', 'BashOutput', 'KillShell',
   'Glob', 'Grep', 'Task', 'Agent', 'WebSearch', 'WebFetch', 'TodoWrite',
@@ -519,8 +532,37 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
 
   // ── PS-TOOL-EXISTS ───────────────────────────────────────────────────────
   if (Array.isArray(fm.tools)) {
+    let configured = null; // computed lazily — most files carry no mcp__ entry at all
     for (const t of fm.tools) {
-      if (String(t).startsWith('mcp__')) continue;
+      const entry = String(t);
+      if (entry.startsWith('mcp__')) {
+        // `mcp__<server>__<tool>`. Split on `__` and keep everything past the server as the tool
+        // name: an MCP tool name may itself contain `__`, a server name by convention may not.
+        const parts = entry.split('__');
+        const server = parts[1];
+        const tool = parts.slice(2).join('__');
+        if (!server || !tool) {
+          // A malformed `mcp__` string FAILS; it is not ignored. Ignoring it would leave `mcp__`
+          // and `mcp__playwright` as unchecked pass-throughs, which is the hole being closed one
+          // string shorter. The shape is closed and decidable, so it belongs on the FAIL side.
+          issues.push(
+            `PS-TOOL-EXISTS: tools entry "${entry}" is not a well-formed MCP tool id — ` +
+            `expected mcp__<server>__<tool>`
+          );
+        } else {
+          if (configured === null) configured = configuredMcpServers();
+          if (!configured.has(server)) {
+            issues.push(
+              `PS-TOOL-EXISTS: tools entry "${entry}" names MCP server "${server}", which is not ` +
+              `configured in .mcp.json or .claude/settings.json ` +
+              `(configured: ${[...configured].sort().join(', ') || 'none'}) — the entry grants nothing`
+            );
+          }
+        }
+        // The `<tool>` half is NOT checked, and that limit is stated rather than left implied: a
+        // server's tool list exists only on a running server, and this linter starts none.
+        continue;
+      }
       if (!TOOL_UNIVERSE.includes(t)) {
         issues.push(`PS-TOOL-EXISTS: tools entry "${t}" is not a runtime tool (${TOOL_UNIVERSE.join(', ')})`);
       }
@@ -623,7 +665,58 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
     }
   }
 
-  // ── PS-JUDGE-BLOCK-CONDITION ─────────────────────────────────────────────
+  // ═══ THREE DEMOTED RULES — WARN as of 2026-08-24. They sit here rather than in the §6.2 block
+  // ═══ below only because moving working code makes a diff harder to check than leaving it.
+  // ═══ PS-DISPOSITION, PS-PRIOR-BELIEF and PS-BODY-TOOL-AFFIRM warn. The two rules interleaved
+  // ═══ with them — PS-JUDGE-BLOCK-CONDITION and PS-FALSE-CONSTRAINT — still FAIL; each says so
+  // ═══ at its own site. Read the posture at the rule, never from this header.
+  //
+  // The three regex over OPEN ENGLISH, and the split at the top of this file assigns that to WARN:
+  // "any pattern over English is eventually wrong about a sentence nobody anticipated, and a
+  // linter that is wrong blocks good work."
+  //
+  // They shipped as FAIL on the strength of "zero hits on the corpus, fires on one constructed
+  // control". TARGET-ARCHITECTURE.md §"The prompt standard has the gate's disease, in a second
+  // organ" built the missing test — a NEGATIVE CONTROL, one paraphrase meaning the same thing —
+  // and each is defeated by it, VERIFIED-BY-EXECUTION:
+  //
+  //   PS-PRIOR-BELIEF      fires on "The diff is believed to be correct."
+  //                        SILENT on "Two senior engineers shipped this. Findings here are usually
+  //                        noise." — the phrasing the 97.2%→3.6% study actually measured. The rule
+  //                        guarding the largest effect here cannot see the construction it was
+  //                        measured with. It also FALSE-POSITIVES: `/\bthe (code|change|diff|work|
+  //                        patch) is (correct|fine|safe|secure|valid)\b/` fires on the legitimate
+  //                        "Determine whether the code is correct."
+  //   PS-DISPOSITION       fires on "Be critical of every finding."
+  //                        SILENT on "Be extremely critical." — the regex needs the words adjacent.
+  //                        False-positive surface too: `/\b(make|be) sure to\b/`.
+  //   PS-BODY-TOOL-AFFIRM  fires on "Run the suite with `Bash`…"
+  //                        SILENT on the same line plus "Do not skip it." — one negation anywhere
+  //                        in the paragraph clears the paragraph, and 90 of 222 paragraphs (40.5%)
+  //                        in the live seven already contain a clearing word
+  //
+  // WHAT A DEMOTION HERE ACTUALLY COSTS, AND WHERE THE GUARANTEE MOVED TO. `main()` exits on
+  // `failCount`, never on `warnCount` — nothing in package.json, .github/workflows/ or scripts/
+  // gates on a warning, so a WARN in this file is cosmetic. The blocking guarantee for these three
+  // now rests ENTIRELY on scripts/prompt-standard.test.mjs, whose corpus-zero assertion fails the
+  // build when any of them starts firing on a live engine. That file is therefore raised to the
+  // irreversible floor in .claude/qa-tier-floor.yml in the same change that demoted them: without
+  // it, neutering PS-PRIOR-BELIEF would have gone from editing an irreversible/block file to
+  // deleting one loop from a full/shadow one. Stated here so a reader at the demotion site does
+  // not have to grep to discover what the demotion leans on.
+  //
+  // Demoting is not deleting: the messages are unchanged and `warnings` is printed under every
+  // passing file. What changes is that a tripwire over English can no longer refuse a merge over a
+  // sentence its author phrased differently. They are tripwires, not judgements.
+
+  // ── PS-JUDGE-BLOCK-CONDITION (FAIL) ──────────────────────────────────────
+  // RESTORED to FAIL 2026-08-24, in the same change that briefly demoted it. It is NOT open prose:
+  // it is a token-presence floor over a CLOSED two-file set (READ_ONLY_ENGINES), and the split at
+  // the top of this file puts a closed set on the FAIL side. Its failure mode is dominantly
+  // FALSE-NEGATIVE — it cannot tell a named condition from the bare word, so it passes files it
+  // should question — and demoting a rule whose error runs that direction removes a floor rather
+  // than reducing wrong blocking. The paraphrase weakness is real and is a reason to sharpen it,
+  // not to stop it refusing a read-only engine that names no BLOCKED condition at all.
   // §4: a file that needs adversarial behaviour may not ask for a mood. It must name the artifact it
   // judges against and the condition under which it returns BLOCKED. Checked on the read-only
   // engines, which is where a verdict binds a merge.
@@ -636,23 +729,40 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
     }
   }
 
-  // ── PS-DISPOSITION · PS-PRIOR-BELIEF · PS-FALSE-CONSTRAINT ───────────────
+  // ── PS-DISPOSITION · PS-PRIOR-BELIEF (WARN) · PS-FALSE-CONSTRAINT (FAIL) ──
+  //
+  // One loop, TWO postures, and the difference is not severity. PS-FALSE-CONSTRAINT is a literal
+  // list of eight statements this repo has EXECUTED and refuted — "subagents cannot spawn
+  // subagents", "maxTurns is advisory". Membership in that list is decidable and its
+  // false-positive surface is bounded and already tested (the hedged, true "`tools:` is not known
+  // to bind `Bash`" is deliberately left alone, and there is a test for exactly that). A closed
+  // list of refuted sentences is not open prose, whatever grammar it is written in — the split at
+  // the top of this file names "a literal phrase list" on the FAIL side, and this is one.
+  //
+  // The other two match dispositions and beliefs, which are open categories of English however the
+  // pattern is written, and both have demonstrated false positives. Same loop, different `posture`.
   const phraseRules = [
-    ['PS-DISPOSITION', DISPOSITION, 'a disposition instruction — name the artifact judged against and the BLOCKED condition instead'],
-    ['PS-PRIOR-BELIEF', PRIOR_BELIEF, 'a stated prior belief about the artifact under judgement — this is the 97.2% to 3.6% class (MODEL-DIVERSITY.md)'],
-    ['PS-FALSE-CONSTRAINT', FALSE_CONSTRAINT, 'a statement this repo has MEASURED false — a false constraint is worse than a missing one, because it is obeyed'],
+    ['PS-DISPOSITION', DISPOSITION, 'a disposition instruction — name the artifact judged against and the BLOCKED condition instead', 'warn'],
+    ['PS-PRIOR-BELIEF', PRIOR_BELIEF, 'a stated prior belief about the artifact under judgement — this is the 97.2% to 3.6% class (MODEL-DIVERSITY.md)', 'warn'],
+    ['PS-FALSE-CONSTRAINT', FALSE_CONSTRAINT, 'a statement this repo has MEASURED false — a false constraint is worse than a missing one, because it is obeyed', 'fail'],
   ];
-  for (const [id, patterns, why] of phraseRules) {
+  for (const [id, patterns, why, posture] of phraseRules) {
     for (const re of patterns) {
       const hit = modelReaching.match(re);
       if (hit) {
         const at = modelReaching.indexOf(hit[0]);
-        issues.push(`${id}: ${why} — ${JSON.stringify(modelReaching.slice(Math.max(0, at - 30), at + hit[0].length + 30).trim())}`);
+        const excerpt = JSON.stringify(modelReaching.slice(Math.max(0, at - 30), at + hit[0].length + 30).trim());
+        if (posture === 'fail') {
+          issues.push(`${id}: ${why} — ${excerpt}`);
+        } else {
+          warnings++;
+          checks.push(`${id}: ${why} — ${excerpt} — advisory only; a paraphrase off the list is invisible to this rule`);
+        }
       }
     }
   }
 
-  // ── PS-BODY-TOOL-AFFIRM ──────────────────────────────────────────────────
+  // ── PS-BODY-TOOL-AFFIRM (WARN) ───────────────────────────────────────────
   const granted = new Set(Array.isArray(fm.tools) ? fm.tools : []);
   for (const para of paragraphs) {
     const flat = normaliseProse(para);
@@ -666,9 +776,11 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
         if (granted.has(tool)) continue;
         if (!normaliseProse(para).includes(tool)) continue;
         if (!sentence.includes(tool)) continue;
-        issues.push(
+        warnings++;
+        checks.push(
           `PS-BODY-TOOL-AFFIRM: the body directs use of \`${tool}\`, which frontmatter does not grant ` +
-          `(tools: ${[...granted].join(', ') || 'none'}) — ${JSON.stringify(sentence.slice(0, 80))}`
+          `(tools: ${[...granted].join(', ') || 'none'}) — ${JSON.stringify(sentence.slice(0, 80))} ` +
+          `— advisory only; one negation anywhere in the paragraph clears the whole paragraph`
         );
       }
     }
@@ -699,6 +811,12 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
   });
 
   // ── Warnings (§6.2) — over open prose or an unavoidable judgement call ───
+  //
+  // NOT the only warnings in this function. The three demoted 2026-08-24 — PS-DISPOSITION,
+  // PS-PRIOR-BELIEF and PS-BODY-TOOL-AFFIRM — warn from where they already stood, above.
+  // PS-JUDGE-BLOCK-CONDITION and PS-FALSE-CONSTRAINT sit among them and still FAIL. Said here
+  // because a section header claiming to hold all of something, while three of them sit
+  // elsewhere, is the small version of the comment defect this commit series is fixing.
   //
   // PS-LENGTH-BAND. Descriptive, from the corpus: 113-149 observed across the seven. reviewer-readonly
   // is the longest BECAUSE it justifies its own existence, which is the right reason to be long — a
