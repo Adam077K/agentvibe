@@ -1,6 +1,14 @@
-// POSTURE: BLOCKS in the binding QA gate. BLOCKS in CI for 14 of the 25 steps it is wired to.
-// Preloaded with `--require` by every `node --test` script in `npm run check` — 25 of them — and
+// POSTURE: BLOCKS in the binding QA gate. BLOCKS in CI for 16 of the 26 steps it is wired to.
+// Preloaded with `--require` by every `node --test` script in `npm run check` — 26 of them — and
 // scripts/protected-write.test.mjs fails if one stops carrying it.
+//
+// Both numbers rot. Re-measure them rather than trusting this comment — the suite is STEPS in
+// scripts/lib/check-suite.js, and the rule is "reachable from STEPS, runs `node --test`":
+//
+//   node -e "const{STEPS,reachable}=require('./scripts/lib/check-suite.js');
+//     const p=JSON.parse(require('fs').readFileSync('package.json','utf8')).scripts;
+//     const t=[...reachable(p,STEPS)].filter(n=>/\bnode\b[^&|]*--test\b/.test(p[n]));
+//     console.log(t.length, t.filter(n=>p[n].includes('protected-write-tripwire')).length)"
 //
 // scripts/protected-write-tripwire.cjs — a test may not write where the armed sandbox refuses.
 //
@@ -8,8 +16,12 @@
 //   • THE GATE — .claude/workflows/qa.js names `npm run check` as the oracle that BLOCKs before
 //     any panel agent is dispatched, and `test:protected-write` is first in that chain. This is
 //     the environment the defect lived in, so this is the one that matters.
-//   • CI — .github/workflows/ci.yml invokes 14 of the 25 by name via `npm run`, and those carry
-//     the preload.
+//   • CI — .github/workflows/ci.yml invokes 16 of the 26 by name via `npm run`, and those carry
+//     the preload. Re-counted 2026-08-24 when the suite moved from an `&&` chain to
+//     scripts/run-checks.mjs; the previous reading of 14 of 25 was taken before `test:pre-tool-use`
+//     was wired into ci.yml the same day, and before `test:check-suite` existed.
+//   • NOT ci.yml for `test:check-suite`, the suite's own drift guard — adding it edits a workflow
+//     file, which is `irreversible` tier. Same known gap, same reason, as the two below.
 //   • NOT ci.yml's "Gate logic tests" step, which runs
 //     `node --test .claude/workflows/lib/gate-logic.test.mjs` DIRECTLY rather than through
 //     `test:gate`. That script carries the preload and CI does not use it, so that one file is
