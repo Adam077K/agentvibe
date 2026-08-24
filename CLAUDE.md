@@ -340,9 +340,9 @@ git commit -m "feat(scope): description"
 > a mistake is reporting the resulting partial tree as its own broken work.
 
 > **Caveat on `--show-toplevel`.** It is correct **from any cwd inside the session project root** — which
-> is where an agent always is — and that is the whole claim. It is *not* an unconditional truth: run it
-> from `/Users/adamks/VibeCoding/agentvibe` and it returns that path, which is *above* the session root
-> and reproduces the original defect exactly. The obvious hardening is unavailable: `CLAUDE_PROJECT_DIR`
+> is where an agent always is — and that is the whole claim. It is *not* an unconditional truth: run it from
+> **the main repository above your session root** (here, `…/VibeCoding/agentvibe`) and it returns *that*
+> path, which is above the session root and reproduces the original defect exactly. The obvious hardening is unavailable: `CLAUDE_PROJECT_DIR`
 > is **empty in an agent's Bash environment**, so it cannot be used as the anchor in a shell command even
 > though `pre-tool-use.sh` reads it.
 
