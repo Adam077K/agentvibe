@@ -448,6 +448,26 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
 > through Phase 8a — eight phases shipped while it said "Sprint 1 — foundation." **If you change the phase,
 > change this block in the same PR.**
 
+- **THE BINDING GATE CAN COMPLETE NOW — 2026-08-24.** `npm run check` is **29 of 29 with the sandbox armed**,
+  measured at the session root. It was 26 of 29 and the gate BLOCKed on its own oracle for every diff:
+  `test:skill-clamp` and `test:registration` built fixtures inside `.claude/agents/` and `.claude/hooks/`,
+  which the armed sandbox denies. Two individually-correct changes — arming the sandbox (#94) and
+  oracle-first ordering — collided, and nothing watched the seam. Fixed in `494c95b`, which also adds a
+  preloaded tripwire that turns the next collision into a red test. **One blocker remains:** `check:mc`
+  fails on `mission-control/test/stream.test.ts:249` (EADDRINUSE despite `port: 0`), deterministic, and
+  pre-existing. `.qa/verdicts/` is still empty — no gate run has yet completed end to end.
+- **The sandbox deny-set is PER SESSION ROOT, and this matters more than it sounds.** `.claude/hooks`,
+  `.claude/skills` and `.claude/workflows` are denied at the session root and WRITABLE in a nested worktree.
+  It hid half a finding three separate times on 2026-08-24 and produced four false "regressions". **Measure
+  at the session root, never in a sibling worktree.**
+- **`git worktree add` cannot complete anywhere under the armed sandbox** — exit 128, 32 denials across
+  `.claude/agents/**`, `.claude/commands/**` and `.mcp.json`. Adding those paths to `allowWrite` does not
+  lift it: `**/.worktrees/**` already matches the refused path and it was refused anyway. That closes
+  SANDBOX.md's two open acceptance questions. Escalation is required for that one command.
+- **Known contradiction, deliberate and visible:** `.claude/agents/builder.md` and `designer.md` still teach
+  the superseded worktree command as Step 1, and `schema-lint.js:1068` still REQUIRES it — `lint:agents` is
+  green only because they do. Both irreversible tier. Required follow-up with an exit criterion in
+  [the handoff](docs/08-agents_work/handoffs/2026-08-25-after-the-gate-ran.md).
 - **Where we are:** Phases 1–7 complete · **Phase 8a complete** · **8b (Dispatch) BUILT 2026-08-16 against
   `agentvibe` as its only target** — the loop is end to end (the server enqueues to a queue file, a
   founder-run consumer in `mission-control/scripts/` reads it; the server still never spawns, and
