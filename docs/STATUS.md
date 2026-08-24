@@ -113,9 +113,22 @@ built it.
    not a defect in the claim. Issue **#56** is decided in the same pass: `c-lenses-and-playbooks-are-loaded`
    carries a `refresh` disposition — shrink the 27,069-byte session-start payload with a router, do not raise
    the 4,096 budget to fit it.
-3. **The OS sandbox is configured nowhere.** `operator` and `instrument` are specified and deliberately
-   uncreated until it exists; they would hold payment keys and deploy tokens in a container that cannot hold
-   them.
+3. **The OS sandbox is ARMED — and this item stays open, for a corrected reason.**
+   *Superseded 2026-08-24: this item read "The OS sandbox is configured nowhere." That was false.*
+   `.claude/settings.json` carries `sandbox.enabled: true` and `failIfUnavailable: true`, armed by Founder
+   decision 2026-08-17 and pinned by `npm run test:sandbox` — which fails if either is flipped back, and
+   passes today (7 tests, exit 0).
+   `operator` and `instrument` are **still specified and still uncreated**, verified rather than recalled:
+   `.claude/agents/` holds 18 files and neither is among them, and the `ENGINES` list in
+   `.claude/hooks/schema-lint.js` names seven engines, neither of them — that file's own comment says the
+   two "join `ENGINES` in the PR that creates their files". So the trigger this item named, *"until it
+   exists"*, is now satisfied while the agents remain uncreated.
+   **Arming does not discharge the reason.** The sandbox governs Bash and its children, and
+   `dangerouslyDisableSandbox` allows a denied command to be retried with it off, so it is a guardrail
+   against accident and not a containment boundary against the agent — `docs/03-system-design/SANDBOX.md`,
+   Finding 2. A container that cannot hold payment keys and deploy tokens against the agent itself still
+   cannot hold them. The open decision is therefore unchanged in substance and different in premise: no
+   longer *"configure a sandbox"* but *"decide what actually holds those credentials."*
 4. **The prompt-craft gate is still closed.** Nothing under `.claude/agents/` may be created, rewritten or
    deleted until a written prompt standard exists and is approved. Two narrow capability-only exceptions were
    granted explicitly and neither is a precedent.
