@@ -448,14 +448,46 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
 > through Phase 8a — eight phases shipped while it said "Sprint 1 — foundation." **If you change the phase,
 > change this block in the same PR.**
 
-- **THE BINDING GATE CAN COMPLETE NOW — 2026-08-24.** `npm run check` is **29 of 29 with the sandbox armed**,
-  measured at the session root. It was 26 of 29 and the gate BLOCKed on its own oracle for every diff:
-  `test:skill-clamp` and `test:registration` built fixtures inside `.claude/agents/` and `.claude/hooks/`,
-  which the armed sandbox denies. Two individually-correct changes — arming the sandbox (#94) and
-  oracle-first ordering — collided, and nothing watched the seam. Fixed in `494c95b`, which also adds a
-  preloaded tripwire that turns the next collision into a red test. **One blocker remains:** `check:mc`
-  fails on `mission-control/test/stream.test.ts:249` (EADDRINUSE despite `port: 0`), deterministic, and
-  pre-existing. `.qa/verdicts/` is still empty — no gate run has yet completed end to end.
+- **THE BINDING GATE CAN COMPLETE NOW — 2026-08-24.** `npm run check` is **29 of 30 steps with the sandbox
+  armed**, measured at the session root. Derive the denominator, never quote it from memory:
+  `node -e "console.log(require('./package.json').scripts.check.split('&&').length)"` → **30**.
+  *Superseded 2026-08-24: this line read "29 of 29" and the P0 bullet below read "29 steps now". Both were
+  wrong in the same way, and the provenance is the point.* The builder who did the work recorded **"29 of 30
+  `check` steps pass; only `check:mc` fails"** and was right; the CEO synthesis that same day rendered it
+  "29 of 29" — dropping the one failing step out of the denominator, so a partial pass read as a clean
+  sweep — and *that* version is what propagated into this file and two handoffs. The worker measured
+  correctly; the orchestrator's summary lost it. This repo already concluded that **the orchestrator's brief
+  is a defect surface nobody reviews**; this is the second instance of it in one week.
+  **The tally is per-step, and `npm run check` cannot itself report it:** the script chains its 30 steps with
+  `&&` and `check:mc` is step 21, so one `npm run check` invocation aborts there and the final 9 steps
+  (`test:probe-readonly` through `test:sandbox`) never run. Read "29 of 30" as a per-step result, not as the
+  exit status of a single run.
+  Before the fix it was 26 by that same per-step tally, and the gate BLOCKed on its own oracle for every
+  diff: `test:skill-clamp` and `test:registration` built fixtures inside `.claude/agents/` and
+  `.claude/hooks/`, which the armed sandbox denies. Two individually-correct changes — arming the sandbox
+  (#94) and oracle-first ordering — collided, and nothing watched the seam. Fixed in `494c95b`, which also
+  adds a preloaded tripwire that turns the next collision into a red test. **One blocker remains — `check:mc`
+  — and it is not a mission-control defect; see the next bullet.** `.qa/verdicts/` is still empty: no gate
+  run has yet completed end to end.
+- **`check:mc`'s single failure is caused by the ARMED SANDBOX, not by mission-control — measured
+  2026-08-24.** Two cells at the session root, same commit, same deps, Bun 1.3.10 in both:
+  **sandboxed → 344 pass · 1 fail · exit 1** (`EADDRINUSE`, in the real-socket SSE test in
+  `mission-control/test/stream.test.ts`); **sandbox disabled → 345 pass · 0 fail · exit 0**, zero
+  `EADDRINUSE`. *This supersedes the reading that the failure was "deterministic and pre-existing" in
+  mission-control, and the 2026-08-25 handoff's hypothesis of "a leaked server from an earlier test in the
+  same file". Both are refuted by the second cell.* `grep -rn 'Bun.serve' mission-control` finds exactly
+  **one** server in the whole tree, it is stopped in a `finally`, and `port: 0` asks the kernel for an
+  ephemeral port and so cannot collide. The reported error carries **`errno: 0`**, where a genuine macOS
+  `EADDRINUSE` is errno **48** — a code synthesized by Bun, not one returned by the kernel. It is the
+  sandbox denying a loopback `bind()`, surfaced under a misleading name.
+  **Do NOT edit `stream.test.ts` to make this green.** It is a regression test for a real shipped bug that
+  was found by running it; taking away its real socket would leave it vacuous — precisely the defect class
+  this repo found and fixed last session.
+  **No network allowance can fix it either.** The sandbox's network model is an outbound domain proxy and
+  exposes **no setting for inbound or loopback binding** (Claude Code sandboxing documentation, accessed
+  2026-08-24 — <https://code.claude.com/docs/en/sandboxing>); consistent with that, the `sandbox` block in
+  `.claude/settings.json` carries only `filesystem` and has no `network` key at all. Fuller write-up:
+  [SANDBOX.md](docs/03-system-design/SANDBOX.md).
 - **The sandbox deny-set is PER SESSION ROOT, and this matters more than it sounds.** `.claude/hooks`,
   `.claude/skills` and `.claude/workflows` are denied at the session root and WRITABLE in a nested worktree.
   It hid half a finding three separate times on 2026-08-24 and produced four false "regressions". **Measure
@@ -481,7 +513,8 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   nine branches in one train, the first time `main` had moved since before 2026-08-20. What landed: the
   PR-route gate **blocks** and posts a check-run signed by `GITHUB_TOKEN` with the author grep deleted;
   `qa.js` runs a deterministic oracle before any panel agent is dispatched; credential `denyRead` covers
-  the CLI credential stores; `test:tier-gate` is in `npm run check` (29 steps now); and
+  the CLI credential stores; `test:tier-gate` is in `npm run check` (**30** steps now — this read "29"
+  until 2026-08-24, the same dropped-step error corrected in the gate bullet above); and
   `war-room/bin/PROJECT_NAME.tmpl` no longer seeds an unreviewed model-resolved merge into every generated
   project. **Only P0 item 6 remains** — `claim-judge-external` (Codex), still correctly deferred: bug
   #19945 returns exit 0 with empty stdout when detached from a TTY, which is exactly how a resolver runs.
