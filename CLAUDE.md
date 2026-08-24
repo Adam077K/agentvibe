@@ -290,20 +290,69 @@ fail the build — so the friction is measured rather than guessed. The exceptio
 
 ## Git Worktree Protocol
 
-```bash
-# Detect — you may already be inside a worktree
-git worktree list
-MAIN_REPO=$(git worktree list | head -1 | awk '{print $1}')
+> **Superseded 2026-08-24.** This block used to anchor child worktrees at the **main repository** —
+> `MAIN_REPO=$(git worktree list | head -1 | awk '{print $1}')`, then
+> `git -C "$MAIN_REPO" worktree add "$MAIN_REPO/.worktrees/[slug]"` — and closed with *"Never run
+> `git worktree add` from inside a worktree without `-C $MAIN_REPO`."* Both instructions were wrong in the
+> same way: **an agent's writes are scoped to its session project root, and `$MAIN_REPO` is above it.** An
+> orchestrator here is itself always inside a worktree, so the documented path placed every child worktree in
+> a *sibling* of the only root its own `Write`/`Edit` may reach. The `-C` sentence was the wrong rule for the
+> right worry: what makes the command safe is the **absolute path**, not the flag.
 
-# Create child worktree FROM the main repo root
-git -C "$MAIN_REPO" worktree add "$MAIN_REPO/.worktrees/[slug]" -b feat/[slug]
-cd "$MAIN_REPO/.worktrees/[slug]"
+```bash
+# Anchor at YOUR OWN toplevel — never at the main repo. `--show-toplevel` sits at or below the
+# session project root from every position an agent can occupy; `$MAIN_REPO` sits at or above it.
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+
+git worktree add "$PROJECT_ROOT/.worktrees/[slug]" -b feat/[slug]
+cd "$PROJECT_ROOT/.worktrees/[slug]"
 
 # Atomic commits
 git commit -m "feat(scope): description"
 ```
 
-**Never** run `git worktree add` from inside a worktree without `-C $MAIN_REPO`. `.worktrees/` is gitignored.
+`.worktrees/` is gitignored.
+
+**Why: the write boundary is the session project root, not the repository.**
+[.claude/hooks/pre-tool-use.sh](.claude/hooks/pre-tool-use.sh) permits `Edit`/`Write` under
+`${CLAUDE_PROJECT_DIR:-$PWD}` plus two named exemptions, and the Bash sandbox's `allowOnly` list in
+[.claude/settings.json](.claude/settings.json) is anchored the same way. Measured 2026-08-24, one real
+`Write` per row — the hook names the root itself when it refuses, and the root it named was
+`…/.worktrees/ceo-1-1787566829`, a **worktree**, not `…/agentvibe`:
+
+| Creating agent's project root | Child worktree path | Result |
+|---|---|---|
+| `…/.worktrees/ceo-1-1787566829` | `$MAIN_REPO/.worktrees/<slug>` — **the old protocol** | **refused** |
+| `…/.worktrees/ceo-1-1787566829` | `$PROJECT_ROOT/.worktrees/<slug>` — the corrected protocol | allowed |
+| a builder inside `…/.worktrees/pr5-systemic` | its own `$PROJECT_ROOT/.worktrees/<slug>` | allowed |
+
+**Three consequences, all observed 2026-08-24, none theoretical:**
+
+1. **Silent partial checkout.** `git worktree add` into a location it may not fully write leaves a tree
+   holding `.git`, `.github` and one file under `scripts/` — no `package.json`, no `.claude/`, no `docs/`.
+   `git status` there then reports ~800 *deletions* that read as the agent's own edits, and nothing inside
+   such a worktree can diagnose it. Reproduced while writing this: the checkout died on
+   `.claude/commands/*.md` and `.mcp.json` with `Operation not permitted` and left a dangling branch, because
+   `git worktree add` creates the branch before it checks out.
+2. **False regressions.** `test:lenses` and `test:playbooks` failed in a sibling worktree and passed on the
+   same commit (`db5bf45`) inside the project root — those tests write fixtures into the repo root. Two
+   failures in one location, seven passes in the other, identical code.
+3. **Divergence by tool, not by task.** One builder succeeded where two were refused, because it used `Bash`
+   while they used `Write`/`Edit`. The hook gives `Bash` no path concept at all; only `Edit`/`Write` are
+   root-scoped. Same instruction, opposite outcomes, and the difference was invisible to all three.
+
+**Do not fix this by widening the hook.** The previous instance of this same `Bash`-vs-`Write` divergence
+(issue #96.3, recorded in `pre-tool-use.sh` beside the allowed-roots loop) was *correctly* resolved by
+widening the `Write` side with a third allowed root — `Bash` already had the scratchpad and `Write` was the
+one in the wrong. Applying that template here inverts it: allowing `$MAIN_REPO/.worktrees` would put every
+parallel session's tree inside every other session's write scope, so a subagent of `ceo-1` could overwrite
+`ceo-2`'s work. **Two instances of one divergence, opposite correct resolutions** — which is the durable
+lesson: this class has no single rule. When `Bash` and `Write` disagree about a path, decide which one is
+right *for that path* and move the other to meet it.
+
+And be clear about what this boundary is **not**. It is the session root, so worktrees that share one root
+are already mutually writable — measured the same day, by both tools. Isolation between agents inside a
+session is a convention they keep, not a rule anything enforces.
 
 ---
 
