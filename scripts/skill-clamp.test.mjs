@@ -19,30 +19,86 @@
 //
 // No agent declares one today, which is exactly why this rule is cheap to add now and would be
 // expensive to discover during the migration.
+//
+// ── WHERE THE FIXTURES LIVE, AND WHY THEY MOVED ─────────────────────────────────────────────
+// They used to be written into this repo's own .claude/agents/ and .claude/skills/. With the OS
+// sandbox armed (#94, `sandbox.enabled: true`) those directories are write-denied in the session
+// the binding QA gate runs in — arming it protects them precisely BECAUSE writing there disarms
+// the harness. Every fixture write therefore raised EPERM, so `npm run check` — the gate's own
+// oracle — could not pass, and the gate BLOCKed on its oracle before dispatching any reviewer.
+// CI never saw it: CI runs unsandboxed.
+//
+// The seam is a throwaway repo root under os.tmpdir(). schema-lint.js derives REPO_ROOT by
+// walking up from process.cwd() until it finds .claude/agents, so running the REAL linter as a
+// child process with cwd set to that root makes everything it resolves — the skills tree,
+// MANIFEST.json, .mcp.json — resolve inside the throwaway. No production code changed.
+//
+// WHAT THAT COSTS, STATED PLAINLY: the skills these rules read are a byte-for-byte COPY of
+// .claude/skills, not the originals. `the throwaway root is a faithful copy…` asserts that
+// byte-identity for every skill this file names, and the two tests that must speak about
+// production — `no agent on disk today declares a clamping skill` and `designer holds the
+// browser grant` — still read the real tree.
 
-import { test } from 'node:test';
+import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { lintFile } = require(path.join(REPO, '.claude', 'hooks', 'schema-lint.js'));
-
+const LINTER = path.join(REPO, '.claude', 'hooks', 'schema-lint.js');
 const AGENTS_DIR = path.join(REPO, '.claude', 'agents');
 
-// Write a throwaway agent file INSIDE .claude/agents/ so relative resolution matches production,
-// lint it, then remove it. The name is unlikely to collide and is cleaned up in `finally`.
-function lintAgentWith(skills, extra = '') {
-  const name = `zz-skill-clamp-fixture-${process.pid}`;
-  const file = path.join(AGENTS_DIR, `${name}.md`);
-  const body = `---
+// ── The throwaway repo root ─────────────────────────────────────────────────────────────────
+// Copied, not fabricated: a hand-written `impeccable/SKILL.md` would turn every assertion below
+// into a statement about this file's own fixtures rather than about the skills that ship.
+const TEMP = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-clamp-root-'));
+const TEMP_AGENTS = path.join(TEMP, '.claude', 'agents');
+const TEMP_SKILLS = path.join(TEMP, '.claude', 'skills');
+fs.mkdirSync(TEMP_AGENTS, { recursive: true });
+fs.cpSync(path.join(REPO, '.claude', 'skills'), TEMP_SKILLS, { recursive: true });
+fs.copyFileSync(path.join(REPO, '.mcp.json'), path.join(TEMP, '.mcp.json'));
+
+after(() => fs.rmSync(TEMP, { recursive: true, force: true }));
+
+// Every skill name this file asserts about. Named once so the faithfulness check below cannot
+// drift out of step with the tests it underwrites.
+const SKILLS_UNDER_TEST = [
+  'impeccable', 'pitch-deck-visuals', 'react-patterns', 'tdd-workflow',
+  'security-audit', 'agent-evaluation',
+];
+
+/**
+ * Runs the REAL schema-lint.js over `files`, with REPO_ROOT pinned by `cwd`.
+ * Returns one issue array per file, in argument order. A failing lint exits 1 with the JSON
+ * still on stdout, so a FAILING run is data here rather than a throw.
+ */
+function runLinter(files, cwd) {
+  let out;
+  try {
+    out = execFileSync(process.execPath, [LINTER, '--json', ...files], {
+      cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } catch (e) {
+    out = e.stdout || '';
+    if (!out) throw e; // exit 2 is a script error, not a lint failure — do not swallow it
+  }
+  return JSON.parse(out).files.map((f) => f.issues || []);
+}
+
+let seq = 0;
+const fixtureName = (kind) => `zz-${kind}-fixture-${process.pid}-${seq++}`;
+
+function writeAgentFixture(name, skills, extra = '') {
+  const file = path.join(TEMP_AGENTS, `${name}.md`);
+  fs.writeFileSync(file, `---
 name: ${name}
 description: |
-  Throwaway fixture written by scripts/skill-clamp.test.mjs. If this file is on disk, a test run died before its cleanup.
+  Throwaway fixture written by the skill-clamp test into a temp root. If this file is on disk, a test run died before its cleanup.
 model: claude-sonnet-4-6
 tools: [Read, Glob, Grep]
 color: gray
@@ -58,10 +114,16 @@ ${extra}---
 ## Purpose
 
 Fixture.
-`;
+`);
+  return file;
+}
+
+// Lint one agent that declares `skills`. The fixture is removed in `finally` so the
+// leaves-nothing-behind tests below mean something.
+function lintAgentWith(skills, extra = '') {
+  const file = writeAgentFixture(fixtureName('skill-clamp'), skills, extra);
   try {
-    fs.writeFileSync(file, body);
-    return (lintFile(file) || {}).issues || [];
+    return runLinter([file], TEMP)[0];
   } finally {
     fs.rmSync(file, { force: true });
   }
@@ -70,6 +132,27 @@ Fixture.
 const isLink = (p) => { try { return fs.lstatSync(p).isSymbolicLink(); } catch { return false; } };
 
 const clampIssues = (issues) => issues.filter((i) => /allowed-tools/.test(i));
+
+test('the throwaway root is a faithful copy of the skills this file asserts about', () => {
+  // If this ever fails, every clamp assertion below is describing a fixture rather than a skill.
+  for (const s of SKILLS_UNDER_TEST) {
+    const rel = path.join(s, 'SKILL.md');
+    assert.deepEqual(
+      fs.readFileSync(path.join(TEMP_SKILLS, rel)),
+      fs.readFileSync(path.join(REPO, '.claude', 'skills', rel)),
+      `${rel} in the throwaway root differs from the one that ships`
+    );
+  }
+  assert.deepEqual(
+    fs.readFileSync(path.join(TEMP_SKILLS, 'MANIFEST.json')),
+    fs.readFileSync(path.join(REPO, '.claude', 'skills', 'MANIFEST.json')),
+  );
+  assert.deepEqual(
+    fs.readFileSync(path.join(TEMP, '.mcp.json')),
+    fs.readFileSync(path.join(REPO, '.mcp.json')),
+    'the MCP allowlist assertions would be about a fabricated config'
+  );
+});
 
 test('attaching a skill that clamps to one Bash pattern is refused, and the message names the clamp', () => {
   const issues = lintAgentWith(['impeccable']);
@@ -107,17 +190,19 @@ test('skills that do not declare allowed-tools attach cleanly', () => {
 test('no agent on disk today declares a clamping skill', () => {
   // The rule is cheap now precisely because it is currently vacuous. If this ever fails, the
   // migration attached one and the agent it landed on is quietly missing most of its tools.
-  const offenders = [];
-  for (const f of fs.readdirSync(AGENTS_DIR).filter((n) => n.endsWith('.md'))) {
-    const issues = (lintFile(path.join(AGENTS_DIR, f)) || {}).issues || [];
-    if (clampIssues(issues).length) offenders.push(f);
-  }
+  //
+  // This one runs against the REAL repo root — it is the production statement, and a copy could
+  // not make it. It writes nothing.
+  const files = fs.readdirSync(AGENTS_DIR).filter((n) => n.endsWith('.md'));
+  assert.ok(files.length > 0, 'no agent files found — the check would pass vacuously');
+  const perFile = runLinter(files.map((f) => path.join(AGENTS_DIR, f)), REPO);
+  const offenders = files.filter((_, i) => clampIssues(perFile[i]).length);
   assert.deepEqual(offenders, []);
 });
 
 test('the fixture leaves nothing behind', () => {
-  const strays = fs.readdirSync(AGENTS_DIR).filter((n) => n.startsWith('zz-skill-clamp-fixture'));
-  assert.deepEqual(strays, [], `fixture files left in ${AGENTS_DIR}`);
+  const strays = fs.readdirSync(TEMP_AGENTS).filter((n) => n.startsWith('zz-skill-clamp-fixture'));
+  assert.deepEqual(strays, [], `fixture files left in ${TEMP_AGENTS}`);
 });
 
 test('a skill directory that does not exist is not reported as a clamp', () => {
@@ -135,15 +220,17 @@ test('a skill directory that does not exist is not reported as a clamp', () => {
 // in CI logs, in a linter that runs on every pull_request including from forks. CWE-22.
 //
 // Reproduced first-hand before fixing: a canary file at the repo root was read and its contents
-// appeared verbatim in the linter's output.
+// appeared verbatim in the linter's output. The canary now sits at the root of the THROWAWAY
+// tree, which is the root the child linter resolves `../..` against.
 
-function lintWithRawSkillName(name) {
-  const agent = `zz-traversal-fixture-${process.pid}`;
-  const file = path.join(AGENTS_DIR, `${agent}.md`);
-  fs.writeFileSync(file, `---
+function lintRawSkillNames(names) {
+  const files = names.map((name) => {
+    const agent = fixtureName('traversal');
+    const file = path.join(TEMP_AGENTS, `${agent}.md`);
+    fs.writeFileSync(file, `---
 name: ${agent}
 description: |
-  Throwaway traversal fixture written by scripts/skill-clamp.test.mjs.
+  Throwaway traversal fixture written by the skill-clamp test into a temp root.
 model: claude-sonnet-4-6
 tools: [Read]
 color: gray
@@ -160,31 +247,36 @@ escalates_when: |
 
 Fixture.
 `);
+    return file;
+  });
   try {
-    return (lintFile(file) || {}).issues || [];
+    return runLinter(files, TEMP);
   } finally {
-    fs.rmSync(file, { force: true });
+    for (const f of files) fs.rmSync(f, { force: true });
   }
 }
+
+const lintWithRawSkillName = (name) => lintRawSkillNames([name])[0];
 
 const CANARY = 'ZZ-CANARY-MUST-NEVER-BE-READ';
 
 test('a traversing skill name reads nothing and echoes nothing', () => {
   // Plant a file the traversal would have hit, containing an allowed-tools line.
-  const bait = path.join(REPO, 'SKILL.md');
-  const preexisting = fs.existsSync(bait);
-  assert.equal(preexisting, false, 'refusing to run: a real SKILL.md exists at the repo root');
+  const bait = path.join(TEMP, 'SKILL.md');
+  assert.equal(fs.existsSync(bait), false, 'refusing to run: the throwaway root already has a SKILL.md');
   fs.writeFileSync(bait, `allowed-tools: ${CANARY}\n`);
   try {
-    for (const name of ['../..', 'a/../../b', '../../etc', '/etc', '..\\..']) {
-      const issues = lintWithRawSkillName(name);
-      const leaked = issues.filter((i) => i.includes(CANARY));
+    const names = ['../..', 'a/../../b', '../../etc', '/etc', '..\\..'];
+    const perName = lintRawSkillNames(names);
+    names.forEach((name, i) => {
+      const issues = perName[i];
+      const leaked = issues.filter((s) => s.includes(CANARY));
       assert.deepEqual(leaked, [], `name ${JSON.stringify(name)} leaked file contents: ${leaked[0] || ''}`);
       assert.deepEqual(
-        issues.filter((i) => /declares allowed-tools/.test(i)), [],
+        issues.filter((s) => /declares allowed-tools/.test(s)), [],
         `name ${JSON.stringify(name)} was treated as a clamping skill`
       );
-    }
+    });
   } finally {
     fs.rmSync(bait, { force: true });
   }
@@ -202,18 +294,21 @@ test('a traversing name still gets its ordinary "not in MANIFEST.json" complaint
 
 test('the name-shape guard holds independently of the manifest check', () => {
   // Direct unit test of the guard, so reordering the caller cannot quietly disarm it.
-  const { lintFile: _lf } = require(path.join(REPO, '.claude', 'hooks', 'schema-lint.js'));
+  const { lintFile: _lf } = require(LINTER);
   assert.ok(typeof _lf === 'function');
-  for (const bad of ['../..', '/etc/passwd', 'a/b', 'UPPER', '.hidden', '-leading']) {
-    const issues = lintWithRawSkillName(bad).filter((i) => /declares allowed-tools/.test(i));
-    assert.deepEqual(issues, [], `${bad} passed the shape guard`);
-  }
+  const bad = ['../..', '/etc/passwd', 'a/b', 'UPPER', '.hidden', '-leading'];
+  lintRawSkillNames(bad).forEach((issues, i) => {
+    assert.deepEqual(
+      issues.filter((s) => /declares allowed-tools/.test(s)), [],
+      `${bad[i]} passed the shape guard`
+    );
+  });
 });
 
 test('no traversal fixture is left behind', () => {
-  const strays = fs.readdirSync(AGENTS_DIR).filter((n) => n.startsWith('zz-traversal-fixture'));
+  const strays = fs.readdirSync(TEMP_AGENTS).filter((n) => n.startsWith('zz-traversal-fixture'));
   assert.deepEqual(strays, []);
-  assert.equal(fs.existsSync(path.join(REPO, 'SKILL.md')), false, 'bait file survived the test');
+  assert.equal(fs.existsSync(path.join(TEMP, 'SKILL.md')), false, 'bait file survived the test');
 });
 
 // ── Symlink route to the same disclosure — found by the gate's SECOND pass ────────────────
@@ -222,30 +317,82 @@ test('no traversal fixture is left behind', () => {
 // tree satisfied the lexical containment check while readFileSync followed the link out.
 // Reproduced before fixing: lexical check true, realpath /private/tmp/evil-target/SKILL.md,
 // canary readable. Fixed with lstat (refuse a symlinked skill dir) + realpathSync containment.
+//
+// THIS TEST WAS VACUOUS UNTIL 2026-08-24 AND IS NOT ANY MORE. The clamp read is gated on
+// `live.has(name)` — the name must appear in MANIFEST.json — and a fixture symlink planted at
+// runtime never does. So the lstat/realpath guard was never reached and the test asserted the
+// absence of a leak that nothing was attempting. The threat it exists for is a REGISTERED skill
+// whose directory is swapped for a symlink, so the root below registers the fixture name in its
+// own manifest, and a positive control proves the read path is live before the symlink case
+// asserts an absence.
 
-test('a symlinked skill directory is refused, and leaks nothing', () => {
-  const SYM = 'zz-symlink-fixture';
-  const skillsRoot = path.join(REPO, '.claude', 'skills');
-  const link = path.join(skillsRoot, SYM);
+/** A second, hand-authored root: its manifest has to be authored for the guard to be reached. */
+function makeSymlinkRoot() {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-clamp-symlink-'));
+  fs.mkdirSync(path.join(root, '.claude', 'agents'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.claude', 'skills'), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, '.claude', 'skills', 'MANIFEST.json'),
+    JSON.stringify({ skills: [{ name: 'zz-symlink-fixture' }, { name: 'zz-real-fixture' }] }, null, 2)
+  );
+  return root;
+}
+
+const SYM_CANARY = 'ZZ-SYMLINK-CANARY-MUST-NOT-LEAK';
+
+test('a symlinked skill directory is refused, and leaks nothing — with a live positive control', () => {
+  const root = makeSymlinkRoot();
+  const skillsRoot = path.join(root, '.claude', 'skills');
+  const link = path.join(skillsRoot, 'zz-symlink-fixture');
   const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-clamp-outside-'));
-  const CANARY = 'ZZ-SYMLINK-CANARY-MUST-NOT-LEAK';
-  fs.writeFileSync(path.join(outside, 'SKILL.md'), `allowed-tools: ${CANARY}\n`);
-  // Self-heal a fixture left by a crashed prior run, but NEVER clobber a real directory:
-  // a leftover symlink is ours; anything else is not, and the test refuses rather than delete it.
-  if (fs.existsSync(link) || isLink(link)) {
-    assert.equal(isLink(link), true, `refusing to run: ${link} exists and is not a symlink`);
-    fs.unlinkSync(link);
-  }
+  fs.writeFileSync(path.join(outside, 'SKILL.md'), `allowed-tools: ${SYM_CANARY}\n`);
+
+  // POSITIVE CONTROL. Same canary, same manifest, reached through a REAL directory. If this
+  // does not report, the symlink assertion below would pass for the wrong reason.
+  fs.mkdirSync(path.join(skillsRoot, 'zz-real-fixture'));
+  fs.writeFileSync(path.join(skillsRoot, 'zz-real-fixture', 'SKILL.md'), `allowed-tools: ${SYM_CANARY}\n`);
+
   try {
     fs.symlinkSync(outside, link);
     // Prove the lexical check alone would have passed — otherwise this test could pass for
     // the wrong reason if the name guard changed.
-    const lexical = path.resolve(skillsRoot, SYM, 'SKILL.md').startsWith(path.resolve(skillsRoot) + path.sep);
+    const lexical = path.resolve(skillsRoot, 'zz-symlink-fixture', 'SKILL.md')
+      .startsWith(path.resolve(skillsRoot) + path.sep);
     assert.equal(lexical, true, 'fixture no longer exercises the lexical-check bypass');
 
-    const issues = lintAgentWith([SYM]);
+    const agent = path.join(root, '.claude', 'agents', 'zz-symlink-agent.md');
+    const body = (skill) => `---
+name: zz-symlink-agent
+description: |
+  Throwaway symlink fixture written by the skill-clamp test into a temp root.
+model: claude-sonnet-4-6
+tools: [Read]
+color: gray
+isolation: none
+skills:
+  - ${skill}
+risk_tier_default: lite
+escalates_to: orchestrator
+escalates_when: |
+  Never — fixture.
+---
+
+## Purpose
+
+Fixture.
+`;
+
+    fs.writeFileSync(agent, body('zz-real-fixture'));
+    const control = runLinter([agent], root)[0];
+    assert.equal(
+      control.filter((i) => i.includes(SYM_CANARY)).length, 1,
+      `the positive control did not reach the skill read, so this test cannot speak: ${JSON.stringify(control)}`
+    );
+
+    fs.writeFileSync(agent, body('zz-symlink-fixture'));
+    const issues = runLinter([agent], root)[0];
     assert.deepEqual(
-      issues.filter((i) => i.includes(CANARY)), [],
+      issues.filter((i) => i.includes(SYM_CANARY)), [],
       'symlinked skill leaked file contents into issue text'
     );
     assert.deepEqual(
@@ -258,10 +405,11 @@ test('a symlinked skill directory is refused, and leaks nothing', () => {
     // advertised as a loadable skill.
     if (isLink(link)) fs.unlinkSync(link);
     fs.rmSync(outside, { recursive: true, force: true });
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });
 
-test('the symlink fixture is gone — including from the skills directory', () => {
+test('the symlink fixture never touched the skills directory that ships', () => {
   const strays = fs.readdirSync(path.join(REPO, '.claude', 'skills')).filter((n) => n.startsWith('zz-'));
   assert.deepEqual(strays, [], 'a fixture symlink survived and is now an advertised skill');
 });
@@ -281,12 +429,12 @@ test('a real (non-symlinked) skill directory still resolves — the fix is not a
 // config. These pin that it did.
 
 function lintAgentWithMcp(servers) {
-  const agent = `zz-mcp-fixture-${process.pid}`;
-  const file = path.join(AGENTS_DIR, `${agent}.md`);
+  const agent = fixtureName('mcp');
+  const file = path.join(TEMP_AGENTS, `${agent}.md`);
   fs.writeFileSync(file, `---
 name: ${agent}
 description: |
-  Throwaway MCP fixture written by scripts/skill-clamp.test.mjs.
+  Throwaway MCP fixture written by the skill-clamp test into a temp root.
 model: claude-sonnet-4-6
 tools: [Read, Glob, Grep]
 mcpServers: [${servers.join(', ')}]
@@ -339,7 +487,7 @@ Fixture.
 Fixture.
 `);
   try {
-    return (lintFile(file) || {}).issues || [];
+    return runLinter([file], TEMP)[0];
   } finally {
     fs.rmSync(file, { force: true });
   }
@@ -373,6 +521,6 @@ test('designer holds the browser grant its own description depends on', () => {
 });
 
 test('the MCP fixture leaves nothing behind', () => {
-  const strays = fs.readdirSync(AGENTS_DIR).filter((n) => n.startsWith('zz-mcp-fixture'));
+  const strays = fs.readdirSync(TEMP_AGENTS).filter((n) => n.startsWith('zz-mcp-fixture'));
   assert.deepEqual(strays, []);
 });
