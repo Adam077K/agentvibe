@@ -20,6 +20,13 @@ list continuations and arrows excluded as anchors; word-bounded matching. Findin
 they opened and flag basename inference; ambiguous and cross-repo locators are listed, not merely
 counted; dead paths carry a did-you-mean; the unqualified pass is gone — coverage prints on every
 path, since only 15% of locators resolve exactly and 25% get a drift check. The source-text test
-was replaced by a differential one against `ledger.mjs` per `writing-good-tests`. 53 tests, three
-mutation-checked; 28 of 30 `check` steps exit 0 (`test:skill-clamp` EPERM in-sandbox, `check:mc`
-needs `bun install` — both pre-existing and untouched).
+was replaced by a differential one against `ledger.mjs` per `writing-good-tests`.
+
+**Round 4 (post-PASS residuals).** `--external-prefix` now REFUSES a prefix naming a real directory
+of this repo — it converted `scripts/reeal.js:1` into a silent tick, the exact failure its empty
+default exists to prevent. Two residual false-positive shapes documented rather than coded around
+(comment-block tops, renamed parameters). Corpus counts removed from the header entirely: the
+printed coverage block is authoritative, prose states shapes. `--json` gained a full resolution
+inventory — and building it exposed that `process.exit()` never flushed async stdout, so
+`--json | jq` had been truncating at 64KB. 56 tests, five mutation-checked; 28 of 30 `check` steps
+exit 0 (`test:skill-clamp` EPERM in-sandbox, `check:mc` needs `bun install` — both pre-existing).

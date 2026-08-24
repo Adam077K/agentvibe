@@ -565,6 +565,21 @@ test('--external-prefix marks a cross-repo pointer as unchecked, not dead', () =
   assert.equal(marked.unchecked.length, 1);
 });
 
+test('--external-prefix REFUSES a directory of this repository', () => {
+  // R4, reproduced exactly as the reviewer did: a typo for a file sitting right there, excused by
+  // a flag whose whole rationale is that guessing "looks foreign" turns a typo into a silent pass.
+  const root = fixture({
+    'docs/a.md': 'See `scripts/reeal.js:1` here.\n',
+    'scripts/real.js': TARGET,
+  });
+  assert.deepEqual(kinds(check(root)), ['path-unresolved'], 'unflagged, the typo is caught');
+
+  const r = run(['--root', root, '--min-locators', '0', '--external-prefix', 'scripts']);
+  assert.equal(r.code, 1, 'a misconfigured checker must not report — this exits 1 even in WARN');
+  assert.match(r.err, /external-prefix/);
+  assert.match(r.err, /names a directory of this repository/);
+});
+
 test('--external-prefix silences only the prefix it names', () => {
   const root = fixture({
     'docs/a.md': 'See `otherproj/x.md:1` and `thirdproj/y.md:1`.\n',
@@ -639,6 +654,38 @@ test('the WARN path states the same coverage as the passing path', () => {
   const r = run(['--root', root, '--min-locators', '0']);
   assert.match(r.out, /RESOLUTION:/);
   assert.match(r.out, /DRIFT COVERAGE:/);
+});
+
+test('--json carries a full inventory of what every locator resolved to', () => {
+  // R5. Converts the basename hazard from disclosed to auditable: a reader can diff every
+  // inference instead of trusting the coverage percentages.
+  const root = fixture({
+    'docs/a.md': 'See `target.js:3`, `deep/other.js:1` and `src/target.js:4`.\n',
+    'src/target.js': TARGET,
+    'nested/deep/other.js': 'x\n',
+  });
+  const res = check(root);
+  const byRes = Object.fromEntries(res.inventory.map((i) => [i.resolution, i]));
+  assert.equal(res.inventory.length, 3);
+  assert.equal(byRes.basename.target, 'src/target.js');
+  assert.equal(byRes.suffix.target, 'nested/deep/other.js');
+  assert.equal(byRes.exact.target, 'src/target.js');
+  assert.equal(byRes.exact.cited, 'src/target.js');
+});
+
+test('--json survives a 64KB pipe — process.exit does not flush async stdout', () => {
+  // Found when the R5 inventory pushed the payload past the pipe buffer: `--json | jq` truncated
+  // at exactly 65536 bytes while the same command redirected to a file was whole. The bug
+  // predated the inventory and would have corrupted any piped consumer as soon as the corpus grew.
+  // 400 locators across 400 files is comfortably past 64KB of JSON.
+  const files = { 'src/target.js': TARGET };
+  for (let i = 0; i < 400; i++) files[`docs/d${i}.md`] = `See \`target.js:${i % 20 + 1}\` here.\n`;
+  const root = fixture(files);
+
+  const r = run(['--root', root, '--min-locators', '0', '--json']);
+  assert.ok(r.out.length > 65536, `payload must exceed the pipe buffer, got ${r.out.length}`);
+  const parsed = JSON.parse(r.out); // throws on truncation — that IS the assertion
+  assert.equal(parsed.inventory.length, 400);
 });
 
 // ── the resolution source ─────────────────────────────────────────────────────

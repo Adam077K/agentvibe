@@ -42,11 +42,26 @@
  * deciding, which is a reviewer's job and not a linter's. `--show` prints what is actually at each
  * cited range so a human can adjudicate; the checker itself never forms that opinion.
  *
- * THE HONEST LIMIT OF THE EXISTENCE CLASS, measured on this repo: across 815 locators it finds 2
- * violations, both dead paths, and ZERO bad line numbers. That is not a bug and it is not
- * reassurance — it is the shape of the problem. Every stale locator in the 2026-08-24 audit points
- * at a line that EXISTS; the file merely grew, or the content moved. An existence check cannot see
- * that, and a run reporting "0 existence findings" must not be read as "the citations are good."
+ * ── ON THE NUMBERS IN THIS HEADER ────────────────────────────────────────────────────────────
+ *
+ * THIS FILE DOES NOT QUOTE CORPUS COUNTS, AND THAT IS DELIBERATE. A header arguing that a number
+ * in prose rots, while quoting numbers that rot, is the defect it was built to catch. Earlier
+ * drafts carried "815 locators", "209 anchored" and both "76 reported" and "75 drift findings" —
+ * two descriptions of one measurement, already disagreeing, and every one of them due to move the
+ * next time this branch rebases or a cited file grows.
+ *
+ * THE AUTHORITATIVE FIGURES ARE PRINTED, NOT WRITTEN. `npm run check:citations` ends with a
+ * coverage block — resolution split, drift coverage, unchecked count — on every path including
+ * the passing one. Read that. What this header states instead are SHAPES, which survive a rebase:
+ * "most locators are not exact paths", "drift coverage is a minority", "the existence class finds
+ * almost nothing". Where a specific case is named it is a worked EXAMPLE, kept because it is
+ * argued from, and each one names the file and symbol so a reader can re-derive it.
+ *
+ * THE HONEST LIMIT OF THE EXISTENCE CLASS: it finds almost nothing on this repo — a couple of dead
+ * paths and NO bad line numbers at all. That is not a bug and it is not reassurance; it is the
+ * shape of the problem. Every stale locator in the 2026-08-24 audit points at a line that EXISTS;
+ * the file merely grew, or the content moved. An existence check cannot see that, and a run
+ * reporting "0 existence findings" must not be read as "the citations are good."
  *
  * That measurement is the whole reason the DRIFT class exists. Without it this checker would be
  * a green light over a corpus of known-stale pointers.
@@ -62,7 +77,7 @@
  *     4. a FOLLOWING span reached across a conjunction or an additive separator is a sibling list
  *        item, not an anchor;
  *     5. token matching is word-bounded.
- *   Population 209 anchored citations of 815 locators, 76 reported at --anchor-slack 10.
+ *   The surviving population and report count are printed by the checker, not quoted here.
  *
  *   Constraints 1, 3 and 4 came from an independent review that reproduced four false positives,
  *   and each is pinned by a named test in check-citations.test.mjs:
@@ -80,31 +95,44 @@
  *   catches one SHAPE of it — path-like (`plan.js`), directory (`mission-control`), conjunction
  *   (`, and`), arrow (`→`). A cross-reference wearing none of those four shapes still reports.
  *   Do not read the list as coverage of the class; read it as four measured subclasses.
- *   Measured after all four: of 75 drift findings, 1 has its symbol absent from the target
+ *   Measured after all four: exactly ONE drift finding has its symbol absent from the target
  *   entirely — `.env.example` at 2026-08-13-rethink-board.md:48 — and that one is a TRUE positive
  *   (line 163 of pre-tool-use.sh is unrelated; the string appears nowhere in the file). An earlier
  *   draft excluded dotted filenames to suppress it, which would have deleted a real finding.
  *
- *   The remaining known false-positive mode: citing a range INSIDE a definition by its behaviour,
- *   where the symbol itself sits just above the range. `verifyFinding` at `qa.js:324-326` is the
- *   worked example — the citation is correct, the name is five lines above. The default
- *   --anchor-slack 10 suppresses it. Widen the slack to suppress more, at the cost of missing
- *   near-miss rot.
+ *   THREE KNOWN FALSE-POSITIVE MODES REMAIN. Each is one SHAPE, not a scatter of separate rots,
+ *   and a reader who recognises the shape can dismiss the whole group at once:
+ *
+ *     1. Citing a range INSIDE a definition by its behaviour, with the symbol just ABOVE the
+ *        range. `verifyFinding` at `qa.js:324-326` — the citation is correct, the name is five
+ *        lines up. --anchor-slack 10 suppresses this direction.
+ *     2. The MIRROR of 1, and NOT suppressed: citing the top of a COMMENT BLOCK that documents a
+ *        symbol declared below it. `schema-lint.js:62` is the comment "Engines that must never be
+ *        able to change what they look at."; `READ_ONLY_ENGINES` is declared at 75. Distance 13
+ *        against a slack of 10, so it reports — twice, from ROSTER-SIZE.md:298 and
+ *        DESIGNER.md:416. The citation is arguably the better one: it points at the reason rather
+ *        than the constant. Do NOT widen the slack to chase this. It would trade a named blind
+ *        spot for an unnamed loss of recall, and the rot worth finding is mostly 25-900 lines out
+ *        — the 11-15 distance band holds 13 findings and this shape is only part of it.
+ *     3. A parameter RENAMED at a function boundary. `check-dispatch-agenttype.mjs:267-268` is
+ *        `function agentInfo(name)`; the prose calls the same value `agentType`. Three findings
+ *        share this shape. A linter cannot follow a rename without resolving the call graph, so
+ *        this one is structural rather than a tuning question.
  *
  * ── BLIND SPOTS, named here rather than discovered during an incident ────────────────────────
  *
  *   · MARKDOWN ONLY. Locators in .js/.mjs/.yml comment blocks are not scanned. The harvester is
  *     markdown-aware (frontmatter, fenced blocks) and applying it to source comments would be
- *     wrong rather than merely incomplete. Sized before deciding, and re-measured after: outside
- *     markdown there are 69 locators, and 67 of them are in THIS FILE and its test — prose about
- *     citations, not citations. The real gap is the other two, both in
- *     check-dispatch-agenttype.mjs. Quoting the raw 69 would overstate it by 34x, which is the
- *     kind of number this checker exists to stop people repeating.
+ *     wrong rather than merely incomplete. Sized before deciding, and worth re-deriving rather
+ *     than trusting: nearly every locator outside markdown is in THIS FILE and its test — prose
+ *     ABOUT citations, not citations. Discount those and the real gap is a couple of locators in
+ *     check-dispatch-agenttype.mjs. The raw count overstates the gap by more than an order of
+ *     magnitude, which is the kind of number this checker exists to stop people repeating.
  *   · The whole inline-code span must BE the locator. `` `see qa.js:100 for why` `` is not
  *     harvested, and neither is a multi-locator span like `` `qa.js:38, 65` ``.
- *   · BASENAME RESOLUTION CAN OPEN THE WRONG FILE, AND THIS IS THE LARGEST HAZARD HERE. Only 122
- *     of 815 locators (15%) are written as a path this checker can resolve exactly; 655 resolve by
- *     bare basename and 16 by suffix. A unique basename is not proof the author meant that file,
+ *   · BASENAME RESOLUTION CAN OPEN THE WRONG FILE, AND THIS IS THE LARGEST HAZARD HERE. Only about
+ *     one locator in seven is written as a path this checker can resolve exactly; the rest resolve
+ *     by bare basename or by suffix. A unique basename is not proof the author meant that file,
  *     and the error runs BOTH ways:
  *       - a correct citation reported as out-of-range, because the line was checked against a
  *         same-named file the prose never meant;
@@ -120,7 +148,7 @@
  *   · AMBIGUOUS BASENAMES ARE NOT CHECKED. When two or more tracked files carry the name
  *     (`_TEMPLATE.md`, `DECISIONS.md`), the locator is reported as `unchecked:ambiguous` with its
  *     candidates listed, and checked against none of them. Guessing which file was meant is how a
- *     checker invents a finding. 20 locators are in this state today.
+ *     checker invents a finding. The run prints how many are in this state.
  *   · A citation whose anchor sits in a DIFFERENT CLAUSE is not anchored, and this is the largest
  *     miss. Of the six known-stale locators the 2026-08-24 audit named, this checker reports two
  *     (`CONTROL-PLANE.md:985`, `MODEL-DIVERSITY.md:304`). Four are missed, each for a checked
@@ -129,7 +157,7 @@
  *     adjacent code span at all in the handoff's own `qa.js:215-218`. Loosening constraint 2 to
  *     reach them re-admits the false positives it exists to exclude — that trade was measured, not
  *     assumed.
- *   · DRIFT COVERAGE IS A MINORITY OF THE CORPUS: 209 of 815 locators (26%) have an anchor to
+ *   · DRIFT COVERAGE IS A MINORITY OF THE CORPUS: roughly a quarter of locators have an anchor to
  *     check at all. The other 606 get existence checks only, which above is shown to find almost
  *     nothing. Do not read a run with few findings as a clean corpus; read the coverage line,
  *     which is printed on every path including the passing one for exactly this reason.
@@ -198,6 +226,7 @@ const SHOW = argv.includes('--show');
 const findings = [];  // citation problems — WARN unless --strict
 const failures = [];  // non-vacuity / harness problems — always exit 1
 const unchecked = []; // locators this checker looked at and could NOT decide — never a failure
+const inventory = []; // every RESOLVED locator and what it resolved to — --json only, see R5
 const fail = (check, msg) => failures.push(`[${check}] ${msg}`);
 
 /**
@@ -373,6 +402,26 @@ const topLevelDirs = new Set(
   tracked.filter((f) => f.includes('/')).map((f) => f.slice(0, f.indexOf('/'))),
 );
 
+// ── --external-prefix may not name a directory of THIS repository ────────────
+//
+// REFUSED, not warned. `--external-prefix scripts` turns `scripts/reeal.js:1` — a typo for a file
+// that is right there — into `unchecked:external`, and the run ends on a tick. That is precisely
+// the failure the empty default exists to prevent, handed to the operator as a flag: this header
+// argues that guessing "looks foreign" would turn a typo into a silent pass, and then let a human
+// do the guessing. A prefix that IS a tracked directory cannot be external by definition, so there
+// is no legitimate use to preserve and nothing is lost by refusing it.
+//
+// It joins `failures`, so it exits 1 in WARN posture too. A misconfigured checker must not report.
+for (const p of EXTERNAL_PREFIXES) {
+  if (topLevelDirs.has(p)) {
+    fail('external-prefix',
+      `--external-prefix ${p} names a directory of this repository, so paths under it are not ` +
+      `external and would be excused from the dead-path check. \`${p}/reeal.js:1\` would report ` +
+      `clean with \`${p}/real.js\` sitting next to it. Drop the flag, or name the prefix of ` +
+      'another repository.');
+  }
+}
+
 /**
  * The symbols an anchor span asserts, or null when the span is not a symbol anchor at all.
  *
@@ -519,13 +568,19 @@ for (const doc of proseFiles) {
       const eof = lines.length;
 
       // EVERY FINDING NAMES THE FILE IT ACTUALLY READ, and says so when that file was inferred
-      // rather than written. 655 of 815 locators in this repo resolve by bare basename, so most
-      // findings are about a file the prose never names — and the inference can be wrong in both
+      // rather than written. Most locators in this repo resolve by bare basename, so most findings
+      // are about a file the prose never names — and the inference can be wrong in both
       // directions. Reporting `qa.js:100` without saying which qa.js was opened is unactionable.
       const via = res.how === 'exact' ? ''
         : ` (\`${citedPath}\` was matched to this file by unique ${res.how}; if that is the wrong ` +
           'file, the finding is about the wrong file)';
       const meta = { target, cited: citedPath, resolution: res.how };
+
+      // R5: the full resolved inventory, --json only. This is what turns the basename hazard above
+      // from DISCLOSED into AUDITABLE — a reader can diff every inference the checker made instead
+      // of taking the coverage percentages on trust. It changes no verdict, and it is cheap
+      // because the resolution was computed anyway. Kept out of stdout: it is one row per locator.
+      inventory.push({ where, locator, cited: citedPath, target, resolution: res.how, start, end });
 
       if (start > eof) {
         record('line-beyond-eof', where,
@@ -612,12 +667,18 @@ function excerpt(f) {
 }
 
 if (JSON_OUT) {
-  console.log(JSON.stringify({
+  // fs.writeSync, NOT console.log. `process.exit()` does not flush a pending async write, and
+  // stdout to a PIPE is async — so `check-citations --json | jq` silently truncated at the 64KB
+  // pipe buffer while the same command redirected to a file was complete. Found when the R5
+  // inventory pushed the payload past 64KB; the bug predates it and would have corrupted any
+  // piped consumer the moment this repo grew. A checker that reports partial JSON as whole JSON
+  // is the failure mode this file exists to argue against.
+  fs.writeSync(1, `${JSON.stringify({
     root: ROOT, posture: STRICT ? 'strict' : 'warn',
     anchor_slack: ANCHOR_SLACK, anchor_gap: ANCHOR_GAP,
     anchors_enabled: ANCHORS, min_locators: MIN_LOCATORS,
-    stats, by_kind: byKind, findings, unchecked, failures,
-  }, null, 2));
+    stats, by_kind: byKind, findings, unchecked, inventory, failures,
+  }, null, 2)}\n`);
   process.exit(failures.length || (STRICT && findings.length) ? 1 : 0);
 }
 
