@@ -382,15 +382,44 @@ const rawFindings = dimResults.flatMap(r => r.findings.map(f => ({ ...f, dimensi
 const blockEligible = (sev) => sev === 'P1' || (TIER === 'irreversible' && sev === 'P2')
 const SEV_ORDER = { P1: 0, P2: 1, P3: 2 }
 const advisory = rawFindings.filter(f => !blockEligible(f.severity)).map(f => ({ ...f, confirmed: false, advisory: true }))
-let eligible = rawFindings.filter(f => blockEligible(f.severity))
-
-// Hard backstop on verifier fan-out (rarely hit now that only block-eligible findings verify).
+// Hard backstop on verifier fan-out. Each finding here costs THREE agent dispatches, so this
+// number is 120 dispatches, not 40.
+//
+// IT IS A RUNNING TOTAL ACROSS PHASE 2 AND EVERY SWEEP ROUND, NOT A FRESH ALLOWANCE PER ROUND.
+// Until 2026-08-24 it was applied to the Phase-2 `eligible` array and nowhere else: the Sweep
+// phase below dispatched three verifiers for every block-eligible finding it turned up, in each
+// of up to three rounds, with no bound of its own. That was the only genuinely unbounded fan-out
+// in this gate — the `round < 3` cap bounds the number of REVIEW rounds and says nothing about
+// how many findings each one hands to the verifier pool.
 const MAX_VERIFY = 40
-if (eligible.length > MAX_VERIFY) {
-  eligible = [...eligible].sort((a, b) => (SEV_ORDER[a.severity] ?? 3) - (SEV_ORDER[b.severity] ?? 3)).slice(0, MAX_VERIFY)
-  log(`Capping verification at ${MAX_VERIFY} block-eligible findings (backstop).`)
+let verifyBudget = MAX_VERIFY
+
+// Take at most what is left of the budget, worst severity first — and SAY SO when it truncates,
+// naming the findings that go unverified.
+//
+// A cap that drops findings quietly is worse than no cap: the run journal then reads as though
+// everything was examined, and the judge weighs a set it has no way to know is partial. This
+// gate's whole claim is that a verdict means what it says.
+//
+// The stated limit, so nobody has to infer it: a truncated finding is NOT verified, so it is not
+// in `confirmed` and it cannot block. It is not silently reclassified as advisory either — that
+// would launder an unexamined P1 into a fast-follow. It is logged, by id and severity, and the
+// correct response to seeing that line is to re-run the gate on a smaller diff.
+function takeVerifyBudget(findings, phaseLabel) {
+  if (findings.length <= verifyBudget) {
+    verifyBudget -= findings.length
+    return findings
+  }
+  const ordered = [...findings].sort((a, b) => (SEV_ORDER[a.severity] ?? 3) - (SEV_ORDER[b.severity] ?? 3))
+  const taken = ordered.slice(0, verifyBudget)
+  const dropped = ordered.slice(verifyBudget)
+  log(`${phaseLabel}: verifier budget exhausted — verifying ${taken.length} of ${findings.length} block-eligible findings. ${MAX_VERIFY} is the TOTAL across Phase 2 and all sweep rounds, and ${dropped.length} finding(s) are NOT verified and cannot be weighed by the judge: ${dropped.map(f => `${f.id}(${f.severity})`).join(', ')}. Re-run the gate on a smaller diff.`)
+  verifyBudget = 0
+  return taken
 }
-log(`${eligible.length} block-eligible findings to 3-vote verify; ${advisory.length} advisory (P3${TIER === 'full' ? '/P2' : ''}) reported unverified.`)
+
+const eligible = takeVerifyBudget(rawFindings.filter(f => blockEligible(f.severity)), 'Verify')
+log(`${eligible.length} block-eligible findings to 3-vote verify; ${advisory.length} advisory (P3${TIER === 'full' ? '/P2' : ''}) reported unverified. Verifier budget remaining for the sweep: ${verifyBudget}/${MAX_VERIFY}.`)
 
 phase('Verify')
 const verified = await parallel(eligible.map(f => () => verifyFinding(f, 'Verify')))
@@ -415,9 +444,12 @@ if (TIER === 'irreversible') {
     newOnes.forEach(f => seen.add(f.id))
     advisory.push(...newOnes.filter(f => !blockEligible(f.severity)).map(f => ({ ...f, confirmed: false, advisory: true })))
     const newEligible = newOnes.filter(f => blockEligible(f.severity))
-    const sv = await parallel(newEligible.map(f => () => verifyFinding(f, 'Sweep')))
+    // Same running budget as Phase 2 — see takeVerifyBudget. `round < 3` bounds how many review
+    // rounds run; it bounds nothing about how many verifiers each round dispatches.
+    const toVerify = takeVerifyBudget(newEligible, `Sweep round ${round}`)
+    const sv = await parallel(toVerify.map(f => () => verifyFinding(f, 'Sweep')))
     allFindings.push(...sv.filter(Boolean))
-    log(`Sweep round ${round}: ${newOnes.length} new (${newEligible.length} block-eligible), ${sv.filter(f => f && f.confirmed).length} confirmed`)
+    log(`Sweep round ${round}: ${newOnes.length} new (${newEligible.length} block-eligible, ${toVerify.length} verified), ${sv.filter(f => f && f.confirmed).length} confirmed`)
   }
 }
 
