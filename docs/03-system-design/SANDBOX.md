@@ -123,6 +123,124 @@ is not addressed by this mechanism.
 
 ---
 
+> **Provenance for Findings 3–5.** Findings 3 and 4 quote
+> <https://code.claude.com/docs/en/sandboxing>, accessed 2026-08-24. Those two quotations were read from
+> that page by the session that commissioned this record, not fetched by the session that wrote it:
+> `.claude/hooks/pre-tool-use.sh` blocks external `curl`, correctly, and the writing engine holds no
+> WebFetch grant. Anyone re-verifying should read the page directly. The **measurements** in Findings 3, 4
+> and 5 are first-hand and are labelled with what was run.
+
+## Finding 3 — the agent-config paths cannot be exempted, by design
+
+The refusals that stop `git worktree add` are not this repository's configuration and cannot be lifted by
+changing it. The vendor documentation states it directly:
+
+> "There is no way to exempt one of these paths: an `allowWrite` entry or an `Edit` allow rule that covers
+> the path doesn't lift the protection. The only way to turn the protection off is `filesystem.disabled`."
+
+**This closes both acceptance questions this document carried** — the 2026-08-20 `**/.worktrees` amendment
+and the 2026-08-23 `**/.worktrees/**` amendment. It does not merely restate the measurement recorded
+against them; it explains it. Those globs *do* match `…/.worktrees/<slug>/.claude/commands/`. The path was
+refused anyway, and now there is a stated reason rather than a suspicion about glob semantics.
+
+**Why the vendor protects them:** a command that could write `.claude/settings.json`, an agent file, or a
+hook could grant itself permissions, or install a hook that Claude Code executes *outside* the sandbox.
+Exempting those paths would make the sandbox self-disabling on request. The protection is upstream of any
+per-project allow-list for exactly that reason.
+
+**Consequences for this repo, in order of how often they bite:**
+
+1. `git worktree add` needs escalation — one command, run with the sandbox disabled. Documented in
+   CLAUDE.md § *Git Worktree Protocol*, and stated in `builder.md` and `designer.md` so an agent meeting
+   the wall knows it is a limit and not its own error.
+2. Any Bash write under `.claude/**` is denied: shell redirection, `sed -i`, `tee`, `git checkout` of those
+   paths. The same edit through `Write`/`Edit` succeeds, because those tools are governed by
+   `.claude/hooks/pre-tool-use.sh` and not by the Bash sandbox. **Use `Write`/`Edit` for `.claude/**`.**
+   A denied Bash write there is the mechanism working.
+3. `filesystem.disabled` is the only switch that lifts it, and it lifts *all* filesystem protection.
+   That is not a trade this repo should make to create a worktree.
+
+---
+
+## Finding 4 — a long-lived worktree cannot be synced to `main` once `main` touches `.claude/**`
+
+Same cause as Finding 3, different symptom, and this one corrupts *reasoning* rather than just failing:
+
+> "A git command fails with `unable to unlink old`: `git merge`, `git checkout`, and similar commands fail
+> this way when they need to replace a file the sandbox denies writes to... if the same git command fails
+> often, add that command to `excludedCommands`."
+
+A merge or checkout that must replace a file under `.claude/**` cannot unlink the old one, so the whole
+operation aborts. Since `.claude/**` is where this harness keeps its agents, hooks, lenses and playbooks,
+**almost every commit to `main` here touches a path a session worktree may not update.** The worktree then
+silently stops tracking `main`.
+
+**Measured 2026-08-24:** the orchestrating session's worktree was **170 commits behind `main`** for this
+reason alone. It was not stale through neglect; it could not be brought forward.
+
+**This has already produced a wrong published fact.** The previous session cited
+`schema-lint.js:1068` for the worktree lint predicate. Its own stated base had that predicate at a
+different line — the file had been restructured on `main` in the interim. The session was reading a
+worktree that could not sync, and the citation it published described a layout that no longer existed.
+It looked like carelessness and was structural: **a stale worktree gives correct-looking answers about a
+tree that has moved.**
+
+**Remedy, documented and deliberately NOT applied here.** The vendor's answer is `excludedCommands` — list
+`git` (or the specific failing subcommands) so those commands run outside the sandbox. That is a
+`.claude/settings.json` change with a real security consequence: it exempts a command that can write
+anywhere in the tree, which is a wider hole than the one it closes. It belongs to a founder decision about
+the sandbox, not to a documentation change. Recorded here so the option is known and the trade is stated.
+
+**Until then, the operational rule:** measure at the session root, and treat any line-number or content
+claim made from a long-lived worktree as suspect until re-read from a tree known to be current. Prefer
+naming a symbol, a heading or a literal string over a line number — a `grep` survives a restructure and a
+line number does not.
+
+---
+
+## Finding 5 — the network model has no inbound/loopback setting, and that is why `check:mc` fails
+
+The sandbox's network model is an **outbound proxy with domain allow-lists**: `allowedDomains`,
+`deniedDomains`, `strictAllowlist`, `tlsTerminate`, plus the proxy ports and `injectHosts` already
+listed under *Configuration keys*. Every one of those governs traffic **leaving** the sandbox. **There is
+no setting for inbound connections or for binding a loopback socket**, so no network configuration can
+grant a test the ability to `listen()`.
+
+**Measured 2026-08-24 — two cells, same commit, same working tree, Bun 1.3.10 in both:**
+
+| Cell | Result |
+|---|---|
+| `npm run check:mc`, sandbox armed | **344 pass · 1 fail** |
+| `npm run check:mc`, sandbox disabled for that one command | **345 pass · 0 fail** |
+
+The single failure is in `mission-control/test/stream.test.ts`, in the test *"a silent stream survives
+past the default 10s reaper, with the server left at its default"*, at its `Bun.serve({ port: 0, hostname:
+'127.0.0.1' })`:
+
+```
+error: Failed to start server. Is port 0 in use?
+ syscall: "listen",
+   errno: 0,
+    code: "EADDRINUSE"
+```
+
+**`errno: 0` is the tell.** A genuine address collision on macOS reports `EADDRINUSE` with errno **48**.
+Errno 0 is *no error number at all* — the syscall was refused before the kernel assigned one. And `port: 0`
+asks the OS for any free ephemeral port, which by construction cannot already be in use. So this is a
+**denied loopback `bind()` wearing a misleading errno**, not a port conflict and not a mission-control
+defect. It is why the last remaining gate blocker reproduced "deterministically" under the sandbox and
+vanished without it, and why CI — which runs unsandboxed — is green on the same code.
+
+**Do NOT edit `stream.test.ts` to make this pass.** It is a regression test for a real bug that was found
+by running it: an SSE connection was being killed by Bun's default 10-second idle reaper, and the test
+serves with that default in force so the per-request opt-out has to carry the result. Replacing its real
+socket with a mock, or dropping the server, would make it vacuous — green and meaningless. This repo shipped
+exactly one such test (`skill-clamp`'s symlink case, found and fixed 2026-08-24) and the class is worth
+recognising: **a test that no longer exercises the mechanism it names is a worse outcome than a test that
+cannot run here.** Run `check:mc` unsandboxed, or accept the one known failure and say which one it is.
+
+---
+
 ## This repo's policy (armed)
 
 ```jsonc
@@ -211,7 +329,7 @@ under this path**, and only then."
 
 ---
 
-## Amendment 2026-08-20 — `**/.worktrees` — **UNVERIFIED**
+## Amendment 2026-08-20 — `**/.worktrees` — **CLOSED 2026-08-24: the entry cannot work**
 
 **What changed.** One entry added to `allowWrite`: `**/.worktrees`. Nothing else. `enabled`,
 `failIfUnavailable` and every `denyRead` entry are untouched.
@@ -239,8 +357,17 @@ git -C "$MAIN_REPO" worktree add "$MAIN_REPO/.worktrees/sandbox-acceptance" -b p
 # Either way, record the result HERE and delete the probe worktree and branch.
 ```
 
-Until that runs, Rule 7 should be treated as still blocked. An unverified fix asserted as
-working is the exact failure this document's own posture exists to prevent.
+**RESULT, recorded here as the block above instructs — 2026-08-24: FAIL, and it is not fixable by
+widening `allowWrite`.** A fresh session ran `git worktree add` at both the old anchor and the corrected
+one: exit 128, 32 × `Operation not permitted` across `.claude/agents/**`, `.claude/commands/**` and
+`.mcp.json`, then `fatal: Could not reset index file to revision 'HEAD'`. No worktree survived; the branch
+was left behind. The same command with the sandbox disabled: exit 0, 809 files. See **Finding 3** for why
+no allow-list entry can change this, and CLAUDE.md § *Git Worktree Protocol* for the operating remedy
+(escalate that one command).
+
+The caution above was right about the mechanism and wrong about the cure. An unverified fix asserted as
+working is the exact failure this document's own posture exists to prevent — and this one was asserted
+twice before anyone ran it.
 
 **Not granted, deliberately.** Writing to the main repository's `.git/` directory is still
 denied. Observed in the same session: `git branch -D` deletes the ref but then reports
@@ -249,7 +376,7 @@ mutating the parent repo's config is not, and it stays outside the boundary.
 
 ---
 
-## Amendment 2026-08-23 — `**/.worktrees/**` — **STILL UNVERIFIED**
+## Amendment 2026-08-23 — `**/.worktrees/**` — **CLOSED 2026-08-24: the entry cannot work**
 
 **What changed.** One entry added to `allowWrite`: `**/.worktrees/**`, alongside the existing
 `**/.worktrees` (both are kept — see the Write-path justification table for why they cover different
@@ -294,9 +421,16 @@ git -C "$MAIN_REPO" worktree add "$MAIN_REPO/.worktrees/sandbox-acceptance-v2" -
 # Either way, record the result HERE and delete the probe worktree and branch.
 ```
 
-Until that runs, treat both worktree-glob entries as *shape-verified, behaviour-unverified*: present in
-`.claude/settings.json`, pinned by `npm run test:sandbox`, and not yet observed to actually let
-`git worktree add` succeed under an armed sandbox.
+**RESULT — 2026-08-24: FAIL, and the widened glob was never the missing piece.** The failure moved but did
+not clear. It no longer reports `could not create leading directories`; it now reports 32 refusals on
+specific files — `.claude/agents/**`, `.claude/commands/**`, `.mcp.json` — which is a *different* refusal
+with a different cause. `**/.worktrees/**` does match those paths. They were refused anyway.
+
+**Both worktree-glob entries are therefore closed as ineffective for their stated purpose**, and both
+open acceptance questions in this document are answered. They are not removed here: removing them is a
+`.claude/settings.json` change and belongs to a decision of its own, and the entries are harmless. What
+is no longer true is the belief that they enable Rule 7. Finding 3 explains why nothing in `allowWrite`
+ever could.
 
 ---
 
