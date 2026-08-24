@@ -132,14 +132,21 @@ const report = {
   wouldPromptTotal: wouldPrompt.reduce((a, [, n]) => a + n, 0),
 };
 
-if (asJson) { console.log(JSON.stringify(report, null, 2)); process.exit(0); }
+// process.exitCode, NOT process.exit(): stdout to a PIPE is asynchronous, so exiting straight
+// after a console.log discards whatever is still queued and cuts the payload at exactly 65536
+// bytes, at exit status 0. See check-dispatch-agenttype.mjs for the measurement.
+if (asJson) {
+  console.log(JSON.stringify(report, null, 2));
+} else {
 
-console.log(`Corpus: ${files.length} newest transcripts under ${ROOT}`);
-console.log(`Bash calls: ${calls}   (${unresolved} unresolved — counted, not dropped)`);
-console.log(`Covered by the settings.json allow list: ${covered}`);
-console.log(`Control-flow led (inner command not resolvable by this method): ${keyword}`);
-console.log(`\nWould prompt today:`);
-for (const [t, n] of wouldPrompt.slice(0, 20)) console.log(`  ${t.padEnd(16)} ${String(n).padStart(6)}`);
-console.log(`\nTotal that would prompt: ${report.wouldPromptTotal}`);
-console.log('\nNumbers move with the corpus. That is the point — a permission decision should');
-console.log('rest on something re-runnable, not on a figure quoted from a session that ended.');
+  console.log(`Corpus: ${files.length} newest transcripts under ${ROOT}`);
+  console.log(`Bash calls: ${calls}   (${unresolved} unresolved — counted, not dropped)`);
+  console.log(`Covered by the settings.json allow list: ${covered}`);
+  console.log(`Control-flow led (inner command not resolvable by this method): ${keyword}`);
+  console.log(`\nWould prompt today:`);
+  for (const [t, n] of wouldPrompt.slice(0, 20)) console.log(`  ${t.padEnd(16)} ${String(n).padStart(6)}`);
+  console.log(`\nTotal that would prompt: ${report.wouldPromptTotal}`);
+  console.log('\nNumbers move with the corpus. That is the point — a permission decision should');
+  console.log('rest on something re-runnable, not on a figure quoted from a session that ended.');
+
+}

@@ -257,7 +257,12 @@ function main() {
     }
   }
 
-  process.exit(requireMode && gateRequired ? 1 : 0);
+  // process.exitCode, NOT process.exit(): stdout to a PIPE is asynchronous, so exiting straight
+  // after a console.log discards whatever is still queued and cuts the payload at exactly 65536
+  // bytes, at exit status 0. main() is the last statement in this file, so setting the code and
+  // returning ends the process with the stream drained. See check-dispatch-agenttype.mjs for the
+  // measurement.
+  process.exitCode = requireMode && gateRequired ? 1 : 0;
 }
 
 main();

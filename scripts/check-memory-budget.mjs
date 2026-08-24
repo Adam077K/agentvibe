@@ -170,6 +170,11 @@ if (!fs.existsSync(decisionsArchivePath)) {
 }
 
 // ── report ───────────────────────────────────────────────────────────────────
+// process.exitCode, NOT process.exit(). Stdout to a PIPE is asynchronous, so `process.exit()`
+// after a console.log tears the process down with the write still queued — the payload is cut at
+// exactly 65536 bytes and the exit status still reads 0. This payload is small today; the pattern
+// is the defect, and `failures` is unbounded. See check-dispatch-agenttype.mjs for the
+// measurement and for why fs.writeSync is not the fix.
 if (JSON_OUT) {
   const decisionsText = fs.existsSync(decisionsPath) ? fs.readFileSync(decisionsPath, 'utf8') : '';
   const longTermText = fs.existsSync(longTermPath) ? fs.readFileSync(longTermPath, 'utf8') : '';
@@ -194,12 +199,11 @@ if (JSON_OUT) {
       failures,
     }, null, 2)
   );
-  process.exit(failures.length ? 1 : 0);
-}
-
-if (failures.length) {
+  process.exitCode = failures.length ? 1 : 0;
+} else if (failures.length) {
   for (const f of failures) console.error(`✗ ${f}`);
   console.error(`\n✗ memory-budget check failed — ${failures.length} problem(s).`);
-  process.exit(1);
+  process.exitCode = 1;
+} else {
+  console.log('\n✓ memory-budget check passed.');
 }
-console.log('\n✓ memory-budget check passed.');
