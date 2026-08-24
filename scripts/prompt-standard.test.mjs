@@ -265,9 +265,40 @@ test('PS-TOOL-EXISTS fires on a tool that does not exist', () => {
   assert.match(r.issues[0], /PS-TOOL-EXISTS: tools entry "Browser" is not a runtime tool/);
 });
 
-test('PS-TOOL-EXISTS lets an mcp__ entry through — PS-MCP-BACKED owns that question', () => {
+// The four tests below replace one that read "PS-TOOL-EXISTS lets an mcp__ entry through —
+// PS-MCP-BACKED owns that question". SUPERSEDED 2026-08-24: PS-MCP-BACKED never owned it. It
+// reads `fm.mcpServers`, a different frontmatter field, so nothing checked an `mcp__` entry in
+// `tools:` and the old test pinned that hole open by asserting the pass.
+
+test('PS-TOOL-EXISTS accepts an mcp__ entry whose server IS configured', () => {
+  // .mcp.json configures `playwright`, and `designer` is the one engine granted it.
   assert.deepEqual(
     ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', 'tools: [Read, mcp__playwright__navigate]')).issues,
+    [],
+  );
+});
+
+test('PS-TOOL-EXISTS fires on an mcp__ entry naming a server nobody configured', () => {
+  // The constructed violation from TARGET-ARCHITECTURE.md. It passed HEAD's linter clean.
+  const r = ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', 'tools: [Read, mcp__nonexistent__doAnything]'));
+  assert.equal(r.issues.length, 1);
+  assert.match(r.issues[0], /PS-TOOL-EXISTS: tools entry "mcp__nonexistent__doAnything" names MCP server "nonexistent"/);
+});
+
+test('PS-TOOL-EXISTS fires on a malformed mcp__ id — it is refused, never ignored', () => {
+  // Ignoring these would leave `mcp__` and `mcp__playwright` as unchecked pass-throughs, which
+  // is the same hole one string shorter. Both halves must be present and non-empty.
+  for (const bad of ['mcp__', 'mcp__playwright', 'mcp____navigate']) {
+    const r = ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', `tools: [Read, ${bad}]`));
+    assert.match(r.issues.join('\n'), /PS-TOOL-EXISTS: .*is not a well-formed MCP tool id/, `did not fire on: ${bad}`);
+  }
+});
+
+test('PS-TOOL-EXISTS splits on the FIRST two separators — an mcp tool name may contain __', () => {
+  // `mcp__playwright__browser__navigate` is server `playwright`, tool `browser__navigate`. A
+  // strict three-part split would reject a real tool id; the server half is what is checkable.
+  assert.deepEqual(
+    ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', 'tools: [Read, mcp__playwright__browser__navigate]')).issues,
     [],
   );
 });

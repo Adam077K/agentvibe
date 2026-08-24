@@ -417,9 +417,19 @@ declaration is real, and it passes because it is real.
 
 Two rules, because there are two places to get this wrong.
 
-- **`PS-TOOL-EXISTS`** (`FAIL`) — every entry in `tools:` is in the runtime tool universe.
+- **`PS-TOOL-EXISTS`** (`FAIL`) — every entry in `tools:` is in the runtime tool universe, and every
+  `mcp__<server>__<tool>` entry names a **configured** server. A malformed `mcp__` id (either half
+  empty) fails too, rather than being ignored.
 - **`PS-BODY-TOOL-AFFIRM`** (`FAIL`) — the body may not affirmatively direct the use of a tool the
   frontmatter does not grant.
+
+> **The `mcp__` half of `PS-TOOL-EXISTS` was added 2026-08-24, and this section said the opposite until
+> then.** `schema-lint.js` skipped every `mcp__*` entry, under a comment asserting that `PS-MCP-BACKED`
+> covered them. It did not: `PS-MCP-BACKED` reads `mcpServers:`, a **different frontmatter field**, so
+> `tools: [mcp__nonexistent__doAnything]` passed the whole standard clean. That is §5.1's `mcpServers`
+> fabrication re-created one field over and hidden behind a comment describing a delegation nobody
+> implemented — which is why the comment was corrected in the same commit as the code. The `<tool>` half
+> is still unchecked and stated as such: a server's tool list exists only on a running server.
 
 The second is where the calibration rule earned its place. All seven out-of-grant tool mentions in the live
 files are *negations* — "You have no `Write` and no `Edit`" — and they must survive. A line-scoped check
@@ -492,7 +502,7 @@ a rule that fires on nothing is not a rule.
 | `PS-EFFORT-ENUM` | `effort` ∈ {`low`, `medium`, `high`, `xhigh`, `max`} when the field is present | 0 (no engine declares it) | yes | **new** — see the binding caveat below |
 | `PS-ISOLATION-ENUM` · `PS-TIER-ENUM` · `PS-MAXTURNS-RANGE` | enum · enum · `[5,30]` | 0 | yes | exists — `:370-376`, `:466` |
 | `PS-NAME-MATCH` | `name:` equals the filename | 0 | yes | exists — `:355` |
-| `PS-TOOL-EXISTS` | every `tools:` entry is a real runtime tool | 0 | yes | **new** (§5.2) |
+| `PS-TOOL-EXISTS` | every `tools:` entry is a real runtime tool, **and every `mcp__<server>__<tool>` entry names a configured server** | 0 | yes — 3 controls: unconfigured server, malformed id, configured server passes | **new** (§5.2); `mcp__` half added 2026-08-24 |
 | `PS-MCP-BACKED` | every `mcpServers:` entry is configured, **per server** | 0 | yes | exists — `:381-406` |
 | `PS-SKILL-EXISTS` | every `skills:` entry is in `MANIFEST.json` | 0 | yes | exists — `:418` |
 | `PS-SKILL-CLAMP` | no attached skill declares `allowed-tools:` | 0 | yes | exists — `:440-448` |

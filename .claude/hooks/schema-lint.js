@@ -360,9 +360,22 @@ const KNOWN_FM_KEYS = [
 ];
 
 // PS-TOOL-EXISTS — the runtime tool universe. A `tools:` entry outside it grants nothing and
-// reads as a boundary, which is the whole never-appear list (§5.2). `mcp__*` entries are passed
-// through deliberately: PS-MCP-BACKED already checks those against configured servers per server,
-// and duplicating that here would give two implementations of one question.
+// reads as a boundary, which is the whole never-appear list (§5.2).
+//
+// `mcp__*` ENTRIES ARE CHECKED HERE, against configuredMcpServers(). Until 2026-08-24 they were
+// skipped, and this comment said they were skipped deliberately: "PS-MCP-BACKED already checks
+// those against configured servers per server, and duplicating that here would give two
+// implementations of one question."
+//
+// SUPERSEDED — that delegation never happened. PS-MCP-BACKED reads `fm.mcpServers`, a DIFFERENT
+// frontmatter field, so nothing ever read an `mcp__` entry in `tools:` and
+// `tools: [mcp__nonexistent__doAnything]` passed this lint clean. That is the `mcpServers`
+// fabrication this linter was written to kill, re-created one field over and hidden behind a
+// comment asserting a coverage that did not exist. Constructed and confirmed in
+// TARGET-ARCHITECTURE.md §"The prompt standard has the gate's disease, in a second organ".
+//
+// It FAILS rather than warns because the `<server>` half is a closed set — the configured-server
+// set, the same one PS-MCP-BACKED compares against — and membership in it is decidable.
 const TOOL_UNIVERSE = [
   'Read', 'Write', 'Edit', 'NotebookEdit', 'Bash', 'BashOutput', 'KillShell',
   'Glob', 'Grep', 'Task', 'Agent', 'WebSearch', 'WebFetch', 'TodoWrite',
@@ -519,8 +532,37 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
 
   // ── PS-TOOL-EXISTS ───────────────────────────────────────────────────────
   if (Array.isArray(fm.tools)) {
+    let configured = null; // computed lazily — most files carry no mcp__ entry at all
     for (const t of fm.tools) {
-      if (String(t).startsWith('mcp__')) continue;
+      const entry = String(t);
+      if (entry.startsWith('mcp__')) {
+        // `mcp__<server>__<tool>`. Split on `__` and keep everything past the server as the tool
+        // name: an MCP tool name may itself contain `__`, a server name by convention may not.
+        const parts = entry.split('__');
+        const server = parts[1];
+        const tool = parts.slice(2).join('__');
+        if (!server || !tool) {
+          // A malformed `mcp__` string FAILS; it is not ignored. Ignoring it would leave `mcp__`
+          // and `mcp__playwright` as unchecked pass-throughs, which is the hole being closed one
+          // string shorter. The shape is closed and decidable, so it belongs on the FAIL side.
+          issues.push(
+            `PS-TOOL-EXISTS: tools entry "${entry}" is not a well-formed MCP tool id — ` +
+            `expected mcp__<server>__<tool>`
+          );
+        } else {
+          if (configured === null) configured = configuredMcpServers();
+          if (!configured.has(server)) {
+            issues.push(
+              `PS-TOOL-EXISTS: tools entry "${entry}" names MCP server "${server}", which is not ` +
+              `configured in .mcp.json or .claude/settings.json ` +
+              `(configured: ${[...configured].sort().join(', ') || 'none'}) — the entry grants nothing`
+            );
+          }
+        }
+        // The `<tool>` half is NOT checked, and that limit is stated rather than left implied: a
+        // server's tool list exists only on a running server, and this linter starts none.
+        continue;
+      }
       if (!TOOL_UNIVERSE.includes(t)) {
         issues.push(`PS-TOOL-EXISTS: tools entry "${t}" is not a runtime tool (${TOOL_UNIVERSE.join(', ')})`);
       }
