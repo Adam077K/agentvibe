@@ -4,7 +4,10 @@ task: citation-range-checker
 date: 2026-08-24
 branch: feat/citation-range-checker
 tier: full
-qa_verdict: PENDING
+qa_verdict: REVIEWED-PASS-GATE-NOT-RUN
+gate_run: false
+gate_blocked_by: "pre-existing check:mc failure on main — mission-control/test/stream.test.ts:249 EADDRINUSE; deterministic across two runs; no branch in this series touches mission-control"
+deviation_authorised_by: founder, 2026-08-24
 ---
 
 **`scripts/check-citations.mjs`** — WARN posture, `--strict` exits 1, not wired to CI. Harvests
@@ -35,3 +38,11 @@ inventory — and building it exposed that `process.exit()` never flushed async 
 `process.exit()` shape and will truncate piped `--json` once their payloads pass 64KB. Both are
 under it today. Left alone because they are separate files and one is wired into a blocking check;
 routed as its own PR. This was not missed. 56 tests, five mutation-checked. Rebased onto `c0e52dc`.
+
+**Gate deviation, recorded rather than skipped.** The binding QA gate did NOT run on this diff. Its
+oracle runs `npm run check`, which does not pass on `main`: `check:mc` fails on a pre-existing
+mission-control SSE test. Two independent blinded reviews were run instead — round 1 returned FAIL
+with 11 findings (4 P1, incl. a resolver mis-resolution demonstrated in both directions), round 2
+returned PASS having verified the 47→75 decomposition by set-diff. The founder authorised merging on
+reviewer PASS with this deviation stated. `qa_verdict` is deliberately NOT `PASS`: no gate run
+produced it, and writing `PASS` here would be the author-asserted verdict that P0 deleted.
