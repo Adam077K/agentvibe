@@ -36,7 +36,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run build:manifest` | `node scripts/build-skills-manifest.mjs` |
 | `npm run build:map` | `node scripts/gen-codebase-map.mjs` |
 | `npm run build:routers` | `node scripts/build-skill-routers.mjs` |
-| `npm run check` | `npm run lint:agents && npm run check:prompt-standard && npm run test:gate && npm run check:manifest && npm run` |
+| `npm run check` | `npm run test:protected-write && npm run lint:agents && npm run check:prompt-standard && npm run test:gate && n` |
 | `npm run check:curation` | `node scripts/curate-skills.mjs --check` |
 | `npm run check:dispatch` | `npm run test:dispatch && node scripts/check-dispatch-agenttype.mjs` |
 | `npm run check:dispatch-prompt` | `npm run test:dispatch-prompt && node scripts/check-dispatch-prompt-size.mjs` |
@@ -45,7 +45,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:map` | `node scripts/gen-codebase-map.mjs --check` |
 | `npm run check:mc` | `node mission-control/check.mjs` |
 | `npm run check:memory` | `npm run test:memory && node scripts/check-memory-budget.mjs` |
-| `npm run check:prompt-standard` | `node --test scripts/prompt-standard.test.mjs` |
+| `npm run check:prompt-standard` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/prompt-standard.test.mjs` |
 | `npm run check:registration` | `node scripts/check-registration.mjs` |
 | `npm run check:routers` | `node scripts/build-skill-routers.mjs --check` |
 | `npm run check:warroom` | `bash -n bin/warroom && bash -n war-room/bin/PROJECT_NAME.tmpl && node --check scripts/warroom-install.mjs && b` |
@@ -59,29 +59,30 @@ it, so a hook that changes posture changes this map with it.
 | `npm run lint:agents` | `node .claude/hooks/schema-lint.js` |
 | `npm run measure:bash` | `node scripts/measure-bash-usage.mjs` |
 | `npm run probe:stop-reason` | `node scripts/probe-stop-reason.mjs` |
-| `npm run test:budget` | `node --test scripts/usage.test.mjs` |
-| `npm run test:claims` | `node --test scripts/claims.test.mjs` |
-| `npm run test:classifier` | `node --test scripts/classifier.test.mjs` |
-| `npm run test:dispatch` | `node --test scripts/check-dispatch-agenttype.test.mjs` |
-| `npm run test:dispatch-prompt` | `node --test scripts/check-dispatch-prompt-size.test.mjs` |
-| `npm run test:gate` | `node --test .claude/workflows/lib/gate-logic.test.mjs` |
-| `npm run test:hooks` | `node --test scripts/session-start.test.mjs` |
-| `npm run test:launcher-permissions` | `node --test scripts/launcher-permissions.test.mjs` |
-| `npm run test:ledger` | `node --test scripts/ledger.test.mjs` |
-| `npm run test:lenses` | `node --test scripts/lenses.test.mjs` |
-| `npm run test:memory` | `node --test scripts/check-memory-budget.test.mjs` |
-| `npm run test:merge-gate` | `node --test scripts/merge-gate.test.mjs` |
-| `npm run test:playbooks` | `node --test scripts/playbooks.test.mjs` |
-| `npm run test:pre-tool-use` | `node --test scripts/pre-tool-use.test.mjs` |
-| `npm run test:probe-readonly` | `node --test scripts/probe-readonly.test.mjs` |
-| `npm run test:probe-stop-reason` | `node --test scripts/probe-stop-reason.test.mjs` |
-| `npm run test:provenance` | `node --test scripts/provenance-portability.test.mjs` |
-| `npm run test:registration` | `node --test scripts/check-registration.test.mjs` |
-| `npm run test:run-gate` | `node --test scripts/run-gate.test.mjs` |
-| `npm run test:sandbox` | `node --test scripts/sandbox-config.test.mjs` |
-| `npm run test:skill-clamp` | `node --test scripts/skill-clamp.test.mjs` |
-| `npm run test:tier-gate` | `node --test scripts/check-tier-gate.test.mjs` |
-| `npm run test:warroom` | `node --test scripts/warroom-install.test.mjs scripts/warroom-template-guard.test.mjs` |
+| `npm run test:budget` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/usage.test.mjs` |
+| `npm run test:claims` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/claims.test.mjs` |
+| `npm run test:classifier` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/classifier.test.mjs` |
+| `npm run test:dispatch` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-dispatch-agenttype.test.mjs` |
+| `npm run test:dispatch-prompt` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-dispatch-prompt-size.test.mjs` |
+| `npm run test:gate` | `node --require ./scripts/protected-write-tripwire.cjs --test .claude/workflows/lib/gate-logic.test.mjs` |
+| `npm run test:hooks` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/session-start.test.mjs` |
+| `npm run test:launcher-permissions` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/launcher-permissions.test.mjs` |
+| `npm run test:ledger` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/ledger.test.mjs` |
+| `npm run test:lenses` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs` |
+| `npm run test:memory` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-memory-budget.test.mjs` |
+| `npm run test:merge-gate` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs` |
+| `npm run test:playbooks` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/playbooks.test.mjs` |
+| `npm run test:pre-tool-use` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/pre-tool-use.test.mjs` |
+| `npm run test:probe-readonly` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs` |
+| `npm run test:probe-stop-reason` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-stop-reason.test.mjs` |
+| `npm run test:protected-write` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/protected-write.test.mjs` |
+| `npm run test:provenance` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/provenance-portability.test.mjs` |
+| `npm run test:registration` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-registration.test.mjs` |
+| `npm run test:run-gate` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/run-gate.test.mjs` |
+| `npm run test:sandbox` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/sandbox-config.test.mjs` |
+| `npm run test:skill-clamp` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/skill-clamp.test.mjs` |
+| `npm run test:tier-gate` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-tier-gate.test.mjs` |
+| `npm run test:warroom` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/warroom-install.test.mjs scripts/warroom-` |
 | `npm run usage` | `node -e "const u=require('./scripts/lib/usage.js');const w=u.windowUsage({});console.log(w.output_tokens.toLoc` |
 | `npm run vendor:provenance` | `node scripts/vendor-provenance.mjs` |
 | `npm run verdict` | `node scripts/verdict.mjs` |
@@ -120,6 +121,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/probe-readonly.test.mjs` | — |
 | `scripts/probe-stop-reason.test.mjs` | the aggregation that answers what ends a run. |
 | `scripts/prompt-standard.test.mjs` | the PS-* rules of |
+| `scripts/protected-write.test.mjs` | proof that scripts/protected-write-tripwire.cjs fires. |
 | `scripts/provenance-portability.test.mjs` | the lens linter, run against a repository that |
 | `scripts/run-gate.test.mjs` | the router that decides whether the binding gate runs. |
 | `scripts/sandbox-config.test.mjs` | proves the Bash sandbox is built and ARMED. |
