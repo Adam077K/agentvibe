@@ -1,8 +1,23 @@
-// POSTURE: BLOCKS. Preloaded with `--require` by every `node --test` script in `npm run check`;
-// scripts/protected-write.test.mjs fails if one of them stops carrying it. Those scripts are
-// what .github/workflows/ci.yml invokes by name, so the guard binds in CI without a workflow edit.
+// POSTURE: BLOCKS in the binding QA gate. BLOCKS in CI for 14 of the 25 steps it is wired to.
+// Preloaded with `--require` by every `node --test` script in `npm run check` — 25 of them — and
+// scripts/protected-write.test.mjs fails if one stops carrying it.
 //
 // scripts/protected-write-tripwire.cjs — a test may not write where the armed sandbox refuses.
+//
+// ── WHERE IT ACTUALLY BINDS, counted rather than assumed (2026-08-24) ────────────────────────
+//   • THE GATE — .claude/workflows/qa.js names `npm run check` as the oracle that BLOCKs before
+//     any panel agent is dispatched, and `test:protected-write` is first in that chain. This is
+//     the environment the defect lived in, so this is the one that matters.
+//   • CI — .github/workflows/ci.yml invokes 14 of the 25 by name via `npm run`, and those carry
+//     the preload.
+//   • NOT ci.yml's "Gate logic tests" step, which runs
+//     `node --test .claude/workflows/lib/gate-logic.test.mjs` DIRECTLY rather than through
+//     `test:gate`. That script carries the preload and CI does not use it, so that one file is
+//     run unpreloaded on a runner. A KNOWN GAP, left open deliberately: closing it edits a
+//     workflow file, which takes a test fix from `full` to `irreversible` tier and puts a
+//     founder sign-off in front of it. Queued for the irreversible follow-up.
+//   • NOT CI for this file's own assertions either — `test:protected-write` is not named in
+//     ci.yml, so the wiring check runs in the gate and locally, not on a runner.
 //
 // WHAT WENT WRONG, AND WHY A COMMENT WOULD NOT HAVE CAUGHT IT. Two tests in `npm run check`
 // built their fixtures inside .claude/agents/ and .claude/hooks/. Arming the OS sandbox (#94)
@@ -14,19 +29,33 @@
 // run. Neither test was wrong and neither change was wrong. Two correct requirements collided,
 // and no mechanism was watching the seam.
 //
-// This preload turns the next collision into a red test, in CI, with the reason attached.
+// This preload turns the next collision into a red test, in the gate's own oracle, with the
+// reason attached.
 //
 // ── THE RULE ────────────────────────────────────────────────────────────────────────────────
 // A write is refused when it lands inside a directory this repo's own harness lives in:
 //
-//     <repo>/.claude/agents      <repo>/.claude/hooks
-//     <repo>/.claude/skills      <repo>/.claude/settings.json      ~/.claude
+//     <repo>/.claude/agents      <repo>/.claude/commands     <repo>/.claude/hooks
+//     <repo>/.claude/skills      <repo>/.claude/workflows    <repo>/.claude/settings.json
+//     ~/.claude
 //
-// The list is the MEASURED deny set, taken 2026-08-24 in an armed session: writes to those
-// three project directories raised EPERM, while the repo root and its other subdirectories did
-// not. Fixture writes elsewhere in the tree are therefore left alone — scripts/lenses.test.mjs
-// writes .lens-fixture-*.yml at the repo root and is not doing anything wrong. The paths are
-// anchored at the REAL repo root, so a test that copies the tree into os.tmpdir() and edits
+// That is ONE armed session's deny set, measured 2026-08-24 at the SESSION ROOT under
+// `sandbox.enabled: true` + `failIfUnavailable: true`. It is not a reading of the sandbox's own
+// rule, which belongs to the binary and is not exposed to a process. Everything else under
+// .claude/ was writable in the same probe — memory/, playbooks/, lenses.yml, review-lenses.yml,
+// qa-tier-floor.yml, mcp-policy.json — as was the repo root.
+//
+// AND THE DENY SET IS PER SESSION ROOT, WHICH IS THE TRAP. The same probe run inside a NESTED
+// worktree reported .claude/hooks, .claude/skills and .claude/workflows as WRITABLE, because the
+// deny entries name the open project's paths literally. A test can therefore pass in a child
+// worktree and EPERM at the session root, which is where the gate runs — that is how the
+// .claude/hooks half of this defect was nearly scoped out as "not reproducing". This list is a
+// floor over both locations rather than a mirror of either, which is also why it is stated as a
+// floor in limit 1 and not as the sandbox's answer.
+//
+// Fixture writes elsewhere in the tree are left alone — scripts/lenses.test.mjs writes
+// .lens-fixture-*.yml at the repo root and is not doing anything wrong. The paths are anchored
+// at the REAL repo root, so a test that copies the tree into os.tmpdir() and edits
 // .claude/hooks/ THERE is unaffected. That is the seam this guard is asking for.
 //
 // ── WHAT IT CATCHES ─────────────────────────────────────────────────────────────────────────
@@ -45,7 +74,8 @@
 //      one; that assertion is a grep and indirection defeats it.
 //   3. Non-Node children. A test that shells out to `sed` or a shell redirect writes freely.
 //   4. Only the npm scripts that preload it — every `node --test` step of `npm run check`. A
-//      non-test step of that chain is unguarded.
+//      non-test step of that chain is unguarded, and so is ci.yml's direct invocation of
+//      gate-logic.test.mjs, per the binding note at the top of this file.
 //   5. It says nothing about reads, and nothing about the credential `denyRead` paths.
 
 'use strict';
@@ -59,8 +89,10 @@ const REPO = path.resolve(__dirname, '..');
 /** Measured 2026-08-24: writing to any of these disarms the harness, and the sandbox refuses. */
 const PROTECTED = [
   path.join(REPO, '.claude', 'agents'),
+  path.join(REPO, '.claude', 'commands'),
   path.join(REPO, '.claude', 'hooks'),
   path.join(REPO, '.claude', 'skills'),
+  path.join(REPO, '.claude', 'workflows'),
   path.join(REPO, '.claude', 'settings.json'),
 ];
 if (os.homedir()) PROTECTED.push(path.join(os.homedir(), '.claude'));

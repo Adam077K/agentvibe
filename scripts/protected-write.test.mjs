@@ -127,7 +127,13 @@ test('the protected list names the directories whose contents ARE the harness', 
     ['-e', 'const t = require(process.argv[1]); process.stdout.write(JSON.stringify({ PROTECTED: t.PROTECTED }))', TRIPWIRE],
     { encoding: 'utf8', stdio: 'pipe' }
   ))
-  for (const rel of ['.claude/agents', '.claude/hooks', '.claude/skills']) {
+  // Every .claude/ entry that a probe found write-denied at the SESSION ROOT on 2026-08-24.
+  // .claude/commands and .claude/workflows were missed on the first cut and added after review:
+  // commands/ holds the slash-command definitions, workflows/ holds the gate itself, and a
+  // fixture built in either reproduces this PR's defect somewhere nobody was looking.
+  for (const rel of [
+    '.claude/agents', '.claude/commands', '.claude/hooks', '.claude/skills', '.claude/workflows',
+  ]) {
     assert.ok(
       PROTECTED.includes(path.join(REPO, ...rel.split('/'))),
       `${rel} is not protected — writing there is what disarms the harness`
@@ -172,15 +178,43 @@ test('this file is itself in the chain — a guard outside the chain guards noth
   assert.ok(reachableScripts().has('test:protected-write'), 'test:protected-write is not reachable from check')
 })
 
+/**
+ * The test files the guarded scripts actually run, read off the `--test` arguments.
+ *
+ * Reading them from the scripts rather than globbing scripts/*.test.mjs is what pulls in
+ * .claude/workflows/lib/gate-logic.test.mjs, which the first cut of the grep below silently
+ * skipped — a scan whose scope is a directory rather than the thing under test.
+ */
+function guardedTestFiles() {
+  const files = new Set()
+  for (const cmd of reachableScripts().values()) {
+    const m = cmd.match(/--test\s+([^&|]+)/)
+    if (!m) continue
+    for (const token of m[1].trim().split(/\s+/)) {
+      if (token.startsWith('-')) continue
+      files.add(path.join(REPO, token))
+    }
+  }
+  return [...files].sort()
+}
+
 test('no guarded test reaches for an fs write API the tripwire does not wrap', () => {
   // A GREP, and honest about it: the tripwire wraps the synchronous mutators only, so an async
   // or promise write would slip past it silently. This reads the sources for those APIs rather
   // than trusting the convention. Indirection (`const w = fs.writeFile`) defeats it.
   const ASYNC_WRITE = /\bfs\.(?:promises\b|createWriteStream\b|(?:writeFile|appendFile|mkdir|mkdtemp|rename|symlink|rm|rmdir|unlink|copyFile|cp|truncate|chmod)\s*\()/g
+  const files = guardedTestFiles()
+  assert.ok(
+    files.includes(path.join(REPO, '.claude', 'workflows', 'lib', 'gate-logic.test.mjs')),
+    'the scan is not reaching outside scripts/ — gate-logic.test.mjs is guarded and must be read'
+  )
+  assert.ok(files.length >= 24, `only ${files.length} test files found — the argument scan is missing some`)
+
   const offenders = []
-  for (const f of fs.readdirSync(path.join(REPO, 'scripts')).filter((n) => n.endsWith('.test.mjs'))) {
-    const src = fs.readFileSync(path.join(REPO, 'scripts', f), 'utf8')
-    for (const m of src.matchAll(ASYNC_WRITE)) offenders.push(`${f}: ${m[0]}`)
+  for (const file of files) {
+    assert.ok(fs.existsSync(file), `a guarded script names a test file that does not exist: ${file}`)
+    const src = fs.readFileSync(file, 'utf8')
+    for (const m of src.matchAll(ASYNC_WRITE)) offenders.push(`${path.relative(REPO, file)}: ${m[0]}`)
   }
   assert.deepEqual(
     offenders, [],
