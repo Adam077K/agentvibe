@@ -388,6 +388,10 @@ if (!oracle || oracle.pass !== true) {
     advisory: [],
     dimensions_failed: [],
     critical_gap: [],
+    // Same shape as the full return below: a consumer that reads this field must find it on
+    // every path, or "absent" and "empty" become indistinguishable. The oracle short-circuits
+    // before Phase 2, so nothing was truncated — that is a fact, not a missing key.
+    unverified_truncated: [],
     verdict: 'BLOCK',
     judge_verdict: null,
     summary,
@@ -430,10 +434,24 @@ let verifyBudget = MAX_VERIFY
 // everything was examined, and the judge weighs a set it has no way to know is partial. This
 // gate's whole claim is that a verdict means what it says.
 //
-// The stated limit, so nobody has to infer it: a truncated finding is NOT verified, so it is not
-// in `confirmed` and it cannot block. It is not silently reclassified as advisory either — that
-// would launder an unexamined P1 into a fast-follow. It is logged, by id and severity, and the
-// correct response to seeing that line is to re-run the gate on a smaller diff.
+// A truncated finding is NOT verified, so it is not in `confirmed`. It is NOT reclassified as
+// advisory either — that would launder an unexamined P1 into a fast-follow. It is collected in
+// `unverifiedTruncated`, returned as a field, and it FORCES BLOCK.
+//
+// THE FIRST VERSION OF THIS CAP WAS FAIL-OPEN, AND THE COMMENT ABOVE IS WHY THAT WAS INEXCUSABLE.
+// `dropped` existed only inside the log() call below. It reached no field of the returned object,
+// so a run that verified 40 of 95 block-eligible findings and discarded 55 unexamined P1s
+// returned byte-identically to a run that examined everything and confirmed nothing. The
+// principle was stated correctly and implemented in the run journal only — and the run journal
+// is not what the caller reads. Note the direction of the regression: before the cap existed the
+// sweep was unbounded and those findings were ALWAYS verified, so the cap is where the dropping
+// was introduced.
+//
+// Budget exhaustion is the same CLASS of event as a critical coverage gap — "something was not
+// examined" — and is treated identically twelve lines below `criticalGap`: forced BLOCK, its own
+// blocker, never a silent PASS. The bound on fan-out is kept, because unbounded fan-out was also
+// real. What is not kept is the bound quietly deciding the verdict.
+const unverifiedTruncated = []
 function takeVerifyBudget(findings, phaseLabel) {
   if (findings.length <= verifyBudget) {
     verifyBudget -= findings.length
@@ -442,7 +460,8 @@ function takeVerifyBudget(findings, phaseLabel) {
   const ordered = [...findings].sort((a, b) => (SEV_ORDER[a.severity] ?? 3) - (SEV_ORDER[b.severity] ?? 3))
   const taken = ordered.slice(0, verifyBudget)
   const dropped = ordered.slice(verifyBudget)
-  log(`${phaseLabel}: verifier budget exhausted — verifying ${taken.length} of ${findings.length} block-eligible findings. ${MAX_VERIFY} is the TOTAL across Phase 2 and all sweep rounds, and ${dropped.length} finding(s) are NOT verified and cannot be weighed by the judge: ${dropped.map(f => `${f.id}(${f.severity})`).join(', ')}. Re-run the gate on a smaller diff.`)
+  unverifiedTruncated.push(...dropped.map(f => ({ id: f.id, severity: f.severity, dimension: f.dimension })))
+  log(`${phaseLabel}: verifier budget exhausted — verifying ${taken.length} of ${findings.length} block-eligible findings. ${MAX_VERIFY} is the TOTAL across Phase 2 and all sweep rounds. ${dropped.length} finding(s) are NOT verified: ${dropped.map(f => `${f.id}(${f.severity})`).join(', ')}. This FORCES BLOCK — re-run the gate on a smaller diff.`)
   verifyBudget = 0
   return taken
 }
@@ -526,6 +545,15 @@ if (criticalGap.length) {
   blockers = [...blockers, { id: 'coverage-gap', file: '(gate)', title: `Critical dimension(s) did not complete review: ${criticalGap.join(', ')}`, fix: 'Re-run qa.js so correctness + security reviews complete; a binding gate cannot PASS with a critical coverage gap.' }]
 }
 
+// Verifier-budget exhaustion, treated exactly as the coverage gap above is treated, because it is
+// the same class of event: a block-eligible finding that nobody examined. The judge never saw
+// these — they were dropped before Phase 2's verifier pool — so this override is the only thing
+// standing between an exhausted budget and a PASS the run did not earn.
+if (unverifiedTruncated.length) {
+  finalVerdict = 'BLOCK'
+  blockers = [...blockers, { id: 'verify-budget-exhausted', file: '(gate)', title: `${unverifiedTruncated.length} block-eligible finding(s) went unverified when the ${MAX_VERIFY}-finding verifier budget was exhausted: ${unverifiedTruncated.map(f => `${f.id}(${f.severity})`).join(', ')}`, fix: `Re-run qa.js against a smaller diff so every block-eligible finding is verified. A binding gate cannot PASS while a finding that could have blocked it was never examined.` }]
+}
+
 // Deterministic severity override — do NOT trust the Opus judge alone to apply the block rule.
 // A confirmed P1 (or P1/P2 at irreversible tier) forces BLOCK even if the judge hallucinated PASS.
 const mustBlock = confirmed.filter(f => f.severity === 'P1' || (TIER === 'irreversible' && f.severity === 'P2'))
@@ -544,6 +572,7 @@ return {
   advisory: advisory.map(f => ({ id: f.id, severity: f.severity, file: f.file, title: f.title })),
   dimensions_failed: failedDims,
   critical_gap: criticalGap,
+  unverified_truncated: unverifiedTruncated,
   verdict: finalVerdict,
   judge_verdict: verdict.verdict,
   summary: verdict.summary,
