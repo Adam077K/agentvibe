@@ -6,10 +6,31 @@
 # `schema-lint.js` — 360 correct lines with a blocking exit path — was registered
 # nowhere at all.
 #
-# The judged gate (qa-lead-pass.yml) shipped in shadow alongside this and was promoted to
-# blocking in Phase 3, with `main` under branch protection requiring both jobs. This
-# comment said "deliberately does NOT block yet" for one phase after that stopped being
-# true — a small instance of the exact rot this repository exists to catch.
+# The judged gate (qa-lead-pass.yml) shipped in shadow alongside this and was promoted out
+# of shadow in Phase 3: it computes a verdict and goes red on a failure.
+#
+# WHAT "BLOCKS" MEANS HERE, AND WHAT IT DOES NOT. This job and that one fail loudly. Whether
+# a red job physically stops a merge is a repository setting neither this file nor any file
+# can state — and qa-lead-pass.yml says exactly that about itself, correctly. Read it there;
+# it is not restated here, because two descriptions of one thing disagree silently.
+#
+# SUPERSEDED 2026-08-23. This comment read: "was promoted to blocking in Phase 3, with `main`
+# under branch protection requiring both jobs. This comment said 'deliberately does NOT block
+# yet' for one phase after that stopped being true — a small instance of the exact rot this
+# repository exists to catch." It was congratulating itself for catching this class of rot
+# while being an instance of it, and it contradicted qa-lead-pass.yml in the same repository.
+#
+# WHAT CHANGED: on 2026-08-23 a push moved `main` from 5b8e127 to 413a029 and reported
+# "2 of 2 required status checks are expected" — then succeeded, having run neither. So the
+# measurement is that required checks govern the PR route and did NOT bind on the route
+# actually used. That is a fact about one push on one date, recorded in CLAUDE.md's Project
+# State block. It is deliberately NOT a claim about how the repository is configured now:
+# branch protection cannot be read from inside a workflow file or by any agent here, and the
+# previous version of this comment is what asserting it unread looks like.
+#
+# The operational consequence, stated once: treat `.github/workflows/**` as unprotected
+# against a direct push until CODEOWNERS or a push restriction is added. Both are repository
+# settings and only the founder can set them.
 name: CI
 
 on:
