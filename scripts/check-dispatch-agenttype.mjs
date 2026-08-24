@@ -546,19 +546,34 @@ for (const rel of scannableFiles()) {
 }
 
 // ── report ─────────────────────────────────────────────────────────────────
+// process.exitCode, NOT process.exit(). When stdout is a PIPE — how CI runs this, and how every
+// `| jq` invocation runs it — console.log is ASYNCHRONOUS: Node fills the 64KB pipe buffer,
+// queues the remainder, and `process.exit()` then tears the process down before that queue
+// drains. The payload is cut at exactly 65536 bytes AND the exit status still reads 0, so the
+// consumer receives truncated JSON reported as a clean run. Measured 2026-08-24: a 200,011-byte
+// payload arrived as 65,536 through a pipe and complete through a file redirect — which is
+// precisely why a file-redirected spot-check does not see it. Setting exitCode and letting the
+// process end naturally drains the queue first.
+//
+// `fs.writeSync(1, ...)` is NOT the fix, though it looks like one: once anything has touched
+// process.stdout the fd carries O_NONBLOCK, and writeSync then returns a SHORT COUNT of 65536
+// without throwing, which truncates just as silently.
+//
+// scripts/check-dispatch-flush.test.mjs drives >64KB through this path and fails if it returns.
 if (JSON_OUT) {
   console.log(JSON.stringify({ root: ROOT, sites, failures, warnings, files_scanned: workflowFiles.length, cred_files_scanned: credScanned }, null, 2));
-  process.exit(failures.length ? 1 : 0);
-}
+  process.exitCode = failures.length ? 1 : 0;
+} else {
+  for (const w of warnings) console.log(`⚠ ${w}`);
+  for (const f of failures) console.error(`✗ ${f}`);
 
-for (const w of warnings) console.log(`⚠ ${w}`);
-for (const f of failures) console.error(`✗ ${f}`);
-
-if (failures.length) {
-  console.error(`\n✗ dispatch-agentType check failed — ${failures.length} problem(s), ${warnings.length} warning(s), across ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s).`);
-  process.exit(1);
+  if (failures.length) {
+    console.error(`\n✗ dispatch-agentType check failed — ${failures.length} problem(s), ${warnings.length} warning(s), across ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s).`);
+    process.exitCode = 1;
+  } else {
+    console.log(
+      `\n✓ dispatch-agentType check passed — ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s), ` +
+        `every agentType resolved to a non-shim engine; ${credScanned} file(s) scanned for credentialed containment, ${warnings.length} warning(s).`
+    );
+  }
 }
-console.log(
-  `\n✓ dispatch-agentType check passed — ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s), ` +
-    `every agentType resolved to a non-shim engine; ${credScanned} file(s) scanned for credentialed containment, ${warnings.length} warning(s).`
-);

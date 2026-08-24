@@ -279,6 +279,11 @@ if (sites.length < MIN_SITES) {
 }
 
 // ── report ────────────────────────────────────────────────────────────────────
+// process.exitCode, NOT process.exit(). Stdout to a PIPE is asynchronous, so `process.exit()`
+// after a large console.log tears the process down with the write still queued: the payload is
+// cut at exactly 65536 bytes and the exit status still reads 0. See the long note in
+// check-dispatch-agenttype.mjs for the measurement, and why `fs.writeSync(1, ...)` is not the
+// fix. scripts/check-dispatch-flush.test.mjs drives >64KB through this path.
 if (JSON_OUT) {
   console.log(JSON.stringify({
     root: ROOT,
@@ -290,26 +295,24 @@ if (JSON_OUT) {
     files_scanned: workflowFiles.length,
   }, null, 2));
   // WARN = exit 0; hard FAIL (non-vacuity, parser) = exit 1.
-  process.exit(failures.length ? 1 : 0);
-}
-
-for (const w of warnings) console.log(`⚠ [PS-DISPATCH-BRIEF-SIZE] ${w}`);
-for (const f of failures) console.error(`✗ ${f}`);
-
-if (failures.length) {
-  console.error(
-    `\n✗ dispatch-prompt-size check failed — ${failures.length} hard problem(s) across ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s).`
-  );
-  process.exit(1);
-}
-
-if (warnings.length) {
-  console.log(
-    `\n⚠ dispatch-prompt-size (PS-DISPATCH-BRIEF-SIZE): ${warnings.length} warning(s) across ${sites.length} site(s) in ${workflowFiles.length} file(s). Posture: WARN — does not block.`
-  );
+  process.exitCode = failures.length ? 1 : 0;
 } else {
-  console.log(
-    `\n✓ dispatch-prompt-size (PS-DISPATCH-BRIEF-SIZE) passed — ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s), ` +
-      `no inline literals >${BRIEF_CHAR_THRESHOLD.toLocaleString()} chars or fenced blocks >${FENCED_LINE_LIMIT} lines.`
-  );
+  for (const w of warnings) console.log(`⚠ [PS-DISPATCH-BRIEF-SIZE] ${w}`);
+  for (const f of failures) console.error(`✗ ${f}`);
+
+  if (failures.length) {
+    console.error(
+      `\n✗ dispatch-prompt-size check failed — ${failures.length} hard problem(s) across ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s).`
+    );
+    process.exitCode = 1;
+  } else if (warnings.length) {
+    console.log(
+      `\n⚠ dispatch-prompt-size (PS-DISPATCH-BRIEF-SIZE): ${warnings.length} warning(s) across ${sites.length} site(s) in ${workflowFiles.length} file(s). Posture: WARN — does not block.`
+    );
+  } else {
+    console.log(
+      `\n✓ dispatch-prompt-size (PS-DISPATCH-BRIEF-SIZE) passed — ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s), ` +
+        `no inline literals >${BRIEF_CHAR_THRESHOLD.toLocaleString()} chars or fenced blocks >${FENCED_LINE_LIMIT} lines.`
+    );
+  }
 }

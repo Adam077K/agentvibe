@@ -1415,6 +1415,37 @@ const realpath = (p) => { try { return fs.realpathSync(p); } catch { return path
 const invokedDirectly =
   process.argv[1] && realpath(process.argv[1]) === realpath(fileURLToPath(import.meta.url));
 
+// THIS `process.exit()` IS THE 64KB-TRUNCATION SHAPE, AND IT WAS LEFT ALONE ON PURPOSE.
+//
+// Stdout to a PIPE is asynchronous. `process.exit()` tears the process down with whatever is
+// still queued undelivered, so the payload is cut and the exit status still reads 0 — silent
+// corruption reported as a clean run. Six scripts carried this shape and were fixed on
+// 2026-08-24 by setting `process.exitCode` and letting the process end naturally: the two
+// dispatch checkers, check-citations.mjs, check-memory-budget.mjs, measure-bash-usage.mjs and
+// run-gate.mjs. See check-dispatch-agenttype.mjs for the full measurement and for why
+// `fs.writeSync(1, ...)` is NOT the fix. scripts/check-dispatch-flush.test.mjs is the regression
+// gate; it does not cover this file.
+//
+// WHY THIS ONE IS DIFFERENT — the cure is worse than the disease here. `verify` performs network
+// fetches through the resolvers. Under a natural exit, one lingering socket keeps the event loop
+// alive and `npm run check:ledger` HANGS instead of returning. A hang inside a blocking CI check
+// is a worse failure than the truncation it would prevent, and this file is not truncating today.
+//
+// MEASURED 2026-08-24, this repo, stdout to a pipe — every command well under the 65,536-byte
+// buffer: `views` 20,802 (the largest) · `verify` 20,774 · `events` 6,461 · `locate` 3,257 ·
+// `lint` 131. This file also emits many SMALL `process.stdout.write` calls rather than one large
+// one, and against a reader that is draining, each small write lands whole and nothing is queued
+// for the exit to discard — measured separately at 263,096 bytes delivered complete.
+//
+// THE TRIPWIRE, so the next reader does not mistake "audited" for "safe". Two ways this becomes
+// live, and neither announces itself:
+//   1. Any command starts emitting ONE write larger than the buffer — a `--json` payload, a
+//      whole-index dump. That truncates immediately, at exactly 65536 bytes, at exit 0.
+//   2. Total output grows large AND the reader is slow rather than absent. The small-write
+//      safety above is a property of the READER draining promptly, not of this code.
+// If either becomes true, fix it then — move the exit code to `process.exitCode` and make the
+// resolvers' sockets `unref()`able so the natural exit cannot hang. Do not assume this file was
+// checked and cleared; it was checked and found to be under the line, which is not the same thing.
 if (invokedDirectly) {
   main().then((code) => process.exit(code)).catch((err) => {
     process.stderr.write(`ledger: ${err.stack || err.message}\n`);

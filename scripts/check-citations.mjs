@@ -667,75 +667,90 @@ function excerpt(f) {
 }
 
 if (JSON_OUT) {
-  // fs.writeSync, NOT console.log. `process.exit()` does not flush a pending async write, and
-  // stdout to a PIPE is async — so `check-citations --json | jq` silently truncated at the 64KB
-  // pipe buffer while the same command redirected to a file was complete. Found when the R5
-  // inventory pushed the payload past 64KB; the bug predates it and would have corrupted any
-  // piped consumer the moment this repo grew. A checker that reports partial JSON as whole JSON
-  // is the failure mode this file exists to argue against.
-  fs.writeSync(1, `${JSON.stringify({
+  // console.log + process.exitCode, and NEITHER half is optional.
+  //
+  // `process.exit()` does not flush a pending async write, and stdout to a PIPE is async — so
+  // `check-citations --json | jq` silently truncated at the 64KB pipe buffer while the same
+  // command redirected to a FILE was complete. Found when the R5 inventory pushed the payload
+  // past 64KB; the bug predates it and would have corrupted any piped consumer the moment this
+  // repo grew. A checker that reports partial JSON as whole JSON is the failure mode this file
+  // exists to argue against.
+  //
+  // This block used to read `fs.writeSync(1, ...)`, and that was a CONDITIONAL fix — correct
+  // only while nothing had written to stdout earlier in the process. Measured 2026-08-24: once
+  // any console.log has initialised process.stdout on a pipe, the fd carries O_NONBLOCK, and
+  // writeSync then returns a SHORT COUNT of 65536 for a 288,001-byte buffer WITHOUT THROWING.
+  // The payload is cut exactly as before, and the return value nobody checks is the only signal.
+  // So the old fix was one `console.log` above this line away from failing again.
+  //
+  // Setting exitCode and letting the process end naturally drains the queue first, and does not
+  // care what touched stdout beforehand. Payload here today: 288,412 bytes, 4.4x the buffer.
+  console.log(`${JSON.stringify({
     root: ROOT, posture: STRICT ? 'strict' : 'warn',
     anchor_slack: ANCHOR_SLACK, anchor_gap: ANCHOR_GAP,
     anchors_enabled: ANCHORS, min_locators: MIN_LOCATORS,
     stats, by_kind: byKind, findings, unchecked, inventory, failures,
-  }, null, 2)}\n`);
-  process.exit(failures.length || (STRICT && findings.length) ? 1 : 0);
-}
+  }, null, 2)}`);
+  process.exitCode = failures.length || (STRICT && findings.length) ? 1 : 0;
+} else {
 
-for (const f of existence) {
-  console.log(`⚠ [${f.kind}] ${f.where}: ${f.message}`);
-  if (SHOW) { const e = excerpt(f); if (e) console.log(e); }
-}
-for (const f of drift.sort((a, b) => (b.distance ?? Infinity) - (a.distance ?? Infinity))) {
-  console.log(`⚠ [${f.kind}] ${f.where}: ${f.message}`);
-  if (SHOW) { const e = excerpt(f); if (e) console.log(e); }
-}
-for (const u of unchecked) {
-  const why = u.reason === 'external'
-    ? `\`${u.cited}\` was declared to live in another repository (--external-prefix). Nothing ` +
-      'here can confirm or deny it; it is reported so it stays visible rather than silently clean.'
-    : `\`${u.cited}\` matches ${u.candidates.length} tracked files (${u.candidates.join(', ')}). ` +
-      'Checked against none of them: guessing which was meant is how a checker invents a finding.';
-  console.log(`· [unchecked:${u.reason}] ${u.where}: \`${u.locator}\` — ${why}`);
-}
-for (const f of failures) console.error(`✗ ${f}`);
+  for (const f of existence) {
+    console.log(`⚠ [${f.kind}] ${f.where}: ${f.message}`);
+    if (SHOW) { const e = excerpt(f); if (e) console.log(e); }
+  }
+  for (const f of drift.sort((a, b) => (b.distance ?? Infinity) - (a.distance ?? Infinity))) {
+    console.log(`⚠ [${f.kind}] ${f.where}: ${f.message}`);
+    if (SHOW) { const e = excerpt(f); if (e) console.log(e); }
+  }
+  for (const u of unchecked) {
+    const why = u.reason === 'external'
+      ? `\`${u.cited}\` was declared to live in another repository (--external-prefix). Nothing ` +
+        'here can confirm or deny it; it is reported so it stays visible rather than silently clean.'
+      : `\`${u.cited}\` matches ${u.candidates.length} tracked files (${u.candidates.join(', ')}). ` +
+        'Checked against none of them: guessing which was meant is how a checker invents a finding.';
+    console.log(`· [unchecked:${u.reason}] ${u.where}: \`${u.locator}\` — ${why}`);
+  }
+  for (const f of failures) console.error(`✗ ${f}`);
 
-/**
- * COVERAGE IS PRINTED ON EVERY PATH, INCLUDING THE PASSING ONE.
- *
- * An unqualified "✓ citation check passed" over this corpus would be manufacturing confidence:
- * most locators get no drift check at all, and most of the ones that do were resolved by
- * inference rather than by an exact path. A reader who sees a bare tick has been told something
- * untrue by omission, which is the defect this checker exists to catch, committed by the checker.
- */
-const anchorPct = stats.locators ? Math.round((stats.anchors_checked / stats.locators) * 100) : 0;
-const exactPct = stats.locators ? Math.round((stats.resolved.exact / stats.locators) * 100) : 0;
-const scanned =
-  `${stats.locators} locator(s) in ${stats.files_scanned} markdown file(s).\n` +
-  `  RESOLUTION: ${stats.resolved.exact} exact (${exactPct}%) · ${stats.resolved.basename} by ` +
-  `basename · ${stats.resolved.suffix} by suffix · ${stats.ambiguous} ambiguous (checked against ` +
-  `nothing) · ${stats.unresolved} unresolved · ${stats.skipped} skipped as illustrative.\n` +
-  `  A basename or suffix match may be the WRONG FILE — ${stats.locators - stats.resolved.exact} ` +
-  'locator(s) here were not written as a path this checker could resolve exactly.\n' +
-  `  DRIFT COVERAGE: ${stats.anchors_checked} of ${stats.locators} locator(s) (${anchorPct}%) had ` +
-  `an anchor to check at all; the other ${stats.locators - stats.anchors_checked} got existence ` +
-  'checks only.';
+  /**
+   * COVERAGE IS PRINTED ON EVERY PATH, INCLUDING THE PASSING ONE.
+   *
+   * An unqualified "✓ citation check passed" over this corpus would be manufacturing confidence:
+   * most locators get no drift check at all, and most of the ones that do were resolved by
+   * inference rather than by an exact path. A reader who sees a bare tick has been told something
+   * untrue by omission, which is the defect this checker exists to catch, committed by the checker.
+   */
+  const anchorPct = stats.locators ? Math.round((stats.anchors_checked / stats.locators) * 100) : 0;
+  const exactPct = stats.locators ? Math.round((stats.resolved.exact / stats.locators) * 100) : 0;
+  const scanned =
+    `${stats.locators} locator(s) in ${stats.files_scanned} markdown file(s).\n` +
+    `  RESOLUTION: ${stats.resolved.exact} exact (${exactPct}%) · ${stats.resolved.basename} by ` +
+    `basename · ${stats.resolved.suffix} by suffix · ${stats.ambiguous} ambiguous (checked against ` +
+    `nothing) · ${stats.unresolved} unresolved · ${stats.skipped} skipped as illustrative.\n` +
+    `  A basename or suffix match may be the WRONG FILE — ${stats.locators - stats.resolved.exact} ` +
+    'locator(s) here were not written as a path this checker could resolve exactly.\n' +
+    `  DRIFT COVERAGE: ${stats.anchors_checked} of ${stats.locators} locator(s) (${anchorPct}%) had ` +
+    `an anchor to check at all; the other ${stats.locators - stats.anchors_checked} got existence ` +
+    'checks only.';
 
-if (failures.length) {
-  console.error(`\n✗ citation check FAILED — ${failures.length} harness problem(s).\n  ${scanned}`);
-  process.exit(1);
+  if (failures.length) {
+    console.error(`\n✗ citation check FAILED — ${failures.length} harness problem(s).\n  ${scanned}`);
+    process.exitCode = 1;
+  } else {
+
+  const verdict = findings.length
+    ? `⚠ citation check: ${existence.length} existence finding(s), ${drift.length} drift finding(s), ` +
+      `${unchecked.length} unchecked, at --anchor-slack ${ANCHOR_SLACK}.`
+    : `✓ citation check: no findings, and ${unchecked.length} locator(s) it could not check. ` +
+      'This is NOT "the citations are good" — read the coverage below before believing it.';
+
+  console.log(
+    `\n${verdict}\n  ${scanned}\n` +
+    `  Posture: ${STRICT && findings.length ? 'STRICT — exiting 1' : 'WARN — does not block'}. ` +
+    'Drift findings are heuristic; re-read before editing. This check cannot tell whether the prose ' +
+    'is supported by the content it points at — only whether the pointer still lands.'
+  );
+  process.exitCode = STRICT && findings.length ? 1 : 0;
+
+  }
 }
-
-const verdict = findings.length
-  ? `⚠ citation check: ${existence.length} existence finding(s), ${drift.length} drift finding(s), ` +
-    `${unchecked.length} unchecked, at --anchor-slack ${ANCHOR_SLACK}.`
-  : `✓ citation check: no findings, and ${unchecked.length} locator(s) it could not check. ` +
-    'This is NOT "the citations are good" — read the coverage below before believing it.';
-
-console.log(
-  `\n${verdict}\n  ${scanned}\n` +
-  `  Posture: ${STRICT && findings.length ? 'STRICT — exiting 1' : 'WARN — does not block'}. ` +
-  'Drift findings are heuristic; re-read before editing. This check cannot tell whether the prose ' +
-  'is supported by the content it points at — only whether the pointer still lands.'
-);
-process.exit(STRICT && findings.length ? 1 : 0);
