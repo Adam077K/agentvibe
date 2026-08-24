@@ -39,7 +39,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check` | `npm run test:protected-write && npm run lint:agents && npm run check:prompt-standard && npm run test:gate && n` |
 | `npm run check:citations` | `npm run test:citations && node scripts/check-citations.mjs` |
 | `npm run check:curation` | `node scripts/curate-skills.mjs --check` |
-| `npm run check:dispatch` | `npm run test:dispatch && node scripts/check-dispatch-agenttype.mjs` |
+| `npm run check:dispatch` | `npm run test:dispatch && npm run test:dispatch-flush && node scripts/check-dispatch-agenttype.mjs` |
 | `npm run check:dispatch-prompt` | `npm run test:dispatch-prompt && node scripts/check-dispatch-prompt-size.mjs` |
 | `npm run check:ledger` | `npm run test:claims && npm run test:classifier && npm run test:ledger && node scripts/ledger.mjs lint && node ` |
 | `npm run check:manifest` | `node scripts/build-skills-manifest.mjs --check` |
@@ -65,6 +65,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:claims` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/claims.test.mjs` |
 | `npm run test:classifier` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/classifier.test.mjs` |
 | `npm run test:dispatch` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-dispatch-agenttype.test.mjs` |
+| `npm run test:dispatch-flush` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-dispatch-flush.test.mjs` |
 | `npm run test:dispatch-prompt` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-dispatch-prompt-size.test.mjs` |
 | `npm run test:gate` | `node --require ./scripts/protected-write-tripwire.cjs --test .claude/workflows/lib/gate-logic.test.mjs` |
 | `npm run test:hooks` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/session-start.test.mjs` |
@@ -109,6 +110,7 @@ it, so a hook that changes posture changes this map with it.
 |---|---|
 | `scripts/check-citations.test.mjs` | mutation gate for the citation-range checker. |
 | `scripts/check-dispatch-agenttype.test.mjs` | the mutation gate for the dispatch-identity checker. |
+| `scripts/check-dispatch-flush.test.mjs` | the regression gate for the 64KB stdout truncation. |
 | `scripts/check-dispatch-prompt-size.test.mjs` | mutation gate for the PS-DISPATCH-BRIEF-SIZE checker. |
 | `scripts/check-memory-budget.test.mjs` | mutation gate for the memory-budget checker. |
 | `scripts/check-registration.test.mjs` | — |
