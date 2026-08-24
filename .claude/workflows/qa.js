@@ -176,26 +176,48 @@ For each of the 3 checks return {name, pass, output}: output is "" on a clean pa
 IMPORTANT: you MUST finish by calling the StructuredOutput tool with {pass, checks}. Do not end without it.${attempt ? ' (Retry — your previous attempt did not return structured output.)' : ''}`
 }
 
-// THE TOOL BUDGET IS THE BINDING CONSTRAINT, AND THIS PROMPT IS WRITTEN AROUND IT.
+// THE TOOL BUDGET IS A REAL CONSTRAINT. IT IS NOT THE DIAGNOSIS OF THE DROPOUT.
 //
-// Measured across three runs of this gate: agents that made ≤17 tool calls returned findings;
-// agents that reached 20 returned NOTHING. Clean separation, no overlap — 13 of 20 dropouts sat
-// at exactly 20, which is what `maxTurns` was set to on the reviewer containers — a declared
-// cap, cutting agents off mid-work with findings in hand, rather than a stochastic failure.
+// SUPERSEDED 2026-08-24. This block used to open "THE TOOL BUDGET IS THE BINDING CONSTRAINT" and
+// read: "agents that made ≤17 tool calls returned findings; agents that reached 20 returned
+// NOTHING... 13 of 20 dropouts sat at exactly 20, which is what `maxTurns` was set to on the
+// reviewer containers — a declared cap, cutting agents off mid-work." It carried an honest bound
+// admitting the cap did not explain 7 of the 20 (21, 32, 32, 32, 32, 34, 34 tool calls, all above
+// the cap) and that "no post-fix run has yet confirmed the diagnosis."
 //
-// HONEST BOUND ON THAT CLAIM, from an independent audit: the cap explains the 13 dropouts that
-// sat at exactly 20 and it does NOT explain the other 7, which recorded 21, 32, 32, 32, 32, 34
-// and 34 tool calls — above the cap. The separation is real (max success 17 < min failure 20);
-// the conclusion that the cap CAUSED every dropout is not supported for roughly a third of them,
-// and no post-fix run has yet confirmed the diagnosis. Treat this as the best current
-// explanation, not a settled mechanism.
+// WHAT CHANGED: the confirming run happened, and it refuted the diagnosis rather than settling
+// it. The REVIEW_ATTEMPTS block below is the measured account and this file now has one: 15 of 31
+// dispatched agents returned nothing, every one on `stop_reason: tool_use`, and a turn cap was
+// one of four explanations tested against the transcripts and refuted — successes reached 43
+// turns while failures started at 37. A cap cannot be the cause of a dropout in a run that
+// finished with more turns than a run that succeeded. Read the dropout as ~48% and UNEXPLAINED.
 //
-// The cap is raised to 30 (the schema maximum), but a cap that is merely higher still binds on
-// a large diff. So the instruction changed too: `git diff` is the PRIMARY evidence and reading
-// whole files is the exception, and the agent is told its budget is finite and that emitting
-// partial findings beats being killed holding a complete set. A reviewer that dies before
-// calling StructuredOutput contributes exactly nothing — worse than a partial review, because
-// the gate then records it as a coverage GAP and blocks on it.
+// Two accounts of one failure mode, in one file, disagreeing, is how a reader picks whichever
+// one they read first and acts on it. The pre-2026-08-24 account is kept above as an obituary,
+// marked, at the point where it was cited — not deleted quietly, and not left standing.
+//
+// THE UNITS DO NOT OBVIOUSLY MATCH, AND THEY ARE NOT RECONCILED HERE. Three quantities appear
+// across the two accounts and nothing on disk proves any two are the same:
+//   · TOOL CALLS      — what the superseded account counted (≤17 / 20 / 34)
+//   · TURNS           — what the measured account counts (43 success / 37 failure)
+//   · `maxTurns: 30`  — the frontmatter field on reviewer.md and reviewer-readonly.md
+// An assistant turn may carry several tool calls or none, so "20 tool calls" and "20 turns" are
+// not interchangeable, and neither is known to be the unit `maxTurns` counts. The superseded
+// account equated the first and the third; that equation is the load-bearing step in its
+// conclusion and it was never checked. Anyone who wants the cap back as an explanation has to
+// establish the unit first. (The lint ceiling is [5, 120]; both reviewer engines declare 30.)
+//
+// WHAT SURVIVES, AND IT IS WHY THE PROMPT BELOW IS STILL WRITTEN THIS WAY: a finite budget of
+// some kind exists, and a reviewer that dies before calling StructuredOutput contributes exactly
+// nothing — worse than a partial review, because the gate records it as a coverage GAP and blocks
+// on it. So `git diff` is the PRIMARY evidence, reading whole files is the exception, and the
+// agent is told to emit partial findings rather than be killed holding a complete set. That
+// instruction is good practice under any of the three explanations and costs nothing under none.
+//
+// The prompt's own "about 30 calls" is an ESTIMATE stated to the reviewer, and it inherits the
+// unit problem above: it is a tool-call figure derived from a turn cap. It is left as it stands
+// because changing what the reviewer is told changes what the gate does, and this commit is
+// reconciling a comment, not retuning the panel.
 function reviewPrompt(d, attempt) {
   return `You are reviewing a Agentvibe diff for the **${d.key}** dimension only.
 
@@ -263,13 +285,20 @@ Your default verdict is binding and the CEO cannot override it. Adam (board) may
 // tracked coverage gap.
 //
 // ATTEMPTS IS 4, AND THE NUMBER IS MEASURED RATHER THAN CHOSEN.
+//
+// THIS IS THE SURVIVING ACCOUNT OF THE DROPOUT. The block above reviewPrompt() carried a second,
+// incompatible one — a `maxTurns` cap cutting reviewers off — and is marked superseded there as
+// of 2026-08-24. The turn cap is one of the four explanations refuted below; it is not a partial
+// cause held in reserve. Read that block for the unit problem it leaves open.
+//
 // Two consecutive runs of this gate were blocked by a coverage gap on `correctness`. Reading
 // the run journal: 15 of 31 dispatched agents returned nothing, every one of them ending on
 // `stop_reason: tool_use` — mid-tool, never reaching StructuredOutput — while the runtime
 // reported `agents_error: 0`. The pending calls were ordinary (`grep`, `sed`, `git status`).
 // Four explanations were tested against the transcripts and all four were refuted: a turn cap
-// (successes reached 43 turns, failures started at 37), context exhaustion (30-84k vs 53-88k,
-// overlapping), output tokens (overlapping), and a wall-clock timeout (median 113s vs 123s).
+// (successes reached 43 turns, failures started at 37 — a cap cannot cut short the run that went
+// further), context exhaustion (30-84k vs 53-88k, overlapping), output tokens (overlapping), and
+// a wall-clock timeout (median 113s vs 123s).
 //
 // So the dropout is ~48% and unexplained by anything on disk. At 2 attempts a dimension fails
 // ~23% of the time and SOME critical dimension fails most runs, which is why this gate had
