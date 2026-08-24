@@ -7,13 +7,20 @@
 //
 //   1. Every blocking rule is run against ALL SEVEN live engine files and must hit ZERO.
 //   2. Every blocking rule must then FIRE on a constructed violation.
+//   3. Added 2026-08-24 — every rule over OPEN PROSE is also run against a NEGATIVE CONTROL: one
+//      paraphrase that means the same thing as the violation in step 2. If the paraphrase walks
+//      past, the rule may not block.
 //
 // Step 2 is not ceremony. A rule that fires on nothing is not a rule — it is a sentence that reads
 // as enforcement, which is the exact defect this repository has now shipped three times: eight
 // CLAUDE.md rules with no mechanism, `mcpServers` declared on 52 files with no MCP config, and a
 // `maxTurns` range check that a quoted value walked straight past.
 //
-// Both numbers are asserted below, per rule, so neither half can rot without failing the build.
+// Step 3 is why five rules are `WARN` below and were `FAIL` before. Steps 1 and 2 alone certify a
+// rule that has simply been narrowed until it stops firing, and "zero on the corpus" then reads as
+// clean while meaning toothless. Four of the five had passed 1 and 2. All five failed 3.
+//
+// All three numbers are asserted below, per rule, so no half can rot without failing the build.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -44,6 +51,22 @@ function ps(text, basename = 'builder') {
   );
   return { issues, checks, warnings };
 }
+
+/**
+ * The five rules demoted to WARN on 2026-08-24. Their controls below assert they still FIRE —
+ * into `checks`, never `issues`. `absent` is the other half: after a demotion, an
+ * `assert.deepEqual(r.issues, [])` on one of these is vacuously true and pins nothing, so every
+ * "does not fire" case asserts the id is missing from `checks` instead. That is a STRONGER
+ * assertion than the one it replaces, not a weaker one.
+ */
+const DEMOTED = [
+  'PS-JUDGE-BLOCK-CONDITION', 'PS-DISPOSITION', 'PS-PRIOR-BELIEF',
+  'PS-FALSE-CONSTRAINT', 'PS-BODY-TOOL-AFFIRM',
+];
+const absent = (r, id) => assert.ok(
+  !r.checks.some((c) => c.startsWith(id)) && !r.issues.some((i) => i.startsWith(id)),
+  `${id} fired: ${[...r.issues, ...r.checks].filter((x) => x.startsWith(id)).join(' | ')}`,
+);
 
 /** Write a whole agent file somewhere harmless and run the FULL lint over it. */
 function lintText(text, basename = 'builder') {
@@ -390,17 +413,20 @@ test('PS-JUDGE-BLOCK-CONDITION fires on a read-only engine that names no BLOCKED
   // judges against and the condition under which it refuses.
   const stripped = GOOD.replace(/BLOCKED/g, 'a note');
   const r = ps(stripped, 'reviewer');
-  assert.match(r.issues.join('\n'), /PS-JUDGE-BLOCK-CONDITION/);
+  assert.deepEqual(r.issues, [], 'demoted 2026-08-24 — it may never reach the blocking list');
+  assert.match(r.checks.join('\n'), /PS-JUDGE-BLOCK-CONDITION/);
 });
 
 test('PS-JUDGE-BLOCK-CONDITION does not apply to producing engines', () => {
-  assert.deepEqual(ps(GOOD.replace(/BLOCKED/g, 'a note'), 'builder').issues, []);
+  absent(ps(GOOD.replace(/BLOCKED/g, 'a note'), 'builder'), 'PS-JUDGE-BLOCK-CONDITION');
 });
 
 test('both read-only engines name the condition today', () => {
   for (const name of ['reviewer', 'reviewer-readonly']) {
     const text = fs.readFileSync(path.join(AGENTS, `${name}.md`), 'utf8');
-    assert.deepEqual(ps(text, name).issues, []);
+    const r = ps(text, name);
+    assert.deepEqual(r.issues, [], name);
+    absent(r, 'PS-JUDGE-BLOCK-CONDITION');
   }
 });
 
@@ -416,7 +442,8 @@ const DISPOSITION_CONTROLS = [
 test('PS-DISPOSITION fires on all four constructed violations', () => {
   for (const line of DISPOSITION_CONTROLS) {
     const r = ps(GOOD.replace('One sentence, or ask once.', line));
-    assert.match(r.issues.join('\n'), /PS-DISPOSITION/, `did not fire on: ${line}`);
+    assert.deepEqual(r.issues, [], `demoted — must not block: ${line}`);
+    assert.match(r.checks.join('\n'), /PS-DISPOSITION/, `did not fire on: ${line}`);
   }
 });
 
@@ -427,12 +454,13 @@ test('PS-DISPOSITION does not ban strong language that names a mechanism', () =>
     'One sentence, or ask once.',
     'An agent that can edit what it reviews will review what it can edit, so this one holds no Write.',
   ));
-  assert.deepEqual(r.issues, []);
+  absent(r, 'PS-DISPOSITION');
 });
 
 test('PS-DISPOSITION reads the frontmatter description too — it reaches the model', () => {
   const r = ps(GOOD.replace('Engine. A fixture', 'Engine. Be thorough. A fixture'));
-  assert.match(r.issues.join('\n'), /PS-DISPOSITION/);
+  assert.deepEqual(r.issues, [], 'demoted — must not block');
+  assert.match(r.checks.join('\n'), /PS-DISPOSITION/);
 });
 
 // ── 9 · PS-PRIOR-BELIEF — the 97.2% → 3.6% class ──────────────────────────
@@ -451,7 +479,8 @@ test('PS-PRIOR-BELIEF fires on all four constructed violations', () => {
   // magnitude, and it is a word-choice finding — same model, same pairs, one clause removed.
   for (const line of PRIOR_BELIEF_CONTROLS) {
     const r = ps(GOOD.replace('One sentence, or ask once.', line));
-    assert.match(r.issues.join('\n'), /PS-PRIOR-BELIEF/, `did not fire on: ${line}`);
+    assert.deepEqual(r.issues, [], `demoted — must not block: ${line}`);
+    assert.match(r.checks.join('\n'), /PS-PRIOR-BELIEF/, `did not fire on: ${line}`);
   }
 });
 
@@ -460,7 +489,7 @@ test('PS-PRIOR-BELIEF leaves PROVENANCE alone — it describes the artifact, not
     'One sentence, or ask once.',
     'State whether this diff touches auth and whether it is the third attempt at the same failure.',
   ));
-  assert.deepEqual(r.issues, []);
+  absent(r, 'PS-PRIOR-BELIEF');
 });
 
 // ── 10 · PS-FALSE-CONSTRAINT — statements this repo has measured false ────
@@ -476,7 +505,8 @@ test('PS-FALSE-CONSTRAINT fires on all three constructed violations', () => {
   // produced the nested-spawn fabrication, and CLAUDE.md rule 9 exists because of it.
   for (const line of FALSE_CONSTRAINT_CONTROLS) {
     const r = ps(GOOD.replace('One sentence, or ask once.', line));
-    assert.match(r.issues.join('\n'), /PS-FALSE-CONSTRAINT/, `did not fire on: ${line}`);
+    assert.deepEqual(r.issues, [], `demoted — must not block: ${line}`);
+    assert.match(r.checks.join('\n'), /PS-FALSE-CONSTRAINT/, `did not fire on: ${line}`);
   }
 });
 
@@ -487,7 +517,7 @@ test('PS-FALSE-CONSTRAINT leaves the HEDGED, TRUE sentence alone', () => {
     'One sentence, or ask once.',
     'The field `tools:` is not known to bind `Bash`, which is why the judge gets a container with no shell.',
   ));
-  assert.deepEqual(r.issues, []);
+  absent(r, 'PS-FALSE-CONSTRAINT');
 });
 
 // ── 11 · PS-BODY-TOOL-AFFIRM — paragraph-scoped, and that is the point ────
@@ -495,13 +525,14 @@ test('PS-FALSE-CONSTRAINT leaves the HEDGED, TRUE sentence alone', () => {
 test('PS-BODY-TOOL-AFFIRM fires on a direction to use a tool the frontmatter does not grant', () => {
   const r = ps(GOOD.replace('Run the thing. A build that compiles is not a build that works.',
     'Run the suite with `Bash` before returning a verdict.'));
-  assert.match(r.issues.join('\n'), /PS-BODY-TOOL-AFFIRM: the body directs use of `Bash`/);
+  assert.deepEqual(r.issues, [], 'demoted — must not block');
+  assert.match(r.checks.join('\n'), /PS-BODY-TOOL-AFFIRM: the body directs use of `Bash`/);
 });
 
 test('PS-BODY-TOOL-AFFIRM leaves a NEGATION alone — all seven out-of-grant mentions today are negations', () => {
   const r = ps(GOOD.replace('One sentence, or ask once.',
     'You have no `Bash`. You cannot run the test suite or shell out to git.'));
-  assert.deepEqual(r.issues, []);
+  absent(r, 'PS-BODY-TOOL-AFFIRM');
 });
 
 test('PS-BODY-TOOL-AFFIRM is PARAGRAPH-scoped: a negation that wraps to the next line still clears it', () => {
@@ -509,12 +540,12 @@ test('PS-BODY-TOOL-AFFIRM is PARAGRAPH-scoped: a negation that wraps to the next
   // rule fires on 2 correct negations in reviewer-readonly.md. Paragraph-scoped it measures 0.
   const r = ps(GOOD.replace('One sentence, or ask once.',
     'This engine was given `general-purpose` with tools `*` — holding `Bash` on the diff under\njudgement. That grant is not one it should have; use the container that removed it.'));
-  assert.deepEqual(r.issues, []);
+  absent(r, 'PS-BODY-TOOL-AFFIRM');
 });
 
 test('PS-BODY-TOOL-AFFIRM does not fire on a granted tool', () => {
   const r = ps(GOOD.replace('One sentence, or ask once.', 'Use `Grep` to locate the call sites first.'));
-  assert.deepEqual(r.issues, []);
+  absent(r, 'PS-BODY-TOOL-AFFIRM');
 });
 
 // ── 12 · PS-PIPELINE-RESTATE ───────────────────────────────────────────────
@@ -546,6 +577,58 @@ test('PS-PIPELINE-RESTATE does not fire on the return-contract JSON of any live 
   for (const p of LIVE) {
     const { issues } = ps(fs.readFileSync(p, 'utf8'), path.basename(p, '.md'));
     assert.ok(!issues.some((i) => i.startsWith('PS-PIPELINE-RESTATE')), path.basename(p));
+  }
+});
+
+// ── 12b · The five demoted to WARN, 2026-08-24 ────────────────────────────
+
+test('the five demoted rules can NEVER reach the blocking list, on any input', () => {
+  // One assertion per rule, each on the input that used to fail the build. If a later change
+  // pushes any of these back onto `issues`, this goes red before it can refuse anyone's merge.
+  const cases = [
+    ['PS-JUDGE-BLOCK-CONDITION', GOOD.replace(/BLOCKED/g, 'a note'), 'reviewer'],
+    ['PS-DISPOSITION', GOOD.replace('One sentence, or ask once.', 'Be critical when you read the diff.'), 'builder'],
+    ['PS-PRIOR-BELIEF', GOOD.replace('One sentence, or ask once.', 'The code is correct; confirm it.'), 'builder'],
+    ['PS-FALSE-CONSTRAINT', GOOD.replace('One sentence, or ask once.', 'Subagents cannot spawn subagents, so do the work yourself.'), 'builder'],
+    ['PS-BODY-TOOL-AFFIRM', GOOD.replace('Run the thing. A build that compiles is not a build that works.', 'Run the suite with `Bash` before returning a verdict.'), 'builder'],
+  ];
+  assert.deepEqual(cases.map((c) => c[0]), DEMOTED, 'a rule was demoted or restored without updating this list');
+  for (const [id, text, basename] of cases) {
+    const r = ps(text, basename);
+    assert.deepEqual(r.issues, [], `${id} reached the blocking list`);
+    assert.match(r.checks.join('\n'), new RegExp(id), `${id} stopped firing entirely — a demotion is not a deletion`);
+  }
+});
+
+test('each demoted rule is defeated by a paraphrase — the negative control that demoted them', () => {
+  // The missing test of §0's method, built in TARGET-ARCHITECTURE.md: zero-on-corpus plus
+  // fires-on-one-control is NOT sufficient, because narrowing a predicate until it stops firing
+  // is indistinguishable from fixing it. Each line below means the same thing as a control the
+  // rule DOES catch, and every one of them walks past. This is the evidence for WARN, and it is
+  // pinned so that "we could sharpen these back into FAIL" stays an argument someone has to win
+  // with a rule that survives its own paraphrase.
+  const paraphrases = [
+    ['PS-DISPOSITION', 'Be extremely critical.'],
+    ['PS-PRIOR-BELIEF', 'Two senior engineers shipped this. Findings here are usually noise.'],
+    ['PS-FALSE-CONSTRAINT', 'A subagent has no way to start another subagent, so do it yourself.'],
+  ];
+  for (const [id, line] of paraphrases) {
+    absent(ps(GOOD.replace('One sentence, or ask once.', line)), id);
+  }
+  // PS-BODY-TOOL-AFFIRM: the same directive it catches, plus one negation word in the paragraph.
+  absent(ps(GOOD.replace('Run the thing. A build that compiles is not a build that works.',
+    'Run the suite with `Bash` before returning a verdict. Do not skip it.')), 'PS-BODY-TOOL-AFFIRM');
+  // PS-JUDGE-BLOCK-CONDITION: it cannot tell a named condition from the word appearing anywhere.
+  absent(ps(GOOD.replace(/BLOCKED/g, 'a note').replace('One sentence, or ask once.',
+    'Nobody enjoys being BLOCKED by a review.'), 'reviewer'), 'PS-JUDGE-BLOCK-CONDITION');
+});
+
+test('none of the five fires on any live engine — demoted, not merely quieted', () => {
+  // They measured zero as FAIL rules and they still measure zero. `npm run lint:agents` reports
+  // 18 pass, 0 fail, 0 warnings, and this is the half of that number these rules own.
+  for (const p of LIVE) {
+    const r = ps(fs.readFileSync(p, 'utf8'), path.basename(p, '.md'));
+    for (const id of DEMOTED) absent(r, id);
   }
 });
 

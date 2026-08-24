@@ -665,20 +665,60 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
     }
   }
 
-  // ── PS-JUDGE-BLOCK-CONDITION ─────────────────────────────────────────────
+  // ═══ THE FIVE DEMOTED RULES — WARN as of 2026-08-24, and they sit here rather than in the
+  // ═══ §6.2 block below only because moving working code makes a diff harder to check than
+  // ═══ leaving it. Everything from here to PS-PIPELINE-RESTATE warns; it does not block.
+  //
+  // All five regex over OPEN ENGLISH, and the split at the top of this file says plainly that a
+  // pattern over English belongs on the WARN side: "any pattern over English is eventually wrong
+  // about a sentence nobody anticipated, and a linter that is wrong blocks good work."
+  //
+  // They were shipped as FAIL on the strength of "zero hits on the corpus, fires on one
+  // constructed control". TARGET-ARCHITECTURE.md §"The prompt standard has the gate's disease, in
+  // a second organ" then built the missing test — a NEGATIVE CONTROL, one paraphrase that means
+  // the same thing — and every one of them was defeated by it, all VERIFIED-BY-EXECUTION:
+  //
+  //   PS-PRIOR-BELIEF        fires on "The diff is believed to be correct."
+  //                          SILENT on "Two senior engineers shipped this. Findings here are
+  //                          usually noise." — and that second phrasing is the one the 97.2%→3.6%
+  //                          study actually measured. The rule guarding the largest effect in this
+  //                          standard cannot see the construction the effect was measured with.
+  //   PS-DISPOSITION         fires on "Be critical of every finding."
+  //                          SILENT on "Be extremely critical." — the regex needs the words adjacent
+  //   PS-JUDGE-BLOCK-CONDITION  fires on a body with no `BLOCKED` token
+  //                          SILENT on any unrelated sentence containing the word. It cannot tell a
+  //                          named condition from the word, which is the entire thing it claims
+  //   PS-FALSE-CONSTRAINT    a literal phrase list; a paraphrase is not on the list
+  //   PS-BODY-TOOL-AFFIRM    fires on "Run the suite with `Bash`…"
+  //                          SILENT on the same line plus "Do not skip it." — one negation anywhere
+  //                          in the paragraph clears the paragraph, and 84 of 215 paragraphs
+  //                          (39.1%) in the live seven already contain a clearing word
+  //
+  // Narrowing a predicate until it stops firing on the corpus is indistinguishable from fixing it.
+  // Four of these survived by exactly that route, which reads as "certified" and means "toothless".
+  //
+  // Demoting is not weakening: the messages are unchanged, `warnings` is returned, accumulated by
+  // lintFile and printed under every passing file, so every one of them stays visible. What
+  // changes is that a tripwire over English can no longer refuse a merge on a sentence its author
+  // phrased differently — while the rule keeps its real value, which is telling a reader to look.
+  // They are tripwires, not judgements, and §6.2 of PROMPT-STANDARD.md now says so.
+
+  // ── PS-JUDGE-BLOCK-CONDITION (WARN) ──────────────────────────────────────
   // §4: a file that needs adversarial behaviour may not ask for a mood. It must name the artifact it
   // judges against and the condition under which it returns BLOCKED. Checked on the read-only
   // engines, which is where a verdict binds a merge.
   if (READ_ONLY_ENGINES.includes(path.basename(filePath, '.md'))) {
     if (!/\bBLOCKED\b/.test(body) && !/per-lens verdict/i.test(body)) {
-      issues.push(
+      warnings++;
+      checks.push(
         'PS-JUDGE-BLOCK-CONDITION: a read-only engine must name the condition under which it returns ' +
-        'BLOCKED, or the per-lens verdict it returns instead. "Be critical" is not a mechanism'
+        'BLOCKED, or the per-lens verdict it returns instead. "Be critical" is not a mechanism ' +
+        '— advisory only; this rule cannot tell a named condition from the word'
       );
     }
   }
 
-  // ── PS-DISPOSITION · PS-PRIOR-BELIEF · PS-FALSE-CONSTRAINT ───────────────
+  // ── PS-DISPOSITION · PS-PRIOR-BELIEF · PS-FALSE-CONSTRAINT (all WARN) ────
   const phraseRules = [
     ['PS-DISPOSITION', DISPOSITION, 'a disposition instruction — name the artifact judged against and the BLOCKED condition instead'],
     ['PS-PRIOR-BELIEF', PRIOR_BELIEF, 'a stated prior belief about the artifact under judgement — this is the 97.2% to 3.6% class (MODEL-DIVERSITY.md)'],
@@ -689,12 +729,13 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
       const hit = modelReaching.match(re);
       if (hit) {
         const at = modelReaching.indexOf(hit[0]);
-        issues.push(`${id}: ${why} — ${JSON.stringify(modelReaching.slice(Math.max(0, at - 30), at + hit[0].length + 30).trim())}`);
+        warnings++;
+        checks.push(`${id}: ${why} — ${JSON.stringify(modelReaching.slice(Math.max(0, at - 30), at + hit[0].length + 30).trim())} — advisory only; a paraphrase off the list is invisible to this rule`);
       }
     }
   }
 
-  // ── PS-BODY-TOOL-AFFIRM ──────────────────────────────────────────────────
+  // ── PS-BODY-TOOL-AFFIRM (WARN) ───────────────────────────────────────────
   const granted = new Set(Array.isArray(fm.tools) ? fm.tools : []);
   for (const para of paragraphs) {
     const flat = normaliseProse(para);
@@ -708,9 +749,11 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
         if (granted.has(tool)) continue;
         if (!normaliseProse(para).includes(tool)) continue;
         if (!sentence.includes(tool)) continue;
-        issues.push(
+        warnings++;
+        checks.push(
           `PS-BODY-TOOL-AFFIRM: the body directs use of \`${tool}\`, which frontmatter does not grant ` +
-          `(tools: ${[...granted].join(', ') || 'none'}) — ${JSON.stringify(sentence.slice(0, 80))}`
+          `(tools: ${[...granted].join(', ') || 'none'}) — ${JSON.stringify(sentence.slice(0, 80))} ` +
+          `— advisory only; one negation anywhere in the paragraph clears the whole paragraph`
         );
       }
     }
@@ -741,6 +784,12 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
   });
 
   // ── Warnings (§6.2) — over open prose or an unavoidable judgement call ───
+  //
+  // NOT the only warnings in this function. The five demoted 2026-08-24 —
+  // PS-JUDGE-BLOCK-CONDITION, PS-DISPOSITION, PS-PRIOR-BELIEF, PS-FALSE-CONSTRAINT and
+  // PS-BODY-TOOL-AFFIRM — warn from where they already stood, above. Said here because a
+  // section header claiming to hold all of something, while five of them sit elsewhere, is the
+  // small version of the comment defect this same commit series is fixing.
   //
   // PS-LENGTH-BAND. Descriptive, from the corpus: 113-149 observed across the seven. reviewer-readonly
   // is the longest BECAUSE it justifies its own existence, which is the right reason to be long — a

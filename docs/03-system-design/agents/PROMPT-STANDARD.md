@@ -383,10 +383,16 @@ what a structural property looks like when it holds.
 > behaviour, it must instead **name the artifact it judges against and the condition under which it returns
 > BLOCKED.**
 
-Both halves are checkable. The ban is a literal phrase list over a closed set (`PS-DISPOSITION`, `FAIL`). The
-positive requirement is a presence check over a closed set of files — the read-only engines must name a
-BLOCKED or per-lens-verdict condition in the body (`PS-JUDGE-BLOCK-CONDITION`, `FAIL`). Both measure zero on
-the seven; the ban fires on all four constructed violations. §6.1 has the numbers, and §6.5 the phrase list.
+Both halves are checked, and **both check less than this paragraph once claimed.** It read: *"The ban is a
+literal phrase list over a closed set (`PS-DISPOSITION`, `FAIL`)... a presence check over a closed set of
+files (`PS-JUDGE-BLOCK-CONDITION`, `FAIL`)."* **SUPERSEDED 2026-08-24 — neither set is closed.** A phrase
+*list* is closed; the set of English sentences that instruct a disposition is not, and `Be extremely
+critical.` is off the list. A *file* set is closed; the presence of the token `BLOCKED` in a body is not a
+named condition, and any sentence containing the word satisfies it. Both are `WARN` now, both still report,
+and §6.2 carries the paraphrase that defeats each. §6.5 still has the phrase list.
+
+The rule in the box above is unchanged and is still the standard. What changed is the honesty of the
+mechanism under it: a reviewer, not a regex, is what can tell a disposition instruction from a mechanism.
 
 **What this rule is not.** It is not a ban on strong language. `reviewer.md:37` says *"an agent that can edit
 what it reviews will review what it can edit"* and that sentence stays — it explains a mechanism that exists.
@@ -420,8 +426,10 @@ Two rules, because there are two places to get this wrong.
 - **`PS-TOOL-EXISTS`** (`FAIL`) — every entry in `tools:` is in the runtime tool universe, and every
   `mcp__<server>__<tool>` entry names a **configured** server. A malformed `mcp__` id (either half
   empty) fails too, rather than being ignored.
-- **`PS-BODY-TOOL-AFFIRM`** (`FAIL`) — the body may not affirmatively direct the use of a tool the
-  frontmatter does not grant.
+- **`PS-BODY-TOOL-AFFIRM`** (`WARN` since 2026-08-24, `FAIL` before it) — the body may not affirmatively
+  direct the use of a tool the frontmatter does not grant. It is paragraph-scoped, and **one negation
+  anywhere in the paragraph clears the paragraph** — 84 of 215 paragraphs in the live seven (39.1%) already
+  contain a clearing word, so what it certifies is far less than it reads as. §6.2.
 
 > **The `mcp__` half of `PS-TOOL-EXISTS` was added 2026-08-24, and this section said the opposite until
 > then.** `schema-lint.js` skipped every `mcp__*` entry, under a comment asserting that `PS-MCP-BACKED`
@@ -453,11 +461,13 @@ This class is the reason [CLAUDE.md](../../../CLAUDE.md) carries Rule 9 — *"cl
 decision"* — and it is the failure mode that "would have caught the nested-spawn fabrication." A false
 constraint is worse than a missing one: it is obeyed.
 
-`PS-FALSE-CONSTRAINT` (`FAIL`) is a **literal phrase list of statements this repo has measured false**, held
+`PS-FALSE-CONSTRAINT` (`WARN` since 2026-08-24, `FAIL` before it) is a **literal phrase list of statements
+this repo has measured false**, held
 in the linter next to the measurement that refuted each. It is deliberately not a general truth-checker. Its
 current contents are in §6.5.
 
-It measures 0 on the seven and fires on all three constructed violations. Note what it must **not** catch:
+It measures 0 on the seven and fires on all three constructed violations — and is **silent on a paraphrase
+of any of them**, which is why it warns rather than blocks. Note what it must **not** catch:
 `reviewer-readonly.md:46` reads *"`tools:` is not known to bind `Bash`"* — a hedged, true statement the list
 is written to leave alone.
 
@@ -513,12 +523,14 @@ a rule that fires on nothing is not a rule.
 | `PS-STEP-SHAPE` | `## Operating procedure` contains ≥ 1 `### Step N` heading | 0 | yes | **new** (§3.2) |
 | `PS-STATUS-FIELD` | `return_contract.required_fields` includes `status` | 0 | yes | **new** |
 | `PS-RETURN-EXAMPLE-MATCHES` | the JSON block under `## Return contract` carries exactly the keys in `required_fields` | 0 | yes | **new** (§1.5) |
-| `PS-JUDGE-BLOCK-CONDITION` | a read-only engine's body names a BLOCKED or per-lens-verdict condition | 0 | yes | **new** (§4) |
-| `PS-DISPOSITION` | no disposition instruction — literal phrase list | 0 | 4 / 4 | **new** (§4) |
-| `PS-PRIOR-BELIEF` | no stated prior belief about the artifact under judgement — literal phrase list, over model-reaching text only | 0 | 4 / 4 | **new** (§3.1) |
-| `PS-FALSE-CONSTRAINT` | no statement this repo has measured false — literal phrase list | 0 | 3 / 3 | **new** (§5.3) |
-| `PS-BODY-TOOL-AFFIRM` | no affirmative direction to use an ungranted tool, **paragraph-scoped** | 0 | yes | **new** (§5.2) |
 | `PS-PIPELINE-RESTATE` | no chain of ≥ 3 stage ids of one playbook on one line | 0 | yes | **new** (§5.4) |
+
+> **Five rows left this table on 2026-08-24 and are now in §6.2:** `PS-JUDGE-BLOCK-CONDITION`,
+> `PS-DISPOSITION`, `PS-PRIOR-BELIEF`, `PS-FALSE-CONSTRAINT`, `PS-BODY-TOOL-AFFIRM`. They were listed
+> here as though membership were decidable. It is not — all five regex over open English, which §0's
+> own split assigns to `WARN`, and each is defeated by a paraphrase (§6.2). Nothing about them is
+> deleted: the messages are unchanged and every one still reports. They can no longer refuse a merge
+> over a sentence its author phrased differently.
 
 **`PS-MODEL-ENUM` is the one blocking rule that does not measure zero, and the exception is stated rather
 than hidden.** `schema-lint.js:115` holds `{claude-opus-4-7, claude-sonnet-4-6, claude-haiku-4-5}`. That set
@@ -565,8 +577,25 @@ writes specs, not implementation files — and it is why `PS-ISOLATION-WRITE` is
 
 Every row names why it cannot be `FAIL`.
 
+**The five demoted on 2026-08-24 head the table, because the reason they are here generalises.** Each was
+certified by §0's method as originally written — zero hits on the seven, fires on a constructed violation
+— and each is still defeated by a **negative control**: one restatement that means the same thing and is
+not on the list. *Zero-on-corpus plus fires-on-one-control is not sufficient.* Narrowing a predicate until
+it stops firing on real files is indistinguishable from fixing it, and reads as "certified" either way.
+§0's method now carries a third step for any rule over open prose: run the paraphrase. The paraphrases
+below are pinned as tests in `scripts/prompt-standard.test.mjs` §12b, so a future sharpening has to beat
+them rather than assert that it would.
+
+They are **tripwires, not judgements**. A tripwire that reports costs an implementer nothing; a tripwire
+that blocks costs a correct sentence.
+
 | id | Checks | Why not `FAIL` |
 |---|---|---|
+| `PS-PRIOR-BELIEF` | no stated prior belief about the artifact under judgement — literal phrase list, over model-reaching text only | fires on *"The diff is believed to be correct."* — **silent on** *"Two senior engineers shipped this. Findings here are usually noise."* This is the rule guarding the 97.2%→3.6% priming effect, **and the phrasing the study actually measured is invisible to it.** Demoted 2026-08-24 |
+| `PS-DISPOSITION` | no disposition instruction — literal phrase list | fires on *"Be critical of every finding."* — silent on *"Be extremely critical."* The regex requires the words adjacent. Demoted 2026-08-24 |
+| `PS-JUDGE-BLOCK-CONDITION` | a read-only engine's body names a BLOCKED or per-lens-verdict condition | fires on a body with no `BLOCKED` token — silent on any unrelated sentence containing the word. It cannot tell a named condition from the word, which is the whole thing it claims to check. Demoted 2026-08-24 |
+| `PS-FALSE-CONSTRAINT` | no statement this repo has measured false — literal phrase list | a literal list; any paraphrase of a false constraint is off it. Demoted 2026-08-24 |
+| `PS-BODY-TOOL-AFFIRM` | no affirmative direction to use an ungranted tool, **paragraph-scoped** | fires on *"Run the suite with `Bash`…"* — silent on the same line **plus "Do not skip it."** One negation anywhere in the paragraph clears the paragraph, and **84 of 215 paragraphs (39.1%) in the live seven already contain a clearing word.** Demoted 2026-08-24 |
 | `PS-LENGTH-BAND` | file outside 100-175 lines (`wc -l` convention) | the band is descriptive — 113-149 observed (§2.4). `reviewer-readonly` is longest *because it justifies its own existence*, which is the right reason to be long. A cap would delete the justification |
 | `PS-STEP-COUNT` | `### Step N` count outside 4-8 | observed 5-7. A genuinely simpler engine may need fewer, and no evidence supports a hard floor |
 | `PS-ANTIPATTERN-COUNT` | `DO NOT` count outside 4-8 | observed 5-7, same reasoning |
