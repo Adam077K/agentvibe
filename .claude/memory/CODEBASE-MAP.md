@@ -36,7 +36,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run build:manifest` | `node scripts/build-skills-manifest.mjs` |
 | `npm run build:map` | `node scripts/gen-codebase-map.mjs` |
 | `npm run build:routers` | `node scripts/build-skill-routers.mjs` |
-| `npm run check` | `npm run test:protected-write && npm run lint:agents && npm run check:prompt-standard && npm run test:gate && n` |
+| `npm run check` | `node scripts/run-checks.mjs` |
 | `npm run check:citations` | `npm run test:citations && node scripts/check-citations.mjs` |
 | `npm run check:curation` | `node scripts/curate-skills.mjs --check` |
 | `npm run check:dispatch` | `npm run test:dispatch && npm run test:dispatch-flush && node scripts/check-dispatch-agenttype.mjs` |
@@ -61,6 +61,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run measure:bash` | `node scripts/measure-bash-usage.mjs` |
 | `npm run probe:stop-reason` | `node scripts/probe-stop-reason.mjs` |
 | `npm run test:budget` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/usage.test.mjs` |
+| `npm run test:check-suite` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs` |
 | `npm run test:citations` | `node --test scripts/check-citations.test.mjs` |
 | `npm run test:claims` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/claims.test.mjs` |
 | `npm run test:classifier` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/classifier.test.mjs` |
@@ -114,6 +115,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/check-dispatch-prompt-size.test.mjs` | mutation gate for the PS-DISPATCH-BRIEF-SIZE checker. |
 | `scripts/check-memory-budget.test.mjs` | mutation gate for the memory-budget checker. |
 | `scripts/check-registration.test.mjs` | — |
+| `scripts/check-suite.test.mjs` | the drift guard for `npm run check`, and the mutation gate for |
 | `scripts/check-tier-gate.test.mjs` | the tier gate that replaced label-based enforcement. |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
