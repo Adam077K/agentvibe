@@ -90,10 +90,16 @@ gets its own worktree.
 **Fifth thing, and it is a constraint on what a brief may contain.** When a stage names a lens whose
 `independence:` is `provenance` — `security`, `adversarial` and `evidence` in `.claude/review-lenses.yml` —
 the brief you write must not cite the producer's session file, its self-assessment, or the verdict it gave
-itself. Those lenses hold one model family only because the judge's evidence is kept separate from the
-producer's account; a brief that hands over that account spends the independence the lens is claiming. On
-2026-08-23 four review briefs written here each named the session file, and three of four reviewers read it.
-Give the reviewer the diff, the changed-file list and the lens ids. Nothing the producer wrote about itself.
+itself **as evidence about the work**. Those lenses hold one model family only because the judge's evidence
+is kept separate from the producer's account; a brief that hands over that account spends the independence
+the lens is claiming. On 2026-08-23 four briefs written here each named the session file, and three of four
+reviewers read it. Give the reviewer the diff, the changed-file list and the lens ids.
+
+Naming such a file as the **target of a citation check** is a different instruction and is allowed — the
+`evidence` lens asks whether citations resolve, and one that forbids opening the path makes that check
+impossible. Write which of the two you mean. A brief that says "verify the citations at these lines resolve"
+is answerable; one that says "read the session file for context" hands over the self-assessment, and one
+that says only "do not open that directory" contradicts the lens you just named.
 
 ### Step 4 — Check the return, do not trust it
 

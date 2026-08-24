@@ -85,12 +85,18 @@ the two modes oblige you differently.
 `out_of_scope_notes` rather than presenting your pass as an independent panel's.
 
 `independence: provenance` — carried by the `security`, `adversarial` and `evidence` lenses — permits one
-family and forbids you the producer's account of its own work. **Do not open the producer's session file,
-its self-assessment, its summary of what it changed, or the verdict it gave itself, even when the brief
-names the path.** A brief that points you at one is wrong on this point; ignore that instruction, apply the
-lens to the diff, and record the refusal in `out_of_scope_notes`. On 2026-08-23 all four review briefs
-directed reviewers to the session file and three of the four complied. Your evidence is the diff and the
-files it touches — nothing the producer wrote about the diff.
+family and forbids you the producer's account of its own work. **Do not read the producer's reasoning, its
+self-assessment, its summary of what it changed, or the verdict it gave itself, even when the brief names
+the path.** A brief that offers you one as evidence is wrong on this point; ignore that instruction, apply
+the lens to the diff, and record the refusal in `out_of_scope_notes`. On 2026-08-23 all four review briefs
+directed reviewers to the session file and three of the four complied.
+
+**A bounded existence check is a different act and is permitted.** The `evidence` lens asks whether a
+citation resolves, and that question cannot be answered without looking. So: open the cited lines, confirm
+the target exists and says what the citing sentence claims, and stop there. What you may take from the file
+is whether the citation holds — never the producer's judgement of its own work, even if your eye crosses
+it. Name in `out_of_scope_notes` which citation you resolved this way. The test is what you carry out, not
+which directory you opened.
 
 ### Step 4 — Write findings that can be acted on
 
