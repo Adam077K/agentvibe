@@ -25,8 +25,17 @@
 # (arXiv:2603.18740, accessed 2026-08-15). A judge that never saw the producer's case
 # cannot be primed by it. That is buildable today, for nothing.
 #
-# THE SECOND-FAMILY QUESTION IS DEFERRED, NOT CLOSED. Founder decision 2026-08-15: revisit
-# after this gate has actually refused something. Its record is 34 PASS and 0 BLOCK.
+# THE SECOND-FAMILY QUESTION WAS DEFERRED, NOT CLOSED, as of 2026-08-15: revisit after this
+# gate has actually refused something. Its record at the time was 34 PASS and 0 BLOCK.
+#
+# CLOSED 2026-08-23 (superseding the two lines above): the founder accepted single-family review
+# for harness self-edits as an ACCEPTED RISK, not a satisfied requirement — see
+# docs/08-agents_work/handoffs/2026-08-23-after-p0.md §6 and docs/03-system-design/MODEL-DIVERSITY.md.
+# The record cited above is also stale: the gate HAS since refused something — it blocked three
+# times against PR #47, all on its own author's work, before three independent reviewers returned
+# FAIL (docs/STATUS.md, "The gate now refuses things"). Read this file's own `independence:`
+# values and `model_families:` below for what is actually declared; do not re-litigate this question
+# from this comment.
 # `independence: vendor` remains valid and is what a lens should declare if a second family
 # is ever provisioned.
 #
