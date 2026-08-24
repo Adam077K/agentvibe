@@ -597,10 +597,26 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   implemented in the binary.
 - **Blockers:** none blocking. `--dangerously-skip-permissions` was removed by #47 — the **39** allow/deny
   rules in `settings.json` (29 allow · 10 deny) are live now, so a command that used to pass silently may
-  prompt. This block said 26 until 2026-08-16. Founder decisions pending: **whether to merge PR #77** (it
-  binds the QA verdict to a diff hash, and merging it means every irreversible PR needs a real local `qa.js`
-  run — it already refused its own author's PR, which is the mechanism working); whether to arm the sandbox;
-  the three unresolvable judge claims above; and the credential scopes for `instrument`/`operator`.
+  prompt. This block said 26 until 2026-08-16.
+  **Founder decisions — of the four this bullet listed, TWO were already discharged. Checked 2026-08-24.**
+  *Superseded: all four were listed as "pending", so this told the founder they owed decisions already made.
+  The list is corrected in place rather than deleted, because which entries went stale is the useful part.*
+  - ~~whether to merge PR #77~~ — **DISCHARGED; the work is live.** `scripts/verdict.mjs` exists and
+    `package.json` exposes it as `verdict`; `qa-lead-pass.yml` runs `node scripts/verdict.mjs check --json`
+    in a step that `exit 1`s on a failing verdict, so it is on the **blocking** path, not advisory. The
+    binding is `subject = sha256(diff)`. Note the bounded guarantee the workflow states about itself: the
+    verdict record is **hash-bound, not signed** — anyone with repo-write access can author a
+    `.qa/verdicts/*.json`. Hash-binding stops an *inherited* verdict, not a *forged* one.
+  - ~~whether to arm the sandbox~~ — **DISCHARGED.** `sandbox.enabled: true` and `failIfUnavailable: true`,
+    armed by #94, pinned by `npm run test:sandbox` (7 tests, exit 0), which fails if either is flipped back.
+  - **STILL OPEN — the three unresolvable judge claims.** They are `c-sessionstart-injection-unverified`,
+    `c-read-only-binding-unverified` and `c-runtime-nested-spawn`, each resolving `unresolved: no judgment
+    recorded`; naming them beats counting them. Not unexamined, though: the founder waiver of 2026-08-20 on
+    `c-shadow-window-open` reasoned about them, recorded that it *stays 5*, and set an exit condition
+    running to **2026-11-17** — one real sourced claim arising from non-harness work, plus a judge panel
+    with two distinct model families.
+  - **STILL OPEN — the credential scopes for `instrument`/`operator`**, which remain uncreated: 18 files in
+    `.claude/agents/` and neither is among them. Reasoning in `docs/STATUS.md` item 3.
 - **Before you trust any local measurement:** `cd mission-control && bun install`. Without it three
   mission-control claims look like regressions when they are only missing dependencies. Measure from a clean
   checkout, never a stale working tree. `c-mission-control-cold-start` is a **wall-clock** check (9.5s against
