@@ -10,16 +10,17 @@ base: 695800e
 ---
 
 `PS-TOOL-EXISTS` reads `mcp__<server>__<tool>` against configured servers: HEAD passed a fabricated
-`mcp__nonexistent__doAnything` at exit 0, this branch exits 1 on the same fixture. Five rules over open English
-(`PS-JUDGE-BLOCK-CONDITION`, `PS-DISPOSITION`, `PS-PRIOR-BELIEF`, `PS-FALSE-CONSTRAINT`, `PS-BODY-TOOL-AFFIRM`)
-are WARN — each is defeated by a paraphrase, now pinned. `qa.js`: `MAX_VERIFY` is a running total across Phase 2
-and every sweep round with truncation logged by finding id; the `maxTurns` account of the reviewer dropout is
-superseded at the point of citation, and the tool-call / turn / `maxTurns` unit mismatch is stated, not
-reconciled. `ATTEMPTS` values untouched. Both reviewer engines and `orchestrator` carry the
-`independence: provenance` obligation. CI runs `test:pre-tool-use` and `test:probe-readonly`, and `ci.yml`'s claim that branch protection made both
-jobs block is superseded at the point of citation — the 2026-08-23 push that moved `main` reported "2 of 2
-required status checks are expected" and succeeded having run neither; `qa-lead-pass.yml` was right and is
-unmodified. Verified
-individually, never chained: the 9 named commands exit 0, plus 14 more. `lint:agents` is 18 pass · 0 fail ·
-0 warnings before and after — the five measured zero as FAIL rules, so demoting adds no warning to a corpus
-they never fired on.
+`mcp__nonexistent__doAnything` at exit 0, this branch exits 1 on the same fixture. Three rules over open
+English (`PS-DISPOSITION`, `PS-PRIOR-BELIEF`, `PS-BODY-TOOL-AFFIRM`) are WARN, each defeated by a paraphrase
+and each with a demonstrated false positive; review round 1 restored `PS-JUDGE-BLOCK-CONDITION` and
+`PS-FALSE-CONSTRAINT` to FAIL as closed-set rules whose errors run false-negative, and floored
+`scripts/prompt-standard.test.mjs` at irreversible because the demotion's only blocking guarantee lives
+there — `schema-lint.js` exits on `failCount`, never `warnCount`. `qa.js`: `MAX_VERIFY` is a running total
+across Phase 2 and every sweep round; round 1 found that cap fail-open, so dropped findings are returned as
+`unverified_truncated` and force BLOCK exactly as a critical coverage gap does. The `maxTurns` account of the
+reviewer dropout is superseded at the point of citation and the tool-call / turn / `maxTurns` unit mismatch
+is stated, not reconciled; `ATTEMPTS` values untouched. Both reviewer engines and `orchestrator` carry the
+provenance obligation, with the citation carve-out moved to a mechanism that is observable — the brief pastes
+the cited excerpt. CI runs `test:pre-tool-use` and `test:probe-readonly`, and `ci.yml`'s branch-protection
+claim is superseded: the 2026-08-23 push reported "2 of 2 required status checks are expected" and succeeded
+having run neither. Verified individually, never chained.
