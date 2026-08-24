@@ -33,12 +33,21 @@
  * and lets the process end on its own. scripts/check-suite.test.mjs pins that with a step that
  * prints ~200KB.
  *
+ * AND ITS OWN LINES GO OUT SYNCHRONOUSLY, for a second reason that is easy to miss. The children
+ * write straight to fd 1 (stdio: 'inherit'), and `spawnSync` blocks the event loop — so a banner
+ * queued through `process.stdout.write` while stdout is a PIPE can be flushed only after the child
+ * it introduces has already finished writing. Small writes usually slip through synchronously and
+ * the ordering looks fine, which is exactly how this would be missed until a run under load put a
+ * failing step's output under the wrong banner. `writeOut` uses `fs.writeSync` so the ordering is
+ * not left to the pipe buffer.
+ *
  * Usage:
  *   node scripts/run-checks.mjs
  *   node scripts/run-checks.mjs --root DIR --steps a,b,c   # test-only: see check-suite.test.mjs
  */
 
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
@@ -61,7 +70,26 @@ const steps = stepsArg
   : STEPS;
 
 const RULE = '═'.repeat(78);
-const w = (line = '') => process.stdout.write(`${line}\n`);
+
+/** A 1ms sleep with no event loop — the only kind available between two blocking writes. */
+const nap = () => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1);
+
+/** Write to fd 1 synchronously, so this runner's lines cannot overtake or trail a child's. */
+function writeOut(text) {
+  const buf = Buffer.from(text, 'utf8');
+  let off = 0;
+  while (off < buf.length) {
+    try {
+      off += fs.writeSync(1, buf, off, buf.length - off);
+    } catch (err) {
+      if (err.code === 'EAGAIN') { nap(); continue; }  // non-blocking pipe, reader has not drained
+      if (err.code === 'EPIPE') return;                // reader is gone; there is no one to tell
+      throw err;
+    }
+  }
+}
+
+const w = (line = '') => writeOut(`${line}\n`);
 
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const total = steps.length;
