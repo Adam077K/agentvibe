@@ -95,11 +95,12 @@ is kept separate from the producer's account; a brief that hands over that accou
 the lens is claiming. On 2026-08-23 four briefs written here each named the session file, and three of four
 reviewers read it. Give the reviewer the diff, the changed-file list and the lens ids.
 
-Naming such a file as the **target of a citation check** is a different instruction and is allowed — the
-`evidence` lens asks whether citations resolve, and one that forbids opening the path makes that check
-impossible. Write which of the two you mean. A brief that says "verify the citations at these lines resolve"
-is answerable; one that says "read the session file for context" hands over the self-assessment, and one
-that says only "do not open that directory" contradicts the lens you just named.
+The `evidence` lens asks whether citations resolve, so it needs the cited text. **Paste it.** Put the cited
+lines into the brief as a quoted excerpt carrying its path and line range, and reserve "open the path
+yourself" for an excerpt the reviewer disputes. That is the mechanism, and it is the only version of this
+rule that is one: what a reviewer carried out of a file is not observable from its output — a reviewer that
+read a whole session file and reported one citation verdict returns the same bytes as one that read three
+lines. What you put in a brief is observable, by you, before you send it.
 
 ### Step 4 — Check the return, do not trust it
 

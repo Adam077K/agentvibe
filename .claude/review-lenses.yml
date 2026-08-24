@@ -100,6 +100,7 @@ review_lenses:
       - "Each external fact carries a source and an access date"
       - "Each durable claim carries an expiry and a way to recheck it"
       - "Claims about library or runtime behaviour were executed, not recalled"
+      - "Each citation resolves: the cited path and line range exist and say what the citing sentence claims"
     blocking_severities: [p1]
     scope: diff-only
     independent: true

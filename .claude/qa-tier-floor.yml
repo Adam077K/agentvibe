@@ -311,6 +311,22 @@ rules:
     # misroutes the next editor. `enforcement: block` is also NOT inert on those two files —
     # they are markdown and can carry claims — which is the intended reading: a claim about
     # what the gate does should block, not shadow.
+  - pattern: "scripts/prompt-standard.test.mjs"
+    tier: irreversible
+    enforcement: block
+    resolvers: [claim-command]
+    reason: "Not a test file in the ordinary sense — it is the ONLY blocking mechanism behind three PS-* rules. schema-lint.js exits on failCount and never on warnCount, so PS-DISPOSITION, PS-PRIOR-BELIEF and PS-BODY-TOOL-AFFIRM are cosmetic in the linter as of 2026-08-24; this file's corpus-zero assertion is what fails a build when one of them starts firing on a live engine"
+    # WHY IRREVERSIBLE AND NOT full, which `scripts/**` below already gives it. The ADR-001
+    # test is whether `git revert` undoes the damage, and here it does not undo it in time:
+    # deleting one `absent(r, id)` loop from this file removes a blocking guarantee while
+    # every check in the repository still reports green, so nothing signals that the floor
+    # is gone until an agent file lands carrying the prose the rule existed to refuse.
+    #
+    # This entry lands in the SAME change that demoted those three rules, and that is the
+    # point of it. Before the demotion, neutering PS-PRIOR-BELIEF meant editing
+    # .claude/hooks/schema-lint.js — irreversible, enforcement: block. After it, and without
+    # this entry, it meant deleting a loop from a full/shadow path. The demotion would have
+    # moved the teeth to a lower tier, which is a weakening disguised as a calibration fix.
   - pattern: "scripts/**"
     tier: full
     resolvers: [claim-command]

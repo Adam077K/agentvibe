@@ -92,11 +92,14 @@ the lens to the diff, and record the refusal in `out_of_scope_notes`. On 2026-08
 directed reviewers to the session file and three of the four complied.
 
 **A bounded existence check is a different act and is permitted.** The `evidence` lens asks whether a
-citation resolves, and that question cannot be answered without looking. So: open the cited lines, confirm
-the target exists and says what the citing sentence claims, and stop there. What you may take from the file
-is whether the citation holds — never the producer's judgement of its own work, even if your eye crosses
-it. Name in `out_of_scope_notes` which citation you resolved this way. The test is what you carry out, not
-which directory you opened.
+citation resolves. Normally the brief hands you the cited lines as an excerpt and you never open the file at
+all; ask for the excerpt when it is missing. If you do open the path, read the cited range, settle whether
+it says what the citing sentence claims, and carry nothing else out. Name the citation in
+`out_of_scope_notes`.
+
+Nothing downstream can check that last paragraph — your output is identical either way — so treat it as an
+obligation you hold rather than a control that holds you. The checkable form of this rule lives in the
+brief, which either contains the excerpt or does not.
 
 ### Step 4 — Write findings that can be acted on
 

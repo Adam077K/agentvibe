@@ -665,72 +665,99 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
     }
   }
 
-  // ═══ THE FIVE DEMOTED RULES — WARN as of 2026-08-24, and they sit here rather than in the
-  // ═══ §6.2 block below only because moving working code makes a diff harder to check than
-  // ═══ leaving it. Everything from here to PS-PIPELINE-RESTATE warns; it does not block.
+  // ═══ THREE DEMOTED RULES — WARN as of 2026-08-24. They sit here rather than in the §6.2 block
+  // ═══ below only because moving working code makes a diff harder to check than leaving it.
+  // ═══ PS-DISPOSITION, PS-PRIOR-BELIEF and PS-BODY-TOOL-AFFIRM warn. The two rules interleaved
+  // ═══ with them — PS-JUDGE-BLOCK-CONDITION and PS-FALSE-CONSTRAINT — still FAIL; each says so
+  // ═══ at its own site. Read the posture at the rule, never from this header.
   //
-  // All five regex over OPEN ENGLISH, and the split at the top of this file says plainly that a
-  // pattern over English belongs on the WARN side: "any pattern over English is eventually wrong
-  // about a sentence nobody anticipated, and a linter that is wrong blocks good work."
+  // The three regex over OPEN ENGLISH, and the split at the top of this file assigns that to WARN:
+  // "any pattern over English is eventually wrong about a sentence nobody anticipated, and a
+  // linter that is wrong blocks good work."
   //
-  // They were shipped as FAIL on the strength of "zero hits on the corpus, fires on one
-  // constructed control". TARGET-ARCHITECTURE.md §"The prompt standard has the gate's disease, in
-  // a second organ" then built the missing test — a NEGATIVE CONTROL, one paraphrase that means
-  // the same thing — and every one of them was defeated by it, all VERIFIED-BY-EXECUTION:
+  // They shipped as FAIL on the strength of "zero hits on the corpus, fires on one constructed
+  // control". TARGET-ARCHITECTURE.md §"The prompt standard has the gate's disease, in a second
+  // organ" built the missing test — a NEGATIVE CONTROL, one paraphrase meaning the same thing —
+  // and each is defeated by it, VERIFIED-BY-EXECUTION:
   //
-  //   PS-PRIOR-BELIEF        fires on "The diff is believed to be correct."
-  //                          SILENT on "Two senior engineers shipped this. Findings here are
-  //                          usually noise." — and that second phrasing is the one the 97.2%→3.6%
-  //                          study actually measured. The rule guarding the largest effect in this
-  //                          standard cannot see the construction the effect was measured with.
-  //   PS-DISPOSITION         fires on "Be critical of every finding."
-  //                          SILENT on "Be extremely critical." — the regex needs the words adjacent
-  //   PS-JUDGE-BLOCK-CONDITION  fires on a body with no `BLOCKED` token
-  //                          SILENT on any unrelated sentence containing the word. It cannot tell a
-  //                          named condition from the word, which is the entire thing it claims
-  //   PS-FALSE-CONSTRAINT    a literal phrase list; a paraphrase is not on the list
-  //   PS-BODY-TOOL-AFFIRM    fires on "Run the suite with `Bash`…"
-  //                          SILENT on the same line plus "Do not skip it." — one negation anywhere
-  //                          in the paragraph clears the paragraph, and 84 of 215 paragraphs
-  //                          (39.1%) in the live seven already contain a clearing word
+  //   PS-PRIOR-BELIEF      fires on "The diff is believed to be correct."
+  //                        SILENT on "Two senior engineers shipped this. Findings here are usually
+  //                        noise." — the phrasing the 97.2%→3.6% study actually measured. The rule
+  //                        guarding the largest effect here cannot see the construction it was
+  //                        measured with. It also FALSE-POSITIVES: `/\bthe (code|change|diff|work|
+  //                        patch) is (correct|fine|safe|secure|valid)\b/` fires on the legitimate
+  //                        "Determine whether the code is correct."
+  //   PS-DISPOSITION       fires on "Be critical of every finding."
+  //                        SILENT on "Be extremely critical." — the regex needs the words adjacent.
+  //                        False-positive surface too: `/\b(make|be) sure to\b/`.
+  //   PS-BODY-TOOL-AFFIRM  fires on "Run the suite with `Bash`…"
+  //                        SILENT on the same line plus "Do not skip it." — one negation anywhere
+  //                        in the paragraph clears the paragraph, and 90 of 222 paragraphs (40.5%)
+  //                        in the live seven already contain a clearing word
   //
-  // Narrowing a predicate until it stops firing on the corpus is indistinguishable from fixing it.
-  // Four of these survived by exactly that route, which reads as "certified" and means "toothless".
+  // WHAT A DEMOTION HERE ACTUALLY COSTS, AND WHERE THE GUARANTEE MOVED TO. `main()` exits on
+  // `failCount`, never on `warnCount` — nothing in package.json, .github/workflows/ or scripts/
+  // gates on a warning, so a WARN in this file is cosmetic. The blocking guarantee for these three
+  // now rests ENTIRELY on scripts/prompt-standard.test.mjs, whose corpus-zero assertion fails the
+  // build when any of them starts firing on a live engine. That file is therefore raised to the
+  // irreversible floor in .claude/qa-tier-floor.yml in the same change that demoted them: without
+  // it, neutering PS-PRIOR-BELIEF would have gone from editing an irreversible/block file to
+  // deleting one loop from a full/shadow one. Stated here so a reader at the demotion site does
+  // not have to grep to discover what the demotion leans on.
   //
-  // Demoting is not weakening: the messages are unchanged, `warnings` is returned, accumulated by
-  // lintFile and printed under every passing file, so every one of them stays visible. What
-  // changes is that a tripwire over English can no longer refuse a merge on a sentence its author
-  // phrased differently — while the rule keeps its real value, which is telling a reader to look.
-  // They are tripwires, not judgements, and §6.2 of PROMPT-STANDARD.md now says so.
+  // Demoting is not deleting: the messages are unchanged and `warnings` is printed under every
+  // passing file. What changes is that a tripwire over English can no longer refuse a merge over a
+  // sentence its author phrased differently. They are tripwires, not judgements.
 
-  // ── PS-JUDGE-BLOCK-CONDITION (WARN) ──────────────────────────────────────
+  // ── PS-JUDGE-BLOCK-CONDITION (FAIL) ──────────────────────────────────────
+  // RESTORED to FAIL 2026-08-24, in the same change that briefly demoted it. It is NOT open prose:
+  // it is a token-presence floor over a CLOSED two-file set (READ_ONLY_ENGINES), and the split at
+  // the top of this file puts a closed set on the FAIL side. Its failure mode is dominantly
+  // FALSE-NEGATIVE — it cannot tell a named condition from the bare word, so it passes files it
+  // should question — and demoting a rule whose error runs that direction removes a floor rather
+  // than reducing wrong blocking. The paraphrase weakness is real and is a reason to sharpen it,
+  // not to stop it refusing a read-only engine that names no BLOCKED condition at all.
   // §4: a file that needs adversarial behaviour may not ask for a mood. It must name the artifact it
   // judges against and the condition under which it returns BLOCKED. Checked on the read-only
   // engines, which is where a verdict binds a merge.
   if (READ_ONLY_ENGINES.includes(path.basename(filePath, '.md'))) {
     if (!/\bBLOCKED\b/.test(body) && !/per-lens verdict/i.test(body)) {
-      warnings++;
-      checks.push(
+      issues.push(
         'PS-JUDGE-BLOCK-CONDITION: a read-only engine must name the condition under which it returns ' +
-        'BLOCKED, or the per-lens verdict it returns instead. "Be critical" is not a mechanism ' +
-        '— advisory only; this rule cannot tell a named condition from the word'
+        'BLOCKED, or the per-lens verdict it returns instead. "Be critical" is not a mechanism'
       );
     }
   }
 
-  // ── PS-DISPOSITION · PS-PRIOR-BELIEF · PS-FALSE-CONSTRAINT (all WARN) ────
+  // ── PS-DISPOSITION · PS-PRIOR-BELIEF (WARN) · PS-FALSE-CONSTRAINT (FAIL) ──
+  //
+  // One loop, TWO postures, and the difference is not severity. PS-FALSE-CONSTRAINT is a literal
+  // list of eight statements this repo has EXECUTED and refuted — "subagents cannot spawn
+  // subagents", "maxTurns is advisory". Membership in that list is decidable and its
+  // false-positive surface is bounded and already tested (the hedged, true "`tools:` is not known
+  // to bind `Bash`" is deliberately left alone, and there is a test for exactly that). A closed
+  // list of refuted sentences is not open prose, whatever grammar it is written in — the split at
+  // the top of this file names "a literal phrase list" on the FAIL side, and this is one.
+  //
+  // The other two match dispositions and beliefs, which are open categories of English however the
+  // pattern is written, and both have demonstrated false positives. Same loop, different `posture`.
   const phraseRules = [
-    ['PS-DISPOSITION', DISPOSITION, 'a disposition instruction — name the artifact judged against and the BLOCKED condition instead'],
-    ['PS-PRIOR-BELIEF', PRIOR_BELIEF, 'a stated prior belief about the artifact under judgement — this is the 97.2% to 3.6% class (MODEL-DIVERSITY.md)'],
-    ['PS-FALSE-CONSTRAINT', FALSE_CONSTRAINT, 'a statement this repo has MEASURED false — a false constraint is worse than a missing one, because it is obeyed'],
+    ['PS-DISPOSITION', DISPOSITION, 'a disposition instruction — name the artifact judged against and the BLOCKED condition instead', 'warn'],
+    ['PS-PRIOR-BELIEF', PRIOR_BELIEF, 'a stated prior belief about the artifact under judgement — this is the 97.2% to 3.6% class (MODEL-DIVERSITY.md)', 'warn'],
+    ['PS-FALSE-CONSTRAINT', FALSE_CONSTRAINT, 'a statement this repo has MEASURED false — a false constraint is worse than a missing one, because it is obeyed', 'fail'],
   ];
-  for (const [id, patterns, why] of phraseRules) {
+  for (const [id, patterns, why, posture] of phraseRules) {
     for (const re of patterns) {
       const hit = modelReaching.match(re);
       if (hit) {
         const at = modelReaching.indexOf(hit[0]);
-        warnings++;
-        checks.push(`${id}: ${why} — ${JSON.stringify(modelReaching.slice(Math.max(0, at - 30), at + hit[0].length + 30).trim())} — advisory only; a paraphrase off the list is invisible to this rule`);
+        const excerpt = JSON.stringify(modelReaching.slice(Math.max(0, at - 30), at + hit[0].length + 30).trim());
+        if (posture === 'fail') {
+          issues.push(`${id}: ${why} — ${excerpt}`);
+        } else {
+          warnings++;
+          checks.push(`${id}: ${why} — ${excerpt} — advisory only; a paraphrase off the list is invisible to this rule`);
+        }
       }
     }
   }
@@ -785,11 +812,11 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
 
   // ── Warnings (§6.2) — over open prose or an unavoidable judgement call ───
   //
-  // NOT the only warnings in this function. The five demoted 2026-08-24 —
-  // PS-JUDGE-BLOCK-CONDITION, PS-DISPOSITION, PS-PRIOR-BELIEF, PS-FALSE-CONSTRAINT and
-  // PS-BODY-TOOL-AFFIRM — warn from where they already stood, above. Said here because a
-  // section header claiming to hold all of something, while five of them sit elsewhere, is the
-  // small version of the comment defect this same commit series is fixing.
+  // NOT the only warnings in this function. The three demoted 2026-08-24 — PS-DISPOSITION,
+  // PS-PRIOR-BELIEF and PS-BODY-TOOL-AFFIRM — warn from where they already stood, above.
+  // PS-JUDGE-BLOCK-CONDITION and PS-FALSE-CONSTRAINT sit among them and still FAIL. Said here
+  // because a section header claiming to hold all of something, while three of them sit
+  // elsewhere, is the small version of the comment defect this commit series is fixing.
   //
   // PS-LENGTH-BAND. Descriptive, from the corpus: 113-149 observed across the seven. reviewer-readonly
   // is the longest BECAUSE it justifies its own existence, which is the right reason to be long — a
