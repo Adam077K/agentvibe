@@ -371,3 +371,40 @@ false pass or a quiet edit. Recording the measurement makes the amendment audita
 **Owner:** ceo
 **Affects:** Phase 6 acceptance, the budget and stall design, anyone reading the handoff's gate section
 
+
+## 2026-08-13 — Phase 8a PR4/PR5 scope, and the Founder widened rule 8 for these two PRs
+
+**Context:** Eight decisions taken with the Founder in one grill session before any code was written. Four
+rested on measurements taken during the grill rather than on the plan document, and two of those overturned
+what the plan assumed. `/api/conflicts` was assumed cheap; it is **18,051 ms** across **309 worktrees**,
+synchronous, on Bun's single JS thread — so it stalls the SSE tick for every connected client. And
+`conflicts.ts:49` catches every error and returns `[]`, so a pruned or unreadable worktree renders as
+**clean**: the §0 defect class for the tenth time, this time already on `main`.
+**Decisions:**
+1. **PR4 and PR5 are one builder, serial, one worktree** — not two builders in parallel. Both had to widen
+   the same three places in `App.tsx` and both needed the same missing fetch path, so "parallel" was not
+   disjoint. Four views that must share a visual language get one author.
+2. **Fetch-on-open, not SSE**, for belief/conflicts/project/inbox — the tick would pay 18 s (conflicts) and
+   up to 3.7 s (project probe) per connected client.
+3. **PR4 fixes what it exposes**: async `execFile`, a sweep scoped to registry-backed worktrees *with the
+   excluded count rendered*, and a distinct could-not-look state. Fixing the defect in the PR that makes it
+   reachable keeps defect and fix in one reviewable change.
+4. **Belief reads `~/.warroom/ledger/global.yml`** alongside the repo ledger. Nothing in `server/` read it;
+   a view called Belief that cannot show the two live waivers is not showing what we believe.
+5. **Full-tier review, Claude-only.** Independence is recorded as **unmet**, as in every session file this
+   phase. `gemini` is installed and was offered; the Founder chose not to use it.
+6. **Rule 8 widened, by the Founder, for PR4 and PR5 only:** merge on reviewer PASS without per-PR Founder
+   confirmation. Framed here as the Founder widening their own rule, not as the CEO interpreting it,
+   because with #24 unfixed the Founder's confirmation was the only element of the QA gate that was not
+   self-reported. **This is the CEO reporting a removed check, not exercising an override.**
+**Rationale for what was NOT done:** the classifier returns `tier=lite, matched=(none — default)` for every
+mission-control path — **no rule in `qa-tier-floor.yml` mentions mission-control at all**, so a server that
+shells out across the whole machine classifies like a typo, and PR2's command-injection RCE would have too.
+The fix is a one-line rule, but that file floors at `risk:irreversible` and needs its own PR and sign-off,
+so it is logged (#34) rather than folded in. Separately, CLAUDE.md requires a **Codex CLI second opinion** at
+Full tier and `codex` is not installed on this machine — every Full-tier review this repo has run was missing
+a documented required step and nothing noticed (#35).
+**Reversibility:** reversible — rule 8's widening is scoped to two named PRs and lapses with them
+**Owner:** ceo · **founder decisions**, all eight taken with options and costs presented
+**Affects:** `mission-control/server/collectors/{conflicts,belief}.ts`, `mission-control/server/routes/api.ts`,
+`mission-control/client/src/{App.tsx,api.ts,views/}`, and items #32–#35
