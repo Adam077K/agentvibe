@@ -14,8 +14,10 @@ founder_signoff: "2026-08-24 — irreversible tier (PR-3) signed off explicitly"
 # Session — continue the build
 
 Five PRs split by TIER, so irreversible files paid the expensive gate once rather than four times.
-Four merged: `c0e52dc` docs+memory · `17bba08` citation checker · `60d64b0` linter/gate/CI ·
-`181f153` worktree protocol + gate self-review. PR-4 (test seam) held for its review.
+**All five merged** — `main` 695800e -> b72042a: `c0e52dc` docs+memory · `17bba08` citation checker ·
+`60d64b0` linter/gate/CI · `181f153` worktree protocol + gate self-review · `494c95b` test seam + tripwire.
+(This line read "four merged, PR-4 held" until PR-4 landed. Corrected in place rather than left to rot —
+the defect class this session is about.)
 
 Six blinded reviews, **four FAIL verdicts, ten P1s**. Not one was found by a deterministic check —
 every suite was green on every branch when each review began. The 79-agent panel was never dispatched:
@@ -25,7 +27,8 @@ three gate runs, three oracle blocks, zero reviewers.
 `.qa/verdicts/` was empty — **no gate run had ever completed in this repo.** Two blockers, in layers.
 (1) `test:skill-clamp` and `test:registration` built fixtures inside `.claude/agents/` and `.claude/hooks/`,
 which the armed sandbox denies, so the oracle blocked every diff before dispatching a reviewer. Fixed by
-PR-4; `npm run check` went 26→29 of 29 locally. (2) `check:mc` fails on a pre-existing mission-control SSE
+PR-4. **`npm run check` is now 29 of 29 with the sandbox armed, measured at the session root** — it was
+26 of 29 at session start and the gate could not complete at all. (2) `check:mc` fails on a pre-existing mission-control SSE
 test. Still blocking. **Neither change that caused (1) was wrong**: arming the sandbox (#94) and oracle-first
 ordering each landed correctly, collided, and nothing watched the seam. PR-4 adds a preloaded tripwire that
 turns the next collision into a red test in CI.
