@@ -210,7 +210,6 @@ whose stated rationale is superseded by this one
 
 ## 2026-08-13 — Phase 8a PR4/PR5 scope, and the Founder widened rule 8 for these two PRs
 *Archived to `DECISIONS_ARCHIVE.md` (2026-08-24). Phase 8a is complete and the widening was explicitly scoped to PR4/PR5 only, so the decision is spent. **Cited by phrase in three session files**, all of which restate the widening themselves rather than relying on this record: `docs/08-agents_work/sessions/2026-08-13-ceo-phase-8a-pr4-grill.md:10`, `docs/08-agents_work/sessions/2026-08-14-ceo-mc-project-inbox.md:13`, `docs/08-agents_work/sessions/2026-08-14-ceo-mc-belief-conflicts.md:13`. Note `IMPLEMENTATION-PLAN.md:198` cites "DECISIONS.md 2026-08-13" by date, but for the cold-start budget entry, not this one.*
-
 ## 2026-08-13 — the budget ceiling is removed from the system, by Founder instruction
 
 **Context:** `.claude/hooks/budget-guard.js` fired stop condition 3 at ~410k output tokens against a 400k

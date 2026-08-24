@@ -371,7 +371,6 @@ false pass or a quiet edit. Recording the measurement makes the amendment audita
 **Owner:** ceo
 **Affects:** Phase 6 acceptance, the budget and stall design, anyone reading the handoff's gate section
 
-
 ## 2026-08-13 — Phase 8a PR4/PR5 scope, and the Founder widened rule 8 for these two PRs
 
 **Context:** Eight decisions taken with the Founder in one grill session before any code was written. Four

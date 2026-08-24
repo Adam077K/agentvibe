@@ -1009,10 +1009,13 @@ Only the ones evidence cannot settle.
    [2026-08-23-after-p0.md §6](../08-agents_work/handoffs/2026-08-23-after-p0.md) and
    [MODEL-DIVERSITY.md](MODEL-DIVERSITY.md). Its stale half: this item's premise ("three review
    lenses ... require ≥2 families") no longer holds for `security`, `adversarial` and `evidence` —
-   they now declare `independence: provenance` (`.claude/review-lenses.yml:65,79,106`), which routes
+   they now declare `independence: provenance` — the `security`, `adversarial` and `evidence` entries
+   in `.claude/review-lenses.yml`, cited by lens id rather than line number on purpose: an earlier
+   draft of this very sentence cited `:65,79,106` and was rotted by a header edit to that file in the
+   same commit. A lens id does not move when the file above it does. This routes
    AWAY from the ≥2-family predicate at `.claude/hooks/schema-lint.js:1472`. That predicate was not
    deleted: it still governs `independence: vendor` lenses and every `risk: high` claim panel via
-   `scripts/lib/claims.js:424-429` (`independenceIssue()`).
+   `independenceIssue()` in `scripts/lib/claims.js`.
 
 4. **May the 44 files in `~/.claude/agents/` be deleted or renamed?** Precondition for deleting the
    11 shims (Step 5); costs zero repo files. `check-registration.mjs` measured the blast radius: the

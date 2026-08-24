@@ -1,6 +1,6 @@
 # Model diversity — does a second family buy independent judgement, and is Codex worth $20/month?
 
-**Date:** 2026-08-15 · **Status:** recommendation, not yet decided as of this writing.
+**Date:** 2026-08-15 · **Status:** recommendation, not yet decided
 **DECIDED 2026-08-23** (supersedes the line above): the founder accepted single-family review for
 harness self-edits — recorded as an **ACCEPTED RISK, not a satisfied requirement**, in
 [2026-08-23-after-p0.md §6](../08-agents_work/handoffs/2026-08-23-after-p0.md). This document's own
