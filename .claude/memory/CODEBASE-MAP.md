@@ -37,6 +37,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run build:map` | `node scripts/gen-codebase-map.mjs` |
 | `npm run build:routers` | `node scripts/build-skill-routers.mjs` |
 | `npm run check` | `npm run lint:agents && npm run check:prompt-standard && npm run test:gate && npm run check:manifest && npm run` |
+| `npm run check:citations` | `npm run test:citations && node scripts/check-citations.mjs` |
 | `npm run check:curation` | `node scripts/curate-skills.mjs --check` |
 | `npm run check:dispatch` | `npm run test:dispatch && node scripts/check-dispatch-agenttype.mjs` |
 | `npm run check:dispatch-prompt` | `npm run test:dispatch-prompt && node scripts/check-dispatch-prompt-size.mjs` |
@@ -60,6 +61,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run measure:bash` | `node scripts/measure-bash-usage.mjs` |
 | `npm run probe:stop-reason` | `node scripts/probe-stop-reason.mjs` |
 | `npm run test:budget` | `node --test scripts/usage.test.mjs` |
+| `npm run test:citations` | `node --test scripts/check-citations.test.mjs` |
 | `npm run test:claims` | `node --test scripts/claims.test.mjs` |
 | `npm run test:classifier` | `node --test scripts/classifier.test.mjs` |
 | `npm run test:dispatch` | `node --test scripts/check-dispatch-agenttype.test.mjs` |
@@ -104,6 +106,7 @@ it, so a hook that changes posture changes this map with it.
 
 | File | Subject |
 |---|---|
+| `scripts/check-citations.test.mjs` | mutation gate for the citation-range checker. |
 | `scripts/check-dispatch-agenttype.test.mjs` | the mutation gate for the dispatch-identity checker. |
 | `scripts/check-dispatch-prompt-size.test.mjs` | mutation gate for the PS-DISPATCH-BRIEF-SIZE checker. |
 | `scripts/check-memory-budget.test.mjs` | mutation gate for the memory-budget checker. |
