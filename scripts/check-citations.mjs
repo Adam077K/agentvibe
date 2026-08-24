@@ -39,59 +39,87 @@
  * deciding, which is a reviewer's job and not a linter's. `--show` prints what is actually at each
  * cited range so a human can adjudicate; the checker itself never forms that opinion.
  *
- * THE HONEST LIMIT OF THE EXISTENCE CLASS, measured on this repo at 695800e: it found ZERO
- * violations across 817 locators. That is not a bug and it is not reassurance — it is the shape of
- * the problem. Every stale locator in the 2026-08-24 audit points at a line that EXISTS; the file
- * merely grew, or the content moved. An existence check cannot see that, and a run reporting
- * "0 existence findings" must not be read as "the citations are good."
+ * THE HONEST LIMIT OF THE EXISTENCE CLASS, measured on this repo: across 815 locators it finds 2
+ * violations, both dead paths, and ZERO bad line numbers. That is not a bug and it is not
+ * reassurance — it is the shape of the problem. Every stale locator in the 2026-08-24 audit points
+ * at a line that EXISTS; the file merely grew, or the content moved. An existence check cannot see
+ * that, and a run reporting "0 existence findings" must not be read as "the citations are good."
  *
  * That measurement is the whole reason the DRIFT class exists. Without it this checker would be
  * a green light over a corpus of known-stale pointers.
  *
- * PRECISION OF THE DRIFT CLASS, stated as measured rather than as hoped. All figures at 695800e.
+ * PRECISION OF THE DRIFT CLASS, stated as measured rather than as hoped. Figures on this repo.
  *   The naive form — pair every code span on the line with every locator on the line — reported
- *   1,457 of 1,806 anchors (80.7%) and is useless. Three constraints make it usable, and each one
- *   was added because the measurement demanded it, not because it sounded principled:
- *     1. the anchor is the code span IMMEDIATELY PRECEDING the locator;
- *     2. the gap between them is ≤ --anchor-gap chars and holds no sentence break or table wall,
- *        so the two sit in one clause;
- *     3. the anchor is not itself path-like.
- *   Population 110 anchored citations, 46 reported at --anchor-slack 10.
+ *   1,457 of 1,806 anchors (80.7%) and is useless. Five constraints make it usable, and every one
+ *   was added because a measurement or a review finding demanded it, not because it sounded
+ *   principled:
+ *     1. the anchor is the code span adjacent to the locator, on EITHER side;
+ *     2. the gap between them is ≤ --anchor-gap chars and holds no sentence break or table wall;
+ *     3. the anchor is not path-like and is not a top-level directory name;
+ *     4. a FOLLOWING span reached across a conjunction or an additive separator is a sibling list
+ *        item, not an anchor;
+ *     5. token matching is word-bounded.
+ *   Population 209 anchored citations of 815 locators, 76 reported at --anchor-slack 10.
  *
- *   Constraint 3 is the one worth explaining. `` `plan.js` at `coding.js:20` `` is a see-also, not
- *   an assertion that `plan.js` appears inside coding.js. Excluding path-like anchors removed 4 of
- *   8 `ABSENT` reports, every one a false positive of that shape.
+ *   Constraints 1, 3 and 4 came from an independent review that reproduced four false positives,
+ *   and each is pinned by a named test in check-citations.test.mjs:
+ *     · reading only BACKWARDS anchored PRODUCERS.md:191 on `FleetView` while the symbol the
+ *       sentence asserts, `windowUsage`, sat after the locator and is on the cited line;
+ *     · `mission-control` at CONTROL-PLANE.md:395 is a directory — no slash, no extension — so it
+ *       passed the path-like test and demanded a second exclusion;
+ *     · `` `designer.md:7`, and `REQUIRED_FRONTMATTER` `` enumerates; it does not cite;
+ *     · a BARE comma is NOT a list separator — `` (`collectors/fleet.ts:14`, `windowUsage`) `` is
+ *       a parenthetical citation, and excluding every comma re-broke the first case. What marks a
+ *       list is the conjunction.
  *
- *   Hand-checked sample, stated as a sample and not generalised into a precision rate: six of the
- *   findings under an earlier, stricter form of the rule. Five were genuine rot (`GATES` cited 890
- *   lines from its definition, `independenceIssue` 542, `VALID_MODELS` 51, `mcpConfigured` 25,
- *   `parallel()` 26). The sixth, `verifyFinding` at `qa.js:324-326`, was a FALSE POSITIVE — the
- *   citation is correct and points inside the function body, five lines below the name.
- *
- *   So the false-positive mode is known and named: citing a range INSIDE a definition by its
- *   behaviour, where the symbol itself sits just above the range. The default --anchor-slack 10
- *   suppresses it. Widen the slack to suppress more, at the cost of missing near-miss rot.
+ *   The remaining known false-positive mode: citing a range INSIDE a definition by its behaviour,
+ *   where the symbol itself sits just above the range. `verifyFinding` at `qa.js:324-326` is the
+ *   worked example — the citation is correct, the name is five lines above. The default
+ *   --anchor-slack 10 suppresses it. Widen the slack to suppress more, at the cost of missing
+ *   near-miss rot.
  *
  * ── BLIND SPOTS, named here rather than discovered during an incident ────────────────────────
  *
  *   · MARKDOWN ONLY. Locators in .js/.mjs/.yml comment blocks are not scanned. The harvester is
  *     markdown-aware (frontmatter, fenced blocks) and applying it to source comments would be
- *     wrong rather than merely incomplete. Sized before deciding: 2 locators of 819 tracked live
- *     outside markdown, both in .mjs. The gap is 0.2%.
+ *     wrong rather than merely incomplete. Sized before deciding, and re-measured after: outside
+ *     markdown there are 69 locators, and 67 of them are in THIS FILE and its test — prose about
+ *     citations, not citations. The real gap is the other two, both in
+ *     check-dispatch-agenttype.mjs. Quoting the raw 69 would overstate it by 34x, which is the
+ *     kind of number this checker exists to stop people repeating.
  *   · The whole inline-code span must BE the locator. `` `see qa.js:100 for why` `` is not
  *     harvested, and neither is a multi-locator span like `` `qa.js:38, 65` ``.
- *   · AMBIGUOUS BASENAMES ARE NOT CHECKED. This repo cites by basename overwhelmingly — 653 of
- *     817 locators name `qa.js` or `schema-lint.js` rather than a repo-relative path. Those are
- *     resolved against `git ls-files` when exactly one tracked file carries that basename. When
- *     two or more do (`_TEMPLATE.md`, `api.ts`), the locator is counted `ambiguous` and checked
- *     against nothing. Guessing which file was meant is how a checker invents a finding.
- *   · The anchor must PRECEDE the locator. `` `qa.js:100` — `JSON.stringify` `` is not anchored.
+ *   · BASENAME RESOLUTION CAN OPEN THE WRONG FILE, AND THIS IS THE LARGEST HAZARD HERE. Only 122
+ *     of 815 locators (15%) are written as a path this checker can resolve exactly; 655 resolve by
+ *     bare basename and 16 by suffix. A unique basename is not proof the author meant that file,
+ *     and the error runs BOTH ways:
+ *       - a correct citation reported as out-of-range, because the line was checked against a
+ *         same-named file the prose never meant;
+ *       - worse, a genuinely DEAD pointer passing silently, because the cited line happens to
+ *         exist in the same-named file that was opened instead.
+ *     The second is the dangerous one: it is a false negative wearing a tick. Not hypothetical —
+ *     GRANT-HOLDERS.md:266 cites `adamos/.claude/agents/archivist.md`, a file in a DIFFERENT
+ *     PROJECT, and only its directory prefix keeps it from silently resolving here.
+ *     Mitigation, not cure: every finding names the file it actually opened and says when that
+ *     came from a basename or suffix match, and the coverage line prints the exact/inferred split
+ *     on every run including the passing one. A reader can then check the inference. The checker
+ *     cannot.
+ *   · AMBIGUOUS BASENAMES ARE NOT CHECKED. When two or more tracked files carry the name
+ *     (`_TEMPLATE.md`, `DECISIONS.md`), the locator is reported as `unchecked:ambiguous` with its
+ *     candidates listed, and checked against none of them. Guessing which file was meant is how a
+ *     checker invents a finding. 20 locators are in this state today.
  *   · A citation whose anchor sits in a DIFFERENT CLAUSE is not anchored, and this is the largest
- *     miss. Of the six known-stale locators the 2026-08-24 audit named, this checker reports two.
- *     Four are missed: three because a clause separates the symbol from the locator (a markdown
- *     table cell wall in `PROMPT-STANDARD.md:369`, prose in `MODEL-DIVERSITY.md:306` and `:529`)
- *     and one because no code span precedes the locator at all (the handoff's own `qa.js:215-218`).
- *     Loosening constraint 2 to reach them re-admits the false positives it exists to exclude.
+ *     miss. Of the six known-stale locators the 2026-08-24 audit named, this checker reports two
+ *     (`CONTROL-PLANE.md:985`, `MODEL-DIVERSITY.md:304`). Four are missed, each for a checked
+ *     reason: a markdown table cell wall at `PROMPT-STANDARD.md:369`; a clause at
+ *     `MODEL-DIVERSITY.md:306`; a 31-character gap at `:529`, one over the 30-char limit; and no
+ *     adjacent code span at all in the handoff's own `qa.js:215-218`. Loosening constraint 2 to
+ *     reach them re-admits the false positives it exists to exclude — that trade was measured, not
+ *     assumed.
+ *   · DRIFT COVERAGE IS A MINORITY OF THE CORPUS: 209 of 815 locators (26%) have an anchor to
+ *     check at all. The other 606 get existence checks only, which above is shown to find almost
+ *     nothing. Do not read a run with few findings as a clean corpus; read the coverage line,
+ *     which is printed on every path including the passing one for exactly this reason.
  *   · A locator inside a fenced code block is invisible, by design: `proseCodeSpans` skips fences,
  *     because an example in a fence is an example and not a citation.
  *   · Resolution uses `git ls-files`, so an UNTRACKED file is invisible. That is the right source
@@ -143,6 +171,7 @@ const SHOW = argv.includes('--show');
 
 const findings = [];  // citation problems — WARN unless --strict
 const failures = [];  // non-vacuity / harness problems — always exit 1
+const unchecked = []; // locators this checker looked at and could NOT decide — never a failure
 const fail = (check, msg) => failures.push(`[${check}] ${msg}`);
 
 /**
@@ -232,17 +261,105 @@ function resolvePath(cited) {
 }
 
 const lineCache = new Map();
+/**
+ * The lines of a file, with the trailing empty element dropped.
+ *
+ * `'a\nb\n'.split('\n')` is `['a', 'b', '']` — length 3 for a 2-line file. POSIX text files end
+ * in a newline, so that was +1 for essentially every real file: a locator one line past the true
+ * end passed silently, and every EOF number this checker printed was wrong by one. The fixture in
+ * check-citations.test.mjs was built with `join('\n')`, which produces no trailing newline, so it
+ * could not reproduce the shape of any file on disk and the guard test passed over the bug.
+ * Only ONE element is dropped — a file genuinely ending in a blank line keeps it.
+ */
 function linesOf(rel) {
   if (!lineCache.has(rel)) {
     let text = '';
     try { text = fs.readFileSync(path.join(ROOT, rel), 'utf8'); } catch { /* unreadable */ }
-    lineCache.set(rel, text.split('\n'));
+    const lines = text.split('\n');
+    if (lines.length && lines[lines.length - 1] === '') lines.pop();
+    lineCache.set(rel, lines);
   }
   return lineCache.get(rel);
 }
 
 const record = (kind, where, message, extra = {}) =>
   findings.push({ kind, where, message, ...extra });
+
+/**
+ * A sentence or clause boundary, or a markdown table cell wall.
+ *
+ * THE EMPHASIS RUN IS THE POINT. `**bold.**` is pervasive in this repo's prose, and there the `.`
+ * is followed by `*`, not by whitespace — so a bare `/[.;:!?]\s/` saw no boundary and paired an
+ * anchor from the PREVIOUS sentence with this sentence's locator. Reproduced at
+ * 2026-08-13-rethink-board.md:94, gap `" is decorative.** "`.
+ */
+const CLAUSE_BREAK = /[.;:!?][*_`)\]]*\s|\|/;
+
+/** Two spans sit in one clause when the gap is short and holds no boundary. */
+const sameClause = (gap) => gap.length <= ANCHOR_GAP && !CLAUSE_BREAK.test(gap);
+
+/**
+ * A span FOLLOWING the locator across a list separator is a sibling item, not an anchor.
+ *
+ * `` `designer.md:7`, and `REQUIRED_FRONTMATTER` `` enumerates two places maxTurns is declared; it
+ * does not assert that REQUIRED_FRONTMATTER is at designer.md:7. Same for `` `resolvers.js:307` +
+ * correct `model_families` ``, which is a work item, not a citation. Both were false positives in
+ * a hand-checked sample of the newly-anchored population, and both are list continuations.
+ *
+ * A BARE COMMA IS NOT ONE, and the distinction is load-bearing: `` (`collectors/fleet.ts:14`,
+ * `windowUsage`) `` is a parenthetical citation naming the file and then the symbol it is cited
+ * for — the exact case the review raised as a false positive. Excluding every comma re-broke it.
+ * What marks a list is a CONJUNCTION or an additive separator, not the comma itself. Appositives
+ * — `` (`cmdVerify`) ``, `` validates only `task` `` — carry neither.
+ */
+const LIST_CONTINUATION = /^[\s)\]]*(?:[+/·&]|,\s*(?:and|or)\b|and\b|or\b)/i;
+
+/**
+ * Every top-level directory of the tree. A span naming one is a location, not a symbol: demanding
+ * that `mission-control` appear inside scripts/lib/usage.js manufactures a finding, which is what
+ * it did at CONTROL-PLANE.md:395. `mission-control` passes the path-like test — no slash, no
+ * extension — so it needs this second exclusion rather than a wider first one.
+ */
+const topLevelDirs = new Set(
+  tracked.filter((f) => f.includes('/')).map((f) => f.slice(0, f.indexOf('/'))),
+);
+
+/**
+ * The symbols an anchor span asserts, or null when the span is not a symbol anchor at all.
+ *
+ * A FILENAME OR A DIRECTORY IS A CROSS-REFERENCE. `` `plan.js` at `coding.js:20` `` says "see
+ * also"; it does not assert that `plan.js` appears inside coding.js.
+ */
+function anchorTokens(text) {
+  if (text.includes('/') || /\.[A-Za-z][A-Za-z0-9]{0,4}$/.test(text)) return null;
+  if (topLevelDirs.has(text)) return null;
+  const tokens = [...new Set(text.match(/[A-Za-z_$][A-Za-z0-9_$]{3,}/g) || [])]
+    .filter((t) => !topLevelDirs.has(t));
+  return tokens.length ? tokens : null;
+}
+
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Distance in lines from [start,end] to the nearest mention of any token; 0 when inside the range,
+ * Infinity when the symbol is absent from the file.
+ *
+ * MATCHING IS WORD-BOUNDED. A bare `String.includes` let `pass` be satisfied by `bypass` and
+ * `password`, so a rotted pointer to a common short symbol resolved against an unrelated word and
+ * never fired.
+ */
+function nearestDistance(lines, tokens, start, end) {
+  const res = tokens.map((t) => new RegExp(`(^|[^A-Za-z0-9_$])${escapeRe(t)}([^A-Za-z0-9_$]|$)`));
+  let best = Infinity;
+  for (let n = 0; n < lines.length; n++) {
+    if (!res.some((re) => re.test(lines[n]))) continue;
+    const ln = n + 1;
+    const d = ln < start ? start - ln : ln > end ? ln - end : 0;
+    if (d < best) best = d;
+    if (best === 0) break;
+  }
+  return best;
+}
 
 // ── harvest ───────────────────────────────────────────────────────────────────────────────────
 
@@ -311,7 +428,12 @@ for (const doc of proseFiles) {
       const res = resolvePath(citedPath);
       if (res.how === 'ambiguous') {
         stats.ambiguous++;
-        continue; // named, not guessed — see the blind-spot list in the header
+        // Named, not guessed — but recorded, so a reader can act on it. Counting them and then
+        // withholding WHICH they are leaves nothing anyone can do.
+        unchecked.push({
+          where, locator, cited: citedPath, reason: 'ambiguous', candidates: res.candidates,
+        });
+        continue;
       }
       if (res.how === 'unresolved') {
         stats.unresolved++;
@@ -326,51 +448,60 @@ for (const doc of proseFiles) {
       const lines = linesOf(target);
       const eof = lines.length;
 
+      // EVERY FINDING NAMES THE FILE IT ACTUALLY READ, and says so when that file was inferred
+      // rather than written. 655 of 815 locators in this repo resolve by bare basename, so most
+      // findings are about a file the prose never names — and the inference can be wrong in both
+      // directions. Reporting `qa.js:100` without saying which qa.js was opened is unactionable.
+      const via = res.how === 'exact' ? ''
+        : ` (\`${citedPath}\` was matched to this file by unique ${res.how}; if that is the wrong ` +
+          'file, the finding is about the wrong file)';
+      const meta = { target, cited: citedPath, resolution: res.how };
+
       if (start > eof) {
         record('line-beyond-eof', where,
-          `\`${locator}\` names line ${start} of ${target}, which has ${eof} lines.`,
-          { target, start: Math.min(start, eof), end: eof });
+          `\`${locator}\` names line ${start} of ${target}, which has ${eof} lines${via}.`,
+          { ...meta, start: Math.min(start, eof), end: eof });
         continue;
       }
       if (end > eof) {
         record('range-beyond-eof', where,
-          `\`${locator}\` ends at line ${end} of ${target}, which has ${eof} lines.`,
-          { target, start, end: eof });
+          `\`${locator}\` ends at line ${end} of ${target}, which has ${eof} lines${via}.`,
+          { ...meta, start, end: eof });
         continue;
       }
 
-      // ── drift: the anchor immediately preceding the locator ────────────────────────────────
-      if (!ANCHORS || k === 0) continue;
-      const prev = spans[k - 1];
-      if (LOCATOR_RE.test(prev.text)) continue; // two locators in a row anchor nothing
+      // ── drift: the anchors sharing a clause with the locator ───────────────────────────────
+      //
+      // BOTH SIDES ARE CANDIDATES. This repo writes the citation both ways — `` `sym` at
+      // `f.js:10` `` and `` `f.js:10`, which returns `sym` `` — and reading only backwards
+      // anchored on whatever happened to precede. Measured: 11 of 47 findings had that shape,
+      // including PRODUCERS.md:191, which anchored on `FleetView` while the symbol the sentence
+      // actually asserts, `windowUsage`, sat immediately AFTER the locator and is on the cited
+      // line. A finding is reported only when NEITHER side anchors, so the nearest match wins.
+      if (!ANCHORS) continue;
 
-      // The anchor and the locator must sit in the SAME CLAUSE. Two constraints do that: a short
-      // gap, and no sentence break inside it. Pairing every span on the line instead is how the
-      // naive version reached an 80.7% report rate and became unusable.
-      const between = raw.slice(prev.end, spans[k].start);
-      if (between.length > ANCHOR_GAP) continue;
-      if (/[.;:!?]\s|\|/.test(between)) continue; // clause boundary, or a markdown table cell wall
+      const candidates = [];
+      const before = spans[k - 1];
+      if (before && !LOCATOR_RE.test(before.text)
+          && sameClause(raw.slice(before.end, spans[k].start))) candidates.push(before.text);
+      const after = spans[k + 1];
+      const afterGap = after ? raw.slice(spans[k].end, after.start) : null;
+      if (after && !LOCATOR_RE.test(after.text)
+          && sameClause(afterGap) && !LIST_CONTINUATION.test(afterGap)) candidates.push(after.text);
 
-      // A FILENAME IS A CROSS-REFERENCE, NOT A SYMBOL ANCHOR. `` `plan.js` at `coding.js:20` ``
-      // says "see also", and demanding that `plan.js` appear inside coding.js manufactures a
-      // finding. Excluding path-like anchors removed 4 of the 8 `ABSENT` reports on this repo,
-      // every one of them a false positive of exactly that shape.
-      if (prev.text.includes('/') || /\.[A-Za-z][A-Za-z0-9]{0,4}$/.test(prev.text)) continue;
-
-      const tokens = [...new Set(prev.text.match(/[A-Za-z_$][A-Za-z0-9_$]{3,}/g) || [])];
-      if (!tokens.length) continue;
+      const anchored = candidates
+        .map((text) => ({ text, tokens: anchorTokens(text) }))
+        .filter((c) => c.tokens);
+      if (!anchored.length) continue;
       stats.anchors_checked++;
 
-      // Distance from the cited range to the nearest line mentioning any token. 0 means the
-      // symbol is inside the range.
       let distance = Infinity;
-      for (let n = 0; n < eof; n++) {
-        if (!tokens.some((t) => lines[n].includes(t))) continue;
-        const ln = n + 1;
-        const d = ln < start ? start - ln : ln > end ? ln - end : 0;
-        if (d < distance) distance = d;
-        if (distance === 0) break;
+      let anchorText = anchored[0].text;
+      for (const c of anchored) {
+        const d = nearestDistance(lines, c.tokens, start, end);
+        if (d < distance) { distance = d; anchorText = c.text; }
       }
+      const prev = { text: anchorText };
 
       if (distance > ANCHOR_SLACK) {
         const range = start === end ? `line ${start}` : `lines ${start}-${end}`;
@@ -378,9 +509,9 @@ for (const doc of proseFiles) {
           ? `\`${prev.text}\` appears nowhere in ${target}`
           : `the nearest mention of \`${prev.text}\` in ${target} is ${distance} line(s) from ${range}`;
         record('anchor-drift', where,
-          `\`${locator}\` is cited for \`${prev.text}\`, but ${dist}. The pointer has probably ` +
-          'rotted; read the range before relying on it.',
-          { target, start, end, distance: distance === Infinity ? null : distance, anchor: prev.text });
+          `\`${locator}\` is cited for \`${prev.text}\`, but ${dist}${via}. The pointer has ` +
+          'probably rotted; read the range before relying on it.',
+          { ...meta, start, end, distance: distance === Infinity ? null : distance, anchor: prev.text });
       }
     }
   }
@@ -413,8 +544,9 @@ function excerpt(f) {
 if (JSON_OUT) {
   console.log(JSON.stringify({
     root: ROOT, posture: STRICT ? 'strict' : 'warn',
-    anchor_slack: ANCHOR_SLACK, anchors_enabled: ANCHORS, min_locators: MIN_LOCATORS,
-    stats, by_kind: byKind, findings, failures,
+    anchor_slack: ANCHOR_SLACK, anchor_gap: ANCHOR_GAP,
+    anchors_enabled: ANCHORS, min_locators: MIN_LOCATORS,
+    stats, by_kind: byKind, findings, unchecked, failures,
   }, null, 2));
   process.exit(failures.length || (STRICT && findings.length) ? 1 : 0);
 }
@@ -427,32 +559,51 @@ for (const f of drift.sort((a, b) => (b.distance ?? Infinity) - (a.distance ?? I
   console.log(`⚠ [${f.kind}] ${f.where}: ${f.message}`);
   if (SHOW) { const e = excerpt(f); if (e) console.log(e); }
 }
+for (const u of unchecked) {
+  console.log(
+    `· [unchecked:${u.reason}] ${u.where}: \`${u.locator}\` — \`${u.cited}\` matches ` +
+    `${u.candidates.length} tracked files (${u.candidates.join(', ')}). Checked against none of ` +
+    'them: guessing which was meant is how a checker invents a finding.'
+  );
+}
 for (const f of failures) console.error(`✗ ${f}`);
 
+/**
+ * COVERAGE IS PRINTED ON EVERY PATH, INCLUDING THE PASSING ONE.
+ *
+ * An unqualified "✓ citation check passed" over this corpus would be manufacturing confidence:
+ * most locators get no drift check at all, and most of the ones that do were resolved by
+ * inference rather than by an exact path. A reader who sees a bare tick has been told something
+ * untrue by omission, which is the defect this checker exists to catch, committed by the checker.
+ */
+const anchorPct = stats.locators ? Math.round((stats.anchors_checked / stats.locators) * 100) : 0;
+const exactPct = stats.locators ? Math.round((stats.resolved.exact / stats.locators) * 100) : 0;
 const scanned =
-  `${stats.locators} locator(s) in ${stats.files_scanned} markdown file(s) — ` +
-  `${stats.resolved.exact} exact · ${stats.resolved.basename} by basename · ` +
-  `${stats.resolved.suffix} by suffix · ${stats.ambiguous} ambiguous (not checked) · ` +
-  `${stats.skipped} skipped as illustrative`;
+  `${stats.locators} locator(s) in ${stats.files_scanned} markdown file(s).\n` +
+  `  RESOLUTION: ${stats.resolved.exact} exact (${exactPct}%) · ${stats.resolved.basename} by ` +
+  `basename · ${stats.resolved.suffix} by suffix · ${stats.ambiguous} ambiguous (checked against ` +
+  `nothing) · ${stats.unresolved} unresolved · ${stats.skipped} skipped as illustrative.\n` +
+  `  A basename or suffix match may be the WRONG FILE — ${stats.locators - stats.resolved.exact} ` +
+  'locator(s) here were not written as a path this checker could resolve exactly.\n' +
+  `  DRIFT COVERAGE: ${stats.anchors_checked} of ${stats.locators} locator(s) (${anchorPct}%) had ` +
+  `an anchor to check at all; the other ${stats.locators - stats.anchors_checked} got existence ` +
+  'checks only.';
 
 if (failures.length) {
-  console.error(`\n✗ citation check FAILED — ${failures.length} harness problem(s). ${scanned}`);
+  console.error(`\n✗ citation check FAILED — ${failures.length} harness problem(s).\n  ${scanned}`);
   process.exit(1);
 }
 
-if (findings.length) {
-  console.log(
-    `\n⚠ citation check: ${existence.length} existence finding(s), ${drift.length} drift finding(s) ` +
-    `over ${stats.anchors_checked} anchored citation(s) at --anchor-slack ${ANCHOR_SLACK}.\n` +
-    `  ${scanned}\n` +
-    `  Posture: ${STRICT ? 'STRICT — exiting 1' : 'WARN — does not block'}. ` +
-    'Drift findings are heuristic; re-read before editing. This check cannot tell whether the ' +
-    'prose is supported by the content it points at — only whether the pointer still lands.'
-  );
-  process.exit(STRICT ? 1 : 0);
-}
+const verdict = findings.length
+  ? `⚠ citation check: ${existence.length} existence finding(s), ${drift.length} drift finding(s), ` +
+    `${unchecked.length} unchecked, at --anchor-slack ${ANCHOR_SLACK}.`
+  : `✓ citation check: no findings, and ${unchecked.length} locator(s) it could not check. ` +
+    'This is NOT "the citations are good" — read the coverage below before believing it.';
 
 console.log(
-  `\n✓ citation check passed — no existence or drift findings. ${scanned}\n` +
-  '  NOTE: this verifies that pointers LAND, not that the prose they support is true.'
+  `\n${verdict}\n  ${scanned}\n` +
+  `  Posture: ${STRICT && findings.length ? 'STRICT — exiting 1' : 'WARN — does not block'}. ` +
+  'Drift findings are heuristic; re-read before editing. This check cannot tell whether the prose ' +
+  'is supported by the content it points at — only whether the pointer still lands.'
 );
+process.exit(STRICT && findings.length ? 1 : 0);

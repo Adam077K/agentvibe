@@ -69,7 +69,14 @@ function check(root, extra = []) {
 
 const kinds = (res) => res.findings.map((f) => f.kind).sort();
 
-/** A 20-line target file whose only symbol, `theSymbol`, sits on line 3. */
+/**
+ * A 20-line target file whose only symbol, `theSymbol`, sits on line 3.
+ *
+ * THE TRAILING NEWLINE IS LOAD-BEARING. POSIX text files end in one, and `split('\n')` on such a
+ * file yields a final empty element. Built with a bare `join('\n')` this fixture had no trailing
+ * newline, could not reproduce the shape of any file on disk, and so passed over an off-by-one
+ * that made every real file read as one line longer than it is.
+ */
 const TARGET = [
   '// line 1',
   '// line 2',
@@ -77,7 +84,7 @@ const TARGET = [
   '  return 1;',
   '}',
   ...Array.from({ length: 15 }, (_, i) => `// filler ${i + 6}`),
-].join('\n');
+].join('\n') + '\n';
 
 // ── existence: path-unresolved ────────────────────────────────────────────────
 
@@ -177,6 +184,29 @@ test('the last line of the file is in range, not past it', () => {
   });
   const res = check(root);
   assert.deepEqual(kinds(res), [], 'an off-by-one here would fire on every citation of a last line');
+});
+
+test('the line after the last is past EOF — the trailing newline is not a line', () => {
+  // The counterpart to the test above, and the one that actually catches the off-by-one:
+  // `split('\n')` on a newline-terminated file yields a final empty element, so line 21 of a
+  // 20-line file passed silently until that element was dropped.
+  const root = fixture({
+    'docs/a.md': 'See `target.js:21` here.\n',
+    'src/target.js': TARGET,
+  });
+  const res = check(root);
+  assert.deepEqual(kinds(res), ['line-beyond-eof']);
+  assert.match(res.findings[0].message, /which has 20 lines/);
+});
+
+test('a file ending in a genuine blank line keeps it', () => {
+  // Only ONE trailing element is dropped. `a\n\n` is two lines, the second of them empty.
+  const root = fixture({
+    'docs/a.md': 'See `blank.txt:2` and `blank.txt:3` here.\n',
+    'src/blank.txt': 'first\n\n',
+  });
+  const res = check(root);
+  assert.deepEqual(kinds(res), ['line-beyond-eof'], 'line 2 exists and is blank; line 3 does not');
 });
 
 // ── the harvester: what is and is not a locator ───────────────────────────────
@@ -329,6 +359,93 @@ test('a path-like anchor is a cross-reference and is not checked', () => {
   assert.equal(res.stats.anchors_checked, 0);
 });
 
+// ── drift: the four false positives the review reproduced ────────────────────
+//
+// Each of these fired on real prose in this repo and each is pinned here, because a heuristic
+// that was tuned once and never tested drifts straight back to where it was.
+
+test('a sentence boundary hidden by markdown emphasis still breaks the pairing', () => {
+  // `**bold.**` puts `*` between the `.` and the space, so a bare /[.;:!?]\s/ saw no boundary and
+  // anchored on the PREVIOUS sentence's symbol. Reproduced at 2026-08-13-rethink-board.md:94.
+  const root = fixture({
+    'docs/a.md': '**The `otherThing` is decorative.** `target.js:19` iterates over everything.\n',
+    'src/target.js': TARGET,
+  });
+  const res = check(root);
+  assert.deepEqual(kinds(res), []);
+  assert.equal(res.stats.anchors_checked, 0, 'the anchor belongs to the previous sentence');
+});
+
+test('a symbol AFTER the locator anchors it — reading only backwards anchored the wrong symbol', () => {
+  // Reproduced at PRODUCERS.md:191: anchored on `FleetView` while `windowUsage`, the symbol the
+  // sentence actually asserts and which IS on the cited line, sat after the locator.
+  const root = fixture({
+    'docs/a.md': 'Which `Unrelated` already displays (`target.js:3`, `theSymbol`).\n',
+    'src/target.js': TARGET,
+  });
+  const res = check(root);
+  assert.deepEqual(kinds(res), [], 'the trailing anchor is correct, so nothing is reported');
+  assert.equal(res.stats.anchors_checked, 1);
+});
+
+test('a top-level directory name is a location, not a symbol', () => {
+  // Reproduced at CONTROL-PLANE.md:395, anchored on `mission-control` — no slash and no
+  // extension, so the path-like test passes it and a second exclusion is required.
+  const root = fixture({
+    'docs/a.md': 'The `src` collector at `target.js:19` reads it.\n',
+    'src/target.js': TARGET,
+  });
+  const res = check(root);
+  assert.deepEqual(kinds(res), []);
+  assert.equal(res.stats.anchors_checked, 0);
+});
+
+test('a following span across a conjunction is a sibling item, not an anchor', () => {
+  // Reproduced at PRODUCERS.md:1243: `` `designer.md:7`, and `REQUIRED_FRONTMATTER` `` enumerates
+  // two places a field is declared. It does not assert the second is at the first.
+  const root = fixture({
+    'docs/a.md': 'Declared in `target.js:19`, and `theSymbol` / range check elsewhere.\n',
+    'src/target.js': TARGET,
+  });
+  const res = check(root);
+  assert.deepEqual(kinds(res), []);
+  assert.equal(res.stats.anchors_checked, 0);
+});
+
+test('a following span across an additive separator is a sibling item', () => {
+  // Reproduced at CONTROL-PLANE.md:1075: `` (`resolvers.js:307`) + correct `model_families` `` is
+  // a work item, not a citation. The gap opens with `)` before the `+`.
+  const root = fixture({
+    'docs/a.md': 'Row 5 needs (`target.js:19`) + correct `theSymbol` here.\n',
+    'src/target.js': TARGET,
+  });
+  const res = check(root);
+  assert.deepEqual(kinds(res), []);
+  assert.equal(res.stats.anchors_checked, 0);
+});
+
+test('a BARE comma is not a list — the parenthetical citation still anchors', () => {
+  // The counterweight to the two tests above. Excluding every comma re-broke PRODUCERS.md:191.
+  // What marks a list is the conjunction, not the comma.
+  const root = fixture({
+    'docs/a.md': 'Displayed already (`target.js:19`, `theSymbol`).\n',
+    'src/target.js': TARGET,
+  });
+  const res = check(root);
+  assert.deepEqual(kinds(res), ['anchor-drift'], 'anchored, and it genuinely has drifted');
+  assert.equal(res.stats.anchors_checked, 1);
+});
+
+test('token matching is word-bounded — `pass` is not satisfied by `bypass`', () => {
+  const root = fixture({
+    'docs/a.md': 'The `pass` result at `res.js:1` is returned.\n',
+    'src/res.js': 'const bypass = 1;\nconst password = 2;\n',
+  });
+  const res = check(root);
+  assert.deepEqual(kinds(res), ['anchor-drift']);
+  assert.equal(res.findings[0].distance, null, '`pass` appears nowhere as a whole token');
+});
+
 test('--no-anchors drops the drift class and keeps the existence class', () => {
   const root = fixture({
     'docs/a.md': 'The guard `theSymbol` at `target.js:19` refuses it.\nAlso `target.js:900` here.\n',
@@ -383,6 +500,94 @@ test('a tree with no markdown at all fails as vacuous rather than passing', () =
   const res = run(['--root', root, '--min-locators', '0']);
   assert.equal(res.code, 1);
   assert.match(res.err, /no tracked \.md files/);
+});
+
+// ── reporting: coverage is never omitted, resolution is never hidden ─────────
+
+test('an ambiguous locator is identifiable, not merely counted', () => {
+  const root = fixture({
+    'docs/a.md': 'See `target.js:9999` for why.\n',
+    'src/target.js': TARGET,
+    'lib/target.js': TARGET,
+  });
+  const res = check(root);
+  assert.equal(res.unchecked.length, 1);
+  assert.deepEqual(res.unchecked[0].candidates.sort(), ['lib/target.js', 'src/target.js']);
+  assert.equal(res.unchecked[0].reason, 'ambiguous');
+  // and it is NOT a finding, so it cannot fail a --strict run
+  assert.deepEqual(kinds(res), []);
+  assert.equal(run(['--root', root, '--min-locators', '0', '--strict']).code, 0);
+});
+
+test('a finding names the file it opened and flags an inferred match', () => {
+  const root = fixture({
+    'docs/a.md': 'See `target.js:900` here.\n',
+    'deep/src/target.js': TARGET,
+  });
+  const res = check(root);
+  assert.equal(res.findings[0].target, 'deep/src/target.js');
+  assert.equal(res.findings[0].resolution, 'basename');
+  assert.equal(res.findings[0].cited, 'target.js');
+  assert.match(res.findings[0].message, /deep\/src\/target\.js/);
+  assert.match(res.findings[0].message, /matched to this file by unique basename/);
+});
+
+test('an exact match is not labelled as inferred', () => {
+  const root = fixture({
+    'docs/a.md': 'See `src/target.js:900` here.\n',
+    'src/target.js': TARGET,
+  });
+  const res = check(root);
+  assert.equal(res.findings[0].resolution, 'exact');
+  assert.doesNotMatch(res.findings[0].message, /matched to this file by unique/);
+});
+
+test('the PASSING path still states coverage — no unqualified tick', () => {
+  const root = fixture({
+    'docs/a.md': 'See `target.js:3` here.\n',
+    'src/target.js': TARGET,
+  });
+  const r = run(['--root', root, '--min-locators', '0']);
+  assert.equal(r.code, 0);
+  assert.doesNotMatch(r.out, /✓ citation check passed/, 'a bare pass manufactures confidence');
+  assert.match(r.out, /NOT "the citations are good"/);
+  assert.match(r.out, /RESOLUTION:/);
+  // The locator has no anchor, so drift coverage is 0 of 1 — and a passing run must SAY so
+  // rather than let the tick imply the drift check ran.
+  assert.match(r.out, /DRIFT COVERAGE: 0 of 1 locator/);
+  assert.match(r.out, /got existence\s+checks only/);
+});
+
+test('the WARN path states the same coverage as the passing path', () => {
+  const root = fixture({
+    'docs/a.md': 'See `target.js:900` here.\n',
+    'src/target.js': TARGET,
+  });
+  const r = run(['--root', root, '--min-locators', '0']);
+  assert.match(r.out, /RESOLUTION:/);
+  assert.match(r.out, /DRIFT COVERAGE:/);
+});
+
+// ── the resolution source ─────────────────────────────────────────────────────
+
+test('a real git checkout resolves through git ls-files, and ignores untracked files', () => {
+  // F8: every real run takes this path, and every fixture above takes the walk fallback instead.
+  // An untracked file is invisible to `git ls-files`, so a locator naming one must NOT resolve --
+  // which is also the cheapest available proof that the git path, not the walk, was used.
+  const root = fixture({
+    'docs/a.md': 'See `tracked.js:900` and `untracked.js:1` here.\n',
+    'tracked.js': TARGET,
+    'untracked.js': TARGET,
+  });
+  execFileSync('git', ['init', '-q'], { cwd: root });
+  execFileSync('git', ['add', 'docs/a.md', 'tracked.js'], { cwd: root });
+
+  const res = check(root);
+  assert.deepEqual(kinds(res).sort(), ['line-beyond-eof', 'path-unresolved']);
+  const beyond = res.findings.find((f) => f.kind === 'line-beyond-eof');
+  assert.equal(beyond.target, 'tracked.js');
+  const dead = res.findings.find((f) => f.kind === 'path-unresolved');
+  assert.match(dead.message, /untracked\.js/);
 });
 
 // ── the harvester is the ledger's, not a second copy ──────────────────────────
