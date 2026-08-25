@@ -197,6 +197,28 @@ if (steps.length === 0) {
   ]);
 }
 
+// ── Ctrl+C has to reach the summary, not just the kernel ─────────────────────────────────────
+// A terminal sends SIGINT to the whole process GROUP, so it hits this process and the step's at
+// once. With no listener registered, Node's default disposition kills this one immediately —
+// while `spawnSync` has the event loop blocked, so the loop below never returns from the current
+// step, never reads `r.signal`, and the INCOMPLETE path promised above could not run at all. It
+// was reachable only when something killed the child alone.
+//
+// Registering a listener suppresses that default kill. The callback itself stays queued until the
+// loop turns, which is what we want: `spawnSync` returns with r.signal === 'SIGINT' because the
+// child got the same signal, the loop breaks, the summary prints, and the callback fires after.
+//
+// THE COST, stated because it is a real one: a step that IGNORES SIGINT now keeps this process
+// alive with it, and repeated Ctrl+C cannot be seen until that step returns. SIGQUIT is
+// deliberately NOT registered, so Ctrl+\ still kills the group outright, as does SIGKILL.
+let signalled = null;
+for (const sig of ['SIGINT', 'SIGTERM']) {
+  process.on(sig, () => {
+    if (signalled) process.exit(130);  // a second one is an operator who means it
+    signalled = sig;
+  });
+}
+
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const total = steps.length;
 const results = [];

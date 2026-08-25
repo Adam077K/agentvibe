@@ -31,6 +31,17 @@
 //     by appending arguments, in the one place a prompt-injected diff is modelled as steering
 //     what the oracle reads
 //   ✓ a passing SUBSET says it is a subset and does not print the whole-suite verdict
+//   ✓ a real Ctrl+C — SIGINT to the process GROUP, not to the child alone — reaches the
+//     INCOMPLETE verdict. It did not before: the parent took Node's default kill while spawnSync
+//     had the event loop blocked, so the path the header promises was unreachable for the one
+//     case that happens
+//   ✓ deleting `lint:agents` from STEPS now fails. GOVERNED matched only check:/test:, so the
+//     agent schema linter could leave the suite in silence — and every STEP is now checked for
+//     being governed at all, which covers the next prefix rather than the three we thought of
+//   ✗ nothing here can check that the pass/fail figures written into EXCLUDED['check:mc'] are
+//     TRUE. A regex over the reason string used to pin them, kept passing after they stopped
+//     reproducing, and so reported green on exactly the defect it sat next to. The citations are
+//     checked instead — ci.yml, .claude/settings.json — because those resolve.
 //   ✗ nothing here checks that a step ASSERTS anything. Wiring is not value: a step that exits 0
 //     unconditionally passes this file and always will.
 //   ✗ nothing here runs the real 30 steps for real. The full-suite verdict IS covered, against a
@@ -45,7 +56,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
@@ -129,6 +140,36 @@ test('the guard REFUSES a step naming a script that does not exist, and a duplic
   );
 });
 
+test('the guard REFUSES deleting lint:agents from STEPS — the prefix that was not governed', () => {
+  // GOVERNED read /^(?:check|test):/, so `lint:agents` — the agent schema linter, step 3 of the
+  // suite — could be removed from STEPS and this guard stayed GREEN. Reproduced before the fix:
+  // auditSuite() returned zero failures. It is the same silent-omission defect as check:mc leaving
+  // without an EXCLUDED entry, arriving through the name instead of the list.
+  const without = STEPS.filter((s) => s !== 'lint:agents');
+  const { failures } = auditSuite({ scripts, steps: without });
+
+  assert.ok(
+    failures.some((f) => f.includes('"lint:agents"') && f.includes('never run under `npm run check`')),
+    `deleting lint:agents from STEPS did not bite:\n${failures.join('\n') || '(no failures at all)'}`
+  );
+});
+
+test('every STEP is GOVERNED — an ungoverned step could leave the suite in silence', () => {
+  // The class fix behind the case above. Widening a prefix list only covers the prefixes someone
+  // thought of; this covers the next one. Asserted against the real STEPS, and then by mutation.
+  const { failures } = auditSuite({ scripts });
+  assert.deepEqual(failures, [], `\n${failures.join('\n')}\n`);
+
+  const smuggled = auditSuite({
+    scripts: { ...scripts, 'build:something': 'node scripts/does-not-matter.mjs' },
+    steps: [...STEPS, 'build:something'],
+  });
+  assert.ok(
+    smuggled.failures.some((f) => f.includes('outside GOVERNED')),
+    `an ungoverned step was accepted into the suite:\n${smuggled.failures.join('\n')}`
+  );
+});
+
 test('transitive reach counts — the five delegating parents are not duplicated into STEPS', () => {
   const reached = reachable(scripts, STEPS);
   for (const [child, parent] of [
@@ -165,18 +206,18 @@ test('check:mc is EXCLUDED, not merely absent — and the reason carries its mea
     'check:mc left STEPS with no EXCLUDED entry — that is the silent omission, wearing the fix as a hat'
   );
 
-  // The matched pair the live claim rests on: sandbox on vs sandbox off, nesting held constant.
-  // *Superseded 2026-08-25: this asserted 345/0 against "344 pass / 1 fail", the standalone-vs-nested
-  // pair. That pair was produced by a sandbox.excludedCommands entry exempting the standalone cell,
-  // not by nesting, and the key was reverted in ab46d40. The old figures stay in the reason as a
-  // superseded note; what is pinned here is what reproduces on this tree.*
-  assert.match(EXCLUDED['check:mc'], /343 pass \/ 2 fail/);
-  assert.match(EXCLUDED['check:mc'], /345 pass \/ 0 fail/);
-  assert.match(
-    EXCLUDED['check:mc'],
-    /NESTING WAS NOT THE VARIABLE/,
-    'the entry no longer records that its earlier conclusion was refuted — that is the part that rots'
-  );
+  // NO PIN ON THE PASS/FAIL FIGURES, deliberately, and this is a retraction.
+  //
+  // This test used to assert /345 pass \/ 0 fail/ and /344 pass \/ 1 fail/ over the reason string.
+  // Both kept passing for weeks after the measurement they quoted stopped reproducing: the pair was
+  // taken while .claude/settings.json carried a `sandbox.excludedCommands` entry, ab46d40 reverted
+  // the key, and a regex over prose cannot tell that the world moved. It reported green on the exact
+  // defect it was positioned to catch, which is worse than not existing — it made the entry look
+  // pinned. A number appearing in a comment is not evidence the number is true, and nothing here can
+  // make it evidence without running check:mc, which takes 3.5 minutes and needs bun deps.
+  //
+  // So the figures are checked by a human re-measuring, and this file checks the CITATIONS instead,
+  // in the test below: they are the parts of the reason that live in this repo and can be resolved.
 });
 
 test('an exclusion that says CI still covers it is checked against ci.yml, not trusted', () => {
@@ -412,6 +453,57 @@ test('a step that cannot start is a failure, not a skip', () => {
 
   assert.match(out, /Tally: 1 of 2 passed · 1 failed/, `a missing script was not counted as failed:\n${out}`);
   assert.equal(code, 1);
+});
+
+test('a real Ctrl+C prints INCOMPLETE and names what never started', async () => {
+  // The header promises this path and, for the case that actually happens, it could not run. A
+  // terminal signals the whole process GROUP; with no listener the parent took Node's default kill
+  // while spawnSync had the event loop blocked, so it died without ever reading r.signal. The path
+  // was reachable only when something killed the child alone, which is not what Ctrl+C does.
+  const dir = fixture({
+    'test:slow': `node -e "console.log('SLOW-STARTED'); setTimeout(() => {}, 30000)"`,
+    'test:never': OK('NEVER-SHOULD-RUN'),
+  });
+
+  const child = spawn('node', [RUNNER, '--root', dir, '--steps', 'test:slow,test:never'], {
+    detached: true,                       // its own group, so a negative pid signals it like a tty does
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, CHECK_SUITE_TEST_HARNESS: '1' },
+  });
+
+  let out = '';
+  child.stdout.on('data', (d) => { out += d; });
+
+  const deadline = (ms, what) =>
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`${what}\n${out}`)), ms).unref());
+
+  try {
+    // Interrupt only once the step is genuinely running. Signalling before spawnSync has started
+    // the child would exercise a different path and then hang here for the full 30s.
+    await Promise.race([
+      new Promise((resolve) => {
+        const poll = setInterval(() => {
+          if (out.includes('SLOW-STARTED')) { clearInterval(poll); resolve(); }
+        }, 25);
+      }),
+      deadline(20_000, 'the slow step never started'),
+    ]);
+
+    process.kill(-child.pid, 'SIGINT');
+
+    const code = await Promise.race([
+      new Promise((resolve) => child.on('exit', resolve)),
+      deadline(20_000, 'the runner did not exit after SIGINT to its process group'),
+    ]);
+
+    assert.match(out, /INCOMPLETE — interrupted during "test:slow"/, `no INCOMPLETE verdict:\n${out}`);
+    assert.match(out, /Never started:[\s\S]*\?\s+test:never/, `the step that never ran was not named:\n${out}`);
+    assert.ok(!out.includes('NEVER-SHOULD-RUN'), 'the runner kept going after the interrupt');
+    assert.ok(!out.includes('✓'), `a ✓ appears in an interrupted run:\n${out}`);
+    assert.equal(code, 1, 'an interrupted run must not exit 0');
+  } finally {
+    try { process.kill(-child.pid, 'SIGKILL'); } catch { /* already gone */ }
+  }
 });
 
 test('~200KB of step output reaches the caller through a pipe — no 64KB truncation', () => {
