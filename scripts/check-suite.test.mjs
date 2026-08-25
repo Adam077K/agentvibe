@@ -799,6 +799,52 @@ test('the ci.yml step parser reads the whole file — a scanner that under-reads
   assert.ok(steps.every((s) => s.run !== null || s.uses !== null), 'a parsed step carries neither run: nor uses:');
 });
 
+test('parseCiSteps reads a `run: |` block scalar — the shape a multi-command step arrives in', () => {
+  // NOTHING IN ci.yml USES ONE TODAY, so this branch had zero coverage — and it is the branch that
+  // decides whether such a step is seen at all. A block scalar read as "no `run:`" is invisible to
+  // every check in this section that iterates `run:` values: the `!cancelled()` guard, the runner
+  // ban, and the chain check. It is also the shape a multi-command step arrives in, which makes it
+  // precisely the shape that must not be missed.
+  const wf = [
+    'name: t',
+    'jobs:',
+    '  one:',
+    '    steps:',
+    '      - uses: actions/checkout@v4',
+    '      - name: Single',
+    '        if: ${{ !cancelled() }}',
+    '        run: npm run test:a',
+    '      - name: Block',
+    '        if: ${{ !cancelled() }}',
+    '        run: |',
+    '          npm run test:b',
+    '          npm run test:c',
+    '      - name: After',
+    '        run: npm run test:d',
+    '',
+  ].join('\n');
+
+  const steps = parseCiSteps(wf);
+  assert.equal(steps.length, 4, 'the block scalar swallowed the step after it, or lost one before it');
+  assert.deepEqual(steps.map((s) => s.name), [null, 'Single', 'Block', 'After']);
+  assert.equal(steps[2].run, 'npm run test:b\nnpm run test:c', 'the block body was not read as written');
+  assert.equal(steps[2].if, '${{ !cancelled() }}', 'the `if:` above a block scalar was lost');
+  assert.equal(steps[3].run, 'npm run test:d', 'the parser never left the block scalar');
+  assert.equal(steps.filter((s) => s.run !== null).length, 3, 'a `run:` step was lost or invented');
+
+  // And the chain check READS it, which is the half that matters: two commands in one `run:` put
+  // both behind one exit code, and the step is one thing the workflow reports. An explicit
+  // allowlist is passed because the real one names a command this fixture does not contain — its
+  // rot check would otherwise fire and this case would count the wrong finding.
+  const found = ciChainFindings(wf, {});
+  assert.equal(found.length, 1, `a two-command block scalar was not reported as a chain:\n${found.join('\n')}`);
+  assert.ok(found[0].includes('`\\n`'), `the finding did not name the newline operator: ${found[0]}`);
+
+  // A ONE-command block scalar is not a chain, so the rule does not fire on the shape itself.
+  const single = wf.replace('          npm run test:c\n', '');
+  assert.deepEqual(ciChainFindings(single, {}), [], 'a single-command block scalar was reported as a chain');
+});
+
 test('every STEP of the suite has a counterpart step in ci.yml', () => {
   // `test:check-suite` — this very file — sat second in STEPS and ran NOWHERE on a runner until
   // 2026-08-25, because nothing ever iterated STEPS against ci.yml. Only EXCLUDED entries were
