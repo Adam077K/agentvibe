@@ -10,8 +10,10 @@
  * step 21 of 30 and fails on any machine without `bun install` in mission-control/, so nine steps
  * after it — every safety-hook test, the gate's own tests, and `test:sandbox` — had not run for as
  * long as that was true, while the output showed exactly one failure. `check:mc` has since left the
- * suite for an unrelated reason (it cannot bind a socket under the sandbox as a child process); the
- * full argument, and that one, are in scripts/lib/check-suite.js, which owns the step list.
+ * suite for an unrelated reason: the armed sandbox denies it a loopback bind(), wherever it runs.
+ * *Superseded 2026-08-25: this said "as a child process", which was the belief at the time and is
+ * refuted by a matched pair — standalone fails too, once `sandbox.excludedCommands` was reverted.*
+ * The full argument, and that one, are in scripts/lib/check-suite.js, which owns the step list.
  *
  * ── WHAT THE OUTPUT PROMISES ─────────────────────────────────────────────────────────────────
  * The reader of this output is an agent deciding whether a diff proceeds. It must not be able to
