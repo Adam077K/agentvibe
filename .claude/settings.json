@@ -96,6 +96,12 @@
         "**/.worktrees",
         "**/.worktrees/**"
       ]
-    }
+    },
+    "excludedCommands": [
+      "git merge*",
+      "git checkout*",
+      "git restore*",
+      "npm run check:mc"
+    ]
   }
 }

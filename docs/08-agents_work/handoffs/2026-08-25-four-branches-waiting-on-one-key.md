@@ -75,6 +75,27 @@ deterministic floor before any reviewer is dispatched.** So the floor had a nine
 failure that was never a real defect. CI was unaffected — it runs each script individually — which is exactly
 why nobody saw it. PR-4 fixes the class: all 31 run, every failure named, exit still nonzero.
 
+**And the fix is one level deep — the same defect survives inside the steps.** Found by pr4, verified here:
+**six `check:`/`test:` scripts are themselves `&&` chains, 19 links** (five of them inside the suite, 17
+links). The worst is `check:ledger`:
+
+```
+test:claims && test:classifier && test:ledger && ledger lint && ledger build --check && ledger verify
+```
+
+If `test:claims` fails, **`ledger lint`, `build --check` and `verify` never run** — the ledger's own
+enforcement, which CLAUDE.md lists as blocking — and the new runner reports exactly one line,
+`✗ check:ledger — exit 1`. Honest about the step, blind inside it, in precisely the way the top level was
+blind. Correctly left unfixed: collapsing those links into `STEPS` changes what each CI job runs
+(`ci.yml` names `check:ledger`, not its parts), which is a workflow decision at irreversible tier, not a
+builder's call. **This is the next session's cheapest high-value fix.**
+
+Two smaller gaps from the same return: **`test:check-suite` and `test:protected-write` do not run in CI**
+under their own names — both bind locally and in the oracle via `npm run check`, but naming them in
+`ci.yml` is an irreversible-tier workflow edit. And `check:mc` on a **fresh checkout fails in 0.1s**, not
+the ~3 minutes assumed, because the deps are absent — so the chain was aborting almost instantly. Nobody had
+to wait to lose the nine steps, which makes the defect cheaper to hit and therefore worse.
+
 ---
 
 ## 4 · Two open questions closed, with sources
@@ -106,7 +127,11 @@ why nobody saw it. PR-4 fixes the class: all 31 run, every failure named, exit s
   word-split) producing three bogus CONFLICT results; misreading a peer's mid-A/B worktree as unfinished work
 - **A verification method that lies to observers:** pr3's ledger A/B wrote a historical `CLAUDE.md` over the
   tracked file for the duration of each run. Four runs, four windows in which the worktree presented a false
-  state. **Evaluate a copy; never mutate a tracked file to measure it.**
+  state — I sampled one and reported a peer's finished work as unfinished. **Evaluate a copy; never mutate a
+  tracked file to measure it.**
+- **The shell cwd resets between calls.** Three separate agents hit this today, one per branch. pr4 ran
+  `npm run check:mc` without a `cd` prefix, executed it in *another builder's worktree*, and got a
+  plausible "dependencies missing" from the wrong tree. **Use absolute paths; re-derive state, never carry it.**
 
 None errored. All returned well-formed answers to questions nobody asked, and **not one was caught by a
 check** — which is the argument for what PR-2 and PR-4 actually built: a canary and a drift guard, each of
