@@ -2235,8 +2235,18 @@ _report_pr_route() {
 }
 
 # Push the reviewed branch and open a pull request against main. This is the only route from this
-# program to origin, and the only one where .github/workflows/ci.yml and qa-lead-pass.yml apply at
-# all — see _warn_local_only_merge above for why a direct push cannot be made to satisfy them.
+# program that puts a branch up for review against main, and the only one where
+# .github/workflows/ci.yml and qa-lead-pass.yml apply at all — see _warn_local_only_merge above for
+# why a direct push cannot be made to satisfy them.
+#
+# It is NOT the only place in this file that pushes to origin. cmd_done (:889) also runs
+# `git push -u origin "$branch"`, unconditionally, where `$branch` is whatever
+# `git branch --show-current` reports for a CEO worktree at session teardown (:880) — never
+# validated against the ceo-<n>-<timestamp> shape the guard below enforces. That push is session
+# housekeeping: it backs up whatever the CEO worktree currently holds so `cmd_done` can safely
+# delete the worktree, and it never opens a PR and never touches main. This function's guard exists
+# because THIS route decides what reaches main; cmd_done's push does not decide that, so it is not
+# gated the same way.
 _open_pull_request() {
   local branch="$1" tier="$2" n="$3"
   local reason err url existing title body
@@ -2245,7 +2255,8 @@ _open_pull_request() {
   # the branch it selected; this is the same predicate at the outward-facing action, so a route
   # added later that reaches this helper by another path cannot push an arbitrary ref to origin
   # without meeting it. Duplicated deliberately — this function's header claims to be the only
-  # route to origin, and a claim like that is worth one repeated regex.
+  # route that puts a branch up for review against main, and a claim like that is worth one
+  # repeated regex.
   #
   # It runs BEFORE the gh checks on purpose. "I will not push that ref" is a fact about what this
   # program is willing to do; "gh is not logged in" is a fact about whether it could. When both are
@@ -2331,8 +2342,8 @@ _open_pull_request() {
 - Risk tier: \`$tier\` (scripts/classify.mjs, via scripts/verdict.mjs)
 - A QA verdict hash-bound to \`origin/main...$branch\` was confirmed before this branch was pushed.
 
-This is the only route from the launcher to origin. ci.yml and qa-lead-pass.yml apply here and
-nowhere else."
+This is the only route from the launcher that opens a pull request against main. ci.yml and
+qa-lead-pass.yml apply here and nowhere else."
 
   if ! url=$(cd "$PROJECT_DIR" && gh pr create --base main --head "$branch" --title "$title" --body "$body" 2>&1); then
     echo -e "  ${C_RED}✗ Refusing to report success${RESET} — reason=pr-create-failed"
