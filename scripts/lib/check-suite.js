@@ -97,7 +97,11 @@ const EXCLUDED = {
     'pass / 1 fail, mission-control/test/stream.test.ts failing EADDRINUSE on a loopback bind(). The OS ' +
     'sandbox denies that bind(), and the `sandbox.excludedCommands` entry for "npm run check:mc" in ' +
     '.claude/settings.json matches the INVOKED command string, not its descendants — so nothing arranged ' +
-    'inside package.json can exempt it while it runs underneath another npm. It is NOT excluded for being ' +
+    'inside package.json can exempt it while it runs underneath another npm. THE CONTROL, because the first ' +
+    'reading of this had a confound worth naming: a backgrounded or subshell-wrapped `npm run check:mc` ALSO ' +
+    'fails, so wrapping defeats the match too. Run foreground, same minute, only the nesting differing — ' +
+    '`npm run check:mc` exits 0 at 345/0, `node scripts/run-checks.mjs --steps check:mc` exits 1 at 344/1. ' +
+    'Nesting is the variable, not the wrapper and not flakiness. It is NOT excluded for being ' +
     'broken or slow: it is 345 of 345 green. RUN IT AS ITS OWN TOP-LEVEL COMMAND: `npm run check:mc`, ' +
     'which that settings key now permits. IT STILL BLOCKS: .github/workflows/ci.yml runs it as its own ' +
     'unsandboxed step, so coverage moves rather than disappearing — and this removes a real local/CI ' +
