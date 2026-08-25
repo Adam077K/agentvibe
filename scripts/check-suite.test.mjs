@@ -24,9 +24,21 @@
 //   ✓ transitive reach counts, so check:ledger's three tests are not duplicated into STEPS
 //   ✓ the runner runs a step after an earlier one failed, and says so in the tally
 //   ✓ ~200KB of step output survives to the caller through a pipe — the process.exit() defect
+//   ✓ a ZERO-step run is refused, and --steps/--root are refused outright without the harness
+//     variable. Both are new, and both are here because the runner shipped printing
+//     "✓ check suite passed — every step ran." at exit 0 for `node scripts/run-checks.mjs
+//     --steps ,` — a green floor from a process that ran nothing, reachable from `npm run check`
+//     by appending arguments, in the one place a prompt-injected diff is modelled as steering
+//     what the oracle reads
+//   ✓ a passing SUBSET says it is a subset and does not print the whole-suite verdict
 //   ✗ nothing here checks that a step ASSERTS anything. Wiring is not value: a step that exits 0
 //     unconditionally passes this file and always will.
-//   ✗ nothing here runs the real 31 steps. That is `npm run check` itself, and it takes minutes.
+//   ✗ nothing here runs the real 30 steps for real. The full-suite verdict IS covered, against a
+//     fixture that stubs all 30 names green — which proves the wording and the count, not the
+//     checks. Running them for real is `npm run check` itself, and it takes minutes.
+//     *Superseded 2026-08-25: this line said "the real 31 steps". STEPS held 31 only between
+//     `test:check-suite` being added and `check:mc` being excluded; derive it, never recall it —
+//     `node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"`.*
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -174,11 +186,22 @@ function fixture(fixtureScripts) {
   return dir;
 }
 
-function runRunner(dir, steps) {
-  const r = spawnSync('node', [RUNNER, '--root', dir, '--steps', steps.join(',')], {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+/**
+ * Drive the runner over a fixture repo.
+ *
+ * `--steps`/`--root` are gated on CHECK_SUITE_TEST_HARNESS, so every case here sets it. `harness:
+ * false` is how the gate itself gets tested — the same spawn an ordinary caller would make.
+ * `steps: null` omits `--steps` entirely, which is what makes a run the FULL suite.
+ */
+function runRunner(dir, steps, { harness = true } = {}) {
+  const args = [RUNNER, '--root', dir];
+  if (steps !== null) args.push('--steps', Array.isArray(steps) ? steps.join(',') : steps);
+
+  const env = { ...process.env };
+  if (harness) env.CHECK_SUITE_TEST_HARNESS = '1';
+  else delete env.CHECK_SUITE_TEST_HARNESS;
+
+  const r = spawnSync('node', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env });
   return { code: r.status, out: r.stdout || '', err: r.stderr || '' };
 }
 
@@ -228,14 +251,108 @@ test('nothing reassuring is printed above the failure list', () => {
   assert.ok(!out.includes('check suite passed'), 'a failing run claimed the suite passed');
 });
 
-test('an all-passing suite exits 0 and says every step ran', () => {
+test('an all-passing SUBSET exits 0, says it is a subset, and does not claim the suite passed', () => {
   const dir = fixture({ 'test:alpha': OK('a'), 'test:beta': OK('b'), 'test:gamma': OK('g') });
   const { code, out } = runRunner(dir, ['test:alpha', 'test:beta', 'test:gamma']);
 
   assert.equal(code, 0, `expected exit 0, got ${code}:\n${out}`);
   assert.match(out, /Tally: 3 of 3 passed · 0 failed/);
-  assert.match(out, /✓ check suite passed — every step ran\./);
+  assert.match(out, /SUBSET RUN/, `a three-step run did not announce itself as a subset:\n${out}`);
+  assert.match(out, /✓ 3 of 3 SELECTED step\(s\) passed/);
+  // The reserved wording. An agent matching the whole-suite verdict must not be handed a green
+  // three-step run wearing it — that phrase is the one `npm run check` earns and nothing else does.
+  assert.ok(
+    !out.includes('check suite passed — every step ran'),
+    `a subset run printed the whole-suite verdict:\n${out}`
+  );
   assert.ok(!out.includes('FAILED'), `a clean run mentioned FAILED:\n${out}`);
+});
+
+test('a run of the FULL declared suite earns the whole-suite verdict', () => {
+  // Every real step name, stubbed green. This exercises STEPS itself and the no---steps path, so
+  // the reserved wording above is pinned by a passing case as well as by the negative one; it
+  // proves the phrasing and the count, not that any check asserts anything.
+  const dir = fixture(Object.fromEntries(STEPS.map((s) => [s, OK(`RAN-${s}`)])));
+  const { code, out } = runRunner(dir, null);
+
+  assert.equal(code, 0, `expected exit 0, got ${code}:\n${out.slice(-800)}`);
+  assert.match(out, new RegExp(`check suite — ${STEPS.length} steps, all of them`));
+  assert.match(out, new RegExp(`Tally: ${STEPS.length} of ${STEPS.length} passed · 0 failed`));
+  assert.match(out, /✓ check suite passed — every step ran\./);
+  assert.ok(!out.includes('SUBSET RUN'), `the full suite called itself a subset:\n${out}`);
+});
+
+// ── The refusals: a run that established nothing must not read as a run that established a floor ──
+
+test('a ZERO-step run is REFUSED — it is the maximal partial run, not a pass', () => {
+  const dir = fixture({ 'test:alpha': OK('a') });
+
+  for (const empty of [',', '', '   ', ',,,', ' , , ']) {
+    const { code, out } = runRunner(dir, empty);
+
+    assert.equal(code, 1, `--steps ${JSON.stringify(empty)} did not exit 1:\n${out}`);
+    assert.match(out, /REFUSED — no check ran/, `no refusal for ${JSON.stringify(empty)}:\n${out}`);
+    assert.ok(
+      !out.includes('✓'),
+      `a ✓ appears in a run that executed nothing (--steps ${JSON.stringify(empty)}):\n${out}`
+    );
+    assert.ok(!out.includes('check suite passed'), `a zero-step run claimed the suite passed:\n${out}`);
+    assert.ok(!/Tally:/.test(out), `a zero-step run printed a tally, which reads as coverage:\n${out}`);
+  }
+});
+
+test('--steps and --root are REFUSED without the harness variable — the injection path', () => {
+  // `npm run check -- --steps ,` forwards straight to the runner. This is the guard that stops an
+  // argument string from deciding how much of the oracle's floor runs; the zero-step guard above
+  // is deliberately independent of it, so neither is the only thing standing there.
+  const dir = fixture({ 'test:alpha': OK('a') });
+
+  const empty = runRunner(dir, ',', { harness: false });
+  assert.equal(empty.code, 1, `unharnessed --steps , did not exit 1:\n${empty.out}`);
+  assert.match(empty.out, /REFUSED — no check ran/);
+  assert.match(empty.out, /--steps and --root — test-only/);
+  assert.ok(!empty.out.includes('✓'), `a ✓ appears in a refusal:\n${empty.out}`);
+
+  // Not just the empty case: a NON-empty subset is refused too, so the gate is the flags
+  // themselves and not a second spelling of the zero-step check.
+  const nonEmpty = runRunner(dir, ['test:alpha'], { harness: false });
+  assert.equal(nonEmpty.code, 1, `unharnessed --steps test:alpha did not exit 1:\n${nonEmpty.out}`);
+  assert.ok(!nonEmpty.out.includes('ALPHA'), 'a refused invocation still ran a step');
+
+  // And the refusal survives a pipe intact — it is the one path that may call process.exit().
+  assert.match(empty.out, /the whole suite\s+npm run check/, `refusal truncated:\n${empty.out}`);
+  assert.match(empty.out, /═{78}\n$/, `refusal did not reach its closing rule:\n${empty.out.slice(-200)}`);
+});
+
+test('a subset flag with no value is REFUSED, not ignored', () => {
+  // `--steps ""` used to fall through to the FULL suite — an empty string is falsy — while the
+  // banner announced a subset. Present-with-no-value is malformed; dropping it on the floor
+  // leaves a caller believing a flag took effect that decided what ran.
+  const dir = fixture({ 'test:alpha': OK('ALPHA-RAN') });
+
+  const r = spawnSync('node', [RUNNER, '--root', dir, '--steps'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, CHECK_SUITE_TEST_HARNESS: '1' },
+  });
+
+  assert.equal(r.status, 1, `a valueless --steps exited ${r.status}:\n${r.stdout}`);
+  assert.match(r.stdout, /--steps was given with no value after it/);
+  assert.ok(!r.stdout.includes('✓'), `a ✓ appears in a refusal:\n${r.stdout}`);
+});
+
+test('a step set of only unknown names cannot report clean — unresolvable is failure, not zero', () => {
+  // The other half of "an empty or unresolvable step set is never a pass": names that resolve to
+  // no script must be counted and named as failures, not quietly dropped to produce a short green
+  // run. `npm run <missing>` exits non-zero, and the runner must carry that through.
+  const dir = fixture({ 'test:alpha': OK('a') });
+  const { code, out } = runRunner(dir, ['test:ghost-one', 'test:ghost-two']);
+
+  assert.equal(code, 1, `a suite of nothing-but-unknown steps exited ${code}:\n${out}`);
+  assert.match(out, /Tally: 0 of 2 passed · 2 failed/, `unknown steps were not counted as failed:\n${out}`);
+  assert.match(out, /✗\s+1\. test:ghost-one/);
+  assert.match(out, /✗\s+2\. test:ghost-two/);
+  assert.ok(!out.includes('check suite passed'), `an all-unknown run claimed the suite passed:\n${out}`);
 });
 
 test('a step that cannot start is a failure, not a skip', () => {
