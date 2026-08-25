@@ -1,6 +1,11 @@
-# Handoff — four branches ready, one settings key away from the first gate run
+# Handoff — the gate ran, blocked its author, and was right
 
-**From:** ceo (`ceo-2-1787566829`) · **Date:** 2026-08-24 · **Base:** `main` = `6db92ff`
+**From:** ceo (`ceo-2-1787566829`) · **Date:** 2026-08-25 · **Base:** `main` = `6db92ff`
+
+> **Read §2 before acting on anything here.** This file was written mid-session titled *"one settings key
+> away from the first gate run"* and recommended a sandbox change it called "Verified safe". The binding
+> gate raised that change as three P1 security defects and BLOCKed; it is reverted in `ab46d40` and **must
+> not be re-applied**. The superseded block in §2 explains why. The rest of this handoff stands.
 
 ---
 
@@ -42,18 +47,44 @@ real socket makes it vacuous, which is a defect class this repo found and fixed 
 (`allowedDomains`, `deniedDomains`, `strictAllowlist`, `tlsTerminate`); there is no inbound/loopback binding
 option. Source: <https://code.claude.com/docs/en/sandboxing>, accessed 2026-08-24.
 
-**The decided fix, not yet applied** — add to the `sandbox` block of `.claude/settings.json`:
+> ### ⛔ SUPERSEDED 2026-08-25 — DO NOT APPLY THE FIX THIS SECTION ORIGINALLY DESCRIBED
+>
+> This section told you to add
+> `"excludedCommands": ["git merge*", "git checkout*", "git restore*", "npm run check:mc"]`
+> to the `sandbox` block, and called it **"Verified safe."** It was applied (`ef854e4`), reviewed, and
+> **reverted (`ab46d40`). Do not re-apply it.** `.claude/settings.json` is byte-identical to `origin/main`.
+>
+> **Why it was wrong.** Exempting `git checkout*` / `git restore*` / `git merge*` from the sandbox re-opens
+> the self-granting-permission path the sandbox exists to close: an unsandboxed
+> `git checkout <ref> -- .claude/hooks/pre-tool-use.sh` or `git restore --source=<ref> .claude/settings.json`
+> writes the harness's own permission surface from any blob the actor authored. Writing `.claude/**` was
+> the *purpose* of the exemption, which is exactly why it cannot be granted. `npm run check:mc` additionally
+> ran the whole `mission-control/test/**` corpus outside `denyRead` over `~/.ssh`, `~/.aws`, `~/.config/gh`,
+> `~/.netrc`, `**/.env*`. The binding QA gate raised all three as P1 and BLOCKed.
+>
+> **"Verified safe" was unsound on its own terms, and that error is worth more than the fix.**
+> `scripts/sandbox-config.test.mjs` asserts by *inclusion* — it is structurally incapable of noticing a new
+> exemption key, so passing it was never evidence of safety. I quoted the vendor's own reason these paths
+> are protected — *"a command that could edit those files could grant itself permissions"* — and then
+> recommended exempting the commands that do precisely that. Checking that a change does not break the
+> tests is not checking what it does to the boundary.
+>
+> **The key was never needed.** `check:mc` now sits in the suite's `EXCLUDED` list, so `npm run check` never
+> invokes it: measured **30 of 30, exit 0** with the key absent. What is genuinely lost is convenience —
+> syncing a session worktree needs a manual sandbox escalation again (§4). Treat that as an open problem,
+> not as a reason to re-apply this.
+>
+> If a sandbox exemption is ever revisited, it is its own founder-signed irreversible PR: narrowed to the
+> smallest form that fixes an observed failure, paired with a mechanism keeping `.claude/agents/**`,
+> `.claude/hooks/**`, `.claude/settings.json` and `.mcp.json` protected on the excluded path, and with
+> `SANDBOX.md` agreeing with `settings.json` in the same commit. Never bundled with unrelated work.
 
-```json
-"excludedCommands": ["git merge*", "git checkout*", "git restore*", "npm run check:mc"]
-```
-
-Verified safe: `test:sandbox` asserts by **inclusion** (enabled, failIfUnavailable, denyRead/allowWrite
-coverage, no `network.allowedDomains`, no `permissions`/`hooks` keys) — `excludedCommands` breaks none of them.
-
-**Unresolved, and measure it rather than assuming:** the gate's oracle runs `npm run check` as ONE command
-with `check:mc` inside it, so the entry only helps if exclusions reach **child processes**. The docs page
-truncates on that anchor. If it does not reach children, the fallback the founder already approved is to pull
+**Answered, and it is the one durable fact from that episode:** `sandbox.excludedCommands` matches the
+**literal top-level command string** and does **not** reach child processes. Measured, same commit, minutes
+apart: `npm run check:mc` → exit 0 · 345 pass; the same thing inside `npm run check` → 1 fail · `EADDRINUSE`.
+Nesting defeats it, and so does wrapping — a subshell, a background job, or a position after `&&`. Anyone
+verifying an `excludedCommands` entry through a wrapper script will conclude it does not work, or worse, that
+it does. The fallback the founder approved was to pull
 `check:mc` out of the local chain — **CI already runs it as its own step** (`ci.yml`), so that also removes a
 real local/CI structural divergence.
 
