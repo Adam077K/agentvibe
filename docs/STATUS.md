@@ -239,13 +239,24 @@ CODEOWNERS in the tree today (verified). On a solo repository it would also dead
 npm run check  →  43 of 43 passed · 0 failed · exit 0
 ```
 
-macOS, sandbox armed, measured 2026-08-26 in this worktree on `fix/wave-1-review-findings`, with the tree
-at `d5b2e04` — the commit before this file's own — plus this file's edits, which no step reads.
+macOS, sandbox armed, measured 2026-08-26 in this worktree on `fix/wave-1-review-findings`. **Re-derive
+before believing it — `npm run check`, about 100 seconds.** If it disagrees, the tree has moved and this
+line is stale; that answer is worth more than knowing which commit it was taken at.
 
-*That commit reference was `833b4d8` an hour earlier, and the rule at the top of this file is why it is not
-still saying so: a further change landed after STATUS.md was written, so STATUS.md was rewritten to be last
-again rather than left pointing at a tree that no longer existed. The rule costs a second pass and this is
-what the second pass buys.*
+> ***No commit sha is given, and dropping it is the fix — not a loss of provenance.*** *This line named a
+> tree: `833b4d8`, then `d5b2e04` an hour later. It could never name the commit it is IN — a file cannot
+> contain its own hash — so it named the previous one, and therefore went stale on **every** subsequent
+> commit, whether or not that commit changed anything this section describes. That is the line-number rot of
+> §1 wearing a different costume, and it was making the ordering rule above look far more expensive than it
+> is: the rule should cost a pass when a change alters what this file DESCRIBES, never merely because a
+> commit exists. The date says when; the command says whether it is still true. The sha only said which
+> tree, which is the one thing a reader can recover from git anyway.*
+>
+> ***Do not strip the other shas on this page.*** *`71fd58d`, `ae7ea48` and `e5eac9f` name FIXED historical
+> commits and are stable by construction — `git merge-base --is-ancestor ae7ea48 HEAD` and
+> `git show 71fd58d:<path>` answer the same way forever. The unstable kind is a sha standing in for "the
+> current tree", because the current tree moves and the reference cannot move with it. Same distinction as
+> §1: cite a thing that holds still, not a position that does not.*
 
 Derive the denominator, never quote it:
 `node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **43**.
