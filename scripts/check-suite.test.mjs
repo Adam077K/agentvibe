@@ -685,6 +685,77 @@ test('every `run:` step in ci.yml carries the `!cancelled()` guard, and the thre
   assert.equal(unguarded(appended).length, 1, 'a newly appended unguarded step did not bite');
 });
 
+test('no ci.yml step invokes a runner directly — the tripwire preload, and the aggregate suite', () => {
+  // ci.yml states this rule about itself and, until 2026-08-26, NOTHING CHECKED IT: "No step in this
+  // file may invoke the runner itself; that is greppable, and the grep is the check, so this comment
+  // does not spell the string it searches for." There was no grep. `check-suite.test.mjs` named
+  // `run-checks.mjs` twice — as its own RUNNER const, and in a message about package.json — and
+  // asserted nothing about ci.yml. The rule held by luck. That is the same class as the two defects
+  // this file fixed the same day: a claim of enforcement with no mechanism, forty lines away from
+  // them, and leaving it would teach the next reader that these comments are decorative.
+  //
+  // TWO DISTINCT PROPERTIES, and only the first is the one that comment means:
+  //
+  //   A · THE NODE TEST RUNNER. Read the paragraph it sits in — "The direct form ran the same file
+  //       WITHOUT `--require ./scripts/protected-write-tripwire.cjs`, so this one step of the
+  //       workflow was unguarded while every other one was, and the difference is invisible in a
+  //       green run." The npm script carries the preload; `node --test <file>` does not. So a step
+  //       spelled the direct way runs the same tests with the tripwire off.
+  //   B · THE AGGREGATE SUITE RUNNER. `run: npm run check` in ci.yml would nest all 43 steps behind
+  //       one step's exit code — the precise opacity the 44 `if:` guards exist to remove, arriving
+  //       from the other direction. Nothing in that comment covers this; it is asserted because it
+  //       is real, not because the comment claims it.
+  //
+  // The comment also says it "does not spell the string it searches for" — a workaround for a grep
+  // that would otherwise match its own comment. That workaround is now unnecessary: this reads
+  // `run:` values, so a comment cannot satisfy it and cannot break it either. It is the same
+  // narrowing that fixed the check:mc P1, and it is why the strings below can be spelled plainly.
+  const commands = ciRunCommands(CI);
+
+  /** `node … --test …`. `(?![\w-])` so `--test-reporter=tap` alone is not a hit. */
+  const DIRECT_TEST_RUNNER = /\bnode\b[^&|;]*--test(?![\w-])/;
+  /** `npm run check` exactly, or the runner by path. Right-anchored: `check:curation` is not a hit. */
+  const AGGREGATE_RUNNER = /npm run check(?![\w:-])|run-checks\.mjs/;
+
+  assert.deepEqual(
+    commands.filter((c) => DIRECT_TEST_RUNNER.test(c)), [],
+    'a ci.yml step invokes the Node test runner directly. It then runs WITHOUT ' +
+      '`--require ./scripts/protected-write-tripwire.cjs`, which every npm test script carries — so that ' +
+      'one step is unguarded while every other one is, and a green run looks identical. Call the npm script.'
+  );
+
+  assert.deepEqual(
+    commands.filter((c) => AGGREGATE_RUNNER.test(c)), [],
+    'a ci.yml step runs the whole suite through `npm run check`. That puts every step behind ONE exit ' +
+      'code again, which is the opacity the per-step `if:` guards exist to remove. ci.yml runs each check ' +
+      'as its own step on purpose.'
+  );
+
+  // Proved by mutation — both, and both spellings of A, since the tripwire hole arrives through the
+  // `--test` flag whether or not a reporter is pinned beside it.
+  const asDirect = CI.replace(/^( *run: )npm run test:gate$/m, '$1node --test .claude/workflows/lib/gate-logic.test.mjs');
+  assert.notEqual(asDirect, CI, 'the direct-runner mutation matched nothing, so its proof is vacuous');
+  assert.equal(ciRunCommands(asDirect).filter((c) => DIRECT_TEST_RUNNER.test(c)).length, 1);
+
+  const withReporter = CI.replace(/^( *run: )npm run test:gate$/m, '$1node --test-reporter=tap --test x.mjs');
+  assert.equal(ciRunCommands(withReporter).filter((c) => DIRECT_TEST_RUNNER.test(c)).length, 1,
+    'a direct invocation with a reporter pinned beside it was missed');
+
+  const asAggregate = CI.replace(/^( *run: )npm run test:gate$/m, '$1npm run check');
+  assert.equal(ciRunCommands(asAggregate).filter((c) => AGGREGATE_RUNNER.test(c)).length, 1);
+
+  // And the discriminations, so neither predicate is a substring scan wearing a regex. These are the
+  // shapes ci.yml legitimately contains today; a rule that fires on them would be deleted, not obeyed.
+  assert.equal(DIRECT_TEST_RUNNER.test('npm run test:gate'), false);
+  assert.equal(DIRECT_TEST_RUNNER.test('node --test-reporter=tap x.mjs'), false, '--test-reporter is not --test');
+  assert.equal(AGGREGATE_RUNNER.test('npm run check:curation'), false, 'a check: step is not the aggregate runner');
+  assert.equal(AGGREGATE_RUNNER.test('npm run check:ledger-verify'), false);
+
+  // A comment can neither satisfy nor break either rule — the property the check:mc P1 was about.
+  const decoy = `${asAggregate}\n# never write: npm run check — and never node --test either\n`;
+  assert.equal(ciRunCommands(decoy).filter((c) => AGGREGATE_RUNNER.test(c)).length, 1, 'a comment changed the count');
+});
+
 test('`continue-on-error` appears in ci.yml as a word and never as a key', () => {
   // ci.yml's own rationale rests on this: "`if:` decides whether a step RUNS. Only
   // `continue-on-error: true` stops a failed step from failing the job, and it appears nowhere in
