@@ -249,10 +249,12 @@ test('BLOCKS a write through a symlink pointing outside the project', () => {
 // execution: with the fixture under /private/tmp/claude-<uid>, a write to
 // <fixture>/.claude/settings.json returns ALLOW. So each candidate base is put to the hook
 // itself rather than compared against a second, drifting copy of the hook's list of roots.
+const HOME_FIXTURE_REJECTED = []
 const HOME_FIXTURE = (() => {
   for (const base of [...new Set([os.tmpdir(), '/tmp'])]) {
     let root
-    try { root = fs.mkdtempSync(path.join(base, 'pre-tool-use-home-')) } catch { continue }
+    try { root = fs.mkdtempSync(path.join(base, 'pre-tool-use-home-')) }
+    catch (err) { HOME_FIXTURE_REJECTED.push(`${base}: not writable (mkdtemp ${err.code || err.message})`); continue }
     const withPlans = path.join(root, 'with-plans')
     const withoutPlans = path.join(root, 'without-plans')
     fs.mkdirSync(withPlans)
@@ -260,6 +262,7 @@ const HOME_FIXTURE = (() => {
     // Neither home has a .claude/ yet, so a BLOCK here was decided by "outside every allowed
     // root" and by nothing else — which is exactly the neutrality these cases need.
     if (runHook(compact(write(path.join(withPlans, '.claude', 'probe.json'))), { HOME: withPlans }) !== BLOCK) {
+      HOME_FIXTURE_REJECTED.push(`${base}: the hook ALLOWS writes here already, so it is one of its own roots — the sandbox scratchpad when TMPDIR points inside it`)
       fs.rmSync(root, { recursive: true, force: true })
       continue
     }
@@ -272,42 +275,57 @@ const HOME_FIXTURE = (() => {
   return null
 })()
 
-// `false` runs the case; a string skips it AND says why, which is the only honest thing to
-// report from an environment where no neutral home can be built.
-const HOME_SKIP = HOME_FIXTURE ? false
-  : 'no writable directory outside the roots this hook already allows — every candidate base was either unwritable or itself an allowed root (the sandbox scratchpad). Re-run with TMPDIR pointed outside it.'
+// A SKIP IS `unresolved`, AND ON CI `unresolved` MUST NOT READ AS `pass` (rule 10). Off CI —
+// a sandboxed agent shell, where /tmp is unwritable and TMPDIR is a root the hook already
+// allows — skipping is the honest report and the string says how to re-run. On a runner it is
+// not: that is the one machine whose verdict blocks a merge, so five silent skips would report
+// "checked" for the exemption whose failure disarms every rule in this file, including (b).
+// There, the cases run and fail with the candidate bases and the reason each was refused.
+const HOME_SKIP = (HOME_FIXTURE || process.env.CI) ? false
+  : `no writable directory outside the roots this hook already allows: ${HOME_FIXTURE_REJECTED.join(' | ')}. Re-run with TMPDIR pointed outside them.`
+
+/** Never dereferences null: on CI the absent fixture must fail loudly, with its cause attached. */
+function homeFixture() {
+  assert.ok(HOME_FIXTURE,
+    `no neutral $HOME fixture could be built and CI is set — these cases cannot be skipped on a runner, because a skip there reports "checked" for something never checked. Candidate bases refused: ${HOME_FIXTURE_REJECTED.join(' | ')}`)
+  return HOME_FIXTURE
+}
 
 test('the pinned $HOME is outside every root the hook already allows — the barrier that keeps (a)-(d) honest', { skip: HOME_SKIP }, () => {
-  assert.equal(runHook(compact(write(path.join(HOME_FIXTURE.root, 'anywhere.txt'))), { HOME: HOME_FIXTURE.withPlans }), BLOCK,
+  const home = homeFixture()
+  assert.equal(runHook(compact(write(path.join(home.root, 'anywhere.txt'))), { HOME: home.withPlans }), BLOCK,
     'the fixture directory is itself writable per the hook — (b), (c) and (d) below would pass on containment, not on the plans/ exemption')
-  assert.ok(fs.existsSync(path.join(HOME_FIXTURE.withPlans, '.claude', 'plans')),
+  assert.ok(fs.existsSync(path.join(home.withPlans, '.claude', 'plans')),
     'fixture must create plans/, or (a) measures the absence of the directory instead of the exemption')
-  assert.ok(fs.existsSync(path.join(HOME_FIXTURE.withPlans, '.claude', 'agents')),
+  assert.ok(fs.existsSync(path.join(home.withPlans, '.claude', 'agents')),
     'fixture must create the sibling, or (c) blocks because the directory is missing rather than because the exemption is narrow')
-  assert.ok(!fs.existsSync(path.join(HOME_FIXTURE.withoutPlans, '.claude')),
+  assert.ok(!fs.existsSync(path.join(home.withoutPlans, '.claude')),
     'the second home must have no .claude/ at all, or (d) is not testing the absent-root path')
 })
 
 test('ALLOWS a write to a file under $HOME/.claude/plans/ — plan-mode storage', { skip: HOME_SKIP }, () => {
   // (a) Red before the path-scoping fix, green after. HOME is pinned, so this reads the fixture
   // rather than whatever the machine happens to have in the real home.
-  const planFile = path.join(HOME_FIXTURE.withPlans, '.claude', 'plans', 'test-plan.md')
-  assert.equal(runHook(compact(write(planFile)), { HOME: HOME_FIXTURE.withPlans }), ALLOW,
+  const home = homeFixture()
+  const planFile = path.join(home.withPlans, '.claude', 'plans', 'test-plan.md')
+  assert.equal(runHook(compact(write(planFile)), { HOME: home.withPlans }), ALLOW,
     'hook blocked a write to $HOME/.claude/plans/ — plan-mode is unusable')
 })
 
 test('BLOCKS a write to $HOME/.claude/settings.json — the regression that would matter most', { skip: HOME_SKIP }, () => {
   // (b) Green before and after Change 1: proves the plans/ exemption did not widen to ~/.claude/.
-  const settingsFile = path.join(HOME_FIXTURE.withPlans, '.claude', 'settings.json')
-  assert.equal(runHook(compact(write(settingsFile)), { HOME: HOME_FIXTURE.withPlans }), BLOCK,
+  const home = homeFixture()
+  const settingsFile = path.join(home.withPlans, '.claude', 'settings.json')
+  assert.equal(runHook(compact(write(settingsFile)), { HOME: home.withPlans }), BLOCK,
     'hook allowed a write to settings.json — the entire permission model is now disarmed')
 })
 
 test('BLOCKS a write to $HOME/.claude/agents/whatever.md', { skip: HOME_SKIP }, () => {
   // (c) Green before and after Change 1: a sibling of plans/ must stay blocked — and agents/
   // exists on disk under the pinned home, so the refusal is the exemption's narrowness.
-  const agentsFile = path.join(HOME_FIXTURE.withPlans, '.claude', 'agents', 'whatever.md')
-  assert.equal(runHook(compact(write(agentsFile)), { HOME: HOME_FIXTURE.withPlans }), BLOCK,
+  const home = homeFixture()
+  const agentsFile = path.join(home.withPlans, '.claude', 'agents', 'whatever.md')
+  assert.equal(runHook(compact(write(agentsFile)), { HOME: home.withPlans }), BLOCK,
     'hook allowed a write to $HOME/.claude/agents/ — blocked paths must stay blocked after plans/ exemption')
 })
 
@@ -318,8 +336,9 @@ test('BLOCKS a write under $HOME/.claude/plans/ when that directory does not exi
   // its nearest EXISTING ancestor — here the home itself, ABOVE plans/ — which the upward-only
   // `-ef` probe can never reach. Fail-closed is the right default for a security hook, so this
   // pins it as chosen. Changing it means changing the hook, and the hook is the harder call.
-  const planFile = path.join(HOME_FIXTURE.withoutPlans, '.claude', 'plans', 'test-plan.md')
-  assert.equal(runHook(compact(write(planFile)), { HOME: HOME_FIXTURE.withoutPlans }), BLOCK,
+  const home = homeFixture()
+  const planFile = path.join(home.withoutPlans, '.claude', 'plans', 'test-plan.md')
+  assert.equal(runHook(compact(write(planFile)), { HOME: home.withoutPlans }), BLOCK,
     'hook allowed a write into a plans/ directory that does not exist — containment must fail closed')
 })
 
