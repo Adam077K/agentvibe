@@ -7,6 +7,7 @@ worktree: .worktrees/w4-eviction
 tier: irreversible
 tier_note: "The brief assigned `full` on the basis of `.claude/memory/**`. The classifier disagrees and the classifier is the one implementation: `node scripts/classify.mjs` over this diff returns `floor=irreversible`, because `scripts/lib/memory-entries.js` matches `scripts/lib/**` (tier=irreversible, enforcement=block). Recorded as the classifier computes it, not as the brief assumed — a session file asserting a tier the classifier contradicts is the two-implementations defect wearing a different hat. This raises the review bar: irreversible needs 2-of-3 multi-judge and founder sign-off."
 qa_verdict: PASS
+verification_round2: "After the 2026-08-26 adversarial review: npm run check 30 of 30 · 0 failed · exit 0; check:ledger exit 0, 0 block; 64 memory tests pass. Mutation survival re-measured — post-write verification 2 fail, destination content 2 fail, conservation gate 1 fail, existsSync guard 1 fail, archive cap 1 fail, fence tracking 5 fail, reversibility fail-closed 5 fail. None is 0."
 verification: "npm run check → 30 of 30 passed · 0 failed · exit 0 (83.3s). npm run check:ledger → exit 0, 193 tests pass, ledger verify 79 pass · 9 would_block (shadow) · 0 block. node scripts/check-memory-budget.mjs → exit 0 over four capped files. node scripts/classify.mjs over the diff → floor=irreversible."
 date_note: "Filename keeps the 2026-08-25 date the brief assigned. The eviction stamps read 2026-08-26 because that is when they were written; a stamp is a record of when, not of what the task was called."
 ---
@@ -53,6 +54,23 @@ enforce. Every remaining candidate with a good `net` is one of those; the rest n
 ~3 entries of room **and** there is now a six-second tool that makes more, which is the durable fix. If the
 band is wanted regardless, `2026-08-11::Claim ledger replaces the diff gate` is the cleanest single case
 (net 1,091; its own body carries `**See:** ADR-001`, so it names its successor) — one command, on request.
+
+**Reviewed adversarially 2026-08-26: FAIL, 2 P1s and 5 P2s, all fixed.** The eviction that had
+already run was re-verified clean by the reviewer's own parser — 0 lines short, 9 bodies verbatim,
+0 headings lost — and **every defect lived in a path that run did not take**, which is how they
+survived: nothing exercised them, so nothing contradicted them. The two that mattered: a dated
+heading inside a **code fence** tore an entry in half and let the fabricated tail be archived out
+from under its refused parent (and `DECISIONS.md`'s own `## Format` section demonstrates that exact
+construct); and a "fresh" volume was never checked against the disk, so `writeFileSync` could
+O_TRUNC irreplaceable history while printing *"conservation closes to zero"*. Also closed:
+conservation covered only the source and is now re-verified **from disk** after the write;
+`Reversibility:` failed **open**, so a one-character typo was the override flag this tool claims not
+to have; and `plan`'s `net` was 62% optimistic **in the direction of evicting**.
+
+**The lesson worth keeping is about the tests, not the code.** Deleting the entire conservation gate
+cost **zero** failing tests before this round. A gate whose call site is an `if` is a gate that can
+be deleted for free, so the post-write check **throws** now — there is no branch left to remove.
+Every guard was re-measured by mutation and none survives at zero.
 
 **Out of scope, noted not fixed:** `DECISIONS.md`'s header says entries are "most-recent first" while the
 file is appended most-recent-**last**.
