@@ -595,10 +595,22 @@ async function runOracle() {
 //
 // That is the DESIGNED behaviour for a genuinely clean diff, and it is why this is a hazard rather
 // than a bug with an obvious patch. What makes it worth writing down here rather than leaving to be
-// rediscovered: the measured subagent dropout in this runtime is around half of all dispatches (see
-// the REVIEW_ATTEMPTS block above), and a dropout that happens to return valid-but-empty structured
-// output is spelled PASS. `ok: false` covers the agent that returns NOTHING; it does not cover the
-// agent that returns an empty set it never earned.
+// rediscovered: the measured subagent dropout in this runtime is around half of all dispatches —
+// 15 of 31 in the corpus the REVIEW_ATTEMPTS block above counts — and a dropout that happens to
+// return valid-but-empty structured output is spelled PASS. `ok: false` covers the agent that
+// returns NOTHING; it does not cover the agent that returns an empty set it never earned.
+//
+// WHAT THE TREE ARGUMENT DID TO THIS, because a hazard that is narrowed and reported unchanged is
+// its own small dishonesty. It narrowed it substantially. reviewPrompt() and verifyPrompt() now run
+// `git -C '<tree>' diff`, so a reviewer launched from a `main` checkout — or from a separate `main`
+// CLONE, which does not even hold the commit and answered `fatal: Invalid symmetric difference
+// expression` — still reads the diff from the tree under review. Before that, the most likely way
+// to get five empty arrays was for five reviewers to have no diff at all, and the operating advice
+// this same change introduced actively invited it. That specific route is closed.
+//
+// WHAT SURVIVES, AND IT IS THE SHAPE RATHER THAN THE ROUTE: any other reason a reviewer returns an
+// empty array — a dropout that still emits structured output, a truncated diff, a misread prompt —
+// is still indistinguishable from a clean verdict. Narrower is not closed.
 //
 // WHY IT IS NOT FIXED IN THIS CHANGE, stated so the omission is a decision. Distinguishing the two
 // needs the reviewer to attest to what it examined — a changed-file count, or the sha it diffed —
