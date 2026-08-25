@@ -1190,6 +1190,75 @@ test('P1-C(b): an INDENTED wrapped path still counts — the narrowing must not 
   assert.notEqual(e.disposition, 'orphaned');
 });
 
+// ── P1-D · CommonMark's OPENING rule, not only its closing rules ────────────────────────────
+
+const OPENER_ATTACK = [
+  '## 2026-07-11 — An entry about the delimiters we use in prose',
+  `**Context:** ${REALISTIC_BODY}`,
+  '**Decision:** Kept.',
+  '**Reversibility:** reversible',
+  '**Affects:** `docs/conventions.md`',
+  '',
+  '``` and ``` are the delimiters we use for code blocks.',
+  '',
+  '## 2026-07-12 — An irreversible decision that must never be evicted',
+  '**Decision:** Dropped the column.',
+  '**Reversibility:** irreversible',
+  '**Affects:** `db/schema.sql`',
+  'THE-IRREVERSIBLE-REASONING.',
+  '',
+  '```sh',
+  'echo hello',
+  '```',
+  '',
+].join('\n');
+
+test('P1-D: a backtick fence whose info string contains a backtick is not a fence at all', () => {
+  // CommonMark forbids it, and `FENCE`'s `(.*)$` accepted it. The prose line above opened a
+  // block that ran to the next bare ``` and swallowed the entry between — two entries parsed as
+  // one, with `ambiguous` still null because the fence count came out even.
+  const root = fixture({ entries: OPENER_ATTACK, files: { 'db/schema.sql': 'x\n', 'docs/conventions.md': 'x\n' } });
+  const p = plan(root);
+  assert.equal(p.entries.length, 2, `expected 2 entries, got ${JSON.stringify(p.entries.map((e) => e.date))}`);
+  assert.deepEqual(p.entries.map((e) => e.date), ['2026-07-11', '2026-07-12']);
+  assert.equal(p.parse.ambiguous, null, 'the real ```sh block still opens and closes normally');
+  assert.equal(dispositionOf(p, 'irreversible decision that must never'), 'refused');
+});
+
+test('P1-D: the swallowed entry is no longer archived as part of its predecessor', () => {
+  const root = fixture({ entries: OPENER_ATTACK, files: { 'db/schema.sql': 'x\n', 'docs/conventions.md': 'x\n' } });
+  assert.equal(apply(root, ['--only', '2026-07-11']).code, 0, 'the first entry is genuinely evictable');
+  const after = readDecisions(root);
+  assert.ok(after.includes('THE-IRREVERSIBLE-REASONING.'),
+    'the irreversible entry must still be in DECISIONS.md, not filed under its predecessor');
+  assert.ok(after.includes('## 2026-07-12 — An irreversible decision that must never be evicted'));
+  const vol = fs.readFileSync(path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE.md'), 'utf8');
+  assert.ok(!vol.includes('THE-IRREVERSIBLE-REASONING.'), 'and it must NOT be in the archive');
+});
+
+test('P1-D: a TILDE fence may carry backticks in its info string — the rule is backtick-only', () => {
+  // The narrowing must not become "any fence line with a backtick is prose". CommonMark puts the
+  // restriction on backtick fences alone, and a ~~~ opener with backticks still opens.
+  const root = fixture({
+    entries: ['## 2026-07-13 — An entry opening a tilde fence with a backticked info string', '',
+      '**Reversibility:** reversible', '**Affects:** nothing', '',
+      '~~~`markdown`', '## 2026-07-14 — [Decision title]', '~~~', ''].join('\n'),
+  });
+  const p = plan(root);
+  assert.equal(p.entries.length, 1, 'the tilde fence must still hide the dated heading inside it');
+  assert.equal(p.parse.ambiguous, null);
+});
+
+test('P1-D: an ordinary ```js opener is unaffected', () => {
+  const root = fixture({
+    entries: ['## 2026-07-15 — An entry with a perfectly ordinary code block', '',
+      '**Reversibility:** reversible', '**Affects:** nothing', '',
+      '```js', '// ## 2026-07-16 — [Decision title]', '```', ''].join('\n'),
+  });
+  assert.equal(plan(root).entries.length, 1);
+  assert.equal(plan(root).parse.ambiguous, null);
+});
+
 test('P1-E: a TWO-entry batch splices both at their own offsets', () => {
   // Offsets are only valid while nothing below them has moved, which is why `ordered` splices
   // bottom-up. One batch, two entries, and the first must not be replaced using an offset the

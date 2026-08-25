@@ -133,6 +133,19 @@ function fenceMask(lines) {
       const run = m[1];
       const rest = (m[2] || '').trim();
       if (open === null) {
+        // ── OPENING IS A RULE TOO, AND IT WAS THE UNENFORCED HALF ──────────────────────────
+        //
+        // CommonMark forbids a BACKTICK fence's info string from containing a backtick, and
+        // `FENCE`'s `(.*)$` accepted one. So an ordinary prose line about the delimiters —
+        // ``` and ``` are the delimiters we use — opened a block that ran to the next bare
+        // fence and SWALLOWED every heading and field between. Two entries merge, `ambiguous`
+        // stays null because the count came out even, and the swallowed entry disappears into
+        // its predecessor's body with every by-date citation left dangling. A tilde fence
+        // carries no such restriction, so this applies only to backticks.
+        if (run[0] === '`' && rest.includes('`')) {
+          inFence[i] = false; // not a fence opener at all — it is a paragraph line
+          return;
+        }
         open = { char: run[0], len: run.length };
         inFence[i] = true; // the opening delimiter is part of the block
         return;
