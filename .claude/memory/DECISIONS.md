@@ -274,6 +274,45 @@ exposure — 117 session files, zero customer-facing work. (2) accepts that a le
 **Owner:** ceo · **founder decision** · **Affects:** `docs/STATUS.md`,
 `docs/08-agents_work/handoffs/`, `qa.js` gate routing, and every future session's pre-flight read
 
+## 2026-08-25 — Branch protection: fix `cmd_merge` first, then flip `enforce_admins`; CODEOWNERS dropped
+
+**Context:** Branch protection exists on `main` and does not bind on the path actually used. Required
+status checks govern the **pull-request route only** — a direct push prints *"Bypassed rule violations for
+refs/heads/main: 2 of 2 required status checks are expected"* and succeeds having run none. Observed
+2026-08-23 and twice on 2026-08-25. So every claim of the form "nothing merges without the gate" is true
+only of the route people choose to take, which makes the gate's authority a convention rather than a
+control.
+
+**Options considered:** flip `enforce_admins` now (the obvious fix, and it bricks the merge path that
+exists today) / add CODEOWNERS as a second control / fix the merge path first, then flip.
+
+**Decision — order matters, and this is the whole decision.** Fix `cmd_merge` in `bin/warroom` to push a
+branch and open a PR, **then** flip `enforce_admins`. Flipping first breaks the repo two ways, both
+following from one fact verified in-worktree: `.github/workflows/qa-lead-pass.yml` triggers on
+`pull_request` only — its `on:` block names `pull_request` and the file contains **zero** `push:` triggers
+— while being a *required* check. So (1) with admins enforced, a direct push to `main` could never satisfy
+a check that only ever runs on pull requests; and (2) `cmd_merge` merges into **local** `main` and never
+pushes, so it would produce commits that can never reach `origin`.
+
+**CODEOWNERS was dropped from the plan, not deferred.** Branch protection carries no
+`required_pull_request_reviews` at all, so `require_code_owner_reviews` is unset and a CODEOWNERS file
+would gate **nothing** — and on a solo repository, enabling code-owner review would deadlock the only
+reviewer. A control that reports green while controlling nothing is the class this repo exists to refuse,
+so adding one to look safer would have been the defect, not the fix.
+
+**Provenance, kept separate because the two halves have different standing.** The API readings —
+`enforce_admins: {enabled: false}`, `rulesets: []`, required checks `["Deterministic checks", "Verify QA
+Lead PASS"]` with `strict: true`, no CODEOWNERS — are **reported by the team lead and not verified in a
+worktree**: `gh` is denied by the sandbox's `denyRead` on `~/.config/gh`, which is working as intended. The
+workflow trigger, the absence of a tracked CODEOWNERS, and `cmd_merge`'s never-pushes behaviour **are**
+verified here. Do not promote the first group to "verified" without re-running it against the API.
+
+**Reversibility:** reversible — `enforce_admins` is one repository setting and `cmd_merge` is one function.
+Note that only the Founder can change the setting; it is not a file in this repo.
+**Owner:** ceo · **founder decision 2026-08-25**
+**Affects:** `bin/warroom` (`cmd_merge`), `.github/workflows/qa-lead-pass.yml`, `docs/STATUS.md`, and every
+agent that believes the QA gate is binding on all routes
+
 ## 2026-08-26 — Memory eviction is typed and mechanised; the archive rotates rather than being pruned
 
 **Context:** `DECISIONS.md` stood at 39,675 of a blocking 40,000 while rule 4 tells every agent to append
