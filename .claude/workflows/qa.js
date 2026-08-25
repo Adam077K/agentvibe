@@ -202,11 +202,11 @@ function shaPrefixEq(a, b) {
  * assertion into evidence: the tree it names must be the tree it was given, and the HEAD it read
  * there must be the commit under review.
  *
- * WHAT THIS ACTUALLY ESTABLISHES, STATED NARROWLY BECAUSE THE BROAD VERSION WAS FALSE.
+ * WHAT THIS ACTUALLY ESTABLISHES, STATED NARROWLY BECAUSE EVERY BROADER VERSION HAS BEEN FALSE.
  *
  * This comment used to read: "an oracle that measured some other checkout has to report that
- * checkout's HEAD and be caught, or fabricate a sha it never read." SUPERSEDED 2026-08-26, twice
- * over, and both corrections are the same lesson from opposite ends.
+ * checkout's HEAD and be caught, or fabricate a sha it never read." SUPERSEDED 2026-08-26, three
+ * times now, and the corrections are one lesson approached from three sides.
  *
  *   FIRST, the check could switch itself off. It read `if (REF_TIP_SHA && !shaPrefixEq(...))` — a
  *   truthiness test, not a guard. With a symbolic tip `REF_TIP_SHA` is null, the comparison
@@ -221,14 +221,33 @@ function shaPrefixEq(a, b) {
  *   was a tautology anyway, since `git rev-parse <sha>` echoes a well-formed sha back at exit 0
  *   whether or not the object exists.
  *
- * SO THE EARNED CLAIM IS THIS, AND NO MORE: an oracle that never reached ${TREE} cannot report its
- * HEAD, because it is told the path but never the commit. That covers the defect actually observed
- * on 2026-08-25 — a check-runner that was honest and in the wrong place.
+ *   THIRD — and this one happened directly underneath the sentence warning against it. The block
+ *   was rewritten to say "an oracle that never reached ${TREE} CANNOT report its HEAD, because it
+ *   is told the path but never the commit." A reviewer cloned the branch to a scratch directory,
+ *   read `git rev-parse HEAD` there, copied the tree path out of the prompt, and returned both:
+ *   PASS, 7 agents, having never touched the tree under review. Any second checkout at the same
+ *   commit supplies the value, and `git worktree list` on this machine returns 38 of them.
  *
- * THE RESIDUAL, NAMED RATHER THAN GLOSSED: an agent that reaches the tree far enough to read HEAD
- * and then runs `npm run check` somewhere else still passes this function. Catching that needs an
- * attestation over the check OUTPUT, which no arrangement of these three fields can provide. Do not
- * write a comment here claiming otherwise; that is precisely how this block came to be wrong twice.
+ * THREE REWRITES, THREE ABSOLUTES, THREE FALSIFICATIONS — AND THAT PATTERN IS THE FINDING. This
+ * block attracts absolutes because an absolute is what one wants to be true of a gate. A comment
+ * falsified three times has negative value: the next reader believes it and is wrong. So what
+ * follows is a mechanism and its bound, and deliberately contains no word of the "cannot / must /
+ * has to" family. If you find yourself about to add one, that is the moment this block has gone
+ * wrong every previous time.
+ *
+ * WHAT THE CHECK FORCES. To return a payload this function accepts, an oracle has to produce the
+ * 40-character sha that ${TREE} is at. That sha is not in its prompt.
+ *
+ * WHAT SUPPLIES THAT VALUE WITHOUT MEASURING ${TREE}, all verified rather than imagined:
+ *   · any other checkout of this repository sitting at the same commit — 38 worktrees here;
+ *   · a fresh clone of the branch into a scratch directory, which is one command;
+ *   · reaching ${TREE} far enough to read HEAD, then running `npm run check` elsewhere.
+ *
+ * So the honest reading is narrow: this catches a check-runner that is HONEST AND MISPLACED — it
+ * reports where it actually was and what it actually read, and the values disagree with what was
+ * asked for. That is the defect observed on 2026-08-25 and it is the one this function was built
+ * for. It is evidence about location, not an attestation about work. Closing the gap between those
+ * two needs something signed over the check OUTPUT, which no arrangement of these fields provides.
  */
 function oracleTreeMismatch(o) {
   const measured = normalizeTree(o.tree)
