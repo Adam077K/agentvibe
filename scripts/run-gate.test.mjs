@@ -354,7 +354,7 @@ function loadQa() {
  * Run qa.js against a stubbed panel. Returns the verdict object, every dispatch label in order,
  * and the oracle's prompt and schema — so "no agent ran" is observed rather than asserted.
  */
-async function runQa(qaArgs, oracleReply) {
+async function runQa(qaArgs, oracleReply, reviewFindings) {
   const dispatched = [];
   let oraclePrompt = null;
   let oracleSchema = null;
@@ -362,7 +362,7 @@ async function runQa(qaArgs, oracleReply) {
     dispatched.push(opts.label);
     const label = String(opts.label);
     if (label.startsWith('oracle')) { oraclePrompt = prompt; oracleSchema = opts.schema; return oracleReply; }
-    if (label.startsWith('review') || label.startsWith('sweep')) return { findings: [] };
+    if (label.startsWith('review') || label.startsWith('sweep')) return { findings: reviewFindings || [] };
     if (label.startsWith('judge')) return { verdict: 'PASS', summary: 'clean', blockers: [] };
     return null;
   };
@@ -384,7 +384,6 @@ const goodOracle = (over = {}) => ({
   pass: true,
   tree: REPO,
   head: HEAD_SHA,
-  ref_head: HEAD_SHA,
   checks: [{ name: 'npm run check', pass: true, output: '' }],
   ...over,
 });
@@ -531,19 +530,26 @@ test('qa.js BLOCKS when the named tree is not at the commit under review', async
   assert.equal(out.verdict, 'BLOCK');
   assert.deepEqual(dispatched, ['oracle']);
   assert.match(out.summary, new RegExp(`but the ref under review names ${HEAD_SHA}`));
+  assert.match(out.summary, /does not hold the commit under review/);
 });
 
-test('qa.js BLOCKS when the check-runner could not resolve the ref inside the tree', async () => {
-  const { out } = await runQa(GOOD_ARGS, goodOracle({ ref_head: '' }));
+test('qa.js BLOCKS when the check-runner reports no readable HEAD for the tree', async () => {
+  // Was `ref_head: ''`. That field is gone: with a sha-tipped ref `git rev-parse <sha>` echoes a
+  // well-formed sha back at exit 0 whether the object exists or not, so it could only ever agree —
+  // and printing the tip to ask for it handed the agent the answer. `head` is the field that has
+  // to be earned, and an unreadable one still fails closed.
+  const { out } = await runQa(GOOD_ARGS, goodOracle({ head: '' }));
   assert.equal(out.verdict, 'BLOCK', 'Rule 10 — a resolver never passes what it could not check');
-  assert.match(out.summary, /no usable sha/);
+  assert.match(out.summary, /no usable HEAD sha/);
 });
 
 test('ORACLE_SCHEMA requires the tree, so the report is evidence rather than an assurance', async () => {
   const { oracleSchema } = await runQa(GOOD_ARGS, goodOracle());
-  for (const field of ['pass', 'tree', 'head', 'ref_head', 'checks']) {
+  for (const field of ['pass', 'tree', 'head', 'checks']) {
     assert.ok(oracleSchema.required.includes(field), `ORACLE_SCHEMA no longer requires "${field}"`);
   }
+  assert.ok(!oracleSchema.required.includes('ref_head'),
+    'ref_head is back: it can only ever agree, and asking for it printed the expected sha into the prompt');
 });
 
 test('the oracle prompt names the tree as an absolute path and cds into it', async () => {
@@ -680,12 +686,14 @@ test('a ref carrying a space is REFUSED — `git diff --output=<file>` writes', 
   assert.equal(fsExists('/tmp/run-gate-should-never-be-written'), false);
 });
 
-test('the ref is single-quoted at the git sink — the second half of that fix', async () => {
+test('the range reaches git single-quoted — the second half of that fix', async () => {
   // Kept as its own assertion because either half alone is one edit from re-opening the other.
+  // The range is `<base>...HEAD` rather than the sha-tipped one it was called with; see the
+  // anti-copy block below for why. What this pins is the QUOTING.
   const { oraclePrompt } = await runQa(GOOD_ARGS, goodOracle());
   assert.ok(
-    oraclePrompt.includes(`diff --name-only '${GOOD_ARGS.ref}'`),
-    'the ref reaches git unquoted; the allowlist is then the only thing standing between a ref and an option',
+    /diff --name-only '[^']+'/.test(oraclePrompt),
+    'the range reaches git unquoted; the allowlist is then the only thing between a ref and an option',
   );
 });
 
@@ -814,4 +822,103 @@ test('--json plus a refusal emits the reason as JSON, not zero bytes', () => {
   assert.equal(parsed.invocation, null, 'the key must be present and null, as on every other path');
   assert.equal(parsed.error, 'tree-unverified');
   assert.match(parsed.reason, /does not resolve to a commit/);
+});
+
+// ── An anchor the agent can read is not an anchor ─────────────────────────────────────────────
+//
+// SECOND INDEPENDENT REVIEWER, 2026-08-26. Both reviewers reached the REF_TIP_SHA defect on their
+// own; this one went further and asked what the surviving check is actually worth. The answer was:
+// nothing against a copying agent. Rendered for the router's real invocation, the oracle prompt
+// printed the expected sha FIVE times and the expected tree SEVEN, and `resolveTree()` guarantees
+// tree-HEAD == ref-tip — so all three required fields were strings the prompt had already handed
+// over. A check-runner standing anywhere on the machine could return a payload byte-identical to an
+// honest one without ever visiting the tree. The comment above oracleTreeMismatch() meanwhile
+// asserted it would have to "fabricate a sha it never read."
+//
+// The sha is out of that prompt now. The tree path cannot be — you cannot send an agent somewhere
+// without naming the somewhere — so the earned property is narrow and is stated narrowly in the
+// source: an oracle that never reached the tree cannot report its HEAD.
+
+test('the oracle prompt does NOT contain the sha it is being checked against', async () => {
+  const { oraclePrompt } = await runQa(GOOD_ARGS, goodOracle());
+  assert.ok(
+    !oraclePrompt.includes(HEAD_SHA),
+    'the expected sha is back in the oracle prompt — the agent can now copy the answer it is being tested on',
+  );
+  // The short forms too: a 7-char prefix is a usable sha and would be just as copyable.
+  assert.ok(!oraclePrompt.includes(HEAD_SHA.slice(0, 12)), 'an abbreviated form of the expected sha is in the prompt');
+});
+
+test('the oracle is still given a usable diff range — the sha was removed, not the range', async () => {
+  // `<base>...HEAD`, which inside the named tree is the same range as `<base>...<sha>`. If this
+  // regressed to no range at all, step 2 of the oracle would silently scope to nothing.
+  const { oraclePrompt } = await runQa(GOOD_ARGS, goodOracle());
+  assert.match(oraclePrompt, /diff --name-only 'origin\/main\.\.\.HEAD'/);
+});
+
+test('the tree path IS still in the prompt, and that is the stated residual', async () => {
+  // Asserted so nobody "hardens" this by removing the one value the oracle cannot work without.
+  const { oraclePrompt } = await runQa(GOOD_ARGS, goodOracle());
+  assert.ok(oraclePrompt.includes(REPO), 'the oracle must be told which tree to measure');
+});
+
+test('an oracle that copies the tree from its prompt but reports its own HEAD is caught', async () => {
+  // The copying agent, post-fix: it can echo `tree` because the prompt gave it, and it cannot echo
+  // `head` because the prompt did not. Whatever HEAD it reports from wherever it actually stood is
+  // not the sha qa.js is holding.
+  const { out, dispatched } = await runQa(GOOD_ARGS, goodOracle({
+    tree: REPO,
+    head: 'c0ffee0c0ffee0c0ffee0c0ffee0c0ffee0c0ffe',
+  }));
+  assert.equal(out.verdict, 'BLOCK');
+  assert.deepEqual(dispatched, ['oracle']);
+  assert.match(out.summary, /does not hold the commit under review/);
+});
+
+test('a ref with an option BEFORE the range is refused — a clean sha tip is not enough', async () => {
+  // Executed pre-fix: PASS, 7 agents dispatched, and the prompt carried
+  //   git -C '<tree>' diff --name-only '--output/tmp/x...origin/main...<sha>'
+  // `refTip()` takes everything after the LAST `...`, so an option in front leaves a valid sha at
+  // the tip and passed every other check. run-gate.mjs's resolveTree() already carried this guard
+  // for the tip; it is one hole seen from two angles and now guarded in both files.
+  for (const bad of [
+    `--output/tmp/RUNGATE_PWNED...origin/main...${HEAD_SHA}`,
+    `-Ofoo...origin/main...${HEAD_SHA}`,
+    `origin/main...-O${HEAD_SHA}`,
+  ]) {
+    const { out, dispatched } = await runQa({ ref: bad, tier: 'full', tree: REPO }, goodOracle());
+    assert.equal(out.verdict, 'BLOCK', `ref ${JSON.stringify(bad)} was accepted`);
+    assert.deepEqual(dispatched, [], `ref ${JSON.stringify(bad)} reached a dispatch`);
+  }
+  assert.equal(fsExists('/tmp/RUNGATE_PWNED'), false);
+});
+
+test('the wrong-tree blocker carries the check-runner output, not just an instruction', async () => {
+  // oraclePrompt() explicitly asks for the exact `cd`/`rev-parse` error in a check named "tree".
+  // The blocker used to drop it, so the one diagnostic the prompt goes out of its way to collect
+  // never reached the operator. The failing-check path always carried its output; this was an
+  // asymmetry, not a decision.
+  const { out } = await runQa(GOOD_ARGS, goodOracle({
+    tree: '/elsewhere',
+    checks: [{ name: 'tree', pass: false, output: "cd: /elsewhere: No such file or directory" }],
+  }));
+  assert.equal(out.blockers[0].id, 'oracle-wrong-tree');
+  assert.match(out.blockers[0].fix, /No such file or directory/,
+    'the operator gets an instruction but not the error the prompt collected for them');
+});
+
+test('the empty-findings hazard is WRITTEN DOWN where the next reader meets it', async () => {
+  // Five dimensions returning [] yields PASS — reproduced, and it is the designed behaviour for a
+  // genuinely clean diff. `ok: false` covers the reviewer that returns NOTHING; it does not cover
+  // one that returns an empty set it never earned, and this runtime loses ~half of all dispatches.
+  //
+  // NOT FIXED IN THIS CHANGE and deliberately not asserted as fixed. What is asserted is that the
+  // hazard is recorded in the source rather than living only in a review thread, because that is
+  // the difference between a known open item and one that gets rediscovered.
+  const { out } = await runQa(GOOD_ARGS, goodOracle(), []);
+  assert.equal(out.verdict, 'PASS', 'behaviour changed — if empty findings now block, delete this test and the comment it guards');
+
+  const src = fs.readFileSync(path.join(REPO, '.claude', 'workflows', 'qa.js'), 'utf8');
+  assert.match(src, /EMPTY findings ARRAY MEANS "CLEAN" AND ALSO MEANS "NEVER LOOKED"/,
+    'the open hazard is no longer documented at reviewDim, so the next reader will rediscover it');
 });
