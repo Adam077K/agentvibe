@@ -753,3 +753,123 @@ test('prune answered with anything but y deletes nothing', () => {
   assert.match(r.stdout + r.stderr, /Cancelled/);
   assert.ok(branchExists(proj), 'a declined prune deleted a branch');
 });
+
+// ── the destination, not just the gate ───────────────────────────────────────────────────────
+//
+// `$n` was interpolated UNQUOTED into the ERE that selects the branch, so a `|` in it opened a
+// top-level alternative the caller controlled and `merge 'x$|main$|y'` selected `main`. The PR
+// route then ran `git push origin main`. The gate was never bypassed — a verdict bound to main's
+// own diff still had to exist — so this is a wrong-DESTINATION defect, and it was live exactly
+// during the window this change exists to close: with enforce_admins false an admin push to main
+// succeeds and qa-lead-pass.yml never runs on it.
+
+/** The upstream's view of a ref, so "was main pushed" is asked of the upstream. */
+const upstreamRev = (up, ref) => run('git', ['rev-parse', '--verify', ref], up).stdout.trim();
+
+test('a regex-injecting CEO number is REFUSED, and main is never pushed', () => {
+  const { proj, up, cfg, root } = fixture();
+  const gh = stubGh(root);
+
+  // Put local main ahead of the upstream, so a push of main would be visible as a moved ref
+  // rather than as a no-op that proves nothing.
+  fs.writeFileSync(path.join(proj, 'local-only.txt'), 'not on the upstream\n');
+  git(proj, ['add', '-A']);
+  git(proj, ['commit', '-qm', 'local main moves ahead']);
+  const upstreamMainBefore = upstreamRev(up, 'main');
+  assert.notEqual(git(proj, ['rev-parse', 'main']).trim(), upstreamMainBefore, 'the fixture did not diverge');
+
+  const r = run('bash', [WARROOM, '--config', cfg, 'merge', 'x$|main$|y'], REPO, gh.env);
+  const text = r.stdout + r.stderr;
+
+  assert.notEqual(r.code, 0, 'a regex-injecting CEO number was accepted');
+  assert.match(text, /CEO number must be digits/, 'the refusal did not name what was wrong');
+  assert.equal(upstreamRev(up, 'main'), upstreamMainBefore, 'main was pushed to the upstream');
+  assert.equal(gh.ghArgs(), '', 'gh ran for a branch the program should never have selected');
+  assert.doesNotMatch(text, /Pushing main/, 'the program announced a push of main');
+});
+
+test('a non-numeric CEO number is refused before any branch is selected', () => {
+  const { cfg, root } = fixture();
+  const gh = stubGh(root);
+  const r = run('bash', [WARROOM, '--config', cfg, 'merge', 'main'], REPO, gh.env);
+  assert.notEqual(r.code, 0);
+  assert.match(r.stdout + r.stderr, /CEO number must be digits/);
+  assert.equal(gh.ghArgs(), '');
+});
+
+test('the push refuses a ref that is not a ceo branch, independently of how it was selected', () => {
+  // The second of the two guards, driven directly. The first (numeric `$n`) now makes it
+  // unreachable through cmd_merge, which is the point: it is there so a route added later cannot
+  // push an arbitrary ref to origin by reaching this helper another way. Extracting it is the only
+  // way to exercise a guard whose job is to catch a caller that does not exist yet.
+  const { proj, up, cfg, root } = fixture();
+  const src = fs.readFileSync(WARROOM, 'utf8');
+  const fn = src.slice(src.indexOf('_open_pull_request() {'), src.indexOf('\n# Feature F5'));
+  assert.ok(fn.includes('not-a-ceo-branch'), 'could not extract _open_pull_request');
+
+  const before = upstreamRev(up, 'main');
+  const r = run('bash', ['-c', [
+    'set -u',
+    `PROJECT_DIR=${JSON.stringify(proj)}`,
+    `PROJECT_STATE_DIR=${JSON.stringify(path.join(root, 'state2'))}`,
+    "C_RED='' C_GREEN='' C_OVERLAY='' RESET='' BOLD='' SESSION=fixture WORKTREES_DIR=/nonexistent",
+    '_log_event() { :; }',
+    fn,
+    '_open_pull_request main full 1',
+  ].join('\n')]);
+
+  assert.notEqual(r.code, 0, 'the helper agreed to push main');
+  assert.match(r.stdout + r.stderr, /reason=not-a-ceo-branch/);
+  assert.equal(upstreamRev(up, 'main'), before, 'main was pushed by the guard that refuses to push main');
+});
+
+// ── what gh said, versus what was concluded from it ──────────────────────────────────────────
+
+test('a JSON null from gh pr list is NOT an open pull request', () => {
+  // `--jq '.[0].url'` emits `null` when there is no open PR. Unvalidated, that became
+  // "✓ Pull request already open: null", exit 0, logged merge_pr_opened, with pr create never
+  // called — a success reported from output that says the opposite.
+  const { up, cfg, root } = fixture();
+  const { proj } = { proj: path.join(root, 'proj') };
+  recordAndCommit(proj);
+  const gh = stubGh(root, { prList: 'null' });
+
+  const r = merge(cfg, gh.env);
+  const text = r.stdout + r.stderr;
+  assert.equal(r.code, 0, `a null from pr list broke the run:\n${text}`);
+  assert.doesNotMatch(text, /already open: null/, 'a JSON null was reported as a pull request');
+  assert.match(gh.ghArgs(), /pr create/, 'pr create was skipped because of a null');
+  assert.match(text, /Pull request opened: https:\/\/github\.com\/o\/r\/pull\/7/);
+  assert.ok(onUpstream(up));
+});
+
+test('gh create exiting 0 with no URL records url=unknown, not chatter', () => {
+  // Refusing would claim a failure over a PR that very likely exists. Inventing a URL from the
+  // last line of output puts a location nobody can visit into the audit trail. Neither: succeed,
+  // and say the URL is unknown.
+  const { cfg, root } = fixture();
+  recordAndCommit(path.join(root, 'proj'));
+  const gh = stubGh(root, { prCreate: 'Warning: 3 uncommitted changes' });
+
+  const r = merge(cfg, gh.env);
+  const text = r.stdout + r.stderr;
+  assert.equal(r.code, 0, `a URL-less success was turned into a failure:\n${text}`);
+  assert.match(text, /printed no pull request URL/);
+  assert.match(eventsOf(root), /state=created url=unknown/, 'the audit trail did not record the URL as unknown');
+  assert.doesNotMatch(eventsOf(root), /url=Warning/, "gh's chatter was recorded as a pull request URL");
+});
+
+test('prune on a detached HEAD does not count the pseudo-line as a kept branch', () => {
+  // `git branch` emits `(HEAD detached at ceo-1-...)`, which an unanchored `grep ceo-` matched.
+  // Once failures were counted, that line arrived as a branch that could not be deleted, so a run
+  // that deleted everything reported a failure — a false alarm inside the counter added to make
+  // the signal trustworthy.
+  const { proj, cfg } = fixture();
+  git(proj, ['checkout', '-q', '--detach', BRANCH]);
+
+  const r = run('bash', [WARROOM, '--config', cfg, 'prune-branches'], REPO, undefined, 'y\n');
+  const text = r.stdout + r.stderr;
+  assert.doesNotMatch(text, /HEAD detached/, 'the detached-HEAD pseudo-line was treated as a branch');
+  assert.match(text, /✓ 1 branch\(es\) deleted\./, 'a clean prune did not report a clean prune');
+  assert.doesNotMatch(text, /kept/, 'a failure was reported that did not happen');
+});
