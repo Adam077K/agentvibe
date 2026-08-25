@@ -31,6 +31,16 @@
 # The operational consequence, stated once: treat `.github/workflows/**` as unprotected
 # against a direct push until CODEOWNERS or a push restriction is added. Both are repository
 # settings and only the founder can set them.
+#
+# ── AND NO STEP HERE IS AN `&&` CHAIN OF CHECKS ──────────────────────────────────────────────
+# Five steps used to be: `check:dispatch`, `check:dispatch-prompt`, `check:memory`,
+# `check:warroom` and `check:ledger` named ONE step each while their package.json bodies chained
+# 18 checks behind those 5 names. That is the same short-circuit one level down, in the one
+# place a step-level `if:` cannot reach — `check:ledger` reported a single red step while
+# `ledger lint`, `ledger build --check` and `ledger verify` had not run. They are 18 steps here
+# now, and scripts/lib/check-suite.js REFUSES a suite step whose command carries `&&`, so it
+# cannot come back through package.json. The one `&&` left is Mission Control's
+# `bun install ... && npm run check:mc`, where the second cannot run without the first.
 name: CI
 
 on:
@@ -155,18 +165,33 @@ jobs:
       # This is the regression test for the `agentType: 'reviewer'` repair in qa.js, and it runs
       # its own mutation gate first: a fixture with a known-bad site the checker must flag, so a
       # parser that silently stops seeing dispatches fails here rather than reporting clean.
-      - name: Dispatch agentType
-        run: npm run check:dispatch
+      # Three steps, because `check:dispatch` chained them with `&&`: the mutation gate ran
+      # first, so a failure in it skipped the checker whose parser it exists to guard, and the
+      # runner reported one red step.
+      - name: Dispatch agentType — parser mutation gate
+        run: npm run test:dispatch
+
+      - name: Dispatch agentType — stdout flush regression
+        run: npm run test:dispatch-flush
+
+      - name: Dispatch agentType — checker
+        run: npm run check:dispatch-agenttype
 
       # PS-DISPATCH-BRIEF-SIZE: warns on inline literals ≥30,000 chars or fenced blocks >200 lines
       # in .claude/workflows/*.js dispatch sites. WARN posture — exits 0 on violations, 1 only on
       # the non-vacuity floor (scanner broken). Memory budget: DECISIONS.md ≤50 entries + ≤40,000 bytes;
       # LONG-TERM.md ≤100 lines. Both fail the build (exits 1) on a real violation.
-      - name: Dispatch prompt size
-        run: npm run check:dispatch-prompt
+      - name: Dispatch prompt size — tests
+        run: npm run test:dispatch-prompt
 
-      - name: Memory budget
-        run: npm run check:memory
+      - name: Dispatch prompt size — scanner
+        run: npm run check:dispatch-prompt-size
+
+      - name: Memory budget — tests
+        run: npm run test:memory
+
+      - name: Memory budget — checker
+        run: npm run check:memory-budget
 
       # CODEBASE-MAP.md is generated, not written. A hand-maintained map is accurate exactly
       # until the first person forgets, and then it is trusted and wrong — which is worse
@@ -185,8 +210,23 @@ jobs:
       # and does not exist on a CI runner. Parity is therefore verified locally
       # and recorded in the PR; CI covers syntax and the guard rails. This limit
       # is stated rather than papered over.
-      - name: Warroom launcher + install guard rails
-        run: npm run check:warroom
+      # Five steps, because `check:warroom` chained them with `&&`: a syntax error in
+      # bin/warroom skipped the other four, the 13 installer guard-rail tests among them, and
+      # reported a single failure.
+      - name: Warroom launcher syntax
+        run: npm run check:warroom-launcher
+
+      - name: Warroom project template syntax
+        run: npm run check:warroom-template
+
+      - name: Warroom installer syntax
+        run: npm run check:warroom-installer
+
+      - name: Warroom parity script syntax
+        run: npm run check:warroom-parity
+
+      - name: Warroom install guard rails
+        run: npm run test:warroom
 
       # The lens layer — the encoded expertise, as linted data rather than agent prose.
       # These tests construct the failures rather than trusting the rules fire: a vague
@@ -341,8 +381,26 @@ jobs:
       #
       # The canary at docs/06-codebase/ledger-canary.md must produce exactly two
       # would_block lines on every run. Zero means the resolvers stopped firing.
-      - name: Claim ledger
-        run: npm run check:ledger
+      # Six steps, because `check:ledger` chained them with `&&` — the worst instance in the
+      # repository. A test:claims failure skipped `ledger lint`, `ledger build --check` AND
+      # `ledger verify`, which is the ledger's entire enforcement, while CI showed one red step.
+      - name: Claim ledger — parser and schema
+        run: npm run test:claims
+
+      - name: Claim ledger — tier classifier
+        run: npm run test:classifier
+
+      - name: Claim ledger — resolvers
+        run: npm run test:ledger
+
+      - name: Claim ledger — lint
+        run: npm run check:ledger-lint
+
+      - name: Claim ledger — index reproduces
+        run: npm run check:ledger-build
+
+      - name: Claim ledger — verify (shadow, blocks on migration/deploy/self-edit)
+        run: npm run check:ledger-verify
 
       # Mission Control's rail: bun install pinned to the committed lockfile (a drifted
       # lockfile fails here rather than silently resolving something else), then the

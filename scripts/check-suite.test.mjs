@@ -21,7 +21,14 @@
 // WHAT IT ASSERTS, AND WHAT IT LEAVES OPEN:
 //   ✓ the guard REFUSES a real package.json with a step removed from STEPS — proved by mutation,
 //     not by a green run against a tree where nothing is wrong
-//   ✓ transitive reach counts, so check:ledger's three tests are not duplicated into STEPS
+//   ✓ the five delegating parents are EXCLUDED aliases and every link they hid is a STEP — this
+//     line said the opposite until 2026-08-25 ("transitive reach counts, so check:ledger's three
+//     tests are not duplicated into STEPS"), and reaching a script is not running it separately:
+//     the parents were `&&` chains, so 18 links reported as 5 steps and the links after a failing
+//     one never ran. Transitive reach is still proved, against a constructed graph
+//   ✓ a STEP whose command carries `&&` is REFUSED, so the chain cannot return through
+//     package.json after being taken out of STEPS, and an alias exemption is refused the moment
+//     one of its links leaves the suite
 //   ✓ the runner runs a step after an earlier one failed, and says so in the tally
 //   ✓ ~200KB of step output survives to the caller through a pipe — the process.exit() defect
 //   ✓ a ZERO-step run is refused, and --steps/--root are refused outright without the harness
@@ -61,7 +68,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { STEPS, EXCLUDED, auditSuite, reachable } = require('./lib/check-suite.js');
+const { STEPS, EXCLUDED, auditSuite, reachable, aliasLinks } = require('./lib/check-suite.js');
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RUNNER = path.join(REPO, 'scripts', 'run-checks.mjs');
@@ -170,20 +177,95 @@ test('every STEP is GOVERNED — an ungoverned step could leave the suite in sil
   );
 });
 
-test('transitive reach counts — the five delegating parents are not duplicated into STEPS', () => {
-  const reached = reachable(scripts, STEPS);
-  for (const [child, parent] of [
-    ['test:claims', 'check:ledger'],
-    ['test:classifier', 'check:ledger'],
-    ['test:ledger', 'check:ledger'],
-    ['test:dispatch', 'check:dispatch'],
-    ['test:warroom', 'check:warroom'],
-    ['test:memory', 'check:memory'],
-    ['test:dispatch-prompt', 'check:dispatch-prompt'],
-  ]) {
-    assert.ok(reached.has(child), `${child} is not reachable — ${parent} should reach it`);
-    assert.ok(!STEPS.includes(child), `${child} was duplicated into STEPS; ${parent} already runs it`);
+/**
+ * The five delegating parents, and what each one used to hide behind a single name.
+ *
+ * Written out rather than derived from package.json, because a list derived from the thing it
+ * checks agrees with it by construction. The parity between this literal and the real script
+ * bodies is asserted below.
+ */
+const ALIASES = {
+  'check:ledger': [
+    'test:claims', 'test:classifier', 'test:ledger',
+    'check:ledger-lint', 'check:ledger-build', 'check:ledger-verify',
+  ],
+  'check:warroom': [
+    'check:warroom-launcher', 'check:warroom-template', 'check:warroom-installer',
+    'check:warroom-parity', 'test:warroom',
+  ],
+  'check:dispatch': ['test:dispatch', 'test:dispatch-flush', 'check:dispatch-agenttype'],
+  'check:dispatch-prompt': ['test:dispatch-prompt', 'check:dispatch-prompt-size'],
+  'check:memory': ['test:memory', 'check:memory-budget'],
+};
+
+test('the five delegating parents are EXCLUDED aliases, and every link is a STEP of its own', () => {
+  // SUPERSEDED 2026-08-25, and this is a retraction. This test used to assert the OPPOSITE: that
+  // test:claims, test:classifier, test:ledger, test:dispatch, test:warroom, test:memory and
+  // test:dispatch-prompt must NOT appear in STEPS, because their parents reached them
+  // transitively. Transitive reach IS real — the mechanism is still proved, in the test below —
+  // but reaching a script is not running it separately. The parents were `&&` chains, 18 links
+  // behind 5 names, so `check:ledger` reported as ONE step and a test:claims failure skipped
+  // `ledger lint`, `ledger build --check` and `ledger verify` while the tally said one step
+  // failed. The suite is the links now; the parents survive only as aliases, because docs,
+  // session files and CLAUDE.md cite those spellings.
+  for (const [parent, links] of Object.entries(ALIASES)) {
+    assert.deepEqual(
+      aliasLinks(scripts[parent]),
+      links,
+      `${parent} in package.json no longer delegates to exactly the links this test pins`
+    );
+    assert.ok(!STEPS.includes(parent), `${parent} is back in STEPS as one step, hiding ${links.length} links`);
+    assert.ok(
+      Object.prototype.hasOwnProperty.call(EXCLUDED, parent),
+      `${parent} left STEPS with no EXCLUDED entry — the silent omission this guard exists to catch`
+    );
+    for (const link of links) {
+      assert.ok(STEPS.includes(link), `${link} is not a STEP, so the suite no longer runs it at all`);
+    }
   }
+});
+
+test('the guard REFUSES an EXCLUDED alias whose links are not all in the suite', () => {
+  // The mechanism the entries above lean on: an alias is exempt BECAUSE its links are steps. Drop
+  // one link and the exemption starts hiding a check that runs nowhere, which is what the
+  // check:mc entry was written to prevent, arriving through a different door.
+  const { failures } = auditSuite({ scripts, steps: STEPS.filter((s) => s !== 'check:ledger-verify') });
+
+  assert.ok(
+    failures.some((f) => f.includes('EXCLUDED names "check:ledger"') && f.includes('check:ledger-verify')),
+    `dropping a link from the suite did not fail the alias exemption:\n${failures.join('\n')}`
+  );
+});
+
+test('the guard REFUSES a STEP whose command is an && chain — the defect, one level down', () => {
+  // `npm run check` spawns each step and reads one exit code; it cannot see inside a step. So a
+  // chain reintroduced in package.json would restore the exact failure this runner replaced, and
+  // the only place it is catchable is on the command string.
+  const mutated = { ...scripts, 'test:sandbox': 'npm run test:hooks && npm run test:budget' };
+  const { failures } = auditSuite({ scripts: mutated });
+
+  assert.ok(
+    failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes('`&&` chain')),
+    `an && chain in a step was accepted:\n${failures.join('\n') || '(no failures at all)'}`
+  );
+});
+
+test('transitive reach still counts — the mechanism, proved where the tree no longer exercises it', () => {
+  // Every STEP is a single command now, so reachable() over the real tree returns the steps
+  // themselves and this property would pass vacuously against it. The alias check in auditSuite()
+  // depends on the walk, so it is proved against a constructed graph instead.
+  const graph = {
+    'check:parent': 'npm run test:child && npm run check:grandparent',
+    'check:grandparent': 'npm run test:grandchild',
+    'test:child': 'node -e ""',
+    'test:grandchild': 'node -e ""',
+    'test:elsewhere': 'node -e ""',
+  };
+  const reached = reachable(graph, ['check:parent']);
+
+  assert.ok(reached.has('test:child'), 'a direct `npm run` link was not reached');
+  assert.ok(reached.has('test:grandchild'), 'reach stopped at one hop — it must be transitive');
+  assert.ok(!reached.has('test:elsewhere'), 'an unlinked script was reported as reached');
 });
 
 test('the nine steps the && chain used to skip are all in the suite', () => {
@@ -227,10 +309,27 @@ test('an exclusion that says CI still covers it is checked against ci.yml, not t
   // reverted. Citations to files in this repo CAN be checked, so these are.
   const ci = fs.readFileSync(path.join(REPO, '.github', 'workflows', 'ci.yml'), 'utf8');
 
-  /** Names whose reason claims ci.yml covers them, where ci.yml does not invoke them. */
+  /**
+   * Does ci.yml invoke this script by name?
+   *
+   * Anchored on the right with a lookahead rather than a bare substring test, because
+   * `npm run check:dispatch-agenttype` CONTAINS `npm run check:dispatch` — so a plain
+   * `includes()` would report the alias covered by a step that runs one of its links.
+   */
+  const invokes = (workflow, name) =>
+    new RegExp(`npm run ${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w:-])`).test(workflow);
+
+  /** Covered by ci.yml — by name, or, for an alias, through every one of its links. */
+  const runsInCi = (workflow, name) => {
+    if (invokes(workflow, name)) return true;
+    const links = aliasLinks(scripts[name]);
+    return Boolean(links) && links.every((link) => invokes(workflow, link));
+  };
+
+  /** Names whose reason claims ci.yml covers them, where ci.yml does not run them. */
   const uncovered = (excluded, workflow) =>
     Object.entries(excluded)
-      .filter(([name, reason]) => /ci\.yml/.test(reason) && !workflow.includes(`npm run ${name}`))
+      .filter(([name, reason]) => /ci\.yml/.test(reason) && !runsInCi(workflow, name))
       .map(([name]) => name);
 
   assert.deepEqual(
@@ -247,6 +346,15 @@ test('an exclusion that says CI still covers it is checked against ci.yml, not t
     uncovered(EXCLUDED, withoutStep),
     ['check:mc'],
     'removing the Mission Control step from ci.yml did not fail this check, so it is not evidence'
+  );
+
+  // And the alias path, which is the load-bearing half now that five entries lean on it: an alias
+  // is covered by ci.yml only while EVERY link has a step there. Delete one and it must bite.
+  const withoutLink = ci.replace(/npm run check:ledger-verify/g, 'npm run something-else');
+  assert.deepEqual(
+    uncovered(EXCLUDED, withoutLink),
+    ['check:ledger'],
+    'deleting the `ledger verify` step from ci.yml left the check:ledger exemption looking covered'
   );
 
   // And the fact the check:mc entry's account of its own history depends on. If someone reinstates
