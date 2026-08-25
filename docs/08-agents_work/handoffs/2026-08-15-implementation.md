@@ -1,3 +1,6 @@
+> **HISTORICAL — superseded by [docs/STATUS.md](../../STATUS.md).** Retained for the record.
+> Read STATUS.md for current state; nothing here is a live instruction.
+
 # Handoff: implement the seven-agent system
 
 **From:** ceo, session `ceo-2-1786445435` · **To:** the next session · **Date:** 2026-08-15 · **Priority:** High

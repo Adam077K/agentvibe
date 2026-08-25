@@ -1,3 +1,6 @@
+> **HISTORICAL — superseded by [docs/STATUS.md](../../STATUS.md).** Retained for the record.
+> Read STATUS.md for current state; nothing here is a live instruction.
+
 # Build brief — complete the harness, one session
 
 **Task:** Finish the agent harness autonomously. **From:** ceo (`ceo-1-1786445435`) · **To:** the build session
