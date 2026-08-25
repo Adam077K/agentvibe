@@ -327,6 +327,60 @@ test('the operator check is quote-aware — a rule that fires on correct code ge
   assert.deepEqual(legit.failures, [], `a quoted semicolon was refused:\n${legit.failures.join('\n')}`);
 });
 
+test('a `&` adjacent to `>` is a redirect, not backgrounding — and redirects keep the exit code', () => {
+  // `bash -c 'false 2>&1'` exits 1. Reporting `&` here would attach this rule's message — "the
+  // step's exit code becomes the last command's" — to a case where that sentence is FALSE, and a
+  // rule that fires on correct code with a wrong explanation gets deleted rather than obeyed. Latent
+  // when fixed: no script in the tree used the shape, so this is a negative control, not a bug fix.
+  assert.deepEqual(shellOperators('node x.mjs 2>&1'), []);
+  assert.deepEqual(shellOperators('node x.mjs >&2'), []);
+  assert.deepEqual(shellOperators('node x.mjs &>log'), []);
+
+  // Backgrounding still bites, and a redirect does not launder a pipe sitting beside it.
+  assert.deepEqual(shellOperators('npm run a & npm run b'), ['&']);
+  assert.deepEqual(shellOperators('node x.mjs 2>&1 | tee log'), ['|']);
+
+  const redirecting = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'node scripts/x.mjs 2>&1' } });
+  assert.deepEqual(redirecting.failures, [], `a redirect was refused as a chain:\n${redirecting.failures.join('\n')}`);
+});
+
+test('the three DISCLOSED holes in resolveChain are pinned, so a narrowing is not mistaken for one', () => {
+  // resolveChain() follows only a BARE `npm run <name>`. Its doc comment discloses three shapes it
+  // walks past, and under-reporting is the safe direction — this check refuses what it understands
+  // and never guesses. But with nothing asserting them, a future narrowing of the regex is
+  // INDISTINGUISHABLE from the intended hole: both look like "this case does not fire". These cases
+  // pin the current behaviour so the difference is visible in a diff.
+  //
+  // THEY ARE NOT A CLAIM THAT THE SHAPES ARE SAFE. Each hides a chain from the guard. If one ever
+  // appears in package.json, widen resolveChain and turn the matching case here positive — do not
+  // read a green run of this test as coverage of these shapes.
+  const cases = {
+    'npm run x --silent': { 'test:sandbox': 'npm run check:inner --silent', 'check:inner': 'npm run a && npm run b' },
+    'npx': { 'test:sandbox': 'npx some-runner', 'check:inner': 'npm run a && npm run b' },
+    'chain inside quotes': { 'test:sandbox': `sh -c "npm run a && npm run b"` },
+  };
+
+  for (const [shape, overlay] of Object.entries(cases)) {
+    const { failures } = auditSuite({ scripts: { ...scripts, ...overlay } });
+    const operatorFindings = failures.filter((f) => f.includes('shell operator'));
+    assert.deepEqual(
+      operatorFindings, [],
+      `resolveChain now REPORTS the "${shape}" shape. That is an improvement, not a regression — but ` +
+        `this case documented it as a known hole, so update the doc comment in scripts/lib/check-suite.js ` +
+        `and move this shape to a positive assertion. Do not delete the case.`
+    );
+  }
+
+  // The control that keeps the three above meaningful: the shape resolveChain DOES follow still bites.
+  const followed = auditSuite({
+    scripts: { ...scripts, 'test:sandbox': 'npm run check:inner', 'check:inner': 'npm run a && npm run b' },
+  });
+  assert.ok(
+    followed.failures.some((f) => f.includes('shell operator')),
+    'the bare `npm run <name>` delegation stopped being followed — the holes above are now the whole rule'
+  );
+});
+
 test('transitive reach still counts — the mechanism, proved where the tree no longer exercises it', () => {
   // Every STEP is a single command now, so reachable() over the real tree returns the steps
   // themselves and this property would pass vacuously against it. The alias check in auditSuite()

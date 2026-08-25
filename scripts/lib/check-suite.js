@@ -309,6 +309,13 @@ function shellOperators(command) {
     if (c === '|' && src[i + 1] === '|') { found.add('||'); i += 1; continue; }
     if (c === '|') { found.add('|'); continue; }
     if (c === ';') { found.add(';'); continue; }
+    // A `&` ADJACENT TO `>` IS A REDIRECT, NOT BACKGROUNDING — `2>&1`, `>&2`, `&>log`. It does not
+    // hide a command and it does not touch the exit code: `bash -c 'false 2>&1'` exits 1. Reporting
+    // it would attach this rule's message — "the step's exit code becomes the last command's" — to a
+    // case where that sentence is simply false, and a rule that fires on correct code with a wrong
+    // explanation is one someone deletes rather than obeys. Latent when fixed 2026-08-26: no script
+    // in the tree used the shape. A pipe alongside a redirect is still reported, on the pipe.
+    if (c === '&' && (src[i - 1] === '>' || src[i + 1] === '>')) continue;
     if (c === '&') { found.add('&'); continue; }
     if (c === '\n' || c === '\r') { found.add('\\n'); continue; }
   }
@@ -329,10 +336,18 @@ const DELEGATION = /^npm\s+run\s+([\w:-]+)$/;
  * rather than a fixed number of hops, and a cycle terminates it.
  *
  * Its narrowness is the same narrowness as aliasLinks(): only a BARE `npm run <name>` is followed.
- * `npm run x --silent`, `npx`, npm-run-all and a script that shells out on its own are invisible
- * here and will be walked past. That is the safe direction — this check under-reports rather than
- * refusing a command it did not understand — and it is the same limitation the header records for
- * reachable().
+ * `npm run x --silent`, `npx`, npm-run-all, `sh -c "npm run a && npm run b"` (the chain is inside
+ * quotes, so the scanner correctly does not see it) and a script that shells out on its own are
+ * invisible here and will be walked past. That is the safe direction — this check under-reports
+ * rather than refusing a command it did not understand — and it is the same limitation the header
+ * records for reachable().
+ *
+ * THREE OF THOSE SHAPES ARE PINNED BY A TEST, and that is not the same as covering them.
+ * `the three DISCLOSED holes in resolveChain are pinned` in scripts/check-suite.test.mjs asserts
+ * that `--silent`, `npx` and a quoted chain currently produce NO finding. Without it, a future
+ * narrowing of the regex would be indistinguishable from the hole documented here — both look like
+ * "this case does not fire" — so the test exists to make the difference visible in a diff. If one
+ * of these shapes ever appears in package.json, widen this function and turn that case positive.
  *
  * Returns [{ name, command }] starting with `name` itself. An unknown name returns [].
  */

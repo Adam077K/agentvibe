@@ -314,15 +314,40 @@ const HOME_FIXTURE = (() => {
 //
 // Forcing CI=1 would have covered the symptom and lost that distinction — it turns a locked-down
 // laptop red for a reason the developer cannot act on, which is how a check gets routed around.
-const HOME_SELECTION_DEFECT = !HOME_FIXTURE && rejected('already-allowed').length > 0
+//
+// EVERY rejection must be `already-allowed`, not merely one of them — and getting that wrong landed
+// the outcome the paragraph above rejects. The predicate read `rejected('already-allowed').length >
+// 0` for one day. On a machine where `~/.agentvibe` has never been created, a sandboxed agent shell
+// classifies the three bases as already-allowed / EPERM / ENOENT — one hit, so the run HARD-FAILED
+// off CI. Reproduced 2026-08-26 with $HOME pointed at an empty directory and CI unset: 0 skipped,
+// 14 failures. `qa.js` runs `npm run check` as its binding oracle in exactly that shell, so this
+// BLOCKED the gate on a fresh machine, for a reason the developer could not act on. That is what
+// forcing CI=1 was rejected to avoid, arriving through a different door.
+//
+// `~/.agentvibe` is created lazily — scripts/lib/usage.js writes a cache there on first use — and
+// nothing creates it eagerly. The test does NOT create it: a test that writes state outside the
+// project to make itself pass is a worse trade than a skip, and it would make the very base whose
+// neutrality it depends on.
+const HOME_SELECTION_DEFECT =
+  !HOME_FIXTURE &&
+  HOME_FIXTURE_REJECTED.length > 0 &&
+  HOME_FIXTURE_REJECTED.every((r) => r.kind === 'already-allowed')
 const HOME_SKIP = (HOME_FIXTURE || process.env.CI || HOME_SELECTION_DEFECT) ? false
   : `no writable directory outside the roots this hook already allows: ${rejectedText()}. Re-run with TMPDIR pointed outside them.`
 
-/** Never dereferences null: an absent fixture fails loudly, with its cause attached. */
+/**
+ * Never dereferences null: an absent fixture fails loudly, with the cause it actually found.
+ *
+ * Three messages, because there are three causes and a remedy that names the wrong one is worse
+ * than none. The `already-allowed` branch used to be reached on a fresh machine and told the reader
+ * to "add a base outside the hook's allowed roots to HOME_FIXTURE_BASES" — while that list already
+ * contained one, unusable only because the directory did not exist yet.
+ */
 function homeFixture() {
+  const environmental = rejected('unwritable')
   assert.ok(HOME_FIXTURE, HOME_SELECTION_DEFECT
-    ? `no neutral $HOME fixture could be built, and at least one candidate base was refused because THE HOOK ALREADY ALLOWS IT. That is this file's fixture list being wrong, not the machine — add a base outside the hook's allowed roots to HOME_FIXTURE_BASES. It is not skippable: these five cases are the ones the gate's oracle runs, and (b) is the write that disarms every rule in this file. Candidate bases refused: ${rejectedText()}`
-    : `no neutral $HOME fixture could be built and CI is set — these cases cannot be skipped on a runner, because a skip there reports "checked" for something never checked. Candidate bases refused: ${rejectedText()}`)
+    ? `no neutral $HOME fixture could be built, and EVERY candidate base was refused because THE HOOK ALREADY ALLOWS IT. That is this file's fixture list being wrong, not the machine — add a base outside the hook's allowed roots to HOME_FIXTURE_BASES. It is not skippable: these five cases are the ones the gate's oracle runs, and (b) is the write that disarms every rule in this file. Candidate bases refused: ${rejectedText()}`
+    : `no neutral $HOME fixture could be built and CI is set — these cases cannot be skipped on a runner, because a skip there reports "checked" for something never checked. ${environmental.length ? `${environmental.length} of ${HOME_FIXTURE_REJECTED.length} bases were refused by the MACHINE, not by the fixture list${environmental.some((r) => /ENOENT/.test(r.why)) ? ' — and an ENOENT here means the directory has not been created yet, not that the base is wrong. ~/.agentvibe is created lazily on first use' : ''}. ` : ''}Candidate bases refused: ${rejectedText()}`)
   return HOME_FIXTURE
 }
 
