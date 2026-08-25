@@ -83,10 +83,12 @@ The test: `scripts/pre-tool-use.test.mjs`, **the case titled *"ALLOWS a write to
 
 > *Superseded 2026-08-26: this cited `scripts/pre-tool-use.test.mjs:228`. That line is now a **comment**.*
 >
-> *No corrected line number is given, and the reason is that the correction rotted twice while being
-> written: the hermetic-`$HOME` fix moved the case from `:228` to `:306`, and the fixture-base fix later
-> the same day moved it to `:341`. A `path:line` locator into a file the same change edits is not a
-> citation, it is a race. Find it by title — `grep -n 'ALLOWS a write to a file under'`.*
+> **A line number in prose rots the next time anyone edits the file above it — and this one rotted twice
+> inside a single change.** *`:228` → `:306` when the hermetic-`$HOME` fix landed → `:341` when the
+> fixture-base fix landed hours later. The correction went stale while it was being written, under
+> observation, which is the whole argument in one example: a `path:line` locator into a file the same
+> change edits is not a citation, it is a race. No replacement number is given here on purpose. Cite by
+> test title and find it with `grep -n 'ALLOWS a write to a file under'`.*
 >
 > *Note also what could not have caught this: `npm run check:citations` existence-checks the **file**, not
 > the line, so a rotted `path:line` is structurally outside its reach. Nothing in this repo checks line
@@ -238,8 +240,14 @@ npm run check  →  43 of 43 passed · 0 failed · exit 0
 ```
 
 macOS, sandbox armed, measured 2026-08-26 in this worktree on `fix/wave-1-review-findings`, with the tree
-at `833b4d8` — the commit before this file's own — plus this file's edits, which no step reads. Derive the
-denominator, never quote it:
+at `d5b2e04` — the commit before this file's own — plus this file's edits, which no step reads.
+
+*That commit reference was `833b4d8` an hour earlier, and the rule at the top of this file is why it is not
+still saying so: a further change landed after STATUS.md was written, so STATUS.md was rewritten to be last
+again rather than left pointing at a tree that no longer existed. The rule costs a second pass and this is
+what the second pass buys.*
+
+Derive the denominator, never quote it:
 `node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **43**.
 
 **`43 of 43 · 0 failed` is the figure. It is not 42 and it is not 44.**
