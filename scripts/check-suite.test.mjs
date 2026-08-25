@@ -26,9 +26,14 @@
 //     tests are not duplicated into STEPS"), and reaching a script is not running it separately:
 //     the parents were `&&` chains, so 18 links reported as 5 steps and the links after a failing
 //     one never ran. Transitive reach is still proved, against a constructed graph
-//   ✓ a STEP whose command carries `&&` is REFUSED, so the chain cannot return through
-//     package.json after being taken out of STEPS, and an alias exemption is refused the moment
-//     one of its links leaves the suite
+//   ✓ a STEP whose RESOLVED command carries any shell control operator is REFUSED — `&&`, `||`,
+//     `;`, `|`, `&` and a newline — so the chain cannot return through package.json after being
+//     taken out of STEPS, nor through a wrapper script one or more `npm run` hops away, and an
+//     alias exemption is refused the moment one of its links leaves the suite.
+//     *Superseded 2026-08-26: this line read "a STEP whose command carries `&&`", which is what the
+//     guard checked. Four mutations walked past it — `;`, `||`, `|` and a one-hop wrapper, each
+//     measured at ZERO findings — and `;` is the worst of them, because `bash -c 'false ; true'`
+//     exits 0 and the failure leaves no red step at all.*
 //   ✓ the runner runs a step after an earlier one failed, and says so in the tally
 //   ✓ ~200KB of step output survives to the caller through a pipe — the process.exit() defect
 //   ✓ a ZERO-step run is refused, and --steps/--root are refused outright without the harness
@@ -51,12 +56,15 @@
 //     checked instead — ci.yml, .claude/settings.json — because those resolve.
 //   ✗ nothing here checks that a step ASSERTS anything. Wiring is not value: a step that exits 0
 //     unconditionally passes this file and always will.
-//   ✗ nothing here runs the real 30 steps for real. The full-suite verdict IS covered, against a
-//     fixture that stubs all 30 names green — which proves the wording and the count, not the
+//   ✗ nothing here runs the real steps for real. The full-suite verdict IS covered, against a
+//     fixture that stubs every STEPS name green — which proves the wording and the count, not the
 //     checks. Running them for real is `npm run check` itself, and it takes minutes.
 //     *Superseded 2026-08-25: this line said "the real 31 steps". STEPS held 31 only between
 //     `test:check-suite` being added and `check:mc` being excluded; derive it, never recall it —
 //     `node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"`.*
+//     *Superseded 2026-08-26: the count was then written in as 30, twice, and went stale the same
+//     way when collapsing the five `&&` aliases took STEPS to 43. It is not written here at all
+//     now — the assertions derive it from STEPS, which is the only spelling that cannot rot.*
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -68,7 +76,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { STEPS, EXCLUDED, auditSuite, reachable, aliasLinks } = require('./lib/check-suite.js');
+const { STEPS, EXCLUDED, auditSuite, reachable, aliasLinks, shellOperators } = require('./lib/check-suite.js');
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RUNNER = path.join(REPO, 'scripts', 'run-checks.mjs');
@@ -237,17 +245,81 @@ test('the guard REFUSES an EXCLUDED alias whose links are not all in the suite',
   );
 });
 
-test('the guard REFUSES a STEP whose command is an && chain — the defect, one level down', () => {
+test('the guard REFUSES a STEP whose resolved command carries ANY shell operator', () => {
   // `npm run check` spawns each step and reads one exit code; it cannot see inside a step. So a
   // chain reintroduced in package.json would restore the exact failure this runner replaced, and
   // the only place it is catchable is on the command string.
-  const mutated = { ...scripts, 'test:sandbox': 'npm run test:hooks && npm run test:budget' };
-  const { failures } = auditSuite({ scripts: mutated });
+  //
+  // SUPERSEDED 2026-08-26. This case tested `&&` alone, and the guard it tested read
+  // `String(scripts[step]).includes('&&')`. Four one-line mutations walked past it, each measured
+  // returning ZERO findings: `;`, `||`, `|`, and a wrapper script — `test:sandbox` set to
+  // `npm run check:inner` with the chain one hop away. `;` is the one that matters most, and it is
+  // the one an `&&`-shaped rule is least likely to reach for: `bash -c 'false ; true'` exits 0, so
+  // a `;` chain does not even leave a red step behind, where `&&` at least does.
+  const cases = {
+    '&&': 'npm run test:hooks && npm run test:budget',
+    '||': 'npm run test:hooks || npm run test:budget',
+    ';': 'npm run test:hooks ; npm run test:budget',
+    '|': 'npm run test:hooks | npm run test:budget',
+    '&': 'npm run test:hooks & npm run test:budget',
+    '\\n': 'npm run test:hooks\n npm run test:budget',
+  };
 
+  for (const [op, command] of Object.entries(cases)) {
+    const { failures } = auditSuite({ scripts: { ...scripts, 'test:sandbox': command } });
+    assert.ok(
+      failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes(`\`${op}\``)),
+      `a step chained with \`${op}\` was accepted:\n${failures.join('\n') || '(no failures at all)'}`
+    );
+  }
+});
+
+test('the guard follows a wrapper — one `npm run` hop used to defeat it entirely', () => {
+  // Measured before the fix: `test:sandbox` → `npm run check:inner` → an `&&` chain returned ZERO
+  // findings. The wrapper changes nothing the runner can see; it still spawns one command and
+  // reads one exit code. The walk follows the whole chain, so two hops do not restore the hole.
+  const oneHop = auditSuite({
+    scripts: { ...scripts, 'test:sandbox': 'npm run check:inner', 'check:inner': 'npm run test:hooks && npm run test:budget' },
+  });
   assert.ok(
-    failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes('`&&` chain')),
-    `an && chain in a step was accepted:\n${failures.join('\n') || '(no failures at all)'}`
+    oneHop.failures.some((f) => f.includes('delegates to "check:inner"') && f.includes('`&&`')),
+    `a one-hop wrapper hid a chain:\n${oneHop.failures.join('\n') || '(no failures at all)'}`
   );
+
+  const twoHops = auditSuite({
+    scripts: {
+      ...scripts,
+      'test:sandbox': 'npm run check:w1',
+      'check:w1': 'npm run check:w2',
+      'check:w2': 'npm run test:hooks ; npm run test:budget',
+    },
+  });
+  assert.ok(
+    twoHops.failures.some((f) => f.includes('delegates to "check:w2"') && f.includes('`;`')),
+    `a two-hop wrapper hid a chain:\n${twoHops.failures.join('\n') || '(no failures at all)'}`
+  );
+
+  // And a cycle must terminate rather than hang — a wrapper pointing at itself is malformed, not
+  // a reason for the drift guard to spin.
+  const cyclic = auditSuite({
+    scripts: { ...scripts, 'test:sandbox': 'npm run check:loop', 'check:loop': 'npm run test:sandbox' },
+  });
+  assert.ok(Array.isArray(cyclic.failures), 'a delegation cycle did not return');
+});
+
+test('the operator check is quote-aware — a rule that fires on correct code gets weakened', () => {
+  // package.json's `usage` script is `node -e "…;…"`: its semicolons are inside a quoted argument
+  // and separate nothing. A substring scan would refuse that shape the day it became a step.
+  assert.deepEqual(shellOperators(`node -e "const a=1;console.log(a)"`), []);
+  assert.deepEqual(shellOperators(`node -e 'a && b'`), []);
+  assert.deepEqual(shellOperators('node scripts/x.mjs --flag'), []);
+
+  // …and still sees the real thing outside quotes, including alongside a quoted decoy.
+  assert.deepEqual(shellOperators(`node -e "a;b" && node -e "c"`), ['&&']);
+  assert.deepEqual(shellOperators('a && b ; c'), ['&&', ';']);
+
+  const legit = auditSuite({ scripts: { ...scripts, 'test:sandbox': `node -e "const a=1;console.log(a)"` } });
+  assert.deepEqual(legit.failures, [], `a quoted semicolon was refused:\n${legit.failures.join('\n')}`);
 });
 
 test('transitive reach still counts — the mechanism, proved where the tree no longer exercises it', () => {

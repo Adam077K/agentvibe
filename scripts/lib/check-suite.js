@@ -44,16 +44,28 @@
  *
  * Ordering intent: the structural and cheap checks come first so a broken tree fails loudly and
  * early in the streamed output, and the slow ones (the six `check:ledger` links, ~45s between
- * them) sit late so they do not delay the signal from everything else. Ordering is a readability
- * choice only — no step depends on an earlier one having passed. `check:mc` used to sit at
+ * them) sit late so they do not delay the signal from everything else. `check:mc` used to sit at
  * position 22 here; see EXCLUDED.
  *
- * EVERY ENTRY IS ONE COMMAND. Five of them used to be one step each — `check:dispatch`,
- * `check:dispatch-prompt`, `check:memory`, `check:warroom` and `check:ledger` — and each of those
- * was itself an `&&` chain inside package.json, 18 links behind 5 names. That is the same defect
- * this file exists to fix, one level down: the runner reported a single failed step while the
- * links after the failing one had not run. auditSuite() now REFUSES a step whose command carries
- * `&&`, so the chain cannot come back through package.json after being taken out of here.
+ * NO STEP DEPENDS ON AN EARLIER ONE HAVING PASSED — and that is a statement about EXECUTION, not
+ * about VALIDITY. Every step runs whatever the ones before it did, which is the whole point of the
+ * runner. But several steps are the mutation gate for a later one, and a green checker beside its
+ * own red gate is worth less than the tally suggests: `test:dispatch` is the mutation gate for
+ * `check:dispatch-agenttype`, `test:dispatch-prompt` for `check:dispatch-prompt-size`, `test:memory`
+ * for `check:memory-budget`, and `test:claims`/`test:classifier`/`test:ledger` guard the libraries
+ * the three `check:ledger-*` steps run on. That trade is deliberate — sequencing them would restore
+ * the skipping this file exists to end — so READ THE FAILURE LIST, not just the tally: a failed gate
+ * next to a passed checker means the checker's parser is unproven, not that the checker is fine.
+ * *This paragraph replaces "Ordering is a readability choice only", which was true of execution and
+ * read as true of both (2026-08-26).*
+ *
+ * EVERY ENTRY IS ONE COMMAND, AND ONE COMMAND MEANS ONE EXIT CODE. Five entries used to be one step
+ * each — `check:dispatch`, `check:dispatch-prompt`, `check:memory`, `check:warroom` and
+ * `check:ledger` — and each of those was itself an `&&` chain inside package.json, 18 links behind 5
+ * names. That is the same defect this file exists to fix, one level down: the runner reported a
+ * single failed step while the links after the failing one had not run. auditSuite() now REFUSES a
+ * step whose RESOLVED command carries a shell control operator, so the chain cannot come back
+ * through package.json — nor through a wrapper script — after being taken out of here.
  */
 const STEPS = [
   'test:protected-write',
@@ -207,7 +219,9 @@ const EXCLUDED = {
  * The other prefixes in package.json are deliberately out: `build:`, `curate:`, `measure:`,
  * `vendor:`, `probe:`, `warroom:` and `ledger:` are generators and operational commands, and
  * their assertive halves already appear as `check:`/`test:` steps (`check:manifest` for
- * `build:manifest`, `check:ledger` for `ledger:verify`, and so on). Governing a generator would
+ * `build:manifest`, `check:ledger-verify` for `ledger:verify`, and so on — that second pairing read
+ * `check:ledger` until 2026-08-26, which is no longer a step at all but an EXCLUDED alias, so the
+ * example named nothing the suite runs). Governing a generator would
  * demand an EXCLUDED entry for every tool in the repo, which is how a guard becomes noise.
  *
  * A prefix list can only ever be a list, so it is not the whole defence: auditSuite() separately
@@ -253,6 +267,92 @@ function aliasLinks(command) {
 }
 
 /**
+ * A shell control operator inside a command string breaks "one step, one exit code".
+ *
+ * The runner spawns `npm run <step>` and reads ONE exit code; it cannot see inside a step. So every
+ * operator below hides a link, and the two failure modes are not equally loud:
+ *
+ *     &&   stops at the first non-zero exit — the later links never run, and the step at least
+ *          goes red, which is how the original 30-link chain was eventually noticed
+ *     ;    STRICTLY WORSE, and it is the reason this check is not about `&&`. `bash -c 'false ;
+ *     |    true'` exits 0, `bash -c 'false | true'` exits 0, `bash -c 'false & true'` exits 0 — the
+ *     &    step's exit code becomes the LAST command's and the failure vanishes with no red step
+ *          anywhere. All three were accepted by the `&&`-only check that preceded this one,
+ *          measured 2026-08-26: `;`, `||` and `|` each returned zero findings against auditSuite().
+ *     ||   masks it the other way — the step passes whenever the FALLBACK passes
+ *     \n   a newline in a JSON script body is a sequence, with `;` semantics
+ *
+ * Quote-aware on purpose, and this is not hypothetical: package.json's `usage` script is a
+ * `node -e "…;…"` one-liner whose semicolons are inside a double-quoted argument and separate
+ * nothing. A substring scan would refuse that shape the day someone made it a step, and a guard
+ * that fires on correct code gets weakened rather than obeyed.
+ *
+ * Returns the operators found, in a stable order, or [] for a single command.
+ */
+const SHELL_OPERATORS = ['&&', '||', ';', '|', '&', '\\n'];
+
+function shellOperators(command) {
+  const src = String(command);
+  const found = new Set();
+  let quote = null;
+
+  for (let i = 0; i < src.length; i += 1) {
+    const c = src[i];
+    if (quote) {
+      if (c === '\\' && quote === '"') { i += 1; continue; }
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (c === '"' || c === "'") { quote = c; continue; }
+    if (c === '\\') { i += 1; continue; }
+    if (c === '&' && src[i + 1] === '&') { found.add('&&'); i += 1; continue; }
+    if (c === '|' && src[i + 1] === '|') { found.add('||'); i += 1; continue; }
+    if (c === '|') { found.add('|'); continue; }
+    if (c === ';') { found.add(';'); continue; }
+    if (c === '&') { found.add('&'); continue; }
+    if (c === '\n' || c === '\r') { found.add('\\n'); continue; }
+  }
+
+  return SHELL_OPERATORS.filter((op) => found.has(op));
+}
+
+/** A command whose ENTIRE body is one `npm run <name>` — a wrapper, and nothing else. */
+const DELEGATION = /^npm\s+run\s+([\w:-]+)$/;
+
+/**
+ * The commands a step really runs: its own body, then the body of anything it delegates to.
+ *
+ * ONE HOP WAS ENOUGH TO DEFEAT THE OPERATOR CHECK, and it was measured that way (2026-08-26):
+ * with `test:sandbox` set to `npm run check:inner` and `check:inner` set to an `&&` chain,
+ * auditSuite() returned zero findings. The wrapper changes nothing the runner can see — it still
+ * spawns one command and reads one exit code — so the walk follows the whole delegation chain
+ * rather than a fixed number of hops, and a cycle terminates it.
+ *
+ * Its narrowness is the same narrowness as aliasLinks(): only a BARE `npm run <name>` is followed.
+ * `npm run x --silent`, `npx`, npm-run-all and a script that shells out on its own are invisible
+ * here and will be walked past. That is the safe direction — this check under-reports rather than
+ * refusing a command it did not understand — and it is the same limitation the header records for
+ * reachable().
+ *
+ * Returns [{ name, command }] starting with `name` itself. An unknown name returns [].
+ */
+function resolveChain(scripts, name) {
+  const chain = [];
+  const seen = new Set();
+  let current = name;
+
+  while (current && Object.prototype.hasOwnProperty.call(scripts, current) && !seen.has(current)) {
+    seen.add(current);
+    const command = String(scripts[current]);
+    chain.push({ name: current, command });
+    const m = DELEGATION.exec(command.trim());
+    current = m ? m[1] : null;
+  }
+
+  return chain;
+}
+
+/**
  * Every script reachable from `steps`, transitively through `npm run` references.
  *
  * Transitive reach counts. `check:ledger` runs test:claims/test:classifier/test:ledger,
@@ -292,20 +392,39 @@ function auditSuite({ scripts, steps = STEPS, excluded = EXCLUDED, runner = RUNN
     }
   }
 
-  // A STEP that is itself an `&&` chain is this file's own defect, one level down. `check:ledger`
+  // A STEP that is itself a shell chain is this file's own defect, one level down. `check:ledger`
   // was six links behind one name: `&&` stopped at the first failure, the runner reported one
   // failed step, and `ledger lint`, `ledger build --check` and `ledger verify` had not run. The
   // runner cannot see inside a step — it spawns `npm run <step>` and reads one exit code — so the
   // only place this is catchable is here, on the command string.
+  //
+  // THE CHECK IS ON THE RESOLVED COMMAND, NOT THE STEP'S OWN STRING, and it covers every operator
+  // rather than `&&`. Until 2026-08-26 it was `String(scripts[step]).includes('&&')`, which three
+  // one-line mutations walked straight past — `;`, `||` and `|` each returned zero findings — and
+  // which one wrapper script defeated outright. `;` is the dangerous one: `&&` at least reddens
+  // the step, while a `;` chain hands back the LAST command's exit code and the failure is gone.
   for (const step of steps) {
     if (!has(step)) continue;
-    if (!String(scripts[step]).includes('&&')) continue;
-    failures.push(
-      `STEPS names "${step}", whose command is an \`&&\` chain: ${scripts[step]}. \`&&\` stops at the first ` +
-        `non-zero exit, so the links after a failing one never run while the suite reports a single failed ` +
-        `step. Give each link its own script and its own entry in STEPS, and keep "${step}" — if a doc cites ` +
-        `it — as an alias in EXCLUDED.`
-    );
+    for (const link of resolveChain(scripts, step)) {
+      const ops = shellOperators(link.command);
+      if (!ops.length) continue;
+
+      const list = ops.map((op) => `\`${op}\``).join(', ');
+      const where =
+        link.name === step
+          ? `whose command carries ${ops.length > 1 ? 'shell operators' : 'the shell operator'} ${list}`
+          : `which delegates to "${link.name}", whose command carries ` +
+            `${ops.length > 1 ? 'shell operators' : 'the shell operator'} ${list}`;
+
+      failures.push(
+        `STEPS names "${step}", ${where}: ${link.command}. A step is ONE command and the runner reads ONE ` +
+          `exit code from it — a wrapper does not change that. \`&&\` stops at the first non-zero exit so the ` +
+          `later links never run; \`;\`, \`|\` and \`&\` are worse, because the step's exit code becomes the ` +
+          `last command's and the failure disappears entirely (\`bash -c 'false ; true'\` exits 0); \`||\` ` +
+          `passes the step whenever the fallback passes. Give each link its own script and its own entry in ` +
+          `STEPS, and keep "${step}" — if a doc cites it — as an alias in EXCLUDED.`
+      );
+    }
   }
 
   // A step this guard does not govern can be deleted from STEPS in silence: nothing then reports
@@ -389,4 +508,16 @@ function auditSuite({ scripts, steps = STEPS, excluded = EXCLUDED, runner = RUNN
   return { failures };
 }
 
-module.exports = { STEPS, EXCLUDED, GOVERNED, RUNNER, scriptGraph, reachable, aliasLinks, auditSuite };
+module.exports = {
+  STEPS,
+  EXCLUDED,
+  GOVERNED,
+  RUNNER,
+  SHELL_OPERATORS,
+  scriptGraph,
+  reachable,
+  aliasLinks,
+  shellOperators,
+  resolveChain,
+  auditSuite,
+};
