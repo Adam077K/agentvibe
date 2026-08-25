@@ -4,8 +4,22 @@
 //
 // WHAT FAILED HERE
 // `warroom merge` merged a branch into LOCAL main and never pushed. CI never ran on that route,
-// and branch protection — which is on, with required contexts — cannot see a merge that never
-// reaches the remote. The PR route was gated. This route was gated by nothing at all.
+// and branch protection cannot see a merge that never reaches the remote. The PR route was gated.
+// This route was gated by nothing at all.
+//
+// AND THEN: THE ROUTE ITSELF WAS THE DEFECT (2026-08-26)
+// A gated dead end is still a dead end. `merge` had no route to origin at all, defended by a
+// comment claiming a push "would not help — main is protected with required contexts, so a direct
+// push is rejected." main carries `enforce_admins: false`, so the direct push is NOT rejected; 48
+// commits reached main that way in one session. The premise was false, so the reason-not-to-act
+// was not a reason. `merge` now opens a pull request by default and `--local` is the opt-in dead
+// end — which also makes it safe to turn `enforce_admins` on, because qa-lead-pass.yml is a
+// REQUIRED check that triggers on `pull_request` only and a pushed commit can never satisfy it.
+//
+// The tests below therefore assert TWO destinations, and the difference between them is the whole
+// point: the PR route must reach the upstream and must NOT move local main; --local must move
+// local main and must NOT reach the upstream. `onUpstream()` asks the upstream repository, never
+// the push command's own output.
 //
 // WHY THESE TESTS DRIVE THE REAL PROGRAM
 // Every case below runs `bin/warroom merge` for real, against a throwaway repository under
@@ -43,16 +57,80 @@ function git(cwd, args) {
   return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 
-function run(cmd, args, cwd = REPO) {
+function run(cmd, args, cwd = REPO, env = undefined, input = undefined) {
+  const opts = { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] };
+  if (env) opts.env = env;
+  if (input !== undefined) { opts.input = input; opts.stdio = ['pipe', 'pipe', 'pipe']; }
   try {
-    return { code: 0, stdout: execFileSync(cmd, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }), stderr: '' };
+    return { code: 0, stdout: execFileSync(cmd, args, opts), stderr: '' };
   } catch (e) {
     return { code: e.status ?? 1, stdout: (e.stdout || '').toString(), stderr: (e.stderr || '').toString() };
   }
 }
 
 const verdict = (args) => run('node', [VERDICT, ...args]);
-const merge = (cfg) => run('bash', [WARROOM, '--config', cfg, 'merge', '1']);
+
+/** The default route: push and open a pull request. `env` supplies the stub gh (see stubGh). */
+const merge = (cfg, env) => run('bash', [WARROOM, '--config', cfg, 'merge', '1'], REPO, env);
+/** The opt-in route: merge into LOCAL main, which never reaches origin. */
+const mergeLocal = (cfg) => run('bash', [WARROOM, '--config', cfg, 'merge', '1', '--local'], REPO);
+
+const NODE_DIR = path.dirname(process.execPath);
+
+/** Does an executable of this name resolve on this PATH? Used to prove the no-gh fixture is one. */
+function resolvesOnPath(name, PATH) {
+  for (const dir of PATH.split(':')) {
+    if (!dir) continue;
+    try { fs.accessSync(path.join(dir, name), fs.constants.X_OK); return path.join(dir, name); }
+    catch { /* not here */ }
+  }
+  return null;
+}
+
+/**
+ * A fake `gh` at the front of PATH, plus the PATH that reaches it.
+ *
+ * The real gh is never invoked by these tests. Opening a pull request is outward-facing and not
+ * undoable by re-running the suite; a test that opened one would file a PR in a live repository
+ * every time CI ran. So the dependency is stubbed and the ARGUMENTS it received are asserted —
+ * which is the part that has to be right.
+ *
+ * PATH deliberately excludes the directory the real gh lives in (/opt/homebrew/bin here), so the
+ * `absent` case is absent for a structural reason rather than a hopeful one. `resolvesOnPath`
+ * proves that per-test instead of assuming it.
+ */
+function stubGh(root, { present = true, authExit = 0, prList = '', prCreate = 'https://github.com/o/r/pull/7', createExit = 0 } = {}) {
+  const dir = fs.mkdtempSync(path.join(root, 'ghbin-'));
+  const argsLog = path.join(dir, 'gh-args.log');
+  if (present) {
+    const gh = path.join(dir, 'gh');
+    fs.writeFileSync(gh, `#!/bin/bash
+printf '%s\\n' "$*" >> ${JSON.stringify(argsLog)}
+case "$1 $2" in
+  "auth status")
+    [ ${authExit} -ne 0 ] && echo "You are not logged into any GitHub hosts." >&2
+    exit ${authExit} ;;
+  "pr list") printf '%s' ${JSON.stringify(prList)}; exit 0 ;;
+  "pr create")
+    [ ${createExit} -ne 0 ] && echo "GraphQL: something went wrong (createPullRequest)" >&2
+    [ ${createExit} -eq 0 ] && printf '%s\\n' ${JSON.stringify(prCreate)}
+    exit ${createExit} ;;
+esac
+echo "stub gh: unhandled invocation: $*" >&2
+exit 1
+`);
+    fs.chmodSync(gh, 0o755);
+  }
+  const PATH = `${dir}:${NODE_DIR}:/usr/bin:/bin`;
+  return { dir, argsLog, PATH, env: { ...process.env, PATH }, ghArgs: () => (fs.existsSync(argsLog) ? fs.readFileSync(argsLog, 'utf8') : '') };
+}
+
+/** Did the branch actually reach the upstream? Asked of the upstream, never of the push output. */
+const onUpstream = (up) => run('git', ['rev-parse', '--verify', BRANCH], up).code === 0;
+const eventsOf = (root) => {
+  const f = path.join(root, 'state', 'events.jsonl');
+  return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
+};
 
 /**
  * A throwaway upstream + clone, with one commit of real work on a ceo-* branch.
@@ -209,11 +287,11 @@ test('the refusal names the subject it computed and the command that satisfies i
   assert.match(text, /verdict\.mjs record --verdict PASS/);
 });
 
-test('merge is ALLOWED when a committed verdict matches the subject', () => {
+test('--local merge is ALLOWED when a committed verdict matches the subject', () => {
   const { proj, cfg } = fixture();
   recordAndCommit(proj);
 
-  const r = merge(cfg);
+  const r = mergeLocal(cfg);
   assert.equal(r.code, 0, `merge refused a validly gated branch:\n${r.stdout}\n${r.stderr}`);
   assert.equal(mainSubject(proj), 'qa(verdict): PASS', 'main did not advance to the branch tip');
   assert.ok(
@@ -242,7 +320,7 @@ test('a verdict recorded, then out-run by a later commit, is REFUSED', () => {
 test('the merge logs the classifier tier and the strategy in separate fields', () => {
   const { proj, cfg, root } = fixture();
   recordAndCommit(proj);
-  assert.equal(merge(cfg).code, 0);
+  assert.equal(mergeLocal(cfg).code, 0);
 
   const events = fs.readFileSync(path.join(root, 'state', 'events.jsonl'), 'utf8');
   const done = events.trim().split('\n').map((l) => JSON.parse(l)).filter((e) => e.event === 'merge_complete');
@@ -292,7 +370,7 @@ test('a conflicting merge is REFUSED even with a valid verdict, and main does no
   );
 
   const before = git(proj, ['rev-parse', 'main']).trim();
-  const r = merge(cfg);
+  const r = mergeLocal(cfg);
 
   assert.notEqual(r.code, 0, 'a conflicted merge exited 0');
   assert.equal(git(proj, ['rev-parse', 'main']).trim(), before, 'main moved onto content no verdict covered');
@@ -322,7 +400,7 @@ test('the conflict refusal is logged as a refusal, never as a merge_complete', (
   git(proj, ['add', '-A']);
   git(proj, ['commit', '-qm', 'main edits f.txt']);
 
-  assert.notEqual(merge(cfg).code, 0);
+  assert.notEqual(mergeLocal(cfg).code, 0);
 
   const events = fs.readFileSync(path.join(root, 'state', 'events.jsonl'), 'utf8');
   assert.match(events, /"event":"merge_refused"/, 'the refusal is invisible in the audit trail');
@@ -345,7 +423,7 @@ test('the conflict refusal says how to make the resolution reviewable', () => {
   git(proj, ['add', '-A']);
   git(proj, ['commit', '-qm', 'main edits f.txt']);
 
-  const text = (() => { const o = merge(cfg); return o.stdout + o.stderr; })();
+  const text = (() => { const o = mergeLocal(cfg); return o.stdout + o.stderr; })();
   assert.match(text, /Refusing to merge/);
   assert.match(text, /f\.txt/, 'the refusal did not name the conflicted file');
   assert.match(text, new RegExp(`git switch ${BRANCH}`), 'the refusal did not say to resolve on the branch');
@@ -461,4 +539,217 @@ test('an unmerged branch is KEPT and reported, not force-deleted', () => {
   assert.equal(r.code, 0);
   assert.match(r.stdout, /kept/, 'an unmerged branch was not reported as kept');
   assert.ok(branchExists(proj), 'the unmerged branch was deleted anyway');
+});
+
+// ── the route to origin ──────────────────────────────────────────────────────────────────────
+//
+// Every test here asks the UPSTREAM whether the branch arrived (`onUpstream`), never the push
+// command's own output. "It printed success" is the class of evidence this file exists to reject.
+//
+// The real `gh` is never invoked. Opening a pull request is outward-facing and is not undone by
+// re-running the suite, so the dependency is stubbed and what is asserted is the arguments it was
+// handed and the state left behind on failure.
+
+test('the DEFAULT route pushes the branch to origin and opens a pull request', () => {
+  const { proj, up, cfg, root } = fixture();
+  recordAndCommit(proj);
+  const gh = stubGh(root);
+  const before = git(proj, ['rev-parse', 'main']).trim();
+
+  const r = merge(cfg, gh.env);
+  const text = r.stdout + r.stderr;
+  assert.equal(r.code, 0, `the PR route refused a validly gated branch:\n${text}`);
+
+  assert.ok(onUpstream(up), 'the branch never reached origin, which is the entire point of this route');
+  assert.equal(git(proj, ['rev-parse', 'main']).trim(), before, 'the PR route moved LOCAL main');
+  assert.ok(branchExists(proj), 'the PR route deleted the branch its own pull request is made of');
+  assert.match(text, /https:\/\/github\.com\/o\/r\/pull\/7/, 'the pull request URL was not reported');
+
+  const args = gh.ghArgs();
+  assert.match(args, /pr create --base main --head ceo-1-1700000000/, `gh was called wrong:\n${args}`);
+
+  assert.match(eventsOf(root), /"event":"merge_pr_opened"/, 'the pull request is invisible in the audit trail');
+  assert.doesNotMatch(eventsOf(root), /"event":"merge_complete"/, 'opening a PR was logged as a completed merge');
+});
+
+test('gh ABSENT is a refusal, and nothing is pushed and nothing is merged', () => {
+  const { proj, up, cfg, root } = fixture();
+  recordAndCommit(proj);
+  const gh = stubGh(root, { present: false });
+  assert.equal(
+    resolvesOnPath('gh', gh.PATH), null,
+    'the no-gh fixture found a real gh on this PATH, so it proves nothing — fix the fixture'
+  );
+
+  const before = git(proj, ['rev-parse', 'main']).trim();
+  const r = merge(cfg, gh.env);
+  const text = r.stdout + r.stderr;
+
+  assert.notEqual(r.code, 0, 'a merge with no route to origin exited 0');
+  assert.match(text, /reason=no-gh/, 'the refusal did not name its reason');
+  assert.equal(onUpstream(up), false, 'a route that refused pushed something anyway');
+  assert.equal(
+    git(proj, ['rev-parse', 'main']).trim(), before,
+    'a missing gh silently fell back to a local merge — the defect class this repo repeats most'
+  );
+  assert.ok(branchExists(proj));
+  assert.match(eventsOf(root), /reason=no-gh/, 'the refusal is invisible in the audit trail');
+});
+
+test('gh present but UNUSABLE is a refusal, and nothing is pushed', () => {
+  const { proj, up, cfg, root } = fixture();
+  recordAndCommit(proj);
+  const gh = stubGh(root, { authExit: 1 });
+
+  const before = git(proj, ['rev-parse', 'main']).trim();
+  const r = merge(cfg, gh.env);
+  const text = r.stdout + r.stderr;
+
+  assert.notEqual(r.code, 0, 'an unauthenticated gh exited 0');
+  assert.match(text, /reason=gh-unusable/);
+  assert.match(text, /not logged into any GitHub hosts/, "the refusal hid gh's own explanation");
+  assert.equal(onUpstream(up), false, 'the branch was pushed before gh was known to work');
+  assert.equal(git(proj, ['rev-parse', 'main']).trim(), before, 'an unusable gh became a local merge');
+  assert.match(eventsOf(root), /reason=gh-unusable/);
+});
+
+test('gh pr create FAILING is a refusal that names the state it left behind', () => {
+  // The one path where a refusal cannot leave everything untouched: the push already succeeded.
+  // Then say so. Reporting "refused" while a branch sits on origin is the same lie one size down.
+  const { proj, up, cfg, root } = fixture();
+  recordAndCommit(proj);
+  const gh = stubGh(root, { createExit: 1 });
+
+  const before = git(proj, ['rev-parse', 'main']).trim();
+  const r = merge(cfg, gh.env);
+  const text = r.stdout + r.stderr;
+
+  assert.notEqual(r.code, 0, 'a failed gh pr create exited 0');
+  assert.match(text, /reason=pr-create-failed/);
+  assert.ok(onUpstream(up), 'the fixture did not reach the state under test — the push should have run');
+  assert.match(text, /IS now on origin/, 'the refusal did not say the branch had already been pushed');
+  assert.match(text, /gh pr create --base main --head ceo-1-1700000000/, 'the refusal did not name the remedy');
+  assert.equal(
+    git(proj, ['rev-parse', 'main']).trim(), before,
+    'a failed pull request quietly became a local merge'
+  );
+  assert.match(eventsOf(root), /reason=pr-create-failed pushed=yes/);
+  assert.doesNotMatch(eventsOf(root), /"event":"merge_pr_opened"/, 'a PR that was never opened was logged as opened');
+});
+
+test('an already-open pull request is reported, not treated as a failure', () => {
+  // Re-running after another commit is the ordinary case: the push updates the head and the open
+  // PR is the answer. gh refuses to create a second one, and reporting that as failure would be a
+  // false negative on the most common path.
+  const { proj, up, cfg, root } = fixture();
+  recordAndCommit(proj);
+  const gh = stubGh(root, { prList: 'https://github.com/o/r/pull/3' });
+
+  const r = merge(cfg, gh.env);
+  const text = r.stdout + r.stderr;
+  assert.equal(r.code, 0, `an existing pull request was treated as an error:\n${text}`);
+  assert.match(text, /already open: https:\/\/github\.com\/o\/r\/pull\/3/);
+  assert.ok(onUpstream(up), 'the head was not updated');
+  assert.doesNotMatch(gh.ghArgs(), /pr create/, 'a second pull request was attempted');
+  assert.match(eventsOf(root), /state=existing/);
+});
+
+test('no origin remote is a refusal naming that reason', () => {
+  const { proj, cfg, root } = fixture();
+  recordAndCommit(proj);
+  // `git remote remove` deletes refs/remotes/origin/* along with the config, and then the VERDICT
+  // refuses first ("cannot resolve origin/main") — an earlier failure than the one under test, and
+  // a test that passed on it would be asserting the wrong guard. Dropping only the config section
+  // leaves the tracking ref in place, which is the real-world shape of this state: someone edited
+  // .git/config. Verified by watching the first version fail on the verdict message instead.
+  git(proj, ['config', '--remove-section', 'remote.origin']);
+  const gh = stubGh(root);
+
+  const r = merge(cfg, gh.env);
+  assert.notEqual(r.code, 0);
+  assert.match(r.stdout + r.stderr, /reason=no-origin-remote/);
+  assert.doesNotMatch(gh.ghArgs(), /pr create/, 'a pull request was attempted with nowhere to push');
+  assert.match(eventsOf(root), /reason=no-origin-remote/);
+});
+
+test('the verdict gate refuses the PR route too, BEFORE gh is invoked or anything is pushed', () => {
+  // Ordering, executed. ci.yml and qa-lead-pass.yml would run on the PR anyway, but an ungated
+  // branch should not reach origin or consume a reviewer, and the refusal belongs where the
+  // operator is still standing.
+  const { up, cfg, root } = fixture();
+  const gh = stubGh(root);
+
+  const r = merge(cfg, gh.env);
+  assert.notEqual(r.code, 0, 'an ungated branch opened a pull request');
+  assert.equal(onUpstream(up), false, 'an ungated branch was pushed to origin');
+  assert.equal(gh.ghArgs(), '', 'gh ran before the verdict was confirmed');
+});
+
+test('the two routes have DIFFERENT destinations, and that is the whole change', () => {
+  // --local moves local main and never reaches origin. The default reaches origin and never moves
+  // local main. Asserting both halves in one place is what stops the two drifting back together.
+  const { proj, up, cfg } = fixture();
+  recordAndCommit(proj);
+
+  const before = git(proj, ['rev-parse', 'main']).trim();
+  const r = mergeLocal(cfg);
+  assert.equal(r.code, 0, `--local refused a validly gated branch:\n${r.stdout}${r.stderr}`);
+
+  assert.notEqual(git(proj, ['rev-parse', 'main']).trim(), before, '--local did not move local main');
+  assert.equal(onUpstream(up), false, '--local pushed to origin; it is defined by not doing that');
+  assert.match(r.stdout, /This merge is LOCAL/, '--local did not say it went nowhere');
+  assert.match(r.stdout, /origin\/main is reached only by opening a PR/);
+});
+
+test('an unknown option to merge is refused, never silently ignored', () => {
+  // `merge 1 --loca` must not quietly do the other thing: the two routes have different
+  // destinations, so a swallowed typo is a wrong destination.
+  const { proj, cfg } = fixture();
+  recordAndCommit(proj);
+  const before = git(proj, ['rev-parse', 'main']).trim();
+
+  const r = run('bash', [WARROOM, '--config', cfg, 'merge', '1', '--loca']);
+  assert.notEqual(r.code, 0, "a misspelled '--local' was accepted");
+  assert.match(r.stdout + r.stderr, /Unknown option for merge: '--loca'/);
+  assert.equal(git(proj, ['rev-parse', 'main']).trim(), before, 'a typo merged something');
+});
+
+// ── prune-branches: force is right here, the report was not ──────────────────────────────────
+//
+// `cmd_prune_branches` keeps `branch -D`, and that is a judgement, not an oversight: a human has
+// been shown every branch and typed y, and `-d` would refuse on exactly the unmerged leftovers the
+// command exists to remove. What was wrong was the REPORT — `-D ... 2>/dev/null && echo deleted`
+// printed nothing for a branch it failed to delete and then printed "✓ Branches deleted." anyway.
+
+test('prune deletes the ceo-* branches it says it deleted, and counts them', () => {
+  const { proj, cfg } = fixture();
+  git(proj, ['branch', 'ceo-2-1700000000', BRANCH]);
+
+  const r = run('bash', [WARROOM, '--config', cfg, 'prune-branches'], REPO, undefined, 'y\n');
+  const text = r.stdout + r.stderr;
+  assert.match(text, /✓ deleted ceo-1-1700000000/);
+  assert.match(text, /✓ 2 branch\(es\) deleted\./, 'the tally does not name what it counted');
+  assert.equal(git(proj, ['branch', '--list', 'ceo-*']).trim(), '', 'branches survived a reported deletion');
+});
+
+test('prune REPORTS a branch it could not delete, instead of claiming it did', () => {
+  // A branch checked out in a worktree cannot be deleted even with -D. Before this change that
+  // failure printed nothing at all, and the run still ended "✓ Branches deleted."
+  const { proj, cfg } = fixture();
+  git(proj, ['switch', '-q', BRANCH]);
+
+  const r = run('bash', [WARROOM, '--config', cfg, 'prune-branches'], REPO, undefined, 'y\n');
+  const text = r.stdout + r.stderr;
+  assert.match(text, /✗ kept ceo-1-1700000000/, 'a branch that survived was not reported');
+  assert.match(text, /cannot delete branch/, "git's own reason was swallowed");
+  assert.doesNotMatch(text, /✓ \d+ branch\(es\) deleted\./, 'a partial prune wore the clean verdict');
+  assert.match(text, /0 deleted, 1 kept/);
+  assert.ok(branchExists(proj), 'the fixture did not reach the state under test');
+});
+
+test('prune answered with anything but y deletes nothing', () => {
+  const { proj, cfg } = fixture();
+  const r = run('bash', [WARROOM, '--config', cfg, 'prune-branches'], REPO, undefined, 'n\n');
+  assert.match(r.stdout + r.stderr, /Cancelled/);
+  assert.ok(branchExists(proj), 'a declined prune deleted a branch');
 });
