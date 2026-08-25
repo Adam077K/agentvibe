@@ -310,3 +310,263 @@ test('the emitted ref is a resolved SHA — immune to which worktree you paste i
     assert.fail(`ref "${emittedRef}" failed to resolve cwd-independently: ${e.message}`);
   }
 });
+
+// ── The oracle must measure the tree holding the ref, not whatever tree the dispatch lands in ──
+//
+// Observed 2026-08-25, both directions: a false BLOCK naming a `check:mc` failure that was
+// impossible in the tree under review (that step is not in its suite), and — same mechanism, worse
+// outcome — a false PASS available any time the session root is clean while the reviewed code is
+// red. `grep -n cwd .claude/workflows/qa.js` returned nothing, because there was nothing to find:
+// oraclePrompt() said "from the repo root" without naming one, and `ref` is a git RANGE, never a
+// path. The oracle therefore inherited the dispatched agent's working directory.
+//
+// It was never hypothetical. Measured the same day on one machine: `scripts/lib/check-suite.js`
+// declares 30 steps in one worktree of this repo and 43 in another, so "run `npm run check` from
+// the repo root" named two different suites at the same instant.
+//
+// WHY THE qa.js HALF IS PINNED IN THIS FILE. The router emits the argument and the gate consumes
+// it; that is one contract with two ends, and a test that watched only the emitting end would stay
+// green through a qa.js that ignored the field entirely. The repo has been bitten by exactly that
+// shape before — two implementations of one rule, drifting silently (see the tier-classification
+// note in CLAUDE.md). qa.js has no test file of its own because it is not importable: an ESM
+// fragment with top-level `await`, top-level `return` and free globals injected by the Workflow
+// runtime. loadQa() below is the smallest thing that runs it anyway.
+
+/**
+ * Compile `.claude/workflows/qa.js` into a callable, the way the Workflow runtime does.
+ *
+ * The file `export`s its `meta` and then `return`s from the top level, which is neither valid ESM
+ * nor valid CJS — so `import()` and `vm.Script` both refuse it, and every other checker in this
+ * repo reads it as text (scripts/check-dispatch-agenttype.mjs says so in its own header). Text is
+ * enough to see that a string changed; it is not enough to see that a REFUSAL happens before any
+ * agent is dispatched, which is the property under test. Stripping the one `export` keyword and
+ * wrapping the rest in an AsyncFunction gives the same closure the runtime gives it, with the
+ * injected globals as parameters.
+ */
+function loadQa() {
+  const src = fs.readFileSync(path.join(REPO, '.claude', 'workflows', 'qa.js'), 'utf8');
+  const body = src.replace(/^export\s+const\s+meta\s*=/m, 'const meta =');
+  const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+  return new AsyncFunction('agent', 'parallel', 'phase', 'log', 'args', 'budget', body);
+}
+
+/**
+ * Run qa.js against a stubbed panel. Returns the verdict object, every dispatch label in order,
+ * and the oracle's prompt and schema — so "no agent ran" is observed rather than asserted.
+ */
+async function runQa(qaArgs, oracleReply) {
+  const dispatched = [];
+  let oraclePrompt = null;
+  let oracleSchema = null;
+  const agent = async (prompt, opts) => {
+    dispatched.push(opts.label);
+    const label = String(opts.label);
+    if (label.startsWith('oracle')) { oraclePrompt = prompt; oracleSchema = opts.schema; return oracleReply; }
+    if (label.startsWith('review') || label.startsWith('sweep')) return { findings: [] };
+    if (label.startsWith('judge')) return { verdict: 'PASS', summary: 'clean', blockers: [] };
+    return null;
+  };
+  const logs = [];
+  const out = await loadQa()(
+    agent,
+    (fns) => Promise.all(fns.map((f) => f())),
+    () => {},
+    (m) => logs.push(m),
+    qaArgs,
+    undefined,
+  );
+  return { out, dispatched, oraclePrompt, oracleSchema, logs };
+}
+
+const HEAD_SHA = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim();
+const GOOD_ARGS = { ref: `origin/main...${HEAD_SHA}`, tier: 'full', tree: REPO };
+const goodOracle = (over = {}) => ({
+  pass: true,
+  tree: REPO,
+  head: HEAD_SHA,
+  ref_head: HEAD_SHA,
+  checks: [{ name: 'npm run check', pass: true, output: '' }],
+  ...over,
+});
+
+test('the router emits an absolute tree, and it is the worktree whose diff it classified', () => {
+  const r = json(['--files', '.claude/workflows/qa.js']);
+  assert.ok(r.invocation.args.tree, 'no tree argument — the oracle would fall back to the dispatch cwd');
+  assert.ok(path.isAbsolute(r.invocation.args.tree), `tree "${r.invocation.args.tree}" is relative, which resolves against a cwd`);
+  assert.equal(r.invocation.args.tree, REPO);
+  const top = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: r.invocation.args.tree, encoding: 'utf8' }).trim();
+  assert.equal(fs.realpathSync(top), fs.realpathSync(REPO), 'the emitted tree is not the top level of a git worktree');
+});
+
+test('the emitted tree holds the commit under review — HEAD equals the tip of the emitted ref', () => {
+  // The two arguments have to agree or the oracle measures a working tree that is not the diff.
+  const r = json(['--files', '.claude/workflows/qa.js']);
+  const { ref, tree } = r.invocation.args;
+  const tip = ref.slice(ref.lastIndexOf('...') + 3);
+  const head = execFileSync('git', ['rev-parse', '--verify', 'HEAD^{commit}'], { cwd: tree, encoding: 'utf8' }).trim();
+  assert.equal(head, tip, `tree ${tree} is at ${head}, but the emitted ref reviews ${tip}`);
+});
+
+test('the router REFUSES rather than emitting a tree that does not hold the ref under review', () => {
+  // Constructed, not waited for: name a real commit that is not this tree's HEAD. Exit 2, no
+  // invocation — emitting one with a caveat attached would move the defect downstream.
+  let other;
+  try {
+    other = execFileSync('git', ['rev-parse', '--verify', 'HEAD~1^{commit}'], { cwd: REPO, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  } catch {
+    return; // depth-1 clone: no second commit to name. Proven by the sibling case below.
+  }
+  const r = run(['--files', '.claude/workflows/qa.js', '--ref', `origin/main...${other}`]);
+  assert.equal(r.code, 2, 'a tree that is not at the reviewed commit must be refused, not emitted');
+  assert.match(r.stderr, /refusing to emit an invocation/);
+  assert.match(r.stderr, /resolves to/);
+});
+
+test('the router REFUSES when the ref under review does not resolve to a commit here', () => {
+  // A bare `git rev-parse` echoes any well-formed 40-hex string back at exit 0 whether the object
+  // exists or not, so this case passed a naive check and reported the wrong reason.
+  const r = run(['--files', '.claude/workflows/qa.js', '--ref', 'origin/main...deadbeefdeadbeefdeadbeefdeadbeefdeadbeef']);
+  assert.equal(r.code, 2);
+  assert.match(r.stderr, /does not resolve to a commit/);
+});
+
+test('a dash-leading TIP inside a range is refused — the whole-ref guard does not see it', () => {
+  // main()'s guard screens the ref as a string; "origin/main...-O<path>" starts with "o".
+  const r = run(['--files', '.claude/workflows/qa.js', '--ref', 'origin/main...-O/tmp/run-gate-tip-should-never-exist']);
+  assert.equal(r.code, 2);
+  assert.equal(fsExists('/tmp/run-gate-tip-should-never-exist'), false, 'git was allowed to act on the option');
+});
+
+test('the superseded conflict analysis is kept, marked, and split into the half that closed', () => {
+  // House rule: mark the superseded analysis at the point of citation, do not delete it. A reader
+  // who meets only the narrowed version cannot tell which half was closed or why the fix is shaped
+  // this way — and this repo's own history is of two accounts of one thing disagreeing silently.
+  const r = json(['--files', '.claude/workflows/qa.js']);
+  const sr = r.gateSelfReview;
+  assert.match(sr.conflictSuperseded, /^SUPERSEDED 2026-08-25/, 'the original must be labelled, not quietly replaced');
+  assert.match(sr.conflictSuperseded, /Both resolve against one cwd/, 'the original text must survive verbatim');
+  assert.match(sr.conflictClosed, /CLOSED/);
+  assert.match(sr.conflictClosed, /args\.tree/, 'the closed half must name the mechanism that closed it');
+  assert.match(sr.conflict, /STILL OPEN/, 'the open half must still read as open');
+  assert.match(sr.conflict, /scriptPath/, 'the open half is the script copy, and must say so');
+  assert.equal(sr.humanDecisionRequired, true, 'the script-copy half still needs a human');
+  assert.ok(!/no invocation this router can emit satisfies both/.test(sr.conflict),
+    'the narrowed statement must not still claim the whole conflict is unresolvable — it is half-closed');
+});
+
+test('the human output marks one half closed and one half open, and keeps the superseded text', () => {
+  const out = run(['--files', '.claude/workflows/qa.js']).stdout;
+  assert.match(out, /ONE HALF IS NOW CLOSED/);
+  assert.match(out, /STILL OPEN/);
+  assert.match(out, /CLOSED 2026-08-25/);
+  assert.match(out, /SUPERSEDED, kept because it is why the fix is shaped this way/);
+  assert.match(out, /The oracle will run `npm run check` in \//, 'the human must be told which tree gets measured');
+});
+
+test('qa.js REFUSES when it is not told which tree to measure, before dispatching any agent', async () => {
+  // RED before the fix: with no tree argument the oracle was dispatched anyway and measured the
+  // session's working directory. The assertion that matters is `dispatched.length === 0` — a gate
+  // that runs the panel and then complains has already spent the budget on the wrong tree.
+  const { out, dispatched } = await runQa({ ref: `origin/main...${HEAD_SHA}`, tier: 'irreversible' }, goodOracle());
+  assert.equal(out.verdict, 'BLOCK');
+  assert.deepEqual(dispatched, [], 'a refusal must dispatch nothing at all, not even the oracle');
+  assert.equal(out.blockers[0].id, 'gate-subject-unestablished');
+  assert.match(out.summary, /REFUSED/);
+  assert.match(out.summary, /does not fall back to its own working directory/,
+    'the refusal must name the cwd fallback as the thing it is refusing to do');
+});
+
+test('qa.js REFUSES a relative tree — a relative path is the cwd dependence wearing a path', async () => {
+  const { out, dispatched } = await runQa({ ...GOOD_ARGS, tree: 'w2-oracle-tree' }, goodOracle());
+  assert.equal(out.verdict, 'BLOCK');
+  assert.deepEqual(dispatched, []);
+  assert.match(out.summary, /not an absolute path/);
+});
+
+test('qa.js REFUSES a tree carrying a shell metacharacter — it is interpolated into commands', async () => {
+  const { out, dispatched } = await runQa({ ...GOOD_ARGS, tree: '/tmp/x`id`' }, goodOracle());
+  assert.equal(out.verdict, 'BLOCK');
+  assert.deepEqual(dispatched, [], 'the string must never reach a prompt that reaches a shell');
+  assert.match(out.summary, /shell metacharacter/);
+});
+
+test('qa.js BLOCKS when the check-runner reports having measured a different tree', async () => {
+  const elsewhere = '/Users/nobody/some-other-checkout';
+  const { out, dispatched } = await runQa(GOOD_ARGS, goodOracle({ tree: elsewhere }));
+  assert.equal(out.verdict, 'BLOCK');
+  assert.deepEqual(dispatched, ['oracle'], 'the panel must not be dispatched on a mis-measured floor');
+  assert.equal(out.blockers[0].id, 'oracle-wrong-tree');
+  assert.equal(out.oracle_tree, elsewhere, 'the verdict record must carry what was ACTUALLY measured');
+  assert.equal(out.tree, REPO, 'and what was asked for, so the two can be compared by a reader');
+});
+
+test('a GREEN suite measured in the wrong tree is a BLOCK, not a PASS — the false-PASS direction', async () => {
+  // This is the case that matters most and the one a "did the checks pass" assertion cannot catch:
+  // every check is green, `pass: true`, and the answer is about code nobody is reviewing.
+  const { out } = await runQa(GOOD_ARGS, goodOracle({
+    tree: '/Users/adamks/VibeCoding/agentvibe',
+    head: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    ref_head: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  }));
+  assert.equal(out.verdict, 'BLOCK', 'a clean floor in the wrong tree must never reach the panel as a pass');
+  assert.match(out.summary, /wrong tree/);
+});
+
+test('qa.js BLOCKS when the named tree is not at the commit under review', async () => {
+  // The tree exists and the check-runner measured the right path, but its HEAD is another commit —
+  // so `npm run check` ran against files that are not the diff.
+  const stale = '66b7d6a1111111111111111111111111111111aa';
+  const { out, dispatched } = await runQa(GOOD_ARGS, goodOracle({ head: stale, ref_head: stale }));
+  assert.equal(out.verdict, 'BLOCK');
+  assert.deepEqual(dispatched, ['oracle']);
+  assert.match(out.summary, new RegExp(`but the ref under review names ${HEAD_SHA}`));
+});
+
+test('qa.js BLOCKS when the check-runner could not resolve the ref inside the tree', async () => {
+  const { out } = await runQa(GOOD_ARGS, goodOracle({ ref_head: '' }));
+  assert.equal(out.verdict, 'BLOCK', 'Rule 10 — a resolver never passes what it could not check');
+  assert.match(out.summary, /no usable sha/);
+});
+
+test('ORACLE_SCHEMA requires the tree, so the report is evidence rather than an assurance', async () => {
+  const { oracleSchema } = await runQa(GOOD_ARGS, goodOracle());
+  for (const field of ['pass', 'tree', 'head', 'ref_head', 'checks']) {
+    assert.ok(oracleSchema.required.includes(field), `ORACLE_SCHEMA no longer requires "${field}"`);
+  }
+});
+
+test('the oracle prompt names the tree as an absolute path and cds into it', async () => {
+  // BEFORE (2026-08-24, verbatim): "execute the fixed commands below from the repo root and report
+  // their real exit status" — with no path anywhere in the prompt, so the repo root was whichever
+  // one the dispatch landed in.
+  // AFTER: the path is in the prompt, and the first command is a cd into it.
+  const { oraclePrompt } = await runQa(GOOD_ARGS, goodOracle());
+  assert.ok(!/from the repo root/.test(oraclePrompt),
+    'the prompt still tells the check-runner to use "the repo root", which is whatever cwd it inherited');
+  assert.ok(oraclePrompt.includes(REPO), 'the prompt does not name the tree to measure');
+  assert.ok(oraclePrompt.includes(`cd '${REPO}'`), 'the prompt does not direct the check-runner into that tree');
+  assert.match(oraclePrompt, /IT IS NOT YOUR WORKING DIRECTORY/,
+    'the prompt must rule out the inherited cwd explicitly — that is the mistake being prevented');
+});
+
+test('a clean run reports the tree it measured in the verdict record', async () => {
+  const { out, dispatched } = await runQa(GOOD_ARGS, goodOracle());
+  assert.equal(out.verdict, 'PASS', 'the happy path must still pass, or these tests only prove refusal');
+  assert.equal(out.tree, REPO);
+  assert.equal(out.oracle_tree, REPO);
+  assert.ok(dispatched.includes('judge'), 'the panel must actually run when the floor is green in the right tree');
+});
+
+test('the router and the gate agree end to end — what run-gate emits is what qa.js accepts', async () => {
+  // The contract, closed at both ends in one assertion. Either half alone can go green while the
+  // other ignores the field.
+  const r = json(['--files', '.claude/workflows/qa.js']);
+  const { out, oraclePrompt } = await runQa(r.invocation.args, goodOracle({
+    tree: r.invocation.args.tree,
+    head: HEAD_SHA,
+    ref_head: HEAD_SHA,
+  }));
+  assert.equal(out.verdict, 'PASS', 'qa.js refused the invocation its own router emitted');
+  assert.ok(oraclePrompt.includes(r.invocation.args.tree),
+    'the tree the router chose is not the tree the oracle is sent to');
+});
