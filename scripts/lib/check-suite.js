@@ -91,23 +91,38 @@ const STEPS = [
  */
 const EXCLUDED = {
   'check:mc':
-    'CANNOT PASS INSIDE THE SUITE, and passes outside it — so this is a containment fact, not a verdict on ' +
-    'the check. Measured 2026-08-25 in this worktree at 7aad16c, minutes apart: `npm run check:mc` on its ' +
-    'own exits 0 with 345 pass / 0 fail; the SAME command as a step of `npm run check` exits 1 with 344 ' +
-    'pass / 1 fail, mission-control/test/stream.test.ts failing EADDRINUSE on a loopback bind(). The OS ' +
-    'sandbox denies that bind(), and the `sandbox.excludedCommands` entry for "npm run check:mc" in ' +
-    '.claude/settings.json matches the INVOKED command string, not its descendants — so nothing arranged ' +
-    'inside package.json can exempt it while it runs underneath another npm. THE CONTROL, because the first ' +
-    'reading of this had a confound worth naming: a backgrounded or subshell-wrapped `npm run check:mc` ALSO ' +
-    'fails, so wrapping defeats the match too. Run foreground, same minute, only the nesting differing — ' +
-    '`npm run check:mc` exits 0 at 345/0, `node scripts/run-checks.mjs --steps check:mc` exits 1 at 344/1. ' +
-    'Nesting is the variable, not the wrapper and not flakiness. It is NOT excluded for being ' +
-    'broken or slow: it is 345 of 345 green. RUN IT AS ITS OWN TOP-LEVEL COMMAND: `npm run check:mc`, ' +
-    'which that settings key now permits. IT STILL BLOCKS: .github/workflows/ci.yml runs it as its own ' +
-    'unsandboxed step, so coverage moves rather than disappearing — and this removes a real local/CI ' +
-    'divergence, since CI always ran it standalone while locally it was buried mid-suite. FALSIFY THIS: ' +
-    'delete this entry and put check:mc back in STEPS. If the suite then goes green, the sandbox behaviour ' +
-    'changed and this exclusion should not survive.',
+    'FAILS UNDER THE ARMED SANDBOX WHEREVER IT RUNS, and passes with the sandbox off — so this is a ' +
+    'containment fact, not a verdict on the check. THE VARIABLE IS THE SANDBOX. Re-measured 2026-08-25 in ' +
+    'this worktree, five minutes apart, same commit, same deps, both a foreground top-level ' +
+    '`npm run check:mc` and nothing else differing: sandboxed exits 1 at 343 pass / 2 fail; with the ' +
+    'sandbox disabled it exits 0 at 345 pass / 0 fail. The isolated control is sharper — ' +
+    '`bun test test/stream.test.ts` alone, thirty seconds apart, 9 pass / 1 fail sandboxed against ' +
+    '10 pass / 0 fail unsandboxed. THE CAUSE is the sandbox denying a loopback bind(): the failure surfaces ' +
+    'as EADDRINUSE carrying errno 0, where a genuine macOS EADDRINUSE is errno 48, and mission-control has ' +
+    'exactly one Bun.serve, stopped in a finally, asking the kernel for an ephemeral port. The second ' +
+    'sandboxed failure is crosscheck.test.ts timing out at its 120s limit; it too passes with the sandbox ' +
+    'off, so it is sandbox-correlated, but no control here isolates its mechanism. ' +
+    'SUPERSEDED 2026-08-25, and this is exactly why measurements get written down. This entry used to read ' +
+    '"CANNOT PASS INSIDE THE SUITE, and passes outside it", citing `npm run check:mc` alone at 345 pass / 0 ' +
+    'fail against 344 pass / 1 fail nested, and concluding "nesting is the variable". NESTING WAS NOT THE ' +
+    'VARIABLE. That pair was taken while .claude/settings.json carried a `sandbox.excludedCommands` entry ' +
+    'naming "npm run check:mc", which matched the INVOKED command string and so exempted the standalone ' +
+    'cell while leaving the nested one sandboxed — the exemption produced the difference the entry then ' +
+    'attributed to nesting. Commit ab46d40 reverted that key. The file is now byte-identical to ' +
+    'origin/main and has no excludedCommands at all, and with it gone BOTH cells fail. So the old ' +
+    'instruction "run it as its own top-level command" no longer works on a sandboxed machine, and this ' +
+    'entry is the only place that said otherwise. ' +
+    'WHY IT IS STILL OUT OF THE SUITE: in it, it turns `npm run check` permanently red on every sandboxed ' +
+    'machine for a reason that is not about the code under test, and a suite that is always red is a suite ' +
+    'nobody reads. It is NOT excluded for being broken or slow — with the sandbox off it is 345 of 345 ' +
+    'green in 195s. IT STILL BLOCKS, and this is the load-bearing half: .github/workflows/ci.yml runs it ' +
+    'as its own step, `bun install --frozen-lockfile --cwd mission-control && npm run check:mc`, on a ' +
+    'runner with no OS sandbox — so coverage moved rather than disappearing, and scripts/check-suite.test' +
+    '.mjs now reads ci.yml and fails if that step is deleted. NOTHING SCHEDULES ITS RETURN, and calling it ' +
+    'temporary would be a promise no one has made: it comes back when a loopback bind is permitted, and ' +
+    'the sandbox exposes no inbound or loopback setting to grant one. Locally, run it with the sandbox ' +
+    'off. FALSIFY THIS: delete this entry, put check:mc back in STEPS, and run `npm run check` sandboxed. ' +
+    'If it goes green, the sandbox behaviour changed and this exclusion should not survive.',
   'check:citations':
     'POSTURE: WARN by design. scripts/check-citations.mjs says so in its own header — "deliberately ' +
     'NOT wired into `npm run check` or into CI by the PR that introduced it: turning it blocking is a ' +

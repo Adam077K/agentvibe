@@ -159,13 +159,64 @@ test('the nine steps the && chain used to skip are all in the suite', () => {
 test('check:mc is EXCLUDED, not merely absent — and the reason carries its measurement', () => {
   // Absent-with-no-entry is the silent omission this guard exists to catch, and it would look
   // identical to a considered decision from the outside. Only the EXCLUDED entry tells them apart.
-  assert.ok(!STEPS.includes('check:mc'), 'check:mc is back in STEPS; it cannot pass as a child under the sandbox');
+  assert.ok(!STEPS.includes('check:mc'), 'check:mc is back in STEPS; it fails under the armed sandbox');
   assert.ok(
     Object.prototype.hasOwnProperty.call(EXCLUDED, 'check:mc'),
     'check:mc left STEPS with no EXCLUDED entry — that is the silent omission, wearing the fix as a hat'
   );
+
+  // The matched pair the live claim rests on: sandbox on vs sandbox off, nesting held constant.
+  // *Superseded 2026-08-25: this asserted 345/0 against "344 pass / 1 fail", the standalone-vs-nested
+  // pair. That pair was produced by a sandbox.excludedCommands entry exempting the standalone cell,
+  // not by nesting, and the key was reverted in ab46d40. The old figures stay in the reason as a
+  // superseded note; what is pinned here is what reproduces on this tree.*
+  assert.match(EXCLUDED['check:mc'], /343 pass \/ 2 fail/);
   assert.match(EXCLUDED['check:mc'], /345 pass \/ 0 fail/);
-  assert.match(EXCLUDED['check:mc'], /344 pass \/ 1 fail/);
+  assert.match(
+    EXCLUDED['check:mc'],
+    /NESTING WAS NOT THE VARIABLE/,
+    'the entry no longer records that its earlier conclusion was refuted — that is the part that rots'
+  );
+});
+
+test('an exclusion that says CI still covers it is checked against ci.yml, not trusted', () => {
+  // auditSuite() can only measure that a reason is 40-odd characters long. It cannot tell a true
+  // reason from a false one, and one went false without a sound: the check:mc entry justified
+  // itself by a `sandbox.excludedCommands` key in .claude/settings.json that ab46d40 had already
+  // reverted. Citations to files in this repo CAN be checked, so these are.
+  const ci = fs.readFileSync(path.join(REPO, '.github', 'workflows', 'ci.yml'), 'utf8');
+
+  /** Names whose reason claims ci.yml covers them, where ci.yml does not invoke them. */
+  const uncovered = (excluded, workflow) =>
+    Object.entries(excluded)
+      .filter(([name, reason]) => /ci\.yml/.test(reason) && !workflow.includes(`npm run ${name}`))
+      .map(([name]) => name);
+
+  assert.deepEqual(
+    uncovered(EXCLUDED, ci),
+    [],
+    'an exclusion tells the reader ci.yml still runs it, and ci.yml does not. Either the CI step was ' +
+      'deleted — in which case that exclusion now hides a check running NOWHERE — or the reason cites ' +
+      'coverage that never existed.'
+  );
+
+  // Proved by mutation, like every other guard here: delete the CI step and the claim must bite.
+  const withoutStep = ci.replace(/npm run check:mc/g, 'npm run something-else');
+  assert.deepEqual(
+    uncovered(EXCLUDED, withoutStep),
+    ['check:mc'],
+    'removing the Mission Control step from ci.yml did not fail this check, so it is not evidence'
+  );
+
+  // And the fact the check:mc entry's account of its own history depends on. If someone reinstates
+  // a sandbox.excludedCommands key, that entry has to be re-measured, not re-read.
+  const settings = JSON.parse(fs.readFileSync(path.join(REPO, '.claude', 'settings.json'), 'utf8'));
+  assert.ok(
+    !(settings.sandbox && 'excludedCommands' in settings.sandbox),
+    'sandbox.excludedCommands is back in .claude/settings.json. The check:mc exclusion states that both ' +
+      'its cells fail BECAUSE that key is absent; with it present, standalone check:mc may pass again and ' +
+      'the entry needs re-measuring rather than a re-read.'
+  );
 });
 
 // ── The runner's behaviour, against fixture repos ────────────────────────────────────────────
