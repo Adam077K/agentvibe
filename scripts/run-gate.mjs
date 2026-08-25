@@ -276,6 +276,21 @@ function resolveTree(ref) {
   } catch (e) {
     return refuseTree(`"${tip}" does not resolve to a commit in ${REPO_ROOT}, so this tree cannot be the one holding the ref under review.`);
   }
+  // THE BASE GETS THE SAME TREATMENT AS THE TIP, because an unresolvable base fails SILENTLY where
+  // an unresolvable tip fails loudly. `git diff --name-only no-such-branch...<sha>` exits 128 with
+  // `fatal: ambiguous argument`, which downstream reads as an empty changed-file list — so the
+  // diff-scoped typecheck skips, the reviewers see nothing, and nothing distinguishes that from a
+  // diff with no defects in it. Raised as a P2 by a delta reviewer, who also noted that qa.js's own
+  // per-run probe of the range had just been removed in the same change that took the sha out of
+  // the oracle prompt. Both halves are back: this one is deterministic and runs before any dispatch.
+  const base = ref.slice(0, ref.length - tip.length).replace(/\.{2,3}$/, '');
+  if (base) {
+    try {
+      git(['rev-parse', '--verify', `${base}^{commit}`]);
+    } catch (e) {
+      return refuseTree(`the range base "${base}" does not resolve to a commit in ${REPO_ROOT}. git answers \`fatal: ambiguous argument\` for such a range and the empty diff that follows is indistinguishable from a diff with nothing wrong in it.`);
+    }
+  }
   if (tipSha !== head) {
     return refuseTree(`${REPO_ROOT} is at HEAD ${head}, but the ref under review ("${tip}") resolves to ${tipSha} there. The oracle would run the deterministic checks against a working tree that is not the commit being reviewed.`);
   }
