@@ -380,11 +380,44 @@ async function runQa(qaArgs, oracleReply, reviewFindings) {
 
 const HEAD_SHA = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim();
 const GOOD_ARGS = { ref: `origin/main...${HEAD_SHA}`, tier: 'full', tree: REPO };
+// THREE ENTRIES, AND SHRINKING THIS ARRAY SILENTLY CHANGES WHAT EVERY TEST BELOW MEANS.
+//
+// qa.js refuses a report carrying fewer than three checks — the prompt asks for exactly three, so
+// fewer is a partial run and a partial floor is not a floor. That makes this fixture COUPLED to a
+// rule it does not mention, and the coupling is HALF-VISIBLE, which is the dangerous half:
+//
+//   · a test asserting PASS fails loudly, because the run is now refused. Measured: cutting this
+//     array to one entry turns 7 cases red. That half takes care of itself.
+//   · a test asserting BLOCK still goes GREEN — for the wrong reason. The run was refused for
+//     UNDER-REPORTING rather than for whatever the test names, and nothing in the output says so.
+//
+// A green case that has stopped testing its subject is the failure mode this whole branch exists to
+// argue against, so it should not be discoverable only by whoever next re-derives it.
+//
+// The case most exposed to it is "pass:true beside a FAILING check", which builds a complete
+// three-element array by hand for exactly this reason — see the comment there. The guard directly
+// below turns the coupling into a failing test rather than a paragraph someone has to read first.
 const OK_CHECKS = [
   { name: 'npm run check', pass: true, output: '' },
   { name: 'typecheck', pass: true, output: '(skipped: no TS project covers the diff)' },
   { name: 'semgrep', pass: true, output: '(skipped: semgrep not installed)' },
 ];
+
+test('the oracle fixture reports a COMPLETE run — a short one would green the suite vacuously', () => {
+  // Read the requirement out of qa.js rather than restating it here: two copies of "three" would
+  // drift, and the one in the source is the one that decides.
+  const declared = /const ORACLE_REQUIRED_CHECKS = (\d+)/.exec(
+    fs.readFileSync(path.join(REPO, '.claude', 'workflows', 'qa.js'), 'utf8'),
+  );
+  assert.ok(declared, 'ORACLE_REQUIRED_CHECKS is gone from qa.js — re-anchor this guard, do not delete it');
+  assert.ok(
+    OK_CHECKS.length >= Number(declared[1]),
+    `OK_CHECKS has ${OK_CHECKS.length} entries but qa.js requires ${declared[1]}. Every case below that asserts ` +
+      'BLOCK would still pass, for the wrong reason: the run is refused as partial rather than exercising what the ' +
+      'test names. (Cases asserting PASS fail loudly, which is why the coupling is only half-visible and worth a ' +
+      'guard.) Add entries back, or change both together deliberately.',
+  );
+});
 const goodOracle = (over = {}) => ({
   pass: true,
   tree: REPO,
