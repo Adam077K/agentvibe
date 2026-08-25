@@ -55,8 +55,17 @@ tense and every one of them described a state the same commit had already remove
 
 ## The four things to know before touching anything
 
-1. **`main` = `71fd58d`** (verified here: `git rev-parse --short main`). This document now sits **ahead** of
-   it, on `integration/wave-1`, and describes **this tree**, not `main`.
+1. **`main` = `71fd58d`** (verified here: `git rev-parse --short main`). This document sits **ahead** of it,
+   on **`fix/wave-1-review-findings`** — the wave-1 review branch, which targets `integration/wave-1` — and
+   describes **this tree**, not `main`. Settle it in your own checkout with
+   `git rev-parse --abbrev-ref HEAD`; that is the branch every figure below was measured on, and it is
+   named here **once**.
+   > *Superseded 2026-08-26: this said `integration/wave-1`, while §4 said `fix/wave-1-review-findings` —
+   > two names for one tree, in a file whose stated rule is that it "describes **this tree**". Both were
+   > true at the time, which is why it survived a reading: `integration/wave-1` had been fast-forwarded onto
+   > the review branch, so the two names resolved to the same commit. **That is the ambiguity's disguise,
+   > not its absence** — the moment the integration branch moves independently, a reader cannot tell which
+   > tree the figures came from, and nothing in the file would change to tell them.*
 2. **The local floor is GREEN — `43 of 43 passed · 0 failed` — and the cause of CI's red is fixed in this
    change, though no runner has confirmed that from here.** See §1 and §4.
    > *Superseded 2026-08-26. This read: **"CI is RED and the local floor is GREEN.** Both are true, and they
@@ -239,7 +248,7 @@ CODEOWNERS in the tree today (verified). On a solo repository it would also dead
 npm run check  →  43 of 43 passed · 0 failed · exit 0
 ```
 
-macOS, sandbox armed, measured 2026-08-26 in this worktree on `fix/wave-1-review-findings`. **Re-derive
+macOS, sandbox armed, measured 2026-08-26 in this worktree, on the branch named once in §1. **Re-derive
 before believing it — `npm run check`, about 100 seconds.** If it disagrees, the tree has moved and this
 line is stale; that answer is worth more than knowing which commit it was taken at.
 
