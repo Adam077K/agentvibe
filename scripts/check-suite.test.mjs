@@ -548,16 +548,24 @@ test('an exclusion that says CI still covers it is checked against ci.yml, not t
   // asserted to survive, or this is once again a self-proof that proves the wrong deletion.
   const withoutStep = CI.replace(/^( *run: .*)npm run check:mc$/m, '$1npm run something-else');
   assert.notEqual(withoutStep, CI, 'the Mission Control mutation matched nothing, so its proof is vacuous');
-  assert.ok(
-    withoutStep.includes('npm run check:mc'),
-    'the mutation removed the comment too — that is the weaker deletion, and proving it proves nothing'
-  );
   assert.deepEqual(
     uncovered(EXCLUDED, withoutStep),
     ['check:mc'],
-    'removing the Mission Control STEP from ci.yml did not fail this check, so it is not evidence. A ' +
-      'mention in a comment must never satisfy a claim about what runs.'
+    'removing the Mission Control STEP from ci.yml did not fail this check, so it is not evidence.'
   );
+
+  // The decoy is CONSTRUCTED, not borrowed from the file. Asserting that ci.yml happens to mention
+  // the command in prose would pin someone else's comment: the first cut of this case did exactly
+  // that and went red the moment the comment was reworded — a test failing on the correct fix for
+  // the defect it guards. The property is "a comment never counts", so the comment is built here.
+  const commentDecoy = `${withoutStep}\n# see the Mission Control step: npm run check:mc\n`;
+  assert.deepEqual(
+    uncovered(EXCLUDED, commentDecoy),
+    ['check:mc'],
+    'a `npm run` mention inside a ci.yml COMMENT satisfied a claim about what ci.yml RUNS. That is how ' +
+      'the Mission Control step became deletable in silence while the exemption still certified coverage.'
+  );
+  assert.equal(invokes(commentDecoy, 'check:mc'), false, 'invokes() read a comment as a step that runs');
 
   // And the alias path, which is the load-bearing half now that five entries lean on it: an alias
   // is covered by ci.yml only while EVERY link has a step there. Delete one and it must bite. Same
@@ -569,14 +577,6 @@ test('an exclusion that says CI still covers it is checked against ci.yml, not t
     uncovered(EXCLUDED, withoutLink),
     ['check:ledger'],
     'deleting the `ledger verify` step from ci.yml left the check:ledger exemption looking covered'
-  );
-
-  // The class fix, stated as its own case: a name that appears ONLY in a comment is not covered.
-  const commentOnly = CI.replace(/^( *run: .*)npm run check:mc$/m, '$1npm run something-else');
-  assert.equal(
-    invokes(commentOnly, 'check:mc'),
-    false,
-    'a `npm run` mention inside a ci.yml comment was read as a step that runs'
   );
 
   // And the fact the check:mc entry's account of its own history depends on. If someone reinstates

@@ -34,7 +34,10 @@
 #
 # ── WHY EVERY CHECK STEP CARRIES `if: ${{ !cancelled() }}` ────────────────────────────────────
 # GitHub's default inside a job is fail-fast: the first failing step SKIPS every step after it.
-# This is one job of 44 sequential checks, and it was 30 before this change. Across the four
+# This is one job of 44 sequential checks, and it was 30 before this change. REPORTED, from the
+# GitHub API and not verifiable from a worktree — `gh` is denied by the sandbox's `denyRead` on
+# `~/.config/gh`, so no run history can be read here, and docs/STATUS.md §3 uses this same
+# `REPORTED` marker for every GitHub-derived claim: across the four
 # most recent runs on `main` before 2026-08-25 the build failed at `Pre-tool-use hook`, step
 # 18 of 30, so the TWELVE steps after it were skipped every time — the whole tail, not a
 # sample of it: `test:hooks`, `test:budget`, `test:run-gate`, `test:merge-gate`,
@@ -65,9 +68,19 @@
 # 18 checks behind those 5 names. That is the same short-circuit one level down, in the one
 # place a step-level `if:` cannot reach — `check:ledger` reported a single red step while
 # `ledger lint`, `ledger build --check` and `ledger verify` had not run. They are 18 steps here
-# now, and scripts/lib/check-suite.js REFUSES a suite step whose command carries `&&`, so it
-# cannot come back through package.json. The one `&&` left is Mission Control's
-# `bun install ... && npm run check:mc`, where the second cannot run without the first.
+# now, and scripts/lib/check-suite.js REFUSES a suite step whose RESOLVED command carries `&&`,
+# `||`, `;`, `|`, `&` or a newline — following the `npm run` delegation chain, because one wrapper
+# script defeated the earlier `&&`-only rule outright. So a chain cannot come back through
+# package.json, nor hide one hop away. The one `&&` left is Mission Control's
+# `bun install --frozen-lockfile --cwd mission-control` step below, where the second command
+# cannot run without the first; it is not a suite step.
+#
+# That sentence used to spell the Mission Control command out in full, and doing so broke the
+# guard that protects it: scripts/check-suite.test.mjs matched `npm run <name>` against this
+# whole file, comments included, so the COMMENT satisfied the coverage claim and the real step
+# could be deleted in silence. The test reads `run:` lines only now — but the spelling stays out
+# of this comment as well, because a check should not be the only thing standing between a
+# comment and a false claim.
 name: CI
 
 on:
