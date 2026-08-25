@@ -922,6 +922,151 @@ test('no ci.yml step invokes a runner directly — the tripwire preload, and the
   assert.equal(ciRunCommands(decoy).filter((c) => AGGREGATE_RUNNER.test(c)).length, 1, 'a comment changed the count');
 });
 
+/**
+ * ci.yml `run:` values that MAY carry a shell chain, keyed by the EXACT run string.
+ *
+ * EVERYTHING THE OPERATOR CHECK PROTECTED REACHED IT THROUGH package.json. shellOperators(),
+ * resolveChain(), aliasLinks() and auditSuite() only ever saw script bodies found by
+ * `resolveChain(scripts, step)`; ci.yml's `run:` text was never fed to any of them. So
+ * `run: npm run a && npm run b` written straight into the workflow bypassed package.json and STEPS
+ * entirely and reintroduced the silent skip this file exists to close — undetected. Measured
+ * 2026-08-26 before this check existed: a chained step appended to ci.yml produced ZERO findings
+ * anywhere in the repo, and `;`, `|` and `&` written there would not even have left a red step.
+ *
+ * KEYED BY THE RUN STRING, NOT THE STEP NAME, and the difference is the point: the command is what
+ * is exempted, so editing it re-opens the decision, while renaming a step does not silently move an
+ * exemption onto different code.
+ *
+ * Same three properties EXCLUDED carries in scripts/lib/check-suite.js, for the same reasons — a
+ * substantive written reason; no entry exempting a command that carries no chain; and, the one that
+ * matters, NO ENTRY THAT MATCHES NO LIVE STEP. An exemption that outlives its step reads as a
+ * considered decision and is not one.
+ */
+const CI_CHAINS_ALLOWED = {
+  'bun install --frozen-lockfile --cwd mission-control && npm run check:mc':
+    'THE ONE REAL EXCEPTION, and it is setup-then-run rather than a suite hiding behind one exit code. ' +
+    '`bun install` is a PREREQUISITE of check:mc, not a check of its own: if it fails, check:mc can ' +
+    'only fail differently and less legibly, so `&&` short-circuiting here hides nothing a reader ' +
+    'needs — the step still goes red and names the install. Splitting it into two steps would be ' +
+    'worse, because every `run:` step in this workflow carries `if: ${{ !cancelled() }}`, so a failed ' +
+    'install would NOT stop check:mc running against absent dependencies. This is also the only place ' +
+    'check:mc runs at all: EXCLUDED["check:mc"] in scripts/lib/check-suite.js carries the measurement ' +
+    '— armed sandbox 344 pass / 1 fail on a loopback bind, unsandboxed 345 pass / 0 fail — and states ' +
+    'that ci.yml "is the only place it runs green, so it is the only place it is checked".',
+};
+
+/**
+ * Findings against ci.yml's `run:` values: an unexempted chain, or an exemption that has rotted.
+ *
+ * Pure over BOTH inputs, so the test can mutate the workflow or the allowlist and watch it bite. A
+ * guard only ever run against a tree where it passes is not evidence, which is this file's whole
+ * method.
+ */
+function ciChainFindings(workflow, allowed = CI_CHAINS_ALLOWED) {
+  const findings = [];
+  const steps = parseCiSteps(workflow).filter((s) => s.run !== null);
+  const exempt = (run) => Object.prototype.hasOwnProperty.call(allowed, run);
+
+  for (const step of steps) {
+    const ops = shellOperators(step.run);
+    if (!ops.length || exempt(step.run)) continue;
+    findings.push(`ci.yml:${step.line} carries ${ops.map((op) => `\`${op}\``).join(', ')} — ${step.run}`);
+  }
+
+  const live = new Set(steps.map((s) => s.run));
+  for (const [run, reason] of Object.entries(allowed)) {
+    if (!live.has(run)) {
+      findings.push(`CI_CHAINS_ALLOWED exempts a command no step in ci.yml runs — ${run}`);
+      continue;
+    }
+    if (!shellOperators(run).length) {
+      findings.push(`CI_CHAINS_ALLOWED exempts a single command, which needs no exemption — ${run}`);
+    }
+    if (typeof reason !== 'string' || reason.trim().length < 40) {
+      findings.push(`CI_CHAINS_ALLOWED has no substantive reason for — ${run}`);
+    }
+  }
+
+  return findings;
+}
+
+test('no ci.yml step runs a shell chain, except one allowlisted command whose reason is checked', () => {
+  // THE SAME PREDICATE THE SUITE APPLIES TO package.json, applied to the file that bypasses it.
+  // `npm run check` reads one exit code per step and ci.yml reads one per step too, so a chain is
+  // the same defect in both places — but only one of them was ever checked.
+  assert.deepEqual(
+    ciChainFindings(CI), [],
+    'a `run:` step in ci.yml chains commands with no allowlist entry, or an entry has gone stale. A ' +
+      'chain behind one `run:` puts several commands behind one exit code: `&&` skips the rest on the ' +
+      'first failure, and `;`, `|` and `&` hand back the LAST command\'s status so the failure vanishes ' +
+      'with no red step at all.'
+  );
+
+  // The control: the exception is real and is exempted, so this is not a check that passes because
+  // ci.yml happens to contain no chains.
+  const seeded = Object.keys(CI_CHAINS_ALLOWED);
+  assert.equal(seeded.length, 1, 'the allowlist grew or shrank — re-read every entry before changing this');
+  assert.ok(
+    ciRunCommands(CI).includes(seeded[0]),
+    'the seeded allowlist entry does not match any `run:` value in ci.yml, so this test proves nothing'
+  );
+  assert.ok(shellOperators(seeded[0]).length > 0, 'the seeded entry exempts a command that carries no chain');
+
+  // ── Mutation 1: a chained step added to ci.yml, which is exactly how the defect arrives ────────
+  for (const [op, run] of Object.entries({
+    '&&': 'npm run test:hooks && npm run test:budget',
+    ';': 'npm run test:hooks ; npm run test:budget',
+    '|': 'npm run test:hooks | npm run test:budget',
+    '&': 'npm run test:hooks & npm run test:budget',
+  })) {
+    const added = `${CI.trimEnd()}\n\n      - name: A new check\n        if: \${{ !cancelled() }}\n        run: ${run}\n`;
+    const found = ciChainFindings(added);
+    assert.equal(found.length, 1, `a \`${op}\` chain written straight into ci.yml was accepted:\n${found.join('\n')}`);
+    assert.ok(found[0].includes(`\`${op}\``), `the finding did not name the operator: ${found[0]}`);
+  }
+
+  // ── Mutation 2: the DEFEATER — a chain hidden in a command substitution inside double quotes ───
+  // This is where the two halves meet. Until shellOperators() learned that `$(…)` re-enters command
+  // context, this exact `run:` line passed BOTH the package.json check and this one, and the `;`
+  // dropped a non-zero exit with no red step. Measured in bash: `echo "$(exit 7; exit 0)"` exits 0.
+  const hidden = `${CI.trimEnd()}\n\n      - name: A new check\n        if: \${{ !cancelled() }}\n        run: echo "$(npm run test:hooks; npm run test:budget)"\n`;
+  assert.equal(ciChainFindings(hidden).length, 1, 'a chain hidden in a substitution walked past the ci.yml check');
+
+  // ── Mutation 3: the allowlisted command EDITED — the entry must go stale, not follow it ────────
+  const edited = CI.replace(
+    /^( *run: )bun install --frozen-lockfile --cwd mission-control && npm run check:mc$/m,
+    '$1bun install --cwd mission-control && npm run check:mc && npm run check:something'
+  );
+  assert.notEqual(edited, CI, 'the edit mutation matched nothing, so its proof is vacuous');
+  const afterEdit = ciChainFindings(edited);
+  assert.equal(afterEdit.length, 2, `editing the exempted command did not bite twice:\n${afterEdit.join('\n')}`);
+  assert.ok(afterEdit.some((f) => /^ci\.yml:\d+ carries/.test(f)), 'the edited command was not reported as an unexempted chain');
+  assert.ok(afterEdit.some((f) => f.includes('no step in ci.yml runs')), 'the entry for the old command did not go stale');
+
+  // ── Mutation 4: the step DELETED — the exemption must not outlive it ──────────────────────────
+  const deleted = CI.replace(/^ *run: bun install --frozen-lockfile --cwd mission-control && npm run check:mc\n/m, '');
+  assert.notEqual(deleted, CI, 'the deletion mutation matched nothing, so its proof is vacuous');
+  assert.deepEqual(
+    ciChainFindings(deleted).filter((f) => f.includes('no step in ci.yml runs')).length, 1,
+    'the Mission Control step was deleted and its chain exemption still read as a considered decision'
+  );
+
+  // ── Mutation 5: the allowlist itself — a thin reason, and an entry that exempts nothing ────────
+  const thin = ciChainFindings(CI, { [seeded[0]]: 'legacy' });
+  assert.equal(thin.length, 1, `a one-word reason was accepted:\n${thin.join('\n')}`);
+  assert.ok(thin[0].includes('no substantive reason'), thin[0]);
+
+  const pointless = ciChainFindings(CI, { ...CI_CHAINS_ALLOWED, 'npm run test:sandbox': 'a'.repeat(60) });
+  assert.equal(pointless.length, 1, `an entry exempting a single command was accepted:\n${pointless.join('\n')}`);
+  assert.ok(pointless[0].includes('needs no exemption'), pointless[0]);
+
+  // ── The negative control: a COMMENT is not a step, in either direction ─────────────────────────
+  // The same property the check:mc P1 turned on. This reads `run:` values, so a chain written in a
+  // comment can neither trip the check nor satisfy an exemption.
+  const commented = `${CI.trimEnd()}\n# do not do this: npm run a && npm run b ; npm run c\n`;
+  assert.deepEqual(ciChainFindings(commented), [], 'a chain inside a ci.yml COMMENT was reported as a step');
+});
+
 test('`continue-on-error` appears in ci.yml as a word and never as a key', () => {
   // ci.yml's own rationale rests on this: "`if:` decides whether a step RUNS. Only
   // `continue-on-error: true` stops a failed step from failing the job, and it appears nowhere in
