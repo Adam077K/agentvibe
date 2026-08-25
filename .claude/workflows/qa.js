@@ -53,11 +53,20 @@ const CONTEXT = A.context || 'No extra context provided.'
 // a resolver never passes what it could not check.
 //
 // KNOWN CALLER THAT DOES NOT PASS IT YET: `.claude/workflows/coding.js` chains into this gate with
-// `{tier, ref, context}` and no `tree`, so its QA phase now REFUSES rather than measuring the CEO
-// worktree it used to measure by accident. That is the fail-closed direction, and it is on a path
-// nothing invokes today — `coding.js` is named by no slash command. It needs a one-line
-// pass-through of `args.tree`, which is outside this change's scope and is recorded here so the
-// next reader finds a decision rather than a surprise.
+// `{tier, ref, context}` and no `tree`. Its QA phase therefore REFUSES — **unconditionally**, and
+// this comment said "may refuse" until it was measured. `coding.js` can no longer reach a PASS by
+// any argument it is capable of passing, because it supplies neither a `tree` nor a sha-tipped ref
+// (its own default is `A.ref || 'origin/main...HEAD'`, which this gate now also refuses). Composing
+// the two workflows over real runtime globals returns `status: BLOCKED_BY_QA`, `qa_verdict: BLOCK`,
+// zero agents dispatched, and a summary carrying the word REFUSED — fail-closed, no budget spent,
+// and legible.
+//
+// It is invoked by no SLASH COMMAND — zero hits for `coding` across `.claude/commands/` — which is
+// the narrow and checkable statement. It remains invocable directly as `Workflow({name:'coding'})`,
+// so "a path nothing invokes" would be broader than the evidence; `TARGET-ARCHITECTURE.md` already
+// states the narrow version and this does not contradict it. The remedy is a one-line pass-through
+// of `args.tree` in that file, which is a contract change to a second workflow and deliberately
+// outside this change's scope — recorded here so the next reader finds a decision, not a surprise.
 
 /** Trailing slashes carry no meaning in a path. `/` is not a worktree and is left to be refused. */
 function normalizeTree(p) {
@@ -576,6 +585,29 @@ async function runOracle() {
   return null
 }
 
+// ── AN EMPTY findings ARRAY MEANS "CLEAN" AND ALSO MEANS "NEVER LOOKED", AND NOTHING HERE CAN ──
+// ── TELL THEM APART. THIS IS AN OPEN HAZARD, NOT A CLOSED ONE. ─────────────────────────────────
+//
+// Raised by an independent reviewer 2026-08-26 and reproduced: five dimensions returning
+// `{findings: []}` yields `verdict: PASS`, with `dimensions_failed: []` and `critical_gap: []`. The
+// coverage-gap override below never fires, because from here a reviewer that examined the diff and
+// found nothing is byte-identical to one that never saw the diff at all.
+//
+// That is the DESIGNED behaviour for a genuinely clean diff, and it is why this is a hazard rather
+// than a bug with an obvious patch. What makes it worth writing down here rather than leaving to be
+// rediscovered: the measured subagent dropout in this runtime is around half of all dispatches (see
+// the REVIEW_ATTEMPTS block above), and a dropout that happens to return valid-but-empty structured
+// output is spelled PASS. `ok: false` covers the agent that returns NOTHING; it does not cover the
+// agent that returns an empty set it never earned.
+//
+// WHY IT IS NOT FIXED IN THIS CHANGE, stated so the omission is a decision. Distinguishing the two
+// needs the reviewer to attest to what it examined — a changed-file count, or the sha it diffed —
+// which means a new required field in FINDINGS_SCHEMA and a new instruction in reviewPrompt(), for
+// all five dimensions plus the verifiers and the sweep. Every additional required field is another
+// way for a dispatch to fail its schema in a runtime that already loses half of them, so that trade
+// wants measuring rather than guessing. It is a change to how the panel reviews; this change is
+// about which tree gets measured, and merging the two would put an unmeasured panel change inside a
+// diff that is about something else.
 async function reviewDim(d) {
   for (let attempt = 0; attempt < REVIEW_ATTEMPTS; attempt++) {
     const r = await agent(reviewPrompt(d, attempt), { label: `review:${d.key}${attempt ? `:retry${attempt}` : ''}`, phase: 'Review', model: 'sonnet', agentType: REVIEW_AGENT, schema: FINDINGS_SCHEMA }).catch(() => null)

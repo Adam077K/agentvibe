@@ -392,9 +392,16 @@ function main() {
       console.log('  in the tree you paste it into — here, the copy this diff modifies. The gate would');
       console.log('  review its own change using its own changed self.');
       console.log('');
-      console.log('  Two requirements, one cwd. ONE HALF IS NOW CLOSED:');
+      console.log('  Two requirements, one cwd. ONE HALF IS NOW CLOSED — and be exact about which:');
       console.log('    · the reviewing copy of qa.js must come from `main`      STILL OPEN');
       console.log('    · the oracle must run `npm run check` in THIS PR\'s tree   CLOSED 2026-08-25');
+      console.log('');
+      console.log('  What closed is WHICH TREE IS READ, for every agent that reads one: the oracle runs');
+      console.log('  the checks in `tree`, and the dimension reviewers and verifiers were given it too');
+      console.log('  on 2026-08-26 — they were still running a bare `git diff` until then, so this very');
+      console.log('  advice was briefly true of the oracle and false of the panel. What did NOT close is');
+      console.log('  WHICH COPY OF qa.js EXECUTES. Those are different questions and only the first is');
+      console.log('  settled by an argument.');
       console.log('');
       console.log('  SUPERSEDED, kept because it is why the fix is shaped this way: "Running from a');
       console.log('  worktree that holds an unmodified gate satisfies the first and breaks the second —');
