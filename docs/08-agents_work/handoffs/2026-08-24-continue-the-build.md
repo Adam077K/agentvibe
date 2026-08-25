@@ -1,3 +1,6 @@
+> **HISTORICAL — superseded by [docs/STATUS.md](../../STATUS.md).** Retained for the record.
+> Read STATUS.md for current state; nothing here is a live instruction.
+
 # Handoff — the system is real now; find out what it is for
 
 **From:** ceo (`ceo-4-1787176363`) · **Date:** 2026-08-24 · **Base:** `main` = `f5c62ba`
