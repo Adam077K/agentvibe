@@ -22,11 +22,20 @@
 // ── READ THE `net` COLUMN OF `plan` BEFORE CHOOSING WHAT TO EVICT ───────────────────────────
 //
 // Eviction does not free an entry's size; it frees the entry MINUS the stub that replaces it,
-// and the stub grows with the number of citations it must name. Measured on the live file: the
-// `"Subagents cannot spawn subagents" is false` entry is 1,035 bytes and is cited in 23 places,
-// so its stub came to 1,004 bytes and evicting it freed **31 bytes**. The entry was left in place
-// for that reason. This is the number worth acting on, and it is not size and not age — a small
-// heavily-cited entry is load-bearing, and the residue rule says so in bytes before you commit.
+// and the stub grows with the number of citations it must name. So the number worth acting on is
+// not size and not age: a small, heavily-cited entry is load-bearing, and the residue rule says
+// so in bytes before you commit. On the live file there is an entry whose stub very nearly
+// outweighs its body, and it was left in place for that reason.
+//
+// NO WORKED EXAMPLE IS QUOTED HERE, AND THAT IS THE SECOND VERSION OF THIS COMMENT. The first
+// said the entry "is 1,035 bytes, cited in 23 places, so its stub came to 1,004 and evicting it
+// freed 31 bytes." Every figure was a true measurement and the sentence was still wrong, because
+// `net` is not a property of an entry — it is a function of (entry, stub format, `--reason`).
+// A reviewer re-running it measured 123 and was equally right: they used the DEFAULT reason where
+// the original run used a 187-byte one, and the stub format had since gained a line. Three
+// numbers, one entry, no contradiction, and a header that read as though the entry had a fixed
+// answer. Ask `plan`, which computes it against the real volume, the real default reason and the
+// real trailing bytes — and states in `net_basis` what it assumed.
 //
 // ── THE RULES ARE IN scripts/lib/memory-entries.js, NOT HERE ────────────────────────────────
 //
@@ -104,9 +113,22 @@ const VOLUME_BYTE_CAP = 40_000;
 /** The writer's ceiling: 90% of the cap. See the reserve note in this file's header. */
 const VOLUME_FILL_CEILING = Math.floor(VOLUME_BYTE_CAP * 0.9);
 
+/**
+ * The reason written into a stub when `--reason` is not given.
+ *
+ * Module scope, because `plan` prices its projection with it and `apply` writes it. Two copies
+ * would drift, and the drift would land in `net` — the one number the operator acts on.
+ */
+const DEFAULT_REASON = 'Superseded or complete; the body is preserved verbatim in the volume named above.';
+
 const MEMORY_DIR = ['.claude', 'memory'];
 const DECISIONS_REL = '.claude/memory/DECISIONS.md';
-const VOLUME_RE = /^DECISIONS_ARCHIVE(?:_(\d{3}))?\.md$/;
+// `\d{3,}` and not `\d{3}`: at volume 1000 `padStart(3)` emits four digits, and a three-digit
+// pattern would stop recognising the tool's own output — so `targetVolume` would compute
+// "volume 1" and `apply` would open a file that already held history. The existsSync guard in
+// `cmdApply` is the belt to this braces; both are needed, because the guard also covers a
+// case-insensitive filesystem collision that no regex can see.
+const VOLUME_RE = /^DECISIONS_ARCHIVE(?:_(\d{3,}))?\.md$/;
 
 // ── argv ────────────────────────────────────────────────────────────────────────────────────
 
@@ -126,7 +148,14 @@ const has = (name) => argv.includes(name);
 const ROOT = path.resolve(flagValue('--root') || REPO);
 const JSON_OUT = has('--json');
 const DRY_RUN = has('--dry-run');
-const TODAY = flagValue('--date') || new Date().toISOString().slice(0, 10);
+// LOCAL date, not `toISOString()`. The stub date is read by a human against their own clock, and
+// at UTC+0300 `toISOString()` stamps yesterday for three hours every evening — a date that is
+// wrong in the direction of looking older than it is, in a file whose whole job is provenance.
+const TODAY = flagValue('--date') || (() => {
+  const d = new Date();
+  const p2 = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+})();
 
 // ── tree access ─────────────────────────────────────────────────────────────────────────────
 
@@ -261,20 +290,45 @@ function readState(root) {
   const corpus = loadClaims(root, listFiles);
   const ctx = { root, claims: corpus.claims, files: corpus.files, decisionsRel: DECISIONS_REL };
   const classified = entries.map((e) => ({ entry: e, cls: classifyEntry(e, ctx) }));
-  return { abs, text, entries, corpus, classified };
+  return { abs, text, entries, corpus, classified, ambiguous: entries.ambiguous };
+}
+
+/**
+ * An ambiguous parse is not a warning — every entry boundary after the ambiguity is a guess.
+ *
+ * `plan` reports it and carries on classifying, because seeing the damage is how you fix it.
+ * `apply` REFUSES: evicting a "body" whose end the parser guessed is how a real entry's reasoning
+ * paragraph ends up in the archive under a fabricated heading, with the byte arithmetic balancing
+ * perfectly over the wrong bytes.
+ */
+function ambiguityNotice(s) {
+  return `DECISIONS.md cannot be parsed unambiguously: ${s.ambiguous}.\n` +
+    '  Every entry boundary after that point is a guess. Fix the file first — the usual cause is a\n' +
+    '  fenced example containing a `## YYYY-MM-DD` heading, which the parser must not read as an entry.\n';
 }
 
 function cmdPlan() {
   const s = readState(ROOT);
   if (!s) return;
   const bytes = Buffer.byteLength(s.text, 'utf8');
-  // The projected stub is built with the SAME function `apply` uses, so `net` is the gain the
-  // eviction would actually produce rather than an estimate of it. A separate estimator here
-  // would be a second implementation of the residue, and it would be the optimistic one.
-  const previewVolume = { name: 'DECISIONS_ARCHIVE.md' };
+  // ── `net` MUST BE WHAT `apply` WOULD ACTUALLY DO ──────────────────────────────────────────
+  //
+  // This projection was optimistic by 62% and it errs toward evicting, which is the worst
+  // direction for the one number this tool tells the operator to act on. Three separate causes,
+  // all fixed here:
+  //   1. it hardcoded `DECISIONS_ARCHIVE.md` as the volume name, while a rotated run writes a
+  //      LONGER name (`DECISIONS_ARCHIVE_002.md`) into every stub;
+  //   2. it built the stub with the literal reason `'Projected.'` — 10 bytes against a real
+  //      reason's hundred or more, and the reason is written into the stub verbatim;
+  //   3. it omitted the `trailing` separator bytes that `apply` counts as residue.
+  // It is now computed with the real target volume, the real DEFAULT reason, and the trailing
+  // bytes. A longer `--reason` makes the true gain SMALLER than this, so the number is now an
+  // upper bound that the report states as such rather than a figure that quietly overshoots.
+  const previewVolume = targetVolume(ROOT, 0);
   const rows = s.classified.map(({ entry, cls }) => {
+    const trailing = entry.text.slice(entry.text.replace(/\s+$/, '').length);
     const stubBytes = cls.citations
-      ? Buffer.byteLength(stubFor(entry, cls, previewVolume, 'Projected.'), 'utf8')
+      ? Buffer.byteLength(stubFor(entry, cls, previewVolume, DEFAULT_REASON) + trailing, 'utf8')
       : null;
     return {
       date: entry.date,
@@ -296,9 +350,18 @@ function cmdPlan() {
       root: ROOT,
       decisions: { bytes, cap: VOLUME_BYTE_CAP, headroom: VOLUME_BYTE_CAP - bytes, entries: s.entries.length },
       volumes: volumes(ROOT).map((v) => ({ number: v.number, name: v.name, bytes: v.bytes, cap: VOLUME_BYTE_CAP })),
+      parse: { ambiguous: s.ambiguous, usable: !s.ambiguous },
       claim_scan: s.corpus.available
-        ? { performed: true, claims: s.corpus.claims.length }
+        ? {
+            performed: true,
+            claims: s.corpus.claims.length,
+            // Declared here as well as in every stub. `plan` is where an operator decides what to
+            // evict, so the exclusion has to be visible at the point of decision, not only in the
+            // residue left after acting.
+            not_scanned: ['global-scope-claims (~/.warroom/ledger/global.yml — machine state, absent on CI)', 'paraphrase citations'],
+          }
         : { performed: false, why: 'git ls-files unavailable — the citation scan did NOT run' },
+      net_basis: `projected_net_gain assumes the DEFAULT --reason and volume ${previewVolume.name}; a longer --reason yields LESS`,
       entries: rows,
     }, null, 2) + '\n');
     return;
@@ -316,6 +379,8 @@ function cmdPlan() {
       ? `  claim scan: ${s.corpus.claims.length} live claims over ${s.corpus.files.length} tracked files\n\n`
       : '  claim scan: NOT PERFORMED (git ls-files unavailable) — no entry below may be evicted on this run\n\n'
   );
+
+  if (s.ambiguous) process.stdout.write(`  !! ${ambiguityNotice(s).trim()}\n\n`);
 
   const order = ['orphaned', 'eligible', 'guarded', 'refused', 'archived'];
   for (const group of order) {
@@ -350,9 +415,87 @@ function resolveSelector(sel, classified) {
   };
 }
 
+/**
+ * Write both files, then RE-READ THEM FROM DISK and re-verify.
+ *
+ * ── WHY EVERY WORD OF THAT SENTENCE IS LOAD-BEARING ─────────────────────────────────────────
+ *
+ * The conservation gate above runs on in-memory strings, before the write. That checks the
+ * tool's arithmetic, and a tool that checks its own arithmetic rather than the result is
+ * checking nothing: it cannot see a short write, a full disk, a file that was not the file it
+ * thought, or a second process. The verdict must be taken from the artifact, so it is taken
+ * again here, from the bytes that are actually on disk.
+ *
+ * ── ORDER AND ATOMICITY ─────────────────────────────────────────────────────────────────────
+ *
+ * Each file is written to a sibling temp and `rename`d over the target. `rename` within a
+ * directory is atomic on POSIX, so no reader — and no crash — ever observes a truncated volume,
+ * which a bare `writeFileSync` (O_TRUNC then write) exposes for the whole duration of the write.
+ *
+ * The VOLUME lands first, and that is deliberate rather than accidental. Renames are two steps
+ * and a crash between them leaves one of two states:
+ *   volume first  → the bodies are in BOTH files. Ugly, recoverable, nothing lost.
+ *   decisions first → the bodies are in NEITHER. Unrecoverable.
+ * So the surviving-duplicate state is chosen on purpose, and the duplicate-body guard in
+ * `cmdApply` is what makes the obvious recovery — re-run the same command — safe instead of
+ * silently appending a second copy.
+ */
+function commitWrite({ vol, volumeText, decisionsPath: decPath, decisionsText, chosen, io = fs }) {
+  // `io` is injected so the FAILURE path is reachable from a test. Without it, this function's
+  // refusal could only fire on a real short write or a real disk fault, so deleting the whole
+  // check cost zero failing tests — a gate nothing pins is a gate nobody notices going away.
+  // Production always passes the real `fs`; the seam adds no branch and no environment variable.
+  const atomic = (target, text) => {
+    const tmp = `${target}.evict-tmp-${process.pid}`;
+    io.writeFileSync(tmp, text);
+    io.renameSync(tmp, target);
+  };
+  atomic(vol.abs, volumeText);
+  atomic(decPath, decisionsText);
+
+  const problems = [];
+  const volOnDisk = io.readFileSync(vol.abs, 'utf8');
+  const decOnDisk = io.readFileSync(decPath, 'utf8');
+  if (volOnDisk !== volumeText) {
+    problems.push(`${vol.name} on disk is ${Buffer.byteLength(volOnDisk, 'utf8')} bytes; ${Buffer.byteLength(volumeText, 'utf8')} were computed`);
+  }
+  if (decOnDisk !== decisionsText) {
+    problems.push(`DECISIONS.md on disk is ${Buffer.byteLength(decOnDisk, 'utf8')} bytes; ${Buffer.byteLength(decisionsText, 'utf8')} were computed`);
+  }
+  // Re-assert the invariants against the artifact, not against the plan that produced it.
+  for (const { entry } of chosen) {
+    if (!volOnDisk.includes(entry.text.replace(/\s+$/, ''))) {
+      problems.push(`body of "${entry.heading}" is NOT in ${vol.name} on disk`);
+    }
+    if (!decOnDisk.includes(entry.heading)) {
+      problems.push(`heading "${entry.heading}" is NOT in DECISIONS.md on disk — the rule 4 residue did not land`);
+    }
+  }
+  // THROWS rather than returning a flag, and that is a deliberate structural choice.
+  //
+  // Returning `problems` put the whole verdict behind an `if (problems.length)` at the call site,
+  // and a mutation test showed that deleting those two lines cost ZERO failing tests: the tool
+  // computed the failure, discarded it, and exited 0. A gate whose call site is optional is
+  // optional. There is no branch to delete now — the only way past this line is for it not to
+  // throw, and the only way it does not throw is for the artifact on disk to be correct.
+  if (problems.length) {
+    const e = new Error(`post-write verification failed:\n  ${problems.join('\n  ')}`);
+    e.name = 'EvictionVerificationError';
+    e.problems = problems;
+    throw e;
+  }
+  return problems;
+}
+
 function cmdApply() {
   const s = readState(ROOT);
   if (!s) return;
+
+  if (s.ambiguous) {
+    process.stderr.write(`evict-memory apply: REFUSED — ${ambiguityNotice(s)}  Nothing written.\n`);
+    process.exitCode = 1;
+    return;
+  }
 
   const selectors = flagValues('--only');
   if (!selectors.length) {
@@ -415,7 +558,6 @@ function cmdApply() {
   // get eight reasons breaks the one-event-one-volume rule — measured: it put entry 1 into volume
   // 1 and entries 2-8 into volume 2, leaving volume 1 parked 492 bytes under the writer ceiling.
   const reasons = flagValues('--reason');
-  const DEFAULT_REASON = 'Superseded or complete; the body is preserved verbatim in the volume named above.';
   if (reasons.length > 1 && reasons.length !== chosen.length) {
     process.stderr.write(
       `evict-memory apply: ${reasons.length} --reason values for ${chosen.length} entries. Give one reason for\n` +
@@ -469,8 +611,55 @@ function cmdApply() {
     newDecisions = newDecisions.slice(0, at) + stub + trailing + newDecisions.slice(at + entry.text.length);
   }
 
+  // ── A "FRESH" VOLUME MUST NOT ALREADY EXIST ───────────────────────────────────────────────
+  //
+  // `vol.fresh` means "targetVolume computed a name no volume occupies", and the previous code
+  // trusted that and never looked at the disk. Everything downstream then works on a header-only
+  // string, so `writeFileSync` O_TRUNCs whatever is actually at that path — and the conservation
+  // check passes, because it compares in-memory strings that never knew the file was there. It
+  // printed "conservation closes to zero" and exited 0 over destroyed history.
+  //
+  // Two ways `targetVolume` is wrong about a name being free, and neither is exotic:
+  //   • a CASE-INSENSITIVE filesystem (macOS default) where `decisions_archive_002.md` exists —
+  //     `VOLUME_RE` is case-sensitive and does not see it, `writeFileSync` opens the same inode;
+  //   • any archive file whose name the pattern does not match, including one produced by
+  //     following `check-memory-budget.mjs`'s own advice to "split this volume by hand".
+  //
+  // The cure is not a smarter regex — a regex cannot see a case-folding filesystem. It is asking
+  // the filesystem, which is the only thing that knows.
+  if (vol.fresh && fs.existsSync(vol.abs)) {
+    process.stderr.write(
+      `evict-memory apply: REFUSED — ${vol.name} was computed as a NEW volume but a file already exists at\n` +
+      `  ${vol.abs}\n` +
+      '  Writing would truncate it. This means the volume set on disk does not match what the naming\n' +
+      '  pattern recognises — most often a case-insensitive filesystem, or an archive renamed by hand.\n' +
+      '  Rename it to the canonical DECISIONS_ARCHIVE_NNN.md form, or move it aside. Nothing written.\n'
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   const volExisting = vol.fresh ? volumeHeader(vol.number) : fs.readFileSync(vol.abs, 'utf8');
   const newVolume = volExisting.replace(/\s*$/, '\n\n') + bodies.join('\n\n') + '\n';
+
+  // ── AN ALREADY-ARCHIVED BODY MUST NOT BE APPENDED TWICE ───────────────────────────────────
+  //
+  // If a previous run wrote the volume and then failed before rewriting DECISIONS.md, the body
+  // is in both files and re-running the identical command is the obvious recovery. That appended
+  // a second copy and reported conservation closing to zero, because the arithmetic is about this
+  // run's bytes and knows nothing about the last one's.
+  const duplicated = chosen.filter(({ entry }) => volExisting.includes(entry.text.replace(/\s+$/, '')));
+  if (duplicated.length) {
+    process.stderr.write(
+      `evict-memory apply: REFUSED — ${duplicated.length} selected bod${duplicated.length === 1 ? 'y is' : 'ies are'} ALREADY present in ${vol.name}.\n` +
+      duplicated.map(({ entry }) => `      ${entry.heading}\n`).join('') +
+      '  This is the signature of an interrupted earlier run: the volume was written and DECISIONS.md\n' +
+      '  was not. Appending again would duplicate history. Replace the entry in DECISIONS.md with its\n' +
+      '  stub by hand, or remove the copy from the volume. Nothing written.\n'
+    );
+    process.exitCode = 1;
+    return;
+  }
 
   const before = { decisions: Buffer.byteLength(s.text, 'utf8'), volume: vol.bytes };
   const after = { decisions: Buffer.byteLength(newDecisions, 'utf8'), volume: Buffer.byteLength(newVolume, 'utf8') };
@@ -503,6 +692,28 @@ function cmdApply() {
     if (!newDecisions.includes(entry.heading)) {
       conservation.push(`heading "${entry.heading}" did not survive in DECISIONS.md — rule 4 residue missing`);
     }
+  }
+  // THE DESTINATION WAS IN THE REPORT AND IN NO ASSERTION. Both checks above are about
+  // DECISIONS.md; deleting the destination volume's prior content entirely left them satisfied,
+  // the report still printed "conservation closes to zero", and the run exited 0. Everything
+  // already in the volume must survive the append, and since the append is a pure suffix the
+  // check is exact rather than heuristic.
+  if (!newVolume.startsWith(volExisting.replace(/\s*$/, ''))) {
+    conservation.push(
+      `${vol.name}'s existing ${Buffer.byteLength(volExisting, 'utf8')} bytes are not a prefix of what would be written — ` +
+      'an append may only add to a volume, never rewrite it'
+    );
+  }
+  // A negative or zero reduction means the "eviction" GREW the file it was asked to shrink —
+  // which happens whenever a stub outweighs the body it replaces, and is invisible in a report
+  // whose other numbers all balance. It is refused rather than warned about, and the remedy needs
+  // no flag: shorten `--reason`, or read `plan`'s net column and pick a different entry.
+  if (removed <= 0) {
+    conservation.push(
+      `this eviction would ${removed === 0 ? 'not shrink' : 'GROW'} DECISIONS.md (reduction ${removed} bytes): ` +
+      `the stubs (${residue} bytes) weigh ${removed === 0 ? 'exactly as much as' : 'more than'} the bodies removed (${movedBodies}). ` +
+      'Shorten --reason, or run `plan` and choose an entry with a positive net'
+    );
   }
   if (conservation.length) {
     process.stderr.write('evict-memory apply: REFUSED — conservation check failed. Nothing written.\n');
@@ -537,8 +748,19 @@ function cmdApply() {
   };
 
   if (!DRY_RUN) {
-    fs.writeFileSync(vol.abs, newVolume);
-    fs.writeFileSync(s.abs, newDecisions);
+    // No `if` here on purpose — see commitWrite. It throws, and the catch only makes the message
+    // readable; delete the catch and the throw still ends the process non-zero. There is no
+    // arrangement of this call that reports success over a bad write.
+    try {
+      commitWrite({ vol, volumeText: newVolume, decisionsPath: s.abs, decisionsText: newDecisions, chosen });
+    } catch (e) {
+      if (e.name !== 'EvictionVerificationError') throw e;
+      process.stderr.write('evict-memory apply: POST-WRITE VERIFICATION FAILED — the files on disk are not what was computed.\n');
+      for (const c of e.problems) process.stderr.write(`  ${c}\n`);
+      process.stderr.write('  Inspect both files before running again; `apply` refuses to append a body a volume already holds.\n');
+      process.exitCode = 1;
+      return;
+    }
   }
 
   if (JSON_OUT) {
@@ -567,7 +789,17 @@ function cmdApply() {
 // were fixed on 2026-08-24; see scripts/check-dispatch-agenttype.mjs for the measurement and for
 // why fs.writeSync is not the fix. `plan --json` over a full DECISIONS.md is the payload here
 // most likely to grow past the buffer, which is exactly why this file does not use exit().
-if (cmd === 'plan') {
+// GUARDED, so this file can be imported by its test without running a command — the same shape
+// `scripts/ledger.mjs` uses for the same reason. Unguarded, importing it hits the usage branch
+// below, writes to stderr and sets a non-zero exit code, which fails the run that imported it.
+const invokedDirectly = process.argv[1]
+  && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
+
+export { commitWrite, VOLUME_BYTE_CAP, VOLUME_FILL_CEILING, DEFAULT_REASON };
+
+if (!invokedDirectly) {
+  // imported for its exports; no command to run
+} else if (cmd === 'plan') {
   cmdPlan();
 } else if (cmd === 'apply') {
   cmdApply();

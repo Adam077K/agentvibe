@@ -91,8 +91,26 @@ const LONG_TERM_LINE_CAP = 100;
  */
 const DECISIONS_ARCHIVE_BYTE_CAP = 40_000;
 
-/** Volume 1 is the un-suffixed legacy name; volumes 2+ carry a zero-padded sequence number. */
-const ARCHIVE_VOLUME_RE = /^DECISIONS_ARCHIVE(?:_\d{3})?\.md$/;
+/**
+ * What counts as an archive file FOR CAPPING — deliberately wider than what the eviction tool
+ * will WRITE.
+ *
+ * Two patterns, two jobs, and conflating them is a hole:
+ *   WRITE  `scripts/evict-memory.mjs` only ever creates `DECISIONS_ARCHIVE.md` or
+ *          `DECISIONS_ARCHIVE_NNN.md`. Narrow on purpose — a writer that accepts any name
+ *          cannot tell a volume from a note.
+ *   CAP    anything named like an archive, case-insensitively, including
+ *          `DECISIONS_ARCHIVE_2026-08.md` (the period-keyed form this design did not adopt),
+ *          `decisions_archive_002.md` (a case-insensitive filesystem's version of a volume) and
+ *          `DECISIONS_ARCHIVE_NOTES.md`.
+ *
+ * An earlier version of this file used the narrow pattern for BOTH, and a test asserted that
+ * `DECISIONS_ARCHIVE_NOTES.md` was correctly ignored. That test pinned the hole: a file holding
+ * archived decisions was governed by nothing because of how somebody had named it. Whether the
+ * eviction tool would produce that name is beside the point — the cap exists to bound what a
+ * reader must load, and a reader loads it by what it holds, not by whether a regex approves.
+ */
+const ARCHIVE_VOLUME_RE = /^DECISIONS_ARCHIVE(?:[_-].*)?\.md$/i;
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 const failures = [];

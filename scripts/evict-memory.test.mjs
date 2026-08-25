@@ -44,13 +44,13 @@ process.on('exit', () => {
  * @param {object} [o.archives]    archive volumes, filename → contents
  * @param {boolean} [o.git=true]   run `git init` — false exercises the unavailable-scan refusal
  */
-function fixture({ entries, files = {}, archives = {}, git = true }) {
+function fixture({ entries, files = {}, archives = {}, git = true, header = true }) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'evict-memory-fixture-'));
   roots.push(root);
   fs.mkdirSync(path.join(root, '.claude', 'memory'), { recursive: true });
   fs.writeFileSync(
     path.join(root, '.claude', 'memory', 'DECISIONS.md'),
-    `# Architecture & Strategy Decisions\n\n---\n\n<!-- Entries below this line. -->\n\n${entries}`
+    header ? `# Architecture & Strategy Decisions\n\n---\n\n<!-- Entries below this line. -->\n\n${entries}` : entries
   );
   fs.writeFileSync(path.join(root, '.claude', 'memory', 'LONG-TERM.md'), 'a\nb\nc\n');
   for (const [name, body] of Object.entries(archives)) {
@@ -82,7 +82,18 @@ const dispositionOf = (p, title) => p.entries.find((e) => e.title.includes(title
 
 // ── entry builders ──────────────────────────────────────────────────────────────────────────
 
-function entry({ date, title, reversibility = 'reversible', affects = 'nothing in particular', body = 'Context and rationale.' }) {
+/**
+ * `body` defaults to roughly a real entry's size on purpose.
+ *
+ * The live file's real entries run to about 1,800 bytes; a 200-byte synthetic one is smaller
+ * than the stub that replaces it, so every eviction of it GROWS the file — which the tool now
+ * refuses, correctly. A fixture that could only exercise the refusal would test the guard and
+ * nothing behind it.
+ */
+const REALISTIC_BODY = ('Why this came up, at about the length a real entry runs to, so that an ' +
+  'eviction of it actually shrinks the file rather than tripping the growth guard. ').repeat(6);
+
+function entry({ date, title, reversibility = 'reversible', affects = 'nothing in particular', body = REALISTIC_BODY }) {
   return [
     `## ${date} — ${title}`,
     '',
@@ -259,7 +270,7 @@ test('RULE 3: apply REFUSES outright when the claim scan could not run', () => {
 
 test('RULE 4: the heading survives, the stub names the volume, and the body is verbatim in it', () => {
   const root = fixture({
-    entries: entry({ date: '2026-08-08', title: 'A decision recorded in unmistakable words', body: 'UNMISTAKABLE-BODY-SENTINEL rationale.' }),
+    entries: entry({ date: '2026-08-08', title: 'A decision recorded in unmistakable words', body: `UNMISTAKABLE-BODY-SENTINEL ${REALISTIC_BODY}` }),
   });
   const r = apply(root, ['--only', '2026-08-08']);
   assert.equal(r.code, 0, r.err);
@@ -402,4 +413,351 @@ test('the real DECISIONS.md parses, and every entry lands in exactly one class',
     assert.ok(known.has(e.disposition), `unknown disposition ${e.disposition} for ${e.date}`);
   }
   assert.ok(p.decisions.headroom > 0, `the real file is over its cap: ${JSON.stringify(p.decisions)}`);
+});
+
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// HARDENING — every case below reproduces an adversarial review finding of 2026-08-26.
+//
+// The eviction that had already run was verified clean by an independent parser. Every defect
+// pinned here lived in a path that run did not take, which is exactly the kind that survives:
+// nothing exercised it, so nothing contradicted it.
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+
+// ── P1-1 · a dated heading inside a code fence ──────────────────────────────────────────────
+
+const FENCED = [
+  '## 2026-03-01 — An irreversible decision that shows the entry format',
+  '',
+  '**Decision:** Applied.',
+  '**Reversibility:** irreversible',
+  '**Affects:** `db/schema.sql`',
+  '',
+  '```markdown',
+  '## 2026-03-02 — [Decision title]',
+  'FENCED-EXAMPLE-SENTINEL',
+  '```',
+  '',
+  '**Consequence:** THE-REASONING-NOBODY-WANTS-TO-LOSE.',
+  '',
+].join('\n');
+
+test('P1-1: a dated heading inside a fence is CONTENT, not an entry', () => {
+  const root = fixture({ entries: FENCED, files: { 'db/schema.sql': 'x\n' } });
+  const p = plan(root);
+  assert.equal(p.entries.length, 1, `the fenced heading must not become an entry: ${JSON.stringify(p.entries.map((e) => e.date))}`);
+  assert.equal(p.entries[0].date, '2026-03-01');
+  assert.equal(p.entries[0].disposition, 'refused', 'the real entry is irreversible with a live subject');
+});
+
+test('P1-1: the fenced tail can no longer be evicted out from under its refused parent', () => {
+  const root = fixture({ entries: FENCED, files: { 'db/schema.sql': 'x\n' } });
+  const before = readDecisions(root);
+  const r = apply(root, ['--only', '2026-03-02']);
+  assert.equal(r.code, 1, 'there is no such entry to select');
+  assert.match(r.err, /matches no entry/);
+  assert.equal(readDecisions(root), before);
+  assert.ok(readDecisions(root).includes('THE-REASONING-NOBODY-WANTS-TO-LOSE'),
+    'the reasoning paragraph must still be in DECISIONS.md');
+});
+
+test("P1-1: the live file's own ## Format example is the attack, and it parses as zero entries", () => {
+  // .claude/memory/DECISIONS.md documents a ```markdown fence containing `## YYYY-MM-DD — …`.
+  // It has been harmless only because the placeholder date is not digits. Fill it in and the
+  // old parser split the file; this asserts the construct itself is now inert.
+  const root = fixture({
+    entries: ['```markdown', '## 2026-04-01 — [Decision title]', '**Reversibility:** reversible', '```', ''].join('\n'),
+  });
+  assert.equal(plan(root).entries.length, 0);
+});
+
+test('P1-1: an UNTERMINATED fence is refused, not guessed', () => {
+  const root = fixture({
+    entries: [
+      '## 2026-05-01 — A decision whose fence is never closed anywhere',
+      '**Reversibility:** reversible',
+      '**Affects:** nothing',
+      '',
+      '```',
+      '## 2026-05-02 — swallowed',
+      '',
+    ].join('\n'),
+  });
+  const p = plan(root);
+  assert.equal(p.parse.usable, false);
+  assert.match(p.parse.ambiguous, /unterminated/);
+  const before = readDecisions(root);
+  const r = apply(root, ['--only', '2026-05-01']);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /cannot be parsed unambiguously/);
+  assert.equal(readDecisions(root), before, 'an ambiguous parse must write nothing');
+});
+
+// ── P1-2 · a "fresh" volume that already exists ─────────────────────────────────────────────
+
+test('P1-2: apply REFUSES when the computed new volume name is already a file', () => {
+  // Reproduces the case-collision demonstration: a volume the naming pattern does not recognise
+  // sits at the path `targetVolume` calls free, and the old code O_TRUNCed it while reporting
+  // "conservation closes to zero".
+  const root = fixture({
+    entries: entry({ date: '2026-06-01', title: 'An ordinary decision about ordinary things' }),
+    archives: {
+      'DECISIONS_ARCHIVE.md': `# Archive\n\n${'x'.repeat(35_000)}\n`,
+      // Occupies the exact path targetVolume will compute, under a name VOLUME_RE misses.
+      'DECISIONS_ARCHIVE_002.MD': 'IRREPLACEABLE-HISTORY-SENTINEL\n',
+    },
+  });
+  const dir = path.join(root, '.claude', 'memory');
+  const collided = fs.readdirSync(dir).filter((n) => /^DECISIONS_ARCHIVE_002\.md$/i.test(n));
+  assert.equal(collided.length, 1, 'fixture must place a file at the contended path');
+
+  const r = apply(root, ['--only', '2026-06-01']);
+  assert.equal(r.code, 1, `expected refusal, got ${r.code}: ${r.out}`);
+  assert.match(r.err, /computed as a NEW volume but a file already exists/);
+  assert.ok(fs.readFileSync(path.join(dir, collided[0]), 'utf8').includes('IRREPLACEABLE-HISTORY-SENTINEL'),
+    'the prior volume must survive untouched');
+});
+
+test('P1-2: volume 1000 keeps being recognised — padStart(3) emits four digits', () => {
+  const root = fixture({
+    entries: entry({ date: '2026-06-02', title: 'An ordinary decision about ordinary things' }),
+    archives: { 'DECISIONS_ARCHIVE_1000.md': `# Archive volume 1000\n\n${'x'.repeat(35_000)}\n` },
+  });
+  const r = apply(root, ['--only', '2026-06-02']);
+  assert.equal(r.code, 0, r.err);
+  assert.ok(fs.existsSync(path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE_1001.md')),
+    'the next volume after 1000 is 1001, not a re-used low number');
+});
+
+// ── P2-1 · conservation must cover the DESTINATION, and be re-checked from disk ─────────────
+
+test('P2-1: the destination volume is an ASSERTION, not just a report line', () => {
+  // Deleting the destination's prior content used to leave every conservation check satisfied.
+  // The invariant is exact: an append may only add a suffix.
+  const root = fixture({
+    entries: [
+      entry({ date: '2026-07-01', title: 'First decision about the shape of the queue' }),
+      entry({ date: '2026-07-02', title: 'Second decision about the shape of the cache' }),
+    ].join('\n'),
+    archives: { 'DECISIONS_ARCHIVE.md': '# Archive\n\nPRIOR-VOLUME-CONTENT-SENTINEL\n' },
+  });
+  assert.equal(apply(root, ['--only', '2026-07-01']).code, 0);
+  const vol = fs.readFileSync(path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE.md'), 'utf8');
+  assert.ok(vol.includes('PRIOR-VOLUME-CONTENT-SENTINEL'), 'prior volume content must survive an append');
+  assert.ok(vol.startsWith('# Archive\n\nPRIOR-VOLUME-CONTENT-SENTINEL'),
+    'the append must be a pure suffix — the prior bytes are a prefix of the result');
+});
+
+test('P2-1: the post-write verification reads the ARTIFACT, not the plan', () => {
+  // Whatever apply reports, the bytes on disk must carry the body and the residue. This asserts
+  // the artifact directly, which is the check the tool now performs on itself before exiting 0.
+  const root = fixture({
+    entries: entry({ date: '2026-07-03', title: 'A decision recorded in unmistakable words', body: `DISK-SENTINEL ${REALISTIC_BODY}` }),
+  });
+  assert.equal(apply(root, ['--only', '2026-07-03']).code, 0);
+  const dir = path.join(root, '.claude', 'memory');
+  assert.ok(fs.readFileSync(path.join(dir, 'DECISIONS_ARCHIVE.md'), 'utf8').includes('DISK-SENTINEL'));
+  assert.ok(fs.readFileSync(path.join(dir, 'DECISIONS.md'), 'utf8').includes('## 2026-07-03 —'));
+  assert.ok(!fs.existsSync(path.join(dir, `DECISIONS_ARCHIVE.md.evict-tmp-${process.pid}`)),
+    'no temp file may be left behind');
+});
+
+test('P2-1: an eviction that would GROW the file is refused', () => {
+  // Every fixture run in the review grew the file and still exited 0. A stub can outweigh the
+  // body it replaces, and the arithmetic still balances — which is exactly why it needs its own
+  // assertion rather than trust in the other numbers.
+  const root = fixture({ entries: entry({ date: '2026-07-04', title: 'A tiny decision about one thing', body: 'x' }) });
+  const before = readDecisions(root);
+  const r = apply(root, ['--only', '2026-07-04', '--reason', 'y'.repeat(2_000)]);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /would GROW DECISIONS\.md/);
+  assert.equal(readDecisions(root), before);
+});
+
+test('P2-4: re-running after an interrupted write refuses instead of duplicating', () => {
+  const root = fixture({ entries: entry({ date: '2026-07-05', title: 'A decision that must not be archived twice over' }) });
+  assert.equal(apply(root, ['--only', '2026-07-05']).code, 0);
+  const dir = path.join(root, '.claude', 'memory');
+  // Simulate the interrupted state: the volume was written, DECISIONS.md was not.
+  fs.writeFileSync(path.join(dir, 'DECISIONS.md'), fs.readFileSync(path.join(dir, 'DECISIONS.md'), 'utf8'));
+  const volBefore = fs.readFileSync(path.join(dir, 'DECISIONS_ARCHIVE.md'), 'utf8');
+  const restored = fixture({
+    entries: entry({ date: '2026-07-05', title: 'A decision that must not be archived twice over' }),
+    archives: { 'DECISIONS_ARCHIVE.md': volBefore },
+  });
+  const r = apply(restored, ['--only', '2026-07-05']);
+  assert.equal(r.code, 1, 'a body already in the volume must not be appended again');
+  assert.match(r.err, /ALREADY present in/);
+});
+
+// ── P2-2 · Reversibility must fail CLOSED ───────────────────────────────────────────────────
+
+const UNREADABLE = [
+  ['field absent', ''],
+  ['transposed letter', '**Reversability:** reversible'],
+  ['bolded value', '**Reversibility:** **irreversible**'],
+  ['empty value', '**Reversibility:**'],
+  ['negated prose', '**Reversibility:** NOT reversible under any circumstances'],
+];
+
+for (const [label, line] of UNREADABLE) {
+  test(`P2-2: Reversibility unreadable (${label}) ⇒ REFUSED, never "reversible"`, () => {
+    const root = fixture({
+      entries: [
+        '## 2026-09-01 — A decision whose reversibility cannot be read at all',
+        '**Decision:** Something.',
+        line,
+        '**Affects:** nothing',
+        '',
+      ].filter(Boolean).join('\n'),
+    });
+    const p = plan(root);
+    assert.equal(p.entries[0].disposition, 'refused', `${label} must refuse, got ${p.entries[0].disposition}`);
+    assert.ok(!p.entries[0].reasons.join(' ').match(/^Reversibility reads/),
+      'the tool must not assert a value it could not read');
+    const before = readDecisions(root);
+    const r = apply(root, ['--only', '2026-09-01']);
+    assert.equal(r.code, 1);
+    assert.equal(readDecisions(root), before);
+  });
+}
+
+test('P2-2: a LIST-ITEM Reversibility is read rather than treated as absent', () => {
+  const root = fixture({
+    entries: ['## 2026-09-02 — A decision written with list-item fields',
+      '- **Reversibility:** irreversible',
+      '- **Affects:** `db/schema.sql`', ''].join('\n'),
+    files: { 'db/schema.sql': 'x\n' },
+  });
+  const p = plan(root);
+  assert.equal(p.entries[0].disposition, 'refused');
+  assert.match(p.entries[0].reasons.join(' '), /RULE 1: Reversibility is irreversible/,
+    'it must refuse for the RIGHT reason — the value was read, not merely unreadable');
+});
+
+test('P2-2: the typo gets a did-you-mean, so "field absent" does not send a reader hunting', () => {
+  const root = fixture({
+    entries: ['## 2026-09-03 — A decision with one transposed letter in a field name',
+      '**Reversability:** reversible', '**Affects:** nothing', ''].join('\n'),
+  });
+  assert.match(plan(root).entries[0].reasons.join(' '), /probably a typo/);
+});
+
+// ── P3 · declarations, CRLF, dates ──────────────────────────────────────────────────────────
+
+test('P3: plan DECLARES the global-scope exclusion it puts in every stub', () => {
+  const root = fixture({ entries: entry({ date: '2026-09-04', title: 'An ordinary decision about ordinary things' }) });
+  const p = plan(root);
+  assert.ok(p.claim_scan.not_scanned.some((n) => n.includes('global-scope-claims')),
+    'the exclusion must be visible where the operator decides, not only in the residue');
+  assert.match(p.net_basis, /DEFAULT --reason/,
+    'net is an upper bound and the report must say what it assumed');
+});
+
+test('P3: a CRLF file parses its entries — it used to report ZERO', () => {
+  // Zero entries means the 50-entry cap fails OPEN on a file the checker calls empty.
+  const body = [
+    entry({ date: '2026-09-05', title: 'First decision about the shape of the queue' }),
+    entry({ date: '2026-09-06', title: 'Second decision about the shape of the cache' }),
+  ].join('\n').replace(/\n/g, '\r\n');
+  const root = fixture({ entries: body, header: false });
+  const p = plan(root);
+  assert.equal(p.entries.length, 2, 'CRLF must not hide entries');
+  assert.equal(p.entries[0].reversibility, 'reversible', 'fields must parse through CRLF too');
+});
+
+test('P3: the stub date is the LOCAL date, not UTC', () => {
+  const root = fixture({ entries: entry({ date: '2026-09-07', title: 'A decision archived without an explicit date flag' }) });
+  const r = run(EVICT, ['apply', '--root', root, '--only', '2026-09-07']); // no --date
+  assert.equal(r.code, 0, r.err);
+  const d = new Date();
+  const local = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  assert.match(readDecisions(root), new RegExp(`\\(${local}\\)`),
+    `the stub must carry the local date ${local}`);
+});
+
+// ── P2-1 · the post-write verification must REFUSE, and that refusal must be pinned ─────────
+//
+// The conservation gate before the write checks the tool's own arithmetic. This one checks the
+// RESULT, and it is the only check that can see a short write, a full disk, or a file that was
+// not the file the tool thought. Its failure path is unreachable through the CLI on a healthy
+// filesystem, so it is driven directly with an injected `io` — otherwise deleting it costs zero
+// failing tests, which is exactly the state the review found it in.
+
+const { commitWrite, VOLUME_BYTE_CAP: EVICT_CAP } = await import('./evict-memory.mjs');
+
+/** Run `fn`, return the error it threw, and fail loudly if it did not throw at all. */
+function caught(fn) {
+  try { fn(); } catch (e) { return e; }
+  assert.fail('expected a throw — a verification that returns instead of throwing is a gate with a deletable call site');
+}
+
+/** A filesystem that writes fewer bytes than it was given — the classic short write. */
+function truncatingIo(realFs, victim) {
+  return {
+    writeFileSync: (p, t) => realFs.writeFileSync(p, p.includes(victim) ? t.slice(0, Math.floor(t.length / 2)) : t),
+    renameSync: (a, b) => realFs.renameSync(a, b),
+    readFileSync: (p, e) => realFs.readFileSync(p, e),
+  };
+}
+
+function commitFixture() {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'evict-commit-'));
+  roots.push(root);
+  const volAbs = path.join(root, 'DECISIONS_ARCHIVE.md');
+  const decAbs = path.join(root, 'DECISIONS.md');
+  fs.writeFileSync(volAbs, '# Archive\n');
+  fs.writeFileSync(decAbs, '# Decisions\n');
+  return {
+    vol: { abs: volAbs, name: 'DECISIONS_ARCHIVE.md' },
+    decisionsPath: decAbs,
+    volumeText: `# Archive\n\n## 2026-10-01 — A body\n\nBODY-SENTINEL and more text to make the halves differ.\n`,
+    decisionsText: `# Decisions\n\n## 2026-10-01 — A body\n*Archived to \`DECISIONS_ARCHIVE.md\` (2026-10-02). Done.*\n`,
+    chosen: [{ entry: { heading: '## 2026-10-01 — A body', text: '## 2026-10-01 — A body\n\nBODY-SENTINEL and more text to make the halves differ.\n' } }],
+  };
+}
+
+test('P2-1: a healthy write passes post-write verification', () => {
+  // The control. Without it the two mutations below would prove only that the function can fail.
+  assert.deepEqual(commitWrite({ ...commitFixture(), io: fs }), []);
+});
+
+test('P2-1: a short write to the VOLUME is caught by re-reading from disk', () => {
+  // It THROWS. A returned flag left the verdict behind a deletable `if` at the call site, and
+  // deleting those two lines cost zero failing tests — the tool computed the failure and exited 0.
+  const e = caught(() => commitWrite({ ...commitFixture(), io: truncatingIo(fs, 'DECISIONS_ARCHIVE.md') }));
+  assert.equal(e.name, 'EvictionVerificationError');
+  const problems = e.problems;
+  assert.ok(problems.length > 0, 'a truncated volume must be reported, not exited 0 over');
+  assert.ok(problems.some((p) => p.includes('DECISIONS_ARCHIVE.md') && p.includes('on disk')),
+    `the volume must be named: ${JSON.stringify(problems)}`);
+  assert.ok(problems.some((p) => p.includes('is NOT in DECISIONS_ARCHIVE.md on disk')),
+    'the missing body must be named, not just the byte count');
+});
+
+test('P2-1: a short write to DECISIONS.md is caught too — the residue is an artifact claim', () => {
+  const e = caught(() => commitWrite({ ...commitFixture(), io: truncatingIo(fs, 'DECISIONS.md') }));
+  const problems = e.problems;
+  assert.ok(problems.some((p) => p.includes('DECISIONS.md on disk')),
+    `expected a DECISIONS.md finding: ${JSON.stringify(problems)}`);
+});
+
+test('P2-1: the volume lands BEFORE DECISIONS.md — the survivable crash state is chosen', () => {
+  // A crash between the two renames leaves the bodies in both files (recoverable) rather than in
+  // neither (not). The duplicate-body guard is what makes re-running the safe recovery.
+  const order = [];
+  const f = commitFixture();
+  commitWrite({
+    ...f,
+    io: {
+      writeFileSync: (p, t) => fs.writeFileSync(p, t),
+      renameSync: (a, b) => { order.push(path.basename(b)); fs.renameSync(a, b); },
+      readFileSync: (p, e) => fs.readFileSync(p, e),
+    },
+  });
+  assert.deepEqual(order, ['DECISIONS_ARCHIVE.md', 'DECISIONS.md']);
+});
+
+test('the exported cap is the one the CLI enforces', () => {
+  assert.equal(EVICT_CAP, 40_000);
 });

@@ -229,19 +229,37 @@ test('MUTATION: many volumes, all within cap, pass — the cap is per volume, no
   assert.equal(r.code, 0, `per-volume caps must not sum: ${JSON.stringify(r.failures)}`);
 });
 
-test('MUTATION: a file that only looks like a volume is not measured', () => {
-  // `DECISIONS_ARCHIVE_2026-08.md` is the period-keyed name this design deliberately did not
-  // adopt. If the pattern accepted it, an operator could believe a period file was governed
-  // when it was not — so the pattern is exact and this pins it.
+test('MUTATION: an archive-named file the WRITE pattern rejects is still CAPPED', () => {
+  // THIS TEST USED TO ASSERT THE OPPOSITE, and the assertion was the hole. It said
+  // `DECISIONS_ARCHIVE_NOTES.md` "is not a volume" and passed a 41,000-byte file, on the
+  // reasoning that the eviction tool would never create that name. But the cap is not about who
+  // wrote the file — it bounds what a reader must load, and a reader loads it by what it holds.
+  // Two patterns, two jobs: the WRITER stays narrow, the CAP is wide.
+  const cases = {
+    'DECISIONS_ARCHIVE_NOTES.md': 'a hand-named archive',
+    'DECISIONS_ARCHIVE_2026-08.md': 'the period-keyed form this design did not adopt',
+    'decisions_archive_002.md': "a case-insensitive filesystem's version of a volume",
+  };
+  for (const [name, why] of Object.entries(cases)) {
+    const r = check(fixture({
+      decisions: makeDecisions(3, 100),
+      longTerm: makeLines(10),
+      volumes: { 'DECISIONS_ARCHIVE.md': '# Archive\n', [name]: 'q'.repeat(ARCHIVE_BYTE_CAP + 1) },
+    }));
+    assert.equal(r.code, 1, `${name} (${why}) must be capped`);
+    assert.ok(r.failures.some((f) => f.includes(name)), `${name} must be named in the failure`);
+  }
+});
+
+test('MUTATION: a file that is not an archive at all is left alone', () => {
+  // The wide pattern must still be a pattern. LONG-TERM.md and CODEBASE-MAP.md live in the same
+  // directory and are governed by their own rules or by none.
   const r = check(fixture({
     decisions: makeDecisions(3, 100),
     longTerm: makeLines(10),
-    volumes: {
-      'DECISIONS_ARCHIVE.md': '# Archive\n',
-      'DECISIONS_ARCHIVE_NOTES.md': 'q'.repeat(ARCHIVE_BYTE_CAP + 1),
-    },
+    volumes: { 'DECISIONS_ARCHIVE.md': '# Archive\n', 'ARCHIVE_OF_DECISIONS.md': 'q'.repeat(ARCHIVE_BYTE_CAP + 1) },
   }));
-  assert.equal(r.code, 0, 'only DECISIONS_ARCHIVE.md and DECISIONS_ARCHIVE_NNN.md are volumes');
+  assert.equal(r.code, 0, 'only DECISIONS_ARCHIVE* names are archive volumes');
   assert.equal(r.decisions_archive_volumes.length, 1);
 });
 
@@ -295,4 +313,27 @@ test('the actual repo DECISIONS.md and LONG-TERM.md pass — pins the real floor
     `DECISIONS.md: ${parsed.decisions?.entries} entries, ${parsed.decisions?.bytes} bytes\n` +
     `LONG-TERM.md: ${parsed.long_term?.lines} lines`
   );
+});
+
+
+// ── the parser is shared, and its hardening must hold HERE too ─────────────────
+//
+// `check-memory-budget.mjs` counts entries through scripts/lib/memory-entries.js. A parser bug
+// is therefore a CAP bug: an entry the parser cannot see is an entry the 50-entry cap does not
+// count, and the cap fails open on a file the checker calls smaller than it is.
+
+test('MUTATION: a CRLF file is counted — it used to report ZERO entries', () => {
+  const decisions = `# Decisions\n\n## 2026-01-01 — First\n\nBody.\n\n## 2026-01-02 — Second\n\nBody.\n`.replace(/\n/g, '\r\n');
+  const r = check(fixture({ decisions, longTerm: makeLines(10) }));
+  assert.equal(r.decisions.entries, 2, 'CRLF must not hide entries from the entry cap');
+});
+
+test('MUTATION: dated headings inside a code fence are not counted as entries', () => {
+  // The real DECISIONS.md documents exactly this construct in its own `## Format` section.
+  const decisions = [
+    '# Decisions', '', '## Format', '', '```markdown', '## 2026-01-01 — [Decision title]',
+    '**Reversibility:** reversible', '```', '', '## 2026-02-02 — A real entry', '', 'Body.', '',
+  ].join('\n');
+  const r = check(fixture({ decisions, longTerm: makeLines(10) }));
+  assert.equal(r.decisions.entries, 1, 'only the unfenced entry counts');
 });

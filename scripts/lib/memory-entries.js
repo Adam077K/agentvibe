@@ -76,8 +76,35 @@ const { parseClaimsFromText } = require('./claims.js');
  */
 const ENTRY_HEADING = /^## (\d{4}-\d{2}-\d{2})(?:\s*[—–-]\s*(.*))?$/;
 
+/**
+ * A fenced code block delimiter: ``` or ~~~, optionally indented up to three spaces, with an
+ * optional info string. A heading INSIDE one of these is content, not a heading.
+ *
+ * ── WHY THIS EXISTS: THE FILE DOCUMENTS THE ATTACK ON ITSELF ────────────────────────────────
+ *
+ * Without fence tracking, an entry runs from its heading to the next line matching
+ * ENTRY_HEADING, wherever that line sits. A dated heading inside a fenced example therefore
+ * TEARS THE ENTRY IN HALF: the parser reports two entries, the second one fabricated out of the
+ * first one's body, and `apply` will archive that fabricated tail — while REFUSING its real
+ * parent under rule 1 — leaving `DECISIONS.md` holding an unterminated fence and the reasoning
+ * paragraph filed in the archive under a heading nobody wrote. It reported conservation and
+ * exited 0 the whole time, because the bytes did balance; they were simply the wrong bytes.
+ *
+ * This is not a contrived input. `.claude/memory/DECISIONS.md`'s own `## Format` section shows
+ * a fenced block containing `## YYYY-MM-DD — [Decision title]`, which is the construct every
+ * agent is told to copy. It has been harmless only because the placeholder date is not digits.
+ * An agent that filled the template in and left it fenced would split the file.
+ */
+const FENCE = /^ {0,3}(```|~~~)/;
+
 /** The first line of an already-evicted entry: `*Archived to \`FILE\` (DATE). ...*` */
 const STUB_MARKER = /^\*Archived to `([^`]+)`/;
+
+/**
+ * The reversibility values this tool will act on. Anything else is `unknown`, and `unknown`
+ * REFUSES — see `readReversibility`.
+ */
+const REVERSIBILITY = ['irreversible', 'hard-to-reverse', 'fully reversible', 'reversible'];
 
 /**
  * A repo path inside an `Affects:` line. Two forms, because the file uses both:
@@ -101,18 +128,38 @@ const PATHLIKE = /^[A-Za-z0-9._][A-Za-z0-9._/*-]*$/;
  * @returns {Array<object>} one record per entry
  */
 function parseDecisionEntries(text) {
+  // CRLF is normalised for SCANNING only; every slice below is taken from the ORIGINAL text, so
+  // an entry's bytes and its archived body keep the file's real line endings. Before this, a
+  // CRLF file parsed as ZERO entries — `\r` defeated the `$` anchor — which made the 50-entry cap
+  // fail open on a file the checker reported as empty.
   const lines = text.split('\n');
+  const scan = lines.map((l) => (l.endsWith('\r') ? l.slice(0, -1) : l));
+
   const starts = [];
-  lines.forEach((line, i) => {
-    if (ENTRY_HEADING.test(line)) starts.push(i);
+  let fence = null; // the delimiter that opened the current block, or null
+  scan.forEach((line, i) => {
+    const f = line.match(FENCE);
+    if (f) {
+      if (fence === null) fence = f[1];
+      else if (line.trim().startsWith(fence)) fence = null;
+      return;
+    }
+    if (fence === null && ENTRY_HEADING.test(line)) starts.push(i);
   });
 
-  return starts.map((start, k) => {
+  // An unterminated fence means the rest of the file was swallowed and no heading after it was
+  // seen. That is exactly the state a torn entry leaves behind, so it is reported rather than
+  // guessed at: callers refuse to classify or evict anything from an ambiguous parse.
+  const ambiguous = fence === null ? null
+    : `unterminated \`${fence}\` code fence — every heading after it was swallowed, so the entry list is incomplete`;
+
+  const entries = starts.map((start, k) => {
     const end = k + 1 < starts.length ? starts[k + 1] : lines.length;
     const body = lines.slice(start, end);
-    const [, date, rawTitle] = lines[start].match(ENTRY_HEADING);
+    const [, date, rawTitle] = scan[start].match(ENTRY_HEADING);
     const entryText = body.join('\n');
-    const stub = (body[1] || '').match(STUB_MARKER);
+    const stub = (scan[start + 1] || '').match(STUB_MARKER);
+    const rev = readReversibility(entryText);
     return {
       index: k,
       date,
@@ -122,12 +169,56 @@ function parseDecisionEntries(text) {
       endLine: end,
       text: entryText,
       bytes: Buffer.byteLength(entryText, 'utf8'),
-      reversibility: fieldValue(entryText, 'Reversibility'),
+      reversibility: rev.value,
+      reversibilityRaw: rev.raw,
+      reversibilityNote: rev.note,
       affects: affectsTargets(entryText),
       isStub: Boolean(stub),
       archivedTo: stub ? stub[1] : null,
     };
   });
+  entries.ambiguous = ambiguous;
+  return entries;
+}
+
+/**
+ * Read `Reversibility:` into one of the four known values, or `unknown`.
+ *
+ * ── THIS FIELD FAILED OPEN, AND THAT MADE RULE 1 OPTIONAL ───────────────────────────────────
+ *
+ * The previous form was `(entry.reversibility || '').startsWith('irreversible')`. Every way of
+ * writing the field that the parser could not read therefore became `''`, `''` is not
+ * `irreversible`, and the entry classified `eligible` — with the affirmative reason "reversible,
+ * subject alive". Six inputs took that path: the field absent; `**Reversability:**` (one
+ * transposed letter); `**Reversibility:** **irreversible**` (bolded value); `- **Reversibility:**`
+ * (list item); an empty value; and `NOT reversible under any circumstances`, which is the most
+ * alarming because it says the opposite of what it was read as.
+ *
+ * So the tool had no override flag and did not need one: a typo was the override. The fix is an
+ * explicit `unknown` — the same shape `subjectStatus` already had — which classifies as REFUSED
+ * and says "could not read the field" instead of asserting a value it never obtained. Rule 10:
+ * never pass what you could not check.
+ */
+function readReversibility(entryText) {
+  const raw = fieldValue(entryText, 'Reversibility');
+  if (raw === null) {
+    // A near-miss is worth naming: `Reversability` is a spelling most people get wrong once, and
+    // "field absent" sends the reader looking for a field that is right there.
+    const near = entryText.match(/^\s*[-*]?\s*\*{0,2}(Revers[a-z]*bility|Reversab[a-z]*)\s*:/im);
+    const note = near && near[1] !== 'Reversibility'
+      ? `no \`Reversibility:\` field — found \`${near[1]}:\`, which is probably a typo for it`
+      : 'no `Reversibility:` field';
+    return { value: 'unknown', raw: null, note };
+  }
+  // Strip markdown emphasis and backticks, then match a KNOWN value at the start. An allowlist,
+  // not a negation test: `NOT reversible under any circumstances` must not read as `reversible`,
+  // and no amount of substring matching gets that right in general.
+  const flat = raw.replace(/[*`_]/g, '').trim().toLowerCase();
+  const hit = REVERSIBILITY.find((v) => flat.startsWith(v));
+  if (!hit) {
+    return { value: 'unknown', raw, note: `\`Reversibility:\` reads ${JSON.stringify(raw.slice(0, 60))}, which is not one of ${REVERSIBILITY.join(' / ')}` };
+  }
+  return { value: hit === 'fully reversible' ? 'reversible' : hit, raw, note: null };
 }
 
 /**
@@ -138,13 +229,17 @@ function parseDecisionEntries(text) {
  * the surviving path was on the line nobody read.
  */
 function fieldValue(entryText, key) {
-  const lines = entryText.split('\n');
-  const at = lines.findIndex((l) => l.startsWith(`**${key}:**`));
+  const lines = entryText.split('\n').map((l) => (l.endsWith('\r') ? l.slice(0, -1) : l));
+  // Tolerates a leading list marker and optional emphasis: `**Key:**`, `- **Key:**`, `Key:`.
+  // The live file uses the first; the second and third are what a hand-written entry looks like,
+  // and reading them as "field absent" is how a real value goes unseen.
+  const head = new RegExp(`^\\s*[-*]?\\s*\\*{0,2}${key}\\*{0,2}\\s*:\\s*\\*{0,2}`, 'i');
+  const at = lines.findIndex((l) => head.test(l));
   if (at === -1) return null;
-  const parts = [lines[at].slice(`**${key}:**`.length).trim()];
+  const parts = [lines[at].replace(head, '').trim()];
   for (let i = at + 1; i < lines.length; i++) {
     const next = lines[i];
-    if (!next.trim() || next.startsWith('**') || next.startsWith('## ')) break;
+    if (!next.trim() || /^\s*[-*]?\s*\*\*/.test(next) || next.startsWith('## ')) break;
     parts.push(next.trim());
   }
   return parts.join(' ').trim();
@@ -336,10 +431,18 @@ function classifyEntry(entry, ctx) {
 
   const subject = subjectStatus(entry, ctx.root);
   const citations = citationsFor(entry, ctx);
-  const rev = (entry.reversibility || '').toLowerCase();
+  const rev = entry.reversibility;
   const reasons = [];
 
-  if (rev.startsWith('irreversible') && subject !== 'deleted') {
+  // The field could not be read. REFUSED, not eligible — an unreadable `Reversibility:` is the
+  // one input from which rule 1 cannot be evaluated at all, so treating it as `reversible` made
+  // a typo into the override flag this tool deliberately does not have.
+  if (rev === 'unknown') {
+    reasons.push(`RULE 1 (fail-closed): ${entry.reversibilityNote}. Rule 1 cannot be evaluated, so this is refused rather than assumed reversible`);
+    return { disposition: 'refused', reasons, citations, subject };
+  }
+
+  if (rev === 'irreversible' && subject !== 'deleted') {
     reasons.push(
       `RULE 1: Reversibility is irreversible and its subject is ${subject} ` +
       `(${entry.affects.length ? entry.affects.join(', ') : 'no path named, so existence is unknown and read as alive'})`
@@ -360,12 +463,12 @@ function classifyEntry(entry, ctx) {
     return { disposition: 'orphaned', reasons, citations, subject };
   }
 
-  if (rev.startsWith('hard-to-reverse')) {
+  if (rev === 'hard-to-reverse') {
     reasons.push('hard-to-reverse with a live subject — evictable only when named explicitly');
     return { disposition: 'guarded', reasons, citations, subject };
   }
 
-  reasons.push(`reversible, subject ${subject}, no live claim cites it`);
+  reasons.push(`Reversibility reads \`${rev}\`, subject ${subject}, no live claim cites it`);
   return { disposition: 'eligible', reasons, citations, subject };
 }
 
