@@ -2223,6 +2223,25 @@ _open_pull_request() {
   local branch="$1" tier="$2" n="$3"
   local reason err url existing title body
 
+  # The destination, checked FIRST and at the point of no return. cmd_merge validates both `$n` and
+  # the branch it selected; this is the same predicate at the outward-facing action, so a route
+  # added later that reaches this helper by another path cannot push an arbitrary ref to origin
+  # without meeting it. Duplicated deliberately — this function's header claims to be the only
+  # route to origin, and a claim like that is worth one repeated regex.
+  #
+  # It runs BEFORE the gh checks on purpose. "I will not push that ref" is a fact about what this
+  # program is willing to do; "gh is not logged in" is a fact about whether it could. When both are
+  # true the first is the better answer, and ordering it this way keeps the guard's coverage
+  # independent of whether gh happens to be installed. It was second until a test drove it with gh
+  # absent and got the gh refusal instead.
+  if ! [[ "$branch" =~ ^ceo-[0-9]+-[0-9]+$ ]]; then
+    echo -e "  ${C_RED}✗ Refusing to push${RESET} — reason=not-a-ceo-branch"
+    echo "    '$branch' is not a ceo-<n>-<timestamp> branch. This route pushes to origin; it does"
+    echo "    not do that for a ref it cannot recognise. Nothing was pushed."
+    _log_event "merge_refused" "branch=$branch tier=$tier route=pr reason=not-a-ceo-branch"
+    return 1
+  fi
+
   if ! reason=$(_gh_reason); then
     echo -e "  ${C_RED}✗ Refusing to open a pull request${RESET} — reason=$reason"
     case "$reason" in
@@ -2394,9 +2413,42 @@ cmd_merge() {
     shift
   done
 
+  # ── The destination is chosen here, so it is validated here ─────────────────────────────────
+  #
+  # `$n` is interpolated UNQUOTED into an ERE two lines down, and a `|` in it opens a top-level
+  # alternative that the caller controls. Reproduced: `merge 'x$|main$|y'` selected `main`, and the
+  # PR route then ran `git push origin main`. It stopped only because the fixture upstream was a
+  # non-bare repository refusing to update its checked-out branch — GitHub has no such refusal, so
+  # against a real remote that push is attempted for real.
+  #
+  # The gate was NOT bypassed: a verdict bound to `main`'s own diff still had to exist to get that
+  # far. This is a wrong-DESTINATION defect, not a gate defect. It matters most right now, in the
+  # window this whole change exists to close: while `enforce_admins` is false an admin push to main
+  # succeeds and qa-lead-pass.yml never runs on it, which is precisely the outcome the PR route was
+  # built to make unreachable.
+  #
+  # TWO checks, because validating the input and validating the destination are different
+  # guarantees and this repo keeps taking one of the two for both.
+  #
+  # 1. The input. The usage has always said `<N>`; now it means it.
+  if ! [[ "$n" =~ ^[0-9]+$ ]]; then
+    echo "✗ CEO number must be digits — got '$n'."
+    echo "  Usage: ${SESSION} merge <N> [--local]"
+    exit 1
+  fi
+
   local branch
   branch=$(git -C "$PROJECT_DIR" branch 2>/dev/null | grep -E "^ *\*? *ceo-${n}-[0-9]+$" | tr -d ' *' | tail -1)
   [ -z "$branch" ] && echo "✗ No ceo-$n branch found." && exit 1
+
+  # 2. The destination itself. Independent of how it was selected, so it still holds if the
+  #    selector changes, and it names what it protects rather than trusting an earlier line.
+  if ! [[ "$branch" =~ ^ceo-[0-9]+-[0-9]+$ ]]; then
+    echo "✗ Refusing: '$branch' is not a ceo-<n>-<timestamp> branch."
+    echo "  This command moves a CEO branch to main. It will not act on any other ref."
+    _log_event "merge_refused" "branch=$branch reason=not-a-ceo-branch"
+    exit 1
+  fi
 
   echo ""
   if [ "$route" = "local" ]; then
