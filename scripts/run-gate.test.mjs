@@ -380,11 +380,16 @@ async function runQa(qaArgs, oracleReply, reviewFindings) {
 
 const HEAD_SHA = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim();
 const GOOD_ARGS = { ref: `origin/main...${HEAD_SHA}`, tier: 'full', tree: REPO };
+const OK_CHECKS = [
+  { name: 'npm run check', pass: true, output: '' },
+  { name: 'typecheck', pass: true, output: '(skipped: no TS project covers the diff)' },
+  { name: 'semgrep', pass: true, output: '(skipped: semgrep not installed)' },
+];
 const goodOracle = (over = {}) => ({
   pass: true,
   tree: REPO,
   head: HEAD_SHA,
-  checks: [{ name: 'npm run check', pass: true, output: '' }],
+  checks: OK_CHECKS,
   ...over,
 });
 
@@ -796,8 +801,15 @@ test('the panel prompts scope git to the tree, so the diff comes from the tree u
 // ── `pass` is a summary of `checks`, and it loses to its own evidence ────────────────────────
 
 test('an oracle reporting pass:true beside a FAILING check is a BLOCK', async () => {
+  // A COMPLETE run with one failing check, so this tests the contradiction rather than the
+  // partial-run refusal below. Cutting the array to one would block for the other reason and the
+  // test would still be green while asserting nothing about `pass` vs its evidence.
   const { out, dispatched } = await runQa(GOOD_ARGS, goodOracle({
-    checks: [{ name: 'npm run check', pass: false, output: 'Tally: 12 of 30 passed - 18 failed' }],
+    checks: [
+      { name: 'npm run check', pass: false, output: 'Tally: 12 of 30 passed - 18 failed' },
+      OK_CHECKS[1],
+      OK_CHECKS[2],
+    ],
   }));
   assert.equal(out.verdict, 'BLOCK', 'the top-level boolean was trusted over the per-check evidence');
   assert.deepEqual(dispatched, ['oracle'], 'the panel must not be dispatched on a contradicted floor');
@@ -845,8 +857,9 @@ test('the oracle prompt does NOT contain the sha it is being checked against', a
     !oraclePrompt.includes(HEAD_SHA),
     'the expected sha is back in the oracle prompt — the agent can now copy the answer it is being tested on',
   );
-  // The short forms too: a 7-char prefix is a usable sha and would be just as copyable.
-  assert.ok(!oraclePrompt.includes(HEAD_SHA.slice(0, 12)), 'an abbreviated form of the expected sha is in the prompt');
+  // Abbreviated forms are covered exhaustively by the parameterised block at the end of this file,
+  // down to the 7 characters SHA_RE actually accepts. This line used to check 12 and only 12.
+  assert.ok(!oraclePrompt.includes(HEAD_SHA.slice(0, 7)), 'an abbreviated form of the expected sha is in the prompt');
 });
 
 test('the oracle is still given a usable diff range — the sha was removed, not the range', async () => {
@@ -915,10 +928,101 @@ test('the empty-findings hazard is WRITTEN DOWN where the next reader meets it',
   // NOT FIXED IN THIS CHANGE and deliberately not asserted as fixed. What is asserted is that the
   // hazard is recorded in the source rather than living only in a review thread, because that is
   // the difference between a known open item and one that gets rediscovered.
+  //
+  // TO THE WAVE 3.1 IMPLEMENTER: this assertion is a description of today, not a requirement. When
+  // `COMPLETE · BLOCKED · NO_RETURN` lands and an unearned empty set stops reading as PASS, THIS
+  // TEST GOES RED AND THAT IS THE FIX WORKING. Delete it and the hazard comment it guards together;
+  // do not preserve the PASS to keep it green. It is written down here because a red test with no
+  // explanation is the thing most likely to be made green the wrong way.
   const { out } = await runQa(GOOD_ARGS, goodOracle(), []);
-  assert.equal(out.verdict, 'PASS', 'behaviour changed — if empty findings now block, delete this test and the comment it guards');
+  assert.equal(out.verdict, 'PASS', 'behaviour changed — if empty findings now block, delete this test and the comment it guards (see the Wave 3.1 note above)');
 
   const src = fs.readFileSync(path.join(REPO, '.claude', 'workflows', 'qa.js'), 'utf8');
   assert.match(src, /EMPTY findings ARRAY MEANS "CLEAN" AND ALSO MEANS "NEVER LOOKED"/,
     'the open hazard is no longer documented at reviewDim, so the next reader will rediscover it');
 });
+
+// ── Delta review, 2026-08-26: the guards were offset-shaped, not general ─────────────────────
+//
+// Third review round, third set of findings, and the severity fell P1 → P1 → P2. None of these is
+// reachable from an invocation run-gate.mjs can emit; all need a hand-written `args` object, which
+// is exactly the population gateEntryRefusal() exists to screen.
+
+test('an option in the MIDDLE of a range is refused — three offsets were not "general"', async () => {
+  // The guard was `REF.startsWith('-') || REF_TIP.startsWith('-') || REF_BASE.startsWith('-')`, and
+  // the comment beside it claimed both ends and both files. REF_BASE is everything left of the LAST
+  // separator, so an option in the middle is read by none of the three: `origin/main` starts with
+  // `o`, the tip is a sha, and the base starts with `o` too. Measured pre-fix: PASS, 7 agents.
+  for (const bad of [
+    `origin/main...--output/tmp/RUNGATE_MID...${HEAD_SHA}`,
+    `origin/main..-Ofoo..${HEAD_SHA}`,
+    `a...b...-c...${HEAD_SHA}`,
+  ]) {
+    const { out, dispatched } = await runQa({ ref: bad, tier: 'full', tree: REPO }, goodOracle());
+    assert.equal(out.verdict, 'BLOCK', `ref ${JSON.stringify(bad)} was accepted`);
+    assert.deepEqual(dispatched, [], `ref ${JSON.stringify(bad)} reached a dispatch`);
+  }
+  assert.equal(fsExists('/tmp/RUNGATE_MID'), false);
+});
+
+test('a bare revision is refused — no separator makes step 2 a working-tree diff', async () => {
+  // REF_SEP is '' so the range renders as `git diff --name-only 'HEAD'`, which on a committed
+  // checkout is empty and scopes the diff-scoped typecheck to nothing.
+  const { out, dispatched } = await runQa({ ref: HEAD_SHA, tier: 'full', tree: REPO }, goodOracle());
+  assert.equal(out.verdict, 'BLOCK');
+  assert.deepEqual(dispatched, []);
+  assert.match(out.summary, /bare revision rather than a range/);
+});
+
+test('a PARTIAL oracle run is a BLOCK — closing the maximum did not close the class', async () => {
+  // The refusal was `checks.length === 0`, while the comment beside it called that "the maximal
+  // version of the same problem" — naming the class and closing only its maximum. One check of the
+  // three the prompt demands reached PASS, and so did a single check named "i ran nothing".
+  for (const checks of [
+    [{ name: 'npm run check', pass: true, output: '' }],
+    [{ name: 'i ran nothing', pass: true, output: '' }],
+    [OK_CHECKS[0], OK_CHECKS[1]],
+  ]) {
+    const { out, dispatched } = await runQa(GOOD_ARGS, goodOracle({ checks }));
+    assert.equal(out.verdict, 'BLOCK', `${checks.length} check(s) reached PASS`);
+    assert.deepEqual(dispatched, ['oracle'], 'the panel must not run on a partial floor');
+    assert.equal(out.blockers[0].id, 'oracle-partial-run');
+  }
+  // And the complete run still passes, or this is just a refusal that blocks everything.
+  const { out } = await runQa(GOOD_ARGS, goodOracle());
+  assert.equal(out.verdict, 'PASS');
+});
+
+test('the oracle is told to verify the range BASE resolves, and to STOP if it does not', async () => {
+  // An unresolvable base fails SILENTLY where an unresolvable tip fails loudly: git answers
+  // `fatal: ambiguous argument`, which reads downstream as an empty changed-file list. Removing the
+  // sha from the prompt also removed the only per-run probe that touched the range; this restores
+  // one on the half that is already disclosed.
+  const { oraclePrompt } = await runQa(GOOD_ARGS, goodOracle());
+  assert.match(oraclePrompt, /rev-parse --verify 'origin\/main\^\{commit\}'/);
+  assert.match(oraclePrompt, /named "range"/, 'the STOP path for an unresolvable base is not spelled out');
+  assert.ok(!oraclePrompt.includes(HEAD_SHA), 'the base probe must not reintroduce the sha');
+});
+
+test('the router refuses a range whose BASE does not resolve', () => {
+  const r = run(['--files', '.claude/workflows/qa.js', '--ref', `no-such-branch-anywhere...${HEAD_SHA}`]);
+  assert.equal(r.code, 2, 'an unresolvable base must be refused before seven dispatches are spent');
+  assert.match(r.stderr, /range base/);
+});
+
+test('sha disclosure is checked at the SHORTEST length the gate accepts, not a convenient one', () => {
+  // The previous version of this checked a 12-character prefix while SHA_RE accepts 7. A regression
+  // reintroducing an 8-to-11-character abbreviation would have been exploitable and green.
+  const SHA_RE = /^[0-9a-f]{7,40}$/;
+  assert.ok(SHA_RE.test(HEAD_SHA.slice(0, 7)), 'the gate accepts a 7-char sha, so 7 is the length to test');
+});
+
+for (const n of [7, 8, 10, 12, 40]) {
+  test(`the oracle prompt does not disclose the expected sha at ${n} characters`, async () => {
+    const { oraclePrompt } = await runQa(GOOD_ARGS, goodOracle());
+    assert.ok(
+      !oraclePrompt.includes(HEAD_SHA.slice(0, n)),
+      `a ${n}-character prefix of the expected sha is in the oracle prompt`,
+    );
+  });
+}
