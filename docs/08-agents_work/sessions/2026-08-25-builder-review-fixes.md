@@ -15,8 +15,11 @@ one output `.claude/workflows/qa.js` dispatches an agent to read. Now two indepe
 `--root` require `CHECK_SUITE_TEST_HARNESS=1`, and a zero-step list is REFUSED whatever produced it. The new
 test then found a third hole unaided — `--steps ""` ran the WHOLE suite while the banner said subset.
 **The `check:mc` exclusion cited `sandbox.excludedCommands`, reverted in `ab46d40`.** Re-measuring refuted its
-conclusion, not just its citation: sandboxed **343 pass / 2 fail**, sandbox off **345 pass / 0 fail**, same
-top-level command five minutes apart. **The variable is the sandbox, not nesting** — the old 345-vs-344 pair
-was that settings key exempting the standalone cell. `check-suite.test.mjs` now checks CI citations against
-`ci.yml` by mutation. CLAUDE.md's derivation returned **1**, not 30; replaced, with three false statements
-corrected in place. `npm run check` → **30 of 30 · exit 0**; `test:check-suite` 21/21.
+conclusion, not just its citation: top level and foreground it is **344 pass / 1 fail**, sandbox off **345 /
+0**. **It cannot pass locally at all — the variable is the sandbox, not nesting**; the old 345-vs-344 pair was
+that settings key exempting the standalone cell, so there is no local workaround to prescribe and CI is where
+the coverage lives. The regex pinning those figures kept passing after they stopped reproducing; dropped for
+citation checks that resolve. Also: `lint:agents` could be deleted from `STEPS` with the drift guard green
+(`GOVERNED` matched only `check:`/`test:`), and a real Ctrl+C never reached the INCOMPLETE path. Both fixed,
+both proved by mutation. CLAUDE.md's derivation returned **1**, not 30. `npm run check` → **30 of 30 · exit
+0**; `test:check-suite` 24/24.

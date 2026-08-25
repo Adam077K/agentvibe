@@ -506,11 +506,14 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   `mission-control/test/stream.test.ts`); **sandbox disabled → 345 pass · 0 fail · exit 0**, zero
   `EADDRINUSE`. *This supersedes the reading that the failure was "deterministic and pre-existing" in
   mission-control, and the 2026-08-25 handoff's hypothesis of "a leaked server from an earlier test in the
-  same file". Both are refuted by the second cell.* **Reproduced 2026-08-25 on `fix/pr5-review-fixes`, five
-  minutes apart, both a foreground top-level `npm run check:mc`: sandboxed 343 pass · 2 fail · exit 1,
-  sandbox off 345 pass · 0 fail · exit 0** — the second sandboxed failure being `crosscheck.test.ts` hitting
-  its 120s timeout, which also clears with the sandbox off. Isolating one file makes it sharpest:
-  `bun test test/stream.test.ts` alone is 9/1 sandboxed and 10/0 unsandboxed, thirty seconds apart. `grep -rn 'Bun.serve' mission-control` finds exactly
+  same file". Both are refuted by the second cell.* **Reproduced 2026-08-25 on `fix/pr5-review-fixes`,
+  foreground and top level: sandboxed 344 pass · 1 fail · exit 1, sandbox off 345 pass · 0 fail · exit 0** —
+  and note that the armed cell fails STANDALONE, not only nested, so there is no local workaround.
+  Isolating one file makes it sharpest: `bun test test/stream.test.ts` alone is 9/1 sandboxed and 10/0
+  unsandboxed, thirty seconds apart. *A first reading of the armed cell said 343 · 2, the extra failure
+  being `crosscheck.test.ts` at its 120s timeout. It did not reproduce on a quiet machine (146s vs 206s for
+  the same run) and is recorded here as load, not as a defect — mission-control's wall-clock checks flake
+  when several lanes build at once, which this file already warns about further down.* `grep -rn 'Bun.serve' mission-control` finds exactly
   **one** server in the whole tree, it is stopped in a `finally`, and `port: 0` asks the kernel for an
   ephemeral port and so cannot collide. The reported error carries **`errno: 0`**, where a genuine macOS
   `EADDRINUSE` is errno **48** — a code synthesized by Bun, not one returned by the kernel. It is the
