@@ -379,72 +379,6 @@ test('check:mc is EXCLUDED, not merely absent — and the reason carries its mea
   // in the test below: they are the parts of the reason that live in this repo and can be resolved.
 });
 
-test('an exclusion that says CI still covers it is checked against ci.yml, not trusted', () => {
-  // auditSuite() can only measure that a reason is 40-odd characters long. It cannot tell a true
-  // reason from a false one, and one went false without a sound: the check:mc entry justified
-  // itself by a `sandbox.excludedCommands` key in .claude/settings.json that ab46d40 had already
-  // reverted. Citations to files in this repo CAN be checked, so these are.
-  const ci = fs.readFileSync(path.join(REPO, '.github', 'workflows', 'ci.yml'), 'utf8');
-
-  /**
-   * Does ci.yml invoke this script by name?
-   *
-   * Anchored on the right with a lookahead rather than a bare substring test, because
-   * `npm run check:dispatch-agenttype` CONTAINS `npm run check:dispatch` — so a plain
-   * `includes()` would report the alias covered by a step that runs one of its links.
-   */
-  const invokes = (workflow, name) =>
-    new RegExp(`npm run ${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w:-])`).test(workflow);
-
-  /** Covered by ci.yml — by name, or, for an alias, through every one of its links. */
-  const runsInCi = (workflow, name) => {
-    if (invokes(workflow, name)) return true;
-    const links = aliasLinks(scripts[name]);
-    return Boolean(links) && links.every((link) => invokes(workflow, link));
-  };
-
-  /** Names whose reason claims ci.yml covers them, where ci.yml does not run them. */
-  const uncovered = (excluded, workflow) =>
-    Object.entries(excluded)
-      .filter(([name, reason]) => /ci\.yml/.test(reason) && !runsInCi(workflow, name))
-      .map(([name]) => name);
-
-  assert.deepEqual(
-    uncovered(EXCLUDED, ci),
-    [],
-    'an exclusion tells the reader ci.yml still runs it, and ci.yml does not. Either the CI step was ' +
-      'deleted — in which case that exclusion now hides a check running NOWHERE — or the reason cites ' +
-      'coverage that never existed.'
-  );
-
-  // Proved by mutation, like every other guard here: delete the CI step and the claim must bite.
-  const withoutStep = ci.replace(/npm run check:mc/g, 'npm run something-else');
-  assert.deepEqual(
-    uncovered(EXCLUDED, withoutStep),
-    ['check:mc'],
-    'removing the Mission Control step from ci.yml did not fail this check, so it is not evidence'
-  );
-
-  // And the alias path, which is the load-bearing half now that five entries lean on it: an alias
-  // is covered by ci.yml only while EVERY link has a step there. Delete one and it must bite.
-  const withoutLink = ci.replace(/npm run check:ledger-verify/g, 'npm run something-else');
-  assert.deepEqual(
-    uncovered(EXCLUDED, withoutLink),
-    ['check:ledger'],
-    'deleting the `ledger verify` step from ci.yml left the check:ledger exemption looking covered'
-  );
-
-  // And the fact the check:mc entry's account of its own history depends on. If someone reinstates
-  // a sandbox.excludedCommands key, that entry has to be re-measured, not re-read.
-  const settings = JSON.parse(fs.readFileSync(path.join(REPO, '.claude', 'settings.json'), 'utf8'));
-  assert.ok(
-    !(settings.sandbox && 'excludedCommands' in settings.sandbox),
-    'sandbox.excludedCommands is back in .claude/settings.json. The check:mc exclusion states that both ' +
-      'its cells fail BECAUSE that key is absent; with it present, standalone check:mc may pass again and ' +
-      'the entry needs re-measuring rather than a re-read.'
-  );
-});
-
 // ── ci.yml: the suite reaches the runner, and the runner reaches every step ───────────────────
 //
 // The three assertions below are the ones the 2026-08-25 change to ci.yml GUARANTEED and did not
@@ -548,6 +482,114 @@ function parseCiSteps(workflow) {
   return steps;
 }
 
+/**
+ * The commands ci.yml actually RUNS — the only text any claim about coverage may be read against.
+ *
+ * Every check in this section goes through here rather than through the raw file, because ci.yml's
+ * comments name the very commands its steps run. On 2026-08-26 a comment naming
+ * `npm run check:mc` was enough to satisfy the guard protecting the Mission Control step, and the
+ * step could then be deleted in silence.
+ */
+const ciRunCommands = (workflow) => parseCiSteps(workflow).filter((s) => s.run !== null).map((s) => s.run);
+
+test('an exclusion that says CI still covers it is checked against ci.yml, not trusted', () => {
+  // auditSuite() can only measure that a reason is 40-odd characters long. It cannot tell a true
+  // reason from a false one, and one went false without a sound: the check:mc entry justified
+  // itself by a `sandbox.excludedCommands` key in .claude/settings.json that ab46d40 had already
+  // reverted. Citations to files in this repo CAN be checked, so these are.
+  //
+  // MATCHED AGAINST `run:` LINES, NEVER THE RAW FILE TEXT, and that distinction is a P1 this very
+  // change introduced and a reviewer caught. `invokes()` used to regex the whole workflow, comments
+  // included. The `&&` rationale paragraph added to ci.yml's header on 2026-08-26 contains the
+  // string "`bun install ... && npm run check:mc`" — so occurrences went 1 → 2, and the COMMENT
+  // alone satisfied the guard. Measured in scratch copies with the Mission Control step deleted and
+  // the comment left: this file went 33 pass · 0 fail, i.e. silent, where origin/main's version bit.
+  // The check:mc exemption states in writing that ci.yml "is the only place it runs green, so it is
+  // the only place it is checked" — a prose sentence about coverage, certified by a check that had
+  // started reading prose.
+
+  /**
+   * Does ci.yml RUN this script?
+   *
+   * Anchored on the right with a lookahead rather than a bare substring test, because
+   * `npm run check:dispatch-agenttype` CONTAINS `npm run check:dispatch` — so a plain
+   * `includes()` would report the alias covered by a step that runs one of its links.
+   */
+  const invokes = (workflow, name) => {
+    const pattern = new RegExp(`npm run ${escapeRe(name)}(?![\\w:-])`);
+    return ciRunCommands(workflow).some((cmd) => pattern.test(cmd));
+  };
+
+  /** Covered by ci.yml — by name, or, for an alias, through every one of its links. */
+  const runsInCi = (workflow, name) => {
+    if (invokes(workflow, name)) return true;
+    const links = aliasLinks(scripts[name]);
+    return Boolean(links) && links.every((link) => invokes(workflow, link));
+  };
+
+  /** Names whose reason claims ci.yml covers them, where ci.yml does not run them. */
+  const uncovered = (excluded, workflow) =>
+    Object.entries(excluded)
+      .filter(([name, reason]) => /ci\.yml/.test(reason) && !runsInCi(workflow, name))
+      .map(([name]) => name);
+
+  assert.deepEqual(
+    uncovered(EXCLUDED, CI),
+    [],
+    'an exclusion tells the reader ci.yml still runs it, and ci.yml does not. Either the CI step was ' +
+      'deleted — in which case that exclusion now hides a check running NOWHERE — or the reason cites ' +
+      'coverage that never existed.'
+  );
+
+  // Proved by mutation — and the MUTATION is the half that was wrong. It used to be
+  // `ci.replace(/npm run check:mc/g, …)`, which scrubbed the comment as well as the step, so it
+  // proved the guard bites when you delete BOTH. Deleting the step is the thing that happens; the
+  // comment is what makes it invisible. So the step alone is removed here, and the comment is
+  // asserted to survive, or this is once again a self-proof that proves the wrong deletion.
+  const withoutStep = CI.replace(/^( *run: .*)npm run check:mc$/m, '$1npm run something-else');
+  assert.notEqual(withoutStep, CI, 'the Mission Control mutation matched nothing, so its proof is vacuous');
+  assert.ok(
+    withoutStep.includes('npm run check:mc'),
+    'the mutation removed the comment too — that is the weaker deletion, and proving it proves nothing'
+  );
+  assert.deepEqual(
+    uncovered(EXCLUDED, withoutStep),
+    ['check:mc'],
+    'removing the Mission Control STEP from ci.yml did not fail this check, so it is not evidence. A ' +
+      'mention in a comment must never satisfy a claim about what runs.'
+  );
+
+  // And the alias path, which is the load-bearing half now that five entries lean on it: an alias
+  // is covered by ci.yml only while EVERY link has a step there. Delete one and it must bite. Same
+  // step-only mutation, for the same reason — `check:ledger-verify` happens to appear in no comment
+  // today, and a proof that depends on that staying true is a proof with a hidden premise.
+  const withoutLink = CI.replace(/^( *run: )npm run check:ledger-verify$/m, '$1npm run something-else');
+  assert.notEqual(withoutLink, CI, 'the ledger-verify mutation matched nothing, so its proof is vacuous');
+  assert.deepEqual(
+    uncovered(EXCLUDED, withoutLink),
+    ['check:ledger'],
+    'deleting the `ledger verify` step from ci.yml left the check:ledger exemption looking covered'
+  );
+
+  // The class fix, stated as its own case: a name that appears ONLY in a comment is not covered.
+  const commentOnly = CI.replace(/^( *run: .*)npm run check:mc$/m, '$1npm run something-else');
+  assert.equal(
+    invokes(commentOnly, 'check:mc'),
+    false,
+    'a `npm run` mention inside a ci.yml comment was read as a step that runs'
+  );
+
+  // And the fact the check:mc entry's account of its own history depends on. If someone reinstates
+  // a sandbox.excludedCommands key, that entry has to be re-measured, not re-read.
+  const settings = JSON.parse(fs.readFileSync(path.join(REPO, '.claude', 'settings.json'), 'utf8'));
+  assert.ok(
+    !(settings.sandbox && 'excludedCommands' in settings.sandbox),
+    'sandbox.excludedCommands is back in .claude/settings.json. The check:mc exclusion states that both ' +
+      'its cells fail BECAUSE that key is absent; with it present, standalone check:mc may pass again and ' +
+      'the entry needs re-measuring rather than a re-read.'
+  );
+});
+
 test('the ci.yml step parser reads the whole file — a scanner that under-reads asserts nothing', () => {
   const steps = parseCiSteps(CI);
 
@@ -567,8 +609,6 @@ test('every STEP of the suite has a counterpart step in ci.yml', () => {
   // `test:check-suite` — this very file — sat second in STEPS and ran NOWHERE on a runner until
   // 2026-08-25, because nothing ever iterated STEPS against ci.yml. Only EXCLUDED entries were
   // checked, and an omission from the suite's own list is invisible to a check on the exemptions.
-  const runs = (workflow) => parseCiSteps(workflow).filter((s) => s.run !== null).map((s) => s.run);
-
   /**
    * ci.yml runs a step by NAME (`npm run x`) or by its resolved BODY.
    *
@@ -577,7 +617,7 @@ test('every STEP of the suite has a counterpart step in ci.yml', () => {
    * match is right-anchored: `npm run check:dispatch-agenttype` CONTAINS `npm run check:dispatch`.
    */
   const missing = (workflow) => {
-    const commands = runs(workflow);
+    const commands = ciRunCommands(workflow);
     return STEPS.filter((step) => {
       const byName = new RegExp(`npm run ${escapeRe(step)}(?![\\w:-])`);
       const body = String(scripts[step]).trim();
