@@ -249,12 +249,37 @@ test('BLOCKS a write through a symlink pointing outside the project', () => {
 // execution: with the fixture under /private/tmp/claude-<uid>, a write to
 // <fixture>/.claude/settings.json returns ALLOW. So each candidate base is put to the hook
 // itself rather than compared against a second, drifting copy of the hook's list of roots.
+/**
+ * The candidate bases, in the order they are tried.
+ *
+ * `os.tmpdir()` and `/tmp` come first so an ordinary dev machine and a CI runner never reach past
+ * them. `$HOME/.agentvibe` is the AGENT-SHELL base, and it is here because without it these five
+ * cases skipped in exactly the environment that matters most: measured 2026-08-26 in a sandboxed
+ * agent shell, `os.tmpdir()` is `/private/tmp/claude-<uid>` — a root the hook allows outright —
+ * and `/tmp` is EPERM, so no fixture was built and five cases went `skipped`, including (b), the
+ * one this file's own header calls the failure that "disarms every rule in this file". `qa.js`
+ * makes `npm run check` the oracle that BLOCKs before any panel agent is dispatched, it runs in a
+ * local agent shell, and it sets no `CI` — so the binding gate's deterministic floor was the exact
+ * place the coverage went missing.
+ *
+ * `~/.agentvibe` is the harness's own state directory and is sandbox-granted for that reason
+ * (`filesystem.allowWrite` in .claude/settings.json). It sits outside all three of the hook's
+ * allowed roots — the project root, `$HOME/.claude/plans`, and `/private/tmp/claude-<uid>` — so a
+ * home built there is neutral. The fixture is an `mkdtemp` subdirectory removed on process exit;
+ * on a runner the directory does not exist, `mkdtemp` fails, and `/tmp` is used as before.
+ */
+const HOME_FIXTURE_BASES = [...new Set([os.tmpdir(), '/tmp', path.join(os.homedir(), '.agentvibe')])]
+
+/** Why a base was refused. `already-allowed` is a fixture-selection defect; `unwritable` is a machine. */
 const HOME_FIXTURE_REJECTED = []
+const rejected = (kind) => HOME_FIXTURE_REJECTED.filter((r) => r.kind === kind)
+const rejectedText = () => HOME_FIXTURE_REJECTED.map((r) => `${r.base}: ${r.why}`).join(' | ')
+
 const HOME_FIXTURE = (() => {
-  for (const base of [...new Set([os.tmpdir(), '/tmp'])]) {
+  for (const base of HOME_FIXTURE_BASES) {
     let root
     try { root = fs.mkdtempSync(path.join(base, 'pre-tool-use-home-')) }
-    catch (err) { HOME_FIXTURE_REJECTED.push(`${base}: not writable (mkdtemp ${err.code || err.message})`); continue }
+    catch (err) { HOME_FIXTURE_REJECTED.push({ base, kind: 'unwritable', why: `not writable (mkdtemp ${err.code || err.message})` }); continue }
     const withPlans = path.join(root, 'with-plans')
     const withoutPlans = path.join(root, 'without-plans')
     fs.mkdirSync(withPlans)
@@ -262,7 +287,7 @@ const HOME_FIXTURE = (() => {
     // Neither home has a .claude/ yet, so a BLOCK here was decided by "outside every allowed
     // root" and by nothing else — which is exactly the neutrality these cases need.
     if (runHook(compact(write(path.join(withPlans, '.claude', 'probe.json'))), { HOME: withPlans }) !== BLOCK) {
-      HOME_FIXTURE_REJECTED.push(`${base}: the hook ALLOWS writes here already, so it is one of its own roots — the sandbox scratchpad when TMPDIR points inside it`)
+      HOME_FIXTURE_REJECTED.push({ base, kind: 'already-allowed', why: 'the hook ALLOWS writes here already, so it is one of its own roots — the sandbox scratchpad when TMPDIR points inside it' })
       fs.rmSync(root, { recursive: true, force: true })
       continue
     }
@@ -275,19 +300,29 @@ const HOME_FIXTURE = (() => {
   return null
 })()
 
-// A SKIP IS `unresolved`, AND ON CI `unresolved` MUST NOT READ AS `pass` (rule 10). Off CI —
-// a sandboxed agent shell, where /tmp is unwritable and TMPDIR is a root the hook already
-// allows — skipping is the honest report and the string says how to re-run. On a runner it is
-// not: that is the one machine whose verdict blocks a merge, so five silent skips would report
-// "checked" for the exemption whose failure disarms every rule in this file, including (b).
-// There, the cases run and fail with the candidate bases and the reason each was refused.
-const HOME_SKIP = (HOME_FIXTURE || process.env.CI) ? false
-  : `no writable directory outside the roots this hook already allows: ${HOME_FIXTURE_REJECTED.join(' | ')}. Re-run with TMPDIR pointed outside them.`
+// A SKIP IS `unresolved`, AND `unresolved` MUST NOT READ AS `pass` (rule 10). Which of the two
+// reasons a base was refused for decides whether skipping is honest, and the two are not alike:
+//
+//   already-allowed  A FIXTURE-SELECTION DEFECT, and it fails. It says every base this file knows
+//                    about is one of the hook's own roots — so the list is wrong, not the machine.
+//                    Skipping on it is what hid five cases from the gate's oracle, silently,
+//                    because the skip string reads like a note about the environment.
+//   unwritable       A MACHINE, and it stays a skip off CI. A laptop with a locked-down /tmp and
+//                    no ~/.agentvibe is not a defect anyone here can fix, and the string says how
+//                    to re-run. On CI it still fails: that is the one machine whose verdict blocks
+//                    a merge, so a silent skip there reports "checked" for something never checked.
+//
+// Forcing CI=1 would have covered the symptom and lost that distinction — it turns a locked-down
+// laptop red for a reason the developer cannot act on, which is how a check gets routed around.
+const HOME_SELECTION_DEFECT = !HOME_FIXTURE && rejected('already-allowed').length > 0
+const HOME_SKIP = (HOME_FIXTURE || process.env.CI || HOME_SELECTION_DEFECT) ? false
+  : `no writable directory outside the roots this hook already allows: ${rejectedText()}. Re-run with TMPDIR pointed outside them.`
 
-/** Never dereferences null: on CI the absent fixture must fail loudly, with its cause attached. */
+/** Never dereferences null: an absent fixture fails loudly, with its cause attached. */
 function homeFixture() {
-  assert.ok(HOME_FIXTURE,
-    `no neutral $HOME fixture could be built and CI is set — these cases cannot be skipped on a runner, because a skip there reports "checked" for something never checked. Candidate bases refused: ${HOME_FIXTURE_REJECTED.join(' | ')}`)
+  assert.ok(HOME_FIXTURE, HOME_SELECTION_DEFECT
+    ? `no neutral $HOME fixture could be built, and at least one candidate base was refused because THE HOOK ALREADY ALLOWS IT. That is this file's fixture list being wrong, not the machine — add a base outside the hook's allowed roots to HOME_FIXTURE_BASES. It is not skippable: these five cases are the ones the gate's oracle runs, and (b) is the write that disarms every rule in this file. Candidate bases refused: ${rejectedText()}`
+    : `no neutral $HOME fixture could be built and CI is set — these cases cannot be skipped on a runner, because a skip there reports "checked" for something never checked. Candidate bases refused: ${rejectedText()}`)
   return HOME_FIXTURE
 }
 
