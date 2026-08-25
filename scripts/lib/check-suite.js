@@ -287,24 +287,134 @@ function aliasLinks(command) {
  * nothing. A substring scan would refuse that shape the day someone made it a step, and a guard
  * that fires on correct code gets weakened rather than obeyed.
  *
+ * QUOTE-AWARE IS NOT THE SAME AS "DOUBLE QUOTES ARE OPAQUE", and reading them as opaque was a hole
+ * that survived until 2026-08-26. `$(…)` and backticks RE-ENTER COMMAND CONTEXT inside double
+ * quotes, so every operator above works in there. Measured in bash, which is the only authority
+ * that settles it:
+ *
+ *     echo "$(exit 7; exit 0)"        exits 0 — the 7 is GONE, and no step goes red
+ *     echo "`exit 7; exit 0`"         exits 0 — same, in the backtick spelling
+ *     echo '$(exit 7; exit 0)'        prints the text, runs nothing — single quotes DO suppress it
+ *
+ * The first two returned [] from this function, so a STEPS entry shaped that way was accepted with
+ * zero findings while dropping a failure silently — which is the exact threat model in the header,
+ * arriving through the one construct the scanner had decided not to look inside. The third is
+ * correct and is pinned: single quotes stay opaque, backslash and all.
+ *
+ * So the scanner tracks a STACK of command contexts rather than one quote flag. Each frame carries
+ * its own quote state, because a substitution re-arms quoting one level in: in
+ * `"$(echo 'a;b')"` bash prints `a;b` — that semicolon is single-quoted INSIDE the substitution and
+ * separates nothing, and a depth counter alone would report it.
+ *
+ * `$((…))` is a fourth kind of frame and NOT a command context: its operators are arithmetic, so
+ * they are not reported. It is ENTERED rather than skipped, and that distinction was measured, not
+ * reasoned — the first cut of this fix skipped the whole expansion and
+ * `x="$(( $(exit 7; echo 1) + 1 ))"` then returned [], while bash runs the inner commands and drops
+ * the 7 exactly as it does anywhere else.
+ *
  * Returns the operators found, in a stable order, or [] for a single command.
  */
 const SHELL_OPERATORS = ['&&', '||', ';', '|', '&', '\\n'];
 
+/**
+ * Does a `$((` at `open - 1` balance? Returns the index of the closing `)`, or -1.
+ *
+ * USED ONLY TO DECIDE WHETHER THIS IS ARITHMETIC AT ALL — the expansion is then walked like any
+ * other frame, not jumped over. `$((…))` is not a command context: measured, `$((6|1))` is 7,
+ * `$((6&1))` is 0, `$((1&&1))` is 1 and `$((0||1))` is 1, so reporting a pipe there would fire this
+ * rule on correct code with a message — "the step's exit code becomes the last command's" — that is
+ * simply false of it. That is the same mistake the `2>&1` case documents.
+ *
+ * -1 rather than "to the end of the string" is the load-bearing half. An unbalanced `$((` is not
+ * arithmetic bash would run, so treating it as opaque would turn a typo into the one place a chain
+ * could still hide. Unbalanced falls through and is read as `$(` opening a substitution whose first
+ * character is a subshell `(` — which reports, as it should.
+ */
+function arithmeticEnd(src, open) {
+  let depth = 0;
+  for (let i = open; i < src.length; i += 1) {
+    if (src[i] === '(') depth += 1;
+    else if (src[i] === ')') {
+      depth -= 1;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
 function shellOperators(command) {
   const src = String(command);
   const found = new Set();
-  let quote = null;
+
+  // One frame per COMMAND CONTEXT, innermost last. `base` is the command line itself; `$(` pushes
+  // a `paren` frame and a backtick a `tick` frame. `parens` counts subshells nested inside a `$(`
+  // so that `$( (a; b) )` closes on the right `)` rather than the first one.
+  const stack = [{ kind: 'base', quote: null, parens: 0 }];
 
   for (let i = 0; i < src.length; i += 1) {
+    const frame = stack[stack.length - 1];
     const c = src[i];
-    if (quote) {
-      if (c === '\\' && quote === '"') { i += 1; continue; }
-      if (c === quote) quote = null;
+
+    // SINGLE QUOTES ARE OPAQUE, backslash and all — `echo '$(exit 7; exit 0)'` prints the text and
+    // runs nothing. This branch is first because it must win over every branch below it.
+    if (frame.quote === "'") {
+      if (c === "'") frame.quote = null;
       continue;
     }
-    if (c === '"' || c === "'") { quote = c; continue; }
+
+    // A backslash escapes the next character, quoted or not — `echo a \; b` prints `a ; b`, one
+    // command. Inside double quotes it is also what stops an ESCAPED substitution from opening a
+    // frame: `"\$(exit 7; exit 0)"` and "\`exit 7; exit 0\`" both print literally and run nothing.
     if (c === '\\') { i += 1; continue; }
+
+    // ARITHMETIC — checked before `$(` so the longer token wins, and inside double quotes too,
+    // where `"$((6|1))"` is just as much a number. Only when it BALANCES: an unbalanced `$((` is
+    // not arithmetic, so it falls through and is read as a substitution rather than becoming the
+    // one place a chain can still hide.
+    if (c === '$' && src[i + 1] === '(' && src[i + 2] === '(' && arithmeticEnd(src, i + 1) !== -1) {
+      stack.push({ kind: 'arith', quote: null, parens: 2 });
+      i += 2;
+      continue;
+    }
+
+    // COMMAND SUBSTITUTION — the hole. Both spellings open a frame from ANY non-single-quoted
+    // context, INCLUDING from inside arithmetic, which is where the first cut of this fix leaked.
+    if (c === '$' && src[i + 1] === '(') {
+      stack.push({ kind: 'paren', quote: null, parens: 1 });
+      i += 1;
+      continue;
+    }
+    if (c === '`') {
+      // Backticks do not nest — the same character opens and closes — so this pops or pushes.
+      if (frame.kind === 'tick') stack.pop();
+      else stack.push({ kind: 'tick', quote: null, parens: 0 });
+      continue;
+    }
+
+    // Inside double quotes and outside any substitution, nothing below separates commands. This is
+    // the `usage` script's case and it must keep returning [].
+    if (frame.quote === '"') {
+      if (c === '"') frame.quote = null;
+      continue;
+    }
+
+    if (c === '"' || c === "'") { frame.quote = c; continue; }
+
+    // `parens` counts every paren still open in this frame — both of `$((`, the one of `$(` — so a
+    // subshell inside a substitution closes on the right `)`: `$( (a; b) )` ends at the second.
+    if (frame.kind === 'paren' || frame.kind === 'arith') {
+      if (c === '(') { frame.parens += 1; continue; }
+      if (c === ')') {
+        frame.parens -= 1;
+        if (frame.parens === 0) stack.pop();
+        continue;
+      }
+    }
+
+    // ARITHMETIC IS NOT A COMMAND CONTEXT. Reached only after the branch above, so a `$(` nested
+    // inside arithmetic has already opened a command frame and is reported from there.
+    if (frame.kind === 'arith') continue;
+
     if (c === '&' && src[i + 1] === '&') { found.add('&&'); i += 1; continue; }
     if (c === '|' && src[i + 1] === '|') { found.add('||'); i += 1; continue; }
     if (c === '|') { found.add('|'); continue; }

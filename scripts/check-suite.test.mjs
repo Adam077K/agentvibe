@@ -344,6 +344,118 @@ test('a `&` adjacent to `>` is a redirect, not backgrounding — and redirects k
   assert.deepEqual(redirecting.failures, [], `a redirect was refused as a chain:\n${redirecting.failures.join('\n')}`);
 });
 
+test('command substitution RE-ENTERS command context — double quotes are not opaque', () => {
+  // MEASURED IN BASH 2026-08-26, which is the only authority that settles what a shell does:
+  //
+  //     echo "$(exit 7; exit 0)"     exits 0   the 7 is GONE, and no step goes red
+  //     echo "`exit 7; exit 0`"      exits 0   the same, in the backtick spelling
+  //     echo '$(exit 7; exit 0)'     exits 0   prints the TEXT — nothing ran, so nothing to report
+  //
+  // The first two returned [] from shellOperators() until this change, because the scanner tracked
+  // ONE quote flag and read double-quoted text as opaque. `$(…)` and backticks re-enter command
+  // context in there, so a STEPS entry shaped that way was accepted with ZERO findings while
+  // dropping a non-zero exit — the header's own threat model, arriving through the single construct
+  // the scanner had decided not to look inside. The third line is why the fix is a stack of frames
+  // and not "look inside quotes too": single quotes really do suppress it, and a rule that fires on
+  // correct code gets weakened rather than obeyed.
+  assert.deepEqual(shellOperators('npm run a && npm run b'), ['&&'], 'the control stopped working');
+  assert.deepEqual(shellOperators('npm run a && echo "$(npm run b; npm run c)"'), ['&&', ';']);
+  assert.deepEqual(shellOperators('echo "$(npm run b; npm run c)"'), [';']);
+  assert.deepEqual(shellOperators('echo "`npm run b; npm run c`"'), [';']);
+  assert.deepEqual(shellOperators('echo $(npm run b; npm run c)'), [';'], 'the unquoted spelling');
+
+  // THE CASE THAT MUST NOT CHANGE.
+  assert.deepEqual(shellOperators("echo '$(npm run b; npm run c)'"), []);
+  assert.deepEqual(shellOperators("echo '`npm run b; npm run c`'"), []);
+
+  // Every operator, not only `;`. A substitution is a command context, so all of them work in it —
+  // and `;`, `|` and `&` are the ones that leave no red step at all.
+  assert.deepEqual(shellOperators('echo "$(a && b)"'), ['&&']);
+  assert.deepEqual(shellOperators('echo "$(a || b)"'), ['||']);
+  assert.deepEqual(shellOperators('echo "$(a | b)"'), ['|']);
+  assert.deepEqual(shellOperators('echo "$(a & b)"'), ['&']);
+  assert.deepEqual(shellOperators('echo "$(a\nb)"'), ['\\n'], 'a newline inside a substitution separates');
+
+  // Each frame carries its OWN quote state, so quoting is re-armed one level in: bash prints `a;b`
+  // for the first line — that semicolon is single-quoted INSIDE the substitution and separates
+  // nothing. A depth counter without per-frame quotes would report it and be wrong.
+  assert.deepEqual(shellOperators(`echo "$(echo 'a;b')"`), []);
+  assert.deepEqual(shellOperators('echo "$(echo "$(npm run a; npm run b)")"'), [';'], 'nesting');
+  assert.deepEqual(shellOperators('echo "$( (npm run a; npm run b) )"'), [';'], 'a subshell inside');
+  assert.deepEqual(shellOperators('echo "$( (a) ; (b) )"'), [';'], 'the substitution closed on the wrong `)`');
+
+  // An ESCAPED substitution runs nothing — `echo "\$(exit 7; exit 0)"` prints the text — so the
+  // backslash branch is what stops the frame opening, and it must not be reported.
+  assert.deepEqual(shellOperators('echo "\\$(npm run a; npm run b)"'), []);
+  assert.deepEqual(shellOperators('echo "\\`npm run a; npm run b\\`"'), []);
+
+  // END TO END, not just the predicate: a STEP shaped this way must fail the guard itself.
+  for (const body of [
+    'echo "$(npm run test:hooks; npm run test:budget)"',
+    'echo "`npm run test:hooks; npm run test:budget`"',
+    'npm run test:hooks && echo "$(npm run test:budget | tee log)"',
+  ]) {
+    const { failures } = auditSuite({ scripts: { ...scripts, 'test:sandbox': body } });
+    assert.ok(
+      failures.some((f) => f.includes('STEPS names "test:sandbox"') && /`;`|`\|`/.test(f)),
+      `a chain hidden in a substitution was accepted:\n${failures.join('\n') || '(no failures at all)'}`
+    );
+  }
+
+  // And a legitimate substitution — one command inside it — is still not a finding.
+  const legit = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'node -e "console.log(1)" --tag "$(git rev-parse HEAD)"' } });
+  assert.deepEqual(legit.failures, [], `a single-command substitution was refused:\n${legit.failures.join('\n')}`);
+});
+
+test('`$((…))` is ARITHMETIC, and it is walked rather than skipped', () => {
+  // Its operators are arithmetic operators. Measured: `$((6|1))` is 7, `$((6&1))` is 0, `$((1&&1))`
+  // is 1, `$((0||1))` is 1. Reporting a pipe there would attach the rule's message — "the step's
+  // exit code becomes the last command's" — to a case where that sentence is false, which is the
+  // same mistake the `2>&1` redirect case exists to prevent.
+  assert.deepEqual(shellOperators('echo "$((6|1))"'), []);
+  assert.deepEqual(shellOperators('echo "$((6&1))"'), []);
+  assert.deepEqual(shellOperators('echo "$((1&&1)) $((0||1))"'), []);
+  assert.deepEqual(shellOperators('echo "$(( (1+2) * 3 ))"'), [], 'a nested paren closed the expansion early');
+
+  // THE HOLE THE FIRST CUT OF THIS FIX OPENED, and the reason arithmetic is entered rather than
+  // jumped over. Measured: `x="$(( $(exit 7; echo 1) + 1 ))"` sets x=1 and `$?` is 7 — bash DOES run
+  // the inner commands — while a version that skipped the whole expansion returned [] for it. A
+  // substitution nested in arithmetic is a command context like any other.
+  assert.deepEqual(shellOperators('x="$(( $(exit 7; echo 1) + 1 ))"'), [';']);
+  assert.deepEqual(shellOperators('x="$(( $(npm run a | npm run b) ))"'), ['|']);
+
+  // An UNBALANCED `$((` is not arithmetic bash would run, so it must not be treated as opaque —
+  // otherwise a typo becomes the one place a chain can still hide. It falls through and is read as
+  // `$(` opening a substitution whose first character is a subshell.
+  assert.deepEqual(shellOperators('echo "$((npm run a; npm run b"'), [';']);
+
+  // A plain chain inside balanced `$((…))` reports nothing, and that is not a hole: bash refuses it
+  // outright — `echo "$((echo hi; echo there))"` is `arithmetic syntax error … (error token is
+  // "; echo there")` and exits 1. Nothing runs, so there is no dropped exit code to catch. Pinned so
+  // that a future widening is a visible decision rather than an accident.
+  assert.deepEqual(shellOperators('echo "$((npm run a; npm run b))"'), []);
+});
+
+test('an unquoted backslash escapes the operator after it — the branch that had no coverage', () => {
+  // Measured: `echo a \; b` prints `a ; b` and `echo a \&\& b` prints `a && b`. Both are ONE
+  // command, so reporting an operator would be firing on correct code. This branch existed from the
+  // first version of shellOperators() and nothing exercised it, so a deletion of it — or of the
+  // `i += 1` that consumes the escaped character — looked identical to a green run.
+  assert.deepEqual(shellOperators('echo a \\; b'), []);
+  assert.deepEqual(shellOperators('echo a \\&\\& b'), []);
+  assert.deepEqual(shellOperators('echo a \\| b'), []);
+  assert.deepEqual(shellOperators('echo a \\& b'), []);
+
+  // The discriminations that keep those four from being satisfied by a scanner that ignores `\`
+  // and everything after it: the escape covers exactly ONE character.
+  assert.deepEqual(shellOperators('echo a \\; b ; npm run c'), [';'], 'the escape swallowed the real operator');
+  assert.deepEqual(shellOperators('echo a \\&& npm run b'), ['&'], 'the second `&` of an escaped pair still runs the job in background');
+
+  // And a backslash inside SINGLE quotes is a literal backslash, not an escape — so it must not
+  // consume the quote that ends the string. `echo 'a\' ; npm run b` really is two commands.
+  assert.deepEqual(shellOperators("echo 'a\\' ; npm run b"), [';']);
+});
+
 test('the three DISCLOSED holes in resolveChain are pinned, so a narrowing is not mistaken for one', () => {
   // resolveChain() follows only a BARE `npm run <name>`. Its doc comment discloses three shapes it
   // walks past, and under-reporting is the safe direction — this check refuses what it understands
