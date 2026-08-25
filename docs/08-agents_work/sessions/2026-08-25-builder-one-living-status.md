@@ -25,3 +25,14 @@ Branch-protection facts are attributed, not claimed — `gh` is denied by the sa
 **Verification:** `npm run check` → 30 of 30 · 0 failed; `check-memory-budget.mjs` → passed; every relative
 link in both new files resolved by script. Measure from the path `git worktree list` prints: a stale path
 cost this session a full run that falsely reported 19 of 30.
+
+**Second round — three additions, all verified in-tree.** The floor figure is `30 of 30 · 0 failed` with
+the **wall clock deliberately unpinned**: the same suite on the same commit took 79.7s, 82.8s and 125.9s
+across three runs. Branch protection's flip is **deferred to Wave 2** on an ordering constraint —
+`qa-lead-pass.yml`'s `on:` at `:45` names `pull_request` with **no `push:`**, so `enforce_admins` would make
+a required check unsatisfiable on the push route and strand `warroom merge`'s local-only commits; CODEOWNERS
+dropped, since no `required_pull_request_reviews` exists and no CODEOWNERS is in the tree. And a **third**
+control disagreement: the sandbox denies `~/.claude/plans/` while the hook allows it.
+**One inherited citation was dead and was not propagated.** The 2026-08-23 handoff has **no `§0.2`** — its
+headings run 0, 1, 1.5, 2, 3, 3.5, 4, 5, 6. Cited `§0`, where the content is, and recorded that the earlier
+instance runs the **opposite way**: there the sandbox granted and the hook refused.
