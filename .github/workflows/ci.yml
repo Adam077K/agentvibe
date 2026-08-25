@@ -178,21 +178,33 @@ jobs:
       # invisible in a green run. No step in this file may invoke `node --test` directly.
       #
       # ENFORCED as of 2026-08-26, by `no ci.yml step invokes a runner directly` in
-      # scripts/check-suite.test.mjs, which reads this file's `run:` values and fails on a direct
-      # invocation — proved by mutation, with and without a `--test-reporter` pinned beside it. The
-      # same case also refuses `npm run check` here, which would put all 43 steps back behind one
-      # exit code.
+      # scripts/check-suite.test.mjs, which reads this file's `run:` values. Two properties, kept
+      # labelled apart there because only the first is what this comment claims:
+      #   A · no step invokes `node --test` — the tripwire rule above. Proved by mutation with and
+      #       without a `--test-reporter` pinned beside it, and a reporter-only step is proved NOT
+      #       to fire, so the rule cannot be deleted the first time it blocks something legitimate.
+      #   B · no step runs `npm run check` — which would put all 43 steps back behind one exit
+      #       code, the defect the 44 `if:` guards exist to remove, arriving from the other side.
+      #       This comment does not claim B; B is asserted because the file needs it.
+      #
+      # ── AND HERE IS THE PROOF THAT THE OLD WORKAROUND IS DEAD, WHICH IS THE POINT ────────────
+      # This comment SPELLS both `node --test` and `npm run check` — the exact thing the version
+      # below forbade itself from doing — and the check is still green. Run it: `npm run
+      # test:check-suite`. A comment can neither satisfy the check nor break it, because the check
+      # reads `run:` values and prose is not a step. That is the whole lesson of the 2026-08-26
+      # wave in one executable sentence, and it is why you should never again narrow a comment to
+      # keep a grep honest: fix the grep.
       #
       # SUPERSEDED 2026-08-26. This read: "No step in this file may invoke the runner itself; that
       # is greppable, and the grep is the check, so this comment does not spell the string it
       # searches for." THERE WAS NO GREP. check-suite.test.mjs named run-checks.mjs twice — as its
       # own RUNNER const and in a message about package.json — and asserted nothing about this
       # file; the rule held by luck. It was a wish that described itself as a check, forty lines
-      # from two defects of exactly that class fixed the same day. The "does not spell the string"
-      # clause was a workaround for a grep that would match its own comment — the same defect that
-      # let a comment here certify the Mission Control step. Unnecessary now: the check reads
-      # `run:` values, so a comment can neither satisfy it nor break it, which is why this one
-      # spells the string plainly.
+      # from two defects of exactly that class fixed the same day. And the "does not spell the
+      # string" clause was itself a WORKAROUND FOR A GREP THAT WOULD HAVE MATCHED ITS OWN COMMENT
+      # — the identical defect that, in this same file, let a comment certify the Mission Control
+      # step so that step could be deleted in silence. The author saw the hazard and worked around
+      # it in prose instead of fixing the tool. Both are fixed now.
       - name: Gate logic tests
         if: ${{ !cancelled() }}
         run: npm run test:gate
