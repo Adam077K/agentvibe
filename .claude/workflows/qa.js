@@ -638,25 +638,59 @@ async function runOracle() {
 // happens to return valid-but-empty structured output is spelled PASS. `ok: false` covers the agent
 // that returns NOTHING; it does not cover the agent that returns an empty set it never earned.
 //
-// THE FIGURE CITED HERE IS THIS GATE'S OWN, AND A SECOND POPULATION AGREES WITH IT. 15 of 31 counts
-// agents `qa.js` itself dispatched, which is the right denominator for a comment about `qa.js`'s
-// dispatches. `docs/03-system-design/TARGET-ARCHITECTURE.md` reports **50.3% end mid-tool** from a
-// different population and a different method — a machine-wide sweep of 2,694 transcripts and
-// 179,808 turns, every subagent on the machine across every project, not this gate's run journals.
+// THE FIGURE CITED HERE IS THIS GATE'S OWN, AND THE ONE THAT CARRIES THE CONCLUSION IS NOT.
+// 15 of 31 counts agents `qa.js` itself dispatched, which is the right denominator for a comment
+// about `qa.js`'s dispatches. `docs/03-system-design/TARGET-ARCHITECTURE.md` reports **50.3% end
+// mid-tool** from a machine-wide sweep of 2,694 transcripts and 179,808 turns — every subagent on
+// the machine, across every project. Do not swap one for the other: a machine-wide figure sitting
+// in this position invites the next reader to believe the GATE was measured when the MACHINE was.
 //
-// Do not swap one for the other: a machine-wide figure sitting in this position invites the next
-// reader to believe the GATE was measured when the MACHINE was. Cite the agreement instead, because
-// the agreement is the part that survives someone re-measuring either one. Two independent
-// populations, counted by different means, landing 1.9 points apart is stronger than either alone —
-// the conclusion does not depend on which corpus you happen to pick up.
+// SUPERSEDED 2026-08-26. This paragraph claimed the two were "two independent populations, counted
+// by different means, landing 1.9 points apart", and that the agreement was "the part that survives
+// someone re-measuring either one." Both halves are wrong, and a reviewer computed it:
+//
+//   NOT INDEPENDENT — one CONTAINS the other. The sweep is every subagent on the machine, which
+//   includes these 31 dispatches. A subset agreeing with its superset is not corroboration. The
+//   overlap is small (31 of ~2,581 is 1.2%), so they are NEARLY independent in practice; the defect
+//   is that independence was asserted as a fact rather than measured.
+//
+//   n=31 CANNOT SUPPORT A 1.9-POINT AGREEMENT CLAIM. 15/31 = 48.4% carries a standard error of
+//   9.0 points and a 95% interval of [30.8%, 66.0%] — 35.2 points wide. Anything from 31% to 66%
+//   would have "agreed". Two numbers landing 1.9 points apart, when one of them has a ±17.6-point
+//   interval, is a coincidence being presented as evidence.
+//
+// THE LARGE SAMPLE STANDS ALONE AND IS WHAT THE CONCLUSION RESTS ON: 1298/2,581 = 50.3%, SE 0.98
+// points, 95% interval [48.4%, 52.2%]. The small one adds almost nothing, and saying so costs the
+// argument nothing, because the argument never needed it. The honest statement is the flat one:
+// this gate's own journals say ~48% across 31 dispatches, a machine-wide sweep that INCLUDES them
+// says 50.3% across ~2,581, and neither contradicts the other.
+//
+// (~2,581 is INFERRED, not quoted: TARGET-ARCHITECTURE.md states 1,298 ending on `tool_use` and 794
+// on `end_turn` but never the total, and 50.3% implies ~2,580-2,582 — which also means there is a
+// third terminal category of ~489 runs that the word "against" in that sentence hides. Anyone who
+// derives 1298/(1298+794) gets 62.0% and concludes the source is unreliable. Logged as a docs fix.)
+//
+// THAT THIS WAS WRITTEN AT ALL IS THE POINT WORTH KEEPING. This very block exists to be careful
+// about population conflation — it correctly refuses to swap the two figures — and then over-claimed
+// in the opposite direction, in the same paragraph, on the same numbers.
 //
 // WHAT THE TREE ARGUMENT DID TO THIS, because a hazard that is narrowed and reported unchanged is
-// its own small dishonesty. It narrowed it substantially. reviewPrompt() and verifyPrompt() now run
-// `git -C '<tree>' diff`, so a reviewer launched from a `main` checkout — or from a separate `main`
-// CLONE, which does not even hold the commit and answered `fatal: Invalid symmetric difference
-// expression` — still reads the diff from the tree under review. Before that, the most likely way
-// to get five empty arrays was for five reviewers to have no diff at all, and the operating advice
-// this same change introduced actively invited it. That specific route is closed.
+// its own small dishonesty. It narrowed it substantially. reviewPrompt() and verifyPrompt() now
+// INSTRUCT the reviewer to run `git -C '<tree>' diff`, so a reviewer launched from a `main`
+// checkout — or from a separate `main` CLONE, which does not hold the commit at all and answers
+// `fatal: Invalid symmetric difference expression` — is pointed at the tree under review. Before
+// that, the most likely way to get five empty arrays was five reviewers with no diff, and the
+// operating advice this same change introduced actively invited it.
+//
+// INSTRUCT, NOT RUN — and the distinction is this file's own lesson turned on its own fix.
+// SUPERSEDED 2026-08-26: this said "That specific route is closed." `qa.js` has no shell. It cannot
+// run `git` and does not; it emits a string asking an agent to. A reviewer that obeys gets the diff
+// from the right tree; one that reformats the command, drops the `-C`, or resolves the path some
+// other way does not, and nothing here can tell which happened. "An anchor the agent can read is
+// not an anchor" was written twenty lines up about the ORACLE's evidence; it applies just as well
+// to a fix delivered as prose. The route is made much less likely, not closed — which is the same
+// register as this paragraph's own closer, and the sentence above it had drifted a notch stronger
+// than the mechanism supports.
 //
 // WHAT SURVIVES, AND IT IS THE SHAPE RATHER THAN THE ROUTE: any other reason a reviewer returns an
 // empty array — a dropout that still emits structured output, a truncated diff, a misread prompt —
