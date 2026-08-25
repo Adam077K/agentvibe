@@ -596,9 +596,21 @@ async function runOracle() {
 // That is the DESIGNED behaviour for a genuinely clean diff, and it is why this is a hazard rather
 // than a bug with an obvious patch. What makes it worth writing down here rather than leaving to be
 // rediscovered: the measured subagent dropout in this runtime is around half of all dispatches —
-// 15 of 31 in the corpus the REVIEW_ATTEMPTS block above counts — and a dropout that happens to
-// return valid-but-empty structured output is spelled PASS. `ok: false` covers the agent that
-// returns NOTHING; it does not cover the agent that returns an empty set it never earned.
+// 15 of 31, or 48.4%, in the corpus the REVIEW_ATTEMPTS block above counts — and a dropout that
+// happens to return valid-but-empty structured output is spelled PASS. `ok: false` covers the agent
+// that returns NOTHING; it does not cover the agent that returns an empty set it never earned.
+//
+// THE FIGURE CITED HERE IS THIS GATE'S OWN, AND A SECOND POPULATION AGREES WITH IT. 15 of 31 counts
+// agents `qa.js` itself dispatched, which is the right denominator for a comment about `qa.js`'s
+// dispatches. `docs/03-system-design/TARGET-ARCHITECTURE.md` reports **50.3% end mid-tool** from a
+// different population and a different method — a machine-wide sweep of 2,694 transcripts and
+// 179,808 turns, every subagent on the machine across every project, not this gate's run journals.
+//
+// Do not swap one for the other: a machine-wide figure sitting in this position invites the next
+// reader to believe the GATE was measured when the MACHINE was. Cite the agreement instead, because
+// the agreement is the part that survives someone re-measuring either one. Two independent
+// populations, counted by different means, landing 1.9 points apart is stronger than either alone —
+// the conclusion does not depend on which corpus you happen to pick up.
 //
 // WHAT THE TREE ARGUMENT DID TO THIS, because a hazard that is narrowed and reported unchanged is
 // its own small dishonesty. It narrowed it substantially. reviewPrompt() and verifyPrompt() now run
