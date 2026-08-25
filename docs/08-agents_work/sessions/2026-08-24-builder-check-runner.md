@@ -17,3 +17,8 @@ Measured on `main` (`6db92ff`): thirty steps joined by `&&`; `check:mc` is step 
 runs all of them, streams via `stdio:'inherit'`, names failures before the tally, and sets `process.exitCode`
 rather than `process.exit()` after a large write. `scripts/check-suite.test.mjs` is the drift guard, proved by
 mutating the real `package.json` — 14/14. `check:citations` is EXCLUDED for the reason its own header gives.
+**2026-08-25:** `check:mc` moved from `STEPS` to `EXCLUDED` (founder pre-approved). Measured here at `7aad16c`,
+minutes apart: alone it is **345 pass / 0 fail, exit 0**; as a step of `npm run check` it is **344 pass / 1 fail**,
+`EADDRINUSE` on a loopback `bind()` — `sandbox.excludedCommands` matches the invoked command, not its children,
+so no `package.json` arrangement can exempt it. It still blocks in `ci.yml` as its own unsandboxed step.
+`npm run check` → **30 of 30 passed · 0 failed · 78.6s · exit 0** — a clean local floor for the first time.

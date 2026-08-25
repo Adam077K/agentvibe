@@ -86,11 +86,15 @@ test('the guard REFUSES a stale or unreasoned exclusion', () => {
     `expected a stale-exclusion finding, got:\n${gone.failures.join('\n')}`
   );
 
-  const thin = auditSuite({ scripts, excluded: { ...EXCLUDED, 'check:citations': 'later' } });
-  assert.ok(
-    thin.failures.some((f) => f.includes('no substantive reason')),
-    `expected a thin-reason finding, got:\n${thin.failures.join('\n')}`
-  );
+  // Every entry, not a representative one: an exclusion mechanism that accepts an empty reason for
+  // the entry someone actually cares about is worse than no exclusion mechanism.
+  for (const name of Object.keys(EXCLUDED)) {
+    const thin = auditSuite({ scripts, excluded: { ...EXCLUDED, [name]: 'later' } });
+    assert.ok(
+      thin.failures.some((f) => f.includes(`EXCLUDED["${name}"] has no substantive reason`)),
+      `stripping the reason from ${name} did not bite:\n${thin.failures.join('\n')}`
+    );
+  }
 
   const live = auditSuite({ scripts, excluded: { ...EXCLUDED, 'test:sandbox': 'y'.repeat(60) } });
   assert.ok(
@@ -129,17 +133,27 @@ test('transitive reach counts — the five delegating parents are not duplicated
   }
 });
 
-test('the nine steps the && chain used to skip are in the suite, after check:mc', () => {
+test('the nine steps the && chain used to skip are all in the suite', () => {
   const skipped = [
     'test:probe-readonly', 'test:pre-tool-use', 'test:run-gate', 'test:tier-gate',
     'test:merge-gate', 'test:skill-clamp', 'test:probe-stop-reason',
     'test:launcher-permissions', 'test:sandbox',
   ];
-  const mc = STEPS.indexOf('check:mc');
-  assert.ok(mc >= 0, 'check:mc left the suite');
   for (const s of skipped) {
-    assert.ok(STEPS.indexOf(s) > mc, `${s} is not in the suite after check:mc — it is the reason this exists`);
+    assert.ok(STEPS.includes(s), `${s} is not in the suite — it is the reason this file exists`);
   }
+});
+
+test('check:mc is EXCLUDED, not merely absent — and the reason carries its measurement', () => {
+  // Absent-with-no-entry is the silent omission this guard exists to catch, and it would look
+  // identical to a considered decision from the outside. Only the EXCLUDED entry tells them apart.
+  assert.ok(!STEPS.includes('check:mc'), 'check:mc is back in STEPS; it cannot pass as a child under the sandbox');
+  assert.ok(
+    Object.prototype.hasOwnProperty.call(EXCLUDED, 'check:mc'),
+    'check:mc left STEPS with no EXCLUDED entry — that is the silent omission, wearing the fix as a hat'
+  );
+  assert.match(EXCLUDED['check:mc'], /345 pass \/ 0 fail/);
+  assert.match(EXCLUDED['check:mc'], /344 pass \/ 1 fail/);
 });
 
 // ── The runner's behaviour, against fixture repos ────────────────────────────────────────────

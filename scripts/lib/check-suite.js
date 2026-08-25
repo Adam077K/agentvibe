@@ -43,9 +43,9 @@
  * failure; it does not stop at the first.
  *
  * Ordering intent: the structural and cheap checks come first so a broken tree fails loudly and
- * early in the streamed output, and `check:mc` (~3 minutes with dependencies installed, and it
- * looks hung while it is not) sits late so it does not delay the signal from everything else.
- * Ordering is a readability choice only — no step depends on an earlier one having passed.
+ * early in the streamed output, and the slow ones (`check:ledger`, ~45s) sit late so they do not
+ * delay the signal from everything else. Ordering is a readability choice only — no step depends
+ * on an earlier one having passed. `check:mc` used to sit at position 22 here; see EXCLUDED.
  */
 const STEPS = [
   'test:protected-write',
@@ -69,7 +69,6 @@ const STEPS = [
   'test:provenance',
   'test:playbooks',
   'check:ledger',
-  'check:mc',
   'test:probe-readonly',
   'test:pre-tool-use',
   'test:run-gate',
@@ -91,6 +90,20 @@ const STEPS = [
  * catch, wearing a different hat.
  */
 const EXCLUDED = {
+  'check:mc':
+    'CANNOT PASS INSIDE THE SUITE, and passes outside it — so this is a containment fact, not a verdict on ' +
+    'the check. Measured 2026-08-25 in this worktree at 7aad16c, minutes apart: `npm run check:mc` on its ' +
+    'own exits 0 with 345 pass / 0 fail; the SAME command as a step of `npm run check` exits 1 with 344 ' +
+    'pass / 1 fail, mission-control/test/stream.test.ts failing EADDRINUSE on a loopback bind(). The OS ' +
+    'sandbox denies that bind(), and the `sandbox.excludedCommands` entry for "npm run check:mc" in ' +
+    '.claude/settings.json matches the INVOKED command string, not its descendants — so nothing arranged ' +
+    'inside package.json can exempt it while it runs underneath another npm. It is NOT excluded for being ' +
+    'broken or slow: it is 345 of 345 green. RUN IT AS ITS OWN TOP-LEVEL COMMAND: `npm run check:mc`, ' +
+    'which that settings key now permits. IT STILL BLOCKS: .github/workflows/ci.yml runs it as its own ' +
+    'unsandboxed step, so coverage moves rather than disappearing — and this removes a real local/CI ' +
+    'divergence, since CI always ran it standalone while locally it was buried mid-suite. FALSIFY THIS: ' +
+    'delete this entry and put check:mc back in STEPS. If the suite then goes green, the sandbox behaviour ' +
+    'changed and this exclusion should not survive.',
   'check:citations':
     'POSTURE: WARN by design. scripts/check-citations.mjs says so in its own header — "deliberately ' +
     'NOT wired into `npm run check` or into CI by the PR that introduced it: turning it blocking is a ' +
