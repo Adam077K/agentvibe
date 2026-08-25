@@ -978,8 +978,32 @@ print(json.dumps(d, indent=2))
     migrate_sessions "$wt_path"
     rm -rf "$wt_path"
     git -C "$PROJECT_DIR" worktree prune 2>/dev/null
-    # Only delete branch if push succeeded — otherwise keep it for recovery
-    [ "$push_ok" -eq 1 ] && git -C "$PROJECT_DIR" branch -D "$branch" 2>/dev/null
+    # `-d`, not `-D`. The reason is not symmetry with cmd_merge — it is that `-d` CHECKS the exact
+    # property `push_ok` only approximates. `push -u` above records an upstream, and `git branch -d`
+    # deletes a branch that is fully merged into that upstream, refusing otherwise. Both directions
+    # were run before this line was changed: after a real `push -u` it deletes, warning "merged to
+    # refs/remotes/origin/<branch>, but not yet merged to HEAD"; with no upstream recorded, or with
+    # a local commit the remote never received, it refuses and the work survives. Those last two are
+    # precisely the cases where push exits 0 and the copy on origin is not the copy being deleted —
+    # what `push_ok` cannot see, and what makes a `-D` here unrecoverable.
+    #
+    # The push_ok guard stays: no point asking when the answer is already known.
+    #
+    # A refusal is REPORTED. Keeping the branch is the safe outcome, but keeping it silently makes
+    # a `done` that half-worked look exactly like one that worked.
+    if [ "$push_ok" -eq 1 ]; then
+      local del_err
+      if del_err=$(git -C "$PROJECT_DIR" branch -d "$branch" 2>&1); then
+        echo "  ✓ Branch $branch deleted — it is on origin"
+      else
+        echo "  ⚠ Branch $branch KEPT — git will not delete it as merged to its upstream:"
+        printf '%s\n' "$del_err" | head -2 | sed 's/^/      /'
+        echo "      The push reported success, so check that origin actually has this ref"
+        echo "      before deleting by hand."
+      fi
+    else
+      echo "  ⚠ Branch $branch KEPT — the push did not succeed, so this is the only copy."
+    fi
     echo "  ✓ Worktree removed"
   fi
 
