@@ -1763,9 +1763,24 @@ cmd_migrate_sessions() {
   echo "  ✓ Migrated sessions from $count worktree project dir(s)"
 }
 
+# `-D` is KEPT here, deliberately, and this is the one site where force is the right answer.
+#
+# cmd_merge's exits use `-d` because there the question is "did the merge actually incorporate this
+# branch", and a force-delete that answers yes when the answer is no destroys the only copy. Here
+# the question is different and a human has already answered it: every branch is listed on screen,
+# in full, and the operator typed y. `-d` would refuse on exactly the branches this command exists
+# to remove — unmerged ceo-* leftovers — leaving it doing nothing while reporting that it had done
+# something. That is the failure being avoided, not a general argument for force.
+#
+# What DID change is the report. `branch -D ... 2>/dev/null && echo deleted` printed nothing at all
+# for a branch it failed to delete, and then printed "✓ Branches deleted." either way. A step that
+# could not do the thing must not report that it did.
 cmd_prune_branches() {
   local branches
-  branches=$(git -C "$PROJECT_DIR" branch 2>/dev/null | grep "ceo-")
+  # Strip git's current-branch "* " and other-worktree "+ " markers. The name here is what gets
+  # passed to `branch -D`, and a mangled one now produces a mangled error message rather than a
+  # silently swallowed one.
+  branches=$(git -C "$PROJECT_DIR" branch 2>/dev/null | sed 's/^[*+ ]*//' | grep "ceo-")
   if [ -z "$branches" ]; then
     echo "  No ceo-* branches to prune."; return
   fi
@@ -1773,10 +1788,24 @@ cmd_prune_branches() {
   echo "$branches" | while read -r b; do echo "    $b"; done
   read -rp "  Delete all? [y/N]: " ans
   if [[ "$ans" =~ ^[Yy] ]]; then
-    echo "$branches" | while read -r b; do
-      git -C "$PROJECT_DIR" branch -D "$b" 2>/dev/null && echo "    ✓ deleted $b"
-    done
-    echo "  ✓ Branches deleted."
+    # A here-string, not a pipe: a pipe runs the loop in a subshell and the counts would not
+    # survive it — the tally would then be as unreliable as the message it replaces.
+    local deleted=0 kept=0 err
+    while read -r b; do
+      [ -z "$b" ] && continue
+      if err=$(git -C "$PROJECT_DIR" branch -D "$b" 2>&1); then
+        echo "    ✓ deleted $b"
+        deleted=$((deleted + 1))
+      else
+        echo "    ✗ kept $b — $(printf '%s' "$err" | head -1)"
+        kept=$((kept + 1))
+      fi
+    done <<< "$branches"
+    if [ "$kept" -eq 0 ]; then
+      echo "  ✓ $deleted branch(es) deleted."
+    else
+      echo "  ⚠ $deleted deleted, $kept kept — the kept ones are still there, reasons above."
+    fi
   else
     echo "  Cancelled."
   fi
