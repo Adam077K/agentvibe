@@ -1780,7 +1780,13 @@ cmd_prune_branches() {
   # Strip git's current-branch "* " and other-worktree "+ " markers. The name here is what gets
   # passed to `branch -D`, and a mangled one now produces a mangled error message rather than a
   # silently swallowed one.
-  branches=$(git -C "$PROJECT_DIR" branch 2>/dev/null | sed 's/^[*+ ]*//' | grep "ceo-")
+  #
+  # Anchored `^ceo-`, not a bare `ceo-`. On a detached HEAD `git branch` emits the pseudo-line
+  # `(HEAD detached at ceo-1-1700000000)`, which the unanchored pattern matched — and now that
+  # failures are counted, that line arrived as a "kept branch", so a run that deleted every real
+  # branch reported a failure that had not happened. Putting a false alarm into the counter added
+  # to make the signal trustworthy is worse than the silence it replaced.
+  branches=$(git -C "$PROJECT_DIR" branch 2>/dev/null | sed 's/^[*+ ]*//' | grep -E '^ceo-')
   if [ -z "$branches" ]; then
     echo "  No ceo-* branches to prune."; return
   fi
@@ -2206,6 +2212,18 @@ _gh_reason() {
   return 0
 }
 
+# Pull a pull-request URL out of gh's output on stdin, or emit nothing.
+#
+# BOTH gh call sites use this, rather than two regexes that drift apart — and they had already
+# drifted. The `pr create` path validated its output with this pattern; the `pr list` path did not
+# validate at all, so any non-empty line became a pull request. Real gh emits an empty line for a
+# JSON null, so it was latent rather than live, but `✓ Pull request already open: null` with exit 0
+# and a logged merge_pr_opened is the same defect as reporting a merge that did not happen, one
+# size down.
+_pr_url() {
+  grep -Eo 'https://[^[:space:]]+/pull/[0-9]+' | tail -1
+}
+
 # What the operator is left holding after a PR is opened. Local main did not move and the branch
 # was not deleted — the branch is what the pull request is MADE of, and it is deleted by the merge
 # on GitHub, not here.
@@ -2288,7 +2306,11 @@ _open_pull_request() {
   # Re-running after another commit is the ordinary case, not an error: the push above already
   # updated the head, so an open PR for this branch IS the answer. gh refuses to create a second
   # one regardless, and reporting that refusal as a failure would be a false negative.
-  existing=$(cd "$PROJECT_DIR" && gh pr list --head "$branch" --base main --state open --json url --jq '.[0].url' 2>/dev/null)
+  #
+  # The output goes through _pr_url, so "there is an open PR" is only ever concluded from something
+  # shaped like a pull request URL. Anything else — `null`, a warning, an empty line — falls
+  # through to `pr create`, which is the answer that gets checked rather than assumed.
+  existing=$(cd "$PROJECT_DIR" && gh pr list --head "$branch" --base main --state open --json url --jq '.[0].url' 2>/dev/null | _pr_url)
   if [ -n "$existing" ]; then
     echo -e "  ${C_GREEN}✓${RESET} Pull request already open: $existing"
     echo "    The push above updated it."
@@ -2328,8 +2350,19 @@ nowhere else."
   # gh prints the URL as the last line of a successful create; anything before it is progress
   # chatter. Pull the URL out rather than echoing the whole blob back.
   local pr_url
-  pr_url=$(printf '%s\n' "$url" | grep -Eo 'https://[^[:space:]]+/pull/[0-9]+' | tail -1)
-  [ -z "$pr_url" ] && pr_url=$(printf '%s\n' "$url" | tail -1)
+  pr_url=$(printf '%s\n' "$url" | _pr_url)
+
+  # gh exited 0 and printed no URL. Refusing here would claim a failure over a pull request that
+  # very likely exists, which is the opposite error and no better. But the URL is NOT known, and
+  # the previous `tail -1` fallback put gh's last line of chatter into `url=` — so events.jsonl
+  # asserted a location nobody can visit. Succeed, and record the URL as unknown.
+  if [ -z "$pr_url" ]; then
+    echo -e "  ${C_GREEN}✓${RESET} gh reported success but printed no pull request URL:"
+    printf '%s\n' "$url" | sed 's/^/      /'
+    _log_event "merge_pr_opened" "branch=$branch tier=$tier route=pr state=created url=unknown"
+    _report_pr_route "(gh reported no URL — check the repository)" "$branch"
+    return 0
+  fi
 
   echo -e "  ${C_GREEN}✓${RESET} Pull request opened: $pr_url"
   _log_event "merge_pr_opened" "branch=$branch tier=$tier route=pr state=created url=$pr_url"
@@ -2397,8 +2430,15 @@ cmd_merge() {
   [ -z "$n" ] && echo "Usage: ${SESSION} merge <N> [--local]" && exit 1
   [ $# -gt 0 ] && shift
 
-  # An unrecognised option is an ERROR, never a silently-ignored word. `merge 1 --loca` must not
-  # quietly do the other thing; the two routes have different destinations.
+  # An unrecognised option reaching HERE is an error, never a silently-ignored word: `merge 1
+  # --loca` must not quietly pick the other destination.
+  #
+  # Narrower than it first read, because three options never reach here. The global ARGS loop at
+  # the bottom of this file consumes `--grid`, `--bare` and `--brief <next>` before any command
+  # runs, so `merge 1 --brief --local` eats `--local` and this loop sees nothing. That is a real
+  # gap and it is stated rather than fixed here: the swallow can only ever leave `route` at its
+  # default, which is the PR route — the gated one. It cannot produce a wrong destination, only a
+  # surprising one, and moving those flags into per-command parsing is a change to every command.
   local route="pr"
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -2467,8 +2507,14 @@ cmd_merge() {
   # and does guard the PR route". Half right, and the wrong half matters. The rule exists and its
   # required contexts are configured — but `enforce_admins: false` means it does not bind the
   # people who use this program, which is how 48 commits reached main by direct push in one
-  # session. It guards the PR route against everyone; it guards main itself against non-admins
-  # only. See _warn_local_only_merge for how that is read and when it changes.
+  # session. See _warn_local_only_merge for how that is read and when it changes.
+  #
+  # The replacement sentence overstated in its turn, and is narrowed here rather than left
+  # standing: it said the rule "guards the PR route against everyone". It does not. `enforce_admins:
+  # false` exempts admins from the rule as a whole, so an admin can merge a PR without its required
+  # checks passing, just as they can push straight to main. What the PR route actually buys while
+  # that setting stands is smaller and still worth having: ci.yml and qa-lead-pass.yml RUN, and
+  # leave a reviewable artifact on the pull request. A direct push gets neither.
   #
   # So: a QA verdict hash-bound to the BRANCH DIFF — origin/main...branch — or no merge.
   # Hash-bound, not signed — a verdict cannot be moved to another diff or survive an edit to the
