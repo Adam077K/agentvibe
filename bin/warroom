@@ -2102,17 +2102,194 @@ _delete_merged_branch() {
   fi
 }
 
-# Say plainly what just happened. This route writes to LOCAL main and does not push; the remote is
-# reached only through a PR, where .github/workflows/ci.yml and qa-lead-pass.yml apply. Adding a
-# push here would not help — main is protected with required contexts, so a direct push is
-# rejected. Silence let people believe a local merge had shipped.
+# Say plainly what just happened. `--local` writes to LOCAL main and does not push, so no CI runs
+# on it and branch protection never sees it. Silence let people believe a local merge had shipped.
+#
+# SUPERSEDED — marked here, at the point of citation, rather than deleted. This comment used to
+# continue: "Adding a push here would not help — main is protected with required contexts, so a
+# direct push is rejected." That was false when it was written and it is still false today, and it
+# is plausibly WHY the push route was never built: a reason-not-to-act whose premise is untrue
+# reads exactly like a reason-not-to-act whose premise holds.
+#
+# TRUE AS OF 2026-08-26. main's protection rule carries `enforce_admins: false`, read from
+#   gh api repos/{owner}/{repo}/branches/main/protection --jq .enforce_admins
+# on 2026-08-25. That is a REMOTE setting; this file cannot check it, and a comment cannot either,
+# so re-read it before you rely on this line. While it is false, an admin push to main SUCCEEDS,
+# printing "Bypassed rule violations for refs/heads/main ... 2 of 2 required status checks are
+# expected". Forty-eight commits reached main that way in one session.
+#
+# TRUE THE MOMENT `enforce_admins` IS FLIPPED ON. The direct push is rejected — and it can never be
+# made to work, because .github/workflows/qa-lead-pass.yml is a REQUIRED status check that triggers
+# on `pull_request` only, with no `push:` trigger. A commit arriving by push can never satisfy a
+# check that only runs on pull requests. So `--local` after the flip produces commits that are
+# structurally unpushable. That is the reason the PR route below is the default, and the reason the
+# flip is sequenced after this change rather than before it.
 _warn_local_only_merge() {
   echo ""
   echo -e "  ${C_OVERLAY}This merge is LOCAL. Nothing was pushed and no CI ran.${RESET}"
-  echo -e "  ${C_OVERLAY}origin/main is reached only by opening a PR.${RESET}"
+  echo -e "  ${C_OVERLAY}origin/main is reached only by opening a PR: ${SESSION} merge <N>${RESET}"
 }
 
-# Feature F5 — Merge CEO-N's branch into main (4-strategy escalation pipeline)
+# ── The route to origin ───────────────────────────────────────────────────────────────────────
+#
+# `gh` is a NEW dependency of this program: before this change it appeared nowhere in this file,
+# zero occurrences, so its absence had never been handled here and handling it is half the work.
+# It is used rather than curl against the REST API because the credential lives in gh's own config
+# and in no environment variable this program can read.
+#
+# Every failure below REFUSES and names the reason. There is deliberately NO fallback to the local
+# merge. "Opened a pull request" and "moved your local main" are not interchangeable outcomes —
+# one is reviewable by CI and by a human, the other is a dead end — and a step that could not do
+# the thing must not report that it did. If you want the local merge, ask for it by name.
+#
+# Ordering matters and is load-bearing: both gh checks run BEFORE the push, so the ordinary failure
+# (gh missing, gh not logged in) leaves the REMOTE untouched as well as the working tree.
+_gh_reason() {
+  if ! command -v gh >/dev/null 2>&1; then printf 'no-gh'; return 1; fi
+  # `gh auth status` is the liveness probe, not `gh --version`: gh reads its config before it does
+  # anything at all, so a gh that cannot read ~/.config/gh fails here too — which is correct, an
+  # unusable gh is not a usable one. The operator sees gh's own words, printed below.
+  if ! gh auth status >/dev/null 2>&1; then printf 'gh-unusable'; return 1; fi
+  return 0
+}
+
+# What the operator is left holding after a PR is opened. Local main did not move and the branch
+# was not deleted — the branch is what the pull request is MADE of, and it is deleted by the merge
+# on GitHub, not here.
+_report_pr_route() {
+  local url="$1" branch="$2"
+  echo ""
+  echo -e "  ${C_OVERLAY}Local main was not touched and $branch was not deleted.${RESET}"
+  echo -e "  ${C_OVERLAY}ci.yml and qa-lead-pass.yml decide from here: ${url}${RESET}"
+}
+
+# Push the reviewed branch and open a pull request against main. This is the only route from this
+# program to origin, and the only one where .github/workflows/ci.yml and qa-lead-pass.yml apply at
+# all — see _warn_local_only_merge above for why a direct push cannot be made to satisfy them.
+_open_pull_request() {
+  local branch="$1" tier="$2" n="$3"
+  local reason err url existing title body
+
+  if ! reason=$(_gh_reason); then
+    echo -e "  ${C_RED}✗ Refusing to open a pull request${RESET} — reason=$reason"
+    case "$reason" in
+      no-gh)
+        echo "    The GitHub CLI (gh) is not on PATH, and it is this program's only route to origin."
+        echo "    Install it (brew install gh), or run '${SESSION} merge $n --local' if a merge that"
+        echo "    never reaches origin is genuinely what you want."
+        ;;
+      gh-unusable)
+        echo "    gh is on PATH but could not confirm an authenticated session. Its own answer:"
+        gh auth status 2>&1 | sed 's/^/      /'
+        echo "    Fix that (gh auth login), then run '${SESSION} merge $n' again."
+        ;;
+    esac
+    echo "    Nothing was pushed and nothing was merged — the repository is as you left it."
+    _log_event "merge_refused" "branch=$branch tier=$tier route=pr reason=$reason"
+    return 1
+  fi
+
+  if ! git -C "$PROJECT_DIR" remote get-url origin >/dev/null 2>&1; then
+    echo -e "  ${C_RED}✗ Refusing to open a pull request${RESET} — reason=no-origin-remote"
+    echo "    This repository has no 'origin' remote, so there is nowhere to push and no GitHub"
+    echo "    repository to open a pull request against. Nothing was pushed or merged."
+    _log_event "merge_refused" "branch=$branch tier=$tier route=pr reason=no-origin-remote"
+    return 1
+  fi
+
+  # Plain `push`, not `push -u`. Setting an upstream writes to .git/config, which is one more thing
+  # that can fail for one more reason; the only thing that has to happen here is that the ref
+  # reaches origin, and `git ls-remote` is how you confirm it did.
+  echo -e "  Pushing ${BOLD}$branch${RESET} → origin"
+  if ! err=$(git -C "$PROJECT_DIR" push origin "$branch" 2>&1); then
+    echo -e "  ${C_RED}✗ Refusing to continue${RESET} — reason=push-failed"
+    printf '%s\n' "$err" | sed 's/^/      /'
+    echo "    No pull request was opened and nothing was merged."
+    _log_event "merge_refused" "branch=$branch tier=$tier route=pr reason=push-failed"
+    return 1
+  fi
+  echo -e "  ${C_GREEN}✓${RESET} Pushed"
+
+  # gh takes its repository from the git remote of the CURRENT directory, so it is run from
+  # $PROJECT_DIR in a subshell — there is no `gh -C`.
+  #
+  # Re-running after another commit is the ordinary case, not an error: the push above already
+  # updated the head, so an open PR for this branch IS the answer. gh refuses to create a second
+  # one regardless, and reporting that refusal as a failure would be a false negative.
+  existing=$(cd "$PROJECT_DIR" && gh pr list --head "$branch" --base main --state open --json url --jq '.[0].url' 2>/dev/null)
+  if [ -n "$existing" ]; then
+    echo -e "  ${C_GREEN}✓${RESET} Pull request already open: $existing"
+    echo "    The push above updated it."
+    _log_event "merge_pr_opened" "branch=$branch tier=$tier route=pr state=existing url=$existing"
+    _report_pr_route "$existing" "$branch"
+    return 0
+  fi
+
+  title="$branch → main"
+  if [ -f "$WORKTREES_DIR/ceo-${n}.task" ]; then
+    local task_label
+    task_label=$(tr -d '\n' < "$WORKTREES_DIR/ceo-${n}.task" 2>/dev/null)
+    [ -n "$task_label" ] && title="$task_label ($branch)"
+  fi
+  body="Opened by \`${SESSION} merge $n\`.
+
+- Branch: \`$branch\`
+- Risk tier: \`$tier\` (scripts/classify.mjs, via scripts/verdict.mjs)
+- A QA verdict hash-bound to \`origin/main...$branch\` was confirmed before this branch was pushed.
+
+This is the only route from the launcher to origin. ci.yml and qa-lead-pass.yml apply here and
+nowhere else."
+
+  if ! url=$(cd "$PROJECT_DIR" && gh pr create --base main --head "$branch" --title "$title" --body "$body" 2>&1); then
+    echo -e "  ${C_RED}✗ Refusing to report success${RESET} — reason=pr-create-failed"
+    printf '%s\n' "$url" | sed 's/^/      /'
+    echo ""
+    echo "    State, exactly: $branch IS now on origin. Local main was NOT touched and nothing"
+    echo "    was merged. Open the pull request by hand:"
+    echo ""
+    echo "      cd $PROJECT_DIR && gh pr create --base main --head $branch"
+    echo ""
+    _log_event "merge_refused" "branch=$branch tier=$tier route=pr reason=pr-create-failed pushed=yes"
+    return 1
+  fi
+
+  # gh prints the URL as the last line of a successful create; anything before it is progress
+  # chatter. Pull the URL out rather than echoing the whole blob back.
+  local pr_url
+  pr_url=$(printf '%s\n' "$url" | grep -Eo 'https://[^[:space:]]+/pull/[0-9]+' | tail -1)
+  [ -z "$pr_url" ] && pr_url=$(printf '%s\n' "$url" | tail -1)
+
+  echo -e "  ${C_GREEN}✓${RESET} Pull request opened: $pr_url"
+  _log_event "merge_pr_opened" "branch=$branch tier=$tier route=pr state=created url=$pr_url"
+  _report_pr_route "$pr_url" "$branch"
+  return 0
+}
+
+# Feature F5 — Take CEO-N's branch to main. TWO ROUTES, and the default changed on 2026-08-26.
+#
+#   ${SESSION} merge <N>            push the branch and open a pull request against main  (DEFAULT)
+#   ${SESSION} merge <N> --local    merge into LOCAL main, which never reaches origin
+#
+# WHY THE DEFAULT MOVED, since this is a daily-use command and changing what it does is a change to
+# something someone depends on. The local merge is not wrong; it is a DEAD END for anything that
+# must reach origin, and it is about to become worse than a dead end. .github/workflows/
+# qa-lead-pass.yml is a required status check that triggers on `pull_request` only. The moment
+# `enforce_admins` is turned on for main — the founder's decision, sequenced deliberately AFTER
+# this change — a commit that arrives on main by direct push can never satisfy it, so every commit
+# `--local` produces becomes unpushable. A default that quietly manufactures unpushable commits is
+# the wrong default. See _warn_local_only_merge above for the full before/after, including the
+# false claim that stood in this file until today.
+#
+# --local is kept, reachable, and gated identically: a local merge still puts content on main, so
+# it still needs a verdict. What it does not get is CI, branch protection, or a reviewer. It says
+# so, every time, on the way out.
+#
+# THE GATE APPLIES TO BOTH ROUTES and runs before either. On the PR route that is belt and braces —
+# ci.yml and qa-lead-pass.yml will run on the PR regardless — but a branch with no verdict should
+# not consume a reviewer's attention or a runner's minutes, and refusing here is where the operator
+# is still standing.
+#
+# Everything from "Strategy is deliberate" down describes the --local ladder ONLY.
 #
 # "Strategy" is deliberate. This ladder is fast-forward → no-ff → AI-assisted → human, which is
 # how the merge is PERFORMED. It has nothing to do with the risk tier of the change, and the two
@@ -2145,21 +2322,48 @@ _warn_local_only_merge() {
 # not.
 cmd_merge() {
   local n=$1
-  [ -z "$n" ] && echo "Usage: ${SESSION} merge <N>" && exit 1
+  [ -z "$n" ] && echo "Usage: ${SESSION} merge <N> [--local]" && exit 1
+  [ $# -gt 0 ] && shift
+
+  # An unrecognised option is an ERROR, never a silently-ignored word. `merge 1 --loca` must not
+  # quietly do the other thing; the two routes have different destinations.
+  local route="pr"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --local) route="local" ;;
+      --pr)    route="pr" ;;
+      *)
+        echo "✗ Unknown option for merge: '$1'"
+        echo "  Usage: ${SESSION} merge <N> [--local]"
+        exit 1
+        ;;
+    esac
+    shift
+  done
 
   local branch
   branch=$(git -C "$PROJECT_DIR" branch 2>/dev/null | grep -E "^ *\*? *ceo-${n}-[0-9]+$" | tr -d ' *' | tail -1)
   [ -z "$branch" ] && echo "✗ No ceo-$n branch found." && exit 1
 
   echo ""
-  echo -e "  ${BOLD}${C_PEACH}Merging $branch → main${RESET}"
+  if [ "$route" = "local" ]; then
+    echo -e "  ${BOLD}${C_PEACH}Merging $branch → LOCAL main${RESET}  ${C_OVERLAY}(--local: origin is not reached)${RESET}"
+  else
+    echo -e "  ${BOLD}${C_PEACH}$branch → pull request against main${RESET}"
+  fi
   echo ""
 
   # ── The gate ────────────────────────────────────────────────────────────────────────────────
-  # This route merges into LOCAL main and never pushes, so CI never runs on it and branch
-  # protection — which is on, and which does guard the PR route — cannot see it at all. For years
-  # the only thing between a branch and main here was this function, and this function checked
-  # nothing.
+  # The --local route merges into LOCAL main and never pushes, so CI never runs on it and branch
+  # protection cannot see it at all. For years the only thing between a branch and main here was
+  # this function, and this function checked nothing.
+  #
+  # SUPERSEDED, at the point of citation: this paragraph used to add that branch protection "is on,
+  # and does guard the PR route". Half right, and the wrong half matters. The rule exists and its
+  # required contexts are configured — but `enforce_admins: false` means it does not bind the
+  # people who use this program, which is how 48 commits reached main by direct push in one
+  # session. It guards the PR route against everyone; it guards main itself against non-admins
+  # only. See _warn_local_only_merge for how that is read and when it changes.
   #
   # So: a QA verdict hash-bound to the BRANCH DIFF — origin/main...branch — or no merge.
   # Hash-bound, not signed — a verdict cannot be moved to another diff or survive an edit to the
@@ -2212,6 +2416,16 @@ cmd_merge() {
 
   echo -e "  ${C_GREEN}✓${RESET} QA verdict bound to this diff · tier=$tier"
   echo ""
+
+  # ── Route: pull request (default) ───────────────────────────────────────────────────────────
+  # Nothing below this point runs on the PR route. In particular there is no `checkout main` and
+  # no `branch -d`: the local repository is untouched by construction, exactly as it is on every
+  # refusal above. _open_pull_request returns non-zero for every one of its own failures and never
+  # falls through to the local merge.
+  if [ "$route" != "local" ]; then
+    _open_pull_request "$branch" "$tier" "$n" || exit 1
+    return 0
+  fi
 
   # Where the operator was standing. Every refusal above this line runs before main is checked
   # out, so it leaves the repository untouched by construction. A refusal BELOW it has to put the
@@ -2854,6 +3068,7 @@ COLORS = {
     "ceo_add": "\033[38;2;166;227;161m", "ceo_done": "\033[38;2;148;226;213m",
     "merge_complete": "\033[38;2;249;226;175m", "message_send": "\033[38;2;180;190;254m",
     "message_broadcast": "\033[38;2;180;190;254m",
+    "merge_pr_opened": "\033[38;2;166;227;161m", "merge_refused": "\033[38;2;243;139;168m",
 }
 RESET, DIM = "\033[0m", "\033[2m"
 lines = []
@@ -2974,7 +3189,7 @@ case "$CMD" in
   broadcast)      cmd_broadcast "${ARGS[@]:1}" ;;
   inbox)          cmd_inbox "${ARGS[1]}" ;;
   diff)           cmd_diff "${ARGS[1]}" ;;
-  merge)          cmd_merge "${ARGS[1]}" ;;
+  merge)          cmd_merge "${ARGS[1]:-}" "${ARGS[@]:2}" ;;
   files)          cmd_files ;;
   history)        cmd_history "${ARGS[1]}" ;;
   log)            cmd_log ;;
@@ -3019,7 +3234,8 @@ case "$CMD" in
     echo "    ${SESSION} broadcast [--type TYPE] \"msg\" Send typed message to all CEOs"
     echo "    ${SESSION} inbox [N]                      Show message inbox for CEO-N (or all)"
     echo "    ${SESSION} diff <N>          Show CEO-N's changes vs main"
-    echo "    ${SESSION} merge <N>         Merge CEO-N's branch into main"
+    echo "    ${SESSION} merge <N>         Push CEO-N's branch and open a PR against main"
+    echo "    ${SESSION} merge <N> --local Merge into LOCAL main instead — never reaches origin"
     echo "    ${SESSION} files             Show file ownership per CEO + overlap warnings"
     echo "    ${SESSION} history [query]   Show past CEO work sessions (search by keyword)"
     echo "    ${SESSION} log               Show agent work history"
