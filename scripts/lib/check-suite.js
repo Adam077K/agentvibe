@@ -91,22 +91,36 @@ const STEPS = [
  */
 const EXCLUDED = {
   'check:mc':
-    'CANNOT PASS INSIDE THE SUITE, and passes outside it — so this is a containment fact, not a verdict on ' +
-    'the check. Measured 2026-08-25 in this worktree at 7aad16c, minutes apart: `npm run check:mc` on its ' +
-    'own exits 0 with 345 pass / 0 fail; the SAME command as a step of `npm run check` exits 1 with 344 ' +
-    'pass / 1 fail, mission-control/test/stream.test.ts failing EADDRINUSE on a loopback bind(). The OS ' +
-    'sandbox denies that bind(), and the `sandbox.excludedCommands` entry for "npm run check:mc" in ' +
-    '.claude/settings.json matches the INVOKED command string, not its descendants — so nothing arranged ' +
-    'inside package.json can exempt it while it runs underneath another npm. THE CONTROL, because the first ' +
-    'reading of this had a confound worth naming: a backgrounded or subshell-wrapped `npm run check:mc` ALSO ' +
-    'fails, so wrapping defeats the match too. Run foreground, same minute, only the nesting differing — ' +
-    '`npm run check:mc` exits 0 at 345/0, `node scripts/run-checks.mjs --steps check:mc` exits 1 at 344/1. ' +
-    'Nesting is the variable, not the wrapper and not flakiness. It is NOT excluded for being ' +
-    'broken or slow: it is 345 of 345 green. RUN IT AS ITS OWN TOP-LEVEL COMMAND: `npm run check:mc`, ' +
-    'which that settings key now permits. IT STILL BLOCKS: .github/workflows/ci.yml runs it as its own ' +
-    'unsandboxed step, so coverage moves rather than disappearing — and this removes a real local/CI ' +
-    'divergence, since CI always ran it standalone while locally it was buried mid-suite. FALSIFY THIS: ' +
-    'delete this entry and put check:mc back in STEPS. If the suite then goes green, the sandbox behaviour ' +
+    'CANNOT PASS LOCALLY AT ALL WHILE THE SANDBOX IS ARMED — not nested, not standalone — so this is a ' +
+    'containment fact, not a verdict on the check. Measured 2026-08-25, foreground, top level: ' +
+    '`npm run check:mc` exits 1 at 344 pass / 1 fail, matching the armed cell in ' +
+    'docs/03-system-design/SANDBOX.md; the failure is mission-control/test/stream.test.ts, on a loopback ' +
+    'bind(). THE CAUSE is the sandbox denying that bind(), and errno 0 is the tell — a genuine macOS ' +
+    'EADDRINUSE is errno 48, mission-control has exactly one Bun.serve, it is stopped in a finally, and ' +
+    'port 0 asks the kernel for an ephemeral port, so it cannot collide. The isolated control, thirty ' +
+    'seconds apart on that one file: `bun test test/stream.test.ts` is 9 pass / 1 fail with the sandbox ' +
+    'armed and 10 pass / 0 fail without it. THE VARIABLE IS THE SANDBOX. ' +
+    'THERE IS NO LOCAL WORKAROUND, and this entry used to prescribe one. It read "CANNOT PASS INSIDE THE ' +
+    'SUITE, and passes outside it — RUN IT AS ITS OWN TOP-LEVEL COMMAND, which that settings key now ' +
+    'permits", citing 345 pass / 0 fail standalone against 344 pass / 1 fail nested and concluding that ' +
+    'nesting was the variable. NESTING WAS NOT THE VARIABLE. That pair was taken while ' +
+    '.claude/settings.json carried a `sandbox.excludedCommands` entry naming "npm run check:mc": it ' +
+    'matched the INVOKED command string, so it exempted the standalone cell and not the nested one, and ' +
+    'the exemption produced the whole difference. The QA gate then raised that key as three P1 security ' +
+    'defects and ab46d40 reverted it. The file is now byte-identical to origin/main with no ' +
+    'excludedCommands at all, the prescribed command fails like every other spelling, and DO NOT PUT THE ' +
+    'KEY BACK to make this paragraph true again. ' +
+    'WHY IT IS OUT OF THE SUITE: in it, it turns `npm run check` permanently red on every sandboxed ' +
+    'machine for a reason that is not about the code under test, and a suite that is always red is a ' +
+    'suite nobody reads. It is NOT excluded for being broken or slow — 345 of 345 green in 195s once the ' +
+    'bind is permitted. WHERE THE COVERAGE WENT, and this is the load-bearing half: ' +
+    '.github/workflows/ci.yml runs it as its own step, `bun install --frozen-lockfile --cwd ' +
+    'mission-control && npm run check:mc`, on a runner with no OS sandbox. That is the only place it runs ' +
+    'green, so it is the only place it is checked, and scripts/check-suite.test.mjs now reads ci.yml and ' +
+    'fails if that step is deleted. NOTHING SCHEDULES ITS RETURN, and calling it temporary would be a ' +
+    'promise nobody has made: it returns when a loopback bind can be permitted, and the sandbox exposes ' +
+    'no inbound or loopback setting to grant one. FALSIFY THIS: delete this entry, put check:mc back in ' +
+    'STEPS, and run `npm run check` with the sandbox armed. If it goes green, the sandbox behaviour ' +
     'changed and this exclusion should not survive.',
   'check:citations':
     'POSTURE: WARN by design. scripts/check-citations.mjs says so in its own header — "deliberately ' +
@@ -120,8 +134,27 @@ const EXCLUDED = {
     'both entries come out together.',
 };
 
-/** A script name whose wiring this guard is responsible for. */
-const GOVERNED = /^(?:check|test):/;
+/**
+ * A script name whose wiring this guard is responsible for.
+ *
+ * These are the prefixes that mean "this script ASSERTS something", and being governed is what
+ * makes removal from STEPS loud: an unreached governed script fails; an unreached ungoverned one
+ * is invisible. `lint:` is here because it was missing and that was a hole, not a decision —
+ * `lint:agents` is the agent schema linter, sat at step 3, and could be deleted from STEPS with
+ * the guard staying green. `verify:` and `audit:` name nothing today and are here so the next
+ * assertive script does not arrive through the same gap.
+ *
+ * The other prefixes in package.json are deliberately out: `build:`, `curate:`, `measure:`,
+ * `vendor:`, `probe:`, `warroom:` and `ledger:` are generators and operational commands, and
+ * their assertive halves already appear as `check:`/`test:` steps (`check:manifest` for
+ * `build:manifest`, `check:ledger` for `ledger:verify`, and so on). Governing a generator would
+ * demand an EXCLUDED entry for every tool in the repo, which is how a guard becomes noise.
+ *
+ * A prefix list can only ever be a list, so it is not the whole defence: auditSuite() separately
+ * fails any STEP that this pattern does not match, which catches the next prefix without anyone
+ * having predicted it.
+ */
+const GOVERNED = /^(?:check|test|lint|verify|audit):/;
 
 /** The entry point. Named here because the guard asserts package.json still points `check` at it. */
 const RUNNER = 'scripts/run-checks.mjs';
@@ -177,6 +210,21 @@ function auditSuite({ scripts, steps = STEPS, excluded = EXCLUDED, runner = RUNN
           `from STEPS in scripts/lib/check-suite.js.`
       );
     }
+  }
+
+  // A step this guard does not govern can be deleted from STEPS in silence: nothing then reports
+  // it as unreached, because only GOVERNED names are checked for reachability. `lint:agents` was
+  // exactly that for as long as GOVERNED read /^(?:check|test):/ — a step of the suite that the
+  // drift guard was not guarding. Checked here rather than only widening the pattern, because a
+  // pattern is a list of the prefixes someone thought of.
+  for (const step of steps) {
+    if (GOVERNED.test(step)) continue;
+    failures.push(
+      `STEPS names "${step}", whose prefix is outside GOVERNED in scripts/lib/check-suite.js. A step that ` +
+        `is not governed can be REMOVED from the suite without this guard noticing, which is the whole ` +
+        `defect it exists to catch. Add the prefix to GOVERNED, or rename the script under one already ` +
+        `there.`
+    );
   }
 
   const dupes = steps.filter((s, i) => steps.indexOf(s) !== i);

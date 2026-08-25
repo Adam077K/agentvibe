@@ -457,9 +457,22 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
 > through Phase 8a — eight phases shipped while it said "Sprint 1 — foundation." **If you change the phase,
 > change this block in the same PR.**
 
-- **THE BINDING GATE CAN COMPLETE NOW — 2026-08-24.** `npm run check` is **29 of 30 steps with the sandbox
-  armed**, measured at the session root. Derive the denominator, never quote it from memory:
-  `node -e "console.log(require('./package.json').scripts.check.split('&&').length)"` → **30**.
+- **THE BINDING GATE CAN COMPLETE NOW — 2026-08-24 · re-measured 2026-08-25.** `npm run check` is now
+  **30 of 30 steps · 0 failed · exit 0 with the sandbox armed**, in 90s, measured on
+  `fix/pr5-review-fixes`. Derive the denominator, never quote it from memory:
+  `node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **30**. That counts the
+  steps the suite actually runs, which is the one list — `scripts/lib/check-suite.js` owns it, and
+  `test:check-suite` fails if `package.json` drifts away from it.
+  *Superseded 2026-08-25: the derivation here was
+  `node -e "console.log(require('./package.json').scripts.check.split('&&').length)"` → 30, and it now
+  returns **1**. The same session replaced the `&&` chain with `node scripts/run-checks.mjs`, so it counts
+  one runner invocation and hands back a plausible small integer instead of erring. A derivation that keeps
+  working after it stops being true is worse than none, which is why the replacement names what it counts.*
+  *Superseded 2026-08-25: the reading was "29 of 30 steps with the sandbox armed", the one failure being
+  `check:mc`. `check:mc` is no longer a step — it is EXCLUDED with its measurement written down, because it
+  fails under the armed sandbox wherever it runs (denied loopback `bind()`), and `.github/workflows/ci.yml`
+  runs it as its own unsandboxed step instead. The denominator changed for that reason, not because
+  anything was dropped out of it.*
   *Superseded 2026-08-24: this line read "29 of 29" and the P0 bullet below read "29 steps now". Both were
   wrong in the same way, and the provenance is the point.* The builder who did the work recorded **"29 of 30
   `check` steps pass; only `check:mc` fails"** and was right; the CEO synthesis that same day rendered it
@@ -467,24 +480,40 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   sweep — and *that* version is what propagated into this file and two handoffs. The worker measured
   correctly; the orchestrator's summary lost it. This repo already concluded that **the orchestrator's brief
   is a defect surface nobody reviews**; this is the second instance of it in one week.
-  **The tally is per-step, and `npm run check` cannot itself report it:** the script chains its 30 steps with
-  `&&` and `check:mc` is step 21, so one `npm run check` invocation aborts there and the final 9 steps
-  (`test:probe-readonly` through `test:sandbox`) never run. Read "29 of 30" as a per-step result, not as the
-  exit status of a single run.
+  **The runner reports the tally itself now, and a single invocation is the whole coverage claim:** it runs
+  every step whatever the ones before it did, names each failure with the command to reproduce it, and
+  prints `Tally: N of M passed`. A partial run cannot wear the passing verdict — an interrupted run prints
+  INCOMPLETE and names what never started, a subset run says SUBSET, and a zero-step run is REFUSED.
+  *Superseded 2026-08-25: this read "the tally is per-step, and `npm run check` cannot itself report it: the
+  script chains its 30 steps with `&&` and `check:mc` is step 21, so one invocation aborts there and the
+  final 9 steps (`test:probe-readonly` through `test:sandbox`) never run." All three clauses are false as
+  the tree now stands — there is no chain, `check:mc` is not a step at all, and the runner does report the
+  tally. What it described was real: that is the defect `scripts/run-checks.mjs` was written to end, and the
+  nine steps it named are pinned in `scripts/check-suite.test.mjs` so they cannot leave the suite quietly.*
   Before the fix it was 26 by that same per-step tally, and the gate BLOCKed on its own oracle for every
   diff: `test:skill-clamp` and `test:registration` built fixtures inside `.claude/agents/` and
   `.claude/hooks/`, which the armed sandbox denies. Two individually-correct changes — arming the sandbox
   (#94) and oracle-first ordering — collided, and nothing watched the seam. Fixed in `494c95b`, which also
-  adds a preloaded tripwire that turns the next collision into a red test. **One blocker remains — `check:mc`
-  — and it is not a mission-control defect; see the next bullet.** `.qa/verdicts/` is still empty: no gate
-  run has yet completed end to end.
+  adds a preloaded tripwire that turns the next collision into a red test. **No step of the suite blocks it
+  now.** *Superseded 2026-08-25: this read "One blocker remains — `check:mc` — and it is not a
+  mission-control defect". It is still not a mission-control defect and it still fails under the sandbox;
+  what changed is that it is no longer a step, so it no longer blocks `npm run check`. See the next bullet
+  for the cause and `scripts/lib/check-suite.js` for where the coverage went.* `.qa/verdicts/` is still
+  empty: no gate run has yet completed end to end.
 - **`check:mc`'s single failure is caused by the ARMED SANDBOX, not by mission-control — measured
   2026-08-24.** Two cells at the session root, same commit, same deps, Bun 1.3.10 in both:
   **sandboxed → 344 pass · 1 fail · exit 1** (`EADDRINUSE`, in the real-socket SSE test in
   `mission-control/test/stream.test.ts`); **sandbox disabled → 345 pass · 0 fail · exit 0**, zero
   `EADDRINUSE`. *This supersedes the reading that the failure was "deterministic and pre-existing" in
   mission-control, and the 2026-08-25 handoff's hypothesis of "a leaked server from an earlier test in the
-  same file". Both are refuted by the second cell.* `grep -rn 'Bun.serve' mission-control` finds exactly
+  same file". Both are refuted by the second cell.* **Reproduced 2026-08-25 on `fix/pr5-review-fixes`,
+  foreground and top level: sandboxed 344 pass · 1 fail · exit 1, sandbox off 345 pass · 0 fail · exit 0** —
+  and note that the armed cell fails STANDALONE, not only nested, so there is no local workaround.
+  Isolating one file makes it sharpest: `bun test test/stream.test.ts` alone is 9/1 sandboxed and 10/0
+  unsandboxed, thirty seconds apart. *A first reading of the armed cell said 343 · 2, the extra failure
+  being `crosscheck.test.ts` at its 120s timeout. It did not reproduce on a quiet machine (146s vs 206s for
+  the same run) and is recorded here as load, not as a defect — mission-control's wall-clock checks flake
+  when several lanes build at once, which this file already warns about further down.* `grep -rn 'Bun.serve' mission-control` finds exactly
   **one** server in the whole tree, it is stopped in a `finally`, and `port: 0` asks the kernel for an
   ephemeral port and so cannot collide. The reported error carries **`errno: 0`**, where a genuine macOS
   `EADDRINUSE` is errno **48** — a code synthesized by Bun, not one returned by the kernel. It is the
