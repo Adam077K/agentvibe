@@ -6,11 +6,12 @@
  * before any review agent is dispatched, and the entry point contributors invoke by hand. CI
  * (.github/workflows/ci.yml) runs the same scripts individually rather than through this file.
  *
- * WHY IT REPLACED A ONE-LINE `&&` CHAIN. The chain stopped at the first failure. `check:mc` sits
- * at step 22 of 31 and fails on any machine without `bun install` in mission-control/, so nine
- * steps after it — every safety-hook test, the gate's own tests, and `test:sandbox` — had not run
- * for as long as that was true, while the output showed exactly one failure. The full argument,
- * with the measurement, is in scripts/lib/check-suite.js, which owns the step list.
+ * WHY IT REPLACED A ONE-LINE `&&` CHAIN. The chain stopped at the first failure. `check:mc` sat at
+ * step 21 of 30 and fails on any machine without `bun install` in mission-control/, so nine steps
+ * after it — every safety-hook test, the gate's own tests, and `test:sandbox` — had not run for as
+ * long as that was true, while the output showed exactly one failure. `check:mc` has since left the
+ * suite for an unrelated reason (it cannot bind a socket under the sandbox as a child process); the
+ * full argument, and that one, are in scripts/lib/check-suite.js, which owns the step list.
  *
  * ── WHAT THE OUTPUT PROMISES ─────────────────────────────────────────────────────────────────
  * The reader of this output is an agent deciding whether a diff proceeds. It must not be able to
@@ -24,8 +25,9 @@
  *   · an interrupted run prints INCOMPLETE and names the steps that never started, rather than
  *     ending silently
  *
- * NO TIMEOUT, deliberately. `check:mc` takes about three minutes with dependencies installed and
- * looks hung throughout. A timeout here would turn a slow check into a flaky one.
+ * NO TIMEOUT, deliberately. `check:ledger` takes 45-70s and `check:mc` took about three minutes
+ * while it was still a step, looking hung throughout. A timeout would turn a slow check into a
+ * flaky one, and the slowest steps here are the ones whose failure matters most.
  *
  * NO `process.exit()`, deliberately. It does not flush an async pipe write: a sibling branch just
  * fixed six scripts that printed a large payload and then exited, cutting stdout at exactly 65536
