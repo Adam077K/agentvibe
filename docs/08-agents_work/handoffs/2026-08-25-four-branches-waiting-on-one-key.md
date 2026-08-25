@@ -13,17 +13,18 @@
 
 The four REQUIRED follow-ups from [the previous handoff](2026-08-25-after-the-gate-ran.md) are **closed**, across
 **24 commits on four disjoint branches**. They merge cleanly in every pairing and as a set
-(`integration/all-four`, verified). On the merged tree `npm run check` is **30 of 31**, the only failure being
+(`integration/all-four`, verified). On the merged tree `npm run check` is **30 of 30, exit 0**, measured after the fixes below; the earlier
+figure in this file read 30 of 31 and predates `check:mc` leaving the suite. The only failure had been
 `check:mc`. **Nothing has merged.** The binding gate has not run, there is no PASS, and rule 8 is not
 negotiable — so this handoff ends with work finished and unlanded, which is the exact condition the previous
-handoff told me to avoid. The reason is a single un-applied config key, below.
+handoff told me to avoid. The blocker was never a missing config key — see §2.
 
 | Branch | Commits | What |
 |---|---|---|
 | `fix/pr1-sandbox-worktree-ci` | 4 | worktree protocol + lint predicate together · 2 CI wiring gaps · 3 sourced sandbox findings |
 | `fix/pr2-flush` | 6 | 64KB truncation in **6** emitters · canary · `ledger.mjs` documented not changed |
 | `fix/pr3-figures` | 9 | drifted figures · STATUS.md item 3 · 2 discharged decisions · rotted pin |
-| `fix/pr4-checkrunner` | 5 | `npm run check` runs all 31 steps and names every failure · drift guard |
+| `fix/pr4-checkrunner` | 7 | `npm run check` runs every step and names every failure · drift guard |
 
 ---
 
@@ -79,12 +80,17 @@ option. Source: <https://code.claude.com/docs/en/sandboxing>, accessed 2026-08-2
 > `.claude/hooks/**`, `.claude/settings.json` and `.mcp.json` protected on the excluded path, and with
 > `SANDBOX.md` agreeing with `settings.json` in the same commit. Never bundled with unrelated work.
 
-**Answered, and it is the one durable fact from that episode:** `sandbox.excludedCommands` matches the
-**literal top-level command string** and does **not** reach child processes. Measured, same commit, minutes
-apart: `npm run check:mc` → exit 0 · 345 pass; the same thing inside `npm run check` → 1 fail · `EADDRINUSE`.
-Nesting defeats it, and so does wrapping — a subshell, a background job, or a position after `&&`. Anyone
-verifying an `excludedCommands` entry through a wrapper script will conclude it does not work, or worse, that
-it does. The fallback the founder approved was to pull
+**The one durable fact from that episode — and read the qualifier, it is the whole point.**
+`sandbox.excludedCommands` matches the **literal top-level command string** and does **not** reach child
+processes. Measured **while the key was applied**, same commit, minutes apart: `npm run check:mc` → exit 0 ·
+345 pass; the same command inside `npm run check` → 1 fail · `EADDRINUSE`. Nesting defeats it, and so does
+wrapping — a subshell, a background job, or a position after `&&`.
+
+**With the key reverted, `check:mc` fails at top level too** — re-measured at HEAD: **344 pass · 1 fail ·
+`EADDRINUSE` · errno 0**, matching SANDBOX.md Finding 5 exactly. So there is no local way to run it while the
+sandbox is armed, and any text prescribing one is stale. That correction exists because reverting the key
+silently invalidated a measurement three files depended on, and nothing re-derived them: the exact defect
+class in §5. The fallback the founder approved was to pull
 `check:mc` out of the local chain — **CI already runs it as its own step** (`ci.yml`), so that also removes a
 real local/CI structural divergence.
 
@@ -104,10 +110,10 @@ That is the safety-hook tests, **the gate's own tests**, and the check that make
 fact rather than a comment. **`qa.js`'s oracle runs `npm run check` as one command and treats it as the
 deterministic floor before any reviewer is dispatched.** So the floor had a nine-step hole in it, behind a
 failure that was never a real defect. CI was unaffected — it runs each script individually — which is exactly
-why nobody saw it. PR-4 fixes the class: all 31 run, every failure named, exit still nonzero.
+why nobody saw it. PR-4 fixes the class: every step runs, every failure is named, exit still nonzero.
 
 **And the fix is one level deep — the same defect survives inside the steps.** Found by pr4, verified here:
-**six `check:`/`test:` scripts are themselves `&&` chains, 19 links** (five of them inside the suite, 17
+**six `check:`/`test:` scripts are themselves `&&` chains, 20 links** (five of them inside the suite, 18
 links). The worst is `check:ledger`:
 
 ```
@@ -121,7 +127,7 @@ blind. Correctly left unfixed: collapsing those links into `STEPS` changes what 
 (`ci.yml` names `check:ledger`, not its parts), which is a workflow decision at irreversible tier, not a
 builder's call. **This is the next session's cheapest high-value fix.**
 
-Two smaller gaps from the same return: **`test:check-suite` and `test:protected-write` do not run in CI**
+One smaller gap from the same return: **`test:check-suite` does not run in CI** (`test:protected-write` now does — `ci.yml` gained that step in this diff)
 under their own names — both bind locally and in the oracle via `npm run check`, but naming them in
 `ci.yml` is an irreversible-tier workflow edit. And `check:mc` on a **fresh checkout fails in 0.1s**, not
 the ~3 minutes assumed, because the deps are absent — so the chain was aborting almost instantly. Nobody had
@@ -138,7 +144,10 @@ to wait to lose the nine steps, which makes the defect cheaper to hit and theref
 - **A long-lived session worktree cannot be synced to `main`** once `main` touches `.claude/**` — `git merge`
   fails with `unable to unlink old`. **This worktree was 170 commits behind for that reason**, and the
   previous session shipped a line cite (`schema-lint.js:1068`) read from a stale tree; the predicate was at
-  `:1186` at its own stated base. Documented remedy is `excludedCommands`; the same key above covers it.
+  `:1186` at its own stated base. The vendor documents `excludedCommands` as the remedy — **it was tried and
+  reverted here** (§2), because exempting `git checkout`/`restore`/`merge` lets an unsandboxed git command
+  rewrite the very `.claude/**` files the protection exists to guard. Syncing a session worktree therefore
+  still needs a one-off manual escalation. **Open problem, not a solved one.**
 
 ---
 
@@ -148,7 +157,7 @@ to wait to lose the nine steps, which makes the defect cheaper to hit and theref
 (pr3's phrasing.) Every defect found today is an instance:
 
 - `EADDRINUSE` meaning a denied `bind()` · `errno: 0` was the only tell
-- `check-citations.mjs`'s `writeSync` "fix" returning a **short count without throwing** — at 288,412 bytes it
+- `check-citations.mjs`'s `writeSync` "fix" returning a **short count without throwing** — at 289,927 bytes it
   was one `console.log` from silently failing again
 - "29 of 29" dropping its own failing step out of the denominator
 - `npm run check` reporting a floor it never reached
@@ -175,7 +184,10 @@ caught by the builder receiving it, none by any check. Second consecutive sessio
 
 ## 6 · Next
 
-1. **Apply the key (or the fallback), run the gate, land the four branches.** They are ready and verified.
+1. **DO NOT apply the sandbox key. It was applied, reviewed, and reverted (`ab46d40`) — see the superseded
+   block in §2.** The gate has since run twice and three blinded reviewers have judged this branch; the
+   remaining fixes are listed in the session file. Land the branches once those are closed and a gate run
+   passes.
 2. **Then the venture task — and `framer` defines it first.** Founder decision 2026-08-24: nobody has ever
    written down what Agentvibe is, who pays, or what the first customer-facing artifact would be. **112
    session files, zero customer-facing work.** A playbook cannot run without that spec.
