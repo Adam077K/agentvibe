@@ -217,6 +217,12 @@ function refTip(ref) {
 }
 
 function refuseTree(reason) {
+  // `--json` callers get the reason as JSON on stdout, not an empty stream and a stderr line.
+  // `scripts/verdict.mjs` tells agents to run this command; a machine consumer that reads zero
+  // bytes at exit 2 has to guess, and the guess it will make is "no output means nothing to do".
+  if (process.argv.includes('--json')) {
+    console.log(JSON.stringify({ error: 'tree-unverified', reason, gateRequired: true, invocation: null }, null, 2));
+  }
   console.error(`run-gate: refusing to emit an invocation — ${reason}`);
   console.error('  qa.js needs an absolute `tree` naming the worktree that holds the ref under review, and');
   console.error('  it refuses to run without one. Emitting an unverified path would move the defect one');
@@ -273,7 +279,26 @@ function resolveTree(ref) {
   if (tipSha !== head) {
     return refuseTree(`${REPO_ROOT} is at HEAD ${head}, but the ref under review ("${tip}") resolves to ${tipSha} there. The oracle would run the deterministic checks against a working tree that is not the commit being reviewed.`);
   }
-  return REPO_ROOT;
+  return { tree: REPO_ROOT, tipSha, tip };
+}
+
+// THE EMITTED TIP IS ALWAYS THE RESOLVED SHA, AND THE GATE NOW REQUIRES THAT.
+//
+// qa.js refuses a symbolic tip outright: with one, its only commit check compares two values the
+// check-runner itself supplied, so the binding silently vanishes (see its gateEntryRefusal()).
+// `resolvedRef()` above already produced a sha on the default path, but an explicit `--ref
+// origin/main...some-branch` was emitted verbatim — so this router could hand out an invocation its
+// own gate would refuse. Router and gate agree by construction now rather than by coincidence.
+//
+// Rewriting is safe because the sha is one `rev-parse --verify` of the tip the caller passed, taken
+// a line earlier and already checked against HEAD: same commit, stated in the form that survives
+// being pasted somewhere else. That is the identical argument resolvedRef() makes for HEAD.
+function pinRefTip(ref, tipSha) {
+  const dots3 = ref.lastIndexOf('...');
+  if (dots3 !== -1) return `${ref.slice(0, dots3 + 3)}${tipSha}`;
+  const dots2 = ref.lastIndexOf('..');
+  if (dots2 !== -1) return `${ref.slice(0, dots2 + 2)}${tipSha}`;
+  return tipSha;
 }
 
 function main() {
@@ -330,8 +355,13 @@ function main() {
   // `tree` is resolved and verified only when the gate is actually required: with no invocation to
   // emit there is nothing for it to be wrong about, and a router that refuses a docs-only diff over
   // a tree argument nobody will use is a router people stop running.
-  const invocation = gateRequired
-    ? { tool: 'Workflow', scriptPath: QA_SCRIPT, args: { ref, tier: floor, tree: resolveTree(ref) } }
+  const resolved = gateRequired ? resolveTree(ref) : null;
+  const invocation = resolved
+    ? {
+        tool: 'Workflow',
+        scriptPath: QA_SCRIPT,
+        args: { ref: pinRefTip(ref, resolved.tipSha), tier: floor, tree: resolved.tree },
+      }
     : null;
 
   // Null when the diff leaves the gate alone — same shape as `invocation`, so a consumer can
