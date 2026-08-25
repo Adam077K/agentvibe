@@ -32,6 +32,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+// ONE definition of "a decision entry", shared with scripts/evict-memory.mjs. This file used to
+// carry its own heading regex; the eviction tool would then have carried a second, and the two
+// would have disagreed about what they were counting — the checker passing a file the evictor
+// could not parse, or the reverse, with no way to tell which was right.
+const { parseDecisionEntries } = require('./lib/memory-entries.js');
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
@@ -60,17 +68,31 @@ const DECISIONS_BYTE_CAP = 40_000;
 const LONG_TERM_LINE_CAP = 100;
 
 /**
- * DECISIONS_ARCHIVE.md byte ceiling.
+ * Byte ceiling for EACH archive volume — the same 40,000 as the active DECISIONS.md.
  *
- * 40,000 bytes — the same ceiling as the active DECISIONS.md. Treating both files as
- * having equal budgets keeps the combined pair ≤ 80 kB and forces a review after roughly
- * six to eight more entries land in the archive (at ~1.4 kB/entry average). The archive
- * grows only during deliberate eviction events, not continuously. When this cap fires:
- * compress or delete records that are fully obsolete (e.g., Phase 2 launcher measurement
- * entries once the fleet rollout in Phase 9 completes and nothing references them any
- * longer). Pre-PR archive was 18,538 bytes; post-eviction it is ~30 kB.
+ * ── THE ARCHIVE ROTATES, AND THIS COMMENT USED TO SAY THE OPPOSITE ─────────────────────────
+ *
+ * It read: "When this cap fires: compress or DELETE records that are fully obsolete." That was
+ * an instruction to lose decisions, written into the one check that is supposed to prevent it,
+ * and it was reachable — the single archive stood at 34,472 of 40,000 while DECISIONS.md had
+ * 325 bytes of headroom, so the very next eviction would have breached it and the advice above
+ * would have been followed. A cap that can only be met by deleting history WILL be met by
+ * deleting history.
+ *
+ * The archive is now a SET of volumes — `DECISIONS_ARCHIVE.md` (volume 1, the legacy name) plus
+ * `DECISIONS_ARCHIVE_002.md`, `_003.md`, … — and this cap applies to each of them independently,
+ * discovered by pattern rather than by name so a new volume is governed the moment it exists.
+ * `scripts/evict-memory.mjs` opens the next volume when the current one passes 90% of this cap.
+ *
+ * WHAT THIS BOUNDS, STATED NARROWLY: the size of any single file a reader must load. It does NOT
+ * bound the lifetime total of the archive, and it is not pretending to. The lifetime total of an
+ * append-only decision log should grow; a mechanism that caps it is a mechanism for losing
+ * decisions, which is the sentence this comment replaced.
  */
 const DECISIONS_ARCHIVE_BYTE_CAP = 40_000;
+
+/** Volume 1 is the un-suffixed legacy name; volumes 2+ carry a zero-padded sequence number. */
+const ARCHIVE_VOLUME_RE = /^DECISIONS_ARCHIVE(?:_\d{3})?\.md$/;
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 const failures = [];
@@ -78,11 +100,15 @@ const fail = (check, msg) => failures.push(`[${check}] ${msg}`);
 
 /**
  * Count dated decision entries in DECISIONS.md.
- * An entry heading looks like `## YYYY-MM-DD — ...` at the start of a line.
- * The format-section heading `## Format` is excluded by the date-anchored pattern.
+ *
+ * Delegates to `scripts/lib/memory-entries.js`, which owns the definition. An entry heading looks
+ * like `## YYYY-MM-DD — ...` at the start of a line; the format-section heading `## Format` is
+ * excluded by the date anchor. Archive STUBS still count as entries, deliberately — a stub costs
+ * bytes and occupies a heading, and hiding it from the count would make the file look emptier
+ * than it reads.
  */
 function countDecisionEntries(text) {
-  return (text.match(/^## \d{4}-\d{2}-\d{2}/gm) || []).length;
+  return parseDecisionEntries(text).length;
 }
 
 // ── check DECISIONS.md ───────────────────────────────────────────────────────
@@ -146,25 +172,40 @@ if (!fs.existsSync(longTermPath)) {
   }
 }
 
-// ── check DECISIONS_ARCHIVE.md ─────────────────────────────────────────────────
-const decisionsArchivePath = path.join(ROOT, '.claude', 'memory', 'DECISIONS_ARCHIVE.md');
+// ── check every archive volume ─────────────────────────────────────────────────
+//
+// Discovered by pattern, never by a hard-coded list of names. Naming the volumes here would mean
+// that opening volume 4 governs it only if somebody also remembered to edit this file — and an
+// unchecked archive volume is exactly the state the single archive was in before it was capped:
+// 18,538 bytes, checked by nothing.
+const memoryDir = path.join(ROOT, '.claude', 'memory');
 
-if (!fs.existsSync(decisionsArchivePath)) {
-  // Not required to exist; only checked when present.
-} else {
-  const text = fs.readFileSync(decisionsArchivePath, 'utf8');
-  const bytes = Buffer.byteLength(text, 'utf8');
+/** @returns {Array<{name: string, bytes: number}>} volumes on disk, in name order. */
+function archiveVolumes() {
+  let names;
+  try { names = fs.readdirSync(memoryDir); } catch { return []; }
+  return names
+    .filter((n) => ARCHIVE_VOLUME_RE.test(n))
+    .sort()
+    .map((n) => ({
+      name: n,
+      bytes: Buffer.byteLength(fs.readFileSync(path.join(memoryDir, n), 'utf8'), 'utf8'),
+    }));
+}
 
-  if (bytes > DECISIONS_ARCHIVE_BYTE_CAP) {
+const volumes = archiveVolumes(); // none is fine — the archive is not required to exist
+for (const vol of volumes) {
+  if (vol.bytes > DECISIONS_ARCHIVE_BYTE_CAP) {
     fail(
       'decisions-archive-byte-overflow',
-      `DECISIONS_ARCHIVE.md is ${bytes.toLocaleString()} bytes; cap is ${DECISIONS_ARCHIVE_BYTE_CAP.toLocaleString()} bytes. ` +
-        `Compress or delete fully superseded entries (e.g., phase-specific records after that phase ships). ` +
-        `Do not delete anything still referenced; do not touch DECISIONS.md entries.`
+      `${vol.name} is ${vol.bytes.toLocaleString()} bytes; the per-volume cap is ${DECISIONS_ARCHIVE_BYTE_CAP.toLocaleString()} bytes. ` +
+        `Do NOT resolve this by deleting records. The archive rotates: move the overflow into the next volume with ` +
+        `\`node scripts/evict-memory.mjs\`, or split this volume by hand keeping every entry. ` +
+        `The cap bounds what one reader must load, not how much history may exist.`
     );
   } else if (!JSON_OUT) {
     console.log(
-      `✓ DECISIONS_ARCHIVE.md — ${bytes.toLocaleString()} bytes (cap ${DECISIONS_ARCHIVE_BYTE_CAP.toLocaleString()})`
+      `✓ ${vol.name} — ${vol.bytes.toLocaleString()} bytes (cap ${DECISIONS_ARCHIVE_BYTE_CAP.toLocaleString()})`
     );
   }
 }
@@ -178,7 +219,6 @@ if (!fs.existsSync(decisionsArchivePath)) {
 if (JSON_OUT) {
   const decisionsText = fs.existsSync(decisionsPath) ? fs.readFileSync(decisionsPath, 'utf8') : '';
   const longTermText = fs.existsSync(longTermPath) ? fs.readFileSync(longTermPath, 'utf8') : '';
-  const archiveText = fs.existsSync(decisionsArchivePath) ? fs.readFileSync(decisionsArchivePath, 'utf8') : '';
   console.log(
     JSON.stringify({
       root: ROOT,
@@ -188,10 +228,15 @@ if (JSON_OUT) {
         entry_cap: DECISIONS_ENTRY_CAP,
         byte_cap: DECISIONS_BYTE_CAP,
       },
-      decisions_archive: {
-        bytes: Buffer.byteLength(archiveText, 'utf8'),
-        byte_cap: DECISIONS_ARCHIVE_BYTE_CAP,
-      },
+      // Every volume, each with its own cap. `decisions_archive` remains as the volume-1 view so
+      // an existing consumer of this JSON keeps working; it is the first element of the list, not
+      // a second measurement of it.
+      decisions_archive: volumes.length
+        ? { bytes: volumes[0].bytes, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP }
+        : { bytes: 0, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP },
+      decisions_archive_volumes: volumes.map((v) => ({
+        name: v.name, bytes: v.bytes, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP,
+      })),
       long_term: {
         lines: longTermText.split('\n').length,
         line_cap: LONG_TERM_LINE_CAP,

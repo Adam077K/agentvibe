@@ -22,7 +22,12 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(REPO, 'scripts', 'check-memory-budget.mjs');
 
 const roots = [];
-function fixture({ decisions = '', longTerm = '', archive = '' }) {
+/**
+ * @param {object} o
+ * @param {string} [o.archive]   volume 1, by its legacy name — the shape most cases need
+ * @param {object} [o.volumes]   any archive volume by filename, for the rotation cases
+ */
+function fixture({ decisions = '', longTerm = '', archive = '', volumes = {} }) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'memory-budget-fixture-'));
   roots.push(root);
   fs.mkdirSync(path.join(root, '.claude', 'memory'), { recursive: true });
@@ -30,6 +35,9 @@ function fixture({ decisions = '', longTerm = '', archive = '' }) {
   fs.writeFileSync(path.join(root, '.claude', 'memory', 'LONG-TERM.md'), longTerm);
   if (archive) {
     fs.writeFileSync(path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE.md'), archive);
+  }
+  for (const [name, body] of Object.entries(volumes)) {
+    fs.writeFileSync(path.join(root, '.claude', 'memory', name), body);
   }
   return root;
 }
@@ -166,6 +174,114 @@ test('MUTATION: absent DECISIONS_ARCHIVE.md passes (archive check is optional)',
   // No archive= provided: fixture does not write the file.
   const r = check(fixture({ decisions: makeDecisions(3, 100), longTerm: makeLines(10) }));
   assert.equal(r.code, 0, `no archive file should pass: ${JSON.stringify(r.failures)}`);
+});
+
+// ── the archive is a SET of volumes, each capped ───────────────────────────────
+//
+// The archive used to be one file and this checker used to name it. A second volume was
+// therefore governed by nothing — the state the single archive was in before it was capped at
+// all (18,538 bytes, checked by nothing). Discovery is by pattern now, and these cases pin it
+// by putting the defect in a volume the old code would not have opened.
+
+test('MUTATION: a numbered volume over the byte cap is flagged, and named', () => {
+  const r = check(fixture({
+    decisions: makeDecisions(3, 100),
+    longTerm: makeLines(10),
+    volumes: {
+      'DECISIONS_ARCHIVE.md': '# Archive\n',
+      'DECISIONS_ARCHIVE_002.md': 'x'.repeat(ARCHIVE_BYTE_CAP + 1),
+    },
+  }));
+  assert.equal(r.code, 1, 'an over-cap volume 2 must fail the blocking check');
+  assert.ok(r.failures.some((f) => f.includes('DECISIONS_ARCHIVE_002.md')),
+    `the failing volume must be named: ${JSON.stringify(r.failures)}`);
+});
+
+test('MUTATION: volume 1 within cap does not excuse volume 3 over it', () => {
+  const r = check(fixture({
+    decisions: makeDecisions(3, 100),
+    longTerm: makeLines(10),
+    volumes: {
+      'DECISIONS_ARCHIVE.md': 'x'.repeat(ARCHIVE_BYTE_CAP),
+      'DECISIONS_ARCHIVE_002.md': 'y'.repeat(100),
+      'DECISIONS_ARCHIVE_003.md': 'z'.repeat(ARCHIVE_BYTE_CAP + 1),
+    },
+  }));
+  assert.equal(r.code, 1);
+  assert.equal(r.decisions_archive_volumes.length, 3, 'all three volumes must be measured');
+  const named = r.failures.filter((f) => f.includes('decisions-archive-byte-overflow'));
+  assert.equal(named.length, 1, 'exactly the over-cap volume fails');
+  assert.ok(named[0].includes('DECISIONS_ARCHIVE_003.md'));
+});
+
+test('MUTATION: many volumes, all within cap, pass — the cap is per volume, not a total', () => {
+  // The lifetime total here is 3× the cap and that is CORRECT. What the cap bounds is what one
+  // reader must load. A checker that summed the volumes would be a mechanism for losing history.
+  const r = check(fixture({
+    decisions: makeDecisions(3, 100),
+    longTerm: makeLines(10),
+    volumes: {
+      'DECISIONS_ARCHIVE.md': 'x'.repeat(ARCHIVE_BYTE_CAP),
+      'DECISIONS_ARCHIVE_002.md': 'y'.repeat(ARCHIVE_BYTE_CAP),
+      'DECISIONS_ARCHIVE_003.md': 'z'.repeat(ARCHIVE_BYTE_CAP),
+    },
+  }));
+  assert.equal(r.code, 0, `per-volume caps must not sum: ${JSON.stringify(r.failures)}`);
+});
+
+test('MUTATION: a file that only looks like a volume is not measured', () => {
+  // `DECISIONS_ARCHIVE_2026-08.md` is the period-keyed name this design deliberately did not
+  // adopt. If the pattern accepted it, an operator could believe a period file was governed
+  // when it was not — so the pattern is exact and this pins it.
+  const r = check(fixture({
+    decisions: makeDecisions(3, 100),
+    longTerm: makeLines(10),
+    volumes: {
+      'DECISIONS_ARCHIVE.md': '# Archive\n',
+      'DECISIONS_ARCHIVE_NOTES.md': 'q'.repeat(ARCHIVE_BYTE_CAP + 1),
+    },
+  }));
+  assert.equal(r.code, 0, 'only DECISIONS_ARCHIVE.md and DECISIONS_ARCHIVE_NNN.md are volumes');
+  assert.equal(r.decisions_archive_volumes.length, 1);
+});
+
+test('MUTATION: the overflow message refuses to advise deleting records', () => {
+  // It used to read "compress or DELETE fully superseded entries" — an instruction to lose
+  // decisions, written into the one check that exists to preserve them, and reachable: the
+  // single archive stood at 34,472 of 40,000 while DECISIONS.md had 325 bytes of headroom.
+  const r = check(fixture({
+    decisions: makeDecisions(3, 100),
+    longTerm: makeLines(10),
+    archive: 'x'.repeat(ARCHIVE_BYTE_CAP + 1),
+  }));
+  const msg = r.failures.find((f) => f.includes('decisions-archive-byte-overflow'));
+  assert.ok(msg, 'the overflow must be reported');
+  assert.match(msg, /Do NOT resolve this by deleting records/);
+  assert.match(msg, /evict-memory\.mjs/, 'the message must name the tool that rotates');
+});
+
+// ── entry counting has ONE implementation ──────────────────────────────────────
+
+test('MUTATION: an archive STUB still counts as an entry', () => {
+  // A stub costs bytes and occupies a heading. Hiding it from the count would make the file
+  // look emptier than it reads — and this checker's whole job is to report what it costs.
+  const decisions =
+    `# Decisions\n\n` +
+    `## 2026-01-01 — A real entry\n\nBody.\n\n` +
+    `## 2026-01-02 — An evicted entry\n*Archived to \`DECISIONS_ARCHIVE.md\` (2026-08-25). Complete.*\n`;
+  const r = check(fixture({ decisions, longTerm: makeLines(10) }));
+  assert.equal(r.decisions.entries, 2, 'the stub is an entry');
+});
+
+test('MUTATION: a heading with no title is still an entry', () => {
+  // The shared parser allows a bare `## YYYY-MM-DD`. If the checker carried its own regex the
+  // two could disagree, and the file would be counted differently by the tool that reports it
+  // and the tool that edits it.
+  const r = check(fixture({
+    decisions: `# Decisions\n\n## 2026-01-01\n\nBody.\n\n## 2026-01-02 — Titled\n\nBody.\n`,
+    longTerm: makeLines(10),
+  }));
+  assert.equal(r.decisions.entries, 2);
 });
 
 // ── real repo must pass ─────────────────────────────────────────────────────
