@@ -245,19 +245,42 @@ function parseDecisionEntries(text) {
  * never pass what you could not check.
  */
 function readReversibility(entryText) {
-  const raw = fieldValue(entryText, 'Reversibility');
+  const read = fieldRead(entryText, 'Reversibility');
+  if (read.status === 'ambiguous') {
+    return {
+      value: 'unknown',
+      raw: null,
+      note: `${read.count} lines in this entry read as \`**Reversibility:**\` outside any code fence, so which one `
+        + 'is the entry\'s own cannot be decided — one of them is hiding somewhere the fence mask does not look '
+        + '(an HTML comment, for instance). Leave exactly one',
+    };
+  }
+  const raw = read.status === 'ok' ? read.value : null;
   if (raw === null) {
-    // A near-miss is worth naming: `Reversability` is a spelling most people get wrong once, and
-    // "field absent" sends the reader looking for a field that is right there.
-    const nearLines = entryText.split('\n');
+    // A near-miss is worth naming, and there are now TWO of them. `Reversability` is a spelling
+    // most people get wrong once, and "field absent" sends the reader looking for a field that is
+    // right there. Since the selector narrowed to the canonical form, a correctly spelled but
+    // NON-CANONICALLY written field lands here too — and calling that "absent" would send the
+    // same reader on the same wrong hunt, so it is named for what it is. The value is still not
+    // read: this branch produces a message, and the disposition stays `unknown` ⇒ refused.
+    //
+    // The `\r` strip matches `parseDecisionEntries` and `fieldValue`. Without it a CRLF file
+    // handed `fenceMask` a `\r`-suffixed line array, `FENCE`'s `$` never anchored, and the mask
+    // came back all-false — fail-closed, but for a reason nobody could read off the message.
+    const nearLines = entryText.split('\n').map((l) => (l.endsWith('\r') ? l.slice(0, -1) : l));
     const { inFence: nearMask } = fenceMask(nearLines);
-    const near = nearLines
-      .filter((_, i) => !nearMask[i])
-      .join('\n')
-      .match(/^\s*[-*]?\s*\*{0,2}(Revers[a-z]*bility|Reversab[a-z]*)\s*:/im);
-    const note = near && near[1] !== 'Reversibility'
-      ? `no \`Reversibility:\` field — found \`${near[1]}:\`, which is probably a typo for it`
-      : 'no `Reversibility:` field';
+    const outside = nearLines.filter((_, i) => !nearMask[i]).join('\n');
+    const near = outside.match(FIELD_SHAPED('(Revers[a-z]*bility|Reversab[a-z]*)'));
+    let note;
+    if (!near) {
+      note = 'no `Reversibility:` field';
+    } else if (near[1] !== 'Reversibility') {
+      note = `no \`Reversibility:\` field — found \`${near[1]}:\`, which is probably a typo for it`;
+    } else {
+      note = 'a `Reversibility:` line is present but is NOT written as `**Reversibility:** value` at the '
+        + 'start of a line, so it was not read — a list marker or an indent in front of a field is exactly '
+        + 'how a wrong value shadows the real one';
+    }
     return { value: 'unknown', raw: null, note };
   }
   // Strip markdown emphasis and backticks, then match a KNOWN value at the start. An allowlist,
@@ -272,45 +295,122 @@ function readReversibility(entryText) {
 }
 
 /**
+ * A field, written the ONE way this file will read: `**Key:** value`, at the start of a line.
+ *
+ * ── THREE ROUNDS OF P1s CAME OUT OF WIDENING THIS ONE REGEX ──────────────────────────────────
+ *
+ * It began as `startsWith('**Key:**')`. A bolded or list-item field read as absent, so it was
+ * widened to `^\s*[-*]?\s*\*{0,2}Key\*{0,2}\s*:` — and that widened what can SHADOW a field
+ * in three places at once, because first match wins:
+ *
+ *   inside a fence   a quoted template's `Reversibility: reversible` outranked the entry's own
+ *                    `**Reversibility:** irreversible`. Closed by the fence mask.
+ *   behind a list marker   `- Reversibility: reversible` in ordinary prose. NOT closed by the
+ *                    mask, which tracks ``` and ~~~ and knows nothing about list items.
+ *   behind four spaces   an indented block. Same gap, same cause.
+ *
+ * The last two are the round-3 hole. The tolerance was measured before it was removed: across
+ * 575 tracked `.md` files there are ZERO non-canonical `Reversibility:`/`Affects:` lines
+ * (`git grep -nE '^\s*([-*]\s+)?\*{0,1}(Reversibility|Affects):' -- '*.md'`, minus the
+ * canonical form). It was buying nothing and costing a P1 a round.
+ *
+ * So the selector is narrow again, and the fail-closed path carries the diagnosis instead: a
+ * line that RESEMBLES a field but is not canonical is never read, and `readReversibility` says
+ * so by name rather than reporting the field absent. Rule 10 — a value you could not read is
+ * not a value you may use.
+ *
+ * The fence mask still pays its way, and must stay: the live file's own `## Format` section
+ * carries a CANONICAL `**Reversibility:** reversible | hard-to-reverse | irreversible` at
+ * column 0 inside a ```markdown fence, which narrowing alone would still read.
+ */
+const CANONICAL_FIELD = (key) => new RegExp(`^\\*\\*${key}:\\*\\*\\s*\\*{0,2}`, 'i');
+
+/**
+ * A line that LOOKS like a field and is not one. Reported, never read — see `readReversibility`.
+ * This is the ONLY place the tolerant form survives, and it produces a message, not a value.
+ */
+const FIELD_SHAPED = (key) => new RegExp(`^\\s*(?:[-*+]\\s+)?\\*{0,2}${key}\\*{0,2}\\s*:`, 'im');
+
+/**
+ * What ends a wrapped field value.
+ *
+ * Two conditions. The bold one is original: the next `**Field:**` line. The second is the other
+ * half of the narrowing above — a line that is ITSELF a field, canonical or not, must never be
+ * read as the tail of the field above it. Without it, narrowing the head alone leaves the same
+ * wrong value readable one line lower: `- Affects: docs/does-not-exist.md` has no `**`, so it
+ * would have joined the `**Affects:**` value above and contributed a dead path the entry never
+ * named — which is `orphaned`, which rule 2 calls archivable on sight.
+ *
+ * ── AND IT IS FIELD-SHAPED, NOT "INDENTED OR LIST-MARKED" ────────────────────────────────────
+ *
+ * The first version of this broke on ANY line with a list marker or a four-space indent, and
+ * that was a widening wearing a narrowing's clothes: an indented continuation of a real
+ * `Affects:` list would have been DROPPED, and if the dropped line held the only surviving path
+ * the entry would flip from `alive` to `deleted` — the same rule-2 escalation, arrived at from
+ * the opposite side. Breaking only on lines that look like fields closes the shadow without
+ * discarding wrapped text. Pinned both ways in scripts/evict-memory.test.mjs.
+ */
+const FIELD_LINE = /^\s*(?:[-*+]\s+)?\*{0,2}(?:Reversibility|Reversability|Affects)\*{0,2}\s*:/i;
+const CONTINUATION_ENDS = (line) => /^\s*[-*]?\s*\*\*/.test(line) || FIELD_LINE.test(line);
+
+/**
  * The value of a `**Key:** value` field, joined across continuation lines.
  *
  * `Affects:` wraps onto a second line in at least one live entry, and a single-line read would
  * silently drop half its targets — which, for rule 2, means calling an entry orphaned because
  * the surviving path was on the line nobody read.
  */
-function fieldValue(entryText, key) {
+function fieldRead(entryText, key) {
   const lines = entryText.split('\n').map((l) => (l.endsWith('\r') ? l.slice(0, -1) : l));
   const { inFence } = fenceMask(lines);
-  // Tolerates a leading list marker and optional emphasis: `**Key:**`, `- **Key:**`, `Key:`.
-  // The live file uses the first; the second and third are what a hand-written entry looks like,
-  // and reading them as "field absent" is how a real value goes unseen.
+  const head = CANONICAL_FIELD(key);
+  const hits = [];
+  lines.forEach((l, i) => { if (!inFence[i] && head.test(l)) hits.push(i); });
+  if (hits.length === 0) return { status: 'absent', value: null, count: 0 };
+  // ── TWO CANDIDATES IS NOT A FIELD, IT IS A QUESTION ─────────────────────────────────────
   //
-  // ── AND IT MUST SKIP FENCES, WHICH IS WHAT THAT TOLERANCE COST ────────────────────────────
+  // "First match wins" is the mechanism behind every shadow this file has been fixed for, and
+  // narrowing the selector only moves the shadow to whatever hides a CANONICAL line next. It
+  // was still one construct short after the narrowing, found by probing the fix rather than by
+  // waiting for a review: a canonical `**Reversibility:** reversible` inside a multi-line
+  // `<!-- … -->` comment shadowed the real one below it, and the entry — irreversible, live
+  // subject — classified `orphaned`, which rule 2 calls archivable on sight. Case was a second
+  // door: `**reversibility:**` and `**Reversibility:**` are both matched by an `i` regex.
   //
-  // The tolerance above is the fix for a real bug — a bolded or list-item field used to read as
-  // absent — and it opened a worse one. The selector went from `startsWith('**Key:**')`, which a
-  // bare `Key: value` inside a fence could not satisfy, to a pattern that matches the bare form
-  // anywhere. So an entry quoting the template inside a fence had the TEMPLATE's values read as
-  // its own, first match wins, and rule 1 was bypassed by a readable wrong value rather than an
-  // unreadable one. Measured across the two revisions: a fenced `Reversibility: reversible`
-  // shadowing a real `**Reversibility:** irreversible` read correctly BEFORE the tolerance and
-  // incorrectly after it.
+  // Rather than teach the mask about HTML comments and then about the construct after that,
+  // this refuses to CHOOSE. Two unmasked canonical lines for one key means the tool cannot tell
+  // which is the entry's own, so it reports that it could not read the field — `unknown`, which
+  // classifies REFUSED — instead of picking one. Rule 10, and it closes the class rather than a
+  // door: it holds for every hiding construct, including the ones nobody has thought of.
   //
-  // The tolerance stays and the fence mask pays for it. Same mask `parseDecisionEntries` uses.
-  const head = new RegExp(`^\\s*[-*]?\\s*\\*{0,2}${key}\\*{0,2}\\s*:\\s*\\*{0,2}`, 'i');
-  const at = lines.findIndex((l, i) => !inFence[i] && head.test(l));
-  if (at === -1) return null;
+  // Measured before it was adopted: no entry in the live DECISIONS.md carries two canonical
+  // lines for either key, so this refuses nothing that exists.
+  if (hits.length > 1) return { status: 'ambiguous', value: null, count: hits.length };
+  const at = hits[0];
   const parts = [lines[at].replace(head, '').trim()];
   for (let i = at + 1; i < lines.length; i++) {
     const next = lines[i];
     // A fence opening also ends the value: a continuation line cannot run into a code block.
-    if (!next.trim() || inFence[i] || /^\s*[-*]?\s*\*\*/.test(next) || next.startsWith('## ')) break;
+    // So does a line that is itself field-shaped — see CONTINUATION_ENDS.
+    if (!next.trim() || inFence[i] || CONTINUATION_ENDS(next) || next.startsWith('## ')) break;
     parts.push(next.trim());
   }
-  return parts.join(' ').trim();
+  return { status: 'ok', value: parts.join(' ').trim(), count: 1 };
 }
 
-/** Repo-path targets named by an entry's `Affects:` field, deduplicated, in order. */
+/** The value, or `null` when the field is absent OR could not be chosen between candidates. */
+function fieldValue(entryText, key) {
+  const r = fieldRead(entryText, key);
+  return r.status === 'ok' ? r.value : null;
+}
+
+/**
+ * Repo-path targets named by an entry's `Affects:` field, deduplicated, in order.
+ *
+ * An ABSENT or UNDECIDABLE field yields no targets, and `subjectStatus` reads no targets as
+ * `unknown`, which callers treat as ALIVE. So rule 2 cannot fire on an `Affects:` line the
+ * parser refused to choose, and rule 1 keeps refusing — which is the fail-closed direction.
+ */
 function affectsTargets(entryText) {
   const raw = fieldValue(entryText, 'Affects');
   if (!raw) return [];
@@ -565,6 +665,7 @@ module.exports = {
   STUB_MARKER,
   parseDecisionEntries,
   fieldValue,
+  fieldRead,
   affectsTargets,
   subjectStatus,
   pathPresent,

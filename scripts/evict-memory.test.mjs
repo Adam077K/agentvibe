@@ -604,6 +604,11 @@ const UNREADABLE = [
   ['transposed letter', '**Reversability:** reversible'],
   ['empty value', '**Reversibility:**'],
   ['negated prose', '**Reversibility:** NOT reversible under any circumstances'],
+  // The last two used to be READ, and reading them is what re-opened rule 1 twice. A field
+  // behind a list marker or an indent is a field this tool will not read, and refusing is the
+  // whole point: the same two shapes are how a WRONG value shadows a real one (see P1-C).
+  ['list-item field', '- **Reversibility:** reversible'],
+  ['four-space indent', '    **Reversibility:** reversible'],
 ];
 
 for (const [label, line] of UNREADABLE) {
@@ -628,7 +633,14 @@ for (const [label, line] of UNREADABLE) {
   });
 }
 
-test('P2-2: a LIST-ITEM Reversibility is read rather than treated as absent', () => {
+test('P2-2: a LIST-ITEM Reversibility is NOT read, and the refusal says why', () => {
+  // ── THIS TEST WAS REVERSED ON 2026-08-26, DELIBERATELY ──────────────────────────────────
+  //
+  // It used to assert the opposite: that `- **Reversibility:** irreversible` is READ. That
+  // tolerance is what made a list item able to SHADOW a real field (P1-C below), and it was
+  // measured to buy nothing — across 575 tracked `.md` files there are zero non-canonical
+  // `Reversibility:`/`Affects:` lines. The entry is still refused; it is refused fail-closed,
+  // and the note names the shape rather than claiming the field is absent.
   const root = fixture({
     entries: ['## 2026-09-02 — A decision written with list-item fields',
       '- **Reversibility:** irreversible',
@@ -637,8 +649,11 @@ test('P2-2: a LIST-ITEM Reversibility is read rather than treated as absent', ()
   });
   const p = plan(root);
   assert.equal(p.entries[0].disposition, 'refused');
-  assert.match(p.entries[0].reasons.join(' '), /RULE 1: Reversibility is irreversible/,
-    'it must refuse for the RIGHT reason — the value was read, not merely unreadable');
+  assert.equal(p.entries[0].reversibility, 'unknown', 'a non-canonical field is never read');
+  assert.match(p.entries[0].reasons.join(' '), /NOT written as `\*\*Reversibility:\*\* value`/,
+    'the refusal must name the shape, or the author is sent hunting for a field that is right there');
+  assert.ok(!p.entries[0].reasons.join(' ').includes('no `Reversibility:` field'),
+    '"absent" is the wrong diagnosis for a field that is present and mis-shaped');
 });
 
 test('P2-2: the typo gets a did-you-mean, so "field absent" does not send a reader hunting', () => {
@@ -952,6 +967,271 @@ test('conservation condition: a reduction of exactly ZERO is refused, not only a
   const issues = conservationIssues({ ...conservationBase(), removed: 0, movedBodies: 50, residue: 50 });
   assert.ok(issues.some((i) => i.includes('would not shrink DECISIONS.md')), JSON.stringify(issues));
   assert.ok(issues.some((i) => i.includes('exactly as much as')), JSON.stringify(issues));
+});
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// ROUND-4 HARDENING — the 2026-08-26 delta review, which bisected three rounds and found ONE
+// widening opening a NEW hole each round. Round 2 widened `fieldValue` to read more field forms;
+// that widened what can SHADOW a field in three places — inside a fence, behind a list marker,
+// behind an indent. Round 3 closed the fenced one and the FENCED fixture, by construction, could
+// not see the other two: every shadow line it plants is inside a fence.
+//
+// So these fixtures plant their shadows OUTSIDE any fence, and the fix is a narrowing.
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+
+// ── P1-C · a real field shadowed from OUTSIDE a fence ───────────────────────────────────────
+
+/**
+ * Ordinary prose. No code block anywhere in this document — which is the point: `fenceMask`
+ * tracks ``` and ~~~ and has never had anything to say about a list item or a four-space indent.
+ *
+ * @param {string} shadow  the two shadow lines, list-marked or indented
+ */
+const shadowed = (shadow) => [
+  '## 2026-06-01 — Drop the legacy column from the production schema',
+  `**Context:** ${REALISTIC_BODY}`,
+  'We weighed two framings before deciding:',
+  '',
+  ...shadow,
+  '',
+  '**Decision:** We dropped the column. It is gone.',
+  '**Reversibility:** irreversible',
+  '**Affects:** `db/schema.sql`',
+  '',
+].join('\n');
+
+const OUTSIDE_FENCE_SHADOWS = [
+  ['list item', ['- Reversibility: reversible — if we only ADD a column, a revert costs nothing',
+    '- Affects: docs/does-not-exist.md — the doc we never wrote']],
+  ['four-space indent', ['    Reversibility: reversible — if we only ADD a column, a revert costs nothing',
+    '    Affects: docs/does-not-exist.md — the doc we never wrote']],
+  ['bold list item', ['- **Reversibility:** reversible — the framing we rejected',
+    '- **Affects:** docs/does-not-exist.md — the doc we never wrote']],
+];
+
+for (const [label, shadow] of OUTSIDE_FENCE_SHADOWS) {
+  test(`P1-C: a ${label} does not shadow the real fields below it`, () => {
+    // At the round-3 HEAD this read `reversibility=reversible, subject=deleted,
+    // disposition=orphaned` — rule 2 calls orphaned "archivable on sight" — and
+    // `apply --only 2026-06-01` exited 0 over a PINNED IRREVERSIBLE entry.
+    const root = fixture({ entries: shadowed(shadow), files: { 'db/schema.sql': 'x\n' } });
+    const e = plan(root).entries[0];
+    assert.equal(e.reversibility, 'irreversible', 'the canonical field wins; the shadow is not read');
+    assert.equal(e.subject, 'alive', 'the shadow must not contribute a dead path the entry never named');
+    assert.equal(e.disposition, 'refused');
+    assert.match(e.reasons.join(' '), /RULE 1: Reversibility is irreversible/);
+
+    const before = readDecisions(root);
+    const r = apply(root, ['--only', '2026-06-01']);
+    assert.equal(r.code, 1, 'a pinned irreversible entry must not be evictable');
+    assert.equal(readDecisions(root), before, 'nothing may be written');
+    assert.ok(readDecisions(root).includes('We dropped the column. It is gone.'));
+  });
+}
+
+test('P1-C: the shadow is not absorbed as the TAIL of the field above it either', () => {
+  // Narrowing the head alone leaves the same wrong value readable one line lower: a continuation
+  // line has no `**`, so `- Affects: docs/does-not-exist.md` would have joined the value above.
+  // Here the real Affects: names no path at all, so an absorbed dead path is the difference
+  // between `unknown` (read as alive, refused) and `deleted` (orphaned, archivable on sight).
+  const root = fixture({
+    entries: [
+      '## 2026-06-02 — A decision whose fields are followed immediately by a list',
+      `**Context:** ${REALISTIC_BODY}`,
+      '**Reversibility:** irreversible',
+      '**Affects:** every agent that merges a PR',
+      '- Affects: docs/does-not-exist.md',
+      '    Affects: docs/also-gone.md',
+      '',
+    ].join('\n'),
+  });
+  const e = plan(root).entries[0];
+  assert.equal(e.subject, 'unknown', 'the entry named no path; the list must not supply one');
+  assert.equal(e.disposition, 'refused');
+});
+
+test('P1-C: a WRAPPED Affects: value is still joined — the narrowing did not take that away', () => {
+  // The live file wraps at least one Affects: line, and this is the behaviour the round-2
+  // widening was originally protecting. It survives, because the wrap is neither a list item
+  // nor an indent — which is what makes the narrowing safe rather than merely strict.
+  const root = fixture({
+    entries: [
+      '## 2026-06-03 — A decision whose affects list wraps across two prose lines',
+      '',
+      '**Decision:** Something.',
+      '**Reversibility:** reversible',
+      '**Affects:** `gone/one.ts`,',
+      '`still/here.ts`',
+      '',
+    ].join('\n'),
+    files: { 'still/here.ts': 'export const y = 2;\n' },
+  });
+  assert.equal(dispositionOf(plan(root), 'affects list wraps'), 'eligible');
+});
+
+// ── P1-C(b) · the class, not the door — two canonical candidates cannot be chosen between ───
+//
+// These were found by probing the narrowing rather than by waiting for a review. Narrowing the
+// selector to the canonical form only moves the shadow to whatever hides a CANONICAL line next,
+// and markdown has more than one such construct. So `fieldRead` refuses to choose.
+
+test('P1-C(b): a canonical field inside an HTML COMMENT does not shadow the real one', () => {
+  // The fence mask tracks ``` and ~~~ and knows nothing about `<!-- -->`. Measured against the
+  // narrowed selector before this refusal existed: reversibility=reversible, affects=[docs/gone.md],
+  // subject=deleted, disposition=ORPHANED — rule 2's "archivable on sight", on an irreversible
+  // entry with a live subject. The fourth door onto the same P1.
+  const root = fixture({
+    entries: [
+      '## 2026-06-11 — A decision whose earlier draft is commented out above it',
+      `**Context:** ${REALISTIC_BODY}`,
+      '<!--',
+      '**Reversibility:** reversible',
+      '**Affects:** docs/does-not-exist.md',
+      '-->',
+      '**Reversibility:** irreversible',
+      '**Affects:** `db/schema.sql`',
+      '',
+    ].join('\n'),
+    files: { 'db/schema.sql': 'x\n' },
+  });
+  const e = plan(root).entries[0];
+  assert.equal(e.reversibility, 'unknown', 'two canonical candidates must not be chosen between');
+  assert.notEqual(e.subject, 'deleted', 'and the commented-out path must not release rule 2');
+  assert.equal(e.disposition, 'refused');
+  assert.match(e.reasons.join(' '), /cannot be decided/);
+  const before = readDecisions(root);
+  assert.equal(apply(root, ['--only', '2026-06-11']).code, 1);
+  assert.equal(readDecisions(root), before);
+});
+
+test('P1-C(b): a case-varied duplicate is a duplicate — the selector matches case-insensitively', () => {
+  const root = fixture({
+    entries: [
+      '## 2026-06-12 — A decision whose key is written twice in two cases',
+      `**Context:** ${REALISTIC_BODY}`,
+      '**reversibility:** reversible',
+      '**Reversibility:** irreversible',
+      '**Affects:** `db/schema.sql`',
+      '',
+    ].join('\n'),
+    files: { 'db/schema.sql': 'x\n' },
+  });
+  assert.equal(plan(root).entries[0].reversibility, 'unknown');
+  assert.equal(plan(root).entries[0].disposition, 'refused');
+});
+
+test('P1-C(b): a duplicated Affects: alone still refuses, through rule 1 rather than rule 2', () => {
+  // Only `Affects:` is doubled here, so `Reversibility:` reads normally. An undecidable Affects:
+  // yields NO targets, no targets is `unknown`, and `unknown` is read as ALIVE — so rule 1 holds
+  // the entry. Fail-closed by the same route `subjectStatus` already used.
+  const root = fixture({
+    entries: [
+      '## 2026-06-13 — A decision whose affects line appears twice',
+      `**Context:** ${REALISTIC_BODY}`,
+      '<!--',
+      '**Affects:** docs/does-not-exist.md',
+      '-->',
+      '**Reversibility:** irreversible',
+      '**Affects:** `db/schema.sql`',
+      '',
+    ].join('\n'),
+    files: { 'db/schema.sql': 'x\n' },
+  });
+  const e = plan(root).entries[0];
+  assert.equal(e.reversibility, 'irreversible');
+  assert.equal(e.subject, 'unknown', 'an undecidable Affects: names no path, and no path is not "deleted"');
+  assert.equal(e.disposition, 'refused');
+});
+
+test('P1-C(b): the ONE canonical line inside a fence is still masked, not counted as a duplicate', () => {
+  // Otherwise the live file's own `## Format` block, and every entry that quotes the template,
+  // would refuse — the narrowing would have made the tool useless rather than safe.
+  const root = fixture({ entries: FENCED, files: { 'db/schema.sql': 'x\n' } });
+  const e = plan(root).entries[0];
+  assert.equal(e.reversibility, 'irreversible', 'the fenced template is masked, so there is only one candidate');
+  assert.equal(e.subject, 'alive');
+});
+
+test('P1-C(b): a blockquoted field is not read and is not a candidate either', () => {
+  const root = fixture({
+    entries: [
+      '## 2026-06-14 — A decision quoting an earlier one in a blockquote',
+      `**Context:** ${REALISTIC_BODY}`,
+      '> **Reversibility:** reversible',
+      '> **Affects:** docs/does-not-exist.md',
+      '**Reversibility:** irreversible',
+      '**Affects:** `db/schema.sql`',
+      '',
+    ].join('\n'),
+    files: { 'db/schema.sql': 'x\n' },
+  });
+  const e = plan(root).entries[0];
+  assert.equal(e.reversibility, 'irreversible', 'a `> ` prefix is not the canonical form');
+  assert.equal(e.subject, 'alive');
+});
+
+test('P1-C(b): an INDENTED wrapped path still counts — the narrowing must not evict more', () => {
+  // The first version of the continuation rule broke on any indented line, which would have
+  // DROPPED this path and flipped the entry from alive to deleted — the same rule-2 escalation
+  // reached from the opposite side. A narrowing that widens eviction is not a narrowing.
+  const root = fixture({
+    entries: [
+      '## 2026-06-15 — A decision whose affects list wraps onto an indented line',
+      '',
+      '**Reversibility:** reversible',
+      '**Affects:** `gone/one.ts`,',
+      '    `still/here.ts`',
+      '',
+    ].join('\n'),
+    files: { 'still/here.ts': 'export const y = 2;\n' },
+  });
+  const e = plan(root).entries[0];
+  assert.equal(e.subject, 'alive', 'the indented continuation carries the only surviving path');
+  assert.notEqual(e.disposition, 'orphaned');
+});
+
+test('P1-E: a TWO-entry batch splices both at their own offsets', () => {
+  // Offsets are only valid while nothing below them has moved, which is why `ordered` splices
+  // bottom-up. One batch, two entries, and the first must not be replaced using an offset the
+  // second one's replacement invalidated.
+  const root = fixture({
+    entries: [
+      entry({ date: '2026-07-25', title: 'First decision about the shape of the queue' }),
+      entry({ date: '2026-07-26', title: 'Second decision about the shape of the cache' }),
+      entry({ date: '2026-07-27', title: 'Third decision about the shape of the log' }),
+    ].join('\n'),
+  });
+  const r = apply(root, ['--only', '2026-07-25', '--only', '2026-07-27']);
+  assert.equal(r.code, 0, r.err);
+  const after = readDecisions(root);
+  for (const d of ['2026-07-25', '2026-07-27']) {
+    const tail = after.slice(after.indexOf(`## ${d}`));
+    assert.match(tail, new RegExp(`^## ${d} [^\\n]*\\n\\*Archived to`), `${d} must be replaced at its own offset`);
+  }
+  assert.ok(after.includes('**Decision:** Something was chosen.'), 'the untouched middle entry keeps its body');
+  assert.equal(plan(root).entries.length, 3);
+  const vol = fs.readFileSync(path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE.md'), 'utf8');
+  assert.ok(vol.includes('## 2026-07-25 —') && vol.includes('## 2026-07-27 —'));
+  assert.ok(!vol.includes('## 2026-07-26 —'), 'the entry nobody selected must not be archived');
+});
+
+// ── P3 · the fence mask must survive CRLF in the near-miss path too ─────────────────────────
+
+test('P3: a CRLF entry does not get a spurious did-you-mean out of a FENCED misspelling', () => {
+  // `readReversibility`'s near-miss scan split on `\n` without stripping `\r`, unlike the two
+  // other readers. On CRLF that gave `fenceMask` a `\r`-suffixed line array, `FENCE`'s `$` never
+  // anchored, the mask came back all-false, and a misspelling quoted INSIDE a fence was reported
+  // as this entry's own near-miss. It failed closed either way, which is why it is a P3 — but the
+  // message sent the reader to the wrong line.
+  const crlf = ['## 2026-08-01 — An entry quoting a misspelling inside a fence, in CRLF',
+    '', '```', '**Reversability:** reversible', '```', '', '**Decision:** Something.', '**Affects:** nothing', '',
+  ].join('\r\n');
+  const root = fixture({ entries: crlf, header: false });
+  const e = plan(root).entries[0];
+  assert.equal(e.disposition, 'refused');
+  assert.match(e.reasons.join(' '), /no `Reversibility:` field/);
+  assert.ok(!e.reasons.join(' ').includes('typo'),
+    'the misspelling is inside a fence; on CRLF the mask must still see that');
 });
 
 // ── P3 · the claim about the REAL file must be made against the real file ───────────────────
