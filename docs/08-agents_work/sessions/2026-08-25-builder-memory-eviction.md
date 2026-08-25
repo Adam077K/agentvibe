@@ -39,5 +39,20 @@ Global-scope claims are outside the scan (machine state, absent on CI) and every
 `plan` prints **net** — entry minus stub — which is the number to act on: a 1,035-byte entry cited in 24
 places nets 31 bytes, and was left in place for that reason.
 
+**The headroom was then spent on purpose, which is the point.** After merging the moved base
+(`8bf9950` → `67947fc`; neither commit touches `.claude/memory/`, and the budget was **re-measured**, not
+assumed, at an unchanged 30,393) the fifth founder decision of 2026-08-25 — the branch-protection deferral,
+until now stranded in `docs/STATUS.md` because it could not be recorded without breaching a blocking cap —
+was written in at **3,020 bytes, the largest entry in the file, uncompressed**. That is the test the brief
+set, and it passed: nothing was trimmed to fit.
+
+**Final headroom is 6,587 bytes, below the 8–10 KB the brief targeted, and I stopped there deliberately.**
+Reaching 8 KB from here requires evicting entries that are recent and live (2026-08-24, 2026-08-25) or
+`hard-to-reverse` and guarded — using the number to justify overriding the caution this design exists to
+enforce. Every remaining candidate with a good `net` is one of those; the rest net under 500 bytes. 6,587 is
+~3 entries of room **and** there is now a six-second tool that makes more, which is the durable fix. If the
+band is wanted regardless, `2026-08-11::Claim ledger replaces the diff gate` is the cleanest single case
+(net 1,091; its own body carries `**See:** ADR-001`, so it names its successor) — one command, on request.
+
 **Out of scope, noted not fixed:** `DECISIONS.md`'s header says entries are "most-recent first" while the
 file is appended most-recent-**last**.
