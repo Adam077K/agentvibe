@@ -34,6 +34,11 @@
 //     guard checked. Four mutations walked past it — `;`, `||`, `|` and a one-hop wrapper, each
 //     measured at ZERO findings — and `;` is the worst of them, because `bash -c 'false ; true'`
 //     exits 0 and the failure leaves no red step at all.*
+//   ✓ ci.yml is PARSED, and the three guarantees of the 2026-08-25 change are asserted against it:
+//     every STEPS entry has a step there, every `run:` step carries `if: ${{ !cancelled() }}`, and
+//     `continue-on-error` appears as a word in one comment and as a KEY nowhere. Each is proved by
+//     mutation, and the parser is cross-checked against raw line counts so it cannot under-read the
+//     file into vacuous green
 //   ✓ the runner runs a step after an earlier one failed, and says so in the tally
 //   ✓ ~200KB of step output survives to the caller through a pipe — the process.exit() defect
 //   ✓ a ZERO-step run is refused, and --steps/--root are refused outright without the harness
@@ -438,6 +443,239 @@ test('an exclusion that says CI still covers it is checked against ci.yml, not t
       'its cells fail BECAUSE that key is absent; with it present, standalone check:mc may pass again and ' +
       'the entry needs re-measuring rather than a re-read.'
   );
+});
+
+// ── ci.yml: the suite reaches the runner, and the runner reaches every step ───────────────────
+//
+// The three assertions below are the ones the 2026-08-25 change to ci.yml GUARANTEED and did not
+// CHECK. Each is proved by mutation, because a green run against the current file proves only that
+// the current file is currently fine:
+//
+//   STEPS ⊆ ci.yml       `test:check-suite` itself "ran NOWHERE on a runner until 2026-08-25" —
+//                        ci.yml says so in its own comment. It was step 2 of the suite with no CI
+//                        step, and nothing reported it, because only EXCLUDED entries were ever
+//                        checked against this file and no test iterated STEPS.
+//   the `if:` guard      `if: ${{ !cancelled() }}` on every `run:` step IS the change. One step
+//                        added without it, or one tidy-up that lifts the repetition into
+//                        something clever, silently restores fail-fast for everything after it.
+//   continue-on-error    ci.yml states "it appears nowhere in this file" as the reason a failure
+//                        is still a failure. That sentence is the load-bearing half of the change
+//                        and nothing checked it.
+//
+// The whole ci.yml is parsed rather than grepped, and the parser is cross-checked against a raw
+// line count below: a parser that silently reads six steps out of forty-four turns all three of
+// these green while asserting nothing, which is this file's own recurring defect.
+
+const CI_PATH = path.join(REPO, '.github', 'workflows', 'ci.yml');
+const CI = fs.readFileSync(CI_PATH, 'utf8');
+
+/** The guard, spelled once. `!cancelled()` and not `always()`: a cancelled run must actually stop. */
+const CI_GUARD = '${{ !cancelled() }}';
+
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * The steps of ci.yml's one job, read off the indentation.
+ *
+ * Zero dependencies in this repo means no YAML parser, so this is a line scanner — and it derives
+ * both indents from the file rather than hardcoding 6 and 8, so a reindent does not turn it
+ * vacuous. It handles a `run: |` block scalar, which nothing in the file uses today; that is the
+ * shape a future multi-command step would arrive in, and a scanner that skipped it would report
+ * such a step as having no `run:` at all.
+ *
+ * Returns [{ line, name, run, uses, if }] — `null` for a key the step does not carry.
+ */
+function parseCiSteps(workflow) {
+  const lines = workflow.split('\n');
+  const steps = [];
+  let stepsIndent = null;
+  let itemIndent = null;
+  let current = null;
+  let block = null; // { key, indent, parts[] } while inside a `key: |` scalar
+
+  const indentOf = (line) => /^ */.exec(line)[0].length;
+
+  const record = (step, text) => {
+    const m = /^([\w-]+):\s*(.*)$/.exec(text);
+    if (!m) return;
+    const [, key, rawValue] = m;
+    if (!(key in step)) return; // `with:`, `env:` and friends are not what this asserts on
+    if (/^[|>][-+\d]*$/.test(rawValue)) {
+      block = { key, indent: null, parts: [] };
+      step[key] = '';
+      return;
+    }
+    step[key] = rawValue.trim();
+  };
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+
+    if (block) {
+      if (!line.trim()) { block.parts.push(''); continue; }
+      const indent = indentOf(line);
+      if (block.indent === null) block.indent = indent;
+      if (indent >= block.indent) {
+        block.parts.push(line.slice(block.indent));
+        current[block.key] = block.parts.join('\n').trim();
+        continue;
+      }
+      block = null;
+    }
+
+    if (!line.trim() || /^\s*#/.test(line)) continue;
+
+    if (stepsIndent === null) {
+      const m = /^( *)steps:\s*$/.exec(line);
+      if (m) stepsIndent = m[1].length;
+      continue;
+    }
+
+    const indent = indentOf(line);
+    if (indent <= stepsIndent) break; // out of the steps block
+
+    if (/^ *- /.test(line) && (itemIndent === null || indent === itemIndent)) {
+      itemIndent = indent;
+      current = { line: i + 1, name: null, run: null, uses: null, if: null };
+      steps.push(current);
+      record(current, line.slice(indent + 2));
+      continue;
+    }
+
+    if (current && indent === itemIndent + 2) record(current, line.trim());
+  }
+
+  return steps;
+}
+
+test('the ci.yml step parser reads the whole file — a scanner that under-reads asserts nothing', () => {
+  const steps = parseCiSteps(CI);
+
+  // Cross-checked against raw line counts, which are wrong in a different way than the parser is.
+  const rawItems = CI.split('\n').filter((l) => /^ {6}- /.test(l)).length;
+  const rawRuns = CI.split('\n').filter((l) => /^ {8}run: /.test(l)).length;
+  const rawUses = CI.split('\n').filter((l) => /^ {6}- uses: /.test(l)).length;
+
+  assert.equal(steps.length, rawItems, 'the parser and a raw item count disagree about how many steps exist');
+  assert.equal(steps.filter((s) => s.run !== null).length, rawRuns, 'the parser lost or invented a `run:` step');
+  assert.equal(steps.filter((s) => s.uses !== null).length, rawUses, 'the parser lost or invented a `uses:` step');
+  assert.ok(rawRuns >= 40, `only ${rawRuns} run-steps found — the parser is not reaching the job`);
+  assert.ok(steps.every((s) => s.run !== null || s.uses !== null), 'a parsed step carries neither run: nor uses:');
+});
+
+test('every STEP of the suite has a counterpart step in ci.yml', () => {
+  // `test:check-suite` — this very file — sat second in STEPS and ran NOWHERE on a runner until
+  // 2026-08-25, because nothing ever iterated STEPS against ci.yml. Only EXCLUDED entries were
+  // checked, and an omission from the suite's own list is invisible to a check on the exemptions.
+  const runs = (workflow) => parseCiSteps(workflow).filter((s) => s.run !== null).map((s) => s.run);
+
+  /**
+   * ci.yml runs a step by NAME (`npm run x`) or by its resolved BODY.
+   *
+   * Three steps are spelled as the body — `lint:agents`, `check:manifest` and `check:registration`
+   * are `node …` lines in this file — so a name-only match would report three false gaps. The name
+   * match is right-anchored: `npm run check:dispatch-agenttype` CONTAINS `npm run check:dispatch`.
+   */
+  const missing = (workflow) => {
+    const commands = runs(workflow);
+    return STEPS.filter((step) => {
+      const byName = new RegExp(`npm run ${escapeRe(step)}(?![\\w:-])`);
+      const body = String(scripts[step]).trim();
+      return !commands.some((cmd) => byName.test(cmd) || cmd.includes(body));
+    });
+  };
+
+  assert.deepEqual(
+    missing(CI), [],
+    'a step of `npm run check` has no step in ci.yml, so it is checked only on machines that run the ' +
+      'suite by hand. Add the step to .github/workflows/ci.yml, or take it out of STEPS deliberately.'
+  );
+
+  // Proved by mutation, on both spellings — the by-name path and the by-body path.
+  const byName = CI.replace(/npm run test:sandbox\b/g, 'npm run something-else');
+  assert.notEqual(byName, CI, 'the by-name mutation matched nothing, so its proof is vacuous');
+  assert.deepEqual(missing(byName), ['test:sandbox'], 'deleting the Sandbox step from ci.yml did not bite');
+
+  const byBody = CI.replace(/node scripts\/check-registration\.mjs/g, 'node scripts/something-else.mjs');
+  assert.notEqual(byBody, CI, 'the by-body mutation matched nothing, so its proof is vacuous');
+  assert.deepEqual(missing(byBody), ['check:registration'], 'deleting the Registration step did not bite');
+});
+
+test('every `run:` step in ci.yml carries the `!cancelled()` guard, and the three setup steps do not', () => {
+  // THIS GUARD IS THE ENTIRE 2026-08-25 CHANGE. Without it the first failing step aborts the job:
+  // on `main` before that change the build failed at step 18 of 30 and the twelve after it never
+  // ran — the ledger's enforcement, both gates, and the check that makes "the sandbox is armed" a
+  // fact. A step added without the guard reinstates exactly that, for everything below it.
+  const unguarded = (workflow) =>
+    parseCiSteps(workflow).filter((s) => s.run !== null && s.if !== CI_GUARD).map((s) => s.line);
+
+  assert.deepEqual(
+    unguarded(CI), [],
+    `a \`run:\` step in ci.yml is missing \`if: ${CI_GUARD}\` (line numbers above). Without it, every step ` +
+      'after the first failure is SKIPPED and the build reports one failure while hiding the rest.'
+  );
+
+  // The three `uses:` setup steps carry NO `if:`, deliberately. Guarding them was considered and
+  // rejected: if checkout fails, `!cancelled()` is still true, so all 44 checks would run against an
+  // empty workspace and produce ~45 red steps instead of one. That is a diagnosability cost, not a
+  // fail-open one — the job still fails and nothing ships. Pinned so it reads as a decision.
+  const setup = parseCiSteps(CI).filter((s) => s.uses !== null);
+  assert.equal(setup.length, 3, 'the setup steps changed — re-decide whether they should carry the guard');
+  assert.deepEqual(setup.map((s) => s.if), [null, null, null], 'a setup step grew an `if:`; see the note above');
+
+  // Mutation 1: the guard deleted from one step, which is how a careless tidy-up arrives.
+  const dropped = CI.replace(
+    new RegExp(`^ *if: ${escapeRe(CI_GUARD)}\\n(?= *run: npm run test:sandbox$)`, 'm'),
+    ''
+  );
+  assert.notEqual(dropped, CI, 'the guard-deletion mutation matched nothing, so its proof is vacuous');
+  assert.equal(unguarded(dropped).length, 1, 'deleting the guard from a step did not bite');
+
+  // Mutation 2: the guard WEAKENED rather than removed. `always()` runs a step the operator
+  // cancelled, which is why ci.yml chose `!cancelled()`; a check for "some if:" would miss this.
+  const weakened = CI.replace(
+    new RegExp(`if: ${escapeRe(CI_GUARD)}\\n(?= *run: npm run test:sandbox$)`, 'm'),
+    'if: ${{ always() }}\n'
+  );
+  assert.notEqual(weakened, CI, 'the weakening mutation matched nothing, so its proof is vacuous');
+  assert.equal(unguarded(weakened).length, 1, 'swapping !cancelled() for always() did not bite');
+
+  // Mutation 3: a NEW step appended with no guard — the recurrence this test exists to catch.
+  const appended = `${CI.trimEnd()}\n\n      - name: A new check\n        run: npm run test:something-new\n`;
+  assert.equal(unguarded(appended).length, 1, 'a newly appended unguarded step did not bite');
+});
+
+test('`continue-on-error` appears in ci.yml as a word and never as a key', () => {
+  // ci.yml's own rationale rests on this: "`if:` decides whether a step RUNS. Only
+  // `continue-on-error: true` stops a failed step from failing the job, and it appears nowhere in
+  // this file." That sentence is what keeps `!cancelled()` from being a way to make failures
+  // survivable, and nothing checked it.
+  const asKey = (workflow) =>
+    workflow.split('\n')
+      .map((line, i) => ({ line, n: i + 1 }))
+      .filter(({ line }) => /^\s*(?:-\s+)?continue-on-error\s*:/.test(line))
+      .map(({ n }) => n);
+
+  assert.deepEqual(
+    asKey(CI), [],
+    '`continue-on-error` is set in ci.yml. A step carrying it goes red and the JOB stays green, so the ' +
+      'workflow reports success on a failed check — the opposite of what the `!cancelled()` guard is for.'
+  );
+
+  // The control that says this is not a substring scan: the WORD is in the file, in the comment
+  // that explains why the key is absent, and that comment must not have to be deleted to stay green.
+  assert.ok(CI.includes('continue-on-error'), 'the rationale comment naming continue-on-error is gone');
+
+  // Proved by mutation, in both places it could be written: as a step key, and on the dash line.
+  const asStepKey = CI.replace(
+    /^( *)run: npm run test:sandbox$/m,
+    '$1continue-on-error: true\n$1run: npm run test:sandbox'
+  );
+  assert.notEqual(asStepKey, CI, 'the step-key mutation matched nothing, so its proof is vacuous');
+  assert.equal(asKey(asStepKey).length, 1, 'continue-on-error added as a step key did not bite');
+
+  const onDashLine = `${CI.trimEnd()}\n\n      - continue-on-error: true\n        run: npm run test:x\n`;
+  assert.equal(asKey(onDashLine).length, 1, 'continue-on-error added on the dash line did not bite');
 });
 
 // ── The runner's behaviour, against fixture repos ────────────────────────────────────────────
