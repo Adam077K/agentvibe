@@ -270,7 +270,18 @@ test('BLOCKS a write through a symlink pointing outside the project', () => {
  */
 const HOME_FIXTURE_BASES = [...new Set([os.tmpdir(), '/tmp', path.join(os.homedir(), '.agentvibe')])]
 
-/** Why a base was refused. `already-allowed` is a fixture-selection defect; `unwritable` is a machine. */
+/**
+ * Why a base was refused. Three kinds, because there are three remedies:
+ *
+ *   already-allowed  A FIXTURE-SELECTION DEFECT — this base is one of the hook's own roots.
+ *   absent           The base does not exist YET. `~/.agentvibe` is created lazily by
+ *                    scripts/lib/usage.js on first use, so a fresh machine reports ENOENT here and
+ *                    a machine that has run anything does not. ONE `mkdir` ends the skip, and the
+ *                    message says so — until 2026-08-26 it was folded into `unwritable` and the
+ *                    remedy printed was "Re-run with TMPDIR pointed outside them", which is the
+ *                    remedy for a different cause and does nothing for this one.
+ *   unwritable       A MACHINE. EPERM/EACCES on a locked-down directory; nothing here can act on it.
+ */
 const HOME_FIXTURE_REJECTED = []
 const rejected = (kind) => HOME_FIXTURE_REJECTED.filter((r) => r.kind === kind)
 const rejectedText = () => HOME_FIXTURE_REJECTED.map((r) => `${r.base}: ${r.why}`).join(' | ')
@@ -279,7 +290,13 @@ const HOME_FIXTURE = (() => {
   for (const base of HOME_FIXTURE_BASES) {
     let root
     try { root = fs.mkdtempSync(path.join(base, 'pre-tool-use-home-')) }
-    catch (err) { HOME_FIXTURE_REJECTED.push({ base, kind: 'unwritable', why: `not writable (mkdtemp ${err.code || err.message})` }); continue }
+    catch (err) {
+      const code = err.code || err.message
+      HOME_FIXTURE_REJECTED.push(code === 'ENOENT'
+        ? { base, kind: 'absent', why: 'does not exist yet (mkdtemp ENOENT)' }
+        : { base, kind: 'unwritable', why: `not writable (mkdtemp ${code})` })
+      continue
+    }
     const withPlans = path.join(root, 'with-plans')
     const withoutPlans = path.join(root, 'without-plans')
     fs.mkdirSync(withPlans)
@@ -328,12 +345,93 @@ const HOME_FIXTURE = (() => {
 // nothing creates it eagerly. The test does NOT create it: a test that writes state outside the
 // project to make itself pass is a worse trade than a skip, and it would make the very base whose
 // neutrality it depends on.
-const HOME_SELECTION_DEFECT =
-  !HOME_FIXTURE &&
-  HOME_FIXTURE_REJECTED.length > 0 &&
-  HOME_FIXTURE_REJECTED.every((r) => r.kind === 'already-allowed')
-const HOME_SKIP = (HOME_FIXTURE || process.env.CI || HOME_SELECTION_DEFECT) ? false
-  : `no writable directory outside the roots this hook already allows: ${rejectedText()}. Re-run with TMPDIR pointed outside them.`
+//
+// NOTHING IN THIS FILE COULD CATCH A CHANGE BACK, which is the other half of the same problem. The
+// `every`/`some` distinction above was found by a person reading the code; the predicate was a pair
+// of module-level `const`s computed from whatever this machine happened to produce, so on a machine
+// where the fixture builds — the normal case — every branch of it is dead. Flipping `every` to
+// `some`, or dropping the `process.env.CI` term, would have been invisible in a green run. It is a
+// pure function over a rejection list now, and the case below drives it through rejection sets this
+// machine does not produce.
+//
+// A MIXED SET STILL SKIPS OFF CI, and that is the settled decision rather than an oversight: the
+// fresh-machine set is already-allowed / EPERM / ENOENT, and failing on it is precisely the
+// regression measured on 2026-08-26 (0 skipped, 14 failures, blocking `qa.js`'s oracle on a
+// machine the developer had done nothing wrong on). What changes here is that the skip stops
+// MISDESCRIBING itself: it counts the already-allowed bases in its own message and, when a base was
+// refused only for not existing yet, prints the one `mkdir` that ends the skip instead of a remedy
+// for a different cause.
+/**
+ * Skip, fail, or run — given what the fixture search found. Pure, so it is testable.
+ *
+ * Returns { defect, skip }. `defect` is the fixture LIST being wrong; `skip` is false or the reason.
+ */
+function homeFixtureDisposition({ fixture, rejections, ci }) {
+  if (fixture) return { defect: false, skip: false }
+
+  const defect = rejections.length > 0 && rejections.every((r) => r.kind === 'already-allowed')
+  if (defect || ci) return { defect, skip: false }
+
+  const allowed = rejections.filter((r) => r.kind === 'already-allowed')
+  const absent = rejections.filter((r) => r.kind === 'absent')
+  const remedy = absent.length
+    ? `The base that does not exist yet is the cheapest fix: \`mkdir -p ${absent[0].base}\` and re-run.`
+    : 'Re-run with TMPDIR pointed outside them.'
+  const composition = allowed.length
+    ? `${allowed.length} of ${rejections.length} candidate $HOME bases were refused because THE HOOK ALREADY ALLOWS THEM, and the rest by the machine`
+    : `all ${rejections.length} candidate $HOME bases were refused by the machine`
+
+  return { defect, skip: `${composition}: ${rejections.map((r) => `${r.base}: ${r.why}`).join(' | ')}. ${remedy}` }
+}
+
+const HOME_DISPOSITION = homeFixtureDisposition({
+  fixture: HOME_FIXTURE,
+  rejections: HOME_FIXTURE_REJECTED,
+  ci: Boolean(process.env.CI),
+})
+const HOME_SELECTION_DEFECT = HOME_DISPOSITION.defect
+const HOME_SKIP = HOME_DISPOSITION.skip
+
+test('the $HOME fixture disposition — which rejections may skip, and which must fail', () => {
+  const ALLOWED = { base: '/private/tmp/claude-501', kind: 'already-allowed', why: 'the hook allows it' }
+  const UNWRITABLE = { base: '/tmp', kind: 'unwritable', why: 'not writable (mkdtemp EPERM)' }
+  const ABSENT = { base: '/home/x/.agentvibe', kind: 'absent', why: 'does not exist yet (mkdtemp ENOENT)' }
+  const D = (rejections, ci = false) => homeFixtureDisposition({ fixture: null, rejections, ci })
+
+  // A fixture that BUILT never skips and is never a defect, whatever was rejected on the way to it.
+  assert.deepEqual(
+    homeFixtureDisposition({ fixture: { root: '/x' }, rejections: [ALLOWED, UNWRITABLE], ci: false }),
+    { defect: false, skip: false },
+    'a built fixture was skipped or called a defect')
+
+  // EVERY base already-allowed: the LIST is wrong, not the machine, and that fails off CI too.
+  assert.deepEqual(D([ALLOWED]), { defect: true, skip: false })
+  assert.deepEqual(D([ALLOWED, { ...ALLOWED, base: '/tmp' }]), { defect: true, skip: false })
+
+  // MIXED — the fresh-machine set. It skips off CI, deliberately: failing here is the measured
+  // 2026-08-26 regression that blocked the gate's oracle on a clean machine. But the message must
+  // NOT read as "nothing was writable", because one of these bases was writable and was refused
+  // for being one of the hook's own roots.
+  const mixed = D([ALLOWED, UNWRITABLE, ABSENT])
+  assert.equal(mixed.defect, false, 'a mixed set was called a fixture-list defect — that is the `some` bug returning')
+  assert.equal(typeof mixed.skip, 'string', 'a mixed set stopped skipping off CI; see the regression above before changing this')
+  assert.match(mixed.skip, /1 of 3 candidate \$HOME bases were refused because THE HOOK ALREADY ALLOWS THEM/,
+    'the skip reason does not disclose that part of the rejection was a fixture-selection problem')
+  assert.match(mixed.skip, /mkdir -p \/home\/x\/\.agentvibe/,
+    'the skip reason does not name the one command that ends it')
+
+  // ALL refused by the machine: skip off CI, and no already-allowed claim in the message.
+  const machine = D([UNWRITABLE, { ...UNWRITABLE, base: '/var/tmp' }])
+  assert.match(machine.skip, /all 2 candidate \$HOME bases were refused by the machine/)
+  assert.doesNotMatch(machine.skip, /ALREADY ALLOWS/, 'a machine-only rejection claimed a fixture-list problem')
+  assert.match(machine.skip, /Re-run with TMPDIR pointed outside them/, 'the wrong remedy is printed when nothing is merely absent')
+
+  // CI NEVER SKIPS. A skip on the one machine whose verdict blocks a merge reports "checked" for
+  // something never checked — rule 10, and the reason `process.env.CI` is a term here at all.
+  for (const set of [[ALLOWED, UNWRITABLE, ABSENT], [UNWRITABLE], [ABSENT]]) {
+    assert.equal(D(set, true).skip, false, `a rejection set skipped on CI: ${JSON.stringify(set)}`)
+  }
+})
 
 /**
  * Never dereferences null: an absent fixture fails loudly, with the cause it actually found.
@@ -344,7 +442,10 @@ const HOME_SKIP = (HOME_FIXTURE || process.env.CI || HOME_SELECTION_DEFECT) ? fa
  * contained one, unusable only because the directory did not exist yet.
  */
 function homeFixture() {
-  const environmental = rejected('unwritable')
+  // Both non-defect kinds are "the machine, not the list" for the purpose of this message — and
+  // `absent` has to be counted here or a CI failure caused entirely by ENOENT reports zero
+  // machine-refused bases while its own next clause explains what an ENOENT means.
+  const environmental = [...rejected('unwritable'), ...rejected('absent')]
   assert.ok(HOME_FIXTURE, HOME_SELECTION_DEFECT
     ? `no neutral $HOME fixture could be built, and EVERY candidate base was refused because THE HOOK ALREADY ALLOWS IT. That is this file's fixture list being wrong, not the machine — add a base outside the hook's allowed roots to HOME_FIXTURE_BASES. It is not skippable: these five cases are the ones the gate's oracle runs, and (b) is the write that disarms every rule in this file. Candidate bases refused: ${rejectedText()}`
     : `no neutral $HOME fixture could be built and CI is set — these cases cannot be skipped on a runner, because a skip there reports "checked" for something never checked. ${environmental.length ? `${environmental.length} of ${HOME_FIXTURE_REJECTED.length} bases were refused by the MACHINE, not by the fixture list${environmental.some((r) => /ENOENT/.test(r.why)) ? ' — and an ENOENT here means the directory has not been created yet, not that the base is wrong. ~/.agentvibe is created lazily on first use' : ''}. ` : ''}Candidate bases refused: ${rejectedText()}`)
