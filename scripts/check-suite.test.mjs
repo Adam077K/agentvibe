@@ -81,7 +81,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { STEPS, EXCLUDED, auditSuite, reachable, aliasLinks, shellOperators } = require('./lib/check-suite.js');
+const { STEPS, EXCLUDED, auditSuite, reachable, aliasLinks, shellOperators, resolveChain } = require('./lib/check-suite.js');
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RUNNER = path.join(REPO, 'scripts', 'run-checks.mjs');
@@ -491,6 +491,34 @@ test('the three DISCLOSED holes in resolveChain are pinned, so a narrowing is no
     followed.failures.some((f) => f.includes('shell operator')),
     'the bare `npm run <name>` delegation stopped being followed — the holes above are now the whole rule'
   );
+});
+
+test('both callers of DELEGATION agree on what a bare delegation is', () => {
+  // aliasLinks() asks the pattern of each `&&`-separated part; resolveChain() asks it of a whole
+  // body. Same question — "is this nothing but a delegation to a name I can go and check?" — and it
+  // was written out twice until 2026-08-26, so a narrowing meant for one would have left the other
+  // behind with nothing saying so. It is one `const` now; this case is what makes un-sharing it
+  // visible, because two copies pass here right up until they diverge.
+  const followed = (body) => resolveChain({ wrapper: body, target: 'node -e ""' }, 'wrapper').length > 1;
+  const linked = (body) => aliasLinks(`${body} && npm run target`) !== null;
+
+  // Spellings without `&&` in them, because aliasLinks() splits on `&&` before it applies the
+  // pattern and a body containing one is not asking these two the same thing.
+  const spellings = {
+    'npm run target': true,
+    'npm  run   target': true,
+    ' npm run target ': true,
+    'npm run target --silent': false,
+    'npm run target extra': false,
+    'npx target': false,
+    'node scripts/x.mjs': false,
+    'FOO=1 npm run target': false,
+  };
+
+  for (const [body, expected] of Object.entries(spellings)) {
+    assert.equal(followed(body), expected, `resolveChain disagrees about "${body}"`);
+    assert.equal(linked(body), expected, `aliasLinks disagrees about "${body}"`);
+  }
 });
 
 test('transitive reach still counts — the mechanism, proved where the tree no longer exercises it', () => {

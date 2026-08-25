@@ -247,6 +247,19 @@ function scriptGraph(scripts) {
 }
 
 /**
+ * A command whose ENTIRE body is one `npm run <name>` — a wrapper, and nothing else.
+ *
+ * ONE PATTERN, TWO CALLERS, and that is deliberate rather than tidy. aliasLinks() asks it of each
+ * `&&`-separated part and resolveChain() asks it of a whole body, but both are asking the same
+ * question — "is this nothing but a delegation to a name I can go and check?" — and both docs below
+ * describe the narrowness in the same words. Written twice, a narrowing meant for one of them
+ * silently left the other behind; written once, the coupling is real and
+ * `both callers of DELEGATION agree on what a bare delegation is` in scripts/check-suite.test.mjs
+ * fails when they stop agreeing.
+ */
+const DELEGATION = /^npm\s+run\s+([\w:-]+)$/;
+
+/**
  * The links of an ALIAS: a script whose entire body is `npm run` calls joined by `&&`, kept so a
  * documented command spelling keeps working after its links became steps of their own.
  *
@@ -259,7 +272,7 @@ function aliasLinks(command) {
   if (parts.length < 2) return null;
   const links = [];
   for (const part of parts) {
-    const m = /^npm\s+run\s+([\w:-]+)$/.exec(part);
+    const m = DELEGATION.exec(part);
     if (!m) return null;
     links.push(m[1]);
   }
@@ -432,9 +445,6 @@ function shellOperators(command) {
 
   return SHELL_OPERATORS.filter((op) => found.has(op));
 }
-
-/** A command whose ENTIRE body is one `npm run <name>` — a wrapper, and nothing else. */
-const DELEGATION = /^npm\s+run\s+([\w:-]+)$/;
 
 /**
  * The commands a step really runs: its own body, then the body of anything it delegates to.
