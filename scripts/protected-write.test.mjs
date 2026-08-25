@@ -57,25 +57,72 @@ function probeEnv(extra) {
   return env
 }
 
-/** Writes a one-case test file into tmp that writes to `target`, and runs it under the tripwire. */
+/**
+ * Writes a one-case test file into tmp that writes to `target`, and runs it under the tripwire.
+ *
+ * ── THE PROBE ANNOUNCES ITSELF BY TOUCHING A FILE, NOT BY ITS REPORTER'S WORDING ─────────────
+ * "The probe actually ran a case" used to be checked with `assert.match(out, /^ℹ tests 1$/m)`.
+ * That `ℹ` line is the SPEC reporter's summary, and `node --test` chooses its default reporter by
+ * version: Node 20 emits TAP (`# tests 1`), Node 22+ emits spec (`ℹ tests 1`). Locally on Node 24
+ * it passed; `ci.yml` pins node-version 20, where it could never match. It turned main red on the
+ * first step of the suite, with everything after it skipped — and the probe itself had worked
+ * perfectly, EPROTECTEDWRITE and all. The DETECTOR failed, by asserting a format rather than a
+ * fact, and no seam had ever run this file on the version CI uses.
+ *
+ * So the case now records that it started by creating a marker in tmp, and this function asserts
+ * the marker exists. It is the load-bearing check: a file either is there or is not, under any
+ * reporter, on any Node, whatever the runner prints. The marker is written BEFORE the probed
+ * write, because the blocked case is supposed to throw on that line and must still prove it ran.
+ *
+ * The reporter is ALSO pinned to tap, for the other assertions — the callers match
+ * EPROTECTEDWRITE and the offending path out of this same output, so the format being parsed
+ * should be chosen rather than inherited from whatever Node is installed. TAP because it is the
+ * machine-readable one and is available on every version this repo supports. The summary line is
+ * still checked, but as a deterministic consequence of that pin rather than as the whole proof.
+ *
+ * The failure mode both are aimed at: NODE_TEST_CONTEXT leaking into the grandchild makes it run
+ * no files, print nothing, and exit 0 — which a probe asserting "the write was refused" would
+ * pass for the wrong reason, silently and forever. See probeEnv().
+ */
 function runProbe(target) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tripwire-probe-'))
   const probe = path.join(dir, 'probe.test.mjs')
+  const marker = path.join(dir, 'case-ran.marker')
   fs.writeFileSync(probe, [
     "import { test } from 'node:test'",
     "import fs from 'node:fs'",
-    "test('probe write', () => { fs.writeFileSync(process.env.PROBE_TARGET, 'probe\\n') })",
+    "test('probe write', () => {",
+    "  fs.writeFileSync(process.env.PROBE_MARKER, 'ran\\n')",
+    "  fs.writeFileSync(process.env.PROBE_TARGET, 'probe\\n')",
+    '})',
     '',
   ].join('\n'))
+
+  const args = ['--require', TRIPWIRE, '--test', '--test-reporter=tap', probe]
+  const env = probeEnv({ PROBE_TARGET: target, PROBE_MARKER: marker })
+
+  /** Both exit paths prove the same thing the same way. */
+  const check = (out) => {
+    assert.ok(
+      fs.existsSync(marker),
+      `the probe ran no test case — it proved nothing:\n${out}`
+    )
+    assert.match(
+      out,
+      /^# tests 1$/m,
+      `the probe's reporter is not the pinned TAP — the other assertions parse this output:\n${out}`
+    )
+  }
+
   try {
-    const out = execFileSync(process.execPath, ['--require', TRIPWIRE, '--test', probe], {
-      cwd: REPO, encoding: 'utf8', stdio: 'pipe', env: probeEnv({ PROBE_TARGET: target }),
+    const out = execFileSync(process.execPath, args, {
+      cwd: REPO, encoding: 'utf8', stdio: 'pipe', env,
     })
-    assert.match(out, /^ℹ tests 1$/m, `the probe ran no test case — it proved nothing:\n${out}`)
+    check(out)
     return { code: 0, out }
   } catch (e) {
     const out = `${e.stdout ?? ''}${e.stderr ?? ''}`
-    assert.match(out, /^ℹ tests 1$/m, `the probe ran no test case — it proved nothing:\n${out}`)
+    check(out)
     return { code: e.status ?? 1, out }
   } finally {
     fs.rmSync(dir, { recursive: true, force: true })
