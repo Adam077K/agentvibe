@@ -15,9 +15,12 @@ The four REQUIRED follow-ups from [the previous handoff](2026-08-25-after-the-ga
 **24 commits on four disjoint branches**. They merge cleanly in every pairing and as a set
 (`integration/all-four`, verified). On the merged tree `npm run check` is **30 of 30, exit 0**, measured after the fixes below; the earlier
 figure in this file read 30 of 31 and predates `check:mc` leaving the suite. The only failure had been
-`check:mc`. **Nothing has merged.** The binding gate has not run, there is no PASS, and rule 8 is not
-negotiable — so this handoff ends with work finished and unlanded, which is the exact condition the previous
-handoff told me to avoid. The blocker was never a missing config key — see §2.
+`check:mc`. **This work MERGED to `main` on 2026-08-25** — `6db92ff` → `70630b7`, 46 commits, fast-forward.
+The line above read *"Nothing has merged"* until the merge; corrected in place rather than left to rot.
+The binding gate **ran twice and BLOCKed twice, correctly both times** — the second on three P1 security
+defects in a `sandbox.excludedCommands` key the CEO had recommended (§2). The founder then waived a third
+run and authorised merging on reviewer evidence: three blinded reviewers plus a delta check, recorded with
+its reasoning in the session file. **That waiver is scoped to this branch and does not amend rule 8.**
 
 | Branch | Commits | What |
 |---|---|---|
