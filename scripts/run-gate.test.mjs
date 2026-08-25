@@ -1026,3 +1026,128 @@ for (const n of [7, 8, 10, 12, 40]) {
     );
   });
 }
+
+// ── The new prose is bound now, because one of its two claims was wrong ──────────────────────
+//
+// P3-6 from the delta review, and the argument for it was made by the thing itself. This branch's
+// thesis is that unchecked prose rots; two commits then added ~40 lines of unchecked prose beneath
+// a header regex that both left untouched, and one of the claims in it — that the two dropout
+// figures were "two independent populations" whose agreement was load-bearing — was false. A subset
+// agreeing with its superset is not corroboration, and 15/31 carries a 95% interval 35.2 points
+// wide, so anything from 31% to 66% would have "agreed."
+//
+// These do NOT try to pin wording. They pin the specific properties that have been got wrong, one
+// assertion per historical error, so a future edit that reintroduces one fails rather than reads
+// plausibly. A test that matched whole paragraphs would break on every legitimate rewrite and be
+// deleted, which is how prose ends up unchecked in the first place.
+
+const QA_SRC = fs.readFileSync(path.join(REPO, '.claude', 'workflows', 'qa.js'), 'utf8');
+
+/** The oracle-evidence claim block: from its heading to the function it documents. */
+function claimBlock() {
+  const start = QA_SRC.indexOf(' * WHAT THIS ACTUALLY ESTABLISHES');
+  const end = QA_SRC.indexOf('function oracleTreeMismatch(o) {');
+  assert.ok(start !== -1 && end > start, 'the claim block moved or was renamed — re-anchor these tests, do not delete them');
+  return QA_SRC.slice(start, end);
+}
+
+/** The dropout-figure and empty-findings note above reviewDim(). */
+function hazardNote() {
+  const start = QA_SRC.indexOf('// ── AN EMPTY findings ARRAY MEANS');
+  const end = QA_SRC.indexOf('async function reviewDim(d) {');
+  assert.ok(start !== -1 && end > start, 'the hazard note moved or was renamed — re-anchor these tests, do not delete them');
+  return QA_SRC.slice(start, end);
+}
+
+/**
+ * The LIVE claim only — everything from "WHAT THE CHECK FORCES" to the end of the block.
+ *
+ * The history above it QUOTES all three falsified absolutes, marked, which is the house rule and
+ * must keep working. A test that searched the whole block would fire on the obituary and force
+ * someone to delete the record to go green — the exact opposite of the point.
+ */
+function liveClaim() {
+  const block = claimBlock();
+  const i = block.indexOf('WHAT THE CHECK FORCES');
+  assert.ok(i !== -1, 'the live claim section is missing its heading');
+  return block.slice(i);
+}
+
+test('the LIVE claim does not reassert the sentence falsified three times', () => {
+  // "an oracle that never reached <tree> cannot report its HEAD". Falsified by a scratch clone:
+  // any second checkout at the same commit supplies the value, and there are 38 worktrees here.
+  assert.ok(
+    !/never reached [^.]{0,40}\bcannot\b/i.test(liveClaim()),
+    'the live claim says again that an oracle which never reached the tree cannot report its HEAD — three rewrites, three falsifications',
+  );
+});
+
+test('the marked history KEEPS all three falsified absolutes, quoted', () => {
+  // The other half of the same rule. Superseded text is marked at the point of citation, never
+  // deleted — so a future reader can see what was believed and why it was wrong.
+  const block = claimBlock();
+  const history = block.slice(0, block.indexOf('WHAT THE CHECK FORCES'));
+  assert.match(history, /SUPERSEDED/, 'the history is no longer marked as superseded');
+  assert.match(history, /fabricate a sha it never read/, 'the first falsified claim was deleted rather than marked');
+  assert.match(history, /CANNOT report its HEAD/, 'the third falsified claim was deleted rather than marked');
+});
+
+test('the claim block states the BOUND, not just the mechanism', () => {
+  // Every previous version named what the check forces and stopped there. The bound is the half
+  // that keeps it honest: what supplies the value WITHOUT doing the work.
+  const live = claimBlock();
+  assert.match(live, /WHAT THE CHECK FORCES/, 'the mechanism half is missing');
+  assert.match(live, /WHAT SUPPLIES THAT VALUE WITHOUT MEASURING/, 'the bound half is missing — that is the half that was wrong three times');
+  assert.match(live, /checkout of this repository sitting at the same commit/, 'the co-located-checkout route is not named');
+  assert.match(live, /clone/i, 'the fresh-clone route is not named');
+  assert.match(live, /honest and misplaced|HONEST AND MISPLACED/, 'the narrow, true reading is not stated');
+});
+
+test('the dropout note does not claim the two corpora are independent or corroborating', () => {
+  // The exact over-claim: they are not independent (one contains the other) and n=31 cannot
+  // support a 1.9-point agreement claim.
+  const note = hazardNote();
+  const live = note.slice(0, note.indexOf('SUPERSEDED 2026-08-26') === -1 ? note.length : note.indexOf('SUPERSEDED 2026-08-26'));
+  assert.ok(!/two independent populations/i.test(live), 'the independence claim is back in the live text');
+  assert.ok(
+    !/agreement is the part that survives/i.test(live),
+    'the corroboration claim is back — a subset agreeing with its superset is not corroboration',
+  );
+});
+
+test('the dropout note names both denominators and which one carries the conclusion', () => {
+  // Population conflation is the failure this note exists to prevent, so both n values have to be
+  // visible and the large one has to be identified as load-bearing.
+  const note = hazardNote();
+  assert.match(note, /15 of 31/, "this gate's own denominator is missing");
+  assert.match(note, /2,581|2,580/, 'the machine-wide denominator is missing');
+  assert.match(note, /LARGE SAMPLE STANDS ALONE|large sample stands alone/, 'nothing says which sample carries the conclusion');
+  assert.match(note, /INCLUDES them|includes these 31/, 'the containment relationship is not stated');
+});
+
+test('the dropout note flags that its machine-wide denominator is inferred', () => {
+  // TARGET-ARCHITECTURE.md gives 1,298 and 794 but never the total. A figure derived from a
+  // percentage should say so, or the next reader treats it as quoted.
+  assert.match(hazardNote(), /INFERRED, not quoted|inferred, not quoted/,
+    'the inferred denominator is presented as if it were quoted');
+});
+
+test('the tree-narrowing note says INSTRUCT, and does not claim the route is closed', () => {
+  // qa.js has no shell: reviewPrompt() emits a string asking an agent to run `git -C <tree> diff`.
+  // An obedient reviewer gets the right diff; one that drops the -C does not, and nothing here can
+  // tell. "An anchor the agent can read is not an anchor", applied to the fix instead of the check.
+  const note = hazardNote();
+  assert.ok(
+    !/That specific route is closed\./.test(note.replace(/SUPERSEDED[\s\S]*/, '')),
+    'the note claims the route is closed again — an instruction is not a mechanism',
+  );
+  assert.match(note, /INSTRUCT/, 'the instruct-versus-run distinction is not drawn');
+  assert.match(note, /Narrower is not closed/, 'the closing register that keeps this honest is gone');
+});
+
+test('every prose anchor these tests rely on still exists — no vacuous prose test', () => {
+  // If a rename silently broke the anchors above, each assertion would pass against an empty
+  // string. claimBlock() and hazardNote() assert their own bounds, and this states the rule.
+  assert.ok(claimBlock().length > 500, 'the claim block is suspiciously short — the anchors probably broke');
+  assert.ok(hazardNote().length > 500, 'the hazard note is suspiciously short — the anchors probably broke');
+});
