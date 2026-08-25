@@ -4,9 +4,10 @@ task: memory-eviction
 date: 2026-08-25
 branch: feat/memory-eviction
 worktree: .worktrees/w4-eviction
-tier: full
+tier: irreversible
+tier_note: "The brief assigned `full` on the basis of `.claude/memory/**`. The classifier disagrees and the classifier is the one implementation: `node scripts/classify.mjs` over this diff returns `floor=irreversible`, because `scripts/lib/memory-entries.js` matches `scripts/lib/**` (tier=irreversible, enforcement=block). Recorded as the classifier computes it, not as the brief assumed — a session file asserting a tier the classifier contradicts is the two-implementations defect wearing a different hat. This raises the review bar: irreversible needs 2-of-3 multi-judge and founder sign-off."
 qa_verdict: PASS
-verification: "npm run check → 30 of 30 passed · 0 failed · exit 0 (89.5s). npm run check:ledger → exit 0, 193 tests pass, ledger verify 79 pass · 9 would_block (shadow) · 0 block. node scripts/check-memory-budget.mjs → exit 0 over four capped files."
+verification: "npm run check → 30 of 30 passed · 0 failed · exit 0 (83.3s). npm run check:ledger → exit 0, 193 tests pass, ledger verify 79 pass · 9 would_block (shadow) · 0 block. node scripts/check-memory-budget.mjs → exit 0 over four capped files. node scripts/classify.mjs over the diff → floor=irreversible."
 date_note: "Filename keeps the 2026-08-25 date the brief assigned. The eviction stamps read 2026-08-26 because that is when they were written; a stamp is a record of when, not of what the task was called."
 ---
 
