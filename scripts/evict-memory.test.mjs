@@ -25,6 +25,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EVICT = path.join(REPO, 'scripts', 'evict-memory.mjs');
@@ -426,17 +427,23 @@ test('the real DECISIONS.md parses, and every entry lands in exactly one class',
 
 // ── P1-1 · a dated heading inside a code fence ──────────────────────────────────────────────
 
+// THE REAL FIELDS COME AFTER THE FENCE, DELIBERATELY. The first version of this fixture put them
+// before it, and the fenced block carried no `Reversibility:` line — so it could not have caught
+// a fenced field shadowing a real one, which is exactly the regression the delta review found.
+// A fixture ordered the safe way is a fixture that cannot fail.
 const FENCED = [
   '## 2026-03-01 — An irreversible decision that shows the entry format',
+  '',
+  '```markdown',
+  '## 2026-03-02 — [Decision title]',
+  'Reversibility: reversible',
+  '**Affects:** docs/does-not-exist.md',
+  'FENCED-EXAMPLE-SENTINEL',
+  '```',
   '',
   '**Decision:** Applied.',
   '**Reversibility:** irreversible',
   '**Affects:** `db/schema.sql`',
-  '',
-  '```markdown',
-  '## 2026-03-02 — [Decision title]',
-  'FENCED-EXAMPLE-SENTINEL',
-  '```',
   '',
   '**Consequence:** THE-REASONING-NOBODY-WANTS-TO-LOSE.',
   '',
@@ -595,7 +602,6 @@ test('P2-4: re-running after an interrupted write refuses instead of duplicating
 const UNREADABLE = [
   ['field absent', ''],
   ['transposed letter', '**Reversability:** reversible'],
-  ['bolded value', '**Reversibility:** **irreversible**'],
   ['empty value', '**Reversibility:**'],
   ['negated prose', '**Reversibility:** NOT reversible under any circumstances'],
 ];
@@ -760,4 +766,212 @@ test('P2-1: the volume lands BEFORE DECISIONS.md — the survivable crash state 
 
 test('the exported cap is the one the CLI enforces', () => {
   assert.equal(EVICT_CAP, 40_000);
+});
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// DELTA HARDENING — the 2026-08-26 delta review. Two P1s, one of them a REGRESSION introduced by
+// the previous round's own P2-2 fix. That is the shape worth remembering: widening a selector to
+// read more forms of a field also widened what could shadow it.
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+
+const { conservationIssues } = await import('./evict-memory.mjs');
+
+// ── P1-B · a fenced template must not shadow an entry's real fields ─────────────────────────
+
+test('P1-B: a fenced `Reversibility:` does NOT shadow the real one below it', () => {
+  // The regression: `startsWith('**Key:**')` could not be satisfied by a bare `Key: value`
+  // inside a fence; the tolerant selector that made list-item and bare fields readable could.
+  // Rule 1 was then bypassed by a readable WRONG value rather than an unreadable one.
+  const root = fixture({ entries: FENCED, files: { 'db/schema.sql': 'x\n' } });
+  const e = plan(root).entries[0];
+  assert.equal(e.reversibility, 'irreversible', 'the real field wins, not the fenced template');
+  assert.equal(e.disposition, 'refused');
+  assert.match(e.reasons.join(' '), /RULE 1: Reversibility is irreversible/);
+});
+
+test('P1-B: a fenced `Affects:` does NOT make a live entry look orphaned', () => {
+  // The worse half: rule 2 releases an entry whose Affects: targets are all gone, and a fenced
+  // `**Affects:** docs/does-not-exist.md` satisfied that release condition with a path the entry
+  // never named — turning an irreversible entry into "archivable on sight".
+  const root = fixture({ entries: FENCED, files: { 'db/schema.sql': 'x\n' } });
+  const e = plan(root).entries[0];
+  assert.equal(e.subject, 'alive', 'the real Affects: target exists');
+  assert.notEqual(e.disposition, 'orphaned');
+  const before = readDecisions(root);
+  assert.equal(apply(root, ['--only', '2026-03-01']).code, 1);
+  assert.equal(readDecisions(root), before);
+});
+
+test('P1-B: a fenced typo does not invent a did-you-mean about a field that is really there', () => {
+  const root = fixture({
+    entries: ['## 2026-03-05 — An entry quoting a misspelling inside a fence', '',
+      '```', '**Reversability:** reversible', '```', '',
+      '**Reversibility:** reversible', '**Affects:** nothing', ''].join('\n'),
+  });
+  const e = plan(root).entries[0];
+  assert.equal(e.reversibility, 'reversible');
+  assert.ok(!e.reasons.join(' ').includes('typo'), 'the real field was found; no near-miss to report');
+});
+
+// ── P1-A · nested fences of differing run length ────────────────────────────────────────────
+
+const NESTED_FENCE = [
+  '## 2026-04-01 — An entry showing how to write a code fence',
+  '',
+  '**Reversibility:** reversible',
+  '**Affects:** nothing',
+  '',
+  '````markdown',
+  '```',
+  '## 2026-04-02 — [Decision title]',
+  '```',
+  '````',
+  '',
+  'PART-TWO-AFTER-THE-FENCE — THE LOAD-BEARING REASONING.',
+  '',
+  '## 2026-04-03 — A second real entry',
+  '',
+  // Realistic size, or the growth guard refuses this eviction before the fence question is reached.
+  `**Context:** ${REALISTIC_BODY}`,
+  '**Reversibility:** reversible',
+  '**Affects:** nothing',
+  '',
+].join('\n');
+
+test('P1-A: a 4-backtick fence wrapping a 3-backtick example does not tear the entry', () => {
+  // A closer must be the same character AND at least as long as the opener (CommonMark). The
+  // first tracker captured exactly three, so the inner ``` closed the ```` block and the file
+  // parsed as 3 entries — one of them fabricated out of the first one's body, with `ambiguous`
+  // still null because the fence count came out even. Wrapping a 3-backtick example in a
+  // 4-backtick fence is the standard way to show a code fence in markdown.
+  const root = fixture({ entries: NESTED_FENCE });
+  const p = plan(root);
+  assert.equal(p.entries.length, 2, `expected 2 entries, got ${p.entries.map((e) => e.date).join(', ')}`);
+  assert.deepEqual(p.entries.map((e) => e.date), ['2026-04-01', '2026-04-03']);
+});
+
+test('P1-A: the load-bearing reasoning stays with its own entry', () => {
+  const root = fixture({ entries: NESTED_FENCE });
+  assert.equal(apply(root, ['--only', '2026-04-03']).code, 0);
+  const after = readDecisions(root);
+  assert.ok(after.includes('PART-TWO-AFTER-THE-FENCE'),
+    'the first entry keeps its tail when a LATER entry is evicted');
+  assert.ok(after.includes('````markdown'), 'the fence survives intact');
+});
+
+test('P1-A: a ~~~ fence is tracked, and a ``` inside it does not close it', () => {
+  const root = fixture({
+    entries: ['## 2026-04-05 — An entry using tilde fences', '',
+      '**Reversibility:** reversible', '**Affects:** nothing', '',
+      '~~~', '```', '## 2026-04-06 — [Decision title]', '```', '~~~', ''].join('\n'),
+  });
+  assert.equal(plan(root).entries.length, 1);
+});
+
+test('P1-A: a closer SHORTER than its opener does not close — it stays ambiguous', () => {
+  const root = fixture({
+    entries: ['## 2026-04-07 — An entry whose fence is closed by too short a run', '',
+      '**Reversibility:** reversible', '````', '```', ''].join('\n'),
+  });
+  assert.equal(plan(root).parse.usable, false, 'three backticks cannot close a four-backtick fence');
+});
+
+test('P1-A: a closer carrying an info string does not close — CommonMark', () => {
+  const root = fixture({
+    entries: ['## 2026-04-08 — An entry whose closing fence carries an info string', '',
+      '**Reversibility:** reversible', '```', '```js', ''].join('\n'),
+  });
+  assert.equal(plan(root).parse.usable, false);
+});
+
+// ── P2-A · the duplicate guard must span volumes ────────────────────────────────────────────
+
+test('P2-A: a body already in ANOTHER volume is refused, not filed twice', () => {
+  // If the interrupted append pushed the volume past the fill ceiling, the re-run ROTATES, sees
+  // a bare header, and finds no duplicate in it. The recovery the tool recommends produced the
+  // duplicate.
+  const body = entry({ date: '2026-05-10', title: 'A decision that must exist in exactly one volume' });
+  const root = fixture({
+    entries: body,
+    archives: {
+      // Volume 1 already holds the body AND is over the writer ceiling, so the retry rotates.
+      'DECISIONS_ARCHIVE.md': `# Archive\n\n${body.trim()}\n\n${'x'.repeat(35_000)}\n`,
+    },
+  });
+  const r = apply(root, ['--only', '2026-05-10']);
+  assert.equal(r.code, 1, 'the rotation must not hide the existing copy');
+  assert.match(r.err, /ALREADY present in the archive/);
+  assert.match(r.err, /already in DECISIONS_ARCHIVE\.md/, 'the message must name WHICH volume holds it');
+  assert.ok(!fs.existsSync(path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE_002.md')),
+    'no second volume may be opened to hold a duplicate');
+});
+
+// ── P3 · each conservation condition, pinned on its own ─────────────────────────────────────
+//
+// Deleting any ONE non-growth condition previously cost zero failing tests: the defects were
+// caught by direct file assertions elsewhere, so the GATE was thinner than the mutation table
+// implied. These reach each condition individually.
+
+const conservationBase = () => ({
+  removed: 100,
+  movedBodies: 150,
+  residue: 50,
+  chosen: [{ entry: { heading: '## 2026-01-01 — H', text: '## 2026-01-01 — H\nBODY\n' } }],
+  newVolume: '# Archive\n\n## 2026-01-01 — H\nBODY',
+  newDecisions: '# Decisions\n\n## 2026-01-01 — H\n*stub*\n',
+  volExisting: '# Archive\n',
+  volName: 'DECISIONS_ARCHIVE.md',
+});
+
+test('conservation: the clean case reports nothing — otherwise the five below prove nothing', () => {
+  assert.deepEqual(conservationIssues(conservationBase()), []);
+});
+
+test('conservation condition: byte arithmetic that does not close', () => {
+  const issues = conservationIssues({ ...conservationBase(), removed: 99 });
+  assert.ok(issues.some((i) => i.includes('byte arithmetic does not close')), JSON.stringify(issues));
+});
+
+test('conservation condition: the body is not in the volume', () => {
+  const issues = conservationIssues({ ...conservationBase(), newVolume: '# Archive\n\nsomething else' });
+  assert.ok(issues.some((i) => i.includes('not present verbatim')), JSON.stringify(issues));
+});
+
+test('conservation condition: the heading did not survive in DECISIONS.md', () => {
+  const issues = conservationIssues({ ...conservationBase(), newDecisions: '# Decisions\n' });
+  assert.ok(issues.some((i) => i.includes('rule 4 residue missing')), JSON.stringify(issues));
+});
+
+test('conservation condition: the destination was rewritten rather than appended to', () => {
+  const issues = conservationIssues({ ...conservationBase(), volExisting: '# Archive\nPRIOR\n' });
+  assert.ok(issues.some((i) => i.includes('an append may only add to a volume')), JSON.stringify(issues));
+});
+
+test('conservation condition: a reduction of exactly ZERO is refused, not only a negative one', () => {
+  // `removed === 0` was unreachable in the suite — "not shrink" appeared zero times in this file.
+  const issues = conservationIssues({ ...conservationBase(), removed: 0, movedBodies: 50, residue: 50 });
+  assert.ok(issues.some((i) => i.includes('would not shrink DECISIONS.md')), JSON.stringify(issues));
+  assert.ok(issues.some((i) => i.includes('exactly as much as')), JSON.stringify(issues));
+});
+
+// ── P3 · the claim about the REAL file must be made against the real file ───────────────────
+
+test('the real DECISIONS.md parses unambiguously and its ## Format fence is inert', () => {
+  // The earlier test built its own fixture, so it established a property of the fixture. This
+  // reads the committed bytes.
+  const real = fs.readFileSync(path.join(REPO, '.claude', 'memory', 'DECISIONS.md'), 'utf8');
+  const { parseDecisionEntries } = createRequire(import.meta.url)('./lib/memory-entries.js');
+  const entries = parseDecisionEntries(real);
+  assert.equal(entries.ambiguous, null, `the live file must parse cleanly: ${entries.ambiguous}`);
+  assert.ok(real.includes('## YYYY-MM-DD — [Decision title]'),
+    'the ## Format section still demonstrates the construct — if this fails the test below is vacuous');
+  assert.ok(!entries.some((e) => e.title.includes('[Decision title]')),
+    'the fenced template must not be an entry');
+
+  // And with the placeholder date filled in — the state one careless edit away.
+  const armed = real.replace('## YYYY-MM-DD — [Decision title]', '## 2026-12-31 — [Decision title]');
+  const armedEntries = parseDecisionEntries(armed);
+  assert.equal(armedEntries.ambiguous, null);
+  assert.ok(!armedEntries.some((e) => e.date === '2026-12-31'),
+    'filling in the template date must still not create an entry');
 });

@@ -68,9 +68,21 @@ conservation covered only the source and is now re-verified **from disk** after 
 to have; and `plan`'s `net` was 62% optimistic **in the direction of evicting**.
 
 **The lesson worth keeping is about the tests, not the code.** Deleting the entire conservation gate
-cost **zero** failing tests before this round. A gate whose call site is an `if` is a gate that can
-be deleted for free, so the post-write check **throws** now — there is no branch left to remove.
-Every guard was re-measured by mutation and none survives at zero.
+cost **zero** failing tests before this round. Two distinct things were fixed and an earlier version of
+this paragraph merged them, which a delta review caught: the **post-write verification** now *throws*, so
+its call site has no `if` to delete; the **conservation gate** still returns a list and is still consumed
+by an `if`, but it was extracted into a pure `conservationIssues()` and each of its five conditions is now
+reachable from a test on its own — four of them previously mutated to **zero** failures because the
+defects they catch were caught elsewhere, by direct file assertions, which made the gate thinner than the
+mutation table implied.
+
+**A delta review then returned FAIL again, and one of the two P1s was a regression from the fix above.**
+Widening `fieldValue`'s selector so a bolded or list-item `Reversibility:` could be read also made a
+*fenced* one able to shadow a real one — so rule 1 was bypassed by a readable **wrong** value where it had
+just been closed against an unreadable one. `parseDecisionEntries` was fence-aware and `fieldValue` was
+not; there is one shared tracker now. The second P1: a four-backtick fence wrapping a three-backtick
+example was closed by the inner run, which is the *standard* way to show a code fence in markdown. Closer
+rules are CommonMark's now — same character, at least as long, no info string.
 
 **Out of scope, noted not fixed:** `DECISIONS.md`'s header says entries are "most-recent first" while the
 file is appended most-recent-**last**.

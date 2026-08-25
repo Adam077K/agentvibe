@@ -440,6 +440,65 @@ function resolveSelector(sel, classified) {
  * `cmdApply` is what makes the obvious recovery — re-run the same command — safe instead of
  * silently appending a second copy.
  */
+/**
+ * Every way this eviction could be losing something, as a list of sentences.
+ *
+ * ── PURE, EXPORTED, AND CALLED ONCE — SO EACH CONDITION CAN BE PINNED ON ITS OWN ────────────
+ *
+ * This lived inline, and a delta review measured what that cost: deleting any ONE of its
+ * non-growth conditions individually cost ZERO failing tests. The defects they catch were caught
+ * — by direct file assertions elsewhere in the suite — so the GATE was thinner than the mutation
+ * table implied. A condition no test can reach on its own is a condition nobody can tell is
+ * still working.
+ *
+ * Extracting it does not make the gate stronger by itself; it makes each condition addressable,
+ * which is what lets the test file mutate them one at a time.
+ *
+ * THE FIVE, and why each is not implied by the others:
+ *   bytes-do-not-close   the splice ate or duplicated something. Arithmetic only.
+ *   body-not-in-volume   the right NUMBER of bytes moved, and they were the wrong bytes.
+ *   heading-not-in-decisions  rule 4's residue never landed; archival became deletion.
+ *   destination-overwritten   the append rewrote the volume instead of extending it.
+ *   would-not-shrink     every other number balances and the file got BIGGER.
+ */
+function conservationIssues({ removed, movedBodies, residue, chosen, newVolume, newDecisions, volExisting, volName }) {
+  const issues = [];
+  if (removed !== movedBodies - residue) {
+    issues.push(
+      `byte arithmetic does not close: DECISIONS.md lost ${removed} bytes, but bodies moved ` +
+      `(${movedBodies}) minus residue left behind (${residue}) is ${movedBodies - residue}`
+    );
+  }
+  for (const { entry } of chosen) {
+    if (!newVolume.includes(entry.text.replace(/\s+$/, ''))) {
+      issues.push(`body of "${entry.heading}" is not present verbatim in ${volName}`);
+    }
+    if (!newDecisions.includes(entry.heading)) {
+      issues.push(`heading "${entry.heading}" did not survive in DECISIONS.md — rule 4 residue missing`);
+    }
+  }
+  // THE DESTINATION WAS IN THE REPORT AND IN NO ASSERTION. Dropping the volume's prior content
+  // entirely left every other check satisfied and printed "conservation closes to zero". The
+  // append is a pure suffix, so this is exact rather than heuristic.
+  if (!newVolume.startsWith(volExisting.replace(/\s*$/, ''))) {
+    issues.push(
+      `${volName}'s existing ${Buffer.byteLength(volExisting, 'utf8')} bytes are not a prefix of what would be written — ` +
+      'an append may only add to a volume, never rewrite it'
+    );
+  }
+  // A non-positive reduction means the "eviction" grew the file it was asked to shrink, which
+  // happens whenever a stub outweighs the body it replaces and is invisible in a report whose
+  // other numbers all balance. Refused, not warned about; the remedy needs no flag.
+  if (removed <= 0) {
+    issues.push(
+      `this eviction would ${removed === 0 ? 'not shrink' : 'GROW'} DECISIONS.md (reduction ${removed} bytes): ` +
+      `the stubs (${residue} bytes) weigh ${removed === 0 ? 'exactly as much as' : 'more than'} the bodies removed (${movedBodies}). ` +
+      'Shorten --reason, or run `plan` and choose an entry with a positive net'
+    );
+  }
+  return issues;
+}
+
 function commitWrite({ vol, volumeText, decisionsPath: decPath, decisionsText, chosen, io = fs }) {
   // `io` is injected so the FAILURE path is reachable from a test. Without it, this function's
   // refusal could only fire on a real short write or a real disk fault, so deleting the whole
@@ -648,11 +707,23 @@ function cmdApply() {
   // is in both files and re-running the identical command is the obvious recovery. That appended
   // a second copy and reported conservation closing to zero, because the arithmetic is about this
   // run's bytes and knows nothing about the last one's.
-  const duplicated = chosen.filter(({ entry }) => volExisting.includes(entry.text.replace(/\s+$/, '')));
+  // ACROSS EVERY VOLUME, not just the one this batch picked. Checking only `volExisting` missed
+  // the exact case the guard exists for: if the interrupted append pushed the volume past the
+  // fill ceiling, the re-run ROTATES, sees a bare header, finds no duplicate, and files a second
+  // copy in the next volume. The recovery this tool's own message recommends — run it again —
+  // was the thing that produced the duplicate.
+  const archived = volumes(ROOT).map((v) => ({ name: v.name, text: fs.readFileSync(v.abs, 'utf8') }));
+  const duplicated = chosen
+    .map(({ entry }) => {
+      const body = entry.text.replace(/\s+$/, '');
+      const where = archived.find((v) => v.text.includes(body));
+      return where ? { entry, where: where.name } : null;
+    })
+    .filter(Boolean);
   if (duplicated.length) {
     process.stderr.write(
-      `evict-memory apply: REFUSED — ${duplicated.length} selected bod${duplicated.length === 1 ? 'y is' : 'ies are'} ALREADY present in ${vol.name}.\n` +
-      duplicated.map(({ entry }) => `      ${entry.heading}\n`).join('') +
+      `evict-memory apply: REFUSED — ${duplicated.length} selected bod${duplicated.length === 1 ? 'y is' : 'ies are'} ALREADY present in the archive.\n` +
+      duplicated.map(({ entry, where }) => `      ${entry.heading}  (already in ${where})\n`).join('') +
       '  This is the signature of an interrupted earlier run: the volume was written and DECISIONS.md\n' +
       '  was not. Appending again would duplicate history. Replace the entry in DECISIONS.md with its\n' +
       '  stub by hand, or remove the copy from the volume. Nothing written.\n'
@@ -666,55 +737,11 @@ function cmdApply() {
   const movedBodies = chosen.reduce((a, c) => a + c.entry.bytes, 0);
   const residue = stubs.reduce((a, s2) => a + s2.bytes, 0);
 
-  // ── CONSERVATION, CHECKED RATHER THAN ASSERTED ────────────────────────────────────────────
-  //
-  // "Nothing was lost" is the one claim an eviction tool must not make on its author's word, so
-  // it is a precondition of the write rather than a line in the report. Two independent checks,
-  // because they fail differently:
-  //
-  //   BYTES   every byte that left DECISIONS.md is either a stub byte still there or a body byte
-  //           now in the volume. An off-by-anything means the splice ate something.
-  //   CONTENT the trimmed body of each evicted entry appears VERBATIM in the new volume, and its
-  //           heading still appears in the new DECISIONS.md. Byte arithmetic alone would be
-  //           satisfied by moving the right NUMBER of the wrong bytes.
-  const conservation = [];
+  const conservation = conservationIssues({
+    removed: before.decisions - after.decisions,
+    movedBodies, residue, chosen, newVolume, newDecisions, volExisting, volName: vol.name,
+  });
   const removed = before.decisions - after.decisions;
-  if (removed !== movedBodies - residue) {
-    conservation.push(
-      `byte arithmetic does not close: DECISIONS.md lost ${removed} bytes, but bodies moved ` +
-      `(${movedBodies}) minus residue left behind (${residue}) is ${movedBodies - residue}`
-    );
-  }
-  for (const { entry } of chosen) {
-    if (!newVolume.includes(entry.text.replace(/\s+$/, ''))) {
-      conservation.push(`body of "${entry.heading}" is not present verbatim in ${vol.name}`);
-    }
-    if (!newDecisions.includes(entry.heading)) {
-      conservation.push(`heading "${entry.heading}" did not survive in DECISIONS.md — rule 4 residue missing`);
-    }
-  }
-  // THE DESTINATION WAS IN THE REPORT AND IN NO ASSERTION. Both checks above are about
-  // DECISIONS.md; deleting the destination volume's prior content entirely left them satisfied,
-  // the report still printed "conservation closes to zero", and the run exited 0. Everything
-  // already in the volume must survive the append, and since the append is a pure suffix the
-  // check is exact rather than heuristic.
-  if (!newVolume.startsWith(volExisting.replace(/\s*$/, ''))) {
-    conservation.push(
-      `${vol.name}'s existing ${Buffer.byteLength(volExisting, 'utf8')} bytes are not a prefix of what would be written — ` +
-      'an append may only add to a volume, never rewrite it'
-    );
-  }
-  // A negative or zero reduction means the "eviction" GREW the file it was asked to shrink —
-  // which happens whenever a stub outweighs the body it replaces, and is invisible in a report
-  // whose other numbers all balance. It is refused rather than warned about, and the remedy needs
-  // no flag: shorten `--reason`, or read `plan`'s net column and pick a different entry.
-  if (removed <= 0) {
-    conservation.push(
-      `this eviction would ${removed === 0 ? 'not shrink' : 'GROW'} DECISIONS.md (reduction ${removed} bytes): ` +
-      `the stubs (${residue} bytes) weigh ${removed === 0 ? 'exactly as much as' : 'more than'} the bodies removed (${movedBodies}). ` +
-      'Shorten --reason, or run `plan` and choose an entry with a positive net'
-    );
-  }
   if (conservation.length) {
     process.stderr.write('evict-memory apply: REFUSED — conservation check failed. Nothing written.\n');
     for (const c of conservation) process.stderr.write(`  ${c}\n`);
@@ -795,7 +822,7 @@ function cmdApply() {
 const invokedDirectly = process.argv[1]
   && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
 
-export { commitWrite, VOLUME_BYTE_CAP, VOLUME_FILL_CEILING, DEFAULT_REASON };
+export { commitWrite, conservationIssues, VOLUME_BYTE_CAP, VOLUME_FILL_CEILING, DEFAULT_REASON };
 
 if (!invokedDirectly) {
   // imported for its exports; no command to run

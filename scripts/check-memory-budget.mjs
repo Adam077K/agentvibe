@@ -129,6 +129,26 @@ function countDecisionEntries(text) {
   return parseDecisionEntries(text).length;
 }
 
+/**
+ * The parse is ambiguous — an unterminated code fence swallowed the rest of the file.
+ *
+ * ── THIS IS A BLOCKING FAILURE, NOT A NOTE, AND THE REASON IS THE ENTRY CAP ─────────────────
+ *
+ * `parseDecisionEntries` reports the condition and this file used to drop it on the floor.
+ * Measured: 60 entries plus one unterminated fence gave `exit 0 · entries: 2 · failures: []`,
+ * with no mention of ambiguity anywhere in the output. So the 50-entry cap failed OPEN on a file
+ * this checker called small — the same shape as the CRLF hole, whose fix comment in
+ * scripts/lib/memory-entries.js says exactly that.
+ *
+ * Worse than failing open: `evict-memory` REFUSES this input while the BLOCKING CI checker
+ * passes it. Two consumers of one parser, disagreeing about whether the document is readable, is
+ * the defect the library's own "ONE PARSER, NOT TWO" header exists to prevent — sharing the
+ * parser is not enough if the consumers disagree about what its output means.
+ */
+function ambiguityOf(text) {
+  return parseDecisionEntries(text).ambiguous || null;
+}
+
 // ── check DECISIONS.md ───────────────────────────────────────────────────────
 const decisionsPath = path.join(ROOT, '.claude', 'memory', 'DECISIONS.md');
 
@@ -138,6 +158,17 @@ if (!fs.existsSync(decisionsPath)) {
   const text = fs.readFileSync(decisionsPath, 'utf8');
   const bytes = Buffer.byteLength(text, 'utf8');
   const entries = countDecisionEntries(text);
+  const ambiguous = ambiguityOf(text);
+
+  if (ambiguous) {
+    fail(
+      'decisions-parse-ambiguous',
+      `DECISIONS.md cannot be parsed unambiguously: ${ambiguous}. ` +
+        `The entry count below (${entries}) is therefore a LOWER BOUND, not a measurement, and the ` +
+        `${DECISIONS_ENTRY_CAP}-entry cap cannot be enforced against it. Close the fence. ` +
+        `The usual cause is a fenced example containing a \`## YYYY-MM-DD\` heading.`
+    );
+  }
 
   if (entries > DECISIONS_ENTRY_CAP) {
     fail(
@@ -242,6 +273,7 @@ if (JSON_OUT) {
       root: ROOT,
       decisions: {
         entries: countDecisionEntries(decisionsText),
+        parse_ambiguous: ambiguityOf(decisionsText),
         bytes: Buffer.byteLength(decisionsText, 'utf8'),
         entry_cap: DECISIONS_ENTRY_CAP,
         byte_cap: DECISIONS_BYTE_CAP,

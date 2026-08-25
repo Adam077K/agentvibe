@@ -337,3 +337,38 @@ test('MUTATION: dated headings inside a code fence are not counted as entries', 
   const r = check(fixture({ decisions, longTerm: makeLines(10) }));
   assert.equal(r.decisions.entries, 1, 'only the unfenced entry counts');
 });
+
+// ── an ambiguous parse must BLOCK, because the entry cap cannot be enforced against it ────────
+
+test('MUTATION: an unterminated fence FAILS the blocking checker', () => {
+  // Measured before this: 60 entries plus one unterminated fence gave exit 0, entries: 2,
+  // failures: []. The 50-entry cap failed OPEN on a file the checker called small — and
+  // `evict-memory` REFUSED that same input, so the blocking CI check was the more permissive of
+  // two consumers of one parser. Sharing a parser is not enough if they disagree about what its
+  // output means.
+  const decisions = `# Decisions\n\n${makeDecisions(60, 50).replace(/^# Architecture.*\n\*.*\n\n---\n\n/m, '')}\n\`\`\`\n## 2026-12-31 — swallowed\n`;
+  const r = check(fixture({ decisions, longTerm: makeLines(10) }));
+  assert.equal(r.code, 1, `an unterminated fence must fail: ${JSON.stringify(r)}`);
+  assert.ok(r.failures.some((f) => f.includes('decisions-parse-ambiguous')),
+    `expected decisions-parse-ambiguous, got: ${JSON.stringify(r.failures)}`);
+  assert.ok(r.decisions.parse_ambiguous, 'the JSON report must carry the reason');
+});
+
+test('MUTATION: the ambiguity failure says the entry count is a LOWER BOUND', () => {
+  // The count is still printed, because it is the only number available — but a reader must not
+  // take it as a measurement, so the message says which it is.
+  const decisions = `# Decisions\n\n## 2026-01-01 — One\n\nBody.\n\n\`\`\`\n## 2026-01-02 — swallowed\n`;
+  const r = check(fixture({ decisions, longTerm: makeLines(10) }));
+  const msg = r.failures.find((f) => f.includes('decisions-parse-ambiguous'));
+  assert.match(msg, /LOWER BOUND/);
+  assert.match(msg, /cannot be enforced/);
+});
+
+test('MUTATION: a well-formed fence does NOT trip the ambiguity failure', () => {
+  // Otherwise the check above would fire on the real file, which documents a fenced example.
+  const decisions = `# Decisions\n\n## Format\n\n\`\`\`markdown\n## 2026-01-01 — [Decision title]\n\`\`\`\n\n## 2026-02-02 — A real entry\n\nBody.\n`;
+  const r = check(fixture({ decisions, longTerm: makeLines(10) }));
+  assert.equal(r.code, 0, `a closed fence must pass: ${JSON.stringify(r.failures)}`);
+  assert.equal(r.decisions.parse_ambiguous, null);
+  assert.equal(r.decisions.entries, 1);
+});

@@ -95,7 +95,64 @@ const ENTRY_HEADING = /^## (\d{4}-\d{2}-\d{2})(?:\s*[—–-]\s*(.*))?$/;
  * agent is told to copy. It has been harmless only because the placeholder date is not digits.
  * An agent that filled the template in and left it fenced would split the file.
  */
-const FENCE = /^ {0,3}(```|~~~)/;
+const FENCE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+
+/**
+ * Which lines of a document sit INSIDE a fenced code block, and whether the fencing is sound.
+ *
+ * ── ONE TRACKER, BECAUSE TWO READERS DISAGREEING IS THE WHOLE DEFECT CLASS ──────────────────
+ *
+ * `parseDecisionEntries` was made fence-aware and `fieldValue` was not, and that asymmetry
+ * re-opened rule 1 by a different door than the one it closed. An entry that quotes the entry
+ * TEMPLATE inside a fence before declaring its own fields had the template's values read as its
+ * own — first match wins — so `**Reversibility:** irreversible` was shadowed by a fenced
+ * `Reversibility: reversible` and the entry classified `eligible`. Worse, a fenced
+ * `**Affects:** docs/does-not-exist.md` made an irreversible entry classify `orphaned`, which
+ * rule 2 calls "archivable on sight", on the strength of a path the entry never named.
+ *
+ * Not a readable-but-absent field, which was the previous bug: a readable and WRONG one. Both
+ * readers take their mask from here now, so there is no second answer to be had.
+ *
+ * ── CLOSER RULES ARE CommonMark's, NOT "STARTS WITH THE SAME THREE CHARACTERS" ──────────────
+ *
+ * The first version captured exactly three delimiter characters, so a ````` ```` ````` block
+ * wrapping a ```` ``` ```` example opened as three and the first inner ```` ``` ````
+ * closed it — tearing an entry in half again, with `ambiguous` still null because the fence
+ * count came out even. A four-backtick fence around a three-backtick example is the STANDARD
+ * way to show a code fence in markdown, and three tracked files here already use it.
+ *
+ * CommonMark: a closing fence uses the same character, is AT LEAST as long as the opener, and
+ * carries no info string. All three are enforced below.
+ */
+function fenceMask(lines) {
+  const inFence = new Array(lines.length).fill(false);
+  let open = null; // { char, len }
+  lines.forEach((line, i) => {
+    const m = line.match(FENCE);
+    if (m) {
+      const run = m[1];
+      const rest = (m[2] || '').trim();
+      if (open === null) {
+        open = { char: run[0], len: run.length };
+        inFence[i] = true; // the opening delimiter is part of the block
+        return;
+      }
+      // A closer: same character, at least as long, and nothing after it.
+      if (run[0] === open.char && run.length >= open.len && rest === '') {
+        inFence[i] = true;
+        open = null;
+        return;
+      }
+      // Otherwise it is content inside the open block (e.g. the inner ``` of a ```` block).
+      inFence[i] = true;
+      return;
+    }
+    inFence[i] = open !== null;
+  });
+  const ambiguous = open === null ? null
+    : `unterminated \`${open.char.repeat(open.len)}\` code fence — every heading and field after it was swallowed, so the parse is incomplete`;
+  return { inFence, ambiguous };
+}
 
 /** The first line of an already-evicted entry: `*Archived to \`FILE\` (DATE). ...*` */
 const STUB_MARKER = /^\*Archived to `([^`]+)`/;
@@ -135,23 +192,11 @@ function parseDecisionEntries(text) {
   const lines = text.split('\n');
   const scan = lines.map((l) => (l.endsWith('\r') ? l.slice(0, -1) : l));
 
+  const { inFence, ambiguous } = fenceMask(scan);
   const starts = [];
-  let fence = null; // the delimiter that opened the current block, or null
   scan.forEach((line, i) => {
-    const f = line.match(FENCE);
-    if (f) {
-      if (fence === null) fence = f[1];
-      else if (line.trim().startsWith(fence)) fence = null;
-      return;
-    }
-    if (fence === null && ENTRY_HEADING.test(line)) starts.push(i);
+    if (!inFence[i] && ENTRY_HEADING.test(line)) starts.push(i);
   });
-
-  // An unterminated fence means the rest of the file was swallowed and no heading after it was
-  // seen. That is exactly the state a torn entry leaves behind, so it is reported rather than
-  // guessed at: callers refuse to classify or evict anything from an ambiguous parse.
-  const ambiguous = fence === null ? null
-    : `unterminated \`${fence}\` code fence — every heading after it was swallowed, so the entry list is incomplete`;
 
   const entries = starts.map((start, k) => {
     const end = k + 1 < starts.length ? starts[k + 1] : lines.length;
@@ -204,7 +249,12 @@ function readReversibility(entryText) {
   if (raw === null) {
     // A near-miss is worth naming: `Reversability` is a spelling most people get wrong once, and
     // "field absent" sends the reader looking for a field that is right there.
-    const near = entryText.match(/^\s*[-*]?\s*\*{0,2}(Revers[a-z]*bility|Reversab[a-z]*)\s*:/im);
+    const nearLines = entryText.split('\n');
+    const { inFence: nearMask } = fenceMask(nearLines);
+    const near = nearLines
+      .filter((_, i) => !nearMask[i])
+      .join('\n')
+      .match(/^\s*[-*]?\s*\*{0,2}(Revers[a-z]*bility|Reversab[a-z]*)\s*:/im);
     const note = near && near[1] !== 'Reversibility'
       ? `no \`Reversibility:\` field — found \`${near[1]}:\`, which is probably a typo for it`
       : 'no `Reversibility:` field';
@@ -230,16 +280,31 @@ function readReversibility(entryText) {
  */
 function fieldValue(entryText, key) {
   const lines = entryText.split('\n').map((l) => (l.endsWith('\r') ? l.slice(0, -1) : l));
+  const { inFence } = fenceMask(lines);
   // Tolerates a leading list marker and optional emphasis: `**Key:**`, `- **Key:**`, `Key:`.
   // The live file uses the first; the second and third are what a hand-written entry looks like,
   // and reading them as "field absent" is how a real value goes unseen.
+  //
+  // ── AND IT MUST SKIP FENCES, WHICH IS WHAT THAT TOLERANCE COST ────────────────────────────
+  //
+  // The tolerance above is the fix for a real bug — a bolded or list-item field used to read as
+  // absent — and it opened a worse one. The selector went from `startsWith('**Key:**')`, which a
+  // bare `Key: value` inside a fence could not satisfy, to a pattern that matches the bare form
+  // anywhere. So an entry quoting the template inside a fence had the TEMPLATE's values read as
+  // its own, first match wins, and rule 1 was bypassed by a readable wrong value rather than an
+  // unreadable one. Measured across the two revisions: a fenced `Reversibility: reversible`
+  // shadowing a real `**Reversibility:** irreversible` read correctly BEFORE the tolerance and
+  // incorrectly after it.
+  //
+  // The tolerance stays and the fence mask pays for it. Same mask `parseDecisionEntries` uses.
   const head = new RegExp(`^\\s*[-*]?\\s*\\*{0,2}${key}\\*{0,2}\\s*:\\s*\\*{0,2}`, 'i');
-  const at = lines.findIndex((l) => head.test(l));
+  const at = lines.findIndex((l, i) => !inFence[i] && head.test(l));
   if (at === -1) return null;
   const parts = [lines[at].replace(head, '').trim()];
   for (let i = at + 1; i < lines.length; i++) {
     const next = lines[i];
-    if (!next.trim() || /^\s*[-*]?\s*\*\*/.test(next) || next.startsWith('## ')) break;
+    // A fence opening also ends the value: a continuation line cannot run into a code block.
+    if (!next.trim() || inFence[i] || /^\s*[-*]?\s*\*\*/.test(next) || next.startsWith('## ')) break;
     parts.push(next.trim());
   }
   return parts.join(' ').trim();
