@@ -47,6 +47,22 @@ for a directory that does not exist:
 to exist — verified: it exists on this machine — and fails on a CI runner where it does not. That is why
 `main` was green locally and red in CI on the same commit.
 
+**And a third control disagrees about the same directory.** The OS sandbox **denies** writes to
+`~/.claude/plans/` while `.claude/hooks/pre-tool-use.sh` explicitly **allows** them: `.claude/settings.json`'s
+`sandbox.filesystem.allowWrite` lists `~/.agentvibe`, `/private/tmp/claude-501`, `**/.worktrees` and
+`**/.worktrees/**` — and not this directory (verified in this worktree).
+
+That is the **third** instance of two controls disagreeing about one path, after the two risk classifiers
+reconciled on 2026-08-16 and the `Write`-vs-Bash split recorded in
+[08-agents_work/handoffs/2026-08-23-after-p0.md](08-agents_work/handoffs/2026-08-23-after-p0.md) §0 — and
+**this one runs the other way round.** There, the sandbox *granted* `/private/tmp/claude-501` and the hook
+*refused* it, so every lane edited through Bash because the Write tool would not. Here the hook allows and
+the sandbox denies. Same defect class, opposite polarity, and it is the same directory whose absence turns
+CI red. Write it down so it is not rediscovered a fourth time.
+
+That handoff's own framing still applies: *"either the hook should permit what the sandbox grants, or the
+sandbox should not grant it. Nobody has decided which."*
+
 A fix is **in flight on `fix/plans-dir-test-hermetic`** and had not landed when this was written: that
 branch pointed at `71fd58d` with zero commits ahead of `main`. *In flight, not verified here.* Re-derive
 before believing either way — do not carry this sentence forward as fact.
@@ -86,17 +102,37 @@ Required status checks govern **the pull-request route only**. Direct pushes to 
 having run none. Observed on 2026-08-23 and twice on 2026-08-25.
 
 **So the gate's authority is a convention, not a control.** Every claim in this repo of the form "nothing
-merges without the gate" is true only of the route people choose to take. Closing it is a repository
-setting and therefore founder-only: enable "do not allow bypassing", or add CODEOWNERS on
-`.github/workflows/`. **Decision pending.**
+merges without the gate" is true only of the route people choose to take.
+
+**The flip is DEFERRED to Wave 2, and the reason is a real ordering constraint rather than reluctance.**
+`.github/workflows/qa-lead-pass.yml` triggers on `pull_request` only — verified in this worktree: its `on:`
+block at `:45` names `pull_request` and there is no `push:` trigger anywhere in the file — while being a
+*required* status check. Two consequences follow, and they are why flipping first would break the repo:
+
+- with `enforce_admins: true`, a direct push to `main` could **never** satisfy a check that only ever runs
+  on pull requests; and
+- `warroom merge` merges into **local** `main` and never pushes, so it would produce commits that can
+  never reach `origin`.
+
+**Founder decision, 2026-08-25: fix `cmd_merge` to push a branch and open a PR first, then flip.** Order
+matters — flipping first bricks the merge path that exists today.
+
+**CODEOWNERS was dropped from the plan.** Branch protection carries no `required_pull_request_reviews` at
+all, so `require_code_owner_reviews` is unset and a CODEOWNERS file would gate nothing; there is no
+CODEOWNERS in the tree today (verified). On a solo repository it would also deadlock the only reviewer.
 
 ## 4 · The local floor is green
 
 ```
-npm run check  →  30 of 30 passed · 0 failed · 82.8s
+npm run check  →  30 of 30 passed · 0 failed
 ```
 
-macOS, sandbox armed, measured 2026-08-25 at `71fd58d` in the worktree that wrote this file.
+macOS, sandbox armed, measured 2026-08-25 at `71fd58d`.
+
+**`30 of 30 · 0 failed` is the figure. It is not 29 and it is not 31.** The wall clock is a sample rather
+than a fact and should not be pinned: the same suite on the same commit took 79.7s at the session root and
+82.8s then 125.9s in the worktree that wrote this file. Wall-clock numbers here move with how many lanes
+are building at once — `c-mission-control-cold-start` already flakes for exactly this reason.
 
 **Measure it from the canonical worktree path and nowhere else.** `git worktree list` is the authority on
 that path. This session lost a full check run to the trap: a stale path that had been removed underneath a
