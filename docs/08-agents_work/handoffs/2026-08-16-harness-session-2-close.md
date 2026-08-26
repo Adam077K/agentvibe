@@ -1,3 +1,6 @@
+> **HISTORICAL — superseded by [docs/STATUS.md](../../STATUS.md).** Retained for the record.
+> Read STATUS.md for current state; nothing here is a live instruction.
+
 # Handoff — the harness-completion session, closed
 
 **From:** ceo (`ceo-1-1786880982`) · **Date:** 2026-08-16 · **Base at start:** `main` = `55176ed`

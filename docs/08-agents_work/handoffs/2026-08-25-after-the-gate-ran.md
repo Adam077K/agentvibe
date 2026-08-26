@@ -1,3 +1,6 @@
+> **HISTORICAL — superseded by [docs/STATUS.md](../../STATUS.md).** Retained for the record.
+> Read STATUS.md for current state; nothing here is a live instruction.
+
 # Handoff — the gate can complete now, and the review layer is carrying everything
 
 **From:** ceo (`ceo-1-1787566829`) · **Date:** 2026-08-24 · **Base:** `main` = `b72042a`
