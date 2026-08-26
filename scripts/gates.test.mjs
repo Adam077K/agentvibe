@@ -188,6 +188,33 @@ test('a command gate carrying a human-only field is refused', () => {
   );
 });
 
+test('a human gate carrying a command-only field is refused, for every one of them', () => {
+  // Enumerated rather than sampled: adding a field to COMMAND_ONLY without a case here would
+  // leave it unguarded on the human side, which is the direction that matters.
+  for (const k of ['run', 'pass_when', 'fail_when', 'recording_hazard', 'how_to_run_it']) {
+    assert.match(joined((t) => { t.gates[1][k] = 'x'; }), new RegExp(`kind "human" carries "${k}"`), k);
+  }
+  // Only `run` gets the "faked into a script" sentence — it is the only one of the five that
+  // would actually make a process answer a question a person has to answer.
+  assert.match(joined((t) => { t.gates[1].run = 'x'; }), /may not be faked into a script/);
+  assert.doesNotMatch(joined((t) => { t.gates[1].how_to_run_it = 'x'; }), /may not be faked into a script/);
+});
+
+test('the qa-verdict gate carries the recording hazard, and it names both distinguishers', () => {
+  // NOT enforcement of the hazard — nothing here can read qa.js output. This asserts only that
+  // the warning is present and still names what to look at, so it cannot be quietly deleted or
+  // reduced to "be careful". Five of six plausible arg shapes are refused at qa.js's entry
+  // contract and every one returns BLOCK with zero agents dispatched (measured 2026-08-26), so a
+  // reader who does not know the two distinguishers cannot tell a refusal from a real finding.
+  const qa = realTree().gates.find((g) => g.id === 'qa-verdict');
+  assert.equal(qa.kind, 'command');
+  const h = String(qa.recording_hazard);
+  assert.match(h, /REFUSED/, 'the summary marker a refusal carries');
+  assert.match(h, /agents dispatched is 0|zero agents/i, 'the dispatch-count distinguisher');
+  assert.match(h, /DOCUMENTATION AND NOT ENFORCEMENT/, 'it must not read as a check');
+  assert.match(String(qa.how_to_run_it), /run-gate\.mjs --json/, 'the one route that builds the args correctly');
+});
+
 test('a human gate with no named approver and no place it is recorded is refused', () => {
   assert.match(joined((t) => { delete t.gates[1].decided_by; }), /needs "decided_by"/);
   assert.match(joined((t) => { delete t.gates[1].recorded_in; }), /needs "recorded_in"/);

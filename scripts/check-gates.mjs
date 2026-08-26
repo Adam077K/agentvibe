@@ -72,7 +72,7 @@ export const COMMAND_DIR = path.join('.claude', 'commands');
 export const KINDS = ['command', 'human'];
 
 /** Fields only a `command` gate may carry, and fields only a `human` gate may carry. */
-const COMMAND_ONLY = ['run', 'pass_when', 'fail_when'];
+const COMMAND_ONLY = ['run', 'pass_when', 'fail_when', 'recording_hazard', 'how_to_run_it'];
 const HUMAN_ONLY = ['decided_by', 'recorded_in', 'why_not_a_command'];
 
 /**
@@ -170,8 +170,13 @@ export function wiringFindings({ gates, playbooks, commands, lintGates, exists }
     const forbidden = g.kind === 'human' ? COMMAND_ONLY : HUMAN_ONLY;
     for (const k of forbidden) {
       if (g[k] !== undefined) {
+        // `run` gets its own sentence. The others describe a command gate too, but only `run`
+        // would actually make a process answer a question a person has to answer, and a message
+        // that overstates what a key does is a message the next reader stops believing.
         F(g.kind === 'human'
-          ? `${where}: kind "human" carries "${k}" — a human stop may not be faked into a script. Change the kind, or delete the key`
+          ? (k === 'run'
+            ? `${where}: kind "human" carries "run" — a human stop may not be faked into a script. Change the kind, or delete the key`
+            : `${where}: kind "human" carries "${k}", which describes how a COMMAND gate is run and recorded. A human gate has no exit code to describe`)
           : `${where}: kind "command" carries "${k}", which describes a human decision. A command gate is resolved by its exit code`);
       }
     }

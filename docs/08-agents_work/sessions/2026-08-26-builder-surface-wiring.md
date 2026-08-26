@@ -62,6 +62,40 @@ that directory, it throws ENOENT — 5 of 10 runs, against 0 of 10 with `--test-
 narrow fix and it is named in the test header, because the hazard is the shared directory and the next
 concurrent reader meets it again.
 
+## Constraints on the gate route, re-checked against this wiring
+
+A parallel lane measured `qa.js`'s entry contract and sent five constraints. **This route satisfies all of
+them, and the measurement is that it never enters that contract at all.** `git diff origin/main...HEAD |
+grep` for `Workflow`, `scriptPath`, `args.tree` and `tree:` returns **zero** additions — against a control
+of 20 for `qa-verdict`, so the instrument was pointed at the right tree. The gate declaration schema forbids
+it structurally: a `kind: command` gate's `run:` must begin with `node` and name a script under `scripts/`,
+so a `Workflow` invocation cannot be declared as a gate here even by accident. `qa-verdict` reads a
+**recorded** verdict (`node scripts/verdict.mjs check`); it does not run the panel.
+
+**Constraint 1 — the session invokes, not a dispatched engine — holds in the data.** All seven gated stages
+carry **zero** `dispatch:` entries; the five framer sites I added all went into ungated stages. I considered
+making that a lint rule and **rejected it**: the obvious spelling, "a stage carrying `gate:` may not carry
+`dispatch:`", refuses a legitimate shape already in use — dispatch a reviewer for findings, then have the
+session resolve the gate — and `scripts/playbooks.test.mjs`'s own fixture is exactly that shape. It is
+documented in `.claude/gates.yml` instead.
+
+**Constraint 4, re-measured here on this branch rather than taken on trust:** `run-gate.mjs --json` →
+`floor: full`, `gateRequired: true`, exit **0**; with `--require`, exit **1**. Its emitted `args` are row 6,
+the safe shape: `tree` absolute, `ref` sha-tipped, all three keys present.
+
+**The BLOCK-vs-REFUSED distinguisher is handled where a person meets it**, in `.claude/gates.yml`'s
+`recording_hazard` and in `/review`. `verdict.mjs` independently refuses the word: `--verdict BLOCK` exits 2,
+`must be PASS or FAIL`, so a BLOCK cannot be recorded verbatim. **That field is documentation, and the test
+asserts it says so** — nothing here reads `qa.js` output. What *is* enforced is the same distinction one
+layer down, where this checker does have reach: `resolveGate` returns `unresolved`, not `fail`, for a spawn
+failure, a signal, and every exit code other than 0 and 1.
+
+**Residual, recorded because it cannot be fixed here.** Neither invocation spelling fixes *which copy* of the
+gate reviews a PR: `scriptPath` is relative and `name:` resolves against the `.claude/workflows/` of whichever
+tree, so a route run from a PR worktree has **the PR's own possibly-modified gate review the PR**.
+`run-gate.mjs` states in its own header that it cannot fix this and does not change its exit code on it. A
+human closes it by launching from a `main` checkout. Not attempted.
+
 **What I did not do.** I did not touch `.claude/hooks/schema-lint.js`, `scripts/lib/**`,
 `.github/workflows/**`, `CLAUDE.md` or `docs/STATUS.md`. Editing the first three would have moved this PR to
 `irreversible`; the last two belong to another lane. `/audit` keeps its own shape rather than collapsing onto

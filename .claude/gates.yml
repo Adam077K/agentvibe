@@ -30,6 +30,19 @@
 # a checker enforces the difference. Faking a human stop into a script would be the more
 # dangerous half of that ambiguity resolving itself in the wrong direction.
 #
+# ── A PLAYBOOK NAMES A GATE. ONLY THE SESSION INVOKES ONE. ───────────────────────────────────
+# `Workflow` is a main-session tool: measured 2026-08-26, 0 of 55 calls came from a sidechain,
+# against 57,590 subagent `Bash` calls in the same scan. A DISPATCHED ENGINE DOES NOT HAVE THE
+# TOOL, and a missing tool reads as a silent no-op rather than an error — so a stage that made
+# its dispatched engine run the gate would report success having gated nothing.
+#
+# As the playbooks stand, all seven gated stages carry ZERO dispatch entries, so this holds in the
+# data today rather than by convention. It is deliberately NOT a lint rule. The obvious spelling —
+# "a stage carrying `gate:` may not carry `dispatch:`" — refuses a shape that is legitimate and
+# already in use: dispatch a reviewer to produce findings, then have the SESSION resolve the gate
+# on them. `scripts/playbooks.test.mjs`'s own fixture is exactly that shape. A rule that refuses
+# the correct arrangement to prevent the wrong one is a worse rule than none.
+#
 # ── EVERY GATE IS USED OR CARRIES ITS REASON ─────────────────────────────────────────────────
 # A declared gate that no playbook names must carry `unused_reason:`, at least 40 characters,
 # which someone can disagree with. Same governance mechanism as `EXCLUDED` in
@@ -59,6 +72,30 @@ gates:
     fail_when: >
       exit 1 — absent, unparseable, subject-mismatch, not-pass, or tier-drift. Exit 2 means the
       subject could not be computed at all, which resolves unresolved and therefore not pass.
+    recording_hazard: >
+      A REFUSED ENTRY AND A REAL BLOCK RETURN THE SAME VERDICT, so read the panel output before
+      recording anything from it. Measured 2026-08-26 by compiling qa.js the way the runtime does
+      and driving it with the shapes a route might emit: five of six plausible arg shapes are
+      refused at the entry contract and every one of them returns BLOCK with ZERO agents
+      dispatched. A gate that reviewed nothing is byte-indistinguishable from a gate that ran all
+      four reviewers and found defects, unless you look at the two distinguishers - agents
+      dispatched is 0, and the summary carries the literal word REFUSED. That is this repository
+      signature defect, a negative result indistinguishable from a real one, sitting inside the
+      entry contract of the gate itself. THIS FIELD IS DOCUMENTATION AND NOT ENFORCEMENT: nothing
+      here reads qa.js output, and scripts/check-gates.mjs cannot see it. What IS enforced is the
+      same distinction one layer down, where this file does have reach - resolveGate returns
+      unresolved rather than fail when it could not ask, and scripts/gates.test.mjs pins the two
+      apart for spawn failure, signal, and every exit code other than 0 and 1.
+    how_to_run_it: >
+      node scripts/run-gate.mjs --json, then pass invocation.args through UNMODIFIED. It resolves
+      the tree from its own location, refuses to emit an invocation it could not verify, and exits
+      2 rather than guessing. Rebuilding those args by hand reopens the five refused shapes: tree
+      is required and must be ABSOLUTE - a relative "." is refused - and ref must be sha-tipped,
+      because a symbolic tip like origin/main...HEAD is refused by name. Note the exit codes,
+      which are easy to read backwards: gate required with no flag exits 0, gate required with
+      --require exits 1, and gate NOT required with --require also exits 0. Without --require an
+      exit code means nothing. With it, exit 1 means you must run the gate, not that anything
+      failed.
 
   - id: founder-approval
     kind: human
