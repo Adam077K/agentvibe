@@ -46,7 +46,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const {
   lintFile, lintPromptStandard, checkEngineRoster, parseFrontmatter, scanSections,
-  VALID_MODELS, VALID_EFFORT, ENGINES,
+  VALID_MODELS, VALID_EFFORT, ENGINES, TOOL_UNIVERSE,
 } = require('../.claude/hooks/schema-lint.js');
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -335,6 +335,103 @@ test('PS-TOOL-EXISTS splits on the FIRST two separators — an mcp tool name may
   assert.deepEqual(
     ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', 'tools: [Read, mcp__playwright__browser__navigate]')).issues,
     [],
+  );
+});
+
+// ── 4b · PS-WORKFLOW-CONTAINMENT ───────────────────────────────────────────
+//
+// `Workflow` invokes `.claude/workflows/qa.js`, the binding gate. Before these tests the tool was
+// simply missing from TOOL_UNIVERSE, so it was refused as "not a runtime tool" — a false statement
+// (binary 2.1.246 holds `var Xu="Workflow"`; 55 calls recorded) whose obvious repair is to append
+// the name to that list, which would have opened the tool to all seven engines with nothing to
+// stop it and no test to go red. These pin the refusal to its real grounds instead.
+
+const WITH_WORKFLOW = (t) => t.replace('tools: [Read, Write, Edit, Glob, Grep]', 'tools: [Read, Workflow]');
+
+test('PS-WORKFLOW-CONTAINMENT fires on every engine that is not orchestrator', () => {
+  // The gate must not be invocable by the thing it gates. `reviewer` is the sharpest case and the
+  // reason the rule exists, but the whole non-orchestrator set is asserted rather than sampled.
+  for (const who of ENGINES.filter((e) => e !== 'orchestrator')) {
+    const r = ps(WITH_WORKFLOW(GOOD), who);
+    assert.equal(r.issues.length, 1, `${who}: ${r.issues.join(' | ')}`);
+    assert.match(r.issues[0], /^PS-WORKFLOW-CONTAINMENT: /);
+    assert.match(r.issues[0], /the binding QA gate/);
+  }
+});
+
+test('PS-WORKFLOW-CONTAINMENT fires on orchestrator too, for the OTHER reason', () => {
+  // Not a softer case — a different mistake. The orchestrator is not dispatched, so no frontmatter
+  // field binds on the path it runs on, and it already holds the tool by being the session. The
+  // arms must stay distinguishable: a reader who meets one must not read the other as the way in.
+  const r = ps(WITH_WORKFLOW(GOOD), 'orchestrator');
+  assert.equal(r.issues.length, 1, r.issues.join(' | '));
+  assert.match(r.issues[0], /^PS-WORKFLOW-CONTAINMENT: orchestrator/);
+  assert.match(r.issues[0], /grants it nothing/);
+  assert.doesNotMatch(r.issues[0], /the binding QA gate/, 'the two arms collapsed into one message');
+});
+
+test('PS-WORKFLOW-CONTAINMENT does not fire when no engine declares it — the control', () => {
+  // Without this, every assertion above would still pass if the rule fired unconditionally.
+  for (const who of ENGINES) absent(ps(GOOD, who), 'PS-WORKFLOW-CONTAINMENT');
+});
+
+test('Workflow is IN TOOL_UNIVERSE — the refusal is containment, not a claim about the runtime', () => {
+  // If someone removes it from the universe again, PS-TOOL-EXISTS resumes refusing it with a
+  // message the binary contradicts, and this test says so before a reader believes it.
+  assert.ok(TOOL_UNIVERSE.includes('Workflow'));
+  const r = ps(WITH_WORKFLOW(GOOD), 'reviewer');
+  assert.ok(!r.issues.some((i) => i.startsWith('PS-TOOL-EXISTS')), `PS-TOOL-EXISTS fired: ${r.issues.join(' | ')}`);
+});
+
+test('a CASE variant of Workflow is refused — by PS-TOOL-EXISTS, quoted or not', () => {
+  // TOOL_UNIVERSE is exact-match, so neither spelling is a runtime tool and neither reaches the
+  // containment rule. Both quotings are exercised because quoting is the axis that decides which
+  // rule fires for the WHITESPACE variants below, and asserting it on only one is how the case
+  // that actually differs went untested.
+  for (const bad of ['workflow', 'WORKFLOW']) {
+    for (const entry of [bad, `"${bad}"`]) {
+      const r = ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', `tools: [Read, ${entry}]`), 'reviewer');
+      assert.match(r.issues.join('\n'), /PS-TOOL-EXISTS: tools entry .* is not a runtime tool/, `admitted: ${entry}`);
+    }
+  }
+});
+
+test('a WHITESPACE variant is refused too — unquoted by CONTAINMENT, quoted by TOOL-EXISTS', () => {
+  // The case an earlier version of this test never exercised, because it quoted every variant.
+  // Unquoted is the realistic spelling, and `parseFrontmatter` trims list items — so `Workflow `
+  // arrives at the rules as exactly `Workflow` and is caught by PS-WORKFLOW-CONTAINMENT, not by
+  // PS-TOOL-EXISTS as the comment in schema-lint.js used to claim. Quoted, the space survives.
+  //
+  // What matters for the guarantee is that NEITHER passes. Which rule catches it is asserted
+  // anyway, because that is the half that was wrong, and a test that only checked "something
+  // fired" would have kept it wrong.
+  for (const bad of ['Workflow ', ' Workflow']) {
+    const unquoted = ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', `tools: [Read, ${bad}]`), 'reviewer');
+    assert.match(unquoted.issues.join('\n'), /PS-WORKFLOW-CONTAINMENT/, `unquoted admitted: ${JSON.stringify(bad)}`);
+
+    const quoted = ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', `tools: [Read, "${bad}"]`), 'reviewer');
+    assert.match(quoted.issues.join('\n'), /PS-TOOL-EXISTS/, `quoted admitted: ${JSON.stringify(bad)}`);
+  }
+});
+
+test('parseFrontmatter TRIMS unquoted list items — the fact the rule split rests on', () => {
+  // Stated as its own assertion rather than left implicit in the test above. If trimming ever
+  // stopped, the whitespace variants would move back to PS-TOOL-EXISTS and the comment in
+  // schema-lint.js would silently become wrong again, in the other direction.
+  assert.deepEqual(parseFrontmatter('---\ntools: [Read, Workflow ]\n---\n').tools, ['Read', 'Workflow']);
+  assert.deepEqual(parseFrontmatter('---\ntools: [Read, "Workflow "]\n---\n').tools, ['Read', 'Workflow ']);
+});
+
+test('STATED LIMIT: a shim never reaches this rule, and check-dispatch is what bounds it', () => {
+  // lintFile early-returns on `kind: shim` before lintPromptStandard runs, so a shim declaring
+  // Workflow is not caught here. Pinned so that making shims dispatchable turns into a red test
+  // rather than a discovery. The bound is that a shim is not a dispatch target at all.
+  const shim = ['---', 'name: ceo', 'description: shim', 'kind: shim', 'engine: orchestrator',
+    'lenses: []', 'retired: true', 'retires_at: phase-9', 'tools: [Read, Workflow]', '---', '', '# ceo', ''].join('\n');
+  const r = lintText(shim, 'ceo');
+  assert.ok(
+    !r.issues.some((i) => i.startsWith('PS-WORKFLOW-CONTAINMENT')),
+    'a shim now reaches PS-WORKFLOW-CONTAINMENT — move the rule above the shim early-return and delete this test',
   );
 });
 

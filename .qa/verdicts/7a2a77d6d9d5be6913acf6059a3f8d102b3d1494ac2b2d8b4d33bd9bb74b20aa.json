@@ -1,0 +1,11 @@
+{
+  "subject": "7a2a77d6d9d5be6913acf6059a3f8d102b3d1494ac2b2d8b4d33bd9bb74b20aa",
+  "base": "507a4707b5c51ed54d28d1202f932cc548527e22",
+  "tier": "irreversible",
+  "tier_driver": ".claude/hooks/schema-lint.js",
+  "verdict": "PASS",
+  "by": "builder-gate-reachable",
+  "run_id": null,
+  "evidence": "Re-recorded after merging origin/main at 507a470 (#113). npm run check 48/48 exit 0 on the merged tree; STEPS.length 48 unchanged; EXCLUDED[test:probe-workflow-reach] survived #113's package.json; probe test 6/6 and probe exits 0 CONTAINED; CODEBASE-MAP.md regenerated and identical to the auto-merge, checked before and after; schema-lint 18 pass 0 fail 0 warnings",
+  "recorded_at": "2026-08-26T20:25:20.723Z"
+}
