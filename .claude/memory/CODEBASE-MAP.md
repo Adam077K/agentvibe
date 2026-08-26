@@ -44,6 +44,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:dispatch-agenttype` | `node scripts/check-dispatch-agenttype.mjs` |
 | `npm run check:dispatch-prompt` | `npm run test:dispatch-prompt && npm run check:dispatch-prompt-size` |
 | `npm run check:dispatch-prompt-size` | `node scripts/check-dispatch-prompt-size.mjs` |
+| `npm run check:figures` | `node scripts/check-figures.mjs` |
 | `npm run check:ledger` | `npm run test:claims && npm run test:classifier && npm run test:ledger && npm run check:ledger-lint && npm run ` |
 | `npm run check:ledger-build` | `node scripts/ledger.mjs build --check` |
 | `npm run check:ledger-lint` | `node scripts/ledger.mjs lint` |
@@ -79,6 +80,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:dispatch` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-dispatch-agenttype.test.mjs` |
 | `npm run test:dispatch-flush` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-dispatch-flush.test.mjs` |
 | `npm run test:dispatch-prompt` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-dispatch-prompt-size.test.mjs` |
+| `npm run test:figures` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-figures.test.mjs` |
 | `npm run test:gate` | `node --require ./scripts/protected-write-tripwire.cjs --test .claude/workflows/lib/gate-logic.test.mjs` |
 | `npm run test:hooks` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/session-start.test.mjs` |
 | `npm run test:launcher-permissions` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/launcher-permissions.test.mjs` |
@@ -124,6 +126,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/check-dispatch-agenttype.test.mjs` | the mutation gate for the dispatch-identity checker. |
 | `scripts/check-dispatch-flush.test.mjs` | the regression gate for the 64KB stdout truncation. |
 | `scripts/check-dispatch-prompt-size.test.mjs` | mutation gate for the PS-DISPATCH-BRIEF-SIZE checker. |
+| `scripts/check-figures.test.mjs` | the drift guard for scripts/lib/figures.js. |
 | `scripts/check-memory-budget.test.mjs` | mutation gate for the memory-budget checker. |
 | `scripts/check-registration.test.mjs` | — |
 | `scripts/check-suite.test.mjs` | the drift guard for `npm run check`, and the mutation gate for |

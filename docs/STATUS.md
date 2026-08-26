@@ -163,17 +163,17 @@ Two things a reader should not over-read:
 
 **TREATED IN THIS CHANGE, as `e5eac9f`** (`git merge-base --is-ancestor e5eac9f HEAD` → true).
 
-`.github/workflows/ci.yml` now runs **44 steps in a single job (`checks`), and all 44 carry
+`.github/workflows/ci.yml` now runs **46 steps in a single job (`checks`), and all 46 carry
 `if: ${{ !cancelled() }}`.** Counted here:
 
 ```
-grep -c '^        run: ' .github/workflows/ci.yml                    →  44
-grep -c '^        if: ${{ !cancelled() }}' .github/workflows/ci.yml  →  44
+grep -c '^        run: ' .github/workflows/ci.yml                    →  46
+grep -c '^        if: ${{ !cancelled() }}' .github/workflows/ci.yml  →  46
 ```
 
 Three further `uses:` setup steps (checkout, setup-node, setup-bun) carry **no** `if:`, deliberately: if
-checkout fails, `!cancelled()` is still true, so guarding them would run all 44 checks against an empty
-workspace and produce ~45 red steps instead of one. That is a diagnosability cost, not a fail-open one — the
+checkout fails, `!cancelled()` is still true, so guarding them would run all 46 checks against an empty
+workspace and turn every one of them red instead of one. That is a diagnosability cost, not a fail-open one — the
 job still fails and nothing ships. `!cancelled()` and not `always()`, so a cancelled run still stops.
 
 > *Superseded 2026-08-26. This read: "`.github/workflows/ci.yml` runs **30 steps in a single job (`checks`)
@@ -245,7 +245,7 @@ CODEOWNERS in the tree today (verified). On a solo repository it would also dead
 ## 4 · The local floor is green
 
 ```
-npm run check  →  43 of 43 passed · 0 failed · exit 0
+npm run check  →  45 of 45 passed · 0 failed · exit 0
 ```
 
 macOS, sandbox armed, measured 2026-08-26 in this worktree, on the branch named once in §1. **Re-derive
@@ -268,9 +268,9 @@ line is stale; that answer is worth more than knowing which commit it was taken 
 > §1: cite a thing that holds still, not a position that does not.*
 
 Derive the denominator, never quote it:
-`node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **43**.
+`node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **45**.
 
-**`43 of 43 · 0 failed` is the figure. It is not 42 and it is not 44.**
+**`45 of 45 · 0 failed` is the figure. It is not 44 and it is not 46.**
 
 > *Superseded 2026-08-26: this read "**`30 of 30 · 0 failed` is the figure. It is not 29 and it is not
 > 31.** … measured 2026-08-25 at `71fd58d`." Correct at `71fd58d` and re-derivable there —

@@ -8,6 +8,8 @@
   "scripts": {
     "check": "node scripts/run-checks.mjs",
     "check:ci-chains": "node scripts/check-ci-chains.mjs",
+    "check:figures": "node scripts/check-figures.mjs",
+    "test:figures": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-figures.test.mjs",
     "test:check-suite": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs",
     "test:tier-gate": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-tier-gate.test.mjs",
     "test:sandbox": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/sandbox-config.test.mjs",
