@@ -181,12 +181,30 @@ function listFiles(root) {
 function decisionsPath(root) { return path.join(root, ...MEMORY_DIR, 'DECISIONS.md'); }
 
 /**
+ * ── TWO QUESTIONS ABOUT A PATH, AND THEY NEED OPPOSITE ANSWERS ──────────────────────────────
+ *
+ * `pathOccupant` asks "is this path FREE TO CREATE?" and must NOT resolve: anything present,
+ * resolved or not, occupies it.
+ * `holdsVolumeContent` asks "does this hold VOLUME CONTENT I must not skip?" and MUST resolve:
+ * a symlink pointing at a real file holding real history is a volume.
+ *
+ * One predicate answered both for a day and cost two P1s. `lstat` was established as the right
+ * choice for the guard — correctly — and then reused for the scan, where it is wrong, because
+ * "not a regular file" and "holds nothing" are different facts about a symlink. Measured
+ * 2026-08-26 with volume 002 a symlink to a real file: the scan reported `[ARCHIVE.md]`, so
+ * `targetVolume` appended to 001 instead of 002 with `vol.fresh` false — no guard, no warning,
+ * exit 0 — and the cross-volume duplicate guard, which reads the same scan, stopped seeing an
+ * already-archived body and filed a second copy. Both are the harms the comment on `volumes`
+ * already named; it named them and then pointed at the wrong case.
+ */
+
+/**
  * Anything sitting at this path — a regular file, a directory, or a symlink, INCLUDING a
- * dangling one. `null` when the path is free.
+ * dangling one. `null` when the path is free. Does NOT resolve.
  *
  * `lstatSync`, not `existsSync`, and the difference is the whole point: `existsSync` follows a
  * symlink, so it reports a DANGLING link as "nothing here" — and a writer that believes that
- * writes through the link and creates the target somewhere else entirely.
+ * calls the path free and replaces the link without a word.
  */
 function pathOccupant(abs) {
   try {
@@ -200,26 +218,42 @@ function pathOccupant(abs) {
 }
 
 /**
+ * Does this path hold volume content? RESOLVES — `statSync`, which follows symlinks.
+ *
+ * A symlink to a regular file IS a volume: it holds real history, `targetVolume` must order
+ * against it, and the cross-volume duplicate guard must be able to find a body inside it.
+ * A symlink to a DIRECTORY, a dangling one, a directory, and a special file are all not
+ * volumes — they resolve to something that is not a regular file, or resolve to nothing.
+ */
+function holdsVolumeContent(abs) {
+  try { return fs.statSync(abs).isFile(); } catch { return false; }
+}
+
+/**
  * Every archive volume on disk, lowest number first. Volume 1 is the un-suffixed legacy name.
  *
- * ── A VOLUME IS A REGULAR FILE, AND THAT IS CHECKED RATHER THAN ASSUMED ─────────────────────
+ * ── A VOLUME IS SOMETHING THAT RESOLVES TO A REGULAR FILE ───────────────────────────────────
  *
  * `VOLUME_RE` matches a NAME, and a name is not a file. Measured 2026-08-26: a DIRECTORY called
  * `DECISIONS_ARCHIVE_002.md` matched, was handed to `readFileSync`, and threw an unhandled
  * EISDIR — so `plan`, which this file's header promises is read-only and exits 0 unless it
  * cannot read the tree, died with a stack trace, and so did `apply`. Nothing was written, so the
- * safety property survived; the DIAGNOSIS did not, and the refusal the operator actually needed
- * never printed.
+ * safety property survived; the DIAGNOSIS did not, and the refusal the operator needed never
+ * printed. Filtering here makes such a path invisible to the scan, which is exactly what puts it
+ * in front of the occupancy guard in `cmdApply` — and that guard refuses, by name, on every
+ * filesystem, which matters because the OTHER route to it, a case-folding collision, exists only
+ * on a case-insensitive one: the filesystem this repo is developed on and NOT the one CI runs on.
  *
- * Skipping non-regular entries makes such a path invisible to this scan, which is exactly what
- * puts it in front of the occupancy guard in `cmdApply` — and that guard refuses, by name, on
- * every filesystem. That matters because the OTHER route to the same guard, a case-folding
- * collision, exists only on a case-insensitive filesystem: it is the route this repo is
- * developed on and NOT the one CI runs on.
+ * ── THE FILTER RESOLVES, AND THE FIRST VERSION DID NOT ──────────────────────────────────────
  *
- * `lstatSync`, so a symlink is skipped whether or not it resolves. A regular file that exists
- * and cannot be READ still throws below, and that is deliberate: silently dropping a real volume
- * would let `targetVolume` append to an older one and break monotonic append in silence.
+ * That first version was `pathOccupant(...) === 'file'` — `lstat` — so it dropped a symlink
+ * whether or not it resolved, and a symlink to a real volume disappeared from the scan. See the
+ * note above `pathOccupant`: two P1s, both of them the harm the next paragraph names.
+ *
+ * A regular file that exists and cannot be READ is NOT skipped, and still throws below.
+ * Dropping a real volume would let `targetVolume` append to an older one and break monotonic
+ * append in silence — which is precisely what the `lstat` filter did, so this paragraph is no
+ * longer describing a hypothetical.
  */
 function volumes(root) {
   const dir = path.join(root, ...MEMORY_DIR);
@@ -228,7 +262,7 @@ function volumes(root) {
   return names
     .map((name) => ({ name, m: name.match(VOLUME_RE) }))
     .filter((v) => v.m)
-    .filter((v) => pathOccupant(path.join(dir, v.name)) === 'file')
+    .filter((v) => holdsVolumeContent(path.join(dir, v.name)))
     .map((v) => ({
       number: v.m[1] ? Number(v.m[1]) : 1,
       name: v.name,
@@ -919,6 +953,7 @@ function cmdApply() {
 // below, writes to stderr and sets a non-zero exit code, which fails the run that imported it.
 const invokedDirectly = process.argv[1]
   && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
+
 
 export { commitWrite, conservationIssues, volumeHeader, VOLUME_BYTE_CAP, VOLUME_FILL_CEILING, DEFAULT_REASON };
 
