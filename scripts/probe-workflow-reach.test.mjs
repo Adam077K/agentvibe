@@ -1,4 +1,14 @@
-// POSTURE: BLOCKS. Wired to .github/workflows/ci.yml via `npm run test:probe-workflow-reach`.
+// POSTURE: REPORTS. NOT wired to CI and not a step of `npm run check` — nothing runs this on a
+// runner. The reason, the measurement behind it and the one-commit fix are in the EXCLUDED entry
+// for `test:probe-workflow-reach` in scripts/lib/check-suite.js; run it by hand with
+// `npm run test:probe-workflow-reach`.
+//
+// This line read "POSTURE: BLOCKS. Wired to .github/workflows/ci.yml" in the commit that created
+// the file — while that same commit's EXCLUDED entry said the opposite and was correct. Two
+// statements about one file, in one diff, disagreeing, and nothing catches it: only
+// gen-codebase-map.mjs parses `POSTURE:`, and not for the test-file table, so `check:map` stayed
+// green with the false line in place. It is the exact defect this branch exists to fix — a comment
+// asserting a property nothing checks — committed inside the fix for it.
 //
 // scripts/probe-workflow-reach.test.mjs — the bucketing behind "only a main session reaches the gate".
 //

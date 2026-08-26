@@ -39,7 +39,7 @@ explicitly invited refutation of its mechanism. The mechanism is wrong, and the 
 measured why on 2026-08-14 — the finding just never reached the brief.
 
 `Workflow` is a real runtime tool: `strings -a` on binary **2.1.246** yields
-`WORKFLOW_TOOL_NAME:()=>Xu});var Xu="Workflow"`, and it fires **55 times across 2,958 transcripts**
+`WORKFLOW_TOOL_NAME:()=>Xu});var Xu="Workflow"`, and it fires **55 times** in the transcript corpus
 on this machine. The orchestrator is **not dispatched** — it *is* the session (`bin/warroom` launches
 a bare `claude`; nothing names an agent file), so **every field in `orchestrator.md`'s frontmatter is
 inert on the path it runs on**, per CONTROL-PLANE.md §1.1. The session already holds the tool. That is
@@ -70,12 +70,15 @@ gates*; for `orchestrator`, *this declaration grants you nothing you do not alre
 - `workflow`, `WORKFLOW`, `Workflow ` do not slip through; they fail `PS-TOOL-EXISTS` instead.
 - `node .claude/hooks/schema-lint.js` → **18 pass · 0 fail · 0 warnings**, exit 0.
 - `npm run check:ledger` → exit 0; the new claim resolves ✓ on both `claim-command` and
-  `claim-freshness`. The 10 shadow entries are pre-existing (canary, three judge claims, and the
+  `claim-freshness`, now against the whole-roster lint rather than the seven-engine test. The 10 shadow entries are pre-existing (canary, three judge claims, and the
   mission-control set that CLAUDE.md attributes to a missing `bun install`).
 
 `scripts/probe-workflow-reach.mjs` makes the measurement re-runnable: **0 subagent `Workflow` calls
-against 55 from main sessions**, with a control of **57,590 subagent `Bash`**, 18,064 `Read` and 225
-`Agent` calls in the same scan. The control is not decoration — the probe reports **UNRESOLVED and
+against 55 from main sessions**, with a control of tens of thousands of subagent `Bash` calls in the
+same scan. **The absolute counts rot and the ratio does not** — re-run hours later on the same
+machine, the corpus reads 2,802 files where it read 2,958 and the `Bash` control 52,711 where it read
+57,590, because transcripts are pruned; subagent `Workflow` was 0 and main-session `Workflow` was 55
+in both. Derive them with `node scripts/probe-workflow-reach.mjs` rather than quoting these. The control is not decoration — the probe reports **UNRESOLVED and
 exits 2** when it does not fire, so an empty corpus cannot produce a containment verdict. Verified by
 executing all three paths, including the fixture built to defeat the conclusion: a constructed
 subagent `Workflow` call is **admitted** and returns `BREACHED`, exit 1.
@@ -98,6 +101,49 @@ named the workflow file, which trips a guard that reads any such mention as a cl
 
 I did not build the **route**, which is the actual fix for the brief's headline problem. It lives in
 `.claude/playbooks/` and `.claude/commands/`, held by L1-surface.
+
+## Blind review (#111) — evidence FAIL, two p1s, both in what the change said about itself
+
+The mechanism passed adversarial and correctness; the reviewer could not defeat it by any route the
+linter evaluates. Both p1s were claims the diff made about itself, which is the failure this branch
+exists to fix, committed inside the fix for it. All four fixed here, each re-measured:
+
+**E1 — the probe test's header claimed CI wiring the same commit denied.** `POSTURE: BLOCKS. Wired
+to ci.yml` against `grep probe-workflow-reach .github/workflows/*.yml` → **0 matches**, control
+`probe-stop-reason` → **2**. `check-suite.js`'s EXCLUDED entry, added in the same commit, said the
+opposite and was right. Nothing catches it: only `gen-codebase-map.mjs` parses `POSTURE:`, and not
+for the test-file table. Header corrected to `POSTURE: REPORTS`, pointing at the EXCLUDED entry.
+
+**E2 — the claim asserted more than its resolver could check.** The cited command,
+`node --test scripts/prompt-standard.test.mjs`, iterates `LIVE` — **7 engines of 18 files** — and
+shims early-return before the rule. So a shim declaring `Workflow` left the assert false and the
+claim green: Rule 10, in a lane that built a probe to refuse exactly that. `evidence.cmd` now points
+at `node .claude/hooks/schema-lint.js`, which covers **18 of 18** by two rules — verified by
+construction against a control that fires: a clean engine file yields `[]`, an engine carrying
+`Workflow` yields `PS-WORKFLOW-CONTAINMENT`, and a shim carrying `tools:` yields
+`shim: must not declare "tools"`. The third clause — *"the orchestrator reaches it by route rather
+than by grant"* — was **deleted, not re-verified**: it is true and measured, but no command checks
+it, and a clause no resolver evaluates is prose wearing a claim's shape. `confidence: 1` stays only
+because what remains is a decidable property of the tree.
+
+**E3 — a "verified by execution" comment that execution contradicts.** `parseFrontmatter` trims
+unquoted list items, so `Workflow ` arrives as `Workflow` and is caught by
+`PS-WORKFLOW-CONTAINMENT`, not `PS-TOOL-EXISTS` as the comment claimed — and the test quoted every
+variant, so the one case the comment named was the one case never exercised. Containment held either
+way; the stated reason was wrong for two of four. Comment corrected, and the test split into a case
+arm and a whitespace arm exercising **both quotings**, plus an assertion pinning the trim itself.
+
+**E4 — a rotting denominator beside a sound ratio.** Re-measured the same day: the corpus reads
+**2,802** files where it read 2,958, and the `Bash` control **52,711** where it read 57,590 —
+transcripts are pruned. **The two figures that decide the question did not move: subagent `Workflow`
+0, main-session 55.** The absolute counts are removed from the code, the ledger and this file in
+favour of the ratio and `node scripts/probe-workflow-reach.mjs`.
+
+**Not fixed here, deliberately — and it is bigger than this PR.** A duplicate frontmatter key hides
+a declaration from *every* frontmatter rule: `parseFrontmatter`'s loop is last-key-wins with no
+duplicate detection, so a second `tools:` line silently discards the first. That defeats the `model`
+check, `maxTurns` and the reviewer engines' `Write` ban, not just this rule. Pre-existing —
+identical on `main` — and a duplicate-key check closes it for all rules at once. It is a separate PR.
 
 ## Stated limits
 

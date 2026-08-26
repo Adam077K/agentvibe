@@ -383,13 +383,43 @@ test('Workflow is IN TOOL_UNIVERSE — the refusal is containment, not a claim a
   assert.ok(!r.issues.some((i) => i.startsWith('PS-TOOL-EXISTS')), `PS-TOOL-EXISTS fired: ${r.issues.join(' | ')}`);
 });
 
-test('a case or spacing variant of Workflow is still refused — by PS-TOOL-EXISTS', () => {
-  // The input built to defeat the containment rule. It must not PASS; which rule catches it is
-  // secondary, and asserting the actual one keeps this honest rather than aspirational.
-  for (const bad of ['workflow', 'WORKFLOW', 'Workflow ']) {
-    const r = ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', `tools: [Read, "${bad}"]`), 'reviewer');
-    assert.match(r.issues.join('\n'), /PS-TOOL-EXISTS: tools entry .* is not a runtime tool/, `admitted: ${bad}`);
+test('a CASE variant of Workflow is refused — by PS-TOOL-EXISTS, quoted or not', () => {
+  // TOOL_UNIVERSE is exact-match, so neither spelling is a runtime tool and neither reaches the
+  // containment rule. Both quotings are exercised because quoting is the axis that decides which
+  // rule fires for the WHITESPACE variants below, and asserting it on only one is how the case
+  // that actually differs went untested.
+  for (const bad of ['workflow', 'WORKFLOW']) {
+    for (const entry of [bad, `"${bad}"`]) {
+      const r = ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', `tools: [Read, ${entry}]`), 'reviewer');
+      assert.match(r.issues.join('\n'), /PS-TOOL-EXISTS: tools entry .* is not a runtime tool/, `admitted: ${entry}`);
+    }
   }
+});
+
+test('a WHITESPACE variant is refused too — unquoted by CONTAINMENT, quoted by TOOL-EXISTS', () => {
+  // The case an earlier version of this test never exercised, because it quoted every variant.
+  // Unquoted is the realistic spelling, and `parseFrontmatter` trims list items — so `Workflow `
+  // arrives at the rules as exactly `Workflow` and is caught by PS-WORKFLOW-CONTAINMENT, not by
+  // PS-TOOL-EXISTS as the comment in schema-lint.js used to claim. Quoted, the space survives.
+  //
+  // What matters for the guarantee is that NEITHER passes. Which rule catches it is asserted
+  // anyway, because that is the half that was wrong, and a test that only checked "something
+  // fired" would have kept it wrong.
+  for (const bad of ['Workflow ', ' Workflow']) {
+    const unquoted = ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', `tools: [Read, ${bad}]`), 'reviewer');
+    assert.match(unquoted.issues.join('\n'), /PS-WORKFLOW-CONTAINMENT/, `unquoted admitted: ${JSON.stringify(bad)}`);
+
+    const quoted = ps(GOOD.replace('tools: [Read, Write, Edit, Glob, Grep]', `tools: [Read, "${bad}"]`), 'reviewer');
+    assert.match(quoted.issues.join('\n'), /PS-TOOL-EXISTS/, `quoted admitted: ${JSON.stringify(bad)}`);
+  }
+});
+
+test('parseFrontmatter TRIMS unquoted list items — the fact the rule split rests on', () => {
+  // Stated as its own assertion rather than left implicit in the test above. If trimming ever
+  // stopped, the whitespace variants would move back to PS-TOOL-EXISTS and the comment in
+  // schema-lint.js would silently become wrong again, in the other direction.
+  assert.deepEqual(parseFrontmatter('---\ntools: [Read, Workflow ]\n---\n').tools, ['Read', 'Workflow']);
+  assert.deepEqual(parseFrontmatter('---\ntools: [Read, "Workflow "]\n---\n').tools, ['Read', 'Workflow ']);
 });
 
 test('STATED LIMIT: a shim never reaches this rule, and check-dispatch is what bounds it', () => {

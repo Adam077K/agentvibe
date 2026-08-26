@@ -378,7 +378,7 @@ const KNOWN_FM_KEYS = [
 // set, the same one PS-MCP-BACKED compares against — and membership in it is decidable.
 // `Workflow` IS in this list, and the reason is that leaving it out stated something false.
 // Measured 2026-08-26 on binary 2.1.246: `strings -a` yields `WORKFLOW_TOOL_NAME:()=>Xu});var
-// Xu="Workflow"`, and the tool fires 55 times across the 2,958 transcripts on this machine. Until
+// Xu="Workflow"`, and the tool fires 55 times in the transcript corpus on this machine. Until
 // this line it was absent, so PS-TOOL-EXISTS refused it with the message `is not a runtime tool` —
 // a claim about the runtime that the runtime contradicts. The refusal was right and its stated
 // reason was wrong, which is the worst combination: it survives review, and the obvious repair is
@@ -599,11 +599,17 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
   // nothing it does not have, and a declaration that grants nothing is read as a boundary — the
   // `mcpServers` fabrication exactly, which PS-MCP-BACKED exists to refuse.
   //
-  // The dispatched path does not rescue it either. Measured 2026-08-26 over 2,958 transcripts:
-  // `Workflow` from a subagent 0, against `Bash` 57,408 · `Read` 18,056 · `Agent` 225 from
-  // subagents in the same scan — the instrument plainly sees sidechain entries, and it never sees
-  // this tool in one. So on the session path the declaration is inert, and on the dispatch path
-  // there is no evidence the runtime would honour it. Neither is a capability.
+  // The dispatched path does not rescue it either. Measured 2026-08-26: `Workflow` from a subagent
+  // ZERO, against tens of thousands of subagent `Bash` calls in the same scan — the instrument
+  // plainly sees sidechain entries, and it never sees this tool in one. So on the session path the
+  // declaration is inert, and on the dispatch path there is no evidence the runtime would honour
+  // it. Neither is a capability.
+  //
+  // THE RATIO IS THE ARGUMENT; THE ABSOLUTE COUNTS ARE NOT, AND THEY ROT. This comment carried
+  // `2,958 transcripts`, `Bash 57,408`, `Read 18,056` — re-run the same day on the same machine and
+  // the corpus reads 2,802 and `Bash` 52,711, because transcripts are pruned. The two numbers that
+  // decide the question did NOT move: subagent `Workflow` 0, main-session `Workflow` 55. Derive it,
+  // never quote it: `node scripts/probe-workflow-reach.mjs`.
   //
   // WHAT WOULD CHANGE THIS: a Workflow call recorded with `isSidechain: true`. That is the probe
   // named at CONTROL-PLANE.md §6 P2, and it is a measurement, not an argument.
@@ -615,8 +621,18 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
   // become dispatchable, this rule must move above that early-return — and the test below pins
   // the limit so the move is a red test rather than a discovery.
   //
-  // A CASE OR SPACING VARIANT IS NOT A BYPASS: `workflow`, `WORKFLOW` and `Workflow ` all fail
-  // PS-TOOL-EXISTS instead, because none of them is in TOOL_UNIVERSE. Verified by execution.
+  // A CASE OR SPACING VARIANT IS NOT A BYPASS — but the two kinds are refused by DIFFERENT rules,
+  // and this comment named the wrong one for half of them until it was executed rather than read:
+  //
+  //   `workflow`, `WORKFLOW`  -> PS-TOOL-EXISTS. Neither is in TOOL_UNIVERSE, which is exact-match.
+  //   `Workflow `, ` Workflow` -> THIS RULE. Unquoted, `parseFrontmatter` trims each list item, so
+  //                               both arrive here as exactly `Workflow` and never reach a
+  //                               whitespace comparison at all. Quoted, the space survives and
+  //                               PS-TOOL-EXISTS takes them.
+  //
+  // Containment holds on every one of those four either way, which is why the error was cheap —
+  // and a refusal whose stated reason is wrong is the exact combination the TOOL_UNIVERSE comment
+  // above calls the worst one, so it does not get to stand in this file of all files.
   if (Array.isArray(fm.tools) && fm.tools.some((t) => String(t) === 'Workflow')) {
     const who = path.basename(filePath, '.md');
     issues.push(
