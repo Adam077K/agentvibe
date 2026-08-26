@@ -30,6 +30,9 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   wiringFindings,
   resolveGate,
@@ -37,6 +40,8 @@ import {
   EXIT_FOR_STATUS,
   KINDS,
 } from './check-gates.mjs';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 // ── The fixture, and the control that proves it is clean ────────────────────
 
@@ -200,19 +205,40 @@ test('a human gate carrying a command-only field is refused, for every one of th
   assert.doesNotMatch(joined((t) => { t.gates[1].how_to_run_it = 'x'; }), /may not be faked into a script/);
 });
 
-test('the qa-verdict gate carries the recording hazard, and it names both distinguishers', () => {
+test('the qa-verdict gate carries the recording hazard, and it names the right cut', () => {
   // NOT enforcement of the hazard — nothing here can read qa.js output. This asserts only that
   // the warning is present and still names what to look at, so it cannot be quietly deleted or
-  // reduced to "be careful". Five of six plausible arg shapes are refused at qa.js's entry
-  // contract and every one returns BLOCK with zero agents dispatched (measured 2026-08-26), so a
-  // reader who does not know the two distinguishers cannot tell a refusal from a real finding.
+  // reduced to "be careful". A refusal returns BLOCK: the entry-refusal path in qa.js ends in
+  // `return gateBlock(...)`, verified in this tree 2026-08-26, so a reader who does not know what
+  // to look for cannot tell a refusal from a real finding.
+  //
+  // THIS ASSERTION USED TO DEMAND A COUNT OF DISPATCHED AGENTS — /agents dispatched is 0|zero
+  // agents/ — and the count is not a discriminator. There is more than one refusal class: an entry
+  // refusal dispatches none, an oracle dropout can dispatch four and establish nothing, and a real
+  // failing check can establish something with one. The cut is whether anything was ESTABLISHED
+  // about the diff. The test is kept pointed at the durable phrasing qa.js emits rather than at a
+  // number, because a number invites a reader to compute the wrong thing confidently.
   const qa = realTree().gates.find((g) => g.id === 'qa-verdict');
   assert.equal(qa.kind, 'command');
   const h = String(qa.recording_hazard);
   assert.match(h, /REFUSED/, 'the summary marker a refusal carries');
-  assert.match(h, /agents dispatched is 0|zero agents/i, 'the dispatch-count distinguisher');
+  assert.match(h, /established/i, 'the cut: was anything established about this diff');
+  assert.match(h, /DO NOT USE A COUNT OF DISPATCHED AGENTS/, 'the refuted discriminator, refuted in place');
   assert.match(h, /DOCUMENTATION AND NOT ENFORCEMENT/, 'it must not read as a check');
   assert.match(String(qa.how_to_run_it), /run-gate\.mjs --json/, 'the one route that builds the args correctly');
+});
+
+test('the refusal path in qa.js still returns a BLOCK, so the hazard is still real', () => {
+  // The hazard above is only worth carrying while a refusal is spellable as a block. PR #115 would
+  // change that — it was OPEN and DRAFT, merged=null, on 2026-08-26, and neither this branch nor
+  // origin/main carried it. When it lands this assertion fails, and the failure is the signal to
+  // replace the reading in `recording_hazard` with the terminal value it can then simply name.
+  // A hazard notice that outlives its hazard is how a file starts teaching the past.
+  const qa = fs.readFileSync(path.join(REPO_ROOT, '.claude', 'workflows', 'qa.js'), 'utf8');
+  assert.match(qa, /qa\.js REFUSED to run/, 'the refusal summary still exists');
+  const refusalReturn = /qa\.js REFUSED to run[\s\S]{0,400}?return\s+(\w+)\(/.exec(qa);
+  assert.ok(refusalReturn, 'the refusal path still returns something');
+  assert.equal(refusalReturn[1], 'gateBlock', 'a refusal is still spelled as a block — if this changed, update recording_hazard');
 });
 
 test('a human gate with no named approver and no place it is recorded is refused', () => {

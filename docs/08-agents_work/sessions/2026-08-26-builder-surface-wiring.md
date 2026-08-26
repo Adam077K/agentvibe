@@ -17,6 +17,8 @@ corrections:
   - "REFUTED — 'no resolver' was stated too broadly. `scripts/run-gate.mjs` and `scripts/verdict.mjs` both exist and both execute. What did not exist was anything that reads a playbook's `gate:` and routes it anywhere."
   - "FOUND, not briefed — `/ship` declared `playbook: ship-feature` while ship-feature's triggers listed only `/build` and `/fix`. Found by running the checker, not by reading."
   - "FOUND, not briefed — `scripts/playbooks.test.mjs` writes fixtures into the live `.claude/playbooks/`, so any concurrent reader of that directory races it. Measured 5 of 10 runs failing."
+  - "SELF-CORRECTED — I wrote a relayed discriminator (`agents dispatched == 0`) into two files and a test before it was refuted. It separates nothing: an entry refusal dispatches none, an oracle dropout dispatches four and establishes nothing, a real failing check establishes something with one. Replaced by `was anything established about this diff`, the phrasing qa.js itself emits."
+  - "REFUTED — the replacement instruction. I was told PR #115 had landed a terminal `REFUSED` value distinct from `BLOCK` and to name it. Measured: #115 is OPEN and DRAFT, merged=null; origin/main is 47dbbd6 carrying only #108; `grep -c gateBlock .claude/workflows/qa.js` is 5 on both refs and the refusal path returns `gateBlock` in both. Documented as pending, with a test that fails when it lands."
 ---
 
 # `gate:` was a spelling allowlist and `triggers:` was decoration
@@ -102,6 +104,25 @@ documented in `.claude/gates.yml` instead.
 **Constraint 4, re-measured here on this branch rather than taken on trust:** `run-gate.mjs --json` →
 `floor: full`, `gateRequired: true`, exit **0**; with `--require`, exit **1**. Its emitted `args` are row 6,
 the safe shape: `tree` absolute, `ref` sha-tipped, all three keys present.
+
+**The discriminator I was handed was wrong, and I had already written it down.** I was told the two
+distinguishers between a refused gate and a real block were `agents dispatched == 0` and the literal
+`REFUSED`; I put both into `recording_hazard` and `/review`, and pinned the first in a test. **The count
+separates nothing in either direction** — there is more than one refusal class: an entry refusal dispatches
+none, an oracle dropout can dispatch four and establish nothing, and a real failing check can establish
+something with one. The cut is **whether anything was established about this diff**, which is the phrasing
+`qa.js` already emits in its own refusal summary. All three sites are corrected and the assertion now
+demands the refutation be present in place, so the bad discriminator cannot come back quietly.
+
+**And the replacement I was handed was also wrong, which is why I measured it.** The instruction was to
+"name the value" because PR #115 had landed a terminal `REFUSED` distinct from `BLOCK`. Verified in this
+tree: **#115 is OPEN and DRAFT, `merged=null`**; `origin/main` is `47dbbd6` and carries only PR #108;
+`grep -c gateBlock .claude/workflows/qa.js` returns **5** on both `origin/main` and this branch, and the
+entry-refusal path ends in `return gateBlock(...)` in both. A refusal is still spelled as a block. Naming a
+value that does not exist would have been the third relayed-mechanism error of the day and the first to
+reach a file as an instruction. The pending change is recorded as pending, and
+`scripts/gates.test.mjs` carries a tripwire that **fails when #115 lands**, which is the signal to replace
+the reading with the value. A hazard notice that outlives its hazard teaches the past.
 
 **The BLOCK-vs-REFUSED distinguisher is handled where a person meets it**, in `.claude/gates.yml`'s
 `recording_hazard` and in `/review`. `verdict.mjs` independently refuses the word: `--verdict BLOCK` exits 2,

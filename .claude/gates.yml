@@ -94,19 +94,29 @@ gates:
       exit 1 — absent, unparseable, subject-mismatch, not-pass, or tier-drift. Exit 2 means the
       subject could not be computed at all, which resolves unresolved and therefore not pass.
     recording_hazard: >
-      A REFUSED ENTRY AND A REAL BLOCK RETURN THE SAME VERDICT, so read the panel output before
-      recording anything from it. Measured 2026-08-26 by compiling qa.js the way the runtime does
-      and driving it with the shapes a route might emit: five of six plausible arg shapes are
-      refused at the entry contract and every one of them returns BLOCK with ZERO agents
-      dispatched. A gate that reviewed nothing is byte-indistinguishable from a gate that ran all
-      four reviewers and found defects, unless you look at the two distinguishers - agents
-      dispatched is 0, and the summary carries the literal word REFUSED. That is this repository
-      signature defect, a negative result indistinguishable from a real one, sitting inside the
-      entry contract of the gate itself. THIS FIELD IS DOCUMENTATION AND NOT ENFORCEMENT: nothing
-      here reads qa.js output, and scripts/check-gates.mjs cannot see it. What IS enforced is the
-      same distinction one layer down, where this file does have reach - resolveGate returns
-      unresolved rather than fail when it could not ask, and scripts/gates.test.mjs pins the two
-      apart for spawn failure, signal, and every exit code other than 0 and 1.
+      A REFUSED RUN AND A REAL BLOCK RETURN THE SAME VERDICT, so read the panel output before
+      recording anything from it. Verified in this tree 2026-08-26: the entry-refusal path in
+      .claude/workflows/qa.js ends in `return gateBlock(summary, ...)`, and `grep -c gateBlock`
+      returns 5 on both this branch and origin/main. BLOCK is what a refusal produces. THE CUT IS
+      WHETHER ANYTHING WAS ESTABLISHED ABOUT THIS DIFF, NOT WHETHER AN AGENT RAN. qa.js says so in
+      the summary it emits, and that sentence is the durable handle - No agent was dispatched and
+      nothing about this diff has been established in either direction, this is a refusal and not a
+      verdict. Look for the literal word REFUSED in the summary, and for that claim of nothing
+      established.
+      DO NOT USE A COUNT OF DISPATCHED AGENTS. It separates nothing in either direction, because
+      there is more than one refusal class: an entry refusal dispatches none, while an oracle
+      dropout can dispatch four and still establish nothing, and a real failing check can establish
+      something with one. A reader given a count will apply it to every class and be wrong on most
+      of them.
+      THIS FIELD IS DOCUMENTATION AND NOT ENFORCEMENT: nothing here reads qa.js output, and
+      scripts/check-gates.mjs cannot see it. What IS enforced is the same distinction one layer
+      down, where this file does have reach - resolveGate returns unresolved rather than fail when
+      it could not ask, and scripts/gates.test.mjs pins the two apart for spawn failure, signal,
+      and every exit code other than 0 and 1.
+      PENDING, AND NOT YET TRUE: PR #115 would make a refusal its own terminal value distinct from
+      BLOCK, which would replace the reading above with a value you can simply name. It is OPEN and
+      DRAFT as of 2026-08-26, merged=null, and neither this branch nor origin/main carries it. When
+      it lands, delete the reading and name the value.
     how_to_run_it: >
       node scripts/run-gate.mjs --json, then pass invocation.args through UNMODIFIED. It resolves
       the tree from its own location, refuses to emit an invocation it could not verify, and exits

@@ -30,11 +30,19 @@ location and exits 2 rather than emitting an invocation it could not verify. Arg
 are refused by the gate: `tree` must be absolute (a relative `.` is refused) and `ref` must be
 sha-tipped (`origin/main...HEAD` is refused by name).
 
-**Before you record anything from a gate run, check that it ran.** A refused entry and a real
-BLOCK return the same verdict — five of six plausible arg shapes are refused and every one of them
-returns BLOCK having dispatched **zero** agents (measured 2026-08-26). The two distinguishers are
-`agents dispatched == 0` and the literal word `REFUSED` in the summary. A gate that reviewed
-nothing looks exactly like a gate that reviewed everything and found defects.
+**Before you record anything from a gate run, check that it ran.** A refused run and a real BLOCK
+return the same verdict: the entry-refusal path in [.claude/workflows/qa.js](../workflows/qa.js)
+ends in `return gateBlock(...)`, so BLOCK is what a refusal produces. A gate that reviewed nothing
+looks exactly like a gate that reviewed everything and found defects.
+
+**The cut is whether anything was established about this diff — not whether an agent ran.** qa.js
+says so itself, and that sentence is what to look for: *"No agent was dispatched and nothing about
+this diff has been established in either direction — this is a refusal, not a verdict."* Look for
+the literal `REFUSED` in the summary and for that claim of nothing established.
+
+**Do not count dispatched agents.** It separates nothing in either direction. An entry refusal
+dispatches none, an oracle dropout can dispatch four and establish nothing, and a real failing
+check can establish something with one.
 
 And the gate is invoked by the **session**, never by a dispatched engine: `Workflow` is a
 main-session tool, so an engine simply does not have it, and a missing tool is a silent no-op
