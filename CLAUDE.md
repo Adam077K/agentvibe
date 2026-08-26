@@ -596,13 +596,22 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   verdict record is hash-bound, not signed, so anyone with repo-write can author one.
   **2.7 is the founder's and its prerequisite is now discharged (#101):** `enforce_admins` is still
   `false`.
-- **SEVEN bypasses of the exit-code guard are CLOSED, and the mechanism was not the one recorded here.**
+- **EIGHT bypasses of the exit-code guard are CLOSED, and the mechanism was not the one recorded here.**
   Each was silent on `main` at `244e8db` — `ciChainFindings -> []`, `unguardedSteps -> []` — and each is a
   finding now, with the benign single-command control unchanged in both cells. Every fixture is valid YAML
   (checked against PyYAML 6.0.3) carrying `npm run x && npm run y`:
   a **second job**; `run :` with a space before the colon; a flow-mapping step `- {run: …}`; a quoted
   `"run":` key; `-  name:` with a **two-space dash**, which puts the step's keys at +3 where the column was
-  hardcoded to +2; `steps: [{run: …}]` as a **flow sequence**; and `- <<: *base`, a **merge key**.
+  hardcoded to +2; `steps: [{run: …}]` as a **flow sequence**; `- <<: *base`, a **merge key**; and a
+  **flush-style job**, `steps:` at column N with its items `- ` also at column N.
+  **The eighth was found by an independent review of the fix for the first seven, and it was a REGRESSION
+  the fix introduced** — the one entry here that is not a pre-existing hole. `main`'s `break` collapsed the
+  parse to ZERO steps on meeting that shape, tripping the `CI_CHAINS_ALLOWED` rot-check and nine tests;
+  replacing the `break` with a resume kept a *plausible* 52-step parse and reported clean, giving a view
+  byte-identical to the pristine file. Nothing named that backstop and nothing tested it, so **a deletion
+  removed a control while every test stayed green** — the class this repo names in four other places,
+  committed by the change that was closing seven instances of it. Flush style is also the likeliest of the
+  eight to be hand-written.
   *Superseded 2026-08-26: this read "Four bypasses are live on `main`, all one class — `parseCiSteps` does
   not see the step at all, so the guard never runs on it."* **Four was the count and the mechanism was
   wrong for three of them, and the wrong mechanism is why the other three went unfound.** `parseCiSteps`
@@ -611,7 +620,11 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   command looks like, and every check downstream filters on `s.run !== null`. Only the second job is
   genuinely never reached. The cure is round 9's, one layer up — declare what is read, refuse the rest, at
   the LINE rather than the value — and it changes **zero** live verdicts: measured across the real
-  `ci.yml` first, 50 item lines and 97 step-key lines, 0 of them anything but a plain `key: value` pair.
+  `ci.yml` first — **50 item lines and 97 step-key lines, ZERO of them anything but a plain `key: value`
+  pair**. *Those two counts are the census taken BEFORE the change and are kept as provenance, not as a
+  live figure: this same change added two steps and they are 52 and 101 now. The **zero** is the
+  load-bearing half, it is what makes the refusals free, and `npm run check:ci-chains` re-derives it on
+  every run.*
   **The composed variant is the one worth remembering:** a second job whose items sit at eight spaces was
   invisible to every backstop in the repo, including all three raw-line cross-checks, because they count
   `/^ {6}- /`. The other four DO trip an incidental assertion — with a message that says nothing about a

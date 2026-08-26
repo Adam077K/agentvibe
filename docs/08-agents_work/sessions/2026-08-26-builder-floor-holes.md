@@ -8,7 +8,7 @@ risk: irreversible
 branch: fix/ci-chain-structure-holes
 ---
 
-# Seven ci.yml shapes walked past the chain guard, and the existence half of the citation checker is blocking
+# Eight ci.yml shapes walked past the chain guard — one of them my own — and the citation existence check is blocking
 
 **The PASS is self-recorded, and that is not the tier being met.** `tier: irreversible` asks for
 2-of-3 multi-judge and ≥2 distinct model families. This branch has one author, one model family, and
@@ -20,7 +20,9 @@ decisions:
   of every change here and is why sweeping the class was cheap.
 - **Measure ci.yml before writing a parser for anything.** 50 item lines, 97 step-key lines, 0 of them
   anything but a plain `key: value` pair, 1 job, 0 inline `steps:`, 0 bare `-`. The refusals change
-  zero live verdicts, which is what makes them safe to make blocking.
+  zero live verdicts, which is what makes them safe to make blocking. *The two line counts are the
+  census taken BEFORE this change and are provenance; it added two steps, so they are 52 and 101 now.
+  The zero is the load-bearing half and `check:ci-chains` re-derives it every run.*
 - **Promote the EXISTENCE class only.** Existence is deterministic with no false positives by
   construction. Drift is heuristic, covers ~a quarter of the corpus, and resolves ~85% of locators by
   basename — which the checker's own blind-spot list says may be the wrong file.
@@ -67,8 +69,33 @@ worst: a second job whose items sit at eight spaces defeats even the raw-line cr
 | `-  name:` — wide dash, keys at +3 | SILENT | **FLAGGED (chain)** |
 | `steps: [{run: x}]` — flow sequence | SILENT | **FLAGGED (refused)** |
 | `- <<: *base` — merge key | SILENT | **FLAGGED (refused)** |
+| flush job — `steps:` and `- ` at one column | SILENT *(blocks on `main`, see below)* | **FLAGGED (chain)** |
 
-Both controls are identical in both cells, which is what makes the seven flips mean something.
+Both controls are identical in both cells, which is what makes the flips mean something.
+
+**The eighth row is mine, and it is a REGRESSION rather than a residual — found by review, not by me.**
+At the *library* level `main` is equally silent on a flush-style job, so a differential there reads
+"pre-existing". At the *repo* level `main` BLOCKS: its `break` collapsed the parse to **zero** steps
+on meeting the shape, which tripped the `CI_CHAINS_ALLOWED` rot-check and nine tests. My resume kept
+a **plausible** 52-step parse and reported clean — a view byte-identical to the pristine file.
+Nothing named that backstop and nothing tested it, so removing it left all 63 tests green.
+
+> **A deletion attracts no test cases** — committed by the change that was closing seven instances of
+> exactly that class. It also falsified my own commit subject: I applied the cure at the item line and
+> the key line and **not at the sequence-detection layer**, which is the one that silently discards.
+
+Measured, flush job prepended as the FIRST job of the real `ci.yml`:
+
+| | parseCiSteps | ciChainFindings |
+|---|---|---|
+| `main` 244e8db | **0 steps** | 1 (the rot-check firing) |
+| my first cut | 52 steps | **0** — identical to pristine |
+| after the fix | 53 steps | 1 (`carries \`&&\``) |
+
+The review's method note is worth keeping: appending the flush job at the **end** of `ci.yml` went
+red, but only because my own test appends its injection after it — the test's self-control caught its
+own instrument dying. **Moving the job to the front removed that accident, and that is how the P0
+surfaced.** Reporting the first result alone would have been wrong in my favour.
 
 Five pieces of the fix, five mutation proofs, each failing the case that pins it and nothing else:
 removing the key-line refusal, removing the item-line refusal, hardcoding the key column back to +2,
@@ -77,7 +104,7 @@ requiring `steps:` to be bare again, and restoring `break` at the first dedent. 
 
 ## Verification, by execution
 
-- `npm run test:check-suite` → **63 pass · 0 fail** (59 before; 4 cases added).
+- `npm run test:check-suite` → **66 pass · 0 fail** (59 before; 7 cases added).
 - `npm run check` → **46 of 48 passed · 2 failed · 289.5s**. Both failures are documented figures in
   `docs/STATUS.md`, which another lane owns. Patching its eight figure sites temporarily and reverting
   byte-exactly: **48 of 48 passed · 0 failed · exit 0 · 180.2s**. Those eight sites are the only thing
@@ -91,6 +118,30 @@ requiring `steps:` to be bare again, and restoring `break` at the first dedent. 
   this checker names in its own blind-spot list, biting one commit later.*
 - The real `ci.yml` is unchanged by the parser rewrite and still agrees with PyYAML exactly: 52 steps,
   49 `run:` values, 0 refusals, 0 chain findings, 0 unguarded.
+
+corrections (third round — an independent review returned FAIL, P0):
+- **My fix removed an accidental backstop and I did not notice, because nothing named it.** See the
+  eighth row above. Closed by reading a flush sequence rather than refusing it: the two shapes are one
+  sequence written two ways, so the honest finding is the chain, and a `- ` at exactly `stepsIndent`
+  cannot be anything else — a sibling key sits at that column but is `key:`-shaped, never `- `-shaped.
+- **A refusal I added FAILED THE BUILD on correct YAML, with a message that was false about it.** The
+  opener matched any line beginning `steps:` at any depth, which my own multi-job resume made reachable
+  between every pair of jobs — so `strategy.matrix.steps: [1, 2]` blocked, saying "this parser reads no
+  step of this job at all" while three steps including that job's were parsed. Scoped by the enclosing
+  key chain now, and the message says only what is checked. **A rule that fires on correct code gets
+  weakened; this repo has learned that twice and I re-taught it a third time.**
+- **The enumeration in the line-refusal message read as exhaustive and was not** — `- # comment` and a
+  bare `-` reach it and are none of the four shapes named. It names the RULE first now and the examples
+  second, marked "not limited to".
+- **`if (!item[3]) itemKeyIndent = itemIndent + 2;` could be deleted with 63 tests green.** Not dead
+  code: without it a bare-dash step's `run:` is never read, so the build goes red on the refusal alone
+  and never names the chain. Now pinned by a case that asserts BOTH findings, with a benign control
+  asserting exactly one.
+- **A figure I froze went stale inside my own PR, twice, and the sweep found the second.** `874
+  locators` was falsified by my own session-file commits — every `path:line` span a lane writes is a
+  locator. Replaced with the command. Sweeping the class then found `50 item lines and 97 step-key
+  lines` in **three** files, falsified by the two ci.yml steps this same change adds (52 and 101 now).
+  Restated as provenance, with the load-bearing **zero** kept live and re-derived by `check:ci-chains`.
 
 ## `main` moved under this branch, and the figure fence was then lifted
 

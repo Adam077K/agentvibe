@@ -68,9 +68,14 @@ if (findings.length) {
         '  · SPLIT OVER SEVERAL LINES? Join it, or make it a block scalar. A continuation is refused ' +
         'because this parser has not read all of the value, not because the value is wrong.\n' +
         '  · A WHOLE LINE refused — the message names a line rather than a key? Then the KEY is what ' +
-        'could not be read, not the value. Write it as a plain `key: value` pair: no quotes around the ' +
-        'key, no space before the colon, no flow mapping (`- {run: …}`) and no merge key (`<<: *base`). ' +
-        'A `steps:` refused this way carries its sequence inline — put the steps on the lines below it.'
+        'could not be read, not the value, so there is nothing to unquote and no scalar to rewrite. ' +
+        'WRITE THE LINE AS A PLAIN `key: value` PAIR. That covers every shape that reaches this ' +
+        'refusal, including ones the message does not enumerate: no quotes around the key ' +
+        '(`"run":`), no space before the colon (`run :`), no flow mapping (`- {run: …}`), no merge ' +
+        'key (`- <<: *base`), and no item that carries only a comment or nothing at all (`- # note`, ' +
+        'a bare `-`) — give the item its first key on the same line. A `steps:` refused this way is ' +
+        'either a flow sequence, which belongs on the lines below it, or a `steps` key spelled in a ' +
+        'form this parser does not open a block for.'
     );
   }
   if (refusals.length < findings.length) {

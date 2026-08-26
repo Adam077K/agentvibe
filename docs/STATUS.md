@@ -415,8 +415,15 @@ of one tree with five other lanes building. **480.0s is why the upper bound move
 the paragraph's own argument arriving again: a bound the next honest run steps over is not a bound. The
 48-step suite is 180.2s at its fastest here, so the 2.7x spread is load and not the two added steps —
 measured over four consecutive pairs, they cost **6.0 to 6.8 seconds together** (`test:citations`
-5.5-6.6s for its 56 cases, `check:citations-exist` 0.4-0.7s over 874 locators), which is 3-4% of the
-fastest run and 1.4% of the slowest. *This sentence first read "together under two seconds" — written
+5.5-6.6s for its 56 cases, `check:citations-exist` 0.4-0.7s over the whole locator corpus — the
+checker prints the size of that corpus on every run, including the passing one, so ask it rather
+than reading a number here), which is 3-4% of the fastest run and 1.4% of the slowest.
+*This sentence stated **874** locators for one commit. It was true when measured and false two
+commits later — falsified by MY OWN session file and figure commits on this branch, because every
+`path:line` code span a lane writes is a locator. A figure whose denominator grows whenever anyone
+documents anything cannot be frozen in prose, and `check:figures` has no registry entry for it, so
+nothing would have caught it. The command replaces it for the same reason the memory block above
+says "ask the checker, do not read a number here".* *This sentence first read "together under two seconds" — written
 from the checker's own 1.4s and never measured as a pair. Caught by timing it before pushing, which is
 the only reason it is not a fifth wrong figure on a page about wrong figures.*
 The 43-step suite that preceded it took 79.4s by

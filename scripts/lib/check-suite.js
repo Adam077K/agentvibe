@@ -1260,7 +1260,7 @@ const NON_PLAIN_SCALAR = /^["'&*!%@`{}[\],]/;
  *
  * ROUND 11, AND THE DEFECT WAS ONE SENTENCE: a shape this parser did not read was indistinguishable
  * from a step that runs nothing. `run: null` is what both look like, and every check downstream
- * filters on it. Seven shapes of VALID YAML carrying `npm run x && npm run y` were SILENT on
+ * filters on it. EIGHT shapes of VALID YAML carrying `npm run x && npm run y` were SILENT on
  * `main` (244e8db) — ciChainFindings -> [], unguardedSteps -> [] — and each is checked against
  * PyYAML 6.0.3 in scripts/check-suite.test.mjs's fixtures:
  *
@@ -1271,13 +1271,26 @@ const NON_PLAIN_SCALAR = /^["'&*!%@`{}[\],]/;
  *     -  name: A  /  run: …              a two-space dash: the keys sit at +3, not +2
  *     steps: [{run: …}]                  a flow sequence: stepsIndent was never set, 0 steps parsed
  *     a second job                       `break` on the first dedent out of job one's steps
+ *     steps: / - at the same column      a FLUSH sequence; see the dedent branch in the loop
+ *
+ * THE EIGHTH IS A REGRESSION THIS FILE INTRODUCED AND A REVIEW CAUGHT, not a pre-existing hole, and
+ * it is listed with the others because the reader needs the shape either way. Round 11's first cut
+ * replaced the `break` with a resume; the `break` had been collapsing the parse to ZERO steps on a
+ * flush job, which tripped the CI_CHAINS_ALLOWED rot-check and nine tests. An ACCIDENTAL backstop,
+ * named by nothing and tested by nothing — so removing it left every test green. That is the exact
+ * class this file warns about in four other places, committed by the change closing seven of them.
  *
  * The first four are the same silence in record(); the fifth is a hardcoded key column; the sixth
  * and seventh are structural. THE CURE IS THE ONE ROUND 9 USED — declare what is read and refuse
  * the rest — applied one layer up, at the LINE rather than at the value. Measured across the real
- * ci.yml before making the change: 50 item lines and 97 step-key lines, of which 0 are anything but
+ * ci.yml BEFORE making the change: 50 item lines and 97 step-key lines, of which 0 are anything but
  * a plain `key: value` pair, 1 job, 0 inline `steps:`, 0 bare `-`. The refusals change ZERO live
- * verdicts, and the parser's counts still agree with PyYAML's exactly (50 steps, 47 `run:`).
+ * verdicts, and the parser's counts agree with PyYAML's exactly.
+ *
+ * THE TWO LINE COUNTS ARE PROVENANCE, NOT A LIVE FIGURE. This same change adds two steps to ci.yml,
+ * so they are 52 and 101 now — and stating them as current is the rot this file spends its length
+ * warning about. The load-bearing number is the ZERO, which is why the refusals cost nothing, and
+ * `check:ci-chains` re-derives it on every run rather than trusting this paragraph.
  *
  * IT READS EXACTLY TWO SHAPES, and refuses every other one. A `run:`/`if:` value is either a plain
  * single-line scalar — taken verbatim, which is what all 44 of ci.yml's `run:` values are — or a
@@ -1318,6 +1331,9 @@ function parseCiSteps(workflow) {
   let current = null;
   let block = null; // { key, indent, parts[] } while inside a `key: |` scalar
   let open = null; // { key, keyIndent } while a plain scalar could still be CONTINUED on a later line
+  // The enclosing key chain OUTSIDE a steps block, innermost last, by indentation. It exists to
+  // answer one question — is this `steps:` a JOB's steps — and nothing else reads it.
+  const parents = []; // [{ indent, key }]
 
   const indentOf = (line) => /^ */.exec(line)[0].length;
 
@@ -1351,10 +1367,16 @@ function parseCiSteps(workflow) {
     step.unparsed.push({ key: null, line: lineNo, why, value: text });
   };
 
+  // THE LIST IS AN ILLUSTRATION, NOT A CLOSURE, and it says so — it read as exhaustive and was not.
+  // `- # comment` and a bare `-` are both valid YAML that reach this refusal and are none of the four
+  // named, so a contributor matching their line against the list would conclude the message was about
+  // someone else's problem. Naming the RULE first and the examples second is what keeps it true as the
+  // set of shapes it catches grows.
   const NOT_A_KEY_LINE =
-    'it is not a plain `key: value` pair, which is the only shape this parser reads at a step key ' +
-    'position — a quoted key, a space before the colon, a flow mapping and a merge key are all valid ' +
-    'YAML that it does not match';
+    'this parser reads exactly one shape at a step key position — a plain `key: value` pair at the ' +
+    'start of the line — and refuses everything else rather than guessing. Valid YAML that lands here ' +
+    'includes, and is not limited to, a quoted key, a space before the colon, a flow mapping, a merge ' +
+    'key, an item carrying only a comment, and a bare `-`';
 
   /** True when `text` was read as a key line; false when it is a shape this parser does not read. */
   const record = (step, text, keyIndent) => {
@@ -1490,41 +1512,116 @@ function parseCiSteps(workflow) {
     if (/^\s*#/.test(line)) { open = null; continue; }
 
     if (stepsIndent === null) {
+      // WHICH `steps:` IS A JOB'S STEPS — asked of the block structure, not of the four characters.
+      //
+      // The pattern here was `/^( *)steps:(.*)$/`, matching ANY line beginning `steps:` at any
+      // depth, and the multi-job resume above makes that reachable between every pair of jobs. So
+      //
+      //     strategy:
+      //       matrix:
+      //         steps: [1, 2]      <- correct YAML, and a BLOCKING finding
+      //
+      // failed the build, with a message reading "this parser reads no step of this job at all"
+      // while parseCiSteps returned three steps INCLUDING that job's. False about the input, and
+      // fatal to a build. A rule that fires on correct code gets weakened, which this repo has
+      // already learned twice, so it is scoped instead.
+      //
+      // `parents` is the enclosing key chain by indentation, and it answers exactly one question:
+      // is this key's parent a job, and its grandparent `jobs:`? That is a fact about the document
+      // structure the scanner already walks, not a model of YAML semantics — the distinction that
+      // separates this from the escape-table modelling rounds 8 and 9 deleted.
+      const key = /^( *)([\w-]+):(.*)$/.exec(line);
+      const nonPlainKey = !key && /^ *["']?steps["']?\s*:/.test(line);
+      const depth = key ? key[1].length : indentOf(line);
+      while (parents.length && parents[parents.length - 1].indent >= depth) parents.pop();
+      const atJobChild = parents.length === 2 && parents[0].key === 'jobs';
+
+      if (nonPlainKey && atJobChild) {
+        // THE OPENER LAYER GETS THE SAME CURE AS THE ITEM AND KEY LAYERS, and it did not have it:
+        // `"steps":` or `steps :` at a job's child level names a steps block this parser cannot
+        // read, and it was skipped in silence — the same shape as the four closed one layer down.
+        // Scoped to the job-child position by `parents`, so it cannot fire on a `matrix:` key.
+        steps.push({
+          line: i + 1,
+          name: null,
+          run: null,
+          uses: null,
+          if: null,
+          unparsed: [{
+            key: null,
+            line: i + 1,
+            why: 'it names a job\'s `steps` key in a form this parser does not read — a plain ' +
+              '`steps:` at the start of the line is the only one it opens a block for',
+            value: line.trim(),
+          }],
+        });
+        continue;
+      }
+      if (key) parents.push({ indent: depth, key: key[2] });
+      if (!key || key[2] !== 'steps' || !atJobChild) continue;
+
       // A BLOCK SEQUENCE OR NOTHING. `steps:` with a value on the same line is a flow sequence —
       // `steps: [{name: A, run: npm run x && npm run y}]` is valid YAML that GitHub runs — and the
       // `\s*$` this pattern used to end with simply did not match it, so stepsIndent was never set,
       // parseCiSteps returned [] and every check downstream reported a clean file. A trailing YAML
       // comment is not a value and does not trigger the refusal.
-      const m = /^( *)steps:(.*)$/.exec(line);
-      if (m) {
-        const trailing = m[2].replace(/\s+#.*$/, '').trim();
-        if (trailing) {
-          steps.push({
+      const trailing = key[3].replace(/\s+#.*$/, '').trim();
+      if (trailing) {
+        steps.push({
+          line: i + 1,
+          name: null,
+          run: null,
+          uses: null,
+          if: null,
+          unparsed: [{
+            key: null,
             line: i + 1,
-            name: null,
-            run: null,
-            uses: null,
-            if: null,
-            unparsed: [{
-              key: null,
-              line: i + 1,
-              why: 'its `steps:` key carries a value on the same line, so the steps are not a block ' +
-                'sequence and this parser reads no step of this job at all',
-              value: line.trim(),
-            }],
-          });
-        } else {
-          stepsIndent = m[1].length;
-          itemIndent = null;
-          itemKeyIndent = null;
-          current = null;
-        }
+            // SAYS ONLY WHAT IS CHECKED. This read "…and this parser reads no step of this job at
+            // all", which was false whenever the scan carried on into another job and found some.
+            why: 'its `steps:` key carries a value on the same line, so the steps of this job are a ' +
+              'flow sequence and this parser reads block sequences only',
+            value: line.trim(),
+          }],
+        });
+      } else {
+        stepsIndent = depth;
+        itemIndent = null;
+        itemKeyIndent = null;
+        current = null;
       }
       continue;
     }
 
     const indent = indentOf(line);
-    if (indent <= stepsIndent) {
+
+    // A FLUSH SEQUENCE IS A STEP, NOT A DEDENT — and this is the hole the `break` used to cover.
+    // YAML lets a block sequence sit at the SAME column as the key that owns it, so
+    //
+    //     steps:              <- column 4
+    //     - name: A           <- column 4, and this is a step of that `steps:`
+    //       run: npm run x && npm run y
+    //
+    // is ordinary YAML that GitHub runs. `indent <= stepsIndent` read the item as the end of the
+    // block, the reset below stepped over the whole job, and the parse carried on into the NEXT
+    // job — so a flush-style job prepended to the real ci.yml produced a view BYTE-IDENTICAL to the
+    // pristine file: 52 steps, 49 `run:` values, 0 findings, 0 unguarded. Measured 2026-08-26.
+    //
+    // ON `main` THE SAME INPUT BLOCKS, AND THAT IS WHY THIS IS A REGRESSION RATHER THAN A RESIDUAL.
+    // `break` collapsed the parse to ZERO steps on meeting the shape, which tripped the
+    // CI_CHAINS_ALLOWED rot-check and nine tests in scripts/check-suite.test.mjs. It was an
+    // ACCIDENTAL backstop — nothing named it, nothing tested it — and replacing the `break` with a
+    // resume removed it while every existing test stayed green. A deletion attracts no test cases;
+    // this comment and the case below are the ones it should have attracted.
+    //
+    // READ, NOT REFUSED. The two shapes are the same sequence written two ways, so the honest
+    // finding is the chain itself rather than "this cannot be read" — and the item branch already
+    // derives its own column, so nothing else needed changing. `- ` at exactly `stepsIndent` cannot
+    // be anything else: a SIBLING key of `steps:` sits at that column too, but a sibling is
+    // `key:`-shaped, never `- `-shaped, so the two do not collide.
+    const flushItem = indent === stepsIndent && /^ *- /.test(line) &&
+      (itemIndent === null || itemIndent === stepsIndent);
+
+    if (indent <= stepsIndent && !flushItem) {
       // OUT OF THIS JOB'S STEPS BLOCK — AND THAT IS NOT THE END OF THE FILE. This was `break`, and
       // the `break` was a total bypass: a workflow's SECOND job was never parsed, so a step there
       // was invisible to the chain check, to the `!cancelled()` guard and to the runner ban alike.
