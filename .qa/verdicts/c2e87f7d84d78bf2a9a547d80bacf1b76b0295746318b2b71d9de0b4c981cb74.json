@@ -1,0 +1,11 @@
+{
+  "subject": "c2e87f7d84d78bf2a9a547d80bacf1b76b0295746318b2b71d9de0b4c981cb74",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "full",
+  "tier_driver": "mission-control/scripts/consume-dispatch.ts",
+  "verdict": "PASS",
+  "by": "builder-honest-dispatch",
+  "run_id": null,
+  "evidence": "Defect reproduced on unmodified code first: fake claude exit 3 gave a record byte-identical to success ('status':'consumed' both). After: consumed/exitCode 0, failed/exitCode 3, no-result/signal SIGTERM — all three distinguishable, verified by execution. Non-vacuity by mutation: reinstating the original 'ok ? consumed : consumed' ternary turns exactly 2 tests red (32 pass, 2 fail); restoring gives 34 pass, 0 fail. Third defect found and fixed: a finished dispatch was relaunched on every run (append-only pending line never removed) — re-run now appends nothing. Crash case proved with the input that defeats it: a 'running' entry with a claude that EXITS 0 is still not relaunched, recorded no-result. npm run check: Tally 46 of 46 passed, 0 failed, exit 0. mission-control per-file: dispatch 34/0, index-cache 32/0, write-barrier 7/0, views 72/0, units 36/0, smoke 3/0, perf 4/0. Shell ban intact: crosscheck -t 'never invokes a shell' 12 pass 0 fail. Known pre-existing: stream.test.ts 9/1 under the armed sandbox (documented loopback bind, errno 0), and crosscheck's ledger test times out at 120s under parallel-lane load — both reproduce on unmodified main and neither is caused by this change. NOT DONE: orchestrator routing, blocked — no engine declares a Workflow tool (7 of 7 have tools:, none lists it), so qa.js is unreachable from a dispatched engine. Tier full via mission-control/server/**; this PASS is one author, one model family, no independent review.",
+  "recorded_at": "2026-08-26T13:23:30.383Z"
+}
