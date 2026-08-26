@@ -133,20 +133,40 @@ Memory:     Mem0 (primary) + Anthropic Memory Tool (auto-fallback after 3 retrie
 | File | Purpose | Updated by |
 |------|---------|-----------|
 | `.claude/memory/DECISIONS.md` | Architecture & strategy decisions, append-only, 50-entry cap · 40,000-byte cap (**byte cap binds**) | Any agent making a decision affecting others |
+| `.claude/memory/DECISIONS_ARCHIVE*.md` | Evicted entry bodies, one capped volume per file. Written only by `scripts/evict-memory.mjs` | The eviction tool — never by hand |
 | `.claude/memory/CODEBASE-MAP.md` | Key files, patterns, tech debt | code-reviewer |
 | `.claude/memory/USER-INSIGHTS.md` | Customer language, pain phrases, JTBD | `orchestrator` (only authorized writer) |
 | `.claude/memory/LONG-TERM.md` | Cross-session facts: user prefs, recurring patterns | `orchestrator` after each session |
 | `docs/08-agents_work/sessions/` | Engine session summaries (`YYYY-MM-DD-[engine]-[task].md`) | Each engine (write at task close) |
 
-**Hard caps:** DECISIONS.md ≤ 50 entries AND ≤ 40,000 bytes — **the byte cap binds, and the entry cap will never
-fire.** The file reached 39,909 bytes at 23 entries: a **marginal cost of 1,735 bytes per entry** (39,909 ÷ 23).
-It now stands at **35,952 bytes over 24 headings** — but do **not** read the resulting 1,470-byte all-entry
-mean as the cost of adding an entry. Seven of those headings are archive stubs that
-`check-memory-budget.mjs` counts as full entries, averaging 549 bytes and ranging 204–1,018; the seventeen
-surviving real entries average **1,849 bytes**. Against 4,048 bytes of headroom all three anchors agree that
-two more entries fit, so the cap fires on the **27th** — barely half way to 50. These figures move with every
-edit and have gone stale twice: recompute with `node scripts/check-memory-budget.mjs` rather than quoting
-them. LONG-TERM.md ≤ 100 lines. Session summaries ≤ 10 lines each.
+**Hard caps:** DECISIONS.md ≤ 50 entries AND ≤ 40,000 bytes — **the byte cap binds, and the entry cap will
+never fire.** LONG-TERM.md ≤ 100 lines. Session summaries ≤ 10 lines each. Every archive volume is capped
+at the same 40,000 bytes, **per volume**, not in total.
+
+**Ask the checker, do not read a number here:** `node scripts/check-memory-budget.mjs`.
+
+> **Superseded 2026-08-26.** This paragraph carried a worked arithmetic — "39,909 bytes at 23 entries", a
+> "marginal cost of 1,735 bytes per entry", "35,952 bytes over 24 headings", a 1,470-byte all-entry mean, a
+> 1,849-byte real-entry mean, and the conclusion that the cap fires on the **27th** entry. It then advised,
+> two sentences later, *"recompute with `node scripts/check-memory-budget.mjs` rather than quoting them."*
+> Every one of those figures was stale by the time you are reading this, the 27th entry had already landed,
+> and the file's own advice is what is kept. Frozen arithmetic in prose rots; a command does not.
+
+**When the cap is close, eviction is a tool, not a judgement call.** `node scripts/evict-memory.mjs plan`
+classifies every entry and prints the **net** bytes each eviction would actually free — the entry minus the
+stub that replaces it, which is smaller than the entry and much smaller for a heavily-cited one. `apply`
+performs it. Four rules, all mechanised in `scripts/lib/memory-entries.js` and pinned by mutation in
+`scripts/evict-memory.test.mjs`: an `irreversible` entry is never archived while its subject exists; an
+entry whose `Affects:` targets are all gone is archivable on sight; anything cited by a live claim is
+pinned; and every archival leaves a stub under the original heading, so a citation by date or by title
+still resolves. **Never hand-edit an entry out of the file** — the tool refuses what these rules forbid and
+checks that no byte was lost, and a manual move does neither.
+
+**The archive rotates and nothing is ever deleted to meet a cap.** `DECISIONS_ARCHIVE.md` is volume 1;
+volumes 2+ are `DECISIONS_ARCHIVE_002.md`, `_003.md`, … The 40,000-byte cap applies to each volume
+independently and bounds **what one reader must load**, never the lifetime total — a cap on the lifetime
+total of an append-only decision log is a mechanism for losing decisions. `check-memory-budget.mjs` finds
+volumes by pattern, so a new one is governed the moment it exists.
 
 ---
 

@@ -212,7 +212,7 @@ const ALIASES = {
   ],
   'check:dispatch': ['test:dispatch', 'test:dispatch-flush', 'check:dispatch-agenttype'],
   'check:dispatch-prompt': ['test:dispatch-prompt', 'check:dispatch-prompt-size'],
-  'check:memory': ['test:memory', 'check:memory-budget'],
+  'check:memory': ['test:memory', 'test:eviction', 'check:memory-budget'],
 };
 
 test('the five delegating parents are EXCLUDED aliases, and every link is a STEP of its own', () => {
@@ -554,8 +554,15 @@ test('the scanner declares its vocabulary — an unmodelled construct is a FINDI
   // Measured 2026-08-26, the case that prompted it:
   //     bash -c "echo $'a\'b'; echo SECOND_RAN"   ->  a'b / SECOND_RAN, exit 0 — TWO COMMANDS RAN
   //
-  // Cost, measured before building: **0** of 69 package.json scripts and **0** of 44 ci.yml `run:`
-  // values contain a `$` at all, so nothing existing is newly flagged.
+  // Cost, RE-MEASURED 2026-08-26: **0** of 72 package.json scripts and **0** of 45 ci.yml `run:` values
+  // contain a `$` at all, so nothing existing is newly flagged. THE CONCLUSION NEVER MOVED — only the
+  // denominators did, and the earlier note read "0 of 69 … and 0 of 44", where the 69 was already off by
+  // one when it was written. Both are derived, never counted by eye:
+  //     node -e "const s=require('./package.json').scripts;console.log(Object.keys(s).length,
+  //       Object.values(s).filter(v=>v.includes('$')).length)"                              -> 72 0
+  //     node -e "const fs=require('fs'),{parseCiSteps}=require('./scripts/lib/check-suite.js');
+  //       const r=parseCiSteps(fs.readFileSync('.github/workflows/ci.yml','utf8')).filter(x=>x.run);
+  //       console.log(r.length, r.filter(x=>String(x.run).includes('$')).length)"           -> 45 0
 
   // The vocabulary. None of these is a finding, and a rule that fired on them would be routed
   // around rather than obeyed.
@@ -1825,8 +1832,8 @@ test('every `run:` step in ci.yml carries the `!cancelled()` guard, and the thre
   );
 
   // The three `uses:` setup steps carry NO `if:`, deliberately. Guarding them was considered and
-  // rejected: if checkout fails, `!cancelled()` is still true, so all 44 checks would run against an
-  // empty workspace and produce ~45 red steps instead of one. That is a diagnosability cost, not a
+  // rejected: if checkout fails, `!cancelled()` is still true, so all 45 checks would run against an
+  // empty workspace and produce ~46 red steps instead of one. That is a diagnosability cost, not a
   // fail-open one — the job still fails and nothing ships. Pinned so it reads as a decision.
   const setup = parseCiSteps(CI).filter((s) => s.uses !== null);
   assert.equal(setup.length, 3, 'the setup steps changed — re-decide whether they should carry the guard');
@@ -1870,8 +1877,8 @@ test('no ci.yml step invokes a runner directly — the tripwire preload, and the
   //       workflow was unguarded while every other one was, and the difference is invisible in a
   //       green run." The npm script carries the preload; `node --test <file>` does not. So a step
   //       spelled the direct way runs the same tests with the tripwire off.
-  //   B · THE AGGREGATE SUITE RUNNER. `run: npm run check` in ci.yml would nest all 43 steps behind
-  //       one step's exit code — the precise opacity the 44 `if:` guards exist to remove, arriving
+  //   B · THE AGGREGATE SUITE RUNNER. `run: npm run check` in ci.yml would nest all 44 steps behind
+  //       one step's exit code — the precise opacity the 45 `if:` guards exist to remove, arriving
   //       from the other direction. Nothing in that comment covers this; it is asserted because it
   //       is real, not because the comment claims it.
   //

@@ -1,0 +1,11 @@
+{
+  "subject": "e6223dc54122f5ecec20bd8bfba6866efedf62c89da86c14402f71e9b8a99432",
+  "base": "7f7bddd75b1eced00a2fc1fd1b2594ab5061376b",
+  "tier": "irreversible",
+  "tier_driver": ".github/workflows/ci.yml",
+  "verdict": "PASS",
+  "by": "builder-102-merge-resolution",
+  "run_id": null,
+  "evidence": "Round 3, after blinded delta review 869aab9..57cbdfc returned PASS on all three lenses with three non-blocking findings. All three fixed. Mechanism refuted by controlled experiment rather than accepted on report: braces AGREE (46/46 on ci.yml), a non-final unescaped $ DIFFERS (0 vs 1 on a fixture), a final $ AGREES (0/0) — and the failing case exits 1 with a 0-byte stderr. Escaping the $ repairs both greps (45/45). npm run check in the branch worktree: Tally: 44 of 44 passed · 0 failed, exit 0, 101.4s; six runs of this tree span 91.2-144.3s, inside the published 90-145 bound. check:ledger-lint clean, 145 prose citations of 26 claim ids. Every recipe printed in STATUS.md executed against this tree, including one (git rev-parse --short main origin/main) that exits 128 and was replaced before commit.",
+  "recorded_at": "2026-08-26T09:11:29.352Z"
+}
