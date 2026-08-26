@@ -477,10 +477,17 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
 > through Phase 8a — eight phases shipped while it said "Sprint 1 — foundation." **If you change the phase,
 > change this block in the same PR.**
 
-- **THE BINDING GATE CAN COMPLETE NOW — 2026-08-24 · re-measured 2026-08-25.** `npm run check` is now
-  **30 of 30 steps · 0 failed · exit 0 with the sandbox armed**, in 90s, measured on
-  `fix/pr5-review-fixes`. Derive the denominator, never quote it from memory:
-  `node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **30**. That counts the
+- **THE BINDING GATE CAN COMPLETE NOW — 2026-08-24 · re-measured 2026-08-26 after the eight-merge train.**
+  `npm run check` is now **48 of 48 steps · 0 failed · exit 0 with the sandbox armed**, measured on
+  `fix/ci-chain-structure-holes` merged with `main`. *It read `46 of 46` at the head of the eight-merge
+  train and that was correct there; 46 → 48 is the same KIND of move as 43 → 44 and not as 30 → 43 —
+  `test:citations` and `check:citations-exist` are genuinely NEW work in the suite, not a renaming of work
+  it already did. `docs/STATUS.md` §4 keeps that distinction and why it matters.* **Wall clock is a range so wide it carries almost no information —
+  90 to 480s**, measured 137.6s and 273.5s on one tree minutes apart, and 180.2s then 480.0s on another
+  the same day. It tracks how many lanes are
+  building, not the suite. Read the tally and the exit code;
+  see `docs/STATUS.md` §4. Derive the denominator, never quote it from memory:
+  `node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **48**. That counts the
   steps the suite actually runs, which is the one list — `scripts/lib/check-suite.js` owns it, and
   `test:check-suite` fails if `package.json` drifts away from it.
   *Superseded 2026-08-25: the derivation here was
@@ -518,8 +525,14 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   now.** *Superseded 2026-08-25: this read "One blocker remains — `check:mc` — and it is not a
   mission-control defect". It is still not a mission-control defect and it still fails under the sandbox;
   what changed is that it is no longer a step, so it no longer blocks `npm run check`. See the next bullet
-  for the cause and `scripts/lib/check-suite.js` for where the coverage went.* `.qa/verdicts/` is still
-  empty: no gate run has yet completed end to end.
+  for the cause and `scripts/lib/check-suite.js` for where the coverage went.*
+  **`.qa/verdicts/` is NOT empty and gate runs DO complete end to end** — `git ls-tree -r --name-only
+  origin/main .qa | wc -l` → **23**, every one `verdict: PASS`.
+  *Superseded 2026-08-26: this read "`.qa/verdicts/` is still empty: no gate run has yet completed end to
+  end." True when written, falsified by the merge train with nobody editing the sentence.* **Read the 23
+  narrowly**: each is author-recorded against a deterministic floor, single model family, so the
+  `irreversible`-tier requirement of 2-of-3 judges is unmet on every one of them. Artifacts exist; the
+  multi-judge panel has still never run.
 - **`check:mc`'s single failure is caused by the ARMED SANDBOX, not by mission-control — measured
   2026-08-24.** Two cells at the session root, same commit, same deps, Bun 1.3.10 in both:
   **sandboxed → 344 pass · 1 fail · exit 1** (`EADDRINUSE`, in the real-socket SSE test in
@@ -569,6 +582,69 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   `PROJECT_ROOT` form. Do not read this bullet as resolved until someone reconciles it against `main` and
   says so here. Required follow-up with an exit criterion in
   [the handoff](docs/08-agents_work/handoffs/2026-08-25-after-the-gate-ran.md).
+- **THE MERGE TRAIN LANDED 2026-08-26 — eight merges, zero open PRs** (`REPORTED`; branch state is not
+  readable from here — the sandbox denies `~/.config/gh`). #106, #99, #101, #102, #103, #104, #105, #107.
+  **#77 was CLOSED, not merged**: it bound a verdict to a HEAD sha while `scripts/verdict.mjs` already
+  binds by content hash, and merging it would have put two implementations of one check side by side —
+  the defect this repo has hit before and names explicitly.
+- **WAVE 2 IS EFFECTIVELY CLOSED, with two items left and one of them the founder's.** Landed: 2.1 the
+  deterministic oracle · 2.3 the first real verdict · 2.4 the external-judge seam (`claim-judge-external`
+  is a registered, dispatchable resolver as of #103) · 2.6 `cmd_merge` opens a PR.
+  **Still open — 2.2 and 2.5, and they are one gap seen twice:** playbooks name `gate: qa-verdict` with
+  **no implementation behind it**, and **no engine declares a `Workflow` tool**, so a dispatched engine
+  cannot reach `qa.js` at all. Also open: the forgeability `qa-lead-pass.yml` documents about itself — a
+  verdict record is hash-bound, not signed, so anyone with repo-write can author one.
+  **2.7 is the founder's and its prerequisite is now discharged (#101):** `enforce_admins` is still
+  `false`.
+- **EIGHT bypasses of the exit-code guard are CLOSED, and the mechanism was not the one recorded here.**
+  Each was silent on `main` at `244e8db` — `ciChainFindings -> []`, `unguardedSteps -> []` — and each is a
+  finding now, with the benign single-command control unchanged in both cells. Every fixture is valid YAML
+  (checked against PyYAML 6.0.3) carrying `npm run x && npm run y`:
+  a **second job**; `run :` with a space before the colon; a flow-mapping step `- {run: …}`; a quoted
+  `"run":` key; `-  name:` with a **two-space dash**, which puts the step's keys at +3 where the column was
+  hardcoded to +2; `steps: [{run: …}]` as a **flow sequence**; `- <<: *base`, a **merge key**; and a
+  **flush-style job**, `steps:` at column N with its items `- ` also at column N.
+  **The eighth was found by an independent review of the fix for the first seven, and it was a REGRESSION
+  the fix introduced** — the one entry here that is not a pre-existing hole. `main`'s `break` collapsed the
+  parse to ZERO steps on meeting that shape, tripping the `CI_CHAINS_ALLOWED` rot-check and nine tests;
+  replacing the `break` with a resume kept a *plausible* 52-step parse and reported clean, giving a view
+  byte-identical to the pristine file. Nothing named that backstop and nothing tested it, so **a deletion
+  removed a control while every test stayed green** — the class this repo names in four other places,
+  committed by the change that was closing seven instances of it. Flush style is also the likeliest of the
+  eight to be hand-written.
+  *Superseded 2026-08-26: this read "Four bypasses are live on `main`, all one class — `parseCiSteps` does
+  not see the step at all, so the guard never runs on it."* **Four was the count and the mechanism was
+  wrong for three of them, and the wrong mechanism is why the other three went unfound.** `parseCiSteps`
+  DOES see those steps: it returned one step for every fixture. `record()`'s key pattern did not match the
+  line, it returned in silence, and the step kept `run: null` — which is precisely what a step that runs no
+  command looks like, and every check downstream filters on `s.run !== null`. Only the second job is
+  genuinely never reached. The cure is round 9's, one layer up — declare what is read, refuse the rest, at
+  the LINE rather than the value — and it changes **zero** live verdicts: measured across the real
+  `ci.yml` first — **50 item lines and 97 step-key lines, ZERO of them anything but a plain `key: value`
+  pair**. *Those two counts are the census taken BEFORE the change and are kept as provenance, not as a
+  live figure: this same change added two steps and they are 52 and 101 now. The **zero** is the
+  load-bearing half, it is what makes the refusals free, and `npm run check:ci-chains` re-derives it on
+  every run.*
+  **The composed variant is the one worth remembering:** a second job whose items sit at eight spaces was
+  invisible to every backstop in the repo, including all three raw-line cross-checks, because they count
+  `/^ {6}- /`. The other four DO trip an incidental assertion — with a message that says nothing about a
+  chain, which is a backstop someone deletes.
+- **THE CITATION DECISION IS TAKEN, and it is a SPLIT posture: existence BLOCKS, drift WARNS** (2026-08-26).
+  *Superseded: this read "`check-citations.mjs` is STILL UNWIRED … Recommendation on the table … Founder
+  decision, not an agent's." The decision was made on the run that deferral asked for and this records it
+  as taken.* **The run it was made from: 2 existence findings · 85 drift · 25% drift coverage · 85% of
+  locators resolved by basename.** Existence is deterministic with no false positives by construction, so
+  it is cheap to enforce; drift is heuristic over a quarter of the corpus and rests on a resolution the
+  checker's own blind-spot list says may be the WRONG FILE, so blocking on it would teach contributors to
+  route around the checker. What is wired: **`check:citations-exist`** (`--no-anchors --strict
+  --external-prefix adamos`) and its mutation gate **`test:citations`**, both STEPS and both steps of
+  `.github/workflows/ci.yml`. **`check:citations` — the full run — is still `EXCLUDED` and still WARN.**
+  Verify all three, never recall them:
+  `node -e "const c=require('./scripts/lib/check-suite.js');
+  console.log(c.STEPS.includes('check:citations-exist'), c.STEPS.includes('test:citations'),
+  'check:citations' in c.EXCLUDED)"` → `true true true`.
+  Both existence findings were FIXED rather than waived: one stale path from a rename, and one true
+  citation into a sibling project declared with `--external-prefix`.
 - **Where we are:** Phases 1–7 complete · **Phase 8a complete** · **8b (Dispatch) BUILT 2026-08-16 against
   `agentvibe` as its only target** — the loop is end to end (the server enqueues to a queue file, a
   founder-run consumer in `mission-control/scripts/` reads it; the server still never spawns, and
@@ -582,16 +658,24 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   nine branches in one train, the first time `main` had moved since before 2026-08-20. What landed: the
   PR-route gate **blocks** and posts a check-run signed by `GITHUB_TOKEN` with the author grep deleted;
   `qa.js` runs a deterministic oracle before any panel agent is dispatched; credential `denyRead` covers
-  the CLI credential stores; `test:tier-gate` is in `npm run check` (**30** steps now — this read "29"
-  until 2026-08-24, the same dropped-step error corrected in the gate bullet above); and
+  the CLI credential stores; `test:tier-gate` is in `npm run check` (**48** steps now — this read "46" until the citation
+  steps landed on 2026-08-26, "30" earlier that day and "29" until 2026-08-24, the same dropped-step
+  error corrected in the gate bullet above); and
   `war-room/bin/PROJECT_NAME.tmpl` no longer seeds an unreviewed model-resolved merge into every generated
-  project. **Only P0 item 6 remains** — `claim-judge-external` (Codex), still correctly deferred: bug
-  #19945 returns exit 0 with empty stdout when detached from a TTY, which is exactly how a resolver runs.
+  project. **P0 item 6 — `claim-judge-external` — HAS NOW LANDED (#103)**: the resolver is registered and
+  dispatchable, and `scripts/ledger.test.mjs` asserts both, plus that it attaches only where a tier rule
+  names it. *Superseded 2026-08-26: this read "Only P0 item 6 remains … still correctly deferred".*
+  **A seam is not a second opinion**: what landed is the mechanism, and Codex bug #19945 — exit 0 with
+  empty stdout when detached from a TTY, which is exactly how a resolver runs — is why the panel below is
+  still single-family.
   Handoff: [2026-08-23-after-p0.md](docs/08-agents_work/handoffs/2026-08-23-after-p0.md).
 - **Single-family review is an ACCEPTED RISK, decided 2026-08-23, not a satisfied requirement.**
   Irreversible tier asks for 2-of-3 multi-judge and `risk: high` requires ≥2 distinct model families;
   there is no non-Anthropic model inside Claude Code. Every review behind that merge said so in its own
-  session file. Revisit if the Codex resolver lands.
+  session file. **Re-measured 2026-08-26 and STILL ACCEPTED — the exit condition runs to 2026-11-17.**
+  *This bullet used to close "Revisit if the Codex resolver lands." It landed (#103) and the risk did not
+  change*, because the seam is dispatchable while no non-Anthropic model is reachable from inside Claude
+  Code. Landing the mechanism is not satisfying the requirement; do not read #103 as discharging this.
 - **Branch protection exists and did not bind on the path actually used.** The push that moved `main`
   reported *"2 of 2 required status checks are expected"* — and succeeded anyway, having run no checks.
   So required checks govern the PR route and not a direct push. Treat `.github/workflows/**` as

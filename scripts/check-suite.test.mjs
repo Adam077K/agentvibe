@@ -1782,6 +1782,522 @@ test('`run: >` is accepted by the parser and joined literally — an over-report
   assert.deepEqual(ciChainFindings(one, {}), [], 'a single-command folded scalar was reported as a chain');
 });
 
+// ── The four shapes that walked past ciChainFindings on `main`, and three more of their class ────
+//
+// EVERY FIXTURE BELOW IS VALID YAML CARRYING A REAL CHAIN — checked against PyYAML 6.0.3, which
+// reads a `run:` of `npm run x && npm run y` out of each one. That check is not repeated here
+// because this repo has no YAML dependency; what IS repeated is the benign control beside every
+// attack, because a refusal that fires on everything proves nothing.
+//
+// THE MECHANISM IS NOT WHAT IT LOOKED LIKE, and the wrong description would have produced the wrong
+// fix. It was reported as "parseCiSteps does not see the step at all". Measured on `main`
+// (244e8db), it sees ONE step for every one of these fixtures: three of them leave the step with
+// `run: null`, because record()'s key pattern did not match the line and it returned in silence —
+// and `run: null` is what a step that runs no command looks like. The fourth, the second job, is
+// the only one the parser never reaches.
+//
+// SILENT ON `main`, ALL SEVEN: ciChainFindings -> [] and unguardedSteps -> []. The composed case is
+// worse than any single one — a second job whose items sit at eight spaces defeats even the
+// raw-line cross-checks in this file, which count `/^ {6}- /`.
+
+const twoJobs = (secondJobSteps) => [
+  'name: CI', 'on:', '  pull_request:', '    branches: [main]', 'jobs:',
+  '  checks:', '    runs-on: ubuntu-latest', '    steps:',
+  '      - name: A', `        if: ${CI_GUARD}`, '        run: npm run x',
+  '  other:', '    runs-on: ubuntu-latest', '    steps:', ...secondJobSteps, '',
+].join('\n');
+
+test('a chain in a SECOND job is a finding — the parser stopped at the first job and said nothing', () => {
+  // `break` on the first line that dedented out of job one's steps, and stepsIndent was set once.
+  // So every step of every later job was unreachable: no chain finding, no `!cancelled()` check,
+  // no runner ban. The items are at EIGHT spaces on purpose — at six, this file's own raw-line
+  // cross-check happens to notice the count is wrong, which is an accident of indentation and not
+  // a check on anything.
+  const chained = twoJobs(['        - name: B', `          if: ${CI_GUARD}`, '          run: npm run x && npm run y']);
+  const benign = twoJobs(['        - name: B', `          if: ${CI_GUARD}`, '          run: npm run y']);
+
+  assert.equal(parseCiSteps(chained).length, 2, 'the second job\'s step is still not parsed');
+  const found = ciChainFindings(chained, {});
+  assert.equal(found.length, 1, `a chain in the second job was not reported:\n${found.join('\n')}`);
+  assert.ok(found[0].includes('carries `&&`'), found[0]);
+  assert.deepEqual(ciChainFindings(benign, {}), [], 'the benign second job was reported — the check fires on anything');
+
+  // THE GUARD REACHES IT TOO, which is the half that is not about chains: an unguarded step in a
+  // later job was equally invisible.
+  const unguardedSecond = twoJobs(['        - name: B', '          run: npm run y']);
+  assert.deepEqual(unguardedSteps(unguardedSecond), [parseCiSteps(unguardedSecond)[1].line],
+    'an unguarded `run:` step in the second job is not reported');
+  assert.deepEqual(unguardedSteps(benign), [], 'a guarded second job was reported as unguarded');
+
+  // AGAINST THE REAL ci.yml, because the property is about this repo's gate. The control on the
+  // last line is what stops the three assertions above being satisfied by a file that is red anyway.
+  const injected = `${CI}\n  other:\n    runs-on: ubuntu-latest\n    steps:\n        - name: B\n` +
+    `          if: ${CI_GUARD}\n          run: npm run x && npm run y\n`;
+  const real = ciChainFindings(injected);
+  assert.equal(real.length, 1, `a second job appended to the real ci.yml did not block:\n${real.join('\n')}`);
+  assert.ok(real[0].includes('carries `&&`'), real[0]);
+  assert.deepEqual(ciChainFindings(CI), [], 'the real ci.yml is not clean, so the injection proves nothing');
+});
+
+test('a step line that is not a plain `key: value` pair is REFUSED, not read as a step that runs nothing', () => {
+  // record() matched /^([\w-]+):\s*(.*)$/ and returned in SILENCE when it did not. Four shapes of
+  // valid YAML miss that pattern, and each left `run: null` on a step that runs a chained command.
+  const wf = (...stepLines) => ['name: CI', 'jobs:', '  one:', '    runs-on: ubuntu-latest', '    steps:',
+    ...stepLines, ''].join('\n');
+  const only = (workflow) => ciChainFindings(workflow, {});
+  const CHAIN = 'npm run x && npm run y';
+
+  // `offending` is the line the refusal must POINT AT, named per case rather than derived: for the
+  // merge key it is the item line and for the other three it is a key line three lines down, and a
+  // rule that guessed would be satisfied by a refusal pointing anywhere.
+  const attacks = {
+    'a space before the colon': {
+      lines: ['      - name: A', `        if: ${CI_GUARD}`, `        run : ${CHAIN}`], offending: `        run : ${CHAIN}`,
+    },
+    'a quoted key': {
+      lines: ['      - name: A', `        if: ${CI_GUARD}`, `        "run": ${CHAIN}`], offending: `        "run": ${CHAIN}`,
+    },
+    'a flow mapping as the item': {
+      lines: [`      - {run: ${CHAIN}, if: "${CI_GUARD}"}`], offending: `      - {run: ${CHAIN}, if: "${CI_GUARD}"}`,
+    },
+    'a merge key pulling in an anchor': {
+      lines: ['      - <<: *base', '        name: A'], offending: '      - <<: *base',
+    },
+  };
+  for (const [label, { lines, offending }] of Object.entries(attacks)) {
+    const steps = parseCiSteps(wf(...lines));
+    assert.equal(steps.length, 1, `${label}: the step count changed`);
+    assert.equal(steps[0].run, null, `${label}: this case is about a step whose \`run:\` was NOT read`);
+    const found = only(wf(...lines));
+    assert.equal(found.length, 1, `${label} was not reported:\n${found.join('\n')}`);
+    assert.ok(found[0].startsWith(UNPARSED_PREFIX), `${label}: ${found[0]}`);
+    // THE LINE, NOT THE STEP. A refusal that points at the item line when the offending key is
+    // three lines below it sends the reader to the wrong place.
+    const at = wf(...lines).split('\n').indexOf(offending) + 1;
+    assert.ok(at > 0, `${label}: the fixture does not contain the line this case names`);
+    assert.ok(found[0].includes(`ci.yml:${at} was NOT read`), `${label}: ${found[0]}`);
+  }
+
+  // ── THE CONTROLS, or the refusal is just a rule that fires on everything.
+  assert.deepEqual(only(wf('      - name: A', `        if: ${CI_GUARD}`, '        run: npm run x')), [],
+    'an ordinary one-command step was refused');
+  assert.deepEqual(only(wf('      - uses: actions/checkout@v4', '        with:', '          fetch-depth: 0')), [],
+    'a `with:` body was refused — its lines are deeper than the key column and are not key lines');
+  assert.deepEqual(ciChainFindings(CI), [], 'the real ci.yml is refused by the new rule');
+
+  // A WIDE DASH IS READ, NOT REFUSED, and that is a separate defect this fix closes. `-  name: A`
+  // is ordinary YAML that puts the step's keys at itemIndent + 3; the key column was hardcoded to
+  // + 2, so the `run:` below matched nothing and was DROPPED — a fifth shape of the same class,
+  // found by sweeping it rather than by reading the four that were reported.
+  const wide = wf('      -  name: A', `         if: ${CI_GUARD}`, `         run: ${CHAIN}`);
+  assert.equal(parseCiSteps(wide)[0].run, CHAIN, 'the `run:` of a wide-dash step is still not read');
+  const wideFound = only(wide);
+  assert.equal(wideFound.length, 1, `a chain under a wide dash was not reported:\n${wideFound.join('\n')}`);
+  assert.ok(wideFound[0].includes('carries `&&`'), wideFound[0]);
+  assert.deepEqual(only(wf('      -  name: A', `         if: ${CI_GUARD}`, '         run: npm run x')), [],
+    'a benign wide-dash step was reported');
+});
+
+test('`steps:` with a value on the same line is REFUSED — it used to parse as a workflow with no steps', () => {
+  // `/^( *)steps:\s*$/` did not match `steps: [ … ]`, so stepsIndent was never set, parseCiSteps
+  // returned [], and every check in this section iterates that empty array to a clean verdict. A
+  // flow sequence is valid YAML and GitHub runs it.
+  const flow = ['name: CI', 'jobs:', '  one:', '    runs-on: ubuntu-latest',
+    '    steps: [{name: A, run: npm run x && npm run y}]', ''].join('\n');
+  const found = ciChainFindings(flow, {});
+  assert.equal(found.length, 1, `an inline \`steps:\` sequence was not reported:\n${found.join('\n')}`);
+  assert.ok(found[0].startsWith(UNPARSED_PREFIX) && found[0].includes('block sequence'), found[0]);
+
+  // A TRAILING COMMENT IS NOT A VALUE, and both directions are pinned because a case asserting only
+  // the refusal passes under a pattern that refuses everything.
+  const commented = ['name: CI', 'jobs:', '  one:', '    runs-on: ubuntu-latest', '    steps: # 3 of them',
+    '      - name: A', `        if: ${CI_GUARD}`, '        run: npm run x', ''].join('\n');
+  assert.deepEqual(ciChainFindings(commented, {}), [], 'a `steps:` with a trailing comment was refused');
+  assert.equal(parseCiSteps(commented).length, 1, 'a `steps:` with a trailing comment stopped opening the block');
+});
+
+test('a step carrying an UNREADABLE LINE is not ALSO reported as unguarded — the same rule as `if:`', () => {
+  // The exclusion in unguardedSteps() is `if:`-shaped, and this widens it by exactly one case with
+  // the same argument behind it: for a `key: null` refusal the parser does not know WHICH key was
+  // on the line, so the line it could not read may BE the guard. Reporting "this step carries no
+  // guard" about a line reading `"if": ${{ !cancelled() }}` says the opposite of what is there.
+  //
+  // NOT FAIL-OPEN — discharged, as the `if:` case is, by ciChainFindings() reporting every refusal
+  // over every step with no allowlist. Both assertions below are needed: the first alone passes if
+  // the refusal is dropped, the second alone passes if the exclusion is dropped.
+  const quotedGuard = ['name: CI', 'jobs:', '  one:', '    steps:',
+    '      - name: A', `        "if": ${CI_GUARD}`, '        run: npm run a', ''].join('\n');
+  assert.deepEqual(unguardedSteps(quotedGuard), [],
+    'a step whose guard is on a line the parser could not read was reported as carrying no guard');
+  assert.equal(ciChainFindings(quotedGuard, {}).length, 1, 'the refusal itself stopped firing — that is fail-open');
+
+  // AND THE CASE THE EXCLUSION MUST NOT EAT. A step with a REFUSED `run:` — a keyed refusal, where
+  // the parser knows the `if:` was read perfectly well or is absent — is still reported unguarded.
+  // The mutation that widens this to `s.unparsed.length === 0` fails here.
+  const refusedRun = ['name: CI', 'jobs:', '  one:', '    steps:',
+    '      - name: A', '        run: "npm run a && npm run b"', ''].join('\n');
+  assert.deepEqual(unguardedSteps(refusedRun), [parseCiSteps(refusedRun)[0].line],
+    'a keyed `run:` refusal stopped being reported as unguarded');
+});
+
+test('a FLUSH-style job is read — the `break` was an accidental backstop and replacing it removed one', () => {
+  // YAML lets a block sequence sit at the SAME column as its key, so `steps:` at column 4 with
+  // `- name: A` also at column 4 is ordinary YAML that GitHub runs. `indent <= stepsIndent` read
+  // that item as the end of the block and the multi-job resume stepped over the whole job.
+  //
+  // WHY THIS IS A REGRESSION AND NOT A RESIDUAL, which is the whole reason this case exists. At the
+  // LIBRARY level `main` is equally silent, so a differential there reads "pre-existing". At the
+  // REPO level `main` BLOCKS: its `break` collapsed the parse to ZERO steps on meeting the shape,
+  // which tripped the CI_CHAINS_ALLOWED rot-check and nine tests in this file. Nothing named that
+  // backstop and nothing tested it, so replacing the `break` with a resume removed it while every
+  // test stayed green. A DELETION ATTRACTS NO TEST CASES; this is the one it should have attracted.
+  //
+  // Measured 2026-08-26, flush job prepended as the FIRST job of the real ci.yml:
+  //     main 244e8db  parseCiSteps -> 0 steps,  ciChainFindings -> 1 (the rot-check firing)
+  //     before fix    parseCiSteps -> 52 steps, ciChainFindings -> 0   <- byte-identical to pristine
+  //     after  fix    parseCiSteps -> 53 steps, ciChainFindings -> 1 (`carries \`&&\``)
+  const flush = (cmd) => ['name: CI', 'jobs:',
+    '  exfil:', '    runs-on: ubuntu-latest', '    steps:',
+    '    - name: B', `      if: ${CI_GUARD}`, `      run: ${cmd}`,
+    '  checks:', '    runs-on: ubuntu-latest', '    steps:',
+    '      - name: A', `        if: ${CI_GUARD}`, '        run: npm run a', ''].join('\n');
+
+  const chained = flush('npm run x && npm run y');
+  assert.equal(parseCiSteps(chained).length, 2, 'the flush-style job is still invisible');
+  const found = ciChainFindings(chained, {});
+  assert.equal(found.length, 1, `a chain in a flush-style job was not reported:\n${found.join('\n')}`);
+  assert.ok(found[0].includes('carries `&&`'), found[0]);
+
+  // THE BENIGN CONTROL, or the rule fires on the shape rather than on the chain.
+  assert.deepEqual(ciChainFindings(flush('npm run x'), {}), [], 'a benign flush-style job was reported');
+
+  // A SIBLING KEY AT THE SAME COLUMN IS NOT A STEP. `steps:` and `env:` are siblings at column 4,
+  // and only one of them is `- `-shaped — which is what makes it safe to read an item there.
+  const sibling = ['name: CI', 'jobs:', '  j:', '    steps:', '    - name: A',
+    `      if: ${CI_GUARD}`, '      run: npm run a', '    env:', '      FOO: bar', ''].join('\n');
+  assert.deepEqual(parseCiSteps(sibling).map((x) => x.run), ['npm run a'],
+    'a sibling key at the steps column was read as a step, or the step was lost');
+  assert.deepEqual(ciChainFindings(sibling, {}), [], 'a benign flush job with an env: sibling was reported');
+
+  // AGAINST THE REAL ci.yml, prepended as the FIRST job — the position that matters, because a
+  // flush job appended LAST is masked by whatever the test after it injects.
+  const injected = CI.replace(/^jobs:\n/m, `jobs:\n  exfil:\n    runs-on: ubuntu-latest\n    steps:\n    - name: B\n      if: ${CI_GUARD}\n      run: npm run x && npm run y\n`);
+  assert.notEqual(injected, CI, 'the injection matched nothing, so its proof is vacuous');
+  const real = ciChainFindings(injected);
+  assert.equal(real.length, 1, `a flush-style job in the real ci.yml did not block:\n${real.join('\n')}`);
+  assert.ok(real[0].includes('carries `&&`'), real[0]);
+  assert.deepEqual(ciChainFindings(CI), [], 'the real ci.yml is not clean, so the injection proves nothing');
+});
+
+test('only a JOB\'s `steps:` opens a block — a `matrix:` key named steps must not fail the build', () => {
+  // The opener matched ANY line beginning `steps:` at any depth, and the multi-job resume made that
+  // reachable between every pair of jobs. `strategy.matrix.steps` is correct YAML and it produced a
+  // BLOCKING finding whose message — "this parser reads no step of this job at all" — was false
+  // about the very input it refused: three steps were parsed, including that job's. A rule that
+  // fires on correct code gets weakened; this one is scoped by the enclosing key chain instead.
+  const matrix = ['name: CI', 'jobs:',
+    '  one:', '    runs-on: x', '    steps:',
+    '      - name: A', `        if: ${CI_GUARD}`, '        run: npm run a',
+    '  two:', '    runs-on: x',
+    '    strategy:', '      matrix:', '        steps: [1, 2]',
+    '    steps:',
+    '      - name: B', `        if: ${CI_GUARD}`, '        run: npm run b', ''].join('\n');
+
+  assert.deepEqual(parseCiSteps(matrix).map((x) => x.run), ['npm run a', 'npm run b'],
+    'the matrix key was read as a steps block, or a real job was lost behind it');
+  assert.deepEqual(ciChainFindings(matrix, {}), [], 'a `matrix:` key named steps failed the build');
+
+  // AND THE REFUSAL IT MUST NOT HAVE EATEN: a real job's steps written as a flow sequence is still
+  // refused. Without this the scoping above could be satisfied by never refusing anything.
+  const flowSeq = ['name: CI', 'jobs:', '  one:', '    runs-on: x',
+    '    steps: [{name: A, run: npm run x && npm run y}]', ''].join('\n');
+  const refused = ciChainFindings(flowSeq, {});
+  assert.equal(refused.length, 1, `a job's flow-sequence steps stopped being refused:\n${refused.join('\n')}`);
+  assert.ok(refused[0].startsWith(UNPARSED_PREFIX) && refused[0].includes('flow sequence'), refused[0]);
+  // The message says only what is checked: it must NOT claim no step of the file was read.
+  assert.ok(!refused[0].includes('reads no step of this job at all'), refused[0]);
+
+  // THE OPENER LAYER GETS THE SAME CURE AS THE ITEM AND KEY LAYERS. A `steps` key a job carries in a
+  // form this parser does not read was skipped in silence — the identical shape to the four closed
+  // one layer down, one layer up.
+  for (const spelling of ['"steps":', 'steps :']) {
+    const odd = ['name: CI', 'jobs:', '  one:', '    runs-on: x', `    ${spelling}`,
+      '      - name: A', `        if: ${CI_GUARD}`, '        run: npm run x && npm run y', ''].join('\n');
+    const f = ciChainFindings(odd, {});
+    assert.equal(f.length, 1, `\`${spelling}\` was skipped in silence:\n${f.join('\n')}`);
+    assert.ok(f[0].startsWith(UNPARSED_PREFIX), `${spelling}: ${f[0]}`);
+  }
+});
+
+test('a BARE `-` item is refused AND its keys are still read — the one line that had no test', () => {
+  // `if (!item[3]) itemKeyIndent = itemIndent + 2;` could be deleted with 63 tests still green. It
+  // is not dead: without it a bare-dash step's `run:` is never read, so only the line refusal fires
+  // and the chain itself goes unreported. Fail-closed either way — but "the build goes red" and
+  // "the build names the chain" are different claims, and only the second is what this file sells.
+  const bare = (cmd) => ['name: CI', 'jobs:', '  one:', '    steps:',
+    '      -', '        name: A', `        if: ${CI_GUARD}`, `        run: ${cmd}`, ''].join('\n');
+
+  const chained = bare('npm run x && npm run y');
+  assert.equal(parseCiSteps(chained)[0].run, 'npm run x && npm run y',
+    'a bare-dash step\'s `run:` is not read — itemKeyIndent did not fall back to itemIndent + 2');
+  const found = ciChainFindings(chained, {});
+  assert.equal(found.length, 2, `expected the refusal AND the chain:\n${found.join('\n')}`);
+  assert.ok(found.some((f) => f.startsWith(UNPARSED_PREFIX)), found.join('\n'));
+  assert.ok(found.some((f) => f.includes('carries `&&`')), found.join('\n'));
+
+  // The control: a benign bare-dash step is refused ONCE and reports no chain, so the second
+  // finding above is the chain and not a second refusal.
+  const benign = ciChainFindings(bare('npm run x'), {});
+  assert.equal(benign.length, 1, `a benign bare-dash step produced ${benign.length} findings:\n${benign.join('\n')}`);
+  assert.ok(benign[0].startsWith(UNPARSED_PREFIX), benign[0]);
+});
+
+// ── Fixture POSITION is a variable to sweep, not a setting to pick ────────────────────────────
+//
+// TWO FINDINGS ON ONE DAY, EACH MASKED BY THE POSITION THAT REVEALED THE OTHER. That symmetry is
+// why this is a harness and not a paragraph:
+//
+//   the FLUSH-job P0     appending it went red — but only because the case below it appends its own
+//                        injection after, so the test's self-control caught its own instrument
+//                        dying. Moving it to the FRONT is what surfaced the bypass.
+//   the SECOND-job bypass  prepending it was CAUGHT on `main` at `steps=1` — the parser had
+//                        collapsed and reported on a fragment of a 52-step file. APPENDING it is
+//                        what shows the bypass: `steps=52`, silent.
+//
+// So neither position is the safe one, and "prepend your fixture" is half a technique. A CATCH FROM
+// A COLLAPSED PARSE IS NOT A CATCH, and the tell is the denominator: this file has long insisted a
+// negative result needs a control that must fire; this is the mirror — A POSITIVE RESULT NEEDS ITS
+// DENOMINATOR READ. `sweepPositions` reads it, at every position, on every call.
+//
+// SCOPE, STATED NARROWLY ON PURPOSE. This covers ADDITIVE injections into the real ci.yml — a
+// fragment that must CHOOSE where to go. There are exactly three such sites in this file and they
+// are swept below. `CI.replace(...)` mutations of an existing line are NOT in scope: they do not
+// choose a position, they inherit one. Calling this "every fixture-based finding in the repo" would
+// be the same over-generalisation the harness exists to catch.
+
+/**
+ * The same fragment at every position it could occupy, with the step count at each.
+ *
+ * Returns [{ position, workflow, steps }]. `steps` is the point as much as the findings are: a
+ * judge that "catches" the attack while parsing one step of a fifty-step file has not caught it,
+ * it has collapsed — and the caller asserts on the denominator, not just on the verdict.
+ */
+function sweepPositions(base, fragment, kind = 'job') {
+  const placements = kind === 'job'
+    ? [
+      ['first job', base.replace(/^jobs:\n/m, `jobs:\n${fragment}`)],
+      ['last job', `${base.replace(/\s*$/, '')}\n${fragment}`],
+    ]
+    : [
+      // A STEP fragment goes either directly under the `steps:` line or after the last step. The
+      // insertion point is found by scanning, NOT by parseCiSteps — a fixture built with the code
+      // under test cannot embarrass it.
+      ['first step', (() => {
+        const lines = base.split('\n');
+        const at = lines.findIndex((l) => /^ *steps:\s*$/.test(l));
+        assert.ok(at !== -1, 'the base workflow has no `steps:` line, so a step fixture cannot be placed');
+        return [...lines.slice(0, at + 1), ...fragment.replace(/\n$/, '').split('\n'), ...lines.slice(at + 1)].join('\n');
+      })()],
+      ['last step', `${base.replace(/\s*$/, '')}\n${fragment}`],
+    ];
+  return placements.map(([position, workflow]) => ({
+    position,
+    workflow,
+    steps: parseCiSteps(workflow).length,
+  }));
+}
+
+/**
+ * Assert a judge answers the SAME way wherever the fragment sits, and answers on the whole file.
+ *
+ * Every position gets a benign control, because a rule that fires on the shape rather than on the
+ * content is position-invariant too, and uselessly so.
+ */
+function assertPositionInvariant({
+  base, attack, benign, kind = 'job', judge, expect, floor, positions, sweep = sweepPositions,
+}) {
+  const attacks = sweep(base, attack, kind);
+  const benigns = sweep(base, benign, kind);
+
+  // ── THE SWEEP'S OWN DENOMINATOR, DECLARED UP FRONT AND CHECKED BEFORE ANY VERDICT IS TAKEN ────
+  //
+  // `positions` is the caller SAYING WHICH POSITIONS MUST BE COVERED, and this compares the sweep
+  // against that declaration rather than against itself. The difference is the whole point: until
+  // 2026-08-26 this asserted `attacks.length >= 2` and the caller compared the labels AFTERWARDS,
+  // which is a derivation checked against itself and is satisfied by a sweep that quietly covered
+  // the wrong two — or, if the loop threw first, by never comparing at all.
+  //
+  // WHY IT IS SHAPED LIKE THIS: the orchestrator's PR watcher terminated on the ABSENCE of output
+  // and announced "queue drained" while seven PRs were open — `gh` cannot read `~/.config/gh` under
+  // the sandbox, so it wrote to stderr and produced empty stdout, and empty was read as a terminal
+  // SUCCESS. An absence read as a clean finding gets reviewed; an absence read as a clean
+  // COMPLETION ends the review. A sweep over zero positions reporting "invariant" is that same
+  // shape, and these three assertions are what stop it: a count that is DECLARED, placements that
+  // must DIFFER from each other, and a floor on the parse before any finding counts.
+  assert.ok(Array.isArray(positions) && positions.length >= 2,
+    'assertPositionInvariant needs the caller to DECLARE the positions it must cover — a sweep that ' +
+    'decides its own denominator cannot report having covered too few');
+  assert.deepEqual(attacks.map((a) => a.position), positions,
+    `the sweep covered ${attacks.length} position(s) and the caller declared ${positions.length}: ` +
+    `${JSON.stringify(attacks.map((a) => a.position))} vs ${JSON.stringify(positions)}`);
+  assert.deepEqual(benigns.map((b) => b.position), positions, 'the benign sweep covered different positions');
+  // DISTINCT PLACEMENTS, or two labels can name one workflow and the sweep proves invariance over a
+  // set of size one while reporting two. Nothing above compares the placements TO EACH OTHER.
+  assert.equal(new Set(attacks.map((a) => a.workflow)).size, attacks.length,
+    'two positions produced the SAME workflow, so the sweep covered fewer positions than it reported');
+
+  const seen = [];
+  for (let i = 0; i < attacks.length; i += 1) {
+    const a = attacks[i];
+    const b = benigns[i];
+    assert.notEqual(a.workflow, base, `${a.position}: the injection matched nothing, so its proof is vacuous`);
+    // THE DENOMINATOR, FIRST. A verdict taken from a collapsed parse is the defect, not the answer.
+    assert.ok(a.steps >= floor, `${a.position}: only ${a.steps} steps parsed (floor ${floor}) — this is a COLLAPSED parse, and a finding from one is not a catch`);
+    assert.ok(b.steps >= floor, `${b.position} (benign): only ${b.steps} steps parsed (floor ${floor})`);
+    const got = judge(a.workflow);
+    const clean = judge(b.workflow);
+    assert.equal(got.length, expect, `${a.position}: expected ${expect} finding(s), got ${got.length}:\n${got.join('\n')}`);
+    assert.deepEqual(clean, [], `${a.position}: the BENIGN control fired, so the rule is about the shape and not the content:\n${clean.join('\n')}`);
+    seen.push(a.position);
+  }
+  return seen;
+}
+
+test('a chained JOB is caught wherever it sits — and the parse is not collapsed at either position', () => {
+  // On `main` at 47dbbd6 this was position-dependent and BOTH cells were misread as a result:
+  //     PREPENDED  CHAIN steps=1   CAUGHT   <- a catch from a collapsed parse
+  //     APPENDED   CHAIN steps=52  silent   <- the bypass
+  // The `steps` floor below is what turns the first row from a pass into a failure.
+  const job = (cmd) => `  extra:\n    runs-on: ubuntu-latest\n    steps:\n      - name: B\n        if: ${CI_GUARD}\n        run: ${cmd}\n`;
+  const floor = parseCiSteps(CI).length; // every position must still see the whole real file
+  const seen = assertPositionInvariant({
+    base: CI,
+    attack: job('npm run x && npm run y'),
+    benign: job('npm run x'),
+    // THE REAL ALLOWLIST, because the subject is the real ci.yml. Passing `{}` here un-exempts
+    // its one legitimate `bun install … && npm run check:mc` step, so every cell reports two
+    // findings and the sweep measures the allowlist instead of the position.
+    judge: (wf) => ciChainFindings(wf),
+    expect: 1,
+    floor,
+    positions: ['first job', 'last job'],
+  });
+  assert.deepEqual(seen, ['first job', 'last job'], 'the job sweep stopped covering both positions');
+});
+
+test('a chained STEP is caught wherever it sits in the job', () => {
+  // The additive step injection in `no ci.yml step runs a shell chain…` only ever appended. A check
+  // that read the first step and stopped would have passed it, and nothing would have said so.
+  const step = (cmd) => `      - name: A new check\n        if: ${CI_GUARD}\n        run: ${cmd}\n`;
+  const floor = parseCiSteps(CI).length;
+  const seen = assertPositionInvariant({
+    base: CI,
+    attack: step('npm run test:hooks && npm run test:budget'),
+    benign: step('npm run test:hooks'),
+    kind: 'step',
+    judge: (wf) => ciChainFindings(wf), // the real allowlist — see the job sweep above
+    expect: 1,
+    floor,
+    positions: ['first step', 'last step'],
+  });
+  assert.deepEqual(seen, ['first step', 'last step'], 'the step sweep stopped covering both positions');
+});
+
+test('the harness REFUSES a position-blind judge, and refuses a collapsed parse — or it proves nothing', () => {
+  // A HARNESS THAT CANNOT FAIL IS A PARAGRAPH WITH A TEST RUNNER ATTACHED. Both defects it exists to
+  // catch are constructed here and asserted to make it throw.
+  const job = (cmd) => `  extra:\n    runs-on: ubuntu-latest\n    steps:\n      - name: B\n        if: ${CI_GUARD}\n        run: ${cmd}\n`;
+  const floor = parseCiSteps(CI).length;
+  const args = {
+    base: CI, attack: job('npm run x && npm run y'), benign: job('npm run x'), expect: 1, floor,
+    positions: ['first job', 'last job'],
+  };
+
+  // 1 · POSITION-BLIND. A judge that reads only up to the second job — the shape `break` had — sees
+  // the prepended fixture and not the appended one. It must not be able to pass.
+  // IT DIFFERS FROM THE CORRECT JUDGE IN POSITION AND IN NOTHING ELSE. A first draft SLICED the
+  // workflow text instead — which also deletes the allowlisted `bun install` step, so the
+  // CI_CHAINS_ALLOWED rot-check fired and the sweep threw for a reason that has nothing to do with
+  // position. A self-test that passes for the wrong reason is the defect this file is about.
+  const firstJobOnly = (wf) => {
+    const lines = wf.split('\n');
+    const jobsAt = lines.findIndex((l) => /^jobs:\s*$/.test(l));
+    const second = lines.findIndex((l, i) => i > jobsAt + 1 && /^ {2}[\w-]+:\s*$/.test(l));
+    const cutoff = second === -1 ? Infinity : second + 1;
+    return ciChainFindings(wf).filter((f) => {
+      const m = /ci\.yml:(\d+)/.exec(f);
+      return m ? Number(m[1]) < cutoff : true;
+    });
+  };
+  assert.throws(
+    () => assertPositionInvariant({ ...args, judge: firstJobOnly }),
+    /expected 1 finding/,
+    'a judge that only reads the first job passed the sweep, so the sweep is not checking position'
+  );
+
+  // 2 · COLLAPSED PARSE. A floor one above what the file can yield must fail even though the verdict
+  // is right — that is the `steps=1` row, and reading the verdict alone is what let it read as a catch.
+  assert.throws(
+    () => assertPositionInvariant({ ...args, judge: (wf) => ciChainFindings(wf), floor: floor + 99 }),
+    /COLLAPSED parse/,
+    'the denominator is not being read, so a catch from a fragment still counts as a catch'
+  );
+
+  // 3 · A SWEEP THAT COULD NOT RUN MUST FAIL LOUDLY, NOT REPORT CLEAN. This is the orchestrator's PR
+  // watcher in miniature: it terminated on the ABSENCE of output and announced "queue drained" while
+  // seven PRs were open, because `gh` cannot read ~/.config/gh under the sandbox and empty stdout was
+  // read as a terminal SUCCESS. An absence read as a clean FINDING gets reviewed; an absence read as
+  // a clean COMPLETION ends the review. Each broken sweeper below is that failure wearing this
+  // harness's clothes, and each must throw.
+  const judge = (wf) => ciChainFindings(wf);
+  const broken = {
+    'a sweep over ZERO positions': () => [],
+    'a sweep that covered a SUBSET of what was declared': (base, frag, kind) => sweepPositions(base, frag, kind).slice(0, 1),
+    'a sweep whose two positions are the SAME workflow': (base, frag, kind) => {
+      const [first] = sweepPositions(base, frag, kind);
+      return [first, { ...first, position: 'last job' }];
+    },
+  };
+  for (const [label, sweep] of Object.entries(broken)) {
+    assert.throws(
+      () => assertPositionInvariant({ ...args, judge, sweep }),
+      /covered .* position|DECLARE the positions|SAME workflow/,
+      `${label} was reported as a clean invariance result`
+    );
+  }
+
+  // 4 · AND THE CONTROL FOR THE CONTROLS: with a correct judge, an honest floor and the real sweeper
+  // it PASSES, or every throw above is satisfied by a harness that throws at everything.
+  assert.doesNotThrow(() => assertPositionInvariant({ ...args, judge }));
+});
+
+test('a base the fixture cannot be placed in is REFUSED, not swept over zero positions', () => {
+  // THE OTHER HALF OF ABSENCE-AS-COMPLETION, and it is the one an ordinary edit produces: a base that
+  // does not contain the anchor the fixture needs. `sweepPositions` must refuse rather than hand back
+  // a placement identical to the base, which every later assertion would then judge as "clean".
+  const jobless = 'name: CI\non:\n  push:\n    branches: [main]\n';
+  const job = `  extra:\n    runs-on: x\n    steps:\n      - name: B\n        run: npm run x && npm run y\n`;
+  assert.throws(
+    () => assertPositionInvariant({
+      base: jobless, attack: job, benign: job, judge: (wf) => ciChainFindings(wf, {}),
+      expect: 1, floor: 0, positions: ['first job', 'last job'],
+    }),
+    /matched nothing|SAME workflow/,
+    'a base with no `jobs:` line was swept as though the fixture had been placed'
+  );
+
+  const stepless = 'name: CI\njobs:\n  one:\n    runs-on: x\n';
+  assert.throws(
+    () => assertPositionInvariant({
+      base: stepless, attack: '      - name: B\n        run: npm run x && npm run y\n', benign: '      - name: B\n        run: npm run x\n',
+      kind: 'step', judge: (wf) => ciChainFindings(wf, {}), expect: 1, floor: 0,
+      positions: ['first step', 'last step'],
+    }),
+    /no `steps:` line/,
+    'a base with no `steps:` line was swept as though a step had been placed'
+  );
+});
+
 test('every STEP of the suite has a counterpart step in ci.yml', () => {
   // `test:check-suite` — this very file — sat second in STEPS and ran NOWHERE on a runner until
   // 2026-08-25, because nothing ever iterated STEPS against ci.yml. Only EXCLUDED entries were

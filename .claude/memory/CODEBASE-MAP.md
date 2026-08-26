@@ -39,6 +39,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check` | `node scripts/run-checks.mjs` |
 | `npm run check:ci-chains` | `node scripts/check-ci-chains.mjs` |
 | `npm run check:citations` | `npm run test:citations && node scripts/check-citations.mjs` |
+| `npm run check:citations-exist` | `node scripts/check-citations.mjs --no-anchors --strict --external-prefix adamos` |
 | `npm run check:curation` | `node scripts/curate-skills.mjs --check` |
 | `npm run check:dispatch` | `npm run test:dispatch && npm run test:dispatch-flush && npm run check:dispatch-agenttype` |
 | `npm run check:dispatch-agenttype` | `node scripts/check-dispatch-agenttype.mjs` |
@@ -76,7 +77,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run probe:stop-reason` | `node scripts/probe-stop-reason.mjs` |
 | `npm run test:budget` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/usage.test.mjs` |
 | `npm run test:check-suite` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs` |
-| `npm run test:citations` | `node --test scripts/check-citations.test.mjs` |
+| `npm run test:citations` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-citations.test.mjs` |
 | `npm run test:claims` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/claims.test.mjs` |
 | `npm run test:classifier` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/classifier.test.mjs` |
 | `npm run test:dispatch` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-dispatch-agenttype.test.mjs` |
@@ -134,6 +135,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/check-registration.test.mjs` | — |
 | `scripts/check-suite.test.mjs` | the drift guard for `npm run check`, and the mutation gate for |
 | `scripts/check-tier-gate.test.mjs` | the tier gate that replaced label-based enforcement. |
+| `scripts/claim-append.test.mjs` | the gate in scripts/lib/claim-append.js. |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
 | `scripts/evict-memory.test.mjs` | mutation gate for the typed memory eviction. |

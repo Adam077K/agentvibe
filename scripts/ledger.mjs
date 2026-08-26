@@ -51,6 +51,7 @@ const require = createRequire(import.meta.url);
 const { parseClaimsFromText, parseYamlSubset, validateClaim } = require('./lib/claims.js');
 const { loadRules, classifyFile } = require('./lib/classifier.js');
 const resolvers = require('./lib/resolvers.js');
+const { eventsPath, logEvent } = require('./lib/events.js');
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..');
@@ -90,32 +91,11 @@ const INDEX_VERSION = 1;
 // The run log the launcher already writes. Resolution order is explicit and the chosen
 // path is always printed, because "which log did it write to" is the first question
 // asked when a would_block cannot be found.
-function eventsPath() {
-  if (process.env.WARROOM_EVENTS) return process.env.WARROOM_EVENTS;
-  const cfgPath = path.join(REPO_ROOT, '.warroom.yml');
-  if (fs.existsSync(cfgPath)) {
-    try {
-      const cfg = parseYamlSubset(fs.readFileSync(cfgPath, 'utf8')) || {};
-      const stateDir = cfg.state_dir
-        ? String(cfg.state_dir).replace(/^~/, os.homedir())
-        : (cfg.session ? path.join(os.homedir(), `.${cfg.session}`) : null);
-      if (stateDir) return path.join(stateDir, 'events.jsonl');
-    } catch { /* fall through to the in-repo log */ }
-  }
-  return path.join(REPO_ROOT, '.ledger-events.jsonl');
-}
-
-function logEvent(obj) {
-  const p = eventsPath();
-  try {
-    fs.mkdirSync(path.dirname(p), { recursive: true });
-    fs.appendFileSync(p, JSON.stringify(obj) + '\n');
-    return p;
-  } catch (e) {
-    process.stderr.write(`ledger: could not write ${p}: ${e.message}\n`);
-    return null;
-  }
-}
+//
+// MOVED to scripts/lib/events.js, unchanged, when `scripts/lib/claim-append.js` needed
+// the same two functions. It is one file with two callers rather than two copies, for
+// the same reason there is one risk classifier: the day they disagree is the day
+// somebody is hunting a would_block in the wrong log.
 
 // ── Collecting claims ───────────────────────────────────────────────────────
 
@@ -499,6 +479,29 @@ const UNRESOLVABLE_CITATIONS = {
  * set — and is reported rather than treated as "no global claim exists."
  * `unknownWhy` says which of the two reasons it was.
  */
+// KNOWN AND DELIBERATELY NOT FIXED HERE — measured 2026-08-26, and the measurement is the
+// point. This function decides by set membership, `projectIds.has(id)`, and never opens the
+// record, so a citation of a DEPRECATED claim passes exactly as a live one does. That is a
+// real gap. It was implemented as a hard failure on this branch and then backed out,
+// because running it showed the obvious predicate is WRONG in three of four live cases:
+//
+//   .claude/memory/DECISIONS.md:217   names the retired id to say it was retired, and
+//                                     names its successor. Correct prose.
+//   two 2026-08-16 session files      historical record of the retirement. Correct, and
+//                                     rewriting history to green a lint is not a fix.
+//   CLAUDE.md:634                     A REAL DEFECT — it asserts the claim's content as
+//                                     live fact, which PR #73 falsified.
+//
+// The machine-readable half is no cleaner: exactly one `supports:` edge points at the one
+// deprecated claim, and it is the SUCCESSOR claim citing its own predecessor — a
+// supersession edge, which is the correct use.
+//
+// So "cites a deprecated claim" is not the predicate. Supersession and historical record
+// are legitimate and a set lookup cannot tell them from an assertion. Closing this needs a
+// decision nobody has made — most likely a `supersedes:` field so the legitimate case says
+// so in the schema instead of being inferred. `scripts/lib/claim-append.js` DOES enforce
+// non-deprecation on `supports:`, because there the semantics are unambiguous: a claim
+// being minted right now cannot be superseding anything and has no history to record.
 function checkCitations(projectIds, globalIds, unknownWhy) {
   const issues = [];
   const notes = [];

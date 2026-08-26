@@ -121,18 +121,50 @@ const qa = (await workflow('qa', {
   tier: TIER,
   ref: REF,
   context: `Combined diff from ${slices.length} parallel coding slices: ${SLICES.map(s => s.id).join(', ')} (branches: ${branches.join(', ')}). Review the integration surface between slices as well as each slice.`,
-}).catch(err => ({ verdict: 'BLOCK', summary: `qa.js sub-workflow threw: ${err && err.message ? err.message : err}`, blockers: [{ id: 'qa-workflow-failure', file: '(gate)', title: 'qa.js sub-workflow failed to return a verdict', fix: 'Re-run coding.js, or run qa.js independently to diagnose.' }] })))
+// A THROW ESTABLISHES NOTHING, so this is REFUSED and not BLOCK. The gate did not judge the diff
+// and reach an adverse conclusion; it fell over. Reporting that as a block attributes a finding to
+// a run that produced none.
+}).catch(err => ({ verdict: 'REFUSED', established: false, summary: `qa.js sub-workflow threw: ${err && err.message ? err.message : err}. Nothing about this diff was established in either direction.`, blockers: [{ id: 'qa-workflow-failure', file: '(gate)', title: 'qa.js sub-workflow failed to return a verdict', fix: 'Re-run coding.js, or run qa.js independently to diagnose.' }] })))
 
+// ── A REFUSAL MUST NOT BE FOLDED BACK INTO A BLOCK HERE ──────────────────────────────────────
+//
+// qa.js gained a third terminal verdict on 2026-08-26 — `REFUSED`, meaning nothing about the diff
+// was established in either direction — precisely because a refusal and a real block used to
+// return the same word. This is the only programmatic consumer of that word, so it is the one
+// place the distinction can be un-made.
+//
+// `status` was `qa.verdict === 'PASS' ? 'READY_TO_MERGE' : 'BLOCKED_BY_QA'`, which is a
+// PASS-vs-everything fold. That fails CLOSED, which is why it was safe to widen the vocabulary
+// before touching this file — but it would have reported a gate that refused its own arguments as
+// a gate that blocked the work, moving the lie one level up rather than ending it. A widened
+// vocabulary that its consumer collapses is not a widened vocabulary.
+//
+// `qa.js` REFUSES unconditionally when called from here today: this file passes no `tree` and no
+// sha-tipped `ref`, which is exactly the shape qa.js refuses. So `REFUSED_BY_QA` is not a rare
+// branch — it is what this path returns until that pass-through is fixed. Making it legible is
+// the point; it was reporting BLOCKED_BY_QA for a run that never looked at the diff.
 if (!qa || !qa.verdict) {
-  return { status: 'BLOCKED_BY_QA', slices, branches, qa_verdict: 'BLOCK', qa_summary: 'qa.js returned no verdict — failing safe.', note: 'No merge — gate did not produce a verdict.' }
+  return { status: 'REFUSED_BY_QA', slices, branches, qa_verdict: 'REFUSED', qa_established: false, qa_summary: 'qa.js returned no verdict — failing safe. Nothing about this diff was established.', note: 'No merge — the gate did not produce a verdict. This is a non-answer, not a finding.' }
 }
 
+const qaRefused = qa.verdict === 'REFUSED'
 return {
-  status: qa.verdict === 'PASS' ? 'READY_TO_MERGE' : 'BLOCKED_BY_QA',
+  status: qa.verdict === 'PASS' ? 'READY_TO_MERGE' : qaRefused ? 'REFUSED_BY_QA' : 'BLOCKED_BY_QA',
   slices,
   branches,
   qa_verdict: qa.verdict,
+  // Pass the gate's own derivation through rather than recomputing it from the verdict string —
+  // two places deciding "did this establish anything" is how the two come to disagree.
+  //
+  // `=== true`, NOT `!== false`, and the comment above is why. `!== false` reads an ABSENT key as
+  // established, which is this line inventing an answer the gate never gave — the second place the
+  // sentence above forbids, written directly underneath it. Absence is not evidence: a payload
+  // that does not carry the field has not told us anything, so it fails closed. Latent today
+  // because both producers set the key on every path, which is exactly when it is cheap to fix.
+  qa_established: qa.established === true,
   qa_blockers: qa.blockers,
   qa_summary: qa.summary,
-  note: 'No merge performed — Adam confirmation required after a PASS verdict.',
+  note: qaRefused
+    ? 'No merge — and NOT because the diff was judged. The gate established nothing; re-invoke it with the arguments its summary names.'
+    : 'No merge performed — Adam confirmation required after a PASS verdict.',
 }
