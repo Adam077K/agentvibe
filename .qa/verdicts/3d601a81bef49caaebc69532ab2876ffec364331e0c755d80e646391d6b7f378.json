@@ -1,0 +1,11 @@
+{
+  "subject": "3d601a81bef49caaebc69532ab2876ffec364331e0c755d80e646391d6b7f378",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "irreversible",
+  "tier_driver": ".claude/agents/sourcer.md",
+  "verdict": "PASS",
+  "by": "builder-sourcer-can-write",
+  "run_id": null,
+  "evidence": "Round 3. npm run check: 46 of 46 passed, 0 failed, exit 0, sandbox armed. test:ledger 214 tests, 213 pass, 0 fail, 1 skipped (real-socket SSRF test; armed sandbox denies loopback listen, binds on CI). N1/N2/N3 each reproduced BEFORE fixing and each pinned by mutation: reintroduce the bug and its test goes red, restore and all four green. Live on the real repo: ledger build --check exit 0 before and after a real append, index_rebuilt true, no stray .tmp files. Single author, single model family -- the irreversible tier's 2-of-3 multi-judge is NOT met by this record.",
+  "recorded_at": "2026-08-26T14:54:39.215Z"
+}
