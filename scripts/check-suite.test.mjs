@@ -692,6 +692,93 @@ test('every OTHER unmodelled construct in the scanner path OVER-reports — the 
   assert.deepEqual(shellOperators('echo "${x:-a;b}"'), [], 'quoted — the double quotes make it literal to both');
 });
 
+test('three shapes bash runs as ONE command, which this rule used to refuse', () => {
+  // THESE RUN THE OPPOSITE DIRECTION FROM EVERY EARLIER ROUND. Rounds 1-3 were under-reports: a real
+  // chain returning []. These are OVER-reports: bash executes each as a single command, exit 0, and
+  // the rule reported a chain operator — so the guards would have refused correct code, with a
+  // message ("the step's exit code becomes the last command's") that is false of it. A rule that
+  // fires on correct code gets weakened rather than obeyed, which is how the surface reopens.
+  //
+  // Measured in bash: `echo "$(($1|1))"` prints 7 with `set -- 6 7`; `echo "$((x|=2))"` prints 3;
+  // `node x.mjs 0<&3` exits 0. None of the 114 governed commands is affected — none contains a `$`
+  // at any position — so these bite the first person to write `$((x|=2))` in a build script.
+  assert.deepEqual(shellOperators('echo "$(($1|1))"'), [], 'a positional parameter is an arithmetic operand');
+  assert.deepEqual(shellOperators('echo "$((x|=2))"'), [], 'compound assignment');
+  assert.deepEqual(shellOperators('node x.mjs 0<&3'), [], 'input descriptor duplication');
+
+  // The rest of the special parameters, because the fix is that ONE list serves both
+  // isModelledDollar() and ARITH_OPERAND — written twice they drift, which is what produced the
+  // first of these three. Two of them needed more than the shared list, and both were found by
+  // running these cases rather than by reading:
+  //
+  //   $#   `#` was in ARITH_FORBIDDEN outright, because it begins a comment in command context. But
+  //        `set -- a b c; echo "$(($#|1))"` prints 3. It is now forbidden only when NOT preceded by
+  //        `$`, which keeps base-N refused — the `#` in `16#ff` follows a digit — and that refusal
+  //        has its own case below.
+  //   $$   the scan re-read its second `$` as the start of another form and reported an unmodelled
+  //        `$|`. It is the one vocabulary member that is itself a `$`, so it is consumed as a unit.
+  //
+  // WHAT THIS CASE ASSERTS IS SYNTAX, not evaluation. `$@` and `$*` are valid operands only when
+  // they expand to a single number — with `set -- 6 7` bash errors on `$((6 7|1))` — and `$!` with
+  // no background job expands to nothing. That is a runtime failure that exits 1 and runs no
+  // command, the same class as `$((1abc|2))`, so treating them as operands is correct here.
+  for (const param of ['$#', '$?', '$$', '$!', '$@', '$*', '$-', '$1', '$12']) {
+    assert.deepEqual(shellOperators(`echo "$((${param}|1))"`), [], `${param} is not an arithmetic operand`);
+  }
+  for (const op of ['|=', '&=', '^=', '+=', '-=', '*=', '/=', '%=', '<<=', '>>=', '**=']) {
+    assert.deepEqual(shellOperators(`echo "$((x${op}2))"`), [], `${op} is not modelled as compound assignment`);
+  }
+  for (const redirect of ['0<&3', '3<&-', 'exec 3<&0']) {
+    assert.deepEqual(shellOperators(`node x.mjs ${redirect}`), [], `${redirect} is not a redirect`);
+  }
+
+  // THE CONTROLS, in the same case, because each fix WIDENS an exemption and a widened exemption is
+  // how a bypass gets in. Every one of these must keep reporting.
+  assert.deepEqual(shellOperators('node x.mjs 2>&1'), [], 'the output-side redirect still is not a chain');
+  assert.deepEqual(shellOperators('npm run a | npm run b'), ['|'], 'a genuine pipe');
+  assert.deepEqual(shellOperators('npm run a & npm run b'), ['&'], 'genuine backgrounding');
+  assert.deepEqual(shellOperators('npm run a && npm run b'), ['&&']);
+  assert.deepEqual(shellOperators('npm run a || npm run b'), ['||']);
+  assert.deepEqual(shellOperators('echo $1; npm run b'), [';'], 'a positional parameter OUTSIDE arithmetic');
+
+  // …and the constructed abuse of each widening, which is the half that makes the widening safe
+  // rather than merely convenient.
+  assert.deepEqual(shellOperators('echo "$(($1; npm run b))"'), [';'], 'ARITH_OPERAND: a chain in the body');
+  assert.deepEqual(shellOperators('echo "$(($1); npm run b)"'), [';'], 'ARITH_OPERAND: no closing `))`');
+  assert.deepEqual(shellOperators('echo "$(($(npm run a; npm run b)|1))"'), [';', '|'], 'ARITH_OPERAND: nested substitution');
+  assert.deepEqual(shellOperators('echo $((a|=b)); npm run x'), [';'], 'ARITH_INFIX: a real separator after it');
+  assert.deepEqual(shellOperators('npm run a |= npm run b'), ['|'], 'ARITH_INFIX: `|=` outside arithmetic is a pipe');
+  assert.deepEqual(shellOperators('npm run a &= npm run b'), ['&'], 'ARITH_INFIX: `&=` outside arithmetic backgrounds');
+  assert.deepEqual(shellOperators('npm run a < file & npm run b'), ['&'], 'redirect guard: a space before `&` is not adjacency');
+  assert.deepEqual(shellOperators('npm run a <&3 & npm run b'), ['&'], 'redirect guard: the real trailing `&` after a dup');
+  assert.deepEqual(shellOperators('npm run a &< npm run b'), ['&'], 'redirect guard: `&<` is NOT a bash construct and must not be exempt');
+  assert.deepEqual(shellOperators('npm run a <&3 ; npm run b'), [';'], 'redirect guard: a `;` after a dup');
+});
+
+test('the two lists of `$` special parameters are ONE list', () => {
+  // Finding 1 in miniature, and this session's recurring defect: isModelledDollar()'s vocabulary and
+  // ARITH_OPERAND both need the special parameters, they were written out separately, and they
+  // disagreed — `$1` was in the vocabulary and not in the operand pattern, so `echo "$(($1|1))"`
+  // was reported as a pipe while bash printed 7. They are built from one constant now; this case is
+  // what makes splitting them again visible.
+  for (const param of ['@', '*', '?', '-', '$', '!', '#']) {
+    assert.deepEqual(shellOperators(`echo $${param}`), [], `$${param} is not in the $-vocabulary`);
+    assert.deepEqual(shellOperators(`echo "$(($${param}|1))"`), [], `$${param} is in the vocabulary but not an arithmetic operand`);
+  }
+  // A `$` form in NEITHER list is still reported — the lists agreeing must not mean they are empty.
+  assert.deepEqual(shellOperators('echo $[1+2]'), ['$['], 'the vocabulary stopped excluding anything');
+  assert.deepEqual(shellOperators('echo $|x'), ['$|'], 'a `$` before a pipe is not a parameter');
+
+  // `$$` is consumed as ONE form in both places, or its second `$` is read as a new one.
+  assert.deepEqual(shellOperators('echo $$'), [], 'a bare $$');
+  assert.deepEqual(shellOperators('echo $$; npm run b'), [';'], 'a real separator after $$ still reports');
+
+  // And the base-N refusal survives the narrowing of the `#` ban — it is a deliberate over-report
+  // with its own case, and the fix for `$#` must not have quietly turned it off.
+  assert.deepEqual(shellOperators('echo "$((16#ff&1))"'), ['&'], 'base-N stopped being refused');
+  assert.deepEqual(shellOperators('npm run a # x ; npm run b'), [';'], 'a `#` comment still over-reports');
+});
+
 test('an unquoted backslash escapes the operator after it — the branch that had no coverage', () => {
   // Measured: `echo a \; b` prints `a ; b` and `echo a \&\& b` prints `a && b`. Both are ONE
   // command, so reporting an operator would be firing on correct code. This branch existed from the

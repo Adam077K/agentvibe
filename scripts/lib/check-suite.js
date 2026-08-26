@@ -380,8 +380,17 @@ function arithmeticEnd(src, open) {
   return -1;
 }
 
-/** Characters that never appear in a bash arithmetic expression, and each of which can start or separate a command. */
-const ARITH_FORBIDDEN = /[;`'"\\#\n\r]/;
+/**
+ * Characters that never appear in a bash arithmetic expression, each of which can start or separate
+ * a command.
+ *
+ * `#` IS FORBIDDEN ONLY WHEN IT IS NOT `$#`. It begins a comment in command context, which is why
+ * it is here at all — but `$#` is an ordinary arithmetic operand, and bash prints 3 for
+ * `set -- a b c; echo "$(($#|1))"`. Banning it outright made this rule refuse correct code. The
+ * lookbehind-free form `(?:^|[^$])#` keeps base-N notation refused, because the `#` in `16#ff` is
+ * preceded by a digit — pinned, since that refusal is a deliberate over-report with its own case.
+ */
+const ARITH_FORBIDDEN = /[;`'"\\\n\r]|(?:^|[^$])#/;
 /**
  * A number, an identifier, `$name`, or `${name}`.
  *
@@ -390,11 +399,41 @@ const ARITH_FORBIDDEN = /[;`'"\\#\n\r]/;
  * begins a comment in command context. Removing it changes nothing and puts the base-N refusal in
  * one place — `$((16#ff&1))` is refused by ARITH_FORBIDDEN, and the case asserting that says so.
  */
-const ARITH_OPERAND = /^(?:\$?\{\s*[A-Za-z_]\w*\s*\}|\$?[A-Za-z_]\w*|\d\w*)/;
+/**
+ * The special parameters, spelled ONCE and consumed by both places that need them.
+ *
+ * isModelledDollar() enumerates them as the `$`-vocabulary; ARITH_OPERAND needs the same set,
+ * because `$?` and `$1` are ordinary operands inside `$((…))`. Written out twice, the two lists
+ * disagree silently — which is this file's own recurring defect, and it is exactly how
+ * `echo "$(($1|1))"` came to be reported as a pipe while bash printed 7.
+ */
+const SPECIAL_PARAMETERS = '@*?-$!#';
+
+/** The same set as a character class. Built from the string so the two cannot drift apart. */
+const SPECIAL_PARAMETER_CLASS = `[${SPECIAL_PARAMETERS.replace(/[-\]\\^]/g, '\\$&')}]`;
+
+// `$1` and `$@` come BEFORE the `$?name` alternative so that `$name` and `${name}` match exactly as
+// they did — the new branch cannot reach a name, because a digit run and a special parameter are
+// disjoint from `[A-Za-z_]`.
+const ARITH_OPERAND = new RegExp(
+  `^(?:\\$?\\{\\s*[A-Za-z_]\\w*\\s*\\}|\\$(?:\\d+|${SPECIAL_PARAMETER_CLASS})|\\$?[A-Za-z_]\\w*|\\d\\w*)`
+);
 /** Unary, where an operand is expected. */
 const ARITH_PREFIX = /^(?:\+\+|--|[-+!~])/;
-/** Binary, where an operator is expected. `?` and `:` are handled separately so they must pair. */
-const ARITH_INFIX = /^(?:\*\*|<<|>>|<=|>=|==|!=|&&|\|\||[-+*/%&|^<>=,])/;
+/**
+ * Binary, where an operator is expected. `?` and `:` are handled separately so they must pair.
+ *
+ * ORDERED LONGEST-FIRST, and that ordering is load-bearing rather than tidy: alternation takes the
+ * FIRST match, so the two-pipe alternative has to precede the compound-assignment class or `||`
+ * would be read as `|` followed by junk, and `<<=` has to precede `<<`. Verified by execution on
+ * the inputs that discriminate — `||` matches `||` and not `|`, `|=` matches `|=`, `&=` matches
+ * `&=`, `<<=` matches `<<=`. (The class is not spelled in this comment because it contains the
+ * two characters that end a block comment.)
+ *
+ * Compound assignment was missing until 2026-08-26, so `$((x|=2))` — which bash evaluates to 3 —
+ * was reported as a pipe.
+ */
+const ARITH_INFIX = /^(?:\*\*=|<<=|>>=|\*\*|<<|>>|<=|>=|==|!=|&&|\|\||[-+*/%&|^]=|[-+*/%&|^<>=,])/;
 
 /**
  * Does the text between `$((` and `))` read as arithmetic bash would evaluate?
@@ -499,7 +538,7 @@ function isModelledDollar(src, i, inDoubleQuote) {
   if (next === undefined || /\s/.test(next)) return true;
   if (next === '{') return true;
   if (/[A-Za-z0-9_]/.test(next)) return true;
-  if ('@*?-$!#'.includes(next)) return true;
+  if (SPECIAL_PARAMETERS.includes(next)) return true;
 
   // THE ONLY TWO FORMS DOUBLE QUOTES SUPPRESS, and the narrowness is the whole point. Outside
   // quotes these never reach here — the branches at the call site consume them. Inside, they are
@@ -620,6 +659,11 @@ function shellOperators(command) {
       unmodelled.add(`$${src[i + 1]}`);
       break;
     }
+    // `$$` IS ONE FORM, so its second `$` must not be re-read as the start of another. Without this
+    // the scan reached `$|` in `$(($$|1))` and reported an unmodelled construct for a body bash
+    // evaluates to a process id — the gate firing on correct code, which is how a gate gets
+    // deleted. It is the only vocabulary member that is itself a `$`.
+    if (c === '$' && src[i + 1] === '$') { i += 1; continue; }
 
     // Inside double quotes and outside any substitution, nothing below separates commands. This is
     // the `usage` script's case and it must keep returning [].
@@ -655,7 +699,12 @@ function shellOperators(command) {
     // case where that sentence is simply false, and a rule that fires on correct code with a wrong
     // explanation is one someone deletes rather than obeys. Latent when fixed 2026-08-26: no script
     // in the tree used the shape. A pipe alongside a redirect is still reported, on the pipe.
-    if (c === '&' && (src[i - 1] === '>' || src[i + 1] === '>')) continue;
+    // `<&` IS THE INPUT SIDE OF THE SAME THING — `0<&3`, `3<&-`, `exec 3<&0` duplicate or close an
+    // input descriptor and run one command, and each exits 0. Only `src[i - 1]`, never `src[i + 1]`:
+    // `&<` is not a bash construct, so accepting it would widen this exemption for nothing, and a
+    // widened exemption is how a bypass gets in. Adjacency with NO whitespace tolerance is what
+    // keeps `npm run a < file & npm run b` reported on its real trailing `&`.
+    if (c === '&' && (src[i - 1] === '>' || src[i + 1] === '>' || src[i - 1] === '<')) continue;
     if (c === '&') { found.add('&'); continue; }
     if (c === '\n' || c === '\r') { found.add('\\n'); continue; }
   }
