@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { ciChainFindings, CI_CHAINS_ALLOWED } = require('./lib/check-suite.js');
+const { ciChainFindings, CI_CHAINS_ALLOWED, UNPARSED_PREFIX } = require('./lib/check-suite.js');
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -46,11 +46,36 @@ const findings = ciChainFindings(fs.readFileSync(CI_PATH, 'utf8'));
 if (findings.length) {
   console.error(`check:ci-chains: ${findings.length} finding${findings.length > 1 ? 's' : ''}\n`);
   for (const f of findings) console.error(`  ${f}`);
-  console.error(
-    '\nA step is ONE command and the workflow reads ONE exit code from it. Split it into two steps, or ' +
-      'add the exact run string to CI_CHAINS_ALLOWED in scripts/lib/check-suite.js with the reason written ' +
-      'down — an entry there fails if it stops matching a live step, so an exemption cannot rot.'
-  );
+  // TWO KINDS OF FINDING, TWO REMEDIES, AND EACH IS PRINTED ONLY FOR ITS OWN KIND. Printing both
+  // always was the smaller half of this defect: a refusal-only run still got the chain remedy
+  // appended, telling the reader to add a string to an allowlist that cannot hold it. The kinds are
+  // told apart by UNPARSED_PREFIX, a constant both files import — not by matching a substring of
+  // the message, which is what this did until 2026-08-26 and which a reword would have broken in
+  // silence.
+  const refusals = findings.filter((f) => f.startsWith(UNPARSED_PREFIX));
+  if (refusals.length) {
+    console.error(
+      `\nAn ${UNPARSED_PREFIX} finding is the YAML layer, not the shell one: this parser reads a \`run:\`/\`if:\` ` +
+        'value in exactly two shapes — a plain single-line scalar, or a block scalar with no explicit ' +
+        'indentation indicator — and refuses the rest rather than implementing YAML. It has NO allowlist ' +
+        'entry by design.\n' +
+        '  · QUOTED?  UNQUOTE IT. That is the fix for nearly every one of these, and it is the whole fix ' +
+        'for an `if:` — `if: ${{ !cancelled() }}` needs no quotes and a block scalar there would be bizarre.\n' +
+        '  · CANNOT unquote, because the value carries a `: ` or starts with an indicator? Write it as a ' +
+        'block scalar (`run: |-`), which has no quoting rules and no escapes, so anything expressible is ' +
+        'expressible there — but WITHOUT an indentation indicator: `|2` is refused too, because the body ' +
+        'baseline is read off the first content line rather than off the indicator.\n' +
+        '  · SPLIT OVER SEVERAL LINES? Join it, or make it a block scalar. A continuation is refused ' +
+        'because this parser has not read all of the value, not because the value is wrong.'
+    );
+  }
+  if (refusals.length < findings.length) {
+    console.error(
+      '\nA step is ONE command and the workflow reads ONE exit code from it. Split it into two steps, or ' +
+        'add the exact run string to CI_CHAINS_ALLOWED in scripts/lib/check-suite.js with the reason written ' +
+        'down — an entry there fails if it stops matching a live step, so an exemption cannot rot.'
+    );
+  }
   process.exit(1);
 }
 
