@@ -113,7 +113,19 @@ const DEFAULT_JUDGE = 'codex';
  * environment would break existing command claims that legitimately read repo config.
  * Two children, two threat models; noted rather than unified.
  */
-const BASE_ENV_ALLOW = ['PATH', 'HOME', 'USER', 'LOGNAME', 'SHELL', 'LANG', 'LC_ALL', 'TMPDIR', 'TERM'];
+// The proxy and CA-bundle names are on this list ON PURPOSE, and they are not decoration.
+// Behind a corporate proxy or a custom CA — the normal shape of a CI runner — a judge
+// that cannot see them fails to reach the vendor, fails to authenticate, and lands on
+// `unresolved`. That is the safe direction and it is also SILENTLY INERT: the resolver
+// stops being able to judge anything and no test anywhere would notice, which is the exact
+// failure class this file already carries a warning about for `last_agent_message`.
+// `WARROOM_JUDGE_ENV_PASS` would fix it too, but only after somebody diagnoses an inert
+// resolver, and that diagnosis is the expensive part.
+const BASE_ENV_ALLOW = [
+  'PATH', 'HOME', 'USER', 'LOGNAME', 'SHELL', 'LANG', 'LC_ALL', 'TMPDIR', 'TERM',
+  'HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY', 'https_proxy', 'http_proxy', 'no_proxy',
+  'NODE_EXTRA_CA_CERTS', 'SSL_CERT_FILE', 'SSL_CERT_DIR', 'REQUESTS_CA_BUNDLE',
+];
 
 const PROFILES = {
   // `codex exec - --json`: subcommand not flag, trailing `-` mandatory (without it codex
@@ -149,7 +161,7 @@ const PROFILES = {
         const k = kind(e);
         if (k.startsWith('item.') || k === 'turn.completed') collectStrings(e, out);
       }
-      return out;
+      return out.slice(-MAX_TEXT_UNITS); // TAKE_TAIL — the answer is the last thing said
     },
   },
 
@@ -185,9 +197,24 @@ const PROFILES = {
   },
 };
 
-/** Every non-empty string leaf of a value, depth-limited so a cyclic or vast event cannot hang the walk. */
+/** How many text units are examined for a verdict, counted from the END. See TAKE_TAIL. */
+const MAX_TEXT_UNITS = 500;
+/** Depth and total-leaf bounds exist to stop a vast or cyclic event hanging the walk, nothing more. */
+const MAX_DEPTH = 8;
+const MAX_LEAVES = 20000;
+
+/**
+ * Every non-empty string leaf of a value.
+ *
+ * TAKE_TAIL: callers keep the LAST MAX_TEXT_UNITS leaves, not the first. A cap that drops
+ * the tail drops the verdict — the judge's answer is the last thing it says — and the
+ * result would be a resolver that goes permanently `unresolved` on any verbose run while
+ * every stub test stays green. That is the silent-inertness failure this file already
+ * warns about twice; a bound that discards the far end of the stream builds a third one.
+ * The bounds here are for runaway input only, and are far above any real event.
+ */
 function collectStrings(value, out, depth = 0) {
-  if (depth > 6 || out.length > 500) return;
+  if (depth > MAX_DEPTH || out.length > MAX_LEAVES) return;
   if (typeof value === 'string') { if (value !== '') out.push(value); return; }
   if (Array.isArray(value)) { for (const v of value) collectStrings(v, out, depth + 1); return; }
   if (value && typeof value === 'object') { for (const v of Object.values(value)) collectStrings(v, out, depth + 1); }
@@ -291,12 +318,44 @@ function buildPrompt(claim, nonce, fence) {
 }
 
 /**
+ * Ordinary model formatting stripped off a candidate final line: list bullets, blockquote
+ * markers, markdown emphasis, code ticks, and trailing sentence punctuation.
+ *
+ * WHY THIS EXISTS: a real judge writing `**WARROOM-VERDICT-x: pass**` or
+ * `- WARROOM-VERDICT-x: pass.` meant to state a verdict, and a bare anchored match counts
+ * neither. That is `unresolved` — safe, but it is inertness caused by punctuation, and it
+ * would be diagnosed as a broken resolver rather than as a formatting mismatch.
+ *
+ * WHY IT STOPS HERE, and this is the deliberate half: only DECORATION is stripped, never
+ * trailing prose. `WARROOM-VERDICT-x: pass (actually, on reflection, fail)` is NOT counted,
+ * because reading it as `pass` would report the opposite of what the judge said. The prompt
+ * asks for nothing else on that line; unbounded trailing text is exactly where a second
+ * verdict hides. Stripping a LEADING bullet is safe because the token must still sit at the
+ * start of what remains, so a verdict quoted mid-sentence still does not match.
+ */
+function stripDecoration(line) {
+  return String(line)
+    .replace(/^[\s>*\-+•`_]+/, '')
+    .replace(/[`*_]+$/, '')
+    .replace(/[.!;,]+$/, '')
+    .trim();
+}
+
+/**
  * The verdicts a judge actually stated, as the DISTINCT set.
  *
  * `texts` is a list of text units — one per message or per string leaf — and only the
  * FINAL non-empty line of each unit is examined. That is what makes a planted verdict
  * mid-message worthless, and it is why profiles return an array rather than one joined
  * blob: joining would give a single final line and discard the structure this depends on.
+ *
+ * N4 — THE ONE RULE HERE THAT MOVES TOWARD `pass`, stated because every other narrowing in
+ * this file moves away from it. A unit containing a mid-message `fail` and a final-line
+ * `pass` was `unresolved` before the final-line rule and is `pass` now: the mid-message
+ * text is no longer read as a competing verdict. That is intended — a judge reasoning
+ * "this could fail, but…" and then stating pass has stated pass — but it IS a widening,
+ * and it is the only one. A genuine contradiction ACROSS two text units still resolves
+ * `unresolved`, which is the case that matters.
  *
  * The nonce is regex-escaped. It is generated here today, so an unescaped one is
  * unreachable — but `extractVerdicts(text, '.*')` matching anyone's token is a defect a
@@ -305,12 +364,12 @@ function buildPrompt(claim, nonce, fence) {
 function extractVerdicts(texts, nonce) {
   const units = Array.isArray(texts) ? texts : [texts];
   const escaped = String(nonce).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const re = new RegExp(`^${VERDICT_PREFIX}-${escaped}:\\s*(pass|fail)\\s*$`, 'i');
+  const re = new RegExp(`^${VERDICT_PREFIX}-${escaped}:\\s*(pass|fail)$`, 'i');
   const found = new Set();
   for (const unit of units) {
     const lines = String(unit).split('\n').map((l) => l.trim()).filter(Boolean);
     if (lines.length === 0) continue;
-    const m = lines[lines.length - 1].match(re);
+    const m = stripDecoration(lines[lines.length - 1]).match(re);
     if (m) found.add(m[1].toLowerCase());
   }
   return [...found];

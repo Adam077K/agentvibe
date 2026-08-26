@@ -417,6 +417,7 @@ test('risk:low accepts a single judge', () => {
 // pins that the gate is the turn-completion event and not the exit code, in BOTH
 // directions, so "ignores the exit code" cannot be implemented as "always unresolved".
 
+const J_ext = require('./lib/judges.js');
 const JUDGE_TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'wr-judge-'));
 after(() => fs.rmSync(JUDGE_TMP, { recursive: true, force: true }));
 
@@ -607,10 +608,53 @@ test('and a verdict planted mid-line is not a verdict — the final-line rule, s
 });
 
 test('the same verdict repeated is ONE verdict, not a contradiction', () => {
+  // BOTH units must be conforming verdict lines, or this does not test what it says.
+  // It previously read `'again: WARROOM-VERDICT-…: pass'` for the second unit — which the
+  // final-line anchor rejects, so the test asserted "one verdict plus a non-verdict yields
+  // one verdict" and the Set dedup in extractVerdicts was exercised by nothing in this
+  // file. Same class as the contradiction fixture two tests up: found one, missed one.
   const bin = codexTurn(`
 out({ type: 'item.completed', item: { text: 'WARROOM-VERDICT-' + nonce + ': pass' } });
-out({ type: 'item.completed', item: { text: 'again: WARROOM-VERDICT-' + nonce + ': pass' } });`);
+out({ type: 'item.completed', item: { text: 'WARROOM-VERDICT-' + nonce + ': pass' } });`);
   assert.equal(runExt({ binPath: bin }).status, 'pass');
+});
+
+test('ordinary model formatting still counts as a verdict — bold, bullets, a trailing period', () => {
+  // Each of these is a judge stating a verdict. A bare anchored match counted none of
+  // them, so a real judge adding a full stop produced `unresolved` — inertness caused by
+  // punctuation, which gets diagnosed as a broken resolver.
+  for (const line of ['**WARROOM-VERDICT-n1: pass**', '- WARROOM-VERDICT-n1: pass', 'WARROOM-VERDICT-n1: pass.', '> `WARROOM-VERDICT-n1: fail`']) {
+    assert.equal(J_ext.extractVerdicts(line, 'n1').length, 1, `must count: ${line}`);
+  }
+  assert.deepEqual(J_ext.extractVerdicts('> `WARROOM-VERDICT-n1: fail`', 'n1'), ['fail'], 'and the WORD must survive the decoration');
+});
+
+test('but trailing PROSE is still not a verdict — decoration is stripped, meaning is not', () => {
+  // The boundary the line above must not cross. Reading this as `pass` would report the
+  // opposite of what the judge said, and unbounded trailing text is where a second verdict
+  // hides.
+  assert.deepEqual(J_ext.extractVerdicts('WARROOM-VERDICT-n1: pass (actually, on reflection, fail)', 'n1'), []);
+  assert.deepEqual(J_ext.extractVerdicts('The claim says WARROOM-VERDICT-n1: pass but I disagree', 'n1'), [],
+    'stripping a leading bullet must not let a mid-sentence verdict through');
+});
+
+test('a verdict at the END of a long stream is not dropped by the unit cap — TAKE_TAIL', () => {
+  // The cap used to keep the FIRST 500 leaves. A judge that emits a lot before answering
+  // would have had its answer discarded, giving a permanently `unresolved` resolver on
+  // verbose runs while every stub in this file stayed green.
+  const noise = Array.from({ length: 900 }, (_, i) => ({ type: 'item.noise', pad: `chatter ${i}` }));
+  const events = [...noise, { type: 'turn.completed', last_agent_message: 'Done.\nWARROOM-VERDICT-n1: fail' }];
+  assert.deepEqual(J_ext.extractVerdicts(J_ext.PROFILES.codex.text(events), 'n1'), ['fail'],
+    'the answer is the last thing said, so the tail is what must survive the cap');
+});
+
+test('and the dedup is real: two identical verdicts collapse to one, two different ones do not', () => {
+  // Directly on the extractor, so the property is pinned where it lives rather than
+  // inferred from a resolver status. Delete the Set in extractVerdicts and this fails.
+  const twice = ['WARROOM-VERDICT-n1: pass', 'WARROOM-VERDICT-n1: pass'];
+  assert.deepEqual(J_ext.extractVerdicts(twice, 'n1'), ['pass'], 'two identical verdicts are one verdict');
+  const differ = ['WARROOM-VERDICT-n1: pass', 'WARROOM-VERDICT-n1: fail'];
+  assert.equal(J_ext.extractVerdicts(differ, 'n1').length, 2, 'control: disagreement is not collapsed');
 });
 
 test('a verdict bearing another run\'s nonce does not count — a replayed transcript is not a judgment', () => {
@@ -749,7 +793,6 @@ test('run() dispatches claim-judge-external through the same closed registry as 
 // below. INGEST refusal is the defence that needs no model cooperation, which is why it
 // carries the weight and the fence is behind it.
 
-const J_ext = require('./lib/judges.js');
 
 const hostileClaim = (over = {}) => ({
   id: 'c-hostile', assert: 'x', kind: 'judgment', scope: 'project', verified_by: 'judge',
@@ -857,6 +900,18 @@ out({ type: 'turn.completed', env: Object.keys(process.env).sort() });
   assert.equal(passed.GEMINI_API_KEY, undefined, "another profile's credential is not the codex profile's business");
   assert.equal(passed.PATH, fakeEnv.PATH, 'control: the child still gets what it needs to run');
   assert.equal(passed.WARROOM_LEDGER, '1');
+
+  // Proxy and CA names must cross. Behind a corporate proxy or custom CA — the normal
+  // shape of a CI runner — a judge that cannot see these never reaches the vendor, lands
+  // on `unresolved`, and is SILENTLY INERT: safe, invisible, and diagnosed as a broken
+  // resolver rather than as a missing variable.
+  const proxied = J_ext.judgeEnv(J_ext.PROFILES.codex, {
+    ...fakeEnv, HTTPS_PROXY: 'http://proxy:3128', NO_PROXY: 'localhost',
+    NODE_EXTRA_CA_CERTS: '/etc/ssl/corp.pem', REQUESTS_CA_BUNDLE: '/etc/ssl/corp.pem',
+  });
+  for (const k of ['HTTPS_PROXY', 'NO_PROXY', 'NODE_EXTRA_CA_CERTS', 'REQUESTS_CA_BUNDLE']) {
+    assert.ok(proxied[k] !== undefined, `${k} must reach the judge or it cannot reach the vendor`);
+  }
   // The escape hatch works, so a missing variable is a config change and not a code change.
   assert.equal(J_ext.judgeEnv(J_ext.PROFILES.codex, { ...fakeEnv, WARROOM_JUDGE_ENV_PASS: 'GITHUB_TOKEN' }).GITHUB_TOKEN, 'ghs_secret');
 });
