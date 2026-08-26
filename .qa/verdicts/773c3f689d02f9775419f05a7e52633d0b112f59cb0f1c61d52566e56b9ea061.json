@@ -1,0 +1,11 @@
+{
+  "subject": "773c3f689d02f9775419f05a7e52633d0b112f59cb0f1c61d52566e56b9ea061",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "irreversible",
+  "tier_driver": ".claude/hooks/schema-lint.js",
+  "verdict": "PASS",
+  "by": "builder-gate-reachable",
+  "run_id": null,
+  "evidence": "Re-recorded after the four blind-review evidence fixes; the prior subject 49e7b352 went correctly stale. npm run check: 46 of 46 passed, 0 failed, 315.1s, exit 0, sandbox armed. prompt-standard 76 pass/0 fail (74 before the fixes, 68 before the branch). schema-lint 18 pass/0 fail/0 warnings. ledger lint passes; c-workflow-invocation-contained now resolves against node .claude/hooks/schema-lint.js, which covers 18 of 18 agent files by two rules (engines via PS-WORKFLOW-CONTAINMENT, shims via the shim-tools rule) rather than the 7-engine prompt-standard test it cited before. Verified against a control that fires: unmodified engine yields no issues, engine+Workflow yields PS-WORKFLOW-CONTAINMENT, shim+tools yields the shim rule. Corpus figures de-rotted: subagent Workflow 0 and main-session 55 reproduce; the denominator does not (2802 files vs 2958, Bash control 52711 vs 57590). SINGLE AUTHOR, SINGLE MODEL FAMILY: the irreversible tier's 2-of-3 multi-judge requirement is NOT met.",
+  "recorded_at": "2026-08-26T14:16:22.859Z"
+}

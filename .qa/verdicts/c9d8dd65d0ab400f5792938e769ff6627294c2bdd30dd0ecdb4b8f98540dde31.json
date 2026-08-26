@@ -1,0 +1,11 @@
+{
+  "subject": "c9d8dd65d0ab400f5792938e769ff6627294c2bdd30dd0ecdb4b8f98540dde31",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "irreversible",
+  "tier_driver": ".claude/hooks/schema-lint.js",
+  "verdict": "PASS",
+  "by": "builder-gate-reachable",
+  "run_id": null,
+  "evidence": "Re-recorded after the #111 delta review; prior subject went correctly stale. npm run check: 46 of 46 passed, 0 failed, 318.3s, exit 0, sandbox armed. check:ledger exit 0. The claim's assert is now the bare 'No agent file declares a Workflow tool' — clause 2 deleted for the same reason clause 3 was, an unverifiable predicate rather than an unverifiable subject: the entailment holds only if frontmatter is the sole grant channel, and check-dispatch-agenttype.mjs documents a runtime all-tools default whose contents are measured nowhere here. evidence.cmd is now 'node .claude/hooks/schema-lint.js && node --test scripts/prompt-standard.test.mjs' because the lint checks the tree and the test checks the rule; measured against a control that fires - clean tree exit 0, rule deleted exit 1, TOOL_UNIVERSE entry removed exit 1. With the rule deleted, schema-lint alone exits 0 while an engine declares Workflow, which is the blind spot the earlier repoint introduced. SINGLE AUTHOR, SINGLE MODEL FAMILY: the irreversible tier's 2-of-3 multi-judge requirement is NOT met.",
+  "recorded_at": "2026-08-26T14:55:58.384Z"
+}

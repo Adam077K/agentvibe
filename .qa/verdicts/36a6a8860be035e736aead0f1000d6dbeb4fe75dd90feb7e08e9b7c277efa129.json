@@ -1,0 +1,11 @@
+{
+  "subject": "36a6a8860be035e736aead0f1000d6dbeb4fe75dd90feb7e08e9b7c277efa129",
+  "base": "0c78fa2813fc9d47291b339e3571a7e165c15074",
+  "tier": "irreversible",
+  "tier_driver": ".claude/hooks/schema-lint.js",
+  "verdict": "PASS",
+  "by": "builder-gate-reachable",
+  "run_id": null,
+  "evidence": "Re-recorded after updating onto main at 0c78fa2 (#114 merged); the prior subject went correctly stale, which is the diff-binding working. Merged, not rebased. No conflicted paths, verified rather than trusted: STEPS.length = 48 (main 48, branch 46 before the merge), #114's test:citations and check:citations-exist both present, my test:probe-workflow-reach EXCLUDED entry survived and is NOT in STEPS. npm run check on the merged tree: 48 of 48 passed, 0 failed, 137.7s, exit 0, sandbox armed. The claim c-workflow-invocation-contained resolves clean against the compound node .claude/hooks/schema-lint.js && node --test scripts/prompt-standard.test.mjs, which covers 18 of 18 agent files AND the rule's own existence. SINGLE AUTHOR, SINGLE MODEL FAMILY: the irreversible tier's 2-of-3 multi-judge requirement is NOT met.",
+  "recorded_at": "2026-08-26T15:28:23.138Z"
+}
