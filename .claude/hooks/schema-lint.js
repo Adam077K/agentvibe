@@ -376,10 +376,21 @@ const KNOWN_FM_KEYS = [
 //
 // It FAILS rather than warns because the `<server>` half is a closed set — the configured-server
 // set, the same one PS-MCP-BACKED compares against — and membership in it is decidable.
+// `Workflow` IS in this list, and the reason is that leaving it out stated something false.
+// Measured 2026-08-26 on binary 2.1.246: `strings -a` yields `WORKFLOW_TOOL_NAME:()=>Xu});var
+// Xu="Workflow"`, and the tool fires 55 times across the 2,958 transcripts on this machine. Until
+// this line it was absent, so PS-TOOL-EXISTS refused it with the message `is not a runtime tool` —
+// a claim about the runtime that the runtime contradicts. The refusal was right and its stated
+// reason was wrong, which is the worst combination: it survives review, and the obvious repair is
+// to append the name here, which silently opens the tool to all seven engines.
+//
+// So the name is admitted and PS-WORKFLOW-CONTAINMENT below owns the refusal on its real grounds.
+// Membership here means only "the runtime has such a tool", never "an agent may declare it".
 const TOOL_UNIVERSE = [
   'Read', 'Write', 'Edit', 'NotebookEdit', 'Bash', 'BashOutput', 'KillShell',
   'Glob', 'Grep', 'Task', 'Agent', 'WebSearch', 'WebFetch', 'TodoWrite',
   'Skill', 'SlashCommand', 'ExitPlanMode', 'StructuredOutput', 'ToolSearch',
+  'Workflow',
 ];
 
 // Tools that appear in `.claude/agents/*.md` prose as code spans, for PS-BODY-TOOL-AFFIRM.
@@ -567,6 +578,60 @@ function lintPromptStandard(filePath, text, fm, sections, issues, checks) {
         issues.push(`PS-TOOL-EXISTS: tools entry "${t}" is not a runtime tool (${TOOL_UNIVERSE.join(', ')})`);
       }
     }
+  }
+
+  // ── PS-WORKFLOW-CONTAINMENT ──────────────────────────────────────────────
+  //
+  // `Workflow` runs `.claude/workflows/qa.js` — the binding gate. No agent file may declare it.
+  // Both arms below FAIL; they carry different messages because they are different mistakes, and
+  // a reader who meets one must not conclude the other arm is the way through.
+  //
+  // ARM 1 — every engine that is not `orchestrator`. The gate must not be invocable by the thing
+  // it gates. This is `reviewer`'s own rule ("an agent that can edit what it reviews will review
+  // what it can edit") applied one level up: an agent whose verdict binds must not be able to
+  // re-run the machine that produces the verdict until it comes back the way it wants.
+  //
+  // ARM 2 — `orchestrator` itself, and this is the arm that looks wrong until you measure it.
+  // The orchestrator ALREADY holds `Workflow`: it is not dispatched, it IS the session
+  // (CONTROL-PLANE.md §1.1 — `bin/warroom` launches a bare `claude`, nothing names an agent file,
+  // and every frontmatter field is therefore inert on that path). All 55 recorded `Workflow`
+  // calls carry `isSidechain: false`; that is how qa.js has run. Declaring the tool here grants
+  // nothing it does not have, and a declaration that grants nothing is read as a boundary — the
+  // `mcpServers` fabrication exactly, which PS-MCP-BACKED exists to refuse.
+  //
+  // The dispatched path does not rescue it either. Measured 2026-08-26 over 2,958 transcripts:
+  // `Workflow` from a subagent 0, against `Bash` 57,408 · `Read` 18,056 · `Agent` 225 from
+  // subagents in the same scan — the instrument plainly sees sidechain entries, and it never sees
+  // this tool in one. So on the session path the declaration is inert, and on the dispatch path
+  // there is no evidence the runtime would honour it. Neither is a capability.
+  //
+  // WHAT WOULD CHANGE THIS: a Workflow call recorded with `isSidechain: true`. That is the probe
+  // named at CONTROL-PLANE.md §6 P2, and it is a measurement, not an argument.
+  //
+  // STATED LIMIT — SHIMS ARE NOT REACHED. `lintFile` early-returns on `kind: shim` before this
+  // function is called, so a shim declaring `tools: [Workflow]` is not caught here. The gap is
+  // bounded rather than open: `check-dispatch-agenttype.mjs` fails any dispatch whose `agentType`
+  // names a shim, so a shim is not a container anything can be dispatched into. If shims ever
+  // become dispatchable, this rule must move above that early-return — and the test below pins
+  // the limit so the move is a red test rather than a discovery.
+  //
+  // A CASE OR SPACING VARIANT IS NOT A BYPASS: `workflow`, `WORKFLOW` and `Workflow ` all fail
+  // PS-TOOL-EXISTS instead, because none of them is in TOOL_UNIVERSE. Verified by execution.
+  if (Array.isArray(fm.tools) && fm.tools.some((t) => String(t) === 'Workflow')) {
+    const who = path.basename(filePath, '.md');
+    issues.push(
+      who === 'orchestrator'
+        ? `PS-WORKFLOW-CONTAINMENT: ${who} declares tools entry "Workflow", which grants it nothing. ` +
+          'The orchestrator is not dispatched — it IS the session, so no field in this frontmatter is ' +
+          'read on the path it runs on (CONTROL-PLANE.md §1.1), and the session already holds the tool: ' +
+          'all 55 recorded Workflow calls came from a main session. A declaration that grants nothing ' +
+          'reads as a boundary, which is the mcpServers fabrication. Fix: delete the entry. The gate is ' +
+          'reached by a route (scripts/run-gate.mjs), never by a grant.'
+        : `PS-WORKFLOW-CONTAINMENT: ${who} declares tools entry "Workflow", which invokes ` +
+          '.claude/workflows/qa.js — the binding QA gate. The gate must not be invocable by the thing it ' +
+          'gates; only orchestrator may route to it, and it needs no declaration to do so. Fix: delete ' +
+          'the entry.'
+    );
   }
 
   // ── PS-SECTION-BOOKENDS ──────────────────────────────────────────────────
