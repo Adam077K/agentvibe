@@ -1,0 +1,110 @@
+---
+date: 2026-08-26
+role: builder
+task: gate-reachable
+branch: feat/orchestrator-reaches-the-gate
+tier: irreversible
+qa_verdict: PASS
+decisions:
+  - Refused the brief's premise that a `Workflow` grant is what makes the gate reachable. The
+    orchestrator already holds the tool; the missing piece is a route, and routes were out of scope.
+  - Admitted `Workflow` to `TOOL_UNIVERSE` because excluding it made the linter state something the
+    binary contradicts, and added `PS-WORKFLOW-CONTAINMENT` to own the refusal on its real grounds.
+  - Made the rule fail for `orchestrator` too, on a DIFFERENT ground. This exceeds the brief's
+    literal "any engine other than orchestrator" and is flagged as the one deviation.
+  - Left `test:probe-workflow-reach` OUT of the check suite and the CI workflow, registered in
+    EXCLUDED with the measurement. Wiring it moves two derived figures and fails `check:figures` at
+    20 sites in docs/STATUS.md and CLAUDE.md — files this brief forbade me to touch.
+corrections:
+  - "Brief: 'No engine can reach the binding QA gate.' REFUTED. The orchestrator is a main session
+    and main sessions hold `Workflow`; qa.js has run 55 times that way."
+  - "Brief: 'None declares Workflow' — CONFIRMED, but it is not the cause of anything."
+  - "Base drifted: origin/main moved 244e8db -> 47dbbd6 mid-session (PR #108). Fast-forward; the
+    standing rules' base is an ancestor. Built on 47dbbd6."
+claims_touched:
+  - c-workflow-invocation-contained
+---
+
+**Tier is `irreversible`** — `node scripts/classify.mjs` returns `floor=irreversible`, driven by
+`.claude/hooks/schema-lint.js` (`.claude/hooks/**`), with `.github/workflows/ci.yml` also
+`irreversible`. **This PASS is author-recorded against a deterministic floor by one agent of one
+model family.** The tier asks for 2-of-3 multi-judge and `risk: high` asks for ≥2 distinct model
+families; neither is met here, and the verdict record should be read as "the checks ran and are
+green", not as "the irreversible tier was satisfied".
+
+## What the brief asked, and what was actually true
+
+The brief asked me to grant the orchestrator the ability to invoke `.claude/workflows/qa.js`, and
+explicitly invited refutation of its mechanism. The mechanism is wrong, and the repo had already
+measured why on 2026-08-14 — the finding just never reached the brief.
+
+`Workflow` is a real runtime tool: `strings -a` on binary **2.1.246** yields
+`WORKFLOW_TOOL_NAME:()=>Xu});var Xu="Workflow"`, and it fires **55 times across 2,958 transcripts**
+on this machine. The orchestrator is **not dispatched** — it *is* the session (`bin/warroom` launches
+a bare `claude`; nothing names an agent file), so **every field in `orchestrator.md`'s frontmatter is
+inert on the path it runs on**, per CONTROL-PLANE.md §1.1. The session already holds the tool. That is
+how qa.js has run. Adding `Workflow` to its `tools:` grants nothing — it is the `mcpServers`
+fabrication one field over, and `2026-08-13-rethink-board.md:46` proposed exactly that remedy.
+
+So the gate is reachable today and the real gap is a **route** (`gate: qa-verdict` resolves to
+nothing; `scripts/run-gate.mjs` emits the invocation and is called by nobody). Routes live in
+`.claude/playbooks/` and `.claude/commands/`, both held by another lane — so I built the guard the
+brief also asked for, and left the route alone.
+
+## What landed
+
+Containment was, until now, an **accident of an omission**: `Workflow` was simply missing from
+`TOOL_UNIVERSE`, so it was refused as *"is not a runtime tool"* — a false statement whose obvious
+repair (append the name) would have silently opened the tool to all seven engines, with no test to
+go red. The name is now admitted and `PS-WORKFLOW-CONTAINMENT` owns the refusal, in two arms with
+distinct messages: for non-orchestrator engines, *the gate must not be invocable by the thing it
+gates*; for `orchestrator`, *this declaration grants you nothing you do not already have*.
+
+## Verification, and the controls
+
+- `npm run check` → **Tally: 46 of 46 passed · 0 failed · 255.0s · exit 0**, sandbox armed.
+- `node --test scripts/prompt-standard.test.mjs` → **74 pass · 0 fail** (68 before). Both mutations
+  go red: deleting the rule → 2 failures; reverting the `TOOL_UNIVERSE` line → 3.
+- The rule fires on **7 of 7** engines with a `Workflow` entry and on **0 of 7** without — the
+  control, without which the first number means nothing.
+- `workflow`, `WORKFLOW`, `Workflow ` do not slip through; they fail `PS-TOOL-EXISTS` instead.
+- `node .claude/hooks/schema-lint.js` → **18 pass · 0 fail · 0 warnings**, exit 0.
+- `npm run check:ledger` → exit 0; the new claim resolves ✓ on both `claim-command` and
+  `claim-freshness`. The 10 shadow entries are pre-existing (canary, three judge claims, and the
+  mission-control set that CLAUDE.md attributes to a missing `bun install`).
+
+`scripts/probe-workflow-reach.mjs` makes the measurement re-runnable: **0 subagent `Workflow` calls
+against 55 from main sessions**, with a control of **57,590 subagent `Bash`**, 18,064 `Read` and 225
+`Agent` calls in the same scan. The control is not decoration — the probe reports **UNRESOLVED and
+exits 2** when it does not fire, so an empty corpus cannot produce a containment verdict. Verified by
+executing all three paths, including the fixture built to defeat the conclusion: a constructed
+subagent `Workflow` call is **admitted** and returns `BREACHED`, exit 1.
+
+## What I did NOT do, and why
+
+I first wired `test:probe-workflow-reach` into `STEPS` and the CI workflow, and **backed it out
+after measuring the cost**. A 47th step moves `suiteSteps` 46→47 and `ciRunSteps` 47→48, and
+`npm run check:figures` then reports **20 findings** across `docs/STATUS.md` (8), `CLAUDE.md` (3)
+and the CI workflow (4). The first two are held by other lanes. Measured both ways: wired,
+`npm run check` was **44 of 47** with `test:figures`, `check:figures` and `check:map` red; unwired
+and after `npm run build:map`, clean. The exclusion is registered in `scripts/lib/check-suite.js`
+with the numbers and a `FALSIFY THIS`, so it is visible rather than silent — **but the probe's
+refusal path is checked by nothing automated, and that is a real gap, not a rounding error.**
+Wiring it is one commit for whoever holds those two files next.
+
+Two things that check caught in my own work, both corrected: the exclusion first cited
+`npm run build:figures`, **which does not exist** (`check-figures.mjs` has no writer mode), and it
+named the workflow file, which trips a guard that reads any such mention as a claim of CI coverage.
+
+I did not build the **route**, which is the actual fix for the brief's headline problem. It lives in
+`.claude/playbooks/` and `.claude/commands/`, held by L1-surface.
+
+## Stated limits
+
+A `kind: shim` file never reaches `PS-WORKFLOW-CONTAINMENT` — `lintFile` early-returns before the PS
+block. The gap is bounded, because `check-dispatch-agenttype.mjs` refuses any dispatch naming a
+shim, and a test pins the limit so that making shims dispatchable becomes a red test.
+
+The corpus evidence is observational. It does **not** discharge CONTROL-PLANE.md §6 P2, which names a
+direct dispatch experiment. What would refute this: one `Workflow` call recorded with
+`isSidechain: true`. The probe exists to catch that.
