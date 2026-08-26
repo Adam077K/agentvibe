@@ -1,13 +1,18 @@
 ---
 playbook: ship-feature
 enter_at: review
+stop_after: review
 ---
 
 # /review — judge a diff independently of whoever produced it
 
-Runs the **`ship-feature`** playbook from its `review` stage:
-[.claude/playbooks/ship-feature.yml](../playbooks/ship-feature.yml). It stops there. `/ship`
-continues through the `ship` stage and its founder gate.
+Runs the **`ship-feature`** playbook from its `review` stage and **stops there**:
+[.claude/playbooks/ship-feature.yml](../playbooks/ship-feature.yml). `/ship` enters at the same
+stage and continues through `ship` and its founder gate.
+
+That difference is the `stop_after` key above, not this paragraph. It used to be only this
+paragraph: `/review` and `/ship` carried byte-identical frontmatter, so the one command that must
+not merge and the one that does were indistinguishable to everything except a reader.
 
 ## Usage
 

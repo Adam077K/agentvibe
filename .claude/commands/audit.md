@@ -4,8 +4,13 @@
 
 ```
 /audit
-/audit [focus: security | quality | architecture]
+/audit [subtree]        e.g. /audit scripts/   ·   /audit mission-control/
 ```
+
+A subtree, not a focus keyword. This used to offer `[focus: security | quality | architecture]`
+and the body no longer describes what any of those three would do — a documented option with no
+described behaviour is one a reader will pass and then wonder about. Scope by path; the dimension
+comes from the review lens you name.
 
 ## This command names no playbook, and that is deliberate
 
@@ -52,4 +57,7 @@ a verdict belongs to a diff, and this command does not have one.
 > agents in parallel, and end in a PASS / NEEDS ATTENTION verdict with a report template. The
 > verdict was the defect — it wore the vocabulary of the binding gate while being computed by
 > nothing, over a subject the gate cannot take. The `CODEBASE-MAP.md` refresh it described is real
-> and is now `npm run check:map` above, which is a step of `npm run check`.
+> and is now `npm run build:map`, which regenerates the file. (`check:map` above is the *verifier*
+> — `gen-codebase-map.mjs --check`, which exits 1 on drift and refreshes nothing. This note said
+> `check:map`, so a reader replacing the deleted capability would have got a drift report instead
+> of a refresh.)

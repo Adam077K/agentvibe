@@ -352,6 +352,66 @@ test('the two lists agree in the shipped tree', () => {
   assert.deepEqual([...gates.map((g) => g.id)].sort(), [...lintGates].sort());
 });
 
+// ── The shipped values, pinned ──────────────────────────────────────────────
+//
+// Everything above checks the SHAPE of the wiring. Shape is not enough, and a reviewer proved it:
+// repoint `qa-verdict`'s `run:` at `node scripts/lib/claims.js` — a library that exits 0 — and every
+// check in this file still passes, `npm run gates` prints "✓ gate and trigger wiring resolves", and
+// `resolve qa-verdict` reports PASS having verified nothing. The string
+// `node scripts/verdict.mjs check` appeared only in the GOOD() fixture above, which is a VALUE and
+// not the shipped file, so nothing connected the two.
+//
+// That is this PR's own defect class arriving one layer down, in the file written to end it: a
+// one-line edit to a `lite`-tier data file makes the gate report PASS while enforcing nothing.
+//
+// The blast radius is bounded and that is why the fix is a pin rather than a redesign:
+// `.github/workflows/qa-lead-pass.yml` calls `verdict.mjs check --json` DIRECTLY and never reads
+// `gates.yml`, so this cannot disarm CI. What it can do is mislead a person running `resolve` by
+// hand, which `.claude/commands/review.md` tells them to do.
+//
+// Pinned as exact strings on purpose. Adding a flag to the command that resolves the binding gate
+// is precisely the change that should require editing a test and explaining itself.
+
+/** Every `kind: command` gate that ships, and the exact argv that resolves it. */
+const SHIPPED_RUN = {
+  'qa-verdict': 'node scripts/verdict.mjs check',
+};
+
+/** Every stage that ships a `gate:`, and which gate. */
+const SHIPPED_GATES = {
+  'design-pass/critique': 'qa-verdict',
+  'launch-landing-page/ship': 'outbound-approval',
+  'price-a-product/review': 'qa-verdict',
+  'price-a-product/commit': 'founder-approval',
+  'ship-feature/review': 'qa-verdict',
+  'ship-feature/ship': 'founder-approval',
+  'validate-a-market/judge': 'founder-approval',
+};
+
+test('every shipped command gate resolves to the exact command it is supposed to', () => {
+  const commandGates = realTree().gates.filter((g) => g.kind === 'command');
+  assert.deepEqual(
+    Object.fromEntries(commandGates.map((g) => [g.id, g.run])),
+    SHIPPED_RUN,
+    'a command gate was added, removed, or repointed — if that was deliberate, say so here',
+  );
+});
+
+test('every stage that gates still gates, and with the same gate', () => {
+  // The checker verifies `used -> declared` and `declared -> used`. It cannot verify
+  // `required -> used`, because nothing declares which stages are required to gate — so a stage
+  // can DROP its `gate:` and every check stays green. This is that missing direction, pinned as
+  // data rather than inferred: removing a gate from a stage, or swapping which gate it names,
+  // fails here. It is the path by which a live gate quietly stops being reached.
+  const live = {};
+  for (const p of realTree().playbooks) {
+    for (const s of p.doc.stages) {
+      if (s.gate !== undefined) live[`${p.id}/${s.id}`] = s.gate;
+    }
+  }
+  assert.deepEqual(live, SHIPPED_GATES, 'a stage gained, lost or changed its gate');
+});
+
 // ── triggers ↔ commands, in both directions ────────────────────────────────
 
 test('a playbook with no triggers is refused', () => {
@@ -412,12 +472,48 @@ test('one trigger claimed by two playbooks is refused', () => {
   );
 });
 
-test('enter_at naming a stage that does not exist is refused', () => {
+test('enter_at and stop_after naming a stage that does not exist are refused', () => {
+  for (const k of ['enter_at', 'stop_after']) {
+    assert.match(
+      joined((t) => { t.commands[0].fm[k] = 'nowhere'; }),
+      new RegExp(`${k} "nowhere" is not a stage of \\.claude/playbooks/alpha\\.yml \\(frame, review, ship\\)`),
+      k,
+    );
+  }
+  assert.deepEqual(findings((t) => { t.commands[0].fm.enter_at = 'review'; t.commands[0].fm.stop_after = 'ship'; }), []);
+});
+
+test('stop_after before enter_at is refused — an empty range runs no stage', () => {
   assert.match(
-    joined((t) => { t.commands[0].fm.enter_at = 'nowhere'; }),
-    /enter_at "nowhere" is not a stage of \.claude\/playbooks\/alpha\.yml \(frame, review, ship\)/,
+    joined((t) => { t.commands[0].fm.enter_at = 'ship'; t.commands[0].fm.stop_after = 'frame'; }),
+    /stop_after "frame" comes before enter_at "ship".*empty range/,
   );
-  assert.deepEqual(findings((t) => { t.commands[0].fm.enter_at = 'review'; }), []);
+  // The boundary case is legal: entering and stopping at the same stage runs exactly that stage,
+  // which is what /review is.
+  assert.deepEqual(findings((t) => { t.commands[0].fm.enter_at = 'review'; t.commands[0].fm.stop_after = 'review'; }), []);
+});
+
+test('/review and /ship are distinguishable in the data, not only in prose', () => {
+  // They carried byte-identical frontmatter — playbook: ship-feature, enter_at: review — while
+  // /review's prose claimed they differ in where they stop. The command that must not merge and
+  // the command that does were the same record.
+  const byName = new Map(realTree().commands.map((c) => [c.name, c]));
+  const review = byName.get('/review');
+  const ship = byName.get('/ship');
+  assert.equal(review.fm.playbook, 'ship-feature');
+  assert.equal(ship.fm.playbook, 'ship-feature');
+  assert.equal(review.fm.enter_at, 'review');
+  assert.equal(ship.fm.enter_at, 'review');
+  assert.equal(review.fm.stop_after, 'review', '/review must stop before the ship stage');
+  assert.notDeepEqual(review.fm, ship.fm, 'two commands with identical frontmatter are one command');
+});
+
+test('every command naming ship-feature declares where it enters', () => {
+  // build.md had no enter_at while fix.md had `enter_at: frame` — two spellings of one entry
+  // point, and the implicit one is the one nobody notices has changed.
+  for (const c of realTree().commands.filter((x) => x.fm.playbook === 'ship-feature')) {
+    assert.ok(c.fm.enter_at, `${c.file} does not say where it enters the playbook`);
+  }
 });
 
 test('unparseable command frontmatter is reported, never silently skipped', () => {

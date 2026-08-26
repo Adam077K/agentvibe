@@ -84,6 +84,52 @@ This is a real narrowing and it is the honest one. The alternative — having th
 gate — would produce exactly the failure the parallel lane measured: a verdict that looks like review and
 is not.
 
+## What blind review found, and what it cost to close
+
+R113 returned **PASS on `correctness`, `evidence` and `scope`, zero p1**, and confirmed the mechanism is
+load-bearing by running the deletion test itself, twice. Four of its eight findings are closed here; each
+was closed by a pin that fails when the defect returns, and each pin was break-tested.
+
+**The sharpest was my own defect class, one level down, in the file written to end it.** `qa-verdict`'s
+`run:` was unpinned and `.claude/gates.yml` floors at `lite`, so repointing it at `node scripts/lib/claims.js`
+— a library that exits 0 — left every shape check green: `npm run gates` printed `✓ gate and trigger wiring
+resolves`, and `resolve qa-verdict` reported **PASS** having verified nothing. Reproduced exactly, and the
+shape check still cannot see it: `npm run gates` exits 0 on the repointed file even now. What catches it is a
+pin on the *shipped value*, because the string `node scripts/verdict.mjs check` previously appeared only in a
+test fixture, which is a value and not the shipped file. Blast radius was genuinely bounded — `qa-lead-pass.yml`
+calls `verdict.mjs check --json` directly and never reads `gates.yml` — so it could mislead a human running
+`resolve` by hand, which `/review` instructs, but could not disarm CI.
+
+**Two commands removed the entire new guard and left `npm run check` at 46 of 46.** Drop
+`scripts/gates.test.mjs` from the `test:playbooks` step, run `build:map`, done. **The pin for this is in
+`scripts/playbooks.test.mjs`, not in `gates.test.mjs`, and the placement is the whole point:** a file cannot
+assert its own membership in the step that runs it — removed from the step it does not run, so its assertion
+does not run either, and the check reports green by not existing. The sibling in the same step still runs.
+The step NAME lives in `scripts/lib/check-suite.js` (`irreversible`, untouched); which FILES it runs lives in
+`package.json` (`lite`), so the cheap edit was the unguarded one.
+
+**A stage could drop its `gate:` and nothing noticed.** The checker verifies `used → declared` and
+`declared → used`; `required → used` is unverifiable, because nothing declares which stages must gate. Pinned
+as data — the seven shipped stage→gate pairs — so removing or swapping one fails.
+
+**`/review` and `/ship` carried byte-identical frontmatter** while `/review`'s prose claimed they differ in
+where they stop. The schema had `enter_at` and no counterpart, so the difference between the command that
+must not merge and the one that does lived in an unchecked sentence. Added `stop_after`, validated against
+real stage ids and refused when it precedes `enter_at`. Also gave `build.md` the explicit `enter_at: frame`
+that `fix.md` already had — two spellings of one entry point, and the implicit one is the one nobody notices
+changing.
+
+**DEFERRED, with the reason: renaming `gates` to `check:gates`.** R113 is right that `gates` escapes
+`GOVERNED = /^(?:check|test|lint|verify|audit):/` and could be deleted without the drift guard noticing —
+measured, `auditSuite()` failures mentioning it are 0 as `gates` and 1 as `check:gates`. The rename is the
+correct end state and it **cannot be done here**: a governed name must appear in `STEPS` or `EXCLUDED`, both
+of which live in `scripts/lib/check-suite.js`, which is `irreversible`. It lands after #114, with the argued
+`EXCLUDED` exemption its own cited precedent (`check:ci-chains`) carries.
+
+**NOT FIXED, deliberately:** the `CODEBASE-MAP.md` truncation and `.yaml` being invisible to
+`loadPlaybooks()` are both pre-existing and confirmed identical at base. Fixing a pre-existing defect inside
+a PR that did not cause it hides which change is under review.
+
 ## Constraints on the gate route, re-checked against this wiring
 
 A parallel lane measured `qa.js`'s entry contract and sent five constraints. **This route satisfies all of

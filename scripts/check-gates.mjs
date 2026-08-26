@@ -282,10 +282,25 @@ export function wiringFindings({ gates, playbooks, commands, lintGates, exists }
     if (!(pb.doc?.triggers || []).includes(c.name)) {
       F(`${pb.file}: triggers omit "${c.name}", but ${c.file} declares it runs this playbook`);
     }
-    if (c.fm.enter_at !== undefined) {
-      const stages = (pb.doc?.stages || []).map((s) => s.id);
-      if (!stages.includes(c.fm.enter_at)) {
-        F(`${c.file}: enter_at "${c.fm.enter_at}" is not a stage of ${pb.file} (${stages.join(', ')})`);
+    // ── enter_at / stop_after ────────────────────────────────────────────────
+    //
+    // `stop_after` exists because `/review` and `/ship` carried BYTE-IDENTICAL frontmatter
+    // (`playbook: ship-feature`, `enter_at: review`) while `/review`'s prose said the two differ in
+    // where they STOP. The schema had a key for where a command enters and none for where it
+    // leaves, so the whole distinction between "judge this diff" and "judge it and then merge it"
+    // lived in a sentence nothing checked. Two commands that read as one command is how somebody
+    // ships by typing the one that was supposed to only look.
+    const stages = (pb.doc?.stages || []).map((s) => s.id);
+    for (const k of ['enter_at', 'stop_after']) {
+      if (c.fm[k] !== undefined && !stages.includes(c.fm[k])) {
+        F(`${c.file}: ${k} "${c.fm[k]}" is not a stage of ${pb.file} (${stages.join(', ')})`);
+      }
+    }
+    if (c.fm.enter_at !== undefined && c.fm.stop_after !== undefined) {
+      const from = stages.indexOf(c.fm.enter_at);
+      const to = stages.indexOf(c.fm.stop_after);
+      if (from >= 0 && to >= 0 && to < from) {
+        F(`${c.file}: stop_after "${c.fm.stop_after}" comes before enter_at "${c.fm.enter_at}" in ${pb.file} — that is an empty range, and a command that runs no stage is not a command`);
       }
     }
   }

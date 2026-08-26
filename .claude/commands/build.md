@@ -1,5 +1,6 @@
 ---
 playbook: ship-feature
+enter_at: frame
 ---
 
 # /build — ship a feature
