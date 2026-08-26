@@ -230,6 +230,42 @@ function holdsVolumeContent(abs) {
 }
 
 /**
+ * Read a volume, or refuse BY NAME. Every read of a volume in this file goes through here.
+ *
+ * ── NAMING A CLASS IS NOT SWEEPING IT, AND THE SWEEP IS A SEPARATE ACT ──────────────────────
+ *
+ * The commit before this one gave `volumes()` a named refusal so an unreadable volume could stop
+ * the run with a sentence instead of a raw `node:fs:440` stack. It guarded ONE read and left
+ * three siblings, two of them fourteen lines apart in `cmdApply`. Staging the window
+ * deterministically — the volume readable to the scan and unreadable at the later read — gave
+ * `apply` exit 1 with a raw stack trace and no named refusal: the exact defect that commit
+ * exists to fix, surviving on adjacent lines.
+ *
+ * Nothing is lost when it happens (every one of these reads is before `commitWrite`), so this is
+ * a DIAGNOSIS defect, which is the only kind worth this much comment. The obligation the last
+ * round missed is the general one: **finding a class creates a duty to search for its other
+ * instances, and the search is not the diagnosis.** Hence one funnel rather than four guards.
+ *
+ * The post-write re-read in `commitWrite` deliberately does NOT use this: at that point both
+ * files are written, "REFUSED" would be a lie, and a read that fails there is a verification
+ * that could not be performed — which that function already has a vocabulary for.
+ */
+function readVolume(abs, name, io = fs) {
+  try {
+    return io.readFileSync(abs, 'utf8');
+  } catch (e) {
+    const err = new Error(
+      `${name} is a volume this tool cannot read (${e.code}):\n` +
+      `  ${abs}\n` +
+      '  It is NOT skipped — dropping a real volume would let the next eviction append to an\n' +
+      '  older one and break monotonic append in silence. Fix its permissions, or move it aside.'
+    );
+    err.name = 'EvictionUnreadableVolumeError';
+    throw err;
+  }
+}
+
+/**
  * Every archive volume on disk, lowest number first. Volume 1 is the un-suffixed legacy name.
  *
  * ── A VOLUME IS SOMETHING THAT RESOLVES TO A REGULAR FILE ───────────────────────────────────
@@ -265,26 +301,11 @@ function volumes(root) {
     .filter((v) => holdsVolumeContent(path.join(dir, v.name)))
     .map((v) => {
       const abs = path.join(dir, v.name);
-      let text;
-      try {
-        text = fs.readFileSync(abs, 'utf8');
-      } catch (e) {
-        // Same class as the EISDIR crash above, and it outlived that fix: an unreadable volume
-        // killed BOTH commands with a raw stack trace. Named, so the dispatcher can print it.
-        const err = new Error(
-          `${v.name} is a volume this tool cannot read (${e.code}):\n` +
-          `  ${abs}\n` +
-          '  It is NOT skipped — dropping a real volume would let the next eviction append to an\n' +
-          '  older one and break monotonic append in silence. Fix its permissions, or move it aside.'
-        );
-        err.name = 'EvictionUnreadableVolumeError';
-        throw err;
-      }
       return {
         number: v.m[1] ? Number(v.m[1]) : 1,
         name: v.name,
         abs,
-        bytes: Buffer.byteLength(text, 'utf8'),
+        bytes: Buffer.byteLength(readVolume(abs, v.name), 'utf8'),
       };
     })
     .sort((a, b) => a.number - b.number);
@@ -641,8 +662,27 @@ function commitWrite({ vol, volumeText, decisionsPath: decPath, decisionsText, c
   atomic(decPath, decisionsText);
 
   const problems = [];
-  const volOnDisk = io.readFileSync(vol.abs, 'utf8');
-  const decOnDisk = io.readFileSync(decPath, 'utf8');
+  // A re-read that FAILS is not a passed verification. Unguarded, an unreadable file here threw a
+  // raw `node:fs` trace from the one function whose entire job is to take the verdict from the
+  // artifact — and it is the worst place to lose the message, because both files are already
+  // written. It is reported in this function's own vocabulary rather than as a refusal: there is
+  // nothing left to refuse.
+  const reread = (abs, label) => {
+    try {
+      return io.readFileSync(abs, 'utf8');
+    } catch (e) {
+      problems.push(`${label} could not be re-read after the write (${e.code}) — the verdict must come from the artifact, and the artifact could not be opened`);
+      return null;
+    }
+  };
+  const volOnDisk = reread(vol.abs, vol.name);
+  const decOnDisk = reread(decPath, 'DECISIONS.md');
+  if (volOnDisk === null || decOnDisk === null) {
+    const e = new Error(`post-write verification failed:\n  ${problems.join('\n  ')}`);
+    e.name = 'EvictionVerificationError';
+    e.problems = problems;
+    throw e;
+  }
   if (volOnDisk !== volumeText) {
     problems.push(`${vol.name} on disk is ${Buffer.byteLength(volOnDisk, 'utf8')} bytes; ${Buffer.byteLength(volumeText, 'utf8')} were computed`);
   }
@@ -848,7 +888,7 @@ function cmdApply() {
     return;
   }
 
-  const volExisting = vol.fresh ? volumeHeader(vol.number) : fs.readFileSync(vol.abs, 'utf8');
+  const volExisting = vol.fresh ? volumeHeader(vol.number) : readVolume(vol.abs, vol.name);
   const newVolume = volExisting.replace(/\s*$/, '\n\n') + bodies.join('\n\n') + '\n';
 
   // ── AN ALREADY-ARCHIVED BODY MUST NOT BE APPENDED TWICE ───────────────────────────────────
@@ -862,7 +902,7 @@ function cmdApply() {
   // fill ceiling, the re-run ROTATES, sees a bare header, finds no duplicate, and files a second
   // copy in the next volume. The recovery this tool's own message recommends — run it again —
   // was the thing that produced the duplicate.
-  const archived = volumes(ROOT).map((v) => ({ name: v.name, text: fs.readFileSync(v.abs, 'utf8') }));
+  const archived = volumes(ROOT).map((v) => ({ name: v.name, text: readVolume(v.abs, v.name) }));
   const duplicated = chosen
     .map(({ entry }) => {
       const body = entry.text.replace(/\s+$/, '');

@@ -785,6 +785,74 @@ test('P2: an unexpected error is NOT tidied into a refusal — the catch is narr
     'an unexpected crash must not be dressed up as one of this tool\'s deliberate refusals');
 });
 
+// ── P3 · EVERY volume read, not the one the last commit happened to be looking at ────────────
+//
+// `9a1a325` guarded the read in `volumes()` and left three siblings, two of them fourteen lines
+// apart in `cmdApply`. These stage the window deterministically — the volume readable to the scan
+// and unreadable at the later read — by editing a throwaway copy of the CLI. THAT IS NOT A RACE
+// AND IS NOT EVIDENCE OF ONE: it is how the handling at each site is reached on purpose. Whether
+// the window is reachable in practice is a separate question nobody here has answered.
+
+/** `chmod 000` denies reads for this process — false as root, where the staging is meaningless. */
+function canStageUnreadable(dir) {
+  const probe = path.join(dir, `.mode-probe-${process.pid}`);
+  fs.writeFileSync(probe, 'x');
+  fs.chmodSync(probe, 0o000);
+  try {
+    fs.readFileSync(probe, 'utf8');
+    return false;
+  } catch {
+    return true;
+  } finally {
+    fs.chmodSync(probe, 0o644);
+    fs.rmSync(probe, { force: true });
+  }
+}
+
+const LATE_READ_SITES = [
+  ["cmdApply's destination read", "  const volExisting = vol.fresh ? volumeHeader(vol.number) : readVolume(vol.abs, vol.name);"],
+  ['the cross-volume duplicate guard', "  const archived = volumes(ROOT).map((v) => ({ name: v.name, text: readVolume(v.abs, v.name) }));"],
+];
+
+for (const [label, line] of LATE_READ_SITES) {
+  test(`P3: an unreadable volume at ${label} refuses by name, not by stack trace`, (t) => {
+    const { root, dir } = rotatingFixture('2026-06-21');
+    if (!canStageUnreadable(dir)) {
+      t.skip('this process can read a 0o000 file (running as root?), so unreadability cannot be staged');
+      return;
+    }
+    // Deny the read immediately before the line under test — the scan has already succeeded.
+    const mutant = cliCopy([[line, `  fs.chmodSync(path.join(ROOT, '.claude', 'memory', 'DECISIONS_ARCHIVE.md'), 0o000);\n${line}`]]);
+    const r = run(mutant, ['apply', '--root', root, '--date', '2026-08-26', '--only', '2026-06-21']);
+    try {
+      assert.equal(r.code, 1, `expected a refusal, got ${r.code}: ${r.out}`);
+      assert.match(r.err, /is a volume this tool cannot read \(EACCES\)/, `no named refusal:\n${r.err}`);
+      assert.ok(!r.err.includes('node:fs:'), `a raw stack trace reached the operator:\n${r.err}`);
+    } finally {
+      fs.chmodSync(path.join(dir, 'DECISIONS_ARCHIVE.md'), 0o644);
+    }
+  });
+}
+
+test('P3: a volume that cannot be RE-READ after the write is a failed verification, not a refusal', () => {
+  // The fourth site, and the one that must NOT say "REFUSED": both files are already written, so
+  // there is nothing left to refuse. A read that fails there is a verification that could not be
+  // performed, and `commitWrite` already has the vocabulary for that.
+  const f = commitFixture();
+  const blind = {
+    writeFileSync: (p2, t2) => fs.writeFileSync(p2, t2),
+    renameSync: (a, b) => fs.renameSync(a, b),
+    readFileSync: (p2, e) => {
+      if (p2.includes('DECISIONS_ARCHIVE.md')) { const err = new Error('EACCES'); err.code = 'EACCES'; throw err; }
+      return fs.readFileSync(p2, e);
+    },
+  };
+  const e = caught(() => commitWrite({ ...f, io: blind }));
+  assert.equal(e.name, 'EvictionVerificationError', 'it must fail as a verification, not escape raw');
+  assert.ok(e.problems.some((x) => x.includes('could not be re-read after the write (EACCES)')), JSON.stringify(e.problems));
+  assert.ok(!e.problems.some((x) => x.includes('REFUSED')), 'nothing is left to refuse once the files are written');
+});
+
 test('P1-2: volume 1000 keeps being recognised — padStart(3) emits four digits', () => {
   const root = fixture({
     entries: entry({ date: '2026-06-02', title: 'An ordinary decision about ordinary things' }),
