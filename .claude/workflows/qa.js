@@ -930,7 +930,22 @@ if (!oracle || oracle.pass !== true || oracleFailing.length || oracleUnderReport
   // a silent one, and downgrading an asserted failure to a non-answer is the direction that loses.
   // An INCOMPLETE report that names no failing check stays REFUSED: there is nothing to point at
   // and the floor did not finish, so "re-run it" is the only honest instruction.
-  const namedFailure = failing.length > 0
+  // A CHECK THAT CARRIES NO NAME NAMES NOTHING, and reading `failing.length > 0` as "something was
+  // named" put C1's own mirror inside C1's fix. `oracleFailing` is deliberately permissive —
+  // `checks.filter(c => !c || c.pass !== true)` — so that a null or malformed element cannot sneak
+  // a pass; `runOracle()` validates that `checks` is an ARRAY and never validates its elements.
+  // The consequence, measured before this line existed: `checks:[null,null]` returned
+  // `BLOCK est=true` with two `oracle-unnamed` blockers. Nothing was named and nothing was
+  // established — a non-answer wearing a finding, which is the defect this whole change closes,
+  // reintroduced by the guard that closed it.
+  //
+  // So the predicate asks for a NAME, not a count. A garbage element still counts as failing (it
+  // cannot become a pass), it just cannot be the thing that makes a report count as evidence.
+  // Downstream that lands each shape where it belongs: garbage in an INCOMPLETE report is REFUSED,
+  // because nothing is named and the floor did not finish; garbage in a COMPLETE report is still
+  // BLOCK — an asserted failure is never downgraded — and now carries ONE actionable
+  // `oracle-unnamed-failure` instead of N copies of `oracle-unnamed`.
+  const namedFailure = failing.some(c => c && typeof c.name === 'string' && c.name.trim().length > 0)
   const establishedNothing = !oracle || (!namedFailure && (oracleVacuous || oracleUnderReported))
   // ORDER MATTERS IN BOTH TERNARIES BELOW, and it is the same order as the predicate: `failing`
   // is tested before `oracleVacuous`/`oracleUnderReported`. With the shape tests first, an

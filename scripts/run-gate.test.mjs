@@ -658,9 +658,11 @@ test('qa.js REFUSES its own default ref when none is passed at all', async () =>
   assert.deepEqual(dispatched, []);
 });
 
-test('the stale-tree case BLOCKS on every ref shape, not only the one the first test used', async () => {
+test('the stale-tree case is REFUSED on every ref shape, not only the one the first test used', async () => {
   // The regression in one assertion: an HONEST oracle reporting a tree whose HEAD has moved.
-  // Pre-fix this was BLOCK for a sha tip and PASS for all four others.
+  // Pre-fix this was BLOCK for a sha tip and PASS for all four others. It is REFUSED now rather
+  // than BLOCK — a tree at the wrong commit establishes nothing about the ref under review — and
+  // the title and the assertion message said "block" after the body moved. Both corrected here.
   const stale = '66b7d6a1111111111111111111111111111111aa';
   const staleButHonest = goodOracle({ head: stale, ref_head: stale });
   const shapes = [
@@ -671,7 +673,7 @@ test('the stale-tree case BLOCKS on every ref shape, not only the one the first 
   ];
   for (const args of shapes) {
     const { out } = await runQa(args, staleButHonest);
-    assert.equal(out.verdict, 'REFUSED', `ref shape ${JSON.stringify(args.ref ?? '(default)')} did not block a stale tree`);
+    assert.equal(out.verdict, 'REFUSED', `ref shape ${JSON.stringify(args.ref ?? '(default)')} did not refuse a stale tree`);
   }
 });
 
@@ -1241,6 +1243,12 @@ const REFUSAL_MATRIX = [
   ['oracle dropped out entirely', GOOD_ARGS, null, 'REFUSED'],
   ['oracle claimed pass having run no checks', GOOD_ARGS, goodOracle({ checks: [] }), 'REFUSED'],
   ['oracle reported 1 of 3 checks', GOOD_ARGS, goodOracle({ checks: [OK_CHECKS[0]] }), 'REFUSED'],
+  // A CHECK CARRYING NO NAME NAMES NOTHING. Its absence from this matrix is exactly how C1
+  // survived, so the shapes that reach `oracleFailing` through its deliberately permissive
+  // `!c ||` are enumerated here rather than left to the next reader to think of.
+  ['2 checks, both null — nothing named, floor incomplete', GOOD_ARGS, goodOracle({ checks: [null, null] }), 'REFUSED'],
+  ['1 check, an empty object', GOOD_ARGS, goodOracle({ checks: [{}] }), 'REFUSED'],
+  ['1 check, a blank name and pass:false', GOOD_ARGS, goodOracle({ checks: [{ name: '   ', pass: false }] }), 'REFUSED'],
   // established: statements ABOUT THE DIFF, which must not move
   ['a named check actually FAILED in the right tree', GOOD_ARGS,
     goodOracle({ pass: false, checks: [{ name: 'npm run check', pass: false, output: 'boom' }, OK_CHECKS[1], OK_CHECKS[2]] }), 'BLOCK'],
@@ -1345,6 +1353,33 @@ test('a NAMED failing check outranks an incomplete report — and names itself i
     assert.deepEqual(out.blockers.map((b) => b.id), ['oracle-npm run check'], 'the failing check was not named');
     assert.match(out.summary, /npm run check/);
     assert.doesNotMatch(out.summary, /A partial floor is not a floor/, 'a red floor reported itself as a partial one');
+  }
+});
+
+test('a check carrying NO NAME names nothing — the mirror C1\'s own fix introduced', async () => {
+  // `namedFailure` read `failing.length > 0`, and `oracleFailing` is deliberately permissive
+  // (`!c || c.pass !== true`) because runOracle() validates that `checks` is an array and never
+  // validates its elements. So `checks:[null,null]` returned BLOCK with `established: true` and
+  // two `oracle-unnamed` blockers — nothing named, nothing established, a non-answer wearing a
+  // finding. That is the defect this branch closes, reintroduced by the guard that closed it.
+  for (const checks of [[null, null], [{}], [{ name: '   ', pass: false }]]) {
+    const { out } = await runQa(GOOD_ARGS, goodOracle({ checks }));
+    assert.equal(out.verdict, 'REFUSED', `${JSON.stringify(checks)} was read as evidence`);
+    assert.equal(out.established, false);
+    assert.ok(!out.blockers.some((b) => b.id === 'oracle-unnamed'), 'an unnamed check reached the blockers as a finding');
+  }
+});
+
+test('garbage in a COMPLETE report is still a BLOCK, and carries ONE actionable blocker', async () => {
+  // The other side of that line, and the reason the fix is not "treat garbage as a refusal". A
+  // complete report asserting failure is an asserted failure whatever its elements look like, and
+  // an asserted failure is never downgraded to a non-answer. What changes is legibility: one
+  // `oracle-unnamed-failure` the operator can act on, rather than N copies of `oracle-unnamed`.
+  for (const checks of [[null, {}, { name: '  ', pass: false }], [null, null, null]]) {
+    const { out } = await runQa(GOOD_ARGS, goodOracle({ pass: false, checks }));
+    assert.equal(out.verdict, 'BLOCK', `${JSON.stringify(checks)} stopped blocking`);
+    assert.equal(out.established, true);
+    assert.deepEqual(out.blockers.map((b) => b.id), ['oracle-unnamed-failure']);
   }
 });
 

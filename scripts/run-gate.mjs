@@ -429,9 +429,8 @@ function main() {
       console.log('  followed cwd. It no longer does: the invocation below carries `tree` as an absolute');
       console.log('  path, qa.js refuses to run without it and REFUSES if the check-runner reports having');
       console.log('  measured anything else — REFUSED is a third verdict meaning nothing was established,');
-      console.log('  distinct from BLOCK; neither is a pass. Launching from a `main` checkout is the RIGHT');
-      console.log('  procedure,');
-      console.log('  not a trade of a wrong reviewer for a wrong subject.');
+      console.log('  distinct from BLOCK; neither is a pass. Launching from a `main` checkout is the');
+      console.log('  RIGHT procedure, not a trade of a wrong reviewer for a wrong subject.');
       console.log('');
       console.log('  On the open half, A HUMAN DECIDES — this router cannot pick which COPY of the gate');
       console.log('  runs. Paste the invocation into a `main` checkout, or this diff is reviewed by the');

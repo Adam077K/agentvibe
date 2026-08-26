@@ -143,6 +143,49 @@ only `PASS|FAIL`, and `stop.sh` documents `PASS|FAIL|SKIP`. **An operator handed
 word for it**, and the natural mapping REFUSED→FAIL re-creates the exact conflation this change
 removes, one mechanism over. Follow-up.
 
+## Delta review — two more, and the sweep lesson sharpened
+
+**D2 — my mechanical sweep beat the finding list, and the reviewer's beat mine.** Both were correct
+about what they examined; the difference was purely how the set was enumerated. Mine parsed test
+*names*; theirs parsed the name **against the assertions in the same block**. I paired them, and
+found why mine under-counted: my parser required a block to assert exactly ONE verdict, so a block
+looping over shapes *and* carrying a PASS control was skipped silently.
+
+```
+2fda82a   my original parser: 6      widened parser: 7      reviewer: 7
+bd760fb   my original parser: 1      widened parser: 1      reviewer: 1
+after     ...                        widened parser: 0
+```
+
+The survivor was `run-gate.test.mjs:661` — title said `BLOCKS`, body asserted `REFUSED`, and the
+**assertion message an operator reads** said *"did not block a stale tree"*. Both corrected. The
+retained `is a BLOCK` title elsewhere is right: it drives a complete report with a named failing
+check, which is the case that keeps BLOCK.
+
+**D1 — C1's mirror was inside C1's own fix.** `namedFailure` read `failing.length > 0`, and
+`oracleFailing` is deliberately permissive (`!c || c.pass !== true`) because `runOracle()` validates
+that `checks` is an array and never validates its elements. Measured:
+
+| oracle checks | before | after |
+|---|---|---|
+| `[null, null]` | **BLOCK est=true**, 2× `oracle-unnamed` | **REFUSED est=false** |
+| `[{}]` | BLOCK est=true, `oracle-unnamed` | REFUSED est=false |
+| `[{name:'  ', pass:false}]` | BLOCK est=true | REFUSED est=false |
+| **complete report, all garbage** | BLOCK, N× `oracle-unnamed` | **BLOCK, 1× `oracle-unnamed-failure`** |
+| control — a real named failure | BLOCK, named | unchanged |
+| control — clean floor | PASS | unchanged |
+
+Nothing was named and nothing was established, yet it returned a finding: **a non-answer wearing a
+finding, which is precisely what this branch closes, reintroduced by the guard that closed it.** The
+predicate now asks for a NAME rather than a count. A garbage element still counts as *failing* — it
+cannot become a pass — it just cannot be what makes a report count as evidence. Three matrix rows
+and two tests added; **their absence is how C1 survived in the first place.** Both mutations bite:
+reverting to a count → 4 red; dropping the `.trim()` → 4 red.
+
+**The general form, and the thing worth carrying:** *a shape test running ahead of a content test
+will mis-file the case where the content is decisive.* C1 was that with the report's shape; D1 was
+that with the element's shape. Same error, one level down, in the fix for the first.
+
 ## The secondary: refuted, not deferred
 
 `findings: []` does **not** currently read as clean for the case the brief described. Measured:
