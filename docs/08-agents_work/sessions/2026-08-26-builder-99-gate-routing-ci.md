@@ -25,7 +25,12 @@ it points there, and delete it in `t.after` — a symbolic tip that exists wheth
 attached. Nothing skips on CI. The `json()` helper no longer parses blind; empty or non-JSON stdout
 now fails naming the command, cwd, exit code and the stderr reason the script already wrote.
 
-**Verification.** Detached-HEAD clone: 87/87 (was 85/2). `npm run check`: `Tally: 30 of 30 passed`
-in this tree, `44 of 44` at the session root. Non-vacuity: breaking `pinRefTip` to emit the tip
-verbatim turns both tests red on the right assertion, and reverting the precondition half alone
-yields the new diagnostic instead of the parse error.
+**Verification.** Detached-HEAD clone: 87/87, before the fix 85/2. After merging `main` in (the
+remote branch had moved): `Tally: 43 of 43 passed · 0 failed`, and the same 43 of 43 at the session
+root. Non-vacuity: breaking `pinRefTip` to emit the tip verbatim turns both tests red on the right
+assertion, and reverting the precondition half alone yields the new diagnostic, not the parse error.
+
+**Do not measure at the session root while other lanes run.** A first reading there said `44 of 44`;
+re-run twenty minutes later on the same clean commit it is `43 of 43`, and `scripts/lib/check-suite.js`
+is byte-identical to this tree's. The root is shared with the other lanes of this session and one of
+them was mutating it. Derive the denominator in the tree under measurement.
