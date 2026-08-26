@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { ciChainFindings, CI_CHAINS_ALLOWED } = require('./lib/check-suite.js');
+const { ciChainFindings, CI_CHAINS_ALLOWED, UNPARSED_PREFIX } = require('./lib/check-suite.js');
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -46,23 +46,29 @@ const findings = ciChainFindings(fs.readFileSync(CI_PATH, 'utf8'));
 if (findings.length) {
   console.error(`check:ci-chains: ${findings.length} finding${findings.length > 1 ? 's' : ''}\n`);
   for (const f of findings) console.error(`  ${f}`);
-  // TWO KINDS OF FINDING, TWO REMEDIES, and printing only the first one attaches a false
-  // instruction to the second. A chain is exemptible; an undecodable scalar is not, because
-  // CI_CHAINS_ALLOWED is keyed by the exact run string and a string this parser cannot read is one
-  // it cannot key on either. Split so a reader is told what to do rather than what usually applies.
-  if (findings.some((f) => f.includes('cannot decode'))) {
+  // TWO KINDS OF FINDING, TWO REMEDIES, AND EACH IS PRINTED ONLY FOR ITS OWN KIND. Printing both
+  // always was the smaller half of this defect: a refusal-only run still got the chain remedy
+  // appended, telling the reader to add a string to an allowlist that cannot hold it. The kinds are
+  // told apart by UNPARSED_PREFIX, a constant both files import — not by matching a substring of
+  // the message, which is what this did until 2026-08-26 and which a reword would have broken in
+  // silence.
+  const refusals = findings.filter((f) => f.startsWith(UNPARSED_PREFIX));
+  if (refusals.length) {
     console.error(
-      '\nA `cannot decode` finding is the YAML layer, not the shell one: the value was quoted in a form this ' +
-        'parser does not model, so it was never scanned for shell operators at all. It has no allowlist entry ' +
-        'by design. Rewrite the scalar — unquote it, or use an escape from YAML_DQ_ESCAPES in ' +
-        'scripts/lib/check-suite.js — so what the runner executes is what this reads.'
+      `\nAn ${UNPARSED_PREFIX} finding is the YAML layer, not the shell one: this parser reads a \`run:\`/\`if:\` ` +
+        'value in exactly two shapes — a plain single-line scalar, or a block scalar — and refuses the rest ' +
+        'rather than implementing YAML. It has NO allowlist entry by design. Rewrite the value as a block ' +
+        'scalar (`run: |-`), which has no quoting rules and no escapes, so anything expressible is ' +
+        'expressible there.'
     );
   }
-  console.error(
-    '\nA step is ONE command and the workflow reads ONE exit code from it. Split it into two steps, or ' +
-      'add the exact run string to CI_CHAINS_ALLOWED in scripts/lib/check-suite.js with the reason written ' +
-      'down — an entry there fails if it stops matching a live step, so an exemption cannot rot.'
-  );
+  if (refusals.length < findings.length) {
+    console.error(
+      '\nA step is ONE command and the workflow reads ONE exit code from it. Split it into two steps, or ' +
+        'add the exact run string to CI_CHAINS_ALLOWED in scripts/lib/check-suite.js with the reason written ' +
+        'down — an entry there fails if it stops matching a live step, so an exemption cannot rot.'
+    );
+  }
   process.exit(1);
 }
 

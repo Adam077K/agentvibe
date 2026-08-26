@@ -83,7 +83,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const {
   STEPS, EXCLUDED, SHELL_OPERATORS, auditSuite, reachable, aliasLinks, shellOperators, resolveChain,
-  CI_GUARD, CI_CHAINS_ALLOWED, parseCiSteps, ciRunCommands, ciChainFindings,
+  CI_GUARD, CI_CHAINS_ALLOWED, parseCiSteps, ciRunCommands, ciChainFindings, UNPARSED_PREFIX,
   DIRECT_TEST_RUNNER, AGGREGATE_RUNNER,
 } = require('./lib/check-suite.js');
 
@@ -1391,146 +1391,158 @@ test('a `run: |` that starts with a BLANK line does not swallow the step after i
   assert.equal(withContent[0].run, 'npm run test:b', 'the block content after a leading blank was lost');
 });
 
-test('a QUOTED `run:` scalar is decoded to what the runner executes — the chain inside one was inert', () => {
-  // ROUND 8, FINDING 4. record() stored `rawValue.trim()` with the YAML quote characters still on
-  // it, so the string reaching shellOperators() OPENED with a quote — everything inside was read as
-  // quoted text and the `&&` separated nothing. Measured against `main` (7f7bddd): the quoted
-  // spelling produced ZERO findings while the unquoted spelling of the same command produced
-  // `` ci.yml:4 carries `&&` ``. Two spellings of one workflow, opposite verdicts, and the silent
-  // one is a one-line edit to a file CLAUDE.md records as unprotected against a direct push.
-  const wf = (value) => ['name: t', 'jobs:', '  one:', '    steps:', '      - name: A', `        run: ${value}`, ''].join('\n');
-  const runOf = (value) => parseCiSteps(wf(value))[0].run;
+test('a `run:`/`if:` value that is not a plain single-line scalar is REFUSED, not decoded', () => {
+  // ROUND 9, AND IT IS A DELETION. Round 8 modelled these shapes — a 17-entry escape table for
+  // quoted flow scalars, a fold for plain continuations — and both were exact against PyYAML on 42
+  // probes. The gate then found a P1 INSIDE the modelling, and the shape of it is why the modelling
+  // is gone rather than patched:
+  //
+  //     run: "npm run good <\          real YAML: an escaped line break collapses to NOTHING, so
+  //       (npm run bad)"               the value is `npm run good <(npm run bad)` — a real procsub
+  //
+  //     the fold joined with a SPACE, the leftover `\`+space then decoded as the escaped-space
+  //     escape, and the value came out `npm run good < (npm run bad)`. `<(` never adjacent.
+  //     ciChainFindings -> []. A SILENT CLEAN on the exact construct round 8 added detection for.
+  //
+  // Ninth bypass in this file, third in this layer. The round-3 rule — the third fix of a kind
+  // means the approach is the defect — is applied instead of a tenth patch.
+  const wf = (...body) => ['name: t', 'jobs:', '  one:', '    steps:', ...body, ''].join('\n');
+  const only = (workflow) => ciChainFindings(workflow, {});
 
-  assert.equal(runOf('"npm run a && npm run b"'), 'npm run a && npm run b', 'a double-quoted scalar kept its quotes');
-  assert.equal(runOf("'npm run a && npm run b'"), 'npm run a && npm run b', 'a single-quoted scalar kept its quotes');
-  for (const value of ['"npm run test:foo && npm run malicious"', "'npm run test:foo && npm run malicious'"]) {
-    const found = ciChainFindings(wf(value), {});
-    assert.equal(found.length, 1, `a quoted chain was not reported:\n${found.join('\n')}`);
-    assert.ok(found[0].includes('`&&`'), found[0]);
+  // THE P1 ITSELF, pinned as the EXACT findings array. `.some()` is what hid one of the P2s in
+  // round 8 — it cannot see a second, contradictory finding beside the one it is looking for — so
+  // every assertion in this case is a deepEqual on the whole array.
+  const p1 = wf('      - name: A', '        run: "npm run good <\\', '          (npm run bad)"');
+  assert.deepEqual(only(p1), [
+    'UNPARSED: ci.yml:5 `run:` was NOT read — it begins with a YAML indicator, so it is not a plain ' +
+      'scalar and this parser does not decode it. It is not scanned for shell operators, so it cannot ' +
+      'be certified as one command: "npm run good <\\',
+  ], 'the escaped-line-break process substitution was certified clean again');
+
+  // THE SAME ROOT CAUSE ON `&&` AND `||`, which round 8 reported as two bare `&`/`|` findings —
+  // caught, but describing a construct that is not there, and a rule whose message is false of the
+  // code is one that gets argued with rather than obeyed. Refused now, ONCE, with no operator claim
+  // at all. PyYAML reads both of these as the real two-command chain.
+  for (const split of ['        run: "npm run a &\\', '        run: "npm run a |\\']) {
+    const found = only(wf('      - name: A', split, '          & npm run b"'));
+    assert.equal(found.length, 1, `expected exactly one refusal, got:\n${found.join('\n')}`);
+    assert.ok(found[0].startsWith(UNPARSED_PREFIX), found[0]);
+    assert.ok(!found[0].includes('carries'), `a refused value was also reported as carrying an operator: ${found[0]}`);
   }
 
-  // THE ESCAPES, and each is checked against PyYAML 6.0.3 rather than against what the assertion
-  // wants. `\n` is the one that matters: `run: "npm run a\nnpm run b"` really is TWO LINES to a
-  // workflow runner, so leaving it as a literal backslash-n would turn a two-command step into a
-  // one-command one — a bypass created by the fix for a bypass.
-  assert.equal(runOf('"npm run a\\nnpm run b"'), 'npm run a\nnpm run b', '`\\n` was not decoded');
-  assert.deepEqual(shellOperators(runOf('"npm run a\\nnpm run b"')), ['\\n'], 'a decoded newline is not reported');
-  assert.equal(runOf("'echo don''t ; npm run bad'"), "echo don't ; npm run bad", "`''` is the only escape single quotes have");
-  assert.equal(runOf('"echo \\"hi\\" ; npm run bad"'), 'echo "hi" ; npm run bad', '`\\"` was not decoded');
-  assert.equal(runOf('"npm run \\u0041"'), 'npm run A', '`\\uXXXX` was not decoded');
-  assert.equal(runOf('"npm run a\\t;\\\\ npm run b"'), 'npm run a\t;\\ npm run b', '`\\t` / `\\\\` were not decoded');
-  assert.equal(runOf('"npm run check:ledger"'), 'npm run check:ledger', 'the shape a contributor quotes FOR — a colon');
+  // A YAML ALIAS, which is NOT one of the judge's findings and is NOT closed by refusing quotes
+  // alone — it is why NON_PLAIN_SCALAR is a character class and not a quote test. `run: *c`, with
+  // `&c npm run a && npm run b` anchored anywhere earlier, resolves to that chain in PyYAML 6.0.3
+  // and returned [] from this parser BEFORE round 8 as well as after. A tag does the same thing.
+  const alias = ['name: t', 'jobs:', '  one:', '    env:', '      C: &c npm run a && npm run b', '    steps:',
+    '      - name: A', '        run: *c', ''].join('\n');
+  assert.equal(only(alias).length, 1, `a YAML alias was not refused:\n${only(alias).join('\n')}`);
+  assert.ok(only(alias)[0].startsWith(UNPARSED_PREFIX));
+  const tagged = wf('      - name: A', '        run: !!str npm run a && npm run b');
+  assert.equal(only(tagged).length, 1, 'a tagged scalar produced more or fewer than one finding');
+  assert.ok(only(tagged)[0].startsWith(UNPARSED_PREFIX), 'a tagged scalar was scanned rather than refused');
 
-  // AND THE RESIDUE FAILS CLOSED, which is the half that keeps the modelling honest. Each of these
-  // is a string PyYAML REFUSES, so no workflow that runs is affected — but the parser must say it
-  // could not read them rather than hand a half-decoded value to the scanner.
-  for (const [value, why] of [
-    ['"npm run a" && npm run b', 'text after the closing quote'],
-    ['"npm run a\\qb"', 'an escape outside the table'],
-    ['"npm run a ; npm run b', 'a quote that never closes'],
-  ]) {
-    const found = ciChainFindings(wf(value), {});
-    assert.ok(
-      found.some((f) => f.includes('cannot decode')),
-      `${why} was not reported as undecodable:\n${found.join('\n') || '(no findings at all)'}`
-    );
-  }
+  // THE DOUBLE REPORT, which is round 8's second P2 stated as an assertion. The refusal message
+  // says the value was not scanned for shell operators; round 8 printed that AND then scanned the
+  // raw text, so one step produced two findings that contradicted each other. Exactly one now, and
+  // this is the case that fails if the `refused.has(step)` skip is deleted.
+  const both = wf('      - name: A', '        run: "npm run a && npm run b"');
+  const bothFound = only(both);
+  assert.equal(bothFound.length, 1, `a refused value was reported twice:\n${bothFound.join('\n')}`);
+  assert.ok(!bothFound[0].includes('carries `&&`'), bothFound[0]);
 
-  // THE OTHER DIRECTION, and this one was found by attacking the fix rather than by reading it:
-  // `run: "npm run a" # note` is ORDINARY, VALID YAML — PyYAML reads it as `npm run a` — and the
-  // first cut of this refused it as undecodable. A finding against a correct workflow is worse
-  // than the hole, because it is the finding someone deletes the rule over.
-  assert.equal(runOf('"npm run a" # note'), 'npm run a', 'a YAML comment after a quoted scalar was refused');
-  assert.equal(runOf("'npm run a' # note"), 'npm run a', 'a YAML comment after a single-quoted scalar was refused');
-  assert.deepEqual(ciChainFindings(wf('"npm run a" # note'), {}), [], 'a correct quoted-plus-comment step was reported');
+  // ── THE OTHER DIRECTION, and it is the half that makes this a refusal rather than a blanket ban.
+  // A PLAIN SINGLE-LINE SCALAR IS READ VERBATIM — all 44 `run:` values in the real ci.yml are this
+  // shape, which is what makes the refusal cost zero today.
+  assert.deepEqual(only(wf('      - name: A', '        run: npm run a')), []);
+  assert.deepEqual(only(wf('      - name: A', '        run: npm run a "b c" && npm run d')),
+    ['ci.yml:5 carries `&&` — npm run a "b c" && npm run d'], 'a plain scalar CONTAINING quotes was refused');
+  assert.deepEqual(only(wf('      - name: A', '        run: npm run good <(npm run bad)')),
+    ['ci.yml:5 carries `<(` — npm run good <(npm run bad)'], 'the round-8 procsub detection was lost');
+  assert.deepEqual(ciChainFindings(CI).filter((f) => f.startsWith(UNPARSED_PREFIX)), [],
+    'the real ci.yml has a value this parser now refuses — the census said zero');
 
-  // A PLAIN scalar is untouched — all 44 `run:` values in ci.yml today are plain, so this decode
-  // is a no-op on the live file and the impact of the change is bounded by that.
-  assert.equal(runOf('npm run a "b c" && npm run d'), 'npm run a "b c" && npm run d', 'a plain scalar was unquoted');
-  assert.deepEqual(ciChainFindings(CI).filter((f) => f.includes('cannot decode')), [], 'the real ci.yml has an undecodable scalar');
+  // A BLOCK SCALAR IS STILL READ, and that is the escape hatch that makes refusing cost nothing:
+  // it has no quoting rules and no escapes, so any command that cannot be a plain scalar can be
+  // written as one. Measured through PyYAML — `run: |-` carries `node -e "a: 1" && npm run b`,
+  // `npm run a # literal`, `{echo a; echo b;}` and `*glob npm run a` byte for byte, and every one
+  // of those is invalid or differently-parsed as a plain scalar.
+  const block = wf('      - name: A', '        run: |-', '          node -e "a: 1" && npm run b');
+  assert.deepEqual(only(block), ['ci.yml:5 carries `&&` — node -e "a: 1" && npm run b'],
+    'a block scalar was refused, which would leave a colon-carrying command unwritable');
+  assert.deepEqual(only(wf('      - name: A', '        run: |-', '          npm run a')), [],
+    'a one-command block scalar was reported');
+
+  // `name:` AND `uses:` ARE NOT REFUSED, deliberately, and this is the case that holds the scope.
+  // The refusal FAILS A BUILD; `name: "Build: step 1"` is ordinary, correct, harmless YAML, and no
+  // assertion anywhere reads a `name:` for anything but identity. `if:` IS refused, because it is
+  // compared by VALUE against CI_GUARD and a misread one hides an unguarded step.
+  assert.deepEqual(only(wf('      - name: "Build: step 1"', '        run: npm run a')), [],
+    'a quoted `name:` failed the build');
+  assert.deepEqual(only(wf('      - uses: "actions/checkout@v4"')), [], 'a quoted `uses:` failed the build');
+  const quotedIf = only(wf('      - name: A', '        if: "${{ !cancelled() }}"', '        run: npm run a'));
+  assert.equal(quotedIf.length, 1, `expected the quoted \`if:\` to be refused, got:\n${quotedIf.join('\n')}`);
+  assert.ok(quotedIf[0].includes('`if:`'), quotedIf[0]);
 });
 
-test('a PLAIN multi-line `run:` is folded, not dropped — the continuation was invisible', () => {
-  // ROUND 8, FINDING 3, and the one reachable BY ACCIDENT: a contributor reflowing a long `run:`
-  // line writes exactly this shape with no adversarial intent. A continuation carrying no `|` and
-  // no `>` matched neither the key regex nor the block branch, so parseCiSteps DROPPED it and the
-  // step came back as the first line alone. Measured against `main` (7f7bddd):
-  //
-  //     run: npm run test:foo         ->  run: "npm run test:foo", and no finding anywhere
-  //       && npm run malicious            ...the second line simply gone
-  //
-  // Every expectation below is what PyYAML 6.0.3 produces for the same text, not what the
-  // assertion needs — a fixture the real system could not produce fails SAFE and looks like the
-  // code working, which is how a fix's own test stops seeing the hole it opened.
+test('a continued `run:` is refused and CONSUMED — a refusal that leaks is a misparse', () => {
+  // ROUND 8 FOLDED THIS; before round 8 it was SILENTLY DROPPED. Refusing is strictly safer than
+  // both: the value this parser holds is not the value the runner executes, and saying so is the
+  // only honest answer once the folding is gone.
   const wf = (...body) => ['name: t', 'jobs:', '  one:', '    steps:', ...body, ''].join('\n');
+  const only = (workflow) => ciChainFindings(workflow, {});
 
-  const folded = wf('      - name: A', '        run: npm run test:foo', '          && npm run malicious');
-  assert.equal(parseCiSteps(folded)[0].run, 'npm run test:foo && npm run malicious', 'the continuation was dropped');
-  const found = ciChainFindings(folded, {});
-  assert.equal(found.length, 1, `a folded chain was not reported:\n${found.join('\n')}`);
-  assert.ok(found[0].includes('`&&`'), found[0]);
+  const cont = wf('      - name: A', '        run: npm run test:foo', '          && npm run malicious');
+  assert.deepEqual(only(cont), [
+    'UNPARSED: ci.yml:5 `run:` was NOT read — its value continues onto the line(s) below it, so this ' +
+      'parser has not read all of it. It is not scanned for shell operators, so it cannot be certified ' +
+      'as one command: npm run test:foo',
+  ], 'a continued `run:` was not refused');
 
-  // Lines join with ONE space, and a run of blank lines joins as that many NEWLINES — both
-  // measured. The blank-line case matters twice over: it is a real YAML rule, and a `\n` is itself
-  // a chain operator, so getting it wrong either invents a finding or loses one.
-  assert.equal(
-    parseCiSteps(wf('      - name: A', '        run: npm run a', '          && npm run b', '          ; npm run c'))[0].run,
-    'npm run a && npm run b ; npm run c'
-  );
-  assert.equal(
-    parseCiSteps(wf('      - name: A', '        run: npm run a', '', '          ; npm run b'))[0].run,
-    'npm run a\n; npm run b',
-    'a blank line inside a plain scalar folded to a space instead of a newline'
-  );
+  // ONE REFUSAL PER KEY, not one per line. A value split over three lines is one value this parser
+  // could not read; three identical findings would read as three defects.
+  const three = wf('      - name: A', '        run: npm run a', '          && npm run b', '          ; npm run c');
+  assert.equal(only(three).length, 1, `a three-line value produced ${only(three).length} findings`);
 
-  // A KEY WITH NO VALUE takes the next line as its value — `run:` alone followed by an indented
-  // command is one string to YAML, and was `''` to this parser, which is a clean verdict on a step
-  // that runs two commands.
-  assert.equal(
-    parseCiSteps(wf('      - name: A', '        run:', '          npm run a && npm run b'))[0].run,
-    'npm run a && npm run b',
-    'an empty `run:` swallowed its own value'
-  );
+  // A BLANK LINE DOES NOT END A PLAIN SCALAR — measured with PyYAML, `run: npm run a` / blank /
+  // `  ; npm run b` is the ONE string `npm run a\n; npm run b`. If the watch closed on the blank,
+  // the continuation would fall through unrefused, which is the silent drop this replaces.
+  const blank = wf('      - name: A', '        run: npm run a', '', '          ; npm run b');
+  assert.equal(only(blank).length, 1, `a value continued across a blank line was not refused:\n${only(blank).join('\n')}`);
 
-  // ── THE DISCRIMINATIONS, without which "fold anything more indented" would pass all of the above
-  // and be wrong. Each is a shape the fold must NOT claim.
+  // AN EMPTY KEY TAKES THE NEXT LINE AS ITS VALUE — `run:` alone followed by an indented command is
+  // one string to YAML, and was `''` to this parser before round 8: a clean verdict on a step that
+  // runs two commands.
+  const empty = wf('      - name: A', '        run:', '          npm run a && npm run b');
+  assert.equal(only(empty).length, 1, `an empty \`run:\` with a value below it was not refused:\n${only(empty).join('\n')}`);
+
+  // ── THE DISCRIMINATIONS. Without these, "refuse anything more indented" refuses three correct
+  // steps in the real ci.yml.
   //
   // A NESTED MAPPING IS NOT A CONTINUATION. `with:` is more indented than the key above it and is
-  // not a tracked key, so the fold is disarmed before its body is reached. Folding it would invent
-  // a `uses:` value YAML never produced — and `with:` is in the real ci.yml, three times.
+  // not a tracked key, so the watch is closed before its body is reached — `with:` appears three
+  // times in the live file.
   const withMap = parseCiSteps(wf('      - uses: actions/checkout@v4', '        with:', '          fetch-depth: 0'));
   assert.equal(withMap.length, 1);
-  assert.equal(withMap[0].uses, 'actions/checkout@v4', 'a `with:` body was folded into the `uses:` above it');
-  assert.equal(withMap[0].run, null);
+  assert.equal(withMap[0].uses, 'actions/checkout@v4', 'a `with:` body was read as a continuation of `uses:`');
+  assert.deepEqual(withMap[0].unparsed, [], 'a `with:` body triggered a refusal');
+  assert.deepEqual(only(wf('      - name: A', '        run: npm run a', '        env:', '          K: v && w')), [],
+    'an `env:` body triggered a refusal on the `run:` above it');
 
-  const envMap = parseCiSteps(wf('      - name: A', '        run: npm run a', '        env:', '          K: v && w'));
-  assert.equal(envMap[0].run, 'npm run a', 'an `env:` body was folded into the `run:` above it');
-  assert.deepEqual(ciChainFindings(wf('      - name: A', '        run: npm run a', '        env:', '          K: v && w'), {}), []);
-
-  // A BLANK LINE BEFORE THE NEXT STEP LEAVES NO TRACE. The blank counter has to survive until a
-  // continuation actually arrives, or every step separated by a blank line grows a trailing
-  // newline — and a trailing `\n` is an operator, so that would be a finding on every other step.
+  // A BLANK LINE BEFORE THE NEXT STEP IS NOT A CONTINUATION EITHER, or every step separated by one
+  // is refused — which is every step in the real file.
   const twoSteps = parseCiSteps(wf('      - name: A', '        run: npm run a', '', '      - name: B', '        run: npm run b'));
   assert.equal(twoSteps.length, 2);
-  assert.equal(twoSteps[0].run, 'npm run a', 'a blank line before the next step was folded into the previous value');
-  assert.deepEqual(twoSteps.map((s) => s.name), ['A', 'B']);
+  assert.deepEqual(twoSteps.map((s) => s.run), ['npm run a', 'npm run b']);
+  assert.deepEqual(twoSteps.flatMap((s) => s.unparsed), [], 'a blank line between steps was read as a continuation');
 
-  // AND A KEY AFTER A FOLD IS STILL A KEY — the fold has to end at the first line that is not
-  // more-indented than its own key, or `if:` disappears into `run:` and the `!cancelled()` guard
-  // check goes blind.
+  // AND A KEY AFTER A REFUSED VALUE IS STILL A KEY — the continuation must be consumed, or it falls
+  // through and is read as something else. `if:` below a refused `run:` must still be found, or the
+  // `!cancelled()` guard check goes blind on exactly the steps this rule fires on.
   const thenKey = parseCiSteps(wf('      - name: A', '        run: npm run a', '          && npm run b', '        if: ${{ !cancelled() }}'));
-  assert.equal(thenKey[0].run, 'npm run a && npm run b');
-  assert.equal(thenKey[0].if, CI_GUARD, 'the `if:` after a folded scalar was swallowed');
-
-  // A BLOCK SCALAR IS NOT FOLDED BY THIS PATH and keeps its literal join — including when the
-  // indicator carries a trailing comment, which is valid YAML and which the block regex missed
-  // until the fold made it matter: the body was read as a continuation of the plain scalar
-  // `| # note`.
-  const blockComment = parseCiSteps(wf('      - name: A', '        run: | # note', '          npm run a', '          npm run b'));
-  assert.equal(blockComment[0].run, 'npm run a\nnpm run b', 'a block indicator with a comment was read as a plain scalar');
-  assert.ok(ciChainFindings(wf('      - name: A', '        run: | # note', '          npm run a', '          npm run b'), {})[0].includes('`\\n`'));
+  assert.equal(thenKey[0].if, CI_GUARD, 'the `if:` after a refused value was swallowed');
+  assert.equal(thenKey.length, 1, 'the continuation line opened a new step');
 });
-
 test('`run: >` is accepted by the parser and joined literally — an over-report, on purpose', () => {
   // parseCiSteps accepts a FOLDED scalar (`>`) and implements LITERAL (`|`) join semantics: it
   // joins with newlines where YAML folding joins with spaces. Nothing in ci.yml uses one, and this
@@ -1744,10 +1756,13 @@ test('the ci.yml chain check has a LIBRARY and an entry point, not only a test',
   for (const name of [
     'CI_GUARD', 'CI_CHAINS_ALLOWED', 'parseCiSteps', 'ciRunCommands', 'ciChainFindings',
     'DIRECT_TEST_RUNNER', 'AGGREGATE_RUNNER',
-    // Added 2026-08-26 with the flow-scalar decode. Exported for the same reason as the rest — a
-    // predicate a test can drive directly is one a mutation can be aimed at, and decodeFlowScalar()
-    // is where a quoted `run:` becomes the string the runner executes.
-    'STEP_KEYS', 'YAML_DQ_ESCAPES', 'decodeFlowScalar',
+    // Added 2026-08-26 with the census refusal, and this list is one commit older than it looks:
+    // it briefly held `YAML_DQ_ESCAPES` and `decodeFlowScalar`, which are gone because the
+    // modelling they served is gone. Exported for the same reason as the rest — a predicate a test
+    // can drive directly is one a mutation can be aimed at — plus UNPARSED_PREFIX, which exists so
+    // scripts/check-ci-chains.mjs can tell the two kinds of finding apart without matching a
+    // substring of an English sentence.
+    'STEP_KEYS', 'SAFETY_KEYS', 'NON_PLAIN_SCALAR', 'UNPARSED_PREFIX',
   ]) {
     assert.ok(name in lib, `${name} is not exported from scripts/lib/check-suite.js — it moved back into a test`);
   }
@@ -1797,6 +1812,36 @@ test('the ci.yml chain check has a LIBRARY and an entry point, not only a test',
   const missing = spawnSync(process.execPath, [entry, path.join(dir, 'nope.yml')], { encoding: 'utf8' });
   assert.equal(missing.status, 1, 'a missing workflow reported success — absent is UNRESOLVED, not clean');
   assert.match(missing.stderr, /UNRESOLVED/, missing.stderr);
+
+  // ── THE TWO REMEDIES, THROUGH THE REAL ENTRY POINT, and each printed ONLY for its own kind. The
+  // gate reported this branch as never executed by any test, which was true: it was reached by
+  // hand and by nothing else. It matters twice over — a refusal-only run used to get the CHAIN
+  // remedy appended, telling the reader to add a string to an allowlist that cannot hold it, and
+  // the kinds were told apart by matching the words "cannot decode" inside a generated sentence,
+  // so rewording the message would have silently switched every reader onto the wrong instruction.
+  // They are told apart by UNPARSED_PREFIX now, which both files import.
+  const refusalOnly = path.join(dir, 'refusal.yml');
+  fs.writeFileSync(refusalOnly, [
+    'name: t', 'jobs:', '  j:', '    steps:',
+    '      - name: Quoted', '        if: ${{ !cancelled() }}', '        run: "npm run a && npm run b"',
+    '      - name: Mission Control', '        if: ${{ !cancelled() }}',
+    `        run: ${Object.keys(CI_CHAINS_ALLOWED)[0]}`, '',
+  ].join('\n'));
+  const refused = spawnSync(process.execPath, [entry, refusalOnly], { encoding: 'utf8' });
+  assert.equal(refused.status, 1, `a refused scalar exited 0 through the entry point:\n${refused.stdout}`);
+  assert.match(refused.stderr, /UNPARSED:/, refused.stderr);
+  assert.match(refused.stderr, /Rewrite the value as a block scalar/, 'the refusal remedy was not printed');
+  assert.ok(
+    !/add the exact run string to CI_CHAINS_ALLOWED/.test(refused.stderr),
+    `the chain remedy was printed for a refusal-only run, which cannot use it:\n${refused.stderr}`
+  );
+  // Exactly one finding, not two: the refused value must not also be operator-scanned. Counted off
+  // the header the script prints, so this reads the real output rather than the library.
+  assert.match(refused.stderr, /check:ci-chains: 1 finding\b/, refused.stderr);
+
+  // And the mirror: a CHAIN-only run gets the chain remedy and NOT the refusal one.
+  assert.match(bad.stderr, /add the exact run string to CI_CHAINS_ALLOWED/, bad.stderr);
+  assert.ok(!/Rewrite the value as a block scalar/.test(bad.stderr), `the refusal remedy leaked into a chain-only run:\n${bad.stderr}`);
 
   // The control: a clean workflow through the same argument path still exits 0, so the two failures
   // above are the findings and not the argument.
