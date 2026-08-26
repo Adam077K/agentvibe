@@ -1,0 +1,11 @@
+{
+  "subject": "49e7b35287731b03b0ff21179bd1dc8ee0241fbff782f27b680f3a55af702f9c",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "irreversible",
+  "tier_driver": ".claude/hooks/schema-lint.js",
+  "verdict": "PASS",
+  "by": "builder-gate-reachable",
+  "run_id": null,
+  "evidence": "npm run check: 46 of 46 passed, 0 failed, 255.0s, exit 0, sandbox armed. schema-lint 18 pass/0 fail/0 warnings. prompt-standard 74 pass/0 fail (68 before); rule deleted -> 2 red, TOOL_UNIVERSE line reverted -> 3 red. check:ledger exit 0, c-workflow-invocation-contained clean on claim-command and claim-freshness. probe-workflow-reach 6/6, and against the real corpus 0 subagent Workflow calls vs 55 main-session, control 57590 subagent Bash. SINGLE AUTHOR, SINGLE MODEL FAMILY: the irreversible tier's 2-of-3 multi-judge requirement is NOT met.",
+  "recorded_at": "2026-08-26T13:24:53.607Z"
+}
