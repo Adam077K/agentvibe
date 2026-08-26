@@ -585,6 +585,15 @@ function shellOperators(command) {
   const found = new Set();
   const unmodelled = new Set();
 
+  // INDICES THE SCAN CONSUMED AS AN ESCAPED CHARACTER. The redirect guard below needs to tell a
+  // redirect OPERATOR from a literal `<` or `>` sitting inside a word, and this scan is the only
+  // thing that knows the difference — it is what consumed the backslash. Testing the byte instead
+  // was a laundering bypass: see the guard.
+  const escaped = new Set();
+
+  /** Is `src[j]` one of `chars`, as an OPERATOR this scan recognised rather than an escaped literal? */
+  const redirectOperatorAt = (j, chars) => chars.includes(src[j]) && !escaped.has(j);
+
   // One frame per COMMAND CONTEXT, innermost last. `base` is the command line itself; `$(` pushes
   // a `paren` frame and a backtick a `tick` frame. `parens` counts subshells nested inside a `$(`
   // so that `$( (a; b) )` closes on the right `)` rather than the first one.
@@ -604,7 +613,7 @@ function shellOperators(command) {
     // A backslash escapes the next character, quoted or not — `echo a \; b` prints `a ; b`, one
     // command. Inside double quotes it is also what stops an ESCAPED substitution from opening a
     // frame: `"\$(exit 7; exit 0)"` and "\`exit 7; exit 0\`" both print literally and run nothing.
-    if (c === '\\') { i += 1; continue; }
+    if (c === '\\') { escaped.add(i + 1); i += 1; continue; }
 
     // ARITHMETIC — checked before `$(` so the longer token wins, and inside double quotes too,
     // where `"$((6|1))"` is just as much a number. TWO INDEPENDENT CHECKS MUST BOTH AGREE before
@@ -727,11 +736,25 @@ function shellOperators(command) {
     // explanation is one someone deletes rather than obeys. Latent when fixed 2026-08-26: no script
     // in the tree used the shape. A pipe alongside a redirect is still reported, on the pipe.
     // `<&` IS THE INPUT SIDE OF THE SAME THING — `0<&3`, `3<&-`, `exec 3<&0` duplicate or close an
-    // input descriptor and run one command, and each exits 0. Only `src[i - 1]`, never `src[i + 1]`:
-    // `&<` is not a bash construct, so accepting it would widen this exemption for nothing, and a
-    // widened exemption is how a bypass gets in. Adjacency with NO whitespace tolerance is what
-    // keeps `npm run a < file & npm run b` reported on its real trailing `&`.
-    if (c === '&' && (src[i - 1] === '>' || src[i + 1] === '>' || src[i - 1] === '<')) continue;
+    // input descriptor and run one command, and each exits 0. Only on the left for `<`, never
+    // `src[i + 1] === '<'`: `&<` is not a bash construct, so exempting it would widen this for
+    // nothing. Adjacency with NO whitespace tolerance is what keeps `npm run a < file & npm run b`
+    // reported on its real trailing `&`.
+    //
+    // IT ASKS WHETHER THAT CHARACTER WAS A REDIRECT OPERATOR, NOT WHETHER IT WAS THAT BYTE, and
+    // the difference was a laundering bypass. A backslash-escaped `<` is a LITERAL `<` inside a
+    // word — the escape branch above consumes the backslash and leaves the `<` at `src[i - 1]` —
+    // so the `&` after it is a real control operator. Measured with a marker oracle, where a
+    // laundered chain is both markers present AND exit 0:
+    //
+    //     LEFT \<& RIGHT      exit 0, both ran   LEFT's exit 7 is GONE
+    //     LEFT \<\<& RIGHT    exit 0, both ran
+    //     LEFT \>& RIGHT      exit 0, both ran   the `>` arm, wrong the same way since it was written
+    //
+    // The `<` arm was introduced here and made the scan strictly worse than before it; the `>` arm
+    // had the defect from the start. One predicate covers both, because fixing half a class is
+    // how the other half gets forgotten.
+    if (c === '&' && (redirectOperatorAt(i - 1, '<>') || redirectOperatorAt(i + 1, '>'))) continue;
     if (c === '&') { found.add('&'); continue; }
     if (c === '\n' || c === '\r') { found.add('\\n'); continue; }
   }

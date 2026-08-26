@@ -799,6 +799,83 @@ test('an unquoted backslash escapes the operator after it — the branch that ha
   assert.deepEqual(shellOperators("echo 'a\\' ; npm run b"), [';']);
 });
 
+test('an ESCAPED `<` or `>` is a literal — the `&` after it is a real operator', () => {
+  // PINNED BY AN ORACLE, NOT BY BELIEF. Every other case in this file asserts what its author
+  // measured once; this one asks bash on each run and derives the expectation from the answer,
+  // because the defect it guards was introduced BY a measurement that looked right. `0<&3` really
+  // is one command, so the guard was widened to exempt a `<` before an `&` — and a
+  // backslash-escaped `<` is a LITERAL `<` inside a word, so `npm run a \<& npm run b` was exempted
+  // too. The detector went from ["&"] to [] on that input: strictly worse than before the fix.
+  //
+  // The `>` arm had the identical defect from the day it was written, and `\>&` was [] on both
+  // sides. One predicate covers both — fixing half a class is how the other half gets forgotten.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'redirect-oracle-'));
+  fixtures.push(dir);
+  const L = path.join(dir, 'L');
+  const R = path.join(dir, 'R');
+
+  /** Run `body` with a LEFT that exits `code` and a RIGHT that leaves a marker. */
+  const probe = (body, code) => {
+    for (const f of [L, R]) if (fs.existsSync(f)) fs.unlinkSync(f);
+    const prelude = `exec 3</dev/null; LEFT() { : > ${L}; return ${code}; }; RIGHT() { : > ${R}; };`;
+    const run = spawnSync('bash', ['-c', `${prelude} ${body}`], { encoding: 'utf8' });
+    return { exit: run.status, left: fs.existsSync(L), right: fs.existsSync(R) };
+  };
+
+  /**
+   * TWO probes, because one cannot tell a conditional chain from a single command.
+   *
+   *   launders    a FAILING left, both commands ran, and the exit code is 0 — the failure is gone
+   *               with no red step, which is this whole file's threat model
+   *   oneCommand  not laundering, AND with a SUCCEEDING left nothing but LEFT ran
+   *
+   * A single probe misclassifies both `&&` and `||`: with a failing left `LEFT && RIGHT` runs only
+   * LEFT and looks single, and with a succeeding left `LEFT || RIGHT` runs only LEFT and looks
+   * single too. Together the two probes put `&&` in neither class and `||` in `launders`, which is
+   * correct — so neither is asserted through this oracle, and both keep their own cases elsewhere.
+   */
+  const classify = (body) => {
+    const failing = probe(body, 7);
+    const succeeding = probe(body, 0);
+    const launders = failing.left && failing.right && failing.exit === 0;
+    return { launders, oneCommand: !launders && succeeding.left && !succeeding.right };
+  };
+
+  // THE ORACLE CHECKS ITSELF FIRST. An oracle that cannot see a chain it is pointed at would make
+  // every assertion below vacuous, and it would look exactly like a green run.
+  assert.equal(classify('LEFT & RIGHT').launders, true, 'the oracle cannot see plain backgrounding');
+  assert.equal(classify('LEFT; RIGHT').launders, true, 'the oracle cannot see a plain `;` chain');
+  assert.equal(classify('LEFT 2>&1').oneCommand, true, 'the oracle calls a plain redirect a chain');
+  assert.ok(fs.existsSync(dir), 'the oracle fixture vanished');
+
+  // LAUNDERING — bash says so, so the scanner must report something. The four escaped forms are the
+  // bypass; the three plain ones are the controls that keep the set from being all-escaped.
+  for (const body of [
+    'LEFT \\<& RIGHT', 'LEFT \\<\\<& RIGHT', 'LEFT \\>& RIGHT', 'LEFT \\>\\>& RIGHT',
+    'LEFT & RIGHT', 'LEFT; RIGHT', 'LEFT | RIGHT',
+  ]) {
+    assert.equal(classify(body).launders, true, `bash stopped laundering \`${body}\` — re-derive this case`);
+    assert.ok(
+      shellOperators(body).length > 0,
+      `bash LAUNDERS \`${body}\` — both commands run and the exit code is 0 — and the scanner reported nothing`
+    );
+  }
+
+  // ONE COMMAND — bash says so, so the scanner must stay silent. These are the shapes the guard
+  // exists for, and the reason it cannot simply be deleted.
+  for (const body of ['LEFT 0<&3', 'LEFT 3<&-', 'LEFT 2>&1', 'LEFT >&2', `LEFT &>${path.join(dir, 'log')}`]) {
+    assert.equal(classify(body).oneCommand, true, `bash stopped running \`${body}\` as one command — re-derive this case`);
+    assert.deepEqual(
+      shellOperators(body), [],
+      `bash runs \`${body}\` as ONE command and the scanner called it a chain — a rule that fires on correct code gets weakened`
+    );
+  }
+
+  // And the shape the guard must NOT exempt, kept as an equality assertion because bash refuses it
+  // rather than running it: `&<` is not a bash construct, so there is nothing for an oracle to see.
+  assert.deepEqual(shellOperators('npm run a &< npm run b'), ['&'], '`&<` was exempted');
+});
+
 test('the three DISCLOSED holes in resolveChain are pinned, so a narrowing is not mistaken for one', () => {
   // resolveChain() follows only a BARE `npm run <name>`. Its doc comment discloses three shapes it
   // walks past, and under-reporting is the safe direction — this check refuses what it understands
