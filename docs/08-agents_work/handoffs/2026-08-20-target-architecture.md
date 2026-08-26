@@ -1,3 +1,6 @@
+> **HISTORICAL — superseded by [docs/STATUS.md](../../STATUS.md).** Retained for the record.
+> Read STATUS.md for current state; nothing here is a live instruction.
+
 # Handoff — build the target architecture
 
 **From:** ceo (`ceo-2-1787176362`) · **Date:** 2026-08-20 · **Base:** `main` = `1f5e742`

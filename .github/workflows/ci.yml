@@ -31,6 +31,56 @@
 # The operational consequence, stated once: treat `.github/workflows/**` as unprotected
 # against a direct push until CODEOWNERS or a push restriction is added. Both are repository
 # settings and only the founder can set them.
+#
+# ── WHY EVERY CHECK STEP CARRIES `if: ${{ !cancelled() }}` ────────────────────────────────────
+# GitHub's default inside a job is fail-fast: the first failing step SKIPS every step after it.
+# This is one job of 44 sequential checks, and it was 30 before this change. REPORTED, from the
+# GitHub API and not verifiable from a worktree — `gh` is denied by the sandbox's `denyRead` on
+# `~/.config/gh`, so no run history can be read here, and docs/STATUS.md §3 uses this same
+# `REPORTED` marker for every GitHub-derived claim: across the four
+# most recent runs on `main` before 2026-08-25 the build failed at `Pre-tool-use hook`, step
+# 18 of 30, so the TWELVE steps after it were skipped every time — the whole tail, not a
+# sample of it: `test:hooks`, `test:budget`, `test:run-gate`, `test:merge-gate`,
+# `test:skill-clamp`, `test:probe-stop-reason`, `test:probe-readonly`,
+# `test:launcher-permissions`, `test:sandbox`, `test:tier-gate`, `check:ledger` and
+# `check:mc`. That is the ledger's own enforcement, both gates, and the check that makes "the
+# sandbox is armed" a fact rather than a comment. A red build was reporting one failure and
+# hiding twelve unknowns.
+#
+# THE FIGURE READ 14 IN THE FIRST DRAFT OF THIS COMMENT, and 14 came from counting the `-`
+# entries in `gh run view`, which include the post-job and cleanup steps that are not checks.
+# 30 − 18 = 12, and the twelve are named above so the next reader can count them instead of
+# believing them. A number in a comment is not evidence the number is true — this file's own
+# `run:` steps are the source, and `git show 71fd58d:.github/workflows/ci.yml` is where the
+# 18-of-30 comes from.
+#
+# `!cancelled()` and not `always()`: a run someone cancelled must actually stop.
+#
+# WHAT THIS DOES NOT DO, because the distinction is the whole risk of the change: it does not
+# make a failure survivable. `if:` decides whether a step RUNS. Only `continue-on-error: true`
+# stops a failed step from failing the job, and it appears nowhere in this file — every step
+# still goes red on its own failure, and one red step still fails the job. The change is that
+# the other 43 checks now produce a result instead of a skip.
+#
+# ── AND NO STEP HERE IS AN `&&` CHAIN OF CHECKS ──────────────────────────────────────────────
+# Five steps used to be: `check:dispatch`, `check:dispatch-prompt`, `check:memory`,
+# `check:warroom` and `check:ledger` named ONE step each while their package.json bodies chained
+# 18 checks behind those 5 names. That is the same short-circuit one level down, in the one
+# place a step-level `if:` cannot reach — `check:ledger` reported a single red step while
+# `ledger lint`, `ledger build --check` and `ledger verify` had not run. They are 18 steps here
+# now, and scripts/lib/check-suite.js REFUSES a suite step whose RESOLVED command carries `&&`,
+# `||`, `;`, `|`, `&` or a newline — following the `npm run` delegation chain, because one wrapper
+# script defeated the earlier `&&`-only rule outright. So a chain cannot come back through
+# package.json, nor hide one hop away. The one `&&` left is Mission Control's
+# `bun install --frozen-lockfile --cwd mission-control` step below, where the second command
+# cannot run without the first; it is not a suite step.
+#
+# That sentence used to spell the Mission Control command out in full, and doing so broke the
+# guard that protects it: scripts/check-suite.test.mjs matched `npm run <name>` against this
+# whole file, comments included, so the COMMENT satisfied the coverage claim and the real step
+# could be deleted in silence. The test reads `run:` lines only now — but the spelling stays out
+# of this comment as well, because a check should not be the only thing standing between a
+# comment and a false claim.
 name: CI
 
 on:
@@ -87,11 +137,22 @@ jobs:
       # preloads the tripwire — which said nothing about this workflow, since the step below
       # invoked the test runner directly instead of through its npm script.
       - name: Protected-write tripwire
+        if: ${{ !cancelled() }}
         run: npm run test:protected-write
+
+      # The drift guard for `npm run check`, and it ran NOWHERE on a runner until 2026-08-25: it
+      # sits second in scripts/lib/check-suite.js's STEPS and had no step in this file. It is the
+      # check that says whether the other checks are in the suite at all — a check:/test: script
+      # the suite reaches from nothing fails here, as does an EXCLUDED entry whose reason cites a
+      # step in THIS file that no longer exists.
+      - name: Check-suite drift guard
+        if: ${{ !cancelled() }}
+        run: npm run test:check-suite
 
       # Validates agent frontmatter, mandatory body sections, model IDs, maxTurns
       # ranges, and every declared skill against MANIFEST.json.
       - name: Agent schema lint
+        if: ${{ !cancelled() }}
         run: node .claude/hooks/schema-lint.js
 
       # The prompt standard — docs/03-system-design/agents/PROMPT-STANDARD.md §6, as PS-* rules
@@ -104,6 +165,7 @@ jobs:
       # It also pins the two numbers the standard measured: PS-BODY-VAGUE fires on 6 of 7 files at
       # 10 sites, every one of them correct prose, which is why it can only ever warn.
       - name: Prompt standard
+        if: ${{ !cancelled() }}
         run: npm run check:prompt-standard
 
       # 30 tests over the QA verdict logic: severity eligibility, tier gating,
@@ -113,29 +175,61 @@ jobs:
       # Invoked through the npm script rather than by naming the test runner directly. The direct
       # form ran the same file WITHOUT `--require ./scripts/protected-write-tripwire.cjs`, so this
       # one step of the workflow was unguarded while every other one was — and the difference is
-      # invisible in a green run. No step in this file may invoke the runner itself; that is
-      # greppable, and the grep is the check, so this comment does not spell the string it
-      # searches for.
+      # invisible in a green run. No step in this file may invoke `node --test` directly.
+      #
+      # ENFORCED as of 2026-08-26, by `no ci.yml step invokes a runner directly` in
+      # scripts/check-suite.test.mjs, which reads this file's `run:` values. Two properties, kept
+      # labelled apart there because only the first is what this comment claims:
+      #   A · no step invokes `node --test` — the tripwire rule above. Proved by mutation with and
+      #       without a `--test-reporter` pinned beside it, and a reporter-only step is proved NOT
+      #       to fire, so the rule cannot be deleted the first time it blocks something legitimate.
+      #   B · no step runs `npm run check` — which would put all 43 steps back behind one exit
+      #       code, the defect the 44 `if:` guards exist to remove, arriving from the other side.
+      #       This comment does not claim B; B is asserted because the file needs it.
+      #
+      # ── AND HERE IS THE PROOF THAT THE OLD WORKAROUND IS DEAD, WHICH IS THE POINT ────────────
+      # This comment SPELLS both `node --test` and `npm run check` — the exact thing the version
+      # below forbade itself from doing — and the check is still green. Run it: `npm run
+      # test:check-suite`. A comment can neither satisfy the check nor break it, because the check
+      # reads `run:` values and prose is not a step. That is the whole lesson of the 2026-08-26
+      # wave in one executable sentence, and it is why you should never again narrow a comment to
+      # keep a grep honest: fix the grep.
+      #
+      # SUPERSEDED 2026-08-26. This read: "No step in this file may invoke the runner itself; that
+      # is greppable, and the grep is the check, so this comment does not spell the string it
+      # searches for." THERE WAS NO GREP. check-suite.test.mjs named run-checks.mjs twice — as its
+      # own RUNNER const and in a message about package.json — and asserted nothing about this
+      # file; the rule held by luck. It was a wish that described itself as a check, forty lines
+      # from two defects of exactly that class fixed the same day. And the "does not spell the
+      # string" clause was itself a WORKAROUND FOR A GREP THAT WOULD HAVE MATCHED ITS OWN COMMENT
+      # — the identical defect that, in this same file, let a comment certify the Mission Control
+      # step so that step could be deleted in silence. The author saw the hazard and worked around
+      # it in prose instead of fixing the tool. Both are fixed now.
       - name: Gate logic tests
+        if: ${{ !cancelled() }}
         run: npm run test:gate
 
       # The skills MANIFEST is generated from disk. This fails if someone
       # hand-edited it or added a skill without regenerating.
       - name: Skills manifest matches disk
+        if: ${{ !cancelled() }}
         run: node scripts/build-skills-manifest.mjs --check
 
       # The skills curation and the two-tier discovery layer. Every cut names the test it
       # failed in CURATION.yml, and these fail when the directory drifts from that decision
       # — so a skill cannot creep back in, and a survivor cannot quietly vanish.
       - name: Skills curation matches CURATION.yml
+        if: ${{ !cancelled() }}
         run: npm run check:curation
 
       - name: Skill routers match namespaces
+        if: ${{ !cancelled() }}
         run: npm run check:routers
 
       # Fabrication catcher: dead paths in governing docs, hooks registered to
       # missing files, README counts that drifted, skills declared but absent.
       - name: Registration completeness
+        if: ${{ !cancelled() }}
         run: node scripts/check-registration.mjs
 
       # Check 11 of that script guards the DATA a hook reads, not just the hook command:
@@ -144,6 +238,7 @@ jobs:
       # real and run the real checker, because a check for a silent failure that is itself
       # only asserted has the same shape as the bug it prevents.
       - name: Registration checker guards hook data files
+        if: ${{ !cancelled() }}
         run: npm run test:registration
 
       # Dispatch identity. `agentType` is the entire container — tool grant, model, isolation —
@@ -155,23 +250,46 @@ jobs:
       # This is the regression test for the `agentType: 'reviewer'` repair in qa.js, and it runs
       # its own mutation gate first: a fixture with a known-bad site the checker must flag, so a
       # parser that silently stops seeing dispatches fails here rather than reporting clean.
-      - name: Dispatch agentType
-        run: npm run check:dispatch
+      # Three steps, because `check:dispatch` chained them with `&&`: the mutation gate ran
+      # first, so a failure in it skipped the checker whose parser it exists to guard, and the
+      # runner reported one red step.
+      - name: Dispatch agentType — parser mutation gate
+        if: ${{ !cancelled() }}
+        run: npm run test:dispatch
+
+      - name: Dispatch agentType — stdout flush regression
+        if: ${{ !cancelled() }}
+        run: npm run test:dispatch-flush
+
+      - name: Dispatch agentType — checker
+        if: ${{ !cancelled() }}
+        run: npm run check:dispatch-agenttype
 
       # PS-DISPATCH-BRIEF-SIZE: warns on inline literals ≥30,000 chars or fenced blocks >200 lines
       # in .claude/workflows/*.js dispatch sites. WARN posture — exits 0 on violations, 1 only on
       # the non-vacuity floor (scanner broken). Memory budget: DECISIONS.md ≤50 entries + ≤40,000 bytes;
       # LONG-TERM.md ≤100 lines. Both fail the build (exits 1) on a real violation.
-      - name: Dispatch prompt size
-        run: npm run check:dispatch-prompt
+      - name: Dispatch prompt size — tests
+        if: ${{ !cancelled() }}
+        run: npm run test:dispatch-prompt
 
-      - name: Memory budget
-        run: npm run check:memory
+      - name: Dispatch prompt size — scanner
+        if: ${{ !cancelled() }}
+        run: npm run check:dispatch-prompt-size
+
+      - name: Memory budget — tests
+        if: ${{ !cancelled() }}
+        run: npm run test:memory
+
+      - name: Memory budget — checker
+        if: ${{ !cancelled() }}
+        run: npm run check:memory-budget
 
       # CODEBASE-MAP.md is generated, not written. A hand-maintained map is accurate exactly
       # until the first person forgets, and then it is trusted and wrong — which is worse
       # than no map. This fails when it drifts from disk.
       - name: Codebase map matches disk
+        if: ${{ !cancelled() }}
         run: npm run check:map
 
       # The launcher every project starts from, plus the install/rollback guard
@@ -185,14 +303,35 @@ jobs:
       # and does not exist on a CI runner. Parity is therefore verified locally
       # and recorded in the PR; CI covers syntax and the guard rails. This limit
       # is stated rather than papered over.
-      - name: Warroom launcher + install guard rails
-        run: npm run check:warroom
+      # Five steps, because `check:warroom` chained them with `&&`: a syntax error in
+      # bin/warroom skipped the other four, the 13 installer guard-rail tests among them, and
+      # reported a single failure.
+      - name: Warroom launcher syntax
+        if: ${{ !cancelled() }}
+        run: npm run check:warroom-launcher
+
+      - name: Warroom project template syntax
+        if: ${{ !cancelled() }}
+        run: npm run check:warroom-template
+
+      - name: Warroom installer syntax
+        if: ${{ !cancelled() }}
+        run: npm run check:warroom-installer
+
+      - name: Warroom parity script syntax
+        if: ${{ !cancelled() }}
+        run: npm run check:warroom-parity
+
+      - name: Warroom install guard rails
+        if: ${{ !cancelled() }}
+        run: npm run test:warroom
 
       # The lens layer — the encoded expertise, as linted data rather than agent prose.
       # These tests construct the failures rather than trusting the rules fire: a vague
       # step, a placeholder, a lens citing a source that does not exist, and an
       # "independent" review panel drawn from a single model family.
       - name: Lens files
+        if: ${{ !cancelled() }}
         run: npm run test:lenses
 
       # Lens provenance, in a repository that has none of this repository's git objects.
@@ -203,12 +342,14 @@ jobs:
       # repo with an empty object store, and also fails when the committed manifest has
       # drifted from what the lens files cite.
       - name: Lens provenance travels
+        if: ${{ !cancelled() }}
         run: npm run test:provenance
 
       # Playbooks — stages and exit criteria, never method. The rule that a playbook
       # may not carry `steps:` is what stops it drifting back into the pipeline prose
       # it replaced, and the tests construct that failure rather than trusting it.
       - name: Playbooks
+        if: ${{ !cancelled() }}
         run: npm run test:playbooks
 
       # The one mechanism in this repository that can REFUSE a tool call. Every other step here
@@ -222,6 +363,7 @@ jobs:
       # It was in `npm run check` and in no workflow at all until 2026-08-24. CI ran every
       # reporting check in the repo and did not run the only enforcing one.
       - name: Pre-tool-use hook
+        if: ${{ !cancelled() }}
         run: npm run test:pre-tool-use
 
       # The SessionStart hook. It is the mechanical consumer of the lens and playbook
@@ -230,12 +372,14 @@ jobs:
       # where saying nothing would have been indistinguishable from saying "all clear",
       # which is the failure this phase exists to catch.
       - name: SessionStart hook
+        if: ${{ !cancelled() }}
         run: npm run test:hooks
 
       # Spend measurement and the ceiling that acts on it. Every transcript in these tests
       # is constructed: a test reading real usage would pass or fail for reasons it did not
       # choose, and ~/.claude/projects does not exist on a CI runner at all.
       - name: Budget and stall
+        if: ${{ !cancelled() }}
         run: npm run test:budget
 
       # The router that decides whether the binding gate (.claude/workflows/qa.js) must run
@@ -247,6 +391,7 @@ jobs:
       # harmless PR at irreversible, and an unreadable ref exits 2 rather than reporting
       # "nothing to gate" — fail-open in a router is indistinguishable from no router.
       - name: Gate routing
+        if: ${{ !cancelled() }}
         run: npm run test:run-gate
 
       # The OTHER merge route. `warroom merge` wrote to LOCAL main and never pushed, so CI never
@@ -261,6 +406,7 @@ jobs:
       # These tests drive `bin/warroom merge` for real against throwaway repos and then assert on
       # where `main` points. A source-level assertion would pass equally against a fix comment.
       - name: Merge gate
+        if: ${{ !cancelled() }}
         run: npm run test:merge-gate
 
       # A SKILL.md carrying `allowed-tools` SUBTRACTS from whatever agent loads it — the binary
@@ -271,6 +417,7 @@ jobs:
       #
       # Currently vacuous — no agent declares one — which is precisely when it is cheap to pin.
       - name: Skill tool clamps
+        if: ${{ !cancelled() }}
         run: npm run test:skill-clamp
 
       # The stop_reason aggregation. Every transcript in these tests is constructed — CI has no
@@ -278,6 +425,7 @@ jobs:
       # (it split on "contains a subagent turn anywhere" rather than "the final turn was one")
       # and was caught by reading the output rather than by a test.
       - name: Stop-reason probe
+        if: ${{ !cancelled() }}
         run: npm run test:probe-stop-reason
 
       # The read-only probe's report path, which must never be able to emit a success verdict.
@@ -293,6 +441,7 @@ jobs:
       # change that touches `.github/workflows/**`. This is that change; the header is corrected
       # in the same commit.
       - name: Read-only probe
+        if: ${{ !cancelled() }}
         run: npm run test:probe-readonly
 
       # The launcher passed --dangerously-skip-permissions, which made all 26 allow/deny rules in
@@ -301,6 +450,7 @@ jobs:
       # already covered; bun/bunx/npm were the real gap and went into the allow list with it.
       # Pinned because one word restores the flag silently and nothing else would fail.
       - name: Launcher permissions
+        if: ${{ !cancelled() }}
         run: npm run test:launcher-permissions
 
       # The sandbox block in .claude/settings.json is armed (enabled: true,
@@ -311,6 +461,7 @@ jobs:
       # .claude/settings.json and restart your Claude Code session.
       # See docs/03-system-design/SANDBOX.md § Emergency revert.
       - name: Sandbox config armed
+        if: ${{ !cancelled() }}
         run: npm run test:sandbox
 
       # Tier gate unit tests (Design B, issue #85).
@@ -323,6 +474,7 @@ jobs:
       # by sessions that declare lower tiers. The "cannot lower" tests run first — if they
       # fail, the gate is broken.
       - name: Tier gate
+        if: ${{ !cancelled() }}
         run: npm run test:tier-gate
 
       # The claim ledger. Four things, all deterministic:
@@ -341,11 +493,36 @@ jobs:
       #
       # The canary at docs/06-codebase/ledger-canary.md must produce exactly two
       # would_block lines on every run. Zero means the resolvers stopped firing.
-      - name: Claim ledger
-        run: npm run check:ledger
+      # Six steps, because `check:ledger` chained them with `&&` — the worst instance in the
+      # repository. A test:claims failure skipped `ledger lint`, `ledger build --check` AND
+      # `ledger verify`, which is the ledger's entire enforcement, while CI showed one red step.
+      - name: Claim ledger — parser and schema
+        if: ${{ !cancelled() }}
+        run: npm run test:claims
+
+      - name: Claim ledger — tier classifier
+        if: ${{ !cancelled() }}
+        run: npm run test:classifier
+
+      - name: Claim ledger — resolvers
+        if: ${{ !cancelled() }}
+        run: npm run test:ledger
+
+      - name: Claim ledger — lint
+        if: ${{ !cancelled() }}
+        run: npm run check:ledger-lint
+
+      - name: Claim ledger — index reproduces
+        if: ${{ !cancelled() }}
+        run: npm run check:ledger-build
+
+      - name: Claim ledger — verify (shadow, blocks on migration/deploy/self-edit)
+        if: ${{ !cancelled() }}
+        run: npm run check:ledger-verify
 
       # Mission Control's rail: bun install pinned to the committed lockfile (a drifted
       # lockfile fails here rather than silently resolving something else), then the
       # same check:mc that runs locally — bun/deps probe, then bun test.
       - name: Mission Control
+        if: ${{ !cancelled() }}
         run: bun install --frozen-lockfile --cwd mission-control && npm run check:mc
