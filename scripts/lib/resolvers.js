@@ -380,9 +380,23 @@ function judge(claim, opts = {}) {
 
 // ── claim-judge-external ────────────────────────────────────────────────────
 // The sibling `claim-judge` checks the SHAPE of a judgment somebody else recorded. This
-// one CALLS a judge — a second model family, out of process — and is the only route this
-// repo has to the `risk: high` requirement of >=2 distinct model families, because there
-// is no non-Anthropic model inside Claude Code.
+// one CALLS a judge — a second model family, out of process.
+//
+// WHAT IT DOES NOT DO, stated first because the obvious reading is wrong. This resolver
+// does NOT satisfy the `risk: high` requirement of >=2 distinct model families. It
+// returns its own verdict and writes NOTHING back into `evidence.judged_by`, so the
+// family count `claim-judge` computes is unmoved. Measured on a risk:high claim with a
+// one-family panel and a conformant external pass:
+//
+//   claim-judge          -> fail | risk:high needs >=2 model families, got 1 (anthropic)
+//   claim-judge-external -> pass | second-family judge ... returned pass
+//
+// The aggregate still blocks, which is the correct direction — but an earlier draft of
+// this header called it "the only route to the >=2 family requirement", and that
+// overstated a seam into a satisfied requirement. Making the requirement genuinely
+// satisfiable means writing a judgment back into the ledger source, which is a founder
+// decision about ledger provenance and is deliberately not taken here. What this resolver
+// is: an independent second opinion that can BLOCK, recorded with an attestation.
 //
 // THE TRAP THAT DEFERRED THIS FOR WEEKS, AND THE RULE THAT COMES OUT OF IT
 // Codex bug #19945: `codex exec` returns EXIT 0 WITH 0-BYTE STDOUT when stdio is detached
@@ -454,8 +468,20 @@ function judgeExternal(claim, opts = {}) {
   // gate, so letting `evidence` name the executable would hand any writable doc an
   // arbitrary spawn. Configuration comes from the process, not from the data.
   const binPath = opts.binPath || process.env.WARROOM_JUDGE_PATH || profile.bin;
+
+  // INGEST REFUSAL, before a process exists. `assert` and `lenses` are claim YAML, which
+  // this file already treats as untrusted three lines above — and they are interpolated
+  // into the prompt that also carries the token authenticating the verdict. A claim
+  // carrying that token is refused rather than fenced-and-hoped, because this is the half
+  // of the defence that needs no cooperation from any model.
+  const hostile = judges.claimTextIssue(claim);
+  if (hostile) {
+    return R('unresolved', `refused to send this claim to a judge: ${hostile}`);
+  }
+
   const nonce = opts.nonce || crypto.randomBytes(6).toString('hex');
-  const prompt = judges.buildPrompt(claim, nonce);
+  const fence = opts.fence || judges.newFence();
+  const prompt = judges.buildPrompt(claim, nonce, fence);
   const argv = profile.argv.slice();
   const timeoutMs = opts.timeoutMs || JUDGE_TIMEOUT_MS;
 
@@ -464,9 +490,14 @@ function judgeExternal(claim, opts = {}) {
   // lexical: `claims.js` counts distinct `model_family` STRINGS, so anyone can type
   // `model_family: openai` into YAML and satisfy the independence predicate. These hashes
   // name the invocation that actually happened.
+  //
+  // `profile_verified_against_binary` is carried here rather than left implicit: a reader
+  // auditing a pass needs to know whether the envelope it was parsed with has ever been
+  // seen coming out of the real binary.
   const attest = (stdout) => ({
     bin: binName,
     bin_path: binPath,
+    profile_verified_against_binary: profile.verified_against_binary === true,
     argv_sha256: sha(JSON.stringify([binPath, ...argv])),
     prompt_sha256: sha(prompt),
     stdout_sha256: stdout === null ? null : sha(stdout),
@@ -480,7 +511,13 @@ function judgeExternal(claim, opts = {}) {
     killSignal: 'SIGKILL',
     maxBuffer: opts.maxBuffer || JUDGE_MAX_OUTPUT,
     cwd: opts.cwd || process.cwd(),
-    env: { ...process.env, WARROOM_LEDGER: '1' },
+    // An ALLOW-LIST, not this process's environment. The ambient environment here measured
+    // 101 variables including an injected GITHUB_TOKEN, and this child is pointed at a
+    // vendor API on purpose. A credential that is never passed cannot be exfiltrated by it.
+    // If a real judge needs a variable this misses it will fail to authenticate, which
+    // lands on `unresolved` — the safe direction — and `WARROOM_JUDGE_ENV_PASS` adds one
+    // without a code change.
+    env: judges.judgeEnv(profile, opts.env || process.env),
   });
 
   // Measured 2026-08-26 on node in this repo: ENOENT for an absent binary (bare name or
@@ -538,10 +575,19 @@ function judgeExternal(claim, opts = {}) {
 
   const verdict = parsed.verdicts[0];
   const detail = { exit: r.status, events: parsed.events.length, attestation: attest(stdout) };
+  // NAME WHAT RAN, not what was configured. `WARROOM_JUDGE_BIN=codex` with
+  // `WARROOM_JUDGE_PATH=/tmp/always-pass` previously read `second-family judge "codex"
+  // returned pass`, which describes an invocation that did not happen — and the one field
+  // recording the substitution, the attestation, is dropped by the caller on a pass. The
+  // profile name alone is not an identity.
+  const who = `"${binName}" (${binPath})`;
+  const caveat = profile.verified_against_binary === true
+    ? ''
+    : ' — profile envelope is UNVERIFIED against the real binary, so this parse is believed, not confirmed';
   if (verdict === 'fail') {
-    return R('fail', `second-family judge "${binName}" completed its turn and returned fail`, detail);
+    return R('fail', `second-family judge ${who} completed its turn and returned fail${caveat}`, detail);
   }
-  return R('pass', `second-family judge "${binName}" completed its turn and returned pass`, detail);
+  return R('pass', `second-family judge ${who} completed its turn and returned pass${caveat}`, detail);
 }
 
 // ── Dispatch ────────────────────────────────────────────────────────────────
@@ -577,11 +623,17 @@ function resolversFor(claim, fileResolvers = []) {
     'claim-command': typeof ev.cmd === 'string',
     'claim-source': typeof ev.url === 'string',
     'claim-judge': Array.isArray(ev.judged_by),
-    // Same evidence as `claim-judge` — a judge claim is what it applies to. It is NOT
+    // A judge claim, and STRICTLY a subset of what `claim-judge` attaches to. It is NOT
     // added by `verified_by` (see VERIFIED_BY_RESOLVER, which is untouched), so it runs
     // only where a tier rule names it. Today no rule does, and calling a vendor API on
     // every `ledger verify` is not a default anybody chose.
-    'claim-judge-external': Array.isArray(ev.judged_by),
+    //
+    // `verified_by === 'judge'` is load-bearing, not belt-and-braces. Keyed on
+    // `judged_by` alone, a `verified_by: command` claim that happens to carry a panel
+    // attracted this resolver while `claim-judge` stayed away — so the external judge ran
+    // with NO panel check and NO family check beside it. Whatever else this resolver is,
+    // it must never be the only one looking at a judgment.
+    'claim-judge-external': claim.verified_by === 'judge' && Array.isArray(ev.judged_by),
   };
   for (const r of fileResolvers) {
     if (RESOLVER_NAMES.includes(r) && applicable[r]) set.add(r);
