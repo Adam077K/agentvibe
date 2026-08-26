@@ -24,15 +24,19 @@
 // carrying `enforcement: block` uses `claim-command` only. Network-dependent claims live
 // on shadow paths, where an outage produces an honest log line and a green build.
 
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
+const crypto = require('crypto');
+const judges = require('./judges.js');
 
 const DAY_MS = 86400000;
 const FETCH_TIMEOUT_MS = 8000;
 const COMMAND_TIMEOUT_MS = 60000;
 const ACCESSED_MAX_AGE_DAYS = 180;
+const JUDGE_TIMEOUT_MS = 120000;
+const JUDGE_MAX_OUTPUT = 8 * 1024 * 1024;
 
 /** Resolver names accepted in `.claude/qa-tier-floor.yml`. Anything else throws. */
-const RESOLVER_NAMES = ['claim-source', 'claim-freshness', 'claim-command', 'claim-judge'];
+const RESOLVER_NAMES = ['claim-source', 'claim-freshness', 'claim-command', 'claim-judge', 'claim-judge-external'];
 
 /** Which resolver a claim's own `verified_by` implies. */
 const VERIFIED_BY_RESOLVER = {
@@ -374,6 +378,218 @@ function judge(claim, opts = {}) {
     `${panel.length} judge${panel.length === 1 ? '' : 's'} across ${families.size} famil${families.size === 1 ? 'y' : 'ies'} returned pass`);
 }
 
+// ── claim-judge-external ────────────────────────────────────────────────────
+// The sibling `claim-judge` checks the SHAPE of a judgment somebody else recorded. This
+// one CALLS a judge — a second model family, out of process.
+//
+// WHAT IT DOES NOT DO, stated first because the obvious reading is wrong. This resolver
+// does NOT satisfy the `risk: high` requirement of >=2 distinct model families. It
+// returns its own verdict and writes NOTHING back into `evidence.judged_by`, so the
+// family count `claim-judge` computes is unmoved. Measured on a risk:high claim with a
+// one-family panel and a conformant external pass:
+//
+//   claim-judge          -> fail | risk:high needs >=2 model families, got 1 (anthropic)
+//   claim-judge-external -> pass | second-family judge ... returned pass
+//
+// The aggregate still blocks, which is the correct direction — but an earlier draft of
+// this header called it "the only route to the >=2 family requirement", and that
+// overstated a seam into a satisfied requirement. Making the requirement genuinely
+// satisfiable means writing a judgment back into the ledger source, which is a founder
+// decision about ledger provenance and is deliberately not taken here. What this resolver
+// is: an independent second opinion that can BLOCK, recorded with an attestation.
+//
+// THE TRAP THAT DEFERRED THIS FOR WEEKS, AND THE RULE THAT COMES OUT OF IT
+// Codex bug #19945: `codex exec` returns EXIT 0 WITH 0-BYTE STDOUT when stdio is detached
+// from a TTY — which is precisely how a resolver runs it (bug #4721 does the same for
+// SIGINT, returning 0 rather than 130). A resolver that read exit 0 as a pass would
+// manufacture judgments that were never made, on the highest-risk claims in the ledger.
+//
+// So: THIS RESOLVER NEVER READS THE EXIT CODE. Not as a pass, not as a fail. It gates on
+// a positively identified turn-completion marker in the binary's own event stream, plus a
+// verdict the judge stated in its own words. Absent either, the answer is `unresolved`
+// with a reason naming WHICH precondition failed — absent binary, no turn completion,
+// no verdict, contradictory verdicts, timeout — because an `unresolved` that does not say
+// why sends the next person to re-derive it.
+//
+// Every one of those is indistinguishable from "judged, no objection" if you squint, and
+// that is the whole point: a negative result is evidence only next to a control that
+// fires. The control lives in the tests — a stub emitting a real, conformant verdict must
+// resolve pass/fail, or the five negative cases prove only that the resolver is inert.
+//
+// ASYMMETRY (MODEL-DIVERSITY.md): a second-family judge may turn PASS into BLOCK, never
+// BLOCK into PASS. Implemented below by refusing to call the binary at all when the
+// recorded panel already dissents — a flaky or absent judge degrades to "no second
+// opinion", never to a false pass.
+//
+// WHAT IT COSTS TO RUN, stated because it is not obvious: this spawns a process and that
+// process talks to a vendor API, sending the claim's assertion text off this machine. It
+// is therefore BOTH a command resolver and a network resolver, and honours `--no-exec`
+// and `--offline` alike. Nothing in `.claude/qa-tier-floor.yml` names it, so it does not
+// run unless a rule is added — and per this file's header, a network-dependent resolver
+// must never guard an `enforcement: block` path.
+
+function judgeExternal(claim, opts = {}) {
+  const ev = claim.evidence || {};
+  const now = opts.now === undefined ? Date.now() : opts.now;
+  const panel = Array.isArray(ev.judged_by) ? ev.judged_by : [];
+  const R = (status, reason, detail) => result('claim-judge-external', claim, status, reason, detail);
+
+  // Same rule as `claim-judge`: a waiver covers "we cannot judge this yet", never a panel
+  // that judged and dissented.
+  if (!panel.some((j) => j && j.verdict === 'fail')) {
+    const disp = dispositionOutcome(claim, now, 'claim-judge-external');
+    if (disp) return disp;
+  } else {
+    // The asymmetry, enforced before any spawn: nothing this binary says can lift a
+    // recorded dissent, so there is no reason to ask it and no way for its answer to leak
+    // into a pass.
+    return R('fail', `the recorded panel already dissents (${panel.filter((j) => j.verdict === 'fail').length} of ${panel.length}) — a second family may turn PASS into BLOCK, never BLOCK into PASS`);
+  }
+
+  if (!Array.isArray(ev.judged_by)) {
+    return R('unresolved', 'this claim carries no evidence.judged_by — the external judge resolver does not apply to it');
+  }
+  if (opts.skipCommands) {
+    return R('unresolved', 'external judge execution disabled (--no-exec) — this claim is unverified');
+  }
+  if (opts.offline) {
+    return R('unresolved', 'offline mode — the external judge was not called, so this claim is unverified');
+  }
+
+  const binName = opts.bin || process.env.WARROOM_JUDGE_BIN || judges.DEFAULT_JUDGE;
+  const profile = judges.selectProfile(binName);
+  if (!profile) {
+    // A closed table. Guessing another binary's argv is how you get a wrong answer wearing
+    // the shape of a right one — the same defect class as `-p` meaning `--profile`.
+    return R('unresolved', `no judge profile for "${binName}" — configured profiles: ${Object.keys(judges.PROFILES).join(', ')}`);
+  }
+  // The BINARY IS NEVER CLAIM-CONTROLLED. `claim-command` runs a string out of a document
+  // because its tier rules gate which documents may carry one; a judge claim has no such
+  // gate, so letting `evidence` name the executable would hand any writable doc an
+  // arbitrary spawn. Configuration comes from the process, not from the data.
+  const binPath = opts.binPath || process.env.WARROOM_JUDGE_PATH || profile.bin;
+
+  // INGEST REFUSAL, before a process exists. `assert` and `lenses` are claim YAML, which
+  // this file already treats as untrusted three lines above — and they are interpolated
+  // into the prompt that also carries the token authenticating the verdict. A claim
+  // carrying that token is refused rather than fenced-and-hoped, because this is the half
+  // of the defence that needs no cooperation from any model.
+  const hostile = judges.claimTextIssue(claim);
+  if (hostile) {
+    return R('unresolved', `refused to send this claim to a judge: ${hostile}`);
+  }
+
+  const nonce = opts.nonce || crypto.randomBytes(6).toString('hex');
+  const fence = opts.fence || judges.newFence();
+  const prompt = judges.buildPrompt(claim, nonce, fence);
+  const argv = profile.argv.slice();
+  const timeoutMs = opts.timeoutMs || JUDGE_TIMEOUT_MS;
+
+  const sha = (s) => crypto.createHash('sha256').update(s === null ? '' : String(s)).digest('hex');
+  // The attestation is what makes a recorded second-family judgment checkable rather than
+  // lexical: `claims.js` counts distinct `model_family` STRINGS, so anyone can type
+  // `model_family: openai` into YAML and satisfy the independence predicate. These hashes
+  // name the invocation that actually happened.
+  //
+  // `profile_verified_against_binary` is carried here rather than left implicit: a reader
+  // auditing a pass needs to know whether the envelope it was parsed with has ever been
+  // seen coming out of the real binary.
+  const attest = (stdout) => ({
+    bin: binName,
+    bin_path: binPath,
+    profile_verified_against_binary: profile.verified_against_binary === true,
+    argv_sha256: sha(JSON.stringify([binPath, ...argv])),
+    prompt_sha256: sha(prompt),
+    stdout_sha256: stdout === null ? null : sha(stdout),
+    subject: sha(String(claim.assert)),
+  });
+
+  const r = spawnSync(binPath, argv, {
+    input: prompt,
+    encoding: 'utf8',
+    timeout: timeoutMs,
+    killSignal: 'SIGKILL',
+    maxBuffer: opts.maxBuffer || JUDGE_MAX_OUTPUT,
+    cwd: opts.cwd || process.cwd(),
+    // An ALLOW-LIST, not this process's environment. The ambient environment here measured
+    // 101 variables including an injected GITHUB_TOKEN, and this child is pointed at a
+    // vendor API on purpose. A credential that is never passed cannot be exfiltrated by it.
+    // If a real judge needs a variable this misses it will fail to authenticate, which
+    // lands on `unresolved` — the safe direction — and `WARROOM_JUDGE_ENV_PASS` adds one
+    // without a code change.
+    env: judges.judgeEnv(profile, opts.env || process.env),
+  });
+
+  // Measured 2026-08-26 on node in this repo: ENOENT for an absent binary (bare name or
+  // absolute path), ETIMEDOUT + signal SIGKILL on timeout, ENOBUFS + signal SIGTERM on
+  // overflow. ENOBUFS leaves PARTIAL stdout populated, so it is refused before parsing —
+  // a truncated stream can carry a completion marker it never earned.
+  if (r.error) {
+    const code = r.error.code;
+    if (code === 'ENOENT') {
+      return R('unresolved', `judge binary "${binPath}" is not installed — no second family was consulted`, { attestation: attest(null) });
+    }
+    if (code === 'ETIMEDOUT') {
+      return R('unresolved', `the judge did not finish within ${timeoutMs}ms — killed, so nothing it may have been about to say counts`, { attestation: attest(null) });
+    }
+    if (code === 'ENOBUFS') {
+      return R('unresolved', `the judge wrote more than ${opts.maxBuffer || JUDGE_MAX_OUTPUT} bytes — the captured stream is truncated and will not be parsed`, { attestation: attest(null) });
+    }
+    return R('unresolved', `the judge could not be run: ${code || r.error.message}`, { attestation: attest(null) });
+  }
+
+  const stdout = r.stdout === undefined || r.stdout === null ? '' : String(r.stdout);
+  const stderr = r.stderr ? String(r.stderr) : '';
+  // The FIRST lines, where `claim-command` keeps the last five. Deliberate, and measured:
+  // a compiler puts its summary at the end, a CLI that cannot start puts its message at the
+  // beginning. Taking the tail of gemini's real failure here returned a stack frame from
+  // inside its bundle and threw away the line that says `IneligibleTierError`.
+  const head = stderr.trim().split('\n').filter(Boolean).slice(0, 3).join('\n').slice(0, 400);
+
+  // r.status IS DELIBERATELY NOT CONSULTED, here or anywhere below. It is reported in the
+  // detail for a human reading the log and is never an input to the verdict. Bug #19945 is
+  // exactly a 0 that means nothing; measured on this machine 2026-08-26, gemini 0.38.2
+  // does the mirror image — exit 1 with 0 bytes of stdout on IneligibleTierError — and
+  // neither number tells you whether a judgment happened.
+  if (stdout.trim() === '') {
+    return R('unresolved',
+      `the judge produced 0 bytes on stdout — no turn completed, so there is no judgment. Exit ${r.status} is not consulted in either direction: codex #19945 exits 0 having done nothing, and a completed turn with a non-zero exit is still a judgment`,
+      { exit: r.status, stderr: head, attestation: attest(stdout) });
+  }
+
+  const parsed = judges.parseOutput(profile, stdout, nonce);
+  if (!parsed.completed) {
+    return R('unresolved', `no turn completion from "${binName}": ${parsed.why}`,
+      { exit: r.status, stderr: head, attestation: attest(stdout) });
+  }
+  if (parsed.verdicts.length === 0) {
+    return R('unresolved',
+      `"${binName}" completed its turn but stated no verdict — expected a line \`${judges.VERDICT_PREFIX}-<nonce>: pass|fail\` in its own output`,
+      { exit: r.status, events: parsed.events.length, attestation: attest(stdout) });
+  }
+  if (parsed.verdicts.length > 1) {
+    return R('unresolved',
+      `"${binName}" stated ${parsed.verdicts.length} contradictory verdicts (${parsed.verdicts.join(', ')}) — a contradiction is not a judgment and is not averaged`,
+      { exit: r.status, attestation: attest(stdout) });
+  }
+
+  const verdict = parsed.verdicts[0];
+  const detail = { exit: r.status, events: parsed.events.length, attestation: attest(stdout) };
+  // NAME WHAT RAN, not what was configured. `WARROOM_JUDGE_BIN=codex` with
+  // `WARROOM_JUDGE_PATH=/tmp/always-pass` previously read `second-family judge "codex"
+  // returned pass`, which describes an invocation that did not happen — and the one field
+  // recording the substitution, the attestation, is dropped by the caller on a pass. The
+  // profile name alone is not an identity.
+  const who = `"${binName}" (${binPath})`;
+  const caveat = profile.verified_against_binary === true
+    ? ''
+    : ' — profile envelope is UNVERIFIED against the real binary, so this parse is believed, not confirmed';
+  if (verdict === 'fail') {
+    return R('fail', `second-family judge ${who} completed its turn and returned fail${caveat}`, detail);
+  }
+  return R('pass', `second-family judge ${who} completed its turn and returned pass${caveat}`, detail);
+}
+
 // ── Dispatch ────────────────────────────────────────────────────────────────
 
 const IMPL = {
@@ -381,6 +597,7 @@ const IMPL = {
   'claim-source': (claim, opts) => source(claim, opts),
   'claim-command': (claim, opts) => Promise.resolve(command(claim, opts)),
   'claim-judge': (claim, opts) => Promise.resolve(judge(claim, opts)),
+  'claim-judge-external': (claim, opts) => Promise.resolve(judgeExternal(claim, opts)),
 };
 
 /**
@@ -406,6 +623,17 @@ function resolversFor(claim, fileResolvers = []) {
     'claim-command': typeof ev.cmd === 'string',
     'claim-source': typeof ev.url === 'string',
     'claim-judge': Array.isArray(ev.judged_by),
+    // A judge claim, and STRICTLY a subset of what `claim-judge` attaches to. It is NOT
+    // added by `verified_by` (see VERIFIED_BY_RESOLVER, which is untouched), so it runs
+    // only where a tier rule names it. Today no rule does, and calling a vendor API on
+    // every `ledger verify` is not a default anybody chose.
+    //
+    // `verified_by === 'judge'` is load-bearing, not belt-and-braces. Keyed on
+    // `judged_by` alone, a `verified_by: command` claim that happens to carry a panel
+    // attracted this resolver while `claim-judge` stayed away — so the external judge ran
+    // with NO panel check and NO family check beside it. Whatever else this resolver is,
+    // it must never be the only one looking at a judgment.
+    'claim-judge-external': claim.verified_by === 'judge' && Array.isArray(ev.judged_by),
   };
   for (const r of fileResolvers) {
     if (RESOLVER_NAMES.includes(r) && applicable[r]) set.add(r);
@@ -427,6 +655,7 @@ module.exports = {
   source,
   command,
   judge,
+  judgeExternal,
   resolversFor,
   run,
   normaliseText,

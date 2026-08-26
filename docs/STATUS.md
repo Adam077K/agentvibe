@@ -55,9 +55,14 @@ tense and every one of them described a state the same commit had already remove
 
 ## The four things to know before touching anything
 
-1. **`main` = `71fd58d`** (verified here: `git rev-parse --short main`). This document sits **ahead** of it,
-   on **`fix/wave-1-review-findings`** — the wave-1 review branch, which targets `integration/wave-1` — and
-   describes **this tree**, not `main`. Settle it in your own checkout with
+1. **Local `main` = `71fd58d`; `origin/main` = `3731087`** —
+   `git for-each-ref --format='%(refname:short) %(objectname:short)' refs/heads/main refs/remotes/origin/main`
+   (`git rev-parse --short main origin/main` **does not work** — it exits 128, `Needed a single revision`).
+   **Name the ref or the figure lies by omission**: the first is a local branch nobody has pulled, the second
+   is what a reader means by "main". This line said `main = 71fd58d` unqualified until 2026-08-26, which was
+   *honest by its own command* and still pointed at the wrong tree. This document sits **ahead** of both,
+   on **`feat/documented-figures-checked`** — the documented-figures branch (PR #107), which targets
+   `main` — and describes **this tree**, not `main`. Settle it in your own checkout with
    `git rev-parse --abbrev-ref HEAD`; that is the branch every figure below was measured on, and it is
    named here **once**.
    > *Superseded 2026-08-26: this said `integration/wave-1`, while §4 said `fix/wave-1-review-findings` —
@@ -66,16 +71,38 @@ tense and every one of them described a state the same commit had already remove
    > the review branch, so the two names resolved to the same commit. **That is the ambiguity's disguise,
    > not its absence** — the moment the integration branch moves independently, a reader cannot tell which
    > tree the figures came from, and nothing in the file would change to tell them.*
-2. **The local floor is GREEN — `43 of 43 passed · 0 failed` — and the cause of CI's red is fixed in this
-   change, though no runner has confirmed that from here.** See §1 and §4.
+   > *Superseded again 2026-08-26: this named `fix/wave-1-review-findings`, which had landed on `main` —
+   > so the file described a tree nobody was on. **A branch name is a figure like any other and expires
+   > the same way**, which is exactly what the ordering rule at the top of this file is for.*
+   > *Superseded a third time, same day: it then named `feat/memory-eviction`, and `origin/main` read
+   > `7f7bddd`. Both were falsified by the six-merge train that took `main` to `3731087` — #106, #99,
+   > #101, #102, #103 and #104. Three expiries of one line in one day. **Nothing checks a branch name or
+   > a sha here**, and `npm run check:figures`, which landed in this very change, cannot: it asserts
+   > numbers against derivations, and neither of these is a number the suite computes. Stated so the
+   > boundary of that check is visible from the thing that keeps escaping it.*
+2. **The local floor is GREEN — `46 of 46 passed · 0 failed`, verified here — and a runner has now
+   confirmed it (`REPORTED`).** See §1 and §4. ***`REPORTED`, not verified here:*** *CI run `32944938976` on
+   `869aab9` finished `success`. That came from `gh run view`, which needs the sandbox disabled to read
+   `~/.config/gh`, so it cannot be checked from this worktree — and per the standard at the top of this
+   file, no GitHub fact on this page can be anything else. **It carried no marker until 2026-08-26**, while §1 and
+   §3 marked theirs correctly: one page, two practices, which is the defect the standard exists to prevent.
+   The clause it replaced read "though no runner has confirmed that from here" and had outlived its own
+   condition. A completed run id is a fixed historical fact and is safe to cite, unlike a sha standing in for
+   "the current tree".*
    > *Superseded 2026-08-26. This read: **"CI is RED and the local floor is GREEN.** Both are true, and they
    > are one environment-dependent test apart." That was true of `main` at `71fd58d` and false of the tree
    > this file ships in: `fix/plans-dir-test-hermetic` is merged here as `ae7ea48`. Kept because the
    > single-test explanation in §1 is still why CI was red, and a reader who cannot see the old state cannot
    > judge whether the fix addresses it.*
-3. **The QA gate has never produced a verdict.** `.qa/` does not exist in the tree at all — not an empty
-   directory, absent. Every "the gate blocked" statement in the record describes a run whose output was
-   read from a transcript, never a stored artifact.
+3. **The QA gate now leaves stored artifacts — `.qa/verdicts/` carries 19 records on `origin/main`**
+   (`git ls-tree -r --name-only origin/main -- .qa | wc -l`). What has still never happened is a run of
+   the multi-judge panel: every record there is author-recorded on a deterministic floor, single model
+   family, and the `irreversible`-tier requirement of 2-of-3 judges is unmet on every one of them.
+   > *Superseded 2026-08-26: this read "**The QA gate has never produced a verdict.** `.qa/` does not
+   > exist in the tree at all — not an empty directory, absent." True when written and falsified by the
+   > six-merge train without anyone editing the sentence — the same way the branch name in item 1 went
+   > stale. The distinction it was drawing is still the one that matters, so it is restated above
+   > against what is actually missing (the panel) rather than against what has since arrived (the file).*
 4. **Scope stops before Phase 9, and no venture work has run through this harness yet.** Both are decisions
    with recorded costs, not oversights. See §6.
 
@@ -163,17 +190,63 @@ Two things a reader should not over-read:
 
 **TREATED IN THIS CHANGE, as `e5eac9f`** (`git merge-base --is-ancestor e5eac9f HEAD` → true).
 
-`.github/workflows/ci.yml` now runs **46 steps in a single job (`checks`), and all 46 carry
-`if: ${{ !cancelled() }}`.** Counted here:
+`.github/workflows/ci.yml` now runs **47 steps in a single job (`checks`), and all 47 carry
+`if: ${{ !cancelled() }}`.** Derived through the repo's own ci.yml parser rather than by `grep` — read the
+hazard note below before you reach for `grep` here:
 
 ```
-grep -c '^        run: ' .github/workflows/ci.yml                    →  46
-grep -c '^        if: ${{ !cancelled() }}' .github/workflows/ci.yml  →  46
+node -e "const fs=require('fs'),{parseCiSteps}=require('./scripts/lib/check-suite.js');
+const r=parseCiSteps(fs.readFileSync('.github/workflows/ci.yml','utf8')).filter(s=>s.run);
+console.log(r.length, r.filter(s=>/!cancelled\(\)/.test(String(s.if||''))).length)"
+→  47 47
 ```
+
+> ***This derivation used to be two `grep -c` recipes, and on the machine this repo is developed on one of
+> them SILENTLY RETURNED `0`.*** *`grep` in an agent shell here is a shell function shimming to
+> **ugrep 7.8.4**. Measured 2026-08-26, same file, same instant:*
+>
+> ```
+> grep -c '^        if: ${{ !cancelled() }}' .github/workflows/ci.yml            →  0   exit 1, stderr EMPTY
+> /usr/bin/grep -c '^        if: ${{ !cancelled() }}' .github/workflows/ci.yml   →  45  exit 0
+> ```
+>
+> ***THE TRIGGER IS AN UNESCAPED `$` IN A NON-FINAL POSITION. IT IS NOT THE BRACES.*** *POSIX BRE reads such
+> a `$` as a literal; ugrep `-G` reads it as an end-of-line anchor, so everything after it can never match
+> and the count is `0` — with an empty stderr, which is what makes it silent rather than merely wrong. The
+> controls, on the same file and on a fixture, separate the two candidate causes:*
+>
+> ```
+> grep -c '{{' ci.yml            →  46   /usr/bin/grep →  46   AGREE — braces alone are FINE
+> grep -c 'foo$bar' fixture      →   0   /usr/bin/grep →   1   DIFFER — `$` mid-pattern, no brace
+> grep -c 'end$'    fixture      →   0   /usr/bin/grep →   0   AGREE — a FINAL `$` anchors in both
+> ```
+>
+> ***Escaping the `$` repairs it in BOTH greps*** — *`'^        if: \${{ !cancelled() }}'` returns 45 and 45
+> — so the portable spelling is an escape, not a path. Prefer that to `/usr/bin/grep`, which only fixes the
+> machine you are sitting at.*
+>
+> *(**Superseded 2026-08-26, hours after it was written:** this note first said ugrep "mis-parses the `{{`".
+> It does not — `{{` agrees at 46 — and the wrong mechanism produced a **wrong rule**: the instruction
+> below read "check before trusting a **brace-bearing** pattern", which guards the shape that is SAFE and says
+> nothing about the shape that FAILS. A reader running `grep -c 'foo$bar'` would have got `0` with nothing in
+> this file to make them doubt it. The mechanism was relayed as a symptom-level guess and written down
+> faithfully; putting it somewhere a reader can execute is exactly what surfaced it.)*
+>
+> *A reviewer following the printed recipe was one step from filing "this recipe returns 0 and never
+> worked" as a confident, false P1, and stopped only because `0` was impossible on its face.* **This file's
+> entire method is re-derive-never-recall, so a recipe that does not produce its stated answer for the
+> person who runs it is worse than no recipe** — *it turns the method itself into a source of false
+> findings, and it fails silently, which is the failure mode this document exists to hunt.*
+>
+> *So: where a figure can come from the repo's own parser — `parseCiSteps()`, `aliasLinks()`, `STEPS` — it
+> now does, because `node` is not shadowed here and `grep` is. Where a `grep` recipe is genuinely the
+> clearest form it is kept: two remain in this file — `'^2026-'` and `'ALLOWS a write to a file under'` —
+> and **neither contains a `$`**. **Check `type grep` before trusting a `$`-bearing pattern**; escape the
+> `$`, or fall back to `/usr/bin/grep`.*
 
 Three further `uses:` setup steps (checkout, setup-node, setup-bun) carry **no** `if:`, deliberately: if
-checkout fails, `!cancelled()` is still true, so guarding them would run all 46 checks against an empty
-workspace and turn every one of them red instead of one. That is a diagnosability cost, not a fail-open one — the
+checkout fails, `!cancelled()` is still true, so guarding them would run all 47 checks against an empty
+workspace and produce 48 red steps instead of one. That is a diagnosability cost, not a fail-open one — the
 job still fails and nothing ships. `!cancelled()` and not `always()`, so a cancelled run still stops.
 
 > *Superseded 2026-08-26. This read: "`.github/workflows/ci.yml` runs **30 steps in a single job (`checks`)
@@ -187,7 +260,7 @@ job still fails and nothing ships. `!cancelled()` and not `always()`, so a cance
 > `git show 71fd58d:.github/workflows/ci.yml` gives 30 run-steps and 0 `if:` lines, with
 > `npm run test:pre-tool-use` as the 18th. It was already false of the tree the sentence shipped in. Kept
 > because the twelve skipped checks are why the change exists: a reader who cannot see what was hidden
-> cannot judge whether guarding 44 steps was the right cure.*
+> cannot judge whether guarding 45 steps was the right cure.*
 
 This was the same shape as the defect found on 2026-08-25 one level down: `npm run check` chained its steps
 with `&&`, so a failure at step 21 silently skipped nine more. Both are fixed now, at both levels.
@@ -245,12 +318,12 @@ CODEOWNERS in the tree today (verified). On a solo repository it would also dead
 ## 4 · The local floor is green
 
 ```
-npm run check  →  45 of 45 passed · 0 failed · exit 0
+npm run check  →  46 of 46 passed · 0 failed · exit 0
 ```
 
 macOS, sandbox armed, measured 2026-08-26 in this worktree, on the branch named once in §1. **Re-derive
-before believing it — `npm run check`, about 100 seconds.** If it disagrees, the tree has moved and this
-line is stale; that answer is worth more than knowing which commit it was taken at.
+before believing it — `npm run check`, 90 to 145 seconds depending on lane load.** If it disagrees, the
+tree has moved and this line is stale; that answer is worth more than knowing which commit it was taken at.
 
 > ***No commit sha is given, and dropping it is the fix — not a loss of provenance.*** *This line named a
 > tree: `833b4d8`, then `d5b2e04` an hour later. It could never name the commit it is IN — a file cannot
@@ -268,23 +341,58 @@ line is stale; that answer is worth more than knowing which commit it was taken 
 > §1: cite a thing that holds still, not a position that does not.*
 
 Derive the denominator, never quote it:
-`node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **45**.
+`node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **46**.
 
-**`45 of 45 · 0 failed` is the figure. It is not 44 and it is not 46.**
+**`46 of 46 · 0 failed` is the figure. It is not 45 and it is not 47.**
 
-> *Superseded 2026-08-26: this read "**`30 of 30 · 0 failed` is the figure. It is not 29 and it is not
-> 31.** … measured 2026-08-25 at `71fd58d`." Correct at `71fd58d` and re-derivable there —
-> `git show 71fd58d:scripts/lib/check-suite.js` still gives `STEPS.length` = 30. The denominator moved to 43
-> because five `EXCLUDED` aliases were split into the 18 links they had been hiding behind five names, so
-> the suite runs the same work under more names. **Nothing was added to the suite and nothing was dropped
-> from it.** The hedge kept its own advice — pinning the exact figure is what made this correctable at all,
-> where a vague "the floor is green" would have survived the change untouched and told the reader nothing.*
+> *Superseded 2026-08-26, twice, and **the two moves are not the same kind of move** — which is the whole
+> reason this note is longer than a number swap.*
+>
+> *It first read "**`30 of 30 · 0 failed` is the figure. It is not 29 and it is not 31.** … measured
+> 2026-08-25 at `71fd58d`." Correct at `71fd58d` and re-derivable there —
+> `git show 71fd58d:scripts/lib/check-suite.js` still gives `STEPS.length` = 30. **30 → 43 was a RENAMING:**
+> five `EXCLUDED` aliases were split into the 18 links they had been hiding behind five names, so the suite
+> ran the same work under more names. Nothing was added and nothing was dropped.*
+>
+> *It then read `43 of 43`. **43 → 44 is NOT that, and reading it as more of the same would be wrong:**
+> `test:eviction` is genuinely NEW work in the suite, arriving with the `feat/memory-eviction` merge, and
+> `check:memory` went from a two-link alias to a three-link one. The link count behind the five aliases
+> moved 18 → 19 with it. Derive both, never recall them:*
+>
+> ```
+> node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"          →  44
+> node -e "const {aliasLinks,EXCLUDED}=require('./scripts/lib/check-suite.js');
+> const s=require('./package.json').scripts;
+> const a=Object.keys(EXCLUDED).map(n=>aliasLinks(s[n])).filter(Boolean);
+> console.log(a.length, a.reduce((n,l)=>n+l.length,0))"                                →  5 19
+> ```
+>
+> ***That merge is also how `43 of 43` survived two commits past its own expiry.*** *This file's rule at the
+> top says STATUS.md is edited in the LAST commit of a change, after the merges, re-deriving every figure.
+> The merge landed and two commits followed without it. The result was worse than staleness: the line
+> **pre-registered the truth as the wrong answer** — "it is not 44" — so an agent trusting this file over
+> the tree would have "corrected" a working 44-step suite back to a broken 43. A hedge that names the adjacent
+> values is what made every earlier version correctable; it is also what makes a missed re-derivation
+> actively dangerous rather than merely out of date. Both halves of that are real, and neither is a reason
+> to drop the hedge.*
 
-The wall clock is a sample rather than a fact and should not be pinned: this run took **79.4s** by the
-runner's own tally and 80s by the shell, and the same suite on the same commit took 79.7s at the session
-root and 82.8s then 125.9s in the worktree that wrote the previous version of this file. Wall-clock numbers
-here move with how many lanes are building at once — `c-mission-control-cold-start` already flakes for
-exactly this reason.
+The wall clock is a sample rather than a fact and should not be pinned, and **three runs of THIS tree in
+one sitting make the case better than the argument does: 99.5s, 144.3s, 94.3s** — same 44 steps, same
+worktree, same machine, `44 of 44 · 0 failed` every time. Two more since, on the same tree: **93.2s** here
+and **91.2s** by an independent reviewer. The 43-step suite that preceded it took 79.4s by
+that tally and 80s by the shell, 79.7s at the session root, and 82.8s then 125.9s in the worktree that wrote
+an earlier version of this file. That is 79.4s to 144.3s for substantially the same work — a 1.6x spread on
+this tree alone (91.2s to 144.3s across the five runs of THIS tree). **So this figure is published as a
+RANGE, and that is a correction to method, not a
+rounding:** the previous version pinned one run, which meant it was falsified by the next run of an
+unchanged tree, and a figure that expires without anything changing teaches the reader to ignore it. A range
+survives re-measurement; pick the slowest honest bound, never the fastest run. **And a range has a LOWER
+bound too, which the first version of this paragraph got wrong in its own terms:** it published "95 to 145"
+while citing a 94.3s run two lines below, so the very next re-measurement — 91.2s — fell outside it. A
+bound that excludes an observation the same paragraph cites is the failure this paragraph is about,
+committed by the sentence describing it. Wall-clock numbers here
+move with how many lanes are building at once —
+`c-mission-control-cold-start` already flakes for exactly this reason.
 
 **Measure it from the canonical worktree path and nowhere else.** `git worktree list` is the authority on
 that path. This session lost a full check run to the trap: a stale path that had been removed underneath a

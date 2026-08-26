@@ -1,0 +1,11 @@
+{
+  "subject": "7958cf2d2e15ebd2b840fd0c644c90a9acb12dcb82af72f79b1f1c7261d04389",
+  "base": "71fd58d31917ada493225cc7899f0412c0255876",
+  "tier": "full",
+  "tier_driver": "bin/warroom",
+  "verdict": "PASS",
+  "by": "ceo-3-1787566829",
+  "run_id": null,
+  "evidence": "Reviewed at the LEAN weight by founder decision 2026-08-25: bin/** tiers full, but the binding qa.js gate is reserved for surfaces git revert does not undo (.github/workflows, .claude/agents, .claude/hooks, the gate itself, credentials). bin/warroom is none of them. Recorded so the weight is a choice, not an omission. EVIDENCE: (1) One blind adversarial delta reviewer under independence:provenance, own fixtures under TMPDIR, session file and author self-assessment unread — PASS, 0 P1, 0 P2, 3 P3. (2) 29 hostile n inputs and 10 hostile push destinations each DRIVEN FOR REAL with upstream refs diffed before and after — all refused, no state change, under four locales; _open_pull_request has one caller and the guard is its first statement, so no path reaches a push with the destination unvalidated. (3) Deterministic floor: test:merge-gate 39 pass 0 fail (was 33), check:warroom 14 pass 0 fail, npm run check 30 of 30 0 failed, bash -n clean. CORRECTION CARRIED: the prior round recorded the branch-name injection as failing only because the fixture upstream was non-bare. Re-run against an upstream configured as GitHub behaves (receive.denyCurrentBranch=ignore) the pre-fix build SUCCEEDS — exit 0, origin/main moved, gh pr create --base main --head main invoked. The refusal was the fixture's, not the program's; the defect was live. ONE P3 FIXED IN BRANCH: three sites claimed this function is the only route to origin; cmd_done:889 also pushes to origin ungated. Claim narrowed, control byte-for-byte unchanged; the third site was inside the heredoc gh pr create posts, so the false claim was being published into real PR bodies. OUT OF SCOPE, RECORDED: war-room/bin/PROJECT_NAME.tmpl carries the identical unfixed defect (P1 portability); n BRE metacharacters in nine pre-existing greps corrupt the local registry, no remote reach. NOT AN INDEPENDENT PANEL: single model family. Full record: docs/08-agents_work/sessions/2026-08-26-ceo-cmd-merge-opens-a-pr.md",
+  "recorded_at": "2026-08-25T23:21:43.956Z"
+}

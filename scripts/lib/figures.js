@@ -116,6 +116,7 @@ function derive({ ci, pkg, suite }) {
     suiteSteps: suite.STEPS.length,
     ciRunSteps: runSteps.length,
     ciRunStepsLessOne: runSteps.length - 1,
+    ciRunStepsPlusOne: runSteps.length + 1,
     ciGuardedSteps: guarded.length,
     ciSetupStepsWithoutIf: setupWithoutIf.length,
     governedChains: chains.length,
@@ -156,18 +157,25 @@ const FIGURES = [
     locator: /and all (\d+) carry\s*\n?`if: \$\{\{ !cancelled\(\) \}\}`/,
   },
   {
-    // The recipe the reviewer found unre-derived. Its stated answer is asserted; the command
-    // itself is NEVER executed, which is the whole difference from the runner that was rejected.
+    // The recipe the reviewer found unre-derived. Its stated answer is asserted; the command itself
+    // is NEVER executed, which is the whole difference from the runner that was rejected.
+    //
+    // RE-AIMED 2026-08-26, when six merges landed. The recipe used to be two `grep -c` lines; `main`
+    // replaced it with a `parseCiSteps` derivation — the same argument this file makes — and both
+    // locators then reported `unmatched`. That is the fail-closed rule working, not a defect: the
+    // prose moved and the check said the figure was now UNCHECKED rather than passing over it in
+    // silence. Re-aimed, never deleted. The recipe now prints both numbers on one line and they stay
+    // two entries: equal today, and not the same question.
     id: 'status-recipe-run-count',
     file: 'docs/STATUS.md', history: 'blockquote', derive: 'ciRunSteps',
-    what: 'the stated answer of the `grep -c run:` recipe',
-    locator: /grep -c '\^ +run: ' \.github\/workflows\/ci\.yml +→ +(\d+)/,
+    what: 'the first number the parseCiSteps recipe says it prints',
+    locator: /^→ +(\d+) +\d+$/m,
   },
   {
     id: 'status-recipe-guard-count',
     file: 'docs/STATUS.md', history: 'blockquote', derive: 'ciGuardedSteps',
-    what: 'the stated answer of the `grep -c if:` recipe',
-    locator: /grep -c '\^ +if: \$\{\{ !cancelled\(\) \}\}' \.github\/workflows\/ci\.yml +→ +(\d+)/,
+    what: 'the second number the parseCiSteps recipe says it prints',
+    locator: /^→ +\d+ +(\d+)$/m,
   },
   {
     id: 'status-setup-steps',
@@ -184,6 +192,16 @@ const FIGURES = [
     file: 'docs/STATUS.md', history: 'blockquote', derive: 'ciRunSteps',
     what: 'checks that would run against an empty workspace if the setup steps were guarded',
     locator: /would run all (\d+) checks against an empty/,
+  },
+  {
+    // `main` KEPT this figure and updated it to "~46 red steps" while this branch had DELETED it
+    // for being unassertable. Wiring it is better than either side: guarding the setup steps would
+    // run every check plus the failed checkout, so it is exactly `ciRunSteps + 1` and the tilde was
+    // hedging an exact quantity. The hedge is gone and the number is checked.
+    id: 'status-empty-workspace-red-steps',
+    file: 'docs/STATUS.md', history: 'blockquote', derive: 'ciRunStepsPlusOne',
+    what: 'red steps produced if the setup steps were guarded and checkout failed',
+    locator: /workspace and produce (\d+) red steps instead of one/,
   },
   {
     id: 'status-governed-chains',
@@ -212,8 +230,19 @@ const FIGURES = [
   {
     id: 'status-floor-tally',
     file: 'docs/STATUS.md', history: 'blockquote', derive: 'suiteSteps',
-    what: 'the local floor tally',
+    what: 'the local floor tally, in the fenced block of §4',
     locator: /npm run check +→ +(\d+) of (\d+) passed/,
+  },
+  {
+    // THE SAME FIGURE, STATED A SECOND TIME 230 LINES EARLIER — and this check reported green over
+    // it for a whole PR. Found 2026-08-26 by reading the document during a merge resolution, not by
+    // running anything, which is the limitation in the header made concrete: one figure, two
+    // sentences, and the registry only knew about one of them. Wiring the second one is the entire
+    // fix available, and it is why coverage is printed as a number rather than implied by a tick.
+    id: 'status-floor-tally-summary',
+    file: 'docs/STATUS.md', history: 'blockquote', derive: 'suiteSteps',
+    what: 'the local floor tally, restated in the summary at the top of the file',
+    locator: /local floor is GREEN — `(\d+) of (\d+) passed/,
   },
   {
     id: 'status-figure-is',

@@ -184,17 +184,95 @@ test('ALLOWS writes inside the project root', () => {
 // The scoping check must decide containment the way the FILESYSTEM does, not the way string
 // comparison does. Three ways a correct path used to be refused, all regressions worth pinning.
 
-test('ALLOWS a write when the root is spelled with different case (case-insensitive FS)', () => {
-  // macOS reaches one directory under many spellings, and this repo is opened under both
-  // `agentvibe` and `Agentvibe`. A case-sensitive prefix match refused writes that were inside
-  // the project. Skips on a case-sensitive filesystem, where the two really are different paths.
-  const flipped = REPO.replace(/(^.*\/)([a-zA-Z])/, (_, head, c) =>
+/** The same path with the case of one letter flipped — a different SPELLING of the same characters. */
+function flipOneLetter(p) {
+  return p.replace(/(^.*\/)([a-zA-Z])/, (_, head, c) =>
     head + (c === c.toLowerCase() ? c.toUpperCase() : c.toLowerCase()))
-  if (flipped === REPO || !fs.existsSync(flipped)) return // case-sensitive FS: nothing to test
-  assert.equal(
-    runHook(compact(write(path.join(REPO, 'docs', 'scratch.md'))), { CLAUDE_PROJECT_DIR: flipped }),
-    ALLOW,
-    'a differently-cased spelling of the SAME directory must not read as outside the project')
+}
+
+/**
+ * Do two spellings reach ONE directory? Asked of the filesystem — same device AND inode — which
+ * is the same question `[ "$_probe" -ef "$_allowed" ]` asks inside the hook.
+ *
+ * `fs.existsSync(flipped)` cannot answer it and was the old test's premise: a case-sensitive
+ * volume holding both `foo` and `Foo` would say yes about two genuinely DIFFERENT directories,
+ * and an expectation derived from that answer would be the wrong one.
+ */
+function sameDirectory(a, b) {
+  try {
+    const x = fs.statSync(a), y = fs.statSync(b)
+    return x.dev === y.dev && x.ino === y.ino
+  } catch { return false }
+}
+
+// The fixture is a program, so it is driven before anything relies on it — every expectation
+// below is DERIVED from this function, so a detector that answers one way always would make the
+// case that follows arbitrary rather than wrong, and arbitrary is the harder failure to see.
+//
+// THE SECOND CONTROL IS THE ONE THAT EARNS ITS PLACE, and it was added after the first attempt at
+// this test failed to catch its own mutant. A detector forced to `return true` still passed a
+// suite of 168, because the only negative control compared REPO against a path that does not
+// exist — `fs.statSync` throws there, the catch returns false, and the stuck `true` is never
+// reached. That control was testing the try/catch, not the identity comparison. Two directories
+// that BOTH exist and are genuinely different is the case that reaches the comparison at all.
+test('the case-folding detector answers both ways — the fixture, driven', () => {
+  assert.equal(sameDirectory(REPO, REPO), true,
+    'a directory is not the same as itself: the detector is stuck false, and the case below would assert the wrong branch everywhere')
+  assert.equal(sameDirectory(REPO, path.dirname(REPO)), false,
+    'two directories that both exist and are different were called the same: the detector is stuck true, and it never reached the dev/ino comparison')
+  assert.equal(sameDirectory(REPO, path.join(REPO, 'no-such-child-' + process.pid)), false,
+    'a path that does not exist was called the same directory')
+  assert.notEqual(flipOneLetter(REPO), REPO,
+    `no letter in ${REPO} could be re-cased, so there is no second spelling and the case below is vacuous`)
+})
+
+// WHY THIS CASE NO LONGER SKIPS, AND WHAT REPLACED THE SKIP
+// It used to end with `if (flipped === REPO || !fs.existsSync(flipped)) return` — a SILENT exit
+// on any case-sensitive filesystem, which is every Linux runner this repo has ever used. A test
+// that deletes itself where its premise is absent is indistinguishable from one that passed, and
+// it deleted itself on the one machine whose verdict blocks a merge.
+//
+// The cure is not a louder skip. There is a property here that holds on BOTH kinds of filesystem,
+// and it is the property the hook actually claims — containment is decided the way the FILESYSTEM
+// decides it. So the expectation is DERIVED from the filesystem instead of assumed from the OS:
+//   • two spellings, one directory   (case-folding, APFS/HFS+) → the write is inside  → ALLOW
+//   • two spellings, two directories (case-sensitive, ext4)    → the root is elsewhere → BLOCK
+// Neither branch is a skip. Each is a real security property, and the runner now exercises the
+// fail-closed half instead of nothing at all.
+//
+// WHAT THIS DOES **NOT** BUY, MEASURED RATHER THAN ASSUMED. The case-folding regression itself
+// stays invisible on a case-sensitive filesystem, so a green run there is NOT evidence about case
+// handling. Measured 2026-08-26 by putting the original defect back — `[ "$_probe" = "$_allowed" ]`
+// in place of `-ef` — and running both regimes: on the folding branch the ALLOW case goes RED
+// (`2 !== 0`); on the case-sensitive branch the answer is BLOCK either way, because `pwd -P`
+// already normalises symlinks on both sides and case is the ONLY axis the two operators disagree
+// on. So the gain here is real and bounded: the runner went from asserting nothing to asserting
+// fail-closed, not from nothing to full coverage. The diagnostic below says which one ran, so a
+// reader of a CI log cannot mistake the second for the first.
+//
+// CONSTRUCTING THE MISSING PREMISE WAS CONSIDERED AND REJECTED, WITH THE MEASUREMENT. The half
+// THIS machine cannot reach is case-SENSITIVITY, which `hdiutil` can make. The half the RUNNER
+// cannot reach is case-INSENSITIVITY, which on Linux needs `tune2fs -O casefold` on an unmounted
+// filesystem or a loopback vfat mount — root and a loop device, inside a security test that also
+// runs under a sandbox where sudo is refused outright (measured: `sudo -n true` → "operation not
+// permitted"). That dependency is worse than the defect it would cure.
+test('decides a differently-cased root the way the FILESYSTEM does — on either kind of filesystem', (t) => {
+  const flipped = flipOneLetter(REPO)
+  assert.notEqual(flipped, REPO, 'no letter could be re-cased, so there is no second spelling to test')
+
+  const folds = sameDirectory(REPO, flipped)
+  t.diagnostic(folds
+    ? `case-FOLDING filesystem: ${flipped} IS the same directory as ${REPO} — the ALLOW branch runs, which is the branch the -ef regression is visible in`
+    : `CASE-SENSITIVE filesystem: ${flipped} is a different directory from ${REPO} — the fail-closed BLOCK branch runs; the case-folding regression is NOT observable on this filesystem, so this pass says nothing about it`)
+
+  const result = runHook(compact(write(path.join(REPO, 'docs', 'scratch.md'))), { CLAUDE_PROJECT_DIR: flipped })
+  if (folds) {
+    assert.equal(result, ALLOW,
+      'a differently-cased spelling of the SAME directory must not read as outside the project')
+  } else {
+    assert.equal(result, BLOCK,
+      'a root that is a DIFFERENT directory must not make this write inside the project — an unresolvable root has to fail CLOSED')
+  }
 })
 
 test('ALLOWS a new file in a subdirectory that does not exist yet', () => {
@@ -1034,13 +1112,37 @@ test('heredoc body quoting the separator is blocked — pinned false-positive [C
 // Decision: Write was wrong. Making Write agree with Bash by adding the scratchpad root to
 // the allowed list.
 
-test('ALLOWS Write to the agent scratchpad — Bash and Write must agree [C3]', () => {
+// THE ONE ROW IN THIS FILE WHERE THE PREMISE CANNOT BE BUILT, SO IT SAYS SO INSTEAD OF VANISHING.
+//
+// This used to read `if (!fs.existsSync(parent)) return` — silent, and silent on every Linux
+// runner, because /private/ is a macOS layout that does not exist there at all. So the C3
+// exemption has never been checked on CI.
+//
+// It is not made loud-and-failing the way the $HOME cases below are, and the difference is the
+// one that decides it: THERE, CI can build the fixture, so a skip on the runner would hide a real
+// failure. HERE, CI cannot — creating /private/tmp/claude-<uid> on Linux needs root, and a test
+// must not take root. Failing would make main permanently red for an environmental fact; skipping
+// silently would report "checked" for something never checked. Naming it is the only honest
+// third option.
+//
+// What still runs everywhere is the NARROWNESS of the exemption — the two cases below assert that
+// /tmp at large and $HOME are still refused. The exemption being too WIDE is the dangerous
+// direction, and that direction is covered on every machine.
+const SCRATCH_UID = typeof process.getuid === 'function' ? process.getuid() : 501
+const SCRATCH_ROOT = `/private/tmp/claude-${SCRATCH_UID}`
+const SCRATCH_SKIP = fs.existsSync(SCRATCH_ROOT) ? false
+  : `${SCRATCH_ROOT} does not exist here, and a test cannot create it: /private/tmp is the macOS ` +
+    `layout for /tmp and making that path on Linux requires root. The agent-scratchpad exemption ` +
+    `is therefore unverifiable on this machine; its two NARROWNESS cases below still run. To run ` +
+    `this case, use a machine where the harness creates ${SCRATCH_ROOT} (macOS), or create that ` +
+    `directory by hand before \`npm run test:pre-tool-use\`.`
+
+test('ALLOWS Write to the agent scratchpad — Bash and Write must agree [C3]', { skip: SCRATCH_SKIP }, () => {
   // RED before fix: Write refused /private/tmp/claude-<uid>/... while Bash wrote freely all session.
-  const uid = typeof process.getuid === 'function' ? process.getuid() : 501;
-  const scratchpadFile = `/private/tmp/claude-${uid}/test-session/scratchpad/temp.md`;
-  const parent = `/private/tmp/claude-${uid}`;
-  if (!fs.existsSync(parent)) return; // scratchpad root absent — skip rather than fail
-  assert.equal(runHook(compact(write(scratchpadFile))), ALLOW,
+  // The premise is re-asserted rather than assumed: SCRATCH_SKIP was computed at module load, and
+  // a directory that disappeared since would otherwise make this pass for the wrong reason.
+  assert.equal(fs.existsSync(SCRATCH_ROOT), true, `${SCRATCH_ROOT} vanished between module load and this case`)
+  assert.equal(runHook(compact(write(`${SCRATCH_ROOT}/test-session/scratchpad/temp.md`))), ALLOW,
     'Write to the agent scratchpad must be allowed — it is sandbox-granted and agent-instructed');
 });
 
@@ -1114,11 +1216,42 @@ test('BLOCKS git checkout -q -- <file> — separator form with -q flag [C1-broad
 // PINNED as BLOCK to document the bug. Expected eventual outcome: ALLOW.
 // Do NOT fix here without a security review of the new allowed-root policy.
 
+// THESE TWO PINS WERE DEAD ON EVERY MACHINE, INCLUDING THE ONE THAT WROTE THEM.
+//
+// Both used to open with `const siblingWorktree = path.resolve(REPO, '..', 'ceo-1-1787176362')`
+// followed by `if (!fs.existsSync(siblingWorktree)) return` — one long-gone session's directory,
+// pinned by name. It is absent everywhere now (checked 2026-08-26), so both cases returned
+// silently and had been asserting nothing for as long as anyone can measure. A KNOWN-BUG pin that
+// checks nothing does not document a bug; it makes the bug look documented.
+//
+// The premise here IS constructible, unlike the scratchpad case above: these two never ran `git`
+// against the sibling, they only used it as a path. All they need is a directory that exists,
+// that does not contain REPO, and that REPO does not contain.
+//
+// WHERE IT LIVES IS A MEASURED DECISION, NOT A HABIT. `os.tmpdir()` is the usual answer and is
+// WRONG here: it is /tmp/claude-<uid> on this harness, which realpaths to /private/tmp/claude-<uid>
+// — byte-for-byte the scratchpad root the hook allows outright — so the ALLOW case below would
+// have passed for the wrong reason and kept passing if the root check were deleted. $HOME and
+// /tmp are both refused by the armed sandbox (EPERM, measured). Under REPO is writable in the
+// session root and in a nested worktree, and is the same pattern lenses.test.mjs already uses.
+// The premises are asserted below rather than trusted.
+function scopeFixture(tag) {
+  const dir = fs.mkdtempSync(path.join(REPO, `.hook-scope-${tag}-`))
+  fs.mkdirSync(path.join(dir, 'scripts'), { recursive: true })
+  const real = fs.realpathSync(dir), repo = fs.realpathSync(REPO)
+  assert.ok(!repo.startsWith(real + path.sep), `the project root is inside the fixture ${real}`)
+  for (const allowed of [SCRATCH_ROOT, path.join(os.homedir(), '.claude', 'plans')]) {
+    assert.ok(!real.startsWith(allowed + path.sep),
+      `the fixture ${real} sits inside ${allowed}, which the hook allows outright — an ALLOW here would prove nothing about the project root`)
+  }
+  return dir
+}
+
 test('KNOWN-BUG: subagent write to own worktree is BLOCK when CLAUDE_PROJECT_DIR is parent root [inherited-root]', () => {
   // Simulate: parent spawned the agent; parent's CLAUDE_PROJECT_DIR is this REPO.
   // The "subagent's worktree" is the sibling (any path outside REPO but inside the same repo).
-  const siblingWorktree = path.resolve(REPO, '..', 'ceo-1-1787176362');
-  if (!fs.existsSync(siblingWorktree)) return; // sibling not present — skip
+  const siblingWorktree = scopeFixture('parent');
+  try {
 
   // Agent is working in REPO but inherits siblingWorktree as CLAUDE_PROJECT_DIR.
   // Write to REPO/some-file.ts should be ALLOWED (it's the agent's own workspace)
@@ -1132,23 +1265,38 @@ test('KNOWN-BUG: subagent write to own worktree is BLOCK when CLAUDE_PROJECT_DIR
   assert.equal(result, BLOCK,
     'KNOWN BUG: own-worktree write is blocked when CLAUDE_PROJECT_DIR is inherited from parent. ' +
     'Fix: derive root from the actual working tree, not the inherited env var.');
+  // The control: the SAME write with the real root is allowed. Without it, a hook that refused
+  // every write would satisfy the assertion above and this pin would be green and empty.
+  assert.equal(runHook(compact(write(ownFile)), { CLAUDE_PROJECT_DIR: REPO }), ALLOW,
+    'the write is refused even with the correct root, so the BLOCK above says nothing about the inherited one');
+  } finally { fs.rmSync(siblingWorktree, { recursive: true, force: true }) }
 });
 
 test('KNOWN-BUG: parent-worktree write is ALLOW from subagent — wrong direction [inherited-root]', () => {
   // Complementary wrong direction: the subagent can write to the parent's worktree.
   // With inherited CLAUDE_PROJECT_DIR = REPO (the "parent"), writing to REPO passes the
   // containment check even if the subagent should not be modifying the parent's files.
-  const siblingWorktree = path.resolve(REPO, '..', 'ceo-1-1787176362');
-  if (!fs.existsSync(siblingWorktree)) return;
-
-  const parentFile = path.join(siblingWorktree, 'scripts', 'some-file.ts');
-  const result = runHook(
-    compact(write(parentFile)),
-    { CLAUDE_PROJECT_DIR: siblingWorktree }
-  );
-  // Current: ALLOW (passes containment). This is the false-negative direction of the bug.
-  // The correct policy is TBD (all worktrees of the same repo, or only own worktree).
-  assert.equal(result, ALLOW,
-    'KNOWN BUG (false-negative): parent-worktree write is allowed from subagent via inherited root. ' +
-    'Policy for the correct behavior requires a security decision.');
+  const siblingWorktree = scopeFixture('parent');
+  const elsewhere = scopeFixture('elsewhere');
+  try {
+    const parentFile = path.join(siblingWorktree, 'scripts', 'some-file.ts');
+    const result = runHook(
+      compact(write(parentFile)),
+      { CLAUDE_PROJECT_DIR: siblingWorktree }
+    );
+    // Current: ALLOW (passes containment). This is the false-negative direction of the bug.
+    // The correct policy is TBD (all worktrees of the same repo, or only own worktree).
+    assert.equal(result, ALLOW,
+      'KNOWN BUG (false-negative): parent-worktree write is allowed from subagent via inherited root. ' +
+      'Policy for the correct behavior requires a security decision.');
+    // The control that makes the ALLOW mean something: the same path, refused when the root is a
+    // THIRD directory. If it were allowed either way the fixture would be inside some other
+    // exemption and this pin would be decoration — which is exactly what os.tmpdir() would have
+    // made it, measured, not guessed.
+    assert.equal(runHook(compact(write(parentFile)), { CLAUDE_PROJECT_DIR: elsewhere }), BLOCK,
+      'this path is writable no matter what the root is, so the ALLOW above is not about the root');
+  } finally {
+    fs.rmSync(siblingWorktree, { recursive: true, force: true })
+    fs.rmSync(elsewhere, { recursive: true, force: true })
+  }
 });
