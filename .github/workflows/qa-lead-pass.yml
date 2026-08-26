@@ -328,47 +328,99 @@ jobs:
       #   · Neither covers the other — a diff that bypasses CI is not checked here,
       #     and a local merge that never becomes a PR is not checked by CI.
       #
-      # Binding model — CORRECTED 2026-08-23 after review found the original claim false:
-      #   The verdict RECORD is hash-bound, not signed — anyone with repo-write
-      #   access can author a `.qa/verdicts/*.json` file. The check-run posted
-      #   below is created with this workflow's own GITHUB_TOKEN, over the
-      #   `checks: write` permission declared at the top of this file — but that
-      #   token does NOT make the check-run unforgeable in this repo's threat
-      #   model. This workflow triggers on `pull_request`, not
-      #   `pull_request_target`, and per GitHub's documented `pull_request`
-      #   semantics the run executes the workflow definition FROM THE PR'S OWN
-      #   HEAD; elevated permissions are withheld only for PRs originating from a
-      #   FORK. This project has no forks in its normal flow — the worktree
-      #   protocol pushes branches straight to `origin` — so a same-repo PR (this
-      #   one included) gets the full declared `permissions:` block, and a PR
-      #   that rewrites this step's bash to hardcode a success conclusion is what
-      #   runs, still holding `checks: write`. (Stated from GitHub's documented
-      #   semantics, not a live reproduction — this sandbox has no network to
-      #   verify against GitHub Actions.)
+      # ══ WHAT THIS GATE ACTUALLY GUARANTEES ═══════════════════════════════════
+      # Measured 2026-08-26 on PR #109 and against the live GitHub API. Every
+      # statement below was executed, not read. The honest sentence first:
       #
-      #   What this DOES still buy: it raises the cost of forgery from "write a
-      #   line into a session file you author" (the old grep) to "modify a
-      #   workflow file in the same PR" — an `irreversible`-tier change under
-      #   .claude/qa-tier-floor.yml, and therefore conspicuous in the diff even
-      #   though nothing here mechanically stops it. Do NOT respond to this by
-      #   switching to `pull_request_target` — that runs untrusted PR code with
-      #   the BASE branch's elevated trust and secrets, which is worse than the
-      #   gap it would close.
+      #   This job establishes that A FILE NAMED FOR THE sha256 OF THIS DIFF,
+      #   SAYING "PASS", IS COMMITTED ON THIS BRANCH. It does not establish that
+      #   a review happened, that anyone other than the author produced it, or
+      #   that the code below is the code that ran.
       #
-      #   What WOULD close it: branch protection requiring a separate human
-      #   approval on changes under `.github/workflows/**` (or CODEOWNERS on that
-      #   path, forcing review by someone other than the PR author). That is a
-      #   repository setting, not a file, and is the founder's call — consistent
-      #   with the header comment at the top of this file, which already makes
-      #   the same point about requiring this job in branch protection.
+      # Everything this job trusts is writable by the PR author: the verdict
+      # record, the session file, and this workflow definition. Writing that down
+      # is the point — the three measurements that follow are what the sentence
+      # costs, and two of them refuted what this file previously asserted.
       #
-      #   The hash on the verdict RECORD still guarantees a verdict cannot be
-      #   moved onto a different diff and cannot survive an unreviewed edit to
-      #   the diff it approved — it does not prove who authored the record, and
-      #   (per the above) the check-run does not prove the step that posted it
-      #   is the step committed to this file. Real unforgeability needs a
-      #   signing key held outside this workflow's own token; that decision has
-      #   not been made and is not claimed here.
+      # ── 1. Can an author fabricate a passing verdict? YES. Executed. ─────────
+      # In a fixture repo, on a diff adding `.github/workflows/evil.yml` and an
+      # `eval(process.env.PAYLOAD)`:
+      #     verdict.mjs check   → ok:false reason:absent  exit 1   ← control fired
+      #     verdict.mjs record --verdict PASS --by qa-lead --evidence "3 reviewers
+      #                 PASS, 2 model families"           exit 0
+      #     git commit; verdict.mjs check → ok:true tier:irreversible exit 0
+      # Two commands, no review, top tier. `by`, `evidence` and `run_id` are
+      # recorded and NEVER validated — `check()` reads subject, verdict and tier
+      # and nothing else; `run_id: null` passes. Those three fields are audit
+      # decoration. Do not read them as provenance.
+      #
+      # ── 2. Does the PR head's workflow definition run? YES. Reproduced. ──────
+      # This was previously asserted here "from GitHub's documented semantics,
+      # not a live reproduction". It is now reproduced. PR #109 changed this
+      # step's `name:` and the runner reported the CHANGED name:
+      #     run 32971785103, step [9]:
+      #       "Verdict diff-binding check — blocking; posts an unsigned audit check-run"
+      #     the same line on origin/main:
+      #       "Verdict diff-binding check — blocking, posted as a signed check-run"
+      # A base-definition run could not have produced the first string. So a PR
+      # that rewrites this bash to `exit 0` is what executes, still holding the
+      # `permissions:` block at the top of this file. Same-repo PRs only —
+      # elevated permissions are withheld from FORK PRs, and the worktree
+      # protocol pushes straight to `origin`, so the normal flow is the exposed one.
+      # Do NOT respond by switching to `pull_request_target`: that runs PR code
+      # with the BASE branch's trust and secrets, which is worse than this gap.
+      #
+      # ── 3. Is the check-run load-bearing? NO. Decorative. ────────────────────
+      # `QA verdict (diff-bound)` is NOT in required_status_checks.contexts, and
+      # grepping the tree for that name returns only the two lines that create it
+      # — written here, read nowhere. What gates the merge is this job's exit
+      # code under the required context "Verify QA Lead PASS".
+      #
+      # WORSE, AND THIS IS THE PART THAT CHANGES THE REMEDY: check-runs posted by
+      # `gh api` from inside a workflow are attributed to the same app as the ones
+      # GitHub Actions creates for real jobs. Measured on PR #108's head:
+      #     QA verdict (diff-bound)   app_id=15368  github-actions  success
+      #     Verify QA Lead PASS       app_id=15368  github-actions  success
+      #     Verify QA Lead PASS       app_id=15368  github-actions  success   ← two, same name
+      #     Deterministic checks      app_id=15368  github-actions  success
+      # Branch protection pins those contexts to app_id 15368 and resolves a
+      # context by NAME, taking the latest check-run bearing it — and two can
+      # coexist. So the attack surface is not "this file": ANY workflow added in
+      # the PR head can post `Verify QA Lead PASS` = success. Guarding this file
+      # alone would guard the wrong thing. (The exploit was NOT executed — that
+      # would be an attack on the live gate other lanes are merging through. The
+      # attribution and the duplicate-name coexistence above are the executed
+      # part; the conclusion from them is analysis.)
+      #
+      # ── What WOULD close it: repository settings, not files ──────────────────
+      # No file in this repo can close 2 or 3, because every file in this repo is
+      # in the diff being judged. A control that a PR can edit is not a control
+      # over that PR. The remedy is a setting, and the exact ones are:
+      #
+      #   (a) `.github/CODEOWNERS` naming an owner for `/.github/` + branch
+      #       protection `required_pull_request_reviews.require_code_owner_reviews
+      #       = true`. Today: the file DOES NOT EXIST and the flag is `false`.
+      #       This is the one that matters — it makes any workflow change require
+      #       an approval the author cannot give themselves.
+      #   (b) `required_pull_request_reviews.required_approving_review_count` is
+      #       already `1` (verified 2026-08-26 against a 404 control on an unset
+      #       sub-resource, because the parent protection object omits this block
+      #       entirely and reading only the parent says "no reviews required").
+      #   (c) `enforce_admins` is `false`. This exempts the account that authors
+      #       and merges every PR here from (a) and (b) alike, so on this repo's
+      #       actual flow the review requirement in (b) does not bind. Setting it
+      #       `true` is what makes (a) and (b) real.
+      #   (d) `required_pull_request_reviews.require_last_push_approval` is
+      #       `false`, so an approval survives a later push. `dismiss_stale_reviews`
+      #       is `false` too. Either one would re-bind approval to the diff — the
+      #       same property the bypass binding below now enforces for overrides.
+      #
+      # What the hash on the verdict RECORD still buys, unchanged and worth
+      # keeping: a verdict cannot be MOVED onto a different diff and cannot
+      # SURVIVE an edit to the diff it approved, and every record has a git author
+      # and a revert. Real unforgeability needs a signing key held outside this
+      # workflow's own token. That decision has not been made and is not claimed
+      # here.
       # The step name said "posted as a signed check-run" until 2026-08-26. Nothing here
       # signs anything. It posts a check-run with the job's own GITHUB_TOKEN, which is
       # authentication of the poster, not a signature over the verdict — and the block
