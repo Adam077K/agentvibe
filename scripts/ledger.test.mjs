@@ -917,6 +917,71 @@ test('claim-judge-external cannot attach where claim-judge does not', () => {
     ['claim-freshness', 'claim-judge', 'claim-judge-external']);
 });
 
+// ── S2 · the attestation must survive the channel it is emitted into ────────
+
+test('a PASS carrying an attestation reaches events.jsonl — the verdict anyone would forge', () => {
+  // End to end through `ledger.mjs verify`, not through the resolver alone: the defect was
+  // in the integration. verify's loop `continue`d on pass BEFORE logEvent, so the
+  // attestation — the entire evidence that a second family was really consulted — was
+  // written for fail and unresolved and never for pass.
+  const bin = stub('attested-pass', `${PREAMBLE}
+out({ type: 'turn.started' });
+out({ type: 'item.completed', item: { text: 'WARROOM-VERDICT-' + nonce + ': pass' } });
+out({ type: 'turn.completed', usage: {} });
+`);
+  const judgeYaml = [
+    '  - id: c-scratch-judge',
+    '    assert: "the scratch judge claim"',
+    '    kind: judgment',
+    '    scope: project',
+    '    verified_by: judge',
+    '    evidence: {lenses: [correctness], risk: low, judged_by: []}',
+    '    valid_until: 2027-01-01',
+    '    confidence: 0.9',
+  ].join('\n');
+  const dir = scratchRepo(scratchDoc([judgeYaml]));
+  const events = path.join(dir, 'events.jsonl');
+  try {
+    fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+    fs.writeFileSync(path.join(dir, '.claude', 'qa-tier-floor.yml'), [
+      'version: 1', 'rules:', '  - pattern: "doc.md"', '    tier: lite',
+      '    enforcement: shadow', '    resolvers: [claim-judge-external]',
+      '    reason: "drive the external judge end to end"', '',
+    ].join('\n'));
+    const out = ledgerEnv(dir, { WARROOM_EVENTS: events, WARROOM_JUDGE_BIN: 'codex', WARROOM_JUDGE_PATH: bin }, 'verify');
+    assert.match(out.out, /c-scratch-judge \[claim-judge-external\]/, `the resolver must actually have run:\n${out.out}`);
+
+    const lines = fs.readFileSync(events, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+    const attested = lines.filter((e) => e.event === 'claim.attested' && e.claim === 'c-scratch-judge');
+    assert.equal(attested.length, 1, `exactly one attested pass must be logged:\n${JSON.stringify(lines, null, 2)}`);
+    assert.equal(attested[0].status, 'pass');
+    assert.equal(attested[0].resolver, 'claim-judge-external');
+    const a = attested[0].detail.attestation;
+    assert.equal(a.bin_path, bin, 'the log must name the binary that actually ran');
+    assert.match(a.prompt_sha256, /^[0-9a-f]{64}$/);
+    assert.match(a.stdout_sha256, /^[0-9a-f]{64}$/);
+    assert.equal(a.profile_verified_against_binary, false);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('and no other resolver starts logging passes — the change is narrow by construction', () => {
+  // claim-command passes constantly. If this had been implemented as "log every pass",
+  // events.jsonl would grow by an order of magnitude and the sweep's silence detection
+  // would start seeing every resolver as live.
+  const dir = scratchRepo();
+  const events = path.join(dir, 'events.jsonl');
+  try {
+    ledgerEnv(dir, { WARROOM_EVENTS: events }, 'verify');
+    const lines = fs.existsSync(events) ? fs.readFileSync(events, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : [];
+    assert.equal(lines.filter((e) => e.event === 'claim.attested').length, 0,
+      'a passing claim-command claim must log nothing — only an attestation-bearing pass does');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // ── Dispatch ────────────────────────────────────────────────────────────────
 
 test('freshness is applied to every durable claim even when the tier map asks for nothing', () => {
