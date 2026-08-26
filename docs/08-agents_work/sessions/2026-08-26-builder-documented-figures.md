@@ -1,0 +1,19 @@
+---
+date: 2026-08-26
+role: builder
+task: documented-figures
+qa_verdict: PASS
+tier: irreversible
+risk: irreversible
+branch: feat/documented-figures-checked
+commits: 3
+---
+# The numbers this repo writes down, checked against the ones it already computes
+**What it checks.** 22 figures across `docs/STATUS.md` and `.github/workflows/ci.yml`, each an explicit registry entry with a locator, compared against `STEPS.length`, `parseCiSteps()` and `aliasLinks()` — the three derivations the suite already owns. Covers the ten falsified STATUS figures from #102 **and** the shadowed `grep` recipe, because they are one class. Reads text, compares numbers, **executes nothing from the corpus**: `test:figures` asserts textually that neither file reaches for `child_process`/`spawn`/`exec*`, which is the whole difference from the recipe runner that destroyed its own 834-file fixture.
+**What it does NOT cover, in the code and not only here.** (1) Figures nobody wired — no entry, no check; the checker prints its own coverage so that is a number rather than an impression. **Maintenance cost: one registry line per figure.** (2) `gh`-derived claims — the sandbox denies `~/.config/gh` by design; they keep the `REPORTED` marker. (3) Historical figures — blockquote history is stripped, deliberately. (4) Whether the *sentence* around a true number is true.
+**Fails closed in the named direction.** Unmatched locator, >1 match, non-finite derivation, missing file, unparseable capture and an empty registry are each a **finding**, never a pass. Three of those fired for real during the build: the first run reported 3 `unmatched` entries whose locators I had mis-aimed.
+**Non-vacuity, both directions, and the CODE side arrived unprompted.** Wiring the check added 2 steps to `STEPS` and 2 to `ci.yml`, which moved four derived values — and **13 figures across both files went red**, each naming `file:line`, stated and derived. I had falsified the documentation with my own change and the check said so before I did. Document side: one digit in STATUS.md → `docs/STATUS.md:248 — status-floor-tally states 44, derived 45`. Library-level: a step appended to the workflow text, a `STEPS` list one shorter, and an alias stripped of links each redden the untouched prose.
+**My first mutation test was spelled with today's number and would have stopped applying.** `.replace(/now runs \*\*44 steps/)` matched nothing once the figure became 46 — a mutation that does not apply is a test asserting nothing. Caught by its own `notEqual` guard within the hour; mutations are now driven by the registry's own locator. Same shape as the case-spelling control, one lane later.
+**Figures found already false or unwireable — findings, not fixes I invented.** One live figure was **unwired and went stale inside this very change** (`would run all 44 checks against an empty workspace` → 46); now wired. Its neighbour `~45 red steps` was **deleted rather than wired** — a tilde is a promise not to be checked. And a true number sitting in a false sentence, which this check by construction cannot catch: STATUS.md §2 says of the six `&&` chains that *"its links are steps in their own right"*, but `check:citations` has neither link in `STEPS` (`test:citations` is not a step; the other link is a bare `node` command). The three figures — 6, 0, 6 — are all correct.
+**Not a satisfied irreversible gate.** `node scripts/classify.mjs` → `floor=irreversible` (driven by `scripts/lib/**`, before `ci.yml` is considered). Tier asks for 2-of-3 multi-judge and founder sign-off; this verdict is author-recorded, single model family. Stated so it is a decision, not an omission.
+Verified: `npm run check` → **Tally: 45 of 45 passed · 0 failed · 82.2s** (was 43 of 43; +2 steps are this change) · `test:figures` **18 pass · 0 fail · 0 skipped** · `check:figures` **22 checked across 2 files**.
