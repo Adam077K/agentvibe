@@ -70,10 +70,38 @@ real `ci.yml`:
 The `steps=1` row is the one worth staring at: pre-fix `main` reported a finding while parsing **one**
 step of a fifty-two-step workflow, and that was recorded as a catch by two readers.
 
+## The claim I was asked to make, and did not — it is false
+
+I was asked to assert this is **"the first place in this repo where *read the denominator before the
+verdict* is mechanised rather than remembered"**, and to make it only if it holds. **It does not.**
+Two pieces of prior art, both mechanised, both predating this branch, both verified by execution:
+
+| prior art | what it does | proof |
+|---|---|---|
+| `check-citations.mjs --min-locators` | a non-vacuity floor that exits 1 **even in WARN posture** | `--min-locators 99999` → **exit 1**, *"A checker that finds nothing must fail, not report clean."* |
+| `scripts/run-checks.mjs` | a zero-step run is **REFUSED**, a partial run says **SUBSET**, an interrupted one says **INCOMPLETE** | its own header and banner text; `test:check-suite` pins all three |
+
+So the practice is established here and I am extending it, not founding it. **The smaller claim that
+IS true:** this is the first place the denominator of a **test fixture sweep** is declared by the
+caller and checked before any verdict is taken. The prior art bounds a *checker's corpus* and a
+*runner's step list* — neither reaches a fixture, which is exactly where both of today's failures
+lived.
+
+**And the axis it does NOT reach, stated because a control cannot find it:** the harness proves the
+instrument ran and was aimed at every position. It says nothing about whether the *predicate* is wide
+enough — and no control drawn from the same predicate ever can. That needs a second independent
+enumeration, which this harness does not provide and cannot.
+
 ## Verification
 
-- `npm run test:check-suite` → **69 pass · 0 fail** (66 before; 3 cases added).
-- The harness's own self-test refuses **both** of its defects and passes the correct judge, so the two
-  `assert.throws` are not satisfied by something that throws at everything.
+- `npm run test:check-suite` → **70 pass · 0 fail** (66 before; 4 cases added).
+- The harness's own self-test refuses **six** defects and passes the correct judge, so no
+  `assert.throws` is satisfied by something that throws at everything: a position-blind judge · an
+  unread parse denominator · a sweep over **zero** positions · a sweep covering a **subset** of what
+  was declared · two positions that are the **same workflow** · and a base the fixture cannot be
+  placed in at all.
+- **The position count is DECLARED by the caller and checked before any verdict is taken.** It was
+  `attacks.length >= 2` with the caller comparing labels afterwards — a derivation checked against
+  itself, and one that is never reached if the loop throws first.
 - `npm run check` → **48 of 48 passed · 0 failed · exit 0 · 188.7s**.
 - **`STEPS.length` unchanged at 48** — no npm script added, no documented figure moved.

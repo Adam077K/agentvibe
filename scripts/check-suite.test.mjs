@@ -2113,10 +2113,39 @@ function sweepPositions(base, fragment, kind = 'job') {
  * Every position gets a benign control, because a rule that fires on the shape rather than on the
  * content is position-invariant too, and uselessly so.
  */
-function assertPositionInvariant({ base, attack, benign, kind = 'job', judge, expect, floor }) {
-  const attacks = sweepPositions(base, attack, kind);
-  const benigns = sweepPositions(base, benign, kind);
-  assert.ok(attacks.length >= 2, 'a one-position sweep is not a sweep');
+function assertPositionInvariant({
+  base, attack, benign, kind = 'job', judge, expect, floor, positions, sweep = sweepPositions,
+}) {
+  const attacks = sweep(base, attack, kind);
+  const benigns = sweep(base, benign, kind);
+
+  // ── THE SWEEP'S OWN DENOMINATOR, DECLARED UP FRONT AND CHECKED BEFORE ANY VERDICT IS TAKEN ────
+  //
+  // `positions` is the caller SAYING WHICH POSITIONS MUST BE COVERED, and this compares the sweep
+  // against that declaration rather than against itself. The difference is the whole point: until
+  // 2026-08-26 this asserted `attacks.length >= 2` and the caller compared the labels AFTERWARDS,
+  // which is a derivation checked against itself and is satisfied by a sweep that quietly covered
+  // the wrong two — or, if the loop threw first, by never comparing at all.
+  //
+  // WHY IT IS SHAPED LIKE THIS: the orchestrator's PR watcher terminated on the ABSENCE of output
+  // and announced "queue drained" while seven PRs were open — `gh` cannot read `~/.config/gh` under
+  // the sandbox, so it wrote to stderr and produced empty stdout, and empty was read as a terminal
+  // SUCCESS. An absence read as a clean finding gets reviewed; an absence read as a clean
+  // COMPLETION ends the review. A sweep over zero positions reporting "invariant" is that same
+  // shape, and these three assertions are what stop it: a count that is DECLARED, placements that
+  // must DIFFER from each other, and a floor on the parse before any finding counts.
+  assert.ok(Array.isArray(positions) && positions.length >= 2,
+    'assertPositionInvariant needs the caller to DECLARE the positions it must cover — a sweep that ' +
+    'decides its own denominator cannot report having covered too few');
+  assert.deepEqual(attacks.map((a) => a.position), positions,
+    `the sweep covered ${attacks.length} position(s) and the caller declared ${positions.length}: ` +
+    `${JSON.stringify(attacks.map((a) => a.position))} vs ${JSON.stringify(positions)}`);
+  assert.deepEqual(benigns.map((b) => b.position), positions, 'the benign sweep covered different positions');
+  // DISTINCT PLACEMENTS, or two labels can name one workflow and the sweep proves invariance over a
+  // set of size one while reporting two. Nothing above compares the placements TO EACH OTHER.
+  assert.equal(new Set(attacks.map((a) => a.workflow)).size, attacks.length,
+    'two positions produced the SAME workflow, so the sweep covered fewer positions than it reported');
+
   const seen = [];
   for (let i = 0; i < attacks.length; i += 1) {
     const a = attacks[i];
@@ -2151,6 +2180,7 @@ test('a chained JOB is caught wherever it sits — and the parse is not collapse
     judge: (wf) => ciChainFindings(wf),
     expect: 1,
     floor,
+    positions: ['first job', 'last job'],
   });
   assert.deepEqual(seen, ['first job', 'last job'], 'the job sweep stopped covering both positions');
 });
@@ -2168,6 +2198,7 @@ test('a chained STEP is caught wherever it sits in the job', () => {
     judge: (wf) => ciChainFindings(wf), // the real allowlist — see the job sweep above
     expect: 1,
     floor,
+    positions: ['first step', 'last step'],
   });
   assert.deepEqual(seen, ['first step', 'last step'], 'the step sweep stopped covering both positions');
 });
@@ -2179,6 +2210,7 @@ test('the harness REFUSES a position-blind judge, and refuses a collapsed parse 
   const floor = parseCiSteps(CI).length;
   const args = {
     base: CI, attack: job('npm run x && npm run y'), benign: job('npm run x'), expect: 1, floor,
+    positions: ['first job', 'last job'],
   };
 
   // 1 · POSITION-BLIND. A judge that reads only up to the second job — the shape `break` had — sees
@@ -2211,9 +2243,59 @@ test('the harness REFUSES a position-blind judge, and refuses a collapsed parse 
     'the denominator is not being read, so a catch from a fragment still counts as a catch'
   );
 
-  // 3 · AND THE CONTROL FOR THE CONTROLS: with a correct judge and an honest floor it PASSES, or the
-  // two throws above are satisfied by a harness that throws at everything.
-  assert.doesNotThrow(() => assertPositionInvariant({ ...args, judge: (wf) => ciChainFindings(wf) }));
+  // 3 · A SWEEP THAT COULD NOT RUN MUST FAIL LOUDLY, NOT REPORT CLEAN. This is the orchestrator's PR
+  // watcher in miniature: it terminated on the ABSENCE of output and announced "queue drained" while
+  // seven PRs were open, because `gh` cannot read ~/.config/gh under the sandbox and empty stdout was
+  // read as a terminal SUCCESS. An absence read as a clean FINDING gets reviewed; an absence read as
+  // a clean COMPLETION ends the review. Each broken sweeper below is that failure wearing this
+  // harness's clothes, and each must throw.
+  const judge = (wf) => ciChainFindings(wf);
+  const broken = {
+    'a sweep over ZERO positions': () => [],
+    'a sweep that covered a SUBSET of what was declared': (base, frag, kind) => sweepPositions(base, frag, kind).slice(0, 1),
+    'a sweep whose two positions are the SAME workflow': (base, frag, kind) => {
+      const [first] = sweepPositions(base, frag, kind);
+      return [first, { ...first, position: 'last job' }];
+    },
+  };
+  for (const [label, sweep] of Object.entries(broken)) {
+    assert.throws(
+      () => assertPositionInvariant({ ...args, judge, sweep }),
+      /covered .* position|DECLARE the positions|SAME workflow/,
+      `${label} was reported as a clean invariance result`
+    );
+  }
+
+  // 4 · AND THE CONTROL FOR THE CONTROLS: with a correct judge, an honest floor and the real sweeper
+  // it PASSES, or every throw above is satisfied by a harness that throws at everything.
+  assert.doesNotThrow(() => assertPositionInvariant({ ...args, judge }));
+});
+
+test('a base the fixture cannot be placed in is REFUSED, not swept over zero positions', () => {
+  // THE OTHER HALF OF ABSENCE-AS-COMPLETION, and it is the one an ordinary edit produces: a base that
+  // does not contain the anchor the fixture needs. `sweepPositions` must refuse rather than hand back
+  // a placement identical to the base, which every later assertion would then judge as "clean".
+  const jobless = 'name: CI\non:\n  push:\n    branches: [main]\n';
+  const job = `  extra:\n    runs-on: x\n    steps:\n      - name: B\n        run: npm run x && npm run y\n`;
+  assert.throws(
+    () => assertPositionInvariant({
+      base: jobless, attack: job, benign: job, judge: (wf) => ciChainFindings(wf, {}),
+      expect: 1, floor: 0, positions: ['first job', 'last job'],
+    }),
+    /matched nothing|SAME workflow/,
+    'a base with no `jobs:` line was swept as though the fixture had been placed'
+  );
+
+  const stepless = 'name: CI\njobs:\n  one:\n    runs-on: x\n';
+  assert.throws(
+    () => assertPositionInvariant({
+      base: stepless, attack: '      - name: B\n        run: npm run x && npm run y\n', benign: '      - name: B\n        run: npm run x\n',
+      kind: 'step', judge: (wf) => ciChainFindings(wf, {}), expect: 1, floor: 0,
+      positions: ['first step', 'last step'],
+    }),
+    /no `steps:` line/,
+    'a base with no `steps:` line was swept as though a step had been placed'
+  );
 });
 
 test('every STEP of the suite has a counterpart step in ci.yml', () => {
