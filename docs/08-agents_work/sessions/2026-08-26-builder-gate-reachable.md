@@ -62,7 +62,8 @@ gates*; for `orchestrator`, *this declaration grants you nothing you do not alre
 
 ## Verification, and the controls
 
-- `npm run check` → **Tally: 46 of 46 passed · 0 failed · 255.0s · exit 0**, sandbox armed.
+- `npm run check` → **48 of 48 passed · 0 failed · exit 0** on the merged tree (46 of 46 before
+  updating onto `main` at `0c78fa2`; #114 moved the denominator).
 - `node --test scripts/prompt-standard.test.mjs` → **74 pass · 0 fail** (68 before). Both mutations
   go red: deleting the rule → 2 failures; reverting the `TOOL_UNIVERSE` line → 3.
 - The rule fires on **7 of 7** engines with a `Workflow` entry and on **0 of 7** without — the
@@ -171,6 +172,27 @@ a declaration from *every* frontmatter rule: `parseFrontmatter`'s loop is last-k
 duplicate detection, so a second `tools:` line silently discards the first. That defeats the `model`
 check, `maxTurns` and the reviewer engines' `Write` ban, not just this rule. Pre-existing —
 identical on `main` — and a duplicate-key check closes it for all rules at once. It is a separate PR.
+
+## Updated onto `main` at `0c78fa2` (#114 merged)
+
+`git merge origin/main`, **not rebase** — rebase hits the armed-sandbox wall on `.claude/agents/**`
+and `.mcp.json` and leaves HEAD unmoved carrying the target's content, which another lane already
+paid for. Merge convention here is merge commits anyway.
+
+**It merged clean, with no conflicted paths** — which is precisely when to verify rather than trust,
+because a clean auto-merge is not evidence of a correct one. #114 added two `STEPS` entries; this
+branch adds an `EXCLUDED` entry. Different regions of the same file, so git took both, and the
+figure a bad resolution changes silently is the one asserted:
+
+```
+STEPS.length          = 48   (main 48, this branch 46 before the merge)
+#114 entries present  = true (test:citations, check:citations-exist)
+my EXCLUDED survived  = true (test:probe-workflow-reach)
+my entry in STEPS?    = false
+```
+
+`npm run check` on the merged tree: **48 of 48 passed · 0 failed · exit 0**, sandbox armed — the
+denominator moved 46 → 48 with the base, which is the whole reason not to quote it from memory.
 
 ## Stated limits
 
