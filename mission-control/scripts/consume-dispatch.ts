@@ -31,7 +31,8 @@ import {
   appendDispatch,
   dispatchQueuePath,
   resolveDispatchStates,
-  unfinishedDispatches,
+  classifyDispatches,
+  KNOWN_DISPATCH_STATUSES,
   type DispatchEntry,
 } from '../server/index-cache.ts';
 
@@ -55,11 +56,30 @@ const LIST_ONLY = args.has('--list');
 
 /** The fields that distinguish one terminal outcome from another. */
 type TerminalUpdate = {
-  status: 'consumed' | 'failed' | 'no-result';
+  status: 'consumed' | 'failed' | 'no-result' | 'not-started';
   exitCode?: number;
   signal?: string;
   error?: string;
 };
+
+/**
+ * Is a process still running? `kill(pid, 0)` signals nothing and only tests reachability.
+ *
+ * THE ANSWER IS A LOWER BOUND ON IGNORANCE, NOT A PROOF OF LIVENESS. `true` means a process with
+ * that pid exists — which after a pid wrap-around may be a different process entirely, and on a
+ * shared machine may be one this user cannot signal. EPERM is therefore read as ALIVE: a process
+ * we may not touch is still a process, and treating "permission denied" as "gone" would relaunch
+ * a goal that is running. Both errors are handled explicitly so neither is inferred from the
+ * other, and the conservative direction is the one that never double-launches.
+ */
+function isAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return (err as NodeJS.ErrnoException).code === 'EPERM';
+  }
+}
 
 /**
  * Append the terminal state of a dispatch, and SAY SO WHEN THAT WRITE FAILS.
@@ -110,11 +130,22 @@ function main() {
   // counts, and filtering them by `status === 'pending'` re-selects work already done — the
   // re-dispatch bug documented on resolveDispatchStates().
   const current = resolveDispatchStates(entries);
-  const unfinished = unfinishedDispatches(entries);
+  const work = classifyDispatches(entries);
   const byStatus = new Map<string, number>();
-  for (const e of current) byStatus.set(e.status, (byStatus.get(e.status) ?? 0) + 1);
+  for (const e of current) byStatus.set(String(e.status), (byStatus.get(String(e.status)) ?? 0) + 1);
   const tally = [...byStatus.entries()].map(([k, n]) => `${n} ${k}`).join(', ');
   console.log(`${current.length} dispatches (${entries.length} queue lines) — ${tally}`);
+
+  // AN UNRECOGNISED STATUS IS REPORTED AND THEN LEFT ALONE. Never launched — this build cannot
+  // know whether the goal already ran — and never rewritten, because whatever wrote it knew
+  // something this build does not. Loud, because a queue this consumer cannot fully read is an
+  // operator's problem, not a line to swallow.
+  for (const e of work.unrecognised) {
+    console.warn(
+      `  UNRECOGNISED STATUS ${JSON.stringify(e.status)} on ${e.id.slice(0, 8)} — left untouched. ` +
+      `This consumer knows: ${KNOWN_DISPATCH_STATUSES.join(', ')}. A newer consumer may have written it.`
+    );
+  }
 
   if (LIST_ONLY) {
     console.log('\nAll dispatches (current state):');
@@ -127,12 +158,15 @@ function main() {
     return;
   }
 
-  if (unfinished.length === 0) {
-    console.log('Nothing unfinished. Nothing to do.');
+  // ALLOW-LIST: only what this build knows how to act on. `settled` and `unrecognised` are both
+  // excluded, for different reasons stated in classifyDispatches().
+  const actionable = [...work.reconcilable, ...work.launchable];
+  if (actionable.length === 0) {
+    console.log('Nothing to act on.');
     return;
   }
 
-  for (const entry of unfinished) {
+  for (const entry of actionable) {
     console.log(`\nProcessing ${entry.id.slice(0, 8)}  project=${entry.project}`);
     console.log(`  Goal: ${entry.goal.slice(0, 140)}${entry.goal.length > 140 ? '…' : ''}`);
 
@@ -152,8 +186,20 @@ function main() {
     }
 
     if (DRY_RUN) {
-      console.log(`  [dry-run] would run: claude --print in ${entry.root}`);
-      console.log(`  [dry-run] goal: ${entry.goal}`);
+      // A DRY RUN THAT MISSTATES THE REAL RUN IS WORSE THAN NO DRY RUN, and this printed
+      // "would run" for a `running` entry that the real run refuses to launch — in a change whose
+      // whole subject is reporting what happened. The branch order below mirrors the real path.
+      if (entry.status === 'running') {
+        const owner = entry.consumerPid;
+        console.log(
+          typeof owner === 'number' && owner !== process.pid && isAlive(owner)
+            ? `  [dry-run] would LEAVE ALONE: pid ${owner} is still running this`
+            : `  [dry-run] would record no-result: launched by an earlier run that never reported back`
+        );
+      } else {
+        console.log(`  [dry-run] would run: claude --print in ${entry.root}`);
+        console.log(`  [dry-run] goal: ${entry.goal}`);
+      }
       continue;
     }
 
@@ -193,11 +239,23 @@ function main() {
     // and re-running it would convert "unknown" into a fresh "success" while hiding that a
     // previous attempt may already have acted. Record the ignorance instead.
     if (entry.status === 'running') {
-      console.warn(`  NO RESULT — a previous run started this and never reported back. Not relaunching.`);
-      writeTerminal(entry, {
-        status: 'no-result',
-        error: 'found still `running` by a later consumer run; the launching run never recorded an outcome',
-      });
+      // IS THE LAUNCHER STILL ALIVE? Declaring `no-result` on sight is wrong when a SECOND
+      // consumer runs while the first is mid-launch: observed `pending -> running -> no-result ->
+      // consumed`, with the `no-result` written while the launch was still in flight. It
+      // self-heals when the first consumer finishes, but for that window the durable record
+      // asserts something false — and an operator who reads "no result" and re-enqueues gets two
+      // live agents on one goal. That is the defect this file exists to remove, arriving through
+      // the fix for it.
+      const owner = entry.consumerPid;
+      if (typeof owner === 'number' && owner !== process.pid && isAlive(owner)) {
+        console.log(`  IN FLIGHT — pid ${owner} is still running this. Leaving it alone.`);
+        continue;
+      }
+      const why = typeof owner === 'number'
+        ? `the launching consumer (pid ${owner}) is gone and recorded no outcome`
+        : 'found still `running` by a later consumer run, with no launching pid recorded';
+      console.warn(`  NO RESULT — ${why}. Not relaunching.`);
+      writeTerminal(entry, { status: 'no-result', error: why });
       continue;
     }
 
@@ -207,7 +265,7 @@ function main() {
     // afterwards records nothing about the interval it is supposed to cover.
     const startedAt = Date.now();
     try {
-      appendDispatch({ ...entry, status: 'running', startedAt });
+      appendDispatch({ ...entry, status: 'running', startedAt, consumerPid: process.pid });
     } catch (writeErr) {
       // Refuse rather than launch blind. If we cannot record that we started, a crash mid-launch
       // is indistinguishable from never having run — which is the whole defect.
@@ -236,10 +294,17 @@ function main() {
         outcome = { status: 'failed', exitCode: e.status, error: message };
       } else if (e.signal) {
         outcome = { status: 'no-result', signal: e.signal, error: message };
+      } else if (e.code === 'ENOENT' || e.code === 'EACCES' || e.code === 'EPERM') {
+        // THE LAUNCH NEVER STARTED, which is not the same fact as "it started and told us
+        // nothing". No `claude` on PATH, or one that cannot be executed: the spawn failed before
+        // any agent ran. Mapping this to `no-result` made a systematic PATH misconfiguration read
+        // in the UI as "the agents keep dying mid-run" — a wrong diagnosis pointing at the wrong
+        // system. Re-enqueueing after fixing PATH is safe precisely because nothing ran.
+        outcome = { status: 'not-started', error: `${e.code}: ${message}` };
       } else {
-        // Spawn never happened (ENOENT: no `claude` on PATH) or the failure is unmodelled. Either
-        // way no exit code exists, so `no-result` is the honest state — NOT `failed`, which would
-        // assert the launch ran and reported something.
+        // Unmodelled: the spawn family reported neither an exit code, nor a signal, nor a spawn
+        // error this build knows. No exit code exists, so `no-result` is the honest state — NOT
+        // `failed`, which would assert the launch ran and reported something.
         outcome = { status: 'no-result', error: message };
       }
       console.error(`  Launch did not succeed: ${message}`);

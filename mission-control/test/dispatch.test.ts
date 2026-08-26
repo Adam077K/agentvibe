@@ -37,7 +37,7 @@ import {
   appendDispatch,
   readDispatch,
   resolveDispatchStates,
-  unfinishedDispatches,
+  classifyDispatches,
   type DispatchEntry,
 } from '../server/index-cache.ts';
 import { execFileSync } from 'node:child_process';
@@ -518,7 +518,7 @@ describe('consume-dispatch records a distinguishable outcome', () => {
   });
 });
 
-describe('resolveDispatchStates / unfinishedDispatches', () => {
+describe('resolveDispatchStates / classifyDispatches', () => {
   const line = (id: string, status: DispatchEntry['status']): DispatchEntry => ({
     id, project: 'p', root: '/p', goal: 'g', enqueuedAt: 1, status,
   });
@@ -534,13 +534,174 @@ describe('resolveDispatchStates / unfinishedDispatches', () => {
     expect(resolved.map((e) => e.id)).toEqual(['a', 'b']);
   });
 
-  test('terminal states are not unfinished; pending and running are', () => {
+  test('only `pending` is launchable and only `running` is reconcilable', () => {
     const entries = [line('done', 'consumed'), line('bad', 'failed'), line('gone', 'no-result'),
-                     line('wait', 'pending'), line('mid', 'running')];
-    expect(unfinishedDispatches(entries).map((e) => e.id)).toEqual(['wait', 'mid']);
+                     line('none', 'not-started'), line('wait', 'pending'), line('mid', 'running')];
+    const work = classifyDispatches(entries);
+    expect(work.launchable.map((e) => e.id)).toEqual(['wait']);
+    expect(work.reconcilable.map((e) => e.id)).toEqual(['mid']);
+    expect(work.settled.map((e) => e.id)).toEqual(['done', 'bad', 'gone', 'none']);
+    expect(work.unrecognised).toEqual([]);
   });
 
-  test('a dispatch that reached a terminal state is not unfinished, even though its first line is pending', () => {
-    expect(unfinishedDispatches([line('a', 'pending'), line('a', 'consumed')])).toEqual([]);
+  test('a dispatch that reached a terminal state is not launchable, though its first line is pending', () => {
+    expect(classifyDispatches([line('a', 'pending'), line('a', 'consumed')]).launchable).toEqual([]);
+  });
+
+  // ── THE ALLOW-LIST, AND THE FOUR INPUTS THAT DEFEATED THE DENY-LIST ────────────────────────
+  //
+  // The first cut of this change selected work with `!TERMINAL_DISPATCH_STATUSES.includes(status)`.
+  // That is a DENY-LIST: every value it did not recognise fell through to "launch it". Measured on
+  // that build with a `claude` that logged its own argv, all four rows below were LAUNCHED and then
+  // OVERWRITTEN with `consumed` — destroying whatever the previous status said.
+  //
+  // `readDispatch()` does not validate `status` (deliberately — forward-compatibility with a newer
+  // writer), so nothing upstream stops any of these reaching the consumer.
+  const UNRECOGNISED: [string, unknown][] = [
+    ['a status from a newer consumer', 'timed-out'],
+    ['no status field at all', undefined],
+    ['a numeric status', 7],
+    ['a null status', null],
+  ];
+
+  for (const [what, status] of UNRECOGNISED) {
+    test(`${what} is NOT launchable, NOT reconcilable, and NOT settled`, () => {
+      const e = { ...line('x', 'pending'), status } as unknown as DispatchEntry;
+      const work = classifyDispatches([e]);
+      expect(work.unrecognised.map((x) => x.id)).toEqual(['x']);
+      expect(work.launchable).toEqual([]);
+      expect(work.reconcilable).toEqual([]);
+      expect(work.settled).toEqual([]);
+    });
+  }
+
+  test('the two CONTROLS still classify — an allow-list that admits nothing proves nothing', () => {
+    expect(classifyDispatches([line('p', 'pending')]).launchable.map((e) => e.id)).toEqual(['p']);
+    expect(classifyDispatches([line('c', 'consumed')]).settled.map((e) => e.id)).toEqual(['c']);
+  });
+});
+
+describe('an unrecognised status is neither launched nor overwritten — END TO END', () => {
+  // The p1 this reproduces, in the only terms that matter: does the goal RUN, and does the record
+  // SURVIVE. Both are observed rather than inferred — the fixture `claude` appends its argv to a
+  // file, so "not launched" is a measured absence with a control that fires beside it.
+  function launchLoggingFixture(prefix: string, status: unknown) {
+    const dir = mkTmpDir(prefix);
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(root, { recursive: true });
+    const log = path.join(dir, 'launches.txt');
+    fs.writeFileSync(path.join(bin, 'claude'), `#!/bin/sh\necho "LAUNCHED $@" >> ${log}\nexit 0\n`);
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    const entry: Record<string, unknown> = {
+      id: 'target', project: path.basename(REPO_ROOT), root, goal: 'a goal', enqueuedAt: 1_000,
+    };
+    if (status !== undefined) entry.status = status;
+    fs.writeFileSync(queue, JSON.stringify(entry) + '\n');
+    return { bin, queue, log };
+  }
+
+  const launches = (log: string) => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).length : 0);
+
+  for (const [what, status] of [
+    ['a status from a newer consumer', 'timed-out'],
+    ['no status field at all', undefined],
+    ['a numeric status', 7],
+    ['a null status', null],
+  ] as [string, unknown][]) {
+    test(`${what}: the goal does not run and the record is left exactly as found`, () => {
+      const f = launchLoggingFixture('mc-dispatch-unk-', status);
+      const before = fs.readFileSync(f.queue, 'utf8');
+      execFileSync('bun', [CONSUMER], {
+        env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
+        encoding: 'utf8', stdio: 'pipe',
+      });
+      expect(launches(f.log)).toBe(0);
+      // NOT OVERWRITTEN. The old build appended `consumed`, destroying the original status.
+      expect(fs.readFileSync(f.queue, 'utf8')).toBe(before);
+    });
+  }
+
+  test('CONTROL: a `pending` entry in the same harness DOES run and IS recorded', () => {
+    // Without this the four absences above are worthless — an absence is byte-identical whether
+    // the harness works or does nothing at all.
+    const f = launchLoggingFixture('mc-dispatch-unk-control-', 'pending');
+    execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    expect(launches(f.log)).toBe(1);
+    const entries = readDispatch(f.queue);
+    expect(entries[entries.length - 1]?.status).toBe('consumed');
+  });
+});
+
+describe('a launch that never started is not a launch that returned nothing', () => {
+  test('no `claude` on PATH is `not-started`, not `no-result`', () => {
+    const dir = mkTmpDir('mc-dispatch-nopath-');
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'empty-bin');   // deliberately contains no `claude`
+    const root = path.join(dir, 'root');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(root, { recursive: true });
+    const queue = path.join(dir, 'queue.jsonl');
+    fs.writeFileSync(queue, JSON.stringify({
+      id: 'nopath', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
+    }) + '\n');
+
+    // PATH IS REPLACED, NOT PREPENDED — the point is that `claude` is absent everywhere, which
+    // prepending cannot achieve. It must still contain the runtime running this test, so it is
+    // `bin` plus bun's own directory and nothing else.
+    const runtimeDir = path.dirname(process.execPath);
+    const isolatedPath = `${bin}:${runtimeDir}`;
+
+    // THE ABSENCE IS ASSERTED, NOT ASSUMED. If `claude` happened to live beside bun, this test
+    // would launch it for real and still pass for the wrong reason.
+    for (const d of isolatedPath.split(':')) {
+      expect(fs.existsSync(path.join(d, 'claude'))).toBe(false);
+    }
+
+    execFileSync(process.execPath, [CONSUMER], {
+      env: { ...process.env, PATH: isolatedPath, MC_DISPATCH_QUEUE: queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    const entries = readDispatch(queue);
+    const last = entries[entries.length - 1] as DispatchEntry;
+    expect(last.status).toBe('not-started');
+    expect(last.status).not.toBe('no-result');
+    expect(last.error).toContain('ENOENT');
+  });
+});
+
+describe('a `running` entry whose launcher is ALIVE is left alone', () => {
+  test('a live consumerPid means in-flight, not no-result', () => {
+    const f = dispatchFixture('mc-dispatch-inflight-', CLAUDE_OK, [
+      { status: 'pending' },
+      // process.pid of the TEST is alive by construction — the strongest available liveness case.
+      { status: 'running', startedAt: 1_500, consumerPid: process.pid },
+    ]);
+    const out = execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    expect(out).toContain('IN FLIGHT');
+    // Nothing appended: not relaunched, and NOT declared no-result while it is still running.
+    expect(readDispatch(f.queue).map((e) => e.status)).toEqual(['pending', 'running']);
+  });
+
+  test('CONTROL: an unreachable pid IS declared no-result', () => {
+    // Same harness, same shape, one field different — so the test above cannot pass by accident.
+    const f = dispatchFixture('mc-dispatch-deadpid-', CLAUDE_OK, [
+      { status: 'pending' },
+      { status: 'running', startedAt: 1_500, consumerPid: 2_147_483_646 },
+    ]);
+    execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    expect(readDispatch(f.queue).map((e) => e.status)).toEqual(['pending', 'running', 'no-result']);
   });
 });

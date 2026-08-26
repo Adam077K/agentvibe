@@ -2438,3 +2438,82 @@ describe('render parity against the real local fleet', () => {
     60_000
   );
 });
+
+
+// ── DispatchView's pure functions — the half that shipped untested ─────────────────────────
+//
+// FOUND BY REVIEW, NOT BY ME: the change that added `failed` and `no-result` added 155 lines of
+// consumer tests and 0 for the 88 lines of view it also added — and the p2 defect below lived in
+// exactly that untested half. `grep -rn 'dispatchHeadline\|StatusCell\|DispatchTable' test/`
+// returned nothing at the time, against 73 `test(` in this file.
+//
+// The base file's stated reason for leaving DispatchView out is about `useEndpoint()` inside the
+// whole-view component, which does not settle under renderToStaticMarkup(). It does not apply to
+// these three, which are pure: entries in, markup out.
+
+import { DispatchTable, dispatchHeadline } from '../client/src/views/DispatchView.tsx';
+import type { DispatchEntry } from '../server/index-cache.ts';
+
+const dispatchRow = (id: string, status: string): DispatchEntry =>
+  ({ id, project: 'p', root: '/p', goal: 'g-' + id, enqueuedAt: 1_000, status } as DispatchEntry);
+
+describe('dispatchHeadline counts the COMPLEMENT, so a new status cannot hide', () => {
+  test('`failed` and `no-result` count as unsuccessful', () => {
+    const h = dispatchHeadline([dispatchRow('a', 'failed'), dispatchRow('b', 'no-result')]);
+    expect(h).toEqual({ total: 2, pending: 0, unsuccessful: 2 });
+  });
+
+  test('THE REGRESSION: an unknown status is counted, not dropped', () => {
+    // The enumerating version returned {total: 3, pending: 0, unsuccessful: 0} here — a clean
+    // headline over a queue in an unknown state, with the tone left at `default`.
+    expect(dispatchHeadline([dispatchRow('x', 'unknown'), dispatchRow('y', 'unknown'), dispatchRow('z', 'unknown')]))
+      .toEqual({ total: 3, pending: 0, unsuccessful: 3 });
+  });
+
+  test('`running` is counted too — it is neither pending nor done', () => {
+    expect(dispatchHeadline([dispatchRow('r', 'running')])).toEqual({ total: 1, pending: 0, unsuccessful: 1 });
+  });
+
+  test('`not-started` is counted', () => {
+    expect(dispatchHeadline([dispatchRow('n', 'not-started')])).toEqual({ total: 1, pending: 0, unsuccessful: 1 });
+  });
+
+  test('CONTROLS: the two states that are FINE are not counted as unsuccessful', () => {
+    // Without these the complement could be "count everything" and every test above would pass.
+    expect(dispatchHeadline([dispatchRow('p', 'pending')])).toEqual({ total: 1, pending: 1, unsuccessful: 0 });
+    expect(dispatchHeadline([dispatchRow('c', 'consumed')])).toEqual({ total: 1, pending: 0, unsuccessful: 0 });
+  });
+});
+
+describe('DispatchTable renders every status distinguishably', () => {
+  const render = (status: string) =>
+    renderToStaticMarkup(<DispatchTable entries={[dispatchRow('id', status)]} now={2_000} />);
+
+  test('a failure is NOT drawn as "consumed" — the defect this view had', () => {
+    const failed = render('failed');
+    expect(failed).toContain('failed');
+    expect(failed).not.toContain('>consumed<');
+    expect(failed).toContain('text-bad');
+  });
+
+  test('every state produces distinct markup — no two collapse', () => {
+    const states = ['pending', 'running', 'consumed', 'failed', 'no-result', 'not-started'];
+    const rendered = states.map(render);
+    expect(new Set(rendered).size).toBe(states.length);
+  });
+
+  test('an UNKNOWN status renders as itself, never folded into a known one', () => {
+    const out = render('timed-out');
+    expect(out).toContain('timed-out');
+    expect(out).not.toContain('>consumed<');
+    expect(out).toContain('text-bad');
+  });
+
+  test('the error tone class is one the stylesheet actually defines', () => {
+    // `text-err` was invented in the first cut of this view and does not exist in styles.css, so
+    // the error state would have rendered unstyled — the failure visible only to a human eye.
+    const css = fs.readFileSync(path.join(import.meta.dir, '..', 'client', 'src', 'styles.css'), 'utf8');
+    expect(css).toContain('--color-bad');
+    expect(render('failed')).not.toContain('text-err');
+  });
+});

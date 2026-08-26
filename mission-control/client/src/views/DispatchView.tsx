@@ -102,6 +102,15 @@ function StatusCell({ entry }: { entry: DispatchEntry }) {
           no result{entry.signal ? ` (${entry.signal})` : ''}
         </span>
       );
+    case 'not-started':
+      return (
+        <span
+          className="fig text-bad"
+          title={entry.error ?? 'The launch never began — nothing ran, so re-enqueueing is safe'}
+        >
+          not started
+        </span>
+      );
     default:
       // An UNKNOWN status is shown as unknown, never folded into a known one. A queue written by
       // a newer consumer must not be read by this UI as success.
@@ -123,7 +132,18 @@ type SubmitResult =
 export interface DispatchHeadline {
   total: number;
   pending: number;
-  /** `failed` + `no-result` — dispatches that ended without succeeding. */
+  /**
+   * Everything that is neither `pending` nor `consumed` — counted as a COMPLEMENT, not a list.
+   *
+   * THIS FIELD ENUMERATED `failed` AND `no-result` UNTIL 2026-08-26, and enumerating is how it
+   * reproduced the defect it was added to prevent. Its own doc said it exists because "the summary
+   * layer can hide a failure just as well as the record did"; with a literal two-value list,
+   * `running` and any status this build does not know fell into NEITHER sub-count, so three
+   * unknown-status dispatches rendered `{total: 3, pending: 0, unsuccessful: 0}` with the tone
+   * left at `default` — a clean-looking headline over a queue in an unknown state.
+   *
+   * A complement cannot go stale when the union grows. That is the whole reason for the shape.
+   */
   unsuccessful: number;
 }
 
@@ -142,8 +162,11 @@ export interface DispatchHeadline {
  */
 export function dispatchHeadline(entries: DispatchEntry[]): DispatchHeadline {
   const pending = entries.filter((e) => e.status === 'pending').length;
-  const unsuccessful = entries.filter((e) => e.status === 'failed' || e.status === 'no-result').length;
-  return { total: entries.length, pending, unsuccessful };
+  const consumed = entries.filter((e) => e.status === 'consumed').length;
+  // The complement: total minus the two states that are fine. Anything new — a status added to
+  // the union, or one written by a newer consumer — lands here and is SEEN, rather than silently
+  // counting as neither.
+  return { total: entries.length, pending, unsuccessful: entries.length - pending - consumed };
 }
 
 export function DispatchFormHeadline({ headline, loading, onRefresh }: { headline: DispatchHeadline | null; loading: boolean; onRefresh: () => void }) {
@@ -160,13 +183,13 @@ export function DispatchFormHeadline({ headline, loading, onRefresh }: { headlin
       }
     >
       <Figure
-        label="Queue entries"
+        label="Dispatches"
         value={headline === null ? '—' : formatCount(headline.total)}
         sub={
           headline === null
             ? 'loading'
             : headline.unsuccessful > 0
-              ? `${formatCount(headline.pending)} pending · ${formatCount(headline.unsuccessful)} did not succeed`
+              ? `${formatCount(headline.pending)} pending · ${formatCount(headline.unsuccessful)} not succeeded`
               : `${formatCount(headline.pending)} pending`
         }
         tone={headline !== null && (headline.pending > 0 || headline.unsuccessful > 0) ? 'warn' : 'default'}

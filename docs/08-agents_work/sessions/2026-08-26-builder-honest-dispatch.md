@@ -9,6 +9,7 @@ tier: full
 risk: full
 tier_note: "node scripts/classify.mjs over the five changed paths returns floor=full, driven by mission-control/server/** (index-cache.ts, routes/api.ts). Not irreversible: no workflow, agent definition, migration or billing path is touched."
 qa_verdict: PASS
+verification_round2: "After blind review returned correctness:fail with one p1. C1 fixed by allow-listing selection (classifyDispatches): unrecognised statuses are reported and left EXACTLY as found — re-measured table shows all four untouched, both controls firing, exactly 1 launch across six cases. C2 complement counting. C3 consumerPid + isAlive liveness. C5 dry-run parity. C6 not-started distinguished from no-result. C7 label. C8 fold contract now asserted in crosscheck.test.ts. UI half now tested (C4): 9 tests, and reverting to the enumerating headline turns 3 of them red. Suites: npm run check 46 of 46 · 0 failed; dispatch 47/0; index-cache 32/0; write-barrier 7/0; shell ban 12/0."
 qa_caveat: "A PASS I recorded myself. One author, one model family, no independent review — that is the deterministic floor being met, not the `full` tier's review requirement."
 decisions:
   - "Widened DispatchStatus rather than adding a parallel `outcome` field. A second field leaves `status` still lying to anything that reads only it — including the UI, which did. Widening the union makes the wrong state unrepresentable and forces every reader to handle failure."
@@ -20,6 +21,9 @@ corrections:
   - "I invented a CSS class. `text-err` does not exist in styles.css; the token is `text-bad`. Caught by grepping with a control that fired (8 files use text-warn) rather than by assuming. Five occurrences replaced."
   - "The brief named two defects; execution found a third. An already-finished dispatch was relaunched on EVERY run, because the consumer filtered raw lines by `status === 'pending'` and append-only never removes the original pending line."
   - "The preamble pins `origin/main` = 244e8db and says STOP if it differs. It is 47dbbd6 — 244e8db is an ancestor. Proceeded on the lead's newer explicit base."
+  - "ROUND 2, p1 from review, and the sharpest correction of the lane: I replaced an ALLOW-list with a DENY-list. Base selected `status === 'pending'`; my first cut selected `!TERMINAL.includes(status)`, so every status this build did not recognise was LAUNCHED and then OVERWRITTEN with `consumed`. Reproduced: `timed-out`, a missing field, `7` and `null` all launched, record destroyed. I defeated the code I ADDED and left the code I REMOVED fail-open — and my own UI comment names that exact class one file away. Class named, one site swept."
+  - "ROUND 2, p2: `unsuccessful` enumerated `failed`/`no-result`, so `running` and unknown statuses counted as neither — the field reproduced the defect its own doc says it exists to prevent. Now a complement."
+  - "ROUND 2: the existing `every LiveState in test/** says where its index cache goes` guard caught my new crosscheck test writing an index cache into $HOME. Fixed by naming the path; the guard was right."
 claims_touched: []
 verification: "See prose. All figures VERIFIED-BY-EXECUTION; none read off the source."
 ---

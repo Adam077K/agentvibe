@@ -384,23 +384,64 @@ export function dispatchQueuePath(): string {
  * *absence* — an assertion accepted where evidence was required. The cure is not a better
  * string at the write site; it is a type in which the lie cannot be spelled.
  *
- *   pending    enqueued by the server, not yet acted on
- *   running    a launch STARTED and has not yet reported back. Durable and written BEFORE the
- *              launch, so a consumer that dies mid-flight leaves evidence instead of silence.
- *   consumed   the launch ran to completion and exited 0
- *   failed     the launch ran and exited non-zero — `exitCode` carries which
- *   no-result  it started and never returned an outcome: killed by a signal, or found still
- *              `running` by a later run
+ *   pending      enqueued by the server, not yet acted on
+ *   running      a launch STARTED and has not yet reported back. Durable and written BEFORE the
+ *                launch, so a consumer that dies mid-flight leaves evidence instead of silence.
+ *   consumed     the launch ran to completion and exited 0
+ *   failed       the launch ran and exited non-zero — `exitCode` carries which
+ *   no-result    it started and never returned an outcome: killed by a signal, or found still
+ *                `running` by a later run
+ *   not-started  the launch never happened — no `claude` on PATH, or the spawn itself failed
  *
- * `no-result` IS NOT AN EDGE CASE, and sizing it as one is why it was missing. Roughly half of
- * subagent runs end mid-tool (n=2,581, 95% interval [48.4%, 52.2%]), so "no outcome" is the
- * single most likely terminal state of a dispatch — and it was the one state the old union
- * could not express. A queue that reports the most probable outcome as success is not a queue.
+ * `no-result` IS NOT AN EDGE CASE, and sizing it as one is why it was missing: a subagent run
+ * ending mid-tool is an ordinary event, not a rare one, so "no outcome" is a likely terminal
+ * state of a dispatch — and it was the one state the old union could not express. A queue that
+ * reports a probable outcome as success is not a queue.
+ * *This paragraph carried "roughly half … (n=2,581, 95% interval [48.4%, 52.2%])" until
+ * 2026-08-26. The figure came from an orchestrator brief and NOTHING IN THIS REPO SOURCES IT —
+ * a statistic in a code comment with no file and no access date is exactly the shape this repo
+ * refuses, and it is worse in a comment than in prose because no reviewer reads it twice. The
+ * design reason does not need the number; the number needed a citation it never had.*
+ *
+ * `not-started` IS NOT `no-result`, and collapsing them misreports a config error as an agent
+ * dying. `no-result` says a launch began and told us nothing. `not-started` says it never began,
+ * which is a different fact with a different remedy: fix PATH and re-enqueue, with the guarantee
+ * that nothing ran the first time. A systematic PATH misconfiguration under the old mapping read
+ * in the UI as "the agents keep dying mid-run".
  */
-export type DispatchStatus = 'pending' | 'running' | 'consumed' | 'failed' | 'no-result';
+export type DispatchStatus =
+  | 'pending'
+  | 'running'
+  | 'consumed'
+  | 'failed'
+  | 'no-result'
+  | 'not-started';
 
 /** The states in which no further work is owed. `running` and `pending` are NOT terminal. */
-export const TERMINAL_DISPATCH_STATUSES: readonly DispatchStatus[] = ['consumed', 'failed', 'no-result'];
+export const TERMINAL_DISPATCH_STATUSES: readonly DispatchStatus[] = [
+  'consumed', 'failed', 'no-result', 'not-started',
+];
+
+/**
+ * Every status THIS BUILD understands — the allow-list, and the reason it is an allow-list.
+ *
+ * A DENY-LIST HERE IS FAIL-OPEN, AND THAT IS NOT THEORETICAL — it shipped in the first cut of
+ * this change and a review caught it. Selection was `!TERMINAL_DISPATCH_STATUSES.includes(status)`,
+ * so every value this build did not recognise fell through to "work to do": a `"timed-out"` written
+ * by a future consumer, a line with no `status` at all, `7`, `null`. Measured 2026-08-26 on that
+ * build, with a `claude` that logged its own argv: all four were LAUNCHED, and the record was then
+ * OVERWRITTEN with `consumed` — destroying what the previous status said and asserting success for
+ * a goal whose real outcome nobody knows. One input class reached both the re-dispatch bug this
+ * change fixes and the destructive-overwrite defect it exists to remove.
+ *
+ * `readDispatch()` type-checks `id`, `project`, `root`, `goal` and `enqueuedAt` and DOES NOT
+ * VALIDATE `status` — deliberately, so a queue stays forward-compatible with a newer writer. That
+ * forward-compatibility is precisely why the consumer must decide by what it KNOWS rather than by
+ * what it can rule out.
+ */
+export const KNOWN_DISPATCH_STATUSES: readonly DispatchStatus[] = [
+  'pending', 'running', 'consumed', 'failed', 'no-result', 'not-started',
+];
 
 /**
  * One entry in the dispatch queue.
@@ -439,6 +480,15 @@ export interface DispatchEntry {
   signal?: string;
   /** Operator-facing detail for a non-terminal-success state. Never the only record of it. */
   error?: string;
+  /**
+   * The pid of the consumer that wrote the `running` line.
+   *
+   * Present so a SECOND consumer can tell "the launcher died" from "the launcher is still going",
+   * instead of stamping `no-result` on a dispatch that is running fine. Absent on entries written
+   * before this field existed, and absence is treated as "no longer running" — the same reading
+   * those entries already got.
+   */
+  consumerPid?: number;
 }
 
 /**
@@ -523,14 +573,40 @@ export function resolveDispatchStates(entries: DispatchEntry[]): DispatchEntry[]
   return [...latest.values()];
 }
 
+/** What a consumer may do with each dispatch, decided by ALLOW-LIST. */
+export interface DispatchWork {
+  /** `pending` — never launched. The ONLY class a consumer may launch. */
+  launchable: DispatchEntry[];
+  /** `running` — launched by a run that has not reported back. Owed a verdict, never a relaunch. */
+  reconcilable: DispatchEntry[];
+  /** Terminal. Nothing is owed. */
+  settled: DispatchEntry[];
+  /**
+   * A status THIS BUILD DOES NOT KNOW. Not launched, not reconciled, NOT OVERWRITTEN — reported,
+   * and left exactly as found.
+   */
+  unrecognised: DispatchEntry[];
+}
+
 /**
- * Dispatches with work still owed: never launched, or launched by a run that never came back.
+ * Sort dispatches into what may be done with them, by naming what is allowed.
  *
- * A `running` entry reaching this function is NOT owed a launch — it is owed a verdict, and the
- * caller records `no-result` for it rather than starting it again. Returning it here and letting
- * the caller decide is what keeps "we do not know what happened" from being silently retried
- * into "it succeeded".
+ * THE PREDICATE IS AN ALLOW-LIST AND THE DIRECTION IS THE WHOLE POINT. This replaced
+ * `unfinishedDispatches()`, which asked `!TERMINAL.includes(status)` — a deny-list, so an
+ * unrecognised status meant "launch it". See KNOWN_DISPATCH_STATUSES for the measured table.
+ *
+ * AN UNRECOGNISED ENTRY IS LEFT ALONE, WHICH IS THE CONSERVATIVE CHOICE IN BOTH DIRECTIONS. It is
+ * not launched, because this build cannot know whether the goal already ran. It is not rewritten,
+ * because whatever wrote that status knew something this build does not, and overwriting it would
+ * destroy the only record of it. Reporting is the only safe action, so it is the only one taken.
  */
-export function unfinishedDispatches(entries: DispatchEntry[]): DispatchEntry[] {
-  return resolveDispatchStates(entries).filter((e) => !TERMINAL_DISPATCH_STATUSES.includes(e.status));
+export function classifyDispatches(entries: DispatchEntry[]): DispatchWork {
+  const work: DispatchWork = { launchable: [], reconcilable: [], settled: [], unrecognised: [] };
+  for (const e of resolveDispatchStates(entries)) {
+    if (!KNOWN_DISPATCH_STATUSES.includes(e.status)) work.unrecognised.push(e);
+    else if (e.status === 'pending') work.launchable.push(e);
+    else if (e.status === 'running') work.reconcilable.push(e);
+    else work.settled.push(e);
+  }
+  return work;
 }
