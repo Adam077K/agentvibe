@@ -16,6 +16,10 @@
 //   bun mission-control/scripts/consume-dispatch.ts              # process all pending
 //   bun mission-control/scripts/consume-dispatch.ts --dry-run    # print without acting
 //   bun mission-control/scripts/consume-dispatch.ts --list       # list the queue and exit
+//   bun mission-control/scripts/consume-dispatch.ts --force-reconcile
+//                                                    # settle every `running` entry without
+//                                                    # consulting its pid — for an entry whose
+//                                                    # launcher pid has been reused
 //
 // REDUCED SCOPE — stated, not hidden. Phase 8b's original gate requires claims to land in
 // a second project's ledger. No sibling project has a ledger (measured 2026-08-12); that
@@ -51,6 +55,14 @@ const AGENTVIBE_PROJECT_ID = path.basename(REPO_ROOT);
 const args = new Set(process.argv.slice(2));
 const DRY_RUN = args.has('--dry-run');
 const LIST_ONLY = args.has('--list');
+/**
+ * Reconcile every `running` entry without consulting its pid.
+ *
+ * THE IN-TOOL REMEDY, AND THE REASON ONE IS NEEDED. A `running` entry whose recorded pid has been
+ * reused by an unrelated process reads as in-flight forever; before this flag the only way out was
+ * hand-editing the queue file, which is not a remedy, it is a workaround for a missing one.
+ */
+const FORCE_RECONCILE = args.has('--force-reconcile');
 
 // ── Recording an outcome ─────────────────────────────────────────────────────────────────
 
@@ -63,6 +75,43 @@ type TerminalUpdate = {
 };
 
 /**
+ * How long a `running` entry may sit before it is reconciled regardless of what its pid says.
+ *
+ * LIVENESS ALONE CANNOT BOUND PID REUSE, AND ONLY AGE CAN. macOS wraps pids at 99999, so a
+ * consumer that died days ago has a pid that is probably owned by something else by now — and
+ * `isAlive()` will say `true` about that stranger forever. Without a clock, such an entry is
+ * wedged permanently with no in-tool remedy but hand-editing the queue.
+ *
+ * SIX HOURS IS DELIBERATELY GENEROUS. The opposite error is the one this file already made once:
+ * declaring `no-result` on a dispatch that was still running, which is the C3 defect. A dispatch
+ * is a Claude Code session and may legitimately run for a long time, so the threshold is set well
+ * past any plausible session rather than tuned tight. `--force-reconcile` exists for the operator
+ * who knows better and does not want to wait.
+ */
+const RUNNING_MAX_AGE_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Is this a value the OS will treat as a single process, rather than as a broadcast?
+ *
+ * `0` AND `-1` ARE NOT PIDS. POSIX gives them to `kill()` as targets meaning "my process group"
+ * and "every process I may signal" — neither ever raises ESRCH, so `kill(0, 0)` and `kill(-1, 0)`
+ * both return cleanly and a liveness check built on them answers `true` forever. Measured:
+ *
+ *     isAlive(1)          true    EPERM — launchd, a real process we may not signal
+ *     isAlive(0)          true    NO THROW — the caller's own process group
+ *     isAlive(-1)         true    NO THROW — the POSIX broadcast target
+ *     isAlive(2147483646) false   ESRCH (control)
+ *
+ * A single appended line `{"id": <existing>, "status": "running", "consumerPid": 0}` therefore
+ * made a goal permanently unrunnable while the UI showed the most innocuous state it has. That is
+ * a denial primitive neither the base nor the first cut of this change had, introduced by the fix
+ * for a different defect — so the validity check comes BEFORE `process.kill`, never inside it.
+ */
+function isPlausiblePid(pid: unknown): pid is number {
+  return typeof pid === 'number' && Number.isInteger(pid) && pid > 0;
+}
+
+/**
  * Is a process still running? `kill(pid, 0)` signals nothing and only tests reachability.
  *
  * THE ANSWER IS A LOWER BOUND ON IGNORANCE, NOT A PROOF OF LIVENESS. `true` means a process with
@@ -71,6 +120,9 @@ type TerminalUpdate = {
  * we may not touch is still a process, and treating "permission denied" as "gone" would relaunch
  * a goal that is running. Both errors are handled explicitly so neither is inferred from the
  * other, and the conservative direction is the one that never double-launches.
+ *
+ * CALLERS MUST GATE ON isPlausiblePid() FIRST. This function does not validate its argument,
+ * because `process.kill` accepts values that are not processes at all; see that function.
  */
 function isAlive(pid: number): boolean {
   try {
@@ -79,6 +131,40 @@ function isAlive(pid: number): boolean {
   } catch (err) {
     return (err as NodeJS.ErrnoException).code === 'EPERM';
   }
+}
+
+/**
+ * Should a `running` entry be left alone, and if not, why not — one decision, two call sites.
+ *
+ * The real run and `--dry-run` both ask this, and they answered it separately until a review
+ * pointed out the dry run was describing a launch the real run refuses. One function now, so they
+ * cannot drift again.
+ */
+function inFlight(entry: DispatchEntry): { held: true; pid: number } | { held: false; why: string } {
+  const owner = entry.consumerPid;
+  if (FORCE_RECONCILE) {
+    return { held: false, why: '--force-reconcile was given, so liveness was not consulted' };
+  }
+  const age = typeof entry.startedAt === 'number' ? Date.now() - entry.startedAt : null;
+  if (age !== null && age > RUNNING_MAX_AGE_MS) {
+    return {
+      held: false,
+      why: `it has been \`running\` for ${Math.round(age / 3_600_000)}h, past the ${RUNNING_MAX_AGE_MS / 3_600_000}h bound — ` +
+        'a pid that old may have been reused, so liveness is no longer evidence',
+    };
+  }
+  if (owner !== undefined && !isPlausiblePid(owner)) {
+    return { held: false, why: `consumerPid ${JSON.stringify(owner)} is not a pid (0 and negatives are broadcast targets, not processes)` };
+  }
+  if (isPlausiblePid(owner) && owner !== process.pid && isAlive(owner)) {
+    return { held: true, pid: owner };
+  }
+  return {
+    held: false,
+    why: owner === undefined
+      ? 'no launching pid was recorded'
+      : `the launching consumer (pid ${owner}) is gone and recorded no outcome`,
+  };
 }
 
 /**
@@ -190,11 +276,11 @@ function main() {
       // "would run" for a `running` entry that the real run refuses to launch — in a change whose
       // whole subject is reporting what happened. The branch order below mirrors the real path.
       if (entry.status === 'running') {
-        const owner = entry.consumerPid;
+        const flight = inFlight(entry);
         console.log(
-          typeof owner === 'number' && owner !== process.pid && isAlive(owner)
-            ? `  [dry-run] would LEAVE ALONE: pid ${owner} is still running this`
-            : `  [dry-run] would record no-result: launched by an earlier run that never reported back`
+          flight.held
+            ? `  [dry-run] would LEAVE ALONE: pid ${flight.pid} is still running this`
+            : `  [dry-run] would record no-result: ${flight.why}`
         );
       } else {
         console.log(`  [dry-run] would run: claude --print in ${entry.root}`);
@@ -246,16 +332,13 @@ function main() {
       // asserts something false — and an operator who reads "no result" and re-enqueues gets two
       // live agents on one goal. That is the defect this file exists to remove, arriving through
       // the fix for it.
-      const owner = entry.consumerPid;
-      if (typeof owner === 'number' && owner !== process.pid && isAlive(owner)) {
-        console.log(`  IN FLIGHT — pid ${owner} is still running this. Leaving it alone.`);
+      const flight = inFlight(entry);
+      if (flight.held) {
+        console.log(`  IN FLIGHT — pid ${flight.pid} is still running this. Leaving it alone.`);
         continue;
       }
-      const why = typeof owner === 'number'
-        ? `the launching consumer (pid ${owner}) is gone and recorded no outcome`
-        : 'found still `running` by a later consumer run, with no launching pid recorded';
-      console.warn(`  NO RESULT — ${why}. Not relaunching.`);
-      writeTerminal(entry, { status: 'no-result', error: why });
+      console.warn(`  NO RESULT — ${flight.why}. Not relaunching.`);
+      writeTerminal(entry, { status: 'no-result', error: flight.why });
       continue;
     }
 
@@ -294,12 +377,20 @@ function main() {
         outcome = { status: 'failed', exitCode: e.status, error: message };
       } else if (e.signal) {
         outcome = { status: 'no-result', signal: e.signal, error: message };
-      } else if (e.code === 'ENOENT' || e.code === 'EACCES' || e.code === 'EPERM') {
+      } else if (typeof e.code === 'string') {
         // THE LAUNCH NEVER STARTED, which is not the same fact as "it started and told us
-        // nothing". No `claude` on PATH, or one that cannot be executed: the spawn failed before
-        // any agent ran. Mapping this to `no-result` made a systematic PATH misconfiguration read
-        // in the UI as "the agents keep dying mid-run" — a wrong diagnosis pointing at the wrong
-        // system. Re-enqueueing after fixing PATH is safe precisely because nothing ran.
+        // nothing". A spawn-family `code` is present only when the spawn ITSELF failed — a
+        // non-zero exit is `status` and a kill is `signal`, both handled above — so reaching here
+        // means no agent ran. Re-enqueueing after fixing the cause is safe precisely because of
+        // that.
+        //
+        // THIS IS A COMPLEMENT, AND IT USED TO BE AN ENUMERATION: `ENOENT || EACCES || EPERM`,
+        // which left `ENOEXEC` (a file that is executable but not a program) and `E2BIG` (an
+        // over-long argument list) reported as `no-result` — "it started and vanished" — when
+        // nothing had started. E2BIG is reachable without an attacker: the HTTP route caps a goal
+        // at 2000 characters and a direct queue writer is not capped. The same commit replaced an
+        // enumeration with a complement in dispatchHeadline and left this one in place; enumerating
+        // the failures you happen to have seen is the habit, and the complement is the cure.
         outcome = { status: 'not-started', error: `${e.code}: ${message}` };
       } else {
         // Unmodelled: the spawn family reported neither an exit code, nor a signal, nor a spawn

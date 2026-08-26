@@ -76,7 +76,7 @@ export function DispatchTable({ entries, now }: { entries: DispatchEntry[]; now:
  * muted tone is what a reader's eye skips. `no-result` says "no result" rather than guessing —
  * it is the most likely outcome of a real dispatch, not an exotic one.
  */
-function StatusCell({ entry }: { entry: DispatchEntry }) {
+export function StatusCell({ entry }: { entry: DispatchEntry }) {
   switch (entry.status) {
     case 'pending':
       return <span className="fig text-warn">pending</span>;

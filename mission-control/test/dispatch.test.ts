@@ -496,7 +496,8 @@ describe('consume-dispatch records a distinguishable outcome', () => {
     // for the wrong reason — so the launch-count assertion below is what carries it.
     const f = dispatchFixture('mc-dispatch-crashed-', CLAUDE_OK, [
       { status: 'pending' },
-      { status: 'running', startedAt: 1_500 },
+      // No consumerPid at all — the pre-N1 shape, and recent so age is not the cause either.
+      { status: 'running', startedAt: Date.now() },
     ]);
     const last = runConsumer(f);
     expect(last.status).toBe('no-result');
@@ -681,7 +682,10 @@ describe('a `running` entry whose launcher is ALIVE is left alone', () => {
     const f = dispatchFixture('mc-dispatch-inflight-', CLAUDE_OK, [
       { status: 'pending' },
       // process.pid of the TEST is alive by construction — the strongest available liveness case.
-      { status: 'running', startedAt: 1_500, consumerPid: process.pid },
+      // `startedAt` MUST BE RECENT: it was `1_500` (i.e. 1970) and the age bound added for N1
+      // correctly settled it, turning this test red. The fixture was asserting liveness while
+      // supplying an entry 56 years old — a detail that meant nothing until age became evidence.
+      { status: 'running', startedAt: Date.now(), consumerPid: process.pid },
     ]);
     const out = execFileSync('bun', [CONSUMER], {
       env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
@@ -692,11 +696,101 @@ describe('a `running` entry whose launcher is ALIVE is left alone', () => {
     expect(readDispatch(f.queue).map((e) => e.status)).toEqual(['pending', 'running']);
   });
 
+  // ── `0` AND `-1` ARE NOT PIDS, AND ADMITTING THEM WAS A DENIAL PRIMITIVE ──────────────────
+  //
+  // POSIX gives kill() `0` for "my process group" and `-1` for "every process I may signal".
+  // Neither ever raises ESRCH, so a liveness check that passes them to process.kill answers `true`
+  // forever. Measured on the build these tests were added to: three consecutive runs each left the
+  // entry `running`, never launched and never terminal, while the control resolved on run one. One
+  // appended line `{"id": <existing>, "status": "running", "consumerPid": 0}` made a goal
+  // permanently unrunnable while the UI showed the most innocuous state it has — and the only
+  // remedy was hand-editing the queue.
+  for (const [what, pid] of [['0, the caller\'s process group', 0], ['-1, the POSIX broadcast target', -1]] as [string, number][]) {
+    test(`consumerPid ${what} is rejected as a pid, and the dispatch is settled`, () => {
+      const f = dispatchFixture(`mc-dispatch-pid${pid}-`, CLAUDE_OK, [
+        { status: 'pending' },
+        { status: 'running', startedAt: Date.now(), consumerPid: pid },
+      ]);
+      execFileSync('bun', [CONSUMER], {
+        env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
+        encoding: 'utf8', stdio: 'pipe',
+      });
+      const entries = readDispatch(f.queue);
+      expect(entries[entries.length - 1]?.status).toBe('no-result');
+      // Not relaunched either: the entry is SETTLED, not retried.
+      expect(entries.map((e) => e.status)).toEqual(['pending', 'running', 'no-result']);
+    });
+  }
+
+  test('an ALIVE pid past the age bound is reconciled — liveness cannot bound pid reuse', () => {
+    // pid 1 is launchd: always alive, and reached through the EPERM branch, so this is the
+    // strongest available "alive" case. `startedAt` is 7h old against a 6h bound.
+    const f = dispatchFixture('mc-dispatch-oldalive-', CLAUDE_OK, [
+      { status: 'pending' },
+      { status: 'running', startedAt: Date.now() - 7 * 60 * 60 * 1000, consumerPid: 1 },
+    ]);
+    execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    const entries = readDispatch(f.queue);
+    expect(entries[entries.length - 1]?.status).toBe('no-result');
+    expect(entries[entries.length - 1]?.error).toContain('bound');
+  });
+
+  test('CONTROL: the SAME alive pid INSIDE the age bound is still held', () => {
+    // One field different from the test above. Without this, the age test could pass because pid 1
+    // was never held at all, and the C3 property — do not settle a dispatch that is running — would
+    // be silently gone.
+    const f = dispatchFixture('mc-dispatch-freshalive-', CLAUDE_OK, [
+      { status: 'pending' },
+      { status: 'running', startedAt: Date.now(), consumerPid: 1 },
+    ]);
+    const out = execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    expect(out).toContain('IN FLIGHT');
+    expect(readDispatch(f.queue).map((e) => e.status)).toEqual(['pending', 'running']);
+  });
+
+  test('--force-reconcile settles a held entry — the in-tool remedy for a reused pid', () => {
+    const f = dispatchFixture('mc-dispatch-force-', CLAUDE_OK, [
+      { status: 'pending' },
+      { status: 'running', startedAt: Date.now(), consumerPid: 1 },
+    ]);
+    execFileSync('bun', [CONSUMER, '--force-reconcile'], {
+      env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    const entries = readDispatch(f.queue);
+    expect(entries[entries.length - 1]?.status).toBe('no-result');
+    expect(entries[entries.length - 1]?.error).toContain('--force-reconcile');
+  });
+
+  test('--dry-run says what the real run would do for a HELD entry', () => {
+    // A dry run that misstates the real run is worse than no dry run. Both paths now ask the same
+    // inFlight() function, so this pins that they cannot drift apart again.
+    const f = dispatchFixture('mc-dispatch-dryheld-', CLAUDE_OK, [
+      { status: 'pending' },
+      { status: 'running', startedAt: Date.now(), consumerPid: 1 },
+    ]);
+    const out = execFileSync('bun', [CONSUMER, '--dry-run'], {
+      env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    expect(out).toContain('would LEAVE ALONE');
+    expect(out).not.toContain('would run: claude');
+    // A dry run writes nothing.
+    expect(readDispatch(f.queue).map((e) => e.status)).toEqual(['pending', 'running']);
+  });
+
   test('CONTROL: an unreachable pid IS declared no-result', () => {
     // Same harness, same shape, one field different — so the test above cannot pass by accident.
     const f = dispatchFixture('mc-dispatch-deadpid-', CLAUDE_OK, [
       { status: 'pending' },
-      { status: 'running', startedAt: 1_500, consumerPid: 2_147_483_646 },
+      // Recent, so this settles because the PID IS UNREACHABLE and not because of the age bound.
+      { status: 'running', startedAt: Date.now(), consumerPid: 2_147_483_646 },
     ]);
     execFileSync('bun', [CONSUMER], {
       env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },

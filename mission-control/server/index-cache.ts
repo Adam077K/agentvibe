@@ -417,10 +417,31 @@ export type DispatchStatus =
   | 'no-result'
   | 'not-started';
 
-/** The states in which no further work is owed. `running` and `pending` are NOT terminal. */
-export const TERMINAL_DISPATCH_STATUSES: readonly DispatchStatus[] = [
-  'consumed', 'failed', 'no-result', 'not-started',
-];
+/**
+ * What a consumer may do with each status — ONE table, from which every other list is derived.
+ *
+ * THREE HAND-MAINTAINED LISTS WERE TWO TOO MANY. This replaced a `TERMINAL_DISPATCH_STATUSES`
+ * array, a `KNOWN_DISPATCH_STATUSES` array and a chain of `if`s in classifyDispatches() — three
+ * places that had to agree, typed as `readonly DispatchStatus[]`, which type-checks a SUBSET and
+ * so stayed green if a member was dropped from any of them.
+ *
+ * `satisfies Record<DispatchStatus, …>` makes that impossible: add a member to DispatchStatus
+ * without giving it a kind here and this file does not compile. The exhaustiveness is the point,
+ * not the tidiness.
+ *
+ * AND THE DELETED NAME WAS ITSELF A HAZARD. `TERMINAL_DISPATCH_STATUSES` was dead in production
+ * — its only non-comment line was its own declaration — while its name invited exactly the
+ * `!TERMINAL.includes(x)` deny-list that was this change's p1. A name that suggests the wrong
+ * predicate is worse than no name, and an exported one nobody uses is a trap with a docstring.
+ */
+const DISPATCH_STATUS_KIND = {
+  pending: 'launchable',
+  running: 'reconcilable',
+  consumed: 'settled',
+  failed: 'settled',
+  'no-result': 'settled',
+  'not-started': 'settled',
+} satisfies Record<DispatchStatus, 'launchable' | 'reconcilable' | 'settled'>;
 
 /**
  * Every status THIS BUILD understands — the allow-list, and the reason it is an allow-list.
@@ -431,18 +452,14 @@ export const TERMINAL_DISPATCH_STATUSES: readonly DispatchStatus[] = [
  * by a future consumer, a line with no `status` at all, `7`, `null`. Measured 2026-08-26 on that
  * build, with a `claude` that logged its own argv: all four were LAUNCHED, and the record was then
  * OVERWRITTEN with `consumed` — destroying what the previous status said and asserting success for
- * a goal whose real outcome nobody knows. One input class reached both the re-dispatch bug this
- * change fixes and the destructive-overwrite defect it exists to remove.
+ * a goal whose real outcome nobody knows.
  *
  * `readDispatch()` type-checks `id`, `project`, `root`, `goal` and `enqueuedAt` and DOES NOT
  * VALIDATE `status` — deliberately, so a queue stays forward-compatible with a newer writer. That
  * forward-compatibility is precisely why the consumer must decide by what it KNOWS rather than by
  * what it can rule out.
  */
-export const KNOWN_DISPATCH_STATUSES: readonly DispatchStatus[] = [
-  'pending', 'running', 'consumed', 'failed', 'no-result', 'not-started',
-];
-
+export const KNOWN_DISPATCH_STATUSES = Object.keys(DISPATCH_STATUS_KIND) as readonly DispatchStatus[];
 /**
  * One entry in the dispatch queue.
  *
@@ -603,10 +620,16 @@ export interface DispatchWork {
 export function classifyDispatches(entries: DispatchEntry[]): DispatchWork {
   const work: DispatchWork = { launchable: [], reconcilable: [], settled: [], unrecognised: [] };
   for (const e of resolveDispatchStates(entries)) {
-    if (!KNOWN_DISPATCH_STATUSES.includes(e.status)) work.unrecognised.push(e);
-    else if (e.status === 'pending') work.launchable.push(e);
-    else if (e.status === 'running') work.reconcilable.push(e);
-    else work.settled.push(e);
+    // A LOOKUP, NOT A CHAIN ENDING IN `else`. The previous version fell through to `settled`,
+    // which is a second unnamed deny-list: a status added to the union and to the known list but
+    // given no branch would have been silently stranded as "nothing owed" — fail-closed, so safe,
+    // but silent, and it would have got none of the loud reporting `unrecognised` gets. Here an
+    // unmapped status is `undefined` and lands in `unrecognised`, where it is reported.
+    const kind = (DISPATCH_STATUS_KIND as Record<string, string | undefined>)[e.status as string];
+    if (kind === 'launchable') work.launchable.push(e);
+    else if (kind === 'reconcilable') work.reconcilable.push(e);
+    else if (kind === 'settled') work.settled.push(e);
+    else work.unrecognised.push(e);
   }
   return work;
 }
