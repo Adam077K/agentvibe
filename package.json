@@ -65,6 +65,7 @@
     "test:eviction": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/evict-memory.test.mjs",
     "memory:evict": "node scripts/evict-memory.mjs",
     "check:citations": "npm run test:citations && node scripts/check-citations.mjs",
+    "check:citations-exist": "node scripts/check-citations.mjs --no-anchors --strict --external-prefix adamos",
     "test:citations": "node --test scripts/check-citations.test.mjs",
     "build:manifest": "node scripts/build-skills-manifest.mjs",
     "test:playbooks": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/playbooks.test.mjs",

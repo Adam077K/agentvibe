@@ -80,6 +80,12 @@ const STEPS = [
   'check:manifest',
   'check:curation',
   'check:routers',
+  // The mutation gate first, then the checker it guards — the pairing this file's ordering note
+  // warns about. Both landed 2026-08-26 when the EXISTENCE class was promoted to blocking; the
+  // drift class is still WARN and `check:citations` is still an EXCLUDED alias, so this is one
+  // class of one checker becoming a step, not the whole file.
+  'test:citations',
+  'check:citations-exist',
   'check:registration',
   'test:registration',
   // check:dispatch, as its three links
@@ -220,15 +226,34 @@ const EXCLUDED = {
     'scripts/check-suite.test.mjs pins the links in ALIASES, auditSuite() fails an alias whose links ' +
     'are not all steps, and the ci.yml counterpart test fails a step with no step on a runner.*',
   'check:citations':
-    'POSTURE: WARN by design. scripts/check-citations.mjs says so in its own header — "deliberately ' +
-    'NOT wired into `npm run check` or into CI by the PR that introduced it: turning it blocking is a ' +
-    'separate, higher-tier decision, and it should be made after someone has looked at a full run." It ' +
-    'exits 0 with findings reported; only --strict exits 1, so wiring it in as-is would add runtime and ' +
-    'assert nothing. Run it by hand: npm run check:citations.',
-  'test:citations':
-    'The mutation gate for check:citations, reached only from it. Excluded because its only parent is ' +
-    'excluded — not because of anything about this test. If check:citations is ever promoted to blocking, ' +
-    'both entries come out together.',
+    'THE DRIFT HALF, AND IT IS STILL WARN. The EXISTENCE half was promoted on 2026-08-26 and is a STEP of ' +
+    'its own: check:citations-exist, which runs the same script as --no-anchors --strict. This spelling ' +
+    'runs BOTH classes and exits 0 with drift findings reported, so putting it in the suite would add ' +
+    '~1.4s and assert nothing the existence step does not already assert. WHY THE DRIFT CLASS IS NOT ' +
+    'PROMOTED, from the full run the deferral asked for (2 existence findings against 85 drift findings, ' +
+    '19 unchecked, over 851 locators): drift is heuristic, covers roughly a quarter of the corpus, and ' +
+    'rests on a resolution that is ~85% by BASENAME — which check-citations.mjs\'s own blind-spot list ' +
+    'says may be the WRONG FILE. Blocking on that teaches contributors to route around the checker. Run ' +
+    'it by hand: npm run check:citations. ' +
+    'WHERE THE COVERAGE WENT IS SAID AS "A STEP", AND THIS ENTRY DELIBERATELY DOES NOT NAME THE WORKFLOW ' +
+    'FILE. The guard over these reasons — grep scripts/check-suite.test.mjs for "exclusion that says CI ' +
+    'still covers it" — tests the reason as PROSE: an entry whose text names that file must itself be RUN ' +
+    'by it. It cannot tell "the workflow runs me" from "the workflow runs my replacement", so an entry ' +
+    'claiming the second fails as though it claimed the first. Rather than loosen a guard to fit one ' +
+    'entry, this one claims something narrower and fully enforced: reachable() fails if ' +
+    'check:citations-exist leaves the suite, and the case named `every STEP of the suite has a ' +
+    'counterpart step` fails if a step has none on a runner. Two enforced claims in place of one ' +
+    'unenforceable one. The over-breadth of that guard is a real limitation and is recorded here rather ' +
+    'than worked around in silence. ' +
+    'FALSIFY THIS: raise exact-path resolution above a basename majority, then re-run with --strict and ' +
+    'anchors ON, and see whether the drift findings that remain are ones a build should stop for.',
+  // `test:citations` WAS A KEY HERE and is deliberately not one now. It read: "The mutation gate
+  // for check:citations, reached only from it. Excluded because its only parent is excluded — not
+  // because of anything about this test. If check:citations is ever promoted to blocking, both
+  // entries come out together." Half of check:citations was promoted on 2026-08-26, so the entry
+  // came out and the test is a STEP. It cannot stay as a key while also being a step: auditSuite()
+  // fails an EXCLUDED entry the suite does reach, which is what makes that promise mechanical
+  // rather than a note. `check:citations-exist` is the promoted half and is a step beside it.
 };
 
 /**
