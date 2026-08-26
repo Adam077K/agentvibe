@@ -82,12 +82,30 @@ requiring `steps:` to be bare again, and restoring `break` at the first dedent. 
   `docs/STATUS.md`, which another lane owns. Patching its eight figure sites temporarily and reverting
   byte-exactly: **48 of 48 passed · 0 failed · exit 0 · 180.2s**. Those eight sites are the only thing
   between this branch and a green suite.
-- `check:citations-exist` non-vacuity: a `check-suite.js:99999` locator → **exit 1**, naming
-  `line-beyond-eof`; `check-suite.js:1` → **exit 0**; restored → **exit 0**.
+- `check:citations-exist` non-vacuity: a locator naming line 99999 of `scripts/lib/check-suite.js`
+  → **exit 1**, reporting `line-beyond-eof`; the same locator naming line 1 → **exit 0**; probe
+  removed → **exit 0**. *Neither probe is written here as a `path:line` code span, because the
+  checker would harvest it out of this file and report the dead one. It did: the first draft of
+  this line spelled both, and CI reported the 99999 one against this very file. It passed LOCALLY
+  because the file was still untracked and resolution runs off `git ls-files` — the local-only gap
+  this checker names in its own blind-spot list, biting one commit later.*
 - The real `ci.yml` is unchanged by the parser rewrite and still agrees with PyYAML exactly: 52 steps,
   49 `run:` values, 0 refusals, 0 chain findings, 0 unguarded.
 
-## Residual
+## Residual — and `main` moved under this branch
 
-`docs/STATUS.md` needs `suiteSteps` 46 → 48 (four sites), `ciRunSteps`/`ciGuardedSteps` 47 → 49 (three
-sites) and `ciRunStepsPlusOne` 48 → 50 (one site). Reported to the lead, not edited here.
+`main` went 244e8db → 47dbbd6 while this ran (#108, the STATUS.md/CLAUDE.md lane). The merge is CLEAN
+— that lane touched no file this one touches — but the figure debt grew, because CI tests the merge.
+Measured on a scratch `git merge --no-commit` that was then aborted: **16 sites**, none of them in a
+file this lane owns and none edited here.
+
+| file | figure | states | must state | sites |
+|---|---|---|---|---|
+| `docs/STATUS.md` | `suiteSteps` | 46 | **48** | :97 · :335 · :358 · :360 |
+| `docs/STATUS.md` | `ciRunSteps` / `ciGuardedSteps` | 47 | **49** | :207 · :215 · :262 |
+| `docs/STATUS.md` | `ciRunStepsPlusOne` | 48 | **50** | :263 |
+| `CLAUDE.md` | `suiteSteps` | 46 | **48** | :481 · :486 · :620 |
+
+Two prose bullets in the new `CLAUDE.md` also go false when this lands, and are for the lead, not for
+this lane: *"Four bypasses are live on `main` … `parseCiSteps` does not see the step at all"* (seven,
+and that is not the mechanism), and *"`check-citations.mjs` is STILL UNWIRED"*.
