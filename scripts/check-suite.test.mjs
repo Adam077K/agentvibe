@@ -682,13 +682,16 @@ function parseCiSteps(workflow) {
 
   const indentOf = (line) => /^ */.exec(line)[0].length;
 
-  const record = (step, text) => {
+  const record = (step, text, keyIndent) => {
     const m = /^([\w-]+):\s*(.*)$/.exec(text);
     if (!m) return;
     const [, key, rawValue] = m;
     if (!(key in step)) return; // `with:`, `env:` and friends are not what this asserts on
     if (/^[|>][-+\d]*$/.test(rawValue)) {
-      block = { key, indent: null, parts: [] };
+      // `keyIndent` is the column of the KEY, and the block ends at the first non-blank line that
+      // is not indented past it. Anchoring to the first CONTENT line instead was a defect: see the
+      // loop below.
+      block = { key, keyIndent, indent: null, parts: [] };
       step[key] = '';
       return;
     }
@@ -699,14 +702,26 @@ function parseCiSteps(workflow) {
     const line = lines[i];
 
     if (block) {
+      // A BLANK LINE IS CONTENT AND MUST NEVER SET THE BASELINE. It did, and that was the defect:
+      // a `run: |` beginning with a blank line took its indent from the NEXT non-blank line, which
+      // for a block that has no content at all is the `- name:` of the FOLLOWING step. Reproduced
+      // 2026-08-26 on `run: |` / blank / `- name: After`: the parser returned TWO steps where three
+      // exist, and After's `name`, `if` and `run` were swallowed into the block's `run` value. Every
+      // check here that iterates steps then passes it in silence — including the `!cancelled()`
+      // guard, so a genuinely unguarded step becomes undetectable. Dormant only because ci.yml has
+      // no block scalar today, which is a property of the input and not of this parser.
       if (!line.trim()) { block.parts.push(''); continue; }
       const indent = indentOf(line);
-      if (block.indent === null) block.indent = indent;
-      if (indent >= block.indent) {
-        block.parts.push(line.slice(block.indent));
-        current[block.key] = block.parts.join('\n').trim();
-        continue;
+      if (indent > block.keyIndent) {
+        if (block.indent === null) block.indent = indent;
+        if (indent >= block.indent) {
+          block.parts.push(line.slice(block.indent));
+          current[block.key] = block.parts.join('\n').trim();
+          continue;
+        }
       }
+      // Out of the block. NOT consumed — execution falls through to the step parsing below, so a
+      // `- name:` on this line opens the next step instead of vanishing into the previous one.
       block = null;
     }
 
@@ -725,11 +740,11 @@ function parseCiSteps(workflow) {
       itemIndent = indent;
       current = { line: i + 1, name: null, run: null, uses: null, if: null };
       steps.push(current);
-      record(current, line.slice(indent + 2));
+      record(current, line.slice(indent + 2), indent + 2);
       continue;
     }
 
-    if (current && indent === itemIndent + 2) record(current, line.trim());
+    if (current && indent === itemIndent + 2) record(current, line.trim(), indent);
   }
 
   return steps;
@@ -902,6 +917,92 @@ test('parseCiSteps reads a `run: |` block scalar — the shape a multi-command s
   // A ONE-command block scalar is not a chain, so the rule does not fire on the shape itself.
   const single = wf.replace('          npm run test:c\n', '');
   assert.deepEqual(ciChainFindings(single, {}), [], 'a single-command block scalar was reported as a chain');
+});
+
+test('a `run: |` that starts with a BLANK line does not swallow the step after it', () => {
+  // REPRODUCED 2026-08-26 before the fix: this exact workflow parsed as TWO steps, and After's
+  // `name`, `if` and `run` were inside Block's `run` value as text. The block took its indent from
+  // the first NON-BLANK line, and for a block with no content of its own that line is the next
+  // step's `- name:`. Every check that iterates steps then passes it in silence — including the
+  // `!cancelled()` guard, so an unguarded step becomes undetectable, which is the one thing this
+  // section exists to make impossible. Dormant only because ci.yml has no block scalar today; that
+  // is a property of the input, not of the parser.
+  const leadingBlank = [
+    'name: t', 'jobs:', '  one:', '    steps:',
+    '      - name: Block',
+    '        if: ${{ !cancelled() }}',
+    '        run: |',
+    '',
+    '      - name: After',
+    '        if: ${{ !cancelled() }}',
+    '        run: npm run test:d',
+    '',
+  ].join('\n');
+
+  const steps = parseCiSteps(leadingBlank);
+  assert.equal(steps.length, 2, 'the step after a leading-blank block scalar was swallowed');
+  assert.equal(steps[1].name, 'After', 'the following step lost its name');
+  assert.equal(steps[1].if, CI_GUARD, 'the following step lost its `if:` guard');
+  assert.equal(steps[1].run, 'npm run test:d', 'the following step lost its `run:`');
+  assert.ok(!String(steps[0].run).includes('After'), `the block absorbed the next step: ${JSON.stringify(steps[0].run)}`);
+
+  // THE MIRROR IMAGE, and it is the half that makes the above load-bearing rather than cosmetic: a
+  // step that is GENUINELY missing the guard must still be reported when it follows such a block.
+  // Without it, "two steps parsed" could be satisfied by a parser that recovers the step and drops
+  // its keys, which reads identically in the count and is silent in exactly the same way.
+  const unguarded = (workflow) =>
+    parseCiSteps(workflow).filter((s) => s.run !== null && s.if !== CI_GUARD).map((s) => s.line);
+
+  assert.deepEqual(unguarded(leadingBlank), [], 'a guarded workflow was reported as unguarded');
+
+  const missingGuard = leadingBlank.replace('        if: ${{ !cancelled() }}\n        run: npm run test:d', '        run: npm run test:d');
+  assert.notEqual(missingGuard, leadingBlank, 'the guard-removal mutation matched nothing, so its proof is vacuous');
+  // Derived, not a literal: removing a line shifts every number below it, and a pinned integer here
+  // would fail on the next edit to the fixture for a reason that has nothing to do with the rule.
+  const afterLine = parseCiSteps(missingGuard).find((step) => step.name === 'After').line;
+  assert.deepEqual(unguarded(missingGuard), [afterLine], 'a step with no `!cancelled()` guard, sitting after a leading-blank block, was not reported');
+
+  // A block whose content is separated from the key by a blank line is still read, and the blank
+  // survives inside the body — blank lines are content, they simply may not set the baseline.
+  const blankThenContent = leadingBlank.replace('        run: |\n\n', '        run: |\n\n          npm run test:b\n');
+  const withContent = parseCiSteps(blankThenContent);
+  assert.equal(withContent.length, 2, 'a blank line before real block content broke the parse');
+  assert.equal(withContent[0].run, 'npm run test:b', 'the block content after a leading blank was lost');
+});
+
+test('`run: >` is accepted by the parser and joined literally — an over-report, on purpose', () => {
+  // parseCiSteps accepts a FOLDED scalar (`>`) and implements LITERAL (`|`) join semantics: it
+  // joins with newlines where YAML folding joins with spaces. Nothing in ci.yml uses one, and this
+  // branch had no coverage at all, so neither the acceptance nor the mismatch was visible.
+  //
+  // NOT "FIXED" BY IMPLEMENTING FOLDING, deliberately. Real folding is a second YAML feature to
+  // write (blank lines fold to newlines, more-indented lines stay literal) and it would make this
+  // check report LESS. Joining literally means a two-line folded body is reported as a `\n` chain
+  // when the shell would have seen one line — an over-report, which costs one `run:` rewritten,
+  // against a class of miss that costs the control. Pinned so the behaviour is a decision.
+  const folded = [
+    'name: t', 'jobs:', '  one:', '    steps:',
+    '      - name: Folded',
+    '        if: ${{ !cancelled() }}',
+    '        run: >',
+    '          npm run test:b',
+    '          npm run test:c',
+    '',
+  ].join('\n');
+
+  const steps = parseCiSteps(folded);
+  assert.equal(steps.length, 1, 'a folded scalar step was lost');
+  assert.equal(steps[0].run, 'npm run test:b\nnpm run test:c', 'the folded body is joined literally — see above');
+  assert.equal(steps[0].if, CI_GUARD, 'the `if:` above a folded scalar was lost');
+
+  const found = ciChainFindings(folded, {});
+  assert.equal(found.length, 1, `a two-line folded scalar was not reported:\n${found.join('\n')}`);
+  assert.ok(found[0].includes('`\\n`'), found[0]);
+
+  // A one-line folded scalar is one command, and is not a finding — so the rule is about the
+  // number of commands, not about the `>` character.
+  const one = folded.replace('          npm run test:c\n', '');
+  assert.deepEqual(ciChainFindings(one, {}), [], 'a single-command folded scalar was reported as a chain');
 });
 
 test('every STEP of the suite has a counterpart step in ci.yml', () => {
