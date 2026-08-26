@@ -61,23 +61,31 @@
 //
 //  6. YAML INJECTION — an `assert` carrying a newline and a forged second claim, or a
 //     `#` that turns the rest of a line into a comment, or a quote that closes early.
-//     STOPPED TWICE. Control characters are refused outright rather than escaped (so the
-//     emitter's escape surface is two characters, not nine), and then the ENTIRE new file
-//     is re-parsed with `parseClaimsFromText` and compared field-by-field against what was
-//     submitted plus everything that was already there. If the round trip does not
-//     reproduce exactly N+1 claims with exactly the submitted values, nothing is written.
-//     An emitter that is merely careful is an emitter nobody proved; this one is proved on
-//     every single call, against the parser that will read it.
+//     STOPPED BY `checkText`, which refuses control characters outright rather than
+//     escaping them — so the emitter's escape surface is two characters, not nine.
+//     The round trip below is a SECOND line, and this is stated narrowly because the
+//     first version of this note was not: it said "STOPPED TWICE … proved on every single
+//     call", and a reviewer then deleted both `roundTrip` calls and watched the suite stay
+//     green. That is the correct reading — with `checkText` refusing control characters
+//     and `validateClaim` closing every unquoted field (`ID_RE`, `KINDS`, `SUPPORTS_RE`,
+//     numeric `confidence`), no submission reachable through `appendClaim` can currently
+//     defeat the emitter, so the round trip catches nothing TODAY. It is here for the edit
+//     that relaxes one of those validators, and `claim-append.test.mjs` exercises the
+//     predicate directly so the second line is tested rather than assumed.
 //
 //  7. ID COLLISION — appending `c-mcp-grant-binds-through-agent-dispatch` with a different
 //     assertion, shadowing a real claim rather than adding one.
 //     STOPPED. The id must be absent from every project claim in the tree.
 //
-//  8. LAUNDERING A CITATION THROUGH `supports:` — pointing at a deprecated claim, which
-//     `ledger lint` accepts today because `checkCitations` decides by set membership and
-//     never opens the record.
-//     STOPPED HERE, and also fixed at the source: `isDeprecated()` in claims.js is now the
-//     one predicate, used by this path and by `checkCitations`.
+//  8. LAUNDERING A CITATION THROUGH `supports:` — pointing at a deprecated claim.
+//     STOPPED HERE, AND ONLY HERE. `ledger lint` still accepts it: `checkCitations`
+//     decides by set membership, `projectIds.has(id)`, and never opens the record. That
+//     is NOT fixed by this work — the fix was implemented, run, and backed out, because
+//     three of its four live hits are correct prose naming a retired id in order to say
+//     it was retired. The reasoning is in `checkCitations`'s own preamble. `isDeprecated()`
+//     in claims.js therefore has exactly ONE caller today, which is this file.
+//     Refusing here is still right and is not the same question: a claim being minted
+//     right now cannot be superseding anything and has no history to record.
 //
 //  9. A CLAIM ARRIVING PRE-WAIVED — `disposition: {action: waive, …}` on a brand-new
 //     record, i.e. a claim switched off at birth.
@@ -110,6 +118,19 @@
 // B. CONFIDENCE. `confidence: 1` on a shaky finding is not mechanically detectable. It is
 //    in the diff.
 // C. VOLUME. Nothing here caps appends per branch. The diff does.
+// D. DNS REBINDING — a TOCTOU, and it is REAL, not theoretical. `assertPublicUrl` resolves
+//    the host with `dns.lookup`, and then `fetch` resolves it AGAIN, independently. An
+//    authoritative server that answers public once and private the second time is not
+//    caught by anything here. Closing it means pinning the resolved address into the
+//    connection — a custom `dispatcher`/`lookup` handed to `fetch` — which is a real
+//    change, not a line. It is recorded rather than half-done, and it is a strictly
+//    smaller hole than F1 was: this one needs an attacker to run authoritative DNS, where
+//    F1 needed a URL string.
+// E. UNICODE DIRECTION AND ZERO-WIDTH. `checkText` refuses < 0x20 and 0x7f, so U+202E
+//    (right-to-left override) and U+200D (zero-width joiner) pass. Rendered text can
+//    therefore differ from stored text inside the enforcement spine. Low severity — the
+//    resolver compares NORMALISED bytes, so a quote cannot be smuggled past `claim-source`
+//    this way; what it can do is mislead a human reading the diff.
 //
 // ── ORDER OF CHECKS IS PART OF THE DESIGN ───────────────────────────────────────────
 // Everything free and local runs BEFORE the network: shape, narrowing, collisions,
@@ -228,35 +249,134 @@ function emitSection(rec, meta) {
 
 // ── SSRF: classify where fetch will actually connect ────────────────────────────────
 // See adversary #10 for why this is not the guard in pre-tool-use.sh.
+// ── DECIDE ON THE VALUE, NEVER ON THE SPELLING ──────────────────────────────────────
+//
+// THIS FUNCTION WAS BYPASSABLE AND THE BYPASS WAS REACHED WITH NOTHING BUT A URL STRING.
+// It looked for a DOTTED IPv4 tail — `/(\d{1,3}\.){3}\d{1,3}$/` — to spot an IPv4 address
+// embedded in an IPv6 one. But its caller takes the host from `new URL(u).hostname`, and
+// the WHATWG serialiser has already compressed the dotted form to hex by then. Measured
+// here, no network needed:
+//
+//   http://[::ffff:169.254.169.254]/  → hostname `::ffff:a9fe:a9fe`   → PASSED as public
+//   http://[::ffff:127.0.0.1]/        → hostname `::ffff:7f00:1`      → PASSED as public
+//   http://[::127.0.0.1]/             → hostname `::7f00:1`           → PASSED as public
+//   http://[64:ff9b::127.0.0.1]/      → hostname `64:ff9b::7f00:1`    → PASSED as public
+//   http://[2002:7f00:1::]/           → hostname `2002:7f00:1::`      → PASSED as public
+//   http://127.0.0.1/                 → hostname `127.0.0.1`          → refused (control)
+//
+// A reviewer took the first of those end to end against a real server bound to loopback:
+// the append SUCCEEDED and the claim landed in the tracked file. Since `evidence.quote` is
+// a substring test against the fetched body and the caller can tell `APPENDED` from
+// `REFUSED[RESOLVER_FAIL]`, that was a content oracle over anything the runner can reach
+// on loopback, link-local or RFC1918 — including the metadata endpoint that is adversary
+// #10 in this file's own header.
+//
+// WHAT IS ACTUALLY INSTRUCTIVE ABOUT IT. `.claude/hooks/pre-tool-use.sh` carries a comment
+// saying its first browser guard "was bypassable five ways and an independent reviewer
+// found all of them… It pattern-matched ONE SPELLING of each address." This reproduced
+// that exact class one layer down — and the header's argument for `new URL()`, *"the very
+// parser fetch uses"*, is precisely what strips the spelling the old check depended on.
+// The right instinct produced the bypass.
+//
+// So: parse to the 128-bit (or 32-bit) VALUE, then classify ranges of that value. Every
+// spelling of one address now collapses to one byte array before any decision is taken,
+// which is what makes this a closed rule rather than a list of forms somebody remembered.
+// The four IPv4-embedding prefixes below are the standardised ones (`::ffff:0:0/96`,
+// `::/96`, `64:ff9b::/96`, `2002::/16`); each is a range of the value, not a text pattern,
+// and each hands the embedded 32 bits to the IPv4 classifier rather than judging it twice.
+
+function v4ToBytes(s) {
+  const parts = String(s).split('.');
+  if (parts.length !== 4) return null;
+  const out = [];
+  for (const p of parts) {
+    if (!/^\d{1,3}$/.test(p)) return null;
+    const n = Number(p);
+    if (n > 255) return null;
+    out.push(n);
+  }
+  return out;
+}
+
+function v6ToBytes(str) {
+  let s = String(str).split('%')[0].toLowerCase();   // drop any zone id
+  // A trailing dotted quad occupies the last two groups. Park a placeholder so the group
+  // arithmetic below stays uniform, then splice the real octets in at the end.
+  let tail = null;
+  const lastColon = s.lastIndexOf(':');
+  if (lastColon >= 0 && s.slice(lastColon + 1).includes('.')) {
+    tail = v4ToBytes(s.slice(lastColon + 1));
+    if (!tail) return null;
+    s = `${s.slice(0, lastColon + 1)}0:0`;
+  }
+  const halves = s.split('::');
+  if (halves.length > 2) return null;
+  const groupsOf = (t) => (t === '' ? [] : t.split(':').map((g) => (/^[0-9a-f]{1,4}$/.test(g) ? parseInt(g, 16) : NaN)));
+  const left = groupsOf(halves[0]);
+  const right = halves.length === 2 ? groupsOf(halves[1]) : [];
+  if ([...left, ...right].some((g) => Number.isNaN(g))) return null;
+  let groups;
+  if (halves.length === 2) {
+    const fill = 8 - left.length - right.length;
+    if (fill < 0) return null;
+    groups = [...left, ...new Array(fill).fill(0), ...right];
+  } else {
+    if (left.length !== 8) return null;
+    groups = left;
+  }
+  const bytes = [];
+  for (const g of groups) bytes.push((g >> 8) & 0xff, g & 0xff);
+  if (tail) for (let i = 0; i < 4; i++) bytes[12 + i] = tail[i];
+  return bytes;
+}
+
+/** One textual address → its raw bytes (4 or 16), or null. `net.isIP` validates first. */
+function ipToBytes(addr) {
+  const v = net.isIP(String(addr).split('%')[0]);
+  if (v === 4) return v4ToBytes(addr);
+  if (v === 6) return v6ToBytes(addr);
+  return null;
+}
+
+function v4IsPublic(b) {
+  if (b[0] === 0) return false;                                     // 0.0.0.0/8
+  if (b[0] === 10) return false;                                    // RFC1918
+  if (b[0] === 127) return false;                                   // loopback
+  if (b[0] === 169 && b[1] === 254) return false;                   // link-local, incl. IMDS
+  if (b[0] === 172 && b[1] >= 16 && b[1] <= 31) return false;       // RFC1918
+  if (b[0] === 192 && b[1] === 168) return false;                   // RFC1918
+  if (b[0] === 192 && b[1] === 0 && (b[2] === 0 || b[2] === 2)) return false;
+  if (b[0] === 100 && b[1] >= 64 && b[1] <= 127) return false;      // CGNAT
+  if (b[0] === 198 && (b[1] === 18 || b[1] === 19)) return false;   // benchmarking
+  if (b[0] === 198 && b[1] === 51 && b[2] === 100) return false;    // TEST-NET-2
+  if (b[0] === 203 && b[1] === 0 && b[2] === 113) return false;     // TEST-NET-3
+  if (b[0] >= 224) return false;                                    // multicast · reserved · broadcast
+  return true;
+}
+
+function v6IsPublic(b) {
+  const zeroThrough = (n) => b.slice(0, n).every((x) => x === 0);
+  if (b.every((x) => x === 0)) return false;                        // ::
+  if (zeroThrough(15) && b[15] === 1) return false;                 // ::1
+
+  // The IPv4-embedding ranges. Decide on the embedded 32 bits, whatever the outer spelling.
+  if (zeroThrough(10) && b[10] === 0xff && b[11] === 0xff) return v4IsPublic(b.slice(12));  // ::ffff:0:0/96
+  if (zeroThrough(12)) return v4IsPublic(b.slice(12));                                      // ::/96
+  if (b[0] === 0x00 && b[1] === 0x64 && b[2] === 0xff && b[3] === 0x9b
+      && b.slice(4, 12).every((x) => x === 0)) return v4IsPublic(b.slice(12));              // 64:ff9b::/96
+  if (b[0] === 0x20 && b[1] === 0x02) return v4IsPublic(b.slice(2, 6));                     // 2002::/16 6to4
+
+  if (b[0] === 0xfe && (b[1] & 0xc0) === 0x80) return false;        // fe80::/10 link-local
+  if ((b[0] & 0xfe) === 0xfc) return false;                         // fc00::/7  unique-local
+  if (b[0] === 0xff) return false;                                  // ff00::/8  multicast
+  if (b[0] === 0x20 && b[1] === 0x01 && b[2] === 0x0d && b[3] === 0xb8) return false; // 2001:db8::/32
+  return true;
+}
+
 function addressIsPublic(addr) {
-  const v = net.isIP(addr);
-  if (v === 4) {
-    const o = addr.split('.').map(Number);
-    if (o[0] === 0) return false;                            // 0.0.0.0/8 unspecified
-    if (o[0] === 10) return false;                           // private
-    if (o[0] === 127) return false;                          // loopback
-    if (o[0] === 169 && o[1] === 254) return false;          // link-local, incl. IMDS
-    if (o[0] === 172 && o[1] >= 16 && o[1] <= 31) return false;
-    if (o[0] === 192 && o[1] === 168) return false;
-    if (o[0] === 192 && o[1] === 0 && o[2] === 0) return false;
-    if (o[0] === 192 && o[1] === 0 && o[2] === 2) return false;
-    if (o[0] === 100 && o[1] >= 64 && o[1] <= 127) return false; // CGNAT
-    if (o[0] >= 224) return false;                           // multicast + reserved + broadcast
-    return true;
-  }
-  if (v === 6) {
-    const a = addr.toLowerCase().split('%')[0];
-    if (a === '::' || a === '::1') return false;
-    if (a.startsWith('fe8') || a.startsWith('fe9') || a.startsWith('fea') || a.startsWith('feb')) return false; // link-local
-    if (/^f[cd]/.test(a)) return false;                      // unique-local fc00::/7
-    if (a.startsWith('ff')) return false;                    // multicast
-    // IPv4-mapped and IPv4-compatible forms carry an IPv4 address inside an IPv6 string;
-    // classify the embedded address rather than trusting the outer shape.
-    const embedded = a.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
-    if (embedded) return addressIsPublic(embedded[1]);
-    return true;
-  }
-  return false;
+  const b = ipToBytes(addr);
+  if (!b) return false;              // not an address at all — the caller resolves names
+  return b.length === 4 ? v4IsPublic(b) : v6IsPublic(b);
 }
 
 async function assertPublicUrl(rawUrl, opts) {
@@ -369,7 +489,8 @@ async function appendClaim(submitted, opts = {}) {
 
   try {
     const rec = await gate(submitted, { ...opts, root, now, by });
-    const written = opts.dryRun ? null : commit(rec, root, now, by);
+    const rebuildIndex = opts.rebuildIndex || defaultRebuildIndex;
+    const written = opts.dryRun ? null : commit(rec, root, now, by, rebuildIndex);
     logEvent({
       event: 'claim.append',
       at: new Date(now).toISOString(),
@@ -381,15 +502,25 @@ async function appendClaim(submitted, opts = {}) {
       dry_run: Boolean(opts.dryRun),
       file: TARGET_REL,
     }, root);
-    return {
+    const out = {
       status: 'APPENDED',
       id: rec.claim.id,
       file: TARGET_REL,
       body_sha256: rec.digest,
       resolvers: rec.verdicts,
-      bytes_added: written === null ? 0 : written,
+      bytes_added: written === null ? 0 : written.bytes,
       dry_run: Boolean(opts.dryRun),
+      index_rebuilt: written === null ? false : written.index.rebuilt,
     };
+    // If the index could NOT be rebuilt, say so and name the command — the caller may
+    // have no shell, but whoever reads its return does. Silence here is what turned one
+    // append into a red CI step nobody was warned about.
+    if (written !== null && !written.index.rebuilt) {
+      out.remedy = `the compiled ledger index was NOT rebuilt (${written.index.why}). ` +
+        'Run `node scripts/ledger.mjs build` and commit the result, or `ledger build --check` will fail.';
+    }
+    if (written === null) out.remedy = 'dry run — nothing was written and no index was rebuilt.';
+    return out;
   } catch (e) {
     if (e instanceof Refusal) {
       logEvent({
@@ -554,6 +685,11 @@ async function gate(submitted, opts) {
   // ── 7. THE NETWORK, LAST. Not a check like the resolver's — the resolver.
   const doFetch = guardedFetch(opts, holder);
   if (!doFetch) {
+    // UNREACHABLE ON EVERY SUPPORTED RUNTIME, and kept deliberately. `fetch` has been a
+    // global since Node 18, so this fires only if a caller injects `fetchImpl: null`
+    // explicitly. Deleting it survives the suite; it is a fail-closed default for a
+    // runtime that does not exist yet, not a check anybody has seen fire. The path that
+    // DOES fire when there is no egress is `RESOLVER_UNRESOLVED`, and that one is tested.
     refuse('NO_FETCH',
       'no fetch implementation is available in this runtime, so the source cannot be checked — ' +
       'a claim that could not be verified is refused, not queued (rule 10)');
@@ -585,9 +721,12 @@ async function gate(submitted, opts) {
     }
   }
   if (!names.includes('claim-source') || !names.includes('claim-freshness')) {
-    // Belt and braces on the registry rather than on the claim: if a future edit to
-    // `resolversFor` stops attaching one of these, this path must stop working rather
-    // than start admitting unchecked records.
+    // A TRIPWIRE ON ANOTHER FILE, and unreachable while that file is correct. Given
+    // `verified_by: source` and `scope: project` — both forced above — `resolversFor`
+    // always returns exactly these two, so deleting this survives the suite. It fires
+    // only if a future edit to resolvers.js stops attaching one of them, and its whole
+    // purpose is that this path should then STOP WORKING rather than quietly start
+    // admitting records checked by less than it believes.
     refuse('RESOLVER_SET',
       `expected claim-source and claim-freshness to apply, got [${names.join(', ')}] — refusing rather than appending something less checked than intended`);
   }
@@ -630,10 +769,40 @@ function seedFile() {
   ].join('\n');
 }
 
+// ── The compiled index has to move with the artifact ────────────────────────────────
+//
+// `.claude/ledger/index.json` is COMPILED from the claims inside markdown files, and
+// `ledger build --check` — step 36 of `npm run check`, and a step of ci.yml — fails when
+// the two disagree. So one successful append used to red the build:
+//
+//   before an append   ledger build --check → exit 0
+//   after ONE append   ledger build --check → "the index is generated. Run … build"
+//   and `ledger lint`  → exit 0, so NOTHING warned until CI
+//
+// The agent this path exists for cannot repair that. `sourcer` has no `Bash` and no
+// `Write`; its designed happy path would have produced a broken tree it was structurally
+// unable to clear. A gate whose success state requires a privilege the caller does not
+// have is not a gate, it is a trap.
+//
+// So the append rebuilds the index itself, inside the same lock, and ROLLS THE CLAIM BACK
+// if the rebuild fails — a written claim beside a stale index is the exact state this is
+// preventing, and leaving it behind on the error path would just move the trap.
+//
+// It shells out rather than importing: `ledger.mjs` is an ESM script whose whole contract
+// is its CLI, and it derives its own repo root from its own file location — so invoking
+// `<root>/scripts/ledger.mjs` targets `<root>` by construction, with no second notion of
+// "which repo am I". The argv is fixed. Nothing the caller submits reaches it.
+function defaultRebuildIndex(root) {
+  const ledger = path.join(root, 'scripts', 'ledger.mjs');
+  if (!fs.existsSync(ledger)) return { rebuilt: false, why: `${root} has no scripts/ledger.mjs — nothing to compile` };
+  execFileSync(process.execPath, [ledger, 'build'], { cwd: root, stdio: 'pipe', encoding: 'utf8' });
+  return { rebuilt: true, why: null };
+}
+
 // The write itself: read-modify-atomic-rename, behind an O_EXCL lock. Two sourcers
 // appending at once is a lost update otherwise, and the loser's claim would vanish with
 // no error at all.
-function commit(rec, root, now, by) {
+function commit(rec, root, now, by, rebuildIndex) {
   const targetAbs = path.join(root, TARGET_REL);
   const lockAbs = path.join(root, LOCK_REL);
   fs.mkdirSync(path.dirname(targetAbs), { recursive: true });
@@ -659,7 +828,21 @@ function commit(rec, root, now, by) {
     const tmp = `${targetAbs}.${process.pid}.tmp`;
     fs.writeFileSync(tmp, next);
     fs.renameSync(tmp, targetAbs);
-    return next.length - current.length;
+
+    let index;
+    try {
+      index = rebuildIndex(root);
+    } catch (e) {
+      // Roll the claim back. A written claim beside a stale index is precisely the state
+      // the rebuild exists to prevent, so failing without undoing would leave the caller
+      // holding the defect AND a success message.
+      fs.writeFileSync(targetAbs, current);
+      const detail = [e.stdout, e.stderr, e.message].filter(Boolean).join(' ').trim().slice(0, 400);
+      refuse('INDEX_REBUILD_FAILED',
+        `the claim was written and then REMOVED again because \`ledger build\` failed: ${detail}. ` +
+        'Nothing was left behind. The tree is exactly as it was before this call.');
+    }
+    return { bytes: next.length - current.length, index };
   } finally {
     fs.closeSync(fd);
     try { fs.unlinkSync(lockAbs); } catch { /* already gone */ }
@@ -672,6 +855,7 @@ module.exports = {
   TARGET_REL,
   MAX_VALID_DAYS,
   addressIsPublic,
+  ipToBytes,
   seedFile,
   // exported for the tests, which must be able to construct the input that defeats the fix
   _emitSection: emitSection,

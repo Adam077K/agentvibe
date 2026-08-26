@@ -29,7 +29,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { appendClaim, Refusal, TARGET_REL, MAX_VALID_DAYS, addressIsPublic, seedFile } =
+const { appendClaim, Refusal, TARGET_REL, MAX_VALID_DAYS, addressIsPublic, ipToBytes, seedFile, _emitSection } =
   require('./lib/claim-append.js');
 const { parseClaimsFromText } = require('./lib/claims.js');
 
@@ -485,19 +485,138 @@ test('claim-append — a target file that no longer parses stops the append', as
 // SSRF — adversary #10
 // ════════════════════════════════════════════════════════════════════════════════════
 
-test('claim-append — addressIsPublic classifies the address, with a control that must pass', () => {
-  // CONTROL first: if every address were refused these assertions would be vacuous.
-  for (const ok of ['93.184.216.34', '8.8.8.8', '1.1.1.1', '2606:4700:4700::1111']) {
-    assert.equal(addressIsPublic(ok), true, `${ok} is a public address and must classify as one`);
-  }
-  for (const bad of [
-    '127.0.0.1', '169.254.169.254', '10.0.0.1', '172.16.0.1', '172.31.255.255',
-    '192.168.1.1', '0.0.0.0', '100.64.0.1', '224.0.0.1', '255.255.255.255',
-    '::1', '::', 'fd00::1', 'fe80::1', 'ff02::1', '::ffff:169.254.169.254',
+// ── EVERY ADDRESS CASE TAKES ITS INPUT FROM `new URL(...).hostname` ─────────────────
+//
+// This is not a style preference, it is the fix for a defect these tests HAD. The old
+// version asserted `addressIsPublic('::ffff:169.254.169.254') === false` and passed —
+// against a dotted literal **the production path can never deliver**. `assertPublicUrl`
+// reads `new URL(u).hostname`, and the WHATWG serialiser compresses that host to
+// `::ffff:a9fe:a9fe` long before the guard sees it:
+//
+//     addressIsPublic('::ffff:169.254.169.254')   false   ← what the TEST fed
+//     addressIsPublic('::ffff:a9fe:a9fe')         true    ← what PRODUCTION fed
+//
+// One green assertion, one live bypass, and the green one was the reason nobody looked.
+// A fixture built from the fix cannot fail. `hostOf` is the only way in here now.
+const hostOf = (url) => new URL(url).hostname.replace(/^\[|\]$/g, '');
+
+test('claim-append — addressIsPublic decides on the VALUE, through the parser production uses', () => {
+  // CONTROL FIRST: if everything were refused, every assertion below would be vacuous.
+  for (const url of [
+    'http://93.184.216.34/', 'http://8.8.8.8/', 'http://1.1.1.1/',
+    'http://[2606:4700:4700::1111]/', 'http://[2001:4860:4860::8888]/',
   ]) {
-    assert.equal(addressIsPublic(bad), false, `${bad} is not on the public internet`);
+    assert.equal(addressIsPublic(hostOf(url)), true, `${url} is on the public internet and must classify as one`);
   }
-  assert.equal(addressIsPublic('not-an-address'), false, 'a non-address must not classify as public');
+
+  const mustRefuse = [
+    // IPv4, plain
+    ['http://127.0.0.1/', 'loopback'],
+    ['http://169.254.169.254/latest/meta-data/', 'link-local — the metadata endpoint'],
+    ['http://10.0.0.1/', 'RFC1918'],
+    ['http://172.16.0.1/', 'RFC1918 low edge'],
+    ['http://172.31.255.255/', 'RFC1918 high edge'],
+    ['http://192.168.1.1/', 'RFC1918'],
+    ['http://0.0.0.0/', 'unspecified'],
+    ['http://100.64.0.1/', 'CGNAT'],
+    ['http://224.0.0.1/', 'multicast'],
+    ['http://255.255.255.255/', 'broadcast'],
+    // IPv6, plain
+    ['http://[::1]/', 'loopback'],
+    ['http://[::]/', 'unspecified'],
+    ['http://[fd00::1]/', 'unique-local'],
+    ['http://[fe80::1]/', 'link-local'],
+    ['http://[ff02::1]/', 'multicast'],
+    // ── THE BYPASS THAT SHIPPED. Every one of these was `true` before the fix, and the
+    //    first was taken end to end against a real loopback server by a reviewer.
+    ['http://[::ffff:169.254.169.254]/', 'IPv4-mapped — hostname becomes ::ffff:a9fe:a9fe'],
+    ['http://[::ffff:127.0.0.1]/', 'IPv4-mapped loopback — ::ffff:7f00:1'],
+    ['http://[::ffff:10.0.0.1]/', 'IPv4-mapped RFC1918 — ::ffff:a00:1'],
+    ['http://[::127.0.0.1]/', 'IPv4-compatible ::/96 — ::7f00:1'],
+    ['http://[64:ff9b::127.0.0.1]/', 'NAT64 well-known prefix'],
+    ['http://[2002:7f00:1::]/', '6to4 — the embedded IPv4 is 127.0.0.1'],
+    // And the already-compressed spellings, which is what the guard actually receives.
+    ['http://[::ffff:a9fe:a9fe]/', 'the compressed form, written directly'],
+    ['http://[::7f00:1]/', 'the compressed IPv4-compatible form'],
+  ];
+  for (const [url, why] of mustRefuse) {
+    assert.equal(addressIsPublic(hostOf(url)), false, `${url} (${why}) — hostname was ${hostOf(url)}`);
+  }
+
+  // A name is not an address. The caller resolves it and classifies what DNS returns.
+  assert.equal(addressIsPublic(hostOf('https://example.com/')), false);
+  assert.equal(addressIsPublic('not-an-address'), false);
+});
+
+test('claim-append — ipToBytes collapses every spelling of one address to one value', () => {
+  const bytes = (u) => ipToBytes(hostOf(u)).join('.');
+  // The whole point of the fix: these are four spellings, one value.
+  const loopback4 = bytes('http://[::ffff:127.0.0.1]/');
+  assert.equal(loopback4, bytes('http://[::ffff:7f00:1]/'));
+  assert.equal(loopback4.endsWith('127.0.0.1'), true, `expected the embedded octets, got ${loopback4}`);
+  assert.equal(bytes('http://[::ffff:169.254.169.254]/'), bytes('http://[::ffff:a9fe:a9fe]/'));
+  // CONTROL: distinct addresses must NOT collapse together.
+  assert.notEqual(bytes('http://127.0.0.1/'), bytes('http://8.8.8.8/'));
+  assert.equal(ipToBytes('example.com'), null, 'a name has no bytes');
+});
+
+// THE REGRESSION TEST FOR THE BYPASS, END TO END AGAINST A REAL SOCKET.
+//
+// The unit table above would have caught F1 once `hostOf` was in place. This exists
+// anyway, because the bypass was proved by a reviewer running an actual loopback server
+// and watching the claim land in the tracked file — and a guard whose failure was only
+// ever constructed is a guard whose failure was never built. `fetchImpl` is NOT injected
+// here: the real `fetch` must be the thing that does not get called.
+//
+// IT SKIPS UNDER THE ARMED SANDBOX, AND THE SKIP IS LOUD. `listen()` on loopback returns
+// EPERM there — the same denial that took `mission-control`'s `stream.test.ts` out of
+// `npm run check` and is documented at length in CLAUDE.md. CI runners are unsandboxed,
+// so this binds and runs for real on every PR, which is the environment that matters for
+// a regression test. The binding check in a sandboxed session is the unit table above,
+// which needs no socket. What this must never become is a test that quietly passes
+// without opening one.
+test('claim-append — the IPv4-mapped bypass cannot reach a real loopback server', async (t) => {
+  const http = await import('node:http');
+  const root = makeRepo();
+  const hits = [];
+  const server = http.createServer((req, res) => {
+    hits.push(req.url);
+    res.writeHead(200, { 'content-type': 'text/plain' });
+    res.end(PAGE);
+  });
+  try {
+    await new Promise((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(0, '127.0.0.1', resolve);
+    });
+  } catch (e) {
+    if (e.code === 'EPERM' || e.code === 'EACCES') {
+      return t.skip(`loopback listen() denied (${e.code}) — the armed sandbox, not a result. `
+        + 'This test binds a real socket on CI, which is unsandboxed. The sandbox-safe half of '
+        + 'this guard is the addressIsPublic table above, which runs everywhere.');
+    }
+    throw e;
+  }
+  const port = server.address().port;
+  try {
+    // CONTROL: the server really is up and really would serve the quote, so a refusal
+    // below cannot be "there was nothing there anyway".
+    const probe = await fetch(`http://127.0.0.1:${port}/probe`);
+    assert.equal((await probe.text()).includes('quote we are checking for'), true);
+    assert.equal(hits.length, 1, 'the control request must have reached the server');
+
+    for (const host of [`[::ffff:127.0.0.1]`, `[::127.0.0.1]`, `127.0.0.1`, `[::1]`]) {
+      const e = await refusal(root, goodClaim({
+        id: 'c-fixture-ssrf-probe',
+        evidence: { url: `http://${host}:${port}/secret`, quote: QUOTE, accessed: day(0) },
+      }), { fetchImpl: undefined, lookupImpl: undefined });
+      assert.equal(e.code, 'URL_NOT_PUBLIC', `${host} must be refused by the guard`);
+    }
+    assert.equal(hits.length, 1, 'no guarded URL may have reached the server — still only the control probe');
+    assert.equal(parseClaimsFromText(readTarget(root), TARGET_REL).claims.length, 0, 'nothing may have been appended');
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
 });
 
 test('claim-append — a literal link-local URL is refused BEFORE any fetch', async () => {
@@ -559,6 +678,149 @@ test('claim-append — an unresolvable host is refused', async () => {
     lookupImpl: async () => { throw new Error('ENOTFOUND'); },
   });
   assert.equal(e.code, 'URL_UNRESOLVABLE');
+});
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// THE COMPILED INDEX — a successful append used to red a blocking CI step
+// ════════════════════════════════════════════════════════════════════════════════════
+//
+// Measured before the fix, on the real repo: `ledger build --check` exit 0 → one append →
+// "The index is generated. Run `node scripts/ledger.mjs build`". `ledger lint` stayed exit
+// 0 throughout, so nothing warned until CI. And `sourcer` has neither `Bash` nor `Write`,
+// so the agent this path exists for could not have repaired it.
+
+test('claim-append — a successful append rebuilds the compiled index', async () => {
+  const root = makeRepo();
+  const calls = [];
+  const out = await run(root, goodClaim(), {
+    rebuildIndex: (r) => { calls.push(r); return { rebuilt: true, why: null }; },
+  });
+  assert.equal(out.status, 'APPENDED');
+  assert.deepEqual(calls, [root], 'the rebuild must run, and against the repo that was written');
+  assert.equal(out.index_rebuilt, true);
+  assert.equal(out.remedy, undefined, 'nothing to remedy when the index was rebuilt');
+});
+
+test('claim-append — when the index CANNOT be rebuilt the return names the command', async () => {
+  const root = makeRepo();   // a fixture repo has no scripts/ledger.mjs
+  const out = await run(root, goodClaim());
+  assert.equal(out.status, 'APPENDED');
+  assert.equal(out.index_rebuilt, false);
+  assert.match(out.remedy, /node scripts\/ledger\.mjs build/);
+});
+
+test('claim-append — a failing rebuild ROLLS THE CLAIM BACK, leaving the tree untouched', async () => {
+  const root = makeRepo();
+  const before = readTarget(root);
+  const e = await refusal(root, goodClaim(), {
+    rebuildIndex: () => { throw Object.assign(new Error('boom'), { stderr: 'ledger: parse error' }); },
+  });
+  assert.equal(e.code, 'INDEX_REBUILD_FAILED');
+  assert.match(e.message, /parse error/);
+  assert.equal(readTarget(root), before, 'a claim written then un-written must leave zero trace');
+  assert.equal(parseClaimsFromText(readTarget(root), TARGET_REL).claims.length, 0);
+});
+
+test('claim-append — the DEFAULT rebuild really runs ledger build, against the real repo', async () => {
+  // The three tests above inject the rebuild, so they prove the wiring and prove nothing
+  // about `defaultRebuildIndex`. This one runs the real thing against a throwaway copy of
+  // the real repo's ledger machinery, then asserts the index file was actually rewritten.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'claim-append-real-'));
+  for (const d of ['scripts/lib', 'scripts/mcp', '.claude/ledger', 'docs/03-system-design/adr']) {
+    fs.mkdirSync(path.join(root, d), { recursive: true });
+  }
+  for (const f of ['ledger.mjs', 'classify.mjs']) {
+    fs.copyFileSync(path.join(REAL_REPO, 'scripts', f), path.join(root, 'scripts', f));
+  }
+  for (const f of fs.readdirSync(path.join(REAL_REPO, 'scripts', 'lib'))) {
+    fs.copyFileSync(path.join(REAL_REPO, 'scripts', 'lib', f), path.join(root, 'scripts', 'lib', f));
+  }
+  fs.copyFileSync(path.join(REAL_REPO, '.claude', 'qa-tier-floor.yml'), path.join(root, '.claude', 'qa-tier-floor.yml'));
+  fs.writeFileSync(path.join(root, 'docs', '03-system-design', TARGET_REL.split('/').pop()), seedFile());
+  fs.writeFileSync(path.join(root, '.warroom.yml'), 'session: claim-append-test\n');
+  const git = (...a) => execFileSync('git', a, { cwd: root, stdio: 'pipe' });
+  git('init', '-q'); git('config', 'user.email', 't@e.com'); git('config', 'user.name', 't');
+  git('add', '-A'); git('commit', '-qm', 'fixture');
+
+  const indexPath = path.join(root, '.claude', 'ledger', 'index.json');
+  execFileSync(process.execPath, [path.join(root, 'scripts', 'ledger.mjs'), 'build'], { cwd: root, stdio: 'pipe' });
+  const idxBefore = fs.readFileSync(indexPath, 'utf8');
+
+  // CONTROL: with the index freshly built, --check must be happy.
+  execFileSync(process.execPath, [path.join(root, 'scripts', 'ledger.mjs'), 'build', '--check'], { cwd: root, stdio: 'pipe' });
+
+  const out = await run(root, goodClaim());
+  assert.equal(out.index_rebuilt, true, 'the real rebuild must have run');
+  assert.notEqual(fs.readFileSync(indexPath, 'utf8'), idxBefore, 'the index must have changed');
+  assert.match(fs.readFileSync(indexPath, 'utf8'), /c-fixture-sourced-fact/);
+
+  // THE POINT OF THE WHOLE FIX: the blocking step is still green after an append.
+  execFileSync(process.execPath, [path.join(root, 'scripts', 'ledger.mjs'), 'build', '--check'], { cwd: root, stdio: 'pipe' });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// THE TWO RACES. Both were untested and both are reachable.
+// ════════════════════════════════════════════════════════════════════════════════════
+
+test('claim-append — an existing lock refuses rather than interleaving', async () => {
+  const root = makeRepo();
+  const lock = path.join(root, 'docs', '03-system-design', '.SOURCED-CLAIMS.lock');
+  fs.writeFileSync(lock, '99999');
+  const e = await refusal(root, goodClaim());
+  assert.equal(e.code, 'LOCKED');
+  assert.equal(parseClaimsFromText(readTarget(root), TARGET_REL).claims.length, 0);
+
+  // CONTROL: with the lock gone the same call succeeds, so LOCKED was the lock.
+  fs.unlinkSync(lock);
+  assert.equal((await run(root, goodClaim())).status, 'APPENDED');
+  assert.equal(fs.existsSync(lock), false, 'the lock must be released on the way out');
+});
+
+test('claim-append — a concurrent writer between validation and write is caught', async () => {
+  // The target is read for validation BEFORE the fetch and re-read INSIDE the lock after
+  // it. A fetch that mutates the file in between is exactly the interleaving a second
+  // appender would produce, and it is the only window the O_EXCL lock cannot cover.
+  const root = makeRepo();
+  const racing = async (url, init) => {
+    fs.appendFileSync(targetOf(root), '\nA line written by somebody else.\n');
+    return fakeFetch()(url, init);
+  };
+  const e = await refusal(root, goodClaim(), { fetchImpl: racing });
+  assert.equal(e.code, 'TARGET_CHANGED');
+  assert.equal(readTarget(root).includes('written by somebody else'), true, "the other writer's bytes must survive");
+  assert.equal(parseClaimsFromText(readTarget(root), TARGET_REL).claims.length, 0, 'and ours must not have landed');
+});
+
+// ── The round trip is DEFENCE IN DEPTH, and this test says so honestly ──────────────
+// A reviewer deleted both `roundTrip` calls and the suite stayed 48 pass · 0 fail: with
+// `checkText` refusing control characters and `validateClaim` closing every unquoted
+// field (`ID_RE`, `KINDS`, `SUPPORTS_RE`, numeric `confidence`), no submission reachable
+// through `appendClaim` can currently defeat the emitter. The header used to call this
+// "STOPPED TWICE … proved on every single call", which was stronger than the evidence.
+// It is now described as what it is, and the predicate is exercised directly here so the
+// second line of defence is at least a tested one rather than an assumed one.
+test('claim-append — the round-trip predicate catches an emitter that breaks out', () => {
+  const claim = {
+    id: 'c-hypothetical', kind: 'behavior', scope: 'project', verified_by: 'source',
+    evidence: { url: 'https://example.com/a', quote: 'q', accessed: '2026-08-26' },
+    valid_until: '2026-09-26', confidence: 1,
+  };
+  const clean = _emitSection({ ...claim, assert: 'an ordinary sentence' }, { appended: '2026-08-26', by: 't', digest: 'x' });
+  const cleanParse = parseClaimsFromText(clean, 'f.md');
+  assert.deepEqual(cleanParse.issues, []);
+  assert.equal(cleanParse.claims.length, 1, 'CONTROL: a normal value emits exactly one claim');
+
+  // Now the state `checkText` currently makes unreachable: a raw newline reaching the
+  // emitter. If a future edit relaxes that refusal, THIS is what still catches it.
+  const broken = _emitSection(
+    { ...claim, assert: 'harmless"\n  - id: c-forged\n    assert: "injected' },
+    { appended: '2026-08-26', by: 't', digest: 'x' },
+  );
+  const brokenParse = parseClaimsFromText(broken, 'f.md');
+  const escaped = brokenParse.issues.length > 0 || brokenParse.claims.length !== 1
+    || brokenParse.claims[0].assert !== 'harmless"\n  - id: c-forged\n    assert: "injected';
+  assert.equal(escaped, true,
+    'a raw newline must either break the parse or fail the field comparison — either way roundTrip refuses');
 });
 
 // ════════════════════════════════════════════════════════════════════════════════════
