@@ -738,6 +738,33 @@ test('P1-2(b): a real volume file is still SEEN — the scan narrowed, it did no
   assert.ok(fs.existsSync(path.join(dir, 'DECISIONS_ARCHIVE_002.md')), 'volume 002 opens when nothing occupies it');
 });
 
+test('P3: an UNREADABLE volume refuses by name instead of dying with a stack trace', (t) => {
+  // Pre-existing at 7d30402 and unchanged by the type filter: an unreadable REGULAR file is a
+  // volume, is not skipped — dropping it would break monotonic append silently, which is the
+  // whole lesson of P1-2(c) — and used to reach `readFileSync` and kill both commands with a raw
+  // EACCES trace. It now stops the run with a named refusal. `plan` exits 1 here, which is what
+  // its header promises: read-only, and 0 unless it cannot read the tree.
+  const { root, dir } = rotatingFixture('2026-06-10');
+  const vol = path.join(dir, 'DECISIONS_ARCHIVE.md');
+  fs.chmodSync(vol, 0o000);
+  try {
+    try {
+      fs.readFileSync(vol, 'utf8');
+      t.skip('this process can read a 0o000 file (running as root?), so unreadability cannot be staged');
+      return;
+    } catch { /* good: the mode really denies reads */ }
+
+    for (const cmd of [['plan', '--root', root, '--json'], ['apply', '--root', root, '--date', '2026-08-26', '--only', '2026-06-10']]) {
+      const r = run(EVICT, cmd);
+      assert.equal(r.code, 1, `${cmd[0]} must refuse, not crash`);
+      assert.match(r.err, /is a volume this tool cannot read \(EACCES\)/);
+      assert.ok(!r.err.includes('node:fs:'), `${cmd[0]} must not print a raw stack trace:\n${r.err}`);
+    }
+  } finally {
+    fs.chmodSync(vol, 0o644);
+  }
+});
+
 test('P1-2: volume 1000 keeps being recognised — padStart(3) emits four digits', () => {
   const root = fixture({
     entries: entry({ date: '2026-06-02', title: 'An ordinary decision about ordinary things' }),

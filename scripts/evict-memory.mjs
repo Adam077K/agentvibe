@@ -250,10 +250,10 @@ function holdsVolumeContent(abs) {
  * whether or not it resolved, and a symlink to a real volume disappeared from the scan. See the
  * note above `pathOccupant`: two P1s, both of them the harm the next paragraph names.
  *
- * A regular file that exists and cannot be READ is NOT skipped, and still throws below.
- * Dropping a real volume would let `targetVolume` append to an older one and break monotonic
- * append in silence — which is precisely what the `lstat` filter did, so this paragraph is no
- * longer describing a hypothetical.
+ * A regular file that exists and cannot be READ is NOT skipped: it stops the run with a named
+ * refusal instead. Dropping a real volume would let `targetVolume` append to an older one and
+ * break monotonic append in silence — which is precisely what the `lstat` filter did, so this
+ * paragraph is no longer describing a hypothetical.
  */
 function volumes(root) {
   const dir = path.join(root, ...MEMORY_DIR);
@@ -263,12 +263,30 @@ function volumes(root) {
     .map((name) => ({ name, m: name.match(VOLUME_RE) }))
     .filter((v) => v.m)
     .filter((v) => holdsVolumeContent(path.join(dir, v.name)))
-    .map((v) => ({
-      number: v.m[1] ? Number(v.m[1]) : 1,
-      name: v.name,
-      abs: path.join(dir, v.name),
-      bytes: Buffer.byteLength(fs.readFileSync(path.join(dir, v.name), 'utf8'), 'utf8'),
-    }))
+    .map((v) => {
+      const abs = path.join(dir, v.name);
+      let text;
+      try {
+        text = fs.readFileSync(abs, 'utf8');
+      } catch (e) {
+        // Same class as the EISDIR crash above, and it outlived that fix: an unreadable volume
+        // killed BOTH commands with a raw stack trace. Named, so the dispatcher can print it.
+        const err = new Error(
+          `${v.name} is a volume this tool cannot read (${e.code}):\n` +
+          `  ${abs}\n` +
+          '  It is NOT skipped — dropping a real volume would let the next eviction append to an\n' +
+          '  older one and break monotonic append in silence. Fix its permissions, or move it aside.'
+        );
+        err.name = 'EvictionUnreadableVolumeError';
+        throw err;
+      }
+      return {
+        number: v.m[1] ? Number(v.m[1]) : 1,
+        name: v.name,
+        abs,
+        bytes: Buffer.byteLength(text, 'utf8'),
+      };
+    })
     .sort((a, b) => a.number - b.number);
 }
 
@@ -954,15 +972,32 @@ function cmdApply() {
 const invokedDirectly = process.argv[1]
   && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
 
+/**
+ * Run a command, turning the one error this tool raises deliberately into a readable refusal.
+ *
+ * Only `EvictionUnreadableVolumeError` is caught, and everything else is re-thrown: a catch-all
+ * here would convert a real bug into a tidy message and an exit code nobody investigates. `plan`
+ * exits 1 through this path, which is what its own header promises — read-only, and 0 unless it
+ * cannot read the tree.
+ */
+function runCommand(fn) {
+  try {
+    fn();
+  } catch (e) {
+    if (e.name !== 'EvictionUnreadableVolumeError') throw e;
+    process.stderr.write(`evict-memory: REFUSED — ${e.message}\n`);
+    process.exitCode = 1;
+  }
+}
 
 export { commitWrite, conservationIssues, volumeHeader, VOLUME_BYTE_CAP, VOLUME_FILL_CEILING, DEFAULT_REASON };
 
 if (!invokedDirectly) {
   // imported for its exports; no command to run
 } else if (cmd === 'plan') {
-  cmdPlan();
+  runCommand(cmdPlan);
 } else if (cmd === 'apply') {
-  cmdApply();
+  runCommand(cmdApply);
 } else {
   process.stderr.write(
     'usage: node scripts/evict-memory.mjs plan [--json] [--root DIR]\n' +
