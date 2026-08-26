@@ -72,6 +72,8 @@
 const STEPS = [
   'test:protected-write',
   'test:check-suite',
+  'test:figures',
+  'check:figures',
   'lint:agents',
   'check:prompt-standard',
   'test:gate',
