@@ -1,0 +1,11 @@
+{
+  "subject": "0acb8e1705711eb7309dedbd1db07534aedb975298e762c3d45cf0dd49843631",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "irreversible",
+  "tier_driver": ".claude/workflows/qa.js",
+  "verdict": "PASS",
+  "by": "builder-gate-refusal",
+  "run_id": null,
+  "evidence": "Re-recorded after the #115 blind-review fixes; the prior subject went correctly stale. npm run check: 46 of 46 passed, 0 failed, 367.3s, exit 0, sandbox armed. test:run-gate 99 pass/0 fail (96 before these fixes, 87 before the branch). C1 was a real loosening bug in this change and is fixed: an under-reported oracle NAMING a genuinely failing check returned REFUSED est=false at head where base returned BLOCK; it now returns BLOCK est=true with the failing check named in blockers (base BLOCKed but left it unnamed). Both ternaries reordered so a named failure outranks the report shape. Three mutations bite: predicate restored 2 red, summary ternary reordered 1 red, blocker ternary reordered 2 red. Controls unchanged and re-verified: a complete-report failing check, and a CONFIRMED P1 from the panel with the judge returning PASS, both still BLOCK. SINGLE AUTHOR, SINGLE MODEL FAMILY: the irreversible tier's 2-of-3 multi-judge requirement is NOT met.",
+  "recorded_at": "2026-08-26T14:40:20.494Z"
+}
