@@ -180,7 +180,47 @@ function listFiles(root) {
 
 function decisionsPath(root) { return path.join(root, ...MEMORY_DIR, 'DECISIONS.md'); }
 
-/** Every archive volume on disk, lowest number first. Volume 1 is the un-suffixed legacy name. */
+/**
+ * Anything sitting at this path — a regular file, a directory, or a symlink, INCLUDING a
+ * dangling one. `null` when the path is free.
+ *
+ * `lstatSync`, not `existsSync`, and the difference is the whole point: `existsSync` follows a
+ * symlink, so it reports a DANGLING link as "nothing here" — and a writer that believes that
+ * writes through the link and creates the target somewhere else entirely.
+ */
+function pathOccupant(abs) {
+  try {
+    const st = fs.lstatSync(abs);
+    if (st.isDirectory()) return 'directory';
+    if (st.isSymbolicLink()) return 'symlink';
+    return st.isFile() ? 'file' : 'special file';
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Every archive volume on disk, lowest number first. Volume 1 is the un-suffixed legacy name.
+ *
+ * ── A VOLUME IS A REGULAR FILE, AND THAT IS CHECKED RATHER THAN ASSUMED ─────────────────────
+ *
+ * `VOLUME_RE` matches a NAME, and a name is not a file. Measured 2026-08-26: a DIRECTORY called
+ * `DECISIONS_ARCHIVE_002.md` matched, was handed to `readFileSync`, and threw an unhandled
+ * EISDIR — so `plan`, which this file's header promises is read-only and exits 0 unless it
+ * cannot read the tree, died with a stack trace, and so did `apply`. Nothing was written, so the
+ * safety property survived; the DIAGNOSIS did not, and the refusal the operator actually needed
+ * never printed.
+ *
+ * Skipping non-regular entries makes such a path invisible to this scan, which is exactly what
+ * puts it in front of the occupancy guard in `cmdApply` — and that guard refuses, by name, on
+ * every filesystem. That matters because the OTHER route to the same guard, a case-folding
+ * collision, exists only on a case-insensitive filesystem: it is the route this repo is
+ * developed on and NOT the one CI runs on.
+ *
+ * `lstatSync`, so a symlink is skipped whether or not it resolves. A regular file that exists
+ * and cannot be READ still throws below, and that is deliberate: silently dropping a real volume
+ * would let `targetVolume` append to an older one and break monotonic append in silence.
+ */
 function volumes(root) {
   const dir = path.join(root, ...MEMORY_DIR);
   let names;
@@ -188,6 +228,7 @@ function volumes(root) {
   return names
     .map((name) => ({ name, m: name.match(VOLUME_RE) }))
     .filter((v) => v.m)
+    .filter((v) => pathOccupant(path.join(dir, v.name)) === 'file')
     .map((v) => ({
       number: v.m[1] ? Number(v.m[1]) : 1,
       name: v.name,
@@ -734,16 +775,21 @@ function cmdApply() {
   //   • a CASE-INSENSITIVE filesystem (macOS default) where `decisions_archive_002.md` exists —
   //     `VOLUME_RE` is case-sensitive and does not see it, `writeFileSync` opens the same inode;
   //   • any archive file whose name the pattern does not match, including one produced by
-  //     following `check-memory-budget.mjs`'s own advice to "split this volume by hand".
+  //     following `check-memory-budget.mjs`'s own advice to "split this volume by hand";
+  //   • anything at that path that is not a regular file — a directory, or a symlink. `volumes`
+  //     skips those by design, so they arrive here rather than crashing the scan, and they reach
+  //     this guard on EVERY filesystem rather than only on a case-folding one.
   //
   // The cure is not a smarter regex — a regex cannot see a case-folding filesystem. It is asking
   // the filesystem, which is the only thing that knows.
-  if (vol.fresh && fs.existsSync(vol.abs)) {
+  const occupant = pathOccupant(vol.abs);
+  if (vol.fresh && occupant) {
     process.stderr.write(
-      `evict-memory apply: REFUSED — ${vol.name} was computed as a NEW volume but a file already exists at\n` +
+      `evict-memory apply: REFUSED — ${vol.name} was computed as a NEW volume but a ${occupant} already exists at\n` +
       `  ${vol.abs}\n` +
-      '  Writing would truncate it. This means the volume set on disk does not match what the naming\n' +
-      '  pattern recognises — most often a case-insensitive filesystem, or an archive renamed by hand.\n' +
+      '  Writing here would destroy it. This means the volume set on disk does not match what the\n' +
+      '  naming pattern recognises — a case-insensitive filesystem, an archive renamed by hand, or\n' +
+      '  something at that path that is not a regular file, which the volume scan skips by design.\n' +
       '  Rename it to the canonical DECISIONS_ARCHIVE_NNN.md form, or move it aside. Nothing written.\n'
     );
     process.exitCode = 1;

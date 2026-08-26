@@ -577,6 +577,84 @@ test('P1-2: a CASE-FOLDED name occupying the computed volume path is refused', (
     'the prior volume must survive untouched');
 });
 
+// ── P1-2(b) · the same refusal, on every filesystem ─────────────────────────────────────────
+//
+// The property is "refuse when ANYTHING already occupies the computed volume path". Case folding
+// is one way to reach it and exists on one kind of filesystem. These two reach it on all of them,
+// because `volumes()` counts only REGULAR FILES: a directory and a symlink are invisible to the
+// scan by design, so `targetVolume` calls the path free and the occupancy guard is what stops it.
+//
+// Volume 1 is sized to 35,900 bytes rather than 35,000 so that ANY batch rotates. At 35,000 a
+// small entry still fits under the 36,000-byte fill ceiling, no rotation happens, 002 is never
+// computed, and the test would pass while checking nothing — measured while writing this.
+
+/** A fixture whose next eviction is forced to rotate into volume 002. */
+function rotatingFixture(date) {
+  const root = fixture({
+    entries: entry({ date, title: 'An ordinary decision about ordinary things' }),
+    archives: { 'DECISIONS_ARCHIVE.md': `# Archive\n\n${'x'.repeat(35_900)}\n` },
+  });
+  return { root, dir: path.join(root, '.claude', 'memory') };
+}
+
+/** `plan --json`, asserting first that it exited 0 — it is read-only and must not crash. */
+function planStrict(root) {
+  const raw = run(EVICT, ['plan', '--root', root, '--json']);
+  assert.equal(raw.code, 0,
+    `plan is read-only and must exit 0 on a tree it can read: ${raw.err.split('\n').slice(0, 3).join(' ')}`);
+  return JSON.parse(raw.out);
+}
+
+test('P1-2(b): a DIRECTORY at the computed volume path is refused, on every filesystem', () => {
+  // Measured before the fix: `VOLUME_RE` matched the directory's NAME, `readFileSync` was handed
+  // a directory, and an unhandled EISDIR killed BOTH commands — including `plan`, which this
+  // tool's header promises is read-only and exits 0 unless it cannot read the tree. Nothing was
+  // written, so the safety property held; the operator got a stack trace instead of the refusal.
+  const { root, dir } = rotatingFixture('2026-06-03');
+  const contended = path.join(dir, 'DECISIONS_ARCHIVE_002.md');
+  fs.mkdirSync(contended);
+  fs.writeFileSync(path.join(contended, 'IRREPLACEABLE.md'), 'HISTORY-SENTINEL\n');
+
+  const p = planStrict(root);
+  assert.deepEqual(p.volumes.map((v) => v.name), ['DECISIONS_ARCHIVE.md'],
+    'a directory is not a volume — confirmed through the report, not assumed');
+
+  const r = apply(root, ['--only', '2026-06-03']);
+  assert.equal(r.code, 1, `expected refusal, got ${r.code}: ${r.out}`);
+  assert.match(r.err, /DECISIONS_ARCHIVE_002\.md was computed as a NEW volume but a directory already exists/);
+  assert.equal(fs.readFileSync(path.join(contended, 'IRREPLACEABLE.md'), 'utf8'), 'HISTORY-SENTINEL\n',
+    'the directory and its contents must survive untouched');
+});
+
+test('P1-2(b): a DANGLING SYMLINK at the computed volume path is refused too', () => {
+  // This one pins a hole the fix above could have opened. Skipping non-regular entries in the
+  // scan is only safe if the occupancy guard uses `lstat`: `existsSync` FOLLOWS a symlink, so a
+  // dangling one reads as "nothing here" — the path would have been called free by both the scan
+  // and the guard, and the rename would have replaced the link without a word.
+  const { root, dir } = rotatingFixture('2026-06-04');
+  const target = path.join(dir, 'nowhere-at-all.md');
+  const contended = path.join(dir, 'DECISIONS_ARCHIVE_002.md');
+  fs.symlinkSync(target, contended);
+  assert.ok(!fs.existsSync(contended), 'the link must be dangling — existsSync follows it and sees nothing');
+  assert.ok(fs.lstatSync(contended).isSymbolicLink(), 'and lstat must still see it, which is the whole point');
+
+  assert.deepEqual(planStrict(root).volumes.map((v) => v.name), ['DECISIONS_ARCHIVE.md']);
+
+  const r = apply(root, ['--only', '2026-06-04']);
+  assert.equal(r.code, 1, `expected refusal, got ${r.code}: ${r.out}`);
+  assert.match(r.err, /DECISIONS_ARCHIVE_002\.md was computed as a NEW volume but a symlink already exists/);
+  assert.ok(fs.lstatSync(contended).isSymbolicLink(), 'the link must not have been replaced');
+  assert.ok(!fs.existsSync(target), 'and nothing may have been created at its target');
+});
+
+test('P1-2(b): a real volume file is still SEEN — the scan narrowed, it did not go blind', () => {
+  // Without this the three cases above would be satisfied by a `volumes()` that returns nothing.
+  const { root, dir } = rotatingFixture('2026-06-05');
+  assert.deepEqual(planStrict(root).volumes.map((v) => v.name), ['DECISIONS_ARCHIVE.md']);
+  assert.equal(apply(root, ['--only', '2026-06-05']).code, 0, 'and the rotation must still work');
+  assert.ok(fs.existsSync(path.join(dir, 'DECISIONS_ARCHIVE_002.md')), 'volume 002 opens when nothing occupies it');
+});
+
 test('P1-2: volume 1000 keeps being recognised — padStart(3) emits four digits', () => {
   const root = fixture({
     entries: entry({ date: '2026-06-02', title: 'An ordinary decision about ordinary things' }),
