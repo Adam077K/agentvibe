@@ -21,6 +21,16 @@
 // local main and must NOT reach the upstream. `onUpstream()` asks the upstream repository, never
 // the push command's own output.
 //
+// AND THEN: THE FIXTURE COULD NOT BUILD THE CONDITION IT TESTED (2026-08-26)
+// `gh ABSENT is a refusal` removed gh by listing a PATH that left gh's directory out —
+// "/opt/homebrew/bin here", said the comment. gh is /usr/bin/gh on ubuntu-latest, which that PATH
+// includes, so the fixture built "gh is absent" on the author's machine and "gh is present" on the
+// runner. It failed there (run 32943665467) and had never proved anything here. The environment is
+// constructed now, by mirroring PATH minus every executable named `gh` — a name is removable on
+// every machine, a location is not — and stubGh asserts both halves of its own premise before any
+// test asserts behaviour. Third time in this repo that one machine's layout was baked into a test:
+// $HOME/.claude/plans existing, a case-folding filesystem (#102), and gh's install path.
+//
 // WHY THESE TESTS DRIVE THE REAL PROGRAM
 // Every case below runs `bin/warroom merge` for real, against a throwaway repository under
 // os.tmpdir(), and then asserts on where `main` actually points. Asserting that the source
@@ -88,16 +98,78 @@ function resolvesOnPath(name, PATH) {
 }
 
 /**
- * A fake `gh` at the front of PATH, plus the PATH that reaches it.
+ * Mirror `sources` into `dir` as symlinks, leaving out every executable named `gh`.
+ *
+ * This is how "gh is not installed" is constructed. Enumerating a PATH that happens to exclude
+ * gh's directory is not a construction, it is a guess about the machine — and the guess was
+ * wrong on the only machine whose verdict blocks a merge. Removing the NAME from a directory we
+ * built ourselves is true on every machine, because it does not ask where gh lives.
+ *
+ * Earlier entries win, which is how PATH itself resolves, so the mirror preserves the ambient
+ * precedence order rather than inverting it.
+ *
+ * Exported through `ghFreeBin()` for the fixture and tested directly by the self-test below —
+ * the removal is proved against a directory that provably HAS a gh, so the proof does not depend
+ * on this machine owning one.
+ */
+function mirrorWithoutGh(dir, sources) {
+  fs.mkdirSync(dir, { recursive: true });
+  const seen = new Set();
+  for (const src of sources) {
+    if (!src || seen.has(src)) continue;
+    seen.add(src);
+    let entries;
+    try { entries = fs.readdirSync(src); } catch { continue; }
+    for (const name of entries) {
+      if (name === 'gh') continue;
+      try { fs.symlinkSync(path.join(src, name), path.join(dir, name)); }
+      catch { /* EEXIST — an earlier source already won this name, as PATH would have */ }
+    }
+  }
+  return dir;
+}
+
+/**
+ * The ambient PATH, minus gh. Built once per process because it is read-only and identical.
+ *
+ * `/usr/bin:/bin:/usr/sbin:/sbin` are appended as sources, not as PATH entries: they were
+ * hard-coded into the old PATH, and a mirror that omitted them could lose `git` on a machine
+ * with an unusual environment — which would make the refusal below be about something other
+ * than gh, silently.
+ */
+let ghFreeBinDir = null;
+function ghFreeBin() {
+  if (ghFreeBinDir) return ghFreeBinDir;
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'merge-gate-nogh-'));
+  tmpRoots.push(root);
+  ghFreeBinDir = mirrorWithoutGh(path.join(root, 'bin'), [
+    ...(process.env.PATH || '').split(':'), NODE_DIR, '/usr/bin', '/bin', '/usr/sbin', '/sbin',
+  ]);
+  return ghFreeBinDir;
+}
+
+/**
+ * A fake `gh` at the front of a PATH that contains no real one, and the PATH that reaches it.
  *
  * The real gh is never invoked by these tests. Opening a pull request is outward-facing and not
  * undoable by re-running the suite; a test that opened one would file a PR in a live repository
  * every time CI ran. So the dependency is stubbed and the ARGUMENTS it received are asserted —
  * which is the part that has to be right.
  *
- * PATH deliberately excludes the directory the real gh lives in (/opt/homebrew/bin here), so the
- * `absent` case is absent for a structural reason rather than a hopeful one. `resolvesOnPath`
- * proves that per-test instead of assuming it.
+ * WHAT WAS WRONG HERE, AND WHY THE PREMISE IS NOW ASSERTED IN BOTH DIRECTIONS
+ * PATH used to be `${dir}:${NODE_DIR}:/usr/bin:/bin` with a comment saying it "deliberately
+ * excludes the directory the real gh lives in (/opt/homebrew/bin here)". "here" was the whole
+ * defect: gh is /opt/homebrew/bin/gh on this Mac and /usr/bin/gh on ubuntu-latest, so the list
+ * excluded gh on the author's machine and INCLUDED it on the runner. The `absent` case was
+ * therefore unbuildable on CI — it failed loudly there (run 32943665467) and, worse, had never
+ * been anything but luck here.
+ *
+ * So the environment is now constructed rather than enumerated, and both halves of the premise
+ * are asserted before any behaviour is:
+ *   - gh resolves to exactly the stub, or to nothing at all — never to a real gh;
+ *   - git / node / bash still resolve, so a refusal cannot be about a PATH we broke.
+ * A one-sided guard is what #102 shipped: it asserted a case-sensitive property with a
+ * case-INsensitive regex and passed while its own premise was false.
  */
 function stubGh(root, { present = true, authExit = 0, prList = '', prCreate = 'https://github.com/o/r/pull/7', createExit = 0 } = {}) {
   const dir = fs.mkdtempSync(path.join(root, 'ghbin-'));
@@ -121,7 +193,22 @@ exit 1
 `);
     fs.chmodSync(gh, 0o755);
   }
-  const PATH = `${dir}:${NODE_DIR}:/usr/bin:/bin`;
+  const PATH = `${dir}:${ghFreeBin()}`;
+
+  const found = resolvesOnPath('gh', PATH);
+  assert.equal(
+    found, present ? path.join(dir, 'gh') : null,
+    present
+      ? `'gh' on this fixture's PATH is ${found}, not the stub — these tests would drive the REAL gh`
+      : `this fixture's PATH still resolves a real gh at ${found}, so 'absent' is not absent and every assertion after it is vacuous`
+  );
+  for (const tool of ['git', 'node', 'bash']) {
+    assert.ok(
+      resolvesOnPath(tool, PATH),
+      `the gh-free PATH lost ${tool}, so anything that fails under it fails for the wrong reason`
+    );
+  }
+
   return { dir, argsLog, PATH, env: { ...process.env, PATH }, ghArgs: () => (fs.existsSync(argsLog) ? fs.readFileSync(argsLog, 'utf8') : '') };
 }
 
@@ -549,6 +636,53 @@ test('an unmerged branch is KEPT and reported, not force-deleted', () => {
 // The real `gh` is never invoked. Opening a pull request is outward-facing and is not undone by
 // re-running the suite, so the dependency is stubbed and what is asserted is the arguments it was
 // handed and the state left behind on failure.
+
+// The fixture is a program, so it gets a test of its own before anything relies on it.
+//
+// `stubGh({ present: false })` asserts that gh does not resolve. That assertion is only worth
+// something if the construction it checks would REMOVE a gh that was there — and on a machine
+// with no gh at all it would pass while doing nothing, which is how the old fixture survived
+// here for as long as it did. So the control below plants a gh, proves it is findable, and only
+// then proves the mirror drops it. Nothing about it depends on this machine.
+test('the gh-free PATH removes a gh that IS there — the fixture, driven', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'merge-gate-fixture-'));
+  tmpRoots.push(root);
+  const src = path.join(root, 'src');
+  fs.mkdirSync(src);
+  for (const name of ['gh', 'git', 'node']) {
+    const p = path.join(src, name);
+    fs.writeFileSync(p, '#!/bin/sh\nexit 0\n');
+    fs.chmodSync(p, 0o755);
+  }
+  assert.equal(
+    resolvesOnPath('gh', src), path.join(src, 'gh'),
+    'the control directory has no gh in it, so removing gh from it proves nothing'
+  );
+
+  const mirror = mirrorWithoutGh(path.join(root, 'bin'), [src]);
+  assert.equal(resolvesOnPath('gh', mirror), null, 'the mirror kept a gh it was asked to drop');
+  assert.ok(resolvesOnPath('git', mirror), 'the mirror dropped git as well as gh — it removes a name, not a directory');
+  assert.ok(resolvesOnPath('node', mirror), 'the mirror dropped node as well as gh');
+});
+
+// And the same property, asserted of the PATH the tests below actually run under: whatever this
+// machine is, gh is not reachable from it. On ubuntu-latest that means /usr/bin/gh; on this Mac
+// it means /opt/homebrew/bin/gh. Neither location appears anywhere in this file.
+test('the absent-gh fixture is absent on THIS machine, wherever gh lives here', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'merge-gate-fixture-'));
+  tmpRoots.push(root);
+  const real = resolvesOnPath('gh', process.env.PATH || '');
+  const gh = stubGh(root, { present: false });
+  assert.equal(resolvesOnPath('gh', gh.PATH), null, `gh is still reachable at ${resolvesOnPath('gh', gh.PATH)}`);
+  assert.equal(
+    run('bash', ['-c', 'command -v gh || echo NONE'], REPO, gh.env).stdout.trim(), 'NONE',
+    `bash resolved a gh the fixture believed it had removed (this machine's gh: ${real ?? 'none'})`
+  );
+  assert.ok(
+    run('bash', ['-c', 'git --version'], REPO, gh.env).stdout.startsWith('git version'),
+    'git stopped working under the gh-free PATH, so a refusal under it would not be about gh'
+  );
+});
 
 test('the DEFAULT route pushes the branch to origin and opens a pull request', () => {
   const { proj, up, cfg, root } = fixture();
