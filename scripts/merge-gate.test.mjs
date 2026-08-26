@@ -667,7 +667,8 @@ test('the gh-free PATH removes a gh that IS there — the fixture, driven', () =
 
 // And the same property, asserted of the PATH the tests below actually run under: whatever this
 // machine is, gh is not reachable from it. On ubuntu-latest that means /usr/bin/gh; on this Mac
-// it means /opt/homebrew/bin/gh. Neither location appears anywhere in this file.
+// it means /opt/homebrew/bin/gh. Both locations appear in the comments above, which explain the
+// defect — neither is READ by any code here, which is the difference that makes this portable.
 test('the absent-gh fixture is absent on THIS machine, wherever gh lives here', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'merge-gate-fixture-'));
   tmpRoots.push(root);
