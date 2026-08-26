@@ -1,0 +1,11 @@
+{
+  "subject": "6fd763dab7481b7bfb43e1a89920e8e0647128236178e8a87196121a83d9239b",
+  "base": "244e8db3a1d8103ef79bec13467d3dcb2ad44cdd",
+  "tier": "full",
+  "tier_driver": "scripts/check-gates.mjs",
+  "verdict": "PASS",
+  "by": "builder-surface-wiring",
+  "run_id": null,
+  "evidence": "npm run check 46/46 pass 0 fail; 64 constructed-failure cases; every changed assertion mutation-tested individually — distinguisher sentence deleted -> exit 1, anchor duplicated -> exit 1, DO-NOT-COUNT clause deleted -> exit 1, self-disclaimer deleted -> exit 1, gated stage gains dispatch -> exit 1, COMMAND_ONLY emptied -> exit 1; two assertions were confirmed unfalsifiable BEFORE the fix (exit 0) and falsifiable after; single author, single model family",
+  "recorded_at": "2026-08-26T14:45:52.442Z"
+}
