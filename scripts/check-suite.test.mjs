@@ -83,7 +83,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const {
   STEPS, EXCLUDED, SHELL_OPERATORS, auditSuite, reachable, aliasLinks, shellOperators, resolveChain,
-  CI_GUARD, CI_CHAINS_ALLOWED, parseCiSteps, ciRunCommands, ciChainFindings,
+  CI_GUARD, CI_CHAINS_ALLOWED, parseCiSteps, unguardedSteps, ciRunCommands, ciChainFindings, UNPARSED_PREFIX,
   DIRECT_TEST_RUNNER, AGGREGATE_RUNNER,
 } = require('./lib/check-suite.js');
 
@@ -670,11 +670,20 @@ test('every OTHER unmodelled construct in the scanner path OVER-reports — the 
   // rather than promised: the remaining constructs this scanner does not model all add operators
   // rather than hiding them, so none of them can produce a silent clean result. Over-reporting
   // costs one command rewritten; under-reporting is what the last three rounds were.
+  //
+  // THE CLAIM WAS FALSE WHEN IT WAS WRITTEN, and `#` is where it broke — which is why the line
+  // asserting it is gone from this list rather than moved. This case used to carry
+  // `shellOperators('npm run a # note ; npm run b').length > 0` as evidence that an unmodelled `#`
+  // over-reports. It does, on that string. On the string a person writes it UNDER-reports to
+  // nothing: the apostrophe in `# don't forget` opened a real single-quote frame and swallowed the
+  // `;` chain on the next line. One shape of a construct over-reporting is not the construct
+  // over-reporting, and a list of shapes somebody thought of is what this test is. `#` is MODELLED
+  // now — see `\`#\` begins a comment ONLY at the start of a word` below for the fix and both
+  // directions of it. The entries that remain are the ones re-checked against bash on 2026-08-26.
   assert.ok(shellOperators('echo @(a|b)').length > 0, 'extglob — `|` is pattern alternation, reported anyway');
   assert.ok(shellOperators('if [[ a && b ]]; then npm run x; fi').length > 0, '[[ ]] conditional operators');
   assert.ok(shellOperators('case x in a) npm run y;; esac').length > 0, 'case terminators');
   assert.ok(shellOperators('bash <<EOF\nnpm run a\nEOF').length > 0, 'here-document body');
-  assert.ok(shellOperators('npm run a # note ; npm run b').length > 0, 'text after a `#` comment');
 
   // THE ONE REMAINING UNDER-REPORT, disclosed rather than hidden: an unterminated quote swallows
   // the rest of the string. It is not a bypass, because bash refuses to run the command at all —
@@ -774,9 +783,162 @@ test('the two lists of `$` special parameters are ONE list', () => {
   assert.deepEqual(shellOperators('echo $$; npm run b'), [';'], 'a real separator after $$ still reports');
 
   // And the base-N refusal survives the narrowing of the `#` ban — it is a deliberate over-report
-  // with its own case, and the fix for `$#` must not have quietly turned it off.
+  // with its own case, and the fix for `$#` must not have quietly turned it off. It survives the
+  // COMMENT model too, which is the newer risk: the `#` in `16#ff` follows a digit, so it is
+  // mid-word and the comment branch must not claim it.
   assert.deepEqual(shellOperators('echo "$((16#ff&1))"'), ['&'], 'base-N stopped being refused');
-  assert.deepEqual(shellOperators('npm run a # x ; npm run b'), [';'], 'a `#` comment still over-reports');
+  assert.deepEqual(shellOperators('echo $((2#101))'), [], 'base-N inside real arithmetic was read as a comment');
+});
+
+test('`#` begins a comment ONLY at the start of a word — and an apostrophe in one used to hide a chain', () => {
+  // ROUND 8, FINDING 1. shellOperators() had no model for bash's comment operator, so a bare
+  // apostrophe inside a comment opened a real single-quote frame and every operator after it was
+  // read in the wrong state. Reproduced against `main` (7f7bddd) before this fix:
+  //
+  //     shellOperators("npm run test:foo # don't forget this\nnpm run bad ; npm run worse")  -> []
+  //     the same string with the apostrophe removed                                          -> [';','\n']
+  //
+  // Two spellings of one script that bash runs identically, opposite verdicts from the guard — and
+  // the EMPTY one is the spelling a person actually writes. The first assertion is the fix stated
+  // as a property rather than as a pair of literals: the apostrophe must not be able to matter.
+  const withApostrophe = "npm run test:foo # don't forget this\nnpm run bad ; npm run worse";
+  const without = 'npm run test:foo # dont forget this\nnpm run bad ; npm run worse';
+  assert.deepEqual(
+    shellOperators(withApostrophe), shellOperators(without),
+    'an apostrophe inside a comment still changes the verdict'
+  );
+  assert.deepEqual(shellOperators(withApostrophe), [';', '\\n'], 'the chain on the line after a comment was not reported');
+
+  // THE OTHER DIRECTION, and it is what keeps this from being "skip everything after any `#`".
+  // Each of these is ONE word in bash and prints the `#` — measured, one probe each: `echo a#b`
+  // -> `a#b`, `echo a=#b` -> `a=#b`, `echo -#b` -> `-#b`, `echo "x"#y` -> `x#y`, `echo 'x'#y` ->
+  // `x#y`, `echo a\ #b` -> `a #b` (the escaped space is part of the word, so the `#` is not).
+  for (const c of ['echo a#b', 'echo a=#b', 'echo -#b', 'echo "x"#y', "echo 'x'#y", 'echo a\\ #b']) {
+    assert.deepEqual(shellOperators(c), [], `${c} — a mid-word \`#\` was read as a comment`);
+  }
+
+  // `)` IS TWO DIFFERENT CHARACTERS TO THIS RULE, which is the whole reason word-start is tracked
+  // FORWARD off the frame stack instead of read backwards off `src[i - 1]`. Measured in bash:
+  // `echo $(echo x)#y` prints `x#y` — a substitution's result is part of the word, so `#y` is
+  // literal — while `(echo a)#y` prints `a`, because that `)` closed a SUBSHELL and `#y` is a
+  // comment. A backwards byte test answers both the same way and is wrong on one of them.
+  assert.deepEqual(shellOperators('echo $(echo x)#y ; npm run b'), [';'], 'a substitution close did not continue the word');
+  assert.deepEqual(shellOperators('echo `echo x`#y ; npm run b'), [';'], 'a backtick close did not continue the word');
+  assert.deepEqual(shellOperators('(echo a)#y ; npm run b'), [], 'a subshell close did not start a word');
+
+  // WHERE THE MODEL MAKES THIS SCANNER REPORT LESS — stated here rather than discovered later.
+  // `bash -c 'echo a #b ; echo SECOND'` prints `a` and nothing else: SECOND never runs. So [] is
+  // the true answer, and the `[';']` this used to return was the guard firing on a correct command
+  // with a message that is false of it.
+  assert.deepEqual(shellOperators('npm run a # x ; npm run b'), [], 'text inside a comment is not a chain');
+  assert.deepEqual(shellOperators('echo a #b ; npm run z'), [], 'measured: bash runs `echo a` alone');
+  assert.deepEqual(shellOperators('echo a;#b ; npm run z'), [';'], 'the `;` BEFORE the comment is still real');
+
+  // A SUBSTITUTION OPENS A COMMAND, so a `#` immediately inside one is a comment there too — and
+  // both spellings do it. Measured: `bash -c "echo \$(# don't<NL>echo A; echo B); echo SECOND"` prints
+  // `A B` then `SECOND`, so the comment ran out at the newline and the `;` after it is real. Without
+  // the word-start these branches set, the apostrophe reopens the original defect one frame down.
+  assert.deepEqual(shellOperators("echo $(# don't\nnpm run a; npm run b)"), [';', '\\n'], 'a comment just inside `$(`');
+  assert.deepEqual(shellOperators("echo \`# don't\nnpm run a; npm run b\`"), [';', '\\n'], 'a comment just inside a backtick');
+
+  // Arithmetic is not command context: `echo $((2#101))` prints 5, so `#` in there is base-N
+  // notation, and `set -- a b c; echo "$(($#|1))"` prints 3. NOT because of where the branch sits —
+  // moving it above the `arith` continue kills no test, and neither does moving it above the
+  // double-quote exit. The word-start test alone is what holds, and for the same reason in both
+  // cases: that `#` follows a digit, and this one follows a `$`. These stay as cases because they
+  // are the shapes a widening of `wordStart` would break first.
+  assert.deepEqual(shellOperators('echo $((2#101))'), [], 'base-N notation was read as a comment');
+  assert.deepEqual(shellOperators('echo "$(($#|1))"'), [], '`$#` was read as a comment');
+
+  // Inside quotes a `#` is literal to bash — `echo "a ; # b"` prints `a ; # b` as one argument.
+  // This scanner gets that from word-start rather than from where the branch sits, so these are
+  // the cases that fail if `wordStart` is ever widened to survive a quote.
+  assert.deepEqual(shellOperators('echo "npm run a # x"'), [], 'a `#` inside double quotes started a comment');
+  assert.deepEqual(shellOperators("echo 'npm run a # x'"), [], 'a `#` inside single quotes started a comment');
+  assert.deepEqual(shellOperators('echo "a b" #c ; npm run z'), [], 'a `#` after a closed quote and a space is still a comment');
+
+  // Both terminations of a comment, because the end-of-string one is a `break` and the other is
+  // not: a comment ends a LINE, so the newline after it is still an operator.
+  assert.deepEqual(shellOperators('npm run a # trailing'), []);
+  assert.deepEqual(shellOperators('npm run a # trailing\nnpm run b'), ['\\n'], 'the newline ending a comment was swallowed');
+
+  // THE DISCLOSED UNDER-REPORT OF THIS BRANCH, pinned so it is a decision rather than a surprise:
+  // a comment that swallows the `)` of an unterminated substitution returns []. bash refuses that
+  // string outright — `echo $(echo # x); echo SECOND` is `unexpected EOF while looking for
+  // matching ')'`, exit 2 — so there is no command hiding behind the empty verdict. Terminated by
+  // a newline, bash runs both, and then it is reported. That is the discrimination.
+  assert.deepEqual(shellOperators('echo $(echo # x); echo SECOND'), [], 'bash refuses this string — see above');
+  assert.deepEqual(shellOperators('echo $(echo # x\n); echo SECOND'), [';', '\\n'], 'the terminated form must report');
+});
+
+test('process substitution is a command whose exit status the step NEVER sees — reported, and entered', () => {
+  // ROUND 8, FINDING 2. `<(…)` and `>(…)` matched no branch and opened no frame, so the construct
+  // was invisible: against `main` (7f7bddd) all three shapes below returned [] — a clean verdict on
+  // a command that runs a second command.
+  //
+  // It is the WORST member of SHELL_OPERATORS rather than a peer of `;`, and that is measured:
+  //
+  //     bash -c 'cat <(false; echo INNER_RAN); echo exit=$?'   -> INNER_RAN, then exit=0
+  //     bash -c 'true <(exit 7); echo exit=$?'                 -> exit=0
+  //
+  // `;` at least hands back the LAST command's status. Here the inner status is not merged, not
+  // masked, and not last: it is discarded, and no ordering of steps recovers it.
+  assert.deepEqual(shellOperators('npm run good <(npm run bad)'), ['<(']);
+  assert.deepEqual(shellOperators('npm run good > >(npm run bad)'), ['>(']);
+  assert.deepEqual(shellOperators('diff <(npm run a) <(npm run b)'), ['<(']);
+
+  // ENTERED, not merely reported — the interior genuinely is a command list (`cat <(echo A; echo
+  // B)` prints A and B), so an inner chain comes back ALONGSIDE the construct. Reporting the
+  // construct without entering it would have been the cheaper fix and would have left the inner
+  // `;` unseen, which is this file's recurring defect one level down.
+  assert.deepEqual(shellOperators('cat <(false; echo X)'), [';', '<(']);
+  assert.deepEqual(shellOperators('cat <(#c\nnpm run a)'), ['<(', '\\n'], 'the comment model does not apply inside a substitution');
+
+  // THE INPUT THAT SEPARATES "entered" FROM "reported", found by mutating the push away and
+  // searching for a case whose answer moves — 23 probes returned the same operators both ways, and
+  // this is the one that does not. A `#` immediately after the closing `)`: inside the frame that
+  // `)` is the substitution closing and the word CONTINUES, so the `#` is literal and the `;`
+  // after it is real; with no frame the `)` is just a base-frame metacharacter, the `#` starts a
+  // comment, and the `;` is swallowed. bash settles it — `cat <(echo a)#b ; echo SECOND` reports
+  // `cat: /dev/fd/63#b: No such file or directory` and then prints SECOND, so `#b` was part of the
+  // filename and SECOND ran. Two commands, and only the entered scan says so.
+  assert.deepEqual(shellOperators('cat <(echo a)#b ; npm run z'), [';', '<('], 'the substitution frame did not close the word');
+
+  // AND THE FRAME CLOSES on the `)`, or everything after it is scanned one level too deep forever.
+  // A trailing `&&` at the base frame is what makes a missing pop visible.
+  assert.deepEqual(shellOperators('cat <(npm run a) && npm run b'), ['&&', '<(']);
+
+  // THE OTHER DIRECTION. Quoted, it is text and bash prints it. Escaped, bash refuses the whole
+  // string — `echo \<(x)` is a syntax error, exit 2 — so there is no command to report. And `<\(`
+  // is a redirect from a file literally named `(x)`, which is one command.
+  assert.deepEqual(shellOperators('echo "<(not a procsub)"'), []);
+  assert.deepEqual(shellOperators("echo '<(not a procsub)'"), []);
+  assert.deepEqual(shellOperators('echo \\<(x)'), [], 'an escaped `<` opened a substitution frame');
+  assert.deepEqual(shellOperators('echo <\\(x\\)'), [], 'a redirect from a literal `(x)` was read as a substitution');
+
+  // ARITHMETIC IS NOT A COMMAND CONTEXT and `<(` in there is a comparison against a parenthesised
+  // operand: `echo $((1<(2)))` prints 1 and `echo $((3>(1)))` prints 1. Same structural guarantee
+  // as the `#` case above, and pinned for the same reason.
+  assert.deepEqual(shellOperators('echo $((1<(2)))'), [], '`<(` inside arithmetic was read as a substitution');
+  assert.deepEqual(shellOperators('echo $((3>(1)))'), [], '`>(` inside arithmetic was read as a substitution');
+
+  // The redirect guard's own shapes must not have moved — each is one command, exit code intact.
+  assert.deepEqual(shellOperators('node x.mjs 2>&1'), [], 'the output-side redirect became a substitution');
+  assert.deepEqual(shellOperators('node x.mjs 0<&3'), [], 'the input-side descriptor dup became a substitution');
+
+  // END TO END, because the guarantee is about what auditSuite() CERTIFIES, not what the scanner
+  // returns — and because the two are joined by splitFindings(), which sorts a token into
+  // `operators` only if SHELL_OPERATORS contains it. A `<(` added to the scanner and not to that
+  // list would be reported as an unmodelled construct instead, with the wrong remedy attached.
+  const audited = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'node --test t.mjs <(npm run test:hooks)' } });
+  assert.ok(
+    audited.failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes('`<(`')),
+    `a command hidden in a process substitution was certified clean:\n${audited.failures.join('\n') || '(no failures at all)'}`
+  );
+  assert.ok(
+    audited.failures.some((f) => f.includes('DISCARDED')),
+    'the finding did not say what a process substitution does to the exit code'
+  );
 });
 
 test('an unquoted backslash escapes the operator after it — the branch that had no coverage', () => {
@@ -1209,8 +1371,7 @@ test('a `run: |` that starts with a BLANK line does not swallow the step after i
   // step that is GENUINELY missing the guard must still be reported when it follows such a block.
   // Without it, "two steps parsed" could be satisfied by a parser that recovers the step and drops
   // its keys, which reads identically in the count and is silent in exactly the same way.
-  const unguarded = (workflow) =>
-    parseCiSteps(workflow).filter((s) => s.run !== null && s.if !== CI_GUARD).map((s) => s.line);
+  const unguarded = unguardedSteps; // one implementation, in the library — see its JSDoc
 
   assert.deepEqual(unguarded(leadingBlank), [], 'a guarded workflow was reported as unguarded');
 
@@ -1227,6 +1388,356 @@ test('a `run: |` that starts with a BLANK line does not swallow the step after i
   const withContent = parseCiSteps(blankThenContent);
   assert.equal(withContent.length, 2, 'a blank line before real block content broke the parse');
   assert.equal(withContent[0].run, 'npm run test:b', 'the block content after a leading blank was lost');
+});
+
+test('a `run:`/`if:` value that is not a plain single-line scalar is REFUSED, not decoded', () => {
+  // ROUND 9, AND IT IS A DELETION. Round 8 modelled these shapes — a 17-entry escape table for
+  // quoted flow scalars, a fold for plain continuations — and both were exact against PyYAML on 42
+  // probes. The gate then found a P1 INSIDE the modelling, and the shape of it is why the modelling
+  // is gone rather than patched:
+  //
+  //     run: "npm run good <\          real YAML: an escaped line break collapses to NOTHING, so
+  //       (npm run bad)"               the value is `npm run good <(npm run bad)` — a real procsub
+  //
+  //     the fold joined with a SPACE, the leftover `\`+space then decoded as the escaped-space
+  //     escape, and the value came out `npm run good < (npm run bad)`. `<(` never adjacent.
+  //     ciChainFindings -> []. A SILENT CLEAN on the exact construct round 8 added detection for.
+  //
+  // Ninth bypass in this file, third in this layer. The round-3 rule — the third fix of a kind
+  // means the approach is the defect — is applied instead of a tenth patch.
+  const wf = (...body) => ['name: t', 'jobs:', '  one:', '    steps:', ...body, ''].join('\n');
+  const only = (workflow) => ciChainFindings(workflow, {});
+
+  // THE P1 ITSELF, pinned as the EXACT findings array. `.some()` is what hid one of the P2s in
+  // round 8 — it cannot see a second, contradictory finding beside the one it is looking for — so
+  // every assertion in this case is a deepEqual on the whole array.
+  const p1 = wf('      - name: A', '        run: "npm run good <\\', '          (npm run bad)"');
+  assert.deepEqual(only(p1), [
+    'UNPARSED: ci.yml:5 `run:` was NOT read — it begins with a YAML indicator, so it is not a plain ' +
+      'scalar and this parser does not decode it. It is not scanned for shell operators, so it cannot ' +
+      'be certified as one command: "npm run good <\\',
+  ], 'the escaped-line-break process substitution was certified clean again');
+
+  // THE SAME ROOT CAUSE ON `&&` AND `||`, which round 8 reported as two bare `&`/`|` findings —
+  // caught, but describing a construct that is not there, and a rule whose message is false of the
+  // code is one that gets argued with rather than obeyed. Refused now, ONCE, with no operator claim
+  // at all. PyYAML reads both of these as the real two-command chain.
+  for (const split of ['        run: "npm run a &\\', '        run: "npm run a |\\']) {
+    const found = only(wf('      - name: A', split, '          & npm run b"'));
+    assert.equal(found.length, 1, `expected exactly one refusal, got:\n${found.join('\n')}`);
+    assert.ok(found[0].startsWith(UNPARSED_PREFIX), found[0]);
+    assert.ok(!found[0].includes('carries'), `a refused value was also reported as carrying an operator: ${found[0]}`);
+  }
+
+  // A YAML ALIAS, which is NOT one of the judge's findings and is NOT closed by refusing quotes
+  // alone — it is why NON_PLAIN_SCALAR is a character class and not a quote test. `run: *c`, with
+  // `&c npm run a && npm run b` anchored anywhere earlier, resolves to that chain in PyYAML 6.0.3
+  // and returned [] from this parser BEFORE round 8 as well as after. A tag does the same thing.
+  const alias = ['name: t', 'jobs:', '  one:', '    env:', '      C: &c npm run a && npm run b', '    steps:',
+    '      - name: A', '        run: *c', ''].join('\n');
+  assert.equal(only(alias).length, 1, `a YAML alias was not refused:\n${only(alias).join('\n')}`);
+  assert.ok(only(alias)[0].startsWith(UNPARSED_PREFIX));
+  const tagged = wf('      - name: A', '        run: !!str npm run a && npm run b');
+  assert.equal(only(tagged).length, 1, 'a tagged scalar produced more or fewer than one finding');
+  assert.ok(only(tagged)[0].startsWith(UNPARSED_PREFIX), 'a tagged scalar was scanned rather than refused');
+
+  // THE DOUBLE REPORT, which is round 8's second P2 stated as an assertion. The refusal message
+  // says the value was not scanned for shell operators; round 8 printed that AND then scanned the
+  // raw text, so one step produced two findings that contradicted each other. Exactly one now, and
+  // this is the case that fails if the `refused.has(step)` skip is deleted.
+  const both = wf('      - name: A', '        run: "npm run a && npm run b"');
+  const bothFound = only(both);
+  assert.equal(bothFound.length, 1, `a refused value was reported twice:\n${bothFound.join('\n')}`);
+  assert.ok(!bothFound[0].includes('carries `&&`'), bothFound[0]);
+
+  // ── THE OTHER DIRECTION, and it is the half that makes this a refusal rather than a blanket ban.
+  // A PLAIN SINGLE-LINE SCALAR IS READ VERBATIM — all 44 `run:` values in the real ci.yml are this
+  // shape, which is what makes the refusal cost zero today.
+  assert.deepEqual(only(wf('      - name: A', '        run: npm run a')), []);
+  assert.deepEqual(only(wf('      - name: A', '        run: npm run a "b c" && npm run d')),
+    ['ci.yml:5 carries `&&` — npm run a "b c" && npm run d'], 'a plain scalar CONTAINING quotes was refused');
+  assert.deepEqual(only(wf('      - name: A', '        run: npm run good <(npm run bad)')),
+    ['ci.yml:5 carries `<(` — npm run good <(npm run bad)'], 'the round-8 procsub detection was lost');
+  assert.deepEqual(ciChainFindings(CI).filter((f) => f.startsWith(UNPARSED_PREFIX)), [],
+    'the real ci.yml has a value this parser now refuses — the census said zero');
+
+  // A BLOCK SCALAR IS STILL READ, and that is the escape hatch that makes refusing cost nothing:
+  // it has no quoting rules and no escapes, so any command that cannot be a plain scalar can be
+  // written as one. Measured through PyYAML — `run: |-` carries `node -e "a: 1" && npm run b`,
+  // `npm run a # literal`, `{echo a; echo b;}` and `*glob npm run a` byte for byte, and every one
+  // of those is invalid or differently-parsed as a plain scalar.
+  const block = wf('      - name: A', '        run: |-', '          node -e "a: 1" && npm run b');
+  assert.deepEqual(only(block), ['ci.yml:5 carries `&&` — node -e "a: 1" && npm run b'],
+    'a block scalar was refused, which would leave a colon-carrying command unwritable');
+  assert.deepEqual(only(wf('      - name: A', '        run: |-', '          npm run a')), [],
+    'a one-command block scalar was reported');
+
+  // `name:` AND `uses:` ARE NOT REFUSED, deliberately, and this is the case that holds the scope.
+  // The refusal FAILS A BUILD; `name: "Build: step 1"` is ordinary, correct, harmless YAML, and no
+  // assertion anywhere reads a `name:` for anything but identity. `if:` IS refused, because it is
+  // compared by VALUE against CI_GUARD and a misread one hides an unguarded step.
+  assert.deepEqual(only(wf('      - name: "Build: step 1"', '        run: npm run a')), [],
+    'a quoted `name:` failed the build');
+  assert.deepEqual(only(wf('      - uses: "actions/checkout@v4"')), [], 'a quoted `uses:` failed the build');
+  const quotedIf = only(wf('      - name: A', '        if: "${{ !cancelled() }}"', '        run: npm run a'));
+  assert.equal(quotedIf.length, 1, `expected the quoted \`if:\` to be refused, got:\n${quotedIf.join('\n')}`);
+  assert.ok(quotedIf[0].includes('`if:`'), quotedIf[0]);
+});
+
+test('a continued `run:` is refused and CONSUMED — a refusal that leaks is a misparse', () => {
+  // ROUND 8 FOLDED THIS; before round 8 it was SILENTLY DROPPED. Refusing is strictly safer than
+  // both: the value this parser holds is not the value the runner executes, and saying so is the
+  // only honest answer once the folding is gone.
+  const wf = (...body) => ['name: t', 'jobs:', '  one:', '    steps:', ...body, ''].join('\n');
+  const only = (workflow) => ciChainFindings(workflow, {});
+
+  const cont = wf('      - name: A', '        run: npm run test:foo', '          && npm run malicious');
+  assert.deepEqual(only(cont), [
+    'UNPARSED: ci.yml:5 `run:` was NOT read — its value continues onto the line(s) below it, so this ' +
+      'parser has not read all of it. It is not scanned for shell operators, so it cannot be certified ' +
+      'as one command: npm run test:foo',
+  ], 'a continued `run:` was not refused');
+
+  // ONE REFUSAL PER KEY, not one per line. A value split over three lines is one value this parser
+  // could not read; three identical findings would read as three defects.
+  const three = wf('      - name: A', '        run: npm run a', '          && npm run b', '          ; npm run c');
+  assert.equal(only(three).length, 1, `a three-line value produced ${only(three).length} findings`);
+
+  // A BLANK LINE DOES NOT END A PLAIN SCALAR — measured with PyYAML, `run: npm run a` / blank /
+  // `  ; npm run b` is the ONE string `npm run a\n; npm run b`. If the watch closed on the blank,
+  // the continuation would fall through unrefused, which is the silent drop this replaces.
+  const blank = wf('      - name: A', '        run: npm run a', '', '          ; npm run b');
+  assert.equal(only(blank).length, 1, `a value continued across a blank line was not refused:\n${only(blank).join('\n')}`);
+
+  // AN EMPTY KEY TAKES THE NEXT LINE AS ITS VALUE — `run:` alone followed by an indented command is
+  // one string to YAML, and was `''` to this parser before round 8: a clean verdict on a step that
+  // runs two commands.
+  const empty = wf('      - name: A', '        run:', '          npm run a && npm run b');
+  assert.equal(only(empty).length, 1, `an empty \`run:\` with a value below it was not refused:\n${only(empty).join('\n')}`);
+
+  // ── THE DISCRIMINATIONS. Without these, "refuse anything more indented" refuses three correct
+  // steps in the real ci.yml.
+  //
+  // A NESTED MAPPING IS NOT A CONTINUATION. `with:` is more indented than the key above it and is
+  // not a tracked key, so the watch is closed before its body is reached — `with:` appears three
+  // times in the live file.
+  const withMap = parseCiSteps(wf('      - uses: actions/checkout@v4', '        with:', '          fetch-depth: 0'));
+  assert.equal(withMap.length, 1);
+  assert.equal(withMap[0].uses, 'actions/checkout@v4', 'a `with:` body was read as a continuation of `uses:`');
+  assert.deepEqual(withMap[0].unparsed, [], 'a `with:` body triggered a refusal');
+  assert.deepEqual(only(wf('      - name: A', '        run: npm run a', '        env:', '          K: v && w')), [],
+    'an `env:` body triggered a refusal on the `run:` above it');
+
+  // A BLANK LINE BEFORE THE NEXT STEP IS NOT A CONTINUATION EITHER, or every step separated by one
+  // is refused — which is every step in the real file.
+  const twoSteps = parseCiSteps(wf('      - name: A', '        run: npm run a', '', '      - name: B', '        run: npm run b'));
+  assert.equal(twoSteps.length, 2);
+  assert.deepEqual(twoSteps.map((s) => s.run), ['npm run a', 'npm run b']);
+  assert.deepEqual(twoSteps.flatMap((s) => s.unparsed), [], 'a blank line between steps was read as a continuation');
+
+  // AND A KEY AFTER A REFUSED VALUE IS STILL A KEY — the continuation must be consumed, or it falls
+  // through and is read as something else. `if:` below a refused `run:` must still be found, or the
+  // `!cancelled()` guard check goes blind on exactly the steps this rule fires on.
+  const thenKey = parseCiSteps(wf('      - name: A', '        run: npm run a', '          && npm run b', '        if: ${{ !cancelled() }}'));
+  assert.equal(thenKey[0].if, CI_GUARD, 'the `if:` after a refused value was swallowed');
+  assert.equal(thenKey.length, 1, 'the continuation line opened a new step');
+});
+test('a block header with an explicit indentation indicator is REFUSED — the body baseline is a lie', () => {
+  // ROUND 10, AND IT IS PRE-EXISTING. Measured on `main` (7f7bddd) and on round 9 (bff6bbe),
+  // IDENTICALLY on both, so this branch did not introduce it and the round-9 review's own
+  // prediction that it was new is refuted by its pre-image: the header regex accepted `|N`, and the
+  // body's baseline was then taken from the FIRST CONTENT LINE rather than from the indicator. A
+  // first line indented deeper than the indicator therefore sets a baseline every later line falls
+  // short of, and every later line closes the block.
+  //
+  //     run: |2                              PyYAML 6.0.3 ->
+  //           npm run test:gate   (14 sp)      "    npm run test:gate\n  && npm run some:step\n"
+  //         && npm run some:step  (12 sp)
+  //
+  //     before: parseCiSteps -> "npm run test:gate", ciChainFindings -> []   SILENT CLEAN
+  //
+  // REFUSED RATHER THAN HONOURED — one more deletion, not one more model, which is the stop
+  // condition this function is being held to. Nothing in ci.yml uses one (0 of 44), and a block
+  // scalar without an indicator expresses everything one with an indicator can.
+  const wf = (header, ...body) => ['name: t', 'jobs:', '  one:', '    steps:',
+    '      - name: A', '        if: ${{ !cancelled() }}', `        run: ${header}`, ...body, ''].join('\n');
+  const deep = ['              npm run test:gate', '            && npm run some:unreviewed:step'];
+  // A step's `line` is its `- ` ITEM line, not the line its key sits on. Derived and then
+  // ASSERTED rather than assumed: the first draft pinned the `run:` line, 7, and the parser said 5.
+  // A pinned integer here would also fail on the next edit to the fixture for a reason that has
+  // nothing to do with the rule.
+  const LINE = parseCiSteps(wf('|', '          x'))[0].line;
+  assert.equal(LINE, 5, 'the fixture shape moved — every expectation below is derived from this');
+  const refusalFor = (value) =>
+    `UNPARSED: ci.yml:${LINE} \`run:\` was NOT read — its block header carries an explicit indentation ` +
+    `indicator, which this parser does not honour. It is not scanned for shell operators, so it ` +
+    `cannot be certified as one command: ${value}`;
+
+  for (const header of ['|2', '>2', '|2+', '|-2', '|9']) {
+    assert.deepEqual(ciChainFindings(wf(header, ...deep), {}), [refusalFor(header)],
+      `\`${header}\` was not refused — its body is read from the wrong baseline`);
+  }
+
+  // ── THE OTHER DIRECTION, and each half was verified here rather than inherited from the review.
+  //
+  // A PLAIN BLOCK SCALAR IS STILL READ, or the escape hatch that makes every other refusal costless
+  // stops existing. This is the CONTROL for the five cases above: same body, no indicator.
+  assert.deepEqual(
+    ciChainFindings(wf('|', '          npm run test:gate', '          && npm run some:unreviewed:step'), {}),
+    [`ci.yml:${LINE} carries \`&&\`, \`\\n\` — npm run test:gate\n&& npm run some:unreviewed:step`],
+    'a block scalar with no indicator stopped being read'
+  );
+
+  // A DIGIT IN THE COMMENT IS NOT AN INDENTATION INDICATOR, and this pair is the discriminator —
+  // one direction alone passes under the bug that produced it. Round 10 tested `/\d/` against the
+  // WHOLE value, header and trailing comment together, so `run: | # step 2 of 3` was refused with a
+  // message saying it carried an indicator that is not there. A regression against round 9, which
+  // read all of these correctly, and a live one: this repo's own ci.yml comments are full of
+  // numbers. The refusal half of this pair passed under that bug; only the READ half fails.
+  for (const comment of ['# step 2 of 3', '# 44 sequential checks', '# bun 1.3.10', '# see #106']) {
+    assert.deepEqual(
+      ciChainFindings(wf(`| ${comment}`, '          npm run a', '          && npm run b'), {}),
+      [`ci.yml:${LINE} carries \`&&\`, \`\\n\` — npm run a\n&& npm run b`],
+      `a digit inside the comment \`${comment}\` was read as an indentation indicator`
+    );
+    assert.deepEqual(
+      ciChainFindings(wf(`|2 ${comment}`, ...deep), {}), [refusalFor(`|2 ${comment}`)],
+      `\`|2 ${comment}\` stopped being refused — the digit is in the HEADER here`
+    );
+  }
+  // The same discrimination one level finer: chomping plus a numeric comment is still read.
+  assert.deepEqual(
+    ciChainFindings(wf('|- # bun 1.3.10', '          npm run a', '          && npm run b'), {}),
+    [`ci.yml:${LINE} carries \`&&\`, \`\\n\` — npm run a\n&& npm run b`],
+    '`|-` with a numeric comment was refused'
+  );
+
+  // CHOMPING STAYS READ. `|-` and `|+` change only the TRAILING newline — measured with PyYAML,
+  // `|-` gives `npm run a\n&& npm run b` and `|+` the same plus a trailing `\n` — and a trailing
+  // newline is not a second command. Refusing them would cost the hatch for nothing.
+  for (const header of ['|-', '|+', '>-', '>+', '| # note']) {
+    assert.deepEqual(ciChainFindings(wf(header, '          npm run a', '          && npm run b'), {}),
+      [`ci.yml:${LINE} carries \`&&\`, \`\\n\` — npm run a\n&& npm run b`],
+      `\`${header}\` was refused — chomping and comments are not indentation indicators`);
+  }
+  assert.deepEqual(ciChainFindings(wf('|-', '          npm run a'), {}), [], 'a one-command `|-` was reported');
+
+  // AND THE REFUSED BODY DOES NOT LEAK into the step after it — a refusal that swallows the next
+  // step trades a silent clean for a silent misparse, which is not a trade.
+  const after = ['name: t', 'jobs:', '  one:', '    steps:', '      - name: A', '        run: |2',
+    '              npm run a', '            && npm run b', '      - name: B', '        run: npm run c', ''].join('\n');
+  assert.deepEqual(parseCiSteps(after).map((s) => [s.name, s.run]), [['A', '|2'], ['B', 'npm run c']],
+    'the refused block body swallowed the step after it');
+});
+
+test('a step whose `if:` could not be read is NOT also reported as unguarded', () => {
+  // ONE TRUE FINDING AND ONE FALSE ONE ABOUT THE SAME LINE, and the false one said the opposite of
+  // what is there. `if: "${{ !cancelled() }}"` is a correctly guarded step written with quotes:
+  // parseCiSteps refuses the quoted scalar — deliberately — and left the raw text on the step, so
+  // the guard filter ALSO reported it as carrying no guard.
+  //
+  // PROVENANCE, because it changes how this reads: `main` (7f7bddd) reports that step unguarded
+  // too. Measured. This is NOT a defect the round-9 deletion introduced — round 8 masked it as a
+  // side effect of unquoting every scalar, and deleting the decode took the mask away. The
+  // reasoning that keeps `name:`/`uses:` out of SAFETY_KEYS applies here word for word.
+  const wf = (guard) => ['name: t', 'jobs:', '  one:', '    steps:',
+    '      - name: A', ...(guard === null ? [] : [`        if: ${guard}`]), '        run: npm run a', ''].join('\n');
+
+  assert.deepEqual(unguardedSteps(wf('"${{ !cancelled() }}"')), [],
+    'a correctly guarded step written with quotes was reported as carrying no guard');
+  assert.equal(ciChainFindings(wf('"${{ !cancelled() }}"'), {}).length, 1,
+    'the refusal itself must still fire — it is the one true finding about that line');
+
+  // NOT FAIL-OPEN, which is the question to ask of any exclusion. A guard that is quoted AND
+  // weakened is excluded from the unguarded list and still fails the build, on the refusal.
+  assert.deepEqual(unguardedSteps(wf('"${{ always() }}"')), []);
+  assert.equal(ciChainFindings(wf('"${{ always() }}"'), {}).length, 1, 'a quoted, weakened guard stopped blocking');
+
+  // ── AND THE CASES IT MUST STILL CATCH, or the exclusion has eaten the rule.
+  const itemLine = (w) => parseCiSteps(w)[0].line;
+  assert.deepEqual(unguardedSteps(wf(null)), [itemLine(wf(null))], 'a step with no `if:` at all stopped being reported');
+  assert.deepEqual(unguardedSteps(wf('${{ always() }}')), [itemLine(wf('${{ always() }}'))], 'an UNQUOTED weakened guard stopped being reported');
+  assert.deepEqual(unguardedSteps(wf('${{ !cancelled() }}')), [], 'the correct guard was reported as missing');
+  assert.deepEqual(unguardedSteps(CI), [], 'the real ci.yml has an unguarded `run:` step');
+
+  // THE EXCLUSION IS `if:`-SHAPED, NOT STEP-SHAPED, and this is the case that holds it there. A
+  // step whose `run:` was refused says NOTHING about whether it carries a guard — its `if:` was
+  // read perfectly well, or is absent. Excluding the whole step would drop a TRUE finding to buy
+  // nothing; the mutation that widens it to `s.unparsed.length === 0` fails here and nowhere else.
+  const refusedRun = ['name: t', 'jobs:', '  one:', '    steps:',
+    '      - name: A', '        run: "npm run a && npm run b"', ''].join('\n');
+  assert.deepEqual(unguardedSteps(refusedRun), [parseCiSteps(refusedRun)[0].line],
+    'a step with a refused `run:` and no `if:` at all stopped being reported as unguarded');
+  // ONE IMPLEMENTATION. This filter was spelled twice in this file — once here, once in the
+  // block-scalar case — and the fix above had to land in both or the two would disagree about the
+  // same workflow. It lives in the library now, and this asserts the library is what answers.
+  assert.equal(typeof unguardedSteps, 'function');
+
+  // THE GUARD IS A PARAMETER, proved on a FIXTURE rather than on the real ci.yml. It was proved on
+  // `CI` — `unguardedSteps(CI, nonsense).length` against `ciRunCommands(CI).length` — and that had
+  // two defects for one line. It compared two NUMBERS with deepEqual, which is only ever equality
+  // wearing the wrong name; and it was silently coupled to "no step in ci.yml has a refused `if:`",
+  // because a refused step is excluded from the left count and not from the right, so injecting one
+  // anywhere in the file turned it red for a reason that has nothing to do with whether `guard` is
+  // read. Measured: that is exactly how it failed during this round's own injection run. A fixture
+  // this case owns cannot be perturbed by an edit to ci.yml.
+  const guarded = ['name: t', 'jobs:', '  one:', '    steps:',
+    '      - name: A', `        if: ${CI_GUARD}`, '        run: npm run a',
+    '      - name: B', `        if: ${CI_GUARD}`, '        run: npm run b', ''].join('\n');
+  assert.deepEqual(unguardedSteps(guarded), [], 'the default guard is not being applied');
+  assert.equal(unguardedSteps(guarded, '${{ nonsense() }}').length, 2,
+    'the guard is not a parameter — passing a different one changed nothing');
+});
+
+test('the `unguardedSteps` exclusion is discharged by ANOTHER function, and this is that coupling', () => {
+  // THE ARGUMENT THIS BRANCH RESTS ON, WITH A TEST UNDER IT AT LAST. unguardedSteps() excludes a
+  // step whose `if:` could not be read, and its JSDoc justifies that as "NOT FAIL-OPEN … a refused
+  // `if:` is itself a BLOCKING finding from ciChainFindings()". That is true — and it is discharged
+  // by a DIFFERENT function, so nothing about unguardedSteps() alone keeps it true. An argument
+  // with no test is what this file has spent ten rounds learning about.
+  //
+  // What makes it hold is one property of ciChainFindings(): its unparsed loop reports EVERY
+  // refusal, over EVERY step, for EVERY key, and consults no allowlist. Give that loop a scope or
+  // an exemption and the exclusion above turns into a genuine fail-open with nothing to notice it.
+  // Each assertion below fails on one of those two changes.
+  const wf = (guard) => ['name: t', 'jobs:', '  one:', '    steps:',
+    '      - name: A', `        if: ${guard}`, '        run: npm run a', ''].join('\n');
+  const weakAndQuoted = wf('"${{ always() }}"');
+
+  // 1 · SCOPE. The only refusal here is on `if:` — the `run:` is a clean plain scalar. A loop
+  // narrowed to `run:` would report nothing at all, and the step would then be neither reported
+  // unguarded (excluded) nor reported unread (out of scope): silent, on a weakened guard.
+  assert.deepEqual(unguardedSteps(weakAndQuoted), [], 'the exclusion under test is not in force');
+  const scoped = ciChainFindings(weakAndQuoted, {});
+  assert.equal(scoped.length, 1, `an \`if:\`-only refusal was not reported:\n${scoped.join('\n')}`);
+  assert.ok(scoped[0].startsWith(UNPARSED_PREFIX) && scoped[0].includes('`if:`'), scoped[0]);
+
+  // 2 · EXEMPTION. CI_CHAINS_ALLOWED is keyed by the exact run string; a refusal has no key and
+  // must not acquire one. Passed an allowlist keyed on the refused VALUE, on the step's `run:`, and
+  // on the finding itself — none may suppress it.
+  for (const key of ['"${{ always() }}"', 'npm run a', scoped[0]]) {
+    const withAllow = ciChainFindings(weakAndQuoted, { [key]: 'x'.repeat(60) });
+    assert.ok(
+      withAllow.some((f) => f.startsWith(UNPARSED_PREFIX)),
+      `an allowlist entry keyed on ${JSON.stringify(key.slice(0, 30))} suppressed a refusal`
+    );
+  }
+
+  // 3 · END TO END, against the REAL ci.yml, because the coupling is a claim about this repo's
+  // gate and not about a fixture. Injecting a quoted, weakened guard must leave the build red.
+  // Note WHICH check goes red: the assertion named for the guard passes, because the step is
+  // excluded; it is the refusal that blocks. On `main` it is the other way round. That inversion is
+  // the whole reason this case exists.
+  const injected = CI.replace(`        if: ${CI_GUARD}\n        run: npm run test:sandbox`,
+    `        if: "\${{ always() }}"\n        run: npm run test:sandbox`);
+  assert.notEqual(injected, CI, 'the injection matched nothing, so its proof is vacuous');
+  assert.deepEqual(unguardedSteps(injected), [], 'the excluded step is what this case is about');
+  const real = ciChainFindings(injected); // the REAL allowlist, as the blocking assertion uses it
+  assert.equal(real.length, 1, `a quoted, weakened guard in the real ci.yml did not block:\n${real.join('\n')}`);
+  assert.ok(real[0].startsWith(UNPARSED_PREFIX), real[0]);
+
+  // And the control, or the three assertions above are satisfied by a file that is red anyway.
+  assert.deepEqual(ciChainFindings(CI), [], 'the real ci.yml is not clean, so the injection proves nothing');
 });
 
 test('`run: >` is accepted by the parser and joined literally — an over-report, on purpose', () => {
@@ -1305,8 +1816,7 @@ test('every `run:` step in ci.yml carries the `!cancelled()` guard, and the thre
   // on `main` before that change the build failed at step 18 of 30 and the twelve after it never
   // ran — the ledger's enforcement, both gates, and the check that makes "the sandbox is armed" a
   // fact. A step added without the guard reinstates exactly that, for everything below it.
-  const unguarded = (workflow) =>
-    parseCiSteps(workflow).filter((s) => s.run !== null && s.if !== CI_GUARD).map((s) => s.line);
+  const unguarded = unguardedSteps; // one implementation, in the library — see its JSDoc
 
   assert.deepEqual(
     unguarded(CI), [],
@@ -1442,6 +1952,13 @@ test('the ci.yml chain check has a LIBRARY and an entry point, not only a test',
   for (const name of [
     'CI_GUARD', 'CI_CHAINS_ALLOWED', 'parseCiSteps', 'ciRunCommands', 'ciChainFindings',
     'DIRECT_TEST_RUNNER', 'AGGREGATE_RUNNER',
+    // Added 2026-08-26 with the census refusal, and this list is one commit older than it looks:
+    // it briefly held `YAML_DQ_ESCAPES` and `decodeFlowScalar`, which are gone because the
+    // modelling they served is gone. Exported for the same reason as the rest — a predicate a test
+    // can drive directly is one a mutation can be aimed at — plus UNPARSED_PREFIX, which exists so
+    // scripts/check-ci-chains.mjs can tell the two kinds of finding apart without matching a
+    // substring of an English sentence.
+    'STEP_KEYS', 'SAFETY_KEYS', 'NON_PLAIN_SCALAR', 'UNPARSED_PREFIX',
   ]) {
     assert.ok(name in lib, `${name} is not exported from scripts/lib/check-suite.js — it moved back into a test`);
   }
@@ -1491,6 +2008,36 @@ test('the ci.yml chain check has a LIBRARY and an entry point, not only a test',
   const missing = spawnSync(process.execPath, [entry, path.join(dir, 'nope.yml')], { encoding: 'utf8' });
   assert.equal(missing.status, 1, 'a missing workflow reported success — absent is UNRESOLVED, not clean');
   assert.match(missing.stderr, /UNRESOLVED/, missing.stderr);
+
+  // ── THE TWO REMEDIES, THROUGH THE REAL ENTRY POINT, and each printed ONLY for its own kind. The
+  // gate reported this branch as never executed by any test, which was true: it was reached by
+  // hand and by nothing else. It matters twice over — a refusal-only run used to get the CHAIN
+  // remedy appended, telling the reader to add a string to an allowlist that cannot hold it, and
+  // the kinds were told apart by matching the words "cannot decode" inside a generated sentence,
+  // so rewording the message would have silently switched every reader onto the wrong instruction.
+  // They are told apart by UNPARSED_PREFIX now, which both files import.
+  const refusalOnly = path.join(dir, 'refusal.yml');
+  fs.writeFileSync(refusalOnly, [
+    'name: t', 'jobs:', '  j:', '    steps:',
+    '      - name: Quoted', '        if: ${{ !cancelled() }}', '        run: "npm run a && npm run b"',
+    '      - name: Mission Control', '        if: ${{ !cancelled() }}',
+    `        run: ${Object.keys(CI_CHAINS_ALLOWED)[0]}`, '',
+  ].join('\n'));
+  const refused = spawnSync(process.execPath, [entry, refusalOnly], { encoding: 'utf8' });
+  assert.equal(refused.status, 1, `a refused scalar exited 0 through the entry point:\n${refused.stdout}`);
+  assert.match(refused.stderr, /UNPARSED:/, refused.stderr);
+  assert.match(refused.stderr, /QUOTED\?  UNQUOTE IT/, 'the refusal remedy was not printed');
+  assert.ok(
+    !/add the exact run string to CI_CHAINS_ALLOWED/.test(refused.stderr),
+    `the chain remedy was printed for a refusal-only run, which cannot use it:\n${refused.stderr}`
+  );
+  // Exactly one finding, not two: the refused value must not also be operator-scanned. Counted off
+  // the header the script prints, so this reads the real output rather than the library.
+  assert.match(refused.stderr, /check:ci-chains: 1 finding\b/, refused.stderr);
+
+  // And the mirror: a CHAIN-only run gets the chain remedy and NOT the refusal one.
+  assert.match(bad.stderr, /add the exact run string to CI_CHAINS_ALLOWED/, bad.stderr);
+  assert.ok(!/QUOTED\?  UNQUOTE IT/.test(bad.stderr), `the refusal remedy leaked into a chain-only run:\n${bad.stderr}`);
 
   // The control: a clean workflow through the same argument path still exits 0, so the two failures
   // above are the findings and not the argument.
