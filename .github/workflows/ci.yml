@@ -34,9 +34,9 @@
 #
 # ── WHY EVERY CHECK STEP CARRIES `if: ${{ !cancelled() }}` ────────────────────────────────────
 # GitHub's default inside a job is fail-fast: the first failing step SKIPS every step after it.
-# This is one job of 47 sequential checks, and it was 30 before this change. It read 44 until the
-# `test:eviction` step was added on 2026-08-26, then 45, and 47 once the two `Documented figures`
-# steps landed the same day; derive it, never recall it — the guarded `run:` steps of this file ARE
+# This is one job of 49 sequential checks, and it was 30 before this change. It read 44 until the
+# `test:eviction` step was added on 2026-08-26, then 45, 47 once the two `Documented figures`
+# steps landed the same day, and 49 when the citation pair landed after them; derive it, never recall it — the guarded `run:` steps of this file ARE
 # the figure, and `npm run check:figures` now fails when this comment disagrees with them. REPORTED, from the
 # GitHub API and not verifiable from a worktree — `gh` is denied by the sandbox's `denyRead` on
 # `~/.config/gh`, so no run history can be read here, and docs/STATUS.md §3 uses this same
@@ -63,7 +63,7 @@
 # make a failure survivable. `if:` decides whether a step RUNS. Only `continue-on-error: true`
 # stops a failed step from failing the job, and it appears nowhere in this file — every step
 # still goes red on its own failure, and one red step still fails the job. The change is that
-# the other 46 checks now produce a result instead of a skip.
+# the other 48 checks now produce a result instead of a skip.
 #
 # ── AND NO STEP HERE IS AN `&&` CHAIN OF CHECKS ──────────────────────────────────────────────
 # Five steps used to be: `check:dispatch`, `check:dispatch-prompt`, `check:memory`,
@@ -201,8 +201,8 @@ jobs:
       #   A · no step invokes `node --test` — the tripwire rule above. Proved by mutation with and
       #       without a `--test-reporter` pinned beside it, and a reporter-only step is proved NOT
       #       to fire, so the rule cannot be deleted the first time it blocks something legitimate.
-      #   B · no step runs `npm run check` — which would put all 46 steps back behind one exit
-      #       code, the defect the 47 `if:` guards exist to remove, arriving from the other side.
+      #   B · no step runs `npm run check` — which would put all 48 steps back behind one exit
+      #       code, the defect the 49 `if:` guards exist to remove, arriving from the other side.
       #       This comment does not claim B; B is asserted because the file needs it.
       #
       # ── AND HERE IS THE PROOF THAT THE OLD WORKAROUND IS DEAD, WHICH IS THE POINT ────────────
@@ -243,6 +243,32 @@ jobs:
       - name: Skill routers match namespaces
         if: ${{ !cancelled() }}
         run: npm run check:routers
+
+      # THE EXISTENCE HALF OF THE CITATION CHECKER, promoted to blocking on 2026-08-26 — and only
+      # that half. `scripts/ledger.mjs` at lint checks that a cited claim ID exists; nothing
+      # checked that a cited `file.md:120` still lands, and a line number in prose rots the next
+      # time anyone edits the file above it. Existence is deterministic and has no false positives
+      # by construction, so it is cheap to enforce.
+      #
+      # DRIFT IS DELIBERATELY NOT HERE. `--no-anchors` turns it off, and `npm run check:citations`
+      # — the full run — stays WARN and stays out of both this file and the suite. The full run
+      # that the deferral asked for reported 2 existence findings against 85 drift findings, where
+      # drift covers about a quarter of the corpus and resolves ~85% of locators by BASENAME, which
+      # the checker's own blind-spot list says may be the wrong file. See EXCLUDED["check:citations"]
+      # in scripts/lib/check-suite.js.
+      #
+      # `--external-prefix adamos` names ONE sibling project, because one locator cites into it —
+      # GRANT-HOLDERS.md's `adamos/.claude/agents/archivist.md:6-10`, which is a true citation to a
+      # file this repository does not contain. The flag reports it as `unchecked:external` instead
+      # of dead. Nothing is excused unless someone names its prefix, which is why `evalove` — named
+      # in the same paragraph, with no line number and so no locator — is NOT here.
+      - name: Citation mutation gate
+        if: ${{ !cancelled() }}
+        run: npm run test:citations
+
+      - name: Cited file paths and line ranges land
+        if: ${{ !cancelled() }}
+        run: npm run check:citations-exist
 
       # Fabrication catcher: dead paths in governing docs, hooks registered to
       # missing files, README counts that drifted, skills declared but absent.

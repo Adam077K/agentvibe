@@ -14,6 +14,16 @@
 // moved quote and a timeout are all constructed rather than hoped for — the Phase 2
 // lesson: a guard verified only on the happy path is a guard whose failure was never built.
 
+// THE WRITE SIDE OF THE SAME LEDGER, registered here on purpose.
+//
+// scripts/claim-append.test.mjs covers the only path that PUTS a claim in this ledger —
+// the MCP grant `sourcer` holds. Importing it means `npm run test:ledger` runs both, so
+// the producer and the resolvers that judge it are checked by one command and cannot
+// drift apart between two. It is an import rather than a new `npm run` step because
+// package.json and scripts/lib/check-suite.js are owned by another lane this week, and a
+// test waiting on a step to be added is a test that is not running.
+import './claim-append.test.mjs';
+
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
