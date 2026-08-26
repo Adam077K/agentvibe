@@ -566,9 +566,24 @@ test('the scanner declares its vocabulary — an unmodelled construct is a FINDI
   assert.deepEqual(shellOperators('echo $[1+2]; npm run b'), ['$['], 'the deprecated $[…] form');
   assert.ok(shellOperators('echo $^weird').length > 0, 'an unknown $-form returned clean');
 
-  // …and it fires only outside double quotes, where these forms are special. Measured:
-  // `echo "$'a'"` prints `$'a'`, so flagging it there would fire on correct code.
-  assert.deepEqual(shellOperators(`echo "$'a'"`), []);
+  // IT RUNS INSIDE DOUBLE QUOTES TOO. This block used to sit below the double-quote early exit,
+  // justified by one true measurement — `echo "$'a'"` prints `$'a'` literally, so flagging it there
+  // would fire on correct code. That fact is about `$'` and `$"` and about nothing else: measured,
+  // `echo "$[1+2]"` prints 3, and `${x}`, `$x`, `$@`, `$(…)` and `$((…))` all expand in there as
+  // well. Skipping the whole class inside quotes certified `echo "result is $[1+2]"` as one clean
+  // command, contradicting the guarantee three lines up. A rule established by ONE construct had
+  // been applied to its entire class. The suppression is now exactly two forms wide.
+  assert.deepEqual(shellOperators('echo "$[1+2]"'), ['$['], 'a quoted unmodelled form was certified clean');
+  assert.deepEqual(shellOperators(`echo "$'a'"`), [], "$' is literal inside double quotes — the one real exception");
+  assert.deepEqual(shellOperators('echo "100$"'), [], 'a `"` after `$` ends the string; there is nothing to model');
+  assert.deepEqual(shellOperators('echo "${HOME}" "$HOME" "$@" "$((6|1))"'), [], 'the vocabulary holds inside quotes too');
+
+  // End to end, because the guarantee is about what the GUARDS certify, not about the predicate.
+  const quoted = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'echo "result is $[1+2]"' } });
+  assert.ok(
+    quoted.failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes('does not model')),
+    `auditSuite certified a quoted unmodelled construct as clean:\n${quoted.failures.join('\n') || '(no failures at all)'}`
+  );
 
   // What was found BEFORE the unmodelled form is kept; scanning stops there because past it the
   // frame stack describes a string this function does not understand.

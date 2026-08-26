@@ -483,12 +483,24 @@ function isArithmeticBody(body) {
  * the inversion this function needed: the vocabulary is finite and written down, so an expansion
  * form nobody thought of is a FINDING instead of a silent `[]`.
  */
-function isModelledDollar(src, i) {
+function isModelledDollar(src, i, inDoubleQuote) {
   const next = src[i + 1];
   if (next === undefined || /\s/.test(next)) return true;
   if (next === '{') return true;
   if (/[A-Za-z0-9_]/.test(next)) return true;
-  return '@*?-$!#'.includes(next);
+  if ('@*?-$!#'.includes(next)) return true;
+
+  // THE ONLY TWO FORMS DOUBLE QUOTES SUPPRESS, and the narrowness is the whole point. Outside
+  // quotes these never reach here — the branches at the call site consume them. Inside, they are
+  // literal and there is nothing to model. Measured 2026-08-26, every form in one line:
+  //
+  //     "$[1+2]" -> 3    "${x}" -> 9    "$x" -> 9    "$(echo S)" -> S    "$((1+1))" -> 2
+  //     "$'a'"   -> $'a'      "$"  -> $ (the quote ends the string)
+  //
+  // Everything except those last two EXPANDS inside double quotes, so a gate that skipped the
+  // whole class in there certified `echo "result is $[1+2]"` as one clean command — which it is
+  // not, and which contradicted this file's own stated guarantee.
+  return Boolean(inDoubleQuote) && (next === "'" || next === '"');
 }
 
 function shellOperators(command) {
@@ -545,15 +557,6 @@ function shellOperators(command) {
       continue;
     }
 
-    // Inside double quotes and outside any substitution, nothing below separates commands. This is
-    // the `usage` script's case and it must keep returning [].
-    if (frame.quote === '"') {
-      if (c === '"') frame.quote = null;
-      continue;
-    }
-
-    if (c === '"' || c === "'") { frame.quote = c; continue; }
-
     // ── THE VOCABULARY GATE, and it is the reason this function stopped being a sequence of ──────
     // patches. Everything above models a construct by name. `$` introduces the rest of bash's
     // expansion surface, and that surface is the ONE place this scanner can UNDER-report: inside
@@ -569,8 +572,13 @@ function shellOperators(command) {
     // state. Modelling ANSI-C quoting would fix that one case and leave the surface open, so the
     // rule is inverted instead: what is modelled is enumerated, and everything else is reported.
     //
-    // It fires only OUTSIDE double quotes, because that is where these forms are special —
-    // measured: `echo "$'a'"` prints `$'a'`, so flagging it there would fire on correct code.
+    // IT RUNS INSIDE DOUBLE QUOTES TOO, and getting that wrong was a whole round. This block sat
+    // BELOW the double-quote early exit, justified by one true measurement — `echo "$'a'"` prints
+    // `$'a'` literally, so flagging it there would fire on correct code. That fact is about `$'`
+    // and `$"`. It is NOT about `$`: measured, `echo "$[1+2]"` prints 3. Skipping the whole class
+    // inside quotes certified `echo "result is $[1+2]"` as one clean command. A rule established by
+    // one construct was applied to its entire class; the suppression is now exactly two forms wide
+    // and lives in isModelledDollar(), where it is stated rather than implied by placement.
     //
     // Scanning STOPS at the first unmodelled form. Past it the frame stack describes a string this
     // function does not understand, and operators read out of a desynced state would be guesses
@@ -587,18 +595,29 @@ function shellOperators(command) {
     //     $"…"   A double-quoted string that is also translated. Same quoting and the SAME
     //            expansions — `echo $"a$(echo X)b"` prints `aXb`, `$"a\"b"` prints `a"b`, and a
     //            `;` inside is literal. So it is the double-quote frame with one extra character.
-    if (c === '$' && src[i + 1] === "'") {
+    const inDoubleQuote = frame.quote === '"';
+
+    if (c === '$' && !inDoubleQuote && src[i + 1] === "'") {
       let j = i + 2;
       while (j < src.length && src[j] !== "'") { if (src[j] === '\\') j += 1; j += 1; }
       i = j; // the closing quote, or the end of an unterminated one — which bash refuses to run
       continue;
     }
-    if (c === '$' && src[i + 1] === '"') { frame.quote = '"'; i += 1; continue; }
+    if (c === '$' && !inDoubleQuote && src[i + 1] === '"') { frame.quote = '"'; i += 1; continue; }
 
-    if (c === '$' && !isModelledDollar(src, i)) {
+    if (c === '$' && !isModelledDollar(src, i, inDoubleQuote)) {
       unmodelled.add(`$${src[i + 1]}`);
       break;
     }
+
+    // Inside double quotes and outside any substitution, nothing below separates commands. This is
+    // the `usage` script's case and it must keep returning [].
+    if (frame.quote === '"') {
+      if (c === '"') frame.quote = null;
+      continue;
+    }
+
+    if (c === '"' || c === "'") { frame.quote = c; continue; }
 
     // `parens` counts every paren still open in this frame — both of `$((`, the one of `$(` — so a
     // subshell inside a substitution closes on the right `)`: `$( (a; b) )` ends at the second.
