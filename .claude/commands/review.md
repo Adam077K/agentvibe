@@ -1,57 +1,47 @@
-# /review — Code Review Pipeline
+---
+playbook: ship-feature
+enter_at: review
+---
 
-Review all changes in the current branch before merging.
+# /review — judge a diff independently of whoever produced it
+
+Runs the **`ship-feature`** playbook from its `review` stage:
+[.claude/playbooks/ship-feature.yml](../playbooks/ship-feature.yml). It stops there. `/ship`
+continues through the `ship` stage and its founder gate.
 
 ## Usage
+
 ```
 /review
-/review [specific files or PR branch]
+/review [branch or PR]
 ```
 
-## What This Does
+## Where the pipeline lives
 
-### Step 1 — Get Diff
-Identify what changed: `git diff --name-only main...HEAD` (or specified branch).
+In the playbook and in the gate — not here.
 
-### Step 2 — Code Reviewer
-Code Reviewer reviews all changed files:
-- **P1 (Must fix)**: security issues, data loss risk, broken logic, missing validation
-- **P2 (Should fix)**: duplication, unclear naming, missing error handling, performance
-- **P3 (Nice to have)**: style, optimization, comments
-
-### Step 3 — Security Engineer (parallel with Step 2)
-Security Engineer runs OWASP check on changed files:
-- Injection vulnerabilities
-- Auth/authz gaps
-- Hardcoded secrets
-- npm audit for new dependencies
-
-Both run in parallel.
-
-### Step 4 — Verdict
-| Outcome | Condition |
-|---------|-----------|
-| **PASS** | No P1 issues, no Critical/High security findings |
-| **PASS with notes** | Only P2/P3 + Medium/Low security (non-blocking) |
-| **BLOCK** | Any P1 issues OR Critical/High security findings |
-
-### Step 5 — Output
 ```
-## Code Review — [branch name]
-
-### P1 — Must Fix (BLOCKING)
-- [file:line] — [issue] — [fix]
-
-### P2 — Should Fix
-- [file:line] — [issue]
-
-### Security Findings
-- [severity] — [file:line] — [issue]
-
-**Verdict: PASS / BLOCK**
+node scripts/run-gate.mjs --json          # what tier this diff is, and the exact qa.js invocation
+node scripts/check-gates.mjs resolve qa-verdict   # is a PASS bound to this diff yet
 ```
 
-## Notes
-- Only reviews files in the diff — not the whole codebase
-- P2/P3 and Medium/Low security don't block merge — they're informational
-- Can be run standalone or as part of `/ship`
+The dimensions the diff is judged on are the `review(lens=…)` exits of the `review` stage,
+resolved against [.claude/review-lenses.yml](../review-lenses.yml). The verdict logic —
+what blocks, what is advisory, how a finding is adversarially verified before it can block — is
+in [.claude/workflows/qa.js](../workflows/qa.js) and tested by `npm run test:gate`.
+
+> **Superseded 2026-08-26.** This file used to restate all of that: five numbered steps, two named
+> reviewer agents, and a four-row table defining PASS / PASS-with-notes / BLOCK. That table was a
+> second implementation of a verdict rule that `qa.js` and `.claude/workflows/lib/gate-logic.mjs`
+> already own, written in prose, checked by nothing, and free to drift from the mechanism it
+> described. CLAUDE.md's house rule is the fix: a slash command names a playbook and stops.
+
+## What this command cannot do
+
+**Produce the verdict record.** Review returns findings; `node scripts/verdict.mjs record` binds a
+PASS to the sha256 of the diff, and it has to be committed to count. A verdict cannot be moved to
+a different diff and cannot survive an edit to the one it approved.
+
+**Pass the gate on its own say-so.** The `review` stage carries `gate: qa-verdict`, declared
+`kind: command` in [.claude/gates.yml](../gates.yml). Its resolver is
+`node scripts/verdict.mjs check`, and the exit code is the answer.

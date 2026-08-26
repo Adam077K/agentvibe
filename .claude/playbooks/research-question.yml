@@ -2,6 +2,7 @@
 # .claude/agents/researcher.md (Steps 1-5).
 playbook: research-question
 summary: "Answer one bounded question with sources, confidence levels, and the gaps named"
+triggers: ["/research"]
 
 stages:
   - id: bound
@@ -10,6 +11,9 @@ stages:
     exit:
       - "criterion(question-is-bounded)"
       - "criterion(prior-research-checked)"
+    dispatch:
+      - task: "Reduce the question to a bounded one, or return the narrower scope that would be"
+        engine: framer
 
   - id: gather
     goal: "Consult primary and official sources before general search, one thread per sub-question"
