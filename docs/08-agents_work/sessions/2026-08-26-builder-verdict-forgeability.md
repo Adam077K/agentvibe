@@ -92,3 +92,59 @@ All four are repository settings only the founder can set.
 Per the standing rules: this is one author and one model family recording a PASS on an
 `irreversible`-tier diff. That is not the tier being met, and the lane's own subject matter is
 why it is worth saying twice.
+
+---
+
+## Round 2 — review returned FAIL on the override path (2026-08-26)
+
+`correctness: fail · adversarial: fail`. Both blockers were on the bypass branch, not the pass
+path. Fixed, plus the cause underneath them.
+
+### corrections (round 2)
+
+- **B1 — the guard was satisfiable by the thing it constrained.** `SUBJECT` came from
+  `jq -r '.subject'`; the `-z` guard caught silence but not non-empty garbage. jq exits 0 having
+  printed nothing, every variable becomes `""`, and `grep -F -q ""` matches any non-empty file —
+  the gate granted a bypass while printing `names this exact diff subject ()`. Now `.ok` must be
+  `true|false` and `.subject` must be `^[0-9a-f]{64}$`. **I derived the shape rather than taking
+  the reviewer's regex**: `verdict.mjs` computes `sha256(...).digest('hex')`, and
+  `verdict.mjs subject` measures len=64, matching.
+- **B2 — authorisation moved to a mutable channel, and it was NEW in my diff.** I had the bypass
+  step write comment bodies to `$RUNNER_TEMP` and the verdict step read them four steps later,
+  across two steps that execute PR-authored repo code. The decision now crosses as a boolean on
+  `$GITHUB_OUTPUT`. The reason it blocks is not marginal capability — it is that **the hole opens
+  the day my own recommended remedy lands**, since CODEOWNERS over `/.github/` leaves `scripts/**`
+  writable.
+- **The cause under both, which neither the reviewer nor I had named: `set +e` was missing.**
+  GitHub invokes every `run:` block here as `/usr/bin/bash -e {0}`, and `set -uo pipefail` does
+  **not** clear an inherited `-e`. So the comment claiming "No -e" described an intent the runner
+  never honoured. On run `32964238343` the step printed its header and died at
+  `VERDICT_JSON=$(...)`: no explanation, **no check-run** (the failing head carries no
+  `QA verdict (diff-bound)`; a passing head does), and the entire bypass branch was **dead code**.
+- **Two instrument failures of my own, both caught by controls, neither by reading.** I grepped a
+  run log and counted GitHub's echo of the *script source* as evidence the code had executed —
+  concluding the failure path worked when it does not. And the first test hardcoded
+  `/usr/bin/bash`, which does not exist on macOS: every case died `ENOENT` with status null and no
+  output, indistinguishable from a script that printed nothing. That is the fourth instance in
+  `merge-gate.test.mjs` of one machine's layout baked into a test.
+- **My own commit falsified a measurement I wrote in it** — "grepping returns only the two lines
+  that create it" became false the moment the comment saying it existed. Restated as a derivation.
+
+### claims_touched (round 2)
+
+None registered. `test:merge-gate` now drives the two `run:` blocks extracted from the shipped
+YAML, so the subject binding has a test that fails if it is deleted — it had none before.
+
+### What was executed (round 2)
+
+| Check | Result |
+|---|---|
+| `npm run check` | **46 of 46 passed · 0 failed** (517s; the suite's wall clock tracks lane load) |
+| `test:merge-gate` | 48 pass · 0 fail, including 7 new PR-route cases |
+| Mutation: `origin/main` | BYPASSES a bypass for another diff **and** an unparseable verdict |
+| Mutation: `76a5603` | refuses the first, still BYPASSES the second — B1 reproduced independently |
+| Mutation: HEAD | refuses both |
+
+The mutation table is the evidence the tests were not built from the fix. The pass-case control is
+what stops the four refusal cases going vacuous: `bash -e` also exits 1 when the step dies early,
+so exit code alone cannot distinguish the shell aborting from the gate refusing.
