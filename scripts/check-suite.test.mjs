@@ -81,7 +81,11 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { STEPS, EXCLUDED, SHELL_OPERATORS, auditSuite, reachable, aliasLinks, shellOperators, resolveChain } = require('./lib/check-suite.js');
+const {
+  STEPS, EXCLUDED, SHELL_OPERATORS, auditSuite, reachable, aliasLinks, shellOperators, resolveChain,
+  CI_GUARD, CI_CHAINS_ALLOWED, parseCiSteps, ciRunCommands, ciChainFindings,
+  DIRECT_TEST_RUNNER, AGGREGATE_RUNNER,
+} = require('./lib/check-suite.js');
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RUNNER = path.join(REPO, 'scripts', 'run-checks.mjs');
@@ -849,109 +853,7 @@ test('check:mc is EXCLUDED, not merely absent — and the reason carries its mea
 const CI_PATH = path.join(REPO, '.github', 'workflows', 'ci.yml');
 const CI = fs.readFileSync(CI_PATH, 'utf8');
 
-/** The guard, spelled once. `!cancelled()` and not `always()`: a cancelled run must actually stop. */
-const CI_GUARD = '${{ !cancelled() }}';
-
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-/**
- * The steps of ci.yml's one job, read off the indentation.
- *
- * Zero dependencies in this repo means no YAML parser, so this is a line scanner — and it derives
- * both indents from the file rather than hardcoding 6 and 8, so a reindent does not turn it
- * vacuous. It handles a `run: |` block scalar, which nothing in the file uses today; that is the
- * shape a future multi-command step would arrive in, and a scanner that skipped it would report
- * such a step as having no `run:` at all.
- *
- * Returns [{ line, name, run, uses, if }] — `null` for a key the step does not carry.
- */
-function parseCiSteps(workflow) {
-  const lines = workflow.split('\n');
-  const steps = [];
-  let stepsIndent = null;
-  let itemIndent = null;
-  let current = null;
-  let block = null; // { key, indent, parts[] } while inside a `key: |` scalar
-
-  const indentOf = (line) => /^ */.exec(line)[0].length;
-
-  const record = (step, text, keyIndent) => {
-    const m = /^([\w-]+):\s*(.*)$/.exec(text);
-    if (!m) return;
-    const [, key, rawValue] = m;
-    if (!(key in step)) return; // `with:`, `env:` and friends are not what this asserts on
-    if (/^[|>][-+\d]*$/.test(rawValue)) {
-      // `keyIndent` is the column of the KEY, and the block ends at the first non-blank line that
-      // is not indented past it. Anchoring to the first CONTENT line instead was a defect: see the
-      // loop below.
-      block = { key, keyIndent, indent: null, parts: [] };
-      step[key] = '';
-      return;
-    }
-    step[key] = rawValue.trim();
-  };
-
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
-
-    if (block) {
-      // A BLANK LINE IS CONTENT AND MUST NEVER SET THE BASELINE. It did, and that was the defect:
-      // a `run: |` beginning with a blank line took its indent from the NEXT non-blank line, which
-      // for a block that has no content at all is the `- name:` of the FOLLOWING step. Reproduced
-      // 2026-08-26 on `run: |` / blank / `- name: After`: the parser returned TWO steps where three
-      // exist, and After's `name`, `if` and `run` were swallowed into the block's `run` value. Every
-      // check here that iterates steps then passes it in silence — including the `!cancelled()`
-      // guard, so a genuinely unguarded step becomes undetectable. Dormant only because ci.yml has
-      // no block scalar today, which is a property of the input and not of this parser.
-      if (!line.trim()) { block.parts.push(''); continue; }
-      const indent = indentOf(line);
-      if (indent > block.keyIndent) {
-        if (block.indent === null) block.indent = indent;
-        if (indent >= block.indent) {
-          block.parts.push(line.slice(block.indent));
-          current[block.key] = block.parts.join('\n').trim();
-          continue;
-        }
-      }
-      // Out of the block. NOT consumed — execution falls through to the step parsing below, so a
-      // `- name:` on this line opens the next step instead of vanishing into the previous one.
-      block = null;
-    }
-
-    if (!line.trim() || /^\s*#/.test(line)) continue;
-
-    if (stepsIndent === null) {
-      const m = /^( *)steps:\s*$/.exec(line);
-      if (m) stepsIndent = m[1].length;
-      continue;
-    }
-
-    const indent = indentOf(line);
-    if (indent <= stepsIndent) break; // out of the steps block
-
-    if (/^ *- /.test(line) && (itemIndent === null || indent === itemIndent)) {
-      itemIndent = indent;
-      current = { line: i + 1, name: null, run: null, uses: null, if: null };
-      steps.push(current);
-      record(current, line.slice(indent + 2), indent + 2);
-      continue;
-    }
-
-    if (current && indent === itemIndent + 2) record(current, line.trim(), indent);
-  }
-
-  return steps;
-}
-
-/**
- * The commands ci.yml actually RUNS — the only text any claim about coverage may be read against.
- *
- * Every check in this section goes through here rather than through the raw file, because ci.yml's
- * comments name the very commands its steps run. On 2026-08-26 a comment naming
- * `npm run check:mc` was enough to satisfy the guard protecting the Mission Control step, and the
- * step could then be deleted in silence.
- */
-const ciRunCommands = (workflow) => parseCiSteps(workflow).filter((s) => s.run !== null).map((s) => s.run);
 
 test('an exclusion that says CI still covers it is checked against ci.yml, not trusted', () => {
   // auditSuite() can only measure that a reason is 40-odd characters long. It cannot tell a true
@@ -1305,11 +1207,6 @@ test('no ci.yml step invokes a runner directly — the tripwire preload, and the
   // narrowing that fixed the check:mc P1, and it is why the strings below can be spelled plainly.
   const commands = ciRunCommands(CI);
 
-  /** `node … --test …`. `(?![\w-])` so `--test-reporter=tap` alone is not a hit. */
-  const DIRECT_TEST_RUNNER = /\bnode\b[^&|;]*--test(?![\w-])/;
-  /** `npm run check` exactly, or the runner by path. Right-anchored: `check:curation` is not a hit. */
-  const AGGREGATE_RUNNER = /npm run check(?![\w:-])|run-checks\.mjs/;
-
   assert.deepEqual(
     commands.filter((c) => DIRECT_TEST_RUNNER.test(c)), [],
     'a ci.yml step invokes the Node test runner directly. It then runs WITHOUT ' +
@@ -1349,86 +1246,46 @@ test('no ci.yml step invokes a runner directly — the tripwire preload, and the
   assert.equal(ciRunCommands(decoy).filter((c) => AGGREGATE_RUNNER.test(c)).length, 1, 'a comment changed the count');
 });
 
-/**
- * ci.yml `run:` values that MAY carry a shell chain, keyed by the EXACT run string.
- *
- * EVERYTHING THE OPERATOR CHECK PROTECTED REACHED IT THROUGH package.json. shellOperators(),
- * resolveChain(), aliasLinks() and auditSuite() only ever saw script bodies found by
- * `resolveChain(scripts, step)`; ci.yml's `run:` text was never fed to any of them. So
- * `run: npm run a && npm run b` written straight into the workflow bypassed package.json and STEPS
- * entirely and reintroduced the silent skip this file exists to close — undetected. Measured
- * 2026-08-26 before this check existed: a chained step appended to ci.yml produced ZERO findings
- * anywhere in the repo, and `;`, `|` and `&` written there would not even have left a red step.
- *
- * KEYED BY THE RUN STRING, NOT THE STEP NAME, and the difference is the point: the command is what
- * is exempted, so editing it re-opens the decision, while renaming a step does not silently move an
- * exemption onto different code.
- *
- * Same three properties EXCLUDED carries in scripts/lib/check-suite.js, for the same reasons — a
- * substantive written reason; no entry exempting a command that carries no chain; and, the one that
- * matters, NO ENTRY THAT MATCHES NO LIVE STEP. An exemption that outlives its step reads as a
- * considered decision and is not one.
- */
-const CI_CHAINS_ALLOWED = {
-  'bun install --frozen-lockfile --cwd mission-control && npm run check:mc':
-    'THE ONE REAL EXCEPTION, and it is setup-then-run rather than a suite hiding behind one exit code. ' +
-    '`bun install` is a PREREQUISITE of check:mc, not a check of its own: if it fails, check:mc can ' +
-    'only fail differently and less legibly, so `&&` short-circuiting here hides nothing a reader ' +
-    'needs — the step still goes red and names the install. Splitting it into two steps would be ' +
-    'worse, because every `run:` step in this workflow carries `if: ${{ !cancelled() }}`, so a failed ' +
-    'install would NOT stop check:mc running against absent dependencies. This is also the only place ' +
-    'check:mc runs at all: EXCLUDED["check:mc"] in scripts/lib/check-suite.js carries the measurement ' +
-    '— armed sandbox 344 pass / 1 fail on a loopback bind, unsandboxed 345 pass / 0 fail — and states ' +
-    'that ci.yml "is the only place it runs green, so it is the only place it is checked".',
-};
-
-/**
- * Findings against ci.yml's `run:` values: an unexempted chain, or an exemption that has rotted.
- *
- * Pure over BOTH inputs, so the test can mutate the workflow or the allowlist and watch it bite. A
- * guard only ever run against a tree where it passes is not evidence, which is this file's whole
- * method.
- */
-function ciChainFindings(workflow, allowed = CI_CHAINS_ALLOWED) {
-  const findings = [];
-  const steps = parseCiSteps(workflow).filter((s) => s.run !== null);
-  const exempt = (run) => Object.prototype.hasOwnProperty.call(allowed, run);
-
-  for (const step of steps) {
-    const found = shellOperators(step.run);
-    if (!found.length || exempt(step.run)) continue;
-    const ops = found.filter((t) => SHELL_OPERATORS.includes(t));
-    const unmodelled = found.filter((t) => !SHELL_OPERATORS.includes(t));
-    // An unmodelled construct is reported as ITS OWN KIND, not as an operator: the scanner cannot
-    // certify the step, which is a different statement from "the step chains commands". The
-    // allowlist covers both, because a step that genuinely needs one is exempted the same way.
-    if (unmodelled.length) {
-      findings.push(
-        `ci.yml:${step.line} contains ${unmodelled.map((u) => `\`${u}\``).join(', ')}, which this checker does not ` +
-          `model, so it cannot be certified as one command — ${step.run}`
-      );
-    }
-    if (ops.length) {
-      findings.push(`ci.yml:${step.line} carries ${ops.map((op) => `\`${op}\``).join(', ')} — ${step.run}`);
-    }
+test('the ci.yml chain check has a LIBRARY and an entry point, not only a test', () => {
+  // ALL OF IT LIVED IN THIS FILE until 2026-08-26 — parseCiSteps, CI_CHAINS_ALLOWED,
+  // ciChainFindings, ciRunCommands and the two runner predicates. That broke the lib/test
+  // separation this same file enforces on the package.json side: assertions with no library behind
+  // them, and no way to run them except by running the whole test file. The move is what these
+  // cases hold; without them, moving it back reads exactly like a green run.
+  const lib = require('./lib/check-suite.js');
+  for (const name of [
+    'CI_GUARD', 'CI_CHAINS_ALLOWED', 'parseCiSteps', 'ciRunCommands', 'ciChainFindings',
+    'DIRECT_TEST_RUNNER', 'AGGREGATE_RUNNER',
+  ]) {
+    assert.ok(name in lib, `${name} is not exported from scripts/lib/check-suite.js — it moved back into a test`);
   }
 
-  const live = new Set(steps.map((s) => s.run));
-  for (const [run, reason] of Object.entries(allowed)) {
-    if (!live.has(run)) {
-      findings.push(`CI_CHAINS_ALLOWED exempts a command no step in ci.yml runs — ${run}`);
-      continue;
-    }
-    if (!shellOperators(run).length) {
-      findings.push(`CI_CHAINS_ALLOWED exempts a single command, which needs no exemption — ${run}`);
-    }
-    if (typeof reason !== 'string' || reason.trim().length < 40) {
-      findings.push(`CI_CHAINS_ALLOWED has no substantive reason for — ${run}`);
-    }
-  }
+  // PURE OVER BOTH INPUTS, which is the property the mutation proofs depend on: the same workflow
+  // TEXT must give the same answer with no filesystem involved, so a test can hand it a workflow
+  // that does not exist on disk. Proved with content that is nowhere in the repo.
+  const invented = [
+    'name: nowhere', 'jobs:', '  j:', '    steps:',
+    '      - name: Chained', '        if: ${{ !cancelled() }}', '        run: npm run a && npm run b', '',
+  ].join('\n');
+  assert.equal(lib.ciChainFindings(invented, {}).length, 1, 'ciChainFindings could not judge text that is not on disk');
+  assert.deepEqual(lib.ciChainFindings(invented, {}), lib.ciChainFindings(invented, {}), 'ciChainFindings is not pure');
 
-  return findings;
-}
+  // THE ENTRY POINT EXISTS AND IS WIRED. `check:` is a GOVERNED prefix, so auditSuite() already
+  // fails if it is neither a STEP nor EXCLUDED with a reason — that is the drift guard, not this
+  // case. What this pins is that the script package.json names is really there and really runs.
+  assert.equal(scripts['check:ci-chains'], 'node scripts/check-ci-chains.mjs', 'the entry point was renamed or removed');
+  const entry = path.join(REPO, 'scripts', 'check-ci-chains.mjs');
+  assert.ok(fs.existsSync(entry), `${entry} does not exist, but package.json points at it`);
+
+  const run = spawnSync(process.execPath, [entry], { encoding: 'utf8' });
+  assert.equal(run.status, 0, `the entry point fails on the current tree:\n${run.stderr}${run.stdout}`);
+  assert.match(run.stdout, /no unexempted chained/, run.stdout || run.stderr);
+
+  // And it is EXCLUDED rather than a STEP, deliberately — asserting one property twice under two
+  // names leaves a second name to go stale. The reason is checked for substance by auditSuite().
+  assert.ok(!STEPS.includes('check:ci-chains'), 'the entry point became a STEP without a workflow step to match it');
+  assert.ok(Object.prototype.hasOwnProperty.call(EXCLUDED, 'check:ci-chains'), 'the entry point is neither a STEP nor EXCLUDED');
+});
 
 test('no ci.yml step runs a shell chain, except one allowlisted command whose reason is checked', () => {
   // THE SAME PREDICATE THE SUITE APPLIES TO package.json, applied to the file that bypasses it.
