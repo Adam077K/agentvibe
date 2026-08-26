@@ -65,6 +65,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:warroom-template` | `bash -n war-room/bin/PROJECT_NAME.tmpl` |
 | `npm run curate:skills` | `node scripts/curate-skills.mjs` |
 | `npm run gate` | `node scripts/run-gate.mjs` |
+| `npm run gates` | `node scripts/check-gates.mjs` |
 | `npm run ledger:build` | `node scripts/ledger.mjs build` |
 | `npm run ledger:events` | `node scripts/ledger.mjs events --since 30d` |
 | `npm run ledger:sweep` | `node scripts/ledger.mjs sweep` |
@@ -91,7 +92,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:lenses` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs` |
 | `npm run test:memory` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-memory-budget.test.mjs` |
 | `npm run test:merge-gate` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs` |
-| `npm run test:playbooks` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/playbooks.test.mjs` |
+| `npm run test:playbooks` | `node --require ./scripts/protected-write-tripwire.cjs --test --test-concurrency=1 scripts/playbooks.test.mjs s` |
 | `npm run test:pre-tool-use` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-readonly` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs` |
 | `npm run test:probe-stop-reason` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-stop-reason.test.mjs` |
@@ -134,9 +135,11 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/check-registration.test.mjs` | — |
 | `scripts/check-suite.test.mjs` | the drift guard for `npm run check`, and the mutation gate for |
 | `scripts/check-tier-gate.test.mjs` | the tier gate that replaced label-based enforcement. |
+| `scripts/claim-append.test.mjs` | the gate in scripts/lib/claim-append.js. |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
 | `scripts/evict-memory.test.mjs` | mutation gate for the typed memory eviction. |
+| `scripts/gates.test.mjs` | every rule tested by constructing the input that DEFEATS it. |
 | `scripts/launcher-permissions.test.mjs` | the autonomy dial, and the model it made inert. |
 | `scripts/ledger.test.mjs` | the resolvers, and the invariant that holds the ledger up. |
 | `scripts/lenses.test.mjs` | the lens linter, tested by constructing its failures. |

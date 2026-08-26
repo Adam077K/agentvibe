@@ -1,0 +1,11 @@
+{
+  "subject": "073468504adab23ad04585f038c28e16ae3a81b208c045dfa4d4c93acdad9fdf",
+  "base": "244e8db3a1d8103ef79bec13467d3dcb2ad44cdd",
+  "tier": "full",
+  "tier_driver": "scripts/check-gates.mjs",
+  "verdict": "PASS",
+  "by": "builder-surface-wiring",
+  "run_id": null,
+  "evidence": "npm run check 46/46 pass 0 fail; 60 constructed-failure cases in scripts/gates.test.mjs; eight live break-tests each exit 1; deletion test exits 0 without the assertions and 1 with them; gate-route constraints re-checked by execution — zero Workflow/scriptPath/tree additions in the diff against a control of 20, run-gate --json emits row 6 (absolute tree, sha-tipped ref), --require exits 1; single author, single model family, no independent reviewer — tier full is not met by this record",
+  "recorded_at": "2026-08-26T13:46:07.401Z"
+}

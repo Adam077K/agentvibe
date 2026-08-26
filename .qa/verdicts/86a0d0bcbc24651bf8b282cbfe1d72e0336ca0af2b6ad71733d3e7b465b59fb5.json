@@ -1,0 +1,11 @@
+{
+  "subject": "86a0d0bcbc24651bf8b282cbfe1d72e0336ca0af2b6ad71733d3e7b465b59fb5",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "irreversible",
+  "tier_driver": ".claude/workflows/qa.js",
+  "verdict": "PASS",
+  "by": "builder-gate-refusal",
+  "run_id": null,
+  "evidence": "npm run check: 46 of 46 passed, 0 failed, 509.5s, exit 0, sandbox armed. test:run-gate 96 pass/0 fail (87 before; 19 assertions moved BLOCK->REFUSED). Four mutations all red: gateRefusal->BLOCK 23 fail, oracle split removed 5, established hardcoded 2, coding.js fold restored 1; restored 96/96. CONTROLS THAT MUST NOT MOVE, both verified: a named check failing in the right tree still BLOCK, and a CONFIRMED P1 from the panel (3-of-3 verifiers real, judge returning PASS) still BLOCK via the deterministic override. SINGLE AUTHOR, SINGLE MODEL FAMILY: the irreversible tier's 2-of-3 multi-judge is NOT met.",
+  "recorded_at": "2026-08-26T14:00:13.537Z"
+}

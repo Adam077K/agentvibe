@@ -2,6 +2,7 @@
 # (Steps 1-7), plus .claude/commands/design.md.
 playbook: design-pass
 summary: "Bring an already-working screen up to the standard, judged against a written system"
+triggers: ["/design"]
 
 stages:
   - id: reference

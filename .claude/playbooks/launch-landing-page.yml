@@ -2,6 +2,7 @@
 # language and the brand-voice checklist) and .claude/agents/design-lead.md.
 playbook: launch-landing-page
 summary: "Ship a customer-facing page whose words came from customers and whose claims are sourced"
+triggers: ["/launch"]
 
 stages:
   - id: positioning

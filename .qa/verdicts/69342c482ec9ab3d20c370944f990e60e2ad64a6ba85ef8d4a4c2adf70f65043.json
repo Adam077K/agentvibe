@@ -1,0 +1,11 @@
+{
+  "subject": "69342c482ec9ab3d20c370944f990e60e2ad64a6ba85ef8d4a4c2adf70f65043",
+  "base": "244e8db3a1d8103ef79bec13467d3dcb2ad44cdd",
+  "tier": "full",
+  "tier_driver": "scripts/check-gates.mjs",
+  "verdict": "PASS",
+  "by": "builder-surface-wiring",
+  "run_id": null,
+  "evidence": "npm run check 46/46 pass 0 fail; 65 constructed-failure cases; F12 fixed and pinned — # restored -> exit 1, unquoted # in a playbook -> exit 1, quoted # -> passes, control asserts ~80 comment lines were scanned; provenance 0/0/1 across d1040f7/7ea3908/2ca2874 confirms I introduced it; single author, single model family",
+  "recorded_at": "2026-08-26T15:00:06.964Z"
+}
