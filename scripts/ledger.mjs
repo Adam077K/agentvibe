@@ -873,6 +873,29 @@ async function cmdVerify(argv) {
       const enforcing = cls.enforcement === 'block';
       if (res.status === 'pass') {
         passed++;
+        // A PASS CARRYING AN ATTESTATION IS LOGGED. Everything else about a pass stays
+        // unlogged as before — this loop only ever recorded failures, which is fine for
+        // resolvers whose passes assert nothing beyond "it passed". `claim-judge-external`
+        // is different: its attestation ({bin, bin_path, argv/prompt/stdout hashes}) is the
+        // evidence that a second model family was really consulted rather than typed into
+        // YAML, and dropping it here meant the record existed for `fail` and `unresolved`
+        // and never for the one verdict anybody would forge. Narrow on purpose: no other
+        // resolver emits an attestation, so no other event volume changes.
+        if (res.detail && res.detail.attestation) {
+          logEvent({
+            ts: Math.floor(Date.now() / 1000),
+            event: 'claim.attested',
+            claim: claim.id,
+            resolver: name,
+            status: res.status,
+            scope: claim.scope,
+            artifact: claim.source_file,
+            tier: cls.tier,
+            enforcement: cls.enforcement,
+            reason: res.reason,
+            detail: res.detail,
+          });
+        }
         process.stdout.write(`  ✓ ${claim.id} [${name}] ${res.reason}\n`);
         continue;
       }
