@@ -114,7 +114,34 @@ to ci.yml` against `grep probe-workflow-reach .github/workflows/*.yml` → **0 m
 opposite and was right. Nothing catches it: only `gen-codebase-map.mjs` parses `POSTURE:`, and not
 for the test-file table. Header corrected to `POSTURE: REPORTS`, pointing at the EXCLUDED entry.
 
-**E2 — the claim asserted more than its resolver could check.** The cited command,
+**E2 (revised twice) — the claim asserted more than its resolver could check, in TWO clauses and
+by TWO blind spots.**
+
+*Delta review closed the coverage half and found the rest.* The assert is now the bare
+`"No agent file declares a Workflow tool"`. The clause `", so the binding QA gate is not invocable
+by any engine it gates"` is **deleted for the same reason clause 3 was** — clause 3 had an
+unverifiable *subject*, clause 2 an unverifiable *predicate*. It is an entailment, sound only if a
+frontmatter declaration is the sole grant channel, and this repo's own
+`check-dispatch-agenttype.mjs` says otherwise: a dispatch naming no `agentType` gets
+`general-purpose`, tools `*`. **Whether that default contains `Workflow` is measured nowhere.** The
+only thing standing against it is observational absence — precisely what the ledger comment says
+was removed from the sentence. I applied that principle to one clause and not the other.
+
+*And the repoint traded a blind spot rather than closing one.* `evidence.cmd` is now
+`node .claude/hooks/schema-lint.js && node --test scripts/prompt-standard.test.mjs`, because the
+lint checks the **tree** and the test checks the **rule**. Measured with a control that fires:
+
+| | compound cmd |
+|---|---|
+| clean tree — control | exit **0** |
+| PS-WORKFLOW-CONTAINMENT deleted | exit **1** |
+| `Workflow` removed from `TOOL_UNIVERSE` | exit **1** |
+
+With the rule deleted, `Workflow` is still in `TOOL_UNIVERSE`, so an engine may declare it and
+`schema-lint` alone exits **0** — the claim green while its assert is false. `claim-command` runs
+`/bin/sh -c`, so the `&&` is real rather than decorative.
+
+*The original finding, kept because it is the one that started this:* The cited command,
 `node --test scripts/prompt-standard.test.mjs`, iterates `LIVE` — **7 engines of 18 files** — and
 shims early-return before the rule. So a shim declaring `Workflow` left the assert false and the
 claim green: Rule 10, in a lane that built a probe to refuse exactly that. `evidence.cmd` now points

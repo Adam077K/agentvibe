@@ -628,12 +628,12 @@
     },
     {
       "id": "c-workflow-invocation-contained",
-      "assert": "No agent file declares a Workflow tool, so the binding QA gate is not invocable by any engine it gates",
+      "assert": "No agent file declares a Workflow tool",
       "kind": "internal-fact",
       "scope": "project",
       "verified_by": "command",
       "evidence": {
-        "cmd": "node .claude/hooks/schema-lint.js",
+        "cmd": "node .claude/hooks/schema-lint.js && node --test scripts/prompt-standard.test.mjs",
         "expect_exit": 0
       },
       "valid_until": "2026-11-26",
