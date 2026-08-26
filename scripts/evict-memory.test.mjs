@@ -765,6 +765,26 @@ test('P3: an UNREADABLE volume refuses by name instead of dying with a stack tra
   }
 });
 
+// ── P2 · the dispatcher's catch must stay NARROW, and that must be pinned ───────────────────
+//
+// `runCommand` catches `EvictionUnreadableVolumeError` and re-throws everything else, and the
+// comment above it explains why. The property held and NOTHING TESTED IT: made a catch-all, an
+// injected `null.boom` in `cmdPlan` went from a real crash to EXIT 0, silently, with a green
+// suite. Same shape as `volExisting: ''` two rounds ago — correct behaviour written down and held
+// by nothing. A comment is not a mechanism.
+
+test('P2: an unexpected error is NOT tidied into a refusal — the catch is narrow', () => {
+  // Injected at the top of `cmdPlan`, so the crash is unambiguously not one of this tool's own
+  // errors. Narrow catch: it escapes, exit 1, a real trace. Catch-all: exit 0 over a dead command.
+  const mutant = cliCopy([['function cmdPlan() {\n', 'function cmdPlan() {\n  null.boom;\n']]);
+  const root = fixture({ entries: entry({ date: '2026-06-20', title: 'An ordinary decision about ordinary things' }) });
+  const r = run(mutant, ['plan', '--root', root, '--json']);
+  assert.notEqual(r.code, 0, `a crashed plan must NOT report success:\n${r.out}${r.err}`);
+  assert.match(r.err, /Cannot read properties of null/, 'the real error must reach the operator');
+  assert.ok(!r.err.includes('REFUSED —'),
+    'an unexpected crash must not be dressed up as one of this tool\'s deliberate refusals');
+});
+
 test('P1-2: volume 1000 keeps being recognised — padStart(3) emits four digits', () => {
   const root = fixture({
     entries: entry({ date: '2026-06-02', title: 'An ordinary decision about ordinary things' }),
