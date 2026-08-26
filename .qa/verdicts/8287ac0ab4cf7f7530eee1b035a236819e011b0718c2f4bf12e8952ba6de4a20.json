@@ -1,0 +1,11 @@
+{
+  "subject": "8287ac0ab4cf7f7530eee1b035a236819e011b0718c2f4bf12e8952ba6de4a20",
+  "base": "244e8db3a1d8103ef79bec13467d3dcb2ad44cdd",
+  "tier": "irreversible",
+  "tier_driver": ".claude/agents/sourcer.md",
+  "verdict": "PASS",
+  "by": "builder-sourcer-can-write",
+  "run_id": null,
+  "evidence": "npm run check: 46 of 46 passed, 0 failed, exit 0, sandbox armed, 292.9s. npm run test:ledger: 197 pass 0 fail. Live end-to-end with sandbox disabled for three commands: real quote APPENDED exit 0; fabricated quote at the same live URL REFUSED[RESOLVER_FAIL] exit 1; 169.254.169.254 REFUSED[URL_NOT_PUBLIC] exit 1 with zero sockets opened. Single author, single model family -- the irreversible tier's 2-of-3 multi-judge is NOT met by this record.",
+  "recorded_at": "2026-08-26T13:27:18.910Z"
+}
