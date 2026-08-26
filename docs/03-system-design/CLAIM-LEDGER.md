@@ -545,6 +545,29 @@ claims:
     valid_until: 2026-11-09
     confidence: 1
 
+  # The gate must not be invocable by the thing it gates. Registered 2026-08-26 because the
+  # containment was, until then, an ACCIDENT of an omission: `Workflow` was simply missing from
+  # `TOOL_UNIVERSE`, so PS-TOOL-EXISTS refused it as "not a runtime tool" — false (binary 2.1.246
+  # holds `var Xu="Workflow"`, and the tool fires 55 times across 2,958 transcripts). A refusal
+  # whose stated reason is wrong invites the repair that breaks it: append the name to the
+  # universe, and all seven engines may declare it with nothing to object.
+  #
+  # The orchestrator needs no such declaration and must not carry one either. It is not
+  # dispatched — it IS the session, so no frontmatter field binds on the path it runs on
+  # (CONTROL-PLANE.md §1.1), and the session already holds the tool. All 55 recorded calls carry
+  # `isSidechain: false`; the same scan finds 57,408 subagent `Bash` calls, so it sees sidechain
+  # entries and never sees this tool in one. Reaching the gate is a ROUTE (scripts/run-gate.mjs),
+  # not a grant, and the rethink board's "add Workflow to orchestrator tools" was refuted here.
+  - id: c-workflow-invocation-contained
+    assert: "No agent file declares a Workflow tool — the binding QA gate is not invocable by any engine it gates, and the orchestrator reaches it by route rather than by grant"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node --test scripts/prompt-standard.test.mjs", expect_exit: 0}
+    valid_until: 2026-11-26
+    confidence: 1
+    supports: [c-no-decorative-capabilities]
+
   - id: c-playbooks-declare-no-method
     assert: "Every playbook declares stages and exit criteria only — a stage carrying steps, how or method fails the lint"
     kind: behavior
