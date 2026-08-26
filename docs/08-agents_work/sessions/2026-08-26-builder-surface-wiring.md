@@ -62,6 +62,26 @@ that directory, it throws ENOENT — 5 of 10 runs, against 0 of 10 with `--test-
 narrow fix and it is named in the test header, because the hazard is the shared directory and the next
 concurrent reader meets it again.
 
+## The boundary of what this buys, stated so nobody has to discover it
+
+**A playbook can now VERIFY that the gate passed. PRODUCING the verdict still requires the session to
+invoke the panel.** Those are different acts and this change closes only the first.
+
+`gate: qa-verdict` resolves to `node scripts/verdict.mjs check`, which asks one question — is a PASS
+committed and bound by sha256 to this exact diff — and answers it deterministically, from a file, with no
+model in the loop. That is why it is safe to put behind an exit code. What it does **not** do is run five
+dimension reviewers, three adversarial verifiers per finding, and an Opus judge. Nothing in
+`scripts/check-gates.mjs` can: `Workflow` is a main-session tool, the gate schema here admits only
+`node scripts/...`, and a dispatched engine that tried would silently no-op.
+
+So the loop is: **session runs the panel → session records the verdict → anyone can check the binding.**
+The third step is now mechanical and the first two are not. A stage declaring `gate: qa-verdict` is
+asserting the third, and a reader who takes it for the first has read it wrong.
+
+This is a real narrowing and it is the honest one. The alternative — having the checker claim to run the
+gate — would produce exactly the failure the parallel lane measured: a verdict that looks like review and
+is not.
+
 ## Constraints on the gate route, re-checked against this wiring
 
 A parallel lane measured `qa.js`'s entry contract and sent five constraints. **This route satisfies all of

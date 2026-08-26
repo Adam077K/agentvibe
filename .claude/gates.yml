@@ -30,6 +30,27 @@
 # a checker enforces the difference. Faking a human stop into a script would be the more
 # dangerous half of that ambiguity resolving itself in the wrong direction.
 #
+# ── A COMMAND GATE VERIFIES. IT DOES NOT PRODUCE. ────────────────────────────────────────────
+# Read this before concluding that `gate: qa-verdict` means the review ran.
+#
+# Every `kind: command` gate here asks a question that is already answerable from an artifact, and
+# answers it deterministically. `qa-verdict` asks "is a PASS committed and bound by sha256 to this
+# exact diff" — a file lookup and a hash compare, no model in the loop. That is precisely why it is
+# safe to put behind an exit code.
+#
+# It does NOT run five dimension reviewers, three adversarial verifiers per block-eligible finding,
+# and an Opus judge. **Nothing in this file can.** `Workflow` is a main-session tool, the schema
+# below admits only `node scripts/...`, and the tool is absent from a dispatched engine anyway.
+#
+#   session runs the panel  →  session records the verdict  →  ANYONE can check the binding
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#   not mechanised, and not by this file                        this is what a gate resolves
+#
+# A stage declaring `gate: qa-verdict` asserts the third step. A reader who takes it for the first
+# has read it wrong, and the mistake is worth naming because the alternative design — a checker
+# that claimed to RUN the gate — produces exactly the failure recorded in `recording_hazard` below:
+# something that looks like review and is not.
+#
 # ── A PLAYBOOK NAMES A GATE. ONLY THE SESSION INVOKES ONE. ───────────────────────────────────
 # `Workflow` is a main-session tool: measured 2026-08-26, 0 of 55 calls came from a sidechain,
 # against 57,590 subagent `Bash` calls in the same scan. A DISPATCHED ENGINE DOES NOT HAVE THE
