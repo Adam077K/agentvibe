@@ -148,3 +148,32 @@ YAML, so the subject binding has a test that fails if it is deleted — it had n
 The mutation table is the evidence the tests were not built from the fix. The pass-case control is
 what stops the four refusal cases going vacuous: `bash -e` also exits 1 when the step dies early,
 so exit code alone cannot distinguish the shell aborting from the gate refusing.
+
+### The failure path, OBSERVED on the runner (not inferred)
+
+One deliberate cycle: a content commit invalidated the verdict subject, CI went red, the runner was
+read, and the commit was reverted. Before/after on the *same* failure, both from the runner:
+
+| | base, run `32964238343` | after `set +e`, run `32978261742` |
+|---|---|---|
+| step output | header, then died at `VERDICT_JSON=$(...)` | full JSON, `reason: absent`, `❌ QA GATE FAILED`, both remedies |
+| audit check-run on the failing head | **absent** — only `Verify QA Lead PASS` | **`QA verdict (diff-bound)` = failure**, with the subject in its summary |
+| bypass branch | unreachable | reachable, and `BYPASS_SUBJECT:` appears in the step env |
+
+The corrected instruction printed with the live subject — `BYPASS REASON: <why> 4bdbd30aaa15` — and
+with the re-trigger note, so the founder reading a refusal now gets the rule that is actually
+enforced. The throwaway was undone with `git revert`; `git diff 5cfd7f1 HEAD` is empty and the
+original verdict record matched again. **A hard reset was refused by `pre-tool-use.sh`, correctly** —
+the revert leaves the cycle in history rather than erasing it, which is the better audit trail.
+
+### The pattern, named as a pattern
+
+**Four instances in `merge-gate.test.mjs` alone of one machine's layout baked into a test**:
+`$HOME/.claude/plans` existing, a case-folding filesystem (#102), `gh`'s install path, and now
+`/usr/bin/bash` — which does not exist on macOS. Its own header records the first three as a
+series; the fourth makes it a class. Every one passed on the machine that wrote it. The general
+form is wider than paths: `js-yaml` was avoided here for the same reason, because `package.json`
+declares zero dependencies while it resolves from `$HOME/node_modules` — a test importing it would
+have passed locally and failed on the runner. **Anything a test reaches outside the repository is
+a machine assumption**, and the cure is to construct the condition and assert the construction
+before asserting behaviour, not to pick a better path.
