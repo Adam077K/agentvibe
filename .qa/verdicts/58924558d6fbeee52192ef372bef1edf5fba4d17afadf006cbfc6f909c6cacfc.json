@@ -1,0 +1,11 @@
+{
+  "subject": "58924558d6fbeee52192ef372bef1edf5fba4d17afadf006cbfc6f909c6cacfc",
+  "base": "0c78fa2813fc9d47291b339e3571a7e165c15074",
+  "tier": "irreversible",
+  "tier_driver": ".github/workflows/qa-lead-pass.yml",
+  "verdict": "PASS",
+  "by": "builder-verdict-forgeability (single author, single model family — see session file)",
+  "run_id": null,
+  "evidence": "npm run check 48/48. test:merge-gate 57/57. set +e deletion measured: 7 red, 1 vacuous, named. Failure path observed on runner 32978261742.",
+  "recorded_at": "2026-08-26T15:46:30.067Z"
+}
