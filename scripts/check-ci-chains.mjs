@@ -66,7 +66,11 @@ if (findings.length) {
         'expressible there — but WITHOUT an indentation indicator: `|2` is refused too, because the body ' +
         'baseline is read off the first content line rather than off the indicator.\n' +
         '  · SPLIT OVER SEVERAL LINES? Join it, or make it a block scalar. A continuation is refused ' +
-        'because this parser has not read all of the value, not because the value is wrong.'
+        'because this parser has not read all of the value, not because the value is wrong.\n' +
+        '  · A WHOLE LINE refused — the message names a line rather than a key? Then the KEY is what ' +
+        'could not be read, not the value. Write it as a plain `key: value` pair: no quotes around the ' +
+        'key, no space before the colon, no flow mapping (`- {run: …}`) and no merge key (`<<: *base`). ' +
+        'A `steps:` refused this way carries its sequence inline — put the steps on the lines below it.'
     );
   }
   if (refusals.length < findings.length) {
