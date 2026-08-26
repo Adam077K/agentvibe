@@ -502,10 +502,39 @@ test('P1-1: an UNTERMINATED fence is refused, not guessed', () => {
 
 // ── P1-2 · a "fresh" volume that already exists ─────────────────────────────────────────────
 
-test('P1-2: apply REFUSES when the computed new volume name is already a file', () => {
-  // Reproduces the case-collision demonstration: a volume the naming pattern does not recognise
-  // sits at the path `targetVolume` calls free, and the old code O_TRUNCed it while reporting
-  // "conservation closes to zero".
+/**
+ * Does this directory's filesystem fold case? PROBED at runtime — written and read back — never
+ * assumed, and deliberately NOT inferred from `process.platform`.
+ *
+ * ── WHY NOT `process.platform` ──────────────────────────────────────────────────────────────
+ *
+ * Because that is the same error one level up. A case-SENSITIVE APFS volume on macOS and a
+ * case-INSENSITIVE mount on Linux both exist; this file was fixed against the first of those,
+ * mounted locally, which is how the CI arm was executed rather than reasoned about. The question
+ * is about the filesystem holding the fixture, so ask that filesystem.
+ *
+ * Only the BASENAME is case-varied: uppercasing the whole path would also vary the temp
+ * directory's own name, and a probe that fails for the wrong reason reads as an answer.
+ */
+function foldsCase(dir) {
+  const base = `.case-probe-${process.pid}-${Math.random().toString(36).slice(2)}`;
+  fs.writeFileSync(path.join(dir, base), 'probe');
+  try {
+    return fs.existsSync(path.join(dir, base.toUpperCase()));
+  } finally {
+    fs.rmSync(path.join(dir, base), { force: true });
+  }
+}
+
+test('P1-2: a CASE-FOLDED name occupying the computed volume path is refused', (t) => {
+  // ── THIS ASSERTION IS FILESYSTEM-DEPENDENT, AND SAYS SO ────────────────────────────────────
+  //
+  // `DECISIONS_ARCHIVE_002.MD` and `DECISIONS_ARCHIVE_002.md` are ONE file where case folds and
+  // TWO where it does not. Where they are two, nothing occupies the contended path, the tool
+  // correctly creates the volume, and this fixture's premise is simply false — so the case is
+  // SKIPPED rather than weakened. The universal companion below covers the same refusal
+  // everywhere; this one covers the route that exists on the filesystem this repo is developed
+  // on, which is precisely the route CI cannot reach.
   const root = fixture({
     entries: entry({ date: '2026-06-01', title: 'An ordinary decision about ordinary things' }),
     archives: {
@@ -515,13 +544,36 @@ test('P1-2: apply REFUSES when the computed new volume name is already a file', 
     },
   });
   const dir = path.join(root, '.claude', 'memory');
-  const collided = fs.readdirSync(dir).filter((n) => /^DECISIONS_ARCHIVE_002\.md$/i.test(n));
-  assert.equal(collided.length, 1, 'fixture must place a file at the contended path');
+  if (!foldsCase(dir)) {
+    t.skip('this filesystem is case-SENSITIVE, so `DECISIONS_ARCHIVE_002.MD` and `...md` are two '
+      + 'files and nothing occupies the contended path — the premise of this fixture, not the '
+      + 'behaviour it checks. The universal directory and symlink cases below cover the same '
+      + 'refusal on every filesystem.');
+    return;
+  }
+
+  // ── THE PRECONDITION, CASE-SENSITIVELY ────────────────────────────────────────────────────
+  //
+  // This guard used to be `readdirSync(dir).filter(n => /^DECISIONS_ARCHIVE_002\.md$/i.test(n))`
+  // — a case-INSENSITIVE regex asserting a case-SENSITIVE property. It found the `.MD` file on a
+  // case-sensitive filesystem, so it passed while the fixture had NOT placed a file at the
+  // contended path, and the real assertion below failed instead. A guard that cannot express its
+  // own failure is the pattern this branch spent four rounds on; here it was in the test proving
+  // the fix. Both checks below are exact-string.
+  const contended = path.join(dir, 'DECISIONS_ARCHIVE_002.md');
+  assert.ok(fs.existsSync(contended),
+    'fixture must place a file at the EXACT path targetVolume computes — that is the premise');
+  assert.ok(!fs.readdirSync(dir).includes('DECISIONS_ARCHIVE_002.md'),
+    'and it must be there under a name VOLUME_RE misses, or the collision is not the one under test');
+
+  // Invisible to the volume scan — confirmed through the tool's own report, not assumed.
+  assert.deepEqual(plan(root).volumes.map((v) => v.name), ['DECISIONS_ARCHIVE.md'],
+    'the .MD file must not be counted as a volume, or targetVolume would never call 002 free');
 
   const r = apply(root, ['--only', '2026-06-01']);
   assert.equal(r.code, 1, `expected refusal, got ${r.code}: ${r.out}`);
-  assert.match(r.err, /computed as a NEW volume but a file already exists/);
-  assert.ok(fs.readFileSync(path.join(dir, collided[0]), 'utf8').includes('IRREPLACEABLE-HISTORY-SENTINEL'),
+  assert.match(r.err, /DECISIONS_ARCHIVE_002\.md was computed as a NEW volume but a file already exists/);
+  assert.ok(fs.readFileSync(path.join(dir, 'DECISIONS_ARCHIVE_002.MD'), 'utf8').includes('IRREPLACEABLE-HISTORY-SENTINEL'),
     'the prior volume must survive untouched');
 });
 
