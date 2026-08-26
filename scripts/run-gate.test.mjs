@@ -35,7 +35,29 @@ function run(args) {
   }
 }
 
-const json = (args) => JSON.parse(run([...args, '--json']).stdout);
+// `JSON.parse(run(...).stdout)` was the whole helper, and it threw `Unexpected end of JSON input`
+// — a refusal nobody can act on. run-gate.mjs exits 2 with its reason on STDERR on several paths,
+// so an empty stdout is its normal shape for "I refused", and the parse error named neither the
+// command, the exit code, nor the reason the script had already written down. Two tests failed
+// that way on ubuntu-latest for four CI runs (32943661820 among them) while the cause — the ref
+// they built — sat one line above, unmentioned in the output.
+//
+// The reason is fetched from stderr rather than re-derived: the script knows why it refused, and a
+// second guess here would be a second implementation of that answer.
+function json(args) {
+  const argv = [...args, '--json'];
+  const r = run(argv);
+  const cmd = `node ${SCRIPT} ${argv.join(' ')}`;
+  const detail = `  cmd:    ${cmd}\n  cwd:    ${REPO}\n  exit:   ${r.code}\n  stderr: ${(r.stderr || '').trim() || '(empty)'}`;
+  if (!r.stdout.trim()) {
+    throw new Error(`run-gate.mjs produced no stdout where JSON was required.\n${detail}`);
+  }
+  try {
+    return JSON.parse(r.stdout);
+  } catch (e) {
+    throw new Error(`run-gate.mjs produced stdout that is not JSON (${e.message}).\n${detail}\n  stdout: ${r.stdout.slice(0, 400)}`);
+  }
+}
 
 test('a docs-only change does not require the binding gate', () => {
   const r = json(['--files', 'docs/a.md', 'docs/08-agents_work/sessions/x.md']);
@@ -689,18 +711,49 @@ test('the stale-tree case BLOCKS on every ref shape, not only the one the first 
   }
 });
 
-test('the router pins the emitted ref tip to a sha, so it cannot emit what the gate refuses', () => {
+// ── A SYMBOLIC tip is the fixture, and the obvious way to get one returns "HEAD" on CI ───────
+//
+// Both tests below need a tip that is a NAME rather than a sha, because pinning a name to a sha is
+// the entire behaviour under test. They took it from `git rev-parse --abbrev-ref HEAD` — the branch
+// you are on, locally. `actions/checkout` checks a `pull_request` out at the merge commit in
+// DETACHED HEAD, and there that same command returns the literal string "HEAD". The ref became
+// `origin/main...HEAD`, which run-gate.mjs refuses outright — exit 2, reason on stderr, stdout
+// empty — so `json()` got zero bytes. Measured on ubuntu-latest: 85 pass · 2 fail, both
+// `Unexpected end of JSON input`. Reproduced by cloning this tree and running `git checkout
+// --detach`: the same two tests, the same error, while every other case stayed green.
+//
+// The assertion is NOT softened to accommodate that environment, and nothing skips on CI — CI is
+// the only machine where these two are real. The test MAKES the precondition it needs instead of
+// borrowing one from whatever the checkout left behind: a branch at HEAD, verified to point there,
+// deleted afterwards. Per-pid because worktrees of one repository share a ref namespace and the
+// lanes here run in parallel.
+function symbolicTipAtHead(t) {
+  const name = `run-gate-test-tip-${process.pid}`;
+  const git = (...a) =>
+    execFileSync('git', a, { cwd: REPO, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  git('branch', '--force', name, 'HEAD');
+  t.after(() => {
+    try { git('branch', '-D', name); } catch { /* the assertion failure is the news, not this */ }
+  });
+  assert.equal(
+    git('rev-parse', '--verify', `${name}^{commit}`), HEAD_SHA,
+    `the fixture branch ${name} does not point at HEAD, so it cannot stand in for one that does`,
+  );
+  return name;
+}
+
+test('the router pins the emitted ref tip to a sha, so it cannot emit what the gate refuses', (t) => {
   // A symbolic tip passed to --ref used to be emitted verbatim. The gate now refuses that shape,
   // so emitting it would make the router hand out an invocation its own gate rejects.
-  const branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim();
+  const branch = symbolicTipAtHead(t);
   const r = json(['--files', '.claude/workflows/qa.js', '--ref', `origin/main...${branch}`]);
   const tip = r.invocation.args.ref.slice(r.invocation.args.ref.lastIndexOf('...') + 3);
   assert.match(tip, /^[0-9a-f]{40}$/, `emitted tip "${tip}" is not a resolved sha`);
   assert.equal(tip, HEAD_SHA);
 });
 
-test('router and gate agree on a SYMBOLIC --ref too — the pin is what makes that true', async () => {
-  const branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim();
+test('router and gate agree on a SYMBOLIC --ref too — the pin is what makes that true', async (t) => {
+  const branch = symbolicTipAtHead(t);
   const r = json(['--files', '.claude/workflows/qa.js', '--ref', `origin/main...${branch}`]);
   const { out } = await runQa(r.invocation.args, goodOracle({ tree: r.invocation.args.tree }));
   assert.equal(out.verdict, 'PASS', 'the gate refused an invocation its own router emitted');
