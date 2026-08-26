@@ -57,9 +57,14 @@ const CONTEXT = A.context || 'No extra context provided.'
 // this comment said "may refuse" until it was measured. `coding.js` can no longer reach a PASS by
 // any argument it is capable of passing, because it supplies neither a `tree` nor a sha-tipped ref
 // (its own default is `A.ref || 'origin/main...HEAD'`, which this gate now also refuses). Composing
-// the two workflows over real runtime globals returns `status: BLOCKED_BY_QA`, `qa_verdict: BLOCK`,
-// zero agents dispatched, and a summary carrying the word REFUSED — fail-closed, no budget spent,
-// and legible.
+// the two workflows over real runtime globals returns `status: REFUSED_BY_QA`,
+// `qa_verdict: REFUSED`, zero agents dispatched, and a summary carrying the word REFUSED —
+// fail-closed, no budget spent, and legible.
+//
+// SUPERSEDED 2026-08-26: this read `status: BLOCKED_BY_QA`, `qa_verdict: BLOCK`. That WAS what the
+// pair returned, and it is the defect this file's verdict vocabulary now fixes — the summary said
+// REFUSED while the field every caller reads said BLOCK. The composition is unchanged; only the
+// word it returns is.
 //
 // It is invoked by no SLASH COMMAND — zero hits for `coding` across `.claude/commands/` — which is
 // the narrow and checkable statement. It remains invocable directly as `Workflow({name:'coding'})`,
@@ -743,12 +748,42 @@ function verifyFinding(f, phaseName) {
 // dimension reviewer, no verifier, no judge is dispatched. That is the short-circuit: it is a
 // property of control flow (an early `return` before any panel `agent()` call), not a panel that
 // runs to completion and gets discarded.
-// One shape for every early BLOCK, built once. Two hand-written copies of a return shape is how a
-// consumer comes to read a key on one path and `undefined` on another — "absent" and "empty" then
-// become indistinguishable, and `unverified_truncated: []` is precisely the field where that
-// matters: the oracle short-circuits before Phase 2, so nothing was truncated. That is a fact
-// being reported, not a key someone forgot.
-function gateBlock(summary, blockers, measuredTree) {
+// ── THE THREE TERMINAL VERDICTS, AND WHY THERE ARE THREE ─────────────────────────────────────
+//
+// Until 2026-08-26 there were two, and a gate that REFUSED ITS OWN ARGUMENTS returned the same
+// word as a gate that reviewed the diff and found defects. Measured across eleven entry shapes,
+// with the panel stubbed: TEN returned `BLOCK`, and exactly ONE of those ten was a statement about
+// the diff. A caller reading the verdict field — which is what every caller reads — could not tell
+// a misconfigured route from a working gate that found something.
+//
+//   PASS     the panel ran and nothing blocks the merge.
+//   BLOCK    something adverse about THIS DIFF was established. A deterministic check failed in
+//            the right tree, or the panel found and confirmed a blocking finding.
+//   REFUSED  nothing was established in either direction. The gate was never aimed, or was aimed
+//            somewhere else, or its floor never reported. NOT a weak BLOCK — a non-answer.
+//
+// THE CUT IS "WAS ANYTHING ESTABLISHED ABOUT THIS DIFF", not "did an agent run". `agents
+// dispatched == 0` looks like the discriminator and is not: the oracle retries up to
+// ORACLE_ATTEMPTS times, so an oracle dropout dispatches four agents and establishes nothing,
+// while a real failing check establishes something on the first. Measured, both.
+//
+// WHY THIS IS SAFE AGAINST EVERY CONSUMER — checked before the value was added, not after. Every
+// consumer of this field keys on `=== 'PASS'` (`coding.js`), never on `=== 'BLOCK'`, so an
+// unrecognised third value fails CLOSED everywhere by construction. `lib/gate-logic.mjs` never
+// sees a refusal — it is the panel arithmetic and refusals return before the panel. And
+// `scripts/verdict.mjs` is a different mechanism entirely (the `.qa/verdicts` record), not a
+// consumer of this return.
+//
+// DO NOT let a caller fold REFUSED back into BLOCK. That moves the lie from the gate to the
+// caller and buys nothing; `coding.js` distinguishes it, and a test pins that it still does.
+const VERDICT = Object.freeze({ PASS: 'PASS', BLOCK: 'BLOCK', REFUSED: 'REFUSED' })
+
+// One shape for every early terminal outcome, built once. Two hand-written copies of a return
+// shape is how a consumer comes to read a key on one path and `undefined` on another — "absent"
+// and "empty" then become indistinguishable, and `unverified_truncated: []` is precisely the field
+// where that matters: the oracle short-circuits before Phase 2, so nothing was truncated. That is
+// a fact being reported, not a key someone forgot.
+function gateOutcome(verdict, summary, blockers, measuredTree) {
   return {
     tier: TIER,
     ref: REF,
@@ -763,12 +798,26 @@ function gateBlock(summary, blockers, measuredTree) {
     dimensions_failed: [],
     critical_gap: [],
     unverified_truncated: [],
-    verdict: 'BLOCK',
+    verdict,
+    // `established` is NOT a second source of truth to be kept in sync — it is derived from the
+    // verdict on the same line that sets it, so the two cannot disagree. It exists because a
+    // consumer that wants "did this run tell me anything" should not have to enumerate verdict
+    // values to find out, and enumerating them is how a fourth value would get missed.
+    established: verdict !== VERDICT.REFUSED,
     judge_verdict: null,
     summary,
     blockers,
   }
 }
+
+/** The gate established something adverse about the diff. */
+const gateBlock = (summary, blockers, measuredTree) => gateOutcome(VERDICT.BLOCK, summary, blockers, measuredTree)
+
+/**
+ * The gate established NOTHING. Every caller of this must be a path where the diff was never
+ * measured, or was measured somewhere else — never a path where a check actually failed.
+ */
+const gateRefusal = (summary, blockers, measuredTree) => gateOutcome(VERDICT.REFUSED, summary, blockers, measuredTree)
 
 // ── Phase 0a: refuse before dispatching anything, if the subject of the run is not established ──
 //
@@ -779,7 +828,9 @@ const entryRefusal = gateEntryRefusal()
 if (entryRefusal) {
   const summary = `qa.js REFUSED to run: ${entryRefusal} No agent was dispatched and nothing about this diff has been established in either direction — this is a refusal, not a verdict. Pass an absolute \`tree\` naming the worktree that holds ${REF_TIP || REF}; \`node scripts/run-gate.mjs --json\` emits the whole invocation, that argument included.`
   log(summary)
-  return gateBlock(summary, [{
+  // This sentence said "a refusal, not a verdict" while returning `verdict: 'BLOCK'`. The prose was
+  // right and the field contradicted it; the field is what callers read.
+  return gateRefusal(summary, [{
     id: 'gate-subject-unestablished',
     file: '(gate)',
     title: 'qa.js was not told which worktree to measure',
@@ -796,9 +847,12 @@ const oracle = await runOracle()
 // to a question nobody asked.
 const wrongTree = oracle ? oracleTreeMismatch(oracle) : null
 if (wrongTree) {
-  const summary = `Oracle measured the wrong tree — ${wrongTree}. BLOCK. Its checks say nothing about ${REF}, whatever they returned, so this is a harness BLOCK and NOT a judgement about the diff. The review panel was never dispatched.`
+  // REFUSED, not BLOCK: "its checks say nothing about this ref" is the definition of nothing
+  // established. The instrument fired — it was aimed at another tree, which is the weaker of the
+  // two failures this repo names and still not evidence about the diff under review.
+  const summary = `Oracle measured the wrong tree — ${wrongTree}. REFUSED. Its checks say nothing about ${REF}, whatever they returned, so nothing about this diff has been established in either direction. The review panel was never dispatched.`
   log(summary)
-  return gateBlock(summary, [{
+  return gateRefusal(summary, [{
     id: 'oracle-wrong-tree',
     file: '(gate)',
     title: 'The deterministic floor was measured somewhere other than the tree under review',
@@ -840,15 +894,28 @@ const oracleVacuous = Boolean(oracle) && Array.isArray(oracle.checks) && oracle.
 if (!oracle || oracle.pass !== true || oracleFailing.length || oracleUnderReported) {
   const failing = oracleFailing
   const contradicted = oracle && oracle.pass === true && (failing.length || oracleVacuous)
+  // ── WHICH OF THESE FOUR IS EVIDENCE, AND WHICH IS A NON-ANSWER ──────────────────────────────
+  //
+  // Three of the four establish NOTHING about the diff, and each says so in its own summary
+  // already — "establishes nothing in either direction", "a partial floor is not a floor", "a
+  // harness failure, NOT a judgement about the diff". They returned BLOCK anyway. Only the fourth
+  // — a named check that actually FAILED, in the tree we asked for — is evidence, and it is the
+  // one that keeps BLOCK.
+  //
+  // `oracle.pass !== true` with a complete report and no failing check named stays BLOCK: the
+  // runner asserted a failure without naming one, which is a contradictory report rather than a
+  // silent one, and downgrading an asserted failure to a non-answer is the direction that loses.
+  const establishedNothing = !oracle || oracleVacuous || oracleUnderReported
   const summary = !oracle
-    ? `Oracle check-runner returned no usable result after ${ORACLE_ATTEMPTS} attempts — auto-BLOCK. This is a harness failure, NOT a judgement about the diff. The review panel was never dispatched.`
+    ? `Oracle check-runner returned no usable result after ${ORACLE_ATTEMPTS} attempts — REFUSED. This is a harness failure, NOT a judgement about the diff. Nothing about this diff has been established in either direction. The review panel was never dispatched.`
     : oracleVacuous
-      ? `Oracle reported pass=true having run NO checks at all in ${TREE} — auto-BLOCK. An empty checks array establishes nothing in either direction; it is the maximal partial run. The review panel was never dispatched.`
+      ? `Oracle reported pass=true having run NO checks at all in ${TREE} — REFUSED. An empty checks array establishes nothing in either direction; it is the maximal partial run. The review panel was never dispatched.`
       : oracleUnderReported
-        ? `Oracle reported only ${oracle.checks.length} of the ${ORACLE_REQUIRED_CHECKS} checks it was asked to run in ${TREE} — auto-BLOCK. A partial floor is not a floor: the checks it did not report are the ones nothing knows the result of. The review panel was never dispatched.`
+        ? `Oracle reported only ${oracle.checks.length} of the ${ORACLE_REQUIRED_CHECKS} checks it was asked to run in ${TREE} — REFUSED. A partial floor is not a floor: the checks it did not report are the ones nothing knows the result of. The review panel was never dispatched.`
       : `Deterministic check(s) failed in ${TREE} before any review agent ran: ${failing.map(c => (c && c.name) || '(unnamed)').join(', ') || '(unspecified)'}.${contradicted ? ' The check-runner reported pass=true alongside them; the per-check evidence wins over its own summary of it.' : ''} This is an oracle/harness BLOCK naming a failing check, NOT a judgement about the diff's quality — fix the check and re-run. The review panel was never dispatched.`
   log(summary)
-  return gateBlock(
+  return gateOutcome(
+    establishedNothing ? VERDICT.REFUSED : VERDICT.BLOCK,
     summary,
     !oracle
       ? [{ id: 'oracle-dropout', file: '(gate)', title: `Oracle check-runner returned no structured result in ${ORACLE_ATTEMPTS} attempts`, fix: 'Re-run qa.js. If this recurs, read the run journal before trusting any verdict from this gate.' }]
@@ -997,6 +1064,13 @@ for (let attempt = 0; attempt < JUDGE_ATTEMPTS && !(verdict && verdict.verdict);
   if (verdict && !verdict.verdict) log(`Judge returned a malformed verdict on attempt ${attempt + 1} — retrying.`)
   if (verdict && verdict.verdict && attempt) log(`Judge completed on attempt ${attempt + 1}/${JUDGE_ATTEMPTS} — ${attempt} dropout(s) absorbed.`)
 }
+// DELIBERATELY STILL BLOCK, NOT REFUSED, AND THE BOUNDARY IS WORTH STATING. Judge dropout is the
+// nearest case to a refusal that is not one: by here the panel HAS run, reviewers have looked, and
+// `confirmed` may hold real findings that the deterministic overrides below turn into a BLOCK on
+// their own evidence. What died is the synthesiser, not the instrument. REFUSED is reserved for
+// runs where nothing looked at the diff at all — widening it to "something looked but did not
+// summarise" would let a run with confirmed P1s wear a non-answer, which is the one direction this
+// change must never move.
 if (!verdict || !verdict.verdict) {
   log(`Judge returned no usable verdict after ${JUDGE_ATTEMPTS} attempts — auto-BLOCK.`)
   verdict = { verdict: 'BLOCK', summary: `Judge agent dropped out on all ${JUDGE_ATTEMPTS} attempts — auto-BLOCK to protect the binding gate. This is a harness failure, NOT a judgement about the diff.`, blockers: [{ id: 'judge-dropout', file: '(gate)', title: `Opus judge returned no structured verdict in ${JUDGE_ATTEMPTS} attempts`, fix: 'Re-run qa.js. If this recurs, the dropout rate has risen — read the run journal before trusting any verdict from this gate.' }] }
@@ -1047,6 +1121,11 @@ return {
   critical_gap: criticalGap,
   unverified_truncated: unverifiedTruncated,
   verdict: finalVerdict,
+  // Always true on this path by construction: reaching here means the panel ran. Emitted anyway so
+  // that `established` is present on EVERY return of this script — a key that exists on the early
+  // returns and is `undefined` here would recreate the absent-vs-false ambiguity that gateOutcome()
+  // exists to prevent, one field over.
+  established: true,
   judge_verdict: verdict.verdict,
   summary: verdict.summary,
   blockers,
