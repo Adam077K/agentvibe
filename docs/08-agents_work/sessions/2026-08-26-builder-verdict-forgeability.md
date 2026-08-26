@@ -275,3 +275,44 @@ mutation table's first version showed all three versions refusing — three cell
 wrong reason, in the table that proved the fix. A *positive* result needs its control as much as a
 negative one, because agreement across cells looks like corroboration while being a single shared
 artefact.
+
+### Round 5 · the failure path re-observed on the FINAL bytes (2026-08-26)
+
+The first observation was at `ebeb3ae`, before rounds 3–4 edited this file, so it demonstrated the
+behaviour but not the shipped bytes. Re-observed after merging `origin/main` at `507a470`:
+
+**Run `33010490290`, head `a2ca26e`** — job `Verify QA Lead PASS` = failure, step [9] = failure,
+44s (`completed_at − started_at`, never `now − started_at`; `gh` stamps UTC):
+
+```
+{ "ok": false, "reason": "absent", "subject": "5088914ee130…", "tier": "irreversible",
+  "driver": ".github/workflows/qa-lead-pass.yml" }
+Posting audit check-run (conclusion=failure)...
+❌ QA GATE FAILED — No QA verdict bound to this diff (reason=absent, subject=5088914ee130…)
+```
+
+and on that head `QA verdict (diff-bound) = failure` is **posted**, carrying the subject in its
+summary — the half the pre-`set +e` code could not do at all. The runner's subject matches the one
+computed locally before pushing, character for character.
+
+**The stale state was free, and the reason is worth keeping.** Merging `main` does not void a
+verdict when `main` misses the reviewed paths — that is the property, and it is why I refuted the
+"free window" the first time it was offered. It voided here because **#116 touched
+`scripts/merge-gate.test.mjs`, which this branch also touches.** The window is created by the base
+move *overlapping*, never by it being large.
+
+**The merge, and the one line the marker removal did not give.** Append/append at the same line:
+#116 added 173 lines, this branch 334, both at the end of a 1010-line file. The base file's single
+trailing `});` closes ONE test and both blocks ended mid-test expecting it, so stripping the three
+markers left this branch's final test open. `node --check` caught it — *Unexpected end of input* —
+which is the loud failure mode, and the reason to parse before running. Checked before resolving,
+because "keep both" is the shape where a resolution looks fine and is wrong: shared top-level
+identifiers (1 against 11) and duplicate test names (4 against 9), both intersections **empty**.
+The naive whole-file name comparison returns **41** — the shared base — and is the number that
+would have misled. 61 of 61 tests pass: 41 base + 16 here + 4 from #116.
+
+**Cross-lane check that had to happen at the merge, not before it.** #116 makes `verdict.mjs`
+refuse an unknown flag (exit 2, writes nothing) and it is the oracle this workflow parses. Both
+live call sites — `subject` with no flags, `check --json` — are inside main's accepted set, and a
+refusal would fail closed anyway through the `-z` guard and the `.ok`/`.subject` guards. #116
+hardened the oracle; B1 hardened the caller against the oracle misbehaving.
