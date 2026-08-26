@@ -1,0 +1,372 @@
+// POSTURE: BLOCKS. Wired to .github/workflows/ci.yml through `npm run test:playbooks`, which
+// runs this file alongside scripts/playbooks.test.mjs. It rides that step rather than taking one
+// of its own on purpose: `scripts/lib/check-suite.js` owns the step list and is `irreversible`
+// tier, and the subject here — what a playbook's `gate:` and `triggers:` resolve to — is a
+// playbook property. `npm run gates` is the same predicate as a human-readable entry point, the
+// arrangement check-suite.js documents for `check:ci-chains`.
+//
+// scripts/gates.test.mjs — every rule tested by constructing the input that DEFEATS it.
+//
+// WHY EACH FAILURE IS BUILT RATHER THAN ASSUMED
+// The defect this whole change closes is a reference that resolves to nothing while everything
+// reports green: `gate: qa-verdict` was checked against a four-name array and executed by no one,
+// and `triggers:` was read by nothing at all. Replacing one unchecked reference with another
+// would be the same defect in a new spelling. So every finding below is produced by a fixture
+// that would have passed before the rule existed, and the GOOD fixture is asserted clean first,
+// so a failure below is the rule firing and not the fixture being broken.
+//
+// The fixtures are VALUES, not files. wiringFindings() is pure for this reason: writing a fixture
+// into `.claude/playbooks/` to test a checker that reads `.claude/playbooks/` makes the test
+// unrunnable in parallel and, under the armed sandbox, sometimes unrunnable at all.
+//
+// WHY `test:playbooks` CARRIES `--test-concurrency=1`, measured here on 2026-08-26.
+// `scripts/playbooks.test.mjs` lints by WRITING `.claude/playbooks/fixture.yml` and unlinking it.
+// Node runs `--test` files concurrently by default, so the first run of the two together threw
+// `ENOENT ... .claude/playbooks/fixture.yml` out of loadPlaybooks() here — this file read the
+// directory while the other file was mid-write. The hazard is that shared directory, not this
+// test: any future reader of `.claude/playbooks/` in a concurrent file meets it again, and the
+// durable fix is a fixture that does not live in the tree under test. Serialising the two files
+// is the narrow fix; it is named here so the next person does not rediscover it as a flake.
+
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  wiringFindings,
+  resolveGate,
+  realTree,
+  EXIT_FOR_STATUS,
+  KINDS,
+} from './check-gates.mjs';
+
+// ── The fixture, and the control that proves it is clean ────────────────────
+
+const GOOD = () => ({
+  gates: [
+    {
+      id: 'qa-verdict',
+      kind: 'command',
+      summary: 'A verdict of PASS is committed and bound to the exact diff being merged.',
+      run: 'node scripts/verdict.mjs check',
+    },
+    {
+      id: 'human-stop',
+      kind: 'human',
+      summary: 'A person has looked at the thing and said yes, which no exit code can say.',
+      decided_by: 'founder',
+      recorded_in: 'the session file for the task',
+    },
+  ],
+  playbooks: [
+    {
+      file: '.claude/playbooks/alpha.yml',
+      id: 'alpha',
+      doc: {
+        triggers: ['/alpha'],
+        stages: [
+          { id: 'frame' },
+          { id: 'review', gate: 'qa-verdict' },
+          { id: 'ship', gate: 'human-stop' },
+        ],
+      },
+    },
+  ],
+  commands: [
+    { file: '.claude/commands/alpha.md', name: '/alpha', fm: { playbook: 'alpha' } },
+    { file: '.claude/commands/color.md', name: '/color', fm: {} },
+  ],
+  lintGates: ['qa-verdict', 'human-stop'],
+  exists: (p) => p === 'scripts/verdict.mjs',
+});
+
+/** Apply a mutation to a fresh copy of GOOD and return the findings it produces. */
+function findings(mutate = () => {}) {
+  const t = GOOD();
+  mutate(t);
+  return wiringFindings(t);
+}
+
+const joined = (mutate) => findings(mutate).join('\n');
+
+test('the fixture is clean, so every failure below is the rule and not the fixture', () => {
+  assert.deepEqual(findings(), []);
+});
+
+// ── THE SHIPPED TREE. The non-vacuity anchor for everything else ────────────
+
+test('the repository itself has no gate or trigger finding', () => {
+  assert.deepEqual(wiringFindings(realTree()), []);
+});
+
+test('every shipped playbook declares at least one trigger, and every trigger reaches a command that names it back', () => {
+  // Stated as its own assertion because the check above would also pass if `triggers` were
+  // optional. Measured 2026-08-26 at 244e8db: 1 of 6 playbooks carried the key, and the one that
+  // did omitted `/ship` while .claude/commands/ship.md declared `playbook: ship-feature`.
+  const { playbooks, commands } = realTree();
+  const byName = new Map(commands.map((c) => [c.name, c]));
+  assert.equal(playbooks.length, 6, 'the seed set');
+  for (const p of playbooks) {
+    assert.ok(Array.isArray(p.doc.triggers) && p.doc.triggers.length > 0, `${p.file} has no triggers`);
+    for (const t of p.doc.triggers) {
+      assert.ok(byName.has(t), `${p.file}: ${t} names no command file`);
+      assert.equal(byName.get(t).fm.playbook, p.id, `${t} does not name ${p.id} back`);
+    }
+  }
+});
+
+test('framer has dispatch sites, and every dispatch engine is a real engine', () => {
+  // framer had ZERO across all six playbooks while builder had 4, sourcer 4 and designer 2 — the
+  // engine that turns fuzzy into structure was dispatched by nothing, in the stage every playbook
+  // opens with.
+  const { playbooks } = realTree();
+  const byEngine = new Map();
+  for (const p of playbooks) {
+    for (const s of p.doc.stages) {
+      for (const d of (s.dispatch || [])) {
+        byEngine.set(d.engine, (byEngine.get(d.engine) || 0) + 1);
+      }
+    }
+  }
+  assert.ok((byEngine.get('framer') || 0) >= 3, `framer has ${byEngine.get('framer') || 0} dispatch sites`);
+});
+
+// ── "A playbook naming a gate must resolve to something" ────────────────────
+
+test('a stage naming a gate that gates.yml does not declare is refused', () => {
+  assert.match(
+    joined((t) => { t.playbooks[0].doc.stages[1].gate = 'probably-fine'; }),
+    /gate "probably-fine" is not declared in \.claude\/gates\.yml — it resolves to nothing/,
+  );
+});
+
+test('a command gate whose run: names a script that does not exist is refused', () => {
+  // The exact shape of the original defect, one level down: the NAME resolves, and the thing it
+  // names does not exist. A spelling allowlist cannot see this.
+  assert.match(
+    joined((t) => { t.gates[0].run = 'node scripts/does-not-exist.mjs check'; }),
+    /run names scripts\/does-not-exist\.mjs, which does not exist — the gate resolves to nothing/,
+  );
+});
+
+test('a command gate with no run: at all is refused', () => {
+  assert.match(joined((t) => { delete t.gates[0].run; }), /kind "command" needs "run"/);
+});
+
+test('a run: outside scripts\\/ is refused', () => {
+  assert.match(joined((t) => { t.gates[0].run = 'node ../../elsewhere.mjs'; }), /run must name a script under scripts\//);
+  assert.match(joined((t) => { t.gates[0].run = 'node scripts/../etc/x.mjs'; }), /run must name a script under scripts\//);
+});
+
+test('a run: that is not node is refused', () => {
+  assert.match(joined((t) => { t.gates[0].run = 'bash scripts/verdict.mjs'; }), /run must start with "node"/);
+});
+
+test('a run: carrying a shell metacharacter is refused', () => {
+  for (const bad of [
+    'node scripts/verdict.mjs check ; echo pass',
+    'node scripts/verdict.mjs check || true',
+    'node scripts/verdict.mjs check > /dev/null',
+    'node scripts/verdict.mjs $(whoami)',
+    'node scripts/verdict.mjs `id`',
+  ]) {
+    assert.match(joined((t) => { t.gates[0].run = bad; }), /carries a shell metacharacter/, bad);
+  }
+});
+
+// ── "A human stop is a first-class kind, not an unimplemented one" ──────────
+
+test('a human gate carrying run: is refused — a human stop may not be faked into a script', () => {
+  assert.match(
+    joined((t) => { t.gates[1].run = 'node scripts/verdict.mjs check'; }),
+    /kind "human" carries "run" — a human stop may not be faked into a script/,
+  );
+});
+
+test('a command gate carrying a human-only field is refused', () => {
+  assert.match(
+    joined((t) => { t.gates[0].why_not_a_command = 'because'; }),
+    /kind "command" carries "why_not_a_command", which describes a human decision/,
+  );
+});
+
+test('a human gate with no named approver and no place it is recorded is refused', () => {
+  assert.match(joined((t) => { delete t.gates[1].decided_by; }), /needs "decided_by"/);
+  assert.match(joined((t) => { delete t.gates[1].recorded_in; }), /needs "recorded_in"/);
+});
+
+test('a kind that is neither command nor human is refused', () => {
+  assert.match(joined((t) => { t.gates[1].kind = 'vibes'; }), /kind "vibes" is not one of \(command, human\)/);
+  assert.match(joined((t) => { delete t.gates[1].kind; }), /is not one of \(command, human\)/);
+  assert.deepEqual(KINDS, ['command', 'human']);
+});
+
+test('resolving a human gate returns unresolved and never pass — Rule 10', () => {
+  const g = GOOD().gates[1];
+  const r = resolveGate(g, { spawn: () => { throw new Error('a human gate must never spawn anything'); } });
+  assert.equal(r.status, 'unresolved');
+  assert.equal(r.reason, 'human-stop');
+  assert.notEqual(r.status, 'pass');
+  assert.notEqual(EXIT_FOR_STATUS.unresolved, EXIT_FOR_STATUS.pass);
+});
+
+test('every human gate in the shipped file resolves unresolved, with nothing spawned', () => {
+  const spawn = () => { throw new Error('spawned a human gate'); };
+  for (const g of realTree().gates.filter((x) => x.kind === 'human')) {
+    assert.equal(resolveGate(g, { spawn }).status, 'unresolved', g.id);
+  }
+});
+
+// ── "Unresolved is not fail, and neither is pass" ───────────────────────────
+
+test('a command gate maps exit codes to pass, fail and unresolved distinctly', () => {
+  const g = GOOD().gates[0];
+  const withResult = (r) => resolveGate(g, { spawn: () => ({ stdout: '', stderr: '', ...r }) });
+  assert.equal(withResult({ status: 0 }).status, 'pass');
+  assert.equal(withResult({ status: 1 }).status, 'fail');
+  assert.equal(withResult({ status: 2 }).status, 'unresolved');
+  assert.equal(withResult({ status: 127 }).status, 'unresolved');
+  assert.equal(withResult({ status: null, signal: 'SIGKILL' }).status, 'unresolved');
+  assert.equal(withResult({ status: null, error: new Error('ENOENT') }).status, 'unresolved');
+});
+
+test('a spawn failure never reports pass, whatever else it reports', () => {
+  const g = GOOD().gates[0];
+  // A resolver that could not run the command has not checked anything. Exit 0 from a failed
+  // spawn is the exact shape of the deferred Codex resolver's bug (#19945), which is why this is
+  // asserted rather than assumed.
+  const r = resolveGate(g, { spawn: () => ({ status: 0, error: new Error('ENOENT'), stdout: '', stderr: '' }) });
+  assert.equal(r.status, 'unresolved');
+});
+
+// ── "A declared gate is used, or carries a reason someone can argue with" ───
+
+test('a gate no playbook names, with no unused_reason, is refused', () => {
+  assert.match(
+    joined((t) => { t.playbooks[0].doc.stages[2].gate = 'qa-verdict'; }),
+    /no playbook stage names this gate, and "unused_reason" is missing or shorter than 40/,
+  );
+});
+
+test('a short unused_reason does not buy the exemption', () => {
+  assert.match(
+    joined((t) => {
+      t.playbooks[0].doc.stages[2].gate = 'qa-verdict';
+      t.gates[1].unused_reason = 'we might need it';
+    }),
+    /shorter than 40/,
+  );
+});
+
+test('a substantive unused_reason does buy it', () => {
+  assert.deepEqual(
+    findings((t) => {
+      t.playbooks[0].doc.stages[2].gate = 'qa-verdict';
+      t.gates[1].unused_reason =
+        'Kept because the tier map already floors migrations at irreversible, so the policy exists and only the stage naming it is missing.';
+    }),
+    [],
+  );
+});
+
+test('an unused_reason on a gate that IS used is refused — a stale exemption reads as governance', () => {
+  assert.match(
+    joined((t) => { t.gates[0].unused_reason = 'x'.repeat(60); }),
+    /carries "unused_reason" but 1 stage\(s\) name it/,
+  );
+});
+
+test('duplicate gate ids are refused', () => {
+  assert.match(joined((t) => { t.gates[1].id = 'qa-verdict'; }), /duplicate gate id "qa-verdict"/);
+});
+
+// ── The drift guard against schema-lint's allowlist ─────────────────────────
+
+test('a gate in schema-lint GATES that gates.yml does not declare is refused', () => {
+  assert.match(
+    joined((t) => { t.lintGates.push('ghost-gate'); }),
+    /schema-lint\.js GATES names "ghost-gate", which \.claude\/gates\.yml does not declare/,
+  );
+});
+
+test('a gate gates.yml declares that schema-lint GATES does not allow is refused', () => {
+  assert.match(
+    joined((t) => { t.lintGates = t.lintGates.filter((g) => g !== 'human-stop'); }),
+    /declares "human-stop", which \.claude\/hooks\/schema-lint\.js GATES does not allow/,
+  );
+});
+
+test('the two lists agree in the shipped tree', () => {
+  const { gates, lintGates } = realTree();
+  assert.deepEqual([...gates.map((g) => g.id)].sort(), [...lintGates].sort());
+});
+
+// ── triggers ↔ commands, in both directions ────────────────────────────────
+
+test('a playbook with no triggers is refused', () => {
+  assert.match(joined((t) => { delete t.playbooks[0].doc.triggers; }), /no "triggers" — a playbook nothing invokes is a document/);
+  assert.match(joined((t) => { t.playbooks[0].doc.triggers = []; }), /no "triggers"/);
+});
+
+test('a trigger that is not a slash command is refused', () => {
+  for (const bad of ['alpha', '/Alpha', '/', '/alpha beta', 42]) {
+    assert.match(joined((t) => { t.playbooks[0].doc.triggers = [bad]; }), /is not a slash command of the form/, String(bad));
+  }
+});
+
+test('a trigger naming a command file that does not exist is refused', () => {
+  assert.match(
+    joined((t) => { t.playbooks[0].doc.triggers = ['/nowhere']; }),
+    /trigger "\/nowhere" names \.claude\/commands\/nowhere\.md, which does not exist/,
+  );
+});
+
+test('a command naming a playbook that does not exist is refused', () => {
+  assert.match(
+    joined((t) => { t.commands[0].fm.playbook = 'no-such-playbook'; }),
+    /names playbook "no-such-playbook", which does not exist/,
+  );
+});
+
+test('a command pointing at a DIFFERENT playbook than the one triggering it is refused', () => {
+  // Both directions of one relation, disagreeing. This is the live defect the checker found on
+  // its first run against the real tree, in the opposite direction: ship.md declared
+  // `playbook: ship-feature` and ship-feature's triggers omitted `/ship`.
+  assert.match(
+    joined((t) => {
+      t.playbooks.push({ file: '.claude/playbooks/beta.yml', id: 'beta', doc: { triggers: ['/beta'], stages: [{ id: 'x', gate: 'human-stop' }] } });
+      t.commands.push({ file: '.claude/commands/beta.md', name: '/beta', fm: { playbook: 'alpha' } });
+    }),
+    /frontmatter says playbook "alpha", but \.claude\/playbooks\/beta\.yml lists "\/beta" as its trigger/,
+  );
+});
+
+test('a command whose playbook omits it from triggers is refused', () => {
+  assert.match(
+    joined((t) => { t.playbooks[0].doc.triggers = ['/color']; t.commands[1].fm.playbook = 'alpha'; }),
+    /triggers omit "\/alpha", but \.claude\/commands\/alpha\.md declares it runs this playbook/,
+  );
+});
+
+test('a command with no playbook frontmatter is fine — /color and /name invoke nothing', () => {
+  assert.deepEqual(findings((t) => { t.commands.push({ file: '.claude/commands/name.md', name: '/name', fm: {} }); }), []);
+});
+
+test('one trigger claimed by two playbooks is refused', () => {
+  assert.match(
+    joined((t) => {
+      t.playbooks.push({ file: '.claude/playbooks/beta.yml', id: 'beta', doc: { triggers: ['/alpha'], stages: [{ id: 'x', gate: 'human-stop' }] } });
+    }),
+    /trigger "\/alpha" is also a trigger of alpha — one command runs one playbook/,
+  );
+});
+
+test('enter_at naming a stage that does not exist is refused', () => {
+  assert.match(
+    joined((t) => { t.commands[0].fm.enter_at = 'nowhere'; }),
+    /enter_at "nowhere" is not a stage of \.claude\/playbooks\/alpha\.yml \(frame, review, ship\)/,
+  );
+  assert.deepEqual(findings((t) => { t.commands[0].fm.enter_at = 'review'; }), []);
+});
+
+test('unparseable command frontmatter is reported, never silently skipped', () => {
+  assert.match(joined((t) => { t.commands[0].fm = { __error: 'tab in indentation' }; }), /frontmatter does not parse — tab in indentation/);
+});
