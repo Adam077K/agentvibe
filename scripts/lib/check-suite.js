@@ -52,7 +52,9 @@
  * runner. But several steps are the mutation gate for a later one, and a green checker beside its
  * own red gate is worth less than the tally suggests: `test:dispatch` is the mutation gate for
  * `check:dispatch-agenttype`, `test:dispatch-prompt` for `check:dispatch-prompt-size`, `test:memory`
- * for `check:memory-budget`, and `test:claims`/`test:classifier`/`test:ledger` guard the libraries
+ * and `test:eviction` both for `check:memory-budget` — they are the two gates over the
+ * scripts/lib/memory-entries.js parser it counts entries with — and
+ * `test:claims`/`test:classifier`/`test:ledger` guard the libraries
  * the three `check:ledger-*` steps run on. That trade is deliberate — sequencing them would restore
  * the skipping this file exists to end — so READ THE FAILURE LIST, not just the tally: a failed gate
  * next to a passed checker means the checker's parser is unproven, not that the checker is fine.
@@ -85,8 +87,9 @@ const STEPS = [
   // check:dispatch-prompt, as its two links
   'test:dispatch-prompt',
   'check:dispatch-prompt-size',
-  // check:memory, as its two links
+  // check:memory, as its three links
   'test:memory',
+  'test:eviction',
   'check:memory-budget',
   'check:map',
   // check:warroom, as its five links
@@ -202,9 +205,18 @@ const EXCLUDED = {
     'check:dispatch-prompt-size — are two STEPS above and two steps in ' +
     '.github/workflows/ci.yml, so a failing test no longer hides whether the size check itself ran.',
   'check:memory':
-    'AN ALIAS for two steps, not a check. Its links — test:memory and check:memory-budget — are ' +
-    'two STEPS above and two steps in .github/workflows/ci.yml. The budget check is the one that ' +
-    'fails a real DECISIONS.md overflow, and it sat behind its own unit tests in the chain.',
+    'AN ALIAS for three steps, not a check. Its links — test:memory, test:eviction and ' +
+    'check:memory-budget — are three STEPS above and three steps in .github/workflows/ci.yml. The ' +
+    'budget check is the one that fails a real DECISIONS.md overflow, and it sat behind its own unit ' +
+    'tests in the chain. test:memory and test:eviction are the two mutation gates over ' +
+    'scripts/lib/memory-entries.js, the parser check:memory-budget counts DECISIONS.md entries with. ' +
+    '*This entry read "AN ALIAS for two steps" and named two links until 2026-08-26, when ' +
+    'feat/memory-eviction merged. That branch added test:eviction to the OLD `&&`-chain form of this ' +
+    'alias, which this file had already split — so taking either side of the merge verbatim would ' +
+    'have DROPPED test:eviction out of the suite in silence, or reverted the split. The link list, ' +
+    'STEPS and ci.yml move together or this entry is false, and each of the three is checked: ' +
+    'scripts/check-suite.test.mjs pins the links in ALIASES, auditSuite() fails an alias whose links ' +
+    'are not all steps, and the ci.yml counterpart test fails a step with no step on a runner.*',
   'check:citations':
     'POSTURE: WARN by design. scripts/check-citations.mjs says so in its own header — "deliberately ' +
     'NOT wired into `npm run check` or into CI by the PR that introduced it: turning it blocking is a ' +

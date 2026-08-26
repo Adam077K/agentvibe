@@ -1,0 +1,11 @@
+{
+  "subject": "0c08044107fc35a182886acaae63917aa329d6c0686f9aa5def15c73d9e8ca7c",
+  "base": "7f7bddd75b1eced00a2fc1fd1b2594ab5061376b",
+  "tier": "irreversible",
+  "tier_driver": ".github/workflows/ci.yml",
+  "verdict": "PASS",
+  "by": "builder-102-merge-resolution",
+  "run_id": null,
+  "evidence": "Round 2, after blinded review returned evidence FAIL. npm run check in the BRANCH WORKTREE (not the shared session root — parallel lanes make it a write surface): Tally: 44 of 44 passed · 0 failed, exit 0, three runs (99.5s / 144.3s / 94.3s). npm run check:ledger-lint: clean, 145 prose citations of 26 claim ids. Eleven STATUS.md figures re-derived, each with the command printed beside it and each command executed: STEPS.length 44; ci.yml 45 run-steps / 45 guarded via parseCiSteps; 72 package.json scripts / 0 with a $; 5 aliases / 19 links via aliasLinks. grep -c recipes replaced by node where a brace is involved — the shell's grep is a ugrep 7.8.4 shim that returns 0 for the ${{ !cancelled() }} pattern where /usr/bin/grep returns 45.",
+  "recorded_at": "2026-08-26T08:31:49.478Z"
+}

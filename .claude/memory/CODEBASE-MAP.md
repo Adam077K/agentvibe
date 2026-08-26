@@ -51,7 +51,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:manifest` | `node scripts/build-skills-manifest.mjs --check` |
 | `npm run check:map` | `node scripts/gen-codebase-map.mjs --check` |
 | `npm run check:mc` | `node mission-control/check.mjs` |
-| `npm run check:memory` | `npm run test:memory && npm run check:memory-budget` |
+| `npm run check:memory` | `npm run test:memory && npm run test:eviction && npm run check:memory-budget` |
 | `npm run check:memory-budget` | `node scripts/check-memory-budget.mjs` |
 | `npm run check:prompt-standard` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/prompt-standard.test.mjs` |
 | `npm run check:registration` | `node scripts/check-registration.mjs` |
@@ -70,6 +70,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run ledger:views` | `node scripts/ledger.mjs views` |
 | `npm run lint:agents` | `node .claude/hooks/schema-lint.js` |
 | `npm run measure:bash` | `node scripts/measure-bash-usage.mjs` |
+| `npm run memory:evict` | `node scripts/evict-memory.mjs` |
 | `npm run probe:stop-reason` | `node scripts/probe-stop-reason.mjs` |
 | `npm run test:budget` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/usage.test.mjs` |
 | `npm run test:check-suite` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs` |
@@ -79,6 +80,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:dispatch` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-dispatch-agenttype.test.mjs` |
 | `npm run test:dispatch-flush` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-dispatch-flush.test.mjs` |
 | `npm run test:dispatch-prompt` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-dispatch-prompt-size.test.mjs` |
+| `npm run test:eviction` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/evict-memory.test.mjs` |
 | `npm run test:gate` | `node --require ./scripts/protected-write-tripwire.cjs --test .claude/workflows/lib/gate-logic.test.mjs` |
 | `npm run test:hooks` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/session-start.test.mjs` |
 | `npm run test:launcher-permissions` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/launcher-permissions.test.mjs` |
@@ -130,6 +132,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/check-tier-gate.test.mjs` | the tier gate that replaced label-based enforcement. |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
+| `scripts/evict-memory.test.mjs` | mutation gate for the typed memory eviction. |
 | `scripts/launcher-permissions.test.mjs` | the autonomy dial, and the model it made inert. |
 | `scripts/ledger.test.mjs` | the resolvers, and the invariant that holds the ledger up. |
 | `scripts/lenses.test.mjs` | the lens linter, tested by constructing its failures. |

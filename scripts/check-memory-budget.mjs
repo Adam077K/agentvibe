@@ -32,6 +32,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+// ONE definition of "a decision entry", shared with scripts/evict-memory.mjs. This file used to
+// carry its own heading regex; the eviction tool would then have carried a second, and the two
+// would have disagreed about what they were counting — the checker passing a file the evictor
+// could not parse, or the reverse, with no way to tell which was right.
+const { parseDecisionEntries } = require('./lib/memory-entries.js');
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
@@ -60,17 +68,49 @@ const DECISIONS_BYTE_CAP = 40_000;
 const LONG_TERM_LINE_CAP = 100;
 
 /**
- * DECISIONS_ARCHIVE.md byte ceiling.
+ * Byte ceiling for EACH archive volume — the same 40,000 as the active DECISIONS.md.
  *
- * 40,000 bytes — the same ceiling as the active DECISIONS.md. Treating both files as
- * having equal budgets keeps the combined pair ≤ 80 kB and forces a review after roughly
- * six to eight more entries land in the archive (at ~1.4 kB/entry average). The archive
- * grows only during deliberate eviction events, not continuously. When this cap fires:
- * compress or delete records that are fully obsolete (e.g., Phase 2 launcher measurement
- * entries once the fleet rollout in Phase 9 completes and nothing references them any
- * longer). Pre-PR archive was 18,538 bytes; post-eviction it is ~30 kB.
+ * ── THE ARCHIVE ROTATES, AND THIS COMMENT USED TO SAY THE OPPOSITE ─────────────────────────
+ *
+ * It read: "When this cap fires: compress or DELETE records that are fully obsolete." That was
+ * an instruction to lose decisions, written into the one check that is supposed to prevent it,
+ * and it was reachable — the single archive stood at 34,472 of 40,000 while DECISIONS.md had
+ * 325 bytes of headroom, so the very next eviction would have breached it and the advice above
+ * would have been followed. A cap that can only be met by deleting history WILL be met by
+ * deleting history.
+ *
+ * The archive is now a SET of volumes — `DECISIONS_ARCHIVE.md` (volume 1, the legacy name) plus
+ * `DECISIONS_ARCHIVE_002.md`, `_003.md`, … — and this cap applies to each of them independently,
+ * discovered by pattern rather than by name so a new volume is governed the moment it exists.
+ * `scripts/evict-memory.mjs` opens the next volume when the current one passes 90% of this cap.
+ *
+ * WHAT THIS BOUNDS, STATED NARROWLY: the size of any single file a reader must load. It does NOT
+ * bound the lifetime total of the archive, and it is not pretending to. The lifetime total of an
+ * append-only decision log should grow; a mechanism that caps it is a mechanism for losing
+ * decisions, which is the sentence this comment replaced.
  */
 const DECISIONS_ARCHIVE_BYTE_CAP = 40_000;
+
+/**
+ * What counts as an archive file FOR CAPPING — deliberately wider than what the eviction tool
+ * will WRITE.
+ *
+ * Two patterns, two jobs, and conflating them is a hole:
+ *   WRITE  `scripts/evict-memory.mjs` only ever creates `DECISIONS_ARCHIVE.md` or
+ *          `DECISIONS_ARCHIVE_NNN.md`. Narrow on purpose — a writer that accepts any name
+ *          cannot tell a volume from a note.
+ *   CAP    anything named like an archive, case-insensitively, including
+ *          `DECISIONS_ARCHIVE_2026-08.md` (the period-keyed form this design did not adopt),
+ *          `decisions_archive_002.md` (a case-insensitive filesystem's version of a volume) and
+ *          `DECISIONS_ARCHIVE_NOTES.md`.
+ *
+ * An earlier version of this file used the narrow pattern for BOTH, and a test asserted that
+ * `DECISIONS_ARCHIVE_NOTES.md` was correctly ignored. That test pinned the hole: a file holding
+ * archived decisions was governed by nothing because of how somebody had named it. Whether the
+ * eviction tool would produce that name is beside the point — the cap exists to bound what a
+ * reader must load, and a reader loads it by what it holds, not by whether a regex approves.
+ */
+const ARCHIVE_VOLUME_RE = /^DECISIONS_ARCHIVE(?:[_-].*)?\.md$/i;
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 const failures = [];
@@ -78,11 +118,35 @@ const fail = (check, msg) => failures.push(`[${check}] ${msg}`);
 
 /**
  * Count dated decision entries in DECISIONS.md.
- * An entry heading looks like `## YYYY-MM-DD — ...` at the start of a line.
- * The format-section heading `## Format` is excluded by the date-anchored pattern.
+ *
+ * Delegates to `scripts/lib/memory-entries.js`, which owns the definition. An entry heading looks
+ * like `## YYYY-MM-DD — ...` at the start of a line; the format-section heading `## Format` is
+ * excluded by the date anchor. Archive STUBS still count as entries, deliberately — a stub costs
+ * bytes and occupies a heading, and hiding it from the count would make the file look emptier
+ * than it reads.
  */
 function countDecisionEntries(text) {
-  return (text.match(/^## \d{4}-\d{2}-\d{2}/gm) || []).length;
+  return parseDecisionEntries(text).length;
+}
+
+/**
+ * The parse is ambiguous — an unterminated code fence swallowed the rest of the file.
+ *
+ * ── THIS IS A BLOCKING FAILURE, NOT A NOTE, AND THE REASON IS THE ENTRY CAP ─────────────────
+ *
+ * `parseDecisionEntries` reports the condition and this file used to drop it on the floor.
+ * Measured: 60 entries plus one unterminated fence gave `exit 0 · entries: 2 · failures: []`,
+ * with no mention of ambiguity anywhere in the output. So the 50-entry cap failed OPEN on a file
+ * this checker called small — the same shape as the CRLF hole, whose fix comment in
+ * scripts/lib/memory-entries.js says exactly that.
+ *
+ * Worse than failing open: `evict-memory` REFUSES this input while the BLOCKING CI checker
+ * passes it. Two consumers of one parser, disagreeing about whether the document is readable, is
+ * the defect the library's own "ONE PARSER, NOT TWO" header exists to prevent — sharing the
+ * parser is not enough if the consumers disagree about what its output means.
+ */
+function ambiguityOf(text) {
+  return parseDecisionEntries(text).ambiguous || null;
 }
 
 // ── check DECISIONS.md ───────────────────────────────────────────────────────
@@ -94,6 +158,17 @@ if (!fs.existsSync(decisionsPath)) {
   const text = fs.readFileSync(decisionsPath, 'utf8');
   const bytes = Buffer.byteLength(text, 'utf8');
   const entries = countDecisionEntries(text);
+  const ambiguous = ambiguityOf(text);
+
+  if (ambiguous) {
+    fail(
+      'decisions-parse-ambiguous',
+      `DECISIONS.md cannot be parsed unambiguously: ${ambiguous}. ` +
+        `The entry count below (${entries}) is therefore a LOWER BOUND, not a measurement, and the ` +
+        `${DECISIONS_ENTRY_CAP}-entry cap cannot be enforced against it. Close the fence. ` +
+        `The usual cause is a fenced example containing a \`## YYYY-MM-DD\` heading.`
+    );
+  }
 
   if (entries > DECISIONS_ENTRY_CAP) {
     fail(
@@ -146,25 +221,101 @@ if (!fs.existsSync(longTermPath)) {
   }
 }
 
-// ── check DECISIONS_ARCHIVE.md ─────────────────────────────────────────────────
-const decisionsArchivePath = path.join(ROOT, '.claude', 'memory', 'DECISIONS_ARCHIVE.md');
+// ── check every archive volume ─────────────────────────────────────────────────
+//
+// Discovered by pattern, never by a hard-coded list of names. Naming the volumes here would mean
+// that opening volume 4 governs it only if somebody also remembered to edit this file — and an
+// unchecked archive volume is exactly the state the single archive was in before it was capped:
+// 18,538 bytes, checked by nothing.
+const memoryDir = path.join(ROOT, '.claude', 'memory');
 
-if (!fs.existsSync(decisionsArchivePath)) {
-  // Not required to exist; only checked when present.
-} else {
-  const text = fs.readFileSync(decisionsArchivePath, 'utf8');
-  const bytes = Buffer.byteLength(text, 'utf8');
+/**
+ * ── A NAME IS NOT A FILE, AND THE WRONG KIND OF ENTRY DOES NOT ALWAYS CRASH ─────────────────
+ *
+ * `ARCHIVE_VOLUME_RE` matches a NAME. Every matching name went straight to `readFileSync`.
+ * Measured 2026-08-26 against constructed trees, one bad entry per tree:
+ *
+ *   a DIRECTORY named like a volume  → EISDIR, unhandled, raw stack trace, exit 1
+ *   a DANGLING SYMLINK               → ENOENT, likewise
+ *   a FIFO                           → NEVER RETURNS. Killed by an 8s alarm at 8,011 ms having
+ *                                      printed nothing at all about the volume (exit 142).
+ *
+ * The FIFO is the one that matters. This script is a BLOCKING CI step, and there a crash names
+ * itself while a hang is indistinguishable from a slow build.
+ *
+ * ONE QUESTION IS ASKED HERE, SO ONE PREDICATE ANSWERS IT — a claim about THIS file, established
+ * by reading it, NOT inherited from scripts/evict-memory.mjs, which genuinely needs two. That
+ * tool also asks "is this path free to CREATE?", which must NOT resolve symlinks or it will write
+ * through one onto an inode that already exists. This file creates nothing: it contains no
+ * writeFileSync, appendFileSync, mkdirSync, renameSync, rmSync, unlinkSync or openSync. Its only
+ * question is "does this hold volume content I must cap?" — and that one MUST resolve, because a
+ * volume reached through a symlink is content the cap has to bound. `lstatSync` here would stop
+ * capping it, which is why `statSync` is not a detail. Pinned by a control case, not by comment.
+ *
+ * A matching entry that is not a regular file FAILS; it is not skipped. Skipping would place an
+ * archive volume beyond the cap according to how somebody named a directory — the unchecked-volume
+ * state this whole section exists to end.
+ */
+function volumeKind(abs) {
+  let st;
+  try {
+    st = fs.statSync(abs); // RESOLVES symlinks — see above; lstatSync would be wrong here
+  } catch (e) {
+    return { ok: false, kind: `unresolvable (${(e && e.code) || (e && e.message) || e})` };
+  }
+  if (st.isFile()) return { ok: true, kind: 'file' };
+  if (st.isDirectory()) return { ok: false, kind: 'a directory' };
+  if (st.isFIFO()) return { ok: false, kind: 'a FIFO — reading it would never return' };
+  if (st.isSocket()) return { ok: false, kind: 'a socket' };
+  if (st.isBlockDevice()) return { ok: false, kind: 'a block device' };
+  if (st.isCharacterDevice()) return { ok: false, kind: 'a character device' };
+  return { ok: false, kind: 'not a regular file' };
+}
 
-  if (bytes > DECISIONS_ARCHIVE_BYTE_CAP) {
+/** @returns {Array<{name: string, bytes: number|null, problem: string|null}>} in name order. */
+function archiveVolumes() {
+  let names;
+  try { names = fs.readdirSync(memoryDir); } catch { return []; }
+  return names
+    .filter((n) => ARCHIVE_VOLUME_RE.test(n))
+    .sort()
+    .map((n) => {
+      const abs = path.join(memoryDir, n);
+      const k = volumeKind(abs);
+      if (!k.ok) return { name: n, bytes: null, problem: k.kind };
+      return {
+        name: n,
+        bytes: Buffer.byteLength(fs.readFileSync(abs, 'utf8'), 'utf8'),
+        problem: null,
+      };
+    });
+}
+
+const volumes = archiveVolumes(); // none is fine — the archive is not required to exist
+for (const vol of volumes) {
+  // A named refusal, not a stack trace. `readFileSync` reported these as EISDIR/ENOENT from deep
+  // inside node with no mention of which entry caused it — and reported the FIFO not at all.
+  if (vol.problem !== null) {
+    fail(
+      'archive-volume-not-a-file',
+      `${vol.name} matches the archive-volume pattern but is ${vol.problem}. ` +
+        `An archive volume must be a regular file (a symlink to one is fine — it is resolved). ` +
+        `Nothing can be capped here: either give the name to a real volume, or rename this entry ` +
+        `so it no longer matches ${ARCHIVE_VOLUME_RE}.`
+    );
+    continue;
+  }
+  if (vol.bytes > DECISIONS_ARCHIVE_BYTE_CAP) {
     fail(
       'decisions-archive-byte-overflow',
-      `DECISIONS_ARCHIVE.md is ${bytes.toLocaleString()} bytes; cap is ${DECISIONS_ARCHIVE_BYTE_CAP.toLocaleString()} bytes. ` +
-        `Compress or delete fully superseded entries (e.g., phase-specific records after that phase ships). ` +
-        `Do not delete anything still referenced; do not touch DECISIONS.md entries.`
+      `${vol.name} is ${vol.bytes.toLocaleString()} bytes; the per-volume cap is ${DECISIONS_ARCHIVE_BYTE_CAP.toLocaleString()} bytes. ` +
+        `Do NOT resolve this by deleting records. The archive rotates: move the overflow into the next volume with ` +
+        `\`node scripts/evict-memory.mjs\`, or split this volume by hand keeping every entry. ` +
+        `The cap bounds what one reader must load, not how much history may exist.`
     );
   } else if (!JSON_OUT) {
     console.log(
-      `✓ DECISIONS_ARCHIVE.md — ${bytes.toLocaleString()} bytes (cap ${DECISIONS_ARCHIVE_BYTE_CAP.toLocaleString()})`
+      `✓ ${vol.name} — ${vol.bytes.toLocaleString()} bytes (cap ${DECISIONS_ARCHIVE_BYTE_CAP.toLocaleString()})`
     );
   }
 }
@@ -178,20 +329,27 @@ if (!fs.existsSync(decisionsArchivePath)) {
 if (JSON_OUT) {
   const decisionsText = fs.existsSync(decisionsPath) ? fs.readFileSync(decisionsPath, 'utf8') : '';
   const longTermText = fs.existsSync(longTermPath) ? fs.readFileSync(longTermPath, 'utf8') : '';
-  const archiveText = fs.existsSync(decisionsArchivePath) ? fs.readFileSync(decisionsArchivePath, 'utf8') : '';
   console.log(
     JSON.stringify({
       root: ROOT,
       decisions: {
         entries: countDecisionEntries(decisionsText),
+        parse_ambiguous: ambiguityOf(decisionsText),
         bytes: Buffer.byteLength(decisionsText, 'utf8'),
         entry_cap: DECISIONS_ENTRY_CAP,
         byte_cap: DECISIONS_BYTE_CAP,
       },
-      decisions_archive: {
-        bytes: Buffer.byteLength(archiveText, 'utf8'),
-        byte_cap: DECISIONS_ARCHIVE_BYTE_CAP,
-      },
+      // Every volume, each with its own cap. `decisions_archive` remains as the volume-1 view so
+      // an existing consumer of this JSON keeps working; it is the first element of the list, not
+      // a second measurement of it.
+      decisions_archive: volumes.length
+        ? { bytes: volumes[0].bytes, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP, problem: volumes[0].problem }
+        : { bytes: 0, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP },
+      // `bytes: null` with a `problem` string, never `bytes: 0` — a volume nothing could read is
+      // not a volume of zero bytes, and a machine consumer that saw 0 would report plenty of room.
+      decisions_archive_volumes: volumes.map((v) => ({
+        name: v.name, bytes: v.bytes, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP, problem: v.problem,
+      })),
       long_term: {
         lines: longTermText.split('\n').length,
         line_cap: LONG_TERM_LINE_CAP,
