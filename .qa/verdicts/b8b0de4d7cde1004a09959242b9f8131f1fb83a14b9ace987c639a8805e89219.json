@@ -1,0 +1,11 @@
+{
+  "subject": "b8b0de4d7cde1004a09959242b9f8131f1fb83a14b9ace987c639a8805e89219",
+  "base": "48e294fd6366f24446257ea20de5d1d142217138",
+  "tier": "irreversible",
+  "tier_driver": ".github/workflows/ci.yml",
+  "verdict": "PASS",
+  "by": "ceo-merge-train",
+  "run_id": null,
+  "evidence": "Blinded delta review of 869aab9..57cbdfc PASSed correctness, evidence and scope. Rebase onto main (48e294f) changed the base, not this PR's contributions: merged tree verified by execution — STEPS 44 with test:eviction present, and #106's round-8/10/11 fixes all intact with a control firing. CI green on the merged result. Author-recorded against the rebase; the content review predates it.",
+  "recorded_at": "2026-08-26T11:42:47.820Z"
+}
