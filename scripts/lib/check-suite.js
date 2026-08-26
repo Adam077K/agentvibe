@@ -52,7 +52,9 @@
  * runner. But several steps are the mutation gate for a later one, and a green checker beside its
  * own red gate is worth less than the tally suggests: `test:dispatch` is the mutation gate for
  * `check:dispatch-agenttype`, `test:dispatch-prompt` for `check:dispatch-prompt-size`, `test:memory`
- * for `check:memory-budget`, and `test:claims`/`test:classifier`/`test:ledger` guard the libraries
+ * and `test:eviction` both for `check:memory-budget` — they are the two gates over the
+ * scripts/lib/memory-entries.js parser it counts entries with — and
+ * `test:claims`/`test:classifier`/`test:ledger` guard the libraries
  * the three `check:ledger-*` steps run on. That trade is deliberate — sequencing them would restore
  * the skipping this file exists to end — so READ THE FAILURE LIST, not just the tally: a failed gate
  * next to a passed checker means the checker's parser is unproven, not that the checker is fine.
@@ -85,8 +87,9 @@ const STEPS = [
   // check:dispatch-prompt, as its two links
   'test:dispatch-prompt',
   'check:dispatch-prompt-size',
-  // check:memory, as its two links
+  // check:memory, as its three links
   'test:memory',
+  'test:eviction',
   'check:memory-budget',
   'check:map',
   // check:warroom, as its five links
@@ -202,9 +205,18 @@ const EXCLUDED = {
     'check:dispatch-prompt-size — are two STEPS above and two steps in ' +
     '.github/workflows/ci.yml, so a failing test no longer hides whether the size check itself ran.',
   'check:memory':
-    'AN ALIAS for two steps, not a check. Its links — test:memory and check:memory-budget — are ' +
-    'two STEPS above and two steps in .github/workflows/ci.yml. The budget check is the one that ' +
-    'fails a real DECISIONS.md overflow, and it sat behind its own unit tests in the chain.',
+    'AN ALIAS for three steps, not a check. Its links — test:memory, test:eviction and ' +
+    'check:memory-budget — are three STEPS above and three steps in .github/workflows/ci.yml. The ' +
+    'budget check is the one that fails a real DECISIONS.md overflow, and it sat behind its own unit ' +
+    'tests in the chain. test:memory and test:eviction are the two mutation gates over ' +
+    'scripts/lib/memory-entries.js, the parser check:memory-budget counts DECISIONS.md entries with. ' +
+    '*This entry read "AN ALIAS for two steps" and named two links until 2026-08-26, when ' +
+    'feat/memory-eviction merged. That branch added test:eviction to the OLD `&&`-chain form of this ' +
+    'alias, which this file had already split — so taking either side of the merge verbatim would ' +
+    'have DROPPED test:eviction out of the suite in silence, or reverted the split. The link list, ' +
+    'STEPS and ci.yml move together or this entry is false, and each of the three is checked: ' +
+    'scripts/check-suite.test.mjs pins the links in ALIASES, auditSuite() fails an alias whose links ' +
+    'are not all steps, and the ci.yml counterpart test fails a step with no step on a runner.*',
   'check:citations':
     'POSTURE: WARN by design. scripts/check-citations.mjs says so in its own header — "deliberately ' +
     'NOT wired into `npm run check` or into CI by the PR that introduced it: turning it blocking is a ' +
@@ -332,6 +344,12 @@ function aliasLinks(command) {
  *          measured 2026-08-26: `;`, `||` and `|` each returned zero findings against auditSuite().
  *     ||   masks it the other way — the step passes whenever the FALLBACK passes
  *     \n   a newline in a JSON script body is a sequence, with `;` semantics
+ *     <(   PROCESS SUBSTITUTION, and it is the worst of them: the inner command's exit status does
+ *     >(   not reach the outer exit code AT ALL. Measured 2026-08-26 —
+ *          `cat <(false; echo INNER_RAN); echo exit=$?` prints INNER_RAN then `exit=0`, and
+ *          `true <(exit 7); echo exit=$?` prints `exit=0`. Where `;` at least hands back the LAST
+ *          command's status, this hands back a status the inner command never touched. Added
+ *          2026-08-26: until then `npm run good <(npm run bad)` returned [] — a complete bypass.
  *
  * Quote-aware on purpose, and this is not hypothetical: package.json's `usage` script is a
  * `node -e "…;…"` one-liner whose semicolons are inside a double-quoted argument and separate
@@ -365,7 +383,7 @@ function aliasLinks(command) {
  *
  * Returns the operators found, in a stable order, or [] for a single command.
  */
-const SHELL_OPERATORS = ['&&', '||', ';', '|', '&', '\\n'];
+const SHELL_OPERATORS = ['&&', '||', ';', '|', '&', '<(', '>(', '\\n'];
 
 /**
  * Where a `$((` at `open` really ends, IF it ends as `))`. Returns that index, or -1.
@@ -599,9 +617,24 @@ function shellOperators(command) {
   // so that `$( (a; b) )` closes on the right `)` rather than the first one.
   const stack = [{ kind: 'base', quote: null, parens: 0 }];
 
+  // IS THE SCAN AT THE START OF A WORD? Only the `#` branch asks, and it is tracked FORWARD — from
+  // what this scan consumed — rather than read backwards off `src[i - 1]`, because the two disagree
+  // on exactly the case that decides a comment. Measured 2026-08-26: `echo $(echo x)#y` prints
+  // `x#y` (that `)` closed a SUBSTITUTION, so the word continues and `#y` is literal) while
+  // `(echo a)#y` prints `a` (that `)` closed a SUBSHELL, so `#y` IS a comment). Both strings end
+  // the construct in `)`; only the frame stack tells them apart, and a backwards byte test cannot.
+  let atWordStart = true;
+
   for (let i = 0; i < src.length; i += 1) {
     const frame = stack[stack.length - 1];
     const c = src[i];
+
+    // Every branch below leaves the scan MID-WORD unless it says otherwise. The exceptions say so
+    // at their own branch — the control operators, the openers that begin a fresh command — and the
+    // metacharacter rule at the BOTTOM of this loop catches whitespace and the characters that have
+    // no operator branch at all.
+    const wordStart = atWordStart;
+    atWordStart = false;
 
     // SINGLE QUOTES ARE OPAQUE, backslash and all — `echo '$(exit 7; exit 0)'` prints the text and
     // runs nothing. This branch is first because it must win over every branch below it.
@@ -634,12 +667,15 @@ function shellOperators(command) {
     if (c === '$' && src[i + 1] === '(') {
       stack.push({ kind: 'paren', quote: null, parens: 1 });
       i += 1;
+      atWordStart = true; // a fresh command starts inside, so a `#` immediately after it is a comment
       continue;
     }
     if (c === '`') {
       // Backticks do not nest — the same character opens and closes — so this pops or pushes.
+      // OPENING one starts a command; CLOSING one does not, because the substitution's result is
+      // part of the surrounding word — measured, \`echo \`echo x\`#y\` prints `x#y`, not `x`.
       if (frame.kind === 'tick') stack.pop();
-      else stack.push({ kind: 'tick', quote: null, parens: 0 });
+      else { stack.push({ kind: 'tick', quote: null, parens: 0 }); atWordStart = true; }
       continue;
     }
 
@@ -713,7 +749,7 @@ function shellOperators(command) {
     // `parens` counts every paren still open in this frame — both of `$((`, the one of `$(` — so a
     // subshell inside a substitution closes on the right `)`: `$( (a; b) )` ends at the second.
     if (frame.kind === 'paren' || frame.kind === 'arith') {
-      if (c === '(') { frame.parens += 1; continue; }
+      if (c === '(') { frame.parens += 1; atWordStart = true; continue; }
       if (c === ')') {
         frame.parens -= 1;
         if (frame.parens === 0) stack.pop();
@@ -725,10 +761,87 @@ function shellOperators(command) {
     // inside arithmetic has already opened a command frame and is reported from there.
     if (frame.kind === 'arith') continue;
 
-    if (c === '&' && src[i + 1] === '&') { found.add('&&'); i += 1; continue; }
-    if (c === '|' && src[i + 1] === '|') { found.add('||'); i += 1; continue; }
-    if (c === '|') { found.add('|'); continue; }
-    if (c === ';') { found.add(';'); continue; }
+    // ── `#`, A COMMENT — MODELLED, NOT REFUSED, and that choice was re-derived for this construct
+    // rather than inherited from the `$`-vocabulary gate above. Failing closed on `#` would report a
+    // finding for every ordinary script carrying a comment, which is the trade this file already
+    // refuses ("a rule that fires on correct code gets weakened rather than obeyed") — and it would
+    // not even fix the defect, because the defect is not the `#`. It is that an APOSTROPHE inside a
+    // comment opened a real single-quote frame and swallowed everything after it. Measured
+    // 2026-08-26 against the code this replaces:
+    //
+    //     bash -c "npm run test:foo # don't forget this<NL>npm run bad ; npm run worse"
+    //                                                    runs ALL THREE commands
+    //     shellOperators(that string)                    []       — the `;` and the \n both gone
+    //     shellOperators(it, with the apostrophe removed)  [';', '\n']
+    //
+    // Modelling it costs nothing measurable HERE AND NOW: zero of the 114 governed commands — 70
+    // package.json scripts plus 44 ci.yml `run:` values — contains a `#` at any position, so this
+    // changes no live verdict. It is the future comment that this is written for.
+    //
+    // IT BEGINS A COMMENT ONLY AT THE START OF A WORD. `echo a#b` prints `a#b`, and `wordStart` is
+    // the only thing that knows the difference — WHICH IS ALSO THE WHOLE OF THE PROTECTION, stated
+    // that way because the first draft of this comment claimed otherwise. It said quoting and
+    // arithmetic were handled "by the branches above", and two mutations refuted it: moving this
+    // branch above the `arith` continue killed no test, and neither did moving it above the
+    // double-quote early exit. Neither placement matters, because nothing inside a quote and no
+    // operand of an arithmetic body ever leaves the scan AT a word start — `echo $((2#101))` prints
+    // 5 and that `#` follows a digit; `echo "x"#y` prints `x#y` and that one follows a quote. The
+    // placement is where a reader expects it; `wordStart` is what makes it correct.
+    //
+    // The PROCESS SUBSTITUTION branch below is the opposite case, and the contrast is why both are
+    // written down: its position under the `arith` continue IS load-bearing, and the mutation that
+    // moves it up turns `echo $((1<(2)))` — which prints 1 — into a finding.
+    //
+    // The scan resumes ON the newline, not past it, so the branch below still records `\n`. A
+    // comment ends a line; it does not merge two.
+    if (c === '#' && wordStart) {
+      const rest = src.slice(i).search(/[\n\r]/);
+      if (rest === -1) break; // the comment runs to the end of the string — nothing follows it
+      i += rest - 1;
+      continue;
+    }
+
+    // ── PROCESS SUBSTITUTION — MODELLED **AND** REPORTED. That is two decisions, and each was made
+    // for this construct on its own measurement.
+    //
+    // MODELLED rather than added to the unmodelled set, because unlike `$'…'` the interior genuinely
+    // IS a command list — `cat <(echo A; echo B)` prints A and B — so entering it keeps quote parity
+    // in sync with the shell's and reports an inner chain as well as the construct.
+    //
+    // REPORTED rather than merely entered, and this half is easy to leave out: pushing a frame and
+    // saying nothing would still return [] for `npm run good <(npm run bad)`, which is the exact
+    // verdict being fixed. The construct hides a whole command by itself, even when what is inside
+    // it is a single one, so it belongs in SHELL_OPERATORS — see the measurement in that list's
+    // header for why it is the worst member of it rather than a peer of `;`.
+    //
+    // NO `!escaped.has(i)` GUARD HERE, and its absence is the considered half. The redirect guard
+    // below needs one because it asks about a NEIGHBOUR index; this branch asks about the current
+    // one, and `escaped` only ever holds indices the loop SKIPS — the backslash branch does
+    // `escaped.add(i + 1); i += 1`, so an escaped character never gets its own iteration and
+    // `escaped.has(i)` is unconditionally false here. It was written with the guard first; the
+    // mutation that deleted it killed no test, because there is no input that reaches it. An
+    // always-true condition that reads as a safety check is worse than none.
+    //
+    // The behaviour it was meant to produce holds anyway and is pinned: `echo \<(x)` returns [],
+    // through the backslash branch. bash refuses that string outright — it is a SYNTAX ERROR — so
+    // there is no command behind the empty verdict. `<\(` is a different string and correctly not
+    // matched here: it is a redirect from a file named `(x)`, which is one command.
+    //
+    // Reached only after the `arith` continue above, which is load-bearing rather than incidental:
+    // `echo $((1<(2)))` prints 1, so inside arithmetic `<(` is a comparison against a parenthesised
+    // operand and not a substitution at all.
+    if ((c === '<' || c === '>') && src[i + 1] === '(') {
+      found.add(`${c}(`);
+      stack.push({ kind: 'paren', quote: null, parens: 1 });
+      i += 1;
+      atWordStart = true;
+      continue;
+    }
+
+    if (c === '&' && src[i + 1] === '&') { found.add('&&'); i += 1; atWordStart = true; continue; }
+    if (c === '|' && src[i + 1] === '|') { found.add('||'); i += 1; atWordStart = true; continue; }
+    if (c === '|') { found.add('|'); atWordStart = true; continue; }
+    if (c === ';') { found.add(';'); atWordStart = true; continue; }
     // A `&` ADJACENT TO `>` IS A REDIRECT, NOT BACKGROUNDING — `2>&1`, `>&2`, `&>log`. It does not
     // hide a command and it does not touch the exit code: `bash -c 'false 2>&1'` exits 1. Reporting
     // it would attach this rule's message — "the step's exit code becomes the last command's" — to a
@@ -755,8 +868,25 @@ function shellOperators(command) {
     // had the defect from the start. One predicate covers both, because fixing half a class is
     // how the other half gets forgotten.
     if (c === '&' && (redirectOperatorAt(i - 1, '<>') || redirectOperatorAt(i + 1, '>'))) continue;
-    if (c === '&') { found.add('&'); continue; }
-    if (c === '\n' || c === '\r') { found.add('\\n'); continue; }
+    if (c === '&') { found.add('&'); atWordStart = true; continue; }
+    if (c === '\n' || c === '\r') { found.add('\\n'); atWordStart = true; continue; }
+
+    // WHAT REACHES HERE: ordinary word characters, whitespace, and the metacharacters that have no
+    // operator branch of their own — `(` and `)` at the base frame, and `<`/`>` used as redirects.
+    // Bash starts a word after every one of them, so a `#` next is a comment. One probe per
+    // character, 2026-08-26, and each is the shape that discriminates:
+    //
+    //     echo a #b     -> a                 whitespace
+    //     echo a;#b     -> a                 `;`
+    //     echo a&#b     -> a                 `&`
+    //     echo a|#b     -> SYNTAX ERROR      the pipe lost its right side to the comment
+    //     echo a>#f     -> SYNTAX ERROR      same, the redirect lost its target
+    //     (echo a)#y    -> a                 `)` closing a subshell
+    //
+    // Against which `echo a#b` -> `a#b`, `echo a=#b` -> `a=#b` and `echo -#b` -> `-#b` are NOT
+    // comments and must stay mid-word — they reach here on their own first character and fail this
+    // test, which is why the rule is a character CLASS and not "anything that is not a letter".
+    if (/[\s|&;()<>]/.test(c)) atWordStart = true;
   }
 
   // Operators first in their canonical order, then the unmodelled constructs. Both are reasons the
@@ -907,7 +1037,9 @@ function auditSuite({ scripts, steps = STEPS, excluded = EXCLUDED, runner = RUNN
           `exit code from it — a wrapper does not change that. \`&&\` stops at the first non-zero exit so the ` +
           `later links never run; \`;\`, \`|\` and \`&\` are worse, because the step's exit code becomes the ` +
           `last command's and the failure disappears entirely (\`bash -c 'false ; true'\` exits 0); \`||\` ` +
-          `passes the step whenever the fallback passes. Give each link its own script and its own entry in ` +
+          `passes the step whenever the fallback passes; \`<(\` and \`>(\` are worse than all of them, because ` +
+          `the substituted command's status is not merged, masked or last — it is DISCARDED, and ` +
+          `\`bash -c 'true <(exit 7); echo exit=$?'\` prints exit=0. Give each link its own script and its own entry in ` +
           `STEPS, and keep "${step}" — if a doc cites it — as an alias in EXCLUDED.`
       );
     }
@@ -1009,6 +1141,86 @@ function auditSuite({ scripts, steps = STEPS, excluded = EXCLUDED, runner = RUNN
 /** The guard, spelled once. `!cancelled()` and not `always()`: a cancelled run must actually stop. */
 const CI_GUARD = '${{ !cancelled() }}';
 
+/**
+ * The marker that says a finding is a REFUSAL rather than a chain, spelled once and exported.
+ *
+ * scripts/check-ci-chains.mjs prints a different remedy for each kind, and until 2026-08-26 it
+ * chose by testing whether the message contained the words "cannot decode" — dispatching on a
+ * substring of a generated English sentence, so rewording the message would have silently switched
+ * every reader onto the wrong instruction. A constant both sides import cannot drift that way.
+ */
+const UNPARSED_PREFIX = 'UNPARSED:';
+
+
+/**
+ * The four keys a step is read for, spelled once — and the two whose VALUE is safety-bearing.
+ *
+ * `key in step` was the test until 2026-08-26, and it meant every field the PARSER hangs on a step
+ * — `line`, and now `unparsed` — was also a YAML key a workflow could write into.
+ *
+ * NOT A DE-DUPLICATION, and the JSDoc here claimed to be one until 2026-08-26. The object literal
+ * in the loop below still spells `name`, `run`, `uses`, `if` because it also carries `line` and
+ * `unparsed`, which are not YAML keys and must not be recordable; building it from this list would
+ * have to add them back one at a time. One list, two spellings, and this line is the reason they
+ * are allowed to differ rather than a claim that they do not.
+ *
+ * SAFETY_KEYS is the narrower list, and the narrowness was derived rather than assumed. A wrong
+ * `run:` hides a shell chain; a wrong `if:` hides a step with no `!cancelled()` guard — both are
+ * compared BY VALUE (`step.if !== CI_GUARD`). `name:` and `uses:` are only ever tested for
+ * identity or non-null, so misreading one cannot hide a command. That matters because the refusal
+ * below is a CI failure: scoping it to all four would fail a workflow over `name: "Build: step 1"`,
+ * which is ordinary, correct, harmless YAML.
+ */
+const STEP_KEYS = ['name', 'run', 'uses', 'if'];
+const SAFETY_KEYS = ['run', 'if'];
+
+/**
+ * A `run:`/`if:` value this parser REFUSES to read, because reading it means implementing YAML.
+ *
+ * ROUND 9, AND THE POINT IS THE DELETION. Round 8 modelled these shapes: quoted flow scalars were
+ * unquoted through a 17-entry escape table, and plain multi-line scalars were folded. Both were
+ * exact against PyYAML on 42 probes. Both are gone, and this predicate replaces them, because the
+ * gate then found a P1 IN THE MODELLING — and the shape of that P1 is the argument:
+ *
+ *     run: "npm run good <\        real YAML: an escaped line break collapses to NOTHING, so the
+ *       (npm run bad)"             value is `npm run good <(npm run bad)` — a process substitution
+ *
+ *     the fold joined the continuation with a SPACE, then the decode read the leftover `\`+space
+ *     as the ordinary escaped-space escape, and the value came out `npm run good < (npm run bad)`
+ *     — a phantom space, `<(` never adjacent, ciChainFindings -> []. A SILENT CLEAN on exactly the
+ *     construct round 8 added detection for.
+ *
+ * That is the ninth bypass in this function and the third in the YAML layer. The rule from round 3
+ * applies: when a fix is the third of its kind, the defect is the approach. So the approach is
+ * inverted the same way the `$`-vocabulary gate inverted it one layer down — DECLARE WHAT IS READ,
+ * REFUSE THE REST — and the read set is the census of what the file actually contains: a plain
+ * single-line scalar, or a block scalar. Measured 2026-08-26 across all 44 `run:` values in
+ * .github/workflows/ci.yml: 44 plain single-line, 0 quoted, 0 multi-line, 0 starting with any
+ * indicator below. The refusal changes ZERO live verdicts.
+ *
+ * THE CHARACTER CLASS IS WIDER THAN "A QUOTE", and that width came from a bypass the quote-only
+ * version would have left open. `run: *c`, with `&c npm run a && npm run b` anchored anywhere
+ * earlier in the file, is a YAML ALIAS: PyYAML 6.0.3 resolves it to the chain, and this parser read
+ * the four characters `*c` and returned []. That was true before round 8 as well as after, so it is
+ * a hole this refusal closes rather than one it was written for. `!!str npm run a && npm run b`
+ * is the same class through a tag. Both are indicators, so both are refused now.
+ *
+ * `|` and `>` are NOT here: they reach the block-scalar branch above this check and never get to
+ * it. That is deliberate and it is what makes the refusal cost nothing — a block scalar has no
+ * escapes and no quoting rules, so ANY command that cannot be a plain scalar can be written as
+ * one. Measured: `run: |-` carries `node -e "a: 1" && npm run b`, `npm run a # literal`,
+ * `{echo a; echo b;}` and `*glob npm run a` through PyYAML byte for byte, and every one of those
+ * is either invalid or differently-parsed as a plain scalar.
+ *
+ * THE HATCH IS TOTAL; THE READING OF IT IS NOT, and the first version of this passage said only the
+ * first half. It read "The escape hatch is total", which is a claim about what is ENFORCED made by
+ * a sentence — the defect this repo exists to refuse — and P1-1 of round 9's review proved the
+ * gap: a block header carrying an explicit indentation indicator was read WRONG, silently, on
+ * `main` as well as here. That shape is refused now, so the two halves agree again; the sentence
+ * is left in two parts so the next reader can see which half is the claim and which is the check.
+ */
+const NON_PLAIN_SCALAR = /^["'&*!%@`{}[\],]/;
+
 
 /**
  * The steps of ci.yml's one job, read off the indentation.
@@ -1019,7 +1231,30 @@ const CI_GUARD = '${{ !cancelled() }}';
  * shape a future multi-command step would arrive in, and a scanner that skipped it would report
  * such a step as having no `run:` at all.
  *
- * Returns [{ line, name, run, uses, if }] — `null` for a key the step does not carry.
+ * IT READS EXACTLY TWO SHAPES, and refuses every other one. A `run:`/`if:` value is either a plain
+ * single-line scalar — taken verbatim, which is what all 44 of ci.yml's `run:` values are — or a
+ * block scalar, joined literally. Anything else is an UNPARSED finding: a value continued onto a
+ * following line, and a value beginning with a YAML indicator (see NON_PLAIN_SCALAR).
+ *
+ * ROUND 8 MODELLED THOSE TWO SHAPES INSTEAD, AND THAT IS WHAT THIS DELETES. It folded plain
+ * continuations and unquoted flow scalars through a 17-entry escape table, exact against PyYAML on
+ * 42 probes — and the gate found a P1 inside the modelling anyway: a double-quoted value wrapped
+ * across an ESCAPED LINE BREAK folded with a space, the leftover `\`+space decoded as the
+ * escaped-space escape, and `<(` came out as `< (`. Silent clean, on the construct round 8 existed
+ * to detect. Nine bypasses in this file, the last three in this layer; the round-3 rule says the
+ * third fix of a kind means the approach is the defect, so the approach is inverted rather than
+ * patched again. Refusing cannot under-report: there is no decoding left to get wrong.
+ *
+ * WHAT REFUSING COSTS, enumerated rather than waved past. A chain inside a quoted scalar was
+ * SILENTLY CLEAN before round 8, decoded during it, and is a LOUD finding now. A plain multi-line
+ * continuation was SILENTLY DROPPED before, folded during, and is a LOUD finding now. Both are
+ * strictly safer than the state this file shipped in for the whole of its life before round 8; what
+ * is lost is only the precision of the MESSAGE — "this cannot be read" rather than "this carries
+ * `&&`" — and the remedy is actionable either way. Measured cost today: ZERO, across 44 `run:`
+ * values, 0 quoted, 0 multi-line, 0 indicator-initial.
+ *
+ * Returns [{ line, name, run, uses, if, unparsed }] — `null` for a key the step does not carry, and
+ * `unparsed` listing the refusals, which ciChainFindings() reports as their own kind.
  */
 function parseCiSteps(workflow) {
   const lines = workflow.split('\n');
@@ -1028,15 +1263,94 @@ function parseCiSteps(workflow) {
   let itemIndent = null;
   let current = null;
   let block = null; // { key, indent, parts[] } while inside a `key: |` scalar
+  let open = null; // { key, keyIndent } while a plain scalar could still be CONTINUED on a later line
 
   const indentOf = (line) => /^ */.exec(line)[0].length;
 
+  /**
+   * Record a refusal against a step, ONCE per key.
+   *
+   * ONE ENTRY PER KEY, not per offending line: a value split over four lines is one value this
+   * parser could not read, and four identical findings would read as four defects. Scoped to
+   * SAFETY_KEYS, because this refusal FAILS A BUILD and `name: "Build: step 1"` is correct YAML.
+   */
+  const refuse = (step, key, why) => {
+    if (!SAFETY_KEYS.includes(key)) return;
+    if (step.unparsed.some((u) => u.key === key)) return;
+    step.unparsed.push({ key, why, value: step[key] });
+  };
+
   const record = (step, text, keyIndent) => {
+    // NO `open = null` HERE, and its absence is measured rather than assumed. The first draft reset
+    // the watch at the top of this function AND in the loop below, on the reasoning that a key line
+    // ends the previous key's. Both are true and they are REDUNDANT: mutating either one alone
+    // killed no test, and mutating both together failed with `a with: body was folded into the
+    // uses: above it`. Two guards for one rule means neither can be shown to work, so the general
+    // one — the loop's, which also covers lines this function never sees — is the one that stayed.
     const m = /^([\w-]+):\s*(.*)$/.exec(text);
     if (!m) return;
     const [, key, rawValue] = m;
-    if (!(key in step)) return; // `with:`, `env:` and friends are not what this asserts on
-    if (/^[|>][-+\d]*$/.test(rawValue)) {
+    // `with:`, `env:` and friends are not what this asserts on. Returning BEFORE the watch is armed
+    // is tidiness rather than correctness, and it is labelled that way because a mutation proved
+    // it: arming it here too writes into `step.with` / `step.env`, which nothing reads, and changed
+    // nothing on the public surface across 45 inputs. What DOES keep a `with:` body out of the
+    // `uses:` above it is the watch reset in the loop, and that one fails a test when removed.
+    if (!STEP_KEYS.includes(key)) return;
+    // AN EXPLICIT INDENTATION INDICATOR IS REFUSED, and this is round 10's whole change. The header
+    // regex accepted `|2`, and then the body's baseline was taken from the FIRST CONTENT LINE
+    // instead of from the indicator — so a first line indented DEEPER than the indicator sets a
+    // baseline every later line falls short of, and every later line then closes the block.
+    // Measured 2026-08-26 on `main` (7f7bddd) and on round 9 (bff6bbe), IDENTICALLY on both, so
+    // this is older than Wave 1 and not something this branch introduced:
+    //
+    //     run: |2            PyYAML -> "    npm run test:gate\n  && npm run some:unreviewed:step\n"
+    //       npm run test:gate          (14 spaces)
+    //     && npm run some:unreviewed:step   (12 spaces)
+    //
+    //     this parser -> "npm run test:gate"      ciChainFindings -> []      SILENT CLEAN
+    //
+    // `>2`, `|2+` and `|-2` do the same; `|9` is invalid YAML outright. REFUSED RATHER THAN
+    // HONOURED, which is one more deletion and not one more model — the same trade round 9 made,
+    // and the reason it is safe is the same: nothing in ci.yml uses one (0 of 44), and a block
+    // scalar without an indicator expresses everything one with an indicator can.
+    //
+    // CHOMPING STAYS READ, and that was verified here rather than inherited. `|-` and `|+` change
+    // only the TRAILING newline — measured, `|-` gives `npm run a\n&& npm run b` and `|+` gives the
+    // same plus a trailing `\n` — and a trailing newline is not a second command. Both produce the
+    // identical finding on both trees.
+    // A BLOCK INDICATOR MAY CARRY A TRAILING YAML COMMENT — `run: | # note` is valid, and PyYAML
+    // reads it as a block scalar. Without the comment arm this pattern missed it and the value was
+    // read as the plain scalar `| # note`, which `main` still does today: it reports a phantom
+    // `` `|` `` operator on a one-command step. The block branch is FIRST, which is what keeps `|`
+    // and `>` out of NON_PLAIN_SCALAR: they are the two indicators this parser does read, and they
+    // are the escape hatch that makes refusing the others cost nothing.
+    //
+    // ONE PATTERN, AND THE HEADER IS CAPTURED — both halves fix a live defect. Round 10 wrote this
+    // as TWO regexes, one spanning the header AND its comment for the refusal test and a narrower
+    // one for the read, then applied `/\d/` to the WHOLE value. A digit anywhere in the COMMENT
+    // therefore satisfied it, and `run: | # step 2 of 3` was refused with a message stating it
+    // carried an indentation indicator — which it does not. That is a regression against round 9,
+    // which read all four of these correctly, and it is live rather than theoretical: this repo's
+    // own ci.yml comments are dense with numbers. Measured 2026-08-26 before the fix —
+    //
+    //     | # note                  clean          | # step 2 of 3        REFUSED, falsely
+    //     | # 44 sequential checks  REFUSED        |- # bun 1.3.10       REFUSED, falsely
+    //     | # see #106              REFUSED        |2 # step 2 of 3      REFUSED, correctly
+    //
+    // — and the last row is why the test below pins BOTH directions: a case asserting only the
+    // refusal passes under the bug that produced it.
+    //
+    // Capturing also means there is now ONE place that decides whether a value is a block header.
+    // Two patterns for one question is how they come to disagree, which is what happened here.
+    const header = /^([|>][-+\d]*)(?:\s+#.*)?$/.exec(rawValue);
+
+    // AN EXPLICIT INDENTATION INDICATOR IS REFUSED, tested against the HEADER and not the comment.
+    if (header && /\d/.test(header[1])) {
+      step[key] = rawValue.trim();
+      refuse(step, key, 'its block header carries an explicit indentation indicator, which this parser does not honour');
+      return;
+    }
+    if (header) {
       // `keyIndent` is the column of the KEY, and the block ends at the first non-blank line that
       // is not indented past it. Anchoring to the first CONTENT line instead was a defect: see the
       // loop below.
@@ -1045,6 +1359,16 @@ function parseCiSteps(workflow) {
       return;
     }
     step[key] = rawValue.trim();
+    // REFUSED BUT STILL STORED. The raw text stays on the step so `run !== null` keeps meaning
+    // "this step runs something" for every other check here; what the refusal buys is that
+    // ciChainFindings() reports it and does NOT then scan it, which is the contradiction round 8
+    // shipped — a message saying the value was not scanned, printed beside a finding from scanning
+    // it.
+    if (NON_PLAIN_SCALAR.test(step[key])) {
+      refuse(step, key, 'it begins with a YAML indicator, so it is not a plain scalar and this parser does not decode it');
+      return;
+    }
+    open = { key, keyIndent };
   };
 
   for (let i = 0; i < lines.length; i += 1) {
@@ -1074,7 +1398,14 @@ function parseCiSteps(workflow) {
       block = null;
     }
 
-    if (!line.trim() || /^\s*#/.test(line)) continue;
+    // A BLANK LINE DOES NOT END A PLAIN SCALAR — measured with PyYAML, `run: npm run a` / blank /
+    // `  ; npm run b` is the ONE string `npm run a\n; npm run b`. So the continuation watch has to
+    // survive a blank line, or a value split across one is refused on the wrong grounds and, worse,
+    // is not refused at all when the continuation then reads as an unrelated line.
+    if (!line.trim()) continue;
+    // A YAML comment TERMINATES a plain scalar — measured, a continuation line after one is a
+    // parse error, not a continuation — so it closes the watch rather than being caught by it.
+    if (/^\s*#/.test(line)) { open = null; continue; }
 
     if (stepsIndent === null) {
       const m = /^( *)steps:\s*$/.exec(line);
@@ -1085,9 +1416,37 @@ function parseCiSteps(workflow) {
     const indent = indentOf(line);
     if (indent <= stepsIndent) break; // out of the steps block
 
+    // ── A CONTINUATION LINE: the value carries on past the line its key is on, so this parser has
+    // not seen the whole of it. REFUSED, not folded — folding is what round 8 did and what the P1
+    // came out of.
+    //
+    // THE `continue` IS INERT, and it is labelled that way rather than defended. The first draft of
+    // this comment claimed the line must be consumed "or it falls through and is read as something
+    // else"; a mutation deleting the `continue` killed no test, and a differential over 58 inputs
+    // found none that tells the two apart. It cannot: a line reaching here is deeper than
+    // itemIndent + 2, so falling through it would be dropped by the key dispatch anyway. It stays
+    // because a line this parser has declared unread should not travel on to code written for key
+    // lines — a structural preference, not a correctness claim, and the difference is the point.
+    //
+    // Armed only by a key record() stored a plain scalar into, so a nested mapping under `with:`
+    // still falls through and is dropped as it always was. The guard is `indent > open.keyIndent`
+    // and not `>=`: measured, a continuation at the SAME column as its key is a YAML ERROR, so a
+    // workflow shaped that way does not run at all. An item line cannot reach here either — `- `
+    // sits at itemIndent and every key is at itemIndent + 2 or deeper.
+    if (current && open && indent > open.keyIndent) {
+      refuse(current, open.key, 'its value continues onto the line(s) below it, so this parser has not read all of it');
+      continue;
+    }
+    // ANY line that is not a continuation ENDS the watch — a key at the step's own indent, the `- `
+    // of the next item, or a nested mapping's first line. `with:` is the case that matters and it
+    // is in the real ci.yml three times: its body is more indented than the `uses:` above it, and
+    // treating that as a continuation would refuse three correct steps. This is the ONLY place the
+    // watch is closed; see record() for why there is not a second one.
+    open = null;
+
     if (/^ *- /.test(line) && (itemIndent === null || indent === itemIndent)) {
       itemIndent = indent;
-      current = { line: i + 1, name: null, run: null, uses: null, if: null };
+      current = { line: i + 1, name: null, run: null, uses: null, if: null, unparsed: [] };
       steps.push(current);
       record(current, line.slice(indent + 2), indent + 2);
       continue;
@@ -1097,6 +1456,36 @@ function parseCiSteps(workflow) {
   }
 
   return steps;
+}
+
+/**
+ * The `run:` steps that do NOT carry the `!cancelled()` guard, by line number.
+ *
+ * SPELLED HERE BECAUSE IT WAS SPELLED TWICE. Two copies of this filter lived in
+ * scripts/check-suite.test.mjs — one in the block-scalar case, one in the guard case — and the fix
+ * below had to land in both or the two would disagree about the same workflow. That is the defect
+ * this file names in three other places; it is not allowed a fourth.
+ *
+ * A STEP WHOSE `if:` COULD NOT BE READ IS NOT REPORTED UNGUARDED, and that exclusion is the fix.
+ * `if: "${{ !cancelled() }}"` is a correctly guarded step written with quotes: parseCiSteps refuses
+ * the quoted scalar (deliberately — see NON_PLAIN_SCALAR) and leaves the raw text on the step, so a
+ * plain `s.if !== CI_GUARD` test then ALSO reported it as carrying no guard. One true finding and
+ * one false one about the same line, and the false one says the opposite of what is there.
+ *
+ * PROVENANCE, because it decides how this reads: `main` (7f7bddd) reports that same step unguarded
+ * too — measured — so this is NOT a defect the round-9 deletion introduced. Round 8 masked it as a
+ * side effect of unquoting every scalar, and deleting the decode took the mask away. The reasoning
+ * that keeps `name:` and `uses:` out of SAFETY_KEYS applies here word for word and was not carried
+ * through at the time.
+ *
+ * NOT FAIL-OPEN, which is the question to ask of any exclusion: a refused `if:` is itself a
+ * BLOCKING finding from ciChainFindings(), so `if: "${{ always() }}"` — quoted AND weakened — still
+ * fails the build. What changes is that it fails once, with a true message.
+ */
+function unguardedSteps(workflow, guard = CI_GUARD) {
+  return parseCiSteps(workflow)
+    .filter((s) => s.run !== null && !s.unparsed.some((u) => u.key === 'if') && s.if !== guard)
+    .map((s) => s.line);
 }
 
 /**
@@ -1151,10 +1540,36 @@ const CI_CHAINS_ALLOWED = {
  */
 function ciChainFindings(workflow, allowed = CI_CHAINS_ALLOWED) {
   const findings = [];
-  const steps = parseCiSteps(workflow).filter((s) => s.run !== null);
+  const parsed = parseCiSteps(workflow);
+
+  // A VALUE THE PARSER REFUSED IS ITS OWN KIND OF FINDING, and it carries UNPARSED_PREFIX so a
+  // caller can tell the kinds apart without matching a substring of an English sentence — which is
+  // what scripts/check-ci-chains.mjs did until 2026-08-26, meaning a reworded message silently
+  // changed which remedy it printed. It is not an operator and not an unmodelled shell construct:
+  // it is the layer below both saying it could not read the value. There is no allowlist entry for
+  // it on purpose — CI_CHAINS_ALLOWED is keyed by the EXACT run string, and a string this parser
+  // cannot read is one it cannot key on either.
+  const refused = new Set();
+  for (const step of parsed) {
+    for (const u of step.unparsed) {
+      if (u.key === 'run') refused.add(step);
+      findings.push(
+        `${UNPARSED_PREFIX} ci.yml:${step.line} \`${u.key}:\` was NOT read — ${u.why}. It is not scanned for ` +
+          `shell operators, so it cannot be certified as one command: ${u.value}`
+      );
+    }
+  }
+
+  const steps = parsed.filter((s) => s.run !== null);
   const exempt = (run) => Object.prototype.hasOwnProperty.call(allowed, run);
 
   for (const step of steps) {
+    // A REFUSED `run:` IS NOT THEN SCANNED, and this line is the whole of round 8's second P2. The
+    // refusal message says the value was not scanned for shell operators; round 8 printed that
+    // message and then scanned the raw text anyway, so a single step produced two findings that
+    // contradicted each other — and the test asserting on it used `.some()`, which cannot see a
+    // second entry. The tests for this branch assert the exact findings ARRAY.
+    if (refused.has(step)) continue;
     const found = shellOperators(step.run);
     if (!found.length || exempt(step.run)) continue;
     const { operators: ops, unmodelled } = splitFindings(found);
@@ -1222,7 +1637,12 @@ module.exports = {
   hasSubstantiveReason,
   CI_GUARD,
   CI_CHAINS_ALLOWED,
+  STEP_KEYS,
+  SAFETY_KEYS,
+  NON_PLAIN_SCALAR,
+  UNPARSED_PREFIX,
   parseCiSteps,
+  unguardedSteps,
   ciRunCommands,
   ciChainFindings,
   DIRECT_TEST_RUNNER,

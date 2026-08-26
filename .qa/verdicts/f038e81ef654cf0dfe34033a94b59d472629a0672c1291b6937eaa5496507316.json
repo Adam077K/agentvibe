@@ -1,0 +1,11 @@
+{
+  "subject": "f038e81ef654cf0dfe34033a94b59d472629a0672c1291b6937eaa5496507316",
+  "base": "7f7bddd75b1eced00a2fc1fd1b2594ab5061376b",
+  "tier": "irreversible",
+  "tier_driver": ".github/workflows/ci.yml",
+  "verdict": "PASS",
+  "by": "builder-102-merge-resolution",
+  "run_id": null,
+  "evidence": "npm run check at the session root on 9b2a43b: Tally: 44 of 44 passed · 0 failed · 139.8s, exit 0, '✓ check suite passed — every step ran.' test:eviction ran as step 17/44: 110 tests · 110 pass · 0 fail · 16.8s. npm run test:check-suite: 52 pass · 0 fail (the drift guard between package.json and scripts/lib/check-suite.js, incl. the ALIASES link pin and the STEPS-to-ci.yml counterpart check). M derived: node -e require('./scripts/lib/check-suite.js').STEPS.length -> 44. Measured at the session root, not a nested worktree, because the sandbox deny-set is per session root.",
+  "recorded_at": "2026-08-26T07:52:34.738Z"
+}
