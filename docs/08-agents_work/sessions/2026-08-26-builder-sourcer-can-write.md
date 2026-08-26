@@ -60,6 +60,13 @@ incident.
 - **A real defect found while measuring the above, in a file another lane holds:** `CLAUDE.md:634` asserts
   `c-mcp-hook-matcher-must-name-the-tool`'s content as live fact. PR #73 falsified it and the ledger
   deprecated it. Not touched — reported.
+- **My own mistake, recorded because the recovery is the useful part.** To control-test whether `check:map`
+  was already stale on the base, I ran `git stash -u` + `git checkout 244e8db` **in the shared worktree**.
+  The stash did not take, the checkout detached HEAD, and the tree came back as base content plus two
+  popped fragments. Nothing was lost — the branch ref held all four commits, both modified files were
+  proved byte-identical to their committed versions with `cmp` before being discarded, and the three
+  stashes belonging to other sessions were untouched. `git stash` is **repo-level state shared across
+  every worktree**; the correct control was `git show <sha>:<path>`, which the standing rules already say.
 
 ## claims_touched
 
@@ -74,11 +81,31 @@ lead's call, not mine.
 
 ## verification
 
-Everything below was executed. `npm run test:ledger` → **197 pass · 0 fail · exit 0** (149 existing plus
-the 48 new, registered by an import rather than a new npm step, because `package.json` and
-`scripts/lib/check-suite.js` are held by L4-floor). `check:registration`, `check:ledger-lint`,
-`check:ledger-build` → exit 0. `check:ledger-verify` → exit 0, 78 pass · 10 would_block · 0 block.
-`lint:agents` → 18 pass · 0 fail · **0 warnings**, unchanged.
+Everything below was executed. `npm run check` → **46 of 46 passed · 0 failed · exit 0 · 292.9s**, sandbox
+armed, at `0c50c6a`. Derive the denominator rather than quoting it:
+`node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → 46.
+
+The first run of the suite was **45 of 46**, failing `check:map` — `CODEBASE-MAP.md` is generated and this
+branch adds a file it enumerates, so the check was doing its job. `npm run build:map` regenerated it (one
+line) and the re-run is clean.
+
+`npm run test:ledger` → **197 pass · 0 fail** (149 existing plus the 48 new, registered by an import rather
+than a new npm step, because `package.json` and `scripts/lib/check-suite.js` are held by L4-floor).
+`check:ledger-verify` → exit 0, 78 pass · 10 would_block · 0 block. Four of those ten are
+`mission-control` `claim-command` failures from `bun install` not having been run in this tree, which this
+branch does not touch. `lint:agents` → 18 pass · 0 fail · **0 warnings**, unchanged.
+
+`pre-tool-use.sh` driven directly, with a control that must fire:
+
+| tool | hook |
+|---|---|
+| `mcp__claim-append__append_claim` | exit 0, allowed by the policy |
+| `mcp__claim-append__delete_everything` | exit 0 + `would_block … rule=unlisted mode=shadow` |
+| `mcp__playwright__browser_navigate` at `169.254.169.254` (control) | exit 2, BLOCKED |
+
+Row two is the honest reading of where enforcement lives: an unlisted tool **proceeds** while the policy is
+in shadow. The server exposes exactly one tool and refuses `UNKNOWN_TOOL` itself, which is why that is
+acceptable — but the policy is not what stops it.
 
 End to end against the live internet, sandbox disabled for those three commands only (the armed sandbox
 denies DNS — `ENOTFOUND example.com`, which is the fail-closed path working):
