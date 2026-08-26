@@ -1744,6 +1744,10 @@ test('the ci.yml chain check has a LIBRARY and an entry point, not only a test',
   for (const name of [
     'CI_GUARD', 'CI_CHAINS_ALLOWED', 'parseCiSteps', 'ciRunCommands', 'ciChainFindings',
     'DIRECT_TEST_RUNNER', 'AGGREGATE_RUNNER',
+    // Added 2026-08-26 with the flow-scalar decode. Exported for the same reason as the rest — a
+    // predicate a test can drive directly is one a mutation can be aimed at, and decodeFlowScalar()
+    // is where a quoted `run:` becomes the string the runner executes.
+    'STEP_KEYS', 'YAML_DQ_ESCAPES', 'decodeFlowScalar',
   ]) {
     assert.ok(name in lib, `${name} is not exported from scripts/lib/check-suite.js — it moved back into a test`);
   }

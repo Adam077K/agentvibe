@@ -46,6 +46,18 @@ const findings = ciChainFindings(fs.readFileSync(CI_PATH, 'utf8'));
 if (findings.length) {
   console.error(`check:ci-chains: ${findings.length} finding${findings.length > 1 ? 's' : ''}\n`);
   for (const f of findings) console.error(`  ${f}`);
+  // TWO KINDS OF FINDING, TWO REMEDIES, and printing only the first one attaches a false
+  // instruction to the second. A chain is exemptible; an undecodable scalar is not, because
+  // CI_CHAINS_ALLOWED is keyed by the exact run string and a string this parser cannot read is one
+  // it cannot key on either. Split so a reader is told what to do rather than what usually applies.
+  if (findings.some((f) => f.includes('cannot decode'))) {
+    console.error(
+      '\nA `cannot decode` finding is the YAML layer, not the shell one: the value was quoted in a form this ' +
+        'parser does not model, so it was never scanned for shell operators at all. It has no allowlist entry ' +
+        'by design. Rewrite the scalar — unquote it, or use an escape from YAML_DQ_ESCAPES in ' +
+        'scripts/lib/check-suite.js — so what the runner executes is what this reads.'
+    );
+  }
   console.error(
     '\nA step is ONE command and the workflow reads ONE exit code from it. Split it into two steps, or ' +
       'add the exact run string to CI_CHAINS_ALLOWED in scripts/lib/check-suite.js with the reason written ' +
