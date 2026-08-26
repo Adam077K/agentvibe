@@ -92,20 +92,46 @@ requiring `steps:` to be bare again, and restoring `break` at the first dedent. 
 - The real `ci.yml` is unchanged by the parser rewrite and still agrees with PyYAML exactly: 52 steps,
   49 `run:` values, 0 refusals, 0 chain findings, 0 unguarded.
 
-## Residual — and `main` moved under this branch
+## `main` moved under this branch, and the figure fence was then lifted
 
-`main` went 244e8db → 47dbbd6 while this ran (#108, the STATUS.md/CLAUDE.md lane). The merge is CLEAN
-— that lane touched no file this one touches — but the figure debt grew, because CI tests the merge.
-Measured on a scratch `git merge --no-commit` that was then aborted: **16 sites**, none of them in a
-file this lane owns and none edited here.
+`main` went 244e8db → 47dbbd6 while this ran (#108, which also WIRED `CLAUDE.md` into `check:figures`
+— that is why three sites exist there that did not at this branch's base). `origin/main` is merged in
+here; the merge was clean, because that lane touched no file this one touches. All 16 sites are
+updated **from a fresh re-derivation**, not from the handoff table:
 
-| file | figure | states | must state | sites |
+| file | figure | was | now | sites |
 |---|---|---|---|---|
 | `docs/STATUS.md` | `suiteSteps` | 46 | **48** | :97 · :335 · :358 · :360 |
 | `docs/STATUS.md` | `ciRunSteps` / `ciGuardedSteps` | 47 | **49** | :207 · :215 · :262 |
 | `docs/STATUS.md` | `ciRunStepsPlusOne` | 48 | **50** | :263 |
 | `CLAUDE.md` | `suiteSteps` | 46 | **48** | :481 · :486 · :620 |
 
-Two prose bullets in the new `CLAUDE.md` also go false when this lands, and are for the lead, not for
-this lane: *"Four bypasses are live on `main` … `parseCiSteps` does not see the step at all"* (seven,
-and that is not the mechanism), and *"`check-citations.mjs` is STILL UNWIRED"*.
+History is not flattened. `CLAUDE.md:620` is a correction naming its own old values — the preserved
+"30" and "29" stay exactly as written and only the live figure moves, with "46" joining the list. §4's
+superseded blockquote gains an entry saying **46 → 48 is the 43 → 44 kind, not the 30 → 43 kind**:
+genuinely new work, not a renaming, which is the distinction that block exists to keep.
+
+Two `CLAUDE.md` prose bullets are rewritten because this branch falsifies them. *"Four bypasses are
+live on `main` … `parseCiSteps` does not see the step at all"* → seven, closed, with the measured
+mechanism and the composed variant that defeats every backstop. *"`check-citations.mjs` is STILL
+UNWIRED … Founder decision, not an agent's"* → the decision is recorded as **taken**, with the run it
+was made from, and it publishes a three-part recipe that prints `true true true`.
+
+**Two figures moved that nobody asked me to touch, because my own runs falsified them.**
+`npm run check` took **480.0s** here against a published range of "90 to 275 seconds" — carried
+identically in both files. The upper bound is 480s now and the three new runs are recorded. A bound
+the next honest run steps over is not a bound, which is that paragraph's own argument.
+
+corrections (second round):
+- **I published "together under two seconds" for the two added steps and it was wrong.** Written from
+  the checker's own 1.4s and never measured as a pair. Timed before pushing: **6.0-6.8s together**
+  across four consecutive pairs. It is in the file as a correction rather than silently right, because
+  it would otherwise have been a fifth wrong figure on a page about wrong figures.
+- `docs/STATUS.md:97` could not simply take the new number: it cited CI run `32944938976` as having
+  "confirmed it", and that run was the suite at **46** steps. The claim is scoped to what the runner
+  actually saw rather than restated over a number no runner has seen.
+
+## Verification, after the merge
+
+`npm run check` → **48 of 48 passed · 0 failed · exit 0 · 480.0s**, on the merged tree. The figure this
+file now publishes is the figure that ran.
