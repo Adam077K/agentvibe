@@ -443,7 +443,7 @@ function resolveSelector(sel, classified) {
 /**
  * Every way this eviction could be losing something, as a list of sentences.
  *
- * ── PURE, EXPORTED, AND CALLED ONCE — SO EACH CONDITION CAN BE PINNED ON ITS OWN ────────────
+ * ── EXPORTED AND CALLED ONCE — SO EACH CONDITION CAN BE PINNED ON ITS OWN ───────────────────
  *
  * This lived inline, and a delta review measured what that cost: deleting any ONE of its
  * non-growth conditions individually cost ZERO failing tests. The defects they catch were caught
@@ -454,15 +454,43 @@ function resolveSelector(sel, classified) {
  * Extracting it does not make the gate stronger by itself; it makes each condition addressable,
  * which is what lets the test file mutate them one at a time.
  *
+ * It was pure until 2026-08-26 and is not any more: it reads the destination volume. That is the
+ * whole point of the change — see the note beside the read. `io` is injectable for the same
+ * reason `commitWrite`'s is: so the unreadable-destination path is reachable from a test.
+ *
  * THE FIVE, and why each is not implied by the others:
  *   bytes-do-not-close   the splice ate or duplicated something. Arithmetic only.
  *   body-not-in-volume   the right NUMBER of bytes moved, and they were the wrong bytes.
  *   heading-not-in-decisions  rule 4's residue never landed; archival became deletion.
- *   destination-overwritten   the append rewrote the volume instead of extending it.
+ *   destination-overwritten   the append rewrote the volume instead of extending it. Its subject
+ *                             is READ from the volume here, because as a parameter it could be —
+ *                             and was — blanked at the call site for zero failing tests.
  *   would-not-shrink     every other number balances and the file got BIGGER.
  */
-function conservationIssues({ removed, movedBodies, residue, chosen, newVolume, newDecisions, volExisting, volName }) {
+function conservationIssues({ removed, movedBodies, residue, chosen, newVolume, newDecisions, vol, io = fs }) {
   const issues = [];
+  const volName = vol?.name ?? 'the destination volume';
+
+  // ── THE DESTINATION'S PRIOR CONTENT IS READ HERE, NOT HANDED IN ───────────────────────────
+  //
+  // It used to arrive as a `volExisting` parameter, and a parameter is something a call site can
+  // get wrong in silence. Measured: passing `volExisting: ''` disabled this condition outright —
+  // `newVolume.startsWith('')` is always true — and cost ZERO failing tests, so the one check the
+  // branch's own history calls out as previously "in the report and in no assertion" was
+  // switchable off again, in production code, with a fully green suite.
+  //
+  // Reading it from the volume this batch is actually about deletes the argument, so there is
+  // nothing left at the call site to corrupt. `vol` is not a substitute target: it is what the
+  // write itself opens, so corrupting it breaks the write and many tests with it.
+  //
+  // Rule 10 applies to the gate as much as to a resolver: when the prior content cannot be
+  // established, this REFUSES. It does not fall back to a value that makes the check vacuous.
+  let volExisting = null;
+  if (vol && vol.fresh) {
+    volExisting = volumeHeader(vol.number);
+  } else if (vol) {
+    try { volExisting = io.readFileSync(vol.abs, 'utf8'); } catch { volExisting = null; }
+  }
   if (removed !== movedBodies - residue) {
     issues.push(
       `byte arithmetic does not close: DECISIONS.md lost ${removed} bytes, but bodies moved ` +
@@ -480,7 +508,14 @@ function conservationIssues({ removed, movedBodies, residue, chosen, newVolume, 
   // THE DESTINATION WAS IN THE REPORT AND IN NO ASSERTION. Dropping the volume's prior content
   // entirely left every other check satisfied and printed "conservation closes to zero". The
   // append is a pure suffix, so this is exact rather than heuristic.
-  if (!newVolume.startsWith(volExisting.replace(/\s*$/, ''))) {
+  const priorTrimmed = typeof volExisting === 'string' ? volExisting.replace(/\s*$/, '') : null;
+  if (priorTrimmed === null || priorTrimmed === '') {
+    issues.push(
+      `${volName}'s prior content could not be established${priorTrimmed === '' ? ' (the file on disk is empty)' : ''}, ` +
+      'so the append-only check has nothing to compare against and cannot run. An empty or unreadable volume ' +
+      'file is not a volume: move it aside so a fresh one opens, then run again'
+    );
+  } else if (!newVolume.startsWith(priorTrimmed)) {
     issues.push(
       `${volName}'s existing ${Buffer.byteLength(volExisting, 'utf8')} bytes are not a prefix of what would be written — ` +
       'an append may only add to a volume, never rewrite it'
@@ -756,7 +791,7 @@ function cmdApply() {
 
   const conservation = conservationIssues({
     removed: before.decisions - after.decisions,
-    movedBodies, residue, chosen, newVolume, newDecisions, volExisting, volName: vol.name,
+    movedBodies, residue, chosen, newVolume, newDecisions, vol,
   });
   const removed = before.decisions - after.decisions;
   if (conservation.length) {
@@ -839,7 +874,7 @@ function cmdApply() {
 const invokedDirectly = process.argv[1]
   && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
 
-export { commitWrite, conservationIssues, VOLUME_BYTE_CAP, VOLUME_FILL_CEILING, DEFAULT_REASON };
+export { commitWrite, conservationIssues, volumeHeader, VOLUME_BYTE_CAP, VOLUME_FILL_CEILING, DEFAULT_REASON };
 
 if (!invokedDirectly) {
   // imported for its exports; no command to run

@@ -789,7 +789,7 @@ test('the exported cap is the one the CLI enforces', () => {
 // read more forms of a field also widened what could shadow it.
 // ══════════════════════════════════════════════════════════════════════════════════════════════
 
-const { conservationIssues } = await import('./evict-memory.mjs');
+const { conservationIssues, volumeHeader } = await import('./evict-memory.mjs');
 
 // ── P1-B · a fenced template must not shadow an entry's real fields ─────────────────────────
 
@@ -927,16 +927,27 @@ test('P2-A: a body already in ANOTHER volume is refused, not filed twice', () =>
 // caught by direct file assertions elsewhere, so the GATE was thinner than the mutation table
 // implied. These reach each condition individually.
 
-const conservationBase = () => ({
-  removed: 100,
-  movedBodies: 150,
-  residue: 50,
-  chosen: [{ entry: { heading: '## 2026-01-01 — H', text: '## 2026-01-01 — H\nBODY\n' } }],
-  newVolume: '# Archive\n\n## 2026-01-01 — H\nBODY',
-  newDecisions: '# Decisions\n\n## 2026-01-01 — H\n*stub*\n',
-  volExisting: '# Archive\n',
-  volName: 'DECISIONS_ARCHIVE.md',
-});
+/**
+ * The destination is a REAL FILE now, because the gate reads it rather than being handed its
+ * content. That change is the P2-1 fix: as a `volExisting` parameter it could be blanked at the
+ * call site for zero failing tests, and `newVolume.startsWith('')` is true for every input.
+ */
+const conservationBase = (over = {}) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'evict-conservation-'));
+  roots.push(dir);
+  const abs = path.join(dir, 'DECISIONS_ARCHIVE.md');
+  fs.writeFileSync(abs, '# Archive\n');
+  return {
+    removed: 100,
+    movedBodies: 150,
+    residue: 50,
+    chosen: [{ entry: { heading: '## 2026-01-01 — H', text: '## 2026-01-01 — H\nBODY\n' } }],
+    newVolume: '# Archive\n\n## 2026-01-01 — H\nBODY',
+    newDecisions: '# Decisions\n\n## 2026-01-01 — H\n*stub*\n',
+    vol: { abs, name: 'DECISIONS_ARCHIVE.md', number: 1, fresh: false },
+    ...over,
+  };
+};
 
 test('conservation: the clean case reports nothing — otherwise the five below prove nothing', () => {
   assert.deepEqual(conservationIssues(conservationBase()), []);
@@ -958,8 +969,38 @@ test('conservation condition: the heading did not survive in DECISIONS.md', () =
 });
 
 test('conservation condition: the destination was rewritten rather than appended to', () => {
-  const issues = conservationIssues({ ...conservationBase(), volExisting: '# Archive\nPRIOR\n' });
+  // The prior content is put on DISK, not passed in — that is the only way this condition can
+  // still be wrong about the destination without the call site being able to make it vacuous.
+  const base = conservationBase();
+  fs.writeFileSync(base.vol.abs, '# Archive\nPRIOR-THAT-MUST-SURVIVE\n');
+  const issues = conservationIssues(base);
   assert.ok(issues.some((i) => i.includes('an append may only add to a volume')), JSON.stringify(issues));
+});
+
+test("conservation condition: a BLANK destination refuses — startsWith('') is not a check", () => {
+  // This is the exact hole the call-site mutation `volExisting: ''` drove through, and it cost
+  // ZERO failing tests. An empty prior makes the prefix test vacuously true for every input, so
+  // an empty prior is now a REFUSAL rather than a pass. Rule 10, applied to the gate itself.
+  const issues = conservationIssues(conservationBase({ io: { readFileSync: () => '' } }));
+  assert.ok(issues.some((i) => i.includes('prior content could not be established')), JSON.stringify(issues));
+  assert.ok(issues.some((i) => i.includes('the file on disk is empty')), JSON.stringify(issues));
+});
+
+test('conservation condition: an UNREADABLE destination refuses rather than passing', () => {
+  const issues = conservationIssues(conservationBase({
+    vol: { abs: path.join(os.tmpdir(), 'no-such-volume-anywhere.md'), name: 'DECISIONS_ARCHIVE.md', number: 1, fresh: false },
+  }));
+  assert.ok(issues.some((i) => i.includes('prior content could not be established')), JSON.stringify(issues));
+});
+
+test('conservation condition: a FRESH volume takes its prior from the header, not from disk', () => {
+  // Otherwise the refusal above would fire on every first eviction into a new volume, and the
+  // condition would have to be softened back to something vacuous to get a green suite.
+  const header = conservationIssues(conservationBase({
+    vol: { abs: path.join(os.tmpdir(), 'no-such-volume-anywhere.md'), name: 'DECISIONS_ARCHIVE_002.md', number: 2, fresh: true },
+    newVolume: `${volumeHeader(2).replace(/\s*$/, '\n\n')}## 2026-01-01 — H\nBODY`,
+  }));
+  assert.deepEqual(header, [], JSON.stringify(header));
 });
 
 test('conservation condition: a reduction of exactly ZERO is refused, not only a negative one', () => {
@@ -1362,6 +1403,100 @@ test('P1-E: a TWO-entry batch splices both at their own offsets', () => {
   const vol = fs.readFileSync(path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE.md'), 'utf8');
   assert.ok(vol.includes('## 2026-07-25 —') && vol.includes('## 2026-07-27 —'));
   assert.ok(!vol.includes('## 2026-07-26 —'), 'the entry nobody selected must not be archived');
+});
+
+// ── P2-1 · THE CALL SITE, not only the conditions ───────────────────────────────────────────
+//
+// Each condition was killed by its own unit test and by nothing else. Two mutations at the CALL
+// SITE were measured on 2026-08-26: discarding the whole gate cost ONE failing test, and passing
+// `volExisting: ''` cost ZERO — the destination check, the one this branch's own commit message
+// calls out as previously "in the report and in no assertion", was switchable off in production
+// code with a green suite. The second mutation is now unwritable: there is no destination-content
+// parameter to blank. These drive `cmdApply` itself, over a copy, and fail when it is neutered.
+
+/** The dependency closure of the CLI: the tool, the parser, and the parser's one import. */
+const CLI_FILES = [['scripts', 'evict-memory.mjs'], ['scripts', 'lib', 'memory-entries.js'], ['scripts', 'lib', 'claims.js']];
+
+/**
+ * A throwaway copy of the CLI with one edit applied to `evict-memory.mjs`.
+ *
+ * `realpathSync` is not decoration: the tool guards its command dispatch on
+ * `resolve(process.argv[1]) === resolve(import.meta.url)`, and on macOS `os.tmpdir()` is
+ * `/var` → `/private/var`. Invoked through the unresolved path the copy runs NO command, exits
+ * 0 and prints nothing — which would satisfy a "the mutant stopped refusing" assertion for
+ * entirely the wrong reason.
+ */
+function cliCopy(edits = []) {
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'evict-callsite-')));
+  roots.push(dir);
+  fs.mkdirSync(path.join(dir, 'scripts', 'lib'), { recursive: true });
+  for (const rel of CLI_FILES) fs.copyFileSync(path.join(REPO, ...rel), path.join(dir, ...rel));
+  const target = path.join(dir, 'scripts', 'evict-memory.mjs');
+  for (const [from, to] of edits) {
+    const before = fs.readFileSync(target, 'utf8');
+    const hits = before.split(from).length - 1;
+    // EXACTLY once. The first version of this helper anchored on the argument list alone, which
+    // appears in `conservationIssues`'s own signature FIRST — so the mutation landed on the
+    // function instead of on the call site, produced a syntax error, and the test failed for a
+    // reason that had nothing to do with the gate. An ambiguous anchor proves nothing either way.
+    assert.equal(hits, 1, `mutation anchor must match exactly once, matched ${hits}: ${from}`);
+    const after = before.replace(from, to);
+    assert.notEqual(after, before, 'mutation was a no-op — the test would prove nothing');
+    fs.writeFileSync(target, after);
+  }
+  return path.join(dir, 'scripts', 'evict-memory.mjs');
+}
+
+const CALL_SITE = 'const conservation = conservationIssues({';
+
+/** A fixture whose only obstacle is the conservation gate: the stub outweighs the body. */
+const growthFixture = () => fixture({ entries: entry({ date: '2026-07-31', title: 'A tiny decision about one thing', body: 'x' }) });
+const GROWTH_ARGS = ['--only', '2026-07-31', '--reason', 'y'.repeat(2_000)];
+
+test('P2-1 CALL SITE: the copied CLI behaves exactly like the real one — the control', () => {
+  // Without this the two mutations below could pass because the copy does nothing at all.
+  const root = growthFixture();
+  const clean = run(cliCopy(), ['apply', '--root', root, '--date', '2026-08-26', ...GROWTH_ARGS]);
+  assert.equal(clean.code, 1, `the unmutated copy must refuse: ${clean.out}${clean.err}`);
+  assert.match(clean.err, /conservation check failed/);
+});
+
+test('P2-1 CALL SITE: discarding the gate is caught — the refusal disappears', () => {
+  const mutant = cliCopy([[CALL_SITE, 'const conservation = []; const discarded = ((_) => [])({']]);
+  const root = growthFixture();
+  const before = readDecisions(root);
+  const r = run(mutant, ['apply', '--root', root, '--date', '2026-08-26', ...GROWTH_ARGS]);
+  assert.equal(r.code, 0,
+    'with the gate discarded the tool must sail through — if it still refuses, the refusal is coming '
+    + 'from somewhere else and this call site is not what the growth test is pinning');
+  assert.notEqual(readDecisions(root), before, 'and it must have written the growth it was asked to refuse');
+});
+
+test('P2-1 CALL SITE: corrupting `vol` there is caught — the gate really does read the destination', () => {
+  // The successor to `volExisting: ''`. The content is no longer a parameter, so the only way to
+  // lie to the destination check from the call site is to lie about WHICH volume — and `vol` is
+  // what the write itself opens, so this cannot be done quietly.
+  const root = fixture({
+    entries: entry({ date: '2026-07-30', title: 'An ordinary decision with an ordinary body' }),
+    archives: { 'DECISIONS_ARCHIVE.md': '# Archive\n\nPRIOR-VOLUME-CONTENT-SENTINEL\n' },
+  });
+  const args = ['apply', '--root', root, '--date', '2026-08-26', '--only', '2026-07-30'];
+
+  const clean = run(cliCopy(), args);
+  assert.equal(clean.code, 0, `the unmutated copy must succeed here: ${clean.err}`);
+
+  const mutant = cliCopy([[
+    'removed: before.decisions - after.decisions,\n    movedBodies, residue, chosen, newVolume, newDecisions, vol,',
+    'removed: before.decisions - after.decisions,\n    movedBodies, residue, chosen, newVolume, newDecisions,\n'
+      + "    vol: { name: vol.name, number: vol.number, abs: '/nonexistent/volume.md', fresh: false },",
+  ]]);
+  const fresh = fixture({
+    entries: entry({ date: '2026-07-30', title: 'An ordinary decision with an ordinary body' }),
+    archives: { 'DECISIONS_ARCHIVE.md': '# Archive\n\nPRIOR-VOLUME-CONTENT-SENTINEL\n' },
+  });
+  const r = run(mutant, ['apply', '--root', fresh, '--date', '2026-08-26', '--only', '2026-07-30']);
+  assert.equal(r.code, 1, 'a destination the gate cannot read must refuse, not pass');
+  assert.match(r.err, /prior content could not be established/);
 });
 
 // ── P3 · the fence mask must survive CRLF in the near-miss path too ─────────────────────────
