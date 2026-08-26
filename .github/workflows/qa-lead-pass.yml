@@ -37,9 +37,29 @@
 # implementations of risk classification will disagree, and you find out during the
 # incident. The label check was a third implementation. It is gone too.
 #
-# Making this a REQUIRED check in branch protection is a repository setting, not a
-# file, and is the founder's call. Until it is required, a failure here is visible
-# and red but does not physically prevent a merge.
+# THIS JOB IS A REQUIRED CHECK. Superseded 2026-08-26 — this paragraph read "Making
+# this a REQUIRED check in branch protection is a repository setting, not a file, and
+# is the founder's call. Until it is required, a failure here is visible and red but
+# does not physically prevent a merge." That became false at some point nobody
+# recorded, and it understated the enforcement rather than overstating it — the rarer
+# and quieter direction, which is why it survived. Measured 2026-08-26 against the
+# live API, `gh api repos/:owner/:repo/branches/main/protection`:
+#
+#     required_status_checks.strict   : true
+#     required_status_checks.contexts : ["Deterministic checks", "Verify QA Lead PASS"]
+#     checks[].app_id                 : 15368 (GitHub Actions) for BOTH contexts
+#     enforce_admins                  : false
+#     required_signatures             : false
+#
+# `Verify QA Lead PASS` is this job's `name:`. Renaming that job silently un-requires
+# it — branch protection matches the context by NAME, so a rename leaves the required
+# context permanently unreported and the PR blocked, which is at least fail-closed.
+# Do not rename it casually.
+#
+# Read the "What this gate actually guarantees" block above the verdict step before
+# concluding that being required makes the result trustworthy. Required means the
+# check must report success before the PR merges. It does not mean the success was
+# earned, and the two are further apart here than the word "required" suggests.
 name: QA Lead Pass
 
 on:
@@ -84,10 +104,10 @@ jobs:
 
           echo "=== QA gate bypass check for PR #${PR_NUMBER} ==="
           echo "The pass/fail decision is made by the 'Verdict diff-binding check' step"
-          echo "below, which reads a diff-bound verdict signed onto a GitHub check-run —"
-          echo "not by grepping session file content, which a PR author can write to say"
-          echo "anything. This step only checks whether the founder granted an explicit"
-          echo "bypass."
+          echo "below, which reads a verdict record whose FILENAME is the sha256 of this"
+          echo "diff — not by grepping session file content, which a PR author can write"
+          echo "to say anything. This step only gathers whether the founder granted an"
+          echo "explicit bypass; it no longer decides one. See the binding note below."
 
           # ── Bypass label ──────────────────────────────────────────────────
           HAS_BYPASS_LABEL=$(gh pr view "$PR_NUMBER" \
@@ -97,29 +117,57 @@ jobs:
 
           echo "Has qa-lead-bypass label: ${HAS_BYPASS_LABEL}"
 
-          # ── Bypass label present → require Adam's bypass comment ───────────
-          BYPASS_APPROVED=false
+          # ── Bypass label present → collect Adam's bypass comments ──────────
+          # THIS STEP NO LONGER GRANTS THE BYPASS. It used to: finding any comment by
+          # ADAM_GITHUB_USER containing "BYPASS REASON:" set bypass_approved=true, and
+          # the verdict step honoured that flag whatever the diff had become since.
+          #
+          # That is the SAME defect the subject hash exists to remove, one branch over.
+          # This file has already had it removed twice from the PASS path — slug-matched
+          # session files (2026-08-15) let a branch inherit a PASS written for work
+          # already merged; grepping session prose (2026-08-23) trusted the author.
+          # Both were "an authorisation not bound to the thing it authorises". The
+          # OVERRIDE path was never swept for the same class and still carried it:
+          # a bypass granted for a one-line typo stayed valid for every later push to
+          # that PR, including a rewrite of this workflow. The label is sticky, the
+          # comment is immutable, and nothing recomputed.
+          #
+          # So this step now only reports what the founder wrote. The verdict step
+          # binds it to the subject, because that is where the subject is known.
+          BYPASS_CANDIDATE=false
           if [ "$HAS_BYPASS_LABEL" = "true" ]; then
             if [ -z "$ADAM_GITHUB_USER" ]; then
               echo "ERROR: ADAM_GITHUB_USER variable is not set — cannot validate bypass author"
+              echo "  Measured 2026-08-26: repos/:owner/:repo/actions/variables returns"
+              echo "  total_count=0, so this variable is UNSET today and the bypass path"
+              echo "  cannot be used at all — applying the label fails this job rather than"
+              echo "  passing it. That is the correct direction to fail, but it does mean"
+              echo "  the documented escape hatch is inert until the founder sets the"
+              echo "  ADAM_GITHUB_USER repository variable."
               exit 1
             fi
 
-            # Look for a comment from Adam containing BYPASS REASON:
-            BYPASS_COMMENT=$(gh api \
-              "repos/$REPO/issues/$PR_NUMBER/comments" \
-              --jq ".[] | select(.user.login == \"$ADAM_GITHUB_USER\") | select(.body | test(\"BYPASS REASON:\")) | .id" \
-              | head -1)
+            # Emit each qualifying comment BODY, @json-encoded so one comment is one
+            # line whatever newlines it contains. The verdict step then requires the
+            # subject and the marker in the SAME comment, which a two-file grep could
+            # not tell apart from the marker in one comment and the subject in another.
+            #
+            # --paginate was missing here: the default page is 30 comments, so a bypass
+            # comment on a long thread was invisible. Fail-closed, but wrong.
+            gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate \
+              --jq ".[] | select(.user.login == \"$ADAM_GITHUB_USER\") | select(.body | test(\"BYPASS REASON:\")) | .body | @json" \
+              > "$RUNNER_TEMP/bypass-comments.txt"
 
-            if [ -n "$BYPASS_COMMENT" ]; then
-              echo "✓ Bypass comment found from ${ADAM_GITHUB_USER} (comment ID: ${BYPASS_COMMENT})"
-              BYPASS_APPROVED=true
+            COMMENT_COUNT=$(wc -l < "$RUNNER_TEMP/bypass-comments.txt" | tr -d ' ')
+            if [ "$COMMENT_COUNT" -gt 0 ]; then
+              echo "✓ ${COMMENT_COUNT} bypass comment(s) from ${ADAM_GITHUB_USER} — the verdict step will check each names this diff's subject"
+              BYPASS_CANDIDATE=true
             else
               echo "✗ No bypass comment from ${ADAM_GITHUB_USER} containing 'BYPASS REASON:'"
             fi
           fi
 
-          echo "bypass_approved=${BYPASS_APPROVED}" >> "$GITHUB_OUTPUT"
+          echo "bypass_candidate=${BYPASS_CANDIDATE}" >> "$GITHUB_OUTPUT"
 
       # ── Tier floor, from THE classifier ────────────────────────────────────
       # Per the 2026-05-16 board decision #4, .claude/qa-tier-floor.yml sets the
@@ -321,13 +369,18 @@ jobs:
       #   is the step committed to this file. Real unforgeability needs a
       #   signing key held outside this workflow's own token; that decision has
       #   not been made and is not claimed here.
-      - name: Verdict diff-binding check — blocking, posted as a signed check-run
+      # The step name said "posted as a signed check-run" until 2026-08-26. Nothing here
+      # signs anything. It posts a check-run with the job's own GITHUB_TOKEN, which is
+      # authentication of the poster, not a signature over the verdict — and the block
+      # above explains why that poster is not a trusted party in this repo's threat
+      # model. "Signed" is the exact word that makes a reader stop asking.
+      - name: Verdict diff-binding check — blocking; posts an unsigned audit check-run
         id: verdict
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          BYPASS_APPROVED: ${{ steps.bypass.outputs.bypass_approved }}
+          BYPASS_CANDIDATE: ${{ steps.bypass.outputs.bypass_candidate }}
         run: |
           set -uo pipefail  # No -e (unlike the other steps in this job): VERDICT_JSON=$(...)
                              # below must still be captured when verdict.mjs exits non-zero, so
@@ -361,7 +414,12 @@ jobs:
             SUMMARY="No QA verdict bound to this diff (reason=${REASON}, subject=${SUBJECT:0:12}…). Run the tier gate, then node scripts/verdict.mjs record --verdict PASS --by <reviewer>, and commit the record."
           fi
 
-          echo "Posting signed check-run (conclusion=${CONCLUSION})..."
+          # Audit artifact, not a control. Measured 2026-08-26: this name is not in
+          # required_status_checks.contexts, and `grep -rn "QA verdict (diff-bound)"`
+          # over the whole tree returns only the two lines below — it is written here
+          # and read nowhere. What gates the merge is this job's EXIT CODE, surfaced
+          # under the required context "Verify QA Lead PASS".
+          echo "Posting audit check-run (conclusion=${CONCLUSION})..."
           if ! gh api "repos/${REPO}/check-runs" \
             -f name="QA verdict (diff-bound)" \
             -f head_sha="${HEAD_SHA}" \
@@ -375,16 +433,53 @@ jobs:
 
           if [ "$OK" = "true" ]; then
             echo ""
-            echo "✅ QA GATE PASSED — verdict signed and bound to this diff."
+            echo "✅ QA GATE PASSED — a verdict record naming this diff's subject is committed"
+            echo "   on this branch. That is the whole claim: see the block above this step for"
+            echo "   what it does and does not establish. It is not a signature and not proof"
+            echo "   that a review happened."
             exit 0
           fi
 
-          if [ "$BYPASS_APPROVED" = "true" ]; then
+          # ── The override, bound to the diff it overrides ────────────────────
+          # A bypass now has to name the subject it is bypassing. Enumerate what the
+          # old predicate admitted and this one does not, because a deletion attracts
+          # no test cases:
+          #
+          #   ADMITTED BEFORE, REFUSED NOW — a "BYPASS REASON:" comment naming no
+          #   subject. It authorised the diff present when it was written AND every
+          #   diff pushed to that PR afterwards, without limit, because the label is
+          #   sticky and the comment is immutable. Nothing recomputed on `synchronize`.
+          #   Who needed that? Nobody: the founder reads the failing check-run to
+          #   decide, and the failing check-run has always printed the subject. The
+          #   cost of the new rule is pasting 12 characters that are already on screen.
+          #
+          #   STILL ADMITTED — a comment carrying the full 64-char subject, since the
+          #   full subject contains its own 12-char prefix. One predicate, both forms.
+          #
+          # 12 hex characters is 48 bits. That is not a cryptographic claim and does
+          # not need to be: the founder is trusted here by construction, and the
+          # binding exists to pin WHICH DIFF they meant, not to resist them.
+          if [ "$BYPASS_CANDIDATE" = "true" ]; then
+            SUBJECT_SHORT="${SUBJECT:0:12}"
+            if [ -f "$RUNNER_TEMP/bypass-comments.txt" ] \
+               && grep -F -q "$SUBJECT_SHORT" "$RUNNER_TEMP/bypass-comments.txt"; then
+              echo ""
+              echo "⚠️  QA GATE BYPASSED — founder comment carries 'BYPASS REASON:' AND names"
+              echo "    this exact diff subject (${SUBJECT_SHORT})."
+              echo "    The failing verdict check-run above stands for audit; it is not overwritten."
+              echo "    Note: audit_log rule_violation row will be written by Inngest on next cycle"
+              exit 0
+            fi
             echo ""
-            echo "⚠️  QA GATE BYPASSED — bypass label + Adam comment with BYPASS REASON: present."
-            echo "    The failing verdict check-run above stands for audit; it is not overwritten."
-            echo "    Note: audit_log rule_violation row will be written by Inngest on next cycle"
-            exit 0
+            echo "❌ BYPASS REFUSED — the label and a 'BYPASS REASON:' comment are present,"
+            echo "   but no such comment names THIS diff. A bypass is bound to the diff it"
+            echo "   bypasses, exactly as a verdict is; otherwise it silently re-authorises"
+            echo "   every later push to this PR."
+            echo ""
+            echo "   To bypass this diff, comment (the subject changes on every push):"
+            echo ""
+            echo "     BYPASS REASON: <why> ${SUBJECT_SHORT}"
+            echo ""
           fi
 
           echo ""
