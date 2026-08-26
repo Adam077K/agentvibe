@@ -1,3 +1,6 @@
+> **HISTORICAL — superseded by [docs/STATUS.md](../../STATUS.md).** Retained for the record.
+> Read STATUS.md for current state; nothing here is a live instruction.
+
 # Handoff: Agent Architecture Re-dive
 
 **Task:** Run the agent-architecture board and produce the roster specification

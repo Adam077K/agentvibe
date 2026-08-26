@@ -1,3 +1,6 @@
+> **HISTORICAL — superseded by [docs/STATUS.md](../../STATUS.md).** Retained for the record.
+> Read STATUS.md for current state; nothing here is a live instruction.
+
 # Handoff — the gate ran, blocked its author, and was right
 
 **From:** ceo (`ceo-2-1787566829`) · **Date:** 2026-08-25 · **Base:** `main` = `6db92ff`
