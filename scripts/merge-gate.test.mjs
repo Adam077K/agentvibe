@@ -1135,11 +1135,27 @@ test('PR route: a bypass approved for another diff is REFUSED', () => {
   assert.match(r.text, /BYPASS REFUSED/);
 });
 
-// THIS CONTROL IS WHAT KEEPS THE FOUR REFUSAL CASES ABOVE FROM GOING VACUOUS, and it is not
-// decoration. Every refusal case asserts exit 1, and `bash -e` also exits 1 when the step dies at
-// VERDICT_JSON=$(...) — the shell aborting and the gate refusing are indistinguishable by exit
-// code. The verdict step clears -e deliberately (`set +e`); delete that line and this case, which
-// demands exit 0 on the same nodeExit=1 input, is the one that goes red.
+// THIS CONTROL KEEPS EXACTLY ONE CASE FROM GOING VACUOUS — `an empty subject never reaches the
+// bypass comparison` — and the claim is narrow because it was measured, not reasoned.
+//
+// It read "KEEPS THE FOUR REFUSAL CASES ABOVE FROM GOING VACUOUS" until 2026-08-26. The worry was
+// right: every refusal case asserts exit 1, and `bash -e` also exits 1 when the step dies at
+// VERDICT_JSON=$(...), so the shell aborting and the gate refusing are indistinguishable BY EXIT
+// CODE. The scope was wrong. Deleting `set +e` from the shipped file — with a flag-state control
+// confirming the extracted block no longer contains it — turns **seven** cases red and leaves one:
+//
+//   caught by their own text assertions (an early death prints none of it):
+//     no verdict and no bypass · unparseable verdict · bypass for another diff
+//     .ok with an empty .subject · truncated .subject · valid .subject, unreadable .ok
+//   red as claimed:  this control, which demands exit 0 on the same nodeExit=1 input
+//   VACUOUS:         `an empty subject never reaches the bypass comparison` — its only
+//                    assertions are code === 1 and doesNotMatch(/QA GATE BYPASSED/), and a
+//                    shell dying at the assignment satisfies both
+//
+// So the control earns its place for one case rather than seven. Naming that case is the point:
+// an unnamed "this keeps the tests honest" drifts back to covering everything above it, and the
+// next person deletes the one assertion that was load-bearing. Overstating a control's scope is
+// an error in the safe direction, which is exactly why it survives review.
 //
 // Confirmed by mutation rather than argued: driving these same cases against the two earlier
 // versions of the step reproduces the defects each fix removed — origin/main BYPASSES a bypass

@@ -240,3 +240,38 @@ Also recorded in the workflow, beside the guard whose comment names the threat: 
 the oracle's answer **shape**, never its **provenance**. It closes the accidental degeneration,
 which was reachable; it does not close a deliberate shim, which is the same privilege by one more
 route to an outcome this repo already concedes.
+
+### Round 4 · the control was overstated, and the rule that survives
+
+**p3, measured before accepting it.** The comment on the pass-case control claimed it kept **four**
+refusal cases from going vacuous. Deleting `set +e` from the shipped file — with a flag-state
+control confirming the extracted block no longer carried it — turns **seven** cases red and leaves
+exactly **one** vacuous: `an empty subject never reaches the bypass comparison`, whose only
+assertions are `code === 1` and `doesNotMatch(/QA GATE BYPASSED/)`, both of which a shell dying at
+the assignment satisfies. Every other refusal case carries a text assertion, and an early death
+prints none of it. The control earns its place for one case, and the comment now names it —
+an unnamed "this keeps the tests honest" drifts back to covering everything above it, and the next
+person deletes the one assertion that was load-bearing.
+
+**Two sentences worth keeping, both from this lane.** The first is now in `qa-lead-pass.yml` beside
+the flag it describes, because a finding in a report is not a finding in the tree:
+
+> **A branch that has never executed is a comment, not a branch.**
+
+The second sharpens my own out-of-repo rule, and the added clause is what makes it survivable:
+
+> **Spend the assertion budget where silence is possible. A rule that says "assert every
+> out-of-repo reach" will get routed around; "assert every out-of-repo reach whose failure could be
+> mistaken for a result" will not.**
+
+By that measure the `BASH` fix is the clean application — construct, assert, then behave — and it
+ranks the two remaining out-of-repo reaches in that helper correctly: `mkdtempSync` throws with the
+path in its message, and the `#!/bin/bash` shebang in the stubs this test writes is an absolute
+interpreter path of exactly the class `BASH` was just fixed for. **Both are loud, so neither is a
+finding.** The ranking is the point: silence is the thing to spend on.
+
+**And the positive-control form, which is the cleaner statement of the session's rule.** The
+mutation table's first version showed all three versions refusing — three cells agreeing, for the
+wrong reason, in the table that proved the fix. A *positive* result needs its control as much as a
+negative one, because agreement across cells looks like corroboration while being a single shared
+artefact.

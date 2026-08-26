@@ -521,9 +521,18 @@ jobs:
           # only way to survive the assignment was verdict.mjs exiting 0, which exits 0
           # before ever consulting a bypass.
           #
+          # A BRANCH THAT HAS NEVER EXECUTED IS A COMMENT, NOT A BRANCH. That is the
+          # durable form of this finding, and it is why the bypass logic below was
+          # elaborate, reviewed, and worth nothing: nothing had ever run it.
+          #
           # Turning it off is what makes the failure path real. What makes THAT safe is
           # that every value the logic below trusts is validated rather than inferred
           # from an exit code — see the guard after the jq block.
+          #
+          # OBSERVED, not inferred: run 32978261742 drove this path on the runner with a
+          # deliberately stale verdict. It printed the JSON, `reason: absent`, the full
+          # refusal, and POSTED `QA verdict (diff-bound) = failure` — where the same
+          # failure at base (run 32964238343) posted no check-run at all.
           set -uo pipefail
           set +e
           echo "=== Verdict diff-binding check (blocking) ==="
