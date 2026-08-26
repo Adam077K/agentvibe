@@ -229,21 +229,82 @@ if (!fs.existsSync(longTermPath)) {
 // 18,538 bytes, checked by nothing.
 const memoryDir = path.join(ROOT, '.claude', 'memory');
 
-/** @returns {Array<{name: string, bytes: number}>} volumes on disk, in name order. */
+/**
+ * ── A NAME IS NOT A FILE, AND THE WRONG KIND OF ENTRY DOES NOT ALWAYS CRASH ─────────────────
+ *
+ * `ARCHIVE_VOLUME_RE` matches a NAME. Every matching name went straight to `readFileSync`.
+ * Measured 2026-08-26 against constructed trees, one bad entry per tree:
+ *
+ *   a DIRECTORY named like a volume  → EISDIR, unhandled, raw stack trace, exit 1
+ *   a DANGLING SYMLINK               → ENOENT, likewise
+ *   a FIFO                           → NEVER RETURNS. Killed by an 8s alarm at 8,011 ms having
+ *                                      printed nothing at all about the volume (exit 142).
+ *
+ * The FIFO is the one that matters. This script is a BLOCKING CI step, and there a crash names
+ * itself while a hang is indistinguishable from a slow build.
+ *
+ * ONE QUESTION IS ASKED HERE, SO ONE PREDICATE ANSWERS IT — a claim about THIS file, established
+ * by reading it, NOT inherited from scripts/evict-memory.mjs, which genuinely needs two. That
+ * tool also asks "is this path free to CREATE?", which must NOT resolve symlinks or it will write
+ * through one onto an inode that already exists. This file creates nothing: it contains no
+ * writeFileSync, appendFileSync, mkdirSync, renameSync, rmSync, unlinkSync or openSync. Its only
+ * question is "does this hold volume content I must cap?" — and that one MUST resolve, because a
+ * volume reached through a symlink is content the cap has to bound. `lstatSync` here would stop
+ * capping it, which is why `statSync` is not a detail. Pinned by a control case, not by comment.
+ *
+ * A matching entry that is not a regular file FAILS; it is not skipped. Skipping would place an
+ * archive volume beyond the cap according to how somebody named a directory — the unchecked-volume
+ * state this whole section exists to end.
+ */
+function volumeKind(abs) {
+  let st;
+  try {
+    st = fs.statSync(abs); // RESOLVES symlinks — see above; lstatSync would be wrong here
+  } catch (e) {
+    return { ok: false, kind: `unresolvable (${(e && e.code) || (e && e.message) || e})` };
+  }
+  if (st.isFile()) return { ok: true, kind: 'file' };
+  if (st.isDirectory()) return { ok: false, kind: 'a directory' };
+  if (st.isFIFO()) return { ok: false, kind: 'a FIFO — reading it would never return' };
+  if (st.isSocket()) return { ok: false, kind: 'a socket' };
+  if (st.isBlockDevice()) return { ok: false, kind: 'a block device' };
+  if (st.isCharacterDevice()) return { ok: false, kind: 'a character device' };
+  return { ok: false, kind: 'not a regular file' };
+}
+
+/** @returns {Array<{name: string, bytes: number|null, problem: string|null}>} in name order. */
 function archiveVolumes() {
   let names;
   try { names = fs.readdirSync(memoryDir); } catch { return []; }
   return names
     .filter((n) => ARCHIVE_VOLUME_RE.test(n))
     .sort()
-    .map((n) => ({
-      name: n,
-      bytes: Buffer.byteLength(fs.readFileSync(path.join(memoryDir, n), 'utf8'), 'utf8'),
-    }));
+    .map((n) => {
+      const abs = path.join(memoryDir, n);
+      const k = volumeKind(abs);
+      if (!k.ok) return { name: n, bytes: null, problem: k.kind };
+      return {
+        name: n,
+        bytes: Buffer.byteLength(fs.readFileSync(abs, 'utf8'), 'utf8'),
+        problem: null,
+      };
+    });
 }
 
 const volumes = archiveVolumes(); // none is fine — the archive is not required to exist
 for (const vol of volumes) {
+  // A named refusal, not a stack trace. `readFileSync` reported these as EISDIR/ENOENT from deep
+  // inside node with no mention of which entry caused it — and reported the FIFO not at all.
+  if (vol.problem !== null) {
+    fail(
+      'archive-volume-not-a-file',
+      `${vol.name} matches the archive-volume pattern but is ${vol.problem}. ` +
+        `An archive volume must be a regular file (a symlink to one is fine — it is resolved). ` +
+        `Nothing can be capped here: either give the name to a real volume, or rename this entry ` +
+        `so it no longer matches ${ARCHIVE_VOLUME_RE}.`
+    );
+    continue;
+  }
   if (vol.bytes > DECISIONS_ARCHIVE_BYTE_CAP) {
     fail(
       'decisions-archive-byte-overflow',
@@ -282,10 +343,12 @@ if (JSON_OUT) {
       // an existing consumer of this JSON keeps working; it is the first element of the list, not
       // a second measurement of it.
       decisions_archive: volumes.length
-        ? { bytes: volumes[0].bytes, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP }
+        ? { bytes: volumes[0].bytes, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP, problem: volumes[0].problem }
         : { bytes: 0, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP },
+      // `bytes: null` with a `problem` string, never `bytes: 0` — a volume nothing could read is
+      // not a volume of zero bytes, and a machine consumer that saw 0 would report plenty of room.
       decisions_archive_volumes: volumes.map((v) => ({
-        name: v.name, bytes: v.bytes, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP,
+        name: v.name, bytes: v.bytes, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP, problem: v.problem,
       })),
       long_term: {
         lines: longTermText.split('\n').length,

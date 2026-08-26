@@ -57,7 +57,33 @@ function run(args) {
 
 function check(root) {
   const r = run(['--root', root, '--json']);
+  // `JSON.parse(r.out)` alone turned every crash into `Unexpected end of JSON input` — a refusal
+  // naming neither the command nor the reason, when the checker had written one to stderr. The
+  // volume-type cases below deliberately drive paths that used to crash, so this helper is the
+  // first thing that has to stop lying about them.
+  if (!r.out.trim()) {
+    throw new Error(
+      `check-memory-budget.mjs produced no stdout where --json was required.\n` +
+      `  root:   ${root}\n  exit:   ${r.code}\n  stderr: ${(r.err || '').trim() || '(empty)'}`
+    );
+  }
   return { code: r.code, ...JSON.parse(r.out) };
+}
+
+/** Run with a hard wall-clock cap. A hang is the one failure a suite never holds a control for. */
+function runCapped(args, ms) {
+  try {
+    const stdout = execFileSync('node', [SCRIPT, ...args], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: ms, killSignal: 'SIGKILL',
+    });
+    return { code: 0, out: stdout, err: '', timedOut: false };
+  } catch (e) {
+    return {
+      code: e.status, out: (e.stdout || '').toString(), err: (e.stderr || '').toString(),
+      // execFileSync reports a timeout kill as a signal with no exit status.
+      timedOut: e.killed === true || e.signal === 'SIGKILL',
+    };
+  }
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
@@ -371,4 +397,96 @@ test('MUTATION: a well-formed fence does NOT trip the ambiguity failure', () => 
   assert.equal(r.code, 0, `a closed fence must pass: ${JSON.stringify(r.failures)}`);
   assert.equal(r.decisions.parse_ambiguous, null);
   assert.equal(r.decisions.entries, 1);
+});
+
+// ── A NAME IS NOT A FILE ──────────────────────────────────────────────────────────────────────
+//
+// `ARCHIVE_VOLUME_RE` matches a NAME, and every matching name went straight to `readFileSync`.
+// The three cases below are the ones that behave differently, and they are here rather than
+// folded into one because they FAIL differently: two crash and one does not.
+//
+// The FIFO is why this block exists. `check:memory` is a BLOCKING CI step, and a crash there
+// names itself while a hang reads as a slow build. Measured on the unfixed checker: killed by an
+// 8s cap having printed nothing at all about the volume.
+//
+// The two symlink cases are CONTROLS on the fix, not extra coverage. The scan must RESOLVE
+// symlinks — `statSync`, not `lstatSync` — because a volume reached through one is content the
+// cap has to bound. Swap in `lstatSync` and both of them go red while the three refusal cases
+// above stay green, which is the only reason those two can be trusted to hold the line.
+
+/** A fixture whose `.claude/memory` gets one extra entry that `fixture()` cannot write. */
+function volumeFixture(build) {
+  const root = fixture({ decisions: '', longTerm: 'one line\n' });
+  build(path.join(root, '.claude', 'memory'));
+  return root;
+}
+
+test('a DIRECTORY named like an archive volume is refused BY NAME, not by EISDIR', () => {
+  const root = volumeFixture((mem) => fs.mkdirSync(path.join(mem, 'DECISIONS_ARCHIVE_002.md')));
+  const r = run(['--root', root]);
+  assert.equal(r.code, 1);
+  // The refusal is written to STDERR — that is where this checker reports every failure, and
+  // where the unfixed version wrote its stack trace. Same stream, so the stream cannot be what
+  // makes this pass; the CONTENT is.
+  assert.match(r.err, /archive-volume-not-a-file/, 'the refusal must be a named check, not a throw');
+  assert.match(r.err, /DECISIONS_ARCHIVE_002\.md/, 'the refusal must name the entry it refused');
+  assert.match(r.err, /a directory/, 'and say what kind of thing it found');
+  assert.doesNotMatch(r.err, /EISDIR/, 'a raw errno means it crashed rather than refused');
+  assert.doesNotMatch(r.err, /^\s+at /m, 'a stack trace is a refusal nobody can act on');
+});
+
+test('a DANGLING SYMLINK named like an archive volume is refused by name, not by ENOENT', () => {
+  const root = volumeFixture((mem) =>
+    fs.symlinkSync(path.join(mem, 'no-such-target.md'), path.join(mem, 'DECISIONS_ARCHIVE_003.md')));
+  const r = run(['--root', root]);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /archive-volume-not-a-file/);
+  assert.match(r.err, /DECISIONS_ARCHIVE_003\.md/);
+  assert.match(r.err, /ENOENT/, 'the errno belongs IN the message — it is the diagnosis, not the delivery');
+  assert.doesNotMatch(r.err, /^\s+at /m, 'a stack trace is a refusal nobody can act on');
+});
+
+test('a FIFO named like an archive volume is refused in milliseconds, not read forever', () => {
+  // THE HANG. `readFileSync` on a FIFO with no writer never returns. Without the cap below this
+  // test would not fail — it would never finish, and a suite that never finishes reports nothing.
+  const root = volumeFixture((mem) => execFileSync('mkfifo', [path.join(mem, 'DECISIONS_ARCHIVE_004.md')]));
+  const started = Date.now();
+  const r = runCapped(['--root', root], 8000);
+  const elapsed = Date.now() - started;
+  assert.equal(r.timedOut, false,
+    `the checker never returned: readFileSync blocked on the FIFO (killed after ${elapsed}ms)`);
+  assert.ok(elapsed < 4000, `refusing a FIFO took ${elapsed}ms — it must not be reading it at all`);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /archive-volume-not-a-file/);
+  assert.match(r.err, /FIFO/, 'the message must name the kind, or the operator cannot act on it');
+});
+
+test('CONTROL: a volume reached through a SYMLINK is still read and still capped', () => {
+  // The scan resolves. `lstatSync` here would refuse this valid volume — verified: it reports
+  // "not a regular file" for exactly this tree.
+  const root = volumeFixture((mem) => {
+    fs.writeFileSync(path.join(mem, 'real-volume.md'), '# Real volume\n\nbody\n');
+    fs.symlinkSync(path.join(mem, 'real-volume.md'), path.join(mem, 'DECISIONS_ARCHIVE_005.md'));
+  });
+  const r = check(root);
+  assert.equal(r.code, 0, `a symlinked volume must be accepted: ${JSON.stringify(r.failures)}`);
+  const vol = r.decisions_archive_volumes.find((v) => v.name === 'DECISIONS_ARCHIVE_005.md');
+  assert.ok(vol, 'the symlinked volume is missing from the report — it was skipped, not read');
+  assert.equal(vol.problem, null);
+  assert.ok(vol.bytes > 0, 'a volume reported as zero bytes was never read');
+});
+
+test('CONTROL: an OVERSIZED volume behind a symlink still overflows its cap', () => {
+  // The one that makes the choice load-bearing. Skip symlinks and this file stops being capped
+  // while the checker still reports success — the cap silently stops binding.
+  const root = volumeFixture((mem) => {
+    fs.writeFileSync(path.join(mem, 'big-volume.md'), `# Big\n\n${'x'.repeat(45_000)}`);
+    fs.symlinkSync(path.join(mem, 'big-volume.md'), path.join(mem, 'DECISIONS_ARCHIVE_006.md'));
+  });
+  const r = check(root);
+  assert.equal(r.code, 1, 'a 45,000-byte volume behind a symlink was not capped');
+  assert.ok(r.failures.some((f) => f.includes('decisions-archive-byte-overflow')),
+    `expected a byte-overflow failure, got ${JSON.stringify(r.failures)}`);
+  assert.ok(!r.failures.some((f) => f.includes('archive-volume-not-a-file')),
+    'it must overflow on BYTES — refusing it as a non-file means the bytes were never measured');
 });
