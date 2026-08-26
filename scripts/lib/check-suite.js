@@ -167,6 +167,32 @@ const EXCLUDED = {
     'no inbound or loopback setting to grant one. FALSIFY THIS: delete this entry, put check:mc back in ' +
     'STEPS, and run `npm run check` with the sandbox armed. If it goes green, the sandbox behaviour ' +
     'changed and this exclusion should not survive.',
+  'test:probe-workflow-reach':
+    'OUT OF THE SUITE FOR A SCOPE REASON, NOT A TECHNICAL ONE, AND IT SHOULD NOT STAY OUT. It passes — ' +
+    '6 of 6, 0.5s, measured 2026-08-26 — and it is fast, hermetic and constructs every transcript it ' +
+    'reads, so it would be a well-behaved step. THE CI WORKFLOW DOES NOT RUN IT EITHER; nothing does, ' +
+    'on a runner. WHY: adding a 47th step moves two derived figures, `suiteSteps` 46 -> 47 and, with the ' +
+    'matching workflow step, `ciRunSteps` 47 -> 48. `npm run check:figures` then fails with 20 findings ' +
+    'across docs/STATUS.md (8 sites), CLAUDE.md (3) and the CI workflow (4) — measured, not assumed: ' +
+    'with the step wired, `npm run check` came back 44 of 47 with test:figures, check:figures and ' +
+    'check:map red, and clean with it unwired. The first two files were held by other lanes for the ' +
+    'duration of the change that added this, so wiring it would have meant editing them anyway. ' +
+    'WHAT IS LOST WHILE IT SITS HERE, stated rather than glossed: scripts/probe-workflow-reach.mjs has ' +
+    'its refusal path — the UNRESOLVED-without-a-firing-control behaviour that is the entire reason to ' +
+    'trust its zero — checked by nothing automated. That is a real gap, and it is why this entry does ' +
+    'not read as settled. What IS separately enforced is the containment the probe measures: ' +
+    'PS-WORKFLOW-CONTAINMENT in .claude/hooks/schema-lint.js, pinned by scripts/prompt-standard.test.mjs, ' +
+    'which IS a step. ' +
+    'THE FIX IS ONE COMMIT: add the step here and a matching workflow step, then update those 20 figure ' +
+    'sites by hand — there is no writer mode, `check:figures` only reports, and an earlier draft of this ' +
+    'entry invented an `npm run build:figures` that does not exist. ' +
+    'A NOTE ON WORDING, so the next editor is not mystified: the guard in scripts/check-suite.test.mjs ' +
+    'treats ANY exclusion reason mentioning the workflow file by name as a claim that the workflow still ' +
+    'covers the script, and fails when it does not. This entry claims the opposite, so it names the ' +
+    'directory and not the file. Do not "fix" that by adding the filename — the assertion here is that ' +
+    'NOTHING runs it. ' +
+    'FALSIFY THIS: delete this entry, add both steps, and update the figures. If `npm run check` and ' +
+    '`npm run check:figures` both come back green, nothing justified the exclusion and it must not survive.',
   'check:ci-chains':
     'AN ENTRY POINT, NOT A SECOND PLACE THE CHECK RUNS. The blocking assertion is the chain case in ' +
     'scripts/check-suite.test.mjs, which is `test:check-suite` — a STEP of this suite, with a step of its ' +
