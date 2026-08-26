@@ -73,6 +73,12 @@ not register them because two are about GitHub's behaviour rather than this repo
 | Is the check-run load-bearing? | **No** | Not in required contexts; `grep` finds it written and never read |
 | Does the bypass binding hold? | **Yes** | Shipped step extracted from the YAML, 6 cases: unbound bypass REFUSED, wrong-subject REFUSED, right-subject bypassed (control), genuine PASS passes (control), silence refuses |
 | Full suite | **46/46, 0 failed** | `npm run check`, 214.9s, in this worktree |
+| Does anything demand a human? | **No** | With both required checks green, PR #109 reports `mergeStateStatus: CLEAN` with **zero approving reviews** |
+
+That last row is the whole finding in one line. Both green checks on PR #109 were produced by
+this diff's own author — one of them by writing a JSON file — and GitHub then reports the PR as
+clean to merge with nobody having looked at it. `required_approving_review_count: 1` is
+configured and did not fire, which is what `enforce_admins: false` means in practice.
 
 ## Residual, stated plainly
 
