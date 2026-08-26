@@ -55,7 +55,12 @@ tense and every one of them described a state the same commit had already remove
 
 ## The four things to know before touching anything
 
-1. **`main` = `71fd58d`** (verified here: `git rev-parse --short main`). This document sits **ahead** of it,
+1. **Local `main` = `71fd58d`; `origin/main` = `7f7bddd`** —
+   `git for-each-ref --format='%(refname:short) %(objectname:short)' refs/heads/main refs/remotes/origin/main`
+   (`git rev-parse --short main origin/main` **does not work** — it exits 128, `Needed a single revision`).
+   **Name the ref or the figure lies by omission**: the first is a local branch nobody has pulled, the second
+   is what a reader means by "main". This line said `main = 71fd58d` unqualified until 2026-08-26, which was
+   *honest by its own command* and still pointed at the wrong tree. This document sits **ahead** of both,
    on **`feat/memory-eviction`** — the memory-eviction branch (PR #102), which targets `main` — and
    describes **this tree**, not `main`. Settle it in your own checkout with
    `git rev-parse --abbrev-ref HEAD`; that is the branch every figure below was measured on, and it is
@@ -70,10 +75,15 @@ tense and every one of them described a state the same commit had already remove
    > so the file described a tree nobody was on. It is `feat/memory-eviction` now. **A branch name is a
    > figure like any other and expires the same way**, which is exactly what the ordering rule at the top
    > of this file is for.*
-2. **The local floor is GREEN — `44 of 44 passed · 0 failed` — and a runner has now confirmed it.** See
-   §1 and §4. *That last clause read "though no runner has confirmed that from here" until 2026-08-26; CI
-   run `32944938976` on `869aab9` finished `success`, so the hedge outlived its own condition. A completed
-   run id is a fixed historical fact and is safe to cite, unlike a sha standing in for "the current tree".*
+2. **The local floor is GREEN — `44 of 44 passed · 0 failed`, verified here — and a runner has now
+   confirmed it (`REPORTED`).** See §1 and §4. ***`REPORTED`, not verified here:*** *CI run `32944938976` on
+   `869aab9` finished `success`. That came from `gh run view`, which needs the sandbox disabled to read
+   `~/.config/gh`, so it cannot be checked from this worktree — and per the standard at the top of this
+   file, no GitHub fact on this page can be anything else. **It carried no marker until 2026-08-26**, while §1 and
+   §3 marked theirs correctly: one page, two practices, which is the defect the standard exists to prevent.
+   The clause it replaced read "though no runner has confirmed that from here" and had outlived its own
+   condition. A completed run id is a fixed historical fact and is safe to cite, unlike a sha standing in for
+   "the current tree".*
    > *Superseded 2026-08-26. This read: **"CI is RED and the local floor is GREEN.** Both are true, and they
    > are one environment-dependent test apart." That was true of `main` at `71fd58d` and false of the tree
    > this file ships in: `fix/plans-dir-test-hermetic` is merged here as `ae7ea48`. Kept because the
@@ -182,13 +192,34 @@ console.log(r.length, r.filter(s=>/!cancelled\(\)/.test(String(s.if||''))).lengt
 
 > ***This derivation used to be two `grep -c` recipes, and on the machine this repo is developed on one of
 > them SILENTLY RETURNED `0`.*** *`grep` in an agent shell here is a shell function shimming to
-> **ugrep 7.8.4**, which mis-parses the `{{` in `${{ !cancelled() }}`. Measured 2026-08-26, same file, same
-> instant:*
+> **ugrep 7.8.4**. Measured 2026-08-26, same file, same instant:*
 >
 > ```
-> grep -c '^        if: ${{ !cancelled() }}' .github/workflows/ci.yml            →  0
-> /usr/bin/grep -c '^        if: ${{ !cancelled() }}' .github/workflows/ci.yml   →  45
+> grep -c '^        if: ${{ !cancelled() }}' .github/workflows/ci.yml            →  0   exit 1, stderr EMPTY
+> /usr/bin/grep -c '^        if: ${{ !cancelled() }}' .github/workflows/ci.yml   →  45  exit 0
 > ```
+>
+> ***THE TRIGGER IS AN UNESCAPED `$` IN A NON-FINAL POSITION. IT IS NOT THE BRACES.*** *POSIX BRE reads such
+> a `$` as a literal; ugrep `-G` reads it as an end-of-line anchor, so everything after it can never match
+> and the count is `0` — with an empty stderr, which is what makes it silent rather than merely wrong. The
+> controls, on the same file and on a fixture, separate the two candidate causes:*
+>
+> ```
+> grep -c '{{' ci.yml            →  46   /usr/bin/grep →  46   AGREE — braces alone are FINE
+> grep -c 'foo$bar' fixture      →   0   /usr/bin/grep →   1   DIFFER — `$` mid-pattern, no brace
+> grep -c 'end$'    fixture      →   0   /usr/bin/grep →   0   AGREE — a FINAL `$` anchors in both
+> ```
+>
+> ***Escaping the `$` repairs it in BOTH greps*** — *`'^        if: \${{ !cancelled() }}'` returns 45 and 45
+> — so the portable spelling is an escape, not a path. Prefer that to `/usr/bin/grep`, which only fixes the
+> machine you are sitting at.*
+>
+> *(**Superseded 2026-08-26, hours after it was written:** this note first said ugrep "mis-parses the `{{`".
+> It does not — `{{` agrees at 46 — and the wrong mechanism produced a **wrong rule**: the instruction
+> below read "check before trusting a **brace-bearing** pattern", which guards the shape that is SAFE and says
+> nothing about the shape that FAILS. A reader running `grep -c 'foo$bar'` would have got `0` with nothing in
+> this file to make them doubt it. The mechanism was relayed as a symptom-level guess and written down
+> faithfully; putting it somewhere a reader can execute is exactly what surfaced it.)*
 >
 > *A reviewer following the printed recipe was one step from filing "this recipe returns 0 and never
 > worked" as a confident, false P1, and stopped only because `0` was impossible on its face.* **This file's
@@ -198,8 +229,9 @@ console.log(r.length, r.filter(s=>/!cancelled\(\)/.test(String(s.if||''))).lengt
 >
 > *So: where a figure can come from the repo's own parser — `parseCiSteps()`, `aliasLinks()`, `STEPS` — it
 > now does, because `node` is not shadowed here and `grep` is. Where a `grep` recipe is genuinely the
-> clearest form it is kept: two remain in this file, and neither contains a brace. **Check `type grep`
-> before trusting a brace-bearing pattern**, or use `/usr/bin/grep`.*
+> clearest form it is kept: two remain in this file — `'^2026-'` and `'ALLOWS a write to a file under'` —
+> and **neither contains a `$`**. **Check `type grep` before trusting a `$`-bearing pattern**; escape the
+> `$`, or fall back to `/usr/bin/grep`.*
 
 Three further `uses:` setup steps (checkout, setup-node, setup-bun) carry **no** `if:`, deliberately: if
 checkout fails, `!cancelled()` is still true, so guarding them would run all 45 checks against an empty
@@ -279,7 +311,7 @@ npm run check  →  44 of 44 passed · 0 failed · exit 0
 ```
 
 macOS, sandbox armed, measured 2026-08-26 in this worktree, on the branch named once in §1. **Re-derive
-before believing it — `npm run check`, 95 to 145 seconds depending on lane load.** If it disagrees, the
+before believing it — `npm run check`, 90 to 145 seconds depending on lane load.** If it disagrees, the
 tree has moved and this line is stale; that answer is worth more than knowing which commit it was taken at.
 
 > ***No commit sha is given, and dropping it is the fix — not a loss of provenance.*** *This line named a
@@ -335,13 +367,19 @@ Derive the denominator, never quote it:
 
 The wall clock is a sample rather than a fact and should not be pinned, and **three runs of THIS tree in
 one sitting make the case better than the argument does: 99.5s, 144.3s, 94.3s** — same 44 steps, same
-worktree, same machine, `44 of 44 · 0 failed` every time. The 43-step suite that preceded it took 79.4s by
+worktree, same machine, `44 of 44 · 0 failed` every time. Two more since, on the same tree: **93.2s** here
+and **91.2s** by an independent reviewer. The 43-step suite that preceded it took 79.4s by
 that tally and 80s by the shell, 79.7s at the session root, and 82.8s then 125.9s in the worktree that wrote
-an earlier version of this file. That is 79.4s to 144.3s for substantially the same work — a 1.5x spread on
-this tree alone. **So this figure is published as a RANGE, and that is a correction to method, not a
+an earlier version of this file. That is 79.4s to 144.3s for substantially the same work — a 1.6x spread on
+this tree alone (91.2s to 144.3s across the five runs of THIS tree). **So this figure is published as a
+RANGE, and that is a correction to method, not a
 rounding:** the previous version pinned one run, which meant it was falsified by the next run of an
 unchanged tree, and a figure that expires without anything changing teaches the reader to ignore it. A range
-survives re-measurement; pick the slowest honest bound, never the fastest run. Wall-clock numbers here
+survives re-measurement; pick the slowest honest bound, never the fastest run. **And a range has a LOWER
+bound too, which the first version of this paragraph got wrong in its own terms:** it published "95 to 145"
+while citing a 94.3s run two lines below, so the very next re-measurement — 91.2s — fell outside it. A
+bound that excludes an observation the same paragraph cites is the failure this paragraph is about,
+committed by the sentence describing it. Wall-clock numbers here
 move with how many lanes are building at once —
 `c-mission-control-cold-start` already flakes for exactly this reason.
 
