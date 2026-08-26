@@ -332,6 +332,12 @@ function aliasLinks(command) {
  *          measured 2026-08-26: `;`, `||` and `|` each returned zero findings against auditSuite().
  *     ||   masks it the other way — the step passes whenever the FALLBACK passes
  *     \n   a newline in a JSON script body is a sequence, with `;` semantics
+ *     <(   PROCESS SUBSTITUTION, and it is the worst of them: the inner command's exit status does
+ *     >(   not reach the outer exit code AT ALL. Measured 2026-08-26 —
+ *          `cat <(false; echo INNER_RAN); echo exit=$?` prints INNER_RAN then `exit=0`, and
+ *          `true <(exit 7); echo exit=$?` prints `exit=0`. Where `;` at least hands back the LAST
+ *          command's status, this hands back a status the inner command never touched. Added
+ *          2026-08-26: until then `npm run good <(npm run bad)` returned [] — a complete bypass.
  *
  * Quote-aware on purpose, and this is not hypothetical: package.json's `usage` script is a
  * `node -e "…;…"` one-liner whose semicolons are inside a double-quoted argument and separate
@@ -365,7 +371,7 @@ function aliasLinks(command) {
  *
  * Returns the operators found, in a stable order, or [] for a single command.
  */
-const SHELL_OPERATORS = ['&&', '||', ';', '|', '&', '\\n'];
+const SHELL_OPERATORS = ['&&', '||', ';', '|', '&', '<(', '>(', '\\n'];
 
 /**
  * Where a `$((` at `open` really ends, IF it ends as `))`. Returns that index, or -1.
@@ -599,9 +605,24 @@ function shellOperators(command) {
   // so that `$( (a; b) )` closes on the right `)` rather than the first one.
   const stack = [{ kind: 'base', quote: null, parens: 0 }];
 
+  // IS THE SCAN AT THE START OF A WORD? Only the `#` branch asks, and it is tracked FORWARD — from
+  // what this scan consumed — rather than read backwards off `src[i - 1]`, because the two disagree
+  // on exactly the case that decides a comment. Measured 2026-08-26: `echo $(echo x)#y` prints
+  // `x#y` (that `)` closed a SUBSTITUTION, so the word continues and `#y` is literal) while
+  // `(echo a)#y` prints `a` (that `)` closed a SUBSHELL, so `#y` IS a comment). Both strings end
+  // the construct in `)`; only the frame stack tells them apart, and a backwards byte test cannot.
+  let atWordStart = true;
+
   for (let i = 0; i < src.length; i += 1) {
     const frame = stack[stack.length - 1];
     const c = src[i];
+
+    // Every branch below leaves the scan MID-WORD unless it says otherwise. The exceptions say so
+    // at their own branch — the control operators, the openers that begin a fresh command — and the
+    // metacharacter rule at the BOTTOM of this loop catches whitespace and the characters that have
+    // no operator branch at all.
+    const wordStart = atWordStart;
+    atWordStart = false;
 
     // SINGLE QUOTES ARE OPAQUE, backslash and all — `echo '$(exit 7; exit 0)'` prints the text and
     // runs nothing. This branch is first because it must win over every branch below it.
@@ -634,12 +655,15 @@ function shellOperators(command) {
     if (c === '$' && src[i + 1] === '(') {
       stack.push({ kind: 'paren', quote: null, parens: 1 });
       i += 1;
+      atWordStart = true; // a fresh command starts inside, so a `#` immediately after it is a comment
       continue;
     }
     if (c === '`') {
       // Backticks do not nest — the same character opens and closes — so this pops or pushes.
+      // OPENING one starts a command; CLOSING one does not, because the substitution's result is
+      // part of the surrounding word — measured, \`echo \`echo x\`#y\` prints `x#y`, not `x`.
       if (frame.kind === 'tick') stack.pop();
-      else stack.push({ kind: 'tick', quote: null, parens: 0 });
+      else { stack.push({ kind: 'tick', quote: null, parens: 0 }); atWordStart = true; }
       continue;
     }
 
@@ -713,7 +737,7 @@ function shellOperators(command) {
     // `parens` counts every paren still open in this frame — both of `$((`, the one of `$(` — so a
     // subshell inside a substitution closes on the right `)`: `$( (a; b) )` ends at the second.
     if (frame.kind === 'paren' || frame.kind === 'arith') {
-      if (c === '(') { frame.parens += 1; continue; }
+      if (c === '(') { frame.parens += 1; atWordStart = true; continue; }
       if (c === ')') {
         frame.parens -= 1;
         if (frame.parens === 0) stack.pop();
@@ -725,10 +749,87 @@ function shellOperators(command) {
     // inside arithmetic has already opened a command frame and is reported from there.
     if (frame.kind === 'arith') continue;
 
-    if (c === '&' && src[i + 1] === '&') { found.add('&&'); i += 1; continue; }
-    if (c === '|' && src[i + 1] === '|') { found.add('||'); i += 1; continue; }
-    if (c === '|') { found.add('|'); continue; }
-    if (c === ';') { found.add(';'); continue; }
+    // ── `#`, A COMMENT — MODELLED, NOT REFUSED, and that choice was re-derived for this construct
+    // rather than inherited from the `$`-vocabulary gate above. Failing closed on `#` would report a
+    // finding for every ordinary script carrying a comment, which is the trade this file already
+    // refuses ("a rule that fires on correct code gets weakened rather than obeyed") — and it would
+    // not even fix the defect, because the defect is not the `#`. It is that an APOSTROPHE inside a
+    // comment opened a real single-quote frame and swallowed everything after it. Measured
+    // 2026-08-26 against the code this replaces:
+    //
+    //     bash -c "npm run test:foo # don't forget this<NL>npm run bad ; npm run worse"
+    //                                                    runs ALL THREE commands
+    //     shellOperators(that string)                    []       — the `;` and the \n both gone
+    //     shellOperators(it, with the apostrophe removed)  [';', '\n']
+    //
+    // Modelling it costs nothing measurable HERE AND NOW: zero of the 114 governed commands — 70
+    // package.json scripts plus 44 ci.yml `run:` values — contains a `#` at any position, so this
+    // changes no live verdict. It is the future comment that this is written for.
+    //
+    // IT BEGINS A COMMENT ONLY AT THE START OF A WORD. `echo a#b` prints `a#b`, and `wordStart` is
+    // the only thing that knows the difference — WHICH IS ALSO THE WHOLE OF THE PROTECTION, stated
+    // that way because the first draft of this comment claimed otherwise. It said quoting and
+    // arithmetic were handled "by the branches above", and two mutations refuted it: moving this
+    // branch above the `arith` continue killed no test, and neither did moving it above the
+    // double-quote early exit. Neither placement matters, because nothing inside a quote and no
+    // operand of an arithmetic body ever leaves the scan AT a word start — `echo $((2#101))` prints
+    // 5 and that `#` follows a digit; `echo "x"#y` prints `x#y` and that one follows a quote. The
+    // placement is where a reader expects it; `wordStart` is what makes it correct.
+    //
+    // The PROCESS SUBSTITUTION branch below is the opposite case, and the contrast is why both are
+    // written down: its position under the `arith` continue IS load-bearing, and the mutation that
+    // moves it up turns `echo $((1<(2)))` — which prints 1 — into a finding.
+    //
+    // The scan resumes ON the newline, not past it, so the branch below still records `\n`. A
+    // comment ends a line; it does not merge two.
+    if (c === '#' && wordStart) {
+      const rest = src.slice(i).search(/[\n\r]/);
+      if (rest === -1) break; // the comment runs to the end of the string — nothing follows it
+      i += rest - 1;
+      continue;
+    }
+
+    // ── PROCESS SUBSTITUTION — MODELLED **AND** REPORTED. That is two decisions, and each was made
+    // for this construct on its own measurement.
+    //
+    // MODELLED rather than added to the unmodelled set, because unlike `$'…'` the interior genuinely
+    // IS a command list — `cat <(echo A; echo B)` prints A and B — so entering it keeps quote parity
+    // in sync with the shell's and reports an inner chain as well as the construct.
+    //
+    // REPORTED rather than merely entered, and this half is easy to leave out: pushing a frame and
+    // saying nothing would still return [] for `npm run good <(npm run bad)`, which is the exact
+    // verdict being fixed. The construct hides a whole command by itself, even when what is inside
+    // it is a single one, so it belongs in SHELL_OPERATORS — see the measurement in that list's
+    // header for why it is the worst member of it rather than a peer of `;`.
+    //
+    // NO `!escaped.has(i)` GUARD HERE, and its absence is the considered half. The redirect guard
+    // below needs one because it asks about a NEIGHBOUR index; this branch asks about the current
+    // one, and `escaped` only ever holds indices the loop SKIPS — the backslash branch does
+    // `escaped.add(i + 1); i += 1`, so an escaped character never gets its own iteration and
+    // `escaped.has(i)` is unconditionally false here. It was written with the guard first; the
+    // mutation that deleted it killed no test, because there is no input that reaches it. An
+    // always-true condition that reads as a safety check is worse than none.
+    //
+    // The behaviour it was meant to produce holds anyway and is pinned: `echo \<(x)` returns [],
+    // through the backslash branch. bash refuses that string outright — it is a SYNTAX ERROR — so
+    // there is no command behind the empty verdict. `<\(` is a different string and correctly not
+    // matched here: it is a redirect from a file named `(x)`, which is one command.
+    //
+    // Reached only after the `arith` continue above, which is load-bearing rather than incidental:
+    // `echo $((1<(2)))` prints 1, so inside arithmetic `<(` is a comparison against a parenthesised
+    // operand and not a substitution at all.
+    if ((c === '<' || c === '>') && src[i + 1] === '(') {
+      found.add(`${c}(`);
+      stack.push({ kind: 'paren', quote: null, parens: 1 });
+      i += 1;
+      atWordStart = true;
+      continue;
+    }
+
+    if (c === '&' && src[i + 1] === '&') { found.add('&&'); i += 1; atWordStart = true; continue; }
+    if (c === '|' && src[i + 1] === '|') { found.add('||'); i += 1; atWordStart = true; continue; }
+    if (c === '|') { found.add('|'); atWordStart = true; continue; }
+    if (c === ';') { found.add(';'); atWordStart = true; continue; }
     // A `&` ADJACENT TO `>` IS A REDIRECT, NOT BACKGROUNDING — `2>&1`, `>&2`, `&>log`. It does not
     // hide a command and it does not touch the exit code: `bash -c 'false 2>&1'` exits 1. Reporting
     // it would attach this rule's message — "the step's exit code becomes the last command's" — to a
@@ -755,8 +856,25 @@ function shellOperators(command) {
     // had the defect from the start. One predicate covers both, because fixing half a class is
     // how the other half gets forgotten.
     if (c === '&' && (redirectOperatorAt(i - 1, '<>') || redirectOperatorAt(i + 1, '>'))) continue;
-    if (c === '&') { found.add('&'); continue; }
-    if (c === '\n' || c === '\r') { found.add('\\n'); continue; }
+    if (c === '&') { found.add('&'); atWordStart = true; continue; }
+    if (c === '\n' || c === '\r') { found.add('\\n'); atWordStart = true; continue; }
+
+    // WHAT REACHES HERE: ordinary word characters, whitespace, and the metacharacters that have no
+    // operator branch of their own — `(` and `)` at the base frame, and `<`/`>` used as redirects.
+    // Bash starts a word after every one of them, so a `#` next is a comment. One probe per
+    // character, 2026-08-26, and each is the shape that discriminates:
+    //
+    //     echo a #b     -> a                 whitespace
+    //     echo a;#b     -> a                 `;`
+    //     echo a&#b     -> a                 `&`
+    //     echo a|#b     -> SYNTAX ERROR      the pipe lost its right side to the comment
+    //     echo a>#f     -> SYNTAX ERROR      same, the redirect lost its target
+    //     (echo a)#y    -> a                 `)` closing a subshell
+    //
+    // Against which `echo a#b` -> `a#b`, `echo a=#b` -> `a=#b` and `echo -#b` -> `-#b` are NOT
+    // comments and must stay mid-word — they reach here on their own first character and fail this
+    // test, which is why the rule is a character CLASS and not "anything that is not a letter".
+    if (/[\s|&;()<>]/.test(c)) atWordStart = true;
   }
 
   // Operators first in their canonical order, then the unmodelled constructs. Both are reasons the
@@ -907,7 +1025,9 @@ function auditSuite({ scripts, steps = STEPS, excluded = EXCLUDED, runner = RUNN
           `exit code from it — a wrapper does not change that. \`&&\` stops at the first non-zero exit so the ` +
           `later links never run; \`;\`, \`|\` and \`&\` are worse, because the step's exit code becomes the ` +
           `last command's and the failure disappears entirely (\`bash -c 'false ; true'\` exits 0); \`||\` ` +
-          `passes the step whenever the fallback passes. Give each link its own script and its own entry in ` +
+          `passes the step whenever the fallback passes; \`<(\` and \`>(\` are worse than all of them, because ` +
+          `the substituted command's status is not merged, masked or last — it is DISCARDED, and ` +
+          `\`bash -c 'true <(exit 7); echo exit=$?'\` prints exit=0. Give each link its own script and its own entry in ` +
           `STEPS, and keep "${step}" — if a doc cites it — as an alias in EXCLUDED.`
       );
     }

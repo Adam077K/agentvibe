@@ -670,11 +670,20 @@ test('every OTHER unmodelled construct in the scanner path OVER-reports — the 
   // rather than promised: the remaining constructs this scanner does not model all add operators
   // rather than hiding them, so none of them can produce a silent clean result. Over-reporting
   // costs one command rewritten; under-reporting is what the last three rounds were.
+  //
+  // THE CLAIM WAS FALSE WHEN IT WAS WRITTEN, and `#` is where it broke — which is why the line
+  // asserting it is gone from this list rather than moved. This case used to carry
+  // `shellOperators('npm run a # note ; npm run b').length > 0` as evidence that an unmodelled `#`
+  // over-reports. It does, on that string. On the string a person writes it UNDER-reports to
+  // nothing: the apostrophe in `# don't forget` opened a real single-quote frame and swallowed the
+  // `;` chain on the next line. One shape of a construct over-reporting is not the construct
+  // over-reporting, and a list of shapes somebody thought of is what this test is. `#` is MODELLED
+  // now — see `\`#\` begins a comment ONLY at the start of a word` below for the fix and both
+  // directions of it. The entries that remain are the ones re-checked against bash on 2026-08-26.
   assert.ok(shellOperators('echo @(a|b)').length > 0, 'extglob — `|` is pattern alternation, reported anyway');
   assert.ok(shellOperators('if [[ a && b ]]; then npm run x; fi').length > 0, '[[ ]] conditional operators');
   assert.ok(shellOperators('case x in a) npm run y;; esac').length > 0, 'case terminators');
   assert.ok(shellOperators('bash <<EOF\nnpm run a\nEOF').length > 0, 'here-document body');
-  assert.ok(shellOperators('npm run a # note ; npm run b').length > 0, 'text after a `#` comment');
 
   // THE ONE REMAINING UNDER-REPORT, disclosed rather than hidden: an unterminated quote swallows
   // the rest of the string. It is not a bypass, because bash refuses to run the command at all —
@@ -774,9 +783,162 @@ test('the two lists of `$` special parameters are ONE list', () => {
   assert.deepEqual(shellOperators('echo $$; npm run b'), [';'], 'a real separator after $$ still reports');
 
   // And the base-N refusal survives the narrowing of the `#` ban — it is a deliberate over-report
-  // with its own case, and the fix for `$#` must not have quietly turned it off.
+  // with its own case, and the fix for `$#` must not have quietly turned it off. It survives the
+  // COMMENT model too, which is the newer risk: the `#` in `16#ff` follows a digit, so it is
+  // mid-word and the comment branch must not claim it.
   assert.deepEqual(shellOperators('echo "$((16#ff&1))"'), ['&'], 'base-N stopped being refused');
-  assert.deepEqual(shellOperators('npm run a # x ; npm run b'), [';'], 'a `#` comment still over-reports');
+  assert.deepEqual(shellOperators('echo $((2#101))'), [], 'base-N inside real arithmetic was read as a comment');
+});
+
+test('`#` begins a comment ONLY at the start of a word — and an apostrophe in one used to hide a chain', () => {
+  // ROUND 8, FINDING 1. shellOperators() had no model for bash's comment operator, so a bare
+  // apostrophe inside a comment opened a real single-quote frame and every operator after it was
+  // read in the wrong state. Reproduced against `main` (7f7bddd) before this fix:
+  //
+  //     shellOperators("npm run test:foo # don't forget this\nnpm run bad ; npm run worse")  -> []
+  //     the same string with the apostrophe removed                                          -> [';','\n']
+  //
+  // Two spellings of one script that bash runs identically, opposite verdicts from the guard — and
+  // the EMPTY one is the spelling a person actually writes. The first assertion is the fix stated
+  // as a property rather than as a pair of literals: the apostrophe must not be able to matter.
+  const withApostrophe = "npm run test:foo # don't forget this\nnpm run bad ; npm run worse";
+  const without = 'npm run test:foo # dont forget this\nnpm run bad ; npm run worse';
+  assert.deepEqual(
+    shellOperators(withApostrophe), shellOperators(without),
+    'an apostrophe inside a comment still changes the verdict'
+  );
+  assert.deepEqual(shellOperators(withApostrophe), [';', '\\n'], 'the chain on the line after a comment was not reported');
+
+  // THE OTHER DIRECTION, and it is what keeps this from being "skip everything after any `#`".
+  // Each of these is ONE word in bash and prints the `#` — measured, one probe each: `echo a#b`
+  // -> `a#b`, `echo a=#b` -> `a=#b`, `echo -#b` -> `-#b`, `echo "x"#y` -> `x#y`, `echo 'x'#y` ->
+  // `x#y`, `echo a\ #b` -> `a #b` (the escaped space is part of the word, so the `#` is not).
+  for (const c of ['echo a#b', 'echo a=#b', 'echo -#b', 'echo "x"#y', "echo 'x'#y", 'echo a\\ #b']) {
+    assert.deepEqual(shellOperators(c), [], `${c} — a mid-word \`#\` was read as a comment`);
+  }
+
+  // `)` IS TWO DIFFERENT CHARACTERS TO THIS RULE, which is the whole reason word-start is tracked
+  // FORWARD off the frame stack instead of read backwards off `src[i - 1]`. Measured in bash:
+  // `echo $(echo x)#y` prints `x#y` — a substitution's result is part of the word, so `#y` is
+  // literal — while `(echo a)#y` prints `a`, because that `)` closed a SUBSHELL and `#y` is a
+  // comment. A backwards byte test answers both the same way and is wrong on one of them.
+  assert.deepEqual(shellOperators('echo $(echo x)#y ; npm run b'), [';'], 'a substitution close did not continue the word');
+  assert.deepEqual(shellOperators('echo `echo x`#y ; npm run b'), [';'], 'a backtick close did not continue the word');
+  assert.deepEqual(shellOperators('(echo a)#y ; npm run b'), [], 'a subshell close did not start a word');
+
+  // WHERE THE MODEL MAKES THIS SCANNER REPORT LESS — stated here rather than discovered later.
+  // `bash -c 'echo a #b ; echo SECOND'` prints `a` and nothing else: SECOND never runs. So [] is
+  // the true answer, and the `[';']` this used to return was the guard firing on a correct command
+  // with a message that is false of it.
+  assert.deepEqual(shellOperators('npm run a # x ; npm run b'), [], 'text inside a comment is not a chain');
+  assert.deepEqual(shellOperators('echo a #b ; npm run z'), [], 'measured: bash runs `echo a` alone');
+  assert.deepEqual(shellOperators('echo a;#b ; npm run z'), [';'], 'the `;` BEFORE the comment is still real');
+
+  // A SUBSTITUTION OPENS A COMMAND, so a `#` immediately inside one is a comment there too — and
+  // both spellings do it. Measured: `bash -c "echo \$(# don't<NL>echo A; echo B); echo SECOND"` prints
+  // `A B` then `SECOND`, so the comment ran out at the newline and the `;` after it is real. Without
+  // the word-start these branches set, the apostrophe reopens the original defect one frame down.
+  assert.deepEqual(shellOperators("echo $(# don't\nnpm run a; npm run b)"), [';', '\\n'], 'a comment just inside `$(`');
+  assert.deepEqual(shellOperators("echo \`# don't\nnpm run a; npm run b\`"), [';', '\\n'], 'a comment just inside a backtick');
+
+  // Arithmetic is not command context: `echo $((2#101))` prints 5, so `#` in there is base-N
+  // notation, and `set -- a b c; echo "$(($#|1))"` prints 3. NOT because of where the branch sits —
+  // moving it above the `arith` continue kills no test, and neither does moving it above the
+  // double-quote exit. The word-start test alone is what holds, and for the same reason in both
+  // cases: that `#` follows a digit, and this one follows a `$`. These stay as cases because they
+  // are the shapes a widening of `wordStart` would break first.
+  assert.deepEqual(shellOperators('echo $((2#101))'), [], 'base-N notation was read as a comment');
+  assert.deepEqual(shellOperators('echo "$(($#|1))"'), [], '`$#` was read as a comment');
+
+  // Inside quotes a `#` is literal to bash — `echo "a ; # b"` prints `a ; # b` as one argument.
+  // This scanner gets that from word-start rather than from where the branch sits, so these are
+  // the cases that fail if `wordStart` is ever widened to survive a quote.
+  assert.deepEqual(shellOperators('echo "npm run a # x"'), [], 'a `#` inside double quotes started a comment');
+  assert.deepEqual(shellOperators("echo 'npm run a # x'"), [], 'a `#` inside single quotes started a comment');
+  assert.deepEqual(shellOperators('echo "a b" #c ; npm run z'), [], 'a `#` after a closed quote and a space is still a comment');
+
+  // Both terminations of a comment, because the end-of-string one is a `break` and the other is
+  // not: a comment ends a LINE, so the newline after it is still an operator.
+  assert.deepEqual(shellOperators('npm run a # trailing'), []);
+  assert.deepEqual(shellOperators('npm run a # trailing\nnpm run b'), ['\\n'], 'the newline ending a comment was swallowed');
+
+  // THE DISCLOSED UNDER-REPORT OF THIS BRANCH, pinned so it is a decision rather than a surprise:
+  // a comment that swallows the `)` of an unterminated substitution returns []. bash refuses that
+  // string outright — `echo $(echo # x); echo SECOND` is `unexpected EOF while looking for
+  // matching ')'`, exit 2 — so there is no command hiding behind the empty verdict. Terminated by
+  // a newline, bash runs both, and then it is reported. That is the discrimination.
+  assert.deepEqual(shellOperators('echo $(echo # x); echo SECOND'), [], 'bash refuses this string — see above');
+  assert.deepEqual(shellOperators('echo $(echo # x\n); echo SECOND'), [';', '\\n'], 'the terminated form must report');
+});
+
+test('process substitution is a command whose exit status the step NEVER sees — reported, and entered', () => {
+  // ROUND 8, FINDING 2. `<(…)` and `>(…)` matched no branch and opened no frame, so the construct
+  // was invisible: against `main` (7f7bddd) all three shapes below returned [] — a clean verdict on
+  // a command that runs a second command.
+  //
+  // It is the WORST member of SHELL_OPERATORS rather than a peer of `;`, and that is measured:
+  //
+  //     bash -c 'cat <(false; echo INNER_RAN); echo exit=$?'   -> INNER_RAN, then exit=0
+  //     bash -c 'true <(exit 7); echo exit=$?'                 -> exit=0
+  //
+  // `;` at least hands back the LAST command's status. Here the inner status is not merged, not
+  // masked, and not last: it is discarded, and no ordering of steps recovers it.
+  assert.deepEqual(shellOperators('npm run good <(npm run bad)'), ['<(']);
+  assert.deepEqual(shellOperators('npm run good > >(npm run bad)'), ['>(']);
+  assert.deepEqual(shellOperators('diff <(npm run a) <(npm run b)'), ['<(']);
+
+  // ENTERED, not merely reported — the interior genuinely is a command list (`cat <(echo A; echo
+  // B)` prints A and B), so an inner chain comes back ALONGSIDE the construct. Reporting the
+  // construct without entering it would have been the cheaper fix and would have left the inner
+  // `;` unseen, which is this file's recurring defect one level down.
+  assert.deepEqual(shellOperators('cat <(false; echo X)'), [';', '<(']);
+  assert.deepEqual(shellOperators('cat <(#c\nnpm run a)'), ['<(', '\\n'], 'the comment model does not apply inside a substitution');
+
+  // THE INPUT THAT SEPARATES "entered" FROM "reported", found by mutating the push away and
+  // searching for a case whose answer moves — 23 probes returned the same operators both ways, and
+  // this is the one that does not. A `#` immediately after the closing `)`: inside the frame that
+  // `)` is the substitution closing and the word CONTINUES, so the `#` is literal and the `;`
+  // after it is real; with no frame the `)` is just a base-frame metacharacter, the `#` starts a
+  // comment, and the `;` is swallowed. bash settles it — `cat <(echo a)#b ; echo SECOND` reports
+  // `cat: /dev/fd/63#b: No such file or directory` and then prints SECOND, so `#b` was part of the
+  // filename and SECOND ran. Two commands, and only the entered scan says so.
+  assert.deepEqual(shellOperators('cat <(echo a)#b ; npm run z'), [';', '<('], 'the substitution frame did not close the word');
+
+  // AND THE FRAME CLOSES on the `)`, or everything after it is scanned one level too deep forever.
+  // A trailing `&&` at the base frame is what makes a missing pop visible.
+  assert.deepEqual(shellOperators('cat <(npm run a) && npm run b'), ['&&', '<(']);
+
+  // THE OTHER DIRECTION. Quoted, it is text and bash prints it. Escaped, bash refuses the whole
+  // string — `echo \<(x)` is a syntax error, exit 2 — so there is no command to report. And `<\(`
+  // is a redirect from a file literally named `(x)`, which is one command.
+  assert.deepEqual(shellOperators('echo "<(not a procsub)"'), []);
+  assert.deepEqual(shellOperators("echo '<(not a procsub)'"), []);
+  assert.deepEqual(shellOperators('echo \\<(x)'), [], 'an escaped `<` opened a substitution frame');
+  assert.deepEqual(shellOperators('echo <\\(x\\)'), [], 'a redirect from a literal `(x)` was read as a substitution');
+
+  // ARITHMETIC IS NOT A COMMAND CONTEXT and `<(` in there is a comparison against a parenthesised
+  // operand: `echo $((1<(2)))` prints 1 and `echo $((3>(1)))` prints 1. Same structural guarantee
+  // as the `#` case above, and pinned for the same reason.
+  assert.deepEqual(shellOperators('echo $((1<(2)))'), [], '`<(` inside arithmetic was read as a substitution');
+  assert.deepEqual(shellOperators('echo $((3>(1)))'), [], '`>(` inside arithmetic was read as a substitution');
+
+  // The redirect guard's own shapes must not have moved — each is one command, exit code intact.
+  assert.deepEqual(shellOperators('node x.mjs 2>&1'), [], 'the output-side redirect became a substitution');
+  assert.deepEqual(shellOperators('node x.mjs 0<&3'), [], 'the input-side descriptor dup became a substitution');
+
+  // END TO END, because the guarantee is about what auditSuite() CERTIFIES, not what the scanner
+  // returns — and because the two are joined by splitFindings(), which sorts a token into
+  // `operators` only if SHELL_OPERATORS contains it. A `<(` added to the scanner and not to that
+  // list would be reported as an unmodelled construct instead, with the wrong remedy attached.
+  const audited = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'node --test t.mjs <(npm run test:hooks)' } });
+  assert.ok(
+    audited.failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes('`<(`')),
+    `a command hidden in a process substitution was certified clean:\n${audited.failures.join('\n') || '(no failures at all)'}`
+  );
+  assert.ok(
+    audited.failures.some((f) => f.includes('DISCARDED')),
+    'the finding did not say what a process substitution does to the exit code'
+  );
 });
 
 test('an unquoted backslash escapes the operator after it — the branch that had no coverage', () => {
