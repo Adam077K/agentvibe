@@ -85,13 +85,87 @@ function countDecisionEntries(text) {
   return (text.match(/^## \d{4}-\d{2}-\d{2}/gm) || []).length;
 }
 
+/**
+ * ── `existsSync` ANSWERS "IS SOMETHING THERE", NOT "CAN I READ IT" ──────────────────────────
+ *
+ * Every memory file below was guarded by `existsSync` and then handed to `readFileSync`. That
+ * pair is safe for a regular file and for a symlink to one, and it is safe for a DANGLING symlink
+ * — `existsSync` follows links, so a broken one reads as absent and the existing `missing-file`
+ * refusal already covers it. It is not safe for anything else. Measured 2026-08-26 against
+ * constructed trees, one bad entry per tree, at `.claude/memory/DECISIONS.md`:
+ *
+ *   a DIRECTORY at that path  → EISDIR, unhandled, raw stack trace, exit 1
+ *   a FIFO at that path       → NEVER RETURNS. Killed by an 8s cap at 8,016 ms, exit 142.
+ *
+ * The FIFO is why this exists. `check:memory` is a BLOCKING CI step, and there a crash names
+ * itself while a hang is indistinguishable from a slow build.
+ *
+ * ONE QUESTION IS ASKED HERE, SO ONE PREDICATE ANSWERS IT. This file asks only "does this hold
+ * content I must measure?" — it creates nothing, holding no writeFileSync, appendFileSync,
+ * mkdirSync, renameSync, rmSync, unlinkSync or openSync. The sibling `scripts/evict-memory.mjs`
+ * needs a second, non-resolving predicate because it also asks "is this path free to CREATE?";
+ * that question is never asked here, so that predicate is not wanted here. The question this file
+ * does ask MUST resolve — a memory file reached through a symlink is content that must still be
+ * measured — which is why this is `statSync` and not `lstatSync`, and why a control test pins it.
+ */
+function fileKind(abs) {
+  let st;
+  try {
+    st = fs.statSync(abs); // RESOLVES symlinks. lstatSync would stop measuring a symlinked file.
+  } catch (e) {
+    return { ok: false, kind: `unreadable (${(e && e.code) || (e && e.message) || e})` };
+  }
+  if (st.isFile()) return { ok: true, kind: 'file' };
+  if (st.isDirectory()) return { ok: false, kind: 'a directory' };
+  if (st.isFIFO()) return { ok: false, kind: 'a FIFO — reading it would never return' };
+  if (st.isSocket()) return { ok: false, kind: 'a socket' };
+  if (st.isBlockDevice()) return { ok: false, kind: 'a block device' };
+  if (st.isCharacterDevice()) return { ok: false, kind: 'a character device' };
+  return { ok: false, kind: 'not a regular file' };
+}
+
+/**
+ * Load one memory file, or record exactly why it could not be loaded. A bad entry FAILS by name;
+ * it is not skipped. Skipping would put a capped file beyond its cap according to what kind of
+ * thing somebody left at its path, and report success while doing it.
+ *
+ * @param {string} abs
+ * @param {{required: boolean}} o `required` files fail when absent; the archive is optional.
+ * @returns {string|null} contents, or null when there is nothing to measure
+ */
+const fileProblems = Object.create(null); // abs path -> why it could not be read
+function loadMemoryFile(abs, { required }) {
+  if (!fs.existsSync(abs)) {
+    // Follows symlinks, so a dangling link lands here rather than below — deliberately unchanged.
+    if (required) {
+      fail('missing-file', `${abs} does not exist. Create it or point --root at the repo root.`);
+    }
+    // Deliberately NOT recorded as a `problem`: absent is a normal state for the optional archive,
+    // and for a required file the `missing-file` failure above already says so. `problem` means
+    // "present, and nothing could be read from it" — the one thing that had no way to be reported.
+    return null;
+  }
+  const k = fileKind(abs);
+  if (!k.ok) {
+    fail(
+      'memory-file-not-a-file',
+      `${abs} exists but is ${k.kind}. A memory file must be a regular file (a symlink to one is ` +
+        `fine — it is resolved). Nothing can be measured here: replace it with the real file, or ` +
+        `move whatever is at that path out of the way.`
+    );
+    fileProblems[abs] = k.kind;
+    return null;
+  }
+  return fs.readFileSync(abs, 'utf8');
+}
+
 // ── check DECISIONS.md ───────────────────────────────────────────────────────
 const decisionsPath = path.join(ROOT, '.claude', 'memory', 'DECISIONS.md');
 
-if (!fs.existsSync(decisionsPath)) {
-  fail('missing-file', `${decisionsPath} does not exist. Create it or point --root at the repo root.`);
-} else {
-  const text = fs.readFileSync(decisionsPath, 'utf8');
+const decisionsText = loadMemoryFile(decisionsPath, { required: true });
+
+if (decisionsText !== null) {
+  const text = decisionsText;
   const bytes = Buffer.byteLength(text, 'utf8');
   const entries = countDecisionEntries(text);
 
@@ -127,10 +201,10 @@ if (!fs.existsSync(decisionsPath)) {
 // ── check LONG-TERM.md ───────────────────────────────────────────────────────
 const longTermPath = path.join(ROOT, '.claude', 'memory', 'LONG-TERM.md');
 
-if (!fs.existsSync(longTermPath)) {
-  fail('missing-file', `${longTermPath} does not exist. Create it or point --root at the repo root.`);
-} else {
-  const text = fs.readFileSync(longTermPath, 'utf8');
+const longTermText = loadMemoryFile(longTermPath, { required: true });
+
+if (longTermText !== null) {
+  const text = longTermText;
   const lines = text.split('\n').length;
 
   if (lines > LONG_TERM_LINE_CAP) {
@@ -149,10 +223,11 @@ if (!fs.existsSync(longTermPath)) {
 // ── check DECISIONS_ARCHIVE.md ─────────────────────────────────────────────────
 const decisionsArchivePath = path.join(ROOT, '.claude', 'memory', 'DECISIONS_ARCHIVE.md');
 
-if (!fs.existsSync(decisionsArchivePath)) {
-  // Not required to exist; only checked when present.
-} else {
-  const text = fs.readFileSync(decisionsArchivePath, 'utf8');
+// Not required to exist; only checked when present.
+const archiveText = loadMemoryFile(decisionsArchivePath, { required: false });
+
+if (archiveText !== null) {
+  const text = archiveText;
   const bytes = Buffer.byteLength(text, 'utf8');
 
   if (bytes > DECISIONS_ARCHIVE_BYTE_CAP) {
@@ -176,25 +251,34 @@ if (!fs.existsSync(decisionsArchivePath)) {
 // is the defect, and `failures` is unbounded. See check-dispatch-agenttype.mjs for the
 // measurement and for why fs.writeSync is not the fix.
 if (JSON_OUT) {
-  const decisionsText = fs.existsSync(decisionsPath) ? fs.readFileSync(decisionsPath, 'utf8') : '';
-  const longTermText = fs.existsSync(longTermPath) ? fs.readFileSync(longTermPath, 'utf8') : '';
-  const archiveText = fs.existsSync(decisionsArchivePath) ? fs.readFileSync(decisionsArchivePath, 'utf8') : '';
+  // Reuse what the checks above already loaded. This block used to re-read all three paths with
+  // the same unguarded `existsSync ? readFileSync : ''` pair — a second copy of the defect, on the
+  // SAME paths, reached whenever --json was passed. `null` (nothing readable) is reported as a
+  // `problem` string rather than collapsed to '': a file nothing could read is not a file of zero
+  // bytes, and a consumer seeing 0 would report plenty of headroom.
+  const dText = decisionsText ?? '';
+  const ltText = longTermText ?? '';
+  const arText = archiveText ?? '';
+  const problemOf = (abs) => fileProblems[abs] ?? null;
   console.log(
     JSON.stringify({
       root: ROOT,
       decisions: {
-        entries: countDecisionEntries(decisionsText),
-        bytes: Buffer.byteLength(decisionsText, 'utf8'),
+        entries: countDecisionEntries(dText),
+        bytes: Buffer.byteLength(dText, 'utf8'),
         entry_cap: DECISIONS_ENTRY_CAP,
         byte_cap: DECISIONS_BYTE_CAP,
+        problem: problemOf(decisionsPath),
       },
       decisions_archive: {
-        bytes: Buffer.byteLength(archiveText, 'utf8'),
+        bytes: Buffer.byteLength(arText, 'utf8'),
         byte_cap: DECISIONS_ARCHIVE_BYTE_CAP,
+        problem: problemOf(decisionsArchivePath),
       },
       long_term: {
-        lines: longTermText.split('\n').length,
+        lines: ltText.split('\n').length,
         line_cap: LONG_TERM_LINE_CAP,
+        problem: problemOf(longTermPath),
       },
       failures,
     }, null, 2)
