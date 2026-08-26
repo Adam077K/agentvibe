@@ -552,6 +552,33 @@ function validateDisposition(c, issues, where) {
   }
 }
 
+/**
+ * Is this claim retired?
+ *
+ * ONE CALLER TODAY — `scripts/lib/claim-append.js`, and nothing else. Stated plainly
+ * because the first version of this comment said "ONE PREDICATE, TWO CALLERS, ON PURPOSE"
+ * and named `checkCitations` as the second. That was false when it was written: the
+ * `checkCitations` change was implemented, run, and BACKED OUT in the same branch, and
+ * two comments went on asserting the state the code no longer had — inside the mechanism
+ * whose entire purpose is to stop assertions being accepted where evidence was required.
+ *
+ * `scripts/ledger.mjs` still decides which prose citations resolve by SET MEMBERSHIP,
+ * `projectIds.has(id)`, and never opens the record, so a deprecated id passes `lint`
+ * exactly as a live one does. That gap is real and is documented where it lives, in
+ * `checkCitations`'s preamble, together with the measurement showing why the obvious
+ * predicate is wrong: supersession and historical record are legitimate reasons for
+ * prose to name a retired claim, and a set lookup cannot tell them from an assertion.
+ * This function is here so that when someone closes that properly — most likely with a
+ * `supersedes:` field — there is one place to change, not two.
+ *
+ * `waive` is deliberately NOT deprecation. A waiver is a dated promise to come back;
+ * `claim-freshness` already fails a lapsed one harder than none, and treating a waived
+ * claim as retired would hide it from the mechanism that chases it.
+ */
+function isDeprecated(c) {
+  return Boolean(c && c.disposition && c.disposition.action === 'deprecate');
+}
+
 /** Validate one claim object. Returns a list of human-readable issue strings. */
 function validateClaim(c, where) {
   const issues = [];
@@ -699,5 +726,6 @@ module.exports = {
   validateClaim,
   parseClaimsFromText,
   isRealDate,
+  isDeprecated,
   independenceIssue,
 };

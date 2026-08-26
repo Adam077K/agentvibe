@@ -45,6 +45,22 @@
       ],
 
       "_unlisted": "A tool on this server that is on NEITHER list is treated as denied: it did not exist when this policy was written. Enumeration is exactly what the SSRF guard in pre-tool-use.sh was rewritten to stop relying on -- it matched one spelling per address and an independent reviewer walked past it five ways. A playwright release that adds a new dangerous tool is covered here by construction rather than by an edit nobody remembers to make. In shadow mode this logs `rule=unlisted` instead of refusing, so the cost of the strictness is measured before it is paid."
+    },
+
+    "claim-append": {
+
+      "_scope": "Configured in .mcp.json as `node scripts/mcp/claim-append-server.mjs`. Granted to `sourcer` via `mcpServers: [claim-append]`. It exists because `sourcer` is the only engine with network reach and holds NO write tool -- tools: [Read, Glob, Grep, WebSearch, WebFetch] -- so the claim ledger had no producer for its domain-general half and `claim-source` ran in shadow with almost nothing to resolve. sourcer's `tools:` line is UNCHANGED by that grant, which is the whole point: the engine that talks to the internet still cannot edit the repository.",
+      "credentialed": false,
+
+      "_where_the_enforcement_actually_is": "NOT HERE. This policy is `mode: shadow`, so these lists LOG and let the call through. Every refusal that matters is in scripts/lib/claim-append.js, which fetches the cited URL and runs the ledger's OWN `claim-source` and `claim-freshness` resolvers -- not a check resembling them -- and writes nothing unless both return `pass`. `unresolved` is refused, so no-network means no append rather than a queued one. This entry is defence in depth and is described as such, because a sentence that reads as a gate while nothing behind it refuses is the defect this repo's rules table was rewritten to remove.",
+
+      "_allow_why": "One tool, and it is the whole server. `append_claim` writes ONE record shape to ONE fixed path (docs/03-system-design/SOURCED-CLAIMS.md) -- the target is not a parameter, so there is no caller-chosen path to traverse -- and it appends, never edits or deletes. Listing it rather than leaving the server unlisted means adding a second tool to this server is a REVIEWED change: a new tool name lands on `_unlisted` and is logged as denied until somebody puts it here on purpose.",
+      "allow": [
+        "append_claim"
+      ],
+
+      "_deny_why": "Empty on purpose, and not an oversight. `deny` enumerates known-dangerous tools on a server this repo does not control; this server is one file in this repo with exactly one tool. Anything else appearing on it is `_unlisted`, which is already denied by construction -- the stricter rule. A deny list here would be enumeration guarding against a release nobody but this repo can cut.",
+      "deny": []
     }
   }
 }

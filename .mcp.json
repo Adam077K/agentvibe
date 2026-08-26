@@ -3,6 +3,10 @@
     "playwright": {
       "command": "npx",
       "args": ["-y", "@playwright/mcp@latest", "--isolated"]
+    },
+    "claim-append": {
+      "command": "node",
+      "args": ["scripts/mcp/claim-append-server.mjs"]
     }
   }
 }
