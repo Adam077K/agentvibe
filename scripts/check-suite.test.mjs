@@ -81,7 +81,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { STEPS, EXCLUDED, auditSuite, reachable, aliasLinks, shellOperators, resolveChain } = require('./lib/check-suite.js');
+const { STEPS, EXCLUDED, SHELL_OPERATORS, auditSuite, reachable, aliasLinks, shellOperators, resolveChain } = require('./lib/check-suite.js');
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RUNNER = path.join(REPO, 'scripts', 'run-checks.mjs');
@@ -493,6 +493,145 @@ test('`$((` DOES NOT MEAN ARITHMETIC — it means arithmetic only when it closes
   assert.deepEqual(shellOperators('echo "$((a|2))"'), []);
   assert.deepEqual(shellOperators('echo "$((0x1f|1))"'), [], 'hex is an ordinary numeric operand');
   assert.deepEqual(shellOperators('echo "$((x=1,y=2))"'), [], 'assignment and comma are arithmetic');
+
+  // UNARY PREFIXES, one of the two branches that GRANT the exemption, and it had zero coverage:
+  // deleting the whole ARITH_PREFIX branch left all 44 cases green. An unpinned exemption branch on
+  // this function's history is a standing regression surface. Bash values measured:
+  //
+  //     $((-1|2))  -1      $((+1|2))  3      $((!1|2))  2
+  //     $((~1|2))  -2      $((++x|1)) 1      $((--x|1)) -1
+  //
+  // Each carries a `|`, so a branch that stopped recognising the prefix would drop the exemption
+  // and the `|` would be reported — which is what makes these cases able to fail.
+  assert.deepEqual(shellOperators('echo "$((-1|2))"'), [], 'unary minus');
+  assert.deepEqual(shellOperators('echo "$((+1|2))"'), [], 'unary plus');
+  assert.deepEqual(shellOperators('echo "$((!1|2))"'), [], 'logical not');
+  assert.deepEqual(shellOperators('echo "$((~1|2))"'), [], 'bitwise not');
+  assert.deepEqual(shellOperators('echo "$((++x|1))"'), [], 'pre-increment');
+  assert.deepEqual(shellOperators('echo "$((--x|1))"'), [], 'pre-decrement');
+
+  // THE NEGATIVE that keeps the six above from being satisfied by "a prefix character anywhere is
+  // fine": in OPERATOR position a prefix does not grant the exemption, and the `|` is reported.
+  // Bash agrees both are errors — `$((1|+))` is "operand expected".
+  assert.deepEqual(shellOperators('echo "$((1|+))"'), ['|'], 'a trailing prefix granted the exemption');
+  assert.deepEqual(shellOperators('echo "$((2 ~ 3|4))"'), ['|'], 'a prefix in operator position granted the exemption');
+
+  // THE RATIONALE EXAMPLE, asserted rather than only written down. This is the string the fix's
+  // comment cites as proof that a non-`))` region runs commands, and until now nothing pinned it:
+  // measured, `echo "$((a|b); echo RAN2)"` reports `a: command not found`, `b: command not found`
+  // and then RAN2 — a and b really are run, through a pipe, and RAN2 after.
+  assert.deepEqual(shellOperators('echo "$((a|b); echo RAN2)"'), [';', '|']);
+
+  // THE EMPTY BODY, named in isArithmeticBody()'s comment as deliberately rejected and unpinned
+  // until now. Rejection and acceptance are INDISTINGUISHABLE here — a body with no operators
+  // returns [] down either path — and that is precisely why rejecting it costs nothing. Pinned as
+  // the observable, with the reason it cannot be pinned any harder.
+  assert.deepEqual(shellOperators('echo "$(())"'), []);
+  assert.deepEqual(shellOperators('echo "$(( ))"'), []);
+
+  // BASE-N IS REFUSED IN ONE PLACE, and after 2026-08-26 only one. ARITH_OPERAND carried `[\w#]`
+  // for it, which was UNREACHABLE: ARITH_FORBIDDEN rejects the whole body first, because `#` begins
+  // a comment in command context. Removing the dead `#` must not change either result below.
+  assert.deepEqual(shellOperators('echo "$((16#ff&1))"'), ['&'], 'base-N is refused by ARITH_FORBIDDEN');
+  assert.deepEqual(shellOperators('echo "$((0x1f|1))"'), [], 'hex needs no `#` and is an ordinary operand');
+});
+
+test('the scanner declares its vocabulary — an unmodelled construct is a FINDING, never a clean []', () => {
+  // THE INVERSION, and it is what ends a sequence rather than extending it. Three rounds produced
+  // three total bypasses, each an unmodelled construct in one code path: command substitution in
+  // double quotes, `$((` that is not arithmetic, and `$'…'`. Every fix was correct. Bash's
+  // expansion surface is larger than any hand-rolled scanner will finish enumerating, and each gap
+  // was a SILENT CLEAN RESULT on the one control that catches laundered exit codes.
+  //
+  // So `$` — the introducer for that whole surface — now has a declared vocabulary, and anything
+  // outside it is reported as its own kind of finding. The surface is closed: there is no next
+  // bypass through a `$` form because there is no open side.
+  //
+  // Measured 2026-08-26, the case that prompted it:
+  //     bash -c "echo $'a\'b'; echo SECOND_RAN"   ->  a'b / SECOND_RAN, exit 0 — TWO COMMANDS RAN
+  //
+  // Cost, measured before building: **0** of 69 package.json scripts and **0** of 44 ci.yml `run:`
+  // values contain a `$` at all, so nothing existing is newly flagged.
+
+  // The vocabulary. None of these is a finding, and a rule that fired on them would be routed
+  // around rather than obeyed.
+  assert.deepEqual(shellOperators('echo ${HOME}'), [], '${…} parameter expansion');
+  assert.deepEqual(shellOperators('echo $HOME $1'), [], '$name and positional');
+  assert.deepEqual(shellOperators('echo $@ $* $? $- $$ $! $#'), [], 'the special parameters');
+  assert.deepEqual(shellOperators('echo costs 100$'), [], 'a bare $ is a literal dollar');
+  assert.deepEqual(shellOperators('echo $(npm run a)'), [], '$( is modelled — one command inside');
+  assert.deepEqual(shellOperators('echo "$((6|1))"'), [], '$(( is modelled');
+
+  // OUTSIDE IT: reported, by name, so the message says what to rewrite.
+  assert.deepEqual(shellOperators('echo $[1+2]; npm run b'), ['$['], 'the deprecated $[…] form');
+  assert.ok(shellOperators('echo $^weird').length > 0, 'an unknown $-form returned clean');
+
+  // …and it fires only outside double quotes, where these forms are special. Measured:
+  // `echo "$'a'"` prints `$'a'`, so flagging it there would fire on correct code.
+  assert.deepEqual(shellOperators(`echo "$'a'"`), []);
+
+  // What was found BEFORE the unmodelled form is kept; scanning stops there because past it the
+  // frame stack describes a string this function does not understand.
+  assert.deepEqual(shellOperators('npm run a && echo $[1]'), ['&&', '$['], 'the earlier operator was dropped');
+
+  // BOTH CONSUMERS report it, with a message of its own kind rather than the operator one — they
+  // share shellOperators(), so a construct it cannot certify must not read as "no chain" in either.
+  const step = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'echo $[1+2]; npm run test:budget' } });
+  assert.ok(
+    step.failures.some((f) => f.includes('does not model') && f.includes('`$[`')),
+    `auditSuite certified a command it cannot parse:\n${step.failures.join('\n') || '(no failures at all)'}`
+  );
+  const wf = `${CI.trimEnd()}\n\n      - name: X\n        if: \${{ !cancelled() }}\n        run: echo $[1+2]\n`;
+  const ciFound = ciChainFindings(wf);
+  assert.equal(ciFound.length, 1, `the ci.yml check certified a command it cannot parse:\n${ciFound.join('\n')}`);
+  assert.ok(ciFound[0].includes('does not model'), ciFound[0]);
+
+  // And the escape hatch is the allowlist already built — same >=40-char reason, same rot check —
+  // so a step that genuinely needs an exotic form is exempted deliberately rather than silently.
+  const exempted = ciChainFindings(wf, { ...CI_CHAINS_ALLOWED, 'echo $[1+2]': 'x'.repeat(45) });
+  assert.deepEqual(exempted, [], `an allowlisted unmodelled command was still reported:\n${exempted.join('\n')}`);
+});
+
+test('ANSI-C and locale quoting are MODELLED, so the gate does not fire on them', () => {
+  // Both were measured rather than looked up, and both are exact:
+  //
+  //   $'…'   echo $'a\'b'          -> a'b       a `\'` does NOT close the string
+  //          echo $'a\\'           -> a\        an escaped BACKSLASH lets the next quote close
+  //          echo $'a$(echo X)b'   -> a$(echo X)b   no expansions inside — nothing in it runs
+  //   $"…"   echo $"a$(echo X)b"   -> aXb       expansions DO happen: it is a double-quoted string
+  //          echo $"a\"b"          -> a"b
+  //          echo $"a;b"           -> a;b       a `;` inside is literal
+  //
+  // Modelling them is what keeps the two controls below reading `;` instead of "unsupported" —
+  // naming the actual defect beats refusing to look at it, where the semantics are this cheap.
+  assert.deepEqual(shellOperators(String.raw`echo $'a\'b'; npm run malicious`), [';'], 'THE BYPASS');
+  assert.deepEqual(shellOperators(`echo 'plain'; npm run b`), [';'], 'control 1');
+  assert.deepEqual(shellOperators(`echo $'abc'; npm run b`), [';'], 'control 2');
+  assert.deepEqual(shellOperators(String.raw`echo $'a\\'; npm run b`), [';'], 'an escaped backslash closes it');
+  assert.deepEqual(shellOperators('echo $"abc"; npm run b'), [';'], 'the locale form');
+
+  // …and neither invents a chain out of quoted text, which is the other half of being modelled.
+  assert.deepEqual(shellOperators(String.raw`echo $'a;b'`), [], 'a `;` inside $\'…\' separates nothing');
+  assert.deepEqual(shellOperators('echo $"a;b"'), [], 'a `;` inside $"…" separates nothing');
+  assert.deepEqual(shellOperators(String.raw`echo $'a$(npm run b; npm run c)d'`), [], 'no expansion inside ANSI-C');
+});
+
+test('every OTHER unmodelled construct in the scanner path OVER-reports — the closure claim', () => {
+  // The gate closes the `$` surface. This is the claim about everything else, and it is asserted
+  // rather than promised: the remaining constructs this scanner does not model all add operators
+  // rather than hiding them, so none of them can produce a silent clean result. Over-reporting
+  // costs one command rewritten; under-reporting is what the last three rounds were.
+  assert.ok(shellOperators('echo @(a|b)').length > 0, 'extglob — `|` is pattern alternation, reported anyway');
+  assert.ok(shellOperators('if [[ a && b ]]; then npm run x; fi').length > 0, '[[ ]] conditional operators');
+  assert.ok(shellOperators('case x in a) npm run y;; esac').length > 0, 'case terminators');
+  assert.ok(shellOperators('bash <<EOF\nnpm run a\nEOF').length > 0, 'here-document body');
+  assert.ok(shellOperators('npm run a # note ; npm run b').length > 0, 'text after a `#` comment');
+
+  // THE ONE REMAINING UNDER-REPORT, disclosed rather than hidden: an unterminated quote swallows
+  // the rest of the string. It is not a bypass, because bash refuses to run the command at all —
+  // `bash -c 'echo "a; npm run b'` is an unexpected-EOF syntax error. Pinned so that if it ever
+  // stops being true, the change is visible here.
+  assert.deepEqual(shellOperators('echo "a; npm run b'), [], 'an unterminated quote started reporting — re-check the claim above');
 });
 
 test('an unquoted backslash escapes the operator after it — the branch that had no coverage', () => {
@@ -1202,9 +1341,22 @@ function ciChainFindings(workflow, allowed = CI_CHAINS_ALLOWED) {
   const exempt = (run) => Object.prototype.hasOwnProperty.call(allowed, run);
 
   for (const step of steps) {
-    const ops = shellOperators(step.run);
-    if (!ops.length || exempt(step.run)) continue;
-    findings.push(`ci.yml:${step.line} carries ${ops.map((op) => `\`${op}\``).join(', ')} — ${step.run}`);
+    const found = shellOperators(step.run);
+    if (!found.length || exempt(step.run)) continue;
+    const ops = found.filter((t) => SHELL_OPERATORS.includes(t));
+    const unmodelled = found.filter((t) => !SHELL_OPERATORS.includes(t));
+    // An unmodelled construct is reported as ITS OWN KIND, not as an operator: the scanner cannot
+    // certify the step, which is a different statement from "the step chains commands". The
+    // allowlist covers both, because a step that genuinely needs one is exempted the same way.
+    if (unmodelled.length) {
+      findings.push(
+        `ci.yml:${step.line} contains ${unmodelled.map((u) => `\`${u}\``).join(', ')}, which this checker does not ` +
+          `model, so it cannot be certified as one command — ${step.run}`
+      );
+    }
+    if (ops.length) {
+      findings.push(`ci.yml:${step.line} carries ${ops.map((op) => `\`${op}\``).join(', ')} — ${step.run}`);
+    }
   }
 
   const live = new Set(steps.map((s) => s.run));

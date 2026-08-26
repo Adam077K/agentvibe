@@ -371,8 +371,15 @@ function arithmeticEnd(src, open) {
 
 /** Characters that never appear in a bash arithmetic expression, and each of which can start or separate a command. */
 const ARITH_FORBIDDEN = /[;`'"\\#\n\r]/;
-/** A number, an identifier, `$name`, or `${name}`. */
-const ARITH_OPERAND = /^(?:\$?\{\s*[A-Za-z_]\w*\s*\}|\$?[A-Za-z_]\w*|\d[\w#]*)/;
+/**
+ * A number, an identifier, `$name`, or `${name}`.
+ *
+ * The numeric branch carried `[\w#]` for base-N notation until 2026-08-26. THAT `#` WAS
+ * UNREACHABLE: ARITH_FORBIDDEN rejects the whole body before this pattern ever runs, because `#`
+ * begins a comment in command context. Removing it changes nothing and puts the base-N refusal in
+ * one place — `$((16#ff&1))` is refused by ARITH_FORBIDDEN, and the case asserting that says so.
+ */
+const ARITH_OPERAND = /^(?:\$?\{\s*[A-Za-z_]\w*\s*\}|\$?[A-Za-z_]\w*|\d\w*)/;
 /** Unary, where an operand is expected. */
 const ARITH_PREFIX = /^(?:\+\+|--|[-+!~])/;
 /** Binary, where an operator is expected. `?` and `:` are handled separately so they must pair. */
@@ -458,9 +465,36 @@ function isArithmeticBody(body) {
   return depth === 0 && ternaries === 0 && expect === 'operator';
 }
 
+/**
+ * Is the `$` at `i` one of the forms this scanner MODELS?
+ *
+ * `$(` and `$((` never reach here — they are handled earlier and consume themselves. What is left
+ * is the rest of bash's expansion surface, enumerated:
+ *
+ *     $        at end of string, or before whitespace — a literal dollar
+ *     ${…}     parameter expansion. Scanned through: its contents are text, and a `$(` inside one
+ *              still opens a command frame, so `${x:-$(a;b)}` reports the `;`
+ *     $name    a named or positional parameter — no command context
+ *     $@ $* $? $- $$ $! $#   the special parameters — likewise
+ *     $'…'     ANSI-C quoting — handled at the call site, which is why it is not listed here
+ *     $"…"     locale translation — likewise
+ *
+ * ANYTHING ELSE IS NOT MODELLED, and the caller reports it rather than scanning past it. That is
+ * the inversion this function needed: the vocabulary is finite and written down, so an expansion
+ * form nobody thought of is a FINDING instead of a silent `[]`.
+ */
+function isModelledDollar(src, i) {
+  const next = src[i + 1];
+  if (next === undefined || /\s/.test(next)) return true;
+  if (next === '{') return true;
+  if (/[A-Za-z0-9_]/.test(next)) return true;
+  return '@*?-$!#'.includes(next);
+}
+
 function shellOperators(command) {
   const src = String(command);
   const found = new Set();
+  const unmodelled = new Set();
 
   // One frame per COMMAND CONTEXT, innermost last. `base` is the command line itself; `$(` pushes
   // a `paren` frame and a backtick a `tick` frame. `parens` counts subshells nested inside a `$(`
@@ -520,6 +554,52 @@ function shellOperators(command) {
 
     if (c === '"' || c === "'") { frame.quote = c; continue; }
 
+    // ── THE VOCABULARY GATE, and it is the reason this function stopped being a sequence of ──────
+    // patches. Everything above models a construct by name. `$` introduces the rest of bash's
+    // expansion surface, and that surface is the ONE place this scanner can UNDER-report: inside
+    // a form whose quoting rules it does not know, its quote parity desyncs from the shell's and a
+    // real chain comes back as `[]`. Measured 2026-08-26, and this is the third instance of that
+    // exact shape:
+    //
+    //     bash -c "echo $'a\'b'; echo SECOND_RAN"     a'b / SECOND_RAN, exit 0 — TWO COMMANDS
+    //     shellOperators("echo $'a\'b'; npm run x")   []  — the `;` was swallowed
+    //
+    // Inside `$'…'` a `\'` is an ESCAPED QUOTE that does not close the string; a scanner that
+    // toggles on every bare `'` closes early, and every character after it is read in the wrong
+    // state. Modelling ANSI-C quoting would fix that one case and leave the surface open, so the
+    // rule is inverted instead: what is modelled is enumerated, and everything else is reported.
+    //
+    // It fires only OUTSIDE double quotes, because that is where these forms are special —
+    // measured: `echo "$'a'"` prints `$'a'`, so flagging it there would fire on correct code.
+    //
+    // Scanning STOPS at the first unmodelled form. Past it the frame stack describes a string this
+    // function does not understand, and operators read out of a desynced state would be guesses
+    // presented as findings. What was found BEFORE it is kept and returned alongside.
+    //
+    // THE TWO FORMS THAT PROMPTED THE GATE ARE ALSO MODELLED, and both together is the point: the
+    // gate is what makes the guarantee stateable, and modelling these two is what keeps the gate
+    // from firing on the shapes it was written for. Each was measured rather than looked up.
+    //
+    //     $'…'   Literal text with backslash escapes and NO expansions — `echo $'a$(echo X)b'`
+    //            prints `a$(echo X)b`. It ends at the first UNESCAPED `'`: `echo $'a\'b'` prints
+    //            `a'b`, and `echo $'a\\'` prints `a\`, so an escaped backslash does let the next
+    //            quote close. Skipped whole, which is exact, because nothing in it runs.
+    //     $"…"   A double-quoted string that is also translated. Same quoting and the SAME
+    //            expansions — `echo $"a$(echo X)b"` prints `aXb`, `$"a\"b"` prints `a"b`, and a
+    //            `;` inside is literal. So it is the double-quote frame with one extra character.
+    if (c === '$' && src[i + 1] === "'") {
+      let j = i + 2;
+      while (j < src.length && src[j] !== "'") { if (src[j] === '\\') j += 1; j += 1; }
+      i = j; // the closing quote, or the end of an unterminated one — which bash refuses to run
+      continue;
+    }
+    if (c === '$' && src[i + 1] === '"') { frame.quote = '"'; i += 1; continue; }
+
+    if (c === '$' && !isModelledDollar(src, i)) {
+      unmodelled.add(`$${src[i + 1]}`);
+      break;
+    }
+
     // `parens` counts every paren still open in this frame — both of `$((`, the one of `$(` — so a
     // subshell inside a substitution closes on the right `)`: `$( (a; b) )` ends at the second.
     if (frame.kind === 'paren' || frame.kind === 'arith') {
@@ -550,7 +630,10 @@ function shellOperators(command) {
     if (c === '\n' || c === '\r') { found.add('\\n'); continue; }
   }
 
-  return SHELL_OPERATORS.filter((op) => found.has(op));
+  // Operators first in their canonical order, then the unmodelled constructs. Both are reasons the
+  // command is not certifiably one command; `SHELL_OPERATORS.includes(t)` tells a caller which kind
+  // it is holding, and the two carry different remedies so they carry different messages.
+  return [...SHELL_OPERATORS.filter((op) => found.has(op)), ...[...unmodelled].sort()];
 }
 
 /**
@@ -659,7 +742,29 @@ function auditSuite({ scripts, steps = STEPS, excluded = EXCLUDED, runner = RUNN
   for (const step of steps) {
     if (!has(step)) continue;
     for (const link of resolveChain(scripts, step)) {
-      const ops = shellOperators(link.command);
+      const findings = shellOperators(link.command);
+      if (!findings.length) continue;
+
+      const ops = findings.filter((t) => SHELL_OPERATORS.includes(t));
+      const unmodelled = findings.filter((t) => !SHELL_OPERATORS.includes(t));
+
+      // A CONSTRUCT THE SCANNER DOES NOT MODEL IS NOT A PASS, and it is not an operator either —
+      // different cause, different remedy, so it does not borrow the operator message. There is no
+      // per-step exemption for it on purpose: EXCLUDED governs reachability, not chains, and a step
+      // that needs an exotic quoting form can be given its own script instead.
+      if (unmodelled.length) {
+        const list = unmodelled.map((u) => `\`${u}\``).join(', ');
+        const via = link.name === step ? '' : ` (through "${link.name}")`;
+        failures.push(
+          `STEPS names "${step}"${via}, whose command contains ${unmodelled.length > 1 ? 'constructs' : 'a construct'} ` +
+            `this checker does not model: ${list} — ${link.command}. It CANNOT be certified as one command. Inside a ` +
+            `form whose quoting rules the scanner does not know, its quote parity desyncs from the shell's and a real ` +
+            `chain comes back with NO findings at all: measured, \`echo $'a\\'b'; echo SECOND\` runs both commands ` +
+            `because the \`\\'\` does not close the string. Rewrite the command without it, or give the exotic part its ` +
+            `own script and its own entry in STEPS.`
+        );
+      }
+
       if (!ops.length) continue;
 
       const list = ops.map((op) => `\`${op}\``).join(', ');
