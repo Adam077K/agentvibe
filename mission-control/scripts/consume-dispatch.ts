@@ -26,7 +26,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { readDispatch, appendDispatch, dispatchQueuePath, type DispatchEntry } from '../server/index-cache.ts';
+import {
+  readDispatch,
+  appendDispatch,
+  dispatchQueuePath,
+  resolveDispatchStates,
+  unfinishedDispatches,
+  type DispatchEntry,
+} from '../server/index-cache.ts';
 
 // ── The one project this consumer targets ────────────────────────────────────────────────
 //
@@ -43,6 +50,41 @@ const AGENTVIBE_PROJECT_ID = path.basename(REPO_ROOT);
 const args = new Set(process.argv.slice(2));
 const DRY_RUN = args.has('--dry-run');
 const LIST_ONLY = args.has('--list');
+
+// ── Recording an outcome ─────────────────────────────────────────────────────────────────
+
+/** The fields that distinguish one terminal outcome from another. */
+type TerminalUpdate = {
+  status: 'consumed' | 'failed' | 'no-result';
+  exitCode?: number;
+  signal?: string;
+  error?: string;
+};
+
+/**
+ * Append the terminal state of a dispatch, and SAY SO WHEN THAT WRITE FAILS.
+ *
+ * The failure path here is the one that matters. If the outcome cannot be recorded, the entry
+ * stays `running` in the queue and the next run resolves it to `no-result` — which is correct,
+ * and is why `running` is written first. What must not happen is this function returning
+ * quietly, leaving an operator believing an outcome was stored when it was not.
+ */
+function writeTerminal(entry: DispatchEntry, update: TerminalUpdate): void {
+  const finished: DispatchEntry = { ...entry, ...update, finishedAt: Date.now() };
+  try {
+    appendDispatch(finished);
+    const detail =
+      update.status === 'failed' ? ` (exit ${update.exitCode})`
+      : update.signal ? ` (${update.signal})`
+      : '';
+    console.log(`  Recorded ${update.status}${detail}.`);
+  } catch (writeErr) {
+    console.error(
+      `  COULD NOT RECORD '${update.status}': ${writeErr}\n` +
+      `  The queue still says 'running' for ${entry.id.slice(0, 8)}; the next run will resolve it to 'no-result'.`
+    );
+  }
+}
 
 // ── Main ─────────────────────────────────────────────────────────────────────────────────
 
@@ -63,13 +105,20 @@ function main() {
     return;
   }
 
-  const pending = entries.filter((e) => e.status === 'pending');
-  const consumed = entries.filter((e) => e.status !== 'pending');
-  console.log(`${entries.length} total entries — ${pending.length} pending, ${consumed.length} consumed`);
+  // CURRENT STATE, NOT EVERY LINE. The queue is append-only, so `entries` holds the whole
+  // history and an id appears once per state change. Counting or filtering raw lines double-
+  // counts, and filtering them by `status === 'pending'` re-selects work already done — the
+  // re-dispatch bug documented on resolveDispatchStates().
+  const current = resolveDispatchStates(entries);
+  const unfinished = unfinishedDispatches(entries);
+  const byStatus = new Map<string, number>();
+  for (const e of current) byStatus.set(e.status, (byStatus.get(e.status) ?? 0) + 1);
+  const tally = [...byStatus.entries()].map(([k, n]) => `${n} ${k}`).join(', ');
+  console.log(`${current.length} dispatches (${entries.length} queue lines) — ${tally}`);
 
   if (LIST_ONLY) {
-    console.log('\nAll entries:');
-    for (const e of entries) {
+    console.log('\nAll dispatches (current state):');
+    for (const e of current) {
       const age = Math.round((Date.now() - e.enqueuedAt) / 1000);
       const ageStr = age < 60 ? `${age}s ago` : age < 3600 ? `${Math.round(age / 60)}m ago` : `${Math.round(age / 3600)}h ago`;
       console.log(`  [${e.status}] ${e.project}  ${ageStr}`);
@@ -78,12 +127,12 @@ function main() {
     return;
   }
 
-  if (pending.length === 0) {
-    console.log('No pending entries. Nothing to do.');
+  if (unfinished.length === 0) {
+    console.log('Nothing unfinished. Nothing to do.');
     return;
   }
 
-  for (const entry of pending) {
+  for (const entry of unfinished) {
     console.log(`\nProcessing ${entry.id.slice(0, 8)}  project=${entry.project}`);
     console.log(`  Goal: ${entry.goal.slice(0, 140)}${entry.goal.length > 140 ? '…' : ''}`);
 
@@ -116,32 +165,87 @@ function main() {
     // may be more appropriate to use that — it carries the project's own warroom config.
     // Using `claude --print` directly here keeps the consumer free of assumptions about
     // which version of the launcher is installed, while remaining compatible with both.
+    //
+    // ── THAT ARGUMENT IS SOUND, AND IT HAS A COST NOBODY HAS PRICED ─────────────────────────
+    // Freedom from assumptions about the harness is exactly freedom from the harness. A goal
+    // launched this way reaches no orchestrator, no playbook, no lens and no QA gate: it is a
+    // bare model session in a project directory. Everything this repo builds to govern work —
+    // the tiered gate, the claim ledger, the review lenses — sits on the other side of a seam
+    // this line does not cross. Dispatch is therefore the one entry point into the project that
+    // is ungoverned by construction, and the comment above explains why without saying so.
+    //
+    // MEASURED 2026-08-26, so the next person starts from facts rather than from this note:
+    //   · `claude --agent <agent>` EXISTS (`claude --help`), so selecting `orchestrator` for a
+    //     dispatched session is available at the CLI today. That is the easy half.
+    //   · NO ENGINE CAN REACH THE GATE. `qa.js` is invoked through a `Workflow` tool, and no
+    //     agent declares one: 7 of 7 engine files carry a `tools:` line and none lists it —
+    //     the orchestrator's is `[Read, Write, Edit, Bash, Glob, Grep, Task]`. So routing
+    //     through `--agent orchestrator` would buy the lens and the playbook and would NOT buy
+    //     the gate, while looking from the outside as though it had.
+    //
+    // NOT FIXED HERE, DELIBERATELY. How workflow invocation is actually granted in this runtime
+    // is being established elsewhere; committing a seam here would give this repo two answers to
+    // one question, which is a failure mode it has already paid for twice. This comment records
+    // the measurement and the gap. It does not choose the design.
+    // A `running` ENTRY IS OWED A VERDICT, NOT A RELAUNCH. Reaching this loop it means some
+    // earlier run started this dispatch and never came back to record an outcome — the consumer
+    // was killed, the machine slept, the terminal was closed. We do not know what the launch did,
+    // and re-running it would convert "unknown" into a fresh "success" while hiding that a
+    // previous attempt may already have acted. Record the ignorance instead.
+    if (entry.status === 'running') {
+      console.warn(`  NO RESULT — a previous run started this and never reported back. Not relaunching.`);
+      writeTerminal(entry, {
+        status: 'no-result',
+        error: 'found still `running` by a later consumer run; the launching run never recorded an outcome',
+      });
+      continue;
+    }
+
+    // DURABLE BEFORE THE FACT. This line is what makes the paragraph above possible: if this
+    // process dies during the launch, the queue already says `running`, so the next run can tell
+    // "started and unknown" from "never started". Written before, not after — a marker written
+    // afterwards records nothing about the interval it is supposed to cover.
+    const startedAt = Date.now();
+    try {
+      appendDispatch({ ...entry, status: 'running', startedAt });
+    } catch (writeErr) {
+      // Refuse rather than launch blind. If we cannot record that we started, a crash mid-launch
+      // is indistinguishable from never having run — which is the whole defect.
+      console.error(`  SKIPPED — could not record 'running', so the launch would be unaccountable: ${writeErr}`);
+      continue;
+    }
+
     console.log(`  Launching claude in ${entry.root} …`);
-    let ok = false;
+    let outcome: TerminalUpdate;
     try {
       execFileSync('claude', ['--print', entry.goal], {
         cwd: entry.root,
         stdio: 'inherit',
         // No shell: false is the default for execFileSync; repeating it is explicit intent.
       });
-      ok = true;
+      outcome = { status: 'consumed', exitCode: 0 };
     } catch (err) {
-      console.error(`  Launch failed: ${err instanceof Error ? err.message : String(err)}`);
+      // THE THREE OUTCOMES ARE DISTINGUISHED HERE, and the distinction is in the error object.
+      // A non-zero exit sets `status`; a signal kill sets `signal` and leaves `status` null. They
+      // are not the same event: the first is a program that ran and reported failure, the second
+      // is a program that was taken away mid-flight and reported nothing. Collapsing them loses
+      // exactly the case that is most common.
+      const e = err as NodeJS.ErrnoException & { status?: number | null; signal?: string | null };
+      const message = err instanceof Error ? err.message : String(err);
+      if (typeof e.status === 'number') {
+        outcome = { status: 'failed', exitCode: e.status, error: message };
+      } else if (e.signal) {
+        outcome = { status: 'no-result', signal: e.signal, error: message };
+      } else {
+        // Spawn never happened (ENOENT: no `claude` on PATH) or the failure is unmodelled. Either
+        // way no exit code exists, so `no-result` is the honest state — NOT `failed`, which would
+        // assert the launch ran and reported something.
+        outcome = { status: 'no-result', error: message };
+      }
+      console.error(`  Launch did not succeed: ${message}`);
     }
 
-    // Mark the entry consumed (or failed). The queue is append-only: the new line
-    // overwrites the status; readDispatch() returns all lines, so the consumer can see
-    // both the original and the update. A production consumer would want to truncate or
-    // archive, but that is a Phase 9 concern — this is the first consumer, not the final one.
-    const updated: DispatchEntry = { ...entry, status: ok ? 'consumed' : 'consumed' };
-    try {
-      appendDispatch(updated);
-      console.log(`  Marked ${ok ? 'consumed' : 'consumed (with error)'}.`);
-    } catch (writeErr) {
-      // If we can't update the status, the entry will be re-processed on the next run.
-      // That is safe: `claude --print` is idempotent in the worst case.
-      console.error(`  Could not update queue entry: ${writeErr}`);
-    }
+    writeTerminal({ ...entry, startedAt }, outcome);
   }
 
   console.log('\nDone.');

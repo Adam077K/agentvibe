@@ -371,11 +371,45 @@ export function dispatchQueuePath(): string {
 }
 
 /**
+ * The states a dispatch can be in, and the reason there are five rather than two.
+ *
+ * THIS UNION USED TO BE `'pending' | 'consumed'`, AND THAT MADE FAILURE UNREPRESENTABLE.
+ * consume-dispatch.ts had to write `status: ok ? 'consumed' : 'consumed'` — a real line, not a
+ * caricature — so a launch that exited non-zero produced a durable record BYTE-IDENTICAL to one
+ * that succeeded. Measured 2026-08-26 against a fake `claude` exiting 3: both runs appended
+ * `"status":"consumed"`, differing in nothing. The failure was mentioned once on a console
+ * nobody reads and was absent from the only record that persists.
+ *
+ * That is this repo's recurring shape — `findings: []` read as *clean*, `0 matches` read as
+ * *absence* — an assertion accepted where evidence was required. The cure is not a better
+ * string at the write site; it is a type in which the lie cannot be spelled.
+ *
+ *   pending    enqueued by the server, not yet acted on
+ *   running    a launch STARTED and has not yet reported back. Durable and written BEFORE the
+ *              launch, so a consumer that dies mid-flight leaves evidence instead of silence.
+ *   consumed   the launch ran to completion and exited 0
+ *   failed     the launch ran and exited non-zero — `exitCode` carries which
+ *   no-result  it started and never returned an outcome: killed by a signal, or found still
+ *              `running` by a later run
+ *
+ * `no-result` IS NOT AN EDGE CASE, and sizing it as one is why it was missing. Roughly half of
+ * subagent runs end mid-tool (n=2,581, 95% interval [48.4%, 52.2%]), so "no outcome" is the
+ * single most likely terminal state of a dispatch — and it was the one state the old union
+ * could not express. A queue that reports the most probable outcome as success is not a queue.
+ */
+export type DispatchStatus = 'pending' | 'running' | 'consumed' | 'failed' | 'no-result';
+
+/** The states in which no further work is owed. `running` and `pending` are NOT terminal. */
+export const TERMINAL_DISPATCH_STATUSES: readonly DispatchStatus[] = ['consumed', 'failed', 'no-result'];
+
+/**
  * One entry in the dispatch queue.
  *
  * `status` is always `'pending'` when written by the server; the consume-dispatch script
- * rewrites a line with `'consumed'` once it has acted. Both values are preserved on read so
- * a UI can distinguish "waiting" from "handled" without the server making that call.
+ * appends later lines carrying the same `id` as the dispatch progresses. Every line is
+ * preserved on read — the queue is append-only — so the CURRENT state of a dispatch is the
+ * LAST line bearing its id, which is what `resolveDispatchStates()` computes. Do not filter
+ * raw `readDispatch()` output by status: see that function for the re-dispatch bug it fixes.
  */
 export interface DispatchEntry {
   /** Stable identifier for this request — a UUID, assigned by the server at enqueue time. */
@@ -388,8 +422,23 @@ export interface DispatchEntry {
   goal: string;
   /** Unix timestamp in ms when this entry was appended. */
   enqueuedAt: number;
-  /** `pending` until the consumer acts; `consumed` afterwards. */
-  status: 'pending' | 'consumed';
+  /** Where this dispatch has got to. See DispatchStatus for why there are five. */
+  status: DispatchStatus;
+  /** Unix ms when the launch was started. Set on the `running` line and carried forward. */
+  startedAt?: number;
+  /** Unix ms when a terminal state was recorded. */
+  finishedAt?: number;
+  /**
+   * The launch's exit code when one was returned.
+   *
+   * ABSENT IS NOT ZERO. A dispatch killed by a signal has no exit code at all, and writing `0`
+   * there would recreate the defect this type exists to remove, one field along.
+   */
+  exitCode?: number;
+  /** The signal that killed the launch, when one did — mutually exclusive with `exitCode`. */
+  signal?: string;
+  /** Operator-facing detail for a non-terminal-success state. Never the only record of it. */
+  error?: string;
 }
 
 /**
@@ -444,4 +493,44 @@ export function readDispatch(file?: string): DispatchEntry[] {
     }
   }
   return entries;
+}
+
+/**
+ * The CURRENT state of each dispatch: the last line bearing each id, in first-seen order.
+ *
+ * WHY THIS EXISTS — A RE-DISPATCH BUG, MEASURED, NOT ANTICIPATED. The queue is append-only, so
+ * acting on an entry appends a new line rather than editing the old one. consume-dispatch.ts
+ * selected work with `readDispatch().filter(e => e.status === 'pending')`, which reads EVERY
+ * line — including the original `pending` line, which no later append ever removes. So a goal
+ * that had already been launched was launched again on every subsequent run.
+ *
+ * Measured 2026-08-26 on unmodified code: one entry, consumed once, then the consumer re-run on
+ * the same queue relaunched it and appended a third line. Nothing in the queue said it had been
+ * done, because the line that said so was not the line being read.
+ *
+ * The script's own comment absorbed this as safe — "`claude --print` is idempotent in the worst
+ * case". Launching an agent against the same goal repeatedly is not idempotent in any sense that
+ * survives contact with a goal that writes files, and the assumption was doing load-bearing work
+ * for a bug rather than describing a property anyone had checked.
+ *
+ * Order is FIRST-SEEN, deliberately: the queue is a work list and its natural order is the order
+ * goals were enqueued, not the order they last changed state. A UI showing newest-first reverses
+ * this itself.
+ */
+export function resolveDispatchStates(entries: DispatchEntry[]): DispatchEntry[] {
+  const latest = new Map<string, DispatchEntry>();
+  for (const e of entries) latest.set(e.id, e);
+  return [...latest.values()];
+}
+
+/**
+ * Dispatches with work still owed: never launched, or launched by a run that never came back.
+ *
+ * A `running` entry reaching this function is NOT owed a launch — it is owed a verdict, and the
+ * caller records `no-result` for it rather than starting it again. Returning it here and letting
+ * the caller decide is what keeps "we do not know what happened" from being silently retried
+ * into "it succeeded".
+ */
+export function unfinishedDispatches(entries: DispatchEntry[]): DispatchEntry[] {
+  return resolveDispatchStates(entries).filter((e) => !TERMINAL_DISPATCH_STATUSES.includes(e.status));
 }

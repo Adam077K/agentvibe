@@ -33,7 +33,14 @@ import { describe, test, expect, beforeEach, afterAll } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { Hono } from 'hono';
-import { appendDispatch, readDispatch, type DispatchEntry } from '../server/index-cache.ts';
+import {
+  appendDispatch,
+  readDispatch,
+  resolveDispatchStates,
+  unfinishedDispatches,
+  type DispatchEntry,
+} from '../server/index-cache.ts';
+import { execFileSync } from 'node:child_process';
 import { LiveState, REPO_ROOT } from '../server/state.ts';
 import { createApi } from '../server/routes/api.ts';
 import type { DispatchResult, DispatchError, DispatchPayload } from '../server/routes/api.ts';
@@ -389,5 +396,151 @@ describe('WRITE ISOLATION: POST /api/dispatch does not touch the fixture fleet o
     // But the fixture fleet and the repo must be byte-identical.
     expect(diffTrees(before, snapshotTree(roots))).toEqual({ added: [], removed: [], modified: [] });
     expect(diffTrees(beforeRepo, snapshotTree([REPO_ROOT], true))).toEqual({ added: [], removed: [], modified: [] });
+  });
+});
+
+
+// ── The consumer records WHAT HAPPENED, not merely THAT it acted ──────────────────────────
+//
+// THE DEFECT THESE TESTS PIN, quoted exactly as it stood in consume-dispatch.ts:
+//
+//     const updated: DispatchEntry = { ...entry, status: ok ? 'consumed' : 'consumed' };
+//
+// A launch that exited non-zero produced a durable record byte-identical to one that succeeded.
+// The failure was printed once to a console nobody reads; the queue — the only record that
+// persists — said success either way. Measured against a fake `claude` exiting 3 before the fix:
+// both records were `"status":"consumed"`, differing in nothing but id and goal.
+//
+// WHY THESE SPAWN A REAL PROCESS. The header above says the `execFileSync('claude', …)` call is
+// "not a unit-testable assertion" and that was true while `claude` meant the real binary. It is a
+// PATH lookup, so a fixture `claude` that exits 0, exits 3, or kills itself makes all three
+// outcomes reachable without an API call, in about a second. The thing under test is precisely
+// the mapping from a launch's exit to a durable record, and no test that stubs the launch can
+// assert it — the earlier note was reasoning about cost, not about testability.
+//
+// EACH ASSERTION IS PAIRED WITH THE OUTCOME IT MUST NOT EQUAL. `status === 'failed'` alone would
+// pass against a build that wrote `'failed'` unconditionally; asserting it DIFFERS from the
+// success record is what makes the pair evidence.
+
+const CONSUMER = path.join(REPO_ROOT, 'mission-control', 'scripts', 'consume-dispatch.ts');
+
+/** A fixture `claude` on PATH, and a queue file: the whole harness. */
+function dispatchFixture(prefix: string, script: string, entries: Partial<DispatchEntry>[]) {
+  const dir = mkTmpDir(prefix);
+  cleanupDirs.push(dir);
+  const bin = path.join(dir, 'bin');
+  const root = path.join(dir, 'root');
+  fs.mkdirSync(bin, { recursive: true });
+  fs.mkdirSync(root, { recursive: true });
+  fs.writeFileSync(path.join(bin, 'claude'), script);
+  fs.chmodSync(path.join(bin, 'claude'), 0o755);
+
+  const queue = path.join(dir, 'queue.jsonl');
+  const lines = entries.map((e) => JSON.stringify({
+    id: 'fixture-id', project: path.basename(REPO_ROOT), root, goal: 'a goal', enqueuedAt: 1_000,
+    status: 'pending', ...e,
+  }));
+  fs.writeFileSync(queue, lines.join('\n') + '\n');
+  return { dir, bin, queue, root };
+}
+
+/** Run the consumer against a fixture and return the LAST line of the queue. */
+function runConsumer(f: { bin: string; queue: string }): DispatchEntry {
+  execFileSync('bun', [CONSUMER], {
+    env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
+    encoding: 'utf8',
+    stdio: 'pipe',
+  });
+  const entries = readDispatch(f.queue);
+  return entries[entries.length - 1] as DispatchEntry;
+}
+
+const CLAUDE_OK = '#!/bin/sh\nexit 0\n';
+const CLAUDE_FAILS = '#!/bin/sh\necho boom >&2\nexit 3\n';
+const CLAUDE_SIGNALLED = '#!/bin/sh\nkill -TERM $$\n';
+
+describe('consume-dispatch records a distinguishable outcome', () => {
+  test('a launch that exits 0 is `consumed`, and a launch that exits 3 is NOT', () => {
+    const ok = runConsumer(dispatchFixture('mc-dispatch-ok-', CLAUDE_OK, [{}]));
+    const bad = runConsumer(dispatchFixture('mc-dispatch-bad-', CLAUDE_FAILS, [{}]));
+
+    expect(ok.status).toBe('consumed');
+    expect(bad.status).toBe('failed');
+    expect(bad.exitCode).toBe(3);
+
+    // THE PAIR THAT IS THE POINT. Before the fix these two objects differed in nothing.
+    const shape = (e: DispatchEntry) => JSON.stringify({ status: e.status, exitCode: e.exitCode, signal: e.signal });
+    expect(shape(bad)).not.toBe(shape(ok));
+  });
+
+  test('a launch killed by a signal is `no-result`, distinct from BOTH success and failure', () => {
+    const sig = runConsumer(dispatchFixture('mc-dispatch-sig-', CLAUDE_SIGNALLED, [{}]));
+    expect(sig.status).toBe('no-result');
+    expect(sig.signal).toBe('SIGTERM');
+    // Not folded into `failed`: a program taken away mid-flight reported nothing, and a program
+    // that exited 3 reported something. `exitCode` must be ABSENT rather than 0 — writing 0 here
+    // would recreate the defect one field along.
+    expect(sig.exitCode).toBeUndefined();
+  });
+
+  test('`running` is durable BEFORE the launch, so a consumer that dies leaves evidence', () => {
+    const f = dispatchFixture('mc-dispatch-running-', CLAUDE_OK, [{}]);
+    runConsumer(f);
+    const statuses = readDispatch(f.queue).map((e) => e.status);
+    expect(statuses).toEqual(['pending', 'running', 'consumed']);
+  });
+
+  test('an entry left `running` resolves to `no-result` and is NOT relaunched', () => {
+    // THE FIXTURE ADMITS THE INPUT THAT WOULD DEFEAT THE FIX: `claude` here EXITS 0. If the
+    // consumer relaunched a `running` entry it would record `consumed` and this test would pass
+    // for the wrong reason — so the launch-count assertion below is what carries it.
+    const f = dispatchFixture('mc-dispatch-crashed-', CLAUDE_OK, [
+      { status: 'pending' },
+      { status: 'running', startedAt: 1_500 },
+    ]);
+    const last = runConsumer(f);
+    expect(last.status).toBe('no-result');
+
+    // Exactly one line was appended — the verdict. No `running` line, so no second launch.
+    const statuses = readDispatch(f.queue).map((e) => e.status);
+    expect(statuses).toEqual(['pending', 'running', 'no-result']);
+  });
+
+  test('a finished dispatch is NOT relaunched on a later run — the re-dispatch bug', () => {
+    // Before the fix the consumer filtered RAW lines by `status === 'pending'`. The original
+    // pending line is never removed by an append-only queue, so every run relaunched every goal
+    // ever dispatched. Measured: a second run appended a third `consumed` line.
+    const f = dispatchFixture('mc-dispatch-rerun-', CLAUDE_OK, [{}]);
+    runConsumer(f);
+    const afterFirst = readDispatch(f.queue).length;
+    runConsumer(f);
+    expect(readDispatch(f.queue).length).toBe(afterFirst);
+  });
+});
+
+describe('resolveDispatchStates / unfinishedDispatches', () => {
+  const line = (id: string, status: DispatchEntry['status']): DispatchEntry => ({
+    id, project: 'p', root: '/p', goal: 'g', enqueuedAt: 1, status,
+  });
+
+  test('the current state of a dispatch is its LAST line', () => {
+    const resolved = resolveDispatchStates([line('a', 'pending'), line('a', 'running'), line('a', 'failed')]);
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0]?.status).toBe('failed');
+  });
+
+  test('order is first-seen, not last-changed', () => {
+    const resolved = resolveDispatchStates([line('a', 'pending'), line('b', 'pending'), line('a', 'consumed')]);
+    expect(resolved.map((e) => e.id)).toEqual(['a', 'b']);
+  });
+
+  test('terminal states are not unfinished; pending and running are', () => {
+    const entries = [line('done', 'consumed'), line('bad', 'failed'), line('gone', 'no-result'),
+                     line('wait', 'pending'), line('mid', 'running')];
+    expect(unfinishedDispatches(entries).map((e) => e.id)).toEqual(['wait', 'mid']);
+  });
+
+  test('a dispatch that reached a terminal state is not unfinished, even though its first line is pending', () => {
+    expect(unfinishedDispatches([line('a', 'pending'), line('a', 'consumed')])).toEqual([]);
   });
 });

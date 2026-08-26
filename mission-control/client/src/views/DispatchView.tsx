@@ -51,11 +51,7 @@ export function DispatchTable({ entries, now }: { entries: DispatchEntry[]; now:
               </span>
             </Td>
             <Td>
-              {e.status === 'pending' ? (
-                <span className="fig text-warn">pending</span>
-              ) : (
-                <span className="fig text-muted">consumed</span>
-              )}
+              <StatusCell entry={e} />
             </Td>
             <Td align="right" className="text-muted" title={formatAbsolute(e.enqueuedAt)}>
               {formatRelative(e.enqueuedAt, now)}
@@ -65,6 +61,52 @@ export function DispatchTable({ entries, now }: { entries: DispatchEntry[]; now:
       </tbody>
     </table>
   );
+}
+
+/**
+ * One dispatch's state, rendered so a failure cannot read as a success.
+ *
+ * THIS USED TO BE A BINARY — `pending` or, for everything else, the word "consumed". That was
+ * correct only while the queue had exactly two states, and it was the display half of the defect
+ * fixed in the consumer: a dispatch that exited non-zero reached this table and was drawn as
+ * `consumed`, in muted grey, indistinguishable from one that worked. Widening the status union
+ * without widening this would have moved the lie from the file to the screen.
+ *
+ * `failed` and `no-result` are rendered in the ERROR tone rather than the muted one, because the
+ * muted tone is what a reader's eye skips. `no-result` says "no result" rather than guessing —
+ * it is the most likely outcome of a real dispatch, not an exotic one.
+ */
+function StatusCell({ entry }: { entry: DispatchEntry }) {
+  switch (entry.status) {
+    case 'pending':
+      return <span className="fig text-warn">pending</span>;
+    case 'running':
+      return <span className="fig text-warn" title="A launch started and has not reported back">running</span>;
+    case 'consumed':
+      return <span className="fig text-muted" title="Ran to completion, exit 0">consumed</span>;
+    case 'failed':
+      return (
+        <span
+          className="fig text-bad"
+          title={entry.error ?? `Exited ${entry.exitCode ?? 'non-zero'}`}
+        >
+          failed{typeof entry.exitCode === 'number' ? ` (${entry.exitCode})` : ''}
+        </span>
+      );
+    case 'no-result':
+      return (
+        <span
+          className="fig text-bad"
+          title={entry.error ?? 'Started and never reported an outcome'}
+        >
+          no result{entry.signal ? ` (${entry.signal})` : ''}
+        </span>
+      );
+    default:
+      // An UNKNOWN status is shown as unknown, never folded into a known one. A queue written by
+      // a newer consumer must not be read by this UI as success.
+      return <span className="fig text-bad" title="Status not recognised by this UI">{String(entry.status)}</span>;
+  }
 }
 
 // ── Form ─────────────────────────────────────────────────────────────────────────────────
@@ -81,11 +123,27 @@ type SubmitResult =
 export interface DispatchHeadline {
   total: number;
   pending: number;
+  /** `failed` + `no-result` — dispatches that ended without succeeding. */
+  unsuccessful: number;
 }
 
+/**
+ * The headline counts, including the one a glance must not miss.
+ *
+ * `unsuccessful` EXISTS BECAUSE THE SUMMARY LAYER CAN HIDE A FAILURE JUST AS WELL AS THE RECORD
+ * DID. Before the consumer could report failure at all, this figure had nothing to omit; now that
+ * `failed` and `no-result` are real, a headline reading "12 entries · 0 pending" beside a queue of
+ * twelve failures would be true in every number and wrong in what it conveys. Counted together
+ * because the distinction between "ran and failed" and "never came back" belongs in the row, not
+ * in a top-line figure that has to be read in half a second.
+ *
+ * `entries` here is already folded to one row per dispatch by GET /api/dispatch, so `total` counts
+ * dispatches rather than queue lines.
+ */
 export function dispatchHeadline(entries: DispatchEntry[]): DispatchHeadline {
   const pending = entries.filter((e) => e.status === 'pending').length;
-  return { total: entries.length, pending };
+  const unsuccessful = entries.filter((e) => e.status === 'failed' || e.status === 'no-result').length;
+  return { total: entries.length, pending, unsuccessful };
 }
 
 export function DispatchFormHeadline({ headline, loading, onRefresh }: { headline: DispatchHeadline | null; loading: boolean; onRefresh: () => void }) {
@@ -104,9 +162,15 @@ export function DispatchFormHeadline({ headline, loading, onRefresh }: { headlin
       <Figure
         label="Queue entries"
         value={headline === null ? '—' : formatCount(headline.total)}
-        sub={headline === null ? 'loading' : `${formatCount(headline.pending)} pending`}
-        tone={headline !== null && headline.pending > 0 ? 'warn' : 'default'}
-        title="Total entries in ~/.agentvibe/dispatch-queue.jsonl, and how many have not yet been consumed"
+        sub={
+          headline === null
+            ? 'loading'
+            : headline.unsuccessful > 0
+              ? `${formatCount(headline.pending)} pending · ${formatCount(headline.unsuccessful)} did not succeed`
+              : `${formatCount(headline.pending)} pending`
+        }
+        tone={headline !== null && (headline.pending > 0 || headline.unsuccessful > 0) ? 'warn' : 'default'}
+        title="Dispatches in ~/.agentvibe/dispatch-queue.jsonl — how many are not yet acted on, and how many ended failed or with no result"
       />
     </HeadlineBar>
   );
@@ -372,8 +436,10 @@ export function DispatchPanel({
 
       {entries !== null && entries.length > 0 && (
         <Footnote>
-          The queue is append-only — entries remain visible after the consumer acts on them (shown
-          as <span className="text-muted">consumed</span>). To act on a pending entry, run:{' '}
+          The queue is append-only — entries remain visible after the consumer acts on them, showing
+          the outcome it recorded: <span className="text-muted">consumed</span>,{' '}
+          <span className="text-bad">failed</span> or <span className="text-bad">no result</span>. To act
+          on a pending entry, run:{' '}
           <code>bun mission-control/scripts/consume-dispatch.ts</code>. Entries are shown newest-first.
         </Footnote>
       )}
