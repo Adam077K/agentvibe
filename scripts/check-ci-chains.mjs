@@ -25,7 +25,15 @@ const require = createRequire(import.meta.url);
 const { ciChainFindings, CI_CHAINS_ALLOWED } = require('./lib/check-suite.js');
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const CI_PATH = path.join(REPO, '.github', 'workflows', 'ci.yml');
+
+// An optional path argument, so THIS SCRIPT'S OWN BRANCHES CAN BE RUN. Without it the file it reads
+// is fixed at its own location, both failure branches below are unreachable from a test, and a
+// script whose failure path has never executed is a script that reports success by construction.
+// It changes no verdict that matters: `npm run check:ci-chains` passes no argument, and the BLOCKING
+// assertion is the chain case in scripts/check-suite.test.mjs, which reads the real file directly.
+const CI_PATH = process.argv[2]
+  ? path.resolve(process.argv[2])
+  : path.join(REPO, '.github', 'workflows', 'ci.yml');
 
 if (!fs.existsSync(CI_PATH)) {
   // Absent is UNRESOLVED, not clean: a check that cannot read its subject has not checked it.

@@ -1331,6 +1331,28 @@ test('no ci.yml step invokes a runner directly — the tripwire preload, and the
   // A comment can neither satisfy nor break either rule — the property the check:mc P1 was about.
   const decoy = `${asAggregate}\n# never write: npm run check — and never node --test either\n`;
   assert.equal(ciRunCommands(decoy).filter((c) => AGGREGATE_RUNNER.test(c)).length, 1, 'a comment changed the count');
+
+  // THE DISCLOSED HOLE, pinned the way resolveChain's three are — and it is NOT the one it looks
+  // like. Both predicates read the `run:` TEXT, so the obvious guess is that wrapping evades them.
+  // Measured, it does not: `bash -c "node --test x.mjs"` still matches DIRECT_TEST_RUNNER and
+  // `sh -c "npm run check"` still matches AGGREGATE_RUNNER, because both patterns match anywhere in
+  // the string rather than anchoring on the first word. What DOES walk past is INDIRECTION THROUGH
+  // A VARIABLE — the binary or the command spelled as `$RUNNER`, where the text no longer contains
+  // the token at all.
+  //
+  // Under-reporting is the safe direction here; this rule refuses what it understands and never
+  // guesses. But with nothing asserting the hole, a future NARROWING of either regex would be
+  // indistinguishable from the intended one — the same argument that put the resolveChain cases in
+  // this file. If either shape appears in the workflow, widen the predicate and turn the matching
+  // line positive. Do NOT read a green run of this block as coverage of them.
+  assert.equal(DIRECT_TEST_RUNNER.test('$RUNNER --test x.mjs'), false, 'now REPORTS the runner named by a variable — widen the doc and make this positive');
+  assert.equal(AGGREGATE_RUNNER.test('npm run $TARGET'), false, 'now REPORTS the target named by a variable — widen the doc and make this positive');
+
+  // The controls, which are the half that corrects the guess above: wrapping is NOT an evasion.
+  assert.equal(DIRECT_TEST_RUNNER.test('node --test x.mjs'), true);
+  assert.equal(DIRECT_TEST_RUNNER.test('bash -c "node --test x.mjs"'), true, 'a wrapped direct runner stopped being caught');
+  assert.equal(AGGREGATE_RUNNER.test('npm run check'), true);
+  assert.equal(AGGREGATE_RUNNER.test('sh -c "npm run check"'), true, 'a wrapped aggregate runner stopped being caught');
 });
 
 test('the ci.yml chain check has a LIBRARY and an entry point, not only a test', () => {
@@ -1367,6 +1389,45 @@ test('the ci.yml chain check has a LIBRARY and an entry point, not only a test',
   const run = spawnSync(process.execPath, [entry], { encoding: 'utf8' });
   assert.equal(run.status, 0, `the entry point fails on the current tree:\n${run.stderr}${run.stdout}`);
   assert.match(run.stdout, /no unexempted chained/, run.stdout || run.stderr);
+
+  // ITS FAILURE BRANCHES, RUN. A script whose failure path has never executed reports success by
+  // construction — the same rule this file applies to every guard it owns, applied to itself.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-chains-'));
+  fixtures.push(dir);
+  const chained = path.join(dir, 'chained.yml');
+  fs.writeFileSync(chained, [
+    'name: t', 'jobs:', '  j:', '    steps:',
+    '      - name: Chained', '        if: ${{ !cancelled() }}', '        run: npm run a && npm run b', '',
+  ].join('\n'));
+
+  const bad = spawnSync(process.execPath, [entry, chained], { encoding: 'utf8' });
+  assert.equal(bad.status, 1, `a chained workflow did not fail the entry point:\n${bad.stdout}${bad.stderr}`);
+  assert.match(bad.stderr, /carries `&&`/, bad.stderr);
+  assert.match(bad.stderr, /CI_CHAINS_ALLOWED/, 'the failure does not name the remedy');
+  // TWO findings, not one, and that is the rot check doing its job rather than noise: a foreign
+  // workflow does not run the allowlisted mission-control command, so the exemption really has
+  // stopped matching a live step. It is asserted rather than filtered out, because the argument is
+  // a diagnostic affordance and this is what it honestly reports against any file but the real one.
+  assert.match(bad.stderr, /2 findings/, bad.stderr);
+  assert.match(bad.stderr, /exempts a command no step in ci\.yml runs/, bad.stderr);
+
+  const missing = spawnSync(process.execPath, [entry, path.join(dir, 'nope.yml')], { encoding: 'utf8' });
+  assert.equal(missing.status, 1, 'a missing workflow reported success — absent is UNRESOLVED, not clean');
+  assert.match(missing.stderr, /UNRESOLVED/, missing.stderr);
+
+  // The control: a clean workflow through the same argument path still exits 0, so the two failures
+  // above are the findings and not the argument.
+  const ok = path.join(dir, 'ok.yml');
+  fs.writeFileSync(ok, [
+    'name: t', 'jobs:', '  j:', '    steps:',
+    '      - name: Single', '        if: ${{ !cancelled() }}', '        run: npm run a',
+    '      - name: Mission Control', '        if: ${{ !cancelled() }}',
+    `        run: ${Object.keys(CI_CHAINS_ALLOWED)[0]}`, '',
+  ].join('\n'));
+  // …so the clean control keeps the allowlisted step, or it would fail on the rot finding alone and
+  // prove nothing about chains.
+  const good = spawnSync(process.execPath, [entry, ok], { encoding: 'utf8' });
+  assert.equal(good.status, 0, `a single-command workflow failed through the argument path:\n${good.stderr}`);
 
   // And it is EXCLUDED rather than a STEP, deliberately — asserting one property twice under two
   // names leaves a second name to go stale. The reason is checked for substance by auditSuite().

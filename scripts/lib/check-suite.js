@@ -258,6 +258,33 @@ function scriptGraph(scripts) {
 }
 
 /**
+ * Split what shellOperators() returned into the two kinds of finding it can produce.
+ *
+ * `operators` mean "this is more than one command". `unmodelled` means "this checker cannot tell",
+ * which is not the same statement and does not take the same remedy — so the two call sites that
+ * report them, auditSuite() here and ciChainFindings() below, must not each re-derive the split.
+ * Written out twice, two lists of one thing disagree silently; that is the defect that put `$1` in
+ * the `$`-vocabulary and not in ARITH_OPERAND.
+ */
+function splitFindings(findings) {
+  return {
+    operators: findings.filter((t) => SHELL_OPERATORS.includes(t)),
+    unmodelled: findings.filter((t) => !SHELL_OPERATORS.includes(t)),
+  };
+}
+
+/**
+ * The bar a written exemption has to clear, spelled once.
+ *
+ * EXCLUDED entries and CI_CHAINS_ALLOWED entries are the same governance mechanism pointed at two
+ * files: an exemption a reader can disagree with instead of guessing at. They each carried their
+ * own `40`, so raising the bar in one would have raised it in one.
+ */
+const REASON_MIN_LENGTH = 40;
+const hasSubstantiveReason = (reason) =>
+  typeof reason === 'string' && reason.trim().length >= REASON_MIN_LENGTH;
+
+/**
  * A command whose ENTIRE body is one `npm run <name>` — a wrapper, and nothing else.
  *
  * ONE PATTERN, TWO CALLERS, and that is deliberate rather than tidy. aliasLinks() asks it of each
@@ -824,8 +851,7 @@ function auditSuite({ scripts, steps = STEPS, excluded = EXCLUDED, runner = RUNN
       const findings = shellOperators(link.command);
       if (!findings.length) continue;
 
-      const ops = findings.filter((t) => SHELL_OPERATORS.includes(t));
-      const unmodelled = findings.filter((t) => !SHELL_OPERATORS.includes(t));
+      const { operators: ops, unmodelled } = splitFindings(findings);
 
       // A CONSTRUCT THE SCANNER DOES NOT MODEL IS NOT A PASS, and it is not an operator either —
       // different cause, different remedy, so it does not borrow the operator message. There is no
@@ -926,7 +952,7 @@ function auditSuite({ scripts, steps = STEPS, excluded = EXCLUDED, runner = RUNN
       }
     }
 
-    if (typeof reason !== 'string' || reason.trim().length < 40) {
+    if (!hasSubstantiveReason(reason)) {
       failures.push(
         `EXCLUDED["${name}"] has no substantive reason. Write why it is out of the suite, so the next reader ` +
           `can disagree with the decision instead of guessing at it.`
@@ -1108,8 +1134,7 @@ function ciChainFindings(workflow, allowed = CI_CHAINS_ALLOWED) {
   for (const step of steps) {
     const found = shellOperators(step.run);
     if (!found.length || exempt(step.run)) continue;
-    const ops = found.filter((t) => SHELL_OPERATORS.includes(t));
-    const unmodelled = found.filter((t) => !SHELL_OPERATORS.includes(t));
+    const { operators: ops, unmodelled } = splitFindings(found);
     // An unmodelled construct is reported as ITS OWN KIND, not as an operator: the scanner cannot
     // certify the step, which is a different statement from "the step chains commands". The
     // allowlist covers both, because a step that genuinely needs one is exempted the same way.
@@ -1133,7 +1158,7 @@ function ciChainFindings(workflow, allowed = CI_CHAINS_ALLOWED) {
     if (!shellOperators(run).length) {
       findings.push(`CI_CHAINS_ALLOWED exempts a single command, which needs no exemption — ${run}`);
     }
-    if (typeof reason !== 'string' || reason.trim().length < 40) {
+    if (!hasSubstantiveReason(reason)) {
       findings.push(`CI_CHAINS_ALLOWED has no substantive reason for — ${run}`);
     }
   }
@@ -1169,6 +1194,9 @@ module.exports = {
   shellOperators,
   resolveChain,
   auditSuite,
+  splitFindings,
+  REASON_MIN_LENGTH,
+  hasSubstantiveReason,
   CI_GUARD,
   CI_CHAINS_ALLOWED,
   parseCiSteps,
