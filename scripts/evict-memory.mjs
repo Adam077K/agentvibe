@@ -181,6 +181,37 @@ function listFiles(root) {
 function decisionsPath(root) { return path.join(root, ...MEMORY_DIR, 'DECISIONS.md'); }
 
 /**
+ * Is this a real FILESYSTEM error, as opposed to a bug in this file?
+ *
+ * ── EVERY `catch` BELOW IS NARROW, AND THE WIDE VERSION WAS THE SAME DEFECT FOUR TIMES ──────
+ *
+ * `runCommand` catches one named error and re-throws the rest, because a catch-all converts a
+ * real bug into a tidy message and an exit code nobody investigates. That property is pinned.
+ * Then `readVolume` was written with an UNCONDITIONAL catch, which reintroduced exactly that
+ * defect one level down — and by the funnel's own design, in three call sites at once. Measured
+ * 2026-08-26 by injecting `null.boom`:
+ *
+ *   readVolume          exit 1, "REFUSED — ... cannot read (undefined)"   a crash, dressed as a
+ *                       deliberate refusal, with the real error lost
+ *   holdsVolumeContent  EXIT 0, silent — every volume invisible, which is the monotonic-append
+ *                       harm of P1-1 reached through a bug instead of a predicate
+ *   pathOccupant        EXIT 0, silent — every path reads as free, the occupancy guard disabled
+ *
+ * The tell in the first is the tool's own message: the code slot reads `(undefined)` where a
+ * genuine failure says EACCES / EISDIR / ENOENT. A refusal that cannot name what it refused is
+ * not a refusal. The last two are worse than the first: they are fail-OPEN and silent.
+ *
+ * Not an allowlist of codes — a list is a thing to forget an entry from. Node's fs errors carry
+ * `syscall` and a numeric `errno`; a `TypeError` and an `ERR_INVALID_ARG_TYPE` carry neither.
+ *
+ * A SHARED HELPER CONCENTRATES THE FAILURE AS WELL AS THE HANDLING. That is not an argument
+ * against the funnel — it is why the funnel deserves the scrutiny its call sites no longer need.
+ */
+function isFsError(e) {
+  return Boolean(e) && typeof e.code === 'string' && typeof e.syscall === 'string' && typeof e.errno === 'number';
+}
+
+/**
  * ── TWO QUESTIONS ABOUT A PATH, AND THEY NEED OPPOSITE ANSWERS ──────────────────────────────
  *
  * `pathOccupant` asks "is this path FREE TO CREATE?" and must NOT resolve: anything present,
@@ -212,7 +243,8 @@ function pathOccupant(abs) {
     if (st.isDirectory()) return 'directory';
     if (st.isSymbolicLink()) return 'symlink';
     return st.isFile() ? 'file' : 'special file';
-  } catch {
+  } catch (e) {
+    if (!isFsError(e)) throw e; // a bug here reads as "the path is free" and disables the guard
     return null;
   }
 }
@@ -226,7 +258,12 @@ function pathOccupant(abs) {
  * volumes — they resolve to something that is not a regular file, or resolve to nothing.
  */
 function holdsVolumeContent(abs) {
-  try { return fs.statSync(abs).isFile(); } catch { return false; }
+  try {
+    return fs.statSync(abs).isFile();
+  } catch (e) {
+    if (!isFsError(e)) throw e; // a bug here makes every volume invisible — silently, exit 0
+    return false;
+  }
 }
 
 /**
@@ -254,6 +291,9 @@ function readVolume(abs, name, io = fs) {
   try {
     return io.readFileSync(abs, 'utf8');
   } catch (e) {
+    // NARROW, for the reason `runCommand`'s catch is narrow — see `isFsError`. Unconditional,
+    // this rendered a programming bug as "cannot read (undefined)" at three call sites at once.
+    if (!isFsError(e)) throw e;
     const err = new Error(
       `${name} is a volume this tool cannot read (${e.code}):\n` +
       `  ${abs}\n` +
@@ -294,7 +334,7 @@ function readVolume(abs, name, io = fs) {
 function volumes(root) {
   const dir = path.join(root, ...MEMORY_DIR);
   let names;
-  try { names = fs.readdirSync(dir); } catch { return []; }
+  try { names = fs.readdirSync(dir); } catch (e) { if (!isFsError(e)) throw e; return []; }
   return names
     .map((name) => ({ name, m: name.match(VOLUME_RE) }))
     .filter((v) => v.m)
@@ -603,7 +643,7 @@ function conservationIssues({ removed, movedBodies, residue, chosen, newVolume, 
   if (vol && vol.fresh) {
     volExisting = volumeHeader(vol.number);
   } else if (vol) {
-    try { volExisting = io.readFileSync(vol.abs, 'utf8'); } catch { volExisting = null; }
+    try { volExisting = io.readFileSync(vol.abs, 'utf8'); } catch (e) { if (!isFsError(e)) throw e; volExisting = null; }
   }
   if (removed !== movedBodies - residue) {
     issues.push(
@@ -671,6 +711,7 @@ function commitWrite({ vol, volumeText, decisionsPath: decPath, decisionsText, c
     try {
       return io.readFileSync(abs, 'utf8');
     } catch (e) {
+      if (!isFsError(e)) throw e; // same reason as everywhere else: a bug is not a read failure
       problems.push(`${label} could not be re-read after the write (${e.code}) — the verdict must come from the artifact, and the artifact could not be opened`);
       return null;
     }

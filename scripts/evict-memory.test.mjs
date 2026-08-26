@@ -839,11 +839,18 @@ test('P3: a volume that cannot be RE-READ after the write is a failed verificati
   // there is nothing left to refuse. A read that fails there is a verification that could not be
   // performed, and `commitWrite` already has the vocabulary for that.
   const f = commitFixture();
+  // The fake carries `syscall` and a numeric `errno` because a REAL EACCES does, and the catch is
+  // narrow — it accepts filesystem errors and re-throws bugs. The first version of this fake set
+  // only `code`, so it was rejected as "not a filesystem error", which was the predicate working
+  // correctly against an unrealistic fixture. Worth the extra two fields: a fake that could not
+  // be produced by the system it imitates proves nothing about the system.
+  const denied = (p2) => Object.assign(new Error(`EACCES: permission denied, open '${p2}'`),
+    { code: 'EACCES', errno: -13, syscall: 'open', path: p2 });
   const blind = {
     writeFileSync: (p2, t2) => fs.writeFileSync(p2, t2),
     renameSync: (a, b) => fs.renameSync(a, b),
     readFileSync: (p2, e) => {
-      if (p2.includes('DECISIONS_ARCHIVE.md')) { const err = new Error('EACCES'); err.code = 'EACCES'; throw err; }
+      if (p2.includes('DECISIONS_ARCHIVE.md')) throw denied(p2);
       return fs.readFileSync(p2, e);
     },
   };
@@ -852,6 +859,62 @@ test('P3: a volume that cannot be RE-READ after the write is a failed verificati
   assert.ok(e.problems.some((x) => x.includes('could not be re-read after the write (EACCES)')), JSON.stringify(e.problems));
   assert.ok(!e.problems.some((x) => x.includes('REFUSED')), 'nothing is left to refuse once the files are written');
 });
+
+test('P3: …and a BUG in that same re-read escapes as itself, not as a verification problem', () => {
+  // The fourth narrow catch, and the one the table above cannot reach: it lives behind an `io`
+  // seam rather than on the CLI path. Same property — a bug is not a read failure.
+  const f = commitFixture();
+  const buggy = {
+    writeFileSync: (p2, t2) => fs.writeFileSync(p2, t2),
+    renameSync: (a, b) => fs.renameSync(a, b),
+    readFileSync: () => { throw new TypeError('Cannot read properties of null (reading "boom")'); },
+  };
+  const e = caught(() => commitWrite({ ...f, io: buggy }));
+  assert.equal(e.name, 'TypeError', `a bug must escape as itself, got ${e.name}: ${e.message}`);
+  assert.match(e.message, /Cannot read properties of null/);
+});
+
+// ── P3 · every catch must be NARROW, not only the dispatcher's ──────────────────────────────
+//
+// The pin above stopped `runCommand` from tidying a crash into a refusal. `readVolume` was then
+// written with an UNCONDITIONAL catch, which reintroduced that exact defect one level down — and,
+// because the funnel shares one catch across three call sites, in three places at once. Two
+// siblings were worse: they swallow a bug and EXIT 0. Measured at 4aa685d:
+//
+//   readVolume          exit 1, "REFUSED — ... cannot read (undefined)"    crash worn as a refusal
+//   holdsVolumeContent  EXIT 0, silent — every volume invisible
+//   pathOccupant        EXIT 0, silent — every path free, occupancy guard disabled
+//
+// A shared helper concentrates the failure as well as the handling. That is why the helper needs
+// the scrutiny its call sites no longer need — and why this is a table, not one case.
+
+const NARROW_CATCH_SITES = [
+  ['readVolume', 'function readVolume(abs, name, io = fs) {\n  try {',
+    'function readVolume(abs, name, io = fs) {\n  try {\n    null.boom;', 'plan'],
+  ['holdsVolumeContent', '    return fs.statSync(abs).isFile();',
+    '    null.boom;\n    return fs.statSync(abs).isFile();', 'plan'],
+  ['pathOccupant', '    const st = fs.lstatSync(abs);',
+    '    null.boom;\n    const st = fs.lstatSync(abs);', 'apply'],
+];
+
+for (const [label, from, to, command] of NARROW_CATCH_SITES) {
+  test(`P3: a programming bug inside ${label}'s try reaches the operator, undisguised`, () => {
+    const mutant = cliCopy([[from, to]]);
+    const { root } = rotatingFixture('2026-06-25');
+    const argv = command === 'apply'
+      ? ['apply', '--root', root, '--date', '2026-08-26', '--only', '2026-06-25']
+      : ['plan', '--root', root, '--json'];
+    const r = run(mutant, argv);
+    // The same three properties the dispatcher's pin asserts, because exit code alone would miss
+    // the shape that matters: a non-zero exit carrying the WRONG explanation.
+    assert.notEqual(r.code, 0, `a crashed ${command} must not report success:\n${r.out}${r.err}`);
+    assert.match(r.err, /Cannot read properties of null/, 'the real error must reach the operator');
+    assert.ok(!r.err.includes('REFUSED —'),
+      "a bug must not wear one of this tool's deliberate refusals");
+    assert.ok(!r.err.includes('(undefined)'),
+      'a refusal that cannot name what it refused is not a refusal — that is the tell');
+  });
+}
 
 test('P1-2: volume 1000 keeps being recognised — padStart(3) emits four digits', () => {
   const root = fixture({
