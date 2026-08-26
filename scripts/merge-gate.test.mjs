@@ -1008,3 +1008,178 @@ test('prune on a detached HEAD does not count the pseudo-line as a kept branch',
   assert.match(text, /✓ 1 branch\(es\) deleted\./, 'a clean prune did not report a clean prune');
   assert.doesNotMatch(text, /kept/, 'a failure was reported that did not happen');
 });
+
+// ── verdict.mjs refuses a flag it does not read ───────────────────────────────────────────────
+//
+// THE DEFECT, MEASURED ON `main` AT 47dbbd6 BEFORE THE FIX. `arg()` searches argv for the names it
+// is asked for and never looks at the rest, so an unrecognised flag was DROPPED: no failure, no
+// warning, no change of behaviour. An operator passed `--dry-run` — a flag whose entire purpose is
+// to prevent a write — and the tool exited 0 and WROTE `.qa/verdicts/e3b0c442….json`, the
+// empty-diff subject, into a governed directory. **The guard rail they reached for did not exist,
+// and failing to have it looked identical to having it.**
+//
+// Six of thirteen probe invocations wrote on `main`; one of thirteen writes here, and it is the
+// real `record`. That one is the POSITIVE CONTROL and it fires in both cells — without it, "wrote
+// nothing" is satisfied by a probe that cannot see a write at all.
+
+/** The verdict directory's CONTENT, not its listing. */
+const verdictSnapshot = (proj) => {
+  const dir = path.join(proj, '.qa', 'verdicts');
+  if (!fs.existsSync(dir)) return '<absent>';
+  return fs.readdirSync(dir).sort()
+    .map((n) => `${n}:${fs.readFileSync(path.join(dir, n), 'utf8')}`)
+    .join('\n');
+};
+
+test('an unknown flag is REFUSED and writes NOTHING — the listing is the assertion, not the exit code', () => {
+  const { proj } = fixture();
+  const base = ['record', '--repo', proj, '--ref', BRANCH, '--verdict', 'PASS', '--by', 'probe'];
+
+  // A LISTING IS NOT ENOUGH AND THE FIRST VERSION OF THIS PROBE PROVED IT. Every `record` in one
+  // repo writes the SAME path — one diff, one subject — so after the first write the file NAMES
+  // stop changing and a dozen real writes read as "wrote nothing". Content, always.
+  const before = verdictSnapshot(proj);
+
+  const attacks = [
+    ['--dry-run-typo', [...base, '--dry-run-typo']],
+    ['--force', [...base, '--force']],
+    ['a misspelt known flag', [...base, '--evidenc', 'x']],
+    ['a flag in a value position', [...base, '--evidence', '--foo']],
+    ['on check', ['check', '--repo', proj, '--ref', BRANCH, '--json', '--nope']],
+    ['on subject', ['subject', '--repo', proj, '--ref', BRANCH, '--verbose']],
+  ];
+  for (const [label, args] of attacks) {
+    const r = verdict(args);
+    assert.notEqual(r.code, 0, `${label}: an unknown flag exited 0`);
+    assert.match(r.stderr, /unknown flag/, `${label}: refused for some other reason:\n${r.stderr}`);
+    assert.equal(verdictSnapshot(proj), before, `${label}: the verdict directory changed on a refused invocation`);
+  }
+
+  // `--evidence --foo` is the case that pins isValue() to ONE definition. `arg()` treats a
+  // `--`-prefixed token as "no value given" and falls back to null; if the walker disagreed and
+  // swallowed `--foo` as evidence, the record would be written with evidence null AND the unknown
+  // flag would be hidden — the same silent accept, one layer down.
+  assert.match(verdict([...base, '--evidence', '--foo']).stderr, /unknown flag "--foo"/);
+
+  // THE POSITIVE CONTROL, in the same run: the probe can see a write, so "nothing changed" above is
+  // a fact about the refusals and not about the instrument.
+  assert.equal(verdict(base).code, 0, 'the real record stopped working');
+  assert.notEqual(verdictSnapshot(proj), before, 'the positive control wrote nothing, so this whole case is vacuous');
+});
+
+test('every flag every LIVE call site passes is still accepted — the sweep, pinned', () => {
+  // NAMING A CLASS CREATES AN OBLIGATION TO SWEEP IT. `git grep -n "verdict\.mjs"` plus the `$vtool`
+  // invocations in bin/warroom is the whole population; this table is that sweep, and each row
+  // carries a `present` string so the table cannot rot into a list of invocations nobody makes.
+  // If a call site changes its flags, the `present` assertion fails and someone re-sweeps — which
+  // is the only reason a refusal like this is safe to add to a tool on the blocking path.
+  const { proj } = fixture();
+  const CALL_SITES = [
+    {
+      what: '.github/workflows/qa-lead-pass.yml — the blocking verdict step',
+      file: '.github/workflows/qa-lead-pass.yml',
+      present: 'node scripts/verdict.mjs check --json',
+      args: ['check', '--json'],
+    },
+    {
+      what: 'bin/warroom — the merge gate, JSON read',
+      file: 'bin/warroom',
+      present: 'node "$vtool" check --repo "$PROJECT_DIR" --ref "$branch" --json',
+      args: ['check', '--repo', proj, '--ref', BRANCH, '--json'],
+    },
+    {
+      what: 'bin/warroom — the merge gate, human-readable re-run',
+      file: 'bin/warroom',
+      present: 'node "$vtool" check --repo "$PROJECT_DIR" --ref "$branch"',
+      args: ['check', '--repo', proj, '--ref', BRANCH],
+    },
+    {
+      what: 'scripts/merge-gate.test.mjs — recordAndCommit, the fixture recorder',
+      file: 'scripts/merge-gate.test.mjs',
+      present: "'--verdict', verdictValue, '--by', 'fixture-reviewer', '--json'",
+      args: ['record', '--repo', proj, '--ref', BRANCH, '--verdict', 'PASS', '--by', 'fixture-reviewer', '--json', '--dry-run'],
+    },
+    {
+      what: 'the recipe verdict.mjs itself prints, and qa-lead-pass.yml repeats',
+      file: 'scripts/verdict.mjs',
+      present: 'record --verdict PASS --by <reviewer>',
+      args: ['record', '--repo', proj, '--ref', BRANCH, '--verdict', 'PASS', '--by', 'r', '--evidence', 'e', '--dry-run'],
+    },
+    {
+      what: 'the run-id flag — readable, and undocumented until this change',
+      file: 'scripts/verdict.mjs',
+      present: "runId: arg('--run-id')",
+      args: ['record', '--repo', proj, '--ref', BRANCH, '--verdict', 'PASS', '--by', 'r', '--run-id', '99', '--dry-run'],
+    },
+  ];
+
+  for (const site of CALL_SITES) {
+    const text = fs.readFileSync(path.join(REPO, site.file), 'utf8');
+    assert.ok(
+      text.includes(site.present),
+      `${site.what}: this row no longer matches ${site.file}. Re-sweep with \`git grep -n "verdict.mjs"\` ` +
+        `and the $vtool invocations in bin/warroom, then update this table — a call site that moved is a ` +
+        `finding, not a row to delete.`
+    );
+    const r = verdict(site.args);
+    assert.doesNotMatch(
+      r.stderr, /unknown flag/,
+      `${site.what}: the new refusal rejects a flag a LIVE call site passes:\n${r.stderr}`
+    );
+  }
+
+  // AND THE CONTROL FOR THE `present` ASSERTIONS: a string that is NOT in the file must fail the
+  // same test, or six passing rows prove only that `includes` returns true for something.
+  assert.ok(
+    !fs.readFileSync(path.join(REPO, 'bin', 'warroom'), 'utf8').includes('node "$vtool" check --dry-run'),
+    'the negative control matched, so the `present` assertions above cannot tell a live call site from any string'
+  );
+});
+
+test('--dry-run writes nothing and previews the record a real run would write', () => {
+  // WHY THIS FLAG EXISTS AT ALL. `subject` was the obvious answer — it reads and never writes — but
+  // measured, `subject --json` prints {subject, base, bytes} and NOT the tier, the tier driver, the
+  // path or the record body. It is not a preview of what `record` writes, so refusing the unknown
+  // flag alone would have left a writing tool with no way to look before it writes.
+  const { proj } = fixture();
+  const args = ['record', '--repo', proj, '--ref', BRANCH, '--verdict', 'PASS', '--by', 'r', '--evidence', 'e', '--json'];
+
+  const before = verdictSnapshot(proj);
+  const dry = verdict([...args, '--dry-run']);
+  assert.equal(dry.code, 0, `--dry-run failed:\n${dry.stderr}`);
+  assert.equal(verdictSnapshot(proj), before, '--dry-run wrote a verdict record');
+
+  const real = verdict(args);
+  assert.equal(real.code, 0, `the real record failed:\n${real.stderr}`);
+  assert.notEqual(verdictSnapshot(proj), before, 'the real record wrote nothing, so the comparison below is vacuous');
+
+  // BYTE-IDENTICAL APART FROM THE TIMESTAMP AND THE FLAG ITSELF. A preview that describes a record
+  // the tool would not write is worse than no preview: it reports a plan nothing executes. The two
+  // bodies come from ONE code path — only the fs calls are gated — and this is what holds that true.
+  const strip = (s) => { const o = JSON.parse(s); delete o.recorded_at; delete o.dry_run; return o; };
+  assert.deepEqual(strip(dry.stdout), strip(real.stdout), 'the dry-run preview differs from the record actually written');
+  assert.equal(JSON.parse(dry.stdout).dry_run, true, 'the preview does not say it is a preview');
+  assert.equal(JSON.parse(real.stdout).dry_run, false, 'a real record claims to be a dry run');
+
+  // THE WRITTEN FILE MUST NOT CARRY `dry_run`. It is a fact about the invocation, not about the
+  // verdict, and check() reads this file — a new key in a governed artifact is a schema change.
+  const written = JSON.parse(fs.readFileSync(path.join(proj, JSON.parse(real.stdout).path), 'utf8'));
+  assert.ok(!('dry_run' in written), 'the dry_run flag leaked into the recorded artifact');
+  assert.ok(!('path' in written), 'the record shape changed');
+});
+
+test('usage names every flag the code reads — it named five of seven', () => {
+  // TWO DESCRIPTIONS OF ONE FLAG SURFACE DISAGREE SILENTLY, and these did: the usage line named
+  // --repo/--ref/--json while the code also read --verdict, --by, --evidence and --run-id. A reader
+  // checking whether `--run-id` was real would have concluded it was not. usage() is generated from
+  // FLAGS now, so this test is asking whether that generation still reaches the reader.
+  const r = verdict([]);
+  assert.equal(r.code, 2, 'no command did not print usage');
+  for (const flag of ['--repo', '--ref', '--json', '--verdict', '--by', '--evidence', '--run-id', '--dry-run']) {
+    assert.ok(r.stderr.includes(flag), `usage does not name ${flag}:\n${r.stderr}`);
+  }
+  // And the refusal message names the accepted set for the command that was refused, so the reader
+  // does not have to run a second command to find out what they should have typed.
+  const refused = verdict(['record', '--nope']);
+  assert.match(refused.stderr, /record accepts: .*--dry-run/, refused.stderr);
+});
