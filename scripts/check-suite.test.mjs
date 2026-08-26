@@ -554,8 +554,15 @@ test('the scanner declares its vocabulary — an unmodelled construct is a FINDI
   // Measured 2026-08-26, the case that prompted it:
   //     bash -c "echo $'a\'b'; echo SECOND_RAN"   ->  a'b / SECOND_RAN, exit 0 — TWO COMMANDS RAN
   //
-  // Cost, measured before building: **0** of 69 package.json scripts and **0** of 44 ci.yml `run:`
-  // values contain a `$` at all, so nothing existing is newly flagged.
+  // Cost, RE-MEASURED 2026-08-26: **0** of 72 package.json scripts and **0** of 45 ci.yml `run:` values
+  // contain a `$` at all, so nothing existing is newly flagged. THE CONCLUSION NEVER MOVED — only the
+  // denominators did, and the earlier note read "0 of 69 … and 0 of 44", where the 69 was already off by
+  // one when it was written. Both are derived, never counted by eye:
+  //     node -e "const s=require('./package.json').scripts;console.log(Object.keys(s).length,
+  //       Object.values(s).filter(v=>v.includes('$')).length)"                              -> 72 0
+  //     node -e "const fs=require('fs'),{parseCiSteps}=require('./scripts/lib/check-suite.js');
+  //       const r=parseCiSteps(fs.readFileSync('.github/workflows/ci.yml','utf8')).filter(x=>x.run);
+  //       console.log(r.length, r.filter(x=>String(x.run).includes('$')).length)"           -> 45 0
 
   // The vocabulary. None of these is a finding, and a rule that fired on them would be routed
   // around rather than obeyed.
