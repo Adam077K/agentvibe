@@ -134,6 +134,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/check-registration.test.mjs` | — |
 | `scripts/check-suite.test.mjs` | the drift guard for `npm run check`, and the mutation gate for |
 | `scripts/check-tier-gate.test.mjs` | the tier gate that replaced label-based enforcement. |
+| `scripts/claim-append.test.mjs` | the gate in scripts/lib/claim-append.js. |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
 | `scripts/evict-memory.test.mjs` | mutation gate for the typed memory eviction. |

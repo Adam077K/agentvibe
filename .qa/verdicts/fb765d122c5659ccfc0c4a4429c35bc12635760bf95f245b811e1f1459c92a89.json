@@ -1,0 +1,11 @@
+{
+  "subject": "fb765d122c5659ccfc0c4a4429c35bc12635760bf95f245b811e1f1459c92a89",
+  "base": "0c78fa2813fc9d47291b339e3571a7e165c15074",
+  "tier": "irreversible",
+  "tier_driver": ".claude/agents/sourcer.md",
+  "verdict": "PASS",
+  "by": "builder-sourcer-can-write",
+  "run_id": null,
+  "evidence": "Merged origin/main 0c78fa2 (merge, not rebase). STEPS.length = 48, asserted after the merge -- the figure a bad resolution would silently change. CODEBASE-MAP.md auto-merged and was VERIFIED not accepted: gen-codebase-map --check exit 0 before regenerating, and build:map produced a zero-byte diff. npm run check: 48 of 48 passed, 0 failed, exit 0, sandbox armed, 155.1s. Emitter cross-checked against the SPEC and not only against our own parser: 14 adversarial assert values through both parseClaimsFromText and js-yaml, 14 of 14 byte-identical, control confirms js-yaml was really parsing. Single author, single model family -- the irreversible tier's 2-of-3 multi-judge is NOT met by this record.",
+  "recorded_at": "2026-08-26T15:24:43.274Z"
+}
