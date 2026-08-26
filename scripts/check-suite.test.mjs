@@ -631,6 +631,36 @@ test('ANSI-C and locale quoting are MODELLED, so the gate does not fire on them'
   assert.deepEqual(shellOperators(String.raw`echo $'a$(npm run b; npm run c)d'`), [], 'no expansion inside ANSI-C');
 });
 
+test('`${…}` and `$"…"` are scanned THROUGH — a nested `$(` still opens a command frame', () => {
+  // TWO RE-ENTRY CLAIMS THAT NOTHING HELD. isModelledDollar()'s doc says `${…}` is scanned through
+  // so `${x:-$(a;b)}` reports the `;`, and the `$"…"` case pins its negatives without its positive.
+  // Both were true and both were unasserted — which is the exact shape that produced three shipped
+  // bypasses: a behavioural claim in a comment with no case behind it. A future narrowing that
+  // made either opaque would have been invisible in a green run.
+  //
+  // Measured, because "scanned through" is a claim about what bash RUNS:
+  //     echo "${x:-$(echo RAN; echo RAN2)}"   ->  RAN / RAN2      the substitution runs
+  //     echo $"a$(echo RAN; echo RAN2)d"      ->  aRAN / RAN2d    likewise, inside the translated
+  //                                                               string — it expands like `"…"`
+  assert.deepEqual(shellOperators('echo "${x:-$(npm run a; npm run b)}"'), [';'], 'a chain in a parameter default');
+  assert.deepEqual(shellOperators('echo "${x:-$(npm run a && npm run b)}"'), ['&&'], 'the `&&` sibling');
+  assert.deepEqual(shellOperators('echo $"a$(npm run b; npm run c)d"'), [';'], 'a chain inside $"…"');
+  assert.deepEqual(shellOperators('echo $"a$(npm run b && npm run c)d"'), ['&&'], 'the `&&` sibling');
+
+  // The literal-only negatives, so neither case is satisfied by a rule that fires on `${` or `$"`
+  // themselves rather than on the substitution inside them.
+  assert.deepEqual(shellOperators('echo "${x:-plain}"'), [], 'a parameter default with no substitution');
+  assert.deepEqual(shellOperators('echo $"a$(npm run b)d"'), [], 'one command inside $"…" is not a chain');
+  assert.deepEqual(shellOperators('echo "${HOME}${PATH}"'), [], 'adjacent expansions are not a chain');
+
+  // And end to end, since the guarantee is about what the guards certify.
+  const step = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'echo "${x:-$(npm run test:hooks; npm run test:budget)}"' } });
+  assert.ok(
+    step.failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes('`;`')),
+    `a chain inside a parameter default was accepted:\n${step.failures.join('\n') || '(no failures at all)'}`
+  );
+});
+
 test('every OTHER unmodelled construct in the scanner path OVER-reports — the closure claim', () => {
   // The gate closes the `$` surface. This is the claim about everything else, and it is asserted
   // rather than promised: the remaining constructs this scanner does not model all add operators
@@ -647,6 +677,15 @@ test('every OTHER unmodelled construct in the scanner path OVER-reports — the 
   // `bash -c 'echo "a; npm run b'` is an unexpected-EOF syntax error. Pinned so that if it ever
   // stops being true, the change is visible here.
   assert.deepEqual(shellOperators('echo "a; npm run b'), [], 'an unterminated quote started reporting — re-check the claim above');
+
+  // AND ONE MORE OVER-REPORT, worth naming because isModelledDollar()'s "scanned through" invites
+  // the opposite expectation: an UNQUOTED parameter default whose word contains a literal `;` is
+  // reported, though bash prints `a;b` and runs one command. Quoted it is not — measured both ways.
+  // Scanning through is what makes a nested `$(` visible; the price is that the word's own text is
+  // read as command context. Over-reporting, so it is the safe side, and it is pinned rather than
+  // left for the next reader to rediscover.
+  assert.deepEqual(shellOperators('echo ${x:-a;b}'), [';'], 'unquoted — reported, though bash runs one command');
+  assert.deepEqual(shellOperators('echo "${x:-a;b}"'), [], 'quoted — the double quotes make it literal to both');
 });
 
 test('an unquoted backslash escapes the operator after it — the branch that had no coverage', () => {
