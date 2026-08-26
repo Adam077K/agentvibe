@@ -37,6 +37,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run build:map` | `node scripts/gen-codebase-map.mjs` |
 | `npm run build:routers` | `node scripts/build-skill-routers.mjs` |
 | `npm run check` | `node scripts/run-checks.mjs` |
+| `npm run check:ci-chains` | `node scripts/check-ci-chains.mjs` |
 | `npm run check:citations` | `npm run test:citations && node scripts/check-citations.mjs` |
 | `npm run check:curation` | `node scripts/curate-skills.mjs --check` |
 | `npm run check:dispatch` | `npm run test:dispatch && npm run test:dispatch-flush && npm run check:dispatch-agenttype` |
