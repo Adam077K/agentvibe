@@ -1008,3 +1008,171 @@ test('prune on a detached HEAD does not count the pseudo-line as a kept branch',
   assert.match(text, /✓ 1 branch\(es\) deleted\./, 'a clean prune did not report a clean prune');
   assert.doesNotMatch(text, /kept/, 'a failure was reported that did not happen');
 });
+
+// ── The PR route's own bash, executed ────────────────────────────────────────────────────────
+//
+// WHY THIS EXISTS. `.github/workflows/qa-lead-pass.yml` carried a subject-binding predicate that
+// nothing under scripts/ could see: no test parsed the workflow, so deleting the binding tomorrow
+// would have failed nothing. An argument with no test is an argument.
+//
+// These drive the SHIPPED bytes of the two `run:` blocks under `/usr/bin/bash -e {0}` — the shell
+// the runner actually reports in its step header — with node, jq and gh stubbed. Asserting the
+// file CONTAINS a regex would pass against a comment describing the regex; this repo has produced
+// twelve false findings that way, and the header of this file already says so.
+//
+// NO YAML PARSER. package.json declares zero dependencies. `js-yaml` resolves on a developer
+// machine from $HOME/node_modules and is absent on the runner, so a test importing it would pass
+// here and fail there — the same one-machine-layout defect this file records three times already.
+// The extractor below is text-directed and dependency-free.
+
+const WORKFLOW = path.join(REPO, '.github', 'workflows', 'qa-lead-pass.yml');
+
+// The runner's step header reports `/usr/bin/bash -e {0}`. That PATH IS THE RUNNER'S, not every
+// machine's — macOS ships bash at /bin/bash and has no /usr/bin/bash, so the first version of this
+// helper hardcoded `/usr/bin/bash` and every case below died with ENOENT: status null, signal null,
+// no output, which reads exactly like a script that produced nothing. Fourth instance in this file
+// of one machine's layout baked into a test. The FLAG is what models the runner; the path is not.
+const BASH = ['/bin/bash', '/usr/bin/bash'].find((p) => fs.existsSync(p));
+assert.ok(BASH, 'no bash found at /bin/bash or /usr/bin/bash — the cases below cannot run');
+
+/** The `run:` block of the step whose name starts with `prefix`, dedented. Shipped bytes only. */
+function runBlock(prefix) {
+  const lines = fs.readFileSync(WORKFLOW, 'utf8').split('\n');
+  const start = lines.findIndex((l) => l.trimStart().startsWith(`- name: ${prefix}`));
+  assert.notEqual(start, -1, `no step named ${prefix} — the extractor is aimed at nothing`);
+  const runAt = lines.findIndex((l, i) => i > start && /^\s*run: \|/.test(l));
+  assert.notEqual(runAt, -1, `step ${prefix} has no "run: |" block`);
+  const indent = lines[runAt].match(/^\s*/)[0].length + 2;
+  const body = [];
+  for (let i = runAt + 1; i < lines.length; i++) {
+    const l = lines[i];
+    if (l.trim() !== '' && l.match(/^\s*/)[0].length < indent) break;
+    body.push(l.slice(indent));
+  }
+  assert.ok(body.length > 5, `extracted ${body.length} lines for ${prefix} — extractor is broken`);
+  return body.join('\n');
+}
+
+/**
+ * Run a step's shipped script the way the runner does. `nodeOut`/`nodeExit` stand in for
+ * verdict.mjs; `jqOut` lets a test model a jq that exits 0 having printed nothing, which is the
+ * degeneration an in-PR $GITHUB_PATH shim produces and which no exit code reveals.
+ */
+function runStep(script, { env = {}, nodeOut = '', nodeExit = 0, jqOut = null } = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qagate-'));
+  const bin = path.join(dir, 'bin');
+  fs.mkdirSync(bin);
+  fs.writeFileSync(path.join(bin, 'node'), `#!/bin/bash\ncat <<'PAYLOAD'\n${nodeOut}\nPAYLOAD\nexit ${nodeExit}\n`);
+  fs.writeFileSync(path.join(bin, 'gh'), '#!/bin/bash\nexit 0\n');
+  if (jqOut !== null) fs.writeFileSync(path.join(bin, 'jq'), `#!/bin/bash\nprintf '%s' ${JSON.stringify(jqOut)}\nexit 0\n`);
+  for (const f of fs.readdirSync(bin)) fs.chmodSync(path.join(bin, f), 0o755);
+
+  const script_path = path.join(dir, 'step.sh');
+  fs.writeFileSync(script_path, script);
+  const r = run(BASH, ['-e', script_path], dir, {
+    ...process.env,
+    PATH: `${bin}:${process.env.PATH}`,
+    RUNNER_TEMP: dir,
+    GITHUB_OUTPUT: path.join(dir, 'out.txt'),
+    GH_TOKEN: 'x',
+    REPO: 'o/r',
+    HEAD_SHA: 'deadbeef',
+    PR_NUMBER: '1',
+    ...env,
+  });
+  return { ...r, text: r.stdout + r.stderr };
+}
+
+const SUBJ = 'a'.repeat(64);
+const OTHER = 'b'.repeat(64);
+const okJson = (ok, subject = SUBJ) =>
+  JSON.stringify({ ok, subject, tier: 'irreversible', reason: ok ? 'match' : 'absent' });
+
+test('PR route: a verdict bound to this diff passes', () => {
+  const r = runStep(runBlock('Verdict diff-binding'), { nodeOut: okJson(true), nodeExit: 0 });
+  assert.equal(r.code, 0, `a genuine PASS was refused:\n${r.text}`);
+  assert.match(r.text, /QA GATE PASSED/);
+});
+
+test('PR route: no verdict and no bypass is refused', () => {
+  const r = runStep(runBlock('Verdict diff-binding'), {
+    nodeOut: okJson(false), nodeExit: 1, env: { BYPASS_APPROVED: 'false', BYPASS_SUBJECT: '' },
+  });
+  assert.equal(r.code, 1, `a missing verdict did not refuse:\n${r.text}`);
+  assert.match(r.text, /QA GATE FAILED/);
+});
+
+// B1. The -z guard catches silence. This is the case it does NOT catch: output that is present
+// and unparseable, so every jq extraction yields "". An empty subject used as a substring needle
+// matches any comment, and the gate grants a bypass while printing "names this exact subject ()".
+test('PR route: a non-empty but unparseable verdict is REFUSED, not read as empty', () => {
+  const r = runStep(runBlock('Verdict diff-binding'), {
+    nodeOut: 'verdict: something went sideways', nodeExit: 1, jqOut: '',
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: SUBJ },
+  });
+  assert.equal(r.code, 1, `garbage output was not refused:\n${r.text}`);
+  assert.doesNotMatch(r.text, /QA GATE BYPASSED/, 'an empty subject granted a bypass');
+  assert.match(r.text, /could not read a boolean \.ok|not 64 hex digits/);
+});
+
+test('PR route: an empty subject never reaches the bypass comparison', () => {
+  const r = runStep(runBlock('Verdict diff-binding'), {
+    nodeOut: okJson(false), nodeExit: 1, jqOut: '',
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: '' },
+  });
+  assert.equal(r.code, 1);
+  assert.doesNotMatch(r.text, /QA GATE BYPASSED/, 'empty subject matched empty subject');
+});
+
+// B2. The decision crosses on an immutable step output. A bypass approved against a DIFFERENT
+// subject must not authorise this diff, however it got here.
+test('PR route: a bypass approved for another diff is REFUSED', () => {
+  const r = runStep(runBlock('Verdict diff-binding'), {
+    nodeOut: okJson(false), nodeExit: 1,
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: OTHER },
+  });
+  assert.equal(r.code, 1, `a bypass for another diff was honoured:\n${r.text}`);
+  assert.match(r.text, /BYPASS REFUSED/);
+});
+
+// THIS CONTROL IS WHAT KEEPS THE FOUR REFUSAL CASES ABOVE FROM GOING VACUOUS, and it is not
+// decoration. Every refusal case asserts exit 1, and `bash -e` also exits 1 when the step dies at
+// VERDICT_JSON=$(...) — the shell aborting and the gate refusing are indistinguishable by exit
+// code. The verdict step clears -e deliberately (`set +e`); delete that line and this case, which
+// demands exit 0 on the same nodeExit=1 input, is the one that goes red.
+//
+// Confirmed by mutation rather than argued: driving these same cases against the two earlier
+// versions of the step reproduces the defects each fix removed — origin/main BYPASSES a bypass
+// approved for another diff AND an unparseable verdict; commit 76a5603 refuses the first and
+// still BYPASSES the second, which is the review's B1, found again from the other end.
+test('PR route: a bypass approved for THIS diff is honoured — the control', () => {
+  const r = runStep(runBlock('Verdict diff-binding'), {
+    nodeOut: okJson(false), nodeExit: 1,
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: SUBJ },
+  });
+  assert.equal(r.code, 0, `a correctly named bypass was refused — the instrument cannot pass:\n${r.text}`);
+  assert.match(r.text, /QA GATE BYPASSED/);
+});
+
+// The evidence must not travel on a channel that PR-authored code can rewrite between steps.
+// scripts/classify.mjs and scripts/ledger.mjs run in between, and the remedy this workflow
+// recommends protects .github/** while leaving scripts/** writable.
+/**
+ * Comment lines stripped. An absence assertion over a shell block must read CODE: both blocks
+ * document the mutable-file design they replaced, and the first version of the test below failed
+ * on that prose — matching a comment describing the defect as if it were the defect. That is the
+ * same confusion this file's header names, arriving from the other direction.
+ */
+const codeOnly = (s) => s.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+
+test('PR route: the bypass decision does not travel through a file under RUNNER_TEMP', () => {
+  const verdict = codeOnly(runBlock('Verdict diff-binding'));
+  const bypass = codeOnly(runBlock('Check for QA gate bypass'));
+
+  // Control: the stripper must leave the code it is meant to search.
+  assert.match(bypass, /GITHUB_OUTPUT/, 'codeOnly() removed the code — the assertion below is vacuous');
+
+  assert.doesNotMatch(verdict, /RUNNER_TEMP/, 'bypass evidence read from a mutable file');
+  assert.doesNotMatch(bypass, /bypass-comments\.txt/, 'bypass evidence written to a mutable file');
+  assert.match(bypass, /bypass_approved=/, 'the decision is not emitted to $GITHUB_OUTPUT');
+});

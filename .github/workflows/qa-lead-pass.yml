@@ -15,8 +15,11 @@
 #
 # What it enforces:
 #   1. A QA verdict bound to THIS PR'S EXACT DIFF (scripts/verdict.mjs), posted as a
-#      check-run signed by this workflow's own GITHUB_TOKEN — or the founder posted
-#      an explicit `BYPASS REASON:` comment under a bypass label.
+#      check-run posted with this workflow's own GITHUB_TOKEN — or the founder posted
+#      an explicit `BYPASS REASON:` comment NAMING THAT DIFF'S SUBJECT, under a bypass
+#      label. (This line said "signed by" until 2026-08-26, 400 lines above another line
+#      in this same file calling "signed" the exact word that makes a reader stop asking.
+#      A token authenticates the poster; it signs nothing.)
 #      (Grepping session files for `qa_verdict: PASS` was removed 2026-08-23 (P0.1) —
 #      that trusted PR-author-authored prose as if it were review output. Before that,
 #      slug matching against the whole sessions directory was removed 2026-08-15 — it
@@ -118,9 +121,9 @@ jobs:
           echo "Has qa-lead-bypass label: ${HAS_BYPASS_LABEL}"
 
           # ── Bypass label present → collect Adam's bypass comments ──────────
-          # THIS STEP NO LONGER GRANTS THE BYPASS. It used to: finding any comment by
-          # ADAM_GITHUB_USER containing "BYPASS REASON:" set bypass_approved=true, and
-          # the verdict step honoured that flag whatever the diff had become since.
+          # THIS STEP STILL GRANTS THE BYPASS — but only for a NAMED DIFF. It used to
+          # grant on finding any comment by ADAM_GITHUB_USER containing "BYPASS REASON:",
+          # and the verdict step honoured that flag whatever the diff had become since.
           #
           # That is the SAME defect the subject hash exists to remove, one branch over.
           # This file has already had it removed twice from the PASS path — slug-matched
@@ -132,9 +135,11 @@ jobs:
           # that PR, including a rewrite of this workflow. The label is sticky, the
           # comment is immutable, and nothing recomputed.
           #
-          # So this step now only reports what the founder wrote. The verdict step
-          # binds it to the subject, because that is where the subject is known.
-          BYPASS_CANDIDATE=false
+          # The decision is made here and crosses to the verdict step as a boolean on an
+          # immutable channel. Both are initialised before any branch: `set -u` is active,
+          # and an unset variable at the emit below would abort the step.
+          BYPASS_APPROVED=false
+          BYPASS_SUBJECT=""
           if [ "$HAS_BYPASS_LABEL" = "true" ]; then
             if [ -z "$ADAM_GITHUB_USER" ]; then
               echo "ERROR: ADAM_GITHUB_USER variable is not set — cannot validate bypass author"
@@ -147,27 +152,66 @@ jobs:
               exit 1
             fi
 
-            # Emit each qualifying comment BODY, @json-encoded so one comment is one
-            # line whatever newlines it contains. The verdict step then requires the
-            # subject and the marker in the SAME comment, which a two-file grep could
-            # not tell apart from the marker in one comment and the subject in another.
+            # Each qualifying comment BODY, @json-encoded so one comment is one line
+            # whatever newlines it contains. That keeps "the marker and the subject in
+            # the SAME comment" checkable, which a line-agnostic search could not tell
+            # apart from the marker in one comment and the subject in another.
             #
             # --paginate was missing here: the default page is 30 comments, so a bypass
             # comment on a long thread was invisible. Fail-closed, but wrong.
-            gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate \
-              --jq ".[] | select(.user.login == \"$ADAM_GITHUB_USER\") | select(.body | test(\"BYPASS REASON:\")) | .body | @json" \
-              > "$RUNNER_TEMP/bypass-comments.txt"
+            #
+            # HELD IN A VARIABLE, NOT A FILE. A first version of this wrote the bodies
+            # to "$RUNNER_TEMP/bypass-comments.txt" and let the verdict step four steps
+            # later read them back. That moved the authorisation evidence onto a MUTABLE
+            # channel: between the write and the read, this job runs `scripts/classify.mjs`
+            # and `scripts/ledger.mjs` — PR-authored repo code — either of which could
+            # rewrite the file to name a subject the founder never approved. Demonstrated
+            # in review, and it is not excused by "anyone who can edit scripts/ can edit
+            # this workflow": the remedy this file recommends is CODEOWNERS over
+            # `/.github/`, and under that remedy `.github/**` is protected while
+            # `scripts/**` is not. The hole would have opened on the day the fix landed.
+            #
+            # $GITHUB_OUTPUT is parsed by the runner when the step ends and is immutable
+            # thereafter, so the decision — not the evidence for it — crosses the gap.
+            BODIES=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate \
+              --jq ".[] | select(.user.login == \"$ADAM_GITHUB_USER\") | select(.body | test(\"BYPASS REASON:\")) | .body | @json")
 
-            COMMENT_COUNT=$(wc -l < "$RUNNER_TEMP/bypass-comments.txt" | tr -d ' ')
-            if [ "$COMMENT_COUNT" -gt 0 ]; then
-              echo "✓ ${COMMENT_COUNT} bypass comment(s) from ${ADAM_GITHUB_USER} — the verdict step will check each names this diff's subject"
-              BYPASS_CANDIDATE=true
+            if [ -n "$BODIES" ]; then
+              # The subject is computed HERE, by the same single implementation the
+              # verdict step uses, because this is the step that decides. `set -e` is
+              # active (this step does not clear it), so a failure to compute the
+              # subject fails the job rather than reaching a comparison with garbage.
+              BYPASS_SUBJECT=$(node scripts/verdict.mjs subject)
+
+              # Derived, not taken on trust: verdict.mjs computes the subject as
+              # crypto.createHash('sha256')...digest('hex') — 64 lowercase hex digits.
+              # Verified by running `verdict.mjs subject` and measuring: len=64, matches.
+              # An unvalidated subject is how an empty string reaches a substring match
+              # and matches everything; see the guard in the verdict step.
+              if ! [[ "$BYPASS_SUBJECT" =~ ^[0-9a-f]{64}$ ]]; then
+                echo "ERROR: computed subject is not 64 hex digits — refusing to evaluate a bypass"
+                echo "  got: [${BYPASS_SUBJECT}]"
+                exit 1
+              fi
+
+              SHORT="${BYPASS_SUBJECT:0:12}"
+              COMMENT_COUNT=$(printf '%s\n' "$BODIES" | wc -l | tr -d ' ')
+              echo "Found ${COMMENT_COUNT} 'BYPASS REASON:' comment(s) from ${ADAM_GITHUB_USER}."
+              echo "This diff's subject is ${SHORT} — a bypass must name it."
+
+              if printf '%s\n' "$BODIES" | grep -F -q "$SHORT"; then
+                echo "✓ a bypass comment names this exact diff subject"
+                BYPASS_APPROVED=true
+              else
+                echo "✗ no bypass comment names this diff — the label alone does not authorise it"
+              fi
             else
               echo "✗ No bypass comment from ${ADAM_GITHUB_USER} containing 'BYPASS REASON:'"
             fi
           fi
 
-          echo "bypass_candidate=${BYPASS_CANDIDATE}" >> "$GITHUB_OUTPUT"
+          echo "bypass_approved=${BYPASS_APPROVED}" >> "$GITHUB_OUTPUT"
+          echo "bypass_subject=${BYPASS_SUBJECT}" >> "$GITHUB_OUTPUT"
 
       # ── Tier floor, from THE classifier ────────────────────────────────────
       # Per the 2026-05-16 board decision #4, .claude/qa-tier-floor.yml sets the
@@ -371,10 +415,19 @@ jobs:
       # with the BASE branch's trust and secrets, which is worse than this gap.
       #
       # ── 3. Is the check-run load-bearing? NO. Decorative. ────────────────────
-      # `QA verdict (diff-bound)` is NOT in required_status_checks.contexts, and
-      # grepping the tree for that name returns only the two lines that create it
-      # — written here, read nowhere. What gates the merge is this job's exit
-      # code under the required context "Verify QA Lead PASS".
+      # `QA verdict (diff-bound)` is NOT in required_status_checks.contexts, and no
+      # code anywhere reads that name back — every occurrence in the tree is either
+      # one of the two `gh api -f` arguments that CREATE the check-run, or prose (this
+      # block included) discussing it. Re-derive rather than trusting the number, and
+      # subtract this comment from what you find:
+      #
+      #   grep -rn -F 'QA verdict (diff-bound)' . --exclude-dir=.git | grep -vc '^\s*#'
+      #
+      # This read "returns only the two lines that create it" until 2026-08-26. It was
+      # true when written and FALSE IN THE SAME COMMIT THAT WROTE IT — the count is now
+      # 5, of which 3 are the comment making the claim. A measurement that counts its
+      # own prose falsifies itself on write; state the derivation, never the total.
+      # What gates the merge is this job's exit code under "Verify QA Lead PASS".
       #
       # WORSE, AND THIS IS THE PART THAT CHANGES THE REMEDY: check-runs posted by
       # `gh api` from inside a workflow are attributed to the same app as the ones
@@ -432,15 +485,29 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          BYPASS_CANDIDATE: ${{ steps.bypass.outputs.bypass_candidate }}
+          BYPASS_APPROVED: ${{ steps.bypass.outputs.bypass_approved }}
+          BYPASS_SUBJECT: ${{ steps.bypass.outputs.bypass_subject }}
         run: |
-          set -uo pipefail  # No -e (unlike the other steps in this job): VERDICT_JSON=$(...)
-                             # below must still be captured when verdict.mjs exits non-zero, so
-                             # the OK/CONCLUSION logic can read it and post an accurate check-run.
-                             # Every verdict.mjs failure mode (absent record, unresolvable
-                             # origin/main, parse failure) was traced by hand and still exits 1
-                             # via the explicit checks below — this is not a silent-continue like
-                             # the removed `|| true` was.
+          # `set +e` IS LOAD-BEARING AND WAS MISSING. Measured 2026-08-26: GitHub invokes
+          # every `run:` block here as `/usr/bin/bash -e {0}` (read off the runner's own
+          # step header), and `set -uo pipefail` does NOT clear an inherited -e. So the
+          # comment that stood here — "No -e (unlike the other steps in this job)" —
+          # described an intent the runner never honoured.
+          #
+          # What that cost, measured on run 32964238343: the step printed its header and
+          # died at VERDICT_JSON=$(...) the moment verdict.mjs exited 1. No "❌ QA GATE
+          # FAILED", no reason, and NO check-run — `check-runs` on that head sha carries
+          # only "Verify QA Lead PASS", while a passing head (#108) carries "QA verdict
+          # (diff-bound)". The file's claim that "the failing verdict check-run stands
+          # for audit" was false, and the entire bypass branch below was DEAD CODE: the
+          # only way to survive the assignment was verdict.mjs exiting 0, which exits 0
+          # before ever consulting a bypass.
+          #
+          # Turning it off is what makes the failure path real. What makes THAT safe is
+          # that every value the logic below trusts is validated rather than inferred
+          # from an exit code — see the guard after the jq block.
+          set -uo pipefail
+          set +e
           echo "=== Verdict diff-binding check (blocking) ==="
 
           VERDICT_JSON=$(node scripts/verdict.mjs check --json)
@@ -457,6 +524,30 @@ jobs:
           SUBJECT=$(echo "$VERDICT_JSON" | jq -r '.subject')
           TIER=$(echo "$VERDICT_JSON" | jq -r '.tier')
           REASON=$(echo "$VERDICT_JSON" | jq -r '.reason')
+
+          # ── Refuse garbage, not just silence ────────────────────────────────
+          # The -z guard above catches an EMPTY verdict; it does not catch a non-empty
+          # one that does not parse. Both degenerate the same way: jq exits 0 having
+          # printed nothing, every variable becomes "", and an empty SUBJECT fed to a
+          # substring match matches ANY comment — granting a bypass while printing
+          # "names this exact diff subject ()". A jq shim on $GITHUB_PATH that exits 0
+          # with empty output reaches this from inside a PR; jq being ABSENT does not,
+          # because that aborts under the -e this step now clears deliberately.
+          #
+          # So the values are checked, not the exit code. The subject shape is derived
+          # from verdict.mjs — sha256 hex digest, 64 lowercase hex digits — and verified
+          # by running `verdict.mjs subject` (len=64, matches), not taken on assertion.
+          if [ "$OK" != "true" ] && [ "$OK" != "false" ]; then
+            echo "❌ could not read a boolean .ok from verdict.mjs output (got [${OK}]) — refusing."
+            echo "   A gate that cannot read its own oracle does not get to guess."
+            exit 1
+          fi
+          if ! [[ "$SUBJECT" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "❌ .subject is not 64 hex digits (got [${SUBJECT}]) — refusing."
+            echo "   An unvalidated subject becomes an empty needle, and an empty needle"
+            echo "   is found in every haystack."
+            exit 1
+          fi
 
           if [ "$OK" = "true" ]; then
             CONCLUSION="success"
@@ -511,27 +602,26 @@ jobs:
           # 12 hex characters is 48 bits. That is not a cryptographic claim and does
           # not need to be: the founder is trusted here by construction, and the
           # binding exists to pin WHICH DIFF they meant, not to resist them.
-          if [ "$BYPASS_CANDIDATE" = "true" ]; then
-            SUBJECT_SHORT="${SUBJECT:0:12}"
-            if [ -f "$RUNNER_TEMP/bypass-comments.txt" ] \
-               && grep -F -q "$SUBJECT_SHORT" "$RUNNER_TEMP/bypass-comments.txt"; then
+          #
+          # The DECISION arrives as a boolean on an immutable step output; the evidence
+          # for it never crosses the gap. All this step does is confirm the decision was
+          # taken against the same diff this step is judging — two invocations of one
+          # implementation, four steps apart, over a tree that must not have moved.
+          if [ "$BYPASS_APPROVED" = "true" ]; then
+            if [ "$BYPASS_SUBJECT" != "$SUBJECT" ]; then
               echo ""
-              echo "⚠️  QA GATE BYPASSED — founder comment carries 'BYPASS REASON:' AND names"
-              echo "    this exact diff subject (${SUBJECT_SHORT})."
-              echo "    The failing verdict check-run above stands for audit; it is not overwritten."
-              echo "    Note: audit_log rule_violation row will be written by Inngest on next cycle"
-              exit 0
+              echo "❌ BYPASS REFUSED — the bypass was approved against subject"
+              echo "   [${BYPASS_SUBJECT}] but this step is judging [${SUBJECT}]."
+              echo "   One implementation computed both, so a mismatch means the tree moved"
+              echo "   mid-job. Refusing rather than picking one."
+              exit 1
             fi
             echo ""
-            echo "❌ BYPASS REFUSED — the label and a 'BYPASS REASON:' comment are present,"
-            echo "   but no such comment names THIS diff. A bypass is bound to the diff it"
-            echo "   bypasses, exactly as a verdict is; otherwise it silently re-authorises"
-            echo "   every later push to this PR."
-            echo ""
-            echo "   To bypass this diff, comment (the subject changes on every push):"
-            echo ""
-            echo "     BYPASS REASON: <why> ${SUBJECT_SHORT}"
-            echo ""
+            echo "⚠️  QA GATE BYPASSED — a founder comment carries 'BYPASS REASON:' AND names"
+            echo "    this exact diff subject (${SUBJECT:0:12})."
+            echo "    The failing verdict check-run posted above stands for audit."
+            echo "    Note: audit_log rule_violation row will be written by Inngest on next cycle"
+            exit 0
           fi
 
           echo ""
@@ -543,6 +633,16 @@ jobs:
           echo "     node scripts/verdict.mjs record --verdict PASS --by <reviewer> ..."
           echo "     and committed under .qa/verdicts/."
           echo ""
-          echo "  2. The PR must have the 'qa-lead-bypass' label AND a comment from"
-          echo "     the authorized user containing 'BYPASS REASON:'"
+          echo "  2. The PR must have the 'qa-lead-bypass' label AND a comment from the"
+          echo "     authorized user containing BOTH 'BYPASS REASON:' and this diff's"
+          echo "     subject — a bypass is bound to the diff it bypasses, exactly as a"
+          echo "     verdict is. Copy this line:"
+          echo ""
+          echo "       BYPASS REASON: <why> ${SUBJECT:0:12}"
+          echo ""
+          echo "     Then RE-RUN THIS JOB. Posting a comment triggers nothing: the"
+          echo "     triggers are [opened, synchronize, reopened, labeled, unlabeled],"
+          echo "     so with the label already applied, toggle it off and on (or use"
+          echo "     'Re-run jobs'). This did not matter under the old rule, which was"
+          echo "     diff-independent and so could be evaluated before the comment existed."
           exit 1
