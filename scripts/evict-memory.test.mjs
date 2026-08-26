@@ -27,6 +27,31 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
+/**
+ * The module under test, imported INSIDE the test body that needs it.
+ *
+ * ── NO `await` MAY APPEAR AT MODULE SCOPE IN THIS FILE ───────────────────────────────────────
+ *
+ * This file used to carry two `const … = await import('./evict-memory.mjs')` at module scope, and
+ * tests declared ABOVE them referenced those bindings. That is fine on Node 22+, which finishes
+ * evaluating the module before running anything, and it is broken on Node 20, which starts
+ * draining registered tests at the first await — so the bodies ran while the `const`s were still
+ * in their temporal dead zone. 108/108 locally on v24.11.1; ELEVEN failures on CI's v20, all
+ * `ReferenceError: Cannot access 'X' before initialization`, and not one of them a logic defect.
+ *
+ * MOVING THE IMPORTS TO THE TOP WOULD NOT BE THE FIX. It works until someone adds a test above
+ * them, and the failure reappears on a machine nobody here runs. The order dependence is removed
+ * instead: a top-level `await` is the only thing that can suspend module evaluation part-way, so
+ * with none, every module-scope binding is initialised before any test body executes — on every
+ * Node version, whatever the runner's scheduling. `test-registration-order` below asserts it.
+ *
+ * A function DECLARATION, not a `const` arrow, so this helper is itself immune to the class it
+ * exists to close. Repeated calls are free: the module loader caches by specifier.
+ */
+function evictModule() {
+  return import('./evict-memory.mjs');
+}
+
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EVICT = path.join(REPO, 'scripts', 'evict-memory.mjs');
 const BUDGET = path.join(REPO, 'scripts', 'check-memory-budget.mjs');
@@ -834,7 +859,8 @@ for (const [label, line] of LATE_READ_SITES) {
   });
 }
 
-test('P3: a volume that cannot be RE-READ after the write is a failed verification, not a refusal', () => {
+test('P3: a volume that cannot be RE-READ after the write is a failed verification, not a refusal', async () => {
+  const { commitWrite } = await evictModule();
   // The fourth site, and the one that must NOT say "REFUSED": both files are already written, so
   // there is nothing left to refuse. A read that fails there is a verification that could not be
   // performed, and `commitWrite` already has the vocabulary for that.
@@ -860,7 +886,8 @@ test('P3: a volume that cannot be RE-READ after the write is a failed verificati
   assert.ok(!e.problems.some((x) => x.includes('REFUSED')), 'nothing is left to refuse once the files are written');
 });
 
-test('P3: …and a BUG in that same re-read escapes as itself, not as a verification problem', () => {
+test('P3: …and a BUG in that same re-read escapes as itself, not as a verification problem', async () => {
+  const { commitWrite } = await evictModule();
   // The fourth narrow catch, and the one the table above cannot reach: it lives behind an `io`
   // seam rather than on the CLI path. Same property — a bug is not a read failure.
   const f = commitFixture();
@@ -931,7 +958,8 @@ for (const [label, from, to, command, expected] of NARROW_CATCH_SITES) {
   });
 }
 
-test("P3: a bug inside conservationIssues' destination read escapes as itself", () => {
+test("P3: a bug inside conservationIssues' destination read escapes as itself", async () => {
+  const { conservationIssues } = await evictModule();
   // The fifth guard. Behind an `io` seam, so the CLI table cannot reach it — and it was one of the
   // two that widening left the suite green on.
   const buggy = { readFileSync: () => { throw new TypeError('Cannot read properties of null (reading "boom")'); } };
@@ -940,7 +968,8 @@ test("P3: a bug inside conservationIssues' destination read escapes as itself", 
   assert.match(e.message, /Cannot read properties of null/);
 });
 
-test("P3: …and a real read failure there is still reported as a conservation issue, not a crash", () => {
+test("P3: …and a real read failure there is still reported as a conservation issue, not a crash", async () => {
+  const { conservationIssues } = await evictModule();
   // The control. Without it the case above is satisfied by a guard that rethrows everything.
   const denied = Object.assign(new Error('EACCES: permission denied'),
     { code: 'EACCES', errno: -13, syscall: 'open' });
@@ -1159,7 +1188,6 @@ test('P3: the stub date is the LOCAL date, not UTC', () => {
 // filesystem, so it is driven directly with an injected `io` — otherwise deleting it costs zero
 // failing tests, which is exactly the state the review found it in.
 
-const { commitWrite, VOLUME_BYTE_CAP: EVICT_CAP } = await import('./evict-memory.mjs');
 
 /** Run `fn`, return the error it threw, and fail loudly if it did not throw at all. */
 function caught(fn) {
@@ -1192,12 +1220,14 @@ function commitFixture() {
   };
 }
 
-test('P2-1: a healthy write passes post-write verification', () => {
+test('P2-1: a healthy write passes post-write verification', async () => {
+  const { commitWrite } = await evictModule();
   // The control. Without it the two mutations below would prove only that the function can fail.
   assert.deepEqual(commitWrite({ ...commitFixture(), io: fs }), []);
 });
 
-test('P2-1: a short write to the VOLUME is caught by re-reading from disk', () => {
+test('P2-1: a short write to the VOLUME is caught by re-reading from disk', async () => {
+  const { commitWrite } = await evictModule();
   // It THROWS. A returned flag left the verdict behind a deletable `if` at the call site, and
   // deleting those two lines cost zero failing tests — the tool computed the failure and exited 0.
   const e = caught(() => commitWrite({ ...commitFixture(), io: truncatingIo(fs, 'DECISIONS_ARCHIVE.md') }));
@@ -1210,14 +1240,16 @@ test('P2-1: a short write to the VOLUME is caught by re-reading from disk', () =
     'the missing body must be named, not just the byte count');
 });
 
-test('P2-1: a short write to DECISIONS.md is caught too — the residue is an artifact claim', () => {
+test('P2-1: a short write to DECISIONS.md is caught too — the residue is an artifact claim', async () => {
+  const { commitWrite } = await evictModule();
   const e = caught(() => commitWrite({ ...commitFixture(), io: truncatingIo(fs, 'DECISIONS.md') }));
   const problems = e.problems;
   assert.ok(problems.some((p) => p.includes('DECISIONS.md on disk')),
     `expected a DECISIONS.md finding: ${JSON.stringify(problems)}`);
 });
 
-test('P2-1: the volume lands BEFORE DECISIONS.md — the survivable crash state is chosen', () => {
+test('P2-1: the volume lands BEFORE DECISIONS.md — the survivable crash state is chosen', async () => {
+  const { commitWrite } = await evictModule();
   // A crash between the two renames leaves the bodies in both files (recoverable) rather than in
   // neither (not). The duplicate-body guard is what makes re-running the safe recovery.
   const order = [];
@@ -1233,7 +1265,8 @@ test('P2-1: the volume lands BEFORE DECISIONS.md — the survivable crash state 
   assert.deepEqual(order, ['DECISIONS_ARCHIVE.md', 'DECISIONS.md']);
 });
 
-test('the exported cap is the one the CLI enforces', () => {
+test('the exported cap is the one the CLI enforces', async () => {
+  const { VOLUME_BYTE_CAP: EVICT_CAP } = await evictModule();
   assert.equal(EVICT_CAP, 40_000);
 });
 
@@ -1243,7 +1276,6 @@ test('the exported cap is the one the CLI enforces', () => {
 // read more forms of a field also widened what could shadow it.
 // ══════════════════════════════════════════════════════════════════════════════════════════════
 
-const { conservationIssues, volumeHeader } = await import('./evict-memory.mjs');
 
 // ── P1-B · a fenced template must not shadow an entry's real fields ─────────────────────────
 
@@ -1403,26 +1435,31 @@ const conservationBase = (over = {}) => {
   };
 };
 
-test('conservation: the clean case reports nothing — otherwise the five below prove nothing', () => {
+test('conservation: the clean case reports nothing — otherwise the five below prove nothing', async () => {
+  const { conservationIssues } = await evictModule();
   assert.deepEqual(conservationIssues(conservationBase()), []);
 });
 
-test('conservation condition: byte arithmetic that does not close', () => {
+test('conservation condition: byte arithmetic that does not close', async () => {
+  const { conservationIssues } = await evictModule();
   const issues = conservationIssues({ ...conservationBase(), removed: 99 });
   assert.ok(issues.some((i) => i.includes('byte arithmetic does not close')), JSON.stringify(issues));
 });
 
-test('conservation condition: the body is not in the volume', () => {
+test('conservation condition: the body is not in the volume', async () => {
+  const { conservationIssues } = await evictModule();
   const issues = conservationIssues({ ...conservationBase(), newVolume: '# Archive\n\nsomething else' });
   assert.ok(issues.some((i) => i.includes('not present verbatim')), JSON.stringify(issues));
 });
 
-test('conservation condition: the heading did not survive in DECISIONS.md', () => {
+test('conservation condition: the heading did not survive in DECISIONS.md', async () => {
+  const { conservationIssues } = await evictModule();
   const issues = conservationIssues({ ...conservationBase(), newDecisions: '# Decisions\n' });
   assert.ok(issues.some((i) => i.includes('rule 4 residue missing')), JSON.stringify(issues));
 });
 
-test('conservation condition: the destination was rewritten rather than appended to', () => {
+test('conservation condition: the destination was rewritten rather than appended to', async () => {
+  const { conservationIssues } = await evictModule();
   // The prior content is put on DISK, not passed in — that is the only way this condition can
   // still be wrong about the destination without the call site being able to make it vacuous.
   const base = conservationBase();
@@ -1431,7 +1468,8 @@ test('conservation condition: the destination was rewritten rather than appended
   assert.ok(issues.some((i) => i.includes('an append may only add to a volume')), JSON.stringify(issues));
 });
 
-test("conservation condition: a BLANK destination refuses — startsWith('') is not a check", () => {
+test("conservation condition: a BLANK destination refuses — startsWith('') is not a check", async () => {
+  const { conservationIssues } = await evictModule();
   // This is the exact hole the call-site mutation `volExisting: ''` drove through, and it cost
   // ZERO failing tests. An empty prior makes the prefix test vacuously true for every input, so
   // an empty prior is now a REFUSAL rather than a pass. Rule 10, applied to the gate itself.
@@ -1440,14 +1478,16 @@ test("conservation condition: a BLANK destination refuses — startsWith('') is 
   assert.ok(issues.some((i) => i.includes('the file on disk is empty')), JSON.stringify(issues));
 });
 
-test('conservation condition: an UNREADABLE destination refuses rather than passing', () => {
+test('conservation condition: an UNREADABLE destination refuses rather than passing', async () => {
+  const { conservationIssues } = await evictModule();
   const issues = conservationIssues(conservationBase({
     vol: { abs: path.join(os.tmpdir(), 'no-such-volume-anywhere.md'), name: 'DECISIONS_ARCHIVE.md', number: 1, fresh: false },
   }));
   assert.ok(issues.some((i) => i.includes('prior content could not be established')), JSON.stringify(issues));
 });
 
-test('conservation condition: a FRESH volume takes its prior from the header, not from disk', () => {
+test('conservation condition: a FRESH volume takes its prior from the header, not from disk', async () => {
+  const { conservationIssues, volumeHeader } = await evictModule();
   // Otherwise the refusal above would fire on every first eviction into a new volume, and the
   // condition would have to be softened back to something vacuous to get a green suite.
   const header = conservationIssues(conservationBase({
@@ -1457,7 +1497,8 @@ test('conservation condition: a FRESH volume takes its prior from the header, no
   assert.deepEqual(header, [], JSON.stringify(header));
 });
 
-test('conservation condition: a reduction of exactly ZERO is refused, not only a negative one', () => {
+test('conservation condition: a reduction of exactly ZERO is refused, not only a negative one', async () => {
+  const { conservationIssues } = await evictModule();
   // `removed === 0` was unreachable in the suite — "not shrink" appeared zero times in this file.
   const issues = conservationIssues({ ...conservationBase(), removed: 0, movedBodies: 50, residue: 50 });
   assert.ok(issues.some((i) => i.includes('would not shrink DECISIONS.md')), JSON.stringify(issues));
@@ -1970,6 +2011,62 @@ test('P3: a CRLF entry does not get a spurious did-you-mean out of a FENCED miss
   assert.match(e.reasons.join(' '), /no `Reversibility:` field/);
   assert.ok(!e.reasons.join(' ').includes('typo'),
     'the misspelling is inside a fence; on CRLF the mask must still see that');
+});
+
+// ── test-registration-order · NO `await` AT MODULE SCOPE IN THIS FILE ───────────────────────
+//
+// The third environment dimension to break this branch's CI, after the OS and the filesystem's
+// case handling. All three are invisible here by construction: every agent on this task runs on
+// one machine and CI runs on another.
+//
+// Node 22+ finishes evaluating a test module before running anything; Node 20 starts draining
+// registered tests at the first `await`. Two module-scope `await import`s therefore let eleven
+// test bodies run while their bindings were still in the temporal dead zone — 108/108 on
+// v24.11.1, eleven `Cannot access 'X' before initialization` on CI's v20, and not one of them a
+// logic defect. `.github/workflows/ci.yml` pins node-version '20'.
+//
+// A top-level `await` is the ONLY thing that can suspend module evaluation part-way, so this one
+// assertion covers the whole class: with none, every module-scope binding is initialised before
+// any test body executes, whatever the runner's scheduling. That is why it is worth asserting the
+// STRUCTURE rather than the eighteen individual bindings that happened to be affected.
+//
+// ⚠ THIS ASSERTION PASSES ON A MACHINE WHERE THE BUG CANNOT HAPPEN. It was therefore checked by
+// construction: inserting `const x = await import('node:fs');` at column 0 turns it red, and that
+// was run, not reasoned about.
+
+test('test-registration-order: this file carries no module-scope `await`', () => {
+  const src = fs.readFileSync(fileURLToPath(import.meta.url), 'utf8');
+  // Column 0 is module scope; anything inside a function or a test body is indented.
+  const offenders = src.split('\n')
+    .map((line, i) => ({ line, n: i + 1 }))
+    .filter(({ line }) => /^(?:const|let|var)\s[^=]*=\s*await\s/.test(line) || /^await\s/.test(line))
+    .map(({ line, n }) => `${n}: ${line.trim()}`);
+  assert.deepEqual(offenders, [],
+    'a module-scope `await` suspends evaluation part-way, and on Node 20 the runner starts tests '
+    + 'during that suspension — every binding declared below it is then in its temporal dead zone. '
+    + 'Import inside the test body instead; see `evictModule` at the top of this file');
+});
+
+test('test-registration-order: …and the check would catch one — verified by construction', () => {
+  // The assertion above passes on this machine whether or not it works, because the defect it
+  // guards cannot occur here. So the predicate is run against a line that must fail it. Without
+  // this, a typo in that regex would read as a clean bill of health forever.
+  const offends = (line) => /^(?:const|let|var)\s[^=]*=\s*await\s/.test(line) || /^await\s/.test(line);
+  for (const bad of [
+    "const { commitWrite } = await import('./evict-memory.mjs');",
+    "const mod = await import('node:fs');",
+    'let x = await something();',
+    'await import("./evict-memory.mjs");',
+  ]) {
+    assert.ok(offends(bad), `the check must catch: ${bad}`);
+  }
+  for (const fine of [
+    "  const { commitWrite } = await evictModule();",
+    "function evictModule() { return import('./evict-memory.mjs'); }",
+    "const REPO = path.resolve('..');",
+  ]) {
+    assert.ok(!offends(fine), `the check must NOT catch: ${fine}`);
+  }
 });
 
 // ── P3 · the claim about the REAL file must be made against the real file ───────────────────
