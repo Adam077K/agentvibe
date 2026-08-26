@@ -37,3 +37,8 @@ mission-control/client/dist/
 
 # Ledger run log — only used when no ~/.<session>/events.jsonl is configured
 .ledger-events.jsonl
+
+# claim-append's write lock and its atomic-rename staging file. Both exist only while
+# scripts/lib/claim-append.js is mid-write; a committed one would mean an append died.
+docs/03-system-design/.SOURCED-CLAIMS.lock
+docs/03-system-design/SOURCED-CLAIMS.md.*.tmp

@@ -552,6 +552,26 @@ function validateDisposition(c, issues, where) {
   }
 }
 
+/**
+ * Is this claim retired?
+ *
+ * ONE PREDICATE, TWO CALLERS, ON PURPOSE. `scripts/ledger.mjs` decided which prose
+ * citations resolve by SET MEMBERSHIP — `projectIds.has(id)` — and never opened the
+ * record, so a deprecated id passed `lint` exactly as a live one did: a withdrawn
+ * finding could go on supporting live work, in prose and in `supports:`, and the lint
+ * that exists to catch dangling citations said nothing. `scripts/lib/claim-append.js`
+ * needs the same answer at write time. Two implementations of one rule agree until the
+ * day they matter, which is the argument that already gave this repo one risk classifier
+ * and one waiver-date rule instead of two.
+ *
+ * `waive` is deliberately NOT deprecation. A waiver is a dated promise to come back;
+ * `claim-freshness` already fails a lapsed one harder than none, and treating a waived
+ * claim as retired would hide it from the mechanism that chases it.
+ */
+function isDeprecated(c) {
+  return Boolean(c && c.disposition && c.disposition.action === 'deprecate');
+}
+
 /** Validate one claim object. Returns a list of human-readable issue strings. */
 function validateClaim(c, where) {
   const issues = [];
@@ -699,5 +719,6 @@ module.exports = {
   validateClaim,
   parseClaimsFromText,
   isRealDate,
+  isDeprecated,
   independenceIssue,
 };
