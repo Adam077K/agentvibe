@@ -93,3 +93,71 @@ conflicts with Wave 1 on `package.json` — keep the split form and give `test:e
 the generated `CODEBASE-MAP.md`, which is resolved either way then rebuilt with `npm run build:map`.
 
 **Not an independent panel:** single model family throughout.
+
+---
+
+## Rounds 5–9: a CI failure four review rounds could not see, and what it uncovered
+
+**CI caught what the whole pipeline could not.** After round 4 passed review, `ubuntu-latest` failed a test
+that passes on macOS: the fixture wrote `DECISIONS_ARCHIVE_002.MD` and asserted something occupied
+`...002.md` — one file on a case-folding filesystem, two on a case-sensitive one. Its own precondition guard
+used a **case-insensitive** regex to assert a **case-sensitive** property, so it passed while its premise was
+false. **Every agent on this task runs on one machine, so a platform-dependent defect is invisible to the
+review pipeline by construction.** The lane's answer was better than the rule it was given: it mounted a
+case-sensitive APFS volume and measured, rather than reasoning — and produced the counter-example proving
+`process.platform` would also have been wrong (a case-sensitive volume on macOS).
+
+**The test bug was hiding a production defect, and two more behind that.** A directory named like a volume
+was handed to `readFileSync` and crashed `plan` — documented read-only, exits 0 — with an unhandled `EISDIR`.
+A **FIFO** named like a volume made it **hang forever** (8s timeout vs 38ms with the type filter); the
+reviewer later corrected the attribution: the surviving hang is the claim scanner reading every git-listed
+`.md`, and **git lists symlinks but not FIFOs**, so a bare FIFO is harmless while a symlink to one hangs. The
+lane withdrew its own explanation rather than defending it.
+
+**Then the fix for that dropped a needed shape.** Filtering non-regular files by `lstat` also dropped
+**symlinks that resolve to real volumes** — invisible to the scan, so `targetVolume` appended to an older
+volume and broke monotonic append **silently**, and the cross-volume duplicate guard went blind, duplicating
+history on the recovery this tool's own message recommends. Two P1s. **The code's own comment named that exact
+harm and applied it to the wrong branch** — one line above the filter inflicting it.
+
+Cure: **one predicate cannot answer two questions.** The scan resolves (*does this hold content I must not
+skip?*); the guard does not (*is this path free to create?*). Both collapse directions are pinned.
+
+**The sweep then stopped short three times, and that is the durable finding.** Guarding one volume read left
+three siblings; the funnel built to fix that reintroduced the defect one level down with an unconditional
+catch — and asking the question of *every* catch found two worse siblings that failed **open and silent**;
+and pinning "the four I recalled" left two of six guards held by nothing. **Intent caught none of these. A
+grep did.**
+
+**And a structural predicate forgot a class too.** `isFsError` tested shape rather than enumerating codes —
+defended as *"a list is a thing to forget an entry from"*, which is true and was not the whole truth. A read
+of an oversized file throws `ERR_STRING_TOO_LONG` with no `syscall` and no `errno`: the read genuinely failed
+and **the kernel was never involved**, so a working named refusal became a stack trace. It is now structural
+for what the kernel refused **plus an explicit list for what Node refused after the read, labelled as a
+list**, with `ERR_INVALID_ARG_TYPE` excluded by its own test so the list cannot drift into dressing up bugs.
+
+**Restraint verified, not assumed.** One catch is deliberately left wide — around `git ls-files`, whose
+failure vocabulary is not the filesystem's. The reviewer injected a fault there and confirmed it fails
+**closed and announced** (`plan` exits 0 reporting "claim scan: NOT PERFORMED"; `apply` refuses), categorically
+unlike the fail-open pair. Sweeping it on a matching *shape* would have been the error this file keeps finding.
+
+**Honesty carried in the artefacts, not just the report.** `ERR_STRING_TOO_LONG` is measured;
+`ERR_FS_FILE_TOO_LARGE` is taken from Node's documentation and is **unreachable on this build** — the comment
+says which is which rather than letting both read as evidence. The read-failure tests **stage** the window by
+denying a read at the point under test and say plainly *"that is not a race and is not evidence of one."*
+Environment is probed, never assumed: `truncate` availability, sparse allocation, whether `chmod 000` really
+denies, whether the filesystem folds case.
+
+**Final state:** `check:memory` 24 + **108 pass**, `npm run check` 30 of 30, `check:ledger` 0 block. Reviewer
+verdict **PASS** at `44560e1` with the two remaining P3s fixed at `58e4821`. Nine rounds; severity ran
+P1 → P1 → P1 → clean → P1 → P2 → P3 → P3.
+
+**The lane's own closing summary, which is the most useful sentence produced on this branch:**
+> *"The through-line was not any one predicate — each fix's own fixture was shaped by the fix, so the thing it
+> dropped, forgot, or concentrated stayed invisible. The countermeasures that actually worked were the
+> mechanical ones: enumerate by grep, assert the anchor matched exactly once, and probe the environment
+> instead of assuming it. Intent caught none of them."*
+
+**Backlog, latent, not blocking:** the claim scanner hangs on a symlink to a FIFO (outside this tool);
+`check-memory-budget.mjs` has the same regex-then-`readFileSync` shape and is a blocking CI script; content
+outside `.claude/memory` is reachable through a symlinked volume path; `ERR_FS_FILE_TOO_LARGE` unverified.
