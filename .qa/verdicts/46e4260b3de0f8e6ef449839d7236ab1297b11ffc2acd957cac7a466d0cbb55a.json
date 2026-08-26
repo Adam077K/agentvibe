@@ -1,0 +1,11 @@
+{
+  "subject": "46e4260b3de0f8e6ef449839d7236ab1297b11ffc2acd957cac7a466d0cbb55a",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "irreversible",
+  "tier_driver": ".github/workflows/qa-lead-pass.yml",
+  "verdict": "PASS",
+  "by": "builder-verdict-forgeability (single author, single model family — see session file)",
+  "run_id": null,
+  "evidence": "npm run check 46/46. test:merge-gate 48/48. Mutation: origin/main bypasses both defects, 76a5603 bypasses B1, HEAD refuses both. Failure path OBSERVED on runner 32978261742: check-run posted, explanation printed.",
+  "recorded_at": "2026-08-26T14:14:34.218Z"
+}
