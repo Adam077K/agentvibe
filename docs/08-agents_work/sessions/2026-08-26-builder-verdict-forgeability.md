@@ -148,5 +148,3 @@ YAML, so the subject binding has a test that fails if it is deleted — it had n
 The mutation table is the evidence the tests were not built from the fix. The pass-case control is
 what stops the four refusal cases going vacuous: `bash -e` also exits 1 when the step dies early,
 so exit code alone cannot distinguish the shell aborting from the gate refusing.
-
-<!-- THROWAWAY: invalidates the verdict subject to observe the failure path on the runner. Reverted immediately. -->
