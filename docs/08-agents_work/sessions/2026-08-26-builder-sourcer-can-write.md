@@ -4,7 +4,7 @@ role: builder
 task: sourcer-can-write
 branch: feat/sourcer-claim-append
 worktree: .worktrees/sourcer-can-write
-base: 47dbbd6
+base: 0c78fa2
 tier: irreversible
 qa_verdict: PASS
 ---
@@ -142,6 +142,35 @@ address (`64:ff9b::8.8.8.8`) is still admitted: a guard that costs `sourcer` the
 one defect with a worse one.
 
 **All four pinned by mutation** — reintroduce each bug and its test goes red; restore and all four are green.
+
+## merge into `0c78fa2` — the queue update
+
+Merged `origin/main`, **not** rebased. My round-2 rebase is why that is now standing for every lane: `git
+rebase` hits the same armed-sandbox wall as `git worktree add` on `.claude/agents/**` and `.mcp.json`, and
+leaves the tree at the target's content with HEAD unmoved.
+
+`CODEBASE-MAP.md` was the only overlap and git auto-merged it. **An auto-merged generated file can match
+neither side, so that was checked rather than accepted:** `gen-codebase-map.mjs --check` exit 0 *before*
+regenerating, and `npm run build:map` then produced a zero-byte diff. The auto-merge happened to be right;
+the point is that it was verified.
+
+**`STEPS.length` → 48**, the figure a bad resolution would silently change (#114 moved it 46 → 48).
+`npm run check` → **48 of 48 · 0 failed · exit 0 · 155.1s**, sandbox armed.
+
+**The emitter now has evidence against the specification, not only against our own parser.** Prompted by
+`parseYamlSubset` being mis-routed as a defect all session — three parties measured our parser correctly
+and compared it to what the author expected rather than to what YAML specifies, and nobody ran a reference
+implementation. My work leans on that parser hard: `_emitSection` writes YAML that `parseClaimsFromText`
+reads back, and the round-trip check proves emitter-and-our-parser agree, which is **not** the same as
+proving the file is valid YAML. So I ran fourteen adversarial `assert` values — embedded double quotes,
+backslashes, `#`, `key: value`, flow braces, a leading `-`, `&anchor *alias !tag`, `%YAML`, backtick,
+non-ASCII — through the emitter and then through **both** parsers: **14 of 14 parse in js-yaml and yield
+byte-identical values to ours**, with a control proving js-yaml was really parsing.
+
+That measurement is **not** committed as a test. `js-yaml` resolves here only as a transitive dependency,
+`package.json` is owned by another lane so I cannot declare it, and a test that silently depends on an
+undeclared transitive dep is the kind of thing that breaks later for reasons nobody can trace. The command
+is one paste if anyone wants it wired once the dependency can be declared.
 
 ## corrections
 
