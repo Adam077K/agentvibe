@@ -164,15 +164,44 @@ onward. Mine. And it is not only prose: `unused_reason` has a 40-character floor
 about the file its author wrote. `run:` is safe only by accident — `SHELL_METACHARACTERS` already refuses
 `#` there.
 
-Fixed by deleting one character. I also **pinned it rather than only commenting it**, because a comment
-saying "do not do this" is unenforced prose, which is the thing this PR exists to end — the scan covers
-`gates.yml` and all six playbooks, allows a `#` inside quotes (the documented remedy), and carries a control
-asserting it saw the 80-odd legitimate whole-line comments, so an empty offender list means it looked rather
-than that it read nothing. Break-tested three ways: the `#` restored in `gates.yml` → exit 1 with the line
-named; an **unquoted** `#` in a playbook `summary:` → exit 1 (and the parser demo shows that summary would
-have silently become `"Bring a screen up to standard"`); a **quoted** `#` → still passes. **The root cause is
-in `scripts/lib/claims.js` and is deliberately untouched** — out of this diff, `irreversible` tier, and
-routed rather than absorbed.
+Fixed by deleting one character, and **pinned rather than only commented**, because a comment saying "do not
+do this" is unenforced prose — the thing this PR exists to end.
+
+**The first version of that pin refused any unquoted `#`, and it was wrong in the way this PR keeps finding.**
+It fired on inputs nothing eats. I ran the class against **PyYAML** rather than reasoning from the spec —
+`js-yaml` was also resolvable; the point is that an independent implementation decided it, not our reading:
+
+| input | PyYAML | `parseYamlSubset` | agree |
+|---|---|---|---|
+| `k: alpha PR #115, bravo` | `"alpha PR"` | `"alpha PR"` | yes — a comment, correctly |
+| `k: alpha#beta gamma` | intact | intact | yes |
+| `k: C# and F# notes` | intact | intact | yes |
+| `k: https://x/doc#approval` | intact | intact | yes |
+| `k: done  # a real comment` | `"done"` | `"done"` | yes |
+| `k: "alpha PR #115, bravo"` | intact | intact | yes |
+| **`k: >` + `alpha PR #115, bravo`** | **keeps it — content** | **`"alpha PR …"` — EATEN** | ***NO*** |
+| **`k: \|` + `alpha PR #115, bravo`** | **keeps it** | **eats it** | ***NO*** |
+
+**So `parseYamlSubset` is spec-conformant on plain scalars and diverges on block scalars — and F12's instance
+was a folded block scalar.** That is a genuine parser divergence, not purely an authoring error. It does not
+change my fix and it is still not mine to fix, but it does mean the backlog item should not be retired on the
+plain-scalar evidence alone.
+
+The predicate is now scoped to where our parser actually eats content: **a whitespace-preceded, unquoted `#`
+on a block-scalar continuation line.** That line has zero false positives *by construction* — inside a block
+scalar YAML says there is no such thing as a comment, so anything stripped there is content someone wrote and
+lost. On a plain-scalar line `key: value  # note` is a real comment both parsers agree on; refusing it was a
+house-style rule wearing a correctness message, and it carried an impossible remedy — `kind: "command"  #
+note` was refused too, while quoting is what the message told you to do.
+
+Also corrected: **the remedy.** "Quote the whole value" happens to satisfy our parser inside a block scalar
+and does **not** survive real YAML, which keeps the quote characters as literal content. The remedy is to
+remove the space before the `#`, or drop the `#`.
+
+Break-tested: `PR #115` restored → exit 1; an unquoted `#` in a playbook `summary:` → exit 1, with the parser
+demo showing it would have become `"Bring a screen up to standard"`; a block-scalar `#` planted in **command
+frontmatter** → exit 1, parsed value `"see PR and the follow-up"`; and every benign shape in the table above
+→ green, asserted individually in a table test rather than inferred.
 
 *A first attempt at the playbook break-test reported exit 0 and I nearly recorded the guard as having a
 hole. The mutation was wrong, not the guard: I had put the `#` inside double quotes, which is the legal

@@ -43,6 +43,7 @@ import {
   HUMAN_ONLY,
   GATES_PATH,
   PLAYBOOK_DIR,
+  COMMAND_DIR,
 } from './check-gates.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -269,10 +270,20 @@ test('the refusal path in qa.js still returns a BLOCK, so the hazard is still re
   // origin/main carried it. When it lands this assertion fails, and the failure is the signal to
   // replace the reading in `recording_hazard` with the terminal value it can then simply name.
   // A hazard notice that outlives its hazard is how a file starts teaching the past.
+  // ANCHORED ON THE FINDING ID, NOT ON A BYTE BUDGET. This read
+  // `/qa\.js REFUSED to run[\s\S]{0,400}?return\s+(\w+)\(/` — a 400-character window over a gap
+  // that had grown to 330, leaving 70 characters of margin. A benign edit lengthening the refusal
+  // summary would have produced a red test asserting "the refusal path still returns something",
+  // which would be FALSE about the input: the path returns fine, the regex could not reach it.
+  // That is the class this repo has already shipped once and names explicitly — a rule that fires
+  // on correct code with a wrong explanation is one someone deletes rather than obeys.
+  //
+  // `gate-subject-unestablished` is the id of the finding the refusal emits. Anchoring there
+  // removes the byte budget rather than widening it, and widening it is how the margin got to 70.
   const qa = fs.readFileSync(path.join(REPO_ROOT, '.claude', 'workflows', 'qa.js'), 'utf8');
   assert.match(qa, /qa\.js REFUSED to run/, 'the refusal summary still exists');
-  const refusalReturn = /qa\.js REFUSED to run[\s\S]{0,400}?return\s+(\w+)\(/.exec(qa);
-  assert.ok(refusalReturn, 'the refusal path still returns something');
+  const refusalReturn = /return\s+(\w+)\(\s*summary\s*,\s*\[\{[\s\S]*?id:\s*'gate-subject-unestablished'/.exec(qa);
+  assert.ok(refusalReturn, 'the refusal path no longer returns the gate-subject-unestablished finding — find where it went before changing this');
   assert.equal(refusalReturn[1], 'gateBlock', 'a refusal is still spelled as a block — if this changed, update recording_hazard');
 });
 
@@ -457,35 +468,53 @@ test('every shipped command gate resolves to the exact command it is supposed to
   );
 });
 
-test('no unquoted # inside a value — it silently eats the rest of the line', () => {
-  // I INTRODUCED THIS DEFECT, at 2ca2874, writing "PR #115" inside a folded scalar. Provenance:
-  // 0 occurrences at d1040f7 and 7ea3908, 1 from 2ca2874 onward.
-  //
-  // `parseYamlSubset` treats a mid-value `#` as a comment and drops the rest of the line. The
-  // failure is not a visible truncation — the surviving text folds onto the next line and reads as
-  // a finished sentence. Measured: "PR #115 would make a refusal its own terminal value distinct
-  // from" + "BLOCK, which would replace the reading above" parsed to "PR BLOCK, which would
-  // replace the reading above", which a reader receives as a coherent claim about a thing called
-  // PR BLOCK. Every consumer — resolve, wiringFindings, this file — reads the PARSED value, so the
-  // mangled sentence is the one people actually get.
-  //
-  // NOT ONLY PROSE. `unused_reason` has a 40-character floor and the truncation happens BEFORE the
-  // floor is measured, so an 87-character reason can fail the build with a message that is false
-  // about the file its author wrote. `run:` is safe only by accident, because SHELL_METACHARACTERS
-  // already refuses `#` there.
-  //
-  // A comment saying "do not do this" is unenforced prose, which is the thing this PR exists to
-  // end. The root cause is in scripts/lib/claims.js — out of this diff, and deliberately not
-  // touched. This pins the blast radius: the files this checker parses.
-  const files = [
-    GATES_PATH,
-    ...fs.readdirSync(path.join(REPO_ROOT, PLAYBOOK_DIR)).filter((f) => f.endsWith('.yml')).map((f) => `${PLAYBOOK_DIR}/${f}`),
-  ];
-  const offenders = [];
-  let commentLines = 0;
-  for (const rel of files) {
-    fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8').split('\n').forEach((line, i) => {
-      if (/^\s*#/.test(line)) { commentLines++; return; } // a whole-line comment is exactly right
+// ── The `#` that eats a sentence, scoped to where our parser actually eats one ──────────────
+//
+// I INTRODUCED THIS DEFECT at 2ca2874, writing "PR #115" inside a folded scalar. Provenance: 0
+// occurrences at d1040f7 and 7ea3908, 1 from 2ca2874 onward. What a reader received was
+// "PENDING, AND NOT YET TRUE: PR BLOCK, which would replace the reading above…" — no visible
+// truncation, the next line folding on to make a finished sentence about a thing called PR BLOCK.
+//
+// ── THE FIRST VERSION OF THIS SCAN REFUSED ANY UNQUOTED `#`, AND THAT WAS WRONG ─────────────
+//
+// It fired on inputs nothing eats. Executed against PyYAML — a real YAML implementation, not our
+// reading of the spec — one row per shape, `parseYamlSubset` beside it:
+//
+//   PLAIN SCALARS — six for six, our parser IS spec-conformant:
+//     k: alpha PR #115, bravo        both -> "alpha PR"                 a comment, correctly
+//     k: alpha#beta gamma            both -> "alpha#beta gamma"         INTACT
+//     k: C# and F# notes             both -> "C# and F# notes"          INTACT
+//     k: https://x/doc#approval      both -> "https://x/doc#approval"   INTACT
+//     k: done  # a real comment      both -> "done"                     a comment, correctly
+//     k: "alpha PR #115, bravo"      both -> intact                     quoting works
+//
+//   BLOCK SCALARS — AND HERE THEY DISAGREE, which is the shape F12 actually had:
+//     k: >  / alpha PR #115, bravo   PyYAML -> "alpha PR #115, bravo …"  content, per spec
+//                                    ours   -> "alpha PR …"              EATEN
+//     k: |  / alpha PR #115, bravo   PyYAML -> keeps it · ours -> eats it
+//
+// So the rule is NOT "any unquoted #", and it is not "the YAML rule" either — inside a block
+// scalar our parser is not the YAML rule. The line that has zero false positives BY CONSTRUCTION
+// is: a whitespace-preceded, unquoted `#` on a BLOCK SCALAR continuation line. Inside a block
+// scalar YAML says there is no such thing as a comment, so anything our parser strips there is
+// content the author wrote and lost. On a plain-scalar line, `key: value  # note` is a real
+// comment that both parsers agree on, nothing is lost, and refusing it was a house-style rule
+// wearing a correctness message — with an impossible remedy attached, since `kind: "command"  #
+// note` was refused too and quoting is what the message told you to do.
+
+/**
+ * Lines where OUR parser silently eats content a YAML parser would keep.
+ * Pure and exported to the test below so the table can drive it directly.
+ */
+function commentEatenLines(text) {
+  const out = [];
+  let blockIndent = null; // indentation of the block scalar body we are inside, or null
+  text.split('\n').forEach((line, i) => {
+    const indent = line.length - line.trimStart().length;
+    if (blockIndent !== null && line.trim() !== '' && indent < blockIndent) blockIndent = null;
+    const inBlock = blockIndent !== null && line.trim() !== '';
+
+    if (inBlock) {
       let s = false;
       let d = false;
       for (let c = 0; c < line.length; c++) {
@@ -493,14 +522,61 @@ test('no unquoted # inside a value — it silently eats the rest of the line', (
         if (d && ch === '\\') { c++; continue; }
         if (ch === "'" && !d) s = !s;
         else if (ch === '"' && !s) d = !d;
-        else if (ch === '#' && !s && !d) { offenders.push(`${rel}:${i + 1}  ${line.trim().slice(0, 80)}`); return; }
+        // The YAML comment trigger, which our parser also implements: `#` at line start or
+        // preceded by whitespace. `alpha#beta` is not one, in either parser.
+        else if (ch === '#' && !s && !d && (c === 0 || /\s/.test(line[c - 1]))) {
+          out.push({ line: i + 1, text: line.trim() });
+          return;
+        }
       }
-    });
-  }
-  // The control: whole-line comments are plentiful and correctly ignored, so an empty offender
-  // list means the scan ran and found nothing — not that it scanned nothing.
-  assert.ok(commentLines > 20, `the scan saw only ${commentLines} comment lines, so it is not reading these files`);
-  assert.deepEqual(offenders, [], 'quote the whole value, or drop the #');
+      return;
+    }
+    // Does THIS line open a block scalar? Its body is whatever is more indented than the key.
+    if (/:\s*[>|][-+]?\s*$/.test(line)) blockIndent = indent + 1;
+  });
+  return out;
+}
+
+test('commentEatenLines fires on exactly the shapes our parser eats, and no others', () => {
+  // The positive control this test needs, run in-process rather than inferred from the shipped
+  // tree: the predicate is exercised against inputs that MUST trip it and inputs that MUST NOT.
+  // The previous version asserted only "the scan saw >20 comment lines", which gates.yml alone
+  // satisfies 92 times over — it proved something was read, never that the predicate works.
+  const eats = (body) => commentEatenLines(`k: >\n  ${body}\n  charlie\n`).length;
+  const plain = (line) => commentEatenLines(`${line}\n`).length;
+
+  assert.equal(eats('alpha PR #115, bravo'), 1, 'the F12 shape, in a block scalar');
+  assert.equal(eats('alpha # note'), 1, 'any whitespace-preceded # in a block scalar is content loss');
+  assert.equal(eats('alpha#beta gamma'), 0, 'no whitespace before # — nothing is eaten, in either parser');
+  assert.equal(eats('C# and F# notes'), 0, 'language names survive');
+  assert.equal(eats('see https://x/doc#approval'), 0, 'URL fragments survive');
+  assert.equal(eats('alpha "PR #115" bravo'), 0, 'quoted inside the block survives our parser');
+
+  assert.equal(plain('k: done  # a real comment'), 0, 'a trailing comment on a plain scalar is a COMMENT');
+  assert.equal(plain('k: "command"  # a process decides'), 0, 'the case whose remedy was impossible');
+  assert.equal(plain('k: C# notes'), 0);
+  assert.equal(plain('  # a whole-line comment'), 0);
+});
+
+test('no # eats a sentence in any file this checker parses', () => {
+  // THREE SOURCES, because loadCommands() runs command frontmatter through the same parser and
+  // the previous version of this scan covered two while its comment claimed "the files this
+  // checker parses". A class named and not swept, in the commit that named the class.
+  const files = [
+    GATES_PATH,
+    ...fs.readdirSync(path.join(REPO_ROOT, PLAYBOOK_DIR)).filter((f) => f.endsWith('.yml')).map((f) => `${PLAYBOOK_DIR}/${f}`),
+    ...fs.readdirSync(path.join(REPO_ROOT, COMMAND_DIR)).filter((f) => f.endsWith('.md')).map((f) => `${COMMAND_DIR}/${f}`),
+  ];
+  // Scope control: the count, not a proxy for it. `commentLines > 20` was satisfied by gates.yml
+  // alone, so narrowing `files` to one entry left the check green while covering nothing.
+  assert.equal(files.length, 1 + 6 + 16, 'the scan no longer covers every source this checker parses');
+  const offenders = files.flatMap((rel) => {
+    const text = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+    // Command files are markdown; only the frontmatter reaches the parser.
+    const yamlPart = rel.endsWith('.md') ? (text.match(/^---\n([\s\S]*?)\n---/) || [null, ''])[1] : text;
+    return commentEatenLines(yamlPart).map((o) => `${rel}:${o.line}  ${o.text.slice(0, 80)}`);
+  });
+  assert.deepEqual(offenders, [], 'remove the space before the #, or drop the # — quoting does not help inside a block scalar under real YAML');
 });
 
 test('no gated stage dispatches an engine — the figure gates.yml asserts', () => {
