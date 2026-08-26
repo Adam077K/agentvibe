@@ -161,3 +161,45 @@ P1 → P1 → P1 → clean → P1 → P2 → P3 → P3.
 **Backlog, latent, not blocking:** the claim scanner hangs on a symlink to a FIFO (outside this tool);
 `check-memory-budget.mjs` has the same regex-then-`readFileSync` shape and is a blocking CI script; content
 outside `.claude/memory` is reachable through a symlinked volume path; `ERR_FS_FILE_TOO_LARGE` unverified.
+
+---
+
+## Round 10: a THIRD environment dimension, and the one that cannot be staged locally
+
+CI red again — 11 tests, `ReferenceError: Cannot access 'commitWrite' before initialization`. **Local Node
+v24.11.1; CI pins Node 20.** Two `await import`s sat at module scope with tests declared above them.
+
+**The refined diagnosis is what makes the fix provably complete.** Not "Node 20 runs tests as they are
+registered" — a test at line 406 using a binding declared at 434 did *not* fail. What fits all eleven is that
+**Node 20 begins draining registered tests at the first `await`**, i.e. when module evaluation suspends.
+Since a top-level `await` is the **only** thing that can suspend module evaluation part-way, removing them
+all means every module-scope binding is initialised before any test body runs, **on every Node version** —
+so a narrow guard covers the whole class. The sweep also caught a third exposed binding the error messages
+never named.
+
+**Fixed by construction, not by measurement** — there is no Node 20 on this machine and no `nvm`/`fnm`/
+`volta`/`n`/`asdf`/`docker`/`podman` to get one; all seven were checked. The guard was verified the only way
+available: injecting a column-0 `await` into a copy turns it **red**, plus a second case driving the
+predicate over four offending and three innocent lines so a typo in the regex cannot read as a clean bill of
+health.
+
+**The three environment dimensions, and the distinction that matters:**
+```
+OS                 $HOME/.claude/plans/ exists here, not on a runner   -> main red for two days
+filesystem case    ..._002.MD == ..._002.md here, not on Linux         -> round 5
+node major         test draining vs module evaluation, 24 vs 20        -> this round
+```
+**Filesystem and OS properties can often be staged locally; a runtime version cannot.** That asymmetry is the
+argument for the repo-wide decision — either the local floor runs under CI's Node, or CI matches local — and
+it is a founder call, deliberately not taken here.
+
+**Two more instrument failures, caught before being believed — third and fourth of the session.** A scanner
+mis-stripped an apostrophe inside a quoted test name and under-reported; its replacement blanked template
+literals and missed a binding inside a `${}`. Caught because **deleting the module-scope bindings makes any
+missed site fail loudly with `is not defined`** — the suite enumerated what the scanner could not. The
+general move, and it is the best formulation of the night's method:
+
+> **Prefer a fix whose incompleteness is loud.**
+
+`110/110` on v24.11.1 · `npm run check` 30 of 30 · `check:ledger` 0 block. Repo-wide search for the class
+found one apparent hit that is fixture data inside a template literal, not code.
