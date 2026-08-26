@@ -71,9 +71,18 @@ export const COMMAND_DIR = path.join('.claude', 'commands');
 
 export const KINDS = ['command', 'human'];
 
-/** Fields only a `command` gate may carry, and fields only a `human` gate may carry. */
-const COMMAND_ONLY = ['run', 'pass_when', 'fail_when', 'recording_hazard', 'how_to_run_it'];
-const HUMAN_ONLY = ['decided_by', 'recorded_in', 'why_not_a_command'];
+/**
+ * Fields only a `command` gate may carry, and fields only a `human` gate may carry.
+ *
+ * EXPORTED so `scripts/gates.test.mjs` iterates these rather than restating them. It held a
+ * hardcoded second copy, which left the *guard* correct — a sixth field added to the source here is
+ * refused with no test change — while the test's own "enumerated rather than sampled" coverage claim
+ * quietly became false: add a field, and the test stays green having never exercised it. That is a
+ * coverage claim decaying without any assertion failing, which is the same shape as an assertion
+ * that cannot fail. `KINDS` below was already exported for exactly this reason.
+ */
+export const COMMAND_ONLY = ['run', 'pass_when', 'fail_when', 'recording_hazard', 'how_to_run_it'];
+export const HUMAN_ONLY = ['decided_by', 'recorded_in', 'why_not_a_command'];
 
 /**
  * A `run:` reaches spawnSync as argv with no shell, so there is no shell to inject into. This

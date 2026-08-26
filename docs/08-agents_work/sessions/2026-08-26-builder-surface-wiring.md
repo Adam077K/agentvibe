@@ -119,6 +119,38 @@ real stage ids and refused when it precedes `enter_at`. Also gave `build.md` the
 that `fix.md` already had — two spellings of one entry point, and the implicit one is the one nobody notices
 changing.
 
+**And then two of my own assertions turned out to be unfalsifiable — in the test guarding the prose about
+unfalsifiable assertions.** R113 measured it on the pre-fix version; I re-measured on mine rather than
+assuming the discriminator edit had cured it, **and it had not**. `/REFUSED/` matched **2** places in the
+field and `/established/i` matched **3**, so each was satisfied by prose other than the sentence it was
+labelled for — including the field's own opening words. Deleting the distinguisher sentence left the step at
+**exit 0**. The consequence was exact: my discriminator fix could delete the wrong discriminator and add the
+right one, and the test would be green before and after. **A fix confirmed by an assertion that cannot fail
+is this PR's thesis, failing inside the test written to uphold it.**
+
+Fixed by anchoring on a unique sentence rather than a word, with the uniqueness itself asserted — `once()`
+requires **exactly one** occurrence, so zero (deleted) and two-or-more (the anchor has stopped identifying a
+sentence) both fail. That second half matters: these assertions did not become vacuous by anyone editing
+them, they became vacuous **by accretion**, as the paragraph grew around them. Re-measured after the fix:
+deleting the sentence → **exit 1**; deleting either of the other two pinned clauses → **exit 1**;
+*duplicating* an anchor elsewhere in the field → **exit 1**.
+
+**A prediction of mine that inverted, worth recording because I argued it in the other direction.** I
+declined a second prose pin on the grounds that it "starts to look like enforcement of prose". The
+measurement says the opposite: the existing pin did not over-enforce, it **under**-enforced, two of five
+assertions vacuously. The conclusion held and the reason was wrong. R113's own prediction inverted too — it
+expected the prose pin to act as a ratchet making a refuted claim expensive to correct, and measured that the
+refuted discriminator could be deleted silently.
+
+**F10 and F11 taken.** `COMMAND_ONLY`/`HUMAN_ONLY` are exported and the test iterates them instead of
+holding a second copy — the guard was always correct, but the *coverage claim* could decay silently, which is
+the same shape as an assertion that cannot fail. Note the mutation that does **not** go red: adding a sixth
+field. That is correct after the fix rather than a hole — the loop derives from the source, so a new field
+arrives already covered. The risk that remains is an **emptied** list, which is what the length guard catches
+(verified: emptying `COMMAND_ONLY` fails two tests). F11 pins the figure `gates.yml` asserts — seven gated
+stages, zero of them dispatching — as **data**, recomputed in four lines, so unlike a prose pin it cannot
+decay into matching a word somewhere.
+
 **DEFERRED, with the reason: renaming `gates` to `check:gates`.** R113 is right that `gates` escapes
 `GOVERNED = /^(?:check|test|lint|verify|audit):/` and could be deleted without the drift guard noticing —
 measured, `auditSuite()` failures mentioning it are 0 as `gates` and 1 as `check:gates`. The rename is the

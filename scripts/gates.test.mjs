@@ -39,6 +39,8 @@ import {
   realTree,
   EXIT_FOR_STATUS,
   KINDS,
+  COMMAND_ONLY,
+  HUMAN_ONLY,
 } from './check-gates.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -194,10 +196,17 @@ test('a command gate carrying a human-only field is refused', () => {
 });
 
 test('a human gate carrying a command-only field is refused, for every one of them', () => {
-  // Enumerated rather than sampled: adding a field to COMMAND_ONLY without a case here would
-  // leave it unguarded on the human side, which is the direction that matters.
-  for (const k of ['run', 'pass_when', 'fail_when', 'recording_hazard', 'how_to_run_it']) {
+  // Enumerated rather than sampled, and enumerated FROM THE SOURCE. This loop held a hardcoded
+  // second copy of the field list, which did not make the guard wrong — a new field is refused
+  // whether or not a case exists — but did make this test's coverage claim decay silently: add a
+  // sixth field and the test stays green having never exercised it. Iterating the export means a
+  // new field arrives with a case automatically, or not at all.
+  assert.ok(COMMAND_ONLY.length >= 5, 'the field list is not empty, so the loop below is not vacuous');
+  for (const k of COMMAND_ONLY) {
     assert.match(joined((t) => { t.gates[1][k] = 'x'; }), new RegExp(`kind "human" carries "${k}"`), k);
+  }
+  for (const k of HUMAN_ONLY) {
+    assert.match(joined((t) => { t.gates[0][k] = 'x'; }), new RegExp(`kind "command" carries "${k}"`), k);
   }
   // Only `run` gets the "faked into a script" sentence — it is the only one of the five that
   // would actually make a process answer a question a person has to answer.
@@ -218,13 +227,37 @@ test('the qa-verdict gate carries the recording hazard, and it names the right c
   // failing check can establish something with one. The cut is whether anything was ESTABLISHED
   // about the diff. The test is kept pointed at the durable phrasing qa.js emits rather than at a
   // number, because a number invites a reader to compute the wrong thing confidently.
+  // ── ANCHOR ON THE SENTENCE, NEVER ON THE WORD ────────────────────────────────────────────
+  //
+  // Two assertions here could not fail, and the mutation that proves it is one line: delete the
+  // distinguisher sentence and this test stayed GREEN. `/REFUSED/` had 2 occurrences in the field
+  // and `/established/i` had 3, so each was satisfied by prose OTHER than the sentence it was
+  // labelled for — including the field's own opening words. They pinned "this word appears
+  // somewhere in a fifteen-line paragraph", which is not what their labels claimed.
+  //
+  // The consequence was precise and bad: the discriminator fix could delete the WRONG
+  // discriminator and add the RIGHT one, and this test would be green before and after. A fix
+  // confirmed by an assertion that cannot fail is the defect this entire PR exists to end,
+  // arriving in the test that guards the prose about it.
+  //
+  // Every anchor below was checked for uniqueness in the field before being used (each matches
+  // exactly once) and then mutated one at a time to watch it go red. A unique substring is also
+  // deliberately brittle against rewording: rewriting the load-bearing instruction SHOULD require
+  // touching this test and saying why.
   const qa = realTree().gates.find((g) => g.id === 'qa-verdict');
   assert.equal(qa.kind, 'command');
   const h = String(qa.recording_hazard);
-  assert.match(h, /REFUSED/, 'the summary marker a refusal carries');
-  assert.match(h, /established/i, 'the cut: was anything established about this diff');
-  assert.match(h, /DO NOT USE A COUNT OF DISPATCHED AGENTS/, 'the refuted discriminator, refuted in place');
-  assert.match(h, /DOCUMENTATION AND NOT ENFORCEMENT/, 'it must not read as a check');
+  // EXACTLY ONE, not "at least one". Zero means the sentence was deleted; two or more means the
+  // anchor has stopped pinning a sentence and started pinning a word that appears twice, which is
+  // how these two assertions became unfalsifiable in the first place — by accretion, not by edit.
+  const once = (re, label) => {
+    const n = (h.match(new RegExp(re.source, 'g')) || []).length;
+    assert.equal(n, 1, `${label}: expected exactly 1 occurrence of ${re}, found ${n}. Zero = the sentence is gone. Two or more = the anchor no longer identifies one sentence, so it has stopped being an anchor.`);
+  };
+  once(/Look for the literal word REFUSED in the summary/, 'the instruction to look for the refusal marker');
+  once(/claim of nothing established/, 'the cut: was anything established about this diff');
+  once(/DO NOT USE A COUNT OF DISPATCHED AGENTS/, 'the refuted discriminator, refuted in place');
+  once(/DOCUMENTATION AND NOT ENFORCEMENT/, 'it must not read as a check');
   assert.match(String(qa.how_to_run_it), /run-gate\.mjs --json/, 'the one route that builds the args correctly');
 });
 
@@ -395,6 +428,28 @@ test('every shipped command gate resolves to the exact command it is supposed to
     SHIPPED_RUN,
     'a command gate was added, removed, or repointed — if that was deliberate, say so here',
   );
+});
+
+test('no gated stage dispatches an engine — the figure gates.yml asserts', () => {
+  // `.claude/gates.yml` says "all seven gated stages carry ZERO dispatch entries, so this holds in
+  // the data today rather than by convention", and then adds that today is the only day that is
+  // checked. This is the check, and it is the `check:figures` pattern rather than another prose
+  // pin: both numbers are DERIVED in four lines, so nothing here depends on how the sentence is
+  // worded and it cannot decay into matching a word somewhere in a paragraph.
+  //
+  // Why it matters: `Workflow` is a main-session tool, so a dispatched engine asked to run a gate
+  // does not have it, and a missing tool is a silent no-op. A stage that gained a dispatch beside
+  // its gate would report success having gated nothing.
+  //
+  // Deliberately NOT the lint rule "a stage with `gate:` may not carry `dispatch:`" — that refuses
+  // the legitimate arrangement of dispatching a reviewer for findings and letting the session
+  // resolve the gate on them, which is the shape playbooks.test.mjs's own GOOD fixture uses. A
+  // figure pinned over the shipped tree catches the drift without outlawing the correct shape.
+  const stages = realTree().playbooks.flatMap((p) => p.doc.stages);
+  const gated = stages.filter((s) => s.gate !== undefined);
+  const gatedWithDispatch = gated.filter((s) => Array.isArray(s.dispatch) && s.dispatch.length);
+  assert.equal(gated.length, Object.keys(SHIPPED_GATES).length, 'the gated-stage count moved');
+  assert.deepEqual(gatedWithDispatch.map((s) => s.id), [], 'a gated stage now dispatches an engine');
 });
 
 test('every stage that gates still gates, and with the same gate', () => {
