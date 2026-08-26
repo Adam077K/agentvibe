@@ -1,0 +1,11 @@
+{
+  "subject": "6747df79baa72c8bac485e008648b13f69d1f711b18940fc1a4a34c9a7cbd603",
+  "base": "0c78fa2813fc9d47291b339e3571a7e165c15074",
+  "tier": "full",
+  "tier_driver": "scripts/check-suite.test.mjs",
+  "verdict": "PASS",
+  "by": "builder-position-sweep (self-recorded; one author, one model family — full tier's review unmet)",
+  "run_id": null,
+  "evidence": "test:check-suite 70 pass 0 fail; npm run check 48 of 48 exit 0 211.8s; harness FAILS 4 of 4 cells against pre-fix 47dbbd6 and PASSES 4 of 4 against main 0c78fa2; six self-test defects each asserted to throw plus a control that the correct judge passes; the first-place claim was tested and REFUTED — check-citations --min-locators and run-checks REFUSED/SUBSET/INCOMPLETE are prior art, verified by execution",
+  "recorded_at": "2026-08-26T15:49:32.652Z"
+}
