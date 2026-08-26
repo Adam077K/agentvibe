@@ -1176,3 +1176,155 @@ test('PR route: the bypass decision does not travel through a file under RUNNER_
   assert.doesNotMatch(bypass, /bypass-comments\.txt/, 'bypass evidence written to a mutable file');
   assert.match(bypass, /bypass_approved=/, 'the decision is not emitted to $GITHUB_OUTPUT');
 });
+
+// ── Isolating the two verdict-step guards, and driving the step that DECIDES ──────────────────
+//
+// The cases above drove both value guards with one `jqOut`, which empties `.ok` AND `.subject`
+// together — so whichever guard survives catches it, and deleting either one alone changes
+// nothing. Two guards that mask each other are one guard with a spare. A jq stub that answers
+// PER FILTER separates them.
+//
+// And the bypass step — which is where the authorisation decision now lives — had no behavioural
+// test at all. Moving a decision without moving its coverage is how a step ends up trusted and
+// unexercised; that is the same shape as the dead bypass branch this lane started from.
+
+/** A jq stub that answers per filter argument (`jq -r '.ok'` → $2 is `.ok`). */
+function jqStub(map) {
+  const arms = Object.entries(map)
+    .map(([k, v]) => `  ${JSON.stringify(k)}) printf '%s' ${JSON.stringify(v)} ;;`)
+    .join('\n');
+  return `#!/bin/bash\ncase "$2" in\n${arms}\n  *) printf '' ;;\nesac\nexit 0\n`;
+}
+
+/** A gh stub that distinguishes `gh pr view` (labels) from `gh api` (comment bodies). */
+function ghStub({ label = 'false', comments = '' } = {}) {
+  return `#!/bin/bash
+case "$1 $2" in
+  "pr view") printf '%s\\n' ${JSON.stringify(label)}; exit 0 ;;
+esac
+case "$1" in
+  api) printf '%s' ${JSON.stringify(comments ? `${comments}\n` : '')}; exit 0 ;;
+esac
+exit 0
+`;
+}
+
+/** As runStep, but lets a test install hand-written stubs and read $GITHUB_OUTPUT back. */
+function runStepWith(script, { env = {}, nodeOut = '', nodeExit = 0, stubs = {} } = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qagate2-'));
+  const bin = path.join(dir, 'bin');
+  fs.mkdirSync(bin);
+  fs.writeFileSync(path.join(bin, 'node'), `#!/bin/bash\ncat <<'PAYLOAD'\n${nodeOut}\nPAYLOAD\nexit ${nodeExit}\n`);
+  fs.writeFileSync(path.join(bin, 'gh'), '#!/bin/bash\nexit 0\n');
+  for (const [name, body] of Object.entries(stubs)) fs.writeFileSync(path.join(bin, name), body);
+  for (const f of fs.readdirSync(bin)) fs.chmodSync(path.join(bin, f), 0o755);
+
+  const out = path.join(dir, 'out.txt');
+  fs.writeFileSync(out, '');
+  const sp = path.join(dir, 'step.sh');
+  fs.writeFileSync(sp, script);
+  const r = run(BASH, ['-e', sp], dir, {
+    ...process.env,
+    PATH: `${bin}:${process.env.PATH}`,
+    RUNNER_TEMP: dir, GITHUB_OUTPUT: out, GH_TOKEN: 'x', REPO: 'o/r',
+    HEAD_SHA: 'deadbeef', PR_NUMBER: '1', ADAM_GITHUB_USER: 'founder',
+    ...env,
+  });
+  return { ...r, text: r.stdout + r.stderr, outputs: fs.readFileSync(out, 'utf8') };
+}
+
+// Deleting the .subject guard alone survived every earlier case. This is the input that isolates
+// it: `.ok` reads cleanly as a boolean, so the .ok guard passes and cannot stand in.
+test('PR route: a well-formed .ok with an EMPTY .subject is refused', () => {
+  const r = runStepWith(runBlock('Verdict diff-binding'), {
+    nodeOut: 'irrelevant', nodeExit: 1,
+    stubs: { jq: jqStub({ '.ok': 'false', '.subject': '', '.tier': 'irreversible', '.reason': 'absent' }) },
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: SUBJ },
+  });
+  assert.equal(r.code, 1, `an empty subject passed the guard:\n${r.text}`);
+  assert.match(r.text, /\.subject is not 64 hex digits/);
+  assert.doesNotMatch(r.text, /QA GATE BYPASSED/);
+});
+
+test('PR route: a truncated .subject is refused — 64 is the length, not "looks hex"', () => {
+  const r = runStepWith(runBlock('Verdict diff-binding'), {
+    nodeOut: 'irrelevant', nodeExit: 1,
+    stubs: { jq: jqStub({ '.ok': 'false', '.subject': 'a'.repeat(63), '.tier': 'irreversible', '.reason': 'absent' }) },
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: SUBJ },
+  });
+  assert.equal(r.code, 1);
+  assert.match(r.text, /\.subject is not 64 hex digits/);
+});
+
+// And the mirror: a valid subject with an unreadable .ok isolates the boolean guard.
+test('PR route: a valid .subject with an unreadable .ok is refused', () => {
+  const r = runStepWith(runBlock('Verdict diff-binding'), {
+    nodeOut: 'irrelevant', nodeExit: 1,
+    stubs: { jq: jqStub({ '.ok': '', '.subject': SUBJ, '.tier': 'irreversible', '.reason': 'absent' }) },
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: SUBJ },
+  });
+  assert.equal(r.code, 1, `an unreadable .ok was treated as a decision:\n${r.text}`);
+  assert.match(r.text, /could not read a boolean \.ok/);
+  assert.doesNotMatch(r.text, /QA GATE BYPASSED/);
+});
+
+// ── The bypass step, driven ──────────────────────────────────────────────────────────────────
+
+test('bypass step: no label → no bypass, and it does not need a subject to say so', () => {
+  const r = runStepWith(runBlock('Check for QA gate bypass'), {
+    stubs: { gh: ghStub({ label: 'false' }) },
+  });
+  assert.equal(r.code, 0, r.text);
+  assert.match(r.outputs, /bypass_approved=false/);
+});
+
+test('bypass step: a comment naming THIS subject approves it — the control', () => {
+  const r = runStepWith(runBlock('Check for QA gate bypass'), {
+    nodeOut: SUBJ,
+    stubs: { gh: ghStub({ label: 'true', comments: `"BYPASS REASON: founder waiver ${SUBJ.slice(0, 12)}"` }) },
+  });
+  assert.equal(r.code, 0, `the step could not approve a correctly named bypass:\n${r.text}`);
+  assert.match(r.outputs, /bypass_approved=true/);
+  assert.match(r.outputs, new RegExp(`bypass_subject=${SUBJ}`));
+});
+
+test('bypass step: a comment naming no subject does NOT approve', () => {
+  const r = runStepWith(runBlock('Check for QA gate bypass'), {
+    nodeOut: SUBJ,
+    stubs: { gh: ghStub({ label: 'true', comments: '"BYPASS REASON: ship it"' }) },
+  });
+  assert.equal(r.code, 0, r.text);
+  assert.match(r.outputs, /bypass_approved=false/);
+});
+
+test('bypass step: a comment naming ANOTHER diff does NOT approve', () => {
+  const r = runStepWith(runBlock('Check for QA gate bypass'), {
+    nodeOut: SUBJ,
+    stubs: { gh: ghStub({ label: 'true', comments: `"BYPASS REASON: for the earlier diff ${OTHER.slice(0, 12)}"` }) },
+  });
+  assert.equal(r.code, 0, r.text);
+  assert.match(r.outputs, /bypass_approved=false/);
+});
+
+// This is the third mutation that survived: the bypass step's own subject guard. It is what makes
+// the verdict step's cross-check safe to rely on — the cross-check compares against BYPASS_SUBJECT,
+// so BYPASS_SUBJECT being well-formed is the invariant the whole pairing rests on.
+test('bypass step: a malformed computed subject refuses, never compares', () => {
+  const r = runStepWith(runBlock('Check for QA gate bypass'), {
+    nodeOut: 'not-a-subject',
+    stubs: { gh: ghStub({ label: 'true', comments: '"BYPASS REASON: anything"' }) },
+  });
+  assert.equal(r.code, 1, `a malformed subject was used as a needle:\n${r.text}`);
+  assert.match(r.text, /not 64 hex digits/);
+  assert.doesNotMatch(r.outputs, /bypass_approved=true/);
+});
+
+test('bypass step: the label with no configured author fails the job, never passes it', () => {
+  const r = runStepWith(runBlock('Check for QA gate bypass'), {
+    nodeOut: SUBJ,
+    stubs: { gh: ghStub({ label: 'true', comments: '"BYPASS REASON: x"' }) },
+    env: { ADAM_GITHUB_USER: '' },
+  });
+  assert.equal(r.code, 1, `an unconfigured bypass author did not fail the job:\n${r.text}`);
+  assert.doesNotMatch(r.outputs, /bypass_approved=true/);
+});

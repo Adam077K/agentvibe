@@ -416,17 +416,35 @@ jobs:
       #
       # ── 3. Is the check-run load-bearing? NO. Decorative. ────────────────────
       # `QA verdict (diff-bound)` is NOT in required_status_checks.contexts, and no
-      # code anywhere reads that name back — every occurrence in the tree is either
-      # one of the two `gh api -f` arguments that CREATE the check-run, or prose (this
-      # block included) discussing it. Re-derive rather than trusting the number, and
-      # subtract this comment from what you find:
+      # code anywhere reads that name back — every occurrence in the tree is either an
+      # ARGUMENT to the `gh api` call below that CREATES the check-run, or prose (this
+      # block included) discussing it.
       #
-      #   grep -rn -F 'QA verdict (diff-bound)' . --exclude-dir=.git | grep -vc '^\s*#'
+      # LIST THEM AND LOOK. Do not count, and do not trust a number written here:
       #
-      # This read "returns only the two lines that create it" until 2026-08-26. It was
-      # true when written and FALSE IN THE SAME COMMIT THAT WROTE IT — the count is now
-      # 5, of which 3 are the comment making the claim. A measurement that counts its
-      # own prose falsifies itself on write; state the derivation, never the total.
+      #   grep -rn -F 'QA verdict (diff-bound)' . --exclude-dir=.git \
+      #     | grep -Ev ':[0-9]+:[[:space:]]*#'
+      #
+      # Every surviving line must be a `-f name=` / `-f "output[title]="` argument, or
+      # markdown prose. A survivor that READS the name refutes this paragraph.
+      #
+      # TWICE WRONG HERE, and the second way is the interesting one:
+      #   1. "returns only the two lines that create it" — a raw total, true when
+      #      written and false in the same commit that wrote it, because the comment
+      #      asserting it is itself a match.
+      #   2. Its replacement, `| grep -vc '^\s*#'`, LOOKED like it subtracted the prose
+      #      and subtracted nothing: `grep -rn` emits `./path:LINENO:content`, so `#` is
+      #      never at column 0, the filter matches zero lines, and `-vc` hands back the
+      #      unfiltered total — 8 of 8 in this tree, 78 of 78 in a wider scope. It sat
+      #      three lines under "state the derivation, never the total", which is why a
+      #      derivation is not automatically safer than a number: a WRONG derivation
+      #      reports a plausible figure forever and never rots into an obvious error.
+      #
+      # The filter above is COUPLED TO THE COMMAND'S SHAPE. `grep -rn` gives two colon
+      # fields, `grep -n` on a single file gives one, and this pattern silently stops
+      # matching comments if you drop the `-r` — measured. Change the command, re-derive
+      # the filter, and check it against a line you know it must strip.
+      #
       # What gates the merge is this job's exit code under "Verify QA Lead PASS".
       #
       # WORSE, AND THIS IS THE PART THAT CHANGES THE REMEDY: check-runs posted by
@@ -537,6 +555,23 @@ jobs:
           # So the values are checked, not the exit code. The subject shape is derived
           # from verdict.mjs — sha256 hex digest, 64 lowercase hex digits — and verified
           # by running `verdict.mjs subject` (len=64, matches), not taken on assertion.
+          #
+          # BOUNDARY, because the paragraph above names a threat and this guard does not
+          # close all of it: what is validated is the ANSWER'S SHAPE, never its
+          # PROVENANCE. A shim that returns a well-formed 64-hex subject and .ok=true
+          # passes here, and the equivalent shim on `node` returns exit 0 at base too.
+          # That is the same privilege by one more route to an outcome this repo has
+          # already conceded — a PR author can rewrite this workflow — so it adds no
+          # exposure. It closes the ACCIDENTAL degeneration, which was reachable and is
+          # now not; it does not pretend to close the deliberate one, which needs the
+          # repository settings named in the block above this step.
+          #
+          # The two guards below are SEPARATE ON PURPOSE and were masking each other in
+          # test until 2026-08-26: every case drove them with one jq stub, which empties
+          # `.ok` and `.subject` together, so whichever guard remained caught the input
+          # and deleting either one alone changed nothing. Two guards that mask each
+          # other are one guard with a spare. `merge-gate.test.mjs` now isolates them —
+          # a well-formed `.ok` with an empty `.subject`, and its mirror.
           if [ "$OK" != "true" ] && [ "$OK" != "false" ]; then
             echo "❌ could not read a boolean .ok from verdict.mjs output (got [${OK}]) — refusing."
             echo "   A gate that cannot read its own oracle does not get to guess."

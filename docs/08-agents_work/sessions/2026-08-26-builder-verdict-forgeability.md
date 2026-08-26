@@ -177,3 +177,66 @@ declares zero dependencies while it resolves from `$HOME/node_modules` — a tes
 have passed locally and failed on the runner. **Anything a test reaches outside the repository is
 a machine assumption**, and the cure is to construct the condition and assert the construction
 before asserting behaviour, not to pick a better path.
+
+---
+
+## Round 3 — two p2s from the passing review (2026-08-26)
+
+### N1 · the corrected derivation was also wrong, and worse than the number it replaced
+
+The recipe `grep -rn -F '...' . --exclude-dir=.git | grep -vc '^\s*#'` **subtracts nothing**.
+`grep -rn` emits `./path:LINENO:content`, so `#` is never at column 0; measured in this tree the
+filter matches **0** lines and `-vc` hands back the unfiltered total — **8 of 8**, identical to raw.
+
+That is the sharper lesson and it is now written into the file: **a derivation is not automatically
+safer than a number.** The original defect was a total that falsified itself on write, which at
+least rots into an obvious error. Its replacement reported a plausible figure forever. It sat three
+lines under "state the derivation, never the total".
+
+Fixed by listing rather than counting, and the filter is **coupled to the command's shape** —
+`grep -rn` gives two colon fields, `grep -n` on one file gives one, and the corrected pattern
+silently stops matching if you drop the `-r`. Measured both ways; the warning is in the comment.
+
+### N2 · the two verdict-step guards were masking each other
+
+Both earlier cases drove them with one `jqOut`, which empties `.ok` and `.subject` together, so
+whichever guard survived caught the input. **Two guards that mask each other are one guard with a
+spare.** A `jq` stub answering *per filter* separates them. Nine cases added, and the bypass step —
+which is where the authorisation decision now lives — went from **no behavioural test at all** to
+six.
+
+Mutation, each guard deleted alone, restored byte-identical after each:
+
+| deleted | red | caught by |
+|---|---|---|
+| `.subject` 64-hex guard | 2 | the empty-`.subject` and truncated-`.subject` cases |
+| `.ok` boolean guard | 1 | the valid-`.subject`-with-unreadable-`.ok` case |
+| bypass step's subject guard | 1 | `a malformed computed subject refuses, never compares` |
+
+Each is caught by exactly the case written to isolate it and by no others, which is what shows the
+isolation is real rather than blanket coverage. All three survived every earlier case.
+
+**My mutation harness damaged the working tree.** The first version was killed at its 2-minute
+timeout midway through mutation 2, so its `finally` never ran and the `.ok` guard was left deleted
+on disk — and my first integrity check *missed it*, because I wrote the grep pattern as
+`'"\$OK" != "true"'` inside single quotes, which searches for a literal backslash. A shell-quoting
+slip produced a clean-looking all-present report over a damaged file. The rewrite takes an on-disk
+backup **before** the first mutation and restores on `exit`/`SIGINT`/`SIGTERM`; every run since
+ends by asserting the file is byte-identical. **A destructive harness needs its restore to survive
+being killed, not merely to be in a `finally`.**
+
+### N3 · recorded, latent, not fixed
+
+The `BYPASS_SUBJECT != SUBJECT` cross-check couples the bypass path to **working-tree stability
+across steps 3–6**. Anything between the two steps that writes into the repo makes a genuine
+founder bypass fail with a message blaming *"the tree moved mid-job"* — a true statement pointing
+at the wrong cause. Verified today rather than taken on report: subject `46e4260b3de0` before and
+after running `classify.mjs` and `ledger.mjs verify`, `git status --porcelain` clean apart from my
+own edits. **No false refusal now. Whoever adds a step between them that generates a file inherits
+one.** The cheap fix if it ever bites: compute the subject once in an earlier step and pass it
+forward, rather than twice.
+
+Also recorded in the workflow, beside the guard whose comment names the threat: the guard validates
+the oracle's answer **shape**, never its **provenance**. It closes the accidental degeneration,
+which was reachable; it does not close a deliberate shim, which is the same privilege by one more
+route to an outcome this repo already concedes.
