@@ -407,33 +407,92 @@ test('command substitution RE-ENTERS command context — double quotes are not o
   assert.deepEqual(legit.failures, [], `a single-command substitution was refused:\n${legit.failures.join('\n')}`);
 });
 
-test('`$((…))` is ARITHMETIC, and it is walked rather than skipped', () => {
-  // Its operators are arithmetic operators. Measured: `$((6|1))` is 7, `$((6&1))` is 0, `$((1&&1))`
-  // is 1, `$((0||1))` is 1. Reporting a pipe there would attach the rule's message — "the step's
-  // exit code becomes the last command's" — to a case where that sentence is false, which is the
-  // same mistake the `2>&1` redirect case exists to prevent.
+test('`$((` DOES NOT MEAN ARITHMETIC — it means arithmetic only when it closes as `))`', () => {
+  // THE BYPASS THIS CASE EXISTS FOR, and it was in the fix for the previous bypass. `$((` is read
+  // as arithmetic by bash only when the region closes `))`; otherwise it is command substitution
+  // wrapping a subshell, `$( (cmd); rest )`, and every command in it runs. Measured in bash:
+  //
+  //     echo "$((echo RAN); echo RAN2)"        RAN / RAN2, exit 0    BOTH RAN
+  //     echo "$((exit 7); echo RAN2)"          exit 0                the 7 is LAUNDERED
+  //     echo "$((a|b); echo RAN2)"             a and b run, through a PIPE, then RAN2
+  //     echo "$((echo RAN))"                   exit 1                arithmetic syntax error
+  //     echo "$(( (echo RAN) ))"               exit 1                "missing `)'" — arithmetic
+  //
+  // The predicate granted non-command status on paren BALANCE, which `$((cmd); cmd)` satisfies. So
+  // `echo "$((npm run a); npm run b)"` returned [] and one crafted step defeated shellOperators(),
+  // auditSuite() and the ci.yml check at once. THE SPECIAL CASE ADDED TO STOP FALSE POSITIVES ON
+  // `$((6|1))` WAS THE BYPASS — which is the general shape, and why the exemption now needs two
+  // independent checks to agree: the structural `))`, and the body reading as arithmetic.
+  assert.deepEqual(shellOperators('echo "$((npm run test:hooks); npm run test:budget)"'), [';']);
+  assert.deepEqual(shellOperators('echo "$((exit 7); echo SECOND)"'), [';']);
+  assert.deepEqual(shellOperators('echo "$((npm run a) && npm run b)"'), ['&&']);
+  assert.deepEqual(shellOperators('echo "$((npm run a); npm run b | npm run c)"'), [';', '|']);
+  assert.deepEqual(shellOperators('echo $((npm run a); npm run b)'), [';'], 'the unquoted spelling');
+
+  // BOTH GUARDS, on the same string. They share shellOperators(), so a hole in it is a hole in two
+  // places at once — which is exactly what made this a P1 rather than a P2, and is why it is
+  // asserted through both entry points rather than only through the predicate.
+  const step = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'echo "$((npm run test:hooks); npm run test:budget)"' } });
+  assert.ok(
+    step.failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes('`;`')),
+    `auditSuite accepted the crafted step:\n${step.failures.join('\n') || '(no failures at all)'}`
+  );
+  const run = `${CI.trimEnd()}\n\n      - name: A new check\n        if: \${{ !cancelled() }}\n        run: echo "$((npm run test:hooks); npm run test:budget)"\n`;
+  assert.equal(ciChainFindings(run).length, 1, 'the ci.yml check accepted the crafted `run:` value');
+
+  // AGAINST OVER-CORRECTION. These are the false positives the special case exists to prevent, and
+  // failing closed must not reach them: measured, `$((6|1))` is 7, `$((6&1))` is 0, `$((1&&1))` is
+  // 1, `$((0||1))` is 1, `$(( (1+2) * 3 ))` is 9. A rule that fires on these gets deleted, not obeyed.
   assert.deepEqual(shellOperators('echo "$((6|1))"'), []);
+  assert.deepEqual(shellOperators('echo "$((a<<2))"'), []);
+  assert.deepEqual(shellOperators('echo "$((x?y:z))"'), []);
   assert.deepEqual(shellOperators('echo "$((6&1))"'), []);
   assert.deepEqual(shellOperators('echo "$((1&&1)) $((0||1))"'), []);
   assert.deepEqual(shellOperators('echo "$(( (1+2) * 3 ))"'), [], 'a nested paren closed the expansion early');
+  assert.deepEqual(shellOperators('echo "$(( ${X} | $Y ))"'), [], 'a variable reference is an arithmetic operand');
+  const clean = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'node -e "console.log($((6|1)))"' } });
+  assert.deepEqual(clean.failures, [], `arithmetic was refused as a chain:\n${clean.failures.join('\n')}`);
 
-  // THE HOLE THE FIRST CUT OF THIS FIX OPENED, and the reason arithmetic is entered rather than
-  // jumped over. Measured: `x="$(( $(exit 7; echo 1) + 1 ))"` sets x=1 and `$?` is 7 — bash DOES run
-  // the inner commands — while a version that skipped the whole expansion returned [] for it. A
-  // substitution nested in arithmetic is a command context like any other.
+  // THE HOLE THE PREVIOUS ROUND OPENED, still closed: arithmetic is walked, not jumped over, because
+  // a substitution nested inside it runs commands. Measured: `x="$(( $(exit 7; echo 1) + 1 ))"` sets
+  // x=1 and `$?` to 7.
   assert.deepEqual(shellOperators('x="$(( $(exit 7; echo 1) + 1 ))"'), [';']);
   assert.deepEqual(shellOperators('x="$(( $(npm run a | npm run b) ))"'), ['|']);
 
-  // An UNBALANCED `$((` is not arithmetic bash would run, so it must not be treated as opaque —
-  // otherwise a typo becomes the one place a chain can still hide. It falls through and is read as
-  // `$(` opening a substitution whose first character is a subshell.
+  // An UNBALANCED `$((` is not arithmetic bash would run, so it must not be treated as opaque.
   assert.deepEqual(shellOperators('echo "$((npm run a; npm run b"'), [';']);
 
-  // A plain chain inside balanced `$((…))` reports nothing, and that is not a hole: bash refuses it
-  // outright — `echo "$((echo hi; echo there))"` is `arithmetic syntax error … (error token is
-  // "; echo there")` and exits 1. Nothing runs, so there is no dropped exit code to catch. Pinned so
-  // that a future widening is a visible decision rather than an accident.
-  assert.deepEqual(shellOperators('echo "$((npm run a; npm run b))"'), []);
+  // SUPERSEDED 2026-08-26, deliberately and in one line: this asserted [] for `$((npm run a; npm
+  // run b))`, on the ground that bash refuses it — `arithmetic syntax error … (error token is
+  // "; npm run b")`, exit 1, nothing runs — and it said "pinned so that a future widening is a
+  // visible decision rather than an accident". This IS that widening, and it is visible here. The
+  // body carries a `;`, the content check refuses it, and the fallback reports it. Reporting a
+  // command bash would refuse to run costs one rewritten command; the balance-only predicate that
+  // let this stay [] cost a total bypass of two guards.
+  assert.deepEqual(shellOperators('echo "$((npm run a; npm run b))"'), [';']);
+
+  // THE OVER-REPORTS THE CONSERVATIVE ALLOWLIST BUYS, measured rather than guessed. All three are
+  // valid arithmetic — bash returns 2, 1 and 1 for them, exit 0, running nothing — and this rule
+  // reports an operator anyway, because each uses a token the allowlist does not carry: an array
+  // subscript, a POSTFIX `++`, and base-N notation, whose `#` is refused because `#` starts a
+  // comment in command context.
+  //
+  // KEPT, and this is the trade the last two rounds settled the hard way. Widening the allowlist to
+  // admit exotic shapes nobody writes in a build script is precisely how both previous bypasses
+  // arrived — a special case added to stop a false positive became the hole. The cost here is one
+  // command rewritten without `$((`; the cost of the other direction was a total bypass of two
+  // guards. Zero scripts in package.json and zero `run:` values in ci.yml use any of these shapes.
+  // If one ever does, widen ARITH_OPERAND deliberately and turn these into `[]` — do not read a
+  // green run of this block as a claim that they are chains.
+  assert.deepEqual(shellOperators('echo "$((a[1]|2))"'), ['|'], 'array subscript — bash says 2');
+  assert.deepEqual(shellOperators('echo "$((a++|1))"'), ['|'], 'postfix ++ — bash says 1');
+  assert.deepEqual(shellOperators('echo "$((16#ff&1))"'), ['&'], 'base-N notation — bash says 1');
+
+  // And the controls that keep the block above from reading as "the allowlist is arbitrary": the
+  // same shapes without the unsupported token are accepted, so it is the token and not the operator.
+  assert.deepEqual(shellOperators('echo "$((a|2))"'), []);
+  assert.deepEqual(shellOperators('echo "$((0x1f|1))"'), [], 'hex is an ordinary numeric operand');
+  assert.deepEqual(shellOperators('echo "$((x=1,y=2))"'), [], 'assignment and comma are arithmetic');
 });
 
 test('an unquoted backslash escapes the operator after it — the branch that had no coverage', () => {

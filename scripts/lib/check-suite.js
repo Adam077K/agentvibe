@@ -330,29 +330,132 @@ function aliasLinks(command) {
 const SHELL_OPERATORS = ['&&', '||', ';', '|', '&', '\\n'];
 
 /**
- * Does a `$((` at `open - 1` balance? Returns the index of the closing `)`, or -1.
+ * Where a `$((` at `open` really ends, IF it ends as `))`. Returns that index, or -1.
  *
- * USED ONLY TO DECIDE WHETHER THIS IS ARITHMETIC AT ALL — the expansion is then walked like any
- * other frame, not jumped over. `$((…))` is not a command context: measured, `$((6|1))` is 7,
- * `$((6&1))` is 0, `$((1&&1))` is 1 and `$((0||1))` is 1, so reporting a pipe there would fire this
- * rule on correct code with a message — "the step's exit code becomes the last command's" — that is
- * simply false of it. That is the same mistake the `2>&1` case documents.
+ * `$((` DOES NOT MEAN ARITHMETIC. It means arithmetic only when the region closes with `))`;
+ * otherwise bash reads it as command substitution wrapping a subshell — `$( (cmd); rest )` — and
+ * runs every command in it. Measured 2026-08-26, and this is the whole rule:
  *
- * -1 rather than "to the end of the string" is the load-bearing half. An unbalanced `$((` is not
- * arithmetic bash would run, so treating it as opaque would turn a typo into the one place a chain
- * could still hide. Unbalanced falls through and is read as `$(` opening a substitution whose first
- * character is a subshell `(` — which reports, as it should.
+ *     echo "$((echo RAN); echo RAN2)"    RAN / RAN2, exit 0    BOTH RAN — no `))` anywhere
+ *     echo "$((exit 7); echo RAN2)"      exit 0                the 7 is LAUNDERED
+ *     echo "$((a|b); echo RAN2)"         a, b run as commands through a PIPE, then RAN2
+ *     echo "$((echo RAN))"               exit 1                arithmetic syntax error, nothing ran
+ *     echo "$(( (echo RAN) ))"           exit 1                "missing `)'" — still arithmetic
+ *
+ * So the previous predicate — "the parens balance" — granted non-command status to the exact case
+ * that IS a command context, and one step shaped `echo "$((npm run a); npm run b)"` returned zero
+ * findings from this function, from auditSuite() and from the ci.yml check at once. THE SPECIAL
+ * CASE ADDED TO AVOID FIRING ON `$((6|1))` WAS ITSELF THE BYPASS; that is the general shape, and it
+ * is why granting the exemption now takes two independent checks that must both agree.
+ *
+ * This is the STRUCTURAL one: the `(` at `open + 1` must be closed by the `)` immediately before
+ * the one that closes `open`. `$((6|1))` satisfies it; `$((echo RAN); echo RAN2)` closes its inner
+ * paren early and does not. isArithmeticBody() is the second, on the text between them.
+ *
+ * -1 is also what an unbalanced `$((` gets, for the same reason as before: treating a typo as
+ * opaque would make it the one place a chain could still hide.
  */
 function arithmeticEnd(src, open) {
   let depth = 0;
+  let innerClose = -1;
   for (let i = open; i < src.length; i += 1) {
     if (src[i] === '(') depth += 1;
     else if (src[i] === ')') {
       depth -= 1;
-      if (depth === 0) return i;
+      if (depth === 1 && innerClose === -1) innerClose = i;
+      if (depth === 0) return i === innerClose + 1 ? i : -1;
     }
   }
   return -1;
+}
+
+/** Characters that never appear in a bash arithmetic expression, and each of which can start or separate a command. */
+const ARITH_FORBIDDEN = /[;`'"\\#\n\r]/;
+/** A number, an identifier, `$name`, or `${name}`. */
+const ARITH_OPERAND = /^(?:\$?\{\s*[A-Za-z_]\w*\s*\}|\$?[A-Za-z_]\w*|\d[\w#]*)/;
+/** Unary, where an operand is expected. */
+const ARITH_PREFIX = /^(?:\+\+|--|[-+!~])/;
+/** Binary, where an operator is expected. `?` and `:` are handled separately so they must pair. */
+const ARITH_INFIX = /^(?:\*\*|<<|>>|<=|>=|==|!=|&&|\|\||[-+*/%&|^<>=,])/;
+
+/**
+ * Does the text between `$((` and `))` read as arithmetic bash would evaluate?
+ *
+ * THE SECOND, INDEPENDENT CHECK, and it exists because the structural one above is a rule about
+ * parentheses and this file has now been bitten twice by a rule about parentheses. Measurement says
+ * a region closing in `))` is arithmetic — bash errors rather than falling back, on every shape
+ * probed — so structurally this is belt and braces. It is written anyway because the asymmetry is
+ * total: a false positive costs one command rewritten without `$((`, a false negative is a complete
+ * bypass of both guards at once, and the last two rounds were both lost on that trade.
+ *
+ * A CONSERVATIVE ALLOWLIST, and everything outside it FAILS CLOSED to command substitution — where
+ * the interior is scanned under normal command rules, so `;`, `&&`, `||` and `|` are reported. What
+ * that rejects, deliberately:
+ *
+ *   `;`, a newline, a backtick, a quote, a backslash, `#`   never arithmetic; each starts or
+ *                                                           separates a command
+ *   `$(`                                                    a nested command substitution. It is
+ *                                                           legal INSIDE arithmetic, but its
+ *                                                           interior is command text, so scanning
+ *                                                           it costs nothing and reading it as
+ *                                                           arithmetic would cost everything
+ *   two bare words — `npm run a`                            two operands with only space between
+ *                                                           them is not an expression, and this is
+ *                                                           the one a character allowlist misses
+ *   `:` with no `?`                                         `a:b|c` is an arithmetic syntax error
+ *                                                           in bash, measured
+ *
+ * It also rejects some VALID arithmetic — postfix `x++`, an empty body — and that costs nothing:
+ * the fallback scans the body as command text, and a body bash accepts as arithmetic contains no
+ * `;` or newline, so the only operators there are `&`/`|` forms, which is exactly what the
+ * allowlist below is precise about. Confirm before widening it: a shape whose classification does
+ * not change the returned operators does not need to be here.
+ */
+function isArithmeticBody(body) {
+  if (ARITH_FORBIDDEN.test(body) || body.includes('$(')) return false;
+
+  let i = 0;
+  let expect = 'operand';
+  let depth = 0;
+  let ternaries = 0;
+
+  while (i < body.length) {
+    const rest = body.slice(i);
+
+    const ws = /^\s+/.exec(rest);
+    if (ws) { i += ws[0].length; continue; }
+
+    if (rest[0] === '(') {
+      if (expect !== 'operand') return false;
+      depth += 1; i += 1; continue;
+    }
+    if (rest[0] === ')') {
+      if (expect !== 'operator' || depth === 0) return false;
+      depth -= 1; i += 1; continue;
+    }
+
+    if (expect === 'operand') {
+      const prefix = ARITH_PREFIX.exec(rest);
+      if (prefix) { i += prefix[0].length; continue; }
+      const operand = ARITH_OPERAND.exec(rest);
+      if (!operand) return false;
+      i += operand[0].length;
+      expect = 'operator';
+      continue;
+    }
+
+    if (rest[0] === '?') { ternaries += 1; i += 1; expect = 'operand'; continue; }
+    if (rest[0] === ':') {
+      if (ternaries === 0) return false;
+      ternaries -= 1; i += 1; expect = 'operand'; continue;
+    }
+    const infix = ARITH_INFIX.exec(rest);
+    if (!infix) return false;
+    i += infix[0].length;
+    expect = 'operand';
+  }
+
+  return depth === 0 && ternaries === 0 && expect === 'operator';
 }
 
 function shellOperators(command) {
@@ -381,13 +484,17 @@ function shellOperators(command) {
     if (c === '\\') { i += 1; continue; }
 
     // ARITHMETIC — checked before `$(` so the longer token wins, and inside double quotes too,
-    // where `"$((6|1))"` is just as much a number. Only when it BALANCES: an unbalanced `$((` is
-    // not arithmetic, so it falls through and is read as a substitution rather than becoming the
-    // one place a chain can still hide.
-    if (c === '$' && src[i + 1] === '(' && src[i + 2] === '(' && arithmeticEnd(src, i + 1) !== -1) {
-      stack.push({ kind: 'arith', quote: null, parens: 2 });
-      i += 2;
-      continue;
+    // where `"$((6|1))"` is just as much a number. TWO INDEPENDENT CHECKS MUST BOTH AGREE before
+    // the exemption is granted: the region has to close as `))`, and the text between has to read
+    // as arithmetic. Either one failing falls through to `$(` below, where the interior is scanned
+    // as commands — the safe direction, and the one the balance-only predicate got wrong.
+    if (c === '$' && src[i + 1] === '(' && src[i + 2] === '(') {
+      const end = arithmeticEnd(src, i + 1);
+      if (end !== -1 && isArithmeticBody(src.slice(i + 3, end - 1))) {
+        stack.push({ kind: 'arith', quote: null, parens: 2 });
+        i += 2;
+        continue;
+      }
     }
 
     // COMMAND SUBSTITUTION — the hole. Both spellings open a frame from ANY non-single-quoted
