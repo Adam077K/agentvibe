@@ -597,10 +597,21 @@ function resolveChain(scripts, name) {
 /**
  * Every script reachable from `steps`, transitively through `npm run` references.
  *
- * Transitive reach counts. `check:ledger` runs test:claims/test:classifier/test:ledger,
- * `check:dispatch` runs test:dispatch, `check:warroom` runs test:warroom, `check:memory` runs
- * test:memory, `check:dispatch-prompt` runs test:dispatch-prompt — those five are reached and
- * must NOT be duplicated into STEPS to satisfy the guard.
+ * SUPERSEDED 2026-08-26, and it had inverted. This paragraph read: "`check:ledger` runs
+ * test:claims/test:classifier/test:ledger, `check:dispatch` runs test:dispatch, `check:warroom`
+ * runs test:warroom, `check:memory` runs test:memory, `check:dispatch-prompt` runs
+ * test:dispatch-prompt — those five are reached and must NOT be duplicated into STEPS to satisfy
+ * the guard." Measured against the tree it describes, all five are reached = FALSE. They were split
+ * into their links, which are steps of their own — six for check:ledger, six of six in STEPS — and
+ * the five parents became EXCLUDED aliases precisely BECAUSE nothing reaches them. auditSuite()
+ * now fails an EXCLUDED entry the suite does reach, so a reader following the old text would have
+ * concluded those five entries were the defect.
+ *
+ * WHY THE WALK STILL MATTERS, which is what the paragraph was for: the alias check depends on it.
+ * An alias is excused from the suite because its links are in it, and that is only checkable by
+ * walking. Every STEP is a single command today, so reach over the real tree returns the steps
+ * themselves and the property would pass vacuously against it — `transitive reach still counts` in
+ * scripts/check-suite.test.mjs proves the mechanism against a constructed graph instead.
  */
 function reachable(scripts, steps = STEPS) {
   const edges = scriptGraph(scripts);
