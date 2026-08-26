@@ -395,3 +395,38 @@ declares ten structured lenses; they share two names. That is *why* `independenc
 unenforced — the gate cannot honour a property it never loads. Patch-and-record chosen over unification.
 **Reversibility:** reversible — documentation, lint severities, and one loop bound.
 **Owner:** ceo · **founder decision** · **Affects:** the 2026-08-24 handoff, `MODEL-DIVERSITY.md`, `qa.js`, `schema-lint.js`
+
+## 2026-08-25 — Four founder decisions: scope, review weight, venture work, one living status
+
+**Context:** Twelve days produced 15 handoff documents, 117 session files and four plan documents on disk
+at once, while the QA gate has still never written a verdict and CI has been red since 2026-08-24 on one
+environment-dependent test. Four open questions were settled in a single pass.
+
+**Options considered:** finish the harness vs. start venture work now / keep the full 49-agent gate on
+every PR vs. tier it by reversibility / continue the handoff chain vs. one living document.
+
+**Decision — 1 · Scope:** complete Waves 1–4 of the target architecture. **Phase 9 fleet rollout is
+excluded** — the plan's own P6, and no other project is touched.
+**Decision — 2 · Review weight:** lean by default — 3 blinded reviewers plus the deterministic floor. The
+full `qa.js` gate runs only where `git revert` does not undo the damage: `.github/workflows/`,
+`.claude/agents/`, `.claude/hooks/`, the gate itself, credentials.
+**Decision — 3 · Venture work: not yet.** The harness is finished first. Founder position, restated
+2026-08-25 after being raised with the session count.
+**Decision — 4 · Documentation:** one living `docs/STATUS.md`. The handoff chain retires — bannered
+HISTORICAL, not deleted.
+
+**Rationale:** (2) rests on this repo's own measurement, not on preference: a 49-agent gate run cost ~3.3M
+tokens and found 3 P1s while missing the largest defect of the session; 3 blinded reviewers found 7 P1s at
+a fraction of that. Panel size was never the signal — two reviewers converging independently was.
+(4) a handoff is a snapshot addressed to one reader at one moment, and snapshots are superseded rather than
+corrected, so a stale one is indistinguishable from a current one until both have been read. A living
+document is corrected in place, which makes being wrong a bug someone fixes instead of a file someone adds.
+
+**Cost, recorded once and not to be re-litigated:** (3) means every mechanism built in Waves 1–4 stays
+untested against work that is not the harness itself, and stop conditions 6 and 7 stand at maximum
+exposure — 117 session files, zero customer-facing work. (2) accepts that a lean panel will miss findings a
+49-agent panel would catch, on the measured ground that the larger panel missed more.
+
+**Reversibility:** reversible — four process decisions; (4) deletes no file and no history.
+**Owner:** ceo · **founder decision** · **Affects:** `docs/STATUS.md`,
+`docs/08-agents_work/handoffs/`, `qa.js` gate routing, and every future session's pre-flight read

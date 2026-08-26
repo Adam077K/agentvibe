@@ -1,3 +1,6 @@
+> **HISTORICAL — superseded by [docs/STATUS.md](../../STATUS.md).** Retained for the record.
+> Read STATUS.md for current state; nothing here is a live instruction.
+
 # Handoff — what P0 still owes, and the traps between here and it
 
 **From:** ceo (`ceo-4-1787176363`) · **Date:** 2026-08-22 · **Base:** `main` = `5b8e127`
