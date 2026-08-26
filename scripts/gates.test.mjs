@@ -406,6 +406,31 @@ test('the two lists agree in the shipped tree', () => {
 //
 // Pinned as exact strings on purpose. Adding a flag to the command that resolves the binding gate
 // is precisely the change that should require editing a test and explaining itself.
+//
+// ── WHAT THESE TWO CONSTANTS DO NOT CHECK, STATED SO IT IS A TRADE AND NOT AN IMPLIED CLOSURE ──
+//
+// NOTHING HERE CHECKS THAT THESE PAIRS ARE THE RIGHT PAIRS. They check that the shipped tree still
+// says what this file says it says. Change both together, in one commit, and every check passes.
+//
+// Measured on this tree, both halves:
+//
+//   swap validate-a-market/judge from `founder-approval` to `qa-verdict` and update SHIPPED_GATES
+//     -> npm run gates 0 · test:playbooks 0 · lint:agents 0
+//        A founder sign-off has become an exit code, and nothing in the repository noticed.
+//   repoint qa-verdict's `run:` at `node scripts/classify.mjs` and update SHIPPED_RUN
+//     -> test:playbooks 0
+//        The binding gate now resolves by running the tier classifier.
+//
+// SO THE PIN CONVERTS A ONE-LINE `lite` EDIT INTO A TWO-FILE EDIT, AND THAT IS ALL IT DOES. It is
+// still the right trade, and the reason is that the alternative regresses one level up: a third
+// declaration of the same fact — a floor entry, a second constant, a schema — can be changed in
+// the same commit as the other two, so it moves the coincidence rather than removing it. Every
+// authority that lives inside the repo has this property; only something outside it does not.
+//
+// What actually catches this is a human reading the diff, and the pin is what makes that possible:
+// a gate change can no longer arrive as one plausible line in a data file. It arrives as a test
+// edit that says, in the diff, that someone decided a founder no longer approves this. That is a
+// weaker guarantee than the ones above it and it is deliberately not described as equivalent.
 
 /** Every `kind: command` gate that ships, and the exact argv that resolves it. */
 const SHIPPED_RUN = {

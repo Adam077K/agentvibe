@@ -178,6 +178,22 @@ routed rather than absorbed.
 hole. The mutation was wrong, not the guard: I had put the `#` inside double quotes, which is the legal
 case. Rebuilt unquoted, it fires.*
 
+**THE RESIDUAL ON BOTH PINS, now stated in the tree rather than implied.** `SHIPPED_RUN` and
+`SHIPPED_GATES` check that the shipped tree still says what the test says it says. **They do not check that
+the pairs are the right pairs.** Reproduced here rather than accepted from the review: swapping
+`validate-a-market/judge` from `founder-approval` to `qa-verdict` and updating the constant in the same
+commit gives `npm run gates` 0, `test:playbooks` 0, `lint:agents` 0 — **a founder sign-off becomes an exit
+code and nothing in the repository notices.** Repointing `qa-verdict`'s `run:` at `node scripts/classify.mjs`
+with a matching constant edit is green too: the binding gate would resolve by running the tier classifier.
+
+So the pin converts a one-line `lite` edit into a two-file edit, **and that is all it does**. Still the right
+trade, and the reason is that the alternative regresses one level up: a third declaration — a floor entry, a
+second constant, a schema — is editable in the same commit as the other two, so it moves the coincidence
+rather than removing it. **Every authority that lives inside the repo has this property.** What actually
+catches it is a human reading the diff, and the pin is what makes that possible: a gate change can no longer
+arrive as one plausible line in a data file, it arrives as a test edit that says someone decided a founder no
+longer approves this. Weaker than the guarantees above it, and deliberately not described as equivalent.
+
 **DEFERRED, with the reason: renaming `gates` to `check:gates`.** R113 is right that `gates` escapes
 `GOVERNED = /^(?:check|test|lint|verify|audit):/` and could be deleted without the drift guard noticing —
 measured, `auditSuite()` failures mentioning it are 0 as `gates` and 1 as `check:gates`. The rename is the
