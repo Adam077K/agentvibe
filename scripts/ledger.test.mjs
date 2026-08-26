@@ -14,12 +14,13 @@
 // moved quote and a timeout are all constructed rather than hoped for — the Phase 2
 // lesson: a guard verified only on the happy path is a guard whose failure was never built.
 
-import { test } from 'node:test';
+import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
@@ -396,6 +397,330 @@ test('risk:high passes with two families in agreement', () => {
 
 test('risk:low accepts a single judge', () => {
   assert.equal(R.judge(judged('low', [J('anthropic')])).status, 'pass');
+});
+
+// ── claim-judge-external ────────────────────────────────────────────────────
+//
+// The resolver that CALLS a second model family. Everything here is driven against a real
+// spawned process — no mocked child_process — because the defect this resolver exists to
+// avoid lives in the seam between a binary's exit code and its output, and a mock has no
+// seam.
+//
+// THE CASE THAT ORDERS THE REST: codex bug #19945 returns exit 0 with 0-byte stdout when
+// detached from a TTY, which is how a resolver runs it. Reading that as a pass would mint
+// judgments nobody made, on the highest-risk claims in the ledger.
+//
+// Five negative cases below would ALL be satisfied by a resolver hard-coded to return
+// `unresolved`, and would prove nothing. The positive control is
+// 'a conformant verdict resolves pass/fail' — it must fire, or the negatives are inert.
+// The `exit 1 …still resolves pass` case is the same control from the other side: it
+// pins that the gate is the turn-completion event and not the exit code, in BOTH
+// directions, so "ignores the exit code" cannot be implemented as "always unresolved".
+
+const JUDGE_TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'wr-judge-'));
+after(() => fs.rmSync(JUDGE_TMP, { recursive: true, force: true }));
+
+/** A real executable on disk. Node, so JSON escaping of the echoed prompt is not hand-rolled. */
+function stub(name, body) {
+  const p = path.join(JUDGE_TMP, name);
+  fs.writeFileSync(p, `#!/usr/bin/env node\n${body}\n`);
+  fs.chmodSync(p, 0o755);
+  return p;
+}
+
+/** Every stub reads the prompt off STDIN and lifts the nonce out of it, as a judge must. */
+const PREAMBLE = `
+const prompt = require('fs').readFileSync(0, 'utf8');
+const m = prompt.match(/WARROOM-VERDICT-([0-9a-f]+):/);
+const nonce = m ? m[1] : 'no-nonce-in-prompt';
+const out = (o) => process.stdout.write(JSON.stringify(o) + '\\n');
+`;
+
+const codexTurn = (verdictLine) => stub(`codex-${Math.random().toString(36).slice(2)}`, `${PREAMBLE}
+out({ type: 'thread.started', thread_id: 't1' });
+out({ type: 'turn.started' });
+${verdictLine}
+out({ type: 'turn.completed', usage: { input_tokens: 11, output_tokens: 3 } });
+`);
+
+const ext = () => judged('high', []);
+const runExt = (opts) => R.judgeExternal(ext(), { bin: 'codex', timeoutMs: 10000, ...opts });
+
+// ── case 1 · the binary is not there at all ──
+test('judge-external is UNRESOLVED when the judge binary is absent — never pass, never fail', () => {
+  const r = runExt({ binPath: path.join(JUDGE_TMP, 'no-such-judge') });
+  assert.equal(r.status, 'unresolved');
+  assert.notEqual(r.status, 'pass');
+  assert.match(r.reason, /is not installed/);
+  assert.match(r.reason, /no second family was consulted/);
+});
+
+// ── case 2 · bug #19945, and it is the reason this resolver was deferred for weeks ──
+test('judge-external is UNRESOLVED on exit 0 with EMPTY stdout — codex #19945 must not read as a pass', () => {
+  const bin = stub('exit0-silent', 'process.exit(0);');
+  const r = runExt({ binPath: bin });
+  assert.equal(r.status, 'unresolved', 'exit 0 with no output is the #19945 shape and is not a judgment');
+  assert.match(r.reason, /0 bytes on stdout/);
+  assert.match(r.reason, /Exit 0 is not consulted in either direction/);
+});
+
+// ── case 3 · well-formed events, no completion marker ──
+test('judge-external is UNRESOLVED when the stream is well-formed but no turn completed', () => {
+  const bin = stub('no-completion', `${PREAMBLE}
+out({ type: 'thread.started', thread_id: 't1' });
+out({ type: 'turn.started' });
+out({ type: 'item.completed', item: { type: 'agent_message', text: 'WARROOM-VERDICT-' + nonce + ': pass' } });
+`);
+  const r = runExt({ binPath: bin });
+  assert.equal(r.status, 'unresolved', 'a verdict inside an unfinished turn is not a verdict');
+  assert.match(r.reason, /no turn completion/);
+  assert.match(r.reason, /no turn\.completed event in 3 event\(s\)/);
+});
+
+test('and turn.failed is named as such rather than reported as a missing event', () => {
+  const bin = stub('turn-failed', `${PREAMBLE}
+out({ type: 'turn.started' });
+out({ type: 'turn.failed', error: { message: 'context length exceeded' } });
+`);
+  const r = runExt({ binPath: bin });
+  assert.equal(r.status, 'unresolved');
+  assert.match(r.reason, /turn\.failed/);
+});
+
+// ── case 4 · turn completed, nothing said ──
+test('judge-external is UNRESOLVED when the turn completes but no verdict is extractable', () => {
+  const bin = codexTurn(`out({ type: 'item.completed', item: { type: 'agent_message', text: 'That is an interesting question.' } });`);
+  const r = runExt({ binPath: bin });
+  assert.equal(r.status, 'unresolved', 'silence is not consent — a completed turn with no verdict is unjudged');
+  assert.match(r.reason, /stated no verdict/);
+});
+
+// ── case 5 · timeout ──
+test('judge-external is UNRESOLVED on a timeout, and says the kill discards anything pending', () => {
+  const bin = stub('hang', 'require("fs").readFileSync(0, "utf8"); setTimeout(() => {}, 30000);');
+  const r = R.judgeExternal(ext(), { bin: 'codex', binPath: bin, timeoutMs: 400 });
+  assert.equal(r.status, 'unresolved');
+  assert.match(r.reason, /did not finish within 400ms/);
+});
+
+// ── case 6 · THE POSITIVE CONTROL. Without this the five above prove only inertness. ──
+test('a conformant verdict resolves pass/fail — the control that makes the negatives mean something', () => {
+  const passBin = codexTurn(`out({ type: 'item.completed', item: { type: 'agent_message', text: 'WARROOM-VERDICT-' + nonce + ': pass' } });`);
+  const p = runExt({ binPath: passBin });
+  assert.equal(p.status, 'pass', `a real completed verdict must pass, or nothing else here is evidence: ${p.reason}`);
+  assert.match(p.reason, /returned pass/);
+
+  const failBin = codexTurn(`out({ type: 'item.completed', item: { type: 'agent_message', text: 'WARROOM-VERDICT-' + nonce + ': fail' } });`);
+  const f = runExt({ binPath: failBin });
+  assert.equal(f.status, 'fail', `a stated fail is a judgment, not an inability to judge: ${f.reason}`);
+  assert.match(f.reason, /returned fail/);
+});
+
+test('the exit code is not consulted in the other direction either: exit 1 with a completed turn still resolves', () => {
+  // The mirror of #19945, and it is not hypothetical: gemini 0.38.2 on this machine exits
+  // 1 with 0 bytes on IneligibleTierError. If "ignore the exit code" were implemented as
+  // "return unresolved whenever the exit code is non-zero", this test fails and case 2
+  // still passes — which is exactly how a toothless fix survives review.
+  const bin = stub('nonzero-but-complete', `${PREAMBLE}
+out({ type: 'turn.started' });
+out({ type: 'item.completed', item: { type: 'agent_message', text: 'WARROOM-VERDICT-' + nonce + ': pass' } });
+out({ type: 'turn.completed', usage: {} });
+process.exit(1);
+`);
+  const r = runExt({ binPath: bin });
+  assert.equal(r.status, 'pass', 'the turn completed and the judge spoke; the exit code is not the gate');
+  assert.equal(r.detail.exit, 1, 'the exit code is reported for a human and is not an input');
+});
+
+// ── defeating the fix: the two traps read out of gemini's own source ──
+
+test('gemini result status:error is NOT a completed turn — the trap a `type === result` check walks into', () => {
+  // Verified against the installed gemini bundle 2026-08-26: every fatal path in
+  // gemini.js emits {type:'result', status:'error', error, stats}. A predicate of "a
+  // result event exists" therefore reads a crash as a finished judgment.
+  const bin = stub('gemini-error', `${PREAMBLE}
+out({ type: 'init', timestamp: 'x' });
+out({ type: 'message', role: 'assistant', content: 'WARROOM-VERDICT-' + nonce + ': pass' });
+out({ type: 'result', timestamp: 'x', status: 'error', error: { type: 'FatalAuthError', message: 'IneligibleTierError' }, stats: {} });
+`);
+  const r = R.judgeExternal(ext(), { bin: 'gemini', binPath: bin, timeoutMs: 10000 });
+  assert.equal(r.status, 'unresolved', 'a crash that emitted a result event has not judged anything');
+  assert.match(r.reason, /status:error/);
+  assert.match(r.reason, /IneligibleTierError/);
+});
+
+test('the same stream with status:success DOES resolve — the control for the line above', () => {
+  const bin = stub('gemini-ok', `${PREAMBLE}
+out({ type: 'init', timestamp: 'x' });
+out({ type: 'message', role: 'assistant', content: 'WARROOM-VERDICT-' + nonce + ': fail' });
+out({ type: 'result', timestamp: 'x', status: 'success', stats: { total_tokens: 9 } });
+`);
+  const r = R.judgeExternal(ext(), { bin: 'gemini', binPath: bin, timeoutMs: 10000 });
+  assert.equal(r.status, 'fail', `only the status field differs from the test above: ${r.reason}`);
+});
+
+test('a judge that only ECHOES the prompt back is UNRESOLVED — the resolver cannot grade its own homework', () => {
+  // gemini really does this: it emits {type:'message', role:'user', content:<the prompt>}
+  // before the model answers. The prompt necessarily contains the verdict template, so a
+  // raw-stdout scan would read our own instructions as the judge's answer.
+  const bin = stub('echo-only', `${PREAMBLE}
+out({ type: 'message', role: 'user', content: prompt });
+out({ type: 'result', timestamp: 'x', status: 'success', stats: {} });
+`);
+  const r = R.judgeExternal(ext(), { bin: 'gemini', binPath: bin, timeoutMs: 10000 });
+  assert.equal(r.status, 'unresolved', 'an echo of the prompt is not a judgment');
+  assert.match(r.reason, /stated no verdict/);
+});
+
+test('a wrong PROFILE fails safe: gemini-shaped output read as codex is unresolved, not pass', () => {
+  // Only one of the two profiles has been verified against its binary. This pins the
+  // property that makes shipping the unverified one honest — a mismatched envelope loses
+  // the verdict, it does not invent one.
+  const bin = stub('gemini-shape', `${PREAMBLE}
+out({ type: 'message', role: 'assistant', content: 'WARROOM-VERDICT-' + nonce + ': pass' });
+out({ type: 'result', timestamp: 'x', status: 'success', stats: {} });
+`);
+  const r = R.judgeExternal(ext(), { bin: 'codex', binPath: bin, timeoutMs: 10000 });
+  assert.equal(r.status, 'unresolved');
+  assert.match(r.reason, /no turn\.completed event/);
+});
+
+test('contradictory verdicts are UNRESOLVED — a contradiction is not averaged into an answer', () => {
+  const bin = codexTurn(`
+out({ type: 'item.completed', item: { text: 'WARROOM-VERDICT-' + nonce + ': pass' } });
+out({ type: 'item.completed', item: { text: 'on reflection, WARROOM-VERDICT-' + nonce + ': fail' } });`);
+  const r = runExt({ binPath: bin });
+  assert.equal(r.status, 'unresolved');
+  assert.match(r.reason, /contradictory verdicts/);
+});
+
+test('the same verdict repeated is ONE verdict, not a contradiction', () => {
+  const bin = codexTurn(`
+out({ type: 'item.completed', item: { text: 'WARROOM-VERDICT-' + nonce + ': pass' } });
+out({ type: 'item.completed', item: { text: 'again: WARROOM-VERDICT-' + nonce + ': pass' } });`);
+  assert.equal(runExt({ binPath: bin }).status, 'pass');
+});
+
+test('a verdict bearing another run\'s nonce does not count — a replayed transcript is not a judgment', () => {
+  const bin = stub('stale-nonce', `${PREAMBLE}
+out({ type: 'turn.started' });
+out({ type: 'item.completed', item: { text: 'WARROOM-VERDICT-deadbeefcafe: pass' } });
+out({ type: 'turn.completed', usage: {} });
+`);
+  const r = runExt({ binPath: bin });
+  assert.equal(r.status, 'unresolved');
+  assert.match(r.reason, /stated no verdict/);
+});
+
+test('truncated output is refused rather than parsed — a cut-off stream can carry a marker it never earned', () => {
+  const bin = stub('flood', `${PREAMBLE}
+out({ type: 'turn.started' });
+out({ type: 'item.completed', item: { text: 'WARROOM-VERDICT-' + nonce + ': pass' } });
+out({ type: 'turn.completed', usage: {} });
+for (let i = 0; i < 5000; i++) out({ type: 'item.noise', pad: 'x'.repeat(200) });
+`);
+  const r = R.judgeExternal(ext(), { bin: 'codex', binPath: bin, timeoutMs: 10000, maxBuffer: 2048 });
+  assert.equal(r.status, 'unresolved');
+  assert.match(r.reason, /truncated/);
+});
+
+// ── it must not run at all in the cases where running is wrong ──
+
+test('an unknown judge binary name is UNRESOLVED and spawns nothing — the profile table is closed', () => {
+  const r = R.judgeExternal(ext(), { bin: 'frobnicate' });
+  assert.equal(r.status, 'unresolved');
+  assert.match(r.reason, /no judge profile for "frobnicate"/);
+  assert.match(r.reason, /codex, gemini/);
+});
+
+test('--no-exec and --offline both yield UNRESOLVED: it is a command resolver AND a network resolver', () => {
+  const bin = codexTurn(`out({ type: 'item.completed', item: { text: 'WARROOM-VERDICT-' + nonce + ': pass' } });`);
+  assert.equal(R.judgeExternal(ext(), { bin: 'codex', binPath: bin, skipCommands: true }).status, 'unresolved');
+  assert.equal(R.judgeExternal(ext(), { bin: 'codex', binPath: bin, offline: true }).status, 'unresolved');
+});
+
+test('the ASYMMETRY: a recorded dissent stands, and the binary is never asked', () => {
+  // MODEL-DIVERSITY.md: a second family may turn PASS into BLOCK, never BLOCK into PASS.
+  // The stub would return pass; the result must still be fail, which is only possible if
+  // it was never run.
+  const bin = codexTurn(`out({ type: 'item.completed', item: { text: 'WARROOM-VERDICT-' + nonce + ': pass' } });`);
+  const dissenting = judged('high', [J('anthropic'), J('anthropic', 'fail')]);
+  const r = R.judgeExternal(dissenting, { bin: 'codex', binPath: bin, timeoutMs: 10000 });
+  assert.equal(r.status, 'fail');
+  assert.match(r.reason, /never BLOCK into PASS/);
+  assert.equal(r.detail, undefined, 'no attestation, because nothing was run');
+});
+
+test('and the asymmetry runs the other way: an agreeing panel plus an external fail is a fail', () => {
+  const bin = codexTurn(`out({ type: 'item.completed', item: { text: 'WARROOM-VERDICT-' + nonce + ': fail' } });`);
+  const r = R.judgeExternal(judged('high', [J('anthropic')]), { bin: 'codex', binPath: bin, timeoutMs: 10000 });
+  assert.equal(r.status, 'fail', 'PASS into BLOCK is the direction a second opinion is allowed to move');
+});
+
+test('a live waiver still covers an unjudged claim, as it does for claim-judge', () => {
+  const waived = judged('high', []);
+  waived.disposition = { action: 'waive', until: '2026-12-01', reason: 'no second family is callable yet' };
+  const r = R.judgeExternal(waived, { bin: 'codex', binPath: path.join(JUDGE_TMP, 'nope'), now: NOW });
+  assert.equal(r.status, 'pass');
+  assert.match(r.reason, /waived for/);
+});
+
+// ── the attestation names the invocation that actually happened ──
+
+test('the attestation binds to the bytes the binary really received, not to what we meant to send', () => {
+  // claims.js counts distinct model_family STRINGS, so `model_family: openai` typed into
+  // YAML satisfies the independence predicate. The hashes are what make a recorded
+  // second-family judgment checkable rather than lexical — so the prompt hash has to be
+  // the hash of the prompt that crossed the pipe.
+  const seenPath = path.join(JUDGE_TMP, 'seen-prompt.sha256');
+  const bin = stub('attest', `${PREAMBLE}
+const h = require('crypto').createHash('sha256').update(prompt).digest('hex');
+require('fs').writeFileSync(${JSON.stringify(seenPath)}, h);
+out({ type: 'turn.started' });
+out({ type: 'item.completed', item: { text: 'WARROOM-VERDICT-' + nonce + ': pass' } });
+out({ type: 'turn.completed', usage: {} });
+`);
+  const r = runExt({ binPath: bin });
+  assert.equal(r.status, 'pass');
+  const a = r.detail.attestation;
+  assert.equal(r.detail.events, 3);
+  assert.equal(a.bin, 'codex');
+  assert.equal(a.bin_path, bin);
+  for (const f of ['argv_sha256', 'prompt_sha256', 'stdout_sha256', 'subject']) {
+    assert.match(a[f], /^[0-9a-f]{64}$/, `${f} must be a sha256`);
+  }
+  // The stub hashed its own stdin. If the two disagree, the attestation is describing a
+  // prompt nobody sent — which is the lexical-independence defect all over again, one
+  // field down.
+  assert.equal(a.prompt_sha256, fs.readFileSync(seenPath, 'utf8'),
+    'the attested prompt hash must equal the hash the binary computed over its own stdin');
+  assert.equal(a.subject, createHash('sha256').update(ext().assert).digest('hex'),
+    'subject names WHAT was judged, so a different assertion is a different attestation');
+});
+
+test('an absent binary still attests what was attempted, with a null stdout hash', () => {
+  const r = runExt({ binPath: path.join(JUDGE_TMP, 'no-such-judge') });
+  assert.equal(r.detail.attestation.stdout_sha256, null, 'there is no output to hash and none is invented');
+  assert.match(r.detail.attestation.subject, /^[0-9a-f]{64}$/);
+});
+
+// ── wiring ──
+
+test('claim-judge-external is registered, dispatchable, and attaches only where a tier rule names it', () => {
+  assert.ok(R.RESOLVER_NAMES.includes('claim-judge-external'));
+  // NOT implied by verified_by — a judge claim does not call a vendor API just by existing.
+  assert.deepEqual(R.resolversFor(judged('high', []), []), ['claim-freshness', 'claim-judge']);
+  assert.deepEqual(R.resolversFor(judged('high', []), ['claim-judge-external']),
+    ['claim-freshness', 'claim-judge', 'claim-judge-external']);
+  // And it does not attach to a claim carrying no panel, however loudly a rule asks.
+  assert.deepEqual(R.resolversFor(claim({ verified_by: 'command', evidence: { cmd: 'true' } }), ['claim-judge-external']),
+    ['claim-command', 'claim-freshness']);
+});
+
+test('run() dispatches claim-judge-external through the same closed registry as the rest', async () => {
+  const r = await R.run('claim-judge-external', ext(), { bin: 'codex', binPath: path.join(JUDGE_TMP, 'nope') });
+  assert.equal(r.resolver, 'claim-judge-external');
+  assert.equal(r.status, 'unresolved');
 });
 
 // ── Dispatch ────────────────────────────────────────────────────────────────
