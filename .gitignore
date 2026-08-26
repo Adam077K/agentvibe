@@ -42,3 +42,4 @@ mission-control/client/dist/
 # scripts/lib/claim-append.js is mid-write; a committed one would mean an append died.
 docs/03-system-design/.SOURCED-CLAIMS.lock
 docs/03-system-design/SOURCED-CLAIMS.md.*.tmp
+.claude/ledger/index.json.*.tmp

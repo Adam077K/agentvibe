@@ -364,6 +364,14 @@ function v6IsPublic(b) {
   if (zeroThrough(12)) return v4IsPublic(b.slice(12));                                      // ::/96
   if (b[0] === 0x00 && b[1] === 0x64 && b[2] === 0xff && b[3] === 0x9b
       && b.slice(4, 12).every((x) => x === 0)) return v4IsPublic(b.slice(12));              // 64:ff9b::/96
+  // RFC 8215's LOCAL-USE NAT64 prefix, 64:ff9b:1::/48. Refused outright rather than
+  // decoded: within it the translation prefix may itself be /48…/96 (RFC 6052), so the
+  // embedded IPv4 sits at a different offset depending on a length this function cannot
+  // see. The whole /48 is reserved for local translation and nothing in it is ever a
+  // public evidence source, so the fail-closed answer is also the correct one. Flagged by
+  // a reviewer as an inconsistency inside a rule otherwise applied completely — it was.
+  if (b[0] === 0x00 && b[1] === 0x64 && b[2] === 0xff && b[3] === 0x9b
+      && b[4] === 0x00 && b[5] === 0x01) return false;                                      // 64:ff9b:1::/48
   if (b[0] === 0x20 && b[1] === 0x02) return v4IsPublic(b.slice(2, 6));                     // 2002::/16 6to4
 
   if (b[0] === 0xfe && (b[1] & 0xc0) === 0x80) return false;        // fe80::/10 link-local
@@ -465,6 +473,21 @@ function existingClaims(root) {
     for (const c of claims) byId.set(c.id, c);
   }
   return byId;
+}
+
+/** Ids the committed index attributes to the target file that the file no longer holds. */
+function claimsLostSinceIndex(root, present) {
+  const indexAbs = path.join(root, '.claude', 'ledger', 'index.json');
+  let idx;
+  try {
+    idx = JSON.parse(fs.readFileSync(indexAbs, 'utf8'));
+  } catch {
+    return [];   // no index, or an unreadable one — no baseline, so nothing to say
+  }
+  const have = new Set(present.map((c) => c.id));
+  return (idx.claims || [])
+    .filter((c) => c && c.source_file === TARGET_REL && !have.has(c.id))
+    .map((c) => c.id);
 }
 
 function adrExists(root, id) {
@@ -648,6 +671,24 @@ async function gate(submitted, opts) {
     refuse('TARGET_ALREADY_INVALID',
       `${TARGET_REL} does not parse cleanly before the append, so this path will not add to it:\n  - ${beforeParsed.issues.join('\n  - ')}`);
   }
+  // A PARSE ERROR IS NOT THE ONLY WAY THIS FILE CAN BE DAMAGED, and the other way is
+  // silent. Truncate it at a claim-block boundary and it parses perfectly with fewer
+  // claims: measured, an append then SUCCEEDED, the index was rebuilt from the truncated
+  // file, `build --check` stayed green and only `git diff` showed the loss. Nothing above
+  // could see it, because `before` is the only baseline this function has and `before` is
+  // the damaged file.
+  //
+  // The committed index is an independent record of what this file used to hold, so it
+  // supplies the baseline. Only LOSS is reported — ids the index attributes to this file
+  // and the file no longer has. Extra claims in the file are just an unbuilt index, which
+  // is the normal state mid-append and not a defect.
+  const lost = claimsLostSinceIndex(root, beforeParsed.claims);
+  if (lost.length) {
+    refuse('TARGET_TRUNCATED',
+      `${TARGET_REL} parses cleanly but is MISSING ${lost.length} claim(s) the committed index records ` +
+      `for it: ${lost.join(', ')}. That is content loss, not drift — appending would bake it in and ` +
+      'rebuild the index over the top of it. Restore the file from git before adding anything.');
+  }
   // A digest is 64 hex characters and is not known until after the fetch, so the
   // pre-flight round trip uses a placeholder OF THE SAME SHAPE and the whole check is run
   // AGAIN on the real bytes below. Validating one string and writing a different one is
@@ -802,9 +843,47 @@ function defaultRebuildIndex(root) {
 // The write itself: read-modify-atomic-rename, behind an O_EXCL lock. Two sourcers
 // appending at once is a lost update otherwise, and the loser's claim would vanish with
 // no error at all.
+// EVERY write in this file goes through here, including the rollback. The rollback used
+// to be a bare `writeFileSync` while the forward path did tmp-and-rename — the one
+// non-atomic write in the file, and the worst possible one to leave that way: a crash
+// mid-rollback leaves a TRUNCATED target, and a truncation at a claim-block boundary
+// parses cleanly with fewer claims. Measured: prior claims silently lost, the index then
+// rebuilt FROM the truncated file, `build --check` green, CI sees nothing, and only
+// `git diff` shows it. `TARGET_ALREADY_INVALID` does not catch it because there is no
+// parse error to catch.
+function atomicWrite(abs, data) {
+  const tmp = `${abs}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, data);
+  fs.renameSync(tmp, abs);
+}
+
+// Put both files back exactly as they were, INCLUDING not existing. Returns the list of
+// things it could not restore — empty means the tree really is untouched, and the caller
+// says one thing when it is empty and a different thing when it is not.
+function rollback({ targetAbs, targetExisted, current, indexAbs, indexExisted, indexBefore }) {
+  const failed = [];
+  try {
+    if (targetExisted) atomicWrite(targetAbs, current);
+    else if (fs.existsSync(targetAbs)) fs.unlinkSync(targetAbs);
+  } catch (e) {
+    failed.push(`${TARGET_REL} (${e.message})`);
+  }
+  try {
+    if (indexExisted) atomicWrite(indexAbs, indexBefore);
+    else if (fs.existsSync(indexAbs)) fs.unlinkSync(indexAbs);
+  } catch (e) {
+    failed.push(`.claude/ledger/index.json (${e.message})`);
+  }
+  for (const p of [targetAbs, indexAbs]) {
+    try { fs.unlinkSync(`${p}.${process.pid}.tmp`); } catch { /* never created, or already gone */ }
+  }
+  return failed;
+}
+
 function commit(rec, root, now, by, rebuildIndex) {
   const targetAbs = path.join(root, TARGET_REL);
   const lockAbs = path.join(root, LOCK_REL);
+  const indexAbs = path.join(root, '.claude', 'ledger', 'index.json');
   fs.mkdirSync(path.dirname(targetAbs), { recursive: true });
   let fd;
   try {
@@ -820,27 +899,52 @@ function commit(rec, root, now, by, rebuildIndex) {
     // Re-read INSIDE the lock. The content the round-trip check validated was read
     // before it, so validating one file and writing to another is the exact race this
     // lock exists to close.
-    const current = fs.existsSync(targetAbs) ? fs.readFileSync(targetAbs, 'utf8') : seedFile();
+    //
+    // `targetExisted` is tracked, not inferred. `seedFile()` is a string that was never
+    // on disk, so a rollback that writes `current` back into a repo which had NO
+    // SOURCED-CLAIMS.md CREATES the file — measured: absent before, present after, while
+    // the refusal said the tree was untouched.
+    const targetExisted = fs.existsSync(targetAbs);
+    const current = targetExisted ? fs.readFileSync(targetAbs, 'utf8') : seedFile();
     if (current !== rec.before) {
       refuse('TARGET_CHANGED', `${TARGET_REL} changed between validation and write — nothing was written. Retry.`);
     }
+
+    // The index is captured BEFORE the rebuild, because the rebuild is not atomic from
+    // out here: `ledger build` writes index.json and then returns, and anything that
+    // interrupts it between those two — a signal, the OOM killer, Ctrl-C — leaves the
+    // index rewritten and the call failed. Measured across five build outcomes; the two
+    // that left the tree inconsistent were "writes then throws" and "writes then is
+    // killed", and the second needs no code change to reach. Restoring only the markdown
+    // made `build --check` fail in the OPPOSITE direction — "in the index, missing from
+    // the artifacts" — which nobody would trace back to an append that reported success.
+    const indexExisted = fs.existsSync(indexAbs);
+    const indexBefore = indexExisted ? fs.readFileSync(indexAbs) : null;
+
     const next = `${current.replace(/\s*$/, '')}\n${rec.section}`;
-    const tmp = `${targetAbs}.${process.pid}.tmp`;
-    fs.writeFileSync(tmp, next);
-    fs.renameSync(tmp, targetAbs);
+    atomicWrite(targetAbs, next);
 
     let index;
     try {
       index = rebuildIndex(root);
     } catch (e) {
-      // Roll the claim back. A written claim beside a stale index is precisely the state
+      // Roll BOTH files back. A written claim beside a stale index is precisely the state
       // the rebuild exists to prevent, so failing without undoing would leave the caller
       // holding the defect AND a success message.
-      fs.writeFileSync(targetAbs, current);
       const detail = [e.stdout, e.stderr, e.message].filter(Boolean).join(' ').trim().slice(0, 400);
+      const failed = rollback({ targetAbs, targetExisted, current, indexAbs, indexExisted, indexBefore });
+      if (failed.length) {
+        // The rollback itself failed. Say so — the alternative is a refusal that promises
+        // a clean tree it did not deliver, which is the sentence this whole change exists
+        // to make true rather than smaller.
+        refuse('ROLLBACK_FAILED',
+          `\`ledger build\` failed (${detail}) AND the tree could not be restored. ` +
+          `THE TREE IS INCONSISTENT. Unrestored: ${failed.join('; ')}. ` +
+          `Check \`git status\` and run \`node scripts/ledger.mjs build\`.`);
+      }
       refuse('INDEX_REBUILD_FAILED',
         `the claim was written and then REMOVED again because \`ledger build\` failed: ${detail}. ` +
-        'Nothing was left behind. The tree is exactly as it was before this call.');
+        `${TARGET_REL} and .claude/ledger/index.json were both restored to what they were before this call.`);
     }
     return { bytes: next.length - current.length, index };
   } finally {

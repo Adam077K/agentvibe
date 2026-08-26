@@ -505,6 +505,10 @@ test('claim-append — addressIsPublic decides on the VALUE, through the parser 
   for (const url of [
     'http://93.184.216.34/', 'http://8.8.8.8/', 'http://1.1.1.1/',
     'http://[2606:4700:4700::1111]/', 'http://[2001:4860:4860::8888]/',
+    // A REAL NAT64 translation of a public address must still be admitted. The narrowing
+    // must not cost `sourcer` the ability to source anything — it is the one engine that
+    // can, and a guard that refuses the open web has replaced one defect with a worse one.
+    'http://[64:ff9b::8.8.8.8]/',
   ]) {
     assert.equal(addressIsPublic(hostOf(url)), true, `${url} is on the public internet and must classify as one`);
   }
@@ -534,6 +538,8 @@ test('claim-append — addressIsPublic decides on the VALUE, through the parser 
     ['http://[::ffff:10.0.0.1]/', 'IPv4-mapped RFC1918 — ::ffff:a00:1'],
     ['http://[::127.0.0.1]/', 'IPv4-compatible ::/96 — ::7f00:1'],
     ['http://[64:ff9b::127.0.0.1]/', 'NAT64 well-known prefix'],
+    ['http://[64:ff9b:1::7f00:1]/', 'RFC 8215 LOCAL-USE NAT64 — refused whole, not decoded'],
+    ['http://[64:ff9b:1:ffff::1]/', 'anywhere else in that same /48'],
     ['http://[2002:7f00:1::]/', '6to4 — the embedded IPv4 is 127.0.0.1'],
     // And the already-compressed spellings, which is what the guard actually receives.
     ['http://[::ffff:a9fe:a9fe]/', 'the compressed form, written directly'],
@@ -709,6 +715,14 @@ test('claim-append — when the index CANNOT be rebuilt the return names the com
   assert.match(out.remedy, /node scripts\/ledger\.mjs build/);
 });
 
+// ── THE ROLLBACK PROMISES A CLEAN TREE. THESE TEST THE PROMISE, NOT THE INTENTION ────
+//
+// `INDEX_REBUILD_FAILED` says the tree is exactly as it was before the call. That
+// sentence was false in three reachable ways, all measured, and the fix was to make it
+// true rather than to hedge it.
+
+const indexPathOf = (root) => path.join(root, '.claude', 'ledger', 'index.json');
+
 test('claim-append — a failing rebuild ROLLS THE CLAIM BACK, leaving the tree untouched', async () => {
   const root = makeRepo();
   const before = readTarget(root);
@@ -719,6 +733,102 @@ test('claim-append — a failing rebuild ROLLS THE CLAIM BACK, leaving the tree 
   assert.match(e.message, /parse error/);
   assert.equal(readTarget(root), before, 'a claim written then un-written must leave zero trace');
   assert.equal(parseClaimsFromText(readTarget(root), TARGET_REL).claims.length, 0);
+});
+
+test('claim-append — N1: a build that WRITES THE INDEX and then dies is rolled back too', async () => {
+  // Reachable today with no code change: `ledger build` writes index.json and then
+  // returns, so any signal in between — Ctrl-C, the OOM killer — lands here. Restoring
+  // only the markdown left `build --check` failing in the OPPOSITE direction, "in the
+  // index, missing from the artifacts", which nobody would trace to a clean rollback.
+  const root = makeRepo();
+  fs.mkdirSync(path.dirname(indexPathOf(root)), { recursive: true });
+  fs.writeFileSync(indexPathOf(root), JSON.stringify({ version: 1, claims: [] }));
+  const indexBefore = fs.readFileSync(indexPathOf(root), 'utf8');
+  const targetBefore = readTarget(root);
+
+  const e = await refusal(root, goodClaim(), {
+    rebuildIndex: (r) => {
+      fs.writeFileSync(indexPathOf(r), JSON.stringify({ version: 1, claims: ['REWRITTEN'] }));
+      throw new Error('killed after the write');
+    },
+  });
+  assert.equal(e.code, 'INDEX_REBUILD_FAILED');
+  assert.equal(fs.readFileSync(indexPathOf(root), 'utf8'), indexBefore, 'the index must be restored too');
+  assert.equal(readTarget(root), targetBefore);
+});
+
+test('claim-append — N2: rolling back must not CREATE a file that never existed', async () => {
+  // `current` falls back to `seedFile()`, a string that was never on disk. Writing it
+  // back turned "absent" into "present" while the refusal said the tree was untouched.
+  const root = makeRepo();
+  fs.unlinkSync(targetOf(root));
+  assert.equal(fs.existsSync(targetOf(root)), false, 'CONTROL: the target really is absent to begin with');
+
+  const e = await refusal(root, goodClaim(), { rebuildIndex: () => { throw new Error('boom'); } });
+  assert.equal(e.code, 'INDEX_REBUILD_FAILED');
+  assert.equal(fs.existsSync(targetOf(root)), false, 'absent before, absent after — that is what "untouched" means');
+
+  // CONTROL: the same repo DOES accept an append, so the absence above is the rollback
+  // and not the path being broken without its target.
+  assert.equal((await run(root, goodClaim())).status, 'APPENDED');
+  assert.equal(fs.existsSync(targetOf(root)), true);
+});
+
+test('claim-append — N3: the rollback is atomic, so it cannot leave a truncated file', async () => {
+  const root = makeRepo();
+  await run(root, goodClaim({ id: 'c-first' }));
+  const before = readTarget(root);
+  await refusal(root, goodClaim({ id: 'c-second' }), { rebuildIndex: () => { throw new Error('boom'); } });
+  assert.equal(readTarget(root), before);
+  // No staging file may survive — a stray .tmp beside the target is how the next reader
+  // finds bytes nobody meant to keep.
+  const strays = fs.readdirSync(path.dirname(targetOf(root))).filter((f) => f.endsWith('.tmp'));
+  assert.deepEqual(strays, [], `stray staging files: ${strays.join(', ')}`);
+});
+
+test('claim-append — N3: a truncation the PARSER accepts is refused, not baked in', async () => {
+  // The silent half. Cut the file at a claim-block boundary and it parses perfectly with
+  // fewer claims, so TARGET_ALREADY_INVALID never fires. Measured before the fix: the
+  // append SUCCEEDED, the index was rebuilt from the truncated file, `build --check`
+  // stayed green, and only `git diff` showed the loss.
+  const root = makeRepo();
+  await run(root, goodClaim({ id: 'c-first' }));
+  await run(root, goodClaim({ id: 'c-second' }));
+  const present = parseClaimsFromText(readTarget(root), TARGET_REL).claims;
+  assert.equal(present.length, 2, 'CONTROL: two claims are really there before the damage');
+  fs.mkdirSync(path.dirname(indexPathOf(root)), { recursive: true });
+  fs.writeFileSync(indexPathOf(root), JSON.stringify({
+    version: 1, claims: present.map((c) => ({ id: c.id, source_file: TARGET_REL })),
+  }));
+
+  const full = readTarget(root);
+  fs.writeFileSync(targetOf(root), full.slice(0, full.indexOf('## c-second')));
+  assert.deepEqual(parseClaimsFromText(readTarget(root), TARGET_REL).issues, [],
+    'CONTROL: the truncated file still PARSES — that is why this was silent');
+
+  const e = await refusal(root, goodClaim({ id: 'c-third' }));
+  assert.equal(e.code, 'TARGET_TRUNCATED');
+  assert.match(e.message, /c-second/);
+  assert.equal(parseClaimsFromText(readTarget(root), TARGET_REL).claims.map((c) => c.id).includes('c-third'), false,
+    'the loss must not be baked in behind a new claim');
+});
+
+test('claim-append — a rollback that ITSELF fails says the tree is inconsistent', async () => {
+  // The last branch of the promise. If the restore cannot be done, the refusal must not
+  // go on claiming a clean tree — it must name what was left.
+  const root = makeRepo();
+  const e = await refusal(root, goodClaim(), {
+    rebuildIndex: (r) => {
+      // Make the restore impossible: replace the target's directory entry with a
+      // directory of the same name, so writeFileSync and unlink both fail.
+      fs.unlinkSync(path.join(r, TARGET_REL));
+      fs.mkdirSync(path.join(r, TARGET_REL));
+      throw new Error('boom');
+    },
+  });
+  assert.equal(e.code, 'ROLLBACK_FAILED');
+  assert.match(e.message, /THE TREE IS INCONSISTENT/);
+  assert.match(e.message, /SOURCED-CLAIMS\.md/);
 });
 
 test('claim-append — the DEFAULT rebuild really runs ledger build, against the real repo', async () => {
