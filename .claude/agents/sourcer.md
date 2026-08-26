@@ -102,6 +102,11 @@ record or drop the claim. **Do not route around a refusal by putting the asserti
 instead** — that converts a checked claim into an unchecked one, which is the exact trade this whole
 mechanism exists to refuse.
 
+A successful call also rebuilds the compiled ledger index, because a claim in a file and a stale
+`.claude/ledger/index.json` fail a blocking CI step that you have no tool to repair. Read `index_rebuilt` in
+the return: if it is `false`, the return carries a `remedy` naming the command — **put that in your findings
+so whoever has a shell can run it.** Report both files as touched.
+
 ### Step 6 — Return findings, not advice
 
 "They price at $X" is yours. "So we should price at $Y" is not.
