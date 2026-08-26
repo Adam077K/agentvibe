@@ -353,11 +353,15 @@ test('the emitted ref is a resolved SHA — immune to which worktree you paste i
 // shape before — two implementations of one rule, drifting silently (see the tier-classification
 // note in CLAUDE.md). qa.js has no test file of its own because it is not importable: an ESM
 // fragment with top-level `await`, top-level `return` and free globals injected by the Workflow
-// runtime. loadQa() below is the smallest thing that runs it anyway.
+// runtime. loadQa(), imported at the top of this file from scripts/lib/load-qa.mjs, is the
+// smallest thing that runs it anyway.
 
-// loadQa() and runQa() MOVED 2026-08-26 to scripts/lib/load-qa.mjs, imported above. A second
-// test file needed them, and two harnesses that compile the gate differently disagree about
-// what the gate does with neither file able to see the other. Their doc comments moved with
+// loadQa() and runQa() MOVED 2026-08-26 to scripts/lib/load-qa.mjs, imported at the top of this
+// file. THIS FILE IS THE ONLY IMPORTER — the extraction is a precaution, not a response to a
+// second caller that exists; the refusal tests that prompted it were merged into this file
+// rather than given one of their own. Two harnesses that compile the gate differently disagree
+// about what the gate does with neither file able to see the other, so the next consumer
+// imports that module instead of copying this. Their doc comments moved with
 // them; do not re-inline a copy here.
 
 const HEAD_SHA = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim();
@@ -520,7 +524,7 @@ test('qa.js REFUSES a tree carrying a shell metacharacter — it is interpolated
   assert.match(out.summary, /outside \[A-Za-z0-9/);
 });
 
-test('qa.js BLOCKS when the check-runner reports having measured a different tree', async () => {
+test('qa.js REFUSES when the check-runner reports having measured a different tree', async () => {
   const elsewhere = '/Users/nobody/some-other-checkout';
   const { out, dispatched } = await runQa(GOOD_ARGS, goodOracle({ tree: elsewhere }));
   assert.equal(out.verdict, 'REFUSED');
@@ -530,7 +534,7 @@ test('qa.js BLOCKS when the check-runner reports having measured a different tre
   assert.equal(out.tree, REPO, 'and what was asked for, so the two can be compared by a reader');
 });
 
-test('a GREEN suite measured in the wrong tree is a BLOCK, not a PASS — the false-PASS direction', async () => {
+test('a GREEN suite measured in the wrong tree is REFUSED, not a PASS — the false-PASS direction', async () => {
   // This is the case that matters most and the one a "did the checks pass" assertion cannot catch:
   // every check is green, `pass: true`, and the answer is about code nobody is reviewing.
   const { out } = await runQa(GOOD_ARGS, goodOracle({
@@ -542,7 +546,7 @@ test('a GREEN suite measured in the wrong tree is a BLOCK, not a PASS — the fa
   assert.match(out.summary, /wrong tree/);
 });
 
-test('qa.js BLOCKS when the named tree is not at the commit under review', async () => {
+test('qa.js REFUSES when the named tree is not at the commit under review', async () => {
   // The tree exists and the check-runner measured the right path, but its HEAD is another commit —
   // so `npm run check` ran against files that are not the diff.
   const stale = '66b7d6a1111111111111111111111111111111aa';
@@ -553,7 +557,7 @@ test('qa.js BLOCKS when the named tree is not at the commit under review', async
   assert.match(out.summary, /does not hold the commit under review/);
 });
 
-test('qa.js BLOCKS when the check-runner reports no readable HEAD for the tree', async () => {
+test('qa.js REFUSES when the check-runner reports no readable HEAD for the tree', async () => {
   // Was `ref_head: ''`. That field is gone: with a sha-tipped ref `git rev-parse <sha>` echoes a
   // well-formed sha back at exit 0 whether the object exists or not, so it could only ever agree —
   // and printing the tip to ask for it handed the agent the answer. `head` is the field that has
@@ -862,7 +866,7 @@ test('an oracle reporting pass:true beside a FAILING check is a BLOCK', async ()
   assert.match(out.summary, /evidence wins over its own summary/);
 });
 
-test('an oracle reporting pass:true having run NO checks is a BLOCK', async () => {
+test('an oracle reporting pass:true having run NO checks is REFUSED', async () => {
   // The maximal version of the same problem, and scripts/run-checks.mjs refuses a zero-step run
   // for exactly this reason: zero checks establish nothing in either direction.
   const { out } = await runQa(GOOD_ARGS, goodOracle({ checks: [] }));
@@ -1020,7 +1024,7 @@ test('a bare revision is refused — no separator makes step 2 a working-tree di
   assert.match(out.summary, /bare revision rather than a range/);
 });
 
-test('a PARTIAL oracle run is a BLOCK — closing the maximum did not close the class', async () => {
+test('a PARTIAL oracle run naming no failing check is REFUSED — closing the maximum did not close the class', async () => {
   // The refusal was `checks.length === 0`, while the comment beside it called that "the maximal
   // version of the same problem" — naming the class and closing only its maximum. One check of the
   // three the prompt demands reached PASS, and so did a single check named "i ran nothing".
@@ -1240,6 +1244,19 @@ const REFUSAL_MATRIX = [
   // established: statements ABOUT THE DIFF, which must not move
   ['a named check actually FAILED in the right tree', GOOD_ARGS,
     goodOracle({ pass: false, checks: [{ name: 'npm run check', pass: false, output: 'boom' }, OK_CHECKS[1], OK_CHECKS[2]] }), 'BLOCK'],
+  // A NAMED FAILURE OUTRANKS AN INCOMPLETE REPORT. These two rows are the defect found in review:
+  // the first cut classified by the SHAPE of the report before asking what was in it, so an
+  // under-reported run naming a genuinely failing check was called REFUSED — "nothing established
+  // in either direction" — while the floor was red in the tree under review. The matrix had a
+  // "1 of 3" row already and it carried a PASSING check, so nothing pinned the buggy behaviour.
+  ['2 of 3 checks, one of them GENUINELY FAILED', GOOD_ARGS,
+    goodOracle({ pass: false, checks: [{ name: 'npm run check', pass: false, output: 'boom' }, OK_CHECKS[1]] }), 'BLOCK'],
+  ['1 of 3 checks, and it GENUINELY FAILED', GOOD_ARGS,
+    goodOracle({ pass: false, checks: [{ name: 'npm run check', pass: false, output: 'boom' }] }), 'BLOCK'],
+  // A complete report asserting failure while naming no failing check. Contradictory, not silent —
+  // an asserted failure is never downgraded to a non-answer.
+  ['pass=false in a COMPLETE report naming no failing check', GOOD_ARGS,
+    goodOracle({ pass: false }), 'BLOCK'],
   ['the valid invocation, clean floor', GOOD_ARGS, goodOracle(), 'PASS'],
 ];
 
@@ -1315,6 +1332,31 @@ test('the JUDGE cannot spell REFUSED — the vocabulary widened in exactly one p
   for (const e of verdictEnums) assert.doesNotMatch(e, /REFUSED/, `an agent-facing verdict enum offers REFUSED: [${e}]`);
 });
 
+test('a NAMED failing check outranks an incomplete report — and names itself in the blockers', async () => {
+  // The review finding, pinned as its own case rather than only as matrix rows, because the
+  // BLOCKER identity is half of it: base returned BLOCK here but carried `oracle-partial-run`, so
+  // the check that actually failed was never named to the operator. A correct verdict wearing the
+  // wrong reason is the combination this branch exists to refuse.
+  const failed = { name: 'npm run check', pass: false, output: 'boom: 3 of 46 failed' };
+  for (const checks of [[failed, OK_CHECKS[1]], [failed]]) {
+    const { out } = await runQa(GOOD_ARGS, goodOracle({ pass: false, checks }));
+    assert.equal(out.verdict, 'BLOCK', `${checks.length} check(s) with a real failure was not a block`);
+    assert.equal(out.established, true);
+    assert.deepEqual(out.blockers.map((b) => b.id), ['oracle-npm run check'], 'the failing check was not named');
+    assert.match(out.summary, /npm run check/);
+    assert.doesNotMatch(out.summary, /A partial floor is not a floor/, 'a red floor reported itself as a partial one');
+  }
+});
+
+test('an incomplete report naming NO failing check is still REFUSED — the other side of that line', async () => {
+  // The fix must not swing the whole under-reported class to BLOCK. With nothing named and the
+  // floor unfinished there is nothing to point at, and "re-run it" is the only honest instruction.
+  const { out } = await runQa(GOOD_ARGS, goodOracle({ checks: [OK_CHECKS[0], OK_CHECKS[1]] }));
+  assert.equal(out.verdict, 'REFUSED');
+  assert.equal(out.established, false);
+  assert.deepEqual(out.blockers.map((b) => b.id), ['oracle-partial-run']);
+});
+
 test('a dispatch COUNT cannot separate the classes — which is why the verdict must', async () => {
   // The tempting cheap discriminator, refuted by measurement. The oracle retries, so a run that
   // established NOTHING dispatches MORE agents than one that established something.
@@ -1347,6 +1389,15 @@ test('THE FIXTURE BUILT TO DEFEAT THIS CHANGE: a REFUSED must never read as merg
     assert.equal(out.established, false, name);
     assert.ok(Array.isArray(out.blockers) && out.blockers.length > 0, `${name}: a refusal with no blockers gives the caller nothing to act on`);
   }
+});
+
+test('coding.js does not INVENT an established flag from an absent key', () => {
+  // `qa.established !== false` reads an absent key as established — the caller answering a
+  // question the gate never answered, two lines under a comment forbidding exactly that. `=== true`
+  // fails closed. Latent while both producers set the key, which is when it is cheap to fix.
+  const src = fs.readFileSync(path.join(REPO, '.claude', 'workflows', 'coding.js'), 'utf8');
+  assert.match(src, /qa_established:\s*qa\.established === true/);
+  assert.doesNotMatch(src, /qa\.established !== false/, 'absence is being read as establishment again');
 });
 
 test('coding.js does not fold a REFUSED back into a BLOCK — the caller half of the contract', () => {

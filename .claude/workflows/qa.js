@@ -337,8 +337,11 @@ const GATE_SCHEMA = {
 // between a report that something was checked and a record of WHAT was checked. Before they
 // existed the oracle returned a pass/fail with no way to tell which of several checkouts on the
 // machine it had run in, and the answer differed between them (see the `tree` block above args).
-// qa.js asserts all three against what it asked for — oracleTreeMismatch() — and BLOCKs on any
-// disagreement, so an omitted or invented value fails the gate rather than passing it.
+// qa.js asserts all three against what it asked for — oracleTreeMismatch() — and REFUSES on any
+// disagreement, so an omitted or invented value fails the gate rather than passing it. (It said
+// "BLOCKs" until 2026-08-26. A report about another tree establishes nothing about THIS diff, so
+// it is a non-answer rather than an adverse finding; see the verdict vocabulary above gateOutcome.
+// It still does not pass, which is the half that matters for safety.)
 const ORACLE_SCHEMA = {
   type: 'object', additionalProperties: false, required: ['pass', 'tree', 'head', 'checks'],
   properties: {
@@ -606,19 +609,25 @@ const JUDGE_ATTEMPTS = 4
 // The oracle is one dispatch too, and it runs BEFORE the panel — so a dropout here is the worst
 // place for one: reading it as a pass would let a genuinely red diff through to consume the
 // whole panel budget, exactly the failure mode this phase exists to prevent. Same attempts, same
-// posture as the judge: retry, and only fail safe (BLOCK) once every attempt is exhausted.
+// posture as the judge: retry, and only fail safe once every attempt is exhausted. That failure
+// is REFUSED, not BLOCK — a dropout establishes nothing about the diff — and it is still not a
+// pass, which is what "fail safe" means here. It read "(BLOCK)" until 2026-08-26.
 const ORACLE_ATTEMPTS = 4
 
 // Run the oracle, retrying on dropout with the same posture as the judge (see ORACLE_ATTEMPTS
 // above): a dropout here must not silently read as a pass, so the caller treats `null` as a
-// harness failure and BLOCKs, exactly like the judge-dropout auto-BLOCK further down.
+// harness failure and REFUSES. It read "BLOCKs, exactly like the judge-dropout auto-BLOCK further
+// down" until 2026-08-26, and that comparison is now exactly backwards: the judge-dropout note
+// further down exists to say the two cases are DELIBERATELY different. The panel has run by then,
+// so a judge dropout still BLOCKs; nothing has run here, so this REFUSES.
 async function runOracle() {
   for (let attempt = 0; attempt < ORACLE_ATTEMPTS; attempt++) {
     const r = await agent(oraclePrompt(attempt), { label: `oracle${attempt ? `:retry${attempt}` : ''}`, phase: 'Oracle', model: 'haiku', agentType: REVIEW_AGENT, schema: ORACLE_SCHEMA }).catch(() => null)
     // A return missing `tree`/`head`/`ref_head` is treated as a DROPOUT, not as a mismatch: the
     // agent never told us what it measured, which is the same information state as no return at
-    // all, and a retry may yet produce one. Exhausting the attempts lands on the auto-BLOCK below,
-    // so the safe direction is preserved either way — this only decides whether we retry first.
+    // all, and a retry may yet produce one. Exhausting the attempts lands on the REFUSAL below
+    // (it read "auto-BLOCK" until 2026-08-26), so the safe direction is preserved either way —
+    // neither value is a pass, and this only decides whether we retry first.
     if (r && typeof r.pass === 'boolean' && Array.isArray(r.checks) && typeof r.tree === 'string' && typeof r.head === 'string') {
       if (attempt) log(`Oracle completed on attempt ${attempt + 1}/${ORACLE_ATTEMPTS} — ${attempt} dropout(s) absorbed.`)
       return r
@@ -743,8 +752,12 @@ function verifyFinding(f, phaseName) {
 // schema check burned the whole panel budget to rediscover, at the very end, what a deterministic
 // checker would have said in seconds.
 //
-// On a red (or dropped-out) oracle this phase returns BLOCK immediately, in the same shape as
-// the final return below, and `phase('Review')` — the first line of the panel — never runs. No
+// On a red or dropped-out oracle this phase returns immediately, in the same shape as the final
+// return below, and `phase('Review')` — the first line of the panel — never runs. RED and
+// DROPPED-OUT no longer return the same word, and the distinction is the point: a named failing
+// check is a BLOCK because it establishes something about this diff; a dropout, a wrong tree or a
+// floor that never reported is REFUSED because it does not. This sentence said "returns BLOCK"
+// for both until 2026-08-26. No
 // dimension reviewer, no verifier, no judge is dispatched. That is the short-circuit: it is a
 // property of control flow (an early `return` before any panel `agent()` call), not a panel that
 // runs to completion and gets discarded.
@@ -894,36 +907,58 @@ const oracleVacuous = Boolean(oracle) && Array.isArray(oracle.checks) && oracle.
 if (!oracle || oracle.pass !== true || oracleFailing.length || oracleUnderReported) {
   const failing = oracleFailing
   const contradicted = oracle && oracle.pass === true && (failing.length || oracleVacuous)
-  // ── WHICH OF THESE FOUR IS EVIDENCE, AND WHICH IS A NON-ANSWER ──────────────────────────────
+  // ── WHICH OF THESE IS EVIDENCE, AND WHICH IS A NON-ANSWER ───────────────────────────────────
   //
-  // Three of the four establish NOTHING about the diff, and each says so in its own summary
-  // already — "establishes nothing in either direction", "a partial floor is not a floor", "a
-  // harness failure, NOT a judgement about the diff". They returned BLOCK anyway. Only the fourth
-  // — a named check that actually FAILED, in the tree we asked for — is evidence, and it is the
-  // one that keeps BLOCK.
+  // Most of these establish NOTHING about the diff, and each says so in its own summary already —
+  // "establishes nothing in either direction", "a partial floor is not a floor", "a harness
+  // failure, NOT a judgement about the diff". They returned BLOCK anyway. What IS evidence is a
+  // NAMED CHECK THAT ACTUALLY FAILED in the tree we asked for, and that keeps BLOCK.
   //
-  // `oracle.pass !== true` with a complete report and no failing check named stays BLOCK: the
-  // runner asserted a failure without naming one, which is a contradictory report rather than a
-  // silent one, and downgrading an asserted failure to a non-answer is the direction that loses.
-  const establishedNothing = !oracle || oracleVacuous || oracleUnderReported
+  // A NAMED FAILURE OUTRANKS AN INCOMPLETE REPORT, and getting that wrong was a real defect in
+  // the first cut of this change — caught in review, in the LOOSENING direction. The predicate
+  // was `!oracle || oracleVacuous || oracleUnderReported`, which classifies by the shape of the
+  // report before asking what is IN it. So an oracle that reported 2 of 3 checks and named one
+  // that genuinely failed, at the right tree and head, was called REFUSED — "nothing has been
+  // established in either direction" — while `npm run check` had in fact failed in the tree under
+  // review, and the failing check's name never reached `blockers` at all. Measured, same harness,
+  // same fixture: BASE returned BLOCK, HEAD returned REFUSED. The verdict is not load-bearing for
+  // safety, because every consumer keys on `=== 'PASS'` and neither value merges — but a run that
+  // saw a red floor must not report that it saw nothing, which is the whole point of this change.
+  //
+  // `oracle.pass !== true` with a COMPLETE report and no failing check named still stays BLOCK:
+  // the runner asserted a failure without naming one, which is a contradictory report rather than
+  // a silent one, and downgrading an asserted failure to a non-answer is the direction that loses.
+  // An INCOMPLETE report that names no failing check stays REFUSED: there is nothing to point at
+  // and the floor did not finish, so "re-run it" is the only honest instruction.
+  const namedFailure = failing.length > 0
+  const establishedNothing = !oracle || (!namedFailure && (oracleVacuous || oracleUnderReported))
+  // ORDER MATTERS IN BOTH TERNARIES BELOW, and it is the same order as the predicate: `failing`
+  // is tested before `oracleVacuous`/`oracleUnderReported`. With the shape tests first, an
+  // under-reported run carrying a real failure would BLOCK while reporting "a partial floor is
+  // not a floor" and carrying `oracle-partial-run` — a correct verdict wearing the wrong reason,
+  // and the failing check still unnamed.
   const summary = !oracle
     ? `Oracle check-runner returned no usable result after ${ORACLE_ATTEMPTS} attempts — REFUSED. This is a harness failure, NOT a judgement about the diff. Nothing about this diff has been established in either direction. The review panel was never dispatched.`
-    : oracleVacuous
-      ? `Oracle reported pass=true having run NO checks at all in ${TREE} — REFUSED. An empty checks array establishes nothing in either direction; it is the maximal partial run. The review panel was never dispatched.`
-      : oracleUnderReported
-        ? `Oracle reported only ${oracle.checks.length} of the ${ORACLE_REQUIRED_CHECKS} checks it was asked to run in ${TREE} — REFUSED. A partial floor is not a floor: the checks it did not report are the ones nothing knows the result of. The review panel was never dispatched.`
-      : `Deterministic check(s) failed in ${TREE} before any review agent ran: ${failing.map(c => (c && c.name) || '(unnamed)').join(', ') || '(unspecified)'}.${contradicted ? ' The check-runner reported pass=true alongside them; the per-check evidence wins over its own summary of it.' : ''} This is an oracle/harness BLOCK naming a failing check, NOT a judgement about the diff's quality — fix the check and re-run. The review panel was never dispatched.`
+    : namedFailure
+      ? `Deterministic check(s) failed in ${TREE} before any review agent ran: ${failing.map(c => (c && c.name) || '(unnamed)').join(', ')}.${contradicted ? ' The check-runner reported pass=true alongside them; the per-check evidence wins over its own summary of it.' : ''}${oracleUnderReported ? ` It also reported only ${oracle.checks.length} of the ${ORACLE_REQUIRED_CHECKS} checks asked for, so the floor is incomplete AS WELL AS red — but a named failure is evidence about this diff whatever else went unreported, so this is a BLOCK and not a refusal.` : ''} This is an oracle/harness BLOCK naming a failing check, NOT a judgement about the diff's quality — fix the check and re-run. The review panel was never dispatched.`
+      : oracleVacuous
+        ? `Oracle reported pass=true having run NO checks at all in ${TREE} — REFUSED. An empty checks array establishes nothing in either direction; it is the maximal partial run. The review panel was never dispatched.`
+        : oracleUnderReported
+          ? `Oracle reported only ${oracle.checks.length} of the ${ORACLE_REQUIRED_CHECKS} checks it was asked to run in ${TREE}, and named no failing check — REFUSED. A partial floor is not a floor: the checks it did not report are the ones nothing knows the result of. The review panel was never dispatched.`
+          : `The check-runner reported a failure in ${TREE} without naming a failing check, in an otherwise complete report. This is an oracle/harness BLOCK, NOT a judgement about the diff's quality — an asserted failure is not downgraded to a non-answer. The review panel was never dispatched.`
   log(summary)
   return gateOutcome(
     establishedNothing ? VERDICT.REFUSED : VERDICT.BLOCK,
     summary,
     !oracle
       ? [{ id: 'oracle-dropout', file: '(gate)', title: `Oracle check-runner returned no structured result in ${ORACLE_ATTEMPTS} attempts`, fix: 'Re-run qa.js. If this recurs, read the run journal before trusting any verdict from this gate.' }]
-      : oracleVacuous
-        ? [{ id: 'oracle-no-checks', file: '(gate)', title: 'Oracle reported a pass having run no checks', fix: `Re-run qa.js. The check-runner must report a result for every check it was asked to run in ${TREE}; an empty array is a refusal, not a floor.` }]
-        : oracleUnderReported
-        ? [{ id: 'oracle-partial-run', file: '(gate)', title: `Oracle reported ${oracle.checks.length} of ${ORACLE_REQUIRED_CHECKS} checks`, fix: `Re-run qa.js. The check-runner is asked for three named checks and must report all three, a legitimate skip included — a missing entry is a result nobody has.` }]
-        : failing.map(c => ({ id: `oracle-${(c && c.name) || 'unnamed'}`, file: '(gate)', title: `Deterministic check failed: ${(c && c.name) || '(unnamed)'}`, fix: (c && c.output) || 'See command output.' })),
+      : namedFailure
+        ? failing.map(c => ({ id: `oracle-${(c && c.name) || 'unnamed'}`, file: '(gate)', title: `Deterministic check failed: ${(c && c.name) || '(unnamed)'}`, fix: (c && c.output) || 'See command output.' }))
+        : oracleVacuous
+          ? [{ id: 'oracle-no-checks', file: '(gate)', title: 'Oracle reported a pass having run no checks', fix: `Re-run qa.js. The check-runner must report a result for every check it was asked to run in ${TREE}; an empty array is a refusal, not a floor.` }]
+          : oracleUnderReported
+            ? [{ id: 'oracle-partial-run', file: '(gate)', title: `Oracle reported ${oracle.checks.length} of ${ORACLE_REQUIRED_CHECKS} checks`, fix: `Re-run qa.js. The check-runner is asked for three named checks and must report all three, a legitimate skip included — a missing entry is a result nobody has.` }]
+            : [{ id: 'oracle-unnamed-failure', file: '(gate)', title: 'Oracle reported a failure without naming a failing check', fix: `Re-run qa.js. The check-runner must name the check that failed in ${TREE}; a bare pass=false is a result nobody can act on.` }],
     oracle ? normalizeTree(oracle.tree) || null : null,
   )
 }

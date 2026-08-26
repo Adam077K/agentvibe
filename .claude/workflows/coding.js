@@ -155,7 +155,13 @@ return {
   qa_verdict: qa.verdict,
   // Pass the gate's own derivation through rather than recomputing it from the verdict string —
   // two places deciding "did this establish anything" is how the two come to disagree.
-  qa_established: qa.established !== false,
+  //
+  // `=== true`, NOT `!== false`, and the comment above is why. `!== false` reads an ABSENT key as
+  // established, which is this line inventing an answer the gate never gave — the second place the
+  // sentence above forbids, written directly underneath it. Absence is not evidence: a payload
+  // that does not carry the field has not told us anything, so it fails closed. Latent today
+  // because both producers set the key on every path, which is exactly when it is cheap to fix.
+  qa_established: qa.established === true,
   qa_blockers: qa.blockers,
   qa_summary: qa.summary,
   note: qaRefused

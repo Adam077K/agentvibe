@@ -85,6 +85,64 @@ a test asserts no agent-facing enum offers it.
 - `loadQa()`/`runQa()` were **moved**, not copied, to `scripts/lib/load-qa.mjs`; `run-gate.test.mjs`
   imports them and stayed 87/87 across the move.
 
+## Blind review (#115) — evidence FAIL, and one of the findings was a real bug
+
+`correctness` and `adversarial` both PASS; the reviewer built its own harness rather than importing
+`load-qa.mjs`, so the instrument was not built from the fix. All six block classes still BLOCK.
+
+**C1 was a genuine defect in my change, in the LOOSENING direction, and it is the important one.**
+The first cut classified by the SHAPE of the oracle report before asking what was in it:
+
+```
+                                          BASE      HEAD (before fix)   HEAD (after)
+2 of 3 checks, one GENUINELY FAILED       BLOCK     REFUSED est=false   BLOCK est=true
+1 of 3 checks, GENUINELY FAILED           BLOCK     REFUSED est=false   BLOCK est=true
+2 of 3 checks, both passing               BLOCK     REFUSED             REFUSED  (correct)
+```
+
+So an oracle that reported an incomplete floor **while naming a check that genuinely failed** — at
+the right tree and head — was told "nothing has been established in either direction", and the
+failing check's name never reached `blockers`. That contradicted two definitions in my own commit.
+The predicate is now `!oracle || (!namedFailure && (oracleVacuous || oracleUnderReported))`, and
+**both ternaries were reordered** so `failing` is tested before the shape tests — otherwise the
+verdict would be right and the reason wrong (`"a partial floor is not a floor"`, blocker
+`oracle-partial-run`), which is the combination this branch exists to refuse. The fix is now
+strictly better than base, which BLOCKed but left the failing check **unnamed**.
+
+`REFUSAL_MATRIX` gained three rows (2-of-3 with a real failure, 1-of-3 with a real failure, and a
+complete `pass=false` naming nothing) plus two dedicated tests. **Nothing pinned the old behaviour**
+— the matrix had a "1 of 3" row carrying a *passing* check. Three mutations now bite: restoring the
+predicate → 2 red; reordering the summary ternary → 1 red; reordering the blocker ternary → 2 red.
+
+**E1** — `load-qa.mjs` justified itself with *"a second test file needed it … and both import it"*.
+Measured: **one importer** (control: `check-suite.js` has 10). The refusal tests were merged into
+`run-gate.test.mjs` rather than given a file, so the second importer was never landed. Restated as
+intent — a precaution against a second copy — rather than as a fact about this commit.
+
+**E2** — five prose sites in `qa.js` my commit falsified and I did not sweep. The sharpest, the
+`runOracle()` header, was **directly contradicted by a comment the same commit added** twelve
+hundred lines down, which exists to say those two cases are now deliberately different. I superseded
+two sites and stopped: naming a class and sweeping one instance.
+
+**E3** — three sites in `run-gate.mjs`, whose diffstat against `origin/main` is **empty**, so
+provenance is unambiguous: true at base, false at head, moved from a distance by my change. Two are
+printed to operators, not comments.
+
+**C2** — `coding.js` read `qa.established !== false`, which invents `true` from an absent key: the
+caller answering a question the gate never answered, two lines under a comment forbidding exactly
+that. Now `=== true`, failing closed, pinned by a test.
+
+**A sweep found four more that the review did not list** — test *names* in `run-gate.test.mjs`
+saying `BLOCKS`/`is a BLOCK` for paths that now return REFUSED. That is the precise inverse of the
+defect this branch documents (nine names said REFUSES while asserting BLOCK), recreated by my own
+fix. Six titles renamed; the one remaining `is a BLOCK` title is correct, because a named failing
+check is one.
+
+**Recorded, not fixed here, at the reviewer's instruction:** `scripts/verdict.mjs record` accepts
+only `PASS|FAIL`, and `stop.sh` documents `PASS|FAIL|SKIP`. **An operator handed a `REFUSED` has no
+word for it**, and the natural mapping REFUSED→FAIL re-creates the exact conflation this change
+removes, one mechanism over. Follow-up.
+
 ## The secondary: refuted, not deferred
 
 `findings: []` does **not** currently read as clean for the case the brief described. Measured:

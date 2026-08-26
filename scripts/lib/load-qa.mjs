@@ -4,12 +4,21 @@
 // scripts/lib/load-qa.mjs — the one way to execute `.claude/workflows/qa.js` outside the runtime.
 //
 // EXTRACTED 2026-08-26 from scripts/run-gate.test.mjs, which is where it was written and where it
-// was the only copy. It moved because a second test file needed it, and this repository has twice
-// paid for two implementations of one contract: the verdict arithmetic lived in both
-// `lib/gate-logic.mjs` and inline in qa.js, drifted, and `npm run test:gate` stayed green while
-// certifying a fail-open. A harness is the same shape of hazard one level down — two harnesses
-// that compile the gate slightly differently disagree about what the gate does, and neither test
-// file can see the other's version. So there is one, here, and both import it.
+// was the only copy.
+//
+// **IT HAS EXACTLY ONE IMPORTER TODAY — `scripts/run-gate.test.mjs`.** The extraction is a
+// PRECAUTION, stated as intent rather than as a fact about a second caller that does not exist:
+// the refusal tests that prompted it were ultimately merged into that same file rather than given
+// one of their own, so the second importer was never landed and is not in the tree. An earlier
+// version of this comment said "a second test file needed it … and both import it", which was
+// true of the plan and false of the commit — the defect class this whole branch is about.
+//
+// WHY EXTRACT IT ANYWAY: this repository has twice paid for two implementations of one contract.
+// The verdict arithmetic lived in both `lib/gate-logic.mjs` and inline in qa.js, drifted, and
+// `npm run test:gate` stayed green while certifying a fail-open. A harness is the same shape of
+// hazard one level down — two harnesses that compile the gate slightly differently disagree about
+// what the gate does, and neither test file can see the other's version. Whoever writes the second
+// consumer imports this instead of copying it, which is the whole point.
 //
 // WHY COMPILATION IS NEEDED AT ALL. qa.js `export`s its `meta` and then `return`s from the top
 // level, which is neither valid ESM nor valid CJS — `import()` and `vm.Script` both refuse it.

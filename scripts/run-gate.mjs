@@ -79,8 +79,11 @@ const QA_SCRIPT = '.claude/workflows/qa.js';
 // WHAT CLOSED: the oracle's subject. It is no longer a function of cwd at all. `qa.js` now takes
 // `args.tree` — an absolute path to the worktree holding the ref under review — interpolates it
 // into the oracle's prompt as an explicit `cd`, requires the check-runner to report the tree and
-// HEAD it actually measured, and BLOCKs when either disagrees with what was asked for. It REFUSES
-// outright when `tree` is absent or malformed; there is no cwd fallback to fall back to. This
+// HEAD it actually measured, and REFUSES when either disagrees with what was asked for. It also
+// REFUSES outright when `tree` is absent or malformed; there is no cwd fallback to fall back to.
+// (This read "BLOCKs when either disagrees" until 2026-08-26, when qa.js gained a third terminal
+// verdict: a report about another tree establishes nothing about this diff, so it is a non-answer
+// rather than an adverse finding. Neither value is a pass.) This
 // router emits that argument below, resolved from REPO_ROOT — the tree whose diff it just
 // classified, which is the PR tree by construction.
 //
@@ -123,7 +126,8 @@ function gateSelfReview(files, ref) {
     conflictClosed:
       'CLOSED 2026-08-25 — the oracle must run `npm run check` in the PR tree. It no longer follows ' +
       'cwd: `args.tree` below names that tree as an absolute path, qa.js refuses to run without it, ' +
-      'and it BLOCKs when the check-runner reports having measured anything else.',
+      'and it REFUSES when the check-runner reports having measured anything else — a verdict of ' +
+      'REFUSED, distinct from BLOCK, meaning nothing about the diff was established either way.',
     conflictSuperseded:
       'SUPERSEDED 2026-08-25, in half. It read: "The reviewing copy of the gate must come from ' +
       '`main`, and the oracle must run `npm run check` in the PR tree. Both resolve against one cwd, ' +
@@ -423,8 +427,10 @@ function main() {
       console.log('  measured 2026-08-24: the oracle then checked `main`, not the PR, and BLOCKed on an');
       console.log('  unrelated environment failure. It is not a workaround." That held while the oracle');
       console.log('  followed cwd. It no longer does: the invocation below carries `tree` as an absolute');
-      console.log('  path, qa.js refuses to run without it and BLOCKs if the check-runner reports having');
-      console.log('  measured anything else. Launching from a `main` checkout is now the RIGHT procedure,');
+      console.log('  path, qa.js refuses to run without it and REFUSES if the check-runner reports having');
+      console.log('  measured anything else — REFUSED is a third verdict meaning nothing was established,');
+      console.log('  distinct from BLOCK; neither is a pass. Launching from a `main` checkout is the RIGHT');
+      console.log('  procedure,');
       console.log('  not a trade of a wrong reviewer for a wrong subject.');
       console.log('');
       console.log('  On the open half, A HUMAN DECIDES — this router cannot pick which COPY of the gate');
