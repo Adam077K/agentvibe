@@ -1306,17 +1306,39 @@ function parseCiSteps(workflow) {
     // only the TRAILING newline — measured, `|-` gives `npm run a\n&& npm run b` and `|+` gives the
     // same plus a trailing `\n` — and a trailing newline is not a second command. Both produce the
     // identical finding on both trees.
-    if (/^[|>][-+\d]*(?:\s+#.*)?$/.test(rawValue) && /\d/.test(rawValue)) {
+    // A BLOCK INDICATOR MAY CARRY A TRAILING YAML COMMENT — `run: | # note` is valid, and PyYAML
+    // reads it as a block scalar. Without the comment arm this pattern missed it and the value was
+    // read as the plain scalar `| # note`, which `main` still does today: it reports a phantom
+    // `` `|` `` operator on a one-command step. The block branch is FIRST, which is what keeps `|`
+    // and `>` out of NON_PLAIN_SCALAR: they are the two indicators this parser does read, and they
+    // are the escape hatch that makes refusing the others cost nothing.
+    //
+    // ONE PATTERN, AND THE HEADER IS CAPTURED — both halves fix a live defect. Round 10 wrote this
+    // as TWO regexes, one spanning the header AND its comment for the refusal test and a narrower
+    // one for the read, then applied `/\d/` to the WHOLE value. A digit anywhere in the COMMENT
+    // therefore satisfied it, and `run: | # step 2 of 3` was refused with a message stating it
+    // carried an indentation indicator — which it does not. That is a regression against round 9,
+    // which read all four of these correctly, and it is live rather than theoretical: this repo's
+    // own ci.yml comments are dense with numbers. Measured 2026-08-26 before the fix —
+    //
+    //     | # note                  clean          | # step 2 of 3        REFUSED, falsely
+    //     | # 44 sequential checks  REFUSED        |- # bun 1.3.10       REFUSED, falsely
+    //     | # see #106              REFUSED        |2 # step 2 of 3      REFUSED, correctly
+    //
+    // — and the last row is why the test below pins BOTH directions: a case asserting only the
+    // refusal passes under the bug that produced it.
+    //
+    // Capturing also means there is now ONE place that decides whether a value is a block header.
+    // Two patterns for one question is how they come to disagree, which is what happened here.
+    const header = /^([|>][-+\d]*)(?:\s+#.*)?$/.exec(rawValue);
+
+    // AN EXPLICIT INDENTATION INDICATOR IS REFUSED, tested against the HEADER and not the comment.
+    if (header && /\d/.test(header[1])) {
       step[key] = rawValue.trim();
       refuse(step, key, 'its block header carries an explicit indentation indicator, which this parser does not honour');
       return;
     }
-    // A BLOCK INDICATOR MAY CARRY A TRAILING YAML COMMENT — `run: | # note` is valid, and PyYAML
-    // reads it as a block scalar. Without the comment arm this regex missed it and the value was
-    // read as the plain scalar `| # note`. The block branch is FIRST, which is what keeps `|` and
-    // `>` out of NON_PLAIN_SCALAR: they are the two indicators this parser does read, and they are
-    // the escape hatch that makes refusing the others cost nothing.
-    if (/^[|>][-+]*(?:\s+#.*)?$/.test(rawValue)) {
+    if (header) {
       // `keyIndent` is the column of the KEY, and the block ends at the first non-blank line that
       // is not indented past it. Anchoring to the first CONTENT line instead was a defect: see the
       // loop below.

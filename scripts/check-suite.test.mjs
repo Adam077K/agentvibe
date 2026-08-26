@@ -1588,6 +1588,30 @@ test('a block header with an explicit indentation indicator is REFUSED — the b
     'a block scalar with no indicator stopped being read'
   );
 
+  // A DIGIT IN THE COMMENT IS NOT AN INDENTATION INDICATOR, and this pair is the discriminator —
+  // one direction alone passes under the bug that produced it. Round 10 tested `/\d/` against the
+  // WHOLE value, header and trailing comment together, so `run: | # step 2 of 3` was refused with a
+  // message saying it carried an indicator that is not there. A regression against round 9, which
+  // read all of these correctly, and a live one: this repo's own ci.yml comments are full of
+  // numbers. The refusal half of this pair passed under that bug; only the READ half fails.
+  for (const comment of ['# step 2 of 3', '# 44 sequential checks', '# bun 1.3.10', '# see #106']) {
+    assert.deepEqual(
+      ciChainFindings(wf(`| ${comment}`, '          npm run a', '          && npm run b'), {}),
+      [`ci.yml:${LINE} carries \`&&\`, \`\\n\` — npm run a\n&& npm run b`],
+      `a digit inside the comment \`${comment}\` was read as an indentation indicator`
+    );
+    assert.deepEqual(
+      ciChainFindings(wf(`|2 ${comment}`, ...deep), {}), [refusalFor(`|2 ${comment}`)],
+      `\`|2 ${comment}\` stopped being refused — the digit is in the HEADER here`
+    );
+  }
+  // The same discrimination one level finer: chomping plus a numeric comment is still read.
+  assert.deepEqual(
+    ciChainFindings(wf('|- # bun 1.3.10', '          npm run a', '          && npm run b'), {}),
+    [`ci.yml:${LINE} carries \`&&\`, \`\\n\` — npm run a\n&& npm run b`],
+    '`|-` with a numeric comment was refused'
+  );
+
   // CHOMPING STAYS READ. `|-` and `|+` change only the TRAILING newline — measured with PyYAML,
   // `|-` gives `npm run a\n&& npm run b` and `|+` the same plus a trailing `\n` — and a trailing
   // newline is not a second command. Refusing them would cost the hatch for nothing.
@@ -1648,8 +1672,72 @@ test('a step whose `if:` could not be read is NOT also reported as unguarded', (
   // block-scalar case — and the fix above had to land in both or the two would disagree about the
   // same workflow. It lives in the library now, and this asserts the library is what answers.
   assert.equal(typeof unguardedSteps, 'function');
-  assert.deepEqual(unguardedSteps(CI, '${{ nonsense() }}').length, ciRunCommands(CI).length,
-    'the guard is not a parameter — a mutation of it changed nothing');
+
+  // THE GUARD IS A PARAMETER, proved on a FIXTURE rather than on the real ci.yml. It was proved on
+  // `CI` — `unguardedSteps(CI, nonsense).length` against `ciRunCommands(CI).length` — and that had
+  // two defects for one line. It compared two NUMBERS with deepEqual, which is only ever equality
+  // wearing the wrong name; and it was silently coupled to "no step in ci.yml has a refused `if:`",
+  // because a refused step is excluded from the left count and not from the right, so injecting one
+  // anywhere in the file turned it red for a reason that has nothing to do with whether `guard` is
+  // read. Measured: that is exactly how it failed during this round's own injection run. A fixture
+  // this case owns cannot be perturbed by an edit to ci.yml.
+  const guarded = ['name: t', 'jobs:', '  one:', '    steps:',
+    '      - name: A', `        if: ${CI_GUARD}`, '        run: npm run a',
+    '      - name: B', `        if: ${CI_GUARD}`, '        run: npm run b', ''].join('\n');
+  assert.deepEqual(unguardedSteps(guarded), [], 'the default guard is not being applied');
+  assert.equal(unguardedSteps(guarded, '${{ nonsense() }}').length, 2,
+    'the guard is not a parameter — passing a different one changed nothing');
+});
+
+test('the `unguardedSteps` exclusion is discharged by ANOTHER function, and this is that coupling', () => {
+  // THE ARGUMENT THIS BRANCH RESTS ON, WITH A TEST UNDER IT AT LAST. unguardedSteps() excludes a
+  // step whose `if:` could not be read, and its JSDoc justifies that as "NOT FAIL-OPEN … a refused
+  // `if:` is itself a BLOCKING finding from ciChainFindings()". That is true — and it is discharged
+  // by a DIFFERENT function, so nothing about unguardedSteps() alone keeps it true. An argument
+  // with no test is what this file has spent ten rounds learning about.
+  //
+  // What makes it hold is one property of ciChainFindings(): its unparsed loop reports EVERY
+  // refusal, over EVERY step, for EVERY key, and consults no allowlist. Give that loop a scope or
+  // an exemption and the exclusion above turns into a genuine fail-open with nothing to notice it.
+  // Each assertion below fails on one of those two changes.
+  const wf = (guard) => ['name: t', 'jobs:', '  one:', '    steps:',
+    '      - name: A', `        if: ${guard}`, '        run: npm run a', ''].join('\n');
+  const weakAndQuoted = wf('"${{ always() }}"');
+
+  // 1 · SCOPE. The only refusal here is on `if:` — the `run:` is a clean plain scalar. A loop
+  // narrowed to `run:` would report nothing at all, and the step would then be neither reported
+  // unguarded (excluded) nor reported unread (out of scope): silent, on a weakened guard.
+  assert.deepEqual(unguardedSteps(weakAndQuoted), [], 'the exclusion under test is not in force');
+  const scoped = ciChainFindings(weakAndQuoted, {});
+  assert.equal(scoped.length, 1, `an \`if:\`-only refusal was not reported:\n${scoped.join('\n')}`);
+  assert.ok(scoped[0].startsWith(UNPARSED_PREFIX) && scoped[0].includes('`if:`'), scoped[0]);
+
+  // 2 · EXEMPTION. CI_CHAINS_ALLOWED is keyed by the exact run string; a refusal has no key and
+  // must not acquire one. Passed an allowlist keyed on the refused VALUE, on the step's `run:`, and
+  // on the finding itself — none may suppress it.
+  for (const key of ['"${{ always() }}"', 'npm run a', scoped[0]]) {
+    const withAllow = ciChainFindings(weakAndQuoted, { [key]: 'x'.repeat(60) });
+    assert.ok(
+      withAllow.some((f) => f.startsWith(UNPARSED_PREFIX)),
+      `an allowlist entry keyed on ${JSON.stringify(key.slice(0, 30))} suppressed a refusal`
+    );
+  }
+
+  // 3 · END TO END, against the REAL ci.yml, because the coupling is a claim about this repo's
+  // gate and not about a fixture. Injecting a quoted, weakened guard must leave the build red.
+  // Note WHICH check goes red: the assertion named for the guard passes, because the step is
+  // excluded; it is the refusal that blocks. On `main` it is the other way round. That inversion is
+  // the whole reason this case exists.
+  const injected = CI.replace(`        if: ${CI_GUARD}\n        run: npm run test:sandbox`,
+    `        if: "\${{ always() }}"\n        run: npm run test:sandbox`);
+  assert.notEqual(injected, CI, 'the injection matched nothing, so its proof is vacuous');
+  assert.deepEqual(unguardedSteps(injected), [], 'the excluded step is what this case is about');
+  const real = ciChainFindings(injected); // the REAL allowlist, as the blocking assertion uses it
+  assert.equal(real.length, 1, `a quoted, weakened guard in the real ci.yml did not block:\n${real.join('\n')}`);
+  assert.ok(real[0].startsWith(UNPARSED_PREFIX), real[0]);
+
+  // And the control, or the three assertions above are satisfied by a file that is red anyway.
+  assert.deepEqual(ciChainFindings(CI), [], 'the real ci.yml is not clean, so the injection proves nothing');
 });
 
 test('`run: >` is accepted by the parser and joined literally — an over-report, on purpose', () => {
