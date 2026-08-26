@@ -83,7 +83,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const {
   STEPS, EXCLUDED, SHELL_OPERATORS, auditSuite, reachable, aliasLinks, shellOperators, resolveChain,
-  CI_GUARD, CI_CHAINS_ALLOWED, parseCiSteps, ciRunCommands, ciChainFindings, UNPARSED_PREFIX,
+  CI_GUARD, CI_CHAINS_ALLOWED, parseCiSteps, unguardedSteps, ciRunCommands, ciChainFindings, UNPARSED_PREFIX,
   DIRECT_TEST_RUNNER, AGGREGATE_RUNNER,
 } = require('./lib/check-suite.js');
 
@@ -1371,8 +1371,7 @@ test('a `run: |` that starts with a BLANK line does not swallow the step after i
   // step that is GENUINELY missing the guard must still be reported when it follows such a block.
   // Without it, "two steps parsed" could be satisfied by a parser that recovers the step and drops
   // its keys, which reads identically in the count and is silent in exactly the same way.
-  const unguarded = (workflow) =>
-    parseCiSteps(workflow).filter((s) => s.run !== null && s.if !== CI_GUARD).map((s) => s.line);
+  const unguarded = unguardedSteps; // one implementation, in the library — see its JSDoc
 
   assert.deepEqual(unguarded(leadingBlank), [], 'a guarded workflow was reported as unguarded');
 
@@ -1543,6 +1542,116 @@ test('a continued `run:` is refused and CONSUMED — a refusal that leaks is a m
   assert.equal(thenKey[0].if, CI_GUARD, 'the `if:` after a refused value was swallowed');
   assert.equal(thenKey.length, 1, 'the continuation line opened a new step');
 });
+test('a block header with an explicit indentation indicator is REFUSED — the body baseline is a lie', () => {
+  // ROUND 10, AND IT IS PRE-EXISTING. Measured on `main` (7f7bddd) and on round 9 (bff6bbe),
+  // IDENTICALLY on both, so this branch did not introduce it and the round-9 review's own
+  // prediction that it was new is refuted by its pre-image: the header regex accepted `|N`, and the
+  // body's baseline was then taken from the FIRST CONTENT LINE rather than from the indicator. A
+  // first line indented deeper than the indicator therefore sets a baseline every later line falls
+  // short of, and every later line closes the block.
+  //
+  //     run: |2                              PyYAML 6.0.3 ->
+  //           npm run test:gate   (14 sp)      "    npm run test:gate\n  && npm run some:step\n"
+  //         && npm run some:step  (12 sp)
+  //
+  //     before: parseCiSteps -> "npm run test:gate", ciChainFindings -> []   SILENT CLEAN
+  //
+  // REFUSED RATHER THAN HONOURED — one more deletion, not one more model, which is the stop
+  // condition this function is being held to. Nothing in ci.yml uses one (0 of 44), and a block
+  // scalar without an indicator expresses everything one with an indicator can.
+  const wf = (header, ...body) => ['name: t', 'jobs:', '  one:', '    steps:',
+    '      - name: A', '        if: ${{ !cancelled() }}', `        run: ${header}`, ...body, ''].join('\n');
+  const deep = ['              npm run test:gate', '            && npm run some:unreviewed:step'];
+  // A step's `line` is its `- ` ITEM line, not the line its key sits on. Derived and then
+  // ASSERTED rather than assumed: the first draft pinned the `run:` line, 7, and the parser said 5.
+  // A pinned integer here would also fail on the next edit to the fixture for a reason that has
+  // nothing to do with the rule.
+  const LINE = parseCiSteps(wf('|', '          x'))[0].line;
+  assert.equal(LINE, 5, 'the fixture shape moved — every expectation below is derived from this');
+  const refusalFor = (value) =>
+    `UNPARSED: ci.yml:${LINE} \`run:\` was NOT read — its block header carries an explicit indentation ` +
+    `indicator, which this parser does not honour. It is not scanned for shell operators, so it ` +
+    `cannot be certified as one command: ${value}`;
+
+  for (const header of ['|2', '>2', '|2+', '|-2', '|9']) {
+    assert.deepEqual(ciChainFindings(wf(header, ...deep), {}), [refusalFor(header)],
+      `\`${header}\` was not refused — its body is read from the wrong baseline`);
+  }
+
+  // ── THE OTHER DIRECTION, and each half was verified here rather than inherited from the review.
+  //
+  // A PLAIN BLOCK SCALAR IS STILL READ, or the escape hatch that makes every other refusal costless
+  // stops existing. This is the CONTROL for the five cases above: same body, no indicator.
+  assert.deepEqual(
+    ciChainFindings(wf('|', '          npm run test:gate', '          && npm run some:unreviewed:step'), {}),
+    [`ci.yml:${LINE} carries \`&&\`, \`\\n\` — npm run test:gate\n&& npm run some:unreviewed:step`],
+    'a block scalar with no indicator stopped being read'
+  );
+
+  // CHOMPING STAYS READ. `|-` and `|+` change only the TRAILING newline — measured with PyYAML,
+  // `|-` gives `npm run a\n&& npm run b` and `|+` the same plus a trailing `\n` — and a trailing
+  // newline is not a second command. Refusing them would cost the hatch for nothing.
+  for (const header of ['|-', '|+', '>-', '>+', '| # note']) {
+    assert.deepEqual(ciChainFindings(wf(header, '          npm run a', '          && npm run b'), {}),
+      [`ci.yml:${LINE} carries \`&&\`, \`\\n\` — npm run a\n&& npm run b`],
+      `\`${header}\` was refused — chomping and comments are not indentation indicators`);
+  }
+  assert.deepEqual(ciChainFindings(wf('|-', '          npm run a'), {}), [], 'a one-command `|-` was reported');
+
+  // AND THE REFUSED BODY DOES NOT LEAK into the step after it — a refusal that swallows the next
+  // step trades a silent clean for a silent misparse, which is not a trade.
+  const after = ['name: t', 'jobs:', '  one:', '    steps:', '      - name: A', '        run: |2',
+    '              npm run a', '            && npm run b', '      - name: B', '        run: npm run c', ''].join('\n');
+  assert.deepEqual(parseCiSteps(after).map((s) => [s.name, s.run]), [['A', '|2'], ['B', 'npm run c']],
+    'the refused block body swallowed the step after it');
+});
+
+test('a step whose `if:` could not be read is NOT also reported as unguarded', () => {
+  // ONE TRUE FINDING AND ONE FALSE ONE ABOUT THE SAME LINE, and the false one said the opposite of
+  // what is there. `if: "${{ !cancelled() }}"` is a correctly guarded step written with quotes:
+  // parseCiSteps refuses the quoted scalar — deliberately — and left the raw text on the step, so
+  // the guard filter ALSO reported it as carrying no guard.
+  //
+  // PROVENANCE, because it changes how this reads: `main` (7f7bddd) reports that step unguarded
+  // too. Measured. This is NOT a defect the round-9 deletion introduced — round 8 masked it as a
+  // side effect of unquoting every scalar, and deleting the decode took the mask away. The
+  // reasoning that keeps `name:`/`uses:` out of SAFETY_KEYS applies here word for word.
+  const wf = (guard) => ['name: t', 'jobs:', '  one:', '    steps:',
+    '      - name: A', ...(guard === null ? [] : [`        if: ${guard}`]), '        run: npm run a', ''].join('\n');
+
+  assert.deepEqual(unguardedSteps(wf('"${{ !cancelled() }}"')), [],
+    'a correctly guarded step written with quotes was reported as carrying no guard');
+  assert.equal(ciChainFindings(wf('"${{ !cancelled() }}"'), {}).length, 1,
+    'the refusal itself must still fire — it is the one true finding about that line');
+
+  // NOT FAIL-OPEN, which is the question to ask of any exclusion. A guard that is quoted AND
+  // weakened is excluded from the unguarded list and still fails the build, on the refusal.
+  assert.deepEqual(unguardedSteps(wf('"${{ always() }}"')), []);
+  assert.equal(ciChainFindings(wf('"${{ always() }}"'), {}).length, 1, 'a quoted, weakened guard stopped blocking');
+
+  // ── AND THE CASES IT MUST STILL CATCH, or the exclusion has eaten the rule.
+  const itemLine = (w) => parseCiSteps(w)[0].line;
+  assert.deepEqual(unguardedSteps(wf(null)), [itemLine(wf(null))], 'a step with no `if:` at all stopped being reported');
+  assert.deepEqual(unguardedSteps(wf('${{ always() }}')), [itemLine(wf('${{ always() }}'))], 'an UNQUOTED weakened guard stopped being reported');
+  assert.deepEqual(unguardedSteps(wf('${{ !cancelled() }}')), [], 'the correct guard was reported as missing');
+  assert.deepEqual(unguardedSteps(CI), [], 'the real ci.yml has an unguarded `run:` step');
+
+  // THE EXCLUSION IS `if:`-SHAPED, NOT STEP-SHAPED, and this is the case that holds it there. A
+  // step whose `run:` was refused says NOTHING about whether it carries a guard — its `if:` was
+  // read perfectly well, or is absent. Excluding the whole step would drop a TRUE finding to buy
+  // nothing; the mutation that widens it to `s.unparsed.length === 0` fails here and nowhere else.
+  const refusedRun = ['name: t', 'jobs:', '  one:', '    steps:',
+    '      - name: A', '        run: "npm run a && npm run b"', ''].join('\n');
+  assert.deepEqual(unguardedSteps(refusedRun), [parseCiSteps(refusedRun)[0].line],
+    'a step with a refused `run:` and no `if:` at all stopped being reported as unguarded');
+  // ONE IMPLEMENTATION. This filter was spelled twice in this file — once here, once in the
+  // block-scalar case — and the fix above had to land in both or the two would disagree about the
+  // same workflow. It lives in the library now, and this asserts the library is what answers.
+  assert.equal(typeof unguardedSteps, 'function');
+  assert.deepEqual(unguardedSteps(CI, '${{ nonsense() }}').length, ciRunCommands(CI).length,
+    'the guard is not a parameter — a mutation of it changed nothing');
+});
+
 test('`run: >` is accepted by the parser and joined literally — an over-report, on purpose', () => {
   // parseCiSteps accepts a FOLDED scalar (`>`) and implements LITERAL (`|`) join semantics: it
   // joins with newlines where YAML folding joins with spaces. Nothing in ci.yml uses one, and this
@@ -1619,8 +1728,7 @@ test('every `run:` step in ci.yml carries the `!cancelled()` guard, and the thre
   // on `main` before that change the build failed at step 18 of 30 and the twelve after it never
   // ran — the ledger's enforcement, both gates, and the check that makes "the sandbox is armed" a
   // fact. A step added without the guard reinstates exactly that, for everything below it.
-  const unguarded = (workflow) =>
-    parseCiSteps(workflow).filter((s) => s.run !== null && s.if !== CI_GUARD).map((s) => s.line);
+  const unguarded = unguardedSteps; // one implementation, in the library — see its JSDoc
 
   assert.deepEqual(
     unguarded(CI), [],
@@ -1830,7 +1938,7 @@ test('the ci.yml chain check has a LIBRARY and an entry point, not only a test',
   const refused = spawnSync(process.execPath, [entry, refusalOnly], { encoding: 'utf8' });
   assert.equal(refused.status, 1, `a refused scalar exited 0 through the entry point:\n${refused.stdout}`);
   assert.match(refused.stderr, /UNPARSED:/, refused.stderr);
-  assert.match(refused.stderr, /Rewrite the value as a block scalar/, 'the refusal remedy was not printed');
+  assert.match(refused.stderr, /QUOTED\?  UNQUOTE IT/, 'the refusal remedy was not printed');
   assert.ok(
     !/add the exact run string to CI_CHAINS_ALLOWED/.test(refused.stderr),
     `the chain remedy was printed for a refusal-only run, which cannot use it:\n${refused.stderr}`
@@ -1841,7 +1949,7 @@ test('the ci.yml chain check has a LIBRARY and an entry point, not only a test',
 
   // And the mirror: a CHAIN-only run gets the chain remedy and NOT the refusal one.
   assert.match(bad.stderr, /add the exact run string to CI_CHAINS_ALLOWED/, bad.stderr);
-  assert.ok(!/Rewrite the value as a block scalar/.test(bad.stderr), `the refusal remedy leaked into a chain-only run:\n${bad.stderr}`);
+  assert.ok(!/QUOTED\?  UNQUOTE IT/.test(bad.stderr), `the refusal remedy leaked into a chain-only run:\n${bad.stderr}`);
 
   // The control: a clean workflow through the same argument path still exits 0, so the two failures
   // above are the findings and not the argument.

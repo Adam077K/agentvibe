@@ -1198,7 +1198,14 @@ const SAFETY_KEYS = ['run', 'if'];
  * escapes and no quoting rules, so ANY command that cannot be a plain scalar can be written as
  * one. Measured: `run: |-` carries `node -e "a: 1" && npm run b`, `npm run a # literal`,
  * `{echo a; echo b;}` and `*glob npm run a` through PyYAML byte for byte, and every one of those
- * is either invalid or differently-parsed as a plain scalar. The escape hatch is total.
+ * is either invalid or differently-parsed as a plain scalar.
+ *
+ * THE HATCH IS TOTAL; THE READING OF IT IS NOT, and the first version of this passage said only the
+ * first half. It read "The escape hatch is total", which is a claim about what is ENFORCED made by
+ * a sentence — the defect this repo exists to refuse — and P1-1 of round 9's review proved the
+ * gap: a block header carrying an explicit indentation indicator was read WRONG, silently, on
+ * `main` as well as here. That shape is refused now, so the two halves agree again; the sentence
+ * is left in two parts so the next reader can see which half is the claim and which is the check.
  */
 const NON_PLAIN_SCALAR = /^["'&*!%@`{}[\],]/;
 
@@ -1277,12 +1284,39 @@ function parseCiSteps(workflow) {
     // nothing on the public surface across 45 inputs. What DOES keep a `with:` body out of the
     // `uses:` above it is the watch reset in the loop, and that one fails a test when removed.
     if (!STEP_KEYS.includes(key)) return;
+    // AN EXPLICIT INDENTATION INDICATOR IS REFUSED, and this is round 10's whole change. The header
+    // regex accepted `|2`, and then the body's baseline was taken from the FIRST CONTENT LINE
+    // instead of from the indicator — so a first line indented DEEPER than the indicator sets a
+    // baseline every later line falls short of, and every later line then closes the block.
+    // Measured 2026-08-26 on `main` (7f7bddd) and on round 9 (bff6bbe), IDENTICALLY on both, so
+    // this is older than Wave 1 and not something this branch introduced:
+    //
+    //     run: |2            PyYAML -> "    npm run test:gate\n  && npm run some:unreviewed:step\n"
+    //       npm run test:gate          (14 spaces)
+    //     && npm run some:unreviewed:step   (12 spaces)
+    //
+    //     this parser -> "npm run test:gate"      ciChainFindings -> []      SILENT CLEAN
+    //
+    // `>2`, `|2+` and `|-2` do the same; `|9` is invalid YAML outright. REFUSED RATHER THAN
+    // HONOURED, which is one more deletion and not one more model — the same trade round 9 made,
+    // and the reason it is safe is the same: nothing in ci.yml uses one (0 of 44), and a block
+    // scalar without an indicator expresses everything one with an indicator can.
+    //
+    // CHOMPING STAYS READ, and that was verified here rather than inherited. `|-` and `|+` change
+    // only the TRAILING newline — measured, `|-` gives `npm run a\n&& npm run b` and `|+` gives the
+    // same plus a trailing `\n` — and a trailing newline is not a second command. Both produce the
+    // identical finding on both trees.
+    if (/^[|>][-+\d]*(?:\s+#.*)?$/.test(rawValue) && /\d/.test(rawValue)) {
+      step[key] = rawValue.trim();
+      refuse(step, key, 'its block header carries an explicit indentation indicator, which this parser does not honour');
+      return;
+    }
     // A BLOCK INDICATOR MAY CARRY A TRAILING YAML COMMENT — `run: | # note` is valid, and PyYAML
     // reads it as a block scalar. Without the comment arm this regex missed it and the value was
     // read as the plain scalar `| # note`. The block branch is FIRST, which is what keeps `|` and
     // `>` out of NON_PLAIN_SCALAR: they are the two indicators this parser does read, and they are
     // the escape hatch that makes refusing the others cost nothing.
-    if (/^[|>][-+\d]*(?:\s+#.*)?$/.test(rawValue)) {
+    if (/^[|>][-+]*(?:\s+#.*)?$/.test(rawValue)) {
       // `keyIndent` is the column of the KEY, and the block ends at the first non-blank line that
       // is not indented past it. Anchoring to the first CONTENT line instead was a defect: see the
       // loop below.
@@ -1388,6 +1422,36 @@ function parseCiSteps(workflow) {
   }
 
   return steps;
+}
+
+/**
+ * The `run:` steps that do NOT carry the `!cancelled()` guard, by line number.
+ *
+ * SPELLED HERE BECAUSE IT WAS SPELLED TWICE. Two copies of this filter lived in
+ * scripts/check-suite.test.mjs — one in the block-scalar case, one in the guard case — and the fix
+ * below had to land in both or the two would disagree about the same workflow. That is the defect
+ * this file names in three other places; it is not allowed a fourth.
+ *
+ * A STEP WHOSE `if:` COULD NOT BE READ IS NOT REPORTED UNGUARDED, and that exclusion is the fix.
+ * `if: "${{ !cancelled() }}"` is a correctly guarded step written with quotes: parseCiSteps refuses
+ * the quoted scalar (deliberately — see NON_PLAIN_SCALAR) and leaves the raw text on the step, so a
+ * plain `s.if !== CI_GUARD` test then ALSO reported it as carrying no guard. One true finding and
+ * one false one about the same line, and the false one says the opposite of what is there.
+ *
+ * PROVENANCE, because it decides how this reads: `main` (7f7bddd) reports that same step unguarded
+ * too — measured — so this is NOT a defect the round-9 deletion introduced. Round 8 masked it as a
+ * side effect of unquoting every scalar, and deleting the decode took the mask away. The reasoning
+ * that keeps `name:` and `uses:` out of SAFETY_KEYS applies here word for word and was not carried
+ * through at the time.
+ *
+ * NOT FAIL-OPEN, which is the question to ask of any exclusion: a refused `if:` is itself a
+ * BLOCKING finding from ciChainFindings(), so `if: "${{ always() }}"` — quoted AND weakened — still
+ * fails the build. What changes is that it fails once, with a true message.
+ */
+function unguardedSteps(workflow, guard = CI_GUARD) {
+  return parseCiSteps(workflow)
+    .filter((s) => s.run !== null && !s.unparsed.some((u) => u.key === 'if') && s.if !== guard)
+    .map((s) => s.line);
 }
 
 /**
@@ -1544,6 +1608,7 @@ module.exports = {
   NON_PLAIN_SCALAR,
   UNPARSED_PREFIX,
   parseCiSteps,
+  unguardedSteps,
   ciRunCommands,
   ciChainFindings,
   DIRECT_TEST_RUNNER,

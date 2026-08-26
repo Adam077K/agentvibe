@@ -56,10 +56,17 @@ if (findings.length) {
   if (refusals.length) {
     console.error(
       `\nAn ${UNPARSED_PREFIX} finding is the YAML layer, not the shell one: this parser reads a \`run:\`/\`if:\` ` +
-        'value in exactly two shapes — a plain single-line scalar, or a block scalar — and refuses the rest ' +
-        'rather than implementing YAML. It has NO allowlist entry by design. Rewrite the value as a block ' +
-        'scalar (`run: |-`), which has no quoting rules and no escapes, so anything expressible is ' +
-        'expressible there.'
+        'value in exactly two shapes — a plain single-line scalar, or a block scalar with no explicit ' +
+        'indentation indicator — and refuses the rest rather than implementing YAML. It has NO allowlist ' +
+        'entry by design.\n' +
+        '  · QUOTED?  UNQUOTE IT. That is the fix for nearly every one of these, and it is the whole fix ' +
+        'for an `if:` — `if: ${{ !cancelled() }}` needs no quotes and a block scalar there would be bizarre.\n' +
+        '  · CANNOT unquote, because the value carries a `: ` or starts with an indicator? Write it as a ' +
+        'block scalar (`run: |-`), which has no quoting rules and no escapes, so anything expressible is ' +
+        'expressible there — but WITHOUT an indentation indicator: `|2` is refused too, because the body ' +
+        'baseline is read off the first content line rather than off the indicator.\n' +
+        '  · SPLIT OVER SEVERAL LINES? Join it, or make it a block scalar. A continuation is refused ' +
+        'because this parser has not read all of the value, not because the value is wrong.'
     );
   }
   if (refusals.length < findings.length) {
