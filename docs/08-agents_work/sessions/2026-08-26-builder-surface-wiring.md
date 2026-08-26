@@ -151,6 +151,33 @@ arrives already covered. The risk that remains is an **emptied** list, which is 
 stages, zero of them dispatching — as **data**, recomputed in four lines, so unlike a prose pin it cannot
 decay into matching a word somewhere.
 
+**F12 — I wrote a defect of exactly the class this PR closes, into the file that closes it.** At `2ca2874`
+I wrote `PR #115` inside a folded scalar. `parseYamlSubset` treats a mid-value `#` as a comment and drops
+the rest of the line, so what every consumer actually received was:
+
+> `"PENDING, AND NOT YET TRUE: PR BLOCK, which would replace the reading above…"`
+
+Not a visible truncation — the surviving text folded onto the next line and read as a **finished sentence
+about a thing called PR BLOCK**. Provenance: 0 occurrences at `d1040f7` and `7ea3908`, 1 from `2ca2874`
+onward. Mine. And it is not only prose: `unused_reason` has a 40-character floor and the truncation happens
+**before** the floor is measured, so an 87-character reason can fail the build with a message that is false
+about the file its author wrote. `run:` is safe only by accident — `SHELL_METACHARACTERS` already refuses
+`#` there.
+
+Fixed by deleting one character. I also **pinned it rather than only commenting it**, because a comment
+saying "do not do this" is unenforced prose, which is the thing this PR exists to end — the scan covers
+`gates.yml` and all six playbooks, allows a `#` inside quotes (the documented remedy), and carries a control
+asserting it saw the 80-odd legitimate whole-line comments, so an empty offender list means it looked rather
+than that it read nothing. Break-tested three ways: the `#` restored in `gates.yml` → exit 1 with the line
+named; an **unquoted** `#` in a playbook `summary:` → exit 1 (and the parser demo shows that summary would
+have silently become `"Bring a screen up to standard"`); a **quoted** `#` → still passes. **The root cause is
+in `scripts/lib/claims.js` and is deliberately untouched** — out of this diff, `irreversible` tier, and
+routed rather than absorbed.
+
+*A first attempt at the playbook break-test reported exit 0 and I nearly recorded the guard as having a
+hole. The mutation was wrong, not the guard: I had put the `#` inside double quotes, which is the legal
+case. Rebuilt unquoted, it fires.*
+
 **DEFERRED, with the reason: renaming `gates` to `check:gates`.** R113 is right that `gates` escapes
 `GOVERNED = /^(?:check|test|lint|verify|audit):/` and could be deleted without the drift guard noticing —
 measured, `auditSuite()` failures mentioning it are 0 as `gates` and 1 as `check:gates`. The rename is the

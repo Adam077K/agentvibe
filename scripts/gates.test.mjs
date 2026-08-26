@@ -41,6 +41,8 @@ import {
   KINDS,
   COMMAND_ONLY,
   HUMAN_ONLY,
+  GATES_PATH,
+  PLAYBOOK_DIR,
 } from './check-gates.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -428,6 +430,52 @@ test('every shipped command gate resolves to the exact command it is supposed to
     SHIPPED_RUN,
     'a command gate was added, removed, or repointed — if that was deliberate, say so here',
   );
+});
+
+test('no unquoted # inside a value — it silently eats the rest of the line', () => {
+  // I INTRODUCED THIS DEFECT, at 2ca2874, writing "PR #115" inside a folded scalar. Provenance:
+  // 0 occurrences at d1040f7 and 7ea3908, 1 from 2ca2874 onward.
+  //
+  // `parseYamlSubset` treats a mid-value `#` as a comment and drops the rest of the line. The
+  // failure is not a visible truncation — the surviving text folds onto the next line and reads as
+  // a finished sentence. Measured: "PR #115 would make a refusal its own terminal value distinct
+  // from" + "BLOCK, which would replace the reading above" parsed to "PR BLOCK, which would
+  // replace the reading above", which a reader receives as a coherent claim about a thing called
+  // PR BLOCK. Every consumer — resolve, wiringFindings, this file — reads the PARSED value, so the
+  // mangled sentence is the one people actually get.
+  //
+  // NOT ONLY PROSE. `unused_reason` has a 40-character floor and the truncation happens BEFORE the
+  // floor is measured, so an 87-character reason can fail the build with a message that is false
+  // about the file its author wrote. `run:` is safe only by accident, because SHELL_METACHARACTERS
+  // already refuses `#` there.
+  //
+  // A comment saying "do not do this" is unenforced prose, which is the thing this PR exists to
+  // end. The root cause is in scripts/lib/claims.js — out of this diff, and deliberately not
+  // touched. This pins the blast radius: the files this checker parses.
+  const files = [
+    GATES_PATH,
+    ...fs.readdirSync(path.join(REPO_ROOT, PLAYBOOK_DIR)).filter((f) => f.endsWith('.yml')).map((f) => `${PLAYBOOK_DIR}/${f}`),
+  ];
+  const offenders = [];
+  let commentLines = 0;
+  for (const rel of files) {
+    fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8').split('\n').forEach((line, i) => {
+      if (/^\s*#/.test(line)) { commentLines++; return; } // a whole-line comment is exactly right
+      let s = false;
+      let d = false;
+      for (let c = 0; c < line.length; c++) {
+        const ch = line[c];
+        if (d && ch === '\\') { c++; continue; }
+        if (ch === "'" && !d) s = !s;
+        else if (ch === '"' && !s) d = !d;
+        else if (ch === '#' && !s && !d) { offenders.push(`${rel}:${i + 1}  ${line.trim().slice(0, 80)}`); return; }
+      }
+    });
+  }
+  // The control: whole-line comments are plentiful and correctly ignored, so an empty offender
+  // list means the scan ran and found nothing — not that it scanned nothing.
+  assert.ok(commentLines > 20, `the scan saw only ${commentLines} comment lines, so it is not reading these files`);
+  assert.deepEqual(offenders, [], 'quote the whole value, or drop the #');
 });
 
 test('no gated stage dispatches an engine — the figure gates.yml asserts', () => {

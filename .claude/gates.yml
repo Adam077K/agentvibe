@@ -80,6 +80,18 @@
 # when they disagree in either direction — the same treatment `package.json` gets from
 # `scripts/lib/check-suite.js`.
 
+# ── NEVER WRITE A BARE `#` INSIDE A VALUE BELOW. Write "PR 115", not "PR #115". ──────────────
+# `parseYamlSubset` treats a mid-value `#` as a comment and DROPS THE REST OF THE LINE, silently.
+# This is not a truncation you would notice: the surviving text folds onto the next line and reads
+# as a complete sentence. Measured on this file — "PR #115 would make a refusal its own terminal
+# value distinct from / BLOCK, which would replace…" parsed to "PR BLOCK, which would replace…",
+# which a reader receives as a coherent claim about a thing called PR BLOCK.
+# It is also not confined to prose: `unused_reason` has a 40-character floor and the truncation
+# happens BEFORE the floor is measured, so an 87-character reason can fail the build with a message
+# that is false about the file its author wrote. Quote the whole value if you genuinely need a `#`.
+# Pinned by `no unquoted # inside a value` in scripts/gates.test.mjs. The root cause is in
+# scripts/lib/claims.js and is not fixed here.
+
 gates:
   - id: qa-verdict
     kind: command
@@ -113,7 +125,7 @@ gates:
       down, where this file does have reach - resolveGate returns unresolved rather than fail when
       it could not ask, and scripts/gates.test.mjs pins the two apart for spawn failure, signal,
       and every exit code other than 0 and 1.
-      PENDING, AND NOT YET TRUE: PR #115 would make a refusal its own terminal value distinct from
+      PENDING, AND NOT YET TRUE: PR 115 would make a refusal its own terminal value distinct from
       BLOCK, which would replace the reading above with a value you can simply name. It is OPEN and
       DRAFT as of 2026-08-26, merged=null, and neither this branch nor origin/main carries it. When
       it lands, delete the reading and name the value.
