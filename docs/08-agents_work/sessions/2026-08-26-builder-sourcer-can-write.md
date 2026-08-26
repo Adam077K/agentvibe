@@ -102,6 +102,47 @@ exercised directly. `LOCKED` and `TARGET_CHANGED` were reachable and are now tes
 running authoritative DNS — strictly smaller than F1, which needed a string) and U+202E / zero-width
 characters passing `checkText`.
 
+## review round 3 — one sentence was false in three reachable ways
+
+`adversarial` and `security` passed. `evidence` failed on `INDEX_REBUILD_FAILED`'s promise: *"Nothing was
+left behind. The tree is exactly as it was before this call."* The instruction was **make it true, not
+narrower** — A7 — and the cost turned out to be small, because the atomic mechanism already existed.
+Reproduced all three myself before touching anything:
+
+| | before | after |
+|---|---|---|
+| **N1** a build that writes `index.json` then dies | index left **REWRITTEN** | restored |
+| **N2** a repo with no `SOURCED-CLAIMS.md` | rollback **CREATED** the file | absent before, absent after |
+| **N3** the rollback was the one non-atomic write | truncation possible | tmp-and-rename, like the forward path |
+
+**N1 is reachable with no code change** — `ledger build` writes the index and then returns, so any signal in
+between lands there. Restoring only the markdown made `build --check` fail in the *opposite* direction,
+"in the index, missing from the artifacts", which nobody would trace back to an append reporting success.
+
+**N2 was `seedFile()` doing it:** `current` falls back to a string that was never on disk, so writing it
+back turns absent into present. `targetExisted` is tracked now rather than inferred.
+
+**N3's silent half is closed too, and this is the part I would have missed.** The reviewer's demonstration
+was that a truncation **at a claim-block boundary parses cleanly with fewer claims** — so
+`TARGET_ALREADY_INVALID` never fires, the append succeeds, the index is rebuilt *from the truncated file*,
+`build --check` stays green and only `git diff` shows the loss. Making the rollback atomic removes *this
+code* as a cause; it does not make the damage visible. The committed index is an independent record of what
+the file used to hold, so it now supplies the baseline: `TARGET_TRUNCATED` refuses when the index names
+claims for this file that the file no longer has. Loss only — extra claims are just an unbuilt index.
+
+**And the promise now has a third branch.** If the rollback itself fails, the refusal is `ROLLBACK_FAILED`
+and says *THE TREE IS INCONSISTENT*, naming what it could not restore. A refusal that promises a clean tree
+it did not deliver is the same defect one level down.
+
+**Hardening taken:** RFC 8215's local-use NAT64 prefix `64:ff9b:1::/48`, which the reviewer correctly called
+an inconsistency inside a rule I had otherwise applied completely. Refused whole rather than decoded — inside
+it the translation prefix may itself be /48–/96, so the embedded IPv4 sits at an offset this function cannot
+see, and the fail-closed answer is also the correct one. A control pins that **real** NAT64 to a public
+address (`64:ff9b::8.8.8.8`) is still admitted: a guard that costs `sourcer` the open web would have replaced
+one defect with a worse one.
+
+**All four pinned by mutation** — reintroduce each bug and its test goes red; restore and all four are green.
+
 ## corrections
 
 - **My own gate refused everything, and looked like it worked.** It read `r.verdict`; the resolver returns
