@@ -1,0 +1,11 @@
+{
+  "subject": "f2e78878cd2d0523929b1a98530235984ffd35936461937417bf276c5b4de17a",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "full",
+  "tier_driver": "mission-control/scripts/consume-dispatch.ts",
+  "verdict": "PASS",
+  "by": "builder-honest-dispatch",
+  "run_id": null,
+  "evidence": "Round 2, after blind review returned correctness:fail with one p1 (C1: allow-list flipped to deny-list, fail-open and destructive). C1 reproduced on the reviewed head with a claude logging its argv — timed-out, missing status, 7 and null all LAUNCHED and overwritten with consumed. Fixed by classifyDispatches allow-list; re-measured table: all four UNTOUCHED with status preserved, pending control launched and recorded consumed, consumed control untouched, exactly 1 launch across six cases. C2 complement counting (reverting to enumeration turns 3 of the new view tests red). C3 consumerPid + isAlive, EPERM reads as alive. C5 dry-run parity. C6 not-started distinguished from no-result, proved with a PATH containing no claude and the absence asserted. C7 label. C8 fold asserted in crosscheck.test.ts. C4 UI half now has 9 tests where it had 0. The repo's own 'every LiveState in test/** says where its index cache goes' guard caught my new test writing to HOME; fixed. Suites: npm run check 46 of 46 passed 0 failed exit 0; dispatch 47 pass 0 fail; index-cache 32/0; write-barrier 7/0; shell ban 12 pass 0 fail (zero exceptions); tsc --noEmit clean. Known pre-existing and reproduced on this branch WITH MY CHANGE STASHED as a control: two views.test.tsx git-fixture tests fail under machine load (70 pass 2 fail without my addition), and stream.test.ts is 9/1 under the armed sandbox. Tier full; this PASS is one author, one model family, no independent review.",
+  "recorded_at": "2026-08-26T14:05:31.052Z"
+}

@@ -1067,3 +1067,64 @@ describe('server/** mutates nothing outside server/index-cache.ts, and never inv
     expect(SHELL_INVOCATION_PATTERNS.flatMap((p) => findOffenders(p, [safe]))).toEqual([]);
   });
 });
+
+
+// ── The dispatch fold is a CONTRACT, not a doc comment ────────────────────────────────────
+//
+// GET /api/dispatch folds the append-only queue to one row per dispatch, and until now the only
+// thing holding that was a comment on the route saying so. A comment cannot go red. This file is
+// where this repo puts "two places must agree" — the shell ban and the ledger cross-check live
+// here for the same reason — so the fold goes here too.
+//
+// WHAT WOULD BREAK WITHOUT IT: a future edit returning `readDispatch()` raw. Every caller that
+// counts rows would silently start counting queue LINES again — three per dispatch once `running`
+// and a terminal line exist — and `dispatchHeadline`'s `total` would inflate with no test failing.
+
+import { appendDispatch, readDispatch, resolveDispatchStates } from '../server/index-cache.ts';
+import { LiveState } from '../server/state.ts';
+import { createApi } from '../server/routes/api.ts';
+import { Hono } from 'hono';
+import type { DispatchEntry, DispatchPayload } from '../server/routes/api.ts';
+
+describe('GET /api/dispatch returns CURRENT STATE, not raw queue lines', () => {
+  test('a dispatch with three lines is one row, carrying its LAST status', async () => {
+    const dir = mkTmpDir('mc-fold-');
+    const queue = path.join(dir, 'queue.jsonl');
+    const priorQueue = process.env.MC_DISPATCH_QUEUE;
+    process.env.MC_DISPATCH_QUEUE = queue;
+    try {
+      const base: DispatchEntry = {
+        id: 'one', project: 'p', root: '/p', goal: 'g', enqueuedAt: 1_000, status: 'pending',
+      };
+      appendDispatch(base, queue);
+      appendDispatch({ ...base, status: 'running' }, queue);
+      appendDispatch({ ...base, status: 'failed', exitCode: 3 }, queue);
+
+      // The RAW file really does hold three lines — without this the assertion below could pass
+      // against a queue that only ever had one.
+      expect(readDispatch(queue)).toHaveLength(3);
+
+      // The route resolves its queue through dispatchQueuePath(), which reads MC_DISPATCH_QUEUE —
+      // the same override the consumer uses. Restored in `finally` so this cannot leak into a
+      // sibling test.
+      // indexCachePath is REQUIRED of every LiveState in test/**, and this file's own guard
+      // ("every LiveState in test/** says where its index cache goes") caught its absence here —
+      // without it this test would have written an index cache into the developer's $HOME.
+      const state = new LiveState({ indexCachePath: path.join(dir, 'index.json') });
+      const app = new Hono().route('/api', createApi(state));
+      const res = await app.request('/api/dispatch');
+      const body = (await res.json()) as DispatchPayload;
+
+      expect(body.entries).toHaveLength(1);
+      expect(body.entries[0]?.status).toBe('failed');
+      expect(body.entries[0]?.exitCode).toBe(3);
+
+      // The route and the library agree — the point of putting this here.
+      expect(body.entries).toEqual(resolveDispatchStates(readDispatch(queue)));
+    } finally {
+      if (priorQueue === undefined) delete process.env.MC_DISPATCH_QUEUE;
+      else process.env.MC_DISPATCH_QUEUE = priorQueue;
+      rmTmp(dir);
+    }
+  });
+});
