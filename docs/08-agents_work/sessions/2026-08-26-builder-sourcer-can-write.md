@@ -186,7 +186,7 @@ Everything below was executed. `npm run check` → **46 of 46 passed · 0 failed
 `docs/STATUS.md` §4 warns. Derive the denominator rather than quoting it:
 `node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → 46.
 
-`npm run test:ledger` after the review fixes → **206 tests · 205 pass · 0 fail · 1 skipped**; the skip is the real-socket
+`npm run test:ledger` → **211 tests · 210 pass · 0 fail · 1 skipped** after round 3 (206/205 after round 2); the skip is the real-socket
 SSRF regression test, which the armed sandbox denies `listen()` and which binds for real on CI. I ran it
 unsandboxed to confirm it passes, and mutated the classifier back to the shipped bug to confirm it fails —
 a test I had never seen fail is a test I do not have.
