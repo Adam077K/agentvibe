@@ -2,10 +2,25 @@
 /**
  * check-citations.mjs — the citation-range checker.
  *
- * POSTURE: WARN. Exits 0 with findings reported. `--strict` exits 1. It is deliberately NOT wired
- * into `npm run check` or into CI by the PR that introduced it: turning it blocking is a separate,
- * higher-tier decision, and it should be made after someone has looked at a full run.
+ * POSTURE: SPLIT, as of 2026-08-26 — the EXISTENCE class BLOCKS and the DRIFT class WARNS.
  * The ONE hard failure that exits 1 regardless of posture is the non-vacuity floor — see below.
+ *
+ *   `check:citations-exist`   node scripts/check-citations.mjs --no-anchors --strict
+ *                             --external-prefix adamos
+ *                             A STEP of `npm run check` and a step of ci.yml. Existence only.
+ *   `check:citations`         the full run, drift included, WARN. Not a step; run it by hand.
+ *
+ * WHY THE SPLIT, AND WHY IT IS NOT "HALF-WIRED". This header used to read "deliberately NOT wired
+ * into `npm run check` or into CI by the PR that introduced it: turning it blocking is a separate,
+ * higher-tier decision, and it should be made after someone has looked at a full run." That run
+ * happened (2 existence · 85 drift · 19 unchecked over 851 locators), and the decision made on it
+ * was to promote ONE class. The two classes differ in kind, and the numbers below are the reason:
+ * existence is deterministic with no false positives by construction — a pointer that does not
+ * land is a hard fact — while drift is heuristic, covers about a quarter of the corpus, and rests
+ * on a resolution that is ~85% by BASENAME, which this file's own blind-spot list says may be the
+ * wrong file. Blocking on a heuristic with a named wrong-file hazard would teach contributors to
+ * route around the checker, which costs more than the class is worth. DO NOT PROMOTE DRIFT
+ * without first raising exact-path resolution; the flag to run it is `--strict` with anchors on.
  *
  * WHY IT EXISTS.
  * `scripts/ledger.mjs` at `lint` verifies that a cited claim ID *exists*. Nothing verifies that a
@@ -744,10 +759,21 @@ if (JSON_OUT) {
     : `✓ citation check: no findings, and ${unchecked.length} locator(s) it could not check. ` +
       'This is NOT "the citations are good" — read the coverage below before believing it.';
 
+  // POSTURE IS A PROPERTY OF THE INVOCATION, NOT OF THE RESULT. This read
+  // `STRICT && findings.length ? 'STRICT — exiting 1' : 'WARN — does not block'`, so a CLEAN
+  // `--strict` run announced "WARN — does not block" — a blocking check telling its reader it
+  // cannot fail, which is the sentence this repo keeps finding under its own incidents. It went
+  // live the moment `check:citations-exist` became a step: that step is `--strict` and passes, so
+  // the false half is the half CI prints on every green run.
+  const posture = STRICT
+    ? `STRICT — a finding exits 1${findings.length ? ', and this run has one' : ''}`
+    : 'WARN — does not block';
   console.log(
-    `\n${verdict}\n  ${scanned}\n` +
-    `  Posture: ${STRICT && findings.length ? 'STRICT — exiting 1' : 'WARN — does not block'}. ` +
-    'Drift findings are heuristic; re-read before editing. This check cannot tell whether the prose ' +
+    `\n${verdict}\n  ${scanned}\n  Posture: ${posture}. ` +
+    (ANCHORS
+      ? 'Drift findings are heuristic; re-read before editing. '
+      : 'Drift was NOT checked at all here (--no-anchors) — this run is the existence class only. ') +
+    'This check cannot tell whether the prose ' +
     'is supported by the content it points at — only whether the pointer still lands.'
   );
   process.exitCode = STRICT && findings.length ? 1 : 0;
