@@ -1,0 +1,11 @@
+{
+  "subject": "a182444a8e8a438c0d985f470672f128f93e4f1887ab068f1923c2fde1902ba0",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "irreversible",
+  "tier_driver": ".github/workflows/ci.yml",
+  "verdict": "PASS",
+  "by": "builder-floor-holes (self-recorded; one author, one model family — NOT the irreversible tier being met)",
+  "run_id": null,
+  "evidence": "review round 2 fixes: P0 flush-job regression closed and mutation-proved, P2 matrix false-positive scoped, P2b enumeration reworded, both P3s closed; test:check-suite 66 pass 0 fail; npm run check 48 of 48 exit 0 316.0s; flush job prepended to the real ci.yml -> 1 finding, pristine control 0; all 8 attack shapes FLAGGED with the benign control SILENT in both cells",
+  "recorded_at": "2026-08-26T14:54:09.090Z"
+}
