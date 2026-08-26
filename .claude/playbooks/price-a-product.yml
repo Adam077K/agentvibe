@@ -2,6 +2,7 @@
 # The financial discipline itself lives in the `business` lens; this is the sequence.
 playbook: price-a-product
 summary: "Set or change a price, with the numbers sourced and the reversibility stated first"
+triggers: ["/price"]
 
 stages:
   - id: frame
@@ -10,6 +11,9 @@ stages:
     exit:
       - "criterion(decision-named-in-one-sentence)"
       - "criterion(prior-decisions-checked)"
+    dispatch:
+      - task: "Name the decision in one sentence and check it against prior locked decisions"
+        engine: framer
 
   - id: gather
     goal: "Pull the live numbers and verify every vendor cost against that vendor's own page"
@@ -27,6 +31,9 @@ stages:
     exit:
       - "criterion(three-scenarios-base-downside-upside)"
       - "criterion(reversibility-stated-before-recommendation)"
+    dispatch:
+      - task: "The pricing case: three scenarios, the recommendation, and what it would take to reverse it"
+        engine: framer
 
   - id: review
     goal: "Have the numbers and the reversibility judged by someone who did not produce them"

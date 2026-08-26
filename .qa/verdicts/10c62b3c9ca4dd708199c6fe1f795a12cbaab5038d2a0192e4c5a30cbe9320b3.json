@@ -1,0 +1,11 @@
+{
+  "subject": "10c62b3c9ca4dd708199c6fe1f795a12cbaab5038d2a0192e4c5a30cbe9320b3",
+  "base": "244e8db3a1d8103ef79bec13467d3dcb2ad44cdd",
+  "tier": "full",
+  "tier_driver": "scripts/check-gates.mjs",
+  "verdict": "PASS",
+  "by": "builder-surface-wiring",
+  "run_id": null,
+  "evidence": "npm run check 46/46 pass 0 fail; 66 constructed-failure cases; PyYAML cross-check 8 shapes (6 agree on plain scalars, 2 diverge on block scalars); break-tests: F12 defect restored -> exit 1, benign 590-char lengthening -> GREEN (F13 proof), gateRefused -> exit 1, files narrowed to one -> exit 1, command-frontmatter plant -> exit 1, every benign # shape -> green; single author, single model family",
+  "recorded_at": "2026-08-26T15:47:50.341Z"
+}

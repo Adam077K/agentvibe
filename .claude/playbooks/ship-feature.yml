@@ -6,7 +6,7 @@
 # enforces it — a stage carrying `steps:` or `how:` is refused.
 playbook: ship-feature
 summary: "Take a feature or fix from a request to merged, through the gate that cannot be overridden"
-triggers: ["/build", "/fix"]
+triggers: ["/build", "/fix", "/review", "/ship"]
 
 stages:
   - id: frame
@@ -16,6 +16,9 @@ stages:
       - "claim(kind=user-language, verified_by=source)"
       - "criterion(success-is-measurable)"
       - "criterion(prior-decisions-checked)"
+    dispatch:
+      - task: "The spec: who has the problem in their words, the options, and what done means"
+        engine: framer
 
   - id: plan
     goal: "Decompose into units that can run independently, and tier the risk before any of them start"

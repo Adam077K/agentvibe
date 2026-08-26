@@ -177,6 +177,32 @@ test('the seed playbooks actually rehouse the dispatch tables', () => {
   assert.ok(withDispatch.size >= 4, `expected several playbooks to carry dispatch, got ${withDispatch.size}`);
 });
 
+// ── The step this file shares, and why the assertion lives HERE ─────────────
+
+test('test:playbooks still runs scripts/gates.test.mjs, serially', () => {
+  // TWO COMMANDS REMOVE THE ENTIRE GATE-WIRING GUARD AND LEAVE `npm run check` AT 46 OF 46:
+  // drop `scripts/gates.test.mjs` from this step in package.json, then `npm run build:map`, which
+  // `check:map` would demand anyway. Nothing pinned the membership. A reviewer measured it by
+  // doing it — 46 of 46 over a tree with three live findings in it.
+  //
+  // THIS ASSERTION IS IN playbooks.test.mjs AND NOT IN gates.test.mjs, and that placement is the
+  // whole point: a file cannot assert its own membership in the step that runs it. Removed from
+  // the step, it does not run, so its assertion does not run either, and the check reports green
+  // by not existing. This file is the sibling in the same step, so it still runs and still fails.
+  //
+  // The step NAME lives in scripts/lib/check-suite.js, which is `irreversible` and deliberately
+  // untouched here. Which FILES the step runs lives in package.json, which is `lite` — so the
+  // cheap edit is the unguarded one, and this is the guard.
+  const pkg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'));
+  const step = pkg.scripts['test:playbooks'];
+  assert.ok(step, 'package.json has no test:playbooks step');
+  assert.match(step, /scripts\/gates\.test\.mjs/, 'the gate-wiring assertions must run in this step');
+  assert.match(step, /scripts\/playbooks\.test\.mjs/, 'and so must this file, or nothing enforces the line above');
+  // Not cosmetic: playbooks.test.mjs writes .claude/playbooks/fixture.yml into the live tree, and
+  // gates.test.mjs reads that directory. Concurrent, it threw ENOENT in 5 of 10 runs; serial, 0 of 10.
+  assert.match(step, /--test-concurrency=1/, 'removing this reintroduces a measured 50% flake');
+});
+
 test('every playbook ends in a stage that gates or reviews', () => {
   // Work that has no last check is work that ships unreviewed.
   const { parseYamlSubset } = require('./lib/claims.js');

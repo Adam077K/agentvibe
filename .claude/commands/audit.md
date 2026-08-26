@@ -1,68 +1,63 @@
-# /audit — Full Codebase Audit
-
-Map the codebase and produce a structured health report.
+# /audit — sweep the whole repository, not a diff
 
 ## Usage
+
 ```
 /audit
-/audit [focus: security | quality | architecture | all]
+/audit [subtree]        e.g. /audit scripts/   ·   /audit mission-control/
 ```
 
-## What This Does
+A subtree, not a focus keyword. This used to offer `[focus: security | quality | architecture]`
+and the body no longer describes what any of those three would do — a documented option with no
+described behaviour is one a reader will pass and then wonder about. Scope by path; the dimension
+comes from the review lens you name.
 
-### Step 1 — Codebase Mapping
-CEO dispatches code-reviewer (in mapper mode) to walk the repo and update `.claude/memory/CODEBASE-MAP.md`:
-- `architecture` focus: top-level structure, module boundaries, dependency graph
-- `quality` focus: conventions adherence, test coverage gaps, lint debt
-- `security` focus: auth boundaries, secret usage, dependency risk
-- `all` (default): all focus areas
+## This command names no playbook, and that is deliberate
 
-Output written to `.claude/memory/CODEBASE-MAP.md` (refreshes the in-repo map).
+Every other command here carries a `playbook:` in its frontmatter and stops. This one cannot,
+because there is no audit playbook and inventing one would be worse than the gap: an audit has no
+diff. The binding gate is diff-scoped from end to end — `scripts/run-gate.mjs` classifies
+*changed files*, `.claude/workflows/qa.js` reviews a *ref range*, and
+`scripts/verdict.mjs` binds a verdict to the sha256 of a *diff*. Point `/audit` at that and you
+get a verdict about nothing, or a verdict about whatever happened to be uncommitted.
 
-### Step 2 — Code Review (Quality + Tech Debt)
-Code Reviewer scans entire codebase:
-- P1 issues: broken logic, security holes, data loss risk
-- P2 issues: tech debt, duplication, missing error handling
-- P3 notes: optimization opportunities
+So `/audit` is the sweep the gate cannot do, and `/review` is the gate. Read
+[.claude/commands/review.md](review.md) if the question is "should this change merge".
 
-### Step 3 — Security Engineer (OWASP)
-Security Engineer runs OWASP audit on all source files:
-- Authentication/authorization gaps
-- Injection vulnerabilities
-- Exposed secrets or misconfigured env
-- Dependency vulnerabilities (npm audit)
+## Run the deterministic sweep first
 
-Both Step 2 and 3 run in parallel.
-
-### Step 4 — QA-Lead Synthesizes
-QA-Lead aggregates all findings into prioritized report:
+These are the checks that already exist and already have an answer. An audit that reports what
+they would have reported is an audit that burned a budget re-deriving a known fact.
 
 ```
-## Codebase Audit — [Date]
-
-### Critical (Fix Now)
-- [file:line] — [issue] — [fix]
-
-### High Priority (Fix This Sprint)
-- [file:line] — [issue]
-
-### Medium Priority (Fix Next Sprint)
-- [file]  — [issue]
-
-### Low / Notes
-- [observations]
-
-### Tech Debt Summary
-- [count] P1 issues
-- [count] P2 issues
-- [count] security findings
-
-### Recommended Next Steps
-1. [Most important action]
-2. [Second action]
+npm run check                 # the whole suite; the runner prints Tally: N of M passed
+npm run gates                 # every playbook gate resolves, every trigger reaches a command
+npm run check:registration    # dead paths and phantom agents in the governing docs
+npm run ledger:verify         # claims that would block, and claims that expired
+npm run check:map             # is .claude/memory/CODEBASE-MAP.md still true of the tree
+node scripts/check-memory-budget.mjs
 ```
 
-## Notes
-- CODEBASE-MAP.md updated with current state after audit
-- QA-Lead verdict: PASS (healthy, no critical issues) / NEEDS ATTENTION (critical issues found)
-- If Critical issues found: CEO recommends routing to `/fix` immediately
+## Then, and only then, dispatch judgement
+
+What is left after the deterministic sweep is what needs reading: whether a boundary is in the
+right place, whether a rule that passes is the rule anyone wanted. That is the `reviewer` engine
+under the dimensions in [.claude/review-lenses.yml](../review-lenses.yml), scoped to a subtree —
+one focused review per session, not the whole tree at once.
+
+`reviewer` carries no `Write` or `Edit`. An agent that can edit what it reviews will review what
+it can edit.
+
+## What an audit produces
+
+Findings, each a measured difference from a stated rule, with the file and the line. No verdict:
+a verdict belongs to a diff, and this command does not have one.
+
+> **Superseded 2026-08-26.** This file used to describe four numbered steps, dispatch three named
+> agents in parallel, and end in a PASS / NEEDS ATTENTION verdict with a report template. The
+> verdict was the defect — it wore the vocabulary of the binding gate while being computed by
+> nothing, over a subject the gate cannot take. The `CODEBASE-MAP.md` refresh it described is real
+> and is now `npm run build:map`, which regenerates the file. (`check:map` above is the *verifier*
+> — `gen-codebase-map.mjs --check`, which exits 1 on drift and refreshes nothing. This note said
+> `check:map`, so a reader replacing the deleted capability would have got a drift report instead
+> of a refresh.)

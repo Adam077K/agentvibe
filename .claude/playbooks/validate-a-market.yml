@@ -2,6 +2,7 @@
 # and .claude/agents/cco.md (customer signal).
 playbook: validate-a-market
 summary: "Decide whether a market is real before building for it, on evidence rather than enthusiasm"
+triggers: ["/validate"]
 
 stages:
   - id: frame
@@ -9,6 +10,9 @@ stages:
     lenses: [product, business]
     exit:
       - "criterion(falsifiable-conditions-stated)"
+    dispatch:
+      - task: "The entry conditions, each stated so that evidence could falsify it"
+        engine: framer
 
   - id: evidence
     goal: "Gather what customers actually say and what the market actually is"
