@@ -1131,6 +1131,111 @@ const CI_GUARD = '${{ !cancelled() }}';
 
 
 /**
+ * The four keys a step is read for, spelled once.
+ *
+ * `key in step` was the test until 2026-08-26, and it meant every field the PARSER hangs on a step
+ * — `line`, and now `unparsed` — was also a YAML key a workflow could write into. A list that says
+ * what it means costs less than the argument about whether that matters.
+ */
+const STEP_KEYS = ['name', 'run', 'uses', 'if'];
+
+/**
+ * The escapes a YAML double-quoted scalar may carry, and the characters they stand for.
+ *
+ * ENUMERATED BECAUSE THE RESIDUE FAILS CLOSED. `\x`, `\u` and `\U` take hex digits and are handled
+ * in code below; everything not in this table and not one of those three makes the scalar
+ * UNDECODABLE, and an undecodable `run:` is reported rather than scanned. That is the
+ * `$`-vocabulary rule applied one layer up, and for the same reason: a value this parser decodes
+ * WRONG is a value the scanner then reads in the wrong state.
+ *
+ * Measured against PyYAML 6.0.3 on 2026-08-26, which is the closest oracle available offline for
+ * what a workflow runner receives: `run: "npm run a\nnpm run b"` really is TWO lines, so leaving
+ * `\n` as a literal backslash-n would have turned a two-command step into a one-command one.
+ */
+const YAML_DQ_ESCAPES = {
+  '\\': '\\', '"': '"', '/': '/', ' ': ' ',
+  n: '\n', t: '\t', r: '\r', b: '\b', f: '\f', v: '\v', a: '\x07', e: '\x1b',
+  0: '\0', N: '\x85', _: '\xa0', L: '\u2028', P: '\u2029',
+};
+
+/**
+ * A YAML flow scalar as the string a workflow runner actually executes — or a refusal.
+ *
+ * ROUND 8, FINDING 4. record() stored `rawValue.trim()` with the quote characters still on it, so
+ * `run: "npm run a && npm run b"` reached shellOperators() as a string whose FIRST character opens
+ * a double-quote frame. Everything inside was then correctly read as quoted text, the `&&` was
+ * inert, and the step came back clean. Measured against `main` (7f7bddd): that workflow produced
+ * ZERO findings while the unquoted spelling of the same command produced `` ci.yml:4 carries `&&` ``.
+ *
+ * MODELLED RATHER THAN REFUSED, and this was decided for THIS construct rather than inherited: a
+ * quoted `run:` is ordinary, correct YAML that a contributor writes the first time a command
+ * contains a `:`, so refusing the shape outright would fire on correct workflows. But the
+ * modelling is bounded and says so — single quotes are exact (the only escape is `''`), double
+ * quotes are decoded from YAML_DQ_ESCAPES above, and ANY other escape, a quote that never closes,
+ * or text after the closing quote returns `ok: false`. The caller keeps the raw text and emits an
+ * unparsed-scalar finding, so the shape cannot pass in silence.
+ *
+ * A plain (unquoted) scalar is returned unchanged with `quoted: false` — this is a no-op for the
+ * 44 `run:` values ci.yml carries today, every one of which is plain.
+ */
+function decodeFlowScalar(raw) {
+  const s = String(raw);
+  const q = s[0];
+  if (q !== '"' && q !== "'") return { ok: true, quoted: false, value: s };
+
+  // WHAT MAY FOLLOW THE CLOSING QUOTE IS WHITESPACE AND A YAML COMMENT, and nothing else. Caught by
+  // attacking this function rather than by reading it: `run: "npm run a" # note` is ORDINARY, VALID
+  // YAML — PyYAML 6.0.3 reads it as `npm run a` — and the first cut of this refused it as
+  // undecodable. A guard that reports a finding against a correct workflow is the failure this file
+  // spends most of its comments avoiding. `run: "npm run a" && npm run b` is a different string and
+  // is still refused, correctly: PyYAML errors on it, so it is not a workflow that runs.
+  const closed = (i, out) =>
+    /^\s*(?:#.*)?$/.test(s.slice(i + 1))
+      ? { ok: true, quoted: true, value: out }
+      : { ok: false, quoted: true, reason: 'there is text after the closing quote' };
+
+  let out = '';
+  let i = 1;
+
+  if (q === "'") {
+    // SINGLE QUOTES ARE EXACT, and that is a property of YAML rather than a simplification: the
+    // only escape a single-quoted scalar has is `''` for one apostrophe. Measured — `'echo it''s
+    // fine'` parses to `echo it's fine`.
+    while (i < s.length) {
+      if (s[i] !== "'") { out += s[i]; i += 1; continue; }
+      if (s[i + 1] === "'") { out += "'"; i += 2; continue; }
+      return closed(i, out);
+    }
+    return { ok: false, quoted: true, reason: 'the quote is never closed' };
+  }
+
+  while (i < s.length) {
+    const c = s[i];
+    if (c === '"') return closed(i, out);
+    if (c !== '\\') { out += c; i += 1; continue; }
+
+    const e = s[i + 1];
+    if (e === undefined) return { ok: false, quoted: true, reason: 'it ends in a backslash' };
+    if (e === 'x' || e === 'u' || e === 'U') {
+      const width = e === 'x' ? 2 : e === 'u' ? 4 : 8;
+      const hex = s.slice(i + 2, i + 2 + width);
+      if (hex.length !== width || !/^[0-9a-fA-F]+$/.test(hex)) {
+        return { ok: false, quoted: true, reason: `\`\\${e}\` is not followed by ${width} hex digits` };
+      }
+      out += String.fromCodePoint(parseInt(hex, 16));
+      i += 2 + width;
+      continue;
+    }
+    if (!Object.prototype.hasOwnProperty.call(YAML_DQ_ESCAPES, e)) {
+      return { ok: false, quoted: true, reason: `the escape \`\\${e}\` is not one this parser models` };
+    }
+    out += YAML_DQ_ESCAPES[e];
+    i += 2;
+  }
+  return { ok: false, quoted: true, reason: 'the quote is never closed' };
+}
+
+/**
  * The steps of ci.yml's one job, read off the indentation.
  *
  * Zero dependencies in this repo means no YAML parser, so this is a line scanner — and it derives
@@ -1139,7 +1244,26 @@ const CI_GUARD = '${{ !cancelled() }}';
  * shape a future multi-command step would arrive in, and a scanner that skipped it would report
  * such a step as having no `run:` at all.
  *
- * Returns [{ line, name, run, uses, if }] — `null` for a key the step does not carry.
+ * IT ALSO FOLDS A PLAIN MULTI-LINE SCALAR, added 2026-08-26 as round 8 finding 3. A `run:` value
+ * continued on a more-indented next line — no `|`, no `>`, just YAML's ordinary plain-scalar
+ * folding — matched neither the key regex nor the block-scalar branch and was DROPPED. Measured
+ * against `main` (7f7bddd):
+ *
+ *     run: npm run test:foo          parseCiSteps -> run: "npm run test:foo"
+ *       && npm run malicious         ...the second line simply gone, and no finding anywhere
+ *
+ * MODELLED RATHER THAN REFUSED, decided for this construct on its own: unlike the other three this
+ * one is reachable BY ACCIDENT — a contributor reflowing a long `run:` line writes it with no
+ * adversarial intent — which puts its likelihood above the rest and makes a refusal a rule that
+ * fires on a correct, ordinary edit. The fold is exact for what YAML does here, checked against
+ * PyYAML 6.0.3 on 2026-08-26: lines join with ONE space, n blank lines between them join as n
+ * newlines, a continuation at the SAME indent as the key is a YAML error rather than a fold, and a
+ * more-indented line after a key with an EMPTY value (`with:`) is a nested mapping and not a
+ * continuation at all — which is why the fold is armed only by a key this parser records a plain
+ * scalar into.
+ *
+ * Returns [{ line, name, run, uses, if, unparsed }] — `null` for a key the step does not carry, and
+ * `unparsed` listing the quoted scalars decodeFlowScalar() refused, which ciChainFindings() reports.
  */
 function parseCiSteps(workflow) {
   const lines = workflow.split('\n');
@@ -1148,23 +1272,44 @@ function parseCiSteps(workflow) {
   let itemIndent = null;
   let current = null;
   let block = null; // { key, indent, parts[] } while inside a `key: |` scalar
+  let fold = null; // { key, keyIndent } while a PLAIN scalar may still be continued
+  let blanks = 0; // blank lines since `fold` was set — YAML folds each of them to a newline
+  const blockKeys = new Map(); // step -> Set<key>: block bodies are not flow scalars and are not decoded
 
   const indentOf = (line) => /^ */.exec(line)[0].length;
 
   const record = (step, text, keyIndent) => {
+    // NO `fold = null` HERE, and its absence is measured rather than assumed. The first draft reset
+    // the fold at the top of this function AND in the loop below, on the reasoning that a key line
+    // ends the previous key's fold. Both are true and they are REDUNDANT: mutating either one alone
+    // killed no test, and mutating both together failed with `a with: body was folded into the
+    // uses: above it`. Two guards for one rule means neither can be shown to work, so the general
+    // one — the loop's, which also covers lines this function never sees — is the one that stayed.
     const m = /^([\w-]+):\s*(.*)$/.exec(text);
     if (!m) return;
     const [, key, rawValue] = m;
-    if (!(key in step)) return; // `with:`, `env:` and friends are not what this asserts on
-    if (/^[|>][-+\d]*$/.test(rawValue)) {
+    // `with:`, `env:` and friends are not what this asserts on. Returning BEFORE the fold is armed
+    // is tidiness rather than correctness, and it is labelled that way because a mutation proved
+    // it: arming the fold here too writes into `step.with` / `step.env`, which nothing reads, and
+    // changed nothing on the public surface across 45 inputs. What DOES keep a `with:` body out of
+    // the `uses:` above it is the fold reset in the loop, and that one fails a test when removed.
+    if (!STEP_KEYS.includes(key)) return;
+    // A BLOCK INDICATOR MAY CARRY A TRAILING YAML COMMENT — `run: | # note` is valid, and PyYAML
+    // reads it as a block scalar. Without the comment arm this regex missed it, the value was read
+    // as the plain scalar `| # note`, and the fold below then swallowed the block's whole body into
+    // it. Found by attacking the fold, not by reading the regex.
+    if (/^[|>][-+\d]*(?:\s+#.*)?$/.test(rawValue)) {
       // `keyIndent` is the column of the KEY, and the block ends at the first non-blank line that
       // is not indented past it. Anchoring to the first CONTENT line instead was a defect: see the
       // loop below.
       block = { key, keyIndent, indent: null, parts: [] };
       step[key] = '';
+      if (!blockKeys.has(step)) blockKeys.set(step, new Set());
+      blockKeys.get(step).add(key);
       return;
     }
     step[key] = rawValue.trim();
+    fold = { key, keyIndent };
   };
 
   for (let i = 0; i < lines.length; i += 1) {
@@ -1194,7 +1339,17 @@ function parseCiSteps(workflow) {
       block = null;
     }
 
-    if (!line.trim() || /^\s*#/.test(line)) continue;
+    // A BLANK LINE DOES NOT END A PLAIN SCALAR — it folds to a newline inside it. Measured with
+    // PyYAML: `run: npm run a` / blank / `  ; npm run b` is the ONE string `npm run a\n; npm run b`,
+    // which the shell runs as two commands. Counted rather than emitted, because a blank line
+    // before the NEXT step is far commoner and must leave no trace on the previous value.
+    if (!line.trim()) {
+      if (fold) blanks += 1;
+      continue;
+    }
+    // A YAML comment TERMINATES a plain scalar — measured, a continuation line after one is a
+    // parse error, not a fold — so it closes the fold rather than being folded into it.
+    if (/^\s*#/.test(line)) { fold = null; blanks = 0; continue; }
 
     if (stepsIndent === null) {
       const m = /^( *)steps:\s*$/.exec(line);
@@ -1205,15 +1360,57 @@ function parseCiSteps(workflow) {
     const indent = indentOf(line);
     if (indent <= stepsIndent) break; // out of the steps block
 
+    // ── THE PLAIN-SCALAR CONTINUATION. Armed only by a key record() stored a plain scalar into, so
+    // a nested mapping under `with:` still falls through and is dropped as it always was. The
+    // guard is `indent > fold.keyIndent` and not `>= `: measured, a continuation at the SAME column
+    // as its key is a YAML ERROR, so a parser that folded it would be reading a workflow that
+    // cannot run. An item line cannot reach here either — `- ` sits at itemIndent, and every key
+    // is at itemIndent + 2 or deeper.
+    if (current && fold && indent > fold.keyIndent) {
+      const joiner = current[fold.key] === '' ? '' : blanks > 0 ? '\n'.repeat(blanks) : ' ';
+      current[fold.key] += joiner + line.trim();
+      blanks = 0;
+      continue;
+    }
+    // ANY line that is not a continuation ENDS the fold — a key at the step's own indent, the `- `
+    // of the next item, or a nested mapping's first line. `with:` is the case that matters and it
+    // is in the real ci.yml three times: its body is more indented than the `uses:` above it, and
+    // folding that in would invent a value YAML never produced. This is the ONLY place the fold is
+    // closed; see record() for why there is not a second one.
+    fold = null;
+    blanks = 0;
+
     if (/^ *- /.test(line) && (itemIndent === null || indent === itemIndent)) {
       itemIndent = indent;
-      current = { line: i + 1, name: null, run: null, uses: null, if: null };
+      current = { line: i + 1, name: null, run: null, uses: null, if: null, unparsed: [] };
       steps.push(current);
       record(current, line.slice(indent + 2), indent + 2);
       continue;
     }
 
     if (current && indent === itemIndent + 2) record(current, line.trim(), indent);
+  }
+
+  // ── THE FLOW-SCALAR DECODE, LAST, and the ordering is load-bearing: a quoted scalar can itself
+  // span lines (`run: "npm run a ;` / `  npm run b"` is one string to YAML), so the fold has to
+  // finish before there is anything to unquote. Block bodies are skipped — they are not flow
+  // scalars, and a block whose first line begins with a quote would otherwise be mangled.
+  for (const step of steps) {
+    const blocks = blockKeys.get(step);
+    for (const key of STEP_KEYS) {
+      if (step[key] === null || (blocks && blocks.has(key))) continue;
+      const decoded = decodeFlowScalar(step[key]);
+      if (decoded.ok) {
+        step[key] = decoded.value;
+        continue;
+      }
+      // FAIL CLOSED: the raw text stays on the step so the other checks still see something, and
+      // the refusal is reported. Silence here is what finding 4 was.
+      step.unparsed.push(
+        `has a quoted \`${key}:\` scalar this parser cannot decode — ${decoded.reason}. It is not ` +
+          `scanned for shell operators, so it cannot be certified as one command: ${step[key]}`
+      );
+    }
   }
 
   return steps;
@@ -1271,7 +1468,19 @@ const CI_CHAINS_ALLOWED = {
  */
 function ciChainFindings(workflow, allowed = CI_CHAINS_ALLOWED) {
   const findings = [];
-  const steps = parseCiSteps(workflow).filter((s) => s.run !== null);
+  const parsed = parseCiSteps(workflow);
+
+  // A SCALAR THE PARSER COULD NOT DECODE IS ITS OWN KIND OF FINDING, reported over EVERY step
+  // rather than only the ones carrying a `run:`. It is not an operator and it is not an unmodelled
+  // shell construct — it is the layer below both saying it could not read the value at all, and
+  // the remedy is different again: rewrite the scalar in a form this parser decodes, or unquote it.
+  // There is no allowlist entry for it on purpose. CI_CHAINS_ALLOWED is keyed by the EXACT run
+  // string, and a string this parser cannot read is a string it cannot key on either.
+  for (const step of parsed) {
+    for (const u of step.unparsed) findings.push(`ci.yml:${step.line} ${u}`);
+  }
+
+  const steps = parsed.filter((s) => s.run !== null);
   const exempt = (run) => Object.prototype.hasOwnProperty.call(allowed, run);
 
   for (const step of steps) {
@@ -1342,6 +1551,9 @@ module.exports = {
   hasSubstantiveReason,
   CI_GUARD,
   CI_CHAINS_ALLOWED,
+  STEP_KEYS,
+  YAML_DQ_ESCAPES,
+  decodeFlowScalar,
   parseCiSteps,
   ciRunCommands,
   ciChainFindings,
