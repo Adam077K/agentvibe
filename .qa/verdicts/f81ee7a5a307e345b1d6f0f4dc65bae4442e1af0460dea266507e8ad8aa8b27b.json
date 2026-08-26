@@ -1,0 +1,11 @@
+{
+  "subject": "f81ee7a5a307e345b1d6f0f4dc65bae4442e1af0460dea266507e8ad8aa8b27b",
+  "base": "244e8db3a1d8103ef79bec13467d3dcb2ad44cdd",
+  "tier": "irreversible",
+  "tier_driver": ".github/workflows/ci.yml",
+  "verdict": "PASS",
+  "by": "builder-floor-holes (self-recorded; one author, one model family — NOT the irreversible tier being met)",
+  "run_id": null,
+  "evidence": "test:check-suite 63 pass/0 fail; npm run check 46 of 48 at base 244e8db, 2 failures are documented figures in docs/STATUS.md owned by another lane, and 48 of 48 exit 0 with those 8 sites patched-and-reverted; 7 attack fixtures SILENT on origin/main and FLAGGED here, both controls unchanged in both cells; 5 mutation proofs each failing only its own case; check:citations-exist exit 1 on a dead locator and exit 0 on a live one",
+  "recorded_at": "2026-08-26T13:38:08.293Z"
+}
