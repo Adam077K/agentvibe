@@ -656,9 +656,26 @@ function cmdApply() {
     // they stay behind with the stub. Counting them as residue is what makes the conservation
     // arithmetic below close to zero instead of to "8, which is one newline per entry, probably".
     const trailing = entry.text.slice(trimmed.length);
-    const at = newDecisions.indexOf(entry.text);
-    if (at === -1) {
-      process.stderr.write(`evict-memory apply: could not locate "${entry.heading}" for replacement. Nothing written.\n`);
+    // ── BY OFFSET, NEVER BY SEARCH ──────────────────────────────────────────────────────────
+    //
+    // This was `newDecisions.indexOf(entry.text)`, a document-wide substring search, and it became
+    // WRONG the moment the fence mask let one entry quote another verbatim inside a fence — which
+    // is a thing entries in this file legitimately do. `indexOf` takes the first occurrence, so
+    // the stub was spliced into the QUOTING entry's fenced example: the evicted entry survived
+    // intact in DECISIONS.md, its body was also appended to the archive (live content duplicated),
+    // a trailing blank line was eaten, and ALL FIVE conservation conditions passed — the spliced
+    // region is the same length wherever it lands, the body really is in the volume, and the
+    // heading really is still in DECISIONS.md. The report said "conservation closes to zero" over
+    // an eviction that had achieved none of it. No extra condition fixes a search that can match
+    // the wrong copy; the parser already knows where each entry begins, so use that.
+    //
+    // The offsets stay valid because `ordered` splices from the BOTTOM UP.
+    const at = entry.startOffset;
+    if (newDecisions.slice(at, at + entry.text.length) !== entry.text) {
+      process.stderr.write(
+        `evict-memory apply: "${entry.heading}" is not at the offset the parser recorded (${at}). Nothing written.\n` +
+        '  DECISIONS.md changed under the tool, or two selected entries overlap. Re-run `plan`.\n'
+      );
       process.exitCode = 1;
       return;
     }

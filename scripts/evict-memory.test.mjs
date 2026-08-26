@@ -1259,6 +1259,86 @@ test('P1-D: an ordinary ```js opener is unaffected', () => {
   assert.equal(plan(root).parse.ambiguous, null);
 });
 
+// ── P1-E · the splice must land on the entry, not on a verbatim quote of it ─────────────────
+
+const B_BODY = [
+  '## 2026-07-22 — Second decision, quoted verbatim by the first one above it',
+  `**Context:** ${REALISTIC_BODY}`,
+  '**Decision:** Something was chosen.',
+  '**Reversibility:** reversible',
+  '**Affects:** `docs/b.md`',
+];
+
+/**
+ * One entry quoting another VERBATIM inside a fence. This became reachable only because the
+ * round-3 fence mask made such a quote legal — before it, the quoted heading tore the file in
+ * half and the parse was ambiguous, so `apply` refused before reaching the splice.
+ */
+const QUOTING = [
+  '## 2026-07-21 — First decision, which quotes the second one verbatim',
+  `**Context:** ${REALISTIC_BODY}`,
+  '**Decision:** Something was chosen.',
+  '**Reversibility:** reversible',
+  '**Affects:** `docs/a.md`',
+  '',
+  'For reference, the entry we are reacting to reads exactly:',
+  '',
+  '```markdown',
+  ...B_BODY,
+  '```',
+  '',
+  ...B_BODY,
+  '',
+].join('\n');
+
+const QUOTED_MARKER = '**Decision:** Something was chosen.\n**Reversibility:** reversible\n**Affects:** `docs/b.md`';
+
+test('P1-E: an entry quoted verbatim elsewhere is evicted from its OWN position', () => {
+  // `newDecisions.indexOf(entry.text)` is a document-wide search and takes the FIRST match. At
+  // the round-3 HEAD the stub was spliced into the quoting entry's fenced example: the evicted
+  // entry survived intact in DECISIONS.md, its body was ALSO appended to the archive, a trailing
+  // blank line was eaten — and all five conservation conditions passed, because the spliced
+  // region is the same length wherever it lands. The report said "conservation closes to zero".
+  const root = fixture({ entries: QUOTING, files: { 'docs/a.md': 'x\n', 'docs/b.md': 'x\n' } });
+  const r = apply(root, ['--only', '2026-07-22']);
+  assert.equal(r.code, 0, r.err);
+  const after = readDecisions(root);
+
+  const tail = after.slice(after.lastIndexOf('## 2026-07-22'));
+  assert.match(tail, /^## 2026-07-22 [^\n]*\n\*Archived to `DECISIONS_ARCHIVE\.md`/,
+    'the real entry, at its own offset, must be the one replaced by the stub');
+  assert.equal(after.split(QUOTED_MARKER).length - 1, 1,
+    'exactly one copy of the body may remain, and it is the quote inside the OTHER entry');
+  assert.match(after, /```markdown\n## 2026-07-22 [^\n]*\n\*\*Context:\*\*/,
+    "the quoting entry's fenced example must be untouched — a stub inside it is the defect");
+});
+
+test('P1-E: the quoting entry is not disturbed, and the archive holds exactly one body', () => {
+  const root = fixture({ entries: QUOTING, files: { 'docs/a.md': 'x\n', 'docs/b.md': 'x\n' } });
+  assert.equal(apply(root, ['--only', '2026-07-22']).code, 0);
+  const after = readDecisions(root);
+  const vol = fs.readFileSync(path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE.md'), 'utf8');
+  assert.ok(after.includes('## 2026-07-21 — First decision, which quotes the second one verbatim'));
+  assert.equal(vol.split(QUOTED_MARKER).length - 1, 1, 'the archive must hold one copy, not zero and not two');
+  assert.equal(plan(root).entries.length, 2, 'the file must still parse as two entries afterwards');
+});
+
+test('P1-E: the recorded offsets are exact, for LF and for CRLF', () => {
+  // The splice is only as good as the offsets. `text.slice(startOffset, endOffset)` must BE the
+  // entry text, or the guard that replaced `indexOf` refuses every apply.
+  const { parseDecisionEntries } = createRequire(import.meta.url)('./lib/memory-entries.js');
+  for (const eol of ['\n', '\r\n']) {
+    const doc = ['# Decisions', '', '## 2026-07-23 — One', '**Reversibility:** reversible', '**Affects:** a/b.ts', '',
+      '## 2026-07-24 — Two', '**Reversibility:** reversible', '**Affects:** c/d.ts', ''].join(eol);
+    const entries = parseDecisionEntries(doc);
+    assert.equal(entries.length, 2, JSON.stringify(eol));
+    for (const e of entries) {
+      assert.equal(doc.slice(e.startOffset, e.endOffset), e.text,
+        `offsets must be exact for ${JSON.stringify(eol)} at ${e.date}`);
+    }
+  }
+});
+
 test('P1-E: a TWO-entry batch splices both at their own offsets', () => {
   // Offsets are only valid while nothing below them has moved, which is why `ordered` splices
   // bottom-up. One batch, two entries, and the first must not be replaced using an offset the

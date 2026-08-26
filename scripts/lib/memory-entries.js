@@ -211,6 +211,15 @@ function parseDecisionEntries(text) {
     if (!inFence[i] && ENTRY_HEADING.test(line)) starts.push(i);
   });
 
+  // Character offsets into `text`, so a writer can splice an entry BY POSITION. The alternative
+  // — searching the document for the entry's own text — takes the FIRST occurrence, and once the
+  // fence mask lets one entry quote another verbatim there can be two. Measured: the stub landed
+  // inside the quoting entry's fenced example, the evicted entry survived intact in DECISIONS.md
+  // while its body was ALSO written to the archive, and every conservation condition passed,
+  // because the spliced region is the same length wherever it lands.
+  const lineOffsets = new Array(lines.length);
+  for (let i = 0, off = 0; i < lines.length; i++) { lineOffsets[i] = off; off += lines[i].length + 1; }
+
   const entries = starts.map((start, k) => {
     const end = k + 1 < starts.length ? starts[k + 1] : lines.length;
     const body = lines.slice(start, end);
@@ -225,6 +234,10 @@ function parseDecisionEntries(text) {
       heading: lines[start],
       startLine: start + 1, // 1-based, to match every other locator in this repo
       endLine: end,
+      // 0-based, half-open: `text.slice(startOffset, endOffset) === entryText` — for LF and for
+      // CRLF alike, because every slice here is taken from the ORIGINAL lines, never from `scan`.
+      startOffset: lineOffsets[start],
+      endOffset: lineOffsets[start] + entryText.length,
       text: entryText,
       bytes: Buffer.byteLength(entryText, 'utf8'),
       reversibility: rev.value,
