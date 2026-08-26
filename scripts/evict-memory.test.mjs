@@ -888,17 +888,32 @@ test('P3: …and a BUG in that same re-read escapes as itself, not as a verifica
 // A shared helper concentrates the failure as well as the handling. That is why the helper needs
 // the scrutiny its call sites no longer need — and why this is a table, not one case.
 
+// ENUMERATED BY GREP, not by memory — `grep -n 'isFsError' scripts/evict-memory.mjs` gives six
+// guards, and the first version of this table pinned the three I happened to be thinking about.
+// `volumes`' readdir and `conservationIssues`' read were correct and defended by nothing, which is
+// this delta's own defect class appearing inside the delta that closed it. The countermeasure is
+// the enumeration, not the intent: list the sites, then pin each one.
+//
+// Four are reachable through the CLI and are the table below. `conservationIssues` and
+// `commitWrite` sit behind `io` seams and have their own cases, marked as such.
 const NARROW_CATCH_SITES = [
-  ['readVolume', 'function readVolume(abs, name, io = fs) {\n  try {',
-    'function readVolume(abs, name, io = fs) {\n  try {\n    null.boom;', 'plan'],
-  ['holdsVolumeContent', '    return fs.statSync(abs).isFile();',
-    '    null.boom;\n    return fs.statSync(abs).isFile();', 'plan'],
-  ['pathOccupant', '    const st = fs.lstatSync(abs);',
-    '    null.boom;\n    const st = fs.lstatSync(abs);', 'apply'],
+  ["a bug inside readVolume's try", 'function readVolume(abs, name, io = fs) {\n  try {',
+    'function readVolume(abs, name, io = fs) {\n  try {\n    null.boom;', 'plan', /Cannot read properties of null/],
+  ["a bug inside holdsVolumeContent's try", '    return fs.statSync(abs).isFile();',
+    '    null.boom;\n    return fs.statSync(abs).isFile();', 'plan', /Cannot read properties of null/],
+  ["a bug inside pathOccupant's try", '    const st = fs.lstatSync(abs);',
+    '    null.boom;\n    const st = fs.lstatSync(abs);', 'apply', /Cannot read properties of null/],
+  ["a bug inside volumes' readdir", '  try { names = fs.readdirSync(dir); }',
+    '  try { null.boom; names = fs.readdirSync(dir); }', 'plan', /Cannot read properties of null/],
+  // The BOUND on the widening below: a bug that DOES carry a code must still be refused entry.
+  // `ERR_INVALID_ARG_TYPE` is what a bad argument produces, and it is exactly what an
+  // unconditional catch used to render as "cannot read (ERR_INVALID_ARG_TYPE)".
+  ['a CODED argument bug (ERR_INVALID_ARG_TYPE), which must not pass as a read failure', "        bytes: Buffer.byteLength(readVolume(abs, v.name), 'utf8'),",
+    "        bytes: Buffer.byteLength(readVolume(undefined, v.name), 'utf8'),", 'plan', /ERR_INVALID_ARG_TYPE/],
 ];
 
-for (const [label, from, to, command] of NARROW_CATCH_SITES) {
-  test(`P3: a programming bug inside ${label}'s try reaches the operator, undisguised`, () => {
+for (const [label, from, to, command, expected] of NARROW_CATCH_SITES) {
+  test(`P3: ${label} — the real error reaches the operator, undisguised`, () => {
     const mutant = cliCopy([[from, to]]);
     const { root } = rotatingFixture('2026-06-25');
     const argv = command === 'apply'
@@ -908,13 +923,61 @@ for (const [label, from, to, command] of NARROW_CATCH_SITES) {
     // The same three properties the dispatcher's pin asserts, because exit code alone would miss
     // the shape that matters: a non-zero exit carrying the WRONG explanation.
     assert.notEqual(r.code, 0, `a crashed ${command} must not report success:\n${r.out}${r.err}`);
-    assert.match(r.err, /Cannot read properties of null/, 'the real error must reach the operator');
+    assert.match(r.err, expected, 'the real error must reach the operator');
     assert.ok(!r.err.includes('REFUSED —'),
       "a bug must not wear one of this tool's deliberate refusals");
     assert.ok(!r.err.includes('(undefined)'),
       'a refusal that cannot name what it refused is not a refusal — that is the tell');
   });
 }
+
+test("P3: a bug inside conservationIssues' destination read escapes as itself", () => {
+  // The fifth guard. Behind an `io` seam, so the CLI table cannot reach it — and it was one of the
+  // two that widening left the suite green on.
+  const buggy = { readFileSync: () => { throw new TypeError('Cannot read properties of null (reading "boom")'); } };
+  const e = caught(() => conservationIssues(conservationBase({ io: buggy })));
+  assert.equal(e.name, 'TypeError', `a bug must escape as itself, got ${e.name}: ${e.message}`);
+  assert.match(e.message, /Cannot read properties of null/);
+});
+
+test("P3: …and a real read failure there is still reported as a conservation issue, not a crash", () => {
+  // The control. Without it the case above is satisfied by a guard that rethrows everything.
+  const denied = Object.assign(new Error('EACCES: permission denied'),
+    { code: 'EACCES', errno: -13, syscall: 'open' });
+  const issues = conservationIssues(conservationBase({ io: { readFileSync: () => { throw denied; } } }));
+  assert.ok(issues.some((i) => i.includes('prior content could not be established')), JSON.stringify(issues));
+});
+
+// ── P3 · the predicate must accept a read that failed WITHOUT the kernel ─────────────────────
+//
+// `isFsError` was purely structural — syscall + errno — and that forgot the class where the read
+// genuinely failed and no syscall did: `readFileSync(…, 'utf8')` over a file larger than
+// MAX_STRING_LENGTH throws `ERR_STRING_TOO_LONG` with neither field. A WORKING NAMED REFUSAL
+// became a raw stack trace, which is this delta's own failure mode reached from the other side.
+//
+// Structural is not strictly better than enumerated. It forgets differently.
+
+test('P3: a volume too large to read as a string refuses by name, not by stack trace', (t) => {
+  const { root, dir } = rotatingFixture('2026-06-30');
+  const vol = path.join(dir, 'DECISIONS_ARCHIVE.md');
+  const tooBig = createRequire(import.meta.url)('node:buffer').constants.MAX_STRING_LENGTH + 64 * 1024 * 1024;
+  try {
+    execFileSync('truncate', ['-s', String(tooBig), vol], { stdio: 'ignore' });
+  } catch {
+    t.skip('`truncate` is unavailable here, so an oversized volume cannot be staged');
+    return;
+  }
+  // SPARSE, or this test writes hundreds of megabytes on a CI runner. Probed, not assumed.
+  const st = fs.statSync(vol);
+  if (st.blocks * 512 > 16 * 1024 * 1024) {
+    t.skip(`this filesystem did not allocate the file sparsely (${st.blocks * 512} bytes on disk); refusing to spend that in a test`);
+    return;
+  }
+  const r = run(EVICT, ['plan', '--root', root, '--json']);
+  assert.equal(r.code, 1, `expected a refusal, got ${r.code}`);
+  assert.match(r.err, /is a volume this tool cannot read \(ERR_STRING_TOO_LONG\)/, `no named refusal:\n${r.err.slice(0, 400)}`);
+  assert.ok(!r.err.includes('node:fs:'), `a raw stack trace reached the operator:\n${r.err.slice(0, 400)}`);
+});
 
 test('P1-2: volume 1000 keeps being recognised — padStart(3) emits four digits', () => {
   const root = fixture({

@@ -201,14 +201,50 @@ function decisionsPath(root) { return path.join(root, ...MEMORY_DIR, 'DECISIONS.
  * genuine failure says EACCES / EISDIR / ENOENT. A refusal that cannot name what it refused is
  * not a refusal. The last two are worse than the first: they are fail-OPEN and silent.
  *
- * Not an allowlist of codes — a list is a thing to forget an entry from. Node's fs errors carry
- * `syscall` and a numeric `errno`; a `TypeError` and an `ERR_INVALID_ARG_TYPE` carry neither.
+ * ── STRUCTURAL IS NOT STRICTLY BETTER THAN ENUMERATED. IT FORGETS DIFFERENTLY ───────────────
+ *
+ * The first version was purely structural — `syscall` and a numeric `errno` — and was defended
+ * here with "a list is a thing to forget an entry from". That sentence is true and it was not the
+ * whole truth: THE STRUCTURAL PREDICATE FORGOT A CLASS TOO, and it is the class where the read
+ * genuinely failed and THE KERNEL WAS NEVER INVOLVED, so there is no syscall to be structural
+ * about. Measured 2026-08-26 against a 600MB sparse file (`truncate -s 600M`, MAX_STRING_LENGTH
+ * here is 536,870,888):
+ *
+ *   readFileSync(…, 'utf8')  ->  Error { code: 'ERR_STRING_TOO_LONG' }, no syscall, no errno
+ *   4aa685d  "REFUSED — … cannot read (ERR_STRING_TOO_LONG)"   a working named refusal
+ *   44560e1  node:fs:440 … raw crash                           the regression, mine
+ *
+ * The only case in this delta that got worse, and it is the failure mode the delta exists to
+ * prevent, reached from the opposite side. So the predicate is BOTH: structural for what the
+ * kernel refused, and an explicit list for what Node itself refused. The list is honest about
+ * being a list.
+ *
+ * ── WHAT THE LIST MAY AND MAY NOT CONTAIN ───────────────────────────────────────────────────
+ *
+ * Only codes that CANNOT ARISE WITHOUT AN ACTUAL READ ATTEMPT. Both below are thrown by
+ * `readFileSync`'s own buffer-to-string path after the bytes are in hand. `ERR_INVALID_ARG_TYPE`
+ * is deliberately NOT here — it is what a bad argument produces, which is a bug in this file, and
+ * it is exactly what an unconditional catch used to dress up as a refusal.
+ *
+ * Every `try` guarded by this predicate contains nothing but `stat`/`lstat`/`readdir`/`readFile`,
+ * so neither code can be reached from anything but a read. That is what bounds the widening.
+ *
+ * `ERR_STRING_TOO_LONG` is MEASURED above. `ERR_FS_FILE_TOO_LARGE` is included from Node's
+ * documented `readFileSync` behaviour and is NOT reachable on this build — `buffer.constants
+ * .MAX_LENGTH` is 9,007,199,254,740,991 here — so it is listed on reading, not on evidence, and
+ * this sentence is how you know which is which.
  *
  * A SHARED HELPER CONCENTRATES THE FAILURE AS WELL AS THE HANDLING. That is not an argument
  * against the funnel — it is why the funnel deserves the scrutiny its call sites no longer need.
  */
+const NODE_READ_FAILURES = new Set(['ERR_STRING_TOO_LONG', 'ERR_FS_FILE_TOO_LARGE']);
+
 function isFsError(e) {
-  return Boolean(e) && typeof e.code === 'string' && typeof e.syscall === 'string' && typeof e.errno === 'number';
+  if (!e || typeof e.code !== 'string') return false;
+  // The kernel refused: a real syscall came back with a real errno.
+  if (typeof e.syscall === 'string' && typeof e.errno === 'number') return true;
+  // Node refused, after the read: no syscall failed, so there is nothing structural to test.
+  return NODE_READ_FAILURES.has(e.code);
 }
 
 /**
