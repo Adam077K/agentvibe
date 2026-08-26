@@ -114,6 +114,7 @@ const ARCHIVE_VOLUME_RE = /^DECISIONS_ARCHIVE(?:[_-].*)?\.md$/i;
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 const failures = [];
+const fileProblems = Object.create(null); // abs path -> why it could not be read
 const fail = (check, msg) => failures.push(`[${check}] ${msg}`);
 
 /**
@@ -152,10 +153,10 @@ function ambiguityOf(text) {
 // ── check DECISIONS.md ───────────────────────────────────────────────────────
 const decisionsPath = path.join(ROOT, '.claude', 'memory', 'DECISIONS.md');
 
-if (!fs.existsSync(decisionsPath)) {
-  fail('missing-file', `${decisionsPath} does not exist. Create it or point --root at the repo root.`);
-} else {
-  const text = fs.readFileSync(decisionsPath, 'utf8');
+const decisionsText = loadMemoryFile(decisionsPath, { required: true });
+
+if (decisionsText !== null) {
+  const text = decisionsText;
   const bytes = Buffer.byteLength(text, 'utf8');
   const entries = countDecisionEntries(text);
   const ambiguous = ambiguityOf(text);
@@ -202,10 +203,10 @@ if (!fs.existsSync(decisionsPath)) {
 // ── check LONG-TERM.md ───────────────────────────────────────────────────────
 const longTermPath = path.join(ROOT, '.claude', 'memory', 'LONG-TERM.md');
 
-if (!fs.existsSync(longTermPath)) {
-  fail('missing-file', `${longTermPath} does not exist. Create it or point --root at the repo root.`);
-} else {
-  const text = fs.readFileSync(longTermPath, 'utf8');
+const longTermText = loadMemoryFile(longTermPath, { required: true });
+
+if (longTermText !== null) {
+  const text = longTermText;
   const lines = text.split('\n').length;
 
   if (lines > LONG_TERM_LINE_CAP) {
@@ -256,7 +257,7 @@ const memoryDir = path.join(ROOT, '.claude', 'memory');
  * archive volume beyond the cap according to how somebody named a directory — the unchecked-volume
  * state this whole section exists to end.
  */
-function volumeKind(abs) {
+function entryKind(abs) {
   let st;
   try {
     st = fs.statSync(abs); // RESOLVES symlinks — see above; lstatSync would be wrong here
@@ -272,6 +273,49 @@ function volumeKind(abs) {
   return { ok: false, kind: 'not a regular file' };
 }
 
+/**
+ * ── THE SAME DEFECT AT THE FIXED PATHS, WHICH THE VOLUME SCAN DOES NOT REACH ────────────────
+ *
+ * `archiveVolumes()` above guards the entries it DISCOVERS. `DECISIONS.md` and `LONG-TERM.md` are
+ * not discovered — they are read from a known path, and each was guarded by `existsSync` and then
+ * handed to `readFileSync`. That pair is safe for a regular file, safe for a symlink to one, and
+ * safe for a DANGLING symlink: `existsSync` follows links, so a broken one reads as absent and the
+ * `missing-file` refusal already covers it. It is not safe for anything else. Measured 2026-08-26
+ * at `.claude/memory/DECISIONS.md`, one bad entry per constructed tree:
+ *
+ *   a DIRECTORY at that path → EISDIR, unhandled, raw stack trace, exit 1
+ *   a FIFO at that path      → NEVER RETURNS. Killed by an 8s cap at 8,016 ms, exit 142.
+ *
+ * Same class as the scan, different site, and neither guard reaches the other's paths.
+ *
+ * @param {string} abs
+ * @param {{required: boolean}} o `required` files fail when absent.
+ * @returns {string|null} contents, or null when there is nothing to measure
+ */
+function loadMemoryFile(abs, { required }) {
+  if (!fs.existsSync(abs)) {
+    // Follows symlinks, so a dangling link lands here rather than below — deliberately unchanged.
+    if (required) {
+      fail('missing-file', `${abs} does not exist. Create it or point --root at the repo root.`);
+    }
+    // Absent is deliberately NOT recorded as a `problem`: for a required file the failure above
+    // already says so, and `problem` means "present, and nothing could be read from it".
+    return null;
+  }
+  const k = entryKind(abs);
+  if (!k.ok) {
+    fail(
+      'memory-file-not-a-file',
+      `${abs} exists but is ${k.kind}. A memory file must be a regular file (a symlink to one is ` +
+        `fine — it is resolved). Nothing can be measured here: replace it with the real file, or ` +
+        `move whatever is at that path out of the way.`
+    );
+    fileProblems[abs] = k.kind;
+    return null;
+  }
+  return fs.readFileSync(abs, 'utf8');
+}
+
 /** @returns {Array<{name: string, bytes: number|null, problem: string|null}>} in name order. */
 function archiveVolumes() {
   let names;
@@ -281,7 +325,7 @@ function archiveVolumes() {
     .sort()
     .map((n) => {
       const abs = path.join(memoryDir, n);
-      const k = volumeKind(abs);
+      const k = entryKind(abs);
       if (!k.ok) return { name: n, bytes: null, problem: k.kind };
       return {
         name: n,
@@ -327,17 +371,23 @@ for (const vol of volumes) {
 // is the defect, and `failures` is unbounded. See check-dispatch-agenttype.mjs for the
 // measurement and for why fs.writeSync is not the fix.
 if (JSON_OUT) {
-  const decisionsText = fs.existsSync(decisionsPath) ? fs.readFileSync(decisionsPath, 'utf8') : '';
-  const longTermText = fs.existsSync(longTermPath) ? fs.readFileSync(longTermPath, 'utf8') : '';
+  // Reuse what the checks above already loaded. This block used to re-read both paths with the
+  // same unguarded `existsSync ? readFileSync : ''` pair — a second copy of the defect, on the
+  // SAME paths, reached whenever --json was passed. The archive is not re-read here either: it is
+  // discovered by `archiveVolumes()` and reported from `volumes` below.
+  const dText = decisionsText ?? '';
+  const ltText = longTermText ?? '';
+  const problemOf = (abs) => fileProblems[abs] ?? null;
   console.log(
     JSON.stringify({
       root: ROOT,
       decisions: {
-        entries: countDecisionEntries(decisionsText),
-        parse_ambiguous: ambiguityOf(decisionsText),
-        bytes: Buffer.byteLength(decisionsText, 'utf8'),
+        entries: countDecisionEntries(dText),
+        parse_ambiguous: ambiguityOf(dText),
+        bytes: Buffer.byteLength(dText, 'utf8'),
         entry_cap: DECISIONS_ENTRY_CAP,
         byte_cap: DECISIONS_BYTE_CAP,
+        problem: problemOf(decisionsPath),
       },
       // Every volume, each with its own cap. `decisions_archive` remains as the volume-1 view so
       // an existing consumer of this JSON keeps working; it is the first element of the list, not
@@ -351,8 +401,9 @@ if (JSON_OUT) {
         name: v.name, bytes: v.bytes, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP, problem: v.problem,
       })),
       long_term: {
-        lines: longTermText.split('\n').length,
+        lines: ltText.split('\n').length,
         line_cap: LONG_TERM_LINE_CAP,
+        problem: problemOf(longTermPath),
       },
       failures,
     }, null, 2)

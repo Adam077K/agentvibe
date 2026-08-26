@@ -49,7 +49,9 @@ process.on('exit', () => {
 function run(args) {
   try {
     const stdout = execFileSync('node', [SCRIPT, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-    return { code: 0, out: stdout };
+    // `err` on both branches: it was present only on failure, so an assertion about stderr on a
+    // passing run compared against `undefined` and silently held for the wrong reason.
+    return { code: 0, out: stdout, err: '' };
   } catch (e) {
     return { code: e.status, out: (e.stdout || '').toString(), err: (e.stderr || '').toString() };
   }
@@ -489,4 +491,113 @@ test('CONTROL: an OVERSIZED volume behind a symlink still overflows its cap', ()
     `expected a byte-overflow failure, got ${JSON.stringify(r.failures)}`);
   assert.ok(!r.failures.some((f) => f.includes('archive-volume-not-a-file')),
     'it must overflow on BYTES — refusing it as a non-file means the bytes were never measured');
+});
+// ── `existsSync` ANSWERS "IS SOMETHING THERE", NOT "CAN I READ IT" ────────────────────────────
+//
+// Every memory file was guarded by `existsSync` and then handed to `readFileSync`. Safe for a
+// regular file, safe for a symlink to one, and safe for a DANGLING symlink — `existsSync` follows
+// links, so a broken one reads as absent and `missing-file` already covers it. Not safe for
+// anything else.
+//
+// The FIFO is why this block exists. `check:memory` is a BLOCKING CI step, and there a crash names
+// itself while a hang is indistinguishable from a slow build. It is the failure a suite is least
+// likely to hold a control for, because a suite that hangs reports nothing at all.
+//
+// The last three are CONTROLS on the fix rather than coverage of the bug. Two pin that the check
+// RESOLVES symlinks — swap `statSync` for `lstatSync` and both go red — and one pins that the
+// dangling-symlink path is left exactly as it was. A narrowing attracts no test cases, so these
+// are the cases.
+
+/** A fixture whose `.claude/memory` is then given one entry `fixture()` cannot write. */
+function typedFixture(build) {
+  const root = fixture({ decisions: makeDecisions(1), longTerm: makeLines(10) });
+  build(path.join(root, '.claude', 'memory'));
+  return root;
+}
+
+/** Replace a path that `fixture()` already wrote with something that is not a regular file. */
+function replaceWith(mem, name, make) {
+  const p = path.join(mem, name);
+  fs.rmSync(p, { force: true });
+  make(p);
+}
+
+test('a DIRECTORY where a memory file belongs is refused BY NAME, not by EISDIR', () => {
+  const root = typedFixture((mem) => replaceWith(mem, 'DECISIONS.md', (p) => fs.mkdirSync(p)));
+  const r = run(['--root', root]);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /memory-file-not-a-file/, 'the refusal must be a named check, not a throw');
+  assert.match(r.err, /DECISIONS\.md/, 'the refusal must name the path it refused');
+  assert.match(r.err, /a directory/, 'and say what kind of thing it found');
+  assert.doesNotMatch(r.err, /EISDIR/, 'a raw errno means it crashed rather than refused');
+  assert.doesNotMatch(r.err, /^\s+at /m, 'a stack trace is a refusal nobody can act on');
+});
+
+test('a FIFO where a memory file belongs is refused in milliseconds, not read forever', () => {
+  // THE HANG. `readFileSync` on a FIFO with no writer never returns. Without the cap below this
+  // test would not fail — it would never finish, and a suite that never finishes reports nothing.
+  const root = typedFixture((mem) =>
+    replaceWith(mem, 'DECISIONS.md', (p) => execFileSync('mkfifo', [p])));
+  const started = Date.now();
+  const r = runCapped(['--root', root], 8000);
+  const elapsed = Date.now() - started;
+  assert.equal(r.timedOut, false,
+    `the checker never returned: readFileSync blocked on the FIFO (killed after ${elapsed}ms)`);
+  assert.ok(elapsed < 4000, `refusing a FIFO took ${elapsed}ms — it must not be reading it at all`);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /memory-file-not-a-file/);
+  assert.match(r.err, /FIFO/, 'the message must name the kind, or the operator cannot act on it');
+});
+
+test('--json does not re-read the paths, so it cannot re-hang on them', () => {
+  // The JSON branch used to repeat `existsSync ? readFileSync : ''` for all three paths — a second
+  // copy of the same defect on the same paths, reached only with --json. It now reuses what the
+  // checks loaded. Without the cap this test would hang rather than fail.
+  const root = typedFixture((mem) =>
+    replaceWith(mem, 'DECISIONS.md', (p) => execFileSync('mkfifo', [p])));
+  const r = runCapped(['--root', root, '--json'], 8000);
+  assert.equal(r.timedOut, false, '--json re-read the FIFO and blocked');
+  assert.equal(r.code, 1);
+  const parsed = JSON.parse(r.out);
+  assert.match(parsed.decisions.problem, /FIFO/,
+    'the JSON must say WHY it has no bytes — 0 with no reason reads as plenty of headroom');
+});
+
+test('CONTROL: a DANGLING SYMLINK is still handled by existsSync, exactly as before', () => {
+  // Deliberately NOT widened. `existsSync` follows the link, so a broken one is already "absent"
+  // and already refused by name. If this starts reporting `memory-file-not-a-file`, the change
+  // widened something it did not need to.
+  const root = typedFixture((mem) =>
+    replaceWith(mem, 'DECISIONS.md', (p) => fs.symlinkSync(path.join(mem, 'no-such-target.md'), p)));
+  const r = run(['--root', root]);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /missing-file/, 'the dangling case must keep its original refusal');
+  assert.doesNotMatch(r.err, /memory-file-not-a-file/, 'it must not be re-routed through the new one');
+});
+
+test('CONTROL: a memory file reached through a SYMLINK is still read and still measured', () => {
+  // The check resolves. `lstatSync` here would refuse this perfectly valid file.
+  const root = typedFixture((mem) => {
+    fs.writeFileSync(path.join(mem, 'real-decisions.md'), makeDecisions(3));
+    replaceWith(mem, 'DECISIONS.md', (p) => fs.symlinkSync(path.join(mem, 'real-decisions.md'), p));
+  });
+  const r = check(root);
+  assert.equal(r.code, 0, `a symlinked memory file must be accepted: ${JSON.stringify(r.failures)}`);
+  assert.equal(r.decisions.problem, null);
+  assert.equal(r.decisions.entries, 3, 'a symlinked file reported as empty was never read');
+});
+
+test('CONTROL: an OVERSIZED file behind a symlink still overflows its cap', () => {
+  // The one that makes the choice load-bearing. Stop resolving and this file stops being capped
+  // while the checker still reports success — the cap silently stops binding.
+  const root = typedFixture((mem) => {
+    fs.writeFileSync(path.join(mem, 'real-decisions.md'), makeDecisions(60));
+    replaceWith(mem, 'DECISIONS.md', (p) => fs.symlinkSync(path.join(mem, 'real-decisions.md'), p));
+  });
+  const r = check(root);
+  assert.equal(r.code, 1, 'a 60-entry file behind a symlink was not capped');
+  assert.ok(r.failures.some((f) => f.includes('decisions-entry-overflow')),
+    `expected an entry-overflow failure, got ${JSON.stringify(r.failures)}`);
+  assert.ok(!r.failures.some((f) => f.includes('memory-file-not-a-file')),
+    'it must overflow on CONTENT — refusing it as a non-file means the content was never measured');
 });
