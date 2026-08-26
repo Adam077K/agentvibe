@@ -194,6 +194,55 @@ my entry in STEPS?    = false
 `npm run check` on the merged tree: **48 of 48 passed · 0 failed · exit 0**, sandbox armed — the
 denominator moved 46 → 48 with the base, which is the whole reason not to quote it from memory.
 
+## Updated AGAIN onto `main` at `507a470` (#113 merged; seven on `main` since `0c78fa2`)
+
+**This supersedes the `0c78fa2` section above as the base that ships.** That section is kept because
+the denominator it records moving (46 -> 48) is the reason none of these figures is quoted from memory.
+
+**`git merge origin/main` failed first, and the failure is the armed sandbox, not a conflict.**
+Exit **2**, `Merge with strategy ort failed`, **8 denied paths** — `.claude/agents/sourcer.md`,
+`.claude/commands/{audit,build,review,launch,price,validate}.md`, `.mcp.json`. It left **HEAD
+unmoved and no `MERGE_HEAD`**, and had already written **35 files as untracked**, which is what makes
+a naive retry refuse to overwrite them.
+
+**The recovery is enumerated, not bulk.** The bulk untracked-file remover is refused by
+`pre-tool-use.sh`, and the refusal is correct — it would also take `.worktrees/.registry` and the
+session files the gate reads. So: `git ls-files --others --exclude-standard` -> 35 paths; each tested
+for membership in `git ls-tree -r --name-only origin/main`; **35 of 35 present, 0 absent**; and the
+membership test was controlled in the failing direction too — two probes that must NOT be found
+(`.worktrees/.registry` and a fabricated path) both returned absent, so the test was not saying yes
+to everything. Exactly those 35 were removed, leaving 0 untracked, 0 modified, HEAD still `20ebe1c`.
+The retry, with the sandbox disabled for that one command: **exit 0, zero conflicted paths.**
+
+**`CODEBASE-MAP.md` was resolved by REGENERATING, and checked on both sides of the merge:**
+
+| | result |
+|---|---|
+| before the merge — `build:map` on this branch | committed map **already identical** (in sync) |
+| after the merge — auto-merged vs `build:map` | **identical**; the auto-merge was already right |
+
+A clean auto-merge is not evidence of a correct one, which is why it is checked rather than trusted.
+The comparison was branched on all three exit cases (`0` / `1` / anything else) — `git diff --quiet`
+on a path matching nothing returns 0, a false IDENTICAL in the direction that ends inquiry.
+
+**`package.json` was read, not trusted** — #113 kept `gates` and `test:playbooks`
+(`--test-concurrency=1`) and added `check:citations-exist`; all present, alongside `test:citations`.
+
+```
+STEPS.length            = 48   (unchanged across this base move)
+my EXCLUDED survived    = true (test:probe-workflow-reach in EXCLUDED, NOT in STEPS)
+probe script exposed    = true
+```
+
+**Verification on the merged tree** — `npm run check` -> **48 of 48 passed · 0 failed · 146.0s ·
+exit 0**, sandbox armed. `npm run test:probe-workflow-reach` -> **6 pass · 0 fail**; the probe itself
+exits **0 (CONTAINED)**. No tripwire fired: this branch pins nothing against `qa.js`'s pre-#115
+vocabulary, and `VERDICT.REFUSED` is on `main` now.
+
+**The re-record is necessary by measurement, not by assumption.** After the merge,
+`node scripts/verdict.mjs check` returns **`ok: false · reason: absent`**, and the subject derived
+here — `ac913c31ff4e2329...` against base `507a470` — is not the one the old record binds.
+
 ## Stated limits
 
 A `kind: shim` file never reaches `PS-WORKFLOW-CONTAINMENT` — `lintFile` early-returns before the PS
