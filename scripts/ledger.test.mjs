@@ -496,7 +496,14 @@ function scratchRepo(doc = scratchDoc()) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ledger-idx-'));
   fs.mkdirSync(path.join(dir, 'scripts', 'lib'), { recursive: true });
   fs.copyFileSync(path.join(REPO_ROOT, 'scripts', 'ledger.mjs'), path.join(dir, 'scripts', 'ledger.mjs'));
-  for (const f of ['claims.js', 'classifier.js', 'resolvers.js']) {
+  // THE WHOLE OF scripts/lib, not a list. This was `['claims.js', 'classifier.js',
+  // 'resolvers.js']` — a hand-maintained dependency closure that nobody maintained. The
+  // moment resolvers.js gains a fourth dependency, every scratch-repo test fails with
+  // MODULE_NOT_FOUND rendered as ledger output, and the assertion that reports it says
+  // "a malformed ledger was not reported cleanly" — a failure that names the wrong file.
+  // A stale copy list cannot fail in a way that names itself, so it stops being a list.
+  for (const f of fs.readdirSync(path.join(REPO_ROOT, 'scripts', 'lib'))) {
+    if (!f.endsWith('.js')) continue;
     fs.copyFileSync(path.join(REPO_ROOT, 'scripts', 'lib', f), path.join(dir, 'scripts', 'lib', f));
   }
   fs.writeFileSync(path.join(dir, 'doc.md'), doc);
