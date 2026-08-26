@@ -5,7 +5,8 @@
 
 ## Why this template stopped inviting a new document
 
-Fifteen handoffs accumulated here in twelve days. Several superseded each other; at least one was written
+Fourteen handoffs accumulated here in twelve days — `ls | wc -l` says fifteen, and the fifteenth is this
+file, which is not a handoff. Derive it as `ls | grep -c '^2026-'`. Several superseded each other; at least one was written
 mid-session and patched three times as its own claims went stale while it was being written. Four plan
 documents sat on disk at once. That churn is a large fraction of this project's total output, and every
 future session paid to read the whole pile in order to find the two paragraphs still true.
@@ -38,7 +39,11 @@ If you cannot say which of the rows above your document is *not*, you do not nee
 
 ## Existing files in this directory
 
-Every file here except the newest is bannered **HISTORICAL** and is retained for the record — this repo
-keeps its superseded statements rather than deleting them, because the reasoning that produced a wrong
-answer is worth more than the absence of the wrong answer. Read them for method and rationale. **Never read
-them for current state.**
+Every **handoff** here except the newest is bannered **HISTORICAL** and is retained for the record — 13 of
+the 14, verified 2026-08-26 — because this repo keeps its superseded statements rather than deleting them:
+the reasoning that produced a wrong answer is worth more than the absence of the wrong answer. Read them
+for method and rationale. **Never read them for current state.**
+
+This file is the exception, and the sentence used to read "every file here", which made it a
+counter-example to itself. It carries no HISTORICAL banner because it is not superseded — it is the live
+instruction not to write another handoff, and bannering it would retire the retirement notice.

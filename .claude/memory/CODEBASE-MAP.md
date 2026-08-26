@@ -37,19 +37,30 @@ it, so a hook that changes posture changes this map with it.
 | `npm run build:map` | `node scripts/gen-codebase-map.mjs` |
 | `npm run build:routers` | `node scripts/build-skill-routers.mjs` |
 | `npm run check` | `node scripts/run-checks.mjs` |
+| `npm run check:ci-chains` | `node scripts/check-ci-chains.mjs` |
 | `npm run check:citations` | `npm run test:citations && node scripts/check-citations.mjs` |
 | `npm run check:curation` | `node scripts/curate-skills.mjs --check` |
-| `npm run check:dispatch` | `npm run test:dispatch && npm run test:dispatch-flush && node scripts/check-dispatch-agenttype.mjs` |
-| `npm run check:dispatch-prompt` | `npm run test:dispatch-prompt && node scripts/check-dispatch-prompt-size.mjs` |
-| `npm run check:ledger` | `npm run test:claims && npm run test:classifier && npm run test:ledger && node scripts/ledger.mjs lint && node ` |
+| `npm run check:dispatch` | `npm run test:dispatch && npm run test:dispatch-flush && npm run check:dispatch-agenttype` |
+| `npm run check:dispatch-agenttype` | `node scripts/check-dispatch-agenttype.mjs` |
+| `npm run check:dispatch-prompt` | `npm run test:dispatch-prompt && npm run check:dispatch-prompt-size` |
+| `npm run check:dispatch-prompt-size` | `node scripts/check-dispatch-prompt-size.mjs` |
+| `npm run check:ledger` | `npm run test:claims && npm run test:classifier && npm run test:ledger && npm run check:ledger-lint && npm run ` |
+| `npm run check:ledger-build` | `node scripts/ledger.mjs build --check` |
+| `npm run check:ledger-lint` | `node scripts/ledger.mjs lint` |
+| `npm run check:ledger-verify` | `node scripts/ledger.mjs verify` |
 | `npm run check:manifest` | `node scripts/build-skills-manifest.mjs --check` |
 | `npm run check:map` | `node scripts/gen-codebase-map.mjs --check` |
 | `npm run check:mc` | `node mission-control/check.mjs` |
-| `npm run check:memory` | `npm run test:memory && npm run test:eviction && node scripts/check-memory-budget.mjs` |
+| `npm run check:memory` | `npm run test:memory && npm run test:eviction && npm run check:memory-budget` |
+| `npm run check:memory-budget` | `node scripts/check-memory-budget.mjs` |
 | `npm run check:prompt-standard` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/prompt-standard.test.mjs` |
 | `npm run check:registration` | `node scripts/check-registration.mjs` |
 | `npm run check:routers` | `node scripts/build-skill-routers.mjs --check` |
-| `npm run check:warroom` | `bash -n bin/warroom && bash -n war-room/bin/PROJECT_NAME.tmpl && node --check scripts/warroom-install.mjs && b` |
+| `npm run check:warroom` | `npm run check:warroom-launcher && npm run check:warroom-template && npm run check:warroom-installer && npm run` |
+| `npm run check:warroom-installer` | `node --check scripts/warroom-install.mjs` |
+| `npm run check:warroom-launcher` | `bash -n bin/warroom` |
+| `npm run check:warroom-parity` | `bash -n scripts/warroom-parity.sh` |
+| `npm run check:warroom-template` | `bash -n war-room/bin/PROJECT_NAME.tmpl` |
 | `npm run curate:skills` | `node scripts/curate-skills.mjs` |
 | `npm run gate` | `node scripts/run-gate.mjs` |
 | `npm run ledger:build` | `node scripts/ledger.mjs build` |

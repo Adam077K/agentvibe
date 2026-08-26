@@ -1,23 +1,78 @@
-# Where we stand — 25 August 2026
+# Where we stand — 26 August 2026
 
 **This is the one living status document.** By founder decision on 2026-08-25 the handoff chain retires
-into this file: fifteen handoff documents accumulated in twelve days, several superseding each other, and
-every future session paid to read the pile to find the two paragraphs that were still true.
+into this file: **fourteen** handoff documents accumulated in twelve days (2026-08-14 to 2026-08-26),
+several superseding each other, and every future session paid to read the pile to find the two paragraphs
+that were still true.
+
+> *Superseded 2026-08-26: this said **fifteen**, and so does `_TEMPLATE.md`. Fifteen is `ls | wc -l`, which
+> counts `_TEMPLATE.md` — a file that is not a handoff and never was. Derive it as
+> `ls docs/08-agents_work/handoffs | grep -c '^2026-'` → **14**. Corrected in both places. The point the
+> figure was making is unaffected, which is exactly why nobody checked it.*
 
 Read this before starting. Correct it in place when it goes stale. **Do not open a new handoff beside it** —
 that is the practice this file exists to end. The superseded handoffs are still on disk, bannered as
-historical, because this repo keeps its wrong statements rather than quietly deleting them.
+historical, because this repo keeps its wrong statements rather than quietly deleting them. Verified here:
+13 of the 14 carry the banner in their first six lines, and the one that does not is the newest.
 
-Every figure below was measured in the worktree that wrote this file, on 2026-08-25, unless the line says
-otherwise. Where something is reported rather than measured here, it says so.
+**The evidentiary standard, and how to read a line that does not meet it.** Every figure below was
+**re-derived in this worktree on 2026-08-26**, with the command shown wherever it is short enough to fit.
+Two kinds of statement do not meet that standard and both are marked where they appear:
+
+- **`REPORTED`** — from outside this tree (the GitHub API, a CI run, another agent). It says who reported
+  it, when, and that it is *not verified in this worktree*. `gh` is unreadable from here by design — the
+  sandbox's `denyRead` covers `~/.config/gh` — so no GitHub fact on this page can be anything else.
+- **`SUPERSEDED`** — a statement kept beside its correction, in a blockquote, dated. It is history, not
+  state. Never carry one forward.
+
+> *Superseded 2026-08-26: line 11 read "Every figure below was measured in the worktree that wrote this
+> file, on 2026-08-25, unless the line says otherwise." The standard was right and the file did not meet
+> it: six passages described the state of `main`, not of the tree this file shipped in, and three
+> GitHub-derived claims carried no attribution while a fourth, two sections down, carried it correctly.
+> One standard, two labelling practices, and the reader could not tell which they were holding.*
+
+## The rule this file follows
+
+**STATUS.md is edited in the LAST commit of the change that ships it, after every other commit in that
+change is already in the tree — including, in a merge train, after the merges.** Re-derive every figure at
+that point. Nothing else in a change may depend on STATUS.md being written first.
+
+**Why that rule and not "describes merged state only; in-flight work is named as such and dated".** The
+weaker rule was already being followed and did not help. On 2026-08-25 this file described two fixes as *"in
+flight on `fix/plans-dir-test-hermetic`"* and *"in flight on `fix/ci-runs-every-step`"*, correctly, dated,
+with the hedge *"in flight, not verified here"* attached to both. Then all three branches merged into one
+integration branch and **the merge falsified the document without editing it.** A living status that ships
+in the same change as the thing it describes will hit that every time, because the branch is written before
+the merge exists. Only ordering fixes it: write the status last, when the tree it describes is the tree it
+ships in.
+
+The cost is real and accepted: the last commit of a change is the one most likely to be rushed. That is a
+better failure than the one this rule replaces, because a *missing* update is visible in a diff and a
+*silently falsified* one is not — the six passages corrected on 2026-08-26 all read as confident present
+tense and every one of them described a state the same commit had already removed.
 
 ---
 
 ## The four things to know before touching anything
 
-1. **`main` = `71fd58d`.**
-2. **CI is RED and the local floor is GREEN.** Both are true, and they are one environment-dependent test
-   apart. See §1.
+1. **`main` = `71fd58d`** (verified here: `git rev-parse --short main`). This document sits **ahead** of it,
+   on **`fix/wave-1-review-findings`** — the wave-1 review branch, which targets `integration/wave-1` — and
+   describes **this tree**, not `main`. Settle it in your own checkout with
+   `git rev-parse --abbrev-ref HEAD`; that is the branch every figure below was measured on, and it is
+   named here **once**.
+   > *Superseded 2026-08-26: this said `integration/wave-1`, while §4 said `fix/wave-1-review-findings` —
+   > two names for one tree, in a file whose stated rule is that it "describes **this tree**". Both were
+   > true at the time, which is why it survived a reading: `integration/wave-1` had been fast-forwarded onto
+   > the review branch, so the two names resolved to the same commit. **That is the ambiguity's disguise,
+   > not its absence** — the moment the integration branch moves independently, a reader cannot tell which
+   > tree the figures came from, and nothing in the file would change to tell them.*
+2. **The local floor is GREEN — `43 of 43 passed · 0 failed` — and the cause of CI's red is fixed in this
+   change, though no runner has confirmed that from here.** See §1 and §4.
+   > *Superseded 2026-08-26. This read: **"CI is RED and the local floor is GREEN.** Both are true, and they
+   > are one environment-dependent test apart." That was true of `main` at `71fd58d` and false of the tree
+   > this file ships in: `fix/plans-dir-test-hermetic` is merged here as `ae7ea48`. Kept because the
+   > single-test explanation in §1 is still why CI was red, and a reader who cannot see the old state cannot
+   > judge whether the fix addresses it.*
 3. **The QA gate has never produced a verdict.** `.qa/` does not exist in the tree at all — not an empty
    directory, absent. Every "the gate blocked" statement in the record describes a run whose output was
    read from a transcript, never a stored artifact.
@@ -26,14 +81,29 @@ otherwise. Where something is reported rather than measured here, it says so.
 
 ---
 
-## 1 · The one red test — the hook is right, the test is wrong
+## 1 · The one red test — FIXED HERE. The hook was right, the test was wrong
 
-CI has been red since 2026-08-24 on a single test:
+**`REPORTED`, not verified here: CI was red from 2026-08-24 on a single test.** No CI run can be read from
+this worktree — `gh` is denied by the sandbox's `denyRead` on `~/.config/gh` — so the redness itself is
+secondhand throughout this section. What *is* verified here is the cause and the fix.
 
-`scripts/pre-tool-use.test.mjs:228` — *"ALLOWS a write to a file under `$HOME/.claude/plans/`"*. The hook
-exits 2 (block) where the test expects 0 (allow).
+The test: `scripts/pre-tool-use.test.mjs`, **the case titled *"ALLOWS a write to a file under
+`$HOME/.claude/plans/` — plan-mode storage"***. The hook exited 2 (block) where the test expected 0 (allow).
 
-**It is environment-dependent, and the environment is the whole explanation.** The test never creates the
+> *Superseded 2026-08-26: this cited `scripts/pre-tool-use.test.mjs:228`. That line is now a **comment**.*
+>
+> **A line number in prose rots the next time anyone edits the file above it — and this one rotted twice
+> inside a single change.** *`:228` → `:306` when the hermetic-`$HOME` fix landed → `:341` when the
+> fixture-base fix landed hours later. The correction went stale while it was being written, under
+> observation, which is the whole argument in one example: a `path:line` locator into a file the same
+> change edits is not a citation, it is a race. No replacement number is given here on purpose. Cite by
+> test title and find it with `grep -n 'ALLOWS a write to a file under'`.*
+>
+> *Note also what could not have caught this: `npm run check:citations` existence-checks the **file**, not
+> the line, so a rotted `path:line` is structurally outside its reach. Nothing in this repo checks line
+> pins, which is the argument for not writing them rather than for adding a checker.*
+
+**It was environment-dependent, and the environment was the whole explanation.** The test never created the
 directory it asserts on. Two independent lines in `.claude/hooks/pre-tool-use.sh` then do the right thing
 for a directory that does not exist:
 
@@ -43,9 +113,9 @@ for a directory that does not exist:
   out of `plans/` into `~/.claude` — which is correctly refused, because a write to `~/.claude/settings.json`
   disarms every rule in the hook.
 
-**The hook is correct. The test is not.** It passes on a developer machine where `~/.claude/plans` happens
-to exist — verified: it exists on this machine — and fails on a CI runner where it does not. That is why
-`main` was green locally and red in CI on the same commit.
+**The hook was correct. The test was not.** It passed on a developer machine where `~/.claude/plans`
+happens to exist — verified: it exists on this machine — and failed on a CI runner where it does not. That
+is why `main` was green locally and red in CI on the same commit.
 
 **And a third control disagrees about the same directory.** The OS sandbox **denies** writes to
 `~/.claude/plans/` while `.claude/hooks/pre-tool-use.sh` explicitly **allows** them: `.claude/settings.json`'s
@@ -63,34 +133,85 @@ CI red. Write it down so it is not rediscovered a fourth time.
 That handoff's own framing still applies: *"either the hook should permit what the sandbox grants, or the
 sandbox should not grant it. Nobody has decided which."*
 
-A fix is **in flight on `fix/plans-dir-test-hermetic`** and had not landed when this was written: that
-branch pointed at `71fd58d` with zero commits ahead of `main`. *In flight, not verified here.* Re-derive
-before believing either way — do not carry this sentence forward as fact.
+**LANDED IN THIS CHANGE, as `ae7ea48`** (`git merge-base --is-ancestor ae7ea48 HEAD` → true). The fix pins
+`$HOME` to a fixture built outside every root the hook already allows, so the case no longer reads the
+developer's home; and on CI an unbuildable fixture **fails rather than skips**, because a skip on the one
+machine whose verdict blocks a merge reports "checked" for something never checked.
+
+Measured here, agent shell, sandbox armed: `npm run test:pre-tool-use` → **166 tests · 166 pass · 0 fail ·
+0 skipped**.
+
+Two things a reader should not over-read:
+
+- **Zero skipped is itself a fix made on 2026-08-26, not a property of the merge.** As merged, five cases —
+  including *"BLOCKS a write to `$HOME/.claude/settings.json`"*, the write that disarms every rule in the
+  hook — **skipped** in an agent shell, because `os.tmpdir()` there is `/private/tmp/claude-<uid>`, a root
+  the hook allows, and `/tmp` is EPERM. `qa.js` runs `npm run check` as its oracle in exactly that shell and
+  sets no `CI`, so the gate's floor was where the coverage went missing. Fixed by adding `~/.agentvibe` as a
+  neutral fixture base and by making "every base is one of the hook's own roots" a **failure** rather than a
+  skip; "genuinely unwritable" stays a skip off CI. Fixture-selection defect and locked-down laptop are not
+  the same report.
+- **No runner has confirmed the original redness is gone.** That needs CI, which cannot be read from here.
+
+> *Superseded 2026-08-26. This read: "A fix is **in flight on `fix/plans-dir-test-hermetic`** and had not
+> landed when this was written: that branch pointed at `71fd58d` with zero commits ahead of `main`. In
+> flight, not verified here." Every word was true when written and false by the time the file shipped —
+> the branch is two commits ahead of `main` and merged into the tree this document sits in. This is the
+> passage that produced the ordering rule at the top of the file.*
 
 ## 2 · One red step hides twelve — a structural property of `ci.yml`
 
-`.github/workflows/ci.yml` runs **30 steps in a single job (`checks`) with zero `if:` conditions.** All
-three numbers were counted in this worktree. With no `if: always()`, the first failing step aborts every
-step after it.
+**TREATED IN THIS CHANGE, as `e5eac9f`** (`git merge-base --is-ancestor e5eac9f HEAD` → true).
 
-**The failing step is #18 of 30 (`Pre-tool-use hook`), so steps 19–30 — twelve of them — never execute.**
-Among them: `Tier gate`, `Claim ledger`, `Merge gate`, `Sandbox config armed`, `Read-only probe`,
-`Launcher permissions` and `Mission Control`. The ledger's own enforcement and the check that makes *"the
-sandbox is armed"* a fact rather than a comment are both downstream of a test that was never a real defect.
+`.github/workflows/ci.yml` now runs **44 steps in a single job (`checks`), and all 44 carry
+`if: ${{ !cancelled() }}`.** Counted here:
 
-This is the same shape as the defect found on 2026-08-25 one level down: `npm run check` chained its steps
-with `&&`, so a failure at step 21 silently skipped nine more. That one is fixed —
-`scripts/run-checks.mjs` now runs every step and names every failure. **CI has the identical disease and
-has not been treated.** A fix is **in flight on `fix/ci-runs-every-step`**, likewise at `71fd58d` with zero
-commits ahead when this was written. *In flight, not verified here.*
+```
+grep -c '^        run: ' .github/workflows/ci.yml                    →  44
+grep -c '^        if: ${{ !cancelled() }}' .github/workflows/ci.yml  →  44
+```
 
-Six `check:`/`test:` scripts are themselves `&&` chains. `check:ledger` is the worst: a `test:claims`
-failure skips `ledger lint`, `ledger build --check` and `ledger verify`. Cheapest high-value fix available.
+Three further `uses:` setup steps (checkout, setup-node, setup-bun) carry **no** `if:`, deliberately: if
+checkout fails, `!cancelled()` is still true, so guarding them would run all 44 checks against an empty
+workspace and produce ~45 red steps instead of one. That is a diagnosability cost, not a fail-open one — the
+job still fails and nothing ships. `!cancelled()` and not `always()`, so a cancelled run still stops.
+
+> *Superseded 2026-08-26. This read: "`.github/workflows/ci.yml` runs **30 steps in a single job (`checks`)
+> with zero `if:` conditions.** All three numbers were counted in this worktree… **The failing step is #18
+> of 30 (`Pre-tool-use hook`), so steps 19–30 — twelve of them — never execute.** Among them: `Tier gate`,
+> `Claim ledger`, `Merge gate`, `Sandbox config armed`, `Read-only probe`, `Launcher permissions` and
+> `Mission Control`… A fix is **in flight on `fix/ci-runs-every-step`**, likewise at `71fd58d` with zero
+> commits ahead when this was written."
+>
+> Every figure was correct **for `main` at `71fd58d`**, and re-derivable there today —
+> `git show 71fd58d:.github/workflows/ci.yml` gives 30 run-steps and 0 `if:` lines, with
+> `npm run test:pre-tool-use` as the 18th. It was already false of the tree the sentence shipped in. Kept
+> because the twelve skipped checks are why the change exists: a reader who cannot see what was hidden
+> cannot judge whether guarding 44 steps was the right cure.*
+
+This was the same shape as the defect found on 2026-08-25 one level down: `npm run check` chained its steps
+with `&&`, so a failure at step 21 silently skipped nine more. Both are fixed now, at both levels.
+
+**The six `&&` chains are gone from the suite, and that is the "cheapest high-value fix" this line used to
+recommend.** Six `check:`/`test:` scripts are still `&&` chains in `package.json` — `check:ledger`,
+`check:warroom`, `check:dispatch`, `check:dispatch-prompt`, `check:memory`, `check:citations` — but **none
+of them is a step of anything any more**: each is an EXCLUDED alias kept only because docs cite the
+spelling, and its links are steps in their own right, in `npm run check` and in `ci.yml`. Derived here: 6
+governed `&&` chains, 0 of them in `STEPS`, 6 of 6 carrying an `EXCLUDED` entry. `scripts/lib/check-suite.js`
+now refuses a step whose **resolved** command carries `&&`, `||`, `;`, `|`, `&` or a newline — following the
+`npm run` delegation chain, because a one-hop wrapper defeated the earlier `&&`-only check outright.
+
+> *Superseded 2026-08-26: "Six `check:`/`test:` scripts are themselves `&&` chains. `check:ledger` is the
+> worst: a `test:claims` failure skips `ledger lint`, `ledger build --check` and `ledger verify`. Cheapest
+> high-value fix available." The count is unchanged and the recommendation is discharged — the chains were
+> taken off the execution path rather than rewritten, which is why the six are still there.*
 
 ## 3 · Branch protection does not bind on the path actually used
 
-Reported by the team lead from the GitHub API on 2026-08-25 — **not verified in this worktree**, because
-`gh` is denied by the agent sandbox's `denyRead` on `~/.config/gh`, which is working as intended:
+**`REPORTED`** by the team lead from the GitHub API on 2026-08-25 — **not verified in this worktree**,
+because `gh` is denied by the agent sandbox's `denyRead` on `~/.config/gh`, which is working as intended.
+This is the labelling every GitHub-derived claim on this page now carries; §1's opening sentence did not
+carry it until 2026-08-26, and neither did `ci.yml`'s header:
 
 - `enforce_admins: {enabled: false}`
 - `rulesets: []`
@@ -124,15 +245,46 @@ CODEOWNERS in the tree today (verified). On a solo repository it would also dead
 ## 4 · The local floor is green
 
 ```
-npm run check  →  30 of 30 passed · 0 failed
+npm run check  →  43 of 43 passed · 0 failed · exit 0
 ```
 
-macOS, sandbox armed, measured 2026-08-25 at `71fd58d`.
+macOS, sandbox armed, measured 2026-08-26 in this worktree, on the branch named once in §1. **Re-derive
+before believing it — `npm run check`, about 100 seconds.** If it disagrees, the tree has moved and this
+line is stale; that answer is worth more than knowing which commit it was taken at.
 
-**`30 of 30 · 0 failed` is the figure. It is not 29 and it is not 31.** The wall clock is a sample rather
-than a fact and should not be pinned: the same suite on the same commit took 79.7s at the session root and
-82.8s then 125.9s in the worktree that wrote this file. Wall-clock numbers here move with how many lanes
-are building at once — `c-mission-control-cold-start` already flakes for exactly this reason.
+> ***No commit sha is given, and dropping it is the fix — not a loss of provenance.*** *This line named a
+> tree: `833b4d8`, then `d5b2e04` an hour later. It could never name the commit it is IN — a file cannot
+> contain its own hash — so it named the previous one, and therefore went stale on **every** subsequent
+> commit, whether or not that commit changed anything this section describes. That is the line-number rot of
+> §1 wearing a different costume, and it was making the ordering rule above look far more expensive than it
+> is: the rule should cost a pass when a change alters what this file DESCRIBES, never merely because a
+> commit exists. The date says when; the command says whether it is still true. The sha only said which
+> tree, which is the one thing a reader can recover from git anyway.*
+>
+> ***Do not strip the other shas on this page.*** *`71fd58d`, `ae7ea48` and `e5eac9f` name FIXED historical
+> commits and are stable by construction — `git merge-base --is-ancestor ae7ea48 HEAD` and
+> `git show 71fd58d:<path>` answer the same way forever. The unstable kind is a sha standing in for "the
+> current tree", because the current tree moves and the reference cannot move with it. Same distinction as
+> §1: cite a thing that holds still, not a position that does not.*
+
+Derive the denominator, never quote it:
+`node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **43**.
+
+**`43 of 43 · 0 failed` is the figure. It is not 42 and it is not 44.**
+
+> *Superseded 2026-08-26: this read "**`30 of 30 · 0 failed` is the figure. It is not 29 and it is not
+> 31.** … measured 2026-08-25 at `71fd58d`." Correct at `71fd58d` and re-derivable there —
+> `git show 71fd58d:scripts/lib/check-suite.js` still gives `STEPS.length` = 30. The denominator moved to 43
+> because five `EXCLUDED` aliases were split into the 18 links they had been hiding behind five names, so
+> the suite runs the same work under more names. **Nothing was added to the suite and nothing was dropped
+> from it.** The hedge kept its own advice — pinning the exact figure is what made this correctable at all,
+> where a vague "the floor is green" would have survived the change untouched and told the reader nothing.*
+
+The wall clock is a sample rather than a fact and should not be pinned: this run took **79.4s** by the
+runner's own tally and 80s by the shell, and the same suite on the same commit took 79.7s at the session
+root and 82.8s then 125.9s in the worktree that wrote the previous version of this file. Wall-clock numbers
+here move with how many lanes are building at once — `c-mission-control-cold-start` already flakes for
+exactly this reason.
 
 **Measure it from the canonical worktree path and nowhere else.** `git worktree list` is the authority on
 that path. This session lost a full check run to the trap: a stale path that had been removed underneath a
@@ -160,8 +312,16 @@ from scope.
 **Built is not the same as gated.** 8b is the standing example: it works end to end against one target and
 its exit criterion is still undischarged. Do not read one as the other.
 
-**117 session files** (`ls docs/08-agents_work/sessions/ | wc -l`), every one of them infrastructure. The
-figure this file carried until today was 105.
+**119 session files** (`ls docs/08-agents_work/sessions/ | wc -l`), every one of them infrastructure.
+
+> *Superseded 2026-08-26: **117**, with the same derivation command printed beside it. The command was
+> right and the number was two behind. This file carried **105** before 2026-08-25.*
+>
+> *It went stale twice inside one change, which is the useful part. It was 117 as merged; re-deriving on
+> 2026-08-26 gave **118**; and writing this session's own file took it to **119** — so the figure moved
+> again after the correction was drafted. That is precisely the case the ordering rule at the top of this
+> file exists for, and it is why the rule is about WHEN the number is taken rather than about taking more
+> care: a derivation published beside a stale value reads as evidence and is not.*
 
 ## 6 · The four founder decisions of 2026-08-25
 
@@ -176,7 +336,7 @@ Recorded in full, with rationale and cost, as a single entry in
    three blinded reviewers found 7 P1s at a fraction of that.
 3. **Venture work: not yet** — the harness is finished first. **The cost is recorded once and is not to be
    re-litigated:** every mechanism built in Waves 1–4 stays untested against work that is not the harness
-   itself, and stop conditions 6 and 7 sit at maximum exposure. 117 session files, zero customer-facing
+   itself, and stop conditions 6 and 7 sit at maximum exposure. 119 session files, zero customer-facing
    work.
 4. **Documentation** — one living STATUS; the handoff chain retires. This file.
 
