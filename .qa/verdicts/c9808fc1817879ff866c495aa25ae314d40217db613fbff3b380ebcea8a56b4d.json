@@ -1,0 +1,11 @@
+{
+  "subject": "c9808fc1817879ff866c495aa25ae314d40217db613fbff3b380ebcea8a56b4d",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "irreversible",
+  "tier_driver": ".claude/workflows/qa.js",
+  "verdict": "PASS",
+  "by": "builder-gate-refusal",
+  "run_id": null,
+  "evidence": "Re-recorded after the #115 delta review (D2, D1, orphan reflow); prior subject went correctly stale. npm run check: 46 of 46 passed, 0 failed, 154.8s, exit 0, sandbox armed. test:run-gate 101 pass/0 fail (99 before). D1: namedFailure read failing.length>0 while oracleFailing is deliberately permissive, so checks:[null,null] returned BLOCK established=true with two oracle-unnamed blockers - nothing named, nothing established. Now asks for a name: those shapes return REFUSED established=false, while a COMPLETE garbage report stays BLOCK with one actionable oracle-unnamed-failure instead of N. Controls re-measured unchanged: a real named failure still BLOCKs and names itself, a clean floor still PASSes, and C1's five rows are byte-identical. Mutations bite: revert to count 4 red, drop .trim() 4 red. D2: the last title/body mismatch fixed, plus the operator-facing assertion message; my widened parser now reproduces 7 mismatches at 2fda82a, 1 at bd760fb, 0 here. SINGLE AUTHOR, SINGLE MODEL FAMILY: the irreversible tier's 2-of-3 multi-judge requirement is NOT met.",
+  "recorded_at": "2026-08-26T15:09:33.124Z"
+}

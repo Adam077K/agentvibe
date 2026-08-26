@@ -1,0 +1,11 @@
+{
+  "subject": "2e6c96c7810d9c9bdb30e2aa4bf3ce60e53090f3fa9bd8869b16c0eaef1fd8ec",
+  "base": "ddaf25a0f8dac14b03b2e813eb1d8723c28c0621",
+  "tier": "full",
+  "tier_driver": "scripts/check-gates.mjs",
+  "verdict": "PASS",
+  "by": "builder-surface-wiring",
+  "run_id": null,
+  "evidence": "merged origin/main ddaf25a; npm run check 48/48 pass 0 fail on the merged tree; check:citations-exist 0/clean (was 1 finding pre-merge, cured by the update as predicted); CODEBASE-MAP auto-merge verified two ways (check:map 0 before regeneration, build:map byte-identical after); STEPS.length 46->48; 66 constructed-failure cases; the #115 tripwire fired on the merge and recording_hazard now names VERDICT.REFUSED and established; single author, single model family",
+  "recorded_at": "2026-08-26T20:10:34.591Z"
+}

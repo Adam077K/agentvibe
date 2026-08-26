@@ -1,0 +1,11 @@
+{
+  "subject": "705550a4a5e83f080393ff9d423e8a6f484f13ff596592e704a94312c6f10745",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "full",
+  "tier_driver": "mission-control/scripts/consume-dispatch.ts",
+  "verdict": "PASS",
+  "by": "builder-honest-dispatch",
+  "run_id": null,
+  "evidence": "Round 3, after delta review returned PASS on both lenses with N1 (p2) and N4 (p3) to fix. N1 reproduced first: isAlive(0) and isAlive(-1) return true because kill() treats them as process-group and broadcast targets that never raise ESRCH; three consecutive runs each left the entry permanently 'running', control (pid 2147483646) resolved on run one. Fixed by isPlausiblePid() before process.kill, a 6h age bound, and --force-reconcile. Verified with a genuine live control: pid 1 (launchd, EPERM path) stays IN FLIGHT inside the bound and settles past it, so C3's property survives. N4 fixed by scoping the test to StatusCell and asserting every emitted text-* class has a matching --color-* across all six statuses plus an unknown; the reviewer's surviving mutation (typo moved to not-started) now fails. Also took the three p3s: C6 spawn-error enumeration became a complement (any e.code -> not-started); N2+N3 collapsed to one table with satisfies Record<DispatchStatus,...>, deleting the dead TERMINAL_DISPATCH_STATUSES export and the unnamed else. Suites: npm run check 46 of 46 passed 0 failed exit 0; dispatch 53 pass 0 fail; views 82 pass 0 fail; index-cache 32/0; write-barrier 7/0; shell ban 12 pass 0 fail (zero exceptions); fold contract 1/0; tsc --noEmit clean. Tier full; one author, one model family, no independent review.",
+  "recorded_at": "2026-08-26T14:46:40.084Z"
+}

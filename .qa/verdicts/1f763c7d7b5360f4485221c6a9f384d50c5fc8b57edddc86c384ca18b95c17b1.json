@@ -1,0 +1,11 @@
+{
+  "subject": "1f763c7d7b5360f4485221c6a9f384d50c5fc8b57edddc86c384ca18b95c17b1",
+  "base": "47dbbd6a96885390512f5930b42be80c5b719efe",
+  "tier": "full",
+  "tier_driver": "scripts/merge-gate.test.mjs",
+  "verdict": "PASS",
+  "by": "builder-verdict-flags (self-recorded; one author, one model family — the full tier's reviewer + security lens is unmet)",
+  "run_id": null,
+  "evidence": "test:merge-gate 45 pass 0 fail; npm run check 46 of 46 exit 0; 13-invocation content-hashed probe both cells — 6 writes on origin/main, 1 here and it is the positive control; 6 mutation proofs each reddening only its own case; all 6 live call sites swept and pinned with a negative control",
+  "recorded_at": "2026-08-26T14:32:45.880Z"
+}

@@ -1,0 +1,11 @@
+{
+  "subject": "e7cf1cfb246087f8fbefbf5f479838ae6fc9cd583ef054f06a518c773912991f",
+  "base": "244e8db3a1d8103ef79bec13467d3dcb2ad44cdd",
+  "tier": "full",
+  "tier_driver": "scripts/check-gates.mjs",
+  "verdict": "PASS",
+  "by": "builder-surface-wiring",
+  "run_id": null,
+  "evidence": "npm run check 46/46 pass 0 fail; 65 constructed-failure cases; the two-file regress reproduced on BOTH pins before documenting it (gates 0, test:playbooks 0, lint:agents 0 after swapping a founder gate to qa-verdict with a matching constant edit); single author, single model family",
+  "recorded_at": "2026-08-26T15:13:13.829Z"
+}

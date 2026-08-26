@@ -32,7 +32,7 @@ import { collectBelief } from '../collectors/belief.ts';
 import { collectSessions, collectProjectStats, type ProjectTranscriptStats } from '../collectors/transcripts.ts';
 import { summarizeEvents, type EventsSummary } from '../collectors/events.ts';
 import { projectEmptyState, projectEmptyStateProbe, inboxEmptyState, type EmptyState } from '../collectors/empty.ts';
-import { appendDispatch, readDispatch, type DispatchEntry } from '../index-cache.ts';
+import { appendDispatch, readDispatch, resolveDispatchStates, type DispatchEntry } from '../index-cache.ts';
 
 function findProject(projects: Project[], id: string): Project | undefined {
   return projects.find((p) => p.id === id);
@@ -327,13 +327,24 @@ export function createApi(state: LiveState = live): Hono {
     return c.json({ ok: true, id: entry.id, enqueuedAt: entry.enqueuedAt } satisfies DispatchResult);
   });
 
-  // GET /api/dispatch — list the current queue
+  // GET /api/dispatch — list the CURRENT STATE of each dispatch, one row per dispatch
   //
-  // READ-ONLY. The queue is an append-only JSONL file; this reads it and returns every valid
-  // entry. The consumer script manages entries that have been acted on, not this route.
+  // READ-ONLY. The queue is an append-only JSONL file, so a single dispatch owns several lines:
+  // `pending` when enqueued here, then `running`, then a terminal line written by the consumer.
+  // This route folds them with resolveDispatchStates() and returns the last line per id.
+  //
+  // FOLDING HAPPENS HERE, AND ON PURPOSE — client/src imports from server/** as `export type`
+  // ONLY, with no runtime value crossing that boundary. Folding in the client would mean either
+  // breaking that rule or writing the fold a second time, and two implementations of one rule
+  // disagree silently. The server owns it; the client renders what it is given.
+  //
+  // Returning raw lines was correct while a dispatch had exactly two states and the consumer
+  // appended at most once. It stopped being correct when `running` and the terminal statuses
+  // arrived: the table would have drawn three rows for one goal and the headline counted lines
+  // as dispatches.
   api.get('/dispatch', (c) => {
     try {
-      return c.json({ entries: readDispatch() } satisfies DispatchPayload);
+      return c.json({ entries: resolveDispatchStates(readDispatch()) } satisfies DispatchPayload);
     } catch (err) {
       return c.json({ error: `could not read queue: ${String(err)}` } satisfies DispatchError, 500);
     }

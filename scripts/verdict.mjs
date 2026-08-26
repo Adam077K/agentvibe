@@ -33,12 +33,23 @@
 // a decision about who holds it. That decision has not been made, so it is not claimed here.
 //
 // USAGE
-//   node scripts/verdict.mjs subject [--repo P] [--ref R]        # print the subject
-//   node scripts/verdict.mjs record  [--repo P] [--ref R] --verdict PASS --by who [--evidence t]
+//   node scripts/verdict.mjs subject [--repo P] [--ref R] [--json]   # print the subject
+//   node scripts/verdict.mjs record  [--repo P] [--ref R] [--json] --verdict PASS --by who
+//                                    [--evidence t] [--run-id id] [--dry-run]
 //   node scripts/verdict.mjs check   [--repo P] [--ref R] [--json]
 //
 // `record` writes the file; you then COMMIT it. `check` reads it back out of the ref's tree, so an
-// uncommitted verdict does not count.
+// uncommitted verdict does not count. `--dry-run` builds the same record and does not write it.
+//
+// AN UNKNOWN FLAG IS REFUSED, exit 2, nothing written. It used to be DROPPED: `arg()` searches argv
+// for the names it is asked for and never looks at the rest, so a misspelling or a flag borrowed
+// from another tool changed nothing and said nothing. Measured on `main` at 47dbbd6,
+// `record --verdict PASS --by probe --dry-run` exited 0 and wrote a real record for the empty-diff
+// subject — the operator typed a flag whose whole purpose was to prevent that. See FLAGS below.
+//
+// THESE THREE LINES ARE NO LONGER THE ONLY DESCRIPTION OF THE FLAG SURFACE, and that is why the
+// list above is now complete: `--run-id` and `--evidence` were readable and undocumented here, so
+// this block said five flags where the code read seven. usage() is generated from FLAGS.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -212,7 +223,7 @@ export function check(repo, ref = 'HEAD') {
   return { ok: true, reason: 'match', subject, base, tier, driver, path: rel, record };
 }
 
-export function record(repo, ref, { verdict, by, evidence = null, runId = null }) {
+export function record(repo, ref, { verdict, by, evidence = null, runId = null, dryRun = false }) {
   if (verdict !== 'PASS' && verdict !== 'FAIL') {
     throw new Refusal(`--verdict must be PASS or FAIL, got "${verdict}"`);
   }
@@ -223,7 +234,6 @@ export function record(repo, ref, { verdict, by, evidence = null, runId = null }
   const rel = verdictPath(subject);
   const abs = path.join(repo, rel);
 
-  fs.mkdirSync(path.dirname(abs), { recursive: true });
   const body = {
     subject,
     base,
@@ -235,17 +245,99 @@ export function record(repo, ref, { verdict, by, evidence = null, runId = null }
     evidence,
     recorded_at: new Date().toISOString(),
   };
-  fs.writeFileSync(abs, `${JSON.stringify(body, null, 2)}\n`);
-  return { path: rel, ...body };
+  // THE ONLY DIFFERENCE A DRY RUN MAKES IS THESE TWO LINES, AND THAT IS THE POINT. `body` is built
+  // by the code above either way — the subject, the tier and the tier driver are all computed from
+  // the real tree — so a preview cannot describe a record different from the one a real run writes.
+  // A --dry-run that builds its own body is worse than none: it reports a plan the tool would not
+  // execute, and nothing would notice. `dry_run_preview_matches_record` in
+  // scripts/merge-gate.test.mjs asserts the two are byte-identical apart from the timestamp.
+  if (!dryRun) {
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, `${JSON.stringify(body, null, 2)}\n`);
+  }
+  return { path: rel, dry_run: dryRun, ...body };
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Does this token supply a VALUE to the flag before it?
+ *
+ * ONE DEFINITION, TWO CALLERS — `arg()` below and `unknownFlag()` — and they must not be written
+ * twice. `arg()` treats a `--`-prefixed token as "no value given" and falls back; if the validator
+ * disagreed and swallowed such a token as a value, `--evidence --dry-run` would set evidence to
+ * null AND hide the unknown flag, which is the silent accept this change exists to end wearing a
+ * second face.
+ */
+const isValue = (tok) => tok !== undefined && !tok.startsWith('--');
+
 function arg(name, fallback = null) {
   const i = process.argv.indexOf(name);
   const v = i !== -1 ? process.argv[i + 1] : undefined;
-  return v && !v.startsWith('--') ? v : fallback;
+  return isValue(v) ? v : fallback;
 }
+
+/**
+ * Every flag this program reads, by command — the ONE list, used to validate and to print usage.
+ *
+ * WHY THIS EXISTS. `arg()` searches argv for a name and ignores everything it was not asked for, so
+ * an unrecognised flag did not fail, did not warn, and did not change the outcome — it was DROPPED.
+ * Measured on `main` at 47dbbd6: `verdict.mjs record --verdict PASS --by probe --dry-run` exited 0
+ * and WROTE `.qa/verdicts/e3b0c442….json`, the empty-diff subject, into a governed directory. The
+ * operator's reason for typing `--dry-run` was that it should not write. Failing to have that guard
+ * rail looked exactly like having it.
+ *
+ * `true` means the flag takes a value, `false` means it is a bare switch. That distinction is what
+ * lets the walker skip `--by ceo` without reading `ceo` as a stray token, and it is why the table
+ * cannot be a plain array of names.
+ *
+ * KEPT NEXT TO THE USAGE STRING ON PURPOSE. The old usage line named five flags and the code read
+ * seven — `--run-id` and `--evidence` were readable and undocumented — so a reader who trusted it
+ * would have thought `--run-id` was unknown. usage() is generated from this table now, so the two
+ * cannot disagree again.
+ */
+const GLOBAL_FLAGS = { '--repo': true, '--ref': true, '--json': false };
+const FLAGS = {
+  subject: { ...GLOBAL_FLAGS },
+  check: { ...GLOBAL_FLAGS },
+  record: {
+    ...GLOBAL_FLAGS,
+    '--verdict': true,
+    '--by': true,
+    '--evidence': true,
+    '--run-id': true,
+    '--dry-run': false,
+  },
+};
+
+/**
+ * The first flag `cmd` does not accept, or null.
+ *
+ * FLAGS ONLY, AND THE BOUNDARY IS DELIBERATE. A stray POSITIONAL — `record PASS` — is still
+ * ignored, and that is a second silent-accept this change does not close. It is left open rather
+ * than closed quietly because the two are not one class: every live call site passes flags and
+ * values only (swept, and pinned in scripts/merge-gate.test.mjs), so refusing flags breaks nothing,
+ * while refusing positionals would require modelling which tokens are values — the same modelling
+ * this repo has twice concluded is the wrong shape of fix. Named here so the next reader finds it
+ * written down rather than by making the mistake.
+ */
+function unknownFlag(cmd, argv) {
+  const allowed = FLAGS[cmd];
+  if (!allowed) return null; // an unknown COMMAND is already refused, with usage, below
+  for (let i = 0; i < argv.length; i += 1) {
+    const tok = argv[i];
+    if (!tok.startsWith('--')) continue;
+    if (!Object.prototype.hasOwnProperty.call(allowed, tok)) return tok;
+    if (allowed[tok] && isValue(argv[i + 1])) i += 1; // skip the value, so it is never read as a flag
+  }
+  return null;
+}
+
+const usage = () =>
+  `usage: verdict.mjs <subject|record|check> [flags]\n${
+    Object.entries(FLAGS)
+      .map(([cmd, flags]) => `  ${cmd.padEnd(8)}${Object.keys(flags).join(' ')}\n`)
+      .join('')}`;
 
 function explain(r) {
   const lines = [];
@@ -284,6 +376,23 @@ function explain(r) {
 
 function main() {
   const cmd = process.argv[2];
+
+  // BEFORE ANYTHING ELSE, AND BEFORE ANYTHING CAN WRITE. Validation sits above `computeSubject`,
+  // above `tierFor` and above `record`, so a refused invocation cannot have touched the verdict
+  // directory — the test asserts the directory listing is unchanged, not merely that the exit code
+  // moved, because "it failed" and "it failed without writing" are different claims.
+  const bad = unknownFlag(cmd, process.argv.slice(3));
+  if (bad) {
+    process.stderr.write(
+      `verdict: unknown flag "${bad}" for "${cmd}" — refusing rather than ignoring it.\n` +
+        `  Nothing was written. A flag this program does not read is dropped in silence otherwise, ` +
+        `and a flag you typed to PREVENT an action is the one you are most likely to type.\n` +
+        `  ${cmd} accepts: ${Object.keys(FLAGS[cmd]).join(' ')}\n` +
+        (cmd === 'record' ? '  To see the record WITHOUT writing it: add --dry-run.\n' : '')
+    );
+    return 2;
+  }
+
   const repo = path.resolve(arg('--repo', process.cwd()));
   const ref = arg('--ref', 'HEAD');
   const asJson = process.argv.includes('--json');
@@ -295,14 +404,27 @@ function main() {
   }
 
   if (cmd === 'record') {
+    const dryRun = process.argv.includes('--dry-run');
     const r = record(repo, ref, {
       verdict: arg('--verdict'),
       by: arg('--by'),
       evidence: arg('--evidence'),
       runId: arg('--run-id'),
+      dryRun,
     });
-    process.stdout.write(asJson ? `${JSON.stringify(r, null, 2)}\n` : `recorded ${r.verdict} · tier=${r.tier} · ${r.path}\n`);
-    process.stdout.write(asJson ? '' : `commit it: git add ${VERDICT_DIR} && git commit -m "qa(verdict): ${r.verdict}"\n`);
+    if (asJson) process.stdout.write(`${JSON.stringify(r, null, 2)}\n`);
+    else if (dryRun) {
+      // NAMES THE PATH IT DID NOT WRITE. "Would write" and "wrote" must not read alike at a glance,
+      // which is why the verb changes and the follow-up line is the command to do it for real
+      // rather than the commit recipe — a preview that ends in "commit it:" invites committing a
+      // file that does not exist.
+      process.stdout.write(`DRY RUN — would record ${r.verdict} · tier=${r.tier} · ${r.path}\n`);
+      process.stdout.write(`${JSON.stringify(r, null, 2)}\n`);
+      process.stdout.write('nothing was written. Re-run without --dry-run to record it.\n');
+    } else {
+      process.stdout.write(`recorded ${r.verdict} · tier=${r.tier} · ${r.path}\n`);
+      process.stdout.write(`commit it: git add ${VERDICT_DIR} && git commit -m "qa(verdict): ${r.verdict}"\n`);
+    }
     return 0;
   }
 
@@ -317,7 +439,7 @@ function main() {
     return r.ok ? 0 : 1;
   }
 
-  process.stderr.write('usage: verdict.mjs <subject|record|check> [--repo P] [--ref R] [--json]\n');
+  process.stderr.write(usage());
   return 2;
 }
 

@@ -2438,3 +2438,118 @@ describe('render parity against the real local fleet', () => {
     60_000
   );
 });
+
+
+// ── DispatchView's pure functions — the half that shipped untested ─────────────────────────
+//
+// FOUND BY REVIEW, NOT BY ME: the change that added `failed` and `no-result` added 155 lines of
+// consumer tests and 0 for the 88 lines of view it also added — and the p2 defect below lived in
+// exactly that untested half. `grep -rn 'dispatchHeadline\|StatusCell\|DispatchTable' test/`
+// returned nothing at the time, against 73 `test(` in this file.
+//
+// The base file's stated reason for leaving DispatchView out is about `useEndpoint()` inside the
+// whole-view component, which does not settle under renderToStaticMarkup(). It does not apply to
+// these three, which are pure: entries in, markup out.
+
+import { DispatchTable, StatusCell, dispatchHeadline } from '../client/src/views/DispatchView.tsx';
+import type { DispatchEntry } from '../server/index-cache.ts';
+
+const dispatchRow = (id: string, status: string): DispatchEntry =>
+  ({ id, project: 'p', root: '/p', goal: 'g-' + id, enqueuedAt: 1_000, status } as DispatchEntry);
+
+describe('dispatchHeadline counts the COMPLEMENT, so a new status cannot hide', () => {
+  test('`failed` and `no-result` count as unsuccessful', () => {
+    const h = dispatchHeadline([dispatchRow('a', 'failed'), dispatchRow('b', 'no-result')]);
+    expect(h).toEqual({ total: 2, pending: 0, unsuccessful: 2 });
+  });
+
+  test('THE REGRESSION: an unknown status is counted, not dropped', () => {
+    // The enumerating version returned {total: 3, pending: 0, unsuccessful: 0} here — a clean
+    // headline over a queue in an unknown state, with the tone left at `default`.
+    expect(dispatchHeadline([dispatchRow('x', 'unknown'), dispatchRow('y', 'unknown'), dispatchRow('z', 'unknown')]))
+      .toEqual({ total: 3, pending: 0, unsuccessful: 3 });
+  });
+
+  test('`running` is counted too — it is neither pending nor done', () => {
+    expect(dispatchHeadline([dispatchRow('r', 'running')])).toEqual({ total: 1, pending: 0, unsuccessful: 1 });
+  });
+
+  test('`not-started` is counted', () => {
+    expect(dispatchHeadline([dispatchRow('n', 'not-started')])).toEqual({ total: 1, pending: 0, unsuccessful: 1 });
+  });
+
+  test('CONTROLS: the two states that are FINE are not counted as unsuccessful', () => {
+    // Without these the complement could be "count everything" and every test above would pass.
+    expect(dispatchHeadline([dispatchRow('p', 'pending')])).toEqual({ total: 1, pending: 1, unsuccessful: 0 });
+    expect(dispatchHeadline([dispatchRow('c', 'consumed')])).toEqual({ total: 1, pending: 0, unsuccessful: 0 });
+  });
+});
+
+describe('DispatchTable renders every status distinguishably', () => {
+  const render = (status: string) =>
+    renderToStaticMarkup(<DispatchTable entries={[dispatchRow('id', status)]} now={2_000} />);
+
+  test('a failure is NOT drawn as "consumed" — the defect this view had', () => {
+    const failed = render('failed');
+    expect(failed).toContain('failed');
+    expect(failed).not.toContain('>consumed<');
+    expect(failed).toContain('text-bad');
+  });
+
+  test('every state produces distinct markup — no two collapse', () => {
+    const states = ['pending', 'running', 'consumed', 'failed', 'no-result', 'not-started'];
+    const rendered = states.map(render);
+    expect(new Set(rendered).size).toBe(states.length);
+  });
+
+  test('an UNKNOWN status renders as itself, never folded into a known one', () => {
+    const out = render('timed-out');
+    expect(out).toContain('timed-out');
+    expect(out).not.toContain('>consumed<');
+    expect(out).toContain('text-bad');
+  });
+
+  test('EVERY status renders a `text-` class the stylesheet actually defines', () => {
+    // THIS TEST USED TO CHECK A HARDCODED HISTORICAL STRING — it rendered only `failed` and
+    // asserted the markup did not contain `text-err`, the one typo that had already been found and
+    // fixed. That is a regression pin for a past mistake, not the property the test is named for:
+    // moving the SAME typo to any other status left it green. Measured by the reviewer — mutation
+    // on `failed` failed 2 of 4 tests; the identical mutation on `not-started` survived, 4 pass.
+    //
+    // An undefined `text-*` class ships UNSTYLED AND GREEN: CSS silently ignores a class it does
+    // not know, so nothing in the build or the test suite objects, and the failure is visible only
+    // to a human looking at the screen. So the rule is asserted generally: extract whatever class
+    // each status actually emits, and require the stylesheet to define a matching custom property.
+    const css = fs.readFileSync(path.join(import.meta.dir, '..', 'client', 'src', 'styles.css'), 'utf8');
+    const STATUSES = ['pending', 'running', 'consumed', 'failed', 'no-result', 'not-started', 'timed-out'];
+
+    // SCOPED TO StatusCell, NOT THE WHOLE ROW — and the first cut of this test was not. Scanning
+    // the rendered table swept up `text-left` and `text-right`, real Tailwind alignment utilities
+    // emitted by `Td align=…`, which are not tone tokens and have no `--color-*`. The fix is to
+    // narrow the SUBJECT to the component that chooses the tone, rather than to enumerate the
+    // layout utilities that happen to exist today — an exception list would need editing every
+    // time the table's layout changed, and would be the same enumerating habit twice over.
+    const emitted = new Set<string>();
+    for (const status of STATUSES) {
+      const markup = renderToStaticMarkup(<StatusCell entry={dispatchRow('id', status)} />);
+      for (const m of markup.matchAll(/\btext-([a-z][a-z-]*)\b/g)) emitted.add(m[1] as string);
+    }
+
+    // NON-VACUITY: the scan really found classes. A markup change that stopped emitting them would
+    // otherwise leave this asserting nothing, forever.
+    expect(emitted.size).toBeGreaterThanOrEqual(3);
+
+    const undefinedTokens = [...emitted].filter((t) => !css.includes(`--color-${t}`));
+    expect(undefinedTokens).toEqual([]);
+  });
+
+  test('the guard REFUSES an undefined tone class — proved by construction, not by history', () => {
+    // The mutation the test above must catch, built here rather than trusted: a class the
+    // stylesheet does not define must be reported no matter WHICH status carries it.
+    const css = fs.readFileSync(path.join(import.meta.dir, '..', 'client', 'src', 'styles.css'), 'utf8');
+    const pretendMarkup = '<span class="fig text-err">not started</span>';
+    const emitted = [...pretendMarkup.matchAll(/\btext-([a-z][a-z-]*)\b/g)].map((m) => m[1] as string);
+    expect(emitted).toEqual(['err']);
+    expect(emitted.filter((t) => !css.includes(`--color-${t}`))).toEqual(['err']);
+  });
+});
