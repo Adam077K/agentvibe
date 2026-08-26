@@ -35,19 +35,21 @@ location and exits 2 rather than emitting an invocation it could not verify. Arg
 are refused by the gate: `tree` must be absolute (a relative `.` is refused) and `ref` must be
 sha-tipped (`origin/main...HEAD` is refused by name).
 
-**Before you record anything from a gate run, check that it ran.** A refused run and a real BLOCK
-return the same verdict: the entry-refusal path in [.claude/workflows/qa.js](../workflows/qa.js)
-ends in `return gateBlock(...)`, so BLOCK is what a refusal produces. A gate that reviewed nothing
-looks exactly like a gate that reviewed everything and found defects.
+**Before you record anything from a gate run, read two fields — `verdict` and `established`.** A
+refusal is its own terminal value: `REFUSED`, distinct from `BLOCK` and from `PASS`. `established`
+is `verdict !== REFUSED`, derived on the same line that sets the verdict, so *"did this run tell me
+anything"* is one field rather than an enumeration you can fall behind.
 
-**The cut is whether anything was established about this diff — not whether an agent ran.** qa.js
-says so itself, and that sentence is what to look for: *"No agent was dispatched and nothing about
-this diff has been established in either direction — this is a refusal, not a verdict."* Look for
-the literal `REFUSED` in the summary and for that claim of nothing established.
+**Do not fold `REFUSED` back into `BLOCK`.** [.claude/workflows/qa.js](../workflows/qa.js) says so
+about itself: doing that moves the lie from the gate to the caller and buys nothing.
 
-**Do not count dispatched agents.** It separates nothing in either direction. An entry refusal
-dispatches none, an oracle dropout can dispatch four and establish nothing, and a real failing
-check can establish something with one.
+> **Superseded 2026-08-26, and kept because it is why the value exists.** Until PR 115 landed, a
+> refusal returned `BLOCK` — so a gate that reviewed nothing was indistinguishable from one that
+> reviewed everything and found defects, and this file told you to read the summary for the literal
+> `REFUSED` and for its claim that nothing had been established. That inference is no longer needed.
+> **Never a count of dispatched agents**, which was never the discriminator: an entry refusal
+> dispatches none, an oracle dropout can dispatch four and establish nothing, and a real failing
+> check can establish something with one.
 
 And the gate is invoked by the **session**, never by a dispatched engine: `Workflow` is a
 main-session tool, so an engine simply does not have it, and a missing tool is a silent no-op

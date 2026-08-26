@@ -234,6 +234,45 @@ of which live in `scripts/lib/check-suite.js`, which is `irreversible`. It lands
 `loadPlaybooks()` are both pre-existing and confirmed identical at base. Fixing a pre-existing defect inside
 a PR that did not cause it hides which change is under review.
 
+## The update onto `main`, and the tripwire that fired on it
+
+Merged `origin/main` at `ddaf25a` (six PRs ahead of my base). **`git merge` failed twice before it worked,
+and neither failure was a conflict** — `merge-tree --write-tree` predicted rc=0 and was right. The first
+attempt died on `Operation not permitted` unlinking `.claude/agents/sourcer.md` and `.mcp.json`: the armed
+sandbox's documented denied paths. It left no `MERGE_HEAD` and HEAD unmoved, but it had already written 25 of
+main's new files as **untracked**, so the escalated retry then refused to overwrite them. Removing them
+needed care rather than `git clean` — which the pre-tool hook blocks outright, correctly, since it would also
+take `.worktrees/.registry` and the session files the gate reads. I enumerated with
+`git ls-files --others --exclude-standard`, **asserted all 25 were present in `origin/main`** (0 were not,
+with the membership test controlled in both directions), and removed exactly those paths.
+
+**`CODEBASE-MAP.md` auto-merged correctly, and that is now checked rather than assumed** — two ways:
+`check:map` exited 0 on the auto-merged file *before* regeneration, and `build:map` then produced a file
+byte-identical to it. `STEPS.length` moved **46 → 48** as predicted. `package.json` kept `gates`,
+`test:playbooks` with both files and `--test-concurrency=1`, and gained main's `check:citations-exist`.
+
+**The citations exposure is cured by the update, as measured in advance:** `check:citations-exist` → **0,
+clean** on the merged tree. Before the merge it was 1 existence finding, from a ten-day-old session file main
+had already repaired.
+
+**And the `#115` tripwire fired on the first run after the merge** — `+ 'gateRefusal' - 'gateBlock'`. That is
+the assertion I wrote precisely to fail when #115 landed, whose comment said the failure *"is the signal to
+replace the reading in `recording_hazard` with the terminal value it can then simply name."* So I did:
+
+- **`VERDICT.REFUSED` is now a real terminal value** beside `BLOCK` and `PASS`, and `established` is
+  `verdict !== VERDICT.REFUSED` — **derived on the same line that sets the verdict**, so the two cannot
+  drift and a consumer asking *"did this run tell me anything"* never enumerates verdict values.
+- `recording_hazard` and `/review` **name the fields** instead of teaching the old inference; the superseded
+  reading is kept in place as the reason the value exists, not deleted.
+- The tripwire now guards the **new** state — a refusal must not be spellable as a block, which is the fold
+  `qa.js` forbids about itself — and additionally asserts both fields the documentation tells a reader to
+  read, so a field the prose names must exist.
+- The two `once()` anchors that pinned the superseded sentences were replaced, not dropped.
+
+A tripwire whose whole job was to fail once, failing exactly when it was supposed to, is the cheapest
+outcome available here: the alternative was documentation that quietly went on describing a hazard the
+repository had already fixed.
+
 ## Constraints on the gate route, re-checked against this wiring
 
 A parallel lane measured `qa.js`'s entry contract and sent five constraints. **This route satisfies all of

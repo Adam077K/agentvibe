@@ -257,19 +257,30 @@ test('the qa-verdict gate carries the recording hazard, and it names the right c
     const n = (h.match(new RegExp(re.source, 'g')) || []).length;
     assert.equal(n, 1, `${label}: expected exactly 1 occurrence of ${re}, found ${n}. Zero = the sentence is gone. Two or more = the anchor no longer identifies one sentence, so it has stopped being an anchor.`);
   };
-  once(/Look for the literal word REFUSED in the summary/, 'the instruction to look for the refusal marker');
-  once(/claim of nothing established/, 'the cut: was anything established about this diff');
+  // These two replaced anchors on the SUPERSEDED reading — "Look for the literal word REFUSED in
+  // the summary" and "claim of nothing established" — which were the workaround for a refusal
+  // being spelled as a block. PR 115 gave it a value, so the anchors now pin the two fields a
+  // reader is told to read rather than the inference they used to have to make.
+  once(/READ TWO FIELDS BEFORE RECORDING/, 'the instruction: read verdict and established');
+  once(/DO NOT FOLD REFUSED BACK INTO BLOCK/, 'the fold qa.js forbids about itself');
   once(/DO NOT USE A COUNT OF DISPATCHED AGENTS/, 'the refuted discriminator, refuted in place');
   once(/DOCUMENTATION AND NOT ENFORCEMENT/, 'it must not read as a check');
   assert.match(String(qa.how_to_run_it), /run-gate\.mjs --json/, 'the one route that builds the args correctly');
 });
 
-test('the refusal path in qa.js still returns a BLOCK, so the hazard is still real', () => {
-  // The hazard above is only worth carrying while a refusal is spellable as a block. PR #115 would
-  // change that — it was OPEN and DRAFT, merged=null, on 2026-08-26, and neither this branch nor
-  // origin/main carried it. When it lands this assertion fails, and the failure is the signal to
-  // replace the reading in `recording_hazard` with the terminal value it can then simply name.
-  // A hazard notice that outlives its hazard is how a file starts teaching the past.
+test('a refusal in qa.js is NOT spellable as a block', () => {
+  // THIS TRIPWIRE FIRED, AND THAT IS WHY THIS TEST NOW READS THE OTHER WAY. Its previous form
+  // asserted the refusal path returned `gateBlock`, and said in this comment that when PR 115
+  // landed the failure would be the signal to replace the reading in `recording_hazard` with the
+  // value it could then simply name. Merging `main` at ddaf25a turned it red with
+  // `+ 'gateRefusal' - 'gateBlock'`, on the first run after the merge. The signal worked, the
+  // hazard notice has been rewritten to name `VERDICT.REFUSED`, and this assertion now guards the
+  // NEW state instead of waiting for it.
+  //
+  // What it guards is the property, not the spelling: a refusal must not resolve to BLOCK, because
+  // that is the fold qa.js itself forbids — "DO NOT let a caller fold REFUSED back into BLOCK.
+  // That moves the lie from the gate to the caller and buys nothing." If someone reverts that,
+  // this goes red and `recording_hazard` is wrong again.
   // ANCHORED ON THE FINDING ID, NOT ON A BYTE BUDGET. This read
   // `/qa\.js REFUSED to run[\s\S]{0,400}?return\s+(\w+)\(/` — a 400-character window over a gap
   // that had grown to 330, leaving 70 characters of margin. A benign edit lengthening the refusal
@@ -284,7 +295,12 @@ test('the refusal path in qa.js still returns a BLOCK, so the hazard is still re
   assert.match(qa, /qa\.js REFUSED to run/, 'the refusal summary still exists');
   const refusalReturn = /return\s+(\w+)\(\s*summary\s*,\s*\[\{[\s\S]*?id:\s*'gate-subject-unestablished'/.exec(qa);
   assert.ok(refusalReturn, 'the refusal path no longer returns the gate-subject-unestablished finding — find where it went before changing this');
-  assert.equal(refusalReturn[1], 'gateBlock', 'a refusal is still spelled as a block — if this changed, update recording_hazard');
+  assert.equal(refusalReturn[1], 'gateRefusal', 'a refusal must not be spelled as a block — if this reverted, recording_hazard is wrong again');
+  // REFUSED is a real terminal value beside BLOCK and PASS, and `established` is derived from it
+  // rather than maintained beside it. Both are what `recording_hazard` now tells a reader to read,
+  // so both are asserted here — a field the documentation names must exist.
+  assert.match(qa, /REFUSED:\s*'REFUSED'/, 'VERDICT.REFUSED is a declared terminal value');
+  assert.match(qa, /established:\s*verdict\s*!==\s*VERDICT\.REFUSED/, '`established` is derived from the verdict, not kept in sync with it');
 });
 
 test('a human gate with no named approver and no place it is recorded is refused', () => {
