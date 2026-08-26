@@ -1,0 +1,11 @@
+{
+  "subject": "517d73115fccd5321eb9c07a09d28edd25d652c542afba11fa11deaffbd515e3",
+  "base": "244e8db3a1d8103ef79bec13467d3dcb2ad44cdd",
+  "tier": "irreversible",
+  "tier_driver": "scripts/lib/figures.js",
+  "verdict": "PASS",
+  "by": "builder-status-after-the-merge-train",
+  "run_id": null,
+  "evidence": "npm run check in the branch worktree: Tally: 46 of 46 passed · 0 failed, exit 0 (152.5s; also 137.6s and 273.5s on this tree, which is why the published wall-clock range widened to 90-275s). npm run check:figures: 27 checked across 3 files, 0 findings — up from 24 across 2, because CLAUDE.md was wired into the registry by this change. The three new entries are proved non-vacuous by mutation: 46->45 yields '[mismatch] CLAUDE.md:481 — claude-suite-steps states 45, derived 46'. Every recipe printed in either document was executed: STEPS.length->46; for-each-ref->main 71fd58d / origin/main 244e8db; rev-parse --abbrev-ref HEAD->docs/status-after-the-merge-train; 'git rev-parse --short main origin/main'->exit 128 as documented; ls-tree .qa->23; check:citations wiring->false true. Tier from node scripts/classify.mjs, not assumed: floor=irreversible via scripts/lib/figures.js; CLAUDE.md itself tiers trivial, contradicting the brief.",
+  "recorded_at": "2026-08-26T12:40:54.669Z"
+}

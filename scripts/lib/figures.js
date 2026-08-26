@@ -312,6 +312,40 @@ const FIGURES = [
     what: 'links of the `check:ledger` alias',
     locator: /^\s*#\s*(\w+) steps, because `check:ledger` chained them/m,
   },
+
+  // ── CLAUDE.md ──────────────────────────────────────────────────────────────────────────────
+  // WIRED 2026-08-26, and the reason is measured rather than tidy. CLAUDE.md's Project State block
+  // is the ONLY section agents read to learn where the project is, and it was the one document
+  // this check did not cover: after the eight-merge train it still said `30 of 30 steps` and
+  // printed a derivation returning **30**, against a real STEPS.length of 46. It had been wrong
+  // through at least two denominators — the block's own superseded notes record `29` and `30` —
+  // because nothing here ever asserted it and the rule that it move "in the same PR" is a
+  // sentence, not a mechanism. Three entries now make the same figure fail a build.
+  //
+  // NO `history: 'blockquote'` ON PURPOSE. CLAUDE.md keeps its history as INLINE italics, not
+  // blockquotes, so the strip that protects docs/STATUS.md would remove nothing here. These
+  // locators therefore pin a whole distinctive sentence, and the ambiguity rule is the backstop:
+  // each was confirmed to match EXACTLY ONCE against the live file before being added, and a
+  // second match fails rather than guessing. Superseded figures in this block are written as
+  // `this read "30"` and are not reachable by any of the three patterns below.
+  {
+    id: 'claude-suite-steps',
+    file: 'CLAUDE.md', derive: 'suiteSteps',
+    what: 'STEPS.length, as the Project State gate bullet states it',
+    locator: /\*\*(\d+) of \d+ steps · 0 failed · exit 0 with the sandbox armed\*\*/,
+  },
+  {
+    id: 'claude-suite-steps-derivation',
+    file: 'CLAUDE.md', derive: 'suiteSteps',
+    what: 'the answer the STEPS.length recipe in Project State says it prints',
+    locator: /STEPS\.length\)"` → \*\*(\d+)\*\*/,
+  },
+  {
+    id: 'claude-tier-gate-steps',
+    file: 'CLAUDE.md', derive: 'suiteSteps',
+    what: 'STEPS.length, as the P0 bullet states it beside `test:tier-gate`',
+    locator: /\(\*\*(\d+)\*\* steps now/,
+  },
 ];
 
 const lineOf = (text, index) => text.slice(0, index).split('\n').length;

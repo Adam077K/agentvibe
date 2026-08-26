@@ -477,10 +477,13 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
 > through Phase 8a — eight phases shipped while it said "Sprint 1 — foundation." **If you change the phase,
 > change this block in the same PR.**
 
-- **THE BINDING GATE CAN COMPLETE NOW — 2026-08-24 · re-measured 2026-08-25.** `npm run check` is now
-  **30 of 30 steps · 0 failed · exit 0 with the sandbox armed**, in 90s, measured on
-  `fix/pr5-review-fixes`. Derive the denominator, never quote it from memory:
-  `node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **30**. That counts the
+- **THE BINDING GATE CAN COMPLETE NOW — 2026-08-24 · re-measured 2026-08-26 after the eight-merge train.**
+  `npm run check` is now **46 of 46 steps · 0 failed · exit 0 with the sandbox armed**, measured on
+  `main` at the head of that train. **Wall clock is a range so wide it carries almost no information —
+  90 to 275s**, measured 137.6s and 273.5s on one tree minutes apart. It tracks how many lanes are
+  building, not the suite. Read the tally and the exit code;
+  see `docs/STATUS.md` §4. Derive the denominator, never quote it from memory:
+  `node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **46**. That counts the
   steps the suite actually runs, which is the one list — `scripts/lib/check-suite.js` owns it, and
   `test:check-suite` fails if `package.json` drifts away from it.
   *Superseded 2026-08-25: the derivation here was
@@ -518,8 +521,14 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   now.** *Superseded 2026-08-25: this read "One blocker remains — `check:mc` — and it is not a
   mission-control defect". It is still not a mission-control defect and it still fails under the sandbox;
   what changed is that it is no longer a step, so it no longer blocks `npm run check`. See the next bullet
-  for the cause and `scripts/lib/check-suite.js` for where the coverage went.* `.qa/verdicts/` is still
-  empty: no gate run has yet completed end to end.
+  for the cause and `scripts/lib/check-suite.js` for where the coverage went.*
+  **`.qa/verdicts/` is NOT empty and gate runs DO complete end to end** — `git ls-tree -r --name-only
+  origin/main .qa | wc -l` → **23**, every one `verdict: PASS`.
+  *Superseded 2026-08-26: this read "`.qa/verdicts/` is still empty: no gate run has yet completed end to
+  end." True when written, falsified by the merge train with nobody editing the sentence.* **Read the 23
+  narrowly**: each is author-recorded against a deterministic floor, single model family, so the
+  `irreversible`-tier requirement of 2-of-3 judges is unmet on every one of them. Artifacts exist; the
+  multi-judge panel has still never run.
 - **`check:mc`'s single failure is caused by the ARMED SANDBOX, not by mission-control — measured
   2026-08-24.** Two cells at the session root, same commit, same deps, Bun 1.3.10 in both:
   **sandboxed → 344 pass · 1 fail · exit 1** (`EADDRINUSE`, in the real-socket SSE test in
@@ -569,6 +578,32 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   `PROJECT_ROOT` form. Do not read this bullet as resolved until someone reconciles it against `main` and
   says so here. Required follow-up with an exit criterion in
   [the handoff](docs/08-agents_work/handoffs/2026-08-25-after-the-gate-ran.md).
+- **THE MERGE TRAIN LANDED 2026-08-26 — eight merges, zero open PRs** (`REPORTED`; branch state is not
+  readable from here — the sandbox denies `~/.config/gh`). #106, #99, #101, #102, #103, #104, #105, #107.
+  **#77 was CLOSED, not merged**: it bound a verdict to a HEAD sha while `scripts/verdict.mjs` already
+  binds by content hash, and merging it would have put two implementations of one check side by side —
+  the defect this repo has hit before and names explicitly.
+- **WAVE 2 IS EFFECTIVELY CLOSED, with two items left and one of them the founder's.** Landed: 2.1 the
+  deterministic oracle · 2.3 the first real verdict · 2.4 the external-judge seam (`claim-judge-external`
+  is a registered, dispatchable resolver as of #103) · 2.6 `cmd_merge` opens a PR.
+  **Still open — 2.2 and 2.5, and they are one gap seen twice:** playbooks name `gate: qa-verdict` with
+  **no implementation behind it**, and **no engine declares a `Workflow` tool**, so a dispatched engine
+  cannot reach `qa.js` at all. Also open: the forgeability `qa-lead-pass.yml` documents about itself — a
+  verdict record is hash-bound, not signed, so anyone with repo-write can author one.
+  **2.7 is the founder's and its prerequisite is now discharged (#101):** `enforce_admins` is still
+  `false`.
+- **DO NOT DESCRIBE THE EXIT-CODE GUARD AS CLOSED. Four bypasses are live on `main`**, all one class —
+  `parseCiSteps` does not see the step at all, so the guard never runs on it: a second job, `run :` with a
+  space before the colon, a flow-mapping step, and a quoted `"run":` key. Each was confirmed silent **by
+  execution**, and each has a written proposal attached. A guard with four known holes is a guard, not a
+  guarantee.
+- **`check-citations.mjs` is STILL UNWIRED, and the full run its own header asked for has now happened.**
+  `check:citations` is `EXCLUDED`, not in `STEPS` — verify with
+  `node -e "const c=require('./scripts/lib/check-suite.js');
+  console.log(c.STEPS.includes('check:citations'), 'check:citations' in c.EXCLUDED)"`
+  → `false true`. The run: **2 existence findings · 85 drift · 25% drift coverage · 85% of locators
+  resolved by basename**. Recommendation on the table — **wire existence as blocking, leave drift as
+  WARN**. Founder decision, not an agent's.
 - **Where we are:** Phases 1–7 complete · **Phase 8a complete** · **8b (Dispatch) BUILT 2026-08-16 against
   `agentvibe` as its only target** — the loop is end to end (the server enqueues to a queue file, a
   founder-run consumer in `mission-control/scripts/` reads it; the server still never spawns, and
@@ -582,16 +617,24 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   nine branches in one train, the first time `main` had moved since before 2026-08-20. What landed: the
   PR-route gate **blocks** and posts a check-run signed by `GITHUB_TOKEN` with the author grep deleted;
   `qa.js` runs a deterministic oracle before any panel agent is dispatched; credential `denyRead` covers
-  the CLI credential stores; `test:tier-gate` is in `npm run check` (**30** steps now — this read "29"
-  until 2026-08-24, the same dropped-step error corrected in the gate bullet above); and
+  the CLI credential stores; `test:tier-gate` is in `npm run check` (**46** steps now — this read "30"
+  until 2026-08-26 and "29" until 2026-08-24, the same dropped-step error corrected in the gate bullet
+  above); and
   `war-room/bin/PROJECT_NAME.tmpl` no longer seeds an unreviewed model-resolved merge into every generated
-  project. **Only P0 item 6 remains** — `claim-judge-external` (Codex), still correctly deferred: bug
-  #19945 returns exit 0 with empty stdout when detached from a TTY, which is exactly how a resolver runs.
+  project. **P0 item 6 — `claim-judge-external` — HAS NOW LANDED (#103)**: the resolver is registered and
+  dispatchable, and `scripts/ledger.test.mjs` asserts both, plus that it attaches only where a tier rule
+  names it. *Superseded 2026-08-26: this read "Only P0 item 6 remains … still correctly deferred".*
+  **A seam is not a second opinion**: what landed is the mechanism, and Codex bug #19945 — exit 0 with
+  empty stdout when detached from a TTY, which is exactly how a resolver runs — is why the panel below is
+  still single-family.
   Handoff: [2026-08-23-after-p0.md](docs/08-agents_work/handoffs/2026-08-23-after-p0.md).
 - **Single-family review is an ACCEPTED RISK, decided 2026-08-23, not a satisfied requirement.**
   Irreversible tier asks for 2-of-3 multi-judge and `risk: high` requires ≥2 distinct model families;
   there is no non-Anthropic model inside Claude Code. Every review behind that merge said so in its own
-  session file. Revisit if the Codex resolver lands.
+  session file. **Re-measured 2026-08-26 and STILL ACCEPTED — the exit condition runs to 2026-11-17.**
+  *This bullet used to close "Revisit if the Codex resolver lands." It landed (#103) and the risk did not
+  change*, because the seam is dispatchable while no non-Anthropic model is reachable from inside Claude
+  Code. Landing the mechanism is not satisfying the requirement; do not read #103 as discharging this.
 - **Branch protection exists and did not bind on the path actually used.** The push that moved `main`
   reported *"2 of 2 required status checks are expected"* — and succeeded anyway, having run no checks.
   So required checks govern the PR route and not a direct push. Treat `.github/workflows/**` as
