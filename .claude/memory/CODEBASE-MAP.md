@@ -93,7 +93,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:ledger` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/ledger.test.mjs` |
 | `npm run test:lenses` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs` |
 | `npm run test:memory` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-memory-budget.test.mjs` |
-| `npm run test:merge-gate` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs` |
+| `npm run test:merge-gate` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs scripts/produce-verdi` |
 | `npm run test:playbooks` | `node --require ./scripts/protected-write-tripwire.cjs --test --test-concurrency=1 scripts/playbooks.test.mjs s` |
 | `npm run test:pre-tool-use` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-agent-tool-inheritance` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-agent-tool-inheritance.test.mjs` |
@@ -154,6 +154,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/probe-readonly.test.mjs` | — |
 | `scripts/probe-stop-reason.test.mjs` | the aggregation that answers what ends a run. |
 | `scripts/probe-workflow-reach.test.mjs` | the bucketing behind "only a main session reaches the gate". |
+| `scripts/produce-verdict.test.mjs` | the blocking assertions for the verdict PRODUCER. |
 | `scripts/prompt-standard.test.mjs` | the PS-* rules of |
 | `scripts/protected-write.test.mjs` | proof that scripts/protected-write-tripwire.cjs fires. |
 | `scripts/provenance-portability.test.mjs` | the lens linter, run against a repository that |

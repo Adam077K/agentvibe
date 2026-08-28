@@ -1,0 +1,11 @@
+{
+  "subject": "b804e248dedfd1f467502e6b857d2f966fbe8e6638e0ed6fbca9815ab91b0dc8",
+  "base": "b4ea862cc6e2653ac21b43b1315da6ae2c4ff011",
+  "tier": "full",
+  "tier_driver": "scripts/check-suite.test.mjs",
+  "verdict": "PASS",
+  "by": "builder-produce-verdict",
+  "run_id": null,
+  "evidence": "Round 8, after PASS on both lenses with two findings. npm run check 48 of 48 passed, 0 failed, exit 0, sandbox armed. produce-verdict 65 pass 0 fail; check-suite 73 pass 0 fail. Five-cell mutation table, operator controlled, restores verified with cmp: FIRED as predicted for the reviewer's own exploit reproduced verbatim - a wired --base-ref knob declared 'bounds' - and for vocabulary-is-a-length-check-again, a-declared-re-derived-field-consumed-anyway, and short-circuit-runs-before-the-dry-run-branch-again; SILENT as predicted for renaming an unasserted field. R1 closed in three halves: the role vocabulary is a set, CLI_SINKS declares the only parameters main() may hand the pipeline, and a source-level non-consumption assertion with comments and registry literals stripped so a declaration is not read as a read. R2 closed: a dry run is REFUSED with would_be carrying what a real run would have reported, pinned through a real process as well as a unit. Named residual not fixed and outside the threat model: JUDGE_REF is symbolic and refs/heads/origin/main outranks refs/remotes/. UNRESOLVED and unchanged: the end-to-end panel has never been driven through this mechanism, and nothing in CI invokes the producer. Single author, single model family, no independent reviewer: tier full is NOT met by this record.",
+  "recorded_at": "2026-08-28T14:24:03.576Z"
+}
