@@ -1,0 +1,11 @@
+{
+  "subject": "21cafe526bc2720d89c9e47b485cd44f722c5c4180f0664a6097e729f502ccaf",
+  "base": "d1294a40a69609d2b227c501837105e41ff4543d",
+  "tier": "irreversible",
+  "tier_driver": "scripts/lib/check-suite.js",
+  "verdict": "PASS",
+  "by": "builder (author-recorded, single model family)",
+  "run_id": null,
+  "evidence": "npm run check 48 of 48 passed, 0 failed, 198.1s, sandbox armed; node --test scripts/probe-agent-tool-inheritance.test.mjs 17 pass 0 fail; node scripts/probe-agent-tool-inheritance.mjs CONTAINED exit 0 against claude 2.1.246; mutation of the fixture control 16 pass 1 fail, restored 17 pass 0 fail",
+  "recorded_at": "2026-08-28T08:55:30.180Z"
+}

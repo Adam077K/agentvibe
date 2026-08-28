@@ -1,0 +1,11 @@
+{
+  "subject": "393f71387375385f7059f5d37a26fd2eac3f6d9deecb4eeb4d8ee22011452624",
+  "base": "62e0c26a0c02898922284ae02edb3c2851e1c3d3",
+  "tier": "irreversible",
+  "tier_driver": "scripts/lib/check-suite.js",
+  "verdict": "PASS",
+  "by": "builder (author-recorded, single model family)",
+  "run_id": null,
+  "evidence": "review fixes C1+A1 and three advisory findings; npm run check 48 of 48 passed, 0 failed, 154.0s, sandbox armed, run with the session file staged so check:citations-exist saw it; npm run test:probe-agent-tool-inheritance 22 pass 0 fail; probe against claude 2.1.246 CONTAINED exit 0, subject arm 5 tools; mutation of the fixture control 16/1 restored 17/0, mutation of the main-session control 20/2 restored 22/0; Workflow-beside-Bash measured directly, inline [Read,Bash,Workflow] returns all three and a file-defined orchestrator replica plus Workflow returns 6 of 8. NOT a satisfied tier: irreversible asks 2-of-3 multi-judge across 2 model families, none reachable here, accepted risk to 2026-11-17",
+  "recorded_at": "2026-08-28T10:02:29.684Z"
+}
