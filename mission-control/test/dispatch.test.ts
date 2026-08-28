@@ -38,6 +38,10 @@ import {
   readDispatch,
   resolveDispatchStates,
   classifyDispatches,
+  deriveGateReachability,
+  GATE_OUTCOMES,
+  type GateOutcome,
+  KNOWN_DISPATCH_STATUSES,
   type DispatchEntry,
 } from '../server/index-cache.ts';
 import { execFileSync } from 'node:child_process';
@@ -46,6 +50,48 @@ import { createApi } from '../server/routes/api.ts';
 import type { DispatchResult, DispatchError, DispatchPayload } from '../server/routes/api.ts';
 import { mkTmpDir, rmTmp, initGitRepo, fixtureClaudeProjectsDir } from './fixtures.ts';
 import { snapshotTree, diffTrees } from './write-barrier.test.ts';
+
+/**
+ * Make a fixture root look like a harness-installed project, because a dispatch target IS one.
+ *
+ * WHY THE OLD FIXTURES WERE WRONG AND STILL PASSED. They created an empty directory and called it a
+ * project root. The consumer only ever did `existsSync(root)` with it, so nothing noticed — until
+ * routing began reading the project's playbooks and agent declaration out of that root, at which
+ * point four tests failed and one PASSED FOR THE WRONG REASON: the `no claude on PATH is
+ * not-started` test got `not-started` from the missing playbook, never reaching the spawn it exists
+ * to test. A fixture that omits what the subject reads does not test the subject.
+ */
+function installHarness(
+  root: string,
+  opts: { playbooks?: string[]; tools?: string; spelling?: 'flow' | 'block'; rawTools?: string; maxTurns?: number | null } = {},
+): void {
+  const agents = path.join(root, '.claude', 'agents');
+  const playbooks = path.join(root, '.claude', 'playbooks');
+  fs.mkdirSync(agents, { recursive: true });
+  fs.mkdirSync(playbooks, { recursive: true });
+  const flow = opts.tools ?? '[Read, Write, Edit, Bash, Glob, Grep, Task]';
+  // F2. THE FIXTURE AND THE PARSER SHARED ONE ASSUMPTION, WHICH IS WHY NEITHER CAUGHT IT. Every
+  // entry in the old table was flow-form, so a parser reading only flow form passed every test.
+  // `spelling: 'block'` renders the SAME list as YAML's other legal sequence form; `rawTools`
+  // writes an arbitrary value for the refusal cases.
+  const tools = opts.rawTools ?? (opts.spelling === 'block'
+    ? '\n' + flow.replace(/^\[|\]$/g, '').split(',').map((t) => `  - ${t.trim()}`).join('\n')
+    : flow);
+  // The body deliberately mentions the gate tool in PROSE, exactly as all 7 real engine files do.
+  // A derivation that greps the file rather than the `tools:` line reports this agent as
+  // gate-capable, so every fixture built by this helper carries that trap.
+  // `maxTurns` IS PART OF A FAITHFUL FIXTURE. Every real engine file declares one, and routing
+  // through `--agent` makes it bind — a fixture omitting it cannot exercise the field the record
+  // now carries, which is the same "fixture omits what the subject reads" defect as the empty root.
+  const maxTurns = opts.maxTurns === null ? '' : `maxTurns: ${opts.maxTurns ?? 30}\n`;
+  fs.writeFileSync(
+    path.join(agents, 'orchestrator.md'),
+    `---\nname: orchestrator\ntools: ${tools}\n${maxTurns}---\nThe Workflow tool is how qa.js is invoked.\n`,
+  );
+  for (const name of opts.playbooks ?? ['ship-feature.yml']) {
+    fs.writeFileSync(path.join(playbooks, name), 'name: fixture\nstages: []\n');
+  }
+}
 
 const cleanupDirs: string[] = [];
 afterAll(() => {
@@ -432,6 +478,7 @@ function dispatchFixture(prefix: string, script: string, entries: Partial<Dispat
   const root = path.join(dir, 'root');
   fs.mkdirSync(bin, { recursive: true });
   fs.mkdirSync(root, { recursive: true });
+  installHarness(root);
   fs.writeFileSync(path.join(bin, 'claude'), script);
   fs.chmodSync(path.join(bin, 'claude'), 0o755);
 
@@ -460,11 +507,11 @@ const CLAUDE_FAILS = '#!/bin/sh\necho boom >&2\nexit 3\n';
 const CLAUDE_SIGNALLED = '#!/bin/sh\nkill -TERM $$\n';
 
 describe('consume-dispatch records a distinguishable outcome', () => {
-  test('a launch that exits 0 is `consumed`, and a launch that exits 3 is NOT', () => {
+  test('a launch that exits 0 is `exited-clean`, and a launch that exits 3 is NOT', () => {
     const ok = runConsumer(dispatchFixture('mc-dispatch-ok-', CLAUDE_OK, [{}]));
     const bad = runConsumer(dispatchFixture('mc-dispatch-bad-', CLAUDE_FAILS, [{}]));
 
-    expect(ok.status).toBe('consumed');
+    expect(ok.status).toBe('exited-clean');
     expect(bad.status).toBe('failed');
     expect(bad.exitCode).toBe(3);
 
@@ -487,7 +534,7 @@ describe('consume-dispatch records a distinguishable outcome', () => {
     const f = dispatchFixture('mc-dispatch-running-', CLAUDE_OK, [{}]);
     runConsumer(f);
     const statuses = readDispatch(f.queue).map((e) => e.status);
-    expect(statuses).toEqual(['pending', 'running', 'consumed']);
+    expect(statuses).toEqual(['pending', 'running', 'exited-clean']);
   });
 
   test('an entry left `running` resolves to `no-result` and is NOT relaunched', () => {
@@ -594,15 +641,21 @@ describe('an unrecognised status is neither launched nor overwritten — END TO 
     fs.mkdirSync(bin, { recursive: true });
     fs.mkdirSync(root, { recursive: true });
     const log = path.join(dir, 'launches.txt');
-    fs.writeFileSync(path.join(bin, 'claude'), `#!/bin/sh\necho "LAUNCHED $@" >> ${log}\nexit 0\n`);
+    // ARGV GOES TO ITS OWN FILE, NUL-SEPARATED, AND THE COUNTER GETS ONE LINE PER LAUNCH. The
+    // routed prompt CONTAINS NEWLINES, so the old `echo "LAUNCHED $@"` wrote many lines for one
+    // launch and the line-counting `launches()` below would have reported a single launch as
+    // several — an instrument broken by the subject it measures.
+    const argv = path.join(dir, 'argv.bin');
+    fs.writeFileSync(path.join(bin, 'claude'), `#!/bin/sh\nprintf '%s\\0' "$@" >> ${argv}\necho LAUNCHED >> ${log}\nexit 0\n`);
     fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    installHarness(root);
     const queue = path.join(dir, 'queue.jsonl');
     const entry: Record<string, unknown> = {
       id: 'target', project: path.basename(REPO_ROOT), root, goal: 'a goal', enqueuedAt: 1_000,
     };
     if (status !== undefined) entry.status = status;
     fs.writeFileSync(queue, JSON.stringify(entry) + '\n');
-    return { bin, queue, log };
+    return { bin, queue, log, root, argv: path.join(dir, 'argv.bin') };
   }
 
   const launches = (log: string) => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).length : 0);
@@ -636,7 +689,7 @@ describe('an unrecognised status is neither launched nor overwritten — END TO 
     });
     expect(launches(f.log)).toBe(1);
     const entries = readDispatch(f.queue);
-    expect(entries[entries.length - 1]?.status).toBe('consumed');
+    expect(entries[entries.length - 1]?.status).toBe('exited-clean');
   });
 });
 
@@ -648,6 +701,12 @@ describe('a launch that never started is not a launch that returned nothing', ()
     const root = path.join(dir, 'root');
     fs.mkdirSync(bin, { recursive: true });
     fs.mkdirSync(root, { recursive: true });
+    // THE HARNESS IS REQUIRED HERE OR THIS TEST PASSES FOR THE WRONG REASON, and it did: without a
+    // playbooks directory the consumer refuses before spawning and records `not-started` — the very
+    // status asserted below — and `readdir`'s own failure message CONTAINS the string 'ENOENT', so
+    // even the error assertion held. The test would have gone green while never reaching the spawn
+    // it exists to test. The `notStartedFrom` assertion below is what keeps the two apart.
+    installHarness(root);
     const queue = path.join(dir, 'queue.jsonl');
     fs.writeFileSync(queue, JSON.stringify({
       id: 'nopath', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
@@ -674,6 +733,12 @@ describe('a launch that never started is not a launch that returned nothing', ()
     expect(last.status).toBe('not-started');
     expect(last.status).not.toBe('no-result');
     expect(last.error).toContain('ENOENT');
+    // DISCRIMINATES THE TWO WAYS TO REACH `not-started`. The spawn failed; the routing did not
+    // refuse. Both produce `not-started` and both carry 'ENOENT', so status and message alone
+    // cannot tell them apart.
+    expect(last.error).not.toContain('no playbook to route through');
+    // AND THE LAUNCH WAS ACTUALLY ATTEMPTED: a refusal never writes a `running` line.
+    expect(entries.some((e) => e.status === 'running')).toBe(true);
   });
 });
 
@@ -797,5 +862,559 @@ describe('a `running` entry whose launcher is ALIVE is left alone', () => {
       encoding: 'utf8', stdio: 'pipe',
     });
     expect(readDispatch(f.queue).map((e) => e.status)).toEqual(['pending', 'running', 'no-result']);
+  });
+});
+
+// ── Routing, and the gate gap it does NOT close ──────────────────────────────────────────
+//
+// Two halves, and the second is the one that matters. Routing buys the orchestrator, the lens and
+// the playbook. It does NOT buy the QA gate, because `qa.js` is invoked through a `Workflow` tool
+// that no engine declares. The failure being closed is therefore not "not gated" — it is "looks
+// gated, wasn't", which is strictly worse because the first is visible and the second is not.
+
+describe('a dispatched goal is ROUTED through the orchestrator', () => {
+  /** A fixture whose `claude` records its argv NUL-separated, so a multi-line prompt survives. */
+  function routedFixture(prefix: string, harness: 'full' | 'no-playbooks' | 'none') {
+    const dir = mkTmpDir(prefix);
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(root, { recursive: true });
+    if (harness === 'full') installHarness(root, { playbooks: ['ship-feature.yml', 'design-pass.yml'] });
+    if (harness === 'no-playbooks') installHarness(root, { playbooks: [] });
+    const argv = path.join(dir, 'argv.bin');
+    const log = path.join(dir, 'launches.txt');
+    fs.writeFileSync(path.join(bin, 'claude'), `#!/bin/sh\nprintf '%s\\0' "$@" >> ${argv}\necho LAUNCHED >> ${log}\nexit 0\n`);
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    fs.writeFileSync(queue, JSON.stringify({
+      id: 'routed', project: path.basename(REPO_ROOT), root, goal: 'THE-DISPATCHED-GOAL', enqueuedAt: 1_000, status: 'pending',
+    }) + '\n');
+    return { bin, queue, argv, log, root };
+  }
+  const run = (f: { bin: string; queue: string }) =>
+    execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+  const argvOf = (file: string) =>
+    fs.existsSync(file) ? fs.readFileSync(file, 'utf8').split('\0').filter(Boolean) : [];
+  const launched = (log: string) => fs.existsSync(log);
+
+  test('the launch selects the orchestrator agent — and is NOT the bare `--print <goal>` form', () => {
+    const f = routedFixture('mc-dispatch-routed-', 'full');
+    run(f);
+    const argv = argvOf(f.argv);
+    expect(argv[0]).toBe('--agent');
+    expect(argv[1]).toBe('orchestrator');
+    expect(argv[2]).toBe('--print');
+    // THE NEGATIVE, which the positives above cannot give: the superseded form put `--print` first
+    // and the raw goal second. Asserting only "--agent is present" would still hold if a future
+    // change appended the bare form as a fall-back beside it.
+    expect(argv[0]).not.toBe('--print');
+    expect(argv).not.toContain('THE-DISPATCHED-GOAL');   // the goal is EMBEDDED, never a bare argv
+    expect(argv.length).toBe(4);
+  });
+
+  test('the prompt carries the goal and bounds the playbook choice to the project’s own', () => {
+    const f = routedFixture('mc-dispatch-prompt-', 'full');
+    run(f);
+    const prompt = argvOf(f.argv)[3] ?? '';
+    expect(prompt).toContain('THE-DISPATCHED-GOAL');
+    expect(prompt).toContain('ship-feature.yml');
+    expect(prompt).toContain('design-pass.yml');
+    // NEGATIVE CONTROL: a playbook this project does not have must NOT be offered. Without this,
+    // a prompt that listed every playbook name it could think of would satisfy the two above.
+    expect(prompt).not.toContain('price-a-product.yml');
+    // The session must be told the gate is out of reach, or it writes a qa_verdict in good faith.
+    expect(prompt).toContain('NOT REACHABLE');
+    expect(prompt).toContain('DO NOT record a qa_verdict you did not obtain');
+  });
+
+  test('EVERY line the consumer writes carries how it routed and what it derived about the gate', () => {
+    const f = routedFixture('mc-dispatch-record-', 'full');
+    run(f);
+    const entries = readDispatch(f.queue);
+    const running = entries.find((e) => e.status === 'running') as DispatchEntry;
+    const terminal = entries[entries.length - 1] as DispatchEntry;
+    expect(terminal.status).toBe('exited-clean');
+    // BOTH LINES, not just the terminal one: a dispatch that dies mid-flight must still leave a
+    // record saying how it was launched and what was known about the gate.
+    for (const e of [running, terminal]) {
+      expect(e.route).toBe('orchestrator-playbook');
+      expect(e.gate?.outcome).toBe('unreachable');
+      expect(e.gate?.agent).toBe('orchestrator');
+      expect(e.playbooksOffered).toEqual(['design-pass.yml', 'ship-feature.yml']);
+    }
+    // DERIVED, NOT ASSERTED. The reason names the tools actually read out of the fixture's own
+    // agent file, so a constant hardcoding "unreachable" could not produce this string.
+    expect(terminal.gate?.tools).toContain('Task');
+    expect(terminal.gate?.why).toContain('Workflow');
+  });
+
+  test('the recorded gate outcome FOLLOWS the declaration — grant Workflow and it changes itself', () => {
+    // THE MUTATION THAT PROVES THE DERIVATION IS ONE. If `unreachable` were a constant, this
+    // fixture would produce it too, and every assertion in the test above would still pass.
+    const f = routedFixture('mc-dispatch-granted-', 'full');
+    installHarness(f.root, { playbooks: ['ship-feature.yml'], tools: '[Read, Bash, Workflow]' });
+    run(f);
+    const entries = readDispatch(f.queue);
+    const terminal = entries[entries.length - 1] as DispatchEntry;
+    expect(terminal.gate?.outcome).toBe('unverified');
+    // AND IT IS STILL NOT A PASS. Reachable is not run: the launch is out of process and this
+    // consumer sees an exit code and nothing else.
+    expect(terminal.gate?.outcome).not.toBe('unreachable');
+    expect(terminal.gate?.why).toContain('does not claim one ran');
+  });
+
+  test('no playbook to route through is `not-started`, and the goal does NOT run', () => {
+    const f = routedFixture('mc-dispatch-nopb-', 'no-playbooks');
+    run(f);
+    expect(launched(f.log)).toBe(false);
+    const entries = readDispatch(f.queue);
+    const terminal = entries[entries.length - 1] as DispatchEntry;
+    expect(terminal.status).toBe('not-started');
+    expect(terminal.error).toContain('no playbook to route through');
+    // A REFUSAL LEAVES NO `running` LINE. If it did, the next run would reconcile it to
+    // `no-result` — "started and told us nothing" about a launch that never began.
+    expect(entries.some((e) => e.status === 'running')).toBe(false);
+  });
+
+  test('CONTROL: the same harness WITH a playbook does launch — an absence needs a fired control', () => {
+    const f = routedFixture('mc-dispatch-nopb-control-', 'full');
+    run(f);
+    expect(launched(f.log)).toBe(true);
+    const entries = readDispatch(f.queue);
+    expect((entries[entries.length - 1] as DispatchEntry).status).toBe('exited-clean');
+  });
+
+  test('a root with no harness at all records `underivable`, not `unreachable`', () => {
+    // "I could not check" is not "I checked and it cannot". A resolver never passes what it could
+    // not check, and it must not report negative KNOWLEDGE it does not have either.
+    const f = routedFixture('mc-dispatch-noharness-', 'none');
+    run(f);
+    const terminal = readDispatch(f.queue).at(-1) as DispatchEntry;
+    expect(terminal.status).toBe('not-started');
+    expect(terminal.gate?.outcome).toBe('underivable');
+    expect(terminal.gate?.outcome).not.toBe('unreachable');
+  });
+});
+
+describe('the gate record cannot express a pass, and reachability is read not assumed', () => {
+  test('no gate outcome can be read as a pass — the union has no such member', () => {
+    // THE STRUCTURAL GUARANTEE, ASSERTED SO A FUTURE ADDITION TRIPS IT. Every member is either
+    // negative knowledge (`unreachable`) or stated ignorance (`unverified`, `underivable`). A
+    // member meaning "the gate ran and passed" is what turns "not gated" into "looks gated,
+    // wasn't", and nothing but this test stands between the type and someone adding one.
+    expect([...GATE_OUTCOMES].sort()).toEqual(['underivable', 'unreachable', 'unverified']);
+    for (const o of GATE_OUTCOMES) {
+      expect(['pass', 'passed', 'ok', 'gated', 'verified', 'clean']).not.toContain(o);
+    }
+  });
+
+  const table: [string, string, GateOutcome][] = [
+    ['[Read, Write, Edit, Bash, Glob, Grep, Task]', 'the real orchestrator declaration', 'unreachable'],
+    ['[Read, Workflow, Bash]', 'the gate tool granted', 'unverified'],
+    ['[Read, WorkflowRunner]', 'a SUBSTRING of the gate tool is not the gate tool', 'unreachable'],
+  ];
+  for (const [tools, what, want] of table) {
+    test(`${what} -> ${want}`, () => {
+      const dir = mkTmpDir('mc-gate-derive-');
+      cleanupDirs.push(dir);
+      installHarness(dir, { tools });
+      expect(deriveGateReachability(dir, 'orchestrator').outcome).toBe(want);
+    });
+  }
+
+  test('MUST NOT FIRE: `Workflow` in the agent’s PROSE is not a declaration of it', () => {
+    // Measured 2026-08-28 in this repo: the word appears in the BODY of 7 of 7 engine files and in
+    // the `tools:` list of ZERO of them, so a file-level grep calls every engine gate-capable.
+    // installHarness() writes that prose into every fixture, so this trap is armed everywhere.
+    const dir = mkTmpDir('mc-gate-prose-');
+    cleanupDirs.push(dir);
+    installHarness(dir, { tools: '[Read, Bash]' });
+    const body = fs.readFileSync(path.join(dir, '.claude', 'agents', 'orchestrator.md'), 'utf8');
+    expect(body).toContain('Workflow');                       // the trap is really present
+    expect(deriveGateReachability(dir, 'orchestrator').outcome).toBe('unreachable');
+  });
+
+  test('an unreadable or tool-less agent file is `underivable`, with the path in the reason', () => {
+    const dir = mkTmpDir('mc-gate-underivable-');
+    cleanupDirs.push(dir);
+    const missing = deriveGateReachability(dir, 'orchestrator');
+    expect(missing.outcome).toBe('underivable');
+    expect(missing.why).toContain('orchestrator.md');
+    fs.mkdirSync(path.join(dir, '.claude', 'agents'), { recursive: true });
+    fs.writeFileSync(path.join(dir, '.claude', 'agents', 'orchestrator.md'), '---\nname: x\n---\nWorkflow\n');
+    expect(deriveGateReachability(dir, 'orchestrator').outcome).toBe('underivable');
+  });
+});
+
+// ── The gate ROUTER, which needs no grant ────────────────────────────────────────────────
+//
+// `GateRecord` says whether the launched session COULD have run the gate. This says whether the
+// gate is REQUIRED for what the dispatch produced, and what would run it. The repo's own
+// `scripts/run-gate.mjs` answers that, and its header names the defect: "a router that is never
+// called is exactly the defect it was written to fix."
+
+describe('a dispatch records what the gate router decided about its output', () => {
+  /** A fixture project whose `scripts/run-gate.mjs` emits exactly what the test wants to test. */
+  function routerFixture(prefix: string, routerBody: string | null) {
+    const dir = mkTmpDir(prefix);
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(root, { recursive: true });
+    installHarness(root);
+    if (routerBody !== null) {
+      fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
+      fs.writeFileSync(path.join(root, 'scripts', 'run-gate.mjs'), routerBody);
+    }
+    fs.writeFileSync(path.join(bin, 'claude'), '#!/bin/sh\nexit 0\n');
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    fs.writeFileSync(queue, JSON.stringify({
+      id: 'router', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
+    }) + '\n');
+    execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    return readDispatch(queue).at(-1) as DispatchEntry;
+  }
+  const emits = (obj: unknown, exit = 0) =>
+    `console.log(${JSON.stringify(JSON.stringify(obj))});\nprocess.exit(${exit});\n`;
+
+  const REAL_SHAPE = {
+    ref: 'origin/main...abc123', files: 5, floor: 'full', gateRequired: true,
+    drivers: ['a.ts'], gateSelfReview: null,
+    invocation: { tool: 'Workflow', scriptPath: '.claude/workflows/qa.js', args: { ref: 'origin/main...abc123', tier: 'full', tree: '/t' } },
+  };
+
+  test('a decided routing is recorded whole — required, floor, files, ref and the invocation', () => {
+    const last = routerFixture('mc-router-ok-', emits(REAL_SHAPE));
+    expect(last.gateRouting?.decided).toBe(true);
+    const r = last.gateRouting as Extract<typeof last.gateRouting, { decided: true }>;
+    expect(r.required).toBe(true);
+    expect(r.floor).toBe('full');
+    expect(r.files).toBe(5);
+    expect(r.ref).toBe('origin/main...abc123');
+    expect(r.invocation?.scriptPath).toBe('.claude/workflows/qa.js');
+    expect(r.invocation?.args).toMatchObject({ tier: 'full' });
+  });
+
+  test('THE HONEST SHAPE: `required: true` sits beside no verdict, and none can be written', () => {
+    const last = routerFixture('mc-router-honest-', emits(REAL_SHAPE));
+    // A dispatch that produced gate-requiring work and no verdict must say BOTH halves. The record
+    // carries the requirement and the means to satisfy it, and nothing that could be read as
+    // having satisfied it.
+    const serialised = JSON.stringify(last);
+    for (const forbidden of ['"verdict"', '"passed"', '"qa_verdict"', '"PASS"']) {
+      expect(serialised).not.toContain(forbidden);
+    }
+    expect((last.gateRouting as { required: boolean }).required).toBe(true);
+    expect(last.gate?.outcome).toBe('unreachable');
+  });
+
+  test('A ZERO-FILE DIFF IS UNDECIDED, NOT `required: false` — a zero is not evidence', () => {
+    // The router reads origin/main...HEAD in the project ROOT. An engine that worked in a child
+    // worktree — which this repo's builders always do — leaves that ref untouched, so an empty
+    // classification means "nothing was measured here", not "nothing needs the gate".
+    const last = routerFixture('mc-router-zero-', emits({ ...REAL_SHAPE, files: 0, gateRequired: false }));
+    expect(last.gateRouting?.decided).toBe(false);
+    expect((last.gateRouting as { why: string }).why).toContain('0 files');
+    expect((last.gateRouting as { why: string }).why).toContain('worktree');
+    // THE NEGATIVE THAT MATTERS: it must not have been recorded as a clean "no gate needed".
+    expect(last.gateRouting).not.toMatchObject({ decided: true, required: false });
+  });
+
+  test('the router refusing (exit 2) is recorded WITH ITS OWN REASON, not as a spawn failure', () => {
+    // run-gate.mjs exits 2 when it cannot verify the tree and prints why as JSON on stdout.
+    // execFileSync throws on that exit, and believing the throw would discard the one thing the
+    // router was trying to say.
+    const last = routerFixture('mc-router-refuse-', emits({ error: 'could not verify tree HEAD' }, 2));
+    expect(last.gateRouting?.decided).toBe(false);
+    expect((last.gateRouting as { why: string }).why).toContain('could not verify tree HEAD');
+    expect((last.gateRouting as { why: string }).why).toContain('exited 2');
+  });
+
+  test('a router emitting a shape this consumer does not read is refused, not partially believed', () => {
+    // Declare what is read and refuse the rest. A router that renamed `gateRequired` must not be
+    // read through a partial match that yields a plausible decision from the fields that survived.
+    const { gateRequired, ...missing } = REAL_SHAPE;
+    const last = routerFixture('mc-router-shape-', emits(missing));
+    expect(last.gateRouting?.decided).toBe(false);
+    expect((last.gateRouting as { why: string }).why).toContain('missing a field');
+  });
+
+  test('an invocation lacking the fields that make it actionable becomes null, not a plausible shape', () => {
+    const last = routerFixture('mc-router-inv-', emits({ ...REAL_SHAPE, invocation: { tool: 'Workflow' } }));
+    const r = last.gateRouting as Extract<typeof last.gateRouting, { decided: true }>;
+    expect(r.decided).toBe(true);
+    expect(r.invocation).toBeNull();
+  });
+
+  test('no router in the project is undecided, and the reason names the path it looked for', () => {
+    const last = routerFixture('mc-router-absent-', null);
+    expect(last.gateRouting?.decided).toBe(false);
+    expect((last.gateRouting as { why: string }).why).toContain('run-gate.mjs');
+    expect((last.gateRouting as { why: string }).why).toContain('does not exist');
+  });
+
+  test('ANTI-DRIFT: the REAL run-gate.mjs emits all FIVE fields this consumer reads', () => {
+    // The six tests above drive a FIXTURE router, so they all stay green if the real one changes
+    // shape — a fixture built from my own parser cannot fail. This runs the real emitter.
+    //
+    // F3a — IT COVERED FOUR OF THE FIVE. There were zero assertions naming `invocation` (control:
+    // six named `gateRequired`). Renaming it in the real router left every test green while
+    // `isInvocation` returned false and the entry recorded `invocation: null` — `required: true`
+    // beside no invocation, which is the shrug `GateInvocation`'s own doc-comment exists to replace.
+    //
+    // F3b — AND THE DENOMINATOR HAD TO BE FORCED. Run with no arguments on `main` after merge the
+    // diff is EMPTY, and the router's empty path emits `{files: 0, floor: 'trivial',
+    // gateRequired: false}` with NO invocation — so a bare run can satisfy four of these assertions
+    // while exercising only the degenerate branch, and would have to SKIP the fifth. `--files`
+    // classifies an explicit list, so the non-empty branch is reached wherever this runs, and
+    // `files > 0` below is the assertion that proves it was.
+    const out = execFileSync('node', [
+      path.join(REPO_ROOT, 'scripts', 'run-gate.mjs'),
+      '--files', 'mission-control/server/index-cache.ts', '--json',
+    ], { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    const j = JSON.parse(out) as Record<string, unknown>;
+    expect(typeof j.ref).toBe('string');
+    expect(typeof j.files).toBe('number');
+    expect(typeof j.floor).toBe('string');
+    expect(typeof j.gateRequired).toBe('boolean');
+    // THE DENOMINATOR, READ RATHER THAN ASSUMED: the non-degenerate branch was the one exercised.
+    expect(j.files as number).toBeGreaterThan(0);
+    expect(j.gateRequired).toBe(true);
+    // THE FIFTH FIELD. Named by key so a rename goes red here, and shaped so a rename of its
+    // INNER keys — which `isInvocation` also reads — goes red too.
+    expect(Object.keys(j)).toContain('invocation');
+    const inv = j.invocation as Record<string, unknown>;
+    expect(typeof inv.tool).toBe('string');
+    expect(typeof inv.scriptPath).toBe('string');
+    expect(typeof inv.args).toBe('object');
+    // And the four names the consumer would silently mis-read if any were renamed.
+    for (const k of ['ref', 'files', 'floor', 'gateRequired']) expect(Object.keys(j)).toContain(k);
+  });
+});
+
+// ── F1 · what the session is TOLD must follow the same derivation as what is RECORDED ────
+//
+// The record and the prompt are two consumers of one derivation. The record followed it; the
+// prompt carried a hard-coded "NOT REACHABLE" for all three outcomes, so the one place the
+// distinction reached something that ACTS on it collapsed it. These tests fail on that code.
+
+describe('the prompt tells the session what was derived, not a fixed sentence', () => {
+  // NO TRAILING PERIOD, AND THAT IS LOAD-BEARING. The defective build emitted
+  // "…FROM THIS SESSION (unverified)." — the outcome interpolated between the sentence and its
+  // full stop — so a constant ending in `SESSION.` does not match it, and the contradiction test
+  // below PASSED against the very code it was written to defeat. Measured by mutation: with the
+  // period, 3 of 4 prompt tests went red on the pre-fix source and this one stayed green.
+  const NOT_REACHABLE = 'THE BINDING QA GATE IS NOT REACHABLE FROM THIS SESSION';
+  const MAY_BE = 'THE BINDING QA GATE MAY BE REACHABLE FROM THIS SESSION, AND NOTHING HAS RUN IT FOR YOU';
+  const UNDETERMINED = 'WHETHER THE BINDING QA GATE IS REACHABLE FROM THIS SESSION COULD NOT BE DETERMINED';
+
+  function promptFor(prefix: string, harness: (root: string) => void) {
+    const dir = mkTmpDir(prefix);
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(root, { recursive: true });
+    harness(root);
+    const argv = path.join(dir, 'argv.bin');
+    fs.writeFileSync(path.join(bin, 'claude'), `#!/bin/sh\nprintf '%s\\0' "$@" >> ${argv}\nexit 0\n`);
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    fs.writeFileSync(queue, JSON.stringify({
+      id: 'p', project: path.basename(REPO_ROOT), root, goal: 'GOALTEXT', enqueuedAt: 1_000, status: 'pending',
+    }) + '\n');
+    execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    const args = fs.existsSync(argv) ? fs.readFileSync(argv, 'utf8').split('\0').filter(Boolean) : [];
+    return { prompt: args[3] ?? '', entry: readDispatch(queue).at(-1) as DispatchEntry };
+  }
+
+  // Each row: the headline it MUST carry, and the two it must NOT. Stating the negatives is the
+  // whole test — the defective build satisfied every positive for `unreachable` and also emitted
+  // that same positive for the other two.
+  const rows: [string, (r: string) => void, GateOutcome, string, string[]][] = [
+    ['unreachable', (r) => installHarness(r), 'unreachable', NOT_REACHABLE, [MAY_BE, UNDETERMINED]],
+    ['unverified', (r) => installHarness(r, { tools: '[Read, Bash, Workflow]' }), 'unverified', MAY_BE, [NOT_REACHABLE, UNDETERMINED]],
+    ['underivable', (r) => {
+      // Playbooks present so the launch is REACHED; the agent file unreadable so the gate is not
+      // derivable. This needs no founder grant and is the case that shipped a confident falsehood.
+      fs.mkdirSync(path.join(r, '.claude', 'playbooks'), { recursive: true });
+      fs.writeFileSync(path.join(r, '.claude', 'playbooks', 'ship-feature.yml'), 'name: f\n');
+    }, 'underivable', UNDETERMINED, [NOT_REACHABLE, MAY_BE]],
+  ];
+
+  for (const [what, harness, outcome, must, mustNot] of rows) {
+    test(`${what}: the prompt says its own headline and NOT the other two`, () => {
+      const { prompt, entry } = promptFor(`mc-prompt-${what}-`, harness);
+      expect(entry.gate?.outcome).toBe(outcome);
+      expect(prompt).toContain(must);
+      for (const other of mustNot) expect(prompt).not.toContain(other);
+    });
+  }
+
+  test('the prompt never contradicts the reason printed directly beneath it', () => {
+    // The defect in its sharpest form: headline "NOT REACHABLE" with `gate.why` saying "so the
+    // gate is REACHABLE" on the next line. Asserted as a relation between the two, so it holds
+    // however the strings are later reworded.
+    const { prompt, entry } = promptFor('mc-prompt-contradiction-', (r) => installHarness(r, { tools: '[Read, Bash, Workflow]' }));
+    expect(entry.gate?.why).toContain('so the gate is REACHABLE');
+    expect(prompt).toContain(entry.gate?.why as string);
+    expect(prompt).not.toContain(NOT_REACHABLE);
+  });
+
+  test('every outcome still forbids writing a verdict that was not obtained', () => {
+    // The one instruction that is correct in all three states, and must survive the split.
+    for (const [what, harness] of rows.map((r) => [r[0], r[1]] as const)) {
+      const { prompt } = promptFor(`mc-prompt-verdict-${what}-`, harness);
+      expect(prompt).toContain('DO NOT record a qa_verdict you did not obtain');
+    }
+  });
+
+  test('F5: the goal is fenced and the constraint restated after it', () => {
+    const { prompt } = promptFor('mc-prompt-fence-', (r) => installHarness(r));
+    const begin = prompt.indexOf('--- BEGIN GOAL ---');
+    const end = prompt.indexOf('--- END GOAL ---');
+    expect(begin).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(begin);
+    expect(prompt.slice(begin, end)).toContain('GOALTEXT');
+    // The constraint appears AFTER the goal, not only before it.
+    expect(prompt.indexOf('do not record', end)).toBeGreaterThan(end);
+  });
+});
+
+// ── F2 · the derivation must read both legal YAML spellings ──────────────────────────────
+
+describe('a tools: declaration is read in either legal YAML spelling', () => {
+  for (const spelling of ['flow', 'block'] as const) {
+    test(`${spelling} form: Workflow absent -> unreachable, present -> unverified`, () => {
+      const dir = mkTmpDir(`mc-yaml-${spelling}-`);
+      cleanupDirs.push(dir);
+      installHarness(dir, { tools: '[Read, Write, Edit, Bash, Glob, Grep, Task]', spelling });
+      expect(deriveGateReachability(dir, 'orchestrator').outcome).toBe('unreachable');
+      installHarness(dir, { tools: '[Read, Bash, Workflow]', spelling });
+      const granted = deriveGateReachability(dir, 'orchestrator');
+      expect(granted.outcome).toBe('unverified');
+      expect(granted.tools).toEqual(['Read', 'Bash', 'Workflow']);
+    });
+  }
+
+  test('THE DEFEATER: the two spellings of ONE list derive identically', () => {
+    // This is the assertion the old parser fails. A reformat that schema-lint accepts — it asserts
+    // only Array.isArray(fm.tools) — took the derivation to `underivable`, and through the prompt
+    // then told the session the gate could not run.
+    const mk = (spelling: 'flow' | 'block') => {
+      const d = mkTmpDir(`mc-yaml-eq-${spelling}-`);
+      cleanupDirs.push(d);
+      installHarness(d, { tools: '[Read, Bash, Workflow]', spelling });
+      return deriveGateReachability(d, 'orchestrator');
+    };
+    const a = mk('flow');
+    const b = mk('block');
+    expect(b.outcome).toBe(a.outcome);
+    expect(b.tools).toEqual(a.tools as string[]);
+    expect(a.outcome).toBe('unverified');   // and not both `underivable`, which would also be equal
+  });
+
+  const refusals: [string, string][] = [
+    ['a scalar is not a list', 'Read'],
+    ['an empty value', ''],
+    ['a mapping', '\n  read: true'],
+  ];
+  for (const [what, raw] of refusals) {
+    test(`${what} -> underivable, never an empty grant list`, () => {
+      const d = mkTmpDir('mc-yaml-refuse-');
+      cleanupDirs.push(d);
+      installHarness(d, { rawTools: raw });
+      const r = deriveGateReachability(d, 'orchestrator');
+      // `underivable` and NOT `unreachable`: "I could not read it" must not become "it declares
+      // nothing", which is a confident wrong answer.
+      expect(r.outcome).toBe('underivable');
+      expect(r.outcome).not.toBe('unreachable');
+    });
+  }
+
+  test('a `tools:` line in the BODY is not the declaration', () => {
+    const d = mkTmpDir('mc-yaml-body-');
+    cleanupDirs.push(d);
+    fs.mkdirSync(path.join(d, '.claude', 'agents'), { recursive: true });
+    fs.writeFileSync(path.join(d, '.claude', 'agents', 'orchestrator.md'),
+      '---\nname: orchestrator\n---\ntools: [Read, Workflow]\n');
+    expect(deriveGateReachability(d, 'orchestrator').outcome).toBe('underivable');
+  });
+});
+
+// ── F7 · a terminal state may not claim what was never observed ──────────────────────────
+
+describe('a clean exit is recorded as a clean exit, not as a completion', () => {
+  function runClean(prefix: string, harness: (r: string) => void) {
+    const dir = mkTmpDir(prefix);
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(root, { recursive: true });
+    harness(root);
+    fs.writeFileSync(path.join(bin, 'claude'), '#!/bin/sh\nexit 0\n');
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    fs.writeFileSync(queue, JSON.stringify({
+      id: 'f7', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
+    }) + '\n');
+    execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    return readDispatch(queue);
+  }
+
+  test('exit 0 is `exited-clean` and is NEVER `consumed` — the word claimed a completion', () => {
+    // The launch runs with stdio: 'inherit', so nothing about the session's content is captured.
+    // `consumed` asserted the session finished; the only observation is the exit code.
+    const entries = runClean('mc-f7-clean-', (r) => installHarness(r));
+    const last = entries.at(-1) as DispatchEntry;
+    expect(last.status).toBe('exited-clean');
+    expect(last.exitCode).toBe(0);
+    // THE NEGATIVE, and it is the finding: no line this build wrote may carry the old claim.
+    for (const e of entries) expect(e.status).not.toBe('consumed');
+  });
+
+  test('the turn cap in force is recorded as CONTEXT, and is not the diagnosis', () => {
+    const entries = runClean('mc-f7-cap-', (r) => installHarness(r));
+    const last = entries.at(-1) as DispatchEntry;
+    expect(last.declaredMaxTurns).toBe(30);
+    // It says what limit applied. It does NOT say the limit fired — nothing here observed that,
+    // and no field claims it.
+    expect(last.status).toBe('exited-clean');
+    expect(JSON.stringify(last)).not.toContain('truncat');
+    expect(JSON.stringify(last)).not.toContain('capped');
+  });
+
+  test('an agent declaring no maxTurns records null, not a default that looks measured', () => {
+    const entries = runClean('mc-f7-nocap-', (r) => installHarness(r, { maxTurns: null }));
+    expect((entries.at(-1) as DispatchEntry).declaredMaxTurns).toBeNull();
+  });
+
+  test('LEGACY: `consumed` still classifies as settled, so old records are not orphaned', () => {
+    // Dropping it from the union would make every existing queue entry `unrecognised` — reported
+    // and then left alone forever, which is a worse outcome than a stale label.
+    const line = (id: string, status: string): DispatchEntry =>
+      ({ id, project: 'p', root: '/r', goal: 'g', enqueuedAt: 1, status } as DispatchEntry);
+    const work = classifyDispatches([line('old', 'consumed'), line('new', 'exited-clean')]);
+    expect(work.settled.map((e) => e.id).sort()).toEqual(['new', 'old']);
+    expect(work.unrecognised).toEqual([]);
+    expect(KNOWN_DISPATCH_STATUSES).toContain('consumed');
+    expect(KNOWN_DISPATCH_STATUSES).toContain('exited-clean');
   });
 });

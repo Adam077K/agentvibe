@@ -82,8 +82,14 @@ export function StatusCell({ entry }: { entry: DispatchEntry }) {
       return <span className="fig text-warn">pending</span>;
     case 'running':
       return <span className="fig text-warn" title="A launch started and has not reported back">running</span>;
+    case 'exited-clean':
+      // NOT "consumed", AND THE TITLE SAYS WHY. Exit 0 is all that was observed; the session's
+      // output is inherited rather than captured, so completion is not something this record knows.
+      return <span className="fig text-muted" title="Exited 0 — completion not observed">exited clean</span>;
     case 'consumed':
-      return <span className="fig text-muted" title="Ran to completion, exit 0">consumed</span>;
+      // LEGACY. Written by builds before `exited-clean` existed, and never by this one. Rendered in
+      // the same tone because the underlying fact is the same, exit 0.
+      return <span className="fig text-muted" title="Exited 0 (legacy label; completion was never observed)">consumed</span>;
     case 'failed':
       return (
         <span
@@ -133,7 +139,11 @@ export interface DispatchHeadline {
   total: number;
   pending: number;
   /**
-   * Everything that is neither `pending` nor `consumed` — counted as a COMPLEMENT, not a list.
+   * Everything that is neither `pending` nor a CLEAN EXIT — counted as a COMPLEMENT, not a list.
+   *
+   * "clean exit" is two labels, `exited-clean` and its legacy predecessor `consumed`, because a
+   * status rename does not rewrite the records already in the queue. Naming the CLASS rather than
+   * one member is what keeps this doc true through the next rename.
    *
    * THIS FIELD ENUMERATED `failed` AND `no-result` UNTIL 2026-08-26, and enumerating is how it
    * reproduced the defect it was added to prevent. Its own doc said it exists because "the summary
@@ -162,7 +172,11 @@ export interface DispatchHeadline {
  */
 export function dispatchHeadline(entries: DispatchEntry[]): DispatchHeadline {
   const pending = entries.filter((e) => e.status === 'pending').length;
-  const consumed = entries.filter((e) => e.status === 'consumed').length;
+  // BOTH CLEAN-EXIT LABELS, OR THE COMPLEMENT BELOW COUNTS EVERY `exited-clean` AS UNSUCCESSFUL.
+  // The complement is what makes an unknown status visible; a KNOWN status missing from this line
+  // is the same bug from the other side, and adding `exited-clean` without this made every routed
+  // dispatch read as "not succeeded".
+  const consumed = entries.filter((e) => e.status === 'consumed' || e.status === 'exited-clean').length;
   // The complement: total minus the two states that are fine. Anything new — a status added to
   // the union, or one written by a newer consumer — lands here and is SEEN, rather than silently
   // counting as neither.
@@ -460,7 +474,7 @@ export function DispatchPanel({
       {entries !== null && entries.length > 0 && (
         <Footnote>
           The queue is append-only — entries remain visible after the consumer acts on them, showing
-          the outcome it recorded: <span className="text-muted">consumed</span>,{' '}
+          the outcome it recorded: <span className="text-muted">exited clean</span>,{' '}
           <span className="text-bad">failed</span> or <span className="text-bad">no result</span>. To act
           on a pending entry, run:{' '}
           <code>bun mission-control/scripts/consume-dispatch.ts</code>. Entries are shown newest-first.

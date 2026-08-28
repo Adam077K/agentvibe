@@ -2521,7 +2521,7 @@ describe('DispatchTable renders every status distinguishably', () => {
     // to a human looking at the screen. So the rule is asserted generally: extract whatever class
     // each status actually emits, and require the stylesheet to define a matching custom property.
     const css = fs.readFileSync(path.join(import.meta.dir, '..', 'client', 'src', 'styles.css'), 'utf8');
-    const STATUSES = ['pending', 'running', 'consumed', 'failed', 'no-result', 'not-started', 'timed-out'];
+    const STATUSES = ['pending', 'running', 'exited-clean', 'consumed', 'failed', 'no-result', 'not-started', 'timed-out'];
 
     // SCOPED TO StatusCell, NOT THE WHOLE ROW — and the first cut of this test was not. Scanning
     // the rendered table swept up `text-left` and `text-right`, real Tailwind alignment utilities
@@ -2551,5 +2551,116 @@ describe('DispatchTable renders every status distinguishably', () => {
     const emitted = [...pretendMarkup.matchAll(/\btext-([a-z][a-z-]*)\b/g)].map((m) => m[1] as string);
     expect(emitted).toEqual(['err']);
     expect(emitted.filter((t) => !css.includes(`--color-${t}`))).toEqual(['err']);
+  });
+});
+
+// ── The VIEW half of the `exited-clean` change ───────────────────────────────────────────
+//
+// F-1. The delta that added `exited-clean` shipped +12/−2 of DispatchView and +80/−10 of
+// dispatch.test.ts, and touched this file NOT AT ALL — `grep 'exited-clean' views.test.tsx` was 0
+// against controls of 5 for `no-result` and 6 for `consumed` in the same file. Two mutations
+// survived both suites green: reverting the headline to count only `consumed`, and deleting the
+// `case 'exited-clean':` arm outright.
+//
+// THIS FILE ALREADY DOCUMENTS THIS EXACT PATTERN HAPPENING BEFORE — the change that added `failed`
+// and `no-result` wrote 155 lines of consumer tests and 0 for the view, and the p2 defect lived in
+// the untested half. Naming a class in a file and then committing it again in the same file is what
+// happened here. `dispatch.test.ts` cannot cover it: it does not import DispatchView at all.
+
+describe('a clean exit is counted and rendered as clean, in the VIEW', () => {
+  test('`exited-clean` is NOT unsuccessful — the headline counts the class, not one label', () => {
+    // KILLS THE MUTATION that reverts the count to `status === 'consumed'` only. With that applied
+    // this returns { unsuccessful: 1 } and every routed dispatch reads as a failure — verbatim the
+    // regression the line's own comment says it exists to prevent.
+    expect(dispatchHeadline([dispatchRow('e', 'exited-clean')]))
+      .toEqual({ total: 1, pending: 0, unsuccessful: 0 });
+  });
+
+  test('both clean-exit labels count alike, because a rename does not rewrite the queue', () => {
+    expect(dispatchHeadline([dispatchRow('new', 'exited-clean'), dispatchRow('old', 'consumed')]))
+      .toEqual({ total: 2, pending: 0, unsuccessful: 0 });
+  });
+
+  test('CONTROL: the complement still catches a status this build does not know', () => {
+    // Without this the two above could be satisfied by a headline that calls everything clean.
+    expect(dispatchHeadline([dispatchRow('e', 'exited-clean'), dispatchRow('u', 'timed-out')]))
+      .toEqual({ total: 2, pending: 0, unsuccessful: 1 });
+  });
+
+  test('`exited-clean` renders in the MUTED tone and is not treated as an unknown status', () => {
+    // KILLS THE MUTATION that deletes the `case 'exited-clean':` arm: without it the switch falls
+    // through to the unknown-status default, which renders the raw string in the ERROR tone — so a
+    // dispatch that exited 0 would be shown to an operator as something the UI does not recognise.
+    const markup = renderToStaticMarkup(<StatusCell entry={dispatchRow('id', 'exited-clean')} />);
+    expect(markup).toContain('text-muted');
+    expect(markup).not.toContain('text-bad');
+    expect(markup).not.toContain('Status not recognised');
+  });
+
+  test('its label and title say what was observed and refuse what was not', () => {
+    const markup = renderToStaticMarkup(<StatusCell entry={dispatchRow('id', 'exited-clean')} />);
+    expect(markup).toContain('exited clean');
+    // The tooltip is the operator-facing half of the whole finding: exit 0 is the observation, and
+    // completion is not. A title claiming "ran to completion" here would reintroduce it in the one
+    // place a human actually reads.
+    expect(markup).toContain('completion not observed');
+    expect(markup).not.toContain('Ran to completion');
+  });
+
+  test('the legacy label still renders, and is marked legacy rather than dropped', () => {
+    const markup = renderToStaticMarkup(<StatusCell entry={dispatchRow('id', 'consumed')} />);
+    expect(markup).toContain('text-muted');
+    expect(markup).toContain('legacy');
+    // F-B. THE TWO ASSERTIONS ABOVE ARE BOTH SATISFIED BY THE `title` ATTRIBUTE, and neither
+    // touches what an operator sees. Measured: relabelling the `consumed` arm's VISIBLE text to
+    // `exited clean` while leaving the title alone kept this test green at 89/0 — a pre-rename
+    // record would then render under the new label with no way to tell them apart, and it slips
+    // the `every state produces distinct markup` test too, because the differing title keeps the
+    // markup distinct. Anchored between the tags so the title cannot satisfy it.
+    expect(markup).toContain('>consumed<');
+  });
+
+  test('the operator legend names the label rows will actually carry', () => {
+    // The footnote told operators to expect "consumed", which this build NEVER writes, directly
+    // beneath a table rendering `exited clean`. A legend that names no row on screen is worse than
+    // none, because it reads as a key.
+    //
+    // F-A. THIS RENDERED `DispatchTable`, WHICH CONTAINS NO FOOTNOTE. The legend lives in
+    // `DispatchPanel`, so `toContain('exited clean')` was satisfied by StatusCell's ROW LABEL —
+    // the same string the test above already asserts. Measured: reverting the legend to
+    // `consumed`, restoring verbatim the state this comment calls worse than none, left all three
+    // instruments green (views 89/0, dispatch 91/0, tsc exit 0).
+    //
+    // READ FROM SOURCE RATHER THAN RENDERED, AND THE REASON IS THIS FILE'S OWN. `DispatchPanel`
+    // calls `useEndpoint()`, so it does not settle under `renderToStaticMarkup` — that is why the
+    // base file left DispatchView's component half out to begin with. Reading the file is the same
+    // move the `every status renders a text- class` test makes against `styles.css`: when the
+    // subject cannot be executed, assert against the artifact rather than assert nothing.
+    const source = fs.readFileSync(
+      path.join(import.meta.dir, '..', 'client', 'src', 'views', 'DispatchView.tsx'), 'utf8');
+    const legend = /<Footnote>([\s\S]*?)<\/Footnote>/.exec(source);
+    // NON-VACUITY: a refactor that renames or removes the element must fail here rather than
+    // silently make every assertion below vacuous.
+    expect(legend).not.toBeNull();
+    const text = legend?.[1];
+    // Checked, not asserted away with `!`: the capture is `string | undefined` under
+    // noUncheckedIndexedAccess, and the six type errors CI caught on this branch were all this
+    // shape. A non-null assertion would silence the compiler and keep the hazard.
+    expect(typeof text).toBe('string');
+    if (text === undefined) return;
+
+    // The label this build actually writes on a clean exit must be named.
+    expect(text).toContain('exited clean');
+    // And the one it NEVER writes must not be, which is the half that catches the revert.
+    expect(text).not.toContain('>consumed<');
+
+    // Every outcome the legend names must be a label `StatusCell` can emit — a legend may be
+    // shorter than the status set, but it may not invent one. NOTE, observed and deliberately NOT
+    // asserted here: the legend omits `not started`, which this build DOES write. That gap
+    // pre-dates this delta and widening the test to it is not this round's scope.
+    const emitted = new Set(['pending', 'running', 'exited clean', 'consumed', 'failed', 'no result', 'not started']);
+    for (const m of text.matchAll(/<span className="text-[a-z]+">([^<]+)<\/span>/g)) {
+      expect(emitted).toContain(m[1] as string);
+    }
   });
 });
