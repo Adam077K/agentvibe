@@ -123,6 +123,9 @@ const STEPS = [
   'test:probe-readonly',
   'test:pre-tool-use',
   'test:run-gate',
+  // The PRODUCER of a verdict, next to the router that decides one is needed. `test:run-gate`
+  // covers whether the gate is required; this covers whether anything makes the verdict exist.
+  'test:produce-verdict',
   'test:tier-gate',
   'test:merge-gate',
   'test:skill-clamp',

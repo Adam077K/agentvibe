@@ -100,6 +100,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:probe-readonly` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs` |
 | `npm run test:probe-stop-reason` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-stop-reason.test.mjs` |
 | `npm run test:probe-workflow-reach` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-workflow-reach.test.mjs` |
+| `npm run test:produce-verdict` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/produce-verdict.test.mjs` |
 | `npm run test:protected-write` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/protected-write.test.mjs` |
 | `npm run test:provenance` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/provenance-portability.test.mjs` |
 | `npm run test:registration` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-registration.test.mjs` |
@@ -154,6 +155,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/probe-readonly.test.mjs` | — |
 | `scripts/probe-stop-reason.test.mjs` | the aggregation that answers what ends a run. |
 | `scripts/probe-workflow-reach.test.mjs` | the bucketing behind "only a main session reaches the gate". |
+| `scripts/produce-verdict.test.mjs` | the blocking assertions for the verdict PRODUCER. |
 | `scripts/prompt-standard.test.mjs` | the PS-* rules of |
 | `scripts/protected-write.test.mjs` | proof that scripts/protected-write-tripwire.cjs fires. |
 | `scripts/provenance-portability.test.mjs` | the lens linter, run against a repository that |

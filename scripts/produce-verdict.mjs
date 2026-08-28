@@ -242,9 +242,14 @@ function isInside(child, parent) {
  * that path. A denied write plus a green check is byte-identical to a mutation that did not fire,
  * and an `applied` flag reports that the write was attempted, not that it was made.
  *
+ * `writeFile` is a seam and exists ONLY so a test can express the failure this verification is
+ * for: a write that reports success and does not land. Without it the read-back is unfalsifiable —
+ * a mutation deleting the comparison was SILENT across the whole suite, measured, before this
+ * parameter existed. A guard nothing can break is a guard someone deletes.
+ *
  * Returns `{ ok: true, files, dir }` or `{ ok: false, reason }`.
  */
-export function extractJudgeTree({ repo, dest, gitRef = 'origin/main', workTree = null }) {
+export function extractJudgeTree({ repo, dest, gitRef = 'origin/main', workTree = null, writeFile = fs.writeFileSync }) {
   if (workTree && isInside(dest, workTree)) {
     return {
       ok: false,
@@ -286,7 +291,7 @@ export function extractJudgeTree({ repo, dest, gitRef = 'origin/main', workTree 
     }
     const out = path.join(dest, rel);
     fs.mkdirSync(path.dirname(out), { recursive: true });
-    fs.writeFileSync(out, blob);
+    writeFile(out, blob);
   }
 
   // READ THE SUBJECT BACK. Not the write's return value, not a flag we set ourselves — the bytes

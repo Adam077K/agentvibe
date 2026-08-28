@@ -486,7 +486,7 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
 > change this block in the same PR.**
 
 - **THE BINDING GATE CAN COMPLETE NOW — 2026-08-24 · re-measured 2026-08-26 after the eight-merge train.**
-  `npm run check` is now **48 of 48 steps · 0 failed · exit 0 with the sandbox armed**, measured on
+  `npm run check` is now **49 of 49 steps · 0 failed · exit 0 with the sandbox armed**, measured on
   `fix/ci-chain-structure-holes` merged with `main`. *It read `46 of 46` at the head of the eight-merge
   train and that was correct there; 46 → 48 is the same KIND of move as 43 → 44 and not as 30 → 43 —
   `test:citations` and `check:citations-exist` are genuinely NEW work in the suite, not a renaming of work
@@ -495,7 +495,7 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   the same day. It tracks how many lanes are
   building, not the suite. Read the tally and the exit code;
   see `docs/STATUS.md` §4. Derive the denominator, never quote it from memory:
-  `node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **48**. That counts the
+  `node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **49**. That counts the
   steps the suite actually runs, which is the one list — `scripts/lib/check-suite.js` owns it, and
   `test:check-suite` fails if `package.json` drifts away from it.
   *Superseded 2026-08-25: the derivation here was
@@ -760,7 +760,7 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   nine branches in one train, the first time `main` had moved since before 2026-08-20. What landed: the
   PR-route gate **blocks** and posts a check-run signed by `GITHUB_TOKEN` with the author grep deleted;
   `qa.js` runs a deterministic oracle before any panel agent is dispatched; credential `denyRead` covers
-  the CLI credential stores; `test:tier-gate` is in `npm run check` (**48** steps now — this read "46" until the citation
+  the CLI credential stores; `test:tier-gate` is in `npm run check` (**49** steps now — this read "46" until the citation
   steps landed on 2026-08-26, "30" earlier that day and "29" until 2026-08-24, the same dropped-step
   error corrected in the gate bullet above); and
   `war-room/bin/PROJECT_NAME.tmpl` no longer seeds an unreviewed model-resolved merge into every generated

@@ -276,6 +276,23 @@ test('extraction is verified by reading the bytes back, and a listing without qa
   assert.equal(extractJudgeTree({ repo, dest: tmp('pv-judge-'), gitRef: 'origin/main' }).ok, true);
 });
 
+test('a write that reports success and does not land is CAUGHT by reading the bytes back', () => {
+  const { repo } = repoWithEditedGate();
+  const dest = tmp('pv-judge-');
+  // A denied write plus a green check is byte-identical to a mutation that did not fire. This
+  // writer is the shape of that failure: it returns normally, having written the wrong bytes.
+  const r = extractJudgeTree({
+    repo, dest, gitRef: 'origin/main', workTree: null,
+    writeFile: (out, blob) => fs.writeFileSync(out, out.endsWith('qa.js') ? 'NOT WHAT WAS ASKED FOR\n' : blob),
+  });
+  assert.equal(r.ok, false, 'the read-back must refuse bytes that do not match the ref');
+  assert.match(r.reason, /does not match origin\/main after extraction/);
+
+  // CONTROL: the identical call with an honest writer succeeds, so the refusal above is about the
+  // bytes and not about the seam.
+  assert.equal(extractJudgeTree({ repo, dest: tmp('pv-judge-'), gitRef: 'origin/main' }).ok, true);
+});
+
 // ── the hard constraint: invocation.args, and nothing else from the router ───────────────────
 
 test('no top-level router field is read — the sha-pinned invocation.args wins over a symbolic tip', () => {
@@ -313,6 +330,10 @@ test('a router refusal (exit 2, invocation null) is REFUSED — NOT "the gate is
   });
   assert.equal(r.outcome, OUTCOME.REFUSED);
   assert.equal(r.established, false);
+  // AND IT MUST SAY WHICH REFUSAL. Asserting only the outcome does not pin the discriminator: a
+  // router exit of 2 falls through to the `unreadable` branch and yields REFUSED there too, so a
+  // mutation deleting the exit-2 check was SILENT until this line existed. Measured, not argued.
+  assert.match(r.reason, /the router refused to emit an invocation/);
 
   // CONTROL on the other arm: the SAME null invocation at exit 0 IS "not required". The exit code
   // is the discriminator, and this pair is what proves it separates the two.
