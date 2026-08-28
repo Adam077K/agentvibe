@@ -44,6 +44,7 @@ import {
   KNOWN_DISPATCH_STATUSES,
   classifyVerdictProduction,
   VERDICT_PRODUCTION_STATES,
+  PRODUCER_SPAWN_LIMITS,
   type DispatchEntry,
   type ProducerRun,
 } from '../server/index-cache.ts';
@@ -539,8 +540,22 @@ describe('consume-dispatch records a distinguishable outcome', () => {
   test('`running` is durable BEFORE the launch, so a consumer that dies leaves evidence', () => {
     const f = dispatchFixture('mc-dispatch-running-', CLAUDE_OK, [{}]);
     runConsumer(f);
-    const statuses = readDispatch(f.queue).map((e) => e.status);
-    expect(statuses).toEqual(['pending', 'running', 'exited-clean']);
+    const all = readDispatch(f.queue);
+    const statuses = all.map((e) => e.status);
+    // THE THESIS IS UNCHANGED: `running` is written BEFORE the launch, so a consumer that dies
+    // mid-flight leaves evidence it started. What changed is that the terminal state is now written
+    // TWICE \u2014 once before the verdict step and once with it \u2014 so an exact-sequence assertion would
+    // pin an incidental line count instead. Each clause below names what it is for.
+    expect(statuses[0]).toBe('pending');
+    expect(statuses[1]).toBe('running');
+    expect(statuses.at(-1)).toBe('exited-clean');
+    expect(statuses.filter((x) => x === 'running').length).toBe(1);
+    // AND THE DOUBLE WRITE IS THE F3 FIX, ASSERTED HERE RATHER THAN ASSUMED: the first terminal
+    // line is durable before the panel window and carries no verdict; the last one carries it.
+    const terminal = all.filter((e) => e.status === 'exited-clean');
+    expect(terminal.length).toBe(2);
+    expect(terminal[0]?.verdictProduction).toBeUndefined();
+    expect(terminal[1]?.verdictProduction).toBeDefined();
   });
 
   test('an entry left `running` resolves to `no-result` and is NOT relaunched', () => {
@@ -1221,6 +1236,14 @@ describe('a dispatch records what the gate router decided about its output', () 
     ['missing `reason`, so a null ref could not explain itself', { ref: null }],
     ['missing `ref`', { reason: 'why' }],
     ['BOTH NULL \u2014 asserting neither a tip nor a reason for having none', { ref: null, reason: null }],
+    // A2. THE SHAPE WAS CHECKED AND THE FORM WAS NOT. This is well-shaped and accepted before the
+    // fix, recorded, and printed as `at feat/my-branch` in the RESOLVED-TIP position \u2014 which
+    // reinstates the exact defect the field was added to close. Unreachable from the shipped
+    // router, and the stated reason for requiring the field is FOREIGN routers, which is where the
+    // form is unguaranteed.
+    ['a BRANCH NAME where a 40-hex sha belongs', { ref: 'feat/my-branch', reason: null }],
+    ['a short sha \u2014 abbreviations are ambiguous and not what verdict.mjs binds', { ref: 'd559dbe', reason: null }],
+    ['a 40-char string that is not hex', { ref: 'z'.repeat(40), reason: null }],
   ];
   for (const [what, vr] of badVerdictRefs) {
     test(`a verdictRef that is ${what} is REFUSED, not partially believed`, () => {
@@ -1229,8 +1252,14 @@ describe('a dispatch records what the gate router decided about its output', () 
       const last = routerFixture('mc-router-vr-', emits(shape));
       expect(last.gateRouting?.decided).toBe(false);
       expect((last.gateRouting as { why: string }).why).toContain('verdictRef');
-      // REFUSAL IS NEVER A PASS AND NEVER A SPEND: an undecided routing does not ask the producer.
+      // REFUSAL IS NEVER A SPEND — AND THE ASSERTION NAMES ITS SUBJECT. This row previously read
+      // `state === 'not-asked'`, which this fixture ALSO yields on the accepted path because it
+      // installs no producer: the assertion ran, passed, and could not separate the two. The `why`
+      // is what distinguishes them — a routing refusal, not a missing producer.
       expect(last.verdictProduction?.state).toBe('not-asked');
+      const why = (last.verdictProduction as { why: string }).why;
+      expect(why).toContain('did not decide');
+      expect(why).not.toContain('produce-verdict.mjs does not exist');
     });
   }
 
@@ -1578,7 +1607,12 @@ describe('classifyVerdictProduction — the exit code is a receipt, the payload 
       run({ status: 64, stdout: said('PRODUCED') })],
     ['a producer KILLED after it had already printed a PRODUCED payload',
       run({ status: null, signal: 'SIGKILL', stdout: said('PRODUCED') })],
-    ['a producer that hit the outer TIMEOUT with a PRODUCED payload already on stdout',
+    // THE SHAPE NODE REALLY PRODUCES ON A TIMEOUT: execFileSync kills the child, so BOTH are set.
+    // The old row modelled `signal: null` with `code: 'ETIMEDOUT'`, which Node does not emit \u2014 so
+    // the fixture and the comment beside it agreed with each other and with nothing else.
+    ['a producer that hit the outer TIMEOUT \u2014 signal AND code, as Node emits it',
+      run({ status: null, signal: 'SIGTERM', spawnCode: 'ETIMEDOUT', stdout: said('PRODUCED'), message: 'timed out' })],
+    ['the defensive shape: a spawn code with no signal',
       run({ status: null, signal: null, spawnCode: 'ETIMEDOUT', stdout: said('PRODUCED'), message: 'timed out' })],
     ['no producer on PATH at all, with stdout somehow non-empty',
       run({ status: null, spawnCode: 'ENOENT', stdout: said('PRODUCED'), message: 'spawn node ENOENT' })],
@@ -1618,6 +1652,38 @@ describe('classifyVerdictProduction — the exit code is a receipt, the payload 
     // THE DENOMINATOR, READ RATHER THAN ASSUMED: four of the five states were reached here, so the
     // absence of the fifth is a fact about the function and not about a thin sample.
     expect(fromRuns.size).toBe(4);
+  });
+
+  test('an outcome reached through the PROTOTYPE CHAIN is an unknown word, not a disagreement', () => {
+    // A3. `declared in TABLE` walks the prototype, so `{"outcome":"toString"}` found a FUNCTION and
+    // skipped the "declares no outcome this build knows" branch \u2014 falling through to the exit
+    // cross-check and reporting a DISAGREEMENT. No bypass (it is `unresolved` either way), but the
+    // wrong diagnosis, and the diagnosis is what an operator acts on.
+    for (const word of ['toString', 'constructor', 'valueOf', 'hasOwnProperty']) {
+      const v = classifyVerdictProduction(run({ status: 0, stdout: said(word) }));
+      expect(v.state).toBe('unresolved');
+      const why = (v as { reason: string }).reason;
+      expect(why).toContain('declares no outcome this build knows');
+      expect(why).not.toContain('disagreeing');
+    }
+    // CONTROL: a genuine exit/payload disagreement STILL says `disagreeing`, so the assertion above
+    // is not satisfied by a build that never uses that word.
+    const real = classifyVerdictProduction(run({ status: 3, stdout: said('PRODUCED') }));
+    expect((real as { reason: string }).reason).toContain('disagreeing');
+  });
+
+  test('the producer spawn declares BOTH bounds, and the call site uses them', () => {
+    // Deleting either `timeout` or `maxBuffer` from the spawn was green at 126/0, which makes them
+    // decoration rather than controls. They are values in a module now, so a deletion at the call
+    // site breaks the reference and a deletion here fails this.
+    expect(PRODUCER_SPAWN_LIMITS.timeoutMs).toBeGreaterThan(0);
+    expect(PRODUCER_SPAWN_LIMITS.maxBufferBytes).toBeGreaterThan(1024 * 1024);
+    // LOOSER THAN THE PRODUCER'S OWN ONE-HOUR DEFAULT, deliberately: one authority for the panel
+    // budget, and it is the producer's, so its bounded refusal wins whenever it can.
+    expect(PRODUCER_SPAWN_LIMITS.timeoutMs).toBeGreaterThan(60 * 60 * 1000);
+    const src = fs.readFileSync(path.join(REPO_ROOT, 'mission-control', 'scripts', 'consume-dispatch.ts'), 'utf8');
+    expect(src).toContain('timeout: PRODUCER_SPAWN_LIMITS.timeoutMs');
+    expect(src).toContain('maxBuffer: PRODUCER_SPAWN_LIMITS.maxBufferBytes');
   });
 
   test('ANTI-DRIFT: the REAL produce-verdict.mjs still spells its states and codes this way', () => {
@@ -1668,7 +1734,7 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
    */
   function producerFixture(
     prefix: string,
-    opts: { router: string | null; producer: string | null; args?: string[] },
+    opts: { router: string | null; producer: string | null; args?: string[]; ids?: string[] },
   ) {
     const dir = mkTmpDir(prefix);
     cleanupDirs.push(dir);
@@ -1680,19 +1746,32 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
     installHarness(root);
     if (opts.router !== null) fs.writeFileSync(path.join(root, 'scripts', 'run-gate.mjs'), opts.router);
     if (opts.producer !== null) fs.writeFileSync(path.join(root, 'scripts', 'produce-verdict.mjs'), opts.producer);
-    fs.writeFileSync(path.join(bin, 'claude'), '#!/bin/sh\nexit 0\n');
+    // F1. THE LAUNCH LOGS TO THE SAME FILE, SO ORDER BECOMES AN ASSERTION RATHER THAN A COMMENT.
+    // The producer must run AFTER the dispatch commits, because the subject hashes the diff — and
+    // moving the whole verdict block above the launch left `tsc` clean and this suite byte-identical
+    // at 126/0. Disclosure is not a control; a shared log is.
+    fs.writeFileSync(path.join(bin, 'claude'), '#!/bin/sh\necho launch >> "$MC_PRODUCER_LOG"\nexit 0\n');
     fs.chmodSync(path.join(bin, 'claude'), 0o755);
     const queue = path.join(dir, 'queue.jsonl');
-    fs.writeFileSync(queue, JSON.stringify({
-      id: 'producer', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
-    }) + '\n');
-    execFileSync('bun', [CONSUMER, ...(opts.args ?? [])], {
+    const ids = opts.ids ?? ['producer'];
+    fs.writeFileSync(queue, ids.map((id) => JSON.stringify({
+      id, project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
+    })).join('\n') + '\n');
+    const stdout = execFileSync('bun', [CONSUMER, ...(opts.args ?? [])], {
       env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue, MC_PRODUCER_LOG: log },
       encoding: 'utf8', stdio: 'pipe',
     });
     const logText = fs.existsSync(log) ? fs.readFileSync(log, 'utf8') : '';
-    const runs = logText.trim().split('\n').filter(Boolean).length;
-    return { entry: readDispatch(queue).at(-1) as DispatchEntry, runs, logText };
+    const lines = logText.trim().split('\n').filter(Boolean);
+    // COUNTED BY PREFIX, because two different programs now write here and a bare line count would
+    // silently conflate a launch with a panel — which is the very thing being measured.
+    const runs = lines.filter((l) => l.startsWith('run')).length;
+    const launches = lines.filter((l) => l.startsWith('launch')).length;
+    return {
+      entry: readDispatch(queue).at(-1) as DispatchEntry,
+      entries: readDispatch(queue),
+      runs, launches, lines, logText, stdout,
+    };
   }
 
   const ROUTER = (over: Record<string, unknown> = {}) => {
@@ -1707,7 +1786,14 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
   /** A producer that records that it ran, prints a payload, and exits with a chosen code. */
   const PRODUCER = (payload: unknown, exit: number) =>
     `import fs from 'node:fs';\n`
-    + `fs.appendFileSync(process.env.MC_PRODUCER_LOG, 'run ' + process.argv.slice(2).join(' ') + '\\n');\n`
+    // F3, OBSERVED FROM INSIDE THE WINDOW. The producer reads the queue as it finds it and logs the
+    // status of the last line. If the terminal record is written BEFORE the producer, it sees a
+    // settled status; if it is withheld until after, it sees `running` \u2014 and an interrupted run
+    // then leaves the entry `running` forever, which `inFlight()` later reclaims and re-dispatches,
+    // paying for a second panel. Nothing else in this suite can see that ordering.
+    + `const q = fs.readFileSync(process.env.MC_DISPATCH_QUEUE, 'utf8').trim().split('\\n').filter(Boolean);\n`
+    + `const seen = JSON.parse(q[q.length - 1]).status;\n`
+    + `fs.appendFileSync(process.env.MC_PRODUCER_LOG, 'run ' + process.argv.slice(2).join(' ') + ' saw=' + seen + '\\n');\n`
     + `console.log(${JSON.stringify(JSON.stringify(payload))});\n`
     + `process.exit(${exit});\n`;
 
@@ -1786,6 +1872,83 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
     });
     expect(runs).toBe(1);
     expect(entry.verdictProduction).toMatchObject({ state: 'blocked', exitCode: 1 });
+  });
+
+  // ── A1 · N ENTRIES, ONE DIFF, ONE PANEL ────────────────────────────────────────────────
+  //
+  // Measured before the fix: 5 pending entries against one root and one diff produced 5 observed
+  // producer invocations. Every cost filter was per-ENTRY; the thing being paid for is per-DIFF.
+  // A panel ending REFUSED writes no binding record, so the producer's own short-circuit \u2014 which
+  // fires only on PRODUCED or BLOCKED \u2014 does not catch the second entry either.
+
+  test('FIVE entries, one subject: five launches, ONE panel', () => {
+    const five = ['e1', 'e2', 'e3', 'e4', 'e5'];
+    const { entries, runs, launches } = producerFixture('mc-prod-fanout-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'REFUSED', reason: 'establishes nothing, so no record binds' }, 2),
+      ids: five,
+    });
+    // THE REFUSED PAYLOAD IS THE POINT: it writes no binding record, so nothing downstream can
+    // dedupe for us. Before the fix this fixture measured 5.
+    expect(runs).toBe(1);
+    // CONTROL ON THE SAME LOG: all five really were dispatched, so `runs === 1` is a dedupe and
+    // not a fixture that quietly processed one entry.
+    expect(launches).toBe(5);
+    const current = resolveDispatchStates(entries);
+    expect(current.length).toBe(5);
+    const states = current.map((e) => e.verdictProduction?.state).sort();
+    expect(states).toEqual(['already-launched', 'already-launched', 'already-launched', 'already-launched', 'unresolved']);
+    // THE SKIP HAS ITS OWN STATE AND NAMES WHO PAID \u2014 `not-asked` already means something else.
+    const skipped = current.filter((e) => e.verdictProduction?.state === 'already-launched');
+    for (const e of skipped) {
+      const v = e.verdictProduction as { firstEntryId: string; subject: string };
+      expect(five).toContain(v.firstEntryId);
+      expect(typeof v.subject).toBe('string');
+    }
+  });
+
+  test('CONTROL: five entries with --no-verdict spend NOTHING, and are not `already-launched`', () => {
+    const { entries, runs, launches } = producerFixture('mc-prod-fanout-optout-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'never reached' }, 0),
+      ids: ['a', 'b', 'c', 'd', 'e'],
+      args: ['--no-verdict'],
+    });
+    expect(runs).toBe(0);
+    expect(launches).toBe(5);
+    // DEDUPE MUST NOT SWALLOW THE OPT-OUT: these are declined, not ridden on someone else's launch.
+    for (const e of resolveDispatchStates(entries)) expect(e.verdictProduction?.state).toBe('not-asked');
+  });
+
+  // ── F1 · THE POST-LAUNCH POSITION, ASSERTED RATHER THAN DISCLOSED ───────────────────────
+
+  test('the producer runs AFTER the launch \u2014 order read off one shared log', () => {
+    const { lines } = producerFixture('mc-prod-order-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'r' }, 0),
+    });
+    // BOTH MUST BE PRESENT, or an order assertion over an empty log is vacuous.
+    expect(lines.filter((l) => l.startsWith('launch')).length).toBe(1);
+    expect(lines.filter((l) => l.startsWith('run')).length).toBe(1);
+    expect(lines.findIndex((l) => l.startsWith('launch')))
+      .toBeLessThan(lines.findIndex((l) => l.startsWith('run')));
+  });
+
+  // ── F3 · THE TERMINAL RECORD IS DURABLE BEFORE THE PANEL WINDOW OPENS ───────────────────
+
+  test('the producer sees a SETTLED entry, not `running` \u2014 so an interrupted run cannot re-dispatch', () => {
+    const { lines, entry } = producerFixture('mc-prod-order-record-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'r' }, 0),
+    });
+    const observed = lines.find((l) => l.startsWith('run')) as string;
+    // `running` HERE IS THE DEFECT: the entry would stay that way if the consumer died mid-panel,
+    // `inFlight()` would reconcile the dead pid, and a later run would pay for a second panel.
+    expect(observed).toContain('saw=exited-clean');
+    expect(observed).not.toContain('saw=running');
+    // AND THE FINAL LINE STILL CARRIES THE VERDICT: writing early must not lose the update.
+    expect(entry.verdictProduction?.state).toBe('produced');
+    expect(entry.status).toBe('exited-clean');
   });
 
   test('--dry-run states the spend WITHOUT making it — a dry run that misstates the real run is worse than none', () => {

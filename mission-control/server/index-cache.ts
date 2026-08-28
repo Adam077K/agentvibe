@@ -608,6 +608,26 @@ export type VerdictProduction =
       /** This consumer never asked. `why` says which of the several reasons applied. */
       state: 'not-asked';
       why: string;
+    }
+  | {
+      /**
+       * A panel for THIS EXACT SUBJECT was already launched earlier in the same consumer run.
+       *
+       * ITS OWN STATE, NOT `not-asked`. Measured: 5 pending entries against one root and one diff
+       * produced 5 observed producer invocations, because all three cost filters are PER ENTRY
+       * while the thing being paid for is PER DIFF — and a panel ending REFUSED writes no binding
+       * record, so the producer's own short-circuit (PRODUCED or BLOCKED only) does not catch the
+       * second entry. That is precisely the case where the money was already spent.
+       *
+       * `not-asked` would have been wrong twice over: it already means "the gate did not require
+       * this", and it would hide that a panel DID run for these bytes, one entry earlier.
+       */
+      state: 'already-launched';
+      /** The subject shared with the entry that did pay for it. */
+      subject: string;
+      /** The id of the entry whose launch this one rode on — the record that carries the outcome. */
+      firstEntryId: string;
+      why: string;
     };
 
 /**
@@ -623,6 +643,9 @@ const VERDICT_PRODUCTION_SPEND = {
   'not-required': 'no',
   unresolved: 'maybe',
   'not-asked': 'no',
+  // THIS ENTRY DID NOT PAY. An earlier entry in the same run did, and its record carries the
+  // outcome. Marking it `'no'` is what makes a run's total spend readable off the queue.
+  'already-launched': 'no',
 } satisfies Record<VerdictProduction['state'], 'maybe' | 'no'>;
 
 /** Every state this build knows, derived from the table above so a reader cannot drift from it. */
@@ -660,6 +683,26 @@ const PRODUCER_OUTCOME_STATE = {
   NOT_REQUIRED: 'not-required',
 } as const satisfies Record<string, VerdictProduction['state']>;
 
+/**
+ * The bounds the producer's spawn is given — DECLARED HERE SO A DELETION GOES RED.
+ *
+ * Both were removable from the spawn call with the suite green at 126/0, which makes them
+ * decoration rather than controls. They are values now, in a module a test imports, so removing
+ * either from the call site breaks the reference and removing them from here fails an assertion.
+ *
+ * `timeoutMs` is DELIBERATELY LOOSER than the producer's own `--timeout` default of one hour: one
+ * authority for the panel budget, and it is the producer's, so its bounded refusal — which carries
+ * a reason — wins whenever it can. This is the outer backstop for a hang before that timer applies.
+ *
+ * `maxBufferBytes` is raised from Node's 1MB default because the payload carries the producer's
+ * reason strings, which are long by design; an ENOBUFS there is safe (`unresolved`) but throws
+ * away a panel run that had already been paid for.
+ */
+export const PRODUCER_SPAWN_LIMITS = {
+  timeoutMs: 70 * 60 * 1000,
+  maxBufferBytes: 16 * 1024 * 1024,
+} as const;
+
 /** The completed spawn of the producer, normalised — the only input the classification reads. */
 export interface ProducerRun {
   /** The exit code, or `null` when the process did not exit normally. */
@@ -687,16 +730,28 @@ export interface ProducerRun {
  */
 export function classifyVerdictProduction(run: ProducerRun): VerdictProduction {
   if (run.signal) {
+    // THE TIMEOUT LANDS HERE, NOT IN THE SPAWN-ERROR BRANCH BELOW. Node reports an `execFileSync`
+    // timeout as a SIGTERM kill carrying `code: 'ETIMEDOUT'`, and testing `signal` first is what
+    // makes "it was taken away" beat "it never started" — the right precedence, because a killed
+    // producer may have printed a payload for a state it had not yet reached.
+    const timedOut = run.spawnCode === 'ETIMEDOUT';
     return {
       state: 'unresolved',
       signal: run.signal,
-      reason: `the producer was killed by ${run.signal}; whatever it had printed describes a run that did not finish`,
+      reason: timedOut
+        ? `the producer exceeded its time budget and was killed by ${run.signal}; whatever it had printed describes a run that did not finish`
+        : `the producer was killed by ${run.signal}; whatever it had printed describes a run that did not finish`,
     };
   }
   if (run.spawnCode) {
-    // ETIMEDOUT ARRIVES HERE AND IS NOT A VERDICT. `execFileSync`'s `timeout` reports the kill
-    // through this field, and the bytes already on stdout are a partial account of a run that was
-    // taken away. Treating them as an answer is how a spend becomes a result.
+    // A TIMEOUT DOES **NOT** ARRIVE HERE, and this comment used to say it did. `execFileSync`'s
+    // `timeout` kills the child, so Node sets BOTH `signal: 'SIGTERM'` and `code: 'ETIMEDOUT'` —
+    // and `signal` is tested above, so a real timeout is settled there and never reaches this
+    // branch. The old text described a shape Node does not produce, and the fixture that
+    // "covered" it modelled the same impossible shape, so the pair agreed with each other and
+    // with nothing else. What DOES arrive here is a spawn that never ran the program: ENOENT,
+    // EACCES, ENOEXEC, E2BIG. Kept as a complement rather than an enumeration, for the reason
+    // consume-dispatch.ts gives at its own spawn-error branch.
     return {
       state: 'unresolved',
       reason: `the producer could not be run to completion (${run.spawnCode}): ${run.message ?? 'no detail'}`,
@@ -726,7 +781,13 @@ export function classifyVerdictProduction(run: ProducerRun): VerdictProduction {
   // EVERY state including `not-asked` — a value this branch can never produce and the return type
   // below rightly refuses. `bun test` does not typecheck and would have shipped it; the cure is to
   // read the table through its own key type so the union stays as narrow as the table is.
-  const mapped = typeof declared === 'string' && declared in PRODUCER_OUTCOME_STATE
+  // OWN PROPERTY, NEVER `in`. `in` walks the prototype chain, so `{"outcome":"toString"}` found a
+  // FUNCTION and skipped the "declares no outcome this build knows" branch — then failed the exit
+  // cross-check instead, reporting a DISAGREEMENT where the truth is an unknown word. No bypass
+  // (all 16 combinations still land `unresolved`) but the wrong diagnosis, which is what an
+  // operator acts on. Same reading for the exit table below.
+  const mapped = typeof declared === 'string'
+    && Object.prototype.hasOwnProperty.call(PRODUCER_OUTCOME_STATE, declared)
     ? PRODUCER_OUTCOME_STATE[declared as keyof typeof PRODUCER_OUTCOME_STATE]
     : undefined;
   if (mapped === undefined) {
@@ -736,7 +797,8 @@ export function classifyVerdictProduction(run: ProducerRun): VerdictProduction {
       ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
     };
   }
-  const expected = typeof run.status === 'number' && run.status in PRODUCER_EXIT_STATE
+  const expected = typeof run.status === 'number'
+    && Object.prototype.hasOwnProperty.call(PRODUCER_EXIT_STATE, run.status)
     ? PRODUCER_EXIT_STATE[run.status as keyof typeof PRODUCER_EXIT_STATE]
     : undefined;
   if (expected === undefined || expected !== mapped) {
