@@ -1,7 +1,7 @@
 // POSTURE: REPORTS. Hermetic, and NOT a step of `npm run check` — nothing on a runner runs it.
 //
 // scripts/probe-agent-tool-inheritance.test.mjs — the controls behind "a launched agent session
-// gets its DECLARED tools".
+// gets its declared set transformed by the runtime, and no Workflow".
 //
 // It launches a FAKE cli, never the real one, so it spends no model turn and needs no network.
 // The reason it is out of the suite is written out in
@@ -62,6 +62,11 @@ if (process.env.PROBE_ARGV_LOG) {
   require('fs').appendFileSync(process.env.PROBE_ARGV_LOG, JSON.stringify({ key, args }) + '\\n');
 }
 if (scenario === '__hang') { setInterval(() => {}, 1000); }
+else if (scenario === '__truncated') {
+  // An init line cut off mid-write: no newline, so the parser never sees it and the run times out.
+  process.stdout.write('{"type":"system","subtype":"init","tools":["Read","Wor');
+  setInterval(() => {}, 1000);
+}
 else if (scenario === '__exit') { process.stderr.write('fake cli refused to start'); process.exit(3); }
 else {
   process.stdout.write(JSON.stringify({ type: 'system', subtype: 'hook_started', hook_name: 'SessionStart' }) + '\\n');
@@ -125,6 +130,7 @@ test('CONTAINED requires all four controls to fire AND an empty subject bucket',
     subject_present_in_main_session: true,
     subject_observable_in_agent_session: true,
     agent_flag_honoured: true,
+    subject_is_not_the_main_session: true,
   });
   assert.equal(report.arms.subject.tools.includes('Workflow'), false);
   assert.match(report.note, /buys the lens and the playbook and NOT the gate/);
@@ -200,6 +206,75 @@ test('the arms are order-independent controls: a dead arm is UNRESOLVED whicheve
     assert.match(report.note, /exited 3 before emitting an init line/);
     assert.match(report.note, /fake cli refused to start/, 'the stderr tail is what makes it diagnosable');
   }
+});
+
+test('a subject arm IDENTICAL to the main session is UNRESOLVED, never INHERITS', () => {
+  // THE ONE CONTROL WHOSE ABSENCE PRODUCES THE OPERATIONALLY WORSE VERDICT, and it was missing
+  // until a reviewer built this input. Every other control guards the CONTAINED path. Here the
+  // runtime has resolved `--agent orchestrator` to the main-session set rather than erroring:
+  // Read is present, Workflow is present in main and in the fixture, and the differential arm
+  // still differs — all four of the original controls fire, and the probe would have announced
+  // INHERITS, i.e. "dispatch reaches the gate", about a runtime that ignored the agent entirely.
+  const { code, report } = run({ orchestrator: REAL.__baseline });
+  assert.equal(code, 2, 'this must not be reported as inheritance');
+  assert.notEqual(report.verdict, 'INHERITS');
+  assert.equal(report.verdict, 'UNRESOLVED');
+  assert.equal(report.controls.subject_is_not_the_main_session, false);
+  assert.equal(report.controls.instrument_fired, true, 'the other controls all fire — that is the point');
+  assert.equal(report.controls.agent_flag_honoured, true);
+  assert.match(report.note, /SAME \d+ tools as a session launched with no --agent/);
+});
+
+test('an unknown --agent that resolves to the main set is caught the same way', () => {
+  // The reviewer's second route into it: a typo'd agent name. Today the CLI exits 1 and the arm
+  // dies at runArm, which is already UNRESOLVED; this pins the OTHER runtime, the one that
+  // silently falls back, so the answer does not depend on which behaviour ships.
+  const { code, report } = run({ typoagent: REAL.__baseline }, { argv: ['--agent=typoagent'] });
+  assert.equal(code, 2);
+  assert.equal(report.verdict, 'UNRESOLVED');
+  assert.equal(report.controls.subject_is_not_the_main_session, false);
+});
+
+test('an unrecognised argument is REFUSED and nothing is launched', () => {
+  // `--agent builder` — the space form — used to be ignored in silence: `flag()` reads `--agent=`
+  // only, so the probe measured the DEFAULT agent and reported it under the name you asked for.
+  const log = path.join(os.tmpdir(), `probe-argv-refuse-${process.pid}-${Date.now()}.jsonl`);
+  try {
+    const { code, report } = run({}, { extraEnv: { PROBE_ARGV_LOG: log }, argv: ['--agent', 'builder'] });
+    assert.equal(code, 2);
+    assert.equal(report.verdict, 'UNRESOLVED');
+    assert.match(report.note, /unrecognised argument\(s\): --agent builder/);
+    assert.equal(fs.existsSync(log), false, 'a refusal that still launches sessions has refused nothing');
+    assert.deepEqual(report.arms, {}, 'no arm may be recorded');
+  } finally {
+    fs.rmSync(log, { force: true });
+  }
+});
+
+test('pointing subject and differential at ONE agent is refused, not reported as a finding', () => {
+  // Otherwise the probe says "--agent is not being read" — a conclusion about the invocation,
+  // wearing the clothes of a conclusion about the runtime.
+  const { code, report } = run({}, { argv: ['--agent=builder', '--differential=builder'] });
+  assert.equal(code, 2);
+  assert.equal(report.verdict, 'UNRESOLVED');
+  assert.match(report.note, /both name "builder"/);
+  assert.deepEqual(report.arms, {});
+});
+
+test('a timeout reports whether anything was buffered — a truncated line is not silence', () => {
+  const { code, report } = run({ orchestrator: '__hang' });
+  assert.equal(code, 2);
+  assert.match(report.note, /timeout after 4000ms with no init line/);
+  assert.match(report.note, /nothing buffered/, 'the hang case emits no partial line');
+  const truncated = run({ orchestrator: '__truncated' });
+  assert.equal(truncated.code, 2);
+  assert.match(truncated.report.note, /byte\(s\) buffered with no newline, tail:/);
+  // The tail is JSON.stringify'd into the reason, so the quotes arrive escaped — assert on the
+  // substring rather than a regex, where that escaping is the easiest thing to get wrong twice.
+  assert.ok(
+    truncated.report.note.includes(String.raw`\"subtype\":\"init\"`),
+    'the tail must show what actually arrived, not merely that something did',
+  );
 });
 
 test('a CLI that cannot be launched at all is UNRESOLVED, not an absence of Workflow', () => {

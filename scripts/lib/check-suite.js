@@ -202,7 +202,7 @@ const EXCLUDED = {
   'test:probe-agent-tool-inheritance':
     'OUT FOR THE SAME FIGURES REASON AS ITS SIBLING ABOVE, AND FOR NO TECHNICAL ONE. It is hermetic — it ' +
     'launches a FAKE cli it writes into a temp dir, never the real one, so it spends no model turn, needs ' +
-    'no credentials and touches no network — and it passes 17 of 17 in 15.6s, measured 2026-08-28. It ' +
+    'no credentials and touches no network — and it passes 22 of 22 in 22.4s, measured 2026-08-28. It ' +
     'would be a well-behaved step. NOTHING ON A RUNNER RUNS IT EITHER; the workflow directory has no step ' +
     'for it. ' +
     'THE COST OF WIRING IT, MEASURED HERE RATHER THAN QUOTED FROM THE ENTRY ABOVE, by putting the step in ' +
@@ -223,14 +223,18 @@ const EXCLUDED = {
     'AUTOMATED CHECKS THAT PROMISE while this entry stands. Every UNRESOLVED case in the file presents a ' +
     'subject bucket identical to the CONTAINED one, and deleting any single control was confirmed by ' +
     'mutation to turn one of them green — 16 pass / 1 fail with the fixture control removed, 17 / 0 with ' +
-    'it restored. That mutation is a hand-run today. ' +
+    'it restored, and 20 / 2 with the main-session control removed against 22 / 0 restored. Those mutations ' +
+    'are hand-runs today. ' +
     'THE PROBE ITSELF, `probe:agent-tool-inheritance`, IS NOT AND SHOULD NOT BE A STEP under any of this: ' +
     'it launches four real `claude` sessions and needs credentials, so it is unrunnable on a runner by ' +
     'construction rather than by policy. Its prefix is outside GOVERNED, so it needs no entry of its own; ' +
     'this sentence is here so its absence below does not read as an oversight. What it returned when run ' +
-    'by hand, 2026-08-28 against claude 2.1.246: CONTAINED, exit 0 — 41 tools in a main session with ' +
-    'Workflow among them, 5 under `--agent orchestrator` with none, and the fixture arm proving an agent ' +
-    'session CAN carry Workflow when it declares it. ' +
+    'by hand, 2026-08-28 against claude 2.1.246: CONTAINED, exit 0 — a main session carrying Workflow, 5 ' +
+    'tools under `--agent orchestrator` with none, and the fixture arm proving an agent session CAN carry ' +
+    'Workflow when it declares it. THE SUBJECT ARM IS 5 ON EVERY RUN; THE BASELINE COUNT IS NOT A CONSTANT ' +
+    'and is deliberately not quoted here — it read 90, 41 and 52 on one machine in one day, because it ' +
+    'includes whichever MCP servers happened to connect. Workflow was present in all three, which is the ' +
+    'only property the verdict rests on. ' +
     'FALSIFY THIS: delete this entry, add the step and a matching workflow step, and update the 8 figure ' +
     'locators. If `npm run check` and `npm run check:figures` both come back green, nothing justified the ' +
     'exclusion and it must not survive.',

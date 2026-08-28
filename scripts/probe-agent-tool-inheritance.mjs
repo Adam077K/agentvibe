@@ -32,6 +32,25 @@
 // the session is offered — not a model's self-report, not `--help`, not the agent file, and not
 // documentation. A tool absent from that array cannot be called by that session.
 //
+// A DECLARED LIST IS AN UPPER BOUND, NOT THE SET — measured here, and it is why the verdict below
+// does not say "gets its declared tools", which it did until a reviewer caught the sentence
+// disagreeing with this file's own numbers. `Glob` and `Grep` are dropped whenever `Bash` is
+// declared beside them, so `orchestrator` declares 7 and receives 5. Four of four agents:
+// orchestrator 7 -> 5, builder 6 -> 4, reviewer 4 -> 2, and `sourcer`, which declares no `Bash`,
+// 5 -> 5. That last one is the negative control; without it this is a story about file agents
+// rather than about `Bash`.
+//
+// THE TRANSFORMATION IS SPECIFIC TO THOSE TWO TOOLS, WHICH THE REMEDY DEPENDS ON. `Workflow`
+// declared beside `Bash` SURVIVES: an inline `[Read, Bash, Workflow]` comes back as exactly those
+// three, against `[Read, Workflow]` -> 2 in the same run, differing in one element. In the shape
+// the remedy would actually take — a FILE-defined agent replicating the orchestrator's declared
+// list — the replica returns the same 5 as the real thing, and the replica plus `Workflow` returns
+// 6. So the declaration is honoured on this path. Two limits on reading that as a green light:
+// it is the tool being ADVERTISED, not invoked, and `PS-WORKFLOW-CONTAINMENT` in
+// `.claude/hooks/schema-lint.js` refuses the declaration in this repo — on grounds this
+// measurement narrows, since that rule's stated reason is that no frontmatter field is read on the
+// path the orchestrator runs on. True of a bare `claude`; false of `claude --agent orchestrator`.
+//
 // WHAT IT DOES NOT OBSERVE, NAMED RATHER THAN GLOSSED: a successful `Workflow` INVOCATION. The
 // probe kills each child as soon as the init line arrives, so it never spends a model turn. An
 // advertised tool that failed on use would read as INHERITS here. Closing that gap costs a full
@@ -75,6 +94,15 @@ const flag = (name, fallback) => {
   const hit = argv.find((a) => a.startsWith(`--${name}=`));
   return hit ? hit.slice(name.length + 3) : fallback;
 };
+
+// DECLARE WHAT IS READ AND REFUSE THE REST — the same move `parseCiSteps` was rebuilt around.
+// `--agent builder`, the space-separated form, was SILENTLY IGNORED: `flag()` matches `--agent=`
+// only, so the probe measured the DEFAULT agent while its report named the one you asked for, and
+// no argv element was ever rejected as unrecognised. A wrong answer under the right heading.
+const RECOGNISED_EXACT = ['--json'];
+const UNRECOGNISED = argv.filter(
+  (a) => !RECOGNISED_EXACT.includes(a) && !/^--(?:agent|differential)=/.test(a),
+);
 
 const SUBJECT_TOOL = 'Workflow';
 // The tool that proves the instrument moved. Every engine in this repo declares `Read`, and a
@@ -143,10 +171,21 @@ function runArm(arm) {
       resolve({ ...arm, elapsed_ms: Date.now() - started, ...result });
     };
 
-    const timer = setTimeout(
-      () => done({ ok: false, reason: `timeout after ${TIMEOUT_MS}ms with no init line` }),
-      TIMEOUT_MS,
-    );
+    // A session that emitted a TRUNCATED init line and one that said nothing at all both time out,
+    // and they are different faults — a stream that stopped mid-line against a session that never
+    // spoke. `buf` holds whatever never terminated in a newline, so it is the only evidence the
+    // first ever existed; dropping it unread makes the two indistinguishable in the report.
+    const timer = setTimeout(() => {
+      const tail = buf.trim();
+      done({
+        ok: false,
+        reason:
+          `timeout after ${TIMEOUT_MS}ms with no init line` +
+          (tail
+            ? `; ${Buffer.byteLength(tail)} byte(s) buffered with no newline, tail: ${JSON.stringify(tail.slice(-160))}`
+            : ' and nothing buffered — the session produced no unterminated output either'),
+      });
+    }, TIMEOUT_MS);
 
     child.stdout.on('data', (d) => {
       buf += d;
@@ -225,6 +264,24 @@ function finish(verdict, code, note) {
   process.exit(code);
 }
 
+if (UNRECOGNISED.length) {
+  finish(
+    'UNRESOLVED', 2,
+    `unrecognised argument(s): ${UNRECOGNISED.join(' ')}. This probe reads --json, --agent=<name> and ` +
+    '--differential=<name>. The space-separated form (--agent builder) is NOT accepted and used to be ' +
+    'ignored in silence, which measured the default agent under the name you asked for. Nothing was run.',
+  );
+}
+
+if (SUBJECT_AGENT === DIFFERENTIAL_AGENT) {
+  finish(
+    'UNRESOLVED', 2,
+    `the subject and differential arms both name "${SUBJECT_AGENT}". The differential arm exists to prove ` +
+    '--agent is READ, by comparing two different declared sets; aimed at one agent it can only report that ' +
+    'the flag is not being read — a conclusion about the invocation, dressed as one about the runtime.',
+  );
+}
+
 for (const arm of ARMS) {
   const r = await runArm(arm);
   const { args, ...rest } = r;
@@ -246,6 +303,7 @@ out.controls = {
   subject_present_in_main_session: A.baseline.tools.includes(SUBJECT_TOOL),
   subject_observable_in_agent_session: A.fixture.tools.includes(SUBJECT_TOOL),
   agent_flag_honoured: !sameSet(A.subject.tools, A.differential.tools),
+  subject_is_not_the_main_session: !sameSet(A.subject.tools, A.baseline.tools),
 };
 
 if (!out.controls.instrument_fired) {
@@ -283,6 +341,23 @@ if (!out.controls.agent_flag_honoured) {
   );
 }
 
+// THE ONLY CONTROL WHOSE FAILURE WOULD PRODUCE THE OPERATIONALLY WORSE VERDICT, and it was missing
+// from the first version of this probe. Every other control guards the CONTAINED path. If the
+// runtime ever resolved an unknown or unloadable `--agent <name>` to the MAIN-SESSION set instead
+// of erroring, all four of those still fire and this probe would print INHERITS — announcing that
+// dispatch reaches a gate it does not reach. Not reachable today, and that is measured rather than
+// assumed: `claude --agent zzznotarealagent` exits 1 with the CLI's own message, so such an arm
+// dies at `runArm` and is reported UNRESOLVED. This closes it against the runtime changing.
+if (!out.controls.subject_is_not_the_main_session) {
+  finish(
+    'UNRESOLVED', 2,
+    `--agent ${SUBJECT_AGENT} advertised the SAME ${A.subject.count} tools as a session launched with no ` +
+    '--agent at all. That is what a silently-ignored --agent looks like, and it is indistinguishable here ' +
+    `from genuine inheritance — so no verdict is reported. An INHERITS from this arm would claim the gate ` +
+    'is reachable on a path where the runtime had merely disregarded the agent.',
+  );
+}
+
 if (A.subject.tools.includes(SUBJECT_TOOL)) {
   finish(
     'INHERITS', 1,
@@ -297,6 +372,12 @@ finish(
   `--agent ${SUBJECT_AGENT} advertised ${A.subject.count} tools and ${SUBJECT_TOOL} was not among them, ` +
   `against ${A.baseline.count} in the main session — with the fixture control proving a --agent session ` +
   `CAN carry ${SUBJECT_TOOL} when it declares it (${A.fixture.count} tools), and the differential arm ` +
-  'proving the flag is read. A launched agent session gets its DECLARED tools. Routing dispatch through ' +
-  '--agent orchestrator buys the lens and the playbook and NOT the gate.',
+  'proving the flag is read. A launched agent session gets its declared set TRANSFORMED BY THE RUNTIME, ' +
+  'not delivered: Glob and Grep are dropped whenever Bash is declared beside them, so orchestrator ' +
+  'declares 7 and receives 5 (4 of 4 agents, sourcer keeping both with no Bash). A declared list is an ' +
+  `upper bound. Routing dispatch through --agent ${SUBJECT_AGENT} buys the lens and the playbook and NOT ` +
+  `the gate. On the obvious remedy, do not read more than was measured: declaring ${SUBJECT_TOOL} DOES ` +
+  'deliver it, including beside Bash and in a file-defined agent (a replica of the orchestrator list plus ' +
+  `${SUBJECT_TOOL} came back 6 of 8, the 5 above plus ${SUBJECT_TOOL}) — but that is the tool being ` +
+  'ADVERTISED, not invoked, and .claude/hooks/schema-lint.js refuses the declaration outright.',
 );
