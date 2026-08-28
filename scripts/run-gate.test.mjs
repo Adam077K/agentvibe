@@ -1544,15 +1544,38 @@ test('the refusal object is discriminated by `error` and fabricates none of the 
   assert.ok(line.includes('gateRequired: true'), 'a refusal must not read as "no gate needed"');
 });
 
-test('A1 — verdictRef is ALWAYS a resolved sha, never the symbolic name it was given', () => {
-  const symbolic = json(['--ref', 'origin/main...fix/gate-ref-shape', '--files', 'README.md']);
-  const expected = execFileSync('git', ['rev-parse', 'fix/gate-ref-shape'], { cwd: REPO, encoding: 'utf8' }).trim();
+test('A1 — verdictRef is ALWAYS a resolved sha, never the symbolic name it was given', (t) => {
+  // THIS TEST CONSTRUCTS THE SYMBOLIC REF IT NEEDS. The first version named the literal branch
+  // `fix/gate-ref-shape`, which exists in the author's worktree and NOWHERE ELSE: `actions/checkout`
+  // for a `pull_request` event checks out the merge commit in DETACHED HEAD and creates no local
+  // branch, so `git rev-parse fix/gate-ref-shape` exits `fatal: ambiguous argument`. Measured on CI
+  // run 33168590818, step 39 "Gate routing" — the ONLY failing test of 112, while the same suite was
+  // 112/112 locally. What this test actually needs is *a symbolic ref resolving to a known sha*, not
+  // *that particular branch*, so it makes one. Same cure as #99 and #101: construct the property you
+  // require instead of enumerating the environments you know.
+  const name = `run-gate-a1-${process.pid}`;
+  const git = (args) => execFileSync('git', args, { cwd: REPO, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  git(['branch', '-f', name, 'HEAD']);
+  t.after(() => {
+    try {
+      git(['branch', '-D', name]);
+    } catch {
+      /* a leaked per-pid branch is harmless; failing cleanup must not mask the assertion */
+    }
+  });
+
+  // ASSERT THE FIXTURE EXISTS BEFORE ASSERTING ANYTHING ABOUT BEHAVIOUR. A missing subject produces
+  // a coherent wrong answer rather than an error, which is how the original defect reached CI.
+  const expected = git(['rev-parse', name]);
+  assert.match(expected, /^[0-9a-f]{40}$/, 'the fixture branch was not created — nothing below is meaningful');
+
+  const symbolic = json(['--ref', `origin/main...${name}`, '--files', 'README.md']);
   assert.equal(symbolic.verdictRef.ref, expected, 'a symbolic tip leaked through unresolved');
   assert.match(symbolic.verdictRef.ref, /^[0-9a-f]{40}$/);
   assert.equal(symbolic.verdictRef.reason, null);
-  // CONTROL THAT MUST FIRE: the branch name really is not a sha, so the assertion above is not
-  // trivially satisfiable by the two happening to be the same string.
-  assert.notEqual('fix/gate-ref-shape', expected, 'the control is aimed wrong — nothing was resolved');
+  // CONTROL THAT MUST FIRE: the branch NAME really is not a sha, so the assertion above cannot be
+  // satisfied by the two happening to be the same string.
+  assert.notEqual(name, expected, 'the control is aimed wrong — nothing was resolved');
 });
 
 test('A2 — a base that is not origin/main yields NO usable ref, because verdict.mjs hardcodes its own', () => {
