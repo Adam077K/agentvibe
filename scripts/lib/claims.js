@@ -248,14 +248,29 @@ function splitTopLevelColon(s) {
 // `clip`, which keeps one trailing newline. This parser has always applied `strip`, so `|`
 // agrees with `|-` and `>` with `>-`; the differential probe records `|-` and `>-` as already
 // matching both reference implementations byte for byte. Adopting `clip` would change all 15
-// block-scalar values in `.claude/gates.yml` and every block scalar in agent frontmatter — an
-// `irreversible`-tier surface — to recover ZERO content, and would split `|` from `|-` where
-// they agree today. The trailing newline is the only remaining difference from a conforming
-// parser, and it is a decision. `scripts/claims.test.mjs` pins it as one.
+// block-scalar values in `.claude/gates.yml` — an `irreversible`-tier surface — to recover
+// ZERO content, and would split `|` from `|-` where they agree today.
 //
-// `|+`, `>+` and `|2` are still REFUSED, by the same route as before this change: they never
-// match the accepted set, so the header parses as a plain scalar and the more-indented body
-// then raises `unexpected indentation`. Refuse rather than guess is this parser's contract.
+// FOUR DIVERGENCES FROM A CONFORMING PARSER REMAIN. Each has a row in the cross-check list in
+// `scripts/claims.test.mjs`; NONE is a sentence without a test behind it.
+//
+//   1. Chomping is `strip`, not `clip` — `|`/`>` drop a trailing newline the references keep.
+//   2. `|+`, `>+` and `|2` are not implemented, and are NOT reliably refused. With a
+//      more-indented body they throw `unexpected indentation`. With NO body, or a body of only
+//      blank or `#`-first lines — which `scanLines` deletes before this code runs — the value
+//      silently becomes the literal indicator string: `a: |+\nb: 2` yields `{a: "|+"}` where
+//      the references yield `{a: ""}`. That string also clears `validateEvidence`'s
+//      `.trim() !== ''` floor, which `""` would not. Pre-existing; named, not fixed here.
+//   3. An empty block scalar THROWS where the references return `""`. Deliberate: a silently
+//      empty value is the failure this parser exists to refuse.
+//   4. THE SIXTH LOSS, NOT FIXED BY THIS CHANGE and not fixable from here: `scanLines` runs
+//      `stripComment` over every line of the document, block-scalar bodies included, so an odd
+//      apostrophe in a body throws `unterminated quote` and takes the WHOLE DOCUMENT with it.
+//      `k: |-\n  the judge's verdict` is unparseable; both references read it. The raw-source
+//      read below cannot rescue it because the throw happens first, in the pre-pass. Live
+//      instance: `.claude/agents/reviewer-readonly.md` frontmatter, which `schema-lint` reads
+//      with its own `parseFrontmatter` and so does not hit. This fix makes the block-scalar
+//      VALUE content; the ADMISSION decision is still made by the line scanner.
 function readBlockScalar(src, headerRaw, parentIndent, indicator, lineNo, key) {
   const isBlank = (l) => /^[ ]*$/.test(l);
   const indentOf = (l) => l.match(/^ */)[0].length;
@@ -282,7 +297,14 @@ function readBlockScalar(src, headerRaw, parentIndent, indicator, lineNo, key) {
   const body = [];
   let endRaw = headerRaw + 1;
   for (let k = headerRaw + 1; k < src.length; k++) {
-    if (isBlank(src[k])) { body.push(''); endRaw = k + 1; continue; }
+    // A whitespace-only line never TERMINATES the block, but it is not always empty either:
+    // real YAML keeps whatever sits at or past the content indent. Pushing '' unconditionally
+    // dropped those bytes — measured `"a\n\nb"` where both references give `"a\n   \nb"`.
+    if (isBlank(src[k])) {
+      body.push(src[k].length > contentIndent ? src[k].slice(contentIndent) : '');
+      endRaw = k + 1;
+      continue;
+    }
     if (indentOf(src[k]) < contentIndent) break;
     body.push(src[k].slice(contentIndent));
     endRaw = k + 1;
@@ -390,6 +412,15 @@ function parseMap(lines, i, indent, src) {
     if (rest === '>' || rest === '|' || rest === '>-' || rest === '|-') {
       // Block scalar. This is the exact shape that silently produced empty strings in
       // build-skills-manifest.mjs before Phase 1 — it is handled explicitly here.
+      // UNREACHABLE FROM ANY DOCUMENT, and deliberately kept: every scanned line carries
+      // `raw`, and `parseSeq`'s one synthetic line copies it. It guards a FUTURE caller that
+      // builds a line and forgets — without it, `lines[i].raw < endRaw` is false immediately
+      // and the body is silently re-parsed as structure. A mutation run confirms no test kills
+      // its removal, because no input can reach it; that is a property of the guard, not a gap
+      // in the tests, and it is written here so nobody claims coverage it does not have.
+      if (typeof headerRaw !== 'number') {
+        throw new ClaimError(`internal: scanned line for "${key}" carries no raw source index`, n);
+      }
       const { value, endRaw } = readBlockScalar(src, headerRaw, indent, rest, n, key);
       map[key] = value;
       // Advance past every SCANNED line the body consumed, indexed by RAW source line. That
@@ -428,8 +459,17 @@ function parseMap(lines, i, indent, src) {
 
 /** Parse a YAML subset. Throws ClaimError on anything it does not fully understand. */
 function parseYamlSubset(text) {
-  const src = String(text).split('\n');
-  const lines = scanLines(text);
+  // NORMALISE LINE ENDINGS ONCE, HERE, BEFORE ANYTHING SPLITS THE TEXT. `\r\n?` and not
+  // `\r\n`: the lone-CR case is the dangerous one. `scanLines` splits on `\n` only, so a
+  // CR-terminated file was ONE line, and `k: |-\r  a\r  b` parsed to the value "|-\r  a\r  b"
+  // — the block indicator itself became the content, silently. CRLF was milder and equally
+  // silent: every value kept an interior `\r`, and a CRLF blank line inside a block threw
+  // `unexpected indentation`. Measured against js-yaml 4.1.1: `\r\n?` fixes all three, `\r\n`
+  // alone fixes only the middle one, and widening the blankness predicate instead would leave
+  // TWO predicates over one source to disagree later. Normalising removes the condition.
+  const normalised = String(text).replace(/\r\n?/g, '\n');
+  const src = normalised.split('\n');
+  const lines = scanLines(normalised);
   if (lines.length === 0) return null;
   const base = lines[0].indent;
   for (const l of lines) {

@@ -11,6 +11,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import fs from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const claims = require('./lib/claims.js');
@@ -256,11 +257,15 @@ test('block scalars nest — inside a mapping and inside a sequence item', () =>
 //      clip would make `|` and `|-` DIVERGE where they agree today.
 //   2. Every value it would change is on an `irreversible`-tier surface —
 //      `node scripts/classify.mjs .claude/gates.yml` — and the change recovers ZERO
-//      content: 15 block scalars in `.claude/gates.yml` and 21 in agent frontmatter
-//      would each gain a trailing "\n" and nothing else. Measured by sweeping the
-//      live corpus against both references: 0 SUBSTANTIVE, 39 trailing-newline-only.
-//   3. The trailing newline is the ONLY remaining difference between this parser and
-//      a conforming one on block scalars, so stating it here states the whole gap.
+//      content. Sweeping the live corpus against both references: 0 SUBSTANTIVE and
+//      39 trailing-newline-only, which is 15 in `.claude/gates.yml` + 23 in agent
+//      frontmatter + 1 in `.claude/skills/CURATION.yml`. THE 23 ARE NOT ON THIS
+//      PARSER'S PATH — `schema-lint.js` reads agent frontmatter with its own
+//      `parseFrontmatter` (line 173) — so the live blast radius is 15 + 1 = 16.
+//      (An earlier version of this comment said "21" and did not add up to 39.)
+//   3. It is not the only remaining gap, and this file no longer claims it is. The
+//      four that remain are enumerated in `scripts/lib/claims.js` above
+//      `readBlockScalar` and each has a test below.
 //
 // If this test is ever deleted, the reason above goes with it. Change the policy by
 // changing this test first.
@@ -269,22 +274,87 @@ test('DECISION: chomping is "strip" for all four indicators, and clip is refused
   assert.equal(parseYamlSubset(`k: >\n  alpha\n`).k, 'alpha');    // YAML clip: 'alpha\n'
   assert.equal(parseYamlSubset(`k: |-\n  alpha\n`).k, 'alpha');   // YAML strip: agrees
   assert.equal(parseYamlSubset(`k: >-\n  alpha\n`).k, 'alpha');   // YAML strip: agrees
-  // The whole gap, stated as an identity: `|` differs from a conforming parser by
-  // exactly one trailing newline and by nothing else.
+  // Stated as an identity, and scoped to what it is: on THIS input, `|` differs from a
+  // conforming parser by exactly one trailing newline. It is divergence 1 of 4, not the
+  // whole gap — the other three are pinned by the three tests that follow.
   const conforming = 'alpha\n';
   assert.equal(parseYamlSubset(`k: |\n  alpha\n`).k, conforming.replace(/\n$/, ''));
 });
 
-test('DECISION: "|+", ">+" and "|2" are REFUSED, not guessed at', () => {
-  // Keep and explicit-indentation indicators are not implemented. They are not
-  // silently mis-parsed either: the header falls through to plain-scalar parsing and
-  // the more-indented body then raises `unexpected indentation`. Refuse rather than
-  // guess is this parser's contract, and a throw is the contract working. Do NOT
-  // "complete" these by making them parse — implement them, with tests, or leave the
-  // refusal.
+test('DIVERGENCE 2: "|+", ">+", "|2" throw WITH a body and silently yield the indicator string WITHOUT one', () => {
+  // This test used to be called "REFUSED, not guessed at" and asserted only the three
+  // cases on the first line. All three carry a MORE-INDENTED BODY, which is the only
+  // shape where the refusal happens — so the fixture set was shaped exactly not to see
+  // the failure it existed to catch. The refusal is real but CONDITIONAL:
   assert.throws(() => parseYamlSubset(`k: |+\n  alpha\n`), /unexpected indentation/);
   assert.throws(() => parseYamlSubset(`k: >+\n  alpha\n`), /unexpected indentation/);
   assert.throws(() => parseYamlSubset(`k: |2\n  alpha\n`), /unexpected indentation/);
+  // ...and with no body, or a body of only lines `scanLines` deletes, nothing is raised
+  // and the value becomes the LITERAL INDICATOR STRING. Both references give "".
+  assert.deepEqual(parseYamlSubset(`k: |+\nj: 2\n`), { k: '|+', j: 2 });
+  assert.deepEqual(parseYamlSubset(`k: |2\nj: 2\n`), { k: '|2', j: 2 });
+  assert.deepEqual(parseYamlSubset(`k: >+\nj: 2\n`), { k: '>+', j: 2 });
+  assert.deepEqual(parseYamlSubset(`k: |+\n  # hashed\n`), { k: '|+' });
+  assert.deepEqual(parseYamlSubset(`top:\n  a: |+\n  b: 2\n`), { top: { a: '|+', b: 2 } });
+  // And why it is worth a p1 rather than a curiosity: "|+" is a non-empty string, so it
+  // clears the `.trim() !== ''` floor in validateEvidence that "" would fail. A keep
+  // indicator in a `quote:` or `cmd:` field passes a check that exists to catch emptiness.
+  // Pre-existing behaviour. NAMED here, not fixed — fixing it is implementing the
+  // indicators or rejecting them at the header, and both are decisions of their own.
+});
+
+test('DIVERGENCE 4 (the sixth loss): an odd apostrophe in a body kills the WHOLE document', () => {
+  // `scanLines` runs `stripComment` over every line before any structure is known,
+  // block-scalar bodies included. `readBlockScalar` reads the raw source and so cannot
+  // rescue this: the throw happens first, in the pre-pass. Unlike the five content
+  // losses, this one is fatal to the document rather than to one value.
+  assert.throws(() => parseYamlSubset(`k: |-\n  the judge's verdict\n`), /unterminated quote/);
+  // The live instance, asserted rather than described, so this test fails the day it is
+  // fixed and the comment above it stops being true.
+  const fm = fs.readFileSync(new URL('../.claude/agents/reviewer-readonly.md', import.meta.url), 'utf8')
+    .match(/^---\n([\s\S]*?)\n---/)[1];
+  assert.match(fm, /judge's/);
+  assert.throws(() => parseYamlSubset(fm), /unterminated quote/);
+  // No live consequence today: schema-lint.js reads agent frontmatter with its own
+  // parseFrontmatter, not this parser. That is why it is named and not fixed here.
+});
+
+test('line endings are normalised once, and `\\r\\n?` is the predicate that matters', () => {
+  // The lone-CR row is the one that was silently corrupting: `scanLines` splits on `\n`
+  // only, so a CR-terminated document was ONE line and the block indicator itself became
+  // the value. `\r\n` alone would not have caught it.
+  assert.deepEqual(parseYamlSubset(`k: |-\r\n  a\r\n  b\r\n`), { k: 'a\nb' });
+  assert.deepEqual(parseYamlSubset(`k: |-\r  a\r  b\r`), { k: 'a\nb' });
+  assert.deepEqual(parseYamlSubset(`k: |-\r\n  a\r\n\r\n  b\r\n`), { k: 'a\n\nb' });
+  // Plain scalars and structure get the same normalisation, not a block-scalar-only fix.
+  assert.deepEqual(parseYamlSubset(`a: 1\r\nb: two\r\n`), { a: 1, b: 'two' });
+  assert.deepEqual(parseYamlSubset(`a: 1\rb: two\r`), { a: 1, b: 'two' });
+});
+
+test('a whitespace-only line keeps whatever sits at or past the content indent', () => {
+  assert.equal(parseYamlSubset(`k: |-\n  a\n     \n  b\n`).k, 'a\n   \nb');
+  assert.equal(parseYamlSubset(`k: >-\n  a\n     \n  b\n`).k, 'a\n   \nb');
+  assert.equal(parseYamlSubset(`k: |-\n  a\n     \n`).k, 'a\n   ');
+  // Shorter than the content indent: genuinely empty, and still not a terminator.
+  assert.equal(parseYamlSubset(`k: |-\n  a\n \n  b\n`).k, 'a\n\nb');
+});
+
+test('a TAB-only line inside a block scalar is refused, as it is by the reference', () => {
+  // `isBlank` is deliberately /^[ ]*$/ and not /^\\s*$/. Widening it to \\s makes a tab-only
+  // line a blank continuation and the document parses to "a\\n\\nb"; both js-yaml and PyYAML
+  // refuse it. Nothing pinned this until a mutation run found the widened predicate
+  // surviving all 76 tests — the mutant was uncovered, not equivalent.
+  assert.throws(() => parseYamlSubset(`k: |-\n  a\n\t\n  b\n`), /unexpected indentation/);
+  assert.throws(() => parseYamlSubset(`k: >-\n  a\n\t\n  b\n`), /unexpected indentation/);
+  // A tab in the indentation of a real body line is caught earlier, by the line scanner.
+  assert.throws(() => parseYamlSubset(`k: |-\n  a\n\t b\n`), /tab in indentation/);
+});
+
+test('folding counts BREAKS, not lines — n+1 breaks make n newlines', () => {
+  // Kills the mutant that replaces `blanks + 1` with a constant 1 in foldLines: a blank
+  // line followed by a more-indented line is two breaks and must stay two.
+  assert.equal(parseYamlSubset(`k: >-\n  alpha\n\n   indented\n`).k, 'alpha\n\n indented');
+  assert.equal(parseYamlSubset(`k: >-\n  alpha\n\n\n   indented\n`).k, 'alpha\n\n\n indented');
 });
 
 test('a body indented between the parent and the content indent is refused', () => {
@@ -295,7 +365,7 @@ test('a body indented between the parent and the content indent is refused', () 
   assert.throws(() => parseYamlSubset(`k: |-\n    alpha\n   bravo\n`), /unexpected indentation/);
 });
 
-test('a block scalar with no body still throws rather than yielding ""', () => {
+test('DIVERGENCE 3: a block scalar with no body throws where the references yield ""', () => {
   assert.throws(() => parseYamlSubset(`k: >-\n`), /block scalar .* has no content/);
   assert.throws(() => parseYamlSubset(`k: |-\nj: plain\n`), /block scalar .* has no content/);
 });
@@ -305,9 +375,13 @@ test('CROSS-CHECK — when a reference YAML parser is reachable, it agrees', (t)
   // so js-yaml is absent on a CI runner and a hard require would fail the build.
   // It can only ADD a failure. The literals above carry the guarantee; this catches
   // the case where the literals themselves were transcribed wrong.
+  // `t.skip`, NOT `return`. A `return` renders a green tick and counts in the pass
+  // tally, so an absent reference reads as a satisfied check — and on CI it is ALWAYS
+  // absent: zero dependencies, no lockfile, no install step. That is a resolver passing
+  // what it could not check, in the file that pins this parser's honesty.
   let jsyaml;
-  try { jsyaml = require('js-yaml'); } catch { 
-    t.diagnostic('js-yaml not resolvable — cross-check UNRESOLVED, not passed');
+  try { jsyaml = require('js-yaml'); } catch {
+    t.skip('js-yaml not resolvable — cross-check UNRESOLVED, not passed');
     return;
   }
   const strip = [
@@ -323,11 +397,27 @@ test('CROSS-CHECK — when a reference YAML parser is reachable, it agrees', (t)
   for (const text of strip) {
     assert.deepEqual(parseYamlSubset(text), jsyaml.load(text), `strip-indicator case: ${JSON.stringify(text)}`);
   }
-  // And the clip indicators differ by EXACTLY the documented trailing newline.
+  // ── ONE ROW PER DIVERGENCE. If a row starts agreeing, this fails and the
+  // ── enumeration in claims.js must be edited down. That is the point of it.
+  // 1 — clip: `|`/`>` differ by exactly the documented trailing newline.
   for (const text of [`k: |\n  alpha\n  bravo\n`, `k: >\n  alpha\n\n  bravo\n`]) {
     assert.equal(parseYamlSubset(text).k, jsyaml.load(text).k.replace(/\n$/, ''));
     assert.notEqual(parseYamlSubset(text).k, jsyaml.load(text).k);
   }
+  // 2 — keep/explicit indicators: the literal indicator string vs "".
+  for (const text of [`k: |+\nj: 2\n`, `k: |2\nj: 2\n`, `k: >+\nj: 2\n`]) {
+    assert.equal(jsyaml.load(text).k, '');
+    assert.notEqual(parseYamlSubset(text).k, '');
+  }
+  // 3 — empty block scalar: we throw, the reference returns "".
+  assert.equal(jsyaml.load(`k: |-\nj: 2\n`).k, '');
+  assert.throws(() => parseYamlSubset(`k: |-\nj: 2\n`), /has no content/);
+  // 4 — the sixth loss: an apostrophe in a body is fatal here and fine there.
+  assert.equal(jsyaml.load(`k: |-\n  the judge's verdict\n`).k, "the judge's verdict");
+  assert.throws(() => parseYamlSubset(`k: |-\n  the judge's verdict\n`), /unterminated quote/);
+  // Positive control: the divergence list is EXHAUSTIVE for the content cases above,
+  // which only means something if those cases are asserted to agree — they are, in the
+  // loop at the top of this test.
 });
 
 // ── Parser: everything that must REFUSE ─────────────────────────────────────
