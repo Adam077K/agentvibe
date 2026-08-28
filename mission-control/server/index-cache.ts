@@ -699,8 +699,13 @@ export function classifyVerdictProduction(run: ProducerRun): VerdictProduction {
     };
   }
   const declared = payload.outcome;
-  const mapped = typeof declared === 'string'
-    ? (PRODUCER_OUTCOME_STATE as Record<string, VerdictProduction['state']>)[declared]
+  // LOOKED UP WITHOUT WIDENING, AND `tsc` IS WHAT SAID SO. Written first as
+  // `(TABLE as Record<string, VerdictProduction['state']>)[declared]`, which types the result as
+  // EVERY state including `not-asked` — a value this branch can never produce and the return type
+  // below rightly refuses. `bun test` does not typecheck and would have shipped it; the cure is to
+  // read the table through its own key type so the union stays as narrow as the table is.
+  const mapped = typeof declared === 'string' && declared in PRODUCER_OUTCOME_STATE
+    ? PRODUCER_OUTCOME_STATE[declared as keyof typeof PRODUCER_OUTCOME_STATE]
     : undefined;
   if (mapped === undefined) {
     return {
@@ -709,8 +714,8 @@ export function classifyVerdictProduction(run: ProducerRun): VerdictProduction {
       ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
     };
   }
-  const expected = typeof run.status === 'number'
-    ? (PRODUCER_EXIT_STATE as Record<number, VerdictProduction['state']>)[run.status]
+  const expected = typeof run.status === 'number' && run.status in PRODUCER_EXIT_STATE
+    ? PRODUCER_EXIT_STATE[run.status as keyof typeof PRODUCER_EXIT_STATE]
     : undefined;
   if (expected === undefined || expected !== mapped) {
     // THE CROSS-CHECK, AND IT IS THE POINT OF THE WHOLE FUNCTION. Two independent statements about

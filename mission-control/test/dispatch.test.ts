@@ -42,8 +42,14 @@ import {
   GATE_OUTCOMES,
   type GateOutcome,
   KNOWN_DISPATCH_STATUSES,
+  classifyVerdictProduction,
+  VERDICT_PRODUCTION_STATES,
   type DispatchEntry,
+  type ProducerRun,
 } from '../server/index-cache.ts';
+// THE PRODUCER'S OWN TABLES, imported so a rename there goes red HERE. Importing the module
+// does not run it: its entry point is guarded on `process.argv[1]` being the script itself.
+import { OUTCOME as REAL_OUTCOME, EXIT as REAL_EXIT } from '../../scripts/produce-verdict.mjs';
 import { execFileSync } from 'node:child_process';
 import { LiveState, REPO_ROOT } from '../server/state.ts';
 import { createApi } from '../server/routes/api.ts';
@@ -1416,5 +1422,316 @@ describe('a clean exit is recorded as a clean exit, not as a completion', () => 
     expect(work.unrecognised).toEqual([]);
     expect(KNOWN_DISPATCH_STATUSES).toContain('consumed');
     expect(KNOWN_DISPATCH_STATUSES).toContain('exited-clean');
+  });
+});
+
+// ── PRODUCING a verdict, not merely routing to one ───────────────────────────────────────
+//
+// `scripts/produce-verdict.mjs` landed on `main` in #125 and was invoked by NOTHING. Measured at
+// `4ddc5c6`, controls in both directions: 3 files referenced it — a test argv in package.json, the
+// registration check naming that argv, and generated documentation — against 24 files referencing
+// `run-gate.mjs`, which IS invoked, and 0 for an impossible name. 24 against 3 is what made that a
+// measured gap rather than a suggestive zero.
+//
+// The cells below pin the two halves that can fail silently: WHEN the producer is asked (the
+// denominator — a spend, not a detail) and WHAT is believed when it answers (the artifact, never
+// the receipt).
+
+describe('classifyVerdictProduction — the exit code is a receipt, the payload is the outcome', () => {
+  const run = (o: Partial<ProducerRun>): ProducerRun =>
+    ({ status: null, signal: null, spawnCode: null, stdout: '', ...o });
+  const said = (outcome: string, extra: Record<string, unknown> = {}) =>
+    JSON.stringify({ outcome, reason: 'the producer said so', ...extra });
+
+  // THE CELL THAT MUST NOT FIRE. Without it every row below is satisfied by a function that
+  // returns `unresolved` unconditionally, and a table where every cell agrees looks like rigour.
+  test('CONTROL: an agreeing PRODUCED run IS `produced`, and carries the artifact evidence', () => {
+    const v = classifyVerdictProduction(run({
+      status: 0,
+      stdout: said('PRODUCED', { subject: 'abc123', head: 'deadbeef', established: true }),
+    }));
+    expect(v.state).toBe('produced');
+    expect(v).toMatchObject({ exitCode: 0, subject: 'abc123', head: 'deadbeef' });
+  });
+
+  test('each of the producer\u2019s four terminal states maps to its own recorded state', () => {
+    expect(classifyVerdictProduction(run({ status: 0, stdout: said('PRODUCED') })).state).toBe('produced');
+    expect(classifyVerdictProduction(run({ status: 1, stdout: said('BLOCKED') })).state).toBe('blocked');
+    expect(classifyVerdictProduction(run({ status: 2, stdout: said('REFUSED') })).state).toBe('unresolved');
+    expect(classifyVerdictProduction(run({ status: 3, stdout: said('NOT_REQUIRED') })).state).toBe('not-required');
+    // AND THEY ARE FOUR DISTINCT ANSWERS, not one value asserted four times. Four inputs produce
+    // four states; REFUSED is the only one whose name differs from the producer's, so the SET is
+    // four wide and `produced` is in it exactly once.
+    const names = ['PRODUCED', 'BLOCKED', 'REFUSED', 'NOT_REQUIRED'];
+    const seen = new Set(names.map((n, i) =>
+      classifyVerdictProduction(run({ status: i, stdout: said(n) })).state));
+    expect(seen.size).toBe(4);
+    expect([...seen].sort()).toEqual(['blocked', 'not-required', 'produced', 'unresolved']);
+  });
+
+  // ── THE INPUTS CONSTRUCTED TO DEFEAT THIS VERY FIX ───────────────────────────────────────
+  //
+  // Each row below is a way a run could END UP LOOKING like a pass without one having been read
+  // out of `.qa/verdicts/`. Every one must be `unresolved`, and none may be `produced`.
+  const attacks: [string, ProducerRun][] = [
+    ['exit 0 with a payload that does NOT say PRODUCED — a wrapper swallowing the real code',
+      run({ status: 0, stdout: said('REFUSED') })],
+    ['a payload saying PRODUCED behind an exit code that means something else',
+      run({ status: 3, stdout: said('PRODUCED') })],
+    ['exit 0 and NO output at all — a stub named `produce-verdict.mjs` on the path',
+      run({ status: 0, stdout: '' })],
+    ['exit 0 and human prose rather than JSON — the non-`--json` renderer',
+      run({ status: 0, stdout: 'PRODUCED  (established=true)\n  a verdict record is committed\n' })],
+    ['JSON that is not an object — a bare string naming the state',
+      run({ status: 0, stdout: '"PRODUCED"' })],
+    ['JSON that is an ARRAY — indexable, truthy, and not an outcome',
+      run({ status: 0, stdout: '[{"outcome":"PRODUCED"}]' })],
+    ['an outcome word this build does not know, spelled like success',
+      run({ status: 0, stdout: said('PASSED') })],
+    ['an outcome that is not a string',
+      run({ status: 0, stdout: JSON.stringify({ outcome: true, reason: 'r' }) })],
+    ['exit 64 — USAGE, deliberately outside the four so it can never be read as one',
+      run({ status: 64, stdout: said('PRODUCED') })],
+    ['a producer KILLED after it had already printed a PRODUCED payload',
+      run({ status: null, signal: 'SIGKILL', stdout: said('PRODUCED') })],
+    ['a producer that hit the outer TIMEOUT with a PRODUCED payload already on stdout',
+      run({ status: null, signal: null, spawnCode: 'ETIMEDOUT', stdout: said('PRODUCED'), message: 'timed out' })],
+    ['no producer on PATH at all, with stdout somehow non-empty',
+      run({ status: null, spawnCode: 'ENOENT', stdout: said('PRODUCED'), message: 'spawn node ENOENT' })],
+  ];
+  for (const [what, r] of attacks) {
+    test(`UNRESOLVED, never produced: ${what}`, () => {
+      const v = classifyVerdictProduction(r);
+      expect(v.state).toBe('unresolved');
+      // PAIRED WITH THE OUTCOME IT MUST NOT EQUAL — `state === 'unresolved'` alone would pass
+      // against a build that wrote it unconditionally, which the CONTROL above rules out.
+      expect(v.state).not.toBe('produced');
+      expect(v.state).not.toBe('not-required');
+    });
+  }
+
+  test('a signal is settled BEFORE stdout is read — the order is the design', () => {
+    // Both are wrong-looking; only the signal explains it. The reason must name the signal rather
+    // than the payload, or a reader diagnoses a parse problem that did not happen.
+    const v = classifyVerdictProduction(run({ status: null, signal: 'SIGTERM', stdout: said('PRODUCED') }));
+    expect(v).toMatchObject({ state: 'unresolved', signal: 'SIGTERM' });
+    expect((v as { reason: string }).reason).toContain('SIGTERM');
+  });
+
+  test('`not-asked` is NOT reachable from a producer run — only the caller may write it', () => {
+    // Every state except this one comes from a run. `not-asked` says the run never happened, and a
+    // function that reads a run's remains must not be able to claim that.
+    const everyState = new Set(VERDICT_PRODUCTION_STATES);
+    expect(everyState.has('not-asked')).toBe(true); // the vocabulary really does contain it
+    const fromRuns = new Set([
+      classifyVerdictProduction(run({ status: 0, stdout: said('PRODUCED') })).state,
+      classifyVerdictProduction(run({ status: 1, stdout: said('BLOCKED') })).state,
+      classifyVerdictProduction(run({ status: 2, stdout: said('REFUSED') })).state,
+      classifyVerdictProduction(run({ status: 3, stdout: said('NOT_REQUIRED') })).state,
+      classifyVerdictProduction(run({ status: null, signal: 'SIGKILL', stdout: '' })).state,
+    ]);
+    expect(fromRuns.has('not-asked')).toBe(false);
+    // THE DENOMINATOR, READ RATHER THAN ASSUMED: four of the five states were reached here, so the
+    // absence of the fifth is a fact about the function and not about a thin sample.
+    expect(fromRuns.size).toBe(4);
+  });
+
+  test('ANTI-DRIFT: the REAL produce-verdict.mjs still spells its states and codes this way', () => {
+    // The rows above drive a FIXTURE payload, so they all stay green if the producer renames a
+    // state or renumbers an exit code — a fixture built from my own reader cannot fail. This drives
+    // the producer's OWN exported tables through the consumer's classifier. It is the same F3a
+    // lesson the run-gate anti-drift test above was written for.
+    // EVERY LOOKUP CHECKED, and that is not ceremony: `noUncheckedIndexedAccess` types these as
+    // `string | undefined`, and the FIRST draft cast the pair instead — which would have turned a
+    // producer that dropped an exit code into `undefined` flowing on as a plausible value. `tsc`
+    // refused it; `bun test` had already passed 116 of 116 with it in.
+    const pairs: [string, number][] = [];
+    for (const o of Object.values(REAL_OUTCOME)) {
+      const code = REAL_EXIT[o];
+      expect(typeof code).toBe('number');
+      pairs.push([o, code as number]);
+    }
+    expect(pairs.length).toBe(4);
+    for (const [outcome, code] of pairs) {
+      const v = classifyVerdictProduction(run({ status: code, stdout: said(outcome) }));
+      expect((v as { reason: string }).reason).not.toContain('disagreeing');
+      expect((v as { reason: string }).reason).not.toContain('declares no outcome this build knows');
+      expect(VERDICT_PRODUCTION_STATES).toContain(v.state);
+    }
+    // CONTROL ON THE SAME ARM: a deliberately mismatched pair from the SAME real tables must be
+    // caught, or the loop above proves only that the classifier says yes to everything.
+    const notRequired = REAL_OUTCOME.NOT_REQUIRED;
+    const produced = REAL_OUTCOME.PRODUCED;
+    expect(typeof notRequired).toBe('string');
+    expect(typeof produced).toBe('string');
+    const mismatchCode = REAL_EXIT[notRequired as string];
+    expect(typeof mismatchCode).toBe('number');
+    const mismatch = classifyVerdictProduction(run({
+      status: mismatchCode as number, stdout: said(produced as string),
+    }));
+    expect(mismatch.state).toBe('unresolved');
+    expect((mismatch as { reason: string }).reason).toContain('disagreeing');
+  });
+});
+
+describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for nothing else', () => {
+  /**
+   * A fixture project with its own router and its own producer, and a LOG THE PRODUCER WRITES.
+   *
+   * THE LOG IS THE WHOLE POINT. `verdictProduction.state === 'not-asked'` is byte-identical whether
+   * the producer was skipped or ran and was misread, so every cell below asserts the RUN COUNT as
+   * well as the state — a spend is the thing being controlled and only the log observes it.
+   */
+  function producerFixture(
+    prefix: string,
+    opts: { router: string | null; producer: string | null; args?: string[] },
+  ) {
+    const dir = mkTmpDir(prefix);
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    const log = path.join(dir, 'producer-runs.log');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
+    installHarness(root);
+    if (opts.router !== null) fs.writeFileSync(path.join(root, 'scripts', 'run-gate.mjs'), opts.router);
+    if (opts.producer !== null) fs.writeFileSync(path.join(root, 'scripts', 'produce-verdict.mjs'), opts.producer);
+    fs.writeFileSync(path.join(bin, 'claude'), '#!/bin/sh\nexit 0\n');
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    fs.writeFileSync(queue, JSON.stringify({
+      id: 'producer', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
+    }) + '\n');
+    execFileSync('bun', [CONSUMER, ...(opts.args ?? [])], {
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue, MC_PRODUCER_LOG: log },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    const logText = fs.existsSync(log) ? fs.readFileSync(log, 'utf8') : '';
+    const runs = logText.trim().split('\n').filter(Boolean).length;
+    return { entry: readDispatch(queue).at(-1) as DispatchEntry, runs, logText };
+  }
+
+  const ROUTER = (over: Record<string, unknown> = {}) => {
+    const shape = {
+      ref: 'origin/main...abc123', files: 5, floor: 'full', gateRequired: true,
+      invocation: { tool: 'Workflow', scriptPath: '.claude/workflows/qa.js', args: { ref: 'r', tier: 'full', tree: '/t' } },
+      ...over,
+    };
+    return `console.log(${JSON.stringify(JSON.stringify(shape))});\n`;
+  };
+  /** A producer that records that it ran, prints a payload, and exits with a chosen code. */
+  const PRODUCER = (payload: unknown, exit: number) =>
+    `import fs from 'node:fs';\n`
+    + `fs.appendFileSync(process.env.MC_PRODUCER_LOG, 'run ' + process.argv.slice(2).join(' ') + '\\n');\n`
+    + `console.log(${JSON.stringify(JSON.stringify(payload))});\n`
+    + `process.exit(${exit});\n`;
+
+  test('a REQUIRED gate asks the producer exactly once, and the artifact answer is recorded', () => {
+    const { entry, runs, logText } = producerFixture('mc-prod-yes-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'binds this diff and reads PASS', subject: 'sub1' }, 0),
+    });
+    expect(runs).toBe(1);
+    // ASKED WITH `--json`, read from the argv the producer LOGGED rather than from this test's
+    // expectation of it. Without the flag the producer prints prose, which the classifier refuses.
+    expect(logText).toContain('--json');
+    expect(entry.verdictProduction).toMatchObject({ state: 'produced', exitCode: 0, subject: 'sub1' });
+    // AND IT WAS ASKED WITH `--json`, because the payload is the only thing that may be believed.
+    // The fixture producer logs its own argv, so this reads what the consumer really passed rather
+    // than what this test would like it to have passed.
+    expect(entry.verdictProduction).not.toHaveProperty('why');
+  });
+
+  test('a NOT-REQUIRED gate never spends a panel — the denominator is diffs, not dispatches', () => {
+    const { entry, runs } = producerFixture('mc-prod-notreq-', {
+      router: ROUTER({ gateRequired: false }),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'should never be reached' }, 0),
+    });
+    // THE PRODUCER WOULD HAVE SAID `produced`. It was not asked, so it did not.
+    expect(runs).toBe(0);
+    expect(entry.verdictProduction?.state).toBe('not-asked');
+    expect((entry.verdictProduction as { why: string }).why).toContain('does not require the gate');
+  });
+
+  test('an UNDECIDED routing never spends a panel either — a zero is not a question', () => {
+    const { entry, runs } = producerFixture('mc-prod-undecided-', {
+      router: null,
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'should never be reached' }, 0),
+    });
+    expect(runs).toBe(0);
+    expect(entry.verdictProduction?.state).toBe('not-asked');
+    expect((entry.verdictProduction as { why: string }).why).toContain('did not decide');
+  });
+
+  test('--no-verdict declines the spend even when the gate IS required', () => {
+    const { entry, runs } = producerFixture('mc-prod-optout-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'should never be reached' }, 0),
+      args: ['--no-verdict'],
+    });
+    expect(runs).toBe(0);
+    expect((entry.verdictProduction as { why: string }).why).toContain('--no-verdict');
+  });
+
+  test('a project with NO producer is `not-asked` naming the path, not a failed gate run', () => {
+    const { entry, runs } = producerFixture('mc-prod-absent-', { router: ROUTER(), producer: null });
+    expect(runs).toBe(0);
+    expect(entry.verdictProduction?.state).toBe('not-asked');
+    expect((entry.verdictProduction as { why: string }).why).toContain('produce-verdict.mjs');
+    expect((entry.verdictProduction as { why: string }).why).toContain('does not exist');
+  });
+
+  test('END TO END: a producer exiting 0 while its payload REFUSES is `unresolved`, not `produced`', () => {
+    // The attack, through the real spawn path rather than through the classifier alone: a producer
+    // that ran, was asked, exited cleanly, and established nothing.
+    const { entry, runs } = producerFixture('mc-prod-lie-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'REFUSED', reason: 'the router refused to emit an invocation' }, 0),
+    });
+    expect(runs).toBe(1);
+    expect(entry.verdictProduction?.state).toBe('unresolved');
+    expect(entry.verdictProduction?.state).not.toBe('produced');
+    expect(JSON.stringify(entry)).not.toContain('"PASS"');
+  });
+
+  test('END TO END: a producer that exits 1 with a BLOCKED payload is recorded as blocked', () => {
+    const { entry, runs } = producerFixture('mc-prod-blocked-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'BLOCKED', reason: 'the panel ran and said no' }, 1),
+    });
+    expect(runs).toBe(1);
+    expect(entry.verdictProduction).toMatchObject({ state: 'blocked', exitCode: 1 });
+  });
+
+  test('--dry-run states the spend WITHOUT making it — a dry run that misstates the real run is worse than none', () => {
+    const dir = mkTmpDir('mc-prod-dry-');
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    const log = path.join(dir, 'producer-runs.log');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
+    installHarness(root);
+    fs.writeFileSync(path.join(root, 'scripts', 'run-gate.mjs'), ROUTER());
+    fs.writeFileSync(path.join(root, 'scripts', 'produce-verdict.mjs'), PRODUCER({ outcome: 'PRODUCED', reason: 'x' }, 0));
+    fs.writeFileSync(path.join(bin, 'claude'), '#!/bin/sh\nexit 0\n');
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    fs.writeFileSync(queue, JSON.stringify({
+      id: 'dry', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
+    }) + '\n');
+    const out = execFileSync('bun', [CONSUMER, '--dry-run'], {
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue, MC_PRODUCER_LOG: log },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    expect(out).toContain('verdict production');
+    expect(fs.existsSync(log)).toBe(false);
+    // AND THE OPT-OUT IS MIRRORED TOO, or the dry run describes only one of the two real paths.
+    const out2 = execFileSync('bun', [CONSUMER, '--dry-run', '--no-verdict'], {
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue, MC_PRODUCER_LOG: log },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    expect(out2).toContain('DECLINED');
+    expect(out2).not.toBe(out);
   });
 });
