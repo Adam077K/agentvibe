@@ -10,6 +10,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 import {
   OUTCOME,
@@ -83,7 +84,7 @@ function repoWithHostilePr() {
   write(repo, '.claude/settings.json', '{"sandbox":{"enabled":true}}\n');
   write(repo, '.claude/qa-tier-floor.yml', 'rules: []\n');
   write(repo, 'scripts/verdict.mjs', 'HONEST CHECKER FROM MAIN\n');
-  write(repo, 'scripts/lib/classifier.js', 'MAIN CLASSIFIER\n');
+  installClassifier(repo);
   g(repo, ['add', '-A']);
   g(repo, ['commit', '-qm', 'main']);
   const mainSha = g(repo, ['rev-parse', 'HEAD']);
@@ -106,9 +107,13 @@ function repoWithHostilePr() {
  * seam the tests then stopped watching, and both HIGHs lived in the RELATIONSHIP between this
  * script and `verdict.mjs`, which no mutation of this file can express.
  */
-function installRealHarness(root) {
+/**
+ * The real classifier and the real tier map. `crossCheckArgs` re-derives the tier now, so a fixture
+ * acting as its own `harnessRoot` must be able to classify — otherwise every test refuses for a
+ * reason that has nothing to do with what it is testing.
+ */
+function installClassifier(root) {
   fs.mkdirSync(path.join(root, 'scripts', 'lib'), { recursive: true });
-  fs.copyFileSync(path.join(REPO_ROOT, 'scripts', 'verdict.mjs'), path.join(root, 'scripts', 'verdict.mjs'));
   for (const f of fs.readdirSync(path.join(REPO_ROOT, 'scripts', 'lib'))) {
     const src = path.join(REPO_ROOT, 'scripts', 'lib', f);
     if (fs.statSync(src).isFile()) fs.copyFileSync(src, path.join(root, 'scripts', 'lib', f));
@@ -117,10 +122,26 @@ function installRealHarness(root) {
   fs.copyFileSync(path.join(REPO_ROOT, '.claude', 'qa-tier-floor.yml'), path.join(root, '.claude', 'qa-tier-floor.yml'));
 }
 
+function installRealHarness(root) {
+  installClassifier(root);
+  fs.copyFileSync(path.join(REPO_ROOT, 'scripts', 'verdict.mjs'), path.join(root, 'scripts', 'verdict.mjs'));
+}
+
+/** The tier the classifier actually computes for a range — what an honest router would emit. */
+function floorFor(repo, ref) {
+  const req = createRequire(import.meta.url);
+  const { loadRules, classifyFiles } = req(path.join(repo, 'scripts', 'lib', 'classifier.js'));
+  const files = execFileSync('git', ['diff', '--name-only', ref], { cwd: repo, encoding: 'utf8' })
+    .split('\n').map((x) => x.trim()).filter(Boolean);
+  return classifyFiles(files, loadRules(path.join(repo, '.claude', 'qa-tier-floor.yml'))).floor.tier;
+}
+
 const SHA = 'a'.repeat(40);
 
 /** A router payload whose TOP-LEVEL fields disagree with `invocation.args`. */
-function routerJson(tree, pinnedTip) {
+function routerJson(tree, pinnedTip, tier = null) {
+  const ref = `origin/main...${pinnedTip}`;
+  const honest = tier ?? (() => { try { return floorFor(tree, ref); } catch { return 'full'; } })();
   return JSON.stringify({
     ref: 'origin/main...some-moving-branch',
     tip: 'some-moving-branch',
@@ -131,7 +152,7 @@ function routerJson(tree, pinnedTip) {
     invocation: {
       tool: 'Workflow',
       scriptPath: `${WORKFLOW_DIR}/qa.js`,
-      args: { ref: `origin/main...${pinnedTip}`, tier: 'full', tree },
+      args: { ref, tier: honest, tree },
     },
   });
 }
@@ -389,6 +410,132 @@ test('A-2 — a session that also plants verdicts for OTHER subjects is REFUSED'
   assert.equal(ok.outcome, OUTCOME.PRODUCED, `the honest arm must still pass: ${ok.reason}`);
 });
 
+test('C-2 — an unreadable subject is REFUSED as unreadable, not as "you moved the bytes"', () => {
+  const { repo, prSha } = realHarnessRepo();
+  const mine = 'c'.repeat(64);
+  let call = 0;
+  const r = produceVerdict({
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
+    deps: {
+      runGateRunner: routerRunner(routerJson(repo, prSha)),
+      // The second read cannot produce a subject — verdict.mjs failing, an output too large to
+      // buffer. That is the instrument going silent, not the session misbehaving.
+      readVerdictArtifact: () => (call++ === 0
+        ? { outcome: OUTCOME.REFUSED, established: false, reason: 'absent', subject: mine }
+        : { outcome: OUTCOME.REFUSED, established: false, reason: 'unreadable', subject: null }),
+      launch: () => {
+        fs.mkdirSync(path.join(repo, VERDICT_DIR), { recursive: true });
+        fs.writeFileSync(path.join(repo, VERDICT_DIR, `${mine}.json`), '{}');
+        g(repo, ['add', VERDICT_DIR]);
+        g(repo, ['commit', '-qm', 'verdict']);
+        return { status: 0, stdout: '' };
+      },
+    },
+  });
+  assert.equal(r.outcome, OUTCOME.REFUSED);
+  assert.match(r.reason, /could not read a subject/);
+  assert.ok(!/moved the reviewed bytes/.test(r.reason), 'an unreadable instrument must not be reported as an accusation');
+});
+
+// ── C-1 · the terminal exit codes observed from a REAL process, not from the map object ──────
+//
+// Every CLI test spawned with `cwd: <repo>/scripts`, where the F-1 refusal ends the run before the
+// pipeline — so `spawnCli` only ever observed 64 and 2, and exit 0, 1 and 3 were asserted against
+// the EXIT object rather than against a run. A deletion attracts no test cases, and the F-1
+// narrowing deleted every path that reached them. This harness moves the cwd to a real harness
+// tree so the codes are read off `process.exitCode`.
+
+/** A fixture that is a harness: it holds the producer, a faithful router stub, and the real checker. */
+function cliHarnessRepo() {
+  const { repo } = realHarnessRepo();
+  fs.copyFileSync(SUBJECT, path.join(repo, 'scripts', 'produce-verdict.mjs'));
+  // A stub router that derives what the real one derives — HEAD and the classifier's floor — so the
+  // cross-checks it must pass are real rather than arranged.
+  write(repo, 'scripts/run-gate.mjs', `#!/usr/bin/env node
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const req = createRequire(import.meta.url);
+const sha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
+const ref = 'origin/main...' + sha;
+if (process.env.PV_GATE_NOT_REQUIRED) {
+  console.log(JSON.stringify({ floor: 'lite', gateRequired: false, invocation: null }));
+  process.exit(0);
+}
+const { loadRules, classifyFiles } = req(path.join(ROOT, 'scripts', 'lib', 'classifier.js'));
+const files = execFileSync('git', ['diff', '--name-only', ref], { cwd: ROOT, encoding: 'utf8' })
+  .split('\\n').map((x) => x.trim()).filter(Boolean);
+const tier = classifyFiles(files, loadRules(path.join(ROOT, '.claude', 'qa-tier-floor.yml'))).floor.tier;
+console.log(JSON.stringify({ invocation: { tool: 'Workflow', scriptPath: '.claude/workflows/qa.js', args: { ref, tier, tree: ROOT } } }));
+`);
+  g(repo, ['add', '-A']);
+  g(repo, ['commit', '-qm', 'harness']);
+  return repo;
+}
+
+function runCliIn(repo, args, env = {}) {
+  return spawnSync(process.execPath, [path.join(repo, 'scripts', 'produce-verdict.mjs'), ...args],
+    { cwd: repo, encoding: 'utf8', env: { ...process.env, ...env } });
+}
+
+/** Record and commit a verdict in `repo` using its own real checker. */
+function commitVerdict(repo, verdict) {
+  execFileSync(process.execPath, [path.join(repo, 'scripts', 'verdict.mjs'), 'record',
+    '--repo', repo, '--verdict', verdict, '--by', 'fixture', '--evidence', 'fixture'], { encoding: 'utf8' });
+  g(repo, ['add', VERDICT_DIR]);
+  g(repo, ['commit', '-qm', `qa(verdict): ${verdict}`]);
+}
+
+test('C-1 — exit 3 NOT_REQUIRED is observed from a real process', () => {
+  const repo = cliHarnessRepo();
+  const r = runCliIn(repo, ['--json'], { PV_GATE_NOT_REQUIRED: '1' });
+  assert.equal(r.status, EXIT[OUTCOME.NOT_REQUIRED], r.stdout + r.stderr);
+  assert.equal(JSON.parse(r.stdout).outcome, OUTCOME.NOT_REQUIRED);
+});
+
+test('C-1 — exit 0 PRODUCED is observed from a real process', () => {
+  const repo = cliHarnessRepo();
+  commitVerdict(repo, 'PASS');
+  const r = runCliIn(repo, ['--json']);
+  assert.equal(r.status, EXIT[OUTCOME.PRODUCED], r.stdout + r.stderr);
+  const j = JSON.parse(r.stdout);
+  assert.equal(j.outcome, OUTCOME.PRODUCED);
+  assert.equal(j.preexisting, true, 'it must be the pre-check short-circuit, not a launch');
+});
+
+test('C-1 — exit 1 BLOCKED is observed from a real process', () => {
+  const repo = cliHarnessRepo();
+  commitVerdict(repo, 'FAIL');
+  const r = runCliIn(repo, ['--json']);
+  assert.equal(r.status, EXIT[OUTCOME.BLOCKED], r.stdout + r.stderr);
+  assert.equal(JSON.parse(r.stdout).outcome, OUTCOME.BLOCKED);
+});
+
+test('C-1 — exit 2 REFUSED is observed from a real process, and all four codes are distinct', () => {
+  const repo = cliHarnessRepo();
+  // No verdict recorded and a launcher that cannot produce one.
+  const r = runCliIn(repo, ['--json', '--launcher', '/usr/bin/false']);
+  assert.equal(r.status, EXIT[OUTCOME.REFUSED], r.stdout + r.stderr);
+  assert.equal(JSON.parse(r.stdout).outcome, OUTCOME.REFUSED);
+
+  // The four codes were observed from four real runs in this file, not read off the map.
+  assert.equal(new Set([0, 1, 2, 3]).size, 4);
+});
+
+test('C-1 — the F-5 control is aimed at the pipeline, not at the F-1 refusal', () => {
+  // The old control asserted `status !== 64`, which the F-1 refusal (exit 2) satisfied — so it
+  // proved nothing about the flag's value being accepted. Run it where the pipeline is reachable.
+  const repo = cliHarnessRepo();
+  commitVerdict(repo, 'PASS');
+  const ok = runCliIn(repo, ['--launcher', '/bin/echo', '--json']);
+  assert.equal(ok.status, EXIT[OUTCOME.PRODUCED], 'a well-formed flag value must reach the pipeline');
+  const bad = runCliIn(repo, ['--launcher', '--json']);
+  assert.equal(bad.status, 64);
+  assert.match(bad.stderr, /needs a value/);
+});
+
 // ── B-1 · the exit map is pinned BY VALUE, because a SWAP is stronger than a fold ─────────────
 
 test('A-2 — ONE verdict file with the WRONG subject in its name is REFUSED', () => {
@@ -555,9 +702,51 @@ test('A1 — the router is distrusted: a redirected tree or tip is REFUSED', () 
   assert.equal(redirectedTip.outcome, OUTCOME.REFUSED);
   assert.match(redirectedTip.reason, /would review a different commit/);
 
-  // CONTROL: the honest pair passes the cross-check, so the two refusals are about the redirection
-  // and not about the check refusing everything.
-  assert.equal(crossCheckArgs({ repo, args: { ref: `origin/main...${prSha}`, tree: repo } }), null);
+  // CONTROL: the honest quadruple passes the cross-check, so the refusals are about the
+  // redirection and not about the check refusing everything.
+  const ref = `origin/main...${prSha}`;
+  assert.equal(crossCheckArgs({ repo, harnessRoot: repo, args: { ref, tier: floorFor(repo, ref), tree: repo } }), null);
+});
+
+// ── A-3 · the BASE and the TIER are re-derived too, not only the tip ──────────────────────────
+
+test('A-3 — a dishonest range BASE is REFUSED, and an empty range is the sharp case', () => {
+  const { repo, prSha } = repoWithHostilePr();
+  const tier = floorFor(repo, `origin/main...${prSha}`);
+  const check = (ref, t = tier) => crossCheckArgs({ repo, harnessRoot: repo, args: { ref, tier: t, tree: repo } });
+
+  // CONTROL first, so the refusals below are known to come from the thing being varied.
+  assert.equal(check(`origin/main...${prSha}`), null, 'CONTROL: the honest range passes');
+
+  // The measured exploit: an honest tip against itself. The panel gets an EMPTY range while the
+  // verdict it produces binds a real diff.
+  assert.match(check(`${prSha}...${prSha}`), /not \S*origin\/main|based on/);
+  assert.match(check(`some-other-branch...${prSha}`), /based on/);
+  // `..` and `...` name different ranges; only one of them is the diff this gate is about.
+  assert.match(check(`origin/main..${prSha}`), /three-dot range/);
+  assert.match(check(prSha), /three-dot range/);
+});
+
+test('A-3 — a tier the router chose rather than derived is REFUSED', () => {
+  const { repo, prSha } = repoWithHostilePr();
+  const ref = `origin/main...${prSha}`;
+  const real = floorFor(repo, ref);
+  const check = (t) => crossCheckArgs({ repo, harnessRoot: repo, args: { ref, tier: t, tree: repo } });
+
+  assert.equal(check(real), null, 'CONTROL: the derived tier passes');
+  for (const lie of ['trivial', 'lite', 'full', 'irreversible'].filter((t) => t !== real)) {
+    assert.match(check(lie), /named tier/, `tier "${lie}" should disagree with "${real}"`);
+  }
+});
+
+test('A-3 — verdictRef is emitted by main\'s router and deliberately NOT read', () => {
+  // #124 built the field for exactly this case and the hostile router emits it truthfully. Reading
+  // it would reintroduce the trust crossCheckArgs exists to withhold, so the base is re-derived
+  // instead. This pins the decision so it is a choice on the record rather than an oversight.
+  const src = fs.readFileSync(SUBJECT, 'utf8');
+  assert.equal((src.match(/decision\.verdictRef|verdictRef\./g) || []).length, 0,
+    'the producer must not consume the router\'s verdictRef');
+  assert.ok(src.includes('refParts(args.ref)'), 'CONTROL: it re-derives the base from args.ref instead');
 });
 
 // ── A2 · the judging project must be one the judge can dispatch out of ───────────────────────

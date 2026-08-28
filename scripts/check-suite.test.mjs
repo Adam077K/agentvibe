@@ -2971,6 +2971,34 @@ test('~200KB of step output reaches the caller through a pipe — no 64KB trunca
 //
 // An exemption must name the file and say why, the same governance mechanism as EXCLUDED above:
 // an exemption you can argue with beats an absence nobody recognises.
+/**
+ * A LENGTH FLOOR IS VACUOUSLY SATISFIABLE. `why.length >= 40` was passed by **45 spaces** at
+ * 1 pass · 0 fail. The floor exists so a reader can DISAGREE with the exemption, and nobody can
+ * disagree with whitespace. Named and exercised below rather than inlined, so the predicate itself
+ * has a test instead of only being applied to entries that happen to be honest.
+ */
+function exemptionIsSubstantive(why) {
+  if (typeof why !== 'string') return false;
+  const dense = why.replace(/\s+/g, '');
+  const words = why.trim().split(/\s+/).filter((w) => /[a-z]/i.test(w));
+  return dense.length >= 40 && words.length >= 6;
+}
+
+test('an exemption reason cannot be satisfied by whitespace or padding', () => {
+  assert.equal(exemptionIsSubstantive(' '.repeat(45)), false, '45 spaces passed the old floor');
+  assert.equal(exemptionIsSubstantive('\t\n '.repeat(30)), false);
+  assert.equal(exemptionIsSubstantive('a'.repeat(60)), false, 'one long word is not a reason');
+  // ONE CASE PER CONJUNCT, or one of them is unfalsifiable. Whitespace and one long word are both
+  // caught by the WORD count, so without this line the density check could be deleted silently:
+  // seven one-letter words clear the word floor and carry no reason.
+  assert.equal(exemptionIsSubstantive('a b c d e f g'), false, 'seven letters is not 40 characters of reason');
+  assert.equal(exemptionIsSubstantive('short'), false);
+  assert.equal(exemptionIsSubstantive(''), false);
+  assert.equal(exemptionIsSubstantive(null), false);
+  // CONTROL: a real reason passes, so the predicate is not refusing everything.
+  assert.equal(exemptionIsSubstantive(Object.values(TEST_FILES_RUN_BY_NOTHING)[0]), true);
+});
+
 const TEST_FILES_RUN_BY_NOTHING = {
   'claim-append.test.mjs':
     'PRE-EXISTING, found 2026-08-28 and deliberately not fixed by the lane that found it: no ' +
@@ -2997,7 +3025,7 @@ test('every scripts/*.test.mjs is named by a package.json script, or carries its
   for (const [f, why] of Object.entries(TEST_FILES_RUN_BY_NOTHING)) {
     assert.ok(fs.existsSync(path.join(REPO, 'scripts', f)), `exempted ${f} no longer exists — drop the entry`);
     assert.equal(scripts.includes(`scripts/${f}`), false, `${f} is wired now — drop the exemption`);
-    assert.ok(why.length >= 40, `${f}'s exemption must say why`);
+    assert.equal(exemptionIsSubstantive(why), true, `${f}'s exemption does not say why`);
   }
 });
 

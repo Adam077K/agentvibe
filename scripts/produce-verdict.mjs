@@ -142,6 +142,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -298,12 +299,21 @@ const SHA40 = /^[0-9a-f]{40}$/;
  */
 const SHELL_SAFE = /^[\w@%+=:,./-]+$/;
 
-export function refTip(ref) {
+/**
+ * A range split into the three things that decide what gets reviewed. `refTip` used to be the only
+ * one of these this file could see, which is how a dishonest BASE walked past a guard that calls
+ * itself distrustful — see crossCheckArgs().
+ */
+export function refParts(ref) {
   const d3 = ref.lastIndexOf('...');
-  if (d3 !== -1) return ref.slice(d3 + 3).trim();
+  if (d3 !== -1) return { base: ref.slice(0, d3), sep: '...', tip: ref.slice(d3 + 3).trim() };
   const d2 = ref.lastIndexOf('..');
-  if (d2 !== -1) return ref.slice(d2 + 2).trim();
-  return ref.trim();
+  if (d2 !== -1) return { base: ref.slice(0, d2), sep: '..', tip: ref.slice(d2 + 2).trim() };
+  return { base: null, sep: null, tip: ref.trim() };
+}
+
+export function refTip(ref) {
+  return refParts(ref).tip;
 }
 
 /** Shape-only checks on `invocation.args`. Everything here is refused by qa.js one layer down. */
@@ -338,7 +348,34 @@ export function validateArgs(args) {
  * repo's HEAD. A router that redirects either one would have the panel review a different subject
  * and record a verdict that binds somewhere else.
  */
-export function crossCheckArgs({ repo, args }) {
+export function crossCheckArgs({ repo, args, harnessRoot = HARNESS_ROOT }) {
+  // ── THE INVOCATION CARRIES FOUR LOAD-BEARING THINGS AND THIS USED TO RE-DERIVE TWO ──────────
+  //
+  // The comment above said "its two load-bearing outputs are re-derived here", and it was accurate
+  // about what the code did and wrong about what the invocation carries. `tree` and the ref's TIP
+  // were checked; the ref's BASE and `tier` were not. A router shipping in the PR — the exact
+  // adversary this function names — emits an honest tip and a dishonest base (`<S2>...<S2>`), and
+  // the panel is then handed an EMPTY RANGE while the verdict it produces binds a real diff.
+  // Measured: EXIT 0, PRODUCED. Redirecting the TIP instead is correctly refused, so the tip arm
+  // worked and the base arm was simply unguarded.
+  //
+  // #124's `verdictRef` field exists for exactly this and the hostile router emits it TRUTHFULLY.
+  // It is deliberately not read: consuming a field the router computes is the trust this function
+  // exists to withhold, and the field is only safe when the router is. The base is re-derived here
+  // instead, from the same `args.ref` the tip comes from, which is the treatment the tip already got.
+  //
+  // The base must be `JUDGE_REF` and the separator must be `...`. Those are not arbitrary: the
+  // diff under review is defined against the same ref the judge is materialised from, so a base
+  // that is anything else reviews a range nobody agreed to, and `..` silently means a different
+  // range than `...` does.
+  const { base, sep } = refParts(args.ref);
+  if (sep !== '...') {
+    return `the router's ref "${args.ref}" is not a three-dot range. ".." and "..." name different ranges and only one of them is the diff this gate is about.`;
+  }
+  if (base !== JUDGE_REF) {
+    return `the router's ref is based on "${base}", not ${JUDGE_REF}. The reviewed range must be defined against the same ref the judge comes from, or the panel reviews a range nobody agreed to — an empty one, if the base equals the tip.`;
+  }
+
   if (canonical(args.tree) !== canonical(repo)) {
     return `the router named tree ${args.tree}, which is not the repository under review (${repo}).`;
   }
@@ -352,6 +389,26 @@ export function crossCheckArgs({ repo, args }) {
   if (tip !== head) {
     return `the router named tip ${tip}, but ${repo} is at HEAD ${head}. The panel would review a different commit than the one this run is about.`;
   }
+
+  // ── AND THE TIER, which decides how deep the panel goes ─────────────────────────────────────
+  //
+  // Re-derived from the same classifier the router used, over the range this function has just
+  // established. BE EXACT ABOUT WHAT THIS BUYS: the classifier and the tier map both ship in the
+  // PR, so this catches a router that disagrees with its own tree — an inconsistent adversary —
+  // and not one that corrupts both consistently. The tier that BINDS is not this one: `verdict.mjs`
+  // computes it at record time and again at check time from the JUDGE's tier map, which is main's.
+  // This guard is about the panel's depth, not about the binding.
+  try {
+    const { loadRules, classifyFiles } = createRequire(import.meta.url)(path.join(harnessRoot, 'scripts', 'lib', 'classifier.js'));
+    const files = git(repo, ['diff', '--name-only', args.ref]).split('\n').map((x) => x.trim()).filter(Boolean);
+    const floor = classifyFiles(files, loadRules(path.join(harnessRoot, '.claude', 'qa-tier-floor.yml'))).floor.tier;
+    if (args.tier !== floor) {
+      return `the router named tier "${args.tier}" for a diff this tree classifies as "${floor}". A tier the router chose rather than derived decides how deep the panel goes.`;
+    }
+  } catch (e) {
+    return `could not re-derive the tier for ${args.ref}: ${firstLine(e)}`;
+  }
+
   return null;
 }
 
@@ -636,7 +693,7 @@ export function produceVerdict(o = {}) {
   const bad = validateArgs(args);
   if (bad) return result(OUTCOME.REFUSED, `the invocation is unusable: ${bad}`);
 
-  const disagrees = (deps.crossCheckArgs ?? crossCheckArgs)({ repo, args });
+  const disagrees = (deps.crossCheckArgs ?? crossCheckArgs)({ repo, args, harnessRoot });
   if (disagrees) return result(OUTCOME.REFUSED, `the router's invocation does not describe this run: ${disagrees}`);
 
   const tip = refTip(args.ref);
@@ -769,7 +826,20 @@ export function produceVerdict(o = {}) {
     // It is reachable in test through the `readVerdictArtifact` seam, which is why it is not dead
     // code by this repo's own standard: an untestable guard is one someone deletes.
     const atHead = read(newHead);
-    if (!pre.subject || !atHead.subject || atHead.subject !== pre.subject) {
+    // TWO DIFFERENT FAILURES, AND ONLY ONE OF THEM IS AN ACCUSATION. A missing subject means this
+    // run could not read one — `verdict.mjs` failing, an output too large to buffer — and reporting
+    // that as "the gate session moved the reviewed bytes" blames the session for the instrument's
+    // silence. Same rule as REFUSED-is-not-BLOCK, one level down.
+    if (!pre.subject || !atHead.subject) {
+      return result(
+        OUTCOME.REFUSED,
+        `could not read a subject to compare (before: ${pre.subject ? 'read' : 'unreadable'}, after: ` +
+        `${atHead.subject ? 'read' : 'unreadable'}). Nothing is established, and this is not a claim ` +
+        'about what the gate session did.',
+        { judgeDir: dir, launched: true, args, head: newHead },
+      );
+    }
+    if (atHead.subject !== pre.subject) {
       return result(
         OUTCOME.REFUSED,
         `the gate session moved the reviewed bytes: the subject at HEAD ${newHead.slice(0, 12)} is ` +
