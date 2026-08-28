@@ -40,6 +40,7 @@ import {
   classifyDispatches,
   deriveGateReachability,
   GATE_OUTCOMES,
+  KNOWN_DISPATCH_STATUSES,
   type DispatchEntry,
 } from '../server/index-cache.ts';
 import { execFileSync } from 'node:child_process';
@@ -61,7 +62,7 @@ import { snapshotTree, diffTrees } from './write-barrier.test.ts';
  */
 function installHarness(
   root: string,
-  opts: { playbooks?: string[]; tools?: string; spelling?: 'flow' | 'block'; rawTools?: string } = {},
+  opts: { playbooks?: string[]; tools?: string; spelling?: 'flow' | 'block'; rawTools?: string; maxTurns?: number | null } = {},
 ): void {
   const agents = path.join(root, '.claude', 'agents');
   const playbooks = path.join(root, '.claude', 'playbooks');
@@ -78,9 +79,13 @@ function installHarness(
   // The body deliberately mentions the gate tool in PROSE, exactly as all 7 real engine files do.
   // A derivation that greps the file rather than the `tools:` line reports this agent as
   // gate-capable, so every fixture built by this helper carries that trap.
+  // `maxTurns` IS PART OF A FAITHFUL FIXTURE. Every real engine file declares one, and routing
+  // through `--agent` makes it bind — a fixture omitting it cannot exercise the field the record
+  // now carries, which is the same "fixture omits what the subject reads" defect as the empty root.
+  const maxTurns = opts.maxTurns === null ? '' : `maxTurns: ${opts.maxTurns ?? 30}\n`;
   fs.writeFileSync(
     path.join(agents, 'orchestrator.md'),
-    `---\nname: orchestrator\ntools: ${tools}\n---\nThe Workflow tool is how qa.js is invoked.\n`,
+    `---\nname: orchestrator\ntools: ${tools}\n${maxTurns}---\nThe Workflow tool is how qa.js is invoked.\n`,
   );
   for (const name of opts.playbooks ?? ['ship-feature.yml']) {
     fs.writeFileSync(path.join(playbooks, name), 'name: fixture\nstages: []\n');
@@ -501,11 +506,11 @@ const CLAUDE_FAILS = '#!/bin/sh\necho boom >&2\nexit 3\n';
 const CLAUDE_SIGNALLED = '#!/bin/sh\nkill -TERM $$\n';
 
 describe('consume-dispatch records a distinguishable outcome', () => {
-  test('a launch that exits 0 is `consumed`, and a launch that exits 3 is NOT', () => {
+  test('a launch that exits 0 is `exited-clean`, and a launch that exits 3 is NOT', () => {
     const ok = runConsumer(dispatchFixture('mc-dispatch-ok-', CLAUDE_OK, [{}]));
     const bad = runConsumer(dispatchFixture('mc-dispatch-bad-', CLAUDE_FAILS, [{}]));
 
-    expect(ok.status).toBe('consumed');
+    expect(ok.status).toBe('exited-clean');
     expect(bad.status).toBe('failed');
     expect(bad.exitCode).toBe(3);
 
@@ -528,7 +533,7 @@ describe('consume-dispatch records a distinguishable outcome', () => {
     const f = dispatchFixture('mc-dispatch-running-', CLAUDE_OK, [{}]);
     runConsumer(f);
     const statuses = readDispatch(f.queue).map((e) => e.status);
-    expect(statuses).toEqual(['pending', 'running', 'consumed']);
+    expect(statuses).toEqual(['pending', 'running', 'exited-clean']);
   });
 
   test('an entry left `running` resolves to `no-result` and is NOT relaunched', () => {
@@ -683,7 +688,7 @@ describe('an unrecognised status is neither launched nor overwritten — END TO 
     });
     expect(launches(f.log)).toBe(1);
     const entries = readDispatch(f.queue);
-    expect(entries[entries.length - 1]?.status).toBe('consumed');
+    expect(entries[entries.length - 1]?.status).toBe('exited-clean');
   });
 });
 
@@ -932,7 +937,7 @@ describe('a dispatched goal is ROUTED through the orchestrator', () => {
     const entries = readDispatch(f.queue);
     const running = entries.find((e) => e.status === 'running') as DispatchEntry;
     const terminal = entries[entries.length - 1] as DispatchEntry;
-    expect(terminal.status).toBe('consumed');
+    expect(terminal.status).toBe('exited-clean');
     // BOTH LINES, not just the terminal one: a dispatch that dies mid-flight must still leave a
     // record saying how it was launched and what was known about the gate.
     for (const e of [running, terminal]) {
@@ -980,7 +985,7 @@ describe('a dispatched goal is ROUTED through the orchestrator', () => {
     run(f);
     expect(launched(f.log)).toBe(true);
     const entries = readDispatch(f.queue);
-    expect((entries[entries.length - 1] as DispatchEntry).status).toBe('consumed');
+    expect((entries[entries.length - 1] as DispatchEntry).status).toBe('exited-clean');
   });
 
   test('a root with no harness at all records `underivable`, not `unreachable`', () => {
@@ -1346,5 +1351,69 @@ describe('a tools: declaration is read in either legal YAML spelling', () => {
     fs.writeFileSync(path.join(d, '.claude', 'agents', 'orchestrator.md'),
       '---\nname: orchestrator\n---\ntools: [Read, Workflow]\n');
     expect(deriveGateReachability(d, 'orchestrator').outcome).toBe('underivable');
+  });
+});
+
+// ── F7 · a terminal state may not claim what was never observed ──────────────────────────
+
+describe('a clean exit is recorded as a clean exit, not as a completion', () => {
+  function runClean(prefix: string, harness: (r: string) => void) {
+    const dir = mkTmpDir(prefix);
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(root, { recursive: true });
+    harness(root);
+    fs.writeFileSync(path.join(bin, 'claude'), '#!/bin/sh\nexit 0\n');
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    fs.writeFileSync(queue, JSON.stringify({
+      id: 'f7', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
+    }) + '\n');
+    execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    return readDispatch(queue);
+  }
+
+  test('exit 0 is `exited-clean` and is NEVER `consumed` — the word claimed a completion', () => {
+    // The launch runs with stdio: 'inherit', so nothing about the session's content is captured.
+    // `consumed` asserted the session finished; the only observation is the exit code.
+    const entries = runClean('mc-f7-clean-', (r) => installHarness(r));
+    const last = entries.at(-1) as DispatchEntry;
+    expect(last.status).toBe('exited-clean');
+    expect(last.exitCode).toBe(0);
+    // THE NEGATIVE, and it is the finding: no line this build wrote may carry the old claim.
+    for (const e of entries) expect(e.status).not.toBe('consumed');
+  });
+
+  test('the turn cap in force is recorded as CONTEXT, and is not the diagnosis', () => {
+    const entries = runClean('mc-f7-cap-', (r) => installHarness(r));
+    const last = entries.at(-1) as DispatchEntry;
+    expect(last.declaredMaxTurns).toBe(30);
+    // It says what limit applied. It does NOT say the limit fired — nothing here observed that,
+    // and no field claims it.
+    expect(last.status).toBe('exited-clean');
+    expect(JSON.stringify(last)).not.toContain('truncat');
+    expect(JSON.stringify(last)).not.toContain('capped');
+  });
+
+  test('an agent declaring no maxTurns records null, not a default that looks measured', () => {
+    const entries = runClean('mc-f7-nocap-', (r) => installHarness(r, { maxTurns: null }));
+    expect((entries.at(-1) as DispatchEntry).declaredMaxTurns).toBeNull();
+  });
+
+  test('LEGACY: `consumed` still classifies as settled, so old records are not orphaned', () => {
+    // Dropping it from the union would make every existing queue entry `unrecognised` — reported
+    // and then left alone forever, which is a worse outcome than a stale label.
+    const line = (id: string, status: string): DispatchEntry =>
+      ({ id, project: 'p', root: '/r', goal: 'g', enqueuedAt: 1, status } as DispatchEntry);
+    const work = classifyDispatches([line('old', 'consumed'), line('new', 'exited-clean')]);
+    expect(work.settled.map((e) => e.id).sort()).toEqual(['new', 'old']);
+    expect(work.unrecognised).toEqual([]);
+    expect(KNOWN_DISPATCH_STATUSES).toContain('consumed');
+    expect(KNOWN_DISPATCH_STATUSES).toContain('exited-clean');
   });
 });

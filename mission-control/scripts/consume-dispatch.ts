@@ -38,6 +38,7 @@ import {
   classifyDispatches,
   KNOWN_DISPATCH_STATUSES,
   deriveGateReachability,
+  readDeclaredMaxTurns,
   type DispatchEntry,
   type GateRecord,
   type GateRouting,
@@ -276,7 +277,9 @@ function routeGate(root: string): GateRouting {
 
 /** The fields that distinguish one terminal outcome from another. */
 type TerminalUpdate = {
-  status: 'consumed' | 'failed' | 'no-result' | 'not-started';
+  // `exited-clean` replaces `consumed`, which this build never writes. See DispatchStatus: the only
+  // thing observed is an exit code, and `consumed` named a completion instead.
+  status: 'exited-clean' | 'failed' | 'no-result' | 'not-started';
   exitCode?: number;
   signal?: string;
   error?: string;
@@ -596,6 +599,10 @@ function main() {
       route: 'orchestrator-playbook',
       gate,
       playbooksOffered: pb.names,
+      // CONTEXT FOR A CLEAN EXIT, RECORDED BEFORE THE LAUNCH SO IT DESCRIBES THE RUN THAT HAPPENED.
+      // Routing makes this field bind where the bare path ignored it; it is not evidence the cap
+      // fired, and nothing here should read it as such.
+      declaredMaxTurns: readDeclaredMaxTurns(entry.root, DISPATCH_AGENT),
     };
 
     const startedAt = Date.now();
@@ -618,7 +625,10 @@ function main() {
         stdio: 'inherit',
         // No shell: false is the default for execFileSync; repeating it is explicit intent.
       });
-      outcome = { status: 'consumed', exitCode: 0 };
+      // EXIT 0 IS EXIT 0, AND NOTHING MORE. This wrote `consumed`, which asserts the session
+      // finished. It asserts that about a session whose output was inherited rather than captured,
+      // so the claim had no evidence behind it in any run. F7.
+      outcome = { status: 'exited-clean', exitCode: 0 };
     } catch (err) {
       // THE THREE OUTCOMES ARE DISTINGUISHED HERE, and the distinction is in the error object.
       // A non-zero exit sets `status`; a signal kill sets `signal` and leaves `status` null. They

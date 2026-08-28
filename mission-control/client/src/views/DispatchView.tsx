@@ -82,8 +82,14 @@ export function StatusCell({ entry }: { entry: DispatchEntry }) {
       return <span className="fig text-warn">pending</span>;
     case 'running':
       return <span className="fig text-warn" title="A launch started and has not reported back">running</span>;
+    case 'exited-clean':
+      // NOT "consumed", AND THE TITLE SAYS WHY. Exit 0 is all that was observed; the session's
+      // output is inherited rather than captured, so completion is not something this record knows.
+      return <span className="fig text-muted" title="Exited 0 — completion not observed">exited clean</span>;
     case 'consumed':
-      return <span className="fig text-muted" title="Ran to completion, exit 0">consumed</span>;
+      // LEGACY. Written by builds before `exited-clean` existed, and never by this one. Rendered in
+      // the same tone because the underlying fact is the same, exit 0.
+      return <span className="fig text-muted" title="Exited 0 (legacy label; completion was never observed)">consumed</span>;
     case 'failed':
       return (
         <span
@@ -162,7 +168,11 @@ export interface DispatchHeadline {
  */
 export function dispatchHeadline(entries: DispatchEntry[]): DispatchHeadline {
   const pending = entries.filter((e) => e.status === 'pending').length;
-  const consumed = entries.filter((e) => e.status === 'consumed').length;
+  // BOTH CLEAN-EXIT LABELS, OR THE COMPLEMENT BELOW COUNTS EVERY `exited-clean` AS UNSUCCESSFUL.
+  // The complement is what makes an unknown status visible; a KNOWN status missing from this line
+  // is the same bug from the other side, and adding `exited-clean` without this made every routed
+  // dispatch read as "not succeeded".
+  const consumed = entries.filter((e) => e.status === 'consumed' || e.status === 'exited-clean').length;
   // The complement: total minus the two states that are fine. Anything new — a status added to
   // the union, or one written by a newer consumer — lands here and is SEEN, rather than silently
   // counting as neither.

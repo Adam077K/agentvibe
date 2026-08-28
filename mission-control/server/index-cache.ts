@@ -403,6 +403,27 @@ export function dispatchQueuePath(): string {
  * refuses, and it is worse in a comment than in prose because no reviewer reads it twice. The
  * design reason does not need the number; the number needed a citation it never had.*
  *
+ * `exited-clean` IS NOT `consumed`, AND THIS FILE USED TO HAVE ONLY THE SECOND. F7. `consumed`
+ * names a COMPLETION, and the only thing ever observed is an EXIT CODE OF ZERO. Those differ for
+ * every session that stops early and tidies up on the way out: one that hits a turn cap, one that
+ * handles an error and returns, one that decides it is done when it is not. The launch runs with
+ * `stdio: 'inherit'`, so nothing about the session's content is captured and no field could have
+ * carried the distinction — the status was asserting something the consumer never saw.
+ *
+ * This is `GateOutcome`'s argument one field over. That union has no `passed` member because
+ * "I could not check" must not be spellable as "it passed"; `consumed` was spellable as
+ * "it finished" when the truth is "it stopped". `exited-clean` says only what was observed.
+ *
+ * THE TURN CAP IS RECORDED AS CONTEXT, NOT AS THE DIAGNOSIS. Routing through `--agent` makes the
+ * agent file's `maxTurns` bind where a bare `claude` read no such field, so a capped truncation is
+ * newly reachable — but the consumer cannot tell a capped session from a finished one, and a status
+ * naming the cap would assert a second thing it did not observe. `declaredMaxTurns` on the entry
+ * says what limit was in force and leaves the inference to a reader who can see the transcript.
+ *
+ * `consumed` IS KEPT AND IS NEVER WRITTEN BY THIS BUILD. Real queues hold entries carrying it, and
+ * dropping it from the union would make every one of them `unrecognised` — reported and then left
+ * alone forever. It stays `settled` so those records keep resolving.
+ *
  * `not-started` IS NOT `no-result`, and collapsing them misreports a config error as an agent
  * dying. `no-result` says a launch began and told us nothing. `not-started` says it never began,
  * which is a different fact with a different remedy: fix PATH and re-enqueue, with the guarantee
@@ -412,6 +433,7 @@ export function dispatchQueuePath(): string {
 export type DispatchStatus =
   | 'pending'
   | 'running'
+  | 'exited-clean'
   | 'consumed'
   | 'failed'
   | 'no-result'
@@ -437,6 +459,7 @@ export type DispatchStatus =
 const DISPATCH_STATUS_KIND = {
   pending: 'launchable',
   running: 'reconcilable',
+  'exited-clean': 'settled',
   consumed: 'settled',
   failed: 'settled',
   'no-result': 'settled',
@@ -556,14 +579,19 @@ export type DispatchRoute = 'orchestrator-playbook' | 'bare-print';
  *     declaration may still not arrive, so "the gate is reachable" was never something this
  *     consumer could assert. It reports that it observed no verdict, which is all it knows.
  *
- * MEASURED, AND NOT BY THIS LANE — the #122 reviewer, 2026-08-28, `claude 2.1.246`. Declared →
+ * MEASURED, AND NOT BY THIS LANE — 2026-08-28, `claude 2.1.246`, recorded in
+ * `docs/08-agents_work/sessions/2026-08-28-builder-probe-agent-tool-inheritance.md` with the probe
+ * at `scripts/probe-agent-tool-inheritance.mjs`. F8: this read "the #122 reviewer" with no path,
+ * and an attribution is not a citation — `check-citations.mjs` blocks on existence, and a name
+ * cannot be resolved by it. Declared →
  * advertised at init: orchestrator 7 → 5, builder 6 → 4, reviewer 4 → 2, sourcer 5 → 5. `Glob` and
  * `Grep` are dropped exactly when `Bash` is declared beside them, and sourcer is the control: it
  * declares no `Bash` and loses nothing. The declared column is re-derived from the agent files in
  * this repo; the advertised column is that reviewer's measurement and is NOT re-derived here.
  *
  * DO NOT READ THAT AS PESSIMISM ABOUT `Workflow` SPECIFICALLY — it is not in the dropped class.
- * The same review ran the arm: `[Read, Bash, Workflow]` → `[Read, Bash, Workflow]`, kept, against
+ * The same probe ran the arm (`scripts/probe-agent-tool-inheritance.mjs`):
+ * `[Read, Bash, Workflow]` → `[Read, Bash, Workflow]`, kept, against
  * `[Read, Glob]` + `Bash` → `[Read, Bash]`. Same declared change, opposite outcomes.
  *
  * AND YET `unverified` STILL STANDS, for a reason worth stating precisely: that observation is
@@ -572,6 +600,21 @@ export type DispatchRoute = 'orchestrator-playbook' | 'bare-print';
  * path this function reads is the file path. So "a declaration would be delivered" is established
  * for the inline case and OPEN for the one that would actually flip this value, which is exactly
  * the shape of knowledge `unverified` exists to carry.
+ *
+ * F6 — AND `unverified` IS NOT MERELY UNOBSERVED THROUGH THAT PATH. IT IS REFUSED. A blocking lint
+ * rule, `PS-WORKFLOW-CONTAINMENT` in `.claude/hooks/schema-lint.js`, fails any agent file declaring
+ * `Workflow`. Measured by mutation on this tree: granting it to `orchestrator.md` takes the linter
+ * from `18 pass · 0 fail · 0 warnings, exit 0` to `17 pass · 1 fail · 0 warnings, exit 1`. So the
+ * comment elsewhere in this repo calling the grant "the one edit that would close this" understates
+ * it: today that edit does not merely await a founder decision, it fails a green blocking check.
+ *
+ * AND THAT RULE'S STATED REASON IS FALSIFIED BY THE VERY CHANGE THIS FILE IS PART OF. It refuses
+ * the declaration because "the orchestrator is not dispatched — it IS the session, so no field in
+ * this frontmatter is read on the path it runs on." `claude --agent orchestrator --print` IS a
+ * dispatched orchestrator, and on that path the frontmatter binds. Nothing here touches
+ * `schema-lint.js`, so nothing goes red: THE RULE KEEPS PASSING WHILE ITS PREMISE NO LONGER HOLDS.
+ * Which of the two files is wrong is a founder decision, not this consumer's — recorded so that a
+ * reader of the promise above learns the obstacle is a live check and not only an unmade decision.
  */
 export type GateOutcome = 'unreachable' | 'unverified' | 'underivable';
 
@@ -646,6 +689,36 @@ function splitItems(raw: string[]): string[] {
   return raw
     .map((t) => t.trim().replace(/^(["'])([\s\S]*)\1$/, '$2').trim())
     .filter(Boolean);
+}
+
+/**
+ * The `maxTurns` an agent file declares, or `null` if it declares none this parser can read.
+ *
+ * WHY IT IS RECORDED AT ALL. Routing a dispatch through `--agent <name>` makes the agent file's
+ * frontmatter bind, and `bin/warroom`'s bare `claude` reads none of it — so a turn cap that was
+ * inert on the old path is live on the new one. A reader looking at an `exited-clean` entry and
+ * asking "did this stop because it was done, or because it ran out?" cannot answer from the exit
+ * code, and this at least tells them what limit was in force.
+ *
+ * IT IS NOT EVIDENCE THAT THE CAP FIRED, and must never be presented as such. Whether the CLI
+ * `--agent` flag enforces `maxTurns` the way an `Agent`-tool dispatch does is UNMEASURED — the
+ * ledger's claim for the sibling behaviour records the same bound, that it measured the Agent tool
+ * path only. The CLI path is a third path and neither measured it.
+ */
+export function parseMaxTurns(text: string): number | null {
+  const fm = /^---\r?\n([\s\S]*?)\r?\n---\s*$/m.exec(text);
+  if (!fm) return null;
+  const m = /^maxTurns:[ \t]*(\d+)[ \t]*$/m.exec(fm[1]);
+  return m ? Number(m[1]) : null;
+}
+
+/** The declared `maxTurns` for an agent in a project, or `null` when unreadable or undeclared. */
+export function readDeclaredMaxTurns(root: string, agent: string): number | null {
+  try {
+    return parseMaxTurns(fs.readFileSync(path.join(root, '.claude', 'agents', `${agent}.md`), 'utf8'));
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -769,6 +842,12 @@ export interface DispatchEntry {
    * it was asked and could not answer. Neither is ever a pass.
    */
   gateRouting?: GateRouting;
+  /**
+   * The `maxTurns` the launched agent's file declares, or `null` when it declares none.
+   *
+   * CONTEXT FOR AN `exited-clean`, NOT A DIAGNOSIS OF ONE. Absent means this build did not read it.
+   */
+  declaredMaxTurns?: number | null;
 }
 
 /**
