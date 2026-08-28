@@ -1616,6 +1616,20 @@ test('THE FIXTURE BUILT TO DEFEAT THIS CHANGE: a usable verdictRef must not impl
   assert.ok(gated.invocation && gated.invocation.args, 'the gated path stopped emitting an invocation');
 });
 
+test('verdict.mjs refuses a range by name, and computes nothing when it does', () => {
+  // THIS TEST WAS LOST once already. It existed, then the suite was rewritten around verdictRef and
+  // it went with the old block — after which disabling the refusal outright scored 111 pass, 0 fail.
+  // A deletion removed a control while every test stayed green, which is the class this repository
+  // names in five places and hit again here, inside the change closing an instance of it.
+  const r = verdict(['subject', '--ref', 'origin/main...origin/main']);
+  assert.equal(r.code, 2, 'a range must be unresolved (2), never a fail (1) and never a pass (0)');
+  assert.match(r.stderr, /single revision/, 'the refusal does not say what --ref actually takes');
+  assert.equal(r.stdout.trim(), '', 'a refused range produced a subject anyway — it converted rather than refused');
+  // CONTROL on the same arm: a single revision still goes through, so this is not a blanket refusal.
+  const ok = verdict(['subject', '--ref', 'origin/main']);
+  assert.equal(ok.code, 0, `the guard swallowed a legitimate single ref — ${(ok.stderr || '').trim()}`);
+});
+
 test('E3 — the `...`-before-`..` precedence exists ONCE, and it is load-bearing', () => {
   // refTip, refBase and pinRefTip were three copies, in the file whose own comment said leaving one
   // behind "would be a poor joke". Swapping the precedence turns 29 tests red, so this is live risk.
@@ -1628,8 +1642,13 @@ test('E5 — gates.yml points consumers at the field that carries a guarantee', 
   // The remedy for the original defect was prose nothing pinned: inverting the instruction, or
   // deleting the paragraph outright, left test:playbooks 66/0 and schema-lint clean. A document
   // that can be reversed without any check noticing is not a remedy.
+  // A bare /verdictRef/ match was NOT enough: gates.yml mentions the field three times, so gutting
+  // the instruction while leaving any one mention behind kept this green. Measured — that mutation
+  // scored 111 pass, 0 fail. Pin the two keys a consumer must actually read.
   const y = fs.readFileSync(path.join(REPO, '.claude', 'gates.yml'), 'utf8');
-  assert.match(y, /verdictRef/, 'gates.yml no longer names the field a consumer should use');
+  assert.match(y, /verdictRef\.ref/, 'gates.yml no longer tells a consumer to read verdictRef.ref');
+  assert.match(y, /verdictRef\.reason/, 'gates.yml no longer tells a consumer to read verdictRef.reason');
+  assert.match(y, /THE FIELD TO USE IS verdictRef/, 'the instruction naming the safe field is gone');
   assert.ok(!/pass tip, never ref/.test(y), 'gates.yml still recommends the removed symbolic field');
   assert.ok(!/pass ref, never tip/.test(y), 'gates.yml recommends the range — the original defect, inverted');
 });

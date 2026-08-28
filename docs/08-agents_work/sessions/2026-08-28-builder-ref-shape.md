@@ -7,30 +7,47 @@ qa_verdict: PASS
 branch: fix/gate-ref-shape
 ---
 
-# builder — the range and the tip wore one field name
+# builder — the range, the tip, and the one value that is safe to hand onward
 
-**Defect, reproduced before building.** `scripts/run-gate.mjs --json` emitted a top-level `ref`
-that is a two-dot-three RANGE; `scripts/verdict.mjs --ref` takes a SINGLE revision and derives its
-own base as `merge-base(origin/main, ref)`. Measured: range -> exit 2, `fatal: Not a valid object
-name`; CONTROL `--ref HEAD` -> exit 0. It fails safe and costs a round trip. It bites because
-`.claude/gates.yml` says to pass `invocation.args` through unmodified and `invocation` is null
-whenever the gate is not required, so the only ref-shaped field left is the one that does not work.
+**Original defect.** `run-gate.mjs --json` emitted a top-level `ref` that is a RANGE;
+`verdict.mjs --ref` takes a SINGLE revision and derives its own base. Reproduced: range -> exit 2;
+control `--ref HEAD` -> exit 0.
 
-**Fix: naming, not conversion.** `ref` is unchanged; `base` and `tip` name its two halves at every
-emit site. `verdict.mjs` REFUSES a range by name (exit 2, unresolved) rather than learning to parse
-one — a second way to compute the range is the defect being closed, and single-ref reproducibility
-is what lets a recorded verdict survive a base move.
+**Root cause, found while building.** The `empty diff` emit site omitted `invocation`, `drivers`
+and `gateSelfReview` entirely while its sibling emitted `invocation: null` for the same condition,
+under a comment promising a consumer can always read the key rather than probe for it. A consumer
+reads `invocation`, gets `undefined`, falls back to the range.
 
-**Found while building, fixed here:** the `empty diff` emit site omitted `invocation`, `drivers`
-and `gateSelfReview` entirely while its sibling emitted `invocation: null` under a comment
-promising "a consumer can always read the key rather than probe for it". It carries the same keys
-now — and still emits no invocation where the gate is not required.
+**My first fix was worse, and review caught it.** Adding bare `base`/`tip` fields created two
+silent failures: the `tip` was SYMBOLIC on an explicit `--ref` while the invocation beside it was
+sha-pinned (a guarantee varying by code path), and `verdict.mjs` hardcodes `origin/main` as its
+base, so a tip alone reproduces the router's classification only at that base — at any other base
+the router floors irreversible while verdict.mjs floors full, with nothing reporting it.
 
-**Evidence.** RED first: 105 tests, 101 pass, 4 fail against the unmodified tree. GREEN after:
-105/105. Control A (drop `tip` from one emit site) -> 2 failures, exit 1, so the test is not
-vacuous. Control B (reword a comment) -> 105/105, so it is not merely reacting to any edit.
-`npm run check`: **48 of 48 passed, 0 failed, exit 0, every step ran.**
+**What shipped instead.** `base`/`tip` are gone. `verdictRef` carries its own guarantee:
+`{ref: <sha>, reason: null}` when the base is `origin/main` AND the tip resolves, else
+`{ref: null, reason: <why>}`. All three decision sites emit an identical 9-key set, pinned by
+key-set equality. `refuseTree` states that it carries none of them and why. One `splitRange`
+replaces three copies of the load-bearing separator precedence.
 
-**Standing caveat.** This PASS is author-recorded against a deterministic floor: one agent, one
-model family. `full` tier asks for a second opinion that no non-Anthropic model inside Claude Code
-can supply. The checks ran and are green; that is not the tier being satisfied.
+**Mutation matrix — the evidence that matters.**
+
+| | result |
+|---|---|
+| C0 comment reword (must not fire) | 112 pass, 0 fail |
+| M1 delete `verdictRef` from empty site | 2 fail |
+| M2 delete `drivers` (was GREEN before) | 1 fail |
+| M3 delete `gateSelfReview` (was GREEN before) | 1 fail |
+| M4 swap separator precedence | 32 fail |
+| M5 disable the range refusal | 1 fail |
+| M6 emit the symbolic tip again (A1) | 1 fail |
+| M7 accept any base (A2) | 1 fail |
+| M8 gut the gates.yml instruction (E5) | 1 fail |
+
+**Two mutations did not fire on the first matrix run, and both were mine.** M5 was unpinned because
+I deleted its test while rewriting the block — a deletion removing a control with every test green,
+inside the change closing an instance of that class. M8 passed because the test matched the bare
+token `verdictRef`, which survived a gutted instruction. Both closed and re-measured.
+
+**Standing caveat.** Author-recorded against a deterministic floor: one agent, one model family.
+The checks ran and are green; that is not the tier being satisfied.
