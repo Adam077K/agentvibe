@@ -1389,18 +1389,22 @@ test('J-6 — an unrecognised knob value REFUSES the run rather than guessing ab
 });
 
 test('J-7 — the library installs an exit sweep and NO signal handlers', () => {
-  // An exported function that a host calls in-process may not decide how that host dies. The
-  // previous version installed SIGINT/SIGTERM/SIGHUP handlers calling process.exit(130): measured
-  // armed -> wait status 130 with no signal, unarmed -> 143.
-  const before = Object.fromEntries(
-    ['SIGINT', 'SIGTERM', 'SIGHUP', 'exit'].map((s) => [s, process.listenerCount(s)]),
-  );
+  // An exported function a host calls IN-PROCESS may not decide how that host dies. The previous
+  // version installed SIGINT/SIGTERM/SIGHUP handlers calling process.exit(130): measured armed ->
+  // wait status 130 with no signal, unarmed -> 143.
+  //
+  // BOTH ASSERTIONS WERE ONCE ON THE WRONG ARM, and a mutation run is what said so. A before/after
+  // DELTA around this arming measures nothing, because `judgeDirCleanupArmed` is already true by
+  // the time this test runs — the block under test never executes here, so re-adding the signal
+  // handlers left it green. And `exit >= 1` was satisfied by this test file's own cleanup listener,
+  // so deleting the library's stayed green too. Both are now absolute and by identity: a fresh
+  // process has 0 of each (verified), and the sweep is named rather than counted.
   const d = judgeDirFixture();
   armJudgeDirCleanup(d, {});
   for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
-    assert.equal(process.listenerCount(sig), before[sig], `${sig}: the library must not take the process`);
+    assert.equal(process.listenerCount(sig), 0, `${sig}: the library must not take the process`);
   }
-  assert.ok(process.listenerCount('exit') >= 1, 'CONTROL: the exit sweep is installed');
+  assert.ok(process.listeners('exit').includes(sweepJudgeDirs), 'the exit sweep must be installed, by identity');
   sweepJudgeDirs();
 });
 
@@ -1421,18 +1425,32 @@ test('J-8 — an unreadable verdict carries its REASON, not just its exit code',
   assert.equal(ok.outcome, OUTCOME.PRODUCED, 'CONTROL: the seam still produces');
 });
 
-test('J-9 — an operator\'s --judge-dir is never REGISTERED, asserted on the pipeline not the parts', () => {
-  // THE SHARPEST OF THE TWELVE. Inverting `ephemeral` at the call site arms the operator's own
-  // directory and spares the temp one; J-1 and J-2 both still pass, because each primitive still
-  // does what it says. Only an assertion about what the PIPELINE registered can see it.
+test('J-9 — an operator\'s --judge-dir survives a reclaiming run; ours does not', () => {
+  // THE SHARPEST OF THE TWELVE, AND IT TOOK TWO TRIES. Inverting `ephemeral` at the call site arms
+  // the operator's own directory and spares the temp one, turning a reclaimer into a remover of a
+  // path the caller named. Every unit cell above still passes under it, because each primitive
+  // still does exactly what it says.
+  //
+  // THE FIRST VERSION OF THIS CELL WAS VACUOUS and a mutation run is what caught it: it drove a
+  // REFUSED outcome, and on REFUSED the tree is deliberately KEPT either way, so both the correct
+  // and the inverted build left the directory standing. Reclamation only happens on an outcome
+  // that reached an answer, so that is the only place the inversion is observable. The seams below
+  // buy that outcome without a panel run.
+  const deps = {
+    materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
+    readVerdictArtifact: () => ({ outcome: OUTCOME.PRODUCED, subject: 's', tier: 'full' }),
+  };
   const theirs = judgeDirFixture();
-  const ours = judgeDirFixture();
-  produceVerdictFn({ repo: theirs, judgeDir: theirs, dryRun: true });
-  assert.equal(isJudgeDirTrackedFn(theirs), false, 'an operator-named directory must never be registered');
-  assert.equal(fs.existsSync(theirs), true, 'and it must still be on disk');
-  // CONTROL, on the arm that can go silently empty: the tracker can report true at all.
-  armJudgeDirCleanup(ours, {});
-  assert.equal(isJudgeDirTrackedFn(ours), true, 'CONTROL: tracking is observable, so the false above means something');
-  sweepJudgeDirs();
+  const r = produceVerdictFn({ repo: REPO_ROOT, judgeDir: theirs, deps });
+  assert.equal(r.outcome, OUTCOME.PRODUCED, 'DENOMINATOR: this cell is only meaningful on a reclaiming outcome');
+  assert.equal(fs.existsSync(theirs), true, 'an operator-named directory must survive a reclaiming run');
+
+  // THE MIRROR, on the arm that can go silently empty: ours must actually be reclaimed, or the
+  // assertion above is satisfied by a build that simply never deletes anything.
+  const r2 = produceVerdictFn({ repo: REPO_ROOT, deps });
+  assert.equal(r2.outcome, OUTCOME.PRODUCED);
+  assert.ok(r2.judgeDir && r2.judgeDir !== theirs, 'CONTROL: the run made its own directory');
+  assert.equal(fs.existsSync(r2.judgeDir), false, 'ours must be reclaimed');
+
   fs.rmSync(theirs, { recursive: true, force: true });
 });
