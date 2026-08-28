@@ -401,7 +401,7 @@ function main() {
   // which answers `fatal: Not a valid object name`. That already exits 2, so it already fails safe;
   // what it does not do is say which of the two shapes was wrong, and the caller pays a round trip
   // to find out. `scripts/run-gate.mjs --json` is where such a string comes from: its `ref` is a
-  // RANGE for a human to read, and its `tip` is the single revision meant for this flag.
+  // RANGE for a human to read, and its `verdictRef.ref` is the single revision meant for this flag.
   //
   // THIS REFUSES; IT DOES NOT CONVERT. Accepting `A...B` here would be a second implementation of
   // the range, and the property being protected is that a subject is reproducible from one ref —
@@ -420,7 +420,9 @@ function main() {
       `--ref takes a single revision, not a range, and got "${ref}". This program computes its own ` +
         'range as merge-base(origin/main, ref)..ref, so a range here would be a second implementation ' +
         'of it. If this came from `node scripts/run-gate.mjs --json`, that object names both halves: ' +
-        'pass its `tip` field, not its `ref` field.'
+        'read its `verdictRef` field: `verdictRef.ref` is the sha to pass here, or null with ' +
+        '`verdictRef.reason` explaining why no safe one exists. Do NOT fall back to the top-level ' +
+        '`ref` — that is this same range, and you will get this same message.'
     );
   }
 

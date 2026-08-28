@@ -1500,7 +1500,15 @@ test('the emit sites are censused in the source, so a new one cannot appear unno
   // empty-diff site is `console.log(asJson ? JSON.stringify(...` and a literal-prefix census
   // silently missed it, which is the same false-zero this suite exists to catch.
   const src = fs.readFileSync(path.join(REPO, 'scripts', 'run-gate.mjs'), 'utf8');
-  const emitting = src.split('\n').filter((l) => l.includes('console.log(') && l.includes('JSON.stringify'));
+  // NOT LINE-LOCAL. The previous predicate filtered LINES, so a site written as
+  //   console.log(
+  //     JSON.stringify(...),
+  //   )
+  // — the way any formatter wraps a long call — was invisible: it reported 3 machine sites with 4
+  // present, suite green. Fixing the `console.log(JSON.stringify(` prefix while keeping the
+  // line-local scan reproduced the same false zero one layer down. Flatten first, then match.
+  const flat = src.replace(/\s+/g, ' ');
+  const emitting = flat.match(/console\.log\([^;]{0,140}?JSON\.stringify/g) || [];
   const humanEcho = emitting.filter((l) => l.includes('Workflow({'));
   const machine = emitting.filter((l) => !l.includes('Workflow({'));
   assert.equal(humanEcho.length, 1, 'the human-readable invocation echo moved or multiplied');
@@ -1527,6 +1535,24 @@ test('every DECISION emit site carries an identical key set — not merely the k
   assert.equal(firstKeys.length, 9, `expected 9 keys, got ${firstKeys.length}: ${firstKeys.join(' ')}`);
   for (const k of ['ref', 'files', 'floor', 'gateRequired', 'reason', 'drivers', 'gateSelfReview', 'verdictRef', 'invocation']) {
     assert.ok(firstKeys.includes(k), `the decision object lost "${k}"`);
+  }
+  // KEY-SET EQUALITY PINS PRESENCE, NOT TYPE. Corrupting the empty site to `ref: 12345` kept every
+  // key in place and scored a clean suite, so a shape check without a type check is half a check.
+  for (const [name, args] of DECISION_SITES) {
+    const r = json(args);
+    assert.equal(typeof r.ref, 'string', `${name}: ref is not a string`);
+    assert.equal(typeof r.files, 'number', `${name}: files is not a number`);
+    assert.equal(typeof r.floor, 'string', `${name}: floor is not a string`);
+    assert.equal(typeof r.gateRequired, 'boolean', `${name}: gateRequired is not a boolean`);
+    assert.ok(Array.isArray(r.drivers), `${name}: drivers is not an array`);
+    assert.equal(typeof r.verdictRef, 'object', `${name}: verdictRef is not an object`);
+    assert.ok(r.verdictRef !== null, `${name}: verdictRef is null — it must always be readable`);
+    assert.ok(r.verdictRef.ref === null || typeof r.verdictRef.ref === 'string', `${name}: verdictRef.ref is neither string nor null`);
+    assert.ok(r.verdictRef.reason === null || typeof r.verdictRef.reason === 'string', `${name}: verdictRef.reason is neither string nor null`);
+    assert.ok(
+      (r.verdictRef.ref === null) !== (r.verdictRef.reason === null),
+      `${name}: verdictRef must carry exactly one of ref/reason — got ref=${r.verdictRef.ref} reason=${r.verdictRef.reason}`,
+    );
   }
 });
 
@@ -1569,7 +1595,7 @@ test('A1 — verdictRef is ALWAYS a resolved sha, never the symbolic name it was
   const expected = git(['rev-parse', name]);
   assert.match(expected, /^[0-9a-f]{40}$/, 'the fixture branch was not created — nothing below is meaningful');
 
-  const symbolic = json(['--ref', `origin/main...${name}`, '--files', 'README.md']);
+  const symbolic = json(['--ref', `origin/main...${name}`]);
   assert.equal(symbolic.verdictRef.ref, expected, 'a symbolic tip leaked through unresolved');
   assert.match(symbolic.verdictRef.ref, /^[0-9a-f]{40}$/);
   assert.equal(symbolic.verdictRef.reason, null);
@@ -1579,13 +1605,13 @@ test('A1 — verdictRef is ALWAYS a resolved sha, never the symbolic name it was
 });
 
 test('A2 — a base that is not origin/main yields NO usable ref, because verdict.mjs hardcodes its own', () => {
-  const r = json(['--ref', `d1294a4...${HEAD_NOW}`, '--files', 'README.md']);
+  const r = json(['--ref', `d1294a4...${HEAD_NOW}`]);
   assert.equal(r.verdictRef.ref, null, 'a non-origin/main base produced a ref a consumer would trust');
   assert.match(r.verdictRef.reason, /not origin\/main/, 'the reason does not name why it refused');
   assert.match(r.verdictRef.reason, /d1294a4/, 'the reason does not name the offending base');
   // CONTROL: the SAME tip with origin/main as the base is usable, so the refusal is about the base
   // and not about this tip being unresolvable.
-  const ok = json(['--ref', `origin/main...${HEAD_NOW}`, '--files', 'README.md']);
+  const ok = json(['--ref', `origin/main...${HEAD_NOW}`]);
   assert.match(ok.verdictRef.ref, /^[0-9a-f]{40}$/, 'the control shape was refused too — wrong discriminator');
 });
 
@@ -1655,7 +1681,8 @@ test('verdict.mjs refuses a range by name, and computes nothing when it does', (
 
 test('E3 — the `...`-before-`..` precedence exists ONCE, and it is load-bearing', () => {
   // refTip, refBase and pinRefTip were three copies, in the file whose own comment said leaving one
-  // behind "would be a poor joke". Swapping the precedence turns 29 tests red, so this is live risk.
+  // behind "would be a poor joke". Swapping the precedence turns a large part of this suite red —
+  // run the mutation rather than trusting a number written here, which is why none is written.
   const src = fs.readFileSync(path.join(REPO, 'scripts', 'run-gate.mjs'), 'utf8');
   const copies = (src.match(/lastIndexOf\('\.\.\.'\)/g) || []).length;
   assert.equal(copies, 1, `${copies} copies of the separator split; there must be exactly one (splitRange)`);
@@ -1674,4 +1701,76 @@ test('E5 — gates.yml points consumers at the field that carries a guarantee', 
   assert.match(y, /THE FIELD TO USE IS verdictRef/, 'the instruction naming the safe field is gone');
   assert.ok(!/pass tip, never ref/.test(y), 'gates.yml still recommends the removed symbolic field');
   assert.ok(!/pass ref, never tip/.test(y), 'gates.yml recommends the range — the original defect, inverted');
+  // THE PINS ABOVE ARE ALL SATISFIABLE WHILE THE DOCUMENT SAYS THE OPPOSITE. Keeping every pinned
+  // phrase and appending "...UNLESS verdictRef.ref is null, in which case pass the top-level ref
+  // through" scored 112 pass and test:playbooks 66 pass. Pin the PROHIBITION, not only the advice.
+  assert.match(y, /Never fall back to the top-level ref/, 'the no-fallback rule is gone');
+  assert.ok(
+    !/pass the top-level ref/i.test(y),
+    'gates.yml now tells a consumer to fall back to the range — the original defect, reinstated',
+  );
+  assert.match(y, /uses three dots/, 'gates.yml states the base condition without the separator condition');
+});
+
+test('BLOCKER 1 — the guarantee reads the SEPARATOR, not only the base name', () => {
+  // NO FIXTURE IN THIS SUITE WAS SEPARATOR-SENSITIVE. Measured across the whole file: one two-dot
+  // occurrence near verdictRef, and it was a leading-dash fixture; control, 45 three-dot ones. So
+  // the two arms below differ by ONE CHARACTER and nothing else — same base, same tip — which is
+  // the capability that was missing rather than an assertion that was wrong.
+  //
+  // `git diff A..B` compares A with B. verdict.mjs ALWAYS computes merge-base(origin/main, ref)..ref,
+  // which is what `A...B` means. Blessing a two-dot range binds a verdict to a different diff:
+  // measured, `--ref origin/main..d1294a4` floors IRREVERSIBLE over 39 files while the subject from
+  // its tip is sha256 of the EMPTY STRING.
+  const three = json(['--ref', `origin/main...${HEAD_NOW}`]);
+  const two = json(['--ref', `origin/main..${HEAD_NOW}`]);
+
+  // CONTROL, and it must fire: the three-dot form of the SAME comparison is usable.
+  assert.match(three.verdictRef.ref, /^[0-9a-f]{40}$/, 'the sound form stopped working — control is aimed wrong');
+  assert.equal(three.verdictRef.reason, null);
+
+  assert.equal(two.verdictRef.ref, null, 'a two-dot range was blessed with a usable ref');
+  assert.match(two.verdictRef.reason, /\.\./, 'the reason does not name the separator it refused');
+  assert.match(two.verdictRef.reason, /merge-base/, 'the reason does not explain what verdict.mjs actually computes');
+});
+
+test('BLOCKER 2 — verdict.mjs points the caller at a field that EXISTS', () => {
+  // The refusal said "pass its `tip` field". Round 2 deleted `tip`. A caller who obeyed read
+  // undefined, fell back to the only ref-shaped field left — the range — and got this same message
+  // again: the exact failure loop run-gate.mjs documents about itself, reintroduced two files away
+  // in the one place the loop is entered. The deleted test asserted /tip/ in this stderr; retargeting
+  // it would have caught this, deleting it did not.
+  const r = verdict(['subject', '--ref', 'origin/main...HEAD']);
+  assert.equal(r.code, 2);
+  assert.match(r.stderr, /verdictRef/, 'the refusal does not name the field that works');
+
+  // The field it names must actually be emitted. This is the half that rotted: the sentence and the
+  // field were added together and only the field was removed.
+  const emitted = json(['--files', 'README.md']);
+  assert.ok('verdictRef' in emitted, 'verdict.mjs names a field run-gate.mjs does not emit');
+
+  // And it must not send the caller back round the loop.
+  assert.ok(!/pass its `tip` field/.test(r.stderr), 'the refusal names a field that no longer exists');
+  assert.ok(
+    !/pass its `ref` field/.test(r.stderr),
+    'the refusal now recommends the range — the original defect, inverted',
+  );
+});
+
+test('A-2 — an explicit --files list decouples the classification, and verdictRef says so', () => {
+  // `--files` overrides the range, so the router's floor and the diff verdict.mjs would hash are not
+  // the same subject. The suite previously normalised this: three tests passed `--files README.md`
+  // while the one test named "reproduces what the router classified" was the only one that did not.
+  const withFiles = json(['--ref', `origin/main...${HEAD_NOW}`, '--files', 'README.md']);
+  assert.equal(withFiles.verdictRef.ref, null, '--files produced a ref asserting an agreement that was overridden');
+  assert.match(withFiles.verdictRef.reason, /--files/, 'the reason does not name what decoupled it');
+
+  // CONTROL: the identical ref WITHOUT --files is usable, so this is about the override and not
+  // about the range.
+  const withoutFiles = json(['--ref', `origin/main...${HEAD_NOW}`]);
+  assert.match(withoutFiles.verdictRef.ref, /^[0-9a-f]{40}$/, 'the control shape was refused too');
+
+  // A malformed range still wins: its reason is the more fundamental complaint.
+  const both = json(['--ref', `origin/main..${HEAD_NOW}`, '--files', 'README.md']);
+  assert.match(both.verdictRef.reason, /"\.\."/, 'the --files reason masked a malformed range');
 });

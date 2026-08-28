@@ -157,10 +157,14 @@ gates:
       substitute the top-level ref, and do not rebuild a tip by splitting it yourself. A symbolic
       tip FOLLOWS THE BRANCH, and the recording order moves the branch after the gate has run, so a
       verdict recorded against one binds to a diff the gate never saw with nothing exiting
-      non-zero. A tip is equivalent to the range only when the base is origin/main, which
-      verdict.mjs hardcodes: at any other base the router and verdict.mjs classify different file
-      sets and the tier can drop in silence. verdictRef checks both conditions and refuses instead
-      of guessing.
+      non-zero. A tip is equivalent to the range only when the base is origin/main AND the range
+      uses three dots - verdict.mjs hardcodes the first and assumes the second, because it always
+      computes merge-base(origin/main, ref)..ref. At any other base, or with a two-dot range, the
+      router and verdict.mjs classify different file sets and the tier can drop in silence.
+      IF verdictRef.ref IS NULL THERE IS NO USABLE REF. Stop and fix the range, or re-run the
+      router without --files. Never fall back to the top-level ref: it is that same range, and it
+      returns the same refusal one command later. verdictRef checks every one of these conditions
+      and refuses instead of guessing.
       verdict.mjs refuses a range by name rather than converting one, because accepting A...B
       would be a second implementation of the range, and a subject reproducible from one ref is
       what lets a recorded verdict survive a move of the base under it. PR 77 was closed over that.

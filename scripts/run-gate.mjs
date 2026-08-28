@@ -221,13 +221,13 @@ function resolvedRef() {
 function splitRange(ref) {
   const dots3 = ref.lastIndexOf('...');
   if (dots3 !== -1) {
-    return { base: ref.slice(0, dots3).trim(), prefix: ref.slice(0, dots3 + 3), tip: ref.slice(dots3 + 3).trim() };
+    return { base: ref.slice(0, dots3).trim(), prefix: ref.slice(0, dots3 + 3), sep: '...', tip: ref.slice(dots3 + 3).trim() };
   }
   const dots2 = ref.lastIndexOf('..');
   if (dots2 !== -1) {
-    return { base: ref.slice(0, dots2).trim(), prefix: ref.slice(0, dots2 + 2), tip: ref.slice(dots2 + 2).trim() };
+    return { base: ref.slice(0, dots2).trim(), prefix: ref.slice(0, dots2 + 2), sep: '..', tip: ref.slice(dots2 + 2).trim() };
   }
-  return { base: null, prefix: null, tip: ref.trim() };
+  return { base: null, prefix: null, sep: null, tip: ref.trim() };
 }
 
 function refTip(ref) {
@@ -268,8 +268,8 @@ function refBase(ref) {
 // So: a resolved sha when both conditions hold, and null WITH THE REASON when either does not.
 // Never a plausible string that quietly means something else. This cannot throw and cannot refuse
 // the run — the ungated path stays cheap, which is the property that keeps people running it.
-function verdictRefFor(ref) {
-  const { base, tip } = splitRange(ref);
+function verdictRefFor(ref, hasExplicitFiles) {
+  const { base, sep, tip } = splitRange(ref);
   if (base === null) {
     return {
       ref: null,
@@ -288,6 +288,28 @@ function verdictRefFor(ref) {
         '--ref origin/main...<tip> if that is the comparison you want.',
     };
   }
+  // THE SEPARATOR IS HALF THE INPUT AND THE NAME CHECK ABOVE DOES NOT READ IT.
+  // `git diff A..B` is A vs B. verdict.mjs ALWAYS computes merge-base(origin/main, ref)..ref, which
+  // is what `A...B` means. So a two-dot range with the right base name passed the name check and
+  // was blessed with `reason: null` while denoting a different diff. Measured: `--ref
+  // origin/main..d1294a4` classifies 39 files and floors IRREVERSIBLE, and the subject built from
+  // its tip is `e3b0c442…` — sha256 of the EMPTY STRING, 0 bytes. Control, same operator on a live
+  // ref: 36318 bytes.
+  //
+  // It is wrong in BOTH directions, which is why it is not merely a tiering nuisance: a file that
+  // `main` changed and the branch did not appears in `A..B` and not in `mergeBase..B` (over-tier),
+  // and a file both changed to the SAME content appears in `mergeBase..B` and not in `A..B`
+  // (UNDER-tier). REFUSE rather than convert — the same argument verdict.mjs makes about ranges.
+  if (sep !== '...') {
+    return {
+      ref: null,
+      reason:
+        `the range uses "${sep}", not "...". \`git diff A..B\` compares A with B, while verdict.mjs ` +
+        'always computes merge-base(origin/main, ref)..ref — which is what "..." means. The two ' +
+        'denote different diffs whenever origin/main has moved, in both directions. Re-run with ' +
+        `--ref ${base}...${tip} if that is the comparison you want.`,
+    };
+  }
   let sha = '';
   try {
     sha = execFileSync('git', ['rev-parse', '--verify', '--quiet', `${tip}^{commit}`], {
@@ -304,6 +326,19 @@ function verdictRefFor(ref) {
       reason:
         `the tip "${tip}" does not resolve to a commit in ${REPO_ROOT}, so there is no sha to pin ` +
         'and a verdict recorded against it would bind to nothing checkable.',
+    };
+  }
+  // `--files` classifies an EXPLICIT LIST, not the range — so the router's floor and the diff
+  // verdict.mjs would hash are decoupled, and a sha here would assert an agreement that was
+  // overridden on the command line. Checked LAST, because a malformed range is the more fundamental
+  // complaint and its reason is the more useful one to return.
+  if (hasExplicitFiles) {
+    return {
+      ref: null,
+      reason:
+        'the classification above came from an explicit --files list, not from this range, so the ' +
+        'tier and the diff verdict.mjs would hash are not the same subject. Re-run without --files ' +
+        'to get a ref that binds to what was classified.',
     };
   }
   return { ref: sha, reason: null };
@@ -464,7 +499,7 @@ function main() {
       reason: 'empty diff',
       drivers: [],
       gateSelfReview: gateSelfReview(files, ref),
-      verdictRef: verdictRefFor(ref),
+      verdictRef: verdictRefFor(ref, explicit.length > 0),
       invocation: null,
     };
     console.log(asJson ? JSON.stringify(empty, null, 2) : `No changed files for ${ref}. Nothing to gate.`);
@@ -513,7 +548,7 @@ function main() {
         reason: null,
         drivers,
         gateSelfReview: selfReview,
-        verdictRef: verdictRefFor(ref),
+        verdictRef: verdictRefFor(ref, explicit.length > 0),
         invocation,
       },
       null,
