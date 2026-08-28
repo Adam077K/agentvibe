@@ -297,3 +297,112 @@ test('this repository passes with no arguments — the real floor, the real file
   assert.ok(j.sites.length >= 12, `expected at least 12 dispatch sites, found ${j.sites.length}`);
   assert.ok(j.sites.every((s) => s.agentType), 'every site must resolve to a name');
 });
+
+// ── THE THIRD BUCKET: what the scan saw and did not classify ──────────────────────────────────
+//
+// The guard this joins fires only when a file drops to ZERO sites while its raw text holds
+// `agent(`. A PARTIAL loss passed it in silence, and that is the state the repo was in: measured
+// across `.claude/workflows/*.js`, 19 occurrences in the unmasked source became 13 sites. Six
+// vanished, no file hit zero, and nothing said so. Most were comments — correct to exclude, and
+// indistinguishable from a real miss in the output, which is the part that matters.
+
+test('an occurrence excluded by masking is REPORTED, not discarded', () => {
+  const r = check(fixture({ workflows: { 'fx.js': `// a note mentioning agent( in prose\n${CLEAN}` } }));
+  assert.equal(r.code, 0, 'a comment must not fail the check');
+  assert.equal(r.unclassified.length, 1, JSON.stringify(r.unclassified));
+  assert.equal(r.unclassified[0].reason, 'masked');
+  assert.ok(r.unclassified[0].line > 0, 'an unclassified item with no line is not actionable');
+});
+
+test('a clean fixture reports an EMPTY bucket — "nothing ambiguous", not "nothing checked"', () => {
+  // The control. Without it, every assertion above would hold for a checker that put everything in
+  // the bucket, and the bucket would mean nothing.
+  const r = check(fixture({ workflows: { 'fx.js': CLEAN } }));
+  assert.equal(r.code, 0);
+  assert.deepEqual(r.unclassified, []);
+  assert.equal(r.sites.length, 1);
+});
+
+test('THE COVERAGE IDENTITY: universe === sites + unclassified, and it is checked', () => {
+  // A coverage line whose parts do not add up is worse than none, so the arithmetic is asserted by
+  // the checker rather than by eye. This pins that the checker asserts it.
+  for (const body of [CLEAN, `// agent( in a comment\n${CLEAN}`, `${CLEAN}\n// and agent( again`]) {
+    const r = check(fixture({ workflows: { 'fx.js': body } }));
+    // NAMED FIELDS, NOT A FALLBACK CHAIN. The first version of this assertion read
+    // `r.raw_agent_occurrences ?? r.universe ?? (r.sites.length + r.unclassified.length)` — whose
+    // last arm is the very quantity being compared, so an ABSENT field made it compare a value to
+    // itself and pass. That is the defect this file is about, written into its own test.
+    assert.equal(typeof r.universe_agent_occurrences, 'number', 'the JSON path does not report the universe');
+    assert.equal(typeof r.sites_in_js, 'number', 'the JSON path does not report the .js site count');
+    assert.equal(r.universe_agent_occurrences, r.sites_in_js + r.unclassified.length,
+      'the reported universe does not equal its two buckets');
+    assert.ok(!flagged(r, 'coverage-identity'), 'the identity check fired on a consistent fixture');
+  }
+});
+
+test('THE FIXTURE BUILT TO DEFEAT IT: live code the mask covers is VISIBLE, not silent', () => {
+  // The tokenizer's known derail case — a regex literal holding a lone quote is read as
+  // division-then-string, blanking the rest of the file. A REAL dispatch after one is still not
+  // seen as a site. What changed is that it now appears in the bucket with a file:line instead of
+  // vanishing: 1 site + 1 unclassified rather than 1 site and no mention of the second.
+  //
+  // This test asserts VISIBILITY, deliberately, and not correct classification — the item is
+  // labelled `masked`, which is true of the mask and false of the intent. Telling a correct mask
+  // from a derailed one needs parsing rather than masking, which this checker does not do and
+  // whose blind-spot list already says so. If that is ever fixed, this test should FAIL and be
+  // replaced by one asserting a `parser-gap` failure.
+  const derailed = `${CLEAN}\nconst re = /"/; const s = await agent('q', { label: 'y', agentType: 'builder' })`;
+  const r = check(fixture({ workflows: { 'fx.js': derailed } }));
+  assert.equal(r.sites.length, 1, 'the second dispatch became visible to the site scan — good, update this test');
+  assert.equal(r.unclassified.length, 1, 'the swallowed dispatch is not in any bucket — it is silent again');
+  assert.match(r.unclassified[0].detail, /excluded by design/);
+});
+
+test('THE .md UNIVERSE: a prose mention of agentType is REPORTED as excluded, not skipped', () => {
+  // The .md half is scanned by a SHAPE predicate — `agentType` followed by a quoted literal —
+  // which is narrower than the token itself. Before the cross-count covered .md, every mention
+  // that did not match the shape was dropped in silence: not a site, not a failure, not in any
+  // bucket. Three exist in this repository right now, all prose (a shape table in workflows/
+  // README.md, a sentence and a column header in design-screen.md), and nothing said so.
+  const md = [
+    '# fx',
+    "A dispatch: `agent(q, { agentType: 'builder' })`.",
+    'The `agentType` key is what selects the engine.',   // prose mention — no literal follows
+  ].join('\n');
+  const r = check(fixture({ workflows: { 'fx.md': md, 'fx.js': CLEAN } }));
+  assert.equal(r.code, 0, JSON.stringify(r.failures));
+  const prose = r.unclassified.filter((u) => u.reason === 'md-prose-mention');
+  assert.equal(prose.length, 1, `expected the prose mention in the bucket, got ${JSON.stringify(r.unclassified)}`);
+  assert.equal(prose[0].line, 3, 'the bucket must carry the line, or a reader cannot act on it');
+  assert.match(prose[0].detail, /excluded by design/);
+  // And it is NOT counted as a dispatch — visibility must not become a false positive.
+  assert.ok(!r.sites.some((s) => s.file.endsWith('fx.md') && s.line === 3), 'a prose mention became a site');
+});
+
+test('a prose mention does NOT fail the run — markdown is prose, unlike the .js parser gap', () => {
+  // The asymmetry is deliberate and is the reason the two universes are counted separately: an
+  // unmatched occurrence in LIVE .js is a parser gap and FAILS; the same in markdown is the
+  // expected case and is merely listed. Collapsing them would either spam failures or hide gaps.
+  const r = check(fixture({ workflows: { 'fx.md': 'Prose about `agentType` alone.', 'fx.js': CLEAN } }));
+  assert.equal(r.code, 0, JSON.stringify(r.failures));
+  assert.ok(!flagged(r, 'parser-gap'), 'a markdown prose mention was treated as a parser gap');
+  assert.equal(r.unclassified.filter((u) => u.reason === 'md-prose-mention').length, 1);
+});
+
+test('THE TWO-UNIVERSE IDENTITY holds on THIS REPOSITORY, and names both halves', () => {
+  // Against the real tree, not a fixture: the first cut of this cross-count covered only .js and
+  // so left 4 of 17 real sites with no universe at all — a coverage line that reports coverage it
+  // does not have, which is the defect one level up from the one this bucket exists to end.
+  const r = JSON.parse(run(["--json"]).out);
+  for (const f of ['universe_agent_occurrences', 'sites_in_js', 'md_agenttype_mentions', 'sites_in_md', 'universe_total']) {
+    assert.equal(typeof r[f], 'number', `the JSON path does not report ${f}`);
+  }
+  assert.equal(r.universe_total, r.universe_agent_occurrences + r.md_agenttype_mentions,
+    'the reported total is not the sum of the two universes');
+  assert.equal(r.universe_total, r.sites_in_js + r.sites_in_md + r.unclassified.length,
+    'the two universes do not equal sites + unclassified');
+  assert.equal(r.sites.length, r.sites_in_js + r.sites_in_md,
+    'the site list and the per-half counts disagree — one of them is not counting what it says');
+  assert.ok(r.md_agenttype_mentions > 0 && r.sites_in_md > 0,
+    'the .md half is empty, so this test would pass without cross-counting anything');
+});

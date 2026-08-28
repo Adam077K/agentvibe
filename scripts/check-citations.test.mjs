@@ -754,3 +754,105 @@ test('importing ledger.mjs does not run its CLI', () => {
   const out = execFileSync('node', ['-e', probe], { cwd: REPO, encoding: 'utf8' });
   assert.equal(out.trim(), 'function');
 });
+
+// ── THE COVERAGE IDENTITY ─────────────────────────────────────────────────────────────────────
+//
+// This checker already reports what it could not check — `unchecked`, with a reason per item,
+// printed on every path including the passing one, and the verdict line says in words that a clean
+// run is NOT "the citations are good". That third bucket is the thing two other sweeps in this repo
+// lacked, and it was here first.
+//
+// What was NOT checked is the arithmetic underneath it. The coverage block prints six resolution
+// counters as though they PARTITION the locators, and `stats.locators` is incremented at the
+// harvest site independently of all six. A locator taking a path that bumped the total and none of
+// the parts would vanish out of a line that reads as exhaustive — an unexamined item reported as a
+// clean one, in the block whose whole job is to refuse that.
+
+test('the resolution counters PARTITION the locators, and the checker asserts it', () => {
+  const root = fixture({
+    'docs/a.md': 'See `scripts/check-citations.mjs:1` and `scripts/check-citations.test.mjs:1`.',
+    'scripts/check-citations.mjs': 'x\n',
+    'scripts/check-citations.test.mjs': 'x\n',
+  });
+  const r = check(root);
+  const parts = r.stats.resolved.exact + r.stats.resolved.basename + r.stats.resolved.suffix +
+                r.stats.ambiguous + r.stats.unresolved + r.stats.skipped;
+  assert.ok(r.stats.locators > 0, 'the fixture harvested nothing — this test would pass vacuously');
+  assert.equal(parts, r.stats.locators, 'the six counters do not sum to the total the coverage line divides');
+  assert.ok(!r.failures.some((f) => f.startsWith('[coverage-identity]')), 'the identity check fired on a consistent fixture');
+});
+
+test('NEITHER POSTURE MOVED: existence still blocks under --strict, the full run still warns', () => {
+  // The constraint on this change. `check:citations-exist` is a blocking CI step and the drift half
+  // is deliberately WARN pending a founder decision; adding a bucket must not touch either.
+  const root = fixture({ 'docs/a.md': 'See `scripts/does-not-exist-at-all.mjs:1`.' });
+  assert.equal(run(['--root', root, '--min-locators', '0', '--no-anchors', '--strict']).code, 1,
+    'the existence class stopped blocking under --strict');
+  assert.equal(run(['--root', root, '--min-locators', '0', '--no-anchors']).code, 0,
+    'the WARN posture started blocking');
+});
+
+test('an unchecked item is reported with a REASON, never as a silent pass', () => {
+  // Two tracked files share a basename, so the locator resolves to neither and is deliberately
+  // checked against nothing. That is the state this bucket exists to make visible.
+  const root = fixture({
+    'docs/a.md': 'See `DUPE.md:1`.',
+    'one/DUPE.md': 'x\n',
+    'two/DUPE.md': 'x\n',
+  });
+  const r = check(root);
+  assert.equal(r.unchecked.length, 1, JSON.stringify(r.unchecked));
+  assert.equal(r.unchecked[0].reason, 'ambiguous');
+  assert.equal(r.findings.length, 0, 'an unresolvable locator became a finding — that is inventing one');
+  assert.equal(r.code, 0);
+});
+
+test('THE SEVENTH DISPOSITION: an external citation is a locator that no counter counts', () => {
+  // This is the case the first version of the coverage identity got WRONG, on a BLOCKING step. It
+  // asserted the six resolution counters partition the locators; an `--external-prefix` citation is
+  // harvested (so it increments `locators`) and is then excused from checking by design (so it
+  // increments none of the six, landing in `unchecked` with reason `external`). The assertion fired
+  // on correct code. Pinned here so the seventh disposition cannot be forgotten twice.
+  const root = fixture({
+    'docs/a.md': 'See `other-project/src/thing.js:12` for the detail.',
+  });
+  const r = check(root, ['--external-prefix', 'other-project']);
+  assert.equal(r.code, 0, JSON.stringify(r.failures));
+  const ext = r.unchecked.filter((u) => u.reason === 'external');
+  assert.equal(ext.length, 1, `expected one external, got ${JSON.stringify(r.unchecked)}`);
+  assert.equal(r.stats.locators, 1, 'the external citation was not harvested as a locator');
+  const six = r.stats.resolved.exact + r.stats.resolved.basename + r.stats.resolved.suffix +
+              r.stats.ambiguous + r.stats.unresolved + r.stats.skipped;
+  assert.equal(six, 0, 'an external must increment NONE of the six resolution counters');
+  // Which is precisely why the identity must carry the seventh term: six alone is short by one.
+  assert.equal(six + ext.length, r.stats.locators, 'six + external must equal the locator total');
+});
+
+test('THE COVERAGE IDENTITY holds on THIS REPOSITORY, in the posture that ships', () => {
+  // Against the real corpus and the real flags — `npm run check:citations-exist` — not a fixture.
+  // The flags are passed as separate array elements deliberately: this shell does not word-split an
+  // unquoted variable, so `$FLAGS` reaches the script as ONE argument and silently selects a
+  // DIFFERENT posture, which is how the miscalibration above went unnoticed for three measurements.
+  const r = JSON.parse(run(['--json', '--no-anchors', '--strict', '--external-prefix', 'adamos']).out);
+  const s = r.stats;
+  for (const f of ['locators', 'ambiguous', 'unresolved', 'skipped']) {
+    assert.equal(typeof s[f], 'number', `the JSON path does not report stats.${f}`);
+  }
+  const ext = r.unchecked.filter((u) => u.reason === 'external').length;
+  const six = s.resolved.exact + s.resolved.basename + s.resolved.suffix + s.ambiguous + s.unresolved + s.skipped;
+  assert.equal(six + ext, s.locators,
+    `every harvested locator must reach exactly one disposition: six ${six} + external ${ext} !== locators ${s.locators}`);
+  assert.ok(s.locators > 100, 'the corpus is too small for this to be pinning the real floor');
+});
+
+test('THE CROSS-COUNT: the unchecked LIST and the unchecked COUNTERS are written separately', () => {
+  // Two accumulators of one quantity, by different mechanisms — array pushes at the call sites,
+  // integer increments in `stats`. A sum of counters can come out right for the wrong reason; a
+  // list cannot be pushed without an item existing. Where a sweep has no counter it did not write,
+  // the honest move is to say so — here it has one, so it is used.
+  const r = JSON.parse(run(['--json', '--no-anchors', '--strict', '--external-prefix', 'adamos']).out);
+  const ext = r.unchecked.filter((u) => u.reason === 'external').length;
+  assert.equal(r.unchecked.length, r.stats.ambiguous + ext,
+    'the unchecked list and the unchecked counters disagree — one is reporting a bucket nobody filled');
+  assert.ok(r.unchecked.length > 0, 'an empty list would make this assertion vacuous on this corpus');
+});
