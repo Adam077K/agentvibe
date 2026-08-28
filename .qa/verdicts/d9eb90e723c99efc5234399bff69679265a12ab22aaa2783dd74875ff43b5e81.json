@@ -1,0 +1,11 @@
+{
+  "subject": "d9eb90e723c99efc5234399bff69679265a12ab22aaa2783dd74875ff43b5e81",
+  "base": "62e0c26a0c02898922284ae02edb3c2851e1c3d3",
+  "tier": "irreversible",
+  "tier_driver": "scripts/lib/check-suite.js",
+  "verdict": "PASS",
+  "by": "builder (author-recorded, single model family)",
+  "run_id": null,
+  "evidence": "merged origin/main at 62e0c26; npm run check 48 of 48 passed, 0 failed, 159.4s, sandbox armed; npm run test:probe-agent-tool-inheritance 17 pass 0 fail; node scripts/probe-agent-tool-inheritance.mjs CONTAINED exit 0 against claude 2.1.246, arms 41/5/2/3 identical to the pre-merge run; mutation of the fixture control 16 pass 1 fail, restored 17 pass 0 fail; EXCLUDED figures re-derived post-merge, unchanged at 48-to-49 and 11 findings across 8 locators. NOT a satisfied tier: irreversible asks 2-of-3 multi-judge across 2 model families, none reachable here, accepted risk to 2026-11-17",
+  "recorded_at": "2026-08-28T09:20:53.295Z"
+}
