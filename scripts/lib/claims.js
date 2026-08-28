@@ -137,7 +137,10 @@ function scanLines(text) {
     if (body.startsWith('#')) continue;
     const content = stripComment(body, n).replace(/\s+$/, '');
     if (content === '') continue;
-    out.push({ n, indent, content });
+    // `raw` is the 0-based index of this line in the UNMODIFIED source. Everything else on
+    // this record has been normalised — comment-stripped, right-trimmed, de-indented — and a
+    // block scalar needs the bytes back. It is the only handle that survives that.
+    out.push({ n, indent, content, raw: idx });
   }
   return out;
 }
@@ -228,14 +231,169 @@ function splitTopLevelColon(s) {
   return -1;
 }
 
-// ── Recursive descent over the scanned lines ────────────────────────────────
-function parseNode(lines, i, indent) {
-  if (i >= lines.length) throw new ClaimError('unexpected end of block');
-  if (/^-(\s|$)/.test(lines[i].content)) return parseSeq(lines, i, indent);
-  return parseMap(lines, i, indent);
+// ── Block scalars ───────────────────────────────────────────────────────────
+//
+// Read from the RAW source, never from the scanned array. `scanLines` is a whole-document
+// pre-pass: before any structure is known it drops blank lines, drops `#`-first lines, strips
+// trailing comments, strips trailing whitespace and strips leading indentation. All five are
+// right for a plain scalar and all five destroy a block-scalar body — and two of them (a
+// dropped blank line, a dropped `#`-first line) remove the line from `lines[]` ENTIRELY, so
+// the body is not reconstructible from what the scan returned. Measured against PyYAML 6.0.3
+// and js-yaml 4.1.1 before this function existed: a `#` after a space truncated the value, a
+// `#`-first line vanished, a blank line vanished (destroying the fold boundary in `>`),
+// relative indentation flattened to column 0, and trailing whitespace was stripped. One live
+// value was corrupt because of it — `.claude/skills/CURATION.yml` added[9].why.
+//
+// CHOMPING IS `strip`, DELIBERATELY, FOR ALL FOUR ACCEPTED INDICATORS. YAML's default is
+// `clip`, which keeps one trailing newline. This parser has always applied `strip`, so `|`
+// agrees with `|-` and `>` with `>-`; the differential probe records `|-` and `>-` as already
+// matching both reference implementations byte for byte. Adopting `clip` would change all 15
+// block-scalar values in `.claude/gates.yml` — an `irreversible`-tier surface — to recover
+// ZERO content, and would split `|` from `|-` where they agree today.
+//
+// FIVE DIVERGENCES INSIDE BLOCK SCALARS ARE ENUMERATED BELOW, EACH WITH A ROW IN THE
+// CROSS-CHECK LIST IN `scripts/claims.test.mjs`. **THIS LIST IS NOT KNOWN TO BE EXHAUSTIVE,
+// AND NOTHING HERE CAN MAKE IT SO.** Two earlier drafts of this comment claimed totality —
+// first "the trailing newline is the only remaining difference", then "FOUR DIVERGENCES
+// REMAIN" — and each was refuted by a divergence nobody had listed. The reason is structural
+// and worth stating rather than repeating the mistake a third time:
+//
+//   THE CROSS-CHECK LIST IS A ONE-DIRECTIONAL CONTROL. It fires when a LISTED row stops
+//   diverging. Nothing fires when a divergence is MISSING from the list — which is the
+//   direction that failed twice.
+//
+// The bidirectional control — a sweep that fails when ANY unlisted divergence exists — needs
+// a reference parser to compare against, and this repo declares zero dependencies, so no
+// reference is resolvable on CI. Such a sweep could therefore only ever be developer-run and
+// advisory, never blocking. That is why this comment is SCOPED instead: it claims what has
+// been enumerated and measured, and claims nothing about what has not. Read "divergence"
+// below as "inside a block scalar", with ONE declared exception: row 4 also names a
+// consequence of the same mechanism in a QUOTED scalar, and flags that in place rather than
+// relying on this sentence. Outside block scalars the parser is a documented subset and
+// diverges on anchors, tags, `0x10`, and multi-line plain and quoted scalars by design.
+//
+//   1. Chomping is `strip`, not `clip` — `|`/`>` drop a trailing newline the references keep.
+//   2. `|+`, `>+` and `|2` are not implemented, and are NOT reliably refused. With a
+//      more-indented body they throw `unexpected indentation`. With NO body, or a body of only
+//      blank or `#`-first lines — which `scanLines` deletes before this code runs — the value
+//      silently becomes the literal indicator string: `a: |+\nb: 2` yields `{a: "|+"}` where
+//      the references yield `{a: ""}`. That string also clears `validateEvidence`'s
+//      `.trim() !== ''` floor, which `""` would not. Pre-existing; named, not fixed here.
+//   3. An empty block scalar THROWS where the references return `""`. Deliberate: a silently
+//      empty value is the failure this parser exists to refuse.
+//   4. THE SIXTH LOSS, NOT FIXED BY THIS CHANGE and not fixable from here: `scanLines` runs
+//      `stripComment` over every line of the document, block-scalar bodies included, so an odd
+//      apostrophe in a body throws `unterminated quote` and takes the WHOLE DOCUMENT with it.
+//      THE MECHANISM IS WIDER THAN THIS ROW: the same quote tracking now also throws on a CR
+//      inside a quoted scalar — `k: 'a\rb'` — where the references give `"a b"`. Base and
+//      round 1 returned `"a\rb"`, so this round changed it from silently-wrong to refused.
+//      Fail-closed and, for a quoted scalar carrying a stray CR, defensible; both the single-
+//      and double-quoted forms behave this way, and both are pinned in the tests.
+//      `k: |-\n  the judge's verdict` is unparseable; both references read it. The raw-source
+//      read below cannot rescue it because the throw happens first, in the pre-pass. Live
+//      instance: `.claude/agents/reviewer-readonly.md` frontmatter, which `schema-lint` reads
+//      with its own `parseFrontmatter` and so does not hit. This fix makes the block-scalar
+//      VALUE content; the ADMISSION decision is still made by the line scanner.
+//   5. A block scalar as a SEQUENCE ITEM — `k:\n  - |-\n    a` — throws `unexpected
+//      indentation` where the references read it as a list of one string. Pre-existing,
+//      unchanged by this diff, and FAIL-CLOSED: it refuses rather than inventing a value.
+//      Named, deliberately not fixed here — `parseSeq` builds a synthetic line for the
+//      "- key:" form only, and teaching it the bare "- |-" form is its own change.
+function readBlockScalar(src, headerRaw, parentIndent, indicator, lineNo, key) {
+  const isBlank = (l) => /^[ ]*$/.test(l);
+  const indentOf = (l) => l.match(/^ */)[0].length;
+
+  // Content indentation is set by the first NON-EMPTY line of the body, per YAML — and a
+  // LEADING all-space line may not be wider than that indent. YAML makes this an error
+  // precisely because the content indent is not yet known when such a line is read, so
+  // accepting it means guessing. Skipping the check is a FAIL-OPEN: `k: |-\n     \n  a`
+  // is a parse error to both references and this parser used to invent `"   \na"` from it.
+  // That is the whole reason the rule below is stated for interior and trailing lines only.
+  let contentIndent = -1;
+  let widestLeadingBlank = 0;
+  for (let k = headerRaw + 1; k < src.length; k++) {
+    if (isBlank(src[k])) { widestLeadingBlank = Math.max(widestLeadingBlank, src[k].length); continue; }
+    const ind = indentOf(src[k]);
+    if (ind <= parentIndent) break;
+    contentIndent = ind;
+    break;
+  }
+  if (contentIndent >= 0 && widestLeadingBlank > contentIndent) {
+    throw new ClaimError(
+      `block scalar "${key}: ${indicator}" starts with an all-space line wider than its content indent — YAML cannot tell how far it is indented, and neither can this parser`,
+      lineNo,
+    );
+  }
+  if (contentIndent < 0) {
+    throw new ClaimError(`block scalar "${key}: ${indicator}" has no content`, lineNo);
+  }
+
+  // The block ends at the first NON-EMPTY line indented below the content indent. A blank
+  // line has indent 0 and is a CONTINUATION, not a terminator: read it as a terminator and
+  // the scalar truncates at the first paragraph break; ignore the non-empty rule and it
+  // swallows the rest of the document. A line indented between the parent and the content
+  // indent also ends the block, and the caller then raises `unexpected indentation` on it,
+  // which is the honest answer to malformed input.
+  const body = [];
+  let endRaw = headerRaw + 1;
+  for (let k = headerRaw + 1; k < src.length; k++) {
+    // A whitespace-only line never TERMINATES the block, but it is not always empty either.
+    // FOR AN INTERIOR OR TRAILING LINE — the only ones that reach here, because a wider
+    // LEADING one is refused above — real YAML keeps whatever sits at or past the content
+    // indent. Pushing '' unconditionally dropped those bytes: measured `"a\n\nb"` where both
+    // references give `"a\n   \nb"`. Stating the rule without that scope is what produced the
+    // leading-line fail-open; the sentence and the code are narrowed together, because a
+    // narrowed sentence over code that still applies the broad rule fixes nothing.
+    if (isBlank(src[k])) {
+      body.push(src[k].length > contentIndent ? src[k].slice(contentIndent) : '');
+      endRaw = k + 1;
+      continue;
+    }
+    if (indentOf(src[k]) < contentIndent) break;
+    body.push(src[k].slice(contentIndent));
+    endRaw = k + 1;
+  }
+  while (body.length && body[body.length - 1] === '') body.pop();  // strip chomping
+
+  return { value: indicator[0] === '>' ? foldLines(body) : body.join('\n'), endRaw };
 }
 
-function parseSeq(lines, i, indent) {
+/**
+ * YAML folding for `>`: one break between two ordinary lines becomes a space; n+1 consecutive
+ * breaks become n newlines; and any break touching a MORE-INDENTED line stays literal, as do
+ * that line's own leading spaces. Written over BREAKS rather than over lines because the two
+ * disagree exactly where it matters — a single blank line between two content lines is two
+ * breaks and folds to ONE newline, not two.
+ */
+function foldLines(body) {
+  if (body.length === 0) return '';
+  let out = body[0];
+  let i = 1;
+  while (i < body.length) {
+    let blanks = 0;
+    while (i + blanks < body.length && body[i + blanks] === '') blanks++;
+    const at = i + blanks;
+    if (at >= body.length) break;  // trailing blanks: already strip-chomped away
+    const prev = body[i - 1];
+    const next = body[at];
+    const literal = /^[ \t]/.test(next) || (prev !== '' && /^[ \t]/.test(prev));
+    if (prev === '' || literal) out += '\n'.repeat(blanks + 1);
+    else if (blanks === 0) out += ' ';
+    else out += '\n'.repeat(blanks);
+    out += next;
+    i = at + 1;
+  }
+  return out;
+}
+
+// ── Recursive descent over the scanned lines ────────────────────────────────
+function parseNode(lines, i, indent, src) {
+  if (i >= lines.length) throw new ClaimError('unexpected end of block');
+  if (/^-(\s|$)/.test(lines[i].content)) return parseSeq(lines, i, indent, src);
+  return parseMap(lines, i, indent, src);
+}
+
+function parseSeq(lines, i, indent, src) {
   const items = [];
   while (i < lines.length && lines[i].indent === indent && /^-(\s|$)/.test(lines[i].content)) {
     const { n, content } = lines[i];
@@ -246,7 +404,7 @@ function parseSeq(lines, i, indent) {
       // "-" alone: the item is a block on the following, more-indented lines.
       i++;
       if (i < lines.length && lines[i].indent > indent) {
-        const r = parseNode(lines, i, lines[i].indent);
+        const r = parseNode(lines, i, lines[i].indent, src);
         items.push(r.value);
         i = r.next;
       } else {
@@ -257,10 +415,10 @@ function parseSeq(lines, i, indent) {
 
     if (splitTopLevelColon(rest) >= 0 && !rest.startsWith('{') && !rest.startsWith('[')) {
       // "- key: value" — a block mapping whose first key sits at column indent+off.
-      const inner = [{ n, indent: indent + off, content: rest }];
+      const inner = [{ n, indent: indent + off, content: rest, raw: lines[i].raw }];
       let j = i + 1;
       while (j < lines.length && lines[j].indent > indent) { inner.push(lines[j]); j++; }
-      const r = parseNode(inner, 0, indent + off);
+      const r = parseNode(inner, 0, indent + off, src);
       if (r.next !== inner.length) {
         throw new ClaimError('unexpected indentation inside sequence item', inner[r.next].n);
       }
@@ -276,10 +434,10 @@ function parseSeq(lines, i, indent) {
   return { value: items, next: i };
 }
 
-function parseMap(lines, i, indent) {
+function parseMap(lines, i, indent, src) {
   const map = {};
   while (i < lines.length && lines[i].indent === indent) {
-    const { n, content } = lines[i];
+    const { n, content, raw: headerRaw } = lines[i];
     if (/^-(\s|$)/.test(content)) {
       throw new ClaimError('sequence item where a mapping key was expected', n);
     }
@@ -298,24 +456,37 @@ function parseMap(lines, i, indent) {
     if (rest === '>' || rest === '|' || rest === '>-' || rest === '|-') {
       // Block scalar. This is the exact shape that silently produced empty strings in
       // build-skills-manifest.mjs before Phase 1 — it is handled explicitly here.
-      const folded = rest[0] === '>';
-      const collected = [];
+      // UNREACHABLE FROM ANY DOCUMENT, and kept for its MESSAGE, not for its control flow.
+      // An earlier version of this comment claimed that without the guard the body is
+      // "silently re-parsed as structure". That was not measured and it is FALSE: building
+      // the synthetic line without `raw` and removing the guard produces a throw anyway —
+      // `readBlockScalar` is handed `undefined` and fails — but with a message that names
+      // neither the key nor the cause. So the guard converts a confusing throw into a
+      // specific one; it does not convert silence into noise. A mutation run confirms no
+      // test kills its removal, because no input can reach it. Written down so nobody
+      // claims coverage, or a failure mode, that it does not have.
+      if (typeof headerRaw !== 'number') {
+        throw new ClaimError(`internal: scanned line for "${key}" carries no raw source index`, n);
+      }
+      const { value, endRaw } = readBlockScalar(src, headerRaw, indent, rest, n, key);
+      map[key] = value;
+      // Advance past every SCANNED line the body consumed, indexed by RAW source line. That
+      // index is what makes this correct: the body's blank and `#`-first lines are absent
+      // from `lines[]` altogether, so an indent-based advance cannot see what was just read.
       i++;
-      while (i < lines.length && lines[i].indent > indent) { collected.push(lines[i].content); i++; }
-      if (collected.length === 0) throw new ClaimError(`block scalar "${key}: ${rest}" has no content`, n);
-      map[key] = folded ? collected.join(' ') : collected.join('\n');
+      while (i < lines.length && lines[i].raw < endRaw) i++;
       continue;
     }
 
     if (rest === '') {
       i++;
       if (i < lines.length && lines[i].indent > indent) {
-        const r = parseNode(lines, i, lines[i].indent);
+        const r = parseNode(lines, i, lines[i].indent, src);
         map[key] = r.value;
         i = r.next;
       } else if (i < lines.length && lines[i].indent === indent && /^-(\s|$)/.test(lines[i].content)) {
         // A sequence at the SAME indent as its key — legal YAML, common in this repo.
-        const r = parseSeq(lines, i, indent);
+        const r = parseSeq(lines, i, indent, src);
         map[key] = r.value;
         i = r.next;
       } else {
@@ -335,13 +506,23 @@ function parseMap(lines, i, indent) {
 
 /** Parse a YAML subset. Throws ClaimError on anything it does not fully understand. */
 function parseYamlSubset(text) {
-  const lines = scanLines(text);
+  // NORMALISE LINE ENDINGS ONCE, HERE, BEFORE ANYTHING SPLITS THE TEXT. `\r\n?` and not
+  // `\r\n`: the lone-CR case is the dangerous one. `scanLines` splits on `\n` only, so a
+  // CR-terminated file was ONE line, and `k: |-\r  a\r  b` parsed to the value "|-\r  a\r  b"
+  // — the block indicator itself became the content, silently. CRLF was milder and equally
+  // silent: every value kept an interior `\r`, and a CRLF blank line inside a block threw
+  // `unexpected indentation`. Measured against js-yaml 4.1.1: `\r\n?` fixes all three, `\r\n`
+  // alone fixes only the middle one, and widening the blankness predicate instead would leave
+  // TWO predicates over one source to disagree later. Normalising removes the condition.
+  const normalised = String(text).replace(/\r\n?/g, '\n');
+  const src = normalised.split('\n');
+  const lines = scanLines(normalised);
   if (lines.length === 0) return null;
   const base = lines[0].indent;
   for (const l of lines) {
     if (l.indent < base) throw new ClaimError('block is not consistently indented', l.n);
   }
-  const r = parseNode(lines, 0, base);
+  const r = parseNode(lines, 0, base, src);
   if (r.next !== lines.length) throw new ClaimError('unexpected trailing content', lines[r.next].n);
   return r.value;
 }

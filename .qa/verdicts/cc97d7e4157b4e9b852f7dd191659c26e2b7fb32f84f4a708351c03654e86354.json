@@ -1,0 +1,11 @@
+{
+  "subject": "cc97d7e4157b4e9b852f7dd191659c26e2b7fb32f84f4a708351c03654e86354",
+  "base": "62e0c26a0c02898922284ae02edb3c2851e1c3d3",
+  "tier": "irreversible",
+  "tier_driver": "scripts/lib/claims.js",
+  "verdict": "PASS",
+  "by": "builder/lane-b1-block-scalar",
+  "run_id": null,
+  "evidence": "npm run check: Tally 48 of 48 passed, 0 failed, exit 0, 155.9s, sandbox armed. node --test scripts/claims.test.mjs: 72 pass 0 fail. Mutation: HEAD~2 claims.js under the same tests -> 62 pass 10 fail, restore -> 72/0. Differential vs PyYAML 6.0.3 and js-yaml 4.1.1, 32 cases, both refs agreeing on all 32: 0 SUBSTANTIVE diffs after. Live corpus 44 docs: 1 SUBSTANTIVE before, 0 after; .claude/gates.yml unchanged at exactly 15 trailing-newline-only. Tier from scripts/classify.mjs: floor irreversible. CAVEAT: single model family, 2-of-3 multi-judge NOT met, accepted risk to 2026-11-17.",
+  "recorded_at": "2026-08-28T09:20:13.034Z"
+}
