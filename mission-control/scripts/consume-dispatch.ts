@@ -279,6 +279,10 @@ function routeGate(root: string): GateRouting {
       cwd: root,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
+      // NAMED, NOT CLOSED: run-gate.mjs is unbounded here — no `timeout`, no `maxBuffer`. It is
+      // PRE-EXISTING, this round did not introduce it, and the round must not imply it closed it.
+      // It fails safe (a throw becomes `decided: false`, never a pass), which is why it is recorded
+      // as a residual rather than fixed inside a change about something else.
     });
   } catch (err) {
     // EXIT 2 IS A REFUSAL THE ROUTER MEANT, AND IT PRINTS ITS REASON AS JSON ON STDOUT. Throwing
@@ -324,32 +328,54 @@ function routeGate(root: string): GateRouting {
   // now lands on `decided: false` — which is never a pass, never a spend, and carries its reason.
   // The alternative, reading it when present, is the exact "fell back to the only ref-shaped field
   // on offer" defect `run-gate.mjs` documents about its own `invocation` key.
+  // ── THE TIP MUST BE PINNED, OR THIS ROUTING IS REFUSED ───────────────────────────────────
+  //
+  // `verdictRef` IS REQUIRED and its `ref` must be a 40-hex sha. NARROWED DELIBERATELY — what the
+  // old predicate admitted and this one does not: a decided routing with `refTip: null`, explained
+  // by a `refTipReason`. What needed it: nothing that can succeed. A tip `verdict.mjs` cannot
+  // resolve cannot carry a binding verdict, so a panel launched under it buys a record that binds
+  // to nothing — and the dedupe key built on that null collapsed every unpinnable entry for a root
+  // into ONE key, failing toward SKIPPING a panel, which is the dangerous direction.
+  //
+  // THE ROUTER'S OWN REASON IS RELAYED, NEVER REPLACED BY THE SHAPE COMPLAINT. Measured on the
+  // shipped emitter: `verdictRefFor` has 5 null-ref returns and 5 of them carry a reason (control:
+  // 1 success return, `reason: null`), so every null tip it can produce arrives with its own
+  // account and refusing loses no diagnosis. Dropping it here would keep the verdict and delete
+  // the cause — the defect a sibling lane found one layer over, where a record captured `stdout`
+  // while every refusal went to `stderr`.
   const vr = parsed.verdictRef;
   const vrOk = typeof vr === 'object' && vr !== null && !Array.isArray(vr)
     && 'ref' in vr && 'reason' in vr;
-  const refTip = vrOk && typeof (vr as { ref: unknown }).ref === 'string'
-    ? (vr as { ref: string }).ref : null;
-  const refTipReason = vrOk && typeof (vr as { reason: unknown }).reason === 'string'
-    ? (vr as { reason: string }).reason : null;
-  // A2. THE SHAPE WAS CHECKED AND THE FORM WAS NOT. A router emitting
-  // `{ref: 'feat/my-branch', reason: null}` was accepted and recorded, and printed as
-  // `at feat/my-branch` in the resolved-tip position — reinstating the exact defect this field was
-  // added to close. The shipped router guards it, so this is unreachable from the real emitter;
-  // but the stated justification for REQUIRING the field is foreign or older routers in Phase-9
-  // targets, and that is precisely where the form is unguaranteed. Checking it costs one regex.
-  if (refTip !== null && !/^[0-9a-f]{40}$/.test(refTip)) {
+  if (!vrOk) {
+    // STRUCTURALLY REASONLESS, AND SAID SO. There is no `reason` field to read here, so this is a
+    // refusal with nothing to relay rather than one that dropped what it was given. "No reason
+    // given" and "the reason was discarded" must not render identically.
     return {
       decided: false,
-      why: `run-gate.mjs --json emitted a verdictRef.ref that is not a 40-hex sha ("${refTip.slice(0, 60)}"), so it names a moving target rather than a pinned tip`,
+      why: `run-gate.mjs --json carries no usable verdictRef {ref, reason}, so the tip could not be pinned and the top-level ref may be symbolic. The router supplied no explanation to relay: ${stdout.slice(0, 200)}`,
     };
   }
-  if (!vrOk || (refTip === null && refTipReason === null)) {
-    // A NULL TIP WITH NO REASON IS THE ONE SHAPE THAT MUST NOT PASS. The router's contract is a sha
-    // OR a null carrying why; a pair of nulls asserts neither, and would render as "tip UNRESOLVED"
-    // with nothing after it — a shrug wearing the costume of a measurement.
+  const refTip = typeof (vr as { ref: unknown }).ref === 'string' ? (vr as { ref: string }).ref : null;
+  const refTipReason = typeof (vr as { reason: unknown }).reason === 'string'
+    ? (vr as { reason: string }).reason : null;
+  const relayed = refTipReason !== null
+    ? `The router's own reason: ${refTipReason}`
+    : 'The router supplied no explanation to relay.';
+  if (refTip === null) {
     return {
       decided: false,
-      why: `run-gate.mjs --json carries no usable verdictRef {ref, reason}, so the tip this routing describes could not be pinned and the top-level ref may be symbolic: ${stdout.slice(0, 200)}`,
+      why: `run-gate.mjs --json emitted a verdictRef.ref of null, so no tip is pinned and nothing here can be gated or deduplicated. ${relayed}`,
+    };
+  }
+  // A2. THE SHAPE WAS CHECKED AND THE FORM WAS NOT. `{ref: 'feat/my-branch', reason: null}` was
+  // accepted and printed as `at feat/my-branch` in the resolved-tip position, reinstating the
+  // defect the field closes. NOTE, ACKNOWLEDGED AND NOT CHANGED: this also refuses a 64-hex tip,
+  // so a sha-256 object-format repository lands on `decided: false` — loudly, with a reason on the
+  // record and no panel spent. That is the safe direction and a deliberate limit, not an oversight.
+  if (!/^[0-9a-f]{40}$/.test(refTip)) {
+    return {
+      decided: false,
+      why: `run-gate.mjs --json emitted a verdictRef.ref that is not a 40-hex sha ("${refTip.slice(0, 60)}"), so it names a moving target rather than a pinned tip. ${relayed}`,
     };
   }
   if (files === 0) {
@@ -364,12 +390,9 @@ function routeGate(root: string): GateRouting {
     floor,
     files,
     ref,
+    // ALWAYS A PINNED SHA BY THE TIME WE REACH HERE. Every other case returned `decided: false`
+    // above, carrying the router's reason where one existed.
     refTip,
-    // ESTABLISHED, NOT DOCUMENTED. The field's comment promises "non-null exactly when `refTip` is
-    // null" and nothing enforced it, so a router sending both left a record contradicting its own
-    // type doc. A pinned tip needs no explanation, so the explanation is dropped rather than
-    // carried — which makes the invariant true by construction instead of by assertion.
-    refTipReason: refTip === null ? refTipReason : null,
     // VALIDATED, NOT CAST. An invocation is only carried forward when it has the three fields a
     // reader needs to act on it; anything else becomes `null` rather than a shape that looks
     // actionable and is not.
@@ -487,9 +510,13 @@ function shouldProduce(routing: GateRouting): { ask: true } | { ask: false; why:
  * printed in place of one — never the symbolic ref standing in for a resolution that did not happen.
  */
 function describeRef(routing: Extract<GateRouting, { decided: true }>): string {
-  return routing.refTip !== null
-    ? `at ${routing.refTip} (asked as "${routing.ref}")`
-    : `TIP UNRESOLVED for "${routing.ref}" — ${routing.refTipReason ?? 'no reason given'}`;
+  // ONE BRANCH NOW, BECAUSE THE OTHER BECAME UNREACHABLE. It rendered `TIP UNRESOLVED for "<ref>"`
+  // when `refTip` was null; a decided routing can no longer have one. The property that branch
+  // pinned — a tip that cannot be pinned must never be rendered as if it were resolved — is still
+  // asserted, at its new location: such a routing is refused, so nothing is rendered at all and no
+  // panel is spent. An unreachable branch is worse than an absent one: it looks like coverage, and
+  // the next reader reasons from a case that cannot occur.
+  return `at ${routing.refTip} (asked as "${routing.ref}")`;
 }
 
 /**
@@ -507,23 +534,46 @@ function describeRef(routing: Extract<GateRouting, { decided: true }>): string {
  * and the direction to be wrong in is the cheap one — a tip that cannot be pinned cannot carry a
  * binding verdict either, so a second panel for it buys nothing.
  */
-const subjectCache = new Map<string, string>();
-function spendKey(root: string, refTip: string | null): { key: string; subject: string | null } {
-  if (refTip === null) return { key: `${root}\u0000<unpinned>`, subject: null };
-  const cacheKey = `${root}\u0000${refTip}`;
-  const cached = subjectCache.get(cacheKey);
-  if (cached !== undefined) return { key: `${root}\u0000${cached}`, subject: cached };
+/**
+ * The subject a panel would be paid for — THE UNIT OF SPEND.
+ *
+ * `verdict.mjs subject` is the SAME INSTRUMENT that computes the binding, which is why the key is
+ * taken from it rather than derived a second way. Measured cost: 74ms / 71ms / 67ms over three
+ * runs, against a 40–50 minute panel — about thirty thousand to one.
+ *
+ * NOT CACHED, AND THE CACHE WAS REMOVED DELIBERATELY. It keyed `(root, tip) -> subject`, but the
+ * subject is `merge-base(origin/main, ref)..ref` — so if `origin/main` moves mid-run, one tip
+ * denotes different bytes and a cached answer is stale. Uncached, both entries recompute and
+ * separate correctly; cached, the second reuses the stale subject and is SKIPPED. The cache bought
+ * ~70ms per entry and widened an edge in the one direction that suppresses a panel, so it is gone.
+ * The edge itself — `origin/main` moving mid-run — is named and remains open at a smaller size.
+ *
+ * THE UNPINNED KEY FORM IS GONE TOO. `refTip` is now `string`, never null, because a routing that
+ * could not pin a tip is refused upstream; there is no third key shape and no per-root collapse.
+ */
+function spendKey(root: string, refTip: string): { key: string; subject: string | null } {
   const bin = path.join(root, 'scripts', 'verdict.mjs');
+  // THE FALLBACK IS BY TIP, AND IT IS STRICTLY NARROWER THAN THE SUBJECT KEY. Two entries sharing
+  // a tip share a diff, so it never merges what the subject would separate — it can only fail
+  // toward LAUNCHING, which is the safe direction. `subject: null` is returned honestly rather
+  // than putting this key into a field that claims to be a subject.
   const byTip = { key: `${root}\u0000tip:${refTip}`, subject: null };
   if (!fs.existsSync(bin)) return byTip;
   try {
     const out = execFileSync('node', [bin, 'subject', '--repo', root, '--ref', refTip, '--json'], {
-      cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      // BOUNDED. This spawn shipped with neither limit in the same round that extracted
+      // PRODUCER_SPAWN_LIMITS and added a test asserting the producer spawn declares both — the
+      // rule was written and the next call site did not get it. Its own timeout, because 70
+      // minutes is the wrong bound for a command measured at 74/71/67ms.
+      timeout: PRODUCER_SPAWN_LIMITS.subjectTimeoutMs,
+      maxBuffer: PRODUCER_SPAWN_LIMITS.maxBufferBytes,
     });
     const parsed = JSON.parse(out) as Record<string, unknown>;
     const subject = typeof parsed.subject === 'string' ? parsed.subject : null;
     if (subject === null) return byTip;
-    subjectCache.set(cacheKey, subject);
     return { key: `${root}\u0000${subject}`, subject };
   } catch {
     return byTip;
@@ -539,7 +589,7 @@ function spendKey(root: string, refTip: string | null): { key: string; subject: 
  * run, where five queue entries against one diff bought five panels because every filter was
  * per-entry while the thing being paid for is per-diff.
  */
-const launchedFor = new Map<string, string>();
+const launchedFor = new Map<string, { id: string; state: VerdictProduction['state'] }>();
 
 /** The operator-facing detail of a production state — three shapes, one accessor. */
 function productionDetail(v: VerdictProduction): string {
@@ -972,16 +1022,40 @@ function main() {
     //
     // Putting the producer ahead of this write withheld the terminal record for the WHOLE panel
     // window — measured, `status: running` with no `verdictProduction` at every 4-second sample
-    // across a 25s stand-in, against a control at `4ddc5c6` writing it at 0s. Kill the consumer in
-    // that window and the entry stays `running` forever; `inFlight()` then finds a dead pid,
-    // reconciles it, and a later run RE-DISPATCHES the goal — paying for a second panel. So an
-    // interrupted run did not merely lose a record, it could pay twice.
+    // across a 25s stand-in, against a control at `4ddc5c6` writing it at 0s.
+    //
+    // THIS COMMENT CLAIMED A DOUBLE PAYMENT AND THAT WAS FALSE. It said an interrupted run left the
+    // entry `running`, which `inFlight()` reconciled and a later run RE-DISPATCHED, paying for a
+    // second panel. Measured on both cells with the consumer stopped mid-panel: at this tip the
+    // second run says "Nothing to act on"; at the base it says "NO RESULT — the launching consumer
+    // is gone… NOT relaunching". NEITHER re-dispatches, and this suite already holds a test named
+    // `an entry left running resolves to no-result and is NOT relaunched`. The claim was inherited
+    // from a review synthesis and never checked against the code it described.
+    //
+    // WHAT THE REORDER REALLY BUYS, which is narrower and still worth having: it converts a LOUD
+    // permanent warning into a settled record. Ungated either way — but silent where it was loud,
+    // which is why the first write carries an explicit `unresolved` rather than nothing.
     //
     // Two appended lines for one id is exactly what the queue is for: it is append-only and
     // `resolveDispatchStates` reads the LAST line, so the settled state is durable from the first
     // write and the verdict is added to it by the second. If the process dies between them, the
     // entry is already terminal — `exited-clean` is `settled`, never `reconcilable`.
-    const settled: DispatchEntry = { ...routed, startedAt, gateRouting };
+    //
+    // Q4. THE FIRST LINE CARRIES AN EXPLICIT `unresolved`, NEVER SILENCE — and this is the fix for
+    // a defect the reorder itself introduced. Written with no `verdictProduction` at all, ABSENCE
+    // meant two things: "no producer was wired in this build" (what the field's own doc promises)
+    // and "a panel may have run and its outcome was lost". Two facts, one representation, in the
+    // change that was closing that class. A fail-safe value restores absence to meaning exactly
+    // one thing, can never be read as a pass, and stops the spend accounting under-counting.
+    const settled: DispatchEntry = {
+      ...routed,
+      startedAt,
+      gateRouting,
+      verdictProduction: {
+        state: 'unresolved',
+        reason: 'this line was written before the verdict step returned; a consumer that stopped here recorded no outcome, and none should be inferred',
+      },
+    };
     writeTerminal(settled, outcome, 'before the verdict step');
 
     const decision = shouldProduce(gateRouting);
@@ -995,19 +1069,28 @@ function main() {
       // for is per-DIFF — and a panel ending REFUSED writes no binding record, so the producer's
       // own short-circuit (PRODUCED or BLOCKED only) does not catch the second entry either. That
       // is the case where the money was already spent.
-      const { key, subject } = spendKey(entry.root, gateRouting.decided ? gateRouting.refTip : null);
+      const { key, subject } = spendKey(entry.root, gateRouting.decided ? gateRouting.refTip : '');
       const first = launchedFor.get(key);
       if (first !== undefined) {
+        // SAYS WHAT HAPPENED, NEVER WHAT IT HOPES HAPPENED. This asserted that a panel WAS
+        // launched, that it produced an outcome, and that the earlier record carries one — all
+        // three false against a producer that throws on its first line, and written durably anyway.
+        // The earlier attempt's STATE is recorded instead, so the reader is told rather than promised.
         verdictProduction = {
           state: 'already-launched',
-          subject: subject ?? key,
-          firstEntryId: first,
-          why: `a panel for this exact subject was already launched in this run by ${first.slice(0, 8)}; its record carries the outcome and this entry did not pay for a second`,
+          subject,
+          firstEntryId: first.id,
+          firstState: first.state,
+          why: `verdict production for this exact subject was already attempted in this run by ${first.id}, which recorded "${first.state}"; this entry started no second attempt. `
+            + (subject === null ? 'Deduplicated by resolved tip, because no subject could be computed.' : 'Deduplicated by subject.'),
         };
       } else {
-        launchedFor.set(key, entry.id);
         console.log('  Verdict production: the gate is required and no verdict is known to bind — running scripts/produce-verdict.mjs …');
         verdictProduction = produceVerdict(entry.root);
+        // RECORDED AFTER THE ATTEMPT, WHICH IS SOUND BECAUSE THIS LOOP IS SEQUENTIAL AND THE SPAWN
+        // IS SYNCHRONOUS: no later entry can be reached until this one has returned. Setting it
+        // beforehand is what made the record above claim an outcome that did not exist yet.
+        launchedFor.set(key, { id: entry.id, state: verdictProduction.state });
       }
       // WHAT IS PRINTED IS WHAT IS RECORDED. `state` is never rendered as a word the record does
       // not hold: an operator who reads "produced" here can find that exact value on the entry.

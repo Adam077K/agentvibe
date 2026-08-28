@@ -554,8 +554,13 @@ describe('consume-dispatch records a distinguishable outcome', () => {
     // line is durable before the panel window and carries no verdict; the last one carries it.
     const terminal = all.filter((e) => e.status === 'exited-clean');
     expect(terminal.length).toBe(2);
-    expect(terminal[0]?.verdictProduction).toBeUndefined();
-    expect(terminal[1]?.verdictProduction).toBeDefined();
+    // Q4. THE FIRST LINE CARRIES AN EXPLICIT `unresolved`, NOT SILENCE. Absent, it meant two
+    // things — "no producer was wired in this build" and "a panel may have run and its outcome was
+    // lost" — which is the ambiguity the reorder itself introduced.
+    expect(terminal[0]?.verdictProduction?.state).toBe('unresolved');
+    expect((terminal[0]?.verdictProduction as { reason: string }).reason).toContain('before the verdict step returned');
+    expect(terminal[1]?.verdictProduction?.state).toBeDefined();
+    expect(terminal[1]?.verdictProduction?.state).not.toBe('unresolved');
   });
 
   test('an entry left `running` resolves to `no-result` and is NOT relaunched', () => {
@@ -1130,8 +1135,10 @@ describe('a dispatch records what the gate router decided about its output', () 
     // THE RESOLVED TIP IS RECORDED BESIDE THE ASKED-FOR REF, not instead of it. `ref` above is a
     // symbolic range; this is the immutable thing a reader should quote.
     expect(r.refTip).toBe('abc123abc123abc123abc123abc123abc123abcd');
-    expect(r.refTipReason).toBeNull();
     expect(r.refTip).not.toBe(r.ref);
+    // `refTipReason` IS GONE, not renamed: a decided routing always has a pinned tip now, so there
+    // is nothing for it to explain. The property it carried moved to the refusal path below.
+    expect(r).not.toHaveProperty('refTipReason');
   });
 
   test('THE HONEST SHAPE: `required: true` sits beside no verdict, and none can be written', () => {
@@ -1212,18 +1219,44 @@ describe('a dispatch records what the gate router decided about its output', () 
     expect(r.refTip).not.toBe(r.ref);
   });
 
-  test('an UNPINNABLE tip is recorded as null WITH THE ROUTER\u2019S REASON, never as the symbolic ref', () => {
+  // CONVERTED, NOT DELETED. This asserted that an unpinnable tip is RECORDED as null with the
+  // router's reason. A decided routing can no longer hold a null tip, so the property moved: such a
+  // routing is REFUSED, nothing is rendered, and no panel is spent. Same property, new location —
+  // deleting the cell would have dropped it, and a deletion attracts no test cases.
+  test('an UNPINNABLE tip is REFUSED, and the router\u2019s own reason is relayed verbatim', () => {
+    const reason = 'the range uses "..", not "..."';
     const last = routerFixture('mc-router-nopin-', emits({
       ...REAL_SHAPE,
       ref: 'origin/main..d1294a4',
-      verdictRef: { ref: null, reason: 'the range uses "..", not "..."' },
+      verdictRef: { ref: null, reason },
     }));
-    const r = last.gateRouting as Extract<typeof last.gateRouting, { decided: true }>;
-    expect(r.refTip).toBeNull();
-    expect(r.refTipReason).toContain('not "..."');
-    // AND THE NULL DID NOT SILENTLY BECOME THE SYMBOLIC REF, which is the substitution that would
-    // make an unresolvable tip indistinguishable from a resolved one.
-    expect(r.refTip).not.toBe(r.ref);
+    expect(last.gateRouting?.decided).toBe(false);
+    const why = (last.gateRouting as { why: string }).why;
+    // REQUIREMENT 2: the diagnosis survives the refusal. Keeping the verdict and dropping the cause
+    // is the defect a sibling lane found one layer over.
+    expect(why).toContain(reason);
+    expect(why).toContain('verdictRef.ref of null');
+    // AND THE SYMBOLIC REF WAS NOT SUBSTITUTED FOR THE MISSING TIP.
+    expect(why).not.toContain('at origin/main..d1294a4 ');
+    // NO PANEL: a refusal is never a spend.
+    expect(last.verdictProduction?.state).toBe('not-asked');
+  });
+
+  test('a refusal with NO router reason SAYS SO, rather than issuing a bare shape complaint', () => {
+    // "No reason given" and "the reason was discarded" must not render identically. These two paths
+    // are structurally reasonless \u2014 there is no `reason` field to read \u2014 and they say that.
+    const noField = routerFixture('mc-router-noreason-a-', emits({ ...REAL_SHAPE, verdictRef: 'not-an-object' }));
+    expect((noField.gateRouting as { why: string }).why).toContain('supplied no explanation to relay');
+    const bothNull = routerFixture('mc-router-noreason-b-', emits({ ...REAL_SHAPE, verdictRef: { ref: null, reason: null } }));
+    expect((bothNull.gateRouting as { why: string }).why).toContain('supplied no explanation to relay');
+    // CONTROL ON THE SAME ARM: a router that DID explain itself gets its words relayed, so the two
+    // assertions above are not satisfied by a build that prints that sentence unconditionally.
+    const explained = routerFixture('mc-router-noreason-c-', emits({
+      ...REAL_SHAPE, verdictRef: { ref: null, reason: 'an explicit --files list' },
+    }));
+    const why = (explained.gateRouting as { why: string }).why;
+    expect(why).toContain('an explicit --files list');
+    expect(why).not.toContain('supplied no explanation to relay');
   });
 
   // EACH CONJUNCT OF THE WIDENED PREDICATE GETS ITS OWN CASE, or some conjunct is decoration.
@@ -1684,6 +1717,16 @@ describe('classifyVerdictProduction — the exit code is a receipt, the payload 
     const src = fs.readFileSync(path.join(REPO_ROOT, 'mission-control', 'scripts', 'consume-dispatch.ts'), 'utf8');
     expect(src).toContain('timeout: PRODUCER_SPAWN_LIMITS.timeoutMs');
     expect(src).toContain('maxBuffer: PRODUCER_SPAWN_LIMITS.maxBufferBytes');
+    // F4. THE SECOND SPAWN SHIPPED WITH NEITHER BOUND, in the round that extracted these limits and
+    // added the assertion above. Its own timeout, because 70 minutes is the wrong bound for a
+    // command measured at 74/71/67ms — and much shorter than the panel's, asserted so a later edit
+    // cannot quietly give it the panel budget.
+    expect(PRODUCER_SPAWN_LIMITS.subjectTimeoutMs).toBeGreaterThan(0);
+    expect(PRODUCER_SPAWN_LIMITS.subjectTimeoutMs).toBeLessThan(PRODUCER_SPAWN_LIMITS.timeoutMs);
+    expect(src).toContain('timeout: PRODUCER_SPAWN_LIMITS.subjectTimeoutMs');
+    // NAMED, NOT CLOSED: routeGate's own spawn is unbounded and PRE-EXISTING. This round did not
+    // fix it and must not imply it did.
+    expect(src).toContain('run-gate.mjs is unbounded');
   });
 
   test('ANTI-DRIFT: the REAL produce-verdict.mjs still spells its states and codes this way', () => {
@@ -1734,7 +1777,7 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
    */
   function producerFixture(
     prefix: string,
-    opts: { router: string | null; producer: string | null; args?: string[]; ids?: string[] },
+    opts: { router: string | null; producer: string | null; args?: string[]; ids?: string[]; noVerdictBin?: boolean },
   ) {
     const dir = mkTmpDir(prefix);
     cleanupDirs.push(dir);
@@ -1746,6 +1789,16 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
     installHarness(root);
     if (opts.router !== null) fs.writeFileSync(path.join(root, 'scripts', 'run-gate.mjs'), opts.router);
     if (opts.producer !== null) fs.writeFileSync(path.join(root, 'scripts', 'produce-verdict.mjs'), opts.producer);
+    // F2. WITHOUT THIS THE SUBJECT BRANCH IS NEVER EXECUTED. `installHarness` writes no
+    // `scripts/verdict.mjs`, so `existsSync` was false in every fixture and every test deduped by
+    // TIP while production takes the SUBJECT path — a `throw` tripwire at the top of that branch
+    // left the suite byte-identical. The wrong-suite class, in my own fixtures.
+    if (!opts.noVerdictBin) {
+      fs.writeFileSync(
+        path.join(root, 'scripts', 'verdict.mjs'),
+        `console.log(JSON.stringify({subject:${JSON.stringify(FIXTURE_SUBJECT)}}));\n`,
+      );
+    }
     // F1. THE LAUNCH LOGS TO THE SAME FILE, SO ORDER BECOMES AN ASSERTION RATHER THAN A COMMENT.
     // The producer must run AFTER the dispatch commits, because the subject hashes the diff — and
     // moving the whole verdict block above the launch left `tsc` clean and this suite byte-identical
@@ -1875,6 +1928,8 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
   });
 
   const RESOLVED = 'abc123abc123abc123abc123abc123abc123abcd';
+  /** What the fixture `verdict.mjs` reports as the subject — named so assertions can name it. */
+  const FIXTURE_SUBJECT = 'deadbeef'.repeat(8);
 
   // ── F2 · AN OPT-OUT THAT FAILS OPEN IS NOT AN OPT-OUT ──────────────────────────────────
   //
@@ -1936,17 +1991,19 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
     expect(runs).toBe(0);
   });
 
-  test('a verdictRef carrying BOTH a tip and a reason records the reason as null', () => {
-    // The field's doc promises "non-null exactly when `refTip` is null" and nothing enforced it, so
-    // a router sending both left a record contradicting its own type doc. Established now, not
-    // documented: a pinned tip needs no explanation, so the explanation is dropped.
+  test('a verdictRef carrying BOTH a tip and a reason is ACCEPTED, and only the tip is kept', () => {
+    // The invariant "a reason exists exactly when no tip does" used to be a doc-comment nothing
+    // enforced, then a normalisation. It is structural now \u2014 there is no field to hold a reason on
+    // a decided routing \u2014 so what is worth pinning is that a router sending both is not REFUSED for
+    // it: the extra reason is surplus, not a shape violation, and refusing would cost a panel.
     const { entry } = producerFixture('mc-invariant-', {
       router: ROUTER({ gateRequired: false, verdictRef: { ref: RESOLVED, reason: 'both were set' } }),
       producer: PRODUCER({ outcome: 'PRODUCED', reason: 'never reached' }, 0),
     });
     const r = entry.gateRouting as Extract<typeof entry.gateRouting, { decided: true }>;
+    expect(r.decided).toBe(true);
     expect(r.refTip).toBe(RESOLVED);
-    expect(r.refTipReason).toBeNull();
+    expect(JSON.stringify(entry)).not.toContain('both were set');
   });
 
   // ── E1 · WHAT `describeRef` RETURNS, NOT MERELY THAT IT IS REACHED ─────────────────────
@@ -1984,19 +2041,24 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
     expect(why).not.toContain('at origin/main...abc123)');
   });
 
-  test('an UNPINNABLE tip renders TIP UNRESOLVED with the reason \u2014 never the symbolic ref', () => {
+  // CONVERTED, NOT DELETED \u2014 the second half of the same collapse. `describeRef` no longer has a
+  // TIP UNRESOLVED branch because a decided routing cannot have a null tip. The property survives:
+  // an unpinnable tip is never rendered as if it were resolved, because it is never rendered.
+  test('an UNPINNABLE tip is never RENDERED at all \u2014 the routing is refused first', () => {
     const reason = 'the range uses "..", not "..."';
     const { stdout, entry } = producerFixture('mc-desc-unpinned-', {
       router: ROUTER({ gateRequired: false, verdictRef: { ref: null, reason } }),
       producer: PRODUCER({ outcome: 'PRODUCED', reason: 'never reached' }, 0),
     });
+    // NOTHING IS RENDERED IN THE RESOLVED-TIP POSITION, in either surface.
     for (const text of [stdout, (entry.verdictProduction as { why: string }).why]) {
-      expect(text).toContain('TIP UNRESOLVED for "origin/main...abc123"');
-      expect(text).toContain(reason);
-      // THE SUBSTITUTION THAT MUST NOT HAPPEN: a null tip quietly rendered as the symbolic ref,
-      // which would make an unresolvable tip indistinguishable from a resolved one.
-      expect(text).not.toContain(`at origin/main...abc123`);
+      expect(text).not.toContain('at origin/main...abc123');
+      expect(text).not.toContain('TIP UNRESOLVED');
     }
+    // THE ROUTING IS REFUSED AND THE REASON IS RELAYED \u2014 the property, at its new location.
+    expect(entry.gateRouting?.decided).toBe(false);
+    expect((entry.gateRouting as { why: string }).why).toContain(reason);
+    expect(stdout).toContain('Gate routing: UNDECIDED');
   });
 
   // ── A1 · N ENTRIES, ONE DIFF, ONE PANEL ────────────────────────────────────────────────
@@ -2025,10 +2087,40 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
     expect(states).toEqual(['already-launched', 'already-launched', 'already-launched', 'already-launched', 'unresolved']);
     // THE SKIP HAS ITS OWN STATE AND NAMES WHO PAID \u2014 `not-asked` already means something else.
     const skipped = current.filter((e) => e.verdictProduction?.state === 'already-launched');
+    expect(skipped.length).toBe(4);
     for (const e of skipped) {
-      const v = e.verdictProduction as { firstEntryId: string; subject: string };
-      expect(five).toContain(v.firstEntryId);
-      expect(typeof v.subject).toBe('string');
+      const v = e.verdictProduction as { firstEntryId: string; subject: string | null; firstState: string };
+      // NAMED, NOT MERELY SHAPED. `expect(five).toContain(...)` survived `firstEntryId: entry.id` —
+      // the skipped entry naming ITSELF as the payer — because membership is not identity. And
+      // `typeof === 'string'` survived `subject: 'NOT-A-SUBJECT'`.
+      expect(v.firstEntryId).toBe('e1');
+      expect(v.firstEntryId).not.toBe(e.id);
+      expect(v.subject).toBe(FIXTURE_SUBJECT);
+      // AND THE RECORD REPORTS WHAT THE EARLIER ATTEMPT ESTABLISHED rather than promising one.
+      expect(v.firstState).toBe('unresolved');
+      expect((e.verdictProduction as { why: string }).why).toContain('recorded "unresolved"');
+      expect((e.verdictProduction as { why: string }).why).toContain('Deduplicated by subject');
+    }
+  });
+
+  test('with NO verdict.mjs the run dedupes by TIP, reports subject null, and still spends once', () => {
+    // THE FALLBACK BRANCH, covered explicitly rather than by accident. It is strictly narrower than
+    // the subject key — entries sharing a tip share a diff — so it can only fail toward LAUNCHING.
+    const { entries, runs, launches } = producerFixture('mc-prod-notip-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'REFUSED', reason: 'nothing established' }, 2),
+      ids: ['e1', 'e2', 'e3'],
+      noVerdictBin: true,
+    });
+    expect(runs).toBe(1);
+    expect(launches).toBe(3);
+    const skipped = resolveDispatchStates(entries).filter((e) => e.verdictProduction?.state === 'already-launched');
+    expect(skipped.length).toBe(2);
+    for (const e of skipped) {
+      // `subject: null` IS THE HONEST VALUE. This field held `<root>\0tip:<sha>` — a KEY — while its
+      // doc called it "the subject shared with the entry that did pay".
+      expect((e.verdictProduction as { subject: string | null }).subject).toBeNull();
+      expect((e.verdictProduction as { why: string }).why).toContain('Deduplicated by resolved tip');
     }
   });
 

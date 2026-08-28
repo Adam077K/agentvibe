@@ -549,15 +549,22 @@ export type GateRouting =
        */
       ref: string;
       /**
-       * The resolved 40-hex tip the router pinned, or `null` when it could not pin one.
+       * The resolved 40-hex tip the router pinned. **NEVER NULL** — a routing that could not pin a
+       * tip is `decided: false`, carrying the router's own reason.
        *
-       * THE VALUE A READER SHOULD QUOTE. Taken from the router's own `verdictRef`, which exists for
-       * exactly this and is emitted on BOTH its paths. `null` is never "the tip is fine"; it comes
-       * with `refTipReason`, and the two are read together or not at all.
+       * THE VALUE A READER SHOULD QUOTE, and the only one. This was `string | null` beside a
+       * `refTipReason` explaining the null, which put a third state into a type whose whole job is
+       * to make the tip unambiguous — and the dedupe key built on it then collapsed every
+       * unpinnable entry to ONE key per root, failing toward SKIPPING a panel. Measured on the
+       * shipped router: 5 of 5 null-tip returns carry a reason, so refusing loses no diagnosis.
+       *
+       * WHAT THE OLD FORM ADMITTED AND THIS ONE DOES NOT: a decided routing with no pinned tip.
+       * What needed it: nothing that can succeed — a tip `verdict.mjs` cannot resolve cannot carry
+       * a binding verdict either, so a panel launched under it buys a record that binds to nothing.
+       * What reached it: only a foreign or older router, the same population that motivates
+       * requiring the field at all.
        */
-      refTip: string | null;
-      /** Why no tip could be pinned. Non-null exactly when `refTip` is null. */
-      refTipReason: string | null;
+      refTip: string;
       /** What would run the gate. Present when one is required. */
       invocation: GateInvocation | null;
     }
@@ -623,10 +630,27 @@ export type VerdictProduction =
        * this", and it would hide that a panel DID run for these bytes, one entry earlier.
        */
       state: 'already-launched';
-      /** The subject shared with the entry that did pay for it. */
-      subject: string;
-      /** The id of the entry whose launch this one rode on — the record that carries the outcome. */
+      /**
+       * The subject shared with the earlier entry, or `null` when no subject could be computed and
+       * the run deduped by resolved tip instead.
+       *
+       * IT WAS TYPED `string` AND DOCUMENTED AS "the subject shared with the entry that did pay",
+       * while the fallback path put a KEY in it — `<root>\0tip:<sha>`, which is not a subject and
+       * never was. A field whose documentation is true on one branch is a field a reader is
+       * entitled to misread on the other.
+       */
+      subject: string | null;
+      /** The id of the entry that made the earlier attempt. Never this entry's own id. */
       firstEntryId: string;
+      /**
+       * What that earlier attempt established, so this record does not have to promise it.
+       *
+       * THE `why` USED TO ASSERT THREE THINGS IT COULD NOT KNOW — that a panel was launched, that
+       * it produced an outcome, and that the earlier record carries one. With a producer that
+       * throws on its first line, all three were false and the record said them anyway. Recording
+       * the earlier STATE means the reader is told what happened instead of promised it.
+       */
+      firstState: VerdictProduction['state'];
       why: string;
     };
 
@@ -634,8 +658,12 @@ export type VerdictProduction =
  * Every state, from ONE table, for the same reason `DISPATCH_STATUS_KIND` is one table.
  *
  * `spend` says whether reaching this state can have cost a panel run (2.5–3.8M tokens, 40–50
- * minutes). It is what makes the cost decision auditable from the record rather than from the
- * consumer's source, and `satisfies` means a new state cannot be added without answering it.
+ * minutes), and `satisfies` means a new state cannot be added without answering it.
+ *
+ * NOTHING READS THIS PROGRAMMATICALLY, AND THE SENTENCE HERE USED TO IMPLY OTHERWISE. It said the
+ * marking "makes a run's total spend readable off the queue" — true only of a person opening the
+ * file, because zero readers exist for the field in `server/` or anywhere else. It is a
+ * documented invariant a future reader could total by hand, not a feature.
  */
 const VERDICT_PRODUCTION_SPEND = {
   produced: 'maybe',
@@ -701,6 +729,15 @@ const PRODUCER_OUTCOME_STATE = {
 export const PRODUCER_SPAWN_LIMITS = {
   timeoutMs: 70 * 60 * 1000,
   maxBufferBytes: 16 * 1024 * 1024,
+  /**
+   * The bound for `verdict.mjs subject`, which is a hash of a diff and not a panel.
+   *
+   * ITS OWN NUMBER, because 70 minutes is the wrong bound for a 70-millisecond command — measured
+   * at 74/71/67ms. A round that extracted these limits and added a test asserting the producer
+   * spawn declares both then introduced a SECOND spawn with neither, which is the shape of every
+   * control this repo has lost: the rule was written and the next call site did not get it.
+   */
+  subjectTimeoutMs: 60 * 1000,
 } as const;
 
 /** The completed spawn of the producer, normalised — the only input the classification reads. */
@@ -797,6 +834,11 @@ export function classifyVerdictProduction(run: ProducerRun): VerdictProduction {
       ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
     };
   }
+  // KEPT, AND INERT TODAY — stated rather than implied. Reverting this half to `in` is provably
+  // equivalent while the keys are the numbers 0–3: no prototype member coerces to "0".."3", so
+  // there is no input that separates them and no test can fail for it. It is symmetry with the
+  // outcome table above, where the same change IS falsifiable and its test fires, kept so the two
+  // lookups cannot drift if this table ever gains a string key. It prevents nothing right now.
   const expected = typeof run.status === 'number'
     && Object.prototype.hasOwnProperty.call(PRODUCER_EXIT_STATE, run.status)
     ? PRODUCER_EXIT_STATE[run.status as keyof typeof PRODUCER_EXIT_STATE]
@@ -1179,6 +1221,13 @@ export interface DispatchEntry {
    * about the dispatch, and different from every state the field can hold. `{state: 'not-asked'}`
    * means this build had a producer and decided not to spend it, and says which reason applied.
    * Neither is ever a pass, and neither may be read as one.
+   *
+   * THAT SENTENCE WAS BRIEFLY FALSE AND IS TRUE AGAIN. Writing the terminal record before the
+   * verdict step left a durable line with this field absent, so absence also meant "a panel may
+   * have run and its outcome was lost" — two facts in one representation, introduced by the fix
+   * that reordered the writes. Every line this build emits after a launch now carries the field,
+   * starting with an explicit `unresolved` written before the producer returns, so absence is once
+   * more a statement about the build alone.
    */
   verdictProduction?: VerdictProduction;
 }
