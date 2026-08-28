@@ -264,8 +264,9 @@ test('block scalars nest — inside a mapping and inside a sequence item', () =>
 //      `parseFrontmatter` (line 173) — so the live blast radius is 15 + 1 = 16.
 //      (An earlier version of this comment said "21" and did not add up to 39.)
 //   3. It is not the only remaining gap, and this file no longer claims it is. The
-//      four that remain are enumerated in `scripts/lib/claims.js` above
-//      `readBlockScalar` and each has a test below.
+//      enumeration lives in `scripts/lib/claims.js` above `readBlockScalar`, and that
+//      comment is the ONE place the count is written — so it can grow without stranding a
+//      figure here. Every row there has a test in this file.
 //
 // If this test is ever deleted, the reason above goes with it. Change the policy by
 // changing this test first.
@@ -275,8 +276,13 @@ test('DECISION: chomping is "strip" for all four indicators, and clip is refused
   assert.equal(parseYamlSubset(`k: |-\n  alpha\n`).k, 'alpha');   // YAML strip: agrees
   assert.equal(parseYamlSubset(`k: >-\n  alpha\n`).k, 'alpha');   // YAML strip: agrees
   // Stated as an identity, and scoped to what it is: on THIS input, `|` differs from a
-  // conforming parser by exactly one trailing newline. It is divergence 1 of 4, not the
-  // whole gap — the other three are pinned by the three tests that follow.
+  // conforming parser by exactly one trailing newline. It is the CHOMPING row of that
+  // enumeration — row 1, an ordinal kept because the sibling tests are titled `DIVERGENCE
+  // 2`..`DIVERGENCE 5` and are found by that name. NO DENOMINATOR IS WRITTEN HERE: this
+  // read "divergence 1 of 4", the enumeration went to five, and the stale count outlived
+  // the round that retired it — inside the diff whose whole thesis is that a comment
+  // cannot keep a count. The others do NOT follow this test; unrelated tests sit between
+  // them, which is why they are named rather than pointed at by position.
   const conforming = 'alpha\n';
   assert.equal(parseYamlSubset(`k: |\n  alpha\n`).k, conforming.replace(/\n$/, ''));
 });

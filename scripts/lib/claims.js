@@ -267,7 +267,9 @@ function splitTopLevelColon(s) {
 // reference is resolvable on CI. Such a sweep could therefore only ever be developer-run and
 // advisory, never blocking. That is why this comment is SCOPED instead: it claims what has
 // been enumerated and measured, and claims nothing about what has not. Read "divergence"
-// below as "inside a block scalar"; outside them the parser is a documented subset and
+// below as "inside a block scalar", with ONE declared exception: row 4 also names a
+// consequence of the same mechanism in a QUOTED scalar, and flags that in place rather than
+// relying on this sentence. Outside block scalars the parser is a documented subset and
 // diverges on anchors, tags, `0x10`, and multi-line plain and quoted scalars by design.
 //
 //   1. Chomping is `strip`, not `clip` — `|`/`>` drop a trailing newline the references keep.
