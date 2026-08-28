@@ -535,6 +535,35 @@ export type DispatchRoute = 'orchestrator-playbook' | 'bare-print';
  *   `underivable`  — the derivation itself failed (no agent file, no `tools:` line). Distinct from
  *                    `unreachable` on purpose: "I checked and it cannot" is not "I could not check",
  *                    and a resolver never passes what it could not check.
+ *
+ * WHY `unverified` IS NOT REDUNDANT, WHICH IS THE ONE THING A READER WILL DOUBT. It looks like the
+ * state that never happens: if an agent declares the gate tool, surely it has it. It does not
+ * follow. A DECLARED `tools:` LIST IS AN UPPER BOUND ON THE DELIVERED SET, NOT THE SET.
+ *
+ * That asymmetry is what makes each member sound in its own direction:
+ *
+ *   · `unreachable` is sound because the bound holds downward — a tool ABSENT from the declaration
+ *     cannot be delivered, so "no `Workflow` declared" really is "the gate could not have run".
+ *   · `unverified` is sound because the bound does NOT hold upward — a tool PRESENT in the
+ *     declaration may still not arrive, so "the gate is reachable" was never something this
+ *     consumer could assert. It reports that it observed no verdict, which is all it knows.
+ *
+ * MEASURED, AND NOT BY THIS LANE — the #122 reviewer, 2026-08-28, `claude 2.1.246`. Declared →
+ * advertised at init: orchestrator 7 → 5, builder 6 → 4, reviewer 4 → 2, sourcer 5 → 5. `Glob` and
+ * `Grep` are dropped exactly when `Bash` is declared beside them, and sourcer is the control: it
+ * declares no `Bash` and loses nothing. The declared column is re-derived from the agent files in
+ * this repo; the advertised column is that reviewer's measurement and is NOT re-derived here.
+ *
+ * DO NOT READ THAT AS PESSIMISM ABOUT `Workflow` SPECIFICALLY — it is not in the dropped class.
+ * The same review ran the arm: `[Read, Bash, Workflow]` → `[Read, Bash, Workflow]`, kept, against
+ * `[Read, Glob]` + `Bash` → `[Read, Bash]`. Same declared change, opposite outcomes.
+ *
+ * AND YET `unverified` STILL STANDS, for a reason worth stating precisely: that observation is
+ * INLINE — a tool set supplied directly — and no agent FILE declaring `Workflow` has been observed
+ * at all, because none exists to observe (0 of 7 declare it; control, 7 of 7 declare `Read`). The
+ * path this function reads is the file path. So "a declaration would be delivered" is established
+ * for the inline case and OPEN for the one that would actually flip this value, which is exactly
+ * the shape of knowledge `unverified` exists to carry.
  */
 export type GateOutcome = 'unreachable' | 'unverified' | 'underivable';
 
