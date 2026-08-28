@@ -1,0 +1,11 @@
+{
+  "subject": "b0d13c56c216acb46cabd8083e83c242364964b000588e0ec4373d970b08731f",
+  "base": "0c78fa2813fc9d47291b339e3571a7e165c15074",
+  "tier": "full",
+  "tier_driver": "scripts/check-citations.mjs",
+  "verdict": "PASS",
+  "by": "builder-sweep-buckets",
+  "run_id": null,
+  "evidence": "npm run check 48/48 exit 0; check-dispatch 30/30 with 4 checker mutants red; check-citations 62/62 with 4 identity + 2 cross-count + 3 data mutants red; both postures unchanged (check:citations-exist blocks, drift WARNs); STEPS.length=48 unchanged",
+  "recorded_at": "2026-08-26T20:10:26.756Z"
+}
