@@ -93,14 +93,13 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:ledger` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/ledger.test.mjs` |
 | `npm run test:lenses` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs` |
 | `npm run test:memory` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-memory-budget.test.mjs` |
-| `npm run test:merge-gate` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs` |
+| `npm run test:merge-gate` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs scripts/produce-verdi` |
 | `npm run test:playbooks` | `node --require ./scripts/protected-write-tripwire.cjs --test --test-concurrency=1 scripts/playbooks.test.mjs s` |
 | `npm run test:pre-tool-use` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-agent-tool-inheritance` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-agent-tool-inheritance.test.mjs` |
 | `npm run test:probe-readonly` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs` |
 | `npm run test:probe-stop-reason` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-stop-reason.test.mjs` |
 | `npm run test:probe-workflow-reach` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-workflow-reach.test.mjs` |
-| `npm run test:produce-verdict` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/produce-verdict.test.mjs` |
 | `npm run test:protected-write` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/protected-write.test.mjs` |
 | `npm run test:provenance` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/provenance-portability.test.mjs` |
 | `npm run test:registration` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-registration.test.mjs` |

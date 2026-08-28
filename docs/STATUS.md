@@ -103,7 +103,7 @@ tense and every one of them described a state the same commit had already remove
    > maintenance problem to try harder at — **it is evidence the line was the wrong shape**, so the sha is
    > gone and only the command remains. Each of the previous three corrections replaced one dead sha with a
    > fresh one, and each bought less than a day.*
-2. **The local floor is GREEN — `49 of 49 passed · 0 failed`, verified here — and a runner has now
+2. **The local floor is GREEN — `48 of 48 passed · 0 failed`, verified here — and a runner has now
    confirmed THIS suite, not only the 46-step one it supersedes (`REPORTED`).** See §1 and §4.
    ***`REPORTED`, not verified here:*** *CI run `33011321018` on `d1294a4` finished `success` —
    **57 of 57 steps, 0 failed, 0 skipped**, read through `actions/runs/<id>/jobs` and `jobs[].steps`
@@ -240,7 +240,7 @@ Two things a reader should not over-read:
 
 **TREATED IN THIS CHANGE, as `e5eac9f`** (`git merge-base --is-ancestor e5eac9f HEAD` → true).
 
-`.github/workflows/ci.yml` now runs **50 steps in a single job (`checks`), and all 50 carry
+`.github/workflows/ci.yml` now runs **49 steps in a single job (`checks`), and all 49 carry
 `if: ${{ !cancelled() }}`.** Derived through the repo's own ci.yml parser rather than by `grep` — read the
 hazard note below before you reach for `grep` here:
 
@@ -248,7 +248,7 @@ hazard note below before you reach for `grep` here:
 node -e "const fs=require('fs'),{parseCiSteps}=require('./scripts/lib/check-suite.js');
 const r=parseCiSteps(fs.readFileSync('.github/workflows/ci.yml','utf8')).filter(s=>s.run);
 console.log(r.length, r.filter(s=>/!cancelled\(\)/.test(String(s.if||''))).length)"
-→  50 50
+→  49 49
 ```
 
 > ***This derivation used to be two `grep -c` recipes, and on the machine this repo is developed on one of
@@ -295,8 +295,8 @@ console.log(r.length, r.filter(s=>/!cancelled\(\)/.test(String(s.if||''))).lengt
 > `$`, or fall back to `/usr/bin/grep`.*
 
 Three further `uses:` setup steps (checkout, setup-node, setup-bun) carry **no** `if:`, deliberately: if
-checkout fails, `!cancelled()` is still true, so guarding them would run all 50 checks against an empty
-workspace and produce 51 red steps instead of one. That is a diagnosability cost, not a fail-open one — the
+checkout fails, `!cancelled()` is still true, so guarding them would run all 49 checks against an empty
+workspace and produce 50 red steps instead of one. That is a diagnosability cost, not a fail-open one — the
 job still fails and nothing ships. `!cancelled()` and not `always()`, so a cancelled run still stops.
 
 > *Superseded 2026-08-26. This read: "`.github/workflows/ci.yml` runs **30 steps in a single job (`checks`)
@@ -368,7 +368,7 @@ CODEOWNERS in the tree today (verified). On a solo repository it would also dead
 ## 4 · The local floor is green
 
 ```
-npm run check  →  49 of 49 passed · 0 failed · exit 0
+npm run check  →  48 of 48 passed · 0 failed · exit 0
 ```
 
 macOS, sandbox armed, measured 2026-08-26 in this worktree, on the branch named once in §1. **Re-derive
@@ -391,9 +391,9 @@ tree has moved and this line is stale; that answer is worth more than knowing wh
 > §1: cite a thing that holds still, not a position that does not.*
 
 Derive the denominator, never quote it:
-`node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **49**.
+`node -e "console.log(require('./scripts/lib/check-suite.js').STEPS.length)"` → **48**.
 
-**`49 of 49 · 0 failed` is the figure. It is not 48 and it is not 50.**
+**`48 of 48 · 0 failed` is the figure. It is not 47 and it is not 49.**
 
 > *Superseded 2026-08-26, twice, and **the two moves are not the same kind of move** — which is the whole
 > reason this note is longer than a number swap.*
