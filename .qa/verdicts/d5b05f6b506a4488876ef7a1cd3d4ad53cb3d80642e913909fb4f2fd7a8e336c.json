@@ -1,0 +1,11 @@
+{
+  "subject": "d5b05f6b506a4488876ef7a1cd3d4ad53cb3d80642e913909fb4f2fd7a8e336c",
+  "base": "244e8db3a1d8103ef79bec13467d3dcb2ad44cdd",
+  "tier": "full",
+  "tier_driver": "scripts/check-gates.mjs",
+  "verdict": "PASS",
+  "by": "builder-surface-wiring",
+  "run_id": null,
+  "evidence": "npm run check 46/46 pass 0 fail; 63 constructed-failure cases; fourteen break-tests each exit 1 then restored green, incl. R113's exact F1 exploit (repoint run: at a library -> shape check still exits 0, pin catches it), F2 step removal caught by the sibling file, F7 gate drop, F4 identical frontmatter; single author, single model family, no independent reviewer at this head",
+  "recorded_at": "2026-08-26T14:32:01.512Z"
+}

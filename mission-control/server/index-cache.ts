@@ -371,11 +371,103 @@ export function dispatchQueuePath(): string {
 }
 
 /**
+ * The states a dispatch can be in, and the reason there are five rather than two.
+ *
+ * THIS UNION USED TO BE `'pending' | 'consumed'`, AND THAT MADE FAILURE UNREPRESENTABLE.
+ * consume-dispatch.ts had to write `status: ok ? 'consumed' : 'consumed'` — a real line, not a
+ * caricature — so a launch that exited non-zero produced a durable record BYTE-IDENTICAL to one
+ * that succeeded. Measured 2026-08-26 against a fake `claude` exiting 3: both runs appended
+ * `"status":"consumed"`, differing in nothing. The failure was mentioned once on a console
+ * nobody reads and was absent from the only record that persists.
+ *
+ * That is this repo's recurring shape — `findings: []` read as *clean*, `0 matches` read as
+ * *absence* — an assertion accepted where evidence was required. The cure is not a better
+ * string at the write site; it is a type in which the lie cannot be spelled.
+ *
+ *   pending      enqueued by the server, not yet acted on
+ *   running      a launch STARTED and has not yet reported back. Durable and written BEFORE the
+ *                launch, so a consumer that dies mid-flight leaves evidence instead of silence.
+ *   consumed     the launch ran to completion and exited 0
+ *   failed       the launch ran and exited non-zero — `exitCode` carries which
+ *   no-result    it started and never returned an outcome: killed by a signal, or found still
+ *                `running` by a later run
+ *   not-started  the launch never happened — no `claude` on PATH, or the spawn itself failed
+ *
+ * `no-result` IS NOT AN EDGE CASE, and sizing it as one is why it was missing: a subagent run
+ * ending mid-tool is an ordinary event, not a rare one, so "no outcome" is a likely terminal
+ * state of a dispatch — and it was the one state the old union could not express. A queue that
+ * reports a probable outcome as success is not a queue.
+ * *This paragraph carried "roughly half … (n=2,581, 95% interval [48.4%, 52.2%])" until
+ * 2026-08-26. The figure came from an orchestrator brief and NOTHING IN THIS REPO SOURCES IT —
+ * a statistic in a code comment with no file and no access date is exactly the shape this repo
+ * refuses, and it is worse in a comment than in prose because no reviewer reads it twice. The
+ * design reason does not need the number; the number needed a citation it never had.*
+ *
+ * `not-started` IS NOT `no-result`, and collapsing them misreports a config error as an agent
+ * dying. `no-result` says a launch began and told us nothing. `not-started` says it never began,
+ * which is a different fact with a different remedy: fix PATH and re-enqueue, with the guarantee
+ * that nothing ran the first time. A systematic PATH misconfiguration under the old mapping read
+ * in the UI as "the agents keep dying mid-run".
+ */
+export type DispatchStatus =
+  | 'pending'
+  | 'running'
+  | 'consumed'
+  | 'failed'
+  | 'no-result'
+  | 'not-started';
+
+/**
+ * What a consumer may do with each status — ONE table, from which every other list is derived.
+ *
+ * THREE HAND-MAINTAINED LISTS WERE TWO TOO MANY. This replaced a `TERMINAL_DISPATCH_STATUSES`
+ * array, a `KNOWN_DISPATCH_STATUSES` array and a chain of `if`s in classifyDispatches() — three
+ * places that had to agree, typed as `readonly DispatchStatus[]`, which type-checks a SUBSET and
+ * so stayed green if a member was dropped from any of them.
+ *
+ * `satisfies Record<DispatchStatus, …>` makes that impossible: add a member to DispatchStatus
+ * without giving it a kind here and this file does not compile. The exhaustiveness is the point,
+ * not the tidiness.
+ *
+ * AND THE DELETED NAME WAS ITSELF A HAZARD. `TERMINAL_DISPATCH_STATUSES` was dead in production
+ * — its only non-comment line was its own declaration — while its name invited exactly the
+ * `!TERMINAL.includes(x)` deny-list that was this change's p1. A name that suggests the wrong
+ * predicate is worse than no name, and an exported one nobody uses is a trap with a docstring.
+ */
+const DISPATCH_STATUS_KIND = {
+  pending: 'launchable',
+  running: 'reconcilable',
+  consumed: 'settled',
+  failed: 'settled',
+  'no-result': 'settled',
+  'not-started': 'settled',
+} satisfies Record<DispatchStatus, 'launchable' | 'reconcilable' | 'settled'>;
+
+/**
+ * Every status THIS BUILD understands — the allow-list, and the reason it is an allow-list.
+ *
+ * A DENY-LIST HERE IS FAIL-OPEN, AND THAT IS NOT THEORETICAL — it shipped in the first cut of
+ * this change and a review caught it. Selection was `!TERMINAL_DISPATCH_STATUSES.includes(status)`,
+ * so every value this build did not recognise fell through to "work to do": a `"timed-out"` written
+ * by a future consumer, a line with no `status` at all, `7`, `null`. Measured 2026-08-26 on that
+ * build, with a `claude` that logged its own argv: all four were LAUNCHED, and the record was then
+ * OVERWRITTEN with `consumed` — destroying what the previous status said and asserting success for
+ * a goal whose real outcome nobody knows.
+ *
+ * `readDispatch()` type-checks `id`, `project`, `root`, `goal` and `enqueuedAt` and DOES NOT
+ * VALIDATE `status` — deliberately, so a queue stays forward-compatible with a newer writer. That
+ * forward-compatibility is precisely why the consumer must decide by what it KNOWS rather than by
+ * what it can rule out.
+ */
+export const KNOWN_DISPATCH_STATUSES = Object.keys(DISPATCH_STATUS_KIND) as readonly DispatchStatus[];
+/**
  * One entry in the dispatch queue.
  *
  * `status` is always `'pending'` when written by the server; the consume-dispatch script
- * rewrites a line with `'consumed'` once it has acted. Both values are preserved on read so
- * a UI can distinguish "waiting" from "handled" without the server making that call.
+ * appends later lines carrying the same `id` as the dispatch progresses. Every line is
+ * preserved on read — the queue is append-only — so the CURRENT state of a dispatch is the
+ * LAST line bearing its id, which is what `resolveDispatchStates()` computes. Do not filter
+ * raw `readDispatch()` output by status: see that function for the re-dispatch bug it fixes.
  */
 export interface DispatchEntry {
   /** Stable identifier for this request — a UUID, assigned by the server at enqueue time. */
@@ -388,8 +480,32 @@ export interface DispatchEntry {
   goal: string;
   /** Unix timestamp in ms when this entry was appended. */
   enqueuedAt: number;
-  /** `pending` until the consumer acts; `consumed` afterwards. */
-  status: 'pending' | 'consumed';
+  /** Where this dispatch has got to. See DispatchStatus for why there are five. */
+  status: DispatchStatus;
+  /** Unix ms when the launch was started. Set on the `running` line and carried forward. */
+  startedAt?: number;
+  /** Unix ms when a terminal state was recorded. */
+  finishedAt?: number;
+  /**
+   * The launch's exit code when one was returned.
+   *
+   * ABSENT IS NOT ZERO. A dispatch killed by a signal has no exit code at all, and writing `0`
+   * there would recreate the defect this type exists to remove, one field along.
+   */
+  exitCode?: number;
+  /** The signal that killed the launch, when one did — mutually exclusive with `exitCode`. */
+  signal?: string;
+  /** Operator-facing detail for a non-terminal-success state. Never the only record of it. */
+  error?: string;
+  /**
+   * The pid of the consumer that wrote the `running` line.
+   *
+   * Present so a SECOND consumer can tell "the launcher died" from "the launcher is still going",
+   * instead of stamping `no-result` on a dispatch that is running fine. Absent on entries written
+   * before this field existed, and absence is treated as "no longer running" — the same reading
+   * those entries already got.
+   */
+  consumerPid?: number;
 }
 
 /**
@@ -444,4 +560,76 @@ export function readDispatch(file?: string): DispatchEntry[] {
     }
   }
   return entries;
+}
+
+/**
+ * The CURRENT state of each dispatch: the last line bearing each id, in first-seen order.
+ *
+ * WHY THIS EXISTS — A RE-DISPATCH BUG, MEASURED, NOT ANTICIPATED. The queue is append-only, so
+ * acting on an entry appends a new line rather than editing the old one. consume-dispatch.ts
+ * selected work with `readDispatch().filter(e => e.status === 'pending')`, which reads EVERY
+ * line — including the original `pending` line, which no later append ever removes. So a goal
+ * that had already been launched was launched again on every subsequent run.
+ *
+ * Measured 2026-08-26 on unmodified code: one entry, consumed once, then the consumer re-run on
+ * the same queue relaunched it and appended a third line. Nothing in the queue said it had been
+ * done, because the line that said so was not the line being read.
+ *
+ * The script's own comment absorbed this as safe — "`claude --print` is idempotent in the worst
+ * case". Launching an agent against the same goal repeatedly is not idempotent in any sense that
+ * survives contact with a goal that writes files, and the assumption was doing load-bearing work
+ * for a bug rather than describing a property anyone had checked.
+ *
+ * Order is FIRST-SEEN, deliberately: the queue is a work list and its natural order is the order
+ * goals were enqueued, not the order they last changed state. A UI showing newest-first reverses
+ * this itself.
+ */
+export function resolveDispatchStates(entries: DispatchEntry[]): DispatchEntry[] {
+  const latest = new Map<string, DispatchEntry>();
+  for (const e of entries) latest.set(e.id, e);
+  return [...latest.values()];
+}
+
+/** What a consumer may do with each dispatch, decided by ALLOW-LIST. */
+export interface DispatchWork {
+  /** `pending` — never launched. The ONLY class a consumer may launch. */
+  launchable: DispatchEntry[];
+  /** `running` — launched by a run that has not reported back. Owed a verdict, never a relaunch. */
+  reconcilable: DispatchEntry[];
+  /** Terminal. Nothing is owed. */
+  settled: DispatchEntry[];
+  /**
+   * A status THIS BUILD DOES NOT KNOW. Not launched, not reconciled, NOT OVERWRITTEN — reported,
+   * and left exactly as found.
+   */
+  unrecognised: DispatchEntry[];
+}
+
+/**
+ * Sort dispatches into what may be done with them, by naming what is allowed.
+ *
+ * THE PREDICATE IS AN ALLOW-LIST AND THE DIRECTION IS THE WHOLE POINT. This replaced
+ * `unfinishedDispatches()`, which asked `!TERMINAL.includes(status)` — a deny-list, so an
+ * unrecognised status meant "launch it". See KNOWN_DISPATCH_STATUSES for the measured table.
+ *
+ * AN UNRECOGNISED ENTRY IS LEFT ALONE, WHICH IS THE CONSERVATIVE CHOICE IN BOTH DIRECTIONS. It is
+ * not launched, because this build cannot know whether the goal already ran. It is not rewritten,
+ * because whatever wrote that status knew something this build does not, and overwriting it would
+ * destroy the only record of it. Reporting is the only safe action, so it is the only one taken.
+ */
+export function classifyDispatches(entries: DispatchEntry[]): DispatchWork {
+  const work: DispatchWork = { launchable: [], reconcilable: [], settled: [], unrecognised: [] };
+  for (const e of resolveDispatchStates(entries)) {
+    // A LOOKUP, NOT A CHAIN ENDING IN `else`. The previous version fell through to `settled`,
+    // which is a second unnamed deny-list: a status added to the union and to the known list but
+    // given no branch would have been silently stranded as "nothing owed" — fail-closed, so safe,
+    // but silent, and it would have got none of the loud reporting `unrecognised` gets. Here an
+    // unmapped status is `undefined` and lands in `unrecognised`, where it is reported.
+    const kind = (DISPATCH_STATUS_KIND as Record<string, string | undefined>)[e.status as string];
+    if (kind === 'launchable') work.launchable.push(e);
+    else if (kind === 'reconcilable') work.reconcilable.push(e);
+    else if (kind === 'settled') work.settled.push(e);
+    else work.unrecognised.push(e);
+  }
+  return work;
 }

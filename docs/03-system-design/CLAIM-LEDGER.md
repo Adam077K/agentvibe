@@ -545,6 +545,72 @@ claims:
     valid_until: 2026-11-09
     confidence: 1
 
+  # The gate must not be invocable by the thing it gates. Registered 2026-08-26 because the
+  # containment was, until then, an ACCIDENT of an omission: `Workflow` was simply missing from
+  # `TOOL_UNIVERSE`, so PS-TOOL-EXISTS refused it as "not a runtime tool" — false (binary 2.1.246
+  # holds `var Xu="Workflow"`, and the tool fires 55 times in the transcript corpus). A refusal
+  # whose stated reason is wrong invites the repair that breaks it: append the name to the
+  # universe, and all seven engines may declare it with nothing to object.
+  #
+  # The orchestrator needs no such declaration and must not carry one either. It is not
+  # dispatched — it IS the session, so no frontmatter field binds on the path it runs on
+  # (CONTROL-PLANE.md §1.1), and the session already holds the tool. All 55 recorded calls carry
+  # `isSidechain: false`; the same scan finds tens of thousands of subagent `Bash` calls, so it
+  # sees sidechain entries and never sees this tool in one. Reaching the gate is a ROUTE (scripts/run-gate.mjs),
+  # not a grant, and the rethink board's "add Workflow to orchestrator tools" was refuted here.
+  #
+  # THE ASSERT AND THE COMMAND WERE MISMATCHED IN THE FIRST VERSION OF THIS CLAIM, and the fix is
+  # worth recording because it is Rule 10 applied to a claim rather than to a resolver.
+  #
+  # It cited `node --test scripts/prompt-standard.test.mjs`, which iterates `LIVE` — the SEVEN
+  # engines (`prompt-standard.test.mjs:56`) — while asserting something about EVERY agent file,
+  # of which there are eighteen. Shims early-return in `lintFile` before PS-WORKFLOW-CONTAINMENT
+  # is reached, so a shim declaring the tool would have left the assert false and the claim green.
+  # A resolver passing what it could not check is exactly what this repo's Rule 10 forbids.
+  #
+  # `node .claude/hooks/schema-lint.js` covers all EIGHTEEN, by two different rules, and both were
+  # verified by construction against a control that fires:
+  #   engine + `Workflow`  -> PS-WORKFLOW-CONTAINMENT   (clean engine file -> no issues)
+  #   shim   + `tools:`    -> `shim: must not declare "tools" — a shim routes, it does not run`
+  #
+  # IT TAKES BOTH COMMANDS, because each has the blind spot the other covers. The lint checks the
+  # TREE; the prompt-standard test checks the RULE. Repointing from one to the other traded a blind
+  # spot rather than closing it. Measured, with the rule deleted from schema-lint.js:
+  #   rule present, engine + `Workflow` -> flagged        (control: clean engine -> no issues)
+  #   rule DELETED, engine + `Workflow` -> ADMITTED, lint exits 0  <- claim green, assert FALSE
+  #   rule DELETED                      -> prompt-standard exits 1 <- the guard's own existence
+  # Hence `&&`: eighteen files AND the rule that judges them. `claim-command` runs `/bin/sh -c`
+  # (`scripts/lib/resolvers.js`), so the operator is real rather than decorative.
+  #
+  # TWO CLAUSES WERE DELETED FROM THE ASSERT, FOR ONE REASON. The first was "the orchestrator
+  # reaches it by route rather than by grant" — an unverifiable SUBJECT: nothing in any command
+  # touches `run-gate.mjs`. The second was "so the binding QA gate is not invocable by any engine
+  # it gates" — an unverifiable PREDICATE, and it is the same shape. That is an ENTAILMENT, sound
+  # only if a frontmatter declaration is the SOLE grant channel, and this repo's own
+  # `scripts/check-dispatch-agenttype.mjs` says otherwise: a dispatch naming no agentType "gets the
+  # runtime default — `general-purpose`, tools `*`". Whether that default contains `Workflow` is
+  # measured NOWHERE in this branch. The only thing standing against it is observational absence —
+  # exactly what the paragraph below says is not in this sentence.
+  #
+  # A clause no resolver evaluates is prose wearing a claim's shape, whether the gap is in its
+  # subject or its predicate. Applying that to one and not the other is how the first version
+  # survived review. The measurements behind both live in the session file and in
+  # `scripts/probe-workflow-reach.mjs`.
+  #
+  # `confidence: 1` is retained deliberately, and only because what remains is a DECIDABLE property
+  # of the tree that two deterministic commands settle. The observational half — that `Workflow` is
+  # main-session-only, evidenced by absence — is precisely what is NOT in the sentence; had it
+  # stayed, a flat 1 would have been miscalibrated.
+  - id: c-workflow-invocation-contained
+    assert: "No agent file declares a Workflow tool"
+    kind: internal-fact
+    scope: project
+    verified_by: command
+    evidence: {cmd: "node .claude/hooks/schema-lint.js && node --test scripts/prompt-standard.test.mjs", expect_exit: 0}
+    valid_until: 2026-11-26
+    confidence: 1
+    supports: [c-no-decorative-capabilities]
+
   - id: c-playbooks-declare-no-method
     assert: "Every playbook declares stages and exit criteria only — a stage carrying steps, how or method fails the lint"
     kind: behavior

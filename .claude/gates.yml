@@ -1,0 +1,200 @@
+# THE gate declarations. A playbook stage's `gate:` names an entry here, and nothing else may
+# appear there.
+#
+# ── WHY THIS FILE EXISTS ─────────────────────────────────────────────────────────────────────
+# `gate:` was a spelling allowlist. `.claude/hooks/schema-lint.js` held
+# `const GATES = ['qa-verdict','founder-approval','outbound-approval','migration-approval']`,
+# refused any other spelling, and that was the entire mechanism. Measured 2026-08-26 at 244e8db:
+# the three names in use appear 7 times across the six playbooks, and grepping them under
+# `scripts/` and `.claude/workflows/` returns the lint list and two test fixtures — no resolver,
+# no caller, nothing that executes. A stage could name `qa-verdict` and exit having run nothing,
+# and every check in the repository stayed green.
+#
+# The repository already had the executable half: `scripts/verdict.mjs check` exits non-zero
+# unless a committed verdict record is bound to the exact diff. What was missing was the sentence
+# joining the two — the same shape as `scripts/run-gate.mjs`'s own finding, that the gate worked
+# and nothing routed to it.
+#
+# ── TWO KINDS, AND THE DIFFERENCE IS THE WHOLE POINT ─────────────────────────────────────────
+#
+#   kind: command   A process decides. `run:` is the exact argv. Exit 0 = pass, exit 1 = fail,
+#                   ANY OTHER EXIT = unresolved. Unresolved is never pass — a resolver that
+#                   could not check may not report that it checked (Rule 10, CLAUDE.md).
+#
+#   kind: human     A person decides. There is no `run:`, and writing one here is refused by
+#                   `scripts/check-gates.mjs`. Resolving a human gate returns `unresolved` with
+#                   reason `human-stop`, always, on purpose.
+#
+# Before this file, "a human must approve" and "nothing implements this" were the same string in
+# the same array, and no reader could tell them apart. They are now different `kind:` values and
+# a checker enforces the difference. Faking a human stop into a script would be the more
+# dangerous half of that ambiguity resolving itself in the wrong direction.
+#
+# ── A COMMAND GATE VERIFIES. IT DOES NOT PRODUCE. ────────────────────────────────────────────
+# Read this before concluding that `gate: qa-verdict` means the review ran.
+#
+# Every `kind: command` gate here asks a question that is already answerable from an artifact, and
+# answers it deterministically. `qa-verdict` asks "is a PASS committed and bound by sha256 to this
+# exact diff" — a file lookup and a hash compare, no model in the loop. That is precisely why it is
+# safe to put behind an exit code.
+#
+# It does NOT run five dimension reviewers, three adversarial verifiers per block-eligible finding,
+# and an Opus judge. **Nothing in this file can.** `Workflow` is a main-session tool, the schema
+# below admits only `node scripts/...`, and the tool is absent from a dispatched engine anyway.
+#
+#   session runs the panel  →  session records the verdict  →  ANYONE can check the binding
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#   not mechanised, and not by this file                        this is what a gate resolves
+#
+# A stage declaring `gate: qa-verdict` asserts the third step. A reader who takes it for the first
+# has read it wrong, and the mistake is worth naming because the alternative design — a checker
+# that claimed to RUN the gate — produces exactly the failure recorded in `recording_hazard` below:
+# something that looks like review and is not.
+#
+# ── A PLAYBOOK NAMES A GATE. ONLY THE SESSION INVOKES ONE. ───────────────────────────────────
+# `Workflow` is a main-session tool: measured 2026-08-26, 0 of 55 calls came from a sidechain,
+# against 57,590 subagent `Bash` calls in the same scan. A DISPATCHED ENGINE DOES NOT HAVE THE
+# TOOL, and a missing tool reads as a silent no-op rather than an error — so a stage that made
+# its dispatched engine run the gate would report success having gated nothing.
+#
+# As the playbooks stand, all seven gated stages carry ZERO dispatch entries, so this holds in the
+# data today rather than by convention. It is deliberately NOT a lint rule. The obvious spelling —
+# "a stage carrying `gate:` may not carry `dispatch:`" — refuses a shape that is legitimate and
+# already in use: dispatch a reviewer to produce findings, then have the SESSION resolve the gate
+# on them. `scripts/playbooks.test.mjs`'s own fixture is exactly that shape. A rule that refuses
+# the correct arrangement to prevent the wrong one is a worse rule than none.
+#
+# ── EVERY GATE IS USED OR CARRIES ITS REASON ─────────────────────────────────────────────────
+# A declared gate that no playbook names must carry `unused_reason:`, at least 40 characters,
+# which someone can disagree with. Same governance mechanism as `EXCLUDED` in
+# `scripts/lib/check-suite.js`, pointed at a different file: an exemption you can argue with
+# instead of an entry nobody recognises.
+#
+# ── WHAT CHECKS THIS ─────────────────────────────────────────────────────────────────────────
+#   node scripts/check-gates.mjs            — every finding, human readable  (`npm run gates`)
+#   node scripts/check-gates.mjs resolve X  — actually run gate X
+#   npm run test:playbooks                  — the BLOCKING assertion, in scripts/gates.test.mjs
+#
+# `schema-lint.js`'s `GATES` array is still the spelling allowlist and is deliberately left
+# alone: it is `irreversible` tier. The two lists are kept honest by a drift finding that fails
+# when they disagree in either direction — the same treatment `package.json` gets from
+# `scripts/lib/check-suite.js`.
+
+# ── INSIDE A FOLDED BLOCK BELOW, A SPACE FOLLOWED BY `#` EATS THE REST OF THE LINE. ──────────
+# Write "PR 115", not "PR #115". Measured on this file: "PR #115 would make a refusal its own
+# terminal value distinct from / BLOCK, which would replace…" parsed to "PR BLOCK, which would
+# replace…" — no visible truncation, the next line folding on to make a finished sentence about a
+# thing called PR BLOCK. Not confined to prose: `unused_reason` has a 40-character floor and the
+# truncation happens BEFORE the floor is measured, so an 87-character reason can fail the build
+# with a message that is false about the file its author wrote.
+#
+# THE REMEDY IS TO REMOVE THE SPACE BEFORE THE `#`, OR TO DROP THE `#`. Quoting a fragment inside
+# a folded block happens to survive our parser and does NOT survive real YAML, which keeps the
+# quote characters as literal content — so it is not the fix even though it goes green.
+#
+# WHERE THIS DOES AND DOES NOT APPLY, executed against PyYAML rather than reasoned from the spec:
+# on a PLAIN scalar our parser matches YAML six for six — `alpha#beta`, `C#`, `https://x/doc#frag`
+# all survive, and `k: v  # note` is a comment in both. Inside a BLOCK scalar the two DISAGREE:
+# YAML keeps `#` as content, ours strips it. That divergence is the whole of this hazard, and it
+# is why the pin below is scoped to block scalars instead of refusing every `#`.
+# Pinned by `no # eats a sentence in any file this checker parses` in scripts/gates.test.mjs.
+
+gates:
+  - id: qa-verdict
+    kind: command
+    summary: >
+      A QA verdict of PASS is committed and bound by sha256 to the exact diff being merged,
+      excluding the verdict records themselves.
+    run: "node scripts/verdict.mjs check"
+    pass_when: >
+      exit 0 — a .qa/verdicts/<subject>.json exists in the committed tree of the ref, names this
+      subject, reads PASS, and its tier matches what the classifier computes today.
+    fail_when: >
+      exit 1 — absent, unparseable, subject-mismatch, not-pass, or tier-drift. Exit 2 means the
+      subject could not be computed at all, which resolves unresolved and therefore not pass.
+    recording_hazard: >
+      READ TWO FIELDS BEFORE RECORDING ANYTHING FROM A GATE RUN - `verdict` and `established`.
+      A refusal is its own terminal value: `VERDICT.REFUSED`, distinct from `BLOCK` and from
+      `PASS`. `established` is `verdict !== VERDICT.REFUSED`, derived on the same line that sets
+      the verdict, so a consumer asking only did this run tell me anything never has to enumerate
+      verdict values and cannot be caught out by a fourth one. Verified in this tree 2026-08-26
+      after merging main at ddaf25a: `gateRefusal` returns `VERDICT.REFUSED` and both entry
+      refusals go through it.
+      DO NOT FOLD REFUSED BACK INTO BLOCK. qa.js says so about itself in the comment above the
+      enum, and `coding.js` distinguishes them with a test pinning that it still does. Folding
+      moves the lie from the gate to the caller and buys nothing.
+      SUPERSEDED, AND KEPT BECAUSE IT IS WHY THE VALUE EXISTS: until PR 115 landed, a refusal
+      returned BLOCK, so a gate that reviewed nothing was byte-indistinguishable from a gate that
+      ran every reviewer and found defects. The documented workaround was to read the summary for
+      the literal word REFUSED and for its claim that nothing had been established. That reading
+      is no longer needed - there is a value to name.
+      DO NOT USE A COUNT OF DISPATCHED AGENTS, which was never the discriminator and still is not.
+      It separates nothing in either direction: an entry refusal dispatches none, an oracle dropout
+      can dispatch four and establish nothing, and a real failing check can establish something
+      with one. A reader given a count will apply it to every class and be wrong on most of them.
+      THIS FIELD IS DOCUMENTATION AND NOT ENFORCEMENT: nothing here reads qa.js output, and
+      scripts/check-gates.mjs cannot see it. What IS enforced is the same distinction one layer
+      down, where this file does have reach - resolveGate returns unresolved rather than fail when
+      it could not ask, and scripts/gates.test.mjs pins the two apart for spawn failure, signal,
+      and every exit code other than 0 and 1.
+    how_to_run_it: >
+      node scripts/run-gate.mjs --json, then pass invocation.args through UNMODIFIED. It resolves
+      the tree from its own location, refuses to emit an invocation it could not verify, and exits
+      2 rather than guessing. Rebuilding those args by hand reopens the five refused shapes: tree
+      is required and must be ABSOLUTE - a relative "." is refused - and ref must be sha-tipped,
+      because a symbolic tip like origin/main...HEAD is refused by name. Note the exit codes,
+      which are easy to read backwards: gate required with no flag exits 0, gate required with
+      --require exits 1, and gate NOT required with --require also exits 0. Without --require an
+      exit code means nothing. With it, exit 1 means you must run the gate, not that anything
+      failed.
+
+  - id: founder-approval
+    kind: human
+    decided_by: founder
+    summary: >
+      The founder has seen the recommendation and said yes. Merging, shipping and price changes
+      stop here whatever any process reports.
+    recorded_in: >
+      The session file for the task, under docs/08-agents_work/sessions/, and for a merge also
+      the pull request conversation.
+    why_not_a_command: >
+      There is no artifact a process could read that distinguishes founder approval from an
+      agent writing the string "approved". The verdict record has the same limit and says so —
+      it is hash-bound, not signed — but at least a hash binds it to a diff. Approval binds to a
+      person, and this repository holds no signing key and has made no decision about who would.
+
+  - id: outbound-approval
+    kind: human
+    decided_by: founder
+    summary: >
+      A human has seen the staged artifact before anything reaches a customer, a public URL or
+      an external service. Publishing is not undone by a revert.
+    recorded_in: >
+      The session file for the task, naming the preview URL that was actually looked at.
+    why_not_a_command: >
+      A process can verify that a page was staged rather than published — that is the
+      criterion(staged-to-preview-not-production) exit beside this gate. It cannot verify that
+      anybody looked at it, and looking is the entire content of the approval.
+
+  - id: migration-approval
+    kind: human
+    decided_by: founder
+    summary: >
+      A schema change or data migration has been read by a human before it runs. The ADR-001 test
+      applies at its sharpest here: git revert does not un-run a migration.
+    recorded_in: >
+      The session file for the task, plus the pull request, which is `risk:irreversible` by
+      .claude/qa-tier-floor.yml for any path under a migrations directory.
+    unused_reason: >
+      NAMED BY NO PLAYBOOK — measured 2026-08-26, `gate: migration-approval` appears zero times
+      across the six playbooks, and it was in the schema-lint allowlist for the whole of its life
+      without ever being reachable. It is kept rather than deleted because the tier map already
+      floors `**/migrations/**` and `**/*.sql` at irreversible with enforcement block, so the
+      policy exists and only the playbook stage naming it is missing; the `plan` stage of ship-feature
+      dispatches a migration unit and its `ship` stage would be where such a gate lands. Deleting
+      the id would mean the next author of that stage has to invent a name and re-argue the case.
+      FALSIFY THIS: if no playbook names it by the time a migration actually ships through this
+      harness, the policy was never real and the id should go.
+    why_not_a_command: >
+      Same reason as outbound-approval. A process can check that a migration file exists and is
+      reversible-by-inspection; it cannot check that a person read it and accepted the risk.

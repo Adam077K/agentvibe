@@ -1,0 +1,11 @@
+{
+  "subject": "1a3d241f3e0449ea5f8d9e3d82a955c62106cc6f9745891afcc5ae2670afd899",
+  "base": "244e8db3a1d8103ef79bec13467d3dcb2ad44cdd",
+  "tier": "full",
+  "tier_driver": "scripts/check-gates.mjs",
+  "verdict": "PASS",
+  "by": "builder-surface-wiring",
+  "run_id": null,
+  "evidence": "npm run check 46/46 pass 0 fail; 62 constructed-failure cases; ten break-tests each exit 1 incl. simulating PR #115; deletion test 0-without/1-with; agent-count discriminator refuted by measurement and swept from 3 sites with a control; #115 verified OPEN/draft and gateBlock=5 on both refs; single author, single model family, no independent reviewer — tier full is not met by this record",
+  "recorded_at": "2026-08-26T14:15:36.717Z"
+}

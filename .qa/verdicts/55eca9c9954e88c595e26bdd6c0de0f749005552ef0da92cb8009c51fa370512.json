@@ -1,0 +1,11 @@
+{
+  "subject": "55eca9c9954e88c595e26bdd6c0de0f749005552ef0da92cb8009c51fa370512",
+  "base": "507a4707b5c51ed54d28d1202f932cc548527e22",
+  "tier": "irreversible",
+  "tier_driver": ".github/workflows/qa-lead-pass.yml",
+  "verdict": "PASS",
+  "by": "builder-verdict-forgeability (single author, single model family — see session file)",
+  "run_id": null,
+  "evidence": "npm run check 48/48 on the merged tree. merge-gate 61/61 (41 base + 16 + 4 from #116). Failure path re-observed on the FINAL bytes: run 33010490290, reason=absent, check-run posted.",
+  "recorded_at": "2026-08-26T20:29:13.761Z"
+}

@@ -1008,3 +1008,514 @@ test('prune on a detached HEAD does not count the pseudo-line as a kept branch',
   assert.match(text, /✓ 1 branch\(es\) deleted\./, 'a clean prune did not report a clean prune');
   assert.doesNotMatch(text, /kept/, 'a failure was reported that did not happen');
 });
+
+// ── The PR route's own bash, executed ────────────────────────────────────────────────────────
+//
+// WHY THIS EXISTS. `.github/workflows/qa-lead-pass.yml` carried a subject-binding predicate that
+// nothing under scripts/ could see: no test parsed the workflow, so deleting the binding tomorrow
+// would have failed nothing. An argument with no test is an argument.
+//
+// These drive the SHIPPED bytes of the two `run:` blocks under `/usr/bin/bash -e {0}` — the shell
+// the runner actually reports in its step header — with node, jq and gh stubbed. Asserting the
+// file CONTAINS a regex would pass against a comment describing the regex; this repo has produced
+// twelve false findings that way, and the header of this file already says so.
+//
+// NO YAML PARSER. package.json declares zero dependencies. `js-yaml` resolves on a developer
+// machine from $HOME/node_modules and is absent on the runner, so a test importing it would pass
+// here and fail there — the same one-machine-layout defect this file records three times already.
+// The extractor below is text-directed and dependency-free.
+
+const WORKFLOW = path.join(REPO, '.github', 'workflows', 'qa-lead-pass.yml');
+
+// The runner's step header reports `/usr/bin/bash -e {0}`. That PATH IS THE RUNNER'S, not every
+// machine's — macOS ships bash at /bin/bash and has no /usr/bin/bash, so the first version of this
+// helper hardcoded `/usr/bin/bash` and every case below died with ENOENT: status null, signal null,
+// no output, which reads exactly like a script that produced nothing. Fourth instance in this file
+// of one machine's layout baked into a test. The FLAG is what models the runner; the path is not.
+const BASH = ['/bin/bash', '/usr/bin/bash'].find((p) => fs.existsSync(p));
+assert.ok(BASH, 'no bash found at /bin/bash or /usr/bin/bash — the cases below cannot run');
+
+/** The `run:` block of the step whose name starts with `prefix`, dedented. Shipped bytes only. */
+function runBlock(prefix) {
+  const lines = fs.readFileSync(WORKFLOW, 'utf8').split('\n');
+  const start = lines.findIndex((l) => l.trimStart().startsWith(`- name: ${prefix}`));
+  assert.notEqual(start, -1, `no step named ${prefix} — the extractor is aimed at nothing`);
+  const runAt = lines.findIndex((l, i) => i > start && /^\s*run: \|/.test(l));
+  assert.notEqual(runAt, -1, `step ${prefix} has no "run: |" block`);
+  const indent = lines[runAt].match(/^\s*/)[0].length + 2;
+  const body = [];
+  for (let i = runAt + 1; i < lines.length; i++) {
+    const l = lines[i];
+    if (l.trim() !== '' && l.match(/^\s*/)[0].length < indent) break;
+    body.push(l.slice(indent));
+  }
+  assert.ok(body.length > 5, `extracted ${body.length} lines for ${prefix} — extractor is broken`);
+  return body.join('\n');
+}
+
+/**
+ * Run a step's shipped script the way the runner does. `nodeOut`/`nodeExit` stand in for
+ * verdict.mjs; `jqOut` lets a test model a jq that exits 0 having printed nothing, which is the
+ * degeneration an in-PR $GITHUB_PATH shim produces and which no exit code reveals.
+ */
+function runStep(script, { env = {}, nodeOut = '', nodeExit = 0, jqOut = null } = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qagate-'));
+  const bin = path.join(dir, 'bin');
+  fs.mkdirSync(bin);
+  fs.writeFileSync(path.join(bin, 'node'), `#!/bin/bash\ncat <<'PAYLOAD'\n${nodeOut}\nPAYLOAD\nexit ${nodeExit}\n`);
+  fs.writeFileSync(path.join(bin, 'gh'), '#!/bin/bash\nexit 0\n');
+  if (jqOut !== null) fs.writeFileSync(path.join(bin, 'jq'), `#!/bin/bash\nprintf '%s' ${JSON.stringify(jqOut)}\nexit 0\n`);
+  for (const f of fs.readdirSync(bin)) fs.chmodSync(path.join(bin, f), 0o755);
+
+  const script_path = path.join(dir, 'step.sh');
+  fs.writeFileSync(script_path, script);
+  const r = run(BASH, ['-e', script_path], dir, {
+    ...process.env,
+    PATH: `${bin}:${process.env.PATH}`,
+    RUNNER_TEMP: dir,
+    GITHUB_OUTPUT: path.join(dir, 'out.txt'),
+    GH_TOKEN: 'x',
+    REPO: 'o/r',
+    HEAD_SHA: 'deadbeef',
+    PR_NUMBER: '1',
+    ...env,
+  });
+  return { ...r, text: r.stdout + r.stderr };
+}
+
+const SUBJ = 'a'.repeat(64);
+const OTHER = 'b'.repeat(64);
+const okJson = (ok, subject = SUBJ) =>
+  JSON.stringify({ ok, subject, tier: 'irreversible', reason: ok ? 'match' : 'absent' });
+
+test('PR route: a verdict bound to this diff passes', () => {
+  const r = runStep(runBlock('Verdict diff-binding'), { nodeOut: okJson(true), nodeExit: 0 });
+  assert.equal(r.code, 0, `a genuine PASS was refused:\n${r.text}`);
+  assert.match(r.text, /QA GATE PASSED/);
+});
+
+test('PR route: no verdict and no bypass is refused', () => {
+  const r = runStep(runBlock('Verdict diff-binding'), {
+    nodeOut: okJson(false), nodeExit: 1, env: { BYPASS_APPROVED: 'false', BYPASS_SUBJECT: '' },
+  });
+  assert.equal(r.code, 1, `a missing verdict did not refuse:\n${r.text}`);
+  assert.match(r.text, /QA GATE FAILED/);
+});
+
+// B1. The -z guard catches silence. This is the case it does NOT catch: output that is present
+// and unparseable, so every jq extraction yields "". An empty subject used as a substring needle
+// matches any comment, and the gate grants a bypass while printing "names this exact subject ()".
+test('PR route: a non-empty but unparseable verdict is REFUSED, not read as empty', () => {
+  const r = runStep(runBlock('Verdict diff-binding'), {
+    nodeOut: 'verdict: something went sideways', nodeExit: 1, jqOut: '',
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: SUBJ },
+  });
+  assert.equal(r.code, 1, `garbage output was not refused:\n${r.text}`);
+  assert.doesNotMatch(r.text, /QA GATE BYPASSED/, 'an empty subject granted a bypass');
+  assert.match(r.text, /could not read a boolean \.ok|not 64 hex digits/);
+});
+
+test('PR route: an empty subject never reaches the bypass comparison', () => {
+  const r = runStep(runBlock('Verdict diff-binding'), {
+    nodeOut: okJson(false), nodeExit: 1, jqOut: '',
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: '' },
+  });
+  assert.equal(r.code, 1);
+  assert.doesNotMatch(r.text, /QA GATE BYPASSED/, 'empty subject matched empty subject');
+});
+
+// B2. The decision crosses on an immutable step output. A bypass approved against a DIFFERENT
+// subject must not authorise this diff, however it got here.
+test('PR route: a bypass approved for another diff is REFUSED', () => {
+  const r = runStep(runBlock('Verdict diff-binding'), {
+    nodeOut: okJson(false), nodeExit: 1,
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: OTHER },
+  });
+  assert.equal(r.code, 1, `a bypass for another diff was honoured:\n${r.text}`);
+  assert.match(r.text, /BYPASS REFUSED/);
+});
+
+// THIS CONTROL KEEPS EXACTLY ONE CASE FROM GOING VACUOUS — `an empty subject never reaches the
+// bypass comparison` — and the claim is narrow because it was measured, not reasoned.
+//
+// It read "KEEPS THE FOUR REFUSAL CASES ABOVE FROM GOING VACUOUS" until 2026-08-26. The worry was
+// right: every refusal case asserts exit 1, and `bash -e` also exits 1 when the step dies at
+// VERDICT_JSON=$(...), so the shell aborting and the gate refusing are indistinguishable BY EXIT
+// CODE. The scope was wrong. Deleting `set +e` from the shipped file — with a flag-state control
+// confirming the extracted block no longer contains it — turns **seven** cases red and leaves one:
+//
+//   caught by their own text assertions (an early death prints none of it):
+//     no verdict and no bypass · unparseable verdict · bypass for another diff
+//     .ok with an empty .subject · truncated .subject · valid .subject, unreadable .ok
+//   red as claimed:  this control, which demands exit 0 on the same nodeExit=1 input
+//   VACUOUS:         `an empty subject never reaches the bypass comparison` — its only
+//                    assertions are code === 1 and doesNotMatch(/QA GATE BYPASSED/), and a
+//                    shell dying at the assignment satisfies both
+//
+// So the control earns its place for one case rather than seven. Naming that case is the point:
+// an unnamed "this keeps the tests honest" drifts back to covering everything above it, and the
+// next person deletes the one assertion that was load-bearing. Overstating a control's scope is
+// an error in the safe direction, which is exactly why it survives review.
+//
+// Confirmed by mutation rather than argued: driving these same cases against the two earlier
+// versions of the step reproduces the defects each fix removed — origin/main BYPASSES a bypass
+// approved for another diff AND an unparseable verdict; commit 76a5603 refuses the first and
+// still BYPASSES the second, which is the review's B1, found again from the other end.
+test('PR route: a bypass approved for THIS diff is honoured — the control', () => {
+  const r = runStep(runBlock('Verdict diff-binding'), {
+    nodeOut: okJson(false), nodeExit: 1,
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: SUBJ },
+  });
+  assert.equal(r.code, 0, `a correctly named bypass was refused — the instrument cannot pass:\n${r.text}`);
+  assert.match(r.text, /QA GATE BYPASSED/);
+});
+
+// The evidence must not travel on a channel that PR-authored code can rewrite between steps.
+// scripts/classify.mjs and scripts/ledger.mjs run in between, and the remedy this workflow
+// recommends protects .github/** while leaving scripts/** writable.
+/**
+ * Comment lines stripped. An absence assertion over a shell block must read CODE: both blocks
+ * document the mutable-file design they replaced, and the first version of the test below failed
+ * on that prose — matching a comment describing the defect as if it were the defect. That is the
+ * same confusion this file's header names, arriving from the other direction.
+ */
+const codeOnly = (s) => s.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+
+test('PR route: the bypass decision does not travel through a file under RUNNER_TEMP', () => {
+  const verdict = codeOnly(runBlock('Verdict diff-binding'));
+  const bypass = codeOnly(runBlock('Check for QA gate bypass'));
+
+  // Control: the stripper must leave the code it is meant to search.
+  assert.match(bypass, /GITHUB_OUTPUT/, 'codeOnly() removed the code — the assertion below is vacuous');
+
+  assert.doesNotMatch(verdict, /RUNNER_TEMP/, 'bypass evidence read from a mutable file');
+  assert.doesNotMatch(bypass, /bypass-comments\.txt/, 'bypass evidence written to a mutable file');
+  assert.match(bypass, /bypass_approved=/, 'the decision is not emitted to $GITHUB_OUTPUT');
+});
+
+// ── Isolating the two verdict-step guards, and driving the step that DECIDES ──────────────────
+//
+// The cases above drove both value guards with one `jqOut`, which empties `.ok` AND `.subject`
+// together — so whichever guard survives catches it, and deleting either one alone changes
+// nothing. Two guards that mask each other are one guard with a spare. A jq stub that answers
+// PER FILTER separates them.
+//
+// And the bypass step — which is where the authorisation decision now lives — had no behavioural
+// test at all. Moving a decision without moving its coverage is how a step ends up trusted and
+// unexercised; that is the same shape as the dead bypass branch this lane started from.
+
+/** A jq stub that answers per filter argument (`jq -r '.ok'` → $2 is `.ok`). */
+function jqStub(map) {
+  const arms = Object.entries(map)
+    .map(([k, v]) => `  ${JSON.stringify(k)}) printf '%s' ${JSON.stringify(v)} ;;`)
+    .join('\n');
+  return `#!/bin/bash\ncase "$2" in\n${arms}\n  *) printf '' ;;\nesac\nexit 0\n`;
+}
+
+/** A gh stub that distinguishes `gh pr view` (labels) from `gh api` (comment bodies). */
+function ghStub({ label = 'false', comments = '' } = {}) {
+  return `#!/bin/bash
+case "$1 $2" in
+  "pr view") printf '%s\\n' ${JSON.stringify(label)}; exit 0 ;;
+esac
+case "$1" in
+  api) printf '%s' ${JSON.stringify(comments ? `${comments}\n` : '')}; exit 0 ;;
+esac
+exit 0
+`;
+}
+
+/** As runStep, but lets a test install hand-written stubs and read $GITHUB_OUTPUT back. */
+function runStepWith(script, { env = {}, nodeOut = '', nodeExit = 0, stubs = {} } = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qagate2-'));
+  const bin = path.join(dir, 'bin');
+  fs.mkdirSync(bin);
+  fs.writeFileSync(path.join(bin, 'node'), `#!/bin/bash\ncat <<'PAYLOAD'\n${nodeOut}\nPAYLOAD\nexit ${nodeExit}\n`);
+  fs.writeFileSync(path.join(bin, 'gh'), '#!/bin/bash\nexit 0\n');
+  for (const [name, body] of Object.entries(stubs)) fs.writeFileSync(path.join(bin, name), body);
+  for (const f of fs.readdirSync(bin)) fs.chmodSync(path.join(bin, f), 0o755);
+
+  const out = path.join(dir, 'out.txt');
+  fs.writeFileSync(out, '');
+  const sp = path.join(dir, 'step.sh');
+  fs.writeFileSync(sp, script);
+  const r = run(BASH, ['-e', sp], dir, {
+    ...process.env,
+    PATH: `${bin}:${process.env.PATH}`,
+    RUNNER_TEMP: dir, GITHUB_OUTPUT: out, GH_TOKEN: 'x', REPO: 'o/r',
+    HEAD_SHA: 'deadbeef', PR_NUMBER: '1', ADAM_GITHUB_USER: 'founder',
+    ...env,
+  });
+  return { ...r, text: r.stdout + r.stderr, outputs: fs.readFileSync(out, 'utf8') };
+}
+
+// Deleting the .subject guard alone survived every earlier case. This is the input that isolates
+// it: `.ok` reads cleanly as a boolean, so the .ok guard passes and cannot stand in.
+test('PR route: a well-formed .ok with an EMPTY .subject is refused', () => {
+  const r = runStepWith(runBlock('Verdict diff-binding'), {
+    nodeOut: 'irrelevant', nodeExit: 1,
+    stubs: { jq: jqStub({ '.ok': 'false', '.subject': '', '.tier': 'irreversible', '.reason': 'absent' }) },
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: SUBJ },
+  });
+  assert.equal(r.code, 1, `an empty subject passed the guard:\n${r.text}`);
+  assert.match(r.text, /\.subject is not 64 hex digits/);
+  assert.doesNotMatch(r.text, /QA GATE BYPASSED/);
+});
+
+test('PR route: a truncated .subject is refused — 64 is the length, not "looks hex"', () => {
+  const r = runStepWith(runBlock('Verdict diff-binding'), {
+    nodeOut: 'irrelevant', nodeExit: 1,
+    stubs: { jq: jqStub({ '.ok': 'false', '.subject': 'a'.repeat(63), '.tier': 'irreversible', '.reason': 'absent' }) },
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: SUBJ },
+  });
+  assert.equal(r.code, 1);
+  assert.match(r.text, /\.subject is not 64 hex digits/);
+});
+
+// And the mirror: a valid subject with an unreadable .ok isolates the boolean guard.
+test('PR route: a valid .subject with an unreadable .ok is refused', () => {
+  const r = runStepWith(runBlock('Verdict diff-binding'), {
+    nodeOut: 'irrelevant', nodeExit: 1,
+    stubs: { jq: jqStub({ '.ok': '', '.subject': SUBJ, '.tier': 'irreversible', '.reason': 'absent' }) },
+    env: { BYPASS_APPROVED: 'true', BYPASS_SUBJECT: SUBJ },
+  });
+  assert.equal(r.code, 1, `an unreadable .ok was treated as a decision:\n${r.text}`);
+  assert.match(r.text, /could not read a boolean \.ok/);
+  assert.doesNotMatch(r.text, /QA GATE BYPASSED/);
+});
+
+// ── The bypass step, driven ──────────────────────────────────────────────────────────────────
+
+test('bypass step: no label → no bypass, and it does not need a subject to say so', () => {
+  const r = runStepWith(runBlock('Check for QA gate bypass'), {
+    stubs: { gh: ghStub({ label: 'false' }) },
+  });
+  assert.equal(r.code, 0, r.text);
+  assert.match(r.outputs, /bypass_approved=false/);
+});
+
+test('bypass step: a comment naming THIS subject approves it — the control', () => {
+  const r = runStepWith(runBlock('Check for QA gate bypass'), {
+    nodeOut: SUBJ,
+    stubs: { gh: ghStub({ label: 'true', comments: `"BYPASS REASON: founder waiver ${SUBJ.slice(0, 12)}"` }) },
+  });
+  assert.equal(r.code, 0, `the step could not approve a correctly named bypass:\n${r.text}`);
+  assert.match(r.outputs, /bypass_approved=true/);
+  assert.match(r.outputs, new RegExp(`bypass_subject=${SUBJ}`));
+});
+
+test('bypass step: a comment naming no subject does NOT approve', () => {
+  const r = runStepWith(runBlock('Check for QA gate bypass'), {
+    nodeOut: SUBJ,
+    stubs: { gh: ghStub({ label: 'true', comments: '"BYPASS REASON: ship it"' }) },
+  });
+  assert.equal(r.code, 0, r.text);
+  assert.match(r.outputs, /bypass_approved=false/);
+});
+
+test('bypass step: a comment naming ANOTHER diff does NOT approve', () => {
+  const r = runStepWith(runBlock('Check for QA gate bypass'), {
+    nodeOut: SUBJ,
+    stubs: { gh: ghStub({ label: 'true', comments: `"BYPASS REASON: for the earlier diff ${OTHER.slice(0, 12)}"` }) },
+  });
+  assert.equal(r.code, 0, r.text);
+  assert.match(r.outputs, /bypass_approved=false/);
+});
+
+// This is the third mutation that survived: the bypass step's own subject guard. It is what makes
+// the verdict step's cross-check safe to rely on — the cross-check compares against BYPASS_SUBJECT,
+// so BYPASS_SUBJECT being well-formed is the invariant the whole pairing rests on.
+test('bypass step: a malformed computed subject refuses, never compares', () => {
+  const r = runStepWith(runBlock('Check for QA gate bypass'), {
+    nodeOut: 'not-a-subject',
+    stubs: { gh: ghStub({ label: 'true', comments: '"BYPASS REASON: anything"' }) },
+  });
+  assert.equal(r.code, 1, `a malformed subject was used as a needle:\n${r.text}`);
+  assert.match(r.text, /not 64 hex digits/);
+  assert.doesNotMatch(r.outputs, /bypass_approved=true/);
+});
+
+test('bypass step: the label with no configured author fails the job, never passes it', () => {
+  const r = runStepWith(runBlock('Check for QA gate bypass'), {
+    nodeOut: SUBJ,
+    stubs: { gh: ghStub({ label: 'true', comments: '"BYPASS REASON: x"' }) },
+    env: { ADAM_GITHUB_USER: '' },
+  });
+  assert.equal(r.code, 1, `an unconfigured bypass author did not fail the job:\n${r.text}`);
+  assert.doesNotMatch(r.outputs, /bypass_approved=true/);
+});
+
+// ── verdict.mjs refuses a flag it does not read ───────────────────────────────────────────────
+//
+// THE DEFECT, MEASURED ON `main` AT 47dbbd6 BEFORE THE FIX. `arg()` searches argv for the names it
+// is asked for and never looks at the rest, so an unrecognised flag was DROPPED: no failure, no
+// warning, no change of behaviour. An operator passed `--dry-run` — a flag whose entire purpose is
+// to prevent a write — and the tool exited 0 and WROTE `.qa/verdicts/e3b0c442….json`, the
+// empty-diff subject, into a governed directory. **The guard rail they reached for did not exist,
+// and failing to have it looked identical to having it.**
+//
+// Six of thirteen probe invocations wrote on `main`; one of thirteen writes here, and it is the
+// real `record`. That one is the POSITIVE CONTROL and it fires in both cells — without it, "wrote
+// nothing" is satisfied by a probe that cannot see a write at all.
+
+/** The verdict directory's CONTENT, not its listing. */
+const verdictSnapshot = (proj) => {
+  const dir = path.join(proj, '.qa', 'verdicts');
+  if (!fs.existsSync(dir)) return '<absent>';
+  return fs.readdirSync(dir).sort()
+    .map((n) => `${n}:${fs.readFileSync(path.join(dir, n), 'utf8')}`)
+    .join('\n');
+};
+
+test('an unknown flag is REFUSED and writes NOTHING — the listing is the assertion, not the exit code', () => {
+  const { proj } = fixture();
+  const base = ['record', '--repo', proj, '--ref', BRANCH, '--verdict', 'PASS', '--by', 'probe'];
+
+  // A LISTING IS NOT ENOUGH AND THE FIRST VERSION OF THIS PROBE PROVED IT. Every `record` in one
+  // repo writes the SAME path — one diff, one subject — so after the first write the file NAMES
+  // stop changing and a dozen real writes read as "wrote nothing". Content, always.
+  const before = verdictSnapshot(proj);
+
+  const attacks = [
+    ['--dry-run-typo', [...base, '--dry-run-typo']],
+    ['--force', [...base, '--force']],
+    ['a misspelt known flag', [...base, '--evidenc', 'x']],
+    ['a flag in a value position', [...base, '--evidence', '--foo']],
+    ['on check', ['check', '--repo', proj, '--ref', BRANCH, '--json', '--nope']],
+    ['on subject', ['subject', '--repo', proj, '--ref', BRANCH, '--verbose']],
+  ];
+  for (const [label, args] of attacks) {
+    const r = verdict(args);
+    assert.notEqual(r.code, 0, `${label}: an unknown flag exited 0`);
+    assert.match(r.stderr, /unknown flag/, `${label}: refused for some other reason:\n${r.stderr}`);
+    assert.equal(verdictSnapshot(proj), before, `${label}: the verdict directory changed on a refused invocation`);
+  }
+
+  // `--evidence --foo` is the case that pins isValue() to ONE definition. `arg()` treats a
+  // `--`-prefixed token as "no value given" and falls back to null; if the walker disagreed and
+  // swallowed `--foo` as evidence, the record would be written with evidence null AND the unknown
+  // flag would be hidden — the same silent accept, one layer down.
+  assert.match(verdict([...base, '--evidence', '--foo']).stderr, /unknown flag "--foo"/);
+
+  // THE POSITIVE CONTROL, in the same run: the probe can see a write, so "nothing changed" above is
+  // a fact about the refusals and not about the instrument.
+  assert.equal(verdict(base).code, 0, 'the real record stopped working');
+  assert.notEqual(verdictSnapshot(proj), before, 'the positive control wrote nothing, so this whole case is vacuous');
+});
+
+test('every flag every LIVE call site passes is still accepted — the sweep, pinned', () => {
+  // NAMING A CLASS CREATES AN OBLIGATION TO SWEEP IT. `git grep -n "verdict\.mjs"` plus the `$vtool`
+  // invocations in bin/warroom is the whole population; this table is that sweep, and each row
+  // carries a `present` string so the table cannot rot into a list of invocations nobody makes.
+  // If a call site changes its flags, the `present` assertion fails and someone re-sweeps — which
+  // is the only reason a refusal like this is safe to add to a tool on the blocking path.
+  const { proj } = fixture();
+  const CALL_SITES = [
+    {
+      what: '.github/workflows/qa-lead-pass.yml — the blocking verdict step',
+      file: '.github/workflows/qa-lead-pass.yml',
+      present: 'node scripts/verdict.mjs check --json',
+      args: ['check', '--json'],
+    },
+    {
+      what: 'bin/warroom — the merge gate, JSON read',
+      file: 'bin/warroom',
+      present: 'node "$vtool" check --repo "$PROJECT_DIR" --ref "$branch" --json',
+      args: ['check', '--repo', proj, '--ref', BRANCH, '--json'],
+    },
+    {
+      what: 'bin/warroom — the merge gate, human-readable re-run',
+      file: 'bin/warroom',
+      present: 'node "$vtool" check --repo "$PROJECT_DIR" --ref "$branch"',
+      args: ['check', '--repo', proj, '--ref', BRANCH],
+    },
+    {
+      what: 'scripts/merge-gate.test.mjs — recordAndCommit, the fixture recorder',
+      file: 'scripts/merge-gate.test.mjs',
+      present: "'--verdict', verdictValue, '--by', 'fixture-reviewer', '--json'",
+      args: ['record', '--repo', proj, '--ref', BRANCH, '--verdict', 'PASS', '--by', 'fixture-reviewer', '--json', '--dry-run'],
+    },
+    {
+      what: 'the recipe verdict.mjs itself prints, and qa-lead-pass.yml repeats',
+      file: 'scripts/verdict.mjs',
+      present: 'record --verdict PASS --by <reviewer>',
+      args: ['record', '--repo', proj, '--ref', BRANCH, '--verdict', 'PASS', '--by', 'r', '--evidence', 'e', '--dry-run'],
+    },
+    {
+      what: 'the run-id flag — readable, and undocumented until this change',
+      file: 'scripts/verdict.mjs',
+      present: "runId: arg('--run-id')",
+      args: ['record', '--repo', proj, '--ref', BRANCH, '--verdict', 'PASS', '--by', 'r', '--run-id', '99', '--dry-run'],
+    },
+  ];
+
+  for (const site of CALL_SITES) {
+    const text = fs.readFileSync(path.join(REPO, site.file), 'utf8');
+    assert.ok(
+      text.includes(site.present),
+      `${site.what}: this row no longer matches ${site.file}. Re-sweep with \`git grep -n "verdict.mjs"\` ` +
+        `and the $vtool invocations in bin/warroom, then update this table — a call site that moved is a ` +
+        `finding, not a row to delete.`
+    );
+    const r = verdict(site.args);
+    assert.doesNotMatch(
+      r.stderr, /unknown flag/,
+      `${site.what}: the new refusal rejects a flag a LIVE call site passes:\n${r.stderr}`
+    );
+  }
+
+  // AND THE CONTROL FOR THE `present` ASSERTIONS: a string that is NOT in the file must fail the
+  // same test, or six passing rows prove only that `includes` returns true for something.
+  assert.ok(
+    !fs.readFileSync(path.join(REPO, 'bin', 'warroom'), 'utf8').includes('node "$vtool" check --dry-run'),
+    'the negative control matched, so the `present` assertions above cannot tell a live call site from any string'
+  );
+});
+
+test('--dry-run writes nothing and previews the record a real run would write', () => {
+  // WHY THIS FLAG EXISTS AT ALL. `subject` was the obvious answer — it reads and never writes — but
+  // measured, `subject --json` prints {subject, base, bytes} and NOT the tier, the tier driver, the
+  // path or the record body. It is not a preview of what `record` writes, so refusing the unknown
+  // flag alone would have left a writing tool with no way to look before it writes.
+  const { proj } = fixture();
+  const args = ['record', '--repo', proj, '--ref', BRANCH, '--verdict', 'PASS', '--by', 'r', '--evidence', 'e', '--json'];
+
+  const before = verdictSnapshot(proj);
+  const dry = verdict([...args, '--dry-run']);
+  assert.equal(dry.code, 0, `--dry-run failed:\n${dry.stderr}`);
+  assert.equal(verdictSnapshot(proj), before, '--dry-run wrote a verdict record');
+
+  const real = verdict(args);
+  assert.equal(real.code, 0, `the real record failed:\n${real.stderr}`);
+  assert.notEqual(verdictSnapshot(proj), before, 'the real record wrote nothing, so the comparison below is vacuous');
+
+  // BYTE-IDENTICAL APART FROM THE TIMESTAMP AND THE FLAG ITSELF. A preview that describes a record
+  // the tool would not write is worse than no preview: it reports a plan nothing executes. The two
+  // bodies come from ONE code path — only the fs calls are gated — and this is what holds that true.
+  const strip = (s) => { const o = JSON.parse(s); delete o.recorded_at; delete o.dry_run; return o; };
+  assert.deepEqual(strip(dry.stdout), strip(real.stdout), 'the dry-run preview differs from the record actually written');
+  assert.equal(JSON.parse(dry.stdout).dry_run, true, 'the preview does not say it is a preview');
+  assert.equal(JSON.parse(real.stdout).dry_run, false, 'a real record claims to be a dry run');
+
+  // THE WRITTEN FILE MUST NOT CARRY `dry_run`. It is a fact about the invocation, not about the
+  // verdict, and check() reads this file — a new key in a governed artifact is a schema change.
+  const written = JSON.parse(fs.readFileSync(path.join(proj, JSON.parse(real.stdout).path), 'utf8'));
+  assert.ok(!('dry_run' in written), 'the dry_run flag leaked into the recorded artifact');
+  assert.ok(!('path' in written), 'the record shape changed');
+});
+
+test('usage names every flag the code reads — it named five of seven', () => {
+  // TWO DESCRIPTIONS OF ONE FLAG SURFACE DISAGREE SILENTLY, and these did: the usage line named
+  // --repo/--ref/--json while the code also read --verdict, --by, --evidence and --run-id. A reader
+  // checking whether `--run-id` was real would have concluded it was not. usage() is generated from
+  // FLAGS now, so this test is asking whether that generation still reaches the reader.
+  const r = verdict([]);
+  assert.equal(r.code, 2, 'no command did not print usage');
+  for (const flag of ['--repo', '--ref', '--json', '--verdict', '--by', '--evidence', '--run-id', '--dry-run']) {
+    assert.ok(r.stderr.includes(flag), `usage does not name ${flag}:\n${r.stderr}`);
+  }
+  // And the refusal message names the accepted set for the command that was refused, so the reader
+  // does not have to run a second command to find out what they should have typed.
+  const refused = verdict(['record', '--nope']);
+  assert.match(refused.stderr, /record accepts: .*--dry-run/, refused.stderr);
+});

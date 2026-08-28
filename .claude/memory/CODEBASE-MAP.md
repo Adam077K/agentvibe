@@ -65,6 +65,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:warroom-template` | `bash -n war-room/bin/PROJECT_NAME.tmpl` |
 | `npm run curate:skills` | `node scripts/curate-skills.mjs` |
 | `npm run gate` | `node scripts/run-gate.mjs` |
+| `npm run gates` | `node scripts/check-gates.mjs` |
 | `npm run ledger:build` | `node scripts/ledger.mjs build` |
 | `npm run ledger:events` | `node scripts/ledger.mjs events --since 30d` |
 | `npm run ledger:sweep` | `node scripts/ledger.mjs sweep` |
@@ -74,6 +75,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run measure:bash` | `node scripts/measure-bash-usage.mjs` |
 | `npm run memory:evict` | `node scripts/evict-memory.mjs` |
 | `npm run probe:stop-reason` | `node scripts/probe-stop-reason.mjs` |
+| `npm run probe:workflow-reach` | `node scripts/probe-workflow-reach.mjs` |
 | `npm run test:budget` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/usage.test.mjs` |
 | `npm run test:check-suite` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs` |
 | `npm run test:citations` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-citations.test.mjs` |
@@ -91,10 +93,11 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:lenses` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs` |
 | `npm run test:memory` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-memory-budget.test.mjs` |
 | `npm run test:merge-gate` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs` |
-| `npm run test:playbooks` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/playbooks.test.mjs` |
+| `npm run test:playbooks` | `node --require ./scripts/protected-write-tripwire.cjs --test --test-concurrency=1 scripts/playbooks.test.mjs s` |
 | `npm run test:pre-tool-use` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-readonly` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs` |
 | `npm run test:probe-stop-reason` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-stop-reason.test.mjs` |
+| `npm run test:probe-workflow-reach` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-workflow-reach.test.mjs` |
 | `npm run test:protected-write` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/protected-write.test.mjs` |
 | `npm run test:provenance` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/provenance-portability.test.mjs` |
 | `npm run test:registration` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-registration.test.mjs` |
@@ -134,9 +137,11 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/check-registration.test.mjs` | — |
 | `scripts/check-suite.test.mjs` | the drift guard for `npm run check`, and the mutation gate for |
 | `scripts/check-tier-gate.test.mjs` | the tier gate that replaced label-based enforcement. |
+| `scripts/claim-append.test.mjs` | the gate in scripts/lib/claim-append.js. |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
 | `scripts/evict-memory.test.mjs` | mutation gate for the typed memory eviction. |
+| `scripts/gates.test.mjs` | every rule tested by constructing the input that DEFEATS it. |
 | `scripts/launcher-permissions.test.mjs` | the autonomy dial, and the model it made inert. |
 | `scripts/ledger.test.mjs` | the resolvers, and the invariant that holds the ledger up. |
 | `scripts/lenses.test.mjs` | the lens linter, tested by constructing its failures. |
@@ -145,6 +150,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/pre-tool-use.test.mjs` | — |
 | `scripts/probe-readonly.test.mjs` | — |
 | `scripts/probe-stop-reason.test.mjs` | the aggregation that answers what ends a run. |
+| `scripts/probe-workflow-reach.test.mjs` | the bucketing behind "only a main session reaches the gate". |
 | `scripts/prompt-standard.test.mjs` | the PS-* rules of |
 | `scripts/protected-write.test.mjs` | proof that scripts/protected-write-tripwire.cjs fires. |
 | `scripts/provenance-portability.test.mjs` | the lens linter, run against a repository that |
@@ -158,7 +164,7 @@ it, so a hook that changes posture changes this map with it.
 
 ## What the system asserts
 
-40 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
+41 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
 `~/.warroom/ledger/global.yml` — machine state a fresh clone does not have, which the ledger reports
 rather than skipping silently.
 
@@ -166,7 +172,7 @@ rather than skipping silently.
 |---|---|
 | behavior | 17 |
 | external-fact | 1 |
-| internal-fact | 15 |
+| internal-fact | 16 |
 | runtime-capability | 7 |
 
 Browse them with `npm run ledger:views`; sweep for expiry with `npm run ledger:sweep`.
