@@ -51,3 +51,39 @@ token `verdictRef`, which survived a gutted instruction. Both closed and re-meas
 
 **Standing caveat.** Author-recorded against a deterministic floor: one agent, one model family.
 The checks ran and are green; that is not the tier being satisfied.
+
+## Round 3 — CI was RED on one test, and it was an environment assumption
+
+`Gate routing` (CI run 33168590818, step 39) failed on **exactly one** test of 112 while the same
+suite was 112/112 locally. Cause, from the log rather than the step name:
+
+```
+not ok 105 - A1 — verdictRef is ALWAYS a resolved sha, never the symbolic name it was given
+  Command failed: git rev-parse fix/gate-ref-shape
+  fatal: ambiguous argument 'fix/gate-ref-shape': unknown revision or path not in the working tree.
+```
+
+The test named a literal branch that exists in the author's worktree and nowhere else.
+`actions/checkout` for a `pull_request` event checks out the merge commit in **detached HEAD** and
+creates no local branch. The test needs *a symbolic ref resolving to a known sha*, not *that
+branch*, so it now **constructs one**: a per-pid branch at HEAD, asserted before use, deleted in
+`t.after`. Same cure as PR 99 and PR 101.
+
+**Proven on an environment that reproduces the defect** — a shared clone, detached, with the branch
+deleted:
+
+| arm | result |
+|---|---|
+| old test in the probe | **FAIL**, identical `fatal: ambiguous argument` |
+| fixed test, same probe | **PASS** |
+
+**The dispatching hypothesis was right about the environment and wrong about the mechanism.** It
+proposed `git rev-parse --abbrev-ref HEAD` returning the literal `HEAD`. Detached HEAD is real and
+the probe confirms `--abbrev-ref` does return `HEAD` there — but **no test calls it**: the single
+occurrence in the suite is a comment describing PR 99's historical defect (control: 14 live
+`rev-parse` uses in the same file). The cure it prescribed was correct anyway.
+
+**Found and NOT fixed here (READ-ONLY, out of scope, fails safe):** `scripts/verdict.mjs`'s `git()`
+helper sets no `maxBuffer`, so a sufficiently large diff throws `spawnSync git ENOBUFS` and
+surfaces as a Refusal — exit 2, unresolved, never a false pass. Observed in the probe, whose base
+was artificially distant. Pre-existing; `run-gate.mjs` has the same gap. Reported, not patched.
