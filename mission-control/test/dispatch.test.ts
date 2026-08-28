@@ -59,12 +59,22 @@ import { snapshotTree, diffTrees } from './write-barrier.test.ts';
  * not-started` test got `not-started` from the missing playbook, never reaching the spawn it exists
  * to test. A fixture that omits what the subject reads does not test the subject.
  */
-function installHarness(root: string, opts: { playbooks?: string[]; tools?: string } = {}): void {
+function installHarness(
+  root: string,
+  opts: { playbooks?: string[]; tools?: string; spelling?: 'flow' | 'block'; rawTools?: string } = {},
+): void {
   const agents = path.join(root, '.claude', 'agents');
   const playbooks = path.join(root, '.claude', 'playbooks');
   fs.mkdirSync(agents, { recursive: true });
   fs.mkdirSync(playbooks, { recursive: true });
-  const tools = opts.tools ?? '[Read, Write, Edit, Bash, Glob, Grep, Task]';
+  const flow = opts.tools ?? '[Read, Write, Edit, Bash, Glob, Grep, Task]';
+  // F2. THE FIXTURE AND THE PARSER SHARED ONE ASSUMPTION, WHICH IS WHY NEITHER CAUGHT IT. Every
+  // entry in the old table was flow-form, so a parser reading only flow form passed every test.
+  // `spelling: 'block'` renders the SAME list as YAML's other legal sequence form; `rawTools`
+  // writes an arbitrary value for the refusal cases.
+  const tools = opts.rawTools ?? (opts.spelling === 'block'
+    ? '\n' + flow.replace(/^\[|\]$/g, '').split(',').map((t) => `  - ${t.trim()}`).join('\n')
+    : flow);
   // The body deliberately mentions the gate tool in PROSE, exactly as all 7 real engine files do.
   // A derivation that greps the file rather than the `tools:` line reports this agent as
   // gate-capable, so every fixture built by this helper carries that trap.
@@ -1147,18 +1157,194 @@ describe('a dispatch records what the gate router decided about its output', () 
     expect((last.gateRouting as { why: string }).why).toContain('does not exist');
   });
 
-  test('ANTI-DRIFT: the REAL run-gate.mjs emits every field this consumer reads', () => {
+  test('ANTI-DRIFT: the REAL run-gate.mjs emits all FIVE fields this consumer reads', () => {
     // The six tests above drive a FIXTURE router, so they all stay green if the real one changes
     // shape — a fixture built from my own parser cannot fail. This runs the real emitter.
-    const out = execFileSync('node', [path.join(REPO_ROOT, 'scripts', 'run-gate.mjs'), '--json'], {
-      cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
-    });
+    //
+    // F3a — IT COVERED FOUR OF THE FIVE. There were zero assertions naming `invocation` (control:
+    // six named `gateRequired`). Renaming it in the real router left every test green while
+    // `isInvocation` returned false and the entry recorded `invocation: null` — `required: true`
+    // beside no invocation, which is the shrug `GateInvocation`'s own doc-comment exists to replace.
+    //
+    // F3b — AND THE DENOMINATOR HAD TO BE FORCED. Run with no arguments on `main` after merge the
+    // diff is EMPTY, and the router's empty path emits `{files: 0, floor: 'trivial',
+    // gateRequired: false}` with NO invocation — so a bare run can satisfy four of these assertions
+    // while exercising only the degenerate branch, and would have to SKIP the fifth. `--files`
+    // classifies an explicit list, so the non-empty branch is reached wherever this runs, and
+    // `files > 0` below is the assertion that proves it was.
+    const out = execFileSync('node', [
+      path.join(REPO_ROOT, 'scripts', 'run-gate.mjs'),
+      '--files', 'mission-control/server/index-cache.ts', '--json',
+    ], { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
     const j = JSON.parse(out) as Record<string, unknown>;
     expect(typeof j.ref).toBe('string');
     expect(typeof j.files).toBe('number');
     expect(typeof j.floor).toBe('string');
     expect(typeof j.gateRequired).toBe('boolean');
-    // And the field name the consumer would silently mis-read if it were renamed.
-    expect(Object.keys(j)).toContain('gateRequired');
+    // THE DENOMINATOR, READ RATHER THAN ASSUMED: the non-degenerate branch was the one exercised.
+    expect(j.files as number).toBeGreaterThan(0);
+    expect(j.gateRequired).toBe(true);
+    // THE FIFTH FIELD. Named by key so a rename goes red here, and shaped so a rename of its
+    // INNER keys — which `isInvocation` also reads — goes red too.
+    expect(Object.keys(j)).toContain('invocation');
+    const inv = j.invocation as Record<string, unknown>;
+    expect(typeof inv.tool).toBe('string');
+    expect(typeof inv.scriptPath).toBe('string');
+    expect(typeof inv.args).toBe('object');
+    // And the four names the consumer would silently mis-read if any were renamed.
+    for (const k of ['ref', 'files', 'floor', 'gateRequired']) expect(Object.keys(j)).toContain(k);
+  });
+});
+
+// ── F1 · what the session is TOLD must follow the same derivation as what is RECORDED ────
+//
+// The record and the prompt are two consumers of one derivation. The record followed it; the
+// prompt carried a hard-coded "NOT REACHABLE" for all three outcomes, so the one place the
+// distinction reached something that ACTS on it collapsed it. These tests fail on that code.
+
+describe('the prompt tells the session what was derived, not a fixed sentence', () => {
+  // NO TRAILING PERIOD, AND THAT IS LOAD-BEARING. The defective build emitted
+  // "…FROM THIS SESSION (unverified)." — the outcome interpolated between the sentence and its
+  // full stop — so a constant ending in `SESSION.` does not match it, and the contradiction test
+  // below PASSED against the very code it was written to defeat. Measured by mutation: with the
+  // period, 3 of 4 prompt tests went red on the pre-fix source and this one stayed green.
+  const NOT_REACHABLE = 'THE BINDING QA GATE IS NOT REACHABLE FROM THIS SESSION';
+  const MAY_BE = 'THE BINDING QA GATE MAY BE REACHABLE FROM THIS SESSION, AND NOTHING HAS RUN IT FOR YOU';
+  const UNDETERMINED = 'WHETHER THE BINDING QA GATE IS REACHABLE FROM THIS SESSION COULD NOT BE DETERMINED';
+
+  function promptFor(prefix: string, harness: (root: string) => void) {
+    const dir = mkTmpDir(prefix);
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(root, { recursive: true });
+    harness(root);
+    const argv = path.join(dir, 'argv.bin');
+    fs.writeFileSync(path.join(bin, 'claude'), `#!/bin/sh\nprintf '%s\\0' "$@" >> ${argv}\nexit 0\n`);
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    fs.writeFileSync(queue, JSON.stringify({
+      id: 'p', project: path.basename(REPO_ROOT), root, goal: 'GOALTEXT', enqueuedAt: 1_000, status: 'pending',
+    }) + '\n');
+    execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    const args = fs.existsSync(argv) ? fs.readFileSync(argv, 'utf8').split('\0').filter(Boolean) : [];
+    return { prompt: args[3] ?? '', entry: readDispatch(queue).at(-1) as DispatchEntry };
+  }
+
+  // Each row: the headline it MUST carry, and the two it must NOT. Stating the negatives is the
+  // whole test — the defective build satisfied every positive for `unreachable` and also emitted
+  // that same positive for the other two.
+  const rows: [string, (r: string) => void, string, string, string[]][] = [
+    ['unreachable', (r) => installHarness(r), 'unreachable', NOT_REACHABLE, [MAY_BE, UNDETERMINED]],
+    ['unverified', (r) => installHarness(r, { tools: '[Read, Bash, Workflow]' }), 'unverified', MAY_BE, [NOT_REACHABLE, UNDETERMINED]],
+    ['underivable', (r) => {
+      // Playbooks present so the launch is REACHED; the agent file unreadable so the gate is not
+      // derivable. This needs no founder grant and is the case that shipped a confident falsehood.
+      fs.mkdirSync(path.join(r, '.claude', 'playbooks'), { recursive: true });
+      fs.writeFileSync(path.join(r, '.claude', 'playbooks', 'ship-feature.yml'), 'name: f\n');
+    }, 'underivable', UNDETERMINED, [NOT_REACHABLE, MAY_BE]],
+  ];
+
+  for (const [what, harness, outcome, must, mustNot] of rows) {
+    test(`${what}: the prompt says its own headline and NOT the other two`, () => {
+      const { prompt, entry } = promptFor(`mc-prompt-${what}-`, harness);
+      expect(entry.gate?.outcome).toBe(outcome);
+      expect(prompt).toContain(must);
+      for (const other of mustNot) expect(prompt).not.toContain(other);
+    });
+  }
+
+  test('the prompt never contradicts the reason printed directly beneath it', () => {
+    // The defect in its sharpest form: headline "NOT REACHABLE" with `gate.why` saying "so the
+    // gate is REACHABLE" on the next line. Asserted as a relation between the two, so it holds
+    // however the strings are later reworded.
+    const { prompt, entry } = promptFor('mc-prompt-contradiction-', (r) => installHarness(r, { tools: '[Read, Bash, Workflow]' }));
+    expect(entry.gate?.why).toContain('so the gate is REACHABLE');
+    expect(prompt).toContain(entry.gate?.why as string);
+    expect(prompt).not.toContain(NOT_REACHABLE);
+  });
+
+  test('every outcome still forbids writing a verdict that was not obtained', () => {
+    // The one instruction that is correct in all three states, and must survive the split.
+    for (const [what, harness] of rows.map((r) => [r[0], r[1]] as const)) {
+      const { prompt } = promptFor(`mc-prompt-verdict-${what}-`, harness);
+      expect(prompt).toContain('DO NOT record a qa_verdict you did not obtain');
+    }
+  });
+
+  test('F5: the goal is fenced and the constraint restated after it', () => {
+    const { prompt } = promptFor('mc-prompt-fence-', (r) => installHarness(r));
+    const begin = prompt.indexOf('--- BEGIN GOAL ---');
+    const end = prompt.indexOf('--- END GOAL ---');
+    expect(begin).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(begin);
+    expect(prompt.slice(begin, end)).toContain('GOALTEXT');
+    // The constraint appears AFTER the goal, not only before it.
+    expect(prompt.indexOf('do not record', end)).toBeGreaterThan(end);
+  });
+});
+
+// ── F2 · the derivation must read both legal YAML spellings ──────────────────────────────
+
+describe('a tools: declaration is read in either legal YAML spelling', () => {
+  for (const spelling of ['flow', 'block'] as const) {
+    test(`${spelling} form: Workflow absent -> unreachable, present -> unverified`, () => {
+      const dir = mkTmpDir(`mc-yaml-${spelling}-`);
+      cleanupDirs.push(dir);
+      installHarness(dir, { tools: '[Read, Write, Edit, Bash, Glob, Grep, Task]', spelling });
+      expect(deriveGateReachability(dir, 'orchestrator').outcome).toBe('unreachable');
+      installHarness(dir, { tools: '[Read, Bash, Workflow]', spelling });
+      const granted = deriveGateReachability(dir, 'orchestrator');
+      expect(granted.outcome).toBe('unverified');
+      expect(granted.tools).toEqual(['Read', 'Bash', 'Workflow']);
+    });
+  }
+
+  test('THE DEFEATER: the two spellings of ONE list derive identically', () => {
+    // This is the assertion the old parser fails. A reformat that schema-lint accepts — it asserts
+    // only Array.isArray(fm.tools) — took the derivation to `underivable`, and through the prompt
+    // then told the session the gate could not run.
+    const mk = (spelling: 'flow' | 'block') => {
+      const d = mkTmpDir(`mc-yaml-eq-${spelling}-`);
+      cleanupDirs.push(d);
+      installHarness(d, { tools: '[Read, Bash, Workflow]', spelling });
+      return deriveGateReachability(d, 'orchestrator');
+    };
+    const a = mk('flow');
+    const b = mk('block');
+    expect(b.outcome).toBe(a.outcome);
+    expect(b.tools).toEqual(a.tools as string[]);
+    expect(a.outcome).toBe('unverified');   // and not both `underivable`, which would also be equal
+  });
+
+  const refusals: [string, string][] = [
+    ['a scalar is not a list', 'Read'],
+    ['an empty value', ''],
+    ['a mapping', '\n  read: true'],
+  ];
+  for (const [what, raw] of refusals) {
+    test(`${what} -> underivable, never an empty grant list`, () => {
+      const d = mkTmpDir('mc-yaml-refuse-');
+      cleanupDirs.push(d);
+      installHarness(d, { rawTools: raw });
+      const r = deriveGateReachability(d, 'orchestrator');
+      // `underivable` and NOT `unreachable`: "I could not read it" must not become "it declares
+      // nothing", which is a confident wrong answer.
+      expect(r.outcome).toBe('underivable');
+      expect(r.outcome).not.toBe('unreachable');
+    });
+  }
+
+  test('a `tools:` line in the BODY is not the declaration', () => {
+    const d = mkTmpDir('mc-yaml-body-');
+    cleanupDirs.push(d);
+    fs.mkdirSync(path.join(d, '.claude', 'agents'), { recursive: true });
+    fs.writeFileSync(path.join(d, '.claude', 'agents', 'orchestrator.md'),
+      '---\nname: orchestrator\n---\ntools: [Read, Workflow]\n');
+    expect(deriveGateReachability(d, 'orchestrator').outcome).toBe('underivable');
   });
 });

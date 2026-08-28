@@ -476,12 +476,20 @@ export interface GateInvocation {
 }
 
 /**
- * What `scripts/run-gate.mjs` decided about the work a dispatch produced.
+ * What `scripts/run-gate.mjs` decided about the DIFF IN THE PROJECT ROOT when the dispatch finished.
+ *
+ * F4. THIS SAID "the work a dispatch produced" AND THAT IS NOT WHAT IS MEASURED. The router
+ * classifies `origin/main...HEAD` in the project root, whatever put it there — measured at 185
+ * files in a tree where no dispatch had run. It is attribution the consumer cannot make: it
+ * launches an out-of-process session and cannot tell that session's commits from anyone else's.
+ * The failure is loud rather than silent — `ref` and `files` are on the record precisely so a
+ * reader can see what was classified — but a sentence claiming causation the data does not carry
+ * is the same defect this whole type exists to refuse, one level up in the prose.
  *
  * THIS IS THE OTHER HALF OF THE GATE STORY, AND IT IS THE HALF THAT NEEDS NO GRANT. `GateRecord`
  * answers "could the session it launched have run the gate" — a fact about tool declarations.
- * This answers "IS the gate required for what came out, and what would run it" — a fact about the
- * diff, decided by the repo's own router, which exists precisely because nothing called it:
+ * This answers "is the gate required for the diff now standing in that root, and what would run
+ * it" — a fact about a diff, NOT a claim about who produced it, decided by the repo's own router, which exists precisely because nothing called it:
  * `run-gate.mjs`'s own header says "a router that is never called is exactly the defect it was
  * written to fix."
  *
