@@ -251,8 +251,24 @@ function splitTopLevelColon(s) {
 // block-scalar values in `.claude/gates.yml` — an `irreversible`-tier surface — to recover
 // ZERO content, and would split `|` from `|-` where they agree today.
 //
-// FOUR DIVERGENCES FROM A CONFORMING PARSER REMAIN. Each has a row in the cross-check list in
-// `scripts/claims.test.mjs`; NONE is a sentence without a test behind it.
+// FIVE DIVERGENCES INSIDE BLOCK SCALARS ARE ENUMERATED BELOW, EACH WITH A ROW IN THE
+// CROSS-CHECK LIST IN `scripts/claims.test.mjs`. **THIS LIST IS NOT KNOWN TO BE EXHAUSTIVE,
+// AND NOTHING HERE CAN MAKE IT SO.** Two earlier drafts of this comment claimed totality —
+// first "the trailing newline is the only remaining difference", then "FOUR DIVERGENCES
+// REMAIN" — and each was refuted by a divergence nobody had listed. The reason is structural
+// and worth stating rather than repeating the mistake a third time:
+//
+//   THE CROSS-CHECK LIST IS A ONE-DIRECTIONAL CONTROL. It fires when a LISTED row stops
+//   diverging. Nothing fires when a divergence is MISSING from the list — which is the
+//   direction that failed twice.
+//
+// The bidirectional control — a sweep that fails when ANY unlisted divergence exists — needs
+// a reference parser to compare against, and this repo declares zero dependencies, so no
+// reference is resolvable on CI. Such a sweep could therefore only ever be developer-run and
+// advisory, never blocking. That is why this comment is SCOPED instead: it claims what has
+// been enumerated and measured, and claims nothing about what has not. Read "divergence"
+// below as "inside a block scalar"; outside them the parser is a documented subset and
+// diverges on anchors, tags, `0x10`, and multi-line plain and quoted scalars by design.
 //
 //   1. Chomping is `strip`, not `clip` — `|`/`>` drop a trailing newline the references keep.
 //   2. `|+`, `>+` and `|2` are not implemented, and are NOT reliably refused. With a
@@ -266,23 +282,45 @@ function splitTopLevelColon(s) {
 //   4. THE SIXTH LOSS, NOT FIXED BY THIS CHANGE and not fixable from here: `scanLines` runs
 //      `stripComment` over every line of the document, block-scalar bodies included, so an odd
 //      apostrophe in a body throws `unterminated quote` and takes the WHOLE DOCUMENT with it.
+//      THE MECHANISM IS WIDER THAN THIS ROW: the same quote tracking now also throws on a CR
+//      inside a quoted scalar — `k: 'a\rb'` — where the references give `"a b"`. Base and
+//      round 1 returned `"a\rb"`, so this round changed it from silently-wrong to refused.
+//      Fail-closed and, for a quoted scalar carrying a stray CR, defensible; both the single-
+//      and double-quoted forms behave this way, and both are pinned in the tests.
 //      `k: |-\n  the judge's verdict` is unparseable; both references read it. The raw-source
 //      read below cannot rescue it because the throw happens first, in the pre-pass. Live
 //      instance: `.claude/agents/reviewer-readonly.md` frontmatter, which `schema-lint` reads
 //      with its own `parseFrontmatter` and so does not hit. This fix makes the block-scalar
 //      VALUE content; the ADMISSION decision is still made by the line scanner.
+//   5. A block scalar as a SEQUENCE ITEM — `k:\n  - |-\n    a` — throws `unexpected
+//      indentation` where the references read it as a list of one string. Pre-existing,
+//      unchanged by this diff, and FAIL-CLOSED: it refuses rather than inventing a value.
+//      Named, deliberately not fixed here — `parseSeq` builds a synthetic line for the
+//      "- key:" form only, and teaching it the bare "- |-" form is its own change.
 function readBlockScalar(src, headerRaw, parentIndent, indicator, lineNo, key) {
   const isBlank = (l) => /^[ ]*$/.test(l);
   const indentOf = (l) => l.match(/^ */)[0].length;
 
-  // Content indentation is set by the first NON-EMPTY line of the body, per YAML.
+  // Content indentation is set by the first NON-EMPTY line of the body, per YAML — and a
+  // LEADING all-space line may not be wider than that indent. YAML makes this an error
+  // precisely because the content indent is not yet known when such a line is read, so
+  // accepting it means guessing. Skipping the check is a FAIL-OPEN: `k: |-\n     \n  a`
+  // is a parse error to both references and this parser used to invent `"   \na"` from it.
+  // That is the whole reason the rule below is stated for interior and trailing lines only.
   let contentIndent = -1;
+  let widestLeadingBlank = 0;
   for (let k = headerRaw + 1; k < src.length; k++) {
-    if (isBlank(src[k])) continue;
+    if (isBlank(src[k])) { widestLeadingBlank = Math.max(widestLeadingBlank, src[k].length); continue; }
     const ind = indentOf(src[k]);
     if (ind <= parentIndent) break;
     contentIndent = ind;
     break;
+  }
+  if (contentIndent >= 0 && widestLeadingBlank > contentIndent) {
+    throw new ClaimError(
+      `block scalar "${key}: ${indicator}" starts with an all-space line wider than its content indent — YAML cannot tell how far it is indented, and neither can this parser`,
+      lineNo,
+    );
   }
   if (contentIndent < 0) {
     throw new ClaimError(`block scalar "${key}: ${indicator}" has no content`, lineNo);
@@ -297,9 +335,13 @@ function readBlockScalar(src, headerRaw, parentIndent, indicator, lineNo, key) {
   const body = [];
   let endRaw = headerRaw + 1;
   for (let k = headerRaw + 1; k < src.length; k++) {
-    // A whitespace-only line never TERMINATES the block, but it is not always empty either:
-    // real YAML keeps whatever sits at or past the content indent. Pushing '' unconditionally
-    // dropped those bytes — measured `"a\n\nb"` where both references give `"a\n   \nb"`.
+    // A whitespace-only line never TERMINATES the block, but it is not always empty either.
+    // FOR AN INTERIOR OR TRAILING LINE — the only ones that reach here, because a wider
+    // LEADING one is refused above — real YAML keeps whatever sits at or past the content
+    // indent. Pushing '' unconditionally dropped those bytes: measured `"a\n\nb"` where both
+    // references give `"a\n   \nb"`. Stating the rule without that scope is what produced the
+    // leading-line fail-open; the sentence and the code are narrowed together, because a
+    // narrowed sentence over code that still applies the broad rule fixes nothing.
     if (isBlank(src[k])) {
       body.push(src[k].length > contentIndent ? src[k].slice(contentIndent) : '');
       endRaw = k + 1;
@@ -412,12 +454,15 @@ function parseMap(lines, i, indent, src) {
     if (rest === '>' || rest === '|' || rest === '>-' || rest === '|-') {
       // Block scalar. This is the exact shape that silently produced empty strings in
       // build-skills-manifest.mjs before Phase 1 — it is handled explicitly here.
-      // UNREACHABLE FROM ANY DOCUMENT, and deliberately kept: every scanned line carries
-      // `raw`, and `parseSeq`'s one synthetic line copies it. It guards a FUTURE caller that
-      // builds a line and forgets — without it, `lines[i].raw < endRaw` is false immediately
-      // and the body is silently re-parsed as structure. A mutation run confirms no test kills
-      // its removal, because no input can reach it; that is a property of the guard, not a gap
-      // in the tests, and it is written here so nobody claims coverage it does not have.
+      // UNREACHABLE FROM ANY DOCUMENT, and kept for its MESSAGE, not for its control flow.
+      // An earlier version of this comment claimed that without the guard the body is
+      // "silently re-parsed as structure". That was not measured and it is FALSE: building
+      // the synthetic line without `raw` and removing the guard produces a throw anyway —
+      // `readBlockScalar` is handed `undefined` and fails — but with a message that names
+      // neither the key nor the cause. So the guard converts a confusing throw into a
+      // specific one; it does not convert silence into noise. A mutation run confirms no
+      // test kills its removal, because no input can reach it. Written down so nobody
+      // claims coverage, or a failure mode, that it does not have.
       if (typeof headerRaw !== 'number') {
         throw new ClaimError(`internal: scanned line for "${key}" carries no raw source index`, n);
       }

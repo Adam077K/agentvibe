@@ -331,12 +331,53 @@ test('line endings are normalised once, and `\\r\\n?` is the predicate that matt
   assert.deepEqual(parseYamlSubset(`a: 1\rb: two\r`), { a: 1, b: 'two' });
 });
 
-test('a whitespace-only line keeps whatever sits at or past the content indent', () => {
+test('an INTERIOR or TRAILING whitespace-only line keeps what sits at or past the content indent', () => {
+  // The scope in this title is load-bearing. Stated as a general rule — which is how an
+  // earlier version of this test and of the source comment both put it — it is false for a
+  // LEADING all-space line, and applying it there was a fail-open that invented content from
+  // a document both references reject. That case is the next test.
   assert.equal(parseYamlSubset(`k: |-\n  a\n     \n  b\n`).k, 'a\n   \nb');
   assert.equal(parseYamlSubset(`k: >-\n  a\n     \n  b\n`).k, 'a\n   \nb');
   assert.equal(parseYamlSubset(`k: |-\n  a\n     \n`).k, 'a\n   ');
   // Shorter than the content indent: genuinely empty, and still not a terminator.
   assert.equal(parseYamlSubset(`k: |-\n  a\n \n  b\n`).k, 'a\n\nb');
+});
+
+test('a LEADING all-space line wider than the content indent is refused, not guessed', () => {
+  // YAML makes this an error because the content indent is not yet known when the line is
+  // read, so accepting it means guessing how far it is indented. This parser used to invent
+  // `"   \na"` from a document both references call a parse error — a FAIL-OPEN, and one
+  // produced by stating the whitespace-line rule without its scope.
+  assert.throws(() => parseYamlSubset(`k: |-\n     \n  a\n`), /all-space line wider than its content indent/);
+  assert.throws(() => parseYamlSubset(`k: >-\n     \n  a\n`), /all-space line wider than its content indent/);
+  // TWO CONTROLS, both of which the references accept and which must keep working — they are
+  // what makes the refusal above narrow rather than a blanket ban on leading blank lines.
+  assert.equal(parseYamlSubset(`k: |-\n  \n  a\n`).k, '\na');   // exactly the content indent
+  assert.equal(parseYamlSubset(`k: |-\n \n  a\n`).k, '\na');    // shallower
+});
+
+test('DIVERGENCE 5: a block scalar as a bare sequence item throws — fail-closed, pre-existing', () => {
+  // `k:\n  - |-\n    a` reads as a one-string list to both references. `parseSeq` builds a
+  // synthetic line for the "- key: value" form only, so the bare "- |-" form never reaches
+  // readBlockScalar. Unchanged by this diff and REFUSING rather than inventing a value, which
+  // is why it is named here and not fixed: teaching parseSeq the bare form is its own change.
+  assert.throws(() => parseYamlSubset(`k:\n  - |-\n    a\n    b\n`), /unexpected indentation/);
+  // Control: the same shape with a plain scalar works, so this is about block scalars and
+  // not about sequences.
+  assert.deepEqual(parseYamlSubset(`k:\n  - a\n`), { k: ['a'] });
+});
+
+test('a CR inside a QUOTED scalar throws — the sixth loss mechanism, outside a block scalar', () => {
+  // Same quote tracking as divergence 4, reached by a different route, and a behaviour
+  // change this diff made: base and round 1 both returned `{k: "a\rb"}`, the references
+  // give `"a b"`, and this parser now refuses. Fail-closed and defensible for a quoted
+  // scalar carrying a stray CR — but it is a changed class, so it gets a test rather than
+  // living as an unmentioned side effect of the line-ending normalisation.
+  assert.throws(() => parseYamlSubset(`k: 'a\rb'\n`), /unterminated quote/);
+  assert.throws(() => parseYamlSubset(`k: "a\rb"\n`), /unterminated quote/);
+  // Control: without the CR both forms parse, so it is the CR and not the quoting.
+  assert.equal(parseYamlSubset(`k: 'a b'\n`).k, 'a b');
+  assert.equal(parseYamlSubset(`k: "a b"\n`).k, 'a b');
 });
 
 test('a TAB-only line inside a block scalar is refused, as it is by the reference', () => {
@@ -415,9 +456,24 @@ test('CROSS-CHECK — when a reference YAML parser is reachable, it agrees', (t)
   // 4 — the sixth loss: an apostrophe in a body is fatal here and fine there.
   assert.equal(jsyaml.load(`k: |-\n  the judge's verdict\n`).k, "the judge's verdict");
   assert.throws(() => parseYamlSubset(`k: |-\n  the judge's verdict\n`), /unterminated quote/);
-  // Positive control: the divergence list is EXHAUSTIVE for the content cases above,
-  // which only means something if those cases are asserted to agree — they are, in the
-  // loop at the top of this test.
+  // 5 — a block scalar as a bare sequence item: we throw, the reference reads a list.
+  assert.deepEqual(jsyaml.load(`k:\n  - |-\n    a\n    b\n`), { k: ['a\nb'] });
+  assert.throws(() => parseYamlSubset(`k:\n  - |-\n    a\n    b\n`), /unexpected indentation/);
+  // Same mechanism as row 4, different route: a CR inside a quoted scalar.
+  assert.equal(jsyaml.load(`k: 'a\rb'\n`).k, 'a b');
+  assert.throws(() => parseYamlSubset(`k: 'a\rb'\n`), /unterminated quote/);
+  // And the case that is NO LONGER a divergence, kept as a regression pin: a leading
+  // all-space line wider than the content indent is a parse error to both sides now.
+  assert.throws(() => jsyaml.load(`k: |-\n     \n  a\n`));
+  assert.throws(() => parseYamlSubset(`k: |-\n     \n  a\n`), /all-space line wider/);
+  //
+  // WHAT THIS LIST CANNOT DO, stated so nobody reads it as more than it is: it fires when a
+  // LISTED row stops diverging. NOTHING here fires when a divergence is missing from the
+  // list, and that is the direction that has now failed twice — first "the only remaining
+  // difference", then "FOUR DIVERGENCES REMAIN". A bidirectional control needs a reference
+  // parser on CI, and this repo declares zero dependencies, so it could only ever be
+  // developer-run and advisory. The source comment is scoped for that reason rather than
+  // making a third totality claim.
 });
 
 // ── Parser: everything that must REFUSE ─────────────────────────────────────
