@@ -1,0 +1,11 @@
+{
+  "subject": "e8c70f139c082ad5f6f0ef0d65fed7d07794591e118d3b5ecd3711f888da1f69",
+  "base": "77965c985c543fd7dc2e6d9e98fa68220e5f594e",
+  "tier": "full",
+  "tier_driver": "scripts/check-gates.mjs",
+  "verdict": "PASS",
+  "by": "builder-ref-shape",
+  "run_id": null,
+  "evidence": "Round 2, after adversarial+evidence FAIL (A1, A2, E1 + five p2s). test:run-gate 112/112. npm run check 48 of 48 passed, 0 failed, exit 0, every step ran. Mutation matrix: C0 no-fire; M1=2 M2=1 M3=1 M4=32 M5=1 M6=1 M7=1 M8=1 all fire. M2/M3 were GREEN before this round; M5/M8 did not fire on the first matrix run and were closed. Author-recorded, single model family.",
+  "recorded_at": "2026-08-28T11:48:56.289Z"
+}
