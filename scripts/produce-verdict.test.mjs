@@ -94,6 +94,25 @@ function repoWithHostilePr() {
   return { repo, mainSha, prSha: g(repo, ['rev-parse', 'HEAD']) };
 }
 
+/**
+ * Copy the REAL `scripts/verdict.mjs`, its `scripts/lib/**` and the real tier map into a fixture,
+ * so the judging project materialised from it holds a WORKING recorder and checker.
+ *
+ * This is the answer to the review's central finding: every seam injected for testability was a
+ * seam the tests then stopped watching, and both HIGHs lived in the RELATIONSHIP between this
+ * script and `verdict.mjs`, which no mutation of this file can express.
+ */
+function installRealHarness(root) {
+  fs.mkdirSync(path.join(root, 'scripts', 'lib'), { recursive: true });
+  fs.copyFileSync(path.join(REPO_ROOT, 'scripts', 'verdict.mjs'), path.join(root, 'scripts', 'verdict.mjs'));
+  for (const f of fs.readdirSync(path.join(REPO_ROOT, 'scripts', 'lib'))) {
+    const src = path.join(REPO_ROOT, 'scripts', 'lib', f);
+    if (fs.statSync(src).isFile()) fs.copyFileSync(src, path.join(root, 'scripts', 'lib', f));
+  }
+  fs.mkdirSync(path.join(root, '.claude'), { recursive: true });
+  fs.copyFileSync(path.join(REPO_ROOT, '.claude', 'qa-tier-floor.yml'), path.join(root, '.claude', 'qa-tier-floor.yml'));
+}
+
 const SHA = 'a'.repeat(40);
 
 /** A router payload whose TOP-LEVEL fields disagree with `invocation.args`. */
@@ -157,6 +176,128 @@ test('tier-drift, subject-mismatch and an unreadable payload are all REFUSED', (
   assert.equal(dead.established, false);
 });
 
+// ── F-2 · AGAINST THE REAL RECORDER, NOT A STUB ──────────────────────────────────────────────
+//
+// These three do not inject `verdictRunner`. They materialise a judging project holding the REAL
+// `verdict.mjs` and drive it with a launcher that records and commits exactly as `buildGoal`
+// instructs. That is the only arrangement in which F-2 is expressible: the defect lived in the
+// relationship between the frozen ref and a recorder that moves HEAD, and a stub returning
+// `{ok:true}` on its second call cannot express it — a fixture built from the fix cannot fail.
+
+function realHarnessRepo() {
+  const repo = tmp('pv-real-');
+  g(repo, ['init', '-q', '-b', 'main']);
+  write(repo, `${WORKFLOW_DIR}/qa.js`, 'MAIN GATE\n');
+  write(repo, '.claude/agents/reviewer.md', '# reviewer\n');
+  write(repo, '.claude/agents/reviewer-readonly.md', '# reviewer-readonly\n');
+  write(repo, '.claude/settings.json', '{}\n');
+  installRealHarness(repo);
+  g(repo, ['add', '-A']);
+  g(repo, ['commit', '-qm', 'main']);
+  g(repo, ['update-ref', 'refs/remotes/origin/main', g(repo, ['rev-parse', 'HEAD'])]);
+  g(repo, ['checkout', '-qb', 'pr']);
+  write(repo, 'scripts/thing.mjs', 'the change under review\n');
+  g(repo, ['add', '-A']);
+  g(repo, ['commit', '-qm', 'the PR']);
+  return { repo, prSha: g(repo, ['rev-parse', 'HEAD']) };
+}
+
+/** A launcher that does what buildGoal asks: record, then commit. It moves HEAD, which is the point. */
+function recordingLauncher(repo, verdict) {
+  return (argv, opts) => {
+    const goal = argv[argv.length - 1];
+    const bin = /node '([^']+)' record/.exec(goal)?.[1] ?? path.join(opts.cwd, 'scripts', 'verdict.mjs');
+    const tip = /--ref '([0-9a-f]{40})'/.exec(goal)[1];
+    execFileSync(process.execPath, [bin, 'record', '--repo', repo, '--ref', tip, '--verdict', verdict, '--by', 'panel', '--evidence', 'the workflow summary'], { encoding: 'utf8' });
+    g(repo, ['add', '.qa/verdicts']);
+    g(repo, ['commit', '-qm', `qa(verdict): ${verdict}`]);
+    return { status: 0, stdout: 'Workflow launched in background. Task ID: wl7tw6ebs\n' };
+  };
+}
+
+test('F-2 — a real recorder that commits produces PRODUCED, not REFUSED', () => {
+  const { repo, prSha } = realHarnessRepo();
+  const r = produceVerdict({
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
+    deps: { runGateRunner: routerRunner(routerJson(repo, prSha)), launch: recordingLauncher(repo, 'PASS') },
+  });
+  assert.equal(r.outcome, OUTCOME.PRODUCED, `expected PRODUCED, got ${r.outcome}: ${r.reason}`);
+  assert.equal(r.launched, true);
+  assert.equal(r.preexisting, false);
+  // The record really is on a DESCENDANT of the reviewed tip — which is why a post-check pinned to
+  // the tip alone could never see it.
+  assert.notEqual(r.head, prSha, 'the recorder must have moved HEAD, or this fixture proves nothing');
+  assert.equal(g(repo, ['rev-parse', 'HEAD']), r.head);
+});
+
+test('F-3 — a real recorder writing FAIL produces BLOCKED, not REFUSED', () => {
+  const { repo, prSha } = realHarnessRepo();
+  const r = produceVerdict({
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
+    deps: { runGateRunner: routerRunner(routerJson(repo, prSha)), launch: recordingLauncher(repo, 'FAIL') },
+  });
+  assert.equal(r.outcome, OUTCOME.BLOCKED, `expected BLOCKED, got ${r.outcome}: ${r.reason}`);
+  assert.equal(r.established, true, 'a bound FAIL establishes a great deal');
+});
+
+test('F-3 — BLOCK is not a spelling the recorder accepts, and that is why FAIL must map', () => {
+  const { repo } = realHarnessRepo();
+  const bin = path.join(repo, 'scripts', 'verdict.mjs');
+  const bad = spawnSync(process.execPath, [bin, 'record', '--repo', repo, '--verdict', 'BLOCK', '--by', 't'], { encoding: 'utf8' });
+  assert.notEqual(bad.status, 0);
+  assert.match(bad.stderr + bad.stdout, /must be PASS or FAIL/);
+  const good = spawnSync(process.execPath, [bin, 'record', '--repo', repo, '--verdict', 'FAIL', '--by', 't', '--dry-run'], { encoding: 'utf8' });
+  assert.equal(good.status, 0, 'CONTROL: FAIL is accepted');
+});
+
+test('F-2 — a session that commits MORE than a verdict is REFUSED, not PRODUCED', () => {
+  const { repo, prSha } = realHarnessRepo();
+  const r = produceVerdict({
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
+    deps: {
+      runGateRunner: routerRunner(routerJson(repo, prSha)),
+      launch: (argv, opts) => {
+        recordingLauncher(repo, 'PASS')(argv, opts);
+        // ...and then changes the reviewed bytes after they were reviewed.
+        write(repo, 'scripts/sneaky.mjs', 'added after the review\n');
+        g(repo, ['add', '-A']);
+        g(repo, ['commit', '-qm', 'sneak']);
+        return { status: 0, stdout: '' };
+      },
+    },
+  });
+  assert.equal(r.outcome, OUTCOME.REFUSED);
+  assert.match(r.reason, /moved the reviewed bytes/);
+});
+
+// ── F-1 · the tree that gets routed ──────────────────────────────────────────────────────────
+
+test('F-1 — a repo that is not the tree run-gate ships in is REFUSED, not answered about', () => {
+  const { repo } = repoWithHostilePr();
+  const elsewhere = tmp('pv-elsewhere-');
+  const r = produceVerdict({
+    repo: elsewhere, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
+    deps: { runGateRunner: () => assert.fail('the router must not even be consulted'), launch: () => assert.fail('must not launch') },
+  });
+  assert.equal(r.outcome, OUTCOME.REFUSED);
+  assert.match(r.reason, /can only gate the tree it ships in/);
+  // CONTROL: the same call with the two agreeing proceeds far enough to consult the router.
+  let consulted = 0;
+  produceVerdict({
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
+    deps: { runGateRunner: () => { consulted += 1; return { status: 0, stdout: JSON.stringify({ invocation: null }) }; } },
+  });
+  assert.equal(consulted, 1);
+});
+
+test('F-1 — run-gate honours no repo argument, which is why the flag is gone', () => {
+  const src = fs.readFileSync(path.join(REPO_ROOT, 'scripts', 'run-gate.mjs'), 'utf8');
+  assert.equal((src.match(/'--repo'/g) || []).length, 0, 'run-gate gained a repo flag — the refusal above can be relaxed');
+  assert.ok((src.match(/'--ref'/g) || []).length > 0, 'CONTROL: the grep can find a flag run-gate does read');
+  const help = spawnCli(['--help']);
+  assert.ok(!help.stdout.includes('--repo '), 'the CLI must not advertise a flag nothing honours');
+});
+
 // ── A1 · PROVENANCE: the checker that decides comes from the ref, not from the PR ────────────
 
 test('A1 — the artifact is read with the JUDGE\'s verdict.mjs, never with the PR\'s', () => {
@@ -164,7 +305,7 @@ test('A1 — the artifact is read with the JUDGE\'s verdict.mjs, never with the 
   const judge = tmp('pv-judge-');
   const spawned = [];
   produceVerdict({
-    repo, judgeDir: judge,
+    repo, harnessRoot: repo, judgeDir: judge,
     deps: {
       runGateRunner: routerRunner(routerJson(repo, prSha)),
       verdictRunner: (argv) => { spawned.push(argv[0]); return { status: 1, stdout: JSON.stringify(ABSENT) }; },
@@ -187,7 +328,7 @@ test('A1 — the PRE-check is made with the judge\'s checker too, so a forgery c
   const judge = tmp('pv-judge-');
   const bins = [];
   const r = produceVerdict({
-    repo, judgeDir: judge,
+    repo, harnessRoot: repo, judgeDir: judge,
     deps: {
       runGateRunner: routerRunner(routerJson(repo, prSha)),
       verdictRunner: (argv) => { bins.push(argv[0]); return { status: 1, stdout: JSON.stringify(ABSENT) }; },
@@ -205,14 +346,14 @@ test('A1 — the router is distrusted: a redirected tree or tip is REFUSED', () 
   const elsewhere = tmp('pv-other-');
 
   const redirectedTree = produceVerdict({
-    repo, judgeDir: tmp('pv-judge-'),
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
     deps: { runGateRunner: routerRunner(routerJson(elsewhere, prSha)), launch: () => assert.fail('must not launch') },
   });
   assert.equal(redirectedTree.outcome, OUTCOME.REFUSED);
   assert.match(redirectedTree.reason, /not the repository under review/);
 
   const redirectedTip = produceVerdict({
-    repo, judgeDir: tmp('pv-judge-'),
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
     deps: { runGateRunner: routerRunner(routerJson(repo, SHA)), launch: () => assert.fail('must not launch') },
   });
   assert.equal(redirectedTip.outcome, OUTCOME.REFUSED);
@@ -395,7 +536,7 @@ test('a session that PRINTS "PASS" and writes nothing produces REFUSED', () => {
   const { repo, prSha } = repoWithHostilePr();
   let launched = 0;
   const r = produceVerdict({
-    repo, judgeDir: tmp('pv-judge-'),
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
     deps: {
       runGateRunner: routerRunner(routerJson(repo, prSha)),
       verdictRunner: verdictRunner(ABSENT, 1),
@@ -414,7 +555,7 @@ test('a session that PRINTS "PASS" and writes nothing produces REFUSED', () => {
 test('the session exit code cannot make a verdict either way', () => {
   const { repo, prSha } = repoWithHostilePr();
   const angry = produceVerdict({
-    repo, judgeDir: tmp('pv-judge-'),
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
     deps: {
       runGateRunner: routerRunner(routerJson(repo, prSha)),
       verdictRunner: verdictRunner(ABSENT, 1),
@@ -425,7 +566,7 @@ test('the session exit code cannot make a verdict either way', () => {
 
   let calls = 0;
   const calm = produceVerdict({
-    repo, judgeDir: tmp('pv-judge-'),
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
     deps: {
       runGateRunner: routerRunner(routerJson(repo, prSha)),
       verdictRunner: () => {
@@ -447,7 +588,7 @@ test('the judging project holds main\'s qa.js, and the session is launched in it
   const judge = tmp('pv-judge-');
   const cwds = [];
   produceVerdict({
-    repo, judgeDir: judge,
+    repo, harnessRoot: repo, judgeDir: judge,
     deps: {
       runGateRunner: routerRunner(routerJson(repo, prSha)),
       verdictRunner: verdictRunner(ABSENT, 1),
@@ -466,7 +607,7 @@ test('no top-level router field is read — the sha-pinned invocation.args wins'
   const { repo, prSha } = repoWithHostilePr();
   let seenGoal = null;
   const r = produceVerdict({
-    repo, judgeDir: tmp('pv-judge-'),
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
     deps: {
       runGateRunner: routerRunner(routerJson(repo, prSha)),
       verdictRunner: verdictRunner(ABSENT, 1),
@@ -483,7 +624,7 @@ test('a router refusal (exit 2, invocation null) is REFUSED — NOT "the gate is
   const { repo } = repoWithHostilePr();
   const body = JSON.stringify({ error: 'tree-unverified', reason: 'HEAD disagrees', gateRequired: true, invocation: null });
   const r = produceVerdict({
-    repo, judgeDir: tmp('pv-judge-'),
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
     deps: { runGateRunner: routerRunner(body, 2), launch: () => assert.fail('must not launch') },
   });
   assert.equal(r.outcome, OUTCOME.REFUSED);
@@ -495,7 +636,7 @@ test('a router refusal (exit 2, invocation null) is REFUSED — NOT "the gate is
 
   // CONTROL on the other arm: the SAME null invocation at exit 0 IS "not required".
   const ok = produceVerdict({
-    repo, judgeDir: tmp('pv-judge-'),
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
     deps: { runGateRunner: routerRunner(JSON.stringify({ floor: 'lite', invocation: null }), 0), launch: () => assert.fail('must not launch') },
   });
   assert.equal(ok.outcome, OUTCOME.NOT_REQUIRED);
@@ -504,7 +645,7 @@ test('a router refusal (exit 2, invocation null) is REFUSED — NOT "the gate is
 test('an unreadable router is REFUSED', () => {
   const { repo } = repoWithHostilePr();
   for (const runner of [routerRunner('not json at all', 0), () => ({ error: new Error('ENOENT') })]) {
-    const r = produceVerdict({ repo, judgeDir: tmp('pv-judge-'), deps: { runGateRunner: runner, launch: () => assert.fail('must not launch') } });
+    const r = produceVerdict({ repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'), deps: { runGateRunner: runner, launch: () => assert.fail('must not launch') } });
     assert.equal(r.outcome, OUTCOME.REFUSED);
   }
 });
@@ -515,7 +656,7 @@ test('a verdict that already binds skips the launch entirely — 2.5-3.8M tokens
   const { repo, prSha } = repoWithHostilePr();
   let launches = 0;
   const r = produceVerdict({
-    repo, judgeDir: tmp('pv-judge-'),
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
     deps: {
       runGateRunner: routerRunner(routerJson(repo, prSha)),
       verdictRunner: verdictRunner({ ok: true, reason: 'match', subject: SHA, tier: 'full' }, 0),
@@ -532,7 +673,7 @@ test('a pre-existing BLOCK also skips the launch, and stays BLOCKED', () => {
   const { repo, prSha } = repoWithHostilePr();
   let launches = 0;
   const r = produceVerdict({
-    repo, judgeDir: tmp('pv-judge-'),
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
     deps: {
       runGateRunner: routerRunner(routerJson(repo, prSha)),
       verdictRunner: verdictRunner({ ok: false, reason: 'not-pass', detail: 'verdict=BLOCK', subject: SHA }, 1),
@@ -546,7 +687,7 @@ test('a pre-existing BLOCK also skips the launch, and stays BLOCKED', () => {
 test('a dry run is REFUSED, not a pass, and launches nothing', () => {
   const { repo, prSha } = repoWithHostilePr();
   const r = produceVerdict({
-    repo, dryRun: true, judgeDir: tmp('pv-judge-'),
+    repo, harnessRoot: repo, dryRun: true, judgeDir: tmp('pv-judge-'),
     deps: {
       runGateRunner: routerRunner(routerJson(repo, prSha)),
       verdictRunner: verdictRunner(ABSENT, 1),
@@ -563,7 +704,7 @@ test('a dry run is REFUSED, not a pass, and launches nothing', () => {
 test('a launcher that cannot be spawned is REFUSED', () => {
   const { repo, prSha } = repoWithHostilePr();
   const r = produceVerdict({
-    repo, judgeDir: tmp('pv-judge-'),
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
     deps: {
       runGateRunner: routerRunner(routerJson(repo, prSha)),
       verdictRunner: verdictRunner(ABSENT, 1),
@@ -582,11 +723,27 @@ test('E3 — a single-dash unknown flag is REFUSED, not dropped in silence', () 
     assert.equal(r.status, EXIT[OUTCOME.REFUSED], `${bad} was not refused`);
     assert.match(r.stderr, /unknown flag/);
   }
-  // CONTROL: a known flag is accepted by the screen.
-  assert.equal(spawnCli(['--help']).status, 0);
-  // ...and a flag's VALUE is not mistaken for a flag, even when it looks like one.
-  const v = spawnCli(['--launcher', '--not-a-flag', '--help']);
-  assert.equal(v.status, 0, 'a value consumed by --launcher must not trip the screen');
+  // CONTROL: a known flag is accepted by the screen (usage exits 64, not a terminal state).
+  assert.equal(spawnCli(['--help']).status, 64);
+});
+
+test('F-4 — usage is exit 64, never 0: there is exactly one route to PRODUCED', () => {
+  const h = spawnCli(['--help']);
+  assert.equal(h.status, 64);
+  assert.notEqual(h.status, EXIT[OUTCOME.PRODUCED]);
+  assert.ok(!Object.values(EXIT).includes(64), 'the usage code must be outside the four terminal codes');
+  assert.match(h.stdout, /usage: produce-verdict/);
+});
+
+test('F-5 — a flag whose value is missing is REFUSED, never defaulted to the real launcher', () => {
+  for (const args of [['--launcher', '--json'], ['--launcher'], ['--judge-dir', '--dry-run'], ['--git-ref']]) {
+    const r = spawnCli(args);
+    assert.equal(r.status, 64, `${args.join(' ')} should be a usage error, got ${r.status}`);
+    assert.match(r.stderr, /needs a value/);
+  }
+  // CONTROL: a real value is accepted by opt() — this reaches the F-1 refusal, not a usage error.
+  const ok = spawnCli(['--launcher', '/bin/echo', '--json']);
+  assert.notEqual(ok.status, 64, 'a well-formed value must not read as a usage error');
 });
 
 function spawnCli(args) {

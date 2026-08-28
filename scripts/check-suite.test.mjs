@@ -2955,3 +2955,55 @@ test('~200KB of step output reaches the caller through a pipe — no 64KB trunca
   assert.match(out, /Tally: 2 of 2 passed/, `the summary was lost after a large write:\n${out.slice(-400)}`);
   assert.equal(code, 0);
 });
+
+// ── EVERY TEST FILE IS NAMED BY SOMETHING THAT RUNS IT ───────────────────────────────────────
+//
+// `test:merge-gate` and `test:playbooks` and `test:warroom` each run TWO files under one script
+// name. That is an established convention here, and it has a hole the STEPS drift check cannot
+// see: `test:check-suite` pins STEPS against script NAMES, not against their argv, so deleting a
+// filename from a script's command line removes its tests with every check still green.
+//
+// Simulated before this test existed: dropping `scripts/produce-verdict.test.mjs` from the
+// `test:merge-gate` argv left `test:merge-gate` at 61 pass exit 0 and `test:check-suite` at 70 pass
+// exit 0, with 24 blocking assertions silently gone. Under a dedicated step name the same deletion
+// was a red test — so the convention trades a guarded position for a cheaper wiring, and this is
+// the assertion that buys the position back.
+//
+// An exemption must name the file and say why, the same governance mechanism as EXCLUDED above:
+// an exemption you can argue with beats an absence nobody recognises.
+const TEST_FILES_RUN_BY_NOTHING = {
+  'claim-append.test.mjs':
+    'PRE-EXISTING, found 2026-08-28 and deliberately not fixed by the lane that found it: no ' +
+    'package.json script names it, so nothing in `npm run check` or ci.yml runs it. Wiring it is a ' +
+    'one-line change to somebody\'s argv and a decision about which step owns it, which is not this ' +
+    'lane\'s to take. FALSIFY THIS: if it is still here next time anyone touches the MCP server, wire ' +
+    'it or delete it.',
+};
+
+test('every scripts/*.test.mjs is named by a package.json script, or carries its reason', () => {
+  const scripts = JSON.stringify(require(path.join(REPO, 'package.json')).scripts);
+  const files = fs.readdirSync(path.join(REPO, 'scripts')).filter((f) => f.endsWith('.test.mjs'));
+  assert.ok(files.length > 20, `CONTROL: only ${files.length} test files found — the listing is aimed wrong`);
+
+  const orphans = files.filter((f) => !scripts.includes(`scripts/${f}`) && !(f in TEST_FILES_RUN_BY_NOTHING));
+  assert.deepEqual(orphans, [], `test file(s) that nothing runs: ${orphans.join(', ')}`);
+
+  // NEGATIVE CONTROL, on the arm that can go silently empty: a name that is not in package.json must
+  // be reported as absent, or the `includes` check above proves nothing.
+  assert.equal(scripts.includes('scripts/no-such-file.test.mjs'), false);
+
+  // And the exemption list may not rot into fiction: every exempted file must still exist AND must
+  // still be unnamed. An exemption for a file that is now wired is a lie about the tree.
+  for (const [f, why] of Object.entries(TEST_FILES_RUN_BY_NOTHING)) {
+    assert.ok(fs.existsSync(path.join(REPO, 'scripts', f)), `exempted ${f} no longer exists — drop the entry`);
+    assert.equal(scripts.includes(`scripts/${f}`), false, `${f} is wired now — drop the exemption`);
+    assert.ok(why.length >= 40, `${f}'s exemption must say why`);
+  }
+});
+
+test('the test:merge-gate argv still names both of its files', () => {
+  const argv = require(path.join(REPO, 'package.json')).scripts['test:merge-gate'];
+  for (const f of ['scripts/merge-gate.test.mjs', 'scripts/produce-verdict.test.mjs']) {
+    assert.ok(argv.includes(f), `test:merge-gate no longer runs ${f} — its assertions are gone and nothing else would say so`);
+  }
+});

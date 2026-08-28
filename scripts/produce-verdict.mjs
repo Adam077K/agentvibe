@@ -71,6 +71,33 @@
 // from the PR and is cross-checked against an independent instrument. Anyone widening this file
 // should keep that sentence true or change it deliberately.
 //
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+// WHAT THIS CLAIMS, STATED BEFORE THE MECHANISM RATHER THAN INFERRED FROM IT
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+//
+// A run of this script gates THE TREE IT SHIPS IN, at that tree's HEAD, and reports one of four
+// terminal states computed from a verdict record read with `main`'s checker. It claims nothing
+// about any other tree, and it refuses rather than answering about one.
+//
+// THE STATEMENT THIS FILE COULD HONESTLY HAVE MADE BEFORE, AND WHY IT IS NOT THE ONE HERE. A
+// review with a real recorder measured that every launch-path outcome was REFUSED: `tip` was
+// frozen pre-launch, the session recorded and committed, and the post-check looked at the pinned
+// tip where the record could not be. PRODUCED closed only on a SECOND invocation, through the
+// pre-check. So the true sentence was *"this produces a verdict only on a second invocation"* —
+// and nobody had written it, which made the second run luck rather than design. Writing it down is
+// what showed the pinned-tip post-check to be INCIDENTAL rather than load-bearing: the binding
+// lives in the SUBJECT, not in the ref, so reading at the post-launch HEAD and requiring the
+// subject to match gives the same guarantee and closes the loop in one invocation. The pin is kept
+// for the pre-check, where it is exactly right.
+//
+// STILL NOT CLAIMED, and neither is fixed by anything below:
+//   · the record is HASH-BOUND, NOT SIGNED. Anyone with repo-write can author one. This script
+//     narrows *which* record counts; it cannot make one unforgeable.
+//   · the end-to-end panel has never been driven through this mechanism. Whether the runtime
+//     accepts a materialised tree as a project is UNMEASURED.
+//   · nothing in CI or `npm run check` invokes this script. Only its unit tests run. It is a tool
+//     a human or `consume-dispatch.ts` calls, and no caller is wired yet.
+//
 // ── HAZARD 1 · THE `tool_result` IS A LAUNCH RECEIPT, NOT A VERDICT ──────────────────────────
 //
 // `Workflow` is asynchronous. The probe captured the receipt verbatim: "Workflow launched in
@@ -458,8 +485,14 @@ export function readVerdictArtifact({ tree, ref, verdictBin, runner = null }) {
   if (payload.reason === 'not-pass') {
     const m = /^verdict=(\S+)$/.exec(String(payload.detail ?? '').trim());
     const recorded = m ? m[1] : null;
-    if (recorded === 'BLOCK') {
-      return result(OUTCOME.BLOCKED, 'the panel ran and its verdict, bound to this exact diff, is BLOCK', common);
+    // `FAIL` AND `BLOCK` BOTH MEAN BLOCKED, and `FAIL` is the only one that can actually arrive.
+    // `verdict.mjs record` refuses anything but PASS or FAIL (`--verdict must be PASS or FAIL`),
+    // so a run that matched only the literal 'BLOCK' had an unreachable BLOCKED branch: a
+    // correctly-bound FAIL — the panel ran and found defects — read as "establishes nothing". That
+    // is this file's own argument against #115, mirrored. `BLOCK` is kept because a hand-written
+    // record can carry it and because qa.js's own vocabulary uses it.
+    if (recorded === 'BLOCK' || recorded === 'FAIL') {
+      return result(OUTCOME.BLOCKED, `the panel ran and its verdict, bound to this exact diff, is ${recorded}`, common);
     }
     return result(
       OUTCOME.REFUSED,
@@ -493,13 +526,16 @@ export function buildGoal({ scriptPath, args, verdictBin }) {
     '3. Record that verdict into the tree under review, using THIS checker and no other:',
     `     node ${shellQuote(verdictBin)} record \\`,
     `       --repo ${shellQuote(args.tree)} --ref ${shellQuote(tip)} \\`,
-    '       --verdict <PASS|BLOCK|REFUSED> --by produce-verdict --evidence "<the workflow summary>"',
+    '       --verdict <PASS|FAIL> --by produce-verdict --evidence "<the workflow summary>"',
     `   then commit it in ${shellQuote(args.tree)}:`,
     '     git add .qa/verdicts && git commit -m "qa(verdict): <verdict>"',
     '',
-    'Record what the workflow actually returned. REFUSED is a real verdict and means nothing was',
-    'established; do not spell it as BLOCK and never as PASS. If the workflow did not complete,',
-    'record nothing at all — an absent record is read as a refusal, which is the truth.',
+    'PASS only if the workflow passed. FAIL if it BLOCKed — that is the recorder\'s spelling of a',
+    'block, and `record` refuses any other word.',
+    '',
+    'If the workflow REFUSED, or did not complete, RECORD NOTHING AT ALL. There is no third value',
+    'to write: an absent record is read as a refusal, which is the truth. Never record PASS for a',
+    'run that established nothing.',
   ].join('\n');
 }
 
@@ -516,6 +552,28 @@ export function produceVerdict(o = {}) {
     gitRef = 'origin/main',
     deps = {},
   } = o;
+
+  // ── F-1 · THE TREE THAT GETS ROUTED IS THE ONE `run-gate.mjs` LIVES IN, AND NOTHING ELSE ───
+  //
+  // `run-gate.mjs` sets `REPO_ROOT = path.resolve(HERE, '..')` and uses it as the cwd of every git
+  // call it makes. It reads NO repo flag — grepped: 0 hits, against 4 and 5 for the two flags it
+  // does read, as controls — and the `cwd` this script passes to the spawn is therefore inert. So
+  // `repo` selected the object store the judging project was materialised from, and never the tree
+  // that was routed, validated or gated. A review measured the consequence from a working tree
+  // sitting at `origin/main`, the posture this file's own header recommends: naming a tier-full
+  // tree returned exit 3 NOT_REQUIRED, an answer about the empty diff of a DIFFERENT tree.
+  //
+  // The CLI flag is gone rather than fixed, because fixing it means teaching `run-gate.mjs` to
+  // honour a repo argument and that file is not this lane's. Programmatic callers are refused
+  // loudly instead of being quietly answered about the wrong tree.
+  if (canonical(repo) !== canonical(harnessRoot)) {
+    return result(
+      OUTCOME.REFUSED,
+      `this script can only gate the tree it ships in. It was asked about ${repo}, but run-gate.mjs ` +
+      `resolves its own location (${harnessRoot}) and reads no repo argument, so the routing decision ` +
+      'would describe a different tree than the one you named.',
+    );
+  }
 
   const route = (deps.routeGate ?? routeGate)({ repo, harnessRoot, runner: deps.runGateRunner ?? null });
 
@@ -561,14 +619,14 @@ export function produceVerdict(o = {}) {
     });
   }
 
-  const read = () => (deps.readVerdictArtifact ?? readVerdictArtifact)({
-    tree: args.tree, ref: tip, verdictBin: judge.verdictBin, runner: deps.verdictRunner ?? null,
+  const read = (ref) => (deps.readVerdictArtifact ?? readVerdictArtifact)({
+    tree: args.tree, ref, verdictBin: judge.verdictBin, runner: deps.verdictRunner ?? null,
   });
 
   // COST. A full panel run has measured 2.5–3.8M tokens and 40–50 minutes. The subject is a hash of
   // the reviewed bytes, so a verdict that already binds is a verdict for THIS diff and re-running
   // buys nothing at that price.
-  const pre = read();
+  const pre = read(tip);
   if (pre.outcome === OUTCOME.PRODUCED || pre.outcome === OUTCOME.BLOCKED) {
     return { ...pre, launched: false, preexisting: true, judgeDir: dir, args };
   }
@@ -595,8 +653,51 @@ export function produceVerdict(o = {}) {
     });
   }
 
+  // ── THE POST-CHECK MUST LOOK WHERE THE RECORD CAN BE, NOT ONLY WHERE THE DIFF WAS ──────────
+  //
+  // `tip` is frozen from the router BEFORE the launch, and the session is told to `record` and then
+  // `git commit`. That puts the record on a DESCENDANT of `tip`, where `git show <tip>:.qa/...`
+  // cannot see it — so a post-check at `tip` alone is structurally identical to the pre-check:
+  // same {tree, ref}, and recording cannot change either input. Measured by a review with a real
+  // recorder: the record IS committed, `check` at the pinned tip says `absent`, `check` at the new
+  // HEAD says `match`, and the run returned REFUSED. **PRODUCED was unreachable through a launch.**
+  // It closed only on a SECOND invocation, via the pre-check — a mitigation nobody had written down,
+  // which makes it luck rather than design.
+  //
+  // So read at the post-launch HEAD as well, and REQUIRE THE SUBJECT TO BE THE ONE REVIEWED. The
+  // subject excludes `.qa/verdicts/*.json`, so committing the record cannot move it — which means
+  // an equal subject proves the session added a verdict and nothing else, and an unequal one proves
+  // it changed the reviewed bytes after they were reviewed. That second case is REFUSED, not
+  // BLOCKED: a verdict about different bytes establishes nothing about these.
+  //
   // THE LAUNCHER'S OUTPUT IS A DIAGNOSTIC AND IS NEVER THE DECISION.
-  const post = read();
+  let newHead = null;
+  try {
+    newHead = git(args.tree, ['rev-parse', '--verify', 'HEAD^{commit}']).trim();
+  } catch (e) {
+    return result(OUTCOME.REFUSED, `could not read HEAD in ${args.tree} after the launch: ${firstLine(e)}`, {
+      judgeDir: dir, launched: true, args,
+    });
+  }
+
+  let post;
+  if (newHead === tip) {
+    // The session committed nothing. Reading at the tip is then the whole truth.
+    post = read(tip);
+  } else {
+    const atHead = read(newHead);
+    if (!pre.subject || !atHead.subject || atHead.subject !== pre.subject) {
+      return result(
+        OUTCOME.REFUSED,
+        `the gate session moved the reviewed bytes: the subject at HEAD ${newHead.slice(0, 12)} is ` +
+        `${String(atHead.subject ?? 'unreadable').slice(0, 12)}, and the subject reviewed at ` +
+        `${tip.slice(0, 12)} was ${String(pre.subject ?? 'unreadable').slice(0, 12)}. A verdict about ` +
+        'different bytes establishes nothing about these.',
+        { judgeDir: dir, launched: true, args, head: newHead },
+      );
+    }
+    post = atHead;
+  }
 
   return {
     ...post,
@@ -605,6 +706,7 @@ export function produceVerdict(o = {}) {
     judgeDir: dir,
     judgeFiles: judge.files,
     args,
+    head: newHead,
     session: { exit: run.status ?? null, signal: run.signal ?? null, stdout_bytes: (run.stdout || '').length },
   };
 }
@@ -614,13 +716,32 @@ export function produceVerdict(o = {}) {
 function flag(name) {
   return process.argv.includes(name);
 }
+class UsageError extends Error {}
+
+/**
+ * A flag's value, or a REFUSAL. It used to fall back silently when the next token began with `-`,
+ * so `--launcher --json` spawned the real `claude` while reporting nothing — a review fired one by
+ * accident that way. A missing value is a mistake, and the direction to fail in is loud.
+ */
 function opt(name, fallback = null) {
   const i = process.argv.indexOf(name);
-  return i !== -1 && process.argv[i + 1] && !process.argv[i + 1].startsWith('-') ? process.argv[i + 1] : fallback;
+  if (i === -1) return fallback;
+  const v = process.argv[i + 1];
+  if (v === undefined || v.startsWith('-')) {
+    throw new UsageError(`${name} needs a value; got ${v === undefined ? 'nothing' : `"${v}"`}.`);
+  }
+  return v;
 }
 
-const KNOWN = new Set(['--json', '--dry-run', '--repo', '--judge-dir', '--launcher', '--timeout', '--git-ref', '--help']);
-const TAKES_VALUE = new Set(['--repo', '--judge-dir', '--launcher', '--timeout', '--git-ref']);
+// The repo flag is DELIBERATELY ABSENT — see the refusal in produceVerdict(). Offering a flag that
+// selects a tree nothing downstream honours is worse than not offering one.
+const KNOWN = new Set(['--json', '--dry-run', '--judge-dir', '--launcher', '--timeout', '--git-ref', '--help']);
+const TAKES_VALUE = new Set(['--judge-dir', '--launcher', '--timeout', '--git-ref']);
+
+// USAGE IS NOT A TERMINAL STATE. `--help` exited 0, which is the code documented as the ONE route
+// to "a verdict exists and binds" — a second way for a caller to read success out of a run that
+// gated nothing. 64 is EX_USAGE and is outside the four, so it can never be mistaken for one.
+const EXIT_USAGE = 64;
 
 function main() {
   // AN UNKNOWN FLAG IS REFUSED, never dropped — and the test is a leading `-`, not a leading `--`.
@@ -639,26 +760,41 @@ function main() {
   }
   if (flag('--help')) {
     process.stdout.write(
-      'usage: produce-verdict.mjs [--repo P] [--dry-run] [--json] [--judge-dir D] [--launcher BIN] [--timeout MS] [--git-ref R]\n' +
-      '  PRODUCED 0 · BLOCKED 1 · REFUSED 2 · NOT_REQUIRED 3\n',
+      'usage: produce-verdict.mjs [--dry-run] [--json] [--judge-dir D] [--launcher BIN] [--timeout MS] [--git-ref R]\n' +
+      '  PRODUCED 0 · BLOCKED 1 · REFUSED 2 · NOT_REQUIRED 3 · usage 64\n' +
+      '  It gates the tree it ships in; there is no repo flag, because run-gate.mjs reads none.\n',
     );
-    return 0;
+    return EXIT_USAGE;
   }
 
-  const timeout = Number(opt('--timeout', String(60 * 60 * 1000)));
-  const r = produceVerdict({
-    repo: opt('--repo', process.cwd()),
+  let timeout;
+  let r;
+  try {
+    timeout = Number(opt('--timeout', String(60 * 60 * 1000)));
+    r = produceVerdict({
     dryRun: flag('--dry-run'),
     judgeDir: opt('--judge-dir'),
     launcher: [opt('--launcher', 'claude')],
     timeoutMs: Number.isFinite(timeout) && timeout > 0 ? timeout : 60 * 60 * 1000,
     gitRef: opt('--git-ref', 'origin/main'),
-  });
+    });
+  } catch (e) {
+    if (e instanceof UsageError) {
+      process.stderr.write(`produce-verdict: ${e.message}\n`);
+      return EXIT_USAGE;
+    }
+    throw e;
+  }
 
   if (flag('--json')) {
     process.stdout.write(`${JSON.stringify(r, null, 2)}\n`);
   } else {
     process.stdout.write(`${r.outcome}  (established=${r.established})\n  ${r.reason}\n`);
+    // PRINT THE TREE. The human path named neither the tree it gated nor the ref, so a run that
+    // answered about the wrong one looked exactly like a run that answered about yours. Only
+    // `--json` carried it, and a person reading a terminal is the case that matters here.
+    if (r.args) process.stdout.write(`  tree:          ${r.args.tree}\n  ref:           ${r.args.ref}\n`);
+    if (r.head) process.stdout.write(`  head after:    ${r.head}\n`);
     if (r.judgeDir) process.stdout.write(`  judge project: ${r.judgeDir}\n`);
     if (r.subject) process.stdout.write(`  subject:       ${String(r.subject).slice(0, 16)}…\n`);
   }
