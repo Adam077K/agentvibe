@@ -1,0 +1,11 @@
+{
+  "subject": "08458496501bd044576c4175e17e2ed5f527c1d9d3c5574b21d793ee872d4897",
+  "base": "b4ea862cc6e2653ac21b43b1315da6ae2c4ff011",
+  "tier": "full",
+  "tier_driver": "scripts/check-gates.mjs",
+  "verdict": "PASS",
+  "by": "builder-ref-shape",
+  "run_id": null,
+  "evidence": "Round 3 after CI RED on one test. Cause: a hardcoded branch name absent on a pull_request checkout (detached HEAD); fixed by constructing a per-pid ref. Proven on a detached clone: old test FAILS with the identical fatal, fixed test PASSES. test:run-gate 112/112. npm run check 48 of 48 passed, 0 failed, exit 0, every step ran. Mutation matrix C0 no-fire; M1=2 M2=1 M3=1 M4=32 M5=1 M6=1 M7=1 M8=1 all fire. Merged origin/main b4ea862. Author-recorded, single model family.",
+  "recorded_at": "2026-08-28T12:00:35.545Z"
+}
