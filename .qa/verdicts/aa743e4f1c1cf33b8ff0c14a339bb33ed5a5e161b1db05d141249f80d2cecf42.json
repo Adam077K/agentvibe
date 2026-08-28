@@ -1,0 +1,11 @@
+{
+  "subject": "aa743e4f1c1cf33b8ff0c14a339bb33ed5a5e161b1db05d141249f80d2cecf42",
+  "base": "b4ea862cc6e2653ac21b43b1315da6ae2c4ff011",
+  "tier": "full",
+  "tier_driver": "scripts/check-gates.mjs",
+  "verdict": "PASS",
+  "by": "builder-ref-shape",
+  "run_id": null,
+  "evidence": "Round 4 after both reviewers FAIL. Blocker 1 (separator blindness) and Blocker 2 (verdict.mjs pointing at the deleted tip field) closed, plus E-2 line-local census, E-3 invertible gates.yml, A-2 --files decoupling, p3 types, E-4 frozen count. test:run-gate 115/115. npm run check 48 of 48 passed, 0 failed, exit 0, every step ran. All six reviewer mutations that scored 112-0 now fire: N1=2 N2=1 N3=1 N4=1 N5=1 N6=1, C0 no-fire. Earlier matrix re-verified: M1=2 M2=1 M3=1 M5=2 M6=1 M7=1 M8=1. Author-recorded, single model family.",
+  "recorded_at": "2026-08-28T12:35:54.690Z"
+}
