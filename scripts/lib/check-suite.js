@@ -199,6 +199,41 @@ const EXCLUDED = {
     'NOTHING runs it. ' +
     'FALSIFY THIS: delete this entry, add both steps, and update the figures. If `npm run check` and ' +
     '`npm run check:figures` both come back green, nothing justified the exclusion and it must not survive.',
+  'test:probe-agent-tool-inheritance':
+    'OUT FOR THE SAME FIGURES REASON AS ITS SIBLING ABOVE, AND FOR NO TECHNICAL ONE. It is hermetic — it ' +
+    'launches a FAKE cli it writes into a temp dir, never the real one, so it spends no model turn, needs ' +
+    'no credentials and touches no network — and it passes 17 of 17 in 15.6s, measured 2026-08-28. It ' +
+    'would be a well-behaved step. NOTHING ON A RUNNER RUNS IT EITHER; the workflow directory has no step ' +
+    'for it. ' +
+    'THE COST OF WIRING IT, MEASURED HERE RATHER THAN QUOTED FROM THE ENTRY ABOVE, by putting the step in ' +
+    'and running both checks: `suiteSteps` 48 -> 49, and `npm run check:figures` comes back with 11 ' +
+    'findings across 8 locators in 3 files — docs/STATUS.md (4 locators), CLAUDE.md (3), the workflow (1). ' +
+    'The sibling entry says 20 findings; that was ITS tree, this is 11, and neither number should be ' +
+    'copied from the other. `npm run test:check-suite` fails once more on top of that, on the guard that ' +
+    'every STEP has a counterpart step in the workflow directory — so promotion is not one edit here but ' +
+    'a workflow step as well, and a workflow file floors this whole change at irreversible tier. The lane ' +
+    'that produced this probe held none of those four files. ' +
+    'ON WORDING, so the next editor is not mystified — the same trap the sibling entry documents: the ' +
+    'guard in scripts/check-suite.test.mjs reads ANY exclusion reason naming the workflow FILE as a claim ' +
+    'that the workflow still covers the script, and fails when it does not. This entry claims the ' +
+    'opposite, so it names the directory throughout. Naming the file here turns this entry red, which is ' +
+    'how that was measured. ' +
+    'WHAT IS LOST WHILE IT SITS HERE, stated rather than glossed: the probe promises three terminal ' +
+    'verdicts and refuses to report CONTAINED when its four controls have not fired, and NOTHING ' +
+    'AUTOMATED CHECKS THAT PROMISE while this entry stands. Every UNRESOLVED case in the file presents a ' +
+    'subject bucket identical to the CONTAINED one, and deleting any single control was confirmed by ' +
+    'mutation to turn one of them green — 16 pass / 1 fail with the fixture control removed, 17 / 0 with ' +
+    'it restored. That mutation is a hand-run today. ' +
+    'THE PROBE ITSELF, `probe:agent-tool-inheritance`, IS NOT AND SHOULD NOT BE A STEP under any of this: ' +
+    'it launches four real `claude` sessions and needs credentials, so it is unrunnable on a runner by ' +
+    'construction rather than by policy. Its prefix is outside GOVERNED, so it needs no entry of its own; ' +
+    'this sentence is here so its absence below does not read as an oversight. What it returned when run ' +
+    'by hand, 2026-08-28 against claude 2.1.246: CONTAINED, exit 0 — 41 tools in a main session with ' +
+    'Workflow among them, 5 under `--agent orchestrator` with none, and the fixture arm proving an agent ' +
+    'session CAN carry Workflow when it declares it. ' +
+    'FALSIFY THIS: delete this entry, add the step and a matching workflow step, and update the 8 figure ' +
+    'locators. If `npm run check` and `npm run check:figures` both come back green, nothing justified the ' +
+    'exclusion and it must not survive.',
   'check:ci-chains':
     'AN ENTRY POINT, NOT A SECOND PLACE THE CHECK RUNS. The blocking assertion is the chain case in ' +
     'scripts/check-suite.test.mjs, which is `test:check-suite` — a STEP of this suite, with a step of its ' +

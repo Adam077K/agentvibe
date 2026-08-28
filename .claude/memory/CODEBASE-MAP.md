@@ -74,6 +74,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run lint:agents` | `node .claude/hooks/schema-lint.js` |
 | `npm run measure:bash` | `node scripts/measure-bash-usage.mjs` |
 | `npm run memory:evict` | `node scripts/evict-memory.mjs` |
+| `npm run probe:agent-tool-inheritance` | `node scripts/probe-agent-tool-inheritance.mjs` |
 | `npm run probe:stop-reason` | `node scripts/probe-stop-reason.mjs` |
 | `npm run probe:workflow-reach` | `node scripts/probe-workflow-reach.mjs` |
 | `npm run test:budget` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/usage.test.mjs` |
@@ -95,6 +96,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:merge-gate` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs` |
 | `npm run test:playbooks` | `node --require ./scripts/protected-write-tripwire.cjs --test --test-concurrency=1 scripts/playbooks.test.mjs s` |
 | `npm run test:pre-tool-use` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/pre-tool-use.test.mjs` |
+| `npm run test:probe-agent-tool-inheritance` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-agent-tool-inheritance.test.mjs` |
 | `npm run test:probe-readonly` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs` |
 | `npm run test:probe-stop-reason` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-stop-reason.test.mjs` |
 | `npm run test:probe-workflow-reach` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-workflow-reach.test.mjs` |
@@ -148,6 +150,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/merge-gate.test.mjs` | the gate on `warroom merge`, executed rather than described. |
 | `scripts/playbooks.test.mjs` | the playbook linter, tested by constructing its failures. |
 | `scripts/pre-tool-use.test.mjs` | — |
+| `scripts/probe-agent-tool-inheritance.test.mjs` | the controls behind "a launched agent session |
 | `scripts/probe-readonly.test.mjs` | — |
 | `scripts/probe-stop-reason.test.mjs` | the aggregation that answers what ends a run. |
 | `scripts/probe-workflow-reach.test.mjs` | the bucketing behind "only a main session reaches the gate". |
