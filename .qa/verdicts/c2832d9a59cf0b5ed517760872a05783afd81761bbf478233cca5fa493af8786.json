@@ -1,0 +1,11 @@
+{
+  "subject": "c2832d9a59cf0b5ed517760872a05783afd81761bbf478233cca5fa493af8786",
+  "base": "62e0c26a0c02898922284ae02edb3c2851e1c3d3",
+  "tier": "full",
+  "tier_driver": "mission-control/scripts/consume-dispatch.ts",
+  "verdict": "PASS",
+  "by": "builder",
+  "run_id": null,
+  "evidence": "dispatch.test.ts 74 pass / 0 fail / 245 expect (base 53/0/158). schema-lint 18/0/0. Author-recorded, single model family: deterministic floor met, full-tier review requirement NOT met.",
+  "recorded_at": "2026-08-28T09:50:55.314Z"
+}
