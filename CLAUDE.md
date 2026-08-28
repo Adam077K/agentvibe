@@ -95,8 +95,16 @@ verified_by=V)` against the ledger's own kinds and resolvers.
 a playbook and stop. The pipeline is described once, in the playbook — `/build` alone previously restated it
 in 50 lines, which is two descriptions of one pipeline, and two descriptions of one thing disagree silently.
 
-**Capabilities are real or absent.** Exactly one agent declares `mcpServers`: `designer`, granted
-`[playwright]`, and `.mcp.json` backs it.
+**Capabilities are real or absent.** **Two** agents declare `mcpServers`: `designer` granted
+`[playwright]`, and `sourcer` granted `[claim-append]` as of #112 — `.mcp.json` backs both. Derive it,
+do not read the number here: `grep -n 'mcpServers' .claude/agents/*.md` and check each name against
+`Object.keys(require('./.mcp.json').mcpServers)`.
+
+> **Superseded 2026-08-28.** This read *"Exactly one agent declares `mcpServers`: `designer`"*, and the
+> wave-one train falsified it two paragraphs' worth of argument later than it falsified the count. Note
+> what `sourcer`'s grant is and is not: it appends a claim through one audited server, and its `tools:`
+> line is still `[Read, Glob, Grep, WebSearch, WebFetch]` — **no `Write`, no `Edit`**. A capability
+> narrow enough to name is the point; "sourcer can write now" is the wrong summary of it.
 
 > **Superseded 2026-08-20.** This line read *"No agent declares `mcpServers`"* — true when written, false
 > since the browser grant landed, and it sat beside a ledger claim asserting that same grant is live. Two
@@ -527,12 +535,18 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   what changed is that it is no longer a step, so it no longer blocks `npm run check`. See the next bullet
   for the cause and `scripts/lib/check-suite.js` for where the coverage went.*
   **`.qa/verdicts/` is NOT empty and gate runs DO complete end to end** — `git ls-tree -r --name-only
-  origin/main .qa | wc -l` → **23**, every one `verdict: PASS`.
+  origin/main .qa | wc -l` → **50**, every one `verdict: PASS` — re-derived 2026-08-28 at `d1294a4`,
+  50 files and 50 `PASS`, which is the whole of `.qa/`.
+  *Superseded 2026-08-28: the figure read **23**, correct at the head of the eight-merge train. The
+  wave-one train (#109–#117) more than doubled it and nobody edited the number. The command was already
+  written down beside it and re-running it takes a second, which is the argument for keeping commands in
+  this file rather than results.*
   *Superseded 2026-08-26: this read "`.qa/verdicts/` is still empty: no gate run has yet completed end to
-  end." True when written, falsified by the merge train with nobody editing the sentence.* **Read the 23
-  narrowly**: each is author-recorded against a deterministic floor, single model family, so the
-  `irreversible`-tier requirement of 2-of-3 judges is unmet on every one of them. Artifacts exist; the
-  multi-judge panel has still never run.
+  end." True when written, falsified by the merge train with nobody editing the sentence.* **Read the 50
+  narrowly**: each is author-recorded against a deterministic floor, one agent, one model family, so the
+  `irreversible`-tier requirement of 2-of-3 multi-judge and ≥2 model families is unmet on every one of
+  them. Artifacts exist; the multi-judge panel has still never run. *The checks ran and are green* is not
+  *the tier was satisfied*.
 - **`check:mc`'s single failure is caused by the ARMED SANDBOX, not by mission-control — measured
   2026-08-24.** Two cells at the session root, same commit, same deps, Bun 1.3.10 in both:
   **sandboxed → 344 pass · 1 fail · exit 1** (`EADDRINUSE`, in the real-socket SSE test in
@@ -582,18 +596,106 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   `PROJECT_ROOT` form. Do not read this bullet as resolved until someone reconciles it against `main` and
   says so here. Required follow-up with an exit criterion in
   [the handoff](docs/08-agents_work/handoffs/2026-08-25-after-the-gate-ran.md).
-- **THE MERGE TRAIN LANDED 2026-08-26 — eight merges, zero open PRs** (`REPORTED`; branch state is not
-  readable from here — the sandbox denies `~/.config/gh`). #106, #99, #101, #102, #103, #104, #105, #107.
+- **THE MERGE TRAIN LANDED 2026-08-26 — eight merges.** #106, #99, #101, #102, #103, #104, #105, #107.
+  *Superseded 2026-08-28: the headline read "eight merges, **zero open PRs**", parenthesised
+  "(`REPORTED`; branch state is not readable from here — the sandbox denies `~/.config/gh`)". Both halves
+  went stale inside two days — a nine-PR wave landed on top of it, and an open-PR count is a fact about a
+  moment, which no document can hold.* **Do not write an open-PR count into this file. Name the command:**
+  `gh pr list --state open --json number,title`. It needs the sandbox lifted for that one invocation:
+  `denyRead` covers `~/.config/gh`, so `gh` fails reading its own config before it reaches the network,
+  and the failure is a config error rather than anything about the repository.
   **#77 was CLOSED, not merged**: it bound a verdict to a HEAD sha while `scripts/verdict.mjs` already
   binds by content hash, and merging it would have put two implementations of one check side by side —
   the defect this repo has hit before and names explicitly.
-- **WAVE 2 IS EFFECTIVELY CLOSED, with two items left and one of them the founder's.** Landed: 2.1 the
+- **WAVE ONE LANDED 2026-08-28 — nine PRs, `47dbbd6` → `d1294a4`, 127 commits.** Derive the set rather
+  than quoting it: `git log --oneline 47dbbd6..d1294a4 | grep -oE '\(#[0-9]+\)' | sort -u` → **#109
+  through #117**, nine of them. CI on `d1294a4` is one job, *Deterministic checks*: **57 of 57 steps
+  success, 0 failed, 0 skipped** — 49 suite checks plus 4 setup and 4 post steps, so do not read 57 as a
+  count of checks. Taken from the jobs API and `jobs[].steps`, because `gh pr checks` has rendered a
+  cancelled run as `fail` and a green branch as "no checks reported" in this repository.
+  What each one changed:
+  - **#109** binds the QA bypass to the diff it authorises, and its failure path was **observed on the
+    runner**, not argued from the source.
+  - **#110** stops a failed launch reading as success on the mission-control dispatch path. Until it
+    landed, a dispatch that never happened reported like one that did.
+  - **#111** settles `Workflow` reachability as containment rather than as a gap — see the Wave 2 bullet
+    below, which is where the measurement lives.
+  - **#112** gives `sourcer` a narrow MCP capability, `mcpServers: [claim-append]`, backed by `.mcp.json`.
+    **It is not a `Write` tool, and that distinction is the whole design:** `sourcer`'s `tools:` line is
+    still `[Read, Glob, Grep, WebSearch, WebFetch]`, so it can append a claim through one audited server
+    and still cannot edit a file. Read both halves together or the grant looks larger than it is —
+    `grep -n 'mcpServers\|^tools:' .claude/agents/sourcer.md`. Two agents now declare `mcpServers`,
+    `designer` and `sourcer`, and `.mcp.json` backs both; the count in the Playbooks section above,
+    written when it was one, moves with the config and not with this sentence.
+  - **#113** turns `gate:` from a spelling allowlist into declarations something executes — see Wave 2 —
+    **and it closes two thirds of the wiring gap in the same PR**, which is easy to miss from its title:
+    `framer` went from **0 dispatch sites to 5**, and `/launch`, `/price` and `/validate` gave the three
+    unnamed playbooks a trigger each, so all six are now reachable from a command. `docs/STATUS.md` §7
+    carries the counts. The third part of that gap did **not** move: `coding.js`, `design.js` and
+    `research.js` are still invoked by nothing.
+  - **#114** closes the structure holes in `parseCiSteps` that let a chained step past the exit-code
+    guard. The count, the eight shapes and the corrected mechanism are in the guard bullet below, which
+    #114 wrote about itself; they are deliberately not restated here.
+  - **#115** makes a refusal a terminal value distinct from a block. Before it, a gate that reviewed
+    nothing was byte-indistinguishable from one that ran every reviewer and found defects.
+  - **#116** makes `verdict.mjs` refuse an unknown flag **instead of performing the non-dry action**.
+    A mistyped `--dry-run` was dropped in silence and the real thing ran, which is the worst direction
+    for that class of mistake to fail in.
+  - **#117** sweeps fixture position, so a fixture that passes only because of where it sits in a file
+    now fails — and makes the suite **read its denominator before its verdict**, which is the same rule
+    the preamble states about instruments generally.
+  **The standing caveat applies to all nine and none of them discharges it:** each is author-recorded
+  against a deterministic floor, one agent, one model family. `irreversible` asks for 2-of-3 multi-judge
+  and ≥2 distinct model families; neither is met, because no non-Anthropic model is reachable from inside
+  Claude Code. *The checks ran and are green* is not *the tier was satisfied*. Accepted risk, exit
+  condition **2026-11-17**.
+  **The sentence this wave earned, and it is a lane's rather than the orchestrator's:** *not one of the
+  instrument failures this session was caught by reading.* Every one was caught by a control that
+  disagreed with an expectation.
+- **WAVE 2 IS CLOSED EXCEPT 2.7, WHICH IS THE FOUNDER'S.** Landed: 2.1 the
   deterministic oracle · 2.3 the first real verdict · 2.4 the external-judge seam (`claim-judge-external`
-  is a registered, dispatchable resolver as of #103) · 2.6 `cmd_merge` opens a PR.
-  **Still open — 2.2 and 2.5, and they are one gap seen twice:** playbooks name `gate: qa-verdict` with
-  **no implementation behind it**, and **no engine declares a `Workflow` tool**, so a dispatched engine
-  cannot reach `qa.js` at all. Also open: the forgeability `qa-lead-pass.yml` documents about itself — a
-  verdict record is hash-bound, not signed, so anyone with repo-write can author one.
+  is a registered, dispatchable resolver as of #103) · 2.6 `cmd_merge` opens a PR · **2.2 the gate
+  declarations (#113)** · **2.5 the gate's reachability, settled as containment (#111)**.
+  *Superseded 2026-08-28: this read "**WAVE 2 IS EFFECTIVELY CLOSED, with two items left**", and named
+  them: "**Still open — 2.2 and 2.5, and they are one gap seen twice:** playbooks name `gate: qa-verdict`
+  with **no implementation behind it**, and **no engine declares a `Workflow` tool**, so a dispatched
+  engine cannot reach `qa.js` at all." It was one gap seen twice and it closed twice, in opposite
+  directions — 2.2 by building the missing thing, 2.5 by establishing that the missing thing must stay
+  missing.*
+  **2.2 — `gate:` has an implementation behind it now (#113).** [.claude/gates.yml](.claude/gates.yml)
+  declares **four gates: one `kind: command` (`qa-verdict`) and three `kind: human`**
+  (`founder-approval`, `outbound-approval`, `migration-approval`), and `scripts/check-gates.mjs`
+  resolves them — `npm run gates` for every finding, `check-gates.mjs resolve <id>` to run one. The
+  **blocking** assertion is `scripts/gates.test.mjs`, run by `npm run test:playbooks`. Before it,
+  `gate:` was a spelling allowlist in `schema-lint.js` and nothing more: a stage could name
+  `qa-verdict`, run nothing, and every check in the repository stayed green.
+  A `command` gate names its exact argv and treats **any exit other than 0 or 1 as `unresolved`, never
+  as pass** — Rule 10, and `gates.test.mjs` pins the two apart for spawn failure, signal, and every other
+  exit code. A `human` gate has no `run:` and writing one is refused. That is the load-bearing half:
+  "a person must decide" and "nothing implements this" used to be the same string in the same array, and
+  no reader could tell them apart.
+  **A command gate VERIFIES; it does not PRODUCE, and reading it the other way is the failure the file
+  warns about.** `qa-verdict` asks whether a PASS is committed and sha256-bound to this exact diff — a
+  file lookup and a hash compare, no model in the loop, which is why it is safe behind an exit code. It
+  does not run five dimension reviewers and a judge, and **nothing in `gates.yml` can**. Read
+  `gate: qa-verdict` as the third step of *session runs the panel → session records the verdict → anyone
+  checks the binding*, never as the first.
+  **2.5 — the count is still ZERO and the meaning inverted (#111).** `grep -c '^tools:.*Workflow'
+  .claude/agents/*.md` → **0 on all eighteen files**; positive control on the same arm,
+  `grep -l '^tools:.*Task' .claude/agents/*.md` → `orchestrator.md`, so the grep can find a tool that is
+  there. That zero was recorded here as a gap in reach. It is a **deliberate containment** now, enforced
+  by `PS-WORKFLOW-CONTAINMENT` in `.claude/hooks/schema-lint.js` and probed by
+  `scripts/probe-workflow-reach.mjs` (`npm run test:probe-workflow-reach`). **The gate may not be
+  invocable by the thing it gates** — the same reason `reviewer` carries no `Write`. The measurement
+  underneath: 0 of 55 recorded `Workflow` calls came from a sidechain, against 57,590 subagent `Bash`
+  calls in the same scan. `Workflow` is a main-session tool; a dispatched engine that declared it would
+  get a **silent no-op**, not an error, so a stage that made its engine run the gate would report success
+  having gated nothing. **Do not delete the zero to tidy this up** — the zero is the guarantee, and what
+  would overturn it is a `Workflow` call recorded with `isSidechain: true`, which is what the probe
+  looks for.
+  **Still open, and it is neither 2.2 nor 2.5:** the forgeability `qa-lead-pass.yml` documents about
+  itself — a verdict record is hash-bound, not signed, so anyone with repo-write can author one.
+  Hash-binding stops an *inherited* verdict, not a *forged* one.
   **2.7 is the founder's and its prerequisite is now discharged (#101):** `enforce_admins` is still
   `false`.
 - **EIGHT bypasses of the exit-code guard are CLOSED, and the mechanism was not the one recorded here.**
