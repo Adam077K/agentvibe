@@ -16,6 +16,10 @@ import {
   OUTCOME,
   EXIT,
   JUDGE_REF,
+  QA_SCRIPT,
+  ARGS_KEYS,
+  INVOCATION_TREATMENT,
+  FORBIDDEN_TREATMENT,
   FLAG_ROLES,
   FORBIDDEN_FLAG_ROLE,
   VERDICT_DIR,
@@ -435,6 +439,72 @@ test('C-2 — an unreadable subject is REFUSED as unreadable, not as "you moved 
   assert.equal(r.outcome, OUTCOME.REFUSED);
   assert.match(r.reason, /could not read a subject/);
   assert.ok(!/moved the reviewed bytes/.test(r.reason), 'an unreadable instrument must not be reported as an accusation');
+});
+
+// ── A-3, as a CLASS: what the invocation asserts, and what this file re-derives ───────────────
+
+test('A-3 — every field the invocation carries has a declared treatment, and none is trusted', () => {
+  const entries = Object.entries(INVOCATION_TREATMENT);
+  assert.ok(entries.length >= 5, `only ${entries.length} fields declared`);
+  for (const [field, how] of entries) {
+    assert.notEqual(how, FORBIDDEN_TREATMENT, `${field} is trusted — that is the class, not an instance`);
+    assert.ok(['re-derived', 'unread'].includes(how), `${field} has an unrecognised treatment "${how}"`);
+  }
+  // CONTROL: the registry can express the forbidden value, so the assertion is not vacuous.
+  assert.equal(typeof FORBIDDEN_TREATMENT, 'string');
+
+  // And the registry must cover what a REAL router actually emits — a field appearing in the
+  // payload with no entry is the shape that let ref-base and tier go unchecked.
+  const { repo, prSha } = repoWithHostilePr();
+  const emitted = JSON.parse(routerJson(repo, prSha)).invocation;
+  for (const k of Object.keys(emitted)) {
+    if (k === 'args') continue;
+    assert.ok(`invocation.${k}` in INVOCATION_TREATMENT, `invocation.${k} is emitted and undeclared`);
+  }
+  for (const k of Object.keys(emitted.args)) {
+    assert.ok(`invocation.args.${k}` in INVOCATION_TREATMENT, `invocation.args.${k} is emitted and undeclared`);
+    assert.ok(ARGS_KEYS.includes(k), `args.${k} is emitted and not in ARGS_KEYS`);
+  }
+});
+
+test('A-3 — the router does not choose WHICH GATE runs', () => {
+  const { repo, prSha } = repoWithHostilePr();
+  const payload = JSON.parse(routerJson(repo, prSha));
+  payload.invocation.scriptPath = '.claude/workflows/research.js';
+  let goal = null;
+  produceVerdict({
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
+    deps: {
+      runGateRunner: routerRunner(JSON.stringify(payload)),
+      verdictRunner: verdictRunner(ABSENT, 1),
+      launch: (argv) => { goal = argv[argv.length - 1]; return { status: 0, stdout: '' }; },
+    },
+  });
+  assert.ok(goal.includes(QA_SCRIPT), 'the goal must name the gate this file re-derives');
+  assert.ok(!goal.includes('research.js'), 'a router-supplied scriptPath must not reach the gate session');
+});
+
+test('A-3 — an args key this script does not know is REFUSED, not forwarded', () => {
+  const { repo, prSha } = repoWithHostilePr();
+  const payload = JSON.parse(routerJson(repo, prSha));
+  payload.invocation.args.budget = 'unlimited';
+  const r = produceVerdict({
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
+    deps: { runGateRunner: routerRunner(JSON.stringify(payload)), launch: () => assert.fail('must not launch') },
+  });
+  assert.equal(r.outcome, OUTCOME.REFUSED);
+  assert.match(r.reason, /args this script does not know: budget/);
+  // CONTROL: the same payload without the extra key proceeds to a launch.
+  let launched = 0;
+  produceVerdict({
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
+    deps: {
+      runGateRunner: routerRunner(routerJson(repo, prSha)),
+      verdictRunner: verdictRunner(ABSENT, 1),
+      launch: () => { launched += 1; return { status: 0, stdout: '' }; },
+    },
+  });
+  assert.equal(launched, 1);
 });
 
 // ── C-1 · the terminal exit codes observed from a REAL process, not from the map object ──────

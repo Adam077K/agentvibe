@@ -187,6 +187,46 @@ export const WORKFLOW_DIR = '.claude/workflows';
  */
 export const JUDGE_REF = 'origin/main';
 
+/** The gate. Re-derived, never taken from the invocation — see INVOCATION_TREATMENT. */
+export const QA_SCRIPT = '.claude/workflows/qa.js';
+
+/** The only keys the invocation may carry in `args`. Anything else is refused, not forwarded. */
+export const ARGS_KEYS = ['ref', 'tier', 'tree'];
+
+/**
+ * ── WHAT THE INVOCATION ASSERTS, AND WHAT THIS FILE DOES ABOUT EACH ─────────────────────────
+ *
+ * `crossCheckArgs` said "DISTRUST THE ROUTER — its two load-bearing outputs are re-derived here."
+ * The invocation carried FOUR and it re-derived TWO; the ref's base and the tier went unchecked, and
+ * a router emitting an honest tip with a dishonest base handed the panel an empty range while the
+ * verdict bound a real diff. The count was in an object literal three lines from that sentence.
+ *
+ * So the count is not a sentence any more. Every field the invocation carries is declared here with
+ * what happens to it, `trusted` is forbidden, and `produce-verdict.test.mjs` fails on a field with
+ * no entry. This is `FLAG_ROLES` pointed at the other input: the flags were what the OPERATOR
+ * supplies, these are what the ROUTER asserts, and both were closed one instance at a time until a
+ * registry made the class checkable.
+ *
+ * WRITING THIS DOWN FOUND TWO MORE, which is the argument for registries over fixes:
+ *   · `scriptPath` was taken from the invocation. It selects WHICH WORKFLOW the judge session runs
+ *     — a different gate, or none. The judging project holds only main's files so it could not
+ *     select hostile CODE, but "which gate runs" is not the router's to choose any more than "which
+ *     tree is judged" was. Re-derived from QA_SCRIPT.
+ *   · `args` was forwarded whole, so keys beyond the three declared ones reached qa.js verbatim
+ *     through the goal. `.claude/gates.yml` asks for `invocation.args` UNMODIFIED and that is
+ *     honoured — unmodified means the VALUES are not rewritten, not that unknown keys are accepted.
+ *     A fourth argument arriving is a deliberate act now, and it fails loudly rather than passing
+ *     through unread.
+ */
+export const INVOCATION_TREATMENT = {
+  'invocation.tool': 'unread',
+  'invocation.scriptPath': 're-derived',
+  'invocation.args.ref': 're-derived',
+  'invocation.args.tier': 're-derived',
+  'invocation.args.tree': 're-derived',
+};
+export const FORBIDDEN_TREATMENT = 'trusted';
+
 /**
  * The agents `qa.js` dispatches. A judging project missing these is not a judging project: the
  * dispatch either errors, or the binary defaults `agentType` to `general-purpose` with tools `*`
@@ -319,6 +359,13 @@ export function refTip(ref) {
 /** Shape-only checks on `invocation.args`. Everything here is refused by qa.js one layer down. */
 export function validateArgs(args) {
   if (!args || typeof args !== 'object') return 'the invocation carries no `args` object';
+  // DECLARE WHAT IS READ AND REFUSE THE REST, at the KEY rather than at the value. An unknown key
+  // was forwarded verbatim into the goal and thence to qa.js, unread by anything here.
+  const extra = Object.keys(args).filter((k) => !ARGS_KEYS.includes(k));
+  if (extra.length) {
+    return `the invocation carries args this script does not know: ${extra.join(', ')}. It forwards ` +
+      `exactly ${ARGS_KEYS.join(', ')}, and a fourth argument is a deliberate change rather than a pass-through.`;
+  }
   const { ref, tree } = args;
   if (typeof ref !== 'string' || !ref) return '`args.ref` is missing';
   if (typeof tree !== 'string' || !tree) return '`args.tree` is missing';
@@ -729,7 +776,8 @@ export function produceVerdict(o = {}) {
   }
 
   const goal = buildGoal({
-    scriptPath: invocation.scriptPath ?? `${WORKFLOW_DIR}/qa.js`,
+    // NOT `invocation.scriptPath`. Which gate runs is not the router's to choose.
+    scriptPath: QA_SCRIPT,
     args,
     verdictBin: judge.verdictBin,
   });
