@@ -754,7 +754,11 @@ function main() {
     if (!a.startsWith('-')) continue;
     if (!KNOWN.has(a)) {
       process.stderr.write(`produce-verdict: unknown flag "${a}". Known: ${[...KNOWN].join(' ')}\n`);
-      return EXIT[OUTCOME.REFUSED];
+      // USAGE, not REFUSED — the same argument as `--help` below. REFUSED is a terminal state
+      // meaning "the gate ran and established nothing"; a mistyped flag is not a gate run at all,
+      // and spelling it as one puts a typo into the same bucket as a panel that could not reach a
+      // reviewer. Both are non-zero, so nothing was unsafe; they were simply not the same event.
+      return EXIT_USAGE;
     }
     if (TAKES_VALUE.has(a)) i += 1; // its value is not a flag, whatever it looks like
   }

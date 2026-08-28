@@ -717,10 +717,11 @@ test('a launcher that cannot be spawned is REFUSED', () => {
 
 // ── E3 · the CLI flag screen ─────────────────────────────────────────────────────────────────
 
-test('E3 — a single-dash unknown flag is REFUSED, not dropped in silence', () => {
-  for (const bad of ['-json', '--dry-runn', '-x']) {
+test('E3 — a single-dash unknown flag is refused as USAGE, not dropped and not a terminal state', () => {
+  for (const bad of ['-json', '--dry-runn', '-x', '--repo']) {
     const r = spawnCli([bad]);
-    assert.equal(r.status, EXIT[OUTCOME.REFUSED], `${bad} was not refused`);
+    assert.equal(r.status, 64, `${bad} was not refused as a usage error`);
+    assert.ok(!Object.values(EXIT).includes(r.status), 'a typo must not wear a terminal state');
     assert.match(r.stderr, /unknown flag/);
   }
   // CONTROL: a known flag is accepted by the screen (usage exits 64, not a terminal state).
