@@ -1,0 +1,11 @@
+{
+  "subject": "409ca79f5738ecec3b01e9c1a96fa7314a37221a3406272148b00a99224770e9",
+  "base": "7384fd2586c6504ff77c8a135878645dae7df92f",
+  "tier": "full",
+  "tier_driver": "mission-control/scripts/consume-dispatch.ts",
+  "verdict": "PASS",
+  "by": "builder",
+  "run_id": null,
+  "evidence": "F-1 through F-5 fixed. views 89/0/734, dispatch 91/0/306, tsc --noEmit exit 0, schema-lint 18/0/0. F-1 pinned: M1 (headline reverted to consumed only) 3 red, M6 (case arm deleted) 3 red, baseline 89/0, each mutation verified by reading the subject back. crosscheck 17/1 — the ledger-summary test at its 120s budget, reproduced twice, caused by one verify invocation now taking 64s against a budget derived from 10.4s; comment-only delta, scripts/ untouched, CI green on the prior sha. Author-recorded, single model family.",
+  "recorded_at": "2026-08-28T11:06:59.647Z"
+}
