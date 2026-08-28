@@ -1,0 +1,11 @@
+{
+  "subject": "7e5f78c9cc999ca208f63afddf9acc2df4ae76a66afad0dac8cdf060b9fe91ca",
+  "base": "4ddc5c6a22c799f7b868f26545c507b03719944b",
+  "tier": "full",
+  "tier_driver": "mission-control/scripts/consume-dispatch.ts",
+  "verdict": "PASS",
+  "by": "builder-w3-caller",
+  "run_id": null,
+  "evidence": "tsc --noEmit exit 0; bun test test/dispatch.test.ts 126 pass 0 fail (baseline 91); symbolic-ref defect reproduced with both arms and fixed at routeGate; author-recorded, single model family",
+  "recorded_at": "2026-08-28T22:33:30.547Z"
+}
