@@ -848,3 +848,189 @@ describe('a `running` entry whose launcher is ALIVE is left alone', () => {
     expect(readDispatch(f.queue).map((e) => e.status)).toEqual(['pending', 'running', 'no-result']);
   });
 });
+
+// ── Routing, and the gate gap it does NOT close ──────────────────────────────────────────
+//
+// Two halves, and the second is the one that matters. Routing buys the orchestrator, the lens and
+// the playbook. It does NOT buy the QA gate, because `qa.js` is invoked through a `Workflow` tool
+// that no engine declares. The failure being closed is therefore not "not gated" — it is "looks
+// gated, wasn't", which is strictly worse because the first is visible and the second is not.
+
+describe('a dispatched goal is ROUTED through the orchestrator', () => {
+  /** A fixture whose `claude` records its argv NUL-separated, so a multi-line prompt survives. */
+  function routedFixture(prefix: string, harness: 'full' | 'no-playbooks' | 'none') {
+    const dir = mkTmpDir(prefix);
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(root, { recursive: true });
+    if (harness === 'full') installHarness(root, { playbooks: ['ship-feature.yml', 'design-pass.yml'] });
+    if (harness === 'no-playbooks') installHarness(root, { playbooks: [] });
+    const argv = path.join(dir, 'argv.bin');
+    const log = path.join(dir, 'launches.txt');
+    fs.writeFileSync(path.join(bin, 'claude'), `#!/bin/sh\nprintf '%s\\0' "$@" >> ${argv}\necho LAUNCHED >> ${log}\nexit 0\n`);
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    fs.writeFileSync(queue, JSON.stringify({
+      id: 'routed', project: path.basename(REPO_ROOT), root, goal: 'THE-DISPATCHED-GOAL', enqueuedAt: 1_000, status: 'pending',
+    }) + '\n');
+    return { bin, queue, argv, log, root };
+  }
+  const run = (f: { bin: string; queue: string }) =>
+    execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: f.queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+  const argvOf = (file: string) =>
+    fs.existsSync(file) ? fs.readFileSync(file, 'utf8').split('\0').filter(Boolean) : [];
+  const launched = (log: string) => fs.existsSync(log);
+
+  test('the launch selects the orchestrator agent — and is NOT the bare `--print <goal>` form', () => {
+    const f = routedFixture('mc-dispatch-routed-', 'full');
+    run(f);
+    const argv = argvOf(f.argv);
+    expect(argv[0]).toBe('--agent');
+    expect(argv[1]).toBe('orchestrator');
+    expect(argv[2]).toBe('--print');
+    // THE NEGATIVE, which the positives above cannot give: the superseded form put `--print` first
+    // and the raw goal second. Asserting only "--agent is present" would still hold if a future
+    // change appended the bare form as a fall-back beside it.
+    expect(argv[0]).not.toBe('--print');
+    expect(argv).not.toContain('THE-DISPATCHED-GOAL');   // the goal is EMBEDDED, never a bare argv
+    expect(argv.length).toBe(4);
+  });
+
+  test('the prompt carries the goal and bounds the playbook choice to the project’s own', () => {
+    const f = routedFixture('mc-dispatch-prompt-', 'full');
+    run(f);
+    const prompt = argvOf(f.argv)[3] ?? '';
+    expect(prompt).toContain('THE-DISPATCHED-GOAL');
+    expect(prompt).toContain('ship-feature.yml');
+    expect(prompt).toContain('design-pass.yml');
+    // NEGATIVE CONTROL: a playbook this project does not have must NOT be offered. Without this,
+    // a prompt that listed every playbook name it could think of would satisfy the two above.
+    expect(prompt).not.toContain('price-a-product.yml');
+    // The session must be told the gate is out of reach, or it writes a qa_verdict in good faith.
+    expect(prompt).toContain('NOT REACHABLE');
+    expect(prompt).toContain('DO NOT record a qa_verdict you did not obtain');
+  });
+
+  test('EVERY line the consumer writes carries how it routed and what it derived about the gate', () => {
+    const f = routedFixture('mc-dispatch-record-', 'full');
+    run(f);
+    const entries = readDispatch(f.queue);
+    const running = entries.find((e) => e.status === 'running') as DispatchEntry;
+    const terminal = entries[entries.length - 1] as DispatchEntry;
+    expect(terminal.status).toBe('consumed');
+    // BOTH LINES, not just the terminal one: a dispatch that dies mid-flight must still leave a
+    // record saying how it was launched and what was known about the gate.
+    for (const e of [running, terminal]) {
+      expect(e.route).toBe('orchestrator-playbook');
+      expect(e.gate?.outcome).toBe('unreachable');
+      expect(e.gate?.agent).toBe('orchestrator');
+      expect(e.playbooksOffered).toEqual(['design-pass.yml', 'ship-feature.yml']);
+    }
+    // DERIVED, NOT ASSERTED. The reason names the tools actually read out of the fixture's own
+    // agent file, so a constant hardcoding "unreachable" could not produce this string.
+    expect(terminal.gate?.tools).toContain('Task');
+    expect(terminal.gate?.why).toContain('Workflow');
+  });
+
+  test('the recorded gate outcome FOLLOWS the declaration — grant Workflow and it changes itself', () => {
+    // THE MUTATION THAT PROVES THE DERIVATION IS ONE. If `unreachable` were a constant, this
+    // fixture would produce it too, and every assertion in the test above would still pass.
+    const f = routedFixture('mc-dispatch-granted-', 'full');
+    installHarness(f.root, { playbooks: ['ship-feature.yml'], tools: '[Read, Bash, Workflow]' });
+    run(f);
+    const entries = readDispatch(f.queue);
+    const terminal = entries[entries.length - 1] as DispatchEntry;
+    expect(terminal.gate?.outcome).toBe('unverified');
+    // AND IT IS STILL NOT A PASS. Reachable is not run: the launch is out of process and this
+    // consumer sees an exit code and nothing else.
+    expect(terminal.gate?.outcome).not.toBe('unreachable');
+    expect(terminal.gate?.why).toContain('does not claim one ran');
+  });
+
+  test('no playbook to route through is `not-started`, and the goal does NOT run', () => {
+    const f = routedFixture('mc-dispatch-nopb-', 'no-playbooks');
+    run(f);
+    expect(launched(f.log)).toBe(false);
+    const entries = readDispatch(f.queue);
+    const terminal = entries[entries.length - 1] as DispatchEntry;
+    expect(terminal.status).toBe('not-started');
+    expect(terminal.error).toContain('no playbook to route through');
+    // A REFUSAL LEAVES NO `running` LINE. If it did, the next run would reconcile it to
+    // `no-result` — "started and told us nothing" about a launch that never began.
+    expect(entries.some((e) => e.status === 'running')).toBe(false);
+  });
+
+  test('CONTROL: the same harness WITH a playbook does launch — an absence needs a fired control', () => {
+    const f = routedFixture('mc-dispatch-nopb-control-', 'full');
+    run(f);
+    expect(launched(f.log)).toBe(true);
+    const entries = readDispatch(f.queue);
+    expect((entries[entries.length - 1] as DispatchEntry).status).toBe('consumed');
+  });
+
+  test('a root with no harness at all records `underivable`, not `unreachable`', () => {
+    // "I could not check" is not "I checked and it cannot". A resolver never passes what it could
+    // not check, and it must not report negative KNOWLEDGE it does not have either.
+    const f = routedFixture('mc-dispatch-noharness-', 'none');
+    run(f);
+    const terminal = readDispatch(f.queue).at(-1) as DispatchEntry;
+    expect(terminal.status).toBe('not-started');
+    expect(terminal.gate?.outcome).toBe('underivable');
+    expect(terminal.gate?.outcome).not.toBe('unreachable');
+  });
+});
+
+describe('the gate record cannot express a pass, and reachability is read not assumed', () => {
+  test('no gate outcome can be read as a pass — the union has no such member', () => {
+    // THE STRUCTURAL GUARANTEE, ASSERTED SO A FUTURE ADDITION TRIPS IT. Every member is either
+    // negative knowledge (`unreachable`) or stated ignorance (`unverified`, `underivable`). A
+    // member meaning "the gate ran and passed" is what turns "not gated" into "looks gated,
+    // wasn't", and nothing but this test stands between the type and someone adding one.
+    expect([...GATE_OUTCOMES].sort()).toEqual(['underivable', 'unreachable', 'unverified']);
+    for (const o of GATE_OUTCOMES) {
+      expect(['pass', 'passed', 'ok', 'gated', 'verified', 'clean']).not.toContain(o);
+    }
+  });
+
+  const table: [string, string, 'unreachable' | 'unverified' | 'underivable'][] = [
+    ['[Read, Write, Edit, Bash, Glob, Grep, Task]', 'the real orchestrator declaration', 'unreachable'],
+    ['[Read, Workflow, Bash]', 'the gate tool granted', 'unverified'],
+    ['[Read, WorkflowRunner]', 'a SUBSTRING of the gate tool is not the gate tool', 'unreachable'],
+  ];
+  for (const [tools, what, want] of table) {
+    test(`${what} -> ${want}`, () => {
+      const dir = mkTmpDir('mc-gate-derive-');
+      cleanupDirs.push(dir);
+      installHarness(dir, { tools });
+      expect(deriveGateReachability(dir, 'orchestrator').outcome).toBe(want);
+    });
+  }
+
+  test('MUST NOT FIRE: `Workflow` in the agent’s PROSE is not a declaration of it', () => {
+    // Measured 2026-08-28 in this repo: the word appears in the BODY of 7 of 7 engine files and in
+    // the `tools:` list of ZERO of them, so a file-level grep calls every engine gate-capable.
+    // installHarness() writes that prose into every fixture, so this trap is armed everywhere.
+    const dir = mkTmpDir('mc-gate-prose-');
+    cleanupDirs.push(dir);
+    installHarness(dir, { tools: '[Read, Bash]' });
+    const body = fs.readFileSync(path.join(dir, '.claude', 'agents', 'orchestrator.md'), 'utf8');
+    expect(body).toContain('Workflow');                       // the trap is really present
+    expect(deriveGateReachability(dir, 'orchestrator').outcome).toBe('unreachable');
+  });
+
+  test('an unreadable or tool-less agent file is `underivable`, with the path in the reason', () => {
+    const dir = mkTmpDir('mc-gate-underivable-');
+    cleanupDirs.push(dir);
+    const missing = deriveGateReachability(dir, 'orchestrator');
+    expect(missing.outcome).toBe('underivable');
+    expect(missing.why).toContain('orchestrator.md');
+    fs.mkdirSync(path.join(dir, '.claude', 'agents'), { recursive: true });
+    fs.writeFileSync(path.join(dir, '.claude', 'agents', 'orchestrator.md'), '---\nname: x\n---\nWorkflow\n');
+    expect(deriveGateReachability(dir, 'orchestrator').outcome).toBe('underivable');
+  });
+});
