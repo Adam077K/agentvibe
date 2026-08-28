@@ -387,7 +387,11 @@ export function dispatchQueuePath(): string {
  *   pending      enqueued by the server, not yet acted on
  *   running      a launch STARTED and has not yet reported back. Durable and written BEFORE the
  *                launch, so a consumer that dies mid-flight leaves evidence instead of silence.
- *   consumed     the launch ran to completion and exited 0
+ *   exited-clean the launch exited 0. That is the whole observation: the session's output is
+ *                inherited rather than captured, so whether it FINISHED is not known here.
+ *   consumed     LEGACY, never written by this build. It meant "ran to completion and exited 0" —
+ *                a completion nobody observed. Kept so records written before `exited-clean`
+ *                still resolve as settled instead of becoming `unrecognised`.
  *   failed       the launch ran and exited non-zero — `exitCode` carries which
  *   no-result    it started and never returned an outcome: killed by a signal, or found still
  *                `running` by a later run
@@ -403,6 +407,27 @@ export function dispatchQueuePath(): string {
  * refuses, and it is worse in a comment than in prose because no reviewer reads it twice. The
  * design reason does not need the number; the number needed a citation it never had.*
  *
+ * `exited-clean` IS NOT `consumed`, AND THIS FILE USED TO HAVE ONLY THE SECOND. F7. `consumed`
+ * names a COMPLETION, and the only thing ever observed is an EXIT CODE OF ZERO. Those differ for
+ * every session that stops early and tidies up on the way out: one that hits a turn cap, one that
+ * handles an error and returns, one that decides it is done when it is not. The launch runs with
+ * `stdio: 'inherit'`, so nothing about the session's content is captured and no field could have
+ * carried the distinction — the status was asserting something the consumer never saw.
+ *
+ * This is `GateOutcome`'s argument one field over. That union has no `passed` member because
+ * "I could not check" must not be spellable as "it passed"; `consumed` was spellable as
+ * "it finished" when the truth is "it stopped". `exited-clean` says only what was observed.
+ *
+ * THE TURN CAP IS RECORDED AS CONTEXT, NOT AS THE DIAGNOSIS. Routing through `--agent` makes the
+ * agent file's `maxTurns` bind where a bare `claude` read no such field, so a capped truncation is
+ * newly reachable — but the consumer cannot tell a capped session from a finished one, and a status
+ * naming the cap would assert a second thing it did not observe. `declaredMaxTurns` on the entry
+ * says what limit was in force and leaves the inference to a reader who can see the transcript.
+ *
+ * `consumed` IS KEPT AND IS NEVER WRITTEN BY THIS BUILD. Real queues hold entries carrying it, and
+ * dropping it from the union would make every one of them `unrecognised` — reported and then left
+ * alone forever. It stays `settled` so those records keep resolving.
+ *
  * `not-started` IS NOT `no-result`, and collapsing them misreports a config error as an agent
  * dying. `no-result` says a launch began and told us nothing. `not-started` says it never began,
  * which is a different fact with a different remedy: fix PATH and re-enqueue, with the guarantee
@@ -412,6 +437,7 @@ export function dispatchQueuePath(): string {
 export type DispatchStatus =
   | 'pending'
   | 'running'
+  | 'exited-clean'
   | 'consumed'
   | 'failed'
   | 'no-result'
@@ -437,6 +463,7 @@ export type DispatchStatus =
 const DISPATCH_STATUS_KIND = {
   pending: 'launchable',
   running: 'reconcilable',
+  'exited-clean': 'settled',
   consumed: 'settled',
   failed: 'settled',
   'no-result': 'settled',
@@ -460,6 +487,305 @@ const DISPATCH_STATUS_KIND = {
  * what it can rule out.
  */
 export const KNOWN_DISPATCH_STATUSES = Object.keys(DISPATCH_STATUS_KIND) as readonly DispatchStatus[];
+/**
+ * The invocation `scripts/run-gate.mjs` emits — the thing that WOULD run the gate.
+ *
+ * EMITTED, NEVER EXECUTED, and the distinction is the whole point. `qa.js` is a Workflow script
+ * that closes over globals (`agent()`, `parallel()`, `phase()`, `budget`) which no plain node
+ * process provides, so the router cannot run it and neither can this consumer. What it can do is
+ * produce the exact arguments, so that "no verdict" arrives with the means to obtain one instead
+ * of as a shrug.
+ */
+export interface GateInvocation {
+  tool: string;
+  scriptPath: string;
+  args: Record<string, unknown>;
+}
+
+/**
+ * What `scripts/run-gate.mjs` decided about the DIFF IN THE PROJECT ROOT when the dispatch finished.
+ *
+ * F4. THIS SAID "the work a dispatch produced" AND THAT IS NOT WHAT IS MEASURED. The router
+ * classifies `origin/main...HEAD` in the project root, whatever put it there — measured at 185
+ * files in a tree where no dispatch had run. It is attribution the consumer cannot make: it
+ * launches an out-of-process session and cannot tell that session's commits from anyone else's.
+ * The failure is loud rather than silent — `ref` and `files` are on the record precisely so a
+ * reader can see what was classified — but a sentence claiming causation the data does not carry
+ * is the same defect this whole type exists to refuse, one level up in the prose.
+ *
+ * THIS IS THE OTHER HALF OF THE GATE STORY, AND IT IS THE HALF THAT NEEDS NO GRANT. `GateRecord`
+ * answers "could the session it launched have run the gate" — a fact about tool declarations.
+ * This answers "is the gate required for the diff now standing in that root, and what would run
+ * it" — a fact about a diff, NOT a claim about who produced it, decided by the repo's own router, which exists precisely because nothing called it:
+ * `run-gate.mjs`'s own header says "a router that is never called is exactly the defect it was
+ * written to fix."
+ *
+ * AGAIN THERE IS NO MEMBER MEANING "PASSED", and here the omission is sharper than in GateRecord:
+ * this type carries `required: true` beside an invocation nobody ran, which is the honest shape of
+ * "this dispatch produced no verdict and here is the invocation that would." A `verdict` field
+ * would immediately attract a value that no panel produced.
+ */
+export type GateRouting =
+  | {
+      decided: true;
+      /** Is the binding gate required for this diff? Decided by the router, not by this consumer. */
+      required: boolean;
+      /** The tier floor the router computed. */
+      floor: string;
+      /** How many files the router classified — the DENOMINATOR behind `required`. */
+      files: number;
+      /** The ref the router classified, named so a reader can check what was measured. */
+      ref: string;
+      /** What would run the gate. Present when one is required. */
+      invocation: GateInvocation | null;
+    }
+  | { decided: false; why: string };
+
+/**
+ * How a dispatch was launched — the routing decision, recorded rather than inferred.
+ *
+ * `bare-print` is what every dispatch before 2026-08-28 used: `claude --print <goal>`, a model
+ * session in a project directory that reached no orchestrator, no playbook and no lens. It is kept
+ * as a NAMED value rather than deleted, because entries written by that build exist in real queues
+ * and a reader must be able to tell them apart from a routed one. It is not a value this build
+ * writes.
+ */
+export type DispatchRoute = 'orchestrator-playbook' | 'bare-print';
+
+/**
+ * What is known about the QA gate for one dispatch — AND WHAT THIS UNION DELIBERATELY CANNOT SAY.
+ *
+ * THERE IS NO `passed` MEMBER, AND ITS ABSENCE IS THE MECHANISM. The failure this closes is
+ * "looks gated, wasn't", which is strictly worse than "not gated" because the second is visible.
+ * A record that could express a pass would eventually carry one written by a build that had not
+ * checked; a union with no such member cannot, in any code path, present or future, without a
+ * type change that a reviewer sees.
+ *
+ *   `unreachable`  — derived, not assumed: the agent this dispatch launched does not declare the
+ *                    tool through which `qa.js` is invoked, so no session under it could have run
+ *                    the gate. Positive knowledge that the gate did not run.
+ *   `unverified`   — the agent COULD reach the gate, and this consumer did not observe a verdict.
+ *                    The launch is out of process; the consumer sees an exit code and nothing else.
+ *                    Ignorance, stated as ignorance.
+ *   `underivable`  — the derivation itself failed (no agent file, no `tools:` line). Distinct from
+ *                    `unreachable` on purpose: "I checked and it cannot" is not "I could not check",
+ *                    and a resolver never passes what it could not check.
+ *
+ * WHY `unverified` IS NOT REDUNDANT, WHICH IS THE ONE THING A READER WILL DOUBT. It looks like the
+ * state that never happens: if an agent declares the gate tool, surely it has it. It does not
+ * follow. A DECLARED `tools:` LIST IS AN UPPER BOUND ON THE DELIVERED SET, NOT THE SET.
+ *
+ * That asymmetry is what makes each member sound in its own direction:
+ *
+ *   · `unreachable` is sound because the bound holds downward — a tool ABSENT from the declaration
+ *     cannot be delivered, so "no `Workflow` declared" really is "the gate could not have run".
+ *   · `unverified` is sound because the bound does NOT hold upward — a tool PRESENT in the
+ *     declaration may still not arrive, so "the gate is reachable" was never something this
+ *     consumer could assert. It reports that it observed no verdict, which is all it knows.
+ *
+ * MEASURED, AND NOT BY THIS LANE — 2026-08-28, `claude 2.1.246`, recorded in
+ * `docs/08-agents_work/sessions/2026-08-28-builder-probe-agent-tool-inheritance.md` with the probe
+ * at `scripts/probe-agent-tool-inheritance.mjs`. F8: this read "the #122 reviewer" with no path,
+ * and an attribution is not a citation — `check-citations.mjs` blocks on existence, and a name
+ * cannot be resolved by it. Declared →
+ * advertised at init: orchestrator 7 → 5, builder 6 → 4, reviewer 4 → 2, sourcer 5 → 5. `Glob` and
+ * `Grep` are dropped exactly when `Bash` is declared beside them, and sourcer is the control: it
+ * declares no `Bash` and loses nothing. The declared column is re-derived from the agent files in
+ * this repo; the advertised column is that reviewer's measurement and is NOT re-derived here.
+ *
+ * DO NOT READ THAT AS PESSIMISM ABOUT `Workflow` SPECIFICALLY — it is not in the dropped class.
+ * The same probe ran the arm (`scripts/probe-agent-tool-inheritance.mjs`):
+ * `[Read, Bash, Workflow]` → `[Read, Bash, Workflow]`, kept, against
+ * `[Read, Glob]` + `Bash` → `[Read, Bash]`. Same declared change, opposite outcomes.
+ *
+ * AND YET `unverified` STILL STANDS, for a reason worth stating precisely: that observation is
+ * INLINE — a tool set supplied directly — and no agent FILE declaring `Workflow` has been observed
+ * at all, because none exists to observe (0 of 7 declare it; control, 7 of 7 declare `Read`). The
+ * path this function reads is the file path. So "a declaration would be delivered" is established
+ * for the inline case and OPEN for the one that would actually flip this value, which is exactly
+ * the shape of knowledge `unverified` exists to carry.
+ *
+ * F6 — AND `unverified` IS NOT MERELY UNOBSERVED THROUGH THAT PATH. IT IS REFUSED. A blocking lint
+ * rule, `PS-WORKFLOW-CONTAINMENT` in `.claude/hooks/schema-lint.js`, fails any agent file declaring
+ * `Workflow`. Measured by mutation on this tree: granting it to `orchestrator.md` takes the linter
+ * from `18 pass · 0 fail · 0 warnings, exit 0` to `17 pass · 1 fail · 0 warnings, exit 1`. So the
+ * comment elsewhere in this repo calling the grant "the one edit that would close this" understates
+ * it: today that edit does not merely await a founder decision, it fails a green blocking check.
+ *
+ * AND THAT RULE'S STATED REASON IS DENTED BY THE VERY CHANGE THIS FILE IS PART OF — dented in one
+ * named place, which is all its premise can survive. It refuses the declaration because "the
+ * orchestrator is not dispatched — it IS the session, so NO FIELD in this frontmatter is read on
+ * the path it runs on." A universal negative needs one counterexample, and `tools:` is one:
+ * measured at `claude 2.1.246` by `scripts/probe-agent-tool-inheritance.mjs`, recorded in
+ * `docs/08-agents_work/sessions/2026-08-28-builder-probe-agent-tool-inheritance.md`, a session
+ * launched as `--agent orchestrator` advertises 5 tools at init where a bare session advertises 41,
+ * with a differential arm on `reviewer-readonly` showing neither figure is a fallback.
+ *
+ * SAY `tools:`, NOT "the frontmatter". THE BROADER SENTENCE IS NOT MEASURED AND THIS FILE HEDGES IT
+ * TWICE ELSEWHERE — the agent-FILE path is called OPEN above, and `maxTurns` on the CLI `--agent`
+ * path is called UNMEASURED at `readDeclaredMaxTurns`. "Every field binds" would contradict both,
+ * from the same file, about the same path. The narrow claim is the one that survives, and it is
+ * enough: Nothing here touches `schema-lint.js`, so nothing goes red — THE RULE KEEPS PASSING WHILE
+ * THE PREMISE UNDER IT HAS A MEASURED COUNTEREXAMPLE.
+ * Which of the two files is wrong is a founder decision, not this consumer's — recorded so that a
+ * reader of the promise above learns the obstacle is a live check and not only an unmade decision.
+ */
+export type GateOutcome = 'unreachable' | 'unverified' | 'underivable';
+
+/** Every gate outcome this build knows, derived from one place so a reader cannot drift from it. */
+export const GATE_OUTCOMES = ['unreachable', 'unverified', 'underivable'] as const satisfies readonly GateOutcome[];
+
+/** What was derived about the gate, with the evidence that produced it. */
+export interface GateRecord {
+  outcome: GateOutcome;
+  /** Why this outcome, in the operator's terms — never the only record of it. */
+  why: string;
+  /** The agent whose declaration was read. Absent only when no agent was selected. */
+  agent?: string;
+  /** The tools that agent declares, as parsed. Present when the `tools:` line was readable. */
+  tools?: string[];
+}
+
+/**
+ * The tool through which `qa.js` — the binding QA gate — is invoked.
+ *
+ * Named once, here, because the derivation below and every comment that explains it must agree.
+ */
+export const GATE_TOOL = 'Workflow';
+
+/**
+ * The `tools:` list out of an agent file's frontmatter — BOTH legal YAML spellings, or `null`.
+ *
+ * F2. THIS READ ONE OF TWO BLESSED SPELLINGS AND SILENTLY DOWNGRADED THE OTHER. The original
+ * accepted only the flow form, `tools: [Read, Bash]`. YAML's block sequence is exactly equivalent
+ * and `schema-lint` accepts it — it asserts only `Array.isArray(fm.tools)`, and a block sequence
+ * parses to an array. Measured on one file with `tools:` rewritten as a block sequence:
+ * `schema-lint` 18 pass · 0 fail · 0 warnings, and this function returned `underivable`. **A
+ * stylistic reformat, valid and lint-clean, degraded the derivation** — and through the prompt it
+ * would then have told the session something false about the gate.
+ *
+ * IT IS NOT A THIS-REPO PROBLEM. `deriveGateReachability` takes a `root`, so a Phase-9 target that
+ * writes its frontmatter the other legal way lands here on its first dispatch.
+ *
+ * WHY THE FIXTURE COULD NOT HAVE CAUGHT IT: `installHarness` writes `tools: ${tools}` and every
+ * table entry was flow-form, so the parser and the fixture shared one assumption. The tests now
+ * drive both spellings through the same table.
+ *
+ * ANCHORED TO THE FRONTMATTER, NOT THE FILE. The old regex scanned the whole document with `/m`, so
+ * a line beginning `tools:` anywhere in the body would have been read as the declaration. This
+ * reads only between the opening `---` and the closing one.
+ *
+ * DECLARE WHAT IS READ AND REFUSE THE REST. Two spellings are understood; anything else returns
+ * `null`, which the caller reports as `underivable` — "I could not check" — rather than as an
+ * empty grant list, which would read as "declares nothing" and produce a confident wrong answer.
+ */
+export function parseToolsDeclaration(text: string): string[] | null {
+  // EVERY CAPTURE IS CHECKED FOR `undefined`, and that is not ceremony under this tsconfig:
+  // `noUncheckedIndexedAccess` types `m[1]` as `string | undefined`, and `bun test` does not
+  // typecheck — only `tsc --noEmit` does. Five errors of exactly this shape reached CI green-looking
+  // locally because the suite passed. An unchecked capture would also be a REAL bug the day a regex
+  // is edited to make the group optional.
+  const fm = /^---\r?\n([\s\S]*?)\r?\n---\s*$/m.exec(text);
+  const body = fm?.[1];
+  if (body === undefined) return null;
+
+  // Spelling 1 — flow sequence on one line: `tools: [Read, Bash]`
+  const flow = /^tools:[ \t]*\[([^\]]*)\][ \t]*$/m.exec(body)?.[1];
+  if (flow !== undefined) return splitItems(flow.split(','));
+
+  // Spelling 2 — block sequence: `tools:` then `  - Read` lines. The key must carry NOTHING after
+  // the colon; `tools: Read` is a scalar, not a list, and is refused rather than read as one item.
+  const block = /^tools:[ \t]*(?:#[^\n]*)?\r?\n((?:[ \t]+-[^\n]*\r?\n?)+)/m.exec(body)?.[1];
+  if (block !== undefined) {
+    const items = block.split(/\r?\n/).filter((l) => /\S/.test(l)).map((l) => l.replace(/^[ \t]+-[ \t]*/, ''));
+    return splitItems(items);
+  }
+  return null;
+}
+
+/** Trim, strip one layer of matching quotes, drop empties. Shared so both spellings normalise identically. */
+function splitItems(raw: string[]): string[] {
+  return raw
+    .map((t) => t.trim().replace(/^(["'])([\s\S]*)\1$/, '$2').trim())
+    .filter(Boolean);
+}
+
+/**
+ * The `maxTurns` an agent file declares, or `null` if it declares none this parser can read.
+ *
+ * WHY IT IS RECORDED AT ALL. Routing a dispatch through `--agent <name>` makes the agent file's
+ * frontmatter bind, and `bin/warroom`'s bare `claude` reads none of it — so a turn cap that was
+ * inert on the old path is live on the new one. A reader looking at an `exited-clean` entry and
+ * asking "did this stop because it was done, or because it ran out?" cannot answer from the exit
+ * code, and this at least tells them what limit was in force.
+ *
+ * IT IS NOT EVIDENCE THAT THE CAP FIRED, and must never be presented as such. Whether the CLI
+ * `--agent` flag enforces `maxTurns` the way an `Agent`-tool dispatch does is UNMEASURED — the
+ * ledger's claim for the sibling behaviour records the same bound, that it measured the Agent tool
+ * path only. The CLI path is a third path and neither measured it.
+ */
+export function parseMaxTurns(text: string): number | null {
+  const body = /^---\r?\n([\s\S]*?)\r?\n---\s*$/m.exec(text)?.[1];
+  if (body === undefined) return null;
+  const digits = /^maxTurns:[ \t]*(\d+)[ \t]*$/m.exec(body)?.[1];
+  return digits === undefined ? null : Number(digits);
+}
+
+/** The declared `maxTurns` for an agent in a project, or `null` when unreadable or undeclared. */
+export function readDeclaredMaxTurns(root: string, agent: string): number | null {
+  try {
+    return parseMaxTurns(fs.readFileSync(path.join(root, '.claude', 'agents', `${agent}.md`), 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Does the agent this dispatch will launch declare the gate tool? Read it; do not assume it.
+ *
+ * WHY DERIVED AND NOT A CONSTANT. A constant saying "the orchestrator cannot reach the gate" is
+ * true today and becomes a lie the day someone adds `Workflow` to that file — silently, in the
+ * direction that manufactures a false negative. Reading the declaration means the recorded value
+ * changes by itself when the grant changes, and the record stays true without anyone maintaining it.
+ *
+ * THE PARSE IS THE `tools:` LINE, NOT THE FILE. Measured 2026-08-28 in this repo: the word
+ * `Workflow` appears in the BODY of all 7 of 7 engine files and in the `tools:` declaration of
+ * ZERO of them. A `grep -l Workflow .claude/agents/` therefore reports every engine as gate-capable
+ * — the exact false negative this function exists to avoid — so matching is on whole tokens split
+ * out of the frontmatter list, never on a substring of the file.
+ *
+ * FAILURE IS A NAMED STATE, NOT A DEFAULT. Every path that could not complete the derivation
+ * returns `underivable` carrying the reason, so an unreadable agent file can never be mistaken for
+ * a checked one.
+ */
+export function deriveGateReachability(root: string, agent: string): GateRecord {
+  const file = path.join(root, '.claude', 'agents', `${agent}.md`);
+  let text: string;
+  try {
+    text = fs.readFileSync(file, 'utf8');
+  } catch (err) {
+    return { outcome: 'underivable', agent, why: `could not read ${file}: ${(err as Error).message}` };
+  }
+  const tools = parseToolsDeclaration(text);
+  if (tools === null) {
+    return { outcome: 'underivable', agent, why: `${file} declares no frontmatter \`tools:\` list this parser can read, so its grants cannot be determined` };
+  }
+  if (tools.includes(GATE_TOOL)) {
+    return {
+      outcome: 'unverified',
+      agent,
+      tools,
+      why: `${agent} declares ${GATE_TOOL}, so the gate is REACHABLE — but this consumer launches out of process and observed no verdict, so it does not claim one ran`,
+    };
+  }
+  return {
+    outcome: 'unreachable',
+    agent,
+    tools,
+    why: `${agent} declares [${tools.join(', ')}] and not ${GATE_TOOL}, through which qa.js is invoked — no session under it could have run the gate`,
+  };
+}
+
 /**
  * One entry in the dispatch queue.
  *
@@ -506,6 +832,41 @@ export interface DispatchEntry {
    * those entries already got.
    */
   consumerPid?: number;
+  /**
+   * How this dispatch was launched. ABSENT MEANS `bare-print`, and that reading is deliberate:
+   * every entry written before routing existed was launched that way, so absence is a known fact
+   * about those entries rather than a gap.
+   */
+  route?: DispatchRoute;
+  /**
+   * What is known about the QA gate for this dispatch. ABSENT MEANS UNKNOWN — never "passed", and
+   * the type on the other side of this field cannot say "passed" either. A reader that finds no
+   * `gate` is looking at a record written by a build that did not derive one, which is a different
+   * fact from any of the three outcomes and must not be folded into them.
+   */
+  gate?: GateRecord;
+  /**
+   * The playbooks the consumer offered the orchestrator to choose from, as filenames.
+   *
+   * WHAT THIS IS AND IS NOT EVIDENCE OF. It records what was OFFERED, which the consumer knows.
+   * Which one was SELECTED happens inside the launched session and is not observable from here, so
+   * it is not recorded — writing a selected playbook the consumer never saw would be the same
+   * class of defect as writing a gate verdict it never saw.
+   */
+  playbooksOffered?: string[];
+  /**
+   * What the repo's own gate router decided about the work this dispatch produced.
+   *
+   * ABSENT MEANS THE ROUTER WAS NEVER ASKED — a different fact from `{decided: false}`, which means
+   * it was asked and could not answer. Neither is ever a pass.
+   */
+  gateRouting?: GateRouting;
+  /**
+   * The `maxTurns` the launched agent's file declares, or `null` when it declares none.
+   *
+   * CONTEXT FOR AN `exited-clean`, NOT A DIAGNOSIS OF ONE. Absent means this build did not read it.
+   */
+  declaredMaxTurns?: number | null;
 }
 
 /**
