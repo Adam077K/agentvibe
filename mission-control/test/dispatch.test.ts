@@ -1874,6 +1874,131 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
     expect(entry.verdictProduction).toMatchObject({ state: 'blocked', exitCode: 1 });
   });
 
+  const RESOLVED = 'abc123abc123abc123abc123abc123abc123abcd';
+
+  // ── F2 · AN OPT-OUT THAT FAILS OPEN IS NOT AN OPT-OUT ──────────────────────────────────
+  //
+  // Measured before the fix, exit 0 and silent in every row: `--no-verdict` skipped the panel while
+  // `--no-verdicts`, `-no-verdict`, `--no_verdict` and `--noverdict` each ran ONE. The missing
+  // rejection is PRE-EXISTING \u2014 `--dry-runs` launches at `4ddc5c6` too \u2014 but this change adds the
+  // first flag here whose typo costs 3.8M tokens, and leans on that opt-out to justify defaulting
+  // the expensive path on.
+
+  const typos = ['--no-verdicts', '-no-verdict', '--no_verdict', '--noverdict', '--dry-runs'];
+  for (const typo of typos) {
+    test(`a mistyped flag "${typo}" is REFUSED, not silently dropped into a 3.8M-token launch`, () => {
+      const dir = mkTmpDir('mc-typo-');
+      cleanupDirs.push(dir);
+      const bin = path.join(dir, 'bin');
+      const root = path.join(dir, 'root');
+      const log = path.join(dir, 'producer-runs.log');
+      fs.mkdirSync(bin, { recursive: true });
+      fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
+      installHarness(root);
+      fs.writeFileSync(path.join(root, 'scripts', 'run-gate.mjs'), ROUTER());
+      fs.writeFileSync(path.join(root, 'scripts', 'produce-verdict.mjs'), PRODUCER({ outcome: 'PRODUCED', reason: 'r' }, 0));
+      fs.writeFileSync(path.join(bin, 'claude'), '#!/bin/sh\necho launch >> "$MC_PRODUCER_LOG"\nexit 0\n');
+      fs.chmodSync(path.join(bin, 'claude'), 0o755);
+      const queue = path.join(dir, 'queue.jsonl');
+      fs.writeFileSync(queue, JSON.stringify({
+        id: 'typo', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
+      }) + '\n');
+      let status: number | null = 0;
+      let stderr = '';
+      try {
+        execFileSync('bun', [CONSUMER, typo], {
+          env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue, MC_PRODUCER_LOG: log },
+          encoding: 'utf8', stdio: 'pipe',
+        });
+      } catch (err) {
+        const e = err as { status?: number | null; stderr?: string };
+        status = typeof e.status === 'number' ? e.status : null;
+        stderr = e.stderr ?? '';
+      }
+      // 64 IS EX_USAGE, outside every state this script reaches, so it can never be read as one.
+      expect(status).toBe(64);
+      expect(stderr).toContain('unknown flag');
+      // AND NOTHING RAN \u2014 not the dispatch, not the panel. A typo must cost zero.
+      expect(fs.existsSync(log)).toBe(false);
+      // THE QUEUE IS UNTOUCHED: refusing must not settle the entry it declined to process.
+      expect(readDispatch(queue).length).toBe(1);
+    });
+  }
+
+  test('CONTROL: the correctly spelled --no-verdict is ACCEPTED and still dispatches', () => {
+    // Without this, the five rows above are satisfied by a build that refuses every flag.
+    const { runs, launches } = producerFixture('mc-typo-control-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'never reached' }, 0),
+      args: ['--no-verdict'],
+    });
+    expect(launches).toBe(1);
+    expect(runs).toBe(0);
+  });
+
+  test('a verdictRef carrying BOTH a tip and a reason records the reason as null', () => {
+    // The field's doc promises "non-null exactly when `refTip` is null" and nothing enforced it, so
+    // a router sending both left a record contradicting its own type doc. Established now, not
+    // documented: a pinned tip needs no explanation, so the explanation is dropped.
+    const { entry } = producerFixture('mc-invariant-', {
+      router: ROUTER({ gateRequired: false, verdictRef: { ref: RESOLVED, reason: 'both were set' } }),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'never reached' }, 0),
+    });
+    const r = entry.gateRouting as Extract<typeof entry.gateRouting, { decided: true }>;
+    expect(r.refTip).toBe(RESOLVED);
+    expect(r.refTipReason).toBeNull();
+  });
+
+  // ── E1 · WHAT `describeRef` RETURNS, NOT MERELY THAT IT IS REACHED ─────────────────────
+  //
+  // The suite reached this function FOURTEEN times and asserted nothing about its output: replacing
+  // its body with `return `at ${routing.ref}`` \u2014 emitting the symbolic ref in the resolved-tip
+  // position, the exact string it exists to forbid \u2014 left the baseline BYTE-IDENTICAL GREEN. The
+  // commit that added it is `fix(mission-control): record the router's RESOLVED tip, not a symbolic
+  // ref`, so a regression here restores that defect for every human reader with the suite green.
+  //
+  // Both branches are covered below, and both the operator-facing LINE and the durable `why`.
+
+  test('the operator line leads with the RESOLVED tip and marks the asked-for ref as asked-for', () => {
+    const { stdout } = producerFixture('mc-desc-resolved-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'r' }, 0),
+    });
+    expect(stdout).toContain(`at ${RESOLVED} (asked as "origin/main...abc123")`);
+    // THE MUTATION THIS KILLS: `return `at ${routing.ref}`` renders `at origin/main...abc123`,
+    // putting a symbolic range where a reader expects the thing that was gated.
+    expect(stdout).not.toContain('at origin/main...abc123 ');
+    expect(stdout).not.toContain('files, at origin/main...abc123');
+  });
+
+  test('the DURABLE `why` carries the resolved tip too, not just the console line', () => {
+    // The `not-asked` reason is written to the queue and outlives the terminal. It embeds the same
+    // rendering, so a regression reaches the permanent record and not only a scrollback buffer.
+    const { entry } = producerFixture('mc-desc-durable-', {
+      router: ROUTER({ gateRequired: false }),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'never reached' }, 0),
+    });
+    const why = (entry.verdictProduction as { why: string }).why;
+    expect(why).toContain(`at ${RESOLVED}`);
+    expect(why).toContain('asked as');
+    expect(why).not.toContain('at origin/main...abc123)');
+  });
+
+  test('an UNPINNABLE tip renders TIP UNRESOLVED with the reason \u2014 never the symbolic ref', () => {
+    const reason = 'the range uses "..", not "..."';
+    const { stdout, entry } = producerFixture('mc-desc-unpinned-', {
+      router: ROUTER({ gateRequired: false, verdictRef: { ref: null, reason } }),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'never reached' }, 0),
+    });
+    for (const text of [stdout, (entry.verdictProduction as { why: string }).why]) {
+      expect(text).toContain('TIP UNRESOLVED for "origin/main...abc123"');
+      expect(text).toContain(reason);
+      // THE SUBSTITUTION THAT MUST NOT HAPPEN: a null tip quietly rendered as the symbolic ref,
+      // which would make an unresolvable tip indistinguishable from a resolved one.
+      expect(text).not.toContain(`at origin/main...abc123`);
+    }
+  });
+
   // ── A1 · N ENTRIES, ONE DIFF, ONE PANEL ────────────────────────────────────────────────
   //
   // Measured before the fix: 5 pending entries against one root and one diff produced 5 observed
