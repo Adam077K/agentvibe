@@ -1,4 +1,4 @@
-# Where we stand — 26 August 2026
+# Where we stand — 28 August 2026
 
 **This is the one living status document.** By founder decision on 2026-08-25 the handoff chain retires
 into this file: **fourteen** handoff documents accumulated in twelve days (2026-08-14 to 2026-08-26),
@@ -71,9 +71,18 @@ tense and every one of them described a state the same commit had already remove
    a branch nobody has pulled — weeks behind, here — and the second is what a reader means by "main".
    Naming neither is how this line once read `main = 71fd58d`, which was *honest by its own command* and
    still pointed at the wrong tree. This document describes **the tree it ships in**, which the second
-   command names; it was written on `docs/status-after-the-merge-train`, cut from `main` after the
-   eight-merge train (#106, #99, #101, #102, #103, #104, #105, #107 — **zero open PRs** at that point,
-   `REPORTED`).
+   command names; it is maintained on `docs/wave-one-closeout`, cut from `origin/main` at `d1294a4`
+   after the **wave-one train — nine PRs, #109 through #117, 127 commits from `47dbbd6`**. Derive that
+   set rather than trusting the list:
+   `git log --oneline 47dbbd6..d1294a4 | grep -oE '\(#[0-9]+\)' | sort -u`.
+   > *Superseded 2026-08-28: this named `docs/status-after-the-merge-train`, cut after the eight-merge
+   > train (#106, #99, #101, #102, #103, #104, #105, #107), and recorded "**zero open PRs** at that
+   > point, `REPORTED`". **The fifth expiry of this line, and the open-PR half is a different defect
+   > from the other four.** A branch name and a sha expire because the tree moves; an open-PR count
+   > expires because it was never a property of any tree. Do not restate one here. The command is
+   > `gh pr list --state open --json number,title`, and it needs the sandbox lifted for that one
+   > invocation — `denyRead` covers `~/.config/gh`, so `gh` fails reading its own config before it
+   > reaches the network.*
    > *Superseded 2026-08-26: this said `integration/wave-1`, while §4 said `fix/wave-1-review-findings` —
    > two names for one tree, in a file whose stated rule is that it "describes **this tree**". Both were
    > true at the time, which is why it survived a reading: `integration/wave-1` had been fast-forwarded onto
@@ -94,29 +103,51 @@ tense and every one of them described a state the same commit had already remove
    > maintenance problem to try harder at — **it is evidence the line was the wrong shape**, so the sha is
    > gone and only the command remains. Each of the previous three corrections replaced one dead sha with a
    > fresh one, and each bought less than a day.*
-2. **The local floor is GREEN — `48 of 48 passed · 0 failed`, verified here — and a runner has confirmed
-   the 46-step suite this one supersedes, not yet this one (`REPORTED`).** See §1 and §4.
-   ***`REPORTED`, not verified here:*** *CI run `32944938976` on `869aab9` finished `success` — that run
-   was the suite at **46** steps. `test:citations` and `check:citations-exist` take it to 48, and the
-   runner evidence for THAT figure is the check run on the PR adding them, which cannot be named from
-   inside the commit it is in — §4 explains why this file stopped naming shas, and a run id is the same
-   shape of problem when the run does not exist yet. Scoped rather than restated, because "a runner has
-   confirmed it" beside a number no runner has seen is the failure this whole page is about.* That came from `gh run view`, which needs the sandbox disabled to read
-   `~/.config/gh`, so it cannot be checked from this worktree — and per the standard at the top of this
-   file, no GitHub fact on this page can be anything else. **It carried no marker until 2026-08-26**, while §1 and
-   §3 marked theirs correctly: one page, two practices, which is the defect the standard exists to prevent.
-   The clause it replaced read "though no runner has confirmed that from here" and had outlived its own
-   condition. A completed run id is a fixed historical fact and is safe to cite, unlike a sha standing in for
-   "the current tree".*
+2. **The local floor is GREEN — `48 of 48 passed · 0 failed`, verified here — and a runner has now
+   confirmed THIS suite, not only the 46-step one it supersedes (`REPORTED`).** See §1 and §4.
+   ***`REPORTED`, not verified here:*** *CI run `33011321018` on `d1294a4` finished `success` —
+   **57 of 57 steps, 0 failed, 0 skipped**, read through `actions/runs/<id>/jobs` and `jobs[].steps`
+   rather than through `gh pr checks`, which has rendered a cancelled run as `fail` and a green branch
+   as "no checks reported" in this repository. **Three denominators live in that sentence and they are
+   not interchangeable:** 57 is what the API counts (49 suite checks, 4 setup steps, 4 post steps), 49
+   is what `ci.yml` declares, and 48 is `STEPS.length`. A run id is a fixed historical fact and is safe
+   to cite; a sha standing in for "the current tree" is not.*
+   > *Superseded 2026-08-28: this read "a runner has confirmed the 46-step suite this one supersedes,
+   > not yet this one", and the note below it explained — correctly, at the time — that the runner
+   > evidence for 48 "cannot be named from inside the commit it is in". It can be named now, because
+   > the commit it was in has merged and the run happened. The reasoning was right and the state moved;
+   > that is the ordinary way a line here goes stale rather than a defect in it.*
+   >
+   > *The paragraph it replaced, kept because its reasoning is still correct about its own moment:*
+   >
+   > ***`REPORTED`, not verified here:*** *CI run `32944938976` on `869aab9` finished `success` — that run
+   > was the suite at **46** steps. `test:citations` and `check:citations-exist` take it to 48, and the
+   > runner evidence for THAT figure is the check run on the PR adding them, which cannot be named from
+   > inside the commit it is in — §4 explains why this file stopped naming shas, and a run id is the same
+   > shape of problem when the run does not exist yet. Scoped rather than restated, because "a runner has
+   > confirmed it" beside a number no runner has seen is the failure this whole page is about.* That came from `gh run view`, which needs the sandbox disabled to read
+   > `~/.config/gh`, so it cannot be checked from this worktree — and per the standard at the top of this
+   > file, no GitHub fact on this page can be anything else. **It carried no marker until 2026-08-26**, while §1 and
+   > §3 marked theirs correctly: one page, two practices, which is the defect the standard exists to prevent.
+   > The clause it replaced read "though no runner has confirmed that from here" and had outlived its own
+   > condition. A completed run id is a fixed historical fact and is safe to cite, unlike a sha standing in for
+   > "the current tree".*
+   >
    > *Superseded 2026-08-26. This read: **"CI is RED and the local floor is GREEN.** Both are true, and they
    > are one environment-dependent test apart." That was true of `main` at `71fd58d` and false of the tree
    > this file ships in: `fix/plans-dir-test-hermetic` is merged here as `ae7ea48`. Kept because the
    > single-test explanation in §1 is still why CI was red, and a reader who cannot see the old state cannot
    > judge whether the fix addresses it.*
-3. **The QA gate now leaves stored artifacts — `.qa/verdicts/` carries 23 records on `origin/main`**
-   (`git ls-tree -r --name-only origin/main -- .qa | wc -l`). What has still never happened is a run of
-   the multi-judge panel: every record there is author-recorded on a deterministic floor, single model
-   family, and the `irreversible`-tier requirement of 2-of-3 judges is unmet on every one of them.
+3. **The QA gate now leaves stored artifacts — `.qa/verdicts/` carries 50 records on `origin/main`**
+   (`git ls-tree -r --name-only origin/main -- .qa | wc -l`, re-derived 2026-08-28 at `d1294a4`; 50
+   files, 50 `PASS`). What has still never happened is a run of the multi-judge panel: every record
+   there is author-recorded on a deterministic floor, one agent, one model family, and the
+   `irreversible`-tier requirement of 2-of-3 judges and ≥2 distinct model families is unmet on every one
+   of them.
+   > *Superseded 2026-08-28: this read **23**, correct at the head of the eight-merge train and more
+   > than doubled by the wave-one train with nobody editing it. The command was printed beside the
+   > number the whole time. That is the third figure on this page to expire that way, and the pattern
+   > is worth naming: a derivation published next to a stale value reads as evidence and is not.*
    > *Superseded 2026-08-26: this read "**The QA gate has never produced a verdict.** `.qa/` does not
    > exist in the tree at all — not an empty directory, absent." True when written and falsified by the
    > six-merge train without anyone editing the sentence — the same way the branch name in item 1 went
@@ -464,7 +495,7 @@ plus an orchestrator have now hit this exact seam.
 | Phase 8a (read plane) | DONE |
 | Phase 8b (dispatch) | **BUILT, exit gate UNDISCHARGED** — the gate needs a second project with a ledger to receive claims, and none exists |
 | Phase 9 (fleet rollout) | **NOT STARTED — out of scope by founder decision** |
-| P0 (the gate) | CLOSED except item 6, `claim-judge-external` |
+| P0 (the gate) | **CLOSED.** Item 6, `claim-judge-external`, landed in #103 — registered, dispatchable, and `scripts/ledger.test.mjs` asserts both. *A seam is not a second opinion:* what landed is the mechanism, and the panel is still single-family |
 | P0.5 (provenance) | LANDED |
 | P1 – P5 | NOT STARTED |
 
@@ -475,8 +506,12 @@ from scope.
 **Built is not the same as gated.** 8b is the standing example: it works end to end against one target and
 its exit criterion is still undischarged. Do not read one as the other.
 
-**119 session files** (`ls docs/08-agents_work/sessions/ | wc -l`), every one of them infrastructure.
+**150 session files** (`ls docs/08-agents_work/sessions/ | wc -l`), every one of them infrastructure.
 
+> *Superseded 2026-08-28: **119**. The wave-one train added thirty-one, which is the largest single
+> jump this figure has taken, and it moved for the ordinary reason: nine PRs, each with lanes and
+> reviewers writing their own records. Same command, same failure mode as the two corrections below.*
+>
 > *Superseded 2026-08-26: **117**, with the same derivation command printed beside it. The command was
 > right and the number was two behind. This file carried **105** before 2026-08-25.*
 >
@@ -499,34 +534,61 @@ Recorded in full, with rationale and cost, as a single entry in
    three blinded reviewers found 7 P1s at a fraction of that.
 3. **Venture work: not yet** — the harness is finished first. **The cost is recorded once and is not to be
    re-litigated:** every mechanism built in Waves 1–4 stays untested against work that is not the harness
-   itself, and stop conditions 6 and 7 sit at maximum exposure. 119 session files, zero customer-facing
-   work.
+   itself, and stop conditions 6 and 7 sit at maximum exposure. 150 session files, zero customer-facing
+   work. **Reaffirmed by the founder on 2026-08-26** alongside the scoping decision that *done = the loop
+   runs itself* — Waves A+B+C, with mission-control surfaces and P1 portability deferred.
 4. **Documentation** — one living STATUS; the handoff chain retires. This file.
 
-## 7 · The wiring gap — specified, unreachable
+## 7 · The wiring gap — two of three closed, and the third did not move
 
-Counted in this worktree across all six files in [../.claude/playbooks/](../.claude/playbooks/):
+Counted in this worktree at `d1294a4` across all six files in
+[../.claude/playbooks/](../.claude/playbooks/) —
+`grep -ho 'engine: *[a-z-]*' .claude/playbooks/*.yml | sort | uniq -c`:
 
 | Engine | `engine:` dispatch entries |
 |---|---|
+| **`framer`** | **5** |
 | `builder` | 4 |
 | `sourcer` | 4 |
 | `designer` | 2 |
-| **`framer`** | **0** |
 | `orchestrator` | 0 |
 
-**`framer` is dispatched by nothing.** It is a fully specified engine with a lens, a prompt and a `maxTurns`
-of 25, and no playbook can reach it.
+> *Superseded 2026-08-28: the table read **`framer` 0**, under the sentence "**`framer` is dispatched by
+> nothing.** It is a fully specified engine with a lens, a prompt and a `maxTurns` of 25, and no playbook
+> can reach it." #113 gave it five dispatch sites — `research-question`, `validate-a-market`,
+> `ship-feature`, and two in `price-a-product`. **The `orchestrator` zero is unchanged and was never the
+> same kind of zero:** the orchestrator IS the session, so nothing dispatching it is the design rather
+> than a gap. One table, two zeros, one of them a defect — which is why the row that moved is the one
+> that was called out in bold.*
 
-**Three of six playbooks are named by no command.** `ship-feature` is named by `/build`, `/fix` and `/ship`;
-`design-pass` by `/design`; `research-question` by `/research`. `launch-landing-page`, `price-a-product`
-and `validate-a-market` are named by none.
+**Every playbook is named by a command now** (#113). `ship-feature` by `/build`, `/fix`, `/ship` and
+`/review`; `design-pass` by `/design`; `research-question` by `/research`; `launch-landing-page` by
+`/launch`; `price-a-product` by `/price`; `validate-a-market` by `/validate`. Derive it with
+`grep -h 'playbook:' .claude/commands/*.md` — `/audit` carries none, deliberately, and says so in its
+own body.
 
-**Three of four workflows are invoked by nothing.** `coding.js`, `design.js` and `research.js` appear only
-in documentation and in their own source — no command file and no agent file calls them. Only `qa.js` is
-referenced from live configuration.
+> *Superseded 2026-08-28: this read "**Three of six playbooks are named by no command.** … `launch-landing-page`,
+> `price-a-product` and `validate-a-market` are named by none."*
 
-This is stop condition 7 — *a mechanism nothing invokes* — sitting in plain sight, three times over.
+**Three of four workflows are still invoked by nothing, and this is the part that did NOT move.**
+`coding.js`, `design.js` and `research.js` appear only in documentation and in their own source — no
+command file and no agent file calls them. Only `qa.js` is referenced from live configuration, by
+`.claude/commands/audit.md`, `.claude/commands/review.md` and `.claude/agents/reviewer-readonly.md`.
+Re-derived at `d1294a4` with
+`for w in coding design research qa; do grep -rl "${w}.js" .claude/commands .claude/agents .claude/playbooks; done`,
+which carries its own positive control: the command that returns nothing for three returns three files
+for the fourth, so the three empties are a finding rather than a broken grep.
+
+**Do not read the `Workflow` zero as a fourth instance of this gap.** It has the same shape and the
+opposite meaning: no engine declares the `Workflow` tool, and since #111 that is a deliberate containment
+held there by a lint rule (`PS-WORKFLOW-CONTAINMENT` in `.claude/hooks/schema-lint.js`) and a probe
+(`scripts/probe-workflow-reach.mjs`). The gate may not be invocable by the thing it gates — the same
+reason `reviewer` carries no `Write`. The measurement is in CLAUDE.md's Wave 2 bullet.
+
+This is stop condition 7 — *a mechanism nothing invokes* — and it sits in one place now rather than three.
+
+> *Superseded 2026-08-28: this closed "sitting in plain sight, three times over." Two of the three closed
+> in one PR. The remaining one is the workflows, and it is the oldest of the three.*
 
 ## 8 · Operating rules earned the expensive way
 
@@ -545,6 +607,19 @@ Each of these cost a real failure. They are cheap to follow and the failures wer
   this shape, and **not one was caught by a check** — each was caught by an agent reading a claim against
   the thing it described.
 - **When you change a thing, re-derive everything that rested on it.**
+- **Do not wait out a CI outage — push again.** A push during a GitHub Actions outage never gets a run,
+  and GitHub does not replay dropped events. Five lanes were told to "wait for recovery" on 2026-08-26,
+  which is precisely the instruction that cannot work: there is nothing queued to recover into. Confirm
+  on the sha you pushed, through the jobs API, with `steps` non-zero.
+- **Timestamps in a brief are UTC or they are a defect.** `gh` returns UTC and your clock is local;
+  mixing them once manufactured a "3-hour hang" out of a +3h offset. A wrong elapsed figure looks
+  plausible at any magnitude, so it never self-checks.
+- **Measuring one construct does not clear the class it belongs to.** Six *plain* YAML scalars were
+  measured against real YAML, `parseYamlSubset` matched six for six, and a backlog item was retired on
+  that basis and three lanes instructed on it. The defect's actual shape was a **block scalar**, where
+  the two do disagree. **A55 is retracted and the backlog item stands.** The general form —
+  *measure a real case, describe a class* — is the shape behind most of the thirteen times a lane
+  refuted the orchestrator this session.
 
 ## 9 · Where the record lives
 

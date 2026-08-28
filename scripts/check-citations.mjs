@@ -2,6 +2,12 @@
 /**
  * check-citations.mjs — the citation-range checker.
  *
+ * Reporting standard: docs/03-system-design/SWEEP-REPORTING.md — a sweep must report what it could
+ * not classify, separately from what it found clean, and cross-check its universe against a counter
+ * it did not write. Note the correction recorded there: this file's universe has SEVEN dispositions,
+ * not the six the coverage block prints, because an `--external-prefix` locator is harvested and then
+ * excused from checking by design.
+ *
  * POSTURE: SPLIT, as of 2026-08-26 — the EXISTENCE class BLOCKS and the DRIFT class WARNS.
  * The ONE hard failure that exits 1 regardless of posture is the non-vacuity floor — see below.
  *
@@ -655,6 +661,64 @@ for (const doc of proseFiles) {
       }
     }
   }
+}
+
+// ── the coverage identity ─────────────────────────────────────────────────────────────────────
+//
+// The coverage block below prints the six resolution counters as though they PARTITION the
+// locators. `stats.locators` is incremented at the HARVEST site, independently of all six, so a
+// locator taking a path that bumps the total and none of the parts would vanish out of a line that
+// reads as exhaustive — an unexamined item reported as a clean one, in the block whose whole job is
+// to refuse exactly that. Nothing asserted the arithmetic. This does.
+//
+// SEVEN DISPOSITIONS, NOT SIX — and the first version of this assertion said six and WAS WRONG.
+// It fired on the real tree, 876 harvested against 875 counted, and the missing one is not a lost
+// locator: it is the single `--external-prefix` citation, declared to live in another repository
+// and therefore checked against nothing BY DESIGN. It lands in `unchecked` with reason `external`
+// and increments none of the six. Note what that near-miss was: a miscalibrated identity check on a
+// BLOCKING step, which would have reddened CI over correct code. The measurement that caught it —
+// literal flags, because `$A` in zsh is one argument and silently ran a different posture.
+//
+// A REAL FINDING, DELIBERATELY NOT FIXED HERE: the RESOLUTION line below prints those six as a
+// partition of the total, so with an external present it accounts for 875 of 876 — it under-reports
+// by exactly the number of externals, while the headline above it counts that same item among the
+// "could not check" total. The two lines of one block disagree by one. It is small, it is
+// operator-facing, and it is a change to what this checker REPORTS rather than to the identity this
+// change is about. Reported, not fixed; see the session file.
+//
+// It FAILS rather than warns because it is arithmetic, not judgement, and because a false coverage
+// line is worse than no coverage line.
+const externalUnchecked = unchecked.filter((u) => u.reason === 'external').length;
+const partition = stats.resolved.exact + stats.resolved.basename + stats.resolved.suffix +
+                  stats.ambiguous + stats.unresolved + stats.skipped + externalUnchecked;
+if (partition !== stats.locators) {
+  fail('coverage-identity',
+    `${stats.locators} locator(s) harvested, but the dispositions sum to ${partition} ` +
+    `(exact ${stats.resolved.exact} + basename ${stats.resolved.basename} + suffix ${stats.resolved.suffix} + ` +
+    `ambiguous ${stats.ambiguous} + unresolved ${stats.unresolved} + skipped ${stats.skipped} + ` +
+    `external ${externalUnchecked}). Every harvested locator must reach exactly one disposition; a ` +
+    'mismatch means locators are reaching neither a resolution nor the unchecked list, which the ' +
+    'coverage block would report as clean.');
+}
+
+// ── the cross-count, against a counter this block did not write ───────────────────────────────
+//
+// The identity above sums INTEGER COUNTERS. If a bucket were pushed without its counter being
+// incremented — or the reverse — the sum could still come out right for the wrong reason, which is
+// the failure mode of every derived number in this repository. `unchecked` is an ARRAY, accumulated
+// by `push` at call sites that do not touch `stats`, so its length is an independent measurement of
+// the same quantity. Two accumulators, different mechanisms, one truth: every unchecked item is
+// either ambiguous or external, and there is no third kind.
+//
+// This is the half of the rule that is cheap and is therefore never an excuse to skip: a sweep's
+// universe count must be cross-checked against a counter it did not write. Where no such counter
+// exists, the honest move is to SAY so rather than to present one derivation as two.
+if (unchecked.length !== stats.ambiguous + externalUnchecked) {
+  fail('coverage-cross-count',
+    `the unchecked list holds ${unchecked.length} item(s), but the counters say ` +
+    `${stats.ambiguous} ambiguous + ${externalUnchecked} external = ${stats.ambiguous + externalUnchecked}. ` +
+    'The list and the counters are written at different call sites and must agree; when they do not, ' +
+    'one of them is reporting a bucket nobody filled or hiding one somebody did.');
 }
 
 // ── non-vacuity ───────────────────────────────────────────────────────────────────────────────
