@@ -220,6 +220,19 @@ function refTip(ref) {
   return ref.trim();
 }
 
+// The other half of the same split: everything LEFT of the separator, or null when `ref` names a
+// single revision rather than a range. resolveTree() computed this inline as
+// `ref.slice(0, ref.length - tip.length).replace(/\.{2,3}$/, '')` and now calls this instead —
+// two implementations of "which part of this string is the base" is the same defect the `base`/
+// `tip` fields exist to close, and leaving one in the file that closes it would be a poor joke.
+function refBase(ref) {
+  const dots3 = ref.lastIndexOf('...');
+  if (dots3 !== -1) return ref.slice(0, dots3).trim();
+  const dots2 = ref.lastIndexOf('..');
+  if (dots2 !== -1) return ref.slice(0, dots2).trim();
+  return null;
+}
+
 function refuseTree(reason) {
   // `--json` callers get the reason as JSON on stdout, not an empty stream and a stderr line.
   // `scripts/verdict.mjs` tells agents to run this command; a machine consumer that reads zero
@@ -287,7 +300,7 @@ function resolveTree(ref) {
   // diff with no defects in it. Raised as a P2 by a delta reviewer, who also noted that qa.js's own
   // per-run probe of the range had just been removed in the same change that took the sha out of
   // the oracle prompt. Both halves are back: this one is deterministic and runs before any dispatch.
-  const base = ref.slice(0, ref.length - tip.length).replace(/\.{2,3}$/, '');
+  const base = refBase(ref);
   if (base) {
     try {
       git(['rev-parse', '--verify', `${base}^{commit}`]);
@@ -350,7 +363,22 @@ function main() {
   const files = explicit.length ? explicit : changedFiles(ref);
 
   if (!files.length) {
-    const empty = { ref, files: 0, floor: 'trivial', gateRequired: false, reason: 'empty diff' };
+    // Same keys as the main emit site below, including `invocation: null`. This object used to
+    // omit `invocation` entirely while its sibling emitted null for the same condition, so a
+    // consumer following gates.yml — "pass invocation.args through UNMODIFIED" — read `undefined`
+    // here and fell back to the only ref-shaped field on offer, which is the range.
+    const empty = {
+      ref,
+      base: refBase(ref),
+      tip: refTip(ref),
+      files: 0,
+      floor: 'trivial',
+      gateRequired: false,
+      reason: 'empty diff',
+      drivers: [],
+      gateSelfReview: null,
+      invocation: null,
+    };
     console.log(asJson ? JSON.stringify(empty, null, 2) : `No changed files for ${ref}. Nothing to gate.`);
     process.exit(0);
   }
@@ -389,7 +417,7 @@ function main() {
 
   if (asJson) {
     console.log(JSON.stringify(
-      { ref, files: files.length, floor, gateRequired, drivers, gateSelfReview: selfReview, invocation },
+      { ref, base: refBase(ref), tip: refTip(ref), files: files.length, floor, gateRequired, drivers, gateSelfReview: selfReview, invocation },
       null,
       2,
     ));

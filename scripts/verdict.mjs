@@ -395,6 +395,31 @@ function main() {
 
   const repo = path.resolve(arg('--repo', process.cwd()));
   const ref = arg('--ref', 'HEAD');
+
+  // `--ref` NAMES ONE REVISION. This program derives its own range — merge-base(origin/main, ref)
+  // — and a range handed in here reaches git as `merge-base origin/main "origin/main...<sha>"`,
+  // which answers `fatal: Not a valid object name`. That already exits 2, so it already fails safe;
+  // what it does not do is say which of the two shapes was wrong, and the caller pays a round trip
+  // to find out. `scripts/run-gate.mjs --json` is where such a string comes from: its `ref` is a
+  // RANGE for a human to read, and its `tip` is the single revision meant for this flag.
+  //
+  // THIS REFUSES; IT DOES NOT CONVERT. Accepting `A...B` here would be a second implementation of
+  // the range, and the property being protected is that a subject is reproducible from one ref —
+  // which is what lets a recorded verdict survive a move of the base under it. PR 77 was closed
+  // rather than merged over exactly that, and `scripts/classify.mjs`'s header already wrote the
+  // ending for two implementations of one concept.
+  //
+  // Safe to key on `..`: git-check-ref-format forbids `..` anywhere in a refname, so this shape is
+  // a range or a malformed ref and is never a legitimate name being turned away.
+  if (ref.includes('..')) {
+    throw new Refusal(
+      `--ref takes a single revision, not a range, and got "${ref}". This program computes its own ` +
+        'range as merge-base(origin/main, ref)..ref, so a range here would be a second implementation ' +
+        'of it. If this came from `node scripts/run-gate.mjs --json`, that object names both halves: ' +
+        'pass its `tip` field, not its `ref` field.'
+    );
+  }
+
   const asJson = process.argv.includes('--json');
 
   if (cmd === 'subject') {
