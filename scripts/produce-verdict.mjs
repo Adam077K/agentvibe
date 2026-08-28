@@ -610,6 +610,23 @@ export function materialiseJudgeProject({
 const EPHEMERAL_JUDGE_DIRS = new Set();
 let judgeDirCleanupArmed = false;
 
+// DECLARE WHAT IS UNDERSTOOD AND REFUSE THE REST — the same posture `verdict.mjs` takes on its
+// ceiling, and this knob had the opposite one. Bare truthiness meant `0`, `false`, `no` and `off`
+// ALL SELECTED KEEP: an operator disabling the knob turned it on. Two knobs, one change, opposite
+// postures, with the argument for the right one written down beside the wrong one.
+const KEEP_TRUE = new Set(['1', 'true', 'yes', 'on']);
+const KEEP_FALSE = new Set(['', '0', 'false', 'no', 'off']);
+
+/** true=keep · false=reclaim · null=unrecognised, which the caller must refuse rather than guess. */
+export function keepJudgeDirSetting(env = process.env) {
+  const raw = env.QA_KEEP_JUDGE_DIR;
+  if (raw === undefined) return false;
+  const v = String(raw).trim().toLowerCase();
+  if (KEEP_TRUE.has(v)) return true;
+  if (KEEP_FALSE.has(v)) return false;
+  return null;
+}
+
 /** Remove every judge project this process created. Safe to call twice; never throws. */
 export function sweepJudgeDirs() {
   for (const d of EPHEMERAL_JUDGE_DIRS) {
@@ -624,17 +641,48 @@ export function sweepJudgeDirs() {
 
 /** Register `dir` for removal at exit, unless the operator asked to keep it. */
 export function armJudgeDirCleanup(dir, env = process.env) {
-  if (env.QA_KEEP_JUDGE_DIR) return false;
+  if (keepJudgeDirSetting(env) !== false) return false;
   EPHEMERAL_JUDGE_DIRS.add(dir);
   if (!judgeDirCleanupArmed) {
     judgeDirCleanupArmed = true;
+    // `exit` ONLY. This is an exported function a host calls IN-PROCESS — produce-verdict.test.mjs
+    // already does — and the previous version installed process-global SIGINT/SIGTERM/SIGHUP
+    // handlers that called process.exit(130). Measured with a must-not-fire control: armed -> wait
+    // status 130 and NO signal, unarmed -> 143. So TERM and HUP came back as SIGINT's code, an
+    // ordinary exit where there had been a signal, and 130 is outside this file's own vocabulary
+    // (0·1·2·3·64). A library that reclaims a temp directory may not decide how its host dies.
+    // Signal handling belongs to the process owner; see the CLI entry point at the foot of this file.
     process.on('exit', sweepJudgeDirs);
-    for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
-      process.on(sig, () => {
-        sweepJudgeDirs();
-        process.exit(130);
-      });
-    }
+  }
+  return true;
+}
+
+/**
+ * Is `dir` one this process registered for removal?
+ *
+ * Exported so a test can assert the COMPOSITION and not merely the primitives. Asserting that
+ * `armJudgeDirCleanup` and `sweepJudgeDirs` behave leaves the sharpest mutation uncaught: inverting
+ * the `ephemeral` predicate at the CALL SITE arms an operator's own `--judge-dir` and spares the
+ * temp directory, and every unit cell still passes because each unit still does exactly what it
+ * says. That is the misdirected-assertion class — an assertion that runs, passes, and is satisfied
+ * by a different occurrence than the one it names.
+ */
+export function isJudgeDirTracked(dir) {
+  return EPHEMERAL_JUDGE_DIRS.has(dir);
+}
+
+/** Stop tracking `dir`, so the exit sweep leaves it alone. Used where the tree IS the evidence. */
+export function disarmJudgeDirCleanup(dir) {
+  return EPHEMERAL_JUDGE_DIRS.delete(dir);
+}
+
+/** Remove `dir` now, but only if it is one we created. Never touches an operator's --judge-dir. */
+export function reclaimJudgeDir(dir) {
+  if (!EPHEMERAL_JUDGE_DIRS.delete(dir)) return false;
+  try {
+    fs.rmSync(dir, { recursive: true, force: true });
+  } catch {
+    // Not a reason to fail a run that already has its answer.
   }
   return true;
 }
@@ -744,7 +792,36 @@ export function buildGoal({ scriptPath, args, verdictBin }) {
 
 // ── the pipeline ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * A REFUSED RUN KEEPS ITS TREE; EVERY OTHER OUTCOME RECLAIMS IT.
+ *
+ * `--dry-run`'s entire product IS the prepared tree, and it printed `judge project: <path>` for a
+ * directory already deleted — the named cure had to be set before you knew you needed it. The
+ * materialise-failure and launch-failure branches pointed at nothing for the same reason. All three
+ * return REFUSED, so ONE predicate covers them, and it lives at a single exit point rather than at
+ * six return sites: a REFUSED branch added later inherits the right behaviour instead of silently
+ * deleting the evidence it just named. A deletion attracts no test cases; a structural rule does
+ * not need them at every site.
+ *
+ * WHAT THIS STILL DOES NOT DO, and it is the honest half: a session that REFUSES many times keeps
+ * many trees. That is deliberate — on a refusal the tree is the only account of what happened — but
+ * it means the 25-copy symptom is fully cured only for runs that reach an answer. `QA_KEEP_JUDGE_DIR`
+ * governs the rest, and an operator's own `--judge-dir` is never touched by any path here.
+ */
 export function produceVerdict(o = {}) {
+  const keep = keepJudgeDirSetting(o.env ?? process.env);
+  if (keep === null) {
+    return result(OUTCOME.REFUSED, `QA_KEEP_JUDGE_DIR="${(o.env ?? process.env).QA_KEEP_JUDGE_DIR}" is not a recognised on/off value. Refusing rather than guessing whether to delete a tree.`);
+  }
+  const r = runProduceVerdict(o);
+  if (r && r.judgeDir) {
+    if (r.outcome === OUTCOME.REFUSED) disarmJudgeDirCleanup(r.judgeDir);
+    else reclaimJudgeDir(r.judgeDir);
+  }
+  return r;
+}
+
+function runProduceVerdict(o = {}) {
   const {
     repo = process.cwd(),
     harnessRoot = HARNESS_ROOT,
@@ -1129,5 +1206,15 @@ function main() {
 }
 
 if (process.argv[1] && canonical(process.argv[1]) === canonical(fileURLToPath(import.meta.url))) {
+  // THE PROCESS OWNER DECIDES HOW THE PROCESS DIES. Ctrl-C should still reclaim what we made, and
+  // 128+signo is the shell's own convention, so an interrupted run looks interrupted. This is
+  // deliberately NOT done by armJudgeDirCleanup: that function runs inside a host that has its own
+  // shutdown, and hijacking it there is the defect this block exists to keep out of the library.
+  for (const [sig, signo] of [['SIGINT', 2], ['SIGTERM', 15], ['SIGHUP', 1]]) {
+    process.on(sig, () => {
+      sweepJudgeDirs();
+      process.exit(128 + signo);
+    });
+  }
   process.exitCode = main();
 }

@@ -1301,3 +1301,138 @@ test('CRITICAL_PATHS names the files that decide, and they all exist in this rep
   }
   assert.ok(!fs.existsSync(path.join(REPO_ROOT, '.claude/agents/no-such-agent.md')), 'CONTROL: the probe can report absence');
 });
+
+// ── J · THE JUDGE PROJECT'S LIFECYCLE ────────────────────────────────────────────────────────
+//
+// Twelve mutations of this behaviour once left the entire 48-step suite byte-identical to a
+// pristine run, including INVERTING the predicate that decides whether a directory is ours — a
+// one-token change that turns a temp-dir reclaimer into a remover of an operator-named path. Each
+// cell below is that specification: it must go red under its named mutation.
+import {
+  keepJudgeDirSetting,
+  armJudgeDirCleanup,
+  disarmJudgeDirCleanup,
+  reclaimJudgeDir,
+  sweepJudgeDirs,
+  produceVerdict as produceVerdictFn,
+  readVerdictArtifact as readVerdictArtifactFn,
+  isJudgeDirTracked as isJudgeDirTrackedFn,
+} from './produce-verdict.mjs';
+
+/** A directory with a file in it, so "removed" is distinguishable from "was never there". */
+function judgeDirFixture() {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-judge-probe-'));
+  fs.writeFileSync(path.join(d, 'marker'), 'x');
+  return d;
+}
+
+test('J-1 — an armed directory is swept; MUST NOT FIRE for one that was never armed', () => {
+  const ours = judgeDirFixture();
+  const theirs = judgeDirFixture();
+  assert.equal(armJudgeDirCleanup(ours, {}), true, 'arming must report that it registered');
+  sweepJudgeDirs();
+  assert.equal(fs.existsSync(ours), false, 'an armed directory must be gone');
+  // THE OPERATOR'S --judge-dir. Never armed, so never removed. This is the cell that fails when
+  // the `ephemeral` predicate is inverted, which is the sharpest of the twelve.
+  assert.equal(fs.existsSync(theirs), true, 'CONTROL: an unarmed directory must survive the sweep');
+  fs.rmSync(theirs, { recursive: true, force: true });
+});
+
+test('J-2 — reclaimJudgeDir removes only what we registered, and says which it did', () => {
+  const ours = judgeDirFixture();
+  const theirs = judgeDirFixture();
+  armJudgeDirCleanup(ours, {});
+  assert.equal(reclaimJudgeDir(ours), true);
+  assert.equal(fs.existsSync(ours), false);
+  assert.equal(reclaimJudgeDir(theirs), false, 'an unregistered path is refused, not removed');
+  assert.equal(fs.existsSync(theirs), true, 'CONTROL: and it is still there');
+  fs.rmSync(theirs, { recursive: true, force: true });
+});
+
+test('J-3 — disarm keeps a tree the sweep would otherwise take', () => {
+  // The REFUSED path. A run whose evidence IS the tree must not delete the tree it just named.
+  const d = judgeDirFixture();
+  armJudgeDirCleanup(d, {});
+  assert.equal(disarmJudgeDirCleanup(d), true);
+  sweepJudgeDirs();
+  assert.equal(fs.existsSync(d), true, 'a disarmed directory survives');
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
+test('J-4 — QA_KEEP_JUDGE_DIR is a declared vocabulary, not bare truthiness', () => {
+  // Bare truthiness meant `0`, `false`, `no` and `off` ALL selected KEEP: an operator disabling
+  // the knob turned it on. verdict.mjs refuses a malformed ceiling; this knob must not guess.
+  for (const on of ['1', 'true', 'yes', 'on', 'ON', ' true ']) {
+    assert.equal(keepJudgeDirSetting({ QA_KEEP_JUDGE_DIR: on }), true, `${on} means keep`);
+  }
+  for (const off of ['0', 'false', 'no', 'off', '', 'OFF']) {
+    assert.equal(keepJudgeDirSetting({ QA_KEEP_JUDGE_DIR: off }), false, `${off} means reclaim`);
+  }
+  assert.equal(keepJudgeDirSetting({}), false, 'unset means reclaim');
+  for (const bad of ['maybe', '2', 'yes please']) {
+    assert.equal(keepJudgeDirSetting({ QA_KEEP_JUDGE_DIR: bad }), null, `${bad} is unrecognised`);
+  }
+});
+
+test('J-5 — with KEEP set, nothing is registered and the tree survives', () => {
+  const d = judgeDirFixture();
+  assert.equal(armJudgeDirCleanup(d, { QA_KEEP_JUDGE_DIR: '1' }), false);
+  sweepJudgeDirs();
+  assert.equal(fs.existsSync(d), true);
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
+test('J-6 — an unrecognised knob value REFUSES the run rather than guessing about deletion', () => {
+  const r = produceVerdictFn({ env: { QA_KEEP_JUDGE_DIR: 'maybe' } });
+  assert.equal(r.outcome, OUTCOME.REFUSED);
+  assert.match(r.message ?? r.reason ?? JSON.stringify(r), /QA_KEEP_JUDGE_DIR/);
+});
+
+test('J-7 — the library installs an exit sweep and NO signal handlers', () => {
+  // An exported function that a host calls in-process may not decide how that host dies. The
+  // previous version installed SIGINT/SIGTERM/SIGHUP handlers calling process.exit(130): measured
+  // armed -> wait status 130 with no signal, unarmed -> 143.
+  const before = Object.fromEntries(
+    ['SIGINT', 'SIGTERM', 'SIGHUP', 'exit'].map((s) => [s, process.listenerCount(s)]),
+  );
+  const d = judgeDirFixture();
+  armJudgeDirCleanup(d, {});
+  for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+    assert.equal(process.listenerCount(sig), before[sig], `${sig}: the library must not take the process`);
+  }
+  assert.ok(process.listenerCount('exit') >= 1, 'CONTROL: the exit sweep is installed');
+  sweepJudgeDirs();
+});
+
+test('J-8 — an unreadable verdict carries its REASON, not just its exit code', () => {
+  // verdict.mjs writes refusals to stderr and exits non-zero with stdout EMPTY, so recording only
+  // stdout logged a failure with the cause deleted.
+  const r = readVerdictArtifactFn({
+    tree: '/nonexistent', ref: 'HEAD', verdictBin: '/nonexistent/verdict.mjs',
+    runner: () => ({ status: 2, stdout: '', stderr: 'verdict: produced more than 1024 bytes on stdout or stderr' }),
+  });
+  assert.equal(r.outcome, OUTCOME.REFUSED);
+  assert.match(r.verdict_check.stderr, /produced more than 1024 bytes/);
+  // MUST NOT FIRE: a well-formed pass on the same seam still reads as PRODUCED.
+  const ok = readVerdictArtifactFn({
+    tree: '/nonexistent', ref: 'HEAD', verdictBin: '/nonexistent/verdict.mjs',
+    runner: () => ({ status: 0, stdout: JSON.stringify({ ok: true, subject: 'a', tier: 'full' }), stderr: '' }),
+  });
+  assert.equal(ok.outcome, OUTCOME.PRODUCED, 'CONTROL: the seam still produces');
+});
+
+test('J-9 — an operator\'s --judge-dir is never REGISTERED, asserted on the pipeline not the parts', () => {
+  // THE SHARPEST OF THE TWELVE. Inverting `ephemeral` at the call site arms the operator's own
+  // directory and spares the temp one; J-1 and J-2 both still pass, because each primitive still
+  // does what it says. Only an assertion about what the PIPELINE registered can see it.
+  const theirs = judgeDirFixture();
+  const ours = judgeDirFixture();
+  produceVerdictFn({ repo: theirs, judgeDir: theirs, dryRun: true });
+  assert.equal(isJudgeDirTrackedFn(theirs), false, 'an operator-named directory must never be registered');
+  assert.equal(fs.existsSync(theirs), true, 'and it must still be on disk');
+  // CONTROL, on the arm that can go silently empty: the tracker can report true at all.
+  armJudgeDirCleanup(ours, {});
+  assert.equal(isJudgeDirTrackedFn(ours), true, 'CONTROL: tracking is observable, so the false above means something');
+  sweepJudgeDirs();
+  fs.rmSync(theirs, { recursive: true, force: true });
+});
