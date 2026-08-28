@@ -38,6 +38,8 @@ import {
   readDispatch,
   resolveDispatchStates,
   classifyDispatches,
+  deriveGateReachability,
+  GATE_OUTCOMES,
   type DispatchEntry,
 } from '../server/index-cache.ts';
 import { execFileSync } from 'node:child_process';
@@ -46,6 +48,34 @@ import { createApi } from '../server/routes/api.ts';
 import type { DispatchResult, DispatchError, DispatchPayload } from '../server/routes/api.ts';
 import { mkTmpDir, rmTmp, initGitRepo, fixtureClaudeProjectsDir } from './fixtures.ts';
 import { snapshotTree, diffTrees } from './write-barrier.test.ts';
+
+/**
+ * Make a fixture root look like a harness-installed project, because a dispatch target IS one.
+ *
+ * WHY THE OLD FIXTURES WERE WRONG AND STILL PASSED. They created an empty directory and called it a
+ * project root. The consumer only ever did `existsSync(root)` with it, so nothing noticed — until
+ * routing began reading the project's playbooks and agent declaration out of that root, at which
+ * point four tests failed and one PASSED FOR THE WRONG REASON: the `no claude on PATH is
+ * not-started` test got `not-started` from the missing playbook, never reaching the spawn it exists
+ * to test. A fixture that omits what the subject reads does not test the subject.
+ */
+function installHarness(root: string, opts: { playbooks?: string[]; tools?: string } = {}): void {
+  const agents = path.join(root, '.claude', 'agents');
+  const playbooks = path.join(root, '.claude', 'playbooks');
+  fs.mkdirSync(agents, { recursive: true });
+  fs.mkdirSync(playbooks, { recursive: true });
+  const tools = opts.tools ?? '[Read, Write, Edit, Bash, Glob, Grep, Task]';
+  // The body deliberately mentions the gate tool in PROSE, exactly as all 7 real engine files do.
+  // A derivation that greps the file rather than the `tools:` line reports this agent as
+  // gate-capable, so every fixture built by this helper carries that trap.
+  fs.writeFileSync(
+    path.join(agents, 'orchestrator.md'),
+    `---\nname: orchestrator\ntools: ${tools}\n---\nThe Workflow tool is how qa.js is invoked.\n`,
+  );
+  for (const name of opts.playbooks ?? ['ship-feature.yml']) {
+    fs.writeFileSync(path.join(playbooks, name), 'name: fixture\nstages: []\n');
+  }
+}
 
 const cleanupDirs: string[] = [];
 afterAll(() => {
@@ -432,6 +462,7 @@ function dispatchFixture(prefix: string, script: string, entries: Partial<Dispat
   const root = path.join(dir, 'root');
   fs.mkdirSync(bin, { recursive: true });
   fs.mkdirSync(root, { recursive: true });
+  installHarness(root);
   fs.writeFileSync(path.join(bin, 'claude'), script);
   fs.chmodSync(path.join(bin, 'claude'), 0o755);
 
@@ -594,15 +625,21 @@ describe('an unrecognised status is neither launched nor overwritten — END TO 
     fs.mkdirSync(bin, { recursive: true });
     fs.mkdirSync(root, { recursive: true });
     const log = path.join(dir, 'launches.txt');
-    fs.writeFileSync(path.join(bin, 'claude'), `#!/bin/sh\necho "LAUNCHED $@" >> ${log}\nexit 0\n`);
+    // ARGV GOES TO ITS OWN FILE, NUL-SEPARATED, AND THE COUNTER GETS ONE LINE PER LAUNCH. The
+    // routed prompt CONTAINS NEWLINES, so the old `echo "LAUNCHED $@"` wrote many lines for one
+    // launch and the line-counting `launches()` below would have reported a single launch as
+    // several — an instrument broken by the subject it measures.
+    const argv = path.join(dir, 'argv.bin');
+    fs.writeFileSync(path.join(bin, 'claude'), `#!/bin/sh\nprintf '%s\\0' "$@" >> ${argv}\necho LAUNCHED >> ${log}\nexit 0\n`);
     fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    installHarness(root);
     const queue = path.join(dir, 'queue.jsonl');
     const entry: Record<string, unknown> = {
       id: 'target', project: path.basename(REPO_ROOT), root, goal: 'a goal', enqueuedAt: 1_000,
     };
     if (status !== undefined) entry.status = status;
     fs.writeFileSync(queue, JSON.stringify(entry) + '\n');
-    return { bin, queue, log };
+    return { bin, queue, log, root, argv: path.join(dir, 'argv.bin') };
   }
 
   const launches = (log: string) => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).length : 0);
@@ -648,6 +685,12 @@ describe('a launch that never started is not a launch that returned nothing', ()
     const root = path.join(dir, 'root');
     fs.mkdirSync(bin, { recursive: true });
     fs.mkdirSync(root, { recursive: true });
+    // THE HARNESS IS REQUIRED HERE OR THIS TEST PASSES FOR THE WRONG REASON, and it did: without a
+    // playbooks directory the consumer refuses before spawning and records `not-started` — the very
+    // status asserted below — and `readdir`'s own failure message CONTAINS the string 'ENOENT', so
+    // even the error assertion held. The test would have gone green while never reaching the spawn
+    // it exists to test. The `notStartedFrom` assertion below is what keeps the two apart.
+    installHarness(root);
     const queue = path.join(dir, 'queue.jsonl');
     fs.writeFileSync(queue, JSON.stringify({
       id: 'nopath', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
@@ -674,6 +717,12 @@ describe('a launch that never started is not a launch that returned nothing', ()
     expect(last.status).toBe('not-started');
     expect(last.status).not.toBe('no-result');
     expect(last.error).toContain('ENOENT');
+    // DISCRIMINATES THE TWO WAYS TO REACH `not-started`. The spawn failed; the routing did not
+    // refuse. Both produce `not-started` and both carry 'ENOENT', so status and message alone
+    // cannot tell them apart.
+    expect(last.error).not.toContain('no playbook to route through');
+    // AND THE LAUNCH WAS ACTUALLY ATTEMPTED: a refusal never writes a `running` line.
+    expect(entries.some((e) => e.status === 'running')).toBe(true);
   });
 });
 

@@ -37,7 +37,9 @@ import {
   resolveDispatchStates,
   classifyDispatches,
   KNOWN_DISPATCH_STATUSES,
+  deriveGateReachability,
   type DispatchEntry,
+  type GateRecord,
 } from '../server/index-cache.ts';
 
 // ── The one project this consumer targets ────────────────────────────────────────────────
@@ -49,6 +51,71 @@ import {
 
 const REPO_ROOT = path.resolve(import.meta.dir, '..', '..');
 const AGENTVIBE_PROJECT_ID = path.basename(REPO_ROOT);
+
+// ── Routing: which agent runs a dispatched goal, and under what playbook ─────────────────
+//
+// A dispatched goal used to be handed to `claude --print`, which is a bare model session in a
+// project directory. It is handed to the orchestrator now, with the project's own playbooks
+// offered to it. See the launch site for what that buys and — more importantly — what it does not.
+
+const DISPATCH_AGENT = 'orchestrator';
+
+/**
+ * The playbooks the target project offers, or the reason it offers none.
+ *
+ * TWO EMPTY CASES, NAMED SEPARATELY. "no playbooks directory" and "a directory holding no
+ * playbooks" both mean the same refusal, and collapsing them to `[]` would have printed one
+ * message for two different operator problems — a missing harness install versus an empty
+ * install. They take the same branch and say which one happened.
+ */
+function playbooksIn(root: string): { ok: true; names: string[] } | { ok: false; why: string } {
+  const dir = path.join(root, '.claude', 'playbooks');
+  let names: string[];
+  try {
+    names = fs.readdirSync(dir);
+  } catch (err) {
+    return { ok: false, why: `could not read ${dir}: ${(err as Error).message}` };
+  }
+  const playbooks = names.filter((n) => n.endsWith('.yml')).sort();
+  if (playbooks.length === 0) return { ok: false, why: `${dir} holds no .yml playbook` };
+  return { ok: true, names: playbooks };
+}
+
+/**
+ * The prompt a routed dispatch runs — and the reason the SELECTION is delegated rather than made.
+ *
+ * THE CONSUMER DOES NOT PICK THE PLAYBOOK, AND THAT IS THE DESIGN, NOT A GAP. Mapping free text
+ * onto one of six playbooks is a classification this repo has no implementation for, and inventing
+ * one inside a queue consumer would put a second, worse answer beside the engine whose whole job is
+ * fuzzy → structure. What the consumer CAN do is bound the choice and require it be named, so the
+ * set is closed and the selection is stated in the session rather than left implicit.
+ *
+ * THE GATE PARAGRAPH IS NOT DECORATION. A session that does not know the gate is out of reach will
+ * write a `qa_verdict: PASS` in good faith, because that is what the documentation gate asks of it
+ * — manufacturing exactly the "looks gated, wasn't" record this change exists to prevent, from the
+ * inside, where no consumer-side field can correct it.
+ */
+function composePrompt(goal: string, playbooks: string[], gate: GateRecord): string {
+  return [
+    'A goal has been dispatched to this project from Mission Control. You are the orchestrator.',
+    '',
+    'FIRST, SELECT A PLAYBOOK AND NAME IT. Choose exactly one of the playbooks below, state which',
+    'you selected and why, then run its stages — honouring the claims and exit criteria each stage',
+    'requires. Do not invent a pipeline; the playbook is the operating standard.',
+    '',
+    ...playbooks.map((name) => `  · ${name}`),
+    '',
+    `THE BINDING QA GATE IS NOT REACHABLE FROM THIS SESSION (${gate.outcome}).`,
+    `  ${gate.why}`,
+    'Run the review stages the playbook names, and say plainly in your session file that the binding',
+    'gate did not run. DO NOT record a qa_verdict you did not obtain — a verdict asserting a gate',
+    'that never ran is worse than no verdict, because the missing one is visible and the false one',
+    'is not.',
+    '',
+    'THE GOAL:',
+    goal,
+  ].join('\n');
+}
 
 // ── Argument parsing ─────────────────────────────────────────────────────────────────────
 
@@ -283,42 +350,57 @@ function main() {
             : `  [dry-run] would record no-result: ${flight.why}`
         );
       } else {
-        console.log(`  [dry-run] would run: claude --print in ${entry.root}`);
-        console.log(`  [dry-run] goal: ${entry.goal}`);
+        // MIRRORS THE REAL PATH, INCLUDING ITS REFUSAL. This block printed "would run" for a
+        // `running` entry the real run refuses, and the fix for that is only half kept if the new
+        // refusal — no playbooks — is invisible here. A dry run that misstates the real run is
+        // worse than no dry run.
+        const gate = deriveGateReachability(entry.root, DISPATCH_AGENT);
+        const pb = playbooksIn(entry.root);
+        if (!pb.ok) {
+          console.log(`  [dry-run] would record not-started: ${pb.why}`);
+        } else {
+          console.log(`  [dry-run] would run: claude --agent ${DISPATCH_AGENT} --print  in ${entry.root}`);
+          console.log(`  [dry-run] playbooks offered: ${pb.names.join(', ')}`);
+          console.log(`  [dry-run] gate: ${gate.outcome} — ${gate.why}`);
+          console.log(`  [dry-run] goal: ${entry.goal}`);
+        }
       }
       continue;
     }
 
-    // DISPATCH. `claude --print` runs the goal headlessly in the project directory and
-    // returns when the agent finishes. stdout is the agent's response; stderr carries
-    // cost/timing info. The exit code is 0 on success, non-zero on tool/API error.
+    // DISPATCH, ROUTED. The goal runs under `--agent orchestrator` with the project's own
+    // playbooks offered to it. stdout is the agent's response; stderr carries cost/timing info.
+    // The exit code is 0 on success, non-zero on tool/API error. The caller's PATH must include
+    // `claude`.
     //
-    // The caller's PATH must include `claude`. If the warroom launcher is installed, it
-    // may be more appropriate to use that — it carries the project's own warroom config.
-    // Using `claude --print` directly here keeps the consumer free of assumptions about
-    // which version of the launcher is installed, while remaining compatible with both.
+    // ── WHAT THIS BUYS, AND THE HALF IT DOES NOT ────────────────────────────────────────────
+    // The block this replaces argued that `claude --print <goal>` kept the consumer free of
+    // assumptions about which launcher is installed, then priced that freedom: "Freedom from
+    // assumptions about the harness is exactly freedom from the harness." A goal launched that
+    // way reached no orchestrator, no playbook, no lens and no gate. Routing fixes three of
+    // those four. It does not fix the fourth, and the fourth is why this comment is long.
     //
-    // ── THAT ARGUMENT IS SOUND, AND IT HAS A COST NOBODY HAS PRICED ─────────────────────────
-    // Freedom from assumptions about the harness is exactly freedom from the harness. A goal
-    // launched this way reaches no orchestrator, no playbook, no lens and no QA gate: it is a
-    // bare model session in a project directory. Everything this repo builds to govern work —
-    // the tiered gate, the claim ledger, the review lenses — sits on the other side of a seam
-    // this line does not cross. Dispatch is therefore the one entry point into the project that
-    // is ungoverned by construction, and the comment above explains why without saying so.
+    // MEASURED 2026-08-28 against `claude 2.1.246`, re-derived rather than carried forward:
+    //   · `claude --agent <agent>` EXISTS (`claude --help`). Routing is available at the CLI.
+    //   · A session launched that way gets that agent's DECLARED tools. The orchestrator
+    //     declares `[Read, Write, Edit, Bash, Glob, Grep, Task]` — SEVEN tools, and `Workflow`,
+    //     through which `qa.js` is invoked, is not among them. 7 of 7 engine files declare a
+    //     `tools:` line; ZERO declare `Workflow`.
     //
-    // MEASURED 2026-08-26, so the next person starts from facts rather than from this note:
-    //   · `claude --agent <agent>` EXISTS (`claude --help`), so selecting `orchestrator` for a
-    //     dispatched session is available at the CLI today. That is the easy half.
-    //   · NO ENGINE CAN REACH THE GATE. `qa.js` is invoked through a `Workflow` tool, and no
-    //     agent declares one: 7 of 7 engine files carry a `tools:` line and none lists it —
-    //     the orchestrator's is `[Read, Write, Edit, Bash, Glob, Grep, Task]`. So routing
-    //     through `--agent orchestrator` would buy the lens and the playbook and would NOT buy
-    //     the gate, while looking from the outside as though it had.
+    // SO ROUTING BUYS THE LENS AND THE PLAYBOOK AND DOES NOT BUY THE GATE — which is the exact
+    // branch the superseded block predicted would "look from the outside as though it had". That
+    // prediction is the reason the routing is only half of this change. The other half is that
+    // every record now CARRIES what was derived about the gate, in a field whose type has no way
+    // to say `passed`. A dispatch that ran no gate cannot be recorded as one that passed one, and
+    // a reader no longer has to infer the gap from silence.
     //
-    // NOT FIXED HERE, DELIBERATELY. How workflow invocation is actually granted in this runtime
-    // is being established elsewhere; committing a seam here would give this repo two answers to
-    // one question, which is a failure mode it has already paid for twice. This comment records
-    // the measurement and the gap. It does not choose the design.
+    // WHAT IS STILL NOT DECIDED HERE, DELIBERATELY. Granting `Workflow` to the orchestrator would
+    // put `qa.js` in reach and is the one edit that would close this. It is an `irreversible`-tier
+    // change to an agent definition, it is a founder decision that has not been taken, and it
+    // should land after branch protection binds so that it lands under a gate that binds. Nothing
+    // in this file touches `.claude/agents/**`. When that grant does land, `deriveGateReachability`
+    // reports `unverified` instead of `unreachable` on its own, with no edit here — which is why
+    // the value is derived from the declaration rather than written down as a constant.
     // A `running` ENTRY IS OWED A VERDICT, NOT A RELAUNCH. Reaching this loop it means some
     // earlier run started this dispatch and never came back to record an outcome — the consumer
     // was killed, the machine slept, the terminal was closed. We do not know what the launch did,
@@ -346,9 +428,38 @@ function main() {
     // process dies during the launch, the queue already says `running`, so the next run can tell
     // "started and unknown" from "never started". Written before, not after — a marker written
     // afterwards records nothing about the interval it is supposed to cover.
+    // DERIVED BEFORE ANYTHING DURABLE IS WRITTEN. Both of these can refuse the launch, and a
+    // refusal must not leave a `running` line behind that the next run then reconciles to
+    // `no-result` — that would report "started and told us nothing" about a launch that never
+    // began, which is the exact conflation this file's status set exists to prevent.
+    const gate = deriveGateReachability(entry.root, DISPATCH_AGENT);
+    const pb = playbooksIn(entry.root);
+    if (!pb.ok) {
+      // NO SILENT FALL-BACK TO THE BARE FORM. Falling back to `claude --print` here would launch
+      // an ungoverned session while the record said the dispatch had been routed — a worse
+      // outcome than not running at all, and precisely the class this change closes. `not-started`
+      // is the honest state: nothing ran, and re-enqueueing after fixing the cause is safe.
+      console.warn(`  NOT STARTED — no playbook to route through: ${pb.why}`);
+      writeTerminal({ ...entry, route: 'orchestrator-playbook', gate }, {
+        status: 'not-started',
+        error: `no playbook to route through: ${pb.why}`,
+      });
+      continue;
+    }
+
+    // WHAT IS KNOWN ABOUT THIS LAUNCH, CARRIED ON EVERY LINE IT WRITES. `route` and `gate` go on
+    // the `running` line as well as the terminal one, so a dispatch that dies mid-flight still
+    // leaves a record saying how it was launched and what was derived about the gate.
+    const routed: DispatchEntry = {
+      ...entry,
+      route: 'orchestrator-playbook',
+      gate,
+      playbooksOffered: pb.names,
+    };
+
     const startedAt = Date.now();
     try {
-      appendDispatch({ ...entry, status: 'running', startedAt, consumerPid: process.pid });
+      appendDispatch({ ...routed, status: 'running', startedAt, consumerPid: process.pid });
     } catch (writeErr) {
       // Refuse rather than launch blind. If we cannot record that we started, a crash mid-launch
       // is indistinguishable from never having run — which is the whole defect.
@@ -356,10 +467,12 @@ function main() {
       continue;
     }
 
-    console.log(`  Launching claude in ${entry.root} …`);
+    console.log(`  Launching claude --agent ${DISPATCH_AGENT} in ${entry.root} …`);
+    console.log(`  Playbooks offered: ${pb.names.join(', ')}`);
+    console.log(`  Gate: ${gate.outcome} — ${gate.why}`);
     let outcome: TerminalUpdate;
     try {
-      execFileSync('claude', ['--print', entry.goal], {
+      execFileSync('claude', ['--agent', DISPATCH_AGENT, '--print', composePrompt(entry.goal, pb.names, gate)], {
         cwd: entry.root,
         stdio: 'inherit',
         // No shell: false is the default for execFileSync; repeating it is explicit intent.
@@ -401,7 +514,7 @@ function main() {
       console.error(`  Launch did not succeed: ${message}`);
     }
 
-    writeTerminal({ ...entry, startedAt }, outcome);
+    writeTerminal({ ...routed, startedAt }, outcome);
   }
 
   console.log('\nDone.');
