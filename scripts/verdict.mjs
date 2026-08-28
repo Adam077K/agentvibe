@@ -89,19 +89,87 @@ class Refusal extends Error {
   constructor(message, code = 2) {
     super(message);
     this.code = code;
+    // A refusal about THIS PROCESS'S CONFIGURATION rather than about the repository. Callers that
+    // replace a low-level message with a friendlier one must not replace these: see `mergeBase`.
+    this.config = false;
   }
 }
 
-function git(repo, args) {
+/** A refusal about how this process was invoked, which no caller may re-label as a repository fact. */
+function configRefusal(message) {
+  const r = new Refusal(message);
+  r.config = true;
+  return r;
+}
+
+// THE SUBJECT IS A WHOLE DIFF, AND NODE'S DEFAULT CEILING IS 1 MiB.
+//
+// `execFileSync` buffers the child's stdout and kills it at `maxBuffer`, defaulting to 1 MiB. The
+// subject here is `git diff <base>..<ref>` over the entire change, so any diff past a megabyte —
+// a vendored file, a lockfile, a generated artifact — made the subject UNREADABLE. Measured on a
+// fixture repo before this constant existed: a 1,530,571-byte diff exited 2 with stdout empty,
+// against a 120-byte control on the same repo that exited 0 with a subject.
+//
+// It failed SAFE — exit 2, a Refusal, never a pass, because `git()` throws and nothing downstream
+// reads a subject it did not get. That is why this was a message defect before it was a limit
+// defect, and why raising the ceiling alone would have been the smaller half of the fix.
+//
+// 256 MiB is chosen to sit far above any diff a human reviews and far below a figure that would
+// let the buffer itself become the failure. It is not a promise that a 256 MiB diff is reviewable;
+// it is the point past which "this could not be read" stays the honest answer.
+const MAX_BUFFER_DEFAULT = 256 * 1024 * 1024;
+const MAX_BUFFER_ENV = 'VERDICT_MAX_BUFFER_BYTES';
+
+/**
+ * The stdout ceiling for git, as a positive integer of bytes.
+ *
+ * DECLARE WHAT IS READ AND REFUSE THE REST. The override exists so the ENOBUFS path can be driven
+ * by a test with a diff of a few hundred bytes — without it, the input that defeats this fix is a
+ * quarter-gigabyte fixture, which is to say the fix would ship untested. A malformed value is a
+ * REFUSAL, never a silent fall back to the default: an operator who mistyped a ceiling has said
+ * something about how this run should behave, and quietly substituting a different ceiling answers
+ * a question they did not ask. Same direction as #116 refusing an unknown flag instead of
+ * performing the non-dry action.
+ */
+function maxBuffer(env = process.env) {
+  const raw = env[MAX_BUFFER_ENV];
+  if (raw === undefined || raw === '') return MAX_BUFFER_DEFAULT;
+  if (!/^[0-9]+$/.test(raw.trim())) {
+    throw configRefusal(`${MAX_BUFFER_ENV}="${raw}" is not a whole number of bytes. Refusing rather than guessing a ceiling.`);
+  }
+  const n = Number(raw.trim());
+  if (!Number.isSafeInteger(n) || n <= 0) {
+    throw configRefusal(`${MAX_BUFFER_ENV}="${raw}" must be a positive integer of bytes. Refusing rather than guessing a ceiling.`);
+  }
+  return n;
+}
+
+function git(repo, args, env = process.env) {
+  const limit = maxBuffer(env);
   try {
     return execFileSync('git', args, {
       cwd: repo,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
+      maxBuffer: limit,
     });
   } catch (e) {
+    const cmd = `git ${args.slice(0, 2).join(' ')}`;
+    // NAME WHAT HAPPENED, NOT WHAT IT RESEMBLES. `spawnSync git ENOBUFS` is the message Node
+    // produces here, and it reads as a fault in git or in the repository. It is neither: the
+    // command succeeded and this process declined to hold the answer. A reader who is told "git
+    // diff failed" goes looking at the diff; a reader told the output exceeded a named ceiling
+    // that a named variable raises can act. A refusal that arrives as the wrong diagnosis is a
+    // refusal nobody can act on.
+    if (e.code === 'ENOBUFS') {
+      throw new Refusal(
+        `${cmd} produced more than ${limit} bytes of output, so this run could not read a subject. ` +
+        `Nothing is established about the diff — this is a limit of this process, not a fact about ` +
+        `the change or the repository. Raise ${MAX_BUFFER_ENV} above the diff size to read it.`
+      );
+    }
     const detail = (e.stderr || e.message || '').toString().trim().split('\n')[0];
-    throw new Refusal(`git ${args.slice(0, 2).join(' ')} failed: ${detail}`);
+    throw new Refusal(`${cmd} failed: ${detail}`);
   }
 }
 
@@ -113,7 +181,15 @@ function git(repo, args) {
 export function mergeBase(repo, ref, base = 'origin/main') {
   try {
     git(repo, ['rev-parse', '--verify', '--quiet', `${base}^{commit}`]);
-  } catch {
+  } catch (e) {
+    // A CATCH THAT DISCARDS ITS REASON REPORTS A CAUSE IT DID NOT CHECK. This block exists to
+    // replace git's low-level "unknown revision" with an actionable one, and that is right for a
+    // ref that genuinely will not resolve. It is wrong for a refusal raised BEFORE any subprocess
+    // ran: with a malformed ceiling this reported `cannot resolve "origin/main"` on a repository
+    // where origin/main resolves fine, sending the reader to fetch a ref they already have.
+    // Measured on a fixture: five malformed values, five identical wrong diagnoses, all exit 2 —
+    // the exit code was correct throughout, which is what made it survive a first reading.
+    if (e instanceof Refusal && e.config) throw e;
     throw new Refusal(
       `cannot resolve "${base}" in ${repo}. Fetch it first (git fetch origin main). ` +
         'Refusing rather than inventing a base to diff against.'
