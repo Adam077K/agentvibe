@@ -1,0 +1,11 @@
+{
+  "subject": "c04ab8239b7724cd3e6a48628c678ef7c8b94842c46adcae656b3d51cee1abf6",
+  "base": "d1294a40a69609d2b227c501837105e41ff4543d",
+  "tier": "trivial",
+  "tier_driver": null,
+  "verdict": "PASS",
+  "by": "builder:w1-closeout",
+  "run_id": null,
+  "evidence": "npm run check: 48 of 48 passed, 0 failed, exit 0, 216.6s, macOS, sandbox armed. check:figures: 27 figures across 3 files, all agree. classify.mjs floor=trivial. Author-recorded against the deterministic floor: one agent, one model family, no multi-judge panel.",
+  "recorded_at": "2026-08-28T08:50:41.591Z"
+}
