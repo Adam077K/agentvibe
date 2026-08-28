@@ -1,0 +1,11 @@
+{
+  "subject": "db14bc30ad5b4eef917c4075609db2cfd9b256745f181c33252979c4f3459b23",
+  "base": "4ddc5c6a22c799f7b868f26545c507b03719944b",
+  "tier": "full",
+  "tier_driver": "mission-control/scripts/consume-dispatch.ts",
+  "verdict": "PASS",
+  "by": "builder-w3-caller",
+  "run_id": null,
+  "evidence": "tsc --noEmit exit 0; bun test test/dispatch.test.ts 116 pass 0 fail (baseline 91); author-recorded, single model family",
+  "recorded_at": "2026-08-28T22:23:53.247Z"
+}
