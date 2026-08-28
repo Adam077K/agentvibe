@@ -2,6 +2,10 @@
 /**
  * check-dispatch-agenttype.mjs — the dispatch-identity checker.
  *
+ * Reporting standard: docs/03-system-design/SWEEP-REPORTING.md — a sweep must report what it could
+ * not classify, separately from what it found clean, and cross-check its universe against a counter
+ * it did not write. Both halves are implemented here and asserted, not assumed.
+ *
  * POSTURE: BLOCKS. Run by `.github/workflows/ci.yml` on every PR via `npm run check:dispatch`.
  * Specified at docs/03-system-design/agents/CONTROL-PLANE.md §3.16, and it is Step 3 of §3.17 —
  * the step whose entire job is to stop Step 1 being reverted by accident.
@@ -91,6 +95,25 @@ const CREDENTIALED = ['operator', 'instrument'];
 
 const failures = [];
 const warnings = [];
+// THE THIRD BUCKET. Items this scan SAW and deliberately did not classify, each with the reason.
+// Kept separate from `failures` (something is wrong) and from silence (nothing was there), because
+// collapsing "I did not classify this" into "I found nothing" is how a sweep reports a clean run
+// over a set it never examined.
+const unclassified = [];
+// THE UNIVERSE COUNT this scan is cross-checked against: `agent(` occurrences in the UNMASKED
+// source of the .js workflow files, found with the same regex the site scan uses. It is the
+// denominator of the coverage line, and the identity that must hold is
+// `universeTotal + mdMentions === sitesInJs + sitesInMd + unclassified.length` — asserted below
+// rather than hoped for, because a coverage line whose parts do not add up is worse than none.
+//
+// THE .md HALF NEEDS ITS OWN UNIVERSE, because it is scanned by a different predicate. Counting
+// only the .js universe left 4 of the 17 sites with no cross-count at all — a cross-count covering
+// part of a corpus reports coverage it does not have, which is the defect this bucket exists to
+// end, one level up.
+let universeTotal = 0;
+let sitesInJs = 0;
+let mdMentions = 0;
+let sitesInMd = 0;
 const fail = (check, msg) => failures.push(`[${check}] ${msg}`);
 const warn = (check, msg) => warnings.push(`[${check}] ${msg}`);
 
@@ -333,12 +356,31 @@ for (const file of workflowFiles) {
     for (let i = 0; i < mdLines.length; i++) {
       const lineRe = /agentType\s*:\s*(['"'])([^'"]+)\1/g;
       let m;
+      let matchedHere = 0;
       while ((m = lineRe.exec(mdLines[i])) !== null) {
         const name = m[2];
         const where = `${rel}:${i + 1}`;
         const site = { file: rel, line: i + 1, agentType: name, resolution: 'md-literal' };
         sites.push(site);
+        sitesInMd++;
+        matchedHere++;
         checkAgentName(name, where, 'agentType');
+      }
+      // THE .md UNIVERSE IS THE BARE TOKEN, DELIBERATELY WIDER THAN THE SHAPE PREDICATE.
+      // `\bagentType\b` matches every mention; the shape predicate takes only those followed by a
+      // quoted literal. The delta is every mention the file MENTIONS but does not treat as a
+      // dispatch — and unlike the .js side it does NOT fail, because markdown is prose and a prose
+      // mention of the key is the expected case, not a parser gap. Measured on this tree the delta
+      // is 3, all three prose: a shape table in README.md, a sentence in design-screen.md, and a
+      // column header in the same file. Listed rather than dropped, so a reader sees the exclusion
+      // instead of inferring it from a number that happens to add up.
+      const mentionsHere = (mdLines[i].match(/\bagentType\b/g) || []).length;
+      mdMentions += mentionsHere;
+      for (let k = 0; k < mentionsHere - matchedHere; k++) {
+        unclassified.push({
+          file: rel, line: i + 1, reason: 'md-prose-mention',
+          detail: 'a mention of `agentType` in markdown not followed by a quoted literal — prose about dispatch rather than a dispatch, excluded by design and listed so the exclusion is visible rather than assumed',
+        });
       }
     }
     continue;
@@ -353,6 +395,80 @@ for (const file of workflowFiles) {
   while ((m = siteRe.exec(masked)) !== null) found.push(m.index + m[0].length - 1);
   if (rawHits > 0 && !found.length) {
     fail('parser', `${rel}: the raw text holds ${rawHits} \`agent(\` occurrence(s) and the masked scan found none — the tokenizer is broken, not the file.`);
+  }
+
+  // ── THE DELTA BETWEEN raw AND found IS REPORTED, NOT DISCARDED ────────────────────────────────
+  //
+  // The guard directly above fires only when a file drops to ZERO. A PARTIAL loss — raw 10, found
+  // 5 — passes it in silence, and that is the state this repo is actually in: measured across
+  // `.claude/workflows/*.js`, 19 raw occurrences become 13 sites. Six vanish, no file hits zero,
+  // and nothing said so.
+  //
+  // Most of those six are correct: `agent(` inside a comment or a prompt string is not a dispatch,
+  // and masking them is the whole point of maskCode(). But "correct" and "unexamined" were
+  // indistinguishable in the output, and a checker that cannot tell them apart is one refactor away
+  // from reporting a real miss as a clean run. So each dropped occurrence is CLASSIFIED against the
+  // mask rather than counted:
+  //
+  //   masked      the byte is blanked in maskCode() -> it lived in a comment or a literal. Benign,
+  //               and listed so a reader can confirm that rather than assume it.
+  //   UNMASKED    the byte is live code, and the site scanner still did not take it. That is a
+  //               parser gap, not a benign exclusion, and it FAILS.
+  //
+  // This is the enumeration form of the rule the ledger already applies to resolvers: a sweep must
+  // report what it could not classify, separately from what it found clean. `unclassified` empty
+  // must mean "nothing was ambiguous", never "nothing was looked at".
+  // THE UNIVERSE USES THE SAME REGEX AS THE SITE SCAN, differing ONLY in masked vs unmasked source.
+  // That is not tidiness: the first cut counted the universe with `/\bagent\s*\(/`, which is a
+  // WIDER predicate than `siteRe`'s `(^|[^\w$.])agent\s*\(` — `\b` matches after a dot. So
+  // `this.agent(p)` and `obj.agent(p)` — ordinary method calls, not the injected global — landed in
+  // the universe, never matched a site, and would have raised a BLOCKING `parser-gap` failure on
+  // correct code. Zero such calls exist in these files today, so it passed; it was a false positive
+  // waiting for the first contributor to write one. Constructed and confirmed before it shipped.
+  //
+  // Aligned, the delta is EXACTLY what masking removed, which is the only thing this classification
+  // is entitled to talk about.
+  const universeRe = /(^|[^\w$.])agent\s*\(/g;
+  universeTotal += (src.match(universeRe) || []).length;
+  sitesInJs += found.length;
+  universeRe.lastIndex = 0;
+  let um;
+  while ((um = universeRe.exec(src)) !== null) {
+    const paren = um.index + um[0].length - 1;
+    if (found.includes(paren)) continue;
+    // maskCode preserves every index and blanks only literal/comment BODIES, so the byte at the
+    // same offset is what separates "masked away" from "missed".
+    const at = paren - 'agent'.length;
+    const isMasked = masked.slice(Math.max(0, at), paren) !== src.slice(Math.max(0, at), paren);
+    if (isMasked) {
+      unclassified.push({
+        file: rel, line: lineOf(src, paren), reason: 'masked',
+        detail: 'an `agent(` occurrence inside a comment or a string/template literal — excluded by design, listed so the exclusion is visible rather than assumed',
+      });
+    } else {
+      // STATED LIMIT — `masked` MEANS "THE MASK COVERED IT", NOT "THE MASK WAS RIGHT TO".
+      //
+      // The tokenizer's known derail cases put LIVE CODE behind the mask: a regex literal holding a
+      // lone quote (`const re = /"/;`) is read as division-then-string, and everything after it in
+      // that file is blanked. A real dispatch downstream of one is then reported here as
+      // `unclassified:masked` — visible, with a file:line, but labelled benign when it is not.
+      //
+      // Constructed and confirmed before shipping: a two-line fixture with a real second dispatch
+      // after such a regex reports 1 site + 1 unclassified and PASSES. That is still strictly
+      // better than what it replaced, where the same dispatch was dropped in silence and the run
+      // said `1 site` with no mention of the second — but it is an improvement in VISIBILITY, not
+      // in classification, and reading `masked` as "safe" would re-create the defect one word over.
+      //
+      // Telling a correct mask from a derailed one needs a different method — parsing rather than
+      // masking — which is the boundary this file's blind-spot list already names. Not attempted
+      // here; recorded so the next reader does not mistake the bucket for a guarantee.
+      fail(
+        'parser-gap',
+        `${rel}:${lineOf(src, paren)}: an \`agent(\` occurrence is in LIVE CODE — the mask did not blank it — and the site scanner did not take it. ` +
+        'That is a dispatch this check cannot see, which is the one thing it must never do silently. ' +
+        'Fix the tokenizer; do not delete the occurrence.'
+      );
+    }
   }
 
   // Frozen allowlists declared in this file, for rule 3.
@@ -478,6 +594,21 @@ for (const file of workflowFiles) {
   }
 }
 
+// ── 6b · the coverage identity ─────────────────────────────────────────────
+// Every occurrence in the universe is either a classified site or an item in the unclassified
+// bucket. If that stops holding, occurrences are going somewhere neither bucket reports — which is
+// the exact failure this bucket was added to end, so it fails rather than printing a line whose
+// parts do not add up.
+const universeAll = universeTotal + mdMentions;
+const classifiedAll = sitesInJs + sitesInMd + unclassified.length;
+if (universeAll !== classifiedAll) {
+  fail('coverage-identity',
+    `${universeAll} occurrence(s) across both universes (${universeTotal} \`agent(\` in unmasked .js source + ` +
+    `${mdMentions} \`agentType\` mention(s) in .md), but ${sitesInJs} .js site(s) + ${sitesInMd} .md site(s) + ` +
+    `${unclassified.length} unclassified = ${classifiedAll}. Occurrences are being dropped into neither ` +
+    'bucket, which is precisely what the unclassified bucket exists to make impossible.');
+}
+
 // ── 6 · non-vacuity ────────────────────────────────────────────────────────
 if (sites.length < MIN_SITES) {
   fail(
@@ -561,10 +692,11 @@ for (const rel of scannableFiles()) {
 //
 // scripts/check-dispatch-flush.test.mjs drives >64KB through this path and fails if it returns.
 if (JSON_OUT) {
-  console.log(JSON.stringify({ root: ROOT, sites, failures, warnings, files_scanned: workflowFiles.length, cred_files_scanned: credScanned }, null, 2));
+  console.log(JSON.stringify({ root: ROOT, sites, failures, warnings, unclassified, universe_agent_occurrences: universeTotal, sites_in_js: sitesInJs, md_agenttype_mentions: mdMentions, sites_in_md: sitesInMd, universe_total: universeAll, files_scanned: workflowFiles.length, cred_files_scanned: credScanned }, null, 2));
   process.exitCode = failures.length ? 1 : 0;
 } else {
   for (const w of warnings) console.log(`⚠ ${w}`);
+  for (const u of unclassified) console.log(`· [unclassified:${u.reason}] ${u.file}:${u.line} — ${u.detail}`);
   for (const f of failures) console.error(`✗ ${f}`);
 
   if (failures.length) {
@@ -573,7 +705,17 @@ if (JSON_OUT) {
   } else {
     console.log(
       `\n✓ dispatch-agentType check passed — ${sites.length} dispatch site(s) in ${workflowFiles.length} workflow file(s), ` +
-        `every agentType resolved to a non-shim engine; ${credScanned} file(s) scanned for credentialed containment, ${warnings.length} warning(s).`
+        `every agentType resolved to a non-shim engine; ${credScanned} file(s) scanned for credentialed containment, ${warnings.length} warning(s), ` +
+        `${unclassified.length} unclassified.`
+    );
+    // PRINTED ON THE PASSING PATH TOO. A third bucket a reader only meets on failure is a third
+    // bucket nobody reads, and the passing run is exactly where an unexamined item hides.
+    console.log(
+      `  COVERAGE: ${universeAll} occurrence(s) across both universes — ${universeTotal} \`agent(\` in the ` +
+      `unmasked .js workflow source and ${mdMentions} \`agentType\` mention(s) in .md — of which ` +
+      `${sitesInJs} + ${sitesInMd} = ${sitesInJs + sitesInMd} were classified as dispatch site(s) and ` +
+      `${unclassified.length} excluded and listed below. ` +
+      'An empty unclassified list means nothing was ambiguous — never that nothing was checked.'
     );
   }
 }

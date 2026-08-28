@@ -1,0 +1,11 @@
+{
+  "subject": "acc7c085da64197bcb4a11fd5d1d32af7992438ee8877fb8b37a1b33c2756c15",
+  "base": "d1294a40a69609d2b227c501837105e41ff4543d",
+  "tier": "full",
+  "tier_driver": "scripts/check-citations.mjs",
+  "verdict": "PASS",
+  "by": "builder-sweep-buckets-onto-main",
+  "run_id": null,
+  "evidence": "npm run check 48/48 exit 0 on the merged tree (183.7s, sandbox armed); node --test check-citations 62/62 and check-dispatch 30/30 exit 0; postures unchanged and controlled: check:citations-exist exits 0 clean and exits 1 on a tracked dead-citation fixture, drift exits 0 while holding 1 existence + 87 drift findings; STEPS=48 at base 0c78fa2 and at main d1294a4, citations-exist in STEPS, check:citations in EXCLUDED; #111 and #115 verified shipped by content with a negative control; class swept over all 7 PR files, 7 hits pre-edit, 4 sites rewritten, 9 post-edit of which 8 are quotations in Superseded blocks; verdict b0d13c5 survived the base move (subject byte-identical at the merge commit) and was invalidated only by this lane's own doc edits",
+  "recorded_at": "2026-08-28T08:46:03.574Z"
+}
