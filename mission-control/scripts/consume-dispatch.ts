@@ -20,6 +20,14 @@
 //                                                    # settle every `running` entry without
 //                                                    # consulting its pid — for an entry whose
 //                                                    # launcher pid has been reused
+//   bun mission-control/scripts/consume-dispatch.ts --no-verdict
+//                                                    # do not run the panel, whatever the router
+//                                                    # decides — the one expensive thing here
+//
+// AFTER A LAUNCH, THIS SCRIPT PRODUCES A VERDICT. It asks `scripts/produce-verdict.mjs` in the
+// target project, and only for **diffs that need the gate and have no binding verdict** — never
+// once per dispatch. See produceVerdict() for the order that makes the subject bind and
+// shouldProduce() for the three filters, two of which cost nothing.
 //
 // REDUCED SCOPE — stated, not hidden. Phase 8b's original gate requires claims to land in
 // a second project's ledger. No sibling project has a ledger (measured 2026-08-12); that
@@ -39,10 +47,12 @@ import {
   KNOWN_DISPATCH_STATUSES,
   deriveGateReachability,
   readDeclaredMaxTurns,
+  classifyVerdictProduction,
   type DispatchEntry,
   type GateRecord,
   type GateRouting,
   type GateInvocation,
+  type VerdictProduction,
 } from '../server/index-cache.ts';
 
 // ── The one project this consumer targets ────────────────────────────────────────────────
@@ -186,6 +196,26 @@ const LIST_ONLY = args.has('--list');
  * hand-editing the queue file, which is not a remedy, it is a workaround for a missing one.
  */
 const FORCE_RECONCILE = args.has('--force-reconcile');
+/**
+ * Decline the panel run — the operator's escape from the one expensive thing this script does.
+ *
+ * IT IS AN OPT-OUT AND NOT AN OPT-IN, AND THAT IS THE COST DECISION MADE EXPLICITLY. A panel run
+ * measures 2.5–3.8M tokens and 40–50 minutes, which is real money to attach to a queue consumer.
+ * The reason it can default to on is the DENOMINATOR: the producer is asked only for **diffs that
+ * need the gate and have no binding verdict**, never for dispatches. Three filters stand between a
+ * dispatch and a spend, and the first two cost nothing —
+ *
+ *   1. `run-gate.mjs` must DECIDE, and decide `required: true`   (this file, routeGate)
+ *   2. the producer's own pre-check short-circuits when a verdict already binds this diff
+ *      (`launched: false, preexisting: true` — `produce-verdict.mjs` has a test asserting
+ *      `launches === 0` on that path)
+ *   3. only then is a session launched
+ *
+ * An opt-in flag would have left the producer where it was found: shipped on `main` and invoked by
+ * nothing, which is the gap this wiring closes. An opt-out leaves the loop closed and still lets a
+ * founder working through a backlog decline the spend per run.
+ */
+const NO_VERDICT = args.has('--no-verdict');
 
 /** Does this value carry the three fields that make an emitted invocation actionable? */
 function isInvocation(v: unknown): v is GateInvocation {
@@ -271,6 +301,115 @@ function routeGate(root: string): GateRouting {
     // actionable and is not.
     invocation: isInvocation(parsed.invocation) ? parsed.invocation : null,
   };
+}
+
+/**
+ * A backstop kill for the producer, deliberately LOOSER than the producer's own bound.
+ *
+ * ONE AUTHORITY FOR THE PANEL BUDGET, AND IT IS NOT THIS FILE. `produce-verdict.mjs` takes
+ * `--timeout` and defaults to one hour; passing our own would put two numbers in charge of one
+ * budget, and two numbers in charge of one thing disagree silently. This is the outer bound that
+ * catches a producer which hangs BEFORE its own timer can apply — and being longer than the inner
+ * one means the producer's bounded refusal, which carries a reason, wins whenever it can.
+ */
+const PRODUCER_TIMEOUT_MS = 70 * 60 * 1000;
+
+/**
+ * Ask the repo's own producer to produce a verdict for what this dispatch committed.
+ *
+ * ═════════════════════════════════════════════════════════════════════════════════════════
+ * WHY THIS RUNS AFTER THE LAUNCH, AND WHY THAT IS NOT A DETAIL
+ * ═════════════════════════════════════════════════════════════════════════════════════════
+ *
+ * The verdict's subject is `sha256(diff)`. Ask before the dispatch has committed and the panel
+ * reviews bytes that are about to change: the record is then written against a subject nothing
+ * matches, and the verdict **quietly stops applying** rather than erroring. That is the same shape
+ * as the recording order this repo already had to discover — session file, commit, record verdict,
+ * commit verdict, push — and it fails in the same silent direction. So the call site is after
+ * `execFileSync('claude', …)` has returned and after `routeGate()`, which is where this file
+ * already writes its terminal line.
+ *
+ * NOTHING HERE ENFORCES THAT ORDER; THE CALL SITE IS THE ONLY THING THAT KEEPS IT. Stated because
+ * a future edit moving this call earlier would produce no error, no failing test in this file, and
+ * a stream of verdicts that bind nothing.
+ *
+ * ═════════════════════════════════════════════════════════════════════════════════════════
+ * THE ARTIFACT, NEVER THE PROSE — AND THE RECEIPT IS NOT THE OUTCOME EITHER
+ * ═════════════════════════════════════════════════════════════════════════════════════════
+ *
+ * `Workflow` is asynchronous: its tool result is a LAUNCH RECEIPT ("Workflow launched in
+ * background. Task ID: …") and the real outcome lands later in an output file. A caller that read
+ * a session's own account of itself would be reading the receipt. `produce-verdict.mjs` is built
+ * around that — it reads `.qa/verdicts/` with the JUDGE's `verdict.mjs` and reports what it found —
+ * so this function's job is to not undo it one layer up: the state comes from the producer's
+ * `--json` payload, and its exit code has to AGREE. `classifyVerdictProduction` owns that
+ * judgement, in `server/` where it is pure and testable, so this function's only responsibilities
+ * are running the process and normalising how it ended.
+ *
+ * A SIGNAL, A TIMEOUT, AN UNREADABLE PAYLOAD AND A DISAGREEING EXIT CODE ARE ALL `unresolved`.
+ * A session cut off at `maxTurns` exits CLEANLY, so a clean exit is not evidence of completion —
+ * which is why no state here is derived from an exit code alone.
+ */
+function produceVerdict(root: string): VerdictProduction {
+  const script = path.join(root, 'scripts', 'produce-verdict.mjs');
+  if (!fs.existsSync(script)) {
+    // NOT ASKED, NOT UNRESOLVED. A target project with no producer has not run a gate that
+    // established nothing; it has no gate to run. Phase 9 targets will reach this branch.
+    return { state: 'not-asked', why: `${script} does not exist, so no verdict could be produced` };
+  }
+  // RESOLVED FROM THE PROJECT ROOT, WITH NO OVERRIDE. The producer's own flag registry forbids an
+  // operator-supplied value that selects what gets MEASURED; a knob choosing WHICH producer runs
+  // would be that class one level up, so there is not one. The fixture root in the tests is what
+  // makes this testable, exactly as it is for `run-gate.mjs` above.
+  let status: number | null = null;
+  let signal: string | null = null;
+  let spawnCode: string | null = null;
+  let stdout = '';
+  let message: string | undefined;
+  try {
+    stdout = execFileSync('node', [script, '--json'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: PRODUCER_TIMEOUT_MS,
+      // AN `ENOBUFS` HERE WOULD DISCARD A REAL VERDICT. The payload carries the producer's reason
+      // strings, which are long by design; the 1MB default is close enough to matter and the
+      // failure is silent-looking (a spawn error, reported as `unresolved` — safe, but a wasted
+      // panel run). Raised deliberately rather than left to a default nobody chose.
+      maxBuffer: 16 * 1024 * 1024,
+    });
+    status = 0;
+  } catch (err) {
+    const e = err as NodeJS.ErrnoException & { status?: number | null; signal?: string | null; stdout?: string };
+    // ITS STDOUT IS READ OFF THE ERROR BEFORE THE ERROR IS BELIEVED — the same reasoning as
+    // `routeGate` above. Exits 1, 2 and 3 are documented terminal states of the producer and
+    // `execFileSync` throws on every one of them, so believing only the throw would discard every
+    // outcome but PRODUCED.
+    stdout = e.stdout ?? '';
+    status = typeof e.status === 'number' ? e.status : null;
+    signal = e.signal ?? null;
+    spawnCode = typeof e.code === 'string' ? e.code : null;
+    message = err instanceof Error ? err.message : String(err);
+  }
+  return classifyVerdictProduction({ status, signal, spawnCode, stdout, message });
+}
+
+/**
+ * Should the producer be asked at all — the DENOMINATOR, computed in one place.
+ *
+ * IT IS *DIFFS THAT NEED THE GATE AND HAVE NO BINDING VERDICT*, NOT DISPATCHES. This function owns
+ * the first half; the producer owns the second, because only it can hash the subject and look for a
+ * record. An undecided routing is NOT a reason to spend: `{decided: false}` means the router could
+ * not answer, and spending a panel on a question nobody could pose is the opposite of the zero-file
+ * reasoning that made routing undecided in the first place.
+ */
+function shouldProduce(routing: GateRouting): { ask: true } | { ask: false; why: string } {
+  if (NO_VERDICT) return { ask: false, why: '--no-verdict was given, so the panel run was declined by the operator' };
+  if (!routing.decided) return { ask: false, why: `the gate router did not decide, so there is nothing to gate: ${routing.why}` };
+  if (!routing.required) {
+    return { ask: false, why: `the gate router decided this diff does not require the gate (floor ${routing.floor} over ${routing.files} files at ${routing.ref})` };
+  }
+  return { ask: true };
 }
 
 // ── Recording an outcome ─────────────────────────────────────────────────────────────────
@@ -506,6 +645,16 @@ function main() {
           console.log(`  [dry-run] would run: claude --agent ${DISPATCH_AGENT} --print  in ${entry.root}`);
           console.log(`  [dry-run] playbooks offered: ${pb.names.join(', ')}`);
           console.log(`  [dry-run] gate: ${gate.outcome} — ${gate.why}`);
+          // MIRRORS THE REAL RUN'S EXPENSIVE BRANCH WITHOUT PREDICTING ITS ANSWER. The router
+          // classifies a DIFF and this dispatch has not produced one, so a dry run that printed a
+          // routing decision would be asserting something about work that has not happened — the
+          // same false-negative the zero-file branch refuses. What CAN be stated without running
+          // anything is the operator's own decision, which is the half a dry run is consulted for.
+          console.log(
+            NO_VERDICT
+              ? '  [dry-run] verdict production: DECLINED by --no-verdict; no panel would run'
+              : '  [dry-run] verdict production: would ask the router after the launch, and run the panel ONLY if it decides the gate is required (2.5–3.8M tokens, 40–50 min). Pass --no-verdict to decline.'
+          );
           console.log(`  [dry-run] goal: ${entry.goal}`);
         }
       }
@@ -671,12 +820,31 @@ function main() {
     const gateRouting = routeGate(entry.root);
     console.log(
       gateRouting.decided
-        ? `  Gate routing: required=${gateRouting.required} floor=${gateRouting.floor} over ${gateRouting.files} files at ${gateRouting.ref}` +
-          (gateRouting.required ? ' — NO VERDICT WAS PRODUCED; the invocation that would produce one is recorded on this entry.' : '')
+        ? `  Gate routing: required=${gateRouting.required} floor=${gateRouting.floor} over ${gateRouting.files} files at ${gateRouting.ref}`
         : `  Gate routing: UNDECIDED — ${gateRouting.why}`
     );
 
-    writeTerminal({ ...routed, startedAt, gateRouting }, outcome);
+    // THE SENTENCE THIS FILE USED TO WRITE IS NOW A CALL. It read "NO VERDICT WAS PRODUCED; the
+    // invocation that would produce one is recorded on this entry" — true, and an accurate account
+    // of a loop with a hole in it: `scripts/produce-verdict.mjs` shipped on `main` and was invoked
+    // by nothing. Measured on `main` at 4ddc5c6, with controls in both directions: 3 files
+    // referenced it (a test argv, a registration check, generated documentation) against 24 for
+    // `run-gate.mjs`, which IS invoked, and 0 for an impossible name.
+    const decision = shouldProduce(gateRouting);
+    let verdictProduction: VerdictProduction;
+    if (!decision.ask) {
+      verdictProduction = { state: 'not-asked', why: decision.why };
+      console.log(`  Verdict production: NOT ASKED — ${decision.why}`);
+    } else {
+      console.log(`  Verdict production: the gate is required and no verdict is known to bind — running scripts/produce-verdict.mjs …`);
+      verdictProduction = produceVerdict(entry.root);
+      // WHAT IS PRINTED IS WHAT IS RECORDED. `state` is never rendered as a word the record does
+      // not hold: an operator who reads "produced" here can find that exact value on the entry.
+      const detail = verdictProduction.state === 'not-asked' ? verdictProduction.why : verdictProduction.reason;
+      console.log(`  Verdict production: ${verdictProduction.state.toUpperCase()} — ${detail}`);
+    }
+
+    writeTerminal({ ...routed, startedAt, gateRouting, verdictProduction }, outcome);
   }
 
   console.log('\nDone.');

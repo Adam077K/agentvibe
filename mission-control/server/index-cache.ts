@@ -542,6 +542,203 @@ export type GateRouting =
   | { decided: false; why: string };
 
 /**
+ * What happened when this consumer asked `scripts/produce-verdict.mjs` to produce a verdict.
+ *
+ * THE RECEIPT IS NOT THE OUTCOME, AND THIS TYPE EXISTS BECAUSE THEY LOOK ALIKE. The producer
+ * launches a gate session and then reads `.qa/verdicts/` with the JUDGE's `verdict.mjs`; its exit
+ * code is a summary of that reading, but a summary is not the reading. A consumer that mapped an
+ * exit code straight to a state would report `produced` for any process that happened to exit 0 —
+ * a launcher that no-oped, a stub on PATH, a producer killed after it had already printed. So the
+ * state is taken from the producer's own `--json` payload and the exit code is required to AGREE
+ * with it; disagreement, an unparseable payload, a signal, or a timeout is `unresolved`.
+ *
+ * THERE IS NO `passed` MEMBER, FOR THE SAME REASON `GateOutcome` HAS NONE AND `consumed` WAS
+ * REPLACED BY `exited-clean`. "I could not check" must not be spellable as "it passed". `produced`
+ * is not a synonym for it either: it says a record was read that binds this exact diff and reads
+ * PASS — a fact about an ARTIFACT, which is why it is the only state that can only come from one.
+ *
+ * `not-asked` IS A THIRD THING, NEVER FOLDED INTO `unresolved`. "The gate was not required, so
+ * nothing was spent" and "the gate ran and established nothing" take opposite remedies, and a
+ * total that mixes them tells an operator neither. Absence of the field entirely is a FOURTH fact —
+ * a record written by a build that had no producer wired — and is likewise never any of these.
+ */
+export type VerdictProduction =
+  | {
+      /** Taken from the producer's payload, cross-checked against its exit code. */
+      state: 'produced' | 'blocked' | 'not-required';
+      /** The producer's own reason string, carried verbatim. */
+      reason: string;
+      /** The exit code that agreed with `state`. Present because agreement is the check. */
+      exitCode: number;
+      /** The subject the producer reported, when it reported one — evidence, not decoration. */
+      subject?: string;
+      /** The HEAD the producer read after the launch, when it reported one. */
+      head?: string;
+    }
+  | {
+      /** Nothing was established: the producer refused, was killed, or could not be read. */
+      state: 'unresolved';
+      reason: string;
+      exitCode?: number;
+      signal?: string;
+    }
+  | {
+      /** This consumer never asked. `why` says which of the several reasons applied. */
+      state: 'not-asked';
+      why: string;
+    };
+
+/**
+ * Every state, from ONE table, for the same reason `DISPATCH_STATUS_KIND` is one table.
+ *
+ * `spend` says whether reaching this state can have cost a panel run (2.5–3.8M tokens, 40–50
+ * minutes). It is what makes the cost decision auditable from the record rather than from the
+ * consumer's source, and `satisfies` means a new state cannot be added without answering it.
+ */
+const VERDICT_PRODUCTION_SPEND = {
+  produced: 'maybe',
+  blocked: 'maybe',
+  'not-required': 'no',
+  unresolved: 'maybe',
+  'not-asked': 'no',
+} satisfies Record<VerdictProduction['state'], 'maybe' | 'no'>;
+
+/** Every state this build knows, derived from the table above so a reader cannot drift from it. */
+export const VERDICT_PRODUCTION_STATES = Object.keys(VERDICT_PRODUCTION_SPEND) as
+  readonly VerdictProduction['state'][];
+
+/**
+ * The producer's four documented exit codes, and the state each one may confirm.
+ *
+ * AN ALLOW-LIST, NOT A SWITCH WITH A DEFAULT. `produce-verdict.mjs` documents
+ * `PRODUCED 0 · BLOCKED 1 · REFUSED 2 · NOT_REQUIRED 3`, plus `64` for usage — and 64 is
+ * deliberately outside the four so it can never be read as one. Anything not listed here (a spawn
+ * failure, a signal, a future fifth code, `64`) is `unresolved`: this build does not know what it
+ * means, and guessing in the direction of a pass is the one direction that must be impossible.
+ */
+const PRODUCER_EXIT_STATE = {
+  0: 'produced',
+  1: 'blocked',
+  2: 'unresolved',
+  3: 'not-required',
+} as const satisfies Record<number, VerdictProduction['state']>;
+
+/**
+ * The producer's own name for each terminal state, which is what its payload carries.
+ *
+ * Two vocabularies, mapped in one place. The producer says `PRODUCED`/`BLOCKED`/`REFUSED`/
+ * `NOT_REQUIRED`; the queue says `produced`/`blocked`/`unresolved`/`not-required`. `REFUSED` maps
+ * to `unresolved` because that is what it means — "the gate ran and established nothing" — and
+ * keeping the queue's word for it means a reader of a dispatch record never has to learn two.
+ */
+const PRODUCER_OUTCOME_STATE = {
+  PRODUCED: 'produced',
+  BLOCKED: 'blocked',
+  REFUSED: 'unresolved',
+  NOT_REQUIRED: 'not-required',
+} as const satisfies Record<string, VerdictProduction['state']>;
+
+/** The completed spawn of the producer, normalised — the only input the classification reads. */
+export interface ProducerRun {
+  /** The exit code, or `null` when the process did not exit normally. */
+  status: number | null;
+  /** The signal that killed it, or `null`. Mutually exclusive with a meaningful `status`. */
+  signal: string | null;
+  /** A spawn-family error code (`ENOENT`, `ETIMEDOUT`, …), or `null` when the spawn itself worked. */
+  spawnCode: string | null;
+  /** Whatever the producer printed on stdout, however malformed. */
+  stdout: string;
+  /** The error message, when the spawn threw. */
+  message?: string;
+}
+
+/**
+ * Turn a completed producer run into a state — the whole of the caller's judgement, in one pure
+ * function so that the consumer's shell code cannot quietly acquire a second opinion.
+ *
+ * THE ORDER OF THE CHECKS IS THE DESIGN. A signal or a spawn error is settled BEFORE stdout is
+ * read, because a producer killed at 49 minutes may have already printed a payload describing a
+ * state it had not yet reached, and a timeout that inherited that payload would report a spend as
+ * a result. Then the payload is required, then the payload's outcome is required to be one of the
+ * four, then the exit code is required to AGREE. Only a run that passes all four gets a state that
+ * is not `unresolved`.
+ */
+export function classifyVerdictProduction(run: ProducerRun): VerdictProduction {
+  if (run.signal) {
+    return {
+      state: 'unresolved',
+      signal: run.signal,
+      reason: `the producer was killed by ${run.signal}; whatever it had printed describes a run that did not finish`,
+    };
+  }
+  if (run.spawnCode) {
+    // ETIMEDOUT ARRIVES HERE AND IS NOT A VERDICT. `execFileSync`'s `timeout` reports the kill
+    // through this field, and the bytes already on stdout are a partial account of a run that was
+    // taken away. Treating them as an answer is how a spend becomes a result.
+    return {
+      state: 'unresolved',
+      reason: `the producer could not be run to completion (${run.spawnCode}): ${run.message ?? 'no detail'}`,
+      ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
+    };
+  }
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(run.stdout) as Record<string, unknown>;
+  } catch {
+    return {
+      state: 'unresolved',
+      reason: `the producer printed no readable JSON, so its exit code is the only thing left and an exit code is not a verdict: ${run.stdout.slice(0, 200)}`,
+      ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
+    };
+  }
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
+    return {
+      state: 'unresolved',
+      reason: 'the producer printed JSON that is not an object, so no outcome could be read from it',
+      ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
+    };
+  }
+  const declared = payload.outcome;
+  const mapped = typeof declared === 'string'
+    ? (PRODUCER_OUTCOME_STATE as Record<string, VerdictProduction['state']>)[declared]
+    : undefined;
+  if (mapped === undefined) {
+    return {
+      state: 'unresolved',
+      reason: `the producer's payload declares no outcome this build knows (${JSON.stringify(declared)}); known: ${Object.keys(PRODUCER_OUTCOME_STATE).join(', ')}`,
+      ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
+    };
+  }
+  const expected = typeof run.status === 'number'
+    ? (PRODUCER_EXIT_STATE as Record<number, VerdictProduction['state']>)[run.status]
+    : undefined;
+  if (expected === undefined || expected !== mapped) {
+    // THE CROSS-CHECK, AND IT IS THE POINT OF THE WHOLE FUNCTION. Two independent statements about
+    // one run — a payload and an exit code — must agree, or this build knows less than either of
+    // them claims. A payload saying PRODUCED behind an exit code that does not mean PRODUCED is
+    // the exact shape a stub, a truncated write or a wrapper script produces.
+    return {
+      state: 'unresolved',
+      reason: `the producer's payload says ${String(declared)} and its exit code ${String(run.status)} says ${expected ?? 'nothing this build knows'} — two statements about one run, disagreeing`,
+      ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
+    };
+  }
+  const reason = typeof payload.reason === 'string' ? payload.reason : 'the producer gave no reason';
+  if (mapped === 'unresolved') {
+    return { state: 'unresolved', reason, exitCode: run.status as number };
+  }
+  const subject = typeof payload.subject === 'string' ? payload.subject : undefined;
+  const head = typeof payload.head === 'string' ? payload.head : undefined;
+  return {
+    state: mapped,
+    reason,
+    exitCode: run.status as number,
+    ...(subject === undefined ? {} : { subject }),
+    ...(head === undefined ? {} : { head }),
+  };
+}
+
+/**
  * How a dispatch was launched — the routing decision, recorded rather than inferred.
  *
  * `bare-print` is what every dispatch before 2026-08-28 used: `claude --print <goal>`, a model
@@ -867,6 +1064,15 @@ export interface DispatchEntry {
    * CONTEXT FOR AN `exited-clean`, NOT A DIAGNOSIS OF ONE. Absent means this build did not read it.
    */
   declaredMaxTurns?: number | null;
+  /**
+   * What came back when this consumer asked the repo's producer to produce a verdict.
+   *
+   * ABSENT MEANS NO PRODUCER WAS WIRED when this line was written — a fact about the BUILD, not
+   * about the dispatch, and different from every state the field can hold. `{state: 'not-asked'}`
+   * means this build had a producer and decided not to spend it, and says which reason applied.
+   * Neither is ever a pass, and neither may be read as one.
+   */
+  verdictProduction?: VerdictProduction;
 }
 
 /**
