@@ -461,6 +461,108 @@ const DISPATCH_STATUS_KIND = {
  */
 export const KNOWN_DISPATCH_STATUSES = Object.keys(DISPATCH_STATUS_KIND) as readonly DispatchStatus[];
 /**
+ * How a dispatch was launched — the routing decision, recorded rather than inferred.
+ *
+ * `bare-print` is what every dispatch before 2026-08-28 used: `claude --print <goal>`, a model
+ * session in a project directory that reached no orchestrator, no playbook and no lens. It is kept
+ * as a NAMED value rather than deleted, because entries written by that build exist in real queues
+ * and a reader must be able to tell them apart from a routed one. It is not a value this build
+ * writes.
+ */
+export type DispatchRoute = 'orchestrator-playbook' | 'bare-print';
+
+/**
+ * What is known about the QA gate for one dispatch — AND WHAT THIS UNION DELIBERATELY CANNOT SAY.
+ *
+ * THERE IS NO `passed` MEMBER, AND ITS ABSENCE IS THE MECHANISM. The failure this closes is
+ * "looks gated, wasn't", which is strictly worse than "not gated" because the second is visible.
+ * A record that could express a pass would eventually carry one written by a build that had not
+ * checked; a union with no such member cannot, in any code path, present or future, without a
+ * type change that a reviewer sees.
+ *
+ *   `unreachable`  — derived, not assumed: the agent this dispatch launched does not declare the
+ *                    tool through which `qa.js` is invoked, so no session under it could have run
+ *                    the gate. Positive knowledge that the gate did not run.
+ *   `unverified`   — the agent COULD reach the gate, and this consumer did not observe a verdict.
+ *                    The launch is out of process; the consumer sees an exit code and nothing else.
+ *                    Ignorance, stated as ignorance.
+ *   `underivable`  — the derivation itself failed (no agent file, no `tools:` line). Distinct from
+ *                    `unreachable` on purpose: "I checked and it cannot" is not "I could not check",
+ *                    and a resolver never passes what it could not check.
+ */
+export type GateOutcome = 'unreachable' | 'unverified' | 'underivable';
+
+/** Every gate outcome this build knows, derived from one place so a reader cannot drift from it. */
+export const GATE_OUTCOMES = ['unreachable', 'unverified', 'underivable'] as const satisfies readonly GateOutcome[];
+
+/** What was derived about the gate, with the evidence that produced it. */
+export interface GateRecord {
+  outcome: GateOutcome;
+  /** Why this outcome, in the operator's terms — never the only record of it. */
+  why: string;
+  /** The agent whose declaration was read. Absent only when no agent was selected. */
+  agent?: string;
+  /** The tools that agent declares, as parsed. Present when the `tools:` line was readable. */
+  tools?: string[];
+}
+
+/**
+ * The tool through which `qa.js` — the binding QA gate — is invoked.
+ *
+ * Named once, here, because the derivation below and every comment that explains it must agree.
+ */
+export const GATE_TOOL = 'Workflow';
+
+/**
+ * Does the agent this dispatch will launch declare the gate tool? Read it; do not assume it.
+ *
+ * WHY DERIVED AND NOT A CONSTANT. A constant saying "the orchestrator cannot reach the gate" is
+ * true today and becomes a lie the day someone adds `Workflow` to that file — silently, in the
+ * direction that manufactures a false negative. Reading the declaration means the recorded value
+ * changes by itself when the grant changes, and the record stays true without anyone maintaining it.
+ *
+ * THE PARSE IS THE `tools:` LINE, NOT THE FILE. Measured 2026-08-28 in this repo: the word
+ * `Workflow` appears in the BODY of all 7 of 7 engine files and in the `tools:` declaration of
+ * ZERO of them. A `grep -l Workflow .claude/agents/` therefore reports every engine as gate-capable
+ * — the exact false negative this function exists to avoid — so matching is on whole tokens split
+ * out of the frontmatter list, never on a substring of the file.
+ *
+ * FAILURE IS A NAMED STATE, NOT A DEFAULT. Every path that could not complete the derivation
+ * returns `underivable` carrying the reason, so an unreadable agent file can never be mistaken for
+ * a checked one.
+ */
+export function deriveGateReachability(root: string, agent: string): GateRecord {
+  const file = path.join(root, '.claude', 'agents', `${agent}.md`);
+  let text: string;
+  try {
+    text = fs.readFileSync(file, 'utf8');
+  } catch (err) {
+    return { outcome: 'underivable', agent, why: `could not read ${file}: ${(err as Error).message}` };
+  }
+  // The frontmatter `tools:` line, anchored at column 0 so a `tools:` mentioned in prose or nested
+  // under another key cannot be mistaken for the declaration.
+  const m = /^tools:\s*\[([^\]]*)\]\s*$/m.exec(text);
+  if (!m) {
+    return { outcome: 'underivable', agent, why: `${file} declares no frontmatter \`tools:\` list, so its grants cannot be read` };
+  }
+  const tools = m[1].split(',').map((t) => t.trim()).filter(Boolean);
+  if (tools.includes(GATE_TOOL)) {
+    return {
+      outcome: 'unverified',
+      agent,
+      tools,
+      why: `${agent} declares ${GATE_TOOL}, so the gate is REACHABLE — but this consumer launches out of process and observed no verdict, so it does not claim one ran`,
+    };
+  }
+  return {
+    outcome: 'unreachable',
+    agent,
+    tools,
+    why: `${agent} declares [${tools.join(', ')}] and not ${GATE_TOOL}, through which qa.js is invoked — no session under it could have run the gate`,
+  };
+}
+
+/**
  * One entry in the dispatch queue.
  *
  * `status` is always `'pending'` when written by the server; the consume-dispatch script
@@ -506,6 +608,28 @@ export interface DispatchEntry {
    * those entries already got.
    */
   consumerPid?: number;
+  /**
+   * How this dispatch was launched. ABSENT MEANS `bare-print`, and that reading is deliberate:
+   * every entry written before routing existed was launched that way, so absence is a known fact
+   * about those entries rather than a gap.
+   */
+  route?: DispatchRoute;
+  /**
+   * What is known about the QA gate for this dispatch. ABSENT MEANS UNKNOWN — never "passed", and
+   * the type on the other side of this field cannot say "passed" either. A reader that finds no
+   * `gate` is looking at a record written by a build that did not derive one, which is a different
+   * fact from any of the three outcomes and must not be folded into them.
+   */
+  gate?: GateRecord;
+  /**
+   * The playbooks the consumer offered the orchestrator to choose from, as filenames.
+   *
+   * WHAT THIS IS AND IS NOT EVIDENCE OF. It records what was OFFERED, which the consumer knows.
+   * Which one was SELECTED happens inside the launched session and is not observable from here, so
+   * it is not recorded — writing a selected playbook the consumer never saw would be the same
+   * class of defect as writing a gate verdict it never saw.
+   */
+  playbooksOffered?: string[];
 }
 
 /**
