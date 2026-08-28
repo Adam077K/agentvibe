@@ -1,0 +1,11 @@
+{
+  "subject": "6898788a8d60b066fb551446de26012cc591d47daf44b738acf916708b1f8854",
+  "base": "249ff5975d83b11310b5fbabcd28223f554c1c23",
+  "tier": "lite",
+  "tier_driver": ".claude/memory/DECISIONS.md",
+  "verdict": "PASS",
+  "by": "ceo-3-orchestrator",
+  "run_id": null,
+  "evidence": "Author-side but NOT self-issued: the producing lane (w1-docs) declined to record its own PASS, and the orchestrator recorded it instead, so producer and recorder are different parties. Tier lite, derived via classify.mjs (.claude/memory/DECISIONS.md -> .claude/memory/**), not accepted from the session file. Diff is 2 files, 98 insertions: one DECISIONS.md heading plus its session file. No code, no workflow, no agent file, no hook. Deterministic floor: npm run check 48 of 48, 0 failed (lane 165.4s; orchestrator confirmed STEPS.length 48 independently). Memory budget PASS at 37,261 of 40,000 bytes, 30 of 50 entries. Orchestrator verified independently, with controls firing: the DECISIONS heading is present on this branch (1 new heading; bogus-path control 0; the sibling closeout branch correctly 0); merge-tree clean; subject computed by hand and by verdict.mjs subject, agreeing. BOUNDARY: this is the checks running green, NOT the tier being independently satisfied. Single model family, no blinded reviewer on this diff.",
+  "recorded_at": "2026-08-28T09:09:16.606Z"
+}
