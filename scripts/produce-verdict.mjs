@@ -702,6 +702,12 @@ export function readVerdictArtifact({ tree, ref, verdictBin, runner = null }) {
     payload = null;
   }
   if (payload === null || typeof payload.ok !== 'boolean') {
+    // DISCLOSURE, ACKNOWLEDGED RATHER THAN FIXED: this field can carry the absolute repository
+    // path, because verdict.mjs names the repo it could not read. It is capped at 400 bytes, it
+    // cannot carry diff bytes or environment values, and the file invites an operator to paste
+    // evidence into a committed record — so a local path may reach the tree that way. Judged
+    // acceptable against losing the cause of every refusal; say so if that trade changes.
+    //
     // STDERR IS WHERE THE REASON IS, AND IT WAS DISCARDED. `verdict.mjs` writes its refusals to
     // stderr and exits non-zero with stdout EMPTY, so this evidence read {exit: 2, stdout: ""} —
     // a record of a failure with the cause deleted. Measured against a 1.5 MB diff: the cause was
