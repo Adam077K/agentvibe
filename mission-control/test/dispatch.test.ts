@@ -1096,6 +1096,9 @@ describe('a dispatch records what the gate router decided about its output', () 
   const REAL_SHAPE = {
     ref: 'origin/main...abc123', files: 5, floor: 'full', gateRequired: true,
     drivers: ['a.ts'], gateSelfReview: null,
+    // THE RESOLVED TIP THE ROUTER PINNED. The top-level `ref` above is what it was ASKED; this is
+    // what that resolves to, and the two differ exactly when the caller passed a symbolic ref.
+    verdictRef: { ref: 'abc123abc123abc123abc123abc123abc123abcd', reason: null },
     invocation: { tool: 'Workflow', scriptPath: '.claude/workflows/qa.js', args: { ref: 'origin/main...abc123', tier: 'full', tree: '/t' } },
   };
 
@@ -1109,6 +1112,11 @@ describe('a dispatch records what the gate router decided about its output', () 
     expect(r.ref).toBe('origin/main...abc123');
     expect(r.invocation?.scriptPath).toBe('.claude/workflows/qa.js');
     expect(r.invocation?.args).toMatchObject({ tier: 'full' });
+    // THE RESOLVED TIP IS RECORDED BESIDE THE ASKED-FOR REF, not instead of it. `ref` above is a
+    // symbolic range; this is the immutable thing a reader should quote.
+    expect(r.refTip).toBe('abc123abc123abc123abc123abc123abc123abcd');
+    expect(r.refTipReason).toBeNull();
+    expect(r.refTip).not.toBe(r.ref);
   });
 
   test('THE HONEST SHAPE: `required: true` sits beside no verdict, and none can be written', () => {
@@ -1169,7 +1177,70 @@ describe('a dispatch records what the gate router decided about its output', () 
     expect((last.gateRouting as { why: string }).why).toContain('does not exist');
   });
 
-  test('ANTI-DRIFT: the REAL run-gate.mjs emits all FIVE fields this consumer reads', () => {
+  // ── THE RECORDED REF MUST NOT NAME A MOVING TARGET ─────────────────────────────────────
+  //
+  // MEASURED, both arms producing both outcomes, at `d559dbe`:
+  //   --ref origin/main...feat/w3-caller  ->  top-level ref SYMBOLIC, invocation.args.ref RESOLVED
+  //   no --ref (default path)             ->  both resolved, they agree
+  // So the top-level field is symbolic ONLY sometimes, which is why reading it alone looked fine.
+
+  test('a SYMBOLIC top-level ref is recorded beside its resolved tip, never in place of it', () => {
+    const last = routerFixture('mc-router-symbolic-', emits({
+      ...REAL_SHAPE,
+      ref: 'origin/main...my-branch',
+      verdictRef: { ref: 'd559dbeedf5261ac845c81b15b60ddcc1e63dfdb', reason: null },
+    }));
+    const r = last.gateRouting as Extract<typeof last.gateRouting, { decided: true }>;
+    expect(r.ref).toBe('origin/main...my-branch');
+    expect(r.refTip).toBe('d559dbeedf5261ac845c81b15b60ddcc1e63dfdb');
+    // THE PAIR IS THE POINT: a record carrying only the first names a branch, and a branch moves.
+    expect(r.refTip).not.toBe(r.ref);
+  });
+
+  test('an UNPINNABLE tip is recorded as null WITH THE ROUTER\u2019S REASON, never as the symbolic ref', () => {
+    const last = routerFixture('mc-router-nopin-', emits({
+      ...REAL_SHAPE,
+      ref: 'origin/main..d1294a4',
+      verdictRef: { ref: null, reason: 'the range uses "..", not "..."' },
+    }));
+    const r = last.gateRouting as Extract<typeof last.gateRouting, { decided: true }>;
+    expect(r.refTip).toBeNull();
+    expect(r.refTipReason).toContain('not "..."');
+    // AND THE NULL DID NOT SILENTLY BECOME THE SYMBOLIC REF, which is the substitution that would
+    // make an unresolvable tip indistinguishable from a resolved one.
+    expect(r.refTip).not.toBe(r.ref);
+  });
+
+  // EACH CONJUNCT OF THE WIDENED PREDICATE GETS ITS OWN CASE, or some conjunct is decoration.
+  // The predicate is: verdictRef is an object, it carries both keys, and not both are null.
+  const badVerdictRefs: [string, unknown][] = [
+    ['absent entirely \u2014 an older or foreign run-gate.mjs', undefined],
+    ['null', null],
+    ['an ARRAY, which is an object and has neither key', []],
+    ['a bare string that looks like a sha', 'd559dbeedf5261ac845c81b15b60ddcc1e63dfdb'],
+    ['missing `reason`, so a null ref could not explain itself', { ref: null }],
+    ['missing `ref`', { reason: 'why' }],
+    ['BOTH NULL \u2014 asserting neither a tip nor a reason for having none', { ref: null, reason: null }],
+  ];
+  for (const [what, vr] of badVerdictRefs) {
+    test(`a verdictRef that is ${what} is REFUSED, not partially believed`, () => {
+      const shape: Record<string, unknown> = { ...REAL_SHAPE };
+      if (vr === undefined) delete shape.verdictRef; else shape.verdictRef = vr;
+      const last = routerFixture('mc-router-vr-', emits(shape));
+      expect(last.gateRouting?.decided).toBe(false);
+      expect((last.gateRouting as { why: string }).why).toContain('verdictRef');
+      // REFUSAL IS NEVER A PASS AND NEVER A SPEND: an undecided routing does not ask the producer.
+      expect(last.verdictProduction?.state).toBe('not-asked');
+    });
+  }
+
+  test('CONTROL: the SAME fixture with a well-formed verdictRef still DECIDES', () => {
+    // Without this the seven rows above are satisfied by a build that refuses every router.
+    const last = routerFixture('mc-router-vr-ok-', emits(REAL_SHAPE));
+    expect(last.gateRouting?.decided).toBe(true);
+  });
+
+  test('ANTI-DRIFT: the REAL run-gate.mjs emits all SIX fields this consumer reads', () => {
     // The six tests above drive a FIXTURE router, so they all stay green if the real one changes
     // shape — a fixture built from my own parser cannot fail. This runs the real emitter.
     //
@@ -1193,6 +1264,19 @@ describe('a dispatch records what the gate router decided about its output', () 
     expect(typeof j.files).toBe('number');
     expect(typeof j.floor).toBe('string');
     expect(typeof j.gateRequired).toBe('boolean');
+    // THE SIXTH FIELD, added when the recorded ref was found to be able to name a moving target.
+    // The five above were the contract before that; a test still saying FIVE while the consumer
+    // reads six is how a rename goes green. Named by key AND by inner shape, like `invocation`.
+    expect(Object.keys(j)).toContain('verdictRef');
+    const vr = j.verdictRef as Record<string, unknown>;
+    expect(vr).not.toBeNull();
+    expect(Object.keys(vr).sort()).toEqual(['reason', 'ref']);
+    // THIS RUN USES `--files`, so the router deliberately declines to pin a tip and says why. That
+    // is the null-WITH-A-REASON branch, and it is the one the consumer must accept rather than
+    // refuse — asserting it here means the real emitter, not a fixture, proves that branch exists.
+    expect(vr.ref).toBeNull();
+    expect(typeof vr.reason).toBe('string');
+    expect((vr.reason as string).length).toBeGreaterThan(0);
     // THE DENOMINATOR, READ RATHER THAN ASSUMED: the non-degenerate branch was the one exercised.
     expect(j.files as number).toBeGreaterThan(0);
     expect(j.gateRequired).toBe(true);
@@ -1614,6 +1698,7 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
   const ROUTER = (over: Record<string, unknown> = {}) => {
     const shape = {
       ref: 'origin/main...abc123', files: 5, floor: 'full', gateRequired: true,
+      verdictRef: { ref: 'abc123abc123abc123abc123abc123abc123abcd', reason: null },
       invocation: { tool: 'Workflow', scriptPath: '.claude/workflows/qa.js', args: { ref: 'r', tier: 'full', tree: '/t' } },
       ...over,
     };

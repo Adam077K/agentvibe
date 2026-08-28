@@ -284,6 +284,39 @@ function routeGate(root: string): GateRouting {
     // read through a partial match that produces a plausible decision from fields that moved.
     return { decided: false, why: `run-gate.mjs --json is missing a field this consumer reads (ref, files, floor, gateRequired): ${stdout.slice(0, 200)}` };
   }
+  // ── THE TOP-LEVEL `ref` CAN BE SYMBOLIC, AND RECORDING IT ALONE NAMES A MOVING TARGET ──────
+  //
+  // Measured on this tree, both arms producing both outcomes: `--ref origin/main...feat/w3-caller`
+  // emits a top-level `ref` of `origin/main...feat/w3-caller` beside an `invocation.args.ref` of
+  // `origin/main...d559dbe…`, while the default path emits the resolved sha in both. So the
+  // guarantee `run-gate.mjs` states in capitals — THE EMITTED TIP IS ALWAYS THE RESOLVED SHA —
+  // holds for the invocation it pins and NOT for this field. A queue entry saying "gated at
+  // feat/x over 6 files" is a durable record of a branch name, and a branch name moves.
+  //
+  // `verdictRef` IS THE FIELD BUILT FOR THIS, and it is required rather than read leniently.
+  // NARROWED DELIBERATELY — what the old predicate admitted and this one does not: a router
+  // emitting only {ref, files, floor, gateRequired}. What needed that? Nothing this repo ships:
+  // the real router emits `verdictRef` on BOTH its paths, the empty-diff literal included, and the
+  // anti-drift test runs the real emitter. A foreign or older `run-gate.mjs` in a Phase-9 target
+  // now lands on `decided: false` — which is never a pass, never a spend, and carries its reason.
+  // The alternative, reading it when present, is the exact "fell back to the only ref-shaped field
+  // on offer" defect `run-gate.mjs` documents about its own `invocation` key.
+  const vr = parsed.verdictRef;
+  const vrOk = typeof vr === 'object' && vr !== null && !Array.isArray(vr)
+    && 'ref' in vr && 'reason' in vr;
+  const refTip = vrOk && typeof (vr as { ref: unknown }).ref === 'string'
+    ? (vr as { ref: string }).ref : null;
+  const refTipReason = vrOk && typeof (vr as { reason: unknown }).reason === 'string'
+    ? (vr as { reason: string }).reason : null;
+  if (!vrOk || (refTip === null && refTipReason === null)) {
+    // A NULL TIP WITH NO REASON IS THE ONE SHAPE THAT MUST NOT PASS. The router's contract is a sha
+    // OR a null carrying why; a pair of nulls asserts neither, and would render as "tip UNRESOLVED"
+    // with nothing after it — a shrug wearing the costume of a measurement.
+    return {
+      decided: false,
+      why: `run-gate.mjs --json carries no usable verdictRef {ref, reason}, so the tip this routing describes could not be pinned and the top-level ref may be symbolic: ${stdout.slice(0, 200)}`,
+    };
+  }
   if (files === 0) {
     return {
       decided: false,
@@ -296,6 +329,8 @@ function routeGate(root: string): GateRouting {
     floor,
     files,
     ref,
+    refTip,
+    refTipReason,
     // VALIDATED, NOT CAST. An invocation is only carried forward when it has the three fields a
     // reader needs to act on it; anything else becomes `null` rather than a shape that looks
     // actionable and is not.
@@ -407,9 +442,26 @@ function shouldProduce(routing: GateRouting): { ask: true } | { ask: false; why:
   if (NO_VERDICT) return { ask: false, why: '--no-verdict was given, so the panel run was declined by the operator' };
   if (!routing.decided) return { ask: false, why: `the gate router did not decide, so there is nothing to gate: ${routing.why}` };
   if (!routing.required) {
-    return { ask: false, why: `the gate router decided this diff does not require the gate (floor ${routing.floor} over ${routing.files} files at ${routing.ref})` };
+    return { ask: false, why: `the gate router decided this diff does not require the gate (floor ${routing.floor} over ${routing.files} files, ${describeRef(routing)})` };
   }
   return { ask: true };
+}
+
+/**
+ * How a decided routing's ref is written down — ONE renderer, because there are two call sites.
+ *
+ * The console line and the durable `why` string both name the ref, and they said it separately
+ * until this defect made the difference matter. `inFlight()` above exists for the same reason: two
+ * places describing one derivation drift, and the drift is invisible until someone compares them.
+ *
+ * THE RESOLVED TIP LEADS AND THE ASKED-FOR REF FOLLOWS IN PARENTHESES. A reader who quotes the
+ * first thing they see then quotes something immutable. When no tip could be pinned the reason is
+ * printed in place of one — never the symbolic ref standing in for a resolution that did not happen.
+ */
+function describeRef(routing: Extract<GateRouting, { decided: true }>): string {
+  return routing.refTip !== null
+    ? `at ${routing.refTip} (asked as "${routing.ref}")`
+    : `TIP UNRESOLVED for "${routing.ref}" — ${routing.refTipReason ?? 'no reason given'}`;
 }
 
 // ── Recording an outcome ─────────────────────────────────────────────────────────────────
@@ -820,7 +872,7 @@ function main() {
     const gateRouting = routeGate(entry.root);
     console.log(
       gateRouting.decided
-        ? `  Gate routing: required=${gateRouting.required} floor=${gateRouting.floor} over ${gateRouting.files} files at ${gateRouting.ref}`
+        ? `  Gate routing: required=${gateRouting.required} floor=${gateRouting.floor} over ${gateRouting.files} files, ${describeRef(gateRouting)}`
         : `  Gate routing: UNDECIDED — ${gateRouting.why}`
     );
 

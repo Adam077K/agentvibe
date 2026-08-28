@@ -534,8 +534,30 @@ export type GateRouting =
       floor: string;
       /** How many files the router classified — the DENOMINATOR behind `required`. */
       files: number;
-      /** The ref the router classified, named so a reader can check what was measured. */
+      /**
+       * The ref the router was ASKED about, verbatim — which CAN BE SYMBOLIC, and that is why the
+       * field below exists rather than this one being trusted alone.
+       *
+       * MEASURED, both arms producing both outcomes, `scripts/run-gate.mjs` at `d559dbe`:
+       *   --ref origin/main...feat/w3-caller  ->  ref "origin/main...feat/w3-caller"   SYMBOLIC
+       *                                           invocation.args.ref "origin/main...d559dbe…"
+       *   no --ref (the default path)         ->  ref "origin/main...d559dbe…"          they agree
+       *
+       * `run-gate.mjs` states in capitals that THE EMITTED TIP IS ALWAYS THE RESOLVED SHA — true of
+       * `invocation.args.ref`, which it pins, and NOT of this top-level field. A branch name is a
+       * moving target: the record says "gated at feat/x" and feat/x is somewhere else tomorrow.
+       */
       ref: string;
+      /**
+       * The resolved 40-hex tip the router pinned, or `null` when it could not pin one.
+       *
+       * THE VALUE A READER SHOULD QUOTE. Taken from the router's own `verdictRef`, which exists for
+       * exactly this and is emitted on BOTH its paths. `null` is never "the tip is fine"; it comes
+       * with `refTipReason`, and the two are read together or not at all.
+       */
+      refTip: string | null;
+      /** Why no tip could be pinned. Non-null exactly when `refTip` is null. */
+      refTipReason: string | null;
       /** What would run the gate. Present when one is required. */
       invocation: GateInvocation | null;
     }
