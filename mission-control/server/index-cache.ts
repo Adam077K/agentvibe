@@ -589,6 +589,58 @@ export interface GateRecord {
 export const GATE_TOOL = 'Workflow';
 
 /**
+ * The `tools:` list out of an agent file's frontmatter — BOTH legal YAML spellings, or `null`.
+ *
+ * F2. THIS READ ONE OF TWO BLESSED SPELLINGS AND SILENTLY DOWNGRADED THE OTHER. The original
+ * accepted only the flow form, `tools: [Read, Bash]`. YAML's block sequence is exactly equivalent
+ * and `schema-lint` accepts it — it asserts only `Array.isArray(fm.tools)`, and a block sequence
+ * parses to an array. Measured on one file with `tools:` rewritten as a block sequence:
+ * `schema-lint` 18 pass · 0 fail · 0 warnings, and this function returned `underivable`. **A
+ * stylistic reformat, valid and lint-clean, degraded the derivation** — and through the prompt it
+ * would then have told the session something false about the gate.
+ *
+ * IT IS NOT A THIS-REPO PROBLEM. `deriveGateReachability` takes a `root`, so a Phase-9 target that
+ * writes its frontmatter the other legal way lands here on its first dispatch.
+ *
+ * WHY THE FIXTURE COULD NOT HAVE CAUGHT IT: `installHarness` writes `tools: ${tools}` and every
+ * table entry was flow-form, so the parser and the fixture shared one assumption. The tests now
+ * drive both spellings through the same table.
+ *
+ * ANCHORED TO THE FRONTMATTER, NOT THE FILE. The old regex scanned the whole document with `/m`, so
+ * a line beginning `tools:` anywhere in the body would have been read as the declaration. This
+ * reads only between the opening `---` and the closing one.
+ *
+ * DECLARE WHAT IS READ AND REFUSE THE REST. Two spellings are understood; anything else returns
+ * `null`, which the caller reports as `underivable` — "I could not check" — rather than as an
+ * empty grant list, which would read as "declares nothing" and produce a confident wrong answer.
+ */
+export function parseToolsDeclaration(text: string): string[] | null {
+  const fm = /^---\r?\n([\s\S]*?)\r?\n---\s*$/m.exec(text);
+  if (!fm) return null;
+  const body = fm[1];
+
+  // Spelling 1 — flow sequence on one line: `tools: [Read, Bash]`
+  const flow = /^tools:[ \t]*\[([^\]]*)\][ \t]*$/m.exec(body);
+  if (flow) return splitItems(flow[1].split(','));
+
+  // Spelling 2 — block sequence: `tools:` then `  - Read` lines. The key must carry NOTHING after
+  // the colon; `tools: Read` is a scalar, not a list, and is refused rather than read as one item.
+  const block = /^tools:[ \t]*(?:#[^\n]*)?\r?\n((?:[ \t]+-[^\n]*\r?\n?)+)/m.exec(body);
+  if (block) {
+    const items = block[1].split(/\r?\n/).filter((l) => /\S/.test(l)).map((l) => l.replace(/^[ \t]+-[ \t]*/, ''));
+    return splitItems(items);
+  }
+  return null;
+}
+
+/** Trim, strip one layer of matching quotes, drop empties. Shared so both spellings normalise identically. */
+function splitItems(raw: string[]): string[] {
+  return raw
+    .map((t) => t.trim().replace(/^(["'])([\s\S]*)\1$/, '$2').trim())
+    .filter(Boolean);
+}
+
+/**
  * Does the agent this dispatch will launch declare the gate tool? Read it; do not assume it.
  *
  * WHY DERIVED AND NOT A CONSTANT. A constant saying "the orchestrator cannot reach the gate" is
@@ -614,13 +666,10 @@ export function deriveGateReachability(root: string, agent: string): GateRecord 
   } catch (err) {
     return { outcome: 'underivable', agent, why: `could not read ${file}: ${(err as Error).message}` };
   }
-  // The frontmatter `tools:` line, anchored at column 0 so a `tools:` mentioned in prose or nested
-  // under another key cannot be mistaken for the declaration.
-  const m = /^tools:\s*\[([^\]]*)\]\s*$/m.exec(text);
-  if (!m) {
-    return { outcome: 'underivable', agent, why: `${file} declares no frontmatter \`tools:\` list, so its grants cannot be read` };
+  const tools = parseToolsDeclaration(text);
+  if (tools === null) {
+    return { outcome: 'underivable', agent, why: `${file} declares no frontmatter \`tools:\` list this parser can read, so its grants cannot be determined` };
   }
-  const tools = m[1].split(',').map((t) => t.trim()).filter(Boolean);
   if (tools.includes(GATE_TOOL)) {
     return {
       outcome: 'unverified',
