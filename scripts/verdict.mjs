@@ -89,16 +89,24 @@ class Refusal extends Error {
   constructor(message, code = 2) {
     super(message);
     this.code = code;
-    // A refusal about THIS PROCESS'S CONFIGURATION rather than about the repository. Callers that
-    // replace a low-level message with a friendlier one must not replace these: see `mergeBase`.
-    this.config = false;
+    // A refusal about THIS RUN — how it was invoked, or a limit it hit — rather than about the
+    // repository. Callers that replace a low-level message with a friendlier one must not replace
+    // these: see `mergeBase` and `readCommitted`.
+    //
+    // IT WAS NAMED `config` AND COVERED ONLY MALFORMED INPUT while the comment claimed the whole
+    // class. An ENOBUFS refusal is equally a fact about this process and was NOT marked, so
+    // `mergeBase` relabelled it: ceilings of 1, 10, 40 and " 12 " — every one well-formed — reported
+    // `cannot resolve "origin/main"` on a repo where origin/main resolves, because rev-parse's own
+    // 41-byte output overflowed first. The comment stated the class; the predicate covered one
+    // member of it. Widening the predicate to the class is the fix.
+    this.aboutThisRun = false;
   }
 }
 
-/** A refusal about how this process was invoked, which no caller may re-label as a repository fact. */
-function configRefusal(message) {
+/** A refusal about this run — invocation or limit — which no caller may re-label as a repo fact. */
+function runRefusal(message) {
   const r = new Refusal(message);
-  r.config = true;
+  r.aboutThisRun = true;
   return r;
 }
 
@@ -135,11 +143,11 @@ function maxBuffer(env = process.env) {
   const raw = env[MAX_BUFFER_ENV];
   if (raw === undefined || raw === '') return MAX_BUFFER_DEFAULT;
   if (!/^[0-9]+$/.test(raw.trim())) {
-    throw configRefusal(`${MAX_BUFFER_ENV}="${raw}" is not a whole number of bytes. Refusing rather than guessing a ceiling.`);
+    throw runRefusal(`${MAX_BUFFER_ENV}="${raw}" is not a whole number of bytes. Refusing rather than guessing a ceiling.`);
   }
   const n = Number(raw.trim());
   if (!Number.isSafeInteger(n) || n <= 0) {
-    throw configRefusal(`${MAX_BUFFER_ENV}="${raw}" must be a positive integer of bytes. Refusing rather than guessing a ceiling.`);
+    throw runRefusal(`${MAX_BUFFER_ENV}="${raw}" must be a positive integer of bytes. Refusing rather than guessing a ceiling.`);
   }
   return n;
 }
@@ -162,10 +170,13 @@ function git(repo, args, env = process.env) {
     // that a named variable raises can act. A refusal that arrives as the wrong diagnosis is a
     // refusal nobody can act on.
     if (e.code === 'ENOBUFS') {
-      throw new Refusal(
-        `${cmd} produced more than ${limit} bytes of output, so this run could not read a subject. ` +
-        `Nothing is established about the diff — this is a limit of this process, not a fact about ` +
-        `the change or the repository. Raise ${MAX_BUFFER_ENV} above the diff size to read it.`
+      // NODE TRIPS ENOBUFS ON EITHER STREAM, so the remedy names the COMMAND'S output, not the
+      // diff. Measured: a 529-byte stderr against a 119-byte diff told the operator to raise a
+      // ceiling "above the diff size" while it already sat ~4x above it.
+      throw runRefusal(
+        `${cmd} produced more than ${limit} bytes on stdout or stderr, so this run could not read ` +
+        `its answer. Nothing is established — this is a limit of this process, not a fact about the ` +
+        `change or the repository. Raise ${MAX_BUFFER_ENV} above that command's output size.`
       );
     }
     const detail = (e.stderr || e.message || '').toString().trim().split('\n')[0];
@@ -189,7 +200,7 @@ export function mergeBase(repo, ref, base = 'origin/main') {
     // where origin/main resolves fine, sending the reader to fetch a ref they already have.
     // Measured on a fixture: five malformed values, five identical wrong diagnoses, all exit 2 —
     // the exit code was correct throughout, which is what made it survive a first reading.
-    if (e instanceof Refusal && e.config) throw e;
+    if (e instanceof Refusal && e.aboutThisRun) throw e;
     throw new Refusal(
       `cannot resolve "${base}" in ${repo}. Fetch it first (git fetch origin main). ` +
         'Refusing rather than inventing a base to diff against.'
@@ -231,11 +242,25 @@ export function verdictPath(subject) {
   return path.join(VERDICT_DIR, `${subject}.json`);
 }
 
-/** Read the verdict out of the REF'S TREE. An uncommitted verdict is not a verdict. */
+/**
+ * Read the verdict out of the REF'S TREE. An uncommitted verdict is not a verdict.
+ *
+ * RULE 10'S MIRROR: A RESOLVER MUST NOT ASSERT ABSENCE FOR SOMETHING IT COULD NOT CHECK. This
+ * `catch` returned null for every failure, and null means `reason: "absent"` — so a record that is
+ * committed and binds was reported as missing, telling an operator to record a verdict they already
+ * have, on `qa-lead-pass.yml`'s blocking path. Measured: a 20,301-byte record with a 119-byte diff
+ * reads `PASS bound to 577ba3f1…` at the default ceiling and `{"ok":false,"reason":"absent"}` at a
+ * ceiling of 5000. Both exit codes were defensible — 0 and 1 — which is why only the message gave
+ * it away.
+ *
+ * A run-level refusal now propagates (exit 2, unresolved). Only a genuine "this path is not in that
+ * tree" becomes null.
+ */
 function readCommitted(repo, ref, subject) {
   try {
     return git(repo, ['show', `${ref}:${verdictPath(subject)}`]);
-  } catch {
+  } catch (e) {
+    if (e instanceof Refusal && e.aboutThisRun) throw e;
     return null;
   }
 }
