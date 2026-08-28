@@ -11,10 +11,9 @@
 // compare, no model in the loop, which is exactly why it is safe behind an exit code and exactly
 // why it cannot be the thing that reviews. `scripts/run-gate.mjs` decides whether the gate is
 // required and emits the invocation that would run it, and says of itself that a router nobody
-// calls is the defect it was written to fix.
-//
-// So the chain read:  router emits an invocation  →  ???  →  gate checks a record that binds.
-// The `???` was a human pasting a `Workflow({...})` call into a session. This file is the `???`.
+// calls is the defect it was written to fix. `mission-control/scripts/consume-dispatch.ts` prints
+// the gap in its own output: "NO VERDICT WAS PRODUCED; the invocation that would produce one is
+// recorded on this entry."
 //
 //   session runs the panel  →  session records the verdict  →  anyone checks the binding
 //   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -28,52 +27,78 @@
 // session answering "NO_WORKFLOW_TOOL" with zero tool_uses when asked to use it. A bare
 // `claude --print <goal>` DOES get the tool, executes the script, and waits.
 //
-// `PS-WORKFLOW-CONTAINMENT` in `.claude/hooks/schema-lint.js` keeps `Workflow` off every agent
-// definition, for the same reason `reviewer` carries no `Write`: THE GATE MAY NOT BE INVOCABLE BY
-// THE THING IT GATES. This file satisfies that REASON rather than arguing with it — the governed
-// session does the work and never holds the tool; a separate bare session, launched afterwards by
-// this script, runs the gate. **No agent definition is edited and no `mcpServers` or tool grant is
-// added.** A design that needed one would be a finding, not a build.
+// `PS-WORKFLOW-CONTAINMENT` keeps `Workflow` off every agent definition for the same reason
+// `reviewer` carries no `Write`: THE GATE MAY NOT BE INVOCABLE BY THE THING IT GATES. This file
+// satisfies that REASON rather than arguing with it. **No agent definition is edited and no
+// `mcpServers` or tool grant is added.**
+//
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+// PROVENANCE — WHAT COMES FROM `main`, WHAT COMES FROM THE PR, AND WHY THE LINE IS THERE
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+//
+// STATE THE BOUNDARY EXACTLY. An earlier version of this header said "THIS SCRIPT IS THAT HUMAN,
+// MECHANISED", which reads as *the judge comes from main*. It materialised `.claude/workflows/**`
+// and nothing else, while invoking `run-gate.mjs` and `verdict.mjs` from its OWN directory — which
+// is the PR tree, because this script ships in the PR. An adversarial review demonstrated the
+// consequence end to end, both arms producing both outcomes:
+//
+//   a PR shipping a one-line hostile scripts/verdict.mjs whose `check --json` prints {"ok":true}
+//     -> EXIT 0 · PRODUCED · launched=FALSE · no judge dir · NO VERDICT RECORD ANYWHERE
+//   the same tree with an honest verdict.mjs
+//     -> EXIT 2 · REFUSED · launched=TRUE
+//
+// That is not an instance of the declared "hash-bound, not signed" forgeability — that one needs a
+// record. This needed NONE, and the pre-check short-circuit turned it from *bypassing a check* into
+// *suppressing the panel run that could have contradicted it*.
+//
+// WHAT IS FIXED: the judging project is now the WHOLE TREE at `origin/main`, not one directory of
+// it. `qa.js`, every agent definition it dispatches, `settings.json`, the tier map, `verdict.mjs`
+// and `scripts/lib/**` all come from the ref. The artifact is read with the JUDGE's `verdict.mjs`
+// (`judge.verdictBin`), never with this script's neighbour. `verdict.mjs` is built for exactly
+// this: it takes `--repo` and reads its tier map from where IT lives, so a main copy judging a PR
+// tree is its designed contract, not a trick played on it.
+//
+// WHAT IS NOT FIXED, AND CANNOT BE FROM HERE: **the router is PR-provenance.** `run-gate.mjs`
+// derives its `REPO_ROOT` from its own location and `resolveTree()` refuses when that tree's HEAD
+// is not the tip under review — so main's copy CANNOT classify a PR tree, and the reviewer checked
+// this rather than assuming it. Editing `run-gate.mjs` is out of scope. What is done instead is to
+// distrust its output: `crossCheckArgs()` re-derives `tree` and the ref tip with this process's own
+// `git` calls and refuses when they disagree with what the router said. A hostile router can still
+// decline to emit an invocation — that is NOT_REQUIRED, exit 3, which is not a pass and never
+// becomes one.
+//
+// SO THE HONEST SENTENCE IS: the JUDGE and everything it loads come from `main`; the ROUTER comes
+// from the PR and is cross-checked against an independent instrument. Anyone widening this file
+// should keep that sentence true or change it deliberately.
 //
 // ── HAZARD 1 · THE `tool_result` IS A LAUNCH RECEIPT, NOT A VERDICT ──────────────────────────
 //
 // `Workflow` is asynchronous. The probe captured the receipt verbatim: "Workflow launched in
-// background. Task ID: wl7tw6ebs". The outcome arrives later, in a task output file. A session
-// handed that receipt can report "PASS" having observed nothing — the class #110 exists to close,
-// arriving on a new path.
+// background. Task ID: wl7tw6ebs". A session handed that receipt can report "PASS" having observed
+// nothing — the class #110 exists to close, arriving on a new path.
 //
 // SO THIS SCRIPT NEVER READS THE GATE SESSION'S STDOUT AS A RESULT. The launcher's exit code and
-// output are recorded as DIAGNOSTICS and are not consulted by the decision. Every terminal state
-// below is computed from `verdict.mjs check` against the diff — the artifact, in the committed
-// tree. `scripts/produce-verdict.test.mjs` pins this with a launcher that prints "VERDICT: PASS"
-// on stdout, exits 0, and writes nothing: the outcome is REFUSED.
+// output are DIAGNOSTICS. Every terminal state is computed from the judge's `verdict.mjs check`.
 //
 // ── HAZARD 2 · WORKFLOW DISCOVERY IS cwd-BASED, SO cwd DECIDES WHICH JUDGE JUDGES ────────────
 //
-// `run-gate.mjs` emits `scriptPath: '.claude/workflows/qa.js'` — RELATIVE, and it says in capitals
-// that it cannot make it otherwise, because an absolute path resolved in the PR tree still points
-// at the PR tree. Observed 2026-08-24: a launch loaded the PR's own modified `qa.js` and reviewed
-// the change with the copy the change edited. run-gate leaves that to "a human, by launching from
-// a `main` checkout."
+// `run-gate.mjs` emits a RELATIVE `scriptPath` and says in capitals that it cannot make it
+// otherwise. Observed 2026-08-24: a launch loaded the PR's own modified `qa.js`. run-gate leaves
+// that to "a human, by launching from a `main` checkout". This script is that human, mechanised —
+// and the whole-tree materialisation above is what makes the scratch directory a project a judge
+// can actually run in, rather than a directory containing one file it cannot dispatch out of.
 //
-// THIS SCRIPT IS THAT HUMAN, MECHANISED. It materialises `.claude/workflows/**` from `origin/main`
-// into a scratch directory OUTSIDE the work tree, verifies every extracted blob hash against
-// `origin/main`'s, and launches the gate session with that directory as cwd. `args.tree` — which
-// run-gate already resolved and verified — carries the work tree, so the oracle still measures the
-// PR. Two knobs, pointed at two trees, deliberately.
-//
-// The scratch directory MUST NOT live inside the work tree, and this is not tidiness: the verdict
-// subject is a hash of the work tree's diff, so writing into it would change the subject the panel
-// is reviewing, mid-review.
+// The judging tree must NOT live inside the work tree. Be exact about why, because the first
+// version of this comment overclaimed: the subject is `sha256(git diff …)`, so UNTRACKED files do
+// not move it. What a judge tree inside the work tree actually costs is (a) it pollutes the tree
+// under review and moves the subject the moment anyone `git add`s it, and (b) it puts main's copy
+// of everything inside the PR's own directory, which is the provenance confusion this section
+// exists to prevent.
 //
 // ── HAZARD 3 · A REFUSAL IS ITS OWN TERMINAL VALUE ───────────────────────────────────────────
 //
-// Rule 10: a resolver never passes what it could not check. #115 made `REFUSED` a real value
-// distinct from `BLOCK`, because before it a gate that reviewed nothing was byte-indistinguishable
-// from one that ran every reviewer and found defects. `gates.yml`'s `recording_hazard` says
-// DO NOT FOLD REFUSED BACK INTO BLOCK — folding moves the lie from the gate to the caller.
-//
-// Four terminal states, four exit codes, no collapse:
+// Rule 10. #115 made `REFUSED` a real value distinct from `BLOCK`; `gates.yml` says DO NOT FOLD
+// REFUSED BACK INTO BLOCK. Four terminal states, four exit codes, no collapse:
 //
 //   PRODUCED      0   a verdict record exists, binds this exact diff, and reads PASS
 //   BLOCKED       1   a record binds this exact diff and reads BLOCK — the panel ran and said no
@@ -81,34 +106,10 @@
 //   NOT_REQUIRED  3   the router decided this diff does not need the gate at all
 //
 // NOT_REQUIRED is 3 and not 0 ON PURPOSE. "The gate passed" and "the gate did not apply" are
-// different sentences and a shell caller branching on `if ok` would say them with one word. A
-// caller that treats every code other than 0 as "do not merge" is safe; one that treats 3 as pass
-// has to say so explicitly, which is the point.
+// different sentences and `if ok` says them with one word.
 //
-// `established` is `outcome !== REFUSED`, derived on the same line that sets the outcome — the
-// shape `gates.yml` asks for, so a consumer asking only "did this run tell me anything" never has
-// to enumerate outcome values and cannot be caught out by a fifth one.
-//
-// ── WHAT IT READS FROM THE ROUTER, AND WHAT IT REFUSES TO READ ───────────────────────────────
-//
-// `invocation.args`, passed through UNMODIFIED, and the router's EXIT CODE. Nothing else.
-//
-// A review of #124 measured the reason: the router's top-level `tip` is SYMBOLIC where
-// `invocation.args.ref` is SHA-PINNED, and the two disagree on any explicit symbolic `--ref`
-// (`fix/gate-ref-shape` vs `e4630009f5…`; they agree on the default path, which is what makes the
-// divergence survive casual testing). run-gate says of itself "THE EMITTED TIP IS ALWAYS THE
-// RESOLVED SHA, AND THE GATE NOW REQUIRES THAT", because qa.js refuses a symbolic tip outright.
-// A consumer that read the top-level field would produce a verdict FOLLOWING A MOVING BRANCH
-// instead of refusing when the reviewed bytes change — demonstrated end to end as a PASS covering
-// a file the gate never saw.
-//
-// ONE REFINEMENT, and it is why the discriminator is the exit code rather than a field. The
-// obvious rule — "`invocation === null` means the gate is not required" — is WRONG on one shape:
-// `run-gate`'s `refuseTree()` also emits `invocation: null`, together with `gateRequired: true`
-// and `error: 'tree-unverified'`, at EXIT 2. Keying on nullness alone would turn a router refusal
-// into "no gate needed", which is a fail-OPEN on the one path the router built to fail closed.
-// run-gate exits 0 whenever it decided and 2 whenever it could not, so the exit code separates
-// them without reading a single top-level field. Both halves are pinned in the tests.
+// `established` is `outcome !== REFUSED`, derived on the same line that sets the outcome, so a
+// consumer asking "did this run tell me anything" cannot be caught out by a fifth value.
 
 import fs from 'node:fs';
 import os from 'node:os';
@@ -119,7 +120,6 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const HARNESS_ROOT = path.resolve(HERE, '..');
 
-/** The four terminal states. There is no fifth, and a fifth must not be spelled as one of these. */
 export const OUTCOME = {
   PRODUCED: 'PRODUCED',
   BLOCKED: 'BLOCKED',
@@ -134,34 +134,90 @@ export const EXIT = {
   [OUTCOME.NOT_REQUIRED]: 3,
 };
 
-/** The subtree that decides which judge judges. Extracted whole — see extractJudgeTree(). */
 export const WORKFLOW_DIR = '.claude/workflows';
 
-/** Every result is built here, so `established` cannot drift away from `outcome`. */
+/**
+ * The agents `qa.js` dispatches. A judging project missing these is not a judging project: the
+ * dispatch either errors, or the binary defaults `agentType` to `general-purpose` with tools `*`
+ * — and `qa.js` records in its own header what that cost last time, when "every dimension
+ * reviewer, every adversarial verifier, and the ONE judge whose verdict binds held `Write` and
+ * `Edit` on the diff they were judging."
+ *
+ * Pinned against `qa.js`'s own constants by a drift test, so adding a third dispatched agent there
+ * fails here rather than silently launching a panel that cannot resolve it.
+ */
+export const REQUIRED_AGENTS = ['reviewer', 'reviewer-readonly'];
+
+/**
+ * Read back by CONTENT HASH after materialisation. The whole-tree copy is checked for COMPLETENESS
+ * (every blob in the ref exists on disk); these few are additionally checked for IDENTITY, because
+ * they are what decides the verdict and a silently different one is the whole of A1.
+ */
+export const CRITICAL_PATHS = [
+  `${WORKFLOW_DIR}/qa.js`,
+  ...REQUIRED_AGENTS.map((a) => `.claude/agents/${a}.md`),
+  '.claude/settings.json',
+  '.claude/qa-tier-floor.yml',
+  'scripts/verdict.mjs',
+  'scripts/lib/classifier.js',
+];
+
 function result(outcome, reason, extra = {}) {
-  return {
-    outcome,
-    established: outcome !== OUTCOME.REFUSED,
-    reason,
-    ...extra,
-  };
+  return { outcome, established: outcome !== OUTCOME.REFUSED, reason, ...extra };
 }
 
 function git(cwd, args) {
-  return execFileSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 
-// ── The router ───────────────────────────────────────────────────────────────────────────────
+function firstLine(e) {
+  return String(e.stderr || e.message || e).trim().split('\n')[0];
+}
+
+// ── paths ────────────────────────────────────────────────────────────────────────────────────
 
 /**
- * Run `run-gate.mjs --json` and return `{ status, decision, raw }`.
+ * Canonicalise a path THAT MAY NOT EXIST YET.
  *
- * `status` is one of 'decided' | 'refused' | 'unreadable', taken from the EXIT CODE and from
- * whether stdout parsed — never from a field in the payload. See the header.
+ * `fs.realpathSync` throws ENOENT on a path whose leaf is absent, and the obvious catch — fall
+ * back to `path.resolve` — DOES NOT RESOLVE SYMLINKS. That made `isInside()` fail OPEN in the one
+ * arrangement that matters: `workTree` always exists so it was canonicalised, `dest` normally does
+ * not so it kept its symlinked prefix, and the prefix compare then said "outside" about a
+ * directory that was inside. Measured: files landed under `<worktree>/judge3/.claude/workflows/`.
+ *
+ * The cure is to canonicalise the nearest EXISTING ancestor and re-append the rest, so both sides
+ * of the comparison are in the same namespace whether or not the leaf exists yet.
+ */
+export function canonical(p) {
+  let cur = path.resolve(p);
+  const tail = [];
+  for (;;) {
+    try {
+      return path.join(fs.realpathSync(cur), ...tail.reverse());
+    } catch {
+      const parent = path.dirname(cur);
+      if (parent === cur) return path.resolve(p); // reached the root and nothing resolved
+      tail.push(path.basename(cur));
+      cur = parent;
+    }
+  }
+}
+
+export function isInside(child, parent) {
+  const c = canonical(child);
+  const p = canonical(parent);
+  return c === p || c.startsWith(p.endsWith(path.sep) ? p : p + path.sep);
+}
+
+// ── the router ───────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Run `run-gate.mjs --json`. `status` is 'decided' | 'refused' | 'unreadable', taken from the EXIT
+ * CODE and from whether stdout parsed — never from a field in the payload.
+ *
+ * Keying "not required" on `invocation === null` alone is FAIL-OPEN: run-gate's `refuseTree()`
+ * emits `invocation: null` together with `gateRequired: true` at exit 2, so nullness alone turns
+ * the router's one deliberate fail-closed path into "no gate needed".
  */
 export function routeGate({ repo, harnessRoot = HARNESS_ROOT, runner = null }) {
   const argv = [path.join(harnessRoot, 'scripts', 'run-gate.mjs'), '--json'];
@@ -176,8 +232,6 @@ export function routeGate({ repo, harnessRoot = HARNESS_ROOT, runner = null }) {
     decision = null;
   }
 
-  // Exit 2 is the router saying it could not decide. It emits a JSON body on that path too, which
-  // is precisely why the body is not the discriminator.
   if (r.status === 2) return { status: 'refused', decision, raw: (r.stdout || '') + (r.stderr || '') };
   if (r.status !== 0) return { status: 'unreadable', decision, raw: `run-gate exited ${r.status}` };
   if (decision === null) return { status: 'unreadable', decision: null, raw: (r.stdout || '').slice(0, 400) };
@@ -186,7 +240,14 @@ export function routeGate({ repo, harnessRoot = HARNESS_ROOT, runner = null }) {
 
 const SHA40 = /^[0-9a-f]{40}$/;
 
-/** The tip of a `base...tip` / `base..tip` range, or the whole ref when it is not a range. */
+/**
+ * A path safe to interpolate into a shell command line without quoting tricks. `buildGoal` writes
+ * `args.tree` into commands a human or an agent will run; `validateArgs` previously required only
+ * "absolute and exists", which is not the property the interpolation needs. Refuse the shape, then
+ * quote anyway — belt and braces, because the goal is prose an agent may rewrite.
+ */
+const SHELL_SAFE = /^[\w@%+=:,./-]+$/;
+
 export function refTip(ref) {
   const d3 = ref.lastIndexOf('...');
   if (d3 !== -1) return ref.slice(d3 + 3).trim();
@@ -195,20 +256,20 @@ export function refTip(ref) {
   return ref.trim();
 }
 
-/**
- * Refuse an `invocation.args` this script cannot use. Everything here is a shape qa.js itself
- * refuses one layer down; refusing early makes the failure loud and cheap instead of arriving
- * 40 minutes and 3M tokens later.
- */
+/** Shape-only checks on `invocation.args`. Everything here is refused by qa.js one layer down. */
 export function validateArgs(args) {
   if (!args || typeof args !== 'object') return 'the invocation carries no `args` object';
   const { ref, tree } = args;
   if (typeof ref !== 'string' || !ref) return '`args.ref` is missing';
   if (typeof tree !== 'string' || !tree) return '`args.tree` is missing';
   if (!path.isAbsolute(tree)) return `\`args.tree\` must be absolute, got "${tree}"`;
+  if (!SHELL_SAFE.test(tree)) {
+    return `\`args.tree\` contains characters this script will not interpolate into a command line: "${tree}"`;
+  }
   if (!SHA40.test(refTip(ref))) {
-    return `\`args.ref\` must be sha-tipped, got tip "${refTip(ref)}" — qa.js refuses a symbolic tip, ` +
-      'and a verdict bound to a moving branch covers bytes the gate never saw';
+    return `\`args.ref\` must be sha-tipped with a full 40-hex sha, got tip "${refTip(ref)}" — qa.js ` +
+      'refuses a symbolic tip, an abbreviated one is ambiguous, and a verdict bound to a moving ' +
+      'branch covers bytes the gate never saw';
   }
   let st;
   try {
@@ -220,126 +281,156 @@ export function validateArgs(args) {
   return null;
 }
 
-// ── The judging tree ─────────────────────────────────────────────────────────────────────────
-
-function realpath(p) {
-  try {
-    return fs.realpathSync(p);
-  } catch {
-    return path.resolve(p);
+/**
+ * DISTRUST THE ROUTER. It ships in the PR (see PROVENANCE above) and this script cannot make it
+ * otherwise, so its two load-bearing outputs are re-derived here with this process's own `git`
+ * calls: the tree it named must BE the repo under review, and the ref tip it named must BE that
+ * repo's HEAD. A router that redirects either one would have the panel review a different subject
+ * and record a verdict that binds somewhere else.
+ */
+export function crossCheckArgs({ repo, args }) {
+  if (canonical(args.tree) !== canonical(repo)) {
+    return `the router named tree ${args.tree}, which is not the repository under review (${repo}).`;
   }
+  let head;
+  try {
+    head = git(repo, ['rev-parse', '--verify', 'HEAD^{commit}']).trim();
+  } catch (e) {
+    return `could not read HEAD in ${repo} to check the router's ref: ${firstLine(e)}`;
+  }
+  const tip = refTip(args.ref);
+  if (tip !== head) {
+    return `the router named tip ${tip}, but ${repo} is at HEAD ${head}. The panel would review a different commit than the one this run is about.`;
+  }
+  return null;
 }
 
-function isInside(child, parent) {
-  const c = realpath(child);
-  const p = realpath(parent);
-  return c === p || c.startsWith(p.endsWith(path.sep) ? p : p + path.sep);
+// ── the judging project ──────────────────────────────────────────────────────────────────────
+
+/** `git archive` into `dest`. No shell: `-o` writes the tar, `tar -xf` reads it back. */
+function defaultExtract({ repo, gitRef, dest }) {
+  const tar = path.join(dest, `.judge-${process.pid}.tar`);
+  git(repo, ['archive', '--format=tar', '-o', tar, gitRef]);
+  execFileSync('tar', ['-xf', tar, '-C', dest], { stdio: ['ignore', 'pipe', 'pipe'] });
+  fs.rmSync(tar, { force: true });
 }
 
 /**
- * Materialise `.claude/workflows/**` from `gitRef` into `dest`, and VERIFY IT BY READING THE
- * SUBJECT BACK — every extracted file's blob hash is compared with the hash `gitRef` records for
- * that path. A denied write plus a green check is byte-identical to a mutation that did not fire,
- * and an `applied` flag reports that the write was attempted, not that it was made.
+ * Materialise the WHOLE tree at `gitRef` as the project the gate session runs in, then verify it
+ * by reading the bytes back.
  *
- * `writeFile` is a seam and exists ONLY so a test can express the failure this verification is
- * for: a write that reports success and does not land. Without it the read-back is unfalsifiable —
- * a mutation deleting the comparison was SILENT across the whole suite, measured, before this
- * parameter existed. A guard nothing can break is a guard someone deletes.
+ * WHY THE WHOLE TREE AND NOT `.claude/workflows/**`. That was the first design and it produced two
+ * HIGH findings at once. `qa.js` dispatches `reviewer` and `reviewer-readonly`; neither resolves at
+ * project scope in a directory holding only workflows, and neither exists at user scope either
+ * (measured: 30+ files in `~/.claude/agents/`, neither among them). So the panel either errors or
+ * falls back to `general-purpose` with tools `*` — and the second branch hands `Write` and `Edit`
+ * to the judge whose verdict binds. A curated path list has the same failure waiting behind the
+ * next thing `qa.js` reaches for; the tree does not.
  *
- * Returns `{ ok: true, files, dir }` or `{ ok: false, reason }`.
+ * `extract` is a seam and exists ONLY so a test can express the failure this verification is for:
+ * a materialisation that reports success and does not land, or lands the wrong bytes. Without it
+ * the read-back is unfalsifiable, and a guard nothing can break is a guard someone deletes.
+ *
+ * Returns `{ ok: true, dir, verdictBin, files }` or `{ ok: false, reason }`.
  */
-export function extractJudgeTree({ repo, dest, gitRef = 'origin/main', workTree = null, writeFile = fs.writeFileSync }) {
+export function materialiseJudgeProject({
+  repo,
+  dest,
+  gitRef = 'origin/main',
+  workTree = null,
+  extract = defaultExtract,
+}) {
   if (workTree && isInside(dest, workTree)) {
     return {
       ok: false,
       reason:
-        `the judging tree ${dest} is inside the work tree ${workTree}. The verdict subject is a hash of ` +
-        'that tree\'s diff, so writing here would change the subject the panel is reviewing, mid-review.',
+        `the judging project ${dest} is inside the work tree ${workTree}. That pollutes the tree under ` +
+        'review, moves the subject the moment anyone stages it, and puts main\'s copy of everything ' +
+        'inside the PR\'s own directory — the provenance confusion this whole design exists to prevent.',
     };
   }
 
   let listed;
   try {
-    listed = git(repo, ['ls-tree', '-r', '--name-only', gitRef, `${WORKFLOW_DIR}/`]);
+    listed = git(repo, ['ls-tree', '-r', '--name-only', gitRef]);
   } catch (e) {
-    return { ok: false, reason: `cannot list ${WORKFLOW_DIR} at ${gitRef}: ${firstLine(e)}` };
+    return { ok: false, reason: `cannot list the tree at ${gitRef}: ${firstLine(e)}` };
   }
-  const paths = listed.split('\n').map((s) => s.trim()).filter(Boolean);
+  const expected = listed.split('\n').map((s) => s.trim()).filter(Boolean);
 
-  // POSITIVE CONTROL ON THE INPUT ARM. An empty or truncated listing is what a denied/ misaimed
-  // `git ls-tree` looks like, and it would produce an empty judging tree that then fails for a
-  // reason naming the wrong thing. qa.js CANNOT be absent from a real listing.
-  if (!paths.includes(`${WORKFLOW_DIR}/qa.js`)) {
+  // POSITIVE CONTROL ON THE INPUT ARM. An empty or truncated listing is what a denied or misaimed
+  // `git ls-tree` looks like, and it would produce an empty judging project that then fails for a
+  // reason naming the wrong thing. None of these can be absent from a real listing of this repo.
+  const missingFromListing = CRITICAL_PATHS.filter((p) => !expected.includes(p));
+  if (missingFromListing.length) {
     return {
       ok: false,
-      reason: `${gitRef} lists ${paths.length} file(s) under ${WORKFLOW_DIR}/ and qa.js is not among them — ` +
-        'the listing is not of a real workflows directory.',
+      reason: `${gitRef} lists ${expected.length} path(s) and does not contain ${missingFromListing.join(', ')} — that is not a listing of a harness tree.`,
     };
   }
 
-  for (const rel of paths) {
-    let blob;
-    try {
-      blob = execFileSync('git', ['show', `${gitRef}:${rel}`], {
-        cwd: repo,
-        maxBuffer: 64 * 1024 * 1024,
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-    } catch (e) {
-      return { ok: false, reason: `cannot read ${gitRef}:${rel}: ${firstLine(e)}` };
-    }
-    const out = path.join(dest, rel);
-    fs.mkdirSync(path.dirname(out), { recursive: true });
-    writeFile(out, blob);
+  try {
+    extract({ repo, gitRef, dest });
+  } catch (e) {
+    return { ok: false, reason: `could not materialise ${gitRef} into ${dest}: ${firstLine(e)}` };
   }
 
-  // READ THE SUBJECT BACK. Not the write's return value, not a flag we set ourselves — the bytes
-  // that are now on disk, hashed the same way git hashed the source.
-  for (const rel of paths) {
-    const out = path.join(dest, rel);
+  // COMPLETENESS. Every blob the ref declares must be on disk. This is what makes the project
+  // viable rather than merely present, and it is the check that would have caught the missing
+  // agent definitions.
+  const absent = expected.filter((rel) => !fs.existsSync(path.join(dest, rel)));
+  if (absent.length) {
+    return {
+      ok: false,
+      reason: `${absent.length} of ${expected.length} path(s) from ${gitRef} are missing after materialisation, including ${absent.slice(0, 3).join(', ')}`,
+    };
+  }
+
+  // IDENTITY, on the files that decide the verdict. Read the bytes back and hash them the way git
+  // hashed the source — not the extractor's exit code, not a flag we set ourselves.
+  for (const rel of CRITICAL_PATHS) {
     let want;
     let got;
     try {
       want = git(repo, ['rev-parse', `${gitRef}:${rel}`]).trim();
-      got = git(repo, ['hash-object', out]).trim();
+      got = git(repo, ['hash-object', path.join(dest, rel)]).trim();
     } catch (e) {
-      return { ok: false, reason: `cannot verify ${rel} after extraction: ${firstLine(e)}` };
+      return { ok: false, reason: `cannot verify ${rel} after materialisation: ${firstLine(e)}` };
     }
     if (want !== got) {
       return {
         ok: false,
-        reason: `${rel} does not match ${gitRef} after extraction (${gitRef} ${want.slice(0, 12)}… vs on disk ${got.slice(0, 12)}…)`,
+        reason: `${rel} does not match ${gitRef} after materialisation (${gitRef} ${want.slice(0, 12)}… vs on disk ${got.slice(0, 12)}…)`,
       };
     }
   }
 
-  return { ok: true, files: paths, dir: dest };
+  return {
+    ok: true,
+    dir: dest,
+    // The artifact is read with the JUDGE's checker, never with this script's neighbour. This one
+    // field is the fix for A1's demonstrated exploit.
+    verdictBin: path.join(dest, 'scripts', 'verdict.mjs'),
+    files: expected.length,
+  };
 }
 
-function firstLine(e) {
-  return String(e.stderr || e.message || e).trim().split('\n')[0];
-}
-
-// ── The artifact, which is the only thing that decides ───────────────────────────────────────
+// ── the artifact, which is the only thing that decides ───────────────────────────────────────
 
 /**
  * `verdict.mjs check` against the work tree, mapped onto the terminal states.
  *
+ * `verdictBin` is REQUIRED and is expected to be the judge's copy. `verdict.mjs` takes `--repo` and
+ * reads its tier map from where it lives, so a main-provenance copy judging a PR tree is its
+ * designed contract.
+ *
  * The mapping is deliberately unbalanced. `ok` is the ONLY route to PRODUCED. BLOCKED requires a
  * record that binds this exact subject AND spells `BLOCK`. Everything else — absent, unparseable,
- * subject-mismatch, tier-drift, an unreadable payload, an unrecognised verdict string — is
- * REFUSED, because none of them establishes anything about this diff. An unknown value must never
- * drift into "the panel found defects" any more than into "the panel passed".
+ * subject-mismatch, tier-drift, an unreadable payload, an unrecognised verdict string — is REFUSED.
+ * An unknown value must never drift into "the panel found defects" any more than into "it passed".
  */
-export function readVerdictArtifact({ tree, ref, harnessRoot = HARNESS_ROOT, runner = null }) {
-  const argv = [
-    path.join(harnessRoot, 'scripts', 'verdict.mjs'),
-    'check',
-    '--repo', tree,
-    '--ref', ref,
-    '--json',
-  ];
+export function readVerdictArtifact({ tree, ref, verdictBin, runner = null }) {
+  const argv = [verdictBin, 'check', '--repo', tree, '--ref', ref, '--json'];
   const r = (runner ?? ((a) => spawnSync(process.execPath, a, { cwd: tree, encoding: 'utf8' })))(argv);
 
   if (r.error) {
@@ -380,14 +471,14 @@ export function readVerdictArtifact({ tree, ref, harnessRoot = HARNESS_ROOT, run
   return result(OUTCOME.REFUSED, `no verdict binds this diff (${payload.reason})`, common);
 }
 
-// ── The gate session ─────────────────────────────────────────────────────────────────────────
+// ── the gate session ─────────────────────────────────────────────────────────────────────────
 
-/**
- * What the bare session is told. It carries the args VERBATIM, tells the session to WAIT (the
- * tool_result is a launch receipt), and tells it to record into the work tree — which is not the
- * directory it is standing in.
- */
-export function buildGoal({ scriptPath, args, harnessRoot }) {
+/** POSIX single-quoting. The goal is prose that an agent will paste into a shell. */
+export function shellQuote(s) {
+  return `'${String(s).replace(/'/g, `'\\''`)}'`;
+}
+
+export function buildGoal({ scriptPath, args, verdictBin }) {
   const tip = refTip(args.ref);
   return [
     'Run the binding QA gate and record its verdict. Do exactly this and nothing else.',
@@ -399,11 +490,12 @@ export function buildGoal({ scriptPath, args, harnessRoot }) {
     '   background. Task ID: ..."), not a verdict. Poll the task output until the run is complete.',
     '   Do not report anything before you have read the workflow\'s own final verdict.',
     '',
-    '3. Record that verdict into the tree under review:',
-    `     node ${path.join(harnessRoot, 'scripts', 'verdict.mjs')} record \\`,
-    `       --repo ${args.tree} --ref ${tip} \\`,
+    '3. Record that verdict into the tree under review, using THIS checker and no other:',
+    `     node ${shellQuote(verdictBin)} record \\`,
+    `       --repo ${shellQuote(args.tree)} --ref ${shellQuote(tip)} \\`,
     '       --verdict <PASS|BLOCK|REFUSED> --by produce-verdict --evidence "<the workflow summary>"',
-    `   then commit it in ${args.tree}:  git add .qa/verdicts && git commit -m "qa(verdict): <verdict>"`,
+    `   then commit it in ${shellQuote(args.tree)}:`,
+    '     git add .qa/verdicts && git commit -m "qa(verdict): <verdict>"',
     '',
     'Record what the workflow actually returned. REFUSED is a real verdict and means nothing was',
     'established; do not spell it as BLOCK and never as PASS. If the workflow did not complete,',
@@ -411,17 +503,8 @@ export function buildGoal({ scriptPath, args, harnessRoot }) {
   ].join('\n');
 }
 
-// ── The pipeline ─────────────────────────────────────────────────────────────────────────────
+// ── the pipeline ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * @param {object} o
- * @param {string} o.repo            the tree to route from (the PR tree)
- * @param {boolean} o.dryRun         prepare and print, never launch
- * @param {string|null} o.judgeDir   where to materialise main's gate; a temp dir by default
- * @param {string[]} o.launcher      argv prefix for the gate session; default ['claude']
- * @param {number} o.timeoutMs
- * @param {object} o.deps            injection seam for the tests
- */
 export function produceVerdict(o = {}) {
   const {
     repo = process.cwd(),
@@ -447,8 +530,9 @@ export function produceVerdict(o = {}) {
     });
   }
 
-  // ONLY `invocation` and, below it, `invocation.args`. No top-level field is read. See the header
-  // for the measurement that makes this a hard constraint rather than a preference.
+  // ONLY `invocation`, and below it `invocation.args`. No top-level field is read — the router's
+  // top-level `tip` is symbolic where `invocation.args.ref` is sha-pinned, and the two disagree on
+  // any explicit symbolic `--ref`.
   const invocation = route.decision.invocation;
   if (invocation === null || invocation === undefined) {
     return result(OUTCOME.NOT_REQUIRED, 'the router emitted no invocation, so this diff does not need the gate');
@@ -458,34 +542,47 @@ export function produceVerdict(o = {}) {
   const bad = validateArgs(args);
   if (bad) return result(OUTCOME.REFUSED, `the invocation is unusable: ${bad}`);
 
+  const disagrees = (deps.crossCheckArgs ?? crossCheckArgs)({ repo, args });
+  if (disagrees) return result(OUTCOME.REFUSED, `the router's invocation does not describe this run: ${disagrees}`);
+
   const tip = refTip(args.ref);
 
-  // ── COST. A full panel run has measured 2.5–3.8M tokens and 40–50 minutes. The subject is a hash
-  // of the reviewed bytes, so a verdict that already binds is a verdict for THIS diff and re-running
-  // the panel would buy nothing at that price. Check the artifact BEFORE launching, and skip.
-  const pre = (deps.readVerdictArtifact ?? readVerdictArtifact)({
-    tree: args.tree, ref: tip, harnessRoot, runner: deps.verdictRunner ?? null,
-  });
-  if (pre.outcome === OUTCOME.PRODUCED || pre.outcome === OUTCOME.BLOCKED) {
-    return { ...pre, launched: false, preexisting: true, args };
-  }
-
-  const dir = judgeDir ?? fs.mkdtempSync(path.join(realpath(os.tmpdir()), 'qa-judge-'));
-  const extracted = (deps.extractJudgeTree ?? extractJudgeTree)({
+  // MATERIALISE BEFORE THE PRE-CHECK. The pre-check is what decides whether to skip a 40-minute
+  // panel run, so it must be made with the judge's checker like every other read — doing it with
+  // this script's neighbour is precisely the A1 exploit, where a hostile in-tree `verdict.mjs`
+  // reported `{"ok":true}` and SUPPRESSED the run that could have contradicted it.
+  const dir = judgeDir ?? fs.mkdtempSync(path.join(canonical(os.tmpdir()), 'qa-judge-'));
+  const judge = (deps.materialiseJudgeProject ?? materialiseJudgeProject)({
     repo, dest: dir, gitRef, workTree: args.tree,
   });
-  if (!extracted.ok) {
-    return result(OUTCOME.REFUSED, `could not materialise the gate from ${gitRef}: ${extracted.reason}`, {
+  if (!judge.ok) {
+    return result(OUTCOME.REFUSED, `could not materialise the judging project from ${gitRef}: ${judge.reason}`, {
       judgeDir: dir, launched: false, args,
     });
   }
 
-  const goal = buildGoal({ scriptPath: invocation.scriptPath ?? `${WORKFLOW_DIR}/qa.js`, args, harnessRoot });
+  const read = () => (deps.readVerdictArtifact ?? readVerdictArtifact)({
+    tree: args.tree, ref: tip, verdictBin: judge.verdictBin, runner: deps.verdictRunner ?? null,
+  });
+
+  // COST. A full panel run has measured 2.5–3.8M tokens and 40–50 minutes. The subject is a hash of
+  // the reviewed bytes, so a verdict that already binds is a verdict for THIS diff and re-running
+  // buys nothing at that price.
+  const pre = read();
+  if (pre.outcome === OUTCOME.PRODUCED || pre.outcome === OUTCOME.BLOCKED) {
+    return { ...pre, launched: false, preexisting: true, judgeDir: dir, args };
+  }
+
+  const goal = buildGoal({
+    scriptPath: invocation.scriptPath ?? `${WORKFLOW_DIR}/qa.js`,
+    args,
+    verdictBin: judge.verdictBin,
+  });
   const argv = [...launcher, '--print', goal];
 
   if (dryRun) {
     return result(OUTCOME.REFUSED, 'dry run — the gate was prepared and deliberately not launched, so nothing is established', {
-      judgeDir: dir, judgeFiles: extracted.files, launched: false, argv, goal, args,
+      judgeDir: dir, judgeFiles: judge.files, launched: false, argv, goal, args,
     });
   }
 
@@ -498,18 +595,15 @@ export function produceVerdict(o = {}) {
     });
   }
 
-  // THE LAUNCHER'S OUTPUT IS A DIAGNOSTIC AND IS NEVER THE DECISION. A session that prints "PASS"
-  // is evidence about a message. Read the artifact.
-  const post = (deps.readVerdictArtifact ?? readVerdictArtifact)({
-    tree: args.tree, ref: tip, harnessRoot, runner: deps.verdictRunner ?? null,
-  });
+  // THE LAUNCHER'S OUTPUT IS A DIAGNOSTIC AND IS NEVER THE DECISION.
+  const post = read();
 
   return {
     ...post,
     launched: true,
     preexisting: false,
     judgeDir: dir,
-    judgeFiles: extracted.files,
+    judgeFiles: judge.files,
     args,
     session: { exit: run.status ?? null, signal: run.signal ?? null, stdout_bytes: (run.stdout || '').length },
   };
@@ -522,24 +616,30 @@ function flag(name) {
 }
 function opt(name, fallback = null) {
   const i = process.argv.indexOf(name);
-  return i !== -1 && process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : fallback;
+  return i !== -1 && process.argv[i + 1] && !process.argv[i + 1].startsWith('-') ? process.argv[i + 1] : fallback;
 }
 
 const KNOWN = new Set(['--json', '--dry-run', '--repo', '--judge-dir', '--launcher', '--timeout', '--git-ref', '--help']);
+const TAKES_VALUE = new Set(['--repo', '--judge-dir', '--launcher', '--timeout', '--git-ref']);
 
 function main() {
-  // AN UNKNOWN FLAG IS REFUSED, never dropped. `verdict.mjs` was measured performing the non-dry
-  // action on a mistyped `--dry-run` (#116); this is the same mistake in the same direction and
-  // here it costs 3M tokens rather than a file.
-  for (const a of process.argv.slice(2)) {
-    if (a.startsWith('--') && !KNOWN.has(a)) {
+  // AN UNKNOWN FLAG IS REFUSED, never dropped — and the test is a leading `-`, not a leading `--`.
+  // Screening on `--` let `-json` through in silence, which is the same direction #116 closed on
+  // `verdict.mjs`: the operator typed something whose whole purpose was to change behaviour, and
+  // nothing changed and nothing said so.
+  const argv = process.argv.slice(2);
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (!a.startsWith('-')) continue;
+    if (!KNOWN.has(a)) {
       process.stderr.write(`produce-verdict: unknown flag "${a}". Known: ${[...KNOWN].join(' ')}\n`);
       return EXIT[OUTCOME.REFUSED];
     }
+    if (TAKES_VALUE.has(a)) i += 1; // its value is not a flag, whatever it looks like
   }
   if (flag('--help')) {
     process.stdout.write(
-      'usage: produce-verdict.mjs [--repo P] [--dry-run] [--json] [--judge-dir D] [--launcher BIN] [--timeout MS]\n' +
+      'usage: produce-verdict.mjs [--repo P] [--dry-run] [--json] [--judge-dir D] [--launcher BIN] [--timeout MS] [--git-ref R]\n' +
       '  PRODUCED 0 · BLOCKED 1 · REFUSED 2 · NOT_REQUIRED 3\n',
     );
     return 0;
@@ -559,12 +659,12 @@ function main() {
     process.stdout.write(`${JSON.stringify(r, null, 2)}\n`);
   } else {
     process.stdout.write(`${r.outcome}  (established=${r.established})\n  ${r.reason}\n`);
-    if (r.judgeDir) process.stdout.write(`  judge tree: ${r.judgeDir}\n`);
-    if (r.subject) process.stdout.write(`  subject:    ${String(r.subject).slice(0, 16)}…\n`);
+    if (r.judgeDir) process.stdout.write(`  judge project: ${r.judgeDir}\n`);
+    if (r.subject) process.stdout.write(`  subject:       ${String(r.subject).slice(0, 16)}…\n`);
   }
   return EXIT[r.outcome];
 }
 
-if (process.argv[1] && realpath(process.argv[1]) === realpath(fileURLToPath(import.meta.url))) {
+if (process.argv[1] && canonical(process.argv[1]) === canonical(fileURLToPath(import.meta.url))) {
   process.exitCode = main();
 }
