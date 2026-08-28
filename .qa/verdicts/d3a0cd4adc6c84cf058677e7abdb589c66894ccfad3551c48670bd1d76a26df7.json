@@ -1,0 +1,11 @@
+{
+  "subject": "d3a0cd4adc6c84cf058677e7abdb589c66894ccfad3551c48670bd1d76a26df7",
+  "base": "62e0c26a0c02898922284ae02edb3c2851e1c3d3",
+  "tier": "full",
+  "tier_driver": "mission-control/scripts/consume-dispatch.ts",
+  "verdict": "PASS",
+  "by": "builder",
+  "run_id": null,
+  "evidence": "dispatch.test.ts 74 pass / 0 fail / 245 expect. crosscheck 18 pass / 0 fail / exit 0 (measured on 8799f9d; no source changed since except a comment-only edit to index-cache.ts). schema-lint 18/0/0. Author-recorded, single model family.",
+  "recorded_at": "2026-08-28T09:59:27.620Z"
+}
