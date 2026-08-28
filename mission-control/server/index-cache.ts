@@ -982,6 +982,25 @@ export function readDeclaredMaxTurns(root: string, agent: string): number | null
  * returns `underivable` carrying the reason, so an unreadable agent file can never be mistaken for
  * a checked one.
  */
+/**
+ * THIS FUNCTION HANDLES NO REF, AND THE NOTE IS HERE BECAUSE TWO BRIEFS SAID IT DID.
+ *
+ * A routed item twice attributed to `deriveGateReachability` the defect *"records the router's
+ * top-level `ref`, which can carry a symbolic tip."* The defect is REAL. It is not here, and it
+ * could not be: this reads `<root>/.claude/agents/<agent>.md`, parses one `tools:` line, and
+ * returns a `GateRecord` — which has no ref field. Both call sites pass `(entry.root, agent)`.
+ * Measured on the whole body: zero `ref`, `git` or `rev-parse` tokens, against 18 `ref` hits
+ * elsewhere in this file as the control that the search works.
+ *
+ * THE REAL SITE IS `routeGate` IN `mission-control/scripts/consume-dispatch.ts`, which reads the
+ * router's JSON. Fixed there — see `GateRouting.refTip`. Measured, both arms:
+ * `--ref origin/main...feat/x` emits a SYMBOLIC top-level `ref` beside a RESOLVED
+ * `invocation.args.ref`; the default path emits both resolved, which is why reading the top-level
+ * field alone looked correct.
+ *
+ * A probe selecting on THIS symbol therefore returns ~zero whether or not the defect is fixed — it
+ * finds only the import line as diff context. Select on `refTip` or `verdictRef` instead.
+ */
 export function deriveGateReachability(root: string, agent: string): GateRecord {
   const file = path.join(root, '.claude', 'agents', `${agent}.md`);
   let text: string;
