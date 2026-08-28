@@ -1,0 +1,11 @@
+{
+  "subject": "d5529c8e1364d1167fe35aee567db20b501dd1a520d7c2d3c7a4ce248ebf675d",
+  "base": "62e0c26a0c02898922284ae02edb3c2851e1c3d3",
+  "tier": "irreversible",
+  "tier_driver": "scripts/lib/claims.js",
+  "verdict": "PASS",
+  "by": "builder/lane-b1-block-scalar",
+  "run_id": null,
+  "evidence": "Round 2, after review #121 (correctness PASS, adversarial PASS, evidence FAIL x2 p1). npm run check: Tally 48 of 48 passed, 0 failed, exit 0, 167.3s, sandbox armed; STEPS.length re-derived = 48. node --test scripts/claims.test.mjs: 77 pass, 0 fail, 0 skipped. Provenance split on 3 arms with blob shas pinned (base 62e0c26/f5172d9, round1 6540d1e/6764c05, head): CRLF was a REGRESSION introduced by round 1 (base AGREE, round1 DIFFER, head AGREE); lone-CR is PRE-EXISTING (DIFFER on base and round1, head AGREE); LF control AGREE on all three. Exhaustive LF-only fuzz, 1600 documents: normalisation is a no-op on 1600/1600, positive control confirms the comparator can report a difference; round1 vs head differs on 224/1600 and 224/224 carry a whitespace-only body line (the A2 fix). Survivor probe re-derived: M1 KILLED, M1b KILLED, M17 KILLED, M15 SURVIVES and is EQUIVALENT - 0 differences over 3284 documents against 1552 for a known-different control arm. Mutation controls behaving: positive KILLED at fail=3, no-op SURVIVED. E5 proved end to end by hiding js-yaml: SKIP with reason, 76 pass 1 skipped, vs 77 pass 0 skipped. Live corpus 44 documents: 0 SUBSTANTIVE, 39 trailing-newline-only. Tier from scripts/classify.mjs: floor irreversible, driver scripts/lib/claims.js. CAVEAT: single model family, 2-of-3 multi-judge NOT met, accepted risk to 2026-11-17.",
+  "recorded_at": "2026-08-28T10:05:59.644Z"
+}
