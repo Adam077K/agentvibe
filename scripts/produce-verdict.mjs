@@ -185,6 +185,14 @@ export const WORKFLOW_DIR = '.claude/workflows';
  * `materialiseJudgeProject` keeps a `gitRef` parameter because it is the MECHANISM and its own
  * tests need to point it at fixture refs. This constant is the POLICY, and policy is not a knob.
  */
+/**
+ * NAMED RESIDUAL, not fixed here. `origin/main` is symbolic, and git resolves `refs/heads/origin/main`
+ * ahead of `refs/remotes/origin/main`, so someone able to WRITE A REF in the repo under review could
+ * shadow it and choose the judge that way. It needs ref-write in the tree being reviewed, which is
+ * outside this file's threat model — the same place "hash-bound, not signed" already sits — and it
+ * predates these rounds in the materialisation path. Recorded so the next reader meets it as a
+ * decision rather than as an oversight.
+ */
 export const JUDGE_REF = 'origin/main';
 
 /** The gate. Re-derived, never taken from the invocation — see INVOCATION_TREATMENT. */
@@ -771,7 +779,13 @@ export function produceVerdict(o = {}) {
   // the reviewed bytes, so a verdict that already binds is a verdict for THIS diff and re-running
   // buys nothing at that price.
   const pre = read(tip);
-  if (pre.outcome === OUTCOME.PRODUCED || pre.outcome === OUTCOME.BLOCKED) {
+  // A DRY RUN MAY NOT REPORT PRODUCED, AND THIS IS THE FILE'S OWN ARGUMENT TURNED ON ITSELF.
+  // The cost short-circuit returned `{...pre}` before the dry-run branch was reached, so
+  // `--dry-run` against a diff whose verdict already binds exited 0 as PRODUCED — a SECOND route
+  // to the code this file spends a paragraph establishing as the single route to "a verdict exists
+  // and binds", and a direct contradiction of the dry-run branch's own message that nothing was
+  // established. The finding it would have reported is not lost: it rides on `would_be`.
+  if (!dryRun && (pre.outcome === OUTCOME.PRODUCED || pre.outcome === OUTCOME.BLOCKED)) {
     return { ...pre, launched: false, preexisting: true, judgeDir: dir, args };
   }
 
@@ -786,6 +800,9 @@ export function produceVerdict(o = {}) {
   if (dryRun) {
     return result(OUTCOME.REFUSED, 'dry run — the gate was prepared and deliberately not launched, so nothing is established', {
       judgeDir: dir, judgeFiles: judge.files, launched: false, argv, goal, args,
+      // What a real run would have reported. A diagnostic, never a terminal state: reading this as
+      // the outcome is the mistake the outcome field exists to prevent.
+      would_be: pre.outcome,
     });
   }
 
@@ -951,6 +968,27 @@ function opt(name, fallback = null) {
 //                             session is now bounded to committing exactly one verdict path.
 //   bounds                    a limit on time or size.
 //   reporting                 changes the output, never the measurement.
+/**
+ * THE ROLES THAT EXIST. A reviewer wired a `--base-ref` knob, declared it `'bounds'`, and passed
+ * 57/57 — because the test asserted only that the role was a string longer than three characters,
+ * so `'xxxx'` passed too. MEMBERSHIP of the registry was enforced and fails closed; the ROLE VALUE
+ * was read by nothing. A registry whose vocabulary is prose is a registry that documents rather
+ * than decides.
+ *
+ * The set alone does not close it — declaring a real knob `'bounds'` still type-checks — which is
+ * why `CLI_SINKS` below is the other half: the roles say what a flag is FOR, the sinks say what
+ * `main()` is allowed to hand the pipeline, and a wired knob has to get past both.
+ */
+export const FLAG_ROLE_VOCABULARY = ['reporting', 'bounds', 'selects-where', 'selects-what-runs'];
+
+/**
+ * The ONLY parameters `main()` may pass to `produceVerdict`. A new flag that actually reaches the
+ * pipeline must add a name here, which is a visible act; declaring it `'bounds'` is not enough.
+ * `repo`, `harnessRoot` and `gitRef` are deliberately absent — the subject, the router and the
+ * judge are not the operator's to select, and each of those was a HIGH before it was a rule.
+ */
+export const CLI_SINKS = ['dryRun', 'judgeDir', 'launcher', 'timeoutMs'];
+
 export const FLAG_ROLES = {
   '--json': 'reporting',
   '--help': 'reporting',

@@ -20,6 +20,8 @@ import {
   ARGS_KEYS,
   INVOCATION_TREATMENT,
   FORBIDDEN_TREATMENT,
+  FLAG_ROLE_VOCABULARY,
+  CLI_SINKS,
   FLAG_ROLES,
   FORBIDDEN_FLAG_ROLE,
   VERDICT_DIR,
@@ -439,6 +441,93 @@ test('C-2 — an unreadable subject is REFUSED as unreadable, not as "you moved 
   assert.equal(r.outcome, OUTCOME.REFUSED);
   assert.match(r.reason, /could not read a subject/);
   assert.ok(!/moved the reviewed bytes/.test(r.reason), 'an unreadable instrument must not be reported as an accusation');
+});
+
+// ── R1 · A REGISTRY THAT CHECKS ITSELF. Declaring a role is not being one. ────────────────────
+
+/** The subject with comments and the registry literals removed, so a DECLARATION is not read as a READ. */
+function subjectCode() {
+  let src = fs.readFileSync(SUBJECT, 'utf8');
+  src = src.replace(/\/\*[\s\S]*?\*\//g, '');          // block comments
+  src = src.replace(/^\s*\/\/.*$/gm, '');               // line comments
+  src = src.replace(/export const INVOCATION_TREATMENT = \{[\s\S]*?\};/, ''); // the registry itself
+  src = src.replace(/export const FLAG_ROLES = \{[\s\S]*?\};/, '');
+  return src;
+}
+
+test('R1 — the role vocabulary is a SET, not a length check', () => {
+  for (const [flag, role] of Object.entries(FLAG_ROLES)) {
+    assert.ok(FLAG_ROLE_VOCABULARY.includes(role), `${flag} declares "${role}", which is not a role that exists`);
+  }
+  // The exploit this closes: a reviewer wired a --base-ref knob, declared it 'bounds', and passed
+  // 57/57 because the assertion was `typeof role === 'string' && role.length > 3` — so 'xxxx'
+  // passed too. Membership of the registry was enforced; the ROLE VALUE was read by nothing.
+  assert.equal(FLAG_ROLE_VOCABULARY.includes('xxxx'), false, 'CONTROL: an invented role is not in the set');
+  assert.equal(FLAG_ROLE_VOCABULARY.includes(FORBIDDEN_FLAG_ROLE), false, 'the forbidden role is not a legal declaration');
+  assert.ok(FLAG_ROLE_VOCABULARY.length >= 3, 'CONTROL: the vocabulary is not empty, so membership can fail');
+});
+
+test('R1 — main() may hand the pipeline only the declared sinks, so a wired knob cannot hide behind a role', () => {
+  // The set alone does not close it: declaring a real knob 'bounds' still type-checks. What stops
+  // it is that a flag which actually REACHES the pipeline has to add a name here, which is visible.
+  const m = /r = produceVerdict\(\{([\s\S]*?)\n\s*\}\);/.exec(subjectCode());
+  assert.ok(m, 'CONTROL: could not find the CLI call site — this test is aimed wrong');
+  const keys = [...m[1].matchAll(/^\s*([A-Za-z_$][\w$]*)\s*:/gm)].map((x) => x[1]);
+  assert.ok(keys.length > 0, 'CONTROL: the extractor found no keys at all');
+  assert.deepEqual(keys.sort(), [...CLI_SINKS].sort(),
+    'main() passes something to produceVerdict that CLI_SINKS does not declare');
+  for (const forbidden of ['repo', 'harnessRoot', 'gitRef']) {
+    assert.ok(!keys.includes(forbidden), `${forbidden} is not the operator's to select — each was a HIGH`);
+  }
+});
+
+test('R1 — a field declared unread or re-derived is NOT consumed, checked on the source', () => {
+  // The registry declares INTENT. This is what makes it declare FACT. My own first probe could not
+  // do this: it counted the registry key and the comments as reads, so it would have reported a
+  // number for a question it could not answer.
+  const code = subjectCode();
+  for (const field of Object.keys(INVOCATION_TREATMENT)) {
+    const leaf = field.split('.').pop();
+    if (leaf === 'args') continue;
+    const reads = (code.match(new RegExp(`invocation\\.${leaf}\\b`, 'g')) || []).length;
+    assert.equal(reads, 0, `invocation.${leaf} is declared "${INVOCATION_TREATMENT[field]}" and is read ${reads} time(s)`);
+  }
+  // CONTROL on the arm that can go silently empty: a field that IS consumed must still be found,
+  // or the stripping above has removed the code along with the comments.
+  assert.ok((code.match(/invocation\.args\b/g) || []).length > 0, 'CONTROL: the probe cannot see a real read');
+  // NEGATIVE CONTROL: the stripping really did remove the declarations.
+  assert.equal((code.match(/'invocation\.scriptPath'/g) || []).length, 0);
+});
+
+// ── R2 · a dry run may not report PRODUCED ────────────────────────────────────────────────────
+
+test('R2 — a dry run over a diff whose verdict already binds is REFUSED, not PRODUCED', () => {
+  const { repo, prSha } = repoWithHostilePr();
+  const r = produceVerdict({
+    repo, harnessRoot: repo, dryRun: true, judgeDir: tmp('pv-judge-'),
+    deps: {
+      runGateRunner: routerRunner(routerJson(repo, prSha)),
+      verdictRunner: verdictRunner({ ok: true, reason: 'match', subject: SHA, tier: 'full' }, 0),
+      launch: () => assert.fail('a dry run must not launch'),
+    },
+  });
+  assert.equal(r.outcome, OUTCOME.REFUSED, 'exit 0 must have exactly one route and this is not it');
+  assert.equal(r.established, false);
+  // The finding is not lost — it rides as a diagnostic, which is not a terminal state.
+  assert.equal(r.would_be, OUTCOME.PRODUCED);
+  assert.match(r.reason, /dry run/);
+});
+
+test('R2 — and the same through a real process: --dry-run never exits 0', () => {
+  const repo = cliHarnessRepo();
+  commitVerdict(repo, 'PASS');
+  const wet = runCliIn(repo, ['--json']);
+  assert.equal(wet.status, EXIT[OUTCOME.PRODUCED], 'CONTROL: without --dry-run this diff does produce');
+  const dry = runCliIn(repo, ['--json', '--dry-run']);
+  assert.equal(dry.status, EXIT[OUTCOME.REFUSED], `--dry-run exited ${dry.status}`);
+  const j = JSON.parse(dry.stdout);
+  assert.equal(j.outcome, OUTCOME.REFUSED);
+  assert.equal(j.would_be, OUTCOME.PRODUCED);
 });
 
 // ── A-3, as a CLASS: what the invocation asserts, and what this file re-derives ───────────────
