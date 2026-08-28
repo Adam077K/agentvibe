@@ -1448,3 +1448,116 @@ test('coding.js does not fold a REFUSED back into a BLOCK — the caller half of
     'the PASS-vs-everything fold is back — a refusal now reports as a block one level up',
   );
 });
+
+// ── THE RANGE AND THE TIP ARE TWO CONCEPTS. THEY WORE ONE FIELD NAME. ───────────────────────
+//
+// `run-gate.mjs --json` emitted a top-level `ref` that is a two-dot-three RANGE
+// (`origin/main...<sha>`), and `scripts/verdict.mjs --ref` takes a SINGLE revision — it derives
+// its own base with `merge-base(origin/main, ref)`. Measured on this pair before the fix:
+//
+//   node scripts/verdict.mjs subject --ref "origin/main...62e0c26"
+//     -> exit 2, "git merge-base origin/main failed: fatal: Not a valid object name"
+//   node scripts/verdict.mjs subject --ref HEAD          CONTROL
+//     -> exit 0, e3b0c44298fc1c14...
+//
+// It fails SAFE — exit 2 is unresolved, never a false pass — and costs a round trip. It bites
+// because `.claude/gates.yml`'s `how_to_run_it` says to pass `invocation.args` through unmodified
+// and `invocation` is null whenever the gate is not required, so the only ref-shaped string left
+// on the object is the one shape that does not work. A consumer reaches for the field that is there.
+//
+// The cure is naming, not conversion: `ref` stays the range it always was, and `base`/`tip` name
+// its two halves. Teaching verdict.mjs to accept `A...B` was the alternative and is REFUSED on
+// purpose — it would be a second implementation of the range, and single-ref reproducibility is
+// the property that lets a recorded verdict survive a base move. PR 77 was closed over exactly that.
+const VERDICT = path.join(REPO, 'scripts', 'verdict.mjs');
+
+// A range whose diff is empty by construction, so the `empty diff` emit site is reachable from a
+// test whatever this worktree's HEAD happens to be. `--ref` containing bare HEAD is refused, so
+// HEAD~0 and friends are not available here.
+const EMPTY_RANGE = ['--ref', 'origin/main...origin/main'];
+
+function verdict(args) {
+  try {
+    const stdout = execFileSync('node', [VERDICT, ...args], {
+      cwd: REPO,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    return { code: 0, stdout };
+  } catch (e) {
+    return { code: e.status, stdout: (e.stdout || '').toString(), stderr: (e.stderr || '').toString() };
+  }
+}
+
+// The three --json emit sites, each reached deterministically. Named so a failure says WHICH one.
+const EMIT_SITES = [
+  ['empty diff', EMPTY_RANGE],
+  ['gate not required', ['--files', 'README.md']],
+  ['gate required', ['--files', 'scripts/run-gate.mjs']],
+];
+
+test('every --json emit site names the range and its tip as separate fields', () => {
+  for (const [name, args] of EMIT_SITES) {
+    const r = json(args);
+    assert.equal(typeof r.ref, 'string', `${name}: no ref`);
+    assert.equal(typeof r.tip, 'string', `${name}: no tip — a consumer has only the range`);
+    assert.ok(
+      !r.tip.includes('..'),
+      `${name}: tip is still a range (${r.tip}) — the whole point is that it is one revision`,
+    );
+    // The tip really is the tip OF THIS RANGE, not some other commit computed on the side.
+    assert.ok(r.ref.endsWith(r.tip), `${name}: tip ${r.tip} is not the tip of ref ${r.ref}`);
+    assert.equal(r.base, 'origin/main', `${name}: base is not the left half of ${r.ref}`);
+    assert.equal(`${r.base}...${r.tip}`, r.ref, `${name}: base and tip do not reconstruct ref`);
+  }
+});
+
+test('the tip run-gate emits is what verdict.mjs accepts — and the range is NOT', () => {
+  for (const [name, args] of EMIT_SITES) {
+    const r = json(args);
+
+    // POSITIVE: the field a consumer is meant to reach for works.
+    const good = verdict(['subject', '--ref', r.tip]);
+    assert.equal(good.code, 0, `${name}: verdict.mjs refused the tip "${r.tip}" — ${(good.stderr || '').trim()}`);
+    assert.match(good.stdout.trim(), /^[0-9a-f]{64}$/, `${name}: no subject came back for the tip`);
+
+    // CONTROL THAT MUST FIRE. If this ever passes, the two shapes have stopped differing and this
+    // whole test is measuring nothing — the failure mode a green suite cannot otherwise report.
+    const bad = verdict(['subject', '--ref', r.ref]);
+    assert.notEqual(
+      bad.code,
+      0,
+      `${name}: verdict.mjs ACCEPTED the range "${r.ref}". Either it grew a second way to compute ` +
+        'the range — which is the defect this change exists to refuse — or this control is aimed wrong.',
+    );
+  }
+});
+
+test('verdict.mjs refuses a range by name instead of leaking a git error', () => {
+  const r = verdict(['subject', '--ref', 'origin/main...origin/main']);
+  assert.equal(r.code, 2, 'a range must be unresolved (2), never a fail (1) and never a pass (0)');
+  assert.match(r.stderr, /single revision/, 'the refusal does not say what --ref actually takes');
+  assert.match(r.stderr, /tip/, 'the refusal does not name the field that works');
+  // ... and it still computes nothing. A refusal that emitted a subject would BE the second
+  // implementation, wearing an error message.
+  assert.equal(r.stdout.trim(), '', 'a refused range produced a subject anyway');
+  // CONTROL on the same arm: a single revision still goes through, so the guard is not a blanket.
+  const ok = verdict(['subject', '--ref', 'origin/main']);
+  assert.equal(ok.code, 0, `the guard swallowed a legitimate single ref — ${(ok.stderr || '').trim()}`);
+});
+
+test('THE FIXTURE BUILT TO DEFEAT THIS CHANGE: naming the tip must not manufacture an invocation', () => {
+  // The cheap way to make `tip` reachable everywhere would be to emit an invocation on every path.
+  // That asserts the gate applies where it does not, which is worse than the defect being closed.
+  for (const [name, args] of [EMIT_SITES[0], EMIT_SITES[1]]) {
+    const r = json(args);
+    assert.equal(r.gateRequired, false, `${name}: fixture is not exercising the ungated path`);
+    assert.ok('invocation' in r, `${name}: the invocation key is absent — a consumer must probe, not read`);
+    assert.equal(r.invocation, null, `${name}: an invocation was emitted where the gate is not required`);
+  }
+  // And the gated path still emits a real one, so the assertion above is a shape check rather than
+  // a blanket "always null" that would pass on a router that emitted nothing at all.
+  const gated = json(EMIT_SITES[2][1]);
+  assert.equal(gated.gateRequired, true);
+  assert.ok(gated.invocation && gated.invocation.args, 'the gated path stopped emitting an invocation');
+});
