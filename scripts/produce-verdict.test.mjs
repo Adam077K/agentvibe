@@ -1454,3 +1454,25 @@ test('J-9 — an operator\'s --judge-dir survives a reclaiming run; ours does no
 
   fs.rmSync(theirs, { recursive: true, force: true });
 });
+
+test('J-10 — a caller\'s QA_KEEP_JUDGE_DIR is THREADED, not merely validated', () => {
+  // Found by the review panel, not by me. The wrapper read `o.env` to decide whether the value was
+  // LEGAL and the arming site read `process.env` to decide what to DO, so a caller asking to keep
+  // its tree had the request validated and then silently dropped — the directory was deleted. Both
+  // arms measured `false` before the fix: opposite instructions, byte-identical outcomes. A
+  // silently-ignored retention flag is the worst direction for that class to fail in.
+  const deps = {
+    materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
+    readVerdictArtifact: () => ({ outcome: OUTCOME.PRODUCED, subject: 's', tier: 'full' }),
+  };
+  const kept = produceVerdictFn({ repo: REPO_ROOT, env: { QA_KEEP_JUDGE_DIR: '1' }, deps });
+  assert.equal(kept.outcome, OUTCOME.PRODUCED, 'DENOMINATOR: only a reclaiming outcome tests this');
+  assert.equal(fs.existsSync(kept.judgeDir), true, 'a caller that asked to keep must get to keep');
+  fs.rmSync(kept.judgeDir, { recursive: true, force: true });
+
+  // TWO CONTROLS, because "always keeps" would satisfy the assertion above on its own.
+  const gone = produceVerdictFn({ repo: REPO_ROOT, env: {}, deps });
+  assert.equal(fs.existsSync(gone.judgeDir), false, 'CONTROL: unset still reclaims');
+  const off = produceVerdictFn({ repo: REPO_ROOT, env: { QA_KEEP_JUDGE_DIR: 'off' }, deps });
+  assert.equal(fs.existsSync(off.judgeDir), false, 'CONTROL: an explicit off still reclaims');
+});

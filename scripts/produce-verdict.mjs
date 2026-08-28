@@ -815,11 +815,18 @@ export function buildGoal({ scriptPath, args, verdictBin }) {
  * governs the rest, and an operator's own `--judge-dir` is never touched by any path here.
  */
 export function produceVerdict(o = {}) {
-  const keep = keepJudgeDirSetting(o.env ?? process.env);
+  // THREADED, NOT JUST VALIDATED. This wrapper read `o.env` to decide whether the value was legal
+  // and then the arming site read `process.env` to decide what to do — so a caller passing
+  // `{env: {QA_KEEP_JUDGE_DIR: '1'}}` had its request VALIDATED and then SILENTLY DROPPED, and the
+  // tree it asked to keep was deleted. A retention flag that is ignored fails in the worst
+  // direction of that class. Measured before the fix: keep-requested and control were both `false`,
+  // byte-identical outcomes for opposite instructions.
+  const env = o.env ?? process.env;
+  const keep = keepJudgeDirSetting(env);
   if (keep === null) {
     return result(OUTCOME.REFUSED, `QA_KEEP_JUDGE_DIR="${(o.env ?? process.env).QA_KEEP_JUDGE_DIR}" is not a recognised on/off value. Refusing rather than guessing whether to delete a tree.`);
   }
-  const r = runProduceVerdict(o);
+  const r = runProduceVerdict({ ...o, env });
   if (r && r.judgeDir) {
     if (r.outcome === OUTCOME.REFUSED) disarmJudgeDirCleanup(r.judgeDir);
     else reclaimJudgeDir(r.judgeDir);
@@ -832,6 +839,7 @@ function runProduceVerdict(o = {}) {
     repo = process.cwd(),
     harnessRoot = HARNESS_ROOT,
     dryRun = false,
+    env = process.env,
     judgeDir = null,
     launcher = ['claude'],
     timeoutMs = 60 * 60 * 1000,
@@ -903,7 +911,7 @@ function runProduceVerdict(o = {}) {
   // Ours to reclaim only when we made it; see armJudgeDirCleanup for what exit-time removal misses.
   const ephemeral = judgeDir === null || judgeDir === undefined;
   const dir = canonical(judgeDir ?? fs.mkdtempSync(path.join(canonical(os.tmpdir()), 'qa-judge-')));
-  if (ephemeral) armJudgeDirCleanup(dir);
+  if (ephemeral) armJudgeDirCleanup(dir, env);
   const judge = (deps.materialiseJudgeProject ?? materialiseJudgeProject)({
     repo, dest: dir, gitRef, workTree: args.tree,
   });
