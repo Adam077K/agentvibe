@@ -40,6 +40,8 @@ import {
   deriveGateReachability,
   type DispatchEntry,
   type GateRecord,
+  type GateRouting,
+  type GateInvocation,
 } from '../server/index-cache.ts';
 
 // ── The one project this consumer targets ────────────────────────────────────────────────
@@ -130,6 +132,92 @@ const LIST_ONLY = args.has('--list');
  * hand-editing the queue file, which is not a remedy, it is a workaround for a missing one.
  */
 const FORCE_RECONCILE = args.has('--force-reconcile');
+
+/** Does this value carry the three fields that make an emitted invocation actionable? */
+function isInvocation(v: unknown): v is GateInvocation {
+  if (typeof v !== 'object' || v === null) return false;
+  const o = v as Record<string, unknown>;
+  return typeof o.tool === 'string' && typeof o.scriptPath === 'string'
+    && typeof o.args === 'object' && o.args !== null;
+}
+
+/**
+ * Ask the repo's own gate router what the dispatch's OUTPUT needs — the half that needs no grant.
+ *
+ * WHY THIS RUNS AFTER THE LAUNCH AND NOT BEFORE. `run-gate.mjs` classifies a DIFF. At enqueue time
+ * a dispatch is a goal and there is no diff to classify, so asking early would return a decision
+ * about work that has not happened. Asked afterwards it answers the question that matters: given
+ * what this dispatch actually produced, is the binding gate required, and what would run it.
+ *
+ * WHY IT IS WORTH ASKING AT ALL WHEN NOTHING HERE CAN RUN THE GATE. `run-gate.mjs` cannot execute
+ * `qa.js` either — that is a Workflow script closing over injected globals no plain node process
+ * provides — and it says so in its own header, together with the sentence this function exists to
+ * answer: "a router that is never called is exactly the defect it was written to fix." Emitting
+ * the invocation converts "no verdict" from a shrug into an artifact somebody can act on.
+ *
+ * A ZERO-FILE DIFF IS `decided: false`, NOT `required: false`. The router classifies
+ * `origin/main...HEAD` in the project root, and an engine that did its work in a child worktree —
+ * which this repo's own builders always do — leaves that ref untouched. "No gate required" over an
+ * empty diff would then be a false negative in the direction that ends inquiry, so an empty
+ * classification is reported as an undecided routing with the reason, never as a clean one.
+ */
+function routeGate(root: string): GateRouting {
+  const script = path.join(root, 'scripts', 'run-gate.mjs');
+  if (!fs.existsSync(script)) {
+    return { decided: false, why: `${script} does not exist, so no gate routing could be computed` };
+  }
+  let stdout: string;
+  try {
+    stdout = execFileSync('node', [script, '--json'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } catch (err) {
+    // EXIT 2 IS A REFUSAL THE ROUTER MEANT, AND IT PRINTS ITS REASON AS JSON ON STDOUT. Throwing
+    // that away and reporting a bare spawn failure would lose the one thing the router was trying
+    // to tell us, so its stdout is read off the error before the error is believed.
+    const e = err as NodeJS.ErrnoException & { stdout?: string; status?: number | null };
+    const said = (e.stdout ?? '').trim();
+    return {
+      decided: false,
+      why: said
+        ? `run-gate.mjs exited ${e.status} and refused to decide: ${said.slice(0, 400)}`
+        : `run-gate.mjs could not be run: ${e.message}`,
+    };
+  }
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(stdout) as Record<string, unknown>;
+  } catch {
+    return { decided: false, why: `run-gate.mjs --json emitted output this consumer could not parse: ${stdout.slice(0, 200)}` };
+  }
+  const files = typeof parsed.files === 'number' ? parsed.files : null;
+  const floor = typeof parsed.floor === 'string' ? parsed.floor : null;
+  const ref = typeof parsed.ref === 'string' ? parsed.ref : null;
+  if (files === null || floor === null || ref === null || typeof parsed.gateRequired !== 'boolean') {
+    // DECLARE WHAT IS READ AND REFUSE THE REST. A router that changed its output shape must not be
+    // read through a partial match that produces a plausible decision from fields that moved.
+    return { decided: false, why: `run-gate.mjs --json is missing a field this consumer reads (ref, files, floor, gateRequired): ${stdout.slice(0, 200)}` };
+  }
+  if (files === 0) {
+    return {
+      decided: false,
+      why: `run-gate.mjs classified 0 files at ${ref} — the dispatch may have committed nothing, or committed in a worktree this ref does not cover. "No gate required" over an empty diff is not evidence that no work needs one`,
+    };
+  }
+  return {
+    decided: true,
+    required: parsed.gateRequired,
+    floor,
+    files,
+    ref,
+    // VALIDATED, NOT CAST. An invocation is only carried forward when it has the three fields a
+    // reader needs to act on it; anything else becomes `null` rather than a shape that looks
+    // actionable and is not.
+    invocation: isInvocation(parsed.invocation) ? parsed.invocation : null,
+  };
+}
 
 // ── Recording an outcome ─────────────────────────────────────────────────────────────────
 
@@ -514,7 +602,18 @@ function main() {
       console.error(`  Launch did not succeed: ${message}`);
     }
 
-    writeTerminal({ ...routed, startedAt }, outcome);
+    // ASKED AFTER THE LAUNCH, WHATEVER THE LAUNCH DID. A failed or signalled session can still
+    // have committed work, so the routing decision is computed on every attempted launch rather
+    // than only on the successful ones.
+    const gateRouting = routeGate(entry.root);
+    console.log(
+      gateRouting.decided
+        ? `  Gate routing: required=${gateRouting.required} floor=${gateRouting.floor} over ${gateRouting.files} files at ${gateRouting.ref}` +
+          (gateRouting.required ? ' — NO VERDICT WAS PRODUCED; the invocation that would produce one is recorded on this entry.' : '')
+        : `  Gate routing: UNDECIDED — ${gateRouting.why}`
+    );
+
+    writeTerminal({ ...routed, startedAt, gateRouting }, outcome);
   }
 
   console.log('\nDone.');

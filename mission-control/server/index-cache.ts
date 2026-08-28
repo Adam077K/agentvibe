@@ -461,6 +461,52 @@ const DISPATCH_STATUS_KIND = {
  */
 export const KNOWN_DISPATCH_STATUSES = Object.keys(DISPATCH_STATUS_KIND) as readonly DispatchStatus[];
 /**
+ * The invocation `scripts/run-gate.mjs` emits — the thing that WOULD run the gate.
+ *
+ * EMITTED, NEVER EXECUTED, and the distinction is the whole point. `qa.js` is a Workflow script
+ * that closes over globals (`agent()`, `parallel()`, `phase()`, `budget`) which no plain node
+ * process provides, so the router cannot run it and neither can this consumer. What it can do is
+ * produce the exact arguments, so that "no verdict" arrives with the means to obtain one instead
+ * of as a shrug.
+ */
+export interface GateInvocation {
+  tool: string;
+  scriptPath: string;
+  args: Record<string, unknown>;
+}
+
+/**
+ * What `scripts/run-gate.mjs` decided about the work a dispatch produced.
+ *
+ * THIS IS THE OTHER HALF OF THE GATE STORY, AND IT IS THE HALF THAT NEEDS NO GRANT. `GateRecord`
+ * answers "could the session it launched have run the gate" — a fact about tool declarations.
+ * This answers "IS the gate required for what came out, and what would run it" — a fact about the
+ * diff, decided by the repo's own router, which exists precisely because nothing called it:
+ * `run-gate.mjs`'s own header says "a router that is never called is exactly the defect it was
+ * written to fix."
+ *
+ * AGAIN THERE IS NO MEMBER MEANING "PASSED", and here the omission is sharper than in GateRecord:
+ * this type carries `required: true` beside an invocation nobody ran, which is the honest shape of
+ * "this dispatch produced no verdict and here is the invocation that would." A `verdict` field
+ * would immediately attract a value that no panel produced.
+ */
+export type GateRouting =
+  | {
+      decided: true;
+      /** Is the binding gate required for this diff? Decided by the router, not by this consumer. */
+      required: boolean;
+      /** The tier floor the router computed. */
+      floor: string;
+      /** How many files the router classified — the DENOMINATOR behind `required`. */
+      files: number;
+      /** The ref the router classified, named so a reader can check what was measured. */
+      ref: string;
+      /** What would run the gate. Present when one is required. */
+      invocation: GateInvocation | null;
+    }
+  | { decided: false; why: string };
+
+/**
  * How a dispatch was launched — the routing decision, recorded rather than inferred.
  *
  * `bare-print` is what every dispatch before 2026-08-28 used: `claude --print <goal>`, a model
@@ -630,6 +676,13 @@ export interface DispatchEntry {
    * class of defect as writing a gate verdict it never saw.
    */
   playbooksOffered?: string[];
+  /**
+   * What the repo's own gate router decided about the work this dispatch produced.
+   *
+   * ABSENT MEANS THE ROUTER WAS NEVER ASKED — a different fact from `{decided: false}`, which means
+   * it was asked and could not answer. Neither is ever a pass.
+   */
+  gateRouting?: GateRouting;
 }
 
 /**
