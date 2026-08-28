@@ -1448,3 +1448,355 @@ test('coding.js does not fold a REFUSED back into a BLOCK — the caller half of
     'the PASS-vs-everything fold is back — a refusal now reports as a block one level up',
   );
 });
+
+// ── THE RANGE, THE TIP, AND THE ONE VALUE THAT IS SAFE TO HAND ONWARD ───────────────────────
+//
+// `run-gate.mjs --json` emitted a top-level `ref` that is a two-dot-three RANGE, while
+// `scripts/verdict.mjs --ref` takes a SINGLE revision and derives its own base with
+// `merge-base(origin/main, ref)`. Two emitters of one concept, sharing a field name.
+//
+// The first fix added `base` and `tip`. REVIEW FOUND THAT WAS WORSE, on two measured grounds, and
+// these tests exist so neither can come back:
+//
+//  A1  the top-level `tip` was SYMBOLIC on an explicit `--ref origin/main...some-branch`, while the
+//      invocation beside it was sha-pinned — a guarantee that varied by code path, invisibly. It
+//      matters because the mandated recording order MOVES the branch after the gate runs. Measured
+//      end to end: recording against a pinned sha then re-checking exits 1 and forces a re-run;
+//      recording against a symbolic tip exits 0, binding a PASS to a diff the gate never saw.
+//  A2  `verdict.mjs` HARDCODES origin/main as its base, so a tip alone reproduces the router's
+//      classification only when the range base IS origin/main. With `--ref d1294a4...a679b495` the
+//      router sees 38 files and floors irreversible; verdict.mjs hashes 6 and floors full. A
+//      consumer told "pass tip, never ref" loses two tiers with nothing reporting it.
+//
+// So the bare fields are gone and `verdictRef` carries its own guarantee: a resolved sha when both
+// conditions hold, null WITH THE REASON when either does not. A field whose guarantee varies
+// silently by path is worse than no field.
+const VERDICT = path.join(REPO, 'scripts', 'verdict.mjs');
+const HEAD_NOW = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim();
+
+function verdict(args) {
+  try {
+    return { code: 0, stdout: execFileSync('node', [VERDICT, ...args], {
+      cwd: REPO, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
+    }) };
+  } catch (e) {
+    return { code: e.status, stdout: (e.stdout || '').toString(), stderr: (e.stderr || '').toString() };
+  }
+}
+
+// The DECISION emit sites, each reached deterministically. `refuseTree()` is the fourth site and is
+// deliberately not here — it is an error object, asserted separately below.
+const DECISION_SITES = [
+  ['empty diff', ['--ref', 'origin/main...origin/main']],
+  ['gate not required', ['--files', 'README.md']],
+  ['gate required', ['--files', 'scripts/run-gate.mjs']],
+];
+
+test('the emit sites are censused in the source, so a new one cannot appear unnoticed', () => {
+  // The previous test was named "every --json emit site" while enumerating three of the four BY
+  // HAND — it passed over a universal it did not hold, and a fifth site would have been invisible
+  // to it in exactly the same way. Counting them in the source is what makes "every" mean every.
+  // Predicate is "JSON reaches stdout", not the literal `console.log(JSON.stringify(` — the
+  // empty-diff site is `console.log(asJson ? JSON.stringify(...` and a literal-prefix census
+  // silently missed it, which is the same false-zero this suite exists to catch.
+  const src = fs.readFileSync(path.join(REPO, 'scripts', 'run-gate.mjs'), 'utf8');
+  // NOT LINE-LOCAL. The previous predicate filtered LINES, so a site written as
+  //   console.log(
+  //     JSON.stringify(...),
+  //   )
+  // — the way any formatter wraps a long call — was invisible: it reported 3 machine sites with 4
+  // present, suite green. Fixing the `console.log(JSON.stringify(` prefix while keeping the
+  // line-local scan reproduced the same false zero one layer down. Flatten first, then match.
+  const flat = src.replace(/\s+/g, ' ');
+  const emitting = flat.match(/console\.log\([^;]{0,140}?JSON\.stringify/g) || [];
+  const humanEcho = emitting.filter((l) => l.includes('Workflow({'));
+  const machine = emitting.filter((l) => !l.includes('Workflow({'));
+  assert.equal(humanEcho.length, 1, 'the human-readable invocation echo moved or multiplied');
+  assert.equal(
+    machine.length,
+    3,
+    `run-gate.mjs has ${machine.length} machine JSON emit sites, not the 3 this suite enumerates ` +
+      '(3 decision sites + the refusal object is 3 code paths). A new one must be added to ' +
+      'DECISION_SITES, or asserted as an error object, before this passes.',
+  );
+});
+
+test('every DECISION emit site carries an identical key set — not merely the keys someone listed', () => {
+  // Presence checks are why `drivers` and `gateSelfReview` could be deleted straight back out of
+  // the empty-diff site with all 105 tests green: each was asserted where it was added and nowhere
+  // compared. Key-set EQUALITY catches a deletion from any site, including keys added later that
+  // nobody thought to write a test for.
+  const seen = DECISION_SITES.map(([name, args]) => [name, Object.keys(json(args)).sort()]);
+  const [firstName, firstKeys] = seen[0];
+  for (const [name, keys] of seen.slice(1)) {
+    assert.deepEqual(keys, firstKeys, `${name} and ${firstName} disagree about which keys exist`);
+  }
+  // A denominator, so this cannot pass by every site having collapsed to nothing.
+  assert.equal(firstKeys.length, 9, `expected 9 keys, got ${firstKeys.length}: ${firstKeys.join(' ')}`);
+  for (const k of ['ref', 'files', 'floor', 'gateRequired', 'reason', 'drivers', 'gateSelfReview', 'verdictRef', 'invocation']) {
+    assert.ok(firstKeys.includes(k), `the decision object lost "${k}"`);
+  }
+  // KEY-SET EQUALITY PINS PRESENCE, NOT TYPE. Corrupting the empty site to `ref: 12345` kept every
+  // key in place and scored a clean suite, so a shape check without a type check is half a check.
+  for (const [name, args] of DECISION_SITES) {
+    const r = json(args);
+    assert.equal(typeof r.ref, 'string', `${name}: ref is not a string`);
+    assert.equal(typeof r.files, 'number', `${name}: files is not a number`);
+    assert.equal(typeof r.floor, 'string', `${name}: floor is not a string`);
+    assert.equal(typeof r.gateRequired, 'boolean', `${name}: gateRequired is not a boolean`);
+    assert.ok(Array.isArray(r.drivers), `${name}: drivers is not an array`);
+    assert.equal(typeof r.verdictRef, 'object', `${name}: verdictRef is not an object`);
+    assert.ok(r.verdictRef !== null, `${name}: verdictRef is null — it must always be readable`);
+    assert.ok(r.verdictRef.ref === null || typeof r.verdictRef.ref === 'string', `${name}: verdictRef.ref is neither string nor null`);
+    assert.ok(r.verdictRef.reason === null || typeof r.verdictRef.reason === 'string', `${name}: verdictRef.reason is neither string nor null`);
+    assert.ok(
+      (r.verdictRef.ref === null) !== (r.verdictRef.reason === null),
+      `${name}: verdictRef must carry exactly one of ref/reason — got ref=${r.verdictRef.ref} reason=${r.verdictRef.reason}`,
+    );
+  }
+});
+
+test('the refusal object is discriminated by `error` and fabricates none of the decision keys', () => {
+  // refuseTree() emits 4 keys where a decision emits 9. That asymmetry is correct — nothing was
+  // decided, so a `floor` or a `verdictRef` there would be an invented answer — but the sibling
+  // comment claimed a consumer "can always read the key rather than probe for it", which was false
+  // here for seven keys. The contract is that `error` is read FIRST.
+  const src = fs.readFileSync(path.join(REPO, 'scripts', 'run-gate.mjs'), 'utf8');
+  const line = src.split('\n').find((l) => l.includes("error: 'tree-unverified'"));
+  assert.ok(line, 'the refusal emit site is gone or renamed');
+  for (const k of ['ref:', 'floor:', 'drivers:', 'verdictRef:', 'gateSelfReview:']) {
+    assert.ok(!line.includes(k), `the refusal object fabricates ${k} — it decided nothing`);
+  }
+  assert.ok(line.includes('gateRequired: true'), 'a refusal must not read as "no gate needed"');
+});
+
+test('A1 — verdictRef is ALWAYS a resolved sha, never the symbolic name it was given', (t) => {
+  // THIS TEST CONSTRUCTS THE SYMBOLIC REF IT NEEDS. The first version named the literal branch
+  // `fix/gate-ref-shape`, which exists in the author's worktree and NOWHERE ELSE: `actions/checkout`
+  // for a `pull_request` event checks out the merge commit in DETACHED HEAD and creates no local
+  // branch, so `git rev-parse fix/gate-ref-shape` exits `fatal: ambiguous argument`. Measured on CI
+  // run 33168590818, step 39 "Gate routing" — the ONLY failing test of 112, while the same suite was
+  // 112/112 locally. What this test actually needs is *a symbolic ref resolving to a known sha*, not
+  // *that particular branch*, so it makes one. Same cure as #99 and #101: construct the property you
+  // require instead of enumerating the environments you know.
+  const name = `run-gate-a1-${process.pid}`;
+  const git = (args) => execFileSync('git', args, { cwd: REPO, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  git(['branch', '-f', name, 'HEAD']);
+  t.after(() => {
+    try {
+      git(['branch', '-D', name]);
+    } catch {
+      /* a leaked per-pid branch is harmless; failing cleanup must not mask the assertion */
+    }
+  });
+
+  // ASSERT THE FIXTURE EXISTS BEFORE ASSERTING ANYTHING ABOUT BEHAVIOUR. A missing subject produces
+  // a coherent wrong answer rather than an error, which is how the original defect reached CI.
+  const expected = git(['rev-parse', name]);
+  assert.match(expected, /^[0-9a-f]{40}$/, 'the fixture branch was not created — nothing below is meaningful');
+
+  const symbolic = json(['--ref', `origin/main...${name}`]);
+  assert.equal(symbolic.verdictRef.ref, expected, 'a symbolic tip leaked through unresolved');
+  assert.match(symbolic.verdictRef.ref, /^[0-9a-f]{40}$/);
+  assert.equal(symbolic.verdictRef.reason, null);
+  // CONTROL THAT MUST FIRE: the branch NAME really is not a sha, so the assertion above cannot be
+  // satisfied by the two happening to be the same string.
+  assert.notEqual(name, expected, 'the control is aimed wrong — nothing was resolved');
+});
+
+test('A2 — a base that is not origin/main yields NO usable ref, because verdict.mjs hardcodes its own', () => {
+  const r = json(['--ref', `d1294a4...${HEAD_NOW}`]);
+  assert.equal(r.verdictRef.ref, null, 'a non-origin/main base produced a ref a consumer would trust');
+  assert.match(r.verdictRef.reason, /not origin\/main/, 'the reason does not name why it refused');
+  assert.match(r.verdictRef.reason, /d1294a4/, 'the reason does not name the offending base');
+  // CONTROL: the SAME tip with origin/main as the base is usable, so the refusal is about the base
+  // and not about this tip being unresolvable.
+  const ok = json(['--ref', `origin/main...${HEAD_NOW}`]);
+  assert.match(ok.verdictRef.ref, /^[0-9a-f]{40}$/, 'the control shape was refused too — wrong discriminator');
+});
+
+test('every other unsound shape is null WITH a reason, never a plausible string', () => {
+  const cases = [
+    ['bare single revision', HEAD_NOW, /single revision/],
+    ['unresolvable tip', 'origin/main...no-such-branch-xyz', /does not resolve/],
+    ['tip that is itself a range', 'origin/main...b..c', /does not resolve/],
+  ];
+  for (const [name, ref, why] of cases) {
+    const r = json(['--ref', ref, '--files', 'README.md']);
+    assert.equal(r.verdictRef.ref, null, `${name}: emitted a ref it cannot stand behind`);
+    assert.match(r.verdictRef.reason, why, `${name}: reason does not explain the refusal`);
+  }
+});
+
+test('a non-null verdictRef reproduces what the router classified — the property, not the shape', async () => {
+  // The point of A2 is not that a field is null in the right places; it is that when the field IS
+  // populated, handing it to verdict.mjs measures the SAME FILES the router just tiered. Anything
+  // less and the two disagree again, one layer down.
+  const r = json(['--ref', `origin/main...${HEAD_NOW}`]);
+  assert.match(r.verdictRef.ref, /^[0-9a-f]{40}$/);
+  const got = verdict(['subject', '--ref', r.verdictRef.ref, '--json']);
+  assert.equal(got.code, 0, `verdict.mjs refused the field built for it — ${(got.stderr || '').trim()}`);
+  const routerFiles = execFileSync('git', ['diff', '--name-only', r.ref], { cwd: REPO, encoding: 'utf8' })
+    .split('\n').map((x) => x.trim()).filter(Boolean)
+    .filter((f) => !f.startsWith('.qa/verdicts/')).sort();
+  // verdict.mjs's OWN function, imported rather than re-derived here — a second implementation of
+  // "which files are under review" in the test would defeat the point of the assertion.
+  const { changedFiles: verdictChangedFiles } = await import('./verdict.mjs');
+  const verdictFiles = verdictChangedFiles(REPO, r.verdictRef.ref).slice().sort();
+  assert.deepEqual(
+    verdictFiles,
+    routerFiles,
+    'the router and verdict.mjs disagree about which files are under review',
+  );
+});
+
+test('THE FIXTURE BUILT TO DEFEAT THIS CHANGE: a usable verdictRef must not imply a gate', () => {
+  // The cheap way to make verdictRef always populated would be to resolve a tree everywhere, which
+  // drags the gate machinery onto the ungated path. Emitting an invocation there would assert the
+  // gate applies where it does not — worse than the defect being closed.
+  for (const [name, args] of DECISION_SITES.slice(0, 2)) {
+    const r = json(args);
+    assert.equal(r.gateRequired, false, `${name}: fixture is not exercising the ungated path`);
+    assert.equal(r.invocation, null, `${name}: an invocation appeared where the gate is not required`);
+    assert.ok('verdictRef' in r, `${name}: verdictRef must still be readable when the gate is not required`);
+  }
+  const gated = json(DECISION_SITES[2][1]);
+  assert.equal(gated.gateRequired, true);
+  assert.ok(gated.invocation && gated.invocation.args, 'the gated path stopped emitting an invocation');
+});
+
+test('verdict.mjs refuses a range by name, and computes nothing when it does', () => {
+  // THIS TEST WAS LOST once already. It existed, then the suite was rewritten around verdictRef and
+  // it went with the old block — after which disabling the refusal outright scored 111 pass, 0 fail.
+  // A deletion removed a control while every test stayed green, which is the class this repository
+  // names in five places and hit again here, inside the change closing an instance of it.
+  const r = verdict(['subject', '--ref', 'origin/main...origin/main']);
+  assert.equal(r.code, 2, 'a range must be unresolved (2), never a fail (1) and never a pass (0)');
+  assert.match(r.stderr, /single revision/, 'the refusal does not say what --ref actually takes');
+  assert.equal(r.stdout.trim(), '', 'a refused range produced a subject anyway — it converted rather than refused');
+  // CONTROL on the same arm: a single revision still goes through, so this is not a blanket refusal.
+  const ok = verdict(['subject', '--ref', 'origin/main']);
+  assert.equal(ok.code, 0, `the guard swallowed a legitimate single ref — ${(ok.stderr || '').trim()}`);
+});
+
+test('E3 — the `...`-before-`..` precedence exists ONCE, and it is load-bearing', () => {
+  // refTip, refBase and pinRefTip were three copies, in the file whose own comment said leaving one
+  // behind "would be a poor joke". Swapping the precedence turns a large part of this suite red —
+  // run the mutation rather than trusting a number written here, which is why none is written.
+  const src = fs.readFileSync(path.join(REPO, 'scripts', 'run-gate.mjs'), 'utf8');
+  const copies = (src.match(/lastIndexOf\('\.\.\.'\)/g) || []).length;
+  assert.equal(copies, 1, `${copies} copies of the separator split; there must be exactly one (splitRange)`);
+});
+
+test('E5 — gates.yml points consumers at the field that carries a guarantee', () => {
+  // The remedy for the original defect was prose nothing pinned: inverting the instruction, or
+  // deleting the paragraph outright, left test:playbooks 66/0 and schema-lint clean. A document
+  // that can be reversed without any check noticing is not a remedy.
+  // A bare /verdictRef/ match was NOT enough: gates.yml mentions the field three times, so gutting
+  // the instruction while leaving any one mention behind kept this green. Measured — that mutation
+  // scored 111 pass, 0 fail. Pin the two keys a consumer must actually read.
+  const y = fs.readFileSync(path.join(REPO, '.claude', 'gates.yml'), 'utf8');
+  assert.match(y, /verdictRef\.ref/, 'gates.yml no longer tells a consumer to read verdictRef.ref');
+  assert.match(y, /verdictRef\.reason/, 'gates.yml no longer tells a consumer to read verdictRef.reason');
+  assert.match(y, /THE FIELD TO USE IS verdictRef/, 'the instruction naming the safe field is gone');
+  assert.ok(!/pass tip, never ref/.test(y), 'gates.yml still recommends the removed symbolic field');
+  assert.ok(!/pass ref, never tip/.test(y), 'gates.yml recommends the range — the original defect, inverted');
+  // THE PINS ABOVE ARE ALL SATISFIABLE WHILE THE DOCUMENT SAYS THE OPPOSITE. Keeping every pinned
+  // phrase and appending "...UNLESS verdictRef.ref is null, in which case pass the top-level ref
+  // through" scored 112 pass and test:playbooks 66 pass. Pin the PROHIBITION, not only the advice.
+  assert.match(y, /Never fall back to the top-level ref/, 'the no-fallback rule is gone');
+  assert.ok(
+    !/pass the top-level ref/i.test(y),
+    'gates.yml now tells a consumer to fall back to the range — the original defect, reinstated',
+  );
+  assert.match(y, /uses three dots/, 'gates.yml states the base condition without the separator condition');
+});
+
+test('BLOCKER 1 — the guarantee reads the SEPARATOR, not only the base name', () => {
+  // NO FIXTURE IN THIS SUITE WAS SEPARATOR-SENSITIVE. Measured across the whole file: one two-dot
+  // occurrence near verdictRef, and it was a leading-dash fixture; control, 45 three-dot ones. So
+  // the two arms below differ by ONE CHARACTER and nothing else — same base, same tip — which is
+  // the capability that was missing rather than an assertion that was wrong.
+  //
+  // `git diff A..B` compares A with B. verdict.mjs ALWAYS computes merge-base(origin/main, ref)..ref,
+  // which is what `A...B` means. Blessing a two-dot range binds a verdict to a different diff:
+  // measured, `--ref origin/main..d1294a4` floors IRREVERSIBLE over 39 files while the subject from
+  // its tip is sha256 of the EMPTY STRING.
+  const three = json(['--ref', `origin/main...${HEAD_NOW}`]);
+  const two = json(['--ref', `origin/main..${HEAD_NOW}`]);
+
+  // CONTROL, and it must fire: the three-dot form of the SAME comparison is usable.
+  assert.match(three.verdictRef.ref, /^[0-9a-f]{40}$/, 'the sound form stopped working — control is aimed wrong');
+  assert.equal(three.verdictRef.reason, null);
+
+  assert.equal(two.verdictRef.ref, null, 'a two-dot range was blessed with a usable ref');
+  assert.match(two.verdictRef.reason, /\.\./, 'the reason does not name the separator it refused');
+  assert.match(two.verdictRef.reason, /merge-base/, 'the reason does not explain what verdict.mjs actually computes');
+});
+
+test('BLOCKER 2 — verdict.mjs points the caller at a field that EXISTS', () => {
+  // The refusal said "pass its `tip` field". Round 2 deleted `tip`. A caller who obeyed read
+  // undefined, fell back to the only ref-shaped field left — the range — and got this same message
+  // again: the exact failure loop run-gate.mjs documents about itself, reintroduced two files away
+  // in the one place the loop is entered. The deleted test asserted /tip/ in this stderr; retargeting
+  // it would have caught this, deleting it did not.
+  const r = verdict(['subject', '--ref', 'origin/main...HEAD']);
+  assert.equal(r.code, 2);
+  assert.match(r.stderr, /verdictRef/, 'the refusal does not name the field that works');
+
+  // The field it names must actually be emitted. This is the half that rotted: the sentence and the
+  // field were added together and only the field was removed.
+  const emitted = json(['--files', 'README.md']);
+  assert.ok('verdictRef' in emitted, 'verdict.mjs names a field run-gate.mjs does not emit');
+
+  // And it must not send the caller back round the loop.
+  assert.ok(!/pass its `tip` field/.test(r.stderr), 'the refusal names a field that no longer exists');
+  assert.ok(
+    !/pass its `ref` field/.test(r.stderr),
+    'the refusal now recommends the range — the original defect, inverted',
+  );
+});
+
+test('A-2 — an explicit --files list decouples the classification, and verdictRef says so', () => {
+  // `--files` overrides the range, so the router's floor and the diff verdict.mjs would hash are not
+  // the same subject. The suite previously normalised this: three tests passed `--files README.md`
+  // while the one test named "reproduces what the router classified" was the only one that did not.
+  const withFiles = json(['--ref', `origin/main...${HEAD_NOW}`, '--files', 'README.md']);
+  assert.equal(withFiles.verdictRef.ref, null, '--files produced a ref asserting an agreement that was overridden');
+  assert.match(withFiles.verdictRef.reason, /--files/, 'the reason does not name what decoupled it');
+
+  // CONTROL: the identical ref WITHOUT --files is usable, so this is about the override and not
+  // about the range.
+  const withoutFiles = json(['--ref', `origin/main...${HEAD_NOW}`]);
+  assert.match(withoutFiles.verdictRef.ref, /^[0-9a-f]{40}$/, 'the control shape was refused too');
+
+  // A malformed range still wins: its reason is the more fundamental complaint.
+  const both = json(['--ref', `origin/main..${HEAD_NOW}`, '--files', 'README.md']);
+  assert.match(both.verdictRef.reason, /"\.\."/, 'the --files reason masked a malformed range');
+});
+
+test('E-4 — no SOURCE comment freezes a live test count', () => {
+  // I reported this class as swept having removed one of two copies; the survivor was the source
+  // comment, which is the one that actually re-evaluates. Third time in this PR that a class was
+  // named and swept one site short. A grep produces a list you can count; a resolution to be
+  // thorough produces a feeling. So this is the grep, kept.
+  //
+  // DELIBERATELY SCOPED TO THE SOURCE FILES. Past-tense provenance in this test file — "disabling
+  // the refusal scored 111 pass, 0 fail" — is a record of one measured run, and a reviewer used
+  // exactly those figures to CONFIRM a disclosure rather than rediscover it. A live prediction
+  // ("swapping the branches turns N tests red") re-evaluates on every edit and rots. Different
+  // things; only the second is banned here.
+  const PREDICATE = /\d+\s+tests?\s+(red|green)/gi;
+  for (const f of ['run-gate.mjs', 'verdict.mjs']) {
+    const src = fs.readFileSync(path.join(REPO, 'scripts', f), 'utf8');
+    const frozen = src.match(PREDICATE) || [];
+    assert.deepEqual(frozen, [], `scripts/${f} freezes a live test count: ${frozen.join(' | ')}`);
+  }
+  // CONTROL THAT MUST FIRE: the predicate can match the exact string that was there, so the empty
+  // results above are a real zero and not a regex that matches nothing.
+  assert.deepEqual(
+    'swapping the two branches turns 29 tests red.'.match(PREDICATE),
+    ['29 tests red'],
+    'the predicate cannot find the very string this test exists to ban',
+  );
+});

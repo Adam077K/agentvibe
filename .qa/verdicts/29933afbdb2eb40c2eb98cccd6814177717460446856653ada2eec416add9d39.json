@@ -1,0 +1,11 @@
+{
+  "subject": "29933afbdb2eb40c2eb98cccd6814177717460446856653ada2eec416add9d39",
+  "base": "b4ea862cc6e2653ac21b43b1315da6ae2c4ff011",
+  "tier": "full",
+  "tier_driver": "scripts/check-gates.mjs",
+  "verdict": "PASS",
+  "by": "builder-ref-shape",
+  "run_id": null,
+  "evidence": "Round 5: E-4 swept properly. Census grep -rn '29 tests' scripts .claude docs -> 3 sites, all classified: live prediction in run-gate.mjs deleted, this PR's session claim corrected, another lane's dated record left as provenance. 0 remain in scripts/. Class pinned by a source-scoped test with a control that must fire; reintroducing the count scores 115 pass 1 fail. test:run-gate 116/116. npm run check 48 of 48 passed, 0 failed, exit 0, every step ran. Author-recorded, single model family.",
+  "recorded_at": "2026-08-28T12:48:21.519Z"
+}

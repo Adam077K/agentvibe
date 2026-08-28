@@ -1,0 +1,11 @@
+{
+  "subject": "4008d81fc2977695f444931e03b5d17adc730f328eb8fab83cf2401d967bc1c6",
+  "base": "7384fd2586c6504ff77c8a135878645dae7df92f",
+  "tier": "full",
+  "tier_driver": "scripts/run-gate.mjs",
+  "verdict": "PASS",
+  "by": "builder-ref-shape",
+  "run_id": null,
+  "evidence": "test:run-gate 105/105 (RED first: 101 pass 4 fail on the unmodified tree). npm run check 48 of 48 passed, 0 failed, exit 0, every step ran. Control A (drop tip from one emit site) fired: 2 failures exit 1. Control B (comment reword) did not fire: 105/105. End-to-end: verdict subject --ref <tip> exit 0; --ref <range> exit 2 refused by name. Author-recorded, single model family.",
+  "recorded_at": "2026-08-28T11:08:18.607Z"
+}
