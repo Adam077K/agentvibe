@@ -1034,3 +1034,131 @@ describe('the gate record cannot express a pass, and reachability is read not as
     expect(deriveGateReachability(dir, 'orchestrator').outcome).toBe('underivable');
   });
 });
+
+// ── The gate ROUTER, which needs no grant ────────────────────────────────────────────────
+//
+// `GateRecord` says whether the launched session COULD have run the gate. This says whether the
+// gate is REQUIRED for what the dispatch produced, and what would run it. The repo's own
+// `scripts/run-gate.mjs` answers that, and its header names the defect: "a router that is never
+// called is exactly the defect it was written to fix."
+
+describe('a dispatch records what the gate router decided about its output', () => {
+  /** A fixture project whose `scripts/run-gate.mjs` emits exactly what the test wants to test. */
+  function routerFixture(prefix: string, routerBody: string | null) {
+    const dir = mkTmpDir(prefix);
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(root, { recursive: true });
+    installHarness(root);
+    if (routerBody !== null) {
+      fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
+      fs.writeFileSync(path.join(root, 'scripts', 'run-gate.mjs'), routerBody);
+    }
+    fs.writeFileSync(path.join(bin, 'claude'), '#!/bin/sh\nexit 0\n');
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    fs.writeFileSync(queue, JSON.stringify({
+      id: 'router', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
+    }) + '\n');
+    execFileSync('bun', [CONSUMER], {
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    return readDispatch(queue).at(-1) as DispatchEntry;
+  }
+  const emits = (obj: unknown, exit = 0) =>
+    `console.log(${JSON.stringify(JSON.stringify(obj))});\nprocess.exit(${exit});\n`;
+
+  const REAL_SHAPE = {
+    ref: 'origin/main...abc123', files: 5, floor: 'full', gateRequired: true,
+    drivers: ['a.ts'], gateSelfReview: null,
+    invocation: { tool: 'Workflow', scriptPath: '.claude/workflows/qa.js', args: { ref: 'origin/main...abc123', tier: 'full', tree: '/t' } },
+  };
+
+  test('a decided routing is recorded whole — required, floor, files, ref and the invocation', () => {
+    const last = routerFixture('mc-router-ok-', emits(REAL_SHAPE));
+    expect(last.gateRouting?.decided).toBe(true);
+    const r = last.gateRouting as Extract<typeof last.gateRouting, { decided: true }>;
+    expect(r.required).toBe(true);
+    expect(r.floor).toBe('full');
+    expect(r.files).toBe(5);
+    expect(r.ref).toBe('origin/main...abc123');
+    expect(r.invocation?.scriptPath).toBe('.claude/workflows/qa.js');
+    expect(r.invocation?.args).toMatchObject({ tier: 'full' });
+  });
+
+  test('THE HONEST SHAPE: `required: true` sits beside no verdict, and none can be written', () => {
+    const last = routerFixture('mc-router-honest-', emits(REAL_SHAPE));
+    // A dispatch that produced gate-requiring work and no verdict must say BOTH halves. The record
+    // carries the requirement and the means to satisfy it, and nothing that could be read as
+    // having satisfied it.
+    const serialised = JSON.stringify(last);
+    for (const forbidden of ['"verdict"', '"passed"', '"qa_verdict"', '"PASS"']) {
+      expect(serialised).not.toContain(forbidden);
+    }
+    expect((last.gateRouting as { required: boolean }).required).toBe(true);
+    expect(last.gate?.outcome).toBe('unreachable');
+  });
+
+  test('A ZERO-FILE DIFF IS UNDECIDED, NOT `required: false` — a zero is not evidence', () => {
+    // The router reads origin/main...HEAD in the project ROOT. An engine that worked in a child
+    // worktree — which this repo's builders always do — leaves that ref untouched, so an empty
+    // classification means "nothing was measured here", not "nothing needs the gate".
+    const last = routerFixture('mc-router-zero-', emits({ ...REAL_SHAPE, files: 0, gateRequired: false }));
+    expect(last.gateRouting?.decided).toBe(false);
+    expect((last.gateRouting as { why: string }).why).toContain('0 files');
+    expect((last.gateRouting as { why: string }).why).toContain('worktree');
+    // THE NEGATIVE THAT MATTERS: it must not have been recorded as a clean "no gate needed".
+    expect(last.gateRouting).not.toMatchObject({ decided: true, required: false });
+  });
+
+  test('the router refusing (exit 2) is recorded WITH ITS OWN REASON, not as a spawn failure', () => {
+    // run-gate.mjs exits 2 when it cannot verify the tree and prints why as JSON on stdout.
+    // execFileSync throws on that exit, and believing the throw would discard the one thing the
+    // router was trying to say.
+    const last = routerFixture('mc-router-refuse-', emits({ error: 'could not verify tree HEAD' }, 2));
+    expect(last.gateRouting?.decided).toBe(false);
+    expect((last.gateRouting as { why: string }).why).toContain('could not verify tree HEAD');
+    expect((last.gateRouting as { why: string }).why).toContain('exited 2');
+  });
+
+  test('a router emitting a shape this consumer does not read is refused, not partially believed', () => {
+    // Declare what is read and refuse the rest. A router that renamed `gateRequired` must not be
+    // read through a partial match that yields a plausible decision from the fields that survived.
+    const { gateRequired, ...missing } = REAL_SHAPE;
+    const last = routerFixture('mc-router-shape-', emits(missing));
+    expect(last.gateRouting?.decided).toBe(false);
+    expect((last.gateRouting as { why: string }).why).toContain('missing a field');
+  });
+
+  test('an invocation lacking the fields that make it actionable becomes null, not a plausible shape', () => {
+    const last = routerFixture('mc-router-inv-', emits({ ...REAL_SHAPE, invocation: { tool: 'Workflow' } }));
+    const r = last.gateRouting as Extract<typeof last.gateRouting, { decided: true }>;
+    expect(r.decided).toBe(true);
+    expect(r.invocation).toBeNull();
+  });
+
+  test('no router in the project is undecided, and the reason names the path it looked for', () => {
+    const last = routerFixture('mc-router-absent-', null);
+    expect(last.gateRouting?.decided).toBe(false);
+    expect((last.gateRouting as { why: string }).why).toContain('run-gate.mjs');
+    expect((last.gateRouting as { why: string }).why).toContain('does not exist');
+  });
+
+  test('ANTI-DRIFT: the REAL run-gate.mjs emits every field this consumer reads', () => {
+    // The six tests above drive a FIXTURE router, so they all stay green if the real one changes
+    // shape — a fixture built from my own parser cannot fail. This runs the real emitter.
+    const out = execFileSync('node', [path.join(REPO_ROOT, 'scripts', 'run-gate.mjs'), '--json'], {
+      cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    const j = JSON.parse(out) as Record<string, unknown>;
+    expect(typeof j.ref).toBe('string');
+    expect(typeof j.files).toBe('number');
+    expect(typeof j.floor).toBe('string');
+    expect(typeof j.gateRequired).toBe('boolean');
+    // And the field name the consumer would silently mis-read if it were renamed.
+    expect(Object.keys(j)).toContain('gateRequired');
+  });
+});
