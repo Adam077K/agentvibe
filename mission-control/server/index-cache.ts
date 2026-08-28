@@ -666,19 +666,24 @@ export const GATE_TOOL = 'Workflow';
  * empty grant list, which would read as "declares nothing" and produce a confident wrong answer.
  */
 export function parseToolsDeclaration(text: string): string[] | null {
+  // EVERY CAPTURE IS CHECKED FOR `undefined`, and that is not ceremony under this tsconfig:
+  // `noUncheckedIndexedAccess` types `m[1]` as `string | undefined`, and `bun test` does not
+  // typecheck — only `tsc --noEmit` does. Five errors of exactly this shape reached CI green-looking
+  // locally because the suite passed. An unchecked capture would also be a REAL bug the day a regex
+  // is edited to make the group optional.
   const fm = /^---\r?\n([\s\S]*?)\r?\n---\s*$/m.exec(text);
-  if (!fm) return null;
-  const body = fm[1];
+  const body = fm?.[1];
+  if (body === undefined) return null;
 
   // Spelling 1 — flow sequence on one line: `tools: [Read, Bash]`
-  const flow = /^tools:[ \t]*\[([^\]]*)\][ \t]*$/m.exec(body);
-  if (flow) return splitItems(flow[1].split(','));
+  const flow = /^tools:[ \t]*\[([^\]]*)\][ \t]*$/m.exec(body)?.[1];
+  if (flow !== undefined) return splitItems(flow.split(','));
 
   // Spelling 2 — block sequence: `tools:` then `  - Read` lines. The key must carry NOTHING after
   // the colon; `tools: Read` is a scalar, not a list, and is refused rather than read as one item.
-  const block = /^tools:[ \t]*(?:#[^\n]*)?\r?\n((?:[ \t]+-[^\n]*\r?\n?)+)/m.exec(body);
-  if (block) {
-    const items = block[1].split(/\r?\n/).filter((l) => /\S/.test(l)).map((l) => l.replace(/^[ \t]+-[ \t]*/, ''));
+  const block = /^tools:[ \t]*(?:#[^\n]*)?\r?\n((?:[ \t]+-[^\n]*\r?\n?)+)/m.exec(body)?.[1];
+  if (block !== undefined) {
+    const items = block.split(/\r?\n/).filter((l) => /\S/.test(l)).map((l) => l.replace(/^[ \t]+-[ \t]*/, ''));
     return splitItems(items);
   }
   return null;
@@ -706,10 +711,10 @@ function splitItems(raw: string[]): string[] {
  * path only. The CLI path is a third path and neither measured it.
  */
 export function parseMaxTurns(text: string): number | null {
-  const fm = /^---\r?\n([\s\S]*?)\r?\n---\s*$/m.exec(text);
-  if (!fm) return null;
-  const m = /^maxTurns:[ \t]*(\d+)[ \t]*$/m.exec(fm[1]);
-  return m ? Number(m[1]) : null;
+  const body = /^---\r?\n([\s\S]*?)\r?\n---\s*$/m.exec(text)?.[1];
+  if (body === undefined) return null;
+  const digits = /^maxTurns:[ \t]*(\d+)[ \t]*$/m.exec(body)?.[1];
+  return digits === undefined ? null : Number(digits);
 }
 
 /** The declared `maxTurns` for an agent in a project, or `null` when unreadable or undeclared. */

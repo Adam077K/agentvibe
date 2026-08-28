@@ -40,6 +40,7 @@ import {
   classifyDispatches,
   deriveGateReachability,
   GATE_OUTCOMES,
+  type GateOutcome,
   KNOWN_DISPATCH_STATUSES,
   type DispatchEntry,
 } from '../server/index-cache.ts';
@@ -1012,7 +1013,7 @@ describe('the gate record cannot express a pass, and reachability is read not as
     }
   });
 
-  const table: [string, string, 'unreachable' | 'unverified' | 'underivable'][] = [
+  const table: [string, string, GateOutcome][] = [
     ['[Read, Write, Edit, Bash, Glob, Grep, Task]', 'the real orchestrator declaration', 'unreachable'],
     ['[Read, Workflow, Bash]', 'the gate tool granted', 'unverified'],
     ['[Read, WorkflowRunner]', 'a SUBSTRING of the gate tool is not the gate tool', 'unreachable'],
@@ -1243,7 +1244,7 @@ describe('the prompt tells the session what was derived, not a fixed sentence', 
   // Each row: the headline it MUST carry, and the two it must NOT. Stating the negatives is the
   // whole test — the defective build satisfied every positive for `unreachable` and also emitted
   // that same positive for the other two.
-  const rows: [string, (r: string) => void, string, string, string[]][] = [
+  const rows: [string, (r: string) => void, GateOutcome, string, string[]][] = [
     ['unreachable', (r) => installHarness(r), 'unreachable', NOT_REACHABLE, [MAY_BE, UNDETERMINED]],
     ['unverified', (r) => installHarness(r, { tools: '[Read, Bash, Workflow]' }), 'unverified', MAY_BE, [NOT_REACHABLE, UNDETERMINED]],
     ['underivable', (r) => {
