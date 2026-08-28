@@ -137,7 +137,10 @@ function scanLines(text) {
     if (body.startsWith('#')) continue;
     const content = stripComment(body, n).replace(/\s+$/, '');
     if (content === '') continue;
-    out.push({ n, indent, content });
+    // `raw` is the 0-based index of this line in the UNMODIFIED source. Everything else on
+    // this record has been normalised — comment-stripped, right-trimmed, de-indented — and a
+    // block scalar needs the bytes back. It is the only handle that survives that.
+    out.push({ n, indent, content, raw: idx });
   }
   return out;
 }
@@ -228,14 +231,103 @@ function splitTopLevelColon(s) {
   return -1;
 }
 
-// ── Recursive descent over the scanned lines ────────────────────────────────
-function parseNode(lines, i, indent) {
-  if (i >= lines.length) throw new ClaimError('unexpected end of block');
-  if (/^-(\s|$)/.test(lines[i].content)) return parseSeq(lines, i, indent);
-  return parseMap(lines, i, indent);
+// ── Block scalars ───────────────────────────────────────────────────────────
+//
+// Read from the RAW source, never from the scanned array. `scanLines` is a whole-document
+// pre-pass: before any structure is known it drops blank lines, drops `#`-first lines, strips
+// trailing comments, strips trailing whitespace and strips leading indentation. All five are
+// right for a plain scalar and all five destroy a block-scalar body — and two of them (a
+// dropped blank line, a dropped `#`-first line) remove the line from `lines[]` ENTIRELY, so
+// the body is not reconstructible from what the scan returned. Measured against PyYAML 6.0.3
+// and js-yaml 4.1.1 before this function existed: a `#` after a space truncated the value, a
+// `#`-first line vanished, a blank line vanished (destroying the fold boundary in `>`),
+// relative indentation flattened to column 0, and trailing whitespace was stripped. One live
+// value was corrupt because of it — `.claude/skills/CURATION.yml` added[9].why.
+//
+// CHOMPING IS `strip`, DELIBERATELY, FOR ALL FOUR ACCEPTED INDICATORS. YAML's default is
+// `clip`, which keeps one trailing newline. This parser has always applied `strip`, so `|`
+// agrees with `|-` and `>` with `>-`; the differential probe records `|-` and `>-` as already
+// matching both reference implementations byte for byte. Adopting `clip` would change all 15
+// block-scalar values in `.claude/gates.yml` and every block scalar in agent frontmatter — an
+// `irreversible`-tier surface — to recover ZERO content, and would split `|` from `|-` where
+// they agree today. The trailing newline is the only remaining difference from a conforming
+// parser, and it is a decision. `scripts/claims.test.mjs` pins it as one.
+//
+// `|+`, `>+` and `|2` are still REFUSED, by the same route as before this change: they never
+// match the accepted set, so the header parses as a plain scalar and the more-indented body
+// then raises `unexpected indentation`. Refuse rather than guess is this parser's contract.
+function readBlockScalar(src, headerRaw, parentIndent, indicator, lineNo, key) {
+  const isBlank = (l) => /^[ ]*$/.test(l);
+  const indentOf = (l) => l.match(/^ */)[0].length;
+
+  // Content indentation is set by the first NON-EMPTY line of the body, per YAML.
+  let contentIndent = -1;
+  for (let k = headerRaw + 1; k < src.length; k++) {
+    if (isBlank(src[k])) continue;
+    const ind = indentOf(src[k]);
+    if (ind <= parentIndent) break;
+    contentIndent = ind;
+    break;
+  }
+  if (contentIndent < 0) {
+    throw new ClaimError(`block scalar "${key}: ${indicator}" has no content`, lineNo);
+  }
+
+  // The block ends at the first NON-EMPTY line indented below the content indent. A blank
+  // line has indent 0 and is a CONTINUATION, not a terminator: read it as a terminator and
+  // the scalar truncates at the first paragraph break; ignore the non-empty rule and it
+  // swallows the rest of the document. A line indented between the parent and the content
+  // indent also ends the block, and the caller then raises `unexpected indentation` on it,
+  // which is the honest answer to malformed input.
+  const body = [];
+  let endRaw = headerRaw + 1;
+  for (let k = headerRaw + 1; k < src.length; k++) {
+    if (isBlank(src[k])) { body.push(''); endRaw = k + 1; continue; }
+    if (indentOf(src[k]) < contentIndent) break;
+    body.push(src[k].slice(contentIndent));
+    endRaw = k + 1;
+  }
+  while (body.length && body[body.length - 1] === '') body.pop();  // strip chomping
+
+  return { value: indicator[0] === '>' ? foldLines(body) : body.join('\n'), endRaw };
 }
 
-function parseSeq(lines, i, indent) {
+/**
+ * YAML folding for `>`: one break between two ordinary lines becomes a space; n+1 consecutive
+ * breaks become n newlines; and any break touching a MORE-INDENTED line stays literal, as do
+ * that line's own leading spaces. Written over BREAKS rather than over lines because the two
+ * disagree exactly where it matters — a single blank line between two content lines is two
+ * breaks and folds to ONE newline, not two.
+ */
+function foldLines(body) {
+  if (body.length === 0) return '';
+  let out = body[0];
+  let i = 1;
+  while (i < body.length) {
+    let blanks = 0;
+    while (i + blanks < body.length && body[i + blanks] === '') blanks++;
+    const at = i + blanks;
+    if (at >= body.length) break;  // trailing blanks: already strip-chomped away
+    const prev = body[i - 1];
+    const next = body[at];
+    const literal = /^[ \t]/.test(next) || (prev !== '' && /^[ \t]/.test(prev));
+    if (prev === '' || literal) out += '\n'.repeat(blanks + 1);
+    else if (blanks === 0) out += ' ';
+    else out += '\n'.repeat(blanks);
+    out += next;
+    i = at + 1;
+  }
+  return out;
+}
+
+// ── Recursive descent over the scanned lines ────────────────────────────────
+function parseNode(lines, i, indent, src) {
+  if (i >= lines.length) throw new ClaimError('unexpected end of block');
+  if (/^-(\s|$)/.test(lines[i].content)) return parseSeq(lines, i, indent, src);
+  return parseMap(lines, i, indent, src);
+}
+
+function parseSeq(lines, i, indent, src) {
   const items = [];
   while (i < lines.length && lines[i].indent === indent && /^-(\s|$)/.test(lines[i].content)) {
     const { n, content } = lines[i];
@@ -246,7 +338,7 @@ function parseSeq(lines, i, indent) {
       // "-" alone: the item is a block on the following, more-indented lines.
       i++;
       if (i < lines.length && lines[i].indent > indent) {
-        const r = parseNode(lines, i, lines[i].indent);
+        const r = parseNode(lines, i, lines[i].indent, src);
         items.push(r.value);
         i = r.next;
       } else {
@@ -257,10 +349,10 @@ function parseSeq(lines, i, indent) {
 
     if (splitTopLevelColon(rest) >= 0 && !rest.startsWith('{') && !rest.startsWith('[')) {
       // "- key: value" — a block mapping whose first key sits at column indent+off.
-      const inner = [{ n, indent: indent + off, content: rest }];
+      const inner = [{ n, indent: indent + off, content: rest, raw: lines[i].raw }];
       let j = i + 1;
       while (j < lines.length && lines[j].indent > indent) { inner.push(lines[j]); j++; }
-      const r = parseNode(inner, 0, indent + off);
+      const r = parseNode(inner, 0, indent + off, src);
       if (r.next !== inner.length) {
         throw new ClaimError('unexpected indentation inside sequence item', inner[r.next].n);
       }
@@ -276,10 +368,10 @@ function parseSeq(lines, i, indent) {
   return { value: items, next: i };
 }
 
-function parseMap(lines, i, indent) {
+function parseMap(lines, i, indent, src) {
   const map = {};
   while (i < lines.length && lines[i].indent === indent) {
-    const { n, content } = lines[i];
+    const { n, content, raw: headerRaw } = lines[i];
     if (/^-(\s|$)/.test(content)) {
       throw new ClaimError('sequence item where a mapping key was expected', n);
     }
@@ -298,24 +390,25 @@ function parseMap(lines, i, indent) {
     if (rest === '>' || rest === '|' || rest === '>-' || rest === '|-') {
       // Block scalar. This is the exact shape that silently produced empty strings in
       // build-skills-manifest.mjs before Phase 1 — it is handled explicitly here.
-      const folded = rest[0] === '>';
-      const collected = [];
+      const { value, endRaw } = readBlockScalar(src, headerRaw, indent, rest, n, key);
+      map[key] = value;
+      // Advance past every SCANNED line the body consumed, indexed by RAW source line. That
+      // index is what makes this correct: the body's blank and `#`-first lines are absent
+      // from `lines[]` altogether, so an indent-based advance cannot see what was just read.
       i++;
-      while (i < lines.length && lines[i].indent > indent) { collected.push(lines[i].content); i++; }
-      if (collected.length === 0) throw new ClaimError(`block scalar "${key}: ${rest}" has no content`, n);
-      map[key] = folded ? collected.join(' ') : collected.join('\n');
+      while (i < lines.length && lines[i].raw < endRaw) i++;
       continue;
     }
 
     if (rest === '') {
       i++;
       if (i < lines.length && lines[i].indent > indent) {
-        const r = parseNode(lines, i, lines[i].indent);
+        const r = parseNode(lines, i, lines[i].indent, src);
         map[key] = r.value;
         i = r.next;
       } else if (i < lines.length && lines[i].indent === indent && /^-(\s|$)/.test(lines[i].content)) {
         // A sequence at the SAME indent as its key — legal YAML, common in this repo.
-        const r = parseSeq(lines, i, indent);
+        const r = parseSeq(lines, i, indent, src);
         map[key] = r.value;
         i = r.next;
       } else {
@@ -335,13 +428,14 @@ function parseMap(lines, i, indent) {
 
 /** Parse a YAML subset. Throws ClaimError on anything it does not fully understand. */
 function parseYamlSubset(text) {
+  const src = String(text).split('\n');
   const lines = scanLines(text);
   if (lines.length === 0) return null;
   const base = lines[0].indent;
   for (const l of lines) {
     if (l.indent < base) throw new ClaimError('block is not consistently indented', l.n);
   }
-  const r = parseNode(lines, 0, base);
+  const r = parseNode(lines, 0, base, src);
   if (r.next !== lines.length) throw new ClaimError('unexpected trailing content', lines[r.next].n);
   return r.value;
 }
