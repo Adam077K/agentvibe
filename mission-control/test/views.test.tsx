@@ -2521,7 +2521,7 @@ describe('DispatchTable renders every status distinguishably', () => {
     // to a human looking at the screen. So the rule is asserted generally: extract whatever class
     // each status actually emits, and require the stylesheet to define a matching custom property.
     const css = fs.readFileSync(path.join(import.meta.dir, '..', 'client', 'src', 'styles.css'), 'utf8');
-    const STATUSES = ['pending', 'running', 'consumed', 'failed', 'no-result', 'not-started', 'timed-out'];
+    const STATUSES = ['pending', 'running', 'exited-clean', 'consumed', 'failed', 'no-result', 'not-started', 'timed-out'];
 
     // SCOPED TO StatusCell, NOT THE WHOLE ROW — and the first cut of this test was not. Scanning
     // the rendered table swept up `text-left` and `text-right`, real Tailwind alignment utilities
@@ -2551,5 +2551,75 @@ describe('DispatchTable renders every status distinguishably', () => {
     const emitted = [...pretendMarkup.matchAll(/\btext-([a-z][a-z-]*)\b/g)].map((m) => m[1] as string);
     expect(emitted).toEqual(['err']);
     expect(emitted.filter((t) => !css.includes(`--color-${t}`))).toEqual(['err']);
+  });
+});
+
+// ── The VIEW half of the `exited-clean` change ───────────────────────────────────────────
+//
+// F-1. The delta that added `exited-clean` shipped +12/−2 of DispatchView and +80/−10 of
+// dispatch.test.ts, and touched this file NOT AT ALL — `grep 'exited-clean' views.test.tsx` was 0
+// against controls of 5 for `no-result` and 6 for `consumed` in the same file. Two mutations
+// survived both suites green: reverting the headline to count only `consumed`, and deleting the
+// `case 'exited-clean':` arm outright.
+//
+// THIS FILE ALREADY DOCUMENTS THIS EXACT PATTERN HAPPENING BEFORE — the change that added `failed`
+// and `no-result` wrote 155 lines of consumer tests and 0 for the view, and the p2 defect lived in
+// the untested half. Naming a class in a file and then committing it again in the same file is what
+// happened here. `dispatch.test.ts` cannot cover it: it does not import DispatchView at all.
+
+describe('a clean exit is counted and rendered as clean, in the VIEW', () => {
+  test('`exited-clean` is NOT unsuccessful — the headline counts the class, not one label', () => {
+    // KILLS THE MUTATION that reverts the count to `status === 'consumed'` only. With that applied
+    // this returns { unsuccessful: 1 } and every routed dispatch reads as a failure — verbatim the
+    // regression the line's own comment says it exists to prevent.
+    expect(dispatchHeadline([dispatchRow('e', 'exited-clean')]))
+      .toEqual({ total: 1, pending: 0, unsuccessful: 0 });
+  });
+
+  test('both clean-exit labels count alike, because a rename does not rewrite the queue', () => {
+    expect(dispatchHeadline([dispatchRow('new', 'exited-clean'), dispatchRow('old', 'consumed')]))
+      .toEqual({ total: 2, pending: 0, unsuccessful: 0 });
+  });
+
+  test('CONTROL: the complement still catches a status this build does not know', () => {
+    // Without this the two above could be satisfied by a headline that calls everything clean.
+    expect(dispatchHeadline([dispatchRow('e', 'exited-clean'), dispatchRow('u', 'timed-out')]))
+      .toEqual({ total: 2, pending: 0, unsuccessful: 1 });
+  });
+
+  test('`exited-clean` renders in the MUTED tone and is not treated as an unknown status', () => {
+    // KILLS THE MUTATION that deletes the `case 'exited-clean':` arm: without it the switch falls
+    // through to the unknown-status default, which renders the raw string in the ERROR tone — so a
+    // dispatch that exited 0 would be shown to an operator as something the UI does not recognise.
+    const markup = renderToStaticMarkup(<StatusCell entry={dispatchRow('id', 'exited-clean')} />);
+    expect(markup).toContain('text-muted');
+    expect(markup).not.toContain('text-bad');
+    expect(markup).not.toContain('Status not recognised');
+  });
+
+  test('its label and title say what was observed and refuse what was not', () => {
+    const markup = renderToStaticMarkup(<StatusCell entry={dispatchRow('id', 'exited-clean')} />);
+    expect(markup).toContain('exited clean');
+    // The tooltip is the operator-facing half of the whole finding: exit 0 is the observation, and
+    // completion is not. A title claiming "ran to completion" here would reintroduce it in the one
+    // place a human actually reads.
+    expect(markup).toContain('completion not observed');
+    expect(markup).not.toContain('Ran to completion');
+  });
+
+  test('the legacy label still renders, and is marked legacy rather than dropped', () => {
+    const markup = renderToStaticMarkup(<StatusCell entry={dispatchRow('id', 'consumed')} />);
+    expect(markup).toContain('text-muted');
+    expect(markup).toContain('legacy');
+  });
+
+  test('the operator legend names the label rows will actually carry', () => {
+    // The footnote told operators to expect "consumed", which this build NEVER writes, directly
+    // beneath a table rendering `exited clean`. A legend that names no row on screen is worse than
+    // none, because it reads as a key.
+    const markup = renderToStaticMarkup(
+      <DispatchTable entries={[dispatchRow('a', 'exited-clean')]} now={2_000} />,
+    );
+    expect(markup).toContain('exited clean');
   });
 });

@@ -139,7 +139,11 @@ export interface DispatchHeadline {
   total: number;
   pending: number;
   /**
-   * Everything that is neither `pending` nor `consumed` — counted as a COMPLEMENT, not a list.
+   * Everything that is neither `pending` nor a CLEAN EXIT — counted as a COMPLEMENT, not a list.
+   *
+   * "clean exit" is two labels, `exited-clean` and its legacy predecessor `consumed`, because a
+   * status rename does not rewrite the records already in the queue. Naming the CLASS rather than
+   * one member is what keeps this doc true through the next rename.
    *
    * THIS FIELD ENUMERATED `failed` AND `no-result` UNTIL 2026-08-26, and enumerating is how it
    * reproduced the defect it was added to prevent. Its own doc said it exists because "the summary
@@ -470,7 +474,7 @@ export function DispatchPanel({
       {entries !== null && entries.length > 0 && (
         <Footnote>
           The queue is append-only — entries remain visible after the consumer acts on them, showing
-          the outcome it recorded: <span className="text-muted">consumed</span>,{' '}
+          the outcome it recorded: <span className="text-muted">exited clean</span>,{' '}
           <span className="text-bad">failed</span> or <span className="text-bad">no result</span>. To act
           on a pending entry, run:{' '}
           <code>bun mission-control/scripts/consume-dispatch.ts</code>. Entries are shown newest-first.

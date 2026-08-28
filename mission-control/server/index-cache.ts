@@ -387,7 +387,11 @@ export function dispatchQueuePath(): string {
  *   pending      enqueued by the server, not yet acted on
  *   running      a launch STARTED and has not yet reported back. Durable and written BEFORE the
  *                launch, so a consumer that dies mid-flight leaves evidence instead of silence.
- *   consumed     the launch ran to completion and exited 0
+ *   exited-clean the launch exited 0. That is the whole observation: the session's output is
+ *                inherited rather than captured, so whether it FINISHED is not known here.
+ *   consumed     LEGACY, never written by this build. It meant "ran to completion and exited 0" —
+ *                a completion nobody observed. Kept so records written before `exited-clean`
+ *                still resolve as settled instead of becoming `unrecognised`.
  *   failed       the launch ran and exited non-zero — `exitCode` carries which
  *   no-result    it started and never returned an outcome: killed by a signal, or found still
  *                `running` by a later run
@@ -608,11 +612,21 @@ export type DispatchRoute = 'orchestrator-playbook' | 'bare-print';
  * comment elsewhere in this repo calling the grant "the one edit that would close this" understates
  * it: today that edit does not merely await a founder decision, it fails a green blocking check.
  *
- * AND THAT RULE'S STATED REASON IS FALSIFIED BY THE VERY CHANGE THIS FILE IS PART OF. It refuses
- * the declaration because "the orchestrator is not dispatched — it IS the session, so no field in
- * this frontmatter is read on the path it runs on." `claude --agent orchestrator --print` IS a
- * dispatched orchestrator, and on that path the frontmatter binds. Nothing here touches
- * `schema-lint.js`, so nothing goes red: THE RULE KEEPS PASSING WHILE ITS PREMISE NO LONGER HOLDS.
+ * AND THAT RULE'S STATED REASON IS DENTED BY THE VERY CHANGE THIS FILE IS PART OF — dented in one
+ * named place, which is all its premise can survive. It refuses the declaration because "the
+ * orchestrator is not dispatched — it IS the session, so NO FIELD in this frontmatter is read on
+ * the path it runs on." A universal negative needs one counterexample, and `tools:` is one:
+ * measured at `claude 2.1.246` by `scripts/probe-agent-tool-inheritance.mjs`, recorded in
+ * `docs/08-agents_work/sessions/2026-08-28-builder-probe-agent-tool-inheritance.md`, a session
+ * launched as `--agent orchestrator` advertises 5 tools at init where a bare session advertises 41,
+ * with a differential arm on `reviewer-readonly` showing neither figure is a fallback.
+ *
+ * SAY `tools:`, NOT "the frontmatter". THE BROADER SENTENCE IS NOT MEASURED AND THIS FILE HEDGES IT
+ * TWICE ELSEWHERE — the agent-FILE path is called OPEN above, and `maxTurns` on the CLI `--agent`
+ * path is called UNMEASURED at `readDeclaredMaxTurns`. "Every field binds" would contradict both,
+ * from the same file, about the same path. The narrow claim is the one that survives, and it is
+ * enough: Nothing here touches `schema-lint.js`, so nothing goes red — THE RULE KEEPS PASSING WHILE
+ * THE PREMISE UNDER IT HAS A MEASURED COUNTEREXAMPLE.
  * Which of the two files is wrong is a founder decision, not this consumer's — recorded so that a
  * reader of the promise above learns the obstacle is a live check and not only an unmade decision.
  */
