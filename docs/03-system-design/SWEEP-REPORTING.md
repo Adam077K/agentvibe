@@ -1,7 +1,8 @@
 # Sweep reporting — the three-bucket rule
 
 **Status:** standard · **Applies to:** every checker that partitions a universe and reports a verdict
-**Instances on this tree:** `scripts/check-dispatch-agenttype.mjs`, `scripts/check-citations.mjs`
+**Instances on this tree:** `scripts/check-dispatch-agenttype.mjs`, `scripts/check-citations.mjs`,
+`scripts/probe-workflow-reach.mjs`
 
 ---
 
@@ -24,12 +25,22 @@ every resolver.
 
 The generalisation is: **an unmeasurable state must not be spellable as a measurement.**
 
-**Two further instances are IN FLIGHT and are not true of this tree — do not read them as shipped.**
-`scripts/probe-workflow-reach.mjs`, which reports `UNRESOLVED` rather than `CONTAINED` when its
-control does not fire, is on the branch of PR #111 and **does not exist here**. And on this base
-`.claude/workflows/qa.js` still spells a refusal *as a `BLOCK`*, carrying the word REFUSED only
-inside a summary string — which is the defect PR #115 fixes, not an instance of this rule. Both are
-named because the pattern is the point; neither is evidence until it merges.
+**Two further instances have SHIPPED and are now true of this tree.**
+`scripts/probe-workflow-reach.mjs` reports `UNRESOLVED` (exit 2) rather than `CONTAINED` (exit 0) when
+its control does not fire — check it with `grep -n UNRESOLVED scripts/probe-workflow-reach.mjs`. And
+`.claude/workflows/qa.js` no longer spells a refusal *as a `BLOCK`*: `REFUSED` is a value of the frozen
+`VERDICT` object every caller reads, not a word inside a summary string — check it with
+`grep -nE '^const VERDICT' .claude/workflows/qa.js`. Both arrived from outside this branch, which is the
+point of having named them: the rule was written down before either landed, and neither was evidence
+until it did.
+
+> **Superseded 2026-08-28.** This paragraph read *"Two further instances are IN FLIGHT and are not true
+> of this tree — do not read them as shipped"*, marked `probe-workflow-reach.mjs` as **"does not exist
+> here"**, and described the `qa.js` refusal as a defect *"PR #115 fixes"*. Both PRs merged to `main` on
+> 2026-08-26 and this branch merged `main` on 2026-08-28, so every clause of it became false about the
+> tree it lives in. It is kept because *which* statement went stale is the useful part, and because the
+> instruction it carried — fix the marking when the base moves, and not before — is what made this
+> correction mechanical rather than a matter of anyone remembering.
 
 ---
 
@@ -40,12 +51,20 @@ predicate can detect it failed to classify. **An item the sweep never ENUMERATED
 all** — it is missing from the denominator, so every ratio computed from it is right about the wrong
 set.
 
-Measured while writing this, on the branch of PR #115 and **not reproducible on this tree**:
-`node --test` reported **101** test cases in `scripts/run-gate.test.mjs` where a name-anchored parser
-of the same file saw **91** blocks. The ten it missed were indented `test(` calls inside loops —
-invisible to every bucket that parser had, because they were never enumerated. Only a counter written
-by someone else finds those. (That file holds **87** tests on this base; the figure is provenance for
-the argument, not a measurement anyone can repeat here.)
+Measured while writing this on the branch of PR #115, and **reproducible on this tree since that branch
+merged**: `node --test scripts/run-gate.test.mjs` reports **101** test cases, where a name-anchored
+parser of the same file — `grep -cE '^test\(' scripts/run-gate.test.mjs` — sees **91** blocks. The ten
+it misses are indented `test(` calls inside two `for` loops of five iterations each; they are invisible
+to every bucket that parser has, because they were never enumerated. Only a counter written by someone
+else finds those. Re-derive both numbers from those two commands rather than trusting the ones printed
+here — the corpus moves, and the gap of ten is not obliged to move with it.
+
+> **Superseded 2026-08-28.** This read *"not reproducible on this tree"* and closed with a parenthetical
+> — *"that file holds **87** tests on this base; the figure is provenance for the argument, not a
+> measurement anyone can repeat here"* — whose entire job was to warn a reader off repeating it. PR #115
+> merged, and it is now an ordinary repeatable measurement. The **87** is left unre-derived rather than
+> quietly restated: it was a reading of a base this tree no longer holds, and the name-anchored count at
+> that base (`0c78fa2`) was **77**.
 
 **Where no independent counter exists, say so. Do not invent one and call it a check.**
 
@@ -97,10 +116,20 @@ elements, whenever a measurement depends on them.
 ## Known, reported, and deliberately not fixed
 
 `check-citations.mjs`'s `RESOLUTION:` line prints the six resolution counters as a partition of the
-locator total. With an external citation present it therefore accounts for **875 of 876**, while the
-headline directly above it counts that same item among the *"could not check"* total. Two lines of
-one block, disagreeing by one. Reported here rather than changed, because it alters what the checker
-reports about its corpus and the reporting posture of that check is a founder decision in flight.
+locator total. With an external citation present it therefore accounts for **one fewer than the locator
+total**, while the headline directly above it counts that same item among the *"could not check"* total.
+Two lines of one block, disagreeing by one. The off-by-one is the durable part and the corpus is not:
+read the live figures off the run — `node scripts/check-citations.mjs --no-anchors --strict
+--external-prefix adamos` printed **880 of 881** on 2026-08-28. Reported rather than changed, because
+changing it moves what the checker reports about its corpus, and the posture of this check is only half
+settled: the **existence** half blocks (`check:citations-exist` is in `STEPS`), while whether the
+**drift** half ever blocks is a founder decision still open (`check:citations` is in `EXCLUDED`).
+
+> **Superseded 2026-08-28.** This froze the figure at **875 of 876** and called the whole reporting
+> posture *"a founder decision in flight"*. The count moved to 880 of 881 across the merge train without
+> the defect itself changing at all — which is the case against frozen arithmetic in prose. And half the
+> posture was never in flight: `check:citations-exist` was already a blocking step at this branch's own
+> base, so the sentence overstated what was undecided on the day it was written.
 
 ---
 
