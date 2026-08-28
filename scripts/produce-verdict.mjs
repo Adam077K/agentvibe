@@ -161,7 +161,30 @@ export const EXIT = {
   [OUTCOME.NOT_REQUIRED]: 3,
 };
 
+export const VERDICT_DIR = '.qa/verdicts';
+
 export const WORKFLOW_DIR = '.claude/workflows';
+
+/**
+ * THE REF THE JUDGE COMES FROM. A CONSTANT, AND THE OPERATOR CANNOT CHOOSE IT.
+ *
+ * `--git-ref` used to select this, unvalidated. That restored the original provenance exploit
+ * verbatim through a flag: every guard in `materialiseJudgeProject` — completeness AND identity —
+ * is measured *against the ref you name*, so naming the PR's own HEAD makes all of them pass
+ * tautologically and the judge becomes the tree under review. Measured: `--git-ref HEAD` against a
+ * fixture whose HEAD ships a one-line `verdict.mjs` printing `{"ok":true}` → EXIT 0, PRODUCED,
+ * launched=false, asserting a record that does not exist.
+ *
+ * The instance before this one was `--repo`, removed for the WEAKER version of the same problem —
+ * it chose the subject; this chose the judge. Deleting one and leaving the other is why this is a
+ * constant now rather than a validated flag: a validated flag is another instance, and the class is
+ * "an operator-supplied value that selects what gets MEASURED rather than what gets REPORTED."
+ * `FLAG_ROLES` below makes that class checkable instead of remembered.
+ *
+ * `materialiseJudgeProject` keeps a `gitRef` parameter because it is the MECHANISM and its own
+ * tests need to point it at fixture refs. This constant is the POLICY, and policy is not a knob.
+ */
+export const JUDGE_REF = 'origin/main';
 
 /**
  * The agents `qa.js` dispatches. A judging project missing these is not a judging project: the
@@ -479,6 +502,18 @@ export function readVerdictArtifact({ tree, ref, verdictBin, runner = null }) {
   const common = { subject: payload.subject ?? null, tier: payload.tier ?? null, verdict_reason: payload.reason };
 
   if (payload.ok) {
+    // RULE 10, AND THE CHECKER GETS THE LAST WORD ON ITSELF. `ok:true` was honoured at any exit
+    // code, so a checker printing a pass and then exiting 2 was read as a pass — a resolver
+    // reporting that it checked when it said it could not. It is also what made the provenance
+    // exploit need only ANY hostile checker rather than a well-formed one.
+    if (r.status !== 0) {
+      return result(
+        OUTCOME.REFUSED,
+        `verdict.mjs printed ok:true and then exited ${r.status}. A checker that reports failure has ` +
+        'not passed anything, whatever its stdout says.',
+        { ...common, verdict_check: { exit: r.status } },
+      );
+    }
     return result(OUTCOME.PRODUCED, 'a verdict record is committed, binds this exact diff, and reads PASS', common);
   }
 
@@ -549,9 +584,10 @@ export function produceVerdict(o = {}) {
     judgeDir = null,
     launcher = ['claude'],
     timeoutMs = 60 * 60 * 1000,
-    gitRef = 'origin/main',
     deps = {},
   } = o;
+  // Not a parameter. See JUDGE_REF.
+  const gitRef = JUDGE_REF;
 
   // ── F-1 · THE TREE THAT GETS ROUTED IS THE ONE `run-gate.mjs` LIVES IN, AND NOTHING ELSE ───
   //
@@ -609,7 +645,11 @@ export function produceVerdict(o = {}) {
   // panel run, so it must be made with the judge's checker like every other read — doing it with
   // this script's neighbour is precisely the A1 exploit, where a hostile in-tree `verdict.mjs`
   // reported `{"ok":true}` and SUPPRESSED the run that could have contradicted it.
-  const dir = judgeDir ?? fs.mkdtempSync(path.join(canonical(os.tmpdir()), 'qa-judge-'));
+  // CANONICALISE EITHER WAY. The default path already went through canonical(); an operator's did
+  // not, so `/tmp/x` vs `/private/tmp/x` made `verdict.mjs`'s self-invocation guard compare unequal
+  // — the judge's checker then defines everything and returns without running main(), which is
+  // fail-closed but permanently unable to produce while reporting it as a checker defect.
+  const dir = canonical(judgeDir ?? fs.mkdtempSync(path.join(canonical(os.tmpdir()), 'qa-judge-')));
   const judge = (deps.materialiseJudgeProject ?? materialiseJudgeProject)({
     repo, dest: dir, gitRef, workTree: args.tree,
   });
@@ -685,6 +725,49 @@ export function produceVerdict(o = {}) {
     // The session committed nothing. Reading at the tip is then the whole truth.
     post = read(tip);
   } else {
+    // ── THE SUBJECT EQUALITY PROVES LESS THAN IT LOOKS, AND THE GAP IS THE FILE CLASS THAT
+    // ── CARRIES MERGE AUTHORITY.
+    //
+    // This used to say an equal subject "proves the session added a verdict AND NOTHING ELSE".
+    // False: `verdict.mjs`'s DIFF_PATHSPEC excludes `.qa/verdicts/*.json` from every subject, so a
+    // session that records the verdict it was asked for AND ALSO commits forged PASS records for
+    // subjects it never reviewed leaves the subject byte-identical. Measured: EXIT 0 PRODUCED with
+    // three planted records committed; the negative control, a non-verdict commit, correctly
+    // REFUSED. The guard fired; its SCOPE was the defect. A planted record is invisible to the tier
+    // as well — `classify.mjs` floors `.qa/verdicts/<64hex>.json` at `lite` by default.
+    //
+    // So bound WHAT was committed, not only whether the subject moved: the session may add exactly
+    // one path, and its basename must be the subject that was reviewed. Anything else is REFUSED.
+    //
+    // What this does NOT close, deliberately: an author who controls a future diff can plant a
+    // record for it in some other commit. That is the already-recorded "the gate is not enforcement
+    // against a determined author" — hash-bound, not signed — and it is not this check's job.
+    const changed = git(args.tree, ['diff', '--name-only', `${tip}..${newHead}`])
+      .split('\n').map((x) => x.trim()).filter(Boolean);
+    const allowed = pre.subject ? [`${VERDICT_DIR}/${pre.subject}.json`] : [];
+    if (changed.length !== 1 || changed[0] !== allowed[0]) {
+      return result(
+        OUTCOME.REFUSED,
+        `the gate session committed ${changed.length} path(s) and may commit exactly one — ` +
+        `${allowed[0] ?? '<no subject to bind to>'}. It changed: ${changed.slice(0, 5).join(', ') || '(nothing)'}. ` +
+        'A session that writes anything beyond the verdict for the diff it reviewed has done ' +
+        'something this run cannot vouch for.',
+        { judgeDir: dir, launched: true, args, head: newHead, committed: changed.slice(0, 20) },
+      );
+    }
+
+    // A SECOND INSTRUMENT OVER THE SAME PROPERTY, AND THAT IS THE POINT.
+    //
+    // Given the path bound above, this can no longer fail on real inputs: the only path the session
+    // may add is excluded from the subject by construction, so the subject cannot have moved. Kept
+    // anyway, and kept honestly — it is computed by a DIFFERENT instrument (verdict.mjs's own hash
+    // over the diff) than the one above (`git diff --name-only`). Two instruments over one property
+    // that are expected never to disagree is redundancy worth having only because a disagreement is
+    // then a finding about one of the two, not about the session. If this ever fires on real input,
+    // do not relax it — find out which instrument is wrong.
+    //
+    // It is reachable in test through the `readVerdictArtifact` seam, which is why it is not dead
+    // code by this repo's own standard: an untestable guard is one someone deletes.
     const atHead = read(newHead);
     if (!pre.subject || !atHead.subject || atHead.subject !== pre.subject) {
       return result(
@@ -733,10 +816,35 @@ function opt(name, fallback = null) {
   return v;
 }
 
-// The repo flag is DELIBERATELY ABSENT — see the refusal in produceVerdict(). Offering a flag that
-// selects a tree nothing downstream honours is worse than not offering one.
-const KNOWN = new Set(['--json', '--dry-run', '--judge-dir', '--launcher', '--timeout', '--git-ref', '--help']);
-const TAKES_VALUE = new Set(['--judge-dir', '--launcher', '--timeout', '--git-ref']);
+// ── EVERY FLAG DECLARES WHAT IT SELECTS, AND ONE ROLE IS FORBIDDEN ──────────────────────────
+//
+// Two flags have now been removed for one reason. `--repo` chose the SUBJECT — the tree that gets
+// gated. `--git-ref` chose the JUDGE — the tree that does the gating, which is strictly worse, and
+// it survived the round that deleted `--repo` because that round fixed the instance and this list
+// did not exist. The class is: **an operator-supplied value that selects what gets MEASURED rather
+// than what gets REPORTED.** A guard against it that lives in someone's memory has already failed
+// once, so it lives here, and `produce-verdict.test.mjs` fails on any flag with no role and on any
+// flag declaring the forbidden one.
+//
+//   selects-what-is-measured   FORBIDDEN. The subject and the judge are not the operator's to pick.
+//   selects-where             a location, not a content. Must still be canonicalised and contained.
+//   selects-what-runs         the launcher. It can stop the panel running; it CANNOT fabricate a
+//                             verdict, because the decision is read from the artifact and the
+//                             session is now bounded to committing exactly one verdict path.
+//   bounds                    a limit on time or size.
+//   reporting                 changes the output, never the measurement.
+export const FLAG_ROLES = {
+  '--json': 'reporting',
+  '--help': 'reporting',
+  '--dry-run': 'bounds',
+  '--timeout': 'bounds',
+  '--judge-dir': 'selects-where',
+  '--launcher': 'selects-what-runs',
+};
+export const FORBIDDEN_FLAG_ROLE = 'selects-what-is-measured';
+
+const KNOWN = new Set(Object.keys(FLAG_ROLES));
+const TAKES_VALUE = new Set(['--judge-dir', '--launcher', '--timeout']);
 
 // USAGE IS NOT A TERMINAL STATE. `--help` exited 0, which is the code documented as the ONE route
 // to "a verdict exists and binds" — a second way for a caller to read success out of a run that
@@ -764,9 +872,10 @@ function main() {
   }
   if (flag('--help')) {
     process.stdout.write(
-      'usage: produce-verdict.mjs [--dry-run] [--json] [--judge-dir D] [--launcher BIN] [--timeout MS] [--git-ref R]\n' +
+      'usage: produce-verdict.mjs [--dry-run] [--json] [--judge-dir D] [--launcher BIN] [--timeout MS]\n' +
       '  PRODUCED 0 · BLOCKED 1 · REFUSED 2 · NOT_REQUIRED 3 · usage 64\n' +
-      '  It gates the tree it ships in; there is no repo flag, because run-gate.mjs reads none.\n',
+      `  It gates the tree it ships in and judges from ${JUDGE_REF}. Neither is selectable: an\n` +
+      '  operator who picks the subject or the judge is picking the answer.\n',
     );
     return EXIT_USAGE;
   }
@@ -780,7 +889,6 @@ function main() {
     judgeDir: opt('--judge-dir'),
     launcher: [opt('--launcher', 'claude')],
     timeoutMs: Number.isFinite(timeout) && timeout > 0 ? timeout : 60 * 60 * 1000,
-    gitRef: opt('--git-ref', 'origin/main'),
     });
   } catch (e) {
     if (e instanceof UsageError) {

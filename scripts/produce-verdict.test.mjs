@@ -14,6 +14,10 @@ import { fileURLToPath } from 'node:url';
 import {
   OUTCOME,
   EXIT,
+  JUDGE_REF,
+  FLAG_ROLES,
+  FORBIDDEN_FLAG_ROLE,
+  VERDICT_DIR,
   WORKFLOW_DIR,
   REQUIRED_AGENTS,
   CRITICAL_PATHS,
@@ -267,7 +271,199 @@ test('F-2 — a session that commits MORE than a verdict is REFUSED, not PRODUCE
     },
   });
   assert.equal(r.outcome, OUTCOME.REFUSED);
-  assert.match(r.reason, /moved the reviewed bytes/);
+  // The PATH BOUND fires first now and is the stronger refusal: it names what was committed rather
+  // than only that the hash moved. The subject-equality branch below it is a second instrument over
+  // the same property — see its comment in the subject.
+  assert.match(r.reason, /may commit exactly one/);
+});
+
+test('F-2 — the subject-equality branch is REACHABLE, so it is not a guard nobody can break', () => {
+  const { repo, prSha } = realHarnessRepo();
+  const mine = 'c'.repeat(64);
+  let call = 0;
+  const r = produceVerdict({
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
+    deps: {
+      runGateRunner: routerRunner(routerJson(repo, prSha)),
+      // Two reads, two DIFFERENT subjects — the disagreement the second instrument exists to catch.
+      readVerdictArtifact: () => (call++ === 0
+        ? { outcome: OUTCOME.REFUSED, established: false, reason: 'absent', subject: mine }
+        : { outcome: OUTCOME.PRODUCED, established: true, reason: 'match', subject: 'd'.repeat(64) }),
+      launch: () => {
+        // Commit exactly the one path the bound allows, so the PATH check passes and control
+        // reaches the equality.
+        fs.mkdirSync(path.join(repo, VERDICT_DIR), { recursive: true });
+        fs.writeFileSync(path.join(repo, VERDICT_DIR, `${mine}.json`), '{}');
+        g(repo, ['add', VERDICT_DIR]);
+        g(repo, ['commit', '-qm', 'verdict']);
+        return { status: 0, stdout: '' };
+      },
+    },
+  });
+  assert.equal(r.outcome, OUTCOME.REFUSED);
+  assert.match(r.reason, /moved the reviewed bytes/, 'the equality branch must be the one that fired');
+});
+
+// ── A-1 · the judge ref is not the operator's to choose, and the CLASS is checkable ──────────
+
+test('A-1 — no flag may select what gets measured, and every flag declares a role', () => {
+  // The registry IS the guard. `--repo` chose the subject and was deleted; `--git-ref` chose the
+  // judge, survived that round, and restored the provenance exploit verbatim through a flag. A rule
+  // that lives in someone's memory has already failed once here.
+  for (const [flag, role] of Object.entries(FLAG_ROLES)) {
+    assert.notEqual(role, FORBIDDEN_FLAG_ROLE, `${flag} selects what gets measured — that is the class, not an instance`);
+    assert.ok(typeof role === 'string' && role.length > 3, `${flag} has no role`);
+  }
+  // CONTROL: the registry can express the forbidden value, so the assertion above is not vacuous.
+  assert.equal(typeof FORBIDDEN_FLAG_ROLE, 'string');
+  assert.ok(FORBIDDEN_FLAG_ROLE.length > 3);
+
+  // And the two removed flags stay removed — at the CLI and in the advertised usage.
+  const help = spawnCli(['--help']);
+  for (const gone of ['--git-ref', '--repo']) {
+    assert.ok(!help.stdout.includes(gone), `--help still advertises ${gone}`);
+    assert.equal(spawnCli([gone, 'HEAD']).status, 64, `${gone} is still accepted`);
+  }
+  assert.ok(help.stdout.includes('--judge-dir'), 'CONTROL: --help does advertise a flag that survives');
+});
+
+test('A-1 — the judge ref is a constant, so naming the PR tree cannot make it the judge', () => {
+  const { repo, prSha } = repoWithHostilePr();
+  const judge = tmp('pv-judge-');
+  produceVerdict({
+    repo, harnessRoot: repo, judgeDir: judge,
+    // A caller passing a ref is ignored: policy is not a parameter.
+    gitRef: 'HEAD',
+    deps: {
+      runGateRunner: routerRunner(routerJson(repo, prSha)),
+      verdictRunner: verdictRunner(ABSENT, 1),
+      launch: () => ({ status: 0, stdout: '' }),
+    },
+  });
+  assert.equal(JUDGE_REF, 'origin/main');
+  // The PR's HEAD ships a hostile checker and an edited judge. Neither reached the judging project.
+  assert.match(fs.readFileSync(path.join(judge, 'scripts/verdict.mjs'), 'utf8'), /HONEST CHECKER FROM MAIN/);
+  assert.match(fs.readFileSync(path.join(judge, `${WORKFLOW_DIR}/qa.js`), 'utf8'), /MAIN COPY/);
+  // CONTROL: the PR tree really does hold the hostile pair, so this is provenance and not two
+  // identical files.
+  assert.match(fs.readFileSync(path.join(repo, 'scripts/verdict.mjs'), 'utf8'), /HOSTILE CHECKER/);
+});
+
+// ── A-2 · the session may commit exactly one verdict, for the subject it reviewed ────────────
+
+test('A-2 — a session that also plants verdicts for OTHER subjects is REFUSED', () => {
+  const { repo, prSha } = realHarnessRepo();
+  const r = produceVerdict({
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
+    deps: {
+      runGateRunner: routerRunner(routerJson(repo, prSha)),
+      launch: (argv, opts) => {
+        recordingLauncher(repo, 'PASS')(argv, opts);
+        // Forged records for subjects never reviewed. These are INVISIBLE to the subject hash —
+        // verdict.mjs excludes .qa/verdicts/*.json from every subject — so the equality check alone
+        // passes and this arm returned EXIT 0 PRODUCED before the path bound existed.
+        fs.mkdirSync(path.join(repo, VERDICT_DIR), { recursive: true });
+        for (const n of ['1', '2', '3']) {
+          fs.writeFileSync(path.join(repo, VERDICT_DIR, `${n.repeat(64)}.json`),
+            JSON.stringify({ subject: n.repeat(64), verdict: 'PASS', by: 'forged', tier: 'full' }));
+        }
+        g(repo, ['add', VERDICT_DIR]);
+        g(repo, ['commit', '-qm', 'plant']);
+        return { status: 0, stdout: '' };
+      },
+    },
+  });
+  assert.equal(r.outcome, OUTCOME.REFUSED, `expected REFUSED, got ${r.outcome}: ${r.reason}`);
+  assert.match(r.reason, /may commit exactly one/);
+  // The forged records really were committed — so this refusal is about the check, not about the
+  // planting having failed.
+  const planted = g(repo, ['ls-tree', '-r', '--name-only', 'HEAD', VERDICT_DIR]);
+  assert.ok(planted.includes('1'.repeat(64)), 'CONTROL: the plant must actually have landed');
+
+  // NEGATIVE CONTROL, same fixture shape: the honest single-verdict session still PRODUCES.
+  const clean = realHarnessRepo();
+  const ok = produceVerdict({
+    repo: clean.repo, harnessRoot: clean.repo, judgeDir: tmp('pv-judge-'),
+    deps: { runGateRunner: routerRunner(routerJson(clean.repo, clean.prSha)), launch: recordingLauncher(clean.repo, 'PASS') },
+  });
+  assert.equal(ok.outcome, OUTCOME.PRODUCED, `the honest arm must still pass: ${ok.reason}`);
+});
+
+// ── B-1 · the exit map is pinned BY VALUE, because a SWAP is stronger than a fold ─────────────
+
+test('A-2 — ONE verdict file with the WRONG subject in its name is REFUSED', () => {
+  // The count bound alone does not catch this: exactly one path is committed, under the right
+  // directory, and only its BASENAME is wrong. Measured as a mutation gap — relaxing the basename
+  // check to a directory-prefix check was SILENT across the whole suite until this cell existed.
+  const { repo, prSha } = realHarnessRepo();
+  const other = 'e'.repeat(64);
+  const r = produceVerdict({
+    repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
+    deps: {
+      runGateRunner: routerRunner(routerJson(repo, prSha)),
+      launch: () => {
+        fs.mkdirSync(path.join(repo, VERDICT_DIR), { recursive: true });
+        fs.writeFileSync(path.join(repo, VERDICT_DIR, `${other}.json`),
+          JSON.stringify({ subject: other, verdict: 'PASS', by: 'wrong-subject' }));
+        g(repo, ['add', VERDICT_DIR]);
+        g(repo, ['commit', '-qm', 'a verdict for something else']);
+        return { status: 0, stdout: '' };
+      },
+    },
+  });
+  assert.equal(r.outcome, OUTCOME.REFUSED, `expected REFUSED, got ${r.outcome}: ${r.reason}`);
+  assert.match(r.reason, /may commit exactly one/);
+  assert.equal(g(repo, ['diff', '--name-only', 'HEAD~1..HEAD']).trim(), `${VERDICT_DIR}/${other}.json`,
+    'CONTROL: exactly one path was committed, so the count bound is not what refused it');
+});
+
+test('B-1 — the four exit codes are pinned by value, not by shape', () => {
+  assert.equal(EXIT[OUTCOME.PRODUCED], 0);
+  assert.equal(EXIT[OUTCOME.BLOCKED], 1);
+  assert.equal(EXIT[OUTCOME.REFUSED], 2);
+  assert.equal(EXIT[OUTCOME.NOT_REQUIRED], 3);
+  // The previous assertions — size 4, PRODUCED 0, and two notEquals — were all satisfied by a SWAP
+  // of BLOCKED and REFUSED, which is a stronger error than the fold the header forbids: it reports
+  // "the panel found defects" for a gate that could not run.
+  assert.deepEqual(Object.entries(EXIT).sort(), [['BLOCKED', 1], ['NOT_REQUIRED', 3], ['PRODUCED', 0], ['REFUSED', 2]]);
+});
+
+// ── B-2 · a checker that says it failed has not passed anything ───────────────────────────────
+
+test('B-2 — ok:true at a non-zero exit is REFUSED, not PRODUCED', () => {
+  for (const status of [1, 2, 3, 127]) {
+    const r = readVerdictArtifact({
+      tree: '/t', ref: SHA, verdictBin: '/j/v.mjs',
+      runner: () => ({ status, stdout: JSON.stringify({ ok: true, reason: 'match', subject: SHA, tier: 'full' }) }),
+    });
+    assert.equal(r.outcome, OUTCOME.REFUSED, `ok:true at exit ${status} must not be a pass`);
+    assert.match(r.reason, /exited/);
+  }
+  // CONTROL: the identical payload at exit 0 IS a pass, so the refusal is about the exit code.
+  const good = readVerdictArtifact({
+    tree: '/t', ref: SHA, verdictBin: '/j/v.mjs',
+    runner: () => ({ status: 0, stdout: JSON.stringify({ ok: true, reason: 'match', subject: SHA, tier: 'full' }) }),
+  });
+  assert.equal(good.outcome, OUTCOME.PRODUCED);
+});
+
+// ── B-3 · an operator judge dir is canonicalised like the default one ────────────────────────
+
+test('B-3 — an operator-supplied judge dir is canonicalised', () => {
+  const { repo, prSha } = repoWithHostilePr();
+  const real = tmp('pv-jd-');
+  const link = path.join(tmp('pv-jdlink-'), 'l');
+  fs.symlinkSync(real, link);
+  const r = produceVerdict({
+    repo, harnessRoot: repo, judgeDir: link,
+    deps: {
+      runGateRunner: routerRunner(routerJson(repo, prSha)),
+      verdictRunner: verdictRunner(ABSENT, 1),
+      launch: () => ({ status: 0, stdout: '' }),
+    },
+  });
+  assert.equal(r.judgeDir, fs.realpathSync(real), 'the reported judge dir must be canonical');
+  assert.notEqual(r.judgeDir, link, 'CONTROL: the symlinked and canonical forms really do differ');
 });
 
 // ── F-1 · the tree that gets routed ──────────────────────────────────────────────────────────
@@ -737,7 +933,7 @@ test('F-4 — usage is exit 64, never 0: there is exactly one route to PRODUCED'
 });
 
 test('F-5 — a flag whose value is missing is REFUSED, never defaulted to the real launcher', () => {
-  for (const args of [['--launcher', '--json'], ['--launcher'], ['--judge-dir', '--dry-run'], ['--git-ref']]) {
+  for (const args of [['--launcher', '--json'], ['--launcher'], ['--judge-dir', '--dry-run'], ['--timeout']]) {
     const r = spawnCli(args);
     assert.equal(r.status, 64, `${args.join(' ')} should be a usage error, got ${r.status}`);
     assert.match(r.stderr, /needs a value/);
