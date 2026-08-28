@@ -1774,3 +1774,29 @@ test('A-2 — an explicit --files list decouples the classification, and verdict
   const both = json(['--ref', `origin/main..${HEAD_NOW}`, '--files', 'README.md']);
   assert.match(both.verdictRef.reason, /"\.\."/, 'the --files reason masked a malformed range');
 });
+
+test('E-4 — no SOURCE comment freezes a live test count', () => {
+  // I reported this class as swept having removed one of two copies; the survivor was the source
+  // comment, which is the one that actually re-evaluates. Third time in this PR that a class was
+  // named and swept one site short. A grep produces a list you can count; a resolution to be
+  // thorough produces a feeling. So this is the grep, kept.
+  //
+  // DELIBERATELY SCOPED TO THE SOURCE FILES. Past-tense provenance in this test file — "disabling
+  // the refusal scored 111 pass, 0 fail" — is a record of one measured run, and a reviewer used
+  // exactly those figures to CONFIRM a disclosure rather than rediscover it. A live prediction
+  // ("swapping the branches turns N tests red") re-evaluates on every edit and rots. Different
+  // things; only the second is banned here.
+  const PREDICATE = /\d+\s+tests?\s+(red|green)/gi;
+  for (const f of ['run-gate.mjs', 'verdict.mjs']) {
+    const src = fs.readFileSync(path.join(REPO, 'scripts', f), 'utf8');
+    const frozen = src.match(PREDICATE) || [];
+    assert.deepEqual(frozen, [], `scripts/${f} freezes a live test count: ${frozen.join(' | ')}`);
+  }
+  // CONTROL THAT MUST FIRE: the predicate can match the exact string that was there, so the empty
+  // results above are a real zero and not a regex that matches nothing.
+  assert.deepEqual(
+    'swapping the two branches turns 29 tests red.'.match(PREDICATE),
+    ['29 tests red'],
+    'the predicate cannot find the very string this test exists to ban',
+  );
+});

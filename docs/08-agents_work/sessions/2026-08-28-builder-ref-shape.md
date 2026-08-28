@@ -110,8 +110,16 @@ sentence. The deleted test asserted `/tip/` in that stderr — retargeting it wo
 `console.log(\n JSON.stringify(…)\n)` was invisible — flattened first now; `gates.yml` was
 invertible with all five E5 pins green, so the **prohibition** is pinned, not only the advice;
 `--files` decouples the classification from the range and `verdictRef` says so; types are pinned
-alongside key-set equality; and a comment froze "29 tests red" where the true figure was 32 — the
-number is gone rather than corrected.
+alongside key-set equality; and a comment froze a test count where the figure had already moved —
+the number is deleted rather than corrected, because a corrected number rots on the next edit.
+
+**That sweep was one site short and a reviewer caught it.** I reported the frozen count as deleted
+having removed one of two live copies; the survivor was the source comment in `run-gate.mjs`, which
+is the one that actually re-evaluates. Census run properly this time, `grep -rn '29 tests' scripts
+.claude docs` -> **3 sites**: the live prediction in `run-gate.mjs` (deleted), this file's own claim
+about it (corrected here), and a different lane's dated session record, which is provenance and
+correctly frozen. **Third instance in this PR of naming a class and sweeping it one site short** —
+the cure is to grep, count, and pin, not to resolve to be thorough.
 
 **Mutation matrix — every one of the reviewers' six that scored 112 pass, 0 fail now fires.**
 

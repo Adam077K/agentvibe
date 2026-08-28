@@ -214,7 +214,8 @@ function resolvedRef() {
 // measure the wrong code — the exact defect the argument was added to close.
 // THE ONE PLACE THIS STRING IS SPLIT. There were three copies of the `...`-before-`..` precedence
 // — refTip, refBase and pinRefTip — and the precedence is LOAD-BEARING, not style: swapping the two
-// branches turns 29 tests red. `prefix` keeps the separator and the untrimmed left side so
+// branches turns a large part of the suite red — run the mutation rather than trusting a count
+// written here, which is why none is written. `prefix` keeps the separator and the untrimmed left side so
 // pinRefTip rebuilds the caller's string byte for byte; `base` is trimmed because it is compared
 // against a ref name. Those are different jobs, which is why both are returned rather than one
 // being derived from the other at each call site.
