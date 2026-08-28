@@ -147,6 +147,14 @@ gates:
       --require exits 1, and gate NOT required with --require also exits 0. Without --require an
       exit code means nothing. With it, exit 1 means you must run the gate, not that anything
       failed.
+      WHEN THE GATE IS NOT REQUIRED, invocation is null and there ARE no args to pass through -
+      and the top-level ref of that object is NOT a substitute for them. That ref is a RANGE
+      (origin/main...sha) for a human to read; scripts/verdict.mjs --ref takes a SINGLE revision
+      and derives its own base as merge-base(origin/main, ref). Handing it the range exits 2 with
+      a git error about an invalid object name. The object names both halves: pass tip, never ref.
+      verdict.mjs refuses a range by name rather than converting one, because accepting A...B
+      would be a second implementation of the range, and a subject reproducible from one ref is
+      what lets a recorded verdict survive a move of the base under it. PR 77 was closed over that.
 
   - id: founder-approval
     kind: human
