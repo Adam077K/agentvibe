@@ -212,31 +212,115 @@ function resolvedRef() {
 // Exits 2 rather than emitting a caveat. This script's contract is that the invocation it prints is
 // runnable, and an invocation naming a tree that does not hold the ref is one whose oracle would
 // measure the wrong code — the exact defect the argument was added to close.
-function refTip(ref) {
+// THE ONE PLACE THIS STRING IS SPLIT. There were three copies of the `...`-before-`..` precedence
+// — refTip, refBase and pinRefTip — and the precedence is LOAD-BEARING, not style: swapping the two
+// branches turns 29 tests red. `prefix` keeps the separator and the untrimmed left side so
+// pinRefTip rebuilds the caller's string byte for byte; `base` is trimmed because it is compared
+// against a ref name. Those are different jobs, which is why both are returned rather than one
+// being derived from the other at each call site.
+function splitRange(ref) {
   const dots3 = ref.lastIndexOf('...');
-  if (dots3 !== -1) return ref.slice(dots3 + 3).trim();
+  if (dots3 !== -1) {
+    return { base: ref.slice(0, dots3).trim(), prefix: ref.slice(0, dots3 + 3), tip: ref.slice(dots3 + 3).trim() };
+  }
   const dots2 = ref.lastIndexOf('..');
-  if (dots2 !== -1) return ref.slice(dots2 + 2).trim();
-  return ref.trim();
+  if (dots2 !== -1) {
+    return { base: ref.slice(0, dots2).trim(), prefix: ref.slice(0, dots2 + 2), tip: ref.slice(dots2 + 2).trim() };
+  }
+  return { base: null, prefix: null, tip: ref.trim() };
 }
 
-// The other half of the same split: everything LEFT of the separator, or null when `ref` names a
-// single revision rather than a range. resolveTree() computed this inline as
-// `ref.slice(0, ref.length - tip.length).replace(/\.{2,3}$/, '')` and now calls this instead —
-// two implementations of "which part of this string is the base" is the same defect the `base`/
-// `tip` fields exist to close, and leaving one in the file that closes it would be a poor joke.
+function refTip(ref) {
+  return splitRange(ref).tip;
+}
+
+// Everything LEFT of the separator, or null when `ref` names a single revision. resolveTree()
+// computed this inline as `ref.slice(0, ref.length - tip.length).replace(/\.{2,3}$/, '')`, which
+// mangled a trailing-whitespace ref into truncated garbage ("origin/main...HEAD  " -> "origin/main...HE").
 function refBase(ref) {
-  const dots3 = ref.lastIndexOf('...');
-  if (dots3 !== -1) return ref.slice(0, dots3).trim();
-  const dots2 = ref.lastIndexOf('..');
-  if (dots2 !== -1) return ref.slice(0, dots2).trim();
-  return null;
+  return splitRange(ref).base;
+}
+
+// ── THE ONE VALUE IT IS SAFE TO HAND TO `scripts/verdict.mjs --ref` ──────────────────────────
+//
+// This replaces a bare `tip` field, which was a trap in two directions at once. Both are measured,
+// and both fail SILENTLY, which is why the field carries its own guarantee instead of a document
+// describing one.
+//
+// 1. A SYMBOLIC TIP FOLLOWS THE BRANCH. `--ref origin/main...my-branch` emitted
+//    `tip: "my-branch"` while the invocation beside it carried the resolved sha — so the guarantee
+//    varied by code path, invisibly. It matters because the mandated recording order MOVES the
+//    branch after the gate has run (session file -> commit -> record). Measured end to end: a
+//    verdict recorded against a pinned sha then re-checked exits 1 and forces a re-run, while the
+//    same recording against a symbolic tip exits 0 — a PASS bound to a diff the gate never saw,
+//    covering files nobody reviewed, with nothing anywhere exiting non-zero.
+//    `run-gate.mjs` already states this in capitals about the INVOCATION tip: "THE EMITTED TIP IS
+//    ALWAYS THE RESOLVED SHA, AND THE GATE NOW REQUIRES THAT." A second tip field that did not hold
+//    it was this router contradicting itself.
+//
+// 2. verdict.mjs HARDCODES ITS BASE — `mergeBase(repo, ref, base = 'origin/main')`. So a tip alone
+//    reproduces what this router classified only when the range base really is origin/main.
+//    Measured with `--ref d1294a4...a679b495`: the router classifies 38 files and floors
+//    IRREVERSIBLE, verdict.mjs hashes 6 from the tip alone and floors FULL. A consumer told to take
+//    the tip and drop the range loses two tiers with no error — and choosing the base is something
+//    an author who wants the lower tier can simply do.
+//
+// So: a resolved sha when both conditions hold, and null WITH THE REASON when either does not.
+// Never a plausible string that quietly means something else. This cannot throw and cannot refuse
+// the run — the ungated path stays cheap, which is the property that keeps people running it.
+function verdictRefFor(ref) {
+  const { base, tip } = splitRange(ref);
+  if (base === null) {
+    return {
+      ref: null,
+      reason:
+        `"${ref}" names a single revision, not a range. This router diffed it against the working ` +
+        'tree; verdict.mjs would diff merge-base(origin/main, ref)..ref. Those are different subjects.',
+    };
+  }
+  if (base !== 'origin/main') {
+    return {
+      ref: null,
+      reason:
+        `the range base is "${base}", not origin/main. verdict.mjs hardcodes origin/main as its ` +
+        'base, so a subject computed from this tip would cover a different set of files than this ' +
+        'router just classified, and the tier can differ with nothing reporting it. Re-run with ' +
+        '--ref origin/main...<tip> if that is the comparison you want.',
+    };
+  }
+  let sha = '';
+  try {
+    sha = execFileSync('git', ['rev-parse', '--verify', '--quiet', `${tip}^{commit}`], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
+  } catch {
+    sha = '';
+  }
+  if (!/^[0-9a-f]{40}$/.test(sha)) {
+    return {
+      ref: null,
+      reason:
+        `the tip "${tip}" does not resolve to a commit in ${REPO_ROOT}, so there is no sha to pin ` +
+        'and a verdict recorded against it would bind to nothing checkable.',
+    };
+  }
+  return { ref: sha, reason: null };
 }
 
 function refuseTree(reason) {
   // `--json` callers get the reason as JSON on stdout, not an empty stream and a stderr line.
   // `scripts/verdict.mjs` tells agents to run this command; a machine consumer that reads zero
   // bytes at exit 2 has to guess, and the guess it will make is "no output means nothing to do".
+  //
+  // THIS IS A REFUSAL OBJECT AND IT DELIBERATELY CARRIES NONE OF THE DECISION KEYS. It has four:
+  // error, reason, gateRequired, invocation. `error` is the discriminator and a consumer must read
+  // it FIRST — nothing was decided here, so `ref`, `floor`, `drivers`, `verdictRef` and the rest
+  // would every one of them be a fabricated answer to a question this process could not resolve.
+  // The sibling comment's promise is therefore scoped to the DECISION sites, not to "every emit
+  // site": it was written as "always" and that was false here for seven keys. Pinned by a census
+  // test that counts the emit sites in this source, so a fifth one cannot appear unnoticed.
   if (process.argv.includes('--json')) {
     console.log(JSON.stringify({ error: 'tree-unverified', reason, gateRequired: true, invocation: null }, null, 2));
   }
@@ -326,10 +410,8 @@ function resolveTree(ref) {
 // a line earlier and already checked against HEAD: same commit, stated in the form that survives
 // being pasted somewhere else. That is the identical argument resolvedRef() makes for HEAD.
 function pinRefTip(ref, tipSha) {
-  const dots3 = ref.lastIndexOf('...');
-  if (dots3 !== -1) return `${ref.slice(0, dots3 + 3)}${tipSha}`;
-  const dots2 = ref.lastIndexOf('..');
-  if (dots2 !== -1) return `${ref.slice(0, dots2 + 2)}${tipSha}`;
+  const { prefix } = splitRange(ref);
+  if (prefix !== null) return `${prefix}${tipSha}`;
   return tipSha;
 }
 
@@ -363,20 +445,26 @@ function main() {
   const files = explicit.length ? explicit : changedFiles(ref);
 
   if (!files.length) {
-    // Same keys as the main emit site below, including `invocation: null`. This object used to
-    // omit `invocation` entirely while its sibling emitted null for the same condition, so a
-    // consumer following gates.yml — "pass invocation.args through UNMODIFIED" — read `undefined`
-    // here and fell back to the only ref-shaped field on offer, which is the range.
+    // THE SAME NINE KEYS AS THE MAIN EMIT SITE. Not "roughly the same" — identical, and asserted by
+    // key-set equality rather than by a list of presence checks, because presence checks let a key
+    // be deleted from one site in silence. That is not hypothetical: `drivers` and `gateSelfReview`
+    // were added here and could each be deleted straight back out with all 105 tests still green.
+    //
+    // This object used to omit `invocation` entirely while its sibling emitted null for the same
+    // condition, so a consumer following gates.yml — "pass invocation.args through UNMODIFIED" —
+    // read `undefined` here and fell back to the only ref-shaped field on offer, which was a range
+    // verdict.mjs refuses. `reason` is the one key that carries a value here and null there, which
+    // is why it is present on BOTH: a key that exists only where it has something to say cannot be
+    // read without probing.
     const empty = {
       ref,
-      base: refBase(ref),
-      tip: refTip(ref),
       files: 0,
       floor: 'trivial',
       gateRequired: false,
       reason: 'empty diff',
       drivers: [],
-      gateSelfReview: null,
+      gateSelfReview: gateSelfReview(files, ref),
+      verdictRef: verdictRefFor(ref),
       invocation: null,
     };
     console.log(asJson ? JSON.stringify(empty, null, 2) : `No changed files for ${ref}. Nothing to gate.`);
@@ -417,7 +505,17 @@ function main() {
 
   if (asJson) {
     console.log(JSON.stringify(
-      { ref, base: refBase(ref), tip: refTip(ref), files: files.length, floor, gateRequired, drivers, gateSelfReview: selfReview, invocation },
+      {
+        ref,
+        files: files.length,
+        floor,
+        gateRequired,
+        reason: null,
+        drivers,
+        gateSelfReview: selfReview,
+        verdictRef: verdictRefFor(ref),
+        invocation,
+      },
       null,
       2,
     ));

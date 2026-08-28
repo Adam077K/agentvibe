@@ -42,7 +42,13 @@
 //   node scripts/check-gates.mjs                       # every finding; exit 1 if any
 //   node scripts/check-gates.mjs check --json
 //   node scripts/check-gates.mjs resolve qa-verdict    # actually run the gate
-//   node scripts/check-gates.mjs resolve qa-verdict -- --ref origin/main...HEAD
+//   node scripts/check-gates.mjs resolve qa-verdict -- --ref HEAD
+//
+// The example above named `--ref origin/main...HEAD` and returned exit 3 / unresolved when run
+// verbatim: `verdict.mjs --ref` takes a SINGLE revision and computes merge-base(origin/main, ref)
+// itself, so a range reaches git as an object name and is refused. A copy-pasteable instruction
+// that does not run is worse than none. For a ref that is not checked out, take verdictRef.ref
+// from `node scripts/run-gate.mjs --json` — it is sha-pinned, or null with the reason why.
 //
 // `resolve` exit codes, which are NOT the exit codes of the command it ran:
 //   0  pass         the gate's command exited 0

@@ -409,8 +409,12 @@ function main() {
   // rather than merged over exactly that, and `scripts/classify.mjs`'s header already wrote the
   // ending for two implementations of one concept.
   //
-  // Safe to key on `..`: git-check-ref-format forbids `..` anywhere in a refname, so this shape is
-  // a range or a malformed ref and is never a legitimate name being turned away.
+  // Keying on `..` is safe for REF NAMES — git-check-ref-format forbids `..` anywhere in one — but
+  // be exact about the boundary, because `--ref` reaches git as a REVISION EXPRESSION, and that
+  // grammar is strictly larger than a refname. Four real expressions contain `..` and are refused
+  // here: `:/a..b`, `HEAD^{/a..b}`, `:/..` and `HEAD^{/..}` — commit-message searches. Measured
+  // against every call site in this repository: ZERO are affected, and a search expression is not
+  // a thing a verdict is recorded against. Named rather than left as an unstated assumption.
   if (ref.includes('..')) {
     throw new Refusal(
       `--ref takes a single revision, not a range, and got "${ref}". This program computes its own ` +

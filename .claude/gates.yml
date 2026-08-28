@@ -151,7 +151,16 @@ gates:
       and the top-level ref of that object is NOT a substitute for them. That ref is a RANGE
       (origin/main...sha) for a human to read; scripts/verdict.mjs --ref takes a SINGLE revision
       and derives its own base as merge-base(origin/main, ref). Handing it the range exits 2 with
-      a git error about an invalid object name. The object names both halves: pass tip, never ref.
+      the message that --ref takes a single revision, not a range.
+      THE FIELD TO USE IS verdictRef, AND READ BOTH OF ITS KEYS. verdictRef.ref is a resolved sha
+      when it is safe to hand onward and null when it is not; verdictRef.reason says which. Do not
+      substitute the top-level ref, and do not rebuild a tip by splitting it yourself. A symbolic
+      tip FOLLOWS THE BRANCH, and the recording order moves the branch after the gate has run, so a
+      verdict recorded against one binds to a diff the gate never saw with nothing exiting
+      non-zero. A tip is equivalent to the range only when the base is origin/main, which
+      verdict.mjs hardcodes: at any other base the router and verdict.mjs classify different file
+      sets and the tier can drop in silence. verdictRef checks both conditions and refuses instead
+      of guessing.
       verdict.mjs refuses a range by name rather than converting one, because accepting A...B
       would be a second implementation of the range, and a subject reproducible from one ref is
       what lets a recorded verdict survive a move of the base under it. PR 77 was closed over that.
