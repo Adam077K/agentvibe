@@ -591,6 +591,54 @@ export function materialiseJudgeProject({
  * subject-mismatch, tier-drift, an unreadable payload, an unrecognised verdict string — is REFUSED.
  * An unknown value must never drift into "the panel found defects" any more than into "it passed".
  */
+// EVERY RUN MATERIALISED A FULL TREE AND NOTHING EVER REMOVED IT. Twenty-five complete copies
+// accumulated in one reviewer's $TMPDIR in a single session, each a whole checkout of the judging
+// project. This removes the ones WE created, at process exit.
+//
+// WHAT THIS DOES NOT COVER, STATED RATHER THAN DISCOVERED. `process.on('exit')` and the signal
+// handlers below run for a normal return, a thrown exception, and an operator's Ctrl-C. They do
+// NOT run for SIGKILL, for a harness that kills this process group on a timeout, or for a power
+// loss — and a gate session is exactly the long-running thing a timeout reaches first. So this
+// bounds the leak, it does not eliminate it: the honest claim is "one directory per hard-killed
+// run" instead of "one per run". A `finally` would have been weaker still, because it does not
+// survive a signal at all.
+//
+// AN OPERATOR'S --judge-dir IS NEVER REMOVED. Naming a directory is how someone asks to keep the
+// tree, and deleting a path the caller chose would destroy evidence they asked for. Only the
+// mkdtemp path is ours to reclaim. `QA_KEEP_JUDGE_DIR=1` keeps ours too, for diagnosing a REFUSED
+// run whose whole explanation is in the materialised tree.
+const EPHEMERAL_JUDGE_DIRS = new Set();
+let judgeDirCleanupArmed = false;
+
+/** Remove every judge project this process created. Safe to call twice; never throws. */
+export function sweepJudgeDirs() {
+  for (const d of EPHEMERAL_JUDGE_DIRS) {
+    try {
+      fs.rmSync(d, { recursive: true, force: true });
+    } catch {
+      // A directory we cannot remove is not a reason to fail a run that already has its answer.
+    }
+  }
+  EPHEMERAL_JUDGE_DIRS.clear();
+}
+
+/** Register `dir` for removal at exit, unless the operator asked to keep it. */
+export function armJudgeDirCleanup(dir, env = process.env) {
+  if (env.QA_KEEP_JUDGE_DIR) return false;
+  EPHEMERAL_JUDGE_DIRS.add(dir);
+  if (!judgeDirCleanupArmed) {
+    judgeDirCleanupArmed = true;
+    process.on('exit', sweepJudgeDirs);
+    for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+      process.on(sig, () => {
+        sweepJudgeDirs();
+        process.exit(130);
+      });
+    }
+  }
+  return true;
+}
+
 export function readVerdictArtifact({ tree, ref, verdictBin, runner = null }) {
   const argv = [verdictBin, 'check', '--repo', tree, '--ref', ref, '--json'];
   const r = (runner ?? ((a) => spawnSync(process.execPath, a, { cwd: tree, encoding: 'utf8' })))(argv);
@@ -606,8 +654,16 @@ export function readVerdictArtifact({ tree, ref, verdictBin, runner = null }) {
     payload = null;
   }
   if (payload === null || typeof payload.ok !== 'boolean') {
+    // STDERR IS WHERE THE REASON IS, AND IT WAS DISCARDED. `verdict.mjs` writes its refusals to
+    // stderr and exits non-zero with stdout EMPTY, so this evidence read {exit: 2, stdout: ""} —
+    // a record of a failure with the cause deleted. Measured against a 1.5 MB diff: the cause was
+    // an unreadable subject and nothing downstream could say so.
     return result(OUTCOME.REFUSED, `verdict.mjs check produced no readable JSON (exit ${r.status})`, {
-      verdict_check: { exit: r.status, stdout: (r.stdout || '').slice(0, 400) },
+      verdict_check: {
+        exit: r.status,
+        stdout: (r.stdout || '').slice(0, 400),
+        stderr: (r.stderr || '').slice(0, 400),
+      },
     });
   }
 
@@ -761,7 +817,10 @@ export function produceVerdict(o = {}) {
   // not, so `/tmp/x` vs `/private/tmp/x` made `verdict.mjs`'s self-invocation guard compare unequal
   // — the judge's checker then defines everything and returns without running main(), which is
   // fail-closed but permanently unable to produce while reporting it as a checker defect.
+  // Ours to reclaim only when we made it; see armJudgeDirCleanup for what exit-time removal misses.
+  const ephemeral = judgeDir === null || judgeDir === undefined;
   const dir = canonical(judgeDir ?? fs.mkdtempSync(path.join(canonical(os.tmpdir()), 'qa-judge-')));
+  if (ephemeral) armJudgeDirCleanup(dir);
   const judge = (deps.materialiseJudgeProject ?? materialiseJudgeProject)({
     repo, dest: dir, gitRef, workTree: args.tree,
   });
