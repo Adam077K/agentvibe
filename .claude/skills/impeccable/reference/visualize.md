@@ -1,3 +1,8 @@
+> **Scripts not present — run nothing, do it by hand.** There is no
+> `.claude/skills/impeccable/scripts/` directory in this repository and no `impeccable` package is
+> installed, so **every `*.mjs` command below will fail.** Each one names a step: carry it out yourself.
+> The procedure around the commands is intact and still applies. Full note: [SKILL.md](../SKILL.md).
+
 # Visualize: Direction Comps & Asset Production
 
 Load this from [new-work.md](new-work.md) on a comp-led build, when image generation is available (a harness-native tool or the API fallback context.mjs reports). A code-led execution contract skips this file by design, not by drift: its ambition lives in the written direction contract and is audited in behavior, so do not load it for a code-led round. PRODUCT.md and DESIGN.md are preconditions. New-work has already resolved the visual world; this file must not reopen it.
