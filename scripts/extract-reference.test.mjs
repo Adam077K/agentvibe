@@ -420,6 +420,130 @@ test('robots wildcards and the $ anchor are honoured', () => {
   assert.equal(robotsPathMatches('/private', '/public'), false);
 });
 
+// ── THE MATCHER IS REACHED BEFORE ANY PAGE LOADS, SO ITS COST IS AN ATTACK SURFACE ──────────────
+//
+// `robotsPathMatches` used to compile its pattern into `new RegExp`, turning every `*` into an
+// unbounded quantifier and every adjacent pair into a nested one. The pattern comes from a
+// robots.txt on a host the operator points at, it is evaluated synchronously on the only thread,
+// and nothing on that path carries a timeout. Measured 2026-08-29 on the regex form, pattern
+// `"/" + "*a"×N + "b"` against a 59-character path:
+//
+//   N=3   0.2ms      N=5   18.5ms      N=7  1273.2ms
+//   N=4   1.6ms      N=6  168.4ms      ~9x per additional star
+//
+// Nine bytes of robots.txt bought three orders of magnitude. These two tests are what stops the
+// regex form coming back: the first pins the SEMANTICS against the implementation it replaced, so
+// the cure cannot quietly change any verdict; the second pins the COST, because a matcher that is
+// correct and exponential is the defect being fixed.
+
+/**
+ * The implementation this replaced, verbatim, as a differential oracle.
+ *
+ * It is here rather than deleted because "the new one is faster" is worth nothing beside "and it
+ * answers identically". A rewrite of a permission check that changes one verdict in ten thousand
+ * is worse than the ReDoS it cures — it silently reads a `Disallow` as an allow.
+ */
+function regexMatcher(pattern, path) {
+  const esc = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+  let re = esc.replace(/[*]/g, '.*');
+  let anchored = false;
+  if (re.endsWith('\\$')) {
+    re = `${re.slice(0, -2)}$`;
+    anchored = true;
+  }
+  return new RegExp(`^${re}${anchored ? '' : ''}`).test(path);
+}
+
+test('the wildcard matcher answers IDENTICALLY to the regex it replaced, exhaustively', () => {
+  const alphabet = ['', '/', 'a', 'b', '.', '*', '$', '?', '-', '_', 'p', 'df'];
+  const paths = [
+    '', '/', '/a', '/a/b', '/a/b.pdf', '/a/b.pdf?x=1', '/private', '/private/x', '/public',
+    '/gallery/', '/gallery/x', '/a$b', '/a.b', '/x?y=*', '/aaa', '/ab', '/ba', '/a/b/c/d.pdf',
+  ];
+  const patterns = [];
+  const build = (cur, depth) => {
+    patterns.push(cur);
+    if (depth === 0) return;
+    for (const c of alphabet) build(cur + c, depth - 1);
+  };
+  build('', 4); // every pattern of up to four tokens from the alphabet above
+
+  let cells = 0;
+  const disagreements = [];
+  for (const pattern of patterns) {
+    for (const path of paths) {
+      cells += 1;
+      const want = regexMatcher(pattern, path);
+      const got = robotsPathMatches(pattern, path);
+      if (want !== got && disagreements.length < 10) {
+        disagreements.push(`pattern=${JSON.stringify(pattern)} path=${JSON.stringify(path)} regex=${want} matcher=${got}`);
+      }
+    }
+  }
+  assert.ok(cells > 400000, `CONTROL: only ${cells} cells compared — too small a space to establish equivalence`);
+  assert.deepEqual(disagreements, [], `the rewrite changed a robots verdict:\n  ${disagreements.join('\n  ')}`);
+
+  // CONTROL over the ORACLE. A differential test whose two sides are the same code proves nothing,
+  // so check the oracle can actually disagree with something.
+  assert.notEqual(regexMatcher('/a', '/a'), regexMatcher('/a', '/b'), 'CONTROL: the oracle is not discriminating');
+});
+
+test('a star-dense robots pattern costs a BOUND, not an exponential — the ReDoS is gone', () => {
+  const path = `/${'a'.repeat(58)}`;
+  const REPS = 200;
+  const spend = (stars) => {
+    const pattern = `/${'*a'.repeat(stars)}b`;
+    const started = process.hrtime.bigint();
+    for (let i = 0; i < REPS; i += 1) robotsPathMatches(pattern, path);
+    return Number(process.hrtime.bigint() - started) / 1e6;
+  };
+
+  // ASSERTED PER STEP, ASCENDING, AND THAT ORDERING IS LOAD-BEARING. An exponential blowup is
+  // SYNCHRONOUS, so node:test's own `timeout` cannot interrupt it: a single assertion AFTER the
+  // whole sweep would not fail, it would never return. Measured on the regex form, ONE call at the
+  // top of this range — 7 stars 1.3s, 8 stars 8.4s, 9 stars 48.2s, and this sweep runs 200 calls at
+  // each of ten counts up to 12. A run that never reports is worse than a red test: it blocks a
+  // lane and says nothing. Budgeting each star count before reaching the next one turns that into a
+  // named failure — measured by reverting this file's subject to the regex form: `pass 42 fail 1`,
+  // "200 calls at 4 star(s) took 286.3ms", in under a second.
+  const counts = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  const times = [];
+  for (const stars of counts) {
+    const ms = spend(stars);
+    times.push(ms);
+    // 100ms for 200 calls, against 1.6ms for ONE call at 4 stars in the regex form — ~500x the
+    // observed 0.1ms so a loaded machine cannot redden it, and still three orders of magnitude
+    // inside what the regex form spends by its fourth star.
+    assert.ok(
+      ms < 100,
+      `${REPS} calls at ${stars} star(s) took ${ms.toFixed(1)}ms. The regex form this replaced took ` +
+        `1273.2ms for ONE call at 7 stars and ~9x per star before that, so this is it coming back. ` +
+        `Costs so far: ${counts.slice(0, times.length).map((c, i) => `${c}:${times[i].toFixed(2)}ms`).join(' ')}`,
+    );
+  }
+
+  // THE SHAPE. The per-step budget could be met by a machine that is merely fast; the growth curve
+  // is what distinguishes a linear matcher from an exponential one. The regex form grew ~9x per
+  // added star — 9^9 across the ends of this range.
+  const ratio = times[times.length - 1] / Math.max(times[0], 1e-6);
+  assert.ok(
+    ratio < 25,
+    `going from ${counts[0]} stars to ${counts[counts.length - 1]} multiplied the cost by ` +
+      `${ratio.toFixed(1)}x (${times[0].toFixed(2)}ms -> ${times[times.length - 1].toFixed(2)}ms). ` +
+      `A two-pointer matcher is flat across this range; ~9x per star is the regex form.`,
+  );
+
+  // The bound is worthless if the matcher achieved it by answering wrongly.
+  assert.equal(robotsPathMatches(`/${'*a'.repeat(7)}b`, path), false, 'the fast answer is the wrong answer');
+  assert.equal(robotsPathMatches(`/${'*a'.repeat(7)}b`, `${path}b`), true, 'the matcher no longer matches what it should');
+  // A long path is the other half of the input, and it must not reintroduce a superlinear term.
+  const long = `/${'a'.repeat(20000)}`;
+  const started = process.hrtime.bigint();
+  robotsPathMatches(`/${'*a'.repeat(1000)}b`, long);
+  const ms = Number(process.hrtime.bigint() - started) / 1e6;
+  assert.ok(ms < 500, `1000 stars against a 20001-character path took ${ms.toFixed(1)}ms`);
+});
+
 test('comments and crawl-delay are parsed, and a delay is surfaced to the caller', () => {
   const v = robotsVerdict('# a comment\nUser-agent: *\nCrawl-delay: 5\nDisallow: /x # trailing\n', '/y');
   assert.equal(v.allowed, true);
