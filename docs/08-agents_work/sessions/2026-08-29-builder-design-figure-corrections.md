@@ -167,9 +167,9 @@ the wrong bytes. Rule 10 held.
 MiB **moves** the cliff, it does not remove it, and past it the failure is still a refusal rather
 than a truncation.
 
-### The audit: is verdict.mjs the only one?
+### The audit: one defect, three helpers
 
-**For a diff BODY, yes.** Every other sync git call in `scripts/` and `scripts/lib/` reads something
+**For a diff BODY, `verdict.mjs:130` is the only production call site — there is no seventh.** Every other sync git call in `scripts/` and `scripts/lib/` reads something
 bounded by *file count*, not by diff size: `diff --name-only`, `ls-files`, `ls-tree -r --name-only`,
 `rev-parse`, `hash-object`, or `archive -o <file>` which writes to a file rather than stdout.
 `produce-verdict.mjs:269` looked like a seventh and is not — its nine call sites are all in that
@@ -239,3 +239,31 @@ Left alone as genuinely pre-existing, each measured on both sides:
 `CONTROL-PLANE.md:1006` (24 off on `main`, 24 now) · `ROSTER-SIZE.md:362` (20 / 20) ·
 `AGENT-ARCHITECTURE.md:195` — `lenses.yml:84` for `business`, which sits at line 31 on **both** `main`
 and HEAD, so 53 lines off either way.
+
+## The same defect was latent in two more helpers
+
+`scripts/produce-verdict.mjs:268` and `scripts/run-gate.mjs:371` were **byte-identical** to the
+defective helper — `execFileSync('git', args, { cwd, encoding: 'utf8', stdio: [...] })`, no
+`maxBuffer`. Both are guarded now, in the same shape and with the same constant.
+
+**They were safe by their CALLERS, not by themselves**, and that distinction is the whole reason to
+fix them. Verified call site by call site rather than assumed:
+
+| helper | call sites | largest output |
+|---|---|---|
+| `produce-verdict.mjs` `git()` | 8 | `diff --name-only` ×2, `ls-tree -r --name-only`, `rev-parse` ×3, `hash-object`, `archive -o <file>` (writes to a file, not stdout) |
+| `run-gate.mjs` `resolveTree` `git()` | 2 | `rev-parse` ×2 |
+
+Neither pipes a diff body today. Each is **one `git diff` away** from needing the guard rather than
+one bug away, in a file nobody is reading. Already guarded elsewhere and left alone:
+`.claude/hooks/schema-lint.js:1460` and `scripts/vendor-provenance.mjs:74`, both at 64 MiB.
+
+## The 47 → 48 transition, measured
+
+| commit | `npm run check` | the one failure |
+|---|---|---|
+| `5b7dbb2` | **47 of 48**, exit 1 | `test:run-gate` — `spawnSync git ENOBUFS` |
+| `222d641` | **48 of 48**, exit 0 | — |
+
+Both read from `$?` directly with output redirected to a file, never through a pipe, in the worktree
+rather than an export. HEAD and `git status --porcelain` were identical before and after the run.

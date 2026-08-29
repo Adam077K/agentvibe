@@ -265,8 +265,18 @@ function result(outcome, reason, extra = {}) {
   return { outcome, established: outcome !== OUTCOME.REFUSED, reason, ...extra };
 }
 
+// GUARDED BECAUSE THE HELPER'S SAFETY IS A PROPERTY OF ITS CALLERS, NOT OF ITSELF. This was
+// byte-identical to verdict.mjs's git() before that one carried no `maxBuffer` and Node's 1 MiB
+// default made the QA gate unsatisfiable on any branch whose diff crossed it (2026-08-29). Nothing
+// here pipes a diff BODY today — all eight call sites are `--name-only`, `ls-tree --name-only`,
+// `rev-parse`, `hash-object`, or `archive -o <file>`, which writes to a file — so this is one
+// `git diff` away from needing the guard rather than one bug away. 64 MiB matches the other sync
+// git call sites; past it the call still THROWS rather than short-reading, which is the property
+// that matters.
+const GIT_MAX_OUTPUT = 64 * 1024 * 1024;
+
 function git(cwd, args) {
-  return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: GIT_MAX_OUTPUT });
 }
 
 function firstLine(e) {

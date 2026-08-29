@@ -368,10 +368,15 @@ function refuseTree(reason) {
 }
 
 function resolveTree(ref) {
+  // Guarded for the same reason as produce-verdict.mjs's git(): both were byte-identical to the
+  // verdict.mjs helper whose missing `maxBuffer` made the QA gate unsatisfiable on 2026-08-29, and
+  // both are safe today only because every caller asks for something small — here, two `rev-parse`
+  // calls. That is a property of the call sites, not of this helper.
   const git = (args) => execFileSync('git', args, {
     cwd: REPO_ROOT,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
+    maxBuffer: 64 * 1024 * 1024,
   }).trim();
 
   let top;
