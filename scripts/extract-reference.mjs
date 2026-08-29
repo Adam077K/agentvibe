@@ -44,11 +44,12 @@
 //     founder's selection of the corpus, not this file's arithmetic.
 //   · guess. Where a value cannot be honestly fitted it emits `null` and a note saying why.
 //     A plausible number with no derivation behind it is the failure mode this repo exists to
-//     refuse. `leading.falloff`/`leading.exponent` were null UNCONDITIONALLY until 2026-08-29,
-//     because the schema named them without stating the curve they parameterise; the formula was
-//     supplied and they are fitted against it now, and null only when the DATA refuses.
-//     As of that day NOT ONE of the five measured references fits it inside a 0.1 RMS residual —
-//     which is a finding about the formula, not about the references, and is reported as such.
+//     refuse. `leading.falloff`/`leading.exponent` are null PERMANENTLY and BY CONSTRUCTION: the
+//     curve they parameterise is prescribed by design SYSTEMS (Radix, Tailwind) and every
+//     reference here is a SITE, which sets line-height per component rather than as a function of
+//     size. They are authored constants in seeds.json and no corpus of sites can supply them.
+//     The fitter still exists as an INSTRUMENT — see fitLeadingCurve — because the claim
+//     "not fittable" is worth nothing if the machinery behind it was never shown to work.
 //
 // LEGAL AND SAFETY POSTURE — non-negotiable, and it is why the old scripts are gone:
 //   · logged-out, robots-respecting, low volume, one page at a time. Never logs in.
@@ -435,39 +436,105 @@ export function fitTracking(rows, { minR2 = 0.5, restrictTo = null } = {}) {
 }
 
 /**
- * The leading curve, fitted against the function `build-tokens.mjs` actually implements:
+ * Fit `exponent` and `falloff` of the curve `build-tokens.mjs` implements, GIVEN a peak:
  *
  *     lineHeight(s) = peak - (|s - peakAt| / peakAt) ^ exponent * falloff
  *
- * with `displayRatio` governing the display band instead of the curve.
+ * THIS IS AN INSTRUMENT, NOT A SOURCE OF SEED VALUES. `fitLeading` below never publishes what this
+ * returns into the seeds — see the category note there. It exists so the question "does this
+ * reference follow the prescribed curve?" can be ANSWERED with a number instead of asserted, and
+ * because a refusal you cannot demonstrate the machinery behind is indistinguishable from a
+ * fitter that never worked. `scripts/extract-reference.test.mjs` drives it with data generated
+ * from known parameters and requires all of them back at residual 0.
  *
- * THIS USED TO EMIT `falloff: null` AND `exponent: null` UNCONDITIONALLY, and that refusal was
- * correct at the time for a reason worth keeping: the seeds schema named both parameters without
- * stating the curve they parameterise, and four candidate curves fit the same peak equally well.
- * Refusing to guess was right. The formula above closed the gap — it was a contract defect, not an
- * unfittable measurement — so the refusal is now conditional on the DATA rather than on the schema.
+ * Linearised: with u = |s - peakAt|/peakAt and d = peak - lineHeight(s), the model d = falloff·u^exponent
+ * becomes log d = log falloff + exponent·log u — ordinary least squares, `exponent` the slope and
+ * `falloff` the exponential of the intercept.
  *
- * How the fit works, because a linearisation deserves to be stated rather than trusted. With `peak`
- * and `peakAt` taken as the maximum and its location — which the formula forces, since u = 0 there
- * — write u = |s - peakAt|/peakAt and d = peak - lineHeight(s). Then d = falloff · u^exponent, so
- * log d = log falloff + exponent · log u: an ordinary least-squares line in log-log space, with
- * `exponent` its slope and `falloff` the exponential of its intercept.
- *
- * WHAT THIS FIT IS AND IS NOT, and it must be said in the output as well as here. The SHAPE is
- * sourced — leading peaks near 1.5-1.56 around 16-18px and reaches 1.0 at display sizes, and both
- * Radix and Tailwind obey it. The exact FUNCTION is a fit, not a standard. So a reference that fits
- * it badly is evidence about the formula, not a defect in the reference, and the residual is
- * reported on every fit rather than only on the failures.
- *
- * REFUSES, with the residual in the notes, when: fewer than 3 usable points, every point sits at
- * the peak, or the RMS residual exceeds `maxResidual`. A bad fit reported is worth more than a
- * plausible one.
+ * Returns {exponent, falloff, residual, points, notes}. `residual` is RMS in the ORIGINAL space,
+ * not in log space: a small log residual can be a large line-height error, and line-height is what
+ * a reader sees. Every field is null when there is nothing to fit, and `notes` says which case.
  */
-export function fitLeading(rows, { displaySizes = [], uiSizes = null, minSamples = 3, minShare = 0.02, maxResidual = 0.1 } = {}) {
+export function fitLeadingCurve(basis, { peak, peakAt } = {}) {
+  const notes = [];
+  const none = (why) => ({ exponent: null, falloff: null, residual: null, points: 0, notes: [why] });
+  if (!Number.isFinite(peak) || !Number.isFinite(peakAt)) return none('no peak to measure a falloff from');
+
+  // Points at the peak carry u = 0 and are excluded by construction; points at or above the peak
+  // carry d <= 0 and cannot be logged, so they are excluded AND COUNTED — a silent drop here would
+  // quietly narrow what the fit was fitted to.
+  const lg = [];
+  let atOrAbovePeak = 0;
+  for (const p of basis) {
+    const u = Math.abs(p.size - peakAt) / peakAt;
+    const d = peak - p.leadingRatio;
+    if (u === 0) continue;
+    if (d <= 0) {
+      atOrAbovePeak++;
+      continue;
+    }
+    lg.push({ x: Math.log(u), y: Math.log(d) });
+  }
+  if (atOrAbovePeak) notes.push(`${atOrAbovePeak} size(s) sit at the peak value away from peakAt, so they carry no falloff and are outside the fit`);
+  if (lg.length < 3) return { ...none(`only ${lg.length} point(s) carry a measurable falloff; three are needed`), notes: [...notes, `only ${lg.length} point(s) carry a measurable falloff; three are needed`] };
+
+  const n = lg.length;
+  const mx = lg.reduce((a, q) => a + q.x, 0) / n;
+  const my = lg.reduce((a, q) => a + q.y, 0) / n;
+  const sxx = lg.reduce((a, q) => a + (q.x - mx) ** 2, 0);
+  if (sxx === 0) return { ...none('every falloff point sits at one distance from the peak; the exponent is undetermined'), notes: [...notes, 'every falloff point sits at one distance from the peak; the exponent is undetermined'] };
+
+  const exponent = lg.reduce((a, q) => a + (q.x - mx) * (q.y - my), 0) / sxx;
+  const falloff = Math.exp(my - exponent * mx);
+  if (!Number.isFinite(exponent) || !Number.isFinite(falloff)) return { ...none('the linearised fit did not converge to finite parameters'), notes };
+
+  const errs = basis.map((p) => p.leadingRatio - (peak - (Math.abs(p.size - peakAt) / peakAt) ** exponent * falloff));
+  return { exponent: r3(exponent), falloff: r3(falloff), residual: r3(Math.sqrt(errs.reduce((a, e) => a + e * e, 0) / errs.length)), points: n, notes };
+}
+
+/**
+ * The leading block of the seeds: `peak`, `peakAt` and `displayRatio` measured; `falloff` and
+ * `exponent` PERMANENTLY NULL.
+ *
+ * ── WHY THOSE TWO ARE NULL, AND WHY THAT IS NOT A LIMITATION OF THIS TOOL ────────────────────────
+ * This went through three positions in one day and the third is the stable one, so all three are
+ * recorded rather than only the answer:
+ *
+ *   1. NULL BECAUSE THE SCHEMA DID NOT SAY WHAT THEY MEANT. Correct at the time — four candidate
+ *      curves fit the same peak, so any value emitted would have been a guess.
+ *   2. FITTED, AND REFUSED ON A RESIDUAL. The formula was supplied, the fit was built, and 0 of 5
+ *      references came within a 0.1 RMS residual. That reading was "I could not fit this."
+ *   3. NOT A FITTABLE QUANTITY AT ALL — and this supersedes 2.
+ *
+ * The curve is cited to **Radix and Tailwind**. Those are DESIGN SYSTEMS: a system PRESCRIBES a
+ * relation between size and leading. linear.app, stripe.com, vercel.com, docs.stripe.com and
+ * play.grafana.org are SITES, and a site SETS whatever each component needed. Measuring a
+ * prescription against a population that never undertook to follow it is a category error, so the
+ * 0-of-5 result is not evidence against the curve — it is what a site without a system looks like.
+ *
+ * `falloff` and `exponent` are therefore AUTHORED CONSTANTS, chosen by whoever writes seeds.json,
+ * and no reference corpus can supply them. "I could not fit this" and "this is not a fittable
+ * quantity" are different statements and only the second is stable, so this emits the second and
+ * does not report a residual beside it — a residual invites the next reader to try harder at
+ * something that cannot work.
+ *
+ * The measurement is not thrown away: `curveEvidence` carries what `fitLeadingCurve` found, which
+ * is the evidence FOR the category claim rather than an attempt at the value.
+ *
+ * ── THE DURABLE LESSON, which is bigger than this field ──────────────────────────────────────────
+ * This is the FOURTH time in this workstream that a measurement was taken without a model of what
+ * was being measured, and the first where the mismatched population is a CATEGORY (system vs site)
+ * rather than a component. When a measurement disagrees with a stated rule, ask what population the
+ * rule was about before concluding the rule is wrong. This harness exists to let measurements kill
+ * rules; that power is worth nothing if it kills them by measuring the wrong thing.
+ */
+export function fitLeading(rows, { displaySizes = [], uiSizes = null, minSamples = 3, minShare = 0.02 } = {}) {
   const pts = (rows ?? []).filter((r) => Number.isFinite(r.size) && Number.isFinite(r.leadingRatio));
   const notes = [];
-  const nullFit = (extra) => ({ peak: null, peakAt: null, falloff: null, exponent: null, displayRatio: null, n: pts.length, residual: null, notes: [...notes, ...extra] });
-  if (pts.length < 3) return nullFit([`only ${pts.length} size(s) carry a resolved line-height; nothing is fitted below 3`]);
+  const NOT_FITTABLE =
+    'falloff and exponent are null BY CONSTRUCTION, not by failure: the curve is prescribed by design systems (Radix, Tailwind) and these references are SITES, which set line-height per component rather than as a function of size. They are authored constants in seeds.json and no reference can supply them.';
+  const nullAll = (extra) => ({ peak: null, peakAt: null, falloff: null, exponent: null, displayRatio: null, n: pts.length, curveEvidence: null, notes: [...notes, ...extra, NOT_FITTABLE] });
+  if (pts.length < 3) return nullAll([`only ${pts.length} size(s) carry a resolved line-height; peak is not measured below 3`]);
 
   const displaySet = new Set(displaySizes.map(Number));
   // The peak is a property of the UI band. Selecting by "not display" let a size BELOW the band in:
@@ -495,48 +562,9 @@ export function fitLeading(rows, { displaySizes = [], uiSizes = null, minSamples
   const dispPts = pts.filter((p) => displaySet.has(p.size));
   const displayRatio = dispPts.length ? r3(dispPts.reduce((a, p) => a + p.leadingRatio, 0) / dispPts.length) : null;
   if (!dispPts.length) notes.push('displayRatio is null: this reference has no display band to average over');
-  notes.push('the SHAPE of this curve is sourced (peak near 1.5-1.56 at 16-18px, 1.0 at display; both Radix and Tailwind obey it) but the exact FUNCTION is a fit, not a standard — a poor fit is evidence about the formula, not about the reference');
+  notes.push(NOT_FITTABLE);
 
-  const half = (extra) => ({ peak, peakAt, falloff: null, exponent: null, displayRatio, n: basis.length, residual: null, notes: [...notes, ...extra] });
-
-  // log d = log falloff + exponent * log u. Points at the peak carry u = 0 and are excluded by
-  // construction; points at or above the peak carry d <= 0 and cannot be logged, so they are
-  // excluded AND COUNTED — a silent drop here would quietly narrow what the fit was fitted to.
-  const lg = [];
-  let atOrAbovePeak = 0;
-  for (const p of basis) {
-    const u = Math.abs(p.size - peakAt) / peakAt;
-    const d = peak - p.leadingRatio;
-    if (u === 0) continue;
-    if (d <= 0) {
-      atOrAbovePeak++;
-      continue;
-    }
-    lg.push({ x: Math.log(u), y: Math.log(d) });
-  }
-  if (atOrAbovePeak) notes.push(`${atOrAbovePeak} size(s) sit at the peak value away from peakAt, so they carry no falloff and are outside the log-log fit`);
-  if (lg.length < 3) return half([`only ${lg.length} point(s) carry a measurable falloff; exponent and falloff need 3 and are null rather than guessed`]);
-
-  const n = lg.length;
-  const mx = lg.reduce((a, q) => a + q.x, 0) / n;
-  const my = lg.reduce((a, q) => a + q.y, 0) / n;
-  const sxx = lg.reduce((a, q) => a + (q.x - mx) ** 2, 0);
-  if (sxx === 0) return half(['every falloff point sits at one distance from the peak; the exponent is undetermined']);
-  const exponent = lg.reduce((a, q) => a + (q.x - mx) * (q.y - my), 0) / sxx;
-  const falloff = Math.exp(my - exponent * mx);
-
-  // Residual in the ORIGINAL space, not in log space — a small log residual can be a large
-  // line-height error, and line-height is what a reader sees.
-  const errs = basis.map((p) => {
-    const u = Math.abs(p.size - peakAt) / peakAt;
-    return p.leadingRatio - (peak - u ** exponent * falloff);
-  });
-  const residual = r3(Math.sqrt(errs.reduce((a, e) => a + e * e, 0) / errs.length));
-
-  if (!Number.isFinite(exponent) || !Number.isFinite(falloff) || residual > maxResidual) {
-    return { peak, peakAt, falloff: null, exponent: null, displayRatio, n: basis.length, residual, notes: [...notes, `the curve does not fit: RMS residual ${residual} against a ceiling of ${maxResidual} (best line-log fit was exponent ${r3(exponent)}, falloff ${r3(falloff)}). Reported rather than emitted — a bad fit named beats a plausible one.`] };
-  }
-  return { peak, peakAt, falloff: r3(falloff), exponent: r3(exponent), displayRatio, n: basis.length, residual, notes: [...notes, `curve fitted over ${n} falloff point(s), RMS residual ${residual}`] };
+  return { peak, peakAt, falloff: null, exponent: null, displayRatio, n: basis.length, curveEvidence: fitLeadingCurve(basis, { peak, peakAt }), notes };
 }
 
 /**
