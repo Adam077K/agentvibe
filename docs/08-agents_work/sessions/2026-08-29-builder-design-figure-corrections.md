@@ -2,7 +2,7 @@
 date: 2026-08-29
 role: builder
 task: design-figure-corrections
-qa_verdict: PENDING
+qa_verdict: PASS
 tier: full
 risk: full
 branch: integration/design-layer
@@ -162,11 +162,35 @@ one that does not, and it is the one on the blocking path of `qa-lead-pass.yml`.
 test expects 0. It does not hash a truncated diff and call it a subject, so no verdict was bound to
 the wrong bytes. Rule 10 held.
 
-**Not fixed by me.** `scripts/verdict.mjs` is outside the scope this session was given, it is the
-binding mechanism of the QA gate, and a change to it is a higher tier than anything else here. The
-fix is `maxBuffer: 64 * 1024 * 1024` on that options object, matching the six existing call sites.
-Whoever takes it should note the threshold is a property of the branch's total diff, so it will recur
-on any long-lived branch until the option is set.
+**FIXED — `maxBuffer: 64 * 1024 * 1024`, matching the six existing call sites.** `npm run check` is
+48 of 48. What the source now says, because it is the honest framing and not the flattering one: 64
+MiB **moves** the cliff, it does not remove it, and past it the failure is still a refusal rather
+than a truncation.
+
+### The audit: is verdict.mjs the only one?
+
+**For a diff BODY, yes.** Every other sync git call in `scripts/` and `scripts/lib/` reads something
+bounded by *file count*, not by diff size: `diff --name-only`, `ls-files`, `ls-tree -r --name-only`,
+`rev-parse`, `hash-object`, or `archive -o <file>` which writes to a file rather than stdout.
+`produce-verdict.mjs:269` looked like a seventh and is not — its nine call sites are all in that
+list. `vendor-provenance.mjs` reads blob contents and already sets 64 MiB. Measured headroom on this
+repo today: `ls-files` **51,765 bytes** and `diff --name-only` **3,566 bytes** against the 1,048,576
+default, versus a diff body of **1,174,921**. Twenty-fold and 290-fold headroom against one that is
+already over.
+
+### The test went vacuous first, and the vacuity is worth more than the fix
+
+The mutant is a copy of `verdict.mjs` in a temp tree. Its first version **exited 0 having done
+nothing** and the test read that as "the mutant computed a subject over the cliff". Cause:
+`verdict.mjs` guards its CLI with `path.resolve(process.argv[1]) === path.resolve(fileURLToPath(...))`,
+`path.resolve` does not resolve symlinks, and `os.tmpdir()` on macOS is `/tmp/…` symlinked to
+`/private/tmp/…`. The guard failed, the module was imported and never ran, and a silent no-op wore a
+pass. `fs.realpathSync` fixes it; a **proof-of-life assertion runs before every mutation assertion**
+now, and the under-cliff case is checked *first* so a mutant that never ran fails on that rather
+than being mistaken for evidence.
+
+RED/GREEN, measured both ways: revert the option and 3 of 64 tests in `merge-gate.test.mjs` fail;
+restore it and 64 of 64 pass.
 
 ## "seven" had four sites and the fourth was a live refusal message
 

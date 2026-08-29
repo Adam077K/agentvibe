@@ -92,12 +92,44 @@ class Refusal extends Error {
   }
 }
 
+/**
+ * A BOUND ON GIT'S OUTPUT, AND IT MOVES THE CLIFF RATHER THAN REMOVING IT.
+ *
+ * `computeSubject()` hashes a WHOLE-BRANCH DIFF, so this call's output grows with the branch and
+ * has no natural ceiling. It carried no `maxBuffer` at all, which meant Node's default of 1 MiB —
+ * and `integration/design-layer` crossed it. Measured 2026-08-29 by bisecting this exact call
+ * across the branch: 1,026,873 bytes at `3b64a9a` returned normally; the next commit threw
+ * `ENOBUFS`. Same args, same cwd, only this option differing: without it the call fails with
+ * stdout truncated at ~1.05 MB; with it the same call returns 1,100,001 bytes.
+ *
+ * WHY THIS IS AN INCIDENT AND NOT A NUISANCE. `verdict.mjs check` is on the BLOCKING path of
+ * `.github/workflows/qa-lead-pass.yml`. While this call throws, no subject can be computed, so no
+ * verdict can be recorded or checked, and the gate this repo calls sacred becomes UNSATISFIABLE on
+ * exactly the long-lived branches that most need it. Ours was the first to cross 1 MiB. It will not
+ * be the last.
+ *
+ * WHAT SAVED IT WAS RULE 10, NOT LUCK. `execFileSync` THROWS on overflow rather than returning a
+ * short read, the catch below turns that into a `Refusal` (exit 2), and a refusal is a distinct
+ * terminal value from a pass. So the failure was a BLOCKED merge and never a FORGED verdict: at no
+ * point was a truncated diff hashed and presented as a subject. That property does not depend on
+ * the number below, and it must survive any change to it.
+ *
+ * 64 MiB IS A BOUND, NOT A REMOVAL, and saying so is the point. A branch whose diff exceeds it
+ * fails exactly as before — `ENOBUFS`, caught, refused — and it still never truncates. The value
+ * matches the six other sync git call sites in this repo, which set 32-64 MiB
+ * (`ledger.mjs` x2, `evict-memory.mjs`, `vendor-provenance.mjs`, `lib/claim-append.js`,
+ * `lib/resolvers.js`). A seventh consistent call site is worth more here than a novel streaming
+ * mechanism in the gate's binding path.
+ */
+const GIT_MAX_OUTPUT = 64 * 1024 * 1024;
+
 function git(repo, args) {
   try {
     return execFileSync('git', args, {
       cwd: repo,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
+      maxBuffer: GIT_MAX_OUTPUT,
     });
   } catch (e) {
     const detail = (e.stderr || e.message || '').toString().trim().split('\n')[0];
