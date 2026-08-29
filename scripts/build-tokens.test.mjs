@@ -138,11 +138,23 @@ test('adjacent ratios decrease monotonically — the signature a modular scale c
         'ratio CONSTANT, which DESIGN-CAPABILITY.md §7.1 falsified against every measured reference.'
     );
   }
-  // The measured band: linear/stripe/vercel sit in 1.07-1.17. Ours must land inside it, or the ramp
-  // is outside every reference the rule was derived from — which is exactly mission-control's defect
-  // (its ratios bottomed out at 1.037, below the reference floor of 1.067).
+  // The bound below is the ARITHMETIC union over 12→20 — `1 + d/s` for d in {1,2} — which is what
+  // DESIGN-CAPABILITY.md §7.1 derives, and it is NOT the same set as the measured band. Keep the two
+  // apart: the measured band over the corpus is wider at the bottom, because stripe.com's UI band
+  // runs to 26px and `1 + 1/21` = 1.048 sits below anything a 12→20 union contains. Derive it, do
+  // not quote it:
+  //   node -e "const s=['linear-app','stripe-com','vercel-com','play-grafana-org','docs-stripe-com'];
+  //     const r=s.flatMap(x=>require('./design/references/'+x+'/measured.json').type.uiSteps.map(t=>t.ratio));
+  //     console.log(Math.min(...r), Math.max(...r))"
+  //
+  // *Superseded 2026-08-29: this comment read "The measured band: linear/stripe/vercel sit in
+  // 1.07-1.17 … (its ratios bottomed out at 1.037, below the reference floor of 1.067)." Both
+  // figures were wrong and both came from the refuted increment table — the measured band is
+  // [1.048, 1.167] and the floor is 1.048. 1.037 is correct and is mission-control's. The BOUND in
+  // the assertion is deliberately unchanged: it is the arithmetic union, it is not the measured
+  // band, and loosening a live assertion to match a comment would be fixing the wrong half.*
   for (const r of ratios) {
-    assert.ok(r >= 1.05 && r <= 1.167, `adjacent ratio ${r} is outside the measured reference band [1.05, 1.167]`);
+    assert.ok(r >= 1.05 && r <= 1.167, `adjacent ratio ${r} is outside the arithmetic band [1.05, 1.167]`);
   }
 });
 
@@ -326,7 +338,29 @@ test('a fractional increment is REFUSED, and the refusal names the measured refe
     assert.ok(msg.includes(site), `the refusal does not name ${site}: ${msg}`);
   }
   assert.ok(msg.includes('+0.5'), 'the refusal does not name the measured defect it exists to stop');
-  assert.ok(msg.includes('1.067'), 'the refusal does not carry the reference floor the defect fell below');
+
+  // THE FLOOR IS RE-DERIVED HERE, NOT PINNED — and the pinned version was asserting a FALSE figure.
+  // This read `assert.ok(msg.includes('1.067'), ...)`. 1.067 is linear.app's 15→16, read off the
+  // hand-written increment table that `referenceIncrements()` exists to replace; the measured floor
+  // over `type.uiSteps` is stripe.com's 21→22. So a control was holding a false number in place in a
+  // user-facing refusal: correcting the message would have turned this test red, which is what makes
+  // a pinned constant in an assertion worse than the same constant in prose.
+  //
+  // Re-derived independently of the module under test — read the corpus, minimise here.
+  const floor = Math.min(
+    ...fs
+      .readdirSync(REFERENCES_DIR, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => path.join(REFERENCES_DIR, d.name, 'measured.json'))
+      .filter((f) => fs.existsSync(f))
+      .flatMap((f) => (JSON.parse(fs.readFileSync(f, 'utf8')).type?.uiSteps ?? []).map((t) => t.ratio))
+  );
+  assert.ok(Number.isFinite(floor), 'CONTROL: no UI-band ratios in the corpus — the assertion below proves nothing');
+  assert.notEqual(floor, 1.067, 'CONTROL: the floor is the refuted 1.067 again — re-read the corpus before trusting this');
+  assert.ok(
+    msg.includes(String(floor)),
+    `the refusal does not carry the corpus floor (${floor}) the defect fell below: ${msg}`
+  );
 });
 
 // ── THE CITATION IS DERIVED FROM THE CORPUS, NOT TYPED BESIDE IT ────────────────────────────────

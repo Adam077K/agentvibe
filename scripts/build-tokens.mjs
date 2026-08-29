@@ -213,14 +213,26 @@ export function referenceIncrements(dir = REFERENCES_DIR) {
     } catch {
       host = e.name;
     }
-    sites[host] = { ui: steps(m.type?.bands?.ui?.sizes), display: steps(m.type?.bands?.display?.sizes) };
+    sites[host] = {
+      ui: steps(m.type?.bands?.ui?.sizes),
+      display: steps(m.type?.bands?.display?.sizes),
+      // The ADJACENT RATIOS of the UI band, read rather than recomputed from the increments,
+      // because `uiSteps` is what the falsification harness reads and two derivations of one
+      // quantity disagree eventually. Used for the floor a fractional-increment refusal cites.
+      uiRatios: (m.type?.uiSteps ?? []).map((t) => t.ratio).filter((r) => typeof r === 'number'),
+    };
   }
   const names = Object.keys(sites);
+  const allRatios = names.flatMap((h) => sites[h].uiRatios);
   return {
     sites,
     integer: names.filter((h) => sites[h].ui.length && sites[h].ui.every(isInt)),
     fractional: names.filter((h) => sites[h].ui.some((d) => !isInt(d))),
     n: names.length,
+    // The lowest adjacent UI-band ratio anywhere in the corpus, or null when nothing is readable.
+    // NULL RATHER THAN A FALLBACK NUMBER, deliberately: a floor with no corpus behind it must not
+    // look like a floor with one, which is the same rule `citeUi()` follows one function down.
+    uiRatioFloor: allRatios.length ? Math.min(...allRatios) : null,
     // Always present, empty when the corpus read cleanly. A field that appears only on failure is
     // a field every caller forgets to check.
     unreadable,
@@ -271,6 +283,28 @@ const citeDisplay = () => {
   const { r, text, rows } = listSites((v) => v.display);
   if (!r.n) return `NO REFERENCE CORPUS IS READABLE (${r.source})`;
   return rows.length ? `${text}${skipNote(r)}` : `no reference in the corpus has a display band of 2+ sizes (${r.source})`;
+};
+
+/**
+ * THE FLOOR THE +0.5 DEFECT FELL BELOW, DERIVED — it used to be the literal `1.067`, and that was
+ * the wrong number as well as the wrong shape.
+ *
+ * `1.067` is linear.app's 15→16, and it was read off the hand-written increment table that
+ * `referenceIncrements()` above exists to replace. The measured floor over `type.uiSteps` across
+ * the corpus is stripe.com's 21→22. The two errors travelled together because they came from the
+ * same table, and the refusal below quoted the figure to a user at the moment it blocked them.
+ *
+ * SAY WHICH FLOOR. Minimising over `type.steps` instead of `type.uiSteps` spans the display bands
+ * and returns a much lower number that mission-control's ratios sit ABOVE — that comparison does
+ * not support the refusal. Every mission-control authored size is a UI-band size, so the UI band
+ * is the like-for-like set, and it is the one read here.
+ */
+const citeUiFloor = () => {
+  const r = referenceIncrements();
+  if (r.uiRatioFloor === null) {
+    return `NO REFERENCE CORPUS IS READABLE (${r.source}), so this refusal cites no floor`;
+  }
+  return `${r.uiRatioFloor}, the lowest adjacent UI-band ratio across ${r.source}`;
 };
 
 /**
@@ -852,8 +886,14 @@ export function assertMonotoneRatios(ratios) {
  * and a caller deserves to know which one it hit.
  *
  *   FRACTIONAL INCREMENT is refused on the strongest evidence in the corpus: no measured reference
- *   uses one, mission-control used +0.5 seven times consecutively, and its adjacent ratios fell
- *   entirely below the reference band.
+ *   uses one, mission-control's UI band steps by +0.5 repeatedly, and its adjacent ratios across
+ *   those steps fell entirely below the corpus's UI-band ratio floor.
+ *
+ *   *Superseded 2026-08-29: this read "+0.5 SEVEN times consecutively". It is six — nine authored
+ *   sizes admit eight increments — and DESIGN-CAPABILITY.md §7.1's own table printed six two lines
+ *   above the prose that said seven. The count is dropped rather than corrected: it carries none of
+ *   the refusal's force, and "six" is a constant that rots the next time mission-control's type
+ *   changes.*
  *
  *   THE {1,2} CLAMP on the UI band is the WEAKER of the two and says so here. It rests on n=4
  *   references which DESIGN-CAPABILITY.md §6.4 itself flags as "maximally correlated" — Linear,
@@ -904,9 +944,9 @@ export function validateSeeds(seeds) {
     if (!isInt(spec.increment)) {
       refuse(
         `type.${name}.increment is ${spec.increment}, which is not an integer. THIS IS THE DEFECT ` +
-          `THAT SHIPPED: mission-control's UI band steps by +0.5 seven times consecutively, and its ` +
-          `adjacent ratios (1.045 ... 1.037) sit entirely below the reference band, which bottoms out ` +
-          `at 1.067. Measured UI increments, per reference: ${citeUi()}. ` +
+          `THAT SHIPPED: mission-control's UI band steps by +0.5 repeatedly, and its adjacent ratios ` +
+          `across those steps (1.045 ... 1.037) sit entirely below the corpus floor of ` +
+          `${citeUiFloor()}. Measured UI increments, per reference: ${citeUi()}. ` +
           `${uiSplit()}. Display increments: ${citeDisplay()}. ` +
           `Source: docs/03-system-design/DESIGN-CAPABILITY.md §7.1 for the rule, §15.16 for the ` +
           `reference that does not obey it, and design/references/ for every figure above — those ` +

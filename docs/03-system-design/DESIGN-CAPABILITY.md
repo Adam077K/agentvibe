@@ -508,19 +508,30 @@ node -e "const j=require('./design/references/<slug>/measured.json');
 grep -rhoE 'text-\[[0-9.]+px\]' mission-control/client/src | grep -oE '[0-9.]+' | sort -n -u
 ```
 
-**What these returned on 2026-08-29 — re-run them, do not quote this table:**
+**What these returned on 2026-08-29 — re-run them, do not quote this table. The last row is the
+SUBJECT, not a reference, and it comes from the second command:**
 
-| Ramp | UI-band increments | Display-band increments |
-|---|---|---|
-| linear.app | `1 1 1 1 1 1` | `2 4 8 16 16 8` |
-| stripe.com | `1 1 1 1 1 1 1 1 2 2 1 1 2 2` | `16 8` |
-| vercel.com | `2 2` | `32 8` |
-| play.grafana.org | `0.6 1.4` | `1.4 1.4 9.8` |
-| docs.stripe.com | `1 1` | `5 3 8` |
-| **mission-control** | **`1 0.5 0.5 0.5 0.5 0.5 0.5 1`** | `5` |
+| Ramp | | UI-band increments | Display-band increments |
+|---|---|---|---|
+| linear.app | reference | `1 1 1 1 1 1` | `2 4 8 16 16 8` |
+| stripe.com | reference | `1 1 1 1 1 1 1 1 2 2 1 1 2 2` | `16 8` |
+| vercel.com | reference | `2 2` | `32 8` |
+| play.grafana.org | reference | `0.6 1.4` | `1.4 1.4 9.8` |
+| docs.stripe.com | reference | `1 1` | `5 3 8` |
+| **mission-control** | **SUBJECT** | **`1 0.5 0.5 0.5 0.5 0.5 0.5 1`** | `5` |
 
-mission-control's display step is the one `text-xl` in `client/src/ui.tsx` — Tailwind's 20px — so the
-`text-[Npx]` grep above does not show it.
+**Read that column before reading the rows.** Five references sit in `design/references/` and
+re-derive from the first command; **mission-control is not among them, has no `measured.json`, and
+cannot** — it is the thing being critiqued, and it is tabulated here beside its own evidence. Check
+rather than take it: `ls design/references/` returns exactly `docs-stripe-com`, `linear-app`,
+`play-grafana-org`, `stripe-com`, `vercel-com`. Its display step is the one `text-xl` in
+`client/src/ui.tsx` — Tailwind's 20px — so the `text-[Npx]` grep does not show it either.
+
+> **The unlabelled column is how the omission hid.** The superseded table below was captioned "five
+> ramps" and had five rows, so it looked complete — but its fifth was mission-control, which made the
+> reference count **four** while the caption said five, and docs.stripe.com could go missing without
+> the arithmetic ever looking wrong. A subject tabulated in the same column as its evidence reads as
+> a fifth data point to anyone who does not already know better.
 
 > **Superseded 2026-08-29 — the table above stood here under the words "VERIFIED HERE, five ramps", and
 > `design/references/` refutes four of its five rows.** It read: linear.app `1 1 1 1 1 1 2` / `6 8 16 16` ·

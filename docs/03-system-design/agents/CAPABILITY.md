@@ -660,7 +660,7 @@ Three bounds, each with a named mechanism and an honest label.
 
 | Bound | Value | Mechanism | Status |
 |---|---|---|---|
-| **Attempts on one source** | 3 | `lenses.yml:157` (`evidence` lens): *"Stop after three failed attempts and report partial progress rather than looping"*; `sourcer.md:17` already escalates on *"Three fetch failures on the same source"* | **ENFORCED** by lens + escalation, both existing |
+| **Attempts on one source** | 3 | the `evidence` lens (`grep -n 'id: evidence' .claude/lenses.yml`; pinned to line 157 when written, moved to 187 by `integration/design-layer`): *"Stop after three failed attempts and report partial progress rather than looping"*; `sourcer.md:17` already escalates on *"Three fetch failures on the same source"* | **ENFORCED** by lens + escalation, both existing |
 | **Rungs above entry** | **2 per task, and the ladder is climbed once.** A second climb on the same task is the stop, not a retry | `research_rungs_climbed: integer` in the return contract; the `orchestrator` refuses a return exceeding the tier cap — `trivial/lite: 2`, `full: 4`, `irreversible: 7` | **ENFORCED at validation**, in the one place that already validates returns (CLAUDE.md Layer Contract: *"Validate C-suite returns … Accept returns missing required fields"* → reject) |
 | **Wall-clock** | 10 min on `lite`, 30 min on `full`/`irreversible` | **None.** `budget-guard` was unregistered in `5290edd` — *"unregister budget-guard — remove the ceiling from the system"* | **ADVISORY, and honestly so.** The rung cap above is the enforceable proxy; do not claim a time ceiling that no hook computes |
 

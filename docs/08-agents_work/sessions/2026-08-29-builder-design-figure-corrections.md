@@ -3,8 +3,8 @@ date: 2026-08-29
 role: builder
 task: design-figure-corrections
 qa_verdict: PENDING
-tier: lite
-risk: lite
+tier: full
+risk: full
 branch: integration/design-layer
 ---
 
@@ -167,3 +167,51 @@ binding mechanism of the QA gate, and a change to it is a higher tier than anyth
 fix is `maxBuffer: 64 * 1024 * 1024` on that options object, matching the six existing call sites.
 Whoever takes it should note the threshold is a property of the branch's total diff, so it will recur
 on any long-lived branch until the option is set.
+
+## "seven" had four sites and the fourth was a live refusal message
+
+`scripts/build-tokens.mjs:907` emits a refusal a user reads at the moment the generator blocks them,
+and it said *"steps by +0.5 **seven** times consecutively … below the reference band, which bottoms
+out at **1.067**"*. Two false figures, user-facing, on a terminal path.
+
+**The count is dropped, not corrected.** It carries none of the refusal's force, and "six" rots the
+next time mission-control's type changes. **The floor is derived**, via a new `uiRatioFloor` on
+`referenceIncrements()` and a `citeUiFloor()` beside the `citeUi()`/`citeDisplay()`/`uiSplit()`
+helpers that already read the corpus on every call. The message closes by claiming its figures "are
+read from measured.json on each call, never typed here" — that claim was false for the floor, and is
+now true. It emits `1.048, the lowest adjacent UI-band ratio across 5 reference(s) under
+design/references`.
+
+### A CONTROL WAS PINNING THE FALSE FIGURE
+
+`build-tokens.test.mjs:329` asserted `msg.includes('1.067')`. So correcting the user-facing message
+would have turned a test red, and the test's failure message read *"the refusal does not carry the
+reference floor the defect fell below"* — it would have looked like the fix was the defect. **A false
+constant inside an assertion is worse than the same constant in prose, because prose does not fight
+back.** It now re-derives the floor from the corpus independently of the module under test, with two
+controls: the minimum must be finite, and it must not be 1.067.
+
+`build-tokens.test.mjs:141-143`'s comment carried the same two figures (`1.07-1.17`, `1.067`). Fixed.
+**The assertion bound `[1.05, 1.167]` is deliberately unchanged** — it is the *arithmetic* union over
+12→20, not the measured band, and loosening a live assertion to agree with a comment would be fixing
+the wrong half. The comment now says which is which.
+
+## Trap 1: the fifth ramp was the subject, not a reference
+
+§7.1's table had five rows under the caption "five ramps" — four references plus **mission-control**,
+the thing being critiqued, in the same column as its own evidence. That is how docs.stripe.com went
+missing without the arithmetic ever looking wrong: the caption said five and there were five rows.
+The table now carries an explicit `reference` / `SUBJECT` column and says `ls design/references/`
+returns exactly five names, none of them mission-control.
+
+## Citation drift: 92 → 86
+
+Five locators, all of them pointers this branch moved. Beyond the three in the original brief and the
+two approved after it, `CAPABILITY.md:663` was a third one **created** by this branch — the `evidence`
+lens moved 152 → 187 in `.claude/lenses.yml`, which was 5 lines off on `main` (inside the checker's
+slack, so not a finding) and 30 off at HEAD. Same rule, same shape, one line.
+
+Left alone as genuinely pre-existing, each measured on both sides:
+`CONTROL-PLANE.md:1006` (24 off on `main`, 24 now) · `ROSTER-SIZE.md:362` (20 / 20) ·
+`AGENT-ARCHITECTURE.md:195` — `lenses.yml:84` for `business`, which sits at line 31 on **both** `main`
+and HEAD, so 53 lines off either way.
