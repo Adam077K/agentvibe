@@ -28,8 +28,9 @@
   },
   "notes": [
     "display: the +24 run from 24 covers 3 of 7 measured display size(s); 18, 20, 32, 64 sit outside it. Display bands are commonly geometric — treat this arithmetic fit as a suggestion, not a description.",
-    "leading: falloff and exponent are null because the seeds contract names them without stating the curve they parameterise; the measured leading table is emitted in full so a consumer can fit its own model",
     "leading: peak excludes 2 under-sampled size(s) (11px n=3, 16px n=4) — a size carried by a handful of elements is not this reference's leading",
+    "leading: the SHAPE of this curve is sourced (peak near 1.5-1.56 at 16-18px, 1.0 at display; both Radix and Tailwind obey it) but the exact FUNCTION is a fit, not a standard — a poor fit is evidence about the formula, not about the reference",
+    "leading: the curve does not fit: RMS residual 0.134 against a ceiling of 0.1 (best line-log fit was exponent 0.622, falloff 0.951). Reported rather than emitted — a bad fit named beats a plausible one.",
     "tracking: r2 = 0.072 is below 0.5; the sizes do not lie on a line, so no zeroAt/slope is emitted"
   ]
 }
