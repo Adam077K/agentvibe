@@ -4,6 +4,14 @@
     "A rule lives here so it can be KILLED. Three were killed during the research that commissioned this harness, and the two that died are kept in this file rather than deleted from it — a deleted rule teaches nobody why it was wrong, and the same rule gets proposed again next quarter.",
     "Every rule must carry a `statement` a person can disagree with. A rule with no statement is a threshold nobody chose."
   ],
+  "_leading_curve": [
+    "NOT A RULE IN THIS FILE, AND HERE IS WHY — recorded so nobody adds it. The leading curve",
+    "lineHeight(s) = peak - (|s-peakAt|/peakAt)^exponent * falloff is cited to Radix and Tailwind.",
+    "Those are design SYSTEMS, which PRESCRIBE. Every reference in design/references/ is a SITE,",
+    "which sets line-height per component. Holding a prescription against a population that never",
+    "undertook to follow it is a category error, so measuring it here would produce a refutation",
+    "that means nothing. The falsifier is for rules about what references DO."
+  ],
   "rules": [
     {
       "id": "min-step-ratio-1125",
