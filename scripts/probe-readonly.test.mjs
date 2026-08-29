@@ -35,10 +35,9 @@
  * Every case runs against a throwaway TMPDIR so it never touches a real probe run.
  */
 
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -61,10 +60,37 @@ function run(tmpdir, args) {
   }
 }
 
-/** A throwaway TMPDIR, fresh per test. */
+/**
+ * A THROWAWAY TMPDIR THAT DOES NOT DEPEND ON THE AMBIENT ONE. This based itself at
+ * `os.tmpdir()`, and under the armed sandbox the macOS default (`/var/folders/.../T`) is not
+ * writable — so every case here died on EPERM inside this function, before it reached a single
+ * assertion. Measured 2026-08-29 at one sha, minutes apart: `TMPDIR=/tmp/claude-501` -> 32 pass,
+ * 0 fail, exit 0; the macOS default -> 0 pass, 32 FAIL, exit 1. The step's verdict therefore
+ * turned on an environment variable nobody sets deliberately — and `test:probe-readonly` runs
+ * this file alongside scripts/design-probe.test.mjs, which was moved off the ambient TMPDIR the
+ * same day, so one step disagreed with itself about where a fixture may live.
+ *
+ * The repo root is the base instead: it is writable wherever this suite may run at all.
+ * scripts/lenses.test.mjs writes `.lens-fixture-*.yml` there by the same reasoning, and the
+ * tripwire this step preloads names that file as legitimate rather than as something to catch.
+ * Dotted so an ordinary listing does not show it.
+ *
+ * A leftover here is a DIRTY WORKING TREE, not a stale entry under a directory the OS reclaims,
+ * so every directory handed out is tracked and removed by the `after` hook below. Centrally,
+ * rather than at each call site as the sibling does: several callers sit inside loops, and a
+ * per-caller remove leaks whenever the test it belongs to is the one that fails.
+ */
+const handedOut = [];
+
 function freshTmpdir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'probe-readonly-test-'));
+  const dir = fs.mkdtempSync(path.join(REPO, '.probe-readonly-tmp-'));
+  handedOut.push(dir);
+  return dir;
 }
+
+after(() => {
+  for (const dir of handedOut) fs.rmSync(dir, { recursive: true, force: true });
+});
 
 function probeFile(tmpdir) {
   return path.join(tmpdir, 'readonly-engine-probe.txt');
