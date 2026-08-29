@@ -89,6 +89,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// The colour arithmetic lives in ONE place now — see scripts/design-lib.mjs for why. Re-exported
+// below rather than merely imported, because `build-tokens.test.mjs` imports `luminance` and
+// `contrast` from this file and other callers may too.
+import { contrast, luminance } from './design-lib.mjs';
+
+export { contrast, luminance };
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TOKENS_DIR = path.join(ROOT, 'design', 'tokens');
 
@@ -154,23 +161,11 @@ const round = (n, dp) => {
 };
 
 // ── colour ───────────────────────────────────────────────────────────────────────────────────────
-
-/** Mirror of scripts/design-probe.mjs `luminance`. Relative luminance per WCAG 2.x. */
-export function luminance([r, g, b]) {
-  const f = (v) => {
-    const s = v / 255;
-    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-}
-
-/** Mirror of scripts/design-probe.mjs `contrast`. WCAG 2.x ratio, rounded to 3dp. */
-export function contrast(fg, bg) {
-  const a = luminance(fg);
-  const b = luminance(bg);
-  const [hi, lo] = a > b ? [a, b] : [b, a];
-  return Math.round(((hi + 0.05) / (lo + 0.05)) * 1000) / 1000;
-}
+//
+// `luminance` and `contrast` were HERE, described as a "mirror of scripts/design-probe.mjs". They
+// are now imported from `./design-lib.mjs` and re-exported at the top of this file, so there is
+// nothing left to mirror. `hexToRgb` stays: it is this file's own, has no second copy anywhere, and
+// its strictness is a seeds-file policy rather than shared arithmetic.
 
 /**
  * New here, and deliberately strict: `#rgb` shorthand is REFUSED rather than expanded. Two

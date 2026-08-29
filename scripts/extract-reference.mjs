@@ -53,79 +53,39 @@
 //   1 = measured, and something failed (a rule came back REFUTED)
 //   2 = COULD NOT MEASURE — no browser, no launch, or robots said no. Never a clean-looking zero.
 
+// `createRequire` was here solely so `resolvePlaywright` could `require()` a CJS entry point. That
+// function moved to `./design-lib.mjs`, which carries its own, so the shim is dead here and is
+// removed rather than left as a loaded gun for the next reader.
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { createRequire } from 'node:module';
-
-const require = createRequire(import.meta.url);
 
 export const TOOL = 'scripts/extract-reference.mjs';
 
-// ── A DELIBERATE DUPLICATION, NAMED RATHER THAN HIDDEN ──────────────────────────────────────────
-// `resolvePlaywright`, `parseRgb`, `luminance` and `contrast` below are byte-equivalent in
-// behaviour to the same four in `scripts/design-probe.mjs`, and the brief that commissioned this
-// file said to import them rather than copy them. THEY COULD NOT BE IMPORTED: as of 4ddc5c6,
-// `scripts/design-probe.mjs` is UNTRACKED — it exists in one session's working tree and on no
-// commit, so `git log --all -- scripts/design-probe.mjs` returns nothing. A branch that imports it
-// does not build from a clean checkout of origin/main.
+// ── THE DUPLICATION IS RESOLVED, AND THIS IS THE RECORD OF IT ───────────────────────────────────
+// `resolvePlaywright`, `parseRgb`, `luminance` and `contrast` were DEFINED HERE, copied because
+// `scripts/design-probe.mjs` was untracked as of 4ddc5c6 and a branch importing it would not have
+// built from a clean checkout. The note that stood here set the end condition explicitly — "WHEN
+// design-probe.mjs LANDS ON main, DELETE THESE FOUR AND IMPORT THEM FROM IT". It has landed, and
+// this is that deletion.
 //
-// This repo's standing lesson is that two implementations of one check disagree and you find out
-// during the incident. That lesson applies with full force to POLICY (the risk classifier, the
-// chain guard) and with much less force here: these four are WCAG 2.x arithmetic and a module
-// resolution order, both of which have an external definition to be checked against rather than an
-// internal convention to drift from. The duplication is bounded and its end is stated:
+// They come from `./design-lib.mjs` rather than from `design-probe.mjs`: three files shared this
+// arithmetic, not two, and importing an instrument to borrow its maths would have made the probe a
+// dependency of the extractor for no reason either one asked for.
 //
-//   WHEN design-probe.mjs LANDS ON main, DELETE THESE FOUR AND IMPORT THEM FROM IT.
+// ONE OF THE FOUR DID NOT SURVIVE THE CLAIM ABOVE. "byte-equivalent in behaviour" was true of
+// `luminance`, `contrast` and `resolvePlaywright` and FALSE of `parseRgb`: design-probe's copy
+// splits on `,` alone and rejects a non-numeric alpha, so it returns null where this one returns a
+// triple — measured 2026-08-29 on `rgb(0 0 0)`, `rgb(11 12 14 / 0.5)` and `rgba(0, 0, 0, var(--a))`.
+// THIS file's copy is the permissive one and is what moved to design-lib; design-probe keeps its
+// own, and `scripts/design-lib.test.mjs` pins both. Nothing this file computes changes.
 //
-// Until then, `scripts/extract-reference.test.mjs` pins the contrast arithmetic against the two
-// WCAG worked examples (21:1 for black on white, 1:1 for a colour on itself), so a divergence
-// between the two copies is a red test rather than a silent difference in a finding.
+// The contrast pins in `scripts/extract-reference.test.mjs` (21:1 black on white, 1:1 for a colour
+// on itself) still stand and still run — they now guard the shared copy through this re-export.
+import { contrast, luminance, parseRgb, resolvePlaywright } from './design-lib.mjs';
 
-/**
- * Resolve playwright without hardcoding an absolute path.
- * `.claude/agents/designer.md` pins `/Users/adamks/node_modules/playwright/index.js`, which throws
- * on any other machine and silently degrades the caller to source-only. Try the normal resolution
- * order, then the known global root, then give up LOUDLY rather than returning a probe that
- * reports nothing.
- */
-export function resolvePlaywright() {
-  const candidates = ['playwright', `${process.env.HOME ?? ''}/node_modules/playwright/index.js`, '/usr/local/lib/node_modules/playwright/index.js'];
-  for (const c of candidates) {
-    try {
-      if (c.startsWith('/') && !existsSync(c)) continue;
-      const mod = require(c);
-      if (mod?.chromium) return { mod, from: c };
-    } catch {
-      /* try the next candidate */
-    }
-  }
-  return null;
-}
-
-/** Relative luminance per WCAG 2.x. */
-export function luminance([r, g, b]) {
-  const f = (v) => {
-    const s = v / 255;
-    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-}
-
-/** WCAG contrast ratio between two rgb triples, rounded to 3dp. */
-export function contrast(fg, bg) {
-  const a = luminance(fg);
-  const b = luminance(bg);
-  const [hi, lo] = a > b ? [a, b] : [b, a];
-  return Math.round(((hi + 0.05) / (lo + 0.05)) * 1000) / 1000;
-}
-
-export function parseRgb(str) {
-  const m = String(str).match(/rgba?\(([^)]+)\)/);
-  if (!m) return null;
-  const parts = m[1].split(/[,\s/]+/).filter(Boolean).map((n) => parseFloat(n.trim()));
-  if (parts.length < 3 || parts.slice(0, 3).some(Number.isNaN)) return null;
-  return [parts[0], parts[1], parts[2]];
-}
+// Re-exported, not merely imported: `extract-reference.test.mjs` imports `luminance` and `parseRgb`
+// from this file by name, and removing them would break a caller to save nothing.
+export { contrast, luminance, parseRgb, resolvePlaywright };
 
 /**
  * Identities this crawler answers to when reading robots.txt.
