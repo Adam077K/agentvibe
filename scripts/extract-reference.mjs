@@ -26,17 +26,29 @@
 //   · "no display band"                           — a category error; play.grafana.org, a real
 //                                                   dashboard, ships `12 14` and nothing else
 //
-// So the harness must be able to kill the rule its own sibling `design-probe.mjs` enforces
-// (MIN_STEP_RATIO = 1.125). It can, and `scripts/extract-reference.test.mjs` proves it does —
-// that test is the negative control for the whole idea.
+// So the harness had to be able to kill the rule its own sibling `design-probe.mjs` enforced
+// (MIN_STEP_RATIO = 1.125). IT DID, AND THE RULE IS GONE: on `integration/design-layer` that
+// constant, `scaleGaps()` and the `type-scale-near-duplicates` finding built on them survive only
+// as a deletion record. Verified from here rather than taken on report — that file carries ONE
+// mention of the name and it is the removal note, against FOUR live mentions in the untracked copy
+// sitting in the session root. `scripts/extract-reference.test.mjs` still refutes the rule, and
+// keeping that test after the rule died is the point: it is the negative control for the whole
+// idea, and a harness that cannot demonstrate a refutation is a machine for confirming its input.
+//
+// READ THAT COPY DISCREPANCY AS A HAZARD, NOT AS TRIVIA. One file existed in several worktrees at
+// once and the visible copy was not the shipping one. `git log --all -- <path>` returning nothing
+// means the path is untracked SOMEWHERE, not absent everywhere.
 //
 // WHAT IT DELIBERATELY DOES NOT DO:
 //   · judge whether a reference is GOOD. It reports what a site's system IS. Taste is the
 //     founder's selection of the corpus, not this file's arithmetic.
 //   · guess. Where a value cannot be honestly fitted it emits `null` and a note saying why.
 //     A plausible number with no derivation behind it is the failure mode this repo exists to
-//     refuse, and `leading.falloff`/`leading.exponent` are emitted as null for exactly that
-//     reason — the contract names them but does not state the curve they parameterise.
+//     refuse. `leading.falloff`/`leading.exponent` were null UNCONDITIONALLY until 2026-08-29,
+//     because the schema named them without stating the curve they parameterise; the formula was
+//     supplied and they are fitted against it now, and null only when the DATA refuses.
+//     As of that day NOT ONE of the five measured references fits it inside a 0.1 RMS residual —
+//     which is a finding about the formula, not about the references, and is reported as such.
 //
 // LEGAL AND SAFETY POSTURE — non-negotiable, and it is why the old scripts are gone:
 //   · logged-out, robots-respecting, low volume, one page at a time. Never logs in.
@@ -53,11 +65,11 @@
 //   1 = measured, and something failed (a rule came back REFUTED)
 //   2 = COULD NOT MEASURE — no browser, no launch, or robots said no. Never a clean-looking zero.
 
-// `createRequire` was here solely so `resolvePlaywright` could `require()` a CJS entry point. That
-// function moved to `./design-lib.mjs`, which carries its own, so the shim is dead here and is
-// removed rather than left as a loaded gun for the next reader.
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
 
 export const TOOL = 'scripts/extract-reference.mjs';
 
@@ -423,25 +435,40 @@ export function fitTracking(rows, { minR2 = 0.5, restrictTo = null } = {}) {
 }
 
 /**
- * The leading curve, fitted only where the data determines it.
+ * The leading curve, fitted against the function `build-tokens.mjs` actually implements:
  *
- * `peak`/`peakAt` are measurable maxima and are emitted. `displayRatio` is the mean over the
- * display band and is emitted when that band has data.
+ *     lineHeight(s) = peak - (|s - peakAt| / peakAt) ^ exponent * falloff
  *
- * `falloff` and `exponent` are emitted as NULL, always, and this is a deliberate refusal rather
- * than a gap: the seeds contract names the two parameters but does not state the curve they
- * parameterise, and four candidate curves fit the same peak equally well. The full measured table
- * ships in measured.json so the consumer can fit its own model. When the generator's formula is
- * written down, this function fits it — and not before.
+ * with `displayRatio` governing the display band instead of the curve.
+ *
+ * THIS USED TO EMIT `falloff: null` AND `exponent: null` UNCONDITIONALLY, and that refusal was
+ * correct at the time for a reason worth keeping: the seeds schema named both parameters without
+ * stating the curve they parameterise, and four candidate curves fit the same peak equally well.
+ * Refusing to guess was right. The formula above closed the gap — it was a contract defect, not an
+ * unfittable measurement — so the refusal is now conditional on the DATA rather than on the schema.
+ *
+ * How the fit works, because a linearisation deserves to be stated rather than trusted. With `peak`
+ * and `peakAt` taken as the maximum and its location — which the formula forces, since u = 0 there
+ * — write u = |s - peakAt|/peakAt and d = peak - lineHeight(s). Then d = falloff · u^exponent, so
+ * log d = log falloff + exponent · log u: an ordinary least-squares line in log-log space, with
+ * `exponent` its slope and `falloff` the exponential of its intercept.
+ *
+ * WHAT THIS FIT IS AND IS NOT, and it must be said in the output as well as here. The SHAPE is
+ * sourced — leading peaks near 1.5-1.56 around 16-18px and reaches 1.0 at display sizes, and both
+ * Radix and Tailwind obey it. The exact FUNCTION is a fit, not a standard. So a reference that fits
+ * it badly is evidence about the formula, not a defect in the reference, and the residual is
+ * reported on every fit rather than only on the failures.
+ *
+ * REFUSES, with the residual in the notes, when: fewer than 3 usable points, every point sits at
+ * the peak, or the RMS residual exceeds `maxResidual`. A bad fit reported is worth more than a
+ * plausible one.
  */
-export function fitLeading(rows, { displaySizes = [], uiSizes = null, minSamples = 3, minShare = 0.02 } = {}) {
+export function fitLeading(rows, { displaySizes = [], uiSizes = null, minSamples = 3, minShare = 0.02, maxResidual = 0.1 } = {}) {
   const pts = (rows ?? []).filter((r) => Number.isFinite(r.size) && Number.isFinite(r.leadingRatio));
-  const notes = [
-    'falloff and exponent are null because the seeds contract names them without stating the curve they parameterise; the measured leading table is emitted in full so a consumer can fit its own model',
-  ];
-  if (pts.length < 3) {
-    return { peak: null, peakAt: null, falloff: null, exponent: null, displayRatio: null, n: pts.length, notes: [...notes, `only ${pts.length} size(s) carry a resolved line-height; peak is not fitted below 3`] };
-  }
+  const notes = [];
+  const nullFit = (extra) => ({ peak: null, peakAt: null, falloff: null, exponent: null, displayRatio: null, n: pts.length, residual: null, notes: [...notes, ...extra] });
+  if (pts.length < 3) return nullFit([`only ${pts.length} size(s) carry a resolved line-height; nothing is fitted below 3`]);
+
   const displaySet = new Set(displaySizes.map(Number));
   // The peak is a property of the UI band. Selecting by "not display" let a size BELOW the band in:
   // measured on vercel.com 2026-08-29, an 11px outlier at ratio 1.818 was reported as the peak
@@ -463,16 +490,53 @@ export function fitLeading(rows, { displaySizes = [], uiSizes = null, minSamples
   else if (excluded.length) notes.push(`peak excludes ${excluded.length} under-sampled size(s) (${excluded.map((p) => `${p.size}px n=${p.count}`).join(', ')}) — a size carried by a handful of elements is not this reference's leading`);
 
   const top = basis.reduce((a, p) => (p.leadingRatio > a.leadingRatio ? p : a), basis[0]);
+  const peak = r3(top.leadingRatio);
+  const peakAt = top.size;
   const dispPts = pts.filter((p) => displaySet.has(p.size));
-  return {
-    peak: r3(top.leadingRatio),
-    peakAt: top.size,
-    falloff: null,
-    exponent: null,
-    displayRatio: dispPts.length ? r3(dispPts.reduce((a, p) => a + p.leadingRatio, 0) / dispPts.length) : null,
-    n: basis.length,
-    notes: dispPts.length ? notes : [...notes, 'displayRatio is null: this reference has no display band to average over'],
-  };
+  const displayRatio = dispPts.length ? r3(dispPts.reduce((a, p) => a + p.leadingRatio, 0) / dispPts.length) : null;
+  if (!dispPts.length) notes.push('displayRatio is null: this reference has no display band to average over');
+  notes.push('the SHAPE of this curve is sourced (peak near 1.5-1.56 at 16-18px, 1.0 at display; both Radix and Tailwind obey it) but the exact FUNCTION is a fit, not a standard — a poor fit is evidence about the formula, not about the reference');
+
+  const half = (extra) => ({ peak, peakAt, falloff: null, exponent: null, displayRatio, n: basis.length, residual: null, notes: [...notes, ...extra] });
+
+  // log d = log falloff + exponent * log u. Points at the peak carry u = 0 and are excluded by
+  // construction; points at or above the peak carry d <= 0 and cannot be logged, so they are
+  // excluded AND COUNTED — a silent drop here would quietly narrow what the fit was fitted to.
+  const lg = [];
+  let atOrAbovePeak = 0;
+  for (const p of basis) {
+    const u = Math.abs(p.size - peakAt) / peakAt;
+    const d = peak - p.leadingRatio;
+    if (u === 0) continue;
+    if (d <= 0) {
+      atOrAbovePeak++;
+      continue;
+    }
+    lg.push({ x: Math.log(u), y: Math.log(d) });
+  }
+  if (atOrAbovePeak) notes.push(`${atOrAbovePeak} size(s) sit at the peak value away from peakAt, so they carry no falloff and are outside the log-log fit`);
+  if (lg.length < 3) return half([`only ${lg.length} point(s) carry a measurable falloff; exponent and falloff need 3 and are null rather than guessed`]);
+
+  const n = lg.length;
+  const mx = lg.reduce((a, q) => a + q.x, 0) / n;
+  const my = lg.reduce((a, q) => a + q.y, 0) / n;
+  const sxx = lg.reduce((a, q) => a + (q.x - mx) ** 2, 0);
+  if (sxx === 0) return half(['every falloff point sits at one distance from the peak; the exponent is undetermined']);
+  const exponent = lg.reduce((a, q) => a + (q.x - mx) * (q.y - my), 0) / sxx;
+  const falloff = Math.exp(my - exponent * mx);
+
+  // Residual in the ORIGINAL space, not in log space — a small log residual can be a large
+  // line-height error, and line-height is what a reader sees.
+  const errs = basis.map((p) => {
+    const u = Math.abs(p.size - peakAt) / peakAt;
+    return p.leadingRatio - (peak - u ** exponent * falloff);
+  });
+  const residual = r3(Math.sqrt(errs.reduce((a, e) => a + e * e, 0) / errs.length));
+
+  if (!Number.isFinite(exponent) || !Number.isFinite(falloff) || residual > maxResidual) {
+    return { peak, peakAt, falloff: null, exponent: null, displayRatio, n: basis.length, residual, notes: [...notes, `the curve does not fit: RMS residual ${residual} against a ceiling of ${maxResidual} (best line-log fit was exponent ${r3(exponent)}, falloff ${r3(falloff)}). Reported rather than emitted — a bad fit named beats a plausible one.`] };
+  }
+  return { peak, peakAt, falloff: r3(falloff), exponent: r3(exponent), displayRatio, n: basis.length, residual, notes: [...notes, `curve fitted over ${n} falloff point(s), RMS residual ${residual}`] };
 }
 
 /**
@@ -559,7 +623,11 @@ export function deriveSeeds(measured, { minCount = 1, minShare = 0 } = {}) {
   let display = null;
   if (bands.display.length === 1) {
     display = { base: bands.display[0].value, increment: null, steps: 1 };
-    notes.push('display: one size above the ui band, so increment is undetermined by the data and is null — a single point fixes no spacing');
+    // The null is honest AND cheap to satisfy, and saying only the first half makes it read as a
+    // blocker. Measured by the tokens lane 2026-08-29: at `steps: 1` the generator produces the
+    // same single-value band for increment 4, 8 or 99, so the field is arithmetically INERT there
+    // while its validator still demands an integer >= 4. Repo default is 8.
+    notes.push('display: one size above the ui band, so increment is undetermined by the data and is null — a single point fixes no spacing. To paste this into seeds.json, ANY integer >= 4 satisfies the validator and none of them changes a byte of output at steps: 1 (the repo default is 8); the field only starts to matter if steps grows.');
   } else if (bands.display.length >= 2) {
     const f = bands.displayFit;
     display = f

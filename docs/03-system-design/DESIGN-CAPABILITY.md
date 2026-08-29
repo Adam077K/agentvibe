@@ -1669,3 +1669,96 @@ which passes on a file missing three sections; not the suite, which does not rea
 **The mechanism that would prevent it does not exist and is cheap:** every write to a shared path uses an
 absolute path, and every count is `grep -c` against that absolute path rather than an echoed constant.
 Both were written into builder briefs today by the agent that then did neither.
+
+### 15.34 A deduplication refused to unify two functions, and the refusal is the finding
+
+Three copies of the colour maths existed because three lanes built in parallel against untracked
+neighbours. Collapsing them into `scripts/design-lib.mjs` moved **no number**: 21 · 15.734 · 3.139 ·
+8.581 · 5.120 identical before and after, across all four modules.
+
+**`parseRgb` was NOT unified.** The two copies genuinely differ, one-directionally — verified here:
+
+| input | `design-probe` | `design-lib` |
+|---|---|---|
+| `rgb(13, 14, 17)` | `[13,14,17]` | `[13,14,17]` |
+| **`rgb(0 0 0)`** | **`null`** | `[0,0,0]` |
+| **`rgb(11 12 14 / 0.5)`** | **`null`** | `[11,12,14]` |
+| **`rgba(0, 0, 0, var(--a))`** | **`null`** | `[0,0,0]` |
+
+Those three shapes are **CSS Color 4 serialization, which Chromium already emits for some computed
+colours and emits for more over time.** In the probe, `null` means *a colour I could not read*, and a
+colour it cannot read is **a contrast check that does not run**.
+
+> **The instrument fails closed on a syntax the browser is adopting, and the hole widens on its own.**
+
+Refusing the unification was right: widening acceptance changes what the instrument *measures*, on live
+pages, in a direction nobody reviewed — **a decision about the probe, not a side effect a deduplication
+gets to make.** Both behaviours are pinned by tests, so the fork can neither drift nor be tidied away.
+
+1. **A dedupe that finds a behavioural difference has found a defect, not a merge conflict.** All three
+   copies agreed on every number; the disagreement was in what each *declined to answer*.
+2. **Silent under-measurement is invisible to every check here.** Nothing counts the colours the probe
+   skipped, and *"I measured fewer things this month"* is not a finding any test emits.
+
+### 15.35 The line-height curve fits 0 of 5 references — and it was tested against the wrong population
+
+§7.1: *"Two rules no one writes down that **Radix and Tailwind** both obey: line-height is a curve…"*
+
+| control / reference | residual |
+|---|---|
+| **synthetic data from the formula itself** | **0 — all four parameters recovered exactly** |
+| linear.app · stripe.com | 0.134 · 0.106 |
+| vercel · grafana · docs.stripe | too few off-peak points to fit at all |
+
+**0 of 5 fit inside a 0.1 RMS residual, and the positive control proves the fitter is correct.**
+**linear.app's leading is not monotone in distance from its peak** — 12px sits further below the peak
+than 10px while being nearer to it — so no curve of that family can pass through its points.
+
+**The rule is not falsified. It was tested against the wrong population.** Radix and Tailwind are
+**design systems**, which *prescribe*. linear.app and stripe.com are **sites**, which set whatever each
+component needed. A prescription is not refuted by people not following it — **and cannot be derived from
+them either.** *Fourth instance of a measurement taken without a model of what is being measured, and the
+first where the wrong population is a category rather than a component.*
+
+So `falloff`/`exponent` are **not extractable in principle**. The extractor emits permanent `null` with
+that reason rather than a residual: *"I could not fit this"* and *"this is not a fittable quantity"* are
+different statements and only the second stops someone trying harder.
+
+**Without the positive control, 0-of-5 is indistinguishable from a broken fitter** — and that is the
+reading a tired reviewer takes.
+
+### 15.36 "No agent could register a claim" WAS FALSE, and it was recorded twice
+
+§15.10 records a `sourcer` unable to reach `mcp__claim-append`. Three agents reported the same and this
+document recorded it twice as a capability gap. **A CLI existed the whole time**: `scripts/claim-append.mjs`,
+3,456 bytes, present since 2026-08-28. One builder found it and registered a claim that resolves green.
+
+**The MCP finding stands** — the grant is not arriving, now on a second server. **The conclusion drawn
+from it was false.** Four agents hit a missing tool; three concluded the capability was absent; one
+checked.
+
+> **A missing tool is not a missing capability, and the difference is one `ls`.** Same shape as `refero`
+> reported "live" because its tools loaded — *tools loading is not capability* — run backwards.
+
+Also, so nobody re-reports it: `ledger verify` shows **8 would_block** in a fresh worktree against
+CLAUDE.md's **5**. The three extra are mission-control claims that fail without `bun install`, which
+CLAUDE.md names. **5 + 3 = 8; the new claim adds zero.**
+
+### 15.37 A merge resolution kept the newer TEST and the older IMPLEMENTATION, and only luck made that loud
+
+Resolving one conflict in `scripts/extract-reference.mjs`, the orchestrator took its own side wholesale
+after grepping for **two** things it expected to differ. Both greps matched, so the resolution looked
+safe. It was not: that side predated a **75-line** `fitLeading` implementation, replacing it with a
+40-line stub returning `null`.
+
+**The test file was not in conflict, so it merged cleanly to the newer version.** Result: new tests
+against an old implementation → `test:merge-gate` exit 1, four named failures, `47 of 48`.
+
+> **The regression was loud only because the two halves desynchronised.** Had the conflict covered the
+> test file too, taking "ours" for both would have produced an old implementation with old tests —
+> **green, consistent, and silently missing a feature.**
+
+**The check that would have caught it is not a grep for what you expect to differ; it is a diff of what
+each side actually contains.** `sum('function fitLeading' in l)` over both sides answers in one line what
+two targeted greps missed. Recorded as the third orchestrator error of the day on the same theme:
+**a verification aimed at the failure you predicted cannot see the one you did not.**
