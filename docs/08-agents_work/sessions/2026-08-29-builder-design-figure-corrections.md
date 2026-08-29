@@ -77,3 +77,49 @@ prose now. A record of a rotted pointer must not itself be a pointer.
 
 The first two are this branch's and are **not fixed**, because the brief scoped the repair to three
 named locators and warned against a sweep. They are recorded here so the decision is visible.
+
+## The origin: DESIGN-CAPABILITY.md §7.1 and §10.1
+
+`design/system/type.md` copied its table from §7.1, where the same figures stood under the words
+**"VERIFIED HERE, five ramps"**. That is why it survived review in two places: a false table wearing
+"verified" is a defect that supplies a reason not to check it. §7 s preamble compounded it — *"the
+central finding was re-derived independently … see the verification block below"* pointed the reader
+at the transcription as evidence of its own independence.
+
+| §7.1 figure | Was | Is | Derived by |
+|---|---|---|---|
+| the increment table | 4 of 5 rows false, docs.stripe.com absent from a table captioned "five ramps" | commands first, dated table second | per-slug `measured.json` increments |
+| "+0.5, **seven** times" | seven | **six** | the verdict command below |
+| "bottoms out at **1.067**" | 1.067 (linear 15→16, read off the refuted table) | **1.048** (stripe 21→22) | `Math.min` over `type.uiSteps` |
+| "the **1.07–1.17** band measured on linear/stripe/vercel" | 1.07–1.17 | **[1.048, 1.167]** | `Math.min`/`Math.max` over the corpus |
+| "fourth and **finally correct**" | finally | struck — §15.16 falsified the integer half | cross-reference, not restated |
+| §10.1 `136` | unlabelled | rule + command stated | `grep … \| wc -l` → 136 · `2 py-[7px]` · `9` |
+
+`1.07–1.17` was not in the brief. It is the same class, in the same section, and the correction
+**confirms** the mechanism rather than damaging it: 1.048 is stripe.com's 21→22, which is `1 + 1/21`
+exactly — a `d=1` step above the 12→20 range the arithmetic considered, because stripe's UI band runs
+to 26px. The sentence compared a union over 12→20 against a corpus wider than 12→20.
+
+### Does the argument survive 1.048? Yes — and its margin does not
+
+`ALL BELOW FLOOR true`: 1.045 is below 1.048. But the gap between mission-control's highest +0.5 ratio
+and the corpus floor fell from **0.022 to 0.003**, so the claim is seven times thinner than the refuted
+figure made it look and now turns on one step of one reference. **It also turns on band membership:**
+the corpus already contains an adjacent ratio of **1.008** — play.grafana.org 11.9→12, present in
+`type.steps` and absent from `type.uiSteps` because 11.9 falls outside that reference s UI band.
+Minimise over `type.steps` and the finding evaporates. The UI-band comparison is the like-for-like one
+and is correct — every mission-control authored size is a UI-band size — but it is stated with that
+dependency out loud rather than quoted as a clean margin.
+
+### Not fixed, and measured rather than assumed
+
+`DESIGN-CAPABILITY.md:95-100`, in §1.2, carries three more figures of this class inside a superseded
+blockquote: *"Linear 1.07–1.13, Stripe 1.09–1.17, Vercel 1.09–1.17"* (true: `[1.067,1.1]`,
+`[1.048,1.125]`, `[1.143,1.167]`), *"play.grafana.org ships **two sizes total**"* (it ships eight), and
+*"the fractional sizes … which no measured reference uses"* (grafana uses five). All three are already
+refuted by §15.16. Left alone deliberately: it is outside the two sections the brief named, it is a
+*record of a correction* rather than a live rule, and adding a third account of the grafana measurement
+is the "two accounts of one event" failure this document keeps finding.
+
+**Nothing was restructured.** The heading list is byte-identical before and after — 114 headings,
+`diff` clean — because other documents cite this file by section number.

@@ -461,32 +461,127 @@ and were callable. Tools loading is not capability.
 
 ## 7 · Visual foundations — the production procedure, and it is writable
 
-Fifth research stream, 2026-08-29. **The central finding was re-derived independently in this worktree
-before being recorded here** — see the verification block below.
+Fifth research stream, 2026-08-29. **The central finding — that ramps are built by increment rather than
+by ratio — was re-derived independently in this worktree, and that claim stands.** The *increment table*
+that used to carry it did not; see the superseded block in §7.1.
+
+> **Superseded 2026-08-29.** This closed *"— see the verification block below"*, and the block it sent the
+> reader to was headed "VERIFIED HERE, five ramps" over figures the corpus refutes. A pointer to
+> verification is not verification, and this one pointed at the transcription. The mechanism claim is
+> unaffected: `ratio = 1 + d/s` holds exactly on every measured run, which is checkable and is checked by
+> `scripts/extract-reference.test.mjs`.
 
 ### 7.1 Type ramps are built by ARITHMETIC INCREMENT, not by modular ratio
 
 For a ramp with constant absolute increment `d` at size `s`, the adjacent ratio is exactly `1 + d/s`. At
-`d=2` over 12→20 that gives 1.167, 1.143, 1.125, 1.111, 1.100; at `d=1`, 1.083 down to 1.050. The union is
-**[1.05, 1.167]** — which is the 1.07–1.17 band measured on linear.app, stripe.com and vercel.com.
+`d=2` over 12→20 that gives 1.167, 1.143, 1.125, 1.111, 1.100; at `d=1`, 1.083 down to 1.050. The union over
+that range is **[1.05, 1.167]**, and the band measured across the corpus is **[1.048, 1.167]** — derive it,
+do not quote it:
+
+```bash
+node -e "const s=['linear-app','stripe-com','vercel-com','play-grafana-org','docs-stripe-com'];
+  const r=s.flatMap(x=>require('./design/references/'+x+'/measured.json').type.uiSteps.map(t=>t.ratio));
+  console.log(Math.min(...r), Math.max(...r))"
+```
+
+> **Superseded 2026-08-29 — this read *"which is the 1.07–1.17 band measured on linear.app, stripe.com and
+> vercel.com"*, and the measured bottom is 1.048, not 1.07.** The mechanism is not damaged by the
+> correction; it is confirmed by it. 1.048 is stripe.com's 21→22, which is `1 + 1/21` exactly — a `d=1`
+> step at a size *above* the 12→20 range the arithmetic above considers, because stripe's UI band runs to
+> 26px. The sentence compared a union computed over 12→20 against a corpus that is wider than 12→20 and
+> then rounded the disagreement away.
 
 **So the "compressed ratio band" is not a compressed modular scale. It is the arithmetic signature of a
 constant +1/+2px step.** A modular scale holds its ratio constant by definition; these visibly decrease.
 
-**VERIFIED HERE, five ramps, `ratio = 1 + d/s` exact to three decimals and monotonically decreasing within
-every constant-increment run:**
+**THE INCREMENTS, AND THE COMMANDS THAT RETURN THEM.** The corpus is `design/references/`, five references
+captured live by `scripts/extract-reference.mjs`. Run these before reading the table below them:
+
+```bash
+# UI-band and display-band increments, one reference.
+# Slugs: linear-app · stripe-com · vercel-com · play-grafana-org · docs-stripe-com
+node -e "const j=require('./design/references/<slug>/measured.json');
+  for (const b of ['ui','display']) { const a = j.type.bands[b].sizes;
+    console.log(b, JSON.stringify(a.slice(1).map((v,i) => +(v - a[i]).toFixed(3)))); }"
+
+# mission-control's own ramp, from its source rather than from the corpus:
+grep -rhoE 'text-\[[0-9.]+px\]' mission-control/client/src | grep -oE '[0-9.]+' | sort -n -u
+```
+
+**What these returned on 2026-08-29 — re-run them, do not quote this table:**
 
 | Ramp | UI-band increments | Display-band increments |
 |---|---|---|
-| linear.app | `1 1 1 1 1 1 2` | `6 8 16 16` |
-| stripe.com | `1 1 1 1 2 2 2` | `4 4 6 16` |
-| vercel.com | `1 2 2 2 2 2 2` | `32 8` |
-| play.grafana.org | `2` | *(none — two sizes is the whole ramp)* |
+| linear.app | `1 1 1 1 1 1` | `2 4 8 16 16 8` |
+| stripe.com | `1 1 1 1 1 1 1 1 2 2 1 1 2 2` | `16 8` |
+| vercel.com | `2 2` | `32 8` |
+| play.grafana.org | `0.6 1.4` | `1.4 1.4 9.8` |
+| docs.stripe.com | `1 1` | `5 3 8` |
 | **mission-control** | **`1 0.5 0.5 0.5 0.5 0.5 0.5 1`** | `5` |
 
-**THE DEFECT, fourth and finally correct version: every reference builds its UI band on integer steps of +1
-or +2; mission-control uses +0.5, seven times consecutively.** Its adjacent ratios (1.045 … 1.037) sit
-entirely *below* the reference band, which bottoms out at 1.067.
+mission-control's display step is the one `text-xl` in `client/src/ui.tsx` — Tailwind's 20px — so the
+`text-[Npx]` grep above does not show it.
+
+> **Superseded 2026-08-29 — the table above stood here under the words "VERIFIED HERE, five ramps", and
+> `design/references/` refutes four of its five rows.** It read: linear.app `1 1 1 1 1 1 2` / `6 8 16 16` ·
+> stripe.com `1 1 1 1 2 2 2` / `4 4 6 16` · vercel.com `1 2 2 2 2 2 2` / `32 8` · play.grafana.org `2` /
+> *(none — two sizes is the whole ramp)*. Only vercel's display row survived, and **docs.stripe.com, the
+> fifth committed reference, was absent** from a table captioned "five ramps" — the fifth ramp it counted
+> was mission-control, the subject under diagnosis, not a reference.
+>
+> **How it got there, which is the part worth keeping.** The figures were transcribed from a secondhand
+> list. `scripts/extract-reference.mjs` measured the five sites live afterwards, writing
+> `design/references/*/measured.json`. Nothing reconciled the transcription against the measurement, and
+> **the word "VERIFIED" was attached to the transcription.** §7's preamble compounded it: *"the central
+> finding was re-derived independently in this worktree before being recorded here — see the verification
+> block below"* pointed the reader at this table as the evidence of its own independence.
+>
+> **That is why it propagated.** `design/system/type.md` copied the table into a `status: answered` rule
+> document, where it survived review in both places until an evidence-lens pass re-derived every figure
+> on 2026-08-29. A false table is a defect; a false table wearing the word "verified" is a defect with a
+> reason not to check it.
+>
+> **play.grafana.org's row is a finding, not a typo, and §15.16 is where it lives.** It is not `2`; the
+> band is fractional. §15.16 records that collision in full, from the measurement side. It is
+> cross-referenced rather than restated here, because two accounts of one event disagree eventually —
+> which is the failure this document keeps finding.
+
+**THE DEFECT, fourth version: every reference builds its UI band on integer steps of +1 or +2;
+mission-control uses +0.5, six times consecutively, and its adjacent ratios across those six steps sit
+entirely below the lowest adjacent UI-band ratio anywhere in the corpus.** That comparison is a command —
+it reads both sides live and prints the verdict:
+
+```bash
+node -e "
+const fs = require('fs'), { execSync } = require('child_process');
+const floor = Math.min(...fs.readdirSync('design/references').flatMap(d =>
+  JSON.parse(fs.readFileSync('design/references/' + d + '/measured.json', 'utf8')).type.uiSteps.map(s => s.ratio)));
+const mc = [...new Set(execSync(\"grep -rhoE 'text-\\\\[[0-9.]+px\\\\]' mission-control/client/src\")
+  .toString().match(/[0-9.]+/g).map(Number))].sort((a, b) => a - b);
+const half = mc.slice(1).map((v, i) => [+(v - mc[i]).toFixed(3), +(v / mc[i]).toFixed(3)]).filter(([d]) => d === 0.5);
+console.log('ui-band floor', floor, '| +0.5 steps', half.length,
+            '| ratios', half.map(([, r]) => r).join(' '),
+            '| ALL BELOW FLOOR', half.every(([, r]) => r < floor));
+"
+```
+
+> **Superseded 2026-08-29 — two figures, and the word "finally".** This read *"+0.5, **seven** times
+> consecutively"* (it is **six**: nine authored sizes admit eight increments, and the table's own
+> mission-control row prints six) and *"the reference band, which bottoms out at **1.067**"* (the UI-band
+> floor is **1.048**, stripe.com's 21→22 — 1.067 was linear's 15→16, read off the refuted table, which is
+> why the two errors travelled together). It also called this version *"fourth and finally correct"*;
+> §15.16 then falsified the integer half of it, so "finally" is struck rather than renumbered.
+>
+> **THE CONCLUSION SURVIVES THE CORRECTION, AND ITS MARGIN DOES NOT.** 1.045 is still below 1.048, so the
+> command still prints `ALL BELOW FLOOR true`. But the gap between mission-control's highest +0.5 ratio
+> and the corpus floor fell from **0.022** to **0.003** — the claim is seven times thinner than the
+> refuted figure made it look, and it now turns on a single step of a single reference. **It also turns
+> on band membership.** The corpus already contains an adjacent ratio of **1.008** — play.grafana.org's
+> 11.9→12, which appears in `type.steps` and not in `type.uiSteps`, because 11.9 falls outside that
+> reference's UI band. Minimise over `type.steps` instead of `type.uiSteps` and the floor drops below
+> every mission-control ratio and the finding evaporates. The UI-band comparison is the like-for-like one
+> and is the right one to make — every mission-control authored size is a UI-band size — but a conclusion
+> that depends on a band boundary should say so out loud rather than be quoted as a clean 0.022 margin.
 
 > **This diagnosis was wrong three times before it was right, and every wrong version was well-formed.**
 > (1) *"6 sizes = disciplined restraint"* — a distinct-value count cannot see structure. (2) *"near-duplicates,
@@ -760,7 +855,34 @@ Eighth stream. **A repo-facing claim was checked here and is WRONG on provenance
 
 ### 10.1 TWO LINKS OF §1's CAUSAL CHAIN ARE WITHDRAWN
 
-Measured here: **136 Tailwind scale spacing utilities vs 2 arbitrary values** (both `7px`).
+Measured here: **136 Tailwind scale spacing utilities vs 2 arbitrary values** (both `7px`) — **padding and
+margin utilities only, on Tailwind's numeric scale, under `mission-control/client/src`.** Both figures come
+from that one prefix set, which is what makes "136 against 2" a single measurement:
+
+```bash
+# 136 — the scale utilities
+grep -rhoE '\b(p|px|py|pt|pr|pb|pl|m|mx|my|mt|mr|mb|ml)-[0-9]+(\.5)?\b' mission-control/client/src | wc -l
+
+# 2 — the arbitrary ones, same prefix set
+grep -rhoE '\b(p|px|py|pt|pr|pb|pl|m|mx|my|mt|mr|mb|ml)-\[[^]]+\]' mission-control/client/src | sort | uniq -c
+# ->   2 py-[7px]
+
+# 9 — the type census in the row below, for the same reason
+grep -rhoE 'text-\[[0-9.]+px\]' mission-control/client/src | grep -oE '[0-9.]+' | sort -n -u | wc -l
+```
+
+> **Counting rule stated 2026-08-29 — the figure was reproducible and the RULE was not, and that is the
+> defect.** `136` stood here with no prefix set, no path and no command, so a reader re-deriving it lands
+> wherever their reading of "spacing utility" takes them: adding `gap-*` and `space-x|y` — spacing
+> utilities by any ordinary reading — gives **168**, and adding `w-*`/`h-*`/`size-*` gives **174**. Three
+> defensible readings, one unlabelled number, and this instance is the one quoted onward to the founder.
+> The pairing settles which rule was meant: `py-[7px]` is a *padding* utility, so restricting to padding
+> and margin is the only reading under which the `136` and the `2` are counts of the same thing. Widen it
+> to `gap`/`space` and the 136 moves while the 2 does not.
+>
+> **This was challenged as "not reproducible: 128 / 175 / 181" and that challenge was wrong** — none of
+> those three figures reproduces under any prefix set tried. The underlying complaint was right and is
+> what is fixed here.
 
 | Axis | §1 said | Measured | Status |
 |---|---|---|---|
