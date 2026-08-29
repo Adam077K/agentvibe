@@ -45,6 +45,40 @@
 //
 // Nothing replaces its OPINION. `token-conformance` replaces its JOB.
 //
+// ── WHY EVERY FINDING THIS PROBE EMITS IS p1, DECIDED 2026-08-29 ─────────────────────────────────
+//
+// Conformance findings were `p2` while the verdict was `ok: !findings.some(p1)`. Measured against
+// the real shipped `design/tokens/tokens.json` and the exact census this layer was built for —
+// fontSize {12.5:30, 11.5:13, 13.5:1}, lineHeight {1.625:27}, 45 of 94 usages off-system and 27
+// line-heights off-system — the probe emitted 2 findings, both p2, `ok: true`, exit 0,
+// `state: "MEASURED — passed"`. The finder worked and the verdict did not read it, which made the
+// whole conformance axis decorative: no token-conformance violation could ever fail a run.
+//
+// THE DECISION: a rendered value that appears in NO token BLOCKS. It is the binding class by
+// construction — deterministic, reproducible twice from the same page, and it names the exact
+// token to change to. This layer's claim is that conformance can bind; a severity that cannot
+// reach the verdict is that claim withdrawn in the one field a machine reads.
+//
+// THE ALTERNATIVE THAT WAS REJECTED: keep `p2` and widen the verdict to "no p1 AND no conformance
+// finding". It gates the same runs, and it leaves `severity: p2` sitting on a finding that blocks
+// — so a reader who sees p2 and infers "does not block" is reading the field the way every other
+// severity scale in this repo uses it. Two meanings of one word beats no meaning only until
+// somebody acts on the wrong one.
+//
+// AND NO USAGE THRESHOLD. A value rendered once is exactly as unauthorised as one rendered thirty
+// times; `count` travels with every offender so a reader can prioritise, but the probe does not
+// decide that 3 usages are tolerable and 30 are not. That number would be invented here, which is
+// how `MIN_STEP_RATIO` above got written and then falsified.
+//
+// THE CONSEQUENCE, STATED RATHER THAN LEFT TO BE DISCOVERED: every check this file emits is now
+// p1, so `ok` is today equivalent to `findings.length === 0` and `rank()` sorts one class. That is
+// not an argument against the change — it is what "everything this instrument measures is
+// deterministic and cites a standard" implies. `severity` and `rank()` stay because the first
+// non-blocking check needs somewhere to go: SC 2.5.5's 44px AAA target is the obvious next one,
+// and it is advisory by the spec's own level. **No test asserts "every finding is p1"** — that
+// would pin a rule this file expects to stop being true, which is the harm the deleted
+// MIN_STEP_RATIO test did.
+//
 // WHAT IT DELIBERATELY DOES NOT DO, stated so the gap is visible rather than assumed covered — see
 // UNCHECKED below, which is emitted on stdout AND into the JSON artifact so a reviewer who cannot
 // run a browser cannot mistake silence for coverage.
@@ -133,6 +167,12 @@ export const DEFAULT_VIEWPORTS = [
 
 /** The token file this probe measures conformance against, relative to the repo root. */
 export const DEFAULT_TOKENS_PATH = 'design/tokens/tokens.json';
+
+/**
+ * How Chromium serialises a fully transparent computed `background-color`. It is a SENTINEL, not a
+ * colour, and the difference is the whole of the defect recorded on `canvasBackground()` below.
+ */
+export const TRANSPARENT = 'rgba(0, 0, 0, 0)';
 
 // Holes that exist whatever the page contains. Declared, not assumed covered.
 export const UNCHECKED_ALWAYS = [
@@ -378,6 +418,26 @@ export function rank(findings) {
   return [...findings].sort((a, b) => (order[a.severity] ?? 9) - (order[b.severity] ?? 9));
 }
 
+/**
+ * The findings that fail a run. ONE definition, because there were three: `probe()` computed
+ * `ok`, the CLI counted p1s for its closing line, and every caller re-derived the same filter.
+ * Three implementations of one predicate is this repo's most-cited failure mode, and here it also
+ * hid the defect above — the verdict and the finder disagreed about what counts, in a file where
+ * they sit 200 lines apart.
+ *
+ * Exported so the gate is testable without a browser. Before this existed, the only way to ask
+ * "does this page pass?" was to launch Chromium, and the one thing no test in this repo can do is
+ * launch Chromium.
+ */
+export function blocking(findings = []) {
+  return findings.filter((f) => f.severity === 'p1');
+}
+
+/** The verdict, derived from `blocking()` and nowhere else. */
+export function isPass(findings = []) {
+  return blocking(findings).length === 0;
+}
+
 // ── the in-page measurement ─────────────────────────────────────────────────────────────────────
 // Runs inside the browser. Pure geometry, computed style and the Web Animations API; no judgement.
 /* c8 ignore start — executes in the page context, not under node coverage */
@@ -451,6 +511,11 @@ function collect() {
     weights[cs.fontWeight] = (weights[cs.fontWeight] || 0) + 1;
     textColors[cs.color] = (textColors[cs.color] || 0) + 1;
 
+    // The walk finds the nearest ancestor that declares a background, up to and including <html> —
+    // and CSS propagates <body>'s background to the canvas when <html> declares none, so both are
+    // reached here. What it CANNOT find is the case where nothing declares one: `bg` is then left
+    // as the transparent sentinel, RAW, and resolveContrast() in node decides what that means.
+    // Substituting a colour here would put an untestable judgement inside page context.
     let bg = 'rgba(0, 0, 0, 0)';
     let n = el;
     while (n && bg === 'rgba(0, 0, 0, 0)') {
@@ -459,6 +524,10 @@ function collect() {
     }
     contrastPairs.push({ fg: cs.color, bg, px, bold: parseInt(cs.fontWeight, 10) >= 700 });
   });
+
+  // The two inputs the UA canvas colour depends on, reported rather than interpreted.
+  const colorScheme = String(getComputedStyle(de).colorScheme || 'normal');
+  const prefersDark = Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   // Motion, via document.getAnimations() — Baseline since September 2020, and the one API that
   // returns CSS animations, CSS transitions and Web Animations through a single interface.
@@ -501,6 +570,8 @@ function collect() {
     weights,
     textColors: Object.keys(textColors).length,
     contrastPairs,
+    colorScheme,
+    prefersDark,
   };
 }
 /* c8 ignore stop */
@@ -558,6 +629,70 @@ export function resolveMotion(raw = {}) {
   return { animationsApi: raw.animationsApi !== false, duration, easing, animations: resolved };
 }
 
+/**
+ * THE UA CANVAS COLOUR, WHICH IS NOT IN ANY COMPUTED STYLE — and reading the sentinel instead was
+ * wrong in BOTH directions, measured 2026-08-29:
+ *
+ *   `rgb(51, 51, 51)`    on an undeclared canvas → p1 `text-contrast` "1.662:1". Truth: 12.635:1.
+ *                        A FALSE BLOCKER on ordinary dark-grey body text.
+ *   `rgb(240, 240, 240)` on an undeclared canvas → nothing emitted at all. Truth: 1.14:1.
+ *                        A MISSED BLOCKER on text that is very nearly invisible.
+ *
+ * The mechanism: the ancestor walk exits carrying `rgba(0, 0, 0, 0)` when nothing between the text
+ * and the root declares a background, and `parseRgb` reads that as `[0, 0, 0]` — opaque black. The
+ * sentinel and black are one string apart and are opposite ends of the scale.
+ *
+ * WHAT IS RETURNED, AND WHAT IS DELIBERATELY NOT GUESSED. In a light colour scheme the UA canvas is
+ * white, and white is what every pixel of an undeclared page actually composites against. In a dark
+ * one it is a UA-chosen colour that this probe HAS NOT MEASURED — Chromium's dark canvas is not
+ * `rgb(0, 0, 0)` and putting a number here that nobody ran would re-create the defect in the other
+ * direction. So dark returns `color: null`, every pair on that page becomes unreadable, and
+ * `uncheckedFor()` reports the count as NOT CHECKED. An honest hole beats a plausible number.
+ *
+ * The used scheme, per CSS Color Adjustment 1: `dark` alone forces dark whatever the user prefers;
+ * `light dark` follows the preference; anything else (`normal`, `light`, absent) is light.
+ */
+export function canvasBackground({ colorScheme = 'normal', prefersDark = false } = {}) {
+  const s = String(colorScheme ?? 'normal');
+  const usedDark = /\bdark\b/.test(s) && (Boolean(prefersDark) || !/\blight\b/.test(s));
+  return { color: usedDark ? null : 'rgb(255, 255, 255)', colorScheme: s, usedDark };
+}
+
+/**
+ * Substitute the canvas into every pair whose backdrop nothing declared. Pure and separate from
+ * `collect()` for the same reason `resolveMotion` is: `collect()` is serialised into the browser
+ * and cannot be unit-tested, so no judgement may live there.
+ *
+ * `canvasBg: true` travels with the substituted pairs so a finding can say the backdrop was the
+ * UA default rather than a decision anyone made.
+ */
+export function resolveContrast(raw = {}) {
+  const canvas = canvasBackground(raw);
+  const pairs = (raw.contrastPairs ?? []).map((p) =>
+    p?.bg === TRANSPARENT ? { ...p, bg: canvas.color, canvasBg: true } : { ...p, canvasBg: false },
+  );
+  return { canvas, pairs };
+}
+
+/**
+ * The two colours of one pair, or null when either cannot be read. ONE predicate, because
+ * `findingsFor` decides whether to check a pair and `uncheckedFor` counts the ones it skipped, and
+ * those two answers must be the same answer.
+ *
+ * The sentinel is refused HERE as well as substituted in `resolveContrast`, so a caller that
+ * forgets to resolve gets "not checked" rather than a confident measurement against black. Before
+ * this, an unreadable pair was `continue`d with no counter and no `unchecked` entry — so a page
+ * whose colours this cannot read was SILENT, which is the one thing this file's header says a hole
+ * may never be. That hole widens on its own: Chromium emits more CSS Color 4 serialization over
+ * time, and `parseRgb` here refuses all of it (see the fork note above).
+ */
+export function pairColors(p = {}) {
+  if (p?.fg === TRANSPARENT || p?.bg === TRANSPARENT) return null;
+  const fg = parseRgb(p?.fg);
+  const bg = parseRgb(p?.bg);
+  return fg && bg ? { fg, bg } : null;
+}
+
 function conformanceFinding({ tag, check, property, res, unit, source }) {
   if (!res.checked || res.offenders.length === 0) return null;
   const shown = res.offenders
@@ -568,7 +703,10 @@ function conformanceFinding({ tag, check, property, res, unit, source }) {
     })
     .join(', ');
   return {
-    severity: 'p2',
+    // p1 — see "WHY EVERY FINDING THIS PROBE EMITS IS p1" in the header. This was `p2` while the
+    // verdict gated on p1, so no conformance violation could fail a run; the census that exposed
+    // it is pinned in design-probe.test.mjs as `the census that used to exit 0`.
+    severity: 'p1',
     check,
     property,
     viewport: tag,
@@ -659,20 +797,27 @@ export function findingsFor(tag, m, opts = {}) {
   if (easeF) out.push(easeF);
 
   for (const p of m.contrastPairs ?? []) {
-    const fg = parseRgb(p.fg);
-    const bg = parseRgb(p.bg);
-    if (!fg || !bg) continue;
+    // A pair this cannot read is SKIPPED, and the skip is counted — by uncheckedFor(), through the
+    // same pairColors() predicate, so the two cannot disagree about which pairs were measured.
+    const c = pairColors(p);
+    if (!c) continue;
     const large = p.px >= 24 || (p.bold && p.px >= 18.66);
     const floor = large ? 3.0 : 4.5;
-    const ratio = contrast(fg, bg);
+    const ratio = contrast(c.fg, c.bg);
     if (ratio < floor) {
-      out.push({
+      const f = {
         severity: 'p1',
         check: 'text-contrast',
         viewport: tag,
         measured: `${ratio}:1 at ${p.px}px`,
         standard: `WCAG 2.2 SC 1.4.3 Contrast (Minimum), level AA — ${floor}:1`,
-      });
+      };
+      if (p.canvasBg) {
+        f.note =
+          'the backdrop is the UA canvas default — nothing between this text and the root declares a ' +
+          'background, so this is measured against what the browser paints, not against a stated colour';
+      }
+      out.push(f);
       break; // one representative finding per viewport; the full set is in the raw measurement
     }
   }
@@ -707,6 +852,33 @@ export function uncheckedFor(tokens, { loaded = true, reason = null, path = DEFA
   }
   if (Object.values(measurements).some((m) => m?.motion && m.motion.animationsApi === false)) {
     out.unshift('motion — document.getAnimations() is not available in this browser, so no animation was read');
+  }
+
+  // Pairs the contrast check could not read. Added 2026-08-29: they were `continue`d with no
+  // counter and no entry here, so an unreadable-colour page was indistinguishable from a page with
+  // nothing to report — silence read as coverage, which is the failure this list exists to prevent.
+  const skipped = [];
+  let skippedTotal = 0;
+  let darkCanvas = false;
+  for (const [tag, m] of Object.entries(measurements)) {
+    const pairs = m?.contrastPairs ?? [];
+    const n = pairs.filter((p) => !pairColors(p)).length;
+    if (m?.canvas?.usedDark) darkCanvas = true;
+    if (n > 0) {
+      skipped.push(`${tag}: ${n} of ${pairs.length}`);
+      skippedTotal += n;
+    }
+  }
+  if (skippedTotal > 0) {
+    out.unshift(
+      `text contrast — ${skippedTotal} text/background pair(s) were NOT measured because a colour could ` +
+        `not be read (${skipped.join(', ')}). Causes: a CSS Color 4 serialization this probe's parseRgb ` +
+        'refuses' +
+        (darkCanvas
+          ? ', and a dark used colour scheme, where the UA canvas colour is not knowable from computed style and is not guessed'
+          : '') +
+        '. These pairs produced no finding, which is not the same as passing.',
+    );
   }
   return out;
 }
@@ -746,6 +918,35 @@ export function writeArtifact(path, artifact) {
 export async function probe(url, { viewports = DEFAULT_VIEWPORTS, settleMs = 2000, tokensPath = DEFAULT_TOKENS_PATH, cwd = process.cwd() } = {}) {
   const tokens = loadTokens(tokensPath, { cwd });
 
+  // A TOKEN FILE THIS CANNOT READ IS A REFUSAL, NOT A CLEAN RUN — added 2026-08-29, and this is
+  // the second half of the same defect as the severity above. `loadTokens` never throws by design,
+  // so a missing or unparseable file degraded every group to `present: false`, `conform()` returned
+  // `checked: false`, and the run produced zero findings, `ok: true`, exit 0, `state: "MEASURED —
+  // passed"`. Reproduced with `--tokens design/tokens/NOPE.json`. The reason DID reach
+  // `unchecked[0]` and `tokens.loaded: false`, so it was disclosed — and the two fields a machine
+  // or a skimming reader acts on, `exit` and `state`, both said passed. This file's own contract
+  // is that a probe which cannot see refuses; it held on the browser axis and not on this one.
+  //
+  // Checked BEFORE the browser is resolved on purpose: it is deterministic, it costs nothing, and
+  // when both are broken the token reason is the one a reader can act on without an escalated lane.
+  //
+  // THE DELIBERATE CONSEQUENCE: there is no `--no-tokens` opt-out, so this probe cannot run at all
+  // against a project with no readable token file. Conformance is half of what it measures, and an
+  // opt-out that silences a refusal is the thing contributors learn to reach for — the same
+  // reasoning that removed the unsatisfiable checks from the `craft` lens. A project that wants
+  // only the WCAG axis should say so by shipping a token file that declares no groups: that file
+  // loads, every group reports `present: false`, and the artifact says NOT CHECKED rather than
+  // passed. Readable-but-empty and unreadable are different facts and stay different.
+  if (!tokens.loaded) {
+    const e = new Error(
+      `the token file could not be read — ${tokens.reason}. Token conformance is half of this ` +
+        'probe; it is refusing rather than reporting a clean run over a standard it never loaded.',
+    );
+    e.code = 'ENOTOKENS';
+    e.tokens = tokens;
+    throw e;
+  }
+
   const resolved = resolvePlaywright();
   if (!resolved) {
     const e = new Error('playwright could not be resolved — the probe cannot see, and is not reporting a clean run');
@@ -781,6 +982,9 @@ export async function probe(url, { viewports = DEFAULT_VIEWPORTS, settleMs = 200
       await page.waitForTimeout(settleMs);
       const m = await page.evaluate(collect);
       m.motion = resolveMotion(m.motion);
+      const c = resolveContrast(m);
+      m.contrastPairs = c.pairs;
+      m.canvas = c.canvas;
       m.reflow = Boolean(v.reflow);
       m.deviceScaleFactor = v.dsf ?? 1;
       measurements[v.tag] = m;
@@ -792,7 +996,7 @@ export async function probe(url, { viewports = DEFAULT_VIEWPORTS, settleMs = 200
   }
 
   return {
-    ok: !findings.some((f) => f.severity === 'p1'),
+    ok: isPass(findings),
     findings: rank(findings),
     measurements,
     tokens,
@@ -820,12 +1024,16 @@ if (isMain) {
 
   try {
     const r = await probe(url, { tokensPath });
+    // ONE artifact, and the process exit code is READ OFF IT rather than computed a second time.
+    // `process.exit(r.ok ? 0 : 1)` beside `exit = refused ? 2 : ok ? 0 : 1` in buildArtifact() was
+    // two implementations of one mapping, which is how the file and the shell come to disagree.
+    const artifact = buildArtifact({ url, tokens: r.tokens, result: r });
     if (outPath) {
-      const written = writeArtifact(outPath, buildArtifact({ url, tokens: r.tokens, result: r }));
+      const written = writeArtifact(outPath, artifact);
       console.error(`artifact: ${written}`);
     }
     if (asJson) {
-      console.log(JSON.stringify(buildArtifact({ url, tokens: r.tokens, result: r }), null, 2));
+      console.log(JSON.stringify(artifact, null, 2));
     } else {
       for (const f of r.findings) {
         console.log(
@@ -834,21 +1042,22 @@ if (isMain) {
       }
       console.log(`\ntokens: ${r.tokens.path} — ${r.tokens.loaded ? 'loaded' : `NOT LOADED (${r.tokens.reason})`}`);
       console.log(`\nNOT CHECKED (declared, not assumed covered):\n${r.unchecked.map((u) => `  · ${u}`).join('\n')}`);
-      console.log(r.ok ? '\n✓ no p1 findings' : `\n✗ ${r.findings.filter((f) => f.severity === 'p1').length} p1 finding(s)`);
+      console.log(r.ok ? '\n✓ no blocking findings' : `\n✗ ${blocking(r.findings).length} blocking finding(s)`);
     }
-    process.exit(r.ok ? 0 : 1);
+    process.exit(artifact.exit);
   } catch (e) {
     // The refusal is written to the artifact too. A reviewer reading only the JSON must not be able
     // to mistake "no findings" for "measured and clean" — that is the whole point of exit 2.
+    const artifact = buildArtifact({ url, tokens: e.tokens ?? loadTokens(tokensPath), result: null, refused: e });
     if (outPath) {
       try {
-        writeArtifact(outPath, buildArtifact({ url, tokens: e.tokens ?? loadTokens(tokensPath), result: null, refused: e }));
+        writeArtifact(outPath, artifact);
       } catch (w) {
         console.error(`could not write the refusal artifact: ${w.message}`);
       }
     }
     console.error(`design-probe REFUSED: ${e.message}`);
-    process.exit(2); // 2 = could not measure. Distinct from 1 = measured and failed.
+    process.exit(artifact.exit); // 2 = could not measure. Distinct from 1 = measured and failed.
   }
 }
 /* c8 ignore stop */

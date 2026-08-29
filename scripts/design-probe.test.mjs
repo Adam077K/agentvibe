@@ -37,13 +37,17 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 import {
   TARGET_AA,
   TARGET_AAA,
   REFLOW_WIDTH,
   EPS,
+  TRANSPARENT,
   DEFAULT_VIEWPORTS,
+  DEFAULT_TOKENS_PATH,
   UNCHECKED_ALWAYS,
   contrast,
   parseRgb,
@@ -55,13 +59,22 @@ import {
   conformStrings,
   authoredEasings,
   resolveMotion,
+  canvasBackground,
+  resolveContrast,
+  pairColors,
   findingsFor,
   uncheckedFor,
   buildArtifact,
   writeArtifact,
   rank,
+  blocking,
+  isPass,
+  probe,
   resolvePlaywright,
 } from './design-probe.mjs';
+
+const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(SCRIPTS_DIR, '..');
 
 const p1s = (fs_) => fs_.filter((f) => f.severity === 'p1');
 const checks = (fs_) => fs_.map((f) => f.check);
@@ -293,6 +306,84 @@ test('NEGATIVE CONTROL: the bad artifact does NOT pass', () => {
   assert.ok(p1s(f).length >= 3, `expected >=3 p1 findings, got ${p1s(f).length}`);
 });
 
+// ── THE GATE — findings must reach the verdict, which is where this probe was broken ─────────────
+//
+// Everything above tests the FINDER. Until 2026-08-29 nothing tested that a finding reaches the
+// exit code, and the finder and the verdict disagreed: conformance findings were emitted at `p2`
+// while `ok` gated on `p1`, so the entire conformance axis could not fail a run. These tests are
+// the ones that would have caught it, and they run without a browser because `blocking()`,
+// `isPass()` and `buildArtifact()` are pure.
+
+// THE MEASURED CENSUS, not a constructed one. mission-control's off-system type as counted on
+// 2026-08-29 against the shipped design/tokens/tokens.json: 45 of 94 font-size usages and 27 of 27
+// `leading-relaxed` line-heights appear in no token.
+const OFF_SYSTEM_CENSUS = {
+  overflow: 0,
+  scrollWidth: 390,
+  clientWidth: 390,
+  reflow: false,
+  targets: [],
+  type: { fontSize: { 12.5: 30, 11.5: 13, 13.5: 1 }, lineHeight: { 1.625: 27 }, letterSpacing: {} },
+  motion: { animationsApi: true, duration: {}, easing: {}, animations: [] },
+  weights: {},
+  textColors: 0,
+  contrastPairs: [],
+};
+
+test('NEGATIVE CONTROL: the census that used to exit 0 now fails the run', () => {
+  // BEFORE this change, on exactly this input: 2 findings, both [p2] token-conformance, no p1,
+  // ok:true, exit 0, state "MEASURED — passed" — 45 off-system usages and a passing verdict.
+  const f = findingsFor('narrow', OFF_SYSTEM_CENSUS, { tokens: TOKENS, tokensPath: DEFAULT_TOKENS_PATH });
+  assert.equal(f.length, 2, 'CONTROL: the finder must still produce exactly the two findings it always did');
+  assert.deepEqual(checks(f), ['token-conformance', 'token-conformance']);
+  assert.equal(blocking(f).length, 2, 'a value that appears in no token must reach the verdict');
+  assert.equal(isPass(f), false, 'the run must not pass');
+
+  const a = buildArtifact({
+    url: 'http://localhost:4317',
+    tokens: { path: DEFAULT_TOKENS_PATH, loaded: true, reason: null, index: TOKENS },
+    result: { ok: isPass(f), findings: f, measurements: { narrow: OFF_SYSTEM_CENSUS }, unchecked: [] },
+  });
+  assert.equal(a.exit, 1, 'the artifact a machine reads must carry a NON-ZERO exit');
+  assert.equal(a.state, 'MEASURED — failed');
+});
+
+test('NEGATIVE CONTROL: the same census against the REAL shipped token file also fails', () => {
+  // The fixture above is the deterministic pin; this arm is the provenance — it is the file the
+  // reviewer reproduced against, loaded from disk. If the shipped ramp ever grows a 12.5px step
+  // this goes red, and that is a change worth reading rather than a flake.
+  const t = loadTokens(DEFAULT_TOKENS_PATH, { cwd: REPO_ROOT });
+  assert.equal(t.loaded, true, `CONTROL: ${DEFAULT_TOKENS_PATH} must load, or this test proves nothing`);
+  assert.equal(t.index.fontSize.present, true, 'CONTROL: the shipped file must declare font sizes');
+  const f = findingsFor('narrow', OFF_SYSTEM_CENSUS, { tokens: t.index, tokensPath: t.path });
+  assert.ok(blocking(f).length > 0, 'the shipped tokens must not authorise 12.5 / 11.5 / 13.5 / 1.625');
+  assert.equal(isPass(f), false);
+});
+
+test('a conforming page still passes — the gate did not become "always fail"', () => {
+  // The counterweight. Raising a severity is only a fix if the clean case is untouched: a gate
+  // that blocks everything is as useless as one that blocks nothing, and cheaper to reach by
+  // accident.
+  const f = findingsFor('narrow', CLEAN, { tokens: TOKENS_MOTION });
+  assert.deepEqual(f, []);
+  assert.equal(isPass(f), true);
+  assert.equal(
+    buildArtifact({ url: 'u', tokens: { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION }, result: { ok: isPass(f), findings: f, measurements: {}, unchecked: [] } }).exit,
+    0,
+  );
+});
+
+test('blocking() is the ONE definition of what fails a run', () => {
+  // It replaced three copies of `f.severity === 'p1'` — in probe(), in the CLI's closing line, and
+  // in every caller. Two of them disagreeing is what the census test above documents.
+  const mixed = [{ severity: 'p1', check: 'a' }, { severity: 'p2', check: 'b' }, { severity: 'p3', check: 'c' }];
+  assert.deepEqual(blocking(mixed).map((f) => f.check), ['a']);
+  assert.equal(isPass(mixed), false);
+  assert.equal(isPass([{ severity: 'p2' }, { severity: 'p3' }]), true, 'a non-blocking finding must not fail a run');
+  assert.equal(isPass([]), true);
+  assert.equal(isPass(), true, 'no findings at all is a pass, not a crash');
+});
+
 // ── POSITIVE CONTROLS — the probe must not fire on conforming work ───────────────────────────────
 
 test('POSITIVE CONTROL: a clean artifact produces no p1', () => {
@@ -367,6 +458,76 @@ test('a token file that is not readable JSON degrades to NOT CHECKED, never to c
   const t = loadTokens('broken.json', { cwd: dir });
   assert.equal(t.loaded, false);
   assert.match(t.reason, /not readable JSON/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+// ── AN UNUSABLE TOKEN FILE IS A REFUSAL — the other half of the gate defect ──────────────────────
+//
+// The two tests above pin that `loadTokens` degrades honestly. Neither asked what the RUN does
+// with that, and the answer until 2026-08-29 was: zero findings, ok:true, exit 0, state
+// "MEASURED — passed", with the reason visible only to a reader who scrolled to `unchecked[0]`.
+// The existing refusal test covered the browser axis only, where `refused` is non-null.
+
+test('probe() REFUSES a token file it cannot read, before it even looks for a browser', async () => {
+  // Ordering matters and is asserted by construction: this machine may or may not have Chromium,
+  // and the test must give the same answer either way. It does, because the token check runs first.
+  await assert.rejects(
+    () => probe('http://localhost:4317', { tokensPath: 'design/tokens/NOPE.json', cwd: REPO_ROOT }),
+    (e) => {
+      assert.equal(e.code, 'ENOTOKENS', 'the refusal must be identifiable, not a bare Error');
+      assert.match(e.message, /no token file at/, 'the refusal must carry the reason');
+      assert.equal(e.tokens.loaded, false, 'the token state must travel so the artifact can report it');
+      return true;
+    },
+  );
+});
+
+test('probe() REFUSES an unparseable token file too, not only a missing one', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-probe-'));
+  fs.writeFileSync(path.join(dir, 'tokens.json'), '{ not json');
+  await assert.rejects(
+    () => probe('http://localhost:4317', { tokensPath: 'tokens.json', cwd: dir }),
+    (e) => e.code === 'ENOTOKENS' && /not readable JSON/.test(e.message),
+  );
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('a readable token file that declares NOTHING is not a refusal — the two are different facts', () => {
+  // CONTROL, and the reason there is no `--no-tokens` flag. "I could not read the standard" and
+  // "the standard governs nothing here" must not collapse into one state: the first is a refusal,
+  // the second is a run whose unchecked list names every ungoverned group. Without this arm the
+  // refusal above could be widened to `!tokens.index.fontSize.present` and nothing would object.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-probe-'));
+  fs.writeFileSync(path.join(dir, 'tokens.json'), '{}');
+  const t = loadTokens('tokens.json', { cwd: dir });
+  assert.equal(t.loaded, true, 'an empty but valid JSON document IS loaded');
+  assert.equal(t.index.fontSize.present, false);
+  const u = uncheckedFor(t.index, { loaded: true, path: 'tokens.json' });
+  assert.ok(!u.some((x) => /DID NOT RUN AT ALL/.test(x)), 'a loaded file must not claim conformance never ran');
+  assert.ok(u.some((x) => /font-size conformance/.test(x)), 'every ungoverned group must still be declared');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('the CLI exits 2 on an unreadable token file, and writes that into the artifact', () => {
+  // END TO END, through the real process, because `exit` is the field this defect was hiding in
+  // and a pure-function assertion cannot prove a process exit code. Cheap: the refusal happens
+  // before Chromium is resolved, so this never launches a browser and never touches the network.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-probe-'));
+  const out = path.join(dir, 'probe.json');
+  const r = spawnSync(
+    process.execPath,
+    [path.join(SCRIPTS_DIR, 'design-probe.mjs'), 'http://127.0.0.1:1', '--tokens', 'design/tokens/NOPE.json', '--out', out],
+    { cwd: REPO_ROOT, encoding: 'utf8' },
+  );
+  assert.equal(r.status, 2, `expected exit 2 (could not measure), got ${r.status}\n${r.stderr}`);
+  assert.match(r.stderr, /design-probe REFUSED/);
+  const a = JSON.parse(fs.readFileSync(out, 'utf8'));
+  assert.equal(a.exit, 2, 'the artifact must not say 0');
+  assert.match(a.state, /REFUSED/, 'the artifact must not say "MEASURED — passed"');
+  assert.equal(a.refused.code, 'ENOTOKENS');
+  assert.deepEqual(a.findings, []);
+  assert.equal(a.tokens.loaded, false);
+  assert.match(a.unchecked[0], /TOKEN CONFORMANCE DID NOT RUN AT ALL/);
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -552,8 +713,13 @@ test('contrast is symmetric — argument order cannot change a verdict', () => {
 
 test('contrast reproduces a figure measured independently in styles.css', () => {
   // --color-divider #5a6270 on --color-ink #0d0e11, documented there as 3.139:1
+  //
+  // TIGHTENED 2026-08-29. This read `assert.ok(Math.abs(r - 3.139) < 0.02)` in a test whose name
+  // claims to REPRODUCE a 3dp figure: +-0.02 is 20x the last digit it reproduces, so it passed at
+  // 3.12 and at 3.15. `contrast()` rounds to 3dp as its stated contract, so the reproduction is
+  // exact or it is not a reproduction — a tolerance here could only ever hide a real divergence.
   const r = contrast(parseRgb('rgb(90, 98, 112)'), parseRgb('rgb(13, 14, 17)'));
-  assert.ok(Math.abs(r - 3.139) < 0.02, `expected ~3.139, got ${r}`);
+  assert.equal(r, 3.139, `styles.css documents 3.139:1, got ${r}`);
 });
 
 test('parseRgb handles rgb and rgba, and refuses what it cannot read', () => {
@@ -561,6 +727,109 @@ test('parseRgb handles rgb and rgba, and refuses what it cannot read', () => {
   assert.deepEqual(parseRgb('rgba(1, 2, 3, 0.5)'), [1, 2, 3]);
   assert.equal(parseRgb('transparent'), null);
   assert.equal(parseRgb('#fff'), null);
+});
+
+// ── THE TRANSPARENT SENTINEL, WHICH WAS READ AS OPAQUE BLACK ─────────────────────────────────────
+//
+// `rgba(0, 0, 0, 0)` is how Chromium serialises "no background", and `parseRgb` returns [0,0,0]
+// for it — black, the far end of the scale from the white canvas Chrome actually paints. Both
+// directions of the resulting error were reproduced on 2026-08-29 and are pinned below.
+
+test('NEGATIVE CONTROL: the sentinel is never read as a colour, in either direction', () => {
+  // FALSE BLOCKER: ordinary #333 body text on an undeclared canvas was reported as 1.662:1.
+  assert.equal(contrast(parseRgb('rgb(51, 51, 51)'), parseRgb(TRANSPARENT)), 1.662, 'the old, wrong figure');
+  assert.equal(contrast([51, 51, 51], [255, 255, 255]), 12.635, 'the truth on the canvas Chrome paints');
+  // MISSED BLOCKER: near-invisible #f0f0f0 text scored 18.427:1 against black and emitted nothing.
+  assert.equal(contrast(parseRgb('rgb(240, 240, 240)'), parseRgb(TRANSPARENT)), 18.427, 'the old, wrong figure');
+  assert.equal(contrast([240, 240, 240], [255, 255, 255]), 1.14, 'the truth — text you cannot read');
+  // parseRgb still returns black for the sentinel; the guard is in pairColors, not in the parser,
+  // because widening what the probe's parseRgb accepts is a separate, reviewed decision.
+  assert.deepEqual(parseRgb(TRANSPARENT), [0, 0, 0]);
+  assert.equal(pairColors({ fg: 'rgb(51, 51, 51)', bg: TRANSPARENT }), null, 'the sentinel is not a backdrop');
+  assert.equal(pairColors({ fg: TRANSPARENT, bg: 'rgb(255, 255, 255)' }), null, 'invisible text is not measurable');
+});
+
+test('NEGATIVE CONTROL: #333 on an undeclared canvas is no longer a false blocker', () => {
+  const raw = { ...CLEAN, contrastPairs: [{ fg: 'rgb(51, 51, 51)', bg: TRANSPARENT, px: 14, bold: false }], colorScheme: 'normal', prefersDark: false };
+  const r = resolveContrast(raw);
+  assert.equal(r.pairs[0].bg, 'rgb(255, 255, 255)');
+  assert.equal(r.pairs[0].canvasBg, true, 'the substitution must be visible in the measurement');
+  const f = findingsFor('t', { ...raw, contrastPairs: r.pairs }, { tokens: TOKENS_MOTION });
+  assert.ok(!checks(f).includes('text-contrast'), '12.635:1 must not be reported as 1.662:1');
+});
+
+test('NEGATIVE CONTROL: #f0f0f0 on an undeclared canvas is now the blocker it always was', () => {
+  const raw = { ...CLEAN, contrastPairs: [{ fg: 'rgb(240, 240, 240)', bg: TRANSPARENT, px: 14, bold: false }], colorScheme: 'normal', prefersDark: false };
+  const f = findingsFor('t', { ...raw, contrastPairs: resolveContrast(raw).pairs }, { tokens: TOKENS_MOTION });
+  const hit = p1s(f).find((x) => x.check === 'text-contrast');
+  assert.ok(hit, 'near-invisible text must be reported, not silently skipped');
+  assert.match(hit.measured, /1\.14:1/);
+  assert.match(hit.note, /UA canvas default/, 'the finding must disclose that the backdrop was not declared');
+});
+
+test('a declared background is used as-is, and carries no canvas caveat', () => {
+  // CONTROL: the substitution must reach only the pairs nothing declared.
+  const raw = { ...CLEAN, contrastPairs: [{ fg: 'rgb(51, 51, 51)', bg: 'rgb(13, 14, 17)', px: 14, bold: false }], colorScheme: 'normal' };
+  const r = resolveContrast(raw);
+  assert.equal(r.pairs[0].bg, 'rgb(13, 14, 17)');
+  assert.equal(r.pairs[0].canvasBg, false);
+  const hit = findingsFor('t', { ...raw, contrastPairs: r.pairs }, { tokens: TOKENS_MOTION }).find((x) => x.check === 'text-contrast');
+  assert.ok(hit, 'CONTROL: 1.3:1 must still be a finding');
+  assert.equal(hit.note, undefined, 'a declared backdrop must not carry the canvas caveat');
+});
+
+test('the canvas is white in light mode, and NOT GUESSED in dark mode', () => {
+  assert.equal(canvasBackground({}).color, 'rgb(255, 255, 255)', 'no color-scheme at all is light');
+  assert.equal(canvasBackground({ colorScheme: 'normal', prefersDark: true }).color, 'rgb(255, 255, 255)',
+    'a preference the page does not opt into does not change what the UA paints');
+  assert.equal(canvasBackground({ colorScheme: 'light', prefersDark: true }).color, 'rgb(255, 255, 255)');
+  // `dark` alone forces dark whatever the user prefers; `light dark` follows the preference.
+  assert.equal(canvasBackground({ colorScheme: 'dark', prefersDark: false }).usedDark, true);
+  assert.equal(canvasBackground({ colorScheme: 'light dark', prefersDark: true }).usedDark, true);
+  assert.equal(canvasBackground({ colorScheme: 'light dark', prefersDark: false }).usedDark, false);
+  // And the dark canvas colour is NULL, not a number nobody measured. Chromium's dark canvas is
+  // not rgb(0,0,0), and inventing it here would rebuild the same defect facing the other way.
+  assert.equal(canvasBackground({ colorScheme: 'dark' }).color, null);
+});
+
+test('a dark undeclared canvas is NOT CHECKED, and says so with a count', () => {
+  const raw = { ...CLEAN, contrastPairs: [{ fg: 'rgb(240, 240, 240)', bg: TRANSPARENT, px: 14, bold: false }], colorScheme: 'dark', prefersDark: true };
+  const r = resolveContrast(raw);
+  assert.equal(r.pairs[0].bg, null);
+  const m = { ...raw, contrastPairs: r.pairs, canvas: r.canvas };
+  assert.deepEqual(findingsFor('narrow', m, { tokens: TOKENS_MOTION }), [], 'an unknown backdrop produces no finding');
+  const u = uncheckedFor(TOKENS_MOTION, { loaded: true, path: 'p', measurements: { narrow: m } });
+  assert.ok(u.some((x) => /1 text\/background pair\(s\) were NOT measured/.test(x)), 'the skip must be counted');
+  assert.ok(u.some((x) => /dark used colour scheme/.test(x)), 'the reason must name the dark canvas');
+  assert.ok(u.some((x) => /not the same as passing/.test(x)));
+});
+
+test('a colour parseRgb cannot read is counted as unchecked, not silently dropped', () => {
+  // The hole this closes widens on its own: Chromium emits more CSS Color 4 serialization over
+  // time and design-probe's parseRgb refuses all of it, by a documented decision. An instrument
+  // whose coverage shrinks silently is the failure this whole file was written against.
+  const m = {
+    ...CLEAN,
+    contrastPairs: [
+      { fg: 'rgb(20 20 20)', bg: 'rgb(255, 255, 255)', px: 14, bold: false },
+      { fg: 'color(srgb 0 0 0)', bg: 'rgb(255, 255, 255)', px: 14, bold: false },
+      { fg: 'rgb(20, 20, 20)', bg: 'rgb(255, 255, 255)', px: 14, bold: false },
+    ],
+  };
+  assert.equal(pairColors(m.contrastPairs[0]), null, 'CONTROL: space-separated rgb is refused by this parseRgb');
+  assert.ok(pairColors(m.contrastPairs[2]), 'CONTROL: the readable pair must still be readable');
+  const u = uncheckedFor(TOKENS_MOTION, { loaded: true, path: 'p', measurements: { narrow: m } });
+  const hit = u.find((x) => /were NOT measured/.test(x));
+  assert.ok(hit, 'two unreadable pairs must be declared');
+  assert.match(hit, /2 text\/background pair\(s\)/);
+  assert.match(hit, /narrow: 2 of 3/, 'the count must name the viewport and the denominator');
+  assert.ok(!/dark used colour scheme/.test(hit), 'a light page must not blame the colour scheme');
+});
+
+test('a page whose every pair is readable declares NO contrast hole', () => {
+  // CONTROL: the entry above must be conditional, or it becomes noise every reader learns to skip.
+  const u = uncheckedFor(TOKENS_MOTION, { loaded: true, path: 'p', measurements: { narrow: CLEAN } });
+  assert.ok(!u.some((x) => /were NOT measured/.test(x)));
 });
 
 test('contrast findings use the large-text floor only where the spec allows it', () => {
@@ -575,10 +844,27 @@ test('contrast findings use the large-text floor only where the spec allows it',
 // ── ordering and refusal ────────────────────────────────────────────────────────────────────────
 
 test('findings are ranked p1 first, so a caller reading the head cannot miss a blocker', () => {
-  const f = findingsFor('narrow', MC_NARROW, { tokens: TOKENS_MOTION });
-  const firstNonP1 = f.findIndex((x) => x.severity !== 'p1');
-  assert.notEqual(firstNonP1, -1, 'CONTROL: this fixture must produce a non-p1, or the check below is vacuous');
-  assert.ok(f.slice(firstNonP1).every((x) => x.severity !== 'p1'), 'p1s must be contiguous at the head');
+  // THE FIXTURE ARM OF THIS TEST WAS REMOVED 2026-08-29 AND THIS RECORDS WHY, because deleting a
+  // control quietly is exactly what it was guarding against. It read:
+  //
+  //     const f = findingsFor('narrow', MC_NARROW, { tokens: TOKENS_MOTION });
+  //     const firstNonP1 = f.findIndex((x) => x.severity !== 'p1');
+  //     assert.notEqual(firstNonP1, -1, 'CONTROL: this fixture must produce a non-p1 …');
+  //
+  // and it went red the moment conformance findings became p1: every check the probe emits is now
+  // p1, so NO fixture can satisfy that control. Pinning the ordering to a fixture made ordering
+  // depend on the severity policy, which is the coupling that broke it.
+  //
+  // It is NOT replaced by `assert.ok(f.every(p1))`. That would pin "every finding is p1" — a rule
+  // design-probe.mjs's header says it expects to stop being true the day a non-blocking check
+  // (SC 2.5.5's 44px AAA target) lands, and a test that pins a rule the source is planning to
+  // retire is the MIN_STEP_RATIO harm again. Ordering is asserted where ordering lives:
+  const mixed = [{ severity: 'p3', check: 'c' }, { severity: 'p1', check: 'a' }, { severity: 'p2', check: 'b' }];
+  assert.deepEqual(rank(mixed).map((x) => x.check), ['a', 'b', 'c'], 'p1 must sort to the head');
+  assert.deepEqual(rank([{ severity: 'p2' }, { severity: 'p2' }]).length, 2, 'a single class must survive ranking');
+  // An unknown severity sorts last rather than crashing or sorting first — a finding nobody
+  // classified must never displace a blocker at the head.
+  assert.deepEqual(rank([{ severity: 'wat' }, { severity: 'p1' }]).map((x) => x.severity), ['p1', 'wat']);
 });
 
 test('rank does not mutate its input', () => {
