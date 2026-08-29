@@ -233,6 +233,36 @@ export function trackingFor(size, { zeroAt, slope }) {
 // ── validation: the refusals that make a bad ramp inexpressible ──────────────────────────────────
 
 /**
+ * THE TWO POST-CONDITIONS, EXPORTED SO THEY CAN BE DRIVEN DIRECTLY — and the reason is a measured
+ * gap, not tidiness. These follow from the validated inputs: a validated seeds file cannot reach
+ * either refusal, so a mutation run that DELETES them turns nothing red. Measured 2026-08-29 across
+ * 18 mutations of this file: 17 were caught by a test and this one was not, because no input exists
+ * that would trip it. That is exactly the shape of an assertion that gets deleted as dead code.
+ *
+ * They are not dead code. They are tripwires over `band()`: if a future edit makes it emit a
+ * fractional size or a ramp that holds its ratio constant, these are what say so. Pulled out as pure
+ * functions so a test can hand them the input that seeds.json cannot express, which turns an
+ * uncontrolled assertion into a controlled one.
+ */
+export function assertIntegerSizes(sizes) {
+  for (const s of sizes) {
+    if (!isInt(s)) refuse(`derived size ${s} is not an integer — band() no longer preserves integers.`);
+  }
+}
+
+export function assertMonotoneRatios(ratios) {
+  for (let i = 1; i < ratios.length; i++) {
+    if (ratios[i] >= ratios[i - 1]) {
+      refuse(
+        `UI adjacent ratios ${ratios.join(' ')} do not decrease monotonically. A constant absolute ` +
+          `increment makes them decrease by construction; a ramp that holds its ratio CONSTANT is a ` +
+          `MODULAR SCALE, which DESIGN-CAPABILITY.md §7.1 falsified against every measured reference.`
+      );
+    }
+  }
+}
+
+/**
  * Every refusal names the measurement it rests on, because the two refusals are NOT equally strong
  * and a caller deserves to know which one it hit.
  *
@@ -307,23 +337,9 @@ export function validateSeeds(seeds) {
 
   const ui = band(type.ui);
   const display = band(type.display);
-
-  // POST-CONDITIONS. Both follow from the validated inputs, and both are asserted anyway: they are
-  // the properties that matter, and a future change to band() that broke either would otherwise be
-  // caught by nothing.
-  for (const s of [...ui, ...display]) {
-    if (!isInt(s)) refuse(`derived size ${s} is not an integer — band() no longer preserves integers.`);
-  }
+  assertIntegerSizes([...ui, ...display]);
   const ratios = adjacentRatios(ui);
-  for (let i = 1; i < ratios.length; i++) {
-    if (ratios[i] >= ratios[i - 1]) {
-      refuse(
-        `UI adjacent ratios ${ratios.join(' ')} do not decrease monotonically. A constant absolute ` +
-          `increment makes them decrease by construction; a ramp that holds its ratio constant is a ` +
-          `MODULAR SCALE, which DESIGN-CAPABILITY.md §7.1 falsified against every measured reference.`
-      );
-    }
-  }
+  assertMonotoneRatios(ratios);
 
   // THE JOIN. Two bands are joined by a jump, never interpolated. A jump is checkable: the step from
   // the top of the UI band into the display band must be larger than any step inside the UI band.

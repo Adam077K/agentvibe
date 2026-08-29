@@ -46,6 +46,8 @@ import {
   WCAG,
   band,
   adjacentRatios,
+  assertIntegerSizes,
+  assertMonotoneRatios,
   buildModel,
   comparable,
   contrast,
@@ -123,6 +125,24 @@ test('adjacent ratios decrease monotonically — the signature a modular scale c
   for (const r of ratios) {
     assert.ok(r >= 1.05 && r <= 1.167, `adjacent ratio ${r} is outside the measured reference band [1.05, 1.167]`);
   }
+});
+
+test('the two post-conditions over band() refuse what no seeds file can express', () => {
+  // WHY THIS TEST EXISTS: a mutation run over this generator on 2026-08-29 caught 17 of 18 deletions.
+  // The one it missed was the monotonicity refusal, because a validated seeds file cannot reach it —
+  // an assertion no input can trip is one nobody can prove is load-bearing, and is therefore one
+  // somebody deletes. Driving them directly is what makes them controlled.
+  assert.throws(() => assertMonotoneRatios([1.1, 1.1]), SeedsRefused, 'a CONSTANT ratio — a modular scale — was accepted');
+  assert.throws(() => assertMonotoneRatios([1.05, 1.1]), SeedsRefused, 'an INCREASING ratio was accepted');
+  assert.throws(() => assertIntegerSizes([11, 12.5, 14]), SeedsRefused, 'a fractional size was accepted');
+
+  const monotone = assertMonotoneRatios([1.091, 1.083, 1.077]);
+  assert.equal(monotone, undefined, 'CONTROL: a decreasing ramp must pass');
+  assert.equal(assertIntegerSizes([11, 12, 13]), undefined, 'CONTROL: integer sizes must pass');
+  assert.equal(assertMonotoneRatios([]), undefined, 'CONTROL: an empty ramp has nothing to violate');
+
+  // And the message must name the failure mode, or a reader hitting it cannot act on it.
+  assert.throws(() => assertMonotoneRatios([1.1, 1.1]), /MODULAR SCALE/);
 });
 
 test('no seeds file that validateSeeds accepts can produce a fractional size', () => {
