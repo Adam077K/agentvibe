@@ -145,6 +145,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/claim-append.test.mjs` | the gate in scripts/lib/claim-append.js. |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
+| `scripts/design-lib.test.mjs` | the pins on the design layer's shared arithmetic. |
 | `scripts/design-probe.test.mjs` | the negative controls that make the design probe binding. |
 | `scripts/evict-memory.test.mjs` | mutation gate for the typed memory eviction. |
 | `scripts/extract-reference.test.mjs` | the falsification harness, driven by real measurements. |

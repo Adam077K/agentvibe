@@ -96,11 +96,10 @@
 // check still green. `scripts/check-suite.test.mjs` asserts that `test:probe-readonly`'s argv still
 // names both of its files, which buys the position back.
 
+// `createRequire` was here only so `resolvePlaywright` could `require()` a CJS entry point. That
+// function moved to `./design-lib.mjs`, which carries its own, so the shim is dead here.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { createRequire } from 'node:module';
-
-const require = createRequire(import.meta.url);
 
 // ── WCAG 2.2, cited rather than asserted ────────────────────────────────────────────────────────
 // SC 2.5.8 Target Size (Minimum) — level AA  — 24x24 CSS px
@@ -145,48 +144,47 @@ export const UNCHECKED_ALWAYS = [
   'the SC 2.5.8 spacing exception — not evaluated, so target-size findings are candidates, not verdicts',
 ];
 
+// ── SHARED ARITHMETIC, NOW IMPORTED RATHER THAN COPIED ──────────────────────────────────────────
+// `resolvePlaywright`, `luminance` and `contrast` were defined here and duplicated verbatim in
+// `build-tokens.mjs` and `extract-reference.mjs`, each author naming the duplication because the
+// other files were untracked when they wrote. All three copies of `contrast` were measured against
+// each other on 2026-08-29 across ten mission-control colour pairs and agreed to the last digit;
+// they collapse into `./design-lib.mjs` with no number moving. Re-exported because
+// `design-probe.test.mjs` imports `contrast` and `resolvePlaywright` from this file by name.
+import { contrast, luminance, resolvePlaywright } from './design-lib.mjs';
+
+export { contrast, luminance, resolvePlaywright };
+
 /**
- * Resolve playwright without hardcoding an absolute path.
- * designer.md currently pins `/Users/adamks/node_modules/playwright/index.js`, which throws on any
- * other machine and silently degrades the engine to source-only — the exact state that produced the
- * two source-only runs. Try the normal resolution order, then the known global root, then give up
- * LOUDLY rather than returning a probe that reports nothing.
+ * `parseRgb` IS DELIBERATELY NOT SHARED, and this is the one exception in the collapse.
+ *
+ * `extract-reference.mjs` carried a copy of this whose comment claimed byte-equivalence with this
+ * one. It was not equivalent. Measured 2026-08-29, that copy splits on `[,\s/]+` and NaN-checks
+ * only the first three components, so it returns a triple on three shapes where this one returns
+ * null:
+ *
+ *   `rgb(0 0 0)`               → null here · [0,0,0]   there
+ *   `rgb(11 12 14 / 0.5)`      → null here · [11,12,14] there
+ *   `rgba(0, 0, 0, var(--a))`  → null here · [0,0,0]   there
+ *
+ * The divergence is one-directional: wherever this returns a triple, that copy returns the SAME
+ * triple. So the permissive one is a strict superset, and adopting it would only ever turn a null
+ * into a value.
+ *
+ * IT IS STILL NOT A FREE CHANGE, WHICH IS WHY IT WAS NOT MADE HERE. A null from this function means
+ * a colour the probe could not read, and a colour it cannot read is a contrast check that does not
+ * run. Widening acceptance changes what this instrument MEASURES, on live pages, in a direction
+ * nobody has reviewed — and this file's own header insists an unmeasured thing must read as "not
+ * checked" rather than as conformance. That is a decision about the probe, not a side effect a
+ * deduplication gets to make.
+ *
+ * WORTH KNOWING BEFORE ANYONE DECIDES: the three divergent shapes are exactly CSS Color 4
+ * serialization, which Chromium already emits for some computed colours and is emitting for more
+ * over time. This copy failing closed on them is a coverage hole that will widen on its own.
+ *
+ * `scripts/design-lib.test.mjs` pins BOTH behaviours, so this fork cannot drift any further without
+ * turning a test red, and cannot be quietly "tidied" into agreement either.
  */
-export function resolvePlaywright() {
-  const candidates = [
-    'playwright',
-    `${process.env.HOME ?? ''}/node_modules/playwright/index.js`,
-    '/usr/local/lib/node_modules/playwright/index.js',
-  ];
-  for (const c of candidates) {
-    try {
-      if (c.startsWith('/') && !existsSync(c)) continue;
-      const mod = require(c);
-      if (mod?.chromium) return { mod, from: c };
-    } catch {
-      /* try the next candidate */
-    }
-  }
-  return null;
-}
-
-/** Relative luminance per WCAG 2.x. */
-export function luminance([r, g, b]) {
-  const f = (v) => {
-    const s = v / 255;
-    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-}
-
-/** WCAG contrast ratio between two rgb triples. Returns a number, rounded to 3dp. */
-export function contrast(fg, bg) {
-  const a = luminance(fg);
-  const b = luminance(bg);
-  const [hi, lo] = a > b ? [a, b] : [b, a];
-  return Math.round(((hi + 0.05) / (lo + 0.05)) * 1000) / 1000;
-}
-
 export function parseRgb(str) {
   const m = String(str).match(/rgba?\(([^)]+)\)/);
   if (!m) return null;
