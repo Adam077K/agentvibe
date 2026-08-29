@@ -1935,3 +1935,188 @@ two.
 > wrong direction), and now a branch two agents share. **The class is not "agents make mistakes" — each
 > lane behaved correctly. It is that a location with two writers has no correct behaviour available to
 > either of them.**
+
+### 15.42 The prescribed fix was unimplementable, and the builder refused it with evidence
+
+The orchestrator's brief for the CSS-injection finding specified the remedy: *"refuse a family value
+containing any of `; { } / * " ' \` or a newline."*
+
+**Refusing `'` refuses `'Segoe UI'`, `'SF Mono'`, `'JetBrains Mono'` and `'Fira Code'` — four members of
+this repository's own committed font stacks.** The prescribed fix would have made the shipped
+`seeds.json` invalid.
+
+> **A quoted string is not the danger; an unterminated or nested quote is.** The builder shipped an
+> allow-list instead and said why. Verified here: the committed seeds are accepted, the hostile value is
+> refused.
+
+**This is the class the whole day has been about, aimed at a remedy rather than a finding.** The
+orchestrator specified a deny-list from the shape of the attack without checking it against the corpus it
+would govern — the same move as comparing a toast threshold to a drawer's, or measuring a prescriptive
+curve against descriptive sites. **A fix that breaks legitimate input is worse than the defect it
+closes**, because the defect was latent and the fix fires on every run.
+
+### 15.43 Two methods from the fix round worth reusing
+
+**A differential oracle, not a claim of equivalence.** Replacing the ReDoS-prone regex matcher with a
+two-pointer walk risks changing *semantics* while fixing *performance* — a new bug wearing a fix's
+clothes. The old implementation was **kept in the test file as an oracle** and compared against the new
+one over **407,178 (pattern, path) cells: zero disagreements.** Performance: 2266ms → 0.006ms at 7 stars,
+and 0.06ms for 1000 stars against a 20,001-character path.
+
+**A seam so a guarantee is executed rather than argued.** The post-redirect robots re-check could not be
+tested — Chromium is SIGTRAP-killed under the armed sandbox. Rather than assert it, the builder added an
+injectable browser seam and drove the check against a fake. Its own reasoning is the durable part:
+*"without it that guarantee could only be read, which is exactly how the original one sat broken."*
+
+**Both are answers to the same question — how do you know the fix does what it says — and neither is
+"the tests pass."**
+
+### 15.44 Three corrections the fix round made to the reviews
+
+The reviewers were right to block and wrong in three details, each corrected with measurement:
+
+- **The slug-collision count was two, not three** — only `docs.stripe.com` and `play.grafana.org` have a
+  registrable colliding variant; the others differ only by the TLD-separating dot. **But all five collide
+  across the host/path boundary** (`https://vercel/com` → `vercel-com`), which is a broader class than
+  the one reported. Narrower count, wider defect.
+- **The two contrast discrepancies are one systematic error, not two mistakes.** Both are **+0.001 in the
+  same direction** — `styles.css` rounds up. Twelve of its seventeen figures are now checked and the
+  remaining five are enumerated as out of reach rather than dropped.
+- **One finding could not have been found by the method that produced it.** A mutation sweep explores
+  edits to *code*; the surviving case needed an untried *input* (base 34). The survey claiming
+  exhaustiveness was replaced with arithmetic. **A test method's blind spot is not visible from inside
+  that method** — which is the same shape as §15.40's two panels finding disjoint sets.
+
+**And the constant defect was worse than reported:** not four entries disagreeing with the shipped
+corpus but **every entry, both bands, and a fifth reference missing entirely.**
+
+### 15.45 THREE ATTEMPTS AT ONE VALIDATOR, EACH OVERSHOOTING THE OTHER WAY
+
+A blinded re-review confirmed all six adversarial findings closed, and found the fix for the first one
+had introduced a regression. The full sequence on a single validator:
+
+| attempt | rule | what it gets wrong |
+|---|---|---|
+| **1 · orchestrator's brief** | deny `; { } / * " ' \` and newline | **too broad** — refuses `'Segoe UI'`, `'SF Mono'`, `'JetBrains Mono'`, `'Fira Code'`, four members of this repo's own committed stacks |
+| **2 · builder's fix** | allow `'[A-Za-z0-9 _-]+'` in the quoted branch | **too narrow** — refuses `"微软雅黑"`, `"ヒラギノ角ゴ ProN"`, `"맑은 고딕"`, `"Åkzidenz Grotesk"`, all valid CSS |
+| **3 · correct** | deny only `"`, `'`, `\`, newline, control chars, inside the quoted branch | — |
+
+Measured here at attempt 2: four international stacks **REFUSED**, the ASCII control **ACCEPTED**, the
+hostile payload **REFUSED**.
+
+> **The argument for attempt 3 was already written in attempt 2's own comment:** *"A quoted string is not
+> the danger: a `}` inside a CSS string does not close a block. An UNTERMINATED or nested quote is."*
+> **Correct — and a non-ASCII letter is neither.** The grammar allow-listed ASCII where it only needed to
+> exclude four characters. The reasoning was right and the implementation was wider than the reasoning.
+
+**Neither attempt is careless, and that is the finding.** Attempt 1 reasoned from the shape of the attack
+without checking the corpus it would govern. Attempt 2 reasoned from the corpus it could see — an
+all-ASCII `seeds.json` — without asking what a legitimate future value looks like. **Both are the same
+error: a rule derived from one population and applied to another**, which is §15.13, §15.35 and §15.42 in
+a fourth costume.
+
+**Latent, not live**, and worth stating precisely: the committed seeds are ASCII and build clean today.
+But `build-tokens --check` rides `test:lenses`, a CI step, so **the first CJK or accented family anyone
+adds turns the build red** — in a design-token generator, which is where one would.
+
+### 15.46 The re-review's method, which is why its clean results are worth reading
+
+- **It rebuilt the oracle rather than trusting the one shipped with the fix.** The ReDoS rewrite came with
+  a differential test against the original implementation. The reviewer **reimplemented the original
+  itself** and ran its own comparison — 91,260 pairs, zero disagreements — plus every boundary named in
+  the brief: empty pattern, bare `*`, `$` alone, `/café`, an emoji pattern with surrogate pairs.
+- **It executed a guarantee that previously could only be read.** The post-redirect robots re-check was
+  driven through the injected-browser seam: `good.test/pub` → `secret.test/vault` → REFUSED, `EROBOTS`,
+  with the phase recorded. Its verdict on that seam — *"the single best thing in this round, because it
+  turned a guarantee that could only be read into one that can be run"* — is the transferable part.
+- **It reported three regression targets as EMPTY results rather than padding the list**: the token
+  refusal cannot be triggered by anything legitimate (an empty `{}` proceeds, with a control test naming
+  the widening it prevents), `loadTokens` never throws across seven shapes, and the verdict threshold did
+  not move.
+- **It marked one finding PARTIAL rather than closed** — a documented trust boundary is acceptance, not
+  closure — *"so it is not later read as fixed."*
+- **It disclosed what it did not do:** it never ran the full suite, and recorded that the `48 of 48` was
+  taken on report rather than confirmed. **A review that names what it could not check is the only kind
+  whose silence carries information.**
+
+### 15.47 EVERY `48 of 48` REPORTED TODAY WAS MEASURED OVER A MOVING TREE
+
+A blinded reviewer opened its re-review with this, and it is the most consequential finding of the day
+because it invalidates the evidence behind every other one:
+
+> `scripts/build-tokens.mjs` was rewritten at **13:33:53**, between two of my own commands. A finding I
+> had reproduced at 13:2x was false by 13:34. My `npm run check` started at ~13:29 and finished after
+> that edit, so **48 of 48 is a tally over a tree that changed during the run** — it is not a measurement
+> of any single state, **and neither is yours if it was taken the same way.**
+
+**It was.** The orchestrator ran `npm run check` repeatedly while two fix lanes committed to the same
+branch, and reported each result as a state. **One of those runs already produced a false failure**
+(§15.41) — `47 of 48`, clean on re-run, because a lane had committed in between. The correct conclusion
+was available at that moment and was not drawn: *if a passing run and a failing run over the same
+nominal tree can differ, neither is a measurement.*
+
+**`HEAD` and the working tree disagreed about a live defect** while both were being reported on: the
+international-font regression was live in the commit and fixed only in uncommitted changes. A reviewer
+reading `HEAD` and an orchestrator reading the working tree would file contradictory reports, both
+honestly.
+
+**The reviewer's practice is the cure and costs nothing:**
+
+```
+Snapshot: 2026-08-29 13:37:07 IDT · HEAD 2b6d933 · sha256 of what I measured:
+  74746b82…  scripts/design-probe.mjs        8f9c9bb5…  scripts/build-tokens.mjs
+  ded769a3…  scripts/design-lib.mjs          df973e78…  scripts/extract-reference.mjs
+```
+
+**A verdict names the bytes it was taken over.** Then a moving tree produces a *detectable* mismatch
+rather than a silent one, and "re-run before merging, on a frozen tree" becomes an instruction someone
+can follow rather than advice.
+
+> **This is the fourth shared-mutable-location defect today** — §15.28, §15.33, §15.41, and now the
+> verification itself. **The measurement is not exempt from the hazard it is measuring.**
+
+### 15.48 A THIRD "UNMEASURABLE REPORTS AS CLEAN", ON THE PATH THE FILE RECOMMENDS
+
+`design-probe.mjs` refuses when the token file is unreadable. A file that is **readable and declares
+nothing** — literally `{}` — is `loaded: true`, so no refusal fires. Measured:
+
+```
+tokens.loaded : true          groups present: all false
+findings      : 0             isPass: true        exit 0, "MEASURED — passed"
+```
+
+— against the same 45-off-system-usage census this document opens with.
+
+**What makes it p1 is that the file's own header prescribes exactly this file:** *"A project that wants
+only the WCAG axis should say so by shipping a token file that declares no groups: that file loads, every
+group reports `present: false`, and the artifact says NOT CHECKED rather than passed."* **The final
+clause is false.**
+
+> **The documented way to opt out of conformance is also the way to obtain a passing verdict over an
+> unmeasured axis** — and there is deliberately no `--no-tokens` flag *because that was judged too easy to
+> reach for.* The escape hatch was refused at the front door and left open at the back.
+
+Third instance of one class in one file: unreadable-file (fixed), dark-scheme contrast (bounded and
+counted), and now readable-but-empty. **Readable-vs-unreadable is a real distinction and it is not the
+one that should decide the verdict.**
+
+### 15.49 One sentence, wrong three times, each narrower than the last
+
+The `parseRgb` fork's stated bound, in order:
+
+| version | claim | falsified by |
+|---|---|---|
+| 1 | *"one-directional · strict superset · only ever turns a null into a value"* | one counterexample |
+| 2 | *"…and nowhere else"* | a second, where **the probe is the permissive one** |
+| 3 | *"on values separated by COMMAS ALONE, the two agree"* | **1,014 disagreements in 13,950 swept inputs** |
+
+Each correction was made in good faith by a different agent, each narrowed the claim, and **each was still
+a universal backed by a hand-written list** — nine items in the last case.
+
+**The true claim was available throughout and survives a sweep of 27,900 inputs across both pure
+grammars: zero violations of "wherever the probe returns a triple, the shared copy returns the same
+triple."** That is the safety property the fork exists to protect.
+
+> **The shape to break is not "the claim was too strong." It is asserting a universal over a grammar and
+> backing it with examples.** A list can only ever demonstrate the cases someone thought of; the sweep
+> costs one loop.
