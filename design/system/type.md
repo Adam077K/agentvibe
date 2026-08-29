@@ -84,30 +84,103 @@ mono stack. **No webfont.** Choosing a typeface is one of the three irreducible 
 
 ## Where the rules come from
 
-All four are recorded in `docs/03-system-design/DESIGN-CAPABILITY.md` §7.1, measured across five
-ramps on 2026-08-29. **Do not re-derive them here and do not restate them in a third place.**
+All four are recorded in `docs/03-system-design/DESIGN-CAPABILITY.md` §7.1, corrected in §15.16, and
+measured against five committed references on 2026-08-29. **Do not re-derive them here and do not
+restate them in a third place** — this section restated them anyway, and every restated row but one
+was false. What follows is the command, and the numbers underneath it are provenance.
 
-**Measured UI-band increments:**
+**Derive the increments. Do not read them off a table, including this one.**
+
+```bash
+# One reference. Slugs: linear-app · stripe-com · vercel-com · play-grafana-org · docs-stripe-com
+node -e "const j=require('./design/references/<slug>/measured.json');
+  for (const b of ['ui','display']) { const a = j.type.bands[b].sizes;
+    console.log(b, JSON.stringify(a.slice(1).map((v,i) => +(v - a[i]).toFixed(3)))); }"
+
+# The whole corpus, held against every stated rule, verdict by verdict:
+node scripts/extract-reference.mjs --against design/rules/type-scale.rules.json --refs design/references --json
+
+# mission-control's own ramp, from its source rather than from the corpus:
+grep -rhoE 'text-\[[0-9.]+px\]' mission-control/client/src | grep -oE '[0-9.]+' | sort -n -u
+```
+
+What those returned on 2026-08-29. **Re-run them; do not quote this table:**
 
 | Reference | UI band | Display band |
 |---|---|---|
-| linear.app | `1 1 1 1 1 1 2` | `6 8 16 16` |
-| stripe.com | `1 1 1 1 2 2 2` | `4 4 6 16` |
-| vercel.com | `1 2 2 2 2 2 2` | `32 8` |
-| play.grafana.org | `2` | *(none — two sizes is the whole ramp)* |
+| linear.app | `1 1 1 1 1 1` | `2 4 8 16 16 8` |
+| stripe.com | `1 1 1 1 1 1 1 1 2 2 1 1 2 2` | `16 8` |
+| vercel.com | `2 2` | `32 8` |
+| play.grafana.org | `0.6 1.4` | `1.4 1.4 9.8` |
+| docs.stripe.com | `1 1` | `5 3 8` |
 | **mission-control** | **`1 0.5 0.5 0.5 0.5 0.5 0.5 1`** | `5` |
 
-**A modular scale is the wrong model and was falsified, not merely rejected.** A modular scale holds
-its ratio *constant* by definition; every measured reference visibly decreases. The 1.07–1.17 band
-that looked like a "compressed modular scale" is just the arithmetic signature of a constant +1/+2px
-step.
+mission-control's nine authored sizes are `text-[Npx]` arbitrary values; its single display size is
+the one `text-xl` in `client/src/ui.tsx`, which is Tailwind's 20px — so its display band is `15 → 20`,
+one step of +5, and it is not visible to the `text-[Npx]` grep above.
 
-**The defect this closes** is the fourth diagnosis of mission-control's type ramp and the first
-correct one: it steps by **+0.5 seven times consecutively**, and its adjacent ratios (1.045 … 1.037)
-sit entirely *below* the reference band, which bottoms out at 1.067. The three earlier diagnoses were
-each well-formed and each wrong — "six sizes is disciplined restraint", "adjacent ratios below 1.125",
-"no display band". §7.1 keeps all three in place, and the lesson it draws is the one that governs this
-file: **a measurement without a construction model produces confident nonsense.**
+> **Superseded 2026-08-29 — the table above previously carried figures its own corpus refutes, and
+> only one row of five was true.** It stated: linear.app `1 1 1 1 1 1 2` / `6 8 16 16` · stripe.com
+> `1 1 1 1 2 2 2` / `4 4 6 16` · vercel.com `1 2 2 2 2 2 2` / `32 8` · play.grafana.org `2` /
+> *(none — two sizes is the whole ramp)*. Vercel's display row, `32 8`, is the only entry that
+> survived. It also **omitted docs.stripe.com**, the fifth committed reference, entirely.
+>
+> **How it got there.** The seeds commit that wrote this section predates the measured corpus: the
+> figures were transcribed from a secondhand list, `scripts/extract-reference.mjs` later measured the
+> five sites live into `design/references/*/measured.json`, and nothing reconciled the two. §15.16
+> records the same collision from the other side for play.grafana.org specifically. A rule document
+> citing evidence that its own corpus refutes is worse than one citing none, because it survives
+> review — which this one did.
+
+**A modular scale is the wrong model and was falsified, not merely rejected.** A modular scale holds
+its ratio *constant* by definition; every constant-increment run in the corpus visibly *decreases*,
+by `1 + d/s` with `s` rising. The 1.07–1.17 band that looked like a "compressed modular scale" is just
+the arithmetic signature of a constant +1/+2px step.
+
+> **Scoping corrected 2026-08-29, same cause as the table.** This read *"every measured reference
+> visibly decreases"*, unqualified. Two references break it as stated: **play.grafana.org increases**
+> (UI ratios `1.05` then `1.111`), and **stripe.com is non-monotone** (it returns to `1.125` where its
+> increment changes from +1 to +2). §7.1's own wording is the correct one and is restored here —
+> *"monotonically decreasing within every constant-increment run"* — which both references satisfy.
+> The argument is unchanged; it was the quantifier that was too wide.
+>
+> **play.grafana.org is a live counterexample to the integer half of §7.1 and its row above now shows
+> it.** Grafana runs a *multiplicative* scale off a 14px base, so it ships fractional sizes by
+> construction. §15.16 states what survives that: the defect was never *fractional*, it was
+> **fractional AND load-bearing by usage share** — grafana's fractional sizes appear once each (1.6%),
+> where mission-control's `12.5px` carries 30 usages.
+
+**The defect this closes** is the fourth diagnosis of mission-control's type ramp: it steps by **+0.5
+six times consecutively**, and its adjacent ratios across those six steps (1.045 … 1.037) sit entirely
+*below* the UI-band floor of **1.048**. The three earlier diagnoses were each well-formed and each
+wrong — "six sizes is disciplined restraint", "adjacent ratios below 1.125", "no display band". §7.1
+keeps all three in place, and the lesson it draws is the one that governs this file: **a measurement
+without a construction model produces confident nonsense.** §15.16 then found a fourth error in v4
+itself, so do not read "fourth" as "final".
+
+> **Superseded 2026-08-29 — two figures in that sentence were wrong and its conclusion is unchanged.**
+> It read *"+0.5 **seven** times consecutively"* (it is **six**; the mission-control row three
+> paragraphs above already printed six, and nine sizes admit eight increments, not nine) and *"the
+> reference band, which bottoms out at **1.067**"* (the UI-band floor is **1.048**, stripe.com's
+> 21→22). 1.067 was the floor of the *refuted* table — linear's 15→16 — which is why the two errors
+> travelled together. Derive both:
+>
+> ```bash
+> node -e "const a=[10,11,11.5,12,12.5,13,13.5,14,15];
+>   const i=a.slice(1).map((v,k)=>+(v-a[k]).toFixed(3)); console.log(i, i.filter(x=>x===0.5).length)"
+> # -> [1,0.5,0.5,0.5,0.5,0.5,0.5,1]  6
+>
+> node -e "const s=['linear-app','stripe-com','vercel-com','play-grafana-org','docs-stripe-com'];
+>   const min=k=>Math.min(...s.flatMap(x=>require('./design/references/'+x+'/measured.json').type[k].map(t=>t.ratio)));
+>   console.log('uiSteps', min('uiSteps'), 'allSteps', min('steps'))"
+> # -> uiSteps 1.048   allSteps 1.008
+> ```
+>
+> **Say which floor, because only one of them carries the argument.** Over *all* steps the floor is
+> **1.008** (play.grafana.org, 11.9→12) and mission-control's 1.037 is comfortably *above* it — that
+> comparison does not bite. All nine of mission-control's authored sizes are UI-band sizes, so the
+> UI-band floor of 1.048 is the like-for-like one, and 1.045 … 1.037 is below it exactly as it was
+> below the old 1.067.
 
 ---
 

@@ -18,6 +18,27 @@ Measured in mission-control: **136 Tailwind-scale spacing utilities against 2 ar
 (both `7px`). `docs/03-system-design/DESIGN-CAPABILITY.md` §10.1 withdrew the earlier reading that
 this repo has "0 spacing tokens → nothing to measure against" on exactly that evidence.
 
+**The counting rule, because 136 means nothing without it — padding and margin utilities only, on
+Tailwind's numeric scale, under `mission-control/client/src`:**
+
+```bash
+# 136 — the scale utilities
+grep -rhoE '\b(p|px|py|pt|pr|pb|pl|m|mx|my|mt|mr|mb|ml)-[0-9]+(\.5)?\b' mission-control/client/src | wc -l
+
+# 2 — the arbitrary ones, same prefix set, which is what makes "136 against 2" one measurement
+grep -rhoE '\b(p|px|py|pt|pr|pb|pl|m|mx|my|mt|mr|mb|ml)-\[[^]]+\]' mission-control/client/src | sort | uniq -c
+# ->   2 py-[7px]
+```
+
+> **Stated 2026-08-29 — the figure was reproducible and the RULE was not, which is the defect.** 136
+> was carried from §10.1 with no prefix set, no path and no command, so a reader re-deriving it lands
+> anywhere: adding `gap-*` and `space-x|y` — spacing utilities by any ordinary reading — gives **168**,
+> and adding `w-*`/`h-*`/`size-*` gives 174. Three defensible readings, one unlabelled number. A
+> figure whose counting rule is unstated cannot be checked, only believed; the commands above are the
+> fix and the number is now a consequence of them. Note what the rule excludes and why it is still the
+> right one here: `py-[7px]` is a *padding* utility, so the 2 and the 136 come from one prefix set,
+> and "136 against 2" is a ratio rather than two unrelated counts.
+
 **So the spacing situation is the opposite of the type situation, and the contrast is the useful
 part:** the team kept Tailwind's spacing scale and abandoned its type scale. One dimension inherited a
 system and stayed inside it; the other opted out and drifted to +0.5px steps. The tool shapes the

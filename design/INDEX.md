@@ -109,8 +109,18 @@ node scripts/build-tokens.mjs --check     exit 1 on drift, naming what drifted
   and `system/palette.md` is where colour is decided. It is unanswered.
 - **Computed** — every contrast figure is recalculated on every run. `mission-control/client/src/styles.css`
   is the reason: its figures were re-measured in 2026 after review found *every one of them wrong*,
-  and one is **still** off by 0.001 (`--color-warn`, documented 8.582:1, computes 8.581:1). A
-  generator cannot carry a figure forward; a comment can.
+  and **two are still off by 0.001** — `--color-warn` (`#d9a441`, documented 8.582:1, computes
+  8.581:1) and the rejected `#6a7280` (documented 3.982:1, computes 3.981:1). Both are pinned in
+  `scripts/build-tokens.test.mjs`, in the test named *"every hex-against-ink figure in styles.css
+  reproduces, except the TWO named here"* — `node --test scripts/build-tokens.test.mjs` re-derives
+  them. A generator cannot carry a figure forward; a comment can.
+
+  > **Superseded 2026-08-29.** This read *"one is **still** off by 0.001 (`--color-warn` …)"*. There
+  > are **two**, same sign and same magnitude: styles.css rounded up where nearest-rounding gives
+  > down, twice. `#6a7280` was simply absent from the map the test iterates while the test's own title
+  > asserted completeness over the file, so the second discrepancy could not be seen from either
+  > place. Two figures wrong the same way is a rounding *habit* and is worth more than "one figure is
+  > off"; stating it needed the second one to be in the map.
 
 **Never hand-edit a generated file.** Each carries a header saying so, and the drift check fails a
 build if one departs from `seeds.json` — it is an assertion in `scripts/build-tokens.test.mjs`, which
@@ -126,7 +136,24 @@ values — its twelve colours verbatim, and a five-step UI band plus one display
 authored sizes collapse to. **No mission-control source file has been changed.** Remapping its
 93 hand-written `text-[Npx]` values onto this ramp is a separate design pass that has not happened.
 
-Why this exists at all: `.claude/lenses.yml`'s `design` lens has five procedure steps and **every one
-is a judging action**. The production procedure was never written, so the design system was never
-manufactured. `docs/03-system-design/DESIGN-CAPABILITY.md` traces that chain end to end; §7.1 is the
-part this directory implements.
+Why this exists at all: `.claude/lenses.yml`'s `design` lens **used to have five procedure steps, and
+every one was a judging action**. The production procedure was never written, so the design system was
+never manufactured. `docs/03-system-design/DESIGN-CAPABILITY.md` traces that chain end to end; §7.1 is
+the part this directory implements.
+
+> **Superseded 2026-08-29 — this sentence described the state its own diff had already repaired.**
+> The `design` lens carries **12 procedure steps**, of which the **first 7 are making actions** (fix
+> the three seeds · build the UI band · derive the display band · set the line-height curve and
+> tracking · assign colour by role · compose in greyscale · give every animation a token) and the last
+> 5 are the original judging ones. Count it without `js-yaml`, which is not installed here:
+>
+> ```bash
+> awk '/^  - id: design$/{f=1;next} f&&/^  - id: /{exit}
+>      f&&/^    procedure:/{p=1;next} f&&p&&/^    [a-z_]+:/{p=0}
+>      f&&p&&/^      - /{n++} END{print n}' .claude/lenses.yml
+> # -> 12   (and: git diff --stat origin/main..HEAD -- .claude/lenses.yml)
+> ```
+>
+> The sentence is kept rather than deleted because the *chain* it names is still why this directory
+> exists — a lens that can only judge produces no artifact to judge. What changed is that the missing
+> half was written, in the same diff that still claimed it was missing.
