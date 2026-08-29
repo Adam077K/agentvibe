@@ -1762,3 +1762,176 @@ against an old implementation → `test:merge-gate` exit 1, four named failures,
 each side actually contains.** `sum('function fitLeading' in l)` over both sides answers in one line what
 two targeted greps missed. Recorded as the third orchestrator error of the day on the same theme:
 **a verification aimed at the failure you predicted cannot see the one you did not.**
+
+### 15.38 THE GATE BLOCKED — and it caught a defect in the defect-catcher
+
+An independent adversarial review returned **FAIL** on `integration/design-layer`: two HIGH, three
+MEDIUM, one LOW, with `scope` passing. Both HIGH findings were reproduced by the orchestrator before any
+fix was dispatched.
+
+**F1 — a hostile `font-family` escapes `@theme` in the generated stylesheet.** Reproduced:
+
+```
+validateSeeds accepts the hostile value:  true   (the only check is "non-empty string")
+declarations stranded OUTSIDE @theme:     32
+final brace depth:                        0      <- balanced, so no CSS parse error
+attacker's --color-danger present:        true
+```
+
+**The whole generated design system silently stops applying and the file still parses.**
+
+> **The important half is what did not catch it.** `drift()` compares the committed artifact to a **fresh
+> generation from the same seeds**. Poisoned seeds produce a poisoned stylesheet that the drift check
+> calls **correct**. That check is one of the four mechanisms this entire layer rests on — §15.17 argued
+> it was *"strictly more coverage at a strictly lower tier"*, and that remains true and is beside the
+> point. **A conformance instrument that can be fed its own standard is not a conformance instrument.**
+
+**F2 — catastrophic backtracking in robots matching, reached before any page load.** `pattern.replace(/\*/g, '.*')`
+over unbounded input. Measured, `"/" + "*a"×N + "b"` against a 59-char path:
+
+```
+N=3  0.2ms   N=4  2.1ms   N=5  23.7ms   N=6  219.7ms   N=7  2266.4ms      ~10x per star
+```
+
+Synchronous, no timeout on that path, triggered by a file the *remote host* controls — reached by the
+very check that exists to respect that host.
+
+Three MEDIUMs: look-alike slugs (`docs-stripe.com` and `docs.stripe.com` collide; **three of five
+committed references have a registrable colliding variant**, and the write has no existence check); three
+holes in a robots guarantee the file states as non-negotiable, including a measured `/%70rivate` bypass;
+and unbounded remote text landing in artifacts the new `design` lens points agents at as authority.
+
+**This is the first defect class in this entire investigation that was found by REVIEW rather than by
+BUILDING.** Every prior error — nine falsified findings and three process failures — surfaced when
+somebody loaded a finding into an instrument. These six needed an adversary, and no amount of building on
+them would have surfaced F1: **the build succeeds, the tests pass, the artifact is balanced, and the
+design system is off.**
+
+> **So the honest reading of this document's own thesis is narrower than it was this morning.** Mechanisms
+> catch what they were built to catch. **The blinded adversarial panel is not ceremony around the
+> mechanisms; it is the only thing that looked at the mechanisms themselves.**
+
+**Two things the reviewer did that are the standard:**
+
+- **It verified the scope claims rather than accepting them.** `check-suite.js` byte-identical,
+  `.github/` untouched, cited files resolving, 136 tests — each checked, not taken from the diff's own
+  description of itself.
+- **It labelled its own limits.** Chromium cannot launch under the armed sandbox, so the browser-side
+  premise of three findings is marked *argued, not executed*; it disclosed running `git log --oneline`
+  after being told not to read commit messages; and it stated plainly that one Opus 5 pass under
+  `independence: provenance` **is not an independent panel**. A review that names what it could not check
+  is the only kind whose silence means anything.
+
+It also found the single genuine tolerance relaxation in 72 files and named exactly where the argument
+runs out: the timing rule's severity drop from HIGH to MEDIUM **is asserted in one sentence with no
+evidence**, while every duration figure around it is sourced to three shipped design systems with an
+evidence-grade caveat. That is a better piece of reading than the change deserved.
+
+### 15.39 BOTH PANELS FAILED IT — and the core deliverable did not work
+
+A second blinded reviewer (`correctness` + `evidence`, no contact with the first) also returned **FAIL**:
+three p1, seven p2, five p3. Union across both panels: **2 HIGH · 3 p1 · 8 p2 · 7 p3.**
+
+**The p1 that matters is the one the orchestrator demonstrated as proof the layer worked.**
+
+`design-probe.mjs:571` hardcodes `severity: 'p2'` on every token-conformance finding; `:795` computes
+`ok: !findings.some(f => f.severity === 'p1')`. Reproduced against the real shipped token file, using the
+exact defect census this document opens with:
+
+```
+input:  fontSize {12.5:30, 11.5:13, 13.5:1}   lineHeight {1.625:27}
+findings: 2   both [p2] token-conformance
+any p1 : false        ok: true        exit: 0   "MEASURED — passed"
+```
+
+**45 of 94 usages off-system, 27 line-heights off-system, and the probe passes.** The finder works. The
+verdict never reads it.
+
+> **The orchestrator ran the finder and reported it as the verdict.** §15.13 records the same shape —
+> a measurement taken without a model of what it means — and §15.35 records it again. This is the third
+> instance, committed on the layer's own deliverable, inside the demonstration used to claim it worked.
+
+**Second p1, same shape one level down:** a missing or unparseable token file yields `exit: 0`,
+`state: "MEASURED — passed"`, `findings: []`. The reason does reach `unchecked[0]` and
+`tokens.loaded:false` — **but the two fields a machine acts on both say passed.** That is the probe's own
+stated contract, *"a probe that cannot see refuses rather than reporting a clean run"*, violated on the
+axis it exists for. The existing refusal test covers only the browser path.
+
+**Third p1 is an internal contradiction shipped in one commit.** `build-tokens.mjs`'s refusal message
+cites *"every measured reference builds its UI band on integer increments"* while the `measured.json`
+files in the same diff disagree on **all four** references — grafana measures `0.6 1.4` — and §15.16 of
+this document says that exact sentence is *"FALSE as written."* Running the repo's own falsifier returns
+`ui-increments-are-integer: CONTESTED`.
+
+### 15.40 Two blinded reviewers, twenty-one findings, essentially zero overlap
+
+§6.1 records the asymmetry that justified running a panel at all: any two evaluators agree with each other
+**5-17%** of the time while each finds **18-60%** of the collective problem set — *"they were not producing
+noise; they were finding different real problems."*
+
+**Measured here, live, on one artifact:**
+
+| | found |
+|---|---|
+| `adversarial` + `scope` | CSS injection via seeds · ReDoS in robots matching · slug collision overwriting a reference · three robots-guarantee holes · instruction-shaped remote text |
+| `correctness` + `evidence` | conformance findings cannot fail · missing token file passes · a constant contradicting its own corpus · transparent-sentinel contrast · rounded-ratio refusal · three false claims about tests · an unsatisfiable lens |
+
+**Not one true duplicate across twenty-one findings.** The closest pair — one reviewer noting the probe's
+verdict derives from the page, the other that conformance findings cannot reach the verdict — are adjacent
+observations of different defects.
+
+> **The union was worth roughly twice either half, and an average of the two would have been meaningless.**
+> The prediction was made from published data before the reviewers ran, and the result is as close to a
+> clean confirmation as this investigation has produced. **It is also the argument for the panel over the
+> mechanisms**: §15.38 recorded that review caught what building could not; this records that *one*
+> reviewer would have caught about half of it.
+
+**What both panels confirmed, stated because it is the half that survives.** One reviewer reimplemented
+`luminance` and `contrast` from the WCAG 2.1 spec text, importing nothing from the diff, and reproduced
+every reference value — 21, 1, 4.4781, 4.5422, 8.5925. All 13 contrast figures and all 12 leading and
+tracking values in the generated files reproduce exactly; `ratio = 1 + d/s` holds on the shipped ramp;
+the `EPS` tolerances were checked specifically for the absorb-your-own-defect pattern and it is absent;
+`scope` passed with `check-suite.js` and `.github/**` verified byte-identical rather than assumed.
+
+**The arithmetic is right and the verdict logic is wrong**, which is a better position than the reverse
+and is precisely what a blinded panel is for.
+
+### 15.41 Two fix lanes on one branch, because the brief said two different things
+
+The dispatch for the fix round said both *"WORK OFF `integration/design-layer`"* and *"your worktree,
+created off that branch"*. Those are different instructions. **Both lanes took the first**, so
+`builder-security` and `builder-verdict` committed onto the same branch, interleaved:
+
+```
+a233239  test(design-probe): pin the sentinel literal          <- verdict
+be8ee62  fix(extract,probe): robots holes, slug, untrusted     <- security
+4db31d4  fix(design): narrow the craft lens                    <- verdict
+7b9fec9  fix(design-lib): the parseRgb bound was false         <- verdict
+3b528fa  fix(design-probe): conformance findings block         <- verdict
+bb696ce  fix(extract): robots matching is a linear walk        <- security
+a7ba7aa  fix(tokens): a hostile font-family cannot escape      <- security
+```
+
+**Consequences, all observed:**
+
+1. **Neither lane can be reverted independently.** Interleaved commits from two authors on one branch
+   means backing out one lane means picking commits, not resetting a branch.
+2. **One lane's uncommitted work was in the other's working tree the whole time.** `builder-verdict`
+   reported seeing `extract-reference.mjs` modified by its peer, and correctly staged only its own files
+   on every commit rather than sweeping the tree — which is the only reason nothing was clobbered.
+   **It handled a hazard the brief created.**
+3. **The orchestrator measured a moving tree and got a false failure.** `npm run check` returned
+   `47 of 48 · test:lenses failed` — and re-running it minutes later returned clean, because a lane had
+   committed a fix in between. **A verification run against a branch two agents are writing to is a
+   measurement of neither state.**
+
+**The rule this yields is narrow and cheap:** *one branch, one writer.* Parallel lanes get parallel
+branches and the orchestrator merges. The reason the day's earlier five-lane round worked and this one
+was fragile is exactly that — five branches, five writers, merged deliberately, versus one branch and
+two.
+
+> This is the third time today that a shared mutable location produced a defect nobody wrote:
+> §15.28 (a document written into a child worktree), §15.33 (three sections destroyed by a copy in the
+> wrong direction), and now a branch two agents share. **The class is not "agents make mistakes" — each
+> lane behaved correctly. It is that a location with two writers has no correct behaviour available to
+> either of them.**
