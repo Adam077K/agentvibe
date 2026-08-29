@@ -29,7 +29,7 @@
       "value": "display",
       "statement": "a real interface has a display band above its UI band",
       "origin": "a category error, stated so it can be checked",
-      "expected": "play.grafana.org is a real production dashboard and ships 12 and 14 and nothing else"
+      "expected": "HELD across the captured corpus — and this rule's death is the one finding in the file that DID NOT SURVIVE re-measurement. It was killed on the evidence that play.grafana.org 'ships 12 14 and nothing else', which reproduces exactly WITHOUT a scroll pass and is false WITH one: scrolled, grafana renders 15.4/16.8/18.2/28 above its UI band. So the rule that was declared a category error is currently HELD by 5 of 5 references. Reproduce both readings: `--no-scroll` against `--scroll` (the default). The lesson is not that the rule is right; it is that a rule killed on one measurement dies again or lives again when the instrument improves, and this file is where that gets noticed."
     },
     {
       "id": "ui-increments-are-integer",

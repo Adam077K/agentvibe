@@ -1,5 +1,8 @@
 url: "https://vercel.com"
 access_date: "2026-08-29"
 captured_by: "scripts/extract-reference.mjs"
+viewport: 1440x900
+scrolled: true
+surface: marketing
 licence_note: "Computed styles and geometry only, read from a logged-out page load after checking /robots.txt. No page content, markup, images or text is reproduced or redistributed. Measurements are facts about a rendering, not a copy of the work. Re-check robots.txt and the site terms before any re-capture: the risk that bites is contract, not the CFAA."
 expires: "2026-11-27"
