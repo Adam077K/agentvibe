@@ -188,7 +188,7 @@ fits the roster**, plus two findings that belong to whoever writes the file.
 | `ui-visual-validator` | 10,017 | keep | The judging half of the perception loop |
 | `web-design-guidelines` | 1,231 | keep, **but see below** | The written rule set the loop measures against |
 | `ui-typography` | 14,291 | keep | Carries an ENFORCEMENT MODE; typography is the highest-frequency measurable defect in generated UI |
-| `wcag-audit-patterns` | 1,508 | **ADD** | The `accessibility` lens (`review-lenses.yml:100-111`) is p1-blocking and describes a procedure it does not carry |
+| `wcag-audit-patterns` | 1,508 | **ADD** | The `accessibility` lens is p1-blocking and describes a procedure it does not carry (`grep -n 'id: accessibility' .claude/review-lenses.yml` — the line pin that stood here rotted from 124 to 181 on `integration/design-layer`) |
 | `12-principles-of-animation` | 5,045 | **ADD** | 15 concrete timing values across 56 CSS blocks. Models guess easing; they do not reconstruct these (`CURATION.yml:51-54`) |
 | `playwright-skill` | 13,889 | **ADD** | Already in repo. The capture half of the loop, in the container that holds the browser grant |
 

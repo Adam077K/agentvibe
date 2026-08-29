@@ -773,17 +773,39 @@ calls for, not of an agent reading a diff. It was a plausible-sounding attachmen
 requires, and every loaded skill is context that displaces the diff.
 
 **Conditional, and only if the browser grant lands (§3.5):** `wcag-audit-patterns`, which is the
-procedure the `accessibility` lens (`review-lenses.yml:100-111`) describes but does not carry. Adding
-it before the grant would give the reviewer a procedure for evidence it cannot obtain.
+procedure the `accessibility` lens describes but does not carry — `grep -n 'id: accessibility'
+.claude/review-lenses.yml`. Adding it before the grant would give the reviewer a procedure for
+evidence it cannot obtain.
 
 All three resolve in `MANIFEST.json` (verified 2026-08-14).
 
 ### 3.5 MCP servers — `playwright`, and why it must be withheld today
 
 ROSTER-SIZE §4.4 grants the reviewer `mcpServers: [playwright]`, read-only, on a sound argument: three
-lenses declare `scope: rendered-output` at p1-blocking — `craft` (`review-lenses.yml:69`), `voice`
-(`:95`), `accessibility` (`:108`) — and no container can currently obtain the subject. A screenshot
-taken by the producer is an artifact the producer can fabricate; one the judge took is not.
+lenses in `.claude/review-lenses.yml` declare `scope: rendered-output` at p1-blocking — `craft`,
+`voice` and `accessibility` — and no container can currently obtain the subject. A screenshot taken by
+the producer is an artifact the producer can fabricate; one the judge took is not. Check the whole
+claim rather than trusting the three names:
+
+```bash
+grep -c 'scope: rendered-output' .claude/review-lenses.yml            # -> 3
+for L in craft voice accessibility; do
+  awk -v L="$L" '$0=="  - id: "L{f=1;next} f&&/^  - id: /{exit} f' .claude/review-lenses.yml \
+    | grep -E 'scope:|blocking_severities:'
+done                                                                   # -> [p1] + rendered-output, x3
+```
+
+> **Line pins removed 2026-08-29 — they had rotted twice over.** This sentence pinned `craft` to line
+> 69 of the lens file, `voice` to line 95 and `accessibility` to line 108; the paragraph above pinned
+> `accessibility` to lines 100-111. Every one was already wrong on `origin/main`, where line 69 holds
+> `- id: adversarial` rather than `craft`, and `integration/design-layer` then moved `craft` from line
+> 83 to 138 and `accessibility` from 124 to 181 — taking the drift from roughly 14 lines to roughly
+> 70. A corrected number rots again the next time a lens is edited above these, which is exactly what
+> just happened. The lens `id` and the grep survive that; the number does not.
+>
+> **Those four are written as prose, not as `path:line`, on purpose.** Spelled the normal way they are
+> live citations again, and `scripts/check-citations.mjs` flags them as drifted — which it did, on the
+> first version of this very note. A record of a rotted pointer must not itself be a pointer.
 
 **And it cannot be declared today**, for the same two reasons as §2.5: `schema-lint.js:299-304` fails
 the build for any `mcpServers` declaration with no MCP config, and `.mcp.json` does not exist; and
