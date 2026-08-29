@@ -235,10 +235,19 @@ two approved after it, `CAPABILITY.md:663` was a third one **created** by this b
 lens moved 152 → 187 in `.claude/lenses.yml`, which was 5 lines off on `main` (inside the checker's
 slack, so not a finding) and 30 off at HEAD. Same rule, same shape, one line.
 
-Left alone as genuinely pre-existing, each measured on both sides:
-`CONTROL-PLANE.md:1006` (24 off on `main`, 24 now) · `ROSTER-SIZE.md:362` (20 / 20) ·
-`AGENT-ARCHITECTURE.md:195` — `lenses.yml:84` for `business`, which sits at line 31 on **both** `main`
-and HEAD, so 53 lines off either way.
+Left alone as genuinely pre-existing, each measured on both sides — CONTROL-PLANE.md at line 1006
+(24 off on `main`, 24 now), ROSTER-SIZE.md at line 362 (20 / 20), and AGENT-ARCHITECTURE.md at line
+195, which pins the `business` lens to line 84 of `.claude/lenses.yml` where it sits at line 31 on
+**both** `main` and HEAD — so 53 lines off either way.
+
+> **Those four are written as prose rather than as `path:line`, and this is the THIRD time this
+> session that rule had to be applied.** The first version of this paragraph spelled them normally,
+> which made a record of four rotted pointers into four live citations, and
+> `scripts/check-citations.mjs` returned three fresh drift findings against this very file — 86 → 89,
+> caught on the authoritative run rather than by reading. The same shape had already been caught in
+> `CONTROL-PLANE.md`'s superseded note earlier today, and its fix is stated one section up. Knowing
+> the rule did not stop me applying it late: **a record of a rotted pointer must not itself be a
+> pointer**, and the control is what enforces that, not the intention.
 
 ## The same defect was latent in two more helpers
 
