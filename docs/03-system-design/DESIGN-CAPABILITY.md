@@ -1580,3 +1580,92 @@ have prevented more damage today than any of the mechanisms did.**
 
 That is not an argument against mechanisms. It is the honest boundary of the thesis: *conformance can
 bind, quality can only inform* — and **the scope of a number is a quality property.**
+
+### 15.30 §6.4's WITHDRAWAL IS ITSELF WITHDRAWN — a rule killed by a bad measurement is alive again
+
+§6.4 withdrew the finding *"mission-control has no display band"* as a **category error**, on the evidence
+that play.grafana.org — a real dashboard — *"has a type ramp of `12 14`, max 14px."*
+
+**That evidence was an incomplete measurement.** With a scroll pass, grafana renders **15.4 · 16.8 · 18.2 ·
+28** above its UI band. `must-have-display-band` now **HOLDS at 5 of 5 references.**
+
+| | reading | verdict |
+|---|---|---|
+| `--no-scroll` | `12 14`, max 14 | grafana has no display band — §6.4's basis |
+| scrolled | + 15.4 · 16.8 · 18.2 · **28** | grafana has a display band, max 28 |
+
+**The withdrawal rested on the same defect it accused the original finding of.** Both readings are
+recorded at the rule itself with the command to reproduce each. **Of the three rules this investigation
+killed, this is the one to stop citing as settled.**
+
+> **A rule killed by one measurement lives again when the instrument improves.** That is the harness
+> working against the interests of every agent that touched it — including the two that killed the rule.
+> It is the only available evidence that the thing is not a confirmation machine.
+
+### 15.31 The five-ramp table §7.1 rests on is NOT REPRODUCIBLE from what was recorded
+
+§7.1's central table lists UI-band increments for five sites, and every downstream claim about integer
+increments rests on it.
+
+**The absolute sizes behind four of those five rows exist nowhere in this repository.** Only increments
+and 2dp ratio bands were written down, and **a ratio band does not determine a ramp**: base 9 and base 10
+both fit Linear's recorded 1.07-1.13 and share no low-end size. Inverting the record is underdetermined.
+
+**So §7.1 cannot be re-derived, only re-measured.** The live captures in `design/references/` are now the
+only reproducible measurements of those sites that exist here — which is why the extractor fixtures its
+own captures rather than the published table, and why §15.26's vercel disagreement cannot be settled from
+the record and needs a capture.
+
+**The lesson is about what a census records, not about who was careless.** An increment is a *derived*
+quantity; recording it instead of the values discards the ability to check the derivation. Every
+`SOURCE.yml` now carries `surface` · `viewport` · `scrolled` alongside url and date, because **a census
+that does not say where it was taken cannot be reproduced** — and three references in this corpus now
+have verdicts that depend on exactly those fields.
+
+### 15.32 `docs.stripe.com` closes the standing objection to the 1.125 refutation
+
+§15.26 narrowed the refutation to three of four references. The obvious defence of the rule — *"those are
+marketing pages, product surfaces are different"* — is now answered directly. Measured, product surface,
+scrolled and recorded:
+
+```
+docs.stripe.com   UI band 12 / 13 / 14   ratios 1.083 and 1.077   BOTH UNDER 1.125
+```
+
+**A documentation surface for a developer product violates the rule as plainly as the landing pages do.**
+
+### 15.33 THE ORCHESTRATOR DESTROYED THREE SECTIONS OF THIS FILE, HAVING ALREADY DOCUMENTED THE MECHANISM AT §15.28
+
+§15.28 records the orchestrator writing two sections into a child worktree because shell cwd persists
+between tool calls and the append used a relative path. **Roughly ninety minutes later, the same
+orchestrator, having written that section, did it again — and this time it deleted rather than
+misplaced.**
+
+1. cwd had moved into the integration worktree by an earlier `cd`.
+2. §15.30-15.32 were appended with a **relative** path and landed in the integration copy. Verified at
+   the time: *"32 sections, 1,636 lines."*
+3. The session-root copy — still at 29 sections — was then copied **over** the integration copy, to
+   "sync" it.
+4. `git commit` reported **"nothing to commit, working tree clean"**, because the overwrite had restored
+   the file to exactly its last committed state. **The success message was produced by the data loss.**
+
+Never committed, absent from every tree, no stash. Recovered only because the text existed in a
+conversation transcript. **Nothing in the repository would have surfaced it** — not the citation check,
+which passes on a file missing three sections; not the suite, which does not read this file; not
+`git status`, which correctly reported a clean tree.
+
+**Three things this is, and the third is the one that matters:**
+
+1. **The same defect as §15.28**, by the same mechanism, committed by the same agent after documenting it.
+   *Knowing the pattern by name does not prevent committing it* — §5 said that about a different pattern
+   this same day.
+2. **A `cp` in the wrong direction is unrecoverable in a way an append is not.** §15.28's orphan was
+   sitting in a child worktree and a builder found it. This left no artifact at all.
+3. **The clean-tree report was the failure surface.** A confident, correct, reassuring message —
+   *"nothing to commit, working tree clean"* — was the direct output of destroying three sections. **This
+   document's own §11.1 names the class: the dangerous output is not the wrong answer, it is the
+   nearly-right one.** Here it was not even nearly-right; it was *exactly* right, about the wrong thing.
+
+**The mechanism that would prevent it does not exist and is cheap:** every write to a shared path uses an
+absolute path, and every count is `grep -c` against that absolute path rather than an echoed constant.
+Both were written into builder briefs today by the agent that then did neither.
