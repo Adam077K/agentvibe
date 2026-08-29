@@ -106,7 +106,8 @@ Reference these guidelines when:
 | `200ms ease-out` | Standard UI transition |
 | `300ms` | Maximum duration for UI animations |
 | `500ms` | Drawer animation duration |
-| `0.11 px/ms` | Velocity threshold for momentum dismiss |
+| `0.4 px/ms` | Velocity threshold for momentum dismiss — vaul 1.1.2 `VELOCITY_THRESHOLD`; sourced for drawers, [assumed for toasts](references/interact-momentum-dismiss.md) |
+
 | `100px` | Scroll-reveal viewport threshold |
 | `14px` | Toast stack offset |
 
