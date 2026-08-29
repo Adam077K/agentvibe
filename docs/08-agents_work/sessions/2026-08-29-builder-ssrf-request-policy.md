@@ -85,13 +85,28 @@ npm run check                                    47 of 48 · 1 failed · 201.2s
 git diff origin/main -- scripts/lib/check-suite.js .github/workflows/   empty
 ```
 
-**The one `npm run check` failure is `test:run-gate` and it is PRE-EXISTING on this branch, not this
-change.** Measured both ways: with this diff stashed it fails identically. The cause is not logic —
-`verdict.mjs` dies on `spawnSync git ENOBUFS`, because the COMMITTED diff `origin/main...32e0cf0` is
-**1,050,273 bytes against `spawnSync`'s 1,048,576 default `maxBuffer`**, over by 1,697. `HEAD_NOW` is
-`git rev-parse HEAD`, so no working tree enters it. It will fail for every lane on this branch and gets
-further out of reach with each commit. `scripts/verdict.mjs` is outside this task's scope; raising its
-`maxBuffer` is the fix and it is somebody's to take.
+**The one `npm run check` failure is `test:run-gate`, it is NOT this change, and the commit that broke
+it is `489e5e0` — another lane's, landed while this work was in progress.** `verdict.mjs` dies on
+`spawnSync git ENOBUFS`; `HEAD_NOW` is `git rev-parse HEAD`, so no working tree enters it. Measured per
+commit against `spawnSync`'s 1,048,576 default `maxBuffer`:
+
+```
+32e0cf0    995,960   OK    <- the branch tip this task started from
+489e5e0  1,050,273   ENOBUFS   <- crosses the line, and it is not this lane's commit
+25693b0  1,103,178   ENOBUFS   <- this change
+159f4e0  1,117,464   ENOBUFS
+```
+
+*Superseded in the same session: this paragraph first read "the COMMITTED diff `origin/main...32e0cf0`
+is 1,050,273 bytes … over by 1,697". The BYTE COUNT was right and THE COMMIT IT NAMED WAS NOT — 1,050,273
+is `489e5e0`, which had landed from another lane between this task's start and the measurement, so HEAD
+had moved under it. `32e0cf0` is 995,960 and passes. The original wording implied the branch was already
+over the line before `489e5e0`, which would have pointed a reader at the wrong commit; the empirical
+claim it supported — that stashing this diff does not fix it — was taken at HEAD `489e5e0` and stands.*
+
+Independently bisected the same day by the `design-figure-corrections` lane, which reached the same
+root cause and pinned it to `scripts/verdict.mjs:97` — git spawned with no `maxBuffer`. Outside this
+task's scope; it will fail for every lane on this branch until it is raised.
 
 ## The trap that was worth more than the fix
 
