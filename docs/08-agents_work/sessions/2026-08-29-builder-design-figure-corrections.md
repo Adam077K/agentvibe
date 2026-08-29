@@ -312,3 +312,36 @@ run `npm run test:lenses`… after I first wrote `npm run test:tokens`, **which 
 would have shipped as a runnable command that errors. `build-tokens.test.mjs` runs inside `test:lenses`
 (99 tests, exit 0). The file now names the step *and* the command that asks `package.json` which step
 runs that file, so the name cannot rot silently.
+
+## §15.31: correcting the band alone would have made the sentence FALSE
+
+The brief said *"fix the band, keep the argument"* and expected the argument to get stronger with the
+true `[1.067, 1.1]`. **Checked before substituting, and the substitution does not work.** §15.31 read
+*"base 9 and base 10 both fit Linear's recorded 1.07-1.13 and share no low-end size."* Under the true
+band **no base-9 ramp fits**: 9..15 gives `[1.071, 1.111]` and 9..16 gives `[1.067, 1.111]`, both above
+1.1 at the top. Dropping the corrected figure into the old sentence would have produced **a true number
+inside a false claim** — the exact move this session exists to stop.
+
+**The example is replaced, not repaired, and the replacement is strictly stronger.** The adjacent ratio
+is `1 + d/s`, so it depends only on the quotient: `10..16` by +1 and `20..32` by +2 return the
+*identical* six ratios — `1.1 1.091 1.083 1.077 1.071 1.067` — and share **no size at all**. That is a
+sharper demonstration that a ratio band cannot be inverted than "both fit the band", and it follows
+directly from §7.1's own arithmetic. The argument was always sound and is untouched.
+
+## `n` beside every band, which beats correcting six endpoints
+
+Both band commands now print the sample size. It is not decoration: per reference the counts are
+**6 · 14 · 2 · 2 · 2**, so three of the five "bands" are two points, and a pair of numbers is not
+evidence of clustering — it is the only shape two points can take. Corpus-wide the range spans **26**
+ratios. Rendering a 2-point range like a 14-point one lets it borrow authority it has not got.
+
+## The re-sweep, run with the corrected pattern
+
+`1\.07.*1\.1[37]` — both figures on one line — is the pattern that missed sites. Either-figure finds
+far more. Every remaining hit outside session records is a **superseded record** (`type.md`,
+`DESIGN-CAPABILITY.md` ×3, `build-tokens.test.mjs`) or a **false positive** — `CONTROL-PLANE.md` twice,
+where `1.13` is the section number *4.1.13*. **Zero live sites remain.**
+
+The false positives are the point: the corrected pattern is *wider*, not *right*, and a wider pattern
+filed as a count is the same error one size up. Only classification closes this — live claim, record,
+argument-about-the-record, or coincidence — and only the first may be edited.

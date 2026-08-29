@@ -95,8 +95,12 @@ simply unusable at mobile width. Both are true at once.
 > **Partly superseded 2026-08-29 — and the correction is more interesting than the original.** This
 > paragraph originally concluded the ten sizes were "near-duplicates, not a scale". Measured references
 > say tight clustering is NORMAL in a UI band — derive the per-reference ranges rather than quoting
-> them, `node -e "const j=require('./design/references/<slug>/measured.json');
-> const r=j.type.uiSteps.map(s=>s.ratio); console.log(Math.min(...r), Math.max(...r))"`. So the tight
+> them, and **print `n` beside every one**: `node -e "const
+> j=require('./design/references/<slug>/measured.json'); const r=j.type.uiSteps.map(s=>s.ratio);
+> console.log(Math.min(...r), Math.max(...r), 'over', r.length, 'ratios')"`. n is not decoration here —
+> vercel.com's band rests on **2** ratios and stripe.com's on **14**, and rendering those in the same
+> shape lets a two-point range wear the authority of a fourteen-point one. "Band" does almost no work
+> at n=2. So the tight
 > steps are not the defect. **What survives is the fractional sizes** — 11.5 / 12.5 / 13.5 — which are
 > literally authored (`text-[11.5px]`), which carry a third of the app's text, and which are not a
 > `clamp()` artifact because mission-control contains no `clamp()` and no `vw` units. See §6.4.
@@ -1753,8 +1757,27 @@ killed, this is the one to stop citing as settled.**
 increments rests on it.
 
 **The absolute sizes behind four of those five rows exist nowhere in this repository.** Only increments
-and 2dp ratio bands were written down, and **a ratio band does not determine a ramp**: base 9 and base 10
-both fit Linear's recorded 1.07-1.13 and share no low-end size. Inverting the record is underdetermined.
+and 2dp ratio bands were written down, and **a ratio band does not determine a ramp.** The adjacent ratio
+is `1 + d/s`, so it depends only on the *quotient*: scale a ramp and its step together and the ratios are
+byte-identical while the sizes share nothing.
+
+```bash
+node -e "const b=a=>a.slice(1).map((v,i)=>+(v/a[i]).toFixed(3));
+  console.log(b([10,11,12,13,14,15,16]).join(' '));   // 10..16 by +1
+  console.log(b([20,22,24,26,28,30,32]).join(' '));"  // 20..32 by +2 — the same six ratios
+```
+
+Both return `1.1 1.091 1.083 1.077 1.071 1.067` and share **no size at all**. Inverting the record is
+underdetermined.
+
+> **Superseded 2026-08-29 — this fitted against a band that is itself refuted, and correcting the band
+> alone would have made the sentence FALSE.** It read *"base 9 and base 10 both fit Linear's recorded
+> 1.07-1.13 and share no low-end size"*. That recorded band came from §7.1's refuted table; Linear's
+> measured UI band is `[1.067, 1.1]` over 6 ratios. **Under the true band no base-9 ramp fits** — 9..15
+> gives `[1.071, 1.111]` and 9..16 gives `[1.067, 1.111]`, both above 1.1 at the top — so substituting
+> the corrected figure into the old sentence would have produced a true number inside a false claim.
+> The example is replaced rather than repaired, and the replacement is stronger: identical ratio
+> *sequences*, not merely overlapping bands. **The argument was always sound and is untouched.**
 
 **So §7.1 cannot be re-derived, only re-measured.** The live captures in `design/references/` are now the
 only reproducible measurements of those sites that exist here — which is why the extractor fixtures its

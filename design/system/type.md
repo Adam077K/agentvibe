@@ -110,9 +110,12 @@ node -e "const j=require('./design/references/<slug>/measured.json');
   for (const b of ['ui','display']) { const a = j.type.bands[b].sizes;
     console.log(b, JSON.stringify(a.slice(1).map((v,i) => +(v - a[i]).toFixed(3)))); }"
 
-# Adjacent ratios, which is what the 'modular scale' paragraph below is about:
+# Adjacent ratios, which is what the 'modular scale' paragraph below is about.
+# ALWAYS PRINT n: vercel.com's band rests on 2 ratios and stripe.com's on 14, and a two-point
+# range rendered like a fourteen-point one borrows authority it has not got.
 node -e "const j=require('./design/references/<slug>/measured.json');
-  console.log(j.type.uiSteps.map(s => s.ratio).join(' '))"
+  const r = j.type.uiSteps.map(s => s.ratio);
+  console.log(r.join(' '), '| [' + Math.min(...r) + ', ' + Math.max(...r) + '] over', r.length, 'ratios')"
 
 # The whole corpus, held against every stated rule, verdict by verdict:
 node scripts/extract-reference.mjs --against design/rules/type-scale.rules.json --refs design/references --json
@@ -174,6 +177,11 @@ corpus and read its extremes, which is the second command in this section.
 > The correction does not damage the mechanism; it confirms it. `1.048` is stripe.com's 21→22, which
 > is `1 + 1/21` exactly — a `d=1` step above the 12→20 range the arithmetic considers, because
 > stripe's UI band runs to 26px.
+>
+> **And a band without its `n` is the deeper defect here, which is why the command prints one.** The
+> corpus-wide range spans 26 ratios, but per reference it is 6 · 14 · 2 · 2 · 2 — three of the five
+> "bands" are two points. A pair of numbers is not evidence of clustering; it is the only shape two
+> points can take. Correcting six endpoints would have left that unsaid.
 
 > **Scoping corrected 2026-08-29, same cause as the table.** This read *"every measured reference
 > visibly decreases"*, unqualified, and the corpus breaks it twice: run the ratios command above
