@@ -26,10 +26,19 @@ design/
   captures/             GITIGNORED — perception-loop output, never committed
 ```
 
-The layout this is a subset of is specified in `docs/03-system-design/agents/DESIGNER.md` §7.1, which
-also names `references/`, `visuals/` and `decisions/`. Those are **not created yet**: an empty
-directory is not a capability, and each one needs a channel that does not exist here today. They
-arrive with the work that fills them.
+*A reference corpus under `references/` is being built in a parallel lane and lands with it, carrying
+a `SOURCE.yml` and a `surface` field per reference. When it arrives it does not change anything
+above: it feeds `seeds.json` by proposing values a human copies, never by being read at build time.*
+
+**The tree above is a snapshot; `ls design/` is the truth.** It is written down so a reader knows what
+each path is *for*, not to assert what exists on any given day — a list of directories in prose goes
+stale the first time a branch adds one, with nobody editing the sentence.
+
+The full layout is specified in `docs/03-system-design/agents/DESIGNER.md` §7.1, which also names
+`references/`, `visuals/` and `decisions/`. **The rule for all three: a directory here exists only
+once work has filled it.** An empty directory is not a capability, and each needs a channel — a way
+references get in, a way visuals get built — that has to be built before the folder means anything.
+So each arrives with the lane that populates it rather than being seeded ahead of one.
 
 ---
 
