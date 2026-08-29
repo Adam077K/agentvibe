@@ -86,9 +86,28 @@ export function contrast(fg, bg) {
  *   `rgb(11 12 14 / 0.5)`      → [11,12,14] here · null in design-probe.mjs
  *   `rgba(0, 0, 0, var(--a))`  → [0,0,0]  here · null in design-probe.mjs
  *
- * On every shape where design-probe's copy returns a triple, this one returns the SAME triple —
- * the divergence is one-directional, and it is acceptance, not arithmetic. Both are pinned in
- * `design-lib.test.mjs`.
+ * THE BOUND ON THE DIVERGENCE, NARROWED 2026-08-29 BECAUSE THE PREVIOUS ONE WAS FALSE. This said
+ * "on every shape where design-probe's copy returns a triple, this one returns the SAME triple —
+ * the divergence is one-directional". It is not one-directional, and the difference is not only
+ * acceptance. Measured:
+ *
+ *   `rgb(1 2, 3, 4)`   → [1,2,3] here · [1,3,4] in design-probe.mjs   DIFFERENT TRIPLES
+ *   `rgb(1 x, 2, 3)`   → null    here · [1,2,3] in design-probe.mjs   the fork is the PERMISSIVE one
+ *
+ * Mixed separators do not merely split more permissively, they split DIFFERENTLY: this one treats
+ * a space as a separator, so components shift left; design-probe's `parseFloat` reads the leading
+ * number of a whitespace-joined chunk and drops the rest. Either can then be the one that returns
+ * a value.
+ *
+ * WHAT IS ACTUALLY TRUE, and it is what the test now checks: **on any value whose components are
+ * separated by commas alone, the two return the same result.** That is the entire legacy `rgb()`
+ * grammar, and it is the only shape where "superset" was ever the right word. Mixed separators are
+ * not valid in either grammar — legacy `rgb()` is comma-separated, modern `rgb()` is
+ * space-separated with an optional `/` before alpha — so no live measurement is known to depend on
+ * the difference. That is reasoning from the grammar, not a capture: nobody has enumerated what
+ * Chromium serialises, and this note claims only what it checked.
+ *
+ * Both behaviours are pinned in `design-lib.test.mjs`.
  *
  * Alpha is dropped on purpose. A contrast ratio is defined between two opaque colours; compositing
  * a translucent foreground against its actual backdrop is a different calculation, and returning

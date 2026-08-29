@@ -188,21 +188,39 @@ test('design-probe.parseRgb diverges from the shared copy, and exactly where doc
     assert.equal(probe.parseRgb(s), null, `design-probe.parseRgb should still refuse ${s}`);
     assert.notEqual(lib.parseRgb(s), null, `the shared parseRgb should still accept ${s}`);
   }
-  // AND NOWHERE ELSE. The divergence is one-directional and bounded: wherever the probe's copy
-  // returns a triple, the shared one returns the SAME triple. Without this arm the test above
-  // would still pass if the two copies had drifted apart on the common cases too.
-  const AGREED = [
+  // THE BOUND, NARROWED 2026-08-29 BECAUSE IT WAS FALSE AS STATED. This arm read:
+  //
+  //   "AND NOWHERE ELSE. The divergence is one-directional and bounded: wherever the probe's copy
+  //    returns a triple, the shared one returns the SAME triple."
+  //
+  // backed by a 7-item allowlist of comma-separated values. Every item in it agreed, so the
+  // universal claim read as checked while nothing had checked it — and this arm's ONE job is to
+  // catch a widening on a shape the divergence list does not name. `rgb(1 2, 3, 4)` is that shape,
+  // and it defeated the claim in two directions at once.
+  //
+  // What is asserted now is what is true: on values separated by COMMAS ALONE — the whole legacy
+  // rgb() grammar, and the shape a computed style is expected to carry — the two agree.
+  const COMMA_SEPARATED = [
     'rgb(0, 0, 0)',
     'rgba(255, 255, 255, 0.5)',
     '  rgb( 12 , 13 , 14 )  ',
     'rgb(230, 232, 236)',
-    'color(srgb 0 0 0)',
     'rgb(1,2)',
+    'rgb(0,0,0,0)',
+    'rgba(1.5, 2.5, 3.5, 1)',
+    'color(srgb 0 0 0)',
     'not a colour',
   ];
-  for (const s of AGREED) {
+  for (const s of COMMA_SEPARATED) {
     assert.deepEqual(probe.parseRgb(s), lib.parseRgb(s), `the copies should still agree on ${s}`);
   }
+
+  // AND WHERE SEPARATORS MIX, THEY DIVERGE IN BOTH DIRECTIONS — measured, not assumed. Without
+  // these two the corrected claim above would be as unbacked as the one it replaced.
+  assert.deepEqual(probe.parseRgb('rgb(1 2, 3, 4)'), [1, 3, 4], 'parseFloat reads the leading number and drops the rest');
+  assert.deepEqual(lib.parseRgb('rgb(1 2, 3, 4)'), [1, 2, 3], 'a space is a separator here, so components shift left');
+  assert.deepEqual(probe.parseRgb('rgb(1 x, 2, 3)'), [1, 2, 3], 'and on THIS shape the probe is the permissive one');
+  assert.equal(lib.parseRgb('rgb(1 x, 2, 3)'), null, 'the shared copy NaN-checks a component the other never sees');
 });
 
 // ── resolvePlaywright ───────────────────────────────────────────────────────────────────────────

@@ -207,16 +207,29 @@ export { contrast, luminance, resolvePlaywright };
  *   `rgb(11 12 14 / 0.5)`      → null here · [11,12,14] there
  *   `rgba(0, 0, 0, var(--a))`  → null here · [0,0,0]   there
  *
- * The divergence is one-directional: wherever this returns a triple, that copy returns the SAME
- * triple. So the permissive one is a strict superset, and adopting it would only ever turn a null
- * into a value.
+ * THE BOUND, CORRECTED 2026-08-29. This said "the divergence is one-directional: wherever this
+ * returns a triple, that copy returns the SAME triple. So the permissive one is a strict superset,
+ * and adopting it would only ever turn a null into a value." All three clauses are false, measured:
  *
- * IT IS STILL NOT A FREE CHANGE, WHICH IS WHY IT WAS NOT MADE HERE. A null from this function means
- * a colour the probe could not read, and a colour it cannot read is a contrast check that does not
- * run. Widening acceptance changes what this instrument MEASURES, on live pages, in a direction
- * nobody has reviewed — and this file's own header insists an unmeasured thing must read as "not
- * checked" rather than as conformance. That is a decision about the probe, not a side effect a
- * deduplication gets to make.
+ *   `rgb(1 2, 3, 4)`  → [1,3,4] here · [1,2,3] there   DIFFERENT triples, not null-vs-value
+ *   `rgb(1 x, 2, 3)`  → [1,2,3] here · null    there   THIS copy is the permissive one
+ *
+ * Mixed separators split differently rather than more permissively: the shared copy treats a space
+ * as a separator and shifts components left, while `parseFloat` here reads the leading number of a
+ * whitespace-joined chunk and silently drops the rest.
+ *
+ * What IS true is narrower: **on values separated by commas alone — the whole legacy `rgb()`
+ * grammar — the two agree.** Mixed separators are valid in neither grammar, so no live measurement
+ * is known to turn on this; that is reasoning from the grammar, not from a capture.
+ *
+ * IT IS STILL NOT A FREE CHANGE, WHICH IS WHY IT WAS NOT MADE HERE — and the correction above
+ * makes that case STRONGER rather than weaker. A null from this function means a colour the probe
+ * could not read, and a colour it cannot read is a contrast check that does not run. Adopting the
+ * shared copy is therefore not a widening at all: it would turn some nulls into values, some values
+ * into nulls, and some values into DIFFERENT values. That changes what this instrument measures on
+ * live pages, in a direction nobody has reviewed, and this file's own header insists an unmeasured
+ * thing must read as "not checked" rather than as conformance. It is a decision about the probe,
+ * not a side effect a deduplication gets to make.
  *
  * WORTH KNOWING BEFORE ANYONE DECIDES: the three divergent shapes are exactly CSS Color 4
  * serialization, which Chromium already emits for some computed colours and is emitting for more
