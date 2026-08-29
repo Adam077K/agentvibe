@@ -36,6 +36,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run build:manifest` | `node scripts/build-skills-manifest.mjs` |
 | `npm run build:map` | `node scripts/gen-codebase-map.mjs` |
 | `npm run build:routers` | `node scripts/build-skill-routers.mjs` |
+| `npm run build:tokens` | `node scripts/build-tokens.mjs` |
 | `npm run check` | `node scripts/run-checks.mjs` |
 | `npm run check:ci-chains` | `node scripts/check-ci-chains.mjs` |
 | `npm run check:citations` | `npm run test:citations && node scripts/check-citations.mjs` |
@@ -91,7 +92,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:hooks` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/session-start.test.mjs` |
 | `npm run test:launcher-permissions` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/launcher-permissions.test.mjs` |
 | `npm run test:ledger` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/ledger.test.mjs` |
-| `npm run test:lenses` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs` |
+| `npm run test:lenses` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs scripts/build-tokens.test` |
 | `npm run test:memory` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-memory-budget.test.mjs` |
 | `npm run test:merge-gate` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs scripts/produce-verdi` |
 | `npm run test:playbooks` | `node --require ./scripts/protected-write-tripwire.cjs --test --test-concurrency=1 scripts/playbooks.test.mjs s` |
@@ -130,6 +131,7 @@ it, so a hook that changes posture changes this map with it.
 
 | File | Subject |
 |---|---|
+| `scripts/build-tokens.test.mjs` | the gate over the token generator. |
 | `scripts/check-citations.test.mjs` | mutation gate for the citation-range checker. |
 | `scripts/check-dispatch-agenttype.test.mjs` | the mutation gate for the dispatch-identity checker. |
 | `scripts/check-dispatch-flush.test.mjs` | the regression gate for the 64KB stdout truncation. |

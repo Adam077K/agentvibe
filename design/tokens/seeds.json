@@ -1,0 +1,44 @@
+{
+  "$comment": "AUTHORED. The only hand-edited file in design/tokens/. tokens.json, tokens.css, tokens.ts and contrast.md are all generated from this file by `npm run build:tokens`; the drift check is an assertion in scripts/build-tokens.test.mjs and fails a build. Type is DERIVED from the numbers below, colour is CARRIED through unchanged, contrast is COMPUTED. Derivation rules and their sources: design/system/type.md and docs/03-system-design/DESIGN-CAPABILITY.md §7.1.",
+  "type": {
+    "$comment": "A PROPOSAL, not a migration. These are mission-control's own values re-expressed as a derivable ramp: its nine authored sizes (10 11 11.5 12 12.5 13 13.5 14 15, plus 20) collapse to a five-step UI band on integer increments and a one-step display band. No mission-control source file is touched by this; the remap is a separate design pass.",
+    "ui": { "base": 11, "increment": 1, "steps": 5 },
+    "display": { "base": 20, "increment": 8, "steps": 1 },
+    "leading": { "peak": 1.55, "peakAt": 17, "falloff": 0.62, "exponent": 1.1, "displayRatio": 1.0 },
+    "tracking": { "zeroAt": 14, "slope": 0.0022 },
+    "family": {
+      "sans": "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      "mono": "ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace"
+    }
+  },
+  "color": {
+    "$comment": "CARRIED, NOT DERIVED. Twelve values, verbatim from mission-control/client/src/styles.css. Nothing here is generated and nothing here is a ramp — colour is decided in design/system/palette.md, which is unanswered. A generated palette would be a claim this repository has not earned.",
+    "ink": "#0d0e11",
+    "row-alt": "#15171d",
+    "raised": "#1e222b",
+    "line": "#2a2f39",
+    "line-strong": "#3d4451",
+    "divider": "#5a6270",
+    "dim": "#7b8494",
+    "muted": "#9aa1ad",
+    "text": "#e6e8ec",
+    "live": "#3fbf8f",
+    "warn": "#d9a441",
+    "bad": "#e2727a"
+  },
+  "contrastPairs": [
+    { "fg": "text", "bg": "ink", "note": "body copy" },
+    { "fg": "muted", "bg": "ink", "note": "secondary text" },
+    { "fg": "dim", "bg": "ink", "note": "column headers, footnotes, placeholders — the lowest-contrast thing allowed to carry meaning" },
+    { "fg": "live", "bg": "ink", "note": "status text, healthy" },
+    { "fg": "warn", "bg": "ink", "note": "status text, warning" },
+    { "fg": "bad", "bg": "ink", "note": "status text, failing" },
+    { "fg": "text", "bg": "raised", "note": "input text on the raised surface" },
+    { "fg": "muted", "bg": "raised", "note": "secondary text on the raised surface" },
+    { "fg": "divider", "bg": "ink", "note": "SURFACE PAIR — the one horizontal rule in the app. A ratio is the wrong metric for a rule; this row exists to show it is a line you can see" },
+    { "fg": "line-strong", "bg": "ink", "note": "SURFACE PAIR — borders and rules, never text" },
+    { "fg": "line", "bg": "ink", "note": "SURFACE PAIR — hairline separators" },
+    { "fg": "raised", "bg": "ink", "note": "SURFACE PAIR — hover fill, never the sole carrier of anything" },
+    { "fg": "row-alt", "bg": "ink", "note": "SURFACE PAIR — row banding. styles.css argues at length that ΔE76 (4.82) is the right metric here and the ratio is not" }
+  ]
+}
