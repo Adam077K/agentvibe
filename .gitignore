@@ -44,6 +44,5 @@ docs/03-system-design/.SOURCED-CLAIMS.lock
 docs/03-system-design/SOURCED-CLAIMS.md.*.tmp
 .claude/ledger/index.json.*.tmp
 
-# Perception-loop output — evidence, never a deliverable. A binary file is committed only if it
-# is the deliverable. Re-derivable from a commit; never committed.
-design/captures/
+# Playwright MCP browser scratch (console logs, page snapshots) — transient, never a deliverable
+.playwright-mcp/

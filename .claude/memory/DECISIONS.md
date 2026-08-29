@@ -393,3 +393,32 @@ merged; the deferrals themselves are reversible.
 **Owner:** builder (`builder-one-living-status`) · **founder decision 2026-08-26**
 **Affects:** `docs/STATUS.md`, `.claude/gates.yml`, `.claude/playbooks/`, `bin/warroom`, and every agent
 that reads "built" as "gated"
+
+## 2026-08-29 — Design: conformance binds, quality informs; taste enters once, as references
+
+**CONFORMANCE CAN BIND. QUALITY CAN ONLY INFORM.** A design-quality PASS/BLOCK judge is ~0.543 accurate
+against a designer panel only 0.741 self-consistent — a biased coin on the merge path, *reproducible
+while invalid*, which looks exactly like a working mechanism. Corollary: evaluators agree with each other
+5-17% of the time while each finds 18-60% of the real problems. **Weak judges are excellent FINDERS and
+useless SCORERS — union, never average.** A panel returns findings, never a score. This explains a result
+already measured here: three blinded reviewers found 7 P1s where a 49-agent gate found 3.
+
+**Division of labour, founder direction 2026-08-29** (*"agents can do those small decisions or learn from
+context, references"*): founder supplies **references, brand adjectives, no-gos**; the agent **derives
+every value**. Taste enters once and nowhere else — no downstream judge can recover it. Also founder-set:
+**1-3 outputs at high quality, not 40+**, which the evidence supports *against* the three-directions
+ritual nobody in the corpus defends.
+
+**Root cause was not taste.** The `design` lens — in a file whose job is "how to PRODUCE work" — has five
+steps and every one is a judging action; `sources:` show it was rehoused from `design-critic.md`. **A
+critic's checklist sat in the production procedure's slot.** Found three independent ways.
+
+**What binds is a short list.** Only `npm run check` steps and `qa-lead-pass.yml`. Grep of `origin/main`
+confirms **no code path loads a lens `procedure:` or a playbook's stages**, `qa.js` has five hardcoded
+dimensions excluding `craft`, and `blocking_severities` is read by nothing outside the linter. **Design
+conformance binds by being a test and by nothing else**; the lens and playbook are ADVISORY, labelled so.
+
+**Reversibility:** reversible — additive scripts only; no agent file, workflow or STEP touched, floor `full`.
+**Owner:** orchestrator (`ceo-4-1787566829`) · **founder direction 2026-08-29**
+**Affects:** `.claude/lenses.yml`, `.claude/review-lenses.yml`, `.claude/playbooks/design-pass.yml`,
+`scripts/build-tokens.mjs`, `scripts/design-probe.mjs`, `design/`, every future design dispatch

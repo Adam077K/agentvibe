@@ -769,6 +769,25 @@ system in one file, which is correct.
 
 ### 7.3 Design tokens code can actually consume
 
+> **Superseded 2026-08-29 — the SHAPE of this section was implemented and its SPELLING was not, on
+> purpose.** This section prescribed `npm run check:tokens`. That name is **GOVERNED**
+> (`/^(?:check|test|lint|verify|audit):/`), and a governed name absent from `STEPS` is *refused* by the
+> drift guard unless it is classified in `EXCLUDED` — which lives in `scripts/lib/check-suite.js`, tier
+> **irreversible · enforcement=block**. Measured when it was tried: **8 failing assertions naming
+> `check:tokens`**. So the prescribed spelling put founder sign-off on the critical path of every token
+> change, and there is no cheap middle: either the name is not `check:`, or the PR is irreversible.
+>
+> **What shipped instead is strictly stronger.** An `EXCLUDED` script runs in **no automated lane at
+> all** — the entry buys a written explanation for zero coverage. The drift check is now a byte-equality
+> assertion inside `scripts/build-tokens.test.mjs`, which rides `test:lenses`'s argv, which *is* a step
+> and *is* a CI step. **Proved rather than asserted:** hand-editing `--text-ui-0: 11px` to `12px` in the
+> generated CSS turns two tests red and exits 1; under the `EXCLUDED` entry the same edit was caught by
+> nothing.
+>
+> `build:tokens` survives as an npm script because `build:` is outside GOVERNED. Nothing else in this
+> section changed — one source, three consumers, the computed contrast table, and no half-generated file
+> are all implemented as written.
+
 **Not a mood board. A build step with a `--check` mode**, which is the pattern this repo already uses
 for every generated file it trusts: `build-skills-manifest.mjs --check` and `gen-codebase-map.mjs
 --check` both run in `npm run check` (`package.json:9, 28, 37`) and fail CI on drift.
@@ -778,7 +797,7 @@ design/tokens/tokens.json          →  node scripts/build-tokens.mjs
                                       ├→ design/tokens/tokens.css     (@theme block)
                                       ├→ design/tokens/tokens.ts      (typed export)
                                       └→ design/tokens/contrast.md    (every pair, computed)
-npm run check:tokens = node scripts/build-tokens.mjs --check
+node scripts/build-tokens.mjs --check        # NOT an npm script — see the note below
 ```
 
 Four properties that make this the answer rather than a directory of hex codes:
@@ -882,7 +901,7 @@ why: "one sentence: what we are looking at this for"
 | `design/INDEX.md` | Authored | Named in `pre_flight_reads:` — an unread index is a dead index, and this one is read every dispatch |
 | `design/system/*.md` | **Authored** | The artifact-existence gate (§7.6). A design stage cannot open while a file in scope is `status: unanswered` |
 | `design/tokens/tokens.json` | **Authored** | It is the only hand-edited file in `tokens/`, so there is exactly one place to change a value |
-| `design/tokens/{tokens.css,tokens.ts,contrast.md}` | **Generated** | `npm run check:tokens` fails CI on drift — the `check:manifest` / `check:map` pattern |
+| `design/tokens/{tokens.css,tokens.ts,contrast.md}` | **Generated** | a byte-equality assertion inside `scripts/build-tokens.test.mjs` fails CI on drift — it rides `test:lenses`, which IS a step |
 | `design/references/*/SOURCE.yml` | Generated stub, authored fields | `claim-source` re-fetches the URL; `claim-freshness` forces a disposition at `expires` |
 | `design/references/*/notes.md` | **Authored** | A reference with no notes is a screenshot, not a reference. §7.7 |
 | `design/visuals/**` | Mixed — see §7.6 | The campaign's own gate |
@@ -950,7 +969,7 @@ obstacle.
 
 1. **Rule 9 — claims expire, and expiry forces a decision.** `design/system/palette.md`'s contrast
    assertions are `claim(kind=internal-fact, verified_by=command)` where the command is
-   `npm run check:tokens`. `ledger.mjs` at `lint` fails a claim with no expiry; `claim-freshness`
+   `node scripts/build-tokens.mjs --check`. `ledger.mjs` at `lint` fails a claim with no expiry; `claim-freshness`
    fails it once the date passes; and exactly one disposition is recordable — Refresh, Deprecate, or
    Waive with a new deadline. **This is precisely the mechanism `styles.css` did not have**, and its
    own comment says why it needed one: figures went unchecked because *"a human (or a model) reading a
