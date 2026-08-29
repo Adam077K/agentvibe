@@ -46,6 +46,8 @@ import {
   WCAG,
   band,
   adjacentRatios,
+  FAMILY_MEMBER,
+  assertFamilySafe,
   assertIntegerSizes,
   assertMonotoneRatios,
   buildModel,
@@ -431,6 +433,126 @@ test('every seeded pair appears in the computed table, with both hexes carried',
   // The AA/AAA thresholds are WCAG's, not ours.
   assert.equal(WCAG.AA, 4.5);
   assert.equal(WCAG.AAA, 7);
+});
+
+// ── THE FAMILY IS A SINK, AND seeds.json IS THE TRUST BOUNDARY ──────────────────────────────────
+//
+// renderCss interpolates `type.family.*` VERBATIM into a declaration inside `@theme { }` and CSS
+// offers no escaping there. Measured on this file before the fix (2026-08-29), with
+// `type.family.sans` = `x, sans-serif} :root{--color-danger:#00ff00} a{content:"` :
+//
+//   validateSeeds accepts it:                    true
+//   @theme opens line 7, brace depth hits 0 at:  line 9
+//   declarations NO LONGER inside @theme:        31 of 32
+//   final brace depth:                           0    <- balanced, so the file still PARSES
+//   attacker property --color-danger present:    true
+//
+// The whole generated design system silently stops applying and nothing downstream notices —
+// `drift()` compares the committed file against a fresh generation from the SAME seeds, so
+// poisoned seeds produce a poisoned file the drift check calls correct. `renderTs` is not a sink:
+// JSON.stringify escapes. These are the tests that make the seeds file the boundary.
+
+/** Read a CSS text the way a CSS tokenizer does: comments and strings carry no block structure. */
+function braceScan(css) {
+  let depth = 0;
+  let line = 1;
+  let closedAt = null;
+  const depthAtLineStart = [0];
+  for (let i = 0; i < css.length; ) {
+    const c = css[i];
+    if (c === '\n') {
+      line += 1;
+      depthAtLineStart[line - 1] = depth;
+      i += 1;
+    } else if (c === '/' && css[i + 1] === '*') {
+      const end = css.indexOf('*/', i + 2);
+      const stop = end === -1 ? css.length : end + 2;
+      for (let j = i; j < stop; j += 1) {
+        if (css[j] === '\n') {
+          line += 1;
+          depthAtLineStart[line - 1] = depth;
+        }
+      }
+      i = stop;
+    } else if (c === '"' || c === "'") {
+      // CSS Syntax 4.3.5: a newline inside a string ends it as a <bad-string>.
+      i += 1;
+      while (i < css.length && css[i] !== c && css[i] !== '\n') i += css[i] === '\\' ? 2 : 1;
+      if (css[i] === c) i += 1;
+    } else {
+      if (c === '{') depth += 1;
+      else if (c === '}') {
+        depth -= 1;
+        if (depth === 0 && closedAt === null) closedAt = line;
+      }
+      i += 1;
+    }
+  }
+  return { finalDepth: depth, closedAt, depthAtLineStart };
+}
+
+test('a family value that could break out of @theme is REFUSED at seeds.json, the trust boundary', () => {
+  // The exact string the adversarial review measured, plus the shapes it generalises to.
+  const breakout = 'x, sans-serif} :root{--color-danger:#00ff00} a{content:"';
+  const msg = refusedWith((s) => { s.type.family.sans = breakout; }, 'renderCss', '@theme', 'trust boundary');
+  assert.ok(msg.includes(JSON.stringify('x')) || msg.includes('sans-serif}'), `the refusal does not name the offending member:\n  ${msg}`);
+
+  for (const bad of [
+    'x} :root{--color-danger:#00ff00} a{content:"', // the brace escape itself
+    'Inter; --color-ink: #ff0000',                  // a second declaration via `;`
+    'Inter /* */ ; color: red',                     // a comment used to hide the payload
+    'Inter\\}',                                     // a backslash escape reaching the sink
+    'Inter\n  --color-ink: #ff0000',                // a newline, so the payload owns its own line
+    "'unterminated",                                // an unclosed quote swallows the rest of the file
+    "'a'b'",                                        // nested quotes: closed, then reopened
+    'url(http://evil.example/x)',                   // a fetch from a value that looks like a font
+  ]) {
+    refusedWith((s) => { s.type.family.mono = bad; }, 'is not a font-family name');
+  }
+
+  // An ARRAY is the other accepted shape and it must not be the way around the string check.
+  refusedWith((s) => { s.type.family.sans = ['Inter', 'x} :root{--color-danger:#0f0} a{content:"']; }, 'is not a font-family name');
+  refusedWith((s) => { s.type.family.sans = ['Inter', '']; }, 'empty stack member');
+
+  // CONTROL, and it is the reason this is an allow-list rather than the deny-list first proposed:
+  // refusing every one of `; { } / * " ' \` and newline refuses four members of the COMMITTED
+  // stacks. A quoted name is the CSS idiom for a family carrying a space and must stay expressible.
+  for (const member of ["'Segoe UI'", "'SF Mono'", "'JetBrains Mono'", "'Fira Code'", '"SF Pro Display"', 'ui-sans-serif', '-apple-system', 'system-ui', 'Segoe UI', 'sans-serif']) {
+    assert.ok(FAMILY_MEMBER.test(member), `${member} is a real font-family member and the grammar refuses it`);
+    assert.doesNotThrow(() => assertFamilySafe('sans', member), `assertFamilySafe refuses ${member}`);
+  }
+  assert.doesNotThrow(() => validateSeeds(clone()), 'the committed seeds.json no longer validates');
+});
+
+test('every emitted declaration lands INSIDE @theme — brace depth, not "it parses"', () => {
+  const css = renderCss(buildModel(seeds));
+  const lines = css.split('\n');
+  const scan = braceScan(css);
+
+  const opens = lines.filter((l) => /^@theme\s*\{/.test(l)).length;
+  assert.equal(opens, 1, `expected exactly one @theme block, found ${opens}`);
+  assert.equal(scan.finalDepth, 0, 'the stylesheet is not brace-balanced');
+
+  const decls = lines.map((l, i) => [i, l]).filter(([, l]) => /^\s*--[\w-]+\s*:/.test(l));
+  assert.ok(decls.length >= 30, `CONTROL: only ${decls.length} declarations — too few for this test to prove anything`);
+  for (const [i, l] of decls) {
+    assert.equal(scan.depthAtLineStart[i], 1, `line ${i + 1} sits at brace depth ${scan.depthAtLineStart[i]}, not inside @theme: ${l.trim()}`);
+    assert.ok(scan.closedAt === null || i + 1 < scan.closedAt, `line ${i + 1} is emitted AFTER @theme closes on line ${scan.closedAt}: ${l.trim()}`);
+  }
+  assert.equal(scan.closedAt, lines.length - 1, `@theme closes on line ${scan.closedAt}, not on the last line (${lines.length - 1})`);
+
+  // CONTROL over the INSTRUMENT. A scanner that never reports an escape would pass the assertions
+  // above on any input at all, so drive it with the poisoned output the fix now makes unreachable.
+  // Built by hand rather than through validateSeeds, precisely because validateSeeds refuses it.
+  const poisoned = css.replace(
+    /^(\s*--font-sans: ).*$/m,
+    '$1x, sans-serif} :root{--color-danger:#00ff00} a{content:";'
+  );
+  assert.notEqual(poisoned, css, 'CONTROL: the poisoned variant was not built — the --font-sans line moved');
+  const bad = braceScan(poisoned);
+  const stranded = poisoned.split('\n').map((l, i) => [i, l]).filter(([i, l]) => /^\s*--[\w-]+\s*:/.test(l) && i + 1 > bad.closedAt);
+  assert.ok(stranded.length >= 30, `CONTROL FAILED: the scanner sees no escape in a stylesheet that has one — ${stranded.length} stranded declaration(s)`);
+  assert.equal(bad.finalDepth, 0, 'CONTROL: the poisoned stylesheet is BALANCED, which is exactly why "it parses" proves nothing');
 });
 
 // ── COLOUR IS CARRIED, NOT DERIVED ───────────────────────────────────────────────────────────────

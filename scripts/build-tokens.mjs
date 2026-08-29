@@ -250,6 +250,74 @@ export function assertIntegerSizes(sizes) {
   }
 }
 
+/**
+ * THE ONE GRAMMAR A FONT-FAMILY STACK MEMBER MAY HAVE, and it is an ALLOW-LIST on purpose.
+ *
+ * `renderCss` interpolates the family straight into a declaration inside `@theme { … }`, and CSS
+ * has no escaping there — a value is copied to the sink verbatim. Measured 2026-08-29 against the
+ * committed seeds with `type.family.sans` set to
+ * `x, sans-serif} :root{--color-danger:#00ff00} a{content:"`:
+ * the previous check (`typeof v === 'string' && v.trim().length > 0`) ACCEPTED it, the `}` closed
+ * `@theme` on its own line, **31 of the 32 emitted declarations landed outside the block**, an
+ * attacker-chosen `--color-danger` was live, and the final brace depth was **0** — so the file
+ * still parses and the whole generated design system silently stops applying.
+ *
+ * A BALANCED FILE IS THE FAILURE MODE, WHICH IS WHY "it parses" PROVES NOTHING and why the drift
+ * check cannot see this: `drift()` compares the committed output to a fresh generation from the
+ * SAME seeds, so poisoned seeds produce a poisoned file the comparison calls correct. The trust
+ * boundary is seeds.json — this refusal — not the renderer and not the extractor that suggests a
+ * value for a human to paste.
+ *
+ * A DENY-LIST WAS THE FIRST DESIGN AND IT DOES NOT SURVIVE CONTACT WITH THIS REPO'S OWN SEEDS.
+ * Refusing every one of ``; { } / * " ' \`` and newline refuses `'Segoe UI'`, `'SF Mono'`,
+ * `'JetBrains Mono'` and `'Fira Code'` — four members of the committed stacks, and the CSS idiom
+ * for any family name carrying a space. A quoted string is not the danger: a `}` inside a CSS
+ * string does not close a block. An UNTERMINATED or nested quote is, so the grammar admits a
+ * quoted member only when it is closed and its contents cannot themselves quote or escape.
+ *
+ * Admits exactly two shapes, and nothing reaches the sink that is not one of them:
+ *   · a quoted name — `'Segoe UI'` or `"SF Mono"` — whose contents are letters, digits, space,
+ *     `_` and `-` only, so no quote, backslash, brace, semicolon or comment can live inside it;
+ *   · unquoted identifiers — `ui-sans-serif`, `-apple-system`, `system-ui`, or space-separated
+ *     idents like `Segoe UI` — matching CSS's own custom-ident shape with an optional leading `-`.
+ */
+export const FAMILY_MEMBER =
+  /^(?:'[A-Za-z0-9 _-]+'|"[A-Za-z0-9 _-]+"|-?[A-Za-z_][A-Za-z0-9_-]*(?: +[A-Za-z_][A-Za-z0-9_-]*)*)$/;
+
+/**
+ * Refuse any `type.family.*` value that could leave the declaration it is written into.
+ *
+ * Splits a string form on `,` the way `familyList` does, so the unit checked here is the unit
+ * emitted there. A member carrying a comma inside quotes is refused by the grammar rather than
+ * split, so the two cannot disagree about where a member ends.
+ */
+export function assertFamilySafe(key, value) {
+  const members = Array.isArray(value) ? value : String(value).split(',');
+  for (const raw of members) {
+    const member = String(raw).trim();
+    if (!member) {
+      refuse(
+        `type.family.${key} has an empty stack member. An empty member emits a stray comma into ` +
+          `--font-${key}, which is a malformed declaration rather than a font choice.`
+      );
+    }
+    if (!FAMILY_MEMBER.test(member)) {
+      refuse(
+        `type.family.${key} member ${JSON.stringify(member)} is not a font-family name. This value ` +
+          `is interpolated VERBATIM into a declaration inside \`@theme { }\` by renderCss, where CSS ` +
+          `offers no escaping: a member carrying \`}\` closes the block, and every declaration after ` +
+          `it — 31 of 32, measured 2026-08-29 — is emitted OUTSIDE @theme while the file stays ` +
+          `brace-balanced and parses cleanly. The drift check cannot see it, because it compares the ` +
+          `committed output against a fresh generation from these same seeds. A stack member is ` +
+          `either a QUOTED name whose contents are letters, digits, space, _ and - ('Segoe UI'), or ` +
+          `unquoted identifiers (ui-sans-serif, -apple-system, system-ui). Nothing else reaches the ` +
+          `stylesheet. seeds.json is the trust boundary; scripts/extract-reference.mjs only SUGGESTS ` +
+          `a family read off a remote page, and a suggestion is not a validated input.`
+      );
+    }
+  }
+}
+
 export function assertMonotoneRatios(ratios) {
   for (let i = 1; i < ratios.length; i++) {
     if (ratios[i] >= ratios[i - 1]) {
@@ -413,6 +481,7 @@ export function validateSeeds(seeds) {
     const v = type.family[key];
     const ok = typeof v === 'string' ? v.trim().length > 0 : Array.isArray(v) && v.length > 0;
     if (!ok) refuse(`type.family.${key} must be a non-empty string or array of strings.`);
+    assertFamilySafe(key, v);
   }
 
   if (!seeds.color || typeof seeds.color !== 'object') refuse('seeds.json has no `color` block.');
