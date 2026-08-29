@@ -99,13 +99,21 @@ export function contrast(fg, bg) {
  * number of a whitespace-joined chunk and drops the rest. Either can then be the one that returns
  * a value.
  *
- * WHAT IS ACTUALLY TRUE, and it is what the test now checks: **on any value whose components are
- * separated by commas alone, the two return the same result.** That is the entire legacy `rgb()`
- * grammar, and it is the only shape where "superset" was ever the right word. Mixed separators are
- * not valid in either grammar — legacy `rgb()` is comma-separated, modern `rgb()` is
- * space-separated with an optional `/` before alpha — so no live measurement is known to depend on
- * the difference. That is reasoning from the grammar, not a capture: nobody has enumerated what
- * Chromium serialises, and this note claims only what it checked.
+ * THAT CORRECTION WAS ALSO TOO BROAD, and this is the third statement of the bound. It read "on
+ * any value whose components are separated by commas alone, the two return the same result". False:
+ * `rgb(1,2,3,)`, `rgb(1,,2,3)`, `rgb(,1,2,3)` and `rgb(1,2,3,x)` are comma-separated and disagree —
+ * and `rgb(1,2,3,x)` is the same non-numeric-alpha class listed as DIVERGENT six lines above, so
+ * the correction contradicted the list it sat beside. Two hand-written allowlists, two false
+ * universals: a list is a sample of the cases its author already had in mind, which is exactly the
+ * population that cannot refute them.
+ *
+ * WHAT IS ACTUALLY TRUE is the SAFETY property, and it is swept rather than sampled: **wherever
+ * design-probe's copy returns a triple, this one returns the SAME triple** — across 66,000 inputs
+ * spanning both pure grammars, ZERO violations, with 6,048 of them cases where the probe does
+ * return a triple. The direction is what is bounded, not the agreement: the copies disagree
+ * outright on thousands of those inputs, always with the probe returning null, which its caller
+ * reports as NOT CHECKED. Mixed separators are valid in neither grammar and are outside the sweep;
+ * there the property genuinely fails, in both directions.
  *
  * Both behaviours are pinned in `design-lib.test.mjs`.
  *

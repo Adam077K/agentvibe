@@ -91,9 +91,12 @@
 // disabled the same command captures every viewport. That is a containment fact, not a verdict on
 // the check, and it is the same shape as `check:mc`.
 //
-// IT IS NOT SILENTLY SKIPPED, and that is the whole design. Three exit states, kept distinct:
-//     2 = could not measure (REFUSED)   1 = measured and failed   0 = measured and passed
-// so a probe that cannot see refuses rather than reporting a clean run over zero pages. `--out`
+// IT IS NOT SILENTLY SKIPPED, and that is the whole design. FOUR exit states, kept distinct:
+//     2 = could not measure (REFUSED)              1 = measured and failed
+//     3 = measured, but an axis did not run        0 = measured everything, and passed
+// so a probe that cannot see refuses rather than reporting a clean run over zero pages. State 3 is
+// the one added last and it closes the hole the other three left: a run that measured SOME axes
+// and reported the rest only in prose. Only an empty `gaps` list reaches 0. `--out`
 // writes that refusal INTO the JSON artifact, so a reviewer reading only the file cannot mistake an
 // empty findings list for a pass. Both states are verified: sandboxed it exits 2 with the SIGTRAP
 // explanation; escalated against a real page it exits 1 with findings across five viewports.
@@ -218,9 +221,16 @@ export { contrast, luminance, resolvePlaywright };
  * as a separator and shifts components left, while `parseFloat` here reads the leading number of a
  * whitespace-joined chunk and silently drops the rest.
  *
- * What IS true is narrower: **on values separated by commas alone — the whole legacy `rgb()`
- * grammar — the two agree.** Mixed separators are valid in neither grammar, so no live measurement
- * is known to turn on this; that is reasoning from the grammar, not from a capture.
+ * THAT CORRECTION WAS ALSO TOO BROAD. It read "on values separated by commas alone the two agree",
+ * and `rgb(1,2,3,)`, `rgb(1,,2,3)`, `rgb(,1,2,3)` and `rgb(1,2,3,x)` all refute it — the last being
+ * the same non-numeric-alpha class listed as divergent above. Two hand-written allowlists produced
+ * two false universals; the fix is a sweep, not a third list.
+ *
+ * THE BOUND THAT SURVIVES IS THE SAFETY ONE: **wherever this copy returns a triple, the shared one
+ * returns the SAME triple** — 66,000 inputs across both pure grammars, zero violations, 6,048 of
+ * them non-vacuous. A null here is a colour the probe could not read, which its caller reports as
+ * NOT CHECKED, so a disagreement in that direction is safe. Mixed separators are valid in neither
+ * grammar, sit outside the sweep, and are where the property genuinely fails.
  *
  * IT IS STILL NOT A FREE CHANGE, WHICH IS WHY IT WAS NOT MADE HERE — and the correction above
  * makes that case STRONGER rather than weaker. A null from this function means a colour the probe
@@ -867,38 +877,82 @@ export function findingsFor(tag, m, opts = {}) {
   return rank(out);
 }
 
+/** The five axes this probe can measure conformance on, and how each is named to a reader. */
+const GROUP_LABELS = {
+  fontSize: 'font-size',
+  lineHeight: 'line-height',
+  letterSpacing: 'letter-spacing',
+  duration: 'motion duration',
+  easing: 'motion easing',
+};
+
 /**
- * Everything this run did not check, as a list a reviewer can read. The token-derived entries are
- * the load-bearing ones: a token file that does not govern a property produces NO findings for it,
- * and without this list that silence is indistinguishable from conformance.
+ * THE AXES THIS RUN COULD HAVE MEASURED AND DID NOT. This is the verdict's second input, and it
+ * exists because of a defect that survived the first two fixes on this file.
+ *
+ * WHAT WENT WRONG, MEASURED. `ENOTOKENS` refuses when the token file cannot be READ. A token file
+ * that is readable and declares nothing — literally `{}` — is `loaded: true`, so it does not
+ * refuse; every group reports `present: false`, `conform()` returns `checked: false`, and against
+ * the same off-system census as before:
+ *
+ *     tokens.loaded : true     groups present: all five false
+ *     findings      : 0        isPass: true      exit: 0     state: "MEASURED — passed"
+ *
+ * 45 off-system usages, a passing verdict. **And this file's own header PRESCRIBED that exact
+ * file** as the way to run the WCAG axis alone, claiming "the artifact says NOT CHECKED rather
+ * than passed". That clause was false. So the documented way to opt out of conformance was also
+ * the way to obtain a pass over an axis nobody measured — the same disclosure-is-not-enough
+ * argument that made the unreadable case a refusal, arriving by a path the file recommended.
+ *
+ * WHY A FOURTH STATE RATHER THAN AN OPT-IN FLAG. The alternative on the table was to refuse unless
+ * an explicit opt-in names the axes being skipped. It is worse for the reason `--no-tokens` was
+ * refused: whatever a flag makes you enumerate, the fastest path to green is to enumerate
+ * everything, and a flag can be copied into a script once and never read again. A STATE cannot be
+ * silenced — it is computed from what the run actually covered. It also covers the case an opt-in
+ * cannot: an axis that failed to run when nobody intended to skip it (a browser without
+ * `getAnimations()`, a dark canvas whose colour is unknowable), which is the same seam one
+ * magnitude down.
+ *
+ * WHAT IS A GAP AND WHAT IS NOT, and the line is mechanical rather than a judgement: **a gap is a
+ * hole this run could have closed.** A token group is declared or it is not; a colour is readable
+ * or it is not — both vary with the input, so a verdict that reads them carries information. The
+ * entries in `UNCHECKED_ALWAYS` are true of EVERY run by construction (rAF animation is invisible
+ * to `getAnimations()` and always will be; composition is not measurable). A verdict reacting to
+ * those is a constant, and a constant verdict says nothing. They stay declared and stay out of it.
+ *
+ * KNOWN AND ACCEPTED: against this repo's own `design/tokens/tokens.json`, `duration` and `easing`
+ * are absent today, so a real run here is INCOMPLETE and cannot reach exit 0 until motion tokens
+ * exist. That is the honest reading — `design/system/motion.md` is `status: unanswered` and the
+ * `craft` lens dropped its motion check for the same reason — and unlike an unsatisfiable check it
+ * has a reachable, mechanical exit condition: declare the tokens.
  */
-export function uncheckedFor(tokens, { loaded = true, reason = null, path = DEFAULT_TOKENS_PATH, measurements = {} } = {}) {
-  const out = [...UNCHECKED_ALWAYS];
+export function coverageGaps({ tokens = null, loaded = true, path = DEFAULT_TOKENS_PATH, reason = null, measurements = {} } = {}) {
+  const gaps = [];
   if (!loaded) {
-    out.unshift(
-      `TOKEN CONFORMANCE DID NOT RUN AT ALL — ${reason ?? `no token file at ${path}`}. Every type and motion value on this page is unmeasured, not conforming.`,
-    );
-    return out;
+    gaps.push({
+      axis: 'token-conformance',
+      message: `TOKEN CONFORMANCE DID NOT RUN AT ALL — ${reason ?? `no token file at ${path}`}. Every type and motion value on this page is unmeasured, not conforming.`,
+    });
+    return gaps;
   }
-  const labels = {
-    fontSize: 'font-size',
-    lineHeight: 'line-height',
-    letterSpacing: 'letter-spacing',
-    duration: 'motion duration',
-    easing: 'motion easing',
-  };
-  for (const [group, label] of Object.entries(labels)) {
+  for (const [group, label] of Object.entries(GROUP_LABELS)) {
     if (!tokens?.[group]?.present) {
-      out.unshift(`${label} conformance — ${path} declares no ${label} tokens, so nothing was compared. Silence here is absence of a standard, not conformance to one.`);
+      gaps.push({
+        axis: `token-conformance:${group}`,
+        message: `${label} conformance — ${path} declares no ${label} tokens, so nothing was compared. Silence here is absence of a standard, not conformance to one.`,
+      });
     }
   }
   if (Object.values(measurements).some((m) => m?.motion && m.motion.animationsApi === false)) {
-    out.unshift('motion — document.getAnimations() is not available in this browser, so no animation was read');
+    gaps.push({
+      axis: 'motion:api',
+      message: 'motion — document.getAnimations() is not available in this browser, so no animation was read',
+    });
   }
 
-  // Pairs the contrast check could not read. Added 2026-08-29: they were `continue`d with no
-  // counter and no entry here, so an unreadable-colour page was indistinguishable from a page with
-  // nothing to report — silence read as coverage, which is the failure this list exists to prevent.
+  // Pairs the contrast check could not read. They were `continue`d with no counter and no entry
+  // anywhere, so an unreadable-colour page was indistinguishable from a page with nothing to
+  // report — silence read as coverage, which is the failure this list exists to prevent.
   const skipped = [];
   let skippedTotal = 0;
   let darkCanvas = false;
@@ -912,17 +966,33 @@ export function uncheckedFor(tokens, { loaded = true, reason = null, path = DEFA
     }
   }
   if (skippedTotal > 0) {
-    out.unshift(
-      `text contrast — ${skippedTotal} text/background pair(s) were NOT measured because a colour could ` +
+    gaps.push({
+      axis: 'text-contrast',
+      message:
+        `text contrast — ${skippedTotal} text/background pair(s) were NOT measured because a colour could ` +
         `not be read (${skipped.join(', ')}). Causes: a CSS Color 4 serialization this probe's parseRgb ` +
         'refuses' +
         (darkCanvas
           ? ', and a dark used colour scheme, where the UA canvas colour is not knowable from computed style and is not guessed'
           : '') +
         '. These pairs produced no finding, which is not the same as passing.',
-    );
+    });
   }
-  return out;
+  return gaps;
+}
+
+/**
+ * Everything this run did not check, as a list a reviewer can read. The token-derived entries are
+ * the load-bearing ones: a token file that does not govern a property produces NO findings for it,
+ * and without this list that silence is indistinguishable from conformance.
+ *
+ * RENDERS `coverageGaps()` — it does not re-derive them. Two answers to "what did not run", one
+ * feeding the prose and one feeding the exit code, is the shape this repo names in five places and
+ * is exactly how the p2/p1 defect above survived: a finder and a verdict that disagreed.
+ */
+export function uncheckedFor(tokens, opts = {}) {
+  const gaps = coverageGaps({ ...opts, tokens });
+  return [...gaps.map((g) => g.message), ...UNCHECKED_ALWAYS];
 }
 
 /**
@@ -932,15 +1002,38 @@ export function uncheckedFor(tokens, { loaded = true, reason = null, path = DEFA
  * which of the three states produced it.
  */
 export function buildArtifact({ url, tokens, result, refused = null, generatedAt = new Date().toISOString() }) {
-  const exit = refused ? 2 : result?.ok ? 0 : 1;
+  // Gaps are DERIVED here, never taken from the caller, so no call site can omit them and fall
+  // back to the passing verdict this state exists to prevent.
+  const gaps = refused
+    ? []
+    : coverageGaps({
+        tokens: tokens?.index ?? null,
+        loaded: tokens?.loaded ?? false,
+        path: tokens?.path,
+        reason: tokens?.reason,
+        measurements: result?.measurements ?? {},
+      });
+  // FOUR states, and the order of the tests is the precedence. A refusal outranks everything: it
+  // measured nothing. A blocking finding outranks incompleteness, because a run that already has
+  // work to do gains nothing from being told its coverage was partial — the gaps are in the
+  // artifact either way, and they surface as state 3 on the re-run that clears the findings.
+  const exit = refused ? 2 : !result?.ok ? 1 : gaps.length > 0 ? 3 : 0;
   return {
     tool: 'design-probe',
-    schema: 2,
+    schema: 3, // 2 -> 3: `gaps` added and `exit` gained a fourth value. A reader keyed on schema 2
+    // and switching on `state` would silently mis-read INCOMPLETE as one of the three it knows.
     generatedAt,
     url: url ?? null,
     exit,
-    state: exit === 2 ? 'REFUSED — could not measure' : exit === 1 ? 'MEASURED — failed' : 'MEASURED — passed',
+    state:
+      exit === 2 ? 'REFUSED — could not measure'
+        : exit === 1 ? 'MEASURED — failed'
+          : exit === 3 ? 'INCOMPLETE — measured, but an axis did not run'
+            : 'MEASURED — passed',
     refused: refused ? { message: refused.message, code: refused.code ?? null } : null,
+    // The axes this run could have covered and did not. Empty is the only shape that permits
+    // exit 0, so a reader can check the verdict against its own coverage without leaving the file.
+    gaps,
     tokens: tokens
       ? { path: tokens.path, loaded: tokens.loaded, reason: tokens.reason, groups: Object.fromEntries(Object.entries(tokens.index).map(([k, v]) => [k, { present: v.present, count: v.values.length }])) }
       : null,
@@ -977,8 +1070,15 @@ export async function probe(url, { viewports = DEFAULT_VIEWPORTS, settleMs = 200
   // opt-out that silences a refusal is the thing contributors learn to reach for — the same
   // reasoning that removed the unsatisfiable checks from the `craft` lens. A project that wants
   // only the WCAG axis should say so by shipping a token file that declares no groups: that file
-  // loads, every group reports `present: false`, and the artifact says NOT CHECKED rather than
-  // passed. Readable-but-empty and unreadable are different facts and stay different.
+  // loads, every group reports `present: false`, and the run is INCOMPLETE — exit 3, never a pass.
+  // Readable-but-empty and unreadable are different facts and stay different, and NEITHER of them
+  // is a pass.
+  //
+  // THAT LAST CLAUSE WAS FALSE WHEN WRITTEN, and it is the reason `coverageGaps()` exists. It read
+  // "the artifact says NOT CHECKED rather than passed", and the artifact said `exit: 0`,
+  // `state: "MEASURED — passed"` — so the file's own recommended way to opt out of conformance was
+  // also the way to obtain a passing verdict over an unmeasured axis. Disclosure in `unchecked[]`
+  // was not enough here for exactly the reason it was not enough for an unreadable file.
   if (!tokens.loaded) {
     const e = new Error(
       `the token file could not be read — ${tokens.reason}. Token conformance is half of this ` +
@@ -1037,11 +1137,16 @@ export async function probe(url, { viewports = DEFAULT_VIEWPORTS, settleMs = 200
     await browser.close();
   }
 
+  // `ok` still means exactly "no blocking findings" and nothing wider. It is NOT the verdict:
+  // `buildArtifact` combines it with coverage, and a run with ok:true and a gap is exit 3, not 0.
+  // Kept narrow deliberately — the last time a field in this file quietly meant more than it said,
+  // it was `severity: p2`.
   return {
     ok: isPass(findings),
     findings: rank(findings),
     measurements,
     tokens,
+    gaps: coverageGaps({ tokens: tokens.index, loaded: tokens.loaded, reason: tokens.reason, path: tokens.path, measurements }),
     unchecked: uncheckedFor(tokens.index, { loaded: tokens.loaded, reason: tokens.reason, path: tokens.path, measurements }),
   };
 }
@@ -1084,7 +1189,15 @@ if (isMain) {
       }
       console.log(`\ntokens: ${r.tokens.path} — ${r.tokens.loaded ? 'loaded' : `NOT LOADED (${r.tokens.reason})`}`);
       console.log(`\nNOT CHECKED (declared, not assumed covered):\n${r.unchecked.map((u) => `  · ${u}`).join('\n')}`);
-      console.log(r.ok ? '\n✓ no blocking findings' : `\n✗ ${blocking(r.findings).length} blocking finding(s)`);
+      // The closing line is read off the artifact's own state, so the words a human sees and the
+      // code a machine reads cannot say different things.
+      console.log(
+        artifact.exit === 0
+          ? '\n✓ no blocking findings, and every axis was measured'
+          : artifact.exit === 3
+            ? `\n! INCOMPLETE — no blocking findings, but ${artifact.gaps.length} axis/axes did not run. This is NOT a pass:\n${artifact.gaps.map((g) => `    · ${g.axis}`).join('\n')}`
+            : `\n✗ ${blocking(r.findings).length} blocking finding(s)`,
+      );
     }
     process.exit(artifact.exit);
   } catch (e) {

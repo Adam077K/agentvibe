@@ -188,35 +188,62 @@ test('design-probe.parseRgb diverges from the shared copy, and exactly where doc
     assert.equal(probe.parseRgb(s), null, `design-probe.parseRgb should still refuse ${s}`);
     assert.notEqual(lib.parseRgb(s), null, `the shared parseRgb should still accept ${s}`);
   }
-  // THE BOUND, NARROWED 2026-08-29 BECAUSE IT WAS FALSE AS STATED. This arm read:
+  // THE BOUND, AND THIS IS THE THIRD STATEMENT OF IT. Each was narrower than the last and the
+  // first two were false, so the shape of the mistake is the durable lesson:
   //
-  //   "AND NOWHERE ELSE. The divergence is one-directional and bounded: wherever the probe's copy
-  //    returns a triple, the shared one returns the SAME triple."
+  //   v1  "wherever the probe returns a triple the shared one returns the SAME triple, AND NOWHERE
+  //        ELSE" — backed by a 7-item hand-written allowlist. Refuted by `rgb(1 2, 3, 4)`.
+  //   v2  "on values separated by COMMAS ALONE, the two agree" — backed by a 9-item hand-written
+  //        allowlist. ALSO FALSE: `rgb(1,2,3,)`, `rgb(1,,2,3)`, `rgb(,1,2,3)` and `rgb(1,2,3,x)`
+  //        all disagree, and `rgb(1,2,3,x)` is the SAME non-numeric-alpha class the DIVERGENT list
+  //        four lines up already names — so the two arms of this one test contradicted each other.
   //
-  // backed by a 7-item allowlist of comma-separated values. Every item in it agreed, so the
-  // universal claim read as checked while nothing had checked it — and this arm's ONE job is to
-  // catch a widening on a shape the divergence list does not name. `rgb(1 2, 3, 4)` is that shape,
-  // and it defeated the claim in two directions at once.
+  // BOTH FAILURES ARE ONE SHAPE: a universal quantified over a grammar, backed by a list somebody
+  // typed. A hand-written list is a sample of the cases its author already had in mind, which is
+  // precisely the population that cannot refute them. The cure is not a third careful list.
   //
-  // What is asserted now is what is true: on values separated by COMMAS ALONE — the whole legacy
-  // rgb() grammar, and the shape a computed style is expected to carry — the two agree.
-  const COMMA_SEPARATED = [
-    'rgb(0, 0, 0)',
-    'rgba(255, 255, 255, 0.5)',
-    '  rgb( 12 , 13 , 14 )  ',
-    'rgb(230, 232, 236)',
-    'rgb(1,2)',
-    'rgb(0,0,0,0)',
-    'rgba(1.5, 2.5, 3.5, 1)',
-    'color(srgb 0 0 0)',
-    'not a colour',
-  ];
-  for (const s of COMMA_SEPARATED) {
-    assert.deepEqual(probe.parseRgb(s), lib.parseRgb(s), `the copies should still agree on ${s}`);
+  // v3 IS THE SAFETY PROPERTY, SWEPT RATHER THAN SAMPLED. It is also the property that actually
+  // matters: a null from the probe means "a colour it could not read", which is reported as NOT
+  // CHECKED and is safe. What would be unsafe is the probe returning a triple that the shared copy
+  // reads differently — a silent disagreement about a measured value. Swept below across both pure
+  // grammars: ZERO violations, and 6,048 of the inputs are cases where the probe DOES return a
+  // triple, so the property is not vacuously true.
+  const ATOMS = ['0', '1', '255', '12.5', '-3', '.5', '', ' ', 'x', 'var(--a)'];
+  const sweep = [];
+  for (const fn of ['rgb', 'rgba']) {
+    for (const a of ATOMS) for (const b of ATOMS) for (const c of ATOMS) {
+      for (const sep of [',', ', ']) {
+        sweep.push(`${fn}(${[a, b, c].join(sep)})`);
+        for (const d of ATOMS) sweep.push(`${fn}(${[a, b, c, d].join(sep)})`);
+      }
+      sweep.push(`${fn}(${a} ${b} ${c})`); // CSS Color 4, space-separated
+      for (const d of ATOMS) sweep.push(`${fn}(${a} ${b} ${c} / ${d})`);
+    }
   }
 
-  // AND WHERE SEPARATORS MIX, THEY DIVERGE IN BOTH DIRECTIONS — measured, not assumed. Without
-  // these two the corrected claim above would be as unbacked as the one it replaced.
+  let probeReturnedATriple = 0;
+  let disagreedOutright = 0;
+  for (const s of sweep) {
+    const p = probe.parseRgb(s);
+    const l = lib.parseRgb(s);
+    if (JSON.stringify(p) !== JSON.stringify(l)) disagreedOutright += 1;
+    if (p === null) continue; // the probe declining says nothing about the shared copy
+    probeReturnedATriple += 1;
+    assert.deepEqual(l, p, `SAFETY VIOLATION on ${JSON.stringify(s)}: probe ${JSON.stringify(p)} vs shared ${JSON.stringify(l)}`);
+  }
+  assert.equal(sweep.length, 66000, 'the sweep must cover what it says it covers');
+  assert.equal(probeReturnedATriple, 6048, 'CONTROL: if the probe never returned a triple the assertion above is vacuous');
+  assert.ok(disagreedOutright > 8000, `CONTROL: the copies DO disagree constantly (${disagreedOutright}) — it is the direction that is bounded, not the agreement`);
+
+  // The four shapes that killed v2, named so the sweep's result is not the only record of them.
+  // Every one is the SAFE direction — probe null, shared a triple.
+  for (const s of ['rgb(1,2,3,)', 'rgb(1,,2,3)', 'rgb(,1,2,3)', 'rgb(1,2,3,x)']) {
+    assert.equal(probe.parseRgb(s), null, `${s}: the probe refuses`);
+    assert.notEqual(lib.parseRgb(s), null, `${s}: the shared copy accepts — so "they agree on comma-separated" is false`);
+  }
+
+  // AND THE BOUND IS TIGHT: outside both pure grammars the safety property genuinely fails, in two
+  // directions. If these ever start agreeing, the sweep above has stopped being the right test.
   assert.deepEqual(probe.parseRgb('rgb(1 2, 3, 4)'), [1, 3, 4], 'parseFloat reads the leading number and drops the rest');
   assert.deepEqual(lib.parseRgb('rgb(1 2, 3, 4)'), [1, 2, 3], 'a space is a separator here, so components shift left');
   assert.deepEqual(probe.parseRgb('rgb(1 x, 2, 3)'), [1, 2, 3], 'and on THIS shape the probe is the permissive one');

@@ -59,6 +59,7 @@ import {
   conformStrings,
   authoredEasings,
   resolveMotion,
+  coverageGaps,
   canvasBackground,
   resolveContrast,
   pairColors,
@@ -492,6 +493,95 @@ test('probe() REFUSES an unparseable token file too, not only a missing one', as
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+// ── INCOMPLETE — the state that stops "readable but governs nothing" reading as a pass ──────────
+//
+// The ENOTOKENS refusal above fires on `loaded === false`. A token file that is readable and
+// declares nothing is `loaded: true`, so it does not refuse — and against the same census it
+// produced 0 findings, isPass:true, exit 0, "MEASURED — passed". This file's own header
+// PRESCRIBED that file as the way to run the WCAG axis alone. The verdict now reads coverage.
+
+test('NEGATIVE CONTROL: an empty-but-readable token file is INCOMPLETE, never passed', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-probe-'));
+  fs.writeFileSync(path.join(dir, 'tokens.json'), '{}');
+  const t = loadTokens('tokens.json', { cwd: dir });
+  assert.equal(t.loaded, true, 'CONTROL: it must LOAD, or this is the refusal case and proves nothing');
+
+  const f = findingsFor('narrow', OFF_SYSTEM_CENSUS, { tokens: t.index, tokensPath: t.path });
+  assert.equal(f.length, 0, 'CONTROL: an ungoverned axis still produces no findings — that is the trap');
+  assert.equal(isPass(f), true, 'CONTROL: `ok` still means only "no blocking findings"');
+
+  const a = buildArtifact({ url: 'u', tokens: t, result: { ok: isPass(f), findings: f, measurements: { narrow: OFF_SYSTEM_CENSUS }, unchecked: [] } });
+  assert.equal(a.exit, 3, 'exit MUST NOT be 0 over 45 off-system usages nothing measured');
+  assert.match(a.state, /INCOMPLETE/);
+  assert.ok(!/passed/.test(a.state), 'the field a skimming reader acts on must not say passed');
+  assert.equal(a.gaps.length, 5, 'all five axes are ungoverned by an empty token file');
+  assert.deepEqual(a.gaps.map((g) => g.axis).sort(), [
+    'token-conformance:duration', 'token-conformance:easing', 'token-conformance:fontSize',
+    'token-conformance:letterSpacing', 'token-conformance:lineHeight',
+  ]);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('only an EMPTY gap list reaches exit 0, and the precedence is refused > failed > incomplete', () => {
+  const full = { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION };
+  const partial = { path: 'p', loaded: true, reason: null, index: TOKENS }; // no duration/easing
+  const clean = { ok: true, findings: [], measurements: {}, unchecked: [] };
+  const failed = { ok: false, findings: findingsFor('narrow', MC_NARROW, { tokens: TOKENS }), measurements: {}, unchecked: [] };
+
+  assert.equal(buildArtifact({ url: 'u', tokens: full, result: clean }).exit, 0, 'every axis covered and nothing found');
+  assert.equal(buildArtifact({ url: 'u', tokens: partial, result: clean }).exit, 3, 'two motion axes ungoverned');
+  // A blocking finding outranks incompleteness — same partial tokens, so the gaps are still there.
+  const f1 = buildArtifact({ url: 'u', tokens: partial, result: failed });
+  assert.equal(f1.exit, 1, 'a finding to act on outranks partial coverage');
+  assert.ok(f1.gaps.length > 0, 'and the gaps still travel in the artifact rather than being dropped');
+  // A refusal outranks everything and carries no gaps: it measured nothing at all.
+  const e = new Error('x'); e.code = 'ENOTOKENS';
+  assert.equal(buildArtifact({ url: 'u', tokens: partial, result: null, refused: e }).exit, 2);
+});
+
+test('gaps are DERIVED by buildArtifact, so no caller can omit them into a pass', () => {
+  // The defect this guards is the one that produced the whole finding: a verdict computed from a
+  // field a caller supplies. Passing a bogus `gaps` must change nothing.
+  const partial = { path: 'p', loaded: true, reason: null, index: TOKENS };
+  const a = buildArtifact({ url: 'u', tokens: partial, result: { ok: true, findings: [], measurements: {}, unchecked: [], gaps: [] } });
+  assert.equal(a.exit, 3, 'a caller-supplied empty gaps list must not buy a pass');
+  assert.equal(a.gaps.length, 2, 'duration and easing, derived from the token index');
+});
+
+test('an unclosable hole is NOT a gap — or the verdict would be a constant', () => {
+  // UNCHECKED_ALWAYS is true of every run by construction: rAF animation is invisible to
+  // getAnimations() and no configuration closes it. A verdict that reacted to those could never
+  // reach 0, and a verdict that is always the same value carries no information. The line is
+  // mechanical: a gap is a hole THIS RUN COULD HAVE CLOSED.
+  const gaps = coverageGaps({ tokens: TOKENS_MOTION, loaded: true, path: 'p', measurements: { narrow: CLEAN } });
+  assert.deepEqual(gaps, [], 'a fully-governed run over readable colours has no gaps');
+  const u = uncheckedFor(TOKENS_MOTION, { loaded: true, path: 'p', measurements: { narrow: CLEAN } });
+  assert.equal(u.length, UNCHECKED_ALWAYS.length, 'the permanent holes are still declared');
+  assert.ok(u.some((x) => /requestAnimationFrame/.test(x)), 'and still name rAF');
+});
+
+test('uncheckedFor RENDERS coverageGaps rather than re-deriving them', () => {
+  // Two answers to "what did not run" — one feeding prose, one feeding the exit code — is how the
+  // p2/p1 defect survived in this same file. Every gap message must appear verbatim in unchecked.
+  const opts = { loaded: true, path: 'p', measurements: { narrow: { ...CLEAN, contrastPairs: [{ fg: 'color(srgb 0 0 0)', bg: 'rgb(255,255,255)', px: 14 }] } } };
+  const gaps = coverageGaps({ ...opts, tokens: TOKENS });
+  const u = uncheckedFor(TOKENS, opts);
+  assert.ok(gaps.length >= 3, `CONTROL: this fixture must produce gaps, got ${gaps.length}`);
+  for (const g of gaps) assert.ok(u.includes(g.message), `gap ${g.axis} is missing from unchecked`);
+  assert.equal(u.length, gaps.length + UNCHECKED_ALWAYS.length, 'unchecked is exactly gaps + the permanent holes');
+});
+
+test('a dark undeclared canvas makes the run INCOMPLETE, not passed — the same seam, one axis down', () => {
+  const raw = { ...CLEAN, contrastPairs: [{ fg: 'rgb(240, 240, 240)', bg: TRANSPARENT, px: 14, bold: false }], colorScheme: 'dark', prefersDark: true };
+  const r = resolveContrast(raw);
+  const m = { ...raw, contrastPairs: r.pairs, canvas: r.canvas };
+  const f = findingsFor('narrow', m, { tokens: TOKENS_MOTION });
+  assert.deepEqual(f, [], 'CONTROL: an unknown backdrop still produces no finding');
+  const a = buildArtifact({ url: 'u', tokens: { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION }, result: { ok: isPass(f), findings: f, measurements: { narrow: m }, unchecked: [] } });
+  assert.equal(a.exit, 3, 'zero contrast findings over zero readable pairs is not a pass');
+  assert.deepEqual(a.gaps.map((g) => g.axis), ['text-contrast']);
+});
+
 test('a readable token file that declares NOTHING is not a refusal — the two are different facts', () => {
   // CONTROL, and the reason there is no `--no-tokens` flag. "I could not read the standard" and
   // "the standard governs nothing here" must not collapse into one state: the first is a refusal,
@@ -672,7 +762,7 @@ test('a REFUSAL is written into the artifact as exit 2 — a blind reader cannot
   assert.ok(a.unchecked.some((x) => /DID NOT RUN AT ALL/.test(x)));
 });
 
-test('a passing run is exit 0 and says which of the three states produced it', () => {
+test('a passing run is exit 0 and says which of the four states produced it', () => {
   const a = buildArtifact({ url: 'u', tokens: { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION }, result: { ok: true, findings: [], measurements: {}, unchecked: [] } });
   assert.equal(a.exit, 0);
   assert.equal(a.state, 'MEASURED — passed');
