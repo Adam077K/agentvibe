@@ -14,9 +14,14 @@
 //
 // THE LOAD-BEARING TEST IN THIS FILE IS `falsifier can kill a rule this repo enforces`. Everything
 // else checks arithmetic. That one checks that the instrument can produce the answer its authors
-// did not want — the 1.125 threshold is live in scripts/design-probe.mjs as MIN_STEP_RATIO, and if
-// this harness could not report it REFUTED against references that violate it, the harness would
-// be a machine for confirming whatever it was handed.
+// did not want. It did: `MIN_STEP_RATIO = 1.125` WAS live in scripts/design-probe.mjs and is now a
+// deletion record on `integration/design-layer`, removed 2026-08-29 with the scaleGaps() analysis
+// built on it.
+//
+// THE TEST STAYS, AND THAT IS DELIBERATE. A negative control that is retired once it fires stops
+// being a control: the next reader has no way to tell a harness that CAN refute from one that
+// never could. It now pins the refutation of a rule this repo used to enforce, which is a stronger
+// artifact than pinning one it still does.
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -285,7 +290,8 @@ test('NOT ONE of the five measured references fits the curve — reported, not s
 const RULE_1125 = { id: 'min-step-ratio-1125', kind: 'min-adjacent-ratio', value: 1.125, band: 'ui', statement: 'adjacent steps must differ by at least 1.125x' };
 
 test('falsifier can kill a rule this repo enforces — 1.125 REFUTED by four real references', () => {
-  // MIN_STEP_RATIO = 1.125 is live in scripts/design-probe.mjs and fires as a p2 finding today.
+  // MIN_STEP_RATIO = 1.125 was live in scripts/design-probe.mjs and fired as a p2 finding until
+  // 2026-08-29, when this refutation is what removed it. Kept as the negative control.
   // docs-stripe-com is here on purpose: it is a PRODUCT surface, so the corpus cannot be waved
   // away as "marketing pages, which are not real UI". It violates by 1.083 and 1.077.
   const corpus = [
