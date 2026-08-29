@@ -29,7 +29,7 @@
     "probe:agent-tool-inheritance": "node scripts/probe-agent-tool-inheritance.mjs",
     "gate": "node scripts/run-gate.mjs",
     "gates": "node scripts/check-gates.mjs",
-    "test:lenses": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs scripts/build-tokens.test.mjs",
+    "test:lenses": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs scripts/build-tokens.test.mjs scripts/design-lib.test.mjs",
     "test:provenance": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/provenance-portability.test.mjs",
     "vendor:provenance": "node scripts/vendor-provenance.mjs",
     "check:ledger": "npm run test:claims && npm run test:classifier && npm run test:ledger && npm run check:ledger-lint && npm run check:ledger-build && npm run check:ledger-verify",

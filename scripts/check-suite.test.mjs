@@ -3036,7 +3036,7 @@ test('the test:merge-gate argv still names both of its files', () => {
   }
 });
 
-test('the test:lenses argv still names both of its files', () => {
+test('the test:lenses argv still names all three of its files', () => {
   // Same trade as `test:merge-gate` above and the same counterweight. `scripts/build-tokens.test.mjs`
   // rides here rather than under a `test:tokens` step of its own, because a new governed step name
   // needs a .github/workflows/** counterpart and that is `irreversible` tier. What it gives up is
@@ -3046,12 +3046,19 @@ test('the test:lenses argv still names both of its files', () => {
   // has no other home: it is deliberately not a `check:*` script, because a GOVERNED name must be a
   // STEP or an EXCLUDED entry and an EXCLUDED script runs nowhere. So this argv is its ONLY lane —
   // `test:lenses` green, `test:check-suite` green, and nothing anywhere saying a control had gone.
+  //
+  // `scripts/design-lib.test.mjs` joined on the same terms and has the same single lane. What IT
+  // guards is narrower and sharper: `luminance` and `contrast` existed in three copies across
+  // build-tokens, extract-reference and design-probe, and its identity assertions are the only
+  // thing anywhere that fails when they fork again. Drop this filename and a re-divergence goes
+  // back to being discovered during an incident, which is where it was found the first time.
   const argv = require(path.join(REPO, 'package.json')).scripts['test:lenses'];
-  for (const f of ['scripts/lenses.test.mjs', 'scripts/build-tokens.test.mjs']) {
+  const files = ['scripts/lenses.test.mjs', 'scripts/build-tokens.test.mjs', 'scripts/design-lib.test.mjs'];
+  for (const f of files) {
     assert.ok(argv.includes(f), `test:lenses no longer runs ${f} — its assertions are gone and nothing else would say so`);
   }
-  // And both files must still exist, or this assertion passes over a name that runs nothing.
-  for (const f of ['scripts/lenses.test.mjs', 'scripts/build-tokens.test.mjs']) {
+  // And every file must still exist, or this assertion passes over a name that runs nothing.
+  for (const f of files) {
     assert.ok(fs.existsSync(path.join(REPO, f)), `${f} is named by test:lenses and is not on disk`);
   }
 });
