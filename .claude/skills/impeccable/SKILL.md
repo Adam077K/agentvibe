@@ -21,9 +21,31 @@ license: Apache 2.0
 > *write the snapshot to the path named, by hand*. The procedure around the commands is the part that
 > carries the value, and it is deliberately left intact — do not drop a step because its runner is absent.
 >
-> **Two files are the exception:** `reference/live.md` and `reference/hooks.md` are built almost entirely
-> around scripts that do not exist — a live browser server and a hook installer. Neither can be followed
-> by hand in any useful way. Treat them as documentation of a feature this repository does not have.
+> **FOUR files are the exception, and they are the ones you cannot rescue by hand.** Each is built on
+> a capability that is absent rather than on a step a person can perform, so "do it manually" would be
+> a lie in these four. Each opens with a stronger note saying so:
+>
+> | File | Lines | Depends on |
+> |---|---:|---|
+> | `reference/live.md` | 323 | a live-variant browser server (`live*.mjs`) |
+> | `reference/hooks.md` | 111 | a design-detector hook installer (`hook-admin.mjs`) |
+> | `reference/live-setup.md` | 102 | the same live server's config handshake |
+> | `reference/doctor.md` | 53 | an INSTALLED Impeccable to reconcile against — `.impeccable/` sidecars that do not exist here |
+> | **Total dead** | **589** | |
+>
+> **So: 4,370 of 4,959 lines — 88% — are usable prose that an agent can follow by hand.** The
+> remaining 12% is documentation of a feature this repository does not have. Re-derive both numbers
+> rather than trusting them:
+> `for f in live hooks live-setup doctor; do wc -l < .claude/skills/impeccable/reference/$f.md; done`
+> against `find .claude/skills/impeccable -name '*.md' -exec cat {} + | wc -l` (which counts the notes
+> added by this repair, so it now reads higher than 4,959 — the 4,959 baseline is `origin/main` at
+> 4ddc5c6).
+>
+> One partial, listed so the 88% is not overclaimed: `reference/visualize.md` (49 lines) is counted as
+> usable, and its art-direction prose genuinely is, but its asset-production pipeline
+> (`generate-image.mjs`, `embed-prompt.mjs`) is absent and it requires an image-generation tool the
+> harness may not have.
+
 >
 > This skill also declared `allowed-tools: Bash(npx impeccable *)` and
 > `Bash(node .claude/skills/impeccable/scripts/*)`. Both pointed at the absent things above, and the field
