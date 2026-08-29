@@ -81,9 +81,21 @@ comparison against a library where it is false.
 > **Why this file is careful about a number that turned out to be right.** The 3.6x claim was
 > well-formed, and it was a category error: it compared a toast constant to a drawer library because
 > nothing in this file named which library the article builds. The number survived; the sentence
-> around it did not. The scope is now stated at the number rather than left to the reader — the same
-> repair `12-principles-of-animation` needed when a 300ms ceiling drafted for small local transitions
-> was applied to drawers.
+> around it did not. The scope is now stated at the number rather than left to the reader.
+>
+> **This skill carried the same defect TWICE, and the second one is three lines from the first.** A
+> scoped number written as universal:
+>
+> | Instance | Was | Scope it actually had |
+> |---|---|---|
+> | this rule | "works well for **most** swipe-to-dismiss interactions" | one component, by the author's own account trial and error |
+> | the Key Values table | `300ms` — "Maximum duration for UI animations" | small, local transitions; [the same skill's own file](timing-300ms-max.md) allows 250–400ms for context switches, and [its drawer rule](timing-drawer-500ms.md) ships 500ms |
+>
+> Both were repaired on 2026-08-29, and `12-principles-of-animation` had a third instance of it — a
+> flat 300ms hard fail — repaired the same day. **Three in two skills. When you add a number to this
+> skill, write the scope beside it in the same sentence**; a number that has to be scoped by the
+> reader will eventually be read unscoped by someone comparing it to something else.
+
 
 Reference: [Building a Toast Component](https://emilkowal.ski/ui/building-a-toast-component) — builds
 **Sonner**, and is the source of the `0.11` above. For the drawer counterpart see
