@@ -1,0 +1,11 @@
+{
+  "subject": "6e8564dfe16e2190500d9715e81baf9bffbc718dd2fbb3e5bf69d4d61c03708d",
+  "base": "4ddc5c6a22c799f7b868f26545c507b03719944b",
+  "tier": "full",
+  "tier_driver": "scripts/merge-gate.test.mjs",
+  "verdict": "PASS",
+  "by": "builder-w3-instruments",
+  "run_id": null,
+  "evidence": "J-13 round. test:merge-gate 145 pass 0 fail. Launch reachability pinned: PRODUCED/BLOCKED skip the launcher, REFUSED reaches it. Mutation-verified both directions (widen RED, narrow RED, inert reword GREEN), restores byte-identical. Also recorded: my stub control had been on the wrong arm and the instrument was re-verified sound from inside a node --test child before the environment explanation was accepted.",
+  "recorded_at": "2026-08-29T00:45:52.990Z"
+}
