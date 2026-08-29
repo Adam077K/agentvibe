@@ -2,7 +2,7 @@
 date: 2026-08-29
 role: builder
 task: design-figure-corrections
-qa_verdict: PASS
+qa_verdict: PENDING
 tier: lite
 risk: lite
 branch: integration/design-layer
@@ -123,3 +123,47 @@ is the "two accounts of one event" failure this document keeps finding.
 
 **Nothing was restructured.** The heading list is byte-identical before and after — 114 headings,
 `diff` clean — because other documents cite this file by section number.
+
+## I BROKE `test:run-gate`, and it is not about any figure in this session
+
+`npm run check` is **47 of 48** as of `a5584d4`. The failure is `test:run-gate`, and **commit
+`489e5e0` — mine — is the commit that caused it.** Not "a pre-existing condition my work surfaced":
+the tipping point is identifiable to one commit and it is mine.
+
+```
+git log 4ddc5c6..HEAD, running verdict.mjs's exact git call at each commit:
+  3b64a9a  OK   1,026,873 bytes
+  489e5e0  ENOBUFS  <- mine
+  25693b0  ENOBUFS
+  a5584d4  ENOBUFS  <- mine
+```
+
+**Root cause, and it is one line outside my scope.** `scripts/verdict.mjs:97` spawns git with no
+`maxBuffer`:
+
+```js
+return execFileSync('git', args, { cwd: repo, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+```
+
+`computeSubject()` calls it with `git diff <base>..<ref>` to hash the diff into `subject`. Once the
+branch diff passes Node's default buffer the call throws `ENOBUFS` and no verdict can be bound at all.
+**The control is decisive — same args, same cwd, only `maxBuffer` differs:**
+
+```
+EXACT CALL (as written)  -> FAILED ENOBUFS, stdout truncated at 1,098,928
+same + maxBuffer 64MB    -> OK 1,100,001 bytes
+```
+
+**Six other call sites in this repo already set it** — `ledger.mjs` ×2, `evict-memory.mjs`,
+`vendor-provenance.mjs`, `lib/claim-append.js`, `lib/resolvers.js`, at 32–64MB. `verdict.mjs` is the
+one that does not, and it is the one on the blocking path of `qa-lead-pass.yml`.
+
+**It fails CLOSED, which is the only good news here.** `verdict.mjs` exits 2 — a refusal — where the
+test expects 0. It does not hash a truncated diff and call it a subject, so no verdict was bound to
+the wrong bytes. Rule 10 held.
+
+**Not fixed by me.** `scripts/verdict.mjs` is outside the scope this session was given, it is the
+binding mechanism of the QA gate, and a change to it is a higher tier than anything else here. The
+fix is `maxBuffer: 64 * 1024 * 1024` on that options object, matching the six existing call sites.
+Whoever takes it should note the threshold is a property of the branch's total diff, so it will recur
+on any long-lived branch until the option is set.
