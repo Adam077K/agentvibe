@@ -69,6 +69,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
+import net from 'node:net';
+import { lookup as dnsLookup } from 'node:dns/promises';
 
 const require = createRequire(import.meta.url);
 
@@ -317,14 +319,245 @@ export function robotsVerdict(txt, path, tokens = UA_TOKENS) {
   return { ...blocking, crawlDelay: verdicts[0].crawlDelay };
 }
 
+// ── THE REQUEST POLICY — ONE PREDICATE, EVERY REQUEST SURFACE ────────────────────────────────────
+//
+// WHY THIS EXISTS, MEASURED. Before 2026-08-29 this file issued requests to whatever a page told
+// it to, and checked robots.txt only against the URL the operator typed and the URL the browser
+// finally LANDED on. Driven through capture()'s own `chromium` seam, that produced:
+//
+//   (b)  public.example -> internal.local/admin
+//        >> REQUEST ISSUED to http://internal.local/admin     <- the request happened
+//        robots.txt FETCHED for internal.local                <- ...and THEN we asked
+//        RESULT: REFUSED (EROBOTS)
+//        The refusal is real and it arrives AFTER the request. Structural, not a race: `goto` is
+//        awaited, so a check on its result cannot precede the navigation it checks.
+//
+//   (b2) public.example -> internal.local/admin -> public.example
+//        robots.txt for internal.local: NEVER FETCHED. Capture SUCCEEDS. Artifact records nothing.
+//        `sameReferenceUrl(landed, url)` compares the LANDED url to the REQUESTED one and is blind
+//        to every intermediate hop, so a chain that returns to its origin evades the check entirely.
+//
+// And underneath both, the hole that makes a narrow redirect fix the wrong fix: a public page
+// carrying `<img src="http://internal.local/x">` reached an internal host with no redirect at all.
+// There was no `page.route`, no `.on('request')`, no host allowlist and no DNS lookup anywhere in
+// this file or in design-lib.mjs. Subresources and in-page `fetch()` were entirely unchecked.
+//
+// SO THE CONTROL IS PREVENTION, NOT DETECTION, and it sits on the request rather than on the
+// result. `capture()` installs a `page.route('**/*')` handler BEFORE `goto`, and every request the
+// browser makes — the navigation, every redirect hop, every subresource, every in-page fetch — is
+// aborted unless it passes `checkRequestTarget`. Walking `response.request().redirectedFrom()`
+// after `goto` would DETECT the chain and PREVENT nothing; it is kept below only as a backstop for
+// one stated assumption, never as the control.
+//
+// EXPOSURE BEFORE THE FIX, BOUNDED HONESTLY AND NOT INFLATED. The attacker got (i) an arbitrary GET
+// issued from inside the operator's network and (ii) script execution on whatever that endpoint
+// returned, since `waitUntil` is 'domcontentloaded'. They did NOT get the internal response body
+// into a committed artifact: in (b) the refusal fires before `page.evaluate`, and in (b2) the
+// browser has navigated away by the time anything is read. That mitigation was real and is why this
+// is a hole rather than an exfiltration channel.
+//
+// RESIDUAL — DNS REBINDING. THIS IS A BOUNDED LIMIT, NOT CONTAINMENT. The policy resolves the
+// hostname itself and Chromium resolves it again to connect; a record with a short TTL can differ
+// between the two lookups, and nothing here pins the address the browser actually dials. Closing
+// that needs an enforcing proxy the browser is pointed at, which cannot run here — a loopback
+// `bind()` is EPERM under the armed sandbox. This repo documents its own sandbox as "a guardrail
+// against accident, not containment against the agent"; read this the same way.
+
+/** The two schemes this tool may speak. Everything else is refused — see TRAP 3 below. */
+export const ALLOWED_SCHEMES = ['http:', 'https:'];
+
+function ipv4Bytes(s) {
+  const parts = String(s).split('.');
+  if (parts.length !== 4) return null;
+  const out = [];
+  for (const p of parts) {
+    if (!/^\d{1,3}$/.test(p)) return null;
+    const n = Number(p);
+    if (n > 255) return null;
+    out.push(n);
+  }
+  return out;
+}
+
+/**
+ * An IPv6 literal as 16 bytes, or null when it will not parse.
+ *
+ * `net.isIPv6` validates and does not decompose, and nothing in node exposes the bytes, so the `::`
+ * run and the dotted-quad tail (`::ffff:10.0.0.1`) are expanded here. Returning null on anything
+ * unexpected is deliberate: `classifyAddress` treats null as BLOCKED, so a spelling this parser
+ * does not understand fails closed rather than sailing through as "not private".
+ */
+function ipv6Bytes(addr) {
+  let s = String(addr);
+  const pct = s.indexOf('%');
+  if (pct !== -1) s = s.slice(0, pct); // a zone id is not part of the address
+  const tail = /:((?:\d{1,3}\.){3}\d{1,3})$/.exec(s);
+  if (tail) {
+    const v4 = ipv4Bytes(tail[1]);
+    if (!v4) return null;
+    const hex = (hi, lo) => ((hi << 8) | lo).toString(16);
+    s = `${s.slice(0, s.length - tail[1].length)}${hex(v4[0], v4[1])}:${hex(v4[2], v4[3])}`;
+  }
+  const halves = s.split('::');
+  if (halves.length > 2) return null;
+  const groups = (str) => (str === '' ? [] : str.split(':').map((g) => (/^[0-9a-fA-F]{1,4}$/.test(g) ? parseInt(g, 16) : NaN)));
+  const head = groups(halves[0]);
+  const rest = halves.length === 2 ? groups(halves[1]) : [];
+  if ([...head, ...rest].some((n) => !Number.isInteger(n))) return null;
+  const fill = 8 - head.length - rest.length;
+  const all = halves.length === 2 ? (fill < 0 ? null : [...head, ...Array(fill).fill(0), ...rest]) : fill === 0 ? head : null;
+  if (!all || all.length !== 8) return null;
+  return all.flatMap((g) => [g >> 8, g & 0xff]);
+}
+
+/**
+ * WHY IS THIS ADDRESS NOT A PUBLIC INTERNET ADDRESS? Returns a short reason, or null when it is one.
+ *
+ * null means "routable, go ahead" and every other return value blocks, INCLUDING the failure to
+ * parse. An address this cannot read is not thereby safe.
+ *
+ * The ranges are the ones an SSRF actually reaches: loopback, RFC1918 private, link-local — which
+ * carries 169.254.169.254, the cloud metadata endpoint — and CGNAT, plus the ranges that are simply
+ * not a destination (unspecified, multicast, reserved). IPv4-mapped and IPv4-compatible IPv6 are
+ * decomposed and judged as the IPv4 address they carry, because `::ffff:127.0.0.1` is 127.0.0.1
+ * and a table that matched only the v6 prefixes would let it past.
+ */
+export function classifyAddress(addr) {
+  const s = String(addr ?? '').replace(/^\[|\]$/g, '');
+  const v4 = net.isIPv4(s) ? ipv4Bytes(s) : null;
+  if (v4) return classifyV4(v4);
+  if (!net.isIPv6(s)) return 'not an IP address';
+  const b = ipv6Bytes(s);
+  if (!b) return 'an IPv6 address this policy could not parse';
+  if (b.every((x) => x === 0)) return 'the IPv6 unspecified address ::';
+  if (b.slice(0, 15).every((x) => x === 0) && b[15] === 1) return 'IPv6 loopback ::1';
+  // ::ffff:a.b.c.d is 4-mapped, ::a.b.c.d is v4-compatible and 64:ff9b::/96 is NAT64. All three
+  // carry an IPv4 address in their low 32 bits and are judged as that address: `::ffff:127.0.0.1`
+  // IS 127.0.0.1, and a table matching only the v6 prefixes would wave it through.
+  const zeroTo = (n) => b.slice(0, n).every((x) => x === 0);
+  if (zeroTo(10) && b[10] === 0xff && b[11] === 0xff) return classifyV4(b.slice(12));
+  if (zeroTo(12)) return classifyV4(b.slice(12));
+  if (b[0] === 0x00 && b[1] === 0x64 && b[2] === 0xff && b[3] === 0x9b && b.slice(4, 12).every((x) => x === 0)) return classifyV4(b.slice(12));
+  if ((b[0] & 0xfe) === 0xfc) return 'an IPv6 unique-local address (fc00::/7)';
+  if (b[0] === 0xfe && (b[1] & 0xc0) === 0x80) return 'an IPv6 link-local address (fe80::/10)';
+  if (b[0] === 0xff) return 'an IPv6 multicast address (ff00::/8)';
+  return null;
+}
+
+function classifyV4(b) {
+  const [a, c] = b;
+  if (a === 0) return 'in 0.0.0.0/8 — "this network", not a destination';
+  if (a === 10) return 'a private address (10.0.0.0/8)';
+  if (a === 127) return 'loopback (127.0.0.0/8)';
+  if (a === 169 && c === 254) return 'link-local (169.254.0.0/16) — this range carries the cloud metadata endpoint';
+  if (a === 172 && c >= 16 && c <= 31) return 'a private address (172.16.0.0/12)';
+  if (a === 192 && c === 168) return 'a private address (192.168.0.0/16)';
+  if (a === 100 && c >= 64 && c <= 127) return 'carrier-grade NAT (100.64.0.0/10)';
+  if (a === 192 && c === 0 && b[2] === 0) return 'IETF protocol assignments (192.0.0.0/24)';
+  if (a === 198 && (c === 18 || c === 19)) return 'a benchmarking range (198.18.0.0/15)';
+  if (a >= 224 && a < 240) return 'multicast (224.0.0.0/4)';
+  if (a >= 240) return 'reserved (240.0.0.0/4), which includes 255.255.255.255';
+  return null;
+}
+
+/**
+ * MAY THIS TOOL ISSUE A REQUEST TO THIS URL? The ONE predicate, and it has two callers on purpose:
+ * `capture`'s `page.route` handler and `checkRobots`. THOSE ARE TWO DIFFERENT REQUEST SURFACES —
+ * Chromium's and node's — and a Playwright route handler cannot see a `fetch()` made in this
+ * process. A policy installed on one of them reads as a whole control while covering half the
+ * requests, which is worse than none because it retires the worry. Two implementations that agree
+ * until they do not is the defect this repo names most often; PR #77 was closed for exactly it.
+ *
+ * TRAP 3 — WHAT HAPPENS TO A NON-http(s) SCHEME, DECIDED HERE RATHER THAN LEFT TO ARITHMETIC.
+ * `file:///etc/passwd` used to be refused BY ACCIDENT: `new URL('file:///etc/passwd').origin` is the
+ * literal string `"null"` and its `.hostname` is `""`, so `${u.origin}/robots.txt` built
+ * `"null/robots.txt"`, which is not an absolute URL, `fetch` threw, and the catch returned
+ * `allowed: false`. Nothing tested a scheme; a string concatenation produced garbage and the garbage
+ * failed closed. The two consequences that make this worth stating: `hostname` is `""` for `file:`,
+ * so a predicate written only against private IP RANGES does not match it at all; and this change
+ * replaces that concatenation with a real code path, so the accident that was covering `file:` stops
+ * covering it in the same commit.
+ *
+ * THE DECISION: only `http:` and `https:` are allowed, and an empty hostname is refused whatever the
+ * scheme. `file:`, `data:`, `blob:`, `ftp:`, `chrome:`, `view-source:` and everything else are
+ * refused BY NAME rather than by falling off the end of an IP table. A tool whose entire job is to
+ * load one public web page over TLS has no use for another scheme, and the alternative — enumerating
+ * the dangerous ones — is a list that is wrong the first time a new scheme ships.
+ */
+export async function checkRequestTarget(target, { lookup = dnsLookup } = {}) {
+  let u;
+  try {
+    u = new URL(target);
+  } catch {
+    return { allowed: false, reason: 'unparseable', detail: `${target} is not a URL, and a target that cannot be parsed cannot be judged`, host: null, addresses: [] };
+  }
+  if (!ALLOWED_SCHEMES.includes(u.protocol)) {
+    return { allowed: false, reason: 'scheme', detail: `scheme ${u.protocol} is not one of ${ALLOWED_SCHEMES.join(', ')}`, host: u.hostname || null, addresses: [] };
+  }
+  const host = u.hostname.replace(/^\[|\]$/g, ''); // URL keeps the brackets on an IPv6 literal
+  if (!host) {
+    // UNREACHABLE TODAY, AND KEPT ON PURPOSE — saying so rather than leaving a reader to wonder.
+    // WHATWG refuses an empty host for a SPECIAL scheme, so with the allowlist above there is no
+    // spelling that arrives here: measured 2026-08-29, `new URL('http:///x')` normalises to
+    // `http://x/` and `new URL('http://')` throws. The empty host belongs to `file:`, which the
+    // scheme gate already refused one line up. It stays because "hostname is empty" was the exact
+    // property that made the pre-fix file:// refusal an ACCIDENT — an IP-range predicate matches
+    // nothing against `""` — and a guard costing one comparison is the right price for never
+    // reproducing that. `extract-reference.test.mjs` pins the REASON it cannot fire, not the fact.
+    return { allowed: false, reason: 'no-host', detail: `${target} names no host`, host: null, addresses: [] };
+  }
+  if (net.isIP(host)) {
+    const why = classifyAddress(host);
+    return why
+      ? { allowed: false, reason: 'blocked-address', detail: `${host} is ${why}`, host, addresses: [host] }
+      : { allowed: true, reason: 'public', detail: null, host, addresses: [host] };
+  }
+  let records;
+  try {
+    records = await lookup(host, { all: true, verbatim: true });
+  } catch (cause) {
+    // A name that will not resolve is not a name we may dial. Under the armed sandbox DNS is denied
+    // and EVERY host lands here, which is the expected result and not a finding about the host.
+    return { allowed: false, reason: 'dns', detail: `could not resolve ${host} (${cause.code ?? cause.message})`, host, addresses: [] };
+  }
+  const addresses = (Array.isArray(records) ? records : [records]).map((r) => (typeof r === 'string' ? r : r?.address)).filter(Boolean);
+  if (!addresses.length) return { allowed: false, reason: 'dns', detail: `${host} resolved to no address`, host, addresses: [] };
+  // EVERY address must pass. A host answering with one public and one private record is the shape
+  // of a rebinding attack, not a host that is half safe.
+  for (const a of addresses) {
+    const why = classifyAddress(a);
+    if (why) return { allowed: false, reason: 'blocked-address', detail: `${host} resolves to ${a}, which is ${why}`, host, addresses };
+  }
+  return { allowed: true, reason: 'public', detail: null, host, addresses };
+}
+
 /**
  * Fetch and evaluate robots.txt. Network. Returns the same shape as robotsVerdict plus `fetched`.
  *
  * A robots.txt that cannot be fetched is NOT treated as permission: 4xx is the documented
  * "no restrictions" case and is allowed, but a network error or a 5xx is UNKNOWN and refuses.
  * A crawler that reads "I could not ask" as "yes" is the crawler that ends up in a contract claim.
+ *
+ * IT IS ALSO THE SECOND REQUEST SURFACE, and that is why `checkRequestTarget` is called here. This
+ * `fetch` runs in NODE, not in Chromium, so no `page.route` handler can see it — and in the measured
+ * (b) timeline it was this fetch that reached the internal host. One predicate, both surfaces; see
+ * checkRequestTarget for why two implementations of one policy is the failure mode.
+ *
+ * ON THE (b) PATH THIS CALL IS NOW UNREACHABLE, AND IT IS NOT DEAD CODE. The route handler aborts
+ * the redirect hop, so `landed` never becomes an internal URL and the post-redirect `checkRobots`
+ * is never handed one. The surface stays live for every OTHER route into this function — the CLI's
+ * own pre-flight call, and any importer using it directly — and those have no browser in front of
+ * them at all.
  */
-export async function checkRobots(url, { tokens = UA_TOKENS, fetchImpl = fetch } = {}) {
+export async function checkRobots(url, { tokens = UA_TOKENS, fetchImpl = fetch, lookup = dnsLookup } = {}) {
+  const policy = await checkRequestTarget(url, { lookup });
+  if (!policy.allowed) {
+    // A DISTINCT `reason`. "The site disallows this" and "I could not ask" are already kept apart
+    // here because collapsing them made the tool say something false about a third party; "I
+    // REFUSED to ask, and the decision was mine" is a third fact and gets a third value. Callers
+    // that branch on `reason` — capture()'s requireAllowed and the CLI — are updated with it.
+    return { allowed: false, reason: 'blocked-target', fetched: false, robotsUrl: null, rule: `request policy refused ${url}: ${policy.detail}`, matchedBy: null, crawlDelay: null, policy };
+  }
   const u = new URL(url);
   const robotsUrl = `${u.origin}/robots.txt`;
   let res;
@@ -1208,8 +1441,34 @@ export function analyse(raw, { url, viewport, scrolled, finalUrl } = {}) {
 }
 
 /**
- * Load the page and measure it. Throws EROBOTS / ENOPLAYWRIGHT / ENOLAUNCH — never returns an
- * empty result.
+ * Every URL a navigation actually passed through, oldest first, read back off the response.
+ *
+ * Playwright models a redirect as a chain of Request objects linked by `redirectedFrom()`, so the
+ * hops are recoverable AFTER the fact and only after it. That is the whole limitation: this is
+ * evidence about requests already issued, which is why `capture` uses it as a backstop and puts the
+ * control on `page.route`. The 64-hop guard bounds a cyclic or absurd chain; a response shape with
+ * no request chain yields [], because a helper that cannot read the chain must not report "no
+ * redirects" as if it had looked.
+ */
+export function redirectChain(response) {
+  const out = [];
+  try {
+    let req = typeof response?.request === 'function' ? response.request() : null;
+    for (let guard = 0; req && guard < 64; guard++) {
+      const u = typeof req.url === 'function' ? req.url() : null;
+      if (u) out.unshift(u);
+      req = typeof req.redirectedFrom === 'function' ? req.redirectedFrom() : null;
+    }
+  } catch {
+    // Nothing to say. The route handler is the control; this was only ever corroboration.
+  }
+  return out;
+}
+
+/**
+ * Load the page and measure it. Throws ETARGET / EROBOTS / ENOPLAYWRIGHT / ENOLAUNCH — never
+ * returns an empty result. ETARGET is OUR refusal to issue a request; EROBOTS is the site's refusal
+ * to be read. They are different facts about different parties and do not share a code.
  *
  * THE ROBOTS CHECK LIVES HERE, NOT IN THE CLI, and that is the correction rather than a preference.
  * This file states as non-negotiable that "/robots.txt is fetched and honoured BEFORE any page
@@ -1246,6 +1505,11 @@ export async function capture(
     scrollPauseMs = 350,
     fetchImpl = fetch,
     checkRobotsImpl = checkRobots,
+    // Name resolution, as a seam, for the same reason the browser is one: the request policy below
+    // is worth nothing if the only way to exercise it is against real DNS, and under the armed
+    // sandbox there is no DNS. It is threaded to BOTH policy call sites — the route handler and
+    // checkRobots — so a test cannot accidentally stub one and leave the other on real resolution.
+    lookup = dnsLookup,
     // The browser, as a seam. Defaults to the resolved playwright and is overridden by nothing in
     // production. It exists because the redirect re-check below is the kind of guarantee that gets
     // written, believed and never executed: chromium cannot launch under the armed sandbox, so
@@ -1262,7 +1526,7 @@ export async function capture(
   const requireAllowed = async (target, phase) => {
     let verdict;
     try {
-      verdict = await checkRobotsImpl(target, { fetchImpl });
+      verdict = await checkRobotsImpl(target, { fetchImpl, lookup });
     } catch (cause) {
       // Both ways of not-asking must wear the SAME disclaimer. A refusal caused by our own
       // inability to fetch, phrased as anything the site did, teaches the reader something untrue
@@ -1275,6 +1539,17 @@ export async function capture(
       throw e;
     }
     if (verdict.allowed) return verdict;
+    if (verdict.reason === 'blocked-target') {
+      // NOT an EROBOTS. This is our own policy refusing to issue a request, which is a fact about
+      // US and about the address — the site said nothing and was never asked. Giving it the robots
+      // code would file a refusal we made under a heading that means "the site declined".
+      const e = new Error(`request policy REFUSED ${target} ${phase}: ${verdict.policy?.detail ?? verdict.rule}. Nothing was requested from it.`);
+      e.code = 'ETARGET';
+      e.reason = verdict.policy?.reason ?? 'blocked-target';
+      e.phase = phase;
+      e.policy = verdict.policy ?? null;
+      throw e;
+    }
     const e = new Error(
       verdict.reason === 'unknown'
         ? `could not READ ${new URL(target).hostname}/robots.txt ${phase}, so permission is UNKNOWN. This is NOT a statement that the site disallows anything — under the armed sandbox the network is denied and this is the expected result. Failing closed is deliberate.`
@@ -1311,9 +1586,79 @@ export async function capture(
   }
   try {
     const page = await browser.newPage();
+
+    // ── THE REQUEST POLICY, INSTALLED BEFORE ANYTHING IS REQUESTED ──────────────────────────────
+    //
+    // ORDER IS THE WHOLE CONTROL. This runs before `goto`, so the navigation itself is the first
+    // request it judges. Everything below it — the redirect hops, the subresources, an in-page
+    // `fetch()` — is judged the same way by the same predicate. The post-navigation robots re-check
+    // further down is kept and is NOT this: it answers "may we read this page", after the fact and
+    // about one URL. This answers "may we send this request", before the fact and about every one.
+    const blocked = [];
+    await page.route('**/*', async (route, request) => {
+      // READING THE URL IS INSIDE THE TRY, and that is not tidiness. A request whose `url()` throws
+      // would otherwise take the exception past the handler, and Playwright treats a handler that
+      // neither continued nor aborted as a request to HANG on — a hang is not a refusal, and the
+      // capture would time out with nothing saying why. Anything short of an explicit pass aborts.
+      let target = '(a request whose URL could not be read)';
+      let verdict;
+      try {
+        target = typeof request?.url === 'function' ? request.url() : String(request?.url ?? '');
+        verdict = await checkRequestTarget(target, { lookup });
+      } catch (cause) {
+        verdict = { allowed: false, reason: 'policy-error', detail: `the request policy failed: ${cause.message}`, host: null, addresses: [] };
+      }
+      if (verdict.allowed) {
+        await route.continue();
+        return;
+      }
+      blocked.push({ url: target, reason: verdict.reason, detail: verdict.detail, resourceType: typeof request?.resourceType === 'function' ? request.resourceType() : null });
+      await route.abort('blockedbyclient');
+    });
+
     await page.setViewportSize({ width: viewport.w, height: viewport.h });
     // domcontentloaded, never networkidle — a long-lived stream keeps networkidle from resolving.
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+    let response;
+    try {
+      response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+    } catch (cause) {
+      // A navigation the policy aborted arrives here as net::ERR_BLOCKED_BY_CLIENT, which names
+      // nothing a reader can act on. Say which hop was refused and why. If nothing was blocked the
+      // failure is not ours and the original error is rethrown untouched.
+      if (!blocked.length) throw cause;
+      const e = new Error(`request policy REFUSED a hop of the navigation from ${url}: ${blocked.map((b) => `${b.url} (${b.detail})`).join('; ')}. The request was never issued.`);
+      e.code = 'ETARGET';
+      e.reason = blocked[0].reason;
+      e.phase = 'during the navigation';
+      e.blocked = blocked;
+      e.cause = cause;
+      throw e;
+    }
+    // ── BACKSTOP, NOT THE CONTROL, and the distinction is the point ─────────────────────────────
+    //
+    // The fix above rests on ONE assumption that cannot be measured from here: that Chromium
+    // re-invokes a route handler for each hop of a redirect chain rather than following the chain
+    // internally after the first `continue()`. Playwright documents it that way; chromium is
+    // SIGTRAP-killed under the armed sandbox, so this file cannot demonstrate it, and an assumption
+    // stated as a measurement is the thing this repo refuses.
+    //
+    // So the chain is ALSO read back off the response. This DETECTS and does not PREVENT — the
+    // requests are already issued by the time it runs — and it is worth exactly one thing: under
+    // the pessimistic reading of that assumption, a chain through an internal host abandons the
+    // capture instead of measuring the page it landed on. `sameReferenceUrl(landed, url)` could
+    // never do that: it compares the landed URL to the requested one and is blind to every hop
+    // between, so `public -> internal -> public` passed it while the middle hop was never asked
+    // about at all.
+    for (const hop of redirectChain(response)) {
+      const verdict = await checkRequestTarget(hop, { lookup });
+      if (verdict.allowed) continue;
+      const e = new Error(`the navigation from ${url} passed through ${hop}, which the request policy refuses (${verdict.detail}). The hop was ALREADY REQUESTED by the time this was read off the response — this is a backstop, not the control. Abandoning the capture.`);
+      e.code = 'ETARGET';
+      e.reason = verdict.reason;
+      e.phase = 'in the redirect chain, read back after the navigation';
+      e.hop = hop;
+      throw e;
+    }
     // The destination, not the request. goto follows redirects and this is the first moment the
     // landed URL is knowable; refusing here abandons the capture before anything is read off it.
     let landed = page.url();
@@ -1668,6 +2013,13 @@ if (isMain) {
     robots = await checkRobots(url);
   } catch (e) {
     console.error(`extract-reference REFUSED: could not evaluate robots.txt (${e.message})`);
+    process.exit(2);
+  }
+  if (robots.reason === 'blocked-target') {
+    // OUR decision, not the site's, and it is reported as ours. robots.txt was never fetched —
+    // printing this under a "robots.txt: … DISALLOWED" heading would attribute our refusal to a
+    // third party, which is the exact defect the two messages below were split to fix.
+    console.error(`\nextract-reference REFUSED: ${robots.rule}\nNo request was issued. Only http and https are dialable, and only to addresses that are not loopback, private, link-local or CGNAT.`);
     process.exit(2);
   }
   const label = robots.allowed ? 'ALLOWED' : robots.reason === 'unknown' ? 'UNKNOWN' : 'DISALLOWED';

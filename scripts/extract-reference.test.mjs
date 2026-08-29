@@ -58,6 +58,9 @@ import {
   robotsPathMatches,
   robotsVerdict,
   checkRobots,
+  checkRequestTarget,
+  classifyAddress,
+  redirectChain,
   slugFor,
   splitBands,
   toYaml,
@@ -882,12 +885,118 @@ test('a percent-encoded path cannot walk past a Disallow', () => {
 // redirect test drives an injected browser. Chromium is SIGTRAP-killed under the armed sandbox, so
 // a test needing one is a test nobody runs — which is exactly how the guarantee went unchecked.
 
-/** A browser-shaped double. `urls` is the sequence page.url() reports on successive reads. */
-function fakeChromium({ urls, raw = null, onEvaluate = null }) {
+/**
+ * DNS, as a stub, with an EXPLICIT map and no default.
+ *
+ * A resolver that quietly answered "public" for anything it had not heard of would make every
+ * assertion below pass for a host nobody meant to allow, and there is no real DNS here anyway —
+ * the sandbox denies it. An unknown host throws, which is what a typo in a fixture deserves.
+ */
+const HOSTS = {
+  'x.test': '93.184.216.34',
+  'other.test': '93.184.216.35',
+  'public.example': '93.184.216.36',
+  'cdn.public.example': '93.184.216.37',
+  'internal.local': '10.0.0.5',
+  'split.example': ['93.184.216.38', '127.0.0.1'],
+};
+const LOOKUP = async (host) => {
+  if (!(host in HOSTS)) {
+    const e = new Error(`no fixture address for ${host}`);
+    e.code = 'ENOTFOUND';
+    throw e;
+  }
+  const addrs = [].concat(HOSTS[host]);
+  return addrs.map((address) => ({ address, family: address.includes(':') ? 6 : 4 }));
+};
+/** A resolver that must never be reached. Proves a refusal happened BEFORE name resolution. */
+const NO_DNS = async (host) => {
+  throw Object.assign(new Error(`DNS was consulted for ${host} by a check that should have refused first`), { code: 'ETESTFAIL' });
+};
+
+/**
+ * A browser-shaped double. `urls` is the sequence page.url() reports on successive reads.
+ *
+ * IT CALLS THE REGISTERED ROUTE HANDLER, AND THAT IS THE POINT OF THIS REWRITE. Until 2026-08-29
+ * the stand-in page was exactly { setViewportSize, goto, url, waitForTimeout, evaluate, close } —
+ * THERE WAS NO `route` METHOD. A fix installing `page.route` would have been driven by a double
+ * that never invoked the handler, and the test would have passed having exercised nothing. That is
+ * this seam's OWN stated failure — its comment says it exists because the redirect re-check "is the
+ * kind of guarantee that gets written, believed and never executed" — reproduced one level up,
+ * inside the mechanism added to prevent it.
+ *
+ * So: `route()` registers, `goto()` and every subresource go THROUGH the registered handler, and an
+ * aborted request is recorded in `refused` and NEVER in `issued`. `issued` is the timeline — what
+ * the browser would actually have put on the wire — and the acceptance predicate for the SSRF fix
+ * is stated against it: the internal request must be ABSENT, not present-then-refused.
+ *
+ * `chain` is the redirect sequence `goto` walks, each hop routed as its own request, which is how
+ * Chromium issues them. Aborting hop N means hops N+1… never happen and `goto` rejects with
+ * ERR_BLOCKED_BY_CLIENT, as Playwright does. `subresources` are issued at the end of `goto`; a real
+ * page issues them during and after parse, and the only property that matters to these tests is
+ * preserved either way — the handler is registered before any of them.
+ *
+ * `routeRedirects: false` is the PESSIMISTIC reading of the one assumption the fix rests on: that
+ * Chromium re-invokes the handler for each hop rather than following the chain internally. Chromium
+ * is SIGTRAP-killed under the armed sandbox so neither reading can be measured here, and a test
+ * that only covered the optimistic one would be asserting the assumption rather than checking it.
+ */
+const UNREADABLE = Symbol('a request whose url() throws');
+function fakeChromium({ urls, raw = null, onEvaluate = null, chain = null, subresources = [], routeRedirects = true }) {
   const seen = [...urls];
+  const issued = [];
+  const refused = [];
+  const handlers = [];
+  const state = { handlersAtGoto: null };
+
+  const issue = async (target, resourceType) => {
+    const handler = handlers[handlers.length - 1];
+    if (!handler) {
+      issued.push(target);
+      return true;
+    }
+    let decided = null;
+    const request = {
+      // `unreadable` models a request whose url() throws — Playwright surfaces one for a handful of
+      // internal request shapes, and the handler must ABORT it rather than let the exception escape.
+      url: () => { if (target === UNREADABLE) throw new Error('this request has no readable URL'); return target; },
+      resourceType: () => resourceType,
+      isNavigationRequest: () => resourceType === 'document',
+      method: () => 'GET',
+    };
+    const route = {
+      request: () => request,
+      continue: async () => { decided = { continued: true }; },
+      abort: async (code = 'failed') => { decided = { continued: false, code }; },
+      fulfill: async () => { decided = { continued: false, code: 'fulfilled' }; },
+    };
+    await handler(route, request);
+    // Playwright hangs on a handler that neither continues nor aborts. A double that silently let
+    // that through would hide a real deadlock behind a green test.
+    assert.ok(decided, `the route handler neither continued nor aborted ${String(target)} — Playwright HANGS on that, and a hang is not a refusal`);
+    (decided.continued ? issued : refused).push(target);
+    return decided.continued;
+  };
+
   const page = {
+    route: async (_pattern, handler) => { handlers.push(handler); },
     setViewportSize: async () => {},
-    goto: async () => {},
+    goto: async (target) => {
+      state.handlersAtGoto = handlers.length;
+      const walk = chain ?? [target];
+      let previous = null;
+      for (const [i, hop] of walk.entries()) {
+        if (routeRedirects || i === 0) {
+          if (!(await issue(hop, 'document'))) throw new Error(`page.goto: net::ERR_BLOCKED_BY_CLIENT at ${hop}`);
+        } else {
+          issued.push(hop); // the pessimistic reading: the hop happens without reaching the handler
+        }
+        const from = previous;
+        previous = { url: () => hop, redirectedFrom: () => from };
+      }
+      for (const sub of subresources) await issue(sub.url ?? sub, sub.type ?? 'image');
+      return { request: () => previous };
+    },
     url: () => (seen.length > 1 ? seen.shift() : seen[0]),
     waitForTimeout: async () => {},
     evaluate: async (fn, arg) => {
@@ -897,7 +1006,7 @@ function fakeChromium({ urls, raw = null, onEvaluate = null }) {
     },
     close: async () => {},
   };
-  return { launch: async () => ({ newPage: async () => page, close: async () => {} }), page };
+  return { launch: async () => ({ newPage: async () => page, close: async () => {} }), page, issued, refused, state };
 }
 
 const ALLOW = async () => ({ allowed: true, reason: 'allowed', rule: 'no matching rule — default allow', matchedBy: null, crawlDelay: null });
@@ -908,7 +1017,7 @@ test('capture() checks robots ITSELF — an importer cannot skip the CLI to skip
   // No `chromium` is supplied, so reaching a browser at all would have to go through
   // resolvePlaywright(). The refusal must arrive first, which is what "BEFORE any page load" means.
   await assert.rejects(
-    () => capture('https://x.test/p', { checkRobotsImpl: DENY }),
+    () => capture('https://x.test/p', { checkRobotsImpl: DENY, lookup: LOOKUP }),
     (e) => {
       assert.equal(e.code, 'EROBOTS', `capture threw ${e.code}, not a robots refusal`);
       assert.equal(e.reason, 'disallowed');
@@ -923,7 +1032,7 @@ test('capture() checks robots ITSELF — an importer cannot skip the CLI to skip
   // with a message that does not accuse the site of anything.
   for (const [name, impl] of [['a 5xx / unreadable robots.txt', UNKNOWN], ['a throwing fetch', async () => { throw new Error('ENOTFOUND'); }]]) {
     await assert.rejects(
-      () => capture('https://x.test/p', { checkRobotsImpl: impl }),
+      () => capture('https://x.test/p', { checkRobotsImpl: impl, lookup: LOOKUP }),
       (e) => {
         assert.equal(e.code, 'EROBOTS', `${name}: threw ${e.code}`);
         assert.equal(e.reason, 'unknown', `${name}: reported as a site refusal rather than as our own failure`);
@@ -943,7 +1052,7 @@ test('capture() checks robots ITSELF — an importer cannot skip the CLI to skip
   // CONTROL: an allowing verdict gets past the robots gate. Without this the three assertions above
   // would also pass against a capture() that refused unconditionally.
   const { launch } = fakeChromium({ urls: ['https://x.test/p'], raw: { sizes: { 14: 3 }, title: 'ok' } });
-  const measured = await capture('https://x.test/p', { checkRobotsImpl: ALLOW, chromium: { launch }, settleMs: 0, scroll: false });
+  const measured = await capture('https://x.test/p', { checkRobotsImpl: ALLOW, chromium: { launch }, lookup: LOOKUP, settleMs: 0, scroll: false });
   assert.equal(measured.url, 'https://x.test/p');
   assert.equal(measured.finalUrl, undefined, 'finalUrl was emitted for a capture that did not redirect');
 });
@@ -958,7 +1067,7 @@ test('a redirect is re-checked against where the browser LANDED, and refusing ab
   const denyElsewhere = record(async (u) => (u.includes('other.test') ? DENY() : ALLOW()));
   const { launch } = fakeChromium({ urls: ['https://other.test/x'], raw: { sizes: { 14: 3 } } });
   await assert.rejects(
-    () => capture('https://x.test/p', { checkRobotsImpl: denyElsewhere, chromium: { launch }, settleMs: 0, scroll: false }),
+    () => capture('https://x.test/p', { checkRobotsImpl: denyElsewhere, chromium: { launch }, lookup: LOOKUP, settleMs: 0, scroll: false }),
     (e) => {
       assert.equal(e.code, 'EROBOTS');
       assert.match(e.phase, /redirected/, `the refusal did not name the redirect phase: ${e.phase}`);
@@ -977,6 +1086,7 @@ test('a redirect is re-checked against where the browser LANDED, and refusing ab
     () => capture('https://x.test/p', {
       checkRobotsImpl: record(async (u) => (u.endsWith('/private') ? DENY() : ALLOW())),
       chromium: { launch: twoReads.launch },
+      lookup: LOOKUP,
       settleMs: 0,
       scroll: true,
       scrollSteps: 1,
@@ -996,7 +1106,7 @@ test('a redirect is re-checked against where the browser LANDED, and refusing ab
   // defect, and this field is what stops it being silent.
   asked = [];
   const ok = fakeChromium({ urls: ['https://x.test/moved'], raw: { sizes: { 14: 3 }, title: 't' } });
-  const m = await capture('https://x.test/p', { checkRobotsImpl: record(ALLOW), chromium: { launch: ok.launch }, settleMs: 0, scroll: false });
+  const m = await capture('https://x.test/p', { checkRobotsImpl: record(ALLOW), chromium: { launch: ok.launch }, lookup: LOOKUP, settleMs: 0, scroll: false });
   assert.equal(m.url, 'https://x.test/p');
   assert.equal(m.finalUrl, 'https://x.test/moved', 'the redirect destination is not recorded in the artifact');
   assert.equal(asked.length, 2, 'the landed URL was not re-checked');
@@ -1005,9 +1115,267 @@ test('a redirect is re-checked against where the browser LANDED, and refusing ab
   // bare domain pays for one and the noise teaches a reader to ignore the field.
   asked = [];
   const slash = fakeChromium({ urls: ['https://x.test/p/'], raw: { sizes: { 14: 3 } } });
-  const same = await capture('https://x.test/p', { checkRobotsImpl: record(ALLOW), chromium: { launch: slash.launch }, settleMs: 0, scroll: false });
+  const same = await capture('https://x.test/p', { checkRobotsImpl: record(ALLOW), chromium: { launch: slash.launch }, lookup: LOOKUP, settleMs: 0, scroll: false });
   assert.equal(same.finalUrl, undefined, 'a trailing slash was reported as a redirect');
   assert.equal(asked.length, 1, 'a trailing slash cost a second robots.txt fetch');
+});
+
+// ── THE REQUEST POLICY — SSRF, MEASURED THROUGH THE SEAM ────────────────────────────────────────
+//
+// EVERY TIMELINE BELOW IS EXECUTED, not reasoned about. Chromium is SIGTRAP-killed under the armed
+// sandbox, so `chromium` and `lookup` are both injected; what is being checked is this file's own
+// control flow — which requests it decides to issue — and that is exactly what the seam exposes.
+// What is NOT executed here, and is stated as an assumption in capture(), is whether real Chromium
+// re-invokes a route handler per redirect hop. The last test in this block covers the pessimistic
+// answer to it.
+
+test('(b) a redirect to an internal host is NEVER REQUESTED — the refusal used to arrive after the request', async () => {
+  // MEASURED BEFORE THE FIX, through this same seam:
+  //     >> REQUEST ISSUED to http://public.example/
+  //     >> REQUEST ISSUED to http://internal.local/admin     <- step 2
+  //     robots.txt FETCHED for internal.local                <- step 3
+  //     RESULT: REFUSED (EROBOTS)
+  // The refusal was real and it arrived AFTER the request. Structural, not a race: `goto` is
+  // awaited, so a check on its result cannot precede the navigation it checks.
+  const asked = [];
+  const fake = fakeChromium({
+    chain: ['http://public.example/', 'http://internal.local/admin'],
+    urls: ['http://internal.local/admin'],
+    raw: { sizes: { 14: 3 } },
+  });
+  await assert.rejects(
+    () => capture('http://public.example/', {
+      checkRobotsImpl: async (u) => { asked.push(u); return { allowed: true, reason: 'allowed', rule: 'default allow', matchedBy: null, crawlDelay: null }; },
+      chromium: { launch: fake.launch },
+      lookup: LOOKUP,
+      settleMs: 0,
+      scroll: false,
+    }),
+    (e) => {
+      assert.equal(e.code, 'ETARGET', `capture threw ${e.code}`);
+      assert.match(e.message, /internal\.local/, 'the refusal does not name the hop it refused');
+      assert.match(e.message, /10\.0\.0\.5/, 'the refusal does not name the address that made it one');
+      assert.match(e.message, /never issued/i);
+      return true;
+    },
+    'capture followed a redirect into an internal host',
+  );
+
+  // THE ACCEPTANCE PREDICATE. Not "requested, then refused" — absent from the timeline entirely.
+  assert.deepEqual(fake.issued, ['http://public.example/'], `an internal request reached the wire: ${fake.issued.join(', ')}`);
+  assert.deepEqual(fake.refused, ['http://internal.local/admin'], 'the internal hop was not aborted by the policy');
+  // ...and the node-side surface did not reach it either. In the measured (b) timeline THIS is what
+  // fetched http://internal.local/robots.txt, and no route handler can see a fetch made in node.
+  assert.ok(!asked.some((u) => u.includes('internal.local')), `robots.txt was fetched for the internal host: ${asked.join(', ')}`);
+  assert.ok(fake.state.handlersAtGoto >= 1, 'the policy was registered AFTER the navigation, which is no policy at all');
+});
+
+test('(b2) a redirect chain that RETURNS TO ITS ORIGIN cannot slip past — the landed-url check was blind to it', async () => {
+  // `if (!sameReferenceUrl(landed, url))` compares the LANDED url to the REQUESTED one. For
+  //     public.example -> internal.local/admin -> public.example
+  // those two are equal, so the check did not fire: robots.txt for internal.local was NEVER
+  // fetched, the capture SUCCEEDED, and the artifact recorded nothing about the hop.
+  const fake = fakeChromium({
+    chain: ['http://public.example/', 'http://internal.local/admin', 'http://public.example/'],
+    urls: ['http://public.example/'],
+    raw: { sizes: { 14: 3 }, title: 'ok' },
+  });
+  await assert.rejects(
+    () => capture('http://public.example/', { checkRobotsImpl: ALLOW, chromium: { launch: fake.launch }, lookup: LOOKUP, settleMs: 0, scroll: false }),
+    (e) => {
+      assert.equal(e.code, 'ETARGET');
+      assert.match(e.message, /internal\.local/);
+      return true;
+    },
+    'a chain returning to its origin measured the page and reported a clean capture',
+  );
+  assert.deepEqual(fake.issued, ['http://public.example/'], `the internal hop was requested: ${fake.issued.join(', ')}`);
+  assert.deepEqual(fake.refused, ['http://internal.local/admin']);
+  // CONTROL that this fixture would have passed before the fix: the landed URL equals the requested
+  // one, which is precisely why the old check said nothing.
+  assert.equal(sameReferenceUrl('http://public.example/', 'http://public.example/'), true);
+});
+
+test('a subresource reaching an internal host is aborted, and a PUBLIC one still loads', async () => {
+  // THE GENERAL HOLE, and it is why the narrow redirect fix was not the fix: a public page carrying
+  // <img src="http://internal.local/x"> reached an internal host with no redirect anywhere. Before
+  // this there was no page.route, no .on('request'), no host allowlist and no DNS lookup in either
+  // extract-reference.mjs or design-lib.mjs.
+  const fake = fakeChromium({
+    urls: ['http://public.example/'],
+    raw: { sizes: { 14: 3 }, title: 'ok' },
+    subresources: [
+      { url: 'http://cdn.public.example/logo.png', type: 'image' },        // NEGATIVE CONTROL
+      { url: 'http://internal.local/x', type: 'image' },
+      { url: 'http://169.254.169.254/latest/meta-data/', type: 'fetch' },  // no DNS: a literal IP
+      { url: 'http://[::1]:8080/admin', type: 'fetch' },
+      { url: 'http://127.0.0.1:3000/', type: 'xhr' },
+    ],
+  });
+  const measured = await capture('http://public.example/', { checkRobotsImpl: ALLOW, chromium: { launch: fake.launch }, lookup: LOOKUP, settleMs: 0, scroll: false });
+
+  // THE NEGATIVE CONTROL IS LOAD-BEARING. A handler that aborted everything would satisfy every
+  // abort assertion above and break capture against every real site, and this suite has no
+  // live-network test that would catch it.
+  assert.deepEqual(fake.issued, ['http://public.example/', 'http://cdn.public.example/logo.png'], `a public subresource was blocked, or an internal one was not: ${fake.issued.join(', ')}`);
+  assert.deepEqual(fake.refused, ['http://internal.local/x', 'http://169.254.169.254/latest/meta-data/', 'http://[::1]:8080/admin', 'http://127.0.0.1:3000/']);
+  // ...and the capture COMPLETED. A blocked subresource is the control working, not a failed run.
+  assert.equal(measured.url, 'http://public.example/');
+  assert.equal(measured.finalUrl, undefined);
+  assert.ok(fake.state.handlersAtGoto >= 1, 'the policy was registered AFTER the navigation, which is no policy at all');
+});
+
+test('a request the policy cannot even READ is aborted — a handler that throws makes Playwright hang', async () => {
+  // Not a hypothetical about tidy code. A route handler that neither continues nor aborts is one
+  // Playwright HANGS on: the capture would die at its 30s timeout with nothing in the message about
+  // a policy, and the operator would read it as a slow site. An exception is not a refusal.
+  const fake = fakeChromium({
+    urls: ['http://public.example/'],
+    raw: { sizes: { 14: 3 }, title: 'ok' },
+    subresources: [{ url: UNREADABLE, type: 'image' }, { url: 'http://cdn.public.example/logo.png', type: 'image' }],
+  });
+  const measured = await capture('http://public.example/', { checkRobotsImpl: ALLOW, chromium: { launch: fake.launch }, lookup: LOOKUP, settleMs: 0, scroll: false });
+  assert.equal(fake.refused.length, 1, 'the unreadable request was not aborted');
+  assert.equal(fake.refused[0], UNREADABLE);
+  // CONTROL: the readable public subresource beside it still went through, so this is not a handler
+  // that has simply started refusing everything.
+  assert.deepEqual(fake.issued, ['http://public.example/', 'http://cdn.public.example/logo.png']);
+  assert.equal(measured.url, 'http://public.example/');
+});
+
+test('even if Chromium did NOT re-route a redirect hop, the chain is read back and the capture abandoned', async () => {
+  // The fix rests on one assumption that cannot be measured here: that Chromium re-invokes the
+  // route handler for each hop of a redirect chain. This drives the pessimistic answer — hop 0
+  // routes, the rest do not — and checks the backstop rather than the control.
+  const fake = fakeChromium({
+    chain: ['http://public.example/', 'http://internal.local/admin', 'http://public.example/'],
+    urls: ['http://public.example/'],
+    routeRedirects: false,
+    raw: { sizes: { 14: 3 }, title: 'ok' },
+  });
+  await assert.rejects(
+    () => capture('http://public.example/', { checkRobotsImpl: ALLOW, chromium: { launch: fake.launch }, lookup: LOOKUP, settleMs: 0, scroll: false }),
+    (e) => {
+      assert.equal(e.code, 'ETARGET');
+      assert.equal(e.hop, 'http://internal.local/admin');
+      assert.match(e.phase, /redirect chain/);
+      assert.match(e.message, /backstop, not the control/, 'the backstop presents itself as prevention');
+      return true;
+    },
+    'a chain returning to its origin was measured when its hops were not routed',
+  );
+  // STATED HONESTLY: in this mode the request WAS issued. Detection is not prevention, and this
+  // assertion is the record of the difference rather than a claim that both are equally good.
+  assert.ok(fake.issued.includes('http://internal.local/admin'), 'CONTROL: the pessimistic mode did not actually issue the hop, so this proves nothing');
+  assert.deepEqual(redirectChain({ request: () => ({ url: () => 'c', redirectedFrom: () => ({ url: () => 'b', redirectedFrom: () => ({ url: () => 'a', redirectedFrom: () => null }) }) }) }), ['a', 'b', 'c']);
+  assert.deepEqual(redirectChain(null), [], 'a response with no request chain must not report "no redirects" as if it had looked');
+  assert.deepEqual(redirectChain({ request: () => { throw new Error('x'); } }), []);
+});
+
+test('checkRequestTarget blocks what an SSRF reaches for, and passes what a real capture needs', async () => {
+  const at = (u) => checkRequestTarget(u, { lookup: NO_DNS });
+
+  // A LITERAL IP NEEDS NO DNS, and NO_DNS proves it takes none. Every entry is a range an SSRF
+  // actually goes for; 169.254.169.254 is the cloud metadata endpoint and lives in link-local.
+  for (const [addr, why] of [
+    ['127.0.0.1', /loopback/], ['127.1.2.3', /loopback/],
+    ['10.0.0.5', /10\.0\.0\.0\/8/], ['172.16.0.1', /172\.16\.0\.0\/12/], ['172.31.255.255', /172\.16\.0\.0\/12/],
+    ['192.168.1.1', /192\.168\.0\.0\/16/], ['169.254.169.254', /link-local/], ['100.64.0.1', /NAT/],
+    ['0.0.0.0', /0\.0\.0\.0\/8/], ['192.0.0.170', /protocol assignments/], ['198.18.0.1', /benchmark/],
+    ['224.0.0.1', /multicast/], ['255.255.255.255', /reserved/],
+    ['[::1]', /loopback/], ['[::]', /unspecified/], ['[fd00::1]', /unique-local/], ['[fe80::1]', /link-local/],
+    ['[ff02::1]', /multicast/], ['[::ffff:127.0.0.1]', /loopback/], ['[::ffff:10.0.0.1]', /10\.0\.0\.0\/8/],
+    ['[64:ff9b::7f00:1]', /loopback/],
+  ]) {
+    const v = await at(`http://${addr}/x`);
+    assert.equal(v.allowed, false, `${addr} was allowed`);
+    assert.equal(v.reason, 'blocked-address', `${addr} was refused for the wrong reason: ${v.reason}`);
+    assert.match(v.detail, why, `${addr}: ${v.detail}`);
+  }
+
+  // CONTROLS, and the boundary ones are the load-bearing half — an off-by-one in a range table is
+  // invisible without them, and a policy that blocks the public internet passes every test above.
+  for (const addr of ['93.184.216.34', '8.8.8.8', '11.0.0.1', '172.15.0.1', '172.32.0.1', '100.63.255.255', '100.128.0.1', '169.253.0.1', '169.255.0.1', '192.0.1.1', '198.20.0.1', '223.255.255.255', '[2606:2800:220:1:248:1893:25c8:1946]', '[fb00::1]', '[fec0::1]']) {
+    const v = await at(`https://${addr}/x`);
+    assert.equal(v.allowed, true, `${addr} is a public address and was refused: ${v.detail}`);
+  }
+
+  // A NAME IS JUDGED BY WHAT IT RESOLVES TO, and EVERY address must pass. A host answering with one
+  // public and one private record is the shape of a rebinding attack, not a host that is half safe.
+  assert.equal((await checkRequestTarget('http://public.example/', { lookup: LOOKUP })).allowed, true);
+  const split = await checkRequestTarget('http://split.example/', { lookup: LOOKUP });
+  assert.equal(split.allowed, false, 'a host with one public and one loopback record was allowed');
+  assert.match(split.detail, /127\.0\.0\.1/);
+  assert.deepEqual(split.addresses, ['93.184.216.38', '127.0.0.1'], 'the refusal does not record what it saw');
+
+  // A name that will not resolve is not a name we may dial. Under the armed sandbox DNS is denied
+  // and every host lands here, which is the expected result rather than a finding about the host.
+  const dead = await checkRequestTarget('http://nowhere.invalid/', { lookup: LOOKUP });
+  assert.equal(dead.allowed, false);
+  assert.equal(dead.reason, 'dns');
+
+  // An address spelling the parser cannot read is NOT thereby safe.
+  assert.equal(classifyAddress('not-an-ip'), 'not an IP address');
+  assert.equal(classifyAddress(''), 'not an IP address');
+  assert.equal(classifyAddress(null), 'not an IP address');
+  assert.equal(classifyAddress('127.0.0.1'), 'loopback (127.0.0.0/8)');
+  assert.equal(classifyAddress('93.184.216.34'), null, 'CONTROL: a public address is not classified as anything');
+  assert.equal(classifyAddress('fe80::1%en0'), 'an IPv6 link-local address (fe80::/10)', 'a zone id defeated the classifier');
+});
+
+test('file:// is refused BY DECISION now — it used to fail closed because a string concatenation made garbage', async () => {
+  // MEASURED 2026-08-29, and this is the accident that was doing the work:
+  assert.equal(new URL('file:///etc/passwd').origin, 'null', 'the literal string "null", not the value');
+  assert.equal(new URL('file:///etc/passwd').hostname, '', 'hostname is empty, so an IP-range predicate does not match it at all');
+  // …so checkRobots built "null/robots.txt", which is not an absolute URL, `fetch` threw, and the
+  // catch returned allowed:false. NOTHING TESTED A SCHEME. This change replaces that concatenation
+  // with a real code path, so the accident stops covering file:// in the same commit that closes
+  // the SSRF hole — which is why the decision is written down here and in the source.
+  const v = await checkRequestTarget('file:///etc/passwd', { lookup: NO_DNS });
+  assert.equal(v.allowed, false);
+  assert.equal(v.reason, 'scheme', `file:// was refused as ${v.reason} — if that is 'dns' or 'blocked-address' the decision is still accidental`);
+  assert.match(v.detail, /file:/);
+
+  // THE DECISION: an allowlist of two schemes, not a blocklist of dangerous ones. A blocklist is
+  // wrong the first time a new scheme ships, and this tool's entire job is one public page over
+  // http(s).
+  for (const u of ['data:text/html,<h1>x</h1>', 'ftp://internal.local/x', 'chrome://settings', 'view-source:http://internal.local/', 'about:blank', 'blob:http://x.test/abc', 'ws://internal.local/', 'javascript:fetch("http://internal.local")']) {
+    const r = await checkRequestTarget(u, { lookup: NO_DNS });
+    assert.equal(r.allowed, false, `${u} was allowed`);
+    assert.equal(r.reason, 'scheme', `${u} was refused as ${r.reason}`);
+  }
+  // THE EMPTY-HOSTNAME GUARD IS UNREACHABLE, AND THIS PINS THE REASON RATHER THAN THE FACT — a
+  // guard nobody can trigger is dead code unless the thing keeping it dead is written down. WHATWG
+  // refuses an empty host for a SPECIAL scheme, so no http/https spelling reaches it; the empty
+  // hostname belongs to file:, which the scheme gate refuses first. If any row below stops holding,
+  // the guard is live and this assertion is where that is discovered.
+  assert.equal(new URL('http:///x').hostname, 'x', 'an empty host became reachable over http — the no-host guard is now live');
+  assert.equal(new URL('http:/x').hostname, 'x');
+  assert.throws(() => new URL('http://'), 'a hostless http URL now parses');
+  assert.throws(() => new URL('http://:80/'), 'a hostless http URL with a port now parses');
+  assert.equal((await checkRequestTarget('nonsense', { lookup: NO_DNS })).reason, 'unparseable');
+  // Scheme comparison is case-insensitive because URL normalises it, which is the only reason the
+  // allowlist can be two lowercase strings.
+  assert.equal(new URL('HTTP://X.TEST/p').protocol, 'http:');
+
+  // AND THE ACCIDENTAL COVER IS REPLACED, NOT REMOVED: checkRobots still refuses file://, and now
+  // refuses it without issuing a fetch at all.
+  let fetches = 0;
+  const r = await checkRobots('file:///etc/passwd', { fetchImpl: async () => { fetches++; throw new Error('unreachable'); }, lookup: NO_DNS });
+  assert.equal(r.allowed, false, 'file:// became fetchable');
+  assert.equal(r.reason, 'blocked-target', `refused as ${r.reason} — "blocked-target" is OUR decision; "unknown" would say we tried and could not`);
+  assert.equal(fetches, 0, 'the refusal still depends on a fetch throwing on a malformed URL');
+  assert.match(r.rule, /request policy refused/);
+
+  // The node-side surface refuses an internal host too, and that is TRAP 2: `page.route` cannot see
+  // a fetch made in this process, and in the measured (b) timeline this fetch is what reached
+  // internal.local. One predicate, both surfaces.
+  const internal = await checkRobots('http://internal.local/admin', { fetchImpl: async () => { fetches++; throw new Error('unreachable'); }, lookup: LOOKUP });
+  assert.equal(internal.allowed, false);
+  assert.equal(internal.reason, 'blocked-target');
+  assert.equal(fetches, 0, 'robots.txt was fetched from an internal host');
+  // CONTROL: the same surface still fetches for a public host, or this assertion is vacuous.
+  assert.equal((await checkRobots('http://public.example/', { fetchImpl: async () => ({ status: 404, ok: false, text: async () => '' }), lookup: LOOKUP })).allowed, true);
 });
 
 // ── LOOK-ALIKE DOMAINS AND THE SLUG THEY SHARE ──────────────────────────────────────────────────
@@ -1125,14 +1493,14 @@ test('comments and crawl-delay are parsed, and a delay is surfaced to the caller
 
 test('an unfetchable robots.txt is NOT permission — 4xx allows, 5xx and network errors refuse', async () => {
   const res = (status, body = '') => async () => ({ status, ok: status >= 200 && status < 300, text: async () => body });
-  assert.equal((await checkRobots('https://x.test/p', { fetchImpl: res(404) })).allowed, true);
-  assert.equal((await checkRobots('https://x.test/p', { fetchImpl: res(503) })).allowed, false);
+  assert.equal((await checkRobots('https://x.test/p', { fetchImpl: res(404), lookup: LOOKUP })).allowed, true);
+  assert.equal((await checkRobots('https://x.test/p', { fetchImpl: res(503), lookup: LOOKUP })).allowed, false);
   assert.equal(
-    (await checkRobots('https://x.test/p', { fetchImpl: async () => { throw new Error('ENOTFOUND'); } })).allowed,
+    (await checkRobots('https://x.test/p', { fetchImpl: async () => { throw new Error('ENOTFOUND'); }, lookup: LOOKUP })).allowed,
     false,
     '"I could not ask" must never read as "yes"',
   );
-  const ok = await checkRobots('https://x.test/p', { fetchImpl: res(200, 'User-agent: *\nDisallow: /p\n') });
+  const ok = await checkRobots('https://x.test/p', { fetchImpl: res(200, 'User-agent: *\nDisallow: /p\n'), lookup: LOOKUP });
   assert.equal(ok.allowed, false);
   assert.equal(ok.robotsUrl, 'https://x.test/robots.txt');
 });
@@ -1142,9 +1510,9 @@ test('a refusal says WHOSE decision it was — "site said no" and "could not ask
   // "linear.app disallows this path" when the armed sandbox had blocked the fetch — a false
   // statement about a third party, produced by a refusal that was otherwise correct.
   const res = (status, body = '') => async () => ({ status, ok: status >= 200 && status < 300, text: async () => body });
-  const said = await checkRobots('https://x.test/p', { fetchImpl: res(200, 'User-agent: *\nDisallow: /p\n') });
-  const couldNotAsk = await checkRobots('https://x.test/p', { fetchImpl: async () => { throw new Error('ENOTFOUND'); } });
-  const alsoCouldNot = await checkRobots('https://x.test/p', { fetchImpl: res(503) });
+  const said = await checkRobots('https://x.test/p', { fetchImpl: res(200, 'User-agent: *\nDisallow: /p\n'), lookup: LOOKUP });
+  const couldNotAsk = await checkRobots('https://x.test/p', { fetchImpl: async () => { throw new Error('ENOTFOUND'); }, lookup: LOOKUP });
+  const alsoCouldNot = await checkRobots('https://x.test/p', { fetchImpl: res(503), lookup: LOOKUP });
 
   assert.equal(said.allowed, false);
   assert.equal(couldNotAsk.allowed, false);
@@ -1153,7 +1521,7 @@ test('a refusal says WHOSE decision it was — "site said no" and "could not ask
   assert.equal(couldNotAsk.reason, 'unknown');
   assert.equal(alsoCouldNot.reason, 'unknown');
   assert.notEqual(said.reason, couldNotAsk.reason, 'if these ever collapse to one value the message collapses with them');
-  assert.equal((await checkRobots('https://x.test/p', { fetchImpl: res(404) })).reason, 'no-robots-published');
+  assert.equal((await checkRobots('https://x.test/p', { fetchImpl: res(404), lookup: LOOKUP })).reason, 'no-robots-published');
 });
 
 // ── the duplicated WCAG arithmetic, pinned against its external definition ───────────────────────
