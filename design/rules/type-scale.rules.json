@@ -1,0 +1,61 @@
+{
+  "_comment": [
+    "STATED RULES, HELD AGAINST THE MEASURED CORPUS. Run: node scripts/extract-reference.mjs --against design/rules/type-scale.rules.json",
+    "A rule lives here so it can be KILLED. Three were killed during the research that commissioned this harness, and the two that died are kept in this file rather than deleted from it — a deleted rule teaches nobody why it was wrong, and the same rule gets proposed again next quarter.",
+    "Every rule must carry a `statement` a person can disagree with. A rule with no statement is a threshold nobody chose."
+  ],
+  "rules": [
+    {
+      "id": "min-step-ratio-1125",
+      "kind": "min-adjacent-ratio",
+      "value": 1.125,
+      "band": "ui",
+      "statement": "adjacent steps in a type scale must differ by at least 1.125x",
+      "origin": "scripts/design-probe.mjs MIN_STEP_RATIO — this repo enforces it today as a p2 finding",
+      "expected": "REFUTED — every reference with a +1 increment above 9px violates it by arithmetic, and that is most of them"
+    },
+    {
+      "id": "six-sizes-is-restraint",
+      "kind": "max-distinct-sizes",
+      "value": 6,
+      "band": "ui",
+      "statement": "a disciplined UI band uses no more than 6 distinct sizes",
+      "origin": "an orchestrator synthesis of 2026-08-28 that read mission-control's 6 sizes as restraint",
+      "expected": "a count cannot see near-duplicates; this rule passed mission-control's +0.5 ramp, which is what made it worth killing"
+    },
+    {
+      "id": "must-have-display-band",
+      "kind": "requires-band",
+      "value": "display",
+      "statement": "a real interface has a display band above its UI band",
+      "origin": "a category error, stated so it can be checked",
+      "expected": "play.grafana.org is a real production dashboard and ships 12 and 14 and nothing else"
+    },
+    {
+      "id": "ui-increments-are-integer",
+      "kind": "integer-increments",
+      "band": "ui",
+      "statement": "every adjacent increment in the UI band is a whole number of pixels",
+      "origin": "the observation this harness was built to test: five references build the UI band on +1 or +2, while mission-control uses +0.5 repeatedly",
+      "expected": "HELD across the captured corpus, and VIOLATED by mission-control — which is the finding, not a bug in the rule"
+    },
+    {
+      "id": "ui-increments-are-one-or-two",
+      "kind": "increment-in",
+      "value": [1, 2],
+      "band": "ui",
+      "statement": "UI-band increments are +1 or +2 and nothing else",
+      "origin": "the stronger form of the rule above",
+      "expected": "unknown — this is the one in the file whose answer was not decided before it was run"
+    },
+    {
+      "id": "ui-increments-are-integer-where-used",
+      "kind": "integer-increments",
+      "band": "ui",
+      "minCount": 3,
+      "statement": "every adjacent increment in the UI band is a whole number of pixels, counting only sizes the reference renders at least 3 times",
+      "origin": "the same rule as ui-increments-are-integer, restated over sizes that carry real text. Both are kept BECAUSE THEY DISAGREE: play.grafana.org renders 12.6px on exactly one element, which is enough to violate the unfiltered form and not enough to mean anything about grafana's system. Which of the two is the real rule is a judgement, and the harness's job is to make the two answers visible rather than to pick one.",
+      "expected": "differs from ui-increments-are-integer on at least one reference; if it never does, one of the two is redundant and should be deleted"
+    }
+  ]
+}

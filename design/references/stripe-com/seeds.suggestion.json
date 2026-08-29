@@ -1,0 +1,32 @@
+{
+  "type": {
+    "ui": {
+      "base": 8,
+      "increment": 2,
+      "steps": 10
+    },
+    "display": {
+      "base": 32,
+      "increment": 16,
+      "steps": 2
+    },
+    "leading": {
+      "peak": 2,
+      "peakAt": 12,
+      "falloff": null,
+      "exponent": null,
+      "displayRatio": 1.043
+    },
+    "tracking": {
+      "zeroAt": null,
+      "slope": null
+    }
+  },
+  "notes": [
+    "ui: 5 measured size(s) inside the fitted range do not sit on the +2 ramp (9, 11, 13, 15, 21) — all of them integer sizes, so the reference has more than one ramp rather than a fractional one",
+    "display: the +16 run from 32 covers 2 of 3 measured display size(s); 56 sits outside it. Display bands are commonly geometric — treat this arithmetic fit as a suggestion, not a description.",
+    "leading: falloff and exponent are null because the seeds contract names them without stating the curve they parameterise; the measured leading table is emitted in full so a consumer can fit its own model",
+    "leading: peak excludes 5 under-sampled size(s) (14px n=8, 15px n=3, 18px n=7, 20px n=1, 21px n=1) — a size carried by a handful of elements is not this reference's leading",
+    "tracking: r2 = 0.071 is below 0.5; the sizes do not lie on a line, so no zeroAt/slope is emitted"
+  ]
+}
