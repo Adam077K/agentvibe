@@ -446,13 +446,42 @@ export function blocking(findings = []) {
   return findings.filter((f) => f.severity === 'p1');
 }
 
-/** The verdict, derived from `blocking()` and nowhere else. */
+/**
+ * The verdict, derived from `blocking()` and nowhere else.
+ *
+ * And `blocking()` is derived from findings, which are derived from what `collect()` read out of
+ * the page — so this verdict is only as trustworthy as the page it was taken from. See the trust
+ * boundary note above `collect()`; it is sound for a local dev server and is not a claim about an
+ * arbitrary URL.
+ */
 export function isPass(findings = []) {
   return blocking(findings).length === 0;
 }
 
 // ── the in-page measurement ─────────────────────────────────────────────────────────────────────
 // Runs inside the browser. Pure geometry, computed style and the Web Animations API; no judgement.
+//
+// THE TRUST BOUNDARY IS HERE, AND THE VERDICT SITS ON THE WRONG SIDE OF IT. Say it plainly rather
+// than leave a reader to work it out: everything `probe()` returns — every finding, and therefore
+// `ok`, which is `isPass(findings)` over findings that come from nowhere else — is computed from
+// values this function reads out of the page under test. The page can decide what
+// `getComputedStyle` reports, what `getBoundingClientRect` returns and what `getAnimations()`
+// yields. A page that wanted a PASS could produce one, and nothing outside the page contradicts
+// it. There is no second observer here; there is one, and it is the subject.
+//
+// THAT IS SOUND FOR WHAT THIS INSTRUMENT IS FOR AND UNSOUND FOR ANYTHING ELSE. The stated target
+// is the operator's own local dev server, where the page and the operator are the same party and a
+// self-flattering measurement is only a way of lying to yourself — which the rest of the run would
+// contradict anyway. Point it at a URL you do not control and `ok` stops being evidence about that
+// site and becomes a report of what that site chose to say about itself. `scripts/extract-
+// reference.mjs` measures third-party pages and makes no pass/fail claim about them for exactly
+// this reason: it emits numbers, and the judging happens here, against a token file this
+// repository owns.
+//
+// This is a NOTE, not a defect left open. Re-architecting it would mean a second, out-of-page
+// oracle — a screenshot pipeline or a rendering engine of our own — which is a far larger
+// instrument than the job needs and would itself need trusting. What is required is that nobody
+// reads `ok: true` from an arbitrary URL as a fact about that URL.
 /* c8 ignore start — executes in the page context, not under node coverage */
 function collect() {
   const de = document.documentElement;
