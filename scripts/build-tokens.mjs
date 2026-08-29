@@ -264,6 +264,49 @@ const uiSplit = () => {
 };
 
 /**
+ * The widest band the corpus actually ships, DERIVED ON EACH CALL for the same reason `citeUi()`
+ * is: a hand-typed count is a second copy of the evidence, and this file has already watched one
+ * drift from it. Counted as increments + 1, which is what `referenceIncrements()` records.
+ */
+const citeBandWidths = () => {
+  const r = referenceIncrements();
+  if (!r.n) return `NO REFERENCE CORPUS IS READABLE (${r.source}), so this ceiling cites no measurement`;
+  const widths = Object.entries(r.sites).flatMap(([site, v]) => [
+    ...(v.ui.length ? [[`${site} ui`, v.ui.length + 1]] : []),
+    ...(v.display.length ? [[`${site} display`, v.display.length + 1]] : []),
+  ]);
+  if (!widths.length) return `no reference in the corpus has a band of 2+ sizes (${r.source})`;
+  const [where, n] = widths.reduce((a, b) => (b[1] > a[1] ? b : a));
+  return `the widest band in the corpus is ${where} at ${n} distinct size(s), over ${r.n} reference(s)${skipNote(r)}`;
+};
+
+/**
+ * THE CEILING ON `steps`, AND IT IS A REFUSAL BECAUSE THE ALTERNATIVE IS NOT A CRASH — IT IS AN
+ * ABORT THAT NO `catch` CAN CONVERT.
+ *
+ * `steps` was validated as an integer >= 1 with no upper bound, and `band()` pushes one element per
+ * step before anything else looks at the value. Measured 2026-08-29, `--max-old-space-size=200` so
+ * the measurement is fast rather than fatal, reading `$?` directly:
+ *
+ *   type.ui.steps = 1e9   ->  exit 134  JavaScript heap out of memory (SIGABRT)
+ *   type.ui.steps = 1e10  ->  exit 134  JavaScript heap out of memory (SIGABRT)
+ *
+ * NOT 2, WHICH IS THIS FILE'S CODE FOR "REFUSED BY A DERIVATION RULE", and not the RangeError an
+ * over-length array would throw either — V8 aborts on heap exhaustion long before it reaches
+ * 2^32-1 elements. That distinction is the reason the bound is here rather than a `try/catch` at
+ * the CLI: the process is gone, so the handler that turns SeedsRefused into exit 2 never runs, and
+ * a caller reading exit codes sees a signal death where the contract promises a refusal.
+ *
+ * 64 IS THIS FILE'S CHOICE AND THE MEASUREMENT BEHIND IT IS THE CORPUS. The widest band any
+ * measured reference ships is stripe.com's UI band at 15 distinct sizes; the widest arithmetic run
+ * `deriveSeeds` fits to one is 10. So 64 is ~4x the widest thing the evidence contains, which is
+ * headroom rather than a limit anyone will meet — a design system with 64 sizes in one band has a
+ * problem this generator is not the place to solve. Widen it here if a reference ever needs it; do
+ * not edit an output. The citation is derived, so it moves when the corpus does.
+ */
+export const MAX_BAND_STEPS = 64;
+
+/**
  * The enforced bounds on the leading curve's peak — SOURCED VALUES, WIDENED, AND THE WIDENING IS
  * DISCLOSED. §7.1 gives 1.5-1.56 at 16-18px; enforcing exactly that would make the source's own
  * measurement error budget unrepresentable in an authored file, so each bound is opened by roughly
@@ -538,6 +581,210 @@ export function assertFamilySafe(key, value) {
 }
 
 /**
+ * THE ONE GRAMMAR A COLOUR NAME MAY HAVE — FAMILY_MEMBER's sibling, and it exists because that
+ * guard hardened one field into a sink and left the field beside it open.
+ *
+ * `validateSeeds` ran every colour VALUE through `hexToRgb` and never looked at the KEY. Measured
+ * 2026-08-29 against the committed generator: `assertFamilySafe('sans', s)` REFUSES
+ * `x, sans-serif} :root{--color-danger:#00ff00} a{content:"`, and the same string as a colour NAME
+ * was ACCEPTED, exit 0, four files written. One field into `renderCss`'s sink guarded and its
+ * sibling into the same sink not — THE ASYMMETRY IS THE FINDING, not either payload below.
+ *
+ * A COLOUR NAME REACHES FOUR SINKS IN FOUR LANGUAGES, so a guard scoped to CSS would be the same
+ * defect one renderer over:
+ *
+ *   renderCss         `  --color-${name}: ${hex};`    a CSS custom-property ident, inside @theme
+ *   renderTs          `  '${name}': '${hex}',`        a SINGLE-QUOTED TypeScript string key
+ *   renderJson        `color[name] = …`               a JavaScript object key
+ *   renderContrastMd  `| \`${name}\` | … |`           a cell of a markdown TABLE
+ *
+ * Both payloads were reproduced verbatim on 2026-08-29 from a seeds file this generator ACCEPTED,
+ * and the second is CODE EXECUTION rather than a spoiled stylesheet — design/tokens/tokens.ts is
+ * imported by the app build:
+ *
+ *   name  a: b; } :root{ --color-text:#ff0000 } @media all { --z
+ *     ->  --color-a: b; } :root{ --color-text:#ff0000 } @media all { --z: #ff0000;
+ *         @theme is closed and :root reopened carrying an attacker-chosen --color-text.
+ *
+ *   name  x': String(globalThis.__PWNED = 'code-executed') //
+ *     ->  'x': String(globalThis.__PWNED = 'code-executed') //': '#ff0000',
+ *         evaluating the generated object literal sets globalThis.__PWNED. Confirmed by EXECUTION.
+ *
+ * `drift()` CANNOT SEE EITHER, for the reason FAMILY_MEMBER already states about its own payload:
+ * `--check` compares the committed output against a fresh generation from the SAME seeds, so
+ * poisoned seeds yield a poisoned file the comparison calls correct. seeds.json is the trust
+ * boundary. A BALANCED FILE IS THE FAILURE MODE here too.
+ *
+ * WHY THIS IS AN ALLOW-LIST WITH NO QUOTED BRANCH. FAMILY_MEMBER admits two shapes because CSS
+ * gives a family name a quoted form, and inside a CSS string `}` and `;` are inert. A colour name
+ * has NO quoted form at any of its four sinks — `--color-"x"` is not a custom property — so the
+ * only shape available to it is the unquoted one. This is FAMILY_MEMBER's unquoted branch with the
+ * space dropped: a space is legal inside a quoted family name and is not a CSS ident code point.
+ *
+ * NON-ASCII LETTERS ARE ADMITTED, DELIBERATELY, AND THE OPPOSITE DECISION HAS ALREADY BEEN MADE
+ * ONCE IN THIS FILE AND WAS WRONG. CSS Syntax Level 3 §4.2 defines an ident code point as "a
+ * letter, a digit, U+005F LOW LINE (_), U+002D HYPHEN-MINUS (-), or a non-ASCII code point", so
+ * `--color-ミッド` is valid CSS; a TS string key and a markdown cell take any letter too. The
+ * ASCII-only allow-list FAMILY_MEMBER once carried refused 微软雅黑, 맑은 고딕 and Åkzidenz
+ * Grotesk — all valid CSS — and a palette nameable in one script and unnameable in another is that
+ * same defect one field over.
+ *
+ * AND IT IS STILL NARROWER THAN CSS ALLOWS, on purpose. CSS would take U+00A0 and every other
+ * non-ASCII code point, including invisible ones. This grammar takes only letters, marks and
+ * digits of any script plus `_` and `-`, so a space, a no-break space and a zero-width joiner are
+ * refused — the same line FAMILY_MEMBER's unquoted branch draws, at no cost to any palette.
+ */
+export const PALETTE_NAME = /^[\p{L}\p{M}\p{N}_-]+$/u;
+
+/**
+ * THE CAPS ON AUTHORED SEEDS TEXT — the reconciliation with the extractor's side, stated rather
+ * than left to be noticed.
+ *
+ * `scripts/extract-reference.mjs` caps every string it reads off a remote page at
+ * `UNTRUSTED_MAX = 512`. Nothing capped a string on the seeds side, so a 100,000-character colour
+ * name and a 200,000-character note both passed straight into four generated files.
+ *
+ * THE TWO CAPS BOUND DIFFERENT THINGS AND ARE SEPARATE CONSTANTS FOR THAT REASON. The extractor's
+ * bounds a QUOTATION from a page nobody here controls. These bound an AUTHORED file, where the
+ * grammar above is the defence and the cap only keeps a generated artifact a thing a human can
+ * open. Neither is the other's defence and neither should be read as one — UNTRUSTED_MAX says the
+ * same about itself.
+ *
+ * The numbers, measured against the committed seeds.json on 2026-08-29:
+ *   colorName  64   longest committed name `line-strong`, 11 characters — ~5.8x headroom.
+ *   note       512  longest committed note, 139 characters — ~3.7x headroom, and equal to
+ *                   UNTRUSTED_MAX deliberately: seeds.json is where extractor output is pasted by
+ *                   hand, and a string the extractor is allowed to EMIT should not fail the gate
+ *                   on the other side. `deriveSeeds` emits no `color` block and no `contrastPairs`
+ *                   today — checked, not assumed — so that is headroom against a path that does
+ *                   not exist yet rather than a live one.
+ */
+export const SEEDS_TEXT_MAX = { colorName: 64, note: 512 };
+
+/**
+ * The colour keys that become tokens. `$`-prefixed keys are seeds-file metadata — seeds.json
+ * carries `color.$comment`, which is why no `--color-$comment` appears in tokens.css — and are
+ * skipped BEFORE validation and BEFORE rendering.
+ *
+ * SPELLED ONCE HERE BECAUSE IT WAS SPELLED TWICE: `validateSeeds` and `buildModel` each carried
+ * their own `Object.keys(seeds.color).filter((k) => !k.startsWith('$'))`. Two copies of "which
+ * keys are tokens" is two answers waiting to disagree, and one direction of that disagreement is
+ * the dangerous one — a key validateSeeds skips and buildModel renders reaches all four sinks
+ * having been validated by nothing.
+ */
+export const paletteNames = (color) => Object.keys(color ?? {}).filter((k) => !k.startsWith('$'));
+
+/**
+ * Refuse any colour name that could leave the declaration, the string literal, the object key or
+ * the table cell it is written into.
+ *
+ * Three clauses, ONE guard. The `__proto__` clause is not a second mechanism bolted beside the
+ * grammar; it is the one case the grammar cannot express, because `__proto__` is spelled entirely
+ * in characters a colour name is allowed to use.
+ */
+export function assertColorNameSafe(name) {
+  // Length first, so every message below can interpolate the name without printing 100,000
+  // characters of it into a terminal.
+  if (name.length > SEEDS_TEXT_MAX.colorName) {
+    refuse(
+      `color.${name.slice(0, 32)}… is ${name.length} characters, over the ` +
+        `${SEEDS_TEXT_MAX.colorName}-character cap; the longest committed name, \`line-strong\`, is 11. ` +
+        `THE CAP IS NOT THE DEFENCE — the grammar below it is — it is what keeps four generated ` +
+        `files things a human can open. See SEEDS_TEXT_MAX for why it is not the extractor's ` +
+        `UNTRUSTED_MAX even where the two numbers agree.`
+    );
+  }
+
+  if (!PALETTE_NAME.test(name)) {
+    refuse(
+      `color key ${JSON.stringify(name)} is not a token name. A colour name is interpolated ` +
+        `VERBATIM into FOUR sinks in four languages, none of which offers it any escaping: a CSS ` +
+        `custom-property ident inside \`@theme { }\` (renderCss), a SINGLE-QUOTED TypeScript string ` +
+        `key (renderTs), a JavaScript object key (renderJson) and a markdown TABLE cell ` +
+        `(renderContrastMd). Measured 2026-08-29 on this generator before this refusal existed: a ` +
+        `name carrying \`}\` closed @theme and reopened :root with an attacker-chosen --color-text, ` +
+        `and a name carrying \`'\` closed the TypeScript key and ran an expression — globalThis.__PWNED ` +
+        `was set by EVALUATING design/tokens/tokens.ts's own object literal, and that file is ` +
+        `imported by the app build. The drift check cannot see either, because it compares the ` +
+        `committed output against a fresh generation from these same seeds. A colour name is ` +
+        `letters, marks and digits of ANY script plus \`_\` and \`-\` (ink, row-alt, line-strong, ` +
+        `ミッド) and nothing else. seeds.json is the trust boundary; this is the same refusal ` +
+        `assertFamilySafe makes for the field beside this one.`
+    );
+  }
+
+  // `__proto__` PASSES the grammar above — it is letters and underscores — and it is the one name
+  // whose damage is not escape but DISAGREEMENT BETWEEN ARTIFACTS. `renderJson` builds its palette
+  // with `color[c.name] = …`, so this key invokes Object.prototype's `__proto__` SETTER instead of
+  // creating a property. Measured 2026-08-29 from a seeds FIXTURE (JSON.parse defines the key, so
+  // a real file reaches this where a hand-written object literal would not): the token appears in
+  // tokens.css `true`, in tokens.ts `true`, and in tokens.json `FALSE`. Object.prototype itself is
+  // NOT polluted — the assignment sets the prototype of one local object — so what ships is two
+  // generated files that disagree about what the palette contains, with a drift check that reports
+  // both as correct. Refused HERE rather than repaired in renderJson because seeds.json is the
+  // trust boundary and because the disagreement has no innocent form: no palette needs this name.
+  if (name === '__proto__') {
+    refuse(
+      `color.__proto__ is not a token name. renderJson builds the palette with \`color[name] = …\`, ` +
+        `where this key invokes Object.prototype's \`__proto__\` setter rather than creating a ` +
+        `property: measured 2026-08-29, the token is emitted into tokens.css and tokens.ts and is ` +
+        `ABSENT from tokens.json, so two generated artifacts disagree about what the palette ` +
+        `contains and \`--check\` calls both correct. Object.prototype is not polluted — the damage ` +
+        `is the disagreement. It passes the colour-name grammar, being letters and underscores, ` +
+        `which is why it is refused by name.`
+    );
+  }
+}
+
+/** Ends a markdown table row, or splits a cell. Nothing else in a note can reach the table. */
+export const NOTE_FORBIDDEN = new RegExp('[|\\u0000-\\u001F\\u007F-\\u009F]');
+
+/**
+ * Refuse a contrast note that could forge a row of contrast.md.
+ *
+ * `renderContrastMd` interpolates `note` as the LAST cell of a markdown table row, and markdown
+ * offers no escaping there that survives a newline. Measured 2026-08-29 with one note set to
+ * "body copy | 99.999 | pass | pass | forged", a newline, then a full hand-written row: the
+ * generator emitted a table carrying A FOURTEENTH ROW FOR A PAIR NOBODY AUTHORED, reading
+ * `**21.000:1** · pass · pass`. The table is the artifact a reader consults to decide whether a
+ * colour pair is legible, so a forged PASS row is the whole of the damage — and the file's own
+ * header tells that reader to read the note column "before reading the verdict".
+ *
+ * A DENY-LIST, NOT AN ALLOW-LIST, AND THAT IS THE OPPOSITE CHOICE FROM THE COLOUR NAME ONE FIELD
+ * OVER. A note is PROSE — the committed thirteen carry `Δ`, `—`, `(4.82)`, `;` and parentheses —
+ * and an allow-list over prose is how the family guard first refused this repo's own seeds. What
+ * ends a row is `|`, CR and LF; a deny-list of exactly those plus the control characters that are
+ * not text refuses every committed note zero times.
+ *
+ * COLOUR NAMES GO INTO THIS TABLE TOO and are NOT re-checked here: `assertColorNameSafe` already
+ * refuses `|` and every control character, so a second guard over the same value would be a second
+ * answer to one question. If that grammar is ever widened, this is a sink the widening has to be
+ * checked against.
+ */
+export function assertNoteSafe(index, note) {
+  if (note.length > SEEDS_TEXT_MAX.note) {
+    refuse(
+      `contrastPairs[${index}].note is ${note.length} characters, over the ` +
+        `${SEEDS_TEXT_MAX.note}-character cap; the longest committed note is 139. The cap bounds the ` +
+        `artifact — contrast.md is a table a human reads — and is not the defence against forgery, ` +
+        `which is the character check below it.`
+    );
+  }
+  const bad = NOTE_FORBIDDEN.exec(note);
+  if (bad) {
+    refuse(
+      `contrastPairs[${index}].note carries ${JSON.stringify(bad[0])}, which ends or splits a row of ` +
+        `contrast.md. The note is the LAST cell of a markdown table row and markdown offers no ` +
+        `escaping across a newline: measured 2026-08-29, one note carrying \`|\` and a newline added ` +
+        `a row for a pair nobody authored, asserting **21.000:1 · pass · pass**, and that table is ` +
+        `what a reader consults to decide whether a pair is legible. Prose is otherwise ` +
+        `unrestricted here — only \`|\`, CR, LF and control characters are refused, and the thirteen ` +
+        `committed notes carry none of them.`
+    );
+  }
+}
+
+/**
  * Feed this `adjacentRatiosExact()`, never `adjacentRatios()`. See that function for the measured
  * defect. The message prints 6dp, because the case a reader is most likely to hit is two ratios
  * that differ below the 3dp the rest of the file shows — printing 3dp here would reprint the very
@@ -596,6 +843,20 @@ export function validateSeeds(seeds) {
     }
     if (!isInt(spec.steps) || spec.steps < 1) {
       refuse(`type.${name}.steps must be an integer >= 1; got ${JSON.stringify(spec.steps)}.`);
+    }
+    // BEFORE band(), which allocates one element per step. See MAX_BAND_STEPS: unbounded, this
+    // field does not reach a refusal, it reaches exit 134.
+    if (spec.steps > MAX_BAND_STEPS) {
+      refuse(
+        `type.${name}.steps is ${spec.steps}, over the ceiling of ${MAX_BAND_STEPS}. band() allocates ` +
+          `one size per step BEFORE any other rule sees the value, so an unbounded steps is not a ` +
+          `refusal but a heap-exhaustion ABORT: measured 2026-08-29, steps 1e9 and 1e10 both exit ` +
+          `134 (SIGABRT, "JavaScript heap out of memory"), never exit 2, and no catch can convert a ` +
+          `signal death into a refusal. The ceiling is this file's choice against the corpus — ` +
+          `${citeBandWidths()} — so ${MAX_BAND_STEPS} is roughly 4x the widest band anything measured ` +
+          `ships. If a reference needs more, capture it into design/references/ and widen ` +
+          `MAX_BAND_STEPS; do not edit an output.`
+      );
     }
     if (!isInt(spec.increment)) {
       refuse(
@@ -722,9 +983,12 @@ export function validateSeeds(seeds) {
   }
 
   if (!seeds.color || typeof seeds.color !== 'object') refuse('seeds.json has no `color` block.');
-  const colorNames = Object.keys(seeds.color).filter((k) => !k.startsWith('$'));
+  const colorNames = paletteNames(seeds.color);
   if (!colorNames.length) refuse('seeds.json `color` block is empty.');
   for (const name of colorNames) {
+    // NAME BEFORE VALUE. Every colour VALUE was validated here and no colour KEY ever was, while
+    // the key is interpolated into four sinks and the value into none — see assertColorNameSafe.
+    assertColorNameSafe(name);
     if (!hexToRgb(seeds.color[name])) {
       refuse(
         `color.${name} is ${JSON.stringify(seeds.color[name])}, which is not a 6-digit hex value. ` +
@@ -749,6 +1013,9 @@ export function validateSeeds(seeds) {
     if (typeof p.note !== 'string' || !p.note.trim()) {
       refuse(`contrastPairs[${i}] has no \`note\`. A ratio with no stated job cannot be judged by a reader.`);
     }
+    // "is a non-empty string" was the whole of the note's validation, and the note is the last cell
+    // of a markdown table row. See assertNoteSafe for the forged row that fact produced.
+    assertNoteSafe(i, p.note);
   }
 
   return { ui, display, ratios, joinRatio };
@@ -785,9 +1052,11 @@ export function buildModel(seeds) {
     ...display.map((s, i) => step('display', i, s, round(leading.displayRatio, 3))),
   ];
 
-  const colors = Object.keys(seeds.color)
-    .filter((k) => !k.startsWith('$'))
-    .map((name) => ({ name, hex: seeds.color[name].toLowerCase(), rgb: hexToRgb(seeds.color[name]) }));
+  const colors = paletteNames(seeds.color).map((name) => ({
+    name,
+    hex: seeds.color[name].toLowerCase(),
+    rgb: hexToRgb(seeds.color[name]),
+  }));
 
   const byName = new Map(colors.map((c) => [c.name, c]));
   const pairs = seeds.contrastPairs.map((p) => {

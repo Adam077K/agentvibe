@@ -43,13 +43,21 @@ import {
   referenceIncrements,
   REFERENCES_DIR,
   LEADING_BOUNDS,
+  MAX_BAND_STEPS,
+  NOTE_FORBIDDEN,
+  PALETTE_NAME,
+  SEEDS_TEXT_MAX,
   SeedsRefused,
   WCAG,
   band,
   adjacentRatios,
   adjacentRatiosExact,
   FAMILY_MEMBER,
+  assertColorNameSafe,
   assertFamilySafe,
+  assertNoteSafe,
+  paletteNames,
+  renderContrastMd,
   assertIntegerSizes,
   assertMonotoneRatios,
   buildModel,
@@ -65,6 +73,13 @@ import {
   trackingFor,
   validateSeeds,
 } from './build-tokens.mjs';
+
+// THE ONE IMPORT FROM THE OTHER LANE, AND IT BUYS EXACTLY ONE ASSERTION. `SEEDS_TEXT_MAX.note` and
+// `UNTRUSTED_MAX` are deliberately equal — see SEEDS_TEXT_MAX — and prose saying so is what this
+// repository keeps finding to have drifted. Importing the constant makes the reconciliation a thing
+// that fails rather than a thing that reads well. extract-reference.mjs drives a browser only
+// behind a dynamic import, so this costs no Chromium.
+import { UNTRUSTED_MAX } from './extract-reference.mjs';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(REPO, 'scripts', 'build-tokens.mjs');
@@ -853,6 +868,313 @@ test('every emitted declaration lands INSIDE @theme — brace depth, not "it par
   const stranded = poisoned.split('\n').map((l, i) => [i, l]).filter(([i, l]) => /^\s*--[\w-]+\s*:/.test(l) && i + 1 > bad.closedAt);
   assert.ok(stranded.length >= 30, `CONTROL FAILED: the scanner sees no escape in a stylesheet that has one — ${stranded.length} stranded declaration(s)`);
   assert.equal(bad.finalDepth, 0, 'CONTROL: the poisoned stylesheet is BALANCED, which is exactly why "it parses" proves nothing');
+});
+
+// ── THE COLOUR NAME IS A SINK TOO, AND IT WAS THE UNGUARDED HALF ────────────────────────────────
+//
+// Everything above this line guards `type.family`, one field of seeds.json, into ONE renderer.
+// `validateSeeds` ran every colour VALUE through hexToRgb and never looked at a colour KEY, which
+// is interpolated into FOUR renderers. The tests below drive the same shapes the family tests do,
+// against the sibling field, and the asymmetry test at the end is the finding itself: one string,
+// two fields, two answers.
+
+/** The exact payloads the review reproduced, both ACCEPTED with exit 0 before assertColorNameSafe. */
+const CSS_ESCAPE = 'a: b; } :root{ --color-text:#ff0000 } @media all { --z';
+const CODE_EXEC = "x': String(globalThis.__PWNED = 'code-executed') //";
+
+test('a colour NAME that could break out of any of its four sinks is REFUSED at seeds.json', () => {
+  for (const [payload, why] of [
+    [CSS_ESCAPE, 'the CSS block escape — @theme closed, :root reopened with an attacker-chosen --color-text'],
+    [CODE_EXEC, 'the code execution — the generated tokens.ts object literal sets globalThis.__PWNED'],
+  ]) {
+    const msg = refusedWith(
+      (s) => {
+        s.color[payload] = '#ff0000';
+      },
+      'renderCss',
+      'renderTs',
+      'renderJson',
+      'renderContrastMd',
+      'trust boundary'
+    );
+    assert.ok(msg.includes(JSON.stringify(payload)), `${why}: the refusal does not name the offending key:\n  ${msg}`);
+  }
+
+  // ONE CHARACTER PER SINK, so a grammar narrowed to CSS — or to TypeScript — is red rather than
+  // plausible. Each entry names the sink it escapes.
+  for (const [bad, sink] of [
+    ['x}y', 'renderCss: `}` closes @theme'],
+    ['x{y', 'renderCss: `{` opens a block'],
+    ['x;y', 'renderCss: `;` ends the declaration and starts another'],
+    ['x:y', 'renderCss: `:` ends the property name'],
+    ['x/*y', 'renderCss: a comment hides the payload'],
+    ['x y', 'renderCss: a space is not an ident code point'],
+    ["x'y", "renderTs: an apostrophe closes the single-quoted key"],
+    ['x"y', 'renderTs: `"` closes a double-quoted key if the renderer ever changes quote style'],
+    ['x\\y', 'renderTs: a backslash escapes out of the string literal'],
+    ['x`y', 'renderContrastMd: a backtick closes the code span the cell wraps the name in'],
+    ['x|y', 'renderContrastMd: `|` splits the table cell'],
+    ['x\ny', 'every sink: a newline gives the payload its own line'],
+    ['x\ry', 'every sink: a carriage return does the same on the other line ending'],
+    ['x\u0000y', 'every sink: a NUL is not text'],
+    ['x\u00A0y', 'renderCss: CSS would take a no-break space as an ident code point; this grammar does not'],
+    ['x\u200Dy', 'every sink: a zero-width joiner is invisible in a name a human is meant to read'],
+    ['', 'every sink: an empty name emits `--color-: #hex`, which names nothing'],
+  ]) {
+    refusedWith(
+      (s) => {
+        s.color[bad] = '#ff0000';
+      },
+      'is not a token name'
+    );
+    assert.ok(!PALETTE_NAME.test(bad), `${sink}: ${JSON.stringify(bad)} is accepted by the grammar`);
+  }
+
+  // CONTROL, DERIVED FROM THE COMMITTED FILE RATHER THAN TYPED HERE. Every name this repository
+  // actually ships must keep working — the family guard's first draft refused four members of this
+  // same seeds.json, and a list typed into a test would not have caught that.
+  const committed = paletteNames(seeds.color);
+  assert.ok(committed.length >= 12, `CONTROL: only ${committed.length} committed colour names — too few to prove anything`);
+  for (const name of committed) {
+    assert.ok(PALETTE_NAME.test(name), `${name} is a committed colour name and the grammar refuses it`);
+    assert.doesNotThrow(() => assertColorNameSafe(name), `assertColorNameSafe refuses the committed name ${name}`);
+  }
+  assert.doesNotThrow(() => validateSeeds(clone()), 'the committed seeds.json no longer validates');
+
+  // ONE ENTRY PER ALTERNATIVE OF THE CHARACTER CLASS, because a mutation has already survived in
+  // this file by a test exercising one alternative of two. Delete \p{N}, \p{M}, \p{L}, `_` or `-`
+  // from PALETTE_NAME and exactly one of these rows goes red.
+  for (const [name, why] of [
+    ['ink', 'ASCII letters — the committed shape'],
+    ['row-alt', 'a hyphen, U+002D'],
+    ['gray-100', 'digits — \\p{N}'],
+    ['_private', 'an underscore, U+005F'],
+    ['-x', 'a LEADING hyphen, which `--color--x` accepts'],
+    ['ミッド', 'a non-ASCII letter — \\p{L}, and CSS Syntax §4.2 admits it'],
+    ['ру́сский', 'a combining mark — \\p{M}'],
+    ['Åkzidenz', 'a Latin-1 accented letter, the case the family guard got wrong'],
+  ]) {
+    assert.ok(PALETTE_NAME.test(name), `${why}: ${name} is a nameable colour and the grammar refuses it`);
+    assert.doesNotThrow(() => assertColorNameSafe(name), `${why}: assertColorNameSafe refuses ${name}`);
+  }
+});
+
+test('the guard on `type.family` and the guard on a colour name give ONE answer — the asymmetry is closed', () => {
+  // THIS IS THE FINDING, AS A TEST. Every payload below was refused by assertFamilySafe and
+  // ACCEPTED by the colour path on the same seeds file, on the same day, into the same renderer.
+  for (const payload of [
+    CSS_ESCAPE,
+    CODE_EXEC,
+    'x} :root{--color-danger:#00ff00} a{content:"',
+    'Inter; --color-ink: #ff0000',
+    'Inter\\}',
+  ]) {
+    assert.throws(() => assertFamilySafe('sans', payload), SeedsRefused, `family: ${JSON.stringify(payload)} is accepted`);
+    assert.throws(() => assertColorNameSafe(payload), SeedsRefused, `colour name: ${JSON.stringify(payload)} is accepted`);
+  }
+
+  // AND WHERE THEY DIFFER, THEY DIFFER ON PURPOSE. A family name has a QUOTED form — `'Segoe UI'`
+  // — and inside a CSS string a space, a `}` and a `;` are inert. A colour name has no quoted form
+  // at any of its four sinks (`--color-"x"` is not a custom property), so the same string that is a
+  // legal font stack member is not a legal token name. Asserting the difference keeps a future
+  // reader from "fixing" the inconsistency by widening the narrower one.
+  for (const shared of ['Segoe UI', "'Segoe UI'", '"SF Mono"']) {
+    assert.doesNotThrow(() => assertFamilySafe('sans', shared), `${shared} is a real font-family member and is refused`);
+    assert.throws(() => assertColorNameSafe(shared), SeedsRefused, `${shared} has no quoted form as a custom-property ident and must not be a colour name`);
+  }
+});
+
+test('__proto__ is refused by name, and the artifacts it splits are shown to split', () => {
+  // JSON.parse DEFINES this key; an ASSIGNMENT invokes Object.prototype's setter and creates
+  // nothing at all. So the fixture goes through the parser, exactly as readSeeds() does — a test
+  // built with `s.color.__proto__ = …` would pass against a generator with no guard in it.
+  const text = JSON.stringify(seeds).replace('"ink":', '"__proto__":"#ff0000","ink":');
+  const s = JSON.parse(text);
+  assert.ok(
+    Object.prototype.hasOwnProperty.call(s.color, '__proto__'),
+    'CONTROL: the fixture carries no __proto__ own property, so this test proves nothing'
+  );
+  assert.ok(PALETTE_NAME.test('__proto__'), 'CONTROL: __proto__ no longer passes the grammar, so the by-name clause is dead code');
+
+  let caught = null;
+  try {
+    validateSeeds(s);
+  } catch (e) {
+    caught = e;
+  }
+  assert.ok(caught instanceof SeedsRefused, '__proto__ was accepted as a colour name');
+  for (const m of ['renderJson', 'tokens.json', 'tokens.css']) {
+    assert.ok(caught.message.includes(m), `the refusal does not mention ${m}:\n  ${caught.message}`);
+  }
+
+  // CONTROL OVER THE SINK. The refusal is only load-bearing if `color[name] = …` really does lose
+  // the key — drive renderJson's mechanism directly rather than asserting it in a comment.
+  const sink = {};
+  sink['row-alt'] = '#15171d';
+  sink['__proto__'] = '#ff0000';
+  assert.deepEqual(
+    Object.keys(sink),
+    ['row-alt'],
+    'CONTROL FAILED: `color[name] = …` no longer loses __proto__, so this refusal now guards nothing'
+  );
+  assert.equal(
+    JSON.stringify(sink),
+    '{"row-alt":"#15171d"}',
+    'CONTROL FAILED: JSON.stringify no longer omits the key, so tokens.json and tokens.css would not disagree and this refusal would guard nothing'
+  );
+  assert.equal(Object.getPrototypeOf(sink), Object.prototype, 'Object.prototype itself is untouched — the damage is the disagreement between artifacts, not pollution');
+});
+
+// ── contrast.md IS A TABLE, AND A TABLE ROW IS A SINK ────────────────────────────────────────────
+
+test('a contrast note cannot forge a row of contrast.md', () => {
+  const forged =
+    'body copy | 99.999 | pass | pass | forged\n| `x` | `y` | `#000` | `#fff` | **21.000:1** | pass | pass | a row nobody authored';
+  refusedWith(
+    (s) => {
+      s.contrastPairs[0].note = forged;
+    },
+    'contrast.md',
+    'markdown table row',
+    '21.000:1'
+  );
+
+  // ONE CHARACTER AT A TIME, so a fix that catches the newline and misses the pipe is red.
+  for (const [bad, why] of [
+    ['a | b', 'a pipe splits the cell and shifts every column after it'],
+    ['a\nb', 'a newline ends the row'],
+    ['a\rb', 'a carriage return ends it on the other line ending'],
+    ['a\u0000b', 'a NUL is not text'],
+    ['a\u007Fb', 'DEL is not text'],
+  ]) {
+    refusedWith((s) => {
+      s.contrastPairs[0].note = bad;
+    }, 'ends or splits a row');
+    assert.ok(NOTE_FORBIDDEN.test(bad), `${why}: ${JSON.stringify(bad)} is accepted by the deny-list`);
+  }
+
+  // CONTROL, DERIVED FROM THE COMMITTED FILE. A note is PROSE and the committed thirteen carry
+  // punctuation an allow-list would have refused — which is exactly how the family guard's first
+  // draft refused this repository's own seeds.
+  assert.ok(seeds.contrastPairs.length >= 13, `CONTROL: only ${seeds.contrastPairs.length} committed notes`);
+  for (const [i, p] of seeds.contrastPairs.entries()) {
+    assert.doesNotThrow(() => assertNoteSafe(i, p.note), `the committed note ${JSON.stringify(p.note.slice(0, 40))} is refused`);
+  }
+  assert.doesNotThrow(
+    () => assertNoteSafe(0, 'SURFACE PAIR — row banding. ΔE76 (4.82) is the right metric here; the ratio is not'),
+    'ordinary prose punctuation is refused'
+  );
+
+  // CONTROL OVER THE INSTRUMENT. The forgery has to be REAL or the refusal above is theatre.
+  // renderContrastMd is driven directly with a poisoned model, because validateSeeds now refuses to
+  // build one — the same move the @theme brace-scan test makes with its poisoned stylesheet.
+  const model = buildModel(seeds);
+  const rows = (md) => md.split('\n').filter((l) => l.startsWith('| `')).length;
+  assert.equal(rows(renderContrastMd(model, TODAY)), model.pairs.length, 'the clean table does not have one row per pair');
+  const poisoned = { ...model, pairs: model.pairs.map((p, i) => (i === 0 ? { ...p, note: forged } : p)) };
+  const forgedRows = rows(renderContrastMd(poisoned, TODAY));
+  assert.equal(
+    forgedRows,
+    model.pairs.length + 1,
+    `CONTROL FAILED: a note carrying a newline and pipes produced ${forgedRows} rows for ${model.pairs.length} pairs — the forgery this refuses is not reproducible, so the refusal proves nothing`
+  );
+  assert.ok(
+    renderContrastMd(poisoned, TODAY).includes('| **21.000:1** | pass | pass |'),
+    'CONTROL FAILED: the forged row does not assert a passing ratio, which is the shape that matters'
+  );
+});
+
+// ── THE CAPS, AND THE RECONCILIATION WITH THE EXTRACTOR'S SIDE ───────────────────────────────────
+
+test('authored seeds text is bounded at both ends, and the bound is not the defence', () => {
+  const at = (n) => 'a'.repeat(n);
+  assert.doesNotThrow(() => assertColorNameSafe(at(SEEDS_TEXT_MAX.colorName)), 'a name AT the cap is refused — the bound is off by one');
+  refusedWith((s) => {
+    s.color[at(SEEDS_TEXT_MAX.colorName + 1)] = '#ff0000';
+  }, 'THE CAP IS NOT THE DEFENCE');
+
+  assert.doesNotThrow(() => assertNoteSafe(0, at(SEEDS_TEXT_MAX.note)), 'a note AT the cap is refused — the bound is off by one');
+  refusedWith((s) => {
+    s.contrastPairs[0].note = at(SEEDS_TEXT_MAX.note + 1);
+  }, 'over the', 'The cap bounds the artifact');
+
+  // THE RECONCILIATION, CHECKED RATHER THAN ASSERTED IN PROSE. The extractor caps every string it
+  // reads off a remote page at UNTRUSTED_MAX and the seeds side capped nothing. The two are set
+  // equal for the note so that a string extract-reference is allowed to EMIT cannot fail the gate
+  // on the side it is pasted into. Moving one without the other is a decision, not a tidy-up, and
+  // this line is what makes it one.
+  assert.equal(
+    SEEDS_TEXT_MAX.note,
+    UNTRUSTED_MAX,
+    'the seeds note cap and the extractor cap have drifted apart — see SEEDS_TEXT_MAX for why they were set equal'
+  );
+});
+
+// ── AN UNBOUNDED FIELD MUST REFUSE, NOT DIE ──────────────────────────────────────────────────────
+
+test('an unbounded `steps` is a REFUSAL, not the heap abort it used to be', () => {
+  // The reported input. Measured before the ceiling: exit 134, SIGABRT, "JavaScript heap out of
+  // memory" — not exit 2, and not a catchable RangeError either, so the CLI's own handler never
+  // ran and the exit-code contract at the top of build-tokens.mjs was silently untrue.
+  refusedWith((s) => {
+    s.type.ui.steps = 1e9;
+  }, 'exit 134', 'the widest band in the corpus is');
+
+  // THE BOUNDARY, BOTH SIDES, ON THE DISPLAY BAND. The UI band cannot be grown to the ceiling
+  // without its top colliding with type.display.base, which refuses for an unrelated reason and
+  // would prove nothing about this one.
+  refusedWith((s) => {
+    s.type.display.steps = MAX_BAND_STEPS + 1;
+  }, `over the ceiling of ${MAX_BAND_STEPS}`);
+  const ok = clone();
+  ok.type.display.steps = MAX_BAND_STEPS;
+  assert.doesNotThrow(() => validateSeeds(ok), `steps at exactly ${MAX_BAND_STEPS} is refused — the ceiling is off by one`);
+
+  // The citation is DERIVED from design/references/ on each call, never typed — the same rule the
+  // increment refusals follow, and for the same reason: a typed count is a second copy of the
+  // evidence, and this file has already watched one drift from it.
+  const msg = refusedWith((s) => {
+    s.type.display.steps = 1e6;
+  }, 'distinct size(s)');
+  assert.ok(/over \d+ reference\(s\)/.test(msg), `the ceiling's citation names no corpus size:\n  ${msg}`);
+});
+
+// ── $-PREFIXED KEYS ARE METADATA AT BOTH ENDS ───────────────────────────────────────────────────
+
+test('a $-prefixed colour key is skipped by the validator AND the renderers, from one spelling', () => {
+  // seeds.json carries `color.$comment`, which is why no `--color-$comment` appears in tokens.css.
+  // The filter used to be spelled twice — once in validateSeeds, once in buildModel — and the
+  // dangerous direction of that disagreement is a key the validator SKIPS and a renderer EMITS.
+  assert.ok(Object.keys(seeds.color).includes('$comment'), 'CONTROL: the committed seeds no longer carry $comment');
+  assert.ok(!generate(seeds, TODAY).files.css.includes('--color-$comment'), '$comment reached the stylesheet');
+
+  const s = clone();
+  s.color[`$${CSS_ESCAPE}`] = '#ff0000';
+  assert.doesNotThrow(() => validateSeeds(s), 'a $-prefixed key is metadata and is deliberately not validated');
+  assert.deepEqual(paletteNames(s.color), paletteNames(seeds.color), 'a $-prefixed key changed the palette');
+  const { files } = generate(s, TODAY);
+  for (const [name, text] of Object.entries(files)) {
+    assert.ok(
+      !text.includes('--color-text:#ff0000'),
+      `the $-prefixed payload reached ${name}: validateSeeds skipped the key and the renderer did not, which is the exact disagreement paletteNames exists to prevent`
+    );
+  }
+});
+
+test('a colour named in any script reaches every generated file intact, still inside @theme', () => {
+  const s = clone();
+  s.color['ミッド'] = '#123456';
+  assert.doesNotThrow(() => validateSeeds(s), "a CJK colour name is refused — this is the family guard's ASCII mistake one field over");
+  const { files } = generate(s, TODAY);
+  assert.ok(files.css.includes('  --color-ミッド: #123456;'), 'the CJK name did not reach tokens.css');
+  assert.ok(files.ts.includes("  'ミッド': '#123456',"), 'the CJK name did not reach tokens.ts');
+  assert.ok(Object.keys(JSON.parse(files.json).color).includes('ミッド'), 'the CJK name did not reach tokens.json');
+  assert.equal(braceScan(files.css).finalDepth, 0, 'the CJK name unbalanced the stylesheet');
+  assert.equal(
+    braceScan(files.css).closedAt,
+    files.css.split('\n').length - 1,
+    '@theme no longer closes on the last line, so something escaped it'
+  );
 });
 
 // ── COLOUR IS CARRIED, NOT DERIVED ───────────────────────────────────────────────────────────────
