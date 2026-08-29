@@ -5,10 +5,53 @@ version: 4.0.4
 user-invocable: true
 argument-hint: "[shape · audit|critique · animate|bolder|colorize|delight|layout|overdrive|quieter|typeset · adapt|clarify|distill · harden|onboard|optimize|polish · init|document|extract|live] [target]"
 license: Apache 2.0
-allowed-tools:
-  - Bash(npx impeccable *)
-  - Bash(node .claude/skills/impeccable/scripts/*)
 ---
+
+> **VENDORED AS PROSE — the `scripts/` runner is NOT PRESENT in this repository, and neither is the
+> package.** This directory holds `SKILL.md` and `reference/` and nothing else. There is no
+> `.claude/skills/impeccable/scripts/`, and no `impeccable` package is installed in either the repo's
+> `node_modules` or the user's. **Every `node .claude/skills/impeccable/scripts/*.mjs` command and every
+> `npx impeccable` command in this skill and its reference files will fail.** Measured 2026-08-29: 27
+> distinct script names, 101 mentions, across 14 files. Re-derive rather than trusting those numbers —
+> `grep -rho '[A-Za-z0-9_-]*\.mjs' .claude/skills/impeccable | sort -u | wc -l`.
+>
+> **Read every such command as the NAME OF A STEP and perform it yourself.** `context.mjs` means *read
+> PRODUCT.md, DESIGN.md and the matching surface brief before acting*; `detect.mjs` means *inspect the
+> target and work out the stack and the incumbent visual truth yourself*; `critique-storage.mjs` means
+> *write the snapshot to the path named, by hand*. The procedure around the commands is the part that
+> carries the value, and it is deliberately left intact — do not drop a step because its runner is absent.
+>
+> **FOUR files are the exception, and they are the ones you cannot rescue by hand.** Each is built on
+> a capability that is absent rather than on a step a person can perform, so "do it manually" would be
+> a lie in these four. Each opens with a stronger note saying so:
+>
+> | File | Lines | Depends on |
+> |---|---:|---|
+> | `reference/live.md` | 323 | a live-variant browser server (`live*.mjs`) |
+> | `reference/hooks.md` | 111 | a design-detector hook installer (`hook-admin.mjs`) |
+> | `reference/live-setup.md` | 102 | the same live server's config handshake |
+> | `reference/doctor.md` | 53 | an INSTALLED Impeccable to reconcile against — `.impeccable/` sidecars that do not exist here |
+> | **Total dead** | **589** | |
+>
+> **So: 4,370 of 4,959 lines — 88% — are usable prose that an agent can follow by hand.** The
+> remaining 12% is documentation of a feature this repository does not have. Re-derive both numbers
+> rather than trusting them:
+> `for f in live hooks live-setup doctor; do wc -l < .claude/skills/impeccable/reference/$f.md; done`
+> against `find .claude/skills/impeccable -name '*.md' -exec cat {} + | wc -l` (which counts the notes
+> added by this repair, so it now reads higher than 4,959 — the 4,959 baseline is `origin/main` at
+> 4ddc5c6).
+>
+> One partial, listed so the 88% is not overclaimed: `reference/visualize.md` (49 lines) is counted as
+> usable, and its art-direction prose genuinely is, but its asset-production pipeline
+> (`generate-image.mjs`, `embed-prompt.mjs`) is absent and it requires an image-generation tool the
+> harness may not have.
+
+>
+> This skill also declared `allowed-tools: Bash(npx impeccable *)` and
+> `Bash(node .claude/skills/impeccable/scripts/*)`. Both pointed at the absent things above, and the field
+> is a **ceiling, not a grant** — it subtracts from whichever agent loads the skill. It was removed for
+> that reason; see the rule and its reasoning in `.claude/hooks/schema-lint.js`
+> (`grep -n 'SUBTRACTS from this agent' .claude/hooks/schema-lint.js`).
 
 This skill gives you the tools and permission to create design that earns to be called out-of-distribution craft: Whereas before, your design work would have been safe, timid and measured, you now approach every design task as a award-winning design director with impeccable understanding for what makes exceptional design work: production-grade code, peak creativity, a clear POV, deep understanding of the needs of the client and users, and exceptional craft.
 
@@ -18,6 +61,11 @@ Core principles:
 - Verify in bounded passes, not a loop, and the ceiling covers the whole cycle: screenshots, defect scans, micro-edits, and rebuilds alike. Build fully, inspect once with a batched round (desktop and mobile together on the web; the shipped device classes on a native platform), fix everything it shows in one batch, confirm with at most one more round, and stop polishing. Open-ended self-QA burns the user's money doing worse what the finish handoffs do better.
 
 ## Setup
+
+> **Step 1 has no runner here — do it by hand.** `context.mjs` does not exist (see the note at the top of
+> this file). Perform what it would have done: read `PRODUCT.md`, `DESIGN.md`, the matching surface brief
+> and any native-platform guidance for the named `--target`, then follow their directives. Everything
+> after "It loads" in step 1 describes the reading list, which is still the right reading list.
 
 1. Run `node <skill-base-dir>/scripts/context.mjs` once per session, where `<skill-base-dir>` is the loaded base directory the runtime reports for this skill; keep cwd at the user's project. That base directory resolves every `node .claude/skills/impeccable/scripts/...` command in this skill and its references, and `.claude/skills/impeccable/scripts` is the fallback only when the runtime reports no base directory. Pass a named source file or route as `--target <path>`. It loads PRODUCT.md, DESIGN.md, the matching surface brief, and native-platform guidance when applicable; follow its directives and do not rerun it.
 2. Before acting, load the one playbook that owns the request: the Commands table's reference for an explicit or clearly implied sub-command, or [reference/new-work.md](reference/new-work.md) for a new surface or replacement visual world. Then inspect the target and at least one representative source of incumbent visual truth (tokens, theme, CSS, component, or asset) before editing.

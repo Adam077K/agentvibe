@@ -1,3 +1,9 @@
+> **This file documents a feature this repository does not have.** It is built around scripts in
+> `.claude/skills/impeccable/scripts/`, a directory that does not exist here, and no `impeccable` package
+> is installed. Unlike the rest of this skill, the procedure below **cannot be carried out by hand** —
+> there is no live-variant server and no hook installer to stand in for. Read it as a description of the
+> absent feature, not as instructions. Full note: [SKILL.md](../SKILL.md).
+
 # /impeccable hooks
 
 Manage the **design detector hook** for the current project.

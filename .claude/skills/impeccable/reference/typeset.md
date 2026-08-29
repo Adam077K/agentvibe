@@ -1,3 +1,8 @@
+> **Scripts not present — run nothing, do it by hand.** There is no
+> `.claude/skills/impeccable/scripts/` directory in this repository and no `impeccable` package is
+> installed, so **every `*.mjs` command below will fail.** Each one names a step: carry it out yourself.
+> The procedure around the commands is intact and still applies. Full note: [SKILL.md](../SKILL.md).
+
 Typography carries information, hierarchy, and voice. Improve it inside the established visual world; do not replace the identity unless the user asked to.
 
 ---

@@ -1,3 +1,8 @@
+> **Scripts not present — run nothing, do it by hand.** There is no
+> `.claude/skills/impeccable/scripts/` directory in this repository and no `impeccable` package is
+> installed, so **every `*.mjs` command below will fail.** Each one names a step: carry it out yourself.
+> The procedure around the commands is intact and still applies. Full note: [SKILL.md](../SKILL.md).
+
 # Init flow
 
 `init` captures durable product truth in PRODUCT.md. It does not invent a visual world and does not write DESIGN.md; [new-work.md](new-work.md) creates or expands one, and [document.md](document.md) records an incumbent one. Existing runnable web projects may also receive `.impeccable/live/config.json`.

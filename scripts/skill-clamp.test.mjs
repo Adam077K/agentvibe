@@ -6,16 +6,27 @@
 // available to the model while this file is active." It is a CEILING, not a grant. An agent
 // that loads such a skill is clamped to that list for as long as the skill is active.
 //
-// Eight skills in this repo declare it. Six clamp to a plausible-looking developer set and
-// quietly remove Bash and every MCP tool. Two clamp to a SINGLE Bash pattern:
+// SEVEN skills in this repo declare it. Six clamp to a plausible-looking developer set and
+// quietly remove Bash and every MCP tool. ONE clamps to a single Bash pattern:
 //
-//   impeccable          → Bash(npx impeccable *), Bash(node .claude/skills/impeccable/scripts/*)
 //   pitch-deck-visuals  → Bash(belt *)
 //
-// An agent holding either would lose Read, Write, Edit and every MCP server. `impeccable` is
-// the skill the roster specification assigns to `designer` — an engine whose entire reason to
-// exist is a browser perception loop it would then be unable to reach, to run a CLI that is not
-// installed on this machine.
+// An agent holding it would lose Read, Write, Edit and every MCP server.
+//
+// ── `impeccable` WAS THE SECOND, AND IS THE REASON THIS FILE EXISTS ─────────────────────────
+// It declared `Bash(npx impeccable *)` and `Bash(node .claude/skills/impeccable/scripts/*)` in
+// the BLOCK-LIST form, and it is the skill the roster specification assigns to `designer` — an
+// engine whose entire reason to exist is a browser perception loop it would then have been
+// unable to reach, in order to run a CLI that is not installed on this machine and a `scripts/`
+// directory that does not exist in this repository at all. The field was stripped for exactly
+// the reason this rule predicted, so the census above is seven and not eight.
+//
+// Two consequences are pinned below rather than left implicit:
+//   1. `impeccable` must now attach CLEANLY. If that test fails, the field came back.
+//   2. It was the only SHIPPED skill using the block-list form, so removing it would have left
+//      the parser's block-list branch untested while every remaining test stayed green. That
+//      branch is now covered by an explicit fixture skill installed into the throwaway root — a
+//      statement about the PARSER, which a fixture can honestly make, not about a shipped skill.
 //
 // No agent declares one today, which is exactly why this rule is cheap to add now and would be
 // expensive to discover during the migration.
@@ -67,6 +78,8 @@ after(() => fs.rmSync(TEMP, { recursive: true, force: true }));
 
 // Every skill name this file asserts about. Named once so the faithfulness check below cannot
 // drift out of step with the tests it underwrites.
+// 'impeccable' stays in this list though it no longer clamps: the regression test that it
+// attaches cleanly is only meaningful if the copy being linted is the one that ships.
 const SKILLS_UNDER_TEST = [
   'impeccable', 'pitch-deck-visuals', 'react-patterns', 'tdd-workflow',
   'security-audit', 'agent-evaluation',
@@ -129,6 +142,35 @@ function lintAgentWith(skills, extra = '') {
   }
 }
 
+/**
+ * Installs a throwaway SKILL.md into the temp skills root AND registers it in the temp
+ * MANIFEST.json, because schema-lint skips any declared skill the manifest does not know.
+ * Restores both exactly, so the faithfulness assertions above keep meaning what they say.
+ * Used only to exercise a PARSE FORM that no shipped skill uses any more.
+ */
+function withFixtureSkill(name, skillMd, fn) {
+  const dir = path.join(TEMP_SKILLS, name);
+  const manifestPath = path.join(TEMP_SKILLS, 'MANIFEST.json');
+  const manifestBefore = fs.readFileSync(manifestPath);
+  const manifest = JSON.parse(manifestBefore.toString());
+  const list = Array.isArray(manifest) ? manifest : manifest.skills;
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'SKILL.md'), skillMd);
+    list.push({
+      name,
+      description: 'Throwaway parse-form fixture.',
+      tags: [],
+      path: '.claude/skills/' + name + '/SKILL.md',
+    });
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    return fn();
+  } finally {
+    fs.writeFileSync(manifestPath, manifestBefore);
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 const isLink = (p) => { try { return fs.lstatSync(p).isSymbolicLink(); } catch { return false; } };
 
 const clampIssues = (issues) => issues.filter((i) => /allowed-tools/.test(i));
@@ -155,12 +197,43 @@ test('the throwaway root is a faithful copy of the skills this file asserts abou
 });
 
 test('attaching a skill that clamps to one Bash pattern is refused, and the message names the clamp', () => {
-  const issues = lintAgentWith(['impeccable']);
+  const issues = lintAgentWith(['pitch-deck-visuals']);
   const found = clampIssues(issues);
   assert.equal(found.length, 1, `expected exactly one clamp issue, got: ${JSON.stringify(issues)}`);
-  assert.match(found[0], /impeccable/);
+  assert.match(found[0], /pitch-deck-visuals/);
   assert.match(found[0], /SUBTRACTS/, 'the message must say which direction the field acts');
-  assert.match(found[0], /npx impeccable/, 'the message must quote the actual clamp, not just its existence');
+  assert.match(found[0], /belt/, 'the message must quote the actual clamp, not just its existence');
+});
+
+test('the BLOCK-LIST form is caught — the form impeccable used before the field was stripped', () => {
+  // No shipped skill uses this form any more, so without this fixture the parser's block-list
+  // branch would be dead code nothing exercises: a deletion could remove the control while every
+  // remaining test stayed green. This fixture states something about the PARSER only.
+  const name = fixtureName('clamp-blocklist');
+  const skillMd = [
+    '---',
+    'name: ' + name,
+    'description: Throwaway fixture. Exercises the block-list form of allowed-tools.',
+    'allowed-tools:',
+    '  - Bash(npx nothing-real *)',
+    '  - Bash(node .claude/skills/' + name + '/scripts/*)',
+    '---',
+    '',
+    'Fixture.',
+    '',
+  ].join('\n');
+  const found = withFixtureSkill(name, skillMd, () => clampIssues(lintAgentWith([name])));
+  assert.equal(found.length, 1, 'the block-list form must parse, not be silently ignored');
+  assert.match(found[0], /npx nothing-real/, 'the message must quote the clamp it parsed');
+});
+
+test('impeccable attaches CLEANLY now — if this fails, allowed-tools came back', () => {
+  // It declared Bash(npx impeccable *) and Bash(node .../impeccable/scripts/*). Both pointed at
+  // things that do not exist here: no impeccable package is installed, and the skill ships no
+  // scripts/ directory. The field granted nothing while subtracting everything from whatever
+  // loaded it — which was to be `designer`, whose browser perception loop it would have removed.
+  const found = clampIssues(lintAgentWith(['impeccable']));
+  assert.deepEqual(found, [], 'impeccable must not clamp — designer is meant to be able to load it');
 });
 
 test('pitch-deck-visuals is caught too — the inline single-value form parses', () => {
@@ -178,7 +251,7 @@ test('the comma-separated inline form is caught, not only the block-list form', 
 });
 
 test('every clamping skill in a multi-skill list is reported, not just the first', () => {
-  const found = clampIssues(lintAgentWith(['impeccable', 'react-patterns', 'tdd-workflow']));
+  const found = clampIssues(lintAgentWith(['pitch-deck-visuals', 'react-patterns', 'tdd-workflow']));
   assert.equal(found.length, 3, 'a partial report would let the second clamp through unnoticed');
 });
 
@@ -417,8 +490,9 @@ test('the symlink fixture never touched the skills directory that ships', () => 
 test('a real (non-symlinked) skill directory still resolves — the fix is not a blanket refusal', () => {
   // Guarding against the lazy fix: refusing everything would pass the test above and destroy
   // the rule's actual purpose.
-  const found = clampIssues(lintAgentWith(['impeccable']));
+  const found = clampIssues(lintAgentWith(['pitch-deck-visuals']));
   assert.equal(found.length, 1, 'the symlink guard must not break ordinary skill resolution');
+
 });
 
 // ── MCP grants are per-SERVER, not per-repo ──────────────────────────────────────────────
