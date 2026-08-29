@@ -97,10 +97,18 @@ class Refusal extends Error {
  *
  * `computeSubject()` hashes a WHOLE-BRANCH DIFF, so this call's output grows with the branch and
  * has no natural ceiling. It carried no `maxBuffer` at all, which meant Node's default of 1 MiB —
- * and `integration/design-layer` crossed it. Measured 2026-08-29 by bisecting this exact call
- * across the branch: 1,026,873 bytes at `3b64a9a` returned normally; the next commit threw
- * `ENOBUFS`. Same args, same cwd, only this option differing: without it the call fails with
- * stdout truncated at ~1.05 MB; with it the same call returns 1,100,001 bytes.
+ * and `integration/design-layer` crossed it. Measured 2026-08-29 by bisecting this exact call across
+ * the branch: `3b64a9a` returned normally at 1,041,526 bytes — under the 1,048,576 cap — and the very
+ * next commit threw `ENOBUFS` at 1,050,273. Same args, same cwd, only this option differing.
+ *
+ * Do not quote a byte count for the CURRENT branch: it grows with every commit. Derive it —
+ *   node scripts/verdict.mjs subject --repo . --ref HEAD --json     # prints subject, base and bytes
+ *
+ * *Superseded 2026-08-29: the pair above read "1,026,873 bytes at 3b64a9a" and "returns 1,100,001
+ * bytes". Both were CHARACTER counts of a utf8-decoded string, labelled as bytes, and `maxBuffer` is
+ * measured in BYTES — so the figure was compared against a cap in the wrong unit and sat 14,653 under
+ * the true value. This repo's prose is full of multibyte punctuation, which is the whole of the gap.
+ * The bisection landed on the right pair of commits either way, and the argument is unchanged.*
  *
  * WHY THIS IS AN INCIDENT AND NOT A NUISANCE. `verdict.mjs check` is on the BLOCKING path of
  * `.github/workflows/qa-lead-pass.yml`. While this call throws, no subject can be computed, so no
@@ -115,11 +123,20 @@ class Refusal extends Error {
  * the number below, and it must survive any change to it.
  *
  * 64 MiB IS A BOUND, NOT A REMOVAL, and saying so is the point. A branch whose diff exceeds it
- * fails exactly as before — `ENOBUFS`, caught, refused — and it still never truncates. The value
- * matches the six other sync git call sites in this repo, which set 32-64 MiB
- * (`ledger.mjs` x2, `evict-memory.mjs`, `vendor-provenance.mjs`, `lib/claim-append.js`,
- * `lib/resolvers.js`). A seventh consistent call site is worth more here than a novel streaming
- * mechanism in the gate's binding path.
+ * fails exactly as before — `ENOBUFS`, caught, refused — and it still never truncates. The value is
+ * the higher of the two already in use: FIVE sync git call sites under `scripts/` set a bound, four
+ * at 32 MiB (`ledger.mjs` x2, `evict-memory.mjs`, `lib/claim-append.js`) and one at 64
+ * (`vendor-provenance.mjs`), and `.claude/hooks/schema-lint.js` sets 64 outside `scripts/`. Both 64s
+ * read blob CONTENT, which is the closest thing here to what this call does. Re-derive rather than
+ * trusting the list:
+ *   grep -rn "execFileSync('git'" scripts/ .claude/hooks/ | grep -v '\.test\.'
+ *
+ * *Superseded 2026-08-29: this said "the SIX other sync git call sites ... which set 32-64 MiB" and
+ * listed `lib/resolvers.js` among them. That is not a git call site — it is `spawnSync(binPath, argv)`
+ * dispatching the EXTERNAL JUDGE, and its bound is `JUDGE_MAX_OUTPUT` = 8 MiB, outside the range the
+ * same sentence quoted. So the enumeration justifying this choice miscounted by one and misclassified
+ * the entry it added. The choice stands; the evidence offered for it did not, which is exactly the
+ * class of defect this session spent the day removing elsewhere.*
  */
 const GIT_MAX_OUTPUT = 64 * 1024 * 1024;
 

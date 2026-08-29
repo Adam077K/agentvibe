@@ -150,8 +150,30 @@ grep for `text-[Npx]` will ever show it.
 
 **A modular scale is the wrong model and was falsified, not merely rejected.** A modular scale holds
 its ratio *constant* by definition; every constant-increment run in the corpus visibly *decreases*,
-by `1 + d/s` with `s` rising. The 1.07–1.17 band that looked like a "compressed modular scale" is
-just the arithmetic signature of a constant +1/+2px step.
+by `1 + d/s` with `s` rising. The narrow ratio band that looked like a "compressed modular scale" is
+just the arithmetic signature of a constant +1/+2px step — run the ratios command above across the
+corpus and read its extremes, which is the second command in this section.
+
+> **Superseded 2026-08-29 — this said "the **1.07–1.17** band", and the measured band is
+> `[1.048, 1.167]`.** Same refuted table as everything else corrected in this section, and it
+> survived the first pass because the blockquote below corrects a *different* clause of the same
+> paragraph. **That is the third time in one round that a fix landed at one site and not at its
+> twin** — it happened to the increment table, to "+0.5 seven times", and then here, inside the work
+> fixing that class. The lesson is that the sweep has to be by CONTENT and not by paragraph or by
+> file, and that a hit list must be CLASSIFIED rather than counted:
+>
+> ```bash
+> grep -rn '1\.07' --include='*.md' --include='*.mjs' . | grep '1\.1[37]'
+> ```
+>
+> Every hit is one of three things — a live claim, a superseded record, or an argument *about* the
+> record — and only the first may be edited. "Fixing" the other two destroys the provenance they
+> exist for. No count is written here: this note is itself a hit, so any number would be wrong the
+> moment it was written.
+>
+> The correction does not damage the mechanism; it confirms it. `1.048` is stripe.com's 21→22, which
+> is `1 + 1/21` exactly — a `d=1` step above the 12→20 range the arithmetic considers, because
+> stripe's UI band runs to 26px.
 
 > **Scoping corrected 2026-08-29, same cause as the table.** This read *"every measured reference
 > visibly decreases"*, unqualified, and the corpus breaks it twice: run the ratios command above
@@ -239,5 +261,22 @@ determine typographic quality as (1) point size, (2) line spacing, (3) line leng
 
 Edit `design/tokens/seeds.json` and run `npm run build:tokens`. Never edit a generated file; never
 type a size into a stylesheet. `scripts/build-tokens.test.mjs` fails on drift AND fails if a
-derivation is removed — verified by mutation, 18 of 18 deletions caught. It runs on every
-`npm run check`. For a quick answer at a terminal: `node scripts/build-tokens.mjs --check`.
+derivation is removed. It runs on every `npm run check`, inside the `test:lenses`
+step — `npm run test:lenses` is that suite at a terminal, and
+`node scripts/build-tokens.mjs --check` is the drift half alone, exit 1 on drift. Do not trust the
+step name from here; ask package.json which step runs this file:
+`node -e "const s=require('./package.json').scripts; for (const [k,v] of Object.entries(s)) if
+(/build-tokens\.test/.test(v)) console.log(k)"`.
+
+> **Superseded 2026-08-29 — this claimed *"verified by mutation, 18 of 18 deletions caught"*, and
+> three places in this repository disagree with it.** The last recorded campaign caught **17 of 18**:
+> `scripts/build-tokens.mjs` records *"18 mutations of this file, 17 were caught by a test and the
+> monotonicity one was not"*, and `scripts/build-tokens.test.mjs` says the same. The survivor was the
+> monotonicity post-condition, and exporting the two post-conditions so a test can drive them
+> directly is what that finding produced — so the claim was not merely inflated, it erased the one
+> result that motivated the fix.
+>
+> **No figure replaces it, deliberately.** No campaign has been run since that change, and a
+> mutation score is only true of the run that produced it — quoting a stale one is how this figure
+> came to be wrong in the first place. What is stated above is what a reader can execute. Re-derive
+> the score with a campaign if you need one, and date it.

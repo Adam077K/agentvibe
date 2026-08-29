@@ -276,3 +276,39 @@ one bug away, in a file nobody is reading. Already guarded elsewhere and left al
 
 Both read from `$?` directly with output redirected to a file, never through a pipe, in the worktree
 rather than an export. HEAD and `git status --porcelain` were identical before and after the run.
+
+## The re-derivation's four survivors, and a fifth I found sweeping for them
+
+| # | Site | Was | Is |
+|---|---|---|---|
+| 1 | `type.md` — "the 1.07–1.17 band" | live prose in a `status: answered` rule doc | the ratios command; band is `[1.048, 1.167]` |
+| 2 | `type.md` — "verified by mutation, 18 of 18 deletions caught" | live claim three places contradict | removed; no figure replaces it |
+| 3 | `verdict.mjs` — "1,026,873 bytes at `3b64a9a`" | a CHARACTER count labelled bytes | **1,041,526 bytes**, plus the command |
+| 4 | `verdict.mjs` — "six other sync git call sites … 32-64 MiB" | miscounted and misclassified | five under `scripts/`, plus the grep |
+| 5 | `DESIGN-CAPABILITY.md` §1.2 — three figures inside a supersession note | a note ARGUING from fresh false figures | command for the bands, §15.16 cross-ref for grafana |
+
+**#3's cause is worth more than its fix.** 1,026,873 and 1,041,526 differ by 14,653, and both are
+correct measurements of *different things*: my bisection read `.length` on a utf8-decoded JavaScript
+string, which counts CHARACTERS, while `maxBuffer` counts BYTES. This repo's prose is dense with
+multibyte punctuation, and every em dash is one character and three bytes. So the figure was compared
+against a cap in the wrong unit. The bisection landed on the right pair of commits regardless.
+
+**#5 was my call and I reversed my earlier one.** I had left §1.2 alone on the grounds that a third
+account of the grafana measurement is the failure to avoid. That reason holds for *restating* the
+measurement and does not hold for *correcting a live claim* — and this blockquote asserted three
+figures as current evidence rather than quoting an old sentence. The fix takes neither horn: the band
+figures become the derivation command, and grafana is **cross-referenced to §15.16** rather than
+recounted. §15.16 remains the single account.
+
+**The sweep had to be by content, and its output had to be classified rather than counted.** Five
+sites carry `1.07`/`1.17` outside session records. Exactly **one** was a live claim; two are
+superseded records, one is an argument *about* the record (§15.31, which reasons from what §7.1
+recorded and is correct as written), and one is a test comment. Editing any of the other four would
+have destroyed the provenance they exist for. No count is written into the fixed prose, because the
+note is itself a hit.
+
+**And my spot-check caught one more, mine, unprompted:** the replacement text for #2 told readers to
+run `npm run test:lenses`… after I first wrote `npm run test:tokens`, **which does not exist**. It
+would have shipped as a runnable command that errors. `build-tokens.test.mjs` runs inside `test:lenses`
+(99 tests, exit 0). The file now names the step *and* the command that asks `package.json` which step
+runs that file, so the name cannot rot silently.

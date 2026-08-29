@@ -94,11 +94,23 @@ simply unusable at mobile width. Both are true at once.
 >
 > **Partly superseded 2026-08-29 — and the correction is more interesting than the original.** This
 > paragraph originally concluded the ten sizes were "near-duplicates, not a scale". Measured references
-> say tight clustering is NORMAL in a UI band: Linear 1.07–1.13, Stripe 1.09–1.17, Vercel 1.09–1.17, and
-> play.grafana.org ships **two sizes total**. So the tight steps are not the defect. **What survives is
-> the fractional sizes** — 11.5 / 12.5 / 13.5 — which no measured reference uses, which are literally
-> authored (`text-[11.5px]`), and which are not a `clamp()` artifact because mission-control contains no
-> `clamp()` and no `vw` units. See §6.4.
+> say tight clustering is NORMAL in a UI band — derive the per-reference ranges rather than quoting
+> them, `node -e "const j=require('./design/references/<slug>/measured.json');
+> const r=j.type.uiSteps.map(s=>s.ratio); console.log(Math.min(...r), Math.max(...r))"`. So the tight
+> steps are not the defect. **What survives is the fractional sizes** — 11.5 / 12.5 / 13.5 — which are
+> literally authored (`text-[11.5px]`), which carry a third of the app's text, and which are not a
+> `clamp()` artifact because mission-control contains no `clamp()` and no `vw` units. See §6.4.
+>
+> **Three figures inside this supersession note were themselves false, corrected 2026-08-29.** A note
+> recording what was once believed is a record; a note ARGUING from fresh measurements is a live
+> claim, and this one was the second kind. It asserted (1) *"Linear 1.07–1.13, Stripe 1.09–1.17,
+> Vercel 1.09–1.17"* — all three wrong, from the same refuted table as §7.1's, and replaced above by
+> the command that derives them; (2) *"play.grafana.org ships **two sizes total**"*; and (3) that the
+> fractional sizes are ones *"no measured reference uses"*. **§15.16 refutes (2) and (3) with the live
+> capture and is the single account of that measurement — read it there.** It is cross-referenced
+> rather than restated here on purpose: three accounts of one measurement is how the first two came to
+> disagree. What §15.16 establishes is that the defect was never *fractional* but **fractional AND
+> load-bearing by usage share**, which is why the surviving sentence above now says so.
 
 ---
 
