@@ -1238,7 +1238,10 @@ describe('a dispatch records what the gate router decided about its output', () 
     expect(why).toContain('verdictRef.ref of null');
     // AND THE SYMBOLIC REF WAS NOT SUBSTITUTED FOR THE MISSING TIP.
     expect(why).not.toContain('at origin/main..d1294a4 ');
-    // NO PANEL: a refusal is never a spend.
+    // NO PANEL — but see the cell below for the assertion that can actually FAIL for that reason.
+    // `routerFixture` writes no `produce-verdict.mjs`, so a fully decided `gateRequired: true`
+    // routing in this same fixture ALSO yields `not-asked`, naming the missing binary. This line
+    // is consistent with the claim and cannot discriminate it.
     expect(last.verdictProduction?.state).toBe('not-asked');
   });
 
@@ -2101,6 +2104,34 @@ describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for noth
       expect((e.verdictProduction as { why: string }).why).toContain('recorded "unresolved"');
       expect((e.verdictProduction as { why: string }).why).toContain('Deduplicated by subject');
     }
+  });
+
+  test('an UNPINNABLE tip spends NOTHING — observed by run count, in a fixture that HAS a producer', () => {
+    // F2. THE SPEND HALF WAS UNOBSERVED. Every null-`verdictRef` cell lived in `routerFixture`,
+    // which installs no producer, so `not-asked` arrived there whatever the routing did. This is
+    // the 1 -> 0 change measured against the base, pinned by the instrument that made A1 credible:
+    // an observed run count, with the launch count as the control that the entries were dispatched.
+    const { runs, launches, entries } = producerFixture('mc-unpinned-spend-', {
+      router: ROUTER({ verdictRef: { ref: null, reason: 'the range uses "..", not "..."' } }),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'would have run' }, 0),
+      ids: ['e1', 'e2', 'e3'],
+    });
+    expect(runs).toBe(0);
+    expect(launches).toBe(3);
+    for (const e of resolveDispatchStates(entries)) expect(e.verdictProduction?.state).toBe('not-asked');
+    // THE NAMED RESIDUAL, ASSERTED RATHER THAN DESCRIBED: the producer was present and willing —
+    // the control below proves it runs on the same fixture with a pinned tip — and we declined.
+    // That is a real skipped panel for a foreign router, not a panel that could not have succeeded.
+  });
+
+  test('CONTROL: the SAME fixture with a PINNED tip DOES spend, so the zero above is a decision', () => {
+    const { runs, launches } = producerFixture('mc-unpinned-spend-control-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'ran' }, 0),
+      ids: ['e1', 'e2', 'e3'],
+    });
+    expect(runs).toBe(1);
+    expect(launches).toBe(3);
   });
 
   test('with NO verdict.mjs the run dedupes by TIP, reports subject null, and still spends once', () => {

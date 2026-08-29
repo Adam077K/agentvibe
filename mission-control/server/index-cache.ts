@@ -559,10 +559,19 @@ export type GateRouting =
        * shipped router: 5 of 5 null-tip returns carry a reason, so refusing loses no diagnosis.
        *
        * WHAT THE OLD FORM ADMITTED AND THIS ONE DOES NOT: a decided routing with no pinned tip.
-       * What needed it: nothing that can succeed — a tip `verdict.mjs` cannot resolve cannot carry
-       * a binding verdict either, so a panel launched under it buys a record that binds to nothing.
-       * What reached it: only a foreign or older router, the same population that motivates
-       * requiring the field at all.
+       * WHY IT IS REFUSED: without a pinned tip nothing can tell one diff from another, so every
+       * unpinnable entry for a root collapsed into one key and distinct diffs were merged.
+       *
+       * THE REASON FIRST WRITTEN HERE WAS FALSE, and it is the row the collapse was authorised on.
+       * It read "nothing that can succeed — a tip `verdict.mjs` cannot resolve cannot carry a
+       * binding verdict either". `produce-verdict.mjs` mentions `verdictRef` on ONE line, to say it
+       * deliberately does not read it (control: 35 lines mentioning `invocation`), and it is spawned
+       * with no ref, so it re-derives from its own router call. The router failing to pin a tip
+       * implies nothing about whether the producer would have succeeded.
+       *
+       * NAMED RESIDUAL: for a foreign router that cannot pin `verdictRef` yet emits a sound
+       * `invocation.args.ref`, this skips a panel that could have run — 1 before this change, 0
+       * after. Unreachable from the shipped router, whose flagless call always pins.
        */
       refTip: string;
       /** What would run the gate. Present when one is required. */

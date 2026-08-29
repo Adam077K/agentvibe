@@ -332,10 +332,25 @@ function routeGate(root: string): GateRouting {
   //
   // `verdictRef` IS REQUIRED and its `ref` must be a 40-hex sha. NARROWED DELIBERATELY — what the
   // old predicate admitted and this one does not: a decided routing with `refTip: null`, explained
-  // by a `refTipReason`. What needed it: nothing that can succeed. A tip `verdict.mjs` cannot
-  // resolve cannot carry a binding verdict, so a panel launched under it buys a record that binds
-  // to nothing — and the dedupe key built on that null collapsed every unpinnable entry for a root
-  // into ONE key, failing toward SKIPPING a panel, which is the dangerous direction.
+  // by a `refTipReason`.
+  //
+  // WHY IT IS REFUSED: without a pinned tip there is no key that can tell one diff from another, so
+  // every unpinnable entry for a root collapsed into ONE key and distinct diffs were merged — the
+  // delta finding this closes. That reason is sufficient on its own.
+  //
+  // THE REASON FIRST WRITTEN HERE WAS FALSE, and it was the row the collapse was authorised on. It
+  // said "nothing that can succeed — a tip `verdict.mjs` cannot resolve cannot carry a binding
+  // verdict". `produce-verdict.mjs` mentions `verdictRef` on exactly ONE line, to say it
+  // DELIBERATELY DOES NOT READ IT — "consuming a field the router computes is the trust this
+  // function exists to withhold" — against 35 lines mentioning `invocation` as the control. And
+  // this consumer spawns it as `[script, '--json']` with NO ref, so the producer re-derives from
+  // its own router call; `CLI_SINKS` makes no ref selectable at all. The router's inability to pin
+  // a tip therefore implies NOTHING about whether the producer would have succeeded.
+  //
+  // NAMED RESIDUAL, NOT A HIDDEN COST: for a foreign router that cannot pin `verdictRef` yet emits
+  // a sound `invocation.args.ref`, this skips a panel that could have run — measured 1 panel before
+  // this round, 0 after. Unreachable from the shipped router, whose flagless call always pins, so
+  // the exposed population is exactly the one the A2 form-check was added for.
   //
   // THE ROUTER'S OWN REASON IS RELAYED, NEVER REPLACED BY THE SHAPE COMPLAINT. Measured on the
   // shipped emitter: `verdictRefFor` has 5 null-ref returns and 5 of them carry a reason (control:
@@ -520,21 +535,6 @@ function describeRef(routing: Extract<GateRouting, { decided: true }>): string {
 }
 
 /**
- * The subject a panel would be paid for, cached per (root, tip) — THE UNIT OF SPEND.
- *
- * `verdict.mjs subject` is the SAME INSTRUMENT that computes the binding, which is why the key is
- * taken from it rather than derived a second way. Measured cost: 74ms / 71ms / 67ms over three
- * runs, against a 40–50 minute panel — about thirty thousand to one, so asking is free at this
- * scale and the cache means one ask per distinct tip however many entries share it.
- *
- * WHEN NO SUBJECT CAN BE COMPUTED THE KEY FALLS BACK TO THE TIP, AND SAYS SO. A fallback key still
- * dedupes correctly for entries sharing a tip; what it loses is the ability to notice that two
- * different tips denote the same bytes, which costs at most an extra launch and never suppresses a
- * needed one. An unpinned tip collapses to ONE key per root: we cannot tell those entries apart,
- * and the direction to be wrong in is the cheap one — a tip that cannot be pinned cannot carry a
- * binding verdict either, so a second panel for it buys nothing.
- */
-/**
  * The subject a panel would be paid for — THE UNIT OF SPEND.
  *
  * `verdict.mjs subject` is the SAME INSTRUMENT that computes the binding, which is why the key is
@@ -548,15 +548,28 @@ function describeRef(routing: Extract<GateRouting, { decided: true }>): string {
  * ~70ms per entry and widened an edge in the one direction that suppresses a panel, so it is gone.
  * The edge itself — `origin/main` moving mid-run — is named and remains open at a smaller size.
  *
- * THE UNPINNED KEY FORM IS GONE TOO. `refTip` is now `string`, never null, because a routing that
- * could not pin a tip is refused upstream; there is no third key shape and no per-root collapse.
+ * THE UNPINNED KEY FORM IS GONE FROM THIS FUNCTION'S BODY — and the composition is what guarantees
+ * it, not the signature. The call site passes `gateRouting.decided ? gateRouting.refTip : ''`, and
+ * that `''` WOULD be a per-root-constant sentinel, the exact collapse this removed, if it were
+ * reachable. It is not: `shouldProduce` returns `ask: false` for every undecided routing, so this is
+ * called only on the decided arm. Measured — a throwing IIFE in the sentinel position leaves 148/0,
+ * so the arm is unreached rather than merely believed to be.
  */
 function spendKey(root: string, refTip: string): { key: string; subject: string | null } {
   const bin = path.join(root, 'scripts', 'verdict.mjs');
-  // THE FALLBACK IS BY TIP, AND IT IS STRICTLY NARROWER THAN THE SUBJECT KEY. Two entries sharing
-  // a tip share a diff, so it never merges what the subject would separate — it can only fail
-  // toward LAUNCHING, which is the safe direction. `subject: null` is returned honestly rather
-  // than putting this key into a field that claims to be a subject.
+  // THE FALLBACK IS BY TIP, AND IT IS SOUND ONLY WHILE `origin/main` IS FIXED FOR THE RUN — which
+  // is the same condition that got the cache deleted, and the two claims cannot both stand
+  // unqualified. "Two entries sharing a tip share a diff" holds under a fixed base; the subject is
+  // `merge-base(origin/main, ref)..ref`, so if the base moves mid-run one tip denotes different
+  // bytes and this fallback merges exactly what the cache was removed for failing to separate.
+  // SAME EXPOSURE, SMALLER: the cache froze one stale subject for a whole run, while this merges
+  // only entries that also share a tip. Under a fixed base it is strictly narrower than the subject
+  // key and can only fail toward LAUNCHING.
+  // NAMED RESIDUAL: a mid-run base move can merge two distinct diffs here, in the SKIPPING
+  // direction. Closing it means keying on the base sha as well — one `git rev-parse` per run — and
+  // is deliberately not done inside a round scoped to correcting sentences.
+  // `subject: null` is returned honestly rather than putting this key into a field claiming to be a
+  // subject.
   const byTip = { key: `${root}\u0000tip:${refTip}`, subject: null };
   if (!fs.existsSync(bin)) return byTip;
   try {
