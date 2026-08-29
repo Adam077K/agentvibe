@@ -1522,3 +1522,39 @@ test('J-12 — a BLOCKED run reclaims its tree; only REFUSED keeps one', () => {
   assert.equal(r.outcome, OUTCOME.BLOCKED, 'DENOMINATOR: this cell only speaks about the arm it names');
   assert.equal(fs.existsSync(r.judgeDir), false, 'a BLOCKED run must reclaim its judge project');
 });
+
+test('J-13 — only PRODUCED and BLOCKED skip the launcher; REFUSED spends the panel', () => {
+  // THIS CELL GOVERNS WHEN ~40 MINUTES AND ~3M TOKENS GET SPENT, and nothing else asserted it.
+  //
+  // The launch guards on this file's call sites protect the SUITE. They do not protect the PRODUCT
+  // — and they make the product harder to protect, because a change that widened this set (BLOCKED
+  // reaching the launcher, say) would spend a panel run on a diff already blocked while every cell
+  // in this file stayed green, precisely BECAUSE they are guarded now.
+  //
+  // Measured rather than assumed. `readVerdictArtifact` returns PRODUCED, BLOCKED or REFUSED and
+  // nothing else, so REFUSED is the whole reachable fall-through set — and REFUSED is what it
+  // returns whenever no verdict is bound yet or one cannot be read, which is the normal state of
+  // every branch anyone is working on. Two real runs launched under exactly that condition: one in
+  // a tree with no bound verdict, one in a detached clone that could not resolve origin/main. They
+  // are the same event under this rule.
+  //
+  // `REFUSED -> run the gate` is what the producer is FOR. Do not "fix" the third assertion.
+  const reach = (outcome) => {
+    let launched = 0;
+    const r = produceVerdictFn({
+      repo: REPO_ROOT,
+      deps: {
+        materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
+        readVerdictArtifact: () => ({ outcome, subject: 's', tier: 'full' }),
+        launch: () => { launched += 1; return { status: 0, stdout: '', stderr: '' }; },
+      },
+    });
+    if (r.judgeDir) fs.rmSync(r.judgeDir, { recursive: true, force: true });
+    return launched;
+  };
+  assert.equal(reach(OUTCOME.PRODUCED), 0, 'a verdict that already binds must not spend a panel run');
+  assert.equal(reach(OUTCOME.BLOCKED), 0, 'a bound BLOCK must not spend a panel run either');
+  // THE MUST-FIRE ARM. Without it, both zeros above are satisfied by a build that never launches at
+  // all — which is the shape of every vacuous cell this round already found in its own tests.
+  assert.equal(reach(OUTCOME.REFUSED), 1, 'CONTROL: no bound verdict is exactly when the panel must run');
+});
