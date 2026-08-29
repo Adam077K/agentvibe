@@ -23,12 +23,32 @@ design/
     tokens.css          GENERATED
     tokens.ts           GENERATED
     contrast.md         GENERATED
-  captures/             GITIGNORED — perception-loop output, never committed
+  references/           MEASURED — five sites, one directory each
+    <site>/SOURCE.yml             url, access date, surface, licence note, expiry
+    <site>/measured.json          what the extractor read out of the page
+    <site>/seeds.suggestion.json  a PROPOSAL a human copies into seeds.json
+  rules/
+    type-scale.rules.json  AUTHORED — stated rules, held against the measured corpus
 ```
 
-*A reference corpus under `references/` is being built in a parallel lane and lands with it, carrying
-a `SOURCE.yml` and a `surface` field per reference. When it arrives it does not change anything
-above: it feeds `seeds.json` by proposing values a human copies, never by being read at build time.*
+*The reference corpus is HERE, in this commit — five sites under `references/`, each carrying a
+`SOURCE.yml` with a `surface` field, plus `rules/type-scale.rules.json`, the stated rules the corpus
+is held against. It changes nothing above it: it feeds `seeds.json` by proposing values a human
+copies, and no build step reads it.*
+
+> **Corrected 2026-08-29.** The paragraph above read *"is being built in a parallel lane and lands
+> with it"* — future tense, in the commit that lands it — and the tree above it listed neither
+> `references/` nor `rules/`. It also listed **`captures/ GITIGNORED — perception-loop output, never
+> committed`**, and both halves of that were unbacked: `.gitignore` carried no `captures` entry, so
+> `git check-ignore -v design/captures/x.png` reported not-ignored, and the directory did not exist
+> to be ignored. The ignore rule is real now and named below; the directory is still absent, so it
+> is no longer listed as something that is here.
+
+**`captures/` is NOT here, deliberately, and this is where its rule is written down.** It is
+perception-loop output — screenshots a run produces and a reviewer looks at — and it is ignored by
+`.gitignore` **before** anything creates it, so the first run cannot commit a screenshot by
+accident. Check it rather than trust this line: `git check-ignore -v design/captures/x.png`. By the
+rule two paragraphs down, the directory itself arrives with the lane that fills it.
 
 **The tree above is a snapshot; `ls design/` is the truth.** It is written down so a reader knows what
 each path is *for*, not to assert what exists on any given day — a list of directories in prose goes

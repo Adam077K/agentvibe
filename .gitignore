@@ -46,3 +46,8 @@ docs/03-system-design/SOURCED-CLAIMS.md.*.tmp
 
 # Playwright MCP browser scratch (console logs, page snapshots) — transient, never a deliverable
 .playwright-mcp/
+
+# Perception-loop output — screenshots a design-probe run produces for a human to look at. Ignored
+# BEFORE the directory exists, so the first run cannot commit one by accident. design/INDEX.md
+# claimed this was ignored while no rule existed; the claim is what made the rule necessary.
+design/captures/

@@ -98,23 +98,51 @@ review_lenses:
   #
   # What is left here is what an instrument produces the same way twice: a value is in the
   # token file or it is not, content reflows at 320px or it does not, a target is 44px or it
-  # is 31px, a contrast figure is computed, an animation's duration equals a declared token.
-  # Taste judgements moved out of the blocking set rather than into a softer wording of it.
+  # is 31px, a contrast figure is computed. Taste judgements moved out of the blocking set
+  # rather than into a softer wording of it.
+  #
+  # This sentence used to close on "an animation's duration equals a declared token" — an
+  # example of the deterministic kind, drawn from a check that no longer exists here. Struck
+  # in the same edit that struck the check, because a preamble advertising coverage the list
+  # below does not carry is the same rot one paragraph up.
   #
   # ONE COVERAGE LOSS, NAMED RATHER THAN HIDDEN: "All states are handled: empty, loading,
   # error, populated" is gone. Nothing enumerates the states of a screen deterministically,
   # so it was a judgement wearing a conformance label. It has no home in this file today —
   # an advisory review lens cannot be expressed here, because the rule that asks for
   # `blocking_severities: []` is the same rule that refuses an empty list.
+  # TWO MORE COVERAGE LOSSES, 2026-08-29 — AND THEY ARE THE DEFECT THIS BLOCK OPENS BY NAMING,
+  # committed by the change that was removing it. Two checks landed here demanding tokens that
+  # design/tokens/tokens.json does not declare, so both were unsatisfiable at p1 on the day they
+  # were written — "a blocking check whose reference is missing", exactly as above.
+  #
+  #   · SPACING, struck from "Every type, spacing and colour value ... resolves to a token". The
+  #     token file has no spacing group at all: its top-level keys are `font` and `color`, and
+  #     design/system/space.md is `status: unanswered`. Type and colour STAY and are not a
+  #     courtesy — `font.size`, `font.lineHeight` and `font.letterSpacing` all exist, twelve
+  #     `color.*` tokens exist, and scripts/design-probe.mjs measures the type half of it.
+  #   · MOTION, the whole check "Every animation's duration and easing equal a declared motion
+  #     token". There is no duration group and no easing group — read through the probe's own
+  #     indexer, `duration.present=false` and `easing.present=false` — and design/system/motion.md
+  #     is `status: unanswered`. There is nothing for an animation to equal.
+  #
+  # THE LOSS IS REAL AND NOTHING REPLACES IT: no lens in this file now asks anything about motion,
+  # and off-system spacing is ungoverned here. That is the honest state, and it is visible in one
+  # other place — the probe reports both as NOT CHECKED rather than as conforming, so silence is
+  # labelled where it is produced.
+  #
+  # EXIT CONDITION, so this is a deferral and not a deletion: restore each word the moment the
+  # token file declares its group. The question is mechanical — index tokens.json through
+  # `tokenIndex` from scripts/design-probe.mjs and read `.present` — and the `status:` line of
+  # design/system/{space,motion}.md is the same signal from the other end.
   - id: craft
     summary: "Does the rendered result conform to the written design system, by measurement"
     checks:
-      - "Every type, spacing and colour value in the render resolves to a token, with no literal one-off"
+      - "Every type and colour value in the render resolves to a token, with no literal one-off"
       - "Type sizes step by the increment the token file states, and neither band is interpolated from the other"
       - "Content reflows at 320px with no horizontal scrolling, measured rather than assumed"
       - "Interactive targets equal or exceed the stated minimum size, in CSS pixels"
       - "Each text and background pair carries a computed contrast figure against the stated threshold"
-      - "Every animation's duration and easing equal a declared motion token"
       - "Every finding is a measured difference from a stated rule, and never a score"
     blocking_severities: [p1]
     scope: rendered-output
