@@ -26,9 +26,18 @@
 //   · "no display band"                           — a category error; play.grafana.org, a real
 //                                                   dashboard, ships `12 14` and nothing else
 //
-// So the harness must be able to kill the rule its own sibling `design-probe.mjs` enforces
-// (MIN_STEP_RATIO = 1.125). It can, and `scripts/extract-reference.test.mjs` proves it does —
-// that test is the negative control for the whole idea.
+// So the harness had to be able to kill the rule its own sibling `design-probe.mjs` enforced
+// (MIN_STEP_RATIO = 1.125). IT DID, AND THE RULE IS GONE: on `integration/design-layer` that
+// constant, `scaleGaps()` and the `type-scale-near-duplicates` finding built on them survive only
+// as a deletion record. Verified from here rather than taken on report — that file carries ONE
+// mention of the name and it is the removal note, against FOUR live mentions in the untracked copy
+// sitting in the session root. `scripts/extract-reference.test.mjs` still refutes the rule, and
+// keeping that test after the rule died is the point: it is the negative control for the whole
+// idea, and a harness that cannot demonstrate a refutation is a machine for confirming its input.
+//
+// READ THAT COPY DISCREPANCY AS A HAZARD, NOT AS TRIVIA. One file existed in several worktrees at
+// once and the visible copy was not the shipping one. `git log --all -- <path>` returning nothing
+// means the path is untracked SOMEWHERE, not absent everywhere.
 //
 // WHAT IT DELIBERATELY DOES NOT DO:
 //   · judge whether a reference is GOOD. It reports what a site's system IS. Taste is the
@@ -84,9 +93,11 @@ export const TOOL = 'scripts/extract-reference.mjs';
 // the class this repo names, and two of the three were created by agents who each reasoned their
 // way to it independently, which is what makes it worth writing down rather than just fixing.
 //
-//   THE END CONDITION: on the integration branch, all three collapse into `scripts/design-lib.mjs`
-//   — NOT `scripts/lib/`, which is irreversible tier — and this block is deleted with them.
-//   That dedupe is owned by the integration lane, not by this file.
+//   THE END CONDITION, AND IT IS IN PROGRESS RATHER THAN PENDING: all three collapse into
+//   `scripts/design-lib.mjs` — NOT `scripts/lib/`, which is irreversible tier — and this block is
+//   deleted with them. Dispatched and working on `integration/design-layer` as of 2026-08-29.
+//   Owned by the integration lane, not by this file. An earlier draft of this note said "when
+//   design-probe.mjs lands on main", which pointed at a branch that is not the one doing the work.
 //
 // Until then, `scripts/extract-reference.test.mjs` pins the contrast arithmetic against the two
 // WCAG worked examples (21:1 for black on white, 1:1 for a colour on itself), so a divergence
@@ -662,7 +673,11 @@ export function deriveSeeds(measured, { minCount = 1, minShare = 0 } = {}) {
   let display = null;
   if (bands.display.length === 1) {
     display = { base: bands.display[0].value, increment: null, steps: 1 };
-    notes.push('display: one size above the ui band, so increment is undetermined by the data and is null — a single point fixes no spacing');
+    // The null is honest AND cheap to satisfy, and saying only the first half makes it read as a
+    // blocker. Measured by the tokens lane 2026-08-29: at `steps: 1` the generator produces the
+    // same single-value band for increment 4, 8 or 99, so the field is arithmetically INERT there
+    // while its validator still demands an integer >= 4. Repo default is 8.
+    notes.push('display: one size above the ui band, so increment is undetermined by the data and is null — a single point fixes no spacing. To paste this into seeds.json, ANY integer >= 4 satisfies the validator and none of them changes a byte of output at steps: 1 (the repo default is 8); the field only starts to matter if steps grows.');
   } else if (bands.display.length >= 2) {
     const f = bands.displayFit;
     display = f
