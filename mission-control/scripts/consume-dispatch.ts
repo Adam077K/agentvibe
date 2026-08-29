@@ -552,8 +552,11 @@ function describeRef(routing: Extract<GateRouting, { decided: true }>): string {
  * it, not the signature. The call site passes `gateRouting.decided ? gateRouting.refTip : ''`, and
  * that `''` WOULD be a per-root-constant sentinel, the exact collapse this removed, if it were
  * reachable. It is not: `shouldProduce` returns `ask: false` for every undecided routing, so this is
- * called only on the decided arm. Measured — a throwing IIFE in the sentinel position leaves 148/0,
- * so the arm is unreached rather than merely believed to be.
+ * called only on the decided arm. Measured — a throwing IIFE in the sentinel position leaves the
+ * suite at 150 pass / 0 fail, so the arm is unreached rather than merely believed to be. (The first
+ * attempt at that measurement anchored on the ternary fragment and matched TWICE, because THIS
+ * comment quotes it; the mutation never applied and the run came back green off the pristine file.
+ * The read-back is what caught it, not the exit code.)
  */
 function spendKey(root: string, refTip: string): { key: string; subject: string | null } {
   const bin = path.join(root, 'scripts', 'verdict.mjs');
