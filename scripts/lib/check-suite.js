@@ -141,33 +141,6 @@ const STEPS = [
  * catch, wearing a different hat.
  */
 const EXCLUDED = {
-  'design-probe':
-    'NOT A SUITE STEP BECAUSE IT NEEDS TWO THINGS THE SUITE CANNOT GIVE IT: a running dev server to ' +
-    'point at, and an escalated sandbox. Chromium is SIGTRAP-killed under the armed sandbox — measured ' +
-    '2026-08-28, binary present and requireable, launch fails; with the sandbox disabled the same ' +
-    'command captures both viewports. Same shape as check:mc below: a containment fact, not a verdict ' +
-    'on the check. IT IS NOT SILENTLY SKIPPED. The probe distinguishes three exit states and the ' +
-    'distinction is the whole point — 2 = could not measure (REFUSED), 1 = measured and failed, ' +
-    '0 = measured and passed — so a probe that cannot see refuses rather than reporting a clean run, ' +
-    'and `--out` writes that refusal INTO the JSON artifact so a reviewer reading only the file cannot ' +
-    'read an empty findings list as a pass. WHERE THE COVERAGE IS, AND IT IS PARTIAL — READ THIS ' +
-    'NARROWLY, IT IS A CLAIM ABOUT A DIFFERENT SCRIPT: nothing runs `design-probe` itself anywhere. ' +
-    'What runs is scripts/design-probe.test.mjs, which replays the real measured numbers through the ' +
-    'same finding-construction code, so the conformance arithmetic, the reflow and motion checks and ' +
-    'the negative controls are exercised wherever `test:probe-readonly` runs — it is a STEP, and the ' +
-    'test file sits in its argv. What no test can cover is whether a browser launches at all — ' +
-    'exactly the failure that produced two source-only designer runs on 2026-08-17. NOTHING ' +
-    'SCHEDULES THE PROBE\'S RETURN as a step; it returns when the design layer has a defined ' +
-    'escalation lane, which is an open founder decision, not a code change. ' +
-    'ITS SIBLING `test:design-probe` HAD AN ENTRY HERE ON 2026-08-29 AND IS NO LONGER A SCRIPT AT ' +
-    'ALL, which is the one thing a future reader will want explained. That entry recorded, correctly, ' +
-    'that the tests were pure and ready and were held out only because a new governed STEPS name ' +
-    'requires a counterpart step in the CI workflow, and editing that file is `irreversible` tier — ' +
-    'the drift guard refused the step route twice and WAS RIGHT BOTH TIMES. Its condition is not ' +
-    'weakened here, it is honoured: the tests never became a step and no workflow file was touched. ' +
-    'The FILE was appended to `test:probe-readonly`\'s argv instead, per the landed precedent ' +
-    'b1ab4ce, so STEPS.length does not move. scripts/check-suite.test.mjs asserts that argv still ' +
-    'names both files, so the fold cannot be undone by quietly deleting a filename.',
   'check:mc':
     'CANNOT PASS LOCALLY AT ALL WHILE THE SANDBOX IS ARMED — not nested, not standalone — so this is a ' +
     'containment fact, not a verdict on the check. Measured 2026-08-25, foreground, top level: ' +

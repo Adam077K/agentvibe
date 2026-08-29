@@ -49,8 +49,52 @@
 // UNCHECKED below, which is emitted on stdout AND into the JSON artifact so a reviewer who cannot
 // run a browser cannot mistake silence for coverage.
 //
-// SANDBOX. Chromium is SIGTRAP-killed under the armed sandbox. This must run in an escalated lane.
-// The probe detects that failure and names it rather than reporting a clean run over zero pages.
+// ── SANDBOX, AND WHY THIS SCRIPT IS IN NO AUTOMATED LANE ────────────────────────────────────────
+//
+// NOT A SUITE STEP, BECAUSE IT NEEDS TWO THINGS THE SUITE CANNOT GIVE IT: a running dev server to
+// point at, and an escalated sandbox. Chromium is SIGTRAP-killed under the armed sandbox — measured
+// 2026-08-28 and again 2026-08-29, binary present and requireable, launch fails; with the sandbox
+// disabled the same command captures every viewport. That is a containment fact, not a verdict on
+// the check, and it is the same shape as `check:mc`.
+//
+// IT IS NOT SILENTLY SKIPPED, and that is the whole design. Three exit states, kept distinct:
+//     2 = could not measure (REFUSED)   1 = measured and failed   0 = measured and passed
+// so a probe that cannot see refuses rather than reporting a clean run over zero pages. `--out`
+// writes that refusal INTO the JSON artifact, so a reviewer reading only the file cannot mistake an
+// empty findings list for a pass. Both states are verified: sandboxed it exits 2 with the SIGTRAP
+// explanation; escalated against a real page it exits 1 with findings across five viewports.
+//
+// WHERE THE COVERAGE IS — AND IT IS PARTIAL, SAY SO. Nothing runs this script itself, anywhere.
+// What runs is `scripts/design-probe.test.mjs`, which replays the real measured numbers through the
+// same finding-construction code, so the conformance arithmetic, the reflow and motion checks and
+// the negative controls are exercised wherever `test:probe-readonly` runs — it is a STEP, and the
+// test file sits in its argv. What no test can cover is whether a browser launches at all — exactly
+// the failure that produced two source-only designer runs on 2026-08-17.
+//
+// NOTHING SCHEDULES THIS SCRIPT'S RETURN as an automated step. It returns when the design layer has
+// a defined escalation lane, which is an open founder decision, not a code change.
+//
+// ── HOW THE TESTS ARE WIRED, AND THE TRAP THAT DECIDED IT ────────────────────────────────────────
+//
+// There is deliberately NO `test:design-probe` script, and no entry for this file in
+// `scripts/lib/check-suite.js`. The suite's `GOVERNED` predicate is
+// `/^(?:check|test|lint|verify|audit):/`: a script named `test:design-probe` is governed and would
+// then REQUIRE either a STEPS entry — which requires a counterpart step in the CI workflow, an
+// `irreversible`-tier edit — or an EXCLUDED entry justifying zero coverage. `design-probe` does not
+// match the predicate and so needs neither, and never did.
+//
+// THE TRAP IS THAT THE NAMING CONVENTION AND THE TIER SYSTEM POINT OPPOSITE WAYS, with no warning at
+// the point of naming: every peer test in this repo is called `test:<thing>`, so reaching for that
+// name is the obvious move, and it silently prices the change at founder sign-off. Two independent
+// builders hit it on 2026-08-29, this one and the token builder, which is why it is written down
+// here rather than remembered. The cure is the landed precedent b1ab4ce: append the test FILE to an
+// existing step's argv. `STEPS.length` stays 48, no workflow file is touched, and the assertions
+// actually run — where an EXCLUDED entry would have bought a written explanation for zero coverage.
+//
+// That trade gives up one guarded position: `test:check-suite` pins STEPS against script NAMES, not
+// against their argv, so deleting a filename from a shared command line removes its tests with every
+// check still green. `scripts/check-suite.test.mjs` asserts that `test:probe-readonly`'s argv still
+// names both of its files, which buys the position back.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
