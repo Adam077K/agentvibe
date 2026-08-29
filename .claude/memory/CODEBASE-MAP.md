@@ -143,6 +143,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
 | `scripts/evict-memory.test.mjs` | mutation gate for the typed memory eviction. |
+| `scripts/extract-reference.test.mjs` | the falsification harness, driven by real measurements. |
 | `scripts/gates.test.mjs` | every rule tested by constructing the input that DEFEATS it. |
 | `scripts/launcher-permissions.test.mjs` | the autonomy dial, and the model it made inert. |
 | `scripts/ledger.test.mjs` | the resolvers, and the invariant that holds the ledger up. |
