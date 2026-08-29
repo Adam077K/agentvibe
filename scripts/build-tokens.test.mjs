@@ -40,12 +40,14 @@ import {
   OUT,
   SEEDS_PATH,
   GENERATED_BANNER,
-  REFERENCE_INCREMENTS,
+  referenceIncrements,
+  REFERENCES_DIR,
   LEADING_BOUNDS,
   SeedsRefused,
   WCAG,
   band,
   adjacentRatios,
+  adjacentRatiosExact,
   FAMILY_MEMBER,
   assertFamilySafe,
   assertIntegerSizes,
@@ -147,11 +149,56 @@ test('the two post-conditions over band() refuse what no seeds file can express'
   assert.throws(() => assertMonotoneRatios([1.1, 1.1]), /MODULAR SCALE/);
 });
 
+test('the monotonicity check compares EXACT ratios — a 3dp tie is not a modular scale', () => {
+  // Reproduced 2026-08-29: {base: 34, increment: 1, steps: 4} was refused as a modular scale.
+  // True ratios 1.029412 > 1.028571 > 1.027778 — strictly decreasing. At 3dp: 1.029 1.029 1.028.
+  // The refusal told the author something FALSE about their own input, which sends them to fix a
+  // defect that is not there.
+  const sizes = band({ base: 34, increment: 1, steps: 4 });
+  const exact = adjacentRatiosExact(sizes);
+  const shown = adjacentRatios(sizes);
+  assert.deepEqual(shown, [1.029, 1.029, 1.028], 'CONTROL: the 3dp series no longer ties, so this test cannot detect the defect');
+  for (let i = 1; i < exact.length; i++) {
+    assert.ok(exact[i] < exact[i - 1], `CONTROL: exact ratio ${exact[i]} is not below ${exact[i - 1]} — the ramp is not the one this test needs`);
+  }
+  assert.doesNotThrow(() => assertMonotoneRatios(exact), 'a strictly decreasing ramp is still refused as a modular scale');
+  // ...and the OLD comparison is what fails, which is what makes this a regression test and not a
+  // restatement of the fix.
+  assert.throws(() => assertMonotoneRatios(shown), SeedsRefused, 'CONTROL: the rounded series no longer reproduces the defect');
+
+  // End to end through validateSeeds, with a display band that clears the taller UI top.
+  const s = clone();
+  s.type.ui = { base: 34, increment: 1, steps: 4 };
+  s.type.display = { base: 48, increment: 8, steps: 1 };
+  assert.doesNotThrow(() => validateSeeds(s), 'validateSeeds still refuses a strictly decreasing ramp');
+
+  // A genuine modular scale — the thing the tripwire exists for — is still refused, exactly.
+  assert.throws(() => assertMonotoneRatios([1.125, 1.125, 1.125]), /MODULAR SCALE/);
+  assert.throws(() => assertMonotoneRatios([1.0294117, 1.0294117]), /MODULAR SCALE/, 'an exact tie below 3dp was accepted');
+  // The message must print enough precision to be actionable: 3dp would reprint the ambiguity.
+  assert.throws(() => assertMonotoneRatios([1.028571, 1.028571]), /1\.028571/, 'the message rounds away the difference it is talking about');
+});
+
 test('no seeds file that validateSeeds accepts can produce a fractional size', () => {
-  // Exhaustive over the whole accepted input space for base and increment, not a sample: if any
-  // combination reached a fractional size, the "inexpressible rather than forbidden" claim is false.
+  // THE CONCLUSION IS TRUE AND ITS OLD JUSTIFICATION WAS NOT. This comment read "exhaustive over
+  // the whole accepted input space for base and increment", and the sweep was `base 9..16` while
+  // `validateSeeds` accepts ANY integer base >= 1 — an unbounded space no sweep can exhaust. The
+  // gap mattered: it is exactly where C5 lived, a real defect at base 34 that this sweep could
+  // never have reached however many times it ran.
+  //
+  // What actually establishes the claim is one line of arithmetic, and it is stated here so a
+  // reader can check it rather than trust a range: `band()` computes `base + i * increment` where
+  // `validateSeeds` has already refused any non-integer base, increment or steps, and integers are
+  // closed under addition and multiplication. No accepted input can produce a fractional size,
+  // for any base.
+  //
+  // The sweep below is therefore a check on the VALIDATOR — that it really does refuse what the
+  // argument assumes it refuses — and not a proof of the arithmetic. It is widened from 8 bases to
+  // 200 because a wider sweep is cheap and the old range was chosen to match the seeds file rather
+  // than to probe anything, and it now spans C5's base 34.
   let accepted = 0;
-  for (let base = 9; base <= 16; base++) {
+  let fractionalRefused = 0;
+  for (let base = 1; base <= 200; base++) {
     for (const increment of [1, 2]) {
       for (let steps = 2; steps <= 8; steps++) {
         const s = clone();
@@ -171,6 +218,17 @@ test('no seeds file that validateSeeds accepts can produce a fractional size', (
     }
   }
   assert.ok(accepted > 20, `CONTROL: only ${accepted} seed combinations were accepted — the sweep proves little`);
+
+  // The other half of the argument: the validator must actually refuse the non-integer inputs the
+  // arithmetic assumes away. A sweep over integers alone cannot see a validator that stopped
+  // refusing fractions, and that is the mutation this pins.
+  for (const bad of [{ base: 11.5, increment: 1 }, { base: 11, increment: 0.5 }, { base: 11, increment: 1.5 }]) {
+    const s = clone();
+    s.type.ui = { ...bad, steps: 4 };
+    assert.throws(() => validateSeeds(s), SeedsRefused, `validateSeeds accepted ${JSON.stringify(bad)}`);
+    fractionalRefused += 1;
+  }
+  assert.equal(fractionalRefused, 3);
 });
 
 test('the two bands are joined by a jump, and an interpolated join is REFUSED', () => {
@@ -217,12 +275,71 @@ test('a fractional increment is REFUSED, and the refusal names the measured refe
     'not an integer',
     'DESIGN-CAPABILITY.md §7.1'
   );
-  // The refusal must cite the measurement, not assert the rule. All four references, by name.
-  for (const site of Object.keys(REFERENCE_INCREMENTS)) {
+  // The refusal must cite the measurement, not assert the rule. Every reference, by name.
+  const corpus = referenceIncrements();
+  assert.ok(corpus.n >= 4, `CONTROL: only ${corpus.n} reference(s) in the corpus — the citation proves little`);
+  for (const site of Object.keys(corpus.sites)) {
     assert.ok(msg.includes(site), `the refusal does not name ${site}: ${msg}`);
   }
   assert.ok(msg.includes('+0.5'), 'the refusal does not name the measured defect it exists to stop');
   assert.ok(msg.includes('1.067'), 'the refusal does not carry the reference floor the defect fell below');
+});
+
+// ── THE CITATION IS DERIVED FROM THE CORPUS, NOT TYPED BESIDE IT ────────────────────────────────
+//
+// The hand-written `REFERENCE_INCREMENTS` this replaced was labelled "the measured reference
+// increments" and was WRONG ON EVERY ENTRY, in both bands, while omitting a fifth reference that
+// existed — and it was interpolated verbatim into the refusal a user reads. It shipped in the same
+// change as the corpus it disagreed with. That is the failure mode a derived citation cannot have.
+
+test('every increment the refusal cites is read from measured.json, not typed', () => {
+  const corpus = referenceIncrements();
+  assert.ok(corpus.n >= 4, `CONTROL: ${corpus.n} reference(s) — too few to compare against`);
+
+  // Re-derive independently of the module under test: read the files, do the subtraction here.
+  const dirs = fs.readdirSync(REFERENCES_DIR, { withFileTypes: true }).filter((d) => d.isDirectory());
+  let compared = 0;
+  for (const d of dirs) {
+    const file = path.join(REFERENCES_DIR, d.name, 'measured.json');
+    if (!fs.existsSync(file)) continue;
+    const m = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const host = new URL(m.url).hostname.replace(/^www\./, '');
+    const steps = (sizes) => sizes.slice(1).map((v, i) => Math.round((v - sizes[i]) * 1000) / 1000);
+    assert.ok(corpus.sites[host], `${host} is in the corpus and not in the citation`);
+    assert.deepEqual(corpus.sites[host].ui, steps(m.type.bands.ui.sizes), `${host}: cited ui increments disagree with measured.json`);
+    assert.deepEqual(corpus.sites[host].display, steps(m.type.bands.display.sizes), `${host}: cited display increments disagree with measured.json`);
+    compared += 1;
+  }
+  assert.equal(compared, corpus.n, 'the citation covers a different set of references than the corpus holds');
+
+  // CONTROL over the INSTRUMENT: pointed at a directory with no corpus it must say so, not quote
+  // numbers. A citation with nothing behind it that still looks like a citation is the whole defect.
+  const empty = referenceIncrements(path.join(os.tmpdir(), 'no-such-reference-corpus-xyz'));
+  assert.equal(empty.n, 0);
+  assert.deepEqual(empty.sites, {});
+});
+
+test('the refusal describes the corpus it cites, and does not overclaim it', () => {
+  const corpus = referenceIncrements();
+  const msg = refusedWith((s) => { s.type.ui.increment = 0.5; }, 'not an integer');
+
+  // play.grafana.org runs a MULTIPLICATIVE scale and measures fractional UI increments, so the
+  // sentence this replaced — "Every measured reference builds its UI band on integer increments" —
+  // was false, and DESIGN-CAPABILITY.md §15.16 says so about that exact sentence. Enforcing the
+  // rule is fine; misdescribing the evidence for it is not.
+  assert.ok(corpus.fractional.length >= 1, `CONTROL: no reference measures fractional increments, so this test cannot detect the overclaim`);
+  assert.doesNotMatch(msg, /Every measured reference builds its UI band on integer/, 'the refusal reasserts the claim §15.16 calls FALSE');
+  assert.match(msg, /THIS PROJECT'S CHOICE/, 'the refusal does not own the rule as a choice');
+  for (const site of corpus.fractional) {
+    assert.ok(msg.includes(site), `the refusal does not name ${site}, the reference that does not obey the rule`);
+  }
+  assert.match(msg, /CONTESTED/, 'the refusal does not report the falsifier verdict for its own rule');
+  assert.match(msg, /§15\.16/, 'the refusal does not cite the section that falsifies the older wording');
+
+  // And the weaker refusal must count its sample from the corpus, not from a literal. It read
+  // "n=4" while the corpus held five.
+  const clamp = refusedWith((s) => { s.type.ui.increment = 3; }, '+1 or +2');
+  assert.match(clamp, new RegExp(`n=${corpus.n}\\b`), `the weaker refusal does not state n=${corpus.n}`);
 });
 
 test('a fractional increment is refused in the DISPLAY band too', () => {
@@ -368,12 +485,28 @@ test('contrast reproduces the two figures the brief names', () => {
   assert.equal(contrast(hexToRgb('#5a6270'), hexToRgb('#0d0e11')), 3.139, 'the hex path disagrees with the rgb path');
 });
 
-test('every contrast figure documented in styles.css is reproduced — with one 0.001 discrepancy, named', () => {
-  // FOUND BY THIS GENERATOR, 2026-08-29. Ten of eleven documented figures reproduce exactly. The
-  // eleventh, --color-warn, is documented as 8.582:1 and computes 8.58149... -> 8.581. That is the
-  // point of a computed table: styles.css says its own figures were "all re-measured on 2026-08-13
-  // after review found every one of them wrong", and one is still off. Pinned here so that
-  // "correcting" the rounding to make it 8.582 is a red test rather than a silent regression.
+test('every hex-against-ink figure in styles.css reproduces, except the TWO named here', () => {
+  // THE TITLE AND THE COUNT WERE BOTH WRONG, and they were wrong in the direction that flatters.
+  // The old title claimed "every contrast figure documented in styles.css is reproduced"; the old
+  // comment said "Ten of eleven documented figures reproduce exactly ... The eleventh, --color-warn"
+  // — one discrepancy. There are TWO, same sign and same magnitude:
+  //
+  //   --color-warn  #d9a441  documented 8.582:1   computes 8.581493 -> 8.581   (-0.001)
+  //   (rejected)    #6a7280  documented 3.982:1   computes 3.981041 -> 3.981   (-0.001)
+  //
+  // and #6a7280 was simply absent from the map while the title asserted completeness over the file.
+  // Two figures off by the same amount in the same direction is not two mistakes; styles.css
+  // rounded up where nearest-rounding gives down, twice. That is a more useful thing to know than
+  // "one figure is off", and stating it needed the second one to be in the map.
+  //
+  // WHAT THIS TEST DOES NOT COVER, SAID OUT LOUD. styles.css carries 17 distinct ratio figures.
+  // Twelve are a documented hex against --color-ink and are all checked below. The other five are
+  // out of reach of a hex-vs-hex computation and are NOT silently omitted: 4.5:1 is the WCAG
+  // threshold rather than a measurement; 1.06:1 and 1.27:1 are an input fill and its border, not
+  // pairs against ink; 1.985:1 and 4.563:1 are states of an opacity animation, which no pair of
+  // hexes can reproduce. A test that quietly dropped those and kept the word "every" is the defect
+  // being fixed here, so the exclusions are enumerated instead.
+  const ink = '#0d0e11';
   const documented = {
     'row-alt': ['#15171d', 1.077],
     raised: ['#1e222b', 1.212],
@@ -387,10 +520,33 @@ test('every contrast figure documented in styles.css is reproduced — with one 
     bad: ['#e2727a', 6.362],
   };
   for (const [name, [hex, expected]] of Object.entries(documented)) {
-    assert.equal(contrast(hexToRgb(hex), hexToRgb('#0d0e11')), expected, `${name} (${hex})`);
+    assert.equal(contrast(hexToRgb(hex), hexToRgb(ink)), expected, `${name} (${hex})`);
   }
-  assert.equal(contrast(hexToRgb('#d9a441'), hexToRgb('#0d0e11')), 8.581, 'warn: the known discrepancy moved');
-  assert.notEqual(8.581, 8.582, 'CONTROL: the discrepancy is real, not a formatting artifact');
+
+  // THE TWO DISCREPANCIES, each pinned so that "correcting" the rounding to match styles.css is a
+  // red test rather than a silent regression.
+  const discrepancies = [
+    ['--color-warn', '#d9a441', 8.582, 8.581, 8.5815],
+    ['the rejected #6a7280', '#6a7280', 3.982, 3.981, 3.9815],
+  ];
+  for (const [name, hex, documentedRatio, computed, ceiling] of discrepancies) {
+    const got = contrast(hexToRgb(hex), hexToRgb(ink));
+    assert.equal(got, computed, `${name}: the known discrepancy moved`);
+    assert.notEqual(got, documentedRatio, `${name}: it now agrees with styles.css, so the discrepancy is gone`);
+    // C13: the control this replaces was `assert.notEqual(8.581, 8.582)` — two number literals,
+    // which cannot fail against any code while wearing a CONTROL label. This one drives the
+    // COMPUTED value, and pins the unrounded figure below the half-way point, so the difference is
+    // shown to be arithmetic rather than a formatting artifact.
+    const a = luminance(hexToRgb(hex));
+    const b = luminance(hexToRgb(ink));
+    const unrounded = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    assert.ok(
+      unrounded < ceiling,
+      `${name}: unrounded ${unrounded} is at or above ${ceiling}, so ${documentedRatio} would be the correct 3dp value and there is no discrepancy to pin`,
+    );
+    assert.equal(Math.round((documentedRatio - computed) * 1000) / 1000, 0.001, `${name}: the discrepancy is no longer +0.001`);
+  }
+  assert.equal(discrepancies.length, 2, 'the count of known discrepancies changed and the comment above did not');
 });
 
 test('luminance is the WCAG piecewise function, at both ends and across the knee', () => {

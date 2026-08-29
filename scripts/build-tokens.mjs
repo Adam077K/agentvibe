@@ -110,27 +110,134 @@ export const OUT = {
 /** The line every generated file carries. Spelled once so all four cannot disagree. */
 export const GENERATED_BANNER = 'GENERATED — do not edit, run `npm run build:tokens`';
 
+export const REFERENCES_DIR = path.join(ROOT, 'design', 'references');
+
 /**
- * The measured reference increments, kept as data so a refusal message can cite them rather than
- * assert them. Source: DESIGN-CAPABILITY.md §7.1, five ramps measured 2026-08-29.
+ * The measured reference increments, DERIVED FROM THE CORPUS ON EVERY CALL rather than typed here.
+ *
+ * THIS WAS A HAND-WRITTEN CONSTANT AND IT WAS WRONG ON EVERY ENTRY. It was labelled "the measured
+ * reference increments" and interpolated verbatim into the refusal a user reads, and it disagreed
+ * with `design/references/<slug>/measured.json` — shipped in the same change — on all four sites it
+ * named, in both bands, while omitting a fifth reference that exists. Measured 2026-08-29:
+ *
+ *   site               typed here          measured.json
+ *   linear.app         ui 1 1 1 1 1 1 2    ui 1 1 1 1 1 1
+ *   stripe.com         ui 1 1 1 1 2 2 2    ui 1 1 1 1 1 1 1 1 2 2 1 1 2 2
+ *   vercel.com         ui 1 2 2 2 2 2 2    ui 2 2
+ *   play.grafana.org   ui 2                ui 0.6 1.4        <- FRACTIONAL
+ *   docs.stripe.com    (absent)            ui 1 1
+ *
+ * A citation typed by hand is a second copy of the evidence, and a second copy of evidence is a
+ * thing that drifts from it silently — which is what happened, in the same diff that added the
+ * corpus. Deriving costs one directory read inside a refusal path that is already terminal.
+ *
+ * Returns `{ sites, integer, fractional, n, source }`. When the corpus cannot be read it returns
+ * `n: 0` and a `source` that says so, and `citeUi()` then reports THAT rather than quoting numbers:
+ * a citation with no corpus behind it must not look like a citation with one.
  */
-export const REFERENCE_INCREMENTS = {
-  'linear.app': { ui: [1, 1, 1, 1, 1, 1, 2], display: [6, 8, 16, 16] },
-  'stripe.com': { ui: [1, 1, 1, 1, 2, 2, 2], display: [4, 4, 6, 16] },
-  'vercel.com': { ui: [1, 2, 2, 2, 2, 2, 2], display: [32, 8] },
-  'play.grafana.org': { ui: [2], display: [] },
+export function referenceIncrements(dir = REFERENCES_DIR) {
+  const sites = {};
+  let entries = [];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory());
+  } catch {
+    return { sites, integer: [], fractional: [], n: 0, source: `no corpus at ${path.relative(ROOT, dir)}` };
+  }
+  for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    const file = path.join(dir, e.name, 'measured.json');
+    let m;
+    try {
+      m = JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch {
+      continue; // a directory that is not a reference is not evidence, and is not an error either
+    }
+    const steps = (sizes) => (sizes ?? []).slice(1).map((v, i) => round(v - sizes[i], 3));
+    let host;
+    try {
+      host = new URL(m.url).hostname.replace(/^www\./, '');
+    } catch {
+      host = e.name;
+    }
+    sites[host] = { ui: steps(m.type?.bands?.ui?.sizes), display: steps(m.type?.bands?.display?.sizes) };
+  }
+  const names = Object.keys(sites);
+  return {
+    sites,
+    integer: names.filter((h) => sites[h].ui.length && sites[h].ui.every(isInt)),
+    fractional: names.filter((h) => sites[h].ui.some((d) => !isInt(d))),
+    n: names.length,
+    source: `${names.length} reference(s) under ${path.relative(ROOT, dir)}`,
+  };
+}
+
+/**
+ * WHAT THE CORPUS ACTUALLY SHOWS, stated so the refusal cannot overclaim.
+ *
+ * The sentence this replaced was *"Every measured reference builds its UI band on integer
+ * increments"*, and `docs/03-system-design/DESIGN-CAPABILITY.md` §15.16 — the same document the
+ * refusal cites — says of that exact sentence: **"FALSE as written."** play.grafana.org runs a
+ * MULTIPLICATIVE scale off a 14px base, which produces fractional pixels by construction, and this
+ * repository's own falsifier returns CONTESTED rather than HELD for the integer-increment rule:
+ * `node scripts/extract-reference.mjs --against design/rules/type-scale.rules.json`.
+ *
+ * So the refusal no longer claims the corpus is unanimous. It reports the split and then says
+ * plainly that the refusal is THIS PROJECT'S CHOICE. A rule the evidence merely favours is still a
+ * rule worth enforcing; a rule that misdescribes its own evidence teaches the reader something
+ * false about four websites and invites them to dismiss the rule when they find out.
+ */
+const listSites = (pick) => {
+  const r = referenceIncrements();
+  const rows = Object.entries(r.sites)
+    .map(([site, v]) => [site, pick(v)])
+    .filter(([, v]) => v.length);
+  return { r, text: rows.map(([site, v]) => `${site} (${v.join(' ')})`).join(' · '), rows };
 };
 
-const citeUi = () =>
-  Object.entries(REFERENCE_INCREMENTS)
-    .map(([site, r]) => `${site} (${r.ui.join(' ')})`)
-    .join(' · ');
+/** Every reference's UI increments, by name, exactly as `measured.json` records them. */
+const citeUi = () => {
+  const { r, text } = listSites((v) => v.ui);
+  return r.n ? text : `NO REFERENCE CORPUS IS READABLE (${r.source}), so this refusal cites no measurement`;
+};
 
-const citeDisplay = () =>
-  Object.entries(REFERENCE_INCREMENTS)
-    .filter(([, r]) => r.display.length)
-    .map(([site, r]) => `${site} (${r.display.join(' ')})`)
-    .join(' · ');
+/** Every reference's display increments. A reference with fewer than 2 display sizes has none. */
+const citeDisplay = () => {
+  const { r, text, rows } = listSites((v) => v.display);
+  if (!r.n) return `NO REFERENCE CORPUS IS READABLE (${r.source})`;
+  return rows.length ? text : `no reference in the corpus has a display band of 2+ sizes (${r.source})`;
+};
+
+/**
+ * THE SPLIT, STATED RATHER THAN AVERAGED — and this sentence is the whole of finding C3.
+ *
+ * The refusals below used to read *"Every measured reference builds its UI band on integer
+ * increments"*. `docs/03-system-design/DESIGN-CAPABILITY.md` §15.16 — the same document those
+ * refusals cite as their source — says of that exact sentence: **"FALSE as written."**
+ * play.grafana.org runs a MULTIPLICATIVE scale off a 14px base, which produces fractional pixels by
+ * construction, and this repository's own falsifier agrees: the integer-increment rule comes back
+ * CONTESTED, not HELD —
+ * `node scripts/extract-reference.mjs --against design/rules/type-scale.rules.json`.
+ *
+ * So the generator refused a fractional increment while citing, as its evidence, a corpus in which
+ * one reference measures fractional. The rule is still worth enforcing. What it may not do is
+ * misdescribe its own evidence: a reader who checks the citation and finds it overstated has been
+ * given a reason to dismiss the rule, and the rule did not need that reason.
+ */
+const uiSplit = () => {
+  const r = referenceIncrements();
+  if (!r.n) return `no corpus is readable (${r.source}), so nothing here is measured`;
+  if (!r.fractional.length) {
+    return `all ${r.n} measured reference(s) use integer UI increments, so the corpus is unanimous on this point`;
+  }
+  const plural = r.fractional.length === 1 ? 'does not' : 'do not';
+  return (
+    `${r.integer.length} of ${r.n} measured reference(s) use integer UI increments; ` +
+    `${r.fractional.join(', ')} ${plural} — a multiplicative scale off a base produces fractional pixels ` +
+    `BY CONSTRUCTION. The falsifier returns CONTESTED for this rule rather than HELD, and ` +
+    `DESIGN-CAPABILITY.md §15.16 says "every reference builds its UI band on integer steps" is FALSE ` +
+    `as written. SO THIS REFUSAL IS THIS PROJECT'S CHOICE of integer steps, and NOT a claim that ` +
+    `every reference obeys it`
+  );
+};
 
 /**
  * The enforced bounds on the leading curve's peak — SOURCED VALUES, WIDENED, AND THE WIDENING IS
@@ -201,6 +308,24 @@ export function adjacentRatios(sizes) {
 }
 
 /**
+ * The same ratios UNROUNDED — what the monotonicity check compares, and it must never be `round`ed.
+ *
+ * ROUNDING TO 3dp DESTROYED THE PROPERTY BEING TESTED. `assertMonotoneRatios` was fed
+ * `adjacentRatios()`, so a ramp whose ratios genuinely decrease could be refused as a modular scale
+ * when two of them happened to round to the same 3dp figure. Reproduced 2026-08-29 with
+ * `type.ui = {base: 34, increment: 1, steps: 4}`: true ratios 1.029412 > 1.028571 > 1.027778,
+ * strictly decreasing; at 3dp they read `1.029 1.029 1.028`, and the generator exited 2 saying
+ * they "do not decrease monotonically". THE MESSAGE TOLD THE AUTHOR SOMETHING FALSE ABOUT THEIR
+ * OWN INPUT, which is worse than a refusal with no explanation: it sends them to fix a defect that
+ * is not there. 3dp is a presentation choice for tokens.json; it is not the ramp.
+ */
+export function adjacentRatiosExact(sizes) {
+  const out = [];
+  for (let i = 1; i < sizes.length; i++) out.push(sizes[i] / sizes[i - 1]);
+  return out;
+}
+
+/**
  * DERIVATION 3 — the line-height curve.
  *
  *   leading(s) = peak - (|s - peakAt| / peakAt)^exponent * falloff,  clamped to [1.0, peak]
@@ -234,15 +359,27 @@ export function trackingFor(size, { zeroAt, slope }) {
 
 /**
  * THE TWO POST-CONDITIONS, EXPORTED SO THEY CAN BE DRIVEN DIRECTLY — and the reason is a measured
- * gap, not tidiness. These follow from the validated inputs: a validated seeds file cannot reach
- * either refusal, so a mutation run that DELETES them turns nothing red. Measured 2026-08-29 across
- * 18 mutations of this file: 17 were caught by a test and this one was not, because no input exists
- * that would trip it. That is exactly the shape of an assertion that gets deleted as dead code.
+ * gap, not tidiness. These follow from the validated inputs, so a mutation run that DELETES them
+ * turns nothing red: measured 2026-08-29 across 18 mutations of this file, 17 were caught by a test
+ * and the monotonicity one was not. That is exactly the shape of an assertion somebody deletes as
+ * dead code. Pulled out as pure functions so a test can hand them the input that seeds.json cannot
+ * express, which turns an uncontrolled assertion into a controlled one.
  *
- * They are not dead code. They are tripwires over `band()`: if a future edit makes it emit a
- * fractional size or a ramp that holds its ratio constant, these are what say so. Pulled out as pure
- * functions so a test can hand them the input that seeds.json cannot express, which turns an
- * uncontrolled assertion into a controlled one.
+ * WHY "no input exists that would trip it" IS AN ARGUMENT NOW AND WAS A GUESS THEN. That sentence
+ * stood here and it was FALSE when written: `{base: 34, increment: 1, steps: 4}` tripped
+ * `assertMonotoneRatios` — three lines, a perfectly ordinary ramp — because the check compared
+ * ratios ROUNDED TO 3dp, and 1.029412 and 1.028571 both read 1.029. The claim was not merely
+ * unproven; the mutation run that produced it could not have found the counterexample either,
+ * because a mutation run explores edits to the code and this was an untried INPUT.
+ *
+ * The comparison is exact as of the same day (see `adjacentRatiosExact`), and the claim now rests
+ * on arithmetic rather than on a survey: for a constant increment d, ratio(i) = 1 + d/s(i), and
+ * s(i) strictly increases, so the ratios strictly DECREASE for every base and every d > 0. Since
+ * `validateSeeds` admits only integer d ≥ 1, no accepted seeds file can reach the refusal. That is
+ * checkable by reading, which the previous justification was not.
+ *
+ * They are still not dead code. They are tripwires over `band()`: if a future edit makes it emit a
+ * fractional size or a ramp that holds its ratio constant, these are what say so.
  */
 export function assertIntegerSizes(sizes) {
   for (const s of sizes) {
@@ -318,13 +455,21 @@ export function assertFamilySafe(key, value) {
   }
 }
 
+/**
+ * Feed this `adjacentRatiosExact()`, never `adjacentRatios()`. See that function for the measured
+ * defect. The message prints 6dp, because the case a reader is most likely to hit is two ratios
+ * that differ below the 3dp the rest of the file shows — printing 3dp here would reprint the very
+ * ambiguity that made the old comparison wrong.
+ */
 export function assertMonotoneRatios(ratios) {
   for (let i = 1; i < ratios.length; i++) {
     if (ratios[i] >= ratios[i - 1]) {
       refuse(
-        `UI adjacent ratios ${ratios.join(' ')} do not decrease monotonically. A constant absolute ` +
-          `increment makes them decrease by construction; a ramp that holds its ratio CONSTANT is a ` +
-          `MODULAR SCALE, which DESIGN-CAPABILITY.md §7.1 falsified against every measured reference.`
+        `UI adjacent ratios ${ratios.map((r) => round(r, 6)).join(' ')} do not decrease ` +
+          `monotonically: ratio ${i + 1} (${round(ratios[i], 6)}) is not below ratio ${i} ` +
+          `(${round(ratios[i - 1], 6)}). A constant absolute increment makes them decrease by ` +
+          `construction; a ramp that holds its ratio CONSTANT is a MODULAR SCALE, which ` +
+          `DESIGN-CAPABILITY.md §7.1 falsified against every measured reference.`
       );
     }
   }
@@ -363,7 +508,8 @@ export function validateSeeds(seeds) {
     if (!isInt(spec.base)) {
       refuse(
         `type.${name}.base is ${spec.base}, which is not an integer. A band whose base is fractional ` +
-          `produces fractional sizes at every step. No measured reference has one: ${citeUi()}.`
+          `produces fractional sizes at every step. Measured UI increments across the corpus: ` +
+          `${citeUi()} — ${uiSplit()}.`
       );
     }
     if (!isInt(spec.steps) || spec.steps < 1) {
@@ -374,9 +520,11 @@ export function validateSeeds(seeds) {
         `type.${name}.increment is ${spec.increment}, which is not an integer. THIS IS THE DEFECT ` +
           `THAT SHIPPED: mission-control's UI band steps by +0.5 seven times consecutively, and its ` +
           `adjacent ratios (1.045 ... 1.037) sit entirely below the reference band, which bottoms out ` +
-          `at 1.067. Every measured reference builds its UI band on integer increments — ${citeUi()} — ` +
-          `and its display band on integer increments too: ${citeDisplay()}. ` +
-          `Source: docs/03-system-design/DESIGN-CAPABILITY.md §7.1.`
+          `at 1.067. Measured UI increments, per reference: ${citeUi()}. ` +
+          `${uiSplit()}. Display increments: ${citeDisplay()}. ` +
+          `Source: docs/03-system-design/DESIGN-CAPABILITY.md §7.1 for the rule, §15.16 for the ` +
+          `reference that does not obey it, and design/references/ for every figure above — those ` +
+          `are read from measured.json on each call, never typed here.`
       );
     }
     if (spec.base < 1) refuse(`type.${name}.base must be >= 1; got ${spec.base}.`);
@@ -387,8 +535,11 @@ export function validateSeeds(seeds) {
       `type.ui.increment is ${type.ui.increment}. The UI band steps by +1 or +2 and by nothing else: ` +
         `${citeUi()}. Source: docs/03-system-design/DESIGN-CAPABILITY.md §7.1, "build the UI band by ` +
         `absolute increment (+1 or +2 across 12-20px)". THIS REFUSAL IS THE WEAKER OF THE TWO and ` +
-        `rests on n=4 maximally-correlated references (§6.4); if you have a fifth, widen the list in ` +
-        `validateSeeds() rather than editing an output.`
+        `rests on n=${referenceIncrements().n} maximally-correlated references (§6.4) — of which ` +
+        `${uiSplit()}. If you have another, capture it into design/references/ and widen the list in ` +
+        `validateSeeds(); do not edit an output. The n is counted from the corpus on each call: it ` +
+        `read a hardcoded "n=4" while the corpus held five, which is the same defect as the ` +
+        `hardcoded increments this now derives.`
     );
   }
 
@@ -399,7 +550,9 @@ export function validateSeeds(seeds) {
     refuse(
       `type.display.increment is ${type.display.increment}. The display band is derived SEPARATELY ` +
         `with a larger increment — measured: ${citeDisplay()} — and an increment of 1-3 makes it a ` +
-        `continuation of the UI band rather than a second band. Source: DESIGN-CAPABILITY.md §7.1.`
+        `continuation of the UI band rather than a second band. Note that these figures are the ` +
+        `corpus as measured, not a set of values this generator would accept: play.grafana.org's ` +
+        `display increments are fractional too. Source: DESIGN-CAPABILITY.md §7.1.`
     );
   }
 
@@ -407,7 +560,9 @@ export function validateSeeds(seeds) {
   const display = band(type.display);
   assertIntegerSizes([...ui, ...display]);
   const ratios = adjacentRatios(ui);
-  assertMonotoneRatios(ratios);
+  // EXACT, not `ratios`. The 3dp series is what the generated files display; comparing it here
+  // refused strictly-decreasing ramps as modular scales — see adjacentRatiosExact().
+  assertMonotoneRatios(adjacentRatiosExact(ui));
 
   // THE JOIN. Two bands are joined by a jump, never interpolated. A jump is checkable: the step from
   // the top of the UI band into the display band must be larger than any step inside the UI band.
