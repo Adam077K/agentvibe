@@ -1481,11 +1481,39 @@ export function writeReference(outDir, { measured, seeds, source }) {
 export function loadReferences(root) {
   if (!existsSync(root)) return [];
   const out = [];
+  const unreadable = [];
   for (const name of readdirSync(root, { withFileTypes: true })) {
     if (!name.isDirectory()) continue;
     const p = join(root, name.name, 'measured.json');
+    // A directory with no measured.json is not a reference and is not an error. A directory whose
+    // measured.json will not parse is a BROKEN reference, and the two must not share a branch.
     if (!existsSync(p)) continue;
-    out.push({ slug: name.name, path: p, measured: JSON.parse(readFileSync(p, 'utf8')) });
+    try {
+      out.push({ slug: name.name, path: p, measured: JSON.parse(readFileSync(p, 'utf8')) });
+    } catch (cause) {
+      unreadable.push({ slug: name.name, path: p, reason: cause.message.split('\n')[0] });
+    }
+  }
+  if (unreadable.length) {
+    // REFUSES RATHER THAN SHRINKING THE CORPUS. An unguarded JSON.parse here crashed the whole
+    // falsifier on one malformed file: uncaught SyntaxError, EMPTY STDOUT, and exit **1** — which
+    // this tool's own usage block assigns to "measured, and something failed — a rule came back
+    // REFUTED". Reproduced 2026-08-29 with one valid reference beside a file holding `not json {{{`.
+    //
+    // Swallowing the bad file would be worse than crashing, not better: the corpus would silently
+    // shrink and every verdict would be computed against a sample nobody chose. You cannot honestly
+    // falsify a rule against a corpus you could not finish reading, so this is one more
+    // "I could not check", and it exits 2 like every other one — see couldNotMeasure().
+    const e = new Error(
+      `${unreadable.length} reference(s) under ${root} could not be read, so this corpus cannot be ` +
+        `falsified against:\n${unreadable.map((u) => `  ${u.path}: ${u.reason}`).join('\n')}\n` +
+        `Fix or remove them, or point --refs at a corpus that parses. A verdict computed over the ` +
+        `${out.length} reference(s) that did parse would be a verdict over a sample nobody chose.`
+    );
+    e.code = 'ECORPUS';
+    e.unreadable = unreadable;
+    e.readable = out.length;
+    throw e;
   }
   return out.sort((a, b) => a.slug.localeCompare(b.slug));
 }
@@ -1568,7 +1596,14 @@ if (isMain) {
       process.exit(2);
     }
     const doc = JSON.parse(readFileSync(rulesPath, 'utf8'));
-    const refs = loadReferences(resolve(args.refs ?? 'design/references'));
+    let refs;
+    try {
+      refs = loadReferences(resolve(args.refs ?? 'design/references'));
+    } catch (e) {
+      if (e.code !== 'ECORPUS') throw e;
+      console.error(`extract-reference REFUSED: ${e.message}`);
+      process.exit(2);
+    }
     if (!refs.length) {
       console.error(`no references under ${resolve(args.refs ?? 'design/references')} — a corpus of zero falsifies nothing, and reporting a clean sweep over it would be a lie`);
       process.exit(2);

@@ -149,6 +149,35 @@ test('the two post-conditions over band() refuse what no seeds file can express'
   assert.throws(() => assertMonotoneRatios([1.1, 1.1]), /MODULAR SCALE/);
 });
 
+test('the "no input can reach it" claim states its float64 bound, and the bound is real', () => {
+  // NEW-5. The claim replacing the retired "exhaustive" one said the ratios strictly decrease "for
+  // every base", which is true in the reals and FALSE in float64 — the same class of error as the
+  // 3dp rounding it replaced, two corrections in a row. `1 + d/s` rounds to exactly 1.0 once `d/s`
+  // drops below 2^-53, and validateSeeds puts no ceiling on the base.
+  const strictlyDecreasing = (base) => {
+    const ex = adjacentRatiosExact(band({ base, increment: 1, steps: 4 }));
+    return ex.every((v, i) => i === 0 || v < ex[i - 1]);
+  };
+
+  // The bound the comment states, pinned from BOTH SIDES OF ONE CONSTANT. Writing the two bases as
+  // independent literals is not enough and a mutation proved it: swapping the first for 69,200,000
+  // — the wrong figure from the original stepped sweep — left both assertions true, because plenty
+  // of bases above the smallest also tie. Only `TIE` and `TIE - 1` together pin the SMALLEST.
+  const TIE = 67114655;
+  assert.equal(strictlyDecreasing(TIE), false, `base ${TIE} no longer ties, so the stated bound is wrong`);
+  assert.equal(strictlyDecreasing(TIE - 1), true, `base ${TIE - 1} also ties, so ${TIE} is not the SMALLEST tying base and the comment overstates it`);
+
+  // Every base a font size can take is far below it. This is the half that matters: the assertion
+  // is an untrippable tripwire over the range that exists, and that is now checked, not asserted.
+  for (const base of [1, 2, 8, 11, 16, 34, 200, 1000, 100000, 1000000, 10000000]) {
+    assert.ok(strictlyDecreasing(base), `base ${base} does not strictly decrease, so the tripwire is reachable by a real ramp`);
+  }
+
+  // And the refusal AT that base is correct rather than false — the doubles genuinely tie, so the
+  // check reports what it sees. Only the claim about reachability was wrong.
+  assert.throws(() => assertMonotoneRatios(adjacentRatiosExact(band({ base: 67114655, increment: 1, steps: 4 }))), SeedsRefused);
+});
+
 test('the monotonicity check compares EXACT ratios — a 3dp tie is not a modular scale', () => {
   // Reproduced 2026-08-29: {base: 34, increment: 1, steps: 4} was refused as a modular scale.
   // True ratios 1.029412 > 1.028571 > 1.027778 — strictly decreasing. At 3dp: 1.029 1.029 1.028.
@@ -317,6 +346,40 @@ test('every increment the refusal cites is read from measured.json, not typed', 
   const empty = referenceIncrements(path.join(os.tmpdir(), 'no-such-reference-corpus-xyz'));
   assert.equal(empty.n, 0);
   assert.deepEqual(empty.sites, {});
+});
+
+test('a reference that will not parse is COUNTED and NAMED, never silently dropped', () => {
+  // NEW-4. The parse was `continue`d in silence, justified as "a directory that is not a reference
+  // is not evidence, and is not an error either" — true of a directory with NO measured.json, and
+  // false of one whose measured.json will not parse, because the second SHRINKS THE SAMPLE while
+  // `n` is quoted to the reader as the sample size. Measured with five directories, three
+  // malformed: the refusal read "1 of 2 measured reference(s)" and `source` said "2 reference(s)",
+  // a smaller but equally confident claim with nothing saying three were dropped.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'partial-corpus-'));
+  for (const slug of ['linear-app', 'stripe-com']) {
+    fs.mkdirSync(path.join(dir, slug), { recursive: true });
+    fs.copyFileSync(path.join(REPO, 'design', 'references', slug, 'measured.json'), path.join(dir, slug, 'measured.json'));
+  }
+  for (const slug of ['a-broken', 'b-broken', 'c-broken']) {
+    fs.mkdirSync(path.join(dir, slug), { recursive: true });
+    fs.writeFileSync(path.join(dir, slug, 'measured.json'), '{ truncated');
+  }
+  fs.mkdirSync(path.join(dir, 'not-a-reference'), { recursive: true });
+
+  const r = referenceIncrements(dir);
+  assert.equal(r.n, 2, 'the two good references did not parse');
+  assert.equal(r.unreadable.length, 3, `${r.unreadable.length} skips recorded, not 3 — a directory with no measured.json must NOT count as unreadable`);
+  for (const slug of ['a-broken', 'b-broken', 'c-broken']) {
+    assert.ok(r.unreadable.some((u) => u.startsWith(slug)), `${slug} was skipped without being named`);
+  }
+  assert.match(r.source, /SKIPPED AS UNREADABLE/, 'source reports a clean count over an incomplete corpus');
+
+  // A clean corpus records an EMPTY list, not a missing one — a field that appears only on failure
+  // is a field every caller forgets to check.
+  const clean = referenceIncrements();
+  assert.deepEqual(clean.unreadable, []);
+  assert.doesNotMatch(clean.source, /SKIPPED/);
+  fs.rmSync(dir, { recursive: true, force: true });
 });
 
 test('the refusal describes the corpus it cites, and does not overclaim it', () => {

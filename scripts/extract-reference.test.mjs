@@ -649,6 +649,54 @@ test('the CLI exits 2 for a corpus that cannot decide, and 0 only when it did de
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+// ── A CORPUS YOU COULD NOT FINISH READING IS ONE MORE "I COULD NOT CHECK" ───────────────────────
+test('one malformed measured.json refuses with exit 2, and does not crash into exit 1', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'corpus-'));
+  fs.mkdirSync(path.join(dir, 'good'), { recursive: true });
+  fs.copyFileSync(path.join(REPO, 'design', 'references', 'linear-app', 'measured.json'), path.join(dir, 'good', 'measured.json'));
+
+  // CONTROL: one good reference alone loads, so the failure below is the broken file and not the
+  // fixture.
+  assert.equal(loadReferences(dir).length, 1);
+  // A directory with no measured.json is not a reference and must stay silent.
+  fs.mkdirSync(path.join(dir, 'not-a-reference'), { recursive: true });
+  assert.equal(loadReferences(dir).length, 1, 'a directory with no measured.json was treated as a broken reference');
+
+  fs.mkdirSync(path.join(dir, 'broken'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'broken', 'measured.json'), 'not json {{{');
+
+  // BEFORE: an unguarded JSON.parse threw an uncaught SyntaxError — empty stdout, exit 1, which
+  // this tool's own usage block assigns to "a rule came back REFUTED". Refusing is not just a
+  // tidier crash: swallowing the file instead would shrink the corpus silently and compute every
+  // verdict over a sample nobody chose.
+  assert.throws(
+    () => loadReferences(dir),
+    (e) => {
+      assert.equal(e.code, 'ECORPUS', `threw ${e.code ?? e.constructor.name} rather than a corpus refusal`);
+      assert.equal(e.unreadable.length, 1);
+      assert.equal(e.readable, 1, 'the refusal does not say how many DID parse');
+      assert.match(e.message, /broken[/\\]measured\.json/, 'the refusal does not name the file to fix');
+      return true;
+    },
+  );
+
+  const run = (refs) => {
+    try {
+      return { code: 0, out: execFileSync('node', [path.join(REPO, 'scripts', 'extract-reference.mjs'), '--against', path.join(REPO, 'design', 'rules', 'type-scale.rules.json'), '--refs', refs], { encoding: 'utf8', cwd: REPO }) };
+    } catch (e) {
+      return { code: e.status, out: `${e.stdout ?? ''}${e.stderr ?? ''}` };
+    }
+  };
+  const broken = run(dir);
+  assert.equal(broken.code, 2, `a malformed reference exited ${broken.code}; before this it was 1, meaning REFUTED`);
+  assert.match(broken.out, /REFUSED/);
+  assert.match(broken.out, /could not be read/);
+
+  // CONTROL: the real corpus still exits 0, so the fix is not "exit 2 always".
+  assert.equal(run(path.join(REPO, 'design', 'references')).code, 0);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 // ── THE RECORDED VERDICT IS COMPARED TO THE COMPUTED ONE ────────────────────────────────────────
 //
 // `design/rules/type-scale.rules.json` recorded `ui-increments-are-integer` as "HELD across the
@@ -683,10 +731,33 @@ test('every rule records the verdict the harness actually returns for it', () =>
   assert.equal(byId.get('ui-increments-are-integer').verdict, 'CONTESTED', 'the integer-increment rule is no longer contested; if the corpus changed, say so in the file');
   assert.equal(byId.get('ui-increments-are-integer').violated_by, 1);
 
-  // CONTROL over this test: it must be able to FAIL. Drive it with a deliberately wrong record.
+  // CONTROL over this test: it must be able to FAIL. The comparison above is lifted into a named
+  // function and re-run against DELIBERATELY WRONG records, so the control exercises the same code
+  // path with a different input.
+  //
+  // The previous version built `doc.rules.map(r => ({...r, expected_verdict: 'REFUTED'}))` and then
+  // never read `expected_verdict` off it — it filtered on `byId.get(r.id).verdict`, so the override
+  // was inert and the whole `.map()` was dead. The logic was sound, which is what made it worth
+  // fixing rather than deleting: a reader checking whether the control controls had to work that
+  // out for themselves, in a test whose entire subject is recorded results that quietly drift.
+  const disagreements = (records) => records.filter((r) => byId.get(r.id).verdict !== r.expected_verdict).map((r) => r.id);
+
+  assert.deepEqual(disagreements(doc.rules), [], 'the committed records disagree with the harness');
+
   const wrong = doc.rules.map((r) => ({ ...r, expected_verdict: 'REFUTED' }));
-  const stillTrue = wrong.filter((r) => byId.get(r.id).verdict === 'REFUTED');
-  assert.equal(stillTrue.length, 0, 'CONTROL: a rule really is REFUTED, so the negative control proves nothing');
+  assert.ok(
+    wrong.every((r) => r.expected_verdict === 'REFUTED'),
+    'CONTROL: the override did not take, so the negative control is testing the committed records again',
+  );
+  assert.deepEqual(
+    disagreements(wrong).sort(),
+    doc.rules.map((r) => r.id).sort(),
+    'CONTROL: the comparison does not flag every deliberately-wrong record, so it cannot detect drift',
+  );
+  assert.ok(
+    !report.rules.some((r) => r.verdict === 'REFUTED'),
+    'CONTROL: a rule really is REFUTED, so overriding to REFUTED does not make every record wrong',
+  );
 });
 
 // ── THE ADVANCE WARNING COVERS ALL FOUR REFUSALS, NOT THREE ─────────────────────────────────────

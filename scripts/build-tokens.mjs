@@ -137,19 +137,31 @@ export const REFERENCES_DIR = path.join(ROOT, 'design', 'references');
  */
 export function referenceIncrements(dir = REFERENCES_DIR) {
   const sites = {};
+  const unreadable = [];
   let entries = [];
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory());
   } catch {
-    return { sites, integer: [], fractional: [], n: 0, source: `no corpus at ${path.relative(ROOT, dir)}` };
+    return { sites, integer: [], fractional: [], n: 0, unreadable, source: `no corpus at ${path.relative(ROOT, dir)}` };
   }
   for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
     const file = path.join(dir, e.name, 'measured.json');
+    if (!fs.existsSync(file)) continue; // not a reference directory; not evidence and not an error
     let m;
     try {
       m = JSON.parse(fs.readFileSync(file, 'utf8'));
-    } catch {
-      continue; // a directory that is not a reference is not evidence, and is not an error either
+    } catch (cause) {
+      // COUNTED AND NAMED, NEVER SILENTLY SKIPPED. This was a bare `continue`, justified in a
+      // comment as "a directory that is not a reference is not evidence, and is not an error
+      // either" — true of a directory with NO measured.json, and false of one whose measured.json
+      // will not parse. The difference is that the second SHRINKS THE SAMPLE while `n` is quoted
+      // to the reader as the sample size ("rests on n=… maximally-correlated references").
+      // Measured 2026-08-29 with five directories, three of them malformed: the refusal read
+      // "1 of 2 measured reference(s) use integer UI increments" and `source` said
+      // "2 reference(s)" — a smaller but equally confident claim, with nothing saying three were
+      // dropped. The all-fail branch was explicit and the partial-fail branch was not.
+      unreadable.push(`${e.name} (${cause.message.split('\n')[0]})`);
+      continue;
     }
     const steps = (sizes) => (sizes ?? []).slice(1).map((v, i) => round(v - sizes[i], 3));
     let host;
@@ -166,7 +178,12 @@ export function referenceIncrements(dir = REFERENCES_DIR) {
     integer: names.filter((h) => sites[h].ui.length && sites[h].ui.every(isInt)),
     fractional: names.filter((h) => sites[h].ui.some((d) => !isInt(d))),
     n: names.length,
-    source: `${names.length} reference(s) under ${path.relative(ROOT, dir)}`,
+    // Always present, empty when the corpus read cleanly. A field that appears only on failure is
+    // a field every caller forgets to check.
+    unreadable,
+    source:
+      `${names.length} reference(s) under ${path.relative(ROOT, dir)}` +
+      (unreadable.length ? `, and ${unreadable.length} SKIPPED AS UNREADABLE: ${unreadable.join('; ')}` : ''),
   };
 }
 
@@ -194,16 +211,23 @@ const listSites = (pick) => {
 };
 
 /** Every reference's UI increments, by name, exactly as `measured.json` records them. */
+const skipNote = (r) =>
+  r.unreadable?.length
+    ? ` [INCOMPLETE CORPUS: ${r.unreadable.length} reference(s) could not be parsed and are NOT in the ` +
+      `figures above — ${r.unreadable.join('; ')}. Every count here, including n, is over what parsed.]`
+    : '';
+
 const citeUi = () => {
   const { r, text } = listSites((v) => v.ui);
-  return r.n ? text : `NO REFERENCE CORPUS IS READABLE (${r.source}), so this refusal cites no measurement`;
+  if (!r.n) return `NO REFERENCE CORPUS IS READABLE (${r.source}), so this refusal cites no measurement`;
+  return `${text}${skipNote(r)}`;
 };
 
 /** Every reference's display increments. A reference with fewer than 2 display sizes has none. */
 const citeDisplay = () => {
   const { r, text, rows } = listSites((v) => v.display);
   if (!r.n) return `NO REFERENCE CORPUS IS READABLE (${r.source})`;
-  return rows.length ? text : `no reference in the corpus has a display band of 2+ sizes (${r.source})`;
+  return rows.length ? `${text}${skipNote(r)}` : `no reference in the corpus has a display band of 2+ sizes (${r.source})`;
 };
 
 /**
@@ -374,9 +398,38 @@ export function trackingFor(size, { zeroAt, slope }) {
  *
  * The comparison is exact as of the same day (see `adjacentRatiosExact`), and the claim now rests
  * on arithmetic rather than on a survey: for a constant increment d, ratio(i) = 1 + d/s(i), and
- * s(i) strictly increases, so the ratios strictly DECREASE for every base and every d > 0. Since
- * `validateSeeds` admits only integer d ≥ 1, no accepted seeds file can reach the refusal. That is
- * checkable by reading, which the previous justification was not.
+ * s(i) strictly increases, so the ratios strictly DECREASE — **in the reals, for every base and
+ * every d > 0**.
+ *
+ * IN float64 THAT IS FALSE ABOVE A BOUND, AND SAYING "for every base" WAS THE SAME CLASS OF ERROR
+ * AS THE 3dp ROUNDING IT REPLACED — a claim about numbers that ignored how they are represented,
+ * two corrections in a row. `1 + d/s` rounds to exactly 1.0 once `d/s` falls below 2^-53, and
+ * `validateSeeds` puts no upper bound on the base. Found by sweep, not by reading, 2026-08-29:
+ *
+ *   base 11         ratios 1.0909090909090908 1.0833333333333333 1.0769230769230769   decreasing
+ *   base 10,000,000 ratios 1.0000001 1.00000009999999 1.00000009999998               decreasing
+ *   base 67,114,654 ratios strictly decreasing                                       decreasing
+ *   base 67,114,655 ratios 1.0000000148998753 1.0000000148998751 1.0000000148998751  TIE -> exit 2
+ *
+ * So the honest statement is: the ratios strictly decrease **for every base a font size can take**,
+ * and the smallest base at which float64 ties, for increment 1 and 4 steps, is **67,114,655 px** —
+ * roughly 8,700 times the width of an 8K display. No accepted seeds file that describes type can
+ * reach the refusal.
+ *
+ * THAT FIGURE IS FROM AN EXHAUSTIVE SCAN OF EVERY INTEGER BASE BELOW IT, NOT FROM A SWEEP, and the
+ * distinction earned its place: the first report of this gave 69,200,000 from a stepped sweep, and
+ * a bisection to refine it returned 89,013,671 — higher than the value it was refining. Bisection
+ * is invalid here because tying is NOT monotonic in the base: 69,100,000 does not tie and
+ * 69,200,000 does. Three plausible numbers, two of them wrong, for a property that admits a
+ * definite answer. Re-derive rather than trusting the constant:
+ *   node -e "for(let b=2;b<7e7;b++){const x=(b+1)/b,y=(b+2)/(b+1),z=(b+3)/(b+2);
+ *            if(!(x>y&&y>z)){console.log(b);break}}"
+ *
+ * NOTE WHAT IS AND IS NOT WRONG AT THAT BASE. The refusal there is CORRECT, not a false message:
+ * the float64 ratios genuinely do tie, so the tripwire reports what it actually sees. What was
+ * wrong is only the claim that no input could reach it. The base is deliberately left unbounded —
+ * adding a ceiling would be a new refusal on an input nobody has, and the bound is more useful
+ * written down than enforced.
  *
  * They are still not dead code. They are tripwires over `band()`: if a future edit makes it emit a
  * fractional size or a ramp that holds its ratio constant, these are what say so.
