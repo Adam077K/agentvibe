@@ -28,8 +28,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import {
   UNTRUSTED_MAX,
+  couldNotMeasure,
+  loadReferences,
   capUntrusted,
   capture,
   pathVariants,
@@ -62,6 +66,8 @@ import {
   RULE_KINDS,
   UA_TOKENS,
 } from './extract-reference.mjs';
+
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const withCounts = (pairs) => pairs.map(([value, count]) => ({ value, count }));
 
@@ -452,6 +458,14 @@ test('robots wildcards and the $ anchor are honoured', () => {
  * It is here rather than deleted because "the new one is faster" is worth nothing beside "and it
  * answers identically". A rewrite of a permission check that changes one verdict in ten thousand
  * is worse than the ReDoS it cures — it silently reads a `Disallow` as an allow.
+ *
+ * THE DEAD TERNARY BELOW IS DELIBERATE AND MUST NOT BE TIDIED. `${anchored ? '' : ''}` has two
+ * empty branches, does nothing, and reads as if it performs the `$` anchoring that the
+ * `slice(0, -2)` above actually performs. It was a real defect in the shipped source and it left
+ * with that source; this is a byte-for-byte copy of what was replaced, which is the only thing an
+ * oracle may be. An oracle that has been cleaned up is no longer evidence about the code it
+ * stands in for — it is a second implementation, and comparing two things you wrote yourself
+ * proves that you are consistent, not that you are right.
  */
 function regexMatcher(pattern, path) {
   const esc = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
@@ -552,6 +566,127 @@ test('a star-dense robots pattern costs a BOUND, not an exponential — the ReDo
   robotsPathMatches(`/${'*a'.repeat(1000)}b`, long);
   const ms = Number(process.hrtime.bigint() - started) / 1e6;
   assert.ok(ms < 500, `1000 stars against a 20001-character path took ${ms.toFixed(1)}ms`);
+});
+
+// ── "I COULD NOT CHECK" IS NOT "I CHECKED AND FOUND NOTHING WRONG" ──────────────────────────────
+//
+// This file's stated contract, written in its own usage text and repeated in its header, is
+// "2 = COULD NOT MEASURE". UNSUPPORTED honoured it; UNMEASURED and UNDERPOWERED fell through to
+// `exit(refuted.length ? 1 : 0)` and printed "✓ no rule was refuted by this corpus" — true, and
+// useless, because nothing had been evaluated.
+
+test('a rule that could not be decided exits 2, and does not wear the clean tick', () => {
+  const rules = [
+    { id: 'undecidable-kind', kind: 'no-such-kind', band: 'ui', statement: 's' },
+    { id: 'nothing-to-measure', kind: 'integer-increments', band: 'display', statement: 's' },
+  ];
+  const oneSize = { type: { bands: { ui: { sizes: [12] }, display: { sizes: [] } }, sizes: [{ value: 12, count: 9 }] } };
+
+  // UNSUPPORTED — already exited 2 before this change; here as the positive control.
+  const unsupported = falsify([rules[0]], [{ slug: 'a', measured: oneSize }, { slug: 'b', measured: oneSize }]);
+  assert.equal(unsupported.rules[0].verdict, 'UNSUPPORTED');
+  assert.equal(couldNotMeasure(unsupported).length, 1);
+
+  // UNMEASURED — no reference carries the data. Was exit 0.
+  const unmeasured = falsify([rules[1]], [{ slug: 'a', measured: oneSize }, { slug: 'b', measured: oneSize }]);
+  assert.equal(unmeasured.rules[0].verdict, 'UNMEASURED');
+  assert.deepEqual(unmeasured.unmeasured, ['nothing-to-measure']);
+  assert.equal(couldNotMeasure(unmeasured).length, 1, 'UNMEASURED still reports as decided');
+
+  // UNDERPOWERED — one measurable reference. Was exit 0, and `falsify`'s own doc says a harness
+  // that lets one site hold or kill a rule "launders an opinion into a finding".
+  const under = falsify(
+    [{ id: 'r', kind: 'integer-increments', band: 'ui', statement: 's' }],
+    [{ slug: 'only', measured: { type: { bands: { ui: { sizes: [12, 13] }, display: { sizes: [] } }, sizes: [{ value: 12, count: 9 }, { value: 13, count: 9 }] } } }],
+  );
+  assert.equal(under.rules[0].verdict, 'UNDERPOWERED');
+  assert.deepEqual(under.underpowered, ['r']);
+  assert.equal(couldNotMeasure(under).length, 1, 'UNDERPOWERED still reports as decided');
+
+  // CONTESTED is DECIDED and must NOT be in the exit-2 set: it is a real finding, and rounding it
+  // to "could not measure" would hide the answer this harness exists to produce.
+  const contested = falsify(
+    [{ id: 'r', kind: 'integer-increments', band: 'ui', statement: 's' }],
+    [
+      { slug: 'a', measured: { type: { bands: { ui: { sizes: [12, 13] }, display: { sizes: [] } }, sizes: [{ value: 12, count: 9 }, { value: 13, count: 9 }] } } },
+      { slug: 'b', measured: { type: { bands: { ui: { sizes: [12, 12.6] }, display: { sizes: [] } }, sizes: [{ value: 12, count: 9 }, { value: 12.6, count: 9 }] } } },
+    ],
+  );
+  assert.equal(contested.rules[0].verdict, 'CONTESTED');
+  assert.equal(couldNotMeasure(contested).length, 0, 'CONTESTED was rounded into "could not measure"');
+  assert.deepEqual(contested.contested, ['r']);
+});
+
+test('the CLI exits 2 for a corpus that cannot decide, and 0 only when it did decide', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'falsify-'));
+  const rulesPath = path.join(REPO, 'design', 'rules', 'type-scale.rules.json');
+
+  // A CORPUS OF ONE. Every measurable rule is UNDERPOWERED by construction — which is also what
+  // makes the capture-plus---against route structurally undecidable, since it falsifies against
+  // the single reference it just captured.
+  const one = path.join(dir, 'linear-app');
+  fs.mkdirSync(one, { recursive: true });
+  fs.copyFileSync(path.join(REPO, 'design', 'references', 'linear-app', 'measured.json'), path.join(one, 'measured.json'));
+
+  const run = (refs) => {
+    try {
+      return { code: 0, out: execFileSync('node', [path.join(REPO, 'scripts', 'extract-reference.mjs'), '--against', rulesPath, '--refs', refs], { encoding: 'utf8', cwd: REPO }) };
+    } catch (e) {
+      return { code: e.status, out: `${e.stdout ?? ''}${e.stderr ?? ''}` };
+    }
+  };
+
+  const undecided = run(dir);
+  assert.equal(undecided.code, 2, `a corpus of one exited ${undecided.code}; before this change it exited 0`);
+  assert.match(undecided.out, /COULD NOT DECIDE/, 'the undecidable run does not say so');
+  assert.doesNotMatch(undecided.out, /✓ no rule was refuted/, 'a run that evaluated nothing still wears the clean tick');
+
+  // CONTROL: the real corpus decides every rule, so the same command still exits 0. Without this
+  // the assertion above is satisfied by a CLI that exits 2 unconditionally.
+  const decided = run(path.join(REPO, 'design', 'references'));
+  assert.equal(decided.code, 0, `the full corpus exited ${decided.code}:\n${decided.out.slice(-400)}`);
+  assert.match(decided.out, /✓ no rule was refuted/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+// ── THE RECORDED VERDICT IS COMPARED TO THE COMPUTED ONE ────────────────────────────────────────
+//
+// `design/rules/type-scale.rules.json` recorded `ui-increments-are-integer` as "HELD across the
+// captured corpus". The harness returns CONTESTED — play.grafana.org runs a multiplicative scale
+// and measures +0.6/+1.4. The neighbouring `must-have-display-band` WAS updated when the scroll
+// pass changed grafana's measurement and this one was not, in the same file on the same day, and
+// NOTHING COMPARED THEM: no suite step ran the falsifier and no test read `expected`. A recorded
+// result that drifts with nothing to notice is the class this repo keeps finding.
+
+test('every rule records the verdict the harness actually returns for it', () => {
+  const doc = JSON.parse(fs.readFileSync(path.join(REPO, 'design', 'rules', 'type-scale.rules.json'), 'utf8'));
+  const refs = loadReferences(path.join(REPO, 'design', 'references'));
+  assert.ok(refs.length >= 4, `CONTROL: ${refs.length} reference(s) — too few for a verdict to mean anything`);
+
+  const report = falsify(doc.rules, refs);
+  const byId = new Map(report.rules.map((r) => [r.id, r]));
+  for (const rule of doc.rules) {
+    assert.ok(rule.expected_verdict, `${rule.id} records no expected_verdict, so nothing checks its recorded result`);
+    assert.equal(
+      byId.get(rule.id).verdict,
+      rule.expected_verdict,
+      `${rule.id}: the file records ${rule.expected_verdict} and the harness returns ` +
+        `${byId.get(rule.id).verdict} (${byId.get(rule.id).violated_by} of ${byId.get(rule.id).measured_against} violating). ` +
+        `Re-derive with: node scripts/extract-reference.mjs --against design/rules/type-scale.rules.json ` +
+        `--refs design/references --json. If the corpus was re-captured, update expected_verdict AND say ` +
+        `why in \`expected\` — a silent edit here is how a rule stops being killable by a measurement.`,
+    );
+  }
+
+  // The one the reviewer caught, pinned by name so a future edit back to HELD is a red test rather
+  // than a quiet reversal.
+  assert.equal(byId.get('ui-increments-are-integer').verdict, 'CONTESTED', 'the integer-increment rule is no longer contested; if the corpus changed, say so in the file');
+  assert.equal(byId.get('ui-increments-are-integer').violated_by, 1);
+
+  // CONTROL over this test: it must be able to FAIL. Drive it with a deliberately wrong record.
+  const wrong = doc.rules.map((r) => ({ ...r, expected_verdict: 'REFUTED' }));
+  const stillTrue = wrong.filter((r) => byId.get(r.id).verdict === 'REFUTED');
+  assert.equal(stillTrue.length, 0, 'CONTROL: a rule really is REFUTED, so the negative control proves nothing');
 });
 
 // ── THE PERCENT-ENCODING BYPASS ─────────────────────────────────────────────────────────────────

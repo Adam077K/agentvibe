@@ -917,12 +917,48 @@ export function falsify(rules, refs) {
     };
   });
 
+  const withVerdict = (v) => results.filter((r) => r.verdict === v).map((r) => r.id);
   return {
     corpus: (refs ?? []).map((r) => r.slug),
     rules: results,
-    refuted: results.filter((r) => r.verdict === 'REFUTED').map((r) => r.id),
-    unsupported: results.filter((r) => r.verdict === 'UNSUPPORTED').map((r) => r.id),
+    refuted: withVerdict('REFUTED'),
+    unsupported: withVerdict('UNSUPPORTED'),
+    // BOTH OF THESE USED TO BE COMPUTED AND THEN DROPPED, and dropping them is how a rule nobody
+    // could evaluate reported as a rule nobody refuted. See `couldNotMeasure` below.
+    unmeasured: withVerdict('UNMEASURED'),
+    underpowered: withVerdict('UNDERPOWERED'),
+    contested: withVerdict('CONTESTED'),
+    held: withVerdict('HELD'),
   };
+}
+
+/**
+ * The rules this run COULD NOT DECIDE — the exit-2 set, and the reason it exists.
+ *
+ * This file's own contract, stated twice in it, is: *"2 = COULD NOT MEASURE … Never a clean-looking
+ * zero."* `UNSUPPORTED` honoured that and the other two did not. Measured 2026-08-29 before the fix:
+ * a report whose rules were all `UNMEASURED` or `UNDERPOWERED` exited **0** and printed
+ * *"✓ no rule was refuted by this corpus"* — which is true and useless, because nothing was
+ * evaluated. A harness that cannot tell "I checked and found nothing wrong" from "I could not
+ * check" reports the second as the first, and the second is the interesting one.
+ *
+ * `UNDERPOWERED` belongs here for the reason `falsify` already states about itself: one measurable
+ * reference can neither hold nor kill a rule, and a harness that lets it "is a harness that
+ * launders an opinion into a finding." That makes the capture-plus-`--against` route exit 2 by
+ * construction — it falsifies against the single reference it just captured — and that is the
+ * correct answer rather than a regression. It could not have returned 1 before either; it simply
+ * said 0 while being unable to.
+ *
+ * CONTESTED is deliberately NOT here. A contested rule was evaluated and the answer is "some
+ * references do, some do not" — a real finding, and this harness's job is to report it rather than
+ * to round it to a pass or a failure.
+ */
+export function couldNotMeasure(report) {
+  return [
+    ...(report.unsupported ?? []).map((id) => ({ id, why: 'UNSUPPORTED — the harness cannot evaluate this rule kind' })),
+    ...(report.unmeasured ?? []).map((id) => ({ id, why: 'UNMEASURED — no reference carries the data this rule needs' })),
+    ...(report.underpowered ?? []).map((id) => ({ id, why: 'UNDERPOWERED — exactly one measurable reference; one site can neither hold nor kill a rule' })),
+  ];
 }
 
 // ── capture ─────────────────────────────────────────────────────────────────────────────────────
@@ -1467,8 +1503,20 @@ function printFalsification(report) {
     for (const ref of r.references) console.log(`   · ${ref.reference.padEnd(28)} ${ref.verdict.padEnd(12)} ${ref.measured}`);
   }
   console.log(`\ncorpus: ${report.corpus.join(' · ') || '(empty)'}`);
-  if (report.unsupported.length) console.log(`UNSUPPORTED rule(s), evaluated by nothing: ${report.unsupported.join(', ')}`);
-  console.log(report.refuted.length ? `\n✗ REFUTED: ${report.refuted.join(', ')}` : '\n✓ no rule was refuted by this corpus');
+  const undecided = couldNotMeasure(report);
+  for (const u of undecided) console.log(`  ! ${u.id} — ${u.why}`);
+  if (report.refuted.length) {
+    console.log(`\n✗ REFUTED: ${report.refuted.join(', ')}`);
+  } else if (undecided.length) {
+    // NOT "✓ no rule was refuted". That sentence is true of a run that evaluated nothing, and it
+    // is the sentence a reader takes away. Say what was and was not decided instead.
+    console.log(
+      `\n? COULD NOT DECIDE ${undecided.length} of ${report.rules.length} rule(s): ${undecided.map((u) => u.id).join(', ')}.` +
+        ` ${report.rules.length - undecided.length} rule(s) were evaluated and none was refuted.`
+    );
+  } else {
+    console.log('\n✓ no rule was refuted by this corpus');
+  }
 }
 
 const isMain = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
@@ -1495,7 +1543,9 @@ if (isMain) {
     const report = falsify(doc.rules ?? [], refs);
     if (args.json) console.log(JSON.stringify(report, null, 2));
     else printFalsification(report);
-    if (report.unsupported.length) process.exit(2);
+    // 2 before 1 before 0: a rule that could not be evaluated outranks one that was, because
+    // "I could not check" must never be reported as "I checked".
+    if (couldNotMeasure(report).length) process.exit(2);
     process.exit(report.refuted.length ? 1 : 0);
   }
 
@@ -1584,7 +1634,11 @@ if (isMain) {
     const doc = JSON.parse(readFileSync(resolve(args.against), 'utf8'));
     const report = falsify(doc.rules ?? [], [{ slug, measured }]);
     printFalsification(report);
-    if (report.unsupported.length) process.exit(2);
+    // STRUCTURALLY ALWAYS 2 ON THIS ROUTE, and that is the honest answer. Falsifying against the
+    // one reference just captured makes every measurable rule UNDERPOWERED. It could never return
+    // 1 here either; before this it returned 0 while being unable to decide anything. To falsify,
+    // run --against over design/references once the capture has landed in it.
+    if (couldNotMeasure(report).length) process.exit(2);
     process.exit(report.refuted.length ? 1 : 0);
   }
   process.exit(0);
