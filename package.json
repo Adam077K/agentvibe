@@ -17,7 +17,7 @@
     "test:probe-readonly": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs scripts/design-probe.test.mjs",
     "test:pre-tool-use": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/pre-tool-use.test.mjs",
     "test:run-gate": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/run-gate.test.mjs",
-    "test:merge-gate": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs scripts/produce-verdict.test.mjs",
+    "test:merge-gate": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs scripts/produce-verdict.test.mjs scripts/extract-reference.test.mjs",
     "verdict": "node scripts/verdict.mjs",
     "test:skill-clamp": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/skill-clamp.test.mjs",
     "test:probe-stop-reason": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-stop-reason.test.mjs",
