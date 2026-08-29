@@ -57,6 +57,7 @@ import {
   loadTokens,
   conform,
   conformStrings,
+  observed,
   authoredEasings,
   resolveMotion,
   coverageGaps,
@@ -209,6 +210,73 @@ const MOTION_BAD = {
 
 const WITH = (m, over) => ({ ...m, ...over });
 
+// ── RUNNING collect() IN NODE, WHICH NOTHING COULD DO BEFORE ────────────────────────────────────
+//
+// `collect()` is serialised into the browser by `page.evaluate`, so it can reference nothing from
+// module scope and is not exported — which is why the only assertion this file ever made about it
+// read its SOURCE for a string. Its source is read here too, and then RUN, against a document
+// built by hand. That turns "the guard is spelled correctly" into "the guard filters what it
+// claims and keeps what it must".
+//
+// WHAT THIS PROVES: what the walk does with a given computed style and rect.
+// WHAT IT DOES NOT PROVE, and no node test can: what Chromium computes for a <title>, or that a
+// child of a display:none parent reports `display: block`. Those are browser facts, measured in
+// Chromium on 2026-08-29 and recorded in the table inside collect(). The fixtures below CARRY
+// those measured values rather than deriving them — a fixture that assumed `display: none` on
+// <title> would be assuming the answer the browser was asked for.
+const COLLECT_SRC = (() => {
+  const src = fs.readFileSync(path.join(SCRIPTS_DIR, 'design-probe.mjs'), 'utf8');
+  const body = src.slice(src.indexOf('function collect()'), src.indexOf('/* c8 ignore stop */'));
+  assert.ok(body.includes("querySelectorAll('*')"), 'CONTROL: collect() source must have been found, or every test below is vacuous');
+  return body;
+})();
+
+const CSS_DEFAULTS = {
+  display: 'block', visibility: 'visible', fontSize: '16px', lineHeight: 'normal',
+  letterSpacing: 'normal', fontWeight: '400', color: 'rgb(0, 0, 0)',
+  backgroundColor: TRANSPARENT, overflowX: 'visible', colorScheme: 'normal',
+};
+
+/** Run the real collect() against a hand-built document. `css` and `rect` are per-element. */
+function runCollect(specs, { clientWidth = 390, scrollWidth = 390 } = {}) {
+  const nodes = specs.map((s) => ({
+    tagName: s.tag ?? 'P',
+    textContent: s.text ?? 'text',
+    children: [],
+    parentElement: null,
+    css: { ...CSS_DEFAULTS, ...(s.css ?? {}) },
+    rect: { width: 100, height: 20, left: 0, ...(s.rect ?? {}) },
+    interactive: Boolean(s.interactive),
+    getBoundingClientRect() { return this.rect; },
+    getAttribute() { return null; },
+  }));
+  const de = { tagName: 'HTML', clientWidth, scrollWidth, parentElement: null, css: { ...CSS_DEFAULTS } };
+  const doc = {
+    documentElement: de,
+    body: { css: { ...CSS_DEFAULTS } },
+    getAnimations: () => [],
+    querySelectorAll: (sel) => (sel === '*' ? nodes : nodes.filter((n) => n.interactive)),
+  };
+  const gcs = (n) => n.css ?? CSS_DEFAULTS;
+  const win = { matchMedia: () => ({ matches: false }) };
+  // eslint-disable-next-line no-new-func
+  return new Function('document', 'getComputedStyle', 'window', `${COLLECT_SRC}\nreturn collect();`)(doc, gcs, win);
+}
+
+// The page the p1 was measured on: one visible 14px paragraph, and five things a browser does not
+// paint. Every `css`/`rect` value here is what Chromium reported for that element on 2026-08-29.
+const RENDERED_AND_NOT = [
+  { tag: 'TITLE', text: 'a title nobody renders', css: { display: 'none', fontSize: '16px' }, rect: { width: 0, height: 0 } },
+  { tag: 'STYLE', text: 'body { margin: 0 }', css: { display: 'none', fontSize: '16px' }, rect: { width: 0, height: 0 } },
+  { tag: 'SCRIPT', text: 'window.__x = 1;', css: { display: 'none', fontSize: '16px' }, rect: { width: 0, height: 0 } },
+  { tag: 'P', text: 'hidden by visibility', css: { visibility: 'hidden', fontSize: '77px' }, rect: { width: 390, height: 180 } },
+  { tag: 'P', text: 'hidden by display', css: { display: 'none', fontSize: '99px' }, rect: { width: 0, height: 0 } },
+  // The one the style test alone does not catch: its own computed display is `block` and its own
+  // visibility is `visible`; the ancestor is what is display:none, and only the rect shows it.
+  { tag: 'P', text: 'a child of a display:none parent', css: { fontSize: '88px' }, rect: { width: 0, height: 0 } },
+  { tag: 'P', text: 'the only text this page renders', css: { fontSize: '14px', lineHeight: '21px', letterSpacing: 'normal' }, rect: { width: 390, height: 21 } },
+];
+
 // ── NEGATIVE CONTROLS — each names a defect that really shipped ──────────────────────────────────
 
 test('NEGATIVE CONTROL: catches the 574px overflow that shipped', () => {
@@ -302,6 +370,64 @@ test('NEGATIVE CONTROL: motion that no token authorises', () => {
   assert.equal(ease.offenders.length, 1, 'cubic-bezier(0.2, 0, 0, 1) IS the `standard` token and must not be reported');
 });
 
+// ── p1: THE WALK MEASURED WHAT THE BROWSER NEVER PAINTED ────────────────────────────────────────
+//
+// The type/colour walk filtered empty text and elements with children, and nothing else, while the
+// interactive-targets walk 24 lines above it in the SAME FUNCTION already tested the rect and the
+// computed style. Measured end to end in Chromium on a page whose only visible text is one 14px
+// paragraph: `fontSize {"14":1,"16":3,"77":1,"88":1,"99":1}` and a p1 reading "4 of 5 rendered
+// font-size value(s) appear in no token".
+//
+// It blocked every run against every real page, and it named values nobody can act on: 16px x3 is
+// <title>, <style> and <script> at the UA default, and there is no token to assign to <title>.
+
+test('NEGATIVE CONTROL: collect() measures only what the browser actually paints', () => {
+  const m = runCollect(RENDERED_AND_NOT);
+  assert.deepEqual(m.type.fontSize, { 14: 1 }, 'the UA 16px on <title>/<style>/<script>, the 77px visibility:hidden, the 99px display:none and the 88px child of a display:none parent are all unpainted');
+  assert.deepEqual(m.type.lineHeight, { 1.5: 1 }, '21px over 14px — and no `normal` from the five the browser does not render');
+  assert.deepEqual(m.type.letterSpacing, { 0: 1 });
+  assert.deepEqual(m.weights, { 400: 1 }, 'the same walk feeds weights, so they are filtered too');
+  assert.equal(m.contrastPairs.length, 1, 'and contrast pairs — invisible text cannot fail a contrast floor');
+});
+
+test('POSITIVE CONTROL: a VISIBLE element is still measured — the guard did not eat the page', () => {
+  // REQUIRED, and it is the arm that makes the one above safe: a guard that filtered everything
+  // would leave the probe measuring nothing, and until the fix below it that read as a PASS. The
+  // two defects compose, which is why they were fixed together.
+  const m = runCollect([
+    { css: { fontSize: '14px', lineHeight: '21px' }, rect: { width: 390, height: 21 } },
+    { css: { fontSize: '20px', lineHeight: '20px', fontWeight: '600' }, rect: { width: 200, height: 20 } },
+  ]);
+  assert.deepEqual(m.type.fontSize, { 14: 1, 20: 1 });
+  assert.deepEqual(m.weights, { 400: 1, 600: 1 });
+  assert.equal(m.contrastPairs.length, 2);
+});
+
+test('each half of the render guard is load-bearing — neither alone closes it', () => {
+  // Mutation-shaped on purpose. Delete the rect test and the child of a display:none parent comes
+  // back (its own computed style says block/visible); delete the style test and visibility:hidden
+  // comes back (it occupies 390x180 of layout). Testing them together would let either deletion
+  // survive, which is the two-alternative-predicate class this repo has now been bitten by twice.
+  const childOfNone = runCollect([{ css: { fontSize: '88px' }, rect: { width: 0, height: 0 } }]);
+  assert.deepEqual(childOfNone.type.fontSize, {}, 'a zero rect is not painted, whatever its own computed display says');
+  const visHidden = runCollect([{ css: { fontSize: '77px', visibility: 'hidden' }, rect: { width: 390, height: 180 } }]);
+  assert.deepEqual(visHidden.type.fontSize, {}, 'visibility:hidden occupies layout and is still not painted');
+  const displayNone = runCollect([{ css: { fontSize: '99px', display: 'none' }, rect: { width: 0, height: 0 } }]);
+  assert.deepEqual(displayNone.type.fontSize, {});
+});
+
+test('NEGATIVE CONTROL: the exact census the unguarded walk produced is a finding, and the guarded one is not', () => {
+  // The measured before-and-after, replayed through the finder against a token file carrying 14.
+  const before = { 14: 1, 16: 3, 77: 1, 88: 1, 99: 1 };  // Chromium, 2026-08-29, guard absent
+  const after = runCollect(RENDERED_AND_NOT).type.fontSize;  // the same page, guard present
+  const only14 = tokenIndex({ font: { size: { s: { $value: { value: 14, unit: 'px' } } } } });
+  const hitBefore = tokenFinding(findingsFor('narrow', WITH(CLEAN, { type: { ...CLEAN.type, fontSize: before } }), { tokens: only14 }), 'font-size');
+  assert.ok(hitBefore, 'CONTROL: the unguarded census must still be a finding, or this proves nothing');
+  assert.deepEqual(hitBefore.offenders.map((o) => o.value).sort((a, b) => a - b), [16, 77, 88, 99]);
+  const hitAfter = tokenFinding(findingsFor('narrow', WITH(CLEAN, { type: { ...CLEAN.type, fontSize: after } }), { tokens: only14 }), 'font-size');
+  assert.equal(hitAfter, undefined, 'the guarded census authorises every value it measured');
+});
+
 test('NEGATIVE CONTROL: the bad artifact does NOT pass', () => {
   const f = findingsFor('narrow', MC_NARROW, { tokens: TOKENS });
   assert.ok(p1s(f).length >= 3, `expected >=3 p1 findings, got ${p1s(f).length}`);
@@ -365,11 +491,16 @@ test('a conforming page still passes — the gate did not become "always fail"',
   // The counterweight. Raising a severity is only a fix if the clean case is untouched: a gate
   // that blocks everything is as useless as one that blocks nothing, and cheaper to reach by
   // accident.
+  //
+  // `measurements` IS LOAD-BEARING AND WAS `{}` UNTIL 2026-08-29. This test asserted exit 0 over a
+  // run that measured no viewport at all, so it pinned the p1 below rather than the pass above it.
+  // Do not empty it again to shorten the line: CLEAN is what makes this a conforming PAGE rather
+  // than a conforming absence of one.
   const f = findingsFor('narrow', CLEAN, { tokens: TOKENS_MOTION });
   assert.deepEqual(f, []);
   assert.equal(isPass(f), true);
   assert.equal(
-    buildArtifact({ url: 'u', tokens: { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION }, result: { ok: isPass(f), findings: f, measurements: {}, unchecked: [] } }).exit,
+    buildArtifact({ url: 'u', tokens: { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION }, result: { ok: isPass(f), findings: f, measurements: { narrow: CLEAN }, unchecked: [] } }).exit,
     0,
   );
 });
@@ -522,11 +653,127 @@ test('NEGATIVE CONTROL: an empty-but-readable token file is INCOMPLETE, never pa
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+// ── A PAGE THAT RENDERED NOTHING — THE FOURTH INSTANCE OF ONE CLASS ─────────────────────────────
+//
+// The three before it: a passing verdict while findings existed; an unreadable token file reading
+// as a clean run; a readable-but-empty token file reading as passed. The third was cured by
+// `coverageGaps()`, which asks whether the token group is DECLARED and never whether anything was
+// OBSERVED — so with a token file declaring all five groups and a page that rendered nothing:
+//
+//     findings 0 · gaps 0 · exit 0 · state "MEASURED — passed"
+//     artifact body: {"fontSize":{},"lineHeight":{},"letterSpacing":{}}
+//
+// The artifact stated in its own body that nothing was measured while the two fields a machine
+// reads said passed. Reproduced with no browser on 2026-08-29; the fix extends the mechanism that
+// exists rather than adding a fourth beside it.
+
+// A viewport that RAN and observed nothing — the page loaded and rendered no measurable text.
+const RENDERED_NOTHING = {
+  overflow: 0, scrollWidth: 390, clientWidth: 390, reflow: false, targets: [],
+  type: { fontSize: {}, lineHeight: {}, letterSpacing: {} },
+  motion: { animationsApi: true, duration: {}, easing: {}, animations: [] },
+  weights: {}, textColors: 0, contrastPairs: [],
+};
+
+test('NEGATIVE CONTROL: a page that rendered NOTHING is INCOMPLETE, never passed', () => {
+  const full = { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION };
+  const f = findingsFor('narrow', RENDERED_NOTHING, { tokens: TOKENS_MOTION });
+  assert.deepEqual(f, [], 'CONTROL: nothing measured produces nothing to find — that is the trap');
+  assert.equal(isPass(f), true, 'CONTROL: `ok` still means only "no blocking findings"');
+
+  const a = buildArtifact({ url: 'u', tokens: full, result: { ok: isPass(f), findings: f, measurements: { narrow: RENDERED_NOTHING }, unchecked: [] } });
+  assert.equal(a.exit, 3, 'exit MUST NOT be 0 when every axis the token file governs measured nothing');
+  assert.match(a.state, /INCOMPLETE/);
+  assert.ok(!/passed/.test(a.state), 'the field a skimming reader acts on must not say passed');
+  assert.deepEqual(a.gaps.map((g) => g.axis).sort(), [
+    'token-conformance:fontSize', 'token-conformance:letterSpacing', 'token-conformance:lineHeight',
+  ], 'the three type axes are declared and unobserved');
+  assert.ok(a.gaps.every((g) => /NO VIEWPORT RENDERED A SINGLE/.test(g.message)), 'the gap must say nothing was rendered, not that no token was declared');
+  // The artifact's body and its verdict now say the same thing, which is the whole defect.
+  assert.deepEqual(a.measurements.narrow.type, { fontSize: {}, lineHeight: {}, letterSpacing: {} });
+});
+
+test('NEGATIVE CONTROL: a run that measured NO VIEWPORT cannot pass either', () => {
+  // `probe(url, { viewports: [] })` returns `measurements: {}`, and nothing anywhere asserted that
+  // a single viewport was measured. It was exit 0, "MEASURED — passed", from a run that never
+  // opened a browser.
+  const full = { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION };
+  const a = buildArtifact({ url: 'u', tokens: full, result: { ok: true, findings: [], measurements: {}, unchecked: [] } });
+  assert.equal(a.exit, 3);
+  assert.deepEqual(a.gaps.map((g) => g.axis), ['viewports'], 'named once, as the cause — not five times as its consequences');
+  assert.match(a.gaps[0].message, /NO VIEWPORT WAS MEASURED/);
+  // And it reaches the prose a human reads, through the same list — both by the route probe()
+  // takes (uncheckedFor over the run's own measurements) and by buildArtifact's fallback, which
+  // read `measurements: {}` regardless of the run until 2026-08-29 and so could describe a
+  // different run from the one the gaps came from.
+  assert.ok(uncheckedFor(TOKENS_MOTION, { loaded: true, path: 'p', measurements: {} }).some((x) => /NO VIEWPORT WAS MEASURED/.test(x)));
+  const derived = buildArtifact({ url: 'u', tokens: full, result: { ok: true, findings: [], measurements: {} } });
+  assert.ok(derived.unchecked.some((x) => /NO VIEWPORT WAS MEASURED/.test(x)), 'the fallback must read the same measurements the gaps did');
+  // THE OTHER DIRECTION, and it is the one that catches a fallback ignoring its argument: a run
+  // that DID measure a page must not have prose saying no viewport was measured. Before the fix
+  // the fallback always read `{}`, so exit 0 shipped beside a line claiming nothing ran.
+  const real = buildArtifact({ url: 'u', tokens: full, result: { ok: true, findings: [], measurements: { narrow: CLEAN } } });
+  assert.equal(real.exit, 0, 'CONTROL: this run measured a conforming page');
+  assert.ok(!real.unchecked.some((x) => /NO VIEWPORT WAS MEASURED/.test(x)), 'the prose must describe the run the verdict came from');
+  assert.equal(real.unchecked.length, UNCHECKED_ALWAYS.length, 'a fully covered run declares only the permanent holes');
+  assert.equal(a.unchecked.length, 0, 'NOTED, not endorsed: `unchecked` is caller-supplied where `gaps` is derived, so a caller CAN omit the prose — it cannot omit the verdict');
+});
+
+test('`checked` means a comparison HAPPENED, which needs a standard AND a reading', () => {
+  // The predicate underneath both gaps above. It used to report only whether the group was
+  // present, so an empty reading came back `checked: true` with zero offenders — identical in
+  // every field a caller reads to a page whose every value conforms.
+  assert.equal(observed({}), false);
+  assert.equal(observed(undefined), false);
+  assert.equal(observed({ 14: 1 }), true);
+  assert.deepEqual(conform({}, TOKENS.fontSize, EPS.px), { checked: false, offenders: [], usages: 0, distinct: 0 });
+  assert.deepEqual(conformStrings({}, TOKENS_MOTION.easing), { checked: false, offenders: [], usages: 0, distinct: 0 });
+  assert.equal(conform(undefined, TOKENS.fontSize).checked, false);
+  // CONTROL: the same groups with a reading ARE checked, so `checked: false` is not "always false".
+  assert.equal(conform({ 14: 1 }, TOKENS.fontSize).checked, true);
+  assert.equal(conformStrings({ 'ease-out': 1 }, TOKENS_MOTION.easing).checked, true);
+});
+
+test('a MOTIONLESS page is not INCOMPLETE — an unclosable hole is still not a gap', () => {
+  // The line `coverageGaps()` already draws, applied rather than widened: a gap is a hole THIS RUN
+  // COULD HAVE CLOSED. A page with no running animation is an ordinary fully-rendered page, and
+  // getAnimations() returns a transition only while it is mid-flight — no re-run closes that, so
+  // it belongs to UNCHECKED_ALWAYS's class and not to the verdict. Making it a gap would put every
+  // motionless page permanently at exit 3, and a verdict that is nearly constant carries nothing.
+  const motionless = WITH(CLEAN, { motion: { animationsApi: true, duration: {}, easing: {}, animations: [] } });
+  const gaps = coverageGaps({ tokens: TOKENS_MOTION, loaded: true, path: 'p', measurements: { narrow: motionless } });
+  assert.deepEqual(gaps, [], 'declared motion tokens with nothing to compare is not a coverage hole');
+  const f = findingsFor('narrow', motionless, { tokens: TOKENS_MOTION });
+  const a = buildArtifact({ url: 'u', tokens: { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION }, result: { ok: isPass(f), findings: f, measurements: { narrow: motionless }, unchecked: [] } });
+  assert.equal(a.exit, 0, 'a conforming page that simply does not animate still passes');
+  // CONTROL: the SAME page with no TYPE reading is INCOMPLETE — so this is a per-axis decision
+  // that `GROUPS.mustObserve` makes, not a blanket "empty readings are fine".
+  const typeless = WITH(motionless, { type: { fontSize: {}, lineHeight: {}, letterSpacing: {} } });
+  assert.equal(coverageGaps({ tokens: TOKENS_MOTION, loaded: true, path: 'p', measurements: { narrow: typeless } }).length, 3);
+});
+
+test('NEGATIVE CONTROL: the two p1s COMPOSE — a walk that filtered the page cannot read as a pass', () => {
+  // Why they were fixed together. The render guard added to collect() is exactly the change that
+  // could leave a page measuring nothing, and before this fix that outcome was exit 0. Run the
+  // real collect() over a document in which the browser paints nothing at all.
+  const m = runCollect(RENDERED_AND_NOT.slice(0, 6));
+  assert.deepEqual(m.type.fontSize, {}, 'CONTROL: this document has nothing the walk keeps');
+  const meas = { ...m, motion: resolveMotion(m.motion), reflow: false };
+  const f = findingsFor('narrow', meas, { tokens: TOKENS_MOTION });
+  assert.deepEqual(f, [], 'CONTROL: a page measured as empty produces no finding');
+  const a = buildArtifact({ url: 'u', tokens: { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION }, result: { ok: isPass(f), findings: f, measurements: { narrow: meas }, unchecked: [] } });
+  assert.equal(a.exit, 3, 'a filter that ate the page must not report a clean run');
+  assert.match(a.state, /INCOMPLETE/);
+});
+
 test('only an EMPTY gap list reaches exit 0, and the precedence is refused > failed > incomplete', () => {
   const full = { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION };
   const partial = { path: 'p', loaded: true, reason: null, index: TOKENS }; // no duration/easing
-  const clean = { ok: true, findings: [], measurements: {}, unchecked: [] };
-  const failed = { ok: false, findings: findingsFor('narrow', MC_NARROW, { tokens: TOKENS }), measurements: {}, unchecked: [] };
+  // Every `measurements` here was `{}` until 2026-08-29, when an unmeasured axis became a gap —
+  // so the first assertion below was pinning exit 0 over a run that opened no page. A fixture that
+  // rendered something is what makes "every axis covered" mean anything.
+  const clean = { ok: true, findings: [], measurements: { narrow: CLEAN }, unchecked: [] };
+  const failed = { ok: false, findings: findingsFor('narrow', MC_NARROW, { tokens: TOKENS }), measurements: { narrow: MC_NARROW }, unchecked: [] };
 
   assert.equal(buildArtifact({ url: 'u', tokens: full, result: clean }).exit, 0, 'every axis covered and nothing found');
   assert.equal(buildArtifact({ url: 'u', tokens: partial, result: clean }).exit, 3, 'two motion axes ungoverned');
@@ -543,7 +790,7 @@ test('gaps are DERIVED by buildArtifact, so no caller can omit them into a pass'
   // The defect this guards is the one that produced the whole finding: a verdict computed from a
   // field a caller supplies. Passing a bogus `gaps` must change nothing.
   const partial = { path: 'p', loaded: true, reason: null, index: TOKENS };
-  const a = buildArtifact({ url: 'u', tokens: partial, result: { ok: true, findings: [], measurements: {}, unchecked: [], gaps: [] } });
+  const a = buildArtifact({ url: 'u', tokens: partial, result: { ok: true, findings: [], measurements: { narrow: CLEAN }, unchecked: [], gaps: [] } });
   assert.equal(a.exit, 3, 'a caller-supplied empty gaps list must not buy a pass');
   assert.equal(a.gaps.length, 2, 'duration and easing, derived from the token index');
 });
@@ -763,9 +1010,13 @@ test('a REFUSAL is written into the artifact as exit 2 — a blind reader cannot
 });
 
 test('a passing run is exit 0 and says which of the four states produced it', () => {
-  const a = buildArtifact({ url: 'u', tokens: { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION }, result: { ok: true, findings: [], measurements: {}, unchecked: [] } });
+  const a = buildArtifact({ url: 'u', tokens: { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION }, result: { ok: true, findings: [], measurements: { narrow: CLEAN }, unchecked: [] } });
   assert.equal(a.exit, 0);
   assert.equal(a.state, 'MEASURED — passed');
+  // `schema` was asserted by NOWHERE until 2026-08-29: mutating it to 2 changed no test. It is the
+  // field a reader keys on to know that `state` has four values and not three, so a silent
+  // downgrade would tell them INCOMPLETE cannot happen.
+  assert.equal(a.schema, 3, 'the artifact must declare the schema whose fourth state it can emit');
 });
 
 test('writeArtifact creates the directory and round-trips as JSON', () => {

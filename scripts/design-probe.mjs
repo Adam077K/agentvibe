@@ -389,14 +389,31 @@ export function loadTokens(path = DEFAULT_TOKENS_PATH, { cwd = process.cwd() } =
 }
 
 /**
+ * Did this axis observe anything at all? ONE predicate, used by `conform`, by `conformStrings` and
+ * by `coverageGaps`, because the finder and the verdict answering "was this checked?" differently
+ * is the defect this file has now recorded four times.
+ */
+export function observed(counts) {
+  return Boolean(counts) && typeof counts === 'object' && Object.keys(counts).length > 0;
+}
+
+/**
  * The conformance question, for one property: which rendered values are absent from the token file?
  * `counts` maps a rendered value to how many elements render it. Returns every non-member with its
  * usage count and the nearest token, so the report says what to change it TO, not only that it is
  * wrong. A value that is not a number at all (`normal`) is a non-member with no nearest — the token
  * file cannot carry it, and dropping it would hide it.
+ *
+ * `checked` MEANS "this run compared something", AND THAT NEEDS TWO CONDITIONS, NOT ONE. It used to
+ * report only whether the token GROUP was present, so a page that rendered nothing came back
+ * `checked: true` with zero offenders — indistinguishable in every field a caller reads from a page
+ * whose every value conforms. Measured 2026-08-29 against a token file declaring all five groups:
+ * `{"fontSize":{},"lineHeight":{},"letterSpacing":{}}` in the artifact body, and `exit: 0`,
+ * `state: "MEASURED — passed"` in the two fields a machine acts on. An empty `counts` is now
+ * `checked: false` — the standard exists, and nothing was compared against it.
  */
 export function conform(counts, group, eps = EPS.px) {
-  if (!group || !group.present) return { checked: false, offenders: [], usages: 0, distinct: 0 };
+  if (!group || !group.present || !observed(counts)) return { checked: false, offenders: [], usages: 0, distinct: 0 };
   const offenders = [];
   let usages = 0;
   let distinct = 0;
@@ -419,7 +436,7 @@ export function conform(counts, group, eps = EPS.px) {
 
 /** The same question for a string-valued property (easing), compared on canonical form. */
 export function conformStrings(counts, group) {
-  if (!group || !group.present) return { checked: false, offenders: [], usages: 0, distinct: 0 };
+  if (!group || !group.present || !observed(counts)) return { checked: false, offenders: [], usages: 0, distinct: 0 };
   const allowed = new Set(group.values.map(normalizeEasing));
   const offenders = [];
   let usages = 0;
@@ -540,7 +557,31 @@ function collect() {
   document.querySelectorAll('*').forEach((el) => {
     const t = (el.textContent || '').trim();
     if (!t || el.children.length > 0) return;
+    // THE BROWSER MUST ACTUALLY RENDER IT — and BOTH tests are required, neither is sufficient.
+    // This walk had neither until 2026-08-29 while the interactive-targets walk above had both,
+    // an inconsistency inside one function. Measured in Chromium 2026-08-29 on a page whose only
+    // visible text is one 14px paragraph:
+    //
+    //   element                          computed display / visibility   rect
+    //   <title> <style> <script>         none / visible                  0x0    16px each
+    //   visibility: hidden               block / hidden                  390x180
+    //   display: none                    none / visible                  0x0
+    //   a child of a display:none parent block / VISIBLE                 0x0
+    //
+    // The last row is why the style test alone does not close this: computed style inside a
+    // display:none subtree resolves to the element's OWN value, so the child reports `block` and
+    // `visible` while nothing paints — only the zero rect sees it. The visibility:hidden row is
+    // why the rect test alone does not either: it occupies layout, 390x180 of it.
+    //
+    // WHY IT WAS A BLOCKING DEFECT RATHER THAN NOISE: every HTML document has a <title>, its
+    // computed font-size is the UA default 16px, and a token file need not carry 16. So every run
+    // against any real page emitted a p1 naming a value no designer can act on — there is no
+    // token to assign to <title>. A conformance finding blocks on the stated grounds that it
+    // "names the exact token to change to"; that class could not.
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) return;
     const cs = getComputedStyle(el);
+    if (cs.visibility === 'hidden' || cs.display === 'none') return;
     const px = parseFloat(cs.fontSize);
     if (!(px > 0)) return;
     bump(fontSize, String(r3(px)));
@@ -877,13 +918,35 @@ export function findingsFor(tag, m, opts = {}) {
   return rank(out);
 }
 
-/** The five axes this probe can measure conformance on, and how each is named to a reader. */
-const GROUP_LABELS = {
-  fontSize: 'font-size',
-  lineHeight: 'line-height',
-  letterSpacing: 'letter-spacing',
-  duration: 'motion duration',
-  easing: 'motion easing',
+/**
+ * The five axes this probe can measure conformance on: how each is named to a reader, where its
+ * rendered values live in a measurement, and whether an EMPTY reading is a hole this run could
+ * have closed.
+ *
+ * `mustObserve` is the whole of that last question and it is data rather than a branch, so
+ * reversing it for an axis is one word here and not an edit to the verdict. The line it draws is
+ * `coverageGaps()`'s own, applied rather than invented: **a gap is a hole this run could have
+ * closed.**
+ *
+ *   TYPE — `true`. Every text element the walk keeps contributes to all three maps, so an empty
+ *   font-size reading means the walk kept NO element: the probe was pointed somewhere that did not
+ *   render, or its own filters ate the page. Both are closeable, and the second is not
+ *   hypothetical — the render guard added to `collect()` the same day is exactly the change that
+ *   could cause it, and these two defects compose into a silent pass without this flag.
+ *
+ *   MOTION — `false`, and this is a deliberate exclusion, not an oversight. A page with no running
+ *   animation is an ordinary, fully-rendered page, and `getAnimations()` returns a transition only
+ *   while it is mid-flight — so no re-run closes it and no configuration closes it. That is
+ *   `UNCHECKED_ALWAYS`'s class, where it is already declared. A verdict that went INCOMPLETE on
+ *   every motionless page would be very nearly a constant, and a constant verdict carries no
+ *   information — the same argument this file makes for keeping the permanent holes out of `gaps`.
+ */
+const GROUPS = {
+  fontSize: { label: 'font-size', counts: (m) => m?.type?.fontSize, mustObserve: true },
+  lineHeight: { label: 'line-height', counts: (m) => m?.type?.lineHeight, mustObserve: true },
+  letterSpacing: { label: 'letter-spacing', counts: (m) => m?.type?.letterSpacing, mustObserve: true },
+  duration: { label: 'motion duration', counts: (m) => m?.motion?.duration, mustObserve: false },
+  easing: { label: 'motion easing', counts: (m) => m?.motion?.easing, mustObserve: false },
 };
 
 /**
@@ -920,6 +983,19 @@ const GROUP_LABELS = {
  * to `getAnimations()` and always will be; composition is not measurable). A verdict reacting to
  * those is a constant, and a constant verdict says nothing. They stay declared and stay out of it.
  *
+ * TWO QUESTIONS, NOT ONE — ADDED 2026-08-29, AND THIS IS THE FOURTH INSTANCE OF ONE CLASS IN THIS
+ * FILE. The three before it: a passing verdict while findings existed; an unreadable token file
+ * reading as a clean run; a readable-but-empty token file reading as passed. This function was the
+ * third one's cure and it asked only **is the token group DECLARED?** — never **did we OBSERVE
+ * anything?** Both are required, because a pass claims a comparison happened and a comparison needs
+ * two sides. Measured against a token file declaring all five groups and a page that rendered
+ * nothing: findings 0, gaps 0, exit 0, `state: "MEASURED — passed"`, with the artifact stating
+ * `{"fontSize":{},"lineHeight":{},"letterSpacing":{}}` in its own body.
+ *
+ * It is deliberately the SAME mechanism rather than a fourth one beside it: a new state, a new
+ * flag or a second verdict input would be the shape that produced the first three. `mustObserve`
+ * in `GROUPS` above decides which axes it applies to, and why.
+ *
  * KNOWN AND ACCEPTED: against this repo's own `design/tokens/tokens.json`, `duration` and `easing`
  * are absent today, so a real run here is INCOMPLETE and cannot reach exit 0 until motion tokens
  * exist. That is the honest reading — `design/system/motion.md` is `status: unanswered` and the
@@ -935,11 +1011,37 @@ export function coverageGaps({ tokens = null, loaded = true, path = DEFAULT_TOKE
     });
     return gaps;
   }
-  for (const [group, label] of Object.entries(GROUP_LABELS)) {
+  // NO PAGE AT ALL. `probe(url, { viewports: [] })` returns `measurements: {}`, and until
+  // 2026-08-29 that was findings 0, gaps 0, exit 0, "MEASURED — passed" — a passing verdict from a
+  // run that never opened a browser. Nothing anywhere asserted that a single viewport was measured.
+  // It is named once, here, rather than five times below: when no page loaded, "no font-size value
+  // was rendered" is true but is not the fact a reader needs.
+  const tags = Object.keys(measurements);
+  if (tags.length === 0) {
+    gaps.push({
+      axis: 'viewports',
+      message:
+        'NO VIEWPORT WAS MEASURED — this run opened no page, so every axis is unmeasured. Zero ' +
+        'findings over zero viewports is not a pass.',
+    });
+  }
+  for (const [group, spec] of Object.entries(GROUPS)) {
     if (!tokens?.[group]?.present) {
       gaps.push({
         axis: `token-conformance:${group}`,
-        message: `${label} conformance — ${path} declares no ${label} tokens, so nothing was compared. Silence here is absence of a standard, not conformance to one.`,
+        message: `${spec.label} conformance — ${path} declares no ${spec.label} tokens, so nothing was compared. Silence here is absence of a standard, not conformance to one.`,
+      });
+      continue;
+    }
+    // THE STANDARD EXISTS AND NOTHING WAS COMPARED AGAINST IT. `conform()` reported `checked: true`
+    // on an empty reading until the same day this landed, so a page that rendered nothing passed
+    // every axis its token file governed. Asked through `observed()` — the same predicate
+    // `conform()` uses — so the gap and the finding cannot disagree about what was checked.
+    if (!spec.mustObserve || tags.length === 0) continue;
+    if (!tags.some((t) => observed(spec.counts(measurements[t])))) {
+      gaps.push({
+        axis: `token-conformance:${group}`,
+        message: `${spec.label} conformance — ${path} declares ${spec.label} tokens, but NO VIEWPORT RENDERED A SINGLE ${spec.label} VALUE, so nothing was compared. A page that rendered nothing conforms to nothing.`,
       });
     }
   }
@@ -1038,7 +1140,10 @@ export function buildArtifact({ url, tokens, result, refused = null, generatedAt
       ? { path: tokens.path, loaded: tokens.loaded, reason: tokens.reason, groups: Object.fromEntries(Object.entries(tokens.index).map(([k, v]) => [k, { present: v.present, count: v.values.length }])) }
       : null,
     findings: result?.findings ?? [],
-    unchecked: result?.unchecked ?? uncheckedFor(tokens?.index, { loaded: tokens?.loaded ?? false, reason: tokens?.reason, path: tokens?.path }),
+    // The fallback reads the SAME measurements the gaps were derived from. Without that the prose
+    // and the exit code answer "what did not run" from different inputs, which is the split this
+    // file has already paid for twice.
+    unchecked: result?.unchecked ?? uncheckedFor(tokens?.index, { loaded: tokens?.loaded ?? false, reason: tokens?.reason, path: tokens?.path, measurements: result?.measurements ?? {} }),
     measurements: result?.measurements ?? {},
   };
 }
