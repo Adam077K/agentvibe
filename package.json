@@ -14,7 +14,7 @@
     "test:tier-gate": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-tier-gate.test.mjs",
     "test:sandbox": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/sandbox-config.test.mjs",
     "check:mc": "node mission-control/check.mjs",
-    "test:probe-readonly": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs",
+    "test:probe-readonly": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs scripts/design-probe.test.mjs",
     "test:pre-tool-use": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/pre-tool-use.test.mjs",
     "test:run-gate": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/run-gate.test.mjs",
     "test:merge-gate": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs scripts/produce-verdict.test.mjs",
@@ -86,7 +86,8 @@
     "build:routers": "node scripts/build-skill-routers.mjs",
     "check:routers": "node scripts/build-skill-routers.mjs --check",
     "measure:bash": "node scripts/measure-bash-usage.mjs",
-    "test:protected-write": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/protected-write.test.mjs"
+    "test:protected-write": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/protected-write.test.mjs",
+    "design-probe": "node scripts/design-probe.mjs"
   },
   "files": [
     "bin/",

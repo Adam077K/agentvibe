@@ -3055,3 +3055,16 @@ test('the test:lenses argv still names both of its files', () => {
     assert.ok(fs.existsSync(path.join(REPO, f)), `${f} is named by test:lenses and is not on disk`);
   }
 });
+
+test('the test:probe-readonly argv still names both of its files', () => {
+  // design-probe.test.mjs rides here rather than under a `test:design-probe` STEP, because a new
+  // governed name requires a counterpart step in .github/workflows/ci.yml and that is `irreversible`
+  // tier — same trade b1ab4ce made for produce-verdict, and this is the assertion that buys back the
+  // position the trade gives up. The pairing is not arbitrary: the design probe's `--out` artifact
+  // exists precisely so a reviewer with no browser and no shell can read the findings, which is the
+  // reviewer probe-readonly.test.mjs is about.
+  const argv = require(path.join(REPO, 'package.json')).scripts['test:probe-readonly'];
+  for (const f of ['scripts/probe-readonly.test.mjs', 'scripts/design-probe.test.mjs']) {
+    assert.ok(argv.includes(f), `test:probe-readonly no longer runs ${f} — its assertions are gone and nothing else would say so`);
+  }
+});

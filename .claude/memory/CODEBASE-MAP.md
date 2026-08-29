@@ -65,6 +65,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:warroom-parity` | `bash -n scripts/warroom-parity.sh` |
 | `npm run check:warroom-template` | `bash -n war-room/bin/PROJECT_NAME.tmpl` |
 | `npm run curate:skills` | `node scripts/curate-skills.mjs` |
+| `npm run design-probe` | `node scripts/design-probe.mjs` |
 | `npm run gate` | `node scripts/run-gate.mjs` |
 | `npm run gates` | `node scripts/check-gates.mjs` |
 | `npm run ledger:build` | `node scripts/ledger.mjs build` |
@@ -98,7 +99,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:playbooks` | `node --require ./scripts/protected-write-tripwire.cjs --test --test-concurrency=1 scripts/playbooks.test.mjs s` |
 | `npm run test:pre-tool-use` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-agent-tool-inheritance` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-agent-tool-inheritance.test.mjs` |
-| `npm run test:probe-readonly` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs` |
+| `npm run test:probe-readonly` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs scripts/design-pr` |
 | `npm run test:probe-stop-reason` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-stop-reason.test.mjs` |
 | `npm run test:probe-workflow-reach` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-workflow-reach.test.mjs` |
 | `npm run test:protected-write` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/protected-write.test.mjs` |
@@ -144,6 +145,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/claim-append.test.mjs` | the gate in scripts/lib/claim-append.js. |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
+| `scripts/design-probe.test.mjs` | the negative controls that make the design probe binding. |
 | `scripts/evict-memory.test.mjs` | mutation gate for the typed memory eviction. |
 | `scripts/gates.test.mjs` | every rule tested by constructing the input that DEFEATS it. |
 | `scripts/launcher-permissions.test.mjs` | the autonomy dial, and the model it made inert. |
