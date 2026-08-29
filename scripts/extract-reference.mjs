@@ -260,16 +260,17 @@ export async function checkRobots(url, { tokens = UA_TOKENS, fetchImpl = fetch }
   try {
     res = await fetchImpl(robotsUrl, { redirect: 'follow', headers: { accept: 'text/plain' } });
   } catch (cause) {
-    return { allowed: false, fetched: false, robotsUrl, rule: `could not fetch robots.txt: ${cause.message}`, matchedBy: null, crawlDelay: null };
+    return { allowed: false, reason: 'unknown', fetched: false, robotsUrl, rule: `could not fetch robots.txt: ${cause.message}`, matchedBy: null, crawlDelay: null };
   }
   if (res.status >= 400 && res.status < 500) {
-    return { allowed: true, fetched: true, status: res.status, robotsUrl, rule: `${res.status} — no robots.txt published, default allow`, matchedBy: null, crawlDelay: null };
+    return { allowed: true, reason: 'no-robots-published', fetched: true, status: res.status, robotsUrl, rule: `${res.status} — no robots.txt published, default allow`, matchedBy: null, crawlDelay: null };
   }
   if (!res.ok) {
-    return { allowed: false, fetched: false, status: res.status, robotsUrl, rule: `robots.txt returned ${res.status} — permission is UNKNOWN, refusing`, matchedBy: null, crawlDelay: null };
+    return { allowed: false, reason: 'unknown', fetched: false, status: res.status, robotsUrl, rule: `robots.txt returned ${res.status} — permission is UNKNOWN, refusing`, matchedBy: null, crawlDelay: null };
   }
   const txt = await res.text();
-  return { ...robotsVerdict(txt, u.pathname + u.search, tokens), fetched: true, status: res.status, robotsUrl };
+  const v = robotsVerdict(txt, u.pathname + u.search, tokens);
+  return { ...v, reason: v.allowed ? 'allowed' : 'disallowed', fetched: true, status: res.status, robotsUrl };
 }
 
 // ── pure analysis ───────────────────────────────────────────────────────────────────────────────
@@ -1061,9 +1062,20 @@ if (isMain) {
     console.error(`extract-reference REFUSED: could not evaluate robots.txt (${e.message})`);
     process.exit(2);
   }
-  console.error(`robots.txt: ${robots.robotsUrl} → ${robots.allowed ? 'ALLOWED' : 'DISALLOWED'} (${robots.rule}${robots.matchedBy ? `, matched as ${robots.matchedBy}` : ''})`);
+  const label = robots.allowed ? 'ALLOWED' : robots.reason === 'unknown' ? 'UNKNOWN' : 'DISALLOWED';
+  console.error(`robots.txt: ${robots.robotsUrl} → ${label} (${robots.rule}${robots.matchedBy ? `, matched as ${robots.matchedBy}` : ''})`);
   if (!robots.allowed) {
-    console.error(`\nextract-reference REFUSED: ${new URL(url).hostname} disallows this path. Not fetching it.\nThis is the tool working, not the tool failing — the risk here is contract, not the CFAA.`);
+    // TWO REFUSALS THAT MUST NOT WEAR THE SAME SENTENCE. Both fail closed, and that part is
+    // settled. But "the site said no" is a fact about the site, and "I could not ask" is a fact
+    // about US — and the first version of this message reported the second as the first. Measured
+    // 2026-08-29 under the armed sandbox, which denies the network: the tool printed
+    // "linear.app disallows this path", which is false about linear.app. A refusal that
+    // misattributes itself teaches the reader something untrue about a third party.
+    if (robots.reason === 'unknown') {
+      console.error(`\nextract-reference REFUSED: could not READ ${new URL(url).hostname}/robots.txt, so permission is UNKNOWN. This is NOT a statement that the site disallows anything.\nFailing closed is deliberate — "I could not ask" must never read as "yes". Under the armed sandbox the network is denied and this is the expected result; capture needs an escalated lane.`);
+    } else {
+      console.error(`\nextract-reference REFUSED: ${new URL(url).hostname} disallows this path in its own robots.txt. Not fetching it.\nThis is the tool working, not the tool failing — the risk here is contract, not the CFAA.`);
+    }
     process.exit(2);
   }
   if (robots.crawlDelay) {

@@ -373,6 +373,25 @@ test('an unfetchable robots.txt is NOT permission — 4xx allows, 5xx and networ
   assert.equal(ok.robotsUrl, 'https://x.test/robots.txt');
 });
 
+test('a refusal says WHOSE decision it was — "site said no" and "could not ask" are distinct', async () => {
+  // Both fail closed. Reporting them with one sentence made the tool say
+  // "linear.app disallows this path" when the armed sandbox had blocked the fetch — a false
+  // statement about a third party, produced by a refusal that was otherwise correct.
+  const res = (status, body = '') => async () => ({ status, ok: status >= 200 && status < 300, text: async () => body });
+  const said = await checkRobots('https://x.test/p', { fetchImpl: res(200, 'User-agent: *\nDisallow: /p\n') });
+  const couldNotAsk = await checkRobots('https://x.test/p', { fetchImpl: async () => { throw new Error('ENOTFOUND'); } });
+  const alsoCouldNot = await checkRobots('https://x.test/p', { fetchImpl: res(503) });
+
+  assert.equal(said.allowed, false);
+  assert.equal(couldNotAsk.allowed, false);
+  assert.equal(alsoCouldNot.allowed, false);
+  assert.equal(said.reason, 'disallowed');
+  assert.equal(couldNotAsk.reason, 'unknown');
+  assert.equal(alsoCouldNot.reason, 'unknown');
+  assert.notEqual(said.reason, couldNotAsk.reason, 'if these ever collapse to one value the message collapses with them');
+  assert.equal((await checkRobots('https://x.test/p', { fetchImpl: res(404) })).reason, 'no-robots-published');
+});
+
 // ── the duplicated WCAG arithmetic, pinned against its external definition ───────────────────────
 
 test('contrast matches the WCAG worked examples — the tripwire on the design-probe duplication', () => {
