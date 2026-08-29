@@ -11,8 +11,8 @@
       "value": 1.125,
       "band": "ui",
       "statement": "adjacent steps in a type scale must differ by at least 1.125x",
-      "origin": "scripts/design-probe.mjs MIN_STEP_RATIO — this repo enforces it today as a p2 finding",
-      "expected": "REFUTED — every reference with a +1 increment above 9px violates it by arithmetic, and that is most of them"
+      "origin": "scripts/design-probe.mjs MIN_STEP_RATIO, which this repo enforced as a p2 finding until 2026-08-29. THIS RULE IS NOW DEAD AND THIS HARNESS IS WHY: the constant, scaleGaps() and the type-scale-near-duplicates finding survive only as a deletion record on integration/design-layer. It is kept stated here rather than deleted, because a rule removed without its refutation left beside it gets re-proposed next quarter by someone who never saw the measurement.",
+      "expected": "REFUTED against linear + stripe + docs.stripe + mission-control; CONTESTED over the full corpus because vercel.com conforms — and vercel's verdict turns on band membership, not on vercel. Any reference with a +1 increment above 9px violates by arithmetic."
     },
     {
       "id": "six-sizes-is-restraint",

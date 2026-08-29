@@ -30,8 +30,9 @@
     "ui: 1 measured size(s) inside the fitted range do not sit on the +2 ramp (12.6), of which 12.6 are fractional sizes",
     "display: no integer increment fits the display sizes; increment is null",
     "below the ui band and not modelled by these seeds: 11.9",
-    "leading: falloff and exponent are null because the seeds contract names them without stating the curve they parameterise; the measured leading table is emitted in full so a consumer can fit its own model",
     "leading: peak excludes 2 under-sampled size(s) (12px n=1, 12.6px n=1) — a size carried by a handful of elements is not this reference's leading",
+    "leading: the SHAPE of this curve is sourced (peak near 1.5-1.56 at 16-18px, 1.0 at display; both Radix and Tailwind obey it) but the exact FUNCTION is a fit, not a standard — a poor fit is evidence about the formula, not about the reference",
+    "leading: only 0 point(s) carry a measurable falloff; exponent and falloff need 3 and are null rather than guessed",
     "tracking: the fitted line crosses zero at 25.977px, outside the measured range 12–14px; that is extrapolation, not measurement, so zeroAt and slope are null (line: tracking = 0.0232 + -0.0009·size, r2 = 0.999)",
     "family: no monospace stack was rendered; mono is null rather than guessed",
     "WILL BE REFUSED BY build-tokens (THE BAND JOIN): display.base/14 = 1.1 is not larger than the widest step inside the ui band (1.111), so the join reads as an interpolation rather than a jump."
