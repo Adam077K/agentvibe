@@ -749,6 +749,21 @@ test('NEGATIVE CONTROL: the sentinel is never read as a colour, in either direct
   assert.equal(pairColors({ fg: TRANSPARENT, bg: 'rgb(255, 255, 255)' }), null, 'invisible text is not measurable');
 });
 
+test('the sentinel constant and the literal inside collect() cannot drift apart', () => {
+  // collect() is serialised into the page, so it CANNOT reference TRANSPARENT — it has to carry
+  // the literal. That is two spellings of one value: change the constant alone and the walk keeps
+  // emitting the old string, pairColors stops recognising it, and the sentinel flows through to
+  // parseRgb as opaque black again — the exact defect this section fixes, restored silently.
+  // Nothing else can see inside collect(), so this reads the source.
+  const src = fs.readFileSync(path.join(SCRIPTS_DIR, 'design-probe.mjs'), 'utf8');
+  const collectBody = src.slice(src.indexOf('function collect()'), src.indexOf('/* c8 ignore stop */'));
+  assert.ok(collectBody.length > 100, 'CONTROL: collect() must have been found, or this test checks nothing');
+  assert.ok(
+    collectBody.includes(`'${TRANSPARENT}'`),
+    `collect() no longer carries the literal '${TRANSPARENT}' that TRANSPARENT declares`,
+  );
+});
+
 test('NEGATIVE CONTROL: #333 on an undeclared canvas is no longer a false blocker', () => {
   const raw = { ...CLEAN, contrastPairs: [{ fg: 'rgb(51, 51, 51)', bg: TRANSPARENT, px: 14, bold: false }], colorScheme: 'normal', prefersDark: false };
   const r = resolveContrast(raw);
