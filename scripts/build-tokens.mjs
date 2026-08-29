@@ -40,15 +40,58 @@
 // against linear.app, stripe.com, vercel.com and play.grafana.org:
 //
 //   1. UI BAND BY ABSOLUTE INCREMENT. size(i) = base + i*increment. The adjacent ratio is exactly
-//      1 + increment/size, which DECREASES monotonically by construction. That is the arithmetic
-//      signature measured on linear.app (1 1 1 1 1 1 2), stripe.com (1 1 1 1 2 2 2), vercel.com
-//      (1 2 2 2 2 2 2) and play.grafana.org (2). A MODULAR SCALE HOLDS ITS RATIO CONSTANT AND IS
-//      THE WRONG MODEL — it was falsified during that research and is not to be reintroduced.
+//      1 + increment/size, which DECREASES monotonically by construction. A MODULAR SCALE HOLDS
+//      ITS RATIO CONSTANT AND IS THE WRONG MODEL — it was falsified during that research and is
+//      not to be reintroduced.
 //   2. DISPLAY BAND DERIVED SEPARATELY, same way, larger increment, JOINED BY A JUMP AND NEVER
-//      INTERPOLATED. Neither band is derived from the other. Measured display increments:
-//      linear 6 8 16 16 · stripe 4 4 6 16 · vercel 32 8.
+//      INTERPOLATED. Neither band is derived from the other.
 //   3. LINE-HEIGHT IS A CURVE, peaking near 1.5-1.56 at 16-18px and reaching 1.0 at display sizes.
 //   4. TRACKING IS MONOTONE WITH SIZE, positive below ~14px and increasingly negative above.
+//
+// ── THE MEASURED INCREMENTS ARE DELIBERATELY NOT WRITTEN DOWN HERE ───────────────────────────────
+//
+// Read them off the corpus instead. Verified to run, 2026-08-29, from the repository root:
+//
+//   for d in design/references/*/; do node -e "const j=require('./$d/measured.json');
+//     const s=a=>((a||[]).slice(1).map((v,i)=>+(v-a[i]).toFixed(3)).join(' ')||'(none)');
+//     console.log('$d', 'ui', s(j.type.bands.ui.sizes), 'display', s(j.type.bands.display.sizes))"; done
+//
+// Every refusal in this file already does exactly that: `citeUi()`, `citeDisplay()` and
+// `citeBandWidths()` all go through `referenceIncrements()`, which reads design/references/ on
+// each call and reports an unreadable reference rather than shrinking `n` in silence.
+//
+// > **Superseded 2026-08-29.** Rules 1 and 2 above carried a table of increments — "the arithmetic
+// > signature measured on linear.app (1 1 1 1 1 1 2), stripe.com (1 1 1 1 2 2 2), vercel.com
+// > (1 2 2 2 2 2 2) and play.grafana.org (2)", and "linear 6 8 16 16 · stripe 4 4 6 16 · vercel
+// > 32 8". Against the committed corpus, exactly ONE of those seven sub-figures holds — vercel's
+// > display `32 8`. Derived with the command above on 2026-08-29:
+// >
+// >     docs.stripe.com   ui 1 1                          display 5 3 8
+// >     linear.app        ui 1 1 1 1 1 1                  display 2 4 8 16 16 8
+// >     play.grafana.org  ui 0.6 1.4                      display 1.4 1.4 9.8
+// >     stripe.com        ui 1 1 1 1 1 1 1 1 2 2 1 1 2 2  display 16 8
+// >     vercel.com        ui 2 2                          display 32 8
+// >
+// > **AND THE NUMBERS WERE NOT INVENTED — THEY ARE AN ACCURATE QUOTATION OF §7.1, WHICH IS THE
+// > SHARPER PROBLEM.** That document carries those exact rows; find the table by what it holds,
+// > never by a line number — `grep -n '1 1 1 1 2 2 2' docs/03-system-design/DESIGN-CAPABILITY.md`.
+// > It omits docs.stripe.com because that reference did not exist when it was written. So this is
+// > not a typo and not a stale copy of the corpus: it is **the source document and this
+// > repository's own measurements disagreeing**, with the header presenting the document's figures
+// > under the word "measured". §15.16 of that same document already says its unanimity claim is
+// > "FALSE as written", and `uiSplit()` below says so to every reader who trips a refusal. The
+// > disagreement is left standing in DESIGN-CAPABILITY.md on purpose: reconciling it is a change to
+// > the sourced research, not to a generator, and quietly editing a cited document to match code is
+// > the worse of the two failures available here.
+// >
+// > **The provenance is the part worth keeping.** `referenceIncrements()` below already records
+// > that this same table "WAS A HAND-WRITTEN CONSTANT AND IT WAS WRONG ON EVERY ENTRY". That fix
+// > removed the constant from the REFUSAL PATH and left its twin here, seventy lines above it,
+// > still asserted — so the file documented that the table was refuted and went on asserting it in
+// > its own header. A correction applied at one site and not at its twin is the shape this
+// > repository keeps finding. **The cure is not a corrected table.** Every SOURCE.yml carries
+// > `expires: 2026-11-27`, so the corpus WILL be recaptured and a corrected constant rots on that
+// > day. A command does not.
 //
 // THE SHAPE OF (3) AND (4) IS SOURCED; THE EXACT FUNCTION IS A FIT. Nothing in the corpus publishes
 // a formula — §9.6 of the same document records that "every motion number in every design system
