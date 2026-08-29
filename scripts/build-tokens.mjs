@@ -405,21 +405,50 @@ export function assertIntegerSizes(sizes) {
  * boundary is seeds.json — this refusal — not the renderer and not the extractor that suggests a
  * value for a human to paste.
  *
- * A DENY-LIST WAS THE FIRST DESIGN AND IT DOES NOT SURVIVE CONTACT WITH THIS REPO'S OWN SEEDS.
- * Refusing every one of ``; { } / * " ' \`` and newline refuses `'Segoe UI'`, `'SF Mono'`,
- * `'JetBrains Mono'` and `'Fira Code'` — four members of the committed stacks, and the CSS idiom
- * for any family name carrying a space. A quoted string is not the danger: a `}` inside a CSS
- * string does not close a block. An UNTERMINATED or nested quote is, so the grammar admits a
- * quoted member only when it is closed and its contents cannot themselves quote or escape.
+ * TWO CORRECTIONS OVERSHOT IN OPPOSITE DIRECTIONS BEFORE THIS SHAPE, and both are worth keeping.
+ *
+ * A BLANKET DENY-LIST WAS THE FIRST DESIGN AND IT REFUSED THIS REPO'S OWN SEEDS. Refusing every
+ * one of ``; { } / * " ' \`` and newline refuses `'Segoe UI'`, `'SF Mono'`, `'JetBrains Mono'` and
+ * `'Fira Code'` — four members of the committed stacks, and the CSS idiom for any family name
+ * carrying a space. A quoted string is not the danger: a `}` inside a CSS string does not close a
+ * block. An UNTERMINATED or nested quote is.
+ *
+ * THE ALLOW-LIST THAT REPLACED IT WAS ASCII-ONLY, AND THAT WAS THE OPPOSITE MISTAKE. The quoted
+ * branch read `'[A-Za-z0-9 _-]+'`, so it refused valid CSS — measured 2026-08-29:
+ *
+ *   REFUSED   "微软雅黑", sans-serif            REFUSED   "맑은 고딕", sans-serif
+ *   REFUSED   "ヒラギノ角ゴ ProN", sans-serif     REFUSED   "Åkzidenz Grotesk", sans-serif
+ *   REFUSED   微软雅黑, sans-serif              <- the UNQUOTED branch had it too
+ *
+ * The safety argument above never asked for that: the dangerous characters are the ones that end
+ * the string or escape out of it, and **a non-ASCII letter is neither**. Latent rather than live —
+ * the committed seeds are ASCII — but `build-tokens --check` rides `test:lenses`, a CI step, so
+ * the first CJK or accented family would have turned the build red. For a design-token generator
+ * that is an ordinary thing to add.
+ *
+ * So: deny-list too broad, then allow-list too narrow. The shape that is neither is a deny-list
+ * SCOPED TO THE QUOTED BRANCH, and Unicode letters admitted in the unquoted one.
  *
  * Admits exactly two shapes, and nothing reaches the sink that is not one of them:
- *   · a quoted name — `'Segoe UI'` or `"SF Mono"` — whose contents are letters, digits, space,
- *     `_` and `-` only, so no quote, backslash, brace, semicolon or comment can live inside it;
- *   · unquoted identifiers — `ui-sans-serif`, `-apple-system`, `system-ui`, or space-separated
- *     idents like `Segoe UI` — matching CSS's own custom-ident shape with an optional leading `-`.
+ *   · a quoted name — `'Segoe UI'`, `"SF Mono"`, `"微软雅黑"` — closed, and containing none of
+ *     `"` `'` `\` or a control character. Everything else may live inside it, because a CSS string
+ *     is a string: `}`, `;` and `/*` inside one close nothing and start nothing.
+ *   · unquoted identifiers — `ui-sans-serif`, `-apple-system`, `Segoe UI`, `微软雅黑` — letters,
+ *     marks and digits of ANY script plus `_` and `-`, space-separated, with an optional leading
+ *     `-`. Unquoted values have no string to protect them, so this branch stays an allow-list.
+ *
+ * BIDI AND JOINING MARKS ARE DELIBERATELY NOT REFUSED. U+061C, U+200E and U+200F appear in
+ * ordinary Arabic and Hebrew text, and refusing them to pre-empt a display-spoofing worry nobody
+ * has raised would recreate exactly the defect above, one script over. C0/C1 controls and DEL are
+ * refused because they are not text.
  */
-export const FAMILY_MEMBER =
-  /^(?:'[A-Za-z0-9 _-]+'|"[A-Za-z0-9 _-]+"|-?[A-Za-z_][A-Za-z0-9_-]*(?: +[A-Za-z_][A-Za-z0-9_-]*)*)$/;
+
+/** Ends a CSS string or escapes out of it. Nothing else inside a quoted name can reach the sink. */
+const QUOTED_FORBIDDEN = '"\'\\\\\\u0000-\\u001F\\u007F-\\u009F';
+export const FAMILY_MEMBER = new RegExp(
+  `^(?:'[^${QUOTED_FORBIDDEN}]+'|"[^${QUOTED_FORBIDDEN}]+"|-?[\\p{L}\\p{M}_][\\p{L}\\p{M}\\p{N}_-]*(?: +[\\p{L}\\p{M}_][\\p{L}\\p{M}\\p{N}_-]*)*)$`,
+  'u'
+);
 
 /**
  * Refuse any `type.family.*` value that could leave the declaration it is written into.

@@ -670,14 +670,95 @@ test('a family value that could break out of @theme is REFUSED at seeds.json, th
   refusedWith((s) => { s.type.family.sans = ['Inter', 'x} :root{--color-danger:#0f0} a{content:"']; }, 'is not a font-family name');
   refusedWith((s) => { s.type.family.sans = ['Inter', '']; }, 'empty stack member');
 
-  // CONTROL, and it is the reason this is an allow-list rather than the deny-list first proposed:
-  // refusing every one of `; { } / * " ' \` and newline refuses four members of the COMMITTED
-  // stacks. A quoted name is the CSS idiom for a family carrying a space and must stay expressible.
-  for (const member of ["'Segoe UI'", "'SF Mono'", "'JetBrains Mono'", "'Fira Code'", '"SF Pro Display"', 'ui-sans-serif', '-apple-system', 'system-ui', 'Segoe UI', 'sans-serif']) {
+  // CONTROL, and it is the reason this is an allow-list rather than the blanket deny-list first
+  // proposed: refusing every one of `; { } / * " ' \` and newline refuses four members of the
+  // COMMITTED stacks. A quoted name is the CSS idiom for a family carrying a space.
+  for (const member of ["'Segoe UI'", "'SF Mono'", "'JetBrains Mono'", "'Fira Code'", '"SF Pro Display"', 'ui-sans-serif', '-apple-system', 'system-ui', 'Segoe UI', 'sans-serif', 'ui-monospace', 'Menlo', 'Consolas', 'monospace']) {
     assert.ok(FAMILY_MEMBER.test(member), `${member} is a real font-family member and the grammar refuses it`);
     assert.doesNotThrow(() => assertFamilySafe('sans', member), `assertFamilySafe refuses ${member}`);
   }
   assert.doesNotThrow(() => validateSeeds(clone()), 'the committed seeds.json no longer validates');
+});
+
+// ── AND THE CORRECTION OVERSHOT THE OTHER WAY ───────────────────────────────────────────────────
+//
+// The allow-list that closed the injection was ASCII-ONLY — `'[A-Za-z0-9 _-]+'` — so it refused
+// valid CSS. Measured 2026-08-29, before this test existed:
+//
+//   REFUSED  "微软雅黑", sans-serif        REFUSED  "맑은 고딕", sans-serif
+//   REFUSED  "ヒラギノ角ゴ ProN", sans-serif  REFUSED  "Åkzidenz Grotesk", sans-serif
+//   REFUSED  微软雅黑, sans-serif          <- the UNQUOTED branch had it too, which the brief
+//                                            scoping the fix to the quoted branch did not cover
+//
+// A blanket deny-list was too broad and this allow-list was too narrow: each correction overshot
+// in the opposite direction, and the shape that is neither is a deny-list scoped to the QUOTED
+// branch, where a CSS string already neutralises `}` `;` and `/*`, plus Unicode letters in the
+// unquoted branch, which has no string to protect it and so stays an allow-list.
+//
+// Latent rather than live — the committed seeds are ASCII — but `build-tokens --check` rides
+// `test:lenses`, a CI step, so the first CJK or accented family turns the build red.
+
+test('a font name in any script is expressible, and the injection stays refused', () => {
+  const valid = [
+    ['"微软雅黑", sans-serif', 'Chinese, quoted'],
+    ['"ヒラギノ角ゴ ProN", sans-serif', 'Japanese, quoted, with a space'],
+    ['"맑은 고딕", sans-serif', 'Korean, quoted, with a space'],
+    ['"Åkzidenz Grotesk", sans-serif', 'a Latin-1 accented letter'],
+    ['"Noto Naskh Arabic", "شبك", sans-serif', 'Arabic — RTL, and its bidi marks are NOT refused'],
+    ['"עברית", sans-serif', 'Hebrew'],
+    ['"Ελληνικά", sans-serif', 'Greek'],
+    ['"Ру́сский", sans-serif', 'Cyrillic with a combining mark'],
+    ['微软雅黑, sans-serif', 'UNQUOTED non-ASCII — the branch the brief scoped out'],
+    ['Åkzidenz Grotesk, sans-serif', 'unquoted, accented, space-separated'],
+    // SINGLE-QUOTED, AND THESE ARE HERE BECAUSE A MUTATION SURVIVED WITHOUT THEM. Reverting only
+    // the single-quoted alternative of FAMILY_MEMBER to `'[A-Za-z0-9 _-]+'` — the N1 regression
+    // exactly — left all 41 tests green, because every international case above is DOUBLE-quoted
+    // and the two alternatives are independent. The reviewer's examples were all double-quoted and
+    // this test had copied that shape, so it covered one of the two branches it was written for.
+    ["'微软雅黑', sans-serif", 'Chinese, SINGLE-quoted'],
+    ["'맑은 고딕', sans-serif", 'Korean, SINGLE-quoted, with a space'],
+    ["'Åkzidenz Grotesk', sans-serif", 'accented, SINGLE-quoted'],
+    ["'ヒラギノ角ゴ ProN', sans-serif", 'Japanese, SINGLE-quoted'],
+  ];
+  for (const [value, why] of valid) {
+    assert.doesNotThrow(() => assertFamilySafe('sans', value), `${why}: ${value} is valid CSS and is refused`);
+  }
+
+  // EVERY ONE OF THE EIGHT PAYLOADS THAT MOTIVATED THE GRAMMAR, RE-RUN AGAINST THE WIDER ONE.
+  // Widening a security predicate without re-running what it was built to stop is how the second
+  // fix undoes the first, so these are executed here rather than argued to survive.
+  const hostile = [
+    ['x} :root{--color-danger:#00ff00} a{content:"', 'the brace escape itself'],
+    ['Inter; --color-ink: #ff0000', 'a second declaration via `;`'],
+    ['Inter /* */ ; color: red', 'a comment used to hide the payload'],
+    ['Inter\\}', 'a backslash escape reaching the sink'],
+    ['Inter\n  --color-ink: #ff0000', 'a newline, so the payload owns its own line'],
+    ["'unterminated", 'an unclosed quote swallows the rest of the file'],
+    ["'a'b'", 'nested quotes: closed, then reopened'],
+    ['url(http://evil.example/x)', 'a fetch from a value that looks like a font'],
+  ];
+  for (const [value, why] of hostile) {
+    assert.throws(() => assertFamilySafe('mono', value), SeedsRefused, `${why}: ${JSON.stringify(value)} is accepted by the widened grammar`);
+  }
+  assert.equal(hostile.length, 8, 'the eight payloads that motivated the grammar are no longer eight');
+
+  // The characters that end a CSS string or escape out of it stay refused INSIDE quotes, which is
+  // the whole of the scoped deny-list. Everything else may live there, because a string is a string.
+  for (const inside of ['"a\"b"', "'a'b'", '"a\\\\b"', '"a\nb"', '"a\u0000b"', '"a\u007Fb"']) {
+    assert.ok(!FAMILY_MEMBER.test(inside), `${JSON.stringify(inside)} can end or escape the string and is accepted`);
+  }
+  for (const inside of ['"a}b"', '"a;b"', '"a/*b"', '"a{b"']) {
+    assert.ok(FAMILY_MEMBER.test(inside), `${JSON.stringify(inside)} is inert inside a CSS string and is refused anyway`);
+  }
+
+  // END TO END: a CJK stack must reach the stylesheet intact, still inside @theme.
+  const s = clone();
+  s.type.family.sans = '"微软雅黑", "Noto Sans SC", sans-serif';
+  assert.doesNotThrow(() => validateSeeds(s));
+  const css = renderCss(buildModel(s));
+  const line = css.split('\n').find((l) => l.includes('--font-sans'));
+  assert.equal(line.trim(), '--font-sans: "微软雅黑", "Noto Sans SC", sans-serif;');
+  assert.equal(css.split('\n').filter((l) => /^@theme\s*\{/.test(l)).length, 1, 'the CJK stack broke the @theme block');
 });
 
 test('every emitted declaration lands INSIDE @theme — brace depth, not "it parses"', () => {

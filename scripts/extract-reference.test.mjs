@@ -689,6 +689,86 @@ test('every rule records the verdict the harness actually returns for it', () =>
   assert.equal(stillTrue.length, 0, 'CONTROL: a rule really is REFUTED, so the negative control proves nothing');
 });
 
+// ── THE ADVANCE WARNING COVERS ALL FOUR REFUSALS, NOT THREE ─────────────────────────────────────
+//
+// This file's own comment says consumerRefusals exists "so a human reading this file learns it
+// before pasting rather than from an exit code afterwards". It warned for ui.increment,
+// display.increment and the band join — and not for the family, which became the MOST LIKELY
+// bounce the day build-tokens started refusing family values. Executed against an ordinary
+// Chinese-language reference before the note existed: the suggestion looked clean, no warning,
+// threw on paste. The sink was hardened and the advance-warning path was not updated with it.
+
+test('a family value that build-tokens will refuse is flagged in the suggestion, before the paste', async () => {
+  const { assertFamilySafe } = await import('./build-tokens.mjs');
+  const warns = (sans) =>
+    consumerRefusals({ increment: 1 }, { increment: 8, base: 20 }, { ui: [{ value: 12 }], uiFit: { covered: [12] } }, { sans })
+      .some((n) => n.includes('type.family.'));
+  const refused = (v) => {
+    try {
+      assertFamilySafe('sans', v);
+      return false;
+    } catch {
+      return true;
+    }
+  };
+
+  // THE MIRROR IS CROSS-CHECKED AGAINST THE AUTHORITY, which is the only honest way to keep a
+  // second copy of a predicate. `assertFamilySafe` in scripts/build-tokens.mjs is the authority;
+  // this note is a heuristic, and it is NOT imported from there on purpose — a measurement tool
+  // that imports the generator it feeds has a dependency its own header denies having.
+  //
+  // OVER-WARNING IS THE HARMFUL DIRECTION and is asserted to be ZERO: a note on a value that would
+  // have been accepted teaches people to ignore notes. Under-warning is a missing note, and the
+  // refusal still fires at the sink.
+  const corpus = [
+    "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+    "ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace",
+    '"微软雅黑", sans-serif',
+    '"ヒラギノ角ゴ ProN", sans-serif',
+    '"맑은 고딕", sans-serif',
+    '"Åkzidenz Grotesk", sans-serif',
+    '"Noto Naskh Arabic", "شبك", sans-serif',
+    '"Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
+    '微软雅黑, sans-serif',
+    'Inter, sans-serif',
+    '"a b"',
+    'Inter',
+    'x} :root{--color-danger:#00ff00} a{content:"',
+    'Inter; --color-ink: #ff0000',
+    'Inter /* */ ; color: red',
+    'Inter\\}',
+    'Inter\n  --color-ink: #ff0000',
+    "'unterminated",
+    "'a'b'",
+    'url(http://evil.example/x)',
+  ];
+  const overWarn = corpus.filter((v) => warns(v) && !refused(v));
+  const underWarn = corpus.filter((v) => !warns(v) && refused(v));
+  assert.deepEqual(overWarn, [], `the note fires on ${overWarn.length} value(s) build-tokens would ACCEPT — a false warning teaches people to ignore the true ones`);
+  assert.ok(corpus.filter(refused).length >= 6, 'CONTROL: too few refusable values in the corpus for this to mean anything');
+
+  // The one residual gap, named rather than rounded off. `url(...)` is refused at the sink and not
+  // warned here — and it cannot arise on this path: the input is `getComputedStyle().fontFamily`,
+  // which a browser normalises to idents and quoted strings, never a url() token. If this list
+  // grows, the mirror has drifted from the authority and that is what the assertion is for.
+  assert.deepEqual(underWarn, ['url(http://evil.example/x)'], 'the set of values refused at the sink but not warned here has changed');
+
+  // Non-ASCII must NOT warn — the note would otherwise reproduce the ASCII-only defect one file over.
+  assert.equal(warns('"微软雅黑", sans-serif'), false, 'an ordinary Chinese-language reference is warned about');
+  assert.equal(warns('"맑은 고딕", sans-serif'), false);
+
+  // END TO END, through the path a real capture takes into seeds.suggestion.json.
+  const hostile = { type: { sizes: [{ value: 12, count: 9 }, { value: 14, count: 9 }], families: [{ value: 'x} :root{--a:1} a{content:"', count: 40 }], leading: [], tracking: [] } };
+  const notes = deriveSeeds(hostile).notes.filter((n) => n.includes('type.family.'));
+  assert.equal(notes.length, 1, 'the note does not reach seeds.suggestion.json, which is the file a human reads');
+  assert.match(notes[0], /WILL PROBABLY BE REFUSED BY build-tokens/);
+  assert.match(notes[0], /微软雅黑/, 'the note does not tell the reader that non-ASCII names are fine');
+
+  // ...and a clean capture carries no family note at all.
+  const clean = { type: { sizes: [{ value: 12, count: 9 }, { value: 14, count: 9 }], families: [{ value: '"微软雅黑", sans-serif', count: 40 }], leading: [], tracking: [] } };
+  assert.deepEqual(deriveSeeds(clean).notes.filter((n) => n.includes('type.family.')), []);
+});
+
 // ── THE PERCENT-ENCODING BYPASS ─────────────────────────────────────────────────────────────────
 test('a percent-encoded path cannot walk past a Disallow', () => {
   const txt = 'User-agent: *\nDisallow: /private\n';

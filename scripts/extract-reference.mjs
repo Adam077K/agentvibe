@@ -695,8 +695,41 @@ export function fitFamilies(families) {
  * does not talk to. So the number stays and the note says exactly what will bounce and why —
  * the human gets the fact and the warning, and the bounce itself is a loud exit 2 either way.
  */
-export function consumerRefusals(ui, display, bands) {
+export function consumerRefusals(ui, display, bands, family = null) {
   const out = [];
+  // THE FAMILY REFUSAL IS THE MOST LIKELY BOUNCE AND HAD NO NOTE — the asymmetry this closes.
+  // `build-tokens` refuses four things and this function warned about three, in a file whose own
+  // header says it exists "so a human reading this file learns it before pasting rather than from
+  // an exit code afterwards". The gap was created by hardening the sink without updating the
+  // advance-warning path the repo maintains for every other refusable field. Measured against an
+  // ordinary Chinese-language reference: the suggestion looked clean, no warning, threw on paste.
+  //
+  // This mirrors `FAMILY_MEMBER` in scripts/build-tokens.mjs rather than importing it, and that is
+  // a deliberate cost: importing the generator into the extractor would make a measurement tool
+  // depend on the thing it feeds. The mirror is loose ON PURPOSE — it reports what will PROBABLY
+  // bounce, and `assertFamilySafe` remains the only authority. Under-warning is a missing note;
+  // over-warning on a value that would have been accepted is a note that teaches people to ignore
+  // notes, so it tests only for the characters that are refused in every position.
+  for (const [key, value] of Object.entries(family ?? {})) {
+    if (typeof value !== 'string' || !value.trim()) continue;
+    for (const member of value.split(',').map((m) => m.trim()).filter(Boolean)) {
+      const quoted = /^(['"]).*\1$/.test(member);
+      const inner = quoted ? member.slice(1, -1) : member;
+      // A quote INSIDE a quoted member is the nested-quote case — `'a'b'` reads as closed-then-
+      // reopened and is refused by the generator. Found by cross-checking this note against
+      // `assertFamilySafe` over a corpus rather than by reading it.
+      const risky = /[{};\\'"]|\/\*|[\u0000-\u001F\u007F-\u009F]/.test(inner);
+      if (risky) {
+        out.push(
+          `WILL PROBABLY BE REFUSED BY build-tokens: type.family.${key} member ${JSON.stringify(member)} ` +
+            `carries a character that cannot reach a CSS declaration — build-tokens interpolates this ` +
+            `value verbatim inside \`@theme { }\`, where a \`}\` closes the block and every later ` +
+            `declaration lands outside it. The measurement is kept; the seeds cannot express it. ` +
+            `Non-ASCII names are fine — "微软雅黑" and "맑은 고딕" are accepted.`
+        );
+      }
+    }
+  }
   if (ui.increment !== null && ui.increment !== 1 && ui.increment !== 2) {
     out.push(`WILL BE REFUSED BY build-tokens: ui.increment must be 1 or 2, and this reference measures +${ui.increment}. The measurement is kept; the seeds cannot express it.`);
   }
@@ -786,7 +819,7 @@ export function deriveSeeds(measured, { minCount = 1, minShare = 0 } = {}) {
 
   const family = fitFamilies(measured?.type?.families ?? []);
   notes.push(...family.notes);
-  notes.push(...consumerRefusals(ui, display, bands));
+  notes.push(...consumerRefusals(ui, display, bands, { sans: family.sans, mono: family.mono }));
 
   return {
     type: {
