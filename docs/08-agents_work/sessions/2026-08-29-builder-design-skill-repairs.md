@@ -9,10 +9,14 @@ branch: fix/design-skill-repairs
 
 # builder — four repairs to design skills we already own
 
-Brief: four repairs, no new skill imports. Two rounds. In round 1 I refused the two numeric changes
-because I could not reach a network to verify them; `sourcer-motion` returned the figures and round 2
-applied them. **Refusing first was worth it — the sourcing falsified something in each of the two
-places it touched, including a row of my own new rule.**
+Brief: four repairs, no new skill imports. **Three rounds, and the arc is the finding.** Round 1
+refused both numeric changes for want of a source. Round 2 applied them once the sourcer returned
+Vaul, Carbon and Material. Round 3 **reverted one of them** once the sourcer returned Sonner: the
+number was right all along and the comparison behind the finding was a category error.
+
+**The sourcing falsified something on every strand it touched, twice against my own work:** it
+falsified a row of the new rule I had just written (§3), and it falsified the value change I had just
+made (§2). Only the refusal in round 1 kept the correct number available to restore.
 
 ## 1 — `impeccable` was unreachable for two independent reasons. Both closed.
 
@@ -43,32 +47,47 @@ sidecars, so with nothing installed there is nothing to compare against. All fou
 stronger "documents an absent feature" note. `visualize.md` (49 lines) is named as a partial rather
 than folded silently into the 88%: its art direction is usable, its asset pipeline is not.
 
-## 2 — the velocity threshold: 0.11 → 0.4 px/ms, and the unit was checked FIRST
+## 2 — the velocity threshold was CORRECT. My own change to it was the defect.
 
-```ts
-// vaul 1.1.2 · src/constants.ts
-export const VELOCITY_THRESHOLD = 0.4;
+**`0.11 px/ms` stands. I reverted my own commit.** Sonner ships exactly it, in exactly this condition:
+
+```tsx
+// sonner 2.0.8 · src/index.tsx
+const SWIPE_THRESHOLD = 45;
+const timeTaken = new Date().getTime() - dragStartTime.current?.getTime();
+const velocity = Math.abs(swipeAmount) / timeTaken;
+if (isAllowedDirection && (Math.abs(swipeAmount) >= SWIPE_THRESHOLD || velocity > 0.11)) {
 ```
 
-**The unit question was the right one to ask and it came back negative — the units match.** Vaul's
-`src/index.tsx` computes `Math.abs(distMoved) / timeTaken` where `timeTaken` is a `getTime()` delta in
-milliseconds, so px/ms. The skill's own example computes `Math.abs(dragDistance) / dragDuration` — the
-identical formula. Same unit both sides, so the 3.6x gap is a defect, not a convention difference. Had
-they differed, the repair would have been to state the unit and leave `0.11` alone.
+The 3.6x finding was a **category error**: it compared a **toast** constant against **Vaul**, a
+**drawer** library. Both numbers are right for their own component. Round 1 refused this change for
+want of a source; round 2 applied it once Vaul came back; round 3 reverted it once Sonner did. **The
+refusal in round 1 is the only reason the correct number was still there to restore** — and the
+mechanism was reading the citation line, which nobody had.
 
-**Still open, and marked so it cannot read as finished.** This rule's `Reference` line points at
-*Building a Toast Component* — **Sonner**, a toast library — while `0.4` is verified from **Vaul**, a
-drawer library. Nobody has read Sonner's shipped threshold. So `0.11` may have been right *for a
-toast*, and the rule may have been conflating two components — the same mistake §3 repairs for
-duration. The file carries a loud block naming what would close it, saying `0.4` is **sourced for
-drawers and assumed for toasts**, and stating that deleting the block is the regression. Per the
-lead's instruction it is written to be impossible to mistake for finished prose; it is honest that
-**no mechanism enforces it** (a step in `scripts/lib/check-suite.js` would, and that file is out of
-scope here).
+Three repairs replace the value change:
 
-Also sourced `timing-drawer-500ms.md`, since §3 leans on it: vaul ships `DURATION: 0.5` — **seconds**,
-consumed as `${DURATION}s` in CSS and `DURATION * 1000` in a `setTimeout`. 500ms is the correct
-derived value, not a literal in the file.
+1. **Name the library.** Nothing said *Building a Toast Component* builds **Sonner**. That omission
+   is the entire mechanism of the error. Named at the citation and at the number, with Vaul named
+   beside it as the drawer counterpart.
+2. **Narrow the generalisation — the finding that survives.** The file said 0.11 "works well for
+   **most** swipe-to-dismiss interactions". Its own source does not support "most": the author calls
+   it *"just a number that I ended up on through trial and error"*, and the same author ships **0.4**
+   for Vaul. **Same defect shape as `timing-under-300ms` in §3 — a scoped number written as
+   universal**, one file over, found the same day.
+3. **The one unsourced number was `100`, not `0.11`.** The example read `> 100`; Sonner ships
+   `SWIPE_THRESHOLD = 45` and the article gives no figure at all. **I did both things offered rather
+   than picking one:** corrected it to 45 *and* labelled the block. Reason: the block is titled
+   "Correct (momentum-based)" and its other number is a real shipped value, so a reader reasonably
+   reads them all as real — one fabricated number beside a sourced one is the worse failure. The
+   label states precisely what is Sonner's (constants, condition, including the `>=` and
+   `isAllowedDirection` shape) and what is illustrative (the signature; Sonner reads these from
+   component state, not arguments).
+
+Two adjacent fixes in the same table, same class: the Key Values row `300ms | Maximum duration for UI
+animations` contradicted the `500ms` drawer row two lines below it, while this skill's own
+`timing-300ms-max.md` already allows 250–400ms for context switches. Scoped, with both files linked.
+Added `45px`; removed a stray blank line an earlier commit of mine put in the table.
 
 ## 3 — `timing-under-300ms` → `timing-duration-by-class`
 
@@ -144,8 +163,8 @@ failure was mine and real, not because the suite was flaky. Removing `allowed-to
 
 ## Blockers
 
-**One, and it is marked in the file rather than only here:** Sonner's shipped swipe threshold is
-unread, so `0.4 px/ms` is sourced for drawers and assumed for toasts. Everything else is closed.
+**None.** The last open item — Sonner's shipped threshold — came back and closed §2 by reverting it.
+
 
 **Not emitted: ledger claims.** The sourcer reported no `mcp__claim-append` tool in its session and I
 have none either. Vaul `VELOCITY_THRESHOLD`, the Carbon duration tokens and Material's
