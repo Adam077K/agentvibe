@@ -787,7 +787,7 @@ test('F-1 — a repo that is not the tree run-gate ships in is REFUSED, not answ
   let consulted = 0;
   produceVerdict({
     repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
-    deps: { runGateRunner: () => { consulted += 1; return { status: 0, stdout: JSON.stringify({ invocation: null }) }; } },
+    deps: { runGateRunner: () => { consulted += 1; return { status: 0, stdout: JSON.stringify({ invocation: null }) }; }, launch: () => assert.fail('must not launch') },
   });
   assert.equal(consulted, 1);
 });
@@ -1383,7 +1383,7 @@ test('J-5 — with KEEP set, nothing is registered and the tree survives', () =>
 });
 
 test('J-6 — an unrecognised knob value REFUSES the run rather than guessing about deletion', () => {
-  const r = produceVerdictFn({ env: { QA_KEEP_JUDGE_DIR: 'maybe' } });
+  const r = produceVerdictFn({ env: { QA_KEEP_JUDGE_DIR: 'maybe' }, deps: { launch: () => assert.fail('must not launch') } });
   assert.equal(r.outcome, OUTCOME.REFUSED);
   assert.match(r.message ?? r.reason ?? JSON.stringify(r), /QA_KEEP_JUDGE_DIR/);
 });
@@ -1441,13 +1441,13 @@ test('J-9 — an operator\'s --judge-dir survives a reclaiming run; ours does no
     readVerdictArtifact: () => ({ outcome: OUTCOME.PRODUCED, subject: 's', tier: 'full' }),
   };
   const theirs = judgeDirFixture();
-  const r = produceVerdictFn({ repo: REPO_ROOT, judgeDir: theirs, deps });
+  const r = produceVerdictFn({ repo: REPO_ROOT, judgeDir: theirs, deps: { ...deps, launch: () => assert.fail('must not launch') } });
   assert.equal(r.outcome, OUTCOME.PRODUCED, 'DENOMINATOR: this cell is only meaningful on a reclaiming outcome');
   assert.equal(fs.existsSync(theirs), true, 'an operator-named directory must survive a reclaiming run');
 
   // THE MIRROR, on the arm that can go silently empty: ours must actually be reclaimed, or the
   // assertion above is satisfied by a build that simply never deletes anything.
-  const r2 = produceVerdictFn({ repo: REPO_ROOT, deps });
+  const r2 = produceVerdictFn({ repo: REPO_ROOT, deps: { ...deps, launch: () => assert.fail('must not launch') } });
   assert.equal(r2.outcome, OUTCOME.PRODUCED);
   assert.ok(r2.judgeDir && r2.judgeDir !== theirs, 'CONTROL: the run made its own directory');
   assert.equal(fs.existsSync(r2.judgeDir), false, 'ours must be reclaimed');
@@ -1465,14 +1465,60 @@ test('J-10 — a caller\'s QA_KEEP_JUDGE_DIR is THREADED, not merely validated',
     materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
     readVerdictArtifact: () => ({ outcome: OUTCOME.PRODUCED, subject: 's', tier: 'full' }),
   };
-  const kept = produceVerdictFn({ repo: REPO_ROOT, env: { QA_KEEP_JUDGE_DIR: '1' }, deps });
+  const kept = produceVerdictFn({ repo: REPO_ROOT, env: { QA_KEEP_JUDGE_DIR: '1' }, deps: { ...deps, launch: () => assert.fail('must not launch') } });
   assert.equal(kept.outcome, OUTCOME.PRODUCED, 'DENOMINATOR: only a reclaiming outcome tests this');
   assert.equal(fs.existsSync(kept.judgeDir), true, 'a caller that asked to keep must get to keep');
   fs.rmSync(kept.judgeDir, { recursive: true, force: true });
 
   // TWO CONTROLS, because "always keeps" would satisfy the assertion above on its own.
-  const gone = produceVerdictFn({ repo: REPO_ROOT, env: {}, deps });
+  const gone = produceVerdictFn({ repo: REPO_ROOT, env: {}, deps: { ...deps, launch: () => assert.fail('must not launch') } });
   assert.equal(fs.existsSync(gone.judgeDir), false, 'CONTROL: unset still reclaims');
-  const off = produceVerdictFn({ repo: REPO_ROOT, env: { QA_KEEP_JUDGE_DIR: 'off' }, deps });
+  const off = produceVerdictFn({ repo: REPO_ROOT, env: { QA_KEEP_JUDGE_DIR: 'off' }, deps: { ...deps, launch: () => assert.fail('must not launch') } });
   assert.equal(fs.existsSync(off.judgeDir), false, 'CONTROL: an explicit off still reclaims');
+});
+
+test('J-11 — EVERY produceVerdict call site in this file guards the launcher', () => {
+  // THE CLASS, NOT THE SITES. Review named six unguarded cells; the class was SEVEN — the seventh
+  // predates these rounds. A per-site fix leaves site 39 free, and the cost of one escaping is not
+  // a failing test: it is a live `claude --print <gate goal>` spawned from CI, bounded only by the
+  // 60-minute default timeout. That already happened once, from this file, and the session it
+  // spawned committed a verdict into the branch under test.
+  //
+  // These cells avoid a launch today only because the code under test refuses first — which is the
+  // exact property they exist to detect the loss of. A guard that depends on the subject behaving
+  // is not a guard.
+  const src = fs.readFileSync(fileURLToPath(import.meta.url), 'utf8');
+  // Built by concatenation so this parser does not match its own pattern literal.
+  const re = new RegExp(`produceVerdict${'(?:Fn)?\\('}`, 'g');
+  const unguarded = [];
+  let sites = 0;
+  for (let m = re.exec(src); m; m = re.exec(src)) {
+    let depth = 0;
+    const i = m.index + m[0].length - 1;
+    let j = i;
+    for (; j < src.length; j += 1) {
+      if (src[j] === '(') depth += 1;
+      else if (src[j] === ')') { depth -= 1; if (depth === 0) break; }
+    }
+    sites += 1;
+    if (!src.slice(i, j + 1).includes('launch:')) unguarded.push(src.slice(0, m.index).split('\n').length);
+  }
+  assert.ok(sites > 30, `DENOMINATOR read before the verdict: the parser found only ${sites} call sites`);
+  assert.deepEqual(unguarded, [], `these call sites can spawn a real gate session, at lines: ${unguarded}`);
+  const probe = `produceVerdict${'({ repo: x })'}`;
+  assert.ok(!probe.includes('launch:'), 'CONTROL: the predicate can report a site with no guard');
+});
+
+test('J-12 — a BLOCKED run reclaims its tree; only REFUSED keeps one', () => {
+  // The reclaim arm was asserted only for PRODUCED, so widening the keep predicate from
+  // `=== REFUSED` to `REFUSED || BLOCKED` left the suite 75/75 green. BLOCKED means the panel ran
+  // and found defects: the answer is in the record, not in the tree.
+  const deps = {
+    materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
+    readVerdictArtifact: () => ({ outcome: OUTCOME.BLOCKED, subject: 's', tier: 'full' }),
+    launch: () => assert.fail('must not launch'),
+  };
+  const r = produceVerdictFn({ repo: REPO_ROOT, deps: { ...deps, launch: () => assert.fail('must not launch') } });
+  assert.equal(r.outcome, OUTCOME.BLOCKED, 'DENOMINATOR: this cell only speaks about the arm it names');
+  assert.equal(fs.existsSync(r.judgeDir), false, 'a BLOCKED run must reclaim its judge project');
 });

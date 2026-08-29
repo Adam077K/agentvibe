@@ -595,13 +595,17 @@ export function materialiseJudgeProject({
 // accumulated in one reviewer's $TMPDIR in a single session, each a whole checkout of the judging
 // project. This removes the ones WE created, at process exit.
 //
-// WHAT THIS DOES NOT COVER, STATED RATHER THAN DISCOVERED. `process.on('exit')` and the signal
-// handlers below run for a normal return, a thrown exception, and an operator's Ctrl-C. They do
+// WHAT THIS DOES NOT COVER, STATED RATHER THAN DISCOVERED — AND IT COVERS LESS THAN THIS COMMENT
+// ONCE CLAIMED. `process.on('exit')` runs for a normal return and for a thrown exception. It does
 // NOT run for SIGKILL, for a harness that kills this process group on a timeout, or for a power
-// loss — and a gate session is exactly the long-running thing a timeout reaches first. So this
-// bounds the leak, it does not eliminate it: the honest claim is "one directory per hard-killed
-// run" instead of "one per run". A `finally` would have been weaker still, because it does not
-// survive a signal at all.
+// loss — and a gate session is exactly the long-running thing a timeout reaches first.
+//
+// IT ALSO DOES NOT COVER AN OPERATOR'S Ctrl-C, which this comment claimed on the strength of signal
+// handlers that were registered and could never fire: `main()` is wholly synchronous, so the event
+// loop never turns and a queued signal callback is never reached. Those handlers are deleted — see
+// the foot of this file. The honest claim is "one directory per signalled or hard-killed run"
+// instead of "one per run". A `finally` would be weaker still: it does not survive a signal either,
+// and it would not have survived the timeout that matters here.
 //
 // AN OPERATOR'S --judge-dir IS NEVER REMOVED. Naming a directory is how someone asks to keep the
 // tree, and deleting a path the caller chose would destroy evidence they asked for. Only the
@@ -651,7 +655,8 @@ export function armJudgeDirCleanup(dir, env = process.env) {
     // status 130 and NO signal, unarmed -> 143. So TERM and HUP came back as SIGINT's code, an
     // ordinary exit where there had been a signal, and 130 is outside this file's own vocabulary
     // (0·1·2·3·64). A library that reclaims a temp directory may not decide how its host dies.
-    // Signal handling belongs to the process owner; see the CLI entry point at the foot of this file.
+    // Signal handling belongs to the process owner, and the CLI entry point deliberately installs
+    // none either — see the block at the foot of this file for why the obvious version cannot fire.
     process.on('exit', sweepJudgeDirs);
   }
   return true;
@@ -1220,15 +1225,21 @@ function main() {
 }
 
 if (process.argv[1] && canonical(process.argv[1]) === canonical(fileURLToPath(import.meta.url))) {
-  // THE PROCESS OWNER DECIDES HOW THE PROCESS DIES. Ctrl-C should still reclaim what we made, and
-  // 128+signo is the shell's own convention, so an interrupted run looks interrupted. This is
-  // deliberately NOT done by armJudgeDirCleanup: that function runs inside a host that has its own
-  // shutdown, and hijacking it there is the defect this block exists to keep out of the library.
-  for (const [sig, signo] of [['SIGINT', 2], ['SIGTERM', 15], ['SIGHUP', 1]]) {
-    process.on(sig, () => {
-      sweepJudgeDirs();
-      process.exit(128 + signo);
-    });
-  }
+  // NO SIGNAL HANDLERS HERE, AND THE REASON IS THE ONE THAT KILLED THE LAST ATTEMPT.
+  //
+  // A block here registered SIGINT/SIGTERM/SIGHUP to sweep and exit 128+signo. It never ran. `main()`
+  // is wholly synchronous — spawnSync throughout — so the event loop never turns and a queued signal
+  // callback never fires. Measured: a marker as the handler's first statement never printed, in
+  // either delivery mode, against a must-fire control on the same arm that fired in 403 ms.
+  //
+  // Registering it was not merely inert, it was HARMFUL: it removed the default terminate action and
+  // put nothing in its place. `main` died in ~405 ms on 4ddc5c6; with the handler registered the same
+  // signal left status 2, signal null, ~20.9 s — so a supervisor's SIGTERM or an operator's kill no
+  // longer stopped a run that can hold a 60-minute launch timeout. The documented 128+signo never
+  // occurred, and the block's own comment asserted a behaviour the code did not produce.
+  //
+  // `process.on('exit', sweepJudgeDirs)` already covers every normal exit, so the handlers add
+  // nothing even when reachable. Deleted rather than repaired: making them fire needs an async main,
+  // which is a change to how the CLI runs and not to how it cleans up.
   process.exitCode = main();
 }
