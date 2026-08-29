@@ -3035,3 +3035,22 @@ test('the test:merge-gate argv still names both of its files', () => {
     assert.ok(argv.includes(f), `test:merge-gate no longer runs ${f} — its assertions are gone and nothing else would say so`);
   }
 });
+
+test('the test:lenses argv still names both of its files', () => {
+  // Same trade as `test:merge-gate` above and the same counterweight. `scripts/build-tokens.test.mjs`
+  // rides here rather than under a `test:tokens` step of its own, because a new governed step name
+  // needs a .github/workflows/** counterpart and that is `irreversible` tier. What it gives up is
+  // exactly what this assertion buys back: without it, deleting the filename from this one argv
+  // removes the whole token generator's negative controls — the fractional-increment refusal, the
+  // band-join jump, the reproduced contrast figures, and the drift check that is the ONLY thing
+  // running `check:tokens`'s assertion inside the suite (see EXCLUDED['check:tokens']) — with
+  // `test:lenses` green, `test:check-suite` green, and nothing anywhere saying a control had gone.
+  const argv = require(path.join(REPO, 'package.json')).scripts['test:lenses'];
+  for (const f of ['scripts/lenses.test.mjs', 'scripts/build-tokens.test.mjs']) {
+    assert.ok(argv.includes(f), `test:lenses no longer runs ${f} — its assertions are gone and nothing else would say so`);
+  }
+  // And both files must still exist, or this assertion passes over a name that runs nothing.
+  for (const f of ['scripts/lenses.test.mjs', 'scripts/build-tokens.test.mjs']) {
+    assert.ok(fs.existsSync(path.join(REPO, f)), `${f} is named by test:lenses and is not on disk`);
+  }
+});
