@@ -3029,9 +3029,15 @@ test('every scripts/*.test.mjs is named by a package.json script, or carries its
   }
 });
 
-test('the test:merge-gate argv still names both of its files', () => {
+test('the test:merge-gate argv still names all three of its files', () => {
   const argv = require(path.join(REPO, 'package.json')).scripts['test:merge-gate'];
-  for (const f of ['scripts/merge-gate.test.mjs', 'scripts/produce-verdict.test.mjs']) {
+  // THREE, not two. `scripts/extract-reference.test.mjs` joined on 2026-08-29 by the same
+  // convention and for the same reason: a new `test:*` NAME must be a STEP or an EXCLUDED entry,
+  // EXCLUDED lives in scripts/lib/check-suite.js, and editing that file tiers the whole change
+  // irreversible. Riding an existing argv keeps STEPS.length at 48 and the floor at full — and
+  // buys the hole this test exists to close, which is why the filename is added HERE in the same
+  // commit that adds it to package.json.
+  for (const f of ['scripts/merge-gate.test.mjs', 'scripts/produce-verdict.test.mjs', 'scripts/extract-reference.test.mjs']) {
     assert.ok(argv.includes(f), `test:merge-gate no longer runs ${f} — its assertions are gone and nothing else would say so`);
   }
 });

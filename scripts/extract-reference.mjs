@@ -516,6 +516,56 @@ export function fitLeading(rows, { displaySizes = [], uiSizes = null, minSamples
 }
 
 /**
+ * Pick the sans and mono stacks a reference actually renders text in.
+ *
+ * seeds.json carries these as comma-separated CSS stack STRINGS. A stack is classified mono when
+ * its own declaration names a monospace family — `monospace`, `ui-monospace`, or a well-known face
+ * — because that is what the site itself asserted; guessing from a name we do not recognise would
+ * be the invention this file refuses. Both are null when nothing qualifies, and null is a real
+ * answer: a page with one stack has no mono face and saying so beats naming its sans one twice.
+ */
+export function fitFamilies(families) {
+  const list = [...(families ?? [])].sort((a, b) => b.count - a.count);
+  const isMono = (v) => /\b(monospace|ui-monospace)\b/i.test(v) || /\b(SF ?Mono|Menlo|Consolas|Courier|Berkeley Mono|SourceCodePro|Roboto Mono|IBM Plex Mono|JetBrains Mono)\b/i.test(v);
+  const mono = list.find((f) => isMono(f.value));
+  const sans = list.find((f) => !isMono(f.value));
+  const notes = [];
+  if (!sans) notes.push('family: no non-monospace stack was rendered; sans is null rather than filled with the mono stack');
+  if (!mono) notes.push('family: no monospace stack was rendered; mono is null rather than guessed');
+  return { sans: sans ? sans.value : null, mono: mono ? mono.value : null, notes };
+}
+
+/**
+ * What `scripts/build-tokens.mjs` will REFUSE, checked here so a human reading this file learns it
+ * before pasting rather than from an exit code afterwards.
+ *
+ * THE MEASURED VALUE IS KEPT, NOT NULLED, and that is a deliberate departure from what the tokens
+ * lane suggested. This file is a measurement-derived proposal a person reads; the generator never
+ * reads it, and a null here would make the file LIE about the reference to please a validator it
+ * does not talk to. So the number stays and the note says exactly what will bounce and why —
+ * the human gets the fact and the warning, and the bounce itself is a loud exit 2 either way.
+ */
+export function consumerRefusals(ui, display, bands) {
+  const out = [];
+  if (ui.increment !== null && ui.increment !== 1 && ui.increment !== 2) {
+    out.push(`WILL BE REFUSED BY build-tokens: ui.increment must be 1 or 2, and this reference measures +${ui.increment}. The measurement is kept; the seeds cannot express it.`);
+  }
+  if (display && display.increment !== null && display.increment < 4) {
+    out.push(`WILL BE REFUSED BY build-tokens: display.increment must be at least 4, and this reference measures +${display.increment}.`);
+  }
+  if (display && display.base !== null && bands.uiFit) {
+    const topUi = bands.ui.length ? bands.ui[bands.ui.length - 1].value : bands.uiFit.covered[bands.uiFit.covered.length - 1];
+    const internal = rampSteps(bands.ui.map((e) => e.value));
+    const widest = internal.length ? Math.max(...internal.map((s) => s.ratio)) : 0;
+    const join = Math.round((display.base / topUi) * 1000) / 1000;
+    if (join <= widest) {
+      out.push(`WILL BE REFUSED BY build-tokens (THE BAND JOIN): display.base/${topUi} = ${join} is not larger than the widest step inside the ui band (${widest}), so the join reads as an interpolation rather than a jump.`);
+    }
+  }
+  return out;
+}
+
+/**
  * Turn a measured reference into the `type` block of design/tokens/seeds.json.
  *
  * Every field is either derived from the measurement or null-with-a-reason. There is no branch in
@@ -580,12 +630,17 @@ export function deriveSeeds(measured, { minCount = 1, minShare = 0 } = {}) {
   const tracking = fitTracking(measured?.type?.tracking ?? [], { restrictTo: bands.ui.map((e) => e.value) });
   notes.push(...leading.notes.map((n) => `leading: ${n}`), ...tracking.notes.map((n) => `tracking: ${n}`));
 
+  const family = fitFamilies(measured?.type?.families ?? []);
+  notes.push(...family.notes);
+  notes.push(...consumerRefusals(ui, display, bands));
+
   return {
     type: {
       ui,
       display,
       leading: { peak: leading.peak, peakAt: leading.peakAt, falloff: leading.falloff, exponent: leading.exponent, displayRatio: leading.displayRatio },
       tracking: { zeroAt: tracking.zeroAt, slope: tracking.slope },
+      family: { sans: family.sans, mono: family.mono },
     },
     notes,
   };
@@ -933,13 +988,22 @@ export function toYaml(obj) {
     .join('\n')}\n`;
 }
 
-export function sourceRecord(url, { accessDate = new Date(), expiryDays = DEFAULT_EXPIRY_DAYS, capturedBy = TOOL } = {}) {
+export function sourceRecord(url, { accessDate = new Date(), expiryDays = DEFAULT_EXPIRY_DAYS, capturedBy = TOOL, viewport = null, scrolled = null, surface = null } = {}) {
   const iso = (d) => d.toISOString().slice(0, 10);
   const expires = new Date(accessDate.getTime() + expiryDays * 86400000);
   return {
     url,
     access_date: iso(accessDate),
     captured_by: capturedBy,
+    // A computed-style census is SINGLE-VIEWPORT by construction, so a fixture that does not say
+    // where it was measured cannot be reproduced. `scrolled` belongs here for the same reason and
+    // is not cosmetic: play.grafana.org reports 2 sizes unscrolled and 8 scrolled.
+    viewport,
+    scrolled,
+    // marketing | product | docs | unknown. linear.app and stripe.com at the bare domain are
+    // MARKETING pages; docs.stripe.com and play.grafana.org are product surfaces. A corpus that
+    // mixes them without saying so will disagree with itself and nobody will know why.
+    surface,
     licence_note:
       'Computed styles and geometry only, read from a logged-out page load after checking /robots.txt. No page content, markup, images or text is reproduced or redistributed. Measurements are facts about a rendering, not a copy of the work. Re-check robots.txt and the site terms before any re-capture: the risk that bites is contract, not the CFAA.',
     expires: iso(expires),
@@ -977,7 +1041,8 @@ export function loadReferences(root) {
 /* c8 ignore start */
 const USAGE = `usage:
   node scripts/extract-reference.mjs <url> [--out <dir>] [--viewport 1440x900] [--settle 2500]
-                                          [--no-scroll] [--min-count N] [--min-share F] [--json]
+                                          [--no-scroll] [--min-count N] [--min-share F]
+                                          [--surface marketing|product|docs] [--json]
   node scripts/extract-reference.mjs --against <rules.json> [--refs design/references] [--json]
 
 exit codes (identical to scripts/design-probe.mjs, deliberately):
@@ -998,6 +1063,7 @@ function parseArgs(argv) {
     else if (t === '--no-scroll') a.scroll = false;
     else if (t === '--min-count') a.minCount = Number(argv[++i]);
     else if (t === '--min-share') a.minShare = Number(argv[++i]);
+    else if (t === '--surface') a.surface = argv[++i];
     else if (t === '--expires-days') a.expiryDays = Number(argv[++i]);
     else if (t.startsWith('--')) a.unknown = (a.unknown ?? []).concat(t);
     else a._.push(t);
@@ -1096,7 +1162,11 @@ if (isMain) {
   const slug = slugFor(url);
   const outDir = resolve(args.out ?? join('design', 'references', slug));
   const seeds = deriveSeeds(measured, { minCount: args.minCount ?? 1, minShare: args.minShare ?? 0 });
-  const files = writeReference(outDir, { measured, seeds, source: sourceRecord(url, { expiryDays: args.expiryDays }) });
+  const files = writeReference(outDir, {
+    measured,
+    seeds,
+    source: sourceRecord(url, { expiryDays: args.expiryDays, viewport: measured.viewport, scrolled: measured.scrolled, surface: args.surface ?? 'unknown' }),
+  });
 
   if (args.json) {
     console.log(JSON.stringify({ slug, files, measured, seeds }, null, 2));

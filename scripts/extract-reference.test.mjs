@@ -29,6 +29,8 @@ import {
   fitIntegerRamp,
   fitLeading,
   fitTracking,
+  fitFamilies,
+  consumerRefusals,
   luminance,
   parseRgb,
   parseRobots,
@@ -56,6 +58,11 @@ const FIX = {
   'stripe-com': withCounts([[8, 25], [9, 47], [10, 210], [11, 85], [12, 47], [13, 5], [14, 40], [15, 3], [16, 154], [18, 9], [20, 1], [21, 1], [22, 20], [24, 1], [26, 42], [32, 11], [48, 16], [56, 1]]),
   'vercel-com': withCounts([[11, 10], [12, 7], [14, 122], [16, 13], [24, 5], [56, 5], [64, 1]]),
   'play-grafana-org': withCounts([[11.9, 1], [12, 1], [12.6, 1], [14, 53], [15.4, 1], [16.8, 3], [18.2, 1], [28, 1]]),
+  // A PRODUCT SURFACE, not a marketing page, and it is in the corpus for exactly that reason:
+  // "those are just landing pages" is the obvious objection to a ramp measured off linear.app and
+  // stripe.com, and docs.stripe.com answers it — 12/13/14, ratios 1.083 and 1.077, both under
+  // 1.125. Captured with --surface docs; the surface is recorded in its SOURCE.yml.
+  'docs-stripe-com': withCounts([[12, 1], [13, 89], [14, 57], [16, 45], [21, 5], [24, 1], [32, 1]]),
 };
 
 // mission-control's ten rendered sizes across all seven views, measured 2026-08-28 by the
@@ -130,7 +137,7 @@ test('the usage floor is off by default and drops singletons when asked', () => 
 
 test('deriveSeeds emits exactly the contract shape', () => {
   const s = deriveSeeds({ type: { sizes: FIX['linear-app'] } });
-  assert.deepEqual(Object.keys(s.type).sort(), ['display', 'leading', 'tracking', 'ui']);
+  assert.deepEqual(Object.keys(s.type).sort(), ['display', 'family', 'leading', 'tracking', 'ui']);
   assert.deepEqual(Object.keys(s.type.ui).sort(), ['base', 'increment', 'steps']);
   assert.deepEqual(Object.keys(s.type.leading).sort(), ['displayRatio', 'exponent', 'falloff', 'peak', 'peakAt']);
   assert.deepEqual(Object.keys(s.type.tracking).sort(), ['slope', 'zeroAt']);
@@ -221,18 +228,79 @@ test('fitLeading never fits the curve parameters the contract does not define', 
   assert.equal(fitLeading([{ size: 12, leadingRatio: 1.4 }], {}).peak, null);
 });
 
+test('fitFamilies picks a sans and a mono from what the site itself declared', () => {
+  const linear = [
+    { value: '"Inter Variable", "SF Pro Display", -apple-system, sans-serif', count: 436 },
+    { value: '"Berkeley Mono", ui-monospace, "SF Mono", Menlo, monospace', count: 217 },
+  ];
+  const f = fitFamilies(linear);
+  assert.match(f.sans, /^"Inter Variable"/);
+  assert.match(f.mono, /^"Berkeley Mono"/);
+  assert.equal(f.notes.length, 0);
+
+  // play.grafana.org renders no monospace stack at all. Null, not the sans stack named twice.
+  const g = fitFamilies([{ value: 'Inter, Helvetica, Arial, sans-serif', count: 60 }]);
+  assert.equal(g.sans, 'Inter, Helvetica, Arial, sans-serif');
+  assert.equal(g.mono, null);
+  assert.ok(g.notes.some((n) => /mono is null rather than guessed/.test(n)));
+
+  assert.deepEqual({ sans: fitFamilies([]).sans, mono: fitFamilies([]).mono }, { sans: null, mono: null });
+});
+
+test('the seeds carry a family block, because seeds.json does', () => {
+  const s = deriveSeeds({ type: { sizes: FIX['linear-app'], families: [{ value: 'Inter, sans-serif', count: 400 }, { value: 'Menlo, monospace', count: 20 }] } });
+  assert.deepEqual(Object.keys(s.type).sort(), ['display', 'family', 'leading', 'tracking', 'ui']);
+  assert.deepEqual(Object.keys(s.type.family).sort(), ['mono', 'sans']);
+  assert.equal(typeof s.type.family.sans, 'string', 'seeds.json carries stacks as comma-separated strings');
+});
+
+test('what build-tokens will REFUSE is stated here, not discovered from an exit code', () => {
+  // 1. ui.increment must be 1 or 2.
+  assert.ok(consumerRefusals({ base: 9, increment: 3, steps: 4 }, null, { uiFit: null, ui: [] }).some((n) => /ui\.increment must be 1 or 2/.test(n)));
+  assert.equal(consumerRefusals({ base: 10, increment: 1, steps: 4 }, null, { uiFit: null, ui: [] }).length, 0, 'a conforming increment raises nothing');
+
+  // 2. display.increment must be >= 4.
+  const bandsOk = splitBands(withCounts([[12, 9], [14, 9], [16, 9], [40, 9], [42, 9]]));
+  assert.ok(consumerRefusals({ base: 12, increment: 2, steps: 3 }, { base: 40, increment: 2, steps: 2 }, bandsOk).some((n) => /display\.increment must be at least 4/.test(n)));
+
+  // 3. THE BAND JOIN — the one that is easy to trip with plausible numbers.
+  const bands = splitBands(withCounts([[12, 9], [14, 9], [16, 9], [18, 9], [20, 9]]));
+  const joinTrip = consumerRefusals({ base: 12, increment: 2, steps: 4 }, { base: 20, increment: 8, steps: 1 }, bands);
+  assert.ok(joinTrip.some((n) => /THE BAND JOIN/.test(n)), 'ui 12..18 joining to display 20 is 1.111 against a 1.167 internal step');
+
+  // CONTROL: a real jump raises nothing, so the check is not refusing every display band.
+  const wide = splitBands(withCounts([[12, 9], [14, 9], [16, 9], [48, 9], [64, 9]]));
+  assert.equal(consumerRefusals({ base: 12, increment: 2, steps: 3 }, { base: 48, increment: 16, steps: 2 }, wide).length, 0);
+});
+
+test('the band-join refusal fires on a REAL reference, not only on a fixture', () => {
+  // play.grafana.org: ui band tops at 14, display starts at 15.4 — a ratio of 1.1 against a
+  // 1.111 step inside the band. A human pasting this into seeds.json would get exit 2.
+  const s = deriveSeeds({ type: { sizes: FIX['play-grafana-org'] } });
+  assert.ok(s.notes.some((n) => /THE BAND JOIN/.test(n)));
+  // And it does NOT fire on linear, whose display band starts well clear of its ui band.
+  assert.ok(!deriveSeeds({ type: { sizes: FIX['linear-app'] } }).notes.some((n) => /THE BAND JOIN/.test(n)));
+});
+
 // ── THE FALSIFICATION HARNESS ───────────────────────────────────────────────────────────────────
 
 const RULE_1125 = { id: 'min-step-ratio-1125', kind: 'min-adjacent-ratio', value: 1.125, band: 'ui', statement: 'adjacent steps must differ by at least 1.125x' };
 
-test('falsifier can kill a rule this repo enforces — 1.125 REFUTED by three real references', () => {
+test('falsifier can kill a rule this repo enforces — 1.125 REFUTED by four real references', () => {
   // MIN_STEP_RATIO = 1.125 is live in scripts/design-probe.mjs and fires as a p2 finding today.
-  const corpus = [ref('linear-app', FIX['linear-app']), ref('stripe-com', FIX['stripe-com']), ref('mission-control', withCounts(MISSION_CONTROL.map((v) => [v, 1])))];
+  // docs-stripe-com is here on purpose: it is a PRODUCT surface, so the corpus cannot be waved
+  // away as "marketing pages, which are not real UI". It violates by 1.083 and 1.077.
+  const corpus = [
+    ref('linear-app', FIX['linear-app']),
+    ref('stripe-com', FIX['stripe-com']),
+    ref('docs-stripe-com', FIX['docs-stripe-com']),
+    ref('mission-control', withCounts(MISSION_CONTROL.map((v) => [v, 1]))),
+  ];
   const report = falsify([RULE_1125], corpus);
   assert.equal(report.rules[0].verdict, 'REFUTED');
   assert.deepEqual(report.refuted, ['min-step-ratio-1125']);
-  assert.equal(report.rules[0].violated_by, 3);
-  assert.equal(report.rules[0].measured_against, 3);
+  assert.equal(report.rules[0].violated_by, 4);
+  assert.equal(report.rules[0].measured_against, 4);
   for (const r of report.rules[0].references) {
     assert.equal(r.verdict, 'VIOLATES');
     assert.match(r.measured, /below 1\.125/, 'a verdict must carry the numbers it was reached from');
@@ -290,7 +358,9 @@ test('the three rules that died during the research all reach a verdict against 
   const report = falsify(rules, corpus);
   for (const r of report.rules) {
     assert.ok(['HELD', 'CONTESTED', 'REFUTED'].includes(r.verdict), `${r.id} came back ${r.verdict}`);
-    assert.equal(r.measured_against, 4);
+    // Derived, not written down: this read `4` and went red when docs-stripe-com joined FIX,
+    // which is the right failure but the wrong reason to have to edit a test.
+    assert.equal(r.measured_against, Object.keys(FIX).length);
   }
   // "6 sizes = restraint" passes mission-control's +0.5 ramp — the failure that made it worth killing.
   const sixOnMc = evaluateRule({ kind: 'max-distinct-sizes', value: 6, band: 'ui' }, ref('mission-control', withCounts(MISSION_CONTROL.map((v) => [v, 1]))));
@@ -418,8 +488,12 @@ test('slugFor is stable and filesystem-safe', () => {
 });
 
 test('SOURCE.yml carries the five required fields and an expiry after the access date', () => {
-  const rec = sourceRecord('https://linear.app', { accessDate: new Date('2026-08-29T00:00:00Z'), expiryDays: 90 });
-  assert.deepEqual(Object.keys(rec).sort(), ['access_date', 'captured_by', 'expires', 'licence_note', 'url']);
+  const rec = sourceRecord('https://linear.app', { accessDate: new Date('2026-08-29T00:00:00Z'), expiryDays: 90, viewport: '1440x900', scrolled: true, surface: 'marketing' });
+  // viewport and scrolled are REQUIRED, not decorative: a computed-style census is single-viewport
+  // by construction, and play.grafana.org reports 2 sizes unscrolled against 8 scrolled.
+  assert.deepEqual(Object.keys(rec).sort(), ['access_date', 'captured_by', 'expires', 'licence_note', 'scrolled', 'surface', 'url', 'viewport']);
+  assert.equal(rec.viewport, '1440x900');
+  assert.equal(rec.surface, 'marketing', 'linear.app at the bare domain is a MARKETING page, not a product surface');
   assert.equal(rec.access_date, '2026-08-29');
   assert.equal(rec.expires, '2026-11-27');
   const yaml = toYaml(rec);
