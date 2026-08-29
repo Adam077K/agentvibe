@@ -68,7 +68,7 @@ design/tokens/seeds.json
 
 ```
 npm run build:tokens     write the four generated files
-npm run check:tokens     exit 1 on drift, naming what drifted
+node scripts/build-tokens.mjs --check     exit 1 on drift, naming what drifted
 ```
 
 **Type is DERIVED. Colour is CARRIED. Contrast is COMPUTED.** Read that literally:
@@ -83,8 +83,10 @@ npm run check:tokens     exit 1 on drift, naming what drifted
   and one is **still** off by 0.001 (`--color-warn`, documented 8.582:1, computes 8.581:1). A
   generator cannot carry a figure forward; a comment can.
 
-**Never hand-edit a generated file.** Each carries a header saying so, and `npm run check:tokens`
-fails if one drifts from `seeds.json`.
+**Never hand-edit a generated file.** Each carries a header saying so, and the drift check fails a
+build if one departs from `seeds.json` — it is an assertion in `scripts/build-tokens.test.mjs`, which
+runs on every `npm run check`. `node scripts/build-tokens.mjs --check` is the same comparison for a
+human at a terminal.
 
 ---
 

@@ -81,7 +81,6 @@
     "build:map": "node scripts/gen-codebase-map.mjs",
     "check:map": "node scripts/gen-codebase-map.mjs --check",
     "build:tokens": "node scripts/build-tokens.mjs",
-    "check:tokens": "node scripts/build-tokens.mjs --check",
     "curate:skills": "node scripts/curate-skills.mjs",
     "check:curation": "node scripts/curate-skills.mjs --check",
     "build:routers": "node scripts/build-skill-routers.mjs",

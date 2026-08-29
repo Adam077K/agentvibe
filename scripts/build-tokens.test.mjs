@@ -448,17 +448,43 @@ test('colour passes through unchanged — nothing about a palette is generated',
 // ── THE GENERATED FILES ──────────────────────────────────────────────────────────────────────────
 
 test('the committed design/tokens/ matches a fresh generation', () => {
+  // THIS IS THE DRIFT GATE, AND IT LIVES HERE RATHER THAN BEHIND A `check:*` SCRIPT NAME.
+  // `check:*` and `test:*` are GOVERNED prefixes: a new one must be a STEP of the suite or carry an
+  // EXCLUDED entry in scripts/lib/check-suite.js — and editing that file is `irreversible` tier,
+  // while an EXCLUDED script runs in no automated lane at all. So the name would have cost a founder
+  // sign-off and bought zero coverage. As an assertion in this file it runs on every `npm run check`
+  // and every CI run, through `test:lenses`. `node scripts/build-tokens.mjs --check` still exists for
+  // humans; it is simply not a named npm script.
   const { files } = generate(readSeeds(), TODAY);
   const onDisk = Object.fromEntries(
     Object.keys(OUT).map((k) => [k, fs.existsSync(OUT[k]) ? fs.readFileSync(OUT[k], 'utf8') : null])
   );
+
   const findings = drift(files, onDisk);
   assert.deepEqual(
     findings.map((f) => `${f.key}: ${f.kind}`),
     [],
-    `design/tokens/ has drifted from seeds.json. Run: npm run build:tokens\n` +
+    'design/tokens/ has drifted from seeds.json. Run: npm run build:tokens\n' +
       findings.map((f) => `  ${f.key} — ${f.detail}`).join('\n')
   );
+
+  // BYTE-EQUALITY on the three artifacts that carry no date, because `drift()` compares through
+  // `comparable()` and a bug there could swallow a real change on any of them. Asserted against the
+  // raw strings so this does not depend on the function it is checking.
+  for (const key of ['json', 'css', 'ts']) {
+    assert.equal(onDisk[key], files[key], `${path.relative(REPO, OUT[key])} is not byte-identical to a fresh generation`);
+  }
+
+  // contrast.md carries the computed date, which is the ONE byte not a function of the seeds. It is
+  // normalised — and the tolerance is bounded here rather than trusted: strip the date from both and
+  // they must be byte-identical, so nothing else is being forgiven along with it.
+  const stripDate = (t) => String(t).replace(/^\*\*Computed:\*\* \d{4}-\d{2}-\d{2}$/m, 'DATE');
+  assert.equal(
+    stripDate(onDisk.contrast),
+    stripDate(files.contrast),
+    'contrast.md differs from a fresh generation by more than its date line'
+  );
+  assert.match(onDisk.contrast, /^\*\*Computed:\*\* \d{4}-\d{2}-\d{2}$/m, 'contrast.md has no date line, so the tolerance above is vacuous');
 });
 
 test('every generated file carries the GENERATED banner; seeds.json does not', () => {

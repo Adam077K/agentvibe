@@ -149,6 +149,6 @@ determine typographic quality as (1) point size, (2) line spacing, (3) line leng
 ## Changing any of this
 
 Edit `design/tokens/seeds.json` and run `npm run build:tokens`. Never edit a generated file; never
-type a size into a stylesheet. `npm run check:tokens` fails on drift, and
-`scripts/build-tokens.test.mjs` fails if a derivation is removed — verified by mutation, 18 of 18
-deletions caught.
+type a size into a stylesheet. `scripts/build-tokens.test.mjs` fails on drift AND fails if a
+derivation is removed — verified by mutation, 18 of 18 deletions caught. It runs on every
+`npm run check`. For a quick answer at a terminal: `node scripts/build-tokens.mjs --check`.

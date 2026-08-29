@@ -1,5 +1,5 @@
 {
-  "$comment": "AUTHORED. The only hand-edited file in design/tokens/. tokens.json, tokens.css, tokens.ts and contrast.md are all generated from this file by `npm run build:tokens`; `npm run check:tokens` fails on drift. Type is DERIVED from the numbers below, colour is CARRIED through unchanged, contrast is COMPUTED. Derivation rules and their sources: design/system/type.md and docs/03-system-design/DESIGN-CAPABILITY.md §7.1.",
+  "$comment": "AUTHORED. The only hand-edited file in design/tokens/. tokens.json, tokens.css, tokens.ts and contrast.md are all generated from this file by `npm run build:tokens`; the drift check is an assertion in scripts/build-tokens.test.mjs and fails a build. Type is DERIVED from the numbers below, colour is CARRIED through unchanged, contrast is COMPUTED. Derivation rules and their sources: design/system/type.md and docs/03-system-design/DESIGN-CAPABILITY.md §7.1.",
   "type": {
     "$comment": "A PROPOSAL, not a migration. These are mission-control's own values re-expressed as a derivable ramp: its nine authored sizes (10 11 11.5 12 12.5 13 13.5 14 15, plus 20) collapse to a five-step UI band on integer increments and a one-step display band. No mission-control source file is touched by this; the remap is a separate design pass.",
     "ui": { "base": 11, "increment": 1, "steps": 5 },

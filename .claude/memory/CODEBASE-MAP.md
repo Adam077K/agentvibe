@@ -59,7 +59,6 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:prompt-standard` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/prompt-standard.test.mjs` |
 | `npm run check:registration` | `node scripts/check-registration.mjs` |
 | `npm run check:routers` | `node scripts/build-skill-routers.mjs --check` |
-| `npm run check:tokens` | `node scripts/build-tokens.mjs --check` |
 | `npm run check:warroom` | `npm run check:warroom-launcher && npm run check:warroom-template && npm run check:warroom-installer && npm run` |
 | `npm run check:warroom-installer` | `node --check scripts/warroom-install.mjs` |
 | `npm run check:warroom-launcher` | `bash -n bin/warroom` |

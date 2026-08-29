@@ -141,26 +141,6 @@ const STEPS = [
  * catch, wearing a different hat.
  */
 const EXCLUDED = {
-  'check:tokens':
-    'THE ASSERTION IS IN THE SUITE; ONLY THIS SCRIPT NAME IS NOT — and that separates this entry from ' +
-    'check:mc and test:design-probe below, whose coverage genuinely goes nowhere. `check:tokens` runs ' +
-    '`build-tokens.mjs --check`, which asserts that design/tokens/{tokens.json,tokens.css,tokens.ts,' +
-    'contrast.md} still equal a fresh generation from design/tokens/seeds.json. THAT SAME DRIFT ' +
-    'ASSERTION IS ALSO A TEST — "the committed design/tokens/ matches a fresh generation" in ' +
-    'scripts/build-tokens.test.mjs — and `test:lenses` runs that file, so drift reddens a STEP of this ' +
-    'suite. Read that as the whole coverage claim and no further: this entry asserts nothing about what ' +
-    'any workflow file runs, because it does not need to. `test:lenses` is a STEP, and STEP-to-workflow ' +
-    'coverage is asserted for every step at once in scripts/check-suite.test.mjs rather than restated ' +
-    'per entry here. WHY NOT MAKE IT A STEP: a new governed name needs a counterpart step under ' +
-    '.github/workflows/**, which is `irreversible` tier — check it with `node scripts/classify.mjs` — ' +
-    'so it costs a founder sign-off, and it moves STEPS.length, a figure `check:figures` pins in three ' +
-    'files. The landed precedent for taking the cheaper route is b1ab4ce, which folded ' +
-    '`test:produce-verdict` into `test:merge-gate` for exactly these reasons; the counterweight it also ' +
-    'shipped — an assertion that the host argv still names every file it is supposed to — is ' +
-    'duplicated for `test:lenses` in the same file. IT IS KEPT AS A SCRIPT because it is the humane ' +
-    'entry point for someone who has just edited seeds.json and wants the one relevant answer, and ' +
-    'because docs/03-system-design/agents/DESIGNER.md §7.3 names `npm run check:tokens` by that exact ' +
-    'spelling. It becomes a STEP in the same PR that adds its workflow counterpart, and not before.',
   'check:mc':
     'CANNOT PASS LOCALLY AT ALL WHILE THE SANDBOX IS ARMED — not nested, not standalone — so this is a ' +
     'containment fact, not a verdict on the check. Measured 2026-08-25, foreground, top level: ' +

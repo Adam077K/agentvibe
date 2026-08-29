@@ -3042,8 +3042,9 @@ test('the test:lenses argv still names both of its files', () => {
   // needs a .github/workflows/** counterpart and that is `irreversible` tier. What it gives up is
   // exactly what this assertion buys back: without it, deleting the filename from this one argv
   // removes the whole token generator's negative controls — the fractional-increment refusal, the
-  // band-join jump, the reproduced contrast figures, and the drift check that is the ONLY thing
-  // running `check:tokens`'s assertion inside the suite (see EXCLUDED['check:tokens']) — with
+  // band-join jump, the reproduced contrast figures, and the drift check over design/tokens/, which
+  // has no other home: it is deliberately not a `check:*` script, because a GOVERNED name must be a
+  // STEP or an EXCLUDED entry and an EXCLUDED script runs nowhere. So this argv is its ONLY lane —
   // `test:lenses` green, `test:check-suite` green, and nothing anywhere saying a control had gone.
   const argv = require(path.join(REPO, 'package.json')).scripts['test:lenses'];
   for (const f of ['scripts/lenses.test.mjs', 'scripts/build-tokens.test.mjs']) {

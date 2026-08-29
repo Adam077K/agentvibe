@@ -1,5 +1,10 @@
 #!/usr/bin/env node
-// POSTURE: BLOCKS (in --check mode). `npm run check:tokens`.
+// POSTURE: BLOCKS. The drift check runs as an assertion in scripts/build-tokens.test.mjs, which
+// `test:lenses` runs — a STEP of `npm run check` and a step of the CI workflow. `--check` below is
+// the same comparison for a human at a terminal; it is deliberately NOT a named npm script, because
+// a `check:*` name is a GOVERNED prefix that must be a suite STEP or an EXCLUDED entry, and an
+// EXCLUDED script runs in no automated lane at all — the name would have cost an `irreversible`-tier
+// edit to scripts/lib/check-suite.js and bought zero coverage.
 //
 // scripts/build-tokens.mjs — the design system's manufacturing step.
 //
