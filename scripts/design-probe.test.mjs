@@ -35,7 +35,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -58,6 +57,8 @@ import {
   conform,
   conformStrings,
   observed,
+  alphaOf,
+  safeLabel,
   authoredEasings,
   resolveMotion,
   coverageGaps,
@@ -77,6 +78,23 @@ import {
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPTS_DIR, '..');
+
+/**
+ * A FIXTURE DIRECTORY THAT DOES NOT DEPEND ON THE AMBIENT TMPDIR. Seven tests here called
+ * `fs.mkdtempSync(path.join(os.tmpdir(), …))`, and under the armed sandbox `os.tmpdir()` is
+ * writable only when TMPDIR points somewhere the sandbox allows. Measured 2026-08-29 on one tree,
+ * one commit, minutes apart: `TMPDIR=/tmp/claude-501` -> 66 pass, exit 0; TMPDIR at the macOS
+ * default `/var/folders/...` -> 59 pass, 7 FAIL, EPERM. `test:probe-readonly` carries this file,
+ * so the outcome of `npm run check` depended on an environment variable nobody sets deliberately —
+ * and every "48 of 48" reported on 2026-08-29 was taken with TMPDIR set to a session scratchpad.
+ *
+ * The repo root is the base instead: it is writable wherever this suite is allowed to run at all,
+ * and `scripts/lenses.test.mjs` already writes `.lens-fixture-*.yml` there by the same reasoning.
+ * Dotted so it is invisible to an ordinary listing, and each caller removes its own.
+ */
+function tmpDir() {
+  return fs.mkdtempSync(path.join(REPO_ROOT, '.design-probe-tmp-'));
+}
 
 const p1s = (fs_) => fs_.filter((f) => f.severity === 'p1');
 const checks = (fs_) => fs_.map((f) => f.check);
@@ -239,17 +257,26 @@ const CSS_DEFAULTS = {
 
 /** Run the real collect() against a hand-built document. `css` and `rect` are per-element. */
 function runCollect(specs, { clientWidth = 390, scrollWidth = 390 } = {}) {
-  const nodes = specs.map((s) => ({
-    tagName: s.tag ?? 'P',
-    textContent: s.text ?? 'text',
-    children: [],
-    parentElement: null,
-    css: { ...CSS_DEFAULTS, ...(s.css ?? {}) },
-    rect: { width: 100, height: 20, left: 0, ...(s.rect ?? {}) },
-    interactive: Boolean(s.interactive),
-    getBoundingClientRect() { return this.rect; },
-    getAttribute() { return null; },
-  }));
+  const nodes = specs.map((s) => {
+    // `ancestors` is nearest-first and exists for one reason: the backdrop walk in collect() reads
+    // `parentElement` and nothing else in this harness had a parent, so the walk always terminated
+    // at the first element and the transparent-ancestor defect could not be reached from a test.
+    let parent = null;
+    for (const a of [...(s.ancestors ?? [])].reverse()) {
+      parent = { tagName: 'DIV', css: { ...CSS_DEFAULTS, ...a }, parentElement: parent, children: [] };
+    }
+    return {
+      tagName: s.tag ?? 'P',
+      textContent: s.text ?? 'text',
+      children: [],
+      parentElement: parent,
+      css: { ...CSS_DEFAULTS, ...(s.css ?? {}) },
+      rect: { width: 100, height: 20, left: 0, ...(s.rect ?? {}) },
+      interactive: Boolean(s.interactive),
+      getBoundingClientRect() { return this.rect; },
+      getAttribute() { return null; },
+    };
+  });
   const de = { tagName: 'HTML', clientWidth, scrollWidth, parentElement: null, css: { ...CSS_DEFAULTS } };
   const doc = {
     documentElement: de,
@@ -286,12 +313,62 @@ test('NEGATIVE CONTROL: catches the 574px overflow that shipped', () => {
   assert.match(hit.measured, /574px/);
 });
 
+test('NEGATIVE CONTROL: a page that under-reports its own overflow is contradicted by its operands', () => {
+  // `collect()` returns overflow, scrollWidth and clientWidth in ONE payload and the first is the
+  // difference of the other two, so this is the one axis where the probe holds a second view of
+  // the same fact. It did not use it: flipping `overflow` 574 -> 0 with the operands untouched
+  // turned exit 1 with 5 blocking findings into exit 0, while the artifact still carried 964 and
+  // 390 for anyone who read them.
+  const lying = WITH(MC_NARROW, { overflow: 0 });   // scrollWidth 964, clientWidth 390 -> 574
+  const f = findingsFor('narrow', lying, { tokens: TOKENS });
+  const integrity = f.find((x) => x.check === 'measurement-integrity');
+  assert.ok(integrity, 'the contradiction must itself be a finding');
+  assert.match(integrity.measured, /reported overflow 0px/);
+  assert.match(integrity.measured, /964 minus clientWidth 390 is 574px/);
+  assert.equal(integrity.severity, 'p1');
+  // And the overflow finding is still made, on the larger of the two, so the lie buys nothing.
+  const over = f.find((x) => x.check === 'horizontal-overflow');
+  assert.ok(over, 'the overflow itself must still be reported');
+  assert.match(over.measured, /^574px beyond a 390px viewport/);
+  assert.equal(isPass(f), false);
+  // The other direction — a page OVER-reporting — is also a contradiction and also still fails.
+  const inflating = WITH(CLEAN, { overflow: 999 });
+  const g = findingsFor('narrow', inflating, { tokens: TOKENS_MOTION });
+  assert.ok(g.find((x) => x.check === 'measurement-integrity'), 'over-reporting is a contradiction too');
+  assert.match(g.find((x) => x.check === 'horizontal-overflow').measured, /^999px/);
+  // CONTROL: an honest measurement produces NO integrity finding, or this fires on every run.
+  assert.equal(findingsFor('narrow', MC_NARROW, { tokens: TOKENS }).find((x) => x.check === 'measurement-integrity'), undefined);
+  assert.equal(findingsFor('narrow', CLEAN, { tokens: TOKENS_MOTION }).find((x) => x.check === 'measurement-integrity'), undefined);
+  assert.equal(findingsFor('reflow-320', MC_REFLOW, { tokens: TOKENS }).find((x) => x.check === 'measurement-integrity'), undefined);
+});
+
 test('NEGATIVE CONTROL: catches interactive elements no scroll offset can reach', () => {
   const f = findingsFor('narrow', MC_NARROW, { tokens: TOKENS });
   const hit = p1s(f).find((x) => x.check === 'unreachable-interactive');
   assert.ok(hit, 'unreachable nav items must be a p1');
   assert.match(hit.measured, /Inbox/);
   assert.match(hit.measured, /Dispatch/);
+});
+
+test('a label cannot repaint the operator\'s terminal', () => {
+  // `.trim()` does not strip ESC. The label comes from aria-label or textContent, the CLI prints
+  // six per finding to a tty, and `\x1b[2J\x1b[H` clears the screen — about 240 attacker-controlled
+  // bytes, enough to repaint a forged closing line under a real one. The artifact was never at
+  // risk (JSON.stringify escapes ESC) and neither was the exit code; the human channel was, and
+  // the CLI's own comment says the two cannot say different things.
+  const hostile = '\u001b[2J\u001b[HInbox';
+  const m = WITH(MC_NARROW, { targets: [{ label: hostile, w: 44, h: 43, unreachable: true }] });
+  const hit = findingsFor('narrow', m, { tokens: TOKENS }).find((x) => x.check === 'unreachable-interactive');
+  assert.ok(hit);
+  assert.ok(!/\u001b/.test(hit.measured), 'no ESC may reach a string the CLI prints');
+  assert.match(hit.measured, /Inbox/, 'and the readable part of the label must survive — this is not "drop the label"');
+  assert.match(hit.measured, /\ufffd/, 'a label that carried control bytes must be visibly one that did');
+  assert.equal(safeLabel('plain label'), 'plain label', 'CONTROL: an ordinary label is untouched');
+  assert.equal(safeLabel('a\u0007b\u009fc'), 'a\ufffdb\ufffdc', 'C0 and C1 both');
+  assert.equal(safeLabel(undefined), '');
+  // CONTROL: the raw label still travels in `measurements`, where JSON escaping makes it safe and
+  // an operator can see what the page actually claimed.
+  assert.equal(m.targets[0].label, hostile);
 });
 
 test('NEGATIVE CONTROL: catches the WCAG AA target-size failures', () => {
@@ -446,27 +523,94 @@ test('NEGATIVE CONTROL: the bad artifact does NOT pass', () => {
 // the ones that would have caught it, and they run without a browser because `blocking()`,
 // `isPass()` and `buildArtifact()` are pure.
 
-// THE MEASURED CENSUS, not a constructed one. mission-control's off-system type as counted on
-// 2026-08-29 against the shipped design/tokens/tokens.json: 45 of 94 font-size usages and 27 of 27
-// `leading-relaxed` line-heights appear in no token.
+// THE MEASURED CENSUS, not a constructed one. mission-control's off-system type against the
+// shipped design/tokens/tokens.json: 45 font-size usages and 27 of 27 `leading-relaxed`
+// line-heights appear in no token.
+//
+// `10: 1` WAS MISSING UNTIL 2026-08-29 and the fixture summed to 44 while four places in two files
+// said 45 — one population, two numbers. 10px is off-system against the ramp 11 12 13 14 15 20,
+// and this file's own conformance test lists exactly four offenders, [10, 11.5, 12.5, 13.5], while
+// the census listed three. The verdicts never moved (still 2 findings, both p1, isPass false), so
+// what the control below was guarding was a population one narrower than the one it documents.
+//
+// PROVENANCE, asked and answered rather than corroborated: the figure is STATIC — a source census,
+// not a probe reading. Three independent reasons, and the test below re-derives it. (1)
+// DESIGN-CAPABILITY.md states "12.5px is 30 usages, 31.9%" beside it, and 30/0.319 = 94.0, which is
+// a USAGE count over source; a probe reports per-viewport computed values and has no such
+// denominator. (2) The same document records the values as literal utilities — `text-[11.5px]` —
+// and labels the method "source census across all seven views". (3) A probe run at that sha would
+// have carried the p1-1 contamination (16px x3 from <title>/<style>/<script>) into any count taken
+// from it, and no off-system census anywhere in this repo carries a 16.
+// SO IT IS NOT CONTAMINATED BY p1-1 and needs no re-derivation after that fix.
+//
+// ONE RESIDUAL, REPORTED RATHER THAN QUIETLY CORRECTED: the NUMERATOR re-derives exactly and the
+// DENOMINATOR does not. `git grep -hEo 'text-\[[0-9.]+px\]' <rev> -- mission-control` gives 93
+// utilities, not 94, identically at origin/main, at 3b528fa and at HEAD; adding the three
+// `font-size:` declarations in styles.css gives 96. So "45 of 94" is 45 of 93 or of 96 by the only
+// method that reproduces the 45. The off-by-one is in the denominator alone, it is nobody's
+// verdict, and it is left as an open question rather than a fifth revision of a number.
 const OFF_SYSTEM_CENSUS = {
   overflow: 0,
   scrollWidth: 390,
   clientWidth: 390,
   reflow: false,
   targets: [],
-  type: { fontSize: { 12.5: 30, 11.5: 13, 13.5: 1 }, lineHeight: { 1.625: 27 }, letterSpacing: {} },
+  type: { fontSize: { 10: 1, 12.5: 30, 11.5: 13, 13.5: 1 }, lineHeight: { 1.625: 27 }, letterSpacing: {} },
   motion: { animationsApi: true, duration: {}, easing: {}, animations: [] },
   weights: {},
   textColors: 0,
   contrastPairs: [],
 };
 
+test('the census sums to the 45 it is described as, and re-derives from the corpus', () => {
+  // THE FIXTURE SUMMED TO 44 while design-probe.mjs and three lines in this file said 45 — one
+  // population, two numbers — because `10: 1` was missing. No verdict moved, which is exactly why
+  // it survived: the control beneath this one passed over a population one narrower than the one
+  // it documents.
+  const counts = OFF_SYSTEM_CENSUS.type.fontSize;
+  assert.equal(Object.values(counts).reduce((a, b) => a + b, 0), 45, 'the census must sum to the figure every prose statement of it uses');
+  const res = conform(counts, TOKENS.fontSize, EPS.px);
+  assert.equal(res.offenders.length, 4, 'and all four sizes are off-system against 11 12 13 14 15 20');
+  assert.deepEqual(res.offenders.map((o) => o.value).sort((a, b) => a - b), [10, 11.5, 12.5, 13.5]);
+
+  // PROVENANCE, RE-DERIVED FROM THE CORPUS RATHER THAN REMEMBERED. This is the arm that makes the
+  // header's "not a constructed one" a checkable claim: the counts are read out of
+  // mission-control's source, which is where they were counted from — statically, not off a probe
+  // run, so the p1-1 contamination (<title> at the UA 16px) never touched them. If the app's type
+  // changes this goes red, and that is a change worth reading rather than a flake.
+  const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const full = path.join(dir, e.name);
+    return e.isDirectory() ? walk(full) : [full];
+  });
+  const src = walk(path.join(REPO_ROOT, 'mission-control', 'client', 'src')).map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+  const all = src.match(/text-\[[0-9.]+px\]/g) ?? [];
+  assert.ok(all.length > 50, `CONTROL: the corpus must have been read, found ${all.length} size utilities`);
+  const usages = {};
+  for (const u of all) {
+    const v = u.slice(6, -3);
+    usages[v] = (usages[v] ?? 0) + 1;
+  }
+  for (const [size, n] of Object.entries(counts)) {
+    assert.equal(usages[size], n, `the census claims ${n} usages of ${size}px and the corpus has ${usages[size]}`);
+  }
+  const offSystem = Object.entries(usages)
+    .filter(([v]) => !TOKENS.fontSize.values.includes(Number(v)))
+    .reduce((a, [, n]) => a + n, 0);
+  assert.equal(offSystem, 45, 'the corpus itself yields 45 off-system usages');
+
+  // THE DENOMINATOR IS THE PART THAT DOES NOT RE-DERIVE, and it is recorded rather than corrected:
+  // four places say "45 of 94" and this method counts 93 size utilities (96 with the three
+  // `font-size:` declarations in styles.css). The numerator is exact; the total is off by one by
+  // the only method that reproduces the numerator. Nobody's verdict depends on it.
+  assert.equal(all.length, 93, 'if this moves, the "of 94" question is live again and must be re-settled, not re-typed');
+});
+
 test('NEGATIVE CONTROL: the census that used to exit 0 now fails the run', () => {
   // BEFORE this change, on exactly this input: 2 findings, both [p2] token-conformance, no p1,
   // ok:true, exit 0, state "MEASURED — passed" — 45 off-system usages and a passing verdict.
   const f = findingsFor('narrow', OFF_SYSTEM_CENSUS, { tokens: TOKENS, tokensPath: DEFAULT_TOKENS_PATH });
   assert.equal(f.length, 2, 'CONTROL: the finder must still produce exactly the two findings it always did');
+  assert.equal(tokenFinding(f, 'font-size').offenders.length, 4, 'over the FOUR off-system sizes, not the three the fixture used to carry');
   assert.deepEqual(checks(f), ['token-conformance', 'token-conformance']);
   assert.equal(blocking(f).length, 2, 'a value that appears in no token must reach the verdict');
   assert.equal(isPass(f), false, 'the run must not pass');
@@ -519,6 +663,22 @@ test('blocking() is the ONE definition of what fails a run', () => {
   assert.equal(isPass([{ severity: 'p2' }, { severity: 'p3' }]), true, 'a non-blocking finding must not fail a run');
   assert.equal(isPass([]), true);
   assert.equal(isPass(), true, 'no findings at all is a pass, not a crash');
+});
+
+test('an UNCLASSIFIED severity blocks — the predicate fails closed', () => {
+  // It was `f.severity === 'p1'`, which fails OPEN on everything else: 'P1', 'p1 ', 'critical',
+  // 'high', undefined and null all returned blocking 0 and isPass true. Nothing is miscounted
+  // today because every finding this file constructs hardcodes 'p1' — but blocking() is exported
+  // AS the definition of what fails a run, and `critical`/`high` are the blocking vocabulary of
+  // .claude/review-lenses.yml, so the first finding to arrive from anywhere else bought a pass.
+  for (const sev of ['critical', 'high', 'P1', 'p1 ', 'blocker', undefined, null, 0]) {
+    assert.equal(blocking([{ severity: sev, check: 'x' }]).length, 1, `severity ${JSON.stringify(sev)} must block until somebody classifies it`);
+    assert.equal(isPass([{ severity: sev, check: 'x' }]), false);
+  }
+  assert.equal(blocking([{}]).length, 1, 'a finding with no severity at all blocks');
+  // CONTROL: the two that do not block still do not, or this becomes "everything blocks".
+  assert.deepEqual(blocking([{ severity: 'p2' }, { severity: 'p3' }]), []);
+  assert.equal(blocking([{ severity: 'p1' }]).length, 1);
 });
 
 // ── POSITIVE CONTROLS — the probe must not fire on conforming work ───────────────────────────────
@@ -636,7 +796,7 @@ test('a token group the file does not declare is NOT CHECKED, and never reported
 });
 
 test('no token file at all means conformance DID NOT RUN — stated first, not implied', () => {
-  const t = loadTokens('design/tokens/does-not-exist.json', { cwd: os.tmpdir() });
+  const t = loadTokens('design/tokens/does-not-exist.json', { cwd: REPO_ROOT });
   assert.equal(t.loaded, false);
   assert.match(t.reason, /no token file at/);
   for (const g of Object.values(t.index)) assert.equal(g.present, false);
@@ -647,7 +807,7 @@ test('no token file at all means conformance DID NOT RUN — stated first, not i
 });
 
 test('a token file that is not readable JSON degrades to NOT CHECKED, never to conforming', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-probe-'));
+  const dir = tmpDir();
   fs.writeFileSync(path.join(dir, 'broken.json'), '{ not json');
   const t = loadTokens('broken.json', { cwd: dir });
   assert.equal(t.loaded, false);
@@ -677,7 +837,7 @@ test('probe() REFUSES a token file it cannot read, before it even looks for a br
 });
 
 test('probe() REFUSES an unparseable token file too, not only a missing one', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-probe-'));
+  const dir = tmpDir();
   fs.writeFileSync(path.join(dir, 'tokens.json'), '{ not json');
   await assert.rejects(
     () => probe('http://localhost:4317', { tokensPath: 'tokens.json', cwd: dir }),
@@ -694,7 +854,7 @@ test('probe() REFUSES an unparseable token file too, not only a missing one', as
 // PRESCRIBED that file as the way to run the WCAG axis alone. The verdict now reads coverage.
 
 test('NEGATIVE CONTROL: an empty-but-readable token file is INCOMPLETE, never passed', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-probe-'));
+  const dir = tmpDir();
   fs.writeFileSync(path.join(dir, 'tokens.json'), '{}');
   const t = loadTokens('tokens.json', { cwd: dir });
   assert.equal(t.loaded, true, 'CONTROL: it must LOAD, or this is the refusal case and proves nothing');
@@ -848,6 +1008,32 @@ test('only an EMPTY gap list reaches exit 0, and the precedence is refused > fai
   assert.equal(buildArtifact({ url: 'u', tokens: partial, result: null, refused: e }).exit, 2);
 });
 
+test('the VERDICT is derived by buildArtifact too — `ok` was the field nobody guarded', () => {
+  // The guard was applied to one of the two caller-supplied fields and not the other. The test
+  // below titles itself "so no caller can omit them into a pass", and its own object literal
+  // passed `ok: true` — which was believed. Measured before this fix:
+  //
+  //   buildArtifact({ result: { ok: true, findings: [<a p1 reflow-1410>] } })
+  //   -> exit 0 | state "MEASURED — passed" | findings 1 | blocking() 1 | isPass() false
+  //
+  // An artifact carrying a blocker and a passing verdict at once, with the blocker in plain view
+  // in `findings`. No live verdict was ever wrong, because probe() computes `ok` from the same
+  // findings — but this constructor is exported and this is the shape a caller reaches for.
+  const full = { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION };
+  const p1 = { severity: 'p1', check: 'reflow-1410', viewport: 'reflow-320', measured: '644px', standard: 'SC 1.4.10' };
+  const a = buildArtifact({ url: 'u', tokens: full, result: { ok: true, findings: [p1], measurements: { narrow: CLEAN } } });
+  assert.equal(a.exit, 1, 'a caller-supplied ok:true must not outrank a p1 in the same artifact');
+  assert.equal(a.state, 'MEASURED — failed');
+  assert.equal(a.findings.length, 1, 'CONTROL: the blocker is in the artifact where anyone could read it');
+  // The other direction: `ok: false` with nothing to act on does not manufacture a failure either.
+  // A run that could not measure says so with a REFUSAL, which is exit 2 and a different field.
+  const b = buildArtifact({ url: 'u', tokens: full, result: { ok: false, findings: [], measurements: { narrow: CLEAN } } });
+  assert.equal(b.exit, 0, 'the verdict reads the evidence, in both directions');
+  // And a non-blocking finding still does not fail a run.
+  const c = buildArtifact({ url: 'u', tokens: full, result: { ok: true, findings: [{ severity: 'p2', check: 'x' }], measurements: { narrow: CLEAN } } });
+  assert.equal(c.exit, 0);
+});
+
 test('gaps are DERIVED by buildArtifact, so no caller can omit them into a pass', () => {
   // The defect this guards is the one that produced the whole finding: a verdict computed from a
   // field a caller supplies. Passing a bogus `gaps` must change nothing.
@@ -896,7 +1082,7 @@ test('a readable token file that declares NOTHING is not a refusal — the two a
   // "the standard governs nothing here" must not collapse into one state: the first is a refusal,
   // the second is a run whose unchecked list names every ungoverned group. Without this arm the
   // refusal above could be widened to `!tokens.index.fontSize.present` and nothing would object.
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-probe-'));
+  const dir = tmpDir();
   fs.writeFileSync(path.join(dir, 'tokens.json'), '{}');
   const t = loadTokens('tokens.json', { cwd: dir });
   assert.equal(t.loaded, true, 'an empty but valid JSON document IS loaded');
@@ -911,7 +1097,7 @@ test('the CLI exits 2 on an unreadable token file, and writes that into the arti
   // END TO END, through the real process, because `exit` is the field this defect was hiding in
   // and a pure-function assertion cannot prove a process exit code. Cheap: the refusal happens
   // before Chromium is resolved, so this never launches a browser and never touches the network.
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-probe-'));
+  const dir = tmpDir();
   const out = path.join(dir, 'probe.json');
   const r = spawnSync(
     process.execPath,
@@ -931,7 +1117,7 @@ test('the CLI exits 2 on an unreadable token file, and writes that into the arti
 });
 
 test('loadTokens reads the DTCG file the token builder actually emits', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-probe-'));
+  const dir = tmpDir();
   fs.writeFileSync(path.join(dir, 'tokens.json'), JSON.stringify({ ...TYPE_DOC, ...MOTION_DOC }));
   const t = loadTokens('tokens.json', { cwd: dir });
   assert.equal(t.loaded, true);
@@ -1082,7 +1268,7 @@ test('a passing run is exit 0 and says which of the four states produced it', ()
 });
 
 test('writeArtifact creates the directory and round-trips as JSON', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-probe-'));
+  const dir = tmpDir();
   const out = path.join(dir, 'nested', 'probe.json');
   const a = buildArtifact({ url: 'u', tokens: null, result: { ok: true, findings: [], measurements: {}, unchecked: ['x'] } });
   writeArtifact(out, a);
@@ -1194,6 +1380,92 @@ test('a declared background is used as-is, and carries no canvas caveat', () => 
   const hit = findingsFor('t', { ...raw, contrastPairs: r.pairs }, { tokens: TOKENS_MOTION }).find((x) => x.check === 'text-contrast');
   assert.ok(hit, 'CONTROL: 1.3:1 must still be a finding');
   assert.equal(hit.note, undefined, 'a declared backdrop must not carry the canvas caveat');
+});
+
+// ── p1: A TRANSLUCENT COLOUR WAS MEASURED AS OPAQUE, AND A REAL WCAG FAILURE PASSED SILENTLY ────
+//
+// `parseRgb` drops the fourth component by an explicit, recorded decision — design-lib.mjs says so
+// and ends "callers that need it must composite first". This is that caller, and it did neither:
+// the pair was measured against a colour that is not on the screen, and the result was not a wrong
+// finding but NO finding, with nothing in `gaps` and nothing in `unchecked` either. That breaks
+// this file's own invariant, the one the other two p1s are about.
+
+test('NEGATIVE CONTROL: a 3% black scrim is not a colour, and the pair over it is NOT CHECKED', () => {
+  const scrim = { fg: 'rgb(238, 238, 238)', bg: 'rgba(0, 0, 0, 0.03)', px: 14, bold: false };
+  // The measurement the probe used to make, kept as the thing that must not happen again.
+  assert.equal(contrast(parseRgb('rgb(238, 238, 238)'), parseRgb('rgba(0, 0, 0, 0.03)')), 18.1, 'the old, wrong figure — read as opaque black');
+  // The truth: 3% black over white composites to rgb(247,247,247), and #eee on that is 1.083:1
+  // against a 4.5 floor. So the old reading was not merely imprecise, it was inverted.
+  assert.equal(contrast([238, 238, 238], [247, 247, 247]), 1.083, 'the composited truth — a real AA failure');
+  assert.equal(pairColors(scrim), null, 'a translucent backdrop is not measurable without compositing');
+  const m = { ...CLEAN, contrastPairs: [scrim] };
+  assert.deepEqual(findingsFor('t', m, { tokens: TOKENS_MOTION }), [], 'CONTROL: it still produces no finding — that is the trap');
+  // …and now it is a HOLE rather than silence: the run cannot reach exit 0.
+  const a = buildArtifact({ url: 'u', tokens: { path: 'p', loaded: true, reason: null, index: TOKENS_MOTION }, result: { ok: true, findings: [], measurements: { narrow: m }, unchecked: [] } });
+  assert.equal(a.exit, 3, 'zero findings over an unmeasurable pair is not a pass');
+  assert.deepEqual(a.gaps.map((g) => g.axis), ['text-contrast']);
+  assert.match(a.gaps[0].message, /1 translucent colour\(s\) \(alpha < 1\)/, 'the cause must be named, not filed under "unreadable"');
+  assert.match(a.gaps[0].message, /NOT read as opaque/);
+});
+
+test('the foreground direction is the same defect, and is refused too', () => {
+  // `color: rgba(0, 0, 0, 0.05)` over white read as 21:1 — the maximum possible ratio, on text
+  // that is very nearly invisible.
+  assert.equal(contrast(parseRgb('rgba(0, 0, 0, 0.05)'), [255, 255, 255]), 21, 'the old, wrong figure');
+  assert.equal(pairColors({ fg: 'rgba(0, 0, 0, 0.05)', bg: 'rgb(255, 255, 255)' }), null);
+});
+
+test('alphaOf reads the component count, not the function name', () => {
+  assert.equal(alphaOf('rgb(1, 2, 3)'), 1, 'three components is opaque');
+  assert.equal(alphaOf('rgba(1, 2, 3, 1)'), 1, 'an explicit alpha of 1 is opaque');
+  assert.equal(alphaOf('rgba(1, 2, 3, 0.5)'), 0.5);
+  // CSS Color 4 permits alpha on rgb(), Chromium emits it, and parseRgb accepts that form and
+  // drops it — so a check on the function name would have missed exactly the dangerous case.
+  assert.equal(alphaOf('rgb(0, 0, 0, 0.03)'), 0.03);
+  assert.deepEqual(parseRgb('rgb(0, 0, 0, 0.03)'), [0, 0, 0], 'CONTROL: parseRgb still reads it as a triple');
+  assert.equal(pairColors({ fg: 'rgb(255,255,255)', bg: 'rgb(0, 0, 0, 0.03)' }), null, 'and pairColors still refuses it');
+  // Unreadable alpha fails CLOSED, and so does anything that is not comma-separated rgb.
+  assert.equal(alphaOf('rgba(0, 0, 0, var(--a))'), null);
+  assert.equal(alphaOf('color(srgb 0 0 0)'), null);
+  assert.equal(alphaOf('#fff'), null);
+  assert.equal(alphaOf(null), null);
+  assert.equal(alphaOf(TRANSPARENT), 0, 'the sentinel is simply an alpha of zero');
+});
+
+test('NEGATIVE CONTROL: a non-sentinel transparent backdrop is not opaque white paint', () => {
+  // The walk halted on `bg === 'rgba(0, 0, 0, 0)'` — the exact string — so rgba(255,255,255,0)
+  // stopped it and was measured as white. Widening the sentinel list would have been the wrong
+  // fix: alpha is the property, not the spelling.
+  assert.equal(pairColors({ fg: 'rgb(120, 120, 120)', bg: 'rgba(255, 255, 255, 0)' }), null);
+  // And collect() now walks PAST it to the ancestor that actually paints.
+  const m = runCollect([{ css: { fontSize: '14px', color: 'rgb(120, 120, 120)' }, ancestors: [{ backgroundColor: 'rgba(255, 255, 255, 0)' }, { backgroundColor: 'rgb(13, 14, 17)' }] }]);
+  assert.equal(m.contrastPairs.length, 1);
+  assert.equal(m.contrastPairs[0].bg, 'rgb(13, 14, 17)', 'the first backdrop that is not fully transparent is the backdrop');
+  // CONTROL: a PARTIALLY transparent ancestor stops the walk and travels as itself, because
+  // compositing it needs every layer beneath and collect() returns one.
+  const partial = runCollect([{ css: { fontSize: '14px' }, ancestors: [{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }, { backgroundColor: 'rgb(255, 255, 255)' }] }]);
+  assert.equal(partial.contrastPairs[0].bg, 'rgba(0, 0, 0, 0.03)');
+  assert.equal(pairColors(partial.contrastPairs[0]), null, 'and node refuses to measure it');
+});
+
+test('NEGATIVE CONTROL: an INVISIBLE failing pair must not consume the one finding slot', () => {
+  // THE OTHER HALF OF THE VISIBILITY DEFECT, and it is a FALSE NEGATIVE rather than a false
+  // blocker. findingsFor() emits one representative contrast finding per viewport and breaks;
+  // pairs arrive in document order; so an unpainted element earlier in the document took the slot
+  // and the real failure after it appeared in NO finding. Measured in Chromium: a display:none
+  // element at 1.044:1 preceding a VISIBLE element at 1.92:1 produced five findings, all five
+  // reading 1.044:1.
+  //
+  // The cure is the walk, not the message: only a fix that stops COLLECTING the invisible pair
+  // moves this, which is why the assertion runs the real collect().
+  const m = runCollect([
+    { text: 'invisible', css: { fontSize: '14px', color: 'rgb(250, 250, 250)', display: 'none' }, rect: { width: 0, height: 0 }, ancestors: [{ backgroundColor: 'rgb(255, 255, 255)' }] },
+    { text: 'visible and failing', css: { fontSize: '14px', color: 'rgb(187, 187, 187)' }, ancestors: [{ backgroundColor: 'rgb(255, 255, 255)' }] },
+  ]);
+  assert.equal(m.contrastPairs.length, 1, 'the unpainted pair is not collected at all');
+  const hit = findingsFor('t', { ...m, motion: resolveMotion(m.motion), reflow: false }, { tokens: TOKENS_MOTION }).find((x) => x.check === 'text-contrast');
+  assert.ok(hit, 'the visible failure must be reported');
+  assert.match(hit.measured, /^1\.92:1 at 14px/, 'and it must be THE VISIBLE ONE — 1.044:1 is the pair that used to take the slot');
 });
 
 test('the canvas is white in light mode, and NOT GUESSED in dark mode', () => {

@@ -470,8 +470,19 @@ export function rank(findings) {
  * launch Chromium.
  */
 export function blocking(findings = []) {
-  return findings.filter((f) => f.severity === 'p1');
+  return findings.filter((f) => !NON_BLOCKING.has(f?.severity));
 }
+
+/**
+ * THE ONLY TWO SEVERITIES THAT DO NOT FAIL A RUN. This was written the other way round —
+ * `f.severity === 'p1'` — which FAILS OPEN on everything else: `'P1'`, `'p1 '`, `'critical'`,
+ * `'high'`, `undefined` and `null` all yielded `blocking: 0` and `isPass: true`. Nothing is
+ * miscounted today because every finding this file constructs hardcodes `'p1'`, but `blocking()`
+ * is exported AS the definition of what fails a run, and `critical`/`high` are the blocking
+ * vocabulary of `.claude/review-lenses.yml` — so the first caller to hand this a finding from
+ * anywhere else gets a pass. A severity nobody classified must block until somebody classifies it.
+ */
+const NON_BLOCKING = new Set(['p2', 'p3']);
 
 /**
  * The verdict, derived from `blocking()` and nowhere else.
@@ -609,10 +620,19 @@ function collect() {
     // reached here. What it CANNOT find is the case where nothing declares one: `bg` is then left
     // as the transparent sentinel, RAW, and resolveContrast() in node decides what that means.
     // Substituting a colour here would put an untestable judgement inside page context.
+    // A FULLY TRANSPARENT BACKDROP IS NOT PAINT, whatever its rgb() channels say. This tested
+    // `bg === 'rgba(0, 0, 0, 0)'` — the exact sentinel string — so `rgba(255, 255, 255, 0)`
+    // HALTED THE WALK and was then measured as opaque white that nothing paints. Reading alpha is
+    // not judgement: a PARTIALLY transparent backdrop stops the walk and travels back as it is,
+    // and pairColors() in node refuses it, because compositing needs every layer beneath and this
+    // function returns one.
     let bg = 'rgba(0, 0, 0, 0)';
     let n = el;
-    while (n && bg === 'rgba(0, 0, 0, 0)') {
-      bg = getComputedStyle(n).backgroundColor;
+    while (n) {
+      const c = getComputedStyle(n).backgroundColor;
+      const m = /^rgba\(([^)]*)\)$/.exec(c);
+      const a = m ? parseFloat(m[1].split(',')[3]) : 1;
+      if (a !== 0) { bg = c; break; }
       n = n.parentElement;
     }
     contrastPairs.push({ fg: cs.color, bg, px, bold: parseInt(cs.fontWeight, 10) >= 700 });
@@ -781,9 +801,55 @@ export function resolveContrast(raw = {}) {
  */
 export function pairColors(p = {}) {
   if (p?.fg === TRANSPARENT || p?.bg === TRANSPARENT) return null;
+  // A TRANSLUCENT COLOUR IS NOT A MEASURABLE ONE, and reading it as opaque was a SILENT PASS on a
+  // real WCAG failure. `parseRgb` drops the fourth component by an explicit decision recorded in
+  // design-lib.mjs, which ends "callers that need it must composite first" — this is that caller,
+  // and until 2026-08-29 it did neither. Measured:
+  //
+  //   parseRgb('rgba(0, 0, 0, 0.03)')            -> [0, 0, 0]   read as OPAQUE BLACK
+  //   probe ratio, #eee on that 3% scrim         -> 18.100
+  //   true ratio against the composited colour   -> 1.083       the AA floor is 4.5
+  //   findings emitted                           -> 0
+  //
+  // A 3% black scrim is ordinary CSS — a hover state, a card, an overlay — and the foreground
+  // direction is the same: `color: rgba(0, 0, 0, 0.05)` over white reads as 21:1.
+  //
+  // WHY REFUSE RATHER THAN COMPOSITE, and it is a bounded answer rather than a preference.
+  // Compositing needs EVERY layer beneath the pair, and `collect()` returns ONE backdrop: the
+  // first ancestor whose background is not fully transparent. Computing a ratio from a partial
+  // stack would put a plausible wrong number where there is now an honest hole — which is the
+  // defect `canvasBackground()` above was written to end, one axis over. So it is NOT CHECKED,
+  // it is counted, and it reaches `gaps` — the run is INCOMPLETE, never passed. Compositing
+  // remains the better fix and it is a change to what this instrument measures, which is a
+  // decision for whoever owns the probe rather than a side effect of closing a hole.
+  if (alphaOf(p?.fg) !== 1 || alphaOf(p?.bg) !== 1) return null;
   const fg = parseRgb(p?.fg);
   const bg = parseRgb(p?.bg);
   return fg && bg ? { fg, bg } : null;
+}
+
+/**
+ * The alpha of an `rgb()`/`rgba()` colour: 1 for a three-component form, the fourth component
+ * where there is one, and **null for anything it cannot read** — including a non-numeric alpha
+ * (`var(--a)`) and any form that is not comma-separated rgb at all.
+ *
+ * Separate from `parseRgb` on purpose. `parseRgb`'s triple-returning contract is pinned in two
+ * test files and swept against `design-lib.mjs`'s copy across 66,000 inputs; changing its return
+ * shape to carry alpha would break that comparison and change what a widely-used function means.
+ * A caller that must not measure a translucent colour needs one boolean, and this is it.
+ *
+ * Note `rgb(0, 0, 0, 0.03)` — CSS Color 4 permits alpha on `rgb()`, Chromium emits it, and
+ * `parseRgb` accepts that form and drops the alpha. So testing the function NAME would miss it;
+ * the component count is what decides.
+ */
+export function alphaOf(str) {
+  const m = /^\s*rgba?\(([^)]*)\)\s*$/.exec(String(str));
+  if (!m) return null;
+  const parts = m[1].split(',');
+  if (parts.length === 3) return 1;
+  if (parts.length !== 4) return null;
+  const a = parseFloat(parts[3]);
+  return Number.isFinite(a) ? a : null;
 }
 
 function conformanceFinding({ tag, check, property, res, unit, source }) {
@@ -812,22 +878,67 @@ function conformanceFinding({ tag, check, property, res, unit, source }) {
   };
 }
 
+/**
+ * A LABEL IS PAGE-CONTROLLED BYTES ON THE OPERATOR'S TERMINAL, and `String.trim()` does not strip
+ * ESC. `collect()` takes each label from `aria-label` or `textContent`, and the CLI prints six of
+ * them per finding to a tty — so `aria-label="\x1b[2J\x1b[H…"` clears the screen and can repaint a
+ * forged closing line, roughly 240 attacker-controlled bytes of it.
+ *
+ * The blast radius is exactly the human channel: the JSON artifact was never at risk because
+ * `JSON.stringify` escapes ESC, and the exit code is computed from severities the page cannot set.
+ * But the CLI's own comment says the words a human sees and the code a machine reads "cannot say
+ * different things", and a terminal a page can repaint is that guarantee withdrawn.
+ *
+ * C0 and C1 become U+FFFD rather than being deleted, so a label that carried them is visible as a
+ * label that carried them. Sanitised in node rather than in `collect()`: nothing interpretive may
+ * live in page context, the raw label stays in `measurements` where a reader can see what the page
+ * actually claimed, and JSON escaping already makes that safe.
+ */
+export function safeLabel(s) {
+  return String(s ?? '').replace(/[\u0000-\u001F\u007F-\u009F]/g, '\uFFFD');
+}
+
 /** Turn one viewport's raw measurement into ranked findings. Pure — unit-testable without a browser. */
 export function findingsFor(tag, m, opts = {}) {
   const tokens = opts.tokens ?? null;
   const source = opts.tokensPath ?? DEFAULT_TOKENS_PATH;
   const out = [];
 
+  // OVERFLOW IS CROSS-CHECKED AGAINST ITS OWN OPERANDS, because for this one axis there IS a
+  // second observer and the note above `collect()` says there is none. `collect()` returns
+  // `overflow`, `scrollWidth` and `clientWidth` in ONE payload and the first is the difference of
+  // the other two, so a page that under-reports overflow is contradicted by the measurement it
+  // shipped alongside. Measured: flipping 574 to 0 with the operands untouched turned exit 1 with
+  // 5 blocking findings into exit 0 — while the artifact still carried 964 and 390 for anyone who
+  // read them. The verdict now takes the LARGER of the two, so neither direction of the lie buys a
+  // pass, and the disagreement itself is a finding.
+  const derivedOverflow =
+    Number.isFinite(m.scrollWidth) && Number.isFinite(m.clientWidth) ? m.scrollWidth - m.clientWidth : null;
+  const overflow = derivedOverflow === null ? m.overflow : Math.max(m.overflow, derivedOverflow);
+  if (derivedOverflow !== null && m.overflow !== derivedOverflow) {
+    out.push({
+      severity: 'p1',
+      check: 'measurement-integrity',
+      viewport: tag,
+      measured: `the page reported overflow ${m.overflow}px, and its own scrollWidth ${m.scrollWidth} minus clientWidth ${m.clientWidth} is ${derivedOverflow}px`,
+      standard: 'a reported measurement must agree with the operands reported beside it',
+      note:
+        'This is the one axis where the probe holds two views of the same fact. It does not make ' +
+        'the instrument trustworthy against a hostile page — see the trust-boundary note above ' +
+        'collect() — it makes THIS contradiction visible instead of silent.',
+    });
+  }
+
   // Overflow is one measurement cited against two different standards depending on the width it was
   // taken at. At the reflow widths it IS SC 1.4.10; anywhere else it is the plain usability finding.
-  if (m.overflow > 0) {
+  if (overflow > 0) {
     out.push(
       m.reflow
         ? {
             severity: 'p1',
             check: 'reflow-1410',
             viewport: tag,
-            measured: `${m.overflow}px beyond a ${m.clientWidth}px viewport (document is ${m.scrollWidth}px) — content scrolls in two dimensions`,
+            measured: `${overflow}px beyond a ${m.clientWidth}px viewport (document is ${m.scrollWidth}px) — content scrolls in two dimensions`,
             standard:
               'WCAG 2.2 SC 1.4.10 Reflow, level AA — vertically-scrolling content must present without two-dimensional scrolling at a width equivalent to 320 CSS px (1280 CSS px at 400% zoom)',
             note:
@@ -837,7 +948,7 @@ export function findingsFor(tag, m, opts = {}) {
             severity: 'p1',
             check: 'horizontal-overflow',
             viewport: tag,
-            measured: `${m.overflow}px beyond a ${m.clientWidth}px viewport (document is ${m.scrollWidth}px)`,
+            measured: `${overflow}px beyond a ${m.clientWidth}px viewport (document is ${m.scrollWidth}px)`,
             standard: 'content must not require horizontal scrolling at the target width',
           },
     );
@@ -850,7 +961,7 @@ export function findingsFor(tag, m, opts = {}) {
       check: 'unreachable-interactive',
       viewport: tag,
       measured: `${unreachable.length} interactive element(s) past the viewport with no horizontal scroll: ${unreachable
-        .map((t) => t.label)
+        .map((t) => safeLabel(t.label))
         .slice(0, 6)
         .join(', ')}`,
       standard: 'every interactive element must be reachable at some scroll offset',
@@ -1058,10 +1169,18 @@ export function coverageGaps({ tokens = null, loaded = true, path = DEFAULT_TOKE
   const skipped = [];
   let skippedTotal = 0;
   let darkCanvas = false;
+  let translucent = 0;
   for (const [tag, m] of Object.entries(measurements)) {
     const pairs = m?.contrastPairs ?? [];
     const n = pairs.filter((p) => !pairColors(p)).length;
     if (m?.canvas?.usedDark) darkCanvas = true;
+    // Counted apart from the rest because it is the newest cause and the least obvious one: a 3%
+    // scrim reads as a colour to every eye and to `parseRgb`, and reporting it merely as
+    // "unreadable" would send a reader looking for a parser bug.
+    translucent += pairs.filter((p) => {
+      const a = [alphaOf(p?.fg), alphaOf(p?.bg)];
+      return a.some((x) => typeof x === 'number' && x < 1);
+    }).length;
     if (n > 0) {
       skipped.push(`${tag}: ${n} of ${pairs.length}`);
       skippedTotal += n;
@@ -1074,6 +1193,9 @@ export function coverageGaps({ tokens = null, loaded = true, path = DEFAULT_TOKE
         `text contrast — ${skippedTotal} text/background pair(s) were NOT measured because a colour could ` +
         `not be read (${skipped.join(', ')}). Causes: a CSS Color 4 serialization this probe's parseRgb ` +
         'refuses' +
+        (translucent > 0
+          ? `, ${translucent} translucent colour(s) (alpha < 1), which cannot be measured without compositing every layer beneath them and are NOT read as opaque`
+          : '') +
         (darkCanvas
           ? ', and a dark used colour scheme, where the UA canvas colour is not knowable from computed style and is not guessed'
           : '') +
@@ -1119,7 +1241,15 @@ export function buildArtifact({ url, tokens, result, refused = null, generatedAt
   // measured nothing. A blocking finding outranks incompleteness, because a run that already has
   // work to do gains nothing from being told its coverage was partial — the gaps are in the
   // artifact either way, and they surface as state 3 on the re-run that clears the findings.
-  const exit = refused ? 2 : !result?.ok ? 1 : gaps.length > 0 ? 3 : 0;
+  // THE VERDICT IS DERIVED FROM THE FINDINGS, exactly as `gaps` is, and for the same reason —
+  // the guard was on one of the two fields a caller supplies and not on the other. Measured:
+  // `buildArtifact({ result: { ok: true, findings: [<a p1 reflow-1410>] } })` returned
+  // `exit: 0`, `state: "MEASURED — passed"`, with the blocker sitting in `findings` where any
+  // reader of the file could see it. No live verdict was ever wrong — `probe()` computes `ok`
+  // from these same findings — but the constructor is exported and the test asserting that a
+  // caller "cannot omit them into a pass" passed `ok: true` in the same object literal.
+  const findings = result?.findings ?? [];
+  const exit = refused ? 2 : !isPass(findings) ? 1 : gaps.length > 0 ? 3 : 0;
   return {
     tool: 'design-probe',
     schema: 3, // 2 -> 3: `gaps` added and `exit` gained a fourth value. A reader keyed on schema 2
@@ -1139,7 +1269,7 @@ export function buildArtifact({ url, tokens, result, refused = null, generatedAt
     tokens: tokens
       ? { path: tokens.path, loaded: tokens.loaded, reason: tokens.reason, groups: Object.fromEntries(Object.entries(tokens.index).map(([k, v]) => [k, { present: v.present, count: v.values.length }])) }
       : null,
-    findings: result?.findings ?? [],
+    findings,
     // The fallback reads the SAME measurements the gaps were derived from. Without that the prose
     // and the exit code answer "what did not run" from different inputs, which is the split this
     // file has already paid for twice.
