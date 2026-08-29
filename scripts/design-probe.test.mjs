@@ -298,8 +298,13 @@ test('NEGATIVE CONTROL: catches the WCAG AA target-size failures', () => {
   const f = findingsFor('narrow', MC_NARROW, { tokens: TOKENS });
   const hit = p1s(f).find((x) => x.check === 'target-size-aa');
   assert.ok(hit, 'sub-24px targets must be a p1');
-  // 18px and 15px rows fail; the 43px-tall nav items fail on WIDTH (40px wide) but not on 24.
-  assert.match(hit.measured, /of 6 below 24x24/);
+  // THE COUNT IS INSIDE THE PATTERN NOW. It read `/of 6 below 24x24/`, leaving the leading number
+  // outside — so a mutation that changed how many targets failed produced the identical string.
+  // The comment here also said the 43px-tall nav items "fail on WIDTH (40px wide)"; 40 is not
+  // below 24 and they fail nothing. The two rows that fail are `agentvibe` 44x18 and
+  // `no launcher` 81x15, both on HEIGHT, which is why the width alternative had no coverage at
+  // all — see the test below.
+  assert.match(hit.measured, /^2 of 6 below 24x24/);
 });
 
 test('NEGATIVE CONTROL: the sizes that shipped, against the tokens that govern them', () => {
@@ -550,6 +555,63 @@ test('the reflow width is the one SC 1.4.10 names, and both zoom cells are actua
   assert.ok(reflow.every((v) => v.w === REFLOW_WIDTH));
   const zoomed = reflow.find((v) => v.dsf === 4);
   assert.ok(zoomed, '400% zoom is 320 CSS px of layout at a 4x scale factor — 1280 device px');
+});
+
+test('a target failing on WIDTH ALONE is caught, and so is one failing on HEIGHT ALONE', () => {
+  // `t.h < TARGET_AA || t.w < TARGET_AA` — both of MC_NARROW's failures are HEIGHT failures, so
+  // deleting the width alternative yielded a byte-identical message and stayed green across the
+  // whole suite. A 20x44 target would have been missed. THIS IS THE TWO-ALTERNATIVE-PREDICATE
+  // CLASS, third instance in this repo: each alternative gets its own fixture, because widening
+  // the regex on a fixture that exercises one side reaches the other side never.
+  const sized = (targets) =>
+    findingsFor('t', WITH(CLEAN, { targets: targets.map((t, i) => ({ label: `t${i}`, unreachable: false, ...t })) }), { tokens: TOKENS_MOTION })
+      .find((x) => x.check === 'target-size-aa');
+
+  const widthOnly = sized([{ w: 20, h: 44 }]);
+  assert.ok(widthOnly, 'a 20x44 target fails SC 2.5.8 on width alone');
+  assert.match(widthOnly.measured, /^1 of 1 below 24x24/);
+  const heightOnly = sized([{ w: 44, h: 20 }]);
+  assert.ok(heightOnly, 'a 44x20 target fails on height alone');
+  assert.match(heightOnly.measured, /^1 of 1 below 24x24/);
+  // The boundary, closed on the passing side: 24 IS the minimum, so exactly 24x24 conforms.
+  assert.equal(sized([{ w: TARGET_AA, h: TARGET_AA }]), undefined, 'exactly 24x24 meets SC 2.5.8');
+  assert.ok(sized([{ w: 23.9, h: 24 }]), 'and a hair under does not');
+  assert.ok(sized([{ w: 24, h: 23.9 }]), 'on either dimension');
+  // Both alternatives in one measurement, with the count inside the pattern.
+  const mixed = sized([{ w: 20, h: 44 }, { w: 44, h: 20 }, { w: 44, h: 44 }]);
+  assert.match(mixed.measured, /^2 of 3 below 24x24/);
+});
+
+test('the em and ms tolerances absorb rounding and nothing else', () => {
+  // EPS.px and EPS.ratio were pinned by the 3dp/4dp test above; EPS.em and EPS.ms were pinned by
+  // nothing. Measured: EPS.em 0.0005 -> 0.5 takes a page rendering 0.25em, -0.3em and 0.11em
+  // against a token file declaring only 0 from three offenders to ZERO, still reporting
+  // `checked: true` and exit 0 — every authored tracking value on the page silently authorised.
+  const only0 = tokenIndex({ font: { letterSpacing: { 'ui-3': { $type: 'number', $value: 0 } } } });
+  assert.deepEqual(only0.letterSpacing.values, [0], 'CONTROL: one token, and it is 0');
+  const res = conform({ 0.25: 1, '-0.3': 1, 0.11: 1 }, only0.letterSpacing, EPS.em);
+  assert.equal(res.checked, true);
+  assert.equal(res.offenders.length, 3, 'three authored tracking values, none of them the one token');
+  assert.deepEqual(conform({ 0.0004: 1 }, only0.letterSpacing, EPS.em).offenders, [], '4dp token rounding is still absorbed');
+  assert.equal(conform({ 0.001: 1 }, only0.letterSpacing, EPS.em).offenders.length, 1, '0.001em is a decision, not rounding');
+  // The same, in milliseconds, against the 120/200 duration tokens.
+  assert.deepEqual(conform({ 200.4: 1 }, TOKENS_MOTION.duration, EPS.ms).offenders, [], 'sub-millisecond drift is not a motion decision');
+  assert.equal(conform({ 201: 1 }, TOKENS_MOTION.duration, EPS.ms).offenders.length, 1, '201ms is a duration no token carries');
+});
+
+test('an empty rendered value is an offender, not the number zero', () => {
+  // `raw === ''` in conform() reads as redundant beside the isFinite test and is not: Number('')
+  // is 0, and the letterSpacing token `ui-3` IS 0 — so dropping it would read a value the browser
+  // reported as empty as conforming to a real token. Deleting it survived the whole suite.
+  const res = conform({ '': 3 }, TOKENS.letterSpacing, EPS.em);
+  assert.equal(res.checked, true);
+  assert.equal(res.offenders.length, 1, 'a value the browser reported as empty conforms to nothing');
+  assert.equal(res.offenders[0].value, '');
+  assert.equal(res.offenders[0].nearest, null, 'and there is no token to change it to');
+  assert.equal(res.offenders[0].count, 3, 'the usage count still travels');
+  // CONTROL: a real 0 IS the ui-3 token and must NOT be reported, or this test would pass by
+  // reporting everything.
+  assert.deepEqual(conform({ 0: 5 }, TOKENS.letterSpacing, EPS.em).offenders, []);
 });
 
 test('the target-size finding cites the standard it is measuring against', () => {
@@ -1188,13 +1250,53 @@ test('a page whose every pair is readable declares NO contrast hole', () => {
   assert.ok(!u.some((x) => /were NOT measured/.test(x)));
 });
 
-test('contrast findings use the large-text floor only where the spec allows it', () => {
-  const dim = { fg: 'rgb(120, 120, 120)', bg: 'rgb(255, 255, 255)', px: 14, bold: false };
-  const small = findingsFor('t', { ...CLEAN, contrastPairs: [dim] }, { tokens: TOKENS_MOTION });
-  assert.ok(checks(small).includes('text-contrast'), '2.85:1 at 14px must fail the 4.5 floor');
+/** The text-contrast finding for one pair, or undefined. */
+const contrastHit = (pair) =>
+  findingsFor('t', { ...CLEAN, contrastPairs: [pair] }, { tokens: TOKENS_MOTION }).find((x) => x.check === 'text-contrast');
 
-  const large = findingsFor('t', { ...CLEAN, contrastPairs: [{ ...dim, px: 24 }] }, { tokens: TOKENS_MOTION });
-  assert.ok(!checks(large).includes('text-contrast'), 'the same colour at 24px passes the 3.0 floor');
+// GREY-120 on white is 4.415:1 — above the 3.0 large-text floor and below the 4.5 small-text one,
+// so this single colour separates every arm of the large-text predicate.
+const DIM = { fg: 'rgb(120, 120, 120)', bg: 'rgb(255, 255, 255)' };
+
+test('contrast findings use the large-text floor only where the spec allows it', () => {
+  // THE MESSAGE HERE SAID "2.85:1 at 14px" AND THE FIXTURE MEASURES 4.415:1 — corrected 2026-08-29.
+  // A wrong number in an assertion message is what a reader reaches for when the test goes red,
+  // and 2.85 would have sent them looking for a defect in `contrast()`.
+  assert.equal(contrast([120, 120, 120], [255, 255, 255]), 4.415, 'CONTROL: the fixture sits between the two floors');
+  assert.ok(contrastHit({ ...DIM, px: 14, bold: false }), '4.415:1 at 14px must fail the 4.5 floor');
+  assert.equal(contrastHit({ ...DIM, px: 24, bold: false }), undefined, 'the same colour at 24px passes the 3.0 floor');
+});
+
+test('the large-text predicate needs BOTH the size and the weight the spec names', () => {
+  // `p.px >= 24 || (p.bold && p.px >= 18.66)` HAD ZERO COVERAGE IN ANY DIRECTION until 2026-08-29:
+  // no fixture anywhere set `bold: true`, and the one test naming this behaviour used
+  // `bold: false` on both arms. Three mutations survived the whole suite — 18.66 -> 14, deleting
+  // the `(p.bold && …)` clause, and deleting the `p.bold` conjunct alone. The first of those
+  // applies the 3.0 floor to 14px bold text: a real AA failure reported as a pass, every check
+  // green. 18.66px is 14pt, which is the size the spec states for bold large text.
+  assert.equal(contrastHit({ ...DIM, px: 18.66, bold: true }), undefined, '14pt bold IS large text — the 3.0 floor applies');
+  assert.ok(contrastHit({ ...DIM, px: 18.65, bold: true }), 'a hair under 14pt is not large, whatever its weight');
+  assert.ok(contrastHit({ ...DIM, px: 20, bold: false }), '20px REGULAR is not large — the weight is half the rule');
+  assert.ok(contrastHit({ ...DIM, px: 14, bold: true }), 'bold does not make 14px large — the size is the other half');
+  assert.equal(contrastHit({ ...DIM, px: 24, bold: false }), undefined, '24px is large at any weight');
+  assert.ok(contrastHit({ ...DIM, px: 23.9, bold: false }), 'and 23.9px is not — both boundaries are closed on the passing side');
+});
+
+test('the large-text floor is 3.0, and the finding states the floor it used', () => {
+  // `const floor = large ? 3.0 : 4.5` -> 2.5 survived the whole suite. The 4.5 arm WAS pinned, by
+  // a 4.415:1 fixture sitting 0.085 below it — but nothing sat between 2.5 and 3.0, so the large
+  // arm's value was free. Grey-153 on white is 2.849:1: a real AA failure for large text, and a
+  // pass under any lowered floor.
+  assert.equal(contrast([153, 153, 153], [255, 255, 255]), 2.849, 'CONTROL: below 3.0 and above 2.5');
+  const hit = contrastHit({ fg: 'rgb(153, 153, 153)', bg: 'rgb(255, 255, 255)', px: 24, bold: false });
+  assert.ok(hit, '2.849:1 must fail the 3.0 floor even at 24px');
+  assert.match(hit.measured, /^2\.849:1 at 24px/);
+  assert.match(hit.standard, /— 3:1$/, 'the finding must name the floor it actually applied');
+  // CONTROL on the other side: 3.033:1 clears 3.0, so the floor is not silently higher either.
+  assert.equal(contrast([148, 148, 148], [255, 255, 255]), 3.033);
+  assert.equal(contrastHit({ fg: 'rgb(148, 148, 148)', bg: 'rgb(255, 255, 255)', px: 24, bold: false }), undefined);
+  // And the small-text floor is still 4.5 and still says so.
+  assert.match(contrastHit({ ...DIM, px: 14, bold: false }).standard, /— 4\.5:1$/);
 });
 
 // ── ordering and refusal ────────────────────────────────────────────────────────────────────────
