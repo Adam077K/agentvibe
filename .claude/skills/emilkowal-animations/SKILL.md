@@ -104,12 +104,14 @@ Reference these guidelines when:
 | `scale(0.97)` | Button press feedback |
 | `scale(0.95)` | Minimum enter scale (never scale(0)) |
 | `200ms ease-out` | Standard UI transition |
-| `300ms` | Maximum duration for UI animations |
-| `500ms` | Drawer animation duration |
-| `0.4 px/ms` | Velocity threshold for momentum dismiss — vaul 1.1.2 `VELOCITY_THRESHOLD`; sourced for drawers, [assumed for toasts](references/interact-momentum-dismiss.md) |
-
+| `300ms` | Maximum duration for a **small, local** UI transition — [not a universal ceiling](references/timing-300ms-max.md); that file's own guidance allows 250–400ms for context switches |
+| `500ms` | Drawer animation duration — [the documented exception to the row above](references/timing-drawer-500ms.md); vaul ships `DURATION: 0.5` (seconds) |
+| `0.11 px/ms` | Swipe-dismiss velocity threshold **for a toast** — sonner 2.0.8, inline literal, not a named constant |
+| `0.4 px/ms` | Swipe-dismiss velocity threshold **for a drawer** — vaul 1.1.2 `VELOCITY_THRESHOLD`. Same author, same unit, 3.6x apart: [the threshold is scoped, not general](references/interact-momentum-dismiss.md) |
+| `45px` | Toast swipe distance threshold — sonner 2.0.8 `SWIPE_THRESHOLD` |
 | `100px` | Scroll-reveal viewport threshold |
 | `14px` | Toast stack offset |
+
 
 ## Reference Files
 

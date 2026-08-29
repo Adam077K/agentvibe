@@ -7,86 +7,85 @@ tags: interact, momentum, velocity, swipe, dismiss, gesture
 
 ## Use Momentum-Based Dismissal
 
-Allow users to dismiss elements with a fast flick, not just by dragging past a threshold. Calculate velocity and dismiss if either distance OR velocity exceeds threshold.
+Allow users to dismiss elements with a fast flick, not just by dragging past a threshold. Calculate
+velocity and dismiss if either distance OR velocity exceeds threshold.
 
 **Incorrect (distance-only threshold):**
 
 ```tsx
-const onDragEnd = (dragDistance) => {
-  if (Math.abs(dragDistance) > 100) {
+const onDragEnd = (swipeAmount) => {
+  if (Math.abs(swipeAmount) >= SWIPE_THRESHOLD) {
     dismiss()
   }
 }
 // Fast flicks don't dismiss if distance is short
 ```
 
-**Correct (momentum-based):**
+**Correct (momentum-based).** The constants and the condition below are Sonner's, shipped; the
+function signature is illustrative, because Sonner reads these from component state rather than from
+arguments:
 
 ```tsx
-const onDragEnd = (dragDistance, dragDuration) => {
-  const velocity = Math.abs(dragDistance) / dragDuration
+const SWIPE_THRESHOLD = 45   // px — sonner 2.0.8
 
-  if (Math.abs(dragDistance) > 100 || velocity > 0.4) {
+const onDragEnd = (swipeAmount, timeTaken) => {
+  const velocity = Math.abs(swipeAmount) / timeTaken
+
+  if (Math.abs(swipeAmount) >= SWIPE_THRESHOLD || velocity > 0.11) {
     dismiss()
   }
 }
 // Fast flicks dismiss even with short distance
 ```
 
-**0.4 pixels per millisecond**, and the unit matters as much as the number.
+## The threshold is 0.11 px/ms FOR A TOAST, and that scope is the point
 
-## Where 0.4 comes from, and what it replaced
+The cited article is **[Building a Toast Component](https://emilkowal.ski/ui/building-a-toast-component)**, which builds **Sonner**. Naming the library
+matters: this rule was once compared against **Vaul**, Kowalski's *drawer* library, and judged 3.6x
+wrong on that basis. It is not wrong. Sonner ships exactly this number, in exactly this condition:
 
-This file carried `0.11 px/ms` until 2026-08-29. Vaul — Emil Kowalski's own drawer library, the one
-this skill's ease and duration rules already cite — ships **3.6x that value**. Verified in shipped
-source, not recalled:
+```tsx
+// sonner 2.0.8 · src/index.tsx
+const SWIPE_THRESHOLD = 45;
+const timeTaken = new Date().getTime() - dragStartTime.current?.getTime();
+const velocity = Math.abs(swipeAmount) / timeTaken;
+if (isAllowedDirection && (Math.abs(swipeAmount) >= SWIPE_THRESHOLD || velocity > 0.11)) {
+```
+
+Source: <https://raw.githubusercontent.com/emilkowalski/sonner/main/src/index.tsx>, accessed
+2026-08-29, sonner 2.0.8, corroborated in the shipped bundle and by the article itself.
+
+**The unit is px/ms**: `getTime()` returns milliseconds and `swipeAmount` is pixels, so
+`Math.abs(swipeAmount) / timeTaken` is pixels per millisecond. Check the unit before comparing this
+number to any other one — the arithmetic shape, not the name, is what makes two thresholds comparable.
+
+**`0.11` is not a general constant, and its own author says so.** In the cited article he writes:
+*"0.11 is just a number that I ended up on through trial and error."* One component, arrived at
+empirically. And the **same author** ships a different value for a different component:
 
 ```ts
-// vaul 1.1.2 · src/constants.ts
+// vaul 1.1.2 · src/constants.ts — a DRAWER, same unit, same arithmetic shape
 export const VELOCITY_THRESHOLD = 0.4;
 ```
-```tsx
-// vaul 1.1.2 · src/index.tsx — the unit, and the comparison
-const timeTaken = dragEndTime.current.getTime() - dragStartTime.current.getTime();
-const velocity = Math.abs(distMoved) / timeTaken;
-if (velocity > VELOCITY_THRESHOLD) {
-  closeDrawer();
-}
-```
 
-Source: <https://raw.githubusercontent.com/emilkowalski/vaul/main/src/constants.ts> and `src/index.tsx`,
-both accessed 2026-08-29, vaul 1.1.2.
+Source: <https://raw.githubusercontent.com/emilkowalski/vaul/main/src/constants.ts>, accessed
+2026-08-29.
 
-**The units are the same, checked from both sides — so the 3.6x gap was real and not a unit error.**
-`getTime()` returns milliseconds and `distMoved` is pixels, so Vaul's `velocity` is px/ms. The formula
-in the example above — `Math.abs(dragDistance) / dragDuration` — is the identical computation. Two
-thresholds in one unit, differing 3.6x, is a defect rather than a difference of convention. That
-question was asked before the number was changed, because if the units had differed the correct repair
-would have been to state the unit and leave the value alone.
+So: **0.11 px/ms for a toast, 0.4 px/ms for a drawer — 3.6x apart, same author, same unit.** A toast
+is small, peripheral and frequent; a drawer is large, central and deliberate. Take `0.11` as the
+starting point for a toast-sized element and expect a larger surface to want a higher bar. **Do not
+restate either number as the threshold for swipe-to-dismiss in general** — this file used to say
+`0.11` "works well for most swipe-to-dismiss interactions", and that word "most" is what invited the
+comparison against a library where it is false.
 
-> ## ⛔ OPEN — UNVERIFIED. THIS RULE'S ORIGINAL ATTRIBUTION IS NOT SOURCED.
->
-> **Read this before citing 0.4 as settled for every component.**
->
-> The `Reference` line below points at *Building a Toast Component* — that is **Sonner**, a toast
-> library. `0.4` is verified from **Vaul**, a drawer library. Nobody has yet read Sonner's shipped
-> swipe threshold, so it remains possible that `0.11` was correct **for a toast** and that this rule
-> was always conflating two components with genuinely different thresholds — exactly the mistake
-> `12-principles-of-animation` made with duration, where one number was applied across element
-> classes that do not share one.
->
-> **What would close this:** fetch Sonner's `src/index.tsx` / `src/constants.ts`, quote the swipe or
-> velocity constant verbatim with its URL and access date, and then either (a) confirm one threshold
-> serves both and delete this block, or (b) split the rule by component the way the duration rule was
-> split. Until one of those happens, treat `0.4` as **sourced for drawers and assumed for toasts**.
->
-> **This marker is ADVISORY — no mechanism enforces it.** Nothing in `npm run check` fails while it
-> is unresolved; a step in `scripts/lib/check-suite.js` would be needed for that. It is written to be
-> impossible to mistake for finished prose, because the figure it replaces survived for exactly that
-> reason: it read as settled and cited an article that never contained it. **Do not delete this block
-> to tidy the file. Deleting it IS the regression.**
+> **Why this file is careful about a number that turned out to be right.** The 3.6x claim was
+> well-formed, and it was a category error: it compared a toast constant to a drawer library because
+> nothing in this file named which library the article builds. The number survived; the sentence
+> around it did not. The scope is now stated at the number rather than left to the reader — the same
+> repair `12-principles-of-animation` needed when a 300ms ceiling drafted for small local transitions
+> was applied to drawers.
 
-Reference: [Building a Drawer Component](https://emilkowal.ski/ui/building-a-drawer-component) ·
-[Building a Toast Component](https://emilkowal.ski/ui/building-a-toast-component) — see the open
-question above about which of the two this rule describes.
-
+Reference: [Building a Toast Component](https://emilkowal.ski/ui/building-a-toast-component) — builds
+**Sonner**, and is the source of the `0.11` above. For the drawer counterpart see
+[Building a Drawer Component](https://emilkowal.ski/ui/building-a-drawer-component), which builds
+**Vaul**.
