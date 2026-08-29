@@ -1141,10 +1141,16 @@ export function analyse(raw, { url, viewport, scrolled, finalUrl } = {}) {
   contrastPairs.sort((a, b) => b.count - a.count);
 
   return {
-    url,
+    // measured.json is committed too, so it is the SECOND persist point and gets the same
+    // treatment as SOURCE.yml — see stripCredentials. Fixing only the one the review named would
+    // have left the identical string in the identical shape one file over, which is the failure
+    // the `untrusted` block below this describes about itself: a guard that covers some of the
+    // paths reads as complete.
+    url: stripCredentials(url),
     // Present ONLY when the browser landed somewhere other than the URL that was asked for. A
     // capture with no redirect emits the same keys it always has, so no committed reference moves.
-    ...(finalUrl ? { finalUrl } : {}),
+    // Stripped as well: a redirect can land on a userinfo URL that was never typed by anyone.
+    ...(finalUrl ? { finalUrl: stripCredentials(finalUrl) } : {}),
     viewport,
     scrolled: scrolled ?? null,
     // ── WHAT CAME FROM THE PAGE, SAID SO IN THE ARTIFACT ────────────────────────────────────────
@@ -1358,11 +1364,45 @@ export function toYaml(obj) {
     .join('\n')}\n`;
 }
 
+/**
+ * Remove userinfo from a URL BEFORE IT IS PERSISTED. `https://user:s3cr3t@example.com/x` becomes
+ * `https://example.com/x`.
+ *
+ * `checkRobots` already drops credentials for its own fetch — it builds `${u.origin}/robots.txt`,
+ * where `origin` carries no userinfo — but the capture path did not sanitise anything before
+ * writing, so a URL typed with a password landed VERBATIM in `SOURCE.yml` and in `measured.json`,
+ * both of which are committed. Latent rather than live: no secret is in any committed reference
+ * today. That is the whole reason to fix it now, while the fix is one function and costs nobody a
+ * rewrite.
+ *
+ * IT RETURNS THE INPUT UNCHANGED WHEN THERE IS NOTHING TO STRIP, AND THAT IS NOT AN OPTIMISATION.
+ * `new URL(x).href` NORMALISES: measured 2026-08-29, `new URL('https://linear.app').href` is
+ * `'https://linear.app/'`, and all five committed SOURCE.yml files carry the bare form. Rewriting
+ * unconditionally would therefore change the `url` of every reference on its next capture, and
+ * `writeReference` compares that field against the committed one to refuse a slug collision — so a
+ * cosmetic normalisation would surface as a REFUSAL to re-capture linear.app. A URL that will not
+ * parse is returned unchanged too: it has no userinfo field to strip, and repairing it is not this
+ * function's job.
+ */
+export function stripCredentials(url) {
+  let u;
+  try {
+    u = new URL(url);
+  } catch {
+    return url;
+  }
+  if (!u.username && !u.password) return url;
+  u.username = '';
+  u.password = '';
+  return u.href;
+}
+
 export function sourceRecord(url, { accessDate = new Date(), expiryDays = DEFAULT_EXPIRY_DAYS, capturedBy = TOOL, viewport = null, scrolled = null, surface = null } = {}) {
   const iso = (d) => d.toISOString().slice(0, 10);
   const expires = new Date(accessDate.getTime() + expiryDays * 86400000);
   return {
-    url,
+    // SOURCE.yml is committed, so this is a persist point and the credentials stop here.
+    url: stripCredentials(url),
     access_date: iso(accessDate),
     captured_by: capturedBy,
     // A computed-style census is SINGLE-VIEWPORT by construction, so a fixture that does not say

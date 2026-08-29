@@ -62,6 +62,7 @@ import {
   splitBands,
   toYaml,
   sourceRecord,
+  stripCredentials,
   analyse,
   RULE_KINDS,
   UA_TOKENS,
@@ -1194,6 +1195,41 @@ test('SOURCE.yml carries the five required fields and an expiry after the access
   assert.match(yaml, /^url: "https:\/\/linear\.app"$/m);
   assert.match(yaml, /^access_date: "2026-08-29"$/m);
   assert.ok(!yaml.includes('\n\n'), 'flat scalars only — no accidental block structure');
+});
+
+test('a URL typed with credentials does not reach a committed file', () => {
+  // LATENT, NOT LIVE: no secret is in any committed reference today. That is the argument for
+  // fixing it now — `SOURCE.yml` and `measured.json` are both committed, and a password typed once
+  // into `--url` was persisted verbatim into both.
+  assert.equal(stripCredentials('https://user:s3cr3t@example.com/x'), 'https://example.com/x');
+  assert.equal(stripCredentials('https://token@example.com/x'), 'https://example.com/x', 'a username with no password is still a credential');
+  assert.equal(stripCredentials('https://user:s3cr3t@example.com/x?q=1#f'), 'https://example.com/x?q=1#f', 'the rest of the URL survives');
+
+  // BOTH PERSIST POINTS, because fixing the one the review named would have left the identical
+  // string in the identical shape one function over.
+  assert.equal(sourceRecord('https://user:s3cr3t@example.com/x').url, 'https://example.com/x', 'SOURCE.yml carries the credential');
+  const m = analyse({ sizes: { 14: 3 } }, { url: 'https://user:s3cr3t@example.com/x', viewport: '1440x900' });
+  assert.equal(m.url, 'https://example.com/x', 'measured.json carries the credential');
+  const redirected = analyse({ sizes: { 14: 3 } }, { url: 'https://example.com/a', finalUrl: 'https://user:pw@evil.example/b', viewport: '1440x900' });
+  assert.equal(redirected.finalUrl, 'https://evil.example/b', 'a redirect can land on a userinfo URL nobody typed');
+
+  // AND NOTHING ELSE MOVES — this is the half that is easy to get wrong. `new URL(x).href`
+  // NORMALISES: `https://linear.app` becomes `https://linear.app/`. All five committed SOURCE.yml
+  // files carry the bare form, and writeReference compares that field against the committed one to
+  // detect a slug collision, so an unconditional rewrite would surface as a REFUSAL to re-capture
+  // linear.app. Read from the committed files rather than typed here, so a new reference is covered
+  // the day it lands.
+  const dirs = fs.readdirSync(path.join(REPO, 'design', 'references'), { withFileTypes: true }).filter((e) => e.isDirectory());
+  const urls = dirs.map((e) => readSourceUrl(path.join(path.join(REPO, 'design', 'references'), e.name))).filter(Boolean);
+  assert.ok(urls.length >= 5, `CONTROL: only ${urls.length} committed reference URLs — too few to prove anything`);
+  for (const u of urls) {
+    assert.equal(stripCredentials(u), u, `${u} was rewritten by a function that had nothing to strip`);
+    assert.equal(sourceRecord(u).url, u, `${u} would move in SOURCE.yml on the next capture`);
+  }
+  assert.ok(urls.some((u) => !u.endsWith('/')), 'CONTROL: no committed URL lacks a trailing slash, so the normalisation case above is untested');
+
+  // A string that is not a URL has no userinfo to strip, and repairing it is not this function's job.
+  assert.equal(stripCredentials('not a url'), 'not a url');
 });
 
 test('analyse folds raw tallies into the measured shape, with contrast on the pairs that occur', () => {
