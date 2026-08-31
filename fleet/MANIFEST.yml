@@ -1,0 +1,147 @@
+# fleet/MANIFEST.yml — every file that constitutes the agentvibe harness, grouped by wave.
+#
+# READ BY bin/fleet-install.mjs, and by nothing else. It is parsed with parseYamlSubset from
+# scripts/lib/claims.js, which is a documented YAML SUBSET rather than YAML: keys are plain
+# identifiers, there are no anchors, no tags and no flow mappings, and an apostrophe anywhere in
+# this file - comments included - throws the whole document. Written without one on purpose.
+#
+# WHY A MANIFEST RATHER THAN A COPY SCRIPT. A hand-copy cannot answer does the target still have
+# the harness a month later. A declaration can: the installer hashes what this file names, records
+# the hashes in the target, and --verify re-derives them. The list is the interface, so a file that
+# is part of the harness and not named here is not installed, not verified, and not missed.
+#
+# WAVE 5 IS ABSENT AND THAT IS DELIBERATE. Waves 1, 2, 3, 4 and 6 are the ones this build was
+# given. The gap is named rather than closed by renumbering, because renumbering would silently
+# change what wave 6 means to everyone already using it.
+
+schema: 1
+name: agentvibe-harness
+source_repo: agentvibe
+summary: The harness, declared as files and grouped by the wave that ports it.
+
+kinds:
+  - kind: copy
+    means: One file, copied byte for byte from the source repo into the target.
+  - kind: copy-tree
+    means: Every file under the named directory, recursively, copied byte for byte. The path ends in a double star.
+  - kind: author
+    means: NEVER copied. The target must write or generate its own. Copying one of these asserts something about the target that is not true, so the installer refuses and prints the reason instead.
+
+waves:
+  - wave: 1
+    id: design-substrate
+    summary: The design pipeline - token build, the rendering probe, reference extraction, and the reference corpus those three read.
+    note: This wave is declared retroactively. It is what already landed in beeond by hand, and it is here so that --verify can describe the whole port rather than the part this tool installed itself.
+    entries:
+      - path: scripts/design-lib.mjs
+        kind: copy
+      - path: scripts/design-lib.test.mjs
+        kind: copy
+      - path: scripts/build-tokens.mjs
+        kind: copy
+      - path: scripts/build-tokens.test.mjs
+        kind: copy
+      - path: scripts/design-probe.mjs
+        kind: copy
+      - path: scripts/design-probe.test.mjs
+        kind: copy
+      - path: scripts/extract-reference.mjs
+        kind: copy
+      - path: scripts/extract-reference.test.mjs
+        kind: copy
+      - path: design/references/**
+        kind: copy-tree
+      - path: design/rules/type-scale.rules.json
+        kind: copy
+
+  - wave: 2
+    id: deterministic-floor
+    summary: The check runner, the step list it runs, the preloaded write tripwire, and the chain checker that stops a step hiding a second command behind an exit code.
+    note: Carries the runner and its guards. It does not carry the checks themselves - those arrive with waves 3, 4 and 6, and until then the target step list is short by construction.
+    entries:
+      - path: scripts/run-checks.mjs
+        kind: copy
+      - path: scripts/lib/check-suite.js
+        kind: author
+        why: STEPS is the list of checks THAT project runs. Copied from here it names 48 steps that do not exist in the target, so the runner refuses every one of them and the first honest run reads as 48 failures. Start from the agentvibe file as a reference and delete what the target does not have.
+      - path: scripts/check-suite.test.mjs
+        kind: copy
+      - path: scripts/protected-write-tripwire.cjs
+        kind: copy
+      - path: scripts/protected-write.test.mjs
+        kind: copy
+      - path: scripts/check-ci-chains.mjs
+        kind: copy
+      - path: .github/workflows/ci.yml
+        kind: author
+        why: A workflow file states which steps CI runs, on which events, with which permissions and which secrets. Every one of those is a fact about the target repository. Copying it also writes into .github/workflows, which is irreversible tier here and should be irreversible tier there.
+
+  - wave: 3
+    id: lenses-and-playbooks
+    summary: Domain lenses, review lenses, the six playbooks, the gate declarations, and the linter that makes all four fail rather than rot.
+    note: The playbooks name engines. This wave does not carry .claude/agents, so a target that installs it has the stages and criteria without the engines that satisfy them.
+    entries:
+      - path: .claude/lenses.yml
+        kind: copy
+      - path: .claude/review-lenses.yml
+        kind: copy
+      - path: .claude/playbooks/**
+        kind: copy-tree
+      - path: .claude/gates.yml
+        kind: copy
+      - path: .claude/hooks/schema-lint.js
+        kind: copy
+      - path: scripts/check-gates.mjs
+        kind: copy
+      - path: scripts/gates.test.mjs
+        kind: copy
+      - path: scripts/playbooks.test.mjs
+        kind: copy
+      - path: scripts/lenses.test.mjs
+        kind: copy
+
+  - wave: 4
+    id: claim-ledger
+    summary: The claim ledger, its parser and resolvers, the judge and event libraries, risk classification, and the verdict binding that ties a QA PASS to one exact diff.
+    note: The resolvers reach the network and dispatch judges. Installing them does not decide which paths block in the target - that is the tier floor, which is author-only below.
+    entries:
+      - path: scripts/ledger.mjs
+        kind: copy
+      - path: scripts/ledger.test.mjs
+        kind: copy
+      - path: scripts/lib/claims.js
+        kind: copy
+      - path: scripts/lib/resolvers.js
+        kind: copy
+      - path: scripts/lib/judges.js
+        kind: copy
+      - path: scripts/lib/events.js
+        kind: copy
+      - path: scripts/claims.test.mjs
+        kind: copy
+      - path: scripts/classify.mjs
+        kind: copy
+      - path: scripts/lib/classifier.js
+        kind: copy
+      - path: scripts/classifier.test.mjs
+        kind: copy
+      - path: scripts/verdict.mjs
+        kind: copy
+      - path: scripts/merge-gate.test.mjs
+        kind: copy
+      - path: .claude/qa-tier-floor.yml
+        kind: author
+        why: This file decides which paths in the TARGET are trivial and which are irreversible, and which of those block rather than shadow. Copied, it tiers agentvibe paths that the target does not have and leaves the paths it does have untiered - a gate that reports green because it is aimed at nothing.
+
+  - wave: 6
+    id: skills-discovery
+    summary: The two-tier skills router index, and the tool that rebuilds the skills manifest from what is actually on disk.
+    note: Carries discovery, not the skills. The routers point at .claude/skills entries the target must supply itself, so a fresh target has a working index over an empty library until it adds skills.
+    entries:
+      - path: .claude/skills/routers/**
+        kind: copy-tree
+      - path: scripts/build-skills-manifest.mjs
+        kind: copy
+      - path: .claude/skills/MANIFEST.json
+        kind: author
+        why: Generated, not written. It is the exhaustive index of the skills present in the target, so a copy is a claim that the target holds agentvibe 134 skills. Run build-skills-manifest.mjs in the target and let it produce the file.
