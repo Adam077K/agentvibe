@@ -10,6 +10,15 @@
 # the hashes in the target, and --verify re-derives them. The list is the interface, so a file that
 # is part of the harness and not named here is not installed, not verified, and not missed.
 #
+# HOW THE copy-localized SET WAS DRAWN, AND WHY IT IS NOT LARGER. The recorded hash is over WHOLE
+# FILE CONTENT, so declaring a file localizable switches off the target-changed alarm for every
+# byte of it - not only for the header that motivated it. So the set is drawn from what a real
+# target was MEASURED to have diverged in, never from what could plausibly need adapting. Census of
+# 2026-08-31, kept as provenance and not as a live figure: 25 of the 35 copy entries carried a
+# POSTURE header and 14 had actually diverged in ../beeond. Those 14 are the ones marked below. The
+# other 11 stay kind copy, and an edit to any of them is still drift. Re-derive rather than trust -
+# node bin/fleet-install.mjs --target ../beeond --verify is the census.
+#
 # WAVE 5 IS ABSENT AND THAT IS DELIBERATE. Waves 1, 2, 3, 4 and 6 are the ones this build was
 # given. The gap is named rather than closed by renumbering, because renumbering would silently
 # change what wave 6 means to everyone already using it.
@@ -24,6 +33,8 @@ kinds:
     means: One file, copied byte for byte from the source repo into the target.
   - kind: copy-tree
     means: Every file under the named directory, recursively, copied byte for byte. The path ends in a double star.
+  - kind: copy-localized
+    means: Copied once, byte for byte, and then EXPECTED to carry local edits. --verify absorbs a difference the TARGET made and reports it in its own bucket. It still FAILS when the SOURCE has moved on, because being behind upstream is a real and actionable fact, and it still refuses a both-changed file as a conflict. Every entry must carry a why saying what is expected to differ.
   - kind: author
     means: NEVER copied. The target must write or generate its own. Copying one of these asserts something about the target that is not true, so the installer refuses and prints the reason instead.
 
@@ -38,13 +49,16 @@ waves:
       - path: scripts/design-lib.test.mjs
         kind: copy
       - path: scripts/build-tokens.mjs
-        kind: copy
+        kind: copy-localized
+        why: The POSTURE header names the npm script and the CI step that run the token drift check, then argues at length that --check is deliberately NOT a named script because a check-prefixed name costs an irreversible-tier edit to the step list. Measured in beeond 2026-08-31 - it is wired there as both test:build-tokens and check:tokens, and the cost that argument turns on was never paid, because the step list was being authored from nothing in the same change. The generator below the header is expected to stay identical.
       - path: scripts/build-tokens.test.mjs
         kind: copy
       - path: scripts/design-probe.mjs
-        kind: copy
+        kind: copy-localized
+        why: The scope comments cross-reference the OTHER colour checker in the same repository. beeond added a section on why this probe is not a duplicate of its own apps/web/scripts/brand-lint.mjs - a static reading and a dynamic one, with the interesting failures in the gap - and that file does not exist in agentvibe. The measurement code is expected to stay identical.
       - path: scripts/design-probe.test.mjs
-        kind: copy
+        kind: copy-localized
+        why: The POSTURE header names the step this file rides on. In agentvibe it shares one argv with scripts/probe-readonly.test.mjs to avoid a new governed step name, and check-suite.test.mjs pins that argv so a dropped filename cannot take its assertions with it. beeond has neither that sibling nor that step and gives this file a step of its own, so both the wiring and the hazard are local to each repository.
       - path: scripts/extract-reference.mjs
         kind: copy
       - path: scripts/extract-reference.test.mjs
@@ -60,18 +74,23 @@ waves:
     note: Carries the runner and its guards. It does not carry the checks themselves - those arrive with waves 3, 4 and 6, and until then the target step list is short by construction.
     entries:
       - path: scripts/run-checks.mjs
-        kind: copy
+        kind: copy-localized
+        why: The POSTURE header claims this runner is the deterministic oracle the binding QA gate runs before dispatching any reviewer. That is agentvibe arrangement. A target whose .claude/workflows/qa.js does not invoke npm run check has to say so, because gate oracle is the reason several other comments in this tree give for why a thing matters, and inheriting the claim inherits a false one.
       - path: scripts/lib/check-suite.js
         kind: author
         why: STEPS is the list of checks THAT project runs. Copied from here it names 48 steps that do not exist in the target, so the runner refuses every one of them and the first honest run reads as 48 failures. Start from the agentvibe file as a reference and delete what the target does not have.
       - path: scripts/check-suite.test.mjs
-        kind: copy
+        kind: copy-localized
+        why: The POSTURE header states this is step two of the suite - the check that says whether the other checks are in the suite at all. Roughly a dozen cases also name agentvibe scripts as literals (test:sandbox, lint:agents, check:mc, the delegating aliases, the argv pins) and two are scale floors sized to a 48-step suite. A target re-points those at its own step names and derives the floors from STEPS.length, and until it does, the header must record that the file is EXCLUDED and that auditSuite therefore enforces nothing.
       - path: scripts/protected-write-tripwire.cjs
-        kind: copy
+        kind: copy-localized
+        why: Two things here are per project, and one of them is code rather than commentary. The POSTURE header counts how many suite steps carry the --require preload, which is a property of the target package.json. The PROTECTED array is a trust boundary - beeond adds design/tokens to it, because every generated artifact there descends from one hand-authored seed file that its own drift check cannot see poisoned by construction.
       - path: scripts/protected-write.test.mjs
-        kind: copy
+        kind: copy-localized
+        why: The POSTURE header, and two scale floors - more than twenty reachable scripts, at least twenty-four files. Both were written to catch a walk that had stopped finding anything, and against a nine-step suite they assert only that this is a different repository. A target re-derives them from its own STEPS and must not delete them. The three substantive cases - the refusal, the permitted fixture write, and the preload wiring - are unaffected.
       - path: scripts/check-ci-chains.mjs
-        kind: copy
+        kind: copy-localized
+        why: The POSTURE header records whether this script is a step in its own right or a duplicate of an assertion held elsewhere, and the answer inverts between repositories. In agentvibe it is EXCLUDED so one property is not asserted under two names. In beeond the file holding that assertion is itself excluded, so this script is the only thing that reads the workflow at all, and the header has to claim MORE rather than less.
       - path: .github/workflows/ci.yml
         kind: author
         why: A workflow file states which steps CI runs, on which events, with which permissions and which secrets. Every one of those is a fact about the target repository. Copying it also writes into .github/workflows, which is irreversible tier here and should be irreversible tier there.
@@ -106,9 +125,11 @@ waves:
     note: The resolvers reach the network and dispatch judges. Installing them does not decide which paths block in the target, nor which of the target prose citations are allowed not to resolve - those are the tier floor and the citation exemption list, both author-only below.
     entries:
       - path: scripts/ledger.mjs
-        kind: copy
+        kind: copy-localized
+        why: The POSTURE header claims both ledger exit codes are read by a step of the CI workflow. A target that registers no check ledger script, and has no workflow step for one, must say that nothing reads them - an exit path nobody calls enforces nothing, and a file claiming BLOCKS where no lane invokes it is the precise defect this harness exists to catch. The exit codes themselves are unchanged.
       - path: scripts/ledger.test.mjs
-        kind: copy
+        kind: copy-localized
+        why: The POSTURE header records whether this file runs at all, and in a partial install it may not even load - measured in beeond 2026-08-31, ERR_MODULE_NOT_FOUND on scripts/claim-append.test.mjs, which wave 4 does not carry, so the module graph never resolves and not one case is evaluated. One reported failure standing for an unknown number of unrun assertions is worth a header that says so.
       - path: scripts/lib/claims.js
         kind: copy
       - path: scripts/lib/resolvers.js
@@ -118,17 +139,21 @@ waves:
       - path: scripts/lib/events.js
         kind: copy
       - path: scripts/claims.test.mjs
-        kind: copy
+        kind: copy-localized
+        why: The POSTURE header claims a CI step runs this file. Measured in beeond 2026-08-31 - 79 of 80 cases pass and the single failure reads .claude/agents/reviewer-readonly.md, an agentvibe agent file the target does not have. The library under test came across intact and the FIXTURE names the wrong repository, so the port is a header correction plus a fixture repoint.
       - path: scripts/classify.mjs
         kind: copy
       - path: scripts/lib/classifier.js
         kind: copy
       - path: scripts/classifier.test.mjs
-        kind: copy
+        kind: copy-localized
+        why: The POSTURE header, and the direction of the danger is what earns the exemption. Thirteen of twenty-eight cases assert against agentvibe tier-map paths. A copied test that FAILS is loud - but this same file would have PASSED against a tier map that had also been copied, certifying the classifier against paths the target does not have. The target tier floor is right and this file is what describes the wrong repository.
       - path: scripts/verdict.mjs
-        kind: copy
+        kind: copy-localized
+        why: The POSTURE header claims this script blocks because cmd_merge in bin/warroom refuses on its non-zero exit. A target with no warroom launcher has no caller for it, so nothing is gated by it. The exit codes are real and unchanged, and the header must not keep naming a caller that is absent.
       - path: scripts/merge-gate.test.mjs
-        kind: copy
+        kind: copy-localized
+        why: The POSTURE header, and this is the one entry whose remedy is an INSTALL decision rather than an edit. Forty-four of its sixty-four cases copy bin/warroom into a temp harness and drive it, and fail on ENOENT wherever that launcher was never installed. Those failures are true - the thing under test is absent - and the header has to say so rather than claim a step that runs.
       - path: .claude/qa-tier-floor.yml
         kind: author
         why: This file decides which paths in the TARGET are trivial and which are irreversible, and which of those block rather than shadow. Copied, it tiers agentvibe paths that the target does not have and leaves the paths it does have untiered - a gate that reports green because it is aimed at nothing.

@@ -1,9 +1,18 @@
 // POSTURE: a test, not a gate. It is NOT a step of `npm run check` — bin/fleet-install.mjs is a
 // tool the fleet rollout runs by hand, and adding a step means editing scripts/lib/check-suite.js,
-// which is irreversible tier and out of scope for this build. Run it with `npm run fleet:test`.
-// That is a real gap, named rather than left for a reader to discover: nothing fails a build if
-// this file starts failing, and wiring it belongs in the PR that also wires the npm script into
-// STEPS.
+// which is irreversible tier and out of scope for this build. Run it with
+// `node --test scripts/fleet-install.test.mjs`. That is a real gap, named rather than left for a
+// reader to discover: nothing fails a build if this file starts failing, and wiring it belongs in
+// the PR that also wires an npm script into STEPS.
+//
+// *Corrected 2026-08-31. This line read "Run it with `npm run fleet:test`", and there is no such
+// script — package.json has `fleet:install` (the tool itself) and `warroom:fleet` (a different
+// tool entirely), and NO script runs this file. The one instruction in this header for running it
+// did not work. Verify rather than trust:
+// `node -e "console.log(Object.keys(require('./package.json').scripts).filter(s=>/fleet/.test(s)))"`
+// — the answer is the two names above, and neither of them is this test.
+// The script is deliberately NOT added here: package.json is outside this change's stated scope,
+// and a `check:`-prefixed or suite-bound name is an irreversible-tier edit either way.*
 //
 // scripts/fleet-install.test.mjs — every property tested by constructing the input that DEFEATS it.
 //
@@ -432,6 +441,226 @@ test('the shipped manifest loads, and every author entry carries a reason', () =
   for (const p of ['.claude/qa-tier-floor.yml', 'scripts/lib/check-suite.js', '.github/workflows/ci.yml']) {
     assert.ok(paths.includes(p), `${p} is not declared`);
   }
+});
+
+// ── copy-localized: the target is allowed to adapt, and only in one direction ────────────────
+//
+// Every case below drives the SAME fixture into a different corner of the three-hash table at
+// classifyEntry, using the same two levers: rewrite the target file (moves T), rewrite the
+// recorded hash (moves R relative to S). There is no second source tree to move S with, so
+// "the source moved on" is reached by moving R away from S — the identical three-hash position,
+// and the only one reachable from one checkout. That substitution is the whole reason these cases
+// can exist at all, and it is why R is written by hand rather than by a second install.
+
+/** A manifest over ONE real source file, at the kind under test. Wave 9, no author entries. */
+function localizedManifest(dir, name, kind, why) {
+  const file = path.join(dir, name);
+  fs.writeFileSync(
+    file,
+    [
+      'schema: 1',
+      'source_repo: fixture',
+      'waves:',
+      '  - wave: 9',
+      '    id: localized-fixture',
+      '    entries:',
+      `      - path: ${TOOL}`,
+      `        kind: ${kind}`,
+      ...(why ? [`        why: ${why}`] : []),
+      '',
+    ].join('\n'),
+  );
+  return file;
+}
+
+const WHY = 'The POSTURE header names the step that runs it, and that is a fact about the target.';
+
+/** Install one file, then move the target, the record, or both. Returns the fixture root. */
+function localizedFixture(tag, { target, record }) {
+  const t = fixtureDir(tag);
+  const m = localizedManifest(t, 'manifest.yml', 'copy-localized', WHY);
+  assert.equal(run(['--target', t, '--wave', '9', '--apply', '--manifest', m], HARNESS).code, EXIT.OK);
+
+  if (target !== undefined) fs.writeFileSync(path.join(t, TOOL), target);
+  if (record !== undefined) {
+    const p = provenance(t);
+    p.files[TOOL].sha256 = sha256(record);
+    fs.writeFileSync(path.join(t, PROVENANCE_FILE), `${JSON.stringify(p, null, 2)}\n`);
+  }
+  return { t, m };
+}
+
+const sha256 = (text) =>
+  spawnSync(
+    process.execPath,
+    ['-e', `const c=require('crypto');process.stdout.write(c.createHash('sha256').update(Buffer.from(${JSON.stringify(text)})).digest('hex'))`],
+    { encoding: 'utf8' },
+  ).stdout;
+
+test('the manifest refuses a copy-localized entry with no why, and a tree that claims the kind', () => {
+  const d = fixtureDir('localized-rules');
+  const head = ['schema: 1', 'waves:', '  - wave: 1', '    id: x', '    entries:'];
+
+  const noWhy = badManifest(d, 'no-why.yml', [...head, '      - path: a/b.txt', '        kind: copy-localized']);
+  assert.throws(() => loadManifest(noWhy), /copy-localized with no "why"/);
+
+  const tree = badManifest(d, 'tree.yml', [
+    ...head, '      - path: a/**', '        kind: copy-localized', '        why: because',
+  ]);
+  assert.throws(() => loadManifest(tree), /names a tree/);
+
+  // The control: the same shape with a why, on a file, must load.
+  const ok = badManifest(d, 'ok.yml', [
+    ...head, '      - path: a/b.txt', '        kind: copy-localized', '        why: because',
+  ]);
+  assert.equal(loadManifest(ok).doc.waves[0].entries[0].kind, 'copy-localized');
+});
+
+test('TARGET CHANGED ONLY on a copy-localized file is NOT a failure, and is named in the output', () => {
+  const { t, m } = localizedFixture('localized-target', { target: '# beeond corrected the POSTURE header\n' });
+
+  const r = run(['--target', t, '--verify', '--manifest', m], HARNESS);
+
+  assert.equal(r.code, EXIT.OK, 'an adapted localized file failed the verify');
+  assert.match(r.out, /IN SYNC — exit 0/);
+  assert.match(r.out, /LOCALIZED — adapted by the target, and the source has not moved \(1\)/);
+  // Absorbing a file silently is the failure mode this whole kind risks, so the verdict has to
+  // carry the count and the file has to be named with the reason it was allowed to differ.
+  assert.match(r.out, /1 of them are copy-localized and were counted as adapted rather than drifted/);
+  assert.match(r.out, /build-skills-manifest\.mjs/);
+  assert.match(r.out, /expected to differ: The POSTURE header names the step/);
+  assert.doesNotMatch(r.out, /DRIFTED — exit 1/);
+});
+
+test('the SAME divergence on a plain copy entry is still drift — the default did not move', () => {
+  const t = fixtureDir('localized-control');
+  const plain = localizedManifest(t, 'plain.yml', 'copy', null);
+  assert.equal(run(['--target', t, '--wave', '9', '--apply', '--manifest', plain], HARNESS).code, EXIT.OK);
+  fs.writeFileSync(path.join(t, TOOL), '# beeond corrected the POSTURE header\n');
+
+  const r = run(['--target', t, '--verify', '--manifest', plain], HARNESS);
+
+  assert.equal(r.code, EXIT.DRIFT);
+  assert.match(r.out, /DRIFTED — exit 1/);
+  assert.match(r.out, /the target edited it/);
+  assert.doesNotMatch(r.out, /LOCALIZED —/);
+});
+
+test('SOURCE MOVED ON for a copy-localized file IS a failure, and says it needs re-porting', () => {
+  // T == R and both differ from S: the target has not adapted this file yet AND the source has been
+  // revised since it was taken. Moving T and R together is what puts them there — moving R alone
+  // leaves T == S, which is in-sync no matter what the record says, and that is correct.
+  const OLD = '# the version this target was installed from\n';
+  const { t, m } = localizedFixture('localized-behind', { target: OLD, record: OLD });
+
+  const r = run(['--target', t, '--verify', '--manifest', m], HARNESS);
+
+  assert.equal(r.code, EXIT.DRIFT, 'being behind the source was absorbed');
+  assert.match(r.out, /DRIFTED — exit 1/);
+  assert.match(r.out, /LOCALIZED AND BEHIND THE SOURCE — needs re-porting \(1\)/);
+  assert.match(r.out, /build-skills-manifest\.mjs/);
+  assert.match(r.out, /unchanged since install; the source has moved on/);
+  assert.match(r.out, /re-port each, keeping the adaptation/);
+  assert.doesNotMatch(r.out, /IN SYNC — exit 0/);
+});
+
+test('a record that is stale while target and source AGREE is in sync, and stays exit 0', () => {
+  // The control for the case above, and the reason it has to move T and R together. Here only R
+  // is stale: the two trees hold the same bytes, so there is nothing to port and nothing to
+  // reconcile. A tool that failed this would fail every target that had been re-ported by hand.
+  const { t, m } = localizedFixture('localized-stale-record', { record: '# a hash from an older install\n' });
+
+  const r = run(['--target', t, '--verify', '--manifest', m], HARNESS);
+
+  assert.equal(r.code, EXIT.OK);
+  assert.match(r.out, /IN SYNC — exit 0/);
+  assert.doesNotMatch(r.out, /LOCALIZED/);
+});
+
+test('BOTH CHANGED is a conflict a person must reconcile, at exit 1, never absorbed', () => {
+  const { t, m } = localizedFixture('localized-both', {
+    target: '# beeond corrected the POSTURE header\n',
+    record: '# what the source used to be\n',
+  });
+
+  const v = run(['--target', t, '--verify', '--manifest', m], HARNESS);
+  assert.equal(v.code, EXIT.DRIFT);
+  assert.match(v.out, /LOCALIZED AND BEHIND THE SOURCE/);
+  assert.match(v.out, /revised in the source since/);
+  assert.doesNotMatch(v.out, /IN SYNC — exit 0/);
+
+  // And --apply still refuses it, without writing a byte.
+  const before = snapshot(t);
+  const a = run(['--target', t, '--wave', '9', '--apply', '--manifest', m], HARNESS);
+  assert.equal(a.code, EXIT.DRIFT);
+  assert.match(a.out, /CONFLICT/);
+  assert.match(a.out, /NOTHING WAS WRITTEN/);
+  assert.match(a.out, /Re-port it, keeping the adaptation/);
+  assert.deepEqual(snapshot(t), before);
+});
+
+test('a copy-localized file with NO record is AMBIGUOUS at exit 2, not absorbed and not drift', () => {
+  const t = fixtureDir('localized-unrecorded');
+  const m = localizedManifest(t, 'manifest.yml', 'copy-localized', WHY);
+  assert.equal(run(['--target', t, '--wave', '9', '--apply', '--manifest', m], HARNESS).code, EXIT.OK);
+  fs.writeFileSync(path.join(t, TOOL), '# hand-placed, or added to the manifest after the install\n');
+  const p = provenance(t);
+  delete p.files[TOOL];
+  fs.writeFileSync(path.join(t, PROVENANCE_FILE), `${JSON.stringify(p, null, 2)}\n`);
+
+  const r = run(['--target', t, '--verify', '--manifest', m], HARNESS);
+
+  // Rule 10. "Allowed to differ" plus "no evidence of which side moved" is not a pass and is not
+  // a drift; picking the comfortable one of those two is the thing being refused here.
+  assert.equal(r.code, EXIT.REFUSED);
+  assert.match(r.out, /COULD NOT CHECK — exit 2/);
+  assert.match(r.out, /no way to tell the two apart/);
+  assert.doesNotMatch(r.out, /IN SYNC — exit 0/);
+  assert.doesNotMatch(r.out, /DRIFTED — exit 1/);
+});
+
+test('--apply leaves an adapted copy-localized file alone and rewrites nothing', () => {
+  const LOCAL = '# beeond corrected the POSTURE header\n';
+  const { t, m } = localizedFixture('localized-apply', { target: LOCAL });
+  const before = snapshot(t);
+
+  const r = run(['--target', t, '--wave', '9', '--apply', '--manifest', m], HARNESS);
+
+  assert.equal(r.code, EXIT.OK);
+  assert.match(r.out, /LOCALIZED — adapted by the target, LEFT ALONE \(1\)/);
+  assert.equal(fs.readFileSync(path.join(t, TOOL), 'utf8'), LOCAL, 'the adaptation was overwritten');
+  // Not one byte, .harness-version included: the record still points at the source content this
+  // copy was taken from, which is the only leg that can later say which side moved.
+  assert.deepEqual(snapshot(t), before);
+});
+
+test('a copy-localized file the target DELETED is still drift, not an absorbed adaptation', () => {
+  const { t, m } = localizedFixture('localized-deleted', {});
+  fs.rmSync(path.join(t, TOOL));
+
+  const r = run(['--target', t, '--verify', '--manifest', m], HARNESS);
+
+  assert.equal(r.code, EXIT.DRIFT);
+  assert.match(r.out, /no longer present in the target/);
+  assert.doesNotMatch(r.out, /LOCALIZED —/);
+});
+
+test('the shipped manifest declares copy-localized entries, each with a real reason', () => {
+  const m = loadManifest(path.join(REPO, 'fleet', 'MANIFEST.yml'));
+  const localized = m.doc.waves.flatMap((wv) => wv.entries.filter((e) => e.kind === 'copy-localized'));
+  assert.ok(localized.length > 0, 'nothing is declared localizable');
+  for (const e of localized) {
+    assert.ok(e.why.length > 80, `${e.path} has a stub reason`);
+    assert.ok(!e.path.endsWith('/**'), `${e.path} is a tree`);
+  }
+
+  // The set is bounded by measurement, not by convenience: a manifest where most of the harness is
+  // exempt from the target-changed check is one that has stopped checking. Half is the line.
+  const copyable = m.doc.waves.flatMap((wv) => wv.entries.filter((e) => e.kind !== 'author' && e.kind !== 'copy-tree'));
+  assert.ok(
+    localized.length * 2 < copyable.length,
+    `${localized.length} of ${copyable.length} copy entries are localizable — over half is not an exemption, it is the default`,
+  );
 });
 
 // ── unit: the two pure argv helpers ──────────────────────────────────────────
