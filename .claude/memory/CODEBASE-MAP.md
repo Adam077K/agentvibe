@@ -66,6 +66,8 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:warroom-template` | `bash -n war-room/bin/PROJECT_NAME.tmpl` |
 | `npm run curate:skills` | `node scripts/curate-skills.mjs` |
 | `npm run design-probe` | `node scripts/design-probe.mjs` |
+| `npm run fleet:install` | `node bin/fleet-install.mjs` |
+| `npm run fleet:test` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/fleet-install.test.mjs` |
 | `npm run gate` | `node scripts/run-gate.mjs` |
 | `npm run gates` | `node scripts/check-gates.mjs` |
 | `npm run ledger:build` | `node scripts/ledger.mjs build` |
@@ -149,6 +151,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/design-probe.test.mjs` | the negative controls that make the design probe binding. |
 | `scripts/evict-memory.test.mjs` | mutation gate for the typed memory eviction. |
 | `scripts/extract-reference.test.mjs` | the falsification harness, driven by real measurements. |
+| `scripts/fleet-install.test.mjs` | every property tested by constructing the input that DEFEATS it. |
 | `scripts/gates.test.mjs` | every rule tested by constructing the input that DEFEATS it. |
 | `scripts/launcher-permissions.test.mjs` | the autonomy dial, and the model it made inert. |
 | `scripts/ledger.test.mjs` | the resolvers, and the invariant that holds the ledger up. |
