@@ -1,18 +1,17 @@
 {
   "name": "gsa-startup-kit",
   "version": "1.1.0",
-  "description": "AI Agent Kit for Claude Code & Antigravity \u2014 autonomous startup team (CEO, C-suite, Workers) with 147 expert skills",
+  "description": "AI Agent Kit for Claude Code & Antigravity — autonomous startup team (CEO, C-suite, Workers) with 147 expert skills",
   "bin": {
     "gsa-startup-kit": "bin/install.js"
   },
   "scripts": {
     "fleet:install": "node bin/fleet-install.mjs",
-    "fleet:test": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/fleet-install.test.mjs",
     "check": "node scripts/run-checks.mjs",
     "check:ci-chains": "node scripts/check-ci-chains.mjs",
     "check:figures": "node scripts/check-figures.mjs",
     "test:figures": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-figures.test.mjs",
-    "test:check-suite": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs",
+    "test:check-suite": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs scripts/fleet-install.test.mjs",
     "test:tier-gate": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-tier-gate.test.mjs",
     "test:sandbox": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/sandbox-config.test.mjs",
     "check:mc": "node mission-control/check.mjs",
