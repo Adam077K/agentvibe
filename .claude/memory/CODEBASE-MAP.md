@@ -67,7 +67,6 @@ it, so a hook that changes posture changes this map with it.
 | `npm run curate:skills` | `node scripts/curate-skills.mjs` |
 | `npm run design-probe` | `node scripts/design-probe.mjs` |
 | `npm run fleet:install` | `node bin/fleet-install.mjs` |
-| `npm run fleet:test` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/fleet-install.test.mjs` |
 | `npm run gate` | `node scripts/run-gate.mjs` |
 | `npm run gates` | `node scripts/check-gates.mjs` |
 | `npm run ledger:build` | `node scripts/ledger.mjs build` |
@@ -82,7 +81,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run probe:stop-reason` | `node scripts/probe-stop-reason.mjs` |
 | `npm run probe:workflow-reach` | `node scripts/probe-workflow-reach.mjs` |
 | `npm run test:budget` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/usage.test.mjs` |
-| `npm run test:check-suite` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs` |
+| `npm run test:check-suite` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs scripts/fleet-instal` |
 | `npm run test:citations` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-citations.test.mjs` |
 | `npm run test:claims` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/claims.test.mjs` |
 | `npm run test:classifier` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/classifier.test.mjs` |
