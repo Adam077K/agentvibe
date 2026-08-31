@@ -23,10 +23,9 @@
 // never could. It now pins the refutation of a rule this repo used to enforce, which is a stronger
 // artifact than pinning one it still does.
 
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -72,6 +71,27 @@ import {
 } from './extract-reference.mjs';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+// ── A FIXTURE DIRECTORY THAT DOES NOT DEPEND ON THE AMBIENT TMPDIR ──────────────────────────────
+// These call sites read `fs.mkdtempSync(path.join(os.tmpdir(), …))`, and that made the verdict a
+// function of an environment variable nobody sets deliberately: identical bytes scored 48/48 with
+// TMPDIR pointing at a session scratchpad and 26/48 with TMPDIR at the macOS default
+// `/var/folders/…`, where the armed sandbox denies the write. A suite whose result depends on
+// where the OS happens to put temp files is not measuring the code.
+//
+// The repo root is the base instead — it is writable wherever this suite is allowed to run at all.
+// Dotted so it is invisible to an ordinary listing. Cleanup is an `after()` HOOK rather than a
+// per-caller `rmSync`, because a test that throws never reaches its own cleanup line, and the
+// litter would then sit in the repo root rather than in a temp directory the OS reaps.
+const TMP_DIRS = [];
+function tmpDir(prefix) {
+  const d = fs.mkdtempSync(path.join(REPO, `.${prefix}`));
+  TMP_DIRS.push(d);
+  return d;
+}
+after(() => {
+  for (const d of TMP_DIRS) fs.rmSync(d, { recursive: true, force: true });
+});
 
 const withCounts = (pairs) => pairs.map(([value, count]) => ({ value, count }));
 
@@ -622,7 +642,7 @@ test('a rule that could not be decided exits 2, and does not wear the clean tick
 });
 
 test('the CLI exits 2 for a corpus that cannot decide, and 0 only when it did decide', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'falsify-'));
+  const dir = tmpDir('falsify-');
   const rulesPath = path.join(REPO, 'design', 'rules', 'type-scale.rules.json');
 
   // A CORPUS OF ONE. Every measurable rule is UNDERPOWERED by construction — which is also what
@@ -655,7 +675,7 @@ test('the CLI exits 2 for a corpus that cannot decide, and 0 only when it did de
 
 // ── A CORPUS YOU COULD NOT FINISH READING IS ONE MORE "I COULD NOT CHECK" ───────────────────────
 test('one malformed measured.json refuses with exit 2, and does not crash into exit 1', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'corpus-'));
+  const dir = tmpDir('corpus-');
   fs.mkdirSync(path.join(dir, 'good'), { recursive: true });
   fs.copyFileSync(path.join(REPO, 'design', 'references', 'linear-app', 'measured.json'), path.join(dir, 'good', 'measured.json'));
 
@@ -1387,7 +1407,7 @@ test('a capture from a DIFFERENT url refuses to overwrite the reference already 
   assert.equal(slugFor('https://play.grafana.org'), slugFor('https://play-grafana.org'));
   assert.equal(slugFor('https://vercel.com'), slugFor('https://vercel/com'));
 
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ref-collision-'));
+  const dir = tmpDir('ref-collision-');
   const out = path.join(dir, slugFor('https://docs.stripe.com'));
   const payload = (url) => ({ measured: { url }, seeds: { type: {} }, source: sourceRecord(url) });
 
