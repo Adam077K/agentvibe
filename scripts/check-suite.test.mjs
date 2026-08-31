@@ -18,9 +18,21 @@
 //   reads what came back, rather than asserting against the working tree, which would pass or
 //   fail for reasons the test did not choose.
 //
+// WHERE EACH CASE GETS ITS BASE, because that is the axis this file was wrong on for a while.
+// The GUARD-MUTATION cases run against a four-step SYNTHETIC fixture they construct themselves
+// (`fixtureSuite()`, below): they ask what auditSuite() does to a suite with a step removed, and a
+// fixture answers that better than the real 48-step list — it is legible, and it cannot drift. The
+// cases that read the REAL tree are the ones whose subject IS this repository: `auditSuite({
+// scripts })` unmutated, the per-entry EXCLUDED reason check, the alias property, the nine steps
+// the chain used to skip, the check:mc entry, the whole ci.yml section, and the argv pins. Every
+// case that named an agentvibe script as a MUTATION SUBJECT — `test:sandbox`, `lint:agents`,
+// `check:ledger-verify` — moved to the fixture, because those cases were describing this
+// repository while claiming to describe the guard, and a port failed eight of them with nothing
+// wrong anywhere.
+//
 // WHAT IT ASSERTS, AND WHAT IT LEAVES OPEN:
-//   ✓ the guard REFUSES a real package.json with a step removed from STEPS — proved by mutation,
-//     not by a green run against a tree where nothing is wrong
+//   ✓ the guard REFUSES a suite with a step removed — proved by mutation against a fixture whose
+//     clean base is itself asserted, not by a green run against a tree where nothing is wrong
 //   ✓ the five delegating parents are EXCLUDED aliases and every link they hid is a STEP — this
 //     line said the opposite until 2026-08-25 ("transitive reach counts, so check:ledger's three
 //     tests are not duplicated into STEPS"), and reaching a script is not running it separately:
@@ -92,6 +104,81 @@ const RUNNER = path.join(REPO, 'scripts', 'run-checks.mjs');
 const pkg = JSON.parse(fs.readFileSync(path.join(REPO, 'package.json'), 'utf8'));
 const scripts = pkg.scripts;
 
+// ── THE SYNTHETIC FIXTURE SUITE, which is what the guard's own mutations run against ─────────
+//
+// WHY IT EXISTS, and it is the third instance of one class found in one port. Every mutation case
+// below asks a question about auditSuite() — "does it refuse a suite with a step removed?" — and
+// each took the LIVE STEPS, EXCLUDED and package.json as the base to mutate, naming this
+// repository's scripts as the subjects: `test:sandbox`, `lint:agents`, `check:ledger-verify`, and
+// the five delegating parents. Ported into a nine-step project, eight of those cases failed with
+// no defect anywhere: they were describing agentvibe rather than describing the guard. The same
+// shape had already been found twice in the same port — seven token tests reading the live
+// seeds.json, eight ledger exemptions hardcoded in ledger.mjs — and it is always the same thing,
+// data about ONE repository embedded where portable behaviour belongs.
+//
+// A three-step fixture answers the question BETTER than the real 48-step list, which is the part
+// worth stating plainly: it is legible on one screen, the mutation sits next to the base it
+// mutates, and it cannot drift when someone adds a step.
+//
+// WHAT DELIBERATELY STAYS ON THE REAL TREE: `auditSuite({ scripts })` with no mutation — the drift
+// guard doing its actual job on this repository — the per-entry EXCLUDED reason check, the alias
+// property over whatever aliases this tree has, and every assertion about
+// .github/workflows/ci.yml. Those check agentvibe and are supposed to.
+
+/** Long enough for hasSubstantiveReason(), and an actual reason, because the guard checks both. */
+const FIXTURE_REASON =
+  'an alias kept because docs cite the spelling; every link is a step of its own, so it hides nothing';
+
+/**
+ * A four-step suite, written out in full.
+ *
+ * It carries one step under each prefix the guard treats differently (`check:`, `test:`, `lint:`),
+ * an EXCLUDED alias whose links are three of the steps, a fourth step NO alias covers — so a case
+ * that needs exactly one finding can remove it — and one ungoverned script that must never be a
+ * finding. The base is CLEAN, asserted below, so any finding a case reports is the one it introduced.
+ */
+const FIXTURE_STEPS = ['check:alpha', 'test:beta', 'lint:gamma', 'test:delta'];
+const FIXTURE_SCRIPTS = {
+  check: 'node scripts/run-checks.mjs',
+  'check:alpha': 'node scripts/alpha.mjs',
+  'test:beta': 'node --test scripts/beta.test.mjs',
+  'lint:gamma': 'node scripts/gamma.mjs',
+  'test:delta': 'node --test scripts/delta.test.mjs',
+  'check:all': 'npm run check:alpha && npm run test:beta && npm run lint:gamma',
+  'build:tokens': 'node scripts/build.mjs',
+};
+
+/** The fixture, with an overlay. `scripts` merges over the base; `steps` and `excluded` replace it. */
+function fixtureSuite(overrides = {}) {
+  return {
+    steps: overrides.steps || [...FIXTURE_STEPS],
+    excluded: overrides.excluded || { 'check:all': FIXTURE_REASON },
+    scripts: { ...FIXTURE_SCRIPTS, ...(overrides.scripts || {}) },
+  };
+}
+
+test('the FIXTURE SUITE is clean, and is not clean by being empty', () => {
+  // A mutation case against a dirty base proves nothing: every `failures.some(...)` below would be
+  // satisfiable by a finding the case did not introduce, and every `deepEqual(failures, [])`
+  // negative control would be red for a reason nobody chose.
+  const { failures } = auditSuite(fixtureSuite());
+  assert.deepEqual(failures, [], `the fixture base is not clean:\n${failures.join('\n')}\n`);
+
+  // …and it exercises each arm of the guard, or "clean" is just "small". One step per governed
+  // prefix, an alias with more than one link, an ungoverned script outside the suite, and a step
+  // no alias covers.
+  const fx = fixtureSuite();
+  for (const prefix of ['check:', 'test:', 'lint:']) {
+    assert.ok(fx.steps.some((s) => s.startsWith(prefix)), `no ${prefix} step — that arm is untested`);
+  }
+  assert.equal(aliasLinks(fx.scripts['check:all']).length, 3, 'the fixture alias stopped being an alias');
+  assert.ok(!fx.steps.includes('build:tokens'), 'the ungoverned control is in the suite, so it proves nothing');
+  assert.ok(
+    !aliasLinks(fx.scripts['check:all']).includes('test:delta'),
+    'test:delta is covered by the alias now, so removing it can no longer produce exactly one finding'
+  );
+});
+
 // ── The drift guard, against the real package.json ───────────────────────────────────────────
 
 test('every check:/test: script in package.json is reached by the suite, or excluded with a reason', () => {
@@ -100,25 +187,29 @@ test('every check:/test: script in package.json is reached by the suite, or excl
 });
 
 test('the guard REFUSES a suite with a step removed — a guard that cannot fail is not evidence', () => {
-  const without = STEPS.filter((s) => s !== 'test:sandbox');
-  const { failures } = auditSuite({ scripts, steps: without });
+  const fx = fixtureSuite();
+  const without = fx.steps.filter((s) => s !== 'test:delta');
+  const { failures } = auditSuite({ ...fx, steps: without });
 
   assert.equal(failures.length, 1, `expected exactly one finding, got:\n${failures.join('\n')}`);
-  assert.match(failures[0], /"test:sandbox" is a check:\/test: script/);
+  assert.match(failures[0], /"test:delta" is a check:\/test: script/);
   assert.match(failures[0], /never run under `npm run check`/);
 });
 
 test('the guard REFUSES a package.json that adds an unwired check: script', () => {
-  const mutated = { ...scripts, 'check:brand-new': 'node scripts/does-not-matter.mjs' };
-  const { failures } = auditSuite({ scripts: mutated });
+  const { failures } = auditSuite(fixtureSuite({
+    scripts: { 'check:brand-new': 'node scripts/does-not-matter.mjs' },
+  }));
 
   assert.equal(failures.length, 1, `expected exactly one finding, got:\n${failures.join('\n')}`);
   assert.match(failures[0], /"check:brand-new"/);
 });
 
 test('the guard REFUSES re-inlining the && chain into package.json', () => {
-  const mutated = { ...scripts, check: 'npm run lint:agents && npm run test:sandbox' };
-  const { failures } = auditSuite({ scripts: mutated, steps: [] });
+  const { failures } = auditSuite(fixtureSuite({
+    steps: [],
+    scripts: { check: 'npm run lint:gamma && npm run test:delta' },
+  }));
 
   assert.ok(
     failures.some((f) => f.includes('no longer runs scripts/run-checks.mjs')),
@@ -127,54 +218,81 @@ test('the guard REFUSES re-inlining the && chain into package.json', () => {
 });
 
 test('the guard REFUSES a stale or unreasoned exclusion', () => {
-  const gone = auditSuite({ scripts, excluded: { ...EXCLUDED, 'test:deleted-long-ago': 'x'.repeat(60) } });
+  const fx = fixtureSuite();
+
+  const gone = auditSuite(fixtureSuite({
+    excluded: { ...fx.excluded, 'test:deleted-long-ago': 'x'.repeat(60) },
+  }));
   assert.ok(
     gone.failures.some((f) => f.includes('no longer a script in package.json')),
     `expected a stale-exclusion finding, got:\n${gone.failures.join('\n')}`
   );
 
-  // Every entry, not a representative one: an exclusion mechanism that accepts an empty reason for
-  // the entry someone actually cares about is worse than no exclusion mechanism.
-  for (const name of Object.keys(EXCLUDED)) {
-    const thin = auditSuite({ scripts, excluded: { ...EXCLUDED, [name]: 'later' } });
-    assert.ok(
-      thin.failures.some((f) => f.includes(`EXCLUDED["${name}"] has no substantive reason`)),
-      `stripping the reason from ${name} did not bite:\n${thin.failures.join('\n')}`
-    );
-  }
+  const thin = auditSuite(fixtureSuite({ excluded: { 'check:all': 'later' } }));
+  assert.ok(
+    thin.failures.some((f) => f.includes('EXCLUDED["check:all"] has no substantive reason')),
+    `stripping the reason did not bite:\n${thin.failures.join('\n')}`
+  );
 
-  const live = auditSuite({ scripts, excluded: { ...EXCLUDED, 'test:sandbox': 'y'.repeat(60) } });
+  const live = auditSuite(fixtureSuite({ excluded: { ...fx.excluded, 'test:delta': 'y'.repeat(60) } }));
   assert.ok(
     live.failures.some((f) => f.includes('but the suite does reach it')),
     `expected a live-exclusion finding, got:\n${live.failures.join('\n')}`
   );
 });
 
+test('EVERY exclusion in THIS repository is subject to the reason check, not a representative one', () => {
+  // The real-tree half of the case above, and the half that has to stay on the real tree: an
+  // exclusion mechanism that accepts an empty reason for the entry someone actually cares about is
+  // worse than no exclusion mechanism, and a fixture with one entry cannot say that about a tree
+  // with several. It names no script of its own, so it travels — it iterates whatever EXCLUDED
+  // holds, in whichever repository this file is running.
+  const names = Object.keys(EXCLUDED);
+  assert.ok(names.length > 0, 'EXCLUDED is empty — this case is passing over nothing');
+
+  for (const name of names) {
+    const thin = auditSuite({ scripts, excluded: { ...EXCLUDED, [name]: 'later' } });
+    assert.ok(
+      thin.failures.some((f) => f.includes(`EXCLUDED["${name}"] has no substantive reason`)),
+      `stripping the reason from ${name} did not bite:\n${thin.failures.join('\n')}`
+    );
+  }
+});
+
 test('the guard REFUSES a step naming a script that does not exist, and a duplicated step', () => {
-  const ghost = auditSuite({ scripts, steps: [...STEPS, 'test:imaginary'] });
+  const fx = fixtureSuite();
+
+  const ghost = auditSuite({ ...fx, steps: [...fx.steps, 'test:imaginary'] });
   assert.ok(
     ghost.failures.some((f) => f.includes('which is not a script in package.json')),
     `expected a ghost-step finding, got:\n${ghost.failures.join('\n')}`
   );
 
-  const twice = auditSuite({ scripts, steps: [...STEPS, 'test:sandbox'] });
+  const twice = auditSuite({ ...fx, steps: [...fx.steps, 'test:delta'] });
   assert.ok(
     twice.failures.some((f) => f.includes('more than once')),
     `expected a duplicate-step finding, got:\n${twice.failures.join('\n')}`
   );
 });
 
-test('the guard REFUSES deleting lint:agents from STEPS — the prefix that was not governed', () => {
-  // GOVERNED read /^(?:check|test):/, so `lint:agents` — the agent schema linter, step 3 of the
-  // suite — could be removed from STEPS and this guard stayed GREEN. Reproduced before the fix:
-  // auditSuite() returned zero failures. It is the same silent-omission defect as check:mc leaving
-  // without an EXCLUDED entry, arriving through the name instead of the list.
-  const without = STEPS.filter((s) => s !== 'lint:agents');
-  const { failures } = auditSuite({ scripts, steps: without });
+test('the guard REFUSES deleting a `lint:` step from STEPS — the prefix that was not governed', () => {
+  // GOVERNED read /^(?:check|test):/, so `lint:agents` — this repository's agent schema linter,
+  // step 3 of its suite — could be removed from STEPS and this guard stayed GREEN. Reproduced
+  // before the fix: auditSuite() returned zero failures. It is the same silent-omission defect as
+  // an excluded step leaving without an EXCLUDED entry, arriving through the name instead of the
+  // list.
+  //
+  // THE SUBJECT IS THE FIXTURE'S `lint:gamma`, not `lint:agents`. The defect is about a PREFIX the
+  // guard did not govern, and naming one repository's script as the subject made this case fail in
+  // a project that has no `lint:agents` — reporting a coupling as a suite defect. That the real
+  // STEPS are all governed is covered where it belongs, by auditSuite({ scripts }) over the tree.
+  const fx = fixtureSuite();
+  const without = fx.steps.filter((s) => s !== 'lint:gamma');
+  const { failures } = auditSuite({ ...fx, steps: without });
 
   assert.ok(
-    failures.some((f) => f.includes('"lint:agents"') && f.includes('never run under `npm run check`')),
-    `deleting lint:agents from STEPS did not bite:\n${failures.join('\n') || '(no failures at all)'}`
+    failures.some((f) => f.includes('"lint:gamma"') && f.includes('never run under `npm run check`')),
+    `deleting the lint: step from STEPS did not bite:\n${failures.join('\n') || '(no failures at all)'}`
   );
 });
 
@@ -184,10 +302,8 @@ test('every STEP is GOVERNED — an ungoverned step could leave the suite in sil
   const { failures } = auditSuite({ scripts });
   assert.deepEqual(failures, [], `\n${failures.join('\n')}\n`);
 
-  const smuggled = auditSuite({
-    scripts: { ...scripts, 'build:something': 'node scripts/does-not-matter.mjs' },
-    steps: [...STEPS, 'build:something'],
-  });
+  const fx = fixtureSuite();
+  const smuggled = auditSuite({ ...fx, steps: [...fx.steps, 'build:tokens'] });
   assert.ok(
     smuggled.failures.some((f) => f.includes('outside GOVERNED')),
     `an ungoverned step was accepted into the suite:\n${smuggled.failures.join('\n')}`
@@ -200,6 +316,13 @@ test('every STEP is GOVERNED — an ungoverned step could leave the suite in sil
  * Written out rather than derived from package.json, because a list derived from the thing it
  * checks agrees with it by construction. The parity between this literal and the real script
  * bodies is asserted below.
+ *
+ * IT IS A PIN ON THIS REPOSITORY, AND IT IS APPLIED AS ONE. Every name here is an agentvibe script;
+ * in a project that has none of them the loop below used to fail on all five and report a coupling
+ * as a suite defect. So the literal loop runs over the parents that EXIST in the tree — full
+ * strength here, silent elsewhere — and the PROPERTY it is an instance of is asserted separately,
+ * derived from whatever aliases the tree does have. The guard behaviour underneath both is proved
+ * on the fixture by the case after this one.
  */
 const ALIASES = {
   'check:ledger': [
@@ -225,7 +348,9 @@ test('the five delegating parents are EXCLUDED aliases, and every link is a STEP
   // `ledger lint`, `ledger build --check` and `ledger verify` while the tally said one step
   // failed. The suite is the links now; the parents survive only as aliases, because docs,
   // session files and CLAUDE.md cite those spellings.
-  for (const [parent, links] of Object.entries(ALIASES)) {
+  // ── THE LITERAL PIN, over the parents this tree actually has ─────────────────────────────
+  const pinned = Object.entries(ALIASES).filter(([parent]) => parent in scripts);
+  for (const [parent, links] of pinned) {
     assert.deepEqual(
       aliasLinks(scripts[parent]),
       links,
@@ -240,16 +365,41 @@ test('the five delegating parents are EXCLUDED aliases, and every link is a STEP
       assert.ok(STEPS.includes(link), `${link} is not a STEP, so the suite no longer runs it at all`);
     }
   }
+
+  // ── THE PROPERTY, DERIVED, so it holds over a tree whose aliases are different ones ───────
+  // An EXCLUDED entry whose whole body is `npm run` calls joined by `&&` IS an alias, whatever it
+  // is called: it must not be a STEP, and every link it hides must be one.
+  const derived = Object.keys(EXCLUDED).filter((name) => aliasLinks(scripts[name]));
+  for (const parent of derived) {
+    const links = aliasLinks(scripts[parent]);
+    assert.ok(links.length >= 2, `${parent} is an "alias" with ${links.length} link — it hides nothing`);
+    assert.ok(!STEPS.includes(parent), `${parent} is both an EXCLUDED alias and a STEP, hiding ${links.length} links`);
+    for (const link of links) {
+      assert.ok(STEPS.includes(link), `${link} is not a STEP, so the suite no longer runs it at all`);
+    }
+  }
+
+  // WHERE THE LITERAL APPLIES, IT MUST BE COMPLETE. An alias in EXCLUDED that the literal does not
+  // name is an alias nobody pinned — the derived loop above checks its links, but nothing would
+  // notice its BODY being rewritten to hide one. Guarded by `pinned.length`, so a tree the literal
+  // does not describe is not held to a list about another repository.
+  if (pinned.length) {
+    assert.deepEqual(
+      derived.filter((name) => !(name in ALIASES)), [],
+      'an EXCLUDED alias is not named in the ALIASES literal above, so its links are unpinned'
+    );
+  }
 });
 
 test('the guard REFUSES an EXCLUDED alias whose links are not all in the suite', () => {
   // The mechanism the entries above lean on: an alias is exempt BECAUSE its links are steps. Drop
   // one link and the exemption starts hiding a check that runs nowhere, which is what the
   // check:mc entry was written to prevent, arriving through a different door.
-  const { failures } = auditSuite({ scripts, steps: STEPS.filter((s) => s !== 'check:ledger-verify') });
+  const fx = fixtureSuite();
+  const { failures } = auditSuite({ ...fx, steps: fx.steps.filter((s) => s !== 'lint:gamma') });
 
   assert.ok(
-    failures.some((f) => f.includes('EXCLUDED names "check:ledger"') && f.includes('check:ledger-verify')),
+    failures.some((f) => f.includes('EXCLUDED names "check:all"') && f.includes('lint:gamma')),
     `dropping a link from the suite did not fail the alias exemption:\n${failures.join('\n')}`
   );
 });
@@ -266,18 +416,18 @@ test('the guard REFUSES a STEP whose resolved command carries ANY shell operator
   // the one an `&&`-shaped rule is least likely to reach for: `bash -c 'false ; true'` exits 0, so
   // a `;` chain does not even leave a red step behind, where `&&` at least does.
   const cases = {
-    '&&': 'npm run test:hooks && npm run test:budget',
-    '||': 'npm run test:hooks || npm run test:budget',
-    ';': 'npm run test:hooks ; npm run test:budget',
-    '|': 'npm run test:hooks | npm run test:budget',
-    '&': 'npm run test:hooks & npm run test:budget',
-    '\\n': 'npm run test:hooks\n npm run test:budget',
+    '&&': 'npm run test:beta && npm run lint:gamma',
+    '||': 'npm run test:beta || npm run lint:gamma',
+    ';': 'npm run test:beta ; npm run lint:gamma',
+    '|': 'npm run test:beta | npm run lint:gamma',
+    '&': 'npm run test:beta & npm run lint:gamma',
+    '\\n': 'npm run test:beta\n npm run lint:gamma',
   };
 
   for (const [op, command] of Object.entries(cases)) {
-    const { failures } = auditSuite({ scripts: { ...scripts, 'test:sandbox': command } });
+    const { failures } = auditSuite(fixtureSuite({ scripts: { 'check:alpha': command } }));
     assert.ok(
-      failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes(`\`${op}\``)),
+      failures.some((f) => f.includes('STEPS names "check:alpha"') && f.includes(`\`${op}\``)),
       `a step chained with \`${op}\` was accepted:\n${failures.join('\n') || '(no failures at all)'}`
     );
   }
@@ -287,22 +437,21 @@ test('the guard follows a wrapper — one `npm run` hop used to defeat it entire
   // Measured before the fix: `test:sandbox` → `npm run check:inner` → an `&&` chain returned ZERO
   // findings. The wrapper changes nothing the runner can see; it still spawns one command and
   // reads one exit code. The walk follows the whole chain, so two hops do not restore the hole.
-  const oneHop = auditSuite({
-    scripts: { ...scripts, 'test:sandbox': 'npm run check:inner', 'check:inner': 'npm run test:hooks && npm run test:budget' },
-  });
+  const oneHop = auditSuite(fixtureSuite({
+    scripts: { 'check:alpha': 'npm run check:inner', 'check:inner': 'npm run test:beta && npm run lint:gamma' },
+  }));
   assert.ok(
     oneHop.failures.some((f) => f.includes('delegates to "check:inner"') && f.includes('`&&`')),
     `a one-hop wrapper hid a chain:\n${oneHop.failures.join('\n') || '(no failures at all)'}`
   );
 
-  const twoHops = auditSuite({
+  const twoHops = auditSuite(fixtureSuite({
     scripts: {
-      ...scripts,
-      'test:sandbox': 'npm run check:w1',
+      'check:alpha': 'npm run check:w1',
       'check:w1': 'npm run check:w2',
-      'check:w2': 'npm run test:hooks ; npm run test:budget',
+      'check:w2': 'npm run test:beta ; npm run lint:gamma',
     },
-  });
+  }));
   assert.ok(
     twoHops.failures.some((f) => f.includes('delegates to "check:w2"') && f.includes('`;`')),
     `a two-hop wrapper hid a chain:\n${twoHops.failures.join('\n') || '(no failures at all)'}`
@@ -310,9 +459,9 @@ test('the guard follows a wrapper — one `npm run` hop used to defeat it entire
 
   // And a cycle must terminate rather than hang — a wrapper pointing at itself is malformed, not
   // a reason for the drift guard to spin.
-  const cyclic = auditSuite({
-    scripts: { ...scripts, 'test:sandbox': 'npm run check:loop', 'check:loop': 'npm run test:sandbox' },
-  });
+  const cyclic = auditSuite(fixtureSuite({
+    scripts: { 'check:alpha': 'npm run check:loop', 'check:loop': 'npm run check:alpha' },
+  }));
   assert.ok(Array.isArray(cyclic.failures), 'a delegation cycle did not return');
 });
 
@@ -327,7 +476,7 @@ test('the operator check is quote-aware — a rule that fires on correct code ge
   assert.deepEqual(shellOperators(`node -e "a;b" && node -e "c"`), ['&&']);
   assert.deepEqual(shellOperators('a && b ; c'), ['&&', ';']);
 
-  const legit = auditSuite({ scripts: { ...scripts, 'test:sandbox': `node -e "const a=1;console.log(a)"` } });
+  const legit = auditSuite(fixtureSuite({ scripts: { 'check:alpha': `node -e "const a=1;console.log(a)"` } }));
   assert.deepEqual(legit.failures, [], `a quoted semicolon was refused:\n${legit.failures.join('\n')}`);
 });
 
@@ -344,7 +493,7 @@ test('a `&` adjacent to `>` is a redirect, not backgrounding — and redirects k
   assert.deepEqual(shellOperators('npm run a & npm run b'), ['&']);
   assert.deepEqual(shellOperators('node x.mjs 2>&1 | tee log'), ['|']);
 
-  const redirecting = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'node scripts/x.mjs 2>&1' } });
+  const redirecting = auditSuite(fixtureSuite({ scripts: { 'check:alpha': 'node scripts/x.mjs 2>&1' } }));
   assert.deepEqual(redirecting.failures, [], `a redirect was refused as a chain:\n${redirecting.failures.join('\n')}`);
 });
 
@@ -395,19 +544,19 @@ test('command substitution RE-ENTERS command context — double quotes are not o
 
   // END TO END, not just the predicate: a STEP shaped this way must fail the guard itself.
   for (const body of [
-    'echo "$(npm run test:hooks; npm run test:budget)"',
-    'echo "`npm run test:hooks; npm run test:budget`"',
-    'npm run test:hooks && echo "$(npm run test:budget | tee log)"',
+    'echo "$(npm run test:beta; npm run lint:gamma)"',
+    'echo "`npm run test:beta; npm run lint:gamma`"',
+    'npm run test:beta && echo "$(npm run lint:gamma | tee log)"',
   ]) {
-    const { failures } = auditSuite({ scripts: { ...scripts, 'test:sandbox': body } });
+    const { failures } = auditSuite(fixtureSuite({ scripts: { 'check:alpha': body } }));
     assert.ok(
-      failures.some((f) => f.includes('STEPS names "test:sandbox"') && /`;`|`\|`/.test(f)),
+      failures.some((f) => f.includes('STEPS names "check:alpha"') && /`;`|`\|`/.test(f)),
       `a chain hidden in a substitution was accepted:\n${failures.join('\n') || '(no failures at all)'}`
     );
   }
 
   // And a legitimate substitution — one command inside it — is still not a finding.
-  const legit = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'node -e "console.log(1)" --tag "$(git rev-parse HEAD)"' } });
+  const legit = auditSuite(fixtureSuite({ scripts: { 'check:alpha': 'node -e "console.log(1)" --tag "$(git rev-parse HEAD)"' } }));
   assert.deepEqual(legit.failures, [], `a single-command substitution was refused:\n${legit.failures.join('\n')}`);
 });
 
@@ -436,9 +585,9 @@ test('`$((` DOES NOT MEAN ARITHMETIC — it means arithmetic only when it closes
   // BOTH GUARDS, on the same string. They share shellOperators(), so a hole in it is a hole in two
   // places at once — which is exactly what made this a P1 rather than a P2, and is why it is
   // asserted through both entry points rather than only through the predicate.
-  const step = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'echo "$((npm run test:hooks); npm run test:budget)"' } });
+  const step = auditSuite(fixtureSuite({ scripts: { 'check:alpha': 'echo "$((npm run test:beta); npm run lint:gamma)"' } }));
   assert.ok(
-    step.failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes('`;`')),
+    step.failures.some((f) => f.includes('STEPS names "check:alpha"') && f.includes('`;`')),
     `auditSuite accepted the crafted step:\n${step.failures.join('\n') || '(no failures at all)'}`
   );
   const run = `${CI.trimEnd()}\n\n      - name: A new check\n        if: \${{ !cancelled() }}\n        run: echo "$((npm run test:hooks); npm run test:budget)"\n`;
@@ -454,7 +603,7 @@ test('`$((` DOES NOT MEAN ARITHMETIC — it means arithmetic only when it closes
   assert.deepEqual(shellOperators('echo "$((1&&1)) $((0||1))"'), []);
   assert.deepEqual(shellOperators('echo "$(( (1+2) * 3 ))"'), [], 'a nested paren closed the expansion early');
   assert.deepEqual(shellOperators('echo "$(( ${X} | $Y ))"'), [], 'a variable reference is an arithmetic operand');
-  const clean = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'node -e "console.log($((6|1)))"' } });
+  const clean = auditSuite(fixtureSuite({ scripts: { 'check:alpha': 'node -e "console.log($((6|1)))"' } }));
   assert.deepEqual(clean.failures, [], `arithmetic was refused as a chain:\n${clean.failures.join('\n')}`);
 
   // THE HOLE THE PREVIOUS ROUND OPENED, still closed: arithmetic is walked, not jumped over, because
@@ -590,9 +739,9 @@ test('the scanner declares its vocabulary — an unmodelled construct is a FINDI
   assert.deepEqual(shellOperators('echo "${HOME}" "$HOME" "$@" "$((6|1))"'), [], 'the vocabulary holds inside quotes too');
 
   // End to end, because the guarantee is about what the GUARDS certify, not about the predicate.
-  const quoted = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'echo "result is $[1+2]"' } });
+  const quoted = auditSuite(fixtureSuite({ scripts: { 'check:alpha': 'echo "result is $[1+2]"' } }));
   assert.ok(
-    quoted.failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes('does not model')),
+    quoted.failures.some((f) => f.includes('STEPS names "check:alpha"') && f.includes('does not model')),
     `auditSuite certified a quoted unmodelled construct as clean:\n${quoted.failures.join('\n') || '(no failures at all)'}`
   );
 
@@ -602,7 +751,7 @@ test('the scanner declares its vocabulary — an unmodelled construct is a FINDI
 
   // BOTH CONSUMERS report it, with a message of its own kind rather than the operator one — they
   // share shellOperators(), so a construct it cannot certify must not read as "no chain" in either.
-  const step = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'echo $[1+2]; npm run test:budget' } });
+  const step = auditSuite(fixtureSuite({ scripts: { 'check:alpha': 'echo $[1+2]; npm run lint:gamma' } }));
   assert.ok(
     step.failures.some((f) => f.includes('does not model') && f.includes('`$[`')),
     `auditSuite certified a command it cannot parse:\n${step.failures.join('\n') || '(no failures at all)'}`
@@ -665,9 +814,9 @@ test('`${…}` and `$"…"` are scanned THROUGH — a nested `$(` still opens a 
   assert.deepEqual(shellOperators('echo "${HOME}${PATH}"'), [], 'adjacent expansions are not a chain');
 
   // And end to end, since the guarantee is about what the guards certify.
-  const step = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'echo "${x:-$(npm run test:hooks; npm run test:budget)}"' } });
+  const step = auditSuite(fixtureSuite({ scripts: { 'check:alpha': 'echo "${x:-$(npm run test:beta; npm run lint:gamma)}"' } }));
   assert.ok(
-    step.failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes('`;`')),
+    step.failures.some((f) => f.includes('STEPS names "check:alpha"') && f.includes('`;`')),
     `a chain inside a parameter default was accepted:\n${step.failures.join('\n') || '(no failures at all)'}`
   );
 });
@@ -937,9 +1086,9 @@ test('process substitution is a command whose exit status the step NEVER sees �
   // returns — and because the two are joined by splitFindings(), which sorts a token into
   // `operators` only if SHELL_OPERATORS contains it. A `<(` added to the scanner and not to that
   // list would be reported as an unmodelled construct instead, with the wrong remedy attached.
-  const audited = auditSuite({ scripts: { ...scripts, 'test:sandbox': 'node --test t.mjs <(npm run test:hooks)' } });
+  const audited = auditSuite(fixtureSuite({ scripts: { 'check:alpha': 'node --test t.mjs <(npm run test:beta)' } }));
   assert.ok(
-    audited.failures.some((f) => f.includes('STEPS names "test:sandbox"') && f.includes('`<(`')),
+    audited.failures.some((f) => f.includes('STEPS names "check:alpha"') && f.includes('`<(`')),
     `a command hidden in a process substitution was certified clean:\n${audited.failures.join('\n') || '(no failures at all)'}`
   );
   assert.ok(
@@ -1056,13 +1205,13 @@ test('the three DISCLOSED holes in resolveChain are pinned, so a narrowing is no
   // appears in package.json, widen resolveChain and turn the matching case here positive — do not
   // read a green run of this test as coverage of these shapes.
   const cases = {
-    'npm run x --silent': { 'test:sandbox': 'npm run check:inner --silent', 'check:inner': 'npm run a && npm run b' },
-    'npx': { 'test:sandbox': 'npx some-runner', 'check:inner': 'npm run a && npm run b' },
-    'chain inside quotes': { 'test:sandbox': `sh -c "npm run a && npm run b"` },
+    'npm run x --silent': { 'check:alpha': 'npm run check:inner --silent', 'check:inner': 'npm run a && npm run b' },
+    'npx': { 'check:alpha': 'npx some-runner', 'check:inner': 'npm run a && npm run b' },
+    'chain inside quotes': { 'check:alpha': `sh -c "npm run a && npm run b"` },
   };
 
   for (const [shape, overlay] of Object.entries(cases)) {
-    const { failures } = auditSuite({ scripts: { ...scripts, ...overlay } });
+    const { failures } = auditSuite(fixtureSuite({ scripts: overlay }));
     const operatorFindings = failures.filter((f) => f.includes('shell operator'));
     assert.deepEqual(
       operatorFindings, [],
@@ -1073,9 +1222,9 @@ test('the three DISCLOSED holes in resolveChain are pinned, so a narrowing is no
   }
 
   // The control that keeps the three above meaningful: the shape resolveChain DOES follow still bites.
-  const followed = auditSuite({
-    scripts: { ...scripts, 'test:sandbox': 'npm run check:inner', 'check:inner': 'npm run a && npm run b' },
-  });
+  const followed = auditSuite(fixtureSuite({
+    scripts: { 'check:alpha': 'npm run check:inner', 'check:inner': 'npm run a && npm run b' },
+  }));
   assert.ok(
     followed.failures.some((f) => f.includes('shell operator')),
     'the bare `npm run <name>` delegation stopped being followed — the holes above are now the whole rule'
@@ -1297,7 +1446,16 @@ test('the ci.yml step parser reads the whole file — a scanner that under-reads
   assert.equal(steps.length, rawItems, 'the parser and a raw item count disagree about how many steps exist');
   assert.equal(steps.filter((s) => s.run !== null).length, rawRuns, 'the parser lost or invented a `run:` step');
   assert.equal(steps.filter((s) => s.uses !== null).length, rawUses, 'the parser lost or invented a `uses:` step');
-  assert.ok(rawRuns >= 40, `only ${rawRuns} run-steps found — the parser is not reaching the job`);
+  // THE FLOOR IS DERIVED, not a number calibrated to this repository. It read `rawRuns >= 40`
+  // against a 48-step suite, and a nine-step port failed it with a correct workflow. Every STEP has
+  // a counterpart `run:` step here — the case below asserts exactly that — and no step may be a
+  // chain, so one `run:` line cannot stand for two steps. `rawRuns >= STEPS.length` therefore holds
+  // at any suite size, is STRICTER than 40 in this tree (49 against 48), and still fails a parser
+  // that has stopped reaching the job.
+  assert.ok(
+    rawRuns >= STEPS.length,
+    `only ${rawRuns} run-steps found for ${STEPS.length} steps — the parser is not reaching the job`
+  );
   assert.ok(steps.every((s) => s.run !== null || s.uses !== null), 'a parsed step carries neither run: nor uses:');
 });
 
