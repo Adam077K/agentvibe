@@ -28,10 +28,9 @@
 // production step, so its negative controls now run in the same command as the tests over the file
 // that is missing it.
 
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -53,11 +52,15 @@ import {
   adjacentRatios,
   adjacentRatiosExact,
   FAMILY_MEMBER,
+  FAMILY_SLOTS,
+  SEEDS_KEYS,
   assertColorNameSafe,
   assertFamilySafe,
   assertNoteSafe,
   paletteNames,
   renderContrastMd,
+  renderJson,
+  renderTs,
   assertIntegerSizes,
   assertMonotoneRatios,
   buildModel,
@@ -85,13 +88,125 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(REPO, 'scripts', 'build-tokens.mjs');
 const TODAY = '2026-01-01';
 
+// ── A FIXTURE DIRECTORY THAT DOES NOT DEPEND ON THE AMBIENT TMPDIR ──────────────────────────────
+// These call sites read `fs.mkdtempSync(path.join(os.tmpdir(), …))`, and that made the verdict a
+// function of an environment variable nobody sets deliberately: identical bytes scored 48/48 with
+// TMPDIR pointing at a session scratchpad and 26/48 with TMPDIR at the macOS default
+// `/var/folders/…`, where the armed sandbox denies the write. A suite whose result depends on
+// where the OS happens to put temp files is not measuring the code.
+//
+// The repo root is the base instead — it is writable wherever this suite is allowed to run at all.
+// Dotted so it is invisible to an ordinary listing. Cleanup is an `after()` HOOK rather than a
+// per-caller `rmSync`, because a test that throws never reaches its own cleanup line, and the
+// litter would then sit in the repo root rather than in a temp directory the OS reaps.
+const TMP_DIRS = [];
+function tmpDir(prefix) {
+  const d = fs.mkdtempSync(path.join(REPO, `.${prefix}`));
+  TMP_DIRS.push(d);
+  return d;
+}
+after(() => {
+  for (const d of TMP_DIRS) fs.rmSync(d, { recursive: true, force: true });
+});
+
 const seeds = readSeeds();
 /** A deep clone, so a test that mutates its seeds cannot leak into the next one. */
 const clone = () => JSON.parse(JSON.stringify(seeds));
 
-/** Assert a seeds mutation is refused AND that the refusal says why, citing something checkable. */
-function refusedWith(mutate, ...mustMention) {
-  const s = clone();
+// ── THE PINNED FIXTURE, AND WHY SEVEN TESTS READ IT INSTEAD OF design/tokens/seeds.json ─────────
+//
+// A test that builds its input by mutating the LIVE seeds file encodes that file's numbers as a
+// premise. Seven tests below did, and the premise they encoded was this repository's own
+// 11-15px control-plane band. Measured by porting this file unchanged into a project whose band is
+// 12-20px: 44 pass, 7 FAIL — and the failures are not findings about the generator. They are the
+// suite reporting that the fixture moved:
+//
+//   neither band is derived from the other   the `tooClose` arm (ui 12/+2) no longer closes the
+//                                            gap to that project's display base, so nothing threw
+//   the display band reaches displayRatio     leadingFor(48px) already clamps to 1.0 there, so the
+//                                            `notEqual` that proves displayRatio is honoured is
+//                                            vacuous — and the assertion said so: "actual 1,
+//                                            expected 1"
+//   __proto__ is refused by name              the splice anchor `"ink":` is not a colour name there
+//   a contrast note cannot forge a row        "CONTROL: only 12 committed notes" against >= 13
+//   contrast.md carries every pair            8.581:1 is this palette's figure, not that one's
+//   drift() names the file AND what changed   `--text-ui-0: 11px;` is not a line in that stylesheet
+//   the CLI distinguishes clean/drifted/…     the "drifted" seeds ARE that project's seeds, exit 0
+//
+// Every one of those is a true statement about a difference between two projects and a useless
+// statement about build-tokens.mjs. Three of them fail through their own CONTROL, which is the
+// suite correctly detecting its own vacuity and is exactly why the controls are there.
+//
+// So those seven read FIXTURE. It is a complete, valid seeds object — validateSeeds accepts it,
+// including the unknown-key refusal — chosen so that every arm those tests need is expressible:
+// the ui/display join is wide enough to survive a narrowed ui band and narrow enough that a
+// 12/+2 band closes it; the leading curve at BOTH display sizes stays clear of the 1.0 clamp, so
+// `displayRatio` being honoured is observable rather than coincidental; the palette names are
+// `fx-`prefixed so a generation from it cannot accidentally equal any project's committed tokens;
+// and the notes carry the prose punctuation (Δ, an em dash, parentheses, a semicolon) that the
+// note deny-list must NOT refuse.
+//
+// WHAT DELIBERATELY STILL READS THE LIVE FILE, because it is genuinely about the live file:
+// `the committed design/tokens/ matches a fresh generation`, `seeds.json is the only hand-edited
+// file in design/tokens/`, `every generated file carries the GENERATED banner`, the CLI's CLEAN
+// arm, `every increment the refusal cites is read from measured.json`, and every refusal test that
+// mutates one field of the real seeds to prove the real seeds are one edit away from being
+// refused. Those go red when THIS repository changes, which is the point of them.
+const FIXTURE = {
+  $comment: 'A pinned seeds fixture. Not derived from design/tokens/seeds.json and not to be synced with it.',
+  type: {
+    ui: { base: 11, increment: 1, steps: 5 },
+    display: { base: 20, increment: 4, steps: 2 },
+    leading: { peak: 1.5, peakAt: 16, falloff: 0.9, exponent: 2, displayRatio: 1 },
+    tracking: { zeroAt: 14, slope: 0.001 },
+    family: { sans: 'ui-sans-serif, system-ui, sans-serif', mono: 'ui-monospace, Menlo, monospace' },
+  },
+  color: {
+    'fx-ink': '#101216',
+    'fx-row': '#15171d',
+    'fx-dim': '#8b93a7',
+    'fx-text': '#e6e9ef',
+    'fx-warn': '#d99b3f',
+  },
+  contrastPairs: [
+    { fg: 'fx-text', bg: 'fx-ink', note: 'body copy on the base surface; the ratio is the metric here' },
+    { fg: 'fx-dim', bg: 'fx-ink', note: 'secondary copy — must clear AA (4.5) at the smallest UI size' },
+    { fg: 'fx-warn', bg: 'fx-ink', note: 'a warning label; TEXT, not a surface — read this before the verdict' },
+    { fg: 'fx-row', bg: 'fx-ink', note: 'SURFACE PAIR — row banding. ΔE76 (4.82) is the right metric here; the ratio is not' },
+  ],
+};
+
+/** A deep clone of the fixture, for the same reason `clone()` exists for the live seeds. */
+const fixture = () => JSON.parse(JSON.stringify(FIXTURE));
+
+test('CONTROL over the fixture: it is a VALID seeds object, and it is not the committed one', () => {
+  // If this goes red every fixture-based test below is measuring the fixture rather than the
+  // generator, so it runs first and says so plainly.
+  assert.doesNotThrow(() => validateSeeds(fixture()), 'the pinned fixture is refused by the generator it is meant to drive');
+  assert.notDeepEqual(
+    paletteNames(FIXTURE.color).sort(),
+    paletteNames(seeds.color).sort(),
+    'the fixture palette equals the committed one, so "a generation from the fixture drifts" is no longer guaranteed'
+  );
+  const displaySteps = buildModel(FIXTURE).scale.filter((s) => s.band === 'display');
+  for (const s of displaySteps) {
+    assert.notEqual(
+      leadingFor(s.size, FIXTURE.type.leading),
+      FIXTURE.type.leading.displayRatio,
+      `the fixture curve at ${s.size}px equals displayRatio, so the displayRatio test below is vacuous`
+    );
+  }
+});
+
+/**
+ * Assert a seeds mutation is refused AND that the refusal says why, citing something checkable.
+ *
+ * `base` is the seeds object the mutation is applied to a CLONE of. Two thin wrappers follow: one
+ * over the live file, for refusals that are about the live file being one edit from refused, and
+ * one over FIXTURE, for refusals whose arms need a band this repository does not happen to ship.
+ */
+function refusedFrom(base, mutate, ...mustMention) {
+  const s = JSON.parse(JSON.stringify(base));
   mutate(s);
   let caught = null;
   try {
@@ -109,6 +224,9 @@ function refusedWith(mutate, ...mustMention) {
   }
   return caught.message;
 }
+
+const refusedWith = (mutate, ...mustMention) => refusedFrom(seeds, mutate, ...mustMention);
+const refusedInFixture = (mutate, ...mustMention) => refusedFrom(FIXTURE, mutate, ...mustMention);
 
 // ── DERIVATION 1 & 2: the arithmetic signature ───────────────────────────────────────────────────
 
@@ -306,17 +424,21 @@ test('the two bands are joined by a jump, and an interpolated join is REFUSED', 
 });
 
 test('neither band is derived from the other — changing the UI band moves no display size', () => {
-  const a = buildModel(seeds).scale.filter((s) => s.band === 'display').map((s) => s.size);
-  const s = clone();
+  // FIXTURE, not the live seeds: the second arm needs a UI band that CLOSES the gap to the display
+  // base, and whether 12/+2 does that is a fact about a particular project's display base rather
+  // than about the generator. See FIXTURE.
+  const a = buildModel(FIXTURE).scale.filter((s) => s.band === 'display').map((s) => s.size);
+  const s = fixture();
   s.type.ui = { base: 11, increment: 1, steps: 4 }; // 11 12 13 14 — still a jump to 20
   const b = buildModel(s).scale.filter((x) => x.band === 'display').map((x) => x.size);
   assert.deepEqual(b, a, 'a display size moved when only the UI band changed — one band is derived from the other');
+  assert.ok(a.length >= 2, `CONTROL: ${a.length} display size(s) — too few for a moved size to be observable`);
 
-  // The other direction, and it is why the fixture above is 11/+1 rather than 12/+2: a UI band of
+  // The other direction, and it is why the band above is 11/+1 rather than 12/+2: a UI band of
   // 12 14 16 18 tops out one step of 1.167 below a display base of 20, and the join (1.111) is then
   // NARROWER than a step inside the band. That is not a jump, and the generator refuses it — the
   // instrument catching a ramp that reads fine as a list of numbers.
-  const tooClose = clone();
+  const tooClose = fixture();
   tooClose.type.ui = { base: 12, increment: 2, steps: 4 };
   assert.throws(() => buildModel(tooClose), SeedsRefused, 'a band that closes the gap to 20px was accepted');
 });
@@ -392,7 +514,7 @@ test('every increment the refusal cites is read from measured.json, not typed', 
 
   // CONTROL over the INSTRUMENT: pointed at a directory with no corpus it must say so, not quote
   // numbers. A citation with nothing behind it that still looks like a citation is the whole defect.
-  const empty = referenceIncrements(path.join(os.tmpdir(), 'no-such-reference-corpus-xyz'));
+  const empty = referenceIncrements(path.join(REPO, '.no-such-reference-corpus-xyz'));
   assert.equal(empty.n, 0);
   assert.deepEqual(empty.sites, {});
 });
@@ -404,7 +526,7 @@ test('a reference that will not parse is COUNTED and NAMED, never silently dropp
   // `n` is quoted to the reader as the sample size. Measured with five directories, three
   // malformed: the refusal read "1 of 2 measured reference(s)" and `source` said "2 reference(s)",
   // a smaller but equally confident claim with nothing saying three were dropped.
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'partial-corpus-'));
+  const dir = tmpDir('partial-corpus-');
   for (const slug of ['linear-app', 'stripe-com']) {
     fs.mkdirSync(path.join(dir, slug), { recursive: true });
     fs.copyFileSync(path.join(REPO, 'design', 'references', slug, 'measured.json'), path.join(dir, slug, 'measured.json'));
@@ -523,19 +645,32 @@ test('the curve makes leading-relaxed (1.625) at UI sizes inexpressible', () => 
 });
 
 test('the display band reaches displayRatio exactly, and the curve is not applied to it', () => {
-  const { displayRatio } = seeds.type.leading;
-  const model = buildModel(seeds);
+  // FIXTURE, not the live seeds, and the reason is the `notEqual` below. The curve CLAMPS to 1.0
+  // far enough from its peak, so at a large display size `leadingFor(size)` and `displayRatio: 1`
+  // agree by coincidence and the assertion that proves displayRatio is honoured becomes vacuous —
+  // "actual 1, expected 1", which is what it reported when this read the live file in a project
+  // with a 48px display size. The fixture's display sizes sit inside the curve, so the two
+  // quantities are genuinely distinguishable and the CONTROL over that is in the fixture test above.
+  const { displayRatio } = FIXTURE.type.leading;
+  const model = buildModel(FIXTURE);
   const displaySteps = model.scale.filter((s) => s.band === 'display');
   assert.ok(displaySteps.length >= 1, 'CONTROL: no display steps to check');
   for (const s of displaySteps) {
     assert.equal(s.lineHeight, displayRatio, `display step ${s.name} is ${s.lineHeight}, not displayRatio`);
     assert.notEqual(
       s.lineHeight,
-      leadingFor(s.size, seeds.type.leading),
+      leadingFor(s.size, FIXTURE.type.leading),
       `display leading equals the UI curve at ${s.size}px — displayRatio is being ignored`
     );
   }
   assert.equal(displayRatio, 1, '§7.1: display sizes reach exactly 1.0');
+
+  // AND THE LIVE FILE STILL HAS TO OBEY THE FIRST HALF. This arm carries no `notEqual`, because
+  // whether the curve happens to clamp at this project's display sizes is not this test's subject.
+  const live = buildModel(seeds);
+  for (const s of live.scale.filter((x) => x.band === 'display')) {
+    assert.equal(s.lineHeight, seeds.type.leading.displayRatio, `committed display step ${s.name} is not displayRatio`);
+  }
 });
 
 test('a displayRatio looser than the peak inverts the curve and is refused', () => {
@@ -1022,7 +1157,13 @@ test('__proto__ is refused by name, and the artifacts it splits are shown to spl
   // JSON.parse DEFINES this key; an ASSIGNMENT invokes Object.prototype's setter and creates
   // nothing at all. So the fixture goes through the parser, exactly as readSeeds() does — a test
   // built with `s.color.__proto__ = …` would pass against a generator with no guard in it.
-  const text = JSON.stringify(seeds).replace('"ink":', '"__proto__":"#ff0000","ink":');
+  // FIXTURE, not the live seeds: the splice needs a colour key it can anchor on, and `"ink":` is
+  // this repository's palette rather than the generator's contract. The fixture names its colours
+  // `fx-…`, so the anchor is derived from the fixture and the CONTROL below fails loudly if the
+  // splice ever stops landing.
+  const anchor = `"${paletteNames(FIXTURE.color)[0]}":`;
+  const text = JSON.stringify(FIXTURE).replace(anchor, `"__proto__":"#ff0000",${anchor}`);
+  assert.notEqual(text, JSON.stringify(FIXTURE), `CONTROL: the splice anchor ${anchor} is not in the fixture, so nothing was injected`);
   const s = JSON.parse(text);
   assert.ok(
     Object.prototype.hasOwnProperty.call(s.color, '__proto__'),
@@ -1064,7 +1205,11 @@ test('__proto__ is refused by name, and the artifacts it splits are shown to spl
 test('a contrast note cannot forge a row of contrast.md', () => {
   const forged =
     'body copy | 99.999 | pass | pass | forged\n| `x` | `y` | `#000` | `#fff` | **21.000:1** | pass | pass | a row nobody authored';
-  refusedWith(
+  // FIXTURE, not the live seeds. The refusals here are about the note deny-list and nothing else;
+  // reading the live file made the CONTROL below a count of THIS repository's committed pairs,
+  // which failed as "CONTROL: only 12 committed notes" in a project with twelve — a true statement
+  // about a palette and a useless one about `assertNoteSafe`.
+  refusedInFixture(
     (s) => {
       s.contrastPairs[0].note = forged;
     },
@@ -1081,16 +1226,29 @@ test('a contrast note cannot forge a row of contrast.md', () => {
     ['a\u0000b', 'a NUL is not text'],
     ['a\u007Fb', 'DEL is not text'],
   ]) {
-    refusedWith((s) => {
+    refusedInFixture((s) => {
       s.contrastPairs[0].note = bad;
     }, 'ends or splits a row');
     assert.ok(NOTE_FORBIDDEN.test(bad), `${why}: ${JSON.stringify(bad)} is accepted by the deny-list`);
   }
 
-  // CONTROL, DERIVED FROM THE COMMITTED FILE. A note is PROSE and the committed thirteen carry
-  // punctuation an allow-list would have refused — which is exactly how the family guard's first
-  // draft refused this repository's own seeds.
-  assert.ok(seeds.contrastPairs.length >= 13, `CONTROL: only ${seeds.contrastPairs.length} committed notes`);
+  // CONTROL: A NOTE IS PROSE. An allow-list over prose is how the family guard's first draft refused
+  // this repository's own seeds, so the deny-list has to leave ordinary punctuation alone. The
+  // fixture notes carry a delta, an em dash, parentheses and a semicolon for exactly that reason,
+  // and the characters are asserted rather than assumed — a fixture of bare words would make this
+  // arm pass while proving nothing.
+  const fixtureNotes = FIXTURE.contrastPairs.map((p) => p.note).join(' ');
+  for (const c of ['Δ', '—', '(4.5)', ';']) {
+    assert.ok(fixtureNotes.includes(c), `CONTROL: no fixture note carries ${JSON.stringify(c)}, so the prose arm proves less than it claims`);
+  }
+  for (const [i, p] of FIXTURE.contrastPairs.entries()) {
+    assert.doesNotThrow(() => assertNoteSafe(i, p.note), `the fixture note ${JSON.stringify(p.note.slice(0, 40))} is refused`);
+  }
+  // AND THE COMMITTED NOTES TOO — whether THIS repository's seeds survive the deny-list is a real
+  // question about this repository, and it is the half of the old control that was worth keeping.
+  // The count is a floor of 1 rather than 13: thirteen was the number this palette happened to
+  // ship, and a palette with twelve is not a defect in `assertNoteSafe`.
+  assert.ok(seeds.contrastPairs.length >= 1, `CONTROL: ${seeds.contrastPairs.length} committed notes`);
   for (const [i, p] of seeds.contrastPairs.entries()) {
     assert.doesNotThrow(() => assertNoteSafe(i, p.note), `the committed note ${JSON.stringify(p.note.slice(0, 40))} is refused`);
   }
@@ -1102,7 +1260,7 @@ test('a contrast note cannot forge a row of contrast.md', () => {
   // CONTROL OVER THE INSTRUMENT. The forgery has to be REAL or the refusal above is theatre.
   // renderContrastMd is driven directly with a poisoned model, because validateSeeds now refuses to
   // build one — the same move the @theme brace-scan test makes with its poisoned stylesheet.
-  const model = buildModel(seeds);
+  const model = buildModel(FIXTURE);
   const rows = (md) => md.split('\n').filter((l) => l.startsWith('| `')).length;
   assert.equal(rows(renderContrastMd(model, TODAY)), model.pairs.length, 'the clean table does not have one row per pair');
   const poisoned = { ...model, pairs: model.pairs.map((p, i) => (i === 0 ? { ...p, note: forged } : p)) };
@@ -1116,6 +1274,123 @@ test('a contrast note cannot forge a row of contrast.md', () => {
     renderContrastMd(poisoned, TODAY).includes('| **21.000:1** | pass | pass |'),
     'CONTROL FAILED: the forged row does not assert a passing ratio, which is the shape that matters'
   );
+});
+
+// ── THE THIRD FAMILY SLOT ────────────────────────────────────────────────────────────────────────
+
+test('serif is a REAL slot: it emits into all four artifacts, or it emits into none', () => {
+  // THE DEFECT: `type.family` was read as {sans, mono}, so a `serif` key was WORSE THAN ABSENT.
+  // renderJson copies `seeds.type` verbatim into $extensions["org.agentvibe.seeds"], so the family
+  // reached tokens.json — the file a reader consults to learn what the design system binds — while
+  // renderCss emitted no --font-serif and renderTs exported nothing. A reader concluded a display
+  // face was bound when no declaration bound one.
+  const withSerif = fixture();
+  withSerif.type.family.serif = "'Iowan Old Style', Georgia, serif";
+  const g = generate(withSerif, TODAY).files;
+  const json = JSON.parse(g.json);
+
+  assert.ok(
+    json.$extensions['org.agentvibe.seeds'].family.serif,
+    'CONTROL: the seeds echo no longer carries type.family, so the defect this closes is unreproducible and this test proves nothing'
+  );
+  assert.ok(g.css.includes("--font-serif: 'Iowan Old Style', Georgia, serif;"), `tokens.css has no --font-serif:\n${g.css.split('\n').slice(0, 12).join('\n')}`);
+  assert.match(g.ts, /^ {2}serif: "'Iowan Old Style', Georgia, serif",$/m, 'tokens.ts exports no serif family');
+  assert.deepEqual(
+    json.font.family.serif,
+    { $type: 'fontFamily', $value: ["'Iowan Old Style'", 'Georgia', 'serif'] },
+    'tokens.json has no font.family.serif token'
+  );
+
+  // OPTIONAL MEANS ABSENT EMITS NOTHING, ANYWHERE. This is what keeps a seeds file with no serif
+  // generating byte-identically to one built before the slot existed.
+  const base = generate(FIXTURE, TODAY).files;
+  assert.equal(FIXTURE.type.family.serif, undefined, 'CONTROL: the fixture declares a serif, so the absent case is untested');
+  assert.ok(!base.css.includes('--font-serif'), 'a stylesheet declares --font-serif for a slot the seeds do not carry');
+  assert.doesNotMatch(base.ts, /^ {2}serif: /m, 'tokens.ts exports a serif family for a slot the seeds do not carry');
+  assert.equal(JSON.parse(base.json).font.family.serif, undefined, 'tokens.json carries a serif token for a slot the seeds do not carry');
+
+  // ...and the same, on the committed artifacts, which is where "byte-identical" is actually
+  // checked — `the committed design/tokens/ matches a fresh generation` is the assertion that
+  // would go red if adding this slot had moved a byte of this repository's output.
+  assert.equal(seeds.type.family.serif, undefined, 'CONTROL: the committed seeds now declare a serif, so this arm no longer tests the absent case');
+  assert.ok(!fs.readFileSync(OUT.css, 'utf8').includes('--font-serif'), 'the committed stylesheet gained a --font-serif nothing seeded');
+
+  // REQUIRED IS STILL REQUIRED, AND PRESENT-BUT-EMPTY IS STILL A REFUSAL. `serif` may be omitted;
+  // it may not be omitted by writing nothing into it, because an empty stack member emits a stray
+  // comma into a live declaration.
+  for (const slot of ['sans', 'mono']) {
+    refusedInFixture((s) => { delete s.type.family[slot]; }, `type.family.${slot} must be a non-empty`);
+  }
+  refusedInFixture((s) => { s.type.family.serif = ''; }, 'type.family.serif must be a non-empty');
+  refusedInFixture((s) => { s.type.family.serif = []; }, 'type.family.serif must be a non-empty');
+
+  // AND THE SLOT IS GUARDED LIKE ITS SIBLINGS. A third sink into `@theme` that skipped
+  // assertFamilySafe would be the exact asymmetry assertColorNameSafe exists to close.
+  refusedInFixture(
+    (s) => { s.type.family.serif = 'x, serif} :root{--color-danger:#00ff00} a{content:"'; },
+    'type.family.serif',
+    'is not a font-family name'
+  );
+
+  // THE LIST IS SPELLED ONCE, so a fourth slot cannot reach three renderers and miss the fourth.
+  assert.deepEqual(FAMILY_SLOTS, ['sans', 'mono', 'serif'], 'the slot list moved; every renderer iterates it, so check all four artifacts');
+  assert.deepEqual(SEEDS_KEYS['type.family'], FAMILY_SLOTS, 'the unknown-key allow-list and the renderer list disagree — one of them would accept a slot the other drops');
+});
+
+// ── DECLARE WHAT IS READ, REFUSE THE REST ────────────────────────────────────────────────────────
+
+test('a seed key no derivation reads is REFUSED at three levels, and the refusal names it', () => {
+  // THE DEFECT, MEASURED: validateSeeds read `type`, `color` and `contrastPairs` and silently
+  // accepted anything else. A seeds file carrying a whole `motion` block — duration and easing —
+  // was ACCEPTED at exit 0 and emitted NOTHING in any of the four generated files. The author of
+  // the one hand-edited file in design/tokens/ got a clean build and no motion tokens, with
+  // nothing anywhere saying the block had been ignored.
+  const cases = [
+    ['top level', 'motion', (s) => { s.motion = { duration: { enter: 200, exit: 150 }, easing: { standard: 'cubic-bezier(.2, 0, 0, 1)' } }; }],
+    ['type', 'type.spacing', (s) => { s.type.spacing = { base: 4, steps: 6 }; }],
+    ['type.family', 'type.family.display', (s) => { s.type.family.display = 'Georgia, serif'; }],
+  ];
+  for (const [level, key, mutate] of cases) {
+    const msg = refusedInFixture(mutate, key, 'does not read');
+    assert.ok(msg.includes(SEEDS_KEYS[level === 'top level' ? '' : level].join(', ')), `the refusal at ${level} does not list the keys it DOES read:\n  ${msg}`);
+  }
+
+  // CONTROL OVER THE SINK, for the `type` level: renderJson really does copy `seeds.type` verbatim,
+  // so an unread key there really does reach tokens.json. Driven directly, because validateSeeds
+  // now refuses to build a model from it — the same move the @theme brace-scan test makes with its
+  // poisoned stylesheet.
+  // The value carries a SENTINEL rather than plausible numbers, because the substring that proves
+  // "nothing emits this" has to be one no renderer can emit for another reason — `spacing` alone is
+  // in every `--text-*--letter-spacing` declaration, and asserting its absence fails on a correct
+  // stylesheet.
+  const SENTINEL = 'UNREAD-SEED-KEY-SENTINEL';
+  const poisoned = fixture();
+  poisoned.type.spacing = { base: 4, marker: SENTINEL };
+  const emitted = renderJson(buildModel(FIXTURE), poisoned);
+  assert.deepEqual(
+    emitted.$extensions['org.agentvibe.seeds'].spacing,
+    { base: 4, marker: SENTINEL },
+    'CONTROL FAILED: an unread type key no longer reaches tokens.json, so this refusal guards nothing'
+  );
+  assert.ok(JSON.stringify(emitted).includes(SENTINEL), 'CONTROL: the sentinel is not in the token file at all, so the carry is not being observed');
+  const model = buildModel(FIXTURE);
+  assert.ok(!renderCss(model).includes(SENTINEL), 'CONTROL FAILED: the stylesheet emits the unread key, so it is read after all');
+  assert.ok(!renderTs(model).includes(SENTINEL), 'CONTROL FAILED: tokens.ts emits the unread key, so it is read after all');
+
+  // $-PREFIXED KEYS ARE METADATA AND STAY LEGAL, at every level that has one. seeds.json carries
+  // `$comment` at the top level, inside `type` and inside `color`; refusing them would refuse this
+  // repository's own authored file.
+  const metadata = fixture();
+  metadata.$note = 'top level';
+  metadata.type.$note = 'inside type';
+  metadata.type.family.$note = 'inside family';
+  metadata.color.$note = 'inside color, which paletteNames already skipped';
+  assert.doesNotThrow(() => validateSeeds(metadata), 'a $-prefixed metadata key is refused, so seeds.json cannot carry a comment');
+  assert.ok(Object.keys(seeds).some((k) => k.startsWith('$')), 'CONTROL: the committed seeds carry no $-prefixed key, so the metadata arm guards nothing here');
+
+  // AND THE COMMITTED SEEDS PASS. If this repository's own authored file trips the new refusal,
+  // that is the refusal being wrong rather than the file.
+  assert.doesNotThrow(() => validateSeeds(clone()), 'the committed seeds.json is refused by the unknown-key check');
 });
 
 // ── THE CAPS, AND THE RECONCILIATION WITH THE EXTRACTOR'S SIDE ───────────────────────────────────
@@ -1300,14 +1575,49 @@ test('tokens.ts is valid TypeScript-shaped output with one entry per scale step'
 });
 
 test('contrast.md carries every pair and the computed figure, not a carried one', () => {
-  const md = fs.readFileSync(OUT.contrast, 'utf8');
-  const model = buildModel(seeds);
+  // FIXTURE, and the "not a carried one" half is now DERIVED rather than typed. This read the
+  // committed contrast.md and asserted the literals `8.581:1` present and `8.582:1` absent — this
+  // palette's computed figure against the stale styles.css figure beside it. Both literals are
+  // facts about one palette: ported, the test failed with "contrast.md carries a figure other than
+  // the computed one for warn", which is true and says nothing about renderContrastMd.
+  //
+  // The shape that mattered is kept and made general: for EVERY pair, the computed figure must be
+  // in the table and its 3dp NEIGHBOUR must not. A renderer that rounded differently, carried a
+  // figure forward, or emitted a stale copy alongside the fresh one is caught by the second half —
+  // and it needs no literal from any palette.
+  const md = generate(FIXTURE, TODAY).files.contrast;
+  const model = buildModel(FIXTURE);
+  assert.ok(model.pairs.length >= 3, `CONTROL: only ${model.pairs.length} pair(s) in the fixture table`);
+  const figures = model.pairs.map((p) => p.ratio);
+  for (const [i, a] of figures.entries()) {
+    for (const b of figures.slice(i + 1)) {
+      assert.ok(
+        Math.abs(a - b) > 0.0015,
+        `CONTROL: fixture ratios ${a.toFixed(3)} and ${b.toFixed(3)} are within one 3dp step, so the neighbour check below would fire on a correct table`
+      );
+    }
+  }
   for (const p of model.pairs) {
     assert.ok(md.includes(`**${p.ratio.toFixed(3)}:1**`), `contrast.md is missing the ratio for ${p.fg}/${p.bg}`);
+    for (const delta of [0.001, -0.001]) {
+      assert.ok(
+        !md.includes(`**${(p.ratio + delta).toFixed(3)}:1**`),
+        `contrast.md carries ${(p.ratio + delta).toFixed(3)}:1 beside the computed ${p.ratio.toFixed(3)}:1 for ${p.fg}/${p.bg} — a second figure for one pair is a carried figure`
+      );
+    }
   }
-  assert.ok(md.includes('8.581:1'), 'contrast.md carries a figure other than the computed one for warn');
-  assert.ok(!md.includes('8.582:1'), 'contrast.md reproduced the stale styles.css figure');
   assert.ok(/\*\*Computed:\*\* \d{4}-\d{2}-\d{2}/.test(md), 'contrast.md is not dated');
+
+  // AND THE COMMITTED TABLE STILL HAS TO HOLD EVERY COMMITTED PAIR. This is the arm that is
+  // genuinely about the live file, so it reads the live file — and `the committed design/tokens/
+  // matches a fresh generation` is what makes it a full check rather than a spot one. The
+  // provenance the two deleted literals carried (that these figures reproduce styles.css and its
+  // corrections do not creep back) lives in design-lib.test.mjs, "the contrast figures in
+  // styles.css reproduce exactly", which is where the shared arithmetic is tested.
+  const committed = fs.readFileSync(OUT.contrast, 'utf8');
+  for (const p of buildModel(seeds).pairs) {
+    assert.ok(committed.includes(`**${p.ratio.toFixed(3)}:1**`), `the committed contrast.md is missing the ratio for ${p.fg}/${p.bg}`);
+  }
 });
 
 test('--check is stable across days: only the date line is normalised', () => {
@@ -1326,20 +1636,30 @@ test('--check is stable across days: only the date line is normalised', () => {
 });
 
 test('drift() names the file AND what changed inside it', () => {
-  const { files } = generate(seeds, TODAY);
-  const mutated = { ...files, css: files.css.replace('--text-ui-0: 11px;', '--text-ui-0: 12px;') };
-  const findings = drift(files, { ...mutated, json: files.json, ts: files.ts, contrast: files.contrast });
+  // FIXTURE, and every literal DERIVED from it. This typed `--text-ui-0: 11px;` and `"value": 11`,
+  // which are this repository's UI base spelled into a test twice. Ported to a 12px base neither
+  // string was in the generated files, `String.replace` returned the input unchanged, and drift()
+  // correctly reported nothing — "a one-line change was not reported", actual 0, expected 1. The
+  // test was measuring the seeds file, so the numbers come off the fixture's own model now, and a
+  // CONTROL asserts each substitution actually landed before its finding is judged.
+  const { files } = generate(FIXTURE, TODAY);
+  const base = FIXTURE.type.ui.base;
+
+  const cssLine = `--text-ui-0: ${base}px;`;
+  const cssMutated = files.css.replace(cssLine, `--text-ui-0: ${base + 1}px;`);
+  assert.notEqual(cssMutated, files.css, `CONTROL: ${cssLine} is not in the generated stylesheet, so nothing was mutated`);
+  const findings = drift(files, { ...files, css: cssMutated });
   assert.equal(findings.length, 1, 'a one-line change was not reported, or was over-reported');
   assert.equal(findings[0].key, 'css');
-  assert.ok(findings[0].detail.includes('--text-ui-0: 12px;'), 'the report does not say what drifted');
+  assert.ok(findings[0].detail.includes(`--text-ui-0: ${base + 1}px;`), 'the report does not say what drifted');
 
   const missing = drift(files, { json: null, css: files.css, ts: files.ts, contrast: files.contrast });
   assert.equal(missing[0].kind, 'missing', 'an absent file is not reported as missing');
 
-  const jsonChanged = drift(files, {
-    ...files,
-    json: files.json.replace('"value": 11', '"value": 99'),
-  });
+  const jsonKey = `"value": ${base}`;
+  const jsonMutated = files.json.replace(jsonKey, '"value": 99');
+  assert.notEqual(jsonMutated, files.json, `CONTROL: ${jsonKey} is not in the generated token file, so nothing was mutated`);
+  const jsonChanged = drift(files, { ...files, json: jsonMutated });
   assert.ok(jsonChanged[0].detail.includes('->'), 'a JSON change is not reported down to the key');
 });
 
@@ -1359,36 +1679,46 @@ test('the CLI distinguishes clean, drifted and refused — three states, three c
   assert.equal(clean.code, 0, `--check on a clean tree exited ${clean.code}:\n${clean.err}`);
   assert.match(clean.out, /matches seeds\.json/);
 
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'build-tokens-'));
-  try {
-    // REFUSED (2): a fractional increment, the defect that shipped.
-    const bad = clone();
-    bad.type.ui.increment = 0.5;
-    const badPath = path.join(dir, 'fractional.json');
-    fs.writeFileSync(badPath, JSON.stringify(bad));
-    const refused = cli(['--check', '--seeds', badPath]);
-    assert.equal(refused.code, 2, `a refused seeds file exited ${refused.code}, not 2`);
-    assert.match(refused.err, /REFUSED/);
-    assert.match(refused.err, /linear\.app/, 'the CLI refusal does not carry the citation');
+  const dir = tmpDir('build-tokens-');
 
-    // DRIFT (1): a valid seeds file that is not the committed one.
-    const other = clone();
-    other.type.ui = { base: 12, increment: 2, steps: 5 };
-    other.type.display.base = 32;
-    const otherPath = path.join(dir, 'other.json');
-    fs.writeFileSync(otherPath, JSON.stringify(other));
-    const drifted = cli(['--check', '--seeds', otherPath]);
-    assert.equal(drifted.code, 1, `a drifted tree exited ${drifted.code}, not 1`);
-    assert.match(drifted.err, /has drifted/);
-    assert.match(drifted.err, /npm run build:tokens/, 'the drift report does not say how to fix it');
+  // REFUSED (2): a fractional increment, the defect that shipped.
+  const bad = fixture();
+  bad.type.ui.increment = 0.5;
+  const badPath = path.join(dir, 'fractional.json');
+  fs.writeFileSync(badPath, JSON.stringify(bad));
+  const refused = cli(['--check', '--seeds', badPath]);
+  assert.equal(refused.code, 2, `a refused seeds file exited ${refused.code}, not 2`);
+  assert.match(refused.err, /REFUSED/);
+  // THE CITATION, DERIVED FROM THE CORPUS RATHER THAN TYPED. This asserted /linear\.app/, which is
+  // a fact about which references this repository happens to have captured. `citeUi()` already
+  // reads design/references/ on every call and says so plainly when nothing is readable, so the
+  // expectation is read from the same place — and a corpus of zero is checked for its OWN sentence
+  // rather than skipped, because "the refusal cites nothing" is the failure mode that matters.
+  const corpus = referenceIncrements();
+  const expected = corpus.n ? Object.keys(corpus.sites)[0] : 'NO REFERENCE CORPUS IS READABLE';
+  assert.ok(refused.err.includes(expected), `the CLI refusal does not carry the citation ${JSON.stringify(expected)}:\n${refused.err}`);
 
-    // MISSING (2): not a drift. A seeds file that does not exist cannot be generated into one.
-    const gone = cli(['--check', '--seeds', path.join(dir, 'nope.json')]);
-    assert.equal(gone.code, 2, `a missing seeds file exited ${gone.code}, not 2`);
-    assert.match(gone.err, /AUTHORED/);
-  } finally {
-    fs.rmSync(dir, { recursive: true, force: true });
-  }
+  // DRIFT (1): a valid seeds file that is not the committed one. The FIXTURE is that file by
+  // construction — its palette names are `fx-`prefixed, so a generation from it cannot equal any
+  // project's committed tokens — where the old arm typed a band (12/+2/5, display base 32) that
+  // happened to differ from THIS repository's and happened to EQUAL another's, where it exited 0
+  // and reported "a drifted tree exited 0, not 1". The premise is asserted rather than assumed.
+  const fixturePath = path.join(dir, 'fixture.json');
+  fs.writeFileSync(fixturePath, JSON.stringify(FIXTURE));
+  assert.notEqual(
+    comparable(generate(FIXTURE, TODAY).files.css),
+    comparable(fs.readFileSync(OUT.css, 'utf8')),
+    'CONTROL: the fixture generates the committed stylesheet, so this arm cannot observe drift'
+  );
+  const drifted = cli(['--check', '--seeds', fixturePath]);
+  assert.equal(drifted.code, 1, `a drifted tree exited ${drifted.code}, not 1`);
+  assert.match(drifted.err, /has drifted/);
+  assert.match(drifted.err, /npm run build:tokens/, 'the drift report does not say how to fix it');
+
+  // MISSING (2): not a drift. A seeds file that does not exist cannot be generated into one.
+  const gone = cli(['--check', '--seeds', path.join(dir, 'nope.json')]);
+  assert.equal(gone.code, 2, `a missing seeds file exited ${gone.code}, not 2`);
+  assert.match(gone.err, /AUTHORED/);
 });
 
 // ── THE SEEDS FILE IS THE ONLY AUTHORED ONE ──────────────────────────────────────────────────────

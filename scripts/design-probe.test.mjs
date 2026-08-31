@@ -562,7 +562,7 @@ const OFF_SYSTEM_CENSUS = {
   contrastPairs: [],
 };
 
-test('the census sums to the 45 it is described as, and re-derives from the corpus', () => {
+test('the census sums to the 45 it is described as, and re-derives from the corpus', (t) => {
   // THE FIXTURE SUMMED TO 44 while design-probe.mjs and three lines in this file said 45 — one
   // population, two numbers — because `10: 1` was missing. No verdict moved, which is exactly why
   // it survived: the control beneath this one passed over a population one narrower than the one
@@ -573,6 +573,28 @@ test('the census sums to the 45 it is described as, and re-derives from the corp
   assert.equal(res.offenders.length, 4, 'and all four sizes are off-system against 11 12 13 14 15 20');
   assert.deepEqual(res.offenders.map((o) => o.value).sort((a, b) => a - b), [10, 11.5, 12.5, 13.5]);
 
+  // ── EXCLUSION WITH A REASON, AND A SKIP IS NOT A PASS ────────────────────────────────────────
+  // The arm below re-derives the census from mission-control/client/src, which exists only in this
+  // repository. Ported into a project with no such surface it threw ENOENT out of readdirSync,
+  // which reads as a BROKEN TEST rather than as an absent subject — so it declines explicitly and
+  // names what is missing instead.
+  //
+  // WHAT STILL RUNS ABOVE THIS LINE, EVERYWHERE: the fixture must sum to 45 and conform() must find
+  // exactly the four off-system sizes. That arithmetic is portable and is the assertion that caught
+  // the 44-vs-45 drift recorded above, so it is deliberately NOT inside the guard.
+  //
+  // Here the directory exists, the guard is false, and this test runs exactly as it always has. Do
+  // not satisfy the guard by creating the directory: a fabricated fixture that makes a census test
+  // pass is worse than a skip, because it re-derives a real number from invented source.
+  const CENSUS_CORPUS = path.join(REPO_ROOT, 'mission-control', 'client', 'src');
+  if (!fs.existsSync(CENSUS_CORPUS)) {
+    t.skip(
+      'the census re-derives from mission-control/client/src, which exists only in agentvibe; ' +
+        'this repository has no such surface. The arithmetic arm above ran and passed.'
+    );
+    return;
+  }
+
   // PROVENANCE, RE-DERIVED FROM THE CORPUS RATHER THAN REMEMBERED. This is the arm that makes the
   // header's "not a constructed one" a checkable claim: the counts are read out of
   // mission-control's source, which is where they were counted from — statically, not off a probe
@@ -582,7 +604,7 @@ test('the census sums to the 45 it is described as, and re-derives from the corp
     const full = path.join(dir, e.name);
     return e.isDirectory() ? walk(full) : [full];
   });
-  const src = walk(path.join(REPO_ROOT, 'mission-control', 'client', 'src')).map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+  const src = walk(CENSUS_CORPUS).map((f) => fs.readFileSync(f, 'utf8')).join('\n');
   const all = src.match(/text-\[[0-9.]+px\]/g) ?? [];
   assert.ok(all.length > 50, `CONTROL: the corpus must have been read, found ${all.length} size utilities`);
   const usages = {};

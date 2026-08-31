@@ -616,6 +616,33 @@ export function assertIntegerSizes(sizes) {
  * refused because they are not text.
  */
 
+/**
+ * THE FONT-FAMILY SLOTS, AND WHY `serif` IS OPTIONAL RATHER THAN ABSENT OR REQUIRED.
+ *
+ * `type.family` was read as `{sans, mono}` and as nothing else. A `serif` key in an authored seeds
+ * file was therefore WORSE THAN NO KEY AT ALL: `renderJson` copies `seeds.type` VERBATIM into
+ * tokens.json's `$extensions["org.agentvibe.seeds"]`, so the key reached the token file a reader
+ * consults, while `renderCss` emitted no `--font-serif` and `renderTs` exported nothing for it.
+ * Measured before this slot existed: the family appears in tokens.json and in NEITHER the
+ * stylesheet nor the TypeScript, so a reader of the token file concludes a display face is bound
+ * when no declaration anywhere binds one. That is the same failure `assertKnownKeys` refuses one
+ * level up, and the cure here is the opposite direction: make the slot REAL rather than refuse it.
+ *
+ * OPTIONAL, NOT REQUIRED, AND THE ASYMMETRY IS DELIBERATE. `sans` and `mono` are required because
+ * every generated artifact references both and a missing one is a broken stylesheet. A serif face
+ * is a choice a design system may not have made — this repository's own seeds have not made it —
+ * so requiring it would refuse every seeds file that ships today. An absent slot emits nothing
+ * anywhere, so a seeds file without `serif` generates BYTE-IDENTICALLY to one built before this
+ * slot existed. That is checked rather than asserted: `build-tokens --check` rides `test:lenses`.
+ *
+ * Every renderer iterates THIS LIST rather than naming the slots itself, so a fourth slot is one
+ * edit here instead of four edits that can disagree — the rule `paletteNames` states about the
+ * colour keys being spelled once, applied to the field beside it.
+ */
+export const FAMILY_REQUIRED = ['sans', 'mono'];
+export const FAMILY_OPTIONAL = ['serif'];
+export const FAMILY_SLOTS = [...FAMILY_REQUIRED, ...FAMILY_OPTIONAL];
+
 /** Ends a CSS string or escapes out of it. Nothing else inside a quoted name can reach the sink. */
 const QUOTED_FORBIDDEN = '"\'\\\\\\u0000-\\u001F\\u007F-\\u009F';
 export const FAMILY_MEMBER = new RegExp(
@@ -882,6 +909,71 @@ export function assertMonotoneRatios(ratios) {
 }
 
 /**
+ * DECLARE WHAT IS READ, REFUSE THE REST — the rule this repository applied to its CI step parser,
+ * here at the KEY rather than at the value.
+ *
+ * `validateSeeds` read `type`, `color` and `contrastPairs`, and silently accepted anything else.
+ * Measured before this refusal existed: a seeds file carrying
+ * `motion: {duration: {enter: 200, exit: 150}, easing: {…}}` was ACCEPTED at exit 0 and emitted
+ * NOTHING in any of the four generated files — so an author who wrote a motion system into the one
+ * hand-edited file in design/tokens/ got a clean build, no motion tokens, and nothing anywhere
+ * saying the block had been ignored.
+ *
+ * A SILENTLY IGNORED KEY IS THE DEFECT THIS FILE ALREADY REFUSES ONE LEVEL DOWN: an authored value
+ * that reaches an artifact a reader trusts while binding nothing. The two levels differ in WHERE
+ * the ignored key surfaces, and the refusal says which:
+ *
+ *   top level      read by no derivation and emitted into no artifact. It vanishes.
+ *   inside `type`  COPIED VERBATIM into tokens.json's $extensions["org.agentvibe.seeds"] by
+ *                  renderJson, so it appears in the token file while no renderer emits it.
+ *
+ * `$`-PREFIXED KEYS ARE METADATA AND STAY LEGAL. seeds.json carries `$comment` at the top level,
+ * inside `type` and inside `color`. `paletteNames` already skips them for the palette; this is the
+ * same rule at the two levels above it. A metadata key is not an unread key — being unread is its
+ * whole purpose.
+ *
+ * SCOPED TO THREE LEVELS ON PURPOSE — the top level, `type`, and `type.family`. The numeric blocks
+ * (`type.ui`, `type.display`, `type.leading`, `type.tracking`) are already validated field by
+ * field, and widening this to them is a separate decision with its own compatibility question.
+ * Adding a level is one entry in the object below.
+ */
+export const SEEDS_KEYS = {
+  '': ['type', 'color', 'contrastPairs'],
+  type: ['ui', 'display', 'leading', 'tracking', 'family'],
+  'type.family': FAMILY_SLOTS,
+};
+
+/** Refuse any key at `where` that no derivation reads. `where` is '' for the top level. */
+export function assertKnownKeys(where, object) {
+  const known = SEEDS_KEYS[where];
+  if (!known) refuse(`assertKnownKeys was asked about ${JSON.stringify(where)}, which declares no key list.`);
+  const prefix = where ? `${where}.` : '';
+  const carried =
+    where === ''
+      ? 'Nothing carries it anywhere: no derivation reads it and no renderer emits it, so the ' +
+        'authored file states a thing the design system does not have. Measured before this ' +
+        'refusal existed, a seeds file carrying `motion` with duration and easing blocks was ' +
+        'ACCEPTED at exit 0 and appeared in NONE of tokens.json, tokens.css, tokens.ts or ' +
+        'contrast.md.'
+      : "renderJson copies `seeds.type` VERBATIM into tokens.json's " +
+        '$extensions["org.agentvibe.seeds"], so an unknown key here is WORSE THAN AN ABSENT ONE: ' +
+        'it reaches the token file a reader consults while no stylesheet declaration and no ' +
+        'TypeScript export binds it. That is exactly what `type.family.serif` did before it ' +
+        'became a real slot — see FAMILY_SLOTS.';
+  for (const key of Object.keys(object)) {
+    if (key.startsWith('$')) continue; // seeds-file metadata; seeds.json carries $comment here
+    if (known.includes(key)) continue;
+    refuse(
+      `seeds.json carries \`${prefix}${key}\`, which this generator does not read. ${carried} ` +
+        `The keys read at this level are: ${known.join(', ')} (plus any $-prefixed metadata key). ` +
+        `A key that is accepted and ignored is indistinguishable, from inside the file, from a key ` +
+        `that is honoured. If \`${prefix}${key}\` should mean something, add it to SEEDS_KEYS AND to ` +
+        `the derivation that reads it; do not widen the list to silence a refusal.`
+    );
+  }
+}
+
+/**
  * Every refusal names the measurement it rests on, because the two refusals are NOT equally strong
  * and a caller deserves to know which one it hit.
  *
@@ -903,9 +995,11 @@ export function assertMonotoneRatios(ratios) {
  */
 export function validateSeeds(seeds) {
   if (!seeds || typeof seeds !== 'object') refuse('seeds.json did not parse to an object.');
+  assertKnownKeys('', seeds);
 
   const type = seeds.type;
   if (!type || typeof type !== 'object') refuse('seeds.json has no `type` block.');
+  assertKnownKeys('type', type);
 
   for (const [name, spec] of [
     ['ui', type.ui],
@@ -1058,8 +1152,14 @@ export function validateSeeds(seeds) {
   }
 
   if (!type.family || typeof type.family !== 'object') refuse('seeds.json has no `type.family` block.');
-  for (const key of ['sans', 'mono']) {
+  assertKnownKeys('type.family', type.family);
+  for (const key of FAMILY_SLOTS) {
     const v = type.family[key];
+    // AN ABSENT OPTIONAL SLOT IS NOT AN EMPTY ONE. `serif` may be omitted entirely — see
+    // FAMILY_SLOTS — and then nothing is emitted for it in any of the four artifacts.
+    // Present-but-empty stays a refusal: an empty stack member emits a stray comma into a live
+    // declaration, which is a malformed rule rather than a font choice.
+    if (v === undefined && !FAMILY_REQUIRED.includes(key)) continue;
     const ok = typeof v === 'string' ? v.trim().length > 0 : Array.isArray(v) && v.length > 0;
     if (!ok) refuse(`type.family.${key} must be a non-empty string or array of strings.`);
     assertFamilySafe(key, v);
@@ -1155,7 +1255,12 @@ export function buildModel(seeds) {
     joinRatio,
     colors,
     pairs,
-    family: { sans: familyList(family.sans), mono: familyList(family.mono) },
+    // Only the slots the seeds file actually declares. An absent optional slot is absent from the
+    // model, so every renderer skips it without needing to know which slots are optional — the
+    // list is FAMILY_SLOTS and it is spelled once.
+    family: Object.fromEntries(
+      FAMILY_SLOTS.filter((slot) => family[slot] !== undefined).map((slot) => [slot, familyList(family[slot])])
+    ),
   };
 }
 
@@ -1199,10 +1304,12 @@ export function renderJson(model, seeds) {
       'Type is DERIVED by arithmetic, colour is CARRIED unchanged, contrast is COMPUTED (see contrast.md). ' +
       'DTCG-shaped, with one stated divergence: letterSpacing is $type "number" in em, because DTCG dimension admits only px and rem.',
     font: {
-      family: {
-        sans: { $type: 'fontFamily', $value: model.family.sans },
-        mono: { $type: 'fontFamily', $value: model.family.mono },
-      },
+      family: Object.fromEntries(
+        FAMILY_SLOTS.filter((slot) => model.family[slot]).map((slot) => [
+          slot,
+          { $type: 'fontFamily', $value: model.family[slot] },
+        ])
+      ),
       size,
       lineHeight,
       letterSpacing,
@@ -1226,8 +1333,10 @@ export function renderCss(model) {
   L.push(' * is not in this file. */');
   L.push('@theme {');
   L.push('  /* families */');
-  L.push(`  --font-sans: ${familyCss(model.family.sans)};`);
-  L.push(`  --font-mono: ${familyCss(model.family.mono)};`);
+  for (const slot of FAMILY_SLOTS) {
+    if (!model.family[slot]) continue;
+    L.push(`  --font-${slot}: ${familyCss(model.family[slot])};`);
+  }
   L.push('');
   L.push('  /* type — derived. adjacent UI ratios: ' + model.ratios.join(' ') + ' · band join: ' + model.joinRatio + ' */');
   for (const s of model.scale) {
@@ -1248,8 +1357,10 @@ export function renderTs(model) {
   L.push('// Source: design/tokens/seeds.json. Type is DERIVED, colour is CARRIED, contrast is COMPUTED.');
   L.push('');
   L.push('export const fontFamily = {');
-  L.push(`  sans: ${JSON.stringify(familyCss(model.family.sans))},`);
-  L.push(`  mono: ${JSON.stringify(familyCss(model.family.mono))},`);
+  for (const slot of FAMILY_SLOTS) {
+    if (!model.family[slot]) continue;
+    L.push(`  ${slot}: ${JSON.stringify(familyCss(model.family[slot]))},`);
+  }
   L.push('} as const;');
   L.push('');
   L.push('/** Every size in the ramp. There is no other size. */');
