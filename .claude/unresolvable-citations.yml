@@ -1,0 +1,86 @@
+# THE citation exemption list. One project, one list — this one is agentvibe's.
+#
+# The ids THIS repository cites in prose that THIS repository's ledger cannot resolve.
+# `scripts/ledger.mjs lint` reads it and nothing else does. Parsed with parseYamlSubset from
+# scripts/lib/claims.js, which is a documented YAML SUBSET and not YAML: keys are plain
+# identifiers, there are no anchors, tags or merge keys, and a value containing a quote must be
+# quoted as a whole, with an inner apostrophe doubled. Two entries below need that; the rest are
+# bare scalars.
+#
+# ── WHY IT IS A FILE AND NOT A CONSTANT ──────────────────────────────────────────────────────
+# This table lived in scripts/ledger.mjs as `const UNRESOLVABLE_CITATIONS = {…}` until
+# 2026-08-31. fleet/MANIFEST.yml ships ledger.mjs as `kind: copy`, so every project that
+# installed wave 4 received eight agentvibe claim ids compiled into its own checker. Measured in
+# beeond, the first target to take the port: `node scripts/ledger.mjs lint` exited 1 with eight
+# problems, each reading "declares X, which no prose cites any more". The ratchet was working
+# perfectly, on data that had no business being in that repository. Same class as STEPS living
+# inside scripts/lib/check-suite.js — a list that describes ONE repository, embedded in code
+# written to be shared. Rules as data, code as mechanism, exactly as .claude/qa-tier-floor.yml
+# already does it for risk tiers.
+#
+# ── EVERY ENTRY IS DEBT, DECLARED. TWO HONEST REASONS, NOT BLURRED ───────────────────────────
+#
+#   scope: global   The claim is real and lives in ~/.warroom/ledger/global.yml — machine state
+#                   that no CI runner has. On any machine that HAS the global ledger the
+#                   declaration is checked against it: an entry whose id the real global ledger
+#                   does not have fails lint ("the exemption has outlived its subject"). On a
+#                   machine without the global ledger the check is skipped and reported. So the
+#                   check is fully enforcing wherever it CAN be, and honest about the remaining
+#                   gap (issue #69).
+#
+#   scope: none     No claim exists anywhere. The prose names an id that was planned, or
+#                   illustrates the id FORMAT. Real rot of the mild kind, grandfathered with a
+#                   reason so the check could go in blocking on the day it was written rather
+#                   than after a documentation sweep that would not itself be checked.
+#
+# ── THIS LIST IS A RATCHET, NOT A RUG ────────────────────────────────────────────────────────
+# Lint fails when:
+#   1. An entry is no longer cited anywhere → delete it; there is nothing under it.
+#   2. An entry's id has since become a real project claim → delete it; the citation resolves.
+#   3. An entry marked scope:global that the real global ledger does not have → the exemption
+#      has outlived its subject (check 3 is skipped, and reported, when no global ledger is
+#      present, or when WARROOM_GLOBAL_LEDGER is set to a fixture — a fixture-based answer
+#      about a real global claim is an answer about the fixture).
+#
+# The list can only shrink, and cannot outlive its subjects.
+#
+# ── WHEN IT REACHES ZERO, DELETE THE FILE ────────────────────────────────────────────────────
+# An absent file means no exemptions, which is not an error and prints nothing: a fresh project
+# genuinely has none, and every cited id then has to resolve in that project's own ledger, which
+# is the strictest posture this check has. A file that exists must declare `citations:`, so
+# "this project has none" is said by the file not being here, never by an empty one.
+
+version: 1
+
+citations:
+  - id: c-runtime-nested-spawn
+    scope: global
+    why: the nested-spawn capability claim — global scope, lives in ~/.warroom/ledger/global.yml
+
+  - id: c-rolling-five-hour-window
+    scope: global
+    why: the usage-window assumption the budget ceiling rests on — global scope, currently waived
+
+  - id: c-zsh-no-word-split-on-expansion
+    scope: global
+    why: a shell behaviour that reaches every project on the machine — global scope
+
+  - id: c-kebab-case
+    scope: none
+    why: 'CLAIM-LEDGER.md''s field table uses it to illustrate the FORMAT of an id, not as a real claim'
+
+  - id: c-venture-task-complete
+    scope: none
+    why: the Z1 debrief gate in IMPLEMENTATION-PLAN.md, which is superseded — the claim was never written
+
+  - id: c-no-second-family-runtime
+    scope: none
+    why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded'
+
+  - id: c-qa-panel-single-family
+    scope: none
+    why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded'
+
+  - id: c-lens-independence-unbacked
+    scope: none
+    why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded'

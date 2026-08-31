@@ -103,7 +103,7 @@ waves:
   - wave: 4
     id: claim-ledger
     summary: The claim ledger, its parser and resolvers, the judge and event libraries, risk classification, and the verdict binding that ties a QA PASS to one exact diff.
-    note: The resolvers reach the network and dispatch judges. Installing them does not decide which paths block in the target - that is the tier floor, which is author-only below.
+    note: The resolvers reach the network and dispatch judges. Installing them does not decide which paths block in the target, nor which of the target prose citations are allowed not to resolve - those are the tier floor and the citation exemption list, both author-only below.
     entries:
       - path: scripts/ledger.mjs
         kind: copy
@@ -132,6 +132,9 @@ waves:
       - path: .claude/qa-tier-floor.yml
         kind: author
         why: This file decides which paths in the TARGET are trivial and which are irreversible, and which of those block rather than shadow. Copied, it tiers agentvibe paths that the target does not have and leaves the paths it does have untiered - a gate that reports green because it is aimed at nothing.
+      - path: .claude/unresolvable-citations.yml
+        kind: author
+        why: The claim ids THIS project cites in prose and its own ledger cannot resolve. Copied, it declares eight agentvibe ids that the target cites nowhere, and the ratchet in ledger.mjs fires on every one of them - eight findings about a repository the target has never seen. That is measured rather than predicted: it is what the first port of ledger.mjs produced, and it is why the table stopped being a constant inside the script this manifest copies. A fresh target needs no file at all, because ledger.mjs reads an absent list as zero exemptions and lints clean.
 
   - wave: 6
     id: skills-discovery

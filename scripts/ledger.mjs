@@ -357,17 +357,18 @@ function globalAbsenceNotice() {
 //      inside a ````markdown block, and a scanner that ignores the outer fence has already
 //      caused this exact mistake once, to the parser.
 //
-// WHAT IS DECLARED RATHER THAN RESOLVED — see UNRESOLVABLE_CITATIONS below.
+// WHAT IS DECLARED RATHER THAN RESOLVED — see .claude/unresolvable-citations.yml, which is
+// this PROJECT's exemption list, and loadCitationExemptions() below, which reads it.
 //
 // Issue #69. The previous approach (any `c-[a-z]+(-[a-z]+)+` token in prose) reported ids
 // only when the global ledger was present, making lint always-clean on CI where
 // ~/.warroom/ledger/global.yml does not exist. The current approach:
-//   - commits the known global claim ids (NOT their content) into UNRESOLVABLE_CITATIONS, so
-//     a runner can distinguish "known global claim" from "dead reference"
+//   - declares the known global claim ids (NOT their content) in the project's own exemption
+//     list, so a runner can distinguish "known global claim" from "dead reference"
 //   - requires backtick wrapping, eliminating the English-word false positives
-//   - fails on any cited id not in the project ledger and not in UNRESOLVABLE_CITATIONS,
+//   - fails on any cited id that is neither in the project ledger nor declared there,
 //     regardless of whether the global ledger is present
-//   - verifies UNRESOLVABLE_CITATIONS entries against the real global ledger when it IS
+//   - verifies the declared scope:global entries against the real global ledger when it IS
 //     present, so the declared list cannot outlive its subjects
 
 // A claim id, exactly as ID_RE in scripts/lib/claims.js defines it. That file owns the
@@ -411,66 +412,104 @@ function proseCodeSpans(text) {
   return out;
 }
 
-// ── The ids this repo cites that the project ledger cannot resolve ──────────
+// ── The citation exemption list ─ per-project data, read from disk ─────────
 //
-// Every entry is debt, declared. Two honest reasons, not blurred:
+// THE LIST IS DATA, IT IS PER PROJECT, AND IT LIVES IN .claude/unresolvable-citations.yml.
+// That file carries the reasoning — the two scopes, the ratchet in both directions, and why
+// deleting it is how a project says it has none. What lives here is the mechanism that
+// reads it, and nothing about agentvibe.
 //
-//   scope: 'global'  The claim is real and lives in ~/.warroom/ledger/global.yml — machine
-//                    state that no CI runner has. On any machine that HAS the global ledger
-//                    the declaration is checked against it: an entry whose id the real
-//                    global ledger does not have fails lint ("the exemption has outlived its
-//                    subject"). On a machine without the global ledger the check is skipped
-//                    and reported. So the check is fully enforcing wherever it CAN be, and
-//                    honest about the remaining gap (issue #69).
-//
-//   scope: 'none'    No claim exists anywhere. The prose names an id that was planned, or
-//                    illustrates the id FORMAT. Real rot of the mild kind, grandfathered with
-//                    a reason so the check can go in blocking today rather than after a
-//                    documentation sweep that would not itself be checked.
-//
-// THIS LIST IS A RATCHET, NOT A RUG. Lint fails when:
-//   1. An entry is no longer cited anywhere → delete it; there is nothing under it.
-//   2. An entry's id has since become a real project claim → delete it; the citation resolves.
-//   3. An entry marked scope:global that the real global ledger does not have → the exemption
-//      has outlived its subject (check 3 is skipped, and reported, when no global ledger is
-//      present, or when WARROOM_GLOBAL_LEDGER is set to a fixture — a fixture-based answer
-//      about a real global claim is an answer about the fixture).
-//
-// The list can only shrink, and cannot outlive its subjects.
-const UNRESOLVABLE_CITATIONS = {
-  'c-runtime-nested-spawn': {
-    scope: 'global',
-    why: 'the nested-spawn capability claim — global scope, lives in ~/.warroom/ledger/global.yml',
-  },
-  'c-rolling-five-hour-window': {
-    scope: 'global',
-    why: 'the usage-window assumption the budget ceiling rests on — global scope, currently waived',
-  },
-  'c-zsh-no-word-split-on-expansion': {
-    scope: 'global',
-    why: 'a shell behaviour that reaches every project on the machine — global scope',
-  },
-  'c-kebab-case': {
-    scope: 'none',
-    why: 'CLAIM-LEDGER.md\'s field table uses it to illustrate the FORMAT of an id, not as a real claim',
-  },
-  'c-venture-task-complete': {
-    scope: 'none',
-    why: 'the Z1 debrief gate in IMPLEMENTATION-PLAN.md, which is superseded — the claim was never written',
-  },
-  'c-no-second-family-runtime': {
-    scope: 'none',
-    why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded',
-  },
-  'c-qa-panel-single-family': {
-    scope: 'none',
-    why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded',
-  },
-  'c-lens-independence-unbacked': {
-    scope: 'none',
-    why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded',
-  },
-};
+// It was `const UNRESOLVABLE_CITATIONS = {…}` in this file until 2026-08-31, and
+// fleet/MANIFEST.yml ships this script as `kind: copy`. So the first port delivered eight
+// agentvibe claim ids into another repository's own checker, and that repository's first
+// honest `lint` exited 1 with eight findings of the shape "declares X, which no prose cites
+// any more". Nothing was broken: the ratchet fired correctly, on a list describing a
+// repository the target had never seen. Same class as STEPS inside
+// scripts/lib/check-suite.js — a list about ONE repo, embedded in code meant to be shared —
+// and the same cure .claude/qa-tier-floor.yml already applies to risk tiers.
+const CITATION_EXEMPTIONS_REL = '.claude/unresolvable-citations.yml';
+const CITATION_EXEMPTIONS_PATH = path.join(REPO_ROOT, CITATION_EXEMPTIONS_REL);
+
+/**
+ * Read this project's exemption list. Returns { entries, issues } — never throws, because
+ * every way this can go wrong is a lint finding the author has to act on, and a stack trace
+ * is a worse rendering of one.
+ *
+ * ABSENT MEANS ZERO EXEMPTIONS, AND THAT IS NOT AN ERROR. It is the one place this
+ * deliberately diverges from `loadRules` in scripts/lib/classifier.js, which refuses to
+ * classify at all when its tier map is missing. The two defaults point opposite ways because
+ * the failures do: a missing tier map would rate every path `trivial`, which is fail-OPEN on
+ * the file deciding how hard everything else is reviewed, whereas a missing exemption list
+ * makes every cited id have to resolve in the project ledger — the STRICTEST posture this
+ * check has. A fresh project genuinely has none; greeting it with a warning about a file it
+ * should not yet have is how you teach someone to create one.
+ *
+ * PRESENT-AND-BROKEN IS A THIRD ANSWER and is reported, never read as empty. An unparseable
+ * list is not a list of nothing — Rule 10 applied to a data file: what could not be read may
+ * not be reported as read.
+ */
+function loadCitationExemptions(file = CITATION_EXEMPTIONS_PATH) {
+  const none = (issue) => ({ entries: {}, issues: issue ? [issue] : [] });
+
+  let text;
+  try {
+    text = fs.readFileSync(file, 'utf8');
+  } catch (e) {
+    if (e.code === 'ENOENT') return none(); // no file, no exemptions, and nothing to say
+    return none(`${CITATION_EXEMPTIONS_REL}: unreadable (${e.message}) — a list that cannot be read is not an empty one`);
+  }
+
+  let doc;
+  try {
+    doc = parseYamlSubset(text);
+  } catch (e) {
+    return none(`${CITATION_EXEMPTIONS_REL}: ${e.message}`);
+  }
+  if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
+    return none(`${CITATION_EXEMPTIONS_REL}: is not a mapping. A project with no exemptions deletes the file; it does not leave an empty one.`);
+  }
+  if (doc.citations === undefined || doc.citations === null) {
+    return none(`${CITATION_EXEMPTIONS_REL}: has no "citations:" list. A project with no exemptions deletes the file; it does not leave one declaring nothing.`);
+  }
+  if (!Array.isArray(doc.citations)) {
+    return none(`${CITATION_EXEMPTIONS_REL}: "citations:" must be a list`);
+  }
+
+  const entries = {};
+  const issues = [];
+  doc.citations.forEach((e, i) => {
+    const where = `${CITATION_EXEMPTIONS_REL} citations[${i}]`;
+    if (!e || typeof e !== 'object' || Array.isArray(e)) {
+      issues.push(`${where}: is not a mapping of id, scope and why`);
+      return;
+    }
+    if (typeof e.id !== 'string' || !CITED_ID_RE.test(e.id)) {
+      issues.push(`${where}: id ${JSON.stringify(e.id === undefined ? null : e.id)} is not a claim id`);
+      return;
+    }
+    // The two scopes are the whole honesty of the file: "the claim is real and lives in the
+    // global ledger" and "no claim exists anywhere" are different debts, and a third spelling
+    // would let a reader stop being able to tell them apart.
+    if (e.scope !== 'global' && e.scope !== 'none') {
+      issues.push(
+        `${where} ("${e.id}"): scope must be "global" (a real claim in ~/.warroom/ledger/global.yml) `
+        + `or "none" (no claim exists anywhere), not ${JSON.stringify(e.scope === undefined ? null : e.scope)}`,
+      );
+      return;
+    }
+    if (typeof e.why !== 'string' || e.why.trim() === '') {
+      issues.push(`${where} ("${e.id}"): why is required — an exemption with no reason is a blanket permission`);
+      return;
+    }
+    if (Object.prototype.hasOwnProperty.call(entries, e.id)) {
+      issues.push(`${where}: "${e.id}" is declared twice — one exemption, one reason`);
+      return;
+    }
+    entries[e.id] = { scope: e.scope, why: e.why };
+  });
+
+  return { entries, issues };
+}
 
 /**
  * Resolve every claim id cited in the repo's markdown prose.
@@ -519,30 +558,43 @@ function checkCitations(projectIds, globalIds, unknownWhy) {
     }
   }
 
+  const total = [...cited.values()].reduce((n, w) => n + w.length, 0);
+
+  const exempt = loadCitationExemptions();
+  // A BROKEN LIST STOPS HERE, and the exit code is unaffected — lint fails on the issue the
+  // loader returned. What is skipped is everything DERIVED from a list nobody could read: a
+  // dead-citation finding per id it might have covered, and a ratchet finding per entry it
+  // might have held, would bury the one line that says what to fix under noise generated by
+  // the same defect. Nothing passes on this path.
+  if (exempt.issues.length > 0) {
+    return { issues: exempt.issues, notes, total, distinct: cited.size };
+  }
+  const exemptions = exempt.entries;
+
   for (const [id, where] of [...cited].sort()) {
     if (projectIds.has(id)) continue;
-    if (Object.prototype.hasOwnProperty.call(UNRESOLVABLE_CITATIONS, id)) continue;
+    if (Object.prototype.hasOwnProperty.call(exemptions, id)) continue;
     issues.push(
       `${where[0]}: prose cites claim "${id}", which is not in the ledger`
       + (where.length > 1 ? ` (and at ${where.slice(1).join(', ')})` : '')
-      + '. Register it, fix the id, or declare it in UNRESOLVABLE_CITATIONS with a reason.'
+      + `. Register it, fix the id, or declare it in ${CITATION_EXEMPTIONS_REL} with a reason.`
     );
   }
 
   // The ratchet, in both directions. Entries that no longer apply fail lint — so the list
   // cannot outlive its subjects and cannot quietly become a permanent blanket permission.
   let uncheckedGlobals = 0;
-  for (const [id, entry] of Object.entries(UNRESOLVABLE_CITATIONS)) {
+  for (const [id, entry] of Object.entries(exemptions)) {
     if (!cited.has(id)) {
       issues.push(
-        `UNRESOLVABLE_CITATIONS declares "${id}", which no prose cites any more — `
+        `${CITATION_EXEMPTIONS_REL} declares "${id}", which no prose cites any more — `
         + 'delete the entry rather than leaving an exemption with nothing under it.'
       );
       continue;
     }
     if (projectIds.has(id)) {
       issues.push(
-        `UNRESOLVABLE_CITATIONS declares "${id}", but it is a real project claim now — `
+        `${CITATION_EXEMPTIONS_REL} declares "${id}", but it is a real project claim now — `
         + 'delete the entry; the citation resolves.'
       );
       continue;
@@ -551,19 +603,18 @@ function checkCitations(projectIds, globalIds, unknownWhy) {
     if (globalIds === null) { uncheckedGlobals++; continue; }
     if (!globalIds.has(id)) {
       issues.push(
-        `UNRESOLVABLE_CITATIONS says "${id}" is a global claim, `
+        `${CITATION_EXEMPTIONS_REL} says "${id}" is a global claim, `
         + `and the real global ledger does not have it — the exemption has outlived its subject.`
       );
     }
   }
   if (uncheckedGlobals > 0) {
     notes.push(
-      `${uncheckedGlobals} UNRESOLVABLE_CITATIONS scope:global entries were not checked against `
-      + `the global ledger — ${unknownWhy}. Reported, not assumed correct.`
+      `${uncheckedGlobals} scope:global entries in ${CITATION_EXEMPTIONS_REL} were not checked `
+      + `against the global ledger — ${unknownWhy}. Reported, not assumed correct.`
     );
   }
 
-  const total = [...cited.values()].reduce((n, w) => n + w.length, 0);
   return { issues, notes, total, distinct: cited.size };
 }
 

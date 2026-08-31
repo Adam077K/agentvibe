@@ -1140,8 +1140,28 @@ function scratchDoc(claims = [scratchClaim()]) {
     `${FENCE}claims`, 'claims:', ...claims, FENCE, ''].join('\n');
 }
 
-/** A throwaway repo holding one artifact and a copy of the ledger. Caller removes it. */
-function scratchRepo(doc = scratchDoc()) {
+/**
+ * The exemption list as a project writes it: .claude/unresolvable-citations.yml.
+ * Entries are [id, scope, why] triples.
+ */
+const exemptionsYaml = (...entries) => [
+  'version: 1',
+  'citations:',
+  ...entries.flatMap(([id, scope, why]) => [`  - id: ${id}`, `    scope: ${scope}`, `    why: ${why}`]),
+  '',
+].join('\n');
+
+/**
+ * A throwaway repo holding one artifact and a copy of the ledger. Caller removes it.
+ *
+ * `exemptions` writes .claude/unresolvable-citations.yml; null leaves the repo WITHOUT one,
+ * which is what a fresh project looks like. That parameter exists because the list stopped
+ * being a constant inside ledger.mjs: copying the script no longer copies agentvibe's eight
+ * ids along with it, so a test that wants an exemption in play must now say so. Every test
+ * below that used to rely on the constant riding in with the file states its list instead,
+ * which is the point of the change and not an inconvenience of it.
+ */
+function scratchRepo(doc = scratchDoc(), exemptions = null) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ledger-idx-'));
   fs.mkdirSync(path.join(dir, 'scripts', 'lib'), { recursive: true });
   fs.copyFileSync(path.join(REPO_ROOT, 'scripts', 'ledger.mjs'), path.join(dir, 'scripts', 'ledger.mjs'));
@@ -1156,6 +1176,10 @@ function scratchRepo(doc = scratchDoc()) {
     fs.copyFileSync(path.join(REPO_ROOT, 'scripts', 'lib', f), path.join(dir, 'scripts', 'lib', f));
   }
   fs.writeFileSync(path.join(dir, 'doc.md'), doc);
+  if (exemptions !== null) {
+    fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+    fs.writeFileSync(path.join(dir, '.claude', 'unresolvable-citations.yml'), exemptions);
+  }
   // The index is built from `git ls-files`, so there must be a repository for it to list.
   execFileSync('git', ['init', '-q'], { cwd: dir, stdio: 'pipe' });
   return dir;
@@ -1896,8 +1920,8 @@ function ledgerEnv(dir, env, ...args) {
 }
 
 /** A scratch repo plus a global ledger written from `yaml`. Caller's body runs inside. */
-function withScratchAndGlobal(yaml, body, doc = scratchDoc()) {
-  const dir = scratchRepo(doc);
+function withScratchAndGlobal(yaml, body, doc = scratchDoc(), exemptions = null) {
+  const dir = scratchRepo(doc, exemptions);
   const gdir = fs.mkdtempSync(path.join(os.tmpdir(), 'wr-dup-'));
   const g = path.join(gdir, 'global.yml');
   try {
@@ -1926,9 +1950,10 @@ test('two global entries sharing one id fail lint, and the message names BOTH li
 });
 
 test('and the same ledger without the duplicate lints clean — the check is not always-on', () => {
-  // Exit may be non-zero because the ratchet fires for uncited UNRESOLVABLE_CITATIONS entries
-  // in a scratch repo — that is expected and orthogonal to duplicate-id detection. What this
-  // test pins: no duplicate-id error on the unmutated fixture.
+  // What this test pins: no duplicate-id error on the unmutated fixture. It used to carry a
+  // caveat that exit may be non-zero because the exemption ratchet fired in a scratch repo —
+  // it no longer does, because a scratch repo has no .claude/unresolvable-citations.yml and
+  // therefore no exemptions to have outlived anything.
   withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
     const r = run('lint');
     assert.doesNotMatch(r.out, /duplicate claim id/,
@@ -1951,9 +1976,11 @@ test('a duplicate is reported ONCE, not once per colliding entry', () => {
 // so the reference pattern could rot the moment the repo leaned on it — and leaning on it is
 // the only thing that beats vocabulary search, which has no completion criterion.
 //
-// The pre-fix approach used HTML markers (`<!-- ledger:unregistered: reason -->`). Those are
-// replaced by UNRESOLVABLE_CITATIONS: a centralized map in ledger.mjs, checked and ratcheted
-// at lint time. The HTML comments have been removed from the docs they inhabited.
+// The pre-fix approach used HTML markers (`<!-- ledger:unregistered: reason -->`). Those were
+// replaced by a centralized map, checked and ratcheted at lint time. The map was a constant in
+// ledger.mjs until 2026-08-31 and is now .claude/unresolvable-citations.yml — per project,
+// because ledger.mjs is copied into other repositories and a constant travelled with it. The
+// HTML comments have been removed from the docs they inhabited.
 
 const proseDoc = (...lines) => [
   '# Scratch artifact', '', ...lines, '',
@@ -1965,14 +1992,16 @@ test('a prose citation of an id in no ledger fails lint, and the message names f
     const r = run('lint');
     assert.equal(r.exit, 1, `a dangling citation must fail:\n${r.out}`);
     assert.match(r.out, /doc\.md:3: prose cites claim "c-does-not-exist"/);
-    assert.match(r.out, /UNRESOLVABLE_CITATIONS/, 'the message must name the escape it offers');
+    // The message must name the escape it offers, and the escape is now a FILE the author
+    // edits rather than a constant they would have to find in a script.
+    assert.match(r.out, /\.claude\/unresolvable-citations\.yml/,
+      'the message must name the file the author is being sent to');
   }, proseDoc('The behaviour is recorded as `c-does-not-exist`.'));
 });
 
 test('a citation that RESOLVES passes — otherwise the check above only proves it fails', () => {
   // c-scratch-one is in the project ledger — citing it must NOT produce a "not in the ledger"
-  // error. The ratchet fires for uncited UNRESOLVABLE_CITATIONS entries in a scratch repo, so
-  // we assert the resolved citation is silent rather than that lint is entirely clean.
+  // error.
   withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
     const r = run('lint');
     assert.doesNotMatch(r.out, /c-scratch-one.*not in the ledger/,
@@ -1983,16 +2012,30 @@ test('a citation that RESOLVES passes — otherwise the check above only proves 
   }, proseDoc('Recorded as `c-scratch-one`, and again as `c-scratch-one`.'));
 });
 
-test('a claim in UNRESOLVABLE_CITATIONS is not reported as a dead citation', () => {
+test('a declared exemption is not reported as a dead citation', () => {
   // The previous test ("a global claim is a valid citation target") relied on fixture injection:
   // WARROOM_GLOBAL_LEDGER was set to a fixture and the cited id was expected to resolve through
-  // it. The new approach: known global ids are listed in UNRESOLVABLE_CITATIONS, so the check
-  // runs without the real global ledger — which no CI runner has (issue #69).
+  // it. The approach since: known global ids are declared in the project's exemption list, so
+  // the check runs without the real global ledger — which no CI runner has (issue #69).
+  //
+  // The list is written HERE now rather than arriving inside the copied ledger.mjs, and that is
+  // the whole of what this test proves differently: the exemption is the project's data.
+  const list = exemptionsYaml(['c-declared-global', 'global', 'a real global claim, declared by this project']);
   withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
     const r = run('lint');
-    assert.doesNotMatch(r.out, /c-runtime-nested-spawn.*not in the ledger/,
-      'a UNRESOLVABLE_CITATIONS entry must not fire as a dead citation');
-  }, proseDoc('See `c-runtime-nested-spawn`.'));
+    assert.doesNotMatch(r.out, /c-declared-global.*not in the ledger/,
+      `a declared exemption must not fire as a dead citation:\n${r.out}`);
+  }, proseDoc('See `c-declared-global`.'), list);
+});
+
+test('and the same citation with the list ABSENT is a dead citation — the exemption is what silences it', () => {
+  // Non-vacuity for the test above. Without this, an exemption mechanism that did nothing at
+  // all would pass it, because a check that never fires reports nothing either way.
+  withScratchAndGlobal(GLOBAL_FIXTURE, (run) => {
+    const r = run('lint');
+    assert.equal(r.exit, 1, `an undeclared id must still fail:\n${r.out}`);
+    assert.match(r.out, /c-declared-global.*not in the ledger/);
+  }, proseDoc('See `c-declared-global`.'));
 });
 
 test('inside a fence an id is a definition or an example, never a citation', () => {
@@ -2077,17 +2120,119 @@ test('CITED_ID_RE uses the same grammar as ID_RE in claims.js — they cannot dr
   assert.equal(citedM[1], idM[1], `CITED_ID_RE ${citedM[1]} must match ID_RE ${idM[1]}`);
 });
 
-test('a declared UNRESOLVABLE_CITATIONS entry with nothing citing it fails lint — the list is a ratchet', () => {
+test('a declared exemption with nothing citing it fails lint — the list is a ratchet', () => {
   // An exemption that has stopped suppressing anything is a blanket permission with nothing
-  // under it. The list can only shrink, and cannot outlive its subjects.
-  const dir = scratchRepo(proseDoc('No claim ids cited here at all.'));
+  // under it. The list can only shrink, and cannot outlive its subjects. This is the check that
+  // fired eight times when agentvibe's constant was copied into another repository, and it is
+  // the reason the list had to become per-project data rather than be softened.
+  const list = exemptionsYaml(['c-nobody-cites-me', 'none', 'planned and never written']);
+  const dir = scratchRepo(proseDoc('No claim ids cited here at all.'), list);
   try {
     const r = ledger(dir, 'lint');
     assert.equal(r.exit, 1, `an uncited exemption must fail lint:\n${r.out}`);
-    assert.match(r.out, /UNRESOLVABLE_CITATIONS declares.*no prose cites any more/);
+    assert.match(r.out, /unresolvable-citations\.yml declares.*no prose cites any more/);
+    assert.match(r.out, /c-nobody-cites-me/);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// ── The list is per-project data, and an absent one is not a defect ─────────
+//
+// WHY THESE EXIST. The table above lived in scripts/ledger.mjs as a constant, and
+// fleet/MANIFEST.yml ships that script as `kind: copy`. The port into the first target
+// repository therefore delivered eight agentvibe claim ids inside the target's own checker, and
+// the target's first honest `lint` exited 1 with eight ratchet findings about prose it had
+// never had. The ratchet was right; the data was in the wrong place.
+//
+// The two failure directions are opposite and both are pinned below: an ABSENT list must be
+// silent and clean, because a fresh project has none and every cited id then has to resolve in
+// its own ledger — the strictest posture this check has. A BROKEN list must be reported, never
+// read as empty, because an unparseable list is not a list of nothing.
+
+test('a project with NO exemption list lints clean, and lint never mentions the file', () => {
+  const dir = scratchRepo(proseDoc('Recorded as `c-scratch-one`.'));
+  try {
+    assert.ok(!fs.existsSync(path.join(dir, '.claude', 'unresolvable-citations.yml')),
+      'the fixture must really be missing the file, or this proves nothing');
+    const r = ledger(dir, 'lint');
+    assert.equal(r.exit, 0, `a fresh project must lint clean with no exemption list:\n${r.out}`);
+    assert.doesNotMatch(r.out, /unresolvable-citations/,
+      `an absent list must not be announced — a new project would go and create one:\n${r.out}`);
+    // Non-vacuity: a scanner that found nothing would also say nothing.
+    assert.match(r.out, /1 prose citation\(s\) of 1 distinct claim id\(s\)/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('an unparseable exemption list is REPORTED, not read as an empty list', () => {
+  // Rule 10 applied to a data file: what could not be read may not be reported as read. The
+  // dangerous reading is the silent one — a syntax error that turns every exemption off would
+  // bury the author under dead-citation findings whose real cause is one broken line.
+  const dir = scratchRepo(proseDoc('No ids here.'), 'citations:\n  - id: c-x\n   scope: none\n');
+  try {
+    const r = ledger(dir, 'lint');
+    assert.equal(r.exit, 1, `a broken list must fail lint:\n${r.out}`);
+    assert.match(r.out, /unresolvable-citations\.yml/, 'the finding must name the file');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a list that declares no "citations:" is refused — silence is said by deleting the file', () => {
+  const dir = scratchRepo(proseDoc('No ids here.'), 'version: 1\nsomething_else: 2\n');
+  try {
+    const r = ledger(dir, 'lint');
+    assert.equal(r.exit, 1, `a list with no citations key must fail:\n${r.out}`);
+    assert.match(r.out, /has no "citations:" list/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('an entry with no reason is refused — an exemption with no why is a blanket permission', () => {
+  const dir = scratchRepo(proseDoc('See `c-needs-a-why`.'),
+    'version: 1\ncitations:\n  - id: c-needs-a-why\n    scope: none\n    why: null\n');
+  try {
+    const r = ledger(dir, 'lint');
+    assert.equal(r.exit, 1, `an entry with no why must fail:\n${r.out}`);
+    assert.match(r.out, /why is required/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a scope outside global|none is refused — the two reasons may not be blurred into a third', () => {
+  const dir = scratchRepo(proseDoc('See `c-bad-scope`.'),
+    exemptionsYaml(['c-bad-scope', 'someday', 'a scope that means nothing to the checker']));
+  try {
+    const r = ledger(dir, 'lint');
+    assert.equal(r.exit, 1, `an unknown scope must fail:\n${r.out}`);
+    assert.match(r.out, /scope must be "global".*or "none"/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('THIS repository ships a list, it parses, and every entry is complete', () => {
+  // Every test above runs in a scratch repo. The file that actually ships is checked here, by
+  // the same parser ledger.mjs uses, so a list that only the fixtures satisfy cannot pass.
+  const { parseYamlSubset } = require('./lib/claims.js');
+  const rel = '.claude/unresolvable-citations.yml';
+  const doc = parseYamlSubset(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'));
+  assert.ok(Array.isArray(doc.citations) && doc.citations.length > 0, `${rel} declares no citations`);
+  for (const [i, e] of doc.citations.entries()) {
+    assert.match(e.id, /^c-[a-z0-9][a-z0-9-]*$/, `citations[${i}] has a malformed id`);
+    assert.ok(['global', 'none'].includes(e.scope), `citations[${i}] (${e.id}) has scope ${e.scope}`);
+    assert.ok(typeof e.why === 'string' && e.why.trim().length > 20,
+      `citations[${i}] (${e.id}) has a stub reason`);
+  }
+  // And the table is no longer compiled into the script the fleet installer copies. A constant
+  // reintroduced here would travel into every target again, which is the defect this replaced.
+  const ledgerSrc = fs.readFileSync(path.join(REPO_ROOT, 'scripts', 'ledger.mjs'), 'utf8');
+  assert.doesNotMatch(ledgerSrc, /^const UNRESOLVABLE_CITATIONS/m,
+    'the exemption table must live in the data file, not in the script that is copied');
 });
 
 test('a four-backtick outer fence wrapping a three-backtick inner one keeps both opaque', () => {
