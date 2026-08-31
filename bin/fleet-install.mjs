@@ -42,6 +42,9 @@
  *      target != source, target != record   CONFLICT — refused, never overwritten
  *      no record at all, target != source   CONFLICT — because "no record" is not "unmodified"
  *
+ *    The last two rows SPLIT when the entry is `kind: copy-localized`; the full table, all six
+ *    rows of it, is at classifyEntry, which is the one place the three hashes are compared.
+ *
  *    The last row is the one that protects beeond. Its wave-1 files were copied by hand, and
  *    measured 2026-08-31 across the 24 files wave 1 declares: 20 byte-identical, 4 diverged, 0
  *    absent — all four of the four being .test.mjs files, which is what a project adapting a test
@@ -65,6 +68,10 @@
  *      exit 2  COULD NOT CHECK  no .harness-version, unreadable target, missing source, or a
  *                               recorded wave the manifest no longer declares
  *
+ *    A `copy-localized` file that the TARGET has adapted is reported in a bucket of its own and
+ *    is part of no failure. The same file with the SOURCE moved on is exit 1, listed as needing
+ *    re-porting, because being behind upstream is real and someone has to do something about it.
+ *
  *    2 DOMINATES 1 DOMINATES 0. A run that found drift AND could not read three files reports 2,
  *    with the drift listed above the verdict — because "drifted" is a complete statement about the
  *    tree and that run did not make one. This is Rule 10 of CLAUDE.md, and scripts/lib/resolvers.js
@@ -84,11 +91,50 @@
  * way to make a verdict meaningless. The summary states the count and the exclusion on every run,
  * so a reader is never handed a bare 0.
  *
+ * ── WHAT `copy-localized` MEANS, AND WHY IT IS NOT A HOLE IN THE CHECK ───────────────────────
+ * Many harness files open with a POSTURE header — a claim about how THAT file is wired IN THE
+ * REPOSITORY IT SITS IN. scripts/verdict.mjs says "POSTURE: BLOCKS ... `bin/warroom`'s cmd_merge
+ * refuses on that non-zero"; beeond has no bin/warroom, so the copied sentence is false there.
+ * beeond corrected it to "BLOCKS NOTHING HERE — ITS ONLY CALLER IS ABSENT", which is true, and
+ * `--verify` called that correction drift. A file claiming to block in a repository where nothing
+ * invokes it is the precise defect this harness exists to catch, so the correction has to stand —
+ * and a verifier that can therefore never return 0 is one people learn to ignore, at which point it
+ * has stopped being a verifier at all.
+ *
+ * `kind: copy-localized` means COPIED ONCE, THEN EXPECTED TO CARRY LOCAL EDITS. It is deliberately
+ * narrow and it changes exactly two rows of the table at classifyEntry:
+ *
+ *   · It absorbs "the TARGET changed" and nothing else. "The SOURCE moved on" stays a failure for
+ *     these files — exit 1, named, and called out as needing re-porting.
+ *   · "Both changed" is still a conflict. It is never silently absorbed, and `--apply` still
+ *     refuses it.
+ *   · A file NOT declared this way behaves exactly as it did before. The default did not move.
+ *   · The entry must say what is expected to differ and why, or the manifest is refused at load.
+ *     An exemption nobody can later judge is an exemption nobody will ever remove.
+ *
+ * THE COST, STATED RATHER THAN DISCOVERED: the recorded hash is over WHOLE FILE CONTENT, so this
+ * kind cannot tell "the posture header was corrected" from "the parser was rewritten". Declaring a
+ * file localizable switches off the target-changed alarm for every byte of it. That is why the set
+ * is drawn from what a real target was MEASURED to diverge in rather than from what could
+ * plausibly need adapting. The census that drew it, kept as provenance and not as a live figure:
+ * on 2026-08-31, 25 of the 35 `copy` entries carried a POSTURE header and 14 had actually diverged
+ * in beeond. The other 11 stay `kind: copy`, and an edit to any of them is still drift. Re-derive
+ * it, do not quote it — `--verify` against a real target is the census.
+ *
  * ── KNOWN LIMITS, STATED RATHER THAN DISCOVERED ──────────────────────────────────────────────
  *   · The recorded hash is over CONTENT ONLY. A mode change in the target — chmod -x on a copied
  *     script — is invisible to `--verify`. Modes are copied on install and not verified after.
  *   · Deletions in the SOURCE are reported as "no longer declared", never as drift, and never
  *     remove anything from the target. This tool adds and updates; it does not prune.
+ *   · `copy-localized` is per FILE and per WHOLE FILE. There is no way to say "this header may
+ *     differ and this body may not", because one content hash is the only thing recorded.
+ *   · A `copy-localized` file with NO record is reported ambiguous at exit 2, never absorbed. With
+ *     nothing recorded there is no way to tell an expected adaptation from real drift, and picking
+ *     the comfortable one of those two is what Rule 10 forbids.
+ *   · Nothing here re-baselines a localized file after the source moves on. Re-port it by hand, or
+ *     move it aside and let `--apply` re-create it and then re-apply the adaptation. That is the
+ *     same escape a plain conflict has always had, and it is deliberately manual: only a person
+ *     can know whether a re-port happened, and a flag that asserted it would be a flag that lies.
  *   · `--verify` compares the target against the source tree as it is RIGHT NOW, not against the
  *     sha in `.harness-version`. Drift therefore covers both "the target changed" and "agentvibe
  *     moved on", and the per-file detail says which.
@@ -231,7 +277,7 @@ const usage = () => [
 
 // ── the manifest ─────────────────────────────────────────────────────────────────────────────
 
-export const KINDS = ['copy', 'copy-tree', 'author'];
+export const KINDS = ['copy', 'copy-tree', 'copy-localized', 'author'];
 
 /**
  * Read and validate the manifest. Throws with a message naming the file and the problem.
@@ -287,6 +333,12 @@ export function loadManifest(file) {
       }
       if (e.kind === 'copy-tree' && !e.path.endsWith('/**')) {
         throw new Error(`manifest ${file}: ${e.path} is kind copy-tree but does not end in /**`);
+      }
+      if (e.kind === 'copy-localized' && e.path.endsWith('/**')) {
+        throw new Error(`manifest ${file}: ${e.path} is kind copy-localized and names a tree. Localization is declared one file at a time, because the "why" has to say what differs in THAT file — one note stretched over a whole directory is true of none of them.`);
+      }
+      if (e.kind === 'copy-localized' && (typeof e.why !== 'string' || e.why.trim() === '')) {
+        throw new Error(`manifest ${file}: ${e.path} is kind copy-localized with no "why". Declaring a file localizable switches off the target-changed alarm for its WHOLE content, so it must say what is expected to differ and why. An exemption nobody can later judge is one nobody will ever remove.`);
       }
       if (e.kind === 'author' && (typeof e.why !== 'string' || e.why.trim() === '')) {
         throw new Error(`manifest ${file}: ${e.path} is kind author with no "why". An entry the installer refuses to copy must say why, or the refusal is unactionable.`);
@@ -392,6 +444,51 @@ function sourceProvenance() {
 
 // ── the three-way check ──────────────────────────────────────────────────────────────────────
 
+/**
+ * THE THREE HASHES, AND EVERY COMBINATION OF THEM. This is the one place all three are compared,
+ * and the next reader needs the table more than they need the code.
+ *
+ *   R  the content hash recorded in the target's .harness-version at the last install
+ *   S  the source file's content hash RIGHT NOW
+ *   T  the target file's content hash RIGHT NOW
+ *
+ * R answers a question S and T cannot: it is the only evidence of which SIDE moved. Without it a
+ * difference is just a difference, and the tool would have to guess.
+ *
+ *   present in                                    kind: copy            kind: copy-localized
+ *   ─────────────────────────────────────────────────────────────────────────────────────────────
+ *   target absent, R absent                       create                create
+ *   target absent, R present                      deleted               deleted
+ *   T == S                                        in-sync               in-sync
+ *   T != S,  T == R              source moved     update                update
+ *   T != S,  T != R,  S == R     target moved     conflict              localized
+ *   T != S,  T != R,  S != R     BOTH moved       conflict              localized-stale
+ *   T != S,  R absent            unknowable       conflict              localized-unrecorded
+ *
+ * The two rows that change are the two the header argues for, and only those:
+ *
+ *   localized             The target adapted the file and the source has NOT moved since install.
+ *                         That is what `copy-localized` declares is expected. Its own bucket, and
+ *                         part of no failure. Never written by --apply, so the adaptation stands.
+ *
+ *   localized-stale       BOTH sides moved. The target has an adaptation AND the source has been
+ *                         revised since it was taken, so the local file is a localization of an
+ *                         OLD upstream. Exit 1 at verify, refused at apply. Absorbing this is the
+ *                         one thing that would make the kind dishonest, because "you are behind"
+ *                         is exactly the fact the operator needs and cannot see any other way.
+ *
+ *   localized-unrecorded  Not a row that changed a verdict from conflict to pass — it changed it
+ *                         from a confident 1 to an honest 2. With no R there is no way to tell an
+ *                         expected adaptation from real drift for a file that is ALLOWED to
+ *                         differ, so neither "expected" nor "drifted" is a statement this tool can
+ *                         make. Rule 10: unresolved is a third value. `--apply` still treats it as
+ *                         a conflict and refuses, because "may I overwrite this?" has an answer
+ *                         even where "is it in sync?" does not.
+ *
+ * `update` is deliberately NOT split. A `copy-localized` file whose target still matches the
+ * record has not been localized at all yet, so the plain update is the true description and
+ * --apply may safely write it.
+ */
 export function classifyEntry(entry, sourceRoot, targetRoot, records) {
   if (entry.kind === 'author') {
     return { ...entry, status: 'author', detail: entry.why };
@@ -432,6 +529,38 @@ export function classifyEntry(entry, sourceRoot, targetRoot, records) {
   if (recorded && tgtHash === recorded) {
     return { ...entry, status: 'update', srcHash, tgtHash, recorded, detail: 'unchanged since install; the source has moved on' };
   }
+  // Past this point the target differs from BOTH the source and the record, or has no record.
+  if (entry.kind === 'copy-localized') {
+    if (!recorded) {
+      return {
+        ...entry,
+        status: 'localized-unrecorded',
+        srcHash,
+        tgtHash,
+        recorded,
+        detail: 'declared copy-localized, and nothing is recorded for it. The difference could be the adaptation this entry expects or it could be real drift, and with no record there is no way to tell the two apart — so neither is claimed.',
+      };
+    }
+    if (recorded === srcHash) {
+      return {
+        ...entry,
+        status: 'localized',
+        srcHash,
+        tgtHash,
+        recorded,
+        detail: 'adapted by the target; the source has not moved since it was installed',
+      };
+    }
+    return {
+      ...entry,
+      status: 'localized-stale',
+      srcHash,
+      tgtHash,
+      recorded,
+      detail: 'adapted by the target AND revised in the source since — a localization of an old upstream, which needs re-porting by hand',
+    };
+  }
+
   return {
     ...entry,
     status: 'conflict',
@@ -445,6 +574,14 @@ export function classifyEntry(entry, sourceRoot, targetRoot, records) {
 }
 
 const BLOCKING = new Set(['source-missing', 'target-unreadable']);
+
+/**
+ * What `--apply` refuses. All three are "the target holds content this tool did not put there and
+ * cannot account for", which is one question with one answer, even though `--verify` splits the
+ * third one out to exit 2 — see classifyEntry. Two different questions about the same file may
+ * have different answers; what would be wrong is one question answered two ways.
+ */
+const APPLY_REFUSES = ['conflict', 'localized-stale', 'localized-unrecorded'];
 
 // ── shared preamble ──────────────────────────────────────────────────────────────────────────
 
@@ -518,7 +655,8 @@ function install({ manifest, waves, targetRoot, targetRaw, apply }) {
   const deleted = group(plan, 'deleted');
   const updates = group(plan, 'update');
   const inSync = group(plan, 'in-sync');
-  const conflicts = group(plan, 'conflict');
+  const localized = group(plan, 'localized');
+  const conflicts = plan.filter((p) => APPLY_REFUSES.includes(p.status));
   const authors = group(plan, 'author');
 
   listFiles('CREATE — not present in the target', creates);
@@ -526,6 +664,17 @@ function install({ manifest, waves, targetRoot, targetRaw, apply }) {
   listFiles('UPDATE — untouched in the target, newer in the source', updates);
   listFiles('IN SYNC — already byte-identical', inSync);
   listFiles('CONFLICT — differs from BOTH source and record; NOT overwritten', conflicts, true);
+
+  if (localized.length) {
+    w('');
+    w(`LOCALIZED — adapted by the target, LEFT ALONE (${localized.length})`);
+    w('  Declared kind: copy-localized. The source has not moved since each was installed, so');
+    w('  there is nothing to port; the local adaptation stands and this tool will not touch it.');
+    for (const l of localized) {
+      w(`  ${l.path}`);
+      w(`      expected to differ: ${l.why}`);
+    }
+  }
 
   if (authors.length) {
     w('');
@@ -538,7 +687,7 @@ function install({ manifest, waves, targetRoot, targetRaw, apply }) {
 
   w('');
   w(RULE);
-  w(`Plan: ${creates.length} create · ${deleted.length} re-create · ${updates.length} update · ${inSync.length} in sync · ${conflicts.length} conflict · ${authors.length} author-required`);
+  w(`Plan: ${creates.length} create · ${deleted.length} re-create · ${updates.length} update · ${inSync.length} in sync · ${localized.length} localized · ${conflicts.length} conflict · ${authors.length} author-required`);
 
   if (conflicts.length) {
     w('');
@@ -546,6 +695,13 @@ function install({ manifest, waves, targetRoot, targetRaw, apply }) {
     w('NOTHING WAS WRITTEN. An apply here is all-or-nothing: a partial install that reports which');
     w('parts it managed is a partial run wearing a complete verdict. Reconcile each file above by');
     w('hand, or move it aside, then run again.');
+    if (conflicts.some((c) => c.status === 'localized-stale')) {
+      w('');
+      w('A copy-localized file listed above is NOT a mistake by whoever adapted it — the source has');
+      w('been revised since. Re-port it, keeping the adaptation; or move it aside and let this tool');
+      w('re-create it and then adapt the new copy. There is no flag for it, because only a person');
+      w('can know whether a re-port happened and a flag that asserted it would be a flag that lies.');
+    }
     w(RULE);
     return EXIT.DRIFT;
   }
@@ -554,7 +710,7 @@ function install({ manifest, waves, targetRoot, targetRaw, apply }) {
 
   if (!apply) {
     w('');
-    w(`DRY RUN — nothing was written. ${toWrite.length} file(s) would be written, ${authors.length} would not.`);
+    w(`DRY RUN — nothing was written. ${toWrite.length} file(s) would be written; ${authors.length} author-required and ${localized.length} localized would not.`);
     w('Re-run with --apply to perform it.');
     w(RULE);
     return EXIT.OK;
@@ -675,8 +831,22 @@ function verify({ manifest, waveArg, targetRoot, subset }) {
     .filter((p) => waves.includes(prov.data.files[p].wave))
     .sort();
 
-  const drifted = [...group(plan, 'update'), ...group(plan, 'conflict'), ...group(plan, 'deleted')];
-  const unchecked = plan.filter((p) => BLOCKING.has(p.status));
+  const localized = group(plan, 'localized');
+
+  // "Localized AND behind" — the target adapted it and the source has moved since. Both shapes of
+  // that (BOTH-moved, and source-moved-with-no-adaptation-yet) are collected here rather than left
+  // in DRIFTED, because the action is a different one — re-port it, keeping the adaptation — and a
+  // file listed under two headings is read under neither. They still FAIL; only the heading moved.
+  const behind = [
+    ...group(plan, 'localized-stale'),
+    ...group(plan, 'update').filter((p) => p.kind === 'copy-localized'),
+  ];
+  const drifted = [
+    ...group(plan, 'update').filter((p) => p.kind !== 'copy-localized'),
+    ...group(plan, 'conflict'),
+    ...group(plan, 'deleted'),
+  ];
+  const unchecked = [...plan.filter((p) => BLOCKING.has(p.status)), ...group(plan, 'localized-unrecorded')];
   const inSync = group(plan, 'in-sync');
   const creates = group(plan, 'create');
   const authors = group(plan, 'author');
@@ -692,7 +862,34 @@ function verify({ manifest, waveArg, targetRoot, subset }) {
   }
 
   listFiles('DRIFTED', drifted, true);
+
+  if (behind.length) {
+    w('');
+    w(`LOCALIZED AND BEHIND THE SOURCE — needs re-porting (${behind.length})`);
+    w('  Declared kind: copy-localized, so an edit in the TARGET is expected and absorbed. These');
+    w('  are the other direction: the SOURCE has been revised since this copy was taken, so the');
+    w('  local file is an adaptation of an old upstream. That is a real "you are behind" and it');
+    w('  fails, because nothing else in this tool would ever tell you.');
+    for (const b of behind) {
+      w(`  ${b.path}`);
+      w(`      ${b.detail}`);
+    }
+  }
+
   listFiles('COULD NOT CHECK', unchecked, true);
+
+  if (localized.length) {
+    w('');
+    w(`LOCALIZED — adapted by the target, and the source has not moved (${localized.length})`);
+    w('  Declared kind: copy-localized. Each differs from the source in the way that entry says to');
+    w('  expect, and the source still matches what was installed, so nothing here is out of date.');
+    w('  Part of no failure — and listed in full every run, so absorbing a file is never silent.');
+    for (const l of localized) {
+      w(`  ${l.path}`);
+      w(`      expected to differ: ${l.why}`);
+    }
+  }
+
   listFiles('IN SYNC', inSync);
 
   if (orphans.length) {
@@ -715,21 +912,29 @@ function verify({ manifest, waveArg, targetRoot, subset }) {
 
   w('');
   w(RULE);
-  w(`Tally: ${inSync.length} in sync · ${drifted.length} drifted · ${unchecked.length} could not be checked · ${authors.length} author-required, excluded`);
+  w(`Tally: ${inSync.length} in sync · ${localized.length} localized · ${drifted.length} drifted · ${behind.length} localized and behind`);
+  w(`       ${unchecked.length} could not be checked · ${authors.length} author-required, excluded · ${checkable} checkable in all`);
 
   if (unchecked.length || missingWaves.length || waves.length === 0) {
     w('');
     w('COULD NOT CHECK — exit 2. It says nothing about the files it did read, including the');
-    w(`${drifted.length} listed as drifted above, because a partial answer is not this verdict.`);
+    w(`${drifted.length + behind.length} listed as drifted or behind above, because a partial answer is not this verdict.`);
     if (waves.length === 0) w('  No wave was checked at all: the record names none this manifest declares.');
     w(RULE);
     return EXIT.REFUSED;
   }
 
-  if (drifted.length) {
+  if (drifted.length || behind.length) {
     w('');
-    w(`DRIFTED — exit 1. ${drifted.length} of ${checkable} checkable file(s) do not match the source.`);
-    w('Each line above says whether the target changed, the source moved on, or both.');
+    w(`DRIFTED — exit 1. ${drifted.length + behind.length} of ${checkable} checkable file(s) do not match the source.`);
+    w('Each line above says whether the target changed, the source moved on, or both — they are');
+    w('different facts and they are under different headings, because they need different work.');
+    if (behind.length) {
+      w(`${behind.length} of them are copy-localized and BEHIND the source; re-port each, keeping the adaptation.`);
+    }
+    if (localized.length) {
+      w(`${localized.length} further copy-localized file(s) are adapted and up to date, and are part of no failure.`);
+    }
     w(RULE);
     return EXIT.DRIFT;
   }
@@ -739,7 +944,12 @@ function verify({ manifest, waveArg, targetRoot, subset }) {
     w(`IN SYNC for the ${waves.length} wave(s) NAMED — exit 0. This is a SUBSET: it says nothing`);
     w(`about the other recorded wave(s), and is not a statement that the target holds the harness.`);
   } else {
-    w(`IN SYNC — exit 0. All ${checkable} checkable file(s) of wave(s) ${waves.join(', ')} match the source.`);
+    w(`IN SYNC — exit 0. All ${checkable} checkable file(s) of wave(s) ${waves.join(', ')} match the source,`);
+    w(`or are declared copy-localized and differ only where the target adapted them.`);
+  }
+  if (localized.length) {
+    w(`${localized.length} of them are copy-localized and were counted as adapted rather than drifted. Each is`);
+    w('named above with what it is expected to differ in — a green verdict here is never a bare 0.');
   }
   if (authors.length) w(`${authors.length} author-required entr${authors.length === 1 ? 'y is' : 'ies are'} outside this verdict; see above.`);
   w(RULE);
