@@ -601,3 +601,110 @@ test('CONTROL: an OVERSIZED file behind a symlink still overflows its cap', () =
   assert.ok(!r.failures.some((f) => f.includes('memory-file-not-a-file')),
     'it must overflow on CONTENT — refusing it as a non-file means the content was never measured');
 });
+
+// ── A REGULAR FILE IS NOT A READABLE FILE ─────────────────────────────────────────────────────
+//
+// The block above closed three ways a NAME can fail to be a readable file: a directory, a FIFO,
+// a dangling symlink. Each is a KIND failure, and `statSync` answers kind. It does not answer
+// ACCESS — `stat(2)` needs no read permission on its subject — so a regular file at mode 0000
+// walks through the kind guard and throws `EACCES` out of `readFileSync` on the next line.
+//
+// MEASURED ON THE UNFIXED CHECKER at `origin/main` e8c8ae5, so these fixtures are known to be
+// able to express the failure rather than merely built from the fix: both arms produced a raw
+// `Error: EACCES` with a stack trace naming `check-memory-budget.mjs:316` and `:332`, exit 1,
+// and nothing at all identifying which memory file the operator should look at.
+//
+// The two assertions that carry the whole point are `doesNotMatch(/^\s+at /m)` — a stack trace is
+// a refusal nobody can act on — and the named code. `EACCES` itself must APPEAR, in the message,
+// because it is the diagnosis; what must not appear is node's own `Error: EACCES` throw line.
+
+/** chmod 000, then assert the denial actually holds — as root it does not, and the case is void. */
+function denyRead(p) {
+  fs.chmodSync(p, 0o000);
+  try {
+    fs.readFileSync(p, 'utf8');
+    return false; // readable anyway: root, or a filesystem that ignores the mode
+  } catch (e) {
+    return e && e.code === 'EACCES';
+  }
+}
+
+const AS_ROOT = typeof process.getuid === 'function' && process.getuid() === 0;
+
+test('an UNREADABLE archive volume is refused BY NAME, not by EACCES', { skip: AS_ROOT && 'running as root: chmod 000 does not deny reads, so the fixture cannot express the defect' }, () => {
+  const root = volumeFixture((mem) => {
+    const p = path.join(mem, 'DECISIONS_ARCHIVE_005.md');
+    fs.writeFileSync(p, '# Volume 5\n\nbody\n');
+  });
+  const target = path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE_005.md');
+  assert.ok(denyRead(target), 'the fixture could not deny the read, so this case proves nothing');
+  const r = run(['--root', root]);
+  fs.chmodSync(target, 0o644); // so the exit-time cleanup is unremarkable
+  assert.equal(r.code, 1);
+  assert.match(r.err, /archive-volume-unreadable/, 'the refusal must be a named check, not a throw');
+  assert.match(r.err, /DECISIONS_ARCHIVE_005\.md/, 'the refusal must name the entry it refused');
+  assert.match(r.err, /EACCES/, 'the errno belongs IN the message — it is the diagnosis, not the delivery');
+  assert.doesNotMatch(r.err, /^\s+at /m, 'a stack trace is a refusal nobody can act on');
+  assert.doesNotMatch(r.err, /Error: EACCES/, 'that is node throwing, not this checker refusing');
+  // NOT `archive-volume-not-a-file`: it IS a file, and the remedies differ — one moves something
+  // out of the way, the other restores permission.
+  assert.doesNotMatch(r.err, /archive-volume-not-a-file/);
+});
+
+test('an UNREADABLE archive volume reports bytes: null, never 0', { skip: AS_ROOT && 'running as root: chmod 000 does not deny reads' }, () => {
+  const root = volumeFixture((mem) => {
+    fs.writeFileSync(path.join(mem, 'DECISIONS_ARCHIVE_006.md'), '# Volume 6\n\nbody\n');
+  });
+  const target = path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE_006.md');
+  assert.ok(denyRead(target), 'the fixture could not deny the read, so this case proves nothing');
+  const r = check(root);
+  fs.chmodSync(target, 0o644);
+  assert.equal(r.code, 1);
+  const v = r.decisions_archive_volumes.find((x) => x.name === 'DECISIONS_ARCHIVE_006.md');
+  assert.ok(v, 'the unreadable volume must still be REPORTED — silence would hide it entirely');
+  // A volume nothing could read is not a volume of zero bytes. A machine consumer that saw 0
+  // would conclude there is 40,000 bytes of room in a file it has never read one byte of.
+  assert.equal(v.bytes, null);
+  assert.match(v.problem, /EACCES/);
+});
+
+test('an UNREADABLE memory file is refused BY NAME, not by EACCES', { skip: AS_ROOT && 'running as root: chmod 000 does not deny reads, so the fixture cannot express the defect' }, () => {
+  const root = typedFixture(() => {});
+  const target = path.join(root, '.claude', 'memory', 'DECISIONS.md');
+  assert.ok(denyRead(target), 'the fixture could not deny the read, so this case proves nothing');
+  const r = run(['--root', root]);
+  fs.chmodSync(target, 0o644);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /memory-file-unreadable/, 'the refusal must be a named check, not a throw');
+  assert.match(r.err, /DECISIONS\.md/, 'the refusal must name the path it refused');
+  assert.match(r.err, /EACCES/, 'the errno belongs IN the message');
+  assert.doesNotMatch(r.err, /^\s+at /m, 'a stack trace is a refusal nobody can act on');
+  assert.doesNotMatch(r.err, /Error: EACCES/, 'that is node throwing, not this checker refusing');
+  assert.doesNotMatch(r.err, /memory-file-not-a-file/, 'it IS a file; the remedy is permission, not relocation');
+});
+
+test('an UNREADABLE LONG-TERM.md is refused too — the guard is on the reader, not on one path', { skip: AS_ROOT && 'running as root: chmod 000 does not deny reads' }, () => {
+  const root = typedFixture(() => {});
+  const target = path.join(root, '.claude', 'memory', 'LONG-TERM.md');
+  assert.ok(denyRead(target), 'the fixture could not deny the read, so this case proves nothing');
+  const r = run(['--root', root]);
+  fs.chmodSync(target, 0o644);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /memory-file-unreadable/);
+  assert.match(r.err, /LONG-TERM\.md/);
+  assert.doesNotMatch(r.err, /^\s+at /m);
+});
+
+test('CONTROL: the guard does not fire on a readable file — it is about ACCESS, not about reading at all', () => {
+  // Without this the four cases above would still pass if `readGuarded` refused everything, which
+  // is the instrument-measures-itself failure. The clean-fixture test at the top of this file
+  // makes the same point globally; this one pins it against these exact fixture builders.
+  const root = typedFixture((mem) => {
+    fs.writeFileSync(path.join(mem, 'DECISIONS_ARCHIVE_007.md'), '# Volume 7\n\nbody\n');
+  });
+  const r = check(root);
+  assert.equal(r.code, 0);
+  const v = r.decisions_archive_volumes.find((x) => x.name === 'DECISIONS_ARCHIVE_007.md');
+  assert.equal(v.problem, null);
+  assert.ok(v.bytes > 0, 'a readable volume must report real bytes');
+});
