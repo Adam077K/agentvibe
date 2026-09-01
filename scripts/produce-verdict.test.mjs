@@ -1319,6 +1319,27 @@ import {
   isJudgeDirTracked as isJudgeDirTrackedFn,
 } from './produce-verdict.mjs';
 
+/**
+ * The routing seam every J cell runs through — and the reason four of them were RED on `main`.
+ *
+ * J-9, J-10, J-12 and J-13 named `materialiseJudgeProject` and `readVerdictArtifact` as deps and
+ * left `runGateRunner` unset, so each one called the LIVE `run-gate.mjs` against whatever tree the
+ * checkout happened to be. That router classifies `origin/main...HEAD`. On the branch these cells
+ * were written on the diff was large and the gate was required, so they passed; the moment they
+ * merged, `origin/main...HEAD` became EMPTY, the router emitted no invocation, and every one of
+ * them returned NOT_REQUIRED and failed its own DENOMINATOR assertion.
+ *
+ * Measured on a pristine checkout of `origin/main`, `git status` clean:
+ *   scripts/produce-verdict.test.mjs   74 pass · 4 fail
+ *   npm run test:merge-gate            141 pass · 4 fail · rc 1     <- a CI step, red
+ * and at the commit before the merge, the same file is 65 pass · 0 fail.
+ *
+ * SO THE CELLS WERE GREEN EXACTLY WHERE THEY COULD NOT BE TRUSTED AND RED WHERE THEY MATTER. The
+ * rest of this file already routes through `routerRunner(routerJson(...))` — the seam existed and
+ * these four did not take it. Sharing one helper is what stops the next cell forgetting.
+ */
+const jRouterRunner = () => routerRunner(routerJson(REPO_ROOT, SHA));
+
 /** A directory with a file in it, so "removed" is distinguishable from "was never there". */
 function judgeDirFixture() {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-judge-probe-'));
@@ -1437,6 +1458,7 @@ test('J-9 — an operator\'s --judge-dir survives a reclaiming run; ours does no
   // that reached an answer, so that is the only place the inversion is observable. The seams below
   // buy that outcome without a panel run.
   const deps = {
+    runGateRunner: jRouterRunner(),
     materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
     readVerdictArtifact: () => ({ outcome: OUTCOME.PRODUCED, subject: 's', tier: 'full' }),
   };
@@ -1462,6 +1484,7 @@ test('J-10 — a caller\'s QA_KEEP_JUDGE_DIR is THREADED, not merely validated',
   // arms measured `false` before the fix: opposite instructions, byte-identical outcomes. A
   // silently-ignored retention flag is the worst direction for that class to fail in.
   const deps = {
+    runGateRunner: jRouterRunner(),
     materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
     readVerdictArtifact: () => ({ outcome: OUTCOME.PRODUCED, subject: 's', tier: 'full' }),
   };
@@ -1514,6 +1537,7 @@ test('J-12 — a BLOCKED run reclaims its tree; only REFUSED keeps one', () => {
   // `=== REFUSED` to `REFUSED || BLOCKED` left the suite 75/75 green. BLOCKED means the panel ran
   // and found defects: the answer is in the record, not in the tree.
   const deps = {
+    runGateRunner: jRouterRunner(),
     materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
     readVerdictArtifact: () => ({ outcome: OUTCOME.BLOCKED, subject: 's', tier: 'full' }),
     launch: () => assert.fail('must not launch'),
@@ -1544,6 +1568,7 @@ test('J-13 — only PRODUCED and BLOCKED skip the launcher; REFUSED spends the p
     const r = produceVerdictFn({
       repo: REPO_ROOT,
       deps: {
+        runGateRunner: jRouterRunner(),
         materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
         readVerdictArtifact: () => ({ outcome, subject: 's', tier: 'full' }),
         launch: () => { launched += 1; return { status: 0, stdout: '', stderr: '' }; },
