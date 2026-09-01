@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { constants as bufferConstants } from 'node:buffer';
 import { fileURLToPath } from 'node:url';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -707,4 +708,186 @@ test('CONTROL: the guard does not fire on a readable file — it is about ACCESS
   const v = r.decisions_archive_volumes.find((x) => x.name === 'DECISIONS_ARCHIVE_007.md');
   assert.equal(v.problem, null);
   assert.ok(v.bytes > 0, 'a readable volume must report real bytes');
+});
+
+// ── THE REMEDY IS PART OF THE BEHAVIOUR, AND UNTIL THIS BLOCK NOTHING PINNED IT ────────────────
+//
+// A blinded review mutated the `archive-volume-unreadable` remedy to "reboot the mainframe." and
+// NOTHING WENT RED. Every case above asserts a failure CODE and a path; none asserted what the
+// operator is told to do about it, which is the half of a refusal that gets acted on. These cases
+// pin the text — narrowly, on the clauses that carry a decision, not on whole sentences.
+
+/** The size that defeats `readFileSync`'s string conversion, DERIVED — never a frozen number. */
+const TOO_LONG_BYTES = bufferConstants.MAX_STRING_LENGTH + 1024;
+
+/** A sparse file of `bytes` — instant, and it occupies ~4K on disk however large it claims to be. */
+function sparse(p, bytes) {
+  fs.writeFileSync(p, '');
+  fs.truncateSync(p, bytes);
+  assert.equal(fs.statSync(p).size, bytes, 'the fixture did not reach the size it needs');
+}
+
+test('an OVERSIZED memory file is diagnosed by SIZE, and never as a permissions problem', () => {
+  // MEASURED on the version this replaces: a 545,259,520-byte DECISIONS.md against a 40,000-byte
+  // cap was refused with "restore read permission, or move whatever is at that path out of the
+  // way" — so an operator follows it, runs chmod 644 on a file already at 644, and concludes the
+  // checker is broken. `decisions-byte-overflow`, the check that exists for this exact file, can
+  // never fire: nothing can read it. The refusal is the only thing that can carry the diagnosis.
+  // No root skip: this case does not depend on permissions, so it runs everywhere.
+  const root = typedFixture((mem) => sparse(path.join(mem, 'DECISIONS.md'), TOO_LONG_BYTES));
+  const r = run(['--root', root]);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /memory-file-unreadable/);
+  assert.match(r.err, /ERR_STRING_TOO_LONG/, 'the cause belongs in the message');
+  assert.match(r.err, new RegExp(TOO_LONG_BYTES.toLocaleString().replace(/,/g, ',')),
+    'the size that caused it must be REPORTED — st.size was in hand one line before the throw');
+  assert.match(r.err, /maximum string length/, 'and the limit it is measured against');
+  assert.match(r.err, /SIZE PROBLEM AND NOT A PERMISSIONS ONE/);
+  assert.match(r.err, /evict-memory\.mjs/, 'the remedy must name the tool that actually shrinks it');
+  // THE ASSERTION THAT REDDENS AGAINST THE OLD MESSAGE. Everything above could be satisfied by
+  // appending; this one cannot be satisfied while the permissions remedy is still there.
+  assert.doesNotMatch(r.err, /restore read permission/,
+    'chmod cannot fix a file that is too large to read — sending an operator there wastes the one ' +
+    'action they take before they stop trusting the checker');
+  assert.doesNotMatch(r.err, /^\s+at /m);
+});
+
+test('CONTROL: the size remedy does NOT displace the permissions one — the branch goes both ways', { skip: AS_ROOT && 'running as root: chmod 000 does not deny reads' }, () => {
+  // Without this, a remedy hardcoded to the SIZE text would satisfy the case above. The pair is
+  // the test; either alone is satisfied by a constant.
+  const root = typedFixture(() => {});
+  const target = path.join(root, '.claude', 'memory', 'DECISIONS.md');
+  assert.ok(denyRead(target), 'the fixture could not deny the read, so this case proves nothing');
+  const r = run(['--root', root]);
+  fs.chmodSync(target, 0o644);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /restore read permission/);
+  assert.doesNotMatch(r.err, /SIZE PROBLEM/);
+  assert.doesNotMatch(r.err, /evict-memory\.mjs/);
+});
+
+test('an UNREADABLE volume is NOT told to rename itself out of the check', { skip: AS_ROOT && 'running as root: chmod 000 does not deny reads' }, () => {
+  // MEASURED, one fixture, three states: a 50,013-byte volume fails `decisions-archive-byte-
+  // overflow`; the same file at mode 000 fails `archive-volume-unreadable`; RENAMED so it no
+  // longer matches ARCHIVE_VOLUME_RE, with the mode restored, it PASSES at exit 0 with 50,013
+  // bytes still on disk. The refusal was instructing the operator to disable the check. The two
+  // states below are the first two of that cell, run here; the third is asserted in the case after.
+  const big = '#'.repeat(50_013);
+  const root = volumeFixture((mem) => fs.writeFileSync(path.join(mem, 'DECISIONS_ARCHIVE_011.md'), big));
+  const target = path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE_011.md');
+
+  const overflow = run(['--root', root]);
+  assert.equal(overflow.code, 1);
+  assert.match(overflow.err, /decisions-archive-byte-overflow/,
+    'readable, this volume is over its cap — which is what the rename advice would have hidden');
+
+  assert.ok(denyRead(target), 'the fixture could not deny the read, so this case proves nothing');
+  const r = run(['--root', root]);
+  fs.chmodSync(target, 0o644);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /archive-volume-unreadable/);
+  assert.match(r.err, /restore read permission/, 'the remedy that is actually sound here');
+  assert.doesNotMatch(r.err, /rename this entry/,
+    'this file HOLDS content the cap must bound; renaming it is how you make an over-cap volume ' +
+    'invisible, so the checker must not be the thing that suggests it');
+  assert.doesNotMatch(r.err, /no longer matches/);
+});
+
+test('CONTROL: the rename advice SURVIVES where it is sound — a volume that is not a file at all', () => {
+  // The deletion above is narrow ON PURPOSE. A directory holds no cappable content, so renaming it
+  // loses nothing and is a real remedy. Without this control the fix reads as "the clause is bad",
+  // and the next person removes it from both arms.
+  const root = volumeFixture((mem) => fs.mkdirSync(path.join(mem, 'DECISIONS_ARCHIVE_012.md')));
+  const r = run(['--root', root]);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /archive-volume-not-a-file/);
+  assert.match(r.err, /rename this entry so it no longer matches/);
+});
+
+test('a SELF-REFERENTIAL SYMLINK is refused by KIND, never reaching the read guard', () => {
+  // This pins a corrected premise, not a fix. The comment above `readGuarded` claimed ELOOP was one
+  // of four codes reaching it, justifying a catch over an access(2) pre-check. MEASURED: statSync
+  // throws ELOOP inside entryKind, which refuses FIRST — so the code arrives as a KIND verdict and
+  // `readGuarded` is never entered. The argument survives on ERR_STRING_TOO_LONG, which is pinned
+  // above. If someone later routes ELOOP through the read path, this goes red and they will find
+  // the comment that explains why it must not.
+  const root = volumeFixture((mem) =>
+    fs.symlinkSync('DECISIONS_ARCHIVE_013.md', path.join(mem, 'DECISIONS_ARCHIVE_013.md')));
+  const r = run(['--root', root]);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /archive-volume-not-a-file/);
+  assert.match(r.err, /ELOOP/);
+  assert.doesNotMatch(r.err, /archive-volume-unreadable/, 'it never reached the read');
+});
+
+test('CONTROL: a symlink to an UNREADABLE regular file is refused as unreadable, not as a kind', { skip: AS_ROOT && 'running as root: chmod 000 does not deny reads' }, () => {
+  // The one symlink shape this file had no control for. The scan RESOLVES symlinks, so the target's
+  // mode is what decides — a link is not a way to smuggle an unreadable volume past the guard, and
+  // it must not be misreported as "not a regular file" either.
+  const root = volumeFixture((mem) => {
+    fs.writeFileSync(path.join(mem, 'real-unreadable.md'), '# Real\n\nbody\n');
+    fs.symlinkSync(path.join(mem, 'real-unreadable.md'), path.join(mem, 'DECISIONS_ARCHIVE_014.md'));
+  });
+  const target = path.join(root, '.claude', 'memory', 'real-unreadable.md');
+  assert.ok(denyRead(target), 'the fixture could not deny the read, so this case proves nothing');
+  const r = run(['--root', root]);
+  fs.chmodSync(target, 0o644);
+  assert.equal(r.code, 1);
+  assert.match(r.err, /archive-volume-unreadable/);
+  assert.match(r.err, /DECISIONS_ARCHIVE_014\.md/, 'named by the entry, not by its target');
+  assert.doesNotMatch(r.err, /not a regular file/);
+});
+
+test('--json reports UNKNOWN as null, never as zero, at BOTH sites', { skip: AS_ROOT && 'running as root: chmod 000 does not deny reads' }, () => {
+  // The principle was stated at the volume site and applied only there. MEASURED on the version
+  // this replaces: an unreadable DECISIONS.md emitted `"bytes": 0, "entries": 0` beside its
+  // `problem` — and 0 bytes against a 40,000-byte cap reads to a machine consumer as plenty of
+  // room, which is the exact sentence the volume site uses to justify null.
+  const root = typedFixture(() => {});
+  const target = path.join(root, '.claude', 'memory', 'DECISIONS.md');
+  assert.ok(denyRead(target), 'the fixture could not deny the read, so this case proves nothing');
+  const r = check(root);
+  fs.chmodSync(target, 0o644);
+  assert.equal(r.code, 1);
+  assert.equal(r.decisions.bytes, null, 'a file nothing could read does not occupy 0 bytes');
+  assert.equal(r.decisions.entries, null, 'nor does it hold 0 entries');
+  assert.equal(r.decisions.parse_ambiguous, null);
+  assert.match(r.decisions.problem, /EACCES/);
+  // The counterpart must be untouched: LONG-TERM.md was readable in this fixture.
+  assert.equal(r.long_term.problem, null);
+  assert.ok(r.long_term.lines > 0, 'the readable file must still report a real measurement');
+});
+
+test('--json reports null for a DIRECTORY too — the pre-existing false zero goes with it', () => {
+  // Same shape, reached by the kind guard rather than the read guard, and wrong for the same
+  // reason. It predates the read guard; it is corrected here because leaving one site emitting a
+  // false zero is how the principle gets read as "a volumes rule" rather than a rule.
+  const root = typedFixture((mem) => replaceWith(mem, 'DECISIONS.md', (p) => fs.mkdirSync(p)));
+  const r = check(root);
+  assert.equal(r.code, 1);
+  assert.equal(r.decisions.bytes, null);
+  assert.equal(r.decisions.entries, null);
+  assert.match(r.decisions.problem, /a directory/);
+});
+
+test('--json carries `unreadable` so a consumer need not string-match the prose', { skip: AS_ROOT && 'running as root: chmod 000 does not deny reads' }, () => {
+  // Two stderr CODES encode "wrong kind" vs "could not read"; the JSON encoded neither, so the only
+  // way to recover the distinction was to match on `problem` — reading the message instead of the
+  // cause, which is why `readGuarded` returns a code separate from its prose.
+  const root = volumeFixture((mem) => fs.writeFileSync(path.join(mem, 'DECISIONS_ARCHIVE_015.md'), 'x\n'));
+  const target = path.join(root, '.claude', 'memory', 'DECISIONS_ARCHIVE_015.md');
+  assert.ok(denyRead(target), 'the fixture could not deny the read, so this case proves nothing');
+  const r = check(root);
+  fs.chmodSync(target, 0o644);
+  const v = r.decisions_archive_volumes.find((x) => x.name === 'DECISIONS_ARCHIVE_015.md');
+  assert.equal(v.unreadable, true);
+  assert.equal(v.bytes, null);
+});
+
+test('CONTROL: a volume of the wrong KIND reports unreadable:false — the flag discriminates', () => {
+  const root = volumeFixture((mem) => fs.mkdirSync(path.join(mem, 'DECISIONS_ARCHIVE_016.md')));
+  const r = check(root);
+  const v = r.decisions_archive_volumes.find((x) => x.name === 'DECISIONS_ARCHIVE_016.md');
+  assert.equal(v.unreadable, false, 'a flag that is always true carries no information');
+  assert.equal(v.bytes, null);
 });
