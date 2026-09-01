@@ -1,0 +1,11 @@
+{
+  "subject": "3dd17529d56a325d58200def10fdeda7dce1ce03001179ec83f0c185ef780703",
+  "base": "4ddc5c6a22c799f7b868f26545c507b03719944b",
+  "tier": "full",
+  "tier_driver": "scripts/merge-gate.test.mjs",
+  "verdict": "PASS",
+  "by": "builder-w3-instruments",
+  "run_id": null,
+  "evidence": "Fix round 2. test:merge-gate 126->142 pass, 0 fail. Mutation table 15 cells: 14 RED under mutation, 1 GREEN must-not-fire, restore byte-identical each row. The table caught 3 of my own cells as vacuous plus 1 skipped anchor; all corrected and re-run RED. Panel found a real env-threading defect I shipped this round; fixed and pinned by J-10 which goes RED on revert. Widening enumerated with a consumer sweep plus positive and negative controls.",
+  "recorded_at": "2026-08-28T23:25:54.202Z"
+}
