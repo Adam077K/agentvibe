@@ -891,3 +891,21 @@ test('CONTROL: a volume of the wrong KIND reports unreadable:false — the flag 
   assert.equal(v.unreadable, false, 'a flag that is always true carries no information');
   assert.equal(v.bytes, null);
 });
+
+test('THE SUITE REFUSES TO RUN AS ROOT, because ten of its cases would vanish in silence', () => {
+  // NOT A COUNT ASSERTION — a refusal. Ten cases carry `skip: AS_ROOT` because `chmod 000` does not
+  // deny reads to uid 0, so as root they report SKIPPED and the suite still reports 0 failures: an
+  // instrument that measured nothing, wearing a passing verdict. That is the shape this repo names
+  // most often, and a skipped-count assertion would only restate the number that is already printed.
+  //
+  // EXPOSURE, MEASURED 2026-09-01 rather than assumed: `.github/workflows/ci.yml` is `ubuntu-latest`
+  // with no `container:` KEY in any workflow: `grep -nE '^\s*container:' .github/workflows/*.yml`
+  // returns nothing, while a bare `grep container` returns two PROSE lines — which is why the KEY
+  // form is what is quoted. GitHub's hosted runners execute
+  // as a non-root user — so the blocking path is not affected and this refusal cannot fire there.
+  // It fires under `act`, under a self-hosted root runner, or in a container, which are exactly the
+  // places the silent version would have been believed.
+  assert.equal(AS_ROOT, false,
+    'running as root: ten permission-dependent cases in this file cannot express their defect, ' +
+    'so a green run here means less than it appears to. Run the suite as a non-root user.');
+});
