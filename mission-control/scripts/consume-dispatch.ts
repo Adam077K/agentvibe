@@ -20,6 +20,14 @@
 //                                                    # settle every `running` entry without
 //                                                    # consulting its pid — for an entry whose
 //                                                    # launcher pid has been reused
+//   bun mission-control/scripts/consume-dispatch.ts --no-verdict
+//                                                    # do not run the panel, whatever the router
+//                                                    # decides — the one expensive thing here
+//
+// AFTER A LAUNCH, THIS SCRIPT PRODUCES A VERDICT. It asks `scripts/produce-verdict.mjs` in the
+// target project, and only for **diffs that need the gate and have no binding verdict** — never
+// once per dispatch. See produceVerdict() for the order that makes the subject bind and
+// shouldProduce() for the three filters, two of which cost nothing.
 //
 // REDUCED SCOPE — stated, not hidden. Phase 8b's original gate requires claims to land in
 // a second project's ledger. No sibling project has a ledger (measured 2026-08-12); that
@@ -39,10 +47,13 @@ import {
   KNOWN_DISPATCH_STATUSES,
   deriveGateReachability,
   readDeclaredMaxTurns,
+  classifyVerdictProduction,
+  PRODUCER_SPAWN_LIMITS,
   type DispatchEntry,
   type GateRecord,
   type GateRouting,
   type GateInvocation,
+  type VerdictProduction,
 } from '../server/index-cache.ts';
 
 // ── The one project this consumer targets ────────────────────────────────────────────────
@@ -186,6 +197,48 @@ const LIST_ONLY = args.has('--list');
  * hand-editing the queue file, which is not a remedy, it is a workaround for a missing one.
  */
 const FORCE_RECONCILE = args.has('--force-reconcile');
+/**
+ * Decline the panel run — the operator's escape from the one expensive thing this script does.
+ *
+ * IT IS AN OPT-OUT AND NOT AN OPT-IN, AND THAT IS THE COST DECISION MADE EXPLICITLY. A panel run
+ * measures 2.5–3.8M tokens and 40–50 minutes, which is real money to attach to a queue consumer.
+ * The reason it can default to on is the DENOMINATOR: the producer is asked only for **diffs that
+ * need the gate and have no binding verdict**, never for dispatches. Three filters stand between a
+ * dispatch and a spend, and the first two cost nothing —
+ *
+ *   1. `run-gate.mjs` must DECIDE, and decide `required: true`   (this file, routeGate)
+ *   2. the producer's own pre-check short-circuits when a verdict already binds this diff
+ *      (`launched: false, preexisting: true` — `produce-verdict.mjs` has a test asserting
+ *      `launches === 0` on that path)
+ *   3. only then is a session launched
+ *
+ * An opt-in flag would have left the producer where it was found: shipped on `main` and invoked by
+ * nothing, which is the gap this wiring closes. An opt-out leaves the loop closed and still lets a
+ * founder working through a backlog decline the spend per run.
+ */
+const NO_VERDICT = args.has('--no-verdict');
+
+/**
+ * AN UNKNOWN FLAG IS REFUSED, NEVER DROPPED — and this is #116's lesson arriving one script over.
+ *
+ * MEASURED, exit 0 and silent in every row: `--no-verdict` skips the panel (control fires), while
+ * `--no-verdicts`, `-no-verdict`, `--no_verdict` and `--noverdict` each ran ONE. The missing
+ * rejection is PRE-EXISTING — `--dry-runs` launches at `4ddc5c6` too — but this change introduces
+ * the first flag here whose typo costs 3.8M tokens, AND leans on that opt-out to justify defaulting
+ * the expensive path on. An opt-out that fails open is not an opt-out.
+ *
+ * SCREENED ON A LEADING `-`, NOT `--`, because `-no-verdict` is the single-dash typo and a `--`
+ * screen waves it through in silence. 64 is EX_USAGE: outside every state this script can reach, so
+ * it can never be read as one. Copied in shape from `produce-verdict.mjs`, which argues it at length.
+ */
+const KNOWN_FLAGS = new Set(['--dry-run', '--list', '--force-reconcile', '--no-verdict']);
+for (const a of process.argv.slice(2)) {
+  if (!a.startsWith('-')) continue;
+  if (!KNOWN_FLAGS.has(a)) {
+    console.error(`consume-dispatch: unknown flag "${a}". Known: ${[...KNOWN_FLAGS].join(' ')}`);
+    process.exit(64);
+  }
+}
 
 /** Does this value carry the three fields that make an emitted invocation actionable? */
 function isInvocation(v: unknown): v is GateInvocation {
@@ -226,6 +279,10 @@ function routeGate(root: string): GateRouting {
       cwd: root,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
+      // NAMED, NOT CLOSED: run-gate.mjs is unbounded here — no `timeout`, no `maxBuffer`. It is
+      // PRE-EXISTING, this round did not introduce it, and the round must not imply it closed it.
+      // It fails safe (a throw becomes `decided: false`, never a pass), which is why it is recorded
+      // as a residual rather than fixed inside a change about something else.
     });
   } catch (err) {
     // EXIT 2 IS A REFUSAL THE ROUTER MEANT, AND IT PRINTS ITS REASON AS JSON ON STDOUT. Throwing
@@ -254,6 +311,88 @@ function routeGate(root: string): GateRouting {
     // read through a partial match that produces a plausible decision from fields that moved.
     return { decided: false, why: `run-gate.mjs --json is missing a field this consumer reads (ref, files, floor, gateRequired): ${stdout.slice(0, 200)}` };
   }
+  // ── THE TOP-LEVEL `ref` CAN BE SYMBOLIC, AND RECORDING IT ALONE NAMES A MOVING TARGET ──────
+  //
+  // Measured on this tree, both arms producing both outcomes: `--ref origin/main...feat/w3-caller`
+  // emits a top-level `ref` of `origin/main...feat/w3-caller` beside an `invocation.args.ref` of
+  // `origin/main...d559dbe…`, while the default path emits the resolved sha in both. So the
+  // guarantee `run-gate.mjs` states in capitals — THE EMITTED TIP IS ALWAYS THE RESOLVED SHA —
+  // holds for the invocation it pins and NOT for this field. A queue entry saying "gated at
+  // feat/x over 6 files" is a durable record of a branch name, and a branch name moves.
+  //
+  // `verdictRef` IS THE FIELD BUILT FOR THIS, and it is required rather than read leniently.
+  // NARROWED DELIBERATELY — what the old predicate admitted and this one does not: a router
+  // emitting only {ref, files, floor, gateRequired}. What needed that? Nothing this repo ships:
+  // the real router emits `verdictRef` on BOTH its paths, the empty-diff literal included, and the
+  // anti-drift test runs the real emitter. A foreign or older `run-gate.mjs` in a Phase-9 target
+  // now lands on `decided: false` — which is never a pass, never a spend, and carries its reason.
+  // The alternative, reading it when present, is the exact "fell back to the only ref-shaped field
+  // on offer" defect `run-gate.mjs` documents about its own `invocation` key.
+  // ── THE TIP MUST BE PINNED, OR THIS ROUTING IS REFUSED ───────────────────────────────────
+  //
+  // `verdictRef` IS REQUIRED and its `ref` must be a 40-hex sha. NARROWED DELIBERATELY — what the
+  // old predicate admitted and this one does not: a decided routing with `refTip: null`, explained
+  // by a `refTipReason`.
+  //
+  // WHY IT IS REFUSED: without a pinned tip there is no key that can tell one diff from another, so
+  // every unpinnable entry for a root collapsed into ONE key and distinct diffs were merged — the
+  // delta finding this closes. That reason is sufficient on its own.
+  //
+  // THE REASON FIRST WRITTEN HERE WAS FALSE, and it was the row the collapse was authorised on. It
+  // said "nothing that can succeed — a tip `verdict.mjs` cannot resolve cannot carry a binding
+  // verdict". `produce-verdict.mjs` mentions `verdictRef` on exactly ONE line, to say it
+  // DELIBERATELY DOES NOT READ IT — "consuming a field the router computes is the trust this
+  // function exists to withhold" — against 35 lines mentioning `invocation` as the control. And
+  // this consumer spawns it as `[script, '--json']` with NO ref, so the producer re-derives from
+  // its own router call; `CLI_SINKS` makes no ref selectable at all. The router's inability to pin
+  // a tip therefore implies NOTHING about whether the producer would have succeeded.
+  //
+  // NAMED RESIDUAL, NOT A HIDDEN COST: for a foreign router that cannot pin `verdictRef` yet emits
+  // a sound `invocation.args.ref`, this skips a panel that could have run — measured 1 panel before
+  // this round, 0 after. Unreachable from the shipped router, whose flagless call always pins, so
+  // the exposed population is exactly the one the A2 form-check was added for.
+  //
+  // THE ROUTER'S OWN REASON IS RELAYED, NEVER REPLACED BY THE SHAPE COMPLAINT. Measured on the
+  // shipped emitter: `verdictRefFor` has 5 null-ref returns and 5 of them carry a reason (control:
+  // 1 success return, `reason: null`), so every null tip it can produce arrives with its own
+  // account and refusing loses no diagnosis. Dropping it here would keep the verdict and delete
+  // the cause — the defect a sibling lane found one layer over, where a record captured `stdout`
+  // while every refusal went to `stderr`.
+  const vr = parsed.verdictRef;
+  const vrOk = typeof vr === 'object' && vr !== null && !Array.isArray(vr)
+    && 'ref' in vr && 'reason' in vr;
+  if (!vrOk) {
+    // STRUCTURALLY REASONLESS, AND SAID SO. There is no `reason` field to read here, so this is a
+    // refusal with nothing to relay rather than one that dropped what it was given. "No reason
+    // given" and "the reason was discarded" must not render identically.
+    return {
+      decided: false,
+      why: `run-gate.mjs --json carries no usable verdictRef {ref, reason}, so the tip could not be pinned and the top-level ref may be symbolic. The router supplied no explanation to relay: ${stdout.slice(0, 200)}`,
+    };
+  }
+  const refTip = typeof (vr as { ref: unknown }).ref === 'string' ? (vr as { ref: string }).ref : null;
+  const refTipReason = typeof (vr as { reason: unknown }).reason === 'string'
+    ? (vr as { reason: string }).reason : null;
+  const relayed = refTipReason !== null
+    ? `The router's own reason: ${refTipReason}`
+    : 'The router supplied no explanation to relay.';
+  if (refTip === null) {
+    return {
+      decided: false,
+      why: `run-gate.mjs --json emitted a verdictRef.ref of null, so no tip is pinned and nothing here can be gated or deduplicated. ${relayed}`,
+    };
+  }
+  // A2. THE SHAPE WAS CHECKED AND THE FORM WAS NOT. `{ref: 'feat/my-branch', reason: null}` was
+  // accepted and printed as `at feat/my-branch` in the resolved-tip position, reinstating the
+  // defect the field closes. NOTE, ACKNOWLEDGED AND NOT CHANGED: this also refuses a 64-hex tip,
+  // so a sha-256 object-format repository lands on `decided: false` — loudly, with a reason on the
+  // record and no panel spent. That is the safe direction and a deliberate limit, not an oversight.
+  if (!/^[0-9a-f]{40}$/.test(refTip)) {
+    return {
+      decided: false,
+      why: `run-gate.mjs --json emitted a verdictRef.ref that is not a 40-hex sha ("${refTip.slice(0, 60)}"), so it names a moving target rather than a pinned tip. ${relayed}`,
+    };
+  }
   if (files === 0) {
     return {
       decided: false,
@@ -266,11 +405,211 @@ function routeGate(root: string): GateRouting {
     floor,
     files,
     ref,
+    // ALWAYS A PINNED SHA BY THE TIME WE REACH HERE. Every other case returned `decided: false`
+    // above, carrying the router's reason where one existed.
+    refTip,
     // VALIDATED, NOT CAST. An invocation is only carried forward when it has the three fields a
     // reader needs to act on it; anything else becomes `null` rather than a shape that looks
     // actionable and is not.
     invocation: isInvocation(parsed.invocation) ? parsed.invocation : null,
   };
+}
+
+/**
+ * Ask the repo's own producer to produce a verdict for what this dispatch committed.
+ *
+ * ═════════════════════════════════════════════════════════════════════════════════════════
+ * WHY THIS RUNS AFTER THE LAUNCH, AND WHY THAT IS NOT A DETAIL
+ * ═════════════════════════════════════════════════════════════════════════════════════════
+ *
+ * The verdict's subject is `sha256(diff)`. Ask before the dispatch has committed and the panel
+ * reviews bytes that are about to change: the record is then written against a subject nothing
+ * matches, and the verdict **quietly stops applying** rather than erroring. That is the same shape
+ * as the recording order this repo already had to discover — session file, commit, record verdict,
+ * commit verdict, push — and it fails in the same silent direction. So the call site is after
+ * `execFileSync('claude', …)` has returned and after `routeGate()`, which is where this file
+ * already writes its terminal line.
+ *
+ * NOTHING HERE ENFORCES THAT ORDER; THE CALL SITE IS THE ONLY THING THAT KEEPS IT. Stated because
+ * a future edit moving this call earlier would produce no error, no failing test in this file, and
+ * a stream of verdicts that bind nothing.
+ *
+ * ═════════════════════════════════════════════════════════════════════════════════════════
+ * THE ARTIFACT, NEVER THE PROSE — AND THE RECEIPT IS NOT THE OUTCOME EITHER
+ * ═════════════════════════════════════════════════════════════════════════════════════════
+ *
+ * `Workflow` is asynchronous: its tool result is a LAUNCH RECEIPT ("Workflow launched in
+ * background. Task ID: …") and the real outcome lands later in an output file. A caller that read
+ * a session's own account of itself would be reading the receipt. `produce-verdict.mjs` is built
+ * around that — it reads `.qa/verdicts/` with the JUDGE's `verdict.mjs` and reports what it found —
+ * so this function's job is to not undo it one layer up: the state comes from the producer's
+ * `--json` payload, and its exit code has to AGREE. `classifyVerdictProduction` owns that
+ * judgement, in `server/` where it is pure and testable, so this function's only responsibilities
+ * are running the process and normalising how it ended.
+ *
+ * A SIGNAL, A TIMEOUT, AN UNREADABLE PAYLOAD AND A DISAGREEING EXIT CODE ARE ALL `unresolved`.
+ * A session cut off at `maxTurns` exits CLEANLY, so a clean exit is not evidence of completion —
+ * which is why no state here is derived from an exit code alone.
+ */
+function produceVerdict(root: string): VerdictProduction {
+  const script = path.join(root, 'scripts', 'produce-verdict.mjs');
+  if (!fs.existsSync(script)) {
+    // NOT ASKED, NOT UNRESOLVED. A target project with no producer has not run a gate that
+    // established nothing; it has no gate to run. Phase 9 targets will reach this branch.
+    return { state: 'not-asked', why: `${script} does not exist, so no verdict could be produced` };
+  }
+  // RESOLVED FROM THE PROJECT ROOT, WITH NO OVERRIDE. The producer's own flag registry forbids an
+  // operator-supplied value that selects what gets MEASURED; a knob choosing WHICH producer runs
+  // would be that class one level up, so there is not one. The fixture root in the tests is what
+  // makes this testable, exactly as it is for `run-gate.mjs` above.
+  let status: number | null = null;
+  let signal: string | null = null;
+  let spawnCode: string | null = null;
+  let stdout = '';
+  let message: string | undefined;
+  try {
+    stdout = execFileSync('node', [script, '--json'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: PRODUCER_SPAWN_LIMITS.timeoutMs,
+      // AN `ENOBUFS` HERE WOULD DISCARD A REAL VERDICT. The payload carries the producer's reason
+      // strings, which are long by design; the 1MB default is close enough to matter and the
+      // failure is silent-looking (a spawn error, reported as `unresolved` — safe, but a wasted
+      // panel run). Raised deliberately rather than left to a default nobody chose.
+      maxBuffer: PRODUCER_SPAWN_LIMITS.maxBufferBytes,
+    });
+    status = 0;
+  } catch (err) {
+    const e = err as NodeJS.ErrnoException & { status?: number | null; signal?: string | null; stdout?: string };
+    // ITS STDOUT IS READ OFF THE ERROR BEFORE THE ERROR IS BELIEVED — the same reasoning as
+    // `routeGate` above. Exits 1, 2 and 3 are documented terminal states of the producer and
+    // `execFileSync` throws on every one of them, so believing only the throw would discard every
+    // outcome but PRODUCED.
+    stdout = e.stdout ?? '';
+    status = typeof e.status === 'number' ? e.status : null;
+    signal = e.signal ?? null;
+    spawnCode = typeof e.code === 'string' ? e.code : null;
+    message = err instanceof Error ? err.message : String(err);
+  }
+  return classifyVerdictProduction({ status, signal, spawnCode, stdout, message });
+}
+
+/**
+ * Should the producer be asked at all — the DENOMINATOR, computed in one place.
+ *
+ * IT IS *DIFFS THAT NEED THE GATE AND HAVE NO BINDING VERDICT*, NOT DISPATCHES. This function owns
+ * the first half; the producer owns the second, because only it can hash the subject and look for a
+ * record. An undecided routing is NOT a reason to spend: `{decided: false}` means the router could
+ * not answer, and spending a panel on a question nobody could pose is the opposite of the zero-file
+ * reasoning that made routing undecided in the first place.
+ */
+function shouldProduce(routing: GateRouting): { ask: true } | { ask: false; why: string } {
+  if (NO_VERDICT) return { ask: false, why: '--no-verdict was given, so the panel run was declined by the operator' };
+  if (!routing.decided) return { ask: false, why: `the gate router did not decide, so there is nothing to gate: ${routing.why}` };
+  if (!routing.required) {
+    return { ask: false, why: `the gate router decided this diff does not require the gate (floor ${routing.floor} over ${routing.files} files, ${describeRef(routing)})` };
+  }
+  return { ask: true };
+}
+
+/**
+ * How a decided routing's ref is written down — ONE renderer, because there are two call sites.
+ *
+ * The console line and the durable `why` string both name the ref, and they said it separately
+ * until this defect made the difference matter. `inFlight()` above exists for the same reason: two
+ * places describing one derivation drift, and the drift is invisible until someone compares them.
+ *
+ * THE RESOLVED TIP LEADS AND THE ASKED-FOR REF FOLLOWS IN PARENTHESES. A reader who quotes the
+ * first thing they see then quotes something immutable. When no tip could be pinned the reason is
+ * printed in place of one — never the symbolic ref standing in for a resolution that did not happen.
+ */
+function describeRef(routing: Extract<GateRouting, { decided: true }>): string {
+  // ONE BRANCH NOW, BECAUSE THE OTHER BECAME UNREACHABLE. It rendered `TIP UNRESOLVED for "<ref>"`
+  // when `refTip` was null; a decided routing can no longer have one. The property that branch
+  // pinned — a tip that cannot be pinned must never be rendered as if it were resolved — is still
+  // asserted, at its new location: such a routing is refused, so nothing is rendered at all and no
+  // panel is spent. An unreachable branch is worse than an absent one: it looks like coverage, and
+  // the next reader reasons from a case that cannot occur.
+  return `at ${routing.refTip} (asked as "${routing.ref}")`;
+}
+
+/**
+ * The subject a panel would be paid for — THE UNIT OF SPEND.
+ *
+ * `verdict.mjs subject` is the SAME INSTRUMENT that computes the binding, which is why the key is
+ * taken from it rather than derived a second way. Measured cost: 74ms / 71ms / 67ms over three
+ * runs, against a 40–50 minute panel — about thirty thousand to one.
+ *
+ * NOT CACHED, AND THE CACHE WAS REMOVED DELIBERATELY. It keyed `(root, tip) -> subject`, but the
+ * subject is `merge-base(origin/main, ref)..ref` — so if `origin/main` moves mid-run, one tip
+ * denotes different bytes and a cached answer is stale. Uncached, both entries recompute and
+ * separate correctly; cached, the second reuses the stale subject and is SKIPPED. The cache bought
+ * ~70ms per entry and widened an edge in the one direction that suppresses a panel, so it is gone.
+ * The edge itself — `origin/main` moving mid-run — is named and remains open at a smaller size.
+ *
+ * THE UNPINNED KEY FORM IS GONE FROM THIS FUNCTION'S BODY — and the composition is what guarantees
+ * it, not the signature. The call site passes `gateRouting.decided ? gateRouting.refTip : ''`, and
+ * that `''` WOULD be a per-root-constant sentinel, the exact collapse this removed, if it were
+ * reachable. It is not: `shouldProduce` returns `ask: false` for every undecided routing, so this is
+ * called only on the decided arm. Measured — a throwing IIFE in the sentinel position leaves the
+ * suite at 150 pass / 0 fail, so the arm is unreached rather than merely believed to be. (The first
+ * attempt at that measurement anchored on the ternary fragment and matched TWICE, because THIS
+ * comment quotes it; the mutation never applied and the run came back green off the pristine file.
+ * The read-back is what caught it, not the exit code.)
+ */
+function spendKey(root: string, refTip: string): { key: string; subject: string | null } {
+  const bin = path.join(root, 'scripts', 'verdict.mjs');
+  // THE FALLBACK IS BY TIP, AND IT IS SOUND ONLY WHILE `origin/main` IS FIXED FOR THE RUN — which
+  // is the same condition that got the cache deleted, and the two claims cannot both stand
+  // unqualified. "Two entries sharing a tip share a diff" holds under a fixed base; the subject is
+  // `merge-base(origin/main, ref)..ref`, so if the base moves mid-run one tip denotes different
+  // bytes and this fallback merges exactly what the cache was removed for failing to separate.
+  // SAME EXPOSURE, SMALLER: the cache froze one stale subject for a whole run, while this merges
+  // only entries that also share a tip. Under a fixed base it is strictly narrower than the subject
+  // key and can only fail toward LAUNCHING.
+  // NAMED RESIDUAL: a mid-run base move can merge two distinct diffs here, in the SKIPPING
+  // direction. Closing it means keying on the base sha as well — one `git rev-parse` per run — and
+  // is deliberately not done inside a round scoped to correcting sentences.
+  // `subject: null` is returned honestly rather than putting this key into a field claiming to be a
+  // subject.
+  const byTip = { key: `${root}\u0000tip:${refTip}`, subject: null };
+  if (!fs.existsSync(bin)) return byTip;
+  try {
+    const out = execFileSync('node', [bin, 'subject', '--repo', root, '--ref', refTip, '--json'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      // BOUNDED. This spawn shipped with neither limit in the same round that extracted
+      // PRODUCER_SPAWN_LIMITS and added a test asserting the producer spawn declares both — the
+      // rule was written and the next call site did not get it. Its own timeout, because 70
+      // minutes is the wrong bound for a command measured at 74/71/67ms.
+      timeout: PRODUCER_SPAWN_LIMITS.subjectTimeoutMs,
+      maxBuffer: PRODUCER_SPAWN_LIMITS.maxBufferBytes,
+    });
+    const parsed = JSON.parse(out) as Record<string, unknown>;
+    const subject = typeof parsed.subject === 'string' ? parsed.subject : null;
+    if (subject === null) return byTip;
+    return { key: `${root}\u0000${subject}`, subject };
+  } catch {
+    return byTip;
+  }
+}
+
+/**
+ * Which subjects have already bought a panel IN THIS RUN, and which entry paid.
+ *
+ * PER RUN, DELIBERATELY — NOT PERSISTED. Retrying after a REFUSED on a LATER run is legitimate: if
+ * the diff changed the subject changed, so it is a different key anyway, and if it did not, the
+ * operator re-running is asking for exactly that. The defect is same-subject fan-out INSIDE one
+ * run, where five queue entries against one diff bought five panels because every filter was
+ * per-entry while the thing being paid for is per-diff.
+ */
+const launchedFor = new Map<string, { id: string; state: VerdictProduction['state'] }>();
+
+/** The operator-facing detail of a production state — three shapes, one accessor. */
+function productionDetail(v: VerdictProduction): string {
+  return v.state === 'not-asked' || v.state === 'already-launched' ? v.why : v.reason;
 }
 
 // ── Recording an outcome ─────────────────────────────────────────────────────────────────
@@ -386,7 +725,7 @@ function inFlight(entry: DispatchEntry): { held: true; pid: number } | { held: f
  * and is why `running` is written first. What must not happen is this function returning
  * quietly, leaving an operator believing an outcome was stored when it was not.
  */
-function writeTerminal(entry: DispatchEntry, update: TerminalUpdate): void {
+function writeTerminal(entry: DispatchEntry, update: TerminalUpdate, note = ''): void {
   const finished: DispatchEntry = { ...entry, ...update, finishedAt: Date.now() };
   try {
     appendDispatch(finished);
@@ -394,7 +733,7 @@ function writeTerminal(entry: DispatchEntry, update: TerminalUpdate): void {
       update.status === 'failed' ? ` (exit ${update.exitCode})`
       : update.signal ? ` (${update.signal})`
       : '';
-    console.log(`  Recorded ${update.status}${detail}.`);
+    console.log(`  Recorded ${update.status}${detail}${note ? ` ${note}` : ''}.`);
   } catch (writeErr) {
     console.error(
       `  COULD NOT RECORD '${update.status}': ${writeErr}\n` +
@@ -506,6 +845,16 @@ function main() {
           console.log(`  [dry-run] would run: claude --agent ${DISPATCH_AGENT} --print  in ${entry.root}`);
           console.log(`  [dry-run] playbooks offered: ${pb.names.join(', ')}`);
           console.log(`  [dry-run] gate: ${gate.outcome} — ${gate.why}`);
+          // MIRRORS THE REAL RUN'S EXPENSIVE BRANCH WITHOUT PREDICTING ITS ANSWER. The router
+          // classifies a DIFF and this dispatch has not produced one, so a dry run that printed a
+          // routing decision would be asserting something about work that has not happened — the
+          // same false-negative the zero-file branch refuses. What CAN be stated without running
+          // anything is the operator's own decision, which is the half a dry run is consulted for.
+          console.log(
+            NO_VERDICT
+              ? '  [dry-run] verdict production: DECLINED by --no-verdict; no panel would run'
+              : '  [dry-run] verdict production: would ask the router after the launch, and run the panel ONLY if it decides the gate is required (2.5–3.8M tokens, 40–50 min). Pass --no-verdict to decline.'
+          );
           console.log(`  [dry-run] goal: ${entry.goal}`);
         }
       }
@@ -671,12 +1020,100 @@ function main() {
     const gateRouting = routeGate(entry.root);
     console.log(
       gateRouting.decided
-        ? `  Gate routing: required=${gateRouting.required} floor=${gateRouting.floor} over ${gateRouting.files} files at ${gateRouting.ref}` +
-          (gateRouting.required ? ' — NO VERDICT WAS PRODUCED; the invocation that would produce one is recorded on this entry.' : '')
+        ? `  Gate routing: required=${gateRouting.required} floor=${gateRouting.floor} over ${gateRouting.files} files, ${describeRef(gateRouting)}`
         : `  Gate routing: UNDECIDED — ${gateRouting.why}`
     );
 
-    writeTerminal({ ...routed, startedAt, gateRouting }, outcome);
+    // THE SENTENCE THIS FILE USED TO WRITE IS NOW A CALL. It read "NO VERDICT WAS PRODUCED; the
+    // invocation that would produce one is recorded on this entry" — true, and an accurate account
+    // of a loop with a hole in it: `scripts/produce-verdict.mjs` shipped on `main` and was invoked
+    // by nothing. Measured on `main` at 4ddc5c6, with controls in both directions: 3 files
+    // referenced it (a test argv, a registration check, generated documentation), against a
+    // positive control on `run-gate.mjs`, which IS invoked, and a negative control on an
+    // impossible name. STATE THE DERIVATION, NEVER THE TOTAL — the control's count was carried
+    // here as a bare `24` and reproduces as 24, 47 or 65 depending on the tool, so the number said
+    // less than the command does:
+    //   git grep -l run-gate origin/main -- ':!scripts/run-gate*' ':!.qa/' ':!docs/' | wc -l
+    // ── THE TERMINAL RECORD IS WRITTEN BEFORE THE PRODUCER, AND UPDATED AFTER ────────────────
+    //
+    // Putting the producer ahead of this write withheld the terminal record for the WHOLE panel
+    // window — measured, `status: running` with no `verdictProduction` at every 4-second sample
+    // across a 25s stand-in, against a control at `4ddc5c6` writing it at 0s.
+    //
+    // THIS COMMENT CLAIMED A DOUBLE PAYMENT AND THAT WAS FALSE. It said an interrupted run left the
+    // entry `running`, which `inFlight()` reconciled and a later run RE-DISPATCHED, paying for a
+    // second panel. Measured on both cells with the consumer stopped mid-panel: at this tip the
+    // second run says "Nothing to act on"; at the base it says "NO RESULT — the launching consumer
+    // is gone… NOT relaunching". NEITHER re-dispatches, and this suite already holds a test named
+    // `an entry left running resolves to no-result and is NOT relaunched`. The claim was inherited
+    // from a review synthesis and never checked against the code it described.
+    //
+    // WHAT THE REORDER REALLY BUYS, which is narrower and still worth having: it converts a LOUD
+    // permanent warning into a settled record. Ungated either way — but silent where it was loud,
+    // which is why the first write carries an explicit `unresolved` rather than nothing.
+    //
+    // Two appended lines for one id is exactly what the queue is for: it is append-only and
+    // `resolveDispatchStates` reads the LAST line, so the settled state is durable from the first
+    // write and the verdict is added to it by the second. If the process dies between them, the
+    // entry is already terminal — `exited-clean` is `settled`, never `reconcilable`.
+    //
+    // Q4. THE FIRST LINE CARRIES AN EXPLICIT `unresolved`, NEVER SILENCE — and this is the fix for
+    // a defect the reorder itself introduced. Written with no `verdictProduction` at all, ABSENCE
+    // meant two things: "no producer was wired in this build" (what the field's own doc promises)
+    // and "a panel may have run and its outcome was lost". Two facts, one representation, in the
+    // change that was closing that class. A fail-safe value restores absence to meaning exactly
+    // one thing, can never be read as a pass, and stops the spend accounting under-counting.
+    const settled: DispatchEntry = {
+      ...routed,
+      startedAt,
+      gateRouting,
+      verdictProduction: {
+        state: 'unresolved',
+        reason: 'this line was written before the verdict step returned; a consumer that stopped here recorded no outcome, and none should be inferred',
+      },
+    };
+    writeTerminal(settled, outcome, 'before the verdict step');
+
+    const decision = shouldProduce(gateRouting);
+    let verdictProduction: VerdictProduction;
+    if (!decision.ask) {
+      verdictProduction = { state: 'not-asked', why: decision.why };
+      console.log(`  Verdict production: NOT ASKED — ${decision.why}`);
+    } else {
+      // A1. ONE PANEL PER SUBJECT PER RUN. Five pending entries against one root and one diff
+      // bought five panels, because all three cost filters are per-ENTRY and the thing being paid
+      // for is per-DIFF — and a panel ending REFUSED writes no binding record, so the producer's
+      // own short-circuit (PRODUCED or BLOCKED only) does not catch the second entry either. That
+      // is the case where the money was already spent.
+      const { key, subject } = spendKey(entry.root, gateRouting.decided ? gateRouting.refTip : '');
+      const first = launchedFor.get(key);
+      if (first !== undefined) {
+        // SAYS WHAT HAPPENED, NEVER WHAT IT HOPES HAPPENED. This asserted that a panel WAS
+        // launched, that it produced an outcome, and that the earlier record carries one — all
+        // three false against a producer that throws on its first line, and written durably anyway.
+        // The earlier attempt's STATE is recorded instead, so the reader is told rather than promised.
+        verdictProduction = {
+          state: 'already-launched',
+          subject,
+          firstEntryId: first.id,
+          firstState: first.state,
+          why: `verdict production for this exact subject was already attempted in this run by ${first.id}, which recorded "${first.state}"; this entry started no second attempt. `
+            + (subject === null ? 'Deduplicated by resolved tip, because no subject could be computed.' : 'Deduplicated by subject.'),
+        };
+      } else {
+        console.log('  Verdict production: the gate is required and no verdict is known to bind — running scripts/produce-verdict.mjs …');
+        verdictProduction = produceVerdict(entry.root);
+        // RECORDED AFTER THE ATTEMPT, WHICH IS SOUND BECAUSE THIS LOOP IS SEQUENTIAL AND THE SPAWN
+        // IS SYNCHRONOUS: no later entry can be reached until this one has returned. Setting it
+        // beforehand is what made the record above claim an outcome that did not exist yet.
+        launchedFor.set(key, { id: entry.id, state: verdictProduction.state });
+      }
+      // WHAT IS PRINTED IS WHAT IS RECORDED. `state` is never rendered as a word the record does
+      // not hold: an operator who reads "produced" here can find that exact value on the entry.
+      console.log(`  Verdict production: ${verdictProduction.state.toUpperCase()} — ${productionDetail(verdictProduction)}`);
+    }
+
+    writeTerminal({ ...settled, verdictProduction }, outcome, 'with the verdict step');
   }
 
   console.log('\nDone.');
