@@ -274,6 +274,40 @@ function entryKind(abs) {
 }
 
 /**
+ * ── THE KIND GUARD IS NOT A READABILITY GUARD, AND `stat` CANNOT TELL YOU THE DIFFERENCE ──────
+ *
+ * `entryKind` asks the KIND question and answers it correctly. It cannot answer the ACCESS
+ * question, because `stat(2)` needs no read permission on its subject: a regular file at mode
+ * 0000 satisfies `st.isFile()` and then throws `EACCES` out of `readFileSync` one line later.
+ * Measured 2026-09-01 on `origin/main` at e8c8ae5, one bad entry per constructed tree, as uid 501:
+ *
+ *   DECISIONS.md at mode 0000          → EACCES, unhandled, raw stack trace, exit 1
+ *   DECISIONS_ARCHIVE.md at mode 0000  → EACCES, unhandled, raw stack trace, exit 1
+ *
+ * Both sites promise the opposite. `loadMemoryFile` reserves `problem` for "present, and nothing
+ * could be read from it", and the volume loop's own comment says "a named refusal, not a stack
+ * trace" — which was true for EISDIR, ENOENT and a FIFO and false for the one case where the
+ * file really is a regular file. So this is the third member of a class the guard above closed
+ * two members of, and it is the member `stat` was always going to miss.
+ *
+ * EACCES IS NOT THE ONLY MEMBER, WHICH IS WHY THIS CATCHES RATHER THAN PRE-CHECKS. `EPERM`,
+ * `EIO`, `ELOOP` and `ERR_STRING_TOO_LONG` all reach the same place, and an `access(2)` pre-check
+ * would answer only the first of them while adding a TOCTOU window. The read is the test.
+ *
+ * @param {string} abs
+ * @returns {{ok: true, text: string} | {ok: false, why: string}}
+ */
+function readGuarded(abs) {
+  try {
+    return { ok: true, text: fs.readFileSync(abs, 'utf8') };
+  } catch (e) {
+    // The errno belongs IN the message — it is the diagnosis, not the delivery. Same reasoning as
+    // the dangling-symlink refusal, which carries its ENOENT for exactly this reason.
+    return { ok: false, why: `unreadable (${(e && e.code) || (e && e.message) || e})` };
+  }
+}
+
+/**
  * ── THE SAME DEFECT AT THE FIXED PATHS, WHICH THE VOLUME SCAN DOES NOT REACH ────────────────
  *
  * `archiveVolumes()` above guards the entries it DISCOVERS. `DECISIONS.md` and `LONG-TERM.md` are
@@ -313,10 +347,21 @@ function loadMemoryFile(abs, { required }) {
     fileProblems[abs] = k.kind;
     return null;
   }
-  return fs.readFileSync(abs, 'utf8');
+  const r = readGuarded(abs);
+  if (!r.ok) {
+    fail(
+      'memory-file-unreadable',
+      `${abs} is a regular file that could not be read — ${r.why}. This is the state ` +
+        `\`problem\` is reserved for: present, and nothing could be read from it. Nothing can be ` +
+        `measured here: restore read permission, or move whatever is at that path out of the way.`
+    );
+    fileProblems[abs] = r.why;
+    return null;
+  }
+  return r.text;
 }
 
-/** @returns {Array<{name: string, bytes: number|null, problem: string|null}>} in name order. */
+/** @returns {Array<{name: string, bytes: number|null, problem: string|null, unreadable: boolean}>} in name order. */
 function archiveVolumes() {
   let names;
   try { names = fs.readdirSync(memoryDir); } catch { return []; }
@@ -326,11 +371,16 @@ function archiveVolumes() {
     .map((n) => {
       const abs = path.join(memoryDir, n);
       const k = entryKind(abs);
-      if (!k.ok) return { name: n, bytes: null, problem: k.kind };
+      if (!k.ok) return { name: n, bytes: null, problem: k.kind, unreadable: false };
+      const r = readGuarded(abs);
+      // `bytes: null` and NOT 0, exactly as for a bad kind: a volume nothing could read is not a
+      // volume of zero bytes, and a consumer that saw 0 would report plenty of room.
+      if (!r.ok) return { name: n, bytes: null, problem: r.why, unreadable: true };
       return {
         name: n,
-        bytes: Buffer.byteLength(fs.readFileSync(abs, 'utf8'), 'utf8'),
+        bytes: Buffer.byteLength(r.text, 'utf8'),
         problem: null,
+        unreadable: false,
       };
     });
 }
@@ -340,6 +390,19 @@ for (const vol of volumes) {
   // A named refusal, not a stack trace. `readFileSync` reported these as EISDIR/ENOENT from deep
   // inside node with no mention of which entry caused it — and reported the FIFO not at all.
   if (vol.problem !== null) {
+    // TWO CODES, NOT ONE, BECAUSE THE REMEDIES ARE OPPOSITE. A volume of the wrong KIND is fixed
+    // by moving something out of the way; a volume that is the right kind and cannot be READ is
+    // fixed by restoring permission. Reporting the second as `archive-volume-not-a-file` would
+    // also be a false statement about it — it IS a file.
+    if (vol.unreadable) {
+      fail(
+        'archive-volume-unreadable',
+        `${vol.name} is a regular file that could not be read — ${vol.problem}. ` +
+          `Nothing can be capped here: restore read permission on it, or rename this entry so it ` +
+          `no longer matches ${ARCHIVE_VOLUME_RE}.`
+      );
+      continue;
+    }
     fail(
       'archive-volume-not-a-file',
       `${vol.name} matches the archive-volume pattern but is ${vol.problem}. ` +
