@@ -1337,8 +1337,13 @@ import {
  * SO THE CELLS WERE GREEN EXACTLY WHERE THEY COULD NOT BE TRUSTED AND RED WHERE THEY MATTER. The
  * rest of this file already routes through `routerRunner(routerJson(...))` — the seam existed and
  * these four did not take it. Sharing one helper is what stops the next cell forgetting.
+ *
+ * THE TIP IS THE TREE'S REAL HEAD, NOT A SYNTHETIC SHA. `crossCheckArgs` refuses an invocation
+ * whose tip is not what the tree is actually at — "the panel would review a different commit than
+ * the one this run is about" — so `'a'.repeat(40)` routes past NOT_REQUIRED and lands on REFUSED
+ * one step later. Read at call time, because HEAD moves with every commit on this branch.
  */
-const jRouterRunner = () => routerRunner(routerJson(REPO_ROOT, SHA));
+const jRouterRunner = () => routerRunner(routerJson(REPO_ROOT, g(REPO_ROOT, ['rev-parse', 'HEAD'])));
 
 /** A directory with a file in it, so "removed" is distinguishable from "was never there". */
 function judgeDirFixture() {
