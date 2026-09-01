@@ -30,6 +30,7 @@
  */
 
 import fs from 'node:fs';
+import { constants as BUFFER_CONSTANTS } from 'node:buffer';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
@@ -153,7 +154,7 @@ function ambiguityOf(text) {
 // ── check DECISIONS.md ───────────────────────────────────────────────────────
 const decisionsPath = path.join(ROOT, '.claude', 'memory', 'DECISIONS.md');
 
-const decisionsText = loadMemoryFile(decisionsPath, { required: true });
+const decisionsText = loadMemoryFile(decisionsPath, { required: true, byteCap: DECISIONS_BYTE_CAP });
 
 if (decisionsText !== null) {
   const text = decisionsText;
@@ -203,6 +204,8 @@ if (decisionsText !== null) {
 // ── check LONG-TERM.md ───────────────────────────────────────────────────────
 const longTermPath = path.join(ROOT, '.claude', 'memory', 'LONG-TERM.md');
 
+// No `byteCap`: LONG-TERM.md is held to a LINE cap, and quoting a byte budget it does not have
+// would be the checker inventing a rule. The size still appears in the refusal.
 const longTermText = loadMemoryFile(longTermPath, { required: true });
 
 if (longTermText !== null) {
@@ -264,7 +267,10 @@ function entryKind(abs) {
   } catch (e) {
     return { ok: false, kind: `unresolvable (${(e && e.code) || (e && e.message) || e})` };
   }
-  if (st.isFile()) return { ok: true, kind: 'file' };
+  // `size` travels with the verdict because the CALLER needs it and `st` does not outlive this
+  // function. A read that fails for SIZE is diagnosed with the number that caused it; without
+  // this the checker had `st.size` in hand one line before the throw and reported it nowhere.
+  if (st.isFile()) return { ok: true, kind: 'file', size: st.size };
   if (st.isDirectory()) return { ok: false, kind: 'a directory' };
   if (st.isFIFO()) return { ok: false, kind: 'a FIFO — reading it would never return' };
   if (st.isSocket()) return { ok: false, kind: 'a socket' };
@@ -290,21 +296,75 @@ function entryKind(abs) {
  * file really is a regular file. So this is the third member of a class the guard above closed
  * two members of, and it is the member `stat` was always going to miss.
  *
- * EACCES IS NOT THE ONLY MEMBER, WHICH IS WHY THIS CATCHES RATHER THAN PRE-CHECKS. `EPERM`,
- * `EIO`, `ELOOP` and `ERR_STRING_TOO_LONG` all reach the same place, and an `access(2)` pre-check
- * would answer only the first of them while adding a TOCTOU window. The read is the test.
+ * EACCES IS NOT THE ONLY MEMBER, WHICH IS WHY THIS CATCHES RATHER THAN PRE-CHECKS — AND THE FIRST
+ * VERSION OF THIS SENTENCE NAMED A MEMBER THAT CANNOT REACH HERE. It read "`EPERM`, `EIO`, `ELOOP`
+ * and `ERR_STRING_TOO_LONG` all reach the same place". `ELOOP` does NOT: measured 2026-09-01 with a
+ * self-referential symlink, `statSync` throws it inside `entryKind`, which refuses first with
+ * `unresolvable (ELOOP)` — and at the fixed paths `existsSync` returns false for that shape, so it
+ * lands on `missing-file` instead. Neither route enters this function.
+ *
+ * THE CONCLUSION SURVIVES ON ONE MEMBER, AND THAT IS ENOUGH. `ERR_STRING_TOO_LONG` is MEASURED to
+ * reach here (a 545,259,520-byte file, past this runtime's maximum string length) and it carries
+ * no errno and no syscall — the kernel was never involved — so an `access(2)` pre-check answers
+ * `EACCES` and misses it entirely, while adding a TOCTOU window between the check and the read.
+ * The read is the test.
+ *
+ * `EPERM` and `EIO` are NOT asserted here. Neither was induced in the cell that produced the
+ * measurements above, and an unverified member listed beside a verified one reads as evidence.
  *
  * @param {string} abs
- * @returns {{ok: true, text: string} | {ok: false, why: string}}
+ * @returns {{ok: true, text: string} | {ok: false, why: string, code: string}}
  */
 function readGuarded(abs) {
   try {
     return { ok: true, text: fs.readFileSync(abs, 'utf8') };
   } catch (e) {
     // The errno belongs IN the message — it is the diagnosis, not the delivery. Same reasoning as
-    // the dangling-symlink refusal, which carries its ENOENT for exactly this reason.
-    return { ok: false, why: `unreadable (${(e && e.code) || (e && e.message) || e})` };
+    // the dangling-symlink refusal, which carries its ENOENT for exactly this reason. It is also
+    // returned SEPARATELY from the prose, because the remedy branches on it and a caller that had
+    // to string-match the sentence would be reading the message rather than the cause.
+    const code = (e && e.code) || (e && e.message) || String(e);
+    return { ok: false, why: `unreadable (${code})`, code };
   }
+}
+
+/**
+ * ── THE REMEDY MUST NAME THE CAUSE, OR IT SENDS THE OPERATOR SOMEWHERE USELESS ─────────────────
+ *
+ * One failure state, several causes, opposite fixes. Measured 2026-09-01 on the version that had
+ * a single remedy: a 545,259,520-byte `DECISIONS.md` against a 40,000-byte cap was refused with
+ * "restore read permission, or move whatever is at that path out of the way" — so an operator
+ * following it runs `chmod 644` on a file already at 644 and concludes the checker is broken.
+ *
+ * WHY THE CODE STAYS ONE AND ONLY THE REMEDY BRANCHES. `archive-volume-unreadable` and
+ * `archive-volume-not-a-file` are two codes because they answer different questions about WHAT
+ * THE PATH IS, and a consumer branches on that. `EACCES` and `ERR_STRING_TOO_LONG` leave the
+ * checker in the IDENTICAL state — present, regular, nothing read, `bytes: null` — so a third
+ * code would split one state by its cause and every consumer would have to handle both arms
+ * the same way. The cause is reported in `problem` and spelled out in the remedy instead.
+ *
+ * @param {string} code    the `code` from `readGuarded`
+ * @param {number} size    `st.size`, from `entryKind`
+ * @param {number|null} byteCap  this path's own byte cap, or null where it has none
+ */
+function unreadableRemedy(code, size, byteCap) {
+  const bytes = typeof size === 'number' ? size.toLocaleString() : 'an unknown number of';
+  if (code === 'ERR_STRING_TOO_LONG' || code === 'ERR_FS_FILE_TOO_LARGE') {
+    const overBudget = typeof byteCap === 'number' && typeof size === 'number'
+      ? `, and ${Math.floor(size / byteCap).toLocaleString()}x this path's own ${byteCap.toLocaleString()}-byte cap`
+      : '';
+    return `it is ${bytes} bytes — past this runtime's ` +
+      `${BUFFER_CONSTANTS.MAX_STRING_LENGTH.toLocaleString()}-byte maximum string length${overBudget} — so ` +
+      `nothing can read it into memory to measure it. THIS IS A SIZE PROBLEM AND NOT A PERMISSIONS ` +
+      `ONE: changing the mode will not move it. Evict content with \`node scripts/evict-memory.mjs\`, ` +
+      `or split it by hand keeping every entry.`;
+  }
+  if (code === 'EACCES' || code === 'EPERM') {
+    return `restore read permission on it — it is ${bytes} bytes on disk, so there is something to ` +
+      `read once the mode allows it.`;
+  }
+  return `the cause is \`${code}\`, which this checker does not recognise; it is ${bytes} bytes on ` +
+    `disk. Diagnose the path directly before changing anything about it.`;
 }
 
 /**
@@ -323,10 +383,11 @@ function readGuarded(abs) {
  * Same class as the scan, different site, and neither guard reaches the other's paths.
  *
  * @param {string} abs
- * @param {{required: boolean}} o `required` files fail when absent.
+ * @param {{required: boolean, byteCap?: number|null}} o `required` files fail when absent;
+ *   `byteCap` is this path's own cap, used only to diagnose a read that failed for SIZE.
  * @returns {string|null} contents, or null when there is nothing to measure
  */
-function loadMemoryFile(abs, { required }) {
+function loadMemoryFile(abs, { required, byteCap = null }) {
   if (!fs.existsSync(abs)) {
     // Follows symlinks, so a dangling link lands here rather than below — deliberately unchanged.
     if (required) {
@@ -353,7 +414,7 @@ function loadMemoryFile(abs, { required }) {
       'memory-file-unreadable',
       `${abs} is a regular file that could not be read — ${r.why}. This is the state ` +
         `\`problem\` is reserved for: present, and nothing could be read from it. Nothing can be ` +
-        `measured here: restore read permission, or move whatever is at that path out of the way.`
+        `measured here: ${unreadableRemedy(r.code, k.size, byteCap)}`
     );
     fileProblems[abs] = r.why;
     return null;
@@ -361,7 +422,8 @@ function loadMemoryFile(abs, { required }) {
   return r.text;
 }
 
-/** @returns {Array<{name: string, bytes: number|null, problem: string|null, unreadable: boolean}>} in name order. */
+/** @returns {Array<{name: string, bytes: number|null, problem: string|null, unreadable: boolean,
+ *   code: string|null, size: number|null}>} in name order. */
 function archiveVolumes() {
   let names;
   try { names = fs.readdirSync(memoryDir); } catch { return []; }
@@ -371,16 +433,18 @@ function archiveVolumes() {
     .map((n) => {
       const abs = path.join(memoryDir, n);
       const k = entryKind(abs);
-      if (!k.ok) return { name: n, bytes: null, problem: k.kind, unreadable: false };
+      if (!k.ok) return { name: n, bytes: null, problem: k.kind, unreadable: false, code: null, size: null };
       const r = readGuarded(abs);
       // `bytes: null` and NOT 0, exactly as for a bad kind: a volume nothing could read is not a
       // volume of zero bytes, and a consumer that saw 0 would report plenty of room.
-      if (!r.ok) return { name: n, bytes: null, problem: r.why, unreadable: true };
+      if (!r.ok) return { name: n, bytes: null, problem: r.why, unreadable: true, code: r.code, size: k.size };
       return {
         name: n,
         bytes: Buffer.byteLength(r.text, 'utf8'),
         problem: null,
         unreadable: false,
+        code: null,
+        size: k.size,
       };
     });
 }
@@ -395,11 +459,20 @@ for (const vol of volumes) {
     // fixed by restoring permission. Reporting the second as `archive-volume-not-a-file` would
     // also be a false statement about it — it IS a file.
     if (vol.unreadable) {
+      // ── NO RENAME CLAUSE HERE, AND THAT IS THE POINT ────────────────────────────────────────
+      // The sibling refusal below ends "or rename this entry so it no longer matches …", which is
+      // SOUND THERE: a directory or a FIFO holds no cappable content, so a rename loses nothing.
+      // Here it IS a file, with content, and renaming it is how you make an over-cap volume
+      // invisible to this check. Measured 2026-09-01, one fixture, three states: a 50,013-byte
+      // volume fails `decisions-archive-byte-overflow`; chmod 000 fails `archive-volume-unreadable`;
+      // RENAMED to ARCHIVE_DECISIONS_009.md with the mode restored it PASSES, exit 0, with 50,013
+      // bytes still on disk. The refusal was instructing the operator to disable the check.
+      // The two messages differ because the two states differ: nothing to cap, versus something to
+      // cap that could not be read. Do not re-unify them.
       fail(
         'archive-volume-unreadable',
         `${vol.name} is a regular file that could not be read — ${vol.problem}. ` +
-          `Nothing can be capped here: restore read permission on it, or rename this entry so it ` +
-          `no longer matches ${ARCHIVE_VOLUME_RE}.`
+          `Nothing can be capped here: ${unreadableRemedy(vol.code, vol.size, DECISIONS_ARCHIVE_BYTE_CAP)}`
       );
       continue;
     }
@@ -444,10 +517,15 @@ if (JSON_OUT) {
   console.log(
     JSON.stringify({
       root: ROOT,
+      // `null`, NEVER 0, WHEN THERE IS A `problem` — the same rule the volume list below states
+      // about itself, applied to the site that was still breaking it. A file nothing could read
+      // has not got 0 entries and does not occupy 0 bytes: it has an UNKNOWN number of each, and
+      // `0` against a 40,000-byte cap reads to a machine consumer as plenty of room. This also
+      // covers the pre-existing directory/FIFO shapes, which emitted the same false zeroes.
       decisions: {
-        entries: countDecisionEntries(dText),
-        parse_ambiguous: ambiguityOf(dText),
-        bytes: Buffer.byteLength(dText, 'utf8'),
+        entries: problemOf(decisionsPath) === null ? countDecisionEntries(dText) : null,
+        parse_ambiguous: problemOf(decisionsPath) === null ? ambiguityOf(dText) : null,
+        bytes: problemOf(decisionsPath) === null ? Buffer.byteLength(dText, 'utf8') : null,
         entry_cap: DECISIONS_ENTRY_CAP,
         byte_cap: DECISIONS_BYTE_CAP,
         problem: problemOf(decisionsPath),
@@ -460,11 +538,15 @@ if (JSON_OUT) {
         : { bytes: 0, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP },
       // `bytes: null` with a `problem` string, never `bytes: 0` — a volume nothing could read is
       // not a volume of zero bytes, and a machine consumer that saw 0 would report plenty of room.
+      // `unreadable` is emitted because the two STDERR codes encode a distinction a machine
+      // consumer could otherwise only recover by string-matching `problem` — which is reading the
+      // message instead of the cause, the thing `readGuarded` returns a `code` to avoid.
       decisions_archive_volumes: volumes.map((v) => ({
         name: v.name, bytes: v.bytes, byte_cap: DECISIONS_ARCHIVE_BYTE_CAP, problem: v.problem,
+        unreadable: v.unreadable,
       })),
       long_term: {
-        lines: ltText.split('\n').length,
+        lines: problemOf(longTermPath) === null ? ltText.split('\n').length : null,
         line_cap: LONG_TERM_LINE_CAP,
         problem: problemOf(longTermPath),
       },
