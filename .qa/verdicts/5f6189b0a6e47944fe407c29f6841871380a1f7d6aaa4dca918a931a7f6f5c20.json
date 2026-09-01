@@ -1,0 +1,11 @@
+{
+  "subject": "5f6189b0a6e47944fe407c29f6841871380a1f7d6aaa4dca918a931a7f6f5c20",
+  "base": "e8c8ae5dc92c1d1048805fac9eb29de5ff47f95c",
+  "tier": "full",
+  "tier_driver": "scripts/check-memory-budget.mjs",
+  "verdict": "PASS",
+  "by": "builder-w24-exit-test",
+  "run_id": null,
+  "evidence": "npm run check: Tally 48 of 48 passed, 0 failed, exit 0 (168.6s). npm run test:memory: 40 pass / 0 fail (was 35). Mutation table against origin/main e8c8ae5's unfixed subject: 36 pass / 4 fail, exactly the four new unreadable-file cases, with the must-not-fire control staying green; subject read back readGuarded 3->0->3, git status 0 lines. Tier full by command (classify.mjs --stdin, floor=full via scripts/**). AUTHOR-RECORDED against a deterministic floor, one agent, one model family - the checks ran and are green, not a panel judged it.",
+  "recorded_at": "2026-09-01T07:39:31.136Z"
+}
