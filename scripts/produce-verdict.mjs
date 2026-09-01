@@ -591,6 +591,107 @@ export function materialiseJudgeProject({
  * subject-mismatch, tier-drift, an unreadable payload, an unrecognised verdict string — is REFUSED.
  * An unknown value must never drift into "the panel found defects" any more than into "it passed".
  */
+// EVERY RUN MATERIALISED A FULL TREE AND NOTHING EVER REMOVED IT. Twenty-five complete copies
+// accumulated in one reviewer's $TMPDIR in a single session, each a whole checkout of the judging
+// project. This removes the ones WE created, at process exit.
+//
+// WHAT THIS DOES NOT COVER, STATED RATHER THAN DISCOVERED — AND IT COVERS LESS THAN THIS COMMENT
+// ONCE CLAIMED. `process.on('exit')` runs for a normal return and for a thrown exception. It does
+// NOT run for SIGKILL, for a harness that kills this process group on a timeout, or for a power
+// loss — and a gate session is exactly the long-running thing a timeout reaches first.
+//
+// IT ALSO DOES NOT COVER AN OPERATOR'S Ctrl-C, which this comment claimed on the strength of signal
+// handlers that were registered and could never fire: `main()` is wholly synchronous, so the event
+// loop never turns and a queued signal callback is never reached. Those handlers are deleted — see
+// the foot of this file. The honest claim is "one directory per signalled or hard-killed run"
+// instead of "one per run". A `finally` would be weaker still: it does not survive a signal either,
+// and it would not have survived the timeout that matters here.
+//
+// AN OPERATOR'S --judge-dir IS NEVER REMOVED. Naming a directory is how someone asks to keep the
+// tree, and deleting a path the caller chose would destroy evidence they asked for. Only the
+// mkdtemp path is ours to reclaim. `QA_KEEP_JUDGE_DIR=1` keeps ours too, for diagnosing a REFUSED
+// run whose whole explanation is in the materialised tree.
+const EPHEMERAL_JUDGE_DIRS = new Set();
+let judgeDirCleanupArmed = false;
+
+// DECLARE WHAT IS UNDERSTOOD AND REFUSE THE REST — the same posture `verdict.mjs` takes on its
+// ceiling, and this knob had the opposite one. Bare truthiness meant `0`, `false`, `no` and `off`
+// ALL SELECTED KEEP: an operator disabling the knob turned it on. Two knobs, one change, opposite
+// postures, with the argument for the right one written down beside the wrong one.
+const KEEP_TRUE = new Set(['1', 'true', 'yes', 'on']);
+const KEEP_FALSE = new Set(['', '0', 'false', 'no', 'off']);
+
+/** true=keep · false=reclaim · null=unrecognised, which the caller must refuse rather than guess. */
+export function keepJudgeDirSetting(env = process.env) {
+  const raw = env.QA_KEEP_JUDGE_DIR;
+  if (raw === undefined) return false;
+  const v = String(raw).trim().toLowerCase();
+  if (KEEP_TRUE.has(v)) return true;
+  if (KEEP_FALSE.has(v)) return false;
+  return null;
+}
+
+/** Remove every judge project this process created. Safe to call twice; never throws. */
+export function sweepJudgeDirs() {
+  for (const d of EPHEMERAL_JUDGE_DIRS) {
+    try {
+      fs.rmSync(d, { recursive: true, force: true });
+    } catch {
+      // A directory we cannot remove is not a reason to fail a run that already has its answer.
+    }
+  }
+  EPHEMERAL_JUDGE_DIRS.clear();
+}
+
+/** Register `dir` for removal at exit, unless the operator asked to keep it. */
+export function armJudgeDirCleanup(dir, env = process.env) {
+  if (keepJudgeDirSetting(env) !== false) return false;
+  EPHEMERAL_JUDGE_DIRS.add(dir);
+  if (!judgeDirCleanupArmed) {
+    judgeDirCleanupArmed = true;
+    // `exit` ONLY. This is an exported function a host calls IN-PROCESS — produce-verdict.test.mjs
+    // already does — and the previous version installed process-global SIGINT/SIGTERM/SIGHUP
+    // handlers that called process.exit(130). Measured with a must-not-fire control: armed -> wait
+    // status 130 and NO signal, unarmed -> 143. So TERM and HUP came back as SIGINT's code, an
+    // ordinary exit where there had been a signal, and 130 is outside this file's own vocabulary
+    // (0·1·2·3·64). A library that reclaims a temp directory may not decide how its host dies.
+    // Signal handling belongs to the process owner, and the CLI entry point deliberately installs
+    // none either — see the block at the foot of this file for why the obvious version cannot fire.
+    process.on('exit', sweepJudgeDirs);
+  }
+  return true;
+}
+
+/**
+ * Is `dir` one this process registered for removal?
+ *
+ * Exported so a test can assert the COMPOSITION and not merely the primitives. Asserting that
+ * `armJudgeDirCleanup` and `sweepJudgeDirs` behave leaves the sharpest mutation uncaught: inverting
+ * the `ephemeral` predicate at the CALL SITE arms an operator's own `--judge-dir` and spares the
+ * temp directory, and every unit cell still passes because each unit still does exactly what it
+ * says. That is the misdirected-assertion class — an assertion that runs, passes, and is satisfied
+ * by a different occurrence than the one it names.
+ */
+export function isJudgeDirTracked(dir) {
+  return EPHEMERAL_JUDGE_DIRS.has(dir);
+}
+
+/** Stop tracking `dir`, so the exit sweep leaves it alone. Used where the tree IS the evidence. */
+export function disarmJudgeDirCleanup(dir) {
+  return EPHEMERAL_JUDGE_DIRS.delete(dir);
+}
+
+/** Remove `dir` now, but only if it is one we created. Never touches an operator's --judge-dir. */
+export function reclaimJudgeDir(dir) {
+  if (!EPHEMERAL_JUDGE_DIRS.delete(dir)) return false;
+  try {
+    fs.rmSync(dir, { recursive: true, force: true });
+  } catch {
+    // Not a reason to fail a run that already has its answer.
+  }
+  return true;
+}
+
 export function readVerdictArtifact({ tree, ref, verdictBin, runner = null }) {
   const argv = [verdictBin, 'check', '--repo', tree, '--ref', ref, '--json'];
   const r = (runner ?? ((a) => spawnSync(process.execPath, a, { cwd: tree, encoding: 'utf8' })))(argv);
@@ -606,8 +707,22 @@ export function readVerdictArtifact({ tree, ref, verdictBin, runner = null }) {
     payload = null;
   }
   if (payload === null || typeof payload.ok !== 'boolean') {
+    // DISCLOSURE, ACKNOWLEDGED RATHER THAN FIXED: this field can carry the absolute repository
+    // path, because verdict.mjs names the repo it could not read. It is capped at 400 bytes, it
+    // cannot carry diff bytes or environment values, and the file invites an operator to paste
+    // evidence into a committed record — so a local path may reach the tree that way. Judged
+    // acceptable against losing the cause of every refusal; say so if that trade changes.
+    //
+    // STDERR IS WHERE THE REASON IS, AND IT WAS DISCARDED. `verdict.mjs` writes its refusals to
+    // stderr and exits non-zero with stdout EMPTY, so this evidence read {exit: 2, stdout: ""} —
+    // a record of a failure with the cause deleted. Measured against a 1.5 MB diff: the cause was
+    // an unreadable subject and nothing downstream could say so.
     return result(OUTCOME.REFUSED, `verdict.mjs check produced no readable JSON (exit ${r.status})`, {
-      verdict_check: { exit: r.status, stdout: (r.stdout || '').slice(0, 400) },
+      verdict_check: {
+        exit: r.status,
+        stdout: (r.stdout || '').slice(0, 400),
+        stderr: (r.stderr || '').slice(0, 400),
+      },
     });
   }
 
@@ -688,11 +803,48 @@ export function buildGoal({ scriptPath, args, verdictBin }) {
 
 // ── the pipeline ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * A REFUSED RUN KEEPS ITS TREE; EVERY OTHER OUTCOME RECLAIMS IT.
+ *
+ * `--dry-run`'s entire product IS the prepared tree, and it printed `judge project: <path>` for a
+ * directory already deleted — the named cure had to be set before you knew you needed it. The
+ * materialise-failure and launch-failure branches pointed at nothing for the same reason. All three
+ * return REFUSED, so ONE predicate covers them, and it lives at a single exit point rather than at
+ * six return sites: a REFUSED branch added later inherits the right behaviour instead of silently
+ * deleting the evidence it just named. A deletion attracts no test cases; a structural rule does
+ * not need them at every site.
+ *
+ * WHAT THIS STILL DOES NOT DO, and it is the honest half: a session that REFUSES many times keeps
+ * many trees. That is deliberate — on a refusal the tree is the only account of what happened — but
+ * it means the 25-copy symptom is fully cured only for runs that reach an answer. `QA_KEEP_JUDGE_DIR`
+ * governs the rest, and an operator's own `--judge-dir` is never touched by any path here.
+ */
 export function produceVerdict(o = {}) {
+  // THREADED, NOT JUST VALIDATED. This wrapper read `o.env` to decide whether the value was legal
+  // and then the arming site read `process.env` to decide what to do — so a caller passing
+  // `{env: {QA_KEEP_JUDGE_DIR: '1'}}` had its request VALIDATED and then SILENTLY DROPPED, and the
+  // tree it asked to keep was deleted. A retention flag that is ignored fails in the worst
+  // direction of that class. Measured before the fix: keep-requested and control were both `false`,
+  // byte-identical outcomes for opposite instructions.
+  const env = o.env ?? process.env;
+  const keep = keepJudgeDirSetting(env);
+  if (keep === null) {
+    return result(OUTCOME.REFUSED, `QA_KEEP_JUDGE_DIR="${(o.env ?? process.env).QA_KEEP_JUDGE_DIR}" is not a recognised on/off value. Refusing rather than guessing whether to delete a tree.`);
+  }
+  const r = runProduceVerdict({ ...o, env });
+  if (r && r.judgeDir) {
+    if (r.outcome === OUTCOME.REFUSED) disarmJudgeDirCleanup(r.judgeDir);
+    else reclaimJudgeDir(r.judgeDir);
+  }
+  return r;
+}
+
+function runProduceVerdict(o = {}) {
   const {
     repo = process.cwd(),
     harnessRoot = HARNESS_ROOT,
     dryRun = false,
+    env = process.env,
     judgeDir = null,
     launcher = ['claude'],
     timeoutMs = 60 * 60 * 1000,
@@ -761,7 +913,10 @@ export function produceVerdict(o = {}) {
   // not, so `/tmp/x` vs `/private/tmp/x` made `verdict.mjs`'s self-invocation guard compare unequal
   // — the judge's checker then defines everything and returns without running main(), which is
   // fail-closed but permanently unable to produce while reporting it as a checker defect.
+  // Ours to reclaim only when we made it; see armJudgeDirCleanup for what exit-time removal misses.
+  const ephemeral = judgeDir === null || judgeDir === undefined;
   const dir = canonical(judgeDir ?? fs.mkdtempSync(path.join(canonical(os.tmpdir()), 'qa-judge-')));
+  if (ephemeral) armJudgeDirCleanup(dir, env);
   const judge = (deps.materialiseJudgeProject ?? materialiseJudgeProject)({
     repo, dest: dir, gitRef, workTree: args.tree,
   });
@@ -1070,5 +1225,21 @@ function main() {
 }
 
 if (process.argv[1] && canonical(process.argv[1]) === canonical(fileURLToPath(import.meta.url))) {
+  // NO SIGNAL HANDLERS HERE, AND THE REASON IS THE ONE THAT KILLED THE LAST ATTEMPT.
+  //
+  // A block here registered SIGINT/SIGTERM/SIGHUP to sweep and exit 128+signo. It never ran. `main()`
+  // is wholly synchronous — spawnSync throughout — so the event loop never turns and a queued signal
+  // callback never fires. Measured: a marker as the handler's first statement never printed, in
+  // either delivery mode, against a must-fire control on the same arm that fired in 403 ms.
+  //
+  // Registering it was not merely inert, it was HARMFUL: it removed the default terminate action and
+  // put nothing in its place. `main` died in ~405 ms on 4ddc5c6; with the handler registered the same
+  // signal left status 2, signal null, ~20.9 s — so a supervisor's SIGTERM or an operator's kill no
+  // longer stopped a run that can hold a 60-minute launch timeout. The documented 128+signo never
+  // occurred, and the block's own comment asserted a behaviour the code did not produce.
+  //
+  // `process.on('exit', sweepJudgeDirs)` already covers every normal exit, so the handlers add
+  // nothing even when reachable. Deleted rather than repaired: making them fire needs an async main,
+  // which is a change to how the CLI runs and not to how it cleans up.
   process.exitCode = main();
 }

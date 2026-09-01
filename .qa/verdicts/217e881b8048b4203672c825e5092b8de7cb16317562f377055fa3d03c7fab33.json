@@ -1,0 +1,11 @@
+{
+  "subject": "217e881b8048b4203672c825e5092b8de7cb16317562f377055fa3d03c7fab33",
+  "base": "4ddc5c6a22c799f7b868f26545c507b03719944b",
+  "tier": "full",
+  "tier_driver": "scripts/merge-gate.test.mjs",
+  "verdict": "PASS",
+  "by": "builder-w3-instruments",
+  "run_id": null,
+  "evidence": "Fix round. test:merge-gate 126->141 pass, 0 fail. Mutation table 14 cells: 13 RED under mutation, 1 GREEN must-not-fire, restore byte-identical. The table caught 3 of my own cells as vacuous (2 wrong-arm controls, 1 unreachable baseline) and 1 skipped anchor; all four corrected and re-run RED. Widening enumerated with a consumer sweep + controls.",
+  "recorded_at": "2026-08-28T23:21:50.808Z"
+}
