@@ -42,8 +42,15 @@ import {
   GATE_OUTCOMES,
   type GateOutcome,
   KNOWN_DISPATCH_STATUSES,
+  classifyVerdictProduction,
+  VERDICT_PRODUCTION_STATES,
+  PRODUCER_SPAWN_LIMITS,
   type DispatchEntry,
+  type ProducerRun,
 } from '../server/index-cache.ts';
+// THE PRODUCER'S OWN TABLES, imported so a rename there goes red HERE. Importing the module
+// does not run it: its entry point is guarded on `process.argv[1]` being the script itself.
+import { OUTCOME as REAL_OUTCOME, EXIT as REAL_EXIT } from '../../scripts/produce-verdict.mjs';
 import { execFileSync } from 'node:child_process';
 import { LiveState, REPO_ROOT } from '../server/state.ts';
 import { createApi } from '../server/routes/api.ts';
@@ -533,8 +540,27 @@ describe('consume-dispatch records a distinguishable outcome', () => {
   test('`running` is durable BEFORE the launch, so a consumer that dies leaves evidence', () => {
     const f = dispatchFixture('mc-dispatch-running-', CLAUDE_OK, [{}]);
     runConsumer(f);
-    const statuses = readDispatch(f.queue).map((e) => e.status);
-    expect(statuses).toEqual(['pending', 'running', 'exited-clean']);
+    const all = readDispatch(f.queue);
+    const statuses = all.map((e) => e.status);
+    // THE THESIS IS UNCHANGED: `running` is written BEFORE the launch, so a consumer that dies
+    // mid-flight leaves evidence it started. What changed is that the terminal state is now written
+    // TWICE \u2014 once before the verdict step and once with it \u2014 so an exact-sequence assertion would
+    // pin an incidental line count instead. Each clause below names what it is for.
+    expect(statuses[0]).toBe('pending');
+    expect(statuses[1]).toBe('running');
+    expect(statuses.at(-1)).toBe('exited-clean');
+    expect(statuses.filter((x) => x === 'running').length).toBe(1);
+    // AND THE DOUBLE WRITE IS THE F3 FIX, ASSERTED HERE RATHER THAN ASSUMED: the first terminal
+    // line is durable before the panel window and carries no verdict; the last one carries it.
+    const terminal = all.filter((e) => e.status === 'exited-clean');
+    expect(terminal.length).toBe(2);
+    // Q4. THE FIRST LINE CARRIES AN EXPLICIT `unresolved`, NOT SILENCE. Absent, it meant two
+    // things — "no producer was wired in this build" and "a panel may have run and its outcome was
+    // lost" — which is the ambiguity the reorder itself introduced.
+    expect(terminal[0]?.verdictProduction?.state).toBe('unresolved');
+    expect((terminal[0]?.verdictProduction as { reason: string }).reason).toContain('before the verdict step returned');
+    expect(terminal[1]?.verdictProduction?.state).toBeDefined();
+    expect(terminal[1]?.verdictProduction?.state).not.toBe('unresolved');
   });
 
   test('an entry left `running` resolves to `no-result` and is NOT relaunched', () => {
@@ -1090,6 +1116,9 @@ describe('a dispatch records what the gate router decided about its output', () 
   const REAL_SHAPE = {
     ref: 'origin/main...abc123', files: 5, floor: 'full', gateRequired: true,
     drivers: ['a.ts'], gateSelfReview: null,
+    // THE RESOLVED TIP THE ROUTER PINNED. The top-level `ref` above is what it was ASKED; this is
+    // what that resolves to, and the two differ exactly when the caller passed a symbolic ref.
+    verdictRef: { ref: 'abc123abc123abc123abc123abc123abc123abcd', reason: null },
     invocation: { tool: 'Workflow', scriptPath: '.claude/workflows/qa.js', args: { ref: 'origin/main...abc123', tier: 'full', tree: '/t' } },
   };
 
@@ -1103,6 +1132,13 @@ describe('a dispatch records what the gate router decided about its output', () 
     expect(r.ref).toBe('origin/main...abc123');
     expect(r.invocation?.scriptPath).toBe('.claude/workflows/qa.js');
     expect(r.invocation?.args).toMatchObject({ tier: 'full' });
+    // THE RESOLVED TIP IS RECORDED BESIDE THE ASKED-FOR REF, not instead of it. `ref` above is a
+    // symbolic range; this is the immutable thing a reader should quote.
+    expect(r.refTip).toBe('abc123abc123abc123abc123abc123abc123abcd');
+    expect(r.refTip).not.toBe(r.ref);
+    // `refTipReason` IS GONE, not renamed: a decided routing always has a pinned tip now, so there
+    // is nothing for it to explain. The property it carried moved to the refusal path below.
+    expect(r).not.toHaveProperty('refTipReason');
   });
 
   test('THE HONEST SHAPE: `required: true` sits beside no verdict, and none can be written', () => {
@@ -1163,7 +1199,113 @@ describe('a dispatch records what the gate router decided about its output', () 
     expect((last.gateRouting as { why: string }).why).toContain('does not exist');
   });
 
-  test('ANTI-DRIFT: the REAL run-gate.mjs emits all FIVE fields this consumer reads', () => {
+  // ── THE RECORDED REF MUST NOT NAME A MOVING TARGET ─────────────────────────────────────
+  //
+  // MEASURED, both arms producing both outcomes, at `d559dbe`:
+  //   --ref origin/main...feat/w3-caller  ->  top-level ref SYMBOLIC, invocation.args.ref RESOLVED
+  //   no --ref (default path)             ->  both resolved, they agree
+  // So the top-level field is symbolic ONLY sometimes, which is why reading it alone looked fine.
+
+  test('a SYMBOLIC top-level ref is recorded beside its resolved tip, never in place of it', () => {
+    const last = routerFixture('mc-router-symbolic-', emits({
+      ...REAL_SHAPE,
+      ref: 'origin/main...my-branch',
+      verdictRef: { ref: 'd559dbeedf5261ac845c81b15b60ddcc1e63dfdb', reason: null },
+    }));
+    const r = last.gateRouting as Extract<typeof last.gateRouting, { decided: true }>;
+    expect(r.ref).toBe('origin/main...my-branch');
+    expect(r.refTip).toBe('d559dbeedf5261ac845c81b15b60ddcc1e63dfdb');
+    // THE PAIR IS THE POINT: a record carrying only the first names a branch, and a branch moves.
+    expect(r.refTip).not.toBe(r.ref);
+  });
+
+  // CONVERTED, NOT DELETED. This asserted that an unpinnable tip is RECORDED as null with the
+  // router's reason. A decided routing can no longer hold a null tip, so the property moved: such a
+  // routing is REFUSED, nothing is rendered, and no panel is spent. Same property, new location —
+  // deleting the cell would have dropped it, and a deletion attracts no test cases.
+  test('an UNPINNABLE tip is REFUSED, and the router\u2019s own reason is relayed verbatim', () => {
+    const reason = 'the range uses "..", not "..."';
+    const last = routerFixture('mc-router-nopin-', emits({
+      ...REAL_SHAPE,
+      ref: 'origin/main..d1294a4',
+      verdictRef: { ref: null, reason },
+    }));
+    expect(last.gateRouting?.decided).toBe(false);
+    const why = (last.gateRouting as { why: string }).why;
+    // REQUIREMENT 2: the diagnosis survives the refusal. Keeping the verdict and dropping the cause
+    // is the defect a sibling lane found one layer over.
+    expect(why).toContain(reason);
+    expect(why).toContain('verdictRef.ref of null');
+    // AND THE SYMBOLIC REF WAS NOT SUBSTITUTED FOR THE MISSING TIP.
+    expect(why).not.toContain('at origin/main..d1294a4 ');
+    // NO PANEL — but see the cell below for the assertion that can actually FAIL for that reason.
+    // `routerFixture` writes no `produce-verdict.mjs`, so a fully decided `gateRequired: true`
+    // routing in this same fixture ALSO yields `not-asked`, naming the missing binary. This line
+    // is consistent with the claim and cannot discriminate it.
+    expect(last.verdictProduction?.state).toBe('not-asked');
+  });
+
+  test('a refusal with NO router reason SAYS SO, rather than issuing a bare shape complaint', () => {
+    // "No reason given" and "the reason was discarded" must not render identically. These two paths
+    // are structurally reasonless \u2014 there is no `reason` field to read \u2014 and they say that.
+    const noField = routerFixture('mc-router-noreason-a-', emits({ ...REAL_SHAPE, verdictRef: 'not-an-object' }));
+    expect((noField.gateRouting as { why: string }).why).toContain('supplied no explanation to relay');
+    const bothNull = routerFixture('mc-router-noreason-b-', emits({ ...REAL_SHAPE, verdictRef: { ref: null, reason: null } }));
+    expect((bothNull.gateRouting as { why: string }).why).toContain('supplied no explanation to relay');
+    // CONTROL ON THE SAME ARM: a router that DID explain itself gets its words relayed, so the two
+    // assertions above are not satisfied by a build that prints that sentence unconditionally.
+    const explained = routerFixture('mc-router-noreason-c-', emits({
+      ...REAL_SHAPE, verdictRef: { ref: null, reason: 'an explicit --files list' },
+    }));
+    const why = (explained.gateRouting as { why: string }).why;
+    expect(why).toContain('an explicit --files list');
+    expect(why).not.toContain('supplied no explanation to relay');
+  });
+
+  // EACH CONJUNCT OF THE WIDENED PREDICATE GETS ITS OWN CASE, or some conjunct is decoration.
+  // The predicate is: verdictRef is an object, it carries both keys, and not both are null.
+  const badVerdictRefs: [string, unknown][] = [
+    ['absent entirely \u2014 an older or foreign run-gate.mjs', undefined],
+    ['null', null],
+    ['an ARRAY, which is an object and has neither key', []],
+    ['a bare string that looks like a sha', 'd559dbeedf5261ac845c81b15b60ddcc1e63dfdb'],
+    ['missing `reason`, so a null ref could not explain itself', { ref: null }],
+    ['missing `ref`', { reason: 'why' }],
+    ['BOTH NULL \u2014 asserting neither a tip nor a reason for having none', { ref: null, reason: null }],
+    // A2. THE SHAPE WAS CHECKED AND THE FORM WAS NOT. This is well-shaped and accepted before the
+    // fix, recorded, and printed as `at feat/my-branch` in the RESOLVED-TIP position \u2014 which
+    // reinstates the exact defect the field was added to close. Unreachable from the shipped
+    // router, and the stated reason for requiring the field is FOREIGN routers, which is where the
+    // form is unguaranteed.
+    ['a BRANCH NAME where a 40-hex sha belongs', { ref: 'feat/my-branch', reason: null }],
+    ['a short sha \u2014 abbreviations are ambiguous and not what verdict.mjs binds', { ref: 'd559dbe', reason: null }],
+    ['a 40-char string that is not hex', { ref: 'z'.repeat(40), reason: null }],
+  ];
+  for (const [what, vr] of badVerdictRefs) {
+    test(`a verdictRef that is ${what} is REFUSED, not partially believed`, () => {
+      const shape: Record<string, unknown> = { ...REAL_SHAPE };
+      if (vr === undefined) delete shape.verdictRef; else shape.verdictRef = vr;
+      const last = routerFixture('mc-router-vr-', emits(shape));
+      expect(last.gateRouting?.decided).toBe(false);
+      expect((last.gateRouting as { why: string }).why).toContain('verdictRef');
+      // REFUSAL IS NEVER A SPEND — AND THE ASSERTION NAMES ITS SUBJECT. This row previously read
+      // `state === 'not-asked'`, which this fixture ALSO yields on the accepted path because it
+      // installs no producer: the assertion ran, passed, and could not separate the two. The `why`
+      // is what distinguishes them — a routing refusal, not a missing producer.
+      expect(last.verdictProduction?.state).toBe('not-asked');
+      const why = (last.verdictProduction as { why: string }).why;
+      expect(why).toContain('did not decide');
+      expect(why).not.toContain('produce-verdict.mjs does not exist');
+    });
+  }
+
+  test('CONTROL: the SAME fixture with a well-formed verdictRef still DECIDES', () => {
+    // Without this the seven rows above are satisfied by a build that refuses every router.
+    const last = routerFixture('mc-router-vr-ok-', emits(REAL_SHAPE));
+    expect(last.gateRouting?.decided).toBe(true);
+  });
+
+  test('ANTI-DRIFT: the REAL run-gate.mjs emits all SIX fields this consumer reads', () => {
     // The six tests above drive a FIXTURE router, so they all stay green if the real one changes
     // shape — a fixture built from my own parser cannot fail. This runs the real emitter.
     //
@@ -1187,6 +1329,19 @@ describe('a dispatch records what the gate router decided about its output', () 
     expect(typeof j.files).toBe('number');
     expect(typeof j.floor).toBe('string');
     expect(typeof j.gateRequired).toBe('boolean');
+    // THE SIXTH FIELD, added when the recorded ref was found to be able to name a moving target.
+    // The five above were the contract before that; a test still saying FIVE while the consumer
+    // reads six is how a rename goes green. Named by key AND by inner shape, like `invocation`.
+    expect(Object.keys(j)).toContain('verdictRef');
+    const vr = j.verdictRef as Record<string, unknown>;
+    expect(vr).not.toBeNull();
+    expect(Object.keys(vr).sort()).toEqual(['reason', 'ref']);
+    // THIS RUN USES `--files`, so the router deliberately declines to pin a tip and says why. That
+    // is the null-WITH-A-REASON branch, and it is the one the consumer must accept rather than
+    // refuse — asserting it here means the real emitter, not a fixture, proves that branch exists.
+    expect(vr.ref).toBeNull();
+    expect(typeof vr.reason).toBe('string');
+    expect((vr.reason as string).length).toBeGreaterThan(0);
     // THE DENOMINATOR, READ RATHER THAN ASSUMED: the non-degenerate branch was the one exercised.
     expect(j.files as number).toBeGreaterThan(0);
     expect(j.gateRequired).toBe(true);
@@ -1416,5 +1571,663 @@ describe('a clean exit is recorded as a clean exit, not as a completion', () => 
     expect(work.unrecognised).toEqual([]);
     expect(KNOWN_DISPATCH_STATUSES).toContain('consumed');
     expect(KNOWN_DISPATCH_STATUSES).toContain('exited-clean');
+  });
+});
+
+// ── PRODUCING a verdict, not merely routing to one ───────────────────────────────────────
+//
+// `scripts/produce-verdict.mjs` landed on `main` in #125 and was invoked by NOTHING. Measured at
+// `4ddc5c6`, controls in both directions: 3 files referenced it — a test argv in package.json, the
+// registration check naming that argv, and generated documentation — against 24 files referencing
+// `run-gate.mjs`, which IS invoked, and 0 for an impossible name. 24 against 3 is what made that a
+// measured gap rather than a suggestive zero.
+//
+// The cells below pin the two halves that can fail silently: WHEN the producer is asked (the
+// denominator — a spend, not a detail) and WHAT is believed when it answers (the artifact, never
+// the receipt).
+
+describe('classifyVerdictProduction — the exit code is a receipt, the payload is the outcome', () => {
+  const run = (o: Partial<ProducerRun>): ProducerRun =>
+    ({ status: null, signal: null, spawnCode: null, stdout: '', ...o });
+  const said = (outcome: string, extra: Record<string, unknown> = {}) =>
+    JSON.stringify({ outcome, reason: 'the producer said so', ...extra });
+
+  // THE CELL THAT MUST NOT FIRE. Without it every row below is satisfied by a function that
+  // returns `unresolved` unconditionally, and a table where every cell agrees looks like rigour.
+  test('CONTROL: an agreeing PRODUCED run IS `produced`, and carries the artifact evidence', () => {
+    const v = classifyVerdictProduction(run({
+      status: 0,
+      stdout: said('PRODUCED', { subject: 'abc123', head: 'deadbeef', established: true }),
+    }));
+    expect(v.state).toBe('produced');
+    expect(v).toMatchObject({ exitCode: 0, subject: 'abc123', head: 'deadbeef' });
+  });
+
+  test('each of the producer\u2019s four terminal states maps to its own recorded state', () => {
+    expect(classifyVerdictProduction(run({ status: 0, stdout: said('PRODUCED') })).state).toBe('produced');
+    expect(classifyVerdictProduction(run({ status: 1, stdout: said('BLOCKED') })).state).toBe('blocked');
+    expect(classifyVerdictProduction(run({ status: 2, stdout: said('REFUSED') })).state).toBe('unresolved');
+    expect(classifyVerdictProduction(run({ status: 3, stdout: said('NOT_REQUIRED') })).state).toBe('not-required');
+    // AND THEY ARE FOUR DISTINCT ANSWERS, not one value asserted four times. Four inputs produce
+    // four states; REFUSED is the only one whose name differs from the producer's, so the SET is
+    // four wide and `produced` is in it exactly once.
+    const names = ['PRODUCED', 'BLOCKED', 'REFUSED', 'NOT_REQUIRED'];
+    const seen = new Set(names.map((n, i) =>
+      classifyVerdictProduction(run({ status: i, stdout: said(n) })).state));
+    expect(seen.size).toBe(4);
+    expect([...seen].sort()).toEqual(['blocked', 'not-required', 'produced', 'unresolved']);
+  });
+
+  // ── THE INPUTS CONSTRUCTED TO DEFEAT THIS VERY FIX ───────────────────────────────────────
+  //
+  // Each row below is a way a run could END UP LOOKING like a pass without one having been read
+  // out of `.qa/verdicts/`. Every one must be `unresolved`, and none may be `produced`.
+  const attacks: [string, ProducerRun][] = [
+    ['exit 0 with a payload that does NOT say PRODUCED — a wrapper swallowing the real code',
+      run({ status: 0, stdout: said('REFUSED') })],
+    ['a payload saying PRODUCED behind an exit code that means something else',
+      run({ status: 3, stdout: said('PRODUCED') })],
+    ['exit 0 and NO output at all — a stub named `produce-verdict.mjs` on the path',
+      run({ status: 0, stdout: '' })],
+    ['exit 0 and human prose rather than JSON — the non-`--json` renderer',
+      run({ status: 0, stdout: 'PRODUCED  (established=true)\n  a verdict record is committed\n' })],
+    ['JSON that is not an object — a bare string naming the state',
+      run({ status: 0, stdout: '"PRODUCED"' })],
+    ['JSON that is an ARRAY — indexable, truthy, and not an outcome',
+      run({ status: 0, stdout: '[{"outcome":"PRODUCED"}]' })],
+    ['an outcome word this build does not know, spelled like success',
+      run({ status: 0, stdout: said('PASSED') })],
+    ['an outcome that is not a string',
+      run({ status: 0, stdout: JSON.stringify({ outcome: true, reason: 'r' }) })],
+    ['exit 64 — USAGE, deliberately outside the four so it can never be read as one',
+      run({ status: 64, stdout: said('PRODUCED') })],
+    ['a producer KILLED after it had already printed a PRODUCED payload',
+      run({ status: null, signal: 'SIGKILL', stdout: said('PRODUCED') })],
+    // THE SHAPE NODE REALLY PRODUCES ON A TIMEOUT: execFileSync kills the child, so BOTH are set.
+    // The old row modelled `signal: null` with `code: 'ETIMEDOUT'`, which Node does not emit \u2014 so
+    // the fixture and the comment beside it agreed with each other and with nothing else.
+    ['a producer that hit the outer TIMEOUT \u2014 signal AND code, as Node emits it',
+      run({ status: null, signal: 'SIGTERM', spawnCode: 'ETIMEDOUT', stdout: said('PRODUCED'), message: 'timed out' })],
+    ['the defensive shape: a spawn code with no signal',
+      run({ status: null, signal: null, spawnCode: 'ETIMEDOUT', stdout: said('PRODUCED'), message: 'timed out' })],
+    ['no producer on PATH at all, with stdout somehow non-empty',
+      run({ status: null, spawnCode: 'ENOENT', stdout: said('PRODUCED'), message: 'spawn node ENOENT' })],
+  ];
+  for (const [what, r] of attacks) {
+    test(`UNRESOLVED, never produced: ${what}`, () => {
+      const v = classifyVerdictProduction(r);
+      expect(v.state).toBe('unresolved');
+      // PAIRED WITH THE OUTCOME IT MUST NOT EQUAL — `state === 'unresolved'` alone would pass
+      // against a build that wrote it unconditionally, which the CONTROL above rules out.
+      expect(v.state).not.toBe('produced');
+      expect(v.state).not.toBe('not-required');
+    });
+  }
+
+  test('a signal is settled BEFORE stdout is read — the order is the design', () => {
+    // Both are wrong-looking; only the signal explains it. The reason must name the signal rather
+    // than the payload, or a reader diagnoses a parse problem that did not happen.
+    const v = classifyVerdictProduction(run({ status: null, signal: 'SIGTERM', stdout: said('PRODUCED') }));
+    expect(v).toMatchObject({ state: 'unresolved', signal: 'SIGTERM' });
+    expect((v as { reason: string }).reason).toContain('SIGTERM');
+  });
+
+  test('`not-asked` is NOT reachable from a producer run — only the caller may write it', () => {
+    // Every state except this one comes from a run. `not-asked` says the run never happened, and a
+    // function that reads a run's remains must not be able to claim that.
+    const everyState = new Set(VERDICT_PRODUCTION_STATES);
+    expect(everyState.has('not-asked')).toBe(true); // the vocabulary really does contain it
+    const fromRuns = new Set([
+      classifyVerdictProduction(run({ status: 0, stdout: said('PRODUCED') })).state,
+      classifyVerdictProduction(run({ status: 1, stdout: said('BLOCKED') })).state,
+      classifyVerdictProduction(run({ status: 2, stdout: said('REFUSED') })).state,
+      classifyVerdictProduction(run({ status: 3, stdout: said('NOT_REQUIRED') })).state,
+      classifyVerdictProduction(run({ status: null, signal: 'SIGKILL', stdout: '' })).state,
+    ]);
+    expect(fromRuns.has('not-asked')).toBe(false);
+    // THE DENOMINATOR, READ RATHER THAN ASSUMED: four of the five states were reached here, so the
+    // absence of the fifth is a fact about the function and not about a thin sample.
+    expect(fromRuns.size).toBe(4);
+  });
+
+  test('an outcome reached through the PROTOTYPE CHAIN is an unknown word, not a disagreement', () => {
+    // A3. `declared in TABLE` walks the prototype, so `{"outcome":"toString"}` found a FUNCTION and
+    // skipped the "declares no outcome this build knows" branch \u2014 falling through to the exit
+    // cross-check and reporting a DISAGREEMENT. No bypass (it is `unresolved` either way), but the
+    // wrong diagnosis, and the diagnosis is what an operator acts on.
+    for (const word of ['toString', 'constructor', 'valueOf', 'hasOwnProperty']) {
+      const v = classifyVerdictProduction(run({ status: 0, stdout: said(word) }));
+      expect(v.state).toBe('unresolved');
+      const why = (v as { reason: string }).reason;
+      expect(why).toContain('declares no outcome this build knows');
+      expect(why).not.toContain('disagreeing');
+    }
+    // CONTROL: a genuine exit/payload disagreement STILL says `disagreeing`, so the assertion above
+    // is not satisfied by a build that never uses that word.
+    const real = classifyVerdictProduction(run({ status: 3, stdout: said('PRODUCED') }));
+    expect((real as { reason: string }).reason).toContain('disagreeing');
+  });
+
+  test('the producer spawn declares BOTH bounds, and the call site uses them', () => {
+    // Deleting either `timeout` or `maxBuffer` from the spawn was green at 126/0, which makes them
+    // decoration rather than controls. They are values in a module now, so a deletion at the call
+    // site breaks the reference and a deletion here fails this.
+    expect(PRODUCER_SPAWN_LIMITS.timeoutMs).toBeGreaterThan(0);
+    expect(PRODUCER_SPAWN_LIMITS.maxBufferBytes).toBeGreaterThan(1024 * 1024);
+    // LOOSER THAN THE PRODUCER'S OWN ONE-HOUR DEFAULT, deliberately: one authority for the panel
+    // budget, and it is the producer's, so its bounded refusal wins whenever it can.
+    expect(PRODUCER_SPAWN_LIMITS.timeoutMs).toBeGreaterThan(60 * 60 * 1000);
+    const src = fs.readFileSync(path.join(REPO_ROOT, 'mission-control', 'scripts', 'consume-dispatch.ts'), 'utf8');
+    expect(src).toContain('timeout: PRODUCER_SPAWN_LIMITS.timeoutMs');
+    expect(src).toContain('maxBuffer: PRODUCER_SPAWN_LIMITS.maxBufferBytes');
+    // F4. THE SECOND SPAWN SHIPPED WITH NEITHER BOUND, in the round that extracted these limits and
+    // added the assertion above. Its own timeout, because 70 minutes is the wrong bound for a
+    // command measured at 74/71/67ms — and much shorter than the panel's, asserted so a later edit
+    // cannot quietly give it the panel budget.
+    expect(PRODUCER_SPAWN_LIMITS.subjectTimeoutMs).toBeGreaterThan(0);
+    expect(PRODUCER_SPAWN_LIMITS.subjectTimeoutMs).toBeLessThan(PRODUCER_SPAWN_LIMITS.timeoutMs);
+    expect(src).toContain('timeout: PRODUCER_SPAWN_LIMITS.subjectTimeoutMs');
+    // NAMED, NOT CLOSED: routeGate's own spawn is unbounded and PRE-EXISTING. This round did not
+    // fix it and must not imply it did.
+    expect(src).toContain('run-gate.mjs is unbounded');
+  });
+
+  test('ANTI-DRIFT: the REAL produce-verdict.mjs still spells its states and codes this way', () => {
+    // The rows above drive a FIXTURE payload, so they all stay green if the producer renames a
+    // state or renumbers an exit code — a fixture built from my own reader cannot fail. This drives
+    // the producer's OWN exported tables through the consumer's classifier. It is the same F3a
+    // lesson the run-gate anti-drift test above was written for.
+    // EVERY LOOKUP CHECKED, and that is not ceremony: `noUncheckedIndexedAccess` types these as
+    // `string | undefined`, and the FIRST draft cast the pair instead — which would have turned a
+    // producer that dropped an exit code into `undefined` flowing on as a plausible value. `tsc`
+    // refused it; `bun test` had already passed 116 of 116 with it in.
+    const pairs: [string, number][] = [];
+    for (const o of Object.values(REAL_OUTCOME)) {
+      const code = REAL_EXIT[o];
+      expect(typeof code).toBe('number');
+      pairs.push([o, code as number]);
+    }
+    expect(pairs.length).toBe(4);
+    for (const [outcome, code] of pairs) {
+      const v = classifyVerdictProduction(run({ status: code, stdout: said(outcome) }));
+      expect((v as { reason: string }).reason).not.toContain('disagreeing');
+      expect((v as { reason: string }).reason).not.toContain('declares no outcome this build knows');
+      expect(VERDICT_PRODUCTION_STATES).toContain(v.state);
+    }
+    // CONTROL ON THE SAME ARM: a deliberately mismatched pair from the SAME real tables must be
+    // caught, or the loop above proves only that the classifier says yes to everything.
+    const notRequired = REAL_OUTCOME.NOT_REQUIRED;
+    const produced = REAL_OUTCOME.PRODUCED;
+    expect(typeof notRequired).toBe('string');
+    expect(typeof produced).toBe('string');
+    const mismatchCode = REAL_EXIT[notRequired as string];
+    expect(typeof mismatchCode).toBe('number');
+    const mismatch = classifyVerdictProduction(run({
+      status: mismatchCode as number, stdout: said(produced as string),
+    }));
+    expect(mismatch.state).toBe('unresolved');
+    expect((mismatch as { reason: string }).reason).toContain('disagreeing');
+  });
+});
+
+describe('the consumer asks the producer for the RIGHT DENOMINATOR, and for nothing else', () => {
+  /**
+   * A fixture project with its own router and its own producer, and a LOG THE PRODUCER WRITES.
+   *
+   * THE LOG IS THE WHOLE POINT. `verdictProduction.state === 'not-asked'` is byte-identical whether
+   * the producer was skipped or ran and was misread, so every cell below asserts the RUN COUNT as
+   * well as the state — a spend is the thing being controlled and only the log observes it.
+   */
+  function producerFixture(
+    prefix: string,
+    opts: { router: string | null; producer: string | null; args?: string[]; ids?: string[]; noVerdictBin?: boolean },
+  ) {
+    const dir = mkTmpDir(prefix);
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    const log = path.join(dir, 'producer-runs.log');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
+    installHarness(root);
+    if (opts.router !== null) fs.writeFileSync(path.join(root, 'scripts', 'run-gate.mjs'), opts.router);
+    if (opts.producer !== null) fs.writeFileSync(path.join(root, 'scripts', 'produce-verdict.mjs'), opts.producer);
+    // F2. WITHOUT THIS THE SUBJECT BRANCH IS NEVER EXECUTED. `installHarness` writes no
+    // `scripts/verdict.mjs`, so `existsSync` was false in every fixture and every test deduped by
+    // TIP while production takes the SUBJECT path — a `throw` tripwire at the top of that branch
+    // left the suite byte-identical. The wrong-suite class, in my own fixtures.
+    if (!opts.noVerdictBin) {
+      fs.writeFileSync(
+        path.join(root, 'scripts', 'verdict.mjs'),
+        `console.log(JSON.stringify({subject:${JSON.stringify(FIXTURE_SUBJECT)}}));\n`,
+      );
+    }
+    // F1. THE LAUNCH LOGS TO THE SAME FILE, SO ORDER BECOMES AN ASSERTION RATHER THAN A COMMENT.
+    // The producer must run AFTER the dispatch commits, because the subject hashes the diff — and
+    // moving the whole verdict block above the launch left `tsc` clean and this suite byte-identical
+    // at 126/0. Disclosure is not a control; a shared log is.
+    fs.writeFileSync(path.join(bin, 'claude'), '#!/bin/sh\necho launch >> "$MC_PRODUCER_LOG"\nexit 0\n');
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    const ids = opts.ids ?? ['producer'];
+    fs.writeFileSync(queue, ids.map((id) => JSON.stringify({
+      id, project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
+    })).join('\n') + '\n');
+    const stdout = execFileSync('bun', [CONSUMER, ...(opts.args ?? [])], {
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue, MC_PRODUCER_LOG: log },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    const logText = fs.existsSync(log) ? fs.readFileSync(log, 'utf8') : '';
+    const lines = logText.trim().split('\n').filter(Boolean);
+    // COUNTED BY PREFIX, because two different programs now write here and a bare line count would
+    // silently conflate a launch with a panel — which is the very thing being measured.
+    const runs = lines.filter((l) => l.startsWith('run')).length;
+    const launches = lines.filter((l) => l.startsWith('launch')).length;
+    return {
+      entry: readDispatch(queue).at(-1) as DispatchEntry,
+      entries: readDispatch(queue),
+      runs, launches, lines, logText, stdout,
+    };
+  }
+
+  const ROUTER = (over: Record<string, unknown> = {}) => {
+    const shape = {
+      ref: 'origin/main...abc123', files: 5, floor: 'full', gateRequired: true,
+      verdictRef: { ref: 'abc123abc123abc123abc123abc123abc123abcd', reason: null },
+      invocation: { tool: 'Workflow', scriptPath: '.claude/workflows/qa.js', args: { ref: 'r', tier: 'full', tree: '/t' } },
+      ...over,
+    };
+    return `console.log(${JSON.stringify(JSON.stringify(shape))});\n`;
+  };
+  /** A producer that records that it ran, prints a payload, and exits with a chosen code. */
+  const PRODUCER = (payload: unknown, exit: number) =>
+    `import fs from 'node:fs';\n`
+    // F3, OBSERVED FROM INSIDE THE WINDOW. The producer reads the queue as it finds it and logs the
+    // status of the last line. If the terminal record is written BEFORE the producer, it sees a
+    // settled status; if it is withheld until after, it sees `running` \u2014 and an interrupted run
+    // then leaves the entry `running` forever, which `inFlight()` later reclaims and re-dispatches,
+    // paying for a second panel. Nothing else in this suite can see that ordering.
+    + `const q = fs.readFileSync(process.env.MC_DISPATCH_QUEUE, 'utf8').trim().split('\\n').filter(Boolean);\n`
+    + `const seen = JSON.parse(q[q.length - 1]).status;\n`
+    + `fs.appendFileSync(process.env.MC_PRODUCER_LOG, 'run ' + process.argv.slice(2).join(' ') + ' saw=' + seen + '\\n');\n`
+    + `console.log(${JSON.stringify(JSON.stringify(payload))});\n`
+    + `process.exit(${exit});\n`;
+
+  test('a REQUIRED gate asks the producer exactly once, and the artifact answer is recorded', () => {
+    const { entry, runs, logText } = producerFixture('mc-prod-yes-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'binds this diff and reads PASS', subject: 'sub1' }, 0),
+    });
+    expect(runs).toBe(1);
+    // ASKED WITH `--json`, read from the argv the producer LOGGED rather than from this test's
+    // expectation of it. Without the flag the producer prints prose, which the classifier refuses.
+    expect(logText).toContain('--json');
+    expect(entry.verdictProduction).toMatchObject({ state: 'produced', exitCode: 0, subject: 'sub1' });
+    // AND IT WAS ASKED WITH `--json`, because the payload is the only thing that may be believed.
+    // The fixture producer logs its own argv, so this reads what the consumer really passed rather
+    // than what this test would like it to have passed.
+    expect(entry.verdictProduction).not.toHaveProperty('why');
+  });
+
+  test('a NOT-REQUIRED gate never spends a panel — the denominator is diffs, not dispatches', () => {
+    const { entry, runs } = producerFixture('mc-prod-notreq-', {
+      router: ROUTER({ gateRequired: false }),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'should never be reached' }, 0),
+    });
+    // THE PRODUCER WOULD HAVE SAID `produced`. It was not asked, so it did not.
+    expect(runs).toBe(0);
+    expect(entry.verdictProduction?.state).toBe('not-asked');
+    expect((entry.verdictProduction as { why: string }).why).toContain('does not require the gate');
+  });
+
+  test('an UNDECIDED routing never spends a panel either — a zero is not a question', () => {
+    const { entry, runs } = producerFixture('mc-prod-undecided-', {
+      router: null,
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'should never be reached' }, 0),
+    });
+    expect(runs).toBe(0);
+    expect(entry.verdictProduction?.state).toBe('not-asked');
+    expect((entry.verdictProduction as { why: string }).why).toContain('did not decide');
+  });
+
+  test('--no-verdict declines the spend even when the gate IS required', () => {
+    const { entry, runs } = producerFixture('mc-prod-optout-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'should never be reached' }, 0),
+      args: ['--no-verdict'],
+    });
+    expect(runs).toBe(0);
+    expect((entry.verdictProduction as { why: string }).why).toContain('--no-verdict');
+  });
+
+  test('a project with NO producer is `not-asked` naming the path, not a failed gate run', () => {
+    const { entry, runs } = producerFixture('mc-prod-absent-', { router: ROUTER(), producer: null });
+    expect(runs).toBe(0);
+    expect(entry.verdictProduction?.state).toBe('not-asked');
+    expect((entry.verdictProduction as { why: string }).why).toContain('produce-verdict.mjs');
+    expect((entry.verdictProduction as { why: string }).why).toContain('does not exist');
+  });
+
+  test('END TO END: a producer exiting 0 while its payload REFUSES is `unresolved`, not `produced`', () => {
+    // The attack, through the real spawn path rather than through the classifier alone: a producer
+    // that ran, was asked, exited cleanly, and established nothing.
+    const { entry, runs } = producerFixture('mc-prod-lie-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'REFUSED', reason: 'the router refused to emit an invocation' }, 0),
+    });
+    expect(runs).toBe(1);
+    expect(entry.verdictProduction?.state).toBe('unresolved');
+    expect(entry.verdictProduction?.state).not.toBe('produced');
+    expect(JSON.stringify(entry)).not.toContain('"PASS"');
+  });
+
+  test('END TO END: a producer that exits 1 with a BLOCKED payload is recorded as blocked', () => {
+    const { entry, runs } = producerFixture('mc-prod-blocked-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'BLOCKED', reason: 'the panel ran and said no' }, 1),
+    });
+    expect(runs).toBe(1);
+    expect(entry.verdictProduction).toMatchObject({ state: 'blocked', exitCode: 1 });
+  });
+
+  const RESOLVED = 'abc123abc123abc123abc123abc123abc123abcd';
+  /** What the fixture `verdict.mjs` reports as the subject — named so assertions can name it. */
+  const FIXTURE_SUBJECT = 'deadbeef'.repeat(8);
+
+  // ── F2 · AN OPT-OUT THAT FAILS OPEN IS NOT AN OPT-OUT ──────────────────────────────────
+  //
+  // Measured before the fix, exit 0 and silent in every row: `--no-verdict` skipped the panel while
+  // `--no-verdicts`, `-no-verdict`, `--no_verdict` and `--noverdict` each ran ONE. The missing
+  // rejection is PRE-EXISTING \u2014 `--dry-runs` launches at `4ddc5c6` too \u2014 but this change adds the
+  // first flag here whose typo costs 3.8M tokens, and leans on that opt-out to justify defaulting
+  // the expensive path on.
+
+  const typos = ['--no-verdicts', '-no-verdict', '--no_verdict', '--noverdict', '--dry-runs'];
+  for (const typo of typos) {
+    test(`a mistyped flag "${typo}" is REFUSED, not silently dropped into a 3.8M-token launch`, () => {
+      const dir = mkTmpDir('mc-typo-');
+      cleanupDirs.push(dir);
+      const bin = path.join(dir, 'bin');
+      const root = path.join(dir, 'root');
+      const log = path.join(dir, 'producer-runs.log');
+      fs.mkdirSync(bin, { recursive: true });
+      fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
+      installHarness(root);
+      fs.writeFileSync(path.join(root, 'scripts', 'run-gate.mjs'), ROUTER());
+      fs.writeFileSync(path.join(root, 'scripts', 'produce-verdict.mjs'), PRODUCER({ outcome: 'PRODUCED', reason: 'r' }, 0));
+      fs.writeFileSync(path.join(bin, 'claude'), '#!/bin/sh\necho launch >> "$MC_PRODUCER_LOG"\nexit 0\n');
+      fs.chmodSync(path.join(bin, 'claude'), 0o755);
+      const queue = path.join(dir, 'queue.jsonl');
+      fs.writeFileSync(queue, JSON.stringify({
+        id: 'typo', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
+      }) + '\n');
+      let status: number | null = 0;
+      let stderr = '';
+      try {
+        execFileSync('bun', [CONSUMER, typo], {
+          env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue, MC_PRODUCER_LOG: log },
+          encoding: 'utf8', stdio: 'pipe',
+        });
+      } catch (err) {
+        const e = err as { status?: number | null; stderr?: string };
+        status = typeof e.status === 'number' ? e.status : null;
+        stderr = e.stderr ?? '';
+      }
+      // 64 IS EX_USAGE, outside every state this script reaches, so it can never be read as one.
+      expect(status).toBe(64);
+      expect(stderr).toContain('unknown flag');
+      // AND NOTHING RAN \u2014 not the dispatch, not the panel. A typo must cost zero.
+      expect(fs.existsSync(log)).toBe(false);
+      // THE QUEUE IS UNTOUCHED: refusing must not settle the entry it declined to process.
+      expect(readDispatch(queue).length).toBe(1);
+    });
+  }
+
+  test('CONTROL: the correctly spelled --no-verdict is ACCEPTED and still dispatches', () => {
+    // Without this, the five rows above are satisfied by a build that refuses every flag.
+    const { runs, launches } = producerFixture('mc-typo-control-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'never reached' }, 0),
+      args: ['--no-verdict'],
+    });
+    expect(launches).toBe(1);
+    expect(runs).toBe(0);
+  });
+
+  test('a verdictRef carrying BOTH a tip and a reason is ACCEPTED, and only the tip is kept', () => {
+    // The invariant "a reason exists exactly when no tip does" used to be a doc-comment nothing
+    // enforced, then a normalisation. It is structural now \u2014 there is no field to hold a reason on
+    // a decided routing \u2014 so what is worth pinning is that a router sending both is not REFUSED for
+    // it: the extra reason is surplus, not a shape violation, and refusing would cost a panel.
+    const { entry } = producerFixture('mc-invariant-', {
+      router: ROUTER({ gateRequired: false, verdictRef: { ref: RESOLVED, reason: 'both were set' } }),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'never reached' }, 0),
+    });
+    const r = entry.gateRouting as Extract<typeof entry.gateRouting, { decided: true }>;
+    expect(r.decided).toBe(true);
+    expect(r.refTip).toBe(RESOLVED);
+    expect(JSON.stringify(entry)).not.toContain('both were set');
+  });
+
+  // ── E1 · WHAT `describeRef` RETURNS, NOT MERELY THAT IT IS REACHED ─────────────────────
+  //
+  // The suite reached this function FOURTEEN times and asserted nothing about its output: replacing
+  // its body with `return `at ${routing.ref}`` \u2014 emitting the symbolic ref in the resolved-tip
+  // position, the exact string it exists to forbid \u2014 left the baseline BYTE-IDENTICAL GREEN. The
+  // commit that added it is `fix(mission-control): record the router's RESOLVED tip, not a symbolic
+  // ref`, so a regression here restores that defect for every human reader with the suite green.
+  //
+  // Both branches are covered below, and both the operator-facing LINE and the durable `why`.
+
+  test('the operator line leads with the RESOLVED tip and marks the asked-for ref as asked-for', () => {
+    const { stdout } = producerFixture('mc-desc-resolved-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'r' }, 0),
+    });
+    expect(stdout).toContain(`at ${RESOLVED} (asked as "origin/main...abc123")`);
+    // THE MUTATION THIS KILLS: `return `at ${routing.ref}`` renders `at origin/main...abc123`,
+    // putting a symbolic range where a reader expects the thing that was gated.
+    expect(stdout).not.toContain('at origin/main...abc123 ');
+    expect(stdout).not.toContain('files, at origin/main...abc123');
+  });
+
+  test('the DURABLE `why` carries the resolved tip too, not just the console line', () => {
+    // The `not-asked` reason is written to the queue and outlives the terminal. It embeds the same
+    // rendering, so a regression reaches the permanent record and not only a scrollback buffer.
+    const { entry } = producerFixture('mc-desc-durable-', {
+      router: ROUTER({ gateRequired: false }),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'never reached' }, 0),
+    });
+    const why = (entry.verdictProduction as { why: string }).why;
+    expect(why).toContain(`at ${RESOLVED}`);
+    expect(why).toContain('asked as');
+    expect(why).not.toContain('at origin/main...abc123)');
+  });
+
+  // CONVERTED, NOT DELETED \u2014 the second half of the same collapse. `describeRef` no longer has a
+  // TIP UNRESOLVED branch because a decided routing cannot have a null tip. The property survives:
+  // an unpinnable tip is never rendered as if it were resolved, because it is never rendered.
+  test('an UNPINNABLE tip is never RENDERED at all \u2014 the routing is refused first', () => {
+    const reason = 'the range uses "..", not "..."';
+    const { stdout, entry } = producerFixture('mc-desc-unpinned-', {
+      router: ROUTER({ gateRequired: false, verdictRef: { ref: null, reason } }),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'never reached' }, 0),
+    });
+    // NOTHING IS RENDERED IN THE RESOLVED-TIP POSITION, in either surface.
+    for (const text of [stdout, (entry.verdictProduction as { why: string }).why]) {
+      expect(text).not.toContain('at origin/main...abc123');
+      expect(text).not.toContain('TIP UNRESOLVED');
+    }
+    // THE ROUTING IS REFUSED AND THE REASON IS RELAYED \u2014 the property, at its new location.
+    expect(entry.gateRouting?.decided).toBe(false);
+    expect((entry.gateRouting as { why: string }).why).toContain(reason);
+    expect(stdout).toContain('Gate routing: UNDECIDED');
+  });
+
+  // ── A1 · N ENTRIES, ONE DIFF, ONE PANEL ────────────────────────────────────────────────
+  //
+  // Measured before the fix: 5 pending entries against one root and one diff produced 5 observed
+  // producer invocations. Every cost filter was per-ENTRY; the thing being paid for is per-DIFF.
+  // A panel ending REFUSED writes no binding record, so the producer's own short-circuit \u2014 which
+  // fires only on PRODUCED or BLOCKED \u2014 does not catch the second entry either.
+
+  test('FIVE entries, one subject: five launches, ONE panel', () => {
+    const five = ['e1', 'e2', 'e3', 'e4', 'e5'];
+    const { entries, runs, launches } = producerFixture('mc-prod-fanout-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'REFUSED', reason: 'establishes nothing, so no record binds' }, 2),
+      ids: five,
+    });
+    // THE REFUSED PAYLOAD IS THE POINT: it writes no binding record, so nothing downstream can
+    // dedupe for us. Before the fix this fixture measured 5.
+    expect(runs).toBe(1);
+    // CONTROL ON THE SAME LOG: all five really were dispatched, so `runs === 1` is a dedupe and
+    // not a fixture that quietly processed one entry.
+    expect(launches).toBe(5);
+    const current = resolveDispatchStates(entries);
+    expect(current.length).toBe(5);
+    const states = current.map((e) => e.verdictProduction?.state).sort();
+    expect(states).toEqual(['already-launched', 'already-launched', 'already-launched', 'already-launched', 'unresolved']);
+    // THE SKIP HAS ITS OWN STATE AND NAMES WHO PAID \u2014 `not-asked` already means something else.
+    const skipped = current.filter((e) => e.verdictProduction?.state === 'already-launched');
+    expect(skipped.length).toBe(4);
+    for (const e of skipped) {
+      const v = e.verdictProduction as { firstEntryId: string; subject: string | null; firstState: string };
+      // NAMED, NOT MERELY SHAPED. `expect(five).toContain(...)` survived `firstEntryId: entry.id` —
+      // the skipped entry naming ITSELF as the payer — because membership is not identity. And
+      // `typeof === 'string'` survived `subject: 'NOT-A-SUBJECT'`.
+      expect(v.firstEntryId).toBe('e1');
+      expect(v.firstEntryId).not.toBe(e.id);
+      expect(v.subject).toBe(FIXTURE_SUBJECT);
+      // AND THE RECORD REPORTS WHAT THE EARLIER ATTEMPT ESTABLISHED rather than promising one.
+      expect(v.firstState).toBe('unresolved');
+      expect((e.verdictProduction as { why: string }).why).toContain('recorded "unresolved"');
+      expect((e.verdictProduction as { why: string }).why).toContain('Deduplicated by subject');
+    }
+  });
+
+  test('an UNPINNABLE tip spends NOTHING — observed by run count, in a fixture that HAS a producer', () => {
+    // F2. THE SPEND HALF WAS UNOBSERVED. Every null-`verdictRef` cell lived in `routerFixture`,
+    // which installs no producer, so `not-asked` arrived there whatever the routing did. This is
+    // the 1 -> 0 change measured against the base, pinned by the instrument that made A1 credible:
+    // an observed run count, with the launch count as the control that the entries were dispatched.
+    const { runs, launches, entries } = producerFixture('mc-unpinned-spend-', {
+      router: ROUTER({ verdictRef: { ref: null, reason: 'the range uses "..", not "..."' } }),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'would have run' }, 0),
+      ids: ['e1', 'e2', 'e3'],
+    });
+    expect(runs).toBe(0);
+    expect(launches).toBe(3);
+    for (const e of resolveDispatchStates(entries)) expect(e.verdictProduction?.state).toBe('not-asked');
+    // THE NAMED RESIDUAL, ASSERTED RATHER THAN DESCRIBED: the producer was present and willing —
+    // the control below proves it runs on the same fixture with a pinned tip — and we declined.
+    // That is a real skipped panel for a foreign router, not a panel that could not have succeeded.
+  });
+
+  test('CONTROL: the SAME fixture with a PINNED tip DOES spend, so the zero above is a decision', () => {
+    const { runs, launches } = producerFixture('mc-unpinned-spend-control-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'ran' }, 0),
+      ids: ['e1', 'e2', 'e3'],
+    });
+    expect(runs).toBe(1);
+    expect(launches).toBe(3);
+  });
+
+  test('with NO verdict.mjs the run dedupes by TIP, reports subject null, and still spends once', () => {
+    // THE FALLBACK BRANCH, covered explicitly rather than by accident. It is strictly narrower than
+    // the subject key — entries sharing a tip share a diff — so it can only fail toward LAUNCHING.
+    const { entries, runs, launches } = producerFixture('mc-prod-notip-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'REFUSED', reason: 'nothing established' }, 2),
+      ids: ['e1', 'e2', 'e3'],
+      noVerdictBin: true,
+    });
+    expect(runs).toBe(1);
+    expect(launches).toBe(3);
+    const skipped = resolveDispatchStates(entries).filter((e) => e.verdictProduction?.state === 'already-launched');
+    expect(skipped.length).toBe(2);
+    for (const e of skipped) {
+      // `subject: null` IS THE HONEST VALUE. This field held `<root>\0tip:<sha>` — a KEY — while its
+      // doc called it "the subject shared with the entry that did pay".
+      expect((e.verdictProduction as { subject: string | null }).subject).toBeNull();
+      expect((e.verdictProduction as { why: string }).why).toContain('Deduplicated by resolved tip');
+    }
+  });
+
+  test('CONTROL: five entries with --no-verdict spend NOTHING, and are not `already-launched`', () => {
+    const { entries, runs, launches } = producerFixture('mc-prod-fanout-optout-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'never reached' }, 0),
+      ids: ['a', 'b', 'c', 'd', 'e'],
+      args: ['--no-verdict'],
+    });
+    expect(runs).toBe(0);
+    expect(launches).toBe(5);
+    // DEDUPE MUST NOT SWALLOW THE OPT-OUT: these are declined, not ridden on someone else's launch.
+    for (const e of resolveDispatchStates(entries)) expect(e.verdictProduction?.state).toBe('not-asked');
+  });
+
+  // ── F1 · THE POST-LAUNCH POSITION, ASSERTED RATHER THAN DISCLOSED ───────────────────────
+
+  test('the producer runs AFTER the launch \u2014 order read off one shared log', () => {
+    const { lines } = producerFixture('mc-prod-order-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'r' }, 0),
+    });
+    // BOTH MUST BE PRESENT, or an order assertion over an empty log is vacuous.
+    expect(lines.filter((l) => l.startsWith('launch')).length).toBe(1);
+    expect(lines.filter((l) => l.startsWith('run')).length).toBe(1);
+    expect(lines.findIndex((l) => l.startsWith('launch')))
+      .toBeLessThan(lines.findIndex((l) => l.startsWith('run')));
+  });
+
+  // ── F3 · THE TERMINAL RECORD IS DURABLE BEFORE THE PANEL WINDOW OPENS ───────────────────
+
+  test('the producer sees a SETTLED entry, not `running` \u2014 so an interrupted run cannot re-dispatch', () => {
+    const { lines, entry } = producerFixture('mc-prod-order-record-', {
+      router: ROUTER(),
+      producer: PRODUCER({ outcome: 'PRODUCED', reason: 'r' }, 0),
+    });
+    const observed = lines.find((l) => l.startsWith('run')) as string;
+    // `running` HERE IS THE DEFECT: the entry would stay that way if the consumer died mid-panel,
+    // `inFlight()` would reconcile the dead pid, and a later run would pay for a second panel.
+    expect(observed).toContain('saw=exited-clean');
+    expect(observed).not.toContain('saw=running');
+    // AND THE FINAL LINE STILL CARRIES THE VERDICT: writing early must not lose the update.
+    expect(entry.verdictProduction?.state).toBe('produced');
+    expect(entry.status).toBe('exited-clean');
+  });
+
+  test('--dry-run states the spend WITHOUT making it — a dry run that misstates the real run is worse than none', () => {
+    const dir = mkTmpDir('mc-prod-dry-');
+    cleanupDirs.push(dir);
+    const bin = path.join(dir, 'bin');
+    const root = path.join(dir, 'root');
+    const log = path.join(dir, 'producer-runs.log');
+    fs.mkdirSync(bin, { recursive: true });
+    fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
+    installHarness(root);
+    fs.writeFileSync(path.join(root, 'scripts', 'run-gate.mjs'), ROUTER());
+    fs.writeFileSync(path.join(root, 'scripts', 'produce-verdict.mjs'), PRODUCER({ outcome: 'PRODUCED', reason: 'x' }, 0));
+    fs.writeFileSync(path.join(bin, 'claude'), '#!/bin/sh\nexit 0\n');
+    fs.chmodSync(path.join(bin, 'claude'), 0o755);
+    const queue = path.join(dir, 'queue.jsonl');
+    fs.writeFileSync(queue, JSON.stringify({
+      id: 'dry', project: path.basename(REPO_ROOT), root, goal: 'g', enqueuedAt: 1_000, status: 'pending',
+    }) + '\n');
+    const out = execFileSync('bun', [CONSUMER, '--dry-run'], {
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue, MC_PRODUCER_LOG: log },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    expect(out).toContain('verdict production');
+    expect(fs.existsSync(log)).toBe(false);
+    // AND THE OPT-OUT IS MIRRORED TOO, or the dry run describes only one of the two real paths.
+    const out2 = execFileSync('bun', [CONSUMER, '--dry-run', '--no-verdict'], {
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, MC_DISPATCH_QUEUE: queue, MC_PRODUCER_LOG: log },
+      encoding: 'utf8', stdio: 'pipe',
+    });
+    expect(out2).toContain('DECLINED');
+    expect(out2).not.toBe(out);
   });
 });
