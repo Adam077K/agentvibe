@@ -1519,3 +1519,113 @@ test('usage names every flag the code reads — it named five of seven', () => {
   const refused = verdict(['record', '--nope']);
   assert.match(refused.stderr, /record accepts: .*--dry-run/, refused.stderr);
 });
+
+// ── W · THE BUFFER CEILING, AND THE REFUSALS IT MUST NOT BE MISTAKEN FOR ─────────────────────
+//
+// Every cell below went GREEN against an unmutated tree and RED under the mutation named beside
+// it. Before these existed, twelve separate mutations of this behaviour — including inverting the
+// predicate that decides whether a directory is ours to delete — left the whole 48-step suite
+// byte-identical to a pristine run. Nothing in the repository asserted a line of it.
+
+/** A repo whose diff is `bytes` long, with origin/main resolvable. */
+function bigDiffRepo(bytes) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'verdict-buffer-'));
+  tmpRoots.push(root);
+  git(root, ['init', '-q', '.']);
+  git(root, ['config', 'user.email', 't@t']);
+  git(root, ['config', 'user.name', 't']);
+  fs.writeFileSync(path.join(root, 'seed.txt'), 'seed\n');
+  git(root, ['add', '-A']);
+  git(root, ['commit', '-qm', 'base']);
+  git(root, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+  fs.writeFileSync(path.join(root, 'big.txt'), 'x'.repeat(bytes).replace(/(.{100})/g, '$1\n'));
+  git(root, ['add', '-A']);
+  git(root, ['commit', '-qm', 'big']);
+  return root;
+}
+
+const subjectAt = (repo, env) => run('node', [VERDICT, 'subject', '--repo', repo, '--ref', 'HEAD', '--json'], REPO, env);
+const withCeiling = (v) => ({ ...process.env, VERDICT_MAX_BUFFER_BYTES: v });
+
+test('W-1 — a diff past Node\'s 1 MiB default is readable, and the same repo is a working control', () => {
+  const repo = bigDiffRepo(1_500_000);
+  // DENOMINATOR, read before the verdict. Measured from the file, not from `git diff` — the test
+  // helper above has no maxBuffer of its own, which is the very defect under test one level up.
+  const bytes = fs.statSync(path.join(repo, 'big.txt')).size;
+  assert.ok(bytes > 1024 * 1024, `the fixture must exceed the old 1 MiB ceiling, got ${bytes}`);
+  const r = subjectAt(repo);
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /"subject": "[0-9a-f]{64}"/);
+});
+
+test('W-2 — over the ceiling it REFUSES, names the limit, and does not blame the repository', () => {
+  const repo = bigDiffRepo(1_500_000);
+  const r = subjectAt(repo, withCeiling('1024'));
+  assert.equal(r.code, 2, 'a subject that could not be read is a refusal, never a pass');
+  assert.match(r.stderr, /produced more than 1024 bytes/);
+  assert.match(r.stderr, /Nothing is established/);
+  assert.match(r.stderr, /VERDICT_MAX_BUFFER_BYTES/);
+  // The remedy names the COMMAND's output. ENOBUFS trips on either stream, so "raise it above the
+  // diff size" is wrong advice whenever it was stderr that overflowed.
+  assert.doesNotMatch(r.stderr, /above the diff size/);
+  // MUST NOT FIRE: the same repo, same command, default ceiling.
+  assert.equal(subjectAt(repo).code, 0, 'CONTROL: the fixture is capable of succeeding');
+});
+
+test('W-3 — a malformed ceiling is REFUSED and names itself, never silently defaulted', () => {
+  const repo = bigDiffRepo(200);
+  for (const bad of ['abc', '0', '-5', '3.5', 'ten']) {
+    const r = subjectAt(repo, withCeiling(bad));
+    assert.equal(r.code, 2, `${bad} should refuse, got ${r.code}`);
+    assert.match(r.stderr, /VERDICT_MAX_BUFFER_BYTES=/, `${bad}: the refusal must name the knob`);
+    assert.doesNotMatch(r.stderr, /cannot resolve/, `${bad}: a config refusal must not be relabelled`);
+  }
+  // MUST NOT FIRE: a well-formed value on the same arm still works, so the loop is not just failing.
+  assert.equal(subjectAt(repo, withCeiling('  4096  ')).code, 0, 'CONTROL: a padded valid value is accepted');
+});
+
+test('W-4 — a run-level refusal is not relabelled as an unresolvable base', () => {
+  // rev-parse's own ~41 bytes overflow first at these ceilings, INSIDE mergeBase's catch. Every
+  // value here is well-formed, so the malformed-input path cannot account for it.
+  const repo = bigDiffRepo(200);
+  for (const tiny of ['1', '10', '40', ' 12 ']) {
+    const r = subjectAt(repo, withCeiling(tiny));
+    assert.equal(r.code, 2, `${tiny}`);
+    assert.match(r.stderr, /produced more than/, `${tiny}: must report the limit it hit`);
+    assert.doesNotMatch(r.stderr, /cannot resolve "origin\/main"/, `${tiny}: origin/main resolves in this repo`);
+  }
+});
+
+test('W-5 — MUST NOT FIRE: a base that genuinely does not resolve still says so', () => {
+  // The guard against curing the relabel by deleting the message. Widening the predicate must not
+  // swallow the case the message was written for.
+  const repo = bigDiffRepo(200);
+  git(repo, ['update-ref', '-d', 'refs/remotes/origin/main']);
+  const r = subjectAt(repo);
+  assert.equal(r.code, 2);
+  assert.match(r.stderr, /cannot resolve "origin\/main"/);
+  assert.match(r.stderr, /Fetch it first/);
+});
+
+test('W-6 — an unreadable committed record is a REFUSAL, never reported as absent', () => {
+  // Rule 10's mirror. `absent` tells an operator to record a verdict they already have.
+  const repo = bigDiffRepo(200);
+  const sub = JSON.parse(subjectAt(repo).stdout).subject;
+  const big = 'z'.repeat(20_000);
+  const rec = run('node', [VERDICT, 'record', '--repo', repo, '--ref', 'HEAD',
+    '--verdict', 'PASS', '--by', 'probe', '--evidence', big]);
+  assert.equal(rec.code, 0, rec.stderr);
+  git(repo, ['add', '-A', '.qa']);
+  git(repo, ['commit', '-qm', 'verdict']);
+  const recBytes = fs.statSync(path.join(repo, '.qa', 'verdicts', `${sub}.json`)).size;
+  assert.ok(recBytes > 5000, `DENOMINATOR: the record must exceed the probe ceiling, got ${recBytes}`);
+
+  // MUST NOT FIRE: at the default ceiling the record is found and binds.
+  const ok = run('node', [VERDICT, 'check', '--repo', repo, '--ref', 'HEAD', '--json']);
+  assert.equal(ok.code, 0, ok.stderr);
+  assert.match(ok.stdout, /"ok": true/);
+
+  const blind = run('node', [VERDICT, 'check', '--repo', repo, '--ref', 'HEAD', '--json'], REPO, withCeiling('5000'));
+  assert.equal(blind.code, 2, 'could-not-read must be exit 2 (unresolved), not exit 1 (absent)');
+  assert.doesNotMatch(blind.stdout, /"reason": "absent"/, 'absence must not be asserted for an unread record');
+});

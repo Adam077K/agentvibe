@@ -787,7 +787,7 @@ test('F-1 — a repo that is not the tree run-gate ships in is REFUSED, not answ
   let consulted = 0;
   produceVerdict({
     repo, harnessRoot: repo, judgeDir: tmp('pv-judge-'),
-    deps: { runGateRunner: () => { consulted += 1; return { status: 0, stdout: JSON.stringify({ invocation: null }) }; } },
+    deps: { runGateRunner: () => { consulted += 1; return { status: 0, stdout: JSON.stringify({ invocation: null }) }; }, launch: () => assert.fail('must not launch') },
   });
   assert.equal(consulted, 1);
 });
@@ -1300,4 +1300,261 @@ test('CRITICAL_PATHS names the files that decide, and they all exist in this rep
     assert.ok(fs.existsSync(path.join(REPO_ROOT, rel)), `${rel} is named critical and is not in the tree`);
   }
   assert.ok(!fs.existsSync(path.join(REPO_ROOT, '.claude/agents/no-such-agent.md')), 'CONTROL: the probe can report absence');
+});
+
+// ── J · THE JUDGE PROJECT'S LIFECYCLE ────────────────────────────────────────────────────────
+//
+// Twelve mutations of this behaviour once left the entire 48-step suite byte-identical to a
+// pristine run, including INVERTING the predicate that decides whether a directory is ours — a
+// one-token change that turns a temp-dir reclaimer into a remover of an operator-named path. Each
+// cell below is that specification: it must go red under its named mutation.
+import {
+  keepJudgeDirSetting,
+  armJudgeDirCleanup,
+  disarmJudgeDirCleanup,
+  reclaimJudgeDir,
+  sweepJudgeDirs,
+  produceVerdict as produceVerdictFn,
+  readVerdictArtifact as readVerdictArtifactFn,
+  isJudgeDirTracked as isJudgeDirTrackedFn,
+} from './produce-verdict.mjs';
+
+/** A directory with a file in it, so "removed" is distinguishable from "was never there". */
+function judgeDirFixture() {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-judge-probe-'));
+  fs.writeFileSync(path.join(d, 'marker'), 'x');
+  return d;
+}
+
+test('J-1 — an armed directory is swept; MUST NOT FIRE for one that was never armed', () => {
+  const ours = judgeDirFixture();
+  const theirs = judgeDirFixture();
+  assert.equal(armJudgeDirCleanup(ours, {}), true, 'arming must report that it registered');
+  sweepJudgeDirs();
+  assert.equal(fs.existsSync(ours), false, 'an armed directory must be gone');
+  // THE OPERATOR'S --judge-dir. Never armed, so never removed. This is the cell that fails when
+  // the `ephemeral` predicate is inverted, which is the sharpest of the twelve.
+  assert.equal(fs.existsSync(theirs), true, 'CONTROL: an unarmed directory must survive the sweep');
+  fs.rmSync(theirs, { recursive: true, force: true });
+});
+
+test('J-2 — reclaimJudgeDir removes only what we registered, and says which it did', () => {
+  const ours = judgeDirFixture();
+  const theirs = judgeDirFixture();
+  armJudgeDirCleanup(ours, {});
+  assert.equal(reclaimJudgeDir(ours), true);
+  assert.equal(fs.existsSync(ours), false);
+  assert.equal(reclaimJudgeDir(theirs), false, 'an unregistered path is refused, not removed');
+  assert.equal(fs.existsSync(theirs), true, 'CONTROL: and it is still there');
+  fs.rmSync(theirs, { recursive: true, force: true });
+});
+
+test('J-3 — disarm keeps a tree the sweep would otherwise take', () => {
+  // The REFUSED path. A run whose evidence IS the tree must not delete the tree it just named.
+  const d = judgeDirFixture();
+  armJudgeDirCleanup(d, {});
+  assert.equal(disarmJudgeDirCleanup(d), true);
+  sweepJudgeDirs();
+  assert.equal(fs.existsSync(d), true, 'a disarmed directory survives');
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
+test('J-4 — QA_KEEP_JUDGE_DIR is a declared vocabulary, not bare truthiness', () => {
+  // Bare truthiness meant `0`, `false`, `no` and `off` ALL selected KEEP: an operator disabling
+  // the knob turned it on. verdict.mjs refuses a malformed ceiling; this knob must not guess.
+  for (const on of ['1', 'true', 'yes', 'on', 'ON', ' true ']) {
+    assert.equal(keepJudgeDirSetting({ QA_KEEP_JUDGE_DIR: on }), true, `${on} means keep`);
+  }
+  for (const off of ['0', 'false', 'no', 'off', '', 'OFF']) {
+    assert.equal(keepJudgeDirSetting({ QA_KEEP_JUDGE_DIR: off }), false, `${off} means reclaim`);
+  }
+  assert.equal(keepJudgeDirSetting({}), false, 'unset means reclaim');
+  for (const bad of ['maybe', '2', 'yes please']) {
+    assert.equal(keepJudgeDirSetting({ QA_KEEP_JUDGE_DIR: bad }), null, `${bad} is unrecognised`);
+  }
+});
+
+test('J-5 — with KEEP set, nothing is registered and the tree survives', () => {
+  const d = judgeDirFixture();
+  assert.equal(armJudgeDirCleanup(d, { QA_KEEP_JUDGE_DIR: '1' }), false);
+  sweepJudgeDirs();
+  assert.equal(fs.existsSync(d), true);
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
+test('J-6 — an unrecognised knob value REFUSES the run rather than guessing about deletion', () => {
+  const r = produceVerdictFn({ env: { QA_KEEP_JUDGE_DIR: 'maybe' }, deps: { launch: () => assert.fail('must not launch') } });
+  assert.equal(r.outcome, OUTCOME.REFUSED);
+  assert.match(r.message ?? r.reason ?? JSON.stringify(r), /QA_KEEP_JUDGE_DIR/);
+});
+
+test('J-7 — the library installs an exit sweep and NO signal handlers', () => {
+  // An exported function a host calls IN-PROCESS may not decide how that host dies. The previous
+  // version installed SIGINT/SIGTERM/SIGHUP handlers calling process.exit(130): measured armed ->
+  // wait status 130 with no signal, unarmed -> 143.
+  //
+  // BOTH ASSERTIONS WERE ONCE ON THE WRONG ARM, and a mutation run is what said so. A before/after
+  // DELTA around this arming measures nothing, because `judgeDirCleanupArmed` is already true by
+  // the time this test runs — the block under test never executes here, so re-adding the signal
+  // handlers left it green. And `exit >= 1` was satisfied by this test file's own cleanup listener,
+  // so deleting the library's stayed green too. Both are now absolute and by identity: a fresh
+  // process has 0 of each (verified), and the sweep is named rather than counted.
+  const d = judgeDirFixture();
+  armJudgeDirCleanup(d, {});
+  for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+    assert.equal(process.listenerCount(sig), 0, `${sig}: the library must not take the process`);
+  }
+  assert.ok(process.listeners('exit').includes(sweepJudgeDirs), 'the exit sweep must be installed, by identity');
+  sweepJudgeDirs();
+});
+
+test('J-8 — an unreadable verdict carries its REASON, not just its exit code', () => {
+  // verdict.mjs writes refusals to stderr and exits non-zero with stdout EMPTY, so recording only
+  // stdout logged a failure with the cause deleted.
+  const r = readVerdictArtifactFn({
+    tree: '/nonexistent', ref: 'HEAD', verdictBin: '/nonexistent/verdict.mjs',
+    runner: () => ({ status: 2, stdout: '', stderr: 'verdict: produced more than 1024 bytes on stdout or stderr' }),
+  });
+  assert.equal(r.outcome, OUTCOME.REFUSED);
+  assert.match(r.verdict_check.stderr, /produced more than 1024 bytes/);
+  // MUST NOT FIRE: a well-formed pass on the same seam still reads as PRODUCED.
+  const ok = readVerdictArtifactFn({
+    tree: '/nonexistent', ref: 'HEAD', verdictBin: '/nonexistent/verdict.mjs',
+    runner: () => ({ status: 0, stdout: JSON.stringify({ ok: true, subject: 'a', tier: 'full' }), stderr: '' }),
+  });
+  assert.equal(ok.outcome, OUTCOME.PRODUCED, 'CONTROL: the seam still produces');
+});
+
+test('J-9 — an operator\'s --judge-dir survives a reclaiming run; ours does not', () => {
+  // THE SHARPEST OF THE TWELVE, AND IT TOOK TWO TRIES. Inverting `ephemeral` at the call site arms
+  // the operator's own directory and spares the temp one, turning a reclaimer into a remover of a
+  // path the caller named. Every unit cell above still passes under it, because each primitive
+  // still does exactly what it says.
+  //
+  // THE FIRST VERSION OF THIS CELL WAS VACUOUS and a mutation run is what caught it: it drove a
+  // REFUSED outcome, and on REFUSED the tree is deliberately KEPT either way, so both the correct
+  // and the inverted build left the directory standing. Reclamation only happens on an outcome
+  // that reached an answer, so that is the only place the inversion is observable. The seams below
+  // buy that outcome without a panel run.
+  const deps = {
+    materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
+    readVerdictArtifact: () => ({ outcome: OUTCOME.PRODUCED, subject: 's', tier: 'full' }),
+  };
+  const theirs = judgeDirFixture();
+  const r = produceVerdictFn({ repo: REPO_ROOT, judgeDir: theirs, deps: { ...deps, launch: () => assert.fail('must not launch') } });
+  assert.equal(r.outcome, OUTCOME.PRODUCED, 'DENOMINATOR: this cell is only meaningful on a reclaiming outcome');
+  assert.equal(fs.existsSync(theirs), true, 'an operator-named directory must survive a reclaiming run');
+
+  // THE MIRROR, on the arm that can go silently empty: ours must actually be reclaimed, or the
+  // assertion above is satisfied by a build that simply never deletes anything.
+  const r2 = produceVerdictFn({ repo: REPO_ROOT, deps: { ...deps, launch: () => assert.fail('must not launch') } });
+  assert.equal(r2.outcome, OUTCOME.PRODUCED);
+  assert.ok(r2.judgeDir && r2.judgeDir !== theirs, 'CONTROL: the run made its own directory');
+  assert.equal(fs.existsSync(r2.judgeDir), false, 'ours must be reclaimed');
+
+  fs.rmSync(theirs, { recursive: true, force: true });
+});
+
+test('J-10 — a caller\'s QA_KEEP_JUDGE_DIR is THREADED, not merely validated', () => {
+  // Found by the review panel, not by me. The wrapper read `o.env` to decide whether the value was
+  // LEGAL and the arming site read `process.env` to decide what to DO, so a caller asking to keep
+  // its tree had the request validated and then silently dropped — the directory was deleted. Both
+  // arms measured `false` before the fix: opposite instructions, byte-identical outcomes. A
+  // silently-ignored retention flag is the worst direction for that class to fail in.
+  const deps = {
+    materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
+    readVerdictArtifact: () => ({ outcome: OUTCOME.PRODUCED, subject: 's', tier: 'full' }),
+  };
+  const kept = produceVerdictFn({ repo: REPO_ROOT, env: { QA_KEEP_JUDGE_DIR: '1' }, deps: { ...deps, launch: () => assert.fail('must not launch') } });
+  assert.equal(kept.outcome, OUTCOME.PRODUCED, 'DENOMINATOR: only a reclaiming outcome tests this');
+  assert.equal(fs.existsSync(kept.judgeDir), true, 'a caller that asked to keep must get to keep');
+  fs.rmSync(kept.judgeDir, { recursive: true, force: true });
+
+  // TWO CONTROLS, because "always keeps" would satisfy the assertion above on its own.
+  const gone = produceVerdictFn({ repo: REPO_ROOT, env: {}, deps: { ...deps, launch: () => assert.fail('must not launch') } });
+  assert.equal(fs.existsSync(gone.judgeDir), false, 'CONTROL: unset still reclaims');
+  const off = produceVerdictFn({ repo: REPO_ROOT, env: { QA_KEEP_JUDGE_DIR: 'off' }, deps: { ...deps, launch: () => assert.fail('must not launch') } });
+  assert.equal(fs.existsSync(off.judgeDir), false, 'CONTROL: an explicit off still reclaims');
+});
+
+test('J-11 — EVERY produceVerdict call site in this file guards the launcher', () => {
+  // THE CLASS, NOT THE SITES. Review named six unguarded cells; the class was SEVEN — the seventh
+  // predates these rounds. A per-site fix leaves site 39 free, and the cost of one escaping is not
+  // a failing test: it is a live `claude --print <gate goal>` spawned from CI, bounded only by the
+  // 60-minute default timeout. That already happened once, from this file, and the session it
+  // spawned committed a verdict into the branch under test.
+  //
+  // These cells avoid a launch today only because the code under test refuses first — which is the
+  // exact property they exist to detect the loss of. A guard that depends on the subject behaving
+  // is not a guard.
+  const src = fs.readFileSync(fileURLToPath(import.meta.url), 'utf8');
+  // Built by concatenation so this parser does not match its own pattern literal.
+  const re = new RegExp(`produceVerdict${'(?:Fn)?\\('}`, 'g');
+  const unguarded = [];
+  let sites = 0;
+  for (let m = re.exec(src); m; m = re.exec(src)) {
+    let depth = 0;
+    const i = m.index + m[0].length - 1;
+    let j = i;
+    for (; j < src.length; j += 1) {
+      if (src[j] === '(') depth += 1;
+      else if (src[j] === ')') { depth -= 1; if (depth === 0) break; }
+    }
+    sites += 1;
+    if (!src.slice(i, j + 1).includes('launch:')) unguarded.push(src.slice(0, m.index).split('\n').length);
+  }
+  assert.ok(sites > 30, `DENOMINATOR read before the verdict: the parser found only ${sites} call sites`);
+  assert.deepEqual(unguarded, [], `these call sites can spawn a real gate session, at lines: ${unguarded}`);
+  const probe = `produceVerdict${'({ repo: x })'}`;
+  assert.ok(!probe.includes('launch:'), 'CONTROL: the predicate can report a site with no guard');
+});
+
+test('J-12 — a BLOCKED run reclaims its tree; only REFUSED keeps one', () => {
+  // The reclaim arm was asserted only for PRODUCED, so widening the keep predicate from
+  // `=== REFUSED` to `REFUSED || BLOCKED` left the suite 75/75 green. BLOCKED means the panel ran
+  // and found defects: the answer is in the record, not in the tree.
+  const deps = {
+    materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
+    readVerdictArtifact: () => ({ outcome: OUTCOME.BLOCKED, subject: 's', tier: 'full' }),
+    launch: () => assert.fail('must not launch'),
+  };
+  const r = produceVerdictFn({ repo: REPO_ROOT, deps: { ...deps, launch: () => assert.fail('must not launch') } });
+  assert.equal(r.outcome, OUTCOME.BLOCKED, 'DENOMINATOR: this cell only speaks about the arm it names');
+  assert.equal(fs.existsSync(r.judgeDir), false, 'a BLOCKED run must reclaim its judge project');
+});
+
+test('J-13 — only PRODUCED and BLOCKED skip the launcher; REFUSED spends the panel', () => {
+  // THIS CELL GOVERNS WHEN ~40 MINUTES AND ~3M TOKENS GET SPENT, and nothing else asserted it.
+  //
+  // The launch guards on this file's call sites protect the SUITE. They do not protect the PRODUCT
+  // — and they make the product harder to protect, because a change that widened this set (BLOCKED
+  // reaching the launcher, say) would spend a panel run on a diff already blocked while every cell
+  // in this file stayed green, precisely BECAUSE they are guarded now.
+  //
+  // Measured rather than assumed. `readVerdictArtifact` returns PRODUCED, BLOCKED or REFUSED and
+  // nothing else, so REFUSED is the whole reachable fall-through set — and REFUSED is what it
+  // returns whenever no verdict is bound yet or one cannot be read, which is the normal state of
+  // every branch anyone is working on. Two real runs launched under exactly that condition: one in
+  // a tree with no bound verdict, one in a detached clone that could not resolve origin/main. They
+  // are the same event under this rule.
+  //
+  // `REFUSED -> run the gate` is what the producer is FOR. Do not "fix" the third assertion.
+  const reach = (outcome) => {
+    let launched = 0;
+    const r = produceVerdictFn({
+      repo: REPO_ROOT,
+      deps: {
+        materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
+        readVerdictArtifact: () => ({ outcome, subject: 's', tier: 'full' }),
+        launch: () => { launched += 1; return { status: 0, stdout: '', stderr: '' }; },
+      },
+    });
+    if (r.judgeDir) fs.rmSync(r.judgeDir, { recursive: true, force: true });
+    return launched;
+  };
+  assert.equal(reach(OUTCOME.PRODUCED), 0, 'a verdict that already binds must not spend a panel run');
+  assert.equal(reach(OUTCOME.BLOCKED), 0, 'a bound BLOCK must not spend a panel run either');
+  // THE MUST-FIRE ARM. Without it, both zeros above are satisfied by a build that never launches at
+  // all — which is the shape of every vacuous cell this round already found in its own tests.
+  assert.equal(reach(OUTCOME.REFUSED), 1, 'CONTROL: no bound verdict is exactly when the panel must run');
 });
