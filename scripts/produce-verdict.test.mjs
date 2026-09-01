@@ -1588,3 +1588,55 @@ test('J-13 — only PRODUCED and BLOCKED skip the launcher; REFUSED spends the p
   // all — which is the shape of every vacuous cell this round already found in its own tests.
   assert.equal(reach(OUTCOME.REFUSED), 1, 'CONTROL: no bound verdict is exactly when the panel must run');
 });
+
+test('J-14 — arming and the REFUSED disarm, asserted at the registry where existsSync is blind', () => {
+  // WHY THIS EXISTS BESIDE J-9, WHICH ALREADY CATCHES THE INVERSION ON ONE ARM.
+  //
+  // `isJudgeDirTracked` was exported "so a test can assert the COMPOSITION and not merely the
+  // primitives" and was then called by NOTHING — a review panel found it from both sides at once,
+  // as an unused export and as an untaken assertion. Wiring it rather than deleting it is a
+  // decision, and this comment is the argument for it, because the docstring's own reason is no
+  // longer the strongest one available: J-9 does catch the `ephemeral` inversion.
+  //
+  // WHAT J-9 CANNOT REACH. It observes arming INDIRECTLY, through fs.existsSync, which requires an
+  // outcome that reclaims. Its own comment records the limit: on REFUSED "the tree is deliberately
+  // KEPT either way", so on that path the filesystem cannot tell an armed directory from an
+  // unarmed one. Two properties are therefore asserted nowhere, and both are visible only at the
+  // registry:
+  //
+  //   1. the `ephemeral` decision on a REFUSING run. Same call site, same one-token mutation, and
+  //      existsSync is structurally unable to see it because nothing is reclaimed on either arm.
+  //   2. THE WRAPPER'S REFUSED DISARM. Delete `disarmJudgeDirCleanup(r.judgeDir)` and the kept tree
+  //      stays armed; `process.on('exit', sweepJudgeDirs)` then removes the ONE directory a refusal
+  //      exists to preserve — the evidence of what went wrong. That removal happens after the last
+  //      test has finished, so no existsSync anywhere in this file can ever observe it.
+  //
+  // Read at MATERIALISATION, which the call site reaches AFTER arming and BEFORE any disarm. The
+  // refusal is forced there for that reason, not to test materialisation.
+  const seen = {};
+  const deps = {
+    runGateRunner: jRouterRunner(),
+    materialiseJudgeProject: ({ dest }) => {
+      seen.tracked = isJudgeDirTrackedFn(dest);
+      return { ok: false, reason: 'forced refusal: this cell is about arming, not materialisation' };
+    },
+  };
+
+  const theirs = judgeDirFixture();
+  const operator = produceVerdictFn({ repo: REPO_ROOT, judgeDir: theirs, deps: { ...deps, launch: () => assert.fail('must not launch') } });
+  assert.equal(operator.outcome, OUTCOME.REFUSED, 'DENOMINATOR: this cell only speaks about a refusing run');
+  assert.equal(seen.tracked, false, "an operator's --judge-dir must never be armed, on any outcome");
+  // THE POINT OF THE CELL, STATED AS AN ASSERTION: existsSync AGREES here and is worthless, because
+  // a refusal keeps the tree whether or not it was armed. Both builds pass this line.
+  assert.equal(fs.existsSync(theirs), true, 'CONTROL: REFUSED keeps it either way — existsSync cannot discriminate on this arm');
+  fs.rmSync(theirs, { recursive: true, force: true });
+
+  // THE MIRROR, on the arm that can go silently empty: a directory this run created MUST be armed,
+  // or `seen.tracked === false` above is satisfied by a build that never arms anything at all.
+  const ours = produceVerdictFn({ repo: REPO_ROOT, deps: { ...deps, launch: () => assert.fail('must not launch') } });
+  assert.equal(ours.outcome, OUTCOME.REFUSED);
+  assert.equal(seen.tracked, true, 'CONTROL: a directory this run created must be armed');
+  assert.equal(isJudgeDirTrackedFn(ours.judgeDir), false, 'a REFUSED run must DISARM the tree it keeps, or the exit sweep deletes it');
+  assert.equal(fs.existsSync(ours.judgeDir), true, 'CONTROL: REFUSED keeps the tree');
+  fs.rmSync(ours.judgeDir, { recursive: true, force: true });
+});
