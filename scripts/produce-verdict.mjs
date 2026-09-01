@@ -829,7 +829,12 @@ export function produceVerdict(o = {}) {
   const env = o.env ?? process.env;
   const keep = keepJudgeDirSetting(env);
   if (keep === null) {
-    return result(OUTCOME.REFUSED, `QA_KEEP_JUDGE_DIR="${(o.env ?? process.env).QA_KEEP_JUDGE_DIR}" is not a recognised on/off value. Refusing rather than guessing whether to delete a tree.`);
+    // READS THE LOCAL, NOT A SECOND DERIVATION OF IT. This re-computed `o.env ?? process.env` inline,
+    // which is the same expression as line above and therefore the same source — checked before
+    // deleting, because a re-derivation that reads a DIFFERENT source is not redundancy. Here it was
+    // identical, so the risk it carried was drift: `env` gains a fallback one day and the message
+    // reports a value the decision was not made from.
+    return result(OUTCOME.REFUSED, `QA_KEEP_JUDGE_DIR="${env.QA_KEEP_JUDGE_DIR}" is not a recognised on/off value. Refusing rather than guessing whether to delete a tree.`);
   }
   const r = runProduceVerdict({ ...o, env });
   if (r && r.judgeDir) {

@@ -1319,6 +1319,32 @@ import {
   isJudgeDirTracked as isJudgeDirTrackedFn,
 } from './produce-verdict.mjs';
 
+/**
+ * The routing seam every J cell runs through — and the reason four of them were RED on `main`.
+ *
+ * J-9, J-10, J-12 and J-13 named `materialiseJudgeProject` and `readVerdictArtifact` as deps and
+ * left `runGateRunner` unset, so each one called the LIVE `run-gate.mjs` against whatever tree the
+ * checkout happened to be. That router classifies `origin/main...HEAD`. On the branch these cells
+ * were written on the diff was large and the gate was required, so they passed; the moment they
+ * merged, `origin/main...HEAD` became EMPTY, the router emitted no invocation, and every one of
+ * them returned NOT_REQUIRED and failed its own DENOMINATOR assertion.
+ *
+ * Measured on a pristine checkout of `origin/main`, `git status` clean:
+ *   scripts/produce-verdict.test.mjs   74 pass · 4 fail
+ *   npm run test:merge-gate            141 pass · 4 fail · rc 1     <- a CI step, red
+ * and at the commit before the merge, the same file is 65 pass · 0 fail.
+ *
+ * SO THE CELLS WERE GREEN EXACTLY WHERE THEY COULD NOT BE TRUSTED AND RED WHERE THEY MATTER. The
+ * rest of this file already routes through `routerRunner(routerJson(...))` — the seam existed and
+ * these four did not take it. Sharing one helper is what stops the next cell forgetting.
+ *
+ * THE TIP IS THE TREE'S REAL HEAD, NOT A SYNTHETIC SHA. `crossCheckArgs` refuses an invocation
+ * whose tip is not what the tree is actually at — "the panel would review a different commit than
+ * the one this run is about" — so `'a'.repeat(40)` routes past NOT_REQUIRED and lands on REFUSED
+ * one step later. Read at call time, because HEAD moves with every commit on this branch.
+ */
+const jRouterRunner = () => routerRunner(routerJson(REPO_ROOT, g(REPO_ROOT, ['rev-parse', 'HEAD'])));
+
 /** A directory with a file in it, so "removed" is distinguishable from "was never there". */
 function judgeDirFixture() {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-judge-probe-'));
@@ -1437,6 +1463,7 @@ test('J-9 — an operator\'s --judge-dir survives a reclaiming run; ours does no
   // that reached an answer, so that is the only place the inversion is observable. The seams below
   // buy that outcome without a panel run.
   const deps = {
+    runGateRunner: jRouterRunner(),
     materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
     readVerdictArtifact: () => ({ outcome: OUTCOME.PRODUCED, subject: 's', tier: 'full' }),
   };
@@ -1462,6 +1489,7 @@ test('J-10 — a caller\'s QA_KEEP_JUDGE_DIR is THREADED, not merely validated',
   // arms measured `false` before the fix: opposite instructions, byte-identical outcomes. A
   // silently-ignored retention flag is the worst direction for that class to fail in.
   const deps = {
+    runGateRunner: jRouterRunner(),
     materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
     readVerdictArtifact: () => ({ outcome: OUTCOME.PRODUCED, subject: 's', tier: 'full' }),
   };
@@ -1514,6 +1542,7 @@ test('J-12 — a BLOCKED run reclaims its tree; only REFUSED keeps one', () => {
   // `=== REFUSED` to `REFUSED || BLOCKED` left the suite 75/75 green. BLOCKED means the panel ran
   // and found defects: the answer is in the record, not in the tree.
   const deps = {
+    runGateRunner: jRouterRunner(),
     materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
     readVerdictArtifact: () => ({ outcome: OUTCOME.BLOCKED, subject: 's', tier: 'full' }),
     launch: () => assert.fail('must not launch'),
@@ -1544,6 +1573,7 @@ test('J-13 — only PRODUCED and BLOCKED skip the launcher; REFUSED spends the p
     const r = produceVerdictFn({
       repo: REPO_ROOT,
       deps: {
+        runGateRunner: jRouterRunner(),
         materialiseJudgeProject: ({ dest }) => ({ ok: true, verdictBin: path.join(dest, 'v.mjs'), files: [] }),
         readVerdictArtifact: () => ({ outcome, subject: 's', tier: 'full' }),
         launch: () => { launched += 1; return { status: 0, stdout: '', stderr: '' }; },
@@ -1557,4 +1587,56 @@ test('J-13 — only PRODUCED and BLOCKED skip the launcher; REFUSED spends the p
   // THE MUST-FIRE ARM. Without it, both zeros above are satisfied by a build that never launches at
   // all — which is the shape of every vacuous cell this round already found in its own tests.
   assert.equal(reach(OUTCOME.REFUSED), 1, 'CONTROL: no bound verdict is exactly when the panel must run');
+});
+
+test('J-14 — arming and the REFUSED disarm, asserted at the registry where existsSync is blind', () => {
+  // WHY THIS EXISTS BESIDE J-9, WHICH ALREADY CATCHES THE INVERSION ON ONE ARM.
+  //
+  // `isJudgeDirTracked` was exported "so a test can assert the COMPOSITION and not merely the
+  // primitives" and was then called by NOTHING — a review panel found it from both sides at once,
+  // as an unused export and as an untaken assertion. Wiring it rather than deleting it is a
+  // decision, and this comment is the argument for it, because the docstring's own reason is no
+  // longer the strongest one available: J-9 does catch the `ephemeral` inversion.
+  //
+  // WHAT J-9 CANNOT REACH. It observes arming INDIRECTLY, through fs.existsSync, which requires an
+  // outcome that reclaims. Its own comment records the limit: on REFUSED "the tree is deliberately
+  // KEPT either way", so on that path the filesystem cannot tell an armed directory from an
+  // unarmed one. Two properties are therefore asserted nowhere, and both are visible only at the
+  // registry:
+  //
+  //   1. the `ephemeral` decision on a REFUSING run. Same call site, same one-token mutation, and
+  //      existsSync is structurally unable to see it because nothing is reclaimed on either arm.
+  //   2. THE WRAPPER'S REFUSED DISARM. Delete `disarmJudgeDirCleanup(r.judgeDir)` and the kept tree
+  //      stays armed; `process.on('exit', sweepJudgeDirs)` then removes the ONE directory a refusal
+  //      exists to preserve — the evidence of what went wrong. That removal happens after the last
+  //      test has finished, so no existsSync anywhere in this file can ever observe it.
+  //
+  // Read at MATERIALISATION, which the call site reaches AFTER arming and BEFORE any disarm. The
+  // refusal is forced there for that reason, not to test materialisation.
+  const seen = {};
+  const deps = {
+    runGateRunner: jRouterRunner(),
+    materialiseJudgeProject: ({ dest }) => {
+      seen.tracked = isJudgeDirTrackedFn(dest);
+      return { ok: false, reason: 'forced refusal: this cell is about arming, not materialisation' };
+    },
+  };
+
+  const theirs = judgeDirFixture();
+  const operator = produceVerdictFn({ repo: REPO_ROOT, judgeDir: theirs, deps: { ...deps, launch: () => assert.fail('must not launch') } });
+  assert.equal(operator.outcome, OUTCOME.REFUSED, 'DENOMINATOR: this cell only speaks about a refusing run');
+  assert.equal(seen.tracked, false, "an operator's --judge-dir must never be armed, on any outcome");
+  // THE POINT OF THE CELL, STATED AS AN ASSERTION: existsSync AGREES here and is worthless, because
+  // a refusal keeps the tree whether or not it was armed. Both builds pass this line.
+  assert.equal(fs.existsSync(theirs), true, 'CONTROL: REFUSED keeps it either way — existsSync cannot discriminate on this arm');
+  fs.rmSync(theirs, { recursive: true, force: true });
+
+  // THE MIRROR, on the arm that can go silently empty: a directory this run created MUST be armed,
+  // or `seen.tracked === false` above is satisfied by a build that never arms anything at all.
+  const ours = produceVerdictFn({ repo: REPO_ROOT, deps: { ...deps, launch: () => assert.fail('must not launch') } });
+  assert.equal(ours.outcome, OUTCOME.REFUSED);
+  assert.equal(seen.tracked, true, 'CONTROL: a directory this run created must be armed');
+  assert.equal(isJudgeDirTrackedFn(ours.judgeDir), false, 'a REFUSED run must DISARM the tree it keeps, or the exit sweep deletes it');
+  assert.equal(fs.existsSync(ours.judgeDir), true, 'CONTROL: REFUSED keeps the tree');
+  fs.rmSync(ours.judgeDir, { recursive: true, force: true });
 });
