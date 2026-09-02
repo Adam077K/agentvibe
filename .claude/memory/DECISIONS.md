@@ -192,26 +192,9 @@ into work that is not Agentvibe, so it is not this repo's call to make unilatera
 **Owner:** ceo · **founder decision** · **Affects:** the roster migration, `~/.claude/agents/`
 
 ## 2026-08-16 — `maxTurns` does bind, and the belief that it did not cost three gate runs
-
-**Context:** Three consecutive runs of the binding QA gate failed with a coverage gap on `correctness`, and
-~48% of dispatched agents returned nothing with `agents_error: 0`. Four explanations were tested against the
-run transcripts and refuted: a turn cap, context exhaustion, output tokens, wall-clock timeout — all
-overlapping distributions.
-**The measurement that settled it:** tool-call count separates the two populations **perfectly**. Agents
-making ≤17 calls returned findings; agents reaching 20 returned nothing; **13 of 20 dropouts sat at exactly
-20** — the `maxTurns` declared on the reviewer containers. No overlap.
-**Decision:** `maxTurns` raised 20 → 30 on `reviewer` and `reviewer-readonly`, and `reviewPrompt` rewritten
-around a finite budget (`git diff` as primary evidence, whole-file reads the exception, emit partial findings
-rather than be killed holding a complete set). The judge gained the retry the reviewers already had — it ran
-with **one** attempt while every dimension retried four times, so at that dropout rate it coin-flipped into
-`auto-BLOCK`, which is what run three recorded.
-**Correction to a recorded repo belief:** this repo states *"`maxTurns` does not bind — 196 of 269 runs
-exceeded a cap of 20."* That measurement was taken where **no agent file was named**. It does not bind then.
-It binds hard the moment a dispatch names an `agentType`. The CEO introduced the regression by adding
-`agentType` at the four `qa.js` sites and then repeated the false belief while diagnosing it.
-**Reversibility:** reversible — two frontmatter numbers and a prompt.
-**Owner:** ceo · **Affects:** `.claude/agents/reviewer*.md`, `.claude/workflows/qa.js`, and any future dispatch
-that names an agent type
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-02). archived 2026-09-02 to make room for the StartupOS v1 entry; superseded by STARTUP-OS.md Part II §11 and §13*
+***Cited in prose by 4 location(s)**, which the heading above keeps resolvable: `docs/08-agents_work/sessions/2026-08-16-builder-token-efficiency.md:9` (date), `scripts/lib/memory-entries.js:507` (title-phrase), `scripts/lib/memory-entries.js:508` (title-phrase), `scripts/lib/memory-entries.js:509` (title-phrase).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-16 — The browser reaches the open web; the local network is refused
 *Archived to `DECISIONS_ARCHIVE_002.md` (2026-08-26). Executed. The grant is `.mcp.json` plus one matcher in `.claude/hooks/pre-tool-use.sh`; the live rule is `c-mcp-matcher-names-the-prefix-and-policy-decides` — **not** `c-mcp-hook-matcher-must-name-the-tool`, which the ledger deprecated once PR #73 made the matcher a prefix.*
@@ -219,25 +202,9 @@ that names an agent type
 *Not checked: paraphrase, global-scope-claims, title-too-generic — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-24 — Act on the over-build audit, but check its premises first; split PRs by tier
-
-**Decision:** the 2026-08-24 audit (`docs/08-agents_work/handoffs/2026-08-24-continue-the-build.md` §4.4)
-ranked six items. All six were re-verified against `695800e` before any was actioned, and **two rest on false
-premises**: item 1's claim that the 4× retry ceiling was sized against `maxTurns=20` is refuted by
-`qa.js:270-272`, which records a turn cap tested **and discarded**; item 5 names `.claude/qa-tier-floor.yml`,
-which contains no mention of model families at all. Both are corrected in the handoff rather than implemented,
-and the retry values stay untouched — cutting them on a refuted premise would re-break a gate that cost three
-failed runs to fix.
-**Why this is a decision, not a detail:** the audit is the document authorising changes to the gate, and it
-carried the same citation rot it was commissioned to cure. An audit is not exempt from its own finding.
-**Work splits into three PRs by TIER, not by topic.** The tier floor is per-PR, so a single irreversible file
-drags a whole PR to a 17–70-agent gate. Grouping by tier makes the irreversible files pay that gate once
-instead of four times; it is the largest cost lever measured this session.
-**Recorded and deferred by founder decision:** `.claude/workflows/qa.js` never reads
-`.claude/review-lenses.yml` (`grep -c` → 0). The gate carries five hardcoded prose dimensions; the lens file
-declares ten structured lenses; they share two names. That is *why* `independence: provenance` goes
-unenforced — the gate cannot honour a property it never loads. Patch-and-record chosen over unification.
-**Reversibility:** reversible — documentation, lint severities, and one loop bound.
-**Owner:** ceo · **founder decision** · **Affects:** the 2026-08-24 handoff, `MODEL-DIVERSITY.md`, `qa.js`, `schema-lint.js`
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-02). archived 2026-09-02 to make room for the StartupOS v1 entry; superseded by STARTUP-OS.md Part II §11 and §13*
+***Cited in prose by 2 location(s)**, which the heading above keeps resolvable: `CLAUDE.md:856` (date), `docs/03-system-design/AGENT-ARCHITECTURE.md:244` (date).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-25 — Four founder decisions: scope, review weight, venture work, one living status
 
@@ -422,3 +389,26 @@ conformance binds by being a test and by nothing else**; the lens and playbook a
 **Owner:** orchestrator (`ceo-4-1787566829`) · **founder direction 2026-08-29**
 **Affects:** `.claude/lenses.yml`, `.claude/review-lenses.yml`, `.claude/playbooks/design-pass.yml`,
 `scripts/build-tokens.mjs`, `scripts/design-probe.mjs`, `design/`, every future design dispatch
+
+## 2026-09-02 — StartupOS v1: the frame is a slice of the picture; fifteen stand, six amendments
+
+**The board built a floor, not a vision** — of fifteen decisions, nine stop, four measure, one shapes, one
+ships. Four sealed designers then designed the whole system inside that floor and a fresh synthesizer merged
+them into the 18-section frame (`docs/03-system-design/STARTUP-OS.md` Part II; every section carries
+`grafted_from:` and `enforced_by:`). A vision round with **no floor** followed — three sealed envisioners,
+the CEO's position sealed first, one synthesizer — and produced `vision/2026-09-02-THE-PICTURE.md`.
+**Verdict: the frame is a SLICE of the picture on 10 of 14 territories and SMALL on 4** (refusal 9's scope ·
+authority as a compile-time label · no fuse · revenue typed by hand). Eight territories were missing from the
+map entirely: distribution, authority, attention, obligation, identity, the clock, silence, succession.
+
+**Founder decisions, 2026-09-02:** all fifteen stand as the floor, four narrowed (D8 first half · D9 in the
+no-Write-argv form · D10 without `KeepAlive` · D12 gains a byte ceiling beside the count) · six amendments
+accepted (pack-field trust may reopen when a second pack ships · `default_if_unanswered:` and a `fused`
+disposition · `warrant_kind:` reserved · revenue from Stripe as a claim · briefing and `say:` on day 5 ·
+`not_before:` on every act that leaves) · an owned address later in month one · **stay on the Mac** until the
+first measured overnight. Recorded in Part IV.
+
+**Measured:** `--disallowedTools Bash` narrows a `claude -p` child (M3 true); `pre-tool-use.sh` fires under
+`claude -p` for `Write` (M1); a child inside a sandboxed session cannot start its own sandbox.
+**Affects:** whoever builds the 30-day path (Part II §15); the handoff chain — four handoffs deleted, folded
+into Part IV. **Reversibility:** reversible — documents only; nothing is built.

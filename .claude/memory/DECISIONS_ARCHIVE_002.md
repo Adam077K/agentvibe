@@ -214,3 +214,46 @@ verify-by-execution non-optional rather than a virtue.
 **Owner:** ceo · **Founder decisions:** 7 working lanes · pre-authorise A/B/C · assign a lane to PR #77
 **Affects:** `CLAUDE.md`, `README.md`, `AGENTS.md`, `.claude/commands/*`, `scripts/check-registration.mjs`,
 `scripts/run-gate.mjs`, `scripts/pre-tool-use.test.mjs`, and the still-open `design-screen.md` dispatch gap
+
+## 2026-08-24 — Act on the over-build audit, but check its premises first; split PRs by tier
+
+**Decision:** the 2026-08-24 audit (`docs/08-agents_work/handoffs/2026-08-24-continue-the-build.md` §4.4)
+ranked six items. All six were re-verified against `695800e` before any was actioned, and **two rest on false
+premises**: item 1's claim that the 4× retry ceiling was sized against `maxTurns=20` is refuted by
+`qa.js:270-272`, which records a turn cap tested **and discarded**; item 5 names `.claude/qa-tier-floor.yml`,
+which contains no mention of model families at all. Both are corrected in the handoff rather than implemented,
+and the retry values stay untouched — cutting them on a refuted premise would re-break a gate that cost three
+failed runs to fix.
+**Why this is a decision, not a detail:** the audit is the document authorising changes to the gate, and it
+carried the same citation rot it was commissioned to cure. An audit is not exempt from its own finding.
+**Work splits into three PRs by TIER, not by topic.** The tier floor is per-PR, so a single irreversible file
+drags a whole PR to a 17–70-agent gate. Grouping by tier makes the irreversible files pay that gate once
+instead of four times; it is the largest cost lever measured this session.
+**Recorded and deferred by founder decision:** `.claude/workflows/qa.js` never reads
+`.claude/review-lenses.yml` (`grep -c` → 0). The gate carries five hardcoded prose dimensions; the lens file
+declares ten structured lenses; they share two names. That is *why* `independence: provenance` goes
+unenforced — the gate cannot honour a property it never loads. Patch-and-record chosen over unification.
+**Reversibility:** reversible — documentation, lint severities, and one loop bound.
+**Owner:** ceo · **founder decision** · **Affects:** the 2026-08-24 handoff, `MODEL-DIVERSITY.md`, `qa.js`, `schema-lint.js`
+
+## 2026-08-16 — `maxTurns` does bind, and the belief that it did not cost three gate runs
+
+**Context:** Three consecutive runs of the binding QA gate failed with a coverage gap on `correctness`, and
+~48% of dispatched agents returned nothing with `agents_error: 0`. Four explanations were tested against the
+run transcripts and refuted: a turn cap, context exhaustion, output tokens, wall-clock timeout — all
+overlapping distributions.
+**The measurement that settled it:** tool-call count separates the two populations **perfectly**. Agents
+making ≤17 calls returned findings; agents reaching 20 returned nothing; **13 of 20 dropouts sat at exactly
+20** — the `maxTurns` declared on the reviewer containers. No overlap.
+**Decision:** `maxTurns` raised 20 → 30 on `reviewer` and `reviewer-readonly`, and `reviewPrompt` rewritten
+around a finite budget (`git diff` as primary evidence, whole-file reads the exception, emit partial findings
+rather than be killed holding a complete set). The judge gained the retry the reviewers already had — it ran
+with **one** attempt while every dimension retried four times, so at that dropout rate it coin-flipped into
+`auto-BLOCK`, which is what run three recorded.
+**Correction to a recorded repo belief:** this repo states *"`maxTurns` does not bind — 196 of 269 runs
+exceeded a cap of 20."* That measurement was taken where **no agent file was named**. It does not bind then.
+It binds hard the moment a dispatch names an `agentType`. The CEO introduced the regression by adding
+`agentType` at the four `qa.js` sites and then repeated the false belief while diagnosing it.
+**Reversibility:** reversible — two frontmatter numbers and a prompt.
+**Owner:** ceo · **Affects:** `.claude/agents/reviewer*.md`, `.claude/workflows/qa.js`, and any future dispatch
+that names an agent type
