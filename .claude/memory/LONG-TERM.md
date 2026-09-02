@@ -82,3 +82,10 @@
 - **The session memory directory is unwritable from an agent turn.** `~/.claude/projects/.../memory/` is
   refused by both the hook and the sandbox (probed 2026-08-24). Cross-session facts go here and in
   `DECISIONS.md`, which is the repo's own mechanism anyway.
+
+## 2026-09-02 — the rethink: WAKE, and how to run design rounds
+- Founder: voice-transcribed ("contacts"=context); wants the WHOLE system envisioned; reads pages, taps widgets, decides via prompts; "idk" = decide; overrules and means it; "we are doing big, changing the future".
+- Anchored rounds (census, board floor, repo as start) produced safety machines and were rejected. What worked: a brief of only the founder's words, no floor, sealed Opus dreams, one Fable merge, provenance per paragraph, parts bin last. Never run an anchored round again.
+- The envisioned system is WAKE (`docs/03-system-design/dream/2026-09-02-THE-SYSTEM.md`); the anchored spec v2 and its Fable review are the record; WAKE §22 maps every existing part to a fate.
+- Measured: `--allowedTools` restricts nothing; `--restricted --tools … --strict-mcp-config` is the seam; a `-p` child binds an inbox socket unless `--bare`; only managed settings survive a child's argv; the hook matches command strings.
+- Next: six territories around WAKE (drive · founder's environment · fleet · the door for outside parts · storage · the field map), same method; then re-derive the spec from WAKE. Start from `handoffs/2026-09-02-after-the-dreams.md`.
