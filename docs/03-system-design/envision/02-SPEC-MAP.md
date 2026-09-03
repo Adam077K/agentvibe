@@ -1,263 +1,314 @@
-# The spec map · how WATCH becomes a spec, in the Territory's order · 2026-09-03
+# The system, as a system design · what the next team must understand, reason about, envision and spec · 2026-09-03
 
-**What this is.** The founder asked: in which steps do we spec and understand the actual system: the memory, the
-files, the projects taken from outside, the agents, the tools and MCPs, the engines and mechanisms, the
-personalities, the skills and their number, the learning of a field; ordered by the Territory page's fourteen
-sections; the points under them that were missed; and new ideas. This file is that plan. It is read by session 5
-before the spec is written. WATCH (`2026-09-02-THE-SYSTEM.md`) is the frame; the section numbers below are WATCH's.
+**What this is, in the founder's words.** *The next team and the next session are to talk about and understand
+the new system we are planning. That includes the WATCH framework and also the other things we need to understand
+in the system. The spec should identify, understand and plan the whole: the surfaces, working with the providers,
+Claude Code, Codex, Gemini or whatever. The agents: how do we call them, how do we set up the prompts, what tools
+do they get, what MCPs do they get, how do we make sure they will be able to do everything. All the things in
+WATCH, and all the things besides it. Be open-minded: think, reason, envision, improve, and plan the whole system:
+architecture, design, framework of the full crew, agentic, harnessed team, company, AI, vibe coding. Think about
+it from a system-design point of view: different surfaces, different parts, different wings, different branches.
+Do not plan the steps of building it. Plan the system and spec it. Do not say it will take seven days. Afterwards
+we build, understand, write, challenge, rethink the whole system.*
 
-## The steps
+**What this is not.** Not a build plan, not a schedule, not a first month. WATCH §25 holds a build order and it is
+not the subject here. Nothing below carries a date or a duration.
 
-| Step | What lands | Method | Founder |
-|---|---|---|---|
-| **A · The parts list** | One table: every organ of WATCH → the file(s) it lives in → the one writer → the readers → the check that fails when it drifts. From §4, §17, §29. This is the skeleton every territory hangs on | one Fable lane, ~1 hour; a read-only census subagent verifies every path it names exists or is marked absent | reads one page; decides nothing yet |
-| **B · Territories 1–7, the inside** | Missions & drive · Workers & roster · Hands · Knowledge · Memory · Communication · Context & cost — each pinned as below: schemas, algorithms, the outside parts taken, the open question | one Fable lane per group of territories; each territory keeps v2's discipline (at full scale · components · enforced by · year one · growth path · would have to be true · grafted from) and WATCH's rule that no stage states method | reads the page; answers the open questions with a tap |
-| **C · Territories 8–14, the edges, and the missed points** | Quality & truth · Control & safety · Surfaces · Runtime · Self-improvement · Economics · The company itself — plus the four points under the fourteen that WATCH does not yet have (below) and adoption of an existing project | same | same |
-| **D · The build order** | §25 as a checklist: weeks one to four (a hundred-line loop and six files), then each stage gated on one real mission having run through the thing before it; the ten measured moves first | Fable, short | the four founder-only items: the API key and the terms question · the managed settings file · the credential plan · a second human |
-| **E · The review** | Two sealed Opus reviewers and one Fable judge over the spec: every named path exists or says it does not; no stage states method; every part names its caller; every rule names what fails | the Fable review method of 2026-09-02 | reads the verdict |
+**The frame.** WATCH, `2026-09-02-THE-SYSTEM.md`, decided the frame on 2026-09-03. It is the starting point, not
+the ceiling: where the next team sees further, it says so and improves it, with the losing image kept by name.
 
-Each step ends with a page and a commit on the branch. A step that runs into the five-hour limit resumes by name.
+---
 
-## The fourteen, in the Territory's order
+## The wings of the system
 
-Each row: what WATCH answers · what the spec must pin · what is taken from outside · the open question.
+A system-design view. Eight wings; each names what WATCH already says, what must still be understood and
+decided, and the questions that are open. The fourteen territories further down are the finer grain.
+
+### Wing 1 · The surfaces and the providers
+*Where the crew runs and what it runs on.*
+- **WATCH says:** cells are `claude -p` processes on this Mac, positions are argv, the founder's surfaces are the
+  desk, the bay, the room, the dailies, the terminal and voice; a second model family is a procurement problem.
+- **Understand and decide:** the provider layer as a first-class part. Claude Code as a runtime for cells (print
+  mode, the measured seam `--restricted --tools --strict-mcp-config --permission-mode dontAsk`, managed settings,
+  the inbox socket, the five-hour window or an API key). Codex CLI and Gemini CLI as runtimes for cells and as
+  second-family judges (what each can and cannot be narrowed to; Codex exits 0 with empty stdout when detached from
+  a TTY; `gemini` is installed and has never run; both local model pins were retired for weeks). The raw APIs
+  through a router for batch work off the founder's clock. Which provider stands which position, chosen by
+  instrument and price, never by loyalty. What is provider-neutral in the design (the Log, the Book, the bet, the
+  mouth, the door) and what is provider-bound (argv, hooks, the window). How a cell's identity, credentials and
+  budget survive a provider change.
+- **Open:** whether one dispatcher speaks every provider, or each provider is a hand admitted through the door.
+  What of Claude Code's own machinery the crew keeps (hooks, skills, agents files, MCP config) and what WATCH
+  retires. Cloud runtimes (Routines, managed agents) as a sixth surface or as never-hands.
+
+### Wing 2 · The crew, concretely
+*How an agent is called, prompted, equipped, and proven able.*
+- **WATCH says:** six positions, cells of twelve minutes, no agent files, no personas; the Compiler assembles
+  trunk, inheritance and delta; the door admits hands; a probe every watch tests what a cell can actually touch.
+- **Understand and decide, in the founder's four questions:**
+  1. **How do we call them.** The dispatcher births a cell: the argv per position, the prompt fed on stdin, the
+     worktree, the budget, the death condition, the checkpoint, the return schema. What a cell is named by (the
+     bet id), and that it has no other name.
+  2. **How do we set up the prompts.** The trunk, byte-identical and cache-warm, and exactly what it holds. The
+     standing prompt per position (what a maker, a lookout, a looker, a judge is told, always). The delta keyed on
+     the judge. The prompt standard that already exists here (`PROMPT-STANDARD.md`, the `PS-*` lint) and what of
+     it survives. Where the founder's voice enters a prompt (the Second's lines, never a preferences file). How a
+     prompt is versioned and how a prompt change is a bet that must beat the company's own history.
+  3. **What tools and what MCPs they get.** Per position, the built-in tool list and the MCP servers, each admitted
+     through the door with a declared exposure, a credential narrower than the hand, a rate ceiling, a dry branch,
+     a caller, a probe. The current grant surface inverted: read-only instruments first, acting hands last. The
+     browser as a day hand only. What the ~15 connected servers become when each is put through door test 1.
+  4. **How do we make sure they will be able to do everything.** Coverage is the field map: every job a company
+     has, with its class, its ground truth and its hand. The spec must show, per job, that a position, an
+     instrument and a hand exist, or say Blind and route to the founder. Assurance is the probe: a capability
+     nobody probes is a memory of one. And the honest limit: a sixth of the jobs are the founder's forever, and
+     "everything" means the crew reaches everything it can measure and says so where it cannot.
+- **Open:** the models per position by instrument; whether positions are five or six or seven once providers vary;
+  how a pod is declared; what the crew does when a hand it needs does not exist (forge it, buy it, or ask).
+
+### Wing 3 · The stores
+*What the company is, when every process is dead.*
+- **WATCH says:** ten stores; the Log is the only truth; the Book by surprise; the graveyard; the Lessons and
+  reflexes; the Bench with licences; the Hands; the Second; the World Ledger; the Treasury and the refusal ledger.
+  Files in git, one house repo and one per venture, blobs by hash off-machine.
+- **Understand and decide:** every store's schema, writer, readers, and the check that fails when it drifts; the
+  settle and consolidate write paths; retraction; erasure by hash; the transcripts as episodes; what the
+  claim ledger, verdict binding, `DECISIONS.md` and the check suite become inside these stores (WATCH §29).
+- **Open:** rent before anything has been loaded; the first fifty resolutions; store sizes, which WATCH gives as
+  bounds and not measurements.
+
+### Wing 4 · The drive
+*What moves, what waits, and who opens a goal.*
+- **WATCH says:** two atoms, bet and debt, never ranked; the keel and the weather; the escapement's four questions
+  and the flip test; the lethality order; five postures; four openers; standing orders and night orders; the three
+  governors; the ladder of method.
+- **Understand and decide:** the bet and debt schemas; the standing-orders template; the escapement as an
+  algorithm and where V and L come from; what a non-startup posture's critical path is; how the crew opens bets by
+  inheritance and cannot wander; how relentlessness is a slot and not a mood.
+- **Open:** the first week runs on the lethality order alone until a funnel instrument exists.
+
+### Wing 5 · The boundary
+*What may be done alone, and what never.*
+- **WATCH says:** the Line in three classes over four currencies; the complete one-way list; six block from day
+  one; the mouth with no model; the broker; the relay; the trifecta broken by positions; taint; the managed
+  settings file; the security block, twelve Hard instruments; the sandbox as guardrail, not containment.
+- **Understand and decide:** the mouth's instruction schema; the one-way list as data; the twelve instruments and
+  their commands; the managed settings file's four lines; the reachability probe; the guard rewritten to match
+  structured tool input; the checklists that live at the mouth.
+- **Open:** the terms question on unattended operation; the hook rewrite is an irreversible-tier change.
+
+### Wing 6 · The founder
+*Their environment, their channel, their protection.*
+- **WATCH says:** the desk, the bay, the room, the dailies; the terminal primary; voice as the originating channel,
+  read back before it binds, never for approval; four verbs; the bell's five conditions; the emission budget; the
+  72-hour heartbeat; the reverse seal; the capture check; the three-line health metric.
+- **Understand and decide:** the desk item schema; the strip schema and the bay's geometry; the room's feeds; the
+  dailies' order; the STOP file; how the phone surface is delivered; where the voice transcript lands.
+- **Open:** whether the room is worth building before the bay is proven; the client's own dailies for Serve.
+
+### Wing 7 · The fleet and the outside
+*Many projects, one founder, one window; and how the world enters.*
+- **WATCH says:** the house; at most three ventures making; the reserve; weekly arithmetic allocation; shared and
+  never shared; one reputation; intake and harvest; succession; the door with seven tests; the first ten of the
+  177; taint; ninety-day expiry; take mechanisms, never runtimes.
+- **Understand and decide:** the intake template for a new idea **and the adoption intake for a project that
+  already exists**, which is the one this founder will use most; `house.yml`; the harvest; the succession
+  handover; the catalogue re-verified against licences before any admission; which skills of the 134 re-enter,
+  which is a measured output.
+- **Open:** a second human; disclosure of machine-made work; the legal entity per venture.
+
+### Wing 8 · The whole, seen from outside
+*What it is, and what it is not.*
+- **WATCH says:** a crew, not a harness and not an org chart; the inversion in one sentence; twelve laws; why
+  nobody has seen it; what it would take, in three buckets; what is genuinely unsolved.
+- **Understand and decide:** the architecture drawn as surfaces, parts, wings and branches, with every arrow
+  named by what travels on it (a condensate, a difficulty, a finding, a strip, a signed instruction, a leaf). The
+  boundary of the system: what is inside the crew, what is a provider, what is the world, what is the founder.
+  Where the previous harness's truth layer sits inside it. And the places where the next team sees further than
+  WATCH: say so, decide, keep the losing image.
+- **Open:** the four points under the fourteen that WATCH lacks (below), and anything the next team finds that
+  nobody in this building has named.
+
+---
+
+## The fourteen territories, in the Territory page's order
+
+The finer grain. Each row: what WATCH answers · what the spec must pin · what is taken from outside · the open
+question. WATCH's section numbers.
 
 ### 01 · Missions & drive → WATCH §6, §9
-- **Answer.** Two atoms, the bet and the debt, never ranked. The keel (one thing under construction, never
-  forked) and the weather (everything else, forked wide, selected by contact). The escapement: four questions in
-  fixed order, the flip test, the lethality order. Five postures. Four openers: founder, crew by inheritance,
-  world, clock. Standing orders and night orders.
-- **Pin.** The bet and debt record schemas (WATCH's field table). `standing-orders.md` template: posture, appetite,
-  ceiling, reserve, the Line's additions, call-me-if, do-not-wake, the stop sentence, the keel's definition of
-  done, emission budget, standing refusals with reopen triggers. `night-orders/` format and its dawn scoring.
-  `keel.md`. The escapement written as an algorithm with the flip arithmetic and where V and L come from. The
-  lethality order as data the founder can reorder in a sentence. The three governors: stall detector, repetition
-  hash, aberrance halt. The blocked / stalled / stuck ladder of method.
-- **Take.** `beads` for the ready set · `projectmem` for the pre-action gate against dead ends · `restate` for
-  Walk's wait-at-the-assumption · `budget-guard.js` on disk becomes the stall detector.
-- **Open.** On day one nothing supplies V and L; a crude funnel instrument must exist before the flip test can run,
-  so what runs the first week is the lethality order alone. And what is the critical path of a project that is not
-  a startup (Serve, research)?
+- **Answer.** Two atoms, the bet and the debt, never ranked. The keel and the weather. The escapement: four
+  questions in fixed order, the flip test, the lethality order. Five postures. Four openers. Standing orders and
+  night orders.
+- **Pin.** The bet and debt record schemas. `standing-orders.md` template: posture, appetite, ceiling, reserve,
+  the Line's additions, call-me-if, do-not-wake, the stop sentence, the keel's definition of done, emission budget,
+  standing refusals with reopen triggers. `night-orders/` format and its dawn scoring. `keel.md`. The escapement
+  written as an algorithm with the flip arithmetic. The lethality order as data the founder reorders in a
+  sentence. The three governors: stall detector, repetition hash, aberrance halt. The ladder of method.
+- **Take.** `beads` for the ready set · `projectmem` for the pre-action gate · `restate` for Walk's
+  wait-at-the-assumption · `budget-guard.js` on disk becomes the stall detector.
+- **Open.** Before a funnel instrument exists nothing supplies V and L. What is the critical path of a project
+  that is not a startup?
 
-### 02 · Workers & roster → WATCH §4, §6, §7
-- **Answer.** No roles, no personas, no agent files. Six positions: maker, lookout, looker, judge, mouth,
-  broker-and-relay. Cells of about twelve minutes with a death condition and a checkpoint. The pod as the one
-  named exception. Four engines: the watch, the escapement, the Compiler, the relief.
-- **Pin.** The argv per position, measured: `--restricted --tools <list> --strict-mcp-config --permission-mode
-  dontAsk` under a managed settings file, and what each position's list is. The cell lifecycle. The three upward
-  shapes (condensate, difficulty, finding). **Where personality lives:** not in an agent. A persona is a
-  *conditioning* bought from the divergence budget (§19): a framing, an exemplar set, a constraint, a model
-  family. Each is scored by the diversity it buys and by how often its candidates survive contact, per field, and
-  it decays like a licence. The best personalities are the ones whose candidates keep surviving, and the list is
-  measured, never written.
-- **Take.** `container-use` for the isolation the worktree protocol only assumes · `claude-code-router` for a
-  judge from a second family · the board's de-anchored framings as conditioning sets, not personas.
-- **Open.** Model per position by instrument (the cheapest model that ever passes a Hard judge); how a pod is
-  declared and budgeted.
+### 02 · Workers & roster → WATCH §4, §6, §7 · Wing 2
+- **Answer.** No roles, no personas, no agent files. Six positions. Cells of twelve minutes with a death
+  condition. The pod. Four engines: the watch, the escapement, the Compiler, the relief.
+- **Pin.** The argv per position and per provider. The cell lifecycle. The three upward shapes. **Where
+  personality lives:** not in an agent. A persona is a conditioning bought from the divergence budget, a framing,
+  an exemplar set, a constraint, a model family, scored by the diversity it buys and how often its candidates
+  survive contact, decaying like a licence. The best personalities are a list the machine writes from outcomes.
+- **Take.** `container-use` · `claude-code-router` · the board's de-anchored framings as conditioning sets.
+- **Open.** Model per position by instrument. How a pod is declared and budgeted.
 
-### 03 · Hands → WATCH §16, §21
-- **Answer.** One door, seven tests, for a repository, a skill, a CLI, an MCP server alike. Day hand, night
-  hand, never. The Hands store. Taint: a cell that read outside content loses the hands that act. The mouth, the
-  broker, the relay. The current grant surface is the wrong shape: publish, send, share, remote exec and the
-  authenticated browser are connected; analytics, error tracking and a read-only billing key are not.
+### 03 · Hands → WATCH §16, §21 · Wing 2
+- **Answer.** One door, seven tests, for a repository, a skill, a CLI, an MCP server alike. Day, night, never.
+  Taint. The mouth, the broker, the relay. The current grant surface is the wrong shape.
 - **Pin.** `hands/<name>.yml`: exposure class, credential scope, rate ceiling, undo or delay, drill date,
-  day|night|never, `reconciles_to`. The first hands, all read-only instruments: the git host, the CI runner,
-  analytics, error tracking, billing read-only, the mail delivery log. The disconnect list until each passes the
-  door. `claude mcp list` every watch, a failure treated as damage. The guard rewritten to match structured tool
-  input, never a command string. The browser as a day hand only, never sharing a grant.
-- **Take.** `posthog` + `growthbook` · `trufflehog` · `litellm` per-key budgets · `agentapi` to steer a running
-  thing · `humanlayer`'s approval as a durable object · the `ALLOW | DENY | ASK` guardrail signature, the one to
-  copy most carefully.
-- **Open.** A census of the ~15 connected servers against door test 1: expect most to fail on "declare a rate".
+  day|night|never, `reconciles_to`. The first hands are read-only instruments: git host, CI runner, analytics,
+  error tracking, billing read-only, the mail log. The disconnect list. `claude mcp list` every watch, a failure
+  treated as damage. The guard on structured tool input. The browser as a day hand only.
+- **Take.** `posthog` + `growthbook` · `trufflehog` · `litellm` · `agentapi` · `humanlayer`'s durable approval ·
+  the `ALLOW | DENY | ASK` guardrail signature.
+- **Open.** The ~15 connected servers against door test 1.
 
 ### 04 · Knowledge → WATCH §11, §8, §19
-- **Answer.** Learn to judge the field before producing in it. Borrow instruments first: the world gives away
-  broken-detectors in every field and almost no good-detectors. The apprenticeship: 200 exemplars, the ground
-  truth and its latency, a discriminator, held-out AUC, only then generate. Licences public. Reflexes compiled
-  from lessons at the third sighting, each with a test, re-run monthly, the one store that shrinks. The 134
-  skills go to a holding directory nothing reads and re-enter one at a time through the door. Method is
-  forbidden where the judge is strong and mandatory where it is absent and the act is one-way.
-- **Pin.** `bench/<licence>/` schema. The borrowed-instruments table per field, as data. `field-map.yml`. The
-  apprenticeship as a runnable procedure with its exemplar store. The reflex format: trigger, test, expiry. The
-  dozen checklists at the mouth. **The number of skills is an output**: whatever paid rent this month, counted;
-  M1's bet is fewer than fifteen of the 134.
-- **Take.** `promptfoo`'s assertion taxonomy · `inspect_ai`'s scorers · **the skills catalogue and the 177 repos
-  mined for exemplar sets and instruments, never for procedure** · verbalised sampling.
-- **Open.** Where 200 exemplars per field come from legally (licence, terms of the source).
+- **Answer.** Learn to judge the field before producing in it. Borrow instruments first. The apprenticeship:
+  200 exemplars, ground truth and its latency, a discriminator, held-out AUC, then generate. Reflexes compiled at
+  the third sighting with a test. The 134 skills into a holding directory; re-entry through the door. Method
+  forbidden where the judge is strong, mandatory where it is absent and the act is one-way.
+- **Pin.** `bench/<licence>/`. The borrowed-instruments table per field. `field-map.yml`. The apprenticeship as a
+  runnable procedure with its exemplar store. The reflex format. The dozen checklists at the mouth. **The number
+  of skills is an output**, counted.
+- **Take.** `promptfoo` · `inspect_ai` · the skills catalogue and the 177 repos mined for exemplar sets and
+  instruments, never for procedure · verbalised sampling.
+- **Open.** Where 200 exemplars per field come from legally.
 
-### 05 · Memory → WATCH §8
-- **Answer.** Ten stores. The Log is the only truth; everything else is a rebuildable cache of it. The Book,
-  written only by surprise, bi-temporal, deltas never rewrites, rent into compost. The graveyard with reproducing
-  commands and reopen triggers, read before any bet opens. Lessons by five fixed questions over a failed trace,
-  never "what did you learn". The Second: a readable document, two scoreboards, the audit of silence. The World
-  Ledger against records the house does not write. The Treasury with estimate beside actual. Erasure by hash.
-- **Pin.** The Log row: id minted at dispatch, venture, bet or debt, cell, position, cost, blob hashes. The
-  belief, obituary, lesson and disposition schemas. The reconciliation table with a tolerance band per
-  instrument. The settle and consolidate write paths and who may run them. Retraction as a procedure. A snapshot
-  per watch and the scheduled rebuild. Ingestion of the 2,936 transcripts as episodes.
-- **Take.** `graphiti` for bi-temporal facts · `mem0`'s add/update/delete/no-op as the shape of a belief write ·
-  the transcript parsers · `sqlite-vec` for the one place embeddings are needed · `letta`'s sleep-time result as
-  the consolidate phase's justification.
-- **Open.** What rent counts before anything has been loaded; the first fifty resolutions before any calibration
-  is shown.
+### 05 · Memory → WATCH §8 · Wing 3
+- **Answer.** Ten stores. The Log is the only truth. The Book by surprise, bi-temporal, deltas, rent into
+  compost. The graveyard. Lessons by five fixed questions. The Second with two scoreboards and the audit of
+  silence. The World Ledger. The Treasury. Erasure by hash.
+- **Pin.** The Log row. The belief, obituary, lesson and disposition schemas. The reconciliation table with a
+  tolerance band per instrument. The settle and consolidate write paths. Retraction. A snapshot per watch. The
+  transcripts as episodes.
+- **Take.** `graphiti` · `mem0`'s add/update/delete/no-op · the transcript parsers · `sqlite-vec` · `letta`'s
+  sleep-time result.
+- **Open.** Rent before anything has been loaded; the first fifty resolutions.
 
 ### 06 · Communication → WATCH §6, §14
-- **Answer.** A star, never a mesh. Cells do not talk. Three shapes travel upward: condensate, difficulty,
-  finding. Everything is read back in the receiver's words before it binds. The relief: preview, brief,
-  read-back, sign-off, with the outgoing watch auditing the incoming one. No channel between ventures. One voice
-  to the founder.
-- **Pin.** The three shapes as schemas. The relief brief's four sections and its byte cap. The read-back check
-  and what a divergence writes. The probe that asserts the messaging token is absent from a maker's environment.
-- **Take.** A2A's `input-required` state, which alone is blocked versus stalled · I-PASS.
-- **Open.** A dispatched child binds an inbox socket unless `--bare`, and `--bare` loses OAuth; an API key
-  answers it.
+- **Answer.** A star, never a mesh. Three shapes upward: condensate, difficulty, finding. Read back before it
+  binds. The relief: preview, brief, read-back, sign-off. No channel between ventures. One voice to the founder.
+- **Pin.** The three shapes as schemas. The relief brief's four sections and byte cap. The read-back check. The
+  probe that asserts the messaging token is absent from a maker's environment.
+- **Take.** A2A's `input-required` state · I-PASS.
+- **Open.** A dispatched child binds an inbox socket unless `--bare`; `--bare` loses OAuth; an API key answers it.
 
 ### 07 · Context & cost → WATCH §10, §22
-- **Answer.** Context is compiled: the trunk (byte-identical, cache-warm), the inheritance (copy-on-write from the
-  parent), the delta keyed on the judge. The Compiler says what it left out and is scored. Condensates, never
-  transcripts. The tick is 240 seconds. Positions are a closed set because tool definitions are part of the
-  cached prefix. The cost formula's dominant term is whether siblings hit the cache. Ten measured moves before any
-  estimate. Batch for everything off the founder's clock. The rope stops starting, never landing.
-- **Pin.** What the trunk holds and the rule that it never carries a timestamp. The delta recipe in order. The
-  counter per item. The meter: the runner's reported cost joined by the id. The rope's thresholds and the
-  model-by-instrument routing table. The Treasury schema.
+- **Answer.** Context compiled: trunk, inheritance, delta keyed on the judge. The Compiler scored. Condensates.
+  Tick 240 seconds. Positions closed because tool definitions are in the cached prefix. The cost formula's
+  dominant term. Ten measured moves before any estimate. Batch off the founder's clock. The rope.
+- **Pin.** The trunk's contents and the rule that it never carries a timestamp. The delta recipe. The counter per
+  item. The meter joined by the id. The rope's thresholds and the routing table.
 - **Take.** `ccusage` · OpenHands' condenser · Generative Agents' retrieval formula.
-- **Open.** The cache-hit rate is the number nobody has. Week one measures it.
+- **Open.** The cache-hit rate is the number nobody has.
 
 ### 08 · Quality & truth → WATCH §20, §11, §19
-- **Answer.** Contact first. Every gate deterministic or it is not a gate. Judges find, never score: pairwise,
-  blind, order-swapped, a different model family. The evidence ladder generated from the instrument, never typed.
-  Red bets. Seventeen checks. Three-line health metric with the capture floor. Calibration suppressed below fifty
-  resolutions; resolved-on-time-without-redefinition reported monthly.
-- **Pin.** The rung → record mapping. The judge protocol. The selection function over findings (a fatal finding
-  eliminates; fewer serious; then map distance; all fatal resolves `unresolved`, never least-bad). `design.js`
-  corrected to stop summing scores. The monthly resolved/redefined report.
+- **Answer.** Contact first. Every gate deterministic or not a gate. Judges find, never score: pairwise, blind,
+  order-swapped, a different family. The evidence ladder generated from the instrument. Red bets. Seventeen
+  checks. The three-line health metric. Calibration suppressed below fifty.
+- **Pin.** The rung to record mapping. The judge protocol. The selection function over findings; all fatal
+  resolves `unresolved`. `design.js` corrected. The monthly resolved-or-redefined report.
 - **Take.** `inspect_ai` · `promptfoo` · `ShinkaEvolve`'s novelty filter.
-- **Open.** No second family is reachable today; the router's first job is to prove the route changed family.
+- **Open.** No second family reachable yet; the router's first job is to prove the route changed family.
 
-### 09 · Control & safety → WATCH §7, §21, §18
-- **Answer.** The Line: three classes over four currencies; reversible drills the undo, compensable drills the
-  delay, one-way is the founder's at any score. The complete one-way list, ending with a kill decision. Six block
-  from day one. The mouth holds no model. The trifecta broken by positions. Taint. The managed settings file is
-  the only tier a running process cannot clear, and it does not exist yet. The security block, twelve Hard
-  instruments, wired on Monday before there is a product.
-- **Pin.** The one-way list as data. The mouth's instruction schema: one act, one recipient, one payload hash,
-  the ceiling checked independently. The broker. The managed settings file text, four lines. The reachability
-  probe. The twelve security instruments and their commands. The checklists.
-- **Take.** `cerbos`' policy test format · `garak`'s probe and detector separation · `trufflehog` ·
-  `sandbox-runtime`'s source for the two unexplained failures.
-- **Open.** The terms question, the founder's. The hook rewrite to structured input is an irreversible-tier change
-  to `.claude/hooks`.
+### 09 · Control & safety → WATCH §7, §21, §18 · Wing 5
+- **Answer.** The Line in three classes over four currencies. The complete one-way list. Six block from day one.
+  The mouth holds no model. The trifecta broken by positions. Taint. The managed settings file. Twelve security
+  instruments.
+- **Pin.** The one-way list as data. The mouth's instruction schema. The broker. The managed settings file. The
+  reachability probe. The twelve instruments and their commands. The checklists.
+- **Take.** `cerbos`' policy tests · `garak` · `trufflehog` · `sandbox-runtime`'s source.
+- **Open.** The terms question. The hook rewrite is irreversible-tier.
 
-### 10 · Surfaces → WATCH §13
-- **Answer.** The desk (phone, decisions only, six fields per item, defaults only for reversible drilled items,
-  the 72-hour heartbeat). The bay (Mac, a strip board, geometry carries state, a strip needing you is cocked
-  out). The room (second monitor, the honest office simulation, never a control surface). The dailies (the raw
-  work at your hour). The terminal stays primary input. Voice is the originating channel, read back before it
-  binds, never for approval. Four verbs: look, say, choose, stop. Five conditions ring the bell.
-- **Pin.** The desk item schema. The strip schema and the bay's geometry. The room's feeds: cells as lights,
-  the map, the river, the replay. The dailies' fixed order. The STOP file. The emission budget. The phone as a
-  thin mirror: a rendered page, which is the founder's measured channel.
+### 10 · Surfaces → WATCH §13 · Wing 6
+- **Answer.** The desk, the bay, the room, the dailies. The terminal primary. Voice as the originating channel.
+  Four verbs. Five bell conditions.
+- **Pin.** The desk item schema. The strip schema and the bay's geometry. The room's feeds. The dailies' order.
+  The STOP file. The emission budget. The phone as a thin mirror.
 - **Take.** Mission control's typed event log and SSE as the bay's feed · the strip board · `agentapi`.
-- **Open.** How the phone surface is delivered (a page opened from a message is the honest default); the voice
-  transcription path and where the verbatim lands.
+- **Open.** How the phone surface is delivered; where the voice transcript lands.
 
-### 11 · Runtime → WATCH §14, §17
-- **Answer.** The watch: five hours, five a day, the count odd. Crash-only. A LaunchDaemon supervisor with a
-  restart ceiling and a process-group kill. Tick 240 seconds. Files in git, one house repo, one per venture, the
-  Log as truth, blobs by hash off-machine, `F_FULLFSYNC` on the Log. What no backup restores is credentials, so the
-  disaster plan is a credential plan. Drills monthly and half-yearly. Day one on this Mac; the target is the
-  mouth and the Log on an always-on box with the Mac as a client.
-- **Pin.** The plists and the supervisor. The storage tree as written in §17. The mirror and the encrypted
-  snapshot. The drill programme with its two cadences. The one escalated command (`git worktree add`), named and
-  logged.
-- **Take.** `dbos-transact` for the Continuo only · the launchd and macOS durability facts.
-- **Open.** API key or subscription decides which constraint binds. When the always-on box arrives.
+### 11 · Runtime → WATCH §14, §17 · Wing 1
+- **Answer.** The watch: five hours, five a day, odd. Crash-only. A LaunchDaemon supervisor with a restart ceiling
+  and a process-group kill. Files in git, blobs by hash off-machine, `F_FULLFSYNC` on the Log. The disaster plan is
+  a credential plan, drilled. The Mac now; the mouth and the Log on an always-on box as the target.
+- **Pin.** The plists and the supervisor. The storage tree. The mirror and the snapshot. The drill programme. The
+  one escalated command.
+- **Take.** `dbos-transact` for the Continuo only · the launchd and macOS facts.
+- **Open.** API key or subscription; when the always-on box arrives; every provider's own runtime facts.
 
 ### 12 · Self-improvement → WATCH §19, §20, §11
-- **Answer.** Forge one instrument per watch, the one blocking the most founder-minutes. A change to WATCH must
-  beat its own history. Lessons compile into reflexes. The fifth, debited before the allocator sees it. Divergence
-  is purchased with conditioning, not sampled. The map, not a leaderboard. The refusal ledger gives every stop a
-  price. The boredom detector.
-- **Pin.** The forge's selection rule. The held-out history set and how a change is scored against it. The
-  fifth's accounting line. The divergence budget as a line item. The map's axes per venture. The refusal ledger
-  schema and the weekly top ten.
-- **Take.** `pyribs` · `gepa`'s Pareto archive · `openevolve`'s islands · verbalised sampling.
+- **Answer.** Forge one instrument per watch. A change to WATCH must beat its own history. Lessons compile into
+  reflexes. The fifth, debited first. Divergence purchased with conditioning. The map. The refusal ledger. The
+  boredom detector.
+- **Pin.** The forge's selection rule. The held-out history set. The fifth's accounting. The divergence budget as
+  a line item. The map's axes. The refusal ledger and the weekly top ten.
+- **Take.** `pyribs` · `gepa` · `openevolve`'s islands · verbalised sampling.
 - **Open.** Who writes an instrument's fooling-mode sentence; how the founder forks a new instrument before it is
   trusted.
 
 ### 13 · Economics → WATCH §12, §22
-- **Answer.** The window is the scarce thing, not the money. A reserve nothing may spend into. At most three
-  ventures in a making posture. Weekly arithmetic allocation: a floor, then rung movement, money at half-Kelly.
-  The harness's own share is capped. Two weekly numbers that must fall, and cost per surviving artifact reported
-  as undefined when it is undefined.
-- **Pin.** `house.yml` allocation fields. The weekly allocation printout. The rope. The founder's hour, priced
-  from the drop list.
-- **Take.** `ccusage` · `litellm` budgets.
-- **Open.** The API key decision and the terms question, both the founder's.
+- **Answer.** The window is the scarce thing. A reserve. At most three ventures making. Weekly arithmetic
+  allocation. The harness's share capped. Cost per surviving artifact undefined when it is undefined.
+- **Pin.** `house.yml`. The weekly printout. The rope. The founder's hour, priced.
+- **Take.** `ccusage` · `litellm`.
+- **Open.** The API key decision and the terms question, the founder's.
 
-### 14 · The company itself → WATCH §12, §18, §23, §24
-- **Answer.** Intake is a figure, one goal and the stop sentence; the graveyard read first. The offer is a signed
-  file. Wind-down by harvest, never deletion. Shared: the Bench, the Second, the reflexes, world beliefs. Never
-  shared: customer data, credentials, market beliefs, identity and voice, anything a client owns. The reputation
-  is one thing. Succession. The field map: half the jobs already checkable, a third slow, a sixth the founder's.
-- **Pin.** The intake template (the fleet installer repurposed). `offer.md`. The `continuo.yml` seed with the
-  statutory debts. `people.yml`. The harvest procedure. The succession handover. `field-map.yml` with every job,
-  its class, its ground truth, its exposure, its grade today.
+### 14 · The company itself → WATCH §12, §18, §23 · Wing 7
+- **Answer.** Intake is a figure, one goal and the stop sentence. The offer is a signed file. Wind-down by harvest.
+  Shared and never shared. Succession. The field map.
+- **Pin.** The intake template and the adoption intake. `offer.md`. The `continuo.yml` seed. `people.yml`. The
+  harvest. The succession handover. `field-map.yml` with every job.
 - **Take.** The venture-studio structure · `openevolve`'s islands for quarantine.
-- **Open.** A second human. Disclosure of machine-made work, a founder decision with a date. The legal entity per
-  venture.
+- **Open.** A second human. Disclosure of machine-made work. The legal entity per venture.
 
-## The points under the fourteen that WATCH does not have yet
+---
 
-The Territory page carried six additions beneath the fourteen, twelve things never named, and nine things nobody
-has built. Checked against WATCH: the twelve are all answered (the door and the connected-server check, the Log
-ingesting the transcripts, the escapement, tapping a strip to steer, the Reactive class and the World Ledger,
-blocked versus stalled, the graveyard, exposure on the hand, voice, licences instead of worker trust, the
-ninety-day expiry, the wake as lineage). Of the six additions, attention as a budget, provenance from day one and
-continuity when away are in. **Four are missing, and go into step C:**
+## Under the fourteen: what the Territory page added, checked against WATCH
 
-1. **Rehearsal: a dress run of a whole mission.** WATCH dry-runs each hand and drills each undo; nothing runs a
-   whole mission end to end against fixtures before spending the four hours. Add **the shadow venture**: a
-   synthetic venture with fixtures that every change to WATCH must run through before it lands, which is also the
-   test bed Law 10 needs, and a rehearsal mode for a Serve engagement before real work starts.
-2. **The world's clock.** WATCH has a do-not-wake list for the founder and none for the world: publishing, emailing
-   a customer or messaging a stranger at 03:14 is technically fine and none of it is fine. Add a **world clock on
-   the mouth**: the delay queue holds every outbound act until the recipient's local working hours, per hand, per
-   region.
-3. **The company's own changelog.** WATCH has changelog coverage as a Hard instrument and the dailies, and no
-   artifact that answers *what did this company produce this month*. Add **the ship log**: one line per rung
-   movement and per keel finished, in the founder's currency, monthly, distinct from decisions and from work.
-4. **Regression detection on the machine's own quality.** WATCH's aberrance halt is rate-based. Add **control
-   charts** over every instrument's pass rate per position and model, so a quiet degradation from a model update
-   or prompt drift shows as a signal rather than as a feeling.
+The twelve things never named are all answered. Of the six additions, attention as a budget, provenance from day
+one and continuity when away are in. **Four are missing and belong in the spec:**
+
+1. **Rehearsal, a dress run of a whole mission.** WATCH dry-runs each hand and drills each undo; nothing runs a
+   whole mission end to end against fixtures before spending the hours. **The shadow venture:** a synthetic venture
+   with fixtures that every change to the system must run through before it lands, which is also the test bed Law
+   10 needs, and a rehearsal mode before a Serve engagement.
+2. **The world's clock.** WATCH has a do-not-wake list for the founder and none for the world. **A world clock on
+   the mouth:** the delay queue holds every outbound act until the recipient's local working hours.
+3. **The company's own changelog.** Nothing answers *what did this company produce this month*. **The ship log:**
+   one line per rung movement and per keel finished, in the founder's currency.
+4. **Regression detection on the machine's own quality.** The aberrance halt is rate-based. **Control charts** over
+   every instrument's pass rate per position and model.
 
 Of the nine "nobody has built these": the transcript server, capability registry, cost-and-worth join,
-negative-knowledge store and cross-mission scheduling are organs of WATCH now; worker trust and the blackboard are
-refused by design; statistical regression detection is item 4 above. The six refusals recorded on the Territory
-page all hold in WATCH.
+negative-knowledge store and cross-mission scheduling are organs of WATCH; worker trust and the blackboard are
+refused; regression detection is item 4. The six recorded refusals hold.
 
-## New ideas, open-minded, for the founder to keep or drop
+## New, open-minded, for the founder to keep or drop
 
-- **Adopting an existing project.** WATCH's first week is for a founder with only an idea. Most of this founder's
-  projects already exist. Add an **adoption intake**: read the repository, derive the Book from its history and
-  its commits, mine its dead ends into the graveyard, list its debts, set its posture, and only then open the first
-  bet. This is the intake the fleet will actually use most.
-- **Exemplars, not skills, as the unit of imported knowledge.** The 134 skills and the 177 repositories are mined
-  for exemplar sets and instruments. A procedure is never imported; a reflex is compiled here, with a test.
-- **Personality as purchased conditioning**, measured by survival on contact and decaying like a licence, as in
-  territory 02 above. This is where the "best personalities" question lands: there is a list, and the machine
-  writes it from outcomes.
-- **The client's own dailies** for a Serve venture: the raw work, at the client's hour, read-only, so showing your
-  work is an artifact and not a meeting.
-- **A weekly one-line forecast the founder can bet against**: WATCH already seals its predictions; let the founder
-  seal theirs on the same forks once a week, and show both curves. The reverse seal made scoreable.
+- **Adopting an existing project**: the intake this founder will actually use most (Wing 7).
+- **Exemplars, not skills, as the unit of imported knowledge.**
+- **Personality as purchased conditioning**, measured by survival on contact.
+- **The client's own dailies** for a Serve venture.
+- **The founder's own weekly seal** against the machine's, both curves shown.
+- **The provider layer as a wing of its own** (Wing 1), which no prior round designed.
 
 ## Files
 
 ```
-docs/03-system-design/envision/02-SPEC-MAP.md          this file
-docs/03-system-design/envision/2026-09-02-THE-SYSTEM.md  WATCH, the frame; §29 the migration table, §25 the build order
-docs/02-competitive/expansion/                          the catalogue: open-source.md (177) · hands.md · concepts.md · 00-TERRITORY.md
+docs/03-system-design/envision/02-SPEC-MAP.md            this file
+docs/03-system-design/envision/2026-09-02-THE-SYSTEM.md    WATCH, the frame · §29 the fates · §25 what it would take (not a schedule here)
+docs/03-system-design/envision/00-BRIEF.md                 the founder's words, the method
+docs/02-competitive/expansion/                            the catalogue: open-source.md (177) · hands.md · concepts.md · 00-TERRITORY.md
+docs/03-system-design/review/2026-09-02-FABLE-REPORT.md    the measurements of this runtime
 page: The Spec Map c1839105… · The Territory 9c8caa91… · WATCH 512afcce…
 ```

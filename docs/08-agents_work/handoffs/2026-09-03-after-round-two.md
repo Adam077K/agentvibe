@@ -80,30 +80,37 @@ you less about facts and more about what is only yours, and never once does alon
 Page: **https://claude.ai/code/artifact/512afcce-e2cf-4cfb-a9a0-b02ba524e8ad** (§13 holds a decision widget for
 the fifteen changes against WAKE; the founder's taps stay on their device and they paste the summary).
 
-## What is next
+## What is next: understand, envision and spec the whole system
 
-0. **Read `docs/03-system-design/envision/02-SPEC-MAP.md` first.** Written 2026-09-03 at the founder's request: the
-   five steps to the spec (parts list · territories 1–7 · territories 8–14 and the missed points · build order ·
-   review), each of the Territory page's fourteen sections pinned (answer · pin · take · open), the four points
-   under the fourteen WATCH lacks (rehearsal as a shadow venture · the world's clock on the mouth · the ship log ·
-   control charts on instrument pass rates), and five new ideas (adoption intake for existing projects · exemplars
-   not skills · personality as purchased conditioning · the client's dailies · the founder's weekly seal).
-   Page: https://claude.ai/code/artifact/c1839105-931b-4874-87cc-d2769ea5d57f
-1. **Re-derive the spec from WATCH.** One Fable lane. `docs/03-system-design/STARTUP-OS.md` v3 from WATCH,
-   **§29 as the migration table**, §25 as the build order; v2 preserved at
-   `docs/03-system-design/designs/2026-09-02-startup-os-v2.md`. The founder chose "next session" so it starts
-   fresh. Keep the anchored spec's discipline that made it useful (each territory: at full scale · components ·
-   enforced by · year one · growth path · would have to be true · grafted from) and WATCH's refusal to write
-   method. Read WATCH §25 first: weeks one to four are a hundred-line loop and six files, and every large first
-   stage in this repository's history produced a safety machine.
-2. **The founder's page decisions.** They may paste the widget summary; each "Keep WAKE's" or "Talk about it"
-   reopens a §28 row. Nothing is reopened until they say.
-3. **The first move** is still pending: two hours of the founder judging forty artifacts and one stop sentence.
-   WATCH §23 says the whole first week follows from it. The founder chose harness-first; raise it once, when the
-   spec exists.
-4. **Founder-only items surfaced by WATCH:** the terms question before any unattended watch; the managed settings
-   file (four lines outside the repository, the single highest-value security item); the credential plan; a
-   second human for statutory debts.
+**The founder's instruction for the next session, 2026-09-03, in their words:** *the next team is to talk about
+and understand the new system we are planning: the WATCH framework and the other things we need to understand.
+The spec should identify, understand and plan the whole: the surfaces, working with the providers, Claude Code,
+Codex, Gemini or whatever. The agents: how do we call them, how do we set up the prompts, what tools do they get,
+what MCPs do they get, how do we make sure they will be able to do everything. Be open-minded: think, reason,
+envision, improve, and plan the whole system from a system-design point of view: different surfaces, different
+parts, different wings, different branches. Do not plan the steps of building it. Do not say it will take seven
+days. Afterwards we build, understand, write, challenge, rethink the whole system.*
+
+0. **Read `docs/03-system-design/envision/02-SPEC-MAP.md` first.** Eight wings of the system (surfaces and
+   providers · the crew concretely · the stores · the drive · the boundary · the founder · the fleet and the
+   outside · the whole from outside), each with what WATCH says, what must be understood and decided, and what is
+   open; the fourteen territories pinned; the four points under the fourteen that WATCH lacks (the shadow venture ·
+   the world's clock on the mouth · the ship log · control charts); the new ideas (adoption intake for existing
+   projects · exemplars not skills · personality as purchased conditioning · the client's dailies · the founder's
+   weekly seal · the provider layer as a wing). Page: https://claude.ai/code/artifact/c1839105-931b-4874-87cc-d2769ea5d57f
+1. **The deliverable is the spec as a system design**, not a build plan: surfaces, parts, wings, branches, every
+   arrow named by what travels on it. `STARTUP-OS.md` v2 is a parts bin; keep its territory discipline (at full
+   scale · components · enforced by · year one · growth path · would have to be true · grafted from) and WATCH's rule
+   that no stage states method. Every named path exists or is marked absent. No schedule, no durations.
+2. **Two wings no prior round designed and the founder named:** the providers (Claude Code, Codex, Gemini, the
+   APIs, cloud runtimes: which stands which position, measured) and the crew concretely (how called, how
+   prompted, which tools, which MCPs, and the proof that every job in the field map has a position, an instrument
+   and a hand, or is Blind and routed to the founder).
+3. **The founder's page decisions** (WATCH page §13) may arrive as a pasted summary; each "Keep WAKE's" or "Talk
+   about it" reopens a §28 row. Nothing is reopened until they say.
+4. **Founder-only items, raise once each:** the first move (two hours judging forty artifacts and one stop
+   sentence); the terms question before any unattended run; the managed settings file; the credential plan; a
+   second human for statutory debts; API key or subscription.
 
 ## Measured facts that bind (commands in the session files and the Fable report)
 
