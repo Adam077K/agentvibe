@@ -82,6 +82,13 @@ the fifteen changes against WAKE; the founder's taps stay on their device and th
 
 ## What is next
 
+0. **Read `docs/03-system-design/envision/02-SPEC-MAP.md` first.** Written 2026-09-03 at the founder's request: the
+   five steps to the spec (parts list · territories 1–7 · territories 8–14 and the missed points · build order ·
+   review), each of the Territory page's fourteen sections pinned (answer · pin · take · open), the four points
+   under the fourteen WATCH lacks (rehearsal as a shadow venture · the world's clock on the mouth · the ship log ·
+   control charts on instrument pass rates), and five new ideas (adoption intake for existing projects · exemplars
+   not skills · personality as purchased conditioning · the client's dailies · the founder's weekly seal).
+   Page: https://claude.ai/code/artifact/c1839105-931b-4874-87cc-d2769ea5d57f
 1. **Re-derive the spec from WATCH.** One Fable lane. `docs/03-system-design/STARTUP-OS.md` v3 from WATCH,
    **§29 as the migration table**, §25 as the build order; v2 preserved at
    `docs/03-system-design/designs/2026-09-02-startup-os-v2.md`. The founder chose "next session" so it starts

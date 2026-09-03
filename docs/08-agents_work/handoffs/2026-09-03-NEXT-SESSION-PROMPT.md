@@ -12,14 +12,20 @@ READ FIRST, in this order, as one block:
                                                                         founder's decisions, what is next
   2. docs/03-system-design/envision/2026-09-02-THE-SYSTEM.md          ← WATCH, THE FRAME (313 KB; read §0–§9,
                                                                         §13, §25, §27–§29 at least)
-  3. docs/03-system-design/envision/00-BRIEF.md                       ← the founder's words, the method
+  3. docs/03-system-design/envision/02-SPEC-MAP.md                    ← THE PLAN FOR THIS SESSION: five steps
+                                                                        A–E, the fourteen territories pinned in
+                                                                        the Territory's order, the four missed
+                                                                        points, five new ideas
+  4. docs/03-system-design/envision/00-BRIEF.md                       ← the founder's words, the method
 Do NOT start from STARTUP-OS.md or CLAUDE.md's Project State; they describe the anchored spec WATCH replaces.
 Open STARTUP-OS.md only as a parts bin, and only for the shape of a spec territory.
 
 THE FOUNDER DECIDED (2026-09-03): WATCH is the frame. WAKE (docs/03-system-design/dream/) is the record of
 round one and stays untouched. The spec is re-derived from WATCH this session.
 
-THE TASK: docs/03-system-design/STARTUP-OS.md v3, re-derived from WATCH. First copy v2 to
+THE TASK: docs/03-system-design/STARTUP-OS.md v3, re-derived from WATCH, in the steps 02-SPEC-MAP.md lays out
+(A the parts list · B territories 1–7 · C territories 8–14 plus the four missed points and adoption of an
+existing project · D the build order · E the review), one page and one commit per step. First copy v2 to
 docs/03-system-design/designs/2026-09-02-startup-os-v2.md (preserve byte-identical). Then one Fable lane
 writes v3: WATCH's §29 is the migration table (every existing part's fate), §25 is the build order (weeks one to
 four are a hundred-line loop and six files; every large first stage in this repository's history produced a
