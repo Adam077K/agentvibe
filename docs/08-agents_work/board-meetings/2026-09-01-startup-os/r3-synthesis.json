@@ -1,0 +1,431 @@
+{
+  "locked_decisions": [
+    {
+      "id": "D1",
+      "decision": "A real task id on every event row, from the first row, threaded through logEvent. This is the only decision on the board whose omission cost is unbounded: a row written without it is permanently unattributable, and the loop's only brake cannot be made correct without it, because the stall counter divides an account-wide numerator by a repo-local denominator and the per-lane fix requires filtering turns by producing mission. Measured during the meeting: 3,813 events at ~/.agentvibe/events.jsonl, and the only id-shaped keys ever written are 'id' and 'dry_run' — no task, mission, run or session id anywhere in the full key census.",
+      "source_persona_round": "architect:R1:P3",
+      "supported_by": [
+        "visionary:R1:P3",
+        "strategist:R1:P1",
+        "architect:R2:P3",
+        "visionary:R2:P3",
+        "adversary:R2:P12"
+      ],
+      "dissented_by": [],
+      "confidence": "high",
+      "reversal_cost": "One field in one function with five call sites today. Reversing the ADDITION is trivial. Reversing the OMISSION is impossible — every row already written is unattributable, and the corpus grows daily.",
+      "needs_founder": false,
+      "title": "A task id on every event row, from the first row"
+    },
+    {
+      "id": "D2",
+      "decision": "No tool grant that spends money outside model tokens — ad platforms, GPU rental, postage, paid-per-call APIs — is connected until an absolute rate ceiling exists that something enforces. Money is the one risk axis with a RATE, and no tier in this repository can express one; every tier it has is about reversibility or blast radius. A pack's budget: field is a WISH until a counter at the wrapper exists, and by the repo's own standing rule it should not be written until then.",
+      "source_persona_round": "risk-modeler:R1:P7",
+      "supported_by": [
+        "strategist:R1:P10",
+        "visionary:R1:P12",
+        "adversary:R1:P10",
+        "architect:R1:P6",
+        "visionary:R2:P12"
+      ],
+      "dissented_by": [],
+      "confidence": "high",
+      "reversal_cost": "Zero to hold — the refusal is inaction, and it is the only board-wide agreement in Round 1 that is also an action rather than a diagnosis. The asymmetry is the point: a missed spend costs nothing and a wrong spend is a bill git revert cannot refund.",
+      "needs_founder": true,
+      "title": "No outbound money before a rate ceiling something enforces"
+    },
+    {
+      "id": "D3",
+      "decision": "Reach is declared on the GRANT, not at the call site, and resolved in the ONE classifier as effective tier = max(path, reach). A second implementation of risk classification is refused outright, including a small helper answering 'is this outbound?'. The measurement that forces it: `node scripts/classify.mjs assets/promo.mp4 posts/launch.txt` returns tier=lite · enforcement=shadow for both — a video and a caption about to be published under the company's name, unattended — because the classifier's only input is a normalised path string and worldly actions have none.",
+      "source_persona_round": "risk-modeler:R1:P1",
+      "supported_by": [
+        "architect:R1:P6",
+        "visionary:R2:P12",
+        "architect:R2:P6",
+        "strategist:R1:P1"
+      ],
+      "dissented_by": [],
+      "confidence": "high",
+      "reversal_cost": "A signature change to classifyFile in scripts/lib/classifier.js, git revert. The irreversible mistake is the one refused here: a second classifier written under pressure, which this repo has already paid for once when qa-lead-pass.yml computed a stricter second tier. The architect holds the substance and demotes the TIMING — its dependency is a pack holding an outbound tool, and no pack exists yet.",
+      "needs_founder": false,
+      "title": "Reach declared on the grant, resolved in the one classifier"
+    },
+    {
+      "id": "D4",
+      "decision": "REPAIR the stall counter first, THEN register budget-guard.js. Registration is a founder act — it edits .claude/settings.json, which is irreversible tier and denied to the write tools. The repair is not optional polish: measured live in this worktree on 2026-09-02 with the last durable artifact 19.1 hours old, sinceLastArtifact().output_tokens and windowUsage().output_tokens returned the SAME number, 193,027. Past RETAIN_HOURS = 6 the stall counter degenerates into the window counter, so the detector is inoperative for exactly the regime it governs — a 24/7 loop crosses six hours on night one by construction. Registering it in this state does not give the loop a brake; it gives the founder a reason to believe there is one.",
+      "source_persona_round": "risk-modeler:R2:P15",
+      "supported_by": [
+        "architect:R1:P4",
+        "architect:R1:P14",
+        "architect:R2:P4",
+        "strategist:R2:P1",
+        "risk-modeler:R2:P15",
+        "visionary:R2:P3"
+      ],
+      "dissented_by": [
+        "adversary:R2:P9"
+      ],
+      "confidence": "high",
+      "reversal_cost": "The repair is a small change in scripts/lib/usage.js. Registration is one founder edit and one founder edit to undo. The expensive order is registration-before-repair, which produces a believed brake and is the failure class this repo has already cured four times elsewhere.",
+      "needs_founder": true,
+      "title": "Repair the stall counter, then register budget-guard",
+      "source_notes": {
+        "risk-modeler:R2:P15": "identical position; the persona also stated it as build-order step 1 in r2-risk-modeler.md §5"
+      }
+    },
+    {
+      "id": "D5",
+      "decision": "Run the demand test, founder-executed: one real page to a real URL with analytics on it, posted once to one place a real audience reads, hands off for seven days, three numbers recorded — sessions, one conversion event, one unsolicited human response. Two conditions, both named by the personas who called the position fatal and both free: (a) declare in writing BEFORE the test runs what number constitutes a pass and what number constitutes an uninformative sample; (b) delete the IF-AND-ONLY-IF from the build order — the result is a finding, not a gate. No agent publishes, sends or spends in this test, so it requires none of the safety controls on this board.",
+      "source_persona_round": "adversary:R2:P13",
+      "supported_by": [
+        "visionary:R2:P4",
+        "architect:R2:md§1.6",
+        "risk-modeler:R2:P5",
+        "adversary:R1:P4"
+      ],
+      "dissented_by": [],
+      "confidence": "med",
+      "reversal_cost": "Hours of founder time, one page, one post. Nothing in the repository changes. It is the cheapest item the board produced and the only one that reads a signal from outside the system. The board split on what its RESULT licenses, not on running it: two lanes called the unconditioned version fatal and both named repairs that cost nothing.",
+      "needs_founder": true,
+      "title": "Run the demand test, with thresholds declared first and no gate",
+      "source_notes": {
+        "architect:R2:md§1.6": "prose-sourced — the architect's support for the demand test lives in changed_mind_on[build_order] and r2-architect.md §1.6, not in a numbered position"
+      }
+    },
+    {
+      "id": "D6",
+      "decision": "A `blocking-human` gate class BY TYPE — a gate the machine structurally cannot clear, because the impossibility lives in the type and not in a policy someone must remember. It is already built: .claude/gates.yml declares a kind: human gate that has no run:, and scripts/check-gates.mjs REFUSES one written with a run:. What it lacks is a caller in any executing path. The composition the board produced and which no single persona stated: because scripts/verdict.mjs binds subject = sha256(git diff), a published video, a sent email, a live landing page and a price change have no diff, therefore no subject, therefore no verdict record — so for three of the four pack families the human gate is not one control among several, it is the ENTIRE enforcement spine.",
+      "source_persona_round": "risk-modeler:R1:P4",
+      "supported_by": [
+        "visionary:R1:P9",
+        "strategist:R1:P1",
+        "risk-modeler:R2:P4",
+        "visionary:R2:P9",
+        "architect:R1:P1"
+      ],
+      "dissented_by": [
+        "risk-modeler:R2:P14"
+      ],
+      "confidence": "high",
+      "reversal_cost": "The gate class exists with a resolver and a test. Giving it a caller is additive and revertible. The residual is named by the persona who proposed it: a blocking-human gate stops overnight work when the founder is asleep, and the founder is a single point of failure for every human gate while watching 2-4 rows a day.",
+      "needs_founder": false,
+      "title": "A blocking-human gate class, by type"
+    },
+    {
+      "id": "D7",
+      "decision": "No done-test whose resolver is the producing model, anywhere. No score summed or averaged from judge outputs, anywhere — union, never average, and design.js's summed `total` field over four 0-10 axes is the named live instance. The first mission's done-test carries no quality judgement at all: rung 0 and rung 1 only — it renders, and a stranger understands it in five seconds. The evidence ladder must also refuse aggregation ACROSS rungs, or a rung-1 result gets reported as a rung-4 claim.",
+      "source_persona_round": "strategist:R1:P14",
+      "supported_by": [
+        "visionary:R1:P7",
+        "strategist:R2:P14",
+        "adversary:R2:P8",
+        "visionary:R2:P7"
+      ],
+      "dissented_by": [],
+      "confidence": "high",
+      "reversal_cost": "A refusal — nothing to build, nothing to revert. The adversary's Round-1 objection was structural (a founder approval per pack sits on the critical path of a system premised on the founder's absence) and was WITHDRAWN in Round 2, because a rung-0/rung-1 done-test carries no taste and needs no per-pack taste approval.",
+      "needs_founder": false,
+      "title": "No done-test resolved by the producing model, and no summed scores"
+    },
+    {
+      "id": "D8",
+      "decision": "Unify the four existing birth-certificate checks into ONE hasCaller predicate, and stop describing it as prevention. Four implementations exist today — build-skill-routers.mjs for skills, check-suite.test.mjs for test files, check-gates.mjs for gates, EXCLUDED for suite steps — with four exemption conventions and no shared code, and a fifth instance is the disease it treats. But the predicate proves CALLABILITY, not CALLEDNESS: wiring IS adding a caller, so the check is satisfiable by a trivial caller written to satisfy it. It must therefore land WITH last-use telemetry keyed on the task id, or it measures the fix and not the disease. The word 'prevents' is withdrawn by the persona who ranked it first.",
+      "source_persona_round": "architect:R1:P8",
+      "supported_by": [
+        "visionary:R1:P10",
+        "risk-modeler:R1:P3",
+        "strategist:R2:P3",
+        "architect:R2:P8",
+        "risk-modeler:R2:P3",
+        "visionary:R2:P10",
+        "adversary:R1:P4"
+      ],
+      "dissented_by": [
+        "strategist:R1:P5",
+        "adversary:R2:P5"
+      ],
+      "confidence": "high",
+      "reversal_cost": "A de-duplication of code that already exists four times. Low. The sufficiency question — whether the demand trigger bolted onto it can tell a harness mission from a venture one — is NOT settled and is recorded in could_not_resolve.",
+      "needs_founder": false,
+      "title": "One hasCaller predicate, and it does not prevent anything"
+    },
+    {
+      "id": "D9",
+      "decision": "Inbound comes after the outbound wrapper, and inbound is last. Inbound plus outbound with nothing between them is injection-to-irreversible-action in one hop. Measured this round: WebFetch returns exit 0 from the only blocking hook in the repository, so there is no point at which a fetched body is marked as foreign. The concession that makes this cheap and which the board should take: the world resolver may sit at build-order position 3 provided it is a deterministic parse into a data file, never a fetched body into a producing context. That is a clause, not a reordering.",
+      "source_persona_round": "risk-modeler:R2:P6",
+      "supported_by": [
+        "risk-modeler:R1:P6",
+        "risk-modeler:R2:P2",
+        "risk-modeler:R2:P6",
+        "architect:R2:P10",
+        "architect:R1:P10"
+      ],
+      "dissented_by": [],
+      "confidence": "high",
+      "reversal_cost": "Free to honour now, because inbound does not exist yet. Expensive to retrofit after an injection path is open. The persona who proposed it named it the one thing they would trade nothing for, across two rounds.",
+      "needs_founder": false,
+      "title": "Inbound after outbound, and inbound last",
+      "source_notes": {
+        "risk-modeler:R2:P6": "nearest held position; the ordering itself is stated in r2-risk-modeler.md §5 and in the persona's remaining_dissent keyed BUILD-ORDER-5"
+      }
+    },
+    {
+      "id": "D10",
+      "decision": "A wrapper is a control only if it is the sole path to the capability, and nothing in this runtime interposes it — the PreToolUse hook has exactly two verbs, allow and deny, and cannot rewrite mcp__higgsfield__tiktok_publish into wrapper.publish(hash). So the loop body runs as `claude -p` with a narrow allowedTools list under a launchd supervisor (KeepAlive plus WatchPaths), with the direct outbound tools struck from the roster, and the kill switch lives in the SUPERVISOR, not in the prompt. This is also the only loop shape that reaches the producing workflows, because a Workflow is a main-session tool and a claude -p process under launchd is not a sidechain.",
+      "source_persona_round": "visionary:R2:P15",
+      "supported_by": [
+        "risk-modeler:R1:P8",
+        "risk-modeler:R2:P5",
+        "architect:R2:P9",
+        "risk-modeler:R1:P5"
+      ],
+      "dissented_by": [],
+      "confidence": "med",
+      "reversal_cost": "A launchd plist and a wrapper script, both revertible. The load-bearing half is the tool list: with the direct outbound tools on the roster, every other outbound control on this board is advisory. Confidence is med rather than high because the workflow-reachability half is an INFERENCE — nobody has run claude -p under launchd and recorded the result.",
+      "needs_founder": true,
+      "title": "The loop body is claude -p with a narrow roster, under a supervisor"
+    },
+    {
+      "id": "D11",
+      "decision": "Refuse worker trust, apprenticeship, promotion, demotion and retirement outright for year one. Not deferred — DISSOLVED: fresh context per unit of work plus a pack that is a grant and a stop leaves no persistent worker for trust to accrue to, so gap #10 is ANSWERED and should leave the list rather than sit at the bottom of it where a quiet month promotes it. Supporting evidence: nothing across 177 surveyed repositories implements worker trust — the highest-cost, least-precedented item in the whole catalogue.",
+      "source_persona_round": "strategist:R1:P8",
+      "supported_by": [
+        "strategist:R2:P8",
+        "visionary:R2:P5"
+      ],
+      "dissented_by": [
+        "architect:R2:P2"
+      ],
+      "confidence": "high",
+      "reversal_cost": "A refusal; nothing to build. The dissent is narrow and real: the clause the strategist called decisive — 'the grant is already the security boundary' — is measured FALSE on one live path. It holds on the Agent(subagent_type:) path and does not hold on the teammate path, which is the path that dispatched this board. The refusal survives; its stated reason needs one clause struck.",
+      "needs_founder": false,
+      "title": "Refuse worker trust outright — the subject is dissolved, not deferred"
+    },
+    {
+      "id": "D12",
+      "decision": "A declared ceiling on the number of governed artifacts — packs, personas, workflows, commands, skills, check-suite steps. Above the ceiling, adding one requires retiring one. The goal tree is NOT capped; think big is relocated to the depth of the goal tree, not the count of mechanisms. This is a PRECONDITION of the first pack, not a governor to install later: the frontmatter schema is a closed 15-key allowlist so a pack: key fails the lint, and the Agent dispatch tool has no tools parameter — so the only pack shape the runtime supports today is one generated agent file per engine × pack, which is roster growth by multiplication, the exact pressure that took this repo to 26 agents.",
+      "source_persona_round": "strategist:R1:P2",
+      "supported_by": [
+        "strategist:R2:P2",
+        "adversary:R1:P5",
+        "visionary:R2:P2",
+        "visionary:R1:P14",
+        "architect:R2:P11"
+      ],
+      "dissented_by": [
+        "architect:R1:P12"
+      ],
+      "confidence": "med",
+      "reversal_cost": "A number in a file plus a check. Reversible. Not setting one is what produced 26 agents and 48 check steps, one cheap reversible file at a time. The live dissent is architect:R1:P12's operating rule that the reversible half should be built fast, loose and continuously — which the architect revised into three classes in Round 2 without withdrawing.",
+      "needs_founder": false,
+      "title": "A ceiling on governed artifacts; none on the goal tree"
+    },
+    {
+      "id": "D13",
+      "decision": "The board does not convene a second time without (a) an agent file per persona that narrows its tool roster, and (b) a cost cap that something reads. Absent both, it convenes only under the founder's hand. Measured during this meeting: zero of the personas had an agent file, so NOTHING NARROWED THE ROSTER — five Opus personas were dispatched into a governance meeting holding the full 15-server roster, wider than builder, wider than designer, including tiktok_publish, sandbox_exec and Gmail send_message, each returning exit 0 from the live blocking hook. The spec's $3 cap is referenced by nothing and was suspended by instruction; the escalation path names Linear (absent) and Telegram (refused by Decision 5 the day before).",
+      "source_persona_round": "strategist:R2:P12",
+      "supported_by": [
+        "adversary:R1:P7",
+        "adversary:R2:P7",
+        "architect:R2:P2"
+      ],
+      "dissented_by": [],
+      "confidence": "high",
+      "reversal_cost": "Writing five agent files. The cost of NOT doing it was measured this run and is the sharpest safety finding of the meeting: the governance body was the least governed thing in the repository.",
+      "needs_founder": true,
+      "title": "The board does not convene again ungoverned"
+    },
+    {
+      "id": "D14",
+      "decision": "A census of dispatch paths against delivered tool rosters, as a day-one measurement. The tool grant is a property of the DISPATCH PATH, not of the agent file: it narrows on the Agent(subagent_type:) path and did not narrow at all on the path that dispatched this board. This is the only proposal in the room that can make the safety list SHORTER rather than longer — a census that finds one leaky launcher turns 'build a wrapper, a register, a rate ceiling and a reach axis' into 'stop launching workers on that path'.",
+      "source_persona_round": "architect:R2:P15",
+      "supported_by": [
+        "architect:R2:P2",
+        "risk-modeler:R2:P2",
+        "adversary:R2:P10",
+        "risk-modeler:R1:P2"
+      ],
+      "dissented_by": [
+        "adversary:R2:P12"
+      ],
+      "confidence": "med",
+      "reversal_cost": "An agent's minutes. It writes nothing and competes with the founder for nothing. The dissent is narrow: the adversary's blanket refusal of new work before the demand test now exempts exactly one item, the task id, and the census is not it.",
+      "needs_founder": false,
+      "title": "A dispatch-path grant census, as a day-one measurement"
+    },
+    {
+      "id": "D15",
+      "decision": "A standing monthly measurement of harness work against venture work, counted over session-file frontmatter and classified through scripts/lib/classifier.js rather than a second implementation of it. It is a FINDING, never an automatic action — N consecutive months of harness work exceeding venture work is reported and nothing fires. It is the only proposal on the board that would have fired during the last three weeks, while every mechanism was being built correctly and nothing was being pointed at anybody.",
+      "source_persona_round": "visionary:R1:P11",
+      "supported_by": [
+        "visionary:R2:P11",
+        "adversary:R2:P1"
+      ],
+      "dissented_by": [],
+      "confidence": "med",
+      "reversal_cost": "A monthly count. Nothing depends on it and it forbids nothing. A refusal decays silently and a one-shot test answers once; a trend needs no threshold to be informative.",
+      "needs_founder": false,
+      "title": "Harness work against venture work, measured monthly, forever"
+    }
+  ],
+  "preserved_dissents": [
+    {
+      "from": "visionary:R2:P11",
+      "dissent": "Three of us identified the same failure mode from different directions and the other two proposed ACTIONS. I propose an INSTRUMENT, and it is the only one of the three that survives two years. A refusal decays silently — strategist:P4 says so itself, which is why that position exists: nobody notices the absence of a decision not to build something. A gate is gameable by definition — strategist's own open question 2 concedes that without a definition of 'a mission not about the system' the trigger is satisfied by calling the harness a venture, and its cure (the done-test must resolve outside this repository) is still a definition someone maintains. A one-shot test answers once — adversary:P4's demand test, even repaired, produces a reading in September and nothing in March. A ratio has none of these properties: it cannot be satisfied by an argument, and it needs no threshold to be informative because the TREND is the signal. It costs a monthly count over session-file frontmatter classified through scripts/lib/classifier.js rather than paralleled, per A5. And it is the only proposal on this board that would have fired during the last three weeks, while every mechanism here was being built correctly and nothing was being pointed at anybody. N consecutive months of harness work exceeding venture work is a FINDING, never an automatic action.",
+      "why_not_resolved": "NOT unresolved — locked as D15. Preserved because the founder asked to see it, and because the persona filed it as a dissent in the same round the Adversary adopted it (adversary:R2:P1, changed_mind_on P1). The two rounds ran simultaneously, so the dissent is an artifact of the protocol, not a live split."
+    },
+    {
+      "from": "visionary:R2:P1",
+      "dissent": "Revised in sequencing, held in substance, and I will not trade it away. Two rungs of the evidence ladder are reachable at n=1 with no instrument and no third-party auth — it renders, and a stranger understands it in five seconds — and W5 adds a third that is free and mechanically observable, whether the founder used it twice unprompted more than 48 hours apart. So the loop turns slowly on rungs 0-1 plus W5 while rungs 2-4 wait for traffic. The ladder is worth building even if rung 2 never arrives, because its job is not to produce a signal: it is to stop a rung-0 result being reported as a rung-2 claim, which is precisely the mechanism by which a machine spends two years learning to lie to itself. adversary:P4's demand test is a rung-2 instrument and it does not replace the ladder; it is the first reading ON it.",
+      "why_not_resolved": "The board accepted the ladder's anti-inflation job and did not settle whether rungs 0-1 at n=1 constitute a flywheel turning slowly or a different instrument entirely. The Strategist's serious critique stands unanswered: a rung-1 and a rung-4 result recorded in one field with only a rung: annotation is how 'a stranger understood it' becomes 'someone paid'."
+    },
+    {
+      "from": "visionary:R2:P5",
+      "dissent": "strategist:P8's refusal of worker trust is correct and I adopted it, but it does not reach this. Trust-in-a-worker has no subject because context is fresh per move; calibration-of-a-judge has a subject that persists across every dispatch — the judge's prompt. Two hundred pairs of 'picked A over B, because' condition that prompt and trust no worker. Section 7's 'taste enters once, at the top' forbids re-asking the founder at every step; it does not forbid remembering what they already said, and C21 requires it. The spec does not currently state that these are compatible, which matters because a careless reading of section 7 forbids the exact mechanism that makes taste compound.",
+      "why_not_resolved": "The Strategist's serious critique is about the INPUT, not the idea. Preference pairs are written only where the founder picks A over B, and the only surface where that happens is a balcony with 7 views, 1 that acts, and an escalation inbox empty on every project ever. Nothing measured whether the input exists."
+    },
+    {
+      "from": "visionary:R2:P14",
+      "dissent": "Every governed artifact should declare at creation whether it compounds, and anything declared inventory must name the thing that reads it. adversary:P6 says the declaration is one more claim on the cost curve and adversary:P4 says the declaration passes by construction because everyone declares flywheel. Both are right about a declaration ALONE, which is why the position was always void without its second half: X2's last-use telemetry contradicts a flywheel declaration with zero events in 90 days, and that contradiction is the retirement queue's entry criterion. The declaration is not the mechanism; it is what makes the telemetry's disagreement legible. Without it, zero calls in 90 days is a fact nobody has to answer for.",
+      "why_not_resolved": "Two personas hold that a required declaration is new surface added to solve a surface problem. The Visionary's answer is that last-use telemetry is the mechanism and the declaration only makes the telemetry's disagreement legible — but telemetry is keyed on the task id, which does not exist yet, so this cannot be settled before D1 lands."
+    },
+    {
+      "from": "strategist:R2:P2",
+      "dissent": "Cheap to reverse is not cheap to carry. architect:P12 sorts the bill of materials by cost-to-reverse and concludes the reversible half — packs, personas, council, board, missions file, balcony views, FIELDS — should be built 'fast, loose and continuously'. Reversibility is a property of ONE CHANGE; carrying cost is a property of the ACCUMULATED SET, and the sort collapses two different axes. Every artifact in adversary:P6's supersession record was in the cheap reversible half — the session-file count superseded five times, the suite denominator four, the .qa count twice, the branch name five, the main sha four times in one day — each individually trivial to fix, each fixed repeatedly, and the aggregate is a 637-line document whose main content is corrections to itself. Nothing in that record was hard to reverse and all of it was expensive to hold. The architect's own evidence points away from the architect's conclusion: the roster reached 26 agents one cheap reversible file at a time, the collapse to 7 was correct and expensive, and architect:P11 says the pack shape re-runs that multiplication. 'Fast and loose on the reversible half' is a description of how the last nine phases were built; it produced 48 check steps and one venture task, and not one of the 48 was hard to reverse. I am not arguing for slow — speed belongs on the MISSION side and the ceiling belongs on the ARTIFACT side, and 'reversible' is the wrong predicate for deciding which is which. The right predicate is the one visionary:P14 reached independently: flywheel, feeder, or inventory. Inventory that is cheap to delete is still inventory while it is held.",
+      "why_not_resolved": "Directly against architect:R1:P12. The Architect moved to three classes in architect:R2:P12 without withdrawing the operating rule. Both lanes cite the same supersession record and read it in opposite directions. See could_not_resolve item 5."
+    },
+    {
+      "from": "strategist:R2:P1",
+      "dissent": "The hook's scope rule is right for the founder and wrong for the loop, and the distinguishing variable is unrecorded. risk-modeler:P2 refuses to widen pre-tool-use.sh over the founder's own user-scope MCP servers, on the grounds that this repo should not govern the founder's Gmail during the founder's own interactive session and that widening is the inverted #96.3 resolution CLAUDE.md warns about. For an interactive session that is exactly right and I agree. The loop is not an interactive session — the entire premise is that it runs while the founder sleeps — so 'the founder's own session' is the wrong frame for a 3am dispatch that inherits those servers. The risk-modeler's own open question 4 records that at least one live dispatch path carried tiktok_publish, sandbox_exec, Gmail send and an authenticated Chrome to an agent no repo file granted them, and its own P14 item 8 names the founder as a single point of failure for every human gate — which the scope rule silently assumes is present. Confirmed today: the PreToolUse matcher is Bash|Edit|Write|NotebookEdit|mcp__ so the call DOES reach the hook, and mcp-policy.json governs two servers (playwright, claim-append) in mode: shadow, neither of them the dangerous one. My P1 claims the smallest company cannot reach a stranger; today it can; and the layer that would stop it has been declared out of scope for a reason that holds only in the case that is not the dangerous one. The answer is neither 'widen the hook' nor 'leave it alone' — it is that who initiated the session is a fact nothing records.",
+      "why_not_resolved": "The distinguishing variable — who initiated the session — is a fact nothing in the runtime records, so no measurement available to this board could settle it. Converted to a founder action item rather than smoothed away."
+    },
+    {
+      "from": "strategist:R2:P8",
+      "dissent": "'Trust last' is not 'trust never', and last is how things get built. visionary:P1's reasoning sequences trust behind the world's verdict, citing T1's own note that it is downstream and cannot be built first, and the visionary's build order places it eighth and forced-last. I refuse it for year one outright, and the difference is not scheduling: open-source.md §16 records that nothing across 177 surveyed repositories implements worker trust — highest cost, least precedent in the entire catalogue — and the architecture REMOVES THE SUBJECT, because fresh context per move plus a pack that is a grant and a stop means there is no persistent worker for trust to accrue to. What varies between two dispatches is the grant, and the grant is already the security boundary. Gap #10 is not deferred, it is ANSWERED, and an answered gap should leave the list rather than sit at the bottom of it where a quiet month will promote it.",
+      "why_not_resolved": "NOT unresolved — locked as D11. Preserved because the Architect's serious critique falsifies its decisive clause on one live path: the grant did not bind on the path that dispatched this board. The refusal survives; its stated reason needs one clause struck."
+    },
+    {
+      "from": "architect:R2:P12",
+      "dissent": "MEASUREMENTS PRECEDE CONTROLS. Between them these two lanes place roughly thirteen mechanisms before an unattended run. Sorted by cost to reverse, exactly one is unbounded — identity on the row — and exactly one more is free to honour, inbound after outbound. The rest are files, and a file is git revert. The dissent is not that the controls are wrong; four of them I would build. It is about what earns the right to PRECEDE, and my answer is unchanged: cost to reverse, plus the silent-and-compounding class I added this round. On that test, four of the five controls placed first are aimed at a boundary nobody has characterised — the grant — and building a control against an uncharacterised boundary is how you get the fifth unwired mechanism. The two measurements I put first cost an agent's minutes, compete with the founder for nothing, and make the controls afterwards SMALLER: a census that finds one leaky launcher turns 'build a wrapper, a register, a rate ceiling and a reach axis' into 'stop launching workers on that path'.",
+      "why_not_resolved": "The board split on what earns the right to PRECEDE — cost to reverse (Architect) or blast radius (Risk Modeler, Strategist). Two of the Architect's forced items are locked as D1 and D14, so the dissent lost none of its content; the ordering PRINCIPLE is unresolved. See could_not_resolve item 5."
+    },
+    {
+      "from": "architect:R2:P1",
+      "dissent": "'Keep L1' is one decision over two components with different reach, and the two peers who touched L1 treated it as one object while pointing in opposite directions over the seam. The Strategist says keep L1 unchanged and stop growing it; the Visionary says point the ledger's forced expiry at every store. Both are reasonable and they are about DIFFERENT HALVES. The claim ledger's unit is an assertion — it follows the system into video, pricing, copy and outbound work, and the Visionary is right that it should govern more. scripts/verdict.mjs binds subject = sha256(git diff); a published video, a sent email, a live landing page and a price change have no diff, therefore no subject, therefore no verdict record, and it cannot follow the system anywhere the Adversary's demand test would take it. Nobody engaged with this and the first non-code mission discovers it by shipping. It is one sentence to state in the design now and a surprise later, and it is precisely the kind of seam this framing asked me to name: two subsystems meeting under one decision and disagreeing silently.",
+      "why_not_resolved": "Nobody engaged with it in either round — the Architect says so and the record confirms it. The two peers who touched L1 treated it as one object while pointing in opposite directions over the seam. It is one sentence to state in the design now and a surprise discovered by shipping later."
+    },
+    {
+      "from": "architect:R2:md§1.6",
+      "dissent": "I ACCEPT the demand test and dissent only from the tripwire's blanket form. The test is the cleanest instrument anyone proposed, costs hours rather than weeks, removes the machine from the experiment entirely and therefore actually tests demand; it is better than the synthetic-mission counter-methodology I offered in Round 1. But the tripwire — zero commits under .claude|scripts|docs in BOTH repositories for seven days — does not only cost seven days of harness polish, which I agree should stop. It costs seven days of the two cheapest items in the building, neither of which is founder work and neither of which is a mechanism. First, the task id: all five of us named it from four framings, and the Adversary reached it from the opposite direction — their own sixth open question asks what the 858 commits cost and answers 'unanswerable in BOTH directions, including mine' for want of a task id that survives a session. The tripwire forbids for a week the field that would make the demand test's own cost accounting possible. Second, the dispatch-path census: seven more days of dispatches on a path that hands out sandbox_exec and mail-send with no record. Both are agent-minutes and neither touches the founder's hours, which is the resource the base-rate argument says is scarce. The ban is right about mechanisms and wrong about measurements. Exempt the two, run the test, and record the exemption as a dated .out-of-scope entry rather than a verbal carve-out, per strategist:P4.",
+      "why_not_resolved": "Partially resolved. The Adversary's Round-2 exemption covers the task id and does not cover the dispatch-path census, so the tripwire's scope remains a live and narrow split. Both personas agree the exemption should be a dated .out-of-scope entry rather than a verbal carve-out.",
+      "from_as_filed": "architect:R2:build_order",
+      "source_note": "prose-sourced — the architect's support for the demand test lives in changed_mind_on[build_order] and r2-architect.md §1.6, not in a numbered position"
+    },
+    {
+      "from": "risk-modeler:R2:P5",
+      "dissent": "The outbound wrapper and blocking-human gates must precede the loop's SUCCESS branch, not the demand test. I concede more to the Adversary than to any other peer and this still holds: the demand test is human-executed and needs nothing from my lane, but the branch where it returns a non-zero number is the branch where an unattended machine is armed with tiktok_publish, Gmail send_message, sandbox_exec and an authenticated Chrome, all measured at exit 0 from the only blocking hook. I am not asking for thirteen controls before the demand test. I am asking for three before their step 5: the reach axis, the outbound wrapper as one artifact, and blocking-human by type. The failure direction is asymmetric — a missed send costs nothing and a wrong send cannot be recalled — so the refusal belongs on the not-sending side, and the Adversary's own strongest_counter states the premise better than I can.",
+      "why_not_resolved": "Locked in part as D3, D6 and D10. What is NOT resolved is whether the outbound wrapper is buildable as one artifact: the Architect's fatal critique says nothing in this runtime interposes it, and the Strategist's serious critique says its rate ceiling needs a number the Risk Modeler explicitly refuses to invent. See could_not_resolve item 6."
+    },
+    {
+      "from": "risk-modeler:R2:P3",
+      "dissent": "The birth certificate, now carrying the demand trigger, is a check-suite step and lands first. strategist:P5 would refuse it because the defect it fails on was found in harness work rather than venture work. I hold the exception and keep it narrow: a step whose subject is the growth of the governed set is the one step a growth ceiling cannot consistently refuse, because refusing it leaves the ceiling itself unenforced. My measured base rate is the reason it goes first rather than later — six of nine census rows unwired, budget-guard registered zero times, one of four workflows running, one of seven mission-control views acting, zero of eight board personas with agent files. Five new controls on that base rate produce five new unwired mechanisms plus a false sense of safety, which is strictly worse than none.",
+      "why_not_resolved": "The exception is taken against strategist:R1:P5, which the Strategist downgraded to a labelled policy in Round 2 — so the conflict softened without being settled. The sufficiency of the demand trigger bolted onto the predicate is unresolved. See could_not_resolve item 2."
+    },
+    {
+      "from": "risk-modeler:R2:P6",
+      "dissent": "Inbound stays last, and the world resolver is inbound. The visionary's order puts verified_by: world at position 3 with no outbound control anywhere in the sequence, and WebFetch returns exit 0 from the only blocking hook — measured, not argued. This is the single most consequential sequencing decision in my lane and it holds whether the board builds three controls or thirty. I will trade volume and I will not trade this. The concession I do make: the constraint is cheap enough that position 3 survives it — a deterministic parse into a data file, never a fetched body into a producing context — so this dissent asks the Visionary to add a clause, not to reorder.",
+      "why_not_resolved": "NOT unresolved — locked as D9. Preserved because the persona named it the single thing it would not trade across two rounds, and because the concession that makes it cheap (a deterministic parse into a data file, never a fetched body into a producing context) is a design constraint the Visionary has not accepted in writing.",
+      "from_as_filed": "risk-modeler:R2:BUILD-ORDER-5",
+      "source_note": "nearest held position; the ordering itself is stated in r2-risk-modeler.md §5 and in the persona's remaining_dissent keyed BUILD-ORDER-5"
+    },
+    {
+      "from": "risk-modeler:R2:P14",
+      "dissent": "A meaningful share of residual risk cannot be closed by any mechanism and must be accepted and NAMED. No peer argued against this and no peer adopted it either, which is the outcome I most expected and least want: it is the item that gets dropped in synthesis because nobody objects to it. The sandbox is a guardrail against accident and not containment; Bash is a general capability; no reasoning-layer control survives prompt injection; a verdict is hash-bound and not signed; the panel is single-family until a second family is reachable; a policy file is an ordinary file; a blocking-human gate stops overnight work when the founder is asleep; and the founder is a single point of failure for every human gate while watching 2-4 rows a day. Naming these is Rule 10 applied to the design rather than to a resolver.",
+      "why_not_resolved": "No peer argued against it and no peer adopted it. The persona predicted in writing that this is the item synthesis drops because nobody objects to it. It is not dropped: it is founder action item 6, and the eight residuals are reproduced in the markdown."
+    },
+    {
+      "from": "adversary:R2:P13",
+      "dissent": "Position 1 must be an artifact, not a mechanism. Measured across all four peer build_order arrays: position 1 is a mechanism in four of four cases, and an artifact that reaches a person outside this system appears at no position in any of them. The nearest approaches are the Visionary's step 6 and the Strategist's step 5, and both are careful about what they are — a SYNTHETIC mission graded internally, and an INSTRUMENT that would read an outcome if one existed. Neither obtains a demand signal; both build the apparatus that would read one. It holds because not one of the four presented evidence that anyone outside this system wants its output, and three of the four wrote that objection down against themselves in their own strongest_counter. The demand test I specified in Round 1 was not refused, weakened or priced by anybody — it was not mentioned. One revision arising from the Risk Modeler's lane, which strengthens rather than weakens it: the demand test requires NONE of their controls, because it contains no autonomous outbound act. The founder ships one page by hand, posts it once by hand, and does not touch it for seven days; no agent publishes, sends or spends. Their ordering (outbound wrapper before inbound, inbound last) is correct and binds the loop, and does not bind the experiment. That removes the last reason to sequence the test behind anything. What would move me is what has always been on offer: run it and show me a number.",
+      "why_not_resolved": "The measurement stands unrebutted: position 1 is a mechanism in four of four peer build orders, and an artifact reaching a person outside this system appears at no position in any of them. D5 locks the test; it does NOT lock the ordering claim, and not one persona moved their own position 1 in response."
+    },
+    {
+      "from": "adversary:R2:P6",
+      "dissent": "The self-correction cost curve is unaddressed by every lane and one proposal multiplies it. A repository whose only output is statements about itself corrects itself faster than it produces: 637 lines of STATUS.md, the main sha stale four times in one day, the branch name five times, the session count five times, the suite denominator four times. Forced expiry across every governed store adds claim surface without adding one claim about the world — a mission, a move, a done-test, a field note, a balcony row and a pack grant are all claims that will expire and none is checkable against anything outside the repository. Nobody costed this in Round 1, and the Visionary's own mitigation changes the arrival pattern of the bill, not its total.",
+      "why_not_resolved": "Unaddressed by every lane — the Adversary's count, and the Visionary concedes it lands partly. The Visionary's mitigation changes the arrival pattern of the bill, not its total. No persona proposed a mechanism that prices self-correction."
+    },
+    {
+      "from": "adversary:R2:P5",
+      "dissent": "The catalogue stays refused at volume. 311 options measured across two files, with selection already performed twice — concepts.md §17's five and hands.md §6's ranked fifteen with the top five free and measured in minutes. Building the top three costs less than the meeting that selects them. visionary:P14 answers this by adding a required field across every governed artifact, and architect:P12 by building the reversible half fast and loose; both add surface, and the second is the operating rule that produced beeond's 92-to-1 ratio. The Strategist's 1.4% is the right posture and I hold with it against both — while parting from the Strategist on what occupies position 1.",
+      "why_not_resolved": "Locked in part as D12. The dissent is aimed at two specific proposals that add surface — visionary:R2:P14 and architect:R1:P12 — and both remain live, so the position is not discharged by the ceiling."
+    }
+  ],
+  "founder_action_items": [
+    {
+      "item": "Register budget-guard.js in .claude/settings.json — but ONLY after the stall-counter repair lands. Two repairs, both small: trigger on elapsed time since the last durable artifact (unbounded, correct at 19.1h, already computed by budget-guard.js and discarded into a warning string) or have sinceLastArtifact return `unresolved` past the retention horizon; and scope the account-wide numerator to the repo-local denominator.",
+      "because": "It is the highest capability-per-hour item on the board, it sits in the first four items of all five build orders, and no agent can do it — .claude/settings.json is irreversible tier and denied to the write tools. In its current state registration produces a believed brake rather than a brake.",
+      "source": "risk-modeler:R2:P15",
+      "source_as_filed": "risk-modeler:R2:BUILD-ORDER"
+    },
+    {
+      "item": "Supply the rate-ceiling number: dollars per day, per venture. Nothing else on the board is blocked on a number only you hold.",
+      "because": "Every rate ceiling needs a number and the Risk Modeler stated in writing that it would not invent one. Money is the only axis with a rate and the only one where the mechanism is trivial once the number exists. D2 cannot become a mechanism without it.",
+      "source": "risk-modeler:R1:P7"
+    },
+    {
+      "item": "Run the demand test by hand — one page, one real URL, analytics on it, posted once, seven days hands off, three numbers recorded — and write down BEFORE it runs what number is a pass and what number is an uninformative sample.",
+      "because": "It is the only item on the board that reads a signal from outside this system, it costs hours rather than weeks, it needs none of the safety controls because no agent publishes or spends, and four of five personas accept it once the IF-AND-ONLY-IF gate is deleted.",
+      "source": "adversary:R2:P13"
+    },
+    {
+      "item": "Decide how a coarse-grained MCP server gets narrowed. higgsfield is ONE server with 84 tools spanning generate_image and tiktok_publish/sandbox_exec; frontmatter grants are per server and the risk is per tool.",
+      "because": "The Risk Modeler flagged this as needing a founder decision rather than a preference, and the cleanest available answer — extending mcp-policy.json's scope rule to credentialed user-scope servers — contradicts that file's own stated design principle.",
+      "source": "risk-modeler:R1:P2"
+    },
+    {
+      "item": "Before the board convenes again: write an agent file per persona that narrows its roster, and either give the $3 cap a counter something reads or delete it from the spec.",
+      "because": "Five Opus personas ran this meeting with no agent file and therefore the full 15-server roster, including tiktok_publish, Gmail send_message and sandbox_exec — each measured exit 0 from the live blocking hook. The governance body was the least governed thing in the repository.",
+      "source": "strategist:R2:P12"
+    },
+    {
+      "item": "Read the eight irreducible residual risks and accept them explicitly, in writing, rather than by silence.",
+      "because": "The Risk Modeler named them and predicted in writing that this is the item synthesis drops because nobody objects to it. A design that implies the residual is closed is worse than one that admits it.",
+      "source": "risk-modeler:R2:P14"
+    },
+    {
+      "item": "Settle whether the harness is itself the product or scaffolding for ventures. TEMPLATE-USAGE.md implies other founders; Decision 4 ('built for this Mac, for the founder') implies not.",
+      "because": "The Adversary's entire cost analysis of the only live customer turns on it, nobody resolved it in either round, and it changes which of these fifteen decisions are worth taking.",
+      "source": "adversary:R2:P3"
+    },
+    {
+      "item": "Authorise, or decline, the two remaining founder-only permissions: run gemini, and fix the pre-tool-use.sh parenthesis bypass. Note the bypass was RE-MEASURED during the meeting and downgraded.",
+      "because": "The Adversary ranked the bypass sweep as forced build-order item 3 in Round 1, then re-ran it and found the defect is one rule's, not the rule set's shape: `( npx --version )` exits 0 while `( rm -rf / )`, `{ rm -rf / ; }` and `( curl https://evil.example.com )` all exit 2. The sweep is not forced; the single rule is still broken.",
+      "source": "adversary:R2:P10"
+    },
+    {
+      "item": "Run `claude -p` under launchd once and record whether a Workflow invocation succeeds. An agent can execute this; it needs your say-so because it is the first unattended process on the machine.",
+      "because": "D10's loop shape rests on it, and the Architect labelled its own answer an inference rather than a measurement: a claude -p process is not a sidechain, but nobody has run one. If it fails, the producing workflows are reachable only while you are typing, and the whole 24/7 premise needs re-examining.",
+      "source": "architect:R2:P9"
+    }
+  ],
+  "could_not_resolve": [
+    "Is built-and-never-wired the disease, or a demand signal misread as an engineering defect? The Architect asked explicitly that this not be smoothed into one. Three lanes prescribe the birth certificate (architect:R1:P8, visionary:R1:P10, risk-modeler:R1:P3); one holds the cure passes by construction and names a cheaper experiment that separates the readings (adversary:R1:P4). This is the live fork and it decides the build order. No measurement taken in either round settles it.",
+    "Can the demand trigger tell a harness mission from a venture one? The Adversary's fatal critique of strategist:P3 shows a mission reading 'make the harness able to dispatch a design round' satisfies it perfectly — real mission, real block, real missing capability, clean merge — and that is WORSE than the failure it replaces, because the justification becomes a first-class artifact with a schema and a check. Two sufficient repairs were named (classify the authorising mission `venture` through the one classifier, or resolve its done-test through verified_by: world). Nobody adopted either and nobody refuted them.",
+    "Must position 1 be an artifact or a mechanism? Measured across four peer build orders: a mechanism sits at position 1 in four of four, and an artifact reaching a person outside this system appears at no position in any of them. Three of four wrote that objection down against themselves in their own strongest_counter and then put a mechanism first anyway. No persona moved their position 1 in Round 2.",
+    "Can the loop and the founder share one quota? adversary:R1:P9 holds that the rope cannot hold because no mechanism allocates quota between them, making Decision 8's implementation a WISH. It was strengthened in Round 2 by two Architect measurements and, in the Adversary's own words, answered by nobody. budget-guard.js is a brake, not an allocator.",
+    "What is the right predicate for sequencing — cost to reverse, or blast radius? architect:R2:P12 sorts by cost to reverse and adds a third class (silent-and-compounding); strategist:R2:P2 answers that reversibility is a property of ONE CHANGE while carrying cost is a property of the ACCUMULATED SET, and that the two axes were collapsed. Both cite the same supersession record. Neither moved.",
+    "Is the outbound wrapper buildable as one artifact at all? The Architect's fatal critique of risk-modeler:P5 holds that a wrapper is a control only if it is the sole path to the capability and nothing in this runtime interposes it — the hook has two verbs, allow and deny. The third and load-bearing survival condition is `claude -p --disallowedTools`, which exists on the binary and has not been exercised. Until it is, the wrapper is a policy, not a physics.",
+    "Does the founder-preference corpus have an input? visionary:R2:P5 makes it the company's moat by 2028; strategist:R2's serious critique measures the only surface where a pair could be written — 7 balcony views, 1 that acts, an escalation inbox empty on every project ever. The idea was not refuted and its input was not demonstrated.",
+    "What does self-correction cost, and does forced expiry across every store multiply it? adversary:R2:P6 measures the curve (637 lines of STATUS.md, the main sha stale four times in one day, the branch name five times, the session count five times, the suite denominator four times) and holds that pointing forced expiry at every store adds claim surface without adding one claim about the world. Nobody costed it in Round 1 and no mechanism was proposed to price it.",
+    "Is the harness itself the product? Unresolved in both rounds. It changes the entire analysis: if the harness is the product, the Adversary's abandonment base rate and beeond damage arguments weaken sharply; if it is scaffolding, they are the sharpest findings on the board."
+  ],
+  "roster_assessment": "**Did the five meaningfully diverge in Round 1? Yes, and the evidence is behavioural rather than lexical.** Five sealed rooms produced four distinct position-1 build-order items — the task id (Visionary, Architect), registering budget-guard (Strategist), the birth certificate (Risk Modeler), the demand test (Adversary) — and five different diagnoses of one corpus: inventory-versus-flywheel, refusal, substrate, binding, demand. Three separate positions were falsified BY MEASUREMENT during the meeting, each by a different persona: the stall ceiling's six-hour blind spot (Architect, verified live by the Risk Modeler), the parenthesis bypass's true scope (Adversary, re-measuring and downgrading its own headline finding), and the workflow-reachability inference (Risk Modeler correcting the Architect). A roster that produces peer falsification of that kind is not a roster of one voice.\n\n**Did dissent shrink artificially in Round 2? No — the numbers say the opposite of polite convergence.** 33 changed_mind_on entries, but 17 remaining dissents survived with a named `holds_because`, and every persona issued a fatal critique. Movement was evidence-driven: the mind-changes name specific measurements (RETAIN_HOURS = 6; 3,813 events with no id-shaped keys; 0 of 55 Workflow calls from a sidechain; exit 0 from the live hook), not peer authority. Two personas moved AGAINST their own interest — the Risk Modeler withdrew the word \"prevents\" from its own top-ranked control, and the Adversary re-ran its own headline bypass finding and downgraded it. That is the opposite of anchoring.\n\n**One correction to the Round-2 stats: the fatal chain is not a permutation.** Five fatals were issued, one per persona, but they landed on three targets — `adversary:P4` took two, the Strategist took two across `P1` and `P3`, `risk-modeler:P5` took one. The Visionary and the Architect received no fatal critique at all, and they are the two lanes that did the most measurement. \"Every persona gave one and took one\" is true of the giving and false of the taking.\n\n**Is the 40% distinctness test measuring the right thing? No, and this is now measured rather than argued.** I ran three controls the instrument had never been given.\n\n| Control | What it is | Mean distinctness |\n|---|---|---|\n| Same persona, R1 vs R2 | One author, one topic — the maximum true similarity available | **25.9%** |\n| Different personas, same round | The reading the spec thresholds | **39.6%** (R1) · **36.6%** (R2) |\n| Persona text vs. the shared R0 brief | A document none of them wrote, on a different subject | **53-56%** |\n\nSo the instrument's entire usable range on this corpus runs from about 26% to about 54%, and the spec's 40% threshold sits near the middle of it. Read against that scale the roster is 11-14 points above self-similarity and 15-18 points below unrelatedness, which is what a genuine debate over one 4,100-line corpus looks like. The threshold was never calibrated against the instrument's dynamic range; it is a round number applied to a statistic with no zero point. The Round-2 drop of 3 points is likewise 11% of the way toward \"same author\", spent while 17 dissents survived and 5 fatal critiques were issued.\n\n**The ordering is worse than the level: on this run the metric is anti-correlated with real disagreement.** The only pair to clear 40% in Round 1 — Adversary × Risk Modeler at 42.4% — is the pair with the sharpest build-order conflict, demand test first against controls first, with a serious critique in each direction. The lowest pair, Strategist × Visionary at 36.8%, holds largely compatible theses and one adopted the other's position outright. In Round 2 the pair that converged most in wording is Architect × Risk Modeler, down 5.7 points to 34.0% — and that is the pair where one persona issued a FATAL critique of the other's central control. Vocabulary converged while positions were being killed.\n\n**What should change before meeting two.**\n\n1. **Give each persona an agent file that narrows its tool roster.** This is the only structural diversity lever available and it is also the meeting's sharpest safety finding: with no agent file nothing narrowed anything, and five personas held `tiktok_publish`, `sandbox_exec` and Gmail `send_message`, each exit 0 from the live blocking hook. Different grants produce different reachable evidence, which is real divergence. Different adjectives are not.\n2. **Replace the trigram test with divergence measured on decisions.** All four readings are already computable from the JSON the protocol produces: distinct position-1 items across build orders (4 of 5 here), fatal critiques issued and received (5 issued, 3 targets), positions falsified by peer measurement (3), and mind-changes naming a peer id (33 of 33).\n3. **If the trigram test is kept, run it on `build_order` and `refuse` only** — the fields where a persona commits — and calibrate the threshold against the self-similarity floor rather than picking a round number.\n4. **Customer Voice was correctly not simulated, and its absence showed exactly where the Adversary said it would:** nobody in the room could speak for a consumer outside the system. Fill the sixth chair with the demand test's actual numbers, not with a sixth persona.\n5. **The protocol did not hold its own three rules on run one.** The $3 cap is enforced by nothing and was suspended by instruction; the escalation path names Linear, which is absent, and Telegram, which the founder refused the day before; zero personas had agent files. Mechanise them or stop asserting them.",
+  "ceo_correction": {
+    "date": "2026-09-02",
+    "what": "Six references cited build_order handles that the R2 contract never defined; personas coined them for build orders written in markdown. Re-sourced to real position ids where an identical position exists, marked prose-sourced otherwise. Zero fabricated.",
+    "changed": [
+      "risk-modeler:R2:BUILD-ORDER → risk-modeler:R2:P15",
+      "architect:R2:build_order → architect:R2:md§1.6",
+      "risk-modeler:R2:BUILD-ORDER-5 → risk-modeler:R2:P6"
+    ]
+  }
+}
