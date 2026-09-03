@@ -140,7 +140,7 @@ test, no grep, no state file enforces it.
 `.claude/skills/team/SKILL.md`, and "each round pick the 3-5 most relevant agents, don't pull in
 everyone." That skill file (`team/SKILL.md` (lines 37 to 61, in the studied repository)) is pure instruction to the LLM — "select 2-5
 based on task nature," "avoid redundant roles" — no code picks agents. Six fixed collaboration
-chains are given as defaults in `CLAUDE.md:88-97` (e.g. new-product-eval:
+chains are given as defaults in `CLAUDE.md` (lines 88 to 97, in the studied repository) (e.g. new-product-eval:
 `research-thompson → ceo-bezos → critic-munger → product-norman → cto-vogels → cfo-campbell`), but
 which chain applies, and who actually gets spawned, is the fresh LLM's judgment call every time.
 
@@ -271,7 +271,7 @@ This is a judgment call made by the same LLM instance that will then play some o
 there's no separate selector, no scoring, no external tool.
 
 **Mechanism ensuring actual disagreement: none.** `critic-munger.md` is framed as the structural
-check — `CLAUDE.md:15`: *"Munger is the sole brake — must be consulted before major decisions, and
+check — `CLAUDE.md` (line 15, in the studied repository): *"Munger is the sole brake — must be consulted before major decisions, and
 can only veto, not stall."* But this "must" is prose in a persona file
 (`critic-munger.md:3,10,45`: *"必须咨询"* / "must be consulted"), not a gate any code enforces.
 Nothing checks that `critic-munger` was actually invoked before a decision is acted on, nothing
@@ -280,7 +280,7 @@ other, and nothing stops the "team lead" (itself an LLM instance) from skipping 
 entirely — `team/SKILL.md`'s own selection step says pick "2-5 *most relevant*," and Munger is not
 hardcoded as always-included. `team/SKILL.md` (lines 56 to 59, in the studied repository) says *"如有分歧，列出各方观点供创始人决策"*
 ("if there's disagreement, list each side's view for the founder to decide") — but the founder is
-not in the loop during autonomous cycles (`CLAUDE.md:11-17`: no waiting for human approval), so in
+not in the loop during autonomous cycles (`CLAUDE.md` (lines 11 to 17, in the studied repository): no waiting for human approval), so in
 practice a listed disagreement with nobody present to adjudicate it just becomes more text in
 `consensus.md` for the next cycle's fresh LLM to resolve however it likes. There is no
 model-family diversity (all 14 are `model: inherit`, same weights), no structured red-team pass,
@@ -306,12 +306,12 @@ returns. Interrupt mechanisms, all external to the cycle itself:
 - Redirect direction: edit the `## Next Action` field of `memories/consensus.md` by hand
   (`README.md`: *"改方向: 修改 consensus.md 的 Next Action"*) — this is the only sanctioned steering
   input, and it works because the whole prompt is rebuilt from that file every cycle (§2 step 5).
-- `make reset-consensus` (`Makefile:59-63`): `git checkout -- memories/consensus.md`, i.e. reverts
+- `make reset-consensus` (`Makefile` (lines 59 to 63, in the studied repository)): `git checkout -- memories/consensus.md`, i.e. reverts
   to whatever was last committed — a 3-second `sleep` "confirmation" is the only guard.
 - Notification: none, pull-only. `monitor.sh --status` / `--last` / `--cycles` /
   bare-tail-the-log (`monitor.sh` (lines 22 to 97, in the studied repository)) are the only visibility tools; nothing pushes to a human
   (no webhook, no email, no Slack). A human finds out something went wrong by choosing to look.
-- Escalation path: none beyond the hardcoded safety redlines in `CLAUDE.md:19-31` (never delete a
+- Escalation path: none beyond the hardcoded safety redlines in `CLAUDE.md` (lines 19 to 31, in the studied repository) (never delete a
   GitHub repo / Cloudflare project / system files, no `force push` to main, no credential leaks) —
   these are prose instructions inside the same untrusted, autonomously-running prompt, not an
   external enforcement layer. Nothing pages a human when a redline is approached; the only backstop
