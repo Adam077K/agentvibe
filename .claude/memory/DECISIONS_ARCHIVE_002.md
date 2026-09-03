@@ -257,3 +257,21 @@ It binds hard the moment a dispatch names an `agentType`. The CEO introduced the
 **Reversibility:** reversible — two frontmatter numbers and a prompt.
 **Owner:** ceo · **Affects:** `.claude/agents/reviewer*.md`, `.claude/workflows/qa.js`, and any future dispatch
 that names an agent type
+
+## 2026-08-13 — c-runtime-nested-spawn REFRESHED: depth-2 nesting works, the CEO instructions are wrong
+
+**Context:** The claim asserts *"Subagents can spawn subagents — write-capable depth-2 nesting outside plan
+mode"*. It carried a 2026-08-11 waiver whose reason — *"spawning is disabled by founder instruction"* —
+stopped being true on 2026-08-13. Two independent probes were run; each made exactly one spawn attempt.
+**Measurement:** `Agent` appears un-deferred in a depth-1 subagent's own tool list; the spawn succeeded with
+no block, denial or error; the depth-2 child ran and returned `ACK`. Spawning is **async** — the tool returns
+launch metadata immediately and the child's reply arrives later — which is why the first probe's report went
+missing and had to be recovered from a session file it wrote before being blocked.
+**Decision:** **Refresh**, not Deprecate. The CEO initially recorded this as a Deprecate, having the claim's
+polarity backwards — the claim says nesting *works*, and the probe agrees.
+**What is actually false is the CEO's own operating instructions**, which state *"RUNTIME CONSTRAINT:
+subagents cannot spawn subagents (nested Task is blocked)"*. That line is wrong on this runtime, and it is
+the stated reason chiefs return dispatch packets instead of spawning workers themselves — so the T2
+orchestration tier rests on a false premise. Not changed here; flagged for the Founder.
+**Reversibility:** reversible — the disposition is one line in `~/.warroom/ledger/global.yml`
+**Owner:** ceo · **Affects:** `~/.warroom/ledger/global.yml`, and the T2 tier design in `AGENTS.md`/`ceo.md`

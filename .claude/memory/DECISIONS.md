@@ -144,22 +144,9 @@ unlike the eleven shimmed names, deleting this one actually removes it.
 *Not checked: paraphrase, global-scope-claims, title-too-generic — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-13 — c-runtime-nested-spawn REFRESHED: depth-2 nesting works, the CEO instructions are wrong
-
-**Context:** The claim asserts *"Subagents can spawn subagents — write-capable depth-2 nesting outside plan
-mode"*. It carried a 2026-08-11 waiver whose reason — *"spawning is disabled by founder instruction"* —
-stopped being true on 2026-08-13. Two independent probes were run; each made exactly one spawn attempt.
-**Measurement:** `Agent` appears un-deferred in a depth-1 subagent's own tool list; the spawn succeeded with
-no block, denial or error; the depth-2 child ran and returned `ACK`. Spawning is **async** — the tool returns
-launch metadata immediately and the child's reply arrives later — which is why the first probe's report went
-missing and had to be recovered from a session file it wrote before being blocked.
-**Decision:** **Refresh**, not Deprecate. The CEO initially recorded this as a Deprecate, having the claim's
-polarity backwards — the claim says nesting *works*, and the probe agrees.
-**What is actually false is the CEO's own operating instructions**, which state *"RUNTIME CONSTRAINT:
-subagents cannot spawn subagents (nested Task is blocked)"*. That line is wrong on this runtime, and it is
-the stated reason chiefs return dispatch packets instead of spawning workers themselves — so the T2
-orchestration tier rests on a false premise. Not changed here; flagged for the Founder.
-**Reversibility:** reversible — the disposition is one line in `~/.warroom/ledger/global.yml`
-**Owner:** ceo · **Affects:** `~/.warroom/ledger/global.yml`, and the T2 tier design in `AGENTS.md`/`ceo.md`
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-03). room for the 2026-09-03 WATCH-is-the-frame entry; the refreshed claim lives in the ledger*
+***Cited in prose by 2 location(s)**, which the heading above keeps resolvable: `docs/03-system-design/IMPLEMENTATION-PLAN.md:198` (date), `docs/08-agents_work/sessions/2026-08-13-ceo-phase-8a-status.md:9` (date).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-15 — RCEs closed by allowlist, not by an Origin check; and the Origin check was a CEO error
 *Archived to `DECISIONS_ARCHIVE_002.md` (2026-08-26). Executed. The allowlist shipped and the Origin check was withdrawn as an error. Security history, preserved verbatim rather than summarised.*
@@ -412,3 +399,9 @@ first measured overnight. Recorded in Part IV.
 `claude -p` for `Write` (M1); a child inside a sandboxed session cannot start its own sandbox.
 **Affects:** whoever builds the 30-day path (Part II §15); the handoff chain — four handoffs deleted, folded
 into Part IV. **Reversibility:** reversible — documents only; nothing is built.
+
+## 2026-09-03 — Round two: WATCH is the frame; the spec is re-derived from it
+
+**Decision (founder, 2026-09-03):** asked whether WAKE was the frame, the founder said *"envision again the whole system; it can learn, for context, from the other systems."* Three sealed Opus minds each wrote a spine before reading anything, then read WAKE and the prior systems as context, then dreamed the whole; one Fable merge decided → **WATCH**, `docs/03-system-design/envision/2026-09-02-THE-SYSTEM.md`. After the page the founder chose: **WATCH is the frame**; commit, no push; the spec is re-derived next session.
+**Affects:** every existing part named in WATCH §29 (the check suite, ledger, verdict binding, sandbox and hook SURVIVE; the risk classifier, QA gate, engines, lenses, playbooks, skills library, session files, slash commands, mission control's views RETIRED or absorbed). WAKE (`dream/`) is round one's record, untouched. `STARTUP-OS.md` v2 is a parts bin until v3 is derived from §29 and §25.
+**Why:** 22 claims all three spines made blind; the largest change against WAKE (the founder model buys silence, never action) was refused by all three independently. Reversibility: reversible; nothing built.
