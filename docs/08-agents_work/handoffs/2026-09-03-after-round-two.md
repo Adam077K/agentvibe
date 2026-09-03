@@ -1,7 +1,7 @@
 # Handoff — after round two · 2026-09-03
 
 **For the next team, starting cold after a compaction.** Read this first, then the next-session prompt beside it.
-Everything below is on branch `ceo-1-1788261466`, committed, not pushed. Nothing is built. **We are doing big:
+Everything below is on branch `ceo-1-1788261466`, pushed; the documents reach `main` through pull request #130 from the docs-only branch `rethink-watch-docs`; the code of the design-layer sessions (design probe, tokens, fleet installer, verdict fixes, skills curation) stays on the session branch for its own gated PR. Nothing is built. **We are doing big:
 envisioning, changing the future.** The founder's words, and the standard.
 
 ## The founder's decisions today, in order
