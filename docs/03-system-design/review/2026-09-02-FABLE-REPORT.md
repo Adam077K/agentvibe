@@ -749,7 +749,7 @@ sandbox keys `enabled, failIfUnavailable, filesystem`, no `network`; hooks `Sess
 HTTPS · PATH binaries · `node fetch example.com` → `ENOTFOUND` in-session · `wc -c .claude/skills/routers/*.md`
 (1,539 / 2,477–5,310 / 25,743) · 24 spec-named paths (11 absent) · `design.js` `total` at `:49,55,111` ·
 `grep -c budget-guard settings.json` → 0 · `.mcp.json` servers `playwright, claim-append` · 174 sessions, 173
-dated · `pre-tool-use.sh` structure (`:229-247`, `:285`, `:342`) · `usage.js:40` · `lenses.yml:180` ·
+dated · `pre-tool-use.sh` structure (`:229-247`, `:285`, `:342`) · `usage.js:40` · `.claude/lenses.yml` (line 180 at the session branch's version of the file) ·
 `grep -c STATUS.md STARTUP-OS.md` → 0 · `grep -o "expansion/…"` → one hit · beeond `docs/design-brain/` 108
 files, 66 MB, untracked · `check-figures.mjs` 57, `probe-agent-tool-inheritance.mjs` 383,
 `produce-verdict.mjs` 1,084, `judges.js` 421, `fleet-install.mjs` 1,053, `consume-dispatch.ts` 685, `stop.sh`

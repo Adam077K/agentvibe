@@ -393,7 +393,7 @@ name it. Those are different checks and the first does not provide half of the s
 | Artifact type | Where the check lives | Exemption convention |
 |---|---|---|
 | **Skills** | `scripts/build-skill-routers.mjs:76` — *"in NO namespace, so unreachable via routers"* | **none at all** — an orphan simply fails |
-| **Test files** | `scripts/check-suite.test.mjs:3169` — *"every `scripts/*.test.mjs` is named by a package.json script, or carries its reason"* | `TEST_FILES_RUN_BY_NOTHING` — a JS object, free prose, no length floor |
+| **Test files** | `scripts/check-suite.test.mjs` (line 3169 at the session branch's version of the file) — *"every `scripts/*.test.mjs` is named by a package.json script, or carries its reason"* | `TEST_FILES_RUN_BY_NOTHING` — a JS object, free prose, no length floor |
 | **Gates** | `scripts/check-gates.mjs:226` — no playbook names it | `unused_reason:` in YAML, **≥40 characters**, and it fails if you carry a reason *while being used* |
 | **Suite steps** | `scripts/lib/check-suite.js:143` | `EXCLUDED` — a JS object with long prose reasons |
 
@@ -410,7 +410,7 @@ strongest of the four), and the four call sites migrated to it. Then adding `wor
 `personas` and `commands` is a config entry rather than a fifth implementation.
 
 Confidence: **high**. Evidence: measured `[M]`; `check-registration.mjs:120`; `build-skill-routers.mjs:76`;
-`check-suite.test.mjs:3160`; `check-gates.mjs:226`; `check-suite.js:143`; `concepts.md` X1, A5.
+`scripts/check-suite.test.mjs` (line 3160 at the session branch's version of the file); `check-gates.mjs:226`; `check-suite.js:143`; `concepts.md` X1, A5.
 
 ---
 
