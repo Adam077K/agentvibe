@@ -40,6 +40,13 @@ for context, from the other systems."* Three Opus minds, one Fable merge; the ei
    session**. Handoff `docs/08-agents_work/handoffs/2026-09-03-after-round-two.md` + next-session prompt written;
    the 2026-09-02 pair deleted. LONG-TERM.md and DECISIONS.md updated within their caps.
 
+6. Founder: *push, merge, save.* The rethink's documents merged to `main` as PR #130 (`4770d39`) from a docs-only
+   branch cut from main; the session branch's code (design layer, fleet installer, verdict fixes, skills curation)
+   conflicts with main in two gate scripts and waits for its own gated PR. Four defects surfaced by CI and fixed in
+   the documents: 101 unresolvable locators (studied repositories and bare basenames), 19 proposed claim ids read as
+   citations, an index carrying a claim from an excluded session file, a stale codebase map. Verdict by
+   `reviewer-readonly` (scope, evidence): PASS, three minor findings, two fixed before binding.
+
 ## Next
 Session 5: `STARTUP-OS.md` v3 re-derived from WATCH (§29 the migration table, §25 the build order), v2 preserved
 under `designs/`. Then the founder's widget decisions, the first move, the terms question, the managed settings
