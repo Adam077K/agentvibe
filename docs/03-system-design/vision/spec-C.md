@@ -886,14 +886,16 @@ staggered at creation**, so a quiet month does not produce fifty simultaneous de
 
 ## Claims this spec asserts
 
+> The ids in this table were proposed by this design and never registered in the ledger; `proposed:` marks them so the ledger lint reads them as proposals, not as citations of claims that exist.
+
 | id | assertion | kind | expires |
 |---|---|---|---|
-| `c-spec-c-reach-bounds-rung` | An exposure's reachable rung is bounded by the audience that can see it; publishing to nobody resolves `no_data`, which teaches nothing | `judge` | at the first exposure reaching rung ≥ 2 with a measured audience |
-| `c-spec-c-authority-one-decider` | Authority is computed in exactly one place; `grep -rn 'reach' scripts/loop/ packs/` returns one decider | `command` | at the first `reach: outbound-write` pack |
-| `c-spec-c-fuse-is-warrant-expiry` | The fuse and the warrant are one object; the queue row and the ledger read the same `expires` | `command` | at the first standing warrant |
-| `c-spec-c-hand-cost-is-flat` | The cost of admitting the fiftieth hand equals the cost of the first, because all five admission tests are checked by non-model machinery | `judge` | at the tenth hand |
-| `c-spec-c-good-year` | A good year is founder minutes per week falling while exposures at rung ≥ 2 rise | `command` | at the first full year of both series |
-| `c-spec-c-process-count` | The full-scale process total is a function of fan-out and venture count, not a constant; the picture's "nineteen" is an illustration and its own block sums to twenty-one | `command` | never — it is arithmetic |
+| `proposed:c-spec-c-reach-bounds-rung` | An exposure's reachable rung is bounded by the audience that can see it; publishing to nobody resolves `no_data`, which teaches nothing | `judge` | at the first exposure reaching rung ≥ 2 with a measured audience |
+| `proposed:c-spec-c-authority-one-decider` | Authority is computed in exactly one place; `grep -rn 'reach' scripts/loop/ packs/` returns one decider | `command` | at the first `reach: outbound-write` pack |
+| `proposed:c-spec-c-fuse-is-warrant-expiry` | The fuse and the warrant are one object; the queue row and the ledger read the same `expires` | `command` | at the first standing warrant |
+| `proposed:c-spec-c-hand-cost-is-flat` | The cost of admitting the fiftieth hand equals the cost of the first, because all five admission tests are checked by non-model machinery | `judge` | at the tenth hand |
+| `proposed:c-spec-c-good-year` | A good year is founder minutes per week falling while exposures at rung ≥ 2 rise | `command` | at the first full year of both series |
+| `proposed:c-spec-c-process-count` | The full-scale process total is a function of fan-out and venture count, not a constant; the picture's "nineteen" is an illustration and its own block sums to twenty-one | `command` | never — it is arithmetic |
 
 *The two `judge` rows will read `unresolved` until the panel has a second model family, because an empty panel
 resolves `unresolved` forever and no non-Anthropic model is reachable from inside Claude Code. Honest, not an

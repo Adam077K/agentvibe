@@ -1261,15 +1261,17 @@ measures something the decision does not govern.
 
 Registered as ledger claims when this design is adopted, each with `valid_until`, per Rule 9.
 
+> The ids in this table were proposed by this design and never registered in the ledger; `proposed:` marks them so the ledger lint reads them as proposals, not as citations of claims that exist.
+
 | id | Assertion | verified_by | Expires |
 |---|---|---|---|
-| `c-exposure-is-the-center` | Every artifact leaving the building has an `EXPOSURES/` row with a `check_on`, and a run of consecutive `no_data` is reported | command (`check-exposures.mjs`) | 2026-12-02 |
-| `c-verdict-subject-generalises` | `verdict.mjs` binds a non-code artifact by `sha256(bytes)` and cannot confuse it with a diff subject | command (`verdict.test.mjs`) | 2026-12-02 |
-| `c-pack-is-argv-not-agent-file` | No pack adds an agent file; the roster is built by `claude -p --allowedTools` from `packs/*.yml` | command (`check-packs.mjs`) | 2026-12-02 |
-| `c-no-send-on-any-pack` | No pack's `allowed_tools` contains a publish, send or spend tool | command (`check-packs.mjs`) | 2026-11-02 |
-| `c-stall-counter-repaired` | `sinceLastArtifact()` and `windowUsage()` return different values at a 19h stall | command (`usage.test.mjs`) | 2026-10-02 |
-| `c-loop-reaches-workflows` | A `claude -p` process under launchd can invoke a `Workflow` | command (probe) | 2026-10-02 |
-| `c-lid-shut-runtime` | `bin/loop.sh` executes with the lid closed on AC power | command (probe) | 2026-10-02 |
+| `proposed:c-exposure-is-the-center` | Every artifact leaving the building has an `EXPOSURES/` row with a `check_on`, and a run of consecutive `no_data` is reported | command (`check-exposures.mjs`) | 2026-12-02 |
+| `proposed:c-verdict-subject-generalises` | `verdict.mjs` binds a non-code artifact by `sha256(bytes)` and cannot confuse it with a diff subject | command (`verdict.test.mjs`) | 2026-12-02 |
+| `proposed:c-pack-is-argv-not-agent-file` | No pack adds an agent file; the roster is built by `claude -p --allowedTools` from `packs/*.yml` | command (`check-packs.mjs`) | 2026-12-02 |
+| `proposed:c-no-send-on-any-pack` | No pack's `allowed_tools` contains a publish, send or spend tool | command (`check-packs.mjs`) | 2026-11-02 |
+| `proposed:c-stall-counter-repaired` | `sinceLastArtifact()` and `windowUsage()` return different values at a 19h stall | command (`usage.test.mjs`) | 2026-10-02 |
+| `proposed:c-loop-reaches-workflows` | A `claude -p` process under launchd can invoke a `Workflow` | command (probe) | 2026-10-02 |
+| `proposed:c-lid-shut-runtime` | `bin/loop.sh` executes with the lid closed on AC power | command (probe) | 2026-10-02 |
 
 **Three of these are currently `WISH`** — the stall repair, the launchd probe and the lid-shut probe — and
 they are the three that decide whether "24/7" is a description or an aspiration. They are cheap, they are

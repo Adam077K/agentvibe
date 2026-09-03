@@ -122,7 +122,7 @@ policies:
       ask_thresholds_usd: [1.00, 3.00]
       expensive_models: ["opus", "gpt-5"]
 ```
-(`docs/POLICIES.md:246-260`)
+(`docs/POLICIES.md` (lines 246 to 260, in the studied repository))
 
 A policy is either a **direct callable** (no params) or a **factory** (called once at
 build time with `factory_params:` to produce the evaluator closure) — the registry
@@ -151,7 +151,7 @@ Every policy is a function `PolicyEvent -> PolicyResponse | None`:
 
 ### Composition and precedence — the actual mechanism
 
-`omnigent/runtime/policies/builder.py:290-301` states it in the docstring, and the
+`omnigent/runtime/policies/builder.py` (lines 290 to 301, in the studied repository) states it in the docstring, and the
 ordering is literally the order the list is built in:
 
 > "Policy run order: session policies (from the CRUD API) first, then agent spec
@@ -169,7 +169,7 @@ overrides agent" — it's strict declaration order, session-first:
     → [server-wide default policies]
 ```
 
-and the loop that walks this list (`omnigent/runtime/policies/engine.py:283-406`,
+and the loop that walks this list (`omnigent/runtime/policies/engine.py` (lines 283 to 406, in the studied repository),
 `_evaluate_composed`) is a **first-DENY-wins** short-circuit:
 
 ```python
@@ -192,7 +192,7 @@ policies even run). ASK doesn't short-circuit — it **accumulates**: every rema
 policy still evaluates, and if any later one DENYs, that DENY wins outright over the
 earlier ASK. Only if nothing DENYs does the composed result become ASK (all accumulated
 reasons joined) or, if nothing ASKed either, ALLOW. Label/state writes from ASK-ing
-policies are **withheld** until the human approves (`engine.py:378-383` — "DO NOT apply
+policies are **withheld** until the human approves (`engine.py` (lines 378 to 383, in the studied repository) — "DO NOT apply
 label writes or state updates here... preserving the 'no side effects from a denied
 ASK' invariant").
 
@@ -210,8 +210,8 @@ hook can still block before the action runs). Two independent gates in one polic
   *only while the session is on an "expensive" model* (`expensive_models`, default
   substring-matches Opus/GPT-5-non-mini/Fable), telling the user to `/model` down.
   Once switched to a cheap model it's allowed again — "a downgrade gate, not a hard
-  stop" (module docstring, `cost.py:1-30`).
-- **Fail-closed on unpriced models**: `_usage_is_unpriced()` (`cost.py:118-135`) — if
+  stop" (module docstring, `cost.py` (lines 1 to 30, in the studied repository)).
+- **Fail-closed on unpriced models**: `_usage_is_unpriced()` (`cost.py` (lines 118 to 135, in the studied repository)) — if
   token counters are non-zero but `total_cost_usd` is absent (model has no catalog
   price), the gate can't score spend at all, so instead of silently allowing unbounded
   spend at `$0` it returns an `ASK` demanding the user switch models or explicitly
@@ -221,7 +221,7 @@ A second variant, `user_daily_cost_budget`, applies the identical ASK/downgrade 
 but against the session **owner's** cross-session UTC-day spend, meant to be declared
 once server-wide as a per-user daily cap.
 
-### Max-tool-calls cap — `omnigent/policies/builtins/safety.py:100-133`
+### Max-tool-calls cap — `omnigent/policies/builtins/safety.py` (lines 100 to 133, in the studied repository)
 
 ```python
 def max_tool_calls_per_session(limit: int = 100) -> PolicyCallable:
@@ -241,7 +241,7 @@ def max_tool_calls_per_session(limit: int = 100) -> PolicyCallable:
 
 Purely session-scoped, in-memory counter, no per-turn reset (that variant is a
 documented pattern in `examples/_shared/rate_limit_policy.py`, mentioned but not
-built in, per `omnigent/policies/base.py:76-80`). A companion `detect_loop()` factory
+built in, per `omnigent/policies/base.py` (lines 76 to 80, in the studied repository)). A companion `detect_loop()` factory
 (`safety.py:143+`) hashes `(tool_name, arguments)` and ASKs when the same call repeats
 `threshold` times within a sliding `window` — "the #1 token-waste pattern" per its
 docstring, something a raw call-count cap can't catch.
@@ -256,11 +256,11 @@ primitive verbatim** rather than inventing a bespoke approval wire format:
    try to hand it to a tool.
 2. Emits an SSE event `response.elicitation_request` on the session's stream, whose
    `params` shape mirrors MCP's `ElicitRequestFormParams` field-for-field
-   (`approval.py:12-16`) — any MCP-aware client can render the approval UI without a
+   (`approval.py` (lines 12 to 16, in the studied repository)) — any MCP-aware client can render the approval UI without a
    translation layer.
 3. Parks on the `tool_result` topic, honoring a per-policy or spec-wide
    `ask_timeout` (`spec.types.DEFAULT_ASK_TIMEOUT`).
-4. Verdict parsing is strict: `_is_accept()`/`_is_decline()` (`approval.py:301-347`)
+4. Verdict parsing is strict: `_is_accept()`/`_is_decline()` (`approval.py` (lines 301 to 347, in the studied repository))
    only return `True` on an **exact** `action == "accept"` / `action == "decline"`
    string; anything else — malformed JSON, a missing field, timeout, a stray value —
    resolves to declined/DENY. Fail-closed by construction, not by convention.
@@ -391,7 +391,7 @@ turn/steering state now lives **in-memory in the runner process**, only a coarse
 **Transport**: confirmed **SSE** for the session event feed —
 `GET /sessions/{session_id}/stream` (`omnigent/server/routes/sessions/routes_events.py`)
 returns a `text/event-stream` `StreamingResponse`; the approval flow's own doc-comment
-(`omnigent/runtime/policies/approval.py:26-30`) cites `designs/SERVER_HARNESS_CONTRACT.md`
+(`omnigent/runtime/policies/approval.py` (lines 26 to 30, in the studied repository)) cites `designs/SERVER_HARNESS_CONTRACT.md`
 for the wire contract, but **that file does not exist in this checkout** — a dead
 citation, code and docs disagree here, trust the code. Separate **WebSocket**
 endpoints (`terminal_attach.py`, `runner_tunnel.py`, `host_tunnel.py`) carry PTY
@@ -418,7 +418,7 @@ Two distinct axes that are easy to conflate:
 platform, `omnigent/inner/{bwrap_sandbox,seatbelt_sandbox,windows_jobobject_sandbox}.py`:
 
 - `linux_bwrap` — bubblewrap + a hardened seccomp profile; `resolve()` hard-fails off
-  Linux (`bwrap_sandbox.py:312-314`) and if the `bwrap` binary is missing from `PATH`.
+  Linux (`bwrap_sandbox.py` (lines 312 to 314, in the studied repository)) and if the `bwrap` binary is missing from `PATH`.
 - `darwin_seatbelt` — writes an SBPL profile to a mode-0600 tempfile, runs under
   `sandbox-exec -f`; macOS only.
 - `windows_jobobject` — Job Object process-tree containment **only**; its own
@@ -426,7 +426,7 @@ platform, `omnigent/inner/{bwrap_sandbox,seatbelt_sandbox,windows_jobobject_sand
   enforced" on this backend — the one place the sandbox story is honestly weaker.
 
 `type: auto` (or omitted) resolves at **parse time**
-(`omnigent/inner/sandbox.py:1172-1231`, `_default_sandbox_for_platform`) to
+(`omnigent/inner/sandbox.py` (lines 1172 to 1231, in the studied repository), `_default_sandbox_for_platform`) to
 Linux→bwrap, macOS→seatbelt, Windows→jobobject — never by probing for the binary; a
 missing binary fails later, inside that backend's own `resolve()`.
 
@@ -449,15 +449,15 @@ network-isolating backend — only `linux_bwrap`/`darwin_seatbelt` qualify;
 (`omnigent/inner/loader.py:774,803`). One vendor-specific hard rule:
 `credential_proxy: databricks_cli` requires `linux_bwrap` specifically — "the Go CLI
 ignores `SSL_CERT_FILE` on macOS, so `darwin_seatbelt` is rejected"
-(`docs/AGENT_YAML_SPEC.md:257-262`).
+(`docs/AGENT_YAML_SPEC.md` (lines 257 to 262, in the studied repository)).
 
 ---
 
 ## 7 · STEAL
 
 1. **Session-first, then-agent, then-server policy precedence with first-DENY-wins,
-   ASK-accumulates composition.** `omnigent/runtime/policies/builder.py:290-301` (order)
-   + `omnigent/runtime/policies/engine.py:283-406` (`_evaluate_composed`, the loop).
+   ASK-accumulates composition.** `omnigent/runtime/policies/builder.py` (lines 290 to 301, in the studied repository) (order)
+   + `omnigent/runtime/policies/engine.py` (lines 283 to 406, in the studied repository) (`_evaluate_composed`, the loop).
    Mechanically: build one ordered list — root session policies, then this session's
    own, then agent-spec policies in YAML order, then server defaults — walk it once per
    event, return immediately on the first `DENY`, collect `ASK` reasons but keep
@@ -477,7 +477,7 @@ ignores `SSL_CERT_FILE` on macOS, so `darwin_seatbelt` is rejected"
    contract; reimplementing this contract is more valuable than any single builtin.
 
 3. **Fail-closed on the thing you can't measure, not fail-open.** `cost_budget`'s
-   `_usage_is_unpriced()` (`omnigent/policies/builtins/cost.py:118-135`): if a model has
+   `_usage_is_unpriced()` (`omnigent/policies/builtins/cost.py` (lines 118 to 135, in the studied repository)): if a model has
    no catalog price, cost would silently score `$0` forever — instead of allowing that,
    it ASKs the user to either switch to a priced model or explicitly approve running
    unmetered. Same instinct as this repo's Rule 10 ("a resolver never passes what it
@@ -490,7 +490,7 @@ ignores `SSL_CERT_FILE` on macOS, so `darwin_seatbelt` is rejected"
    emits an SSE event whose params match MCP's `ElicitRequestFormParams` field-for-
    field, and resolves strictly — only an exact `action == "accept"` string is a yes;
    everything else (malformed JSON, timeout, missing field) is a no
-   (`approval.py:301-347`). Reusing an existing protocol's shape means any MCP-aware
+   (`approval.py` (lines 301 to 347, in the studied repository)). Reusing an existing protocol's shape means any MCP-aware
    client renders the approval UI with no translation layer, and the strict-string
    check is the cheap, auditable way to make "ambiguous means deny."
 
@@ -544,32 +544,32 @@ that was added and then reverted.
 
 - **The `omnigent[memory]` package extra** — a multi-release saga. Dropped by an
   earlier PR (#2605, undated in this file), restored in v0.6.0 as "a backwards-compat
-  alias" with an explicit warning it "will be removed in 0.70" (`CHANGELOG.md:861`),
-  then actually removed in **v0.11.0** (2026-08-24, `CHANGELOG.md:68`), replaced by
+  alias" with an explicit warning it "will be removed in 0.70" (`CHANGELOG.md` (line 861, in the studied repository)),
+  then actually removed in **v0.11.0** (2026-08-24, `CHANGELOG.md` (line 68, in the studied repository)), replaced by
   `omnigent[hindsight]`. Even a deprecation with a stated target version took 5+
   releases to actually clear.
 - **`OMNIGENT_ACCOUNTS_ENABLED`** env var removed in favor of `OMNIGENT_AUTH_ENABLED`
-  (v0.7.0, `CHANGELOG.md:703`).
+  (v0.7.0, `CHANGELOG.md` (line 703, in the studied repository)).
 - **Shared-session approval authority + message attribution**: shipped (#2150 stack),
   then **reverted** by #4318 — "session approvals are once again available to any
-  shared editor" — reported at both v0.9.0 (`CHANGELOG.md:386`) and again at v0.10.0
-  (`CHANGELOG.md:140`), i.e. the revert itself needed a follow-up note. The one clear
+  shared editor" — reported at both v0.9.0 (`CHANGELOG.md` (line 386, in the studied repository)) and again at v0.10.0
+  (`CHANGELOG.md` (line 140, in the studied repository)), i.e. the revert itself needed a follow-up note. The one clear
   case of a shipped feature actually being pulled back out, not just deprecated.
   Note for us: even Databricks' team shipped a permission-model feature that turned out
   wrong in production and had to revert it — evidence that access-control UX is easy to
   get wrong even with resources.
 - **`omni server start` removed**, replaced by `omni server --background` (v0.7.0,
-  `CHANGELOG.md:651`) — then **partially un-abandoned**: v0.9.0 restores it as "a
+  `CHANGELOG.md` (line 651, in the studied repository)) — then **partially un-abandoned**: v0.9.0 restores it as "a
   deprecated alias... fixing 'Start locally' on desktop clients older than v0.7.0"
-  (`CHANGELOG.md:294`). A removal that broke an older client shipped separately, so it
+  (`CHANGELOG.md` (line 294, in the studied repository)). A removal that broke an older client shipped separately, so it
   came back as a compat shim.
 - **`omni integration slack start`** removed for `--background` (v0.7.0,
-  `CHANGELOG.md:667`), same pattern as the server command.
+  `CHANGELOG.md` (line 667, in the studied repository)), same pattern as the server command.
 - **Per-harness `<x>_args` config keys** deprecated in favor of one uniform
-  `extra_args`, explicitly "slated for removal in 0.9.0" (v0.8.0, `CHANGELOG.md:411`).
+  `extra_args`, explicitly "slated for removal in 0.9.0" (v0.8.0, `CHANGELOG.md` (line 411, in the studied repository)).
 - **Browser PWA install support** removed, along with its "new version available"
   prompt — desktop/mobile native apps are now the only installable clients (v0.10.0,
-  `CHANGELOG.md:229`).
+  `CHANGELOG.md` (line 229, in the studied repository)).
 
 No "Phase N rewrite" language appears anywhere in the changelog — unlike this repo's
 own phase-numbered history, Omnigent's public log reads as continuous incremental

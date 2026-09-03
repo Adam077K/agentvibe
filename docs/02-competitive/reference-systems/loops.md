@@ -34,7 +34,7 @@ agent with a judge model, Playwright/Postgres provisioned inside the sandbox, an
 
 ### auto-company — one cycle of `auto-loop.sh`
 
-1. Top of `while true` (`auto-loop.sh:263`): check `.auto-loop-stop` sentinel file
+1. Top of `while true` (`auto-loop.sh` (line 263, in the studied repository)): check `.auto-loop-stop` sentinel file
    (`check_stop_requested`, `:82-88`); if present, graceful `cleanup()` and exit.
 2. `loop_count++`; log `START`; `save_state "running"` (`:270-274`).
 3. `rotate_logs()` (`:107-124`): deletes oldest `cycle-*.log` beyond `MAX_LOGS=200`; rotates
@@ -64,7 +64,7 @@ agent with a judge model, Playwright/Postgres provisioned inside the sandbox, an
 
 **Supervisor.** Two independent layers. Inside one cycle, the bash watchdog in step 6 is the only
 thing that can kill a hung `claude` process. Around the whole script, `launchd` optionally
-supervises the *bash process itself* (`install-daemon.sh:72-119` generates
+supervises the *bash process itself* (`install-daemon.sh` (lines 72 to 119, in the studied repository) generates
 `~/Library/LaunchAgents/com.autocompany.loop.plist` with `RunAtLoad`, `KeepAlive.PathState` keyed
 on the *absence* of `.auto-loop-paused`, and `ThrottleInterval=30`). Run via `make start`
 (foreground, no `--daemon`) there is no supervisor at all — a killed shell just stays dead.
@@ -80,7 +80,7 @@ that's a special filename Claude Code reads at session start. There is no token 
 compression on the consensus file — whatever fits in the prompt is what's fed; nothing truncates
 it.
 
-**What's written at cycle end, exact format.** `PROMPT.md:26-57` gives the literal template the
+**What's written at cycle end, exact format.** `PROMPT.md` (lines 26 to 57, in the studied repository) gives the literal template the
 cycle must reproduce:
 
 ```markdown
@@ -114,7 +114,7 @@ cycle must reproduce:
 - [待思考的问题]
 ```
 
-`validate_consensus()` (`auto-loop.sh:139-153`) only checks three of the nine required pieces
+`validate_consensus()` (`auto-loop.sh` (lines 139 to 153, in the studied repository)) only checks three of the nine required pieces
 actually exist: the file is non-empty, and it contains the literal lines `# Auto Company
 Consensus`, `## Next Action`, and `## Company State`. The other six sections (Last Updated,
 Current Phase, What We Did, Key Decisions, Active Projects, Open Questions) are unenforced
@@ -125,10 +125,10 @@ cap. Per-cycle timeout `CYCLE_TIMEOUT_SECONDS=1800`; consecutive-failure circuit
 `MAX_CONSECUTIVE_ERRORS=5` → `COOLDOWN_SECONDS=300`; usage-limit detection via string match on the
 raw CLI output → `LIMIT_WAIT_SECONDS=3600`. Completion detection: none — there is no concept of
 "the company is done," the loop runs until a human sends `SIGTERM`/`.auto-loop-stop`
-(`stop-loop.sh:18-36`, dual mechanism: signal file for graceful stop-after-current-cycle, plus a
+(`stop-loop.sh` (lines 18 to 36, in the studied repository), dual mechanism: signal file for graceful stop-after-current-cycle, plus a
 direct `kill -TERM`) or `make pause` unloads the daemon.
 
-**Anti-repetition: prose only, zero code.** `PROMPT.md:59-65`, rule 5: *"同一个 Next Action 连续出
+**Anti-repetition: prose only, zero code.** `PROMPT.md` (lines 59 to 65, in the studied repository), rule 5: *"同一个 Next Action 连续出
 现 2 轮 → 卡住了，换方向或缩范围直接 ship"* ("If the same Next Action appears for 2 consecutive
 cycles → stuck, change direction or scope down and ship"). Nothing in `auto-loop.sh` reads,
 diffs, or persists the previous cycle's `## Next Action` field outside of the giant text blob
@@ -138,7 +138,7 @@ test, no grep, no state file enforces it.
 
 **Work selection / persona selection.** `PROMPT.md`'s step 3 says: read
 `.claude/skills/team/SKILL.md`, and "each round pick the 3-5 most relevant agents, don't pull in
-everyone." That skill file (`team/SKILL.md:37-61`) is pure instruction to the LLM — "select 2-5
+everyone." That skill file (`team/SKILL.md` (lines 37 to 61, in the studied repository)) is pure instruction to the LLM — "select 2-5
 based on task nature," "avoid redundant roles" — no code picks agents. Six fixed collaboration
 chains are given as defaults in `CLAUDE.md:88-97` (e.g. new-product-eval:
 `research-thompson → ceo-bezos → critic-munger → product-norman → cto-vogels → cfo-campbell`), but
@@ -146,7 +146,7 @@ which chain applies, and who actually gets spawned, is the fresh LLM's judgment 
 
 ### ralph — one call to `RalphLoopAgent.loop()`
 
-1. `contextManager?.clear()` unless `preserveContext` (`ralph-loop-agent.ts:238-240`) — wipes
+1. `contextManager?.clear()` unless `preserveContext` (`ralph-loop-agent.ts` (lines 238 to 240, in the studied repository)) — wipes
    tracked files, change log, iteration summaries.
 2. Build `initialUserMessage` from `prompt`; build `systemMessages` from `instructions`
    (`:243-249`, `:666-682`).
@@ -167,15 +167,15 @@ which chain applies, and who actually gets spawned, is the fresh LLM's judgment 
    `providerOptions.anthropic.cacheControl: {type:'ephemeral'}` (`:349-384`) — prompt-cache
    optimization, not a correctness mechanism.
 9. `generateText(...)` — the **inner** tool loop, bounded by
-   `toolStopWhen ?? stepCountIs(20)` (`:392`, default from `ralph-loop-agent-settings.ts:107`).
+   `toolStopWhen ?? stepCountIs(20)` (`:392`, default from `ralph-loop-agent-settings.ts` (line 107, in the studied repository)).
 10. Push result to `allResults`; `totalUsage += aggregateStepUsage(result)` (sums per-step usage,
     then takes `Math.max` against `result.usage` for the top-level counts —
-    `ralph-stop-condition.ts:204-244`); append `result.response.messages` to `currentMessages`
+    `ralph-stop-condition.ts` (lines 204 to 244, in the studied repository)); append `result.response.messages` to `currentMessages`
     (`:410-417`).
 11. `onIterationEnd({iteration, duration, result})` (`:419-426`).
 12. Check **outer** stop conditions — `isRalphStopConditionMet` — *after* the iteration ran
     (`:428-439`). Any condition true (`Promise.all` + `.some()`,
-    `ralph-stop-condition.ts:378-389`) → `completionReason='max-iterations'`, break. (Misleading
+    `ralph-stop-condition.ts` (lines 378 to 389, in the studied repository)) → `completionReason='max-iterations'`, break. (Misleading
     name: this fires identically for a token or cost cap, not only an iteration cap — the result
     object gives no way to tell which condition actually tripped.)
 13. If `verifyCompletion` is set, call it with `{result, iteration, allResults, originalPrompt}`
@@ -196,7 +196,7 @@ library provides.
 **Fresh-context boundary: none, by default — it's cumulative, not fresh.** Unlike auto-company,
 each iteration is *not* a new session; `currentMessages` accumulates across the whole `loop()`
 call. The only compaction is `prepareMessagesForIteration`
-(`ralph-context-manager.ts:467-521`), and it only activates once `iteration >
+(`ralph-context-manager.ts` (lines 467 to 521, in the studied repository)), and it only activates once `iteration >
 recentIterationsToKeep` (default 2) *and* `enableSummarization` is true (default true,
 `:137`) *and* the running token estimate — `estimateTokens = Math.ceil(text.length / 3.5)`
 (`:86-88`) — exceeds `maxContextTokens * 0.7` (default `150_000 * 0.7 = 105,000`, `:490`). When it
@@ -214,13 +214,13 @@ tracked files/change-log survive the abort.
 **Baton format:** none — there is no persisted cross-run state file at all. State lives only
 inside one `loop()` call's closures (`trackedFiles: Map`, `changeLog: ChangeLogEntry[]`,
 `iterationSummaries: IterationSummary[]`, all in-memory, `RalphContextManager` fields
-`ralph-context-manager.ts:126-129`). Nothing is written to disk by the core package between runs.
+`ralph-context-manager.ts` (lines 126 to 129, in the studied repository)). Nothing is written to disk by the core package between runs.
 
 **What stops it, exact constants.**
-- Default outer `stopWhen`: `iterationCountIs(10)` (`ralph-loop-agent.ts:192`,
-  `ralph-loop-agent-settings.ts:87`).
-- Default inner `toolStopWhen`: `stepCountIs(20)` (`ralph-loop-agent.ts:392`, settings `:107`).
-- `iterationCountIs(count)` → `iteration >= count` (`ralph-stop-condition.ts:285-287`).
+- Default outer `stopWhen`: `iterationCountIs(10)` (`ralph-loop-agent.ts` (line 192, in the studied repository),
+  `ralph-loop-agent-settings.ts` (line 87, in the studied repository)).
+- Default inner `toolStopWhen`: `stepCountIs(20)` (`ralph-loop-agent.ts` (line 392, in the studied repository), settings `:107`).
+- `iterationCountIs(count)` → `iteration >= count` (`ralph-stop-condition.ts` (lines 285 to 287, in the studied repository)).
 - `tokenCountIs(maxTokens)` → `(totalUsage.totalTokens ?? 0) >= maxTokens` (`:297-299`).
 - `costIs(maxCostDollars, ratesOrModel?)` (`:345-373`) looks up a hardcoded
   `MODEL_PRICING` table (`:50-141`) keyed by exact AI-Gateway string, e.g.
@@ -229,14 +229,14 @@ inside one `loop()` call's closures (`trackedFiles: Map`, `changeLog: ChangeLogE
   model string isn't in the table and no explicit rates were passed (`:360-365`); cache-aware cost
   calc in `calculateCost()` (`:250-275`); stops when `currentCost >= maxCostDollars`.
 - Multiple `stopWhen` entries are OR'd (`isRalphStopConditionMet`, `:378-389`).
-- The CLI example sets only `stopWhen: iterationCountIs(20)` (`examples/cli/index.ts:671`) — no
+- The CLI example sets only `stopWhen: iterationCountIs(20)` (`examples/cli/index.ts` (line 671, in the studied repository)) — no
   token or cost cap, despite the library supporting `costIs()`; cost is logged
   (`logUsageReport`) but never enforced.
-- Judge model hardcoded `anthropic/claude-opus-4.5` (`examples/cli/lib/judge.ts:9`), judge's own
+- Judge model hardcoded `anthropic/claude-opus-4.5` (`examples/cli/lib/judge.ts` (line 9, in the studied repository)), judge's own
   inner loop capped `stepCountIs(10)` (`:27`).
-- Vercel Sandbox lifetime: `SANDBOX_TIMEOUT_MS = 30 * 60 * 1000` (`examples/cli/lib/constants.ts:9`),
+- Vercel Sandbox lifetime: `SANDBOX_TIMEOUT_MS = 30 * 60 * 1000` (`examples/cli/lib/constants.ts` (line 9, in the studied repository)),
   passed straight through as `timeout: SANDBOX_TIMEOUT_MS` to sandbox creation
-  (`examples/cli/lib/sandbox.ts:118`).
+  (`examples/cli/lib/sandbox.ts` (line 118, in the studied repository)).
 
 **Anti-repetition: none.** The only feedback that varies between iterations is
 `verifyCompletion`'s own `reason` string (step 13 above) — entirely the *caller's* responsibility
@@ -264,7 +264,7 @@ Hightower, Godin, Graham, Ross, Campbell, Thompson), `## Core Principles`, `## D
 diversity; every persona is the same underlying model (whatever `--model opus` set for the cycle)
 role-playing a different voice via system-prompt text.
 
-**Selection per cycle:** `.claude/skills/team/SKILL.md:37-46` — the acting orchestrator (whichever
+**Selection per cycle:** `.claude/skills/team/SKILL.md` (lines 37 to 46, in the studied repository) — the acting orchestrator (whichever
 agent the fresh cycle spins up as "team lead," normally `ceo-bezos` per `CLAUDE.md`) reads a
 markdown table of all 14 and picks "2-5 most relevant," explicitly told "avoid redundant roles."
 This is a judgment call made by the same LLM instance that will then play some of those roles —
@@ -278,7 +278,7 @@ Nothing checks that `critic-munger` was actually invoked before a decision is ac
 diffs the critic's output against the proposer's to confirm they're not just agreeing with each
 other, and nothing stops the "team lead" (itself an LLM instance) from skipping the consult
 entirely — `team/SKILL.md`'s own selection step says pick "2-5 *most relevant*," and Munger is not
-hardcoded as always-included. `team/SKILL.md:56-59` says *"如有分歧，列出各方观点供创始人决策"*
+hardcoded as always-included. `team/SKILL.md` (lines 56 to 59, in the studied repository) says *"如有分歧，列出各方观点供创始人决策"*
 ("if there's disagreement, list each side's view for the founder to decide") — but the founder is
 not in the loop during autonomous cycles (`CLAUDE.md:11-17`: no waiting for human approval), so in
 practice a listed disagreement with nobody present to adjudicate it just becomes more text in
@@ -294,14 +294,14 @@ whose text says to be skeptical.
 **auto-company.** No in-loop pause point — the running cycle is opaque from outside until it
 returns. Interrupt mechanisms, all external to the cycle itself:
 - `stop-loop.sh` (no args): touches `.auto-loop-stop` (checked at top of next loop iteration,
-  `auto-loop.sh:82-88` — graceful, finishes the current cycle first) **and** sends `SIGTERM`
-  directly to the PID in `.auto-loop.pid` (`stop-loop.sh:18-36`) — belt and suspenders, the signal
-  handler (`trap cleanup SIGTERM SIGINT SIGHUP`, `auto-loop.sh:251`) runs mid-cycle regardless of
+  `auto-loop.sh` (lines 82 to 88, in the studied repository) — graceful, finishes the current cycle first) **and** sends `SIGTERM`
+  directly to the PID in `.auto-loop.pid` (`stop-loop.sh` (lines 18 to 36, in the studied repository)) — belt and suspenders, the signal
+  handler (`trap cleanup SIGTERM SIGINT SIGHUP`, `auto-loop.sh` (line 251, in the studied repository)) runs mid-cycle regardless of
   where the shell is, but the underlying `claude -p` child is not itself killed by that trap unless
   the watchdog also fires — so "stop" can still be delayed until the in-flight `claude` call
   returns or the 30-minute per-cycle timeout expires.
 - `stop-loop.sh --pause-daemon` / `--resume-daemon`: touches/removes `.auto-loop-paused`, which
-  `launchd`'s `KeepAlive.PathState` watches (`install-daemon.sh:90-97`) — pausing stops
+  `launchd`'s `KeepAlive.PathState` watches (`install-daemon.sh` (lines 90 to 97, in the studied repository)) — pausing stops
   auto-restart, it doesn't just stop the current run.
 - Redirect direction: edit the `## Next Action` field of `memories/consensus.md` by hand
   (`README.md`: *"改方向: 修改 consensus.md 的 Next Action"*) — this is the only sanctioned steering
@@ -309,7 +309,7 @@ returns. Interrupt mechanisms, all external to the cycle itself:
 - `make reset-consensus` (`Makefile:59-63`): `git checkout -- memories/consensus.md`, i.e. reverts
   to whatever was last committed — a 3-second `sleep` "confirmation" is the only guard.
 - Notification: none, pull-only. `monitor.sh --status` / `--last` / `--cycles` /
-  bare-tail-the-log (`monitor.sh:22-97`) are the only visibility tools; nothing pushes to a human
+  bare-tail-the-log (`monitor.sh` (lines 22 to 97, in the studied repository)) are the only visibility tools; nothing pushes to a human
   (no webhook, no email, no Slack). A human finds out something went wrong by choosing to look.
 - Escalation path: none beyond the hardcoded safety redlines in `CLAUDE.md:19-31` (never delete a
   GitHub repo / Cloudflare project / system files, no `force push` to main, no credential leaks) —
@@ -319,7 +319,7 @@ returns. Interrupt mechanisms, all external to the cycle itself:
 
 **ralph.** Two layers, cleanly separated. The *library* offers exactly one primitive:
 `abortSignal` on `loop()`/`stream()`, checked once per outer iteration
-(`ralph-loop-agent.ts:254-257`) — the caller owns triggering it. The *CLI example* builds real UX
+(`ralph-loop-agent.ts` (lines 254 to 257, in the studied repository)) — the caller owns triggering it. The *CLI example* builds real UX
 on top: a SIGINT handler (`examples/cli/index.ts`, `handleInterrupt`) that on first Ctrl+C aborts
 the in-flight `AbortController` immediately, creates a `pausePromise` the running
 `verifyCompletion` will `await` before proceeding, and shows an interactive menu — Continue /
@@ -328,7 +328,7 @@ Follow-up / Save & exit / Quit (keys `1234`/`c/f/s/q`, Enter defaults to Continu
 i.e. becomes next-iteration feedback exactly like judge feedback does. This is synchronous,
 foreground, terminal-based — there is no background/daemon mode, so "notification" isn't a
 separate concept: the human is watching the process directly. Escalation at the *end* of a
-successful run is a `gh pr create` (`examples/cli/lib/git.ts:185-219`) — the agent's output
+successful run is a `gh pr create` (`examples/cli/lib/git.ts` (lines 185 to 219, in the studied repository)) — the agent's output
 becomes a PR for a human to review normally; there is no in-run approval gate before that PR is
 opened.
 
@@ -337,18 +337,18 @@ opened.
 ## 5 · COST
 
 **auto-company:** measured, not capped. `extract_cycle_metadata()` pulls `total_cost_usd` out of
-each cycle's JSON output (`auto-loop.sh:209`) purely for the log line — nothing compares it to any
+each cycle's JSON output (`auto-loop.sh` (line 209, in the studied repository)) purely for the log line — nothing compares it to any
 threshold, there is no daily/total spend cap, no per-cycle dollar limit. The only volume control is
 time-based: `LOOP_INTERVAL` (30s) between cycles and `CYCLE_TIMEOUT_SECONDS` (1800s) per cycle,
 both about wall clock, not spend. A runaway 24/7 loop on a paid model is bounded only by however
 long a human lets it run.
 
 **ralph:** the only system of the two with an actual spend-based stop condition —
-`costIs(maxCostDollars, ratesOrModel?)` (`ralph-stop-condition.ts:345-373`), driven by the
+`costIs(maxCostDollars, ratesOrModel?)` (`ralph-stop-condition.ts` (lines 345 to 373, in the studied repository)), driven by the
 hardcoded `MODEL_PRICING` table (`:50-141`) and cache-aware `calculateCost()` (`:250-275`). It is
 opt-in per agent instance (`stopWhen: [iterationCountIs(50), tokenCountIs(100_000), costIs(5.00)]`
-per `README.md:242`) and the shipped CLI example does **not** enable it — only
-`iterationCountIs(20)` (`examples/cli/index.ts:671`); cost is logged every iteration
+per `README.md` (line 242, in the studied repository)) and the shipped CLI example does **not** enable it — only
+`iterationCountIs(20)` (`examples/cli/index.ts` (line 671, in the studied repository)); cost is logged every iteration
 (`logUsageReport`, e.g. `:783`, `:790`) but never enforced. `tokenCountIs`/`inputTokenCountIs`/
 `outputTokenCountIs` are the token-based siblings (`:297-323`). Usage aggregation itself is
 careful — `aggregateStepUsage` sums every inner tool-loop step and takes `Math.max` against the
@@ -359,7 +359,7 @@ matters to a caller who actually wires a `costIs`/`tokenCountIs` condition in.
 
 ## 6 · STEAL
 
-1. **`costIs()`'s exact mechanism** (`ralph/packages/ralph-loop-agent/src/ralph-stop-condition.ts:250-373`).
+1. **`costIs()`'s exact mechanism** (`ralph/packages/ralph-loop-agent/src/ralph-stop-condition.ts` (lines 250 to 373, in the studied repository)).
    A per-model USD-per-million-token table keyed by exact model string, cache-read/cache-write
    rates included, computed against a `LanguageModelUsage` object that's been reconciled via
    `Math.max(summed-per-step, top-level-result)`. Reimplement as: maintain a small
@@ -368,24 +368,24 @@ matters to a caller who actually wires a `costIs`/`tokenCountIs` condition in.
    can disagree); multiply by the table; compare running total to a caller-supplied dollar ceiling;
    throw loudly if the model isn't in the table and no explicit rate was given — don't silently
    treat unknown-cost as zero-cost.
-2. **Two-tier stop-condition composition** (`ralph-stop-condition.ts:378-389` +
+2. **Two-tier stop-condition composition** (`ralph-stop-condition.ts` (lines 378 to 389, in the studied repository) +
    `ralph-loop-agent.ts:189-195,392`). Outer loop stop conditions are an *array*, OR'd via
    `Promise.all(...).some(...)`, checked once per full iteration; inner tool loop gets its own
    independent, tighter stop (`stepCountIs(20)`) so a single "iteration" can't itself run away
    inside `generateText`. Two independent caps at two different granularities, composable, each
    swappable.
-3. **Dual-layer supervision with two different jobs** (`auto-company/auto-loop.sh:155-199` +
-   `install-daemon.sh:72-119`). Inner watchdog subshell (`sleep TIMEOUT; SIGTERM; sleep 5; SIGKILL`)
+3. **Dual-layer supervision with two different jobs** (`auto-company/auto-loop.sh` (lines 155 to 199, in the studied repository) +
+   `install-daemon.sh` (lines 72 to 119, in the studied repository)). Inner watchdog subshell (`sleep TIMEOUT; SIGTERM; sleep 5; SIGKILL`)
    kills a hung *single call*; outer OS supervisor (`launchd` `KeepAlive`) restarts the *loop
    process* if it dies outright. Don't conflate "the current unit of work hung" with "the
    supervising process crashed" — they need different detectors and different remedies.
-   `KeepAlive.PathState` keyed on a sentinel file's *absence* (`install-daemon.sh:90-97`) is a
+   `KeepAlive.PathState` keyed on a sentinel file's *absence* (`install-daemon.sh` (lines 90 to 97, in the studied repository)) is a
    clean pause/resume primitive: touch the file to stop auto-restart without touching the plist.
 4. **Backup-then-restore around the one piece of durable state**
    (`auto-loop.sh:126-137,279-280,327-328`). `cp consensus.md consensus.md.bak` before every cycle;
    on any failure classification, restore from that backup before retrying. Cheap, effective
    against a cycle that corrupts its own baton — cost is one extra file copy per cycle.
-5. **Schema-check the baton before trusting it** (`auto-loop.sh:139-153`,
+5. **Schema-check the baton before trusting it** (`auto-loop.sh` (lines 139 to 153, in the studied repository),
    `validate_consensus()`). A cheap `grep -q` for required section headers, run as part of
    pass/fail classification (not just on read) — a cycle that produced a malformed consensus file
    is itself treated as a *failed cycle* (triggers the restore-from-backup path), not silently
@@ -396,7 +396,7 @@ matters to a caller who actually wires a `costIs`/`tokenCountIs` condition in.
 ## 7 · REJECT
 
 1. **The anti-repetition mechanism in both systems is fiction.** auto-company's rule 5
-   (`PROMPT.md:59-65`) — "same Next Action twice in a row means stuck" — is enforced by nothing;
+   (`PROMPT.md` (lines 59 to 65, in the studied repository)) — "same Next Action twice in a row means stuck" — is enforced by nothing;
    it depends on a brand-new LLM instance every cycle voluntarily comparing its own predecessor's
    free-text field to itself. Ralph's built-in nudge is a hardcoded, context-free string repeated
    verbatim every iteration (`ralph-loop-agent.ts:320-331,545-555`). Neither system can actually
@@ -405,14 +405,14 @@ matters to a caller who actually wires a `costIs`/`tokenCountIs` condition in.
    Real fingerprinting (hash of the diff/tool-call sequence, or a structured "last N attempts"
    comparison) is required, not sourced from either repo.
 2. **`--dangerously-skip-permissions` as the entire safety model**
-   (`auto-company/auto-loop.sh:166`, `.claude/settings.json:
+   (`auto-company/auto-loop.sh` (line 166, in the studied repository), `.claude/settings.json:
    "defaultMode": "bypassPermissions"`). Every safety rule auto-company has is prose inside
    `CLAUDE.md` — "don't delete the GitHub repo," "don't force-push main" — trusted to the same
    untrusted, fully-autonomous model that's making every other decision. There is no tool-level
    enforcement, no separate reviewer, no dry-run. A model that mis-executes doesn't hit a wall; it
    hits nothing.
 3. **The judge in the ralph CLI example fails open, twice.** If the judge model errors, the
-   `catch` block auto-approves the task (`examples/cli/lib/judge.ts:104-121`, comment reads "auto-
+   `catch` block auto-approves the task (`examples/cli/lib/judge.ts` (lines 104 to 121, in the studied repository), comment reads "auto-
    approve to avoid infinite loop"). If the judge runs its tools but never calls `approveTask` or
    `requestChanges`, that *also* auto-approves (`:94-103`). A verification gate whose failure mode
    is "ship it" is worse than no gate, because it looks like a gate. Any QA/judge mechanism this

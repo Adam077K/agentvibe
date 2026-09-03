@@ -86,11 +86,11 @@ managed file is a founder act. Confidence: high. Endorsed: both.
 
 **1.2 Five `MEASURED` / physics labels have no measurement behind them, and both real probes were taken in
 the wrong condition.** (i) `--strict-mcp-config` "makes user-scope servers absent" — `MEASURED` at OS:214,
-OS:1111, OS:2265; no record anywhere; `runtime-first.md:797` lists it as open M2. It happens to be true
+OS:1111, OS:2265; no record anywhere; `docs/03-system-design/designs/2026-09-02-runtime-first.md:797` lists it as open M2. It happens to be true
 (measured today by fable-1). (ii) "Never `--bare` (`MEASURED`: no auth)" (OS:337) — no record;
 `hands.md:536` quotes the vendor recommending `--bare` for scripted calls; the docs say `--bare` never reads
 OAuth or the keychain, so "no auth" is true only of subscription auth. (iii) "`claude mcp list` exits 0 when
-unhealthy (`MEASURED`)" (OS:496-498) — `runtime-first.md:807` lists it as open M12, absent from the spec's own
+unhealthy (`MEASURED`)" (OS:496-498) — `docs/03-system-design/designs/2026-09-02-runtime-first.md:807` lists it as open M12, absent from the spec's own
 probe set (OS:2515). (iv) `session_id`, `total_cost_usd`, `num_turns`, `stop_reason`, `cache_read_input_tokens`
 "every one of them `MEASURED` present" (OS:592, OS:860, OS:890) — nobody probed the envelope; measured
 (fable-1): `--max-turns 1` returns `subtype: "error_max_turns"`, `terminal_reason: "max_turns"`,
@@ -106,7 +106,7 @@ the founder authorises). Confidence: high. Endorsed: both.
 **1.3 The looking test's "base rate of zero" is a misread, and the fork rests on it.** OS:53: "beeond made
 11 mockups and **could not look at one of them**" — subject beeond, the agent; OS:1268: "an attention record
 that reads … **eleven mockups unlooked at**" — now the founder, and the basis of "measured base rate zero"
-(OS:1287, OS:2726). The beeond record: the agent could not view them (`2026-08-26-ceo-website-design-process.md:35`);
+(OS:1287, OS:2726). The beeond record: the agent could not view them (`2026-08-26-ceo-website-design-process.md` (line 35, a session file in the beeond repository));
 the founder judged all eleven, "right craft, wrong shape" (`:19`); the rethink session says "Sight works"
 (`2026-09-01-ceo-startup-os-rethink.md:54`). The other two legs — "seven views, one acts" and "an Inbox empty
 on every project" — measure the machine's supply, not the founder's appetite. OS:138-140 ("sight is not a
@@ -202,7 +202,7 @@ named in Components are absent from Map 2** (`PORTFOLIO.yml`, `packs/`, `LIMITS.
 Endorsed: both.
 
 **1.10 `select.js` is "pure and total" with no branch for the case Rule 10 exists for.** OS:975-977: eliminate
-P1s → fewest P2s → archive distance; nothing for *every candidate carries a P1*. `creativity-first.md:629` had
+P1s → fewest P2s → archive distance; nothing for *every candidate carries a P1*. `docs/03-system-design/designs/2026-09-02-creativity-first.md:629` had
 it: *"the round is `unresolved`, never 'least bad'."* As written, eight broken candidates return a winner. And
 no common-cause branch: eight variants from one prompt assembler, one ORIENT block and one model (OS:351)
 sharing a finding is `common_cause`, not "all bad". Where: §08. Cost: small. Confidence: high. Endorsed: both.
@@ -491,7 +491,7 @@ library of their own, corrects the shape of what is shown rather than picking, c
 into their hands.** Against it: "Terminal only" (OS:1261), and REFUSES 12 (OS:2716) refuses "a web UI" for
 "seven views, one acts, an Inbox empty on every project" — every clause naming mission-control, a server. **The
 refusal was written against a stateful app and is enforced against a file format.** The gallery — in the CEO's
-sealed definition of the company (`ceo-position.md:9`, `:29`) — is dropped to a circular trigger (OS:1279)
+sealed definition of the company (`docs/03-system-design/vision/2026-09-02-ceo-position.md:9`, `:29`) — is dropped to a circular trigger (OS:1279)
 while `SHELF · +14` renders fourteen artifacts as an integer. Decision 5 and REFUSES 12 were both taken without
 the founder's actual reading channel on the table. **Alternative:** 2.4. Endorsed: fable-2.
 

@@ -29,10 +29,10 @@ two TypeScript scripts, four shell adapters, and 158 markdown files carrying the
 **Trigger: none is automatic.** No hook and no git event fires reflection. `hooks/hooks.json` wires
 exactly two events — `SessionStart` and `PreCompact` — both to `hooks/session-start.sh`, which does
 knowledge **priming** (`bd prime`), not capture. Self-reflection is invoked by an agent following a
-prose instruction inside `skills/orchestrated-execution/SKILL.md:717` ("## 8.5. Pre-PR Knowledge
-Capture (MANDATORY) ... run `/self-reflect`"), with `skills/pr-shepherd/SKILL.md:391-413` as a
+prose instruction inside `skills/orchestrated-execution/SKILL.md` (line 717, in the studied repository) ("## 8.5. Pre-PR Knowledge
+Capture (MANDATORY) ... run `/self-reflect`"), with `skills/pr-shepherd/SKILL.md` (lines 391 to 413, in the studied repository) as a
 post-merge fallback if that step was skipped. "MANDATORY" here means "the skill text says so" — there
-is no test, hook, or CI step that checks it happened. `README.md:164` markets this as "After every PR
+is no test, hook, or CI step that checks it happened. `README.md` (line 164, in the studied repository) markets this as "After every PR
 merge, the self-reflect workflow... analyzes what happened," which is not what the code does: the
 primary path is explicitly **pre**-PR (`SKILL.md:733`, "By the time a PR is merged, the implementing
 agent's context may be gone... Capture them now"). Believe the skill file, not the README line.
@@ -104,7 +104,7 @@ in the codebase — `grep -rn "max.*entries|cap|prune"` across `knowledge/` and 
 returns nothing. `usageCount`, `helpfulCount`, and `outdatedReports` are schema fields with no reader
 or writer in any script — `grep -rln` for all three across `*.ts|*.sh|*.js` matches only the two
 agent-definition markdown files that declare the schema, never code that increments them. "Weekly
-maintenance" and "staleness detection" in `agents/knowledge-curator-agent.md:198-244` are a prose
+maintenance" and "staleness detection" in `agents/knowledge-curator-agent.md` (lines 198 to 244, in the studied repository) are a prose
 job description ("Check for stale facts... not referenced in 90 days") with no scheduler behind it —
 `.github/workflows/` contains one file, `ci.yml`, which runs installer/hook/sync tests only; there is
 no cron, no scheduled workflow, no `@beads curate` dispatcher. As of 0.11.0 the one piece of custom
@@ -137,7 +137,7 @@ documentation of the flag interface, and (c) `hooks/session-start.sh`, which cal
 machine without BEADS installed, priming silently does nothing (`bd_output=$(bd prime 2>/dev/null ||
 true)`).
 
-**Token-savings claim: present, not substantiated.** `README.md:181-189` claims "the knowledge base
+**Token-savings claim: present, not substantiated.** `README.md` (lines 181 to 189, in the studied repository) claims "the knowledge base
 can grow to hundreds or thousands of entries without consuming context window. Agents get precisely
 the facts they need — the 5 critical gotchas for the files they're about to touch, not the entire
 institutional memory." No number, percentage, or measurement backs this anywhere in the repo — `grep
@@ -254,7 +254,7 @@ one CLI borrowing another's model for one task.
 
 ## 7 · STEAL
 
-1. **Regex-classified transcript mining for user pushback**, `scripts/beads-fetch-conversation-history.ts:122-173`.
+1. **Regex-classified transcript mining for user pushback**, `scripts/beads-fetch-conversation-history.ts` (lines 122 to 173, in the studied repository).
    Five labeled pattern arrays (`CORRECTION_PATTERNS`, `DISAGREEMENT_PATTERNS`, `CLARIFICATION_PATTERNS`,
    `DISCOVERY_PATTERNS`, `DECISION_PATTERNS`), each an array of `RegExp` tested case-insensitively
    against every `user`/`external` message in a Claude Code session JSONL (`~/.claude/projects/<encoded-path>/*.jsonl`),
@@ -267,7 +267,7 @@ one CLI borrowing another's model for one task.
    and add a test that fails if that wiring is ever removed.
 
 2. **Fresh-instance, no-cross-visibility parallel review with a hard iteration cap**,
-   `skills/plan-review-gate/SKILL.md:77-104` and `skills/design-review-gate/SKILL.md:110-129`. The
+   `skills/plan-review-gate/SKILL.md` (lines 77 to 104, in the studied repository) and `skills/design-review-gate/SKILL.md` (lines 110 to 129, in the studied repository). The
    concrete rule worth lifting: on any FAIL/NEEDS_REVISION, spawn **entirely new** reviewer instances
    with zero memory of prior findings (named anti-pattern #1 in the plan-review skill: reusing
    instances causes anchoring bias — a reviewer starts checking whether previous findings were
@@ -283,7 +283,7 @@ one CLI borrowing another's model for one task.
    applicable to agentvibe's own rubric/lens duplication if any exists.
 
 4. **A single generator function guaranteeing docs match a JS source-of-truth map**,
-   `lib/sync-resources.js:144-171` (`generateTomlContent` + `checkTomlCommands`). The pattern —
+   `lib/sync-resources.js` (lines 144 to 171, in the studied repository) (`generateTomlContent` + `checkTomlCommands`). The pattern —
    derive the artifact from code at write time, re-derive-and-diff at check time, fail CI on mismatch
    — is more trustworthy than the artifact-matches-artifact-manually pattern it uses for the Claude→Gemini
    command mapping itself (§6's own critique). Worth stealing the *pattern*, not the specific
