@@ -82,3 +82,10 @@
 - **The session memory directory is unwritable from an agent turn.** `~/.claude/projects/.../memory/` is
   refused by both the hook and the sandbox (probed 2026-08-24). Cross-session facts go here and in
   `DECISIONS.md`, which is the repo's own mechanism anyway.
+
+## 2026-09-03 — the rethink: WATCH is the frame, and how to run design rounds
+- Founder: voice-transcribed ("contacts"=context); wants the WHOLE system envisioned; reads pages, taps widgets, decides via AskUserQuestion once they have the page; "idk" = decide; overrules and means it ("envision again" is not "graft"); "we are doing big, changing the future".
+- Method, measured twice: a brief of only the founder's words, no floor; sealed Opus minds; **each writes a spine before reading anything**, then learns from prior systems as context; one Fable merge that decides and keeps losing images; provenance per paragraph with `blind` for spine-level agreement; parts bin last. Anchored rounds produced safety machines; never run one again.
+- **The frame is WATCH** (`docs/03-system-design/envision/2026-09-02-THE-SYSTEM.md`, decided 2026-09-03). WAKE (`dream/`) is round one's record. Two atoms bet/debt; keel and weather; the escapement; postures Drive·Walk·Serve·Tend·Dark; the Second buys silence never action; desk·bay·room·dailies; the five-hour watch with a two-way relief; the World Ledger; the refusal ledger. §29 maps every existing part to a fate.
+- Measured: `--allowedTools` restricts nothing; `--restricted --tools … --strict-mcp-config` is the seam; a `-p` child binds an inbox socket unless `--bare`; only managed settings survive a child's argv; the hook matches command strings; the five-hour limit stops every agent at once (have them write as they go, resume by name); tick 240 s not 300.
+- Next: re-derive `STARTUP-OS.md` v3 from WATCH (§29 migration table, §25 build order), v2 preserved under `designs/`. Start from `handoffs/2026-09-03-after-round-two.md`. Pending with the founder: widget decisions, the first move, the terms question, the managed settings file.

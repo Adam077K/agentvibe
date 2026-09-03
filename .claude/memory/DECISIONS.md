@@ -144,22 +144,9 @@ unlike the eleven shimmed names, deleting this one actually removes it.
 *Not checked: paraphrase, global-scope-claims, title-too-generic — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-13 — c-runtime-nested-spawn REFRESHED: depth-2 nesting works, the CEO instructions are wrong
-
-**Context:** The claim asserts *"Subagents can spawn subagents — write-capable depth-2 nesting outside plan
-mode"*. It carried a 2026-08-11 waiver whose reason — *"spawning is disabled by founder instruction"* —
-stopped being true on 2026-08-13. Two independent probes were run; each made exactly one spawn attempt.
-**Measurement:** `Agent` appears un-deferred in a depth-1 subagent's own tool list; the spawn succeeded with
-no block, denial or error; the depth-2 child ran and returned `ACK`. Spawning is **async** — the tool returns
-launch metadata immediately and the child's reply arrives later — which is why the first probe's report went
-missing and had to be recovered from a session file it wrote before being blocked.
-**Decision:** **Refresh**, not Deprecate. The CEO initially recorded this as a Deprecate, having the claim's
-polarity backwards — the claim says nesting *works*, and the probe agrees.
-**What is actually false is the CEO's own operating instructions**, which state *"RUNTIME CONSTRAINT:
-subagents cannot spawn subagents (nested Task is blocked)"*. That line is wrong on this runtime, and it is
-the stated reason chiefs return dispatch packets instead of spawning workers themselves — so the T2
-orchestration tier rests on a false premise. Not changed here; flagged for the Founder.
-**Reversibility:** reversible — the disposition is one line in `~/.warroom/ledger/global.yml`
-**Owner:** ceo · **Affects:** `~/.warroom/ledger/global.yml`, and the T2 tier design in `AGENTS.md`/`ceo.md`
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-03). room for the 2026-09-03 WATCH-is-the-frame entry; the refreshed claim lives in the ledger*
+***Cited in prose by 2 location(s)**, which the heading above keeps resolvable: `docs/03-system-design/IMPLEMENTATION-PLAN.md:198` (date), `docs/08-agents_work/sessions/2026-08-13-ceo-phase-8a-status.md:9` (date).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-15 — RCEs closed by allowlist, not by an Origin check; and the Origin check was a CEO error
 *Archived to `DECISIONS_ARCHIVE_002.md` (2026-08-26). Executed. The allowlist shipped and the Origin check was withdrawn as an error. Security history, preserved verbatim rather than summarised.*
@@ -192,26 +179,9 @@ into work that is not Agentvibe, so it is not this repo's call to make unilatera
 **Owner:** ceo · **founder decision** · **Affects:** the roster migration, `~/.claude/agents/`
 
 ## 2026-08-16 — `maxTurns` does bind, and the belief that it did not cost three gate runs
-
-**Context:** Three consecutive runs of the binding QA gate failed with a coverage gap on `correctness`, and
-~48% of dispatched agents returned nothing with `agents_error: 0`. Four explanations were tested against the
-run transcripts and refuted: a turn cap, context exhaustion, output tokens, wall-clock timeout — all
-overlapping distributions.
-**The measurement that settled it:** tool-call count separates the two populations **perfectly**. Agents
-making ≤17 calls returned findings; agents reaching 20 returned nothing; **13 of 20 dropouts sat at exactly
-20** — the `maxTurns` declared on the reviewer containers. No overlap.
-**Decision:** `maxTurns` raised 20 → 30 on `reviewer` and `reviewer-readonly`, and `reviewPrompt` rewritten
-around a finite budget (`git diff` as primary evidence, whole-file reads the exception, emit partial findings
-rather than be killed holding a complete set). The judge gained the retry the reviewers already had — it ran
-with **one** attempt while every dimension retried four times, so at that dropout rate it coin-flipped into
-`auto-BLOCK`, which is what run three recorded.
-**Correction to a recorded repo belief:** this repo states *"`maxTurns` does not bind — 196 of 269 runs
-exceeded a cap of 20."* That measurement was taken where **no agent file was named**. It does not bind then.
-It binds hard the moment a dispatch names an `agentType`. The CEO introduced the regression by adding
-`agentType` at the four `qa.js` sites and then repeated the false belief while diagnosing it.
-**Reversibility:** reversible — two frontmatter numbers and a prompt.
-**Owner:** ceo · **Affects:** `.claude/agents/reviewer*.md`, `.claude/workflows/qa.js`, and any future dispatch
-that names an agent type
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-02). archived 2026-09-02 to make room for the StartupOS v1 entry; superseded by STARTUP-OS.md Part II §11 and §13*
+***Cited in prose by 4 location(s)**, which the heading above keeps resolvable: `docs/08-agents_work/sessions/2026-08-16-builder-token-efficiency.md:9` (date), `scripts/lib/memory-entries.js:507` (title-phrase), `scripts/lib/memory-entries.js:508` (title-phrase), `scripts/lib/memory-entries.js:509` (title-phrase).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-16 — The browser reaches the open web; the local network is refused
 *Archived to `DECISIONS_ARCHIVE_002.md` (2026-08-26). Executed. The grant is `.mcp.json` plus one matcher in `.claude/hooks/pre-tool-use.sh`; the live rule is `c-mcp-matcher-names-the-prefix-and-policy-decides` — **not** `c-mcp-hook-matcher-must-name-the-tool`, which the ledger deprecated once PR #73 made the matcher a prefix.*
@@ -219,25 +189,9 @@ that names an agent type
 *Not checked: paraphrase, global-scope-claims, title-too-generic — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-24 — Act on the over-build audit, but check its premises first; split PRs by tier
-
-**Decision:** the 2026-08-24 audit (`docs/08-agents_work/handoffs/2026-08-24-continue-the-build.md` §4.4)
-ranked six items. All six were re-verified against `695800e` before any was actioned, and **two rest on false
-premises**: item 1's claim that the 4× retry ceiling was sized against `maxTurns=20` is refuted by
-`qa.js:270-272`, which records a turn cap tested **and discarded**; item 5 names `.claude/qa-tier-floor.yml`,
-which contains no mention of model families at all. Both are corrected in the handoff rather than implemented,
-and the retry values stay untouched — cutting them on a refuted premise would re-break a gate that cost three
-failed runs to fix.
-**Why this is a decision, not a detail:** the audit is the document authorising changes to the gate, and it
-carried the same citation rot it was commissioned to cure. An audit is not exempt from its own finding.
-**Work splits into three PRs by TIER, not by topic.** The tier floor is per-PR, so a single irreversible file
-drags a whole PR to a 17–70-agent gate. Grouping by tier makes the irreversible files pay that gate once
-instead of four times; it is the largest cost lever measured this session.
-**Recorded and deferred by founder decision:** `.claude/workflows/qa.js` never reads
-`.claude/review-lenses.yml` (`grep -c` → 0). The gate carries five hardcoded prose dimensions; the lens file
-declares ten structured lenses; they share two names. That is *why* `independence: provenance` goes
-unenforced — the gate cannot honour a property it never loads. Patch-and-record chosen over unification.
-**Reversibility:** reversible — documentation, lint severities, and one loop bound.
-**Owner:** ceo · **founder decision** · **Affects:** the 2026-08-24 handoff, `MODEL-DIVERSITY.md`, `qa.js`, `schema-lint.js`
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-02). archived 2026-09-02 to make room for the StartupOS v1 entry; superseded by STARTUP-OS.md Part II §11 and §13*
+***Cited in prose by 2 location(s)**, which the heading above keeps resolvable: `CLAUDE.md:856` (date), `docs/03-system-design/AGENT-ARCHITECTURE.md:244` (date).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-25 — Four founder decisions: scope, review weight, venture work, one living status
 
@@ -393,3 +347,61 @@ merged; the deferrals themselves are reversible.
 **Owner:** builder (`builder-one-living-status`) · **founder decision 2026-08-26**
 **Affects:** `docs/STATUS.md`, `.claude/gates.yml`, `.claude/playbooks/`, `bin/warroom`, and every agent
 that reads "built" as "gated"
+
+## 2026-08-29 — Design: conformance binds, quality informs; taste enters once, as references
+
+**CONFORMANCE CAN BIND. QUALITY CAN ONLY INFORM.** A design-quality PASS/BLOCK judge is ~0.543 accurate
+against a designer panel only 0.741 self-consistent — a biased coin on the merge path, *reproducible
+while invalid*, which looks exactly like a working mechanism. Corollary: evaluators agree with each other
+5-17% of the time while each finds 18-60% of the real problems. **Weak judges are excellent FINDERS and
+useless SCORERS — union, never average.** A panel returns findings, never a score. This explains a result
+already measured here: three blinded reviewers found 7 P1s where a 49-agent gate found 3.
+
+**Division of labour, founder direction 2026-08-29** (*"agents can do those small decisions or learn from
+context, references"*): founder supplies **references, brand adjectives, no-gos**; the agent **derives
+every value**. Taste enters once and nowhere else — no downstream judge can recover it. Also founder-set:
+**1-3 outputs at high quality, not 40+**, which the evidence supports *against* the three-directions
+ritual nobody in the corpus defends.
+
+**Root cause was not taste.** The `design` lens — in a file whose job is "how to PRODUCE work" — has five
+steps and every one is a judging action; `sources:` show it was rehoused from `design-critic.md`. **A
+critic's checklist sat in the production procedure's slot.** Found three independent ways.
+
+**What binds is a short list.** Only `npm run check` steps and `qa-lead-pass.yml`. Grep of `origin/main`
+confirms **no code path loads a lens `procedure:` or a playbook's stages**, `qa.js` has five hardcoded
+dimensions excluding `craft`, and `blocking_severities` is read by nothing outside the linter. **Design
+conformance binds by being a test and by nothing else**; the lens and playbook are ADVISORY, labelled so.
+
+**Reversibility:** reversible — additive scripts only; no agent file, workflow or STEP touched, floor `full`.
+**Owner:** orchestrator (`ceo-4-1787566829`) · **founder direction 2026-08-29**
+**Affects:** `.claude/lenses.yml`, `.claude/review-lenses.yml`, `.claude/playbooks/design-pass.yml`,
+`scripts/build-tokens.mjs`, `scripts/design-probe.mjs`, `design/`, every future design dispatch
+
+## 2026-09-02 — StartupOS v1: the frame is a slice of the picture; fifteen stand, six amendments
+
+**The board built a floor, not a vision** — of fifteen decisions, nine stop, four measure, one shapes, one
+ships. Four sealed designers then designed the whole system inside that floor and a fresh synthesizer merged
+them into the 18-section frame (`docs/03-system-design/STARTUP-OS.md` Part II; every section carries
+`grafted_from:` and `enforced_by:`). A vision round with **no floor** followed — three sealed envisioners,
+the CEO's position sealed first, one synthesizer — and produced `vision/2026-09-02-THE-PICTURE.md`.
+**Verdict: the frame is a SLICE of the picture on 10 of 14 territories and SMALL on 4** (refusal 9's scope ·
+authority as a compile-time label · no fuse · revenue typed by hand). Eight territories were missing from the
+map entirely: distribution, authority, attention, obligation, identity, the clock, silence, succession.
+
+**Founder decisions, 2026-09-02:** all fifteen stand as the floor, four narrowed (D8 first half · D9 in the
+no-Write-argv form · D10 without `KeepAlive` · D12 gains a byte ceiling beside the count) · six amendments
+accepted (pack-field trust may reopen when a second pack ships · `default_if_unanswered:` and a `fused`
+disposition · `warrant_kind:` reserved · revenue from Stripe as a claim · briefing and `say:` on day 5 ·
+`not_before:` on every act that leaves) · an owned address later in month one · **stay on the Mac** until the
+first measured overnight. Recorded in Part IV.
+
+**Measured:** `--disallowedTools Bash` narrows a `claude -p` child (M3 true); `pre-tool-use.sh` fires under
+`claude -p` for `Write` (M1); a child inside a sandboxed session cannot start its own sandbox.
+**Affects:** whoever builds the 30-day path (Part II §15); the handoff chain — four handoffs deleted, folded
+into Part IV. **Reversibility:** reversible — documents only; nothing is built.
+
+## 2026-09-03 — Round two: WATCH is the frame; the spec is re-derived from it
+
+**Decision (founder, 2026-09-03):** asked whether WAKE was the frame, the founder said *"envision again the whole system; it can learn, for context, from the other systems."* Three sealed Opus minds each wrote a spine before reading anything, then read WAKE and the prior systems as context, then dreamed the whole; one Fable merge decided → **WATCH**, `docs/03-system-design/envision/2026-09-02-THE-SYSTEM.md`. After the page the founder chose: **WATCH is the frame**; commit, no push; the spec is re-derived next session.
+**Affects:** every existing part named in WATCH §29 (the check suite, ledger, verdict binding, sandbox and hook SURVIVE; the risk classifier, QA gate, engines, lenses, playbooks, skills library, session files, slash commands, mission control's views RETIRED or absorbed). WAKE (`dream/`) is round one's record, untouched. `STARTUP-OS.md` v2 is a parts bin until v3 is derived from §29 and §25.
+**Why:** 22 claims all three spines made blind; the largest change against WAKE (the founder model buys silence, never action) was refused by all three independently. Reversibility: reversible; nothing built.

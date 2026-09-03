@@ -168,14 +168,14 @@ it, so a hook that changes posture changes this map with it.
 
 ## What the system asserts
 
-41 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
+49 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
 `~/.warroom/ledger/global.yml` — machine state a fresh clone does not have, which the ledger reports
 rather than skipping silently.
 
 | Kind | Count |
 |---|---|
 | behavior | 17 |
-| external-fact | 1 |
+| external-fact | 9 |
 | internal-fact | 16 |
 | runtime-capability | 7 |
 

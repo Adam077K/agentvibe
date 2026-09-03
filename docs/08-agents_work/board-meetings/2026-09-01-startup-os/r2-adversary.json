@@ -1,0 +1,213 @@
+{
+  "persona": "adversary",
+  "round": 2,
+  "changed_mind_on": [
+    {
+      "position_id": "P4",
+      "from": "'Built and never wired' is a demand signal misread as an engineering defect, and no mechanism on the table can tell the two apart — §8's 'wire, then delete whatever has no caller' passes by construction, because wiring IS adding a caller. The only test I could name was observational: wire design.js, wait seven days, count invocations.",
+      "to": "The diagnosis is unchanged and a mechanism now exists. The Strategist saw the identical hole ('X1's birth certificate does not prevent built-and-wired-to-nothing-anyone-needed') and named a merge-time predicate for it. I withdraw the claim that nothing on the table could distinguish the two readings. My critique relocates from 'no mechanism exists' to 'the mechanism cannot tell a harness mission from a venture mission' — see the fatal critique against the same position.",
+      "because_of": "strategist:P3"
+    },
+    {
+      "position_id": "P10",
+      "from": "The containment is porous and my headline instance is the ( npx --version ) bypass; a rule set with one known bypass of that shape probably has more, so sweeping the other rules is forced build-order item 3, ahead of any autonomy.",
+      "to": "My inference was wrong and I re-measured it myself today. The bypass is one rule's defect, not the rule set's shape: ( npx --version ) exits 0, but ( rm -rf / ) exits 2, { rm -rf / ; } exits 2, and ( curl https://evil.example.com ) exits 2. The sweep is not forced. The real containment gap is the one the Risk Modeler found and I under-called: mcp__higgsfield__tiktok_publish, mcp__higgsfield__sandbox_exec, mcp__claude_ai_Gmail__send_message, Task and WebFetch each exit 0 from the only blocking hook with empty stderr and no log line, while the one governed server (playwright) is the one that cannot connect. Build-order item 3 drops to a one-line fix; if any outbound hand is connected, risk-modeler:P2 and not my parenthesis is what stands in front of it.",
+      "because_of": "risk-modeler:P12"
+    },
+    {
+      "position_id": "P8",
+      "from": "Two objections to §4's done-test. First, the creativity diagnosis contradicts §1b's own centrepiece. Second and structural: a founder approval per pack, per project, sits on the critical path of a system premised on the founder's absence, and §7's 'taste enters once, at the top' says something different — which of the two binds is undecided and decides whether the system can run unattended at all.",
+      "to": "The structural objection is answered and I withdraw it. A done-test restricted to rung 0 and rung 1 — it renders, a stranger understands it in five seconds — carries no taste and therefore needs no per-pack taste approval, so the founder leaves the critical path without §4 and §7 having to be reconciled first. The Visionary supplies the complement: capture founder choices as pairs so taste compounds rather than being re-elicited. The first objection is untouched and stands: §1b's own illustration says the system WAS creative and WAS NOT used, so 'make it more creative' designs for a problem that document disproves.",
+      "because_of": "strategist:P14"
+    },
+    {
+      "position_id": "P1",
+      "from": "The base rate is abandonment at three weeks, and the control that makes the demand test real is a seven-day binary tripwire: harness-path commits must return 0 in both repositories or the experiment did not happen.",
+      "to": "The measurement and the causal reading are unchanged. The mechanism upgrades: the Visionary's monthly harness-versus-venture ratio over session-file frontmatter, classified by scripts/lib/classifier.js rather than by a second implementation of it, is the better DURABLE form and satisfies A5. Mine is the better EXPERIMENTAL control, because a finding that never acts cannot make a week happen. They are not competitors — binary for the experiment week, ratio forever after.",
+      "because_of": "visionary:P11"
+    },
+    {
+      "position_id": "P12",
+      "from": "Refusal 4, carried in my refuse list: any new mechanism before the demand test returns a number, including ones I would otherwise support.",
+      "to": "The refusal becomes conditional rather than blanket: exempt an item only if it costs hours AND its cost of omission is unbounded because it cannot be retrofitted. Exactly one item on the whole board passes that test — the task id on the event row. I verified it: ~/.agentvibe/events.jsonl holds 3,814 events and the only id-shaped keys ever written are 'id' and 'dry_run'; no task_id, mission_id, run_id or session_id. The Architect's own counter concedes the scope honestly, naming it the one component genuinely un-discoverable-by-doing. The exemption is one item wide, which costs my position almost nothing and makes it correct.",
+      "because_of": "architect:P3"
+    }
+  ],
+  "peer_critiques": [
+    {
+      "persona": "strategist",
+      "position_id": "P3",
+      "critique": "FATAL. The demand trigger requires a mission in_flight carrying a blocked row authored before the diff, and nothing in it constrains that mission to have a consumer outside this system. A mission reading 'make the harness able to dispatch a design round' satisfies it perfectly: real mission, real block, real missing capability, clean merge. On the base rate the Strategist themself measured — 172 session files, one touching a venture, which I re-counted today — every block that fires in the first months is a harness block, and the trigger reads green while the pathology runs at full speed with more rigour than it has ever enjoyed. That is WORSE than the failure it replaces: 'built and never wired' is at least visible as a count, whereas 'built for a mission we authored to justify building it' is invisible by construction, because the justification is now a first-class artifact with a schema and a check. The Strategist anticipates a gaming objection and answers a different one ('anyone with repo-write can author a mission… it stops drift, not a determined author') — that is about a bad actor. My objection needs no bad actor and no bad faith; it fires on a founder authoring true missions about real blocks for twenty-two more days. TO SURVIVE, either of two things must be true and either is sufficient: (1) the authorising mission is itself classified 'venture' by scripts/lib/classifier.js over the paths it affects — visionary:P11's mechanism reused, not reimplemented — and a harness-classified mission cannot authorise a merge alone; or (2) the authorising mission's done: resolves through verified_by: world (visionary:P1), so the mission is answerable by something that is not this repository. Either turns a test of internal coherence into a test of external demand. Without one, it is a demand trigger that cannot detect demand.",
+      "severity": "fatal"
+    },
+    {
+      "persona": "visionary",
+      "position_id": "P4",
+      "critique": "The position says the first unattended run should be the capability probe, and that 'its job is to mint the first task id and write the first balcony row rather than to be valuable'. As engineering it is good and I will not pretend otherwise — it exercises the two non-retrofittable things at zero blast radius where being wrong is free, and its payload (three MCP servers needing re-auth, two failing outright, both second-family pins retired six months ago) is genuinely worth knowing. As strategy it is the purest available instance of what I am attacking: the system's first autonomous act in its life is a report about its own tools, read by nobody outside the system. If the answer to 'what did the company do the first night it ran alone' is 'it audited its own hands', the thesis has not been tested, it has been deferred with a green tick attached. Survivable as written if the probe is not FIRST but rides along with something that leaves the building; it costs nothing to run it the same night a real artifact ships.",
+      "severity": "serious"
+    },
+    {
+      "persona": "risk-modeler",
+      "position_id": "P3",
+      "critique": "Ranking the birth certificate forced-first 'because it changes the survival rate of every item after it' measures the wrong survival. Requiring a caller in the same diff guarantees CALLABILITY, which is trivially satisfiable by adding a caller — the same construction-passes defect I raised against §8's wire-then-delete, and the one strategist:P3 was written to close. The deeper objection is not mine and the board produced it in another room: architect:P8 measured that this predicate ALREADY EXISTS FOUR TIMES with four different exemption conventions and no shared predicate — skills in build-skill-routers.mjs with no exemption mechanism at all, test files in check-suite.test.mjs exempted by a free-prose map with no length floor, gates in check-gates.mjs exempted by a 40-character unused_reason, and the suite's own EXCLUDED map. A fifth instance is the disease under treatment. If the board takes the birth certificate at all it takes architect:P8's version: one hasCaller predicate, four call sites migrated, no new implementation.",
+      "severity": "serious"
+    },
+    {
+      "persona": "architect",
+      "position_id": "P12",
+      "critique": "The position sorts the bill of materials by cost-to-reverse, puts packs, personas, council, board, missions, balcony and FIELDS/ in the 'cheap, days' bucket, and draws the operating rule that the reversible half should be built 'fast, loose and continuously'. The sorting is right and the rule drawn from it is the one that produced the ratio I measured. git revert measures the cost of UNDOING an artifact and says nothing about the cost of CARRYING one — and my P3 measured the carrying cost being paid, in the only place this system has ever been used. beeond spent 2026-08-26, a full working day and twenty-one commits, removing a different company's brand, pricing and ICP from twenty-two agent files, deleting 1,395 files of foreign agent kit, and repointing nine agents off a directory that never existed. Every one of those artifacts was individually reversible. That is precisely why they were cheap to create and why there were 1,395 of them. Fast and loose is how 552 harness configuration files come to stand against 6 product files.",
+      "severity": "serious"
+    },
+    {
+      "persona": "visionary",
+      "position_id": "P2",
+      "critique": "Forced expiry with a compelled disposition IS this repo's one invention and pointing it at every store is the right instinct, which is what makes this the most expensive proposal on the board. My P6 measured the cost curve it runs on: docs/STATUS.md at 637 lines, the main sha stale four times in one day, the branch name five times, the session count five times, the suite denominator four times — in every case with the correct derivation command printed beside the wrong value. Putting retire_on on packs, skills, personas, field files, tool grants and shipped-register entries means every one of those eventually comes due and demands a recorded disposition. On a machine where the measured cause of nine dead projects is the founder's attention running out, a mechanism whose output is a growing queue of mandatory dispositions is aimed squarely at the scarce resource. The Visionary sees the shape ('mass expiry in a quiet month produces a batch waiver, so stagger dates at creation') but staggering changes when the bill arrives, not its size.",
+      "severity": "serious"
+    },
+    {
+      "persona": "visionary",
+      "position_id": "P14",
+      "critique": "Credit for the honest self-label of evidence: INVENTED. The substance: a compounds: flywheel|feeder|inventory field required on every governed artifact, with inventory additionally naming its reader, is new surface added to solve a surface problem. Its justification is that nothing reads the corpus — which is the thing in question. If nothing reads the artifacts, nothing will read their declarations either, and the declaration then becomes one more governed field that must itself be checked, expired and dispositioned under P2.",
+      "severity": "minor"
+    },
+    {
+      "persona": "architect",
+      "position_id": "P9",
+      "critique": "Not a defect — a correction I owe them, recorded here so the synthesizer has both readings. I argued design.js went uninvoked because no design work was pending, not because a call site was missing, and pointed at .claude/commands/design.md as proof a founder could type /design. The Architect measured what I had not: Workflow is a main-session tool, 0 of 55 recorded calls came from a sidechain against 57,590 subagent Bash calls, so a dispatched engine or a server-side loop cannot invoke design.js at all. My claim survives for the FOUNDER path and needed narrowing for the LOOP path, and the two have different cures. I verified their caller count and found it sharper than either of us stated: outside markdown, the only references to design.js in the repository are its own source, a tier glob in qa-tier-floor.yml, a fixture path in classifier.test.mjs, and the five JSON files of this board meeting. Repo-wide reference lines: 84, of which 32 are this meeting. This one afternoon produced 38% of every reference to design.js that exists, and zero invocations.",
+      "severity": "minor"
+    }
+  ],
+  "remaining_dissent": [
+    {
+      "position_id": "P13",
+      "holds_because": "Position 1 must be an artifact, not a mechanism. Measured across all four peer build_order arrays: position 1 is a mechanism in four of four cases, and an artifact that reaches a person outside this system appears at no position in any of them. The nearest approaches are the Visionary's step 6 and the Strategist's step 5, and both are careful about what they are — a SYNTHETIC mission graded internally, and an INSTRUMENT that would read an outcome if one existed. Neither obtains a demand signal; both build the apparatus that would read one. It holds because not one of the four presented evidence that anyone outside this system wants its output, and three of the four wrote that objection down against themselves in their own strongest_counter. The demand test I specified in Round 1 was not refused, weakened or priced by anybody — it was not mentioned. One revision arising from the Risk Modeler's lane, which strengthens rather than weakens it: the demand test requires NONE of their controls, because it contains no autonomous outbound act. The founder ships one page by hand, posts it once by hand, and does not touch it for seven days; no agent publishes, sends or spends. Their ordering (outbound wrapper before inbound, inbound last) is correct and binds the loop, and does not bind the experiment. That removes the last reason to sequence the test behind anything. What would move me is what has always been on offer: run it and show me a number.",
+      "against": ["visionary:P1", "strategist:P1", "architect:P3", "risk-modeler:P3"]
+    },
+    {
+      "position_id": "P6",
+      "holds_because": "The self-correction cost curve is unaddressed by every lane and one proposal multiplies it. A repository whose only output is statements about itself corrects itself faster than it produces: 637 lines of STATUS.md, the main sha stale four times in one day, the branch name five times, the session count five times, the suite denominator four times. Forced expiry across every governed store adds claim surface without adding one claim about the world — a mission, a move, a done-test, a field note, a balcony row and a pack grant are all claims that will expire and none is checkable against anything outside the repository. Nobody costed this in Round 1, and the Visionary's own mitigation changes the arrival pattern of the bill, not its total.",
+      "against": ["visionary:P2"]
+    },
+    {
+      "position_id": "P5",
+      "holds_because": "The catalogue stays refused at volume. 311 options measured across two files, with selection already performed twice — concepts.md §17's five and hands.md §6's ranked fifteen with the top five free and measured in minutes. Building the top three costs less than the meeting that selects them. visionary:P14 answers this by adding a required field across every governed artifact, and architect:P12 by building the reversible half fast and loose; both add surface, and the second is the operating rule that produced beeond's 92-to-1 ratio. The Strategist's 1.4% is the right posture and I hold with it against both — while parting from the Strategist on what occupies position 1.",
+      "against": ["visionary:P14", "architect:P12"]
+    }
+  ],
+  "convergence": [
+    "No outbound money hand — ad platforms, GPU rental, postage, paid-per-call APIs — may be connected before a rate axis exists that something enforces. Unanimous, five of five, reached from four different framings, and the only board-wide agreement that is also an ACTION rather than a diagnosis. adversary:P10 · strategist:P10 · risk-modeler:P7 · visionary:P12, with architect:P6 supplying the mechanism (widen classifyFile into classifyAction inside the ONE classifier, never a second implementation).",
+    "budget-guard.js is built, verified by execution, registered nowhere, and registering it is the highest capability-per-hour item on the board and is founder-gated. I verified today that grep -c budget-guard returns 0 in both .claude/settings.json and ~/.claude/settings.json. architect:P14 · strategist:P1 · visionary build-order 5 · adversary build-order 4.",
+    "Callability is not use, and every cure that currently exists detects after the fact rather than preventing. All five lanes. adversary:P4 · visionary:P10 · strategist:P3 · risk-modeler:P3 · architect:P8. The board agrees on the disease completely and disagrees on the cure completely, and the fatal critique in this document is that disagreement.",
+    "The resolver of a done-test may never be the producer. Four lanes independently, all leaning on the same 0.543-against-a-0.741-self-consistent-panel measurement. strategist:P14 · visionary:P1 · risk-modeler:P9 · adversary:P8.",
+    "The task id on the event row cannot be retrofitted and is forced first among mechanisms. Three lanes reached it from three framings, which is the strongest convergence signal the board produced, and it is the one item I concede as an exemption to my own refusal. architect:P3 · visionary:P3 · strategist build-order 2.",
+    "THE SPLIT THE SYNTHESIS MUST NOT AVERAGE AWAY: the board converged on the demand diagnosis in its strongest_counter fields and diverged from it unanimously in its build_order fields. Three of four peers stated my thesis against themselves — 'fourteen stopping mechanisms, the disease performed with more rigour', 'an instrument is not a landing page', 'every control I propose is a stopping mechanism' — and then put a mechanism at position 1 anyway. adversary:P11 · adversary:P13 · strategist:strongest_counter · architect:strongest_counter · risk-modeler:strongest_counter · visionary:strongest_counter. A synthesis that averages five build orders produces a sixth with a mechanism at position 1 and loses the one thing all five of us agree about.",
+    "strategist:P8 is the best single move any lane made and the board should take its SHAPE as the template for cutting 420 options: it does not defer worker trust, apprenticeship, promotion and retirement — the highest-cost, least-precedented item in the catalogue, with no OSS answer anywhere per open-source.md §16 — it DISSOLVES the subject, because fresh context per unit of work plus a pack that is a grant and a stop leaves no persistent worker for trust to accrue to. Gap #10 is answered, not postponed. My own refusals only defer things; that one removes a problem from the design."
+  ],
+  "updated_positions": [
+    {
+      "id": "P1",
+      "claim": "The base rate on this machine is abandonment at roughly three weeks, and the harness sits on that curve rather than above it. UNCHANGED in substance; the durable control upgrades to the Visionary's ratio.",
+      "reasoning": "Eleven sibling projects with more than twenty commits, nine dead: overstory absorbed 1,142 commits in 23 days and died, etsyc 689 in 11 days and died. What ran out was never hours in the day — it was interest, or the absence of anyone waiting. A 24/7 loop does not manufacture interest; it lowers the cost of starting, the one thing that has never been the bottleneck here. REVISED MECHANISM: my seven-day binary tripwire is the right EXPERIMENTAL control and visionary:P11's monthly harness-versus-venture ratio, classified by the one classifier, is the right DURABLE one. Binary for the experiment week, ratio forever after.",
+      "evidence": ["MEASURED 2026-09-02: ~/VibeCoding/*/ first and last commit per project", "r1-visionary.json:P11", "docs/02-competitive/expansion/concepts.md:§15 A5"],
+      "confidence": "high",
+      "territories": ["01", "14"]
+    },
+    {
+      "id": "P2",
+      "claim": "beeond is the thesis's only live test and it returned a scaffold against 552 harness files. UNCHANGED; CEO-verified.",
+      "reasoning": "The product surface is a Next.js scaffold. The harness surface in the same repository is 552 .claude files, 257 docs, 62 war-room. design/ contains no designs — all 22 files are instrumentation for five reference sites. The load-bearing observation is the commit log, not the ratio: the most recent day of work anywhere on this machine is all beeond commits and all eight are harness. The harness is not a tool the ventures use; it is a competing venture that consumes them.",
+      "evidence": ["MEASURED: git -C ~/VibeCoding/beeond ls-files | awk -F/ '{print $1}' | sort | uniq -c", "docs/03-system-design/STARTUP-OS.md:§1"],
+      "confidence": "high",
+      "territories": ["02", "14"]
+    },
+    {
+      "id": "P3",
+      "claim": "The harness has already damaged its only customer, measurably, and no proposal prices that cost. STRENGTHENED — it is now also the counter-example to architect:P12.",
+      "reasoning": "beeond spent 2026-08-26, twenty-one commits, undoing what the template did to it: a different company's brand, pricing and ICP removed from 22 agent files; 1,395 files of foreign agent kit deleted; nine agents repointed off a directory that never existed; the product stripped to a shell. Net contribution of the harness to its only user over ten weeks: negative. NEW IN ROUND 2: every one of those artifacts was individually reversible by git revert, which is exactly why they were cheap to create and why there were 1,395 of them. Reversibility is not the carrying cost, and architect:P12's 'build the reversible half fast and loose' is the operating rule that produces this outcome.",
+      "evidence": ["MEASURED: git -C ~/VibeCoding/beeond log --since=2026-08-26 --until=2026-08-27 --oneline", "r1-architect.json:P12"],
+      "confidence": "high",
+      "territories": ["02", "04", "14"]
+    },
+    {
+      "id": "P4",
+      "claim": "'Built and never wired' is a demand signal misread as an engineering defect. REVISED: a mechanism to tell the two apart now exists (strategist:P3), and it cannot yet distinguish a harness mission from a venture one. Separately, the loop path has a real runtime wall the founder path does not (architect:P9).",
+      "reasoning": "Wiring makes a mechanism callable; it does not make it called. §8's cure reports success by construction because wiring IS adding a caller. strategist:P3 closes that at merge time and is a genuine advance — and as written it authorises any diff answering any mission, including a mission about the harness, so on a 172-to-1 base rate it reads green while nothing changes. architect:P9 adds the half I missed: Workflow is a main-session tool, 0 of 55 recorded calls came from a sidechain, so a dispatched engine or a server-side loop cannot invoke design.js at all — my 'a founder could type /design' survives for the founder path only.",
+      "evidence": ["MEASURED 2026-09-02: non-markdown refs to design.js are its own source, a qa-tier-floor.yml glob, a classifier.test.mjs fixture path, and this meeting's five JSON files", "r1-strategist.json:P3", "r1-architect.json:P9", "docs/03-system-design/STARTUP-OS.md:§1b"],
+      "confidence": "high",
+      "territories": ["12", "08", "01"]
+    },
+    {
+      "id": "P5",
+      "claim": "The catalogue is negative-value at this volume, and its own discipline failing within one day is the proof. UNCHANGED, and the Strategist's 1.4% is the converging answer.",
+      "reasoning": "311 discrete options measured across two files. The research discipline is genuinely high and it drifted within a day of being written, in exactly the way this repo spends 637 lines hunting: concepts.md's header states 128 mechanisms and prints the command that returns 134. At 311 options the discipline cannot be held by anyone, including an author unusually good at it. Selection has already been performed twice; building the top three costs less than the meeting that selects them.",
+      "evidence": ["MEASURED: grep -cE '^\\*\\*[A-Z]+[0-9]+ · ' concepts.md → 134 against a stated 128", "docs/02-competitive/expansion/concepts.md:§17", "docs/02-competitive/expansion/hands.md:§6"],
+      "confidence": "high",
+      "territories": ["04", "07", "13"]
+    },
+    {
+      "id": "P6",
+      "claim": "The record is majority self-correction, and that is the real cost curve of a system whose only output is statements about itself. UNCHANGED and unaddressed by any lane; visionary:P2 multiplies it.",
+      "reasoning": "Documented expiry history from STATUS.md's own supersession blocks: the main sha stale four times in one day, the branch name five times, the session-file count five times, the suite denominator four times — and in every case the correct derivation command was printed beside the wrong value. Adding L2 through L5 multiplies the claim surface without adding one claim about the world. Every proposed new object type — a mission, a move, a done-test, a field note, a balcony row, a pack grant — is a claim that will expire and that is not checkable against anything outside the repository.",
+      "evidence": ["docs/STATUS.md:§1, §4, §5", "r1-visionary.json:P2"],
+      "confidence": "high",
+      "territories": ["05", "07", "08"]
+    },
+    {
+      "id": "P7",
+      "claim": "This board meeting is a live instance of the failure it convened to diagnose. STRENGTHENED with a new measurement, and strategist:P12 supplies the right response to it.",
+      "reasoning": "Zero of seven personas have an agent file; the $3 cap is enforced by nothing, referenced by no script, hook, CI step or package script; the escalation path names a Linear integration that does not exist and a Telegram channel founder Decision 5 forbids. NEW IN ROUND 2, and it is the sharpest fact I have: repo-wide reference lines to design.js number 84, of which 32 are this board meeting's own five JSON files. This one afternoon produced 38% of every reference to the unwired mechanism that exists in the repository, and zero invocations. strategist:P12 is the correct response — the council convenes on irreversible-tier forks only, never on a schedule — and it is better than my finding.",
+      "evidence": ["MEASURED 2026-09-02: grep -rn 'design\\.js' → 84 lines repo-wide, 32 in this meeting's directory", "MEASURED: ls .claude/agents/{visionary,strategist,architect,risk-modeler,customer-voice,adversary,synthesizer}.md → 7 of 7 absent", "r1-strategist.json:P12"],
+      "confidence": "high",
+      "territories": ["08", "09", "10"]
+    },
+    {
+      "id": "P8",
+      "claim": "'Creativity' is the wrong diagnosis. REVISED: the structural half of this position is withdrawn — the founder can be kept off the per-pack critical path — and the diagnosis half stands untouched.",
+      "reasoning": "WITHDRAWN: the objection that §4's done-test re-imports a founder approval per pack per project onto the critical path of a system premised on human absence. strategist:P14's rung-0/rung-1 restriction removes taste from the done-test, and visionary:P5's preference pairs make taste compound instead of being re-elicited; together the founder leaves the critical path without §4 and §7 having to be reconciled first. STANDS: §1b's boxed argument is that design.js already did the thing asked for and was never invoked, which says the system WAS creative and WAS NOT used. Substituting 'make it more creative' for 'make someone need it' designs for a problem the document's own centrepiece disproves.",
+      "evidence": ["docs/03-system-design/STARTUP-OS.md:§1b, §4, §7", "r1-strategist.json:P14", "r1-visionary.json:P5"],
+      "confidence": "high",
+      "territories": ["01", "02", "08"]
+    },
+    {
+      "id": "P9",
+      "claim": "The rope cannot hold: the loop and the founder share one quota and no mechanism allocates it. Decision 8's implementation is a WISH. STRENGTHENED by architect:P4 and architect:P5, and answered by nobody.",
+      "reasoning": "budget-guard.js is a brake, not an allocator: two ceilings that stop spend, neither dividing it between two consumers with different priorities. No scheduler, no reservation, no preemption, and no mechanism anywhere expressing 'the founder outranks the loop'. The Architect measured the instrument's internals and found it worse than I said — sinceLastArtifact discards turns older than a six-hour horizon, so the ceiling fires LESS the deeper the machine is stuck, and recentTurns divides an account-wide numerator by a repo-local denominator. Their P5 is about two missions competing; mine is about the founder competing with the loop. Same seam, two instances, and no proposal on this board allocates between two consumers of one quota.",
+      "evidence": ["docs/03-system-design/STARTUP-OS.md:§1b live budget-guard run", "r1-architect.json:P4", "r1-architect.json:P5"],
+      "confidence": "high",
+      "territories": ["07", "11", "13"]
+    },
+    {
+      "id": "P10",
+      "claim": "Autonomy raises the blast radius before the axis that would bound it exists. REVISED: my headline instance was over-ranked and the Risk Modeler found the real one, which is larger.",
+      "reasoning": "The dangerous hands are granted and the safe ones are not; money has no axis at all, and the risk ladder is about whether git revert saves you, which has nothing to say about £500 of ad spend that reverts perfectly and is still gone. CORRECTED: the ( npx --version ) bypass is one rule's defect, not the rule set's shape — I re-measured it and ( rm -rf / ), { rm -rf / ; } and ( curl … ) all still exit 2. The larger hole, which I verified independently: mcp__higgsfield__tiktok_publish, mcp__higgsfield__sandbox_exec, mcp__claude_ai_Gmail__send_message, Task and WebFetch each exit 0 from the only blocking hook with empty stderr and no log line, while the one server carrying a per-tool policy is the one that cannot connect.",
+      "evidence": ["MEASURED 2026-09-02: pre-tool-use.sh driven with generated payloads — subshell bypass rule-specific; five MCP/dispatch tools exit 0 with empty stderr; playwright exit 2", "r1-risk-modeler.json:P2", "r1-risk-modeler.json:P12", "docs/02-competitive/expansion/hands.md:§8"],
+      "confidence": "high",
+      "territories": ["03", "09", "13"]
+    },
+    {
+      "id": "P11",
+      "claim": "L1 is genuinely excellent and rare, and none of it is evidence for the thesis. UNCHANGED, and Round 2 supplies the proof I could not give in Round 1.",
+      "reasoning": "Forced claim expiry with a compelled disposition, sha256 verdict binding, one classifier with the second implementation deliberately refused, a 48-of-48 suite that refuses a zero-step run, a gate that blocked its own author on PR #47. The field ships the opposite — Ralph's judge fails open twice. Every mechanism I praise answers 'is this statement true?'; not one answers 'did anyone want it?'. NEW IN ROUND 2: three of four peers wrote that same objection down against themselves in their own strongest_counter and then put a mechanism at position 1 anyway. A truth machine with no demand is a very well-audited zero.",
+      "evidence": ["docs/03-system-design/STARTUP-OS.md:§1, §8b", "r1-strategist.json:strongest_counter", "r1-architect.json:strongest_counter", "r1-risk-modeler.json:strongest_counter"],
+      "confidence": "high",
+      "territories": ["08", "14"]
+    },
+    {
+      "id": "P12",
+      "claim": "I refuse the 'tenth attempt repeats the nine' framing: 858 commits in 22 days is one sprint with phase labels, and nothing in it failed in the ordinary sense. UNCHANGED, CEO-verified. My refusal list is revised in one place.",
+      "reasoning": "The framing is false and I can measure that it is false, and taking it would let the board dismiss everything downstream. What the evidence supports is narrower and worse: the sprint has never once been pointed at anyone outside it. REVISED REFUSAL: 'no new mechanism before the demand test returns a number' becomes conditional — exempt an item only if it costs hours AND cannot be retrofitted. Exactly one item passes: the task id on the event row, verified today as absent across all 3,814 events.",
+      "evidence": ["MEASURED: git log --format='%ad' --date=format:'%Y-%m' | sort | uniq -c → 858 2026-08", "MEASURED: ~/.agentvibe/events.jsonl, 3,814 events, no task_id/mission_id/run_id/session_id", "r1-architect.json:P3"],
+      "confidence": "high",
+      "territories": ["14"]
+    },
+    {
+      "id": "P13",
+      "claim": "NEW IN ROUND 2. Position 1 is a mechanism in four of four peer build orders, and an artifact that reaches a person outside this system appears at no position in any of them.",
+      "reasoning": "Visionary: task id, policy seam, world resolver, capability probe, budget-guard, then a SYNTHETIC mission. Strategist: budget-guard, task id, non-producer resolver, the loop, the world verifier. Architect: task id, symmetric Rule 10, grant probe, stall counter, hasCaller, classifyAction. Risk Modeler: birth certificate, budget-guard, reach axis, outbound wrapper, kill file, inbound. The nearest approaches are careful about what they are: a synthetic mission graded internally, and an instrument that would read an outcome if one existed. Neither obtains a demand signal. The demand test I specified in Round 1 was not refused, weakened or priced by anybody — it was not mentioned. And it requires none of the Risk Modeler's controls, because it contains no autonomous outbound act: the founder ships one page by hand, posts it once by hand, and does not touch it for seven days. Their ordering is correct and binds the loop; it does not bind the experiment, and the two lanes do not conflict.",
+      "evidence": ["r1-visionary.json:build_order", "r1-strategist.json:build_order", "r1-architect.json:build_order", "r1-risk-modeler.json:build_order"],
+      "confidence": "high",
+      "territories": ["01", "13", "14"]
+    }
+  ],
+  "strongest_counter": "You cannot safely automate what you cannot verify, and the field's graveyard is full of systems that automated first: GSD's 40 KB verify-phase wired to nothing, Metaswarm's disagreement classifier no longer called, CAST's dispatch endpoint querying the wrong table for two months, Auto-Co's circuit breaker existing only in its own .gitignore, Ralph's judge auto-approving when the verdict tool was never called. Every one is a system that ran unattended without a control that could refuse. Under that reading the last twenty-two days built the one precondition for leaving something running overnight, and a prerequisite is not a project — it does not have to attract users or beat a base rate, it has to be FINISHED. The Architect adds the one thing that survives my Round 1 rebuttal of this, and it is narrow and unbeatable: the mission that teaches you that you needed a task id has already run without it, so a demand test run before the id is minted produces a result nobody can attribute afterwards. That is not a general argument for instruments first — it is an argument about one field, five call sites and a few hours, and I have conceded exactly that and no more. The falsifiable form is unchanged and the board should hold every lane to it: this counter predicts that the demand test is now cheap and safe to run. If the next three weeks produce a tenth phase instead of the test, verification-first was a preference dressed as a prerequisite. There is no third reading, which is what makes it a fair test."
+}

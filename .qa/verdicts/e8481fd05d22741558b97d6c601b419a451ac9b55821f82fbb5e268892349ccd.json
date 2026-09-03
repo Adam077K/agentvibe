@@ -1,0 +1,11 @@
+{
+  "subject": "e8481fd05d22741558b97d6c601b419a451ac9b55821f82fbb5e268892349ccd",
+  "base": "f4ef5472718b2bae8fc755e6fe01dcae9cb21432",
+  "tier": "lite",
+  "tier_driver": ".claude/ledger/index.json",
+  "verdict": "PASS",
+  "by": "reviewer-readonly",
+  "run_id": null,
+  "evidence": null,
+  "recorded_at": "2026-09-03T11:41:32.801Z"
+}
