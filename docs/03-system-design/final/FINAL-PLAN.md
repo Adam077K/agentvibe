@@ -1832,3 +1832,258 @@ window as axes · the label at emission · the read-back before binding · a dur
 capabilities (ABSENT; the runtime exists) · `keel/logbook/` as its only source (ABSENT) · `~/.agentvibe/events.jsonl`
 and mission control's SSE feed (TREE A, exist; the logbook's spine, RENAMED) · the room's JSON writer (ABSENT).
 
+---
+
+## 14 · Runtime — the Mac, the facts that bind, and each provider
+
+### 14.1 The Mac now, the split as the target
+
+**(BOTH, founder)** Day one is this Mac, lid open, on power, logged in. The target is the split the design implies:
+**the Watch, the Sender and the logbook on an always-on machine**, because obligations must complete and the logbook
+must never be lost; **the runs wherever they are cheapest**, because they hold no credentials by construction; the
+founder's Mac as a client, a very good one, that can sleep without the company stopping. A small always-on box with a
+real service manager solves every laptop problem for a few pounds a month; it does not solve the credential problem,
+it relocates it, which is why only the three no-model parts move there. The box is bought after the first measured
+overnight, not before (§1 row 20).
+
+### 14.2 Supervision, on macOS
+
+**(KEEL, with v3's launchd facts from Apple's documentation)** A **LaunchAgent** holds the Watch: it runs as the
+founder's user, which is what reaches the keychain and the subscription's OAuth; it dies at logout, and the honest
+statement is that the Mac stays logged in with the lid open, or the night ends. **(V3)** The tick is a `StartInterval`
+job that runs and exits, never a `KeepAlive` one — `KeepAlive` on a script that exits zero is an infinite loop
+throttled to one launch every ten seconds. `StartInterval` coalesces missed firings, so a Mac that slept through four
+ticks fires once on wake; `caffeinate -i`, time-bounded, prevents idle sleep and nothing but `pmset -a disablesleep 1`
+prevents lid sleep. `launchd` has no restart ceiling beyond its throttle, so the supervisor implements one — N restarts
+in T seconds, after which it escalates rather than loops. `KeepAlive` cannot catch a hang, so a separate heartbeat and a
+**process-group kill**, because a timeout that kills a child while its grandchild runs on is a timeout that does
+nothing. **(BOTH)** Every tick is crash-only: read state from disk, take one move, write, exit; a tick that vanishes
+loses exactly one tick. **Enforced by:** `~/Library/LaunchAgents/com.keel.watch.plist` and `keel/bin/supervise`
+(ABSENT).
+
+### 14.3 Storage, durably — what survives a dead machine
+
+**(KEEL)** Everything is a plain file. The test: if the Mac dies tonight, what does the founder still have?
+
+```mermaid
+flowchart TB
+    subgraph GIT["In git — survives everything"]
+        A["charters · intents · obligations · memory · craft ·<br/>rehearsals · shapes · handovers · the ledger"]
+    end
+    subgraph LOCAL["On the machine only — rebuildable"]
+        B["the vector index over transcripts"]
+        C["run traces older than the retention window"]
+        D["worktrees and branches in flight"]
+    end
+    subgraph NEVER["Never in git, never in a file"]
+        E["credentials — OS keychain, referenced by name"]
+        F["customer PII — stays in its own system"]
+    end
+    subgraph BLOB["Off the machine, by hash"]
+        G["renders · screenshots · video · audio · page captures —<br/>content-addressed by sha256; the logbook holds the hash"]
+    end
+    GIT -->|"pushed after every run,<br/>to a private remote the founder owns"| REMOTE["A remote"]
+    REMOTE -->|"clone on a new machine"| NEWMAC["Everything but the index"]
+    B -.->|"rebuilt from transcripts in one pass"| NEWMAC
+    NEWMAC --> RESUME["The Watch restarts.<br/>Runs in flight resume from the logbook (§6.4)."]
+```
+
+**(V3)** One `keel` repository and one per venture; a push after every run; a nightly encrypted snapshot to object
+storage, excluding secrets by construction because they were never in it; blobs mirrored to one bucket, the only
+thing in the design that has to exist somewhere else, and a hash with no blob is a known absence. The logbook's append
+uses `F_FULLFSYNC`, because on macOS `fsync()` does not mean the drive wrote the data and neither git nor SQLite calls
+the real thing by default. The local index runs in WAL mode, never over a network filesystem, and a page holding a
+query open starves the checkpoint — one more reason the Balcony reads files and not a database. Snapshots of the
+memory stores every night, because event sourcing's own failure is replay time, and the rebuild-from-scratch path is
+exercised on a schedule rather than trusted. **(BOTH)** The logbook is the truth and is never edited; memory is a
+curated view over it; if memory is wrong the logbook is still right. **Enforced by:** `keel/bin/log` with
+`F_FULLFSYNC` (ABSENT) · the push in every run's close (ABSENT) · the nightly snapshot job (ABSENT).
+
+### 14.4 The credential plan, which is the disaster plan
+
+**(V3)** What no backup restores: OAuth refresh tokens (a grant held by the authorisation server, often rotated on
+use; recovery is re-running the consent flow, as a human, once per service), device-bound passkeys and hardware keys,
+two-factor seeds, and domain and DNS control — the one true single point of failure in a small company. So the
+recovery plan is a **credential plan**: a password manager as the single source of truth, its emergency kit printed
+and stored physically, hardware keys registered in pairs with the second off-site, a k-of-n split for the handful of
+secrets that unlock everything else. The standard mistake: escrowing the vault and not the second factor that protects
+the vault. **The restore is drilled or none of this is true**: monthly, the fleet is restored into a scratch directory
+from the remote alone and the anchors run there, result in the briefing; twice a year, on a machine that is not this
+one, the company is rebuilt from the logbook and the escrow, and the drill produces a number. **(BOTH)** Credentials
+are keychain references in every file, never values; a file that contains a secret is a file that gets committed
+eventually. **Enforced by:** the drill as an obligation with `recurs: monthly` in the harness venture's
+`obligations.yml` (ABSENT).
+
+### 14.5 The cache, and why the standing prompt is byte-identical
+
+**(V3, measured)** Eighty-nine per cent of the historical bill on this machine was context — cache reads 57%, writes
+32%, output 11% — so *what does this run need to know* and *what does this system cost* are the same question. The
+prompt cache lives **one hour on the subscription** and five minutes on a key or once the account draws on credits:
+the TTL is a function of billing state and shortens twelve-fold at the moment the account crosses into overage, which
+is exactly when the machine is busiest. So the tick stays 240 seconds for control latency, runs of one shape are
+batched inside the TTL the Watch observes, the three standing prompts are byte-identical and carry no timestamp, and
+the shapes are a closed set — because the cache is invalidated by any change to the stable prefix including the tool
+definitions, a bespoke grant per run would pay the cache-write share of the bill forever. Two shipped flags stabilise
+the prefix and neither is used here yet: `--exclude-dynamic-system-prompt-sections` (moves cwd, environment, memory
+paths and git status out of the system prompt) and `--system-prompt-snapshot on`. And a hole: `/usage` reports the
+cache hit rate for the main conversation only, so the meter reads each run's own token fields (§15.1).
+
+### 14.6 Each provider's facts
+
+**(V3, from the providers lane, 2026-09-04; M measured on this Mac, D documented with a URL and date)** Nothing in the
+lane was run against a model; every "narrows to" is what the vendor says the flag does.
+
+| | Claude Code | Codex CLI | Gemini CLI | OpenCode · Amp · Cursor · Aider · Copilot |
+|---|---|---|---|---|
+| Installed here | M yes, 2.1.259 | M **no** | M yes, 0.38.2, never authenticated | M none |
+| Headless | M `-p`, json / jsonl / schema | D `codex exec` | M `-p`, json | D all |
+| Narrowable by argv | M `--tools`, `--restricted`, `--strict-mcp-config`; **not** `--allowedTools` | D `--sandbox`, `--ignore-user-config`; no per-tool flag | M `--approval-mode plan`, `--policy`, `--admin-policy`, `--allowed-mcp-server-names` | D OpenCode `--permissions …`; Copilot `--allow-tool/--deny-tool` |
+| MCP | M stdio / SSE / HTTP / WS, per-subagent inline | D yes | M `gemini mcp` | D most; Aider no |
+| Subagents | D depth 3, 20 concurrent, argv-definable | D TOML files with own sandbox mode | M none found | D OpenCode `--agent` |
+| Sandbox | D Seatbelt / bwrap, Bash only, filesystem **and network** layers, credential masking | D Seatbelt / Landlock, three modes, network off by default | M `-s` flag; mechanism unknown | D Amp hosted per-thread machines; Cursor `--sandbox` |
+| Policy seam | D 32 hook events, 12 blocking; **managed settings outrank argv** | D **`requirements.toml` outranks every flag** | M Policy Engine, `--admin-policy` | — |
+| Cost model | D subscription or key; **`--max-budget-usd` per run** | D both; included in every ChatGPT plan | low | D BYO key; Amp credits |
+| Second checker family | D **no** | D in principle, **blocked by #19945** until a headless rehearsal passes | M **yes, installed** | D yes; Amp two families in one runtime |
+| Shared config read | M `CLAUDE.md`, `SKILL.md`, `.mcp.json`; **imports codex and gemini config** | D `AGENTS.md`, `SKILL.md`, `config.toml` | M skills, extensions, **imports Claude Code hooks** | C `AGENTS.md` |
+| Worktree flag | M `-w` and `--tmux` | — | M `-w` | D Amp orbs |
+
+**(V3)** What is provider-neutral, because every runtime has a form of it: a headless invocation with a prompt in and
+a structured result out; a session id and resume by id; an instructions file and a `SKILL.md` bundle; MCP as the way a
+run reaches a capability; some per-run tool restriction, with a different vocabulary everywhere; a working directory
+as the confinement unit; a git worktree as the isolation unit. What is provider-bound, each in exactly one place:
+Anthropic's hook event set and managed-settings precedence, `crossSessionInbound`, `Workflow`'s removal from every
+subagent, Routines, Remote Control, `--max-budget-usd`, the one-hour subscription cache; OpenAI's `requirements.toml`;
+Google's Policy Engine. **The asymmetry worth naming: the capability layer is close to neutral and the policy layer
+is not. The shapes are portable; the guarantees are not.** Switching a provider changes the argv file and the price
+and nothing else, and a provider that retires a model pin is caught by the nightly probe rather than in month six.
+**(V3)** Model ids live in `settings.yml`, never in prose: this repository's pinned model set is behind the price list
+— Fable 5.1 and Opus 4.8 are current — so a brief naming a current model fails a blocking lint in TREE A for being
+unrecognised, which is the failure this rule prevents.
+
+### 14.7 The measured facts that bind
+
+**(V3, the handoff's list; where each bites in this plan)** These are facts about this Mac, this account and these
+runtimes, measured 2026-09-02 to 2026-09-04. They are not design, and nothing above contradicts them.
+
+| Fact | Where it bites |
+|---|---|
+| `--allowedTools` restricts nothing; a `claude -p` child is narrowed by `--restricted --tools <list> --strict-mcp-config --permission-mode dontAsk --permission-prompts none --add-dir <wt> --max-budget-usd <n>` under a managed settings file the founder writes outside the repository | §7.5 the argv; §9.7 the managed file |
+| The prompt cache lives one hour on the subscription, five minutes on a key or on credits; cache reads were 57% of the historical bill | §14.5; §3.1 batching by shape |
+| Peer isolation is enforceable: `crossSessionInbound: refuse` outranks every source; `permissions.deny: ["SendMessage","ListAgents"]`; `isolatePeerMachines: true` | §9.7; §7.7 the probe |
+| The sandbox has a full `network` block and a `credentials` block; nothing lifts an inbound `bind` | §9.7; §7.4 the Sender is a program |
+| `--bare` is an API-key cell: no OAuth, five-minute cache, no Routines, no Remote Control, no inbox socket | §5.2 |
+| `claude -p` starts in `default` mode by construction; the `auto` seen here came from user settings | §5.4; §9.7 |
+| `Workflow` is removed from every subagent by a documented universal filter | §9.7 |
+| `SIGTERM` gives exit 143 and a resumable turn; a background subagent holds its parent open up to ten minutes idle; `maxTurns` marks output partial and resumable | §6.1; §6.4 |
+| `gemini` 0.38.2 is installed and has never authenticated; `codex` is not installed; openai/codex#19945 is open since 2026-04-28 with no maintainer response | §5.2; §7.5; §7.6 headless rehearsal |
+| Money is an axis in the runtime: `--max-budget-usd` per run; a gateway key budget is the only one that survives a provider change and bounds a rate | §9.6; §15.3 |
+| The account's five-hour window stops every agent at once; it stopped two lanes mid-write on 2026-09-04 | §5.1; §6.4 write-as-you-go |
+| `claude agents` is a shipped state-ordered strip board; `/voice` is native and works into agent view; no product reads an instruction back before acting; the Channels permission relay binds an approval to the exact tool call; a published artifact's comments wake the publishing session with a thread id | §13.2; §13.6; §13.4; §13.10 |
+| No spatial renderer of Claude Code agents exists; every spatial project is a display and every control surface is a table; Generative Agents' `demo` mode renders from one JSON file with no model | §13.8 |
+| Nobody has run a real business profitably unattended; nobody has measured overnight against bounded operation; nobody has built a detector for an agent misreporting its own progress; per-action approval is the weakest control anyone has measured (13.6% of disguised dangerous commands caught; 97% of prompts approved; 39% of whole plans rejected) | §8.5 the reconciliation; §9.2 which-not-may-I; §19 the overnight premise as an open decision |
+
+**Enforced by:** `keel/shared/facts.yml`, one row per fact with its date and the command or URL that re-measures
+it, checked for expiry by the cheap pass like any other fact (ABSENT; the substrate is `scripts/ledger.mjs`, RENAMED).
+
+---
+
+## 15 · Economics — where the money and the window actually go
+
+### 15.1 What is measured, per run, always
+
+**(KEEL)** Every run's handover carries its actual cost and the ledger accumulates it. There is no estimation step
+anywhere; the Desk ranks on measured medians of past runs of the same shape and kind.
+
+| Rolled up to | Answers |
+|---|---|
+| per run | what did this piece of work cost, and on which window |
+| per intent | what has this goal cost against its ceiling |
+| per venture per month | am I inside what I said this venture may spend |
+| per window | how much went to Claude, Codex, Gemini, local — **the number that predicts which fuse blows first** *(founder)* |
+| per anchor rung | how much of what I believe is rung 1, and how much is rung 4 |
+
+**(KEEL)** That last row is a **quality-of-belief** metric: the fraction of finished work whose done-test was checked
+by something deterministic. If it falls, the system is producing more and knowing less, and no cost number would
+reveal it. **(V3)** The meter is the runner's own reported cost record, joined by the id minted at dispatch — not
+output tokens (11% of the bill), not a window heuristic (cannot attribute). One review session on this machine
+produced 1.4 million output tokens in five hours with no loop running, and a meter without a per-run axis cannot see
+that. **Enforced by:** `keel/logbook/ledger.jsonl` written from each run's `--output-format json` cost fields
+(ABSENT); TREE A's `bin/warroom` per-worker cost pricing exists and is RENAMED into it.
+
+### 15.2 Where cost is actually saved
+
+**(KEEL)** Not by making the runs thriftier; by moving work off the expensive window.
+
+```mermaid
+flowchart LR
+    ALL["All the work a company does"] --> S1{"Is a human waiting?"}
+    S1 -->|"no"| S2{"Deterministic?"}
+    S2 -->|"yes"| Z["ZERO — no model"]
+    S2 -->|"no"| S3{"Extraction, ranking,<br/>classification, search?"}
+    S3 -->|"yes"| L["LOCAL — electricity"]
+    S3 -->|"no"| S4{"Judgement or generation?"}
+    S4 -->|"routine"| G["GEMINI window"]
+    S4 -->|"mid-to-hard"| B["CODEX or CLAUDE window"]
+    S1 -->|"yes"| I["CLAUDE window — the Floor,<br/>and the founder is here"]
+    B -.->|"only if a metered key is ever bought"| BATCH["BATCH — ~85–90% off. Deferred (§1 row 19)"]
+```
+
+**(KEEL)** The claim to hold the design to: **the majority of what a company does every day is not generation.** It
+is reading, sorting, checking, remembering, watching and summarising; all of that belongs on the bottom three rows,
+and the Claude window should be spent almost entirely on building and on judgement.
+
+### 15.3 The cost formula, kept for the day a key exists
+
+**(V3)** Two competent reviewers priced this machine's predecessor within days of each other and diverged tenfold —
+$74 a month against $1,300 to $1,700 — on one assumption, the cache hit rate, which sets whether context costs 0.1×
+or 1.25× per token on the 89% of the bill that is context. The plan does not pick a number; it says what determines
+it, and it is the same arithmetic in window units on a subscription:
+
+```
+cost per night ≈ (standing prompt bytes) × 1.25   on the first run of a batch
+               + (standing prompt bytes) × (siblings − 1) × 0.10   on every sibling that hits
+               + (divergence bytes per run) × siblings
+               + output
+Dominant term, by a distance: whether siblings hit the cache.
+Fails if: shapes vary per run, or the standing prompt is regenerated, or the TTL is shorter than the batch.
+```
+
+**(BOTH)** So the first thing measured, before any estimate is believed, is **ten real moves against the runner's own
+reported cost** — on the subscription, in window units per run. Every prior round's dollar figure is kept as a target a
+real bill can falsify, never as an estimate to plan on.
+
+### 15.4 The stop rule
+
+**(KEEL)** An Intent that has consumed its ceiling stops and comes back with what it has. It does not get an extension
+automatically, and no run may raise its own ceiling. Sunk cost is explicitly not an argument for continuing: the
+briefing shows what was spent and what was achieved, and the founder decides whether to renew — a which, with the
+alternative already framed. **(V3)** The rope stops starting, never stops landing: at a fraction of a window new work
+stops; commit, push, the anchors, the logbook write and the reconciliation stay permitted. A model with no entry in the
+price table is refused, not scored at zero.
+
+### 15.5 Budgets, in the founder's list's words
+
+**(V3, re-placed in Keel's terms)**
+
+| The founder asked for | Here it is |
+|---|---|
+| budget in money · daily spend cap · spend-rate limit | the charter's money ceiling per month and `usd_per_day` per tool; the Sender rejects at the ceiling independently of the number in the instruction; a tool with a null rate cannot carry `SPENDS MONEY` |
+| budget in hours | the reserve per window, and the venture's ceiling per window |
+| per-mission cost · per-worker cost · cost attribution | per intent and per run, joined by the id on every row; per shape × window × move class as views over it |
+| mission budget cap · investment stop criteria | the intent's ceiling and expiry; the stop rule |
+| exploration vs exploitation spend | idle capacity buys knowledge, bounded by being free; *both options built* is the only sampled diversity |
+| cheap-tier bulk usage | the Gemini window; batch on the day a key exists |
+| cache-hit cost rate | measured per run from the runner's record; the dominant term, one line weekly |
+| company P&L · revenue tracking · payment analytics · burn · runway | a venture's own work; revenue read from the processor as a claim, never typed; a runway computed from a number the bank does not confirm is stamped *internal* and cannot promote anything |
+| ROI per mission | cost per finished intent; revenue attribution this founder mostly cannot make honestly yet, so it is reported as undefined rather than as a guess |
+| unit economics per agent | none: there is no standing agent; per run and per intent are the real units |
+
+**(V3)** Two numbers every week, whether or not they flatter, and both must fall: **cost per finished intent** and
+**founder-minutes per finished intent**. One that is reported and must be undefined when it is undefined: **cost per
+surviving artifact**, because a month of cheap runs that produced nothing has no such number, and reporting a small one
+is the arithmetic by which producing nothing looks efficient. **(V3)** The harness's own share of every window has a
+ceiling and it is a line in the briefing (§4.5).
+
+**Enforced by:** `keel/logbook/ledger.jsonl` (ABSENT) · the price table in `keel/settings.yml` (ABSENT) · the three
+ceilings (§9.6) · the weekly lines in the briefing (ABSENT).
+
