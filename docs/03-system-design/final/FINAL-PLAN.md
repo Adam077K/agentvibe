@@ -1124,3 +1124,711 @@ a new field — standing diversity sampling is refused (§1 row 24).
 **Enforced by:** the rung table read by `keel/bin/reconcile` (ABSENT) · `keel/ventures/<v>/ship-log.md` written only
 by that program (ABSENT).
 
+---
+
+## 9 · Control — what may be done alone, and what never
+
+**(KEEL)** The founder refuses a machine that is only brakes. This section does not add brakes. It removes the need
+for most of them by deciding once, per venture, what does not need asking — and makes the remaining few absolute.
+
+### 9.1 The envelope
+
+**(KEEL)** Three lists in the Charter, in the founder's own words, read by every run:
+
+```
+may-alone:  what runs without asking, ever
+never:      what is not done by this system under any circumstance
+wake-me:    the exact conditions that interrupt me, each with a number
+```
+
+**(KEEL)** The naval standing-orders and night-orders pair, with two details copied exactly: the call-me list carries
+**numeric thresholds** — closest point of approach under 1.5 miles, wind up one Beaufort force — never "if something
+seems wrong"; and the governing sentence *call the captain on any doubt whatever, before an emergency has developed*
+is what stops a threshold list becoming a loophole. An envelope written the way the founder would say it:
+
+```
+may-alone:  write code · run tests · make branches · research anything · draft anything ·
+            build both options of a choice · spend up to the venture ceiling on capacity ·
+            read my calendar and mail
+never:      send mail as me · post publicly · pay anyone · sign anything · touch production
+            data · change a live price · contact a customer · delete anything a person made
+wake-me:    a customer is waiting more than 4 hours · spend crosses 60% of the monthly
+            ceiling · a done-test that passed for 7 days starts failing · anything I said
+            'never' to is now the only way forward · a run has been blocked on the same
+            thing three times
+```
+
+**(V3)** Every charter starts from a **default `never` list** held as data, longer than any tiering system covers,
+and the founder deletes from it rather than writes to it: a secret in a published artifact · a migration without a
+proven down-path · a deploy that emits mail or mutates data · money outside a standing, capped, rate-limited allowance
+(a new payee, a new rate, a raised ceiling are doors; spending inside the ceiling is not) · a domain lapsed or bought ·
+**anything delivered to a person** — a send, a post, a press reply, a launch, a store release, a share link · a burned
+sending domain · a signature · a price change on existing customers · a partnership term · an offer, and a termination
+· publication before a patent filing · a trademark class · an entity type · a cap table · an erasure · an account
+deletion · a bulk merge · a missed statutory deadline · any edit to the system's own judging machinery · **and a kill
+decision.** **(V3)** And every charter starts from a **default `wake-me` template** of five conditions about
+consequence, never policy: a one-way act wanted · damage (an error rate, a churn event, a furious reply, an unexpected
+bill, a reconciliation that disagreed with the bank) · a kill criterion the founder wrote on the day the intent opened
+· a contradiction between an anchor and something the founder said out loud · a statutory clock. **Enforced by:**
+`keel/shared/never-default.yml` and `wake-me-default.yml` merged into each charter at load (ABSENT).
+
+### 9.2 The rule that decides what belongs in `may-alone`
+
+**(KEEL)** Not importance, not risk vocabulary: **reversibility**. Two-way doors are made fast at ~70% of the
+information you would like, because the cost of delay exceeds the cost of a correctable mistake; one-way doors get
+slow, deliberate treatment.
+
+```mermaid
+flowchart TD
+    ACT["A run wants to act"] --> Q1{"Can the system itself undo this<br/>within an hour, with no one else noticing —<br/>and has that undo been DRILLED within N days?"}
+    Q1 -->|"yes"| TWO["TWO-WAY DOOR<br/>Do it. Record it, with the undo path. Do not ask."]
+    Q1 -->|"no"| Q2{"Does it reach a person,<br/>money, or the public?"}
+    Q2 -->|"yes"| ONE["ONE-WAY DOOR<br/>Never alone. Build it, stage it, ask WHICH."]
+    Q2 -->|"no"| Q3{"Does it destroy<br/>something a human made?"}
+    Q3 -->|"yes"| ONE
+    Q3 -->|"no"| Q4{"Inside 'may-alone'<br/>for this venture?"}
+    Q4 -->|"yes"| TWO
+    Q4 -->|"no"| QUEUE["Queue a WHICH.<br/>Keep working on everything else."]
+    ONE --> STAGE["Staged: the artifact exists,<br/>hashed, ready, unsent"]
+    STAGE --> TAP["One tap runs the Sender"]
+    STAGE -.->|"a class the charter WIDENED"| WIDE["The Sender runs without the tap,<br/>after a recall window, inside the ceiling"]
+```
+
+**(KEEL)** The staged-not-sent pattern is the whole trick. A tweet is written, previewed and sits there; an email is
+drafted with the recipient filled in; a deploy is built and waiting. The founder's tap is the only irreversible step
+and takes a second because everything else is already done — which is what makes *ask me only what only I can answer*
+affordable: the asking blocks the last inch, never the work. **(KEEL, founder-confirmed)** Nothing outward runs alone
+until the founder widens it, **per venture and per class**: an exception is written into one venture's `may-alone`
+for one named class of action with its own limit, and can be withdrawn without touching any other venture. There is no
+setting that turns outward action on everywhere at once. **(V3)** Two additions. **An undo is drilled or the door is
+one-way**: a two-way door whose undo has not been exercised within N days is treated as one-way until it is — the drill
+runner writes only a date — by Keel's own rule that an untested kill switch is a story about a kill switch. **A
+widened class executes after a recall window**, not on the instant: the Sender holds it for a window sized to the
+blast radius, the phone can recall it, and the receipt says plainly when a recall is not an undo. **Enforced by:** the
+door test runs in the Watch before a brief carries a `REACHES THE WORLD` grant (ABSENT) · the drill dates in
+`keel/shared/tools/<name>.yml` (ABSENT) · `keel/bin/send` (ABSENT).
+
+### 9.3 Tools — how one is admitted, and what stops it
+
+**(KEEL, founder-confirmed: all fifteen go back through this door, one at a time)** The largest live exposure in the
+founder's environment: about fifteen services connected today, "by clicking a button, not by a decision". Scans found
+critical vulnerabilities in 33% of 1,000 MCP servers and some finding in 66% of 1,808; three attacks are documented
+and none needs the founder to do anything wrong — tool poisoning (instructions hidden in a description), the rug pull
+(a server passes review, then silently changes its description; CVE-2025-54136), line jumping (the server steers the
+agent without appearing in the log). The prediction the founder can check: several will not survive the first
+question.
+
+```mermaid
+flowchart TD
+    NEW["A tool is proposed<br/>(MCP server, CLI, API, browser, repository)"] --> WHY{"Which Intent needs it,<br/>and what does it replace?"}
+    WHY -->|"no intent needs it"| NO["Not admitted.<br/>'Might be useful' is not a reason."]
+    WHY -->|"a named intent"| CLASS["Classify: READ-ONLY · WRITES LOCALLY ·<br/>REACHES THE WORLD · SPENDS MONEY —<br/>and its undo, with a rate where there is one"]
+    CLASS --> PIN["Pin the version.<br/>Hash the tool descriptions.<br/>A human reads the full description once."]
+    PIN --> SCOPE["Scope the credential:<br/>one venture, least privilege, an expiry —<br/>narrower than the tool"]
+    SCOPE --> TRI{"Would granting this create<br/>the trifecta on any path?"}
+    TRI -->|"yes"| SPLIT["SPLIT THE RUN (§9.4) —<br/>structural, not a setting"]
+    TRI -->|"no"| REH
+    SPLIT --> REH["Rehearse it: a known call, a known answer,<br/>on its DRY branch, headless"]
+    REH --> CEIL{"A counter and a ceiling,<br/>and does the ceiling REJECT?"}
+    CEIL -->|"no"| NO
+    CEIL -->|"yes"| ADMIT["Admitted, with a horizon.<br/>Day (Floor only) · night · never"]
+    ADMIT --> WATCHIT["Every call logged.<br/>Description hash checked each session.<br/>Probed every night (§7.7)."]
+    WATCHIT -->|"hash changed"| FREEZE["FROZEN — a rug pull until proven otherwise.<br/>The founder is told."]
+    WATCHIT -->|"horizon passes"| RENEW{"Still used by a live Intent<br/>in the last 90 days?"}
+    RENEW -->|"no"| REVOKE["Revoked. Credential rotated."]
+    RENEW -->|"yes"| ADMIT
+```
+
+**(KEEL)** Hashing the descriptions and re-checking them every session is the specific countermeasure to rug pulls,
+and it is a string comparison. **(V3)** The door's other questions, folded into the boxes above: a declared exposure
+and a rate (a tool that cannot say what its own undo costs does not enter); a dry branch, and dry is the default (a tool
+that cannot dry-run enters only as a founder-signed commitment); a credential narrower than the tool; a probe every
+night in the environment the run actually uses; a counter and a ceiling that rejects; and for a repository, *what does
+it give us we could not build in a day, its LICENSE file, our monthly test, what breaks if it disappears, is it alive*
+— **take the mechanism, not the dependency**, because every framework that wants to own the loop is a second control
+plane beside the runtime, and two implementations of one thing disagree silently; this repository has hit that three
+times. **(V3, measured)** An MCP tool call reaches a hook only if the hook's matcher names that tool, so a hook that
+matches `Bash|Edit|Write` governs no MCP call; every admitted server is named in the run's argv and is otherwise absent
+by `--strict-mcp-config`. **(V3)** The grant surface today is inverted from the right one — a social publisher, a mail
+client that can send, a drive client that can share, a remote compute sandbox and the authenticated browser are all
+connected; analytics, error tracking and a read-only billing key are not — so read-only instruments are admitted
+first, because instruments buy freedom and hands spend it. **Enforced by:** `keel/bin/door` writing
+`keel/shared/tools/<name>.yml` (ABSENT) · the description hash check in `keel/bin/run` (ABSENT) · the nightly probe
+(ABSENT) · `claude mcp list` every night with a failure counted as damage (the command exists; the check is ABSENT).
+
+### 9.4 The trifecta rule — the one structural safety rule
+
+**(KEEL)** An execution path that holds all three of **private data**, **untrusted content** and **the ability to
+communicate outward** is exploitable by indirect prompt injection, and there is no prompt that fixes it. The only
+reliable defence is to guarantee one leg is missing, which is why this is a shape rule and not a policy file.
+
+```mermaid
+flowchart TB
+    subgraph BAD["FORBIDDEN — one run holding all three"]
+        X1["private data"] --- X2["untrusted content"] --- X3["can send outward"]
+    end
+    subgraph GOOD["The split — two runs, one boundary"]
+        R1["SCOUT<br/>reads the untrusted world.<br/>NO credentials. NO private data. NO sending."]
+        R1 -->|"returns FACTS ONLY,<br/>quoted, never as direction"| BOUND["Boundary:<br/>fetched content is data"]
+        BOUND --> R2["MAKER<br/>has the private data.<br/>NEVER reads raw fetched text.<br/>Stages; the Sender sends."]
+    end
+    BAD -->|"is replaced by"| GOOD
+```
+
+**(KEEL)** The run that reads the internet is never the run that holds the keys. Anything from outside — a web page,
+an email body, a document, a tool's own response — is data to be quoted, never direction to be followed. **(V3)**
+Taint closes the seam: any run that has read content from outside the company has its grant narrowed for the rest of
+its life — it keeps reading, reasoning and writing, and loses the tools that act; if it concludes something should be
+sent it says so in its handover, and a different run that has not read the foreign content decides. *The web page told
+the agent to email the founder's contacts* becomes structurally impossible rather than heuristically unlikely. **(V3)**
+And the one place a written procedure belongs: where the judge is absent and the act cannot be taken back — sending to
+a list, a migration over real data, a filing, a charge — a short checklist lives with the tool, there are about a
+dozen, and the Sender reads each one aloud into the logbook because it contains no model and cannot decide to skip an
+item.
+
+### 9.5 The world's door
+
+**(BOTH)** When the world sends something — a reply, a payment, a failed build, a CVE, an invoice, a support message —
+a program writes **one row** into the logbook and does nothing else. No model reads a stranger's text with a tool in
+its hand. The row becomes a line on the Balcony, and a scout with no credentials reads it. **(V3, measured)** Routines'
+API trigger already wraps an inbound payload in a block that labels it untrusted data, which is this rule implemented;
+and a delivered cross-session message starts a new turn carrying the receiver's full context, so an inbound path wired
+to a running run costs a context window per event, not a slot — which is why the door writes a row and never wakes a
+run directly. **Enforced by:** `keel/bin/inbound` (ABSENT).
+
+### 9.6 Ceilings, and the cord
+
+**(KEEL)** Two mechanisms from market-access rules, both deliberately blunt. **Pre-action, not post-review**: a spend
+that would breach a ceiling is blocked before it happens, never flagged after; there is no *warn at 80%* an agent can
+reason past; ceilings exist per run, per intent and per venture per month, and the tightest binds. **The cord**: one
+control that stops everything — cancels running work, revokes outward grants, finishes nothing new, leaves every
+artifact in place — reachable in one tap from the Balcony, one word on the Floor, one command in a terminal, and tested
+on purpose, monthly. It does not delete and does not roll back; undo is a separate, deliberate act, because the state
+after a panic stop is exactly when you least want an automatic mutation. **(V3)** The cord is a file, read first on
+every tick; the same tap recalls everything in the Sender's window; there is one kill and not two, because a kill that
+lives in a second place is a kill that disagrees. **Enforced by:** `keel/STOP` (ABSENT) · the three ceilings in
+`keel/bin/run` and `keel/bin/send` (ABSENT) · `--max-budget-usd` per run (exists).
+
+### 9.7 What makes a grant real — the measured seam
+
+**(V3, measured on this Mac)** Keel's tool grants are argv and files; this is what holds them in place, and every
+line is a measurement, not a design. **The managed settings file**: four lines of JSON in a directory no run can reach,
+the only tier a running process cannot clear, because a process holding a shell can strip its own guardrails by
+launching a child with different settings — and it does not exist yet. **Peer isolation is enforceable by a
+checked-in file**: `crossSessionInbound: refuse` drops every inbound message and, uniquely, applies from project or
+local settings over every other source; `permissions.deny: ["SendMessage","ListAgents"]` removes both tools;
+`isolatePeerMachines: true` requires human approval before any message leaves the machine even in bypass mode. A run
+cannot be stopped from binding an inbox socket; it can be stopped from receiving anything and from holding the tools
+to send. **The sandbox has a full `network` block** (`allowedDomains`, `strictAllowlist`, `allowManagedDomainsOnly`,
+`tlsTerminate`) **and a `credentials` block** (`mask`, per-host `injectHosts`) — the scout's read-only proxy and the
+Sender's key-at-egress, both unused here; two documented holes stay in the plan: `excludedCommands` and `allowRead`
+merge across scopes with no managed-only lock, and the proxy does not inspect TLS by default, so a broad allowed
+domain is an exfiltration path. **Nothing lifts an inbound `bind`**, which is why the Sender and the Watch are
+programs and not runs. **The sandbox is a guardrail against accident, not containment**: `failIfUnavailable` is set,
+`denyRead` covers the credential stores, and there is a documented escape hatch. **The pre-tool hook matches command
+strings and is the wrong shape** — it once blocked a document for mentioning a command; its rewrite to structured tool
+input is an edit to the judging machinery and is the founder's (§19). **`Workflow` is removed from every subagent by a
+documented universal filter**, so a run that declared it would get a silent no-op — the gate may never be invocable by
+the thing it gates, which stays true. **The classifier under auto mode**: humans approve 97% of per-action prompts and
+catch 13.6% of disguised dangerous commands, decaying to 5% after fifty; the classifier catches 89%; runs here use
+`dontAsk` because a model's judgement is not a gate, and whether the classifier binds in print mode is one measurement.
+**Enforced by:** the managed file (a founder act, ABSENT) · the checked-in isolation file (ABSENT) · the probe
+(ABSENT) · `npm run test:sandbox` (exists).
+
+---
+
+## 10 · Memory — what is remembered, who writes it, and what rots
+
+### 10.1 The one rule that shapes all of it
+
+**(KEEL)** **The thing that acts never edits memory.** Letta runs two agents per identity: a primary that talks and
+acts with no tools to edit its own core memory, and a sleep-time agent that reflects over history in idle time and
+rewrites the shared blocks. That separation is the mechanism, for a reason the founder will recognise: memory written
+as a side effect of doing the work is written by the most biased possible author, in the moment they most want to
+believe they succeeded. A run *proposes* memory in its handover's `learned` field; the night curator (§7.2) decides
+what is admitted.
+
+### 10.2 What is remembered, and where
+
+**(KEEL)**
+
+```mermaid
+flowchart TB
+    subgraph RECORD["The record — not memory: the truth"]
+        LOG["Logbook<br/>append-only, typed, every run, every tool call,<br/>every cost, every outward act.<br/>Never edited. Never summarised in place."]
+    end
+    subgraph MEM["Memory — small, curated, expiring"]
+        F["FACTS<br/>true things about a venture<br/>· source · expiry · falsifier"]
+        T["TASTE<br/>what the founder accepts and rejects<br/>· the evidence that showed it"]
+        N["NEGATIVES<br/>what was tried and failed, and why<br/>· the command that reproduces it"]
+        B["ALREADY-BUILT<br/>what exists, where, what it does"]
+        C["CRAFT<br/>proven field kits, examples of good"]
+        O["OPEN<br/>questions waiting on the founder"]
+    end
+    LOG -->|"the night curator reads"| CUR["Curator: proposes deltas"]
+    CUR --> F & T & N & B & C & O
+    MEM -->|"a SLICE, assembled per run"| RUN["A run's context"]
+    RUN -->|"handover.learned"| LOG
+```
+
+**(KEEL)** Scope, strictly: `TASTE` and `CRAFT` are the founder's and cross every venture; `FACTS`, `NEGATIVES`,
+`ALREADY-BUILT` and `OPEN` are per venture and do not cross without a promotion. Credentials are not memory and are
+never in any of these files. **Every item carries four things**: where it came from, when it was written, when it
+expires, and what would falsify it; an item with no expiry is not accepted. **(V3)** Retraction works because the
+logbook is the only truth and every store is a derived view: *ignore that interview, he was pitching me*, and
+everything downstream is recomputed with a list of what moved; a corrupted store is a rebuild, not a disaster; a better
+curator next year is re-run over the whole logbook.
+
+### 10.3 How memory is written — deltas only, never a rewrite
+
+**(KEEL)** The failure mode has a name and a paper: **context collapse**, where repeatedly asking a model to rewrite its
+accumulated context squeezes the specifics out until the knowledge is gone. The cure the same paper demonstrates is
+incremental delta operations — ADD, UPDATE, REMOVE against individual items — by a separate curator, never a wholesale
+regeneration.
+
+```mermaid
+flowchart TD
+    HAND["Handovers since the last pass"] --> CUR["Night curator<br/>(routine window; a maker whose only<br/>writable scope is the memory files)"]
+    CUR --> P["Proposes deltas, one item at a time"]
+    P --> CHECK{"For each proposed delta"}
+    CHECK -->|"ADD"| A1{"Does an item already<br/>say something close?"}
+    A1 -->|"yes"| A2["UPDATE that item instead.<br/>Never two items on one fact."]
+    A1 -->|"no"| A3{"Is it anchored?<br/>(§8 — evidence, not an opinion)"}
+    A3 -->|"no"| DROP["Dropped. Stays in the logbook,<br/>which is never lost."]
+    A3 -->|"yes"| WRITE["Written, with source + expiry + falsifier"]
+    CHECK -->|"UPDATE"| U1{"Does it contradict<br/>an existing item?"}
+    U1 -->|"yes"| CONF["CONFLICT: keep both, mark both;<br/>ask the founder only if a live Intent<br/>depends on which is true"]
+    U1 -->|"no"| WRITE
+    CHECK -->|"REMOVE"| R1{"Expired, or falsified<br/>by evidence?"}
+    R1 -->|"either"| ARCH["Archived, not deleted"]
+    R1 -->|"neither"| KEEP["Refused. Only evidence removes<br/>an item, never tidiness."]
+    WRITE --> SIZE{"Store over its size cap?"}
+    SIZE -->|"yes"| EVICT["Evict the least-retrieved, nearest-expiry<br/>items to the archive. Never delete.<br/>A stub stays under every heading."]
+```
+
+**(KEEL)** A conflict is kept, not resolved: two items that disagree is information, usually that something changed;
+silently picking one is how a store becomes confidently wrong. **(V3)** The eviction rules already exist on this
+machine as `scripts/evict-memory.mjs` (TREE A, present): an entry marked irreversible is never archived while its
+subject exists, anything cited by a live item is pinned, every archival leaves a stub under the original heading so a
+citation still resolves, and the archive rotates in capped volumes rather than being pruned — RENAMED into the
+curator's REMOVE and EVICT branches. **(V3)** Expiry with forced disposition already exists as `scripts/ledger.mjs`
+(TREE A, present): a durable item carries `valid_until` or it is not an item; when it comes due exactly one of refresh,
+deprecate or waive-with-a-new-deadline is recorded; a resolver never passes what it could not check (`unresolved` is
+distinct from `pass`) — RENAMED into the fact store's expiry mechanism.
+
+### 10.4 Negative knowledge is the highest-value store
+
+**(KEEL)** A newsroom's spike file records the stories that were killed and why, so the same idea is not re-reported
+next month. For an always-on system this is the main defence against burning capacity to relearn the same dead end.
+Every failed run, every rejected approach, every *we tried that* goes here with its evidence, and every brief carries
+the relevant slice in `negatives`. Facts age and craft generalises slowly, but a dead end is dead for a long time and
+knowing it costs one line in a brief — **the asset that makes an autonomous system get cheaper over time.** **(V3)**
+Each negative carries the command that reproduces the failure, and the Watch's repetition tripwire (§3.1) checks a
+run's proposed tool call against them before the call is made, so the pre-action check is the Watch's and cannot be
+skipped by the run.
+
+### 10.5 The transcripts — the largest unused asset on this machine
+
+**(KEEL, founder-confirmed: mine them, locally)** Thousands of past conversations sit on this Mac and nothing reads
+them. They contain, for free, the three things a new run most needs and can least invent: what this founder likes,
+what has already been built, and what has already failed.
+
+```mermaid
+flowchart TD
+    TR["Thousands of transcripts<br/>already on the machine"] --> LOCAL["Local pass — no API cost<br/>embeddings + SQLite vector index"]
+    LOCAL --> RED["Redact first:<br/>credentials, third-party PII,<br/>anything a client owns"]
+    RED --> SEG["Segment into episodes<br/>by project and by date"]
+    SEG --> MINE{"Local classifier<br/>sorts each episode"}
+    MINE -->|"'no, not like that' / 'yes, that's it'"| TASTE["TASTE candidates"]
+    MINE -->|"'we already built X'"| BUILT["ALREADY-BUILT candidates"]
+    MINE -->|"'that didn't work because'"| NEG["NEGATIVE candidates"]
+    MINE -->|"a decision with a reason"| FACT["FACT candidates"]
+    MINE -->|"a case with a known right answer"| REH["REHEARSAL cases (§7.6)"]
+    TASTE & BUILT & NEG & FACT --> SUM["The Gemini window summarises<br/>redacted extracts only"]
+    SUM --> CUR["Night curator — the delta rules of §10.3"]
+    REH --> BENCH["The rehearsal set that decides<br/>which loadouts may run unattended"]
+```
+
+**(KEEL)** Embeddings, indexing and the first-pass classifier never leave the machine; only redacted extracts are
+summarised by a model, on the routine window. This is the clearest example in the design of spending idle capacity on
+knowing more rather than doing more, and it is the work to do first, because everything else gets better once it
+exists. **(V3)** The transcript corpus on this Mac is 2,936+ files and the parsers that read them exist in TREE A
+(mission-control's index and `bin/warroom`'s cost pricing) — RENAMED into this pass; a transcript enters the logbook
+as an episode and never as retrieval memory.
+
+### 10.6 How a run gets its memory
+
+**(KEEL)** Not all of it. A slice, assembled by the Desk, ranked the way the Stanford generative-agents work ranks a
+memory stream — by **recency, importance and relevance together**, not similarity alone. Three things are always
+included regardless of score, because relevance scoring is a heuristic and three things must never be missed by one:
+the venture's `never` list, the negatives touching this exact move, and the open questions blocking this intent.
+**(V3)** The slice is ordered by cost: the byte-identical standing prompt first, so siblings share the cache; the
+charter and the intent next; the slice last. The slice says what it left out, and every item carries a counter
+scored by outcome, so the Desk is itself measured: work should pass its anchor first time more often than it did last
+month.
+
+### 10.7 How a failure is analysed
+
+**(V3, sourced)** A lesson is produced only by structured trajectory analysis over a failed run's trace, five fixed
+questions: what was the target; what did each step actually return; at which step did the observation stop matching
+the plan; what single observation would have distinguished the two; what would have been done differently. Never
+*what did you learn*: in sixteen frozen failure environments, zero of 121 free reflections named the correct cause,
+and the agent wrote confident wrong diagnoses into memory and reinforced them. The curator asks the five questions of
+every `stopped-on-defect`, `blocked` and `over-ceiling` handover; the answer is a NEGATIVE candidate.
+
+**Enforced by:** `keel/bin/curate` with the memory files as its only writable scope (ABSENT) · the item schema with
+source, date, expiry and falsifier required (ABSENT) · `scripts/evict-memory.mjs` and `scripts/ledger.mjs` (exist;
+RENAMED) · the local index under `keel/.index/` (ABSENT; deletable, rebuilt in one pass).
+
+---
+
+## 11 · Learning a field it has never seen
+
+**(KEEL)** The founder will run projects in fields nobody anticipated. A curated library cannot cover that — it covers
+what someone thought of in advance and rots between the thinking and the needing. So the system does not carry field
+knowledge; **it carries the ability to go and get some, and the discipline to throw it away if it does not prove
+itself.**
+
+### 11.1 The field kit
+
+**(KEEL)**
+
+```mermaid
+flowchart TD
+    NEED["A brief names a field<br/>with no CRAFT entry"] --> CHECK{"A field kit,<br/>unexpired?"}
+    CHECK -->|"yes"| USE["Load it. Proceed."]
+    CHECK -->|"no"| BOUND["Bound the question first:<br/>what must I know<br/>to pass THIS done-test?"]
+    BOUND --> SCOUTS["Fan out — scouts in parallel.<br/>The one place parallelism is earned."]
+    SCOUTS --> S1["how practitioners actually do it"]
+    SCOUTS --> S2["what good looks like — real examples"]
+    SCOUTS --> S3["what goes wrong — failure modes"]
+    SCOUTS --> S4["how anyone checks it — the anchors"]
+    S1 & S2 & S3 & S4 --> KIT["FIELD KIT, drafted"]
+    KIT --> FIELDS["Contents — four descriptive headings, NO procedure:<br/>· what good looks like, with 2–3 real examples<br/>· the anchors: how this field checks itself<br/>· the common failure modes<br/>· the vocabulary a practitioner uses"]
+    FIELDS --> PROVE{"Used on the real work.<br/>Did the done-test pass?"}
+    PROVE -->|"no"| DISCARD["Discarded. Recorded as a negative:<br/>'this framing of the field did not help.'"]
+    PROVE -->|"yes, once"| PROV["PROVISIONAL — 30-day horizon"]
+    PROV -->|"used and passed 3 times"| KEEP["Promoted to CRAFT.<br/>Longer horizon. Shared across ventures."]
+    PROV -->|"horizon passes unused"| DISCARD
+```
+
+**(KEEL)** A field kit contains no steps, and this is enforced by what its sections are: all four headings are
+descriptive and none can hold *first do this, then do that* — the founder's refusal of playbooks made structural
+rather than promised. Provisional-until-proven, discarded-if-unused, is the Voyager discipline applied to knowledge
+instead of code. Breadth-first research decomposing into independent directions is where the orchestrator-plus-
+subagents pattern earned its 90% gain; four scouts asking four questions do not need each other's context; four
+makers building one page do.
+
+### 11.2 Borrow before you build — the anchors a field already gives away
+
+**(V3)** The kit's *anchors* heading starts from an inventory of the deterministic checks the world gives away, and
+the list is long, which is why breadth is affordable:
+
+| Field | Free, deterministic checks that already exist |
+|---|---|
+| Code | compiler · type checker · test runner · linter · static analysis · mutation testing · dependency CVE scan |
+| Web performance | Lighthouse · field Core Web Vitals |
+| Accessibility | the automated WCAG subset (a third to a half of real issues; the honest number goes in the kit) |
+| Design | contrast ratio · token conformance · spacing-grid lint · visual regression against the last accepted render |
+| SEO | schema validator · rich-results test · sitemap and robots validators · canonical checks |
+| Email | SPF, DKIM, DMARC validators · a spam-score checker · unsubscribe-link presence (the law, not taste) |
+| Video | loudness to EBU R128 · audio/video sync · resolution and frame-rate conformance · duration |
+| Data | schema tests · row counts against a control · significance with a pre-declared sample |
+| Money | reconciliation: the number in the deck equals the number in the processor |
+| Distribution | the link resolves · the preview renders · the post exists an hour later |
+| Security | secret scanning that verifies · TLS and header checks · the trifecta audit of every tool |
+
+**(V3)** Security, privacy and compliance are all deterministic and all wired on day one: secret scan · access diff ·
+CVE clock · restore drill · consent trace · deletion query · policy-versus-code · export · uptime.
+
+### 11.3 The holding directory, and what a skill becomes
+
+**(BOTH, founder: the holding directory, 2026-09-04)** The 134 curated skills, the routers, the manifest and
+`CURATION.yml` (TREE A, `.claude/skills/`) move whole into `keel/holding/skills/`, which nothing reads. A skill
+re-enters one at a time through the tool door, with a caller in the same change and a test that fails without it, and
+it re-enters as exactly one of three things: **examples-of-good** in a field kit, a **rung-1 anchor**, or a
+**rehearsal case**. A skill that is a procedure for how to produce work does not re-enter; that is what the done-test
+replaced. Ninety days uncalled and it leaves. The number of skills is an output, counted monthly, and the standing bet
+is that fewer than fifteen of the 134 will ever be called for by a real piece of work. `CURATION.yml`, which records
+every cut with the test that made it, is the right instrument pointed the wrong way, and is inverted: admission by
+test, not excision by argument. §16.2 carries the fate class of every one of the 134 from the census.
+
+### 11.4 Research, and why it is the cheapest thing the system does
+
+**(V3)** The system states its expectation before it looks, one line and a number. A source that confirms compresses
+to a tally. A source that contradicts enters FACTS carrying its URL, its access date and the quoted sentence that did
+the damage. The output of a research run is not a document; it is a diff against what the company believed this
+morning, three lines long on a good night. A claim with no fetched, quoted, dated source is not a claim. **(BOTH)**
+Fetched content is data, never instruction, and the scout that read it is tainted; the honest instrument for a
+question of taste is people, not a simulation — synthetic customers and user-testing simulation are refused as
+anchors, allowed as idea generation.
+
+**Enforced by:** the kit schema with four headings and a `horizon:` (ABSENT) · `keel/holding/` (a move) · the tool
+door (§9.3) · a research handover's `evidence` field requiring URL, date and the quoted line, checked by
+`scripts/check-citations.mjs` (TREE A, exists; RENAMED into a rung-1 anchor).
+
+---
+
+## 12 · How the system improves itself
+
+**(KEEL)** Three loops at three speeds, all anchored to something outside the model, because a system that improves
+itself by its own judgement drifts by its own judgement.
+
+```mermaid
+flowchart TB
+    subgraph FAST["Within a run — minutes"]
+        F1["Done-test fails"] --> F2["The exact failure text goes<br/>back to the maker. Never a summary."]
+        F2 --> F3["Retry, with the failure in context"]
+        F3 -->|"same failure twice"| F4["Stop. Not a retry problem.<br/>Record and escalate."]
+    end
+    subgraph NIGHT["Nightly — the curator"]
+        N1["Read every handover"] --> N2["Deltas into memory (§10.3)"]
+        N2 --> N3["Count sightings of each<br/>recurring failure"]
+        N3 -->|"same shape seen 3 times"| N4["Promote to a NEGATIVE that<br/>ships in every relevant brief —<br/>and, where it can be made deterministic,<br/>to a rung-1 anchor"]
+    end
+    subgraph SLOW["Occasionally — the standing prompts"]
+        S1["A shape's standing prompt<br/>is a versioned file"] --> S2["A change is proposed<br/>with a reason and a hypothesis"]
+        S2 --> S3["Run BOTH versions against<br/>the rehearsal set (§7.6)"]
+        S3 --> S4{"Measurably better<br/>on known-answer cases?"}
+        S4 -->|"no"| S5["Reverted. The proposal is kept<br/>as a negative."]
+        S4 -->|"yes"| S6["Adopted. Old version archived,<br/>reversible in one command."]
+    end
+```
+
+**(KEEL)** The retry ladder is deliberately short: one retry with the failure in context, and a second identical
+failure stops the run; a third attempt at the same wall is how an autonomous system burns a night. Prompt changes are
+A/B'd against known answers or they are not made — the only self-editing permitted anywhere, bounded by the rehearsal
+set. **(V3)** A negative that can be turned into a deterministic check becomes one — a script, a trunk line, a test
+that fails without it — reviewed by the founder because three is a signal and not a proof; and the whole set re-runs
+monthly, a failing check quarantined rather than followed.
+
+**(V3)** **Corrections learn.** A founder redirect of a running run is logged as a defect in the *brief*, not in the
+run: a run that had to be redirected was told the wrong thing. **Interventions per surviving artifact** — redirects,
+rejections and rework divided by the artifacts that survived contact — must fall and cannot be gamed by producing
+more, because the denominator is survivorship. A rejection at a which is a labelled example in the taste profile by
+the next curator pass.
+
+**(KEEL)** **Horizons on everything durable** — charters, intents, kits, grants, memory items, loadout recipes,
+trust — replace every calendar audit: a rethink forced by expiry rather than remembered. Anything whose horizon passes
+must justify renewal in one sentence or it stops; no agent argues for its own existence. **(V3)** **The refusal line.**
+Every stop the system makes is answerable from the Desk's record (§13.7), and the briefing carries the week's most
+expensive refusal — what was going to happen, what stopped it, what it would have been worth. A refusal that tops that
+line four weeks running is a design defect wearing a safety costume, and is narrowed by name. **(V3)** **The rethink
+trigger** is a number, not a mood: the founder's own ideas stop reaching production, or interventions per surviving
+artifact rise for a month, or the same refusal tops the line four weeks running, or two of the six numbers (§20) move
+the wrong way at once. When it runs, the method is the measured one: a brief of the founder's words only, no floor,
+sealed minds writing a spine before reading, one merge that decides and keeps losing images.
+
+**(BOTH)** Refused: **fine-tuning**, which converts reversible artifacts into irreversible weights, removes the ability
+to see why the system behaves as it does, and needs a volume of clean labelled data that does not exist yet;
+**self-editing prompts** beyond the A/B'd change (the best-documented case hallucinated a test log to fake passing and,
+when detection markers were added, removed the markers); and **standing diversity sampling** — v3's fifth of every
+night's budget spent on work aimed at the founder's blind spots — because it multiplies cost with no anchor to pick
+between the outputs; the adversarial pressure the founder asked for comes from a different family and a test.
+
+**Enforced by:** the rehearsal set and git history of `keel/shared/shapes/` (ABSENT) · `keel/bin/curate` (ABSENT) ·
+the cheap pass checking horizons (ABSENT) · the counter of redirects per intent in the logbook (ABSENT).
+
+---
+
+## 13 · The surfaces — walking with it, and watching from the balcony
+
+**(KEEL)** Two surfaces over one state. There is no third source of truth, and neither surface has anything the
+other cannot reach.
+
+### 13.1 The whole picture
+
+```mermaid
+flowchart TB
+    subgraph STATE["One state — plain files in git"]
+        LOG["Logbook"] --- MEM["Memory"] --- INT["Charters + Intents + Obligations"]
+    end
+    subgraph FLOOR["THE FLOOR — the terminal"]
+        FL1["One agent. Beside you.<br/>Same memory, same envelope."]
+        FL2["Your fastest input.<br/>Nothing queues behind you."]
+        FL3["While you are here the system is STERILE."]
+    end
+    subgraph BALCONY["THE BALCONY — a rendered page, phone or Mac"]
+        B1["NOW — what is running, on what,<br/>burning which window, costing what"]
+        B2["DECIDE — the whiches, each with<br/>both options already built"]
+        B3["LAST NIGHT — the briefing"]
+        B4["VENTURES — tempo per venture,<br/>one tap to change it"]
+        B5["THE CORD"]
+    end
+    subgraph VOICE["VOICE — input only"]
+        V1["You speak. It transcribes, verbatim."]
+        V2["It writes back what it heard,<br/>in its own words, on screen."]
+        V3["You confirm by tap or text. NEVER by voice."]
+    end
+    STATE --> FLOOR
+    STATE --> BALCONY
+    VOICE --> STATE
+    BALCONY -->|"redirect · stop · pick · retempo"| STATE
+    FLOOR -->|"work, decisions, corrections"| STATE
+```
+
+### 13.2 The Balcony: five views and no dashboard
+
+**(KEEL)** The founder opens rendered pages and taps, and does not read dashboards. So the Balcony is not a
+dashboard: **every element is either a fact or a tap**, and nothing is only informational.
+
+| View | What is on it | What you can do |
+|---|---|---|
+| **Now** | one line per running item: what it is making, for which intent, which window, how long, what it has spent, the last thing it did; an item that needs you is cocked out of alignment *(V3)* | stop it · redirect it · watch it |
+| **Decide** | the whiches. Each carries six things *(V3)*: the question, typed FACT or PREFERENCE · the recommendation and its one reason · what happens if you say nothing (it waits, and expires on a date) · the class (two-way with its drill date · one-way) · the cost of being wrong · both options, built | tap one. That is the whole interaction |
+| **Last night** | the briefing (§13.4) | open any item · promote a proposal |
+| **Ventures** | one row per venture: tempo · live intents · spend against ceiling per window · three health facts, never a composite score | change tempo · adjust weight · park |
+| **Cord** | nothing | stop everything |
+
+**(KEEL)** *Watch it* means what it says: tapping a run in Now shows its live trace, tool call by tool call — the
+founder asked to see the agents work, and this is that; read-only from the phone, steerable from the Mac. Redirect is a
+typed verb, not a chat box, the four the agent-inbox pattern settled on: *go ahead · change this one thing · stop this
+· here is what I actually meant*. **(V3)** A question of fact cheaper than an hour is refused as a question and settled
+by the machine, with a receipt; a question of preference is asked, always, at any calibration. **(V3, measured)** On
+the Mac the Now view exists today for free: `claude agents` is a state-ordered strip board, needs-input first, with a
+PR column and peek-and-reply; what it lacks and the Balcony adds is venture as the axis, the window, the cost, and a
+label written at emission rather than by a model at render time.
+
+### 13.3 The Floor, and the sterile rule
+
+**(KEEL)** When the founder is working beside an agent, that is the highest-value use of the system, and nothing may
+degrade it. Aviation solved this with a regulation: below 10,000 feet no communication not required for the task is
+permitted, defined by phase of flight and applied automatically, because a series of accidents were caused by
+non-essential conversation during critical phases.
+
+```mermaid
+flowchart TD
+    SIT["Founder opens a terminal session"] --> ST["STERILE begins, automatically.<br/>Detected, not declared."]
+    ST --> HOLD["No new run on the Claude window.<br/>The venture under the founder's hands is held whole.<br/>Obligations and routine-window work continue (§1 row 16)."]
+    ST --> QUEUE["Everything that would have interrupted<br/>queues, in order, with its timestamp"]
+    QUEUE --> EX{"Does anything match<br/>the venture's wake-me list?"}
+    EX -->|"no"| WAIT["Waits. Silently."]
+    EX -->|"yes"| ONE["ONE line, at the bottom of the terminal.<br/>Not a popup. Not a page change."]
+    ST --> LEAVE["Founder leaves"]
+    LEAVE --> RESUME["Sterile ends. Queued items are summarised<br/>into ONE paragraph, never replayed one by one."]
+```
+
+**(KEEL)** Queued interruptions are summarised, never replayed: coming back to eleven notifications is the alarm
+problem again. **(V3)** On the Floor, and nowhere else, the founder's own hands are reachable — the signed-in browser,
+the send button — and each act still writes a Sender instruction with `signed_by: founder`, so the Floor leaves the
+same trail as the night and the reconciliation reads it the same way; when the founder acts outside the system
+entirely, the world's door records it from the mail log, and the system never pretends it did not happen. The
+founder can *take over* — edit directly while the agent yields and watches — and *hand back*; the transcript is an
+episode in the logbook, never memory. **(V3, measured)** The Floor's mid-flight verbs already ship: `Esc` interrupts
+and keeps the work, a queued message reaches the model between tool calls, `/btw` asks a side question, `/model` and
+`/effort` change mid-flight, `Esc Esc` rewinds code and conversation. **Enforced by:** sterile is detected from a
+live interactive session's presence in the logbook (ABSENT; the Watch's cheap pass) · the Floor is Claude Code with
+the charter, the envelope and the slice loaded by the session-start hook (`.claude/hooks/session-start.js` exists in
+TREE A at 2,941 bytes, under the 4,096-byte ceiling at which the runtime truncates; RENAMED).
+
+### 13.4 The briefing
+
+**(KEEL)** One page, generated on the routine window, opened when the founder feels like it. Its shape is the newsroom
+budget meeting and its required fields come from the handover discipline:
+
+```
+What moved             — intents that advanced, with the evidence, and the raw work: the render, the diff,
+                         the email that would go out, staged (V3)
+What finished          — done-tests that passed, and what they now enable; the ship log's new lines (V3)
+What is stuck          — blocked, and what would unblock it
+What I could not check — the low-confidence items, named honestly
+What is waiting on you — the whiches, in priority order
+What it cost           — against the ceiling, per venture, per window; the reserve's hit rate
+Books agree with the bank — the reconciliation line, or the incident (V3)
+Things I got wrong     — trust scores that fell, redirects, the week's most expensive refusal (V3)
+What I would do next   — proposals, none of them started
+```
+
+**(KEEL)** *What I could not check* is the field to fight for: a briefing that reports only successes trains the
+founder to trust the system uniformly, which is exactly wrong when some done-tests reach rung 1 and some only rung 4.
+**(V3)** The briefing shows the raw work, not a summary of it — the film set's dailies, whose function was never
+latency but that the accountable person looks at the actual output at a fixed hour and reacts. **(V3, measured)** It
+is a published page, and a published page is a two-way surface: the artifact runtime carries a shared database, viewer
+identity and comment threads; a comment the founder leaves reaches the publishing session as a wake-up carrying a
+thread id, and the session replies into the thread. **The margin of the briefing is a redirect channel addressed to an
+intent id.** First-party, private by default, free, and the founder's revealed channel is rendered pages they open and
+tap.
+
+### 13.5 The interruption budget, measured
+
+**(KEEL, decided under "idk means decide": three a day)** Every notification channel reports its own **acted-on
+rate** — of the things it raised, what fraction did the founder act on — and a channel below its threshold is
+automatically demoted from interrupt to briefing. The ICU finding turned into a control loop: 74–99% of alarms being
+irrelevant does not make people angry, it makes them stop looking. The budget is a hard cap: at most **three
+unprompted interruptions a day** outside the `wake-me` list; everything above it queues to the briefing, which is never
+an interruption because the founder opens it. **(V3)** Escalation is a count, not a level — the second ring says it is
+the second — and the run is never penalised for calling. **Enforced by:** the counter and the acted-on rate in the
+logbook, read by the Watch before it rings (ABSENT).
+
+### 13.6 Voice
+
+**(BOTH)** Voice is input, never confirmation. Speak freely, at any length, with transcription errors kept verbatim;
+the system writes back what it understood — as an Intent with a done-test, in its own words, on screen — and the
+founder confirms with a tap or a typed word. A spoken sentence never binds anything by itself. Audio out is available
+for the briefing on a walk, and nothing can be approved from it. **(V3, measured)** `/voice` is native, hold or tap,
+takes project and branch names as recognition hints, and works in the agent view's dispatch input; voice out was
+closed as a duplicate request; **no product reads an instruction back before acting**, so the read-back is built here.
+**Enforced by:** the read-back page (§2.4, ABSENT).
+
+### 13.7 Ask the company anything
+
+**(BOTH)** The founder wants to understand the whole system, not answers to questions. Four ways in, at four depths:
+*why did you do that* → the handover, then the brief, then the trace, then the chain of direction — this run ← this
+intent ← this charter ← the sentence you said, on this date. *Why did you NOT do that* → the Desk's ranking at that
+tick: what it considered, what gate stopped it — it lost the ranking, or hit the WIP limit, or was outside the envelope,
+or was spiked three weeks ago for a reason that is written down. *What do you believe about X* → the memory items on
+X, each with source, date, expiry and falsifier. *How does the whole thing work* → this document and its diagrams.
+Because a run cannot start without an intent id and an intent cannot exist without a founder sentence behind it, every
+single thing the system ever did traces back to something the founder actually said — not a logging feature, a
+consequence of the one rule in the spine.
+
+### 13.8 The room, through the door
+
+**(founder, 2026-09-04: "there are open-source projects")** The office view of the agents at work is admitted through
+the tool door like a scraper: its LICENSE read, its input declared (it reads the logbook's event feed and nothing
+else), its exposure read-only, a caller in the same change, a test that fails without it, an exit note. Because it
+reads and never writes, tests 1–3 are met trivially and the cost argument that put it after everything else
+disappears. **(V3, from the survey)** No Claude Code fleet surface is spatial, every spatial project is a display and
+every control surface is a table, and no project is both — which settles the rule rather than leaving it to taste.
+Rank 1 for admission: **Generative Agents' `demo` mode** (Apache 2.0), a top-down town that renders from one JSON
+file, four fields per agent per step — a tile, an emoji, a sentence, a nullable chat — no model, no backend, assets
+included; every live run is a light, and the sentence's four-level location path maps onto venture → intent → run →
+artifact with no schema change; the whole bill is porting about forty lines of routing off a dead Django, and the
+cheapest high-value experiment in any research file is one afternoon with a synthetic movement file. Rank 2: AI Town
+(MIT, alive), which needs Convex. Refused: WorkAdventure (AGPL with the Commons Clause, no RPC places an avatar),
+vibe-kanban (an unmaintained runtime that wants to own execution), ChatDev (the office is gone). **(BOTH)** The rules
+all prior rounds wrote and Keel's caveat agrees with: no notifications, no badges, no unread count, no obligations;
+never on the phone; never where a decision is made; nothing reads whether you watched it. Entertainment is a legitimate
+requirement and a disqualifying control surface, and the reason to be strict is that a beautiful surface will always
+win the argument against a useful one.
+
+### 13.9 The menu bar
+
+**(KEEL)** The smallest useful surface: a glyph that says running / waiting on you / stopped, reading the logbook,
+entering through the door like the room.
+
+### 13.10 What ships today, and what must be built
+
+**(V3, from the surfaces lane, 2026-09-04)** For walking-for-me the watching and the stopping are bought and the
+deciding is not; for walking-with-me the steering primitives are bought and the memory of what was said is not. In
+both halves the missing piece is the same: a durable, typed record of the founder's intent addressed to an id. Every
+vendor built the transport; none built the ledger; this repository already has one.
+
+| The verb | What ships today | Where it stops; what is built |
+|---|---|---|
+| Run unattended | cloud Routines (schedule ≥ 1 h, an API trigger, GitHub events, no prompts); Desktop scheduled tasks (local, die with sleep); `dontAsk` mode | Routines are cloud-only and cannot reach local files, so they are refused for the Watch; nothing reports whether the work was *good*. Built: the Watch, the Desk, the anchors |
+| See the fleet | **`claude agents`**: a state-ordered strip board, needs-input first, peek-and-reply; `claude-view` (MIT, read-only, cost gauges) | grouped by state or directory only; no venture, window, cost or verdict column. Built: Now |
+| Be told | Remote Control push; task notifications | two booleans and the model's judgement; no classes, budget or count. Built: the bell with `wake-me`, a budget and a count |
+| Approve from the pocket | the Channels permission relay over iMessage, Telegram or Discord, **binding to the exact tool call**; Remote Control holds `AskUserQuestion` indefinitely | nobody routes a **decision between two built things**; nobody carries a deadline with a class. Built: Decide |
+| Stop | `Ctrl+X` in agent view; `Esc` in a session | no fleet-wide halt, none that survives sleep. Built: the cord |
+| Redirect without killing | a queued message reaches the model between tool calls; `Esc` keeps the work; **a shell script can inject a message into a live session through the messaging socket the runtime exports** | dies with the session. Built: a redirect is a logbook row addressed to an intent, and a defect in the brief |
+| Speak | `/voice`, native; works in agent view | no read-back anywhere. Built: the read-back |
+| Take the wheel | Manus's browser operator; Cursor's remote desktop control | Built: *take over* on the Floor |
+| A page that answers back | artifact pages with a shared database, viewer identity, file assets and comment threads that wake the publishing session | Built: the Balcony and the briefing on that runtime |
+
+**(V3)** Six things must be built, and none is a dashboard: the bell with classes, a budget and a count · venture and
+window as axes · the label at emission · the read-back before binding · a durable annotation addressed to an intent id
+· the six-field Decide item. **Enforced by:** the Balcony as a published page declaring the database, user and comment
+capabilities (ABSENT; the runtime exists) · `keel/logbook/` as its only source (ABSENT) · `~/.agentvibe/events.jsonl`
+and mission control's SSE feed (TREE A, exist; the logbook's spine, RENAMED) · the room's JSON writer (ABSENT).
+
