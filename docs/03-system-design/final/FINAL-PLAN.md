@@ -18,7 +18,7 @@ measured:   TREE A = this branch (ceo-3-1788468144 = local main b2cabad). TREE B
             behind. Nothing was merged for this document. final/CENSUS.md holds every measurement
 not:        a build plan, a schedule, a first month, a price list. Nothing here is built. Nothing was pushed
 companions: final/COVERAGE.md (every item of the founder's list placed) · final/CENSUS.md (every path measured) ·
-            final/page/ (the phone-first page)
+            final/page/final-plan.html (the phone-first page, https://claude.ai/code/artifact/0183d6db-918f-44ab-aa13-9c82bf5097b3)
 ```
 
 ---
