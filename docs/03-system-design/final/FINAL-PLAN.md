@@ -85,7 +85,8 @@ one item: two landing pages, both live on staging, the cost of each, a recommend
 the bottleneck on one thing; it has cost four days.* **The night.** The Watch ticks every four minutes and mostly
 sleeps. Obligations first. Then, under each driven venture's ceiling, runs are born with a nine-field brief, work
 however they like, are checked by something outside the model, hand back seven fields, and die. Routine work — mail
-sorting, link checks, the night curator, transcript mining — burns the Gemini window and never touches yours. At
+sorting, link checks, the night curator, the summarising half of transcript mining — burns the Gemini window and never
+touches yours; the local half runs on electricity. At
 dawn, the briefing.
 
 ### What it is not
@@ -115,7 +116,8 @@ called an engine, a crew, a swarm, a council, a brain, a kernel, a mouth or a be
 **(NEW: two words added and why)** *Obligation* is added because Keel has no word for a promise with a due date and
 the founder's list carries statutory clocks, renewals and filings in three places; *Sender* is added because Keel
 says one tap sends and never says what program does the sending once a class of act is widened. Ordinary words —
-anchor, grant, loadout, shape, rehearsal, field kit, briefing, logbook, memory, window, reserve, the cord — are used
+anchor, grant, loadout, shape, rehearsal, field kit, briefing, logbook, memory, window, reserve, the cord, the
+curator, the world's door, the probe, the reconciler — are used
 as they read and are defined where they first appear.
 
 **(BOTH)** Two words are refused. *Playbook*: the founder named it as what killed creativity, and mission-command
@@ -335,7 +337,7 @@ flowchart TD
     G3 -->|"no"| G4
     G3 -->|"yes"| G5
     G4{"4 · Idle-time work that costs<br/>no Claude capacity?"}
-    G4 -->|"yes"| ROUTINE["The routine window: transcript mining,<br/>the curator, sweeps, link checks,<br/>second-family checking, regression re-runs"]
+    G4 -->|"yes"| ROUTINE["The routine window: the curator, sweeps, link checks,<br/>second-family checking, regression re-runs,<br/>the summarising half of transcript mining;<br/>the local half runs on nothing"]
     ROUTINE --> SLEEP
     G4 -->|"no"| SLEEP["Sleep until next tick"]
     G5{"5 · A live Intent with<br/>unfinished candidate work?"}
@@ -432,7 +434,7 @@ flowchart LR
         W["WATCHING<br/>no work; signals and<br/>routine-window sensing only"]
         P["PARKED<br/>nothing runs.<br/>Frozen, reversible."]
     end
-    D -->|"founder taps 'walk with me',<br/>or opens the Floor on it"| A
+    D -->|"founder taps 'walk with me'"| A
     A -->|"founder taps 'go'"| D
     D -->|"no live intent, or ceiling spent"| W
     W -->|"a watched signal fires"| PROP["Proposal → briefing<br/>never auto-promoted"]
@@ -449,7 +451,9 @@ flowchart LR
 | **Watching** | Sensing and routine-window only; proposals, never work; obligations always | near zero | "it tells me when something changes" |
 | **Parked** | Nothing except obligations with a statute. Archived, not deleted | zero | "it is safe and it is quiet" |
 
-**(KEEL, founder: two)** **At most two ventures may be driven at once, and the number is in `settings.yml`, not in
+**(NEW: the Floor and the tempo)** Opening the Floor on a venture does not change its tempo. A driven venture is
+held whole while sterile lasts (§13.3) and its dispatch resumes when the founder leaves; *attended* is the tempo of
+a venture that only ever moves beside the founder. **(KEEL, founder: two)** **At most two ventures may be driven at once, and the number is in `settings.yml`, not in
 this document.** It is a WIP limit and it is the mechanism, not a suggestion; a third driven venture does not add
 throughput, it adds cycle time to the other two. If the founder wants a third, the Balcony shows which one they are
 slowing down and asks which. **(NEW: Serve as a pattern, not a tempo)** Client work is a driven or attended venture
@@ -541,8 +545,8 @@ on the day it matters. **Enforced by:** the cheap pass reads the founder's last 
 
 **(BOTH)** One Claude account, one rolling five-hour window, and when it runs out **every agent stops at once** — a
 shared fuse, not a per-agent limit; it stopped two lanes mid-write on the day this was written. Any design that treats
-runs as independent workers is wrong here: they are loads on one circuit. A grid never dispatches to 100% of capacity;
-it holds a reserve, part of it spinning. Same structure, same justification.
+runs as independent workers is wrong here: they are loads on one circuit. **(KEEL)** A grid never dispatches to 100% of
+capacity; it holds a reserve, part of it spinning. Same structure, same justification.
 
 ```mermaid
 flowchart LR
@@ -689,7 +693,13 @@ flowchart TD
 
 **(KEEL)** Three properties are load-bearing. **A run cannot dispatch its own successor**: it proposes, the Desk
 decides; without this, one run that believes it is nearly finished spawns another that believes the same, forever —
-the loop is broken at the only place that knows the budget and the ranking. **A run that stops on a defect has
+the loop is broken at the only place that knows the budget and the ranking. **(NEW: the mechanism, because a maker
+holds `Bash`)** A maker's shell could otherwise call `claude -p` itself, so the rule is held in three places a run
+cannot reach: the managed settings file carries `permissions.deny` rules for `Bash(claude *)`, `Bash(gemini *)` and
+`Bash(codex *)`, which `--restricted` cannot lift; the ledger refuses a row whose run id was not minted by
+`keel/bin/run`, so a child born outside the Desk is uncounted and the aberrance halt (§3.1) catches its spend; and
+the probe asserts every night that a maker cannot start a runtime (§7.7). Scouts fanning out on a new field (§11.1)
+are several runs the Desk births in parallel, never children of a run. **A run that stops on a defect has
 succeeded**: Toyota's andon cord, where stopping the line on a detected problem is the worker's responsibility;
 without that inversion every incentive pushes toward producing something rather than reporting that the ground is
 wrong. **The ceiling is a hard stop, not a warning**: pre-trade risk controls block the order before it reaches the
@@ -836,8 +846,10 @@ page · Claude*, *sorting last night's mail · Gemini*. **(V3)** A venture's col
 nothing while a runtime identity costs a career, a trust score and a stale context.
 
 **(NEW: the curator's shape)** Keel names a night curator and does not give it a shape. It is a **maker** loadout
-whose only writable scope is the memory files of one venture or the shared store, whose window is Gemini, and which is
-never given a shell — so the rule that *the thing that acts never edits memory* is enforced by the grant, not by
+whose only writable scope is the memory files of one venture or the shared store, whose window is Gemini once a
+write-capable Gemini narrowing has been measured and Claude until then (§7.5), and which is
+never given a shell; `keel/bin/curate`, a program with no model, births it nightly — so the rule that *the thing that
+acts never edits memory* is enforced by the grant, not by
 instruction.
 
 ### 7.3 The standing prompts, and how they are versioned
@@ -849,8 +861,8 @@ and the evidence its done-test named), the one objection it may file (the cord o
 from with a stated reason. The checker's says *find, never score; when comparing two, pairwise and order-swapped;
 report the candidate stripped of its own label*. **(BOTH)** Their sha is on every logbook row, so every outcome
 attributes to a prompt version; a change is A/B'd against the rehearsal set or it is not made (§12). **(V3)** The
-prompt-craft standard on this machine (`PROMPT-STANDARD.md`, the `PS-*` lint in `.claude/hooks/schema-lint.js`, TREE
-A) survives as the deterministic check on those three files; the eighteen agent files it governed go (§17).
+prompt-craft standard on this machine (`docs/03-system-design/agents/PROMPT-STANDARD.md`, the `PS-*` lint in
+`.claude/hooks/schema-lint.js`, TREE A) survives as the deterministic check on those three files; the eighteen agent files it governed go (§17).
 
 ### 7.4 The Sender — the program with no model
 
@@ -899,8 +911,8 @@ restricts nothing.
 |---|---|---|---|
 | **maker** | `claude -p --restricted --tools Read,Write,Edit,Bash,Glob,Grep --strict-mcp-config --permission-mode dontAsk --permission-prompts none --add-dir <worktree> --max-budget-usd <n> --max-turns <n> --session-id <uuid> --output-format json < brief.md` · the "never a credential" clause is `sandbox.credentials.mask` + `injectHosts`; the "read-only proxy" clause is `sandbox.network` with `strictAllowlist` | a write-capable narrowing is unverified; Policy Engine via `--admin-policy` | `codex exec` with `--sandbox`; `requirements.toml` outranks every flag; **no per-tool flag found**; the TTY defect |
 | **maker + browser** | the same, plus a per-run inline `mcpServers` entry for Playwright — **the only surveyed way to give one run a browser without the server's tools entering any other run's context** | none found | none found |
-| **scout** | `--restricted --tools Read,Glob,Grep,WebSearch,WebFetch --strict-mcp-config --permission-prompts none --max-budget-usd <n>` (`--restricted` removes WebFetch unless `--tools` names it) | `--approval-mode plan` is read-only in one flag — **the one shape three runtimes can stand today** | unverified |
-| **checker** | `--restricted --tools Read,Glob,Grep --strict-mcp-config --permission-prompts none --max-budget-usd <n>` — TREE A's `reviewer-readonly.md` already encodes it; a checker reading a prepared diff can go through a batch tier at half price on the day a key exists | the second family on this Mac; first run is a measurement | third family in principle, **blocked by #19945** until a headless rehearsal passes |
+| **scout** | `--restricted --tools Read,Glob,Grep,WebSearch,WebFetch --strict-mcp-config --permission-mode dontAsk --permission-prompts none --add-dir <worktree> --max-budget-usd <n>` (`--restricted` removes WebFetch unless `--tools` names it) | `--approval-mode plan` is read-only in one flag — **the one shape all three runtimes document a read-only narrowing for; only Claude's is measured on this Mac** | `codex exec --sandbox read-only`, documented, not installed, unverified |
+| **checker** | `--restricted --tools Read,Glob,Grep --strict-mcp-config --permission-mode dontAsk --permission-prompts none --add-dir <worktree> --max-budget-usd <n>` — TREE A's `reviewer-readonly.md` already encodes it; a checker reading a prepared diff can go through a batch tier at half price on the day a key exists | the second family on this Mac; first run is a measurement | third family in principle, **blocked by #19945** until a headless rehearsal passes |
 | **the Sender** | **nothing surveyed is a Sender**; every runtime holds a model by construction; it is a program the system writes | — | — |
 
 **(V3, measured)** `--restricted` supplies three clauses at once: it ignores user, project and local settings,
@@ -1027,8 +1039,9 @@ quality here does not mean a review panel: it means the run produced the evidenc
 ### 8.3 The other family — and there are three
 
 **(KEEL, founder: three subscriptions)** A checker on the maker's family is a compromised instrument by measurement.
-With Gemini and Codex bought as subscriptions there are three families, so cross-family checking stops being a
-constraint and becomes a choice: Claude makes and Codex checks on hard work; Gemini checks routine work; the checker is
+With Gemini and Codex bought as subscriptions there will be three families — the founder's decision; on this Mac
+today neither is live, §5.2 and §19 rows 9 and 10 — so cross-family checking stops being a constraint and becomes a
+choice: Claude makes and Codex checks on hard work; Gemini checks routine work; the checker is
 whichever family did not make it. A genuinely multi-family panel becomes reachable — the single most-cited unmet
 requirement of the prior system — and it is still not spent casually: three model opinions with no deterministic
 anchor are still three opinions, so the panel is reserved for a one-way door with no rung-1 anchor.
@@ -1055,7 +1068,10 @@ fatal finding from any family eliminates; fewer serious findings are preferred; 
 score is a finding with the information removed. **(BOTH)** Disagreement resolution is blunt: the deterministic anchor
 wins over the model; a model that disagrees with a passing test flags and does not block; the one exception is a
 checker asserting the test itself is wrong, which goes to the founder — and consensus thresholds are refused, because a
-vote among models has no anchor.
+vote among models has no anchor. **Enforced by:** the run launcher presents two candidates to a checker as an ordered
+pair twice, swapped, and records a flipped verdict as `unresolved` itself; the checker's handover schema carries a
+`findings` field and no score field, so averaging has nothing to average (`keel/bin/run`, the schema in
+`keel/shared/schemas/`; ABSENT).
 
 ### 8.4 Where taste is judged
 
@@ -1276,11 +1292,16 @@ flowchart TB
 ```
 
 **(KEEL)** The run that reads the internet is never the run that holds the keys. Anything from outside — a web page,
-an email body, a document, a tool's own response — is data to be quoted, never direction to be followed. **(V3)**
-Taint closes the seam: any run that has read content from outside the company has its grant narrowed for the rest of
-its life — it keeps reading, reasoning and writing, and loses the tools that act; if it concludes something should be
-sent it says so in its handover, and a different run that has not read the foreign content decides. *The web page told
-the agent to email the founder's contacts* becomes structurally impossible rather than heuristically unlikely. **(V3)**
+an email body, a document, a tool's own response — is data to be quoted, never direction to be followed. **(V3, made
+static at dispatch)** Taint closes the seam, and it is decided when a run is born, not while it runs, because a grant
+is an argv fixed at dispatch and cannot narrow mid-run: any run whose brief reads content from outside the company —
+a fetch, a search, an inbound row — is born as a scout, without the tools that act, and stays one for its whole
+life; a maker is never given fetch or search and never reads a raw inbound row. If a scout concludes something should
+be sent it says so in its handover, and a different run that has not read the foreign content decides. *The web page
+told the agent to email the founder's contacts* becomes structurally impossible rather than heuristically unlikely.
+**Enforced by:** `keel/bin/run` refuses a brief whose grant carries both an outside-reading tool (`WebFetch`,
+`WebSearch`, a read of `logbook/inbound/`) and any of `Write`, `Edit`, `Bash` or a `REACHES THE WORLD` tool (ABSENT);
+the probe asserts it (§7.7). **(V3)**
 And the one place a written procedure belongs: where the judge is absent and the act cannot be taken back — sending to
 a list, a migration over real data, a filing, a charge — a short checklist lives with the tool, there are about a
 dozen, and the Sender reads each one aloud into the logbook because it contains no model and cannot decide to skip an
@@ -1366,7 +1387,8 @@ flowchart TB
         O["OPEN<br/>questions waiting on the founder"]
     end
     LOG -->|"the night curator reads"| CUR["Curator: proposes deltas"]
-    CUR --> F & T & N & B & C & O
+    CUR --> F & T & N & B & C
+    WATCH["The Watch: a which queued,\na conflict that blocks a live intent"] --> O
     MEM -->|"a SLICE, assembled per run"| RUN["A run's context"]
     RUN -->|"handover.learned"| LOG
 ```
@@ -1452,7 +1474,7 @@ flowchart TD
 **(KEEL)** Embeddings, indexing and the first-pass classifier never leave the machine; only redacted extracts are
 summarised by a model, on the routine window. This is the clearest example in the design of spending idle capacity on
 knowing more rather than doing more, and it is the work to do first, because everything else gets better once it
-exists. **(V3)** The transcript corpus on this Mac is 2,936+ files and the parsers that read them exist in TREE A
+exists. **(V3)** The transcript corpus on this Mac is 3,060 files (the census; v3 said 2,936+) and the parsers that read them exist in TREE A
 (mission-control's index and `bin/warroom`'s cost pricing) — RENAMED into this pass; a transcript enters the logbook
 as an episode and never as retrieval memory.
 
@@ -1462,6 +1484,8 @@ as an episode and never as retrieval memory.
 memory stream — by **recency, importance and relevance together**, not similarity alone. Three things are always
 included regardless of score, because relevance scoring is a heuristic and three things must never be missed by one:
 the venture's `never` list, the negatives touching this exact move, and the open questions blocking this intent.
+**Enforced by:** the slice assembler in `keel/bin/run` writes those three before it ranks anything, and
+`keel/bin/check-stores` refuses a brief whose slice lacks them (ABSENT).
 **(V3)** The slice is ordered by cost: the byte-identical standing prompt first, so siblings share the cache; the
 charter and the intent next; the slice last. The slice says what it left out, and every item carries a counter
 scored by outcome, so the Desk is itself measured: work should pass its anchor first time more often than it did last
@@ -1565,7 +1589,7 @@ anchors, allowed as idea generation.
 
 **Enforced by:** the kit schema with four headings and a `horizon:` (ABSENT) · `keel/holding/` (a move) · the tool
 door (§9.3) · a research handover's `evidence` field requiring URL, date and the quoted line, checked by
-`scripts/check-citations.mjs` (TREE A, exists; RENAMED into a rung-1 anchor).
+`scripts/check-citations.mjs` (TREE A, exists; SURVIVES as a rung-1 anchor).
 
 ---
 
@@ -1637,6 +1661,8 @@ the cheap pass checking horizons (ABSENT) · the counter of redirects per intent
 other cannot reach.
 
 ### 13.1 The whole picture
+
+**(KEEL, with obligations added)**
 
 ```mermaid
 flowchart TB
@@ -1719,7 +1745,7 @@ and keeps the work, a queued message reaches the model between tool calls, `/btw
 `/effort` change mid-flight, `Esc Esc` rewinds code and conversation. **Enforced by:** sterile is detected from a
 live interactive session's presence in the logbook (ABSENT; the Watch's cheap pass) · the Floor is Claude Code with
 the charter, the envelope and the slice loaded by the session-start hook (`.claude/hooks/session-start.js` exists in
-TREE A at 2,941 bytes, under the 4,096-byte ceiling at which the runtime truncates; RENAMED).
+TREE A, 259 lines, and emits 2,941 bytes, under the 4,096-byte ceiling at which the runtime truncates; RENAMED).
 
 ### 13.4 The briefing
 
@@ -2008,7 +2034,7 @@ reveal it. **(V3)** The meter is the runner's own reported cost record, joined b
 output tokens (11% of the bill), not a window heuristic (cannot attribute). One review session on this machine
 produced 1.4 million output tokens in five hours with no loop running, and a meter without a per-run axis cannot see
 that. **Enforced by:** `keel/logbook/ledger.jsonl` written from each run's `--output-format json` cost fields
-(ABSENT); TREE A's `bin/warroom` per-worker cost pricing exists and is RENAMED into it.
+(ABSENT); TREE A's `bin/warroom` per-worker cost pricing exists and is ABSORBED into it.
 
 ### 15.2 Where cost is actually saved
 
@@ -2025,7 +2051,7 @@ flowchart LR
     S4 -->|"routine"| G["GEMINI window"]
     S4 -->|"mid-to-hard"| B["CODEX or CLAUDE window"]
     S1 -->|"yes"| I["CLAUDE window — the Floor,<br/>and the founder is here"]
-    B -.->|"only if a metered key is ever bought"| BATCH["BATCH — ~85–90% off. Deferred (§1 row 19)"]
+    B -.->|"only if a metered key is ever bought"| BATCH["BATCH — half price, stacking with cached reads<br/>to roughly 85–90% off in total. Deferred (§1 row 19)"]
 ```
 
 **(KEEL)** The claim to hold the design to: **the majority of what a company does every day is not generation.** It
@@ -2096,20 +2122,34 @@ skill and what it becomes; every hand with its class and credential; every store
 every command the founder types; every surface; every provider and what it may stand; the file tree of the house and
 of a venture. A path is marked ABSENT unless the census found it.
 
-### 16.1 Positions — three shapes, one loadout worth naming, and five programs with no model
+### 16.1 Positions — three shapes, two loadouts worth naming, and thirteen programs with no model
+
+**(NEW: the count)** Five of the thirteen programs act on their own at night — the Watch, the Sender, the world's
+door, the probe, the reconciler; the other eight are launched by the Watch or by a `keel` verb. `keel/bin/curate` is a
+launcher: it holds no model and births the curator *loadout*, a maker run whose only writable scope is memory.
+
+**(NEW: measured against the census)**
 
 | Position | Kind | File | Claude Code argv (§7.5) | Tools | MCPs | Window | Exists today |
 |---|---|---|---|---|---|---|---|
 | **maker** | shape | `keel/shared/shapes/maker.md` + `maker.claude-code.argv` | `claude -p --restricted --tools Read,Write,Edit,Bash,Glob,Grep --strict-mcp-config --permission-mode dontAsk --permission-prompts none --add-dir <wt> --max-budget-usd <n> --max-turns <n> --session-id <id> --output-format json` | Read Write Edit Bash Glob Grep | none by default | Claude or Codex | ABSENT; seed: `.claude/agents/builder.md` (134 lines, TREE A) |
-| **maker · browser** | loadout | the maker file + an inline `mcpServers` entry per run | as maker, plus `--mcp-config <inline playwright>` | as maker | `playwright` (`.mcp.json`, exists, `--isolated`), with `mcp-policy.json`'s deny list: `browser_run_code_unsafe`, `browser_file_upload`, `browser_network_request` | Claude or Codex | ABSENT as a loadout; seed: `.claude/agents/designer.md` (151 lines) and `.claude/mcp-policy.json` (65 lines) |
-| **maker · curator** | loadout | the maker file; grant narrowed to one venture's `memory/` or `keel/shared/` | as maker with `--tools Read,Write,Edit,Glob,Grep --add-dir <memory dir>` — no Bash | Read Write Edit Glob Grep | none | Gemini | ABSENT |
-| **scout** | shape | `keel/shared/shapes/scout.md` + `.argv` | `claude -p --restricted --tools Read,Glob,Grep,WebSearch,WebFetch --strict-mcp-config --permission-prompts none --max-budget-usd <n> --session-id <id> --output-format json` | Read Glob Grep WebSearch WebFetch | read-only servers admitted through the door, per run | Gemini (routine) · Claude | ABSENT; seed: `.claude/agents/sourcer.md` (147 lines; `mcpServers: [claim-append]`) |
-| **checker** | shape | `keel/shared/shapes/checker.md` + `.argv` | `claude -p --restricted --tools Read,Glob,Grep --strict-mcp-config --permission-prompts none --max-budget-usd <n> --session-id <id> --output-format json` | Read Glob Grep — no shell, no write | none | Gemini (routine) · Codex (hard) · Claude only when neither made it | ABSENT; seed: `.claude/agents/reviewer-readonly.md` (169 lines) |
+| **maker · browser** | loadout | the maker file + an inline `mcpServers` entry per run | as maker, plus `--mcp-config <inline playwright>` | as maker | `playwright` (`.mcp.json`, exists, `--isolated`), with the three verbs `mcp-policy.json` names for denial — `browser_run_code_unsafe`, `browser_file_upload`, `browser_network_request` — in shadow mode today (it logs and lets them through); the door flips it to block | Claude or Codex | ABSENT as a loadout; seed: `.claude/agents/designer.md` (151 lines) and `.claude/mcp-policy.json` (65 lines) |
+| **maker · curator** | loadout | the maker file; grant narrowed to one venture's `memory/` or `keel/shared/` | as maker with `--tools Read,Write,Edit,Glob,Grep --add-dir <memory dir>` — no Bash | Read Write Edit Glob Grep | none | Claude until `shapes/maker.gemini.argv` is measured; then Gemini | ABSENT |
+| **scout** | shape | `keel/shared/shapes/scout.md` + `.argv` | `claude -p --restricted --tools Read,Glob,Grep,WebSearch,WebFetch --strict-mcp-config --permission-mode dontAsk --permission-prompts none --add-dir <wt> --max-budget-usd <n> --session-id <id> --output-format json` | Read Glob Grep WebSearch WebFetch | read-only servers admitted through the door, per run | Gemini (routine) · Claude | ABSENT; seed: `.claude/agents/sourcer.md` (147 lines; `mcpServers: [claim-append]`) |
+| **checker** | shape | `keel/shared/shapes/checker.md` + `.argv` | `claude -p --restricted --tools Read,Glob,Grep --strict-mcp-config --permission-mode dontAsk --permission-prompts none --add-dir <wt> --max-budget-usd <n> --session-id <id> --output-format json` | Read Glob Grep — no shell, no write | none | Gemini (routine) · Codex (hard) · Claude only when neither made it | ABSENT; seed: `.claude/agents/reviewer-readonly.md` (169 lines) |
 | **the Watch** | program | `keel/bin/watch` under `~/Library/LaunchAgents/com.keel.watch.plist` | — | reads files; spawns runs via the argv files | — | none | ABSENT; seeds: `.claude/hooks/budget-guard.js` (204 lines, unregistered), `mission-control/scripts/consume-dispatch.ts` (685 lines) |
 | **the Sender** | program | `keel/bin/send` | — | the admitted tool's one verb; a credential injected at egress | the tool's server, per instruction | none | ABSENT |
 | **the world's door** | program | `keel/bin/inbound` | — | appends one logbook row | — | none | ABSENT |
 | **the probe** | program | `keel/bin/probe` | runs each shape's argv against a fixture | — | — | Gemini or Claude, minimal | ABSENT |
 | **the reconciler** | program | `keel/bin/reconcile` | — | read-only credentials per venture | read-only servers | none | ABSENT |
+| **the run launcher** | program | `keel/bin/run` | emits the shape's argv verbatim; mints the id; refuses a malformed brief or a trifecta grant | — | — | none | ABSENT; seed: `mission-control/scripts/consume-dispatch.ts` |
+| **the curator launcher** | program | `keel/bin/curate` | births the curator loadout nightly with the memory-only grant | — | — | none | ABSENT |
+| **the log append** | program | `keel/bin/log` | one append function; `F_FULLFSYNC`; refuses a row with no minted id | — | — | none | ABSENT |
+| **the store check** | program | `keel/bin/check-stores` | every rule in §16.4's last column | — | — | none | ABSENT |
+| **the door** | program | `keel/bin/door` | walks one tool through §9.3; writes `shared/tools/<name>.yml` | — | — | none | ABSENT |
+| **the drill runner** | program | `keel/bin/drill` | exercises a tool's undo; writes only a date | — | — | none | ABSENT |
+| **the rehearsal runner** | program | `keel/bin/rehearse` | runs a loadout against known-answer cases, headless; writes `scores.jsonl` | — | — | the cheapest window that can stand the shape | ABSENT |
+| **the supervisor** | program | `keel/bin/supervise` | the restart ceiling, the heartbeat, the process-group kill | — | — | none | ABSENT |
 | **the Floor** | the founder | Claude Code, interactive, `keel floor <venture>` | `claude` with the charter, envelope and slice loaded at session start | everything, including the founder's own browser | the founder's own connected servers, on the Floor only | Claude | the substrate exists; the loader is `.claude/hooks/session-start.js` (259 lines, RENAMED) |
 
 **(measured)** Of the eighteen agent files in TREE A, seven are engines and eleven are 23-line shims; two engines
@@ -2145,7 +2185,7 @@ from this session's own server list, 2026-09-04.
 | Hand | Class | Credential today | Who may hold it | Day · night · never | Disposition at the door |
 |---|---|---|---|---|---|
 | the founder's signed-in Chrome (`claude-in-chrome`) | REACHES THE WORLD + private data | the founder's own sessions | nobody but the founder, on the Floor | **day, Floor only, forever** | the widest hand in the building; never a night grant at any trust score; never shares a grant |
-| Playwright, headless, `--isolated` | READ-ONLY render | none | maker · browser loadout | night | the design anchor; already `mcpServers: [playwright]` on one file; three verbs denied by `mcp-policy.json` |
+| Playwright, headless, `--isolated` | READ-ONLY render | none | maker · browser loadout | night | the design anchor; already `mcpServers: [playwright]` on one file; three verbs `mcp-policy.json` names for denial, in shadow mode today; the door flips it to block |
 | Gmail read · Calendar read · Drive read · Notion read | READ-ONLY, tainted content | OAuth, the founder's | scout | night | admitted first: instruments buy freedom |
 | Gmail send | REACHES THE WORLD, one-way | OAuth | the Sender, `signed_by: founder` | never unattended until widened | anything delivered to a person |
 | Drive share · Calendar create · Notion write | REACHES THE WORLD (a share is durable; an edit others see) | OAuth | the Sender, after a recall window | night only after the class is widened and the undo drilled | a share link is one-way by any honest reading |
@@ -2153,8 +2193,8 @@ from this session's own server list, 2026-09-04.
 | Higgsfield (image · video · audio) | reversible artifact, **SPENDS credits** | API key; failed to connect this session (`ENOTFOUND`) | maker, rate-capped | night, under `usd_per_day` | publish and TikTok verbs are one-way and never; a failure to resolve is damage, counted |
 | RunPod | **SPENDS MONEY at a rate** | API key, uncapped | nobody until capped at the credential | never until a capped key exists | an unbounded spend that runs whether or not anyone is watching; Keel admits rented compute only as founder-approved spend |
 | `claim-append` (local server, `scripts/mcp/claim-append-server.mjs`) | WRITES LOCALLY | none | scout (today) | night | RENAMED into the memory item append; the narrow-capability-through-an-audited-server pattern is the door's model |
-| Mem0 | a hosted memory service | unauthenticated | — | — | **REFUSED**: memory is plain files in git; a service is a dependency, an auth surface and a leak path |
-| Miro · n8n | — | unauthenticated | — | — | through the door individually, each naming the Intent that needs it, or disconnected |
+| Mem0 | REACHES THE WORLD (memory leaves the machine to a hosted store) | unauthenticated | nobody | never | **REFUSED**: memory is plain files in git; a service is a dependency, an auth surface and a leak path |
+| Miro · n8n | REACHES THE WORLD (a board others see; a workflow that acts) | unauthenticated | nobody until an Intent names one | never today | through the door individually, each naming the Intent that needs it, or disconnected |
 | `gh` · `git` · `node` · `bun` · `gemini` | CLIs | `gh` reads `~/.config/gh`, which the sandbox denies; `gemini` never authenticated | maker (git, node, bun) · a provider (gemini) | night | each CLI is rehearsed with a known call and a known answer, headless, which is the test that catches a detached-TTY failure |
 | **Not connected, and needed first**: analytics, error tracking, a read-only billing key, the CI runner's API, the git host's read API | READ-ONLY | none | scout · the reconciler | night | connected before any hand, because the reconciliation (§8.5) reads them |
 
@@ -2164,28 +2204,35 @@ lines; its per-server allow/deny shape is the seed).
 
 ### 16.4 Stores — each with its schema, its one writer, its readers, and the check that fails when it drifts
 
-| Store | Path | Schema (fields) | The one writer | Readers | Fails to load when |
+**(KEEL's stores, with v3's additions; schemas NEW)**
+
+| Store | Path | Schema (fields) | The writer — one program per file | Readers | Fails to load when |
 |---|---|---|---|---|---|
 | Charter | `keel/ventures/<v>/charter.md` | venture · tempo · envelope{may-alone, never, wake-me} · ceiling{per window, money/month} · weight · horizon | the founder, through the read-back | the Watch, every run | a line is missing; horizon passed; `never` shorter than the default list without a founder line saying which was removed |
 | Intent | `keel/ventures/<v>/intents/<id>.md` | purpose · done-test · ceiling · expires · owner · evidence | the founder's door, through the read-back | the Desk, runs, the Balcony | no falsifiable done-test; expired without disposition |
-| Obligation | `keel/ventures/<v>/obligations.yml` | id · owed{what,to} · due · lead_time · consequence · discharge{what,proved_by} · recurs · statute · second_human | the world's door, the clock, the founder | the Watch, first | `statute` set with `second_human` null; `due` past with no disposition (loudest Decide item) |
-| Facts | `keel/ventures/<v>/memory/facts.md` · `keel/shared/facts.yml` | item · source · date · expiry · falsifier · scope | the curator; `shared/facts.yml` by the probe and the measurement commands | the Desk's slice | an item with no expiry or no falsifier; expiry passed with no disposition (`scripts/ledger.mjs`, RENAMED) |
+| Obligation | `keel/ventures/<v>/obligations.yml` | id · owed{what,to} · due · lead_time · consequence · discharge{what,proved_by} · recurs · statute · second_human | the Watch — it materialises a row from the world's door's logbook entry, the clock's recurrence, or the founder's tap; nothing else writes the file | the Watch, first | `statute` set with `second_human` null; `due` past with no disposition (loudest Decide item) |
+| Facts | `keel/ventures/<v>/memory/facts.md` | item · source · date · expiry · falsifier · scope | the curator | the Desk's slice | an item with no expiry or no falsifier; expiry passed with no disposition (`scripts/ledger.mjs`, RENAMED) |
+| Measured facts | `keel/shared/facts.yml` | fact · date · the command or URL that re-measures it · expiry | the probe | the cheap pass; the Desk's slice | a fact past expiry with no re-measurement |
 | Negatives | `keel/ventures/<v>/memory/negatives.md` | what was tried · why it failed · the command that reproduces it · date · venture | the curator | the Desk's slice (always for the exact move); the repetition tripwire | no reproduction command |
 | Already-built | `keel/ventures/<v>/memory/already-built.md` | what · where · what it does · date | the curator; `keel adopt` seeds it | the Desk's slice | a path that does not resolve |
 | Open | `keel/ventures/<v>/memory/open.md` | question · asked on · blocks which intent | the Watch | the Desk's slice (always); the Decide view | an entry older than its intent's expiry |
 | Taste | `keel/shared/taste.md` | accepted/rejected · the evidence · date · held-out flag | the curator, from decisions only | the checker's taste check; the Desk's slice when the anchor is the founder | an entry with no evidence row |
-| Craft | `keel/shared/craft/<field>/kit.md` | what good looks like (2–3 examples) · the anchors · failure modes · vocabulary · horizon · pass count | scouts draft; the curator promotes | makers in that field | any heading not in the four; no horizon; a step list |
-| Rehearsals | `keel/shared/rehearsals/<move-class>/*.case` · `scores.jsonl` | input · known answer · source · date; score rows per loadout | transcript mining; the Floor; the probe writes scores | the Desk (may a loadout run unattended); prompt A/B | a case with no known answer |
+| Craft | `keel/shared/craft/<field>/kit.md` | what good looks like (2–3 examples) · the anchors · failure modes · vocabulary · horizon · pass count | the curator — scouts' drafts arrive as handover proposals | makers in that field | any heading not in the four; no horizon; a step list |
+| Rehearsal cases | `keel/shared/rehearsals/<move-class>/*.case` | input · known answer · source · date | the curator — from transcript mining and Floor handovers | the rehearsal runner; prompt A/B | a case with no known answer |
+| Rehearsal scores | `keel/shared/rehearsals/scores.jsonl` | loadout · move class · pass rate · n · date | the rehearsal runner | the Desk (may a loadout run unattended) | a score with n below the floor printed as a number |
 | Shapes | `keel/shared/shapes/<shape>.md` · `<shape>.<provider>.argv` | the standing prompt; the exact argv | the founder, through an A/B against rehearsals | the Desk at dispatch | a timestamp in the prompt (`PS-*` lint, RENAMED); an argv naming `--allowedTools` |
 | Tools | `keel/shared/tools/<name>.yml` · `checklist.md` | class · credential scope · rate · undo{how, drilled_on} · description_hash · horizon · day/night/never · verbs | the door; the drill runner writes only a date | the Desk (grant), the Sender (class, ceiling, checklist), the probe | hash mismatch (FROZEN); drill date stale; horizon passed |
-| Defaults | `keel/shared/never-default.yml` · `wake-me-default.yml` | the lists | the founder | charter load | — |
+| Defaults | `keel/shared/never-default.yml` · `wake-me-default.yml` | the lists | the founder | charter load | a charter whose `never` is shorter than the default with no founder line naming the removal |
 | Anchors | `keel/shared/anchors/<name>/` | the check as a script with an exit code; tolerance band; what record it reads | the door | runs' done-tests; the reconciler; the nightly re-run | a check with no exit code; a `reconciles_to` that is the company's own record while claiming rung 1 |
 | People | `keel/people.yml` | person id · consent per relationship and venture · first-contact vs reply · last contact | the founder; the world's door on a reply | the Sender, before any contact | a contact with no consent row |
 | Settings | `keel/settings.yml` | windows{reserve, models, price} · tick · driven_limit (2) · wip_per_venture · interruptions_per_day (3) · harness_share_ceiling · model ids | the founder | everything | a model id with no price row (refused, not scored at zero) |
 | The logbook | `keel/logbook/events.jsonl` · `ledger.jsonl` · `runs/<id>/{brief,trace,handover,evidence}` · `desk/<tick>.json` | OpenTelemetry `gen_ai.*` attribute names; intent id and run id on every row; `F_FULLFSYNC` | everything, through one append function | the Balcony, the briefing, the curator, the meter, ask-anything | a row without an id is refused at the append |
-| The cord | `keel/STOP` | a file; its presence | the founder's tap or word | the Watch, first, every tick | — |
+| Inbound | `keel/logbook/inbound/` | one row per thing the world sent: source · received at · payload as quoted data · the obligation or intent it touches | the world's door | a scout; the Watch (obligations) | a row a model wrote |
+| The venture's work | `keel/ventures/<v>/work/` | the venture's own repository: source, branches, CI | makers, in their own worktrees | anchors; the reconciler | its own CI |
+| Secrets | `keel/.secrets/` | keychain references by name, never values | the founder | the Sender at egress | a value instead of a reference; the directory tracked by git |
+| The cord | `keel/STOP` | a file; its presence | the founder's tap or word | the Watch, first, every tick | the monthly drill pulls it and a run starts anyway |
 | The index | `keel/.index/` | SQLite, WAL, vectors over transcripts and the logbook | the local pass | the Desk's slice | deletable; rebuilt in one pass |
-| The holding directory | `keel/holding/skills/` | the 134 as they are | a move | nothing | — |
+| The holding directory | `keel/holding/skills/` | the 134 as they are | a move | nothing | the probe finds any loader reading it |
 | Ship log | `keel/ventures/<v>/ship-log.md` | one line per rung movement and per intent finished | the reconciler | the briefing | a line not generated from a record |
 
 **Enforced by:** `keel/bin/check-stores`, every rule in the last column (ABSENT); the existing mechanisms it absorbs:
@@ -2195,8 +2242,8 @@ artifact) — all exist in TREE A.
 
 ### 16.5 Every command the founder types
 
-**(NEW: named here for the first time; all ABSENT)** The founder's terminal verbs, the Balcony's taps, and the
-Claude Code verbs that already ship.
+**(NEW: named here for the first time)** The founder's terminal verbs — every `keel` verb ABSENT — the Balcony's
+taps, and the Claude Code verbs that already ship.
 
 | Command | Does | Exists |
 |---|---|---|
@@ -2220,6 +2267,8 @@ Claude Code verbs that already ship.
 
 ### 16.6 Every surface, and what it shows
 
+**(BOTH, with the measured substrates)**
+
 | Surface | Shows | Substrate | Exists |
 |---|---|---|---|
 | **the Floor** | one agent beside the founder; the venture's charter, envelope, slice; a one-line wake at the bottom when `wake-me` fires | Claude Code interactive | the runtime exists; the loader (`session-start.js`) exists and is RENAMED; the one-line wake is ABSENT |
@@ -2234,10 +2283,12 @@ Claude Code verbs that already ship.
 
 ### 16.7 Every provider, and what position it may stand
 
+**(KEEL's routing, v3's measurements)**
+
 | Provider | May stand | Window | argv file | State today |
 |---|---|---|---|---|
 | **Claude Code** (subscription) | maker · scout · checker (only when neither other family made it) · **the Floor, always** | the rolling five-hour window; one-hour cache | `shapes/*.claude-code.argv` (ABSENT; the strings are measured, §7.5) | installed, 2.1.259, measured |
-| **Gemini CLI** (subscription) | scout · checker on routine work · the curator loadout | its own daily quota | `shapes/{scout,checker}.gemini.argv` (ABSENT; `--approval-mode plan` documented) | installed 0.38.2, never authenticated; first run is a measurement |
+| **Gemini CLI** (subscription) | scout · checker on routine work · the curator loadout once a write-capable narrowing is measured | its own daily quota | `shapes/{scout,checker}.gemini.argv` (ABSENT; `--approval-mode plan` documented) · `shapes/maker.gemini.argv` (ABSENT; unverified) | installed 0.38.2, never authenticated; first run is a measurement |
 | **Codex CLI** (subscription) | maker · checker on mid-to-hard work | its own window | `shapes/{maker,checker}.codex.argv` (ABSENT; `codex exec --sandbox` documented; no per-tool flag) | not installed; #19945 means the headless rehearsal is the admission test |
 | **Local models** | no shape: embeddings, classification, PII detection, dedup | electricity | — | ABSENT; a 384-dimension model plus a SQLite vector extension |
 | **The artifact runtime** | hosts the Balcony, the briefing, the read-back page | free | — | exists; measured: database, user identity, comments that wake the session |
@@ -2303,29 +2354,30 @@ says the trees differ)** Four fates: **SURVIVES** unchanged in role · **RENAMED
 | The 48-step check suite — `scripts/run-checks.mjs`, `scripts/lib/check-suite.js` | 312 and 1,978 lines; 48 steps, 10 exclusions in both trees | SURVIVES | the harness venture's founding rung-1 anchors; a partial run cannot wear a passing verdict |
 | `scripts/check-citations.mjs` | 846 lines | SURVIVES | a rung-1 anchor for research handovers |
 | The risk classifier on file paths — `scripts/lib/classifier.js`, `.claude/qa-tier-floor.yml` | 187 and 468 lines | RETIRED | the class lives on the hand (§9.3) and the door test on the act (§9.2), never on a file path |
-| The QA gate — `.claude/workflows/qa.js`, `qa-lead-pass.yml`, blind reviewers, adversarial verifiers, a judge with no shell | 1,182 and 692 lines; `qa.js` named by 2 commands, referenced by 41 files | RETIRED as a gate; split | oracle-first is the anchor ladder; reviewers become checkers from another family; the shell-less judge's argv is the checker's; the gate blocks the done-test, not the merge |
+| The QA gate — `.claude/workflows/qa.js`, `qa-lead-pass.yml`, blind reviewers, adversarial verifiers, a judge with no shell | 1,182 and 692 lines; `qa.js` named by 2 commands, referenced by 41 files | ABSORBED | oracle-first is the anchor ladder; reviewers become checkers from another family; the shell-less judge's argv is the checker's; the gate blocks the done-test, not the merge |
 | Seven engines, eleven shims — `.claude/agents/` | 18 files; engines 121–169 lines; shims 23 | RETIRED | three standing prompts. `builder` → maker, `sourcer` → scout, `reviewer-readonly` → checker, `designer` → the browser loadout; `orchestrator` and `framer` → programs and loadouts; `reviewer` (with Bash) → gone, a checker has no shell; the eleven shims → gone |
-| Six playbooks, the lenses, the review lenses, the gates — `.claude/playbooks/`, `lenses.yml`, `review-lenses.yml`, `gates.yml` | 6 files / 284 lines; 201; 230; 221 lines | ABSORBED / RETIRED | a playbook's exit criteria become the done-test; a domain lens becomes a field kit's four headings; a review lens becomes a checker's named dimension; `qa-verdict` becomes the anchor check; the human gates become `never` and *which* |
-| 134 curated skills, `CURATION.yml`, routers, `MANIFEST.json` | 134 dirs; 462; 8; 870 lines | RETIRED as a store | `keel/holding/skills/`; re-entry through the door as examples, anchor or rehearsal (§16.2) |
+| Six playbooks, the lenses, the review lenses, the gates — `.claude/playbooks/`, `lenses.yml`, `review-lenses.yml`, `gates.yml` | 6 files / 284 lines; 201; 230; 221 lines | ABSORBED | a playbook's exit criteria become the done-test; a domain lens becomes a field kit's four headings; a review lens becomes a checker's named dimension; `qa-verdict` becomes the anchor check; the human gates become `never` and *which* |
+| 134 curated skills, `CURATION.yml`, routers, `MANIFEST.json` | 134 dirs; 462 lines; 8 entries in `routers/` (INDEX + 7); 870 lines | RENAMED | `keel/holding/skills/`; re-entry through the door as examples, anchor or rehearsal (§16.2) |
 | `design.js` (blind variations, blind judges, synthesis) | 143 lines; named by no command | RENAMED | one *both options built* round for design; its score-averaging removed; checkers find, never score |
 | `coding.js`, `research.js` as workflows | 170 and 187 lines; named by no command | RETIRED | a run's own method; the done-test judges the result |
 | `budget-guard.js` | 204 lines; **zero references in `settings.json`** | RENAMED | the stall detector in the Watch (§3.1); registering it today is a founder act |
-| `pre-tool-use.sh`, the armed sandbox, the worktree protocol | 676 lines; `sandbox.enabled: true`, `failIfUnavailable: true`; **no `network` key, no `credentials` key** | SURVIVES with corrections | run physics; the string matcher becomes structured-input matching (the founder's, §19); the `network` and `credentials` blocks are added; `git worktree add` stays the one escalated command |
+| `pre-tool-use.sh`, the armed sandbox, the worktree protocol | 676 lines; `sandbox.enabled: true`, `failIfUnavailable: true`; **no `network` key, no `credentials` key** | SURVIVES | run physics; the string matcher becomes structured-input matching (the founder's, §19); the `network` and `credentials` blocks are added; `git worktree add` stays the one escalated command |
 | `session-start.js` | 259 lines; emits 2,941 bytes under the 4,096 ceiling | RENAMED | the Floor's loader: charter, envelope, slice |
-| `schema-lint.js` and the `PS-*` prompt standard | 1,947 lines | RETIRED; one predicate and the standard survive | a declared capability with no configuration behind it fails to load (door test); the standard governs three files |
-| `CLAUDE.md`, `AGENTS.md` | 886 and 126 lines | RENAMED / RETIRED | `CLAUDE.md` becomes the Floor's standing context stripped of archaeology, which moves into the logbook; `AGENTS.md` goes |
+| `schema-lint.js` and the `PS-*` prompt standard | 1,947 lines | ABSORBED | a declared capability with no configuration behind it fails to load (door test); the standard governs three files |
+| `CLAUDE.md` | 886 lines | RENAMED | the Floor's standing context, stripped of archaeology, which moves into the logbook |
+| `AGENTS.md` | 126 lines | RETIRED | goes |
 | `DECISIONS.md`, `evict-memory.mjs`, the archive volumes | A 424 lines / 39,543 B; B 407 / 39,416; 1,125 lines; two volumes | RENAMED | the curator's REMOVE and EVICT rules: nothing deleted, irreversible entries pinned, a stub under every heading, capped rotating volumes |
 | `LONG-TERM.md`, `USER-INSIGHTS.md`, `CODEBASE-MAP.md` | A 84 / B 96; 18; 202 lines | ABSORBED | taste is derived, never authored; customer language is FACTS with provenance; the map is ALREADY-BUILT seeded by `keel adopt` |
 | Session files, handoffs, the documentation gate | A 171 / B 180 sessions; A 16 / B 21 handoffs | RETIRED | a run's handover; the logbook; the briefing |
 | Sixteen slash commands, `/color`, `/name`, `/board-meeting` | 16 files, 791 lines | RETIRED | `keel` verbs (§16.5); no prompts to write |
-| Mission control | 60 files; `server/` 11 entries; `client/`; `consume-dispatch.ts` 685 lines | SPLIT | the views go; `~/.agentvibe/events.jsonl` (1,119,259 bytes, 3,840 lines) is the logbook's spine; the queue-file consumer is the seed of how the Watch births a run |
-| `bin/warroom` | 3,429 lines | RETIRED; three features reborn | per-worker cost pricing → the meter; typed events → the logbook; snapshots → verified checkpoints |
+| Mission control | 60 files; `server/` 11 entries; `client/`; `consume-dispatch.ts` 685 lines | ABSORBED | the views go; `~/.agentvibe/events.jsonl` (1,119,259 bytes, 3,840 lines) is the logbook's spine; the queue-file consumer is the seed of how the Watch births a run |
+| `bin/warroom` | 3,429 lines | ABSORBED | per-worker cost pricing → the meter; typed events → the logbook; snapshots → verified checkpoints |
 | `bin/fleet-install.mjs` and the Stage A/B installer | 1,053 lines, present in **both** trees | RENAMED | `keel adopt`: stamps a repository with the templates and verifies the port rather than assuming it |
 | `.mcp.json`, `.claude/mcp-policy.json` | 12 and 65 lines | RENAMED | the browser loadout's one server; the per-server allow/deny shape is the tool file's seed |
 | `~/.claude/projects/` transcripts | 60 project dirs, **3,060** `.jsonl` files | RENAMED | the transcript pass (§10.5); episodes, never retrieval memory |
 | The catalogue and the five reference studies — `docs/02-competitive/` | TREE B only: `open-source.md` 1,083, `hands.md` 901, `concepts.md` 2,157; 5 studies | SURVIVES | the door's catalogue; every entry re-verified against its LICENSE before admission |
-| v2, WAKE, WATCH, the designs, the minds, v3, Keel — `docs/03-system-design/{STARTUP-OS.md, dream, envision, designs, review, vision, round-5}` and round-6 on ceo-2 | TREE B: 86 design docs vs A's 36; v2 2,826 lines; v3 2,309; Keel 2,682 | SURVIVES as record | the priors of this plan; every decision against them is in §1 |
-| The eight hooks — `.claude/hooks/` | 3,579 lines; only `SessionStart` and `PreToolUse` registered; `stop.sh` exists with no `Stop` event | SPLIT | two survive as above; `gsa-*` and `stop.sh` RETIRED |
+| v2, WAKE, WATCH, the designs, the minds, v3, Keel — `docs/03-system-design/{STARTUP-OS.md, dream, envision, designs, review, vision, round-5}` and round-6 on ceo-2 | TREE B: 86 design docs vs A's 36; v2 2,826 lines; v3 2,309; Keel 2,682 | SURVIVES | as record: the priors of this plan; every decision against them is in §1 |
+| The eight hooks — `.claude/hooks/` | 3,579 lines; only `SessionStart` and `PreToolUse` registered; `stop.sh` exists with no `Stop` event | ABSORBED | two survive as above; `gsa-*` and `stop.sh` RETIRED |
 
 **(measured)** Where TREE A is behind TREE B: `verdict.mjs` (+52 lines), `.qa/verdicts/` (+12), the memory files
 (an eviction landed on B), the round-5 corpus, the rethink docs, and origin/main's 65 commits. This document sits on
@@ -2376,6 +2428,8 @@ reach, and the probe that proves they hold.
 ---
 
 ## 19 · Open decisions, with both sides
+
+**(BOTH)**
 
 | # | Decision | One side | The other side | Whose |
 |---|---|---|---|---|
@@ -2432,14 +2486,14 @@ the third is parked); a different family is a good enough checker (now cheap to 
 
 ## 21 · Losing images
 
-Every decision against v3, Keel, WATCH, v2 or a design is a row of §1, with the losing image kept by name in its
+**(NEW: a pointer)** Every decision against v3, Keel, WATCH, v2 or a design is a row of §1, with the losing image kept by name in its
 last column. Nothing is repeated here so that the two cannot disagree.
 
 ---
 
 ## 22 · Coverage of the founder's list
 
-Every item of the founder's thirty-five sections and nine wings is placed — IN, RENAMED, REFUSED, FOUNDER'S or
+**(NEW: a pointer)** Every item of the founder's thirty-five sections and nine wings is placed — IN, RENAMED, REFUSED, FOUNDER'S or
 OUTSIDE, with the final section and one line of reason — in [`COVERAGE.md`](COVERAGE.md) beside this file, written by
 a lane against §1's decisions and both prior placements; a `?` marks a row the reviewer should read first.
 
