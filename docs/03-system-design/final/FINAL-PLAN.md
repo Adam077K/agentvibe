@@ -12,10 +12,10 @@ rule:       where the two agree, taken and marked (BOTH). Where they differ, DEC
             fact says otherwise. Every paragraph carries (V3) (KEEL) (BOTH) or (NEW: why). Every rule names the
             mechanism that enforces it or is marked WISH. Every path exists in the tree named, or is marked ABSENT.
             No stage states method. No schedule; dependencies read "this needs that"
-measured:   TREE A = this branch (ceo-3-1788468144 = local main b2cabad, carrying the Stage A/B fleet-installer
-            commits origin lacks) · TREE B = ceo-1-1788468144 (origin/main 4770d39 + round-5). The two diverge by
-            113 and 65 commits and conflict in five files; nothing was merged for this document. §17 names the
-            tree each row was measured on; final/CENSUS.md holds the measurements
+measured:   TREE A = this branch (ceo-3-1788468144 = local main b2cabad). TREE B = ceo-1-1788468144 at 280b5e7, a
+            STRICT DESCENDANT of TREE A: it carries every commit A has plus 75 more (origin/main's 65, the rethink
+            docs, the round-5 corpus). Nothing exists in A that B lacks; §17 measures on B and names where A is
+            behind. Nothing was merged for this document. final/CENSUS.md holds every measurement
 not:        a build plan, a schedule, a first month, a price list. Nothing here is built. Nothing was pushed
 companions: final/COVERAGE.md (every item of the founder's list placed) · final/CENSUS.md (every path measured) ·
             final/page/ (the phone-first page)
@@ -2086,4 +2086,360 @@ ceiling and it is a line in the briefing (§4.5).
 
 **Enforced by:** `keel/logbook/ledger.jsonl` (ABSENT) · the price table in `keel/settings.yml` (ABSENT) · the three
 ceilings (§9.6) · the weekly lines in the briefing (ABSENT).
+
+---
+
+## 16 · The inventory — concretely
+
+**(NEW: the merge, measured against final/CENSUS.md)** Every position with its file, argv, tools and MCPs; every
+skill and what it becomes; every hand with its class and credential; every store with its schema, writer and reader;
+every command the founder types; every surface; every provider and what it may stand; the file tree of the house and
+of a venture. A path is marked ABSENT unless the census found it.
+
+### 16.1 Positions — three shapes, one loadout worth naming, and five programs with no model
+
+| Position | Kind | File | Claude Code argv (§7.5) | Tools | MCPs | Window | Exists today |
+|---|---|---|---|---|---|---|---|
+| **maker** | shape | `keel/shared/shapes/maker.md` + `maker.claude-code.argv` | `claude -p --restricted --tools Read,Write,Edit,Bash,Glob,Grep --strict-mcp-config --permission-mode dontAsk --permission-prompts none --add-dir <wt> --max-budget-usd <n> --max-turns <n> --session-id <id> --output-format json` | Read Write Edit Bash Glob Grep | none by default | Claude or Codex | ABSENT; seed: `.claude/agents/builder.md` (134 lines, TREE A) |
+| **maker · browser** | loadout | the maker file + an inline `mcpServers` entry per run | as maker, plus `--mcp-config <inline playwright>` | as maker | `playwright` (`.mcp.json`, exists, `--isolated`), with `mcp-policy.json`'s deny list: `browser_run_code_unsafe`, `browser_file_upload`, `browser_network_request` | Claude or Codex | ABSENT as a loadout; seed: `.claude/agents/designer.md` (151 lines) and `.claude/mcp-policy.json` (65 lines) |
+| **maker · curator** | loadout | the maker file; grant narrowed to one venture's `memory/` or `keel/shared/` | as maker with `--tools Read,Write,Edit,Glob,Grep --add-dir <memory dir>` — no Bash | Read Write Edit Glob Grep | none | Gemini | ABSENT |
+| **scout** | shape | `keel/shared/shapes/scout.md` + `.argv` | `claude -p --restricted --tools Read,Glob,Grep,WebSearch,WebFetch --strict-mcp-config --permission-prompts none --max-budget-usd <n> --session-id <id> --output-format json` | Read Glob Grep WebSearch WebFetch | read-only servers admitted through the door, per run | Gemini (routine) · Claude | ABSENT; seed: `.claude/agents/sourcer.md` (147 lines; `mcpServers: [claim-append]`) |
+| **checker** | shape | `keel/shared/shapes/checker.md` + `.argv` | `claude -p --restricted --tools Read,Glob,Grep --strict-mcp-config --permission-prompts none --max-budget-usd <n> --session-id <id> --output-format json` | Read Glob Grep — no shell, no write | none | Gemini (routine) · Codex (hard) · Claude only when neither made it | ABSENT; seed: `.claude/agents/reviewer-readonly.md` (169 lines) |
+| **the Watch** | program | `keel/bin/watch` under `~/Library/LaunchAgents/com.keel.watch.plist` | — | reads files; spawns runs via the argv files | — | none | ABSENT; seeds: `.claude/hooks/budget-guard.js` (204 lines, unregistered), `mission-control/scripts/consume-dispatch.ts` (685 lines) |
+| **the Sender** | program | `keel/bin/send` | — | the admitted tool's one verb; a credential injected at egress | the tool's server, per instruction | none | ABSENT |
+| **the world's door** | program | `keel/bin/inbound` | — | appends one logbook row | — | none | ABSENT |
+| **the probe** | program | `keel/bin/probe` | runs each shape's argv against a fixture | — | — | Gemini or Claude, minimal | ABSENT |
+| **the reconciler** | program | `keel/bin/reconcile` | — | read-only credentials per venture | read-only servers | none | ABSENT |
+| **the Floor** | the founder | Claude Code, interactive, `keel floor <venture>` | `claude` with the charter, envelope and slice loaded at session start | everything, including the founder's own browser | the founder's own connected servers, on the Floor only | Claude | the substrate exists; the loader is `.claude/hooks/session-start.js` (259 lines, RENAMED) |
+
+**(measured)** Of the eighteen agent files in TREE A, seven are engines and eleven are 23-line shims; two engines
+carry `mcpServers` (`designer`, `sourcer`), two carry `worktree add` in their body (`builder`, `designer`), one
+declares `Task` (`orchestrator`), none declares `Workflow`. Their fates are in §17.
+
+### 16.2 Skills — 134, by what each becomes
+
+**(BOTH, measured)** `.claude/skills/` holds 134 skill directories, 7 routers, `CURATION.yml` (462 lines, 67
+entries, five cut-reason keys) and `MANIFEST.json` (870 lines, 134 entries). All of it moves to
+`keel/holding/skills/`. The census classified each by the router's one-line description; the full list is
+CENSUS.md §3.
+
+| Fate class | Count | What it may become, and how it re-enters |
+|---|---|---|
+| **PROCEDURE** | 73 | nothing, as procedure — that is the container Keel refuses; a procedure skill may donate its examples to a kit, one at a time, with a caller. All 28 `thinking-*` are here |
+| **ANCHOR-CANDIDATE** | 22 | a rung-1 anchor in `keel/shared/anchors/`, each admitted with a test that fails without it. First candidates: `wcag-audit-patterns`, `ui-typography`, `ui-visual-validator`, `web-design-guidelines`, `12-principles-of-animation`, `design-taste-frontend`, `security-audit`, `web-security-testing`, `xss-html-injection`, `broken-authentication`, `production-code-audit`, `cc-skill-security-review`, `e2e-testing-patterns`, `writing-good-tests`, `object-calisthenics`, `aws-compliance-checker`, `aws-iam-best-practices`, `agent-evaluation`, `verification-before-completion`, `full-output-enforcement`, `sharp-edges`, `trust-spec-contracts` |
+| **EXEMPLAR-CANDIDATE** | 16 | examples-of-good in a field kit: `high-end-visual-design`, `minimalist-ui`, `industrial-brutalist-ui`, `stitch-design-taste`, `emilkowal-animations`, `pitch-deck-visuals`, `react-patterns`, `vercel-composition-patterns`, `error-handling-patterns`, `nodejs-backend-patterns`, `auth-implementation-patterns`, `cc-skill-coding-standards`, `llm-app-patterns`, `multi-agent-patterns`, `seo-content-writer`, `social-content` |
+| **REHEARSAL-CANDIDATE** | 1 | a rehearsal case: `react19-test-patterns` carries before/after pairs with known answers — the only one in the corpus |
+| **INFRA** | 22 | a vendor fact with an expiry in FACTS, or a tool's admission notes at the door; never loaded into a run as a skill |
+
+**(measured)** Anchor candidates cluster in `quality-security` (11 of 21) and `frontend-design` (6 of 24);
+`ops-delivery` and `thinking` have none between them. The two checks that govern the library today — `check:manifest`
+and `check:curation` in the 48-step suite — retire with it; their rule survives as *a kit names its anchors or it does
+not load*.
+
+### 16.3 Hands — every tool connected on this Mac today, with its class and its credential
+
+**(V3's table, re-classed in Keel's four classes; founder: all of them back through the door, one at a time)** Today
+**none is admitted**; each row is its disposition when it reaches the door. The measured state of the connections is
+from this session's own server list, 2026-09-04.
+
+| Hand | Class | Credential today | Who may hold it | Day · night · never | Disposition at the door |
+|---|---|---|---|---|---|
+| the founder's signed-in Chrome (`claude-in-chrome`) | REACHES THE WORLD + private data | the founder's own sessions | nobody but the founder, on the Floor | **day, Floor only, forever** | the widest hand in the building; never a night grant at any trust score; never shares a grant |
+| Playwright, headless, `--isolated` | READ-ONLY render | none | maker · browser loadout | night | the design anchor; already `mcpServers: [playwright]` on one file; three verbs denied by `mcp-policy.json` |
+| Gmail read · Calendar read · Drive read · Notion read | READ-ONLY, tainted content | OAuth, the founder's | scout | night | admitted first: instruments buy freedom |
+| Gmail send | REACHES THE WORLD, one-way | OAuth | the Sender, `signed_by: founder` | never unattended until widened | anything delivered to a person |
+| Drive share · Calendar create · Notion write | REACHES THE WORLD (a share is durable; an edit others see) | OAuth | the Sender, after a recall window | night only after the class is widened and the undo drilled | a share link is one-way by any honest reading |
+| Figma · Pencil · Stitch · Refero | WRITES (versioned, reversible) · Refero READ-ONLY | OAuth / local files / API key | maker · design loadout, on a dry branch | night after the undo is drilled | a design file reverts; a published prototype link does not, and is a one-way verb |
+| Higgsfield (image · video · audio) | reversible artifact, **SPENDS credits** | API key; failed to connect this session (`ENOTFOUND`) | maker, rate-capped | night, under `usd_per_day` | publish and TikTok verbs are one-way and never; a failure to resolve is damage, counted |
+| RunPod | **SPENDS MONEY at a rate** | API key, uncapped | nobody until capped at the credential | never until a capped key exists | an unbounded spend that runs whether or not anyone is watching; Keel admits rented compute only as founder-approved spend |
+| `claim-append` (local server, `scripts/mcp/claim-append-server.mjs`) | WRITES LOCALLY | none | scout (today) | night | RENAMED into the memory item append; the narrow-capability-through-an-audited-server pattern is the door's model |
+| Mem0 | a hosted memory service | unauthenticated | — | — | **REFUSED**: memory is plain files in git; a service is a dependency, an auth surface and a leak path |
+| Miro · n8n | — | unauthenticated | — | — | through the door individually, each naming the Intent that needs it, or disconnected |
+| `gh` · `git` · `node` · `bun` · `gemini` | CLIs | `gh` reads `~/.config/gh`, which the sandbox denies; `gemini` never authenticated | maker (git, node, bun) · a provider (gemini) | night | each CLI is rehearsed with a known call and a known answer, headless, which is the test that catches a detached-TTY failure |
+| **Not connected, and needed first**: analytics, error tracking, a read-only billing key, the CI runner's API, the git host's read API | READ-ONLY | none | scout · the reconciler | night | connected before any hand, because the reconciliation (§8.5) reads them |
+
+**Enforced by:** `keel/shared/tools/<name>.yml` per admitted hand with class, credential scope, rate, undo drill date,
+horizon, and `checklist.md` beside it (ABSENT) · `keel/bin/door` (ABSENT) · `.claude/mcp-policy.json` (exists, 65
+lines; its per-server allow/deny shape is the seed).
+
+### 16.4 Stores — each with its schema, its one writer, its readers, and the check that fails when it drifts
+
+| Store | Path | Schema (fields) | The one writer | Readers | Fails to load when |
+|---|---|---|---|---|---|
+| Charter | `keel/ventures/<v>/charter.md` | venture · tempo · envelope{may-alone, never, wake-me} · ceiling{per window, money/month} · weight · horizon | the founder, through the read-back | the Watch, every run | a line is missing; horizon passed; `never` shorter than the default list without a founder line saying which was removed |
+| Intent | `keel/ventures/<v>/intents/<id>.md` | purpose · done-test · ceiling · expires · owner · evidence | the founder's door, through the read-back | the Desk, runs, the Balcony | no falsifiable done-test; expired without disposition |
+| Obligation | `keel/ventures/<v>/obligations.yml` | id · owed{what,to} · due · lead_time · consequence · discharge{what,proved_by} · recurs · statute · second_human | the world's door, the clock, the founder | the Watch, first | `statute` set with `second_human` null; `due` past with no disposition (loudest Decide item) |
+| Facts | `keel/ventures/<v>/memory/facts.md` · `keel/shared/facts.yml` | item · source · date · expiry · falsifier · scope | the curator; `shared/facts.yml` by the probe and the measurement commands | the Desk's slice | an item with no expiry or no falsifier; expiry passed with no disposition (`scripts/ledger.mjs`, RENAMED) |
+| Negatives | `keel/ventures/<v>/memory/negatives.md` | what was tried · why it failed · the command that reproduces it · date · venture | the curator | the Desk's slice (always for the exact move); the repetition tripwire | no reproduction command |
+| Already-built | `keel/ventures/<v>/memory/already-built.md` | what · where · what it does · date | the curator; `keel adopt` seeds it | the Desk's slice | a path that does not resolve |
+| Open | `keel/ventures/<v>/memory/open.md` | question · asked on · blocks which intent | the Watch | the Desk's slice (always); the Decide view | an entry older than its intent's expiry |
+| Taste | `keel/shared/taste.md` | accepted/rejected · the evidence · date · held-out flag | the curator, from decisions only | the checker's taste check; the Desk's slice when the anchor is the founder | an entry with no evidence row |
+| Craft | `keel/shared/craft/<field>/kit.md` | what good looks like (2–3 examples) · the anchors · failure modes · vocabulary · horizon · pass count | scouts draft; the curator promotes | makers in that field | any heading not in the four; no horizon; a step list |
+| Rehearsals | `keel/shared/rehearsals/<move-class>/*.case` · `scores.jsonl` | input · known answer · source · date; score rows per loadout | transcript mining; the Floor; the probe writes scores | the Desk (may a loadout run unattended); prompt A/B | a case with no known answer |
+| Shapes | `keel/shared/shapes/<shape>.md` · `<shape>.<provider>.argv` | the standing prompt; the exact argv | the founder, through an A/B against rehearsals | the Desk at dispatch | a timestamp in the prompt (`PS-*` lint, RENAMED); an argv naming `--allowedTools` |
+| Tools | `keel/shared/tools/<name>.yml` · `checklist.md` | class · credential scope · rate · undo{how, drilled_on} · description_hash · horizon · day/night/never · verbs | the door; the drill runner writes only a date | the Desk (grant), the Sender (class, ceiling, checklist), the probe | hash mismatch (FROZEN); drill date stale; horizon passed |
+| Defaults | `keel/shared/never-default.yml` · `wake-me-default.yml` | the lists | the founder | charter load | — |
+| Anchors | `keel/shared/anchors/<name>/` | the check as a script with an exit code; tolerance band; what record it reads | the door | runs' done-tests; the reconciler; the nightly re-run | a check with no exit code; a `reconciles_to` that is the company's own record while claiming rung 1 |
+| People | `keel/people.yml` | person id · consent per relationship and venture · first-contact vs reply · last contact | the founder; the world's door on a reply | the Sender, before any contact | a contact with no consent row |
+| Settings | `keel/settings.yml` | windows{reserve, models, price} · tick · driven_limit (2) · wip_per_venture · interruptions_per_day (3) · harness_share_ceiling · model ids | the founder | everything | a model id with no price row (refused, not scored at zero) |
+| The logbook | `keel/logbook/events.jsonl` · `ledger.jsonl` · `runs/<id>/{brief,trace,handover,evidence}` · `desk/<tick>.json` | OpenTelemetry `gen_ai.*` attribute names; intent id and run id on every row; `F_FULLFSYNC` | everything, through one append function | the Balcony, the briefing, the curator, the meter, ask-anything | a row without an id is refused at the append |
+| The cord | `keel/STOP` | a file; its presence | the founder's tap or word | the Watch, first, every tick | — |
+| The index | `keel/.index/` | SQLite, WAL, vectors over transcripts and the logbook | the local pass | the Desk's slice | deletable; rebuilt in one pass |
+| The holding directory | `keel/holding/skills/` | the 134 as they are | a move | nothing | — |
+| Ship log | `keel/ventures/<v>/ship-log.md` | one line per rung movement and per intent finished | the reconciler | the briefing | a line not generated from a record |
+
+**Enforced by:** `keel/bin/check-stores`, every rule in the last column (ABSENT); the existing mechanisms it absorbs:
+`scripts/ledger.mjs` (expiry, resolvers, `unresolved ≠ pass`), `scripts/evict-memory.mjs` (archive rules),
+`scripts/check-memory-budget.mjs` (size caps), `scripts/verdict.mjs` (sha256 binding of evidence to the exact
+artifact) — all exist in TREE A.
+
+### 16.5 Every command the founder types
+
+**(NEW: named here for the first time; all ABSENT)** The founder's terminal verbs, the Balcony's taps, and the
+Claude Code verbs that already ship.
+
+| Command | Does | Exists |
+|---|---|---|
+| `keel charter <venture>` | opens the read-back page for a new or changed charter; voice in, text back, tap binds | ABSENT |
+| `keel intend <venture>` | opens the read-back page for a new intent; refuses one with no falsifiable done-test and proposes two | ABSENT |
+| `keel tempo <venture> driven\|attended\|watching\|parked` | one field, one write; refuses a third driven venture and shows which one it would slow | ABSENT |
+| `keel floor <venture>` | opens Claude Code on the venture with the charter, envelope and slice loaded; sterile begins | ABSENT (`claude` exists; the loader is `session-start.js`, RENAMED) |
+| `keel adopt <path>` | a scout pass over an existing repository → drafts: charter, obligations, already-built, a first intent | ABSENT (`bin/fleet-install.mjs`, 1,053 lines, RENAMED) |
+| `keel stop` | writes the cord file; recalls the Sender's window | ABSENT |
+| `keel briefing` | opens the page | ABSENT |
+| `keel why <run-id\|intent-id>` | the four depths (§13.7) | ABSENT |
+| `keel status` | one line: running / waiting on you / stopped; per window, capacity and reserve | ABSENT |
+| `keel watch start\|stop` | loads or unloads the LaunchAgent | ABSENT |
+| `keel door <tool>` | walks one tool through §9.3 and writes its file | ABSENT |
+| `keel drill <tool>` | exercises the undo; writes only a date | ABSENT |
+| `keel rehearse <move-class>` | runs a loadout against the known-answer cases, headless, and records the score | ABSENT |
+| `keel probe` | §7.7, on demand | ABSENT |
+| `keel restore --scratch` | the monthly drill: restore from the remote alone into a scratch directory and run the anchors | ABSENT |
+| Balcony taps: *which* · *go ahead* · *change this one thing* · *stop this* · *here is what I meant* · *promote* · *retempo* · *the cord* | §13.2 | ABSENT (the page runtime exists) |
+| Claude Code verbs that ship: `/voice` · `Esc` · `Esc Esc` · `/btw` · `/model` · `/effort` · `claude agents` · `Ctrl+X` in agent view | §13.3, §13.10 | exist |
+
+### 16.6 Every surface, and what it shows
+
+| Surface | Shows | Substrate | Exists |
+|---|---|---|---|
+| **the Floor** | one agent beside the founder; the venture's charter, envelope, slice; a one-line wake at the bottom when `wake-me` fires | Claude Code interactive | the runtime exists; the loader (`session-start.js`) exists and is RENAMED; the one-line wake is ABSENT |
+| **the Balcony** | Now · Decide · Last night · Ventures · Cord (§13.2) | a published page declaring the database, user and comment capabilities; reads the logbook; taps write intents, tempos and the cord | ABSENT; the runtime exists |
+| **the briefing** | §13.4, nine fields, the raw work, the reconciliation line, things I got wrong | a published page; margin comments addressed to an intent id | ABSENT; the runtime exists |
+| **the read-back page** | the system's restatement of a spoken instruction; a confirm tap that binds | a published page | ABSENT |
+| **voice** | input only; verbatim transcript kept | `/voice`, native | exists |
+| **`claude agents`** | the Mac's Now view for free: state-ordered strips, needs-input first, peek-and-reply | shipped | exists |
+| **the room** | every live run a light; the night replayed at speed in the morning; never a control | Generative Agents `demo` mode fed by a JSON writer over `events.jsonl` | ABSENT; through the door |
+| **the menu bar** | running / waiting on you / stopped | a glyph reading the logbook | ABSENT |
+| **the terminal, `keel status` and `keel why`** | one line; the four depths | the CLI | ABSENT |
+
+### 16.7 Every provider, and what position it may stand
+
+| Provider | May stand | Window | argv file | State today |
+|---|---|---|---|---|
+| **Claude Code** (subscription) | maker · scout · checker (only when neither other family made it) · **the Floor, always** | the rolling five-hour window; one-hour cache | `shapes/*.claude-code.argv` (ABSENT; the strings are measured, §7.5) | installed, 2.1.259, measured |
+| **Gemini CLI** (subscription) | scout · checker on routine work · the curator loadout | its own daily quota | `shapes/{scout,checker}.gemini.argv` (ABSENT; `--approval-mode plan` documented) | installed 0.38.2, never authenticated; first run is a measurement |
+| **Codex CLI** (subscription) | maker · checker on mid-to-hard work | its own window | `shapes/{maker,checker}.codex.argv` (ABSENT; `codex exec --sandbox` documented; no per-tool flag) | not installed; #19945 means the headless rehearsal is the admission test |
+| **Local models** | no shape: embeddings, classification, PII detection, dedup | electricity | — | ABSENT; a 384-dimension model plus a SQLite vector extension |
+| **The artifact runtime** | hosts the Balcony, the briefing, the read-back page | free | — | exists; measured: database, user identity, comments that wake the session |
+| **Routines** (cloud) | **refused for the Watch**: cloud-only, cannot reach local files; may run a scout on a schedule against a remote repository later | daily cap | — | exists |
+| **A gateway key** (LiteLLM · OpenRouter) | the only portable credential and the only budget that survives a provider change | per key per period | — | deferred with the metered key (§1 row 19) |
+
+### 16.8 The file tree of the house, and of a venture
+
+**(KEEL's tree, with the obligations, the Sender, the tools, the defaults, the anchors, the people register, the
+holding directory and the ship log added from §1)**
+
+```
+keel/                                   one private repository · the house
+  settings.yml                          windows{reserve, models, price} · tick · driven_limit · wip · interruptions/day · harness ceiling
+  STOP                                  the cord: a file, read first, every tick; one tap from the phone
+  people.yml                            the fleet-wide register of named humans: consent per relationship; first contact narrower than reply
+  bin/
+    watch · send · inbound · probe · reconcile · run · curate · log · check-stores · door · drill · rehearse · supervise
+  shared/
+    shapes/<shape>.md                   three standing prompts, byte-identical, versioned in git
+    shapes/<shape>.<provider>.argv      the exact argv per shape per provider — the grant is these strings
+    tools/<name>.yml · checklist.md     every admitted hand: class · credential scope · rate · undo drill date · hash · horizon
+    anchors/<name>/                     rung-1 checks: a script with an exit code, a tolerance band, the record it reads
+    never-default.yml · wake-me-default.yml
+    facts.yml                           the measured facts that bind, each with its date and its re-measurement command
+    taste.md                            the founder's, mined and confirmed; a held-out fraction
+    craft/<field>/kit.md                proven field kits: four descriptive headings, a horizon
+    rehearsals/<move-class>/            known-answer cases; scores.jsonl per loadout
+  ventures/<name>/
+    charter.md                          venture · tempo · envelope · ceiling · weight · horizon
+    intents/<id>.md                     one file per live intent, with its done-test
+    obligations.yml                     owed · to · due · lead time · consequence · discharge · recurs · statute · second human
+    memory/{facts,negatives,already-built,open}.md
+    ship-log.md                         one line per rung movement and per intent finished, generated
+    work/                               the venture's own repository: ordinary source, ordinary branches, ordinary CI
+  logbook/
+    events.jsonl                        typed, append-only, gen_ai.* attribute names, an id on every row, F_FULLFSYNC
+    ledger.jsonl                        every cost, every tool call, every outward act, by id
+    runs/<id>/                          brief · trace · handover · evidence
+    desk/<tick>.json                    what the Desk considered, scored, and which gate stopped it
+    inbound/                            one row per thing the world sent
+  holding/skills/                       the 134 skills, routers, manifest, CURATION.yml — read by nothing
+  .index/                               SQLite, WAL; vectors; deletable; rebuilt in one pass
+  .secrets/                             NOT in git. Keychain references only.
+```
+
+**(BOTH)** In git: charters, intents, obligations, memory, craft, rehearsals, shapes, tools, handovers, the ledger.
+On the machine only, rebuildable: the index, old traces, worktrees in flight. Never in git, never in a file:
+credentials, customer PII. Off the machine by hash: renders, screenshots, video, audio.
+
+---
+
+## 17 · What exists today, and its fate
+
+**(V3's table, re-decided in Keel's terms and measured by the census, 2026-09-04; sizes are TREE B unless the row
+says the trees differ)** Four fates: **SURVIVES** unchanged in role · **RENAMED** into a part of Keel · **ABSORBED**
+(the artifact goes, the idea lives inside another part) · **RETIRED**.
+
+| Exists today | Measured | Fate | In Keel it is |
+|---|---|---|---|
+| The claim ledger with forced expiry and resolvers — `scripts/ledger.mjs` | 1,531 lines; `.claude/ledger/index.json` 661 lines, 42 claims | RENAMED | the expiry mechanism of every fact and measured fact: `valid_until`, forced disposition, `unresolved ≠ pass` |
+| Verdict binding by sha256 — `scripts/verdict.mjs`, `.qa/verdicts/` | A 534 lines / 68 records; **B 586 / 80** | RENAMED | the binding of a handover's evidence to the exact artifact its anchor checked |
+| The 48-step check suite — `scripts/run-checks.mjs`, `scripts/lib/check-suite.js` | 312 and 1,978 lines; 48 steps, 10 exclusions in both trees | SURVIVES | the harness venture's founding rung-1 anchors; a partial run cannot wear a passing verdict |
+| `scripts/check-citations.mjs` | 846 lines | SURVIVES | a rung-1 anchor for research handovers |
+| The risk classifier on file paths — `scripts/lib/classifier.js`, `.claude/qa-tier-floor.yml` | 187 and 468 lines | RETIRED | the class lives on the hand (§9.3) and the door test on the act (§9.2), never on a file path |
+| The QA gate — `.claude/workflows/qa.js`, `qa-lead-pass.yml`, blind reviewers, adversarial verifiers, a judge with no shell | 1,182 and 692 lines; `qa.js` named by 2 commands, referenced by 41 files | RETIRED as a gate; split | oracle-first is the anchor ladder; reviewers become checkers from another family; the shell-less judge's argv is the checker's; the gate blocks the done-test, not the merge |
+| Seven engines, eleven shims — `.claude/agents/` | 18 files; engines 121–169 lines; shims 23 | RETIRED | three standing prompts. `builder` → maker, `sourcer` → scout, `reviewer-readonly` → checker, `designer` → the browser loadout; `orchestrator` and `framer` → programs and loadouts; `reviewer` (with Bash) → gone, a checker has no shell; the eleven shims → gone |
+| Six playbooks, the lenses, the review lenses, the gates — `.claude/playbooks/`, `lenses.yml`, `review-lenses.yml`, `gates.yml` | 6 files / 284 lines; 201; 230; 221 lines | ABSORBED / RETIRED | a playbook's exit criteria become the done-test; a domain lens becomes a field kit's four headings; a review lens becomes a checker's named dimension; `qa-verdict` becomes the anchor check; the human gates become `never` and *which* |
+| 134 curated skills, `CURATION.yml`, routers, `MANIFEST.json` | 134 dirs; 462; 8; 870 lines | RETIRED as a store | `keel/holding/skills/`; re-entry through the door as examples, anchor or rehearsal (§16.2) |
+| `design.js` (blind variations, blind judges, synthesis) | 143 lines; named by no command | RENAMED | one *both options built* round for design; its score-averaging removed; checkers find, never score |
+| `coding.js`, `research.js` as workflows | 170 and 187 lines; named by no command | RETIRED | a run's own method; the done-test judges the result |
+| `budget-guard.js` | 204 lines; **zero references in `settings.json`** | RENAMED | the stall detector in the Watch (§3.1); registering it today is a founder act |
+| `pre-tool-use.sh`, the armed sandbox, the worktree protocol | 676 lines; `sandbox.enabled: true`, `failIfUnavailable: true`; **no `network` key, no `credentials` key** | SURVIVES with corrections | run physics; the string matcher becomes structured-input matching (the founder's, §19); the `network` and `credentials` blocks are added; `git worktree add` stays the one escalated command |
+| `session-start.js` | 259 lines; emits 2,941 bytes under the 4,096 ceiling | RENAMED | the Floor's loader: charter, envelope, slice |
+| `schema-lint.js` and the `PS-*` prompt standard | 1,947 lines | RETIRED; one predicate and the standard survive | a declared capability with no configuration behind it fails to load (door test); the standard governs three files |
+| `CLAUDE.md`, `AGENTS.md` | 886 and 126 lines | RENAMED / RETIRED | `CLAUDE.md` becomes the Floor's standing context stripped of archaeology, which moves into the logbook; `AGENTS.md` goes |
+| `DECISIONS.md`, `evict-memory.mjs`, the archive volumes | A 424 lines / 39,543 B; B 407 / 39,416; 1,125 lines; two volumes | RENAMED | the curator's REMOVE and EVICT rules: nothing deleted, irreversible entries pinned, a stub under every heading, capped rotating volumes |
+| `LONG-TERM.md`, `USER-INSIGHTS.md`, `CODEBASE-MAP.md` | A 84 / B 96; 18; 202 lines | ABSORBED | taste is derived, never authored; customer language is FACTS with provenance; the map is ALREADY-BUILT seeded by `keel adopt` |
+| Session files, handoffs, the documentation gate | A 171 / B 180 sessions; A 16 / B 21 handoffs | RETIRED | a run's handover; the logbook; the briefing |
+| Sixteen slash commands, `/color`, `/name`, `/board-meeting` | 16 files, 791 lines | RETIRED | `keel` verbs (§16.5); no prompts to write |
+| Mission control | 60 files; `server/` 11 entries; `client/`; `consume-dispatch.ts` 685 lines | SPLIT | the views go; `~/.agentvibe/events.jsonl` (1,119,259 bytes, 3,840 lines) is the logbook's spine; the queue-file consumer is the seed of how the Watch births a run |
+| `bin/warroom` | 3,429 lines | RETIRED; three features reborn | per-worker cost pricing → the meter; typed events → the logbook; snapshots → verified checkpoints |
+| `bin/fleet-install.mjs` and the Stage A/B installer | 1,053 lines, present in **both** trees | RENAMED | `keel adopt`: stamps a repository with the templates and verifies the port rather than assuming it |
+| `.mcp.json`, `.claude/mcp-policy.json` | 12 and 65 lines | RENAMED | the browser loadout's one server; the per-server allow/deny shape is the tool file's seed |
+| `~/.claude/projects/` transcripts | 60 project dirs, **3,060** `.jsonl` files | RENAMED | the transcript pass (§10.5); episodes, never retrieval memory |
+| The catalogue and the five reference studies — `docs/02-competitive/` | TREE B only: `open-source.md` 1,083, `hands.md` 901, `concepts.md` 2,157; 5 studies | SURVIVES | the door's catalogue; every entry re-verified against its LICENSE before admission |
+| v2, WAKE, WATCH, the designs, the minds, v3, Keel — `docs/03-system-design/{STARTUP-OS.md, dream, envision, designs, review, vision, round-5}` and round-6 on ceo-2 | TREE B: 86 design docs vs A's 36; v2 2,826 lines; v3 2,309; Keel 2,682 | SURVIVES as record | the priors of this plan; every decision against them is in §1 |
+| The eight hooks — `.claude/hooks/` | 3,579 lines; only `SessionStart` and `PreToolUse` registered; `stop.sh` exists with no `Stop` event | SPLIT | two survive as above; `gsa-*` and `stop.sh` RETIRED |
+
+**(measured)** Where TREE A is behind TREE B: `verdict.mjs` (+52 lines), `.qa/verdicts/` (+12), the memory files
+(an eviction landed on B), the round-5 corpus, the rethink docs, and origin/main's 65 commits. This document sits on
+TREE A; landing it means merging onto a tree that has B's history, which is §19.14.
+
+---
+
+## 18 · What must be built, by dependency
+
+**(BOTH)** No durations. Each arrow reads *needs*. Keel's three-first stands — the logbook, transcript mining, one
+real venture driven — and v3's seam nodes sit where the measured facts put them: nothing unattended runs before the
+managed settings file exists, and nothing is trusted before the probe has run.
+
+```mermaid
+flowchart TD
+    LOG["1 · The logbook and the ledger<br/>keel/bin/log · an id on every row · F_FULLFSYNC ·<br/>gen_ai.* names · events.jsonl adopted as the spine"] --> RUN
+    LOG --> MINE["2 · Transcript mining<br/>local index · redaction · the classifier ·<br/>taste, negatives, already-built, rehearsal candidates"]
+    MANAGED["The managed settings file<br/>(the founder, outside the repository)"] --> PROBE["The probe<br/>what a run can actually touch"]
+    PROBE --> RUN["The run: keel/bin/run<br/>shapes/*.argv · brief and handover schemas ·<br/>--session-id · resume from the log"]
+    RUN --> METER["The meter: ten real moves,<br/>the runner's own cost joined by id"]
+    MINE --> REH["The rehearsal set<br/>and the first trust scores"]
+    RUN --> REH
+    LOG --> STORES["check-stores: charter · intent ·<br/>obligation · memory schemas"]
+    STORES --> READBACK["The read-back page<br/>(the artifact runtime)"]
+    READBACK --> WATCH["3 · The Watch and the Desk<br/>the cord · obligations first · the nine gates ·<br/>a LaunchAgent that exits"]
+    METER --> WATCH
+    REH --> WATCH
+    WATCH --> VENTURE["3 · One real venture, driven,<br/>with a done-test and a rung-1 anchor"]
+    LOG --> BALCONY["The Balcony and the briefing<br/>Now · Decide · Last night · Ventures · Cord"]
+    BALCONY --> VENTURE
+    PROBE --> DOOR["The tool door and the first admissions:<br/>read-only instruments first"]
+    DOOR --> RECON["The nightly reconciliation<br/>and the contact rungs"]
+    DOOR --> SENDER["The Sender, for the first widened class"]
+    MINE --> CURATOR["The curator loadout, nightly"]
+    VENTURE --> OVERNIGHT["The first measured overnight<br/>(one week overnight vs one week bounded)"]
+    OVERNIGHT --> BOX["The always-on box:<br/>the Watch, the Sender, the logbook move"]
+    LOG --> ROOM["The room, through the door:<br/>a JSON writer over events.jsonl"]
+```
+
+**(KEEL)** Three things unlock everything else and one of them is unusual: the logbook, because nothing can be
+measured, learned from, explained or resumed without a typed append-only record, and it is the cheapest thing here;
+transcript mining, the only component that makes every other component better on the day it lands, which most designs
+would build last; and one real venture, driven, with a real done-test and a rung-1 anchor — not a synthetic test —
+because everything in this design is a claim about what happens when that runs, and none of it is worth more than the
+first night of evidence. **(V3)** The first node on the seam side is four lines of JSON in a directory no run can
+reach, and the probe that proves they hold.
+
+---
+
+## 19 · Open decisions, with both sides
+
+| # | Decision | One side | The other side | Whose |
+|---|---|---|---|---|
+| 1 | **The terms.** The founder chose subscription-only; the full Usage Policy and Commercial Terms have not been read for unattended headless use | the two agentic help-centre articles read say nothing forbidding it; the subscription is paid for; the one-hour cache favours it | the downside of being wrong is the account, which takes the company; a metered key answers it and fixes the metering | the founder, after one reading |
+| 2 | **The second human**, named on statutory obligations | cheap now, impossible in the moment it is needed | a trust and a credential decision the founder may not be ready to make | the founder |
+| 3 | **The managed settings file**, four lines outside the repository, before the first unattended run | the only tier a running process cannot clear; everything else is hygiene | a founder act on a machine-wide file, shown the wrong seam twice before; must be measured by the probe after it is written | the founder, then the probe |
+| 4 | **Which room**: Generative Agents' `demo` mode (Apache 2.0, cold, one JSON file) or AI Town (MIT, alive, needs Convex) | a dead project with no runtime is the cheapest read-only display; one afternoon with a synthetic movement file | a living project is worth operating Convex for if the founder wants it maintained | the founder |
+| 5 | **The first venture**, its first Intent and its rung-1 anchor: beeond, agentvibe itself, or the client's repository | adoption is the intake this founder will use most and beeond is real | the harness as venture zero is the only one whose anchors already exist (the 48-step suite) | the founder |
+| 6 | **The hook rewrite** to structured tool input, and registering `budget-guard.js` | both correct in shape and measured; the string matcher has bypassed and over-blocked | both are edits to the judging machinery, one-way from day one | the founder |
+| 7 | **`pmset -a disablesleep 1`** | runs with the lid shut today | defeats thermal and battery policy; not made on the founder's behalf | the founder |
+| 8 | **Disclosure of machine-made work**; the legal entity and jurisdiction per venture | a dated founder decision with a reopen trigger | one-way doors on the default `never` list | the founder |
+| 9 | **Codex now, or after Gemini proves the second-family route** | three families is the strongest form of vendor independence and the founder said buy | not installed; #19945 open since 2026-04-28; a headless rehearsal is the admission test and may fail | the founder |
+| 10 | **Authenticate `gemini`** — a founder act in a terminal | the second family on this Mac at zero marginal cost; its first run is a measurement | nothing, except that it has sat unauthenticated since it was installed | the founder |
+| 11 | **Two measurements**: does `--max-budget-usd` bind on a subscription; does the auto-mode classifier bind in print mode for a dispatched run | if yes, a per-run ceiling in the argv and a cheap guardrail under the envelope | if no, the ceiling is the Watch's alone | the probe |
+| 12 | **The overnight premise.** Nobody has measured whether a crew that runs overnight beats one that stops | the first overnight starts a standing comparison: one week overnight against one week bounded on the same venture, judged by rung movement per window spent and the reconciliation line | every founder in the corpus reviews in the morning; if overnight does not beat bounded, the system runs bounded and says so | the measurement |
+| 13 | **The two sliders**: the reserve at 30% and three interruptions a day | sliders with a weekly evidence line each | "idk means decide" set them; the evidence moves them | the founder, on evidence |
+| 14 | **Where this document lands.** It sits on TREE A, a branch 75 commits behind TREE B, and round-6 is on a third branch | merge ceo-3 onto ceo-1's history, then ceo-2's, so the plan and both inputs share one tree | leave the three branches and let the founder's merge order decide | the founder |
+| 15 | **The three refusals that may feel like refusals**: no named roster, no approve verb, the room never a control | each is the strongest agreement of every sealed mind in three rounds | each is where a founder who wants a crew of people may feel the design refusing them | decided; reopened only by name |
+
+---
+
+## 20 · How we would know it worked
+
+**(KEEL)** Not a dashboard. Six numbers on the briefing, one line each, tracked over weeks:
+
+| Number | What it means | Direction |
+|---|---|---|
+| **Interventions per finished artifact** | how often the founder had to correct or redo | ↓ — the one that matters most; it is the only number that directly measures walking *for* versus being carried |
+| **Rung-1 fraction** | of finished work, how much was checked by something deterministic | ↑ |
+| **Acted-on rate of interruptions** | of the times it woke you, how often you did something | ↑, and above the threshold |
+| **Cost per finished intent** | measured, per venture, per window | ↓ on repeated kinds of work |
+| **Reserve hit rate** | how often the reserve was needed versus expired unused | neither extreme |
+| **Time from spoken intent to first artifact** | the founder's actual experience of the thing | ↓ |
+
+**(V3)** And five lines beside them: **books agree with the bank**, every night, incidents counted · **the week's
+most expensive refusal**, never the same four weeks running · **the harness's share of every window**, under its
+ceiling · **founder-originated work that shipped**, above a floor — the capture check, and if it falls it is the first
+line of the briefing · **founder-minutes per finished intent**, falling. **(BOTH)** *Worked* looks like: a venture
+reaches rung 2 — a stranger did something — on an intent that began as the founder's own sentence, with the
+reconciliation line green and the founder's mornings ten minutes long. *Did not* looks like: month three with the
+harness's share above its ceiling, or interventions per finished artifact rising while every other number improves,
+or one refusal topping the line a month running. **(V3)** The first measurable thing, before any of the above: the
+briefing opened unprompted twice in forty-eight hours — the looking test, whose base rate is unknown, not zero.
+
+**(KEEL)** The assumptions this rests on, each with what would prove it false: most valuable company work has a
+deterministic anchor cheaper than the work (falsified if done-tests routinely reach only rung 4); a done-test
+constrains quality as well as a procedure would (falsified if the founder routinely rejects passed work on grounds
+nobody could have written down); the envelope can be written once and mostly stays true (falsified if `wake-me`
+changes weekly); idle capacity spent on knowing more compounds (falsified if six weeks of mining do not move
+interventions per artifact); two driven ventures is the right limit (falsified if cycle time does not improve when
+the third is parked); a different family is a good enough checker (now cheap to test rather than expensive to hold).
+
+---
+
+## 21 · Losing images
+
+Every decision against v3, Keel, WATCH, v2 or a design is a row of §1, with the losing image kept by name in its
+last column. Nothing is repeated here so that the two cannot disagree.
+
+---
+
+## 22 · Coverage of the founder's list
+
+Every item of the founder's thirty-five sections and nine wings is placed — IN, RENAMED, REFUSED, FOUNDER'S or
+OUTSIDE, with the final section and one line of reason — in [`COVERAGE.md`](COVERAGE.md) beside this file, written by
+a lane against §1's decisions and both prior placements; a `?` marks a row the reviewer should read first.
 
