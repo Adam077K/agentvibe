@@ -120,7 +120,7 @@
 | Payments tool | IN | IN | IN | 9 | a one-way door that never acts alone | agree |
 | Missing payments MCP | NOT YET | REFUSED | REFUSED | 9 | not having a payments tool is a safety property; add one when an Intent needs it | keel-default |
 | Tool allowlist | RENAMED | IN | IN | 9 | admission by named Intent, carried as argv per shape | §1 row 13 |
-| Tool denylist | REFUSED | IN | IN | 9 | unlisted is denied by construction, so no second list exists to disagree | keel-default? |
+| Tool denylist | REFUSED | IN | IN | 9 | allow-by-construction: `--strict-mcp-config` and `--tools`; the only enumerated deny is three browser verbs on one hand | agree, in different words |
 | Tool discovery protocol | NOT YET | REFUSED | REFUSED | 9 | automatic discovery is how fifteen servers got connected by clicking | keel-default |
 | Tool version pinning | IN | IN | IN | 9 | pinned, with description hashes checked every session | agree |
 | Tool audit log | IN | IN | IN | 10 | the logbook, in OpenTelemetry attribute names | agree |
@@ -204,7 +204,7 @@
 | Dispatch by reference | IN | IN | IN | 6 | briefs name intent ids and paths, never inline payloads | agree |
 | Shared board | RENAMED | RENAMED | RENAMED | 10 | the logbook plus memory files, which carry provenance a board does not | agree |
 | Baton handoff | RENAMED | IN | IN | 6 | the handover is the baton, and it is fixed-field | keel-default |
-| Board rewrite cycle | REFUSED | IN | IN | 10 | delta-only edits; wholesale rewrite is the measured context collapse | keel-default? |
+| Board rewrite cycle | REFUSED | IN | RENAMED | 10 | refused as a cycle, kept as ADD/UPDATE/REMOVE deltas; wholesale rewrite is the measured context collapse | §1 row 11 |
 | Board cap size | RENAMED | IN | IN | 10 | a size cap per store | keel-default |
 | Worker-to-worker request | REFUSED | REFUSED | REFUSED | 6 | runs do not talk; a run proposes and the Desk decides | agree |
 | Peer help request | REFUSED | REFUSED | REFUSED | 6 | direct peer messaging is where implicit conflicting decisions come from | agree |
@@ -289,7 +289,7 @@
 | Pre-tool-use hook | IN | IN | IN | 9 | the door test and pre-action ceilings, at the tool boundary | agree |
 | MCP policy file | RENAMED | IN | IN | 9 | a managed settings file the runs cannot reach | §1 row 13 |
 | Allow list policy | RENAMED | IN | IN | 9 | argv per shape, plus admission by named Intent | §1 row 13 |
-| Deny list policy | REFUSED | IN | IN | 9 | unlisted is denied by construction, so there is no second list | keel-default? |
+| Deny list policy | REFUSED | IN | IN | 9 | allow-by-construction in §9.3, plus the founder's `never` list held as data in `never-default.yml` | agree, in different words |
 | Unlisted-denied default | IN | IN | IN | 9 | the grant is a closed set; what it does not name is absent | agree |
 | Sandbox isolation | IN | IN | IN | 9 | worktrees; a guardrail against accident, not containment | agree |
 | Credential read denial | IN | IN | IN | 14 | credentials are keychain references, never in a file a run can read | agree |
@@ -471,7 +471,7 @@
 | GDPR/privacy compliance | IN | FOUNDER'S | FOUNDER'S | 2 | a venture obligation with a statutory clock, and legal is rung 3 | keel-default |
 | Data retention schedule | IN | IN | IN | 14 | a separate retention for prompt and response bodies | agree |
 | Data deletion request | IN | IN | IN | 10 | the one exception to archive-not-delete, with its own record | agree |
-| Consent management | IN | FOUNDER'S | IN | 9 | the people register carries consent per relationship and per venture | fact? |
+| Consent management | IN | FOUNDER'S | IN | 9 | a mechanism, not the founder's: the People store, read by the Sender before any contact | §1 row 7 |
 | Anonymization pipeline | NOT YET | IN | IN | 10 | redaction before mining, not after | keel-default |
 | Third-party data sharing policy | NOT YET | IN | IN | 4 | the never list; client data stays off any path that reaches the world | keel-default |
 
@@ -608,7 +608,7 @@
 | User testing simulation | REFUSED | REFUSED | REFUSED | 8 | a model imagining users is rung 4 pretending to be rung 1 | agree |
 | Accessibility review | RENAMED | IN | IN | 8 | contrast, focus order and labels are computable rather than judged | keel-default |
 | Product spec writing | RENAMED | RENAMED | RENAMED | 7 | it drafts; the founder chooses between two built options | agree |
-| Roadmap prioritization | FOUNDER'S | RENAMED | RENAMED | 3 | the Desk ranks and ties go to the founder as a which | keel-default? |
+| Roadmap prioritization | FOUNDER'S | RENAMED | RENAMED | 3 | the Desk's ranking, with the value input FOUNDER'S: `weight` is the founder's field and no value is predicted | §1 row 2 |
 | Feature flag rollout | RENAMED | RENAMED | RENAMED | 9 | a flag is what upgrades a deploy from a one-way door to a two-way one | agree |
 | User feedback triage | RENAMED | RENAMED | RENAMED | 9 | it arrives through the world's door; a narrowed run reads it | agree |
 
@@ -701,7 +701,7 @@
 | Item | v3 | Keel | FINAL | Final § | Why | Rule |
 |---|---|---|---|---|---|---|
 | Vendor management agent | RENAMED | RENAMED | RENAMED | 9 | every adopted part gets an exit note on the day it arrives | agree |
-| Hiring-pipeline agent | OUTSIDE | RENAMED | RENAMED | 7 | a loadout on people work; hiring itself stays the founder's | keel-default? |
+| Hiring-pipeline agent | OUTSIDE | RENAMED | OUTSIDE | 4 | refused as an agent; hiring is the founder's, and the only hiring the plan touches is the second human (§4.6) | §1 row 6 |
 | Onboarding-doc agent | RENAMED | RENAMED | RENAMED | 4 | a venture is onboarded by its Charter; a run is not onboarded at all | agree |
 | Meeting-notes agent | RENAMED | RENAMED | RENAMED | 10 | the transcript is the artifact; the summary is never evidence | agree |
 | Calendar-scheduling agent | RENAMED | RENAMED | RENAMED | 9 | an invite to a person is delivery to a person, so it is one-way | agree |
@@ -912,7 +912,7 @@
 |---|---|---|---|---|---|---|
 | System purpose (one sentence) | IN | RENAMED | IN | 0 | one sentence: runs what can be checked, walks beside you on the rest | agree |
 | Wing map (all 9 wings, what exists vs missing) | IN | RENAMED | IN | 22 | this file is the map, and the inventory names what exists and its fate | agree |
-| Relevant contacts (owner of each wing) | REFUSED | RENAMED | REFUSED | 2 | there are no wing owners; there is one founder and a named second human | keel-default? |
+| Relevant contacts (owner of each wing) | REFUSED | RENAMED | REFUSED | 2 | no named roles; one founder and a statutory second human are the only named humans | §1 row 8 |
 | Current state (built, in progress, or only on paper) | IN | RENAMED | IN | 17 | every path is measured and marked, on the tree it was measured on | keel-default |
 | Open decisions (unresolved, with both sides' reasoning) | IN | RENAMED | IN | 19 | the open list, with every losing image kept by name in §1 | keel-default |
 | Open-mindedness instruction (rethink, envision, improve) | IN | RENAMED | IN | 12 | horizons force the rethink, and every decision names what would falsify it | keel-default |
@@ -946,3 +946,5 @@
 | Relevant contacts | handoff | v3 REFUSED wing owners; Keel renamed the whole handoff template to the document itself. Keel-as-default would give RENAMED |
 
 **How the 671 were decided.** `agree` where v3 and Keel land in the same place. `§1 row N` where the decisions table settles a disagreement — rows 2, 3, 4, 6, 8, 10, 11, 13, 15, 18, 19, 20, 21, 26, 28, 29 and 30 are each cited at least once. `keel-default` where they differ and §1 is silent, which the handoff resolves in Keel's favour. No row was decided by `fact` alone; the one measured fact that binds a placement — Codex is not installed, so its use is conditional on a headless rehearsal — is carried inside §1 row 30 and cited that way.
+
+**Settled 2026-09-04 by the reviewer lane, against the plan's own sections:** all seven doubts above are resolved in the rows they name; no `?` remains. The tally's `?` count is therefore 0.
