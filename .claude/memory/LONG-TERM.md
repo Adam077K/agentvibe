@@ -82,3 +82,16 @@
 - **The session memory directory is unwritable from an agent turn.** `~/.claude/projects/.../memory/` is
   refused by both the hook and the sandbox (probed 2026-08-24). Cross-session facts go here and in
   `DECISIONS.md`, which is the repo's own mechanism anyway.
+
+## 2026-09-04 — The final plan, and how the founder chose its inputs
+
+- **The final plan is `docs/03-system-design/final/FINAL-PLAN.md` on branch `ceo-3-1788468144`**, with
+  `COVERAGE.md`, `CENSUS.md`, `DECISIONS.md` and `page/` beside it. Keel (round six, mind-1) is the base; v3
+  contributes the measured facts, the obligations, the Sender, the probe and the reconciliation. §1 holds all thirty
+  decisions with losing images. Nothing is built; nothing was pushed.
+- **Asked which round-6 files to read, the founder chose "Keel only" against the recommendation.** Read that the
+  way the 2026-08-12 pattern reads: overruled on scope, and meant it. THE-PLAN.md and the other round-6 files stay
+  unread by the merge; do not fold them in later without asking.
+- **A second model family is still unreachable from inside Claude Code**: `gemini` installed, never authenticated;
+  `codex` absent. Every review of the final plan is single-family and says so.
+
