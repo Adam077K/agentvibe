@@ -533,3 +533,594 @@ company with no second human has a real hole, and the system says so on the day 
 on the day it matters. **Enforced by:** the cheap pass reads the founder's last touch from the logbook (WISH until
 `keel/bin/watch` exists); `statute` without `second_human` fails to load (§2.3).
 
+---
+
+## 5 · Capacity, providers, and where things actually run
+
+### 5.1 The pool and the reserve
+
+**(BOTH)** One Claude account, one rolling five-hour window, and when it runs out **every agent stops at once** — a
+shared fuse, not a per-agent limit; it stopped two lanes mid-write on the day this was written. Any design that treats
+runs as independent workers is wrong here: they are loads on one circuit. A grid never dispatches to 100% of capacity;
+it holds a reserve, part of it spinning. Same structure, same justification.
+
+```mermaid
+flowchart LR
+    POOL["A window<br/>100% of its capacity"] --> RES["RESERVE — held back, never dispatched<br/>for the founder sitting down to work"]
+    POOL --> DISP["DISPATCHABLE"]
+    DISP --> T1["Interactive<br/>the founder on the Floor<br/>strongest model, never routed away"]
+    DISP --> T2["Driven work<br/>runs against live Intents<br/>model chosen per move"]
+    DISP --> T3["Checking<br/>never the family that made it"]
+    RES -.->|"untouched at window close"| GONE["Expires. The reserve is insurance,<br/>not a budget line."]
+```
+
+**(KEEL, founder: 30%, a real slider)** The reserve is the most important number in the system and the founder sets
+it: too small and the founder sits down at 9 p.m. to a burned window; too large and the nights are wasted. One slider
+on the Balcony, and a weekly line reports how often the reserve was needed and how often it expired unused, so the
+founder tunes it on evidence. With three windows the reserve is **per window**, and the Claude reserve is the one that
+protects the Floor.
+
+### 5.2 Three subscription windows, routed by difficulty
+
+**(KEEL, founder: "Gemini for the small routine stuff, Codex and Claude for the mid-hard things"; subscriptions only,
+no metered key in the first form)** Fuel is a set of subscription windows, one per provider, each with its own fuse,
+and the Desk routes by **difficulty**, which is a better axis than price because it survives a price change.
+
+| Window | Fuse | Serves | Measured state on this Mac, 2026-09-04 |
+|---|---|---|---|
+| **Gemini** (CLI subscription) | its own daily quota | routine work: triage, extraction, classification, link checks, summarising, second-family checking, the night curator | `gemini` 0.38.2 installed, **never authenticated**; its first run is a measurement, fail-closed on empty stdout |
+| **Codex** (subscription) | its own window | mid-to-hard work, and a third family for checking | **not installed**; openai/codex#19945 — exit 0 with empty stdout when detached from a TTY on a non-trivial prompt — open since 2026-04-28, so a smoke test passes and the real workload fails; the rehearsal (§7.6) must be headless or it proves nothing |
+| **Claude** (subscription) | the rolling five-hour window | mid-to-hard work, and everything the founder is watching | Claude Code 2.1.259 installed and measured; the prompt cache lives **one hour** on the subscription and five minutes on a key or once the account draws on credits |
+| **Local** | electricity | embeddings, semantic search over transcripts, PII detection, dedup, a first-pass classifier | a 384-dimension model runs in under 100 MB with a SQLite vector extension; no service, no API cost |
+
+**(KEEL)** Four rules, and they are the whole fuel strategy. **Difficulty picks the window; cost breaks the tie** —
+routine work goes to Gemini even when Claude has capacity, because spending a hard-tier window on easy work is the
+waste, not the price. **Windows fail independently, and that is the point** — Claude running out at 4 p.m. stops
+Claude's work and not the night's routine work; real resilience one account never had. **A checker is never on the
+family that made it** (§8.3) — with three families this stops being a constraint and becomes a choice. **Nothing runs
+on a harder window than the move needs**, and §7.6 decides what "needs" means by measurement.
+
+**(KEEL)** What "no metered key" costs, said plainly: the Anthropic batch tier — half price, stacking with cached
+reads — needs a metered key, so it is out of the first form. The cheap bulk tier is therefore the Gemini window;
+overnight work is CLI work on the machine and a shut lid ends the night rather than degrading it, which strengthens
+the case for the always-on box; and batch is the first thing to add if a key is ever bought — the largest single cost
+reduction available, needing no design change. **(V3)** `--bare` is an API-key cell by construction — no OAuth, the
+five-minute cache, no Routines, no Remote Control, no inbox socket — so a bare run and a subscription run are one
+decision, not three.
+
+### 5.3 The three-family map, and the model per move
+
+**(KEEL)** There is no table of model-per-agent because the agent is not the unit; the **move** is.
+
+```mermaid
+flowchart TD
+    M["A move needs doing"] --> Q1{"Is a human waiting?"}
+    Q1 -->|"no"| Q2{"Deterministic answer exists?<br/>(test, grep, diff, sum, reconcile)"}
+    Q2 -->|"yes"| DET["No model at all"]
+    Q2 -->|"no"| Q3{"Extraction, classification,<br/>ranking or retrieval?"}
+    Q3 -->|"yes"| LOCAL["Local model / embeddings"]
+    Q3 -->|"no"| Q4{"Judgement or generation?"}
+    Q4 -->|"routine"| GEM["GEMINI window"]
+    Q4 -->|"mid-to-hard"| HARD["CODEX or CLAUDE window,<br/>whichever has room"]
+    Q1 -->|"yes"| Q5{"The founder's own<br/>working session?"}
+    Q5 -->|"yes"| TOP["CLAUDE window, strongest model.<br/>The Floor is never routed away."]
+    Q5 -->|"no"| MID["Cheapest window that has passed<br/>this move's rehearsal (§7.6)"]
+    HARD --> ART["An artifact"]
+    GEM --> ART
+    ART --> CHK["CHECKER — any family<br/>that did not make it"]
+```
+
+**(KEEL)** The only justification for a harder window on a move is that a routine one has been measured to fail that
+move's rehearsal — the reverse of the usual instinct. **(V3)** Work judged by a deterministic anchor is attempted by
+the cheapest model that ever passes it, because a retry is cheaper than a smarter attempt; work judged only by taste
+gets the best model and few tries. **Enforced by:** `keel/settings.yml` `windows:` with a reserve and a model list per
+window (ABSENT); the rehearsal scores in `keel/shared/rehearsals/` (ABSENT).
+
+### 5.4 Where it runs, honestly
+
+**(KEEL, founder: Mac first; lid open when convenient; an always-on box after the first measured overnight)**
+
+```mermaid
+flowchart TB
+    subgraph MAC["The Mac — lid open, on power, logged in"]
+        LA["launchd LaunchAgent<br/>holds the Watch"]
+        CAF["caffeinate -i, time-bounded<br/>prevents idle sleep"]
+        CC["claude -p runs<br/>each in its own git worktree"]
+    end
+    subgraph WALL["The hard wall"]
+        LID["Lid closed → the Mac sleeps.<br/>caffeinate does NOT prevent this.<br/>Only pmset -a disablesleep 1 does,<br/>and that is the founder's decision."]
+    end
+    subgraph LATER["After the first measured overnight"]
+        BOX["An always-on box:<br/>the Watch, the Sender, the logbook.<br/>The Mac becomes a client."]
+    end
+    MAC --> WALL
+    WALL -->|"a real gap, measured on one night"| LATER
+```
+
+**(KEEL)** A closed laptop is not a server, and a design that promises "runs all night" on one is lying. Three honest
+options: lid open on power (works today, costs nothing); `pmset -a disablesleep 1` (a system-wide change that defeats
+thermal and battery policy — not made on the founder's behalf); or move the overnight tier off the laptop. In the
+first form there is no pool that survives a closed lid, so the always-on box answers a real gap rather than an
+optimisation, and buying it is a decision earned by one night's evidence. **(V3)** When the box comes, only the
+Watch, the Sender and the logbook move there — the runs hold no credentials by construction and can be anywhere, and
+moving credentials to a second machine widens the blast radius rather than solving anything. **(V3, measured)** The
+runtime's own facts that bind this section: `--allowedTools` restricts nothing; a `claude -p` child is narrowed only by
+`--restricted --tools <list> --strict-mcp-config --permission-mode dontAsk --permission-prompts none` under a managed
+settings file; `claude -p` starts in `default` mode by construction and the `auto` seen on this Mac came from user
+settings; `/usage` reports the cache hit rate for the main conversation only, so the meter must read each run's own
+JSON cost fields (§15.1). **(V3)** Unattended headless operation on a consumer subscription is an open
+terms-of-service question and the two agentic help-centre articles read so far say nothing that forbids it; the full
+terms have not been read, and that reading is open decision §19.1.
+
+**Enforced by:** the LaunchAgent plist and `keel/bin/watch` (ABSENT) · `keel/settings.yml` (ABSENT) · the managed
+settings file, a founder act outside the repository (ABSENT) · `npm run test:sandbox` (TREE A, exists; fails if the
+sandbox is disarmed).
+
+---
+
+## 6 · A Run — born, works, dies
+
+**(KEEL)** A Run is the only place work happens and it is deliberately disposable. Nothing here is a long-lived agent
+accumulating context, because a long-lived context is the thing that rots, drifts and costs.
+
+### 6.1 The life of a Run
+
+**(KEEL)**
+
+```mermaid
+flowchart TD
+    BIRTH["BORN — the Desk writes a brief"] --> BRIEF
+    BRIEF["The brief, nine fields (§6.2)"] --> CTX["Fresh context.<br/>Loaded: charter, intent, the memory slice,<br/>the field kit if any. Nothing else."]
+    CTX --> ISO["Its own git worktree<br/>if it writes code or files"]
+    ISO --> WORK["WORKS — chooses its own method"]
+    WORK --> SELF{"Self-check against<br/>the done-test (rung 0)"}
+    SELF -->|"fails"| WORK
+    SELF -->|"passes, or ceiling hit"| ANCH["ANCHOR — something outside the model<br/>checks it (§8)"]
+    WORK -->|"hits something outside its scope<br/>that is wrong"| CORD["PULLS THE CORD on itself:<br/>stops, records the defect, escalates.<br/>This is a SUCCESS."]
+    ANCH --> HAND["HANDOVER — seven fields (§6.3)"]
+    CORD --> HAND
+    WORK -->|"ceiling reached with no result"| HAND
+    HAND --> LOG["Written to the logbook"]
+    LOG --> DIE["DIES — context discarded"]
+    DIE --> NEXT{"Handover proposes<br/>a next action?"}
+    NEXT -->|"yes"| Q["The proposal queue (§2.4 door B) —<br/>never dispatched by the run that proposed it"]
+    NEXT -->|"no"| END["Intent advances or completes"]
+```
+
+**(KEEL)** Three properties are load-bearing. **A run cannot dispatch its own successor**: it proposes, the Desk
+decides; without this, one run that believes it is nearly finished spawns another that believes the same, forever —
+the loop is broken at the only place that knows the budget and the ranking. **A run that stops on a defect has
+succeeded**: Toyota's andon cord, where stopping the line on a detected problem is the worker's responsibility;
+without that inversion every incentive pushes toward producing something rather than reporting that the ground is
+wrong. **The ceiling is a hard stop, not a warning**: pre-trade risk controls block the order before it reaches the
+market; a run at its ceiling hands over what it has with an honest *unfinished, here is where I got to*.
+
+**(V3)** Runs are short by default. Agent success over duration decays, and a model that has seen its own earlier
+error is more likely to make the next one; the default wall-clock ceiling is minutes, not hours, and a restart is from
+the last verified checkpoint. Two measured facts shape it: a background child holds its parent open up to ten minutes
+of idle waiting by default (`CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS` sets it), so a maker with one stuck child doubles
+its own duration with nothing reporting it — runs do not spawn background children except scouts fanning out under a
+bounded wait; and `maxTurns` marks output partial and resumable rather than truncating it, which is the
+restart-from-checkpoint primitive and does not need to be built.
+
+### 6.2 The brief
+
+**(KEEL)** Nine fields. Anything not in the brief is not in scope, and the run is told so.
+
+```
+intent:        the id it serves — a run with no intent id does not start
+purpose:       one sentence
+done-test:     copied verbatim from the Intent, never paraphrased
+out-of-scope:  named explicitly — what it must not touch or fix
+ceiling:       tokens, and wall-clock
+tools:         the exact grant (§9.3) — nothing else is reachable
+window+model:  from §5.3
+negatives:     what has already been tried here and failed (§10.4)
+hand back:     the named artifacts, and the evidence for the done-test
+```
+
+**(NEW: two stamps the Desk adds, from measured facts)** The Desk also stamps an `id` — a company-generated UUID
+carried into the runtime as `--session-id`, so the id is the system's and not the vendor's returned handle, and it is
+on every logbook row — and a `label`, what the run is making and which window it is burning, which is all the Balcony
+shows. **(KEEL)** `out-of-scope` and `negatives` are the two fields most systems omit and the two that most reduce
+waste: the first stops scope creep, the main way a bounded run becomes an unbounded one; the second stops the system
+re-discovering the same dead end every night.
+
+### 6.3 The handover
+
+**(KEEL)** Fixed fields, always, even on failure. The I-PASS bundle cut medical errors 23% and preventable adverse
+events 30% across nine hospitals; the mechanism is not the format but that named required fields force the outgoing
+party to surface what the incoming party needs, especially the uncertain parts, which free prose omits.
+
+```
+outcome:      done | partial | stopped-on-defect | blocked | over-ceiling
+done-test:    passed | failed | not-reached — and the evidence, attached
+changed:      every file, branch, external effect. Nothing summarised away.
+cost:         actual tokens, window, wall-clock — from the runner's own record
+learned:      what is now known that was not before — a PROPOSAL to memory (§10.3)
+uncertain:    what I am not sure about and what would settle it
+next:         the single most valuable next action, as a proposal
+```
+
+**(KEEL)** `uncertain` is the field to fight hardest for: it turns a confident wrong answer into a flagged one, and
+the anchor and the briefing read it first. **(V3)** A handover is never the next run's input by itself: every run
+starts from the files — the logbook, the intent, the slice — so a summary that lost a number cannot propagate, which
+is the defect this repository recorded twice.
+
+### 6.4 Resume, not restart
+
+**(KEEL)** Every Run writes its handover incrementally and records each completed step before the next begins. When
+the window closes or the lid shuts, the run is resumable from its log rather than restartable from its brief —
+Temporal's durable-execution model: a complete event history replayed on recovery, steps that succeeded skipped. A
+restarted agent run does not merely waste time; it re-spends money and may re-take actions that already happened. An
+agent that already sent the email and then restarts sends it twice. So every external effect is recorded before it is
+attempted, with an idempotency key, and replay checks the log before acting. **(V3, measured)** The runtime's own
+facts: `SIGTERM` gives exit 143, the turn left unfinished with no result recorded, the process tree killed, the turn
+resumable; every surveyed runtime has a session id and resume-by-id, and Claude Code accepts the id the system
+assigns.
+
+**Enforced by:** the brief and handover schemas in `keel/shared/schemas/` and `keel/bin/run` that births a run and
+refuses a brief missing any field (ABSENT) · `--output-format json` (exists) · `--session-id <uuid>` (exists) · the
+runner's `SessionEnd` hook writing the partial handover (ABSENT).
+
+---
+
+## 7 · Shapes and loadouts — how many kinds of worker, and why that number
+
+**(KEEL)** The founder's list names roughly sixty department agents. They are refused, and this section is the
+argument, because refusing sixty things the founder asked for requires more than an assertion.
+
+### 7.1 Three shapes, separated by irreducible properties
+
+**(KEEL)** A cold-outreach agent and a blog-writing agent have the same tools, the same reasoning, the same failure
+modes and the same shape; they differ in what they know about the field and what would prove them right — memory and
+a check, neither of which is an agent. OpenHands reaches 72% on SWE-Bench Verified with one generalist architecture
+across providers; Cognition's failure case is what happens when one artifact is split across specialists who cannot
+see each other's implicit decisions; Anthropic's win is breadth-first search where subtasks are independent.
+
+```mermaid
+flowchart TB
+    subgraph MAKER["MAKER — builds one thing"]
+        M1["Single-threaded. Continuous context.<br/>Never split across parallel builders."]
+        M2["Grant: read, write, edit, shell —<br/>and a browser only as a loadout"]
+        M3["One artifact. One worktree. One done-test."]
+    end
+    subgraph SCOUT["SCOUT — finds things out"]
+        S1["Stateless. Narrow. Parallel is legal<br/>here and only here."]
+        S2["Grant: read, search, fetch.<br/>NO write. NO credentials."]
+        S3["Returns evidence with sources,<br/>never a recommendation. Tainted by construction."]
+    end
+    subgraph CHECKER["CHECKER — judges what someone else made"]
+        C1["Read-only. Cannot edit what it reviews.<br/>No shell. Out of band."]
+        C2["A different family from the maker,<br/>whenever one is reachable."]
+        C3["Returns findings against a named<br/>dimension, never a score."]
+    end
+    BRIEF["A brief from the Desk"] --> PICK{"What shape of work?"}
+    PICK -->|"produce an artifact"| MAKER
+    PICK -->|"answer a bounded question"| SCOUT
+    PICK -->|"judge finished work"| CHECKER
+```
+
+**(KEEL)** Why exactly three: a maker must hold continuous context and so must not be parallelised on one artifact; a
+scout must be parallelisable and so must be stateless and must not write; a checker must not be able to change what
+it judges and must not be the family that made it — if a checker could edit, it would review what it can edit and the
+check would be circular. Every fourth shape collapses into one of these: a designer is a maker whose anchor is a
+rendered screenshot; a security reviewer is a checker with a different dimension; a researcher is a scout with a wider
+question. **Domain is a loadout, not a shape.** **(BOTH)** v3 reached the same three from its own side — its looker is
+a maker loadout carrying a browser, its judge is the checker, its lookout is the scout — and its three no-model
+processes are not shapes at all (§7.4).
+
+### 7.2 The loadout — where all the variety lives
+
+**(KEEL)**
+
+```mermaid
+flowchart LR
+    SHAPE["Shape<br/>maker | scout | checker"] --> RUN
+    CHARTER["Charter<br/>venture, envelope, tone"] --> RUN
+    INTENT["Intent + done-test"] --> RUN
+    MEM["Memory slice<br/>taste · negatives · already-built"] --> RUN
+    KIT["Field kit<br/>if the field is new (§11)"] --> RUN
+    TOOLS["Grant<br/>the exact scoped set (§9.3)"] --> RUN
+    ANCH["Anchor<br/>what will prove this (§8)"] --> RUN
+    WIN["Window<br/>which subscription burns (§5.2)"] --> RUN
+    RUN["The run"]
+```
+
+**(KEEL, founder-confirmed)** Three shapes, unbounded runs, as many loadouts as there are kinds of work. On any night
+the founder might see six runs going, all makers, all different because their loadouts differ. There is no registry
+of personalities, no file per role to drift, no question of which of fifty agents to call. The founder loses the
+ability to say "send this to the CFO agent"; what replaces it is that they say what they want and the Desk assembles
+the loadout. The Balcony labels each run by what it is making and which window it is burning: *writing the pricing
+page · Claude*, *sorting last night's mail · Gemini*. **(V3)** A venture's colour may label its lane; a label costs
+nothing while a runtime identity costs a career, a trust score and a stale context.
+
+**(NEW: the curator's shape)** Keel names a night curator and does not give it a shape. It is a **maker** loadout
+whose only writable scope is the memory files of one venture or the shared store, whose window is Gemini, and which is
+never given a shell — so the rule that *the thing that acts never edits memory* is enforced by the grant, not by
+instruction.
+
+### 7.3 The standing prompts, and how they are versioned
+
+**(BOTH)** Three standing prompts, one per shape, in `keel/shared/shapes/<shape>.md`, byte-identical across every
+run of that shape and never carrying a timestamp, because two runs whose prompts differ by a date are not cached and
+the bill triples (§14.5). What each says is commander's intent, not procedure: what a run owes at the end (a handover,
+and the evidence its done-test named), the one objection it may file (the cord on itself), and a default it may depart
+from with a stated reason. The checker's says *find, never score; when comparing two, pairwise and order-swapped;
+report the candidate stripped of its own label*. **(BOTH)** Their sha is on every logbook row, so every outcome
+attributes to a prompt version; a change is A/B'd against the rehearsal set or it is not made (§12). **(V3)** The
+prompt-craft standard on this machine (`PROMPT-STANDARD.md`, the `PS-*` lint in `.claude/hooks/schema-lint.js`, TREE
+A) survives as the deterministic check on those three files; the eighteen agent files it governed go (§17).
+
+### 7.4 The Sender — the program with no model
+
+**(V3 mechanism, KEEL's naming discipline and founder-confirmed default)** Every outward act — a send, a post, a
+payment, a deploy, a share, a delete of something a person made — is **staged, never sent** (§9.2): the artifact
+exists, hashed, ready, and one tap sends it. The tap runs a program. When the founder widens one class of act in one
+venture's `may-alone`, the same program runs without the tap. It holds no model, is a few hundred lines, and accepts
+exactly one shape:
+
+```yaml
+instruction:
+  act:            send | publish | pay | deploy | delete | share      # one act, from the tool's declared verbs
+  tool:           tools/resend-transactional                         # admitted through the door (§9.3)
+  venture:        beeond
+  intent:         i-2026-09-04-0132                                   # the id on every logbook row
+  payload_sha256: 9f3c…                                              # the exact artifact that was staged and checked
+  recipient:      person:pk_7a2f | channel:x/@beeond | env:production # from people.yml or the venture's channels
+  not_before:     2026-09-05T09:00+01:00                              # the recall window, and the recipient's working hours
+  ceiling_check:  { count_today: 3, ceiling: 6 }                      # recomputed by the Sender itself; it REJECTS
+  checklist:      tools/resend-transactional/checklist.md            # read aloud into the logbook, item by item
+  signed_by:      founder | watch                                     # 'watch' only for a class the charter widened
+```
+
+**(V3)** It checks the ceiling and the rate limit **independently of the number in the instruction** — no process
+may both decide to spend and execute the spend — reads the checklist aloud into the logbook as it executes each item,
+performs exactly one act, holds the recall window, and records the result with an idempotency key. A prompt injection
+that reaches the Sender finds a program. Rate limits are absolute: *six outbound messages a day to people who have not
+replied* is a number in a process no model can reach. No first contact with anyone not on `people.yml`. The queue
+holds every act until the recipient's local working hours unless the tool declares otherwise — a machine that emails a
+stranger at 03:40 has said something about itself before the first word. **(NEW: why it survives Keel's cut)** Keel
+blocks a breaching act at the tool boundary and says "one tap sends"; it never says what program the tap runs or what
+runs when a class is widened. Without a Sender the thing that decided to send is the thing that sends, which is the
+exact seam the corpus shows breaking. **Enforced by:** `keel/bin/send` (ABSENT; specified in v2 Map 1 and kept) ·
+`keel/people.yml` (ABSENT) · the sandbox's `credentials.mask` and `injectHosts` so the credential is attached at
+egress and never in any run's environment (documented; unused on this Mac).
+
+### 7.5 The argv per shape per provider — the grant is these strings
+
+**(V3, measured 2026-09-02 and re-measured by the providers lane 2026-09-04; Keel's tool-grant rule made concrete)**
+A grant is not a prose rule; it is the exact argv the Desk emits, held in
+`keel/shared/shapes/<shape>.<provider>.argv` (ABSENT), under a **managed settings file** the founder writes outside
+the repository, because only managed settings survive a child's argv. `--allowedTools` appears in no argv because it
+restricts nothing.
+
+| Shape | Claude Code (installed, measured) | Gemini CLI (installed, never authenticated; documented) | Codex CLI (not installed; documented) |
+|---|---|---|---|
+| **maker** | `claude -p --restricted --tools Read,Write,Edit,Bash,Glob,Grep --strict-mcp-config --permission-mode dontAsk --permission-prompts none --add-dir <worktree> --max-budget-usd <n> --max-turns <n> --session-id <uuid> --output-format json < brief.md` · the "never a credential" clause is `sandbox.credentials.mask` + `injectHosts`; the "read-only proxy" clause is `sandbox.network` with `strictAllowlist` | a write-capable narrowing is unverified; Policy Engine via `--admin-policy` | `codex exec` with `--sandbox`; `requirements.toml` outranks every flag; **no per-tool flag found**; the TTY defect |
+| **maker + browser** | the same, plus a per-run inline `mcpServers` entry for Playwright — **the only surveyed way to give one run a browser without the server's tools entering any other run's context** | none found | none found |
+| **scout** | `--restricted --tools Read,Glob,Grep,WebSearch,WebFetch --strict-mcp-config --permission-prompts none --max-budget-usd <n>` (`--restricted` removes WebFetch unless `--tools` names it) | `--approval-mode plan` is read-only in one flag — **the one shape three runtimes can stand today** | unverified |
+| **checker** | `--restricted --tools Read,Glob,Grep --strict-mcp-config --permission-prompts none --max-budget-usd <n>` — TREE A's `reviewer-readonly.md` already encodes it; a checker reading a prepared diff can go through a batch tier at half price on the day a key exists | the second family on this Mac; first run is a measurement | third family in principle, **blocked by #19945** until a headless rehearsal passes |
+| **the Sender** | **nothing surveyed is a Sender**; every runtime holds a model by construction; it is a program the system writes | — | — |
+
+**(V3, measured)** `--restricted` supplies three clauses at once: it ignores user, project and local settings,
+confines the file tools to the working directories, and refuses bypass; `--permission-prompts none` means a run never
+hangs on a prompt nobody will answer; `--max-budget-usd` makes a run's cost a stated bound rather than an observed
+outcome (whether it binds on a subscription is one measurement, §19). Whether `--permission-mode auto`'s classifier
+binds in print mode for a dispatched run is a second measurement; if it does, it is a cheap guardrail against accident
+under the argv, and it is not the envelope.
+
+### 7.6 How a loadout is proven able, before it is trusted
+
+**(KEEL)** Voyager added a skill to its library only after the skill verifiably worked in the environment, and that is
+why the library transferred to a fresh world instead of being a pile of plausible code. The same discipline applies to
+loadouts.
+
+```mermaid
+flowchart TD
+    NEW["A new kind of move appears<br/>(new field, new tool, new loadout, new provider)"] --> REH{"Is there a rehearsal<br/>for this move?"}
+    REH -->|"no"| MAKE["Build one: 3–5 cases from the past<br/>where the right answer is already known<br/>(transcripts, shipped work, the Floor)"]
+    MAKE --> RUNIT
+    REH -->|"yes"| RUNIT["Run the loadout against the rehearsal<br/>on the cheapest window — HEADLESS,<br/>exactly as it will run at night"]
+    RUNIT --> SCORE{"Passed the<br/>known-answer cases?"}
+    SCORE -->|"no"| STRONGER["A stronger model,<br/>or a richer loadout; re-run"]
+    STRONGER --> RUNIT
+    SCORE -->|"still no"| ESCALATE["Not yet safe to run unattended.<br/>It goes to the Floor, where the founder<br/>does it WITH an agent."]
+    SCORE -->|"yes"| TRUST["The loadout earns a trust score<br/>for this move class"]
+    TRUST --> AUTO["May run unattended<br/>inside the envelope"]
+    AUTO --> WATCH2["Trust recomputed continuously from<br/>anchored outcomes, never self-reported"]
+    WATCH2 -->|"pass rate falls"| ESCALATE
+```
+
+**(KEEL)** Three consequences. **A trust score is a measurement, not a rating**: the observed pass rate of anchored
+checks for that loadout on that move class; no run scores itself. **"Not yet trusted" has a productive destination,
+not a bin**: a move that fails rehearsal goes to the Floor, and *that session becomes the rehearsal case for next
+time* — the mechanism by which walking with the founder teaches the system to walk for them. **The rehearsal cases
+come from the founder's own past**: thousands of transcripts hold hundreds of *no, not like that* and *yes, that's it*
+— a labelled dataset of this founder's judgement, gathered free over years. **(V3)** Trust scores are printed as
+*insufficient* below a sample floor rather than as a number, and a trust score charted over time with limits from its
+own history is the control chart that sees a provider's silent model update in month nine.
+
+### 7.7 The probe — every night, in the environment a run actually uses
+
+**(V3)** A capability nobody probes is not a capability; it is a memory of one. A flag everybody believed restricted
+the tool surface restricted nothing for months, and a second model family sat dead for six months because both its pins
+were retired and nothing asked. So every night a probe run, using the real argv under the real managed file, asserts:
+a maker cannot name a tool outside its argv, cannot find any credential or the messaging token in its environment,
+cannot reach the network except through the proxy; a checker cannot write; every admitted tool answers; every
+second-family route returns a model id that is not the maker's; `crossSessionInbound: refuse` dropped a test message.
+Results go to the logbook; a failure is a `wake-me`. **Enforced by:** `keel/bin/probe` (ABSENT) · `claude mcp list`
+every night (the command exists; the check is ABSENT).
+
+### 7.8 How a run dies
+
+**(KEEL)** Every run dies at handover. What survives is exactly three things: the handover, whatever memory accepted
+from it under §10.3, and the loadout's updated trust score. The context is discarded. The one thing that can be
+retired is a loadout recipe, and it retires the way everything here does: it carries a horizon, and past it must be
+re-rehearsed or stops being offered.
+
+---
+
+## 8 · Truth — how anything is known to be good
+
+**(KEEL)** The scarcest thing in the system, and the section to defend hardest.
+
+### 8.1 The finding that reorganises everything
+
+**(KEEL)** An LLM asked to review its own reasoning with no external feedback gets worse — GPT-4 fell from 95.5% to
+91.5% on GSM8K — because the bottleneck is finding the error, not fixing it. A model judging output measurably prefers
+its own generations, its own family, longer answers and whichever came first, agreeing with human experts 60–68% of
+the time in specialist domains. **(V3)** Across 27 papers and 19 benchmarks additional scaffolding does not
+consistently improve reliability, and a production review gate in this very repository flagged zero of a hundred
+rounds in which humans later confirmed twenty-three defects. So: **a model checking a model is a screen, not a
+verdict**; every gate is deterministic or it is not a gate; everything believed is anchored to something that is not a
+language model.
+
+### 8.2 The anchor ladder
+
+**(KEEL)** Every done-test names its anchor, and the ladder is ordered by how much it can be trusted. A done-test that
+can only reach rung 4 is a weaker done-test, and the system says so out loud.
+
+```mermaid
+flowchart TD
+    A1["1 · THE WORLD<br/>a test passes · a page renders · a number reconciles<br/>· a link resolves · a payment clears · a build ships"]
+    A2["2 · A DIFFERENT FAMILY<br/>a second model, not the maker's, judges the artifact<br/>against a named dimension"]
+    A3["3 · THE FOUNDER<br/>one tap. Reserved for taste and for one-way doors."]
+    A4["4 · SAME-FAMILY REVIEW<br/>usable to RANK and to FLAG.<br/>Never sufficient to certify."]
+    A5["0 · SELF-REVIEW<br/>run against its own done-test before handover.<br/>Cheap hygiene. Proves nothing."]
+    D["A done-test"] --> PICK{"What can actually<br/>check this?"}
+    PICK -->|"something deterministic exists"| A1
+    PICK -->|"no, but it is judgeable"| A2
+    PICK -->|"taste, or a one-way door"| A3
+    PICK -->|"none of the above"| A4
+    A4 --> WARN["Marked LOW-CONFIDENCE in the handover<br/>and in the briefing. Never presented as verified."]
+    A5 --> A1
+    A1 --> BELIEVED["Believed"]
+    A2 --> BELIEVED
+    A3 --> BELIEVED
+    WARN --> SHOWN["Shown, with the weakness named"]
+```
+
+**(KEEL)** Rung 1 is not a formality and it is where the design work is: for most company work there *is* a
+deterministic anchor, and finding it is the intellectual task of writing the done-test.
+
+| Kind of work | The deterministic anchor |
+|---|---|
+| Code | tests run · build passes · the app starts · a named user path completes |
+| A screen or a page | it renders · a screenshot exists · contrast ratios computed · it loads under a stated size |
+| Copy or content | every factual claim resolves to a fetched source · links return 200 · reading level computed |
+| A price or a model | the arithmetic reconciles · sensitivity to each input is computed and shown |
+| A video or an image | it plays · right length and aspect · the brand colours are the declared ones · loudness to a standard |
+| Research | every claim carries a URL that was fetched, with the quoted line present in the fetched text |
+| Data work | row counts reconcile · a known query returns the known answer · nulls counted |
+| Outreach or social | it sent · it was received · the reply, if any, is attached |
+| Finance | it ties to the bank line, or the difference is shown |
+| Anything legal | it does not go out without rung 3. Full stop. |
+
+**(V3)** Inside rung 1 there is an order: a check that reads a record the company does not write — the processor, the
+bank, the git host, the runner, the analytics provider — outranks a check that reads the company's own, because a
+status report cannot promote itself. The world is full of free instruments that detect *broken* and almost none that
+detect *good*; broken-detectors license generating widely and discarding, and only a live outcome licenses shipping.
+**(KEEL)** The anchor is almost always cheaper than the work it checks, which is why this is affordable and why
+quality here does not mean a review panel: it means the run produced the evidence its done-test named.
+
+### 8.3 The other family — and there are three
+
+**(KEEL, founder: three subscriptions)** A checker on the maker's family is a compromised instrument by measurement.
+With Gemini and Codex bought as subscriptions there are three families, so cross-family checking stops being a
+constraint and becomes a choice: Claude makes and Codex checks on hard work; Gemini checks routine work; the checker is
+whichever family did not make it. A genuinely multi-family panel becomes reachable — the single most-cited unmet
+requirement of the prior system — and it is still not spent casually: three model opinions with no deterministic
+anchor are still three opinions, so the panel is reserved for a one-way door with no rung-1 anchor.
+
+```mermaid
+flowchart LR
+    MAKER["Maker · family A<br/>produced the artifact"] --> ART["The artifact + its evidence"]
+    ART --> DET{"Rung-1 anchor available?"}
+    DET -->|"yes"| RUNIT["Run it. Deterministic.<br/>No model involved."]
+    RUNIT -->|"fails"| BACK["Back to the maker with the<br/>exact failure text. Never a summary of it."]
+    RUNIT -->|"passes"| FAM
+    DET -->|"no"| FAM
+    FAM["Checker · a family that did NOT make it<br/>Gemini for routine, Codex for hard<br/>read-only, no shell"]
+    FAM -->|"finding"| SEV{"Severity?"}
+    SEV -->|"blocks the done-test"| BACK
+    SEV -->|"opinion, not defect"| NOTE["Recorded, not acted on"]
+    SEV -->|"disagrees with rung 1"| HUMAN["To the founder as a which.<br/>A model contradicting a test<br/>is usually the model — not always."]
+```
+
+**(V3, sourced)** When a checker compares two candidates it is **pairwise, never pointwise**; blind, and stripped of
+the candidate's own label; order-swapped, a flip resolving to *unresolved*. One frontier judge held its verdict when
+two answers were swapped only 65% of the time; another 23.8%. Findings from several families are **unioned**: a
+fatal finding from any family eliminates; fewer serious findings are preferred; scores are never averaged, because a
+score is a finding with the information removed. **(BOTH)** Disagreement resolution is blunt: the deterministic anchor
+wins over the model; a model that disagrees with a passing test flags and does not block; the one exception is a
+checker asserting the test itself is wrong, which goes to the founder — and consensus thresholds are refused, because a
+vote among models has no anchor.
+
+### 8.4 Where taste is judged
+
+**(KEEL)** Taste is not checkable by a test and is the founder's alone — but it does not follow that every taste
+question goes to the founder, or the founder becomes the bottleneck they refused to be. The system holds a **taste
+profile**: an evidence-backed record of what this founder has accepted and rejected, mined from transcripts (§10.5)
+and from every *no, not like that* on the Floor. A taste check asks *does this artifact violate anything in the
+profile?* — a rung-2 check with a real corpus behind it. What reaches the founder is the residue, the genuinely new
+taste question, as two built options with a which. **(BOTH)** The profile is never a preferences file the founder
+types, because a founder is an unreliable narrator of their own taste; it is derived from decisions only, and a
+fraction of rejections is held out so it is scored on predicting what the founder *wants*, not what they *approve*.
+Building both options is often cheaper than the round trip of asking.
+
+### 8.5 The nightly reconciliation — the company's numbers against records it does not write
+
+**(V3)** The single most repeated failure in the whole corpus of autonomous-company attempts is the agent misreporting
+its own progress, and the misreport is what the human reads; it is invisible to any check that reads the agent's
+output. So every night, on no model, the system's own numbers are read against the outside records:
+
+```mermaid
+flowchart LR
+    HOUSE["The system's number<br/>the ledger · sent · the funnel · rung claims ·<br/>obligations discharged · the people register"] --> SETTLE["Every night: read-only calls, never a write"]
+    WORLD["The outside record<br/>bank & billing · processor · runner · git host ·<br/>analytics + a second count · delivery log ·<br/>inbox & calendar · registrar"] --> SETTLE
+    SETTLE --> CMP{"Agree within the check's<br/>DECLARED tolerance band?"}
+    CMP -->|"yes"| OK["One line in the briefing:<br/>books agree with the bank"]
+    CMP -->|"no"| INC["An item in Decide, both numbers side by side.<br/>The outside record wins. The difference is NEVER plugged."]
+    INC --> BLOCK["The metric cannot move a rung<br/>until it reconciles"]
+```
+
+**(V3)** Revenue is read from the processor as a claim, never typed; a runway computed from a number the bank does
+not confirm is stamped *internal* and cannot promote anything. **Enforced by:** `keel/bin/reconcile` with read-only
+credentials per venture and a tolerance band per check (ABSENT); the checks themselves are rung-1 anchors and live in
+`keel/shared/anchors/` (ABSENT).
+
+### 8.6 Regression, for free
+
+**(KEEL)** A regression is a done-test that used to pass and now does not. Because every done-test names a checkable
+anchor, the set of live done-tests across all ventures *is* the regression suite, re-run nightly on the routine window
+at close to zero cost. Nothing extra is maintained — a consequence of the done-test design and the strongest argument
+for it. **(V3)** The 48-step check suite on this machine (`scripts/run-checks.mjs`, TREE A) is the founding
+population of rung-1 anchors for the harness venture, and its rule survives whole: a partial run cannot wear a passing
+verdict.
+
+### 8.7 A venture's progress — the contact rungs
+
+**(V3)** Keel measures whether the work is true; nothing in it measures whether the venture is becoming a business,
+and the founder's list asks. So a venture's progress is a rung generated from a record the company does not write,
+never typed:
+
+```
+0  it exists / it compiles / it renders    ← a rung-1 anchor's exit code
+1  a stranger understood it                ← a recorded artifact: a reply, a recording, a survey row
+2  a stranger did something                ← the analytics provider AND the server's own count
+3  they came back                          ← a cohort in the product's own event store
+4  they paid                               ← the payment processor
+5  they paid again, and named you          ← the processor, plus a referral with a name attached
+```
+
+*"The landing page is done"* is rung 0 and will say rung 0. **(V3)** The **ship log** — one line per rung movement
+and per Intent finished, in the founder's currency — appears in the briefing and answers *what did this company produce
+this month*, the cheapest morale instrument there is. **(V3)** A thing the founder wants built is worked single-thread
+and continuously until its done-test passes (Keel's WIP limit per venture); the cheap, wide, mostly-discarded
+exploration that v3 called the weather survives only as *both options built for a which* and as scouts fanning out on
+a new field — standing diversity sampling is refused (§1 row 24).
+
+**Enforced by:** the rung table read by `keel/bin/reconcile` (ABSENT) · `keel/ventures/<v>/ship-log.md` written only
+by that program (ABSENT).
+
