@@ -87,9 +87,14 @@ v2 retires eleven and re-seeds six.
 The founder asked for it back as a first-class website, so it is **RENAMED**: the artifact continues, under a bigger
 job than it had.
 
+**(v39: and it is the host, not only the seed)** The Bun and Hono server and the React client **serve the seven pages
+on the Mac**, because a terminal pop needs `tmux` on the same machine. The published artifact pages survive beside it
+as the phone's read-and-decide surface, and they cannot pop a terminal. **Two renderers over one state — which FINAL
+§13.1 refused — accepted once, for that reason**, and both read the same logbook.
+
 | Of the 60 files | Measured on this branch | Fate | In v2 it is |
 |---|---|---|---|
-| `server/` — `app.ts`, `collectors/`, `config.ts`, `index-cache.ts`, `index-store.ts`, `index.ts`, `lib/`, `projects.ts`, `routes/`, `state.ts`, `trust.ts` | 11 top-level entries | **SURVIVES as the website's server** | the seven pages are routes on it. `collectors/` and `index-store.ts` are what already read the event log; `projects.ts` is what already knows there is more than one venture |
+| `server/` — `app.ts`, `collectors/`, `config.ts`, `index-cache.ts`, `index-store.ts`, `index.ts`, `lib/`, `projects.ts`, `routes/`, `state.ts`, `trust.ts` | 11 top-level entries | **SURVIVES as the website's server** (v39) | the seven pages are routes on it. `collectors/` and `index-store.ts` are what already read the event log; `projects.ts` is what already knows there is more than one venture |
 | `client/` | present; **there is no `web/`** | **SURVIVES as the website's client** | seven pages replace the views. FINAL's *"the views go"* is what v4 overrules, and this is where the overrule lands |
 | `scripts/consume-dispatch.ts` | 685 lines | **RENAMED** | **the seed of `keel/bin/run`.** It already reads a queue file and births a run; v34 makes it the only thing that composes argv |
 | `scripts/check-cold-start.ts` | present | **SURVIVES** | the cold-start anchor. It is a **wall-clock** check (9.5s against a 10s budget) and flakes when several lanes build at once — re-run before believing it |

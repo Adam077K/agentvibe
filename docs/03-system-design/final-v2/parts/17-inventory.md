@@ -25,21 +25,21 @@ that already passes the lint; nine have no seed and are written from the standar
 
 | # | Name | File | Seed on `ceo-1-1788609834` | Model | Tools (the argv grant) | MCPs | Skill namespaces | maxTurns | Isolation | Anchor — what proves it |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 0 | **Operator** | `.claude/agents/operator.md` — ABSENT | `orchestrator.md` (154 lines) | `claude-opus-5` | Read Glob Grep Agent | none | — | 30 (seed) | none | it dispatched, and it did not build: a diff authored by the Operator is a defect |
-| 1 | **builder** | `.claude/agents/builder.md` — ABSENT as v2's file | `builder.md` (134 lines) | `claude-opus-5`, escalating to `claude-fable-5-1` under v21 | Read Write Edit Bash Glob Grep | none by default | engineering · testing | 30 (seed) | worktree | the venture's own CI, plus the done-test, plus the tester's blind test |
-| 2 | **reviewer** | `.claude/agents/reviewer.md` — ABSENT as v2's file | `reviewer-readonly.md` (169 lines) — **not** `reviewer.md`, which carries Bash | `claude-sonnet-5`; a second family when reachable | Read Glob Grep | none | engineering · quality | 30 (seed) | none | findings reproduce from the diff alone |
-| 3 | **architect** | `.claude/agents/architect.md` — ABSENT | none | `claude-opus-5` | Read Glob Grep Write (design paths only) | none | engineering · data | UNDECIDED → §20 | worktree (derived: it writes) | a migration that applies and rolls back in a scratch database |
-| 4 | **tester** | `.claude/agents/tester.md` — ABSENT | none | `claude-sonnet-5` | Read Write Edit Bash Glob Grep, `--add-dir` excluding the implementation | none | testing · quality | UNDECIDED → §20 | worktree | the test fails before the change and passes after |
-| 5 | **guard** | `.claude/agents/guard.md` — ABSENT | none | `claude-opus-5` | Read Glob Grep | none | security | UNDECIDED → §20 | none | a proof of concept that reproduces |
-| 6 | **scout** | `.claude/agents/scout.md` — ABSENT | `sourcer.md` (147 lines, `mcpServers: [claim-append]`) | `claude-sonnet-5`; Gemini once authenticated | Read Glob Grep WebSearch WebFetch — no Write, no credential, no send | read-only servers, admitted per run | research | 25 (seed) | none | every claim carries URL, quote and access date; `scripts/check-citations.mjs` (846 lines) blocks on a dead one |
-| 7 | **designer** | `.claude/agents/designer.md` — ABSENT as v2's file | `designer.md` (151 lines, `mcpServers: [playwright]`) | `claude-opus-5` | Read Write Edit Bash Glob Grep | `playwright`, per-run inline | design · frontend | 30 (seed) | worktree | a rendered screenshot judged against a named anchor |
-| 8 | **product** | `.claude/agents/product.md` — ABSENT | `framer.md` (121 lines) | `claude-sonnet-5` | Read Glob Grep Write (spec paths) | none | product | 25 (seed) | none | the store check refuses a done-test not falsifiable by someone who did not do the work |
-| 9 | **analyst** | `.claude/agents/analyst.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Bash | read-only analytics · error tracking · billing-read | data | UNDECIDED → §20 | none | the reconciliation reads a record the company does not write |
-| 10 | **writer** | `.claude/agents/writer.md` — ABSENT | none | split: `claude-opus-5` for taste work, `claude-sonnet-5` for routine | Read Write Edit Glob Grep | Higgsfield, rate-capped | growth · craft | UNDECIDED → §20 | none | staged, never sent; the founder's taste store and a rung-2 external reaction |
-| 11 | **growth** | `.claude/agents/growth.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write | CRM read-only | growth | UNDECIDED → §20 | none | a reply from a real person, recorded by the world's door |
-| 12 | **steward** | `.claude/agents/steward.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write (obligations and operations paths) | **none** (v36) — it writes from scout's handover and the world's door's rows, never from a raw mailbox | operations | UNDECIDED → §20 | none | an obligation is discharged only by a record the company does not write |
-| 13 | **curator** | `.claude/agents/curator.md` — ABSENT | none | `claude-sonnet-5`; the summarising half on Gemini or a local model | Read Write Edit Glob Grep — no Bash | none | knowledge | UNDECIDED → §20 | none | a memory item with no source, date, expiry and falsifier is refused at the store check |
-| 14 | **challenger** | `.claude/agents/challenger.md` — ABSENT | none | `claude-opus-5`; a second family when reachable | Read Glob Grep | none | quality · research | UNDECIDED → §20 | none | every finding names the mechanism that would have caught it |
+| 0 | **Operator** | `.claude/agents/operator.md` — ABSENT | `orchestrator.md` (154 lines) | `claude-opus-5` | Read Glob Grep Agent | none | — | 30 (v40) | none (v41) | it dispatched, and it did not build: a diff authored by the Operator is a defect |
+| 1 | **builder** | `.claude/agents/builder.md` — ABSENT as v2's file | `builder.md` (134 lines) | `claude-opus-5`, escalating to `claude-fable-5-1` under v21 | Read Write Edit Bash Glob Grep | none by default | engineering · testing | 30 (v40) | worktree (v41) | the venture's own CI, plus the done-test, plus the tester's blind test |
+| 2 | **reviewer** | `.claude/agents/reviewer.md` — ABSENT as v2's file | `reviewer-readonly.md` (169 lines) — **not** `reviewer.md`, which carries Bash | `claude-sonnet-5`; a second family when reachable | Read Glob Grep | none | engineering · quality | 25 (v40) | none (v41) | findings reproduce from the diff alone |
+| 3 | **architect** | `.claude/agents/architect.md` — ABSENT | none | `claude-opus-5` | Read Glob Grep Write (design paths only) | none | engineering · data | 30 (v40) | worktree (v41) | a migration that applies and rolls back in a scratch database |
+| 4 | **tester** | `.claude/agents/tester.md` — ABSENT | none | `claude-sonnet-5` | Read Write Edit Bash Glob Grep, `--add-dir` excluding the implementation | none | testing · quality | 30 (v40) | worktree (v41) | the test fails before the change and passes after |
+| 5 | **guard** | `.claude/agents/guard.md` — ABSENT | none | `claude-opus-5` | Read Glob Grep | none | security | 25 (v40) | none (v41) | a proof of concept that reproduces |
+| 6 | **scout** | `.claude/agents/scout.md` — ABSENT | `sourcer.md` (147 lines, `mcpServers: [claim-append]`) | `claude-sonnet-5`; Gemini once authenticated | Read Glob Grep WebSearch WebFetch — no Write, no credential, no send | read-only servers, admitted per run | research | 25 (v40) | none (v41) | every claim carries URL, quote and access date; `scripts/check-citations.mjs` (846 lines) blocks on a dead one |
+| 7 | **designer** | `.claude/agents/designer.md` — ABSENT as v2's file | `designer.md` (151 lines, `mcpServers: [playwright]`) | `claude-opus-5` | Read Write Edit Bash Glob Grep | `playwright`, per-run inline | design · frontend | 30 (v40) | worktree (v41) | a rendered screenshot judged against a named anchor |
+| 8 | **product** | `.claude/agents/product.md` — ABSENT | `framer.md` (121 lines) | `claude-sonnet-5` | Read Glob Grep Write (spec paths) | none | product | 30 (v40) | none (v41) | the store check refuses a done-test not falsifiable by someone who did not do the work |
+| 9 | **analyst** | `.claude/agents/analyst.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Bash | read-only analytics · error tracking · billing-read | data | 25 (v40) | none (v41) | the reconciliation reads a record the company does not write |
+| 10 | **writer** | `.claude/agents/writer.md` — ABSENT | none | split: `claude-opus-5` for taste work, `claude-sonnet-5` for routine | Read Write Edit Glob Grep | Higgsfield, rate-capped | growth · craft | 30 (v40) | none (v41) | staged, never sent; the founder's taste store and a rung-2 external reaction |
+| 11 | **growth** | `.claude/agents/growth.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write | CRM read-only | growth | 30 (v40) | none (v41) | a reply from a real person, recorded by the world's door |
+| 12 | **steward** | `.claude/agents/steward.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write (obligations and operations paths) | **none** (v36) — it writes from scout's handover and the world's door's rows, never from a raw mailbox | operations | 30 (v40) | none (v41) | an obligation is discharged only by a record the company does not write |
+| 13 | **curator** | `.claude/agents/curator.md` — ABSENT | none | `claude-sonnet-5`; the summarising half on Gemini or a local model | Read Write Edit Glob Grep — no Bash | none | knowledge | 30 (v40) | none (v41) | a memory item with no source, date, expiry and falsifier is refused at the store check |
+| 14 | **challenger** | `.claude/agents/challenger.md` — ABSENT | none | `claude-opus-5`; a second family when reachable | Read Glob Grep | none | quality · research | 25 (v40) | none (v41) | every finding names the mechanism that would have caught it |
 
 **(NEW: what leaves, and it is thirteen files of eighteen)** `reviewer.md` (149 lines, `tools: [Read, Glob, Grep,
 Bash]`) is **gone**: a checker has no shell, so the v2 `reviewer` is seeded from `reviewer-readonly.md` instead. The
@@ -58,10 +58,18 @@ branch pins the valid model set to `claude-opus-5`, `claude-sonnet-5`, `claude-f
 available)"*. **Mechanism:** the pinned set must move in the same change that writes builder's file, or the file
 fails `npm run check`. Not a preference — a red test.
 
-**(NEW: two cells are not decided in SPINE §A and this section may not decide them)** `maxTurns` for the nine agents
-with no seed, and `isolation` for the five that write outside a venture's source. The lint ceiling is 120 and the
-declared value is a per-agent tuning decision; the six seeded agents carry their seed's value. Both are raised as
-rows in §20 rather than guessed here.
+**(v40 and v41: the two cells this section could not fill are filled by class, not by guess)** `maxTurns` is **30 for
+the nine that produce** and **25 for the five that only read**, with the Operator at 30 — exactly the two values the
+seven existing engine files already use, against a lint ceiling that stays 120. `isolation` is **`worktree` for the
+four that touch venture source** and **`none` for the other eleven**, whose grant is a narrowed `--add-dir` and needs
+no working tree of its own. **Both override a seed where the class and the seed disagree:** `reviewer` inherits 30
+from `reviewer-readonly.md` and takes **25** because it only reads, and `product` inherits 25 from `framer.md` and
+takes **30** because it produces. Tuning per agent is a later measurement, not a design decision.
+
+**(NEW: one measured cost rides on `isolation`)** Creating a worktree still cannot complete under the armed sandbox
+without escalation — exit 128, 32 denials across `.claude/agents/**`, `.claude/commands/**` and `.mcp.json`. Four
+agents declare `worktree`, so **four** need that escalation for exactly one command, and the eleven that never touch
+venture source never meet it.
 
 ---
 
@@ -74,11 +82,12 @@ library is in the open SKILL.md standard so one artifact loads in Claude Code, C
 `ceo-1-1788609834`, 135 entries) for Claude Code, and **`.agents/skills/` — ABSENT** for Codex and Gemini CLI. Codex
 does **not** read `.codex/skills`. Markdown is the single source; harness-native artifacts are generated.
 
-**(NEW: a count in SPINE §E.4 does not match its own list, and this section will not silently pick one)** §E.4 opens
-*"Seven namespaces"* and then enumerates **thirteen**: `engineering` · `testing` · `quality` · `security` · `design` ·
-`product` · `data` · `growth` · `craft` · `operations` · `knowledge` · `research` · `frontend`. The thirteen are what
-every row of 17.1 draws from, so the thirteen are used here and the word *seven* is flagged. Today's
-`.claude/skills/routers/` holds INDEX + **7** namespace routers, which is the likeliest origin of the number.
+**(NEW: thirteen namespaces)** `engineering` · `testing` · `quality` · `security` · `design` · `product` · `data` ·
+`growth` · `craft` · `operations` · `knowledge` · `research` · `frontend`. Each agent's row in 17.1 names the ones it
+carries. §E.4 read *"Seven namespaces"* over this same list of thirteen when this section was first written; **the
+word was corrected and the list was not**, because every row of 17.1 draws from the thirteen. Today's
+`.claude/skills/routers/` holds INDEX + **7** namespace routers, which is the likeliest origin of the number that was
+there.
 
 **(NEW: the two programs the library needs, both ABSENT)**
 
@@ -264,20 +273,28 @@ terminal which runs the agent on my Mac is popping up."* Seven pages, each its o
 | 6 | **3D file graph** | `3d-force-graph` (MIT). **Its input is a `{nodes, links}` object; it does not read a repository** — the extractor is ours. Gource refused (GPL-3.0) | ABSENT; the thinnest researched area |
 | 7 | **Canvas / playground** | **Langflow** (MIT, alive 2026-09-05) as the idiom. **n8n refused** (licence) · **Flowise refused** (archived, licence NOASSERTION) | ABSENT |
 | — | **The Floor** | Claude Code, interactive, `keel floor <venture>` | the runtime exists; the loader is `.claude/hooks/session-start.js` (259 lines, emits 2,941 bytes under a 4,096 ceiling). **Unchanged, and it is what every tap opens** |
-| — | **The read-back page** | a published page; the confirm tap is what binds (§C.3) | ABSENT |
-| — | **The briefing** | a published page; margin comments addressed to an intent id | ABSENT |
+| — | **The read-back** | the intent-creation form on **page 4's *new card* and page 7's *add session***, and a published phone page for voice (v38); the confirm tap is what binds | ABSENT |
+| — | **The briefing** | the **top strip of page 5**, and a published phone page; margin comments addressed to an intent id (v38) | ABSENT |
 | — | **The menu bar** | a glyph reading the logbook: running / waiting on you / stopped | ABSENT |
 
-**(NEW: §D assigns seven pages and leaves two surfaces unplaced)** The read-back page and the briefing are named in
-§C.3 and §C.2 but are not among the seven. Whether they become pages 8 and 9 of the website or stay separate
-published pages is **not decided in §A**, and is a row of §20. **What is decided:** the Balcony is absorbed, not
-deleted — `Now` → page 2, `Decide` and `Last night` → page 5's desk strip, `Ventures` → page 1, `Cord` → a control on
-every page — and FINAL §13.2's rule *every element is either a fact or a tap* survives, extended by v14 to the
-dashboard the founder asked for.
+**(v38: the read-back and the briefing are placed, and neither becomes an eighth page)** The **read-back is the
+intent-creation form wherever an intent is born** — page 4's *new card* and page 7's *add session* — and it **stays a
+published phone page** for voice. The **briefing is the top strip of page 5** and also stays a published phone page.
+`Decide` items appear on page 4 as cards in a *waiting on you* column, and on the phone. This is placement and not a
+new mechanism: both were already published pages, and the founder's pages absorb rather than delete them (v4).
+**Mechanism:** the store check refuses an intent with no read-back confirmation row (ABSENT).
 
-**(NEW: what hosts the website is not decided either)** FINAL §16.7 put the Balcony on the artifact runtime. v4 makes
-mission control a first-class website whose taps reach `tmux` on the founder's Mac, which the artifact runtime cannot
-do. The substrate is a §20 row.
+**(FINAL, and it survives the placement)** The Balcony is absorbed, not deleted — `Now` → page 2, `Decide` → page 4's
+waiting column, `Last night` → page 5, `Ventures` → page 1, `Cord` → a control on every page — and FINAL §13.2's rule
+*every element is either a fact or a tap* survives, extended by v14 to the dashboard the founder asked for.
+
+**(v39: the website is served on the Mac, by the server that already exists)** `mission-control/` — the Bun and Hono
+server and the React client, **60 files on this branch** — serves the seven pages, **because a terminal pop needs
+`tmux` on the same machine**. The phone reaches the system two ways: the **published artifact pages** (Balcony views,
+the briefing, the read-back) for reading and deciding, which **cannot pop a terminal**; and the local server over the
+founder's own network for everything else. **The cost, stated once:** two renderers over one state, which FINAL §13.1
+refused. It is accepted because a tap that opens a terminal cannot come from a hosted page, and because both
+renderers read the same logbook.
 
 ---
 
@@ -291,6 +308,7 @@ do. The substrate is a §20 row.
 | **Codex CLI** (subscription) | **day one (v5), in one position:** checker on a prepared diff, foreground, stdout to a file while inheriting the parent shell's TTY | its own window; **the only vendor publishing numeric per-window quotas** | `<agent>.codex.argv` — ABSENT | **not installed** (`command -v codex` → absent). #19945 open **130 days with no maintainer reply** |
 | **Gemini CLI** (subscription) | scout on routine work; the summarising half of the curator | free tier 60 requests/min, 1,000/day on a personal account; paid tiers UNVERIFIED | `<agent>.gemini.argv` — ABSENT | installed **0.38.2**, never authenticated; auth state unreadable (`~/.gemini` is `denyRead`) |
 | **Local models** | **real work, not no work** (v20): embeddings, classification, dedup, PII detection | none — electricity | — | ABSENT. MiniLM (384 dims, Apache 2.0, 256-word-piece truncation) · Qwen3-0.6B (32,768 context, Apache 2.0); on-disk size not published |
+| **The artifact runtime** | the published phone pages: Balcony views, the briefing, the read-back. **It cannot pop a terminal**, which is why it is not the website's host (v39) | free | — | exists; measured: database, user identity, comments that wake the session |
 | **Routines** (cloud) | **refused for the Watch**: cloud-only, cannot reach local files | daily cap | — | exists |
 | **A gateway key** (LiteLLM · OpenRouter) | the only portable credential and the only budget surviving a provider change | per key per period | — | deferred with the metered key (§20 row 1) |
 

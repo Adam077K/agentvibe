@@ -184,8 +184,8 @@ entire unattended half of the system through `PROBE`. `LICENSE` gates only the b
 is on the critical path of everything**, and it is four lines of JSON in a directory no run can reach.
 
 **(NEW: one edge exists so that another one does not have to, v36)** `INBOUND --> WATCH` is drawn because the Watch
-materialises an obligation from a row the world's door already wrote down. **No edge runs from a tainted hand to
-`steward`**, and none may: no agent holding `Write`, `Edit` or `Bash` reads mail, calendar, drive or Notion raw. That
+materialises an obligation from a row the world's door already wrote down, and **`steward` writes its obligations
+from those rows and from `scout`'s handover**. **No edge runs from a tainted hand to `steward`**, and none may: no agent holding `Write`, `Edit` or `Bash` reads mail, calendar, drive or Notion raw. That
 is why the world's door is a node in its own right rather than a detail inside the tool door.
 
 **(NEW: one edge is deliberately missing, and its absence is the design)** Nothing points from any agent node to

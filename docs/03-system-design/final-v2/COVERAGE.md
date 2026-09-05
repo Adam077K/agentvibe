@@ -101,7 +101,7 @@
 | Publish tool | IN | IN | 12 | REACHES THE WORLD: no agent holds it, and the Sender holds no model | SPINE v33 |
 | Sandbox exec | IN | IN | 12 | worktrees plus the armed OS sandbox — a guardrail against accident, not containment | agree |
 | Virality predictor | REFUSED | REFUSED | 11 | a prediction with no anchor that would be believed anyway | agree |
-| Email tool | IN | IN | 12 | steward reads and writer drafts; the send is the Sender's | SPINE v33 |
+| Email tool | IN | IN | 12 | the world's door reads the mail and `scout` handles it; `writer` drafts and only the Sender sends | SPINE v36 |
 | Design tool integration | IN | IN | 8 | class WRITES-reversible: the designer, after the undo is drilled | agree |
 | Prototype tool integration | IN | IN | 8 | the perception loop is a job, not a product; the tool passes the same door | agree |
 | Review tool integration | IN | IN | 8 | admitted through the door as a read-only instrument | agree |
@@ -309,7 +309,7 @@
 | Kill switch | IN | IN | 14 | the cord, and it is a control present on every page | SPINE v4 |
 | Remote kill access | IN | IN | 14 | the same cord from the phone; a kill in two places is a kill that disagrees | agree |
 | Prompt injection defense | IN | IN | 12 | structural: scout reads the untrusted world holding no key and no send | SPINE v33 |
-| Fetched-content taint tracking | IN | IN | 8 | READ-ONLY tainted is its own class, and scout is its only holder | SPINE §F |
+| Fetched-content taint tracking | IN | IN | 8 | READ-ONLY tainted is its own class, held by `scout` and the world's door and by nothing else | SPINE v36 |
 | Research reach exemption | IN | IN | 8 | scout reaches the world precisely because it holds nothing | SPINE v33 |
 | Structured-input matching | IN | IN | 12 | declare what is read and refuse the rest, at the line rather than the value | fact |
 | String-matching bypass fix | IN | IN | 12 | the same rewrite; eight chained-step bypasses were closed by it | fact |
@@ -515,7 +515,7 @@
 |---|---|---|---|---|---|
 | Public changelog | IN | IN | 12 | drafted alone, published never without a tap | agree |
 | User feedback channel | IN | IN | 12 | it arrives through the world's door as an event row a scout reads | agree |
-| Support escalation path | IN | IN | 5 | steward triages, writer drafts, the Sender sends | SPINE §B.4 |
+| Support escalation path | IN | IN | 5 | the door and `scout` read it; `steward` writes the obligation, `writer` drafts the reply, the Sender sends | SPINE v36 |
 | Marketing content pipeline | RENAMED | RENAMED | 2 | intents with content done-tests; `writer` owns the craft, not a pipeline | SPINE §B.4 |
 | Community management | IN | IN | 12 | drafted and staged; every send is the founder's tap | agree |
 | Partner integration requests | IN | IN | 2 | it arrives through a door and becomes a proposal | agree |
@@ -679,7 +679,7 @@
 
 | Item | FINAL | v2 | v2 § | Why | Rule |
 |---|---|---|---|---|---|
-| Support ticket triage | RENAMED | IN | 5 | `steward` triages: a ticket is an obligation with a due date | SPINE §B.4 |
+| Support ticket triage | RENAMED | IN | 5 | the door delivers the ticket and `scout` reads it; `steward` writes the obligation and its due date | SPINE v36 |
 | Chatbot response agent | RENAMED | REFUSED | 12 | an autonomous reply bot is refused; a person is on the other side | SPINE §B.4 |
 | Escalation-to-human rule | IN | IN | 14 | the wake-me list, against the interruption budget | agree |
 | Customer sentiment tracking | RENAMED | IN | 5 | `scout` reads and reports, and structurally cannot act | SPINE v33 |
@@ -695,7 +695,7 @@
 | Expense tracking agent | RENAMED | IN | 5 | `steward`; the vendor's own billing endpoint is the outside record | SPINE §B.4 |
 | Budget-vs-actual agent | RENAMED | IN | 5 | `steward` states it and `analyst` reconciles it | SPINE §B.4 |
 | Contract drafting agent | RENAMED | REFUSED | 12 | drafting that binds is a one-way door; it reaches the founder as a which | SPINE §B.4 |
-| Contract review agent | RENAMED | IN | 5 | `steward` reviews; a rubric here would manufacture a number | SPINE §B.4 |
+| Contract review agent | RENAMED | IN | 5 | `scout` reads the counterparty's document; `steward` writes the review, and a rubric here would manufacture a number | SPINE v36 |
 | Compliance check agent | RENAMED | IN | 5 | `steward` flags; deterministic rows, wired before there is a product | SPINE §B.4 |
 | Tax-prep support agent | RENAMED | REFUSED | 12 | tax filing is a one-way door and reaches the founder with both options prepared | SPINE §B.4 |
 | Cap-table tracking | RENAMED | REFUSED | 12 | a cap-table edit is one-way; the same which | SPINE §B.4 |
@@ -708,8 +708,8 @@
 | Vendor management agent | RENAMED | IN | 5 | `steward` owns vendors; every adopted part gets an exit note on arrival | SPINE §B.4 |
 | Hiring-pipeline agent | OUTSIDE | REFUSED | 5 | there are no employees; revisit when there are | SPINE §B.4 |
 | Onboarding-doc agent | RENAMED | RENAMED | 5 | `steward` writes process docs; a venture is onboarded by its Charter | SPINE §B.4 |
-| Meeting-notes agent | RENAMED | IN | 5 | `steward`, on read-only Gmail, Calendar, Drive and Notion | SPINE §B.4 |
-| Calendar-scheduling agent | RENAMED | RENAMED | 12 | reading the calendar is `steward`'s; an invite to a person is the Sender's | SPINE §B.4 |
+| Meeting-notes agent | RENAMED | IN | 5 | the door and `scout` hold the Gmail, Calendar, Drive and Notion reads; `steward` writes the note | SPINE v36 |
+| Calendar-scheduling agent | RENAMED | RENAMED | 12 | `scout` reads the calendar, `steward` writes the obligation, and an invite to a person is the Sender's | SPINE v36 |
 | Process-documentation agent | IN | IN | 5 | `steward` writes process docs and internal tooling requests | SPINE §B.4 |
 | Internal-tool provisioning | RENAMED | RENAMED | 8 | nothing is admitted without naming the intent and what it replaces | agree |
 
@@ -965,6 +965,6 @@ Placements this file could not settle from its inputs. Every one is a dispositio
 | Ticket status field | 22 | the board is the founder's page 4 and its stages are certain; whether dragging a card launches a **team** is open decision 9, and nothing in the world has done it |
 | Infra layer (Wing 5) | wing 5 | IN here, while every venture-facing DevOps row of §17 is OUTSIDE. The two readings disagree about who owns hosting, and FINAL had the same split |
 
-**How the 671 were decided.** `agree` where SPINE moved nothing and FINAL stands. `SPINE vN` or `SPINE §X` where a v2 row or a lettered section settles it — v1, v2, v3 and v4 between them account for most of the 137 moves, and every one of §A's thirty-five rows is cited by at least one item. Verify with `grep -oE 'SPINE v[0-9]+' COVERAGE.md | sort -u`. `founder` where the direction itself decides, quoted in SPINE §B, §C, §D, §E, §F or §G. `fact` where a research fact from `roster.md`, `memory.md`, `cognition.md`, `skills.md`, `models.md`, `surfaces.md` or `runtimes.md` decides the row rather than a preference.
+**How the 671 were decided.** `agree` where SPINE moved nothing and FINAL stands. `SPINE vN` or `SPINE §X` where a v2 row or a lettered section settles it — v1, v2, v3 and v4 between them account for most of the 137 moves, and every one of §A's thirty-six rows is cited by at least one item. Verify with `grep -oE 'SPINE v[0-9]+' COVERAGE.md | sort -u`. `founder` where the direction itself decides, quoted in SPINE §B, §C, §D, §E, §F or §G. `fact` where a research fact from `roster.md`, `memory.md`, `cognition.md`, `skills.md`, `models.md`, `surfaces.md` or `runtimes.md` decides the row rather than a preference.
 
 **No row is placed on a mechanism that does not exist.** Where the plan wants a thing and has no mechanism for it, the row says so in its Why — the wish-list tools of §F, the ABSENT paths of §B–§H, and `Improvement backlog`'s missing section are the honest cases, and they are marked rather than dressed.

@@ -64,36 +64,34 @@ SPINE §I. They are not closed by omission.
 
 ---
 
-### 20.4 Raised by v2's own sections, and not decidable inside them
+### 20.4 Raised by v2's own sections, and decided
 
-**(NEW: a section that needs a decision SPINE §A does not carry returns it here rather than inventing it)** Five.
-The first two are collisions inside the inputs; the last three are cells the inputs left empty. **A sixth — who may
-hold a tainted read — was raised the same way and closed the same day**; it is recorded in 20.5 rather than deleted,
-because which questions closed is the useful part.
+**(NEW: a section that needs a decision SPINE §A does not carry returns it rather than inventing it — and all six came
+back decided)** Six cells and collisions were returned from §17, §19 and §22 while this document was being written.
+None was guessed inside the section that found it, and each is now a row of §A. **Each is reopened only by name.**
 
-| # | What | One side | The other | Whose |
-|---|---|---|---|---|
-| B | **The namespace count.** §E.4 says *"Seven namespaces"* and enumerates **thirteen** | seven matches today's `.claude/skills/routers/` — INDEX plus 7 | thirteen is what every agent row in §17.1 draws from, and dropping six leaves six agents with no namespace | a naming decision, not a design one. §17 uses the thirteen and flags the word |
-| C | **Where the read-back page and the briefing sit.** §D names seven pages; §C.3 and §C.2 name two more surfaces and place neither | make them pages 8 and 9 — one website, one set of taps, one store | keep them separate published pages: the read-back is the only surface where **a tap binds an instruction**, and mixing it into a dashboard is how a confirm becomes a click | the founder |
-| D | **What hosts the website.** FINAL put the Balcony on the artifact runtime; v4's pages must reach `tmux` on the founder's Mac | keep the artifact runtime for the read-only pages and let the taps go through a local endpoint | run the whole website locally, since *"everything is run on it"* is the founder's own sentence about the Mac | the founder. **Not decidable from §A**, which says what the pages do and not what serves them |
-| E | **`maxTurns` for the nine agents with no seed** | the six seeded agents carry 30 or 25 and the lint ceiling is 120, so any value in range loads | at 30 the ceiling was setting the value rather than bounding an error; a measured reviewer run needed 68 tool calls. It is a per-agent tuning decision and guessing it fifteen times is how a field becomes inert | the founder, or the first measured run of each agent |
-| F | **`isolation` for the agents that write outside a venture's source** — architect, product, writer, growth, steward, curator | `worktree` for anything that writes, uniformly, and the rule needs no exceptions | five of those six write **memory, specs and drafts**, not source; a worktree per memory write is ceremony, and `git worktree add` is the one command that needs the sandbox lifted | the founder. §17.1 marks the cells rather than filling them |
+| # | What was raised | Decided | Row |
+|---|---|---|---|
+| A | **The tainted-read collision.** §F held READ-ONLY-tainted at **scout only**; §B.2 row 12 granted **steward** the same reads, and steward carries `Write`. One grant, two rules, both inside §A | a tainted read is held by **`scout` and the world's door**, a program with no model, **and by nothing else**. No agent holding `Write`, `Edit` or `Bash` reads mail, calendar, drive or Notion raw; `steward` holds **none** and writes obligations from scout's handover and the door's inbound rows | **v36**, on FINAL §9.4–9.5 and the trifecta split |
+| B | **The namespace count.** §E.4 opened *"Seven namespaces"* and enumerated **thirteen** | **thirteen.** The word was corrected and the list was not, because every agent row draws from the thirteen | §E.4, amended |
+| C | **Where the read-back and the briefing sit.** §D names seven pages; §C.2 and §C.3 name two more surfaces and place neither | the **read-back is the intent-creation form** on page 4's *new card* and page 7's *add session*, and stays a published phone page for voice. The **briefing is page 5's top strip**, and stays a phone page. `Decide` items are a *waiting on you* column on page 4. **Neither becomes an eighth page** | **v38** |
+| D | **What hosts the website.** FINAL put the Balcony on the artifact runtime; v4's taps must reach `tmux` on the Mac | **`mission-control/` serves it on the Mac** — the Bun and Hono server and React client, 60 files on this branch. The phone keeps the published pages for reading and deciding, and **they cannot pop a terminal**. Cost, once: two renderers over one state, which FINAL §13.1 refused, accepted because a tap that opens a terminal cannot come from a hosted page | **v39** |
+| E | **`maxTurns` for the nine agents with no seed** | **30 for the nine that produce, 25 for the five that only read, the Operator 30** — the two values the seven existing engine files already use, against a ceiling of 120. It overrides a seed twice: `reviewer` 30 → 25, `product` 25 → 30. Tuned per agent by measurement afterwards | **v40** |
+| F | **`isolation` for the agents that write** | **`worktree` for the four that touch venture source** (builder, architect, tester, designer); **`none` for the eleven others**, whose grant is a narrowed `--add-dir` and needs no working tree of its own. Cost, once: those four need the sandbox escalated for one command | **v41** |
 
 ---
 
-### 20.5 Closed while this document was being written
+### 20.5 What the six closures show, and what they do not
 
-**(NEW: v36 — the tainted-read collision, raised by §17.3 and decided the same day)** §F put READ-ONLY-tainted at
-**scout only**; §B.2 row 12 granted **steward** Gmail, Calendar, Drive and Notion **read**, and steward carries
-`Write`. One grant, two rules, both inside §A. **Decided 2026-09-05 by the orchestrator, on FINAL §9.4–9.5 and
-v33:** a tainted read is held by `scout` and by the **world's door**, a program with no model, and by nothing else.
-`steward` holds none and writes obligations from scout's handover and from the door's inbound rows. **The losing
-image, kept by name:** *a steward that reads mail with a pen in its hand.* It is recorded here, and not silently
-removed from 20.4, because a decision that vanishes reads as a question nobody asked.
+**(NEW: none of the six was a founder question, and that is the whole distinction)** Each closed on a rule that was
+already written down — the trifecta split reached A, FINAL §6.1 reached F, the seven existing engine files reached E,
+and C and D were placements of surfaces the plan already had. **The fourteen rows of 20.1 and the five of 20.2 have
+no such rule overhead**, which is exactly why they are the founder's and not an editor's. A question a standing rule
+can answer is not an open decision; it is an unfinished reading.
 
-**(NEW: what this row demonstrates about the other five)** It closed in one move because both sides were already
-written down and a standing rule — the trifecta split — reached it. **The five left in 20.4 have no such rule
-overhead**, which is why they are the founder's and not an editor's.
+**(NEW: what stays visible, and why nothing was deleted)** The six are recorded as raised-and-decided rather than
+removed, because a decision that vanishes reads as a question nobody asked. **The losing image of each is kept by
+name** in §22 where one exists — for A, *a steward that reads mail with a pen in its hand*.
 
 ---
 
