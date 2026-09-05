@@ -99,7 +99,7 @@ inherited from FINAL's measured seam (§7.5, §9.7, §14.6, §14.7, §13.8) mis-
 
 ## §14 — Close: reassembly, the page, the landing branch
 
-The fix round landed in `aac18d8` (24 parts). Reassembled to 6,337 lines · 35 flowcharts · 53 rows in §1 · zero
+The fix round landed in `aac18d8` (24 parts); its second pass — P3-31, P3-32 and v53 across seven parts — was swept into `b0be50a` by the reassembly commit, confirmed afterwards against the lane's reported byte counts and by a reassembly that changed nothing. Reassembled to 6,337 lines · 35 flowcharts · 53 rows in §1 · zero
 `round-6/` references. Two things the orchestrator did by hand rather than through a lane, both recorded so they can
 be judged: §1's preamble still read "v6–v41" after the fix round and now names v42–v53 as the review round; the
 page's six stale figures (line count, row count and grouping, "ten of the fourteen carry no shell", seven `?`, the
