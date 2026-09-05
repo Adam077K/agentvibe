@@ -137,3 +137,20 @@ where the founder typed; the chosen option's label where they picked one. Each b
 | standing jobs | **Standing intents with a cadence or trigger, run by the Watch** |
 | next step | **Fold them into v2 now: new rows, §20 updated, research lanes for the new items.** Still nothing built |
 | push | **Do not push yet** |
+
+## §16 — The interview round, applied · 2026-09-05
+
+Every answer of §15 became a SPINE row (v54–v65), a §I status, or a §J losing image (43–54). Two rows the founder
+answered with a thing to research rather than a thing to do were decided the same day from two sourcer lanes recorded
+verbatim: **v62** from research/room.md — pixel-agents (MIT, licence read from the file, alive, reads Claude Code) over
+Star-Office-UI (assets non-commercial, stale) and the ambiguous "AgentOffice" (the likeliest match needs an LLM to
+render); **v56** from research/cloud.md — Codex cloud admitted as a PR reviewer through `@codex review`, Codex cloud as
+a maker UNVERIFIED because no vendor page prints a command or endpoint, and the only fully documented off-Mac drivers
+are Anthropic's (`claude --cloud`, Routines with an API fire endpoint) and Jules (alpha). That opened **§I row 15**
+(which hosted lane may make when the Mac is off), the founder's, beside row 1 (the terms), which the founder kept open
+by their word. Five builders folded the rows into the sections in parallel by file ownership (A: §1–§5, §9, §16, §19,
+§20, §22; B: §10, §14, §15, §17.6–7, §18; C: the v56/v62 sync into §1, §19, §20, §22; D: §15.6's cloud rows; E:
+COVERAGE re-placement); a designer lane re-renders the page. One correction to FINAL falls out: §13.8's *"no Claude
+Code fleet surface is spatial"* is overturned by three live projects. What no lane could do: register the durable
+facts as ledger claims — the claim-append server is in no lane's tool set — so that is a build-time task, named in the
+session file. Nothing built, nothing pushed.

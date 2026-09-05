@@ -85,3 +85,7 @@
 - **The founder plans in rounds and forbids building until the plan is theirs** (2026-09-04, 2026-09-05: "go. no
   builing yet."). Twice they chose "Keel only" over the recommended wider input set — decide against the
   recommendation on input scope, then widen *research* mid-turn when asked to go "a couple of steps forward".
+- **The founder answers open decisions through an interview** (2026-09-05): AskUserQuestion, four rows per round, multiple
+  choice with an open field, recommended option first. They pick against the recommendation often (Fable as a default,
+  no model constraint on teammates, "both" on a binary) and type new requirements into the open field — treat every
+  free-text answer as a new row, not a footnote.
