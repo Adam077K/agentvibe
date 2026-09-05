@@ -94,7 +94,7 @@ details.tile > summary:hover{background:var(--surface-2)}
 .body p:last-child{margin:0}
 .body b{color:var(--ink)}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:13.5px;margin:0 0 8px}
-.kv dt{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:600;padding-top:3px;white-space:nowrap}
+.kv dt{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:600;padding-top:3px;max-width:110px}
 .kv dd{margin:0;color:var(--ink-2)}
 .lost{font-size:13px;color:var(--ink-2);background:var(--surface-2);padding:8px 10px;border-radius:4px;margin:8px 0 0}
 .lost b{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2);display:block;margin-bottom:2px;font-weight:600}
@@ -143,10 +143,10 @@ footer p{max-width:none;margin:0 0 6px}
   <p class="eyebrow">docs · 03-system-design · final-v2 · 2026-09-05</p>
   <h1>Keel<br>the final plan v2</h1>
   <p class="lede">One company of named agents, one website, one launcher. A company operating system for one founder and many ventures.</p>
-  <p class="supersede"><b>This supersedes the previous page</b> — <code>final/page/final-plan.html</code>, the page of FINAL, dated 2026-09-04. Five of FINAL's decision rows were overruled by the founder on <b>2026-09-05</b>, and this is what the plan says after those overrules.</p>
+  <p class="supersede"><b>This supersedes the previous page</b> — <code>final/page/final-plan.html</code>, the page of FINAL, dated 2026-09-04. Five of FINAL's decision rows were overruled by the founder on <b>2026-09-05</b>, and this is what the plan says after those overrules. <b>On the same day the founder answered every open decision</b>, in five rounds of questions — twelve further rows, v54–v65 — and this page says what the plan says after those answers too.</p>
   <div class="meta">
-    <span><b>Source</b> final-v2/FINAL-PLAN-v2.md · 6,337 lines · 25 sections · 35 flowcharts</span>
-    <span><b>Inputs</b> FINAL (branch ceo-3) · the founder's direction of 2026-09-05 · seven research lanes</span>
+    <span><b>Source</b> final-v2/FINAL-PLAN-v2.md · 6,979 lines · 25 sections · 35 flowcharts</span>
+    <span><b>Inputs</b> FINAL (branch ceo-3) · the founder's direction of 2026-09-05 · the founder's interview of 2026-09-05 · nine research lanes, seven before the interview and two after it</span>
     <span><b>Founder's choice</b> Keel only, again — THE-PLAN, mind-2, Fable's round-six design and the buy lane were not read</span>
     <span><b>State</b> nothing built, installed, authenticated, spent, published or pushed</span>
   </div>
@@ -205,13 +205,13 @@ footer p{max-width:none;margin:0 0 6px}
 <!-- ============ §1 ============ -->
 <section id="s1">
   <div class="sec"><span class="num">§1</span><h2>The decisions</h2></div>
-  <p class="sub">Fifty-three rows — v1–v5 the founder’s overrules, v6–v41 the research and build rounds, v42–v53 the review round (a census against disk and two sealed challengers). The five below are the founder's overrules of FINAL — they are not arguments, they are decisions, and each states the cost once. The losing image is kept by name in every row.</p>
+  <p class="sub">Sixty-five rows — v1–v5 overrules, v6–v41 research and build, v42–v53 review, v54–v65 the founder's interview of 2026-09-05. The five below are the founder's overrules of FINAL — they are not arguments, they are decisions, and each states the cost once. The losing image is kept by name in every row.</p>
 
   <div class="nums">
     <div class="nt"><div class="n">5</div><div class="l">founder overrules, v1–v5. Never re-litigated</div></div>
-    <div class="nt"><div class="n">36</div><div class="l">further rows, v6–v41, where a fact from the world moves a FINAL row or holds it</div></div>
-    <div class="nt"><div class="n">6</div><div class="l">of those, v36–v41, decided during the build round because a writer returned a question rather than inventing an answer</div></div>
+    <div class="nt"><div class="n">36</div><div class="l">further rows, v6–v41, where a fact from the world moves a FINAL row or holds it. Six of them, v36–v41, were decided in the build round because a writer returned a question rather than inventing an answer</div></div>
     <div class="nt"><div class="n">12</div><div class="l">more, v42–v53, decided in the review round — five contradictions between sections, the rest gaps the census and two sealed challengers found</div></div>
+    <div class="nt"><div class="n">12</div><div class="l">more, v54–v65, the founder's answers in the interview of 2026-09-05 — the section below</div></div>
   </div>
 
   <details class="tile"><summary><span class="tk">§1.1 · v1</span><span class="th">Fourteen named agents plus the Operator</span><span class="ts">How many kinds of worker</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip">overrules FINAL row 6</span></div></summary>
@@ -235,10 +235,113 @@ footer p{max-width:none;margin:0 0 6px}
   </details>
 </section>
 
+<!-- ============ §1 · v54–v65 ============ -->
+<section id="s1b">
+  <div class="sec"><span class="num">§1 · v54–v65</span><h2>The founder's interview — twelve decisions</h2></div>
+  <p class="sub">Every row of §20 and every open row of FINAL §19 was put to the founder in five rounds of questions on 2026-09-05. Twelve answers came back as decisions rather than arguments. Each tile carries the founder's own words and the image that lost.</p>
+
+  <details class="tile"><summary><span class="tk">§5.0 · v54</span><span class="th">Eight agents first, seven later</span><span class="ts">“Start with the eight that have seeds or code paths”</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip">overrules nothing · orders §19</span></div></summary>
+    <div class="body">
+      <p>The roster is unchanged and all fifteen files are still <b>ABSENT</b>; what is decided is the order they are written in. <b>Wave one</b> — the Operator, <code>builder</code>, <code>reviewer</code>, <code>architect</code>, <code>tester</code>, <code>guard</code>, <code>scout</code>, <code>designer</code> — each has a seed file or a code path on this branch today. <b>Wave two</b> — the six business agents and the challenger — comes online when a venture needs them, which under v64 is not day one.</p>
+      <p><b>The cost, stated once.</b> Wave one has no <code>challenger</code>, so a plan about to bind is attacked by <code>guard</code>'s adversarial review and the founder's own read; and no <code>product</code>, so a done-test too fuzzy to dispatch is written by the founder through the read-back. <b>Wave two is not a maybe</b> — every one of the fifteen keeps its row, its file in the inventory and its anchor, and <code>bin/run</code> refuses a brief naming an agent whose file does not exist.</p>
+      <div class="lost"><b>the losing image, kept as</b>fifteen files on day one</div>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§2.8 · v55</span><span class="th">Standing intents run by the Watch</span><span class="ts">“agents … that can run every set time or evant … it to build the company like working”</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip">no new agents</span></div></summary>
+    <div class="body">
+      <p>A <b>standing intent</b> never expires and carries <code>every:</code> — a cadence — or <code>on:</code> — an inbound event class. It is written once through the same read-back as any other intent. Each time it comes round the Watch treats it as candidate work like any other and dispatches it to the agent its kind already routes to. <b>Its outputs stage; they never send</b> — a standing intent is a recurring reason to consider work, not a standing permission to act.</p>
+      <dl class="kv">
+        <dt>support</dt><dd><b>steward</b> — a support thread is an obligation with a creditor, and it already works from <code>scout</code>'s handover of inbound rows</dd>
+        <dt>leads</dt><dd><b>growth</b> — it already drafts the outward act, and the Sender is what sends it</dd>
+        <dt>research</dt><dd><b>scout</b> — it already holds the tainted read of the open web and returns facts, never acts</dd>
+        <dt>competitors</dt><dd><b>scout</b> — the same read, on a cadence rather than on a request</dd>
+        <dt>security</dt><dd><b>guard</b> — it already produces a finding nothing downstream re-derives</dd>
+        <dt>data</dt><dd><b>analyst</b> — it already reads the reconciliation's mismatches and drafts the Decide item</dd>
+      </dl>
+      <p>So the row adds two optional fields to the intent store and <b>nothing to the roster</b>. It is not a second scheduler — there is one Watch, one tick, one ranking. It is not a cron field in an agent file, which would put the decision to run work inside the thing that does the work. <b>Mechanism:</b> <code>bin/watch</code> reads the two fields on each tick and <code>bin/check-stores</code> refuses <code>every:</code> with no per-run ceiling — both <b>ABSENT</b>.</p>
+      <div class="lost"><b>the losing image, kept as</b>per-agent cron in each agent file; a schedules page; a second scheduler beside the Watch</div>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§10.2a · v56</span><span class="th">One stated exception to the Mac</span><span class="ts">“When my Mac is not on … you can use codex or Gemini … But still keep it open”</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip exists">from research</span><span class="chip unver">what may MAKE is OPEN</span></div></summary>
+    <div class="body">
+      <p>A cloud lane exists, and FINAL's <i>everything runs on the Mac</i> gets its one stated exception. <b>Codex cloud is admitted as a PR reviewer</b> today; as a maker it is <b>UNVERIFIED</b>, and which hosted lane may make is §20 row 15. The tile in §10 carries the evidence.</p>
+      <div class="lost"><b>the losing image, kept as</b>the Mac as the only runtime; Routines refused wholesale; Codex cloud as a full night maker on issue-only evidence</div>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§9.1 · v57</span><span class="th">Fable is builder's and architect's default</span><span class="ts">“Fable as builder's and architect's default”</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip">overrules v21</span></div></summary>
+    <div class="body">
+      <p><code>claude-fable-5-1</code> is the <code>model:</code> field of <code>builder</code> and <code>architect</code>, not an escalation under conditions nobody could observe cheaply. <b>Reachability on the subscription seat is still one measurement and still UNVERIFIED</b>, so the fallback written into both files is <code>claude-opus-5</code> until it passes.</p>
+      <p><b>The cost, stated once:</b> the two heaviest producers now sit on the most expensive list price. What offsets it is a coefficient rather than an argument — <b>Fable's cache reads are 0.025x base input against 0.1x for every other model</b>, on a workload measured at 89% context. <code>scripts/prompt-standard.test.mjs</code> must admit <code>claude-fable-5-1</code> in the same change that writes either file; that is a red test, not an open question.</p>
+      <div class="lost"><b>the losing image, kept as</b>Fable as an escalation only; Fable as nobody's default</div>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§9.8 · v58</span><span class="th">The small fast model becomes Sonnet</span><span class="ts">“Set ANTHROPIC_DEFAULT_HAIKU_MODEL to Sonnet 5 now”</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip">set now, not at the retirement date</span></div></summary>
+    <div class="body">
+      <p><code>ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5</code>, so <code>/goal</code>'s evaluator and the auto-mode classifier stop depending on Haiku 4.5 before its <b>2026-10-15</b> retirement. Nothing of ours defaulted to Haiku; the vendor's own defaults did. <b>The cost, once:</b> every goal check costs Sonnet, not Haiku. <b>Mechanism:</b> the variable in the launcher's environment (<code>bin/run</code>, <b>ABSENT</b>) and in the managed file's <code>env</code> if it carries one.</p>
+      <div class="lost"><b>the losing image, kept as</b>vendor defaults with an expiry row; a local model, unsupported</div>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§14.5 · v59</span><span class="th">Agent teams on, no model constraint</span><span class="ts">“Turn it on, no model constraint”</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip exists">substrate ships</span></div></summary>
+    <div class="body">
+      <p><code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code>, and <b>a teammate runs on its own agent file's model</b> — the launcher names the file, never a model. <b>The cost, once:</b> the vendor's <i>“approximately 7x more tokens … in plan mode”</i> now applies at Opus and Fable prices for five of the fourteen.</p>
+      <div class="lost"><b>the losing image, kept as</b>Sonnet teammates; teams off, subagent trees only</div>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§14.7 · v60</span><span class="th">The card carries a solo | team toggle</span><span class="ts">“Both: the card carries a ‘solo or team’ toggle”</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip unver">the team half has no prior art</span></div></summary>
+    <div class="body">
+      <p>One field on the card store, <b>defaulted from the intent's kind</b>: source code defaults to the solo chain — architect → tester → builder → reviewer, which is what one artifact and one agent requires — and anything cross-department defaults to a team led by the Operator. The toggle is visible on the card, so flipping it is one tap before the drag rather than a conversation afterwards. <b>Mechanism:</b> <code>bin/run</code> reads the field (<b>ABSENT</b>), so the board still composes no argv.</p>
+      <p><b>The toggle does not soften what is new here:</b> <code>solo</code> is the shape the world has shipped and <code>team</code> is the shape nobody has.</p>
+      <div class="lost"><b>the losing image, kept as</b>a card that always launches a team; a card that always launches one agent</div>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§14.9 · v61</span><span class="th">Page 6 is built last</span><span class="ts">“Build it, but last in the page order”</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip unver">thinnest researched area</span></div></summary>
+    <div class="body">
+      <p>The 3D file graph is built, and it is <b>last of the seven pages</b>, after one research lane on repository-to-graph tooling. The renderer is MIT and free; the extractor is entirely ours and is the least-researched area in the plan, which is the whole reason it goes last rather than not at all.</p>
+      <div class="lost"><b>the losing image, kept as</b>page 6 beside page 2; a 2D graph first</div>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§14.4 · v62</span><span class="th">pixel-agents is the room's renderer</span><span class="ts">“use pixel-agents code or Star-Office-UI or AgentOffice” — the <i>or</i> hands the pick to evidence</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip exists">from research</span></div></summary>
+    <div class="body">
+      <p>Three candidates, three LICENSE files read from the file rather than from GitHub's detection, one substrate. <b>pixel-agents</b> is MIT, was pushed the day it was read, renders without a model, and already reads Claude Code. §14.4 carries what is ours, what was refused and why, and the fallbacks.</p>
+      <p><b>It corrects FINAL:</b> <i>“no Claude Code fleet surface is spatial”</i> is no longer true.</p>
+      <div class="lost"><b>the losing image, kept as</b>Generative Agents demo mode as rank 1; Star-Office-UI; an LLM-driven office simulation</div>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">FINAL §19.8 · v63</span><span class="th">Disclose by default; entity at intake</span><span class="ts">“Disclose by default; entity per venture decided at intake”</span><div class="tags"><span class="chip founder">FOUNDER</span></div></summary>
+    <div class="body">
+      <p>Every outward artifact carries a disclosure line unless the venture's charter turns it off, and the legal entity and jurisdiction are a charter field answered at intake rather than deferred. <b>Mechanism:</b> the Sender's checklist reads the disclosure flag, and <code>bin/check-stores</code> refuses a charter with no entity field — both <b>ABSENT</b>.</p>
+      <div class="lost"><b>the losing image, kept as</b>no default disclosure; both deferred</div>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§19 · v64</span><span class="th">The first venture is the harness</span><span class="ts">“The harness itself”</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip exists">its anchors already exist</span></div></summary>
+    <div class="body">
+      <p>The intents are the build order below; the anchors are <code>npm run check</code> and the probe. <b>The cost, once:</b> the machine tests itself again, and <b>no customer-facing work has ever run through this harness</b> — recorded so it stays a choice rather than an oversight.</p>
+      <div class="lost"><b>the losing image, kept as</b>adopting an existing project; a greenfield charter</div>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§20.1 · v65</span><span class="th">The founder only, for now</span><span class="ts">“Me only, for now”</span><div class="tags"><span class="chip founder">FOUNDER</span></div></summary>
+    <div class="body">
+      <p>No second human on statutory obligations yet. Statutory clocks wake the founder, and the row is revisited when a venture has a legal entity — which v63 makes a charter field, so the trigger is written down rather than remembered.</p>
+      <div class="lost"><b>the losing image, kept as</b>a named accountant or lawyer as a wake-me target</div>
+    </div>
+  </details>
+</section>
+
 <!-- ============ §5 ============ -->
 <section id="s5">
   <div class="sec"><span class="num">§5</span><h2>The roster</h2></div>
-  <p class="sub">Fourteen agents plus the Operator — fifteen named roles, one file each, in the frontmatter format the runtime already reads. <b>All fifteen files are ABSENT.</b> The anchor is what proves the work and is never the agent's own report.</p>
+  <p class="sub">Fourteen agents plus the Operator — fifteen named roles, one file each, in the frontmatter format the runtime already reads. <b>All fifteen files are ABSENT.</b> The anchor is what proves the work and is never the agent's own report. <b>Two waves (v54):</b> eight first — the Operator, builder, reviewer, architect, tester, guard, scout, designer — and seven when a venture needs them.</p>
 
   <blockquote class="founder">
     <p>I want us to recreate the whole startup company or a whole company or a team. So I want us to have more agents as much as you will need, but not too much. So, like, between ten and fifteen agents. So we will have each agent with its own expertise so we can adjust his knowledge and his tools and his way of walking and thinking towards the tasks that he needs to achieve.</p>
@@ -251,63 +354,63 @@ footer p{max-width:none;margin:0 0 6px}
     <div class="nt"><div class="n">4</div><div class="l">can touch source. Most of them cannot do most things</div></div>
   </div>
 
-  <details class="tile" open><summary><span class="tk">§3 · the fifteenth, and the contact point</span><span class="th">Operator</span><span class="ts">The orchestrator of the agents, and the founder's contact point. Dispatches; never builds</span><div class="tags"><span class="chip">claude-opus-5</span><span class="chip absent">FILE ABSENT</span></div></summary>
+  <details class="tile" open><summary><span class="tk">§3 · the fifteenth, and the contact point</span><span class="th">Operator</span><span class="ts">The orchestrator of the agents, and the founder's contact point. Dispatches; never builds</span><div class="tags"><span class="chip">claude-opus-5</span><span class="chip absent">FILE ABSENT</span><span class="chip">wave 1</span></div></summary>
     <div class="body"><dl class="kv"><dt>Tools</dt><dd><code>Read Glob Grep</code> plus <code>Agent(...)</code> — <b>no Write, no Edit, no Bash</b></dd><dt>Anchor</dt><dd>It is not in the §5 table because §3 is its section. It holds no verb that could build instead of dispatching, and that is the guarantee</dd><dt>Founder</dt><dd><i>"We need an operator, which is, like, the orchestrator of the agents. which is also the contact point with me"</i></dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 1 · engineering</span><span class="th">builder</span><span class="ts">Writes the code. One artifact, one worktree, continuous context</span><div class="tags"><span class="chip">claude-opus-5</span><span class="chip unver">escalates to claude-fable-5-1</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 1 · engineering</span><span class="th">builder</span><span class="ts">Writes the code. One artifact, one worktree, continuous context</span><div class="tags"><span class="chip">claude-fable-5-1</span><span class="chip unver">fallback claude-opus-5 until measured</span><span class="chip">wave 1</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>the venture's own CI, plus the done-test, plus the tester's blind test</dd><dt>Tools</dt><dd><code>Read Write Edit Bash Glob Grep</code> · no MCPs by default</dd><dt>Routed</dt><dd>when the intent's outcome is source code</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 2 · engineering · correctness</span><span class="th">reviewer</span><span class="ts">Judges code it did not write, against a named dimension</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">a second family when reachable</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 2 · engineering · correctness</span><span class="th">reviewer</span><span class="ts">Judges code it did not write, against a named dimension</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">a second family when reachable</span><span class="chip">wave 1</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>findings reproduce from the diff alone; a finding with no reproduction is a hypothesis</dd><dt>Tools</dt><dd><code>Read Glob Grep</code> — no write</dd><dt>Routed</dt><dd>any builder handover, before merge</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 3 · engineering · systems</span><span class="th">architect</span><span class="ts">The contract before the code: schema, API, data model, migration</span><div class="tags"><span class="chip">claude-opus-5</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 3 · engineering · systems</span><span class="th">architect</span><span class="ts">The contract before the code: schema, API, data model, migration</span><div class="tags"><span class="chip">claude-fable-5-1</span><span class="chip unver">fallback claude-opus-5 until measured</span><span class="chip">wave 1</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>a migration that applies and rolls back in a scratch database</dd><dt>Tools</dt><dd><code>Read Glob Grep Write</code> (design paths only)</dd><dt>Routed</dt><dd>when the work changes a schema, an interface or a stored shape</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 4 · quality</span><span class="th">tester</span><span class="ts">Writes the test that judges a build, blind to the implementation</span><div class="tags"><span class="chip">claude-sonnet-5</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 4 · quality</span><span class="th">tester</span><span class="ts">Writes the test that judges a build, blind to the implementation</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">wave 1</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>the test fails before the change and passes after</dd><dt>Tools</dt><dd><code>Read Write Edit Bash Glob Grep</code>, with <code>--add-dir</code> excluding the implementation</dd><dt>Routed</dt><dd>any intent whose done-test needs a new anchor</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 5 · security</span><span class="th">guard</span><span class="ts">Security and adversarial review; every tool admission</span><div class="tags"><span class="chip">claude-opus-5</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 5 · security</span><span class="th">guard</span><span class="ts">Security and adversarial review; every tool admission</span><div class="tags"><span class="chip">claude-opus-5</span><span class="chip">wave 1</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>a proof of concept that reproduces, or the finding is a hypothesis</dd><dt>Tools</dt><dd><code>Read Glob Grep</code></dd><dt>Routed</dt><dd>auth, credentials, network, outward acts, migrations, or a new tool at the door</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 6 · research</span><span class="th">scout</span><span class="ts">Finds things out. Stateless, parallel legal here and only here. Reads the untrusted world</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip unver">Gemini once authenticated</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 6 · research</span><span class="th">scout</span><span class="ts">Finds things out. Stateless, parallel legal here and only here. Reads the untrusted world</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip unver">Gemini once authenticated</span><span class="chip">wave 1</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>every claim carries URL, quote and access date; <code>check-citations.mjs</code> blocks on a dead one</dd><dt>Tools</dt><dd><code>Read Glob Grep WebSearch WebFetch</code> — <b>no Write, no credential, no send</b>. Read-only MCP servers, per run</dd><dt>Routed</dt><dd>when a bounded question of fact is cheaper to answer than to assume</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 7 · design</span><span class="th">designer</span><span class="ts">UI, UX, brand, visual identity, prototypes. The perception loop: render, look, iterate</span><div class="tags"><span class="chip">claude-opus-5</span><span class="chip">playwright, per-run inline</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 7 · design</span><span class="th">designer</span><span class="ts">UI, UX, brand, visual identity, prototypes. The perception loop: render, look, iterate</span><div class="tags"><span class="chip">claude-opus-5</span><span class="chip">playwright, per-run inline</span><span class="chip">wave 1</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>a rendered screenshot judged against a named anchor; never the agent's description of it</dd><dt>Tools</dt><dd><code>Read Write Edit Bash Glob Grep</code></dd><dt>Routed</dt><dd>when the artifact is seen by a person</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 8 · product</span><span class="th">product</span><span class="ts">Turns fuzzy into a falsifiable done-test; specs, tickets, acceptance criteria, roadmap</span><div class="tags"><span class="chip">claude-sonnet-5</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 8 · product</span><span class="th">product</span><span class="ts">Turns fuzzy into a falsifiable done-test; specs, tickets, acceptance criteria, roadmap</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">wave 2</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>the store check refuses an intent whose done-test is not falsifiable by someone who did not do the work</dd><dt>Tools</dt><dd><code>Read Glob Grep Write</code> (spec paths)</dd><dt>Routed</dt><dd>when the request cannot yet be dispatched</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 9 · data</span><span class="th">analyst</span><span class="ts">Pipelines, KPIs, cohorts, A/B, anomalies, and the nightly reconciliation</span><div class="tags"><span class="chip">claude-sonnet-5</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 9 · data</span><span class="th">analyst</span><span class="ts">Pipelines, KPIs, cohorts, A/B, anomalies, and the nightly reconciliation</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">wave 2</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>the reconciliation reads a record the company does not write; a number that reconciles to our own log is rung 4, not rung 1</dd><dt>Tools</dt><dd><code>Read Glob Grep Bash</code> · read-only analytics, error tracking, billing-read</dd><dt>Routed</dt><dd>when a question is about what actually happened</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 10 · growth · craft</span><span class="th">writer</span><span class="ts">Content, brand voice, SEO, ad copy, campaign drafts, video and asset briefs</span><div class="tags"><span class="chip">claude-opus-5 for taste</span><span class="chip">claude-sonnet-5 for routine</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 10 · growth · craft</span><span class="th">writer</span><span class="ts">Content, brand voice, SEO, ad copy, campaign drafts, video and asset briefs</span><div class="tags"><span class="chip">claude-opus-5 for taste</span><span class="chip">claude-sonnet-5 for routine</span><span class="chip">wave 2</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>staged, never sent; the anchor is the founder's taste store and a rung-2 external reaction</dd><dt>Tools</dt><dd><code>Read Write Edit Glob Grep</code> · Higgsfield, rate-capped, spends credits</dd><dt>Routed</dt><dd>when words or assets are the artifact</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 11 · growth</span><span class="th">growth</span><span class="ts">Leads, scoring, outreach drafts, CRM hygiene, funnel work. Never sends</span><div class="tags"><span class="chip">claude-sonnet-5</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 11 · growth</span><span class="th">growth</span><span class="ts">Leads, scoring, outreach drafts, CRM hygiene, funnel work. Never sends</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">wave 2</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>a reply from a real person, recorded by the world's door; never a count of messages sent</dd><dt>Tools</dt><dd><code>Read Glob Grep Write</code> · CRM read-only</dd><dt>Routed</dt><dd>when the intent is about reaching people who are not yet customers</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 12 · operations · finance</span><span class="th">steward</span><span class="ts">Obligations, invoices, expenses, contract review, compliance flags, vendors, support triage</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">no MCPs</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 12 · operations · finance</span><span class="th">steward</span><span class="ts">Obligations, invoices, expenses, contract review, compliance flags, vendors, support triage</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">no MCPs</span><span class="chip">wave 2</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>an obligation is discharged only by a record the company does not write</dd><dt>Tools</dt><dd><code>Read Glob Grep Write</code> (obligations and operations paths). Mail, calendar, drive and Notion are read by the world's door and by scout; steward writes from scout's handover, never from a raw row</dd><dt>Routed</dt><dd>when something is owed to someone by a date</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 13 · knowledge</span><span class="th">curator</span><span class="ts">What the company knows: memory, the transcript pass, and skill admission. The only writer of memory</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">summarising half on Gemini or local</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 13 · knowledge</span><span class="th">curator</span><span class="ts">What the company knows: memory, the transcript pass, and skill admission. The only writer of memory</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">summarising half on Gemini or local</span><span class="chip">wave 2</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>a memory item with no source, date, expiry and falsifier is refused at the store check</dd><dt>Tools</dt><dd><code>Read Write Edit Glob Grep</code> — <b>no Bash</b></dd><dt>Routed</dt><dd>nightly, and whenever a run's handover proposes a durable fact</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§5.2 · 14 · adversarial reasoning</span><span class="th">challenger</span><span class="ts">Attacks a finished plan or artifact for holes, contradictions, and rules with no mechanism</span><div class="tags"><span class="chip">claude-opus-5</span><span class="chip">a second family when reachable</span></div></summary>
+  <details class="tile"><summary><span class="tk">§5.2 · 14 · adversarial reasoning</span><span class="th">challenger</span><span class="ts">Attacks a finished plan or artifact for holes, contradictions, and rules with no mechanism</span><div class="tags"><span class="chip">claude-opus-5</span><span class="chip">a second family when reachable</span><span class="chip">wave 2</span></div></summary>
     <div class="body"><dl class="kv"><dt>Anchor</dt><dd>every finding names the mechanism that would have caught it, or it is an opinion</dd><dt>Tools</dt><dd><code>Read Glob Grep</code></dd><dt>Routed</dt><dd>before anything irreversible, and on every plan the Operator is about to bind</dd></dl></div>
   </details>
 
@@ -324,8 +427,8 @@ footer p{max-width:none;margin:0 0 6px}
     <div class="attrib">the founder · this sentence decides the architecture of every page</div>
   </blockquote>
 
-  <details class="tile"><summary><span class="tk">§14.4 · page 1</span><span class="th">The office</span><span class="ts">The room: every live run a light, one venture per area, and the night replayed at speed in the morning</span><div class="tags"><span class="chip absent">ABSENT · enters through the tool door</span></div></summary>
-    <div class="body"><dl class="kv"><dt>Tap</dt><dd>an avatar → that agent's terminal</dd><dt>Substrate</dt><dd>Generative Agents <code>demo</code> mode, Apache 2.0</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§14.4 · page 1</span><span class="th">The office</span><span class="ts">The room: every live run a light, one venture per area, and the night replayed at speed in the morning</span><div class="tags"><span class="chip absent">ABSENT · enters through the tool door</span><span class="chip founder">FOUNDER · v62</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Tap</dt><dd>an avatar → that agent's terminal</dd><dt>Substrate</dt><dd><b>pixel-agents</b> — <b>MIT</b>, the LICENSE read from the file, pushed <b>2026-09-05</b>, the day it was read. It renders without a model, and it already reads Claude Code by two paths and no others: hook events (<code>SessionStart</code>, <code>PreToolUse</code>, <code>PermissionRequest</code>, <code>Stop</code>) and a transcript fallback over the JSONL under <code>~/.claude/projects/</code>. Its Fastify server runs on this Mac, beside <code>mission-control/</code></dd><dt>Ours</dt><dd>the writer from the event log into its <code>AgentEvent</code> model — <b>schema UNVERIFIED</b>, the README was read and not the type in source — and the <b>browser-side</b> terminal pop, which upstream has only as open PR #347. A click already opens a terminal in VS Code (issue #251), so that binding is moved rather than invented</dd><dt>Declared at the door</dt><dd>the event feed and nothing else. The transcript path is <i>not</i> the one used, and the terminal pop is §14.11's mechanism rather than the renderer's — so <i>reads and never writes</i> stays true of the substrate as admitted, which is not the same as true of the project</dd><dt>Refused</dt><dd><b>Star-Office-UI</b> — the LICENSE is dual, MIT for code and the art assets restricted, the README stating <i>禁止商用</i>, commercial use prohibited; ≈ 6 months stale, OpenClaw-only, and it has no terminal · <b>“AgentOffice”</b> — the name resolves to eleven repositories, and the likeliest <b>needs an LLM to render</b>: a simulation the model drives, reading no agent runtime at all, which fails the one rule this page has</dd><dt>Fallbacks</dt><dd>Generative Agents <code>demo</code> (Apache 2.0) and AI Town (MIT, needs Convex) — kept because their licences were already read and they cost nothing to keep</dd></dl><p>The founder can settle the name in one sentence: <b>if they say where they saw “AgentOffice”, that source settles it faster than any search</b>, and it is the only way v62's refusal of the name reopens.</p><div class="lost"><b>the losing image, kept as</b>Generative Agents demo mode as rank 1; Star-Office-UI; an LLM-driven office simulation</div></div>
   </details>
 
   <details class="tile"><summary><span class="tk">§14.5 · page 2</span><span class="th">Agents and child flows</span><span class="ts">The Operator and its children; who is working, who is sleeping, what each is doing on the current task</span><div class="tags"><span class="chip exists">SUBSTRATE SHIPS</span><span class="chip absent">PAGE ABSENT</span></div></summary>
@@ -336,20 +439,24 @@ footer p{max-width:none;margin:0 0 6px}
     <div class="body"><dl class="kv"><dt>Tap</dt><dd>a cost row → its run · a window row → retempo · an anomaly → the cord</dd><dt>Substrate</dt><dd>the event log joined to §16's price table</dd><dt>The rule</dt><dd>FINAL had no dashboard row and said "nothing is only informational"; the founder asked for a dashboard. Both are kept, by one rule: every number on the page names the tap that acts on it</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§14.7 · page 4</span><span class="th">Tasks, tickets and PRs</span><span class="ts">A board with stages, a timeline, and a kanban; PRs beside tickets</span><div class="tags"><span class="chip absent">ABSENT</span><span class="chip unver">the team part has no prior art anywhere</span></div></summary>
-    <div class="body"><dl class="kv"><dt>Tap</dt><dd><b>drag a card into "working on it" → launches a session with a team of agents and hands it the task</b></dd><dt>Substrate</dt><dd>ours; prior art OpenAI Symphony</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§14.7 · page 4</span><span class="th">Tasks, tickets and PRs</span><span class="ts">A board with stages, a timeline, and a kanban; PRs beside tickets</span><div class="tags"><span class="chip absent">ABSENT</span><span class="chip unver">the team part has no prior art anywhere</span><span class="chip founder">FOUNDER · v60</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Tap</dt><dd><b>drag a card into "working on it" → launches a session with a team of agents and hands it the task</b></dd><dt>The toggle</dt><dd><b>the card carries a <code>solo | team</code> field</b>, defaulted from the intent's kind: source code defaults to <b>solo</b> — architect → tester → builder → reviewer — and anything cross-department defaults to <b>team</b>, led by the Operator. It is visible on the card, so flipping it is one tap before the drag (v60)</dd><dt>Before anything starts</dt><dd>three counts are checked — the vendor's 20 concurrent subagents, the venture's WIP limit, at most two driven ventures. A board that accepts a drag it cannot honour is a board that lies</dd><dt>Substrate</dt><dd>ours; prior art OpenAI Symphony. <code>bin/run</code> reads the toggle (<b>ABSENT</b>), so the board still composes no argv</dd></dl></div>
   </details>
 
   <details class="tile"><summary><span class="tk">§14.8 · page 5</span><span class="th">Engines and how it works</span><span class="ts">Every engine, every gate, every store, and the flowcharts of this plan — live rather than drawn</span><div class="tags"><span class="chip absent">ABSENT</span></div></summary>
     <div class="body"><dl class="kv"><dt>Tap</dt><dd>a gate → its last ten resolutions · a store → its schema and its one writer</dd><dt>Substrate</dt><dd>the same state as every other page</dd></dl></div>
   </details>
 
-  <details class="tile"><summary><span class="tk">§14.9 · page 6</span><span class="th">The 3D file graph</span><span class="ts">The files of one project as a wired brain; edges are imports and co-change</span><div class="tags"><span class="chip absent">ABSENT</span><span class="chip unver">thinnest researched area</span></div></summary>
-    <div class="body"><dl class="kv"><dt>Tap</dt><dd>a node → open that file on the Floor</dd><dt>Substrate</dt><dd><code>3d-force-graph</code> (MIT) renders; <b>the extractor is ours</b></dd></dl></div>
+  <details class="tile"><summary><span class="tk">§14.9 · page 6</span><span class="th">The 3D file graph</span><span class="ts">The files of one project as a wired brain; edges are imports and co-change</span><div class="tags"><span class="chip absent">ABSENT</span><span class="chip unver">thinnest researched area</span><span class="chip founder">FOUNDER · v61 · built last</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Tap</dt><dd>a node → open that file on the Floor</dd><dt>Substrate</dt><dd><code>3d-force-graph</code> (MIT) renders; <b>the extractor is ours</b></dd><dt>Order</dt><dd><b>last of the seven pages</b> (v61), after one research lane on repository-to-graph tooling — built, and built last, because the renderer is free and the extractor is the least-researched thing in the plan</dd></dl></div>
   </details>
 
   <details class="tile"><summary><span class="tk">§14.10 · page 7</span><span class="th">The canvas and playground</span><span class="ts">Every agent in every session, and their connections</span><div class="tags"><span class="chip absent">ABSENT</span></div></summary>
     <div class="body"><dl class="kv"><dt>Tap</dt><dd>add a session: worktree, project, provider, model, task and agent → launch in the background, then attach</dd><dt>Substrate</dt><dd>Langflow (MIT) as the canvas idiom</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§14 · v53</span><span class="th">An eighth page enters through the door</span><span class="ts">A new page is proposed against an intent and admitted like a tool, or it is not admitted</span><div class="tags"><span class="chip absent">bin/door kind: page — ABSENT</span></div></summary>
+    <div class="body"><p>Seven is neither a ceiling nor an invitation. A proposed page declares <b>what it reads</b> — the logbook and nothing else unless the door admits more — <b>what each tap launches</b>, and its <b>licence read from the file</b>. It passes the same door a tool passes, with one extra test: <b>every element is a fact or a tap</b>.</p><p>The plan had a door for tools and none for surfaces, and the founder asked for <i>“a lot more cool and important things”</i>. This is where they enter.</p><div class="lost"><b>the losing image, kept as</b>seven pages as a ceiling</div></div>
   </details>
 </section>
 
@@ -386,7 +493,22 @@ footer p{max-width:none;margin:0 0 6px}
       <dt>Prompt</dt><dd><b>non-trivial</b> — a smoke prompt does not exercise the defect</dd>
       <dt>Version</dt><dd>≥ 0.124.0</dd>
       <dt>Judged by</dt><dd>known-answer cases</dd>
-    </dl><p><b>The test is the plan, not the issue closing</b> — 130 days of silence is not a schedule. Installing Codex and running the rehearsal is open decision 5.</p></div>
+    </dl><p><b>The test is the plan, not the issue closing</b> — 130 days of silence is not a schedule. Installing Codex and running the rehearsal is open decision 5, and the founder has put it at build time: <i>“I will install it when the building starts”</i>.</p></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§10.2a · v56</span><span class="th">The cloud lane — when the Mac is off</span><span class="ts">FINAL's <i>everything runs on the Mac</i> gets one stated exception. Codex cloud reviews a PR today; which lane may MAKE is open</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip unver">OPEN · §20 row 15</span></div></summary>
+    <div class="body">
+      <p><i>“When my Mac is not on … you can use codex or Gemini … But still keep it open”</i> <b>(FOUNDER)</b>, clarified next round as <i>“Yes — a cloud lane for when the Mac is off”</i>, with research on Codex cloud tasks and nothing else. Every fact below was read 2026-09-05 and nothing was run.</p>
+      <dl class="kv">
+        <dt>Admitted</dt><dd><b>Codex cloud as a PR reviewer.</b> <code>@codex review</code> in a pull-request comment, or automatic review on PR open, is vendor-documented, needs no local Codex, and runs in OpenAI's sandbox — so it <b>sidesteps #19945 entirely</b>, that defect being local <code>codex exec</code> with stdio detached from a TTY</dd>
+        <dt>UNVERIFIED</dt><dd><b>Codex cloud as a maker.</b> No vendor page prints a non-interactive command or an HTTP endpoint for creating a cloud task; the CLI reference describes the entry point as a browser. <code>codex cloud exec --env &lt;id&gt;</code> appears <b>only inside open feature request #24777</b>, as the author's assertion about a binary that is not installed on this Mac</dd>
+        <dt>Documented</dt><dd>the off-Mac makers that <i>do</i> have a driver are Anthropic's — <code>claude --cloud "&lt;task&gt;"</code>, an isolated VM that clones the GitHub remote, with <code>--teleport</code> pulling the session back, and <b>Routines</b>, an API fire endpoint with a one-hour floor — and Google's <b>Jules</b>, whose API says of itself that it is <i>“in an alpha release”</i></dd>
+        <dt>Unknown</dt><dd>the maximum duration of a cloud task, and how to <b>cancel</b> one — neither is published anywhere the lane reached. OpenAI's terms refused the fetch <b>four times across two dates</b>, HTTP 403, so that half of the terms question has no text behind it. Unread is not permissive</dd>
+        <dt>Mechanism</dt><dd>a hosted run's output lands as a <b>pull request or a staged artifact the Mac reconciles on wake</b>, never into the house directly; <code>bin/run</code> gains a <code>cloud</code> carrier that mints a task, records its id and does nothing else; the Watch reads the pull requests on wake. <b>All three ABSENT</b></dd>
+      </dl>
+      <p><b>The cost, stated once:</b> the lane the founder named has no documented driver today, and the lanes with a documented driver run on the Claude seat whose terms clause is the open question. Both halves are why §20 row 15 is a question rather than a decision.</p>
+      <div class="lost"><b>the losing image, kept as</b>the Mac as the only runtime; Routines refused wholesale; Codex cloud as a full night maker on issue-only evidence</div>
+    </div>
   </details>
 </section>
 
@@ -429,13 +551,16 @@ footer p{max-width:none;margin:0 0 6px}
   <p class="sub">The default is a field in the agent's own file — <code>model:</code> in frontmatter — which is what makes this routing rather than advice. All fifteen files are ABSENT.</p>
 
   <div class="nums">
-    <div class="nt"><div class="n">5</div><div class="l"><code>claude-opus-5</code> — builder · architect · guard · designer · challenger</div></div>
+    <div class="nt"><div class="n">2</div><div class="l"><code>claude-fable-5-1</code> — builder · architect (v57). The fallback is <code>claude-opus-5</code> until the seat is measured</div></div>
+    <div class="nt"><div class="n">3</div><div class="l"><code>claude-opus-5</code> — guard · designer · challenger</div></div>
     <div class="nt"><div class="n">8</div><div class="l"><code>claude-sonnet-5</code> — reviewer · tester · scout · product · analyst · growth · steward · curator</div></div>
     <div class="nt"><div class="n">1</div><div class="l">split by move — <b>writer</b>, Opus for taste work, Sonnet for routine</div></div>
     <div class="nt"><div class="n">1</div><div class="l">the Operator, <code>claude-opus-5</code>, on top of the fourteen</div></div>
   </div>
-  <p>Five, eight and one, totalling fourteen. Counting the Operator, six of fifteen named roles sit on Opus 5 and eight on Sonnet 5. <b>No agent defaults to Haiku</b> — the genuinely cheap work does not go to a cheap model at all, it goes to a local one or to no model.</p>
-  <p>Three of the five Opus rows are checkers, deliberately. <code>guard</code>, <code>challenger</code> and <code>architect</code> are on the top tier while <code>reviewer</code> and <code>tester</code> are not, because the first three produce a finding or a contract that nothing downstream re-derives. Where a cheap check exists, the cheap model is enough; where the output <i>is</i> the check, it is not.</p>
+  <p>Two, three, eight and one, totalling fourteen. Counting the Operator, four of fifteen named roles sit on Opus 5, two on Fable 5.1 and eight on Sonnet 5. <b>No agent defaults to Haiku</b> — the genuinely cheap work does not go to a cheap model at all, it goes to a local one or to no model.</p>
+  <p><b>Two of the three Opus rows are checkers</b>, deliberately — <code>guard</code> and <code>challenger</code>. The top tier is now split across two models: <code>architect</code> joins them on Fable rather than Opus, and all three sit above <code>reviewer</code> and <code>tester</code> because they produce a finding or a contract that nothing downstream re-derives. Where a cheap check exists, the cheap model is enough; where the output <i>is</i> the check, it is not.</p>
+  <p><b>The two Fable rows are the heaviest producers, and that is v57's whole argument.</b> <code>builder</code> is the one top-tier row that is not a checker: the founder put the agent that writes the most code on the model with the cheapest re-read of a large standing context — <b>cache reads at 0.025x base input against 0.1x everywhere else</b>, on a workload measured at 89% context.</p>
+  <p><b>Two settings the interview fixed.</b> <code>ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5</code>, <b>set now</b> rather than at Haiku 4.5's retirement on 2026-10-15 (v58), in the launcher's environment and in the managed file's <code>env</code> if it carries one. And teams are on with <b>no model constraint</b>: a teammate is a full session started from an agent file, so it runs on <i>that file's</i> model, and the launcher names the file rather than a model (v59).</p>
 
   <h3>The three windows <span class="chip sec">§9.3</span></h3>
   <details class="tile"><summary><span class="tk">§9.3 · window 1</span><span class="th">Anthropic subscription</span><span class="ts">No numeric quota is published on any page fetched. The absence of numbers is itself the finding</span><div class="tags"><span class="chip unver">Max 20x price UNVERIFIED</span></div></summary>
@@ -453,49 +578,53 @@ footer p{max-width:none;margin:0 0 6px}
 <!-- ============ §20 ============ -->
 <section id="s20">
   <div class="sec"><span class="num">§20</span><h2>Open decisions</h2></div>
-  <p class="sub">Fourteen, each with both sides and whose decision it is. Tap to open.</p>
+  <p class="sub">Fifteen, each with both sides and whose decision it is. Eleven were decided in the founder's interview of 2026-09-05 and one is an act at build time. <b>Open today: three</b> — row 1 (the terms), row 4 (<code>LICENSE-CONTENT</code>, one fetch at build), and row 15, which v56 raised and did not settle. Tap to open.</p>
+  <div class="legend"><span class="chip exists">DECIDED</span><span class="chip unver">OPEN</span><span class="chip">AT BUILD</span><span>the status is the founder's answer, not an editor's reading</span></div>
 
-  <details class="tile"><summary><span class="tk">§20.1 · 1</span><span class="th">The terms — automated access on a subscription</span><span class="ts">Whose: the founder, after one reading</span></summary>
+  <details class="tile"><summary><span class="tk">§20.1 · 1</span><span class="th">The terms — automated access on a subscription</span><span class="ts">Whose: the founder, after one reading</span><div class="tags"><span class="chip unver">OPEN</span></div></summary>
     <div class="body"><dl class="kv"><dt>One side</dt><dd>the vendor ships and documents the unattended features (<code>-p</code>, <code>--max-budget-usd</code>, <code>/loop</code>, Routines, Remote Control, agent teams) and the subscription is paid for</dd><dt>The other</dt><dd>the clause names an API key as the carve-out, and the downside of being wrong is the account, which takes the company. <b>OpenAI's terms returned HTTP 403 and are unread; Google's are unfetched</b></dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 2</span><span class="th">Is Fable 5.1 reachable on the subscription seat</span><span class="ts">Whose: one measurement, then the founder</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>it is in the API catalogue and Fable is a valid frontmatter value</dd><dt>The other</dt><dd><b>no plan table names it</b>, and this repo's own lint does not carry <code>claude-fable-5-1</code>. Fallback is <code>claude-opus-5</code></dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 2</span><span class="th">Is Fable 5.1 reachable on the subscription seat</span><span class="ts">Whose: one measurement, then the founder</span><div class="tags"><span class="chip exists">DECIDED · v57</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>it is in the API catalogue and Fable is a valid frontmatter value</dd><dt>The other</dt><dd><b>no plan table names it</b>, and this repo's own lint does not carry <code>claude-fable-5-1</code>. Fallback is <code>claude-opus-5</code></dd><dt>Decided</dt><dd><b>v57</b> — builder's and architect's default. Reachability on the seat is still one measurement, and <code>claude-opus-5</code> is the value both files carry until it passes</dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 3</span><span class="th">Haiku 4.5 retires from 2026-10-15</span><span class="ts">Whose: the founder, on a dated review</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>nothing of ours defaults to it</dd><dt>The other</dt><dd><code>/goal</code>'s evaluator and the auto-mode classifier do, by vendor default. <code>ANTHROPIC_DEFAULT_HAIKU_MODEL</code> changes it everywhere the small fast model is used</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 3</span><span class="th">Haiku 4.5 retires from 2026-10-15</span><span class="ts">Whose: the founder, on a dated review</span><div class="tags"><span class="chip exists">DECIDED · v58</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>nothing of ours defaults to it</dd><dt>The other</dt><dd><code>/goal</code>'s evaluator and the auto-mode classifier do, by vendor default. <code>ANTHROPIC_DEFAULT_HAIKU_MODEL</code> changes it everywhere the small fast model is used</dd><dt>Decided</dt><dd><b>v58</b> — <code>ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5</code>, set now rather than at the retirement date</dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 4</span><span class="th"><code>LICENSE-CONTENT</code> in the skills upstream</span><span class="ts">Whose: one fetch, then a decision</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>one fetch clears it and unlocks 2,111 skills</dd><dt>The other</dt><dd>until read, no bulk import: MIT covers the code, not necessarily the content</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 4</span><span class="th"><code>LICENSE-CONTENT</code> in the skills upstream</span><span class="ts">Whose: one fetch, then a decision</span><div class="tags"><span class="chip unver">OPEN · one fetch</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>one fetch clears it and unlocks 2,111 skills</dd><dt>The other</dt><dd>until read, no bulk import: MIT covers the code, not necessarily the content</dd><dt>Where it stands</dt><dd><b>Open</b>, and the founder's answer is <i>“fetch it at build time”</i> — the library plan stands as written until then</dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 5</span><span class="th">Install Codex and run the headless rehearsal</span><span class="ts">Whose: the founder, then the measurement</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>day one is the founder's instruction, and three families is the strongest vendor independence</dd><dt>The other</dt><dd>#19945 is open 130 days with no maintainer reply; the rehearsal may fail, and then Codex stays in one foreground slot</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 5</span><span class="th">Install Codex and run the headless rehearsal</span><span class="ts">Whose: the founder, then the measurement</span><div class="tags"><span class="chip">AT BUILD</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>day one is the founder's instruction, and three families is the strongest vendor independence</dd><dt>The other</dt><dd>#19945 is open 130 days with no maintainer reply; the rehearsal may fail, and then Codex stays in one foreground slot</dd><dt>Where it stands</dt><dd><b>At build time</b> — <i>“I will install it when the building starts, no need to think about now”</i>. An act, not a choice</dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 6</span><span class="th">Authenticate <code>gemini</code></span><span class="ts">Whose: the founder, one terminal act</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>a second family at zero marginal cost; 60 requests/min and 1,000/day free</dd><dt>The other</dt><dd>it has sat unauthenticated since it was installed</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 6</span><span class="th">Authenticate <code>gemini</code></span><span class="ts">Whose: the founder, one terminal act</span><div class="tags"><span class="chip exists">DECIDED</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>a second family at zero marginal cost; 60 requests/min and 1,000/day free</dd><dt>The other</dt><dd>it has sat unauthenticated since it was installed</dd><dt>Decided</dt><dd>authenticate with a <b>personal Google account</b></dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 7</span><span class="th">Turn on agent teams</span><span class="ts">Whose: the founder</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>it is the substrate for page 2, and it ships</dd><dt>The other</dt><dd>experimental, off by default, <b>no nested teams</b>, one team per session, <code>/resume</code> does not restore them, and "approximately 7x more" tokens when teammates run in plan mode</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 7</span><span class="th">Turn on agent teams</span><span class="ts">Whose: the founder</span><div class="tags"><span class="chip exists">DECIDED · v59</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>it is the substrate for page 2, and it ships</dd><dt>The other</dt><dd>experimental, off by default, <b>no nested teams</b>, one team per session, <code>/resume</code> does not restore them, and "approximately 7x more" tokens when teammates run in plan mode</dd><dt>Decided</dt><dd><b>v59</b> — on, and <b>no model constraint</b>: a teammate runs on its own file's model</dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 8</span><span class="th">The managed settings file</span><span class="ts">Whose: the founder, then the probe</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>the only tier a running process cannot clear</dd><dt>The other</dt><dd>a founder act on a machine-wide file, and the hook trade rides on it: keeping <code>/goal</code> means a run can register its own Stop hook</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 8</span><span class="th">The managed settings file</span><span class="ts">Whose: the founder, then the probe</span><div class="tags"><span class="chip exists">DECIDED</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>the only tier a running process cannot clear</dd><dt>The other</dt><dd>a founder act on a machine-wide file, and the hook trade rides on it: keeping <code>/goal</code> means a run can register its own Stop hook</dd><dt>Decided</dt><dd><i>“Yes — I will write it when building starts”</i>. The trade rides with it: keeping <code>/goal</code> means a run can register its own Stop hook, and the probe checks it nightly</dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 9</span><span class="th">Does a card launch a team</span><span class="ts">Whose: decided by the founder; built by us either way</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>it is the founder's page 4, verbatim</dd><dt>The other</dt><dd><b>no prior art anywhere</b> — every board-to-session project maps one task to one agent</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 9</span><span class="th">Does a card launch a team</span><span class="ts">Whose: decided by the founder; built by us either way</span><div class="tags"><span class="chip exists">DECIDED · v60</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>it is the founder's page 4, verbatim</dd><dt>The other</dt><dd><b>no prior art anywhere</b> — every board-to-session project maps one task to one agent</dd><dt>Decided</dt><dd><b>v60</b> — both: the card carries a <code>solo | team</code> toggle, defaulted from the intent's kind</dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 10</span><span class="th">The 3D graph extractor</span><span class="ts">Whose: the founder, on appetite</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>the renderer is MIT and free</dd><dt>The other</dt><dd>the extractor is entirely ours and it is the least-researched area in the plan</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 10</span><span class="th">The 3D graph extractor</span><span class="ts">Whose: the founder, on appetite</span><div class="tags"><span class="chip exists">DECIDED · v61</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>the renderer is MIT and free</dd><dt>The other</dt><dd>the extractor is entirely ours and it is the least-researched area in the plan</dd><dt>Decided</dt><dd><b>v61</b> — build it, <b>last</b> in the page order, after one research lane on repo-to-graph tooling</dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 11</span><span class="th">The second human on statutory obligations</span><span class="ts">Whose: the founder</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>cheap now, impossible in the moment it is needed</dd><dt>The other</dt><dd>a trust and credential decision</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 11</span><span class="th">The second human on statutory obligations</span><span class="ts">Whose: the founder</span><div class="tags"><span class="chip exists">DECIDED · v65</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>cheap now, impossible in the moment it is needed</dd><dt>The other</dt><dd>a trust and credential decision</dd><dt>Decided</dt><dd><b>v65</b> — <i>“Me only, for now”</i>; revisited when a venture has a legal entity, which v63 makes a charter field</dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 12</span><span class="th">Which room</span><span class="ts">Whose: the founder</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>Generative Agents <code>demo</code> (Apache 2.0, cold) — the cheapest read-only display, one JSON file</dd><dt>The other</dt><dd>AI Town (MIT, alive, needs Convex) — a living project, if the founder wants it maintained</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 12</span><span class="th">Which room</span><span class="ts">Whose: the founder</span><div class="tags"><span class="chip exists">DECIDED · v62</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>Generative Agents <code>demo</code> (Apache 2.0, cold) — the cheapest read-only display, one JSON file</dd><dt>The other</dt><dd>AI Town (MIT, alive, needs Convex) — a living project, if the founder wants it maintained</dd><dt>Decided</dt><dd><b>v62 — pixel-agents</b>, MIT and alive, because it already reads Claude Code and needs no model to render. Star-Office-UI and “AgentOffice” are refused with their reasons in §14.4, where the fallbacks also sit</dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 13</span><span class="th">The first venture and its rung-1 anchor</span><span class="ts">Whose: the founder</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>adoption is the intake this founder uses most</dd><dt>The other</dt><dd>the harness is the only venture whose anchors already exist — the 48-step suite</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 13</span><span class="th">The first venture and its rung-1 anchor</span><span class="ts">Whose: the founder</span><div class="tags"><span class="chip exists">DECIDED · v64</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>adoption is the intake this founder uses most</dd><dt>The other</dt><dd>the harness is the only venture whose anchors already exist — the 48-step suite</dd><dt>Decided</dt><dd><b>v64</b> — <i>“The harness itself”</i>: its intents are the build order and its anchors already exist</dd></dl></div>
   </details>
-  <details class="tile"><summary><span class="tk">§20.1 · 14</span><span class="th">Fourteen agents is inside an unoccupied band</span><span class="ts">Whose: decided; reopened only by name</span></summary>
-    <div class="body"><dl class="kv"><dt>One side</dt><dd>the founder's decision, taken with the evidence in hand</dd><dt>The other</dt><dd>every shipped running roster measured is 5–6; every roster of 150+ is a catalogue you pick from</dd></dl></div>
+  <details class="tile"><summary><span class="tk">§20.1 · 14</span><span class="th">Fourteen agents is inside an unoccupied band</span><span class="ts">Whose: decided; reopened only by name</span><div class="tags"><span class="chip exists">DECIDED · v54</span></div></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>the founder's decision, taken with the evidence in hand</dd><dt>The other</dt><dd>every shipped running roster measured is 5–6; every roster of 150+ is a catalogue you pick from</dd><dt>Decided</dt><dd><b>v54</b> — the roster stands at fifteen and ships in <b>two waves</b>; the eight with seeds or code paths are written first</dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 15</span><span class="th">Which hosted lane may MAKE when the Mac is off</span><span class="ts">Whose: the founder, with row 1 · raised by v56 and not settled by it</span><div class="tags"><span class="chip unver">OPEN</span><span class="chip founder">raised by v56</span></div></summary>
+    <div class="body"><dl class="kv"><dt>The three</dt><dd><b>Codex cloud</b> (<code>codex cloud exec</code>, issue-only, UNVERIFIED) · <b>Claude Code <code>--cloud</code> and Routines</b> (documented argv and API; shares the Claude seat) · <b>Jules</b> (alpha API, a third family)</dd><dt>One side</dt><dd>Anthropic's is the only fully documented driver today and costs no extra compute</dd><dt>The other</dt><dd>it is the same seat as the Floor and the same terms clause as row 1; Codex cloud is the founder's named preference and has no driver yet</dd><dt>What would close it</dt><dd>a vendor page or <code>codex cloud exec --help</code> on an installed binary · <b>OpenAI's terms actually read</b>, after four HTTP 403 refusals · the undocumented maximum cloud-task duration · a cancel command. <b>None of the four is published today</b></dd></dl></div>
   </details>
 </section>
 
@@ -522,7 +651,7 @@ footer p{max-width:none;margin:0 0 6px}
 
   <p class="tier">The run and its grant</p>
   <ol class="build">
-    <li><div class="node">The fifteen agent files</div><span class="path">keel/agents/*.md · the model set in prompt-standard.test.mjs moves in the same change</span><div class="needs"><b>needs</b>nothing</div></li>
+    <li><div class="node">The agent files, in two waves (v54)</div><span class="path">wave one — Operator · builder · reviewer · architect · tester · guard · scout · designer<br>wave two — product · analyst · writer · growth · steward · curator · challenger, when a venture needs them<br>keel/agents/*.md · prompt-standard.test.mjs admits claude-fable-5-1 in the same change (v57)</span><div class="needs"><b>needs</b>nothing. All fifteen keep a row and an anchor; a wave is the order they are written in, and bin/run refuses a brief naming a file that does not exist</div></li>
     <li><div class="node">The argv files</div><span class="path">keel/agents/&lt;agent&gt;.&lt;provider&gt;.argv — the grant IS these strings</span><div class="needs"><b>needs</b>the agent files · gemini authenticated</div></li>
     <li><div class="node">The probe</div><span class="path">keel/bin/probe — what a run can actually touch, nightly</span><div class="needs"><b>needs</b>the managed settings file · the argv files</div></li>
     <li><div class="node"><code>bin/run</code> — the only thing that composes argv</div><span class="path">mints the UUID · writes logbook/sessions.jsonl · seed: mission-control/scripts/consume-dispatch.ts</span><div class="needs"><b>needs</b>the logbook · the probe · the argv files</div></li>
@@ -566,10 +695,10 @@ footer p{max-width:none;margin:0 0 6px}
     <li><div class="node">Page 3 · cost, tokens, efficiency</div><span class="path">every number taps</span><div class="needs"><b>needs</b>mission control · the meter</div></li>
     <li><div class="node">Page 4 · tasks, tickets, PRs</div><span class="path">a card launches a session with a TEAM</span><div class="needs"><b>needs</b>mission control · bin/run</div></li>
     <li><div class="node">Page 5 · engines, gates, stores, live</div><span class="path"></span><div class="needs"><b>needs</b>mission control · the store check</div></li>
-    <li><div class="node">Page 1 · the office</div><span class="path">Generative Agents demo mode, through the door</span><div class="needs"><b>needs</b>mission control</div></li>
+    <li><div class="node">Page 1 · the office</div><span class="path">pixel-agents (MIT), through the tool door · the writer into its AgentEvent model is ours</span><div class="needs"><b>needs</b>mission control</div></li>
     <li><div class="node">Page 7 · canvas / playground</div><span class="path">Langflow idiom · --session-id --bg then --attach</span><div class="needs"><b>needs</b>mission control · bin/run</div></li>
     <li><div class="node">The repository-to-graph extractor</div><span class="path">ours; 3d-force-graph reads {nodes, links} only</span><div class="needs"><b>needs</b>nothing</div></li>
-    <li><div class="node">Page 6 · 3D file graph</div><span class="path"></span><div class="needs"><b>needs</b>the extractor · mission control</div></li>
+    <li><div class="node">Page 6 · 3D file graph</div><span class="path">last of the seven pages (v61) · one research lane on repo-to-graph tooling first</span><div class="needs"><b>needs</b>the extractor · mission control</div></li>
   </ol>
 
   <p class="tier">The last node</p>
@@ -582,7 +711,7 @@ footer p{max-width:none;margin:0 0 6px}
 <section id="s23">
   <div class="sec"><span class="num">§23</span><h2>Coverage of the founder's list</h2></div>
   <p class="sub">One row per founder item; the five dispositions summing to the total; and separately the count of rows marked <code>?</code>. Written against COVERAGE.md as it lands, never from memory.</p>
-  <div class="tally">TALLY (v2 · FINAL): IN <b>503 · 410</b> — RENAMED <b>90 · 157</b> — REFUSED <b>52 · 77</b> — OUTSIDE <b>13 · 14</b> — FOUNDER'S <b>13 · 13</b>; <b>671</b> items, <b>137</b> rows changed, <b>7</b> marked <code>?</code></div>
+  <div class="tally">TALLY (v2 · FINAL): IN <b>503 · 410</b> — RENAMED <b>90 · 157</b> — REFUSED <b>52 · 77</b> — OUTSIDE <b>13 · 14</b> — FOUNDER'S <b>13 · 13</b>; <b>671</b> items, <b>137</b> rows changed, <b>5</b> marked <code>?</code> — 8 when first written; the review settled two and the founder's interview two more<br>LOSING IMAGES kept by name: <b>54</b> — <b>5</b> the founder's overrules + <b>49</b> moved by a fact, a rule already written down, the review round, or the interview</div>
   <p style="margin-top:10px">If the tally and <code>COVERAGE.md</code> disagree, <b>COVERAGE.md is right</b> — it is the table, this is a pointer to it.</p>
 </section>
 
