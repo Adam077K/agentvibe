@@ -152,4 +152,22 @@ Returns `{"type":"routine_fire","claude_code_session_id":...,"claude_code_sessio
 5. Section 10.5's Routines row: the one-hour minimum is **confirmed verbatim**; the daily cap is confirmed to exist but published as no number. The *"no local files (fresh clone)"* cell is right about the laptop and misleading if read as "no repository" — routines clone every selected repo per run and push `claude/`-prefixed branches.
 6. Section 10.7's ABSENT rows are untouched. Nothing here is built.
 
-**Gaps.** *(the lane's message truncated here; the Gaps section follows as part 5b)*
+**Gaps** (delivered as part 5b after the lane's part 5 truncated mid-sentence).
+
+1. **OpenAI terms are unread.** Four HTTP 403 refusals against `openai.com/policies/*` across two dates: `terms-of-use` (prior lane), `row-terms-of-use`, `eu-terms-of-use/`, `business-terms/`. Question 6 is UNKNOWN for OpenAI. No clause has been read.
+2. **Codex cloud maximum task duration is undocumented.** No page I reached states a runtime limit.
+3. **No vendor page prints `codex cloud exec` argv.** The command list is from openai/codex#24777, whose author is not confirmed as an OpenAI maintainer and has no maintainer reply. Confidence M, not H.
+4. **No REST API for creating a Codex cloud task was found.** This is absence of evidence across six fetched pages, not a vendor denial. A private or undocumented endpoint may exist.
+5. **No GitHub label trigger for Codex is documented.** Only `@codex` mention and automatic review on pull request open.
+6. **Cancelling a Codex cloud task is unknown.** No cancel command appears in either the existing or the requested list, and no page mentions one.
+7. **Whether `codex exec resume` reaches a cloud task is unknown.** Nothing links the two, and the surfaces use different nouns: `SESSION_ID` locally, `TASK_ID` in the cloud.
+8. **No numeric cloud quota is published.** The only cloud statement is qualitative: cloud chats *"may use more of your allowance than local messages."* The published five-hour figures are for local messages.
+9. **Codex cloud container technology is unnamed.** *"Isolated cloud environments"* is the entire vendor claim.
+10. **The two-phase network model is my inference,** from the phrase *"during the agent phase."* No page states it.
+11. **Anthropic publishes no numeric inactivity timeout** for cloud sessions and no numeric daily routine cap. Both are described only qualitatively.
+12. **Jules task quotas and the CLI were not fetched.** The docs reference a "Jules Tools (CLI)" section I did not open, and the only quota found was the three-API-key limit.
+13. **Fetch fidelity.** The `learn.chatgpt.com` `.md` pages were summarized by the fetch model rather than returned whole. Short quoted strings are H; reconstructed tables and figures are M.
+14. **Nothing was measured.** No runtime ran. Codex remains uninstalled and I attempted no install, per the brief.
+15. **No claims were registered.** `mcp__claim-append__append_claim` was not present in this session's tool set, so durable findings could not be written to the ledger. Whoever has that tool should register at minimum the internet-access default, the routines API endpoint and its one-hour floor, and the absence of a documented Codex cloud creation API, each with a `valid_until` date.
+
+**Report complete: parts 1 through 5 and 5b delivered.**
