@@ -34,7 +34,10 @@ protecting is kept as four rules that now live inside a roster.
    no `Bash`**. *(FINAL row 6's irreducible property; enforced by the argv and by the nightly probe `bin/probe`,
    ABSENT. An agent that can edit what it reviews will review what it can edit.)*
 3. **The trifecta split.** No agent holds untrusted input, private credentials and an outward channel at once.
-   *(v33; the Sender is the only thing that sends, and it holds no model.)*
+   *(v33; the Sender is the only thing that sends, and it holds no model.)* **v36 sharpens the first leg into a
+   testable rule:** a tainted read — mail, calendar, drive, Notion, the open web — is held by `scout` and by the
+   world's door program, **and by nothing that carries `Write`, `Edit` or `Bash`.** *(Mechanism: the MCP column of
+   §5.2 is the argv; `bin/probe`, ABSENT, asserts it nightly.)*
 4. **The no-model programs stay programs.** The Watch · the Sender · the world's door · the probe · the reconciler ·
    the log · the launcher · the curator's launcher · the drill · the rehearsal runner · the store check · the
    supervisor. **A prompt injection that reaches one of these finds a program.** *(FINAL §7.4, §16.1.)*
@@ -65,7 +68,7 @@ proves the work and is **never the agent's own report**)**
 | 9 | **analyst** | Pipelines, KPIs, cohorts, A/B, anomalies, and the nightly reconciliation | data | `claude-sonnet-5` | Read Glob Grep Bash | read-only analytics, error tracking, billing-read | data | the reconciliation reads a record the company does not write; a number that reconciles to our own log is rung 4, not rung 1 | a question is about what actually happened |
 | 10 | **writer** | Content, brand voice, SEO, ad copy, campaign drafts, video and asset briefs | growth · craft | `claude-opus-5` for taste work; `claude-sonnet-5` for routine | Read Write Edit Glob Grep | Higgsfield (rate-capped, spends credits) | growth · craft | staged, never sent; the anchor is the founder's taste store and a rung-2 external reaction | words or assets are the artifact |
 | 11 | **growth** | Leads, scoring, outreach *drafts*, CRM hygiene, funnel work. **Never sends** | growth | `claude-sonnet-5` | Read Glob Grep Write | CRM read-only | growth | a reply from a real person, recorded by the world's door; never a count of messages sent | the intent is about reaching people who are not yet customers |
-| 12 | **steward** | Obligations, invoices, expenses, contract *review*, compliance flags, vendors, support triage | operations · finance | `claude-sonnet-5` | Read Glob Grep Write | Gmail/Calendar/Drive/Notion **read** | operations | an obligation is discharged only by a record the company does not write | something is owed to someone by a date |
+| 12 | **steward** | Obligations, invoices, expenses, contract *review*, compliance flags, vendors, support triage | operations · finance | `claude-sonnet-5` | Read Glob Grep Write (obligations and operations paths) | **none** — mail, calendar, drive and Notion are read by the world's door (a program) into inbound rows, and by `scout`; steward writes from scout's handover, never from a raw row (v36) | operations | an obligation is discharged only by a record the company does not write | something is owed to someone by a date |
 | 13 | **curator** | What the company knows: memory, the transcript pass, and skill admission. **The only writer of memory** | knowledge | `claude-sonnet-5`; the summarising half on Gemini or a local model | Read Write Edit Glob Grep — **no Bash** | none | knowledge | a memory item with no source, date, expiry and falsifier is refused at the store check | nightly, and whenever a run's handover proposes a durable fact |
 | 14 | **challenger** | Attacks a finished plan or artifact for holes, contradictions, and rules with no mechanism | adversarial reasoning | `claude-opus-5`; a second family when reachable | Read Glob Grep | none | quality · research | every finding names the mechanism that would have caught it, or it is an opinion | before anything irreversible, and on every plan the Operator is about to bind |
 
@@ -73,6 +76,19 @@ proves the work and is **never the agent's own report**)**
 **Eight of the fourteen carry no shell. Five carry no write of any kind. Only four can touch source.** That is the
 trifecta split expressed as a table rather than as a rule, and it is what makes fourteen names cost less than it
 sounds: most of them cannot do most things.
+
+**(NEW: v36 — who may hold a tainted read, and it is one line because it is one rule)** Mail, calendar, drive and
+Notion are **tainted read-only**: their content is written by strangers. **Only `scout` and the world's door program
+may read them.** No agent that holds `Write`, `Edit` or `Bash` reads them raw — which, read against the MCP column
+above, is why exactly one agent in the table carries a tainted server and it is the one with no write, no
+credential and no send.
+
+| Who | May read mail, calendar, drive, Notion | Why |
+|---|---|---|
+| **the world's door** | yes | a program with no model. It writes one inbound row per event and does nothing else |
+| **`scout`** | yes, read-only servers admitted per run | it holds no `Write`, no credential and no send, so a prompt injection in a stranger's text reaches a thing that can neither act nor tell anyone |
+| **`steward`** | **no** | it holds `Write`. It works from `scout`'s handover and from inbound rows, never from a raw row |
+| every other agent | no | none of them has a reason to, and each of them holds something |
 
 **(NEW: the fifteenth)** The **Operator** is not in the table because §3 is its section. It carries `Read Glob Grep`
 plus `Agent(...)`, no `Write`, no `Edit`, no `Bash`, and its file is ABSENT like the rest.
@@ -169,10 +185,24 @@ while it burns a reputation. **It never sends.** First contact with a stranger i
 the Sender's own rate limits are absolute numbers in a program no model can reach.
 
 **12 · steward.** Obligations, invoices, expenses, contract **review**, compliance flags, vendors, support triage.
-Lens: operations, finance. `claude-sonnet-5`. Read, Glob, Grep, Write. MCPs: Gmail, Calendar, Drive, Notion — **read**.
-Skills: operations. **Anchor:** an obligation is discharged only by a record the company does not write. Contract
-**drafting that binds**, tax filing and cap-table edits are one-way doors and are refused: they reach the founder as
-a *which*, with both options prepared.
+Lens: operations, finance. `claude-sonnet-5`. Read, Glob, Grep, and `Write` on obligations and operations paths.
+**MCPs: none** (v36). Skills: operations. **Anchor:** an obligation is discharged only by a record the company does
+not write. Contract **drafting that binds**, tax filing and cap-table edits are one-way doors and are refused: they
+reach the founder as a *which*, with both options prepared.
+
+**(NEW: v36 — where steward's input comes from, and why it is not a server on its own line)** An earlier draft of
+this roster gave `steward` read access to Gmail, Calendar, Drive and Notion. **That was one grant breaking two
+rules at once**: those reads are tainted, and this agent holds `Write`. So the grant is removed and the input
+arrives by two paths that already exist. **The world's door** — a program with no model — writes one inbound row per
+event; **`scout`** answers a bounded question about what a row actually says, holding no write, no credential and no
+send. `steward` writes an obligation **from `scout`'s handover and from inbound rows, never from a raw row.**
+**Mechanism:** the MCP column of §5.2 is the grant, composed into argv by `bin/run` (ABSENT) and asserted nightly
+by `bin/probe` (ABSENT); there is no server for `steward` to reach.
+
+**(NEW: what this costs, once)** One hop. A support ticket becomes an obligation after an inbound row and a scout
+pass, rather than the moment `steward` reads the mailbox. That is the price of the rule FINAL states as *no model
+reads a stranger's text with a tool in its hand*, and the alternative is an agent that reads mail with a pen in its
+hand — the losing image v36 keeps by name.
 
 **13 · curator.** What the company knows: memory, the transcript pass, and skill admission. **The only writer of
 memory** (v25). Lens: knowledge. `claude-sonnet-5`, with the summarising half on Gemini or a local model, because
@@ -209,7 +239,11 @@ flowchart TD
 
     W -->|"a bounded question of fact"| SCOUT["SCOUT · parallel legal here and only here"]
     W -->|"a record of what actually happened"| ANALYST["ANALYST"]
-    W -->|"something owed by a date"| STEW["STEWARD"]
+    W -->|"something owed by a date"| T{"Does answering it mean reading<br/>mail, calendar, drive or Notion?"}
+    T -->|"yes — a tainted read"| DOOR["THE WORLD'S DOOR · a program, no model.<br/>One inbound row per event"]
+    DOOR --> SC2["SCOUT reads the row's source.<br/>No Write, no credential, no send"]
+    SC2 --> STEW
+    T -->|"no"| STEW["STEWARD · writes the obligation<br/>from a handover, never from a raw row"]
     W -->|"a durable fact, or nightly"| CUR["CURATOR"]
     W -->|"words or assets"| WRITER["WRITER"]
     W -->|"reaching people who are not yet customers"| GROWTH["GROWTH · drafts only, never sends"]
@@ -229,10 +263,12 @@ flowchart TD
     GUARD --> DONE
 ```
 
-**(NEW: three properties of that picture are load-bearing)** **`challenger` comes before the route, not after it** —
+**(NEW: four properties of that picture are load-bearing)** **`challenger` comes before the route, not after it** —
 it attacks the plan the Operator is about to bind, and attacking afterwards is attacking a decision. **`architect`
-and `tester` are gates on the code path, not alternatives to it.** And **no branch reaches an outward act**: the
-right-hand edge of the diagram ends at an anchor, because staging is where every agent's authority stops.
+and `tester` are gates on the code path, not alternatives to it.** **No branch reaches an outward act**: the
+right-hand edge of the diagram ends at an anchor, because staging is where every agent's authority stops. And **no
+branch hands a tainted read to an agent that can write** (v36) — the one route that starts in a stranger's text
+passes through a program and then through `scout` before it reaches anything holding a pen.
 
 ---
 
@@ -248,9 +284,9 @@ rather than deferring)**
 | 25 | data & analytics | analyst (pipelines, tracking, dashboards, KPIs, cohorts, A/B, cleaning, anomalies) | **Data labelling** as an agent — it is a founder-taste task and feeds the taste store through the Floor |
 | 26 | marketing & content | writer (calendar, blog, video and asset briefs, SEO, ad copy, social, email, brand voice) | **Influencer outreach** — first contact with a stranger is on the default `never` list |
 | 27 | sales & growth | growth (scraping, scoring, outreach drafts, CRM, follow-up, deal stage, referral) | **Churn prediction** — no venture has the data; it is a wish until one does |
-| 28 | customer service | steward triages, because a support ticket is an obligation with a due date; writer drafts the reply; **the Sender sends** | **An autonomous reply bot** — a person is on the other side, so it is REACHES-THE-WORLD and never unattended until the founder widens the class |
+| 28 | customer service | the world's door writes the inbound row and `scout` reads the source (v36); steward triages it, because a support ticket is an obligation with a due date; writer drafts the reply; **the Sender sends** | **An autonomous reply bot** — a person is on the other side, so it is REACHES-THE-WORLD and never unattended until the founder widens the class |
 | 29 | finance & legal | steward (invoices, expenses, budget-vs-actual, contract *review*, compliance flags) · analyst (the reconciliation) | **Contract drafting that binds, tax filing, cap-table edits** — one-way doors; they reach the founder as a *which*, with both options prepared |
-| 30 | operations & HR | steward (vendors, meeting notes, calendar, process docs, internal tooling requests) | **Hiring pipeline** — there are no employees; revisit when there are |
+| 30 | operations & HR | steward (vendors, process docs, internal tooling requests, and calendar and meeting notes **as inbound rows**, never as a mailbox it opens — v36) | **Hiring pipeline** — there are no employees; revisit when there are |
 
 **(NEW: the two roster entries with the least outside evidence, named rather than smoothed over)** **Two departments
 have no shipped precedent anywhere in the rosters fetched:** sales and growth as a function, and legal and contracts.

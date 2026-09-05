@@ -68,3 +68,13 @@ existing — the same hop FINAL §9.5 already required.
 Builder 1 returned BLOCKED on §6: fourteen named agents mean the brief must carry which agent runs it, and SPINE §A
 decided neither a tenth field nor a widened `window+model:`. Decided by the orchestrator: a tenth field `agent:`,
 because it leaves FINAL's nine untouched and the launcher can refuse a name that is not a roster file. Row v37.
+
+## 10 · v38–v41 — four placements builder 4 found undecided, decided by the orchestrator
+Builder 4 returned six BLOCKED rows. A was v36; B was the namespace miscount (§E.4 now reads thirteen). The other
+four were absent from §A and are decided here because each follows from a measured fact or an existing setting,
+not from a preference the founder holds: **v38** the read-back is the intent-creation form on pages 4 and 7 and
+stays a phone page, the briefing is page 5's top strip and a phone page; **v39** the website is served on the
+Mac by the existing `mission-control/` server because a terminal pop needs tmux on the same machine — the phone
+keeps the published pages for reading and deciding (cost: two renderers over one state, accepted); **v40**
+`maxTurns` 30 for producing agents, 25 for read-only ones, copying the measured seeds; **v41** `isolation:
+worktree` for the four that touch venture source, `none` elsewhere. Each is reopenable by name in §20.
