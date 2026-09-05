@@ -67,7 +67,7 @@ control plane beside the runtime, and two implementations of one thing disagree 
 | Class | Example | Who may hold it | Night? |
 |---|---|---|---|
 | **READ-ONLY** | Playwright headless, a render, a repo read API, analytics, error tracking | any agent whose grant names it | yes |
-| **READ-ONLY, tainted** | Gmail read, Drive read, Notion read, the open web | **scout** — the trifecta agent, which holds no key and cannot send. See the collision in 8.7 | yes |
+| **READ-ONLY, tainted** | Gmail read, Calendar read, Drive read, Notion read, the open web | **`scout`, and the world's door program — nothing else.** No agent holding `Write`, `Edit` or `Bash` reads them raw (v36) | yes |
 | **WRITES, reversible** | Figma, Pencil, a design file on a dry branch | **designer**, after the undo is drilled | yes |
 | **REACHES THE WORLD** | send, publish, pay, deploy, share, delete | **no agent. The Sender**, which holds no model | only after the founder widens the class |
 
@@ -103,6 +103,12 @@ literally *"the reconciliation reads a record the company does not write"*, and 
 **(FOUNDER: *"we need to think about it outside of what we have right now."*)** Each row names the need, not the
 product, so that a vendor change is a routing change. **Every row is WISH until it passes 8.1 — nothing here is
 admitted by being listed.**
+
+**(v36, applied.)** "Which agent needs it" names who the answer is *for*, not always who holds the credential. Where
+a row's read carries text a stranger controls — an invoice body, a signed document, a support message — it is a
+**tainted** read by 8.2, so the world's door writes the row and `scout` reads it, and the named agent works from
+that row. Where the read is a structured figure from a service the company itself holds an account with, the named
+agent may hold it directly once it passes 8.1.
 
 | The need | Which agent needs it | Why the system is incomplete without it |
 |---|---|---|
@@ -170,7 +176,7 @@ the door.)**
 |---|---|---|---|---|
 | the founder's signed-in Chrome | REACHES THE WORLD **+ private data** | the founder's own sessions | **nobody but the founder, on the Floor** | day, Floor only, forever |
 | Playwright, headless, `--isolated` | READ-ONLY render | none | **designer** — the only agent whose row names it | night |
-| Gmail · Calendar · Drive · Notion **read** | READ-ONLY, **tainted** | OAuth, the founder's | **COLLISION — see below** | night |
+| Gmail · Calendar · Drive · Notion **read** | READ-ONLY, **tainted** | OAuth, the founder's | **the world's door program** (holds no model) **and `scout`** — nobody else. `steward` holds none of them (v36) | night |
 | Gmail **send** | REACHES THE WORLD, one-way | OAuth | **the Sender**, founder-signed | never unattended until the founder widens the class |
 | Drive share · Calendar create · Notion write | REACHES THE WORLD (a share is durable) | OAuth | **the Sender**, after a recall window | night only after the class is widened and the undo drilled |
 | Figma · Pencil · Stitch · Refero (Refero READ-ONLY) | WRITES, reversible | OAuth / local files / API key | **designer**, on a dry branch | night after the undo is drilled |
@@ -185,22 +191,34 @@ the door.)**
 | `gemini` | a **provider**, not a tool | never authenticated | routed by section 9, not held by an agent | night |
 | **Not connected, needed first**: analytics · error tracking · read-only billing · CI API · git host read | READ-ONLY | none | **analyst** (the reconciliation) · **scout** | night — and **before any hand**, per 8.3 |
 
-**The collision, named rather than resolved. (BLOCKED.)** SPINE §F's class table says tainted read-only is
-**scout only** — *"the trifecta agent, which holds no key and cannot send"*. SPINE §B.2 row 12 grants
-**steward** *"Gmail/Calendar/Drive/Notion **read**"*. Both are in §A and they disagree about one grant. The two
-sides:
+**The tainted read, decided. (v36, decided 2026-09-05; DECISIONS.md §8.)** SPINE §F's class table and §B.2 row 12
+disagreed about exactly one grant: §F said a tainted read is **scout only**, and the roster row gave `steward`
+*"Gmail/Calendar/Drive/Notion read"*. **v36 resolves it. A tainted read is held by `scout` and by the world's door
+program, and by nothing else. No agent that holds `Write`, `Edit` or `Bash` reads a stranger's text raw.** §B.2 row
+12 is patched: `steward`'s MCP grant is now **none**.
 
-- **For steward holding it:** the trifecta needs all three legs, and steward has two — private data and tainted
-  content — with **no outward channel at all**. Two legs is not the forbidden shape, and steward's whole job (*"an
-  obligation is discharged only by a record the company does not write"*) is unreachable if it cannot read the mail
-  that carries the obligation.
-- **For scout only:** FINAL §9.4 makes taint **static at dispatch** — *"any run whose brief reads content from
-  outside the company … is born as a scout, without the tools that act, and stays one for its whole life"*. Steward
-  carries `Write`. Under that rule `bin/run` refuses the brief, so the §B.2 grant is one an enforced launcher would
-  never compose.
+**(FINAL §9.5 — this is a mechanism, not a policy.)** When the world sends something — a reply, a payment, a failed
+build, a CVE, an invoice, a support message — **a program writes one row into the logbook and does nothing else.**
+*"No model reads a stranger's text with a tool in its hand."* The door holds no model, so there is nothing in it to
+steer; a prompt injection that reaches it finds a program. A scout with no credentials reads the row, and `steward`
+writes the obligation **from `scout`'s handover, never from a raw row**.
 
-**This section does not decide it**, because deciding it changes either §F's class table or §B.2's roster row. It is
-returned to the Operator, and it belongs beside the other founder decisions in section 20.
+**(FINAL §9.4 — why the two-legs argument does not survive.)** Taint is **static at dispatch**, not judged while a
+run is going: *"any run whose brief reads content from outside the company … is born as a scout, without the tools
+that act, and stays one for its whole life."* `steward` carries `Write`, so `bin/run` would refuse the brief
+outright. The grant §B.2 used to carry was one an enforced launcher could never have composed — the contradiction
+was visible between two tables before it would have been visible in a run, which is the cheapest place to find it.
+
+**What `steward` loses, and what it does not.** It loses the raw read. It keeps every obligation, because an
+obligation reaches it as an inbound row, and its anchor was never the mail: *"an obligation is discharged only by a
+record the company does not write."* The losing image, kept by name in section 22: **a steward that reads mail with
+a pen in its hand.**
+
+**(FINAL §9.5, measured, and it carries into the surfaces work.)** *"a delivered cross-session message starts a new
+turn carrying the receiver's full context, so an inbound path wired to a running run costs a context window per
+event, not a slot"* — which is why the door **writes a row and never wakes a run directly**. Routines' API trigger
+already wraps an inbound payload in a block labelling it untrusted data, which is this rule shipped by a vendor.
+**Mechanism:** the inbound door program — **ABSENT**.
 
 ---
 
@@ -212,6 +230,7 @@ returned to the Operator, and it belongs beside the other founder decisions in s
 | Descriptions are hashed and re-checked each session | the hash check inside `bin/run` | **ABSENT** |
 | A grant is argv, and only one thing composes it | `bin/run` | **ABSENT** |
 | The trifecta cannot form on any path | `bin/run` refuses the combined grant; `bin/probe` asserts it nightly | **ABSENT** |
+| A tainted read is held only by `scout` and the world's door (v36) | the door program writes one inbound row and holds no model; `bin/run` refuses any brief pairing an outside read with `Write`, `Edit` or `Bash` | **ABSENT** — the roster row is patched, the launcher that would enforce it is not built |
 | An MCP call is governed by a hook only if the matcher names it | registered as `c-mcp-hook-matcher-must-name-the-tool` | **EXISTS** as a claim, branch `ceo-1-1788609834` |
 | Servers absent unless named in argv | `--strict-mcp-config` | **shipped by the runtime** |
 | Per-server allow/deny | `.claude/mcp-policy.json` (65 lines; the seed shape) | **EXISTS**, branch `ceo-1-1788609834` |
