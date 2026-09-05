@@ -70,19 +70,22 @@ clear scope, boundaries, and success criteria"* is the closest and is prose advi
 `--session-id` so the id is the system's and not the vendor's returned handle, and it is on every logbook row; and a
 **`label`**, what the run is making and which window it is burning.
 
-> **BLOCKED — the SPINE does not decide whether the brief gains a tenth field, and the roster forces the question.**
-> With fourteen named agents, something must carry *which agent this is*. Two readings are available and the SPINE
-> settles neither. **(a)** A tenth field, `agent:`, naming one of the fifteen files. **(b)** `window+model:` widens
-> to `agent+window+model:`, keeping the count at nine, with the model read from the agent's frontmatter and
-> overridden per move. **This section is written on reading (a)** because it changes the least: the nine fields stay
-> exactly as FINAL wrote them, and the new fact gets its own field rather than overloading one. **The decision
-> belongs to whoever owns SPINE §A**, and if it goes the other way only this paragraph and the block below change.
-
-**(NEW: the tenth field, on the stated assumption)**
+**(NEW: the tenth field, decided as v37)** Fourteen named agents make *which agent* a fact the brief must carry,
+and FINAL's nine had nowhere to put it. **The brief gains a tenth field rather than widening an existing one:**
 
 ```
-agent:         one of the fifteen — the file bin/run reads the grant from
+agent:         one of the fifteen roster names — the file bin/run composes the argv from
 ```
+
+**(NEW: what v37 decides and what it leaves alone)** `window+model:` **stays exactly as FINAL wrote it.** The
+agent's own row supplies its default model, and the per-move table overrides it — so the two fields answer two
+different questions, *who* and *on what*, and neither is overloaded. The losing image is kept by name: a single
+widened `agent+window+model:` field, and a brief that names no agent and lets the launcher guess.
+
+**(NEW: the mechanism, because a tenth field with nothing checking it is a tenth field nobody fills)** **`bin/run`
+refuses a brief whose `agent:` is not a roster file** (ABSENT). That refusal is what makes the field load-bearing:
+a typo, a retired agent, or a name someone invented in a prompt fails at dispatch rather than producing a run with a
+guessed grant.
 
 **(NEW: why the field names the agent and not the argv, which is v34 restated where it is most likely to be
 violated)** The brief names *who*. **`bin/run` (ABSENT; FINAL names it `keel/bin/run`) composes the argv** from that

@@ -30,10 +30,12 @@ was stated once, and the chosen thing is then built properly. They are never re-
 
 ---
 
-### 22.2 The nineteen moved by a fact from the world
+### 22.2 The nineteen moved by a fact, and one settled by a standing rule
 
-**(NEW: each of these lost to a measurement, not to a preference)** The column names the row that beat it and the
-fact that did the beating. Where the fact came from a research lane this session, the lane is the source.
+**(NEW: nineteen of these lost to a measurement, not to a preference)** The column names the row that beat it and the
+fact that did the beating. Where the fact came from a research lane this session, the lane is the source. **Numbers
+6–24 are §J's own**, unchanged. **Number 25 is not in §J**, because v36 was decided after §J was written; it is the
+one entry here that lost to a standing rule rather than to a new fact.
 
 | # | The losing image | Beaten by | The fact that moved it |
 |---|---|---|---|
@@ -53,10 +55,10 @@ fact that did the beating. Where the fact came from a research lane this session
 | 19 | **Fable as anyone's default; wshobson's tier 0 adopted as-is** | v21 | it is an escalation with one named trigger. Its **availability on a subscription seat is UNVERIFIED**, and the SWE-bench Pro ranking behind the tier-0 idea is third-party, confidence L, and is not used to route |
 | 20 | **One rolling five-hour window as the whole physical fact** | v22 | there is a **weekly** window too, per seat, shared with Claude chat and Cowork — and a seat limit cannot be escaped with `/model` while a model-family limit can |
 | 21 | **`--max-budget-usd` as a spend control** | v23 | print mode only, computed locally at list price, and *"the session cost figure isn't relevant for billing purposes"* for subscribers. Kept as a **stall fuse**, which it is good at |
-| 22 | **A nightly full rewrite of the memory files** | v24 | ACE, arXiv 2510.04618: context held 18,282 tokens at 66.7% accuracy and collapsed at the next step to **122 tokens and 57.1%**, below a 63.7% baseline. Delta-only, never a rewrite |
-| 23 | **FINAL §10.1's Letta attribution** | v25 | the current vendor page for that feature no longer supports the sentence. The **principle** stands — the thing that acts never edits memory — with its one shipped counter-example named rather than hidden: Claude Code's own auto memory is written by the acting agent, in-session |
-| 24 | **A plan-critique pass the same run performs on itself** | v30 | *"at times, their performance even degrades after self-correction"* (arXiv 2310.01798). Reflexion's 91% is not a counterexample: its feedback is external. That is why `challenger` is an agent |
-| 25 | **`script -qfc` wrapped around every Codex child** | v32 | the cure is *"incompatible with normal background / parallel job execution"*, which is what a crew is. Codex runs in the foreground slot instead, and the headless rehearsal is what widens it |
+| 22 | **FINAL §10.1's Letta attribution** | v25 | the current vendor page for that feature no longer supports the sentence. The **principle** stands — the thing that acts never edits memory — with its one shipped counter-example named rather than hidden: Claude Code's own auto memory is written by the acting agent, in-session |
+| 23 | **A plan-critique pass the same run performs on itself** | v30 | *"at times, their performance even degrades after self-correction"* (arXiv 2310.01798). Reflexion's 91% is not a counterexample: its feedback is external. That is why `challenger` is an agent |
+| 24 | **`script -qfc` wrapped around every Codex child** | v32 | the cure is *"incompatible with normal background / parallel job execution"*, which is what a crew is. Codex runs in the foreground slot instead, and the headless rehearsal is what widens it |
+| 25 | **A steward that reads mail with a pen in its hand** | v36 | **not a new fact — a standing rule reaching a collision.** §F held the tainted read at scout only while §B.2 row 12 granted steward the same reads, and steward carries `Write`. The trifecta split decided it: a tainted read is held by `scout` and by the **world's door**, a program with no model, and by nothing else. Steward writes obligations from the handover and the door's rows |
 
 ---
 
@@ -74,6 +76,9 @@ it here should look in one of three places, not conclude it was never considered
   credential or a new licence would change.
 - **The FINAL rows that neither the founder nor a fact moved** are carried forward unchanged by number in §1-v2, and
   they have no losing image here because nothing beat them this round.
+- **One image §J does not list, deliberately:** *a nightly full rewrite of the memory files*, which v24 beat with ACE
+  (arXiv 2510.04618). It lives in §1-v2 row v24's last column and is not copied here, because the rule this section
+  opens with is that nothing §1 carries word for word is repeated.
 
 **(FINAL)** Everything above is kept so it can be argued for later. **Nothing here is deleted when it loses** — that
 is the whole point of writing it down, and it is why §1-v2's last column and this section exist as two views of one
