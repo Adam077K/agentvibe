@@ -34,3 +34,22 @@ states it plainly. §19.10 stays open.
   compress) · `ceo-3-1788468144 7286420` = `b2cabad` + 12 (same final docs, no origin/main) ·
   `ceo-1-1788468144 280b5e7` ⊇ origin/main ∪ b2cabad + round-5 corpus, no `final/` · this branch = `b2cabad`.
 - The handoff file is byte-identical on `docs/final-plan` (52fa1f1) and `ceo-3` (7286420).
+
+## 5 · Seven research lanes, direct `Agent` dispatch, not a `Workflow`
+The handoff named four lanes; the founder's widening ("add more to the research or more to the thinking") added
+three: cognition and tickets (§21–§22), memory and knowledge (§04–§05), models and quotas. All seven ran as
+`sourcer` engines in parallel by direct dispatch. Fan-out wider than three is supposed to go through a committed
+workflow script, but the `Workflow` tool needs the founder's explicit words and the founder's standing preference
+is direct agents for anything short of a main change (LONG-TERM.md). Cost of the choice: no enforced return
+schema; the return format was carried in each brief instead and checked by reading.
+
+## 6 · Lane returns are delivered in 3,500-character parts
+The idle-notification drain that delivers a subagent's result truncates near 4,000 characters per message and
+16,000 per drain, and `sourcer` has no `Write`. Every report came back in numbered parts, requested one at a time,
+and was recorded verbatim under `final-v2/research/` by the orchestrator — recording, not authoring. Seven lanes,
+fifty-one parts, one commit per round. A lane engine with `Write` would remove this ceremony; noted for the plan.
+
+## 7 · The spine lane runs on Opus, not the framer's default Sonnet
+`framer.md` declares `claude-sonnet-5`. The decision spine is the highest-leverage document of the session — every
+builder writes from it — so the dispatch overrode the model to `opus`. Cost: roughly 2.5× the token price for
+one lane. Recorded so the override is a choice and not drift.
