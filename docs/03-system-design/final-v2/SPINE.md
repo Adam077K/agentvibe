@@ -549,7 +549,7 @@ Kept by name so each can be argued for later. Five are the founder's overrules; 
 
 ## K · The section plan for the builders
 
-Twenty-four sections. Each names the SPINE rows it must obey and the FINAL sections it inherits. **A section may
+Twenty-five sections (13a added in the build round). Each names the SPINE rows it must obey and the FINAL sections it inherits. **A section may
 not decide anything not in §A; if it needs a decision that is not there, it returns BLOCKED to the Operator.**
 
 | § | Section | SPINE rows it obeys | Inherits from FINAL |
@@ -568,6 +568,7 @@ not decide anything not in §A; if it needs a decision that is not there, it ret
 | 11 | **Truth** — anchors, the ladder, rehearsal | v8, v30; §B.2 anchor column | §8, §7.6 |
 | 12 | **Control** — envelope, permissions, the Sender | §C.1; v9, v10, v28, v33 | §9 |
 | 13 | **Memory and knowledge** | v24, v25, v26, v27; §E | §10, §11 |
+| 13a | **How the system improves itself** — three loops, horizons, corrections that learn, the rethink trigger | v19 (skill expiry), v30 (the challenger), §E.3 (a failed candidate becomes a negative), §B.2 `curator` and `challenger` | §12 entire (**added in the build round: §K omitted FINAL §12 and the coverage lane found the gap**) |
 | 14 | **Mission control** | §D entire; v4, v14, v15, v16 | §13 (Floor and Balcony absorbed, not deleted) |
 | 15 | **Runtime and the Mac** | §D.1, §D.2; v13's constraints | §14, §16.7 |
 | 16 | **Economics** | §G.2, §G.3; v22, v23 | §15 |

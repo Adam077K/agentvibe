@@ -78,3 +78,10 @@ Mac by the existing `mission-control/` server because a terminal pop needs tmux 
 keeps the published pages for reading and deciding (cost: two renderers over one state, accepted); **v40**
 `maxTurns` 30 for producing agents, 25 for read-only ones, copying the measured seeds; **v41** `isolation:
 worktree` for the four that touch venture source, `none` elsewhere. Each is reopenable by name in §20.
+
+## 11 · Section 13a — self-improvement had no home in the section plan
+The coverage lane, placing "Improvement backlog", found that SPINE §K's twenty-four sections carry no
+self-improvement section: FINAL §12 (three loops at three speeds, horizons on everything durable, corrections
+logged as defects in the brief, the refusal line, the rethink trigger) inherited nowhere. Added as §13a between
+memory and mission control rather than renumbering fourteen cross-referenced sections. A hole found by a
+mechanical placement pass, not by reading — the pattern this repo keeps recording.

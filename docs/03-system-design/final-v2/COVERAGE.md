@@ -300,7 +300,7 @@
 | Credential read denial | IN | IN | 12 | `denyRead` over the credential stores, and scout holds no credential at all | SPINE v33 |
 | Permission rule count | REFUSED | REFUSED | 12 | a count of rules is not a measure of safety | agree |
 | Hook event coverage | IN | IN | 12 | and the managed file deliberately does not disable hooks, because that would kill `/goal` | SPINE v11 |
-| Blocking gate | IN | IN | 11 | four gates declared, and any exit other than 0 or 1 is unresolved, never pass | fact |
+| Blocking gate | IN | IN | 11 | four gates declared, any exit other than 0 or 1 is unresolved — and the gate may not be invocable by the thing it gates | SPINE v35 |
 | Blocking-human gate | IN | IN | 12 | a `human` gate has no `run:`, and writing one is refused | fact |
 | Live worldly risk | IN | IN | 12 | REACHES THE WORLD is a class on the act, and no agent holds it | SPINE v33 |
 | Publish-action risk | IN | IN | 12 | anything delivered to a person is one-way | agree |
@@ -507,7 +507,7 @@
 | Liability policy | FOUNDER'S | FOUNDER'S | 2 | legal reaches the founder, with no tempo that changes it | agree |
 | Audit-readiness checklist | IN | IN | 14 | the chain of direction is the audit trail, and it exists whether or not asked | agree |
 | Regulatory monitoring | IN | IN | 2 | a watching intent over a handful of pages, opening a proposal on change | agree |
-| IP infringement check | IN | IN | 11 | the licence read is the check: n8n, Flowise, Gource and `LICENSE-CONTENT` each moved a decision | fact |
+| IP infringement check | IN | IN | 11 | the licence read is the check: n8n, Flowise, Gource and `LICENSE-CONTENT` each moved a decision | SPINE v17 |
 
 ## 19 Growth & external comms
 
@@ -965,6 +965,6 @@ Placements this file could not settle from its inputs. Every one is a dispositio
 | Ticket status field | 22 | the board is the founder's page 4 and its stages are certain; whether dragging a card launches a **team** is open decision 9, and nothing in the world has done it |
 | Infra layer (Wing 5) | wing 5 | IN here, while every venture-facing DevOps row of §17 is OUTSIDE. The two readings disagree about who owns hosting, and FINAL had the same split |
 
-**How the 671 were decided.** `agree` where SPINE moved nothing and FINAL stands. `SPINE vN` or `SPINE §X` where a v2 row or a lettered section settles it — v1, v2, v3 and v4 between them account for most of the 137 moves, and v6, v7, v8, v9, v11, v12, v13, v14, v15, v16, v18, v19, v20, v21, v22, v23, v24, v25, v26, v27, v28, v29, v30, v31, v32, v33 and v34 are each cited at least once. `founder` where the direction itself decides, quoted in SPINE §B, §C, §D, §E, §F or §G. `fact` where a research fact from `roster.md`, `memory.md`, `cognition.md`, `skills.md`, `models.md`, `surfaces.md` or `runtimes.md` decides the row rather than a preference.
+**How the 671 were decided.** `agree` where SPINE moved nothing and FINAL stands. `SPINE vN` or `SPINE §X` where a v2 row or a lettered section settles it — v1, v2, v3 and v4 between them account for most of the 137 moves, and every one of §A's thirty-five rows is cited by at least one item. Verify with `grep -oE 'SPINE v[0-9]+' COVERAGE.md | sort -u`. `founder` where the direction itself decides, quoted in SPINE §B, §C, §D, §E, §F or §G. `fact` where a research fact from `roster.md`, `memory.md`, `cognition.md`, `skills.md`, `models.md`, `surfaces.md` or `runtimes.md` decides the row rather than a preference.
 
 **No row is placed on a mechanism that does not exist.** Where the plan wants a thing and has no mechanism for it, the row says so in its Why — the wish-list tools of §F, the ABSENT paths of §B–§H, and `Improvement backlog`'s missing section are the honest cases, and they are marked rather than dressed.
