@@ -24,7 +24,7 @@ not:        a build plan, a schedule, a first month, a price list. Nothing here 
 companions: final-v2/SPINE.md (the sixty-five rows and the roster, binding on every section — v54–v65 are the
             founder's interview of 2026-09-05) ·
             final-v2/COVERAGE.md (every item of the founder's list placed) · final-v2/DECISIONS.md (this session's
-            own decisions, as they were made) · final-v2/research/ (seven lanes, verbatim) · final-v2/page/final-plan-v2.html (71,585 bytes)
+            own decisions, as they were made) · final-v2/research/ (seven lanes, verbatim) · final-v2/page/final-plan-v2.html (100,099 bytes)
 ```
 
 ---
@@ -6968,7 +6968,7 @@ the world's door, and a record the company does not write.
 **(NEW: written by the coverage lane, against `COVERAGE.md` as it lands, never from memory)**
 
 ```
-TALLY (v2 · FINAL): IN 503 · 410 — RENAMED 90 · 157 — REFUSED 52 · 77 — OUTSIDE 13 · 14 — FOUNDER'S 13 · 13; 671 items, 137 rows changed, 8 marked `?`
+TALLY (v2 · FINAL): IN 503 · 410 — RENAMED 90 · 157 — REFUSED 52 · 77 — OUTSIDE 13 · 14 — FOUNDER'S 13 · 13; 671 items, 137 rows changed, 5 marked `?` (8 when first written; the review settled two, the founder's interview two more)
 ```
 
 **(NEW: what the tally must count, so that a number here cannot drift from the table beside it)** One row per founder
