@@ -275,10 +275,52 @@ program (ABSENT).
 
 ### 11.10 The rehearsal set, and what it decides
 
-**(FINAL §7.6, restated in v2's terms.)** A rehearsal case is an input with a known answer. Two things are decided by
-running against the set rather than by argument: **which loadouts may run unattended**, and **whether a change to a
-standing prompt is adopted** — both versions are run against known answers, and a change that is not measurably
-better is reverted and kept as a negative. It is the only self-editing permitted anywhere.
+**(FINAL §7.6, inherited whole and re-read at the source.)** A rehearsal case is an input whose right answer is
+already known. Voyager added a skill to its library only after it verifiably worked in the environment, which is why
+that library transferred to a fresh world instead of being a pile of plausible code. **The same discipline decides
+which agents may run unattended**, and it decides one other thing: whether a change to a standing prompt is adopted —
+both versions run against known answers, and a change that is not measurably better is reverted and kept as a
+negative. That is the only self-editing permitted anywhere.
+
+```mermaid
+flowchart TD
+    NEW["A new kind of move appears<br/>(a new field, a new tool, a new agent,<br/>a new provider)"] --> REH{"Is there a rehearsal<br/>for this move?"}
+    REH -->|"no"| MAKE["Build one: 3–5 cases FROM THE PAST<br/>where the right answer is already known —<br/>transcripts, shipped work, the Floor"]
+    MAKE --> RUNIT
+    REH -->|"yes"| RUNIT["Run it against the rehearsal on the<br/>cheapest window — HEADLESS, exactly<br/>as it will run at night"]
+    RUNIT --> SCORE{"Passed the<br/>known-answer cases?"}
+    SCORE -->|"no"| STRONGER["A stronger model (§G.1),<br/>or a richer grant; re-run"]
+    STRONGER --> RUNIT
+    SCORE -->|"still no"| ESCALATE["NOT YET TRUSTED — and it has a<br/>destination, not a bin: the Floor, where<br/>the founder does it WITH the agent.<br/>That session becomes the next rehearsal case."]
+    SCORE -->|"yes"| TRUST["A trust score for THIS agent<br/>on THIS move class"]
+    TRUST --> AUTO["May run unattended, inside the envelope (§12)"]
+    AUTO --> WATCH2["Trust recomputed continuously from<br/>ANCHORED outcomes — never self-reported"]
+    WATCH2 -->|"pass rate falls"| ESCALATE
+```
+
+**(FINAL §7.6's three consequences, and each one is a rule this section would otherwise have to invent.)**
+
+1. **A trust score is a measurement, not a rating.** It is the observed pass rate of anchored checks for that agent on
+   that move class, and **no run scores itself** — §11.1 applied to the question of who may work alone. Below a sample
+   floor it prints **`insufficient`** rather than a number, because a pass rate over four cases is a number that
+   invites a decision it cannot support.
+2. **"Not yet trusted" has a productive destination.** A move that fails rehearsal goes to the Floor, where the
+   founder does it *with* the agent — **and that session becomes the rehearsal case for next time.** This is the
+   mechanism by which walking *with* the founder teaches the system to walk *for* them, and it is why the Floor is not
+   a consolation prize.
+3. **The cases come from the founder's own past.** Thousands of transcripts hold hundreds of *no, not like that* and
+   *yes, that's it* — **a labelled dataset of this founder's judgement, gathered free over years.** §13.7's mining
+   pass is what extracts them, which is why that pass is the work to do first: it is the only source of rehearsal
+   cases nobody has to write.
+
+**(FINAL, and it is the instrument that catches the failure nobody watches for.)** A trust score charted over time,
+with limits computed from its own history, is a **control chart** — and it is what sees a provider's silent model
+update in month nine, when nothing in the release notes and nothing in the code has changed.
+
+**(NEW: v1 changes what carries a trust score, and it makes the whole mechanism cheaper.)** FINAL scored a *loadout*
+assembled per run, so the population of scores was open-ended. **Fourteen named agents give the score a stable
+subject**: `builder` on schema changes, `scout` on a field it has not read before. A pass rate needs a denominator
+that persists, and a named roster is one.
 
 **(NEW: v18 makes a rehearsal case one of exactly four admissible skill bodies, so the set has a home and a format.)**
 A rehearsal case is a `SKILL.md` body under §E's content rule, which means the same admission and the same forced
