@@ -22,10 +22,10 @@ flowchart TD
     GEMINI(["FOUNDER ACT · authenticate gemini<br/>one terminal act; 0.38.2 installed, never authenticated"])
     CODEX(["FOUNDER ACT · install codex<br/>command -v codex is absent today"])
     TEAMS(["FOUNDER ACT · CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1<br/>experimental, off by default, no nested teams"])
-    LICENSE(["FOUNDER ACT · fetch and read LICENSE-CONTENT<br/>one fetch; unblocks the 2,111 (v17)"])
+    LICENSE(["FOUNDER ACT · fetch and read LICENSE-CONTENT<br/>one fetch; unblocks the 2,111+ (v17)"])
 
-    AGENTS["The fifteen agent files<br/>keel/agents/*.md · the model set in<br/>prompt-standard.test.mjs moves in the same change"]
-    ARGV["keel/agents/&lt;agent&gt;.&lt;provider&gt;.argv<br/>the grant IS these strings"]
+    AGENTS["The fifteen agent files<br/>.claude/agents/*.md · the model set in<br/>prompt-standard.test.mjs moves in the same change"]
+    ARGV["keel/shared/argv/&lt;agent&gt;.&lt;provider&gt;.argv<br/>the grant IS these strings"]
     PROBE["keel/bin/probe<br/>what a run can actually touch, nightly"]
     RUN["keel/bin/run<br/>the only thing that composes argv · mints the UUID ·<br/>writes keel/logbook/sessions.jsonl<br/>seed: mission-control/scripts/consume-dispatch.ts"]
     SUPERVISE["keel/bin/supervise<br/>restart ceiling · heartbeat · process-group kill"]
@@ -128,8 +128,8 @@ two nodes the graph is wrong, and this table is how that is found.
 
 | ABSENT path or artifact | SPINE | Node |
 |---|---|---|
-| `keel/agents/operator.md` and the fourteen agent files | §B.2, §C | `AGENTS` |
-| `keel/agents/<agent>.<provider>.argv` | §B.1 rule 1, §H.1 | `ARGV` |
+| `.claude/agents/operator.md` and the fourteen agent files | §B.2, §C | `AGENTS` |
+| `keel/shared/argv/<agent>.<provider>.argv` | §B.1 rule 1, §H.1 | `ARGV` |
 | `keel/bin/run` | §B.1 rule 1, §C.4, v34 | `RUN` |
 | `keel/bin/probe` | §B.1 rule 4, v34 | `PROBE` |
 | `keel/bin/log` and `keel/logbook/` | §B.1 rule 4 | `LOG` |

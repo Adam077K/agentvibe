@@ -19,6 +19,13 @@ question answered before it started.
 
 ### 3.1 Identity
 
+**(NEW: v46 — the Operator's runtime position, decided, because page 2 depends on it.)** The Operator is
+the founder's **interactive session**, started as `claude --agent operator`, so one agent file governs it and
+it can still form the agent team page 2 draws. It is inventoried as a file (§17.1 row 0) and runs as the main
+session; a dispatched agent file could not form a team (v13, §14.5). Whether `--agent` binds the file's
+`tools:` at top level is **one measurement, UNVERIFIED**; until it passes, the no-`Write` guarantee below is
+held by managed `permissions.deny`, not by frontmatter.
+
 **(NEW: one file, in the format the runtime already reads, so the Operator is the same kind of object as the
 fourteen it dispatches)**
 
@@ -28,7 +35,7 @@ fourteen it dispatches)**
 | **Model** | `claude-opus-5` | It reads the founder's sentence, picks among fourteen, and writes the brief that binds a run. Every defect in it is a defect in work nobody reviews |
 | **Tools** | `Read Glob Grep` plus `Agent(...)` | **It dispatches and it does not build** |
 | **No** | `Write`, `Edit`, `Bash` | An Operator that can edit will edit instead of dispatching. It is the same argument that keeps `Write` off `reviewer`: the thing that can do the work will do the work, and then nothing was orchestrated |
-| **MCPs** | none | Nothing it does touches a server. The two agents that declare `mcpServers` are `designer` and `sourcer`-class read-only work, and neither is this |
+| **MCPs** | none | Nothing it does touches a server. The two agents that declare `mcpServers` today are `designer` and `sourcer` — a fact about **this repository as it stands**, not a roster rule; **v2's roster grants servers to five** (scout, designer, analyst, writer, growth; §5.2). Neither kind of work is this |
 | **Mechanism** | its argv, composed by `bin/run` (ABSENT), plus the nightly probe `bin/probe` (ABSENT) that asserts what it can actually touch | v34: a grant is argv, not prose. A capability nobody probes is a memory of one |
 
 **(NEW: why the no-`Bash` line is not decoration)** This repository has already measured what a shell in the wrong
@@ -48,11 +55,11 @@ rather than an adjective.)** This is the row every section about control obeys.
 | Band | Task types | Envelope | Claude Code mode | Codex `approval_policy` × `sandbox_mode` | Who runs in it |
 |---|---|---|---|---|---|
 | **Read and report** | research, review, audit, analysis, challenge | `may-alone` | `plan` | `never` × `read-only` | scout · reviewer · guard · challenger · analyst |
-| **Build in a worktree** | code, design, copy, spec, schema, memory | `may-alone`, inside one venture's worktree | `dontAsk` with `--restricted` and an explicit `--tools` | `never` × `workspace-write` | builder · architect · tester · designer · product · writer · growth · steward · curator |
+| **Build in a worktree** | code, design, copy, spec, schema, memory | `may-alone`, inside one venture's worktree | `dontAsk` with `--restricted` and an explicit `--tools` | `never` × `workspace-write` | builder · architect · tester · designer · product · writer · growth · steward · curator — the five with `isolation: none` (product, writer, growth, steward, curator; v41) run in this band on a narrowed `--add-dir`, **not a checkout** |
 | **Stage an outward act** | send, publish, pay, deploy, share, delete | **`never` for every agent** | no mode — no agent performs it | — | nobody. The **Sender** performs it, and it holds no model |
 | **Wake the founder** | anything on the venture's `wake-me` list | `wake-me` | — | — | the Watch, before it rings, against the interruption budget |
 
-**(NEW: two shipped facts make the table binding rather than descriptive, and both are quotable)** `bypassPermissions`
+**(FINAL §7.5, providers lane, measured 2026-09-04: two shipped facts make the table binding rather than descriptive)** `bypassPermissions`
 is disabled in managed settings, and **deny rules bind in every mode including it** while *"Allow rules have no
 effect in `bypassPermissions`"* — so the widest mode is both refused and, were it reached, still floored (v10). And
 a subagent's own `permissionMode` frontmatter **is ignored**, so **a child cannot widen its own grant**. Those two
@@ -119,7 +126,7 @@ flowchart TD
 a done-test, in its own words, on screen — and the founder confirms by tap or typed word. **Nothing binds by voice.**
 
 **(NEW: the honest research position)** No shipped system mandates a restatement before work binds; Linear's
-ten-second `thought` acknowledges rather than confirms. The rule is **unsupported and uncontradicted**, and it is
+ten-second `thought` acknowledges rather than confirms (cognition.md marks the figure `M`). The rule is **unsupported and uncontradicted**, and it is
 kept because closed-loop readback is regulation in aviation and medicine, and because the input is a voice
 transcription with errors preserved.
 
@@ -218,7 +225,7 @@ The Operator returns exactly three kinds of thing, and nothing else reaches the 
 | What | When | The rule it obeys |
 |---|---|---|
 | **A *which*** — two options, both already built, with the cost of each and a recommendation | when a decision is outside the envelope, or a fully autonomous run hit a question | never *may I*; there is no approve verb |
-| **A ring** — one line, on the phone | only when a `wake-me` line fired | the interruption budget is three a day, and a channel whose acted-on rate falls is demoted below its threshold. ICU alarms: 74–99% irrelevant produces trained inattention, not annoyance |
+| **A ring** — one line, on the phone | only when a `wake-me` line fired | the interruption budget is three a day, and a channel whose acted-on rate falls is demoted below its threshold. ICU alarms: 74–99% irrelevant **(FINAL §1 row 18, §13.5)** produces trained inattention, not annoyance |
 | **The briefing** — a page the founder opens | whenever the founder opens it, so it is **never** an interruption | its contents are FINAL's: what moved with the evidence; the raw work biggest first; the *whiches*, both built; **what could not be checked, named**; what it cost per venture and per window; what the Operator would do next, none of it started |
 
 **(NEW: the field of the handover that the briefing reads first, and why it is the field to fight for)** `uncertain`

@@ -32,13 +32,13 @@ launcher is what makes the grant checkable by a probe.
 neutral and the policy layer is not. The shapes are portable; the guarantees are not."* Every runtime has a headless
 invocation, a session id, an instructions file, a SKILL.md bundle, MCP, a working directory as the confinement unit
 and a git worktree as the isolation unit. **Only the policy tier differs**: Anthropic's managed settings outrank
-argv; **OpenAI's `requirements.toml` outranks every flag**; Google has a Policy Engine.
+argv; **OpenAI's `requirements.toml` outranks every flag** (FINAL §14.6, not re-read this session); Google has a Policy Engine (FINAL §14.6, providers lane 2026-09-04).
 
 ```mermaid
 flowchart TD
     OP["The Operator emits a brief with an intent id.<br/>It never composes argv"] --> RUN["bin/run — the only thing that composes argv.<br/>It holds no model · ABSENT"]
     RUN --> PICK{"Which provider does this<br/>move's position name? (10.5)"}
-    PICK -->|"builder, architect, tester, designer,<br/>product, writer, growth, steward, curator,<br/>reviewer, guard, challenger — and the Floor"| CC["claude --session-id UUID<br/>--restricted --tools LIST --strict-mcp-config<br/>--permission-mode dontAsk --max-budget-usd N<br/>-p '/goal &lt;done-test&gt; or stop after N turns'"]
+    PICK -->|"builder, architect, tester, designer,<br/>product, writer, growth, steward, curator,<br/>reviewer, guard, challenger, analyst — and the Floor"| CC["claude --session-id UUID<br/>--restricted --tools LIST --strict-mcp-config<br/>--permission-mode dontAsk --max-budget-usd N<br/>-p '/goal &lt;done-test&gt; or stop after N turns'"]
     PICK -->|"a checker on a prepared diff"| CX["codex exec --json<br/>FOREGROUND, stdout redirected to a file,<br/>inheriting the parent shell's TTY"]
     PICK -->|"routine scouting and the summarising half"| GM["gemini -p --approval-mode plan<br/>installed 0.38.2, NEVER AUTHENTICATED"]
     CC --> LOG["ONE LOGBOOK: the event log.<br/>gen_ai.* attributes, the intent id on every row"]
@@ -171,13 +171,13 @@ in that lane was measured — no runtime was run.)**
 
 | | Claude Code | Codex CLI |
 |---|---|---|
-| Installed here | **yes**, 2.1.259 | **no** |
+| Installed here | **M** yes, 2.1.261 | **M** no |
 | Headless | `-p`, text / json / stream-json | `codex exec`; *"streams progress to `stderr` and prints only the final agent message to `stdout`"*; `--json` emits `thread.started`, `turn.started`, `turn.completed`, `turn.failed`, `item.*` |
 | Structured out | `--output-format`, `--output-schema` on the goal loop | `--output-schema`, `-o` / `--output-last-message` |
 | Session and resume | `--session-id` *"must be a valid UUID"*; `--continue` | `codex exec resume --last` or `<SESSION_ID>` |
 | Narrowing by argv | `--restricted` (v2.1.248+) *"removes the built-in tools that run commands or code, and WebFetch, unless you name them individually in `--tools`"*; `--strict-mcp-config`. **`--allowedTools` restricts nothing** | `--sandbox`, `--ignore-user-config`, `--ignore-rules`, `--skip-git-repo-check`, `--ephemeral`. **No per-tool flag.** `--full-auto` is **deprecated** — *"use `--sandbox workspace-write` instead"* |
-| Sandbox axes | Seatbelt / bubblewrap, **Bash only**, filesystem and network layers | Seatbelt / Landlock; `approval_policy` × `sandbox_mode` — three modes, **network off by default** |
-| Policy tier | **34 hook events, 10 documented as blocking**; managed settings outrank argv | **`requirements.toml` outranks every flag** |
+| Sandbox axes | Seatbelt / bubblewrap, **Bash only**, filesystem and network layers | Seatbelt / Landlock; `approval_policy` × `sandbox_mode` — three modes, **network off by default** (FINAL §14.6, providers lane 2026-09-04) |
+| Policy tier | **34 hook events, 10 documented as blocking** (`D`, medium — the fetch merged two lists, §15.6); managed settings outrank argv | **`requirements.toml` outranks every flag** (FINAL §14.6, providers lane 2026-09-04, not re-read this session) |
 | Hooks, sharp edge | **PermissionRequest is non-blocking** — *"Exit code 2 isn't honored for this event and the permission flow proceeds unchanged. Deny through the `decision` object instead"* | hooks behind `codex_hooks = true` |
 | Subagents | depth **3** default, **20** concurrent, *"Concurrent subagent limit reached"* on overflow. **`Workflow` is removed from all of them** — *"via the first filter applied to subagent tool sets"* | TOML files with their own sandbox mode |
 | Teams | agent teams: a lead plus named teammates, each a full session. **Experimental, off by default; no nested teams; one team per session; `/resume` does not restore them; `-p` never forms a team.** *"approximately 7x more tokens … when teammates run in plan mode"* | none documented |
@@ -185,7 +185,7 @@ in that lane was measured — no runtime was run.)**
 | Channels | *"A channel is an MCP server that pushes events into your running Claude Code session."* Research preview. Gated twice: *"Being in `.mcp.json` isn't enough … a server also has to be named in `--channels`"*. Anthropic auth only | none documented |
 | Scheduling | three tiers (10.3), plus `ScheduleWakeup` and `Monitor` | *"Automations"*, or a shell loop around `codex exec` (`C`) |
 | Goals | `/goal`, `D`, **headless-capable** | `/goal` 0.128+, `C`, **headless status unknown** |
-| Per-run spend | `--max-budget-usd`; subagent spend counts toward it | included in every ChatGPT plan |
+| Per-run spend | `--max-budget-usd`; subagent spend counts toward it | included in every ChatGPT plan (FINAL §14.6, providers lane 2026-09-04) |
 | Shared config | `CLAUDE.md`, `SKILL.md`, `.mcp.json`; imports Codex and Gemini config | `AGENTS.md`, `SKILL.md`, `config.toml`, `mcp_servers` |
 | Second checker family | **no** — it cannot check itself | **yes in principle, blocked by #19945** until 10.2's test passes |
 
@@ -198,11 +198,11 @@ each incoming message as an event"* — is *"not available when `DISABLE_TELEMET
 
 | Provider | Which of the fifteen may run on it | Window | State today |
 |---|---|---|---|
-| **Claude Code** (subscription) | all fifteen, **and the Floor, always** | rolling five-hour **and weekly**, per seat, shared with Claude chat and Cowork | installed 2.1.259, measured |
+| **Claude Code** (subscription) | all fifteen, **and the Floor, always** | rolling five-hour **and weekly**, per seat, shared with Claude chat and Cowork | installed 2.1.261, measured |
 | **Codex CLI** (subscription) | **`reviewer` and `guard` only, on a prepared diff, in the foreground.** Widens to `builder` on mid-to-hard work if 10.2's test passes | its own 5-hour window; the only one publishing numeric quotas | **not installed**; #19945 open |
 | **Gemini CLI** (subscription) | **`scout`**, and the summarising half of `curator` | 60 rpm / 1,000 rpd free on a personal account | installed 0.38.2, **never authenticated** |
 | **Local models** | no agent — moves, not positions: embeddings, classification, dedup, PII detection | electricity | **ABSENT** |
-| **Routines** (cloud) | **refused for the Watch** — cloud-only, no local files | daily cap | exists |
+| **Routines** (cloud) | **refused for the Watch** — cloud-only, no local files | **1-hour minimum interval** (runtimes.md); a daily cap is FINAL §16.7's word for the window and is **unverified** | exists |
 
 ---
 

@@ -59,7 +59,7 @@ flowchart TB
 ```
 
 **(FINAL)** Scope, strictly: `TASTE` and `CRAFT` are the founder's and cross every venture. `FACTS`, `NEGATIVES`,
-`ALREADY-BUILT` and `OPEN` are per venture and do not cross without a promotion. **Credentials are not memory** and
+`ALREADY-BUILT` and `OPEN` are per venture and do not cross without a promotion. **Credentials are not memory**, and are never in a file — **mechanism:** a `gitleaks`-class secret scan over every store write (**ABSENT**) and
 are never in any of these files. **Every item carries four things** — where it came from, when it was written, when
 it expires, and what would falsify it — and an item with no expiry is not accepted.
 
@@ -72,7 +72,7 @@ a memory came from.** Claude Code's `modified` field records **write time only, 
 `valid_from`/`valid_until`; ACE has bullet ids with helpfulness counters. Provenance, expiry, conflict resolution and
 decay are **absent from all three CLIs** — Codex has no memory feature at all (*"Codex rebuilds the instruction chain
 on every run … so there is no cache to clear manually"*), and Gemini CLI appends facts to **one global heading** under
-`## Gemini Added Memories`, with no expiry, no dedupe and no per-project scope.
+`## Gemini Added Memories`, with no expiry, no dedupe and no per-project scope — **search-synthesised, `M`: memory.md reached this after two 404s, not from vendor documentation.**
 
 ---
 

@@ -25,7 +25,7 @@ loophole. Written the way the founder would say it:
 ```
 may-alone:  write code · run tests · make branches · research anything · draft anything ·
             build both options of a choice · spend up to the venture ceiling on capacity ·
-            read my calendar and mail
+            (NOT calendar or mail: the world's door and scout read those, v36)
 never:      send mail as me · post publicly · pay anyone · sign anything · touch production
             data · change a live price · contact a customer · delete anything a person made
 wake-me:    a customer is waiting more than 4 hours · spend crosses 60% of the monthly
@@ -64,7 +64,7 @@ predicts damage is *can this be undone*.
 
 ```mermaid
 flowchart TD
-    ACT["A run wants to act"] --> Q1{"Can the system itself undo this<br/>within an hour, with nobody else noticing —<br/>and has that undo been DRILLED?"}
+    ACT["A run wants to act"] --> Q1{"Can the system itself undo this<br/>within an hour — **the plan's one duration inside a rule, kept deliberately: it is a blast-radius test, and the no-durations rule governs schedules, not decision predicates (P3-32)**, with nobody else noticing —<br/>and has that undo been DRILLED?"}
     Q1 -->|"yes"| TWO["TWO-WAY DOOR<br/>Do it. Record it, with the undo path.<br/>Do not ask."]
     Q1 -->|"no"| Q2{"Does it reach a person,<br/>money, or the public?"}
     Q2 -->|"yes"| ONE["ONE-WAY DOOR<br/>Never alone. Build it, stage it,<br/>ask WHICH."]
@@ -112,7 +112,7 @@ the other two to be guessed at dispatch.)**
 | Band | Task types | Envelope | Claude Code mode | Codex `approval_policy` × `sandbox_mode` | Who runs in it |
 |---|---|---|---|---|---|
 | **Read and report** | research, review, audit, analysis, challenge | `may-alone` | `plan` | `never` × `read-only` | scout · reviewer · guard · challenger · analyst |
-| **Build in a worktree** | code, design, copy, spec, schema, memory | `may-alone`, inside one venture's worktree | `dontAsk` with `--restricted` and an explicit `--tools` | `never` × `workspace-write` | builder · architect · tester · designer · product · writer · growth · steward · curator — **none of them holds a tainted read (v36)**; `steward` works from `scout`'s handover, never from a raw inbound row |
+| **Build in a worktree** | code, design, copy, spec, schema, memory | `may-alone`, inside one venture's worktree | `dontAsk` with `--restricted` and an explicit `--tools` | `never` × `workspace-write` | builder · architect · tester · designer · product · writer · growth · steward · curator — **none of them holds a tainted read (v36)**; `steward` works from `scout`'s handover, never from a raw inbound row; the five with `isolation: none` (v41) run in this band on a narrowed `--add-dir`, **not a checkout** |
 | **Stage an outward act** | send, publish, pay, deploy, share, delete | **`never` for every agent** | no mode — no agent performs it | — | nobody. The **Sender** performs it, and it holds no model |
 | **Wake the founder** | anything on the venture's `wake-me` list | `wake-me` | — | — | the Watch, before it rings, against the interruption budget |
 
@@ -181,7 +181,7 @@ approve verb:
 ```mermaid
 flowchart TD
     Q["A run reaches a question<br/>it cannot answer alone"] --> MODE{"Which band is it in?"}
-    MODE -->|"band 1 or 2 · dontAsk"| DENIED["AskUserQuestion is DENIED by the mode.<br/>There is no prompt to answer."]
+    MODE -->|"band 1 · plan;<br/>band 2 · dontAsk"| DENIED["AskUserQuestion is DENIED in dontAsk (sourced).<br/>In plan it is UNVERIFIED.<br/>There is no prompt to answer."]
     MODE -->|"the Floor · the founder is here"| ASK["Ask. The founder is beside it."]
     DENIED --> ENV{"Pre-decided in the envelope?"}
     ENV -->|"yes"| GO["Proceed. Record the clause<br/>that authorised it."]
@@ -263,7 +263,7 @@ read the foreign content decides.
 
 **(NEW: v1 changes how this is enforced, and makes it cheaper.)** In FINAL the split was a property of a *run's*
 loadout, checked at dispatch. With a named roster it is also a property of a **file**: `scout`'s `tools:` line carries
-no `Write` and no credential, and §B.2's own summary is the rule as a table — *eight of the fourteen carry no shell,
+no `Write` and no credential, and §B.2's own summary is the rule as a table — *ten of the fourteen carry no shell,
 five carry no write of any kind, and only four can touch source.* The check at dispatch does not go away; it now has
 something static to check against.
 
@@ -339,16 +339,25 @@ ceiling that binds the account is §16's business, not this section's.
 
 **(FINAL, v34.)** Every line here is a measurement, not a design.
 
-- **The grant is the exact argv, emitted by one no-model launcher.** `--allowedTools` restricts nothing. A `claude -p`
+- **The grant is the exact argv on the `claude -p` carrier, emitted by one no-model launcher — and argv is
+  not the carrier on the other two (v43).** Three carriers, one per dispatch mechanism, and a narrowing is
+  claimed only where its carrier can hold it: **`claude -p` children** — the exact argv; **subagents** — the
+  agent file's `tools:`/`disallowedTools:` plus managed-settings `permissions.deny`, and nothing path-scoped
+  those cannot express; **agent teams** — the teammate's agent file plus the same managed denies.
+  **Unattended night work runs only on the `-p` carrier.** The tester's blindness (v8) and the builder's
+  exclusion from the architect's paths (v7) are argv facts on `-p` and `permissions.deny` `Edit(<path>)` rules
+  on the other two, **UNVERIFIED** until `bin/probe` (ABSENT) asserts them per row. `--allowedTools` restricts nothing. A `claude -p`
   child is narrowed by `--restricted --tools <list> --strict-mcp-config --permission-mode dontAsk --permission-prompts
   none --add-dir <worktree> --max-budget-usd <n>`, under the managed file of §12.6. **The Operator never composes
   argv**; it emits a brief with an intent id, and `bin/run` composes it. That is what keeps v34 true as the roster
   grows.
 - **The sandbox is a guardrail against accident, not containment.** `failIfUnavailable` is set, `denyRead` covers the
   credential stores, and there is a documented escape hatch. Describing it as containment is the error to avoid.
-- **The sandbox has a full `network` block** (`allowedDomains`, `strictAllowlist`, `allowManagedDomainsOnly`,
-  `tlsTerminate`) **and a `credentials` block** (`mask`, per-host `injectHosts`) — the scout's read-only proxy and the
-  Sender's key-at-egress. Both are unused here. Two documented holes stay in the plan: `excludedCommands` and
+- **The runtime's sandbox schema HAS a full `network` block** (`allowedDomains`, `strictAllowlist`,
+  `allowManagedDomainsOnly`, `tlsTerminate`) **and a `credentials` block** (`mask`, per-host `injectHosts`)
+  **(FINAL §9.7)** — **and this repository's `.claude/settings.json` uses neither, carrying `filesystem` only
+  with no `network` key at all (§18.4).** They are the scout's read-only proxy and the Sender's key-at-egress,
+  and both are unbuilt here. Two documented holes stay in the plan: `excludedCommands` and
   `allowRead` merge across scopes with no managed-only lock, and the proxy does not inspect TLS by default, so a broad
   allowed domain is an exfiltration path.
 - **Nothing lifts an inbound `bind`.** That is why the Sender and the Watch are programs and not runs.
@@ -358,7 +367,7 @@ ceiling that binds the account is §16's business, not this section's.
 - **The pre-tool hook matches command strings and is the wrong shape.** It once blocked a document for mentioning a
   command. Its rewrite to structured tool input is an edit to the judging machinery, and is the founder's.
 
-**(NEW: cognition.md prices per-action approval, which is why none of the above is a prompt.)** Humans approve 97% of
+**(FINAL §9.7, which prices per-action approval — which is why none of the above is a prompt.)** Humans approve 97% of
 per-action prompts and catch 13.6% of disguised dangerous commands, decaying to 5% after fifty; the classifier catches
 89%. Runs here use `dontAsk` because **a model's judgement is not a gate and a tired human's is not either**. The
 control is the argv, the deny rules, and the fact that the thing which sends holds no model.

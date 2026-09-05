@@ -46,7 +46,7 @@ flowchart TD
 
 ### 6.2 The brief
 
-**(FINAL, plus one field from v37)** **Ten fields: FINAL's nine, below, plus `agent:`.** **Anything not in the
+**(FINAL, plus one field from v37 and one from v45)** **Eleven fields: FINAL's nine, below, plus `agent:` (v37) and `anchor:` (v45).** **Anything not in the
 brief is not in scope, and the run is told so.**
 
 ```
@@ -70,11 +70,12 @@ clear scope, boundaries, and success criteria"* is the closest and is prose advi
 `--session-id` so the id is the system's and not the vendor's returned handle, and it is on every logbook row; and a
 **`label`**, what the run is making and which window it is burning.
 
-**(NEW: the tenth field, decided as v37)** Fourteen named agents make *which agent* a fact the brief must carry,
-and FINAL's nine had nowhere to put it. **The brief gains a tenth field rather than widening an existing one:**
+**(NEW: the tenth field, decided as v37; the eleventh, `anchor:`, is v45)** Fourteen named agents make *which agent* a fact the brief must carry,
+and FINAL's nine had nowhere to put it. **The brief gains a tenth field rather than widening an existing one — and an eleventh, `anchor:`, at v45:**
 
 ```
 agent:         one of the fifteen roster names — the file bin/run composes the argv from
+anchor:        the rung-1 check the done-test names — bin/run refuses a brief carrying none (v45)
 ```
 
 **(NEW: what v37 decides and what it leaves alone)** `window+model:` **stays exactly as FINAL wrote it.** The
@@ -83,7 +84,9 @@ different questions, *who* and *on what*, and neither is overloaded. The losing 
 widened `agent+window+model:` field, and a brief that names no agent and lets the launcher guess.
 
 **(NEW: the mechanism, because a tenth field with nothing checking it is a tenth field nobody fills)** **`bin/run`
-refuses a brief whose `agent:` is not a roster file** (ABSENT). That refusal is what makes the field load-bearing:
+refuses a brief whose `agent:` is not a roster file, and refuses one carrying no `anchor:`** (ABSENT; v45,
+§11.11). **One schema file, `keel/shared/schemas/brief.yml` (ABSENT), is the single source these prose tables
+are generated from** — the absence of it is why the count was ten here and eleven in §3 and §11. That refusal is what makes the field load-bearing:
 a typo, a retired agent, or a name someone invented in a prompt fails at dispatch rather than producing a run with a
 guessed grant.
 
@@ -107,7 +110,7 @@ unavailable model.
 
 ### 6.3 The handover
 
-**(FINAL)** Fixed fields, always, **even on failure**. The I-PASS bundle cut medical errors 23% and preventable
+**(FINAL, plus the three fields the rest of the plan already reads back)** **Ten fixed fields, always, even on failure** — FINAL's seven plus `rung`, `findings` and `anchor`, held in **one schema file, `keel/shared/schemas/handover.yml` (ABSENT)**, which every table that shows them is generated from. The I-PASS bundle cut medical errors 23% and preventable
 adverse events 30% across nine hospitals; the mechanism is not the format but that named required fields force the
 outgoing party to surface what the incoming party needs, especially the uncertain parts, which free prose omits.
 
@@ -119,6 +122,9 @@ cost:         actual tokens, window, wall-clock — from the runner's own record
 learned:      what is now known that was not before — a PROPOSAL to memory
 uncertain:    what I am not sure about and what would settle it
 next:         the single most valuable next action, as a proposal
+rung:         the evidence rung of the claim this handover makes (§11.2)
+findings:     each defect, with its evidence — no score (§11.3)
+anchor:       the rung-1 check the done-test named (§11.11)
 ```
 
 **(FINAL)** `uncertain` is the field to fight hardest for: it turns a confident wrong answer into a flagged one, and
@@ -151,7 +157,7 @@ is recorded **before** it is attempted, with an idempotency key, and replay chec
 killed, the turn resumable. Every surveyed runtime has a session id and resume-by-id, and Claude Code accepts the id
 the system assigns — which is why the UUID is minted by us and not read back from the vendor.
 
-**(NEW: two runtime facts that shape how long a run should be, both quotable)** `maxTurns` **marks output partial
+**(FINAL §6.1 and §14.7, providers lane, measured 2026-09-04: two runtime facts that shape how long a run should be)** `maxTurns` **marks output partial
 and resumable rather than truncating it**, which is the restart-from-checkpoint primitive and does not need to be
 built. And a background child holds its parent open in idle waiting by default — one stuck child doubles its
 parent's duration with nothing reporting it — which is why runs do not spawn background children except `scout`

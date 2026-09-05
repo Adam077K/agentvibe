@@ -28,7 +28,7 @@ protecting is kept as four rules that now live inside a roster.
 
 **(FINAL, kept; each names its mechanism)**
 
-1. **The grant is argv, not prose.** One no-model launcher composes it; nothing else may. *(v34; `bin/run`, ABSENT.
+1. **The grant is argv on the `claude -p` carrier, not prose — and v43 names the carrier for each of the three dispatch mechanisms.** One no-model launcher composes it; nothing else may. *(v34; `bin/run`, ABSENT.
    A prose rule describing a grant is the losing image, and `--allowedTools` restricting nothing is why.)*
 2. **The checker cannot edit what it judges.** `reviewer`, `guard` and `challenger` carry **no `Write`, no `Edit`,
    no `Bash`**. *(FINAL row 6's irreducible property; enforced by the argv and by the nightly probe `bin/probe`,
@@ -68,12 +68,12 @@ proves the work and is **never the agent's own report**)**
 | 9 | **analyst** | Pipelines, KPIs, cohorts, A/B, anomalies, and the nightly reconciliation | data | `claude-sonnet-5` | Read Glob Grep Bash | read-only analytics, error tracking, billing-read | data | the reconciliation reads a record the company does not write; a number that reconciles to our own log is rung 4, not rung 1 | a question is about what actually happened |
 | 10 | **writer** | Content, brand voice, SEO, ad copy, campaign drafts, video and asset briefs | growth · craft | `claude-opus-5` for taste work; `claude-sonnet-5` for routine | Read Write Edit Glob Grep | Higgsfield (rate-capped, spends credits) | growth · craft | staged, never sent; the anchor is the founder's taste store and a rung-2 external reaction | words or assets are the artifact |
 | 11 | **growth** | Leads, scoring, outreach *drafts*, CRM hygiene, funnel work. **Never sends** | growth | `claude-sonnet-5` | Read Glob Grep Write | CRM read-only | growth | a reply from a real person, recorded by the world's door; never a count of messages sent | the intent is about reaching people who are not yet customers |
-| 12 | **steward** | Obligations, invoices, expenses, contract *review*, compliance flags, vendors, support triage | operations · finance | `claude-sonnet-5` | Read Glob Grep Write (obligations and operations paths) | **none** — mail, calendar, drive and Notion are read by the world's door (a program) into inbound rows, and by `scout`; steward writes from scout's handover, never from a raw row (v36) | operations | an obligation is discharged only by a record the company does not write | something is owed to someone by a date |
+| 12 | **steward** | Obligations, invoices, expenses, contract *review*, compliance flags, vendors, support triage | operations · finance | `claude-sonnet-5` | Read Glob Grep Write (obligation **proposals** and operations paths — `obligations.yml` itself is the Watch's, v44) | **none** — mail, calendar, drive and Notion are read by the world's door (a program) into inbound rows, and by `scout`; steward writes from scout's handover, never from a raw row (v36) | operations | an obligation is discharged only by a record the company does not write | something is owed to someone by a date |
 | 13 | **curator** | What the company knows: memory, the transcript pass, and skill admission. **The only writer of memory** | knowledge | `claude-sonnet-5`; the summarising half on Gemini or a local model | Read Write Edit Glob Grep — **no Bash** | none | knowledge | a memory item with no source, date, expiry and falsifier is refused at the store check | nightly, and whenever a run's handover proposes a durable fact |
 | 14 | **challenger** | Attacks a finished plan or artifact for holes, contradictions, and rules with no mechanism | adversarial reasoning | `claude-opus-5`; a second family when reachable | Read Glob Grep | none | quality · research | every finding names the mechanism that would have caught it, or it is an opinion | before anything irreversible, and on every plan the Operator is about to bind |
 
 **(NEW: where the roster is thinner than it looks, deliberately, and this is the table's most important row)**
-**Eight of the fourteen carry no shell. Five carry no write of any kind. Only four can touch source.** That is the
+**Ten of the fourteen carry no shell. Five carry no write of any kind. Only four can touch source.** That is the
 trifecta split expressed as a table rather than as a rule, and it is what makes fourteen names cost less than it
 sounds: most of them cannot do most things.
 
@@ -368,7 +368,7 @@ Nothing is left to be discovered by a reader comparing two documents)**
 | 6 | Anthropic's +90.2% is on **research** with independent subtasks; Cognition's failure is on **one artifact** | **Adopted as the dispatch rule:** `scout` is the only agent that runs parallel, and it is the only one whose subtasks are independent |
 
 **(NEW: one blocking mechanism problem, recorded here because it must be fixed in the same change that writes the
-first agent file)** `scripts/prompt-standard.test.mjs` on this branch pins the valid model set to `claude-opus-5`,
+first agent file)** `scripts/prompt-standard.test.mjs` on this branch pins the valid model set (quoted in full once, at §9.9, where it includes `claude-sonnet-4-6`) to `claude-opus-5`,
 `claude-sonnet-5`, `claude-fable-5` and `claude-haiku-4-5`. **`claude-fable-5-1` is not in it**, and `claude-fable-5`
 is listed by the vendor under legacy models. An agent file written to §5.2's escalation rule **fails a blocking lint
 today**. That is a real, checkable blocker, not a caveat.

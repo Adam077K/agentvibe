@@ -91,8 +91,8 @@ the third is parked) · a different family is a good enough checker.
 **(NEW: the last assumption is the one v2 cannot yet test, and it is stated plainly)** A different family is
 **unreachable from inside Claude Code today**. `codex` is not installed and `gemini` is unauthenticated, so every
 review behind this plan is single-family, author-recorded against a deterministic floor. The `independent: true`
-predicate in `.claude/review-lenses.yml` requires ≥2 distinct model families and is unmet; `.qa/verdicts/` holds 50
-records, every one `verdict: PASS`, and **not one of them satisfies the `irreversible` tier's 2-of-3 multi-judge
+predicate in `.claude/review-lenses.yml` requires ≥2 distinct model families and is unmet; `.qa/verdicts/` holds 68
+records on this branch (80 on `origin/main`), every one `verdict: PASS`, and **not one of them satisfies the `irreversible` tier's 2-of-3 multi-judge
 requirement**. *The checks ran and are green* is not *the tier was satisfied*. Accepted risk, exit condition
 **2026-11-17**.
 

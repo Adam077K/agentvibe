@@ -25,7 +25,7 @@ that already passes the lint; nine have no seed and are written from the standar
 
 | # | Name | File | Seed on `ceo-1-1788609834` | Model | Tools (the argv grant) | MCPs | Skill namespaces | maxTurns | Isolation | Anchor — what proves it |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 0 | **Operator** | `.claude/agents/operator.md` — ABSENT | `orchestrator.md` (154 lines) | `claude-opus-5` | Read Glob Grep Agent | none | — | 30 (v40) | none (v41) | it dispatched, and it did not build: a diff authored by the Operator is a defect |
+| 0 | **Operator** | `.claude/agents/operator.md` — ABSENT | `orchestrator.md` (154 lines) | `claude-opus-5` | Read Glob Grep Agent | none | — | 30 (v40) | none (v41) | it dispatched, and it did not build: a diff authored by the Operator is a defect. **It runs as the founder's main interactive session, `claude --agent operator` (v46)** |
 | 1 | **builder** | `.claude/agents/builder.md` — ABSENT as v2's file | `builder.md` (134 lines) | `claude-opus-5`, escalating to `claude-fable-5-1` under v21 | Read Write Edit Bash Glob Grep | none by default | engineering · testing | 30 (v40) | worktree (v41) | the venture's own CI, plus the done-test, plus the tester's blind test |
 | 2 | **reviewer** | `.claude/agents/reviewer.md` — ABSENT as v2's file | `reviewer-readonly.md` (169 lines) — **not** `reviewer.md`, which carries Bash | `claude-sonnet-5`; a second family when reachable | Read Glob Grep | none | engineering · quality | 25 (v40) | none (v41) | findings reproduce from the diff alone |
 | 3 | **architect** | `.claude/agents/architect.md` — ABSENT | none | `claude-opus-5` | Read Glob Grep Write (design paths only) | none | engineering · data | 30 (v40) | worktree (v41) | a migration that applies and rolls back in a scratch database |
@@ -53,7 +53,7 @@ split** (writer). The Operator is a sixth `claude-opus-5` seat and is counted se
 than produces.
 
 **(NEW: a blocking lint stands between this table and a file that loads)** `scripts/prompt-standard.test.mjs` on this
-branch pins the valid model set to `claude-opus-5`, `claude-sonnet-5`, `claude-fable-5`, `claude-haiku-4-5`.
+branch pins the valid model set (quoted in full once, at §9.9, where it includes `claude-sonnet-4-6`) to `claude-opus-5`, `claude-sonnet-5`, `claude-fable-5`, `claude-haiku-4-5`.
 **`claude-fable-5-1` is not in it**, and `claude-fable-5` is now listed by the vendor under *"Legacy models (still
 available)"*. **Mechanism:** the pinned set must move in the same change that writes builder's file, or the file
 fails `npm run check`. Not a preference — a red test.
@@ -111,7 +111,7 @@ re-enters through the eval or expires; the fate class is now a **queue position*
 | ANCHOR-CANDIDATE | 22 | admitted as an anchor once a test fails without it. First in the queue, because an anchor is what makes a done-test rung 1 |
 | EXEMPLAR-CANDIDATE | 16 | admitted as an exemplar with provenance on each example |
 | REHEARSAL-CANDIDATE | 1 | `react19-test-patterns`, the only one in the corpus carrying before/after pairs with known answers |
-| INFRA | 22 | a vendor fact with an expiry in the facts store, or a tool's admission notes at the door; never loaded into a run as a skill |
+| INFRA | 22 | a vendor fact with an expiry in the facts store, or a tool's admission notes at the door; **since v18 an INFRA entry also has a legitimate `reference` body with an expiry (§7.7)**, which is the one way it enters a run |
 
 **(NEW: the bulk import is blocked on one fetch, v17)** The upstream advertises **2,111+ skills**; the code is MIT and
 a **separate `LICENSE-CONTENT` file exists and was not fetched**. No bulk vendoring until it is read. It is §20's row
@@ -145,12 +145,12 @@ material, not a ceiling.
 | Gmail send | REACHES THE WORLD, one-way | OAuth | **the Sender only** | never unattended until the founder widens the class | anything delivered to a person |
 | Drive share · Calendar create · Notion write | REACHES THE WORLD | OAuth | **the Sender**, after a recall window | night only once widened and the undo drilled | a share link is one-way by any honest reading |
 | Figma · Pencil · Stitch · Refero (Refero READ-ONLY) | WRITES, reversible | OAuth / local files / API key | **designer**, on a dry branch | night after the undo is drilled | a design file reverts; a published prototype link does not |
-| Higgsfield (image · video · audio) | WRITES, reversible, **SPENDS credits** | API key | **writer**, rate-capped | night, under a daily ceiling | publish and social verbs are one-way and never |
+| Higgsfield (image · video · audio) | WRITES, reversible, **SPENDS credits** | API key | **writer**, rate-capped | night, under a daily ceiling | publish and social verbs are one-way and never — **verb set UNVERIFIED (FINAL §16.3)** |
 | RunPod | **SPENDS MONEY at a rate** | API key, uncapped | nobody | never until a capped key exists | **REFUSED as it stands** (§F) |
 | Mem0 | REACHES THE WORLD | unauthenticated | nobody | never | **REFUSED**: memory leaves the machine (§F) |
 | n8n | REACHES THE WORLD | unauthenticated | nobody | never | **REFUSED on licence** (v15): Sustainable Use — *"only for your own internal business purposes or for non-commercial"* |
 | Miro | REACHES THE WORLD | unauthenticated | nobody until an Intent names one | never today | through the door individually, naming the Intent that needs it |
-| `claim-append` (`scripts/mcp/claim-append-server.mjs`, this branch) | WRITES LOCALLY | none | today `sourcer`; in v2 **curator**, as the memory-item append | night | the narrow-capability-through-one-audited-server pattern is the door's model |
+| `claim-append` (`scripts/mcp/claim-append-server.mjs`, this branch) | WRITES LOCALLY | none | today `sourcer`; **in v2 nobody — `curator` performs that append with `Write` and declares no server** (§5.2, §8.6) | night | the narrow-capability-through-one-audited-server pattern is the door's model |
 | `gh` · `git` · `node` · `bun` · `gemini` | CLIs | `gh` reads `~/.config/gh`, which the sandbox denies; `gemini` 0.38.2 present and never authenticated | **builder** (git, node, bun) · a provider (gemini) | night | each CLI is rehearsed with a known call and a known answer, headless — the test that catches a detached-TTY failure |
 
 **(NEW: a collision this section raised, decided as v36 rather than left open)** §F put the tainted read class at
@@ -174,6 +174,9 @@ runtimes:** Claude Code takes per-subagent `mcpServers`, Codex takes per-agent `
 
 ### 17.4 Stores — one writer each
 
+**Every `keel/…` path in this section is ABSENT** — the `keel/` tree exists on no branch (census,
+2026-09-05); the store names below are design names, not files.
+
 **(FINAL §16.4, inherited whole)** Every store keeps its schema, its **one** writer, its readers and the rule that
 fails it. Compressed here to what v2 changes; the schemas stand as FINAL §16.4 wrote them.
 
@@ -181,11 +184,11 @@ fails it. Compressed here to what v2 changes; the schemas stand as FINAL §16.4 
 |---|---|---|---|
 | Charter | `keel/ventures/<v>/charter.md` | the founder, through the read-back | unchanged |
 | Intent | `keel/ventures/<v>/intents/<id>.md` | the founder's door, through the read-back | unchanged; page 4's cards point at intent ids |
-| Obligation | `keel/ventures/<v>/obligations.yml` | the Watch | read by **steward** as well as the Watch |
+| Obligation | `keel/ventures/<v>/obligations.yml` | the Watch, alone (v44) | read by **steward** as well as the Watch. `steward` writes **proposals** into `keel/ventures/<v>/obligations-draft/` from `scout`'s handover; the Watch materialises a proposal into a row after the store check |
 | Facts | `keel/ventures/<v>/memory/facts.md` | **the curator** | v25 makes the single writer an agent with a name and a grant |
 | Measured facts | `keel/shared/facts.yml` | the probe | gains the model-expiry rows of 17.4.1 |
 | Negatives | `keel/ventures/<v>/memory/negatives.md` | the curator | a skill candidate that does not beat baseline is written here, not discarded (§E.3) |
-| Already-built · Open · Taste | `keel/ventures/<v>/memory/*.md` · `keel/shared/taste.md` | the curator; the Watch writes `open.md` | delta-only, never a rewrite (v24, sourced to ACE, arXiv 2510.04618) |
+| Already-built · Open · Taste | `keel/ventures/<v>/memory/*.md` · `keel/shared/taste.md` | the curator, except `open.md` — **the Watch alone writes `open.md`**, so each file still has exactly one writer | delta-only, never a rewrite (v24, sourced to ACE, arXiv 2510.04618) |
 | Craft kits | `keel/shared/craft/<field>/kit.md` | the curator | absorbed into the skill library's exemplar body (v3) |
 | Rehearsal cases · scores | `keel/shared/rehearsals/` | the curator · the rehearsal runner | unchanged |
 | Shapes | `keel/shared/shapes/` | the founder, through an A/B | **replaced** by the fifteen agent files plus `<agent>.<provider>.argv` |
@@ -206,7 +209,7 @@ fails it. Compressed here to what v2 changes; the schemas stand as FINAL §16.4 
 | Store | Path | Schema | The one writer | Readers | Fails when |
 |---|---|---|---|---|---|
 | Teams config | `~/.claude/teams/<team>/config.json` · `inboxes/<agent>.json` · `~/.claude/tasks/<team>/` | the vendor's; session ids **and tmux pane ids**; team name is `session-` + the first eight characters of the session id | **Claude Code itself — READ-ONLY to us** | page 2 | anything of ours writes it. The file is *"overwritten on the next state update"*, so a write is lost and looks like a bug in the page |
-| Cards | `keel/ventures/<v>/cards/<id>.yml` | card id · intent id · stage · venture · the team it launched · the PR · the execution cap | `keel/bin/run` — the founder's drag is an input to it, never a second writer (v34) | page 4; the Watch | a card in "working on it" with no session id; a stage change with no logbook row |
+| Cards | `keel/ventures/<v>/cards/<id>.yml` | card id · intent id · stage · venture · the team it launched · the PR · the execution cap | **the founder's door — `bin/intend` (ABSENT) creates the card with its intent id (v52)**; `keel/bin/run` writes only the session id and the stage, and the founder's drag is an input to it, never a second writer (v34) | page 4; the Watch | a card in "working on it" with no session id; a stage change with no logbook row |
 | Sessions registry | `keel/logbook/sessions.jsonl` | session id (a UUID we mint) · provider · agent · venture · tmux session name · pane id · state · started · ended | `keel/bin/run` | pages 2, 3, 7; `claude --attach`; `tmux attach-session` | a session id that is not a valid UUID (`--session-id` refuses it); a row with no provider |
 | Price table | `keel/shared/prices.yml` | model id · input · output · cache write at **1.25x for 5 minutes and 2x for 1 hour** · cache read at 0.1x, **0.025x for Fable 5.1 and Mythos 5.1** · batch at 50% both directions · source URL · date · expiry | the founder, from the vendor page; the probe stamps the date | page 3; the meter | a model id used anywhere with no price row — **refused, not scored at zero**; a row past its expiry |
 | Skills registry | `keel/shared/skills/registry.yml` | name · namespace · body class (anchor · exemplar · rehearsal · reference) · with-skill and baseline scores · n · `valid_until` · both directory paths | `keel/bin/skill` | agents at load; the store check | a skill in either directory with no registry row; an expiry passed with no disposition |
@@ -268,10 +271,10 @@ terminal which runs the agent on my Mac is popping up."* Seven pages, each its o
 | 1 | **The office** | Generative Agents `demo` mode (Apache 2.0), fed by a JSON writer over the event log | ABSENT; through the tool door. §20 keeps the AI Town alternative open |
 | 2 | **Agents / child flows** | Claude Code **agent teams**; `~/.claude/teams/<team>/config.json` read-only | the substrate ships; the page is ABSENT |
 | 3 | **Cost · tokens · efficiency** | the event log with `gen_ai.*` attribute names, joined to the price table (17.4.1) | ABSENT; `~/.agentvibe/events.jsonl` is the spine |
-| 4 | **Tasks · tickets · PRs** | ours. Prior art: OpenAI **Symphony** (Apache-2.0, alive 2026-08-19); card fields from Linear (**delegate**, not assignee) and Copilot (one branch, exactly one PR, a hard execution cap) | ABSENT. **Nothing in the world gives a card a team** (v16) |
-| 5 | **Engines · how it works** | the same store as every other page; no second source of truth | ABSENT. Absorbs the Balcony's *Decide* and *Last night* as its desk strip |
-| 6 | **3D file graph** | `3d-force-graph` (MIT). **Its input is a `{nodes, links}` object; it does not read a repository** — the extractor is ours. Gource refused (GPL-3.0) | ABSENT; the thinnest researched area |
-| 7 | **Canvas / playground** | **Langflow** (MIT, alive 2026-09-05) as the idiom. **n8n refused** (licence) · **Flowise refused** (archived, licence NOASSERTION) | ABSENT |
+| 4 | **Tasks · tickets · PRs** | ours. Prior art: OpenAI **Symphony** (Apache-2.0 [`api`: GitHub SPDX detection, LICENSE not read], alive 2026-08-19); card fields from Linear (**delegate**, not assignee) and Copilot (one branch, exactly one PR, a hard execution cap) | ABSENT. **Nothing in the world gives a card a team** (v16) |
+| 5 | **Engines · how it works** | the same store as every other page; no second source of truth | ABSENT. Absorbs the Balcony's *Last night* as its desk strip; ***Decide* is page 4's alone** (v38, §14.2, §14.7) |
+| 6 | **3D file graph** | `3d-force-graph` (MIT [`api`: GitHub SPDX detection, LICENSE not read]). **Its input is a `{nodes, links}` object; it does not read a repository** — the extractor is ours. Gource refused (GPL-3.0 [`api`: GitHub SPDX detection, LICENSE not read]) | ABSENT; the thinnest researched area |
+| 7 | **Canvas / playground** | **Langflow** (MIT [`api`: GitHub SPDX detection, LICENSE not read], alive 2026-09-05) as the idiom. **n8n refused** (licence) · **Flowise refused** (archived, licence NOASSERTION) | ABSENT |
 | — | **The Floor** | Claude Code, interactive, `keel floor <venture>` | the runtime exists; the loader is `.claude/hooks/session-start.js` (259 lines, emits 2,941 bytes under a 4,096 ceiling). **Unchanged, and it is what every tap opens** |
 | — | **The read-back** | the intent-creation form on **page 4's *new card* and page 7's *add session***, and a published phone page for voice (v38); the confirm tap is what binds | ABSENT |
 | — | **The briefing** | the **top strip of page 5**, and a published phone page; margin comments addressed to an intent id (v38) | ABSENT |
@@ -309,7 +312,7 @@ renderers read the same logbook.
 | **Gemini CLI** (subscription) | scout on routine work; the summarising half of the curator | free tier 60 requests/min, 1,000/day on a personal account; paid tiers UNVERIFIED | `<agent>.gemini.argv` — ABSENT | installed **0.38.2**, never authenticated; auth state unreadable (`~/.gemini` is `denyRead`) |
 | **Local models** | **real work, not no work** (v20): embeddings, classification, dedup, PII detection | none — electricity | — | ABSENT. MiniLM (384 dims, Apache 2.0, 256-word-piece truncation) · Qwen3-0.6B (32,768 context, Apache 2.0); on-disk size not published |
 | **The artifact runtime** | the published phone pages: Balcony views, the briefing, the read-back. **It cannot pop a terminal**, which is why it is not the website's host (v39) | free | — | exists; measured: database, user identity, comments that wake the session |
-| **Routines** (cloud) | **refused for the Watch**: cloud-only, cannot reach local files | daily cap | — | exists |
+| **Routines** (cloud) | **refused for the Watch**: cloud-only, cannot reach local files | **1-hour minimum interval** (runtimes.md); a daily cap is FINAL §16.7's word for the window and is **unverified** | — | exists |
 | **A gateway key** (LiteLLM · OpenRouter) | the only portable credential and the only budget surviving a provider change | per key per period | — | deferred with the metered key (§20 row 1) |
 
 **(FOUNDER, v5)** *"I run from day one of the system to include codex and Claude code."* **A third program drives
@@ -326,6 +329,9 @@ date of any model this system names.
 
 ### 17.8 The file tree of the house, and of a venture
 
+**Every path in this tree is ABSENT** — no `keel/` file exists on any branch (census, 2026-09-05). The
+only things that exist today are the `mission-control/` seed and the `.claude/` files §18 renames.
+
 **(FINAL §16.8, with the fifteen agent files, the two skill directories, the website and the new bins added)**
 
 ```
@@ -333,10 +339,12 @@ keel/                                   one private repository · the house
   settings.yml                          windows{reserve, models} · tick · driven_limit (2) · wip · interruptions/day
   STOP                                  the cord: a file, read first every tick; a control on every mission-control page
   people.yml                            named humans: consent per relationship; first contact narrower than reply
-  agents/                               THE FIFTEEN — one file per agent, frontmatter the runtime reads
+  .claude/agents/                       THE FIFTEEN — one file per agent (v42: the path the runtime reads
+                                        and the path the PS-* lint globs; `keel/agents/` does not exist)
     operator.md builder.md reviewer.md architect.md tester.md guard.md scout.md designer.md
     product.md analyst.md writer.md growth.md steward.md curator.md challenger.md
-    <agent>.<provider>.argv             the exact argv per agent per provider — the grant IS these strings
+  shared/argv/<agent>.<provider>.argv   the exact argv per agent per provider (v42) — the grant IS these
+                                        strings on the `claude -p` carrier, and only there (v43)
   bin/
     run · skill · probe · watch · send · inbound · reconcile · log · check-stores · door · drill · rehearse ·
     curate · supervise
@@ -359,8 +367,10 @@ keel/                                   one private repository · the house
     memory/{facts,negatives,already-built,open}.md
     ship-log.md
     work/                               the venture's own repository: ordinary source, branches, CI
-    .agents/skills/                     GENERATED from shared/skills — read by Codex and Gemini CLI, not .codex/skills
-    .claude/skills/                     GENERATED from shared/skills — read by Claude Code
+  .agents/skills/                       AT THE HOUSE ROOT (v48), GENERATED from shared/skills — read by Codex
+                                        and Gemini CLI, not .codex/skills
+  .claude/skills/                       AT THE HOUSE ROOT (v48), GENERATED from shared/skills — read by Claude
+                                        Code. A venture carries no skills directory; skills are not per venture
   mission-control/                      the website: seven pages, each a control, every tap opening a terminal here
     server/ client/ scripts/            seeded from mission-control/ on ceo-1-1788609834 (60 files) — §18
   logbook/

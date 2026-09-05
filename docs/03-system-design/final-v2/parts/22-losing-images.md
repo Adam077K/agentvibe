@@ -30,11 +30,11 @@ was stated once, and the chosen thing is then built properly. They are never re-
 
 ---
 
-### 22.2 The twenty-five moved by a fact, or by a rule already written down
+### 22.2 The thirty-six moved by a fact, by a rule already written down, or by this round's review
 
 **(NEW: nineteen lost to a measurement; six lost to a rule this system already had)** The column names the row that
 beat each image and what did the beating. Where the fact came from a research lane this session, the lane is the
-source. **Numbers 6–30 are §J's own, unchanged.** The split is worth seeing: **6–24 fell to a fact from the world**,
+source. **Numbers 6–30 are §J's own, unchanged.** **Numbers 31–41 are new this round — rows v42–v52, each an image the review found the plan still holding in one section while deciding against it in another.** The split is worth seeing: **6–24 fell to a fact from the world**,
 and **25–30 fell to a rule that was already on the page** — the trifecta split, FINAL §6.1, the values the existing
 engine files already carry. The second kind costs nothing to decide and is the cheaper half of any design.
 
@@ -48,8 +48,8 @@ engine files already carry. The second kind costs nothing to decide and is the c
 | 11 | **One dispatch mechanism for everything** | v13 | three ship and each documents a different job: agent teams (a lead plus named teammates, each a full session, with tmux pane ids on disk), subagents (depth 3, 20 concurrent), and `claude -p` children, which **never form a team** |
 | 12 | **"Nothing is only informational" read as refusing a dashboard** | v14 | the collision was two stated positions, not a resolved question. Both are kept: the dashboard is admitted and every number names the tap that acts on it |
 | 13 | **n8n and Flowise as canvas substrates** | v15 | n8n's LICENSE.md, read raw: *"only for your own internal business purposes or for non-commercial"*. Flowise is **archived** with licence NOASSERTION |
-| 14 | **vibe-kanban as the board reference** | v16 | its own README now reads *"Vibe Kanban is sunsetting"*. OpenAI Symphony (Apache-2.0, last push 2026-08-19) replaces it. **FINAL reached the right conclusion on a weaker reason** |
-| 15 | **Importing 2,111 skills on the strength of an MIT badge** | v17 | the MIT file covers the code; a **separate `LICENSE-CONTENT` exists and was not fetched**, and it may carry different terms for skill content |
+| 14 | **vibe-kanban as the board reference** | v16 | its own README now reads *"Vibe Kanban is sunsetting"*. OpenAI Symphony (Apache-2.0 [`api`: GitHub SPDX detection, LICENSE not read], last push 2026-08-19) replaces it. **FINAL reached the right conclusion on a weaker reason** |
+| 15 | **Importing 2,111+ skills on the strength of an MIT badge** | v17 | the MIT file covers the code; a **separate `LICENSE-CONTENT` exists and was not fetched**, and it may carry different terms for skill content |
 | 16 | **The SKILL.md spec's recommended step-by-step body** | v18 | the published spec recommends *"Step-by-step instructions"* and this system refuses procedure, so the two describe *"different artifacts wearing the same filename"*. The container is the standard; the content rule is ours |
 | 17 | **"Ninety days uncalled and it leaves"** | v19 | *"Nobody found retires a skill by non-use."* The nearest shipped thing is dead-link and drift detection. Retirement is by forced expiry instead, on a mechanism this repo already runs |
 | 18 | **A Haiku executor tier** | v20 | Haiku 4.5's retirement is committed *"Not sooner than October 15, 2026"* — six weeks out and the nearest retirement date of any model named here. The genuinely cheap work goes to local models on electricity |
@@ -65,6 +65,17 @@ engine files already carry. The second kind costs nothing to decide and is the c
 | 28 | **The website hosted as a published artifact; a cloud host reaching into the Mac** | v39 | a terminal pop needs `tmux` on the same machine, and a hosted page cannot reach it. `mission-control/` serves the seven pages on the Mac; the phone keeps the published pages for reading and deciding, and they cannot pop a terminal. **The cost, once:** two renderers over one state, which FINAL §13.1 refused |
 | 29 | **One `maxTurns` for every agent; no cap** | v40 | the seven existing engine files already use exactly two values — **30 producing, 25 read-only** — `maxTurns` binds when an `agentType` is named, and the lint ceiling is 120. A default that copies the measured seeds is a starting point, not a design, and measurement tunes it per agent afterwards |
 | 30 | **A worktree for every agent; no isolation for the four that edit source** | v41 | a worktree is for a run that writes the venture's own files; a store write is narrowed by argv instead (v34). **The cost, once:** creating a worktree still needs the sandbox escalated for that one command, and only four agents ever meet it |
+| 31 | **`keel/agents/<name>.md`, the fifteen files beside their argv** | v42 | Claude Code reads `.claude/agents/` and the `PS-*` lint globs it, so fifteen files under a second path would be loaded by nothing (challenge A P1-1) |
+| 32 | **"the grant is the argv", said of a teammate** | v43 | a teammate and a subagent are spawned in-process and have no argv at all; four narrowings were claimed on mechanisms that cannot carry them (P1-2) |
+| 33 | **`steward` writing the obligations store directly** | v44 | the store table gives the file one writer, the Watch. Two writers under a heading that reads *one writer each* is the defect the store check exists to refuse (P1-3) |
+| 34 | **ten brief fields, with the anchor implied** | v45 | §11.11 keys a refusal on the eleventh field, so a launcher built to a ten-field brief refuses nothing and one built to eleven refuses every brief §6.2 describes (P1-4) |
+| 35 | **an Operator dispatched as a subagent; or an Operator with no file** | v46 | a dispatched agent file cannot form the agent team page 2 draws, and a bare main session is not the object §17.1 inventories with a model and a tools line (P1-5) |
+| 36 | **an `analyst` that does the arithmetic** | v47 | the reconciliation is the anchor that makes every other number rung 1; a model in that loop makes the company's own numbers rung 4 (P2-12) |
+| 37 | **skill directories under `ventures/<name>/`** | v48 | the file tree put the generated directories inside a venture while §7.1 put them at the repository root, which leaves the house's own fifteen agents with no skills directory (P2-13) |
+| 38 | **a skill creator that is a program dispatching four agents** | v49 | §0.3 admits one dispatcher. A second one is a second place a grant is composed, which is the failure v34 exists to prevent (P2-14) |
+| 39 | **ABSENT and WISH as interchangeable marks** | v50 | the two marks decide how much of the plan reads as enforced, and six sections used them for one state — designed-but-unbuilt against no-mechanism-proposed (P2-19) |
+| 40 | **one admitted step list, with the curator's five questions smuggled in** | v51 | 0 of 121 free reflections named the cause: evidence for admitting a second list by name, not for declining to call it one (P2-20) |
+| 41 | **a card with no writer** | v52 | a card exists before anyone drags it, and `keel/bin/run` writes only what happens after the drag (P2-21) |
 
 ---
 

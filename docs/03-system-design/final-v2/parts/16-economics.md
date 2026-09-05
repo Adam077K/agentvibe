@@ -232,7 +232,10 @@ governs every line that appears in both.** Four of the six above are in that set
 rung-1 share, interventions, and founder-minutes per finished intent — and where the wording differs, **§21.1's
 definition wins and this table follows it.** One difference is real and is named rather than smoothed: §21.1 counts
 interventions per **finished** artifact, and line 4 above counts them per **surviving** artifact, which is the
-stricter denominator FINAL §12 argued for. §21 owns that reconciliation. **The two lines this section genuinely adds
+stricter denominator FINAL §12 argued for. **§21 owns that reconciliation and this section defers to it: FINAL
+§15.5's two weekly numbers are cost per finished intent and founder-minutes per finished intent, while
+interventions per surviving artifact is FINAL §12/§20's number, so §21 governs and "surviving" is the word used
+here.** **The two lines this section genuinely adds
 are 3 and 5** — cost per surviving artifact, and the cache-hit cost rate — because both are arithmetic about money
 that no other section computes.
 

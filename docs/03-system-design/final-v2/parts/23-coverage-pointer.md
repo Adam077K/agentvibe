@@ -5,7 +5,7 @@
 
 **(NEW: a pointer, because a coverage table in two places is two tables that disagree)** Every item of the founder's
 thirty-five sections and nine wings is placed — **IN · RENAMED · REFUSED · FOUNDER'S · OUTSIDE** — with the v2 section
-that carries it and one line of reason, in **[`COVERAGE.md`](../COVERAGE.md)** beside this document. Nothing from that
+that carries it and one line of reason, in **[`COVERAGE.md`](COVERAGE.md)** beside this document. Nothing from that
 table is restated here. A `?` marks a row a reviewer should read first.
 
 **(NEW: what makes v2's coverage different from FINAL's)** `final/COVERAGE.md` was written against three shapes, one

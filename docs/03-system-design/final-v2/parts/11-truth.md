@@ -217,8 +217,9 @@ flowchart LR
 **(FINAL)** Revenue is read from the processor as a claim, never typed; a runway computed from a number the bank does
 not confirm is stamped *internal* and cannot promote anything.
 
-**(NEW: §B.2 gives the reconciliation an owner it did not have in FINAL, and §F gives it its precondition.)** It is
-`analyst`'s work — the one agent whose row names the reconciliation explicitly — and it is why §F admits the
+**(NEW: §B.2 gives the reconciliation an owner it did not have in FINAL, and §F gives it its precondition.)** **`bin/reconcile` runs it (v47): a program with no model computes every comparison and writes the result
+rows, and `analyst` reads the mismatches and drafts the Decide item. The rung is the program's.** `analyst` is
+the one agent whose row names the reconciliation explicitly — and it is why §F admits the
 **read-only instruments first**: analytics, error tracking, a read-only billing key, the CI API, the git host read
 API. Without them the reconciliation cannot exist, and without the reconciliation every number in the company is
 rung 4 wearing a rung-1 label.

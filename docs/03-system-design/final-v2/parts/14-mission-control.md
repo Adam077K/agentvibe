@@ -28,7 +28,8 @@ and is extended by v14 to the dashboard the founder asked for. There is still **
 truth**, and no page has anything another page cannot reach.
 
 **(NEW: the cost of v4, stated once and not re-litigated.)** surfaces.md's §4A.11 finding stands unrefuted: *no
-Claude Code fleet surface is spatial; every spatial project is a display and every control surface is a table.*
+Claude Code fleet surface is spatial*, and **(FINAL §13.8, from round-5 `surfaces.md` §4A.11)** every spatial
+project is a display and every control surface is a table.
 Building a surface that is both is therefore work nobody has published, and the office page is the one most likely to
 become a beautiful display. §14.9 keeps FINAL's guard rails on it for exactly that reason.
 
@@ -108,17 +109,20 @@ to.
 
 | # | Page | What each tap launches | Substrate | State |
 |---|---|---|---|---|
-| 1 | The office | tap an avatar → that agent's terminal | Generative Agents `demo` mode, Apache 2.0 | ABSENT; enters through the tool door |
+| 1 | The office | tap an avatar → that agent's terminal | Generative Agents `demo` mode, Apache 2.0 — **candidate, not decided: §20 row 12 is open** | ABSENT; enters through the tool door |
 | 2 | Agents / child flows | tap → attach to its tmux session or background session; message → write its inbox file | Claude Code **agent teams** | **substrate ships**; page ABSENT |
 | 3 | Cost · tokens · efficiency | a cost row → its run · a window row → retempo · an anomaly → the cord | the event log joined to §16's price table | ABSENT; `~/.agentvibe/events.jsonl` is the spine |
 | 4 | Tasks · tickets · PRs | **drag a card into "working on it" → launches a session with a team of agents and hands it the task** | ours; prior art OpenAI Symphony | ABSENT; **the team part has no prior art anywhere** |
 | 5 | Engines · how it works | tap a gate → its last ten resolutions; tap a store → its schema and its one writer | the same state as every other page | ABSENT |
-| 6 | 3D file graph | tap a node → open it on the Floor | `3d-force-graph` (MIT) renders; **the extractor is ours** | ABSENT; thinnest researched area |
-| 7 | Canvas / playground | add a session: worktree, project, provider, model, task, agent → launch, then attach | Langflow (MIT) as the canvas idiom | ABSENT |
+| 6 | 3D file graph | tap a node → open it on the Floor | `3d-force-graph` (MIT [`api`: GitHub SPDX detection, LICENSE not read]) renders; **the extractor is ours** | ABSENT; thinnest researched area |
+| 7 | Canvas / playground | add a session: worktree, project, provider, model, task, agent → launch, then attach | Langflow (MIT [`api`: GitHub SPDX detection, LICENSE not read]) as the canvas idiom | ABSENT |
 
 ---
 
 ### 14.4 Page 1 · The office
+
+**(NEW: the prohibitions in this subsection are WISH under v50 — no renderer check enforces any of them
+today, and none names a mechanism.)**
 
 **What it shows.** The room: every live run a light, one venture per area, and the night replayed at speed in the
 morning. **(FOUNDER)** *"include it with the office, and also the place where it updates and shows what we are
@@ -126,7 +130,7 @@ doing."*
 
 **What each tap launches.** Tap an avatar → **that agent's terminal on the Mac** (§14.11).
 
-**Substrate, with licence and liveness.** **(FINAL §13.8, inherited whole.)** Rank 1 for admission is **Generative
+**Substrate, with licence and liveness.** **(FINAL §13.8, inherited whole.)** Rank 1 for admission — a **candidate**, while §20 row 12 leaves the substrate open — is **Generative
 Agents' `demo` mode (Apache 2.0)**: a top-down town that renders from **one JSON file, four fields per agent per step**
 — a tile, an emoji, a sentence, a nullable chat — with **no model and no backend**, assets included. Every live run is
 a light, and the sentence's four-level location path maps onto **venture → intent → run → artifact with no schema
@@ -178,7 +182,7 @@ inbox file**; entries are validated on read and malformed ones are *"removed fro
 
 **(NEW: the one sentence that decides how the page may touch that substrate.)** *"The team config holds runtime state
 such as session IDs and tmux pane IDs, so don't edit it by hand or pre-author it: your changes are overwritten on the
-next state update."* So **`config.json` is a read source and never a write target.** The inbox file is the write
+next state update."* So **`config.json` is a read source and never a write target.** **Mechanism:** `bin/probe` (ABSENT) asserts the page's writable paths and fails if `config.json` is among them. The inbox file is the write
 target, and it is the only one.
 
 **Substrate constraints that shape the page, all documented, all H** (v13): agent teams are **experimental and off by
@@ -219,7 +223,7 @@ a dashboard. **Both are kept, by one rule: every number on the page names the ta
 | the quality-of-belief split — how much of what is believed is rung 1 and how much rung 4 (§11) | → the done-tests behind the rung-4 share |
 
 **Substrate.** The event log, with `gen_ai.*` attribute names and an id on every row, joined to §16's price table.
-`~/.agentvibe/events.jsonl` exists on this Mac — 1.1 MB, 3,840 rows — and `mission-control/` (60 files, a Bun and Hono
+`~/.agentvibe/events.jsonl` exists on this Mac — 1.1 MB, 3,843 rows — and `mission-control/` (60 files, a Bun and Hono
 server with an SSE feed and a React client) and `bin/warroom` (per-worker cost pricing, typed events, snapshots)
 exist on branch `ceo-1-1788609834`. The page is **ABSENT**; its spine is not.
 
@@ -254,7 +258,7 @@ is born here too (§C.3). Nothing binds by voice; the founder confirms by tap or
 **(NEW: v36 decides where a card may come from, and it is the same rule as the trifecta.)** A card that originates
 outside the company — a support message, an invoice, a failed build, a reply — is created from **an inbound row
 written by the world's door, a program with no model**. No agent reads the raw mail, calendar or Notion item; `scout`
-reads the row, and `steward` writes the obligation from `scout`'s handover. **The board therefore never renders
+reads the row, and `steward` writes the obligation **proposal** from `scout`'s handover, and the Watch materialises it (v44). **The board therefore never renders
 attacker-controlled text as an instruction to anything** — it renders a row a program wrote.
 
 **What the tap launches.** **Dragging a card into "working on it" launches a session with a team of agents and hands
@@ -276,7 +280,7 @@ flowchart TD
 ```
 
 **Substrate, and what the world actually ships.** **(NEW: v16 replaces FINAL's reference project, because both ends
-moved.)** **OpenAI Symphony** — Apache-2.0, Elixir, created 2026-02-26, **last push 2026-08-19**, 27,042 stars, not
+moved.)** **OpenAI Symphony** — Apache-2.0 [`api`: GitHub SPDX detection, LICENSE not read], Elixir, created 2026-02-26, **last push 2026-08-19**, 27,042 stars, not
 archived — is the closest live prior art, described by its own repository as: *"Symphony turns project work into
 isolated, autonomous implementation runs, allowing teams to manage work instead of supervising coding agents."* Its
 mechanism (polls Linear on an interval, one isolated workspace per issue, restarts stalled agents) is **REPORTED at
@@ -345,9 +349,9 @@ altogether."*
 **What it shows.** The files of one project as a wired brain; edges are imports and co-change. **What each tap
 launches.** Tap a node → open that file on the Floor.
 
-**Substrate, with the sharp caveat.** **`vasturiano/3d-force-graph`** — MIT, 6,369 stars, last push 2026-04-05, not
+**Substrate, with the sharp caveat.** **`vasturiano/3d-force-graph`** — MIT [`api`: GitHub SPDX detection, LICENSE not read], 6,369 stars, last push 2026-04-05, not
 archived, *"3D force-directed graph component using ThreeJS/WebGL"*. **Its input is a `{nodes, links}` object and it
-does not read a repository.** **Gource is refused**: GPL-3.0, the strictest licence surveyed, and it animates a 2.5D
+does not read a repository.** **Gource is refused**: GPL-3.0 [`api`: GitHub SPDX detection, LICENSE not read], the strictest licence surveyed, and it animates a 2.5D
 tree from a VCS log — a replay of history, not a live wired brain.
 
 **What is genuinely new.** **The extractor is entirely ours.** surfaces.md's gap 3 is explicit: *"No maintained
@@ -376,7 +380,7 @@ started here carries the same binding record as one dragged from a card on page 
 makes this page dispatchable at all** — the brief carries `agent:`, the roster name the launcher composes argv for,
 which is exactly the "which agent" the founder asked to choose here.**)**
 
-**Substrate, decided by licence rather than by taste** (v15). **Langflow — MIT, 154,275 stars, last push 2026-09-05,
+**Substrate, decided by licence rather than by taste** (v15). **Langflow — MIT [`api`: GitHub SPDX detection, LICENSE not read], 154,275 stars, last push 2026-09-05,
 alive — is the canvas idiom.** Two are refused and neither refusal is close:
 
 - **n8n**, whose LICENSE.md was the one licence file read raw in the lane: *"You may use or modify the software only
@@ -388,7 +392,7 @@ alive — is the canvas idiom.** Two are refused and neither refusal is close:
 
 **(NEW: a caveat the whole substrate table carries, from surfaces.md's own gap 1.)** **Nine of ten licences in that
 lane are GitHub's SPDX detection rather than a quoted LICENSE file.** Only n8n's was read raw. Each is one fetch away,
-and no bulk adoption should happen before those fetches — the same discipline v17 applies to the 2,111-skill upstream.
+and no bulk adoption should happen before those fetches — the same discipline v17 applies to the 2,111+-skill upstream.
 
 **State.** **ABSENT.**
 

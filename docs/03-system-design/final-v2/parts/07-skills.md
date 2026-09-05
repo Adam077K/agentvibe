@@ -80,13 +80,13 @@ recommendation is procedural by that recommendation. Two different artifacts wer
 | **rehearsal case** | an input plus a known answer | it can be failed, so it can be trusted |
 | **reference** | a vendor fact carrying an expiry | it is a fact, and it rots on a date rather than silently |
 
-**A step list is admitted in exactly one place:** a checklist the **Sender** reads aloud, where the judge is absent
+**A step list is admitted in exactly two places (v51).** The second is the curator's five fixed questions per failed handover (§13.6, §13a.3), admitted on the evidence FINAL §10.7 cites — 0 of 121 free reflections named the cause. The first is a checklist the **Sender** reads aloud, where the judge is absent
 and the act cannot be taken back — sending to a list, a migration over real data, a filing, a charge. **(FINAL
 §9.4.)** The Sender contains no model and cannot decide to skip an item, which is the only condition under which a
 written procedure is safe here.
 
 **The cost of v18, stated once and not re-litigated:** an imported skill written to the spec's recommendation
-**fails our admission and needs a pass**. That is a real conversion cost on 2,111 candidates and it is accepted,
+**fails our admission and needs a pass**. That is a real conversion cost on 2,111+ candidates and it is accepted,
 because the alternative is a library of procedure, which is the container the done-test replaced.
 
 ---
@@ -153,9 +153,11 @@ a vendor fact and a code exemplar do not rot at the same rate, and a single numb
 **(FOUNDER.)** *"we need a skill creator of skill, which, you know, we will research a task or a mission and, like,
 to break it down two steps and to give it to the agents."*
 
-**(NEW: it is a program, not a fifteenth agent — and it names which agent does each move, which is what keeps it
-from being a stage that states method.)** `bin/skill` — **ABSENT**. It holds no model. It sequences four moves and
-each move is performed by an agent from section 5's roster, under that agent's own grant:
+**(NEW: v49 — it is a routing rule the Operator follows plus one no-model program, not a fifteenth agent and not
+a second dispatcher, and it names which agent does each move, which is what keeps it from being a stage that
+states method.)** Only the Operator dispatches (§0.3), so the creator is this: the Operator routes **scout →
+product → curator**, each under its own grant, and one program scores the result — the eval runner
+**`bin/skill-eval`** (**ABSENT**), which holds no model and dispatches nothing. The routing rule, in order:
 
 1. **scout** answers the bounded question of how the field actually does this. Every claim carries URL, quote and
    access date; `scripts/check-citations.mjs` (EXISTS, this branch) blocks on a dead one.
