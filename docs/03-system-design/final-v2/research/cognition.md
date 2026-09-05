@@ -49,3 +49,16 @@ No system I reached carries an explicit **definition-of-ready** gate, a **blocke
 | Anthropic guidance | Not levels; checkpoints | "Agents can then pause for human feedback at checkpoints or when encountering blockers" plus "stopping conditions (such as a maximum number of iterations)" | building-effective-agents, 2026-09-05, H |
 
 **No SAE-style numbered autonomy ladder appears in any source I fetched.** Both shipped schemes key on **tool class and filesystem path**, never on reversibility, and never on task type.
+
+## Coverage of §21 and §22 items by any shipped system
+
+**Appears somewhere shipped:** task intake parsing and intent clarity (Anthropic: "Once the task is clear"); clarifying-question trigger (`AskUserQuestion` as a permissioned tool); plan draft and its approval (Claude Code plan mode; measured by Plan-and-Solve); definition of done and acceptance criteria (Devin's success criteria and checkpoints); self-check before submit (Devin: test before opening a PR); give-up condition (Copilot's 59 minutes; `--max-turns`; Anthropic's stopping conditions); risk pre-check (the classifier, at the tool boundary); sub-task decomposition (orchestrator-workers); reflection with external feedback (Reflexion, evaluator-optimizer); ticket owner, status, audit trail (Linear delegate + activities; Copilot's per-commit logs); ticket template (issue templates, named as a cost lever).
+
+**Appears nowhere in what I reached:** plan critique pass and plan revision loop as self-directed steps — the only measurement points the other way (2310.01798); confidence self-rating; resource and time estimate; multiple-approach generation and comparison; explicit assumption logging; knowledge-gap detection; lesson extraction as a separate artifact; **definition-of-ready**; ticket dependency, blocked reason, aging alert, duplicate detection, cross-ticket linking; ticket size estimate; backlog grooming; reassignment rule; a mandatory goal read-back.
+
+## What this changes against FINAL-PLAN §2/§6/§9.2
+
+- **COVERAGE line 547** refuses "Plan critique pass" on the ground that "self-correction without external feedback degrades performance". That is now a sourced claim, quotable verbatim from 2310.01798. Reflexion's 91% does not contradict it: the feedback there is external.
+- **COVERAGE line 546** refuses "Plan draft" as mandating method. Fact: the largest shipped coding agent ships plan mode as one of six permission modes, and plan approval is what unblocks edits. That is a mode the human selects, not a step the run performs on itself, which is a different placement than the item's wording.
+- **§9.2 keys `may-alone` on reversibility.** Fact: neither shipped scheme does. Claude Code's floor is a fixed path list plus an action-class list; Codex's is workspace scope plus network. The nearest shipped analog to a reversibility rule is the classifier's special-casing of `rm`/`rmdir` on critical paths.
+- **§9.2's staged-not-sent pattern and its recall window have no analog** in anything I fetched. The shipped equivalent of "never alone" is a prompt or a deny rule, not a staged artifact.

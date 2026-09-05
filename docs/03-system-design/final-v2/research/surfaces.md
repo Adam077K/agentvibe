@@ -114,3 +114,21 @@ Facts only, by row.
 6. **§13.2's Balcony table has no dashboard row**, and *"nothing is only informational."* The founder's page (c) is a cost, tokens and efficiency dashboard. The two are stated positions, not a resolved question.
 7. **§4A.11's finding — "no Claude Code fleet surface is spatial"** — nothing I fetched overturns it. `claude-view` renders sub-agent **trees**, which is a graph, not a space.
 8. **The handoff's line at 195–198** claims `-w` and `--tmux`. The CLI reference documents `--teammate-mode` and does not document `-w`. Unresolved.
+
+## Gaps
+
+1. **Licence lines are not quoted for nine of ten projects.** Only n8n's LICENSE was fetched raw; the rest are GitHub's SPDX detection. This fails the brief's own standard and is the largest defect in this report. Each is one `raw.githubusercontent.com/<repo>/<branch>/LICENSE` fetch away.
+2. **`Flowise`'s NOASSERTION is unexplained.** Archived plus undetected licence needs the file read before anyone relies on it.
+3. **(f) is barely covered.** No maintained project was verified that reads a repository's files into a 3D graph. `3d-force-graph` is a renderer with no repo reader; Gource replays a VCS log. The "3D IDE for Obsidian as a code city dispatching coding agents" could not be resolved to a repository.
+4. **No prior art for a card that launches a *team*.** Every board-to-session project found maps one task to one agent.
+5. **AppleScript / `open -a Terminal` unverified** — no primary source fetched.
+6. **claude-view and agent-paperclip carry no verified licence, commit date or mechanism.** Both are named in the brief; both are `REPORTED` only.
+7. **Conductor was not fetched.** Its row is search-result summary, so its worktree and terminal claims are `REPORTED` · M.
+8. **Symphony's spec was not read.** Licence and liveness are `H` from the API; every mechanism claim about it is `M` from secondary coverage.
+9. **Cursor background agents and the Claude Code GitHub/Linear integrations were not reached.** Named in the brief, not researched — unsearched, not empty.
+10. **Agent Zero was not fetched.** Named in the brief, absent here.
+11. **Nothing was run, installed or published, and I appended nothing to the claim ledger.** Several findings above are durable enough to qualify as claims with a `valid_until`; I left them as findings because the dispatching brief bounded this lane to a returned report. That is a deliberate omission, not coverage.
+
+## Sources fetched (17) · failed fetches (0)
+
+Six repository files by absolute path; eleven network fetches — nine GitHub API endpoints and raw files, two documentation pages — plus four web searches. No fetch failed. Tool-call ceiling of 25 reached exactly, which is why gaps 1, 3, 6, 9 and 10 remain open.

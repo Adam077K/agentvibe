@@ -56,3 +56,14 @@ All five sub-questions have evidence. The context-collapse paper is identified a
 | Memory conflict resolution | mem0 (ADD/UPDATE/DELETE/NOOP) · ACE curator | Not in any CLI |
 | Memory search index | basic-memory (SQLite) | Claude Code has **no index**; topic files are read by name on demand |
 | Cross-agent memory sharing | Claude Code — explicitly **not** | Main-conversation auto memory is not loaded into subagents except a fork; subagent memory is a separate directory |
+
+## What this changes against FINAL-PLAN §10/§11
+
+1. §10.3's unnamed "context collapse" paper is **ACE, arXiv 2510.04618**, and is now citable with 18,282 → 122 tokens and 66.7% → 57.1%. The delta-not-rewrite rule §10.3 states is exactly what the paper demonstrates, including the helpfulness counter §10.6 already asks for.
+2. §10.1 attributes to Letta "a primary that talks and acts with no tools to edit its own core memory". **The current Letta page for that feature does not say this** — it describes background subagents under the name "Dreaming". The sentence needs re-sourcing or re-wording.
+3. §10.1's separation-of-writer principle now has a second shipped instance (ChatGPT dreaming) and one shipped counter-example: **Claude Code's auto memory is written by the acting agent, in-session.**
+4. §10.5's premise holds. No tool was found that mines a transcript archive into taste, negatives or already-built. Three tools read the corpus and render it.
+5. §11.1's provisional-until-proven field kit has one measured precedent, Voyager, with the numbers above. The Anthropic skills post offers **no measurement** to compare a curated library against it.
+6. Claude Code's `MEMORY.md` index (200 lines / 25KB, index loaded, topic files on demand) is **the same two-tier shape** this repo built for skills discovery. It is now a shipped default rather than a local invention.
+7. Every §05 discipline item — expiry, provenance, conflict resolution, decay — is **absent from all three CLIs**. Codex has no memory; Gemini CLI appends facts to one global heading with no expiry or dedupe.
+8. Benchmark numbers in this field are vendor-run on a dataset a competing vendor calls partly unusable. Any §10 claim resting on "mem0 scores X" is a claim about a self-report.
