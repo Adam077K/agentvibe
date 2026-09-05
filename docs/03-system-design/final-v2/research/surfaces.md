@@ -101,3 +101,16 @@ Session names are prefixed `claudesquad_`. Messaging is `SendKeys` plus `TapEnte
 | Issue → isolated run | OpenAI Symphony (Apache-2.0) | polls Linear, one workspace per issue | Elixir runtime; Linear as control plane · **M** |
 
 **Not found:** any primary source for AppleScript, `open -a Terminal`, or an iTerm2 AppleScript hand-off. I fetched none, so the obvious macOS route is **unverified**, not absent.
+
+## What this changes against FINAL-PLAN §13
+
+Facts only, by row.
+
+1. **§13.10, row "See the fleet"** — the row lists `claude agents` and `claude-view`. Two shipped verbs are missing from it: `claude --attach <id>` and `claude --bg`, both documented in the CLI reference.
+2. **§13.10, row "Redirect without killing"** — the row says a redirect *"dies with the session."* Agent teams add a second, on-disk transport: a per-agent mailbox JSON file with a validating reader. Its durability is not stated on the page.
+3. **§13.10, row "A page that answers back"** — unaffected by anything I fetched.
+4. **§13.8's refusal of vibe-kanban** — the ground under it moved in the same direction: the README's own status line reads *"Vibe Kanban is sunsetting"*, which is stronger than "unmaintained since 2026-04-24".
+5. **§13.8's ranking is silent on OpenAI Symphony**, which is Apache-2.0, alive on 2026-08-19, and is the only board-to-session prior art found with a live commit.
+6. **§13.2's Balcony table has no dashboard row**, and *"nothing is only informational."* The founder's page (c) is a cost, tokens and efficiency dashboard. The two are stated positions, not a resolved question.
+7. **§4A.11's finding — "no Claude Code fleet surface is spatial"** — nothing I fetched overturns it. `claude-view` renders sub-agent **trees**, which is a graph, not a space.
+8. **The handoff's line at 195–198** claims `-w` and `--tmux`. The CLI reference documents `--teammate-mode` and does not document `-w`. Unresolved.

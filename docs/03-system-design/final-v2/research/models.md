@@ -86,3 +86,34 @@ Cached input is **0.1x** input across the line — the same ratio Anthropic char
 ## Google
 
 **Gemini CLI** — <https://raw.githubusercontent.com/google-gemini/gemini-cli/main/README.md>, accessed 2026-09-05, **H** for the free numbers: *"60 requests/min and 1,000 requests/day with personal Google account"*, access to Gemini 3 models with a 1M context window; API-key route *"1000 requests/day with Gemini 3 (mix of flash and pro)"*; Vertex *"Higher rate limits with billing account"* with no number. **Google AI Pro/Ultra and Code Assist per-tier CLI quotas: UNVERIFIED** — the README defers to a quota page and the canonical quota URL 301s to `docs.cloud.google.com/gemini/docs/quotas`, which I had no call left to fetch.
+
+**Gemini API** — <https://ai.google.dev/gemini-api/docs/pricing>, accessed 2026-09-05, **H**. $/MTok paid, in/out; every row below also has a *"Free of charge"* free tier except 3.1 Pro:
+
+| Model | In | Out | Context cache |
+|---|---|---|---|
+| 3.8 / 3.7 / 3.6 Flash | 0.75 | 3.75 (through Dec 31, 2026) | 0.075 + $0.50/hr |
+| 3.5 Flash | 1.50 | 9.00 | 0.15 + $1.00/hr |
+| 3.5 Flash-Lite | 0.30 | 2.50 | none |
+| 3.1 Flash-Lite | 0.25 | 1.50 | 0.025 + $1.00/hr |
+| **3.1 Pro Preview** | 2.00 | 12.00 (≤200k prompt) | 0.20 + $4.50/hr · **no free tier** |
+| 2.5 Pro | 1.25 | 10.00 (≤200k) | 0.125 + $4.50/hr |
+| 2.5 Flash / Flash-Lite | 0.30 / 0.10 | 2.50 / 0.40 | 0.03 / 0.01 + $1.00/hr |
+| Gemini Embedding 2 | 0.20 text | — | free tier yes |
+| Gemini Embedding | 0.15 | — | free tier yes |
+
+## Local models
+
+| Model | Dims / params | Size | Licence | Source (accessed 2026-09-05) |
+|---|---|---|---|---|
+| `sentence-transformers/all-MiniLM-L6-v2` | **384 dims**, 22.7M params | 22.7M params, safetensors | **Apache 2.0** | <https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2> |
+| `Qwen/Qwen3-0.6B` | 0.6B params (0.44B non-embedding), 28 layers | BF16 tensors | **Apache 2.0** | <https://huggingface.co/Qwen/Qwen3-0.6B> |
+
+MiniLM quote: *"384 dimensional dense vector space"*; *"input text longer than 256 word pieces is truncated"* — a 256-word-piece ceiling, which matters for chunking transcripts. Qwen3-0.6B: *"32,768"* context. Both **H**. On-disk byte sizes were not stated as a figure on either page — the plan's *"under 100 MB"* for the embedder is consistent with 22.7M params at 4 bytes but is **not quoted from the page**.
+
+## Cost-per-task evidence across CLIs
+
+1. **No vendor-published cost-per-task column was found for any of the three CLIs.** SWE-bench, Terminal-Bench and vendor posts were not reached with a call to spare. Everything below is third-party, **confidence L**, and must not be used as a vendor figure.
+2. Third-party, via search 2026-09-05: *"Approximate cost per successful fix on SWE-Bench-scale tasks includes: Opus 4.7 $1.71, GPT-5.3-Codex $1.06, Gemini 3.1 Pro $0.93, Qwen3.6 Plus $0.25, DeepSeek V4 $0.23."* Source: morphllm.com. Not vendor, not reproducible from the page's own method.
+3. Third-party: *"Dividing output price by Scale SEAL SWE-bench Pro score shows Claude Haiku 4.5 about $0.13 of output per point, gpt-5.4 $0.25, Gemini 3.1 Pro $0.26, Claude Opus 4.6 $0.48."*
+4. Third-party: *"Claude Fable 5.1 takes #1 at 81.2%"* on SWE-bench Pro, dated 2026-09-03.
+5. The one **vendor** per-task-ish anchor that exists is Anthropic's, and it is per *developer-day*, not per task: $13/active day, $150–250/month, <$30/day for 90% of users.

@@ -126,3 +126,23 @@ Facts, no recommendation.
 4. **§7.2's "no registry of personalities" has no shipped precedent** among the systems fetched. The nearest is Anthropic's research system, which spawns 3–5 subagents that are unnamed and task-scoped — and whose own post says coding is *"not a good fit"* for that pattern.
 5. **The 10–15 target sits in an unoccupied band.** Running rosters are 5–6 (Magentic-One 5, ChatDev 6, MetaGPT 4–5, TheAgentCompany's 6 job functions, Anthropic's 3–5 concurrent). Catalogues are 150–202. Nobody I fetched publishes a measured roster size between them, in either direction.
 6. **Cognition and Anthropic do not conflict, and both bear on the split.** Anthropic's +90.2% is on **research** with independent parallel subtasks; Cognition's failure is on **one artifact** split across parallel builders. That is the maker/scout boundary in §7.1, and it is the one part of §7 that the world's evidence directly supports.
+
+## Gaps
+
+- **Google ADK, LangGraph multi-agent templates, Sakana AI Scientist, Devin/Cognition's own roster: NOT FETCHED.** Call ceiling reached at 25. No claim about any of them.
+- **Factory droids: FETCH RETURNED NOTHING USABLE.** https://docs.factory.ai/ · 2026-09-05 · the welcome page names "Droid" as one product across App/CLI/web and **enumerates no named droid types**. Any "Code Droid / Knowledge Droid / Reliability Droid" roster is **UNVERIFIED**.
+- **TheAgentCompany's headline result** — best model, full-completion rate, partial score — not obtained; the site root returned a bare header and the README defers to a leaderboard.
+- **Licence files not read:** CrewAI, MetaGPT (badge only), ChatDev (none stated anywhere I looked), OpenAI Agents SDK, Magentic-One/AutoGen, Paperclip (both repos).
+- **Individual role names for wshobson (202) and VoltAgent (~150–160)** — categories and counts only. Any statement that a specific role exists in either is unverified.
+- **VoltAgent's own count is internally inconsistent**: 158+ headline, 150 stated total, 160 by summing the table.
+- **wshobson's "202 agents"** is a README self-claim; I did not enumerate the directory.
+- **Paperclip** verified to exist by search snippets only. Neither repository fetched. Its roster, fields and licence are unknown, and there are two distinct projects using the name.
+- **No source found, in any system, for a measured point at which adding specialists stops paying.** The question appears to be unanswered in public rather than answered against us.
+
+## Sources fetched (15) · failed fetches
+
+Fetched: wshobson README, wshobson LICENSE, VoltAgent README, VoltAgent LICENSE, Claude Code sub-agents docs, CrewAI agents docs, MetaGPT README, ChatDev README, Cognition blog, Anthropic multi-agent research post, Magentic-One article, TheAgentCompany README, OpenAI Agents SDK handoffs, Factory docs root, one web search for Paperclip.
+
+Failed or empty: `docs.claude.com/en/docs/claude-code/sub-agents` (301, refetched at the redirect); `cognition.ai/blog/dont-build-multi-agents` (301, refetched at cognition.com); `the-agent-company.com` (returned only a page header, no leaderboard content); `docs.factory.ai/` (no droid roster on the page).
+
+Sources: [wshobson/agents](https://raw.githubusercontent.com/wshobson/agents/main/README.md) · [wshobson LICENSE](https://raw.githubusercontent.com/wshobson/agents/main/LICENSE) · [VoltAgent](https://raw.githubusercontent.com/VoltAgent/awesome-claude-code-subagents/main/README.md) · [VoltAgent LICENSE](https://raw.githubusercontent.com/VoltAgent/awesome-claude-code-subagents/main/LICENSE) · [Claude Code subagents](https://code.claude.com/docs/en/sub-agents) · [CrewAI agents](https://docs.crewai.com/en/concepts/agents) · [MetaGPT](https://raw.githubusercontent.com/FoundationAgents/MetaGPT/main/README.md) · [ChatDev](https://raw.githubusercontent.com/OpenBMB/ChatDev/main/README.md) · [Cognition](https://cognition.com/blog/dont-build-multi-agents) · [Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system) · [Magentic-One](https://www.microsoft.com/en-us/research/articles/magentic-one-a-generalist-multi-agent-system-for-solving-complex-tasks/) · [TheAgentCompany](https://raw.githubusercontent.com/TheAgentCompany/TheAgentCompany/main/README.md) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/handoffs/) · [Factory](https://docs.factory.ai/) · [paperclipai/paperclip](https://github.com/paperclipai/paperclip) · [agencyenterprise/paperclip-ai](https://github.com/agencyenterprise/paperclip-ai)

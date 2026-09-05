@@ -40,3 +40,19 @@ All five sub-questions have evidence. The context-collapse paper is identified a
 | Letta dreaming / ChatGPT dreaming | Background review of recent conversations into consolidated memory | **Partly** — recent conversations, not an archive | docs.letta.com · **H** / openai.com · **L** |
 
 **Nothing found mines an existing transcript archive into preferences, negatives or examples.** Three tools read the corpus; all three render it for humans. The format warning matters: *"The entry format is internal to Claude Code and changes between versions, so scripts that parse these files directly can break on any release."*
+
+## Coverage of the founder's §04/§05 items by any shipped system
+
+| Item | System | Mechanism |
+|---|---|---|
+| Taste profile | Claude Code auto memory | `type: user` + `type: feedback` notes, written by Claude, plain markdown, editable via `/memory` |
+| Brand voice profile | **none found** | Carried by convention in CLAUDE.md / rules; no first-class store in any of the three CLIs |
+| Negative knowledge log | ACE (research) · projectmem (prior catalogue) | ACE bullets store "failure mode" as a unit with a helpfulness counter; projectmem has typed events plus a pre-action gate. **No CLI ships one.** |
+| Golden output archive | **none found** | Voyager's verified-before-stored skill library is the nearest analogue, and it stores code, not outputs |
+| Memory provenance tag | Partial — Claude Code `modified` field; Graphiti `valid_from`/`valid_until`; ACE bullet IDs | Claude Code records **write time only, not source**. No shipped CLI records where a memory came from. |
+| Intentional forgetting | ChatGPT dreaming (**L**) · Claude Code (manual) | Claude Code excludes memory from the retention sweep — deletion is a human or Claude edit, never automatic |
+| Memory decay function | `mcp-memory-service` · MemoryBank (research) | Exponential decay with configurable half-life; Ebbinghaus curve. **None of the three CLIs.** |
+| Learned-field expiry | **none found shipped** | This repo's `valid_until` + forced disposition is ahead of every system surveyed |
+| Memory conflict resolution | mem0 (ADD/UPDATE/DELETE/NOOP) · ACE curator | Not in any CLI |
+| Memory search index | basic-memory (SQLite) | Claude Code has **no index**; topic files are read by name on demand |
+| Cross-agent memory sharing | Claude Code — explicitly **not** | Main-conversation auto memory is not loaded into subagents except a fork; subagent memory is a separate directory |
