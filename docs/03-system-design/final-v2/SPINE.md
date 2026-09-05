@@ -19,7 +19,7 @@ not:        a build plan. Nothing here is built, installed, spent, published or 
 
 ## A · §1-v2 — the decisions table
 
-Fifty-two rows. Rows **v1–v5** are the founder's overrules of FINAL §1. Rows **v6–v52** are places a research
+Fifty-three rows. Rows **v1–v5** are the founder's overrules of FINAL §1. Rows **v6–v53** are places a research
 fact moves a FINAL row, or a place FINAL stands *because* a fact was checked against it. The losing image is kept by
 name in every row and collected again in §J.
 
@@ -77,6 +77,7 @@ name in every row and collected again in §J.
 | **v50** | ABSENT versus WISH | **ABSENT: the mechanism is designed and its path is named; it is not built. WISH: no mechanism is designed.** A rule whose only mechanism is ABSENT is written in the present tense and is not a WISH | **NEW:** challenge A P2-19 — the two marks were used for one state. **Mechanism:** a lint over the document's marks (ABSENT) | ABSENT and WISH interchangeable |
 | **v51** | The curator's five fixed questions | **Admitted as the second legitimate step list**, beside the Sender's checklist, on the evidence FINAL §10.7 cites (0 of 121 free reflections named the cause). v18 now reads "two places" | **NEW:** challenge A P2-20 | one place, with the five questions smuggled in |
 | **v52** | Who writes a card | **The founder's door writes the card** — the read-back form (`bin/intend`, ABSENT) creates the card with its intent id; `bin/run` writes only the session id when a card is dragged | **NEW:** challenge A P2-21. **Mechanism:** `bin/check-stores` fails a card store row with no creating writer | a card with no writer |
+| **v53** | How an eighth page is admitted | **Through a door, like a tool.** A new mission-control page is proposed against an intent, declares what it reads (the logbook and nothing else unless the door admits more), what each tap launches, and its licence read from the file; the same §9.3 door, with "every element is a fact or a tap" as its extra test | **NEW:** challenge A opinion O-1 — the founder said *"and a lot more cool and important things"* and the plan built a door for tools and none for surfaces. **Mechanism:** `bin/door` accepts `kind: page` (ABSENT) | seven pages as a ceiling |
 
 **Carried forward from FINAL §1, unchanged, by number:** rows **1, 2, 3, 4, 5, 7, 9, 14, 16, 17, 18, 20, 21, 22,
 23, 24, 25, 26, 27, 28, 29**. Rows **11, 12, 13, 19** are carried forward *and* moved, by v24/v25, v28, v34 and
