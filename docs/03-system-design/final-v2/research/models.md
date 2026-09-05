@@ -127,3 +127,36 @@ MiniLM quote: *"384 dimensional dense vector space"*; *"input text longer than 2
 **Google** — **not fetched** (no calls left). Gemini API Additional Terms of Service, and the free-tier data-use clause, are UNVERIFIED.
 
 **Anthropic API rate limits** (distinct from subscription): tiers named *Start / Build / Scale*, no numbers on the pricing page; Claude Code's own doc recommends 200k–300k TPM and 5–7 RPM per user at 1–5 users, falling to 10k–15k TPM and 0.25–0.35 RPM at 500+.
+
+## What this changes against FINAL-PLAN §5/§14.5/§15.3
+
+Facts only.
+
+- **§14.5 and §5.2's cache-TTL sentence is confirmed verbatim today**, and is broader than the plan states: five minutes applies *on an API key, on a cloud provider, and once usage credits are drawn*, not only on a key.
+- **§15.3's formula uses the wrong write coefficient for the TTL it assumes.** It multiplies the standing prompt by **1.25** on the first run of a batch. 1.25x is the **5-minute** write. A batch that relies on the **one-hour** TTL, which is what §5.2 buys with a subscription, writes at **2x**. The sibling-read coefficient **0.10** is right for Opus 5, Sonnet 5 and Haiku 4.5, and is **wrong by 4x for Fable 5.1 and Mythos 5.1, where reads are 0.025x** ($0.25/MTok).
+- **§5.2's "batch needs a metered key" holds**, and the discount is 50% on both directions and stacks with caching. Batch prices are now published for every model in the table above.
+- **§5.3's decision tree gains a price axis it did not have**: the spread from Haiku 4.5 ($1/$5) to Fable 5.1 ($10/$50) is 10x in, 10x out, but Fable 5.1's cache reads ($0.25) are only 2.5x Haiku's ($0.10) — so on a cache-dominated workload, which §14.5 measures at 89% context, the model spread narrows sharply.
+- **The repo's pinned valid set is partly stale against the live catalogue.** CLAUDE.md pins `claude-opus-5`, `claude-sonnet-5`, `claude-fable-5`, `claude-haiku-4-5`. `claude-fable-5` is listed by Anthropic today under *"Legacy models (still available)"*; the current one is `claude-fable-5-1`, which is not in the pinned set. Separately, **Haiku 4.5's retirement commitment is "not sooner than October 15, 2026"** — the nearest retirement date of any model the repo names.
+- **A tokenizer discontinuity crosses the repo's own model list**: Opus 5 / Fable 5.x produce *"approximately 30% more tokens for the same text"* than Sonnet 4.6 and earlier. Any token budget carried over from a Sonnet-4.6-era measurement understates by roughly that much on the current engines.
+- **Model-family limits are separate from session limits on a subscription**, per the quoted Claude Code doc. A crew that hits "your Opus limit" can keep working by moving to Sonnet or Haiku; a crew that hits the session or weekly limit cannot, because that one is shared across all models.
+- **`--max-budget-usd` is a real per-run cap and counts subagent spend**, but is print-mode only and computed locally at list price, so on a subscription it bounds a *reported estimate*, not a bill.
+- **OpenAI is the only vendor here publishing numeric per-window quotas**, which makes a Codex window the only one of the three that can be budgeted in advance from published figures.
+
+## Gaps
+
+1. **OpenAI terms of use: 403 on fetch.** No automation, resale or account-sharing clause quoted. Retry from a different route.
+2. **Google terms and Gemini free-tier data-use clause: not fetched.**
+3. **Google AI Pro / Ultra / Code Assist per-tier CLI quotas: not fetched** — the documented URL 301s to `docs.cloud.google.com/gemini/docs/quotas`.
+4. **No numeric Anthropic subscription quota exists in any page fetched.** Windows are documented, magnitudes are relative ("5x Pro per 5-hour session"), and no message or token count is published. A Max window's capacity is measurable only from an account.
+5. **Max 20x price is UNVERIFIED** — the pricing page rendered "From $100 per month" for both Max tiers.
+6. **No vendor cost-per-task benchmark for any CLI.** Items 2–4 in that section are third-party and should not be quoted as vendor figures.
+7. **On-disk MB for MiniLM and Qwen3-0.6B not stated on their pages**; only parameter counts.
+8. **Codex model-to-plan mapping is by marketing name** (GPT-6 Astra, GPT-5.6 Sol, GPT-5.6 Luna) while the API price list uses ids (`gpt-6-astra`, `gpt-5.6-sol`, `gpt-5.6-luna`). The mapping is inferred from name similarity, not stated. `gpt-5.3-codex` appears in the API price list but in **no** plan quota row.
+
+## Sources fetched (12 succeeded) · failed fetches
+
+Succeeded: platform.claude.com pricing · platform.claude.com models overview · claude.com/pricing · code.claude.com/docs/en/costs · code.claude.com/docs/en/cli-reference · anthropic.com/legal/consumer-terms · learn.chatgpt.com/docs/pricing · developers.openai.com/api/docs/pricing · ai.google.dev/gemini-api/docs/pricing · raw.githubusercontent.com gemini-cli README · huggingface.co all-MiniLM-L6-v2 · huggingface.co Qwen3-0.6B. Plus two searches (Claude limits, SWE-bench cost).
+
+Failed: `openai.com/policies/terms-of-use` **403** · `raw.githubusercontent.com/google-gemini/gemini-cli/main/docs/quota-and-pricing.md` **404** · `developers.google.com/gemini-code-assist/resources/quotas` **301, not followed, no calls left** · `support.claude.com/en/articles/11145838` **fetched but contains none of the requested limits**.
+
+No claim was appended to the ledger: every figure above is a price or quota that moves, and I had no call left to run the append tool's own verification fetch.
