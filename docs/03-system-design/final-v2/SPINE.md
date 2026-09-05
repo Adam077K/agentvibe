@@ -19,8 +19,9 @@ not:        a build plan. Nothing here is built, installed, spent, published or 
 
 ## A · §1-v2 — the decisions table
 
-Fifty-three rows. Rows **v1–v5** are the founder's overrules of FINAL §1. Rows **v6–v53** are places a research
-fact moves a FINAL row, or a place FINAL stands *because* a fact was checked against it. The losing image is kept by
+Sixty-five rows. Rows **v1–v5** are the founder's overrules of FINAL §1. Rows **v6–v53** are places a research
+fact moves a FINAL row, or a place FINAL stands *because* a fact was checked against it. Rows **v54–v65** are the
+founder's answers in the interview of 2026-09-05 (DECISIONS §15), each a decision and not an argument. The losing image is kept by
 name in every row and collected again in §J.
 
 | # | The question | Decided | From | The losing image, kept as |
@@ -78,6 +79,18 @@ name in every row and collected again in §J.
 | **v51** | The curator's five fixed questions | **Admitted as the second legitimate step list**, beside the Sender's checklist, on the evidence FINAL §10.7 cites (0 of 121 free reflections named the cause). v18 now reads "two places" | **NEW:** challenge A P2-20 | one place, with the five questions smuggled in |
 | **v52** | Who writes a card | **The founder's door writes the card** — the read-back form (`bin/intend`, ABSENT) creates the card with its intent id; `bin/run` writes only the session id when a card is dragged | **NEW:** challenge A P2-21. **Mechanism:** `bin/check-stores` fails a card store row with no creating writer | a card with no writer |
 | **v53** | How an eighth page is admitted | **Through a door, like a tool.** A new mission-control page is proposed against an intent, declares what it reads (the logbook and nothing else unless the door admits more), what each tap launches, and its licence read from the file; the same §9.3 door, with "every element is a fact or a tap" as its extra test | **NEW:** challenge A opinion O-1 — the founder said *"and a lot more cool and important things"* and the plan built a door for tools and none for surfaces. **Mechanism:** `bin/door` accepts `kind: page` (ABSENT) | seven pages as a ceiling |
+| **v54** | The roster's first wave | **Eight agents first — the Operator, builder, reviewer, architect, tester, guard, scout, designer — the ones with a seed file or a code path today. The six business agents (product, analyst, writer, growth, steward, curator) and the challenger come online when a venture needs them.** All fifteen files stay in the inventory; §19 draws two waves | **FOUNDER** (interview 2026-09-05, DECISIONS §15): *"Start with the eight that have seeds or code paths"*. **The cost, once:** wave one has no `challenger`, so a plan about to bind is attacked by `guard`'s adversarial review and the founder's own read until wave two; and wave one has no `product`, so done-tests are written by the founder through the read-back | fifteen files on day one |
+| **v55** | Standing jobs — the company working on a cadence or an event | **A standing intent: an intent that never expires, carrying `every:` (a cadence) or `on:` (an inbound event class), dispatched by the Watch's tick to the agent its kind routes to; outputs stage, never send.** Customer support → steward from inbound rows · leads → growth · research and competitor watch → scout · security → guard · data analysis → analyst. **No new agents** | **FOUNDER**: *"agents like: customer support, marketing agents: leads, research, security, competitors, data analysis and more that can run every set time or event … to build the company like working"*; chose *"Standing intents with a cadence or trigger, run by the Watch"*. **Mechanism:** the intent schema gains two optional fields; `bin/watch` reads them (ABSENT); `bin/check-stores` refuses `every:` without a ceiling per run (ABSENT) | per-agent cron in each agent file; a schedules page; a scheduler beside the Watch |
+| **v56** | Work when the Mac is off | **A cloud lane: OpenAI Codex cloud tasks, researched this session (research/cloud.md, PENDING at the time of this row).** FINAL's *"everything runs on the Mac"* gets one stated exception. **NEW (orchestrator's mechanism, reopenable):** anything a hosted lane writes lands as a pull request or a staged artifact the Mac reconciles on wake — never into the house directly | **FOUNDER**: *"When my Mac is not on … you can use codex or Gemini … But still keep it open"* → *"Yes — a cloud lane for when the Mac is off"*, research on **Codex cloud tasks** only. The terms row (§I 1) **stays open** by the founder's word | the Mac as the only runtime; Routines refused wholesale |
+| **v57** | Fable's position | **`claude-fable-5-1` is the default model of `builder` and `architect`.** v21's escalation rule is the losing image. Reachability on the subscription seat is still one measurement, UNVERIFIED; until it passes, the fallback is `claude-opus-5` | **FOUNDER** (overrules v21): *"Fable as builder's and architect's default"*. **The cost, once:** the two heaviest producers on the top tier burn the window fastest — offset by cache reads at 0.025x on a cache-dominated workload (§G.3) — and `scripts/prompt-standard.test.mjs` must admit `claude-fable-5-1` in the same change that writes the first agent file | Fable as an escalation only; Fable as nobody's default |
+| **v58** | The small fast model | **`ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5`, set now**, so `/goal`'s evaluator and the auto-mode classifier stop depending on Haiku 4.5 before its 2026-10-15 retirement | **FOUNDER**: *"Set ANTHROPIC_DEFAULT_HAIKU_MODEL to Sonnet 5 now"*. **The cost, once:** every goal check costs Sonnet, not Haiku. **Mechanism:** the env var in the launcher's environment (`bin/run`, ABSENT) and in the managed file's `env` if it carries one | vendor defaults with an expiry row; a local model (unsupported) |
+| **v59** | Agent teams | **On (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), and a teammate runs on its own agent file's model** — no Sonnet constraint | **FOUNDER**: *"Turn it on, no model constraint"*. **The cost, once:** the vendor's *"approximately 7x more tokens … in plan mode"* now applies at Opus and Fable prices for five of the fourteen; §G.1's teammate row is struck | Sonnet teammates; teams off, subagent trees only |
+| **v60** | What a card launches | **The card carries a `solo \| team` toggle, defaulted from the intent's kind** — source code defaults to the solo chain (architect → tester → builder → reviewer); anything cross-department defaults to a team led by the Operator | **FOUNDER**: *"Both: the card carries a 'solo or team' toggle"*. **Mechanism:** one field on the card store; `bin/run` reads it (ABSENT) | a card always launches a team; a card always launches one agent |
+| **v61** | Page 6's place in the build order | **Last of the seven pages.** One research lane on repository-to-graph tooling before the extractor is written | **FOUNDER**: *"Build it, but last in the page order"* | page 6 beside page 2; a 2D graph first |
+| **v62** | The room's renderer | **Decided after research/room.md returns (PENDING at the time of this row): the founder named three candidates — pixel-agents, Star-Office-UI, AgentOffice — none in any prior lane.** Generative Agents `demo` and AI Town stay as fallbacks with their licences already read | **FOUNDER**: *"use pixel-agents code or Star-Office-UI or AgentOffice"* | Generative Agents demo mode as rank 1 by default |
+| **v63** | Disclosure and the legal entity | **Every outward artifact carries a disclosure line unless the venture's charter turns it off; the legal entity and jurisdiction are a charter field answered at intake** | **FOUNDER**: *"Disclose by default; entity per venture decided at intake"*. **Mechanism:** the Sender's checklist reads the disclosure flag (ABSENT); `bin/check-stores` refuses a charter without the entity field (ABSENT) | no default disclosure; both deferred |
+| **v64** | The first venture | **The harness itself.** Intents are the build order; anchors are `npm run check` and the probe | **FOUNDER**: *"The harness itself"*. **The cost, once, and LONG-TERM.md's standing note applies:** the machine tests itself again; no customer-facing work has ever run through it | adopting an existing project; a greenfield charter |
+| **v65** | The second human | **The founder only, for now.** Statutory clocks wake the founder; revisit when a venture has a legal entity | **FOUNDER**: *"Me only, for now"* | a named accountant or lawyer as a wake-me target |
 
 **Carried forward from FINAL §1, unchanged, by number:** rows **1, 2, 3, 4, 5, 7, 9, 14, 16, 17, 18, 20, 21, 22,
 23, 24, 25, 26, 27, 28, 29**. Rows **11, 12, 13, 19** are carried forward *and* moved, by v24/v25, v28, v34 and
@@ -502,28 +515,28 @@ carried by `--restricted` plus an explicit `--tools` list, which does not touch 
 
 ## I · Open decisions, with both sides
 
-| # | Decision | One side | The other | Whose |
-|---|---|---|---|---|
-| 1 | **The terms** — automated access on a subscription | the vendor ships and documents the unattended features; the subscription is paid for | the clause names an API key as the carve-out; the downside of being wrong is the account, which takes the company. **OpenAI's terms are unread (403), Google's unfetched** | the founder, after one reading |
-| 2 | **Is Fable 5.1 reachable on the subscription seat** | it is in the API catalogue and `fable` is a valid frontmatter value | no plan table names it; the repo's own lint does not carry `claude-fable-5-1` | one measurement, then the founder |
-| 3 | **Haiku 4.5 retires from 2026-10-15** | nothing of ours defaults to it | `/goal`'s evaluator and the classifier do, by vendor default | the founder, on a dated review |
-| 4 | **`LICENSE-CONTENT` in the skills upstream** | one fetch clears it and unlocks 2,111 skills | until read, no bulk import; MIT covers the code, not necessarily the content | one fetch, then a decision |
-| 5 | **Install Codex and run the headless rehearsal** | day one is the founder's instruction; three families is the strongest vendor independence | #19945 is open with no maintainer reply; the rehearsal may fail | the founder, then the measurement |
-| 6 | **Authenticate `gemini`** | a second family at zero marginal cost; 60 rpm / 1,000 rpd free | it has sat unauthenticated since it was installed | the founder, one terminal act |
-| 7 | **Turn on agent teams** (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) | it is the substrate for mission control page 2, and it ships | experimental, off by default, no nested teams, ~7x tokens in plan mode | the founder |
-| 8 | **The managed settings file** | the only tier a running process cannot clear | a founder act on a machine-wide file, and v11's hook trade rides on it | the founder, then the probe |
-| 9 | **Does a card launch a team** | it is the founder's page 4, verbatim | **no prior art anywhere**; every board-to-session project maps one task to one agent | decided by the founder; built by us either way |
-| 10 | **The 3D graph extractor** — build it, since nothing found reads a repository into a graph | the renderer is MIT and free | the extractor is entirely ours and the least-researched area | the founder, on appetite |
-| 11 | **The second human** on statutory obligations | cheap now, impossible in the moment it is needed | a trust and credential decision | the founder |
-| 12 | **Which room** — Generative Agents `demo` (Apache 2.0, cold) or AI Town (MIT, alive, needs Convex) | the cheapest read-only display | a living project if the founder wants it maintained | the founder |
-| 13 | **The first venture** and its rung-1 anchor | adoption is the intake this founder uses most | the harness is the only venture whose anchors already exist | the founder |
-| 14 | **Fourteen agents is inside an unoccupied band** | the founder's decision, taken with the evidence | running rosters are 5–6 everywhere it was measured | **decided; reopened only by name** |
+| # | Decision | One side | The other | Whose | **Status after the founder's interview, 2026-09-05** |
+|---|---|---|---|---|---|
+| 1 | **The terms** — automated access on a subscription | the vendor ships and documents the unattended features; the subscription is paid for | the clause names an API key as the carve-out; the downside of being wrong is the account, which takes the company. **OpenAI's terms are unread (403), Google's unfetched** | the founder, after one reading | **OPEN by the founder's word** (interview: *"still keep it open"*); a cloud lane is researched, v56 |
+| 2 | **Is Fable 5.1 reachable on the subscription seat** | it is in the API catalogue and `fable` is a valid frontmatter value | no plan table names it; the repo's own lint does not carry `claude-fable-5-1` | one measurement, then the founder | **DECIDED v57**: builder and architect default; reachability still one measurement |
+| 3 | **Haiku 4.5 retires from 2026-10-15** | nothing of ours defaults to it | `/goal`'s evaluator and the classifier do, by vendor default | the founder, on a dated review | **DECIDED v58**: `ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5` now |
+| 4 | **`LICENSE-CONTENT` in the skills upstream** | one fetch clears it and unlocks 2,111 skills | until read, no bulk import; MIT covers the code, not necessarily the content | one fetch, then a decision | **OPEN**: fetch at build time (founder) |
+| 5 | **Install Codex and run the headless rehearsal** | day one is the founder's instruction; three families is the strongest vendor independence | #19945 is open with no maintainer reply; the rehearsal may fail | the founder, then the measurement | **AT BUILD**: *"I will install it when the building starts"* |
+| 6 | **Authenticate `gemini`** | a second family at zero marginal cost; 60 rpm / 1,000 rpd free | it has sat unauthenticated since it was installed | the founder, one terminal act | **DECIDED**: personal Google account |
+| 7 | **Turn on agent teams** (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) | it is the substrate for mission control page 2, and it ships | experimental, off by default, no nested teams, ~7x tokens in plan mode | the founder | **DECIDED v59**: on, no model constraint |
+| 8 | **The managed settings file** | the only tier a running process cannot clear | a founder act on a machine-wide file, and v11's hook trade rides on it | the founder, then the probe | **DECIDED**: the founder writes it when building starts |
+| 9 | **Does a card launch a team** | it is the founder's page 4, verbatim | **no prior art anywhere**; every board-to-session project maps one task to one agent | decided by the founder; built by us either way | **DECIDED v60**: a solo/team toggle on the card |
+| 10 | **The 3D graph extractor** — build it, since nothing found reads a repository into a graph | the renderer is MIT and free | the extractor is entirely ours and the least-researched area | the founder, on appetite | **DECIDED v61**: built last |
+| 11 | **The second human** on statutory obligations | cheap now, impossible in the moment it is needed | a trust and credential decision | the founder | **DECIDED v65**: the founder only, for now |
+| 12 | **Which room** — Generative Agents `demo` (Apache 2.0, cold) or AI Town (MIT, alive, needs Convex) | the cheapest read-only display | a living project if the founder wants it maintained | the founder | **PENDING v62**: three founder-named candidates under research |
+| 13 | **The first venture** and its rung-1 anchor | adoption is the intake this founder uses most | the harness is the only venture whose anchors already exist | the founder | **DECIDED v64**: the harness itself |
+| 14 | **Fourteen agents is inside an unoccupied band** | the founder's decision, taken with the evidence | running rosters are 5–6 everywhere it was measured | **decided; reopened only by name** | **DECIDED v54**: two waves, eight first |
 
 ---
 
 ## J · Losing-images ledger — additions
 
-Kept by name so each can be argued for later. Five are the founder's overrules; the rest are moved by research, and 25–30 by the orchestrator's build-round decisions (DECISIONS.md §8–§10).
+Kept by name so each can be argued for later. Five are the founder's overrules; the rest are moved by research, 25–30 by the orchestrator's build-round decisions (DECISIONS.md §8–§10), 31–42 by the review round, and 43–54 by the founder's interview (DECISIONS §15).
 
 1. **Three shapes — maker · scout · checker — with loadouts per run** (FINAL row 6 → v1).
 2. **Labels, not names; no registry of personalities; a run labelled by what it makes and which window it
@@ -556,6 +569,19 @@ Kept by name so each can be argued for later. Five are the founder's overrules; 
 28. **The website hosted as a published artifact; a cloud host reaching into the Mac** (→ v39).
 29. **One `maxTurns` for every agent; no cap** (→ v40).
 30. **A worktree for every agent; no isolation for the four that edit source** (→ v41).
+31–42. **See parts/22-losing-images.md §22.2** — the review round's twelve (v42–v53).
+43. **Fifteen agent files on day one** (→ v54; two waves).
+44. **Per-agent cron; a schedules page; a second scheduler beside the Watch** (→ v55; standing intents).
+45. **The Mac as the only runtime; Routines refused wholesale** (→ v56; a cloud lane when the Mac is off).
+46. **Fable as an escalation only** (→ v57; v21 is the losing image now).
+47. **Haiku left as the vendor's small fast model until it retires** (→ v58).
+48. **Sonnet teammates** (→ v59; each teammate on its own file's model).
+49. **A card that always launches a team; a card that always launches one agent** (→ v60; a toggle).
+50. **Page 6 beside page 2** (→ v61; last).
+51. **Generative Agents demo mode as rank 1 by default** (→ v62; pending the founder's three candidates).
+52. **No default disclosure** (→ v63).
+53. **Adopting an existing project as the first venture** (→ v64; the harness).
+54. **A named accountant or lawyer as a wake-me target** (→ v65; the founder only).
 
 ---
 
