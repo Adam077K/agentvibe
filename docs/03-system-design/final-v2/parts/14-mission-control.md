@@ -1,6 +1,6 @@
 ## 14 · Mission control — seven pages, one state, and every tap opens a terminal on the Mac
 
-*obeys: §D entire, v4, v14, v15, v16 · inherits: FINAL §13 — the Floor and the Balcony are absorbed, not deleted*
+*obeys: §D entire, v4, v14, v15, v16, **v62** (the room's renderer, §14.4) · inherits: FINAL §13 — the Floor and the Balcony are absorbed, not deleted*
 
 ---
 
@@ -27,11 +27,22 @@ FINAL §13.2's rule — **every element is either a fact or a tap, and nothing i
 and is extended by v14 to the dashboard the founder asked for. There is still **one state and no second source of
 truth**, and no page has anything another page cannot reach.
 
-**(NEW: the cost of v4, stated once and not re-litigated.)** surfaces.md's §4A.11 finding stands unrefuted: *no
-Claude Code fleet surface is spatial*, and **(FINAL §13.8, from round-5 `surfaces.md` §4A.11)** every spatial
-project is a display and every control surface is a table.
-Building a surface that is both is therefore work nobody has published, and the office page is the one most likely to
-become a beautiful display. §14.9 keeps FINAL's guard rails on it for exactly that reason.
+**(NEW: the cost of v4 was stated once as unpublished work, and half of it is now discharged — research/room.md
+part 5 OVERTURNS the finding this paragraph rested on.)** This paragraph read *"surfaces.md's §4A.11 finding stands
+unrefuted: no Claude Code fleet surface is spatial"*, carrying **(FINAL §13.8, from round-5 `surfaces.md`
+§4A.11)** *every spatial project is a display and every control surface is a table*. **That is no longer the state of
+the world.** Three projects watch Claude Code and were all pushed on 2026-09-05: **pixel-agents** (MIT, LICENSE read
+from the file, 9,190 stars), **clawd-on-desk** (AGPL-3.0, refused for the copyleft) and **pixtuoid** (MIT, Rust,
+terminal). And pixel-agents is **a control, not only a display** — a click on an agent already opens its terminal in
+the VS Code surface (open issue #251, 2026-04-25; H that a click-to-terminal binding exists there, M on its exact
+behaviour). The room lane reached that conclusion without opening SPINE, from a grep of `surfaces.md` that returned
+§4A.11 as the single line on the subject. So the office page is **not** work nobody has published; what is genuinely
+ours narrows to the writer and the browser-side terminal, both named in §14.4. FINAL §13.8 is kept by name as the
+losing image (§J.51 keeps the room's).
+
+**(FINAL, unchanged by that discharge, and this is the half that must not relax.)** The office page is still the one
+most likely to become a beautiful display, and **§14.4 keeps FINAL's guard rails on it for exactly that reason** —
+being able to buy the room does not make it safe to point a decision at it.
 
 **(NEW: v39 — what hosts the website, and it follows from the founder's own sentence rather than from a preference.)**
 Mission control is **served on the Mac by `mission-control/`** — the Bun and Hono server and React client that exist
@@ -109,12 +120,12 @@ to.
 
 | # | Page | What each tap launches | Substrate | State |
 |---|---|---|---|---|
-| 1 | The office | tap an avatar → that agent's terminal | Generative Agents `demo` mode, Apache 2.0 — **candidate, not decided: §20 row 12 is open** | ABSENT; enters through the tool door |
+| 1 | The office | tap an avatar → that agent's terminal | **pixel-agents** (MIT, LICENSE read from the file, pushed 2026-09-05) — **decided v62**; §I row 12 is closed | ABSENT; enters through the tool door |
 | 2 | Agents / child flows | tap → attach to its tmux session or background session; message → write its inbox file | Claude Code **agent teams** | **substrate ships**; page ABSENT |
 | 3 | Cost · tokens · efficiency | a cost row → its run · a window row → retempo · an anomaly → the cord | the event log joined to §16's price table | ABSENT; `~/.agentvibe/events.jsonl` is the spine |
-| 4 | Tasks · tickets · PRs | **drag a card into "working on it" → launches a session with a team of agents and hands it the task** | ours; prior art OpenAI Symphony | ABSENT; **the team part has no prior art anywhere** |
+| 4 | Tasks · tickets · PRs | **drag a card into "working on it" → launches a session and hands it the task; the card's `solo \| team` toggle decides which shape** (v60) | ours; prior art OpenAI Symphony | ABSENT; **the team part has no prior art anywhere** |
 | 5 | Engines · how it works | tap a gate → its last ten resolutions; tap a store → its schema and its one writer | the same state as every other page | ABSENT |
-| 6 | 3D file graph | tap a node → open it on the Floor | `3d-force-graph` (MIT [`api`: GitHub SPDX detection, LICENSE not read]) renders; **the extractor is ours** | ABSENT; thinnest researched area |
+| 6 | 3D file graph | tap a node → open it on the Floor | `3d-force-graph` (MIT [`api`: GitHub SPDX detection, LICENSE not read]) renders; **the extractor is ours** | ABSENT; thinnest researched area; **built LAST of the seven** (v61), after one research lane on repo-to-graph tooling |
 | 7 | Canvas / playground | add a session: worktree, project, provider, model, task, agent → launch, then attach | Langflow (MIT [`api`: GitHub SPDX detection, LICENSE not read]) as the canvas idiom | ABSENT |
 
 ---
@@ -130,21 +141,71 @@ doing."*
 
 **What each tap launches.** Tap an avatar → **that agent's terminal on the Mac** (§14.11).
 
-**Substrate, with licence and liveness.** **(FINAL §13.8, inherited whole.)** Rank 1 for admission — a **candidate**, while §20 row 12 leaves the substrate open — is **Generative
-Agents' `demo` mode (Apache 2.0)**: a top-down town that renders from **one JSON file, four fields per agent per step**
-— a tile, an emoji, a sentence, a nullable chat — with **no model and no backend**, assets included. Every live run is
-a light, and the sentence's four-level location path maps onto **venture → intent → run → artifact with no schema
-change**. The whole bill is porting about forty lines of routing off a dead Django. Rank 2: **AI Town (MIT, alive)**,
-which needs Convex. Refused: **WorkAdventure** (AGPL with the Commons Clause; no RPC places an avatar), **ChatDev**
-(the office is gone). Which one is §I row 12, and it is the founder's.
+**Substrate, decided.** **(FOUNDER, DECISIONS §15: *"use pixel-agents code or Star-Office-UI or AgentOffice"* — and
+the *or* hands the pick to evidence. Decided v62 on research/room.md, which read all three LICENSE files from the file
+rather than from GitHub's detection.)** The substrate is **pixel-agents**,
+<https://github.com/pixel-agents-hq/pixel-agents> — **MIT**, the LICENSE opening *"MIT License"* / *"Copyright (c)
+2026 Pablo De Lucca"*; pushed **2026-09-05**, the day it was read; 9,190 stars, 1,488 forks, 87 open issues;
+TypeScript with React 19, Canvas 2D. §I row 12 is closed by it.
+
+**Why it, in facts rather than preference.** It **already reads Claude Code**, by two paths and no others: hook
+events, verbatim *"a hook script receives Claude events such as `SessionStart`, `PreToolUse`, `PermissionRequest`, and
+`Stop`"*, and a transcript fallback, *"the runtime infers agent status by scanning Claude's JSONL session transcripts
+under `~/.claude/projects/`"*. Both normalise into a shared **`AgentEvent`** model. It **renders without a model** —
+it visualises Claude Code's activity and calls no model API of its own — which is what keeps the office a display of
+real runs rather than a thing that invents them. And it is already a control in one surface: a click on an agent
+opens that agent's terminal in **VS Code** (open issue #251). Its scope is stated by its own README: *"Claude Code is
+the reference implementation today; Codex, Gemini, Cursor, and others are on the roadmap."*
+
+**Where it runs, and it is the same answer as everything else.** A **Fastify server is required** for both the VS Code
+extension and the standalone CLI, and *"the CLI chooses a free local port and prints the URL"*. That server runs **on
+this Mac, beside `mission-control/`** (v39, §15.1) — which is what a terminal pop needs anyway.
+
+**What is ours, and it is two things.** First, **the writer from the event log into its `AgentEvent` model** (ABSENT).
+**The `AgentEvent` schema is UNVERIFIED** — the lane read the README, not the type in source, so the writer's target
+shape is a README-level claim and one file read closes it. Second, **the browser-side terminal pop**: upstream has it
+only as **open PR #347**, *"feat(terminal): standalone embedded terminal — launch and drive agents from the browser"*,
+**open and not merged**, so a browser-embedded terminal **is not shipped** and §14.11's mechanism cannot assume it.
+
+**Refused, each with the reason that refused it.** **Star-Office-UI** (ringhyacinth/Star-Office-UI, 7,466 stars): the
+LICENSE is a **dual** one — MIT for code and logic, and the **art assets are restricted, the README stating
+*禁止商用***, commercial use prohibited, education and demo only — which is the sprites, that is, the thing one
+would take. It is also **≈ 6 months stale** (pushed 2026-03-11), built for **OpenClaw** with no documented Claude Code
+or Codex integration, and **has no terminal and no chat**: clicking a character surfaces status, so it is a status
+dashboard. **"AgentOffice"**: the name does not resolve — it names **eleven candidate repositories**, none of them an
+office-room renderer over live agent sessions, and the likeliest on the hyphenated reading
+(harishkotra/agent-office, MIT, 250 stars) **requires an LLM to render**, Ollama by default. That is decisive rather
+than incidental: it is **a simulation the model drives** — *"LLM returns: { thought, action, target, toolCall }"* —
+which **reads no Claude Code JSONL and no agent-runtime log at all**, and so fails the one rule this page has, that
+the room displays real runs.
+
+**(NEW: the founder can settle the name in one sentence.)** *"AgentOffice"* was never disambiguated, and the lane
+ranked candidates by fit and adoption because that was all it could do. **If the founder names where they saw it,
+that source settles it faster than any search** — and it is the only way v62's refusal of the name gets reopened.
+
+**Fallbacks, kept because they were already licence-read and cost nothing to keep.** **Generative Agents' `demo` mode
+(Apache 2.0)** — a top-down town rendering from one JSON file, four fields per agent per step, no model and no
+backend, whose four-level location path maps onto **venture → intent → run → artifact with no schema change**; and
+**AI Town (MIT, alive)**, which needs Convex. Still refused from that round: **WorkAdventure** (AGPL with the Commons
+Clause; no RPC places an avatar) and **ChatDev** (the office is gone). *(FINAL §13.8 ranked Generative Agents first,
+and that ranking is the losing image — §J.51.)*
 
 **State.** **ABSENT.** It enters through the tool door like a scraper — its LICENSE read, its input declared (it reads
 the event feed and nothing else), its exposure read-only, a caller in the same change, a test that fails without it,
 an exit note. Because it reads and never writes, the door's first three tests are met trivially.
 
-**What is genuinely new.** Nothing in the renderer. What is ours is **the JSON writer over the event log** (ABSENT),
-and the fact that in this plan an avatar is **a tap** rather than a picture — which is the half FINAL refused and v4
-overruled.
+**(NEW: v62 makes that input declaration a narrower promise than it was, and the narrowing has to be written down or
+it is not one.)** pixel-agents can read `~/.claude/projects/` transcripts directly, and it binds a click to a
+terminal. **What is declared at the door here is the event feed and nothing else** — the transcript path is not the
+one used — and the terminal pop is §14.11's mechanism rather than the renderer's. *Reads and never writes* therefore
+stays true of the substrate **as admitted**, which is not the same as true of the project. If either changes, the
+door is re-run; that is the whole point of declaring the input rather than describing it.
+
+**What is genuinely new.** Nothing in the renderer. What is ours is **the writer from the event log into the
+`AgentEvent` model** (ABSENT, schema UNVERIFIED), **the browser-side terminal pop** that upstream has only as open PR
+#347, and the fact that in this plan an avatar is **a tap** rather than a picture — which is the half FINAL refused
+and v4 overruled. Under v62 that last half is **no longer unpublished work**: pixel-agents already binds a click to a
+terminal in VS Code, so what remains is moving that binding to the browser, not inventing it (§14.1).
 
 **(FINAL, and these guard rails survive the overrule unchanged.)** No notifications, no badges, no unread count, no
 obligations; never on the phone; never where a decision is made; nothing reads whether you watched it. *Entertainment
@@ -185,12 +246,13 @@ such as session IDs and tmux pane IDs, so don't edit it by hand or pre-author it
 next state update."* So **`config.json` is a read source and never a write target.** **Mechanism:** `bin/probe` (ABSENT) asserts the page's writable paths and fails if `config.json` is among them. The inbox file is the write
 target, and it is the only one.
 
-**Substrate constraints that shape the page, all documented, all H** (v13): agent teams are **experimental and off by
-default** (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, §I row 7); *"No nested teams: teammates cannot spawn their own
-teammates"*; *"One team per session"*; `/resume` does not restore in-process teammates; spawning requires an
-interactive session, so **`-p` never forms a team**. Tokens: *"Agent teams use approximately 7x more tokens than
-standard sessions when teammates run in plan mode"*, and the vendor's own advice is *"Use Sonnet for teammates"*
-(§G.1).
+**Substrate constraints that shape the page, all documented, all H** (v13): agent teams are **experimental**, off by
+default in the vendor's shipping configuration and **turned on here by the founder** (v59:
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`); *"No nested teams: teammates cannot spawn their own teammates"*; *"One
+team per session"*; `/resume` does not restore in-process teammates; spawning requires an interactive session, so
+**`-p` never forms a team**. Tokens: *"Agent teams use approximately 7x more tokens than standard sessions when
+teammates run in plan mode"* — and since v59 that lands at **each teammate's own file's model**, with no Sonnet
+floor, which §9.2 states the cost of once.
 
 **So the child-flow tree the founder asked for is two mechanisms, not one** (v13): **one level of named teammates**
 from agent teams, and **the deeper tree from subagents** — depth 3, 20 concurrent, `Workflow` removed from all of
@@ -273,11 +335,23 @@ flowchart TD
     CHK -->|"all three clear"| INTENT["The card resolves to an INTENT with a done-test.<br/>No done-test, no dispatch — the store check refuses it (§C.3)."]
     INTENT --> BRIEF["The Operator writes a brief with an intent id.<br/>It does NOT compose argv (v34)."]
     BRIEF --> RUN["bin/run composes the argv:<br/>--session-id &lt;uuid we mint&gt; · --restricted · --tools …<br/>· --add-dir &lt;worktree&gt; · the band's permission mode (§12.3)"]
-    RUN --> TEAM["A lead plus named teammates —<br/>each a full session, Sonnet by default (§G.1)"]
+    RUN --> TOG{"THE CARD'S solo | team TOGGLE, v60.<br/>Defaulted from the intent's kind;<br/>the founder can flip it before dragging"}
+    TOG -->|"team"| TEAM["A lead plus named teammates —<br/>each a full session, on ITS OWN FILE'S MODEL (v59)"]
+    TOG -->|"solo"| SOLO["The solo chain, one artifact at a time:<br/>architect → tester → builder → reviewer (v6)"]
     TEAM --> TMUX["A tmux session per agent.<br/>Its pane id lands in ~/.claude/teams/&lt;team&gt;/config.json"]
+    SOLO --> TMUX
     TMUX --> POP["The card now taps through to a live terminal<br/>on the Mac (§14.11)"]
     POP --> BACK["Card state moves on the ANCHOR, never on a report:<br/>the done-test passed, the PR opened, the check ran (§11)"]
 ```
+
+**(FOUNDER, v60: the card carries the toggle, so the board decides the shape and the Operator does not guess.)**
+Asked whether a card launches a team or one agent, the founder chose **both**: *"Both: the card carries a 'solo or
+team' toggle."* The card has a `solo | team` field, **defaulted from the intent's kind** — source-code work defaults
+to **solo**, which is the chain architect → tester → builder → reviewer and is what v6 requires for one artifact;
+anything cross-department defaults to **team**, led by the Operator. The default is only a default and the toggle is
+visible on the card, so flipping it is one tap before the drag rather than a conversation afterwards. **Mechanism:**
+one field on the card store; `bin/run` (**ABSENT**) reads it and picks the dispatch mechanism from it, which keeps
+v34 true — the board still composes no argv. §3.5 carries the three mechanisms it chooses between.
 
 **Substrate, and what the world actually ships.** **(NEW: v16 replaces FINAL's reference project, because both ends
 moved.)** **OpenAI Symphony** — Apache-2.0 [`api`: GitHub SPDX detection, LICENSE not read], Elixir, created 2026-02-26, **last push 2026-08-19**, 27,042 stars, not
@@ -293,11 +367,15 @@ server."*
 not assignee** — *"so humans maintain ownership while agents act on their behalf"* — and a session is created
 automatically when an agent is mentioned or delegated an issue. From **GitHub Copilot's coding agent**, the hard caps
 that make a card bounded: *"Copilot can only work on one branch at a time and can open exactly one pull request"*, and
-a maximum execution time.
+a maximum execution time. **And one field that is ours, from v60: `solo | team`**, defaulted from the intent's kind
+and settable by the founder — the field the drag above reads. It sits beside the intent id and the creating writer
+(v52) as the three things a card must carry before it can launch anything.
 
-**What is genuinely new, and it is named as new because nobody has built it** (v16, §I row 9): **nothing found gives a
-card a *team*.** Every board-to-session project surveyed maps **one task to one agent**. The founder asked for a team,
-and that part is ours to build with no reference implementation to read.
+**What is genuinely new, and it is named as new because nobody has built it** (v16; §20 row 9, **decided as v60**):
+**nothing found gives a card a *team*.** Every board-to-session project surveyed maps **one task to one agent**. The
+founder asked for a team, and that part is ours to build with no reference implementation to read. **The toggle does
+not soften that:** `solo` is the shape the world has shipped and `team` is the shape nobody has, so half of this
+page's dispatch has prior art and half does not, and the half that does not is the half the founder asked for.
 
 **(NEW: and one field nobody ships that this board needs anyway.)** cognition.md searched for it: *no system reached
 carries an explicit definition-of-ready gate, a blocked-reason enum, a dependency field consumed by the agent, or
@@ -356,10 +434,19 @@ tree from a VCS log — a replay of history, not a live wired brain.
 
 **What is genuinely new.** **The extractor is entirely ours.** surfaces.md's gap 3 is explicit: *"No maintained
 repo→3D-graph project was verified"*, and this is **the thinnest of the five sub-questions researched**. One unnamed
-"3D IDE for Obsidian" that renders a vault as a code city could not be resolved to a repository. §I row 10 puts the
-appetite question to the founder for that reason.
+"3D IDE for Obsidian" that renders a vault as a code city could not be resolved to a repository. That is why the
+appetite question went to the founder, as §20 row 10.
 
-**State.** **ABSENT**, and honestly the least-evidenced page in this section.
+**(FOUNDER, v61: build it, and build it last of the seven.)** *"Build it, but last in the page order."* So page 6 is
+**the seventh page written**, after pages 1, 2, 3, 4, 5 and 7 — the order is by dependency and evidence, not by page
+number. Two things follow and both are the point of putting it last. **The renderer is decided and the extractor is
+not**, so the page that needs original work waits for the six that do not; and **one research lane on
+repository-to-graph tooling runs before the extractor is written**, so the thinnest-evidenced area gets its evidence
+before anyone builds against it rather than after. §19 draws the dependency: page 6 is the only page that waits on
+all the others.
+
+**State.** **ABSENT**, and honestly the least-evidenced page in this section — **built last by the founder's
+decision** (v61).
 
 ---
 

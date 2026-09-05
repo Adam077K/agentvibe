@@ -1,6 +1,7 @@
 ## 18 · What exists today, and its fate
 
-*obeys: v1 (the eighteen agent files become fifteen, not three), v3, v4, v6, v13, v25, v26, v35 · inherits: FINAL §17*
+*obeys: v1 (the eighteen agent files become fifteen, not three), v3, v4, v6, v13, v25, v26, v35, **v62** (18.5's
+room substrate and the finding it overturns) · inherits: FINAL §17*
 
 **(NEW: three of FINAL §17's rows are re-decided, and one of them inverts)** FINAL wrote this table against three
 shapes, a holding directory and one Balcony. v1 replaces the shapes with fifteen named files, v3 replaces the holding
@@ -91,6 +92,23 @@ job than it had.
 on the Mac**, because a terminal pop needs `tmux` on the same machine. The published artifact pages survive beside it
 as the phone's read-and-decide surface, and they cannot pop a terminal. **Two renderers over one state — which FINAL
 §13.1 refused — accepted once, for that reason**, and both read the same logbook.
+
+**(NEW, v62: a second server joins it on the Mac, and it is not ours.)** Page 1's substrate is **pixel-agents** (MIT,
+LICENSE read from the file), and it **requires a Fastify server** for both its VS Code extension and its standalone
+CLI — *"the CLI chooses a free local port and prints the URL"*. That process **runs beside `mission-control/` on this
+Mac**, not inside it: `mission-control/` keeps serving the seven pages, and the room renders within page 1 against a
+writer that is ours (§14.4, ABSENT, `AgentEvent` schema UNVERIFIED). Two processes, still one state — neither holds
+anything the logbook does not.
+
+**(NEW: the FINAL finding this section inherited is OVERTURNED, and it is recorded here because a fate table is where
+an inherited belief goes unexamined.)** FINAL §13.8, from round-5 `surfaces.md` §4A.11, held that **no Claude Code
+fleet surface is spatial** — every spatial project a display, every control surface a table — and that was the
+argument for `mission-control/` being a table and the room being someone else's problem. **research/room.md part 5
+refutes it**: pixel-agents (9,190 stars), **clawd-on-desk** (AGPL-3.0, refused for the copyleft) and **pixtuoid**
+(MIT, Rust, terminal) all watch Claude Code, and all three were pushed on 2026-09-05. pixel-agents already binds a
+click to an agent's terminal in VS Code (open issue #251). **The fate of `mission-control/` does not change** — it is
+still RENAMED and still the host — but the reason FINAL gave for keeping the room out of it is gone, and §14.1 is
+where that is argued. FINAL §13.8 is kept by name as a losing image (§J.51).
 
 | Of the 60 files | Measured on this branch | Fate | In v2 it is |
 |---|---|---|---|

@@ -1,6 +1,7 @@
 ## 10 · Codex and Claude Code, from day one
 
-*obeys: v5, v11, v12, v32 (SPINE §H entire); inherits: FINAL §1 row 30 as the losing image, §16.7, §14.6*
+*obeys: v5, v11, v12, v32 (SPINE §H entire), **v56** (the cloud lane, 10.2a); inherits: FINAL §1 row 30 as the losing
+image, §16.7, §14.6*
 
 **(FOUNDER, overruling FINAL §1 row 30.)** *"I run from day one of the system to include codex and Claude code in
 the system. So we will need to understand how we are doing it. If you're walking straight from codex, or straight
@@ -64,6 +65,12 @@ while inheriting the parent shell's TTY** — the second documented workaround, 
 yet.** That is the whole price of admitting it on day one, and it buys a second model family on the one move where
 family independence pays for itself.
 
+**(NEW, from research/cloud.md part 5 item 2: that cost governs the LOCAL `codex exec`, and it does not reach a cloud
+task.)** #19945 is a defect of local `codex exec` with stdio detached from a TTY, so it cannot apply to work running
+in OpenAI's hosted sandbox. Whether a *local dispatcher* hits it while minting a cloud task depends on whether
+`codex cloud exec` shares the local exec code path, and that is **UNKNOWN**. The hosted lane is 10.2a, and it is a
+different lane with a different position.
+
 **openai/codex#19945, read 2026-09-05:** *"codex exec silently crashes with no output when stdio is detached from
 TTY (0.124.0+)"*, opened 2026-04-28, labels `CLI`, `bug`, `exec`. **Open 130 days with no comments and no
 maintainer reply.** Mechanism: *"the process produces no error, no panic message, no log entry — just an empty
@@ -87,6 +94,112 @@ slot. **The test is the plan, not the issue closing** — 130 days of silence is
 
 **(NEW: the prerequisite is a founder act.)** Codex is **not installed** on this machine. Installing it and running
 the rehearsal is section 20 row 5.
+
+---
+
+### 10.2a The cloud lane — Codex off the Mac
+
+**(FOUNDER, one answer of the interview of 2026-09-05, DECISIONS §15.)** *"When my Mac is not on, and then we need
+to use not the regular Claude code or codex in terminal, then you can use codex or Gemini I think they don't bun
+those. But still keep it open"* — clarified in the next round as **"Yes — a cloud lane for when the Mac is off"**, with
+research on **Codex cloud tasks** and nothing else. That is v56, and it gives FINAL's *everything runs on the Mac* its
+one stated exception (§15.1a).
+
+**(NEW: what the lane found, and the position it supports is narrower than the founder's sentence.)** Every fact below
+is from `research/cloud.md`, all URLs accessed 2026-09-05, with the confidence that lane marked — `H` documented and
+quoted, `M` weaker, `L` inference. Nothing here was run.
+
+**What a cloud task is.** Hosted, off this machine, and bound to a saved **environment** rather than to a command.
+*"Run tasks in isolated cloud environments."* — and that sentence is the entire vendor claim about the runtime:
+**no container or sandbox technology is named on the page**, which is itself the finding.
+<https://learn.chatgpt.com/docs/cloud> · H on the quote. Repository access is chosen once, per environment —
+*"Connect GitHub or GitLab"*, and for GitHub you *"choose the repositories Codex can access"* · H. So is setup:
+*"Configure any dependencies, tools, environment variables, or secrets the task needs."* · H — dependencies and
+secrets are environment configuration, never per-task arguments. **How long one may run is documented nowhere the
+lane reached — UNKNOWN**; the page distinguishes *"longer tasks"* as receiving *"dedicated environments"* and states
+no maximum. What it produces is a summary and a diff, with the pull request an optional next step rather than the
+default artifact: *"Review the summary and diff. Ask Codex to make follow-up changes, or open a pull request."* · H.
+Newer pages call these *"cloud chats"* · M.
+
+**The key negative finding, and it is what fixes the position.** **No OpenAI page the lane reached documents an HTTP
+endpoint for creating a cloud task, and none prints a non-interactive CLI invocation for one.** The vendor CLI
+reference describes the entry point as a browser: `codex cloud` lets you *"Browse active and completed chats, submit
+work to a configured environment, and apply the result to your local repository from the terminal."*
+<https://learn.chatgpt.com/docs/codex/cli> · H on the quote, H on the absence across the six pages fetched. A
+non-interactive form does appear — `codex cloud exec --env ENV_ID "..."`, with `list --env ENV_ID --json`, `status`,
+`diff` and `apply` — but **only inside an open feature request**: openai/codex#24777, created 2026-05-27, labels `CLI`
+and `enhancement`, whose own complaint is this problem exactly, that automation *"currently has to open the
+interactive `codex cloud` TUI or web UI, find an environment manually, copy an opaque ID, and paste it into
+scripts."* <https://github.com/openai/codex/issues/24777> · **M, not H** — the author is not a confirmed maintainer,
+no maintainer has replied, and the command list is their assertion about the binary rather than documentation.
+
+**The one human-free path carrying vendor documentation is the pull-request trigger.** Manual: *"In a pull request
+comment, mention `@codex review`. Wait for Codex to react (👀) and post a review."* Automatic, enabled in settings:
+*"Codex will post a review whenever someone opens a new PR for review, without needing an `@codex review` comment"*,
+which needs *"GitHub push or admin permission for its settings."* <https://learn.chatgpt.com/docs/third-party/github>
+· H. **No label trigger is documented** — the lane looked and found none. Slack is the second documented trigger:
+*"Mention `@Codex` and include your prompt."* <https://learn.chatgpt.com/docs/third-party/slack> · H. And one thing
+that looks like this lane and is not: `openai/codex-action@v1` *"installs the Codex CLI, starts the Responses API
+proxy when you provide an API key, and runs `codex exec`"* — that is CI compute on a GitHub runner against an API
+key, **not OpenAI's hosted sandbox** · H. The distinction matters because the two are billed and governed
+differently.
+
+**Plans, quota and network.** Cloud chats are **not on Free or Go**, and the narrowest quote is the one to hold:
+*"You need a Plus, Pro, Business, Enterprise, or Edu plan...a connected GitHub account, and at least one
+environment."* <https://learn.chatgpt.com/docs/third-party/slack> · H. **No numeric cloud quota is published
+anywhere.** The single sentence bearing on it is qualitative: *"Cloud chats on ChatGPT plans use GPT-5.6 Sol and may
+use more of your allowance than local messages."* <https://learn.chatgpt.com/docs/pricing> · M. The numbers that page
+does publish are per five-hour window for **local** messages and do not govern this lane. Network is the sharp fact,
+and it is a default rather than a setting someone chose: *"By default, Codex blocks internet access during the agent
+phase."* <https://learn.chatgpt.com/docs/cloud/internet-access> · H — with three allowlist presets (None · Common
+dependencies · *"All (unrestricted)"*), set per environment, and an option to *"restrict network requests to `GET`,
+`HEAD`, and `OPTIONS`"* · H. The same page names the vendor's own threat model, quoted because it reads as one:
+*"Prompt injection from untrusted web content"*, *"Code or secret exfiltration"*, *"Downloading malware or vulnerable
+dependencies"*, *"Pulling in content with license restrictions"* · H.
+
+**Resume, cancel and poll — where the shape of the evidence matters more than the list.** Three read operations appear
+in the same issue — `codex cloud status TASK_ID`, `codex cloud diff TASK_ID`, and `codex cloud list --env ENV_ID
+--json`, whose `--json` is the flag a driver would need — so polling **appears** possible · M. `codex cloud apply
+TASK_ID` is how a result would reach this Mac · M, corroborated without the command by the CLI page's *"apply the
+result to your local repository from the terminal"* · H. **Blocking wait, log streaming, follow-up messaging and
+structured output are absent**: they are what #24777 asks for, and a feature request is the firmer half of that
+source · M to H. **Cancel is UNKNOWN** — no cancel command appears in either the existing list or the requested one,
+and no vendor page mentions cancelling a cloud task. And `codex exec resume` is **not applicable until shown
+otherwise**: that page is about local non-interactive sessions, the two surfaces use `SESSION_ID` and `TASK_ID`
+throughout, and nothing connects them · M on the negative.
+
+**The terms, and the refusal is the finding.** Every OpenAI policy URL refused the fetch —
+`openai.com/policies/row-terms-of-use`, `.../eu-terms-of-use/` and `.../business-terms/`, all **HTTP 403**, which with
+the prior lane's 403 on `.../terms-of-use` is **four refusals against one host across two dates**. The lane stopped at
+three by its own rule and returned the gap rather than substituting a remembered clause. **The OpenAI half of §I row 1
+is therefore UNKNOWN, and unread is not permissive.** What can be said factually is only this: OpenAI documents and
+ships automation surfaces that run on a subscription rather than a key — the Slack app, the `@codex` mention, and
+automatic review on PR open — and separately documents an API-key path billed at API pricing. **Documented product
+behaviour is not a terms clause**, and reading it as one is exactly the substitution the lane refused · L on any
+inference, H only on the fact that the features are documented. Anthropic's clause is already on file from the
+runtimes lane and was not re-fetched: access *"through automated or non-human means"* is prohibited except via an API
+key or *"where we otherwise explicitly permit it."*
+
+**v56's position, stated once and not re-argued.**
+
+| The lane | Verdict | Why |
+|---|---|---|
+| **Codex cloud as a PR reviewer** | **admitted** | `@codex review` is vendor-documented, needs no local Codex, and runs in OpenAI's sandbox — so it **sidesteps #19945 entirely**, that defect being local `codex exec` with stdio detached from a TTY |
+| **Codex cloud as a maker** | **UNVERIFIED** | the only non-interactive creation path is issue-only (#24777, M). A night maker cannot rest on an unconfirmed assertion about a binary that is **not installed on this Mac** |
+| **Which hosted lane may MAKE** | **the founder's — §I row 15, raised by v56 and open** | Anthropic's is the only fully documented driver today and costs no extra compute; it is also the **same seat as the Floor and the same terms clause as §I row 1**. Codex cloud is the founder's named preference and has no driver yet. Jules is a third family, and its API says of itself *"The Jules API is in an alpha release, which means it is experimental"* |
+
+**The mechanism, orchestrator's and reopenable — and every part of it is ABSENT.**
+
+| Rule | Mechanism | State |
+|---|---|---|
+| A hosted run never writes into the house directly | its output lands as a **pull request or a staged artifact**, which the Mac reconciles **on wake** | **ABSENT** |
+| Minting a cloud task is not a run | `bin/run` gains a `cloud` carrier that **mints a task and records its id, and does nothing else** | **ABSENT** |
+| A night's cloud work is read, not trusted | the Watch reads the pull requests on wake | **ABSENT** |
+
+**(NEW: the cost, stated once and not re-litigated.)** The lane the founder named has **no documented driver today**,
+and the lanes that do have one run on the Claude seat whose terms clause is the open question. Both halves of that
+sentence are why §I row 15 exists rather than a decision. The losing image is kept by name in section 22: *the Mac as
+the only runtime; Routines refused wholesale; Codex cloud as a full night maker on issue-only evidence* (§J.45).
 
 ---
 
@@ -187,7 +300,8 @@ in that lane was measured — no runtime was run.)**
 | Goals | `/goal`, `D`, **headless-capable** | `/goal` 0.128+, `C`, **headless status unknown** |
 | Per-run spend | `--max-budget-usd`; subagent spend counts toward it | included in every ChatGPT plan (FINAL §14.6, providers lane 2026-09-04) |
 | Shared config | `CLAUDE.md`, `SKILL.md`, `.mcp.json`; imports Codex and Gemini config | `AGENTS.md`, `SKILL.md`, `config.toml`, `mcp_servers` |
-| Second checker family | **no** — it cannot check itself | **yes in principle, blocked by #19945** until 10.2's test passes |
+| **Cloud lane** *(NEW, cloud.md parts 2 and 5 — the row this table did not have)* | **documented argv, not a UI.** `claude --cloud "<task>"`, where *"each session runs in an isolated, Anthropic-managed VM"* and *"The cloud VM clones your current directory's GitHub remote at your current branch, not your local checkout"*; follow up from any machine with `claude -p "your message" --cloud <session-id>`; pull the session back with `claude --teleport <session-id>`. **Routines add the thing Codex lacks, a fire endpoint**: `POST https://api.anthropic.com/v1/claude_code/routines/trig_.../fire`. Quota *"shares rate limits with all other Claude and Claude Code usage within your account"* | **a TUI, plus two chat triggers.** `codex cloud` is *"Browse active and completed chats, submit work to a configured environment, and apply the result to your local repository from the terminal"*; the human-free triggers are `@codex review` on a pull request and `@Codex` in Slack. **No endpoint and no printed non-interactive command** — `codex cloud exec` appears only in open issue #24777 (M). Internet off by default *"during the agent phase"*; Plus and above only |
+| Second checker family | **no** — it cannot check itself | **yes, and narrower than "blocked" (cloud.md part 5 item 3).** The `@codex review` route needs no local Codex, so #19945 cannot reach it — it is admitted today (10.2a). What 10.2's test widens is the **local** foreground checker |
 
 **(NEW: one trap worth naming, because it collides with a setting this repository plausibly wants.)** `Monitor` —
 *"Runs a command in the background and feeds each output line back to Claude … Can also open a WebSocket and treat
@@ -202,7 +316,7 @@ each incoming message as an event"* — is *"not available when `DISABLE_TELEMET
 | **Codex CLI** (subscription) | **`reviewer` and `guard` only, on a prepared diff, in the foreground.** Widens to `builder` on mid-to-hard work if 10.2's test passes | its own 5-hour window; the only one publishing numeric quotas | **not installed**; #19945 open |
 | **Gemini CLI** (subscription) | **`scout`**, and the summarising half of `curator` | 60 rpm / 1,000 rpd free on a personal account | installed 0.38.2, **never authenticated** |
 | **Local models** | no agent — moves, not positions: embeddings, classification, dedup, PII detection | electricity | **ABSENT** |
-| **Routines** (cloud) | **refused for the Watch** — cloud-only, no local files | **1-hour minimum interval** (runtimes.md); a daily cap is FINAL §16.7's word for the window and is **unverified** | exists |
+| **Routines** (cloud) | **refused for the Watch** — it cannot reach anything this system stores on the Mac. **Read *no local files* narrowly (cloud.md part 5 item 5):** it is right about the laptop and wrong if read as *no repository* — a routine clones every selected repo per run and pushes `claude/`-prefixed branches | **1-hour minimum, now confirmed verbatim**: *"The minimum interval is one hour; expressions that run more frequently are rejected."* The **daily cap exists and is published as no number** — which supersedes this cell's earlier *unverified*, because what was unverified was the cap's existence and what is unknown is its size | exists; its **API fire endpoint is documented** (10.2a), and it is the documented off-Mac maker path — §I row 15 |
 
 ---
 
@@ -228,6 +342,47 @@ own unknowns spends them later at a worse price.)**
 9. **Third-party routers** (Amp's two-family runtime, OpenCode) were not researched.
 10. **Nothing was measured.** No runtime ran. **Codex remains uninstalled and no install was attempted.**
 
+**(NEW: ten more, and these belong to the cloud lane of 2026-09-05 — `research/cloud.md` part 5b — rather than the
+runtimes lane above. They are numbered on from ten so that neither lane's count is claimed for the other. The lane
+named fifteen; several are folded here where they are the same hole seen from two sides.)**
+
+11. **OpenAI's terms are unread after four refusals against one host across two dates** — `row-terms-of-use`,
+    `eu-terms-of-use/` and `business-terms/` returned HTTP 403 this session, on top of the prior lane's 403 on
+    `terms-of-use`. This restates gap 2 with the count, because *"one fetch failed"* and *"four fetches failed on two
+    days"* argue differently about whether a fifth is worth spending. The gap stays open at §I row 1.
+12. **A cloud task's maximum duration is undocumented.** No page states one; *"longer tasks"* get *"dedicated
+    environments"* and no number follows. A night lane with an unknown ceiling is a night lane whose failure mode is
+    unknown.
+13. **No vendor page prints `codex cloud exec` or any other non-interactive creation command.** The only source is an
+    open feature request whose author is not a confirmed maintainer (#24777, M). **Two things close this: a vendor
+    page, or `codex cloud exec --help` on an installed binary** — and Codex is not installed (§I row 5).
+14. **Cancelling a cloud task is UNKNOWN.** It appears in neither the commands the issue says exist nor the ones it
+    requests, and no vendor page mentions it. A lane the cord cannot stop is a lane the cord does not govern, which
+    is a real hole in §12's stop guarantee and is named here rather than assumed away.
+15. **No REST endpoint for creating a cloud task was found, and that is absence of evidence across six fetched
+    pages — not a vendor denial.** A private or undocumented endpoint may exist. The distinction is kept because
+    *"we could not find one"* and *"there is none"* license different plans, and only the first is what happened.
+16. **No numeric quota is published for either hosted lane, at the point where it would bind.** OpenAI's only cloud
+    statement is qualitative; Anthropic publishes **no numeric inactivity timeout** for a cloud session and **no
+    numeric daily routine cap**, both described only in words. A night lane whose budget is unpublished cannot be
+    budgeted — only observed after the fact.
+17. **No GitHub label trigger is documented for Codex** — the two documented triggers are the `@codex` mention and
+    automatic review on PR open. A label is exactly what a card-driven board (§14.7) would reach for, and it is not
+    there.
+18. **Whether `codex exec resume` reaches a cloud task is unknown.** Nothing links the two surfaces and they use
+    different nouns throughout — `SESSION_ID` locally, `TASK_ID` in the cloud.
+19. **Two things about the hosted sandbox rest on nothing.** Its container technology is **unnamed** —
+    *"isolated cloud environments"* is the entire vendor claim — and the **two-phase network model is the lane's own
+    inference** from the phrase *"during the agent phase"*, stated by no page. Both matter to anyone deciding what a
+    cloud task may be trusted with.
+20. **Fetch fidelity bounds every `M` in 10.2a, and two things were not fetched at all.** The `learn.chatgpt.com`
+    pages were **summarized by the fetch rather than returned whole**: short quoted strings are H, reconstructed
+    tables and figures are M. **Jules' task quotas and its CLI were not fetched.** And **no claim was registered in
+    the ledger** — that lane had no `claim-append` tool, so every durable fact in 10.2a is **unregistered prose**.
+    The lane names its own minimum for whoever does hold the tool: the internet-access default, the Routines fire
+    endpoint with its one-hour floor, and the absence of a documented Codex cloud creation API, each with a
+    `valid_until`.
+
 ---
 
 ### 10.7 What enforces this section
@@ -244,3 +399,6 @@ own unknowns spends them later at a worse price.)**
 | A run cannot stall forever | `--max-budget-usd` as a stall fuse, not a billing control | **shipped** (v2.1.217+) |
 | Codex only widens on evidence | the headless admission test of 10.2 | **ABSENT** — Codex is not installed |
 | One logbook, no second source of truth | the event log, with the intent id on every row | **ABSENT**; `~/.agentvibe/events.jsonl` is the spine on this branch |
+| **A hosted run never writes into the house directly** — a pull request or a staged artifact, never the working tree (v56, 10.2a) | reconciliation on wake, against the PR or the staged artifact | **ABSENT** |
+| **Minting a cloud task is not a run** | `bin/run`'s `cloud` carrier — it mints a task and records its id, and does nothing else | **ABSENT** |
+| **A night's cloud work is read, not trusted** | the Watch reads the pull requests on wake | **ABSENT** |

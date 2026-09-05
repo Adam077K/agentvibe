@@ -1,13 +1,15 @@
 ## 15 · Runtime and the Mac — the facts that bind, and each provider
 
-*obeys: §D.1, §D.2, and v13's constraints · inherits: FINAL §14 and §16.7*
+*obeys: §D.1, §D.2, v13's constraints, and **v56** — which gives this section its one stated exception (§15.1a) ·
+inherits: FINAL §14 and §16.7*
 
 ---
 
 ### 15.1 The Mac now, the split as the target
 
 **(FOUNDER, and it is why this section exists at all.)** *"everything is run on it."* Day one is this Mac: lid open,
-on power, logged in.
+on power, logged in — **with one stated exception (v56)**, the cloud lane of §15.1a, which the same founder asked for
+in the same interview and which exists only for the hours this sentence is false.
 
 **(NEW: v39 makes that sentence a hosting decision, not only a runtime one.)** **Mission control is served on this
 Mac**, by `mission-control/` — the Bun and Hono server and React client on branch `ceo-1-1788609834` — because a tap
@@ -28,11 +30,54 @@ three no-model parts move there. The box is bought after the first measured over
 
 ---
 
+### 15.1a The one exception: when the Mac is off
+
+**(FOUNDER, DECISIONS §15, and this is the whole of the exception.)** *"When my Mac is not on, and then we need to use
+not the regular Claude code or codex in terminal, then you can use codex or Gemini I think they don't bun those. But
+still keep it open"* — clarified the next round as **"Yes — a cloud lane for when the Mac is off"**. That is v56. It
+does not soften *"everything is run on it"*; it carves one exception out of it and states the exception's price.
+
+**(NEW: what the lane may do TODAY is narrower than the sentence that asked for it, and the narrowing is evidence,
+not caution.)** The facts are §10.2a's and are not restated here. Their consequence for this section is three rows:
+
+| Off-Mac lane | May it MAKE, today? | The evidence |
+|---|---|---|
+| **Codex cloud as a PR reviewer** — `@codex review`, or automatic review on PR open | it reviews; it is **admitted** | vendor-documented, needs no local Codex, runs in OpenAI's sandbox — so it **sidesteps #19945**, which is a defect of *local* `codex exec` with stdio detached from a TTY |
+| **Codex cloud as a maker** — `codex cloud exec --env <id>` | **UNVERIFIED** | no vendor page prints a non-interactive command or an endpoint; the command list is an open feature request's author's assertion (openai/codex#24777, M). Codex is also **not installed here** (§I row 5) |
+| **Claude Code `--cloud` and Routines** · **Jules** | **documented, and not decided** | Anthropic's is documented argv plus a documented fire endpoint, and it **shares the Claude seat** — the same seat as the Floor and the same terms clause as §I row 1. Jules' own API page says *"The Jules API is in an alpha release, which means it is experimental"* |
+
+**The mechanism, and it is what keeps an off-Mac night from being an unreviewed write into the house.** A hosted run's
+output lands as **a pull request or a staged artifact**, and **the Mac reconciles it on wake** — never into the house
+directly. `bin/run` gains a `cloud` carrier that **mints a task and records its id, and does nothing else**, and the
+Watch reads the pull requests on wake. **All three are ABSENT.** The reason the shape is this and not a remote write
+is the same reason §15.3 gives for plain files: a machine that was asleep cannot have judged anything, so the judgement
+happens here, once it is awake.
+
+**Two rows stay open, and neither is an agent's to close.**
+
+- **§I row 1, the terms** — **OPEN by the founder's word** (*"still keep it open"*). The OpenAI half is **UNKNOWN and
+  unread rather than permissive**: four HTTP 403 refusals against one host across two dates. Anthropic's clause, on
+  file from the runtimes lane, prohibits access *"through automated or non-human means"* except via an API key or
+  *"where we otherwise explicitly permit it."*
+- **§I row 15, which hosted lane may MAKE when the Mac is off** — raised by v56 and **the founder's, with row 1**.
+  The tension is stated once and not re-argued: the founder's named preference has no driver, and the lane with a
+  driver runs on the seat the terms question is about.
+
+**(NEW: what this exception does NOT move.)** Routines stay **refused for the Watch** — a one-hour minimum interval,
+*"The minimum interval is one hour; expressions that run more frequently are rejected"*, and no reach into anything
+this system stores on the Mac. Read *"no local files"* narrowly: a routine clones every selected repository per run and
+pushes `claude/`-prefixed branches, so it has a repository and not this laptop. **The Watch is still the LaunchAgent of
+§15.2**, and a cloud lane that cannot see `~/.agentvibe/` cannot be a supervisor of anything here.
+
+---
+
 ### 15.2 Supervision, on macOS
 
 **(FINAL, from Apple's documentation.)** A **LaunchAgent** holds the Watch. It runs as the founder's user, which is
 what reaches the keychain and the subscription's OAuth, and **it dies at logout** — so the honest statement is that
-the Mac stays logged in with the lid open, or the night ends.
+the Mac stays logged in with the lid open, or the night ends, **with one stated exception (v56)**: the cloud lane of
+§15.1a keeps running, because it never needed this machine. What it cannot do is reach anything stored on it, which
+is why it is an exception to the runtime and not to the Watch.
 
 Six facts, each of which changes the code:
 
@@ -261,7 +306,7 @@ this Mac, this account and these runtimes — they are not design, and nothing a
 | `/goal` is *"a wrapper around a session-scoped prompt-based Stop hook"*, and is unavailable under `disableAllHooks` or `allowManagedHooksOnly` | **runtimes.md** | v11 · §12.6 — the managed file omits both |
 | A goal **defers evaluation while a subagent or background shell is running**; check-ins start at 30 minutes and double to a 4x ceiling; under `-p` *"this is the only way Claude Code delivers check-ins"* | **runtimes.md** | §12.5 — an unattended run's only heartbeat |
 | `/goal` leaves the goal active after transient failures **including rate limits**, and terminates only on Met, Impossible, `/goal clear`, or four unrecoverable errors | **runtimes.md** | the behaviour a night wants |
-| Agent teams: experimental, off by default, **no nested teams**, one team per session, `/resume` does not restore them, `-p` never forms one; **~7x tokens in plan mode**; *"Use Sonnet for teammates"* | **surfaces.md · models.md** | §14.5 · v13 · §G.1 |
+| Agent teams: experimental, off by default, **no nested teams**, one team per session, `/resume` does not restore them, `-p` never forms one; **~7x tokens in plan mode**; *"Use Sonnet for teammates"* — **our position is v59: a teammate runs on its own agent file's model**, the 7x cost stated in §9 and §16 | **surfaces.md · models.md** | §14.5 · v13 · §G.1 |
 | `~/.claude/teams/<team>/config.json` holds session ids **and tmux pane ids**, and is *"overwritten on the next state update"* | **surfaces.md** | §14.5 — read source, never a write target |
 | Split panes are **unsupported** in VS Code's integrated terminal, Windows Terminal and Ghostty; `iterm2` mode needs the `it2` CLI **and** the iTerm2 Python API | **surfaces.md** | §14.11 |
 | `gemini` 0.38.2 installed and never authenticated; `codex` **not installed**; openai/codex#19945 open since 2026-04-28 — **130 days, no maintainer reply** | FINAL §14.7 · **runtimes.md** re-verified 2026-09-05 | v5 · v32 · §11.3 |
