@@ -12,7 +12,7 @@
 
 **The `v2 §` column is SPINE §K's numbering, 0–23, not FINAL's.** The crosswalk, stated once so no row has to argue it: FINAL §2 → 2 · §3 → 4 (ranking) or 2 (intent structure) · §4 → 2 (charter, tempo), 4 (cross-venture ranking) or 14 (the portfolio view) · §5 → 9 (models) or 10 (Codex and Claude Code) · §6 → 6 · §7 → 5 (the roster) or 6 (the run) · §8 → 11 · §9 → 12 (envelope, permissions, the Sender) or 8 (the tool door) · §10 → 13 · §11 → 7 (skills) or 13 (knowledge) · §13 → 14 (mission control) or 15 (the Floor and the Mac) · §14 → 15 · §15 → 16 · §16 → 17 · §17 → 18 · §18 → 19 · §19 → 20 · §20 → 21.
 
-**One structural note, because it costs the reviewer time otherwise: §K names no self-improvement section.** FINAL §12's items are placed by mechanism — the curator's nightly pass at 13, the rehearsal and eval loops at 11, forced expiry at 7 — and the two that fit none of those are marked `?`.
+**One structural note, because it changed the section plan.** §K now carries **§13a, "How the system improves itself"**, inheriting FINAL §12; it was added after this file's first pass found FINAL §12's items had no home. Rows with a sharper mechanism elsewhere still sit at it — the curator's nightly pass at 13, rehearsal and the eval loops at 11, forced expiry at 7 — and the one row that fit none of those is at 13a.
 
 ---
 
@@ -382,7 +382,7 @@
 
 ## 12 Self-improvement
 
-*§K names no self-improvement section. These are placed by mechanism: the curator's nightly pass at 13, rehearsal and the eval loop at 11, forced expiry at 7.*
+*§K carries **§13a, "How the system improves itself"**, inheriting FINAL §12. Rows whose mechanism is sharper elsewhere still sit at it: the curator's nightly pass at 13, rehearsal and the eval loop at 11, forced expiry at 7.*
 
 | Item | FINAL | v2 | v2 § | Why | Rule |
 |---|---|---|---|---|---|
@@ -402,7 +402,7 @@
 | Field-note expiry | RENAMED | IN | 7 | `valid_until` on every skill, with a forced disposition | SPINE v19 |
 | Continuous fine-tuning | REFUSED | REFUSED | 9 | it turns reversible artifacts into irreversible weights | agree |
 | Feedback loop closure | IN | IN | 11 | a challenger's finding names the mechanism that would have caught it, or it is an opinion | SPINE v30 |
-| Improvement backlog | IN | IN | 2 | improvements are intents; there is no separate backlog and no section for one | ? |
+| Improvement backlog | IN | IN | 13a | improvements are intents, and §13a owns the loop that raises them | SPINE §K 13a |
 | Improvement ownership | IN | IN | 2 | the intent's owner field | agree |
 
 ## 13 Economics
@@ -950,9 +950,9 @@ awk -F'|' 'NF==8 && $2 !~ /^ *(Item|-+) *$/ {gsub(/^[ \t]+|[ \t]+$/,"",$3); gsub
 
 **A correction to the previous file's own arithmetic, carried here so the two can be reconciled.** Its FINAL column is copied verbatim into this file's second column, and the rows re-derive to **IN 410 · RENAMED 157 · REFUSED 77 · OUTSIDE 14 · FOUNDER'S 13**. Its published tally printed `IN 411` and `OUTSIDE 13`. The row set is the same; its tally was one row out in two cells. Three values in an earlier draft of this file were also mis-transcribed from that table — `maxTurns cap`, `Worker health check` and `Cache read discount` — and were corrected against the source before this tally was computed.
 
-### The eight `?` rows
+### The seven `?` rows
 
-Placements this file could not settle from its inputs. Every one is a disposition question, not a section question, except where noted.
+Placements this file could not settle from its inputs. Every one is a disposition question. The eighth, `Improvement backlog`, was a **section** question and is settled: §K added §13a for it, and the row is now IN there.
 
 | Row | Section | The doubt |
 |---|---|---|
@@ -960,11 +960,10 @@ Placements this file could not settle from its inputs. Every one is a dispositio
 | Compute rental tool | 03 | §F refuses **RunPod as it stands** — it spends money at a rate under an uncapped key — which is not the same as refusing rented compute as a class. Read as REFUSED for the named vendor only |
 | Worker-to-worker request | 06 | v13 admits agent teams whose teammates are messageable by name, so peer messaging exists; v6's reasoning is that implicit conflicting decisions are exactly how two agents on one artifact fail. Both are in the spine |
 | Peer help request | 06 | the same doubt, and it should be answered the same way in both places |
-| Improvement backlog | 12 | a **section** question, not a disposition one: §K names no self-improvement section, so this is placed at §2 as an intent. Whoever writes §2 should confirm it wants the row |
 | Second human role | 14 | FINAL has it IN with a 72-hour freeze; SPINE §I row 11 lists it as an open founder decision. Placed IN at §20, which reads as both and settles neither |
 | Ticket status field | 22 | the board is the founder's page 4 and its stages are certain; whether dragging a card launches a **team** is open decision 9, and nothing in the world has done it |
 | Infra layer (Wing 5) | wing 5 | IN here, while every venture-facing DevOps row of §17 is OUTSIDE. The two readings disagree about who owns hosting, and FINAL had the same split |
 
 **How the 671 were decided.** `agree` where SPINE moved nothing and FINAL stands. `SPINE vN` or `SPINE §X` where a v2 row or a lettered section settles it — v1, v2, v3 and v4 between them account for most of the 137 moves, and every one of §A's thirty-six rows is cited by at least one item. Verify with `grep -oE 'SPINE v[0-9]+' COVERAGE.md | sort -u`. `founder` where the direction itself decides, quoted in SPINE §B, §C, §D, §E, §F or §G. `fact` where a research fact from `roster.md`, `memory.md`, `cognition.md`, `skills.md`, `models.md`, `surfaces.md` or `runtimes.md` decides the row rather than a preference.
 
-**No row is placed on a mechanism that does not exist.** Where the plan wants a thing and has no mechanism for it, the row says so in its Why — the wish-list tools of §F, the ABSENT paths of §B–§H, and `Improvement backlog`'s missing section are the honest cases, and they are marked rather than dressed.
+**No row is placed on a mechanism that does not exist.** Where the plan wants a thing and has no mechanism for it, the row says so in its Why — the wish-list tools of §F, the ABSENT paths of §B–§H are the honest cases, and they are marked rather than dressed.
