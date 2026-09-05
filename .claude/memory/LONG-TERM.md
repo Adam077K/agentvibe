@@ -82,3 +82,6 @@
 - **The session memory directory is unwritable from an agent turn.** `~/.claude/projects/.../memory/` is
   refused by both the hook and the sandbox (probed 2026-08-24). Cross-session facts go here and in
   `DECISIONS.md`, which is the repo's own mechanism anyway.
+- **The founder plans in rounds and forbids building until the plan is theirs** (2026-09-04, 2026-09-05: "go. no
+  builing yet."). Twice they chose "Keel only" over the recommended wider input set — decide against the
+  recommendation on input scope, then widen *research* mid-turn when asked to go "a couple of steps forward".
