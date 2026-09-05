@@ -1,0 +1,313 @@
+<title>Keel · Final Plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EEF1F3; --surface:#FFFFFF; --surface-2:#E4EAED; --ink:#14222B; --ink-2:#4A5B66; --ink-3:#7A8A93;
+  --line:#CBD5DA; --accent:#1F6F78; --accent-ink:#FFFFFF; --accent-soft:#D8EBED; --brass:#9A7628; --brass-soft:#F1E7CC;
+  --keel:#0F3A44; --absent:#A0592A; --absent-soft:#F4E4D6; --focus:#1F6F78;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D161B; --surface:#142027; --surface-2:#1B2A32; --ink:#DDE6EA; --ink-2:#A3B3BB; --ink-3:#6F808A;
+    --line:#26363F; --accent:#5FB3B8; --accent-ink:#0D161B; --accent-soft:#163238; --brass:#D9B45C; --brass-soft:#2E2812;
+    --keel:#8CC7CE; --absent:#D89A5E; --absent-soft:#33241A; --focus:#5FB3B8;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D161B; --surface:#142027; --surface-2:#1B2A32; --ink:#DDE6EA; --ink-2:#A3B3BB; --ink-3:#6F808A;
+  --line:#26363F; --accent:#5FB3B8; --accent-ink:#0D161B; --accent-soft:#163238; --brass:#D9B45C; --brass-soft:#2E2812;
+  --keel:#8CC7CE; --absent:#D89A5E; --absent-soft:#33241A; --focus:#5FB3B8;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+main{max-width:680px;margin:0 auto;padding:20px 18px 64px}
+h1,h2,h3{font-family:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif;text-wrap:balance;margin:0}
+h1{font-size:clamp(34px,8vw,48px);font-weight:700;line-height:1.02;letter-spacing:-.01em}
+h2{font-size:24px;font-weight:700;line-height:1.15;margin:0 0 10px}
+p{margin:0 0 12px;max-width:62ch}
+a{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em}
+code{background:var(--surface-2);padding:1px 5px;border-radius:3px}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 6px}
+header{padding:8px 0 22px;border-bottom:1px solid var(--line)}
+.lede{font-size:18px;color:var(--ink-2);margin:14px 0 0;max-width:34ch;line-height:1.4}
+.meta{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:16px;font-size:13px;color:var(--ink-3)}
+.meta b{color:var(--ink-2);font-weight:600}
+section{padding:26px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+.chip{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.06em;padding:2px 7px;border-radius:3px;border:1px solid var(--ink-3);color:var(--ink-2);vertical-align:middle;white-space:nowrap}
+.chip.keel{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip.v3{background:var(--brass-soft);border-color:var(--brass);color:var(--brass)}
+.chip.both{border-color:var(--ink-2);color:var(--ink)}
+.chip.new{border-style:dashed}
+.chip.absent{background:var(--absent-soft);border-color:var(--absent);color:var(--absent)}
+.chip.exists{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;color:var(--ink-2);align-items:center;margin:0 0 14px}
+.waterline{position:relative;margin:24px 0 6px;height:2px;background:linear-gradient(90deg,var(--accent),var(--keel))}
+.waterline::after{content:"the waterline";position:absolute;right:0;top:6px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.above,.below{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.tile{padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:4px}
+.tile .n{font-family:"Bricolage Grotesque",sans-serif;font-size:26px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.tile .l{font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.below .tile{border-color:var(--keel)}
+dl.words{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:15px}
+dl.words dt{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;color:var(--keel)}
+dl.words dd{margin:0;color:var(--ink-2)}
+dl.words dd small{color:var(--ink-3)}
+ol.decisions{list-style:none;margin:0;padding:0;counter-reset:d}
+ol.decisions li{border-top:1px solid var(--line);padding:10px 0 10px 40px;position:relative;counter-increment:d}
+ol.decisions li::before{content:counter(d);position:absolute;left:0;top:11px;font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-3);width:30px;font-variant-numeric:tabular-nums}
+ol.decisions .q{font-size:12.5px;color:var(--ink-3);letter-spacing:.02em}
+ol.decisions .d{font-weight:600;margin:1px 0 3px;font-size:15.5px}
+ol.decisions .lost{font-size:13px;color:var(--ink-2)}
+ol.decisions .lost b{font-weight:500;color:var(--ink-3)}
+details{margin:2px 0 0}
+summary{cursor:pointer;font-size:13px;color:var(--accent);list-style:none;display:inline}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"why";}
+details .why{font-size:13.5px;color:var(--ink-2);margin:4px 0 0;max-width:60ch}
+.diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:8px;margin:8px 0 12px}
+pre.mermaid{margin:0;min-width:520px}
+.day{display:grid;grid-template-columns:64px 1fr;gap:6px 12px;font-size:14.5px}
+.day .t{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--accent);padding-top:3px;font-variant-numeric:tabular-nums}
+.day .w{color:var(--ink-2)}
+.day .w b{color:var(--ink);font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:7px 8px 7px 0;border-bottom:1px solid var(--line)}
+th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+td.n{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tablewrap{overflow-x:auto}
+.open{display:grid;gap:10px}
+.od{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--brass);border-radius:4px;padding:10px 12px}
+.od .h{font-weight:600;font-size:15px;margin-bottom:6px}
+.od .h span{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-3);margin-right:8px}
+.sides{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13.5px;color:var(--ink-2)}
+.sides div::before{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:2px}
+.sides div:first-child::before{content:"one side"}
+.sides div:last-child::before{content:"the other"}
+.od .who{font-size:12px;color:var(--ink-3);margin-top:6px}
+@media (max-width:420px){.sides{grid-template-columns:1fr}}
+.six{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:14.5px}
+.six .k{font-weight:500}
+.six .v{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--accent);white-space:nowrap}
+.lines{font-size:14px;color:var(--ink-2);padding-left:18px;margin:10px 0 0}
+.lines li{margin:2px 0}
+footer{padding:22px 0 0;font-size:13px;color:var(--ink-3)}
+footer p{max-width:none}
+</style>
+
+<main>
+<header>
+  <p class="eyebrow">docs · 03-system-design · final · 2026-09-04</p>
+  <h1>Keel<br>the final plan of the whole thing</h1>
+  <p class="lede">It runs every part of every venture that can be checked against the world without you, walks beside you on the parts that are only yours, and shows you both from one place, on your phone, in your own words.</p>
+  <div class="meta">
+    <span><b>Inputs</b> Keel (mind-1, from scratch) · StartupOS v3 · the measured facts</span>
+    <span><b>Your call</b> Keel only; THE-PLAN, mind-2, Fable's design unread</span>
+    <span><b>Rule</b> where they differ, decided in one line; the losing image kept by name</span>
+    <span><b>State</b> nothing built · nothing pushed · branch ceo-3</span>
+  </div>
+</header>
+
+<section>
+  <p class="eyebrow">Provenance, on every paragraph of the plan</p>
+  <div class="legend">
+    <span class="chip keel">KEEL</span><span>the from-scratch design, the base</span>
+    <span class="chip v3">V3</span><span>kept from round five</span>
+    <span class="chip both">BOTH</span><span>they agree</span>
+    <span class="chip new">NEW</span><span>the merge, with one line why</span>
+    <span class="chip absent">ABSENT</span><span>a path that does not exist yet</span>
+  </div>
+  <div class="above">
+    <div class="tile"><div class="n">30</div><div class="l">decisions where the two plans differed, each with its losing image</div></div>
+    <div class="tile"><div class="n">22</div><div class="l">sections · 2,499 lines · 27 flowcharts</div></div>
+    <div class="tile"><div class="n">671</div><div class="l">items of your list placed in COVERAGE.md, 7 doubts flagged</div></div>
+  </div>
+  <div class="waterline"></div>
+  <div class="below">
+    <div class="tile"><div class="n">3</div><div class="l">shapes: maker · scout · checker</div></div>
+    <div class="tile"><div class="n">13</div><div class="l">programs with no model; five act on their own at night: the Watch · the Sender · the world's door · the probe · the reconciler</div></div>
+    <div class="tile"><div class="n">11</div><div class="l">named things, and plain words for the rest</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Eleven words</h2>
+  <dl class="words">
+    <dt>Charter</dt><dd>one per venture: what it is, tempo, envelope, ceiling, weight, horizon</dd>
+    <dt>Intent</dt><dd>one live goal with a done-test, a ceiling, an expiry</dd>
+    <dt>Done-test</dt><dd>what is true when the work is finished, written before it starts, checkable by someone else. The only thing ever mandated</dd>
+    <dt>Obligation</dt><dd>something owed, to whom, by when. The world set the test <small>· added</small></dd>
+    <dt>The Watch</dt><dd>the one always-on loop. Reads state, ranks, mostly sleeps</dd>
+    <dt>The Desk</dt><dd>the ranking inside the Watch: Weight × Decay ÷ measured Cost</dd>
+    <dt>Run</dt><dd>fresh context, one outcome, a ceiling, a grant, a nine-field brief, a seven-field handover, then death</dd>
+    <dt>Envelope</dt><dd>may-alone · never · wake-me, in your words</dd>
+    <dt>The Sender</dt><dd>the program with no model that performs a widened outward act <small>· added</small></dd>
+    <dt>Balcony</dt><dd>a rendered page, phone or Mac: Now · Decide · Last night · Ventures · Cord</dd>
+    <dt>Floor</dt><dd>the terminal, one agent beside you, same memory, same envelope</dd>
+  </dl>
+</section>
+
+<section>
+  <h2>The picture</h2>
+  <div class="diagram">
+<pre class="mermaid">
+flowchart TB
+  F["You · voice · terminal · phone"] -->|"read back, then bound"| D["Charters · Intents · Obligations"]
+  D --> W["The Watch · ticks, mostly sleeps"]
+  W --> K["The Desk · ranks to the reserve line"]
+  K -->|"nine-field brief"| R["Run · maker | scout | checker"]
+  R -->|"artifact"| A["Anchors · tests · renders · reconciliations · another family · you"]
+  A -->|"seven-field handover"| L[("Logbook · the only truth")]
+  L --> M["Memory · facts · taste · negatives · already-built · craft · open"]
+  M --> K
+  R -.->|"staged, hashed, unsent"| S["The Sender · no model · one tap, or a widened class"]
+  S --> X(("The world"))
+  X -->|"one row"| L
+  L --> B["Balcony · Now · Decide · Last night · Ventures · Cord"]
+  B -->|"which · redirect · stop"| D
+  F -->|"sits down"| FL["Floor · sterile"]
+  FL --> M
+</pre>
+  </div>
+  <p>Direction is cheap and written down. The Watch is continuous and nearly free. Work is expensive and disposable. Nothing is believed until something outside the model says so. Everything lands as files you can read.</p>
+</section>
+
+<section>
+  <h2>A day with it</h2>
+  <div class="day">
+    <div class="t">06:40</div><div class="w">Nothing rings unless a <b>wake-me</b> line fired. If one did, one line.</div>
+    <div class="t">07:20</div><div class="w"><b>The briefing</b>, one page you open. What moved, with the evidence. The raw work: the render, the diff, the email that would go out, staged. Two whiches, both built. What I could not check. What it cost, per window. You tap two, overrule one by typing a sentence; by 07:31 it is a rehearsal case.</div>
+    <div class="t">09:00</div><div class="w"><b>The Floor.</b> A terminal on the venture you care about. Sterile: nothing interrupts, nothing new on your window, the venture held whole. Your own browser and send button are here and nowhere else. When you leave, the queue is one paragraph.</div>
+    <div class="t">lunch</div><div class="w"><b>Decide</b> has one item: two landing pages, both live, the cost of each. One tap.</div>
+    <div class="t">18:00</div><div class="w"><i>You are the bottleneck on one thing; it has cost four days.</i></div>
+    <div class="t">night</div><div class="w">Obligations first. Then, under each driven venture's ceiling, runs are born, work however they like, are checked by something outside the model, hand back seven fields, and die. Routine work burns the <b>Gemini window</b> and never touches yours.</div>
+  </div>
+</section>
+
+<section>
+  <h2>The thirty decisions</h2>
+  <p>Every place v3 and Keel disagreed, or one was silent. The full row, with the one-line why and the losing image kept by name, is §1 of the plan.</p>
+  <ol class="decisions">
+    <li><div class="q">the base, the organs, the names</div><div class="d">Keel is the base; its words stand <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> the OS-parts map and the ten named stores</div><details><summary></summary><p class="why">Your verdict on v3: the engines and mythologies were taken straight from other frameworks.</p></details></li>
+    <li><div class="q">the atom of work</div><div class="d">The Intent with a done-test, not the bet <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> p, V, L, the flip point, half-Kelly stakes · kept: the kill sentence as the done-test; death as the ceiling; "would it change a next act" as a Desk question</div><details><summary></summary><p class="why">A probability and a payoff are estimates by the interested party with nothing to check them; v3's own calibration section prints "insufficient" below fifty resolutions.</p></details></li>
+    <li><div class="q">promises with due dates</div><div class="d">Obligations, read before any Intent <span class="chip v3">V3</span></div><div class="lost"><b>lost:</b> the names debt and Continuo</div><details><summary></summary><p class="why">Keel is silent on statutory clocks and renewals; a renewal is not a goal and has no done-test to invent.</p></details></li>
+    <li><div class="q">the unit of unattended operation</div><div class="d">The Run, resumable; the window is a fuse <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> the five-hour watch with phases and the four-phase relief</div><details><summary></summary><p class="why">Resume-not-restart makes a closed window cost only the unfinished work.</p></details></li>
+    <li><div class="q">a nightly document</div><div class="d">None. You write charters and intents, nothing else <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> night orders, signed nightly</div><details><summary></summary><p class="why">"If it needs more than this, the design has failed." The briefing's <i>what I would do next</i> carries tonight's intent.</p></details></li>
+    <li><div class="q">how many kinds of worker</div><div class="d">Three shapes and loadouts <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> six positions · the curator is a maker loadout that may write only memory files</div><details><summary></summary><p class="why">Separated by irreducible properties: must hold context · must be parallel and stateless · must not edit what it judges.</p></details></li>
+    <li><div class="q">who performs an outward act</div><div class="d">Staged, one tap sends; a widened class runs through the Sender, a program with no model <span class="chip new">NEW</span></div><div class="lost"><b>lost:</b> the mouth, broker and relay as three processes</div><details><summary></summary><p class="why">Keel never says what executes a widened act; v3's mechanism is the only one where the thing that decides cannot be the thing that sends.</p></details></li>
+    <li><div class="q">names</div><div class="d">Labels, not names: what it makes and which window it burns <span class="chip both">BOTH</span></div><div class="lost"><b>lost:</b> named agents with careers</div><details><summary></summary><p class="why">You decided it twice, on two pages.</p></details></li>
+    <li><div class="q">how a field is known</div><div class="d">Field kits with horizons; rehearsal sets gate what runs unattended <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> the Bench, licences, the five-step apprenticeship</div><details><summary></summary><p class="why">The lighter form of the same discipline, starting from transcripts the machine already has.</p></details></li>
+    <li><div class="q">the 134 skills</div><div class="d">A holding directory; re-entry only as examples, an anchor or a rehearsal case <span class="chip both">BOTH</span></div><div class="lost"><b>lost:</b> Keel's flat refusal; v3's reflex as a third form</div><details><summary></summary><p class="why">You decided the holding directory on v3's page; Keel's container rule says what the door may admit.</p></details></li>
+    <li><div class="q">memory</div><div class="d">Six stores, deltas only, a night curator, transcripts mined locally <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> the Book written by surprise, the Second, reflexes, the Wake · kept: five fixed questions for a failure; the nightly reconciliation</div><details><summary></summary><p class="why">The thing that acts never edits memory; context collapse has a paper; you confirmed local mining.</p></details></li>
+    <li><div class="q">the permission axis</div><div class="d">The envelope's three lists and the reversibility door test <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> the Line, τ thresholds, fused defaults · kept: an undo is drilled or the door is one-way; v3's one-way list is the default never list</div><details><summary></summary><p class="why">Reversibility is close to a fact; importance is argued; asking is what you refused.</p></details></li>
+    <li><div class="q">what makes a grant real</div><div class="d">argv per shape, a managed settings file, peer isolation by a checked-in file, a nightly probe <span class="chip v3">V3</span></div><div class="lost"><b>lost:</b> the names cell contract and dispatcher</div><details><summary></summary><p class="why">Measured facts bind and Keel is silent on the seam. A capability nobody probes is a memory of one.</p></details></li>
+    <li><div class="q">many ventures</div><div class="d">Four tempos, at most two driven, a WIP limit per venture <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> five postures, weekly allocation arithmetic, half-Kelly · kept: Serve as a charter pattern; the harness as a venture with a ceiling</div><details><summary></summary><p class="why">Little's Law, and your answer: two.</p></details></li>
+    <li><div class="q">the surfaces</div><div class="d">Floor · Balcony (five views) · briefing · voice · a room through the door <span class="chip new">NEW</span></div><div class="lost"><b>lost:</b> the desk's fused defaults; the bay as a build; Keel's refusal of the room</div><details><summary></summary><p class="why">Keel's two surfaces over one state; v3's contents where richer; the room is your decision.</p></details></li>
+    <li><div class="q">you on the Floor</div><div class="d">Sterile: no interruptions, nothing new on your window; obligations and routine work continue; your venture held whole <span class="chip new">NEW</span></div><div class="lost"><b>lost:</b> v3's "the weather keeps running"; Keel's global hold</div><details><summary></summary><p class="why">With three windows the routine work does not compete for yours, and an obligation due does not wait for a conversation to end.</p></details></li>
+    <li><div class="q">voice</div><div class="d">Input only; a text read-back; nothing binds by voice; the verbatim transcript kept <span class="chip both">BOTH</span></div><div class="lost">no losing image</div></li>
+    <li><div class="q">when you are woken</div><div class="d">A wake-me list with numbers, three interruptions a day, a measured acted-on rate <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> the five bell conditions and the emission budget; the five become the default template</div><details><summary></summary><p class="why">ICU alarms: 74–99% irrelevant produces trained inattention, not annoyance.</p></details></li>
+    <li><div class="q">the key or the window</div><div class="d">Three subscription windows routed by difficulty; no metered key; a 30% reserve per window <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> an API key first, the batch tier, the cost formula, kept as a row for the day a key exists</div><details><summary></summary><p class="why">You answered it. Three fuses fail independently, which one account never did. The terms reading stays open.</p></details></li>
+    <li><div class="q">where it runs</div><div class="d">A LaunchAgent, lid open on power, an always-on box after the first measured overnight <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> the LaunchDaemon · kept: a tick that exits, coalesced firings, a process-group kill, push after every run, the credential plan</div><details><summary></summary><p class="why">The Watch must run as your user to reach the subscription credential.</p></details></li>
+    <li><div class="q">the logbook's schema</div><div class="d">JSONL with OpenTelemetry gen_ai names; an intent id and a run id on every row <span class="chip both">BOTH</span></div><div class="lost"><b>lost:</b> a bespoke row schema</div></li>
+    <li><div class="q">how work is known to be good</div><div class="d">The anchor ladder for work; the contact rungs 0–5 for a venture's progress <span class="chip new">NEW</span></div><div class="lost"><b>lost:</b> Hard · Rendered · Reactive · Blind as a taxonomy</div><details><summary></summary><p class="why">Keel measures whether the work is true; nothing in it measures whether the venture is becoming a business.</p></details></li>
+    <li><div class="q">rehearsal</div><div class="d">Known-answer cases, re-run on a cadence <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> the shadow venture with fixtures · kept: a hand's dry branch is its rehearsal</div><details><summary></summary><p class="why">Three to five cases from your own past, at zero cost, beat a fixture world per hand.</p></details></li>
+    <li><div class="q">self-improvement</div><div class="d">Three loops; horizons on everything; a redirect logged as a defect in the brief <span class="chip new">NEW</span></div><div class="lost"><b>lost:</b> the forge, the fifth, the weekly refusal review as a ritual</div><details><summary></summary><p class="why">Horizons force the rethink a calendar only remembers; a redirected run was told the wrong thing.</p></details></li>
+    <li><div class="q">intake</div><div class="d">The Charter is the intake; adopting a repository adds a scout pass <span class="chip both">BOTH</span></div><div class="lost"><b>lost:</b> house adopt as a name</div></li>
+    <li><div class="q">succession</div><div class="d">A statutory obligation names a second human; 72 hours of no touch freezes defaults; a week writes a handover <span class="chip v3">V3</span></div><div class="lost">none in Keel</div><details><summary></summary><p class="why">A single-founder company with no second human has a real hole; this is not multi-operator design, which Keel rightly defers.</p></details></li>
+    <li><div class="q">the name and the command</div><div class="d">Keel; the command is <code>keel</code>; the tree root is <code>keel/</code> <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> house, StartupOS, house seat, bin/warroom</div></li>
+    <li><div class="q">the first move</div><div class="d">The logbook · transcript mining · one real venture driven with a rung-1 anchor <span class="chip keel">KEEL</span></div><div class="lost"><b>lost:</b> forty judged artifacts; the synthetic fake company; adopting beeond in Walk</div><details><summary></summary><p class="why">None of the design is worth more than the first night of evidence on a real thing. Which venture is yours.</p></details></li>
+    <li><div class="q">consensus between families</div><div class="d">Refused; the deterministic anchor wins; a checker saying the test is wrong goes to you <span class="chip both">BOTH</span></div><div class="lost"><b>lost:</b> majority vote, weighted scores</div></li>
+    <li><div class="q">which provider stands which shape</div><div class="d">Claude every shape and always the Floor · Gemini routine scout, checker, curator · Codex maker and checker after a headless rehearsal · local none · Routines refused for the Watch <span class="chip new">NEW</span></div><div class="lost"><b>lost:</b> v3's drivers directory as a concept</div><details><summary></summary><p class="why">Your routing by difficulty; gemini never authenticated and codex absent are measured; openai/codex#19945 is why a smoke test is not a rehearsal.</p></details></li>
+  </ol>
+</section>
+
+<section>
+  <h2>The inventory, in numbers</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Section</th><th>Holds</th><th></th></tr>
+    <tr><td>Positions §16.1</td><td>3 shapes · the browser loadout · the curator loadout · 13 programs · the Floor. File, argv, tools, MCPs, window per row</td><td class="n"><span class="chip absent">ABSENT</span></td></tr>
+    <tr><td>Skills §16.2</td><td>134: procedure 73 · anchor candidates 22 · exemplar candidates 16 · rehearsal case 1 · infra 22</td><td class="n"><span class="chip exists">134 on disk</span></td></tr>
+    <tr><td>Hands §16.3</td><td>15 connected today, each with class, credential, who may hold it, day/night/never. None admitted; all back through the door</td><td class="n"><span class="chip exists">connected</span></td></tr>
+    <tr><td>Stores §16.4</td><td>22 stores, each with schema, one writer, readers, and the check that fails when it drifts</td><td class="n"><span class="chip absent">ABSENT</span></td></tr>
+    <tr><td>Commands §16.5</td><td>15 <code>keel</code> verbs, the Balcony's taps, and the Claude Code verbs that already ship</td><td class="n"><span class="chip absent">ABSENT</span></td></tr>
+    <tr><td>Surfaces §16.6</td><td>Floor · Balcony · briefing · read-back page · voice · claude agents · the room · menu bar · the terminal</td><td class="n">3 exist</td></tr>
+    <tr><td>Providers §16.7</td><td>Claude · Gemini · Codex · local · the artifact runtime · Routines (refused for the Watch) · a gateway key (deferred)</td><td class="n">1 measured</td></tr>
+    <tr><td>What exists today §17</td><td>29 things on disk: 5 survive · 11 renamed · 6 retired · 7 absorbed. Measured by the census on both trees</td><td class="n"><span class="chip exists">CENSUS.md</span></td></tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>What must be built, by dependency</h2>
+  <p>No durations. Three things unlock everything else: the logbook, transcript mining, one real venture driven. The seam nodes are the managed settings file and the probe.</p>
+  <div class="diagram">
+<pre class="mermaid">
+flowchart TD
+  LOG["1 · Logbook + ledger"] --> RUN["The run: argv files, brief and handover, resume"]
+  LOG --> MINE["2 · Transcript mining"]
+  MAN["Managed settings file (you)"] --> PROBE["The probe"] --> RUN
+  RUN --> METER["Ten real moves, measured"]
+  MINE --> REH["Rehearsal set, first trust scores"]
+  RUN --> REH
+  LOG --> RB["Read-back page"] --> WATCH["3 · The Watch and the Desk"]
+  METER --> WATCH
+  REH --> WATCH
+  WATCH --> VENT["3 · One real venture, driven"]
+  LOG --> BAL["Balcony + briefing"] --> VENT
+  PROBE --> DOOR["Tool door: read-only instruments first"]
+  DOOR --> RECON["Nightly reconciliation"]
+  DOOR --> SEND["The Sender, first widened class"]
+  VENT --> NIGHT["First measured overnight: a week overnight vs a week bounded"]
+  NIGHT --> BOX["Always-on box"]
+</pre>
+  </div>
+</section>
+
+<section>
+  <h2>Fifteen open decisions</h2>
+  <p>Each with both sides. These are yours, the probe's, or the measurement's; the plan does not pretend to have made them.</p>
+  <div class="open">
+    <div class="od"><div class="h"><span>01</span>The terms</div><div class="sides"><div>The help-centre articles read say nothing forbids unattended use; the subscription is paid for; the one-hour cache favours it.</div><div>Being wrong costs the account, which takes the company. A metered key answers it.</div></div><div class="who">Yours, after one reading of the full terms</div></div>
+    <div class="od"><div class="h"><span>02</span>The second human</div><div class="sides"><div>Cheap now, impossible in the moment it is needed.</div><div>A trust and credential decision you may not be ready to make.</div></div><div class="who">Yours</div></div>
+    <div class="od"><div class="h"><span>03</span>The managed settings file</div><div class="sides"><div>The only tier a running process cannot clear.</div><div>A founder act on a machine-wide file; shown the wrong seam twice before; the probe must measure it after.</div></div><div class="who">Yours, then the probe</div></div>
+    <div class="od"><div class="h"><span>04</span>Which room</div><div class="sides"><div>Generative Agents' demo mode: Apache 2.0, cold, one JSON file, no runtime; one afternoon.</div><div>AI Town: MIT, alive, needs Convex; worth it if you want it maintained.</div></div><div class="who">Yours</div></div>
+    <div class="od"><div class="h"><span>05</span>The first venture, its first Intent, its rung-1 anchor</div><div class="sides"><div>beeond is real and adoption is the intake you will use most.</div><div>The harness as venture zero is the only one whose anchors already exist.</div></div><div class="who">Yours</div></div>
+    <div class="od"><div class="h"><span>06</span>The hook rewrite; registering budget-guard.js</div><div class="sides"><div>Both correct in shape and measured; the string matcher has bypassed and over-blocked.</div><div>Both are edits to the judging machinery, one-way from day one.</div></div><div class="who">Yours</div></div>
+    <div class="od"><div class="h"><span>07</span>pmset -a disablesleep 1</div><div class="sides"><div>Runs with the lid shut today.</div><div>Defeats thermal and battery policy; not made on your behalf.</div></div><div class="who">Yours</div></div>
+    <div class="od"><div class="h"><span>08</span>Disclosure of machine-made work; entity per venture</div><div class="sides"><div>A dated decision with a reopen trigger.</div><div>One-way doors on the default never list.</div></div><div class="who">Yours</div></div>
+    <div class="od"><div class="h"><span>09</span>Codex now, or after Gemini proves the route</div><div class="sides"><div>Three families is the strongest vendor independence, and you said buy.</div><div>Not installed; #19945 open since April; the headless rehearsal may fail.</div></div><div class="who">Yours</div></div>
+    <div class="od"><div class="h"><span>10</span>Authenticate gemini</div><div class="sides"><div>The second family on this Mac at zero marginal cost; its first run is a measurement.</div><div>Nothing, except it has sat unauthenticated since install.</div></div><div class="who">Yours, one command in a terminal</div></div>
+    <div class="od"><div class="h"><span>11</span>Two measurements</div><div class="sides"><div>Does --max-budget-usd bind on a subscription?</div><div>Does the auto-mode classifier bind in print mode for a dispatched run?</div></div><div class="who">The probe</div></div>
+    <div class="od"><div class="h"><span>12</span>The overnight premise</div><div class="sides"><div>The first overnight starts a standing comparison: a week overnight vs a week bounded, same venture.</div><div>Every founder in the corpus reviews in the morning; if overnight does not win, the system runs bounded and says so.</div></div><div class="who">The measurement</div></div>
+    <div class="od"><div class="h"><span>13</span>The two sliders: reserve 30%, interruptions 3/day</div><div class="sides"><div>Sliders with a weekly evidence line each.</div><div>"idk means decide" set them; evidence moves them.</div></div><div class="who">Yours, on evidence</div></div>
+    <div class="od"><div class="h"><span>14</span>Where this document lands</div><div class="sides"><div>Merge ceo-3 onto ceo-1's history, then ceo-2's, so the plan and both inputs share one tree.</div><div>Leave the three branches and let the merge order decide.</div></div><div class="who">Yours</div></div>
+    <div class="od"><div class="h"><span>15</span>The three refusals that may feel like refusals</div><div class="sides"><div>No named roster, no approve verb, the room never a control: every sealed mind's strongest agreement across three rounds.</div><div>Each is where a founder who wants a crew of people may feel the design refusing them.</div></div><div class="who">Decided; reopened only by name</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>How we would know</h2>
+  <div class="six">
+    <div class="k">Interventions per finished artifact</div><div class="v">↓ the one that matters</div>
+    <div class="k">Rung-1 fraction of finished work</div><div class="v">↑</div>
+    <div class="k">Acted-on rate of interruptions</div><div class="v">↑ above threshold</div>
+    <div class="k">Cost per finished intent</div><div class="v">↓ on repeated work</div>
+    <div class="k">Reserve hit rate</div><div class="v">neither extreme</div>
+    <div class="k">Spoken intent to first artifact</div><div class="v">↓</div>
+  </div>
+  <ul class="lines">
+    <li>Books agree with the bank, every night; incidents counted</li>
+    <li>The week's most expensive refusal is never the same four weeks running</li>
+    <li>The harness's share of every window stays under its ceiling</li>
+    <li>Founder-originated work that shipped stays above a floor</li>
+    <li>First of all: the briefing opened unprompted twice in forty-eight hours</li>
+  </ul>
+</section>
+
+<footer>
+  <p><b>The plan:</b> <code>docs/03-system-design/final/FINAL-PLAN.md</code> · <b>every item of your list:</b> <code>COVERAGE.md</code> · <b>every path measured:</b> <code>CENSUS.md</code>; branch <code>ceo-3-1788468144</code>, 2026-09-04. Reviewed by an Anthropic lane: 30 findings, all applied; a second model family was not reachable (gemini unauthenticated, codex absent).</p>
+</footer>
+</main>

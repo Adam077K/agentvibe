@@ -89,3 +89,11 @@
 - **The frame is WATCH** (`docs/03-system-design/envision/2026-09-02-THE-SYSTEM.md`, decided 2026-09-03). WAKE (`dream/`) is round one's record. Two atoms bet/debt; keel and weather; the escapement; postures Drive·Walk·Serve·Tend·Dark; the Second buys silence never action; desk·bay·room·dailies; the five-hour watch with a two-way relief; the World Ledger; the refusal ledger. §29 maps every existing part to a fate.
 - Measured: `--allowedTools` restricts nothing; `--restricted --tools … --strict-mcp-config` is the seam; a `-p` child binds an inbox socket unless `--bare`; only managed settings survive a child's argv; the hook matches command strings; the five-hour limit stops every agent at once (have them write as they go, resume by name); tick 240 s not 300.
 - Next: re-derive `STARTUP-OS.md` v3 from WATCH (§29 migration table, §25 build order), v2 preserved under `designs/`. Start from `handoffs/2026-09-03-after-round-two.md`. Pending with the founder: widget decisions, the first move, the terms question, the managed settings file.
+
+## 2026-09-04/05 — The final plan and the founder's verdict
+
+- **The final plan is `docs/03-system-design/final/FINAL-PLAN.md`**: Keel as the base, v3's facts, thirty decisions in §1.
+- **The founder chose "Keel only" as input against the recommendation, and on 2026-09-05 overruled rows 6, 8, 10,
+  15, 30**: ten to fifteen expert agents with an operator, mission control back as the working surface, a learned
+  skill library plus a skill creator, Codex from day one. Authority:
+  `docs/08-agents_work/handoffs/2026-09-05-THE-PLAN-NEXT-TEAM-PROMPT.md`. Overruled and meant it. A second family is still unreachable: `gemini` unauthenticated, `codex` absent.
