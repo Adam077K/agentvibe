@@ -75,3 +75,30 @@
 One occurrence, line 286, §1.1, inside the **v37** row: *"neither reading was in the spine until §6 returned BLOCKED"* — historical narrative of how v37 arose, not a live status. The row's mechanism (`bin/run`, ABSENT) is present and marked. No occurrence in any heading, frontmatter, status table or coverage row.
 
 **Adjacent observation:** `bin/…` verbs are consistently marked `(ABSENT)` in place (lines 400, 944, 1565); the `keel/…` prefixed forms are the ones that go unmarked — Part 4.
+
+## Cross-references — 113 distinct `§N` refs against 195 headings, plus 41 `vNN` refs
+
+**Zero internal misses.** Seven refs had no matching v2 heading; all seven are references to external documents and six name the document in the same clause (`§04`/`§05` the founder's list; `§19.12`, `§19.14` FINAL; `§30`, `§35` the founder's list). **One style miss:** line 272 (v23) writes `§19.11` bare after "FINAL §7.5" — resolves by adjacency only; v2 has no §19.11. `vNN`: defined v1–v41, used v1–v41, closed. Headings 0–23 plus 13a; sub-headings gap-free where checked; no orphan sub-heading.
+
+## TREE-NAME-ONLY — the 23 `keel/…` paths carrying no ABSENT mark on their line
+
+`keel/agents/operator.md` · `keel/bin/curate` · `keel/bin/drill` · `keel/bin/inbound` · `keel/bin/log` · `keel/bin/probe` · `keel/bin/reconcile` · `keel/bin/rehearse` · `keel/bin/send` · `keel/bin/supervise` · `keel/holding/skills/` · `keel/logbook/events.jsonl` · `keel/logbook/inbound/` · `keel/logbook/ledger.jsonl` · `keel/logbook/sessions.jsonl` · `keel/people.yml` · `keel/settings.yml` · `keel/shared/facts.yml` · `keel/shared/never-default.yml` · `keel/shared/prices.yml` · `keel/shared/rehearsals/` · `keel/shared/shapes/` · `keel/shared/skills/registry.yml` · `keel/shared/taste.md`
+
+**Two mitigations:** line 5429 asserts blanket *"Every `keel` verb is **ABSENT**"*, covering the ten `keel/bin/*`; the unprefixed `bin/run`, `bin/watch`, `bin/check-stores`, `bin/probe` carry inline `(ABSENT)` marks. **Genuinely unmarked anywhere: the data tree** — nine `keel/shared/*` and `keel/logbook/*` files, `keel/people.yml`, `keel/settings.yml`, `keel/agents/operator.md`.
+
+## What the census could not check, and why
+
+| Item | Site | Why unmeasurable |
+|---|---|---|
+| `gemini 0.38.2 present and never authenticated` | header line 20 | `gemini --version` fails with `EPERM … ~/.gemini/settings.json` under the sandbox `denyRead`. Presence confirmed; **version and never-authenticated UNVERIFIED from here.** |
+| `Keel 2,682 lines` | 5701, §18.6 | no `keel`-named file on HEAD, origin/main or origin/docs/final-plan; the document is under `round-6/`, barred |
+| `docs/final-plan` is "the head of PR #131" | header line 19 | sha `7fe8ede` resolves; PR membership needs `gh`, denied by `denyRead` on `~/.config/gh` |
+| `~/Library/LaunchAgents/…watch.plist` | §14 | elided path, outside every tree |
+| ten upstream repositories and `agentskills.io` | various | network; out of scope for a disk census |
+| 18 slash-command tokens | various | runtime surfaces, not paths; `/color` and `/name` backed by `.claude/commands/` |
+| `~/.claude/teams/<team>/…` | §11 | runtime state paths with placeholders |
+| content of `round-6` | — | scope bound honoured |
+
+**Scope and independence:** single model family, one agent — `independent: true` unmet, as the subject's §23 says of itself. No producer self-assessment read (no DECISIONS, SPINE, COVERAGE, parts, session files). Bounded existence checks only. `~/.claude/projects/` holds 62 transcript files on this Mac; the subject makes no transcript-count claim. Nothing edited.
+
+**Verdict.** Two path defects, both in §23's closing apparatus. Two figure drifts, both self-contradicted elsewhere in the document by the correct value. Zero internal cross-reference misses across 113 section refs and 41 row refs. The document's stated rule holds everywhere testable except the 23 unmarked `keel/…` data paths and the two defects in Part 1.

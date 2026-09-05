@@ -44,4 +44,28 @@ v37 and §6.2 fix it: "Ten fields: FINAL's nine, below, plus `agent:`", and the 
 **Mechanism:** a schema file as the single source, with the prose tables generated from it, which is what the plan does for skills at §7.1 and not for its own schemas.
 
 **P1-5 · The Operator's runtime position is never decided, and page 2 needs it.** Dimension E.
-§3.1 makes the Operator an agent file, the same object as the fourteen it dispatches. §3.5 requires it to dispatch agent teams for "the fleet the founder watches on page 2". The plan's own sourced constraints at v13 and §14.5 are that teams need an interactive session, that there are no nested teams, and that `-p` never forms a team. An Operator that is a dispatched agent file cannot form the team page 2 draws; an Operator that is the main interactive session is not the object §17.1 inventories. [truncated in transit — remainder in Part 2b]
+§3.1 makes the Operator an agent file, the same object as the fourteen it dispatches. §3.5 requires it to dispatch agent teams for "the fleet the founder watches on page 2". The plan's own sourced constraints at v13 and §14.5 are that teams need an interactive session, that there are no nested teams, and that `-p` never forms a team. An Operator that is a dispatched agent file cannot form the team page 2 draws; an Operator that is the main interactive session is not the object §17.1 inventories. The founder's direction A depends on this page: the orchestrator and its subagents as child flows, who is working, who is sleeping, and a click that pops that agent's terminal on the Mac.
+
+Both readings break something. If the Operator is a dispatched agent file, as §3.1 and §17.1 inventory it, it cannot form a team, because the plan's own sourced constraints at v13 and §14.5 are that spawning teammates needs an interactive session, that there are no nested teams, and that `-p` never forms a team. Page 2 then has one level of nothing to draw, and the tmux pane ids the page joins on are never written to `~/.claude/teams/<team>/config.json`.
+
+If instead the Operator is the main interactive session, then it is not the object §17.1 inventories with a model, a tools line, `maxTurns: 30` and `isolation: none`, and §17.1 row 0 is describing a file that governs nothing. It also loses the guarantee §3.1 spends most of its length on, that the Operator carries no `Write`, no `Edit` and no `Bash`, because a main session's tools come from settings and the founder's own permission mode, not from an agent file's frontmatter.
+
+The plan never states which it is. §3.4's table contrasts the Operator with the Watch on six axes, including "Always on?" answered "No. It exists inside a session, for the duration of that session," which is compatible with either reading and settles neither.
+
+**Mechanism that would have caught it:** the reachability probe this repository already ships for `Workflow`, `scripts/probe-workflow-reach.mjs`, pointed at team formation instead: assert that the thing declared to form a team is recorded as a session lead and not as a sidechain, and fail when a declaration is made by something the runtime would silently no-op.
+
+## P2 · Findings 6 to 13 of 16
+
+**P2-6 · The twenty-two INFRA skills have two opposite fates.** §7.7 says v18 admits INFRA as a "reference" body; §17.2 restates "never loaded into a run as a skill". **Mechanism:** one fate table, cited not copied.
+
+**P2-7 · `check:manifest` and `check:curation` both retire and both survive.** §7.7 re-points them (drift between one Markdown source and two generated directories); §18.3 retires them. §7.1's no-drift rule depends on the re-pointed check. **Mechanism:** a fate census keyed on artifact name.
+
+**P2-8 · "Eight of the fourteen carry no shell" contradicts the table.** §5.2 gives `Bash` to builder, tester, designer, analyst → ten carry no shell, not eight; §12.7 repeats eight. **Mechanism:** a count derived from the table.
+
+**P2-9 · The four agents that carry `Bash` are named as two different sets.** §8.7 and §17.3: "builder · architect · tester · analyst"; §5.2 and §17.1: architect has no Bash, designer has. **Mechanism:** the same table-derived census.
+
+**P2-10 · Five agents run in a band called "Build in a worktree" with no worktree.** §3.2, §6.5, §12.3 put nine agents in the band whose argv includes `--add-dir <worktree>`; v41 gives product, writer, growth, steward, curator `isolation: none`. **Mechanism:** a lint pairing `isolation` against band.
+
+**P2-11 · Band one is `plan` in three tables and `dontAsk` in §12.5's flowchart**, and v9's "cannot ask" holds for `dontAsk`, unsourced for `plan`. **Mechanism:** one band table referenced by every diagram.
+
+**P2-12 · The nightly reconciliation has a model in it and has no model in it.** §11.7 flowchart: "No model in the loop"; same section: "It is `analyst`'s work" (sonnet-5); §17.5 lists `bin/reconcile` among the no-model programs. [tail truncated in transit — Part 3b]
