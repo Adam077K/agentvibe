@@ -46,7 +46,8 @@ flowchart TD
 
 ### 6.2 The brief
 
-**(FINAL)** Nine fields. **Anything not in the brief is not in scope, and the run is told so.**
+**(FINAL, plus one field from v37)** **Ten fields: FINAL's nine, below, plus `agent:`.** **Anything not in the
+brief is not in scope, and the run is told so.**
 
 ```
 intent:        the id it serves — a run with no intent id does not start

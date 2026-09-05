@@ -37,7 +37,7 @@ that already passes the lint; nine have no seed and are written from the standar
 | 9 | **analyst** | `.claude/agents/analyst.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Bash | read-only analytics · error tracking · billing-read | data | UNDECIDED → §20 | none | the reconciliation reads a record the company does not write |
 | 10 | **writer** | `.claude/agents/writer.md` — ABSENT | none | split: `claude-opus-5` for taste work, `claude-sonnet-5` for routine | Read Write Edit Glob Grep | Higgsfield, rate-capped | growth · craft | UNDECIDED → §20 | none | staged, never sent; the founder's taste store and a rung-2 external reaction |
 | 11 | **growth** | `.claude/agents/growth.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write | CRM read-only | growth | UNDECIDED → §20 | none | a reply from a real person, recorded by the world's door |
-| 12 | **steward** | `.claude/agents/steward.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write | Gmail · Calendar · Drive · Notion **read** — see the collision in 17.3 | operations | UNDECIDED → §20 | none | an obligation is discharged only by a record the company does not write |
+| 12 | **steward** | `.claude/agents/steward.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write (obligations and operations paths) | **none** (v36) — it writes from scout's handover and the world's door's rows, never from a raw mailbox | operations | UNDECIDED → §20 | none | an obligation is discharged only by a record the company does not write |
 | 13 | **curator** | `.claude/agents/curator.md` — ABSENT | none | `claude-sonnet-5`; the summarising half on Gemini or a local model | Read Write Edit Glob Grep — no Bash | none | knowledge | UNDECIDED → §20 | none | a memory item with no source, date, expiry and falsifier is refused at the store check |
 | 14 | **challenger** | `.claude/agents/challenger.md` — ABSENT | none | `claude-opus-5`; a second family when reachable | Read Glob Grep | none | quality · research | UNDECIDED → §20 | none | every finding names the mechanism that would have caught it |
 
@@ -130,7 +130,7 @@ material, not a ceiling.
 |---|---|---|---|---|---|
 | the founder's signed-in Chrome (`claude-in-chrome`) | REACHES THE WORLD + private data | the founder's own sessions | **nobody but the founder, on the Floor** | day, Floor only, forever | the widest hand in the building; never a night grant, never shared |
 | Playwright headless `--isolated` | READ-ONLY | none | **designer** | night | the design anchor; three verbs `.claude/mcp-policy.json` (65 lines) names for denial are in shadow today; the door flips them to block |
-| Gmail · Calendar · Drive · Notion **read** | READ-ONLY, **tainted** | OAuth, the founder's | **scout** — and **steward** claims it in §B.2 row 12. See the collision below | night | admitted first: instruments buy freedom |
+| Gmail · Calendar · Drive · Notion **read** | READ-ONLY, **tainted** | OAuth, the founder's | **the world's door** (`keel/bin/inbound`, a program with no model) and **scout**. No agent holding `Write`, `Edit` or `Bash` reads them raw (v36) | night | admitted first: instruments buy freedom |
 | analytics · error tracking · billing **read** · the CI API · the git host read API | READ-ONLY | none today | **analyst** · scout · the reconciler | night | **admitted before any other hand**, because the nightly reconciliation cannot exist without them |
 | CRM read | READ-ONLY | API key | **growth** | night | scored leads are worthless if the record they score is ours |
 | Gmail send | REACHES THE WORLD, one-way | OAuth | **the Sender only** | never unattended until the founder widens the class | anything delivered to a person |
@@ -144,11 +144,13 @@ material, not a ceiling.
 | `claim-append` (`scripts/mcp/claim-append-server.mjs`, this branch) | WRITES LOCALLY | none | today `sourcer`; in v2 **curator**, as the memory-item append | night | the narrow-capability-through-one-audited-server pattern is the door's model |
 | `gh` · `git` · `node` · `bun` · `gemini` | CLIs | `gh` reads `~/.config/gh`, which the sandbox denies; `gemini` 0.38.2 present and never authenticated | **builder** (git, node, bun) · a provider (gemini) | night | each CLI is rehearsed with a known call and a known answer, headless — the test that catches a detached-TTY failure |
 
-**(NEW: a collision inside SPINE, named rather than resolved)** §F puts the tainted read class at **scout only** —
-*"the trifecta agent, which holds no key and cannot send"* — while §B.2 row 12 grants **steward** Gmail, Calendar,
-Drive and Notion **read**, and steward carries `Write`. Both statements are in §A, they cannot both hold, and this
-section may not choose. It is a row of §20. The narrowest reading that satisfies both: steward reads the *obligations
-the world's door has already written down*, and scout is the only agent whose grant touches the raw untrusted source.
+**(NEW: a collision this section raised, decided as v36 rather than left open)** §F put the tainted read class at
+**scout only** — *"the trifecta agent, which holds no key and cannot send"* — while §B.2 row 12 granted **steward**
+the same reads, and steward carries `Write`. Both were in §A and they could not both hold. **Decided 2026-09-05:** a
+tainted read is held by `scout` and by **the world's door**, a program with no model, and by nothing else. **No agent
+holding `Write`, `Edit` or `Bash` reads mail, calendar, drive or Notion raw.** The world's door writes one inbound row
+per event; `steward` writes obligations from `scout`'s handover and from those rows. The losing image is kept by name
+in §22: *a steward that reads mail with a pen in its hand*.
 
 **(NEW: the wish list is by need, not by vendor, and every row is WISH until it passes the door)** a payments read API
 · a domain and DNS read · an ads platform **read** before any write · a design-token bridge · a database read replica

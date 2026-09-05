@@ -42,7 +42,7 @@ flowchart TD
 
     DOOR["keel/bin/door + keel/shared/tools/&lt;name&gt;.yml<br/>+ checklist.md · read-only instruments admitted first"]
     DRILL["keel/bin/drill<br/>exercises a tool's undo; writes only a date"]
-    INBOUND["keel/bin/inbound · the world's door<br/>one row per thing the world sent, as quoted data"]
+    INBOUND["keel/bin/inbound · the world's door<br/>one row per thing the world sent, as quoted data ·<br/>with scout, the only reader of a tainted source (v36)"]
     SENDER["keel/bin/send · the Sender<br/>no model; the only thing that sends"]
     RECON["keel/bin/reconcile<br/>reads a record the company does not write"]
 
@@ -90,6 +90,7 @@ flowchart TD
     DOOR --> RECON
     DRILL --> SENDER
     INBOUND --> SENDER
+    INBOUND --> WATCH
     READBACK --> WATCH
     METER --> WATCH
     REHEARSE --> WATCH
@@ -136,7 +137,7 @@ two nodes the graph is wrong, and this table is how that is found.
 | `keel/bin/watch` and the Desk | §B.1 rule 4, §D.2 | `WATCH` |
 | `keel/bin/supervise` | §B.1 rule 4 | `SUPERVISE` |
 | `keel/bin/send` — the Sender | §B.1 rules 3 and 4, §C.1, §F | `SENDER` |
-| `keel/bin/inbound` — the world's door | §B.1 rule 4 | `INBOUND` |
+| `keel/bin/inbound` — the world's door | §B.1 rule 4, v36 | `INBOUND` |
 | `keel/bin/door` and `keel/shared/tools/<name>.yml` + `checklist.md` | §B.1 rule 4, §F | `DOOR` |
 | `keel/bin/drill` | §B.1 rule 4, §F | `DRILL` |
 | `keel/bin/reconcile` | §B.1 rule 4 | `RECON` |
@@ -181,6 +182,11 @@ cannot exist before `bin/run` can hand a card to a team. **None of them is a new
 entire unattended half of the system through `PROBE`. `LICENSE` gates only the bulk import. `TEAMS` gates one page.
 `CODEX` gates one measurement whose failure leaves Codex in the foreground slot it already has. **Only one founder act
 is on the critical path of everything**, and it is four lines of JSON in a directory no run can reach.
+
+**(NEW: one edge exists so that another one does not have to, v36)** `INBOUND --> WATCH` is drawn because the Watch
+materialises an obligation from a row the world's door already wrote down. **No edge runs from a tainted hand to
+`steward`**, and none may: no agent holding `Write`, `Edit` or `Bash` reads mail, calendar, drive or Notion raw. That
+is why the world's door is a node in its own right rather than a detail inside the tool door.
 
 **(NEW: one edge is deliberately missing, and its absence is the design)** Nothing points from any agent node to
 `WATCH` or to a gate. **The gate may not be invocable by the thing it gates** (v35), and the same argument keeps

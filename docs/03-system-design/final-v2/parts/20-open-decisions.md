@@ -66,17 +66,36 @@ SPINE §I. They are not closed by omission.
 
 ### 20.4 Raised by v2's own sections, and not decidable inside them
 
-**(NEW: a section that needs a decision SPINE §A does not carry returns it here rather than inventing it)** Six. The
-first three are collisions inside the inputs; the last three are cells the inputs left empty.
+**(NEW: a section that needs a decision SPINE §A does not carry returns it here rather than inventing it)** Five.
+The first two are collisions inside the inputs; the last three are cells the inputs left empty. **A sixth — who may
+hold a tainted read — was raised the same way and closed the same day**; it is recorded in 20.5 rather than deleted,
+because which questions closed is the useful part.
 
 | # | What | One side | The other | Whose |
 |---|---|---|---|---|
-| A | **The tainted-read collision.** §F puts READ-ONLY-tainted at **scout only**; §B.2 row 12 grants **steward** Gmail, Calendar, Drive and Notion **read**, and steward carries `Write` | steward's whole job is obligations, and obligations arrive by mail and calendar; taking the grant away makes it read a queue somebody else fills | the trifecta split is the reason scout holds no key and cannot send. An agent that reads the untrusted world **and** writes is one leg short of the failure the split exists to prevent | the founder. **The narrowest reading that satisfies both:** steward reads what the world's door has already written down as an obligation, and scout is the only agent whose grant touches the raw source |
 | B | **The namespace count.** §E.4 says *"Seven namespaces"* and enumerates **thirteen** | seven matches today's `.claude/skills/routers/` — INDEX plus 7 | thirteen is what every agent row in §17.1 draws from, and dropping six leaves six agents with no namespace | a naming decision, not a design one. §17 uses the thirteen and flags the word |
 | C | **Where the read-back page and the briefing sit.** §D names seven pages; §C.3 and §C.2 name two more surfaces and place neither | make them pages 8 and 9 — one website, one set of taps, one store | keep them separate published pages: the read-back is the only surface where **a tap binds an instruction**, and mixing it into a dashboard is how a confirm becomes a click | the founder |
 | D | **What hosts the website.** FINAL put the Balcony on the artifact runtime; v4's pages must reach `tmux` on the founder's Mac | keep the artifact runtime for the read-only pages and let the taps go through a local endpoint | run the whole website locally, since *"everything is run on it"* is the founder's own sentence about the Mac | the founder. **Not decidable from §A**, which says what the pages do and not what serves them |
 | E | **`maxTurns` for the nine agents with no seed** | the six seeded agents carry 30 or 25 and the lint ceiling is 120, so any value in range loads | at 30 the ceiling was setting the value rather than bounding an error; a measured reviewer run needed 68 tool calls. It is a per-agent tuning decision and guessing it fifteen times is how a field becomes inert | the founder, or the first measured run of each agent |
 | F | **`isolation` for the agents that write outside a venture's source** — architect, product, writer, growth, steward, curator | `worktree` for anything that writes, uniformly, and the rule needs no exceptions | five of those six write **memory, specs and drafts**, not source; a worktree per memory write is ceremony, and `git worktree add` is the one command that needs the sandbox lifted | the founder. §17.1 marks the cells rather than filling them |
+
+---
+
+### 20.5 Closed while this document was being written
+
+**(NEW: v36 — the tainted-read collision, raised by §17.3 and decided the same day)** §F put READ-ONLY-tainted at
+**scout only**; §B.2 row 12 granted **steward** Gmail, Calendar, Drive and Notion **read**, and steward carries
+`Write`. One grant, two rules, both inside §A. **Decided 2026-09-05 by the orchestrator, on FINAL §9.4–9.5 and
+v33:** a tainted read is held by `scout` and by the **world's door**, a program with no model, and by nothing else.
+`steward` holds none and writes obligations from scout's handover and from the door's inbound rows. **The losing
+image, kept by name:** *a steward that reads mail with a pen in its hand.* It is recorded here, and not silently
+removed from 20.4, because a decision that vanishes reads as a question nobody asked.
+
+**(NEW: what this row demonstrates about the other five)** It closed in one move because both sides were already
+written down and a standing rule — the trifecta split — reached it. **The five left in 20.4 have no such rule
+overhead**, which is why they are the founder's and not an editor's.
+
+---
 
 **(NEW: one item that looks like a decision and is not)** `scripts/prompt-standard.test.mjs` pins a model set that
 does not contain `claude-fable-5-1`. That is a **red test**, not an open question: the set moves in the same change

@@ -7,13 +7,13 @@
 **(NEW: what this section is for, and why it is reproduced rather than summarised)** This is the row set every other
 section writes from. Twenty-three sections cannot disagree if each of them decides nothing that is not here. Rows
 **v1–v5** are the founder's overrules of FINAL §1 — they are not arguments, they are decisions, and each is followed
-in §1.2 by one paragraph stating the cost once and the chosen thing. Rows **v6–v35** are places a fact from the
+in §1.2 by one paragraph stating the cost once and the chosen thing. Rows **v6–v36** are places a fact from the
 world moves a FINAL row, or a place FINAL stands *because* a fact was checked against it. The losing image is kept
 by name in every row so it can be argued for later, and collected again in §22.
 
 ---
 
-### 1.1 The thirty-five rows
+### 1.1 The thirty-six rows
 
 | # | The question | Decided | From | The losing image, kept as |
 |---|---|---|---|---|
@@ -52,6 +52,7 @@ by name in every row so it can be argued for later, and collected again in §22.
 | **v33** | The trifecta split, inside a roster | **Survives intact.** The agent that reads the untrusted world (`scout`) holds no credential and cannot send. The agent that drafts an outward act (`writer`, `growth`) never holds the key. The thing that sends is **the Sender, a program with no model** | **FINAL** row 7, and cognition.md finds *no shipped analog* for staged-not-sent or a recall window anywhere | a research agent with a send verb; one agent that reads mail, decides and replies |
 | **v34** | What makes a grant real | **The exact argv, emitted by one no-model launcher**, plus the managed file of v11, plus a nightly probe that asserts what a run can actually touch | **FINAL** §7.5 and row 13, unchanged. **Mechanism:** `bin/run` is the only thing that composes argv (ABSENT); `bin/probe` asserts it nightly (ABSENT) | `--allowedTools` as a narrowing; a prose rule describing a grant |
 | **v35** | `Workflow` in an agent's tool line | **Absent from every agent, deliberately.** The gate may not be invocable by the thing it gates | **FINAL / this repo**, now **independently cited**: runtimes.md quotes the vendor — *"The `Workflow` tool is removed from all subagents via the first filter applied to subagent tool sets"* | granting a dispatched engine the ability to run its own gate |
+| **v36** | Who may hold a tainted read | **`scout` only, and the world's door program.** Gmail, Calendar, Drive and Notion reads are tainted READ-ONLY; **no agent that holds `Write`, `Edit` or `Bash` reads them raw.** `steward` writes obligations from `scout`'s handover; the world's door writes one inbound row per event and holds no model | **FINAL** §9.4–9.5 and v33, applied to a collision found between the tool classes and §5.2's `steward` row — one grant, two rules. Decided by the orchestrator 2026-09-05, DECISIONS.md §8 | a steward that reads mail with a pen in its hand |
 
 **Carried forward from FINAL §1, unchanged, by number:** rows **1, 2, 3, 4, 5, 7, 9, 14, 16, 17, 18, 20, 21, 22,
 23, 24, 25, 26, 27, 28, 29**. Rows **11, 12, 13, 19** are carried forward *and* moved, by v24/v25, v28, v34 and
