@@ -32,6 +32,25 @@ Claude Code fleet surface is spatial; every spatial project is a display and eve
 Building a surface that is both is therefore work nobody has published, and the office page is the one most likely to
 become a beautiful display. §14.9 keeps FINAL's guard rails on it for exactly that reason.
 
+**(NEW: v39 — what hosts the website, and it follows from the founder's own sentence rather than from a preference.)**
+Mission control is **served on the Mac by `mission-control/`** — the Bun and Hono server and React client that exist
+on branch `ceo-1-1788609834`, 60 files — because **a terminal pop needs `tmux` on the same machine**, and the
+published-artifact runtime cannot reach it. FINAL §17 marked `mission-control/` ABSORBED; v4 un-absorbs it as the
+seed rather than starting a website from nothing.
+
+**The phone reaches it two ways, and the split is by capability, not by taste:**
+
+| Surface | What it is for | What it cannot do |
+|---|---|---|
+| **The published artifact pages** — the absorbed Balcony views, the briefing, the read-back (v38) | reading and **deciding**, from anywhere, with a shared database, viewer identity and comment threads that wake the publishing session | **cannot pop a terminal**, because it is not on the Mac |
+| **The local server**, over the founder's own network | everything else, including every tap that opens a terminal | not reachable when the Mac is off, which is the same condition the whole night already has (§15.1) |
+
+**The cost, stated once and not re-litigated (v39):** **two renderers over one state** — which FINAL §13.1 explicitly
+refused when it said there is no third source of truth. It is accepted here because **a tap that opens a terminal
+cannot come from a hosted page**, and the refusal that actually matters survives intact: both renderers read the same
+log, and neither holds state the other cannot see. The losing images are kept by name: *the website hosted as a
+published artifact*, and *a cloud host that reaches into the Mac*.
+
 ---
 
 ### 14.2 Where the Floor and the Balcony now live
@@ -42,7 +61,9 @@ become a beautiful display. §14.9 keeps FINAL's guard rails on it for exactly t
 |---|---|
 | **The Floor** — one terminal, one agent, same memory, same envelope, sterile while the founder is in it | **Unchanged, and it is what every tap opens.** Mission control is the index; the Floor is the destination |
 | Balcony · **Now** | page 2 (agents and child flows) |
-| Balcony · **Decide** and **Last night** | page 5's desk strip |
+| Balcony · **Decide** | **page 4, as cards in a "waiting on you" column** — and on the phone, as a published page (v38) |
+| Balcony · **Last night** — the briefing | **the top strip of page 5** — and on the phone, as a published page (v38) |
+| FINAL §2.4's **read-back page** | **the intent-creation form wherever an intent is born** — page 4's *new card* and page 7's *add session* — and a published phone page for voice (v38) |
 | Balcony · **Ventures** | page 1 (the office), one venture per area |
 | Balcony · **Cord** | **a control present on every page**, not a view of its own |
 | *(new)* | page 3, the dashboard v14 admits |
@@ -224,6 +245,18 @@ session and then, like, give it the task, and then it starts walking."*
 
 **What it shows.** A board with stages, a timeline, and a kanban; PRs beside tickets.
 
+**(NEW: v38 puts two of FINAL's Balcony views on this page rather than leaving them unplaced.)** **`Decide` is a
+"waiting on you" column on this board**, each card carrying its six fields and both options already built — so a
+decision is a card in the same board as the work it blocks, rather than a separate view the founder must remember to
+open. And **the read-back is this page's *new card* form**: an intent is born here, so the restatement that binds it
+is born here too (§C.3). Nothing binds by voice; the founder confirms by tap or typed word, on this form.
+
+**(NEW: v36 decides where a card may come from, and it is the same rule as the trifecta.)** A card that originates
+outside the company — a support message, an invoice, a failed build, a reply — is created from **an inbound row
+written by the world's door, a program with no model**. No agent reads the raw mail, calendar or Notion item; `scout`
+reads the row, and `steward` writes the obligation from `scout`'s handover. **The board therefore never renders
+attacker-controlled text as an instruction to anything** — it renders a row a program wrote.
+
 **What the tap launches.** **Dragging a card into "working on it" launches a session with a team of agents and hands
 it the task.**
 
@@ -288,11 +321,17 @@ falsifier. *How does the whole thing work* → this document and its diagrams. *
 intent id and an intent cannot exist without a founder sentence behind it, everything the system ever did traces back
 to something the founder actually said** — not a logging feature, a consequence of one rule.
 
-**(NEW: this page carries the desk strip, which is where FINAL's Balcony went.)** *Decide* — the whiches, each with
-its six fields and both options already built — and *Last night*, the briefing. The briefing's shape is unchanged
-from FINAL §13.4, and the field to fight for is unchanged too: **what I could not check.** A briefing that reports
-only successes trains the founder to trust the system uniformly, which is exactly wrong when some done-tests reach
-rung 1 and some only rung 4.
+**(NEW: v38 — the briefing is the top strip of this page, and `Decide` is not.)** *Last night* lives here, above the
+engines, because the briefing answers *what happened* and this is the page that answers *how it works*. `Decide` went
+to page 4 instead, as a "waiting on you" column, so that a decision sits beside the work it blocks. **Both remain
+published phone pages**, which is how they are read away from the Mac (v39).
+
+**(FINAL §13.4, unchanged.)** The briefing's shape is the newsroom budget meeting: what moved, what finished, what is
+stuck, **what I could not check**, what is waiting on you, what it cost, whether the books agree with the bank, what
+I got wrong, and what I would do next. The field to fight for is unchanged: **what I could not check.** A briefing
+that reports only successes trains the founder to trust the system uniformly, which is exactly wrong when some
+done-tests reach rung 1 and some only rung 4. It shows **the raw work rather than a summary of it** — the render, the
+diff, the email that would go out, staged — and it is never an interruption, because the founder opens it.
 
 **State.** **ABSENT.**
 

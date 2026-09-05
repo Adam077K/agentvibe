@@ -511,7 +511,7 @@ carried by `--restricted` plus an explicit `--tools` list, which does not touch 
 
 ## J · Losing-images ledger — additions
 
-Kept by name so each can be argued for later. Five are the founder's overrules; the rest are moved by research.
+Kept by name so each can be argued for later. Five are the founder's overrules; the rest are moved by research, and 25–30 by the orchestrator's build-round decisions (DECISIONS.md §8–§10).
 
 1. **Three shapes — maker · scout · checker — with loadouts per run** (FINAL row 6 → v1).
 2. **Labels, not names; no registry of personalities; a run labelled by what it makes and which window it
@@ -538,6 +538,12 @@ Kept by name so each can be argued for later. Five are the founder's overrules; 
 22. **FINAL §10.1's Letta attribution** (→ v25; the vendor page no longer supports it).
 23. **A plan-critique pass the same run performs on itself** (→ v30; measured as harmful).
 24. **`script -qfc` around every Codex child** (→ v32; incompatible with parallel jobs).
+25. **A steward that reads mail with a pen in its hand** (→ v36; the world's door and `scout` read, steward writes).
+26. **A brief that names no agent and lets the launcher guess; `agent+window+model:` as one widened field** (→ v37).
+27. **A read-back page as an eighth page; a briefing nobody can reach from mission control** (→ v38).
+28. **The website hosted as a published artifact; a cloud host reaching into the Mac** (→ v39).
+29. **One `maxTurns` for every agent; no cap** (→ v40).
+30. **A worktree for every agent; no isolation for the four that edit source** (→ v41).
 
 ---
 

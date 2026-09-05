@@ -112,7 +112,7 @@ the other two to be guessed at dispatch.)**
 | Band | Task types | Envelope | Claude Code mode | Codex `approval_policy` × `sandbox_mode` | Who runs in it |
 |---|---|---|---|---|---|
 | **Read and report** | research, review, audit, analysis, challenge | `may-alone` | `plan` | `never` × `read-only` | scout · reviewer · guard · challenger · analyst |
-| **Build in a worktree** | code, design, copy, spec, schema, memory | `may-alone`, inside one venture's worktree | `dontAsk` with `--restricted` and an explicit `--tools` | `never` × `workspace-write` | builder · architect · tester · designer · product · writer · growth · steward · curator |
+| **Build in a worktree** | code, design, copy, spec, schema, memory | `may-alone`, inside one venture's worktree | `dontAsk` with `--restricted` and an explicit `--tools` | `never` × `workspace-write` | builder · architect · tester · designer · product · writer · growth · steward · curator — **none of them holds a tainted read (v36)**; `steward` works from `scout`'s handover, never from a raw inbound row |
 | **Stage an outward act** | send, publish, pay, deploy, share, delete | **`never` for every agent** | no mode — no agent performs it | — | nobody. The **Sender** performs it, and it holds no model |
 | **Wake the founder** | anything on the venture's `wake-me` list | `wake-me` | — | — | the Watch, before it rings, against the interruption budget |
 
@@ -267,8 +267,21 @@ no `Write` and no credential, and §B.2's own summary is the rule as a table —
 five carry no write of any kind, and only four can touch source.* The check at dispatch does not go away; it now has
 something static to check against.
 
-**(NEW: §F's tainted class is where this rule meets the tool plan.)** READ-ONLY **tainted** tools — Gmail read, Drive
-read, Notion read, the open web — may be held by **`scout` only**, and §8 carries the door that admits them.
+**(NEW: v36 — §F's tainted class is where this rule meets the roster, and it is where the roster contradicted itself
+until it was decided.)** READ-ONLY **tainted** tools — Gmail read, Calendar read, Drive read, Notion read, the open
+web — may be held by **`scout` only, plus the world's door program, which holds no model.** §8 carries the door that
+admits them.
+
+**The collision, and how it was resolved:** §B.2 row 12 gave `steward` mail, calendar, drive and Notion **read**
+while also giving it `Write` — one grant satisfying two rules that cannot both hold, because untrusted content plus a
+pen is two thirds of the trifecta with the third leg one obligation away. **`steward` now holds none of them.** The
+world's door writes one inbound row per event; `scout` reads those rows and the raw world; **`steward` writes
+obligations from `scout`'s handover and never from a raw row.** The losing image is kept by name: *a steward that
+reads mail with a pen in its hand.*
+
+**Why this is the right direction to resolve it:** the alternative was taking `Write` off `steward`, which would
+leave nothing able to record an obligation. Taint is the leg that can be removed without removing a capability the
+company needs, and it is removable by argv rather than by instruction.
 
 **Mechanism:** `bin/run` refuses a brief whose grant carries both an outside-reading tool (`WebFetch`, `WebSearch`, a
 read of the inbound log) and any of `Write`, `Edit`, `Bash` or a `REACHES THE WORLD` tool (**ABSENT**); `bin/probe`

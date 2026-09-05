@@ -7,13 +7,19 @@
 **(NEW: what this section is for, and why it is reproduced rather than summarised)** This is the row set every other
 section writes from. Twenty-three sections cannot disagree if each of them decides nothing that is not here. Rows
 **v1–v5** are the founder's overrules of FINAL §1 — they are not arguments, they are decisions, and each is followed
-in §1.2 by one paragraph stating the cost once and the chosen thing. Rows **v6–v36** are places a fact from the
+in §1.2 by one paragraph stating the cost once and the chosen thing. Rows **v6–v41** are places a fact from the
 world moves a FINAL row, or a place FINAL stands *because* a fact was checked against it. The losing image is kept
 by name in every row so it can be argued for later, and collected again in §22.
 
+**(NEW: where the last six rows came from, said once because their provenance is different from the rest)** Rows
+**v36–v41 were decided by the orchestrator during the build round** (DECISIONS.md §8–§10), each because a section
+writer hit a question the spine did not answer and returned it rather than inventing one. That is the intended path
+and the rows are load-bearing, not late additions: v36 closes a collision between two rules over one grant, v37
+closes the brief's field count, and v38–v41 place or dimension things the roster and the seven pages made concrete.
+
 ---
 
-### 1.1 The thirty-six rows
+### 1.1 The forty-one rows
 
 | # | The question | Decided | From | The losing image, kept as |
 |---|---|---|---|---|
