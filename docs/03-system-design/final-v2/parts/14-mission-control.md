@@ -369,6 +369,13 @@ which provider models use and, like, which task and which agent, like, to have a
 choose worktree, project, provider, model, task and agent, then launch it in the background and attach to it
 (§14.11).
 
+**(NEW: v38 — *add session* is the second place an intent is born, so it is the second place the read-back lives.)**
+The form states back what it understood, as an intent with a done-test, before anything launches. This is not
+ceremony on a playground page: the store check refuses an intent with no read-back confirmation row, so a session
+started here carries the same binding record as one dragged from a card on page 4. **(NEW: v37 names the field that
+makes this page dispatchable at all** — the brief carries `agent:`, the roster name the launcher composes argv for,
+which is exactly the "which agent" the founder asked to choose here.**)**
+
 **Substrate, decided by licence rather than by taste** (v15). **Langflow — MIT, 154,275 stars, last push 2026-09-05,
 alive — is the canvas idiom.** Two are refused and neither refusal is close:
 

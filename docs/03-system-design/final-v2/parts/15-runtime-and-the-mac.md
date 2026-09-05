@@ -9,6 +9,14 @@
 **(FOUNDER, and it is why this section exists at all.)** *"everything is run on it."* Day one is this Mac: lid open,
 on power, logged in.
 
+**(NEW: v39 makes that sentence a hosting decision, not only a runtime one.)** **Mission control is served on this
+Mac**, by `mission-control/` — the Bun and Hono server and React client on branch `ceo-1-1788609834` — because a tap
+that pops a terminal needs `tmux` on the same machine, and a published page cannot reach it. So the website inherits
+every fact in this section: it is up while the Mac is up, it dies at logout with everything else, and it is reachable
+from the phone over the founder's own network. **What the phone keeps when the Mac is asleep** is the published
+artifact pages — the briefing, the read-back, and the Decide items — which are for reading and deciding and can pop
+nothing. §14.1 carries the cost of that split, stated once: two renderers over one state.
+
 **(FINAL)** The target is the split the design implies. **The Watch, the Sender and the log on an always-on machine**,
 because obligations must complete and the log must never be lost. **The runs wherever they are cheapest**, because
 they hold no credentials by construction. **The founder's Mac as a client** — a very good one — that can sleep
