@@ -23,7 +23,7 @@ argument for an always-on loop. §4.4 states the seam.
 flowchart TD
     T["Tick · the interval is a field in settings.yml, ABSENT"] --> CORD{"0 · Is the cord pulled?<br/>A file, read first"}
     CORD -->|"yes"| HALT["Nothing starts. Running work<br/>finishes its step and stops"]
-    CORD -->|"no"| CHEAP["Cheap pass — NO MODEL CALL.<br/>Read charters, intents, obligations, the ledger,<br/>capacity per window AND per week, open whiches"]
+    CORD -->|"no"| CHEAP["Cheap pass — NO MODEL CALL.<br/>Read charters, intents including standing ones<br/>and their every: / on: fields, obligations, the ledger,<br/>capacity per window AND per week, open whiches"]
     CHEAP --> G1{"1 · An obligation due,<br/>or inside its lead time?"}
     G1 -->|"yes"| DOIT["Do it, on whichever window has room.<br/>Nothing else is considered for this venture"]
     DOIT --> SLEEP
@@ -37,7 +37,7 @@ flowchart TD
     G4 -->|"yes"| ROUTINE["The routine window: the curator, sweeps, link checks,<br/>second-family checking, regression re-runs, the<br/>summarising half of transcript mining. Embeddings,<br/>classification and dedup run locally on electricity"]
     ROUTINE --> SLEEP
     G4 -->|"no"| SLEEP["Sleep until the next tick"]
-    G5{"5 · A live Intent with<br/>unfinished candidate work?"}
+    G5{"5 · A live Intent with unfinished candidate work,<br/>or a STANDING intent whose every: has come round<br/>or whose on: event class has arrived?"}
     G5 -->|"no"| G4
     G5 -->|"yes"| DESK["THE DESK ranks<br/>one small model call, or none"]
     DESK --> G6{"6 · Top candidate above the floor,<br/>and would its outcome change a next act?"}
@@ -59,6 +59,18 @@ meaningful because its default branch is free, not because it is clever.
 **(FINAL)** Nine gates and eight of them stop, cheapest and most absolute first: **the cord beats everything; an
 obligation beats a goal; the founder's presence beats capacity; capacity beats desire; provenance beats opportunity;
 the envelope beats capability; flow limits beat all of it.**
+
+**(FOUNDER, v55: a standing intent is read by the tick and dispatched like any other candidate, which is the whole
+of what the founder asked for)** The founder asked for agents *"that can run every set time or evant or something
+else … to build the company like working"* and chose standing intents run by the Watch. A standing intent is an
+intent that never expires, carrying `every:` (a cadence) or `on:` (an inbound event class) — §2.8. The cheap pass
+reads those two fields with the rest of the intent store, still with **no model call**, because *has this cadence
+come round* and *did an event of this class arrive* are date and string comparisons. When one has, it becomes
+candidate work at **gate 5** and passes every gate after it unchanged: the Desk ranks it against everything else,
+the reserve line stops it like anything else, and the WIP limit counts it. **Obligations still come first** — gate 1
+is before gate 5 and nothing about a cadence moves it — so a standing intent can never displace something owed to
+someone by a date. **Mechanism:** `bin/watch` reads `every:`/`on:` on each tick (**ABSENT**); `bin/check-stores`
+refuses `every:` without a ceiling per run (**ABSENT**), which is what keeps a thing that fires forever bounded.
 
 **(NEW: the tick interval is deliberately not written here, and the omission is the point)** FINAL drew it as *every
 240 s* and gave the reason — control latency for the cord, a *which* answered, a run's difficulty. The number is a

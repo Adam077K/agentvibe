@@ -50,7 +50,7 @@ limit, which is the difference between a stop and a reroute.
 
 ### 2.2 The Intent, and the done-test that makes it real
 
-**(FINAL)** One live goal, six fields:
+**(FINAL)** One live goal, six fields — and, since v55, two optional ones that only a standing intent carries (§2.8):
 
 ```
 purpose:    one sentence — what becomes true, and why it matters
@@ -59,6 +59,9 @@ ceiling:    the most this may consume before it must come back to me
 expires:    the date it stops being live if not finished or renewed
 owner:      founder, or the venture's own standing intent
 evidence:   what will be attached to prove the done-test passed
+
+every:      OPTIONAL, v55 — a cadence: this intent is considered again every time it comes round
+on:         OPTIONAL, v55 — an inbound event class: this intent is considered when one arrives
 ```
 
 **(FINAL)** The done-test is the whole design compressed into one field. Compare two ways of instructing one piece
@@ -273,3 +276,43 @@ know, the history and number of sessions and, like, to understand how do we save
 is **not** a founder task. It is bounded by mechanism in three places — the vendor's concurrent-subagent cap, the WIP
 limit per venture, and at most two driven ventures — and the board **refuses a drag that would breach any of them**
 rather than asking the founder to count. §14 and §15 carry it.
+
+---
+
+### 2.8 Standing intents — the company working on a cadence or an event
+
+**(FOUNDER, v55)** *"skip hermes for now. but think about agents like: customer support, marketing agents: leads,
+reacherch, security, competers, data anslisis and more that can run every set time or evant or something else. it to
+build the company like working."* Asked which shape that should take, the founder chose **standing intents with a
+cadence or trigger, run by the Watch**.
+
+**(FOUNDER: what a standing intent is)** An intent that **never expires**, carrying `every:` — a cadence — or `on:`
+— an inbound event class. It is written once, through the same read-back as any other intent, and it is the
+`owner:` field FINAL §2.2 already anticipated: *"founder, or the venture's own standing intent"*. Every time it comes
+round, the Watch treats it as candidate work like any other and dispatches it to the agent its kind already routes
+to. **Its outputs stage; they never send** — a standing intent is a recurring *reason to consider work*, not a
+standing permission to act, and the Sender's rules are unchanged by it.
+
+**(NEW: why this needs no new agents, which is the load-bearing half of the row)** Each of the founder's examples is
+already a kind of work the Operator routes, so the row adds a field to the intent store and nothing to the roster.
+
+| The founder's example | The agent it routes to | Why that one, from its existing anchor |
+|---|---|---|
+| customer support | **steward** | it already owns *"something is owed to someone by a date"* and works from `scout`'s handover of inbound rows; a support thread is an obligation with a creditor |
+| marketing: leads | **growth** | it already drafts the outward act, and the Sender is what sends it |
+| research | **scout** | it already holds the tainted read of the open web and returns facts, never acts (v36) |
+| competitor watch | **scout** | the same read, on a cadence rather than on a request |
+| security | **guard** | it already reviews adversarially and produces a finding nothing downstream re-derives |
+| data analysis | **analyst** | it already reads the reconciliation's mismatches and drafts the Decide item |
+
+**(NEW: the two things this must not become, both named because they are the obvious next step and both refused)**
+It is **not a second scheduler** — there is one Watch, one tick, one ranking, and a standing intent is a row it
+reads, not a clock it obeys. And it is **not a cron field in an agent file**, because that would put the decision to
+run work inside the thing that does the work, where nothing ranks it against an obligation or against the reserve.
+Both are kept in §22.
+
+**(NEW: what has to hold for a cadence not to be a leak)** A standing intent that fires forever needs a bound that
+is not its own expiry, because it has none. So the ceiling is **per run**, not per intent, and a standing intent
+with `every:` and no per-run ceiling does not load. **Mechanism:** the intent schema gains the two optional fields;
+`bin/watch` reads them on each tick (**ABSENT**); `bin/check-stores` refuses `every:` without a ceiling per run
+(**ABSENT**). §4 carries the tick side.

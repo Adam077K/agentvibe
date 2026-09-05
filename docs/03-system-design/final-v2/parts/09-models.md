@@ -1,6 +1,6 @@
 ## 9 · Models
 
-*obeys: v20, v21, v22, v23 (SPINE §G entire); inherits: FINAL §5, §14.5, §15.3 with its coefficients corrected*
+*obeys: v20, v22, v23, and v57, v58, v59 which overrule v21 and §G.1's teammate row (SPINE §G entire); inherits: FINAL §5, §14.5, §15.3 with its coefficients corrected*
 
 **(FOUNDER.)** *"we need to understand what models each agent gets because we don't need everyone running on Opus or
 Fable or Astra or Terra ChatGPT models. We can also define it."*
@@ -18,19 +18,33 @@ file — `model:` in frontmatter — which is what makes this routing rather tha
 
 | Tier | Agents | Count |
 |---|---|---|
-| `claude-opus-5` | builder · architect · guard · designer · challenger | **5** |
+| `claude-fable-5-1` | builder · architect | **2** |
+| `claude-opus-5` | guard · designer · challenger | **3** |
 | `claude-sonnet-5` | reviewer · tester · scout · product · analyst · growth · steward · curator | **8** |
 | Split by move | **writer** — `claude-opus-5` for taste work, `claude-sonnet-5` for routine | **1** |
 | **The Operator** | `claude-opus-5`, on top of the fourteen | **1** |
 
-**Verified against SPINE §B.2 row by row: five, eight and one, totalling fourteen. The count is correct as
-written.** Counting the Operator, six of fifteen named roles sit on Opus 5 and eight on Sonnet 5.
+**Two, three, eight and one, totalling fourteen.** Counting the Operator, **four of fifteen named roles sit on Opus
+5, two on Fable 5.1 and eight on Sonnet 5**, with one split by move.
 
-**(NEW: three of the five Opus rows are checkers, and that is deliberate rather than incidental.)** `guard`,
-`challenger` and `architect` are on the top tier while `reviewer` and `tester` are not, because the first three
-produce a **finding or a contract that nothing downstream re-derives**, and the last two produce something a
-deterministic anchor immediately re-tests. Where a cheap check exists, the cheap model is enough; where the output
-*is* the check, it is not.
+**(FOUNDER, v57: `builder` and `architect` default to Fable 5.1, and v21 is the losing image.)** *"Fable as
+builder's and architect's default."* This overrules v21, which admitted Fable only as an escalation under two
+conjoined conditions; that reading is kept by name in §22 and is not re-argued. **Reachability on the subscription
+seat is still one measurement and still UNVERIFIED** — Fable 5.1 is in the API catalogue and no plan table names it
+— so **the fallback is `claude-opus-5`**, written into both files as the value they carry until the measurement
+passes. **The cost, stated once:** the two heaviest producers now sit on the most expensive list price in the table
+(9.6), and what offsets it is not an argument but a coefficient — **Fable's cache reads are 0.025x base input
+against 0.1x for every other model** (9.5), on a workload measured at 89% context. **Mechanism:** `model:` in each
+agent file, plus the pinned lint set of 9.9, which must admit `claude-fable-5-1` in the same change that writes
+either file.
+
+**(NEW: the top-tier rows are mostly checkers, and that is deliberate rather than incidental.)** `guard`,
+`challenger` and `architect` sit on a top tier — Opus for the first two, Fable for the third since v57 — while
+`reviewer` and `tester` do not, because the first three produce a **finding or a contract that nothing downstream
+re-derives**, and the last two produce something a deterministic anchor immediately re-tests. Where a cheap check
+exists, the cheap model is enough; where the output *is* the check, it is not. `builder` is the one top-tier row
+that is not a checker, and v57 is why: the founder put the agent that writes the most code on the model with the
+cheapest re-read of a large standing context.
 
 **(NEW: no agent defaults to Haiku, and 9.8 is why.)** The genuinely cheap work does not go to a cheap model at all
 — it goes to a local one, or to no model.
@@ -45,17 +59,22 @@ move.)** Each row names its trigger, so a route can be checked rather than argue
 | Move | Model | Why this one |
 |---|---|---|
 | Any agent's default | as 9.1 | not everyone on the top tier — the founder's instruction |
-| A build whose done-test has **failed twice** under Opus 5, **and** whose horizon exceeds one window | escalate to `claude-fable-5-1` | 1M context, and **cache reads at 0.025x base input against 0.1x everywhere else**, so a large standing context is cheap to re-read. **Availability on a subscription seat is UNVERIFIED** — no plan table names Fable. Fallback is `claude-opus-5` |
-| A teammate inside an agent team | `claude-sonnet-5` | the vendor's own line, *"Use Sonnet for teammates"*, and teams use *"approximately 7x more tokens … when teammates run in plan mode"* |
+| Anything `builder` or `architect` does | `claude-fable-5-1` **as the default, not as an escalation** (v57) | 1M context, and **cache reads at 0.025x base input against 0.1x everywhere else**, so a large standing context is cheap to re-read. **Availability on a subscription seat is UNVERIFIED** — no plan table names Fable. Fallback is `claude-opus-5` |
+| A teammate inside an agent team | **the model its own agent file declares** (v59) | the founder: *"Turn it on, no model constraint."* A teammate is a full session running one of the fifteen files, so it runs at that file's model. The vendor's advice to floor teammates at Sonnet is the losing image, §22 |
 | Routine scouting, mail sorting, link checks, the summarising half of the transcript pass | **Gemini**, once authenticated | it burns a different window and never touches the founder's. Free tier: **60 requests/min, 1,000 requests/day** on a personal account |
 | Embeddings, classification, dedup, PII detection | **local, on electricity** — MiniLM (**384 dims**, Apache 2.0, *"input text longer than 256 word pieces is truncated"*) and Qwen3-0.6B (**32,768** context, Apache 2.0) | no window at all, and no vendor |
 | A checker on a prepared diff | Codex `gpt-5.3-codex`, in the one position of section 10 | a second model family, which is what the anchor ladder pays for |
 | A deterministic answer — test, grep, diff, sum, reconcile | **no model** | a no-model program is the cheapest and the only one that cannot be talked out of its answer |
-| `/goal`'s evaluator and the auto-mode classifier | **Haiku, set by the vendor, not by us** | see 9.8 |
+| `/goal`'s evaluator and the auto-mode classifier | **`claude-sonnet-5`, set by us** — `ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5` (v58) | the founder: *"Set ANTHROPIC_DEFAULT_HAIKU_MODEL to Sonnet 5 now"*, ahead of Haiku 4.5's retirement. See 9.8 |
 
-**(NEW, v21: Fable is an escalation with two conjoined conditions, and both must hold.)** *Failed twice* alone is a
-reason to re-read the done-test, not to spend more. *Horizon beyond one window* alone is a reason to batch. Only
-together do they describe the one regime where the top model is not priced like the top model (9.6).
+**(FOUNDER, v57: Fable is a default now, and the two-condition escalation is the losing image.)** The row above used
+to read *escalate to Fable when a done-test has failed twice under Opus 5 and the horizon exceeds one window* — v21,
+overruled by the founder. What was true about v21 and stays true is **why** that regime is cheap: a long-horizon
+build with a large standing context is the one move where the top model is not priced like the top model (9.6), and
+that is now the standing condition of the two agents that do most of the building rather than an exception they
+climb into. **What the change removes is a trigger nobody could observe cheaply** — *failed twice* and *horizon
+beyond one window* both needed history the ledger does not carry yet — and what it adds is a flat, checkable field
+in two files.
 
 **(FINAL §5.3, surviving and now sourced.)** *"The only justification for a harder window on a move is that a
 routine one has been measured to fail that move's rehearsal — the reverse of the usual instinct."* And: work judged
@@ -72,16 +91,16 @@ flowchart TD
     Q1 -->|"no"| Q2{"Is the founder waiting,<br/>on the Floor?"}
     Q2 -->|"yes"| TOP["The agent's default, never routed down.<br/>The Floor is never routed away"]
     Q2 -->|"no"| Q3{"A teammate inside an agent team?"}
-    Q3 -->|"yes"| SON["claude-sonnet-5 — the vendor's own advice"]
+    Q3 -->|"yes"| SON["ITS OWN FILE'S MODEL, v59.<br/>No Sonnet floor on teammates"]
     Q3 -->|"no"| Q4{"Routine scouting, sorting, link checks,<br/>or the summarising half?"}
     Q4 -->|"yes"| GEM["GEMINI — a different window<br/>from the founder's"]
     Q4 -->|"no"| Q5{"A checker on a prepared diff?"}
     Q5 -->|"yes"| CDX["CODEX gpt-5.3-codex —<br/>the one foreground position of section 10"]
-    Q5 -->|"no"| Q6{"Has this done-test failed twice under Opus 5<br/>AND does its horizon exceed one window?"}
+    Q5 -->|"no"| Q6{"Is this agent's declared default<br/>claude-fable-5-1? builder or architect, v57"}
     Q6 -->|"no"| OUT["The agent's default stands"]
     Q6 -->|"yes"| FAB{"Is claude-fable-5-1 reachable<br/>on this seat?"}
-    FAB -->|"UNVERIFIED, or no"| OUT
-    FAB -->|"yes"| ESC["Escalate to claude-fable-5-1"]
+    FAB -->|"UNVERIFIED, or no"| FALL["Fall back to claude-opus-5"]
+    FAB -->|"yes"| ESC["Run on claude-fable-5-1"]
 ```
 
 ---
@@ -142,7 +161,7 @@ does this system cost* are the same question.
 
 | Fact, quoted from the vendor 2026-09-05 | What it binds |
 |---|---|
-| *"Cache hits and refreshes on Claude Fable 5.1 and Claude Mythos 5.1 are priced at 0.025x the base input price. All other models use the standard 0.1x multiplier."* | the whole of v21, and the corrected formula in 9.6 |
+| *"Cache hits and refreshes on Claude Fable 5.1 and Claude Mythos 5.1 are priced at 0.025x the base input price. All other models use the standard 0.1x multiplier."* | the whole of v57, and the corrected formula in 9.6 |
 | *"5-minute cache write \| 1.25x base input price"*; *"1-hour cache write \| 2x base input price"* | the write coefficient is a function of the TTL bought, not a constant |
 | *"The lifetime is an hour on a subscription and drops to five minutes once you're drawing on usage credits; on an API key or cloud provider, it's five minutes by default."* | **broader than FINAL stated**: three conditions shorten it, not one. It shortens **twelvefold at the moment the account crosses into overage**, which is exactly when the machine is busiest |
 | *"a 50% discount on both input and output tokens"*, and *"Batch API and prompt caching discounts can be combined"* | batch still needs a metered key; the row is ready for the day one exists |
@@ -192,7 +211,7 @@ Base input and the published absolutes both appear so either can be checked agai
 | Haiku 4.5 (`claude-haiku-4-5-20251001`) | 1 / 5 | 0.10 | 1.25 / 2 | 200K |
 | `gpt-5.3-codex` | 1.75 / 14 | 0.175 | — | — |
 
-**(NEW: this is the quantitative backing for v21, and it is the one number that changes an instinct.)** List price
+**(NEW: this is the quantitative backing for v57, and it is the one number that changes an instinct.)** List price
 runs **10x in and 10x out** from Haiku 4.5 to Fable 5.1 — but **Fable's cache reads are only 2.5x Haiku's**. On the
 cache-dominated workload FINAL §14.5 measured at 89% context, the model spread collapses. **A long-horizon build
 with a large standing context is the one move where the top model is not priced like the top model.**
@@ -228,17 +247,28 @@ date of any model this system names**, against Sonnet 5's *"June 30, 2027"*, Opu
 5.1's *"Not sooner than September 1, 2027"*. It is also **the only Haiku in the published table**, so there is no
 successor to move to inside the family.
 
-**So no agent's default is Haiku.** It remains exactly where the vendor sets it: `/goal`'s evaluator and the
-auto-mode classifier. `ANTHROPIC_DEFAULT_HAIKU_MODEL` changes it, and the trap in that lever is that it changes it
-**everywhere the small fast model is used**, not only for `/goal`.
+**So no agent's default is Haiku.** The two places the vendor sets it are `/goal`'s evaluator and the auto-mode
+classifier, and `ANTHROPIC_DEFAULT_HAIKU_MODEL` is the one lever that moves them.
+
+**(FOUNDER, v58: the lever is pulled now, not on the retirement date.)** *"Set ANTHROPIC_DEFAULT_HAIKU_MODEL to
+Sonnet 5 now."* So the env var is `claude-sonnet-5` from the first launch, and nothing of ours depends on Haiku 4.5
+before 2026-10-15 rather than at it. **The trap in the lever is unchanged and is the reason the cost is worth
+stating: it changes the small fast model *everywhere* it is used**, not only for `/goal`. **The cost, once:** every
+goal check and every auto-mode classification is priced at Sonnet's base input rather than Haiku's — 2 against 1
+per MTok in, 10 against 5 out (9.6) — on a call that happens after every turn of a `/goal` run. That is the price of
+not being surprised by a retirement, and the founder chose to pay it now. **Mechanism:** the variable is set in the
+launcher's environment — `bin/run` (**ABSENT**) — and in the managed settings file's `env` block if it carries one,
+so a run cannot be started without it; a value set only in a shell profile would bind the founder's terminal and
+not the night.
 
 **(NEW: FINAL §16.7's *"local models: no shape"* is read as *no shape*, not as *no work*.)** The genuinely cheap
 work — embeddings, classification, dedup, PII detection, first-pass ranking — goes to **local models on
 electricity**, which have no window, no retirement date and no vendor. That is a stronger position than a cheap
 tier, not a weaker one.
 
-**Owner:** the founder, on a dated review (section 20 row 3). **Mechanism:** the model ids carry an expiry in the
-facts store and the store check fails a stale one — **ABSENT**.
+**Owner:** the founder, and **row 3 of section 20 is decided rather than open** — v58 answered it. **Mechanism:** the
+env var above, plus model ids carrying an expiry in the facts store that the store check fails a stale one against —
+**ABSENT**.
 
 ---
 
@@ -250,14 +280,16 @@ model set. Grepping it today returns `claude-opus-5`, `claude-sonnet-5`, `claude
 
 Two facts collide:
 
-- The escalation rule of 9.2 names `claude-fable-5-1`.
+- **The declared default of `builder` and `architect` is `claude-fable-5-1`** (v57, 9.1) — no longer an escalation
+  that might never fire, but the `model:` field of the first two agent files anyone writes.
 - `claude-fable-5` is listed by the vendor today under *"Legacy models (still available)"*, and its cache read is
   **1.00** against Fable 5.1's **0.25** — so the pinned id is not merely older, it **prices four times higher on the
-  exact term v21 escalates for**.
+  exact term v57 is spending for**.
 
-**An agent file written to 9.2 fails a blocking lint today.** The fix is one entry in the pinned set and it belongs
+**An agent file written to 9.1 fails a blocking lint today.** The fix is one entry in the pinned set and it belongs
 in the same change that writes the first agent file, not in a follow-up — because a follow-up means the roster lands
-red, and a red roster is a roster nobody trusts the lint on.
+red, and a red roster is a roster nobody trusts the lint on. **(FOUNDER, v57 makes this sharper than it was:** the
+lint cannot be deferred to whenever the escalation first fires, because the very first two files carry the id.**)**
 
 ---
 
@@ -287,7 +319,9 @@ company's whole capacity.
 | Rule | Mechanism | State |
 |---|---|---|
 | Each agent has one declared default model | `model:` in the agent file's frontmatter | **ABSENT** (fifteen files); the format is read by the runtime today |
-| A brief cannot name an unrecognised model | `scripts/prompt-standard.test.mjs` — blocking | **EXISTS**, branch `ceo-1-1788609834`; **needs `claude-fable-5-1` added** (9.9) |
+| A brief cannot name an unrecognised model | `scripts/prompt-standard.test.mjs` — blocking | **EXISTS**, branch `ceo-1-1788609834`; **needs `claude-fable-5-1` added** (9.9), and v57 makes that the first two agent files rather than a later escalation |
+| The small fast model is Sonnet 5, not Haiku 4.5 | `ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5` in the launcher's environment, and in the managed file's `env` if it carries one (v58) | **ABSENT** — `bin/run` does not exist; the variable itself is shipped and documented |
+| A teammate runs on its own file's model | the teammate is a full session started from an agent file; `bin/run` names the file, never a model (v59) | **ABSENT** — teams are on (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), the launcher is not built |
 | A run's cost is measured, never estimated | each run's own reported cost fields, joined by the dispatch id | **ABSENT** — the event log on this branch is the spine |
 | A stall cannot run forever | `--max-budget-usd`; subagent spend counts toward it; overflow fails a spawn with `Budget limit reached` | **shipped** (v2.1.217+). **It is not a billing control** — print mode only, computed locally at list price, and *"the session cost figure isn't relevant for billing purposes"* for subscribers (v23) |
 | A reserve is held per window **and** per week | a founder-set slider, and a weekly line reporting how often it was needed against how often it expired unused | **ABSENT** |

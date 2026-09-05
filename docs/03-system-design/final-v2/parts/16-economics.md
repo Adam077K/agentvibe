@@ -1,6 +1,7 @@
 ## 16 · Economics — where the money and the window actually go
 
-*obeys: §G.2, §G.3, v22, v23 · inherits: FINAL §15, with its cost formula corrected*
+*obeys: §G.2, §G.3, v22, v23, and v57 and v59 which change what the arithmetic assumes · inherits: FINAL §15, with
+its cost formula corrected*
 
 ---
 
@@ -143,12 +144,33 @@ retirement is committed *"Not sooner than October 15, 2026"* and it is the only 
 building a cheap executor tier on it buys a migration. The genuinely cheap work goes to **local models on
 electricity**; Haiku remains only where the vendor sets it.
 
-**(NEW: v21, and this is the quantitative surprise in the whole section.)** **On a cache-dominated workload the model
+**(NEW: v57, and this is the quantitative surprise in the whole section.)** **On a cache-dominated workload the model
 spread collapses.** List price runs **10x in and 10x out** from Haiku 4.5 ($1/$5) to Fable 5.1 ($10/$50) — but
 Fable's cache reads ($0.25) are only **2.5x** Haiku's ($0.10). FINAL §14.5 measured context at **89% of the load**,
 which is exactly the regime where the 0.025x read rate does the work. **A long-horizon build with a large standing
-context is the one move where the top model is not priced like the top model** — and that, not a benchmark, is why
-Fable is an escalation rather than a default.
+context is the one move where the top model is not priced like the top model** — and that, not a benchmark, is the
+coefficient the founder's decision rests on.
+
+**(FOUNDER, v57: this section's arithmetic keeps one assumption and loses another, and both are named rather than
+recomputed.)** `builder` and `architect` now **default** to Fable 5.1 rather than escalating into it, so the two
+agents that produce the most work sit on the **highest list price** in the table and on the **lowest cache-read
+multiplier** in it at the same time. **What is lost is the assumption that Fable's share of the bill is rare** — the
+formula's per-model rate `R` was written expecting most runs at 0.100 and a few at 0.025, and the mix now goes the
+other way for the busiest lane. **What is kept, and what makes the trade the founder's rather than a gamble, is the
+paragraph above:** on a workload that is 89% context, the read rate is the term that dominates, and Fable's is four
+times cheaper than everything else's. **No number in 16.3 is changed here, because none of them can be recomputed
+without measuring the mix** — and this section has said since FINAL that two competent reviewers diverged tenfold on
+exactly that assumption. The first ten real moves measure it; until then the correct statement is which way the
+uncertainty now leans, and it leans on the cache hit rate harder than before.
+
+**(FOUNDER, v59: teammates are no longer floored at Sonnet, and that changes the multiplier on one line.)** The
+vendor's *"approximately 7x more tokens … when teammates run in plan mode"* was previously multiplied against
+Sonnet's rates, because §9.2 pinned every teammate to Sonnet. The founder turned teams on **with no model
+constraint**, so a teammate runs at its own agent file's model and that 7x lands at **Opus and Fable prices for the
+agents that declare them**. Again no new figure is invented: the 7x is the vendor's, the rates are §16.3's table,
+and the product of the two is a measurement nobody here has taken. **What the plan owes this decision is a
+measurement, not an estimate** — the per-run cost fields, joined by the dispatch id, split by dispatch mechanism, so
+*teams cost too much* becomes a checkable statement about specific runs rather than an argument about a multiplier.
 
 **(FINAL, holding: batch still needs a metered key.)** 50% off both directions, stacking with caching. Batch prices
 are now published for every model, so the row is ready for the day a key exists — and §G.5's terms question is

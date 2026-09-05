@@ -24,6 +24,37 @@ protecting is kept as four rules that now live inside a roster.
 
 ---
 
+### 5.0 Two waves — which of the fifteen are written first
+
+**(FOUNDER, v54)** Asked how many of the fifteen to write at the start, the founder chose: **"Start with the eight
+that have seeds or code paths"**. The roster is unchanged — fourteen agents plus the Operator, and **all fifteen
+files are still ABSENT** — but the order in which they are written is now decided, and §19 draws it as two waves.
+
+| Wave | Agents | Why these |
+|---|---|---|
+| **Wave one — eight** | the **Operator** · `builder` · `reviewer` · `architect` · `tester` · `guard` · `scout` · `designer` | each has a seed file or a code path on this branch today: the seven engine files of `.claude/agents/` are the format and the `maxTurns` seeds (v40), `designer` already holds the one `playwright` grant that exists, and the checkers already run against this repository's own gate |
+| **Wave two — seven** | `product` · `analyst` · `writer` · `growth` · `steward` · `curator` · `challenger` | the six business agents and the challenger. They come online **when a venture needs them** — which, given v64 makes the harness itself the first venture, is not on day one |
+
+**(FOUNDER: the cost, stated once and not re-litigated)** Wave one is missing two agents whose absence changes how
+the system runs, not merely what it contains, and both gaps are covered by something weaker rather than by nothing:
+
+- **No `product`.** So a request too fuzzy to dispatch is closed by **the founder writing the done-test through the
+  read-back**, with the Operator proposing two candidates (§2.5, §3.6). The provenance rule is untouched, because
+  `product` never bound an intent anyway; what is lost is the founder's own time on the fuzzy ones.
+- **No `challenger`.** So a plan about to bind is attacked by **`guard`'s adversarial review and the founder's own
+  read** until wave two. That keeps v30's load-bearing half — the critique is external, by an agent that reads the
+  artifact and its done-test and never the author's reasoning — and loses the second model family v30 also asks for.
+
+**(NEW: what the two waves must not be allowed to become, because this is where a wave plan usually rots)** Wave two
+is **not a maybe**. Every one of the fifteen keeps its row in §5.2, its file in the §17 inventory and its anchor,
+because a roster that quietly shrinks to eight has re-decided v1 and v31 without saying so. What a wave is, exactly:
+the order §19 writes the files in. **Mechanism:** the inventory carries the wave per agent, so *not yet written* and
+*not in the roster* cannot be confused for one another; and `bin/run` refuses a brief naming an agent whose file
+does not exist (**ABSENT**), which is what makes wave two's absence a refusal rather than a silent fallback to some
+other agent.
+
+---
+
 ### 5.1 The four rules that survive the move from three shapes to fourteen names
 
 **(FINAL, kept; each names its mechanism)**
@@ -57,9 +88,9 @@ proves the work and is **never the agent's own report**)**
 
 | # | Name | The job it exists for | Expertise lens | Model | Tools | MCPs | Skill namespaces | Anchor — what proves it | The Operator routes here when |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | **builder** | Writes the code. One artifact, one worktree, continuous context | engineering | `claude-opus-5` · escalates to `claude-fable-5-1` under v21 | Read Write Edit Bash Glob Grep | none by default | engineering · testing | the venture's own CI, plus the done-test, plus the tester's blind test | the intent's outcome is source code |
+| 1 | **builder** | Writes the code. One artifact, one worktree, continuous context | engineering | **`claude-fable-5-1`** (v57, the founder); fallback `claude-opus-5` while reachability is UNVERIFIED | Read Write Edit Bash Glob Grep | none by default | engineering · testing | the venture's own CI, plus the done-test, plus the tester's blind test | the intent's outcome is source code |
 | 2 | **reviewer** | Judges code it did not write, against a named dimension | engineering · correctness | `claude-sonnet-5`; a second family when reachable | Read Glob Grep | none | engineering · quality | findings reproduce from the diff alone; a finding with no reproduction is a hypothesis | any builder handover, before merge |
-| 3 | **architect** | The contract before the code: schema, API, data model, migration | engineering · systems | `claude-opus-5` | Read Glob Grep Write (design paths only) | none | engineering · data | a migration that applies and rolls back in a scratch database | the work changes a schema, an interface or a stored shape |
+| 3 | **architect** | The contract before the code: schema, API, data model, migration | engineering · systems | **`claude-fable-5-1`** (v57, the founder); fallback `claude-opus-5` while reachability is UNVERIFIED | Read Glob Grep Write (design paths only) | none | engineering · data | a migration that applies and rolls back in a scratch database | the work changes a schema, an interface or a stored shape |
 | 4 | **tester** | Writes the test that judges a build, **blind to the implementation** | quality | `claude-sonnet-5` | Read Write Edit Bash Glob Grep, `--add-dir` excluding the implementation | none | testing · quality | the test fails before the change and passes after | any intent whose done-test needs a new anchor (v8) |
 | 5 | **guard** | Security and adversarial review; every tool admission | security | `claude-opus-5` | Read Glob Grep | none | security | a proof of concept that reproduces, or the finding is a hypothesis | auth, credentials, network, outward acts, migrations, or a new tool at the door |
 | 6 | **scout** | Finds things out. Stateless, parallel legal here and only here. **Reads the untrusted world** | research | `claude-sonnet-5`; Gemini once authenticated | Read Glob Grep WebSearch WebFetch — **no Write, no credential, no send** | read-only servers, per run | research | every claim carries URL, quote and access date; `check-citations.mjs` blocks on a dead one | a bounded question of fact is cheaper to answer than to assume |
@@ -101,8 +132,9 @@ plus `Agent(...)`, no `Write`, no `Edit`, no `Bash`, and its file is ABSENT like
 one names the thing that would make that agent wrong)**
 
 **1 · builder.** Writes the code, and is the only agent for which *"one artifact, one agent, continuous context"* is
-a hard rule rather than a preference. Lens: engineering. `claude-opus-5`, escalating to `claude-fable-5-1` only
-under v21's single named rule — a done-test failed twice under Opus 5 and a horizon beyond one window. Full grant:
+a hard rule rather than a preference. Lens: engineering. **`claude-fable-5-1` by the founder's decision (v57)**, with
+`claude-opus-5` as the fallback while reachability on the seat is UNVERIFIED; v21's escalation-only rule is the
+losing image (§22) and §9.1 carries the cost. Full grant:
 Read, Write, Edit, Bash, Glob, Grep, inside one worktree. No MCPs by default, because a builder with a server has a
 surface nobody admitted. Skills: engineering, testing. **Anchor:** three things, none of them its own report — the
 venture's CI, the done-test, and the tester's blind test. **The way it goes wrong:** it fixes something outside its
@@ -117,7 +149,8 @@ findings reproduce from the diff alone. A finding that does not reproduce is a h
 comparing two candidates it compares pairwise and order-swapped with the candidate stripped of its label.
 
 **3 · architect.** The contract before the code: schema, API, data model, migration. Lens: engineering, systems.
-`claude-opus-5`, because a wrong interface is expensive in a way a wrong function is not. Read, Glob, Grep, and
+**`claude-fable-5-1` (v57)**, fallback `claude-opus-5`, because a wrong interface is expensive in a way a wrong
+function is not — the founder put the two heaviest producers on the top tier deliberately. Read, Glob, Grep, and
 `Write` **on design paths only**. Skills: engineering, data. **Anchor:** a migration that applies **and rolls back**
 in a scratch database — an anchor outside the model, run by a program. **The seam with builder is v7 and it is the
 whole reason this is a separate agent:** the architect's output is a separate artifact with its own done-test,
@@ -351,6 +384,14 @@ a satisfied requirement** — there is no non-Anthropic model reachable from ins
 asks for a 2-of-3 multi-judge panel and `risk: high` asks for two distinct model families, and neither is met today.
 Codex's admission (v5, v32) is the route to changing that, and until it passes its rehearsal the gap stays named.
 
+**(FOUNDER, v54: in wave one it is narrower still, and the narrowing is stated here rather than discovered)** The
+`challenger` file is wave two (§5.0), so until a venture brings it online **there is no challenger at all** and
+`guard`'s adversarial review plus the founder's own read stand in its place before anything binds. Two of the three
+things v30 asks for survive that substitution — the critique is external, and it reads the artifact and its
+done-test rather than the author's reasoning — and the third, a second model family, was already unmet for the
+reason in the paragraph above. So wave one does not lose a guarantee it had; it loses a second, differently-anchored
+pair of eyes, and §19's build order is what closes it.
+
 ---
 
 ### 5.8 Reconciliation with the roster research
@@ -370,5 +411,6 @@ Nothing is left to be discovered by a reader comparing two documents)**
 **(NEW: one blocking mechanism problem, recorded here because it must be fixed in the same change that writes the
 first agent file)** `scripts/prompt-standard.test.mjs` on this branch pins the valid model set (quoted in full once, at §9.9, where it includes `claude-sonnet-4-6`) to `claude-opus-5`,
 `claude-sonnet-5`, `claude-fable-5` and `claude-haiku-4-5`. **`claude-fable-5-1` is not in it**, and `claude-fable-5`
-is listed by the vendor under legacy models. An agent file written to §5.2's escalation rule **fails a blocking lint
-today**. That is a real, checkable blocker, not a caveat.
+is listed by the vendor under legacy models. An agent file written to §5.2 **fails a blocking lint today**. That is a
+real, checkable blocker, not a caveat — **and v57 makes it bind sooner**: `claude-fable-5-1` is no longer an
+escalation that might never fire, it is the declared `model:` of the first two agent files anyone writes.

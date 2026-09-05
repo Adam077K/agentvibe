@@ -11,37 +11,38 @@ with one side is a recommendation wearing a question mark, and this section refu
 
 **(FOUNDER and NEW, per row)**
 
-| # | Decision | One side | The other | Whose |
-|---|---|---|---|---|
-| 1 | **The terms** — automated access on a subscription | the vendor ships and documents the unattended features (`-p`, `--max-budget-usd`, `/loop`, Routines, Remote Control, agent teams) and the subscription is paid for | the clause names an API key as the carve-out, and the downside of being wrong is the account, which takes the company. **OpenAI's terms returned HTTP 403 and are unread; Google's are unfetched** | the founder, after one reading |
-| 2 | **Is Fable 5.1 reachable on the subscription seat** | it is in the API catalogue and Fable is a valid frontmatter value | **no plan table names it**, and this repo's own lint does not carry `claude-fable-5-1`. Fallback is `claude-opus-5` | one measurement, then the founder |
-| 3 | **Haiku 4.5 retires from 2026-10-15** | nothing of ours defaults to it (v20) | `/goal`'s evaluator and the auto-mode classifier do, by vendor default. `ANTHROPIC_DEFAULT_HAIKU_MODEL` changes it **everywhere the small fast model is used** | the founder, on a dated review |
-| 4 | **`LICENSE-CONTENT` in the skills upstream** | one fetch clears it and unlocks 2,111+ skills | until read, no bulk import: MIT covers the code, not necessarily the content | one fetch, then a decision |
-| 5 | **Install Codex and run the headless rehearsal** | day one is the founder's instruction (v5), and three families is the strongest vendor independence | #19945 is open 130 days with no maintainer reply; the rehearsal may fail, and then Codex stays in one foreground slot | the founder, then the measurement |
-| 6 | **Authenticate `gemini`** | a second family at zero marginal cost; 60 requests/min and 1,000/day free | it has sat unauthenticated since it was installed | the founder, one terminal act |
-| 7 | **Turn on agent teams** | it is the substrate for page 2, and it ships | experimental, off by default, **no nested teams**, one team per session, `/resume` does not restore them, and *"approximately 7x more"* tokens when teammates run in plan mode | the founder |
-| 8 | **The managed settings file** | the only tier a running process cannot clear | a founder act on a machine-wide file, and v11's hook trade rides on it: keeping `/goal` means a run can register its own Stop hook | the founder, then the probe |
-| 9 | **Does a card launch a team** | it is the founder's page 4, verbatim | **no prior art anywhere** — every board-to-session project maps one task to one agent | decided by the founder; built by us either way |
-| 10 | **The 3D graph extractor** | the renderer is MIT and free | the extractor is entirely ours and it is the least-researched area in the plan | the founder, on appetite |
-| 11 | **The second human** on statutory obligations | cheap now, impossible in the moment it is needed | a trust and credential decision | the founder |
-| 12 | **Which room** — Generative Agents `demo` (Apache 2.0, cold) or AI Town (MIT, alive, needs Convex) | the cheapest read-only display, one JSON file | a living project, if the founder wants it maintained | the founder |
-| 13 | **The first venture** and its rung-1 anchor | adoption is the intake this founder uses most | the harness is the only venture whose anchors already exist — the 48-step suite | the founder |
-| 14 | **Fourteen agents is inside an unoccupied band** | the founder's decision, taken with the evidence in hand | every shipped running roster measured is 5–6; every roster of 150+ is a catalogue you pick from | **decided; reopened only by name** |
+| # | Decision | One side | The other | Whose | **Status after the founder's interview, 2026-09-05** |
+|---|---|---|---|---|---|
+| 1 | **The terms** — automated access on a subscription | the vendor ships and documents the unattended features (`-p`, `--max-budget-usd`, `/loop`, Routines, Remote Control, agent teams) and the subscription is paid for | the clause names an API key as the carve-out, and the downside of being wrong is the account, which takes the company. **OpenAI's terms returned HTTP 403 and are unread; Google's are unfetched** | the founder, after one reading | **OPEN, by the founder's word** — *"still keep it open"*. A cloud lane for when the Mac is off is researched instead (v56, PENDING) |
+| 2 | **Is Fable 5.1 reachable on the subscription seat** | it is in the API catalogue and Fable is a valid frontmatter value | **no plan table names it**, and this repo's own lint does not carry `claude-fable-5-1`. Fallback is `claude-opus-5` | one measurement, then the founder | **DECIDED v57** — builder's and architect's default; reachability still one measurement |
+| 3 | **Haiku 4.5 retires from 2026-10-15** | nothing of ours defaults to it (v20) | `/goal`'s evaluator and the auto-mode classifier do, by vendor default. `ANTHROPIC_DEFAULT_HAIKU_MODEL` changes it **everywhere the small fast model is used** | the founder, on a dated review | **DECIDED v58** — `ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5`, set now |
+| 4 | **`LICENSE-CONTENT` in the skills upstream** | one fetch clears it and unlocks 2,111+ skills | until read, no bulk import: MIT covers the code, not necessarily the content | one fetch, then a decision | **OPEN** — *"Fetch it at build time"*; the library plan stands as written |
+| 5 | **Install Codex and run the headless rehearsal** | day one is the founder's instruction (v5), and three families is the strongest vendor independence | #19945 is open 130 days with no maintainer reply; the rehearsal may fail, and then Codex stays in one foreground slot | the founder, then the measurement | **AT BUILD** — *"I will install it when the building starts, no need to think about now"* |
+| 6 | **Authenticate `gemini`** | a second family at zero marginal cost; 60 requests/min and 1,000/day free | it has sat unauthenticated since it was installed | the founder, one terminal act | **DECIDED** — authenticate with a personal Google account |
+| 7 | **Turn on agent teams** | it is the substrate for page 2, and it ships | experimental, off by default, **no nested teams**, one team per session, `/resume` does not restore them, and *"approximately 7x more"* tokens when teammates run in plan mode | the founder | **DECIDED v59** — on, and **no model constraint**: a teammate runs on its own file's model |
+| 8 | **The managed settings file** | the only tier a running process cannot clear | a founder act on a machine-wide file, and v11's hook trade rides on it: keeping `/goal` means a run can register its own Stop hook | the founder, then the probe | **DECIDED** — *"Yes — I will write it when building starts"* |
+| 9 | **Does a card launch a team** | it is the founder's page 4, verbatim | **no prior art anywhere** — every board-to-session project maps one task to one agent | decided by the founder; built by us either way | **DECIDED v60** — both: the card carries a `solo \| team` toggle, defaulted from the intent's kind |
+| 10 | **The 3D graph extractor** | the renderer is MIT and free | the extractor is entirely ours and it is the least-researched area in the plan | the founder, on appetite | **DECIDED v61** — *"Build it, but last in the page order"* |
+| 11 | **The second human** on statutory obligations | cheap now, impossible in the moment it is needed | a trust and credential decision | the founder | **DECIDED v65** — *"Me only, for now"* |
+| 12 | **Which room** — Generative Agents `demo` (Apache 2.0, cold) or AI Town (MIT, alive, needs Convex) | the cheapest read-only display, one JSON file | a living project, if the founder wants it maintained | the founder | **PENDING v62** — three founder-named candidates (pixel-agents, Star-Office-UI, AgentOffice) under research |
+| 13 | **The first venture** and its rung-1 anchor | adoption is the intake this founder uses most | the harness is the only venture whose anchors already exist — the 48-step suite | the founder | **DECIDED v64** — *"The harness itself"* |
+| 14 | **Fourteen agents is inside an unoccupied band** | the founder's decision, taken with the evidence in hand | every shipped running roster measured is 5–6; every roster of 150+ is a catalogue you pick from | **decided; reopened only by name** | **DECIDED v54** — two waves; the eight with seeds or code paths first |
 
 ---
 
 ### 20.2 FINAL §19, row by row: what still stands
 
-**(FINAL, still open and not carried into §I)** Four rows of FINAL §19 are open, unchanged, and appear nowhere in
-SPINE §I. They are not closed by omission.
+**(FINAL, carried into the interview rather than into §I)** Five rows of FINAL §19 stood open and appear nowhere in
+SPINE §I. They were not closed by omission, and the founder was asked all five on 2026-09-05: **every one now
+carries a disposition, and two of the five are still deferred on purpose.**
 
-| FINAL §19 | Decision | One side | The other | Whose |
-|---|---|---|---|---|
-| 6 | **The hook rewrite to structured tool input, and registering `budget-guard.js`** | both are correct in shape and measured; the string matcher has both bypassed and over-blocked, and the guard has **zero references in `settings.json`** today | both are edits to the judging machinery, one-way from day one | the founder |
-| 7 | **`pmset -a disablesleep 1`** | it runs with the lid shut, which is what a night lane is | it defeats thermal and battery policy, and is not a change to make on the founder's behalf | the founder |
-| 8 | **Disclosure of machine-made work; the legal entity and jurisdiction per venture** | a dated founder decision with a reopen trigger | one-way doors, on the default `never` list | the founder |
-| 12 | **The overnight premise** — nobody has measured whether a crew that runs overnight beats one that stops | the first overnight starts a standing comparison: one week overnight against one week bounded on the same venture | every founder in the corpus reviews in the morning; if overnight does not beat bounded, the system runs bounded and says so | the measurement |
-| 13 | **The two sliders** — the reserve at 30% and three interruptions a day | each carries a weekly evidence line | *"idk means decide"* set them; the evidence moves them | the founder, on evidence |
+| FINAL §19 | Decision | One side | The other | Whose | **Status after the founder's interview, 2026-09-05** |
+|---|---|---|---|---|---|
+| 6 | **The hook rewrite to structured tool input, and registering `budget-guard.js`** | both are correct in shape and measured; the string matcher has both bypassed and over-blocked, and the guard has **zero references in `settings.json`** today | both are edits to the judging machinery, one-way from day one | the founder | **DEFERRED to build time** — *"Neither yet — decide at build time"* |
+| 7 | **`pmset -a disablesleep 1`** | it runs with the lid shut, which is what a night lane is | it defeats thermal and battery policy, and is not a change to make on the founder's behalf | the founder | **DEFERRED to build time** — the same answer as row 6, *"Neither yet"* |
+| 8 | **Disclosure of machine-made work; the legal entity and jurisdiction per venture** | a dated founder decision with a reopen trigger | one-way doors, on the default `never` list | the founder | **DECIDED v63** — *"Disclose by default; entity per venture decided at intake"* |
+| 12 | **The overnight premise** — nobody has measured whether a crew that runs overnight beats one that stops | the first overnight starts a standing comparison: one week overnight against one week bounded on the same venture | every founder in the corpus reviews in the morning; if overnight does not beat bounded, the system runs bounded and says so | the measurement | **DECIDED: run the comparison** — *"Run the comparison; let the measurement decide"*. The premise stays a measurement, not a belief |
+| 13 | **The two sliders** — the reserve at 30% and three interruptions a day | each carries a weekly evidence line | *"idk means decide"* set them; the evidence moves them | the founder, on evidence | **DECIDED: kept as set** — *"Keep 30% and 3/day; evidence moves them"* |
 
 ---
 
@@ -95,7 +96,47 @@ name** in §22 where one exists — for A, *a steward that reads mail with a pen
 
 ---
 
+---
+
+### 20.6 Raised by the founder's interview, and decided
+
+**(FOUNDER, 2026-09-05)** Every row of 20.1 and every open row of 20.2 was put to the founder through
+`AskUserQuestion` in five rounds. Twelve answers became rows **v54–v65** of §1. Each is one line here with the words
+that decided it; the row carries the reasoning, the mechanism and the losing image, and none of them is re-argued in
+this section.
+
+| Row | What the founder decided | In their words |
+|---|---|---|
+| **v54** | The roster ships in **two waves** — eight first, the six business agents and the challenger when a venture needs them (§5.0, §17.1, §19.1) | *"Start with the eight that have seeds or code paths"* |
+| **v55** | **Standing intents**: an intent that never expires, carrying a cadence or an inbound event class, dispatched by the Watch (§2.8, §4.1) | *"agents … that can run every set time or evant or something else. it to build the company like working"* |
+| **v56** | **A cloud lane for when the Mac is off** — OpenAI Codex cloud tasks. **PENDING research**; the terms row stays open | *"When my Mac is not on … you can use codex or Gemini … But still keep it open"* |
+| **v57** | **Fable 5.1 is builder's and architect's default**, overruling v21's escalation-only rule (§9.1, §5.2, §17.1) | *"Fable as builder's and architect's default"* |
+| **v58** | **`ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5`, set now**, ahead of Haiku 4.5's retirement (§9.8) | *"Set ANTHROPIC_DEFAULT_HAIKU_MODEL to Sonnet 5 now"* |
+| **v59** | **Agent teams on, no model constraint** — a teammate runs on its own agent file's model (§3.5, §9.2, §14.5) | *"Turn it on, no model constraint"* |
+| **v60** | **The card carries a `solo \| team` toggle**, defaulted from the intent's kind (§14.7, §17.4.1) | *"Both: the card carries a 'solo or team' toggle"* |
+| **v61** | **Page 6 is built last of the seven**, after one research lane on repo-to-graph tooling (§14.9, §19.1) | *"Build it, but last in the page order"* |
+| **v62** | **The room's renderer** — three founder-named candidates, none in any prior lane. **PENDING research** | *"use pixel-agents code or Star-Office-UI or AgentOffice"* |
+| **v63** | **Disclose by default**; the legal entity is a charter field answered at intake (FINAL §19.8, closed) | *"Disclose by default; entity per venture decided at intake"* |
+| **v64** | **The first venture is the harness itself** — its intents are the build order and its anchors already exist | *"The harness itself"* |
+| **v65** | **The founder only**, for now, as the second human on statutory obligations | *"Me only, for now"* |
+
+**(NEW: two of the twelve are PENDING, and pending is a state this section refuses to blur into decided)** **v56**
+and **v62** name a thing to research, not a thing to do: the founder chose a cloud lane and named three room
+candidates, and neither answer can be written into the plan until a lane reads the terms and the licences from the
+files themselves. **Until those lanes return, the sections they touch say PENDING rather than guessing** — §10 and
+§15 for v56, §14.4 and §17.7 for v62. A pending row is not an open decision either: the decision is taken and what
+is missing is evidence for how to carry it out.
+
+**(NEW: what is still open after the interview, and it is a short list)** **Row 1, the terms**, by the founder's own
+word — *"still keep it open"* — and **row 4, `LICENSE-CONTENT`**, which is one fetch at build time. Rows 5 and 8 are
+**acts at build time** rather than choices. Everything else in 20.1 is decided, and 20.2's five rows are decided or
+deliberately deferred to the moment building starts.
+
+---
+
 **(NEW: one item that looks like a decision and is not)** `scripts/prompt-standard.test.mjs` pins a model set that
 does not contain `claude-fable-5-1`. That is a **red test**, not an open question: the set moves in the same change
-that writes builder's file, whichever way 20.1 row 2 is answered. If Fable turns out to be unreachable on the seat,
-the escalation rule falls back to `claude-opus-5` and the pinned set still has to be correct.
+that writes builder's file, whichever way 20.1 row 2 is answered. **And v57 makes it bind at the first file rather
+than at some later escalation** — `claude-fable-5-1` is now the declared `model:` of `builder` and `architect`, both
+wave one, so the pinned set must admit it before either file can load. If Fable turns out to be unreachable on the
+seat, the fallback is `claude-opus-5` and the pinned set still has to be correct.

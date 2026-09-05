@@ -143,7 +143,7 @@ mechanisms have different documented properties and picking one would mean using
 
 | Mechanism | Used for | The sourced constraint that shapes the design |
 |---|---|---|
-| **Agent teams** | the fleet the founder watches on page 2 — a lead plus named teammates, each a full independent session, messageable by name | experimental, off by default (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`); **no nested teams**; one team per session; `/resume` does not restore in-process teammates; spawning needs an interactive session, so `-p` never forms a team. Tokens: *"approximately 7x more … when teammates run in plan mode"*, and the vendor's own advice is *"Use Sonnet for teammates"* |
+| **Agent teams** | the fleet the founder watches on page 2 — a lead plus named teammates, each a full independent session, messageable by name | **turned on by the founder** (v59: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), and experimental in the vendor's own words; **no nested teams**; one team per session; `/resume` does not restore in-process teammates; spawning needs an interactive session, so `-p` never forms a team. Tokens: *"approximately 7x more … when teammates run in plan mode"* — **at each teammate's own model price** (v59) |
 | **Subagents** | depth inside one agent — a builder's own exploration, a scout fan-out | depth 3 by default, 20 concurrent, `Workflow` removed from all of them (v35); a subagent's `permissionMode` frontmatter is ignored; main-conversation auto memory is not loaded into subagents except a fork |
 | **`claude -p` children through the launcher** | unattended night work, and every non-Claude provider | `--session-id` must be a valid UUID, minted by us; `--restricted` needs v2.1.248+; `--max-budget-usd` is a stall fuse, not a billing control (v23); `-p` disables tools needing terminal input, so a session never stalls waiting |
 
@@ -151,6 +151,24 @@ mechanisms have different documented properties and picking one would mean using
 are **no nested teams** and one team per session. So the child-flow page shows **one level of teammates**, and
 everything deeper is subagents. A page drawn as a tree of teams of teams would be drawing something the runtime
 cannot produce.
+
+**(FOUNDER, v59: teams are on, and a teammate runs on its own agent file's model)** *"Turn it on, no model
+constraint."* So `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set, and a teammate is dispatched at **the model its
+own file declares** — a `builder` teammate runs at `builder`'s model, a `guard` teammate at `guard`'s. There is no
+Sonnet floor for teammates and the vendor's advice to impose one is the losing image (§22). **The cost is the 7x
+multiplier in the table above, and what v59 changes is what it multiplies:** each teammate's own price rather than
+Sonnet's, which is why §9.2's teammate row is struck rather than rewritten with a different model in it. §16.4
+carries the arithmetic. **Mechanism:** the teammate's agent file is what carries
+the model, and `bin/run` (ABSENT) names the file rather than a model; the grant on a teammate is the agent file plus
+the managed denies, never argv (v43).
+
+**(FOUNDER, v60: the card decides whether this is a team at all)** A card on page 4 carries a `solo | team`
+toggle, defaulted from the intent's kind — *"Both: the card carries a 'solo or team' toggle."* Source-code work
+defaults to **solo**, which is the chain architect → tester → builder → reviewer, one artifact and one agent at a
+time (v6). Anything cross-department defaults to **team**, led by the Operator. So the founder's drag, not the
+Operator's judgement, is what decides between the two shapes, and the default is only a default: the toggle is on
+the card and the founder can flip it before dragging. **Mechanism:** one field on the card store; `bin/run` reads it
+(**ABSENT**) and picks the dispatch mechanism from it. §14.7 draws the card and the drag.
 
 **(NEW: the rule that keeps v34 true as the roster grows)** **The Operator never composes argv itself.** It emits a
 brief carrying an intent id and a named agent; `bin/run` (ABSENT) composes the argv from the agent's file and the
@@ -182,17 +200,30 @@ flowchart TD
 
     B1 --> PICK
     B2 --> PICK
-    PICK{"Which of the fourteen?<br/>see the routing column in section 5"}
+    PICK{"Which agent? Wave one is eight of them, v54.<br/>See the routing column in section 5"}
     PICK --> BRIEF["THE OPERATOR emits a BRIEF:<br/>intent id, done-test verbatim, out-of-scope,<br/>ceiling, the named agent, the anchor"]
     BRIEF --> LAUNCH["bin/run composes the argv.<br/>Nothing else may. ABSENT"]
     LAUNCH --> HOW{"Which dispatch<br/>mechanism?"}
-    HOW -->|"the founder is watching"| TEAM["Agent team:<br/>a lead plus named teammates,<br/>one level deep"]
+    HOW -->|"the card's toggle says TEAM, v60,<br/>or the founder is watching"| TEAM["Agent team:<br/>a lead plus named teammates,<br/>one level deep, each on its own file's model"]
     HOW -->|"depth inside one agent"| SUB["Subagents:<br/>depth 3, 20 concurrent"]
     HOW -->|"unattended, or a non-Claude provider"| PRINT["claude -p child with /goal,<br/>a minted UUID, and a stall fuse"]
     TEAM --> RUN["A RUN"]
     SUB --> RUN
     PRINT --> RUN
 ```
+
+**(FOUNDER, v54: in wave one the Operator has eight agents to route among, and two of the routes above do not exist
+yet — said once, here, because it changes what the Operator does rather than only what the roster contains)** The
+founder chose to start with the eight that have a seed file or a code path today: the Operator, `builder`,
+`reviewer`, `architect`, `tester`, `guard`, `scout` and `designer`. Two of this section's routes are wave two. **The
+`product` dispatch of §3.6 has nobody in it**, so a genuinely fuzzy request is closed the other way — the founder
+writes the done-test themselves, through the read-back, with the Operator proposing two candidates as it already
+does; nothing binds without their confirm either way, so the provenance rule is unchanged. And **`challenger` is not
+in wave one**, so a plan about to bind is attacked by **`guard`'s adversarial review plus the founder's own read**
+until wave two. That is weaker than v30 asks for and the plan says so rather than pretending otherwise. It keeps the
+half that v30 measured as load-bearing — the critique is **external**, from an agent that reads the artifact and its
+done-test and never the author's reasoning — and it loses the half v30 also asks for, **a second model family**,
+because `guard` runs on the same one. §5 carries the two waves and §19 draws them.
 
 ---
 

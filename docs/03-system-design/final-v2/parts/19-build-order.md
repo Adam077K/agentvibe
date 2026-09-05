@@ -11,6 +11,13 @@ logbook, transcript mining, one real venture driven — and the seam nodes sit w
 the founder can do. FINAL kept them in §19 as open decisions; v2 also draws them here, because a graph that omits its
 blocking inputs reads as if the work could start.
 
+**(FOUNDER, 2026-09-05: all five founder-act nodes are now DECIDED, and they stay nodes anyway)** The interview
+settled every one of them — the managed file is written at build start, `gemini` authenticates on a personal Google
+account, `codex` is installed when building starts, agent teams are **on** with no model constraint (v59), and
+`LICENSE-CONTENT` is fetched at build time. **A decided act is still an act**: none of these has been performed, each
+still gates what it gated, and deleting the nodes because the decision is made would hide five things that must
+happen before the graph below can move. That is why each node now carries its decision rather than being removed.
+
 ---
 
 ### 19.1 The graph
@@ -18,19 +25,20 @@ blocking inputs reads as if the work could start.
 ```mermaid
 flowchart TD
     LOG["1 · The logbook<br/>keel/bin/log · keel/logbook/{events,ledger}.jsonl ·<br/>an id on every row · F_FULLFSYNC · gen_ai.* names ·<br/>~/.agentvibe/events.jsonl adopted as the spine"]
-    MANAGED(["FOUNDER ACT · the managed settings file<br/>permissions.deny · disableBypassPermissionsMode ·<br/>disableAutoMode · and NOT the two hook settings (v11)"])
-    GEMINI(["FOUNDER ACT · authenticate gemini<br/>one terminal act; 0.38.2 installed, never authenticated"])
-    CODEX(["FOUNDER ACT · install codex<br/>command -v codex is absent today"])
-    TEAMS(["FOUNDER ACT · CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1<br/>experimental, off by default, no nested teams"])
-    LICENSE(["FOUNDER ACT · fetch and read LICENSE-CONTENT<br/>one fetch; unblocks the 2,111+ (v17)"])
+    MANAGED(["FOUNDER ACT · the managed settings file<br/>permissions.deny · disableBypassPermissionsMode ·<br/>disableAutoMode · and NOT the two hook settings (v11)<br/>DECIDED 2026-09-05: written at build start"])
+    GEMINI(["FOUNDER ACT · authenticate gemini<br/>one terminal act; 0.38.2 installed, never authenticated<br/>DECIDED 2026-09-05: a personal Google account"])
+    CODEX(["FOUNDER ACT · install codex<br/>command -v codex is absent today<br/>DECIDED 2026-09-05: installed when building starts"])
+    TEAMS(["FOUNDER ACT · CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1<br/>experimental, no nested teams<br/>DECIDED 2026-09-05, v59: ON, and no model constraint —<br/>a teammate runs on its own file model"])
+    LICENSE(["FOUNDER ACT · fetch and read LICENSE-CONTENT<br/>one fetch; unblocks the 2,111+ (v17)<br/>DECIDED 2026-09-05: fetched at build time; row stays open"])
 
-    AGENTS["The fifteen agent files<br/>.claude/agents/*.md · the model set in<br/>prompt-standard.test.mjs moves in the same change"]
+    AGENTS1["WAVE ONE · eight agent files (v54)<br/>operator · builder · reviewer · architect · tester ·<br/>guard · scout · designer<br/>.claude/agents/*.md · the model set in<br/>prompt-standard.test.mjs moves in the same change,<br/>because builder and architect declare claude-fable-5-1 (v57)"]
+    AGENTS2["WAVE TWO · seven agent files (v54)<br/>product · analyst · writer · growth · steward ·<br/>curator · challenger<br/>written when a venture needs them; each brings<br/>its own argv file with it"]
     ARGV["keel/shared/argv/&lt;agent&gt;.&lt;provider&gt;.argv<br/>the grant IS these strings"]
     PROBE["keel/bin/probe<br/>what a run can actually touch, nightly"]
     RUN["keel/bin/run<br/>the only thing that composes argv · mints the UUID ·<br/>writes keel/logbook/sessions.jsonl<br/>seed: mission-control/scripts/consume-dispatch.ts"]
     SUPERVISE["keel/bin/supervise<br/>restart ceiling · heartbeat · process-group kill"]
 
-    STORES["keel/bin/check-stores<br/>charter · intent · obligation · memory schemas"]
+    STORES["keel/bin/check-stores<br/>charter · intent · obligation · memory schemas ·<br/>the standing-intent fields every: and on:, and the<br/>per-run ceiling every: requires (v55)"]
     PRICES["keel/shared/prices.yml + the model-expiry rows<br/>of keel/shared/facts.yml · cache 1.25x/2x, read 0.1x/0.025x"]
     METER["The meter · page 3's numbers<br/>the runner's own cost joined by id"]
 
@@ -52,12 +60,13 @@ flowchart TD
     MC["mission-control/ server + client, kept<br/>the website's runtime"]
     P2["Page 2 · agents and child flows<br/>tmux attach-session · claude --attach · inbox files"]
     P3["Page 3 · cost, tokens, efficiency<br/>every number taps"]
-    P4["Page 4 · tasks, tickets, PRs<br/>a card launches a session with a TEAM"]
+    P4["Page 4 · tasks, tickets, PRs<br/>a card launches a session; its solo | team toggle<br/>decides which shape (v60)"]
     P5["Page 5 · engines, gates, stores, live"]
     P1["Page 1 · the office<br/>Generative Agents demo mode, through the door"]
     P7["Page 7 · canvas / playground<br/>Langflow idiom · --session-id --bg then --attach"]
+    GRAPHLANE["A research lane on repository-to-graph tooling<br/>the thinnest-evidenced area; runs BEFORE the extractor (v61)"]
     EXTRACT["The repository-to-graph extractor<br/>ours; 3d-force-graph reads {nodes, links} only"]
-    P6["Page 6 · 3D file graph"]
+    P6["Page 6 · 3D file graph<br/>LAST of the seven pages (v61)"]
 
     CODEXTEST["The Codex headless rehearsal<br/>codex exec --json · no controlling TTY ·<br/>non-trivial prompt · version >= 0.124.0"]
     VENTURE["3 · One real venture, driven<br/>a real done-test and a rung-1 anchor"]
@@ -70,7 +79,7 @@ flowchart TD
     LOG --> MC
     MANAGED --> PROBE
     PROBE --> RUN
-    AGENTS --> ARGV
+    AGENTS1 --> ARGV
     ARGV --> RUN
     ARGV --> PROBE
     RUN --> SUPERVISE
@@ -82,7 +91,7 @@ flowchart TD
     MINE --> REHEARSE
     RUN --> REHEARSE
     LICENSE --> SKILL
-    AGENTS --> SKILL
+    AGENTS1 --> SKILL
     REHEARSE --> SKILL
     PROBE --> DOOR
     DOOR --> DRILL
@@ -107,8 +116,14 @@ flowchart TD
     RUN --> P7
     METER --> P3
     STORES --> P5
+    GRAPHLANE --> EXTRACT
     EXTRACT --> P6
     MC --> P6
+    P2 --> P6
+    P3 --> P6
+    P4 --> P6
+    P5 --> P6
+    P7 --> P6
     GEMINI --> ARGV
     CODEX --> CODEXTEST
     ARGV --> CODEXTEST
@@ -116,6 +131,7 @@ flowchart TD
     P4 --> VENTURE
     RECON --> VENTURE
     SKILL --> VENTURE
+    VENTURE -.->|"when a venture needs them"| AGENTS2
     VENTURE --> OVERNIGHT
 ```
 
@@ -128,8 +144,9 @@ two nodes the graph is wrong, and this table is how that is found.
 
 | ABSENT path or artifact | SPINE | Node |
 |---|---|---|
-| `.claude/agents/operator.md` and the fourteen agent files | §B.2, §C | `AGENTS` |
-| `keel/shared/argv/<agent>.<provider>.argv` | §B.1 rule 1, §H.1 | `ARGV` |
+| `.claude/agents/operator.md` and the seven other wave-one files | §B.2, §C, v54 | `AGENTS1` |
+| The seven wave-two agent files — product · analyst · writer · growth · steward · curator · challenger | §B.2, v54 | `AGENTS2` |
+| `keel/shared/argv/<agent>.<provider>.argv` | §B.1 rule 1, §H.1 | `ARGV` for wave one; each wave-two file brings its own with it (v54) |
 | `keel/bin/run` | §B.1 rule 1, §C.4, v34 | `RUN` |
 | `keel/bin/probe` | §B.1 rule 4, v34 | `PROBE` |
 | `keel/bin/log` and `keel/logbook/` | §B.1 rule 4 | `LOG` |
@@ -152,8 +169,8 @@ two nodes the graph is wrong, and this table is how that is found.
 | Page 3, cost, tokens and efficiency | §D, v14 | `P3` |
 | Page 4, tasks, tickets and PRs | §D, v16 | `P4` |
 | Page 5, engines and how it works | §D | `P5` |
-| Page 6, the 3D file graph | §D | `P6` |
-| The repository-to-graph extractor | §D, v15 | `EXTRACT` |
+| Page 6, the 3D file graph | §D, v61 | `P6` — last of the seven |
+| The repository-to-graph extractor | §D, v15, v61 | `EXTRACT`, preceded by `GRAPHLANE` |
 | Page 7, canvas and playground | §D, v15 | `P7` |
 | `keel/shared/prices.yml` and the model-expiry facts | §G.1, §G.3, §G.4 | `PRICES` |
 | The Codex headless rehearsal | §H.2, v32 | `CODEXTEST` |
@@ -182,6 +199,21 @@ cannot exist before `bin/run` can hand a card to a team. **None of them is a new
 entire unattended half of the system through `PROBE`. `LICENSE` gates only the bulk import. `TEAMS` gates one page.
 `CODEX` gates one measurement whose failure leaves Codex in the foreground slot it already has. **Only one founder act
 is on the critical path of everything**, and it is four lines of JSON in a directory no run can reach.
+
+**(FOUNDER, v54: the roster is two nodes now, and the second one is downstream of a running venture)** `AGENTS1` is
+eight files and sits where `AGENTS` did — everything that needs a grant needs it. `AGENTS2` is the other seven, and
+the only edge into it comes **from** `VENTURE`: they are written when a venture needs them. **No edge is drawn from
+`AGENTS2` to `ARGV`, and the omission is deliberate rather than an oversight** — that edge would close a cycle
+(`AGENTS2 → ARGV → RUN → … → VENTURE → AGENTS2`), and the cycle would be real rather than a drawing artifact, because
+wave two is written after the machine is already running. Each wave-two file therefore brings its own argv file with
+it, the same way wave one's arrives with `AGENTS1`. **What the split does not change:** all fifteen rows stay in the
+§17.1 inventory, and §5.0 states once what wave one does without.
+
+**(FOUNDER, v61: page 6 is the only page with edges from every other page, and that is what "last" means here)**
+`P2`, `P3`, `P4`, `P5` and `P7` all point into `P6`, so the graph refuses to build it early rather than a sentence
+asking nobody to. `GRAPHLANE` — one research lane on repository-to-graph tooling — points into `EXTRACT`, because
+the extractor is the one substrate in this plan with no verified prior art and §14.9 says so. Read the two together:
+the page waits on the other six for appetite, and the extractor waits on evidence.
 
 **(NEW: one edge exists so that another one does not have to, v36)** `INBOUND --> WATCH` is drawn because the Watch
 materialises an obligation from a row the world's door already wrote down, and **`steward` writes its obligations

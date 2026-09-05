@@ -30,11 +30,11 @@ was stated once, and the chosen thing is then built properly. They are never re-
 
 ---
 
-### 22.2 The thirty-seven moved by a fact, by a rule already written down, or by this round's review
+### 22.2 The forty-nine moved by a fact, by a rule already written down, by this round's review, or by the founder's interview
 
 **(NEW: nineteen lost to a measurement; six lost to a rule this system already had)** The column names the row that
 beat each image and what did the beating. Where the fact came from a research lane this session, the lane is the
-source. **Numbers 6–30 are §J's own, unchanged.** **Numbers 31–42 are new this round — rows v42–v53, each an image the review found the plan still holding in one section while deciding against it in another.** The split is worth seeing: **6–24 fell to a fact from the world**,
+source. **Numbers 6–30 are §J's own, unchanged.** **Numbers 31–42 are the review round — rows v42–v53, each an image the review found the plan still holding in one section while deciding against it in another.** **Numbers 43–54 are the founder's interview of 2026-09-05 — rows v54–v65, and they are the founder's decisions rather than facts from the world, which is why each carries the words that beat it.** Two of those twelve, 45 and 51, lose to a decision whose research is still PENDING; they are listed now because the image lost when the founder chose, not when the lane returns. The split is worth seeing: **6–24 fell to a fact from the world**,
 and **25–30 fell to a rule that was already on the page** — the trifecta split, FINAL §6.1, the values the existing
 engine files already carry. The second kind costs nothing to decide and is the cheaper half of any design.
 
@@ -77,6 +77,18 @@ engine files already carry. The second kind costs nothing to decide and is the c
 | 40 | **one admitted step list, with the curator's five questions smuggled in** | v51 | 0 of 121 free reflections named the cause: evidence for admitting a second list by name, not for declining to call it one (P2-20) |
 | 41 | **a card with no writer** | v52 | a card exists before anyone drags it, and `keel/bin/run` writes only what happens after the drag (P2-21) |
 | 42 | **seven pages as a ceiling** | v53 | the founder asked for *"a lot more cool and important things"*, and the plan built a door for tools and none for surfaces. An eighth page enters through the §9.3 door or not at all (opinion O-1) |
+| 43 | **fifteen agent files on day one** | v54 | the founder, asked how many to write first: *"Start with the eight that have seeds or code paths"*. The other seven stay in the roster and in the inventory; what moved is the order, not the membership |
+| 44 | **a per-agent cron field; a schedules page; a second scheduler beside the Watch** | v55 | the founder chose *"Standing intents with a cadence or trigger, run by the Watch"*. A cron inside an agent file puts the decision to run work inside the thing that does the work, where nothing ranks it against an obligation or the reserve |
+| 45 | **the Mac as the only runtime; Routines refused wholesale** | v56 | the founder: *"When my Mac is not on … you can use codex or Gemini … But still keep it open"* → a cloud lane for when the Mac is off. **PENDING** the research lane; FINAL's *"everything runs on the Mac"* gets one stated exception, not a general one |
+| 46 | **Fable as an escalation only** — v21, which was itself a losing image's winner | v57 | the founder: *"Fable as builder's and architect's default."* What v21 got right is kept as the reason: cache reads at 0.025x are what make a large standing context cheap to re-read. What it got wrong was making that a trigger nobody could observe cheaply |
+| 47 | **Haiku left as the vendor's small fast model until it retires** | v58 | the founder: *"Set ANTHROPIC_DEFAULT_HAIKU_MODEL to Sonnet 5 now."* Haiku 4.5 retires *"not sooner than October 15, 2026"* and is the only Haiku in the published table, so waiting buys a migration on a date somebody else picked |
+| 48 | **Sonnet teammates** — the vendor's own advice, followed | v59 | the founder: *"Turn it on, no model constraint."* A teammate is a full session running one of the fifteen files, so it runs at that file's model; the 7x plan-mode token multiplier now lands at each teammate's own price, stated once in §9.2 |
+| 49 | **a card that always launches a team; a card that always launches one agent** | v60 | the founder: *"Both: the card carries a 'solo or team' toggle."* Neither fixed answer survives, because the founder's drag is what decides the shape and the default comes from the intent's kind |
+| 50 | **page 6 beside page 2; a 2D graph first** | v61 | the founder: *"Build it, but last in the page order."* It is the only page whose substrate has no verified prior art, so it waits for the six that do and for one research lane |
+| 51 | **Generative Agents `demo` mode as rank 1 by default** | v62 | the founder named three candidates nobody had read — *"use pixel-agents code or Star-Office-UI or AgentOffice"*. **PENDING** the research lane; the two Apache/MIT fallbacks keep their licences already read |
+| 52 | **no default disclosure; the entity deferred whole** | v63 | the founder: *"Disclose by default; entity per venture decided at intake."* A disclosure default that is off is a decision nobody revisits, and an entity question deferred whole is one that arrives with the first contract |
+| 53 | **adopting an existing project as the first venture** | v64 | the founder: *"The harness itself."* Its anchors already exist — `npm run check` and the probe — which is the property no adopted project has on day one. The standing cost is that the machine tests itself again |
+| 54 | **a named accountant or lawyer as a wake-me target** | v65 | the founder: *"Me only, for now."* Statutory clocks wake the founder; the row reopens when a venture has a legal entity, which v63 makes a charter field |
 
 ---
 
