@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Keel · Final Plan v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EEF1F3; --surface:#FFFFFF; --surface-2:#E4EAED; --ink:#14222B; --ink-2:#42535E; --ink-3:#5F6F79;
+  --line:#CBD5DA; --accent:#1B646C; --accent-ink:#FFFFFF; --accent-soft:#D8EBED; --brass:#7A5A18; --brass-soft:#F1E7CC;
+  --keel:#0F3A44; --absent:#95501F; --absent-soft:#F4E4D6; --focus:#1B646C; --founder:#5C3E86; --founder-soft:#E9E1F4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D161B; --surface:#142027; --surface-2:#1B2A32; --ink:#E2EAEE; --ink-2:#AFBEC6; --ink-3:#8496A0;
+    --line:#2A3A44; --accent:#6EC0C5; --accent-ink:#0D161B; --accent-soft:#16333A; --brass:#DEBB68; --brass-soft:#2E2812;
+    --keel:#8CC7CE; --absent:#E0A469; --absent-soft:#33241A; --focus:#6EC0C5; --founder:#C2A9E8; --founder-soft:#241C33;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D161B; --surface:#142027; --surface-2:#1B2A32; --ink:#E2EAEE; --ink-2:#AFBEC6; --ink-3:#8496A0;
+  --line:#2A3A44; --accent:#6EC0C5; --accent-ink:#0D161B; --accent-soft:#16333A; --brass:#DEBB68; --brass-soft:#2E2812;
+  --keel:#8CC7CE; --absent:#E0A469; --absent-soft:#33241A; --focus:#6EC0C5; --founder:#C2A9E8; --founder-soft:#241C33;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-wrap:anywhere}
+main{max-width:700px;margin:0 auto;padding:16px 14px 56px}
+h1,h2,h3{font-family:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif;text-wrap:balance;margin:0}
+h1{font-size:clamp(30px,7.6vw,46px);font-weight:700;line-height:1.03;letter-spacing:-.012em}
+h2{font-size:clamp(21px,5.4vw,25px);font-weight:700;line-height:1.15;margin:0 0 4px}
+h3{font-size:15px;font-weight:700;margin:16px 0 6px;color:var(--ink)}
+p{margin:0 0 10px;max-width:64ch}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:3px}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85em}
+code{background:var(--surface-2);padding:1px 4px;border-radius:3px}
+.eyebrow{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 6px}
+
+/* header */
+header{padding:4px 0 18px;border-bottom:1px solid var(--line)}
+.lede{font-size:17px;color:var(--ink-2);margin:12px 0 0;max-width:36ch;line-height:1.4}
+.supersede{margin:14px 0 0;padding:9px 11px;background:var(--brass-soft);border:1px solid var(--brass);border-left-width:3px;border-radius:4px;font-size:13.5px;color:var(--ink);max-width:none}
+.meta{display:grid;gap:5px;margin-top:14px;font-size:12.5px;color:var(--ink-3)}
+.meta b{color:var(--ink-2);font-weight:600}
+.toggles{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+button.t{min-height:44px;padding:0 14px;border-radius:4px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font:inherit;font-size:13px;cursor:pointer}
+button.t:active{background:var(--surface-2)}
+
+/* sections */
+section{padding:22px 0 20px;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+.sec{display:flex;align-items:baseline;gap:8px;margin:0 0 10px;flex-wrap:wrap}
+.sec .num{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--accent-ink);background:var(--accent);padding:2px 7px;border-radius:3px;font-weight:500;white-space:nowrap}
+.sub{font-size:13.5px;color:var(--ink-3);margin:0 0 12px;max-width:60ch}
+
+/* chips */
+.chip{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.05em;padding:2px 6px;border-radius:3px;border:1px solid var(--ink-3);color:var(--ink-2);white-space:nowrap;line-height:1.5}
+.chip.absent{background:var(--absent-soft);border-color:var(--absent);color:var(--absent)}
+.chip.exists{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.chip.unver{background:var(--brass-soft);border-color:var(--brass);color:var(--brass)}
+.chip.founder{background:var(--founder-soft);border-color:var(--founder);color:var(--founder)}
+.chip.sec{border-style:dashed;color:var(--ink-3)}
+.legend{display:flex;flex-wrap:wrap;gap:7px 10px;font-size:12.5px;color:var(--ink-2);align-items:center;margin:0 0 14px}
+
+/* quote */
+blockquote.founder{margin:0 0 12px;padding:11px 13px;background:var(--founder-soft);border-left:3px solid var(--founder);border-radius:0 4px 4px 0;font-size:15px;line-height:1.5;color:var(--ink)}
+blockquote.founder p{margin:0 0 8px;max-width:none;font-style:italic}
+blockquote.founder p:last-child{margin:0}
+blockquote.founder .attrib{font-style:normal;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--founder);font-weight:600;margin-top:8px}
+.pull{font-size:15.5px;color:var(--ink-2);border-left:2px solid var(--accent);padding-left:11px;margin:0 0 12px;font-style:italic}
+
+/* number tiles */
+.nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(146px,1fr));gap:8px;margin:0 0 12px}
+.nt{padding:9px 10px;background:var(--surface);border:1px solid var(--line);border-radius:4px}
+.nt .n{font-family:"Bricolage Grotesque",sans-serif;font-size:25px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;color:var(--keel)}
+.nt .l{font-size:12px;color:var(--ink-2);margin-top:4px;line-height:1.35}
+
+/* expandable tiles */
+details.tile{background:var(--surface);border:1px solid var(--line);border-radius:5px;margin:0 0 8px;overflow:hidden}
+details.tile[open]{border-color:var(--accent)}
+details.tile > summary{list-style:none;cursor:pointer;display:block;padding:11px 34px 11px 12px;min-height:46px;position:relative}
+details.tile > summary::-webkit-details-marker{display:none}
+details.tile > summary::after{content:"+";position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:"JetBrains Mono",monospace;font-size:17px;color:var(--accent);line-height:1}
+details.tile[open] > summary::after{content:"\2212"}
+details.tile > summary:hover{background:var(--surface-2)}
+.tk{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-3);display:block;margin-bottom:2px;letter-spacing:.04em}
+.th{display:block;font-weight:600;font-size:15.5px;line-height:1.3;color:var(--ink)}
+.ts{display:block;font-size:13.5px;color:var(--ink-2);margin-top:3px;line-height:1.4}
+.tags{margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}
+.body{padding:0 12px 12px;border-top:1px solid var(--line);margin-top:2px;padding-top:10px}
+.body p{font-size:14px;color:var(--ink-2);margin:0 0 8px}
+.body p:last-child{margin:0}
+.body b{color:var(--ink)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:13.5px;margin:0 0 8px}
+.kv dt{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:600;padding-top:3px;white-space:nowrap}
+.kv dd{margin:0;color:var(--ink-2)}
+.lost{font-size:13px;color:var(--ink-2);background:var(--surface-2);padding:8px 10px;border-radius:4px;margin:8px 0 0}
+.lost b{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2);display:block;margin-bottom:2px;font-weight:600}
+
+/* day grid */
+.day{display:grid;grid-template-columns:1fr;gap:8px}
+.dayrow{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:9px 11px}
+.dayrow .w{font-weight:600;font-size:14px;color:var(--keel);margin-bottom:3px}
+.dayrow .s{font-size:13.5px;color:var(--ink-2);line-height:1.42}
+.dayrow .b{font-size:12.5px;color:var(--ink-3);margin-top:5px;padding-top:5px;border-top:1px dashed var(--line);line-height:1.4}
+
+/* five ideas */
+.idea{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:4px;padding:9px 11px;margin:0 0 8px}
+.idea.moves{border-left-color:var(--brass)}
+.idea .h{font-weight:600;font-size:14px;line-height:1.35;margin-bottom:4px}
+.idea .h span.v{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.06em;color:var(--accent);margin-right:6px}
+.idea.moves .h span.v{color:var(--brass)}
+.idea .m{font-size:13px;color:var(--ink-2);line-height:1.42}
+
+/* build order */
+ol.build{list-style:none;margin:0;padding:0}
+ol.build li{border-top:1px solid var(--line);padding:9px 0 9px 0}
+ol.build li:first-child{border-top:0}
+ol.build .node{font-weight:600;font-size:14.5px;line-height:1.3}
+ol.build .path{font-family:"JetBrains Mono",monospace;font-size:12px;line-height:1.5;color:var(--ink-3);margin-top:3px;display:block}
+ol.build .path:empty{display:none}
+ol.build .needs{font-size:12.5px;color:var(--ink-2);margin-top:4px}
+ol.build .needs b{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-right:5px}
+.tier{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:16px 0 6px;padding-top:12px;border-top:2px solid var(--line)}
+.tier:first-of-type{border-top:0;padding-top:0;margin-top:0}
+
+/* tally */
+.tally{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:11px 12px;font-family:"JetBrains Mono",monospace;font-size:12.5px;line-height:1.7;color:var(--ink-2);overflow-x:auto}
+.tally b{color:var(--keel)}
+footer{padding:20px 0 0;font-size:12.5px;color:var(--ink-3)}
+footer p{max-width:none;margin:0 0 6px}
+@media (min-width:560px){
+  .day{gap:8px}
+  .kv{grid-template-columns:96px 1fr}
+}
+</style>
+
+<main>
+
+<header>
+  <p class="eyebrow">docs · 03-system-design · final-v2 · 2026-09-05</p>
+  <h1>Keel<br>the final plan v2</h1>
+  <p class="lede">One company of named agents, one website, one launcher. A company operating system for one founder and many ventures.</p>
+  <p class="supersede"><b>This supersedes the previous page</b> — <code>final/page/final-plan.html</code>, the page of FINAL, dated 2026-09-04. Five of FINAL's decision rows were overruled by the founder on <b>2026-09-05</b>, and this is what the plan says after those overrules.</p>
+  <div class="meta">
+    <span><b>Source</b> final-v2/FINAL-PLAN-v2.md · 6,252 lines · 25 sections · 35 flowcharts</span>
+    <span><b>Inputs</b> FINAL (branch ceo-3) · the founder's direction of 2026-09-05 · seven research lanes</span>
+    <span><b>Founder's choice</b> Keel only, again — THE-PLAN, mind-2, Fable's round-six design and the buy lane were not read</span>
+    <span><b>State</b> nothing built, installed, authenticated, spent, published or pushed</span>
+  </div>
+  <div class="toggles">
+    <button class="t" id="theme" type="button">Switch to light</button>
+    <button class="t" id="expand" type="button">Open every tile</button>
+  </div>
+</header>
+
+<!-- ============ §0 ============ -->
+<section id="s0">
+  <div class="sec"><span class="num">§0</span><h2>What it is</h2></div>
+  <p class="sub">The purpose in the founder's own words, transcribed by voice and kept as spoken, errors preserved, because the founder's words are the input.</p>
+
+  <blockquote class="founder">
+    <p>So remember, the purpose of this system is to be the place where I, as a founder or any other person or with any other task or goal to be able to take a project, open a project, take a task. achieve it, and walk with agent relentlessly until we get the perfect trade we are looking for. So it's a system and a harness and crew and a company like space and working environment and it starts up like two and a system, an autonomous self moving, self adjusting, improving system That can also and a big part of it is to be a place where the valkorders or the creators or the minds. can do everything. with the power of AI agents, AI systems. workflows. and agentic tools.</p>
+    <div class="attrib">the founder · verbatim</div>
+  </blockquote>
+
+  <p class="pull">It runs every part of every venture that can be checked against the world without you, walks beside you on the parts that are only yours, and shows you both from one place, on your phone, in your own words.</p>
+
+  <p>Five things are named in that paragraph and each is load-bearing somewhere below. <b>A place you open a project</b> — mission control's board and canvas (§14). <b>Take a task and achieve it</b> — the intent with a falsifiable done-test (§2). <b>Walk with agents relentlessly until the perfect result</b> — the roster of fourteen (§5) and the run that resumes rather than restarts (§6). <b>A company-like space</b> — the Operator as the founder's single contact point (§3). <b>Self-moving, self-adjusting, improving</b> — the Watch (§4), skill admission by eval and retirement by expiry (§7), and memory written by one curator (§13).</p>
+
+  <div class="nums">
+    <div class="nt"><div class="n">4</div><div class="l">rules that are the whole design: only the founder's door creates an intent · only the Operator dispatches · only the Sender touches the world · only the curator writes memory</div></div>
+    <div class="nt"><div class="n">15</div><div class="l">named roles — fourteen agents plus the Operator. Every file ABSENT</div></div>
+    <div class="nt"><div class="n">7</div><div class="l">pages of mission control. Every page ABSENT</div></div>
+  </div>
+
+  <h3>The five ideas, re-read against the direction <span class="chip sec">§0.4</span></h3>
+  <p class="sub">FINAL rested the whole design on five ideas. Three stand unchanged, two move, and none is deleted.</p>
+
+  <div class="idea"><div class="h"><span class="v">1 · STANDS</span>Nothing runs that does not trace to a live Intent with a falsifiable done-test</div><div class="m">The roster makes it easier to enforce, not harder. <b>Mechanism:</b> <code>bin/run</code> refuses a brief with no resolving intent id <span class="chip absent">ABSENT</span></div></div>
+  <div class="idea"><div class="h"><span class="v">2 · STANDS</span>Method is never specified. Only the outcome, the constraints and the evidence are</div><div class="m">The roster is where this was most at risk. Fourteen named agents carry expertise — a lens, a skill namespace, a model, a grant — never a procedure.</div></div>
+  <div class="idea"><div class="h"><span class="v">3 · STANDS</span>Standing orders replace approvals. Inside the envelope, silence is permission. There is no approve verb</div><div class="m">It hardens from stylistic to load-bearing: a fully autonomous run runs in <code>dontAsk</code>, which denies <code>AskUserQuestion</code> even when allowed. A silent run <i>cannot</i> ask.</div></div>
+  <div class="idea moves"><div class="h"><span class="v">4 · MOVES</span>Capacity is one exhaustible pool with a reserve held for the founder</div><div class="m">There are <b>two</b> windows per seat — a rolling five-hour and a weekly — so the reserve is per window <i>and</i> per week. A weekly exhaustion is a different event from a five-hour one.</div></div>
+  <div class="idea moves"><div class="h"><span class="v">5 · MOVES</span>Knowledge is earned, not curated; memory is mined from what already happened</div><div class="m">There <b>is</b> a skill library now. <i>Earned</i> survives with a sharper mechanism: admitted by eval, retired by forced expiry. Mining stays a batch pass over a snapshot, never a live parser.</div></div>
+
+  <p>Neither move overturns an idea; each replaces a belief with a mechanism. A founder overrule made both sharper than the original, which is the argument for not re-litigating them.</p>
+
+  <h3>A day with it <span class="chip sec">§0.5</span></h3>
+  <p class="sub">FINAL's day ran on a clock. The plan forbids schedules and durations, so this is the same day re-anchored on the page the founder is looking at and the agent doing the work.</p>
+  <div class="day">
+    <div class="dayrow"><div class="w">The phone, first thing</div><div class="s">Nothing, unless a <code>wake-me</code> line fired. If one did: one line.</div><div class="b">The Watch slept through everything that did not qualify. Three interruptions a day, and a channel whose acted-on rate falls is demoted below its threshold.</div></div>
+    <div class="dayrow"><div class="w">The briefing</div><div class="s">One page the founder opens, so it is never an interruption. What moved, with the evidence; the raw work biggest first — the rendered page, the played video, the diff, the email that would go out, staged and unsent; two <i>whiches</i>, both built; what could not be checked, named; what it cost per venture and per window.</div><div class="b">writer staged the email and never held the key. designer's anchor is the screenshot judged against a named target, not its own description. Every cost row taps through to its run.</div></div>
+    <div class="dayrow"><div class="w">Mission control, page 2</div><div class="s">The Operator and its children: who is working, who is sleeping, what each is doing on the current task.</div><div class="b">One level of teammates is visible because the runtime ships <b>no nested teams</b>; the deeper tree is subagents.</div></div>
+    <div class="dayrow"><div class="w">A tap on an agent</div><div class="s">A terminal opens on the Mac and the founder is inside that session.</div><div class="b">"remember each agent or each session that we are opening in the mission control or any other surface, it's directly opening it in the terminal in my Mac because everything is run on it" (FOUNDER). The mechanism is the documented tmux CLI (§15).</div></div>
+    <div class="dayrow"><div class="w">Mission control, page 4 — the board</div><div class="s">Tickets, PRs and a timeline. The founder drags a card into <i>working on it</i>.</div><div class="b">The drag launches a session with a team of agents and hands it the task. <b>Nothing in the world does this</b> — every board-to-session project found maps one task to one agent, so this part is ours to build.</div></div>
+    <div class="dayrow"><div class="w">The Floor</div><div class="s">A terminal, one agent, the same memory and the same envelope. The founder's own browser and own send button are here and nowhere else.</div><div class="b">The system goes sterile: nothing interrupts, nothing new is dispatched on the founder's window, the venture under their hands is held whole. When they leave, the queue is one paragraph.</div></div>
+    <div class="dayrow"><div class="w">A <i>which</i></div><div class="s">Two options, both already built, and the cost of each. One tap.</div><div class="b">There is no approve verb anywhere in the system. Outside the envelope, the system builds both and asks <i>which</i>.</div></div>
+    <div class="dayrow"><div class="w">The night</div><div class="s">Nothing. The founder is asleep.</div><div class="b">Obligations first, before any goal. Then, under each driven venture's ceiling, runs are born with a brief, work however they like, are checked by something outside the model, hand back seven fields, and die. Routine work burns the Gemini window. A fully autonomous run <b>cannot ask</b>.</div></div>
+    <div class="dayrow"><div class="w">Dawn</div><div class="s">The briefing again.</div><div class="b">The curator has already run: delta-only writes, one writer, an index loaded at start and topic files on demand.</div></div>
+  </div>
+</section>
+
+<!-- ============ §1 ============ -->
+<section id="s1">
+  <div class="sec"><span class="num">§1</span><h2>The decisions</h2></div>
+  <p class="sub">Forty-one rows. The five below are the founder's overrules of FINAL — they are not arguments, they are decisions, and each states the cost once. The losing image is kept by name in every row.</p>
+
+  <div class="nums">
+    <div class="nt"><div class="n">5</div><div class="l">founder overrules, v1–v5. Never re-litigated</div></div>
+    <div class="nt"><div class="n">36</div><div class="l">further rows, v6–v41, where a fact from the world moves a FINAL row or holds it</div></div>
+    <div class="nt"><div class="n">6</div><div class="l">of those, v36–v41, decided during the build round because a writer returned a question rather than inventing an answer</div></div>
+  </div>
+
+  <details class="tile"><summary><span class="tk">§1.1 · v1</span><span class="th">Fourteen named agents plus the Operator</span><span class="ts">How many kinds of worker</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip">overrules FINAL row 6</span></div></summary>
+    <div class="body"><p>A company, each agent with its own expertise, knowledge, tools and way of working.</p><p><i>"I want us to recreate the whole startup company … between ten and fifteen agents"</i></p><div class="lost"><b>the losing image, kept as</b>three shapes — maker · scout · checker — with loadouts assembled per run, and no file per role</div></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§1.1 · v2</span><span class="th">Real names, one file per agent</span><span class="ts">Each carrying its own model, tools, MCPs, skills and anchor</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip">overrules FINAL row 8</span></div></summary>
+    <div class="body"><p>Roster research fact 1: MetaGPT, ChatDev, Magentic-One, CrewAI, the OpenAI SDK, wshobson and VoltAgent all ship named persistent roles. <b>Zero of seven</b> ship unnamed-shape-plus-loadout.</p><div class="lost"><b>the losing image, kept as</b>labels, not names; a run labelled only by what it makes and which window it burns</div></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§1.1 · v3</span><span class="th">A library in the open SKILL.md standard</span><span class="ts">Admitted by eval, retired by expiry, plus a skill creator</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip">overrules FINAL row 10</span></div></summary>
+    <div class="body"><p><i>"take all the skills that the biggest systems use … we need a skill creator of skill"</i></p><div class="lost"><b>the losing image, kept as</b><code>keel/holding/skills/</code> — 134 skills moved whole into a directory read by nothing</div></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§1.1 · v4</span><span class="th">Mission control is a first-class website with seven pages</span><span class="ts">Every page is a control, not a display</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip">overrules FINAL row 15</span></div></summary>
+    <div class="body"><p>The Balcony's five views are not deleted; they become pages of it. The Floor stays a terminal on the Mac and is what every tap opens.</p><p><i>"the mission control surface. I want to add it, bring it back"</i>, and <i>"when I click on it, the terminal which runs the agent on my Mac is popping up"</i></p><div class="lost"><b>the losing image, kept as</b>five Balcony views over one state; the room as a display that is never a control; "no project is both"</div></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§1.1 · v5</span><span class="th">Codex and Claude Code are both in the system from day one</span><span class="ts">In one shape, decided in §10</span><div class="tags"><span class="chip founder">FOUNDER</span><span class="chip">overrules FINAL row 30</span></div></summary>
+    <div class="body"><p><i>"I run from day one of the system to include codex and Claude code"</i></p><div class="lost"><b>the losing image, kept as</b>Codex admitted only after a headless rehearsal passes; Gemini proving the second-family route first</div></div>
+  </details>
+</section>
+
+<!-- ============ §5 ============ -->
+<section id="s5">
+  <div class="sec"><span class="num">§5</span><h2>The roster</h2></div>
+  <p class="sub">Fourteen agents plus the Operator — fifteen named roles, one file each, in the frontmatter format the runtime already reads. <b>All fifteen files are ABSENT.</b> The anchor is what proves the work and is never the agent's own report.</p>
+
+  <blockquote class="founder">
+    <p>I want us to recreate the whole startup company or a whole company or a team. So I want us to have more agents as much as you will need, but not too much. So, like, between ten and fifteen agents. So we will have each agent with its own expertise so we can adjust his knowledge and his tools and his way of walking and thinking towards the tasks that he needs to achieve.</p>
+    <div class="attrib">the founder · verbatim</div>
+  </blockquote>
+
+  <div class="nums">
+    <div class="nt"><div class="n">8</div><div class="l">of the fourteen carry no shell</div></div>
+    <div class="nt"><div class="n">5</div><div class="l">carry no write of any kind</div></div>
+    <div class="nt"><div class="n">4</div><div class="l">can touch source. Most of them cannot do most things</div></div>
+  </div>
+
+  <details class="tile" open><summary><span class="tk">§3 · the fifteenth, and the contact point</span><span class="th">Operator</span><span class="ts">The orchestrator of the agents, and the founder's contact point. Dispatches; never builds</span><div class="tags"><span class="chip">claude-opus-5</span><span class="chip absent">FILE ABSENT</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Tools</dt><dd><code>Read Glob Grep</code> plus <code>Agent(...)</code> — <b>no Write, no Edit, no Bash</b></dd><dt>Anchor</dt><dd>It is not in the §5 table because §3 is its section. It holds no verb that could build instead of dispatching, and that is the guarantee</dd><dt>Founder</dt><dd><i>"We need an operator, which is, like, the orchestrator of the agents. which is also the contact point with me"</i></dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 1 · engineering</span><span class="th">builder</span><span class="ts">Writes the code. One artifact, one worktree, continuous context</span><div class="tags"><span class="chip">claude-opus-5</span><span class="chip unver">escalates to claude-fable-5-1</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>the venture's own CI, plus the done-test, plus the tester's blind test</dd><dt>Tools</dt><dd><code>Read Write Edit Bash Glob Grep</code> · no MCPs by default</dd><dt>Routed</dt><dd>when the intent's outcome is source code</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 2 · engineering · correctness</span><span class="th">reviewer</span><span class="ts">Judges code it did not write, against a named dimension</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">a second family when reachable</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>findings reproduce from the diff alone; a finding with no reproduction is a hypothesis</dd><dt>Tools</dt><dd><code>Read Glob Grep</code> — no write</dd><dt>Routed</dt><dd>any builder handover, before merge</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 3 · engineering · systems</span><span class="th">architect</span><span class="ts">The contract before the code: schema, API, data model, migration</span><div class="tags"><span class="chip">claude-opus-5</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>a migration that applies and rolls back in a scratch database</dd><dt>Tools</dt><dd><code>Read Glob Grep Write</code> (design paths only)</dd><dt>Routed</dt><dd>when the work changes a schema, an interface or a stored shape</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 4 · quality</span><span class="th">tester</span><span class="ts">Writes the test that judges a build, blind to the implementation</span><div class="tags"><span class="chip">claude-sonnet-5</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>the test fails before the change and passes after</dd><dt>Tools</dt><dd><code>Read Write Edit Bash Glob Grep</code>, with <code>--add-dir</code> excluding the implementation</dd><dt>Routed</dt><dd>any intent whose done-test needs a new anchor</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 5 · security</span><span class="th">guard</span><span class="ts">Security and adversarial review; every tool admission</span><div class="tags"><span class="chip">claude-opus-5</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>a proof of concept that reproduces, or the finding is a hypothesis</dd><dt>Tools</dt><dd><code>Read Glob Grep</code></dd><dt>Routed</dt><dd>auth, credentials, network, outward acts, migrations, or a new tool at the door</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 6 · research</span><span class="th">scout</span><span class="ts">Finds things out. Stateless, parallel legal here and only here. Reads the untrusted world</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip unver">Gemini once authenticated</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>every claim carries URL, quote and access date; <code>check-citations.mjs</code> blocks on a dead one</dd><dt>Tools</dt><dd><code>Read Glob Grep WebSearch WebFetch</code> — <b>no Write, no credential, no send</b>. Read-only MCP servers, per run</dd><dt>Routed</dt><dd>when a bounded question of fact is cheaper to answer than to assume</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 7 · design</span><span class="th">designer</span><span class="ts">UI, UX, brand, visual identity, prototypes. The perception loop: render, look, iterate</span><div class="tags"><span class="chip">claude-opus-5</span><span class="chip">playwright, per-run inline</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>a rendered screenshot judged against a named anchor; never the agent's description of it</dd><dt>Tools</dt><dd><code>Read Write Edit Bash Glob Grep</code></dd><dt>Routed</dt><dd>when the artifact is seen by a person</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 8 · product</span><span class="th">product</span><span class="ts">Turns fuzzy into a falsifiable done-test; specs, tickets, acceptance criteria, roadmap</span><div class="tags"><span class="chip">claude-sonnet-5</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>the store check refuses an intent whose done-test is not falsifiable by someone who did not do the work</dd><dt>Tools</dt><dd><code>Read Glob Grep Write</code> (spec paths)</dd><dt>Routed</dt><dd>when the request cannot yet be dispatched</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 9 · data</span><span class="th">analyst</span><span class="ts">Pipelines, KPIs, cohorts, A/B, anomalies, and the nightly reconciliation</span><div class="tags"><span class="chip">claude-sonnet-5</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>the reconciliation reads a record the company does not write; a number that reconciles to our own log is rung 4, not rung 1</dd><dt>Tools</dt><dd><code>Read Glob Grep Bash</code> · read-only analytics, error tracking, billing-read</dd><dt>Routed</dt><dd>when a question is about what actually happened</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 10 · growth · craft</span><span class="th">writer</span><span class="ts">Content, brand voice, SEO, ad copy, campaign drafts, video and asset briefs</span><div class="tags"><span class="chip">claude-opus-5 for taste</span><span class="chip">claude-sonnet-5 for routine</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>staged, never sent; the anchor is the founder's taste store and a rung-2 external reaction</dd><dt>Tools</dt><dd><code>Read Write Edit Glob Grep</code> · Higgsfield, rate-capped, spends credits</dd><dt>Routed</dt><dd>when words or assets are the artifact</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 11 · growth</span><span class="th">growth</span><span class="ts">Leads, scoring, outreach drafts, CRM hygiene, funnel work. Never sends</span><div class="tags"><span class="chip">claude-sonnet-5</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>a reply from a real person, recorded by the world's door; never a count of messages sent</dd><dt>Tools</dt><dd><code>Read Glob Grep Write</code> · CRM read-only</dd><dt>Routed</dt><dd>when the intent is about reaching people who are not yet customers</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 12 · operations · finance</span><span class="th">steward</span><span class="ts">Obligations, invoices, expenses, contract review, compliance flags, vendors, support triage</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">no MCPs</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>an obligation is discharged only by a record the company does not write</dd><dt>Tools</dt><dd><code>Read Glob Grep Write</code> (obligations and operations paths). Mail, calendar, drive and Notion are read by the world's door and by scout; steward writes from scout's handover, never from a raw row</dd><dt>Routed</dt><dd>when something is owed to someone by a date</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 13 · knowledge</span><span class="th">curator</span><span class="ts">What the company knows: memory, the transcript pass, and skill admission. The only writer of memory</span><div class="tags"><span class="chip">claude-sonnet-5</span><span class="chip">summarising half on Gemini or local</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>a memory item with no source, date, expiry and falsifier is refused at the store check</dd><dt>Tools</dt><dd><code>Read Write Edit Glob Grep</code> — <b>no Bash</b></dd><dt>Routed</dt><dd>nightly, and whenever a run's handover proposes a durable fact</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§5.2 · 14 · adversarial reasoning</span><span class="th">challenger</span><span class="ts">Attacks a finished plan or artifact for holes, contradictions, and rules with no mechanism</span><div class="tags"><span class="chip">claude-opus-5</span><span class="chip">a second family when reachable</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Anchor</dt><dd>every finding names the mechanism that would have caught it, or it is an opinion</dd><dt>Tools</dt><dd><code>Read Glob Grep</code></dd><dt>Routed</dt><dd>before anything irreversible, and on every plan the Operator is about to bind</dd></dl></div>
+  </details>
+
+  <p style="margin-top:12px">Mail, calendar, drive and Notion are <b>tainted read-only</b>: their content is written by strangers. Only <b>scout</b> and the <b>world's door</b> program may read them. No agent that holds <code>Write</code>, <code>Edit</code> or <code>Bash</code> reads them raw.</p>
+</section>
+
+<!-- ============ §14 ============ -->
+<section id="s14">
+  <div class="sec"><span class="num">§14</span><h2>Mission control</h2></div>
+  <p class="sub">Seven pages, one state, and every tap opens a terminal on the Mac. <b>Every page is ABSENT.</b> What ships is the substrate, and the distinction between <i>the substrate ships</i> and <i>the page exists</i> is the one to hold on to.</p>
+
+  <blockquote class="founder">
+    <p>remember each agent or each session that we are opening in the mission control or any other surface, it's directly opening it in the terminal in my Mac because everything is run on it.</p>
+    <div class="attrib">the founder · this sentence decides the architecture of every page</div>
+  </blockquote>
+
+  <details class="tile"><summary><span class="tk">§14.4 · page 1</span><span class="th">The office</span><span class="ts">The room: every live run a light, one venture per area, and the night replayed at speed in the morning</span><div class="tags"><span class="chip absent">ABSENT · enters through the tool door</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Tap</dt><dd>an avatar → that agent's terminal</dd><dt>Substrate</dt><dd>Generative Agents <code>demo</code> mode, Apache 2.0</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§14.5 · page 2</span><span class="th">Agents and child flows</span><span class="ts">The Operator and its children; who is working, who is sleeping, what each is doing on the current task</span><div class="tags"><span class="chip exists">SUBSTRATE SHIPS</span><span class="chip absent">PAGE ABSENT</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Tap</dt><dd>attach to its tmux session or background session; message → write its inbox file</dd><dt>Substrate</dt><dd>Claude Code <b>agent teams</b> — experimental, off by default, no nested teams</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§14.6 · page 3</span><span class="th">Cost, tokens, efficiency</span><span class="ts">Spend and tokens per run, per agent, per venture. Every number names the tap that acts on it</span><div class="tags"><span class="chip absent">ABSENT</span><span class="chip exists">events.jsonl is the spine</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Tap</dt><dd>a cost row → its run · a window row → retempo · an anomaly → the cord</dd><dt>Substrate</dt><dd>the event log joined to §16's price table</dd><dt>The rule</dt><dd>FINAL had no dashboard row and said "nothing is only informational"; the founder asked for a dashboard. Both are kept, by one rule: every number on the page names the tap that acts on it</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§14.7 · page 4</span><span class="th">Tasks, tickets and PRs</span><span class="ts">A board with stages, a timeline, and a kanban; PRs beside tickets</span><div class="tags"><span class="chip absent">ABSENT</span><span class="chip unver">the team part has no prior art anywhere</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Tap</dt><dd><b>drag a card into "working on it" → launches a session with a team of agents and hands it the task</b></dd><dt>Substrate</dt><dd>ours; prior art OpenAI Symphony</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§14.8 · page 5</span><span class="th">Engines and how it works</span><span class="ts">Every engine, every gate, every store, and the flowcharts of this plan — live rather than drawn</span><div class="tags"><span class="chip absent">ABSENT</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Tap</dt><dd>a gate → its last ten resolutions · a store → its schema and its one writer</dd><dt>Substrate</dt><dd>the same state as every other page</dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§14.9 · page 6</span><span class="th">The 3D file graph</span><span class="ts">The files of one project as a wired brain; edges are imports and co-change</span><div class="tags"><span class="chip absent">ABSENT</span><span class="chip unver">thinnest researched area</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Tap</dt><dd>a node → open that file on the Floor</dd><dt>Substrate</dt><dd><code>3d-force-graph</code> (MIT) renders; <b>the extractor is ours</b></dd></dl></div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§14.10 · page 7</span><span class="th">The canvas and playground</span><span class="ts">Every agent in every session, and their connections</span><div class="tags"><span class="chip absent">ABSENT</span></div></summary>
+    <div class="body"><dl class="kv"><dt>Tap</dt><dd>add a session: worktree, project, provider, model, task and agent → launch in the background, then attach</dd><dt>Substrate</dt><dd>Langflow (MIT) as the canvas idiom</dd></dl></div>
+  </details>
+</section>
+
+<!-- ============ §10 ============ -->
+<section id="s10">
+  <div class="sec"><span class="num">§10</span><h2>Codex and Claude Code, from day one</h2></div>
+  <p class="sub">Four options were judged against a measured defect rather than a preference. One was chosen.</p>
+
+  <details class="tile" open><summary><span class="tk">§10.1 · the chosen shape</span><span class="th">A third program drives both</span><span class="ts">One launcher, <code>bin/run</code>, composes argv. Nothing else may</span><div class="tags"><span class="chip exists">CHOSEN</span><span class="chip absent">bin/run ABSENT</span></div></summary>
+    <div class="body">
+      <p>Each vendor documents a headless invocation, a session id, resume, an instructions file, a SKILL.md bundle and MCP. A provider outage or a defect becomes a <b>routing change, not a rewrite</b>.</p>
+      <p>It is a consequence, not a taste: if two things compose argv, two things define what a run may touch, and the guarantee that a checker cannot edit what it judges becomes an agreement between them.</p>
+      <dl class="kv">
+        <dt>Rejected</dt><dd><b>Claude Code drives Codex from Bash</b> — exactly the shape openai/codex#19945 breaks. The <code>script -qfc</code> cure is "incompatible with normal background / parallel job execution", which is what a crew is</dd>
+        <dt>Rejected</dt><dd><b>Codex drives Claude</b> — no documented mechanism in either direction, and Codex is not installed</dd>
+        <dt>Folded in</dt><dd><b>Hybrid</b> — the Floor is interactive Claude Code and always was; the founder may run Codex by hand there</dd>
+        <dt>The seam</dt><dd>Only the policy tier differs between runtimes. Anthropic's managed settings outrank argv; <b>OpenAI's <code>requirements.toml</code> outranks every flag</b>; Google has a Policy Engine</dd>
+      </dl>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§10.2 · day one</span><span class="th">Codex's position: a checker on a prepared diff</span><span class="ts">Foreground, stdout redirected to a file, inheriting the parent shell's TTY</span><div class="tags"><span class="chip absent">codex NOT INSTALLED</span></div></summary>
+    <div class="body">
+      <p>The position is narrow because a measured defect makes it narrow, not because Codex is distrusted.</p>
+      <p><b>The cost, stated once and not re-litigated:</b> one foreground slot is not parallel, so Codex is not a night lane yet. That is the whole price of admitting it on day one, and it buys a second model family on the one move where family independence pays for itself.</p>
+      <p><b>openai/codex#19945, read 2026-09-05:</b> "codex exec silently crashes with no output when stdio is detached from TTY (0.124.0+)", opened 2026-04-28. <b>Open 130 days with no comments and no maintainer reply.</b> The process produces no error, no panic, no log entry — just an empty result. Piping through <code>tee</code> or <code>tail</code> does not resolve it. A silent empty result is the worst failure shape there is.</p>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§10.2 · the admission test</span><span class="th">What widens the position</span><span class="ts">Pass and Codex becomes a night checker and a maker on mid-to-hard work. Fail and it stays in the foreground slot</span><div class="tags"><span class="chip unver">not yet run</span></div></summary>
+    <div class="body"><dl class="kv">
+      <dt>Command</dt><dd><code>codex exec --json</code></dd>
+      <dt>TTY</dt><dd><b>no controlling TTY</b></dd>
+      <dt>Prompt</dt><dd><b>non-trivial</b> — a smoke prompt does not exercise the defect</dd>
+      <dt>Version</dt><dd>≥ 0.124.0</dd>
+      <dt>Judged by</dt><dd>known-answer cases</dd>
+    </dl><p><b>The test is the plan, not the issue closing</b> — 130 days of silence is not a schedule. Installing Codex and running the rehearsal is open decision 5.</p></div>
+  </details>
+</section>
+
+<!-- ============ §7 ============ -->
+<section id="s7">
+  <div class="sec"><span class="num">§7</span><h2>Skills</h2></div>
+  <p class="sub">The founder overruled FINAL's refusal of a library. Two tiles: what the library is, and the creator that makes new ones.</p>
+
+  <details class="tile"><summary><span class="tk">§7.1 · the library plan</span><span class="th">Two directories, one source of truth</span><span class="ts">The container is the open SKILL.md standard, fetched 2026-09-05. Its published limits are the file's limits</span><div class="tags"><span class="chip unver">bulk import BLOCKED</span></div></summary>
+    <div class="body">
+      <p>Claude Code reads <code>.claude/skills/</code>. Codex and Gemini CLI both read <code>.agents/skills/</code>, and Codex does <b>not</b> read <code>.codex/skills</code>. So there are two directories and one source of truth: Markdown is the source, and both directories are generated from it.</p>
+      <p><b>Collisions are not merged.</b> Codex states it plainly: if two skills share a name, both appear in skill selectors. A drifted generated copy does not error; it appears twice with different bodies. So the generator is the only writer of either directory, and nothing hand-edits them.</p>
+      <dl class="kv">
+        <dt>Limits</dt><dd><code>name</code> ≤ 64 chars and must match the parent directory · <code>description</code> ≤ 1024 · metadata ~100 tokens loaded at startup for all skills · instructions under 5,000 tokens recommended · body under 500 lines</dd>
+        <dt>Blocked on</dt><dd>The upstream advertises <b>2,111+ skills</b>, MIT on the code — but a separate <code>LICENSE-CONTENT</code> file exists there and <b>was not fetched</b>. No bulk vendoring until it is read. One fetch clears it</dd>
+        <dt>UNVERIFIED</dt><dd>this branch's <code>SKILLS_SOURCE.md</code> names <code>npx antigravity-awesome-skills</code>; the upstream now advertises <code>npx agentic-awesome-skills</code>. Whether the old name still resolves is unverified</dd>
+        <dt>Read the sources for what they are</dt><dd><code>anthropics/skills</code> is 19 directories with <b>no root LICENSE file</b> · <code>wshobson/agents</code> is MIT, read from LICENSE · both VoltAgent lists are indexes of links, MIT unverified · the spec repo's licence is <b>UNKNOWN</b>, not fetched</dd>
+      </dl>
+    </div>
+  </details>
+
+  <details class="tile"><summary><span class="tk">§7.5 · the skill creator</span><span class="th"><code>bin/skill</code> — a program, not a fifteenth agent</span><span class="ts">It holds no model. It sequences four moves, each performed by an agent under that agent's own grant</span><div class="tags"><span class="chip absent">ABSENT</span></div></summary>
+    <div class="body">
+      <p><i>"we need a skill creator of skill, which, you know, we will research a task or a mission and, like, to break it down two steps and to give it to the agents."</i> <b>(FOUNDER)</b></p>
+      <dl class="kv">
+        <dt>1 · scout</dt><dd>answers the bounded question of how the field actually does this. URL, quote and access date on every claim; <code>check-citations.mjs</code> blocks on a dead one</dd>
+        <dt>2 · product</dt><dd>states the done-test the skill is supposed to make reachable — falsifiable by someone who did not do the work, or the store check refuses it</dd>
+        <dt>3 · curator</dt><dd>writes the artifact into one of the four admissible bodies and proposes its <code>valid_until</code></dd>
+        <dt>4 · eval</dt><dd>runs with-skill against baseline. <b>A candidate that does not beat baseline is not admitted, and the negative is written to the negatives store rather than discarded</b> — the failure is the cheapest thing the run produced</dd>
+        <dt>Expiry</dt><dd>when <code>valid_until</code> falls due, exactly one disposition: refresh, deprecate, or waive with a new date</dd>
+      </dl>
+      <p>The scout fan-out inside move 1 is the one place parallelism is earned: four scouts asking four independent questions do not need each other's context.</p>
+    </div>
+  </details>
+</section>
+
+<!-- ============ §9 ============ -->
+<section id="s9">
+  <div class="sec"><span class="num">§9</span><h2>Models</h2></div>
+  <p class="sub">The default is a field in the agent's own file — <code>model:</code> in frontmatter — which is what makes this routing rather than advice. All fifteen files are ABSENT.</p>
+
+  <div class="nums">
+    <div class="nt"><div class="n">5</div><div class="l"><code>claude-opus-5</code> — builder · architect · guard · designer · challenger</div></div>
+    <div class="nt"><div class="n">8</div><div class="l"><code>claude-sonnet-5</code> — reviewer · tester · scout · product · analyst · growth · steward · curator</div></div>
+    <div class="nt"><div class="n">1</div><div class="l">split by move — <b>writer</b>, Opus for taste work, Sonnet for routine</div></div>
+    <div class="nt"><div class="n">1</div><div class="l">the Operator, <code>claude-opus-5</code>, on top of the fourteen</div></div>
+  </div>
+  <p>Five, eight and one, totalling fourteen. Counting the Operator, six of fifteen named roles sit on Opus 5 and eight on Sonnet 5. <b>No agent defaults to Haiku</b> — the genuinely cheap work does not go to a cheap model at all, it goes to a local one or to no model.</p>
+  <p>Three of the five Opus rows are checkers, deliberately. <code>guard</code>, <code>challenger</code> and <code>architect</code> are on the top tier while <code>reviewer</code> and <code>tester</code> are not, because the first three produce a finding or a contract that nothing downstream re-derives. Where a cheap check exists, the cheap model is enough; where the output <i>is</i> the check, it is not.</p>
+
+  <h3>The three windows <span class="chip sec">§9.3</span></h3>
+  <details class="tile"><summary><span class="tk">§9.3 · window 1</span><span class="th">Anthropic subscription</span><span class="ts">No numeric quota is published on any page fetched. The absence of numbers is itself the finding</span><div class="tags"><span class="chip unver">Max 20x price UNVERIFIED</span></div></summary>
+    <div class="body"><p>Two windows exist — a rolling five-hour <b>and a weekly</b> — "per-seat", and the allowance is "shared with Claude chat and Cowork". Magnitudes are relative only: Pro "at least 5x more usage per 5-hour session than Free"; Max "5x" and "20x more usage than Pro". The pricing page rendered "From $100 per month" for both Max tiers.</p><p><b>Any Anthropic window figure in this system is a measurement, never a plan input.</b></p></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§9.3 · window 2</span><span class="th">OpenAI Codex</span><span class="ts">The only vendor of the three publishing numeric per-window quotas</span><div class="tags"><span class="chip exists">budgetable in advance</span></div></summary>
+    <div class="body"><p>Per 5-hour rolling window: GPT-6 Astra 5–45 (Plus) / 25–225 (Pro 5x) / 100–900 (Pro 20x). GPT-5.6 Sol 10–100 / 50–500 / 200–2,000. GPT-5.6 Luna 250–2,000 / 1,250–10,000 / 5,000–40,000. "GPT-5.6 usage averages 5-30 credits per message".</p><p><b>Caveat:</b> <code>gpt-5.3-codex</code> appears in the API price list and in no plan quota row.</p></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§9.3 · window 3</span><span class="th">Gemini CLI</span><span class="ts">Free tier: 60 requests/min, 1,000 requests/day with a personal Google account</span><div class="tags"><span class="chip unver">paid tiers UNVERIFIED</span></div></summary>
+    <div class="body"><p>Paid AI Pro / Ultra / Code Assist per-tier CLI quotas are <b>UNVERIFIED</b> — not fetched.</p><p>Installed here at 0.38.2 and <b>never authenticated</b>.</p></div>
+  </details>
+  <p style="margin-top:10px">The consequence for the reserve, and it changes FINAL: with a weekly window in the same seat, the reserve is <b>per window and per week</b>, and a weekly exhaustion is a different event from a five-hour one. The five-hour one ends in hours; the weekly one does not. A design that holds one reserve holds the wrong one on the day it matters.</p>
+</section>
+
+<!-- ============ §20 ============ -->
+<section id="s20">
+  <div class="sec"><span class="num">§20</span><h2>Open decisions</h2></div>
+  <p class="sub">Fourteen, each with both sides and whose decision it is. Tap to open.</p>
+
+  <details class="tile"><summary><span class="tk">§20.1 · 1</span><span class="th">The terms — automated access on a subscription</span><span class="ts">Whose: the founder, after one reading</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>the vendor ships and documents the unattended features (<code>-p</code>, <code>--max-budget-usd</code>, <code>/loop</code>, Routines, Remote Control, agent teams) and the subscription is paid for</dd><dt>The other</dt><dd>the clause names an API key as the carve-out, and the downside of being wrong is the account, which takes the company. <b>OpenAI's terms returned HTTP 403 and are unread; Google's are unfetched</b></dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 2</span><span class="th">Is Fable 5.1 reachable on the subscription seat</span><span class="ts">Whose: one measurement, then the founder</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>it is in the API catalogue and Fable is a valid frontmatter value</dd><dt>The other</dt><dd><b>no plan table names it</b>, and this repo's own lint does not carry <code>claude-fable-5-1</code>. Fallback is <code>claude-opus-5</code></dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 3</span><span class="th">Haiku 4.5 retires from 2026-10-15</span><span class="ts">Whose: the founder, on a dated review</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>nothing of ours defaults to it</dd><dt>The other</dt><dd><code>/goal</code>'s evaluator and the auto-mode classifier do, by vendor default. <code>ANTHROPIC_DEFAULT_HAIKU_MODEL</code> changes it everywhere the small fast model is used</dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 4</span><span class="th"><code>LICENSE-CONTENT</code> in the skills upstream</span><span class="ts">Whose: one fetch, then a decision</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>one fetch clears it and unlocks 2,111 skills</dd><dt>The other</dt><dd>until read, no bulk import: MIT covers the code, not necessarily the content</dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 5</span><span class="th">Install Codex and run the headless rehearsal</span><span class="ts">Whose: the founder, then the measurement</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>day one is the founder's instruction, and three families is the strongest vendor independence</dd><dt>The other</dt><dd>#19945 is open 130 days with no maintainer reply; the rehearsal may fail, and then Codex stays in one foreground slot</dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 6</span><span class="th">Authenticate <code>gemini</code></span><span class="ts">Whose: the founder, one terminal act</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>a second family at zero marginal cost; 60 requests/min and 1,000/day free</dd><dt>The other</dt><dd>it has sat unauthenticated since it was installed</dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 7</span><span class="th">Turn on agent teams</span><span class="ts">Whose: the founder</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>it is the substrate for page 2, and it ships</dd><dt>The other</dt><dd>experimental, off by default, <b>no nested teams</b>, one team per session, <code>/resume</code> does not restore them, and "approximately 7x more" tokens when teammates run in plan mode</dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 8</span><span class="th">The managed settings file</span><span class="ts">Whose: the founder, then the probe</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>the only tier a running process cannot clear</dd><dt>The other</dt><dd>a founder act on a machine-wide file, and the hook trade rides on it: keeping <code>/goal</code> means a run can register its own Stop hook</dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 9</span><span class="th">Does a card launch a team</span><span class="ts">Whose: decided by the founder; built by us either way</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>it is the founder's page 4, verbatim</dd><dt>The other</dt><dd><b>no prior art anywhere</b> — every board-to-session project maps one task to one agent</dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 10</span><span class="th">The 3D graph extractor</span><span class="ts">Whose: the founder, on appetite</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>the renderer is MIT and free</dd><dt>The other</dt><dd>the extractor is entirely ours and it is the least-researched area in the plan</dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 11</span><span class="th">The second human on statutory obligations</span><span class="ts">Whose: the founder</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>cheap now, impossible in the moment it is needed</dd><dt>The other</dt><dd>a trust and credential decision</dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 12</span><span class="th">Which room</span><span class="ts">Whose: the founder</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>Generative Agents <code>demo</code> (Apache 2.0, cold) — the cheapest read-only display, one JSON file</dd><dt>The other</dt><dd>AI Town (MIT, alive, needs Convex) — a living project, if the founder wants it maintained</dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 13</span><span class="th">The first venture and its rung-1 anchor</span><span class="ts">Whose: the founder</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>adoption is the intake this founder uses most</dd><dt>The other</dt><dd>the harness is the only venture whose anchors already exist — the 48-step suite</dd></dl></div>
+  </details>
+  <details class="tile"><summary><span class="tk">§20.1 · 14</span><span class="th">Fourteen agents is inside an unoccupied band</span><span class="ts">Whose: decided; reopened only by name</span></summary>
+    <div class="body"><dl class="kv"><dt>One side</dt><dd>the founder's decision, taken with the evidence in hand</dd><dt>The other</dt><dd>every shipped running roster measured is 5–6; every roster of 150+ is a catalogue you pick from</dd></dl></div>
+  </details>
+</section>
+
+<!-- ============ §19 ============ -->
+<section id="s19">
+  <div class="sec"><span class="num">§19</span><h2>Build order, by dependency</h2></div>
+  <p class="sub">The needs graph as a list. <b>No durations and no schedule.</b> Three things unlock everything else: the logbook, transcript mining, and one real venture driven. Every path below is ABSENT unless the line says otherwise.</p>
+
+  <p class="tier">Needs nothing — the founder's own acts</p>
+  <ol class="build">
+    <li><div class="node">Write the managed settings file</div><span class="path">permissions.deny · disableBypassPermissionsMode · disableAutoMode — and not the two hook settings</span><div class="needs"><b>gates</b>the entire unattended half of the system, through the probe. Four lines of JSON in a directory no run can reach</div></li>
+    <li><div class="node">Authenticate <code>gemini</code></div><span class="path">0.38.2 installed, never authenticated</span><div class="needs"><b>gates</b>the argv files</div></li>
+    <li><div class="node">Install <code>codex</code></div><span class="path">command -v codex is absent today</span><div class="needs"><b>gates</b>one measurement, whose failure leaves Codex in the foreground slot it already has</div></li>
+    <li><div class="node">Turn on agent teams</div><span class="path">CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</span><div class="needs"><b>gates</b>page 2 only</div></li>
+    <li><div class="node">Fetch and read <code>LICENSE-CONTENT</code></div><span class="path">one fetch</span><div class="needs"><b>gates</b>the bulk import only</div></li>
+  </ol>
+
+  <p class="tier">The three trunks</p>
+  <ol class="build">
+    <li><div class="node">1 · The logbook</div><span class="path">bin/log · logbook/{events,ledger}.jsonl · an id on every row · F_FULLFSYNC · gen_ai.* names · ~/.agentvibe/events.jsonl adopted as the spine</span><div class="needs"><b>needs</b>nothing. The cheapest thing here, and nothing can be measured, learned from, explained or resumed without it</div></li>
+    <li><div class="node">2 · Transcript mining</div><span class="path">a batch pass over a snapshot, never a live parser · taste · negatives · already-built · rehearsal candidates</span><div class="needs"><b>needs</b>the logbook. The only component that makes every other component better on the day it lands, which most designs would build last</div></li>
+    <li><div class="node">3 · One real venture, driven</div><span class="path">a real done-test and a rung-1 anchor</span><div class="needs"><b>needs</b>the Watch · page 4 · the reconciler · the skill library. Everything in this design is a claim about what happens when that runs</div></li>
+  </ol>
+
+  <p class="tier">The run and its grant</p>
+  <ol class="build">
+    <li><div class="node">The fifteen agent files</div><span class="path">keel/agents/*.md · the model set in prompt-standard.test.mjs moves in the same change</span><div class="needs"><b>needs</b>nothing</div></li>
+    <li><div class="node">The argv files</div><span class="path">keel/agents/&lt;agent&gt;.&lt;provider&gt;.argv — the grant IS these strings</span><div class="needs"><b>needs</b>the agent files · gemini authenticated</div></li>
+    <li><div class="node">The probe</div><span class="path">keel/bin/probe — what a run can actually touch, nightly</span><div class="needs"><b>needs</b>the managed settings file · the argv files</div></li>
+    <li><div class="node"><code>bin/run</code> — the only thing that composes argv</div><span class="path">mints the UUID · writes logbook/sessions.jsonl · seed: mission-control/scripts/consume-dispatch.ts</span><div class="needs"><b>needs</b>the logbook · the probe · the argv files</div></li>
+    <li><div class="node">The supervisor</div><span class="path">keel/bin/supervise — restart ceiling · heartbeat · process-group kill</span><div class="needs"><b>needs</b>bin/run</div></li>
+    <li><div class="node">The Codex headless rehearsal</div><span class="path">codex exec --json · no controlling TTY · non-trivial prompt · version ≥ 0.124.0</span><div class="needs"><b>needs</b>codex installed · the argv files</div></li>
+  </ol>
+
+  <p class="tier">The stores, the prices, the meter</p>
+  <ol class="build">
+    <li><div class="node">The store check</div><span class="path">keel/bin/check-stores — charter · intent · obligation · memory schemas</span><div class="needs"><b>needs</b>the logbook</div></li>
+    <li><div class="node">Prices and the model-expiry rows</div><span class="path">keel/shared/prices.yml + keel/shared/facts.yml · cache 1.25x/2x, read 0.1x/0.025x</span><div class="needs"><b>needs</b>the store check</div></li>
+    <li><div class="node">The meter — page 3's numbers</div><span class="path">the runner's own cost joined by id</span><div class="needs"><b>needs</b>the logbook · bin/run · prices</div></li>
+    <li><div class="node">The read-back page</div><span class="path">nothing binds by voice</span><div class="needs"><b>needs</b>the store check</div></li>
+  </ol>
+
+  <p class="tier">Memory, rehearsal, skills</p>
+  <ol class="build">
+    <li><div class="node">The curator, nightly</div><span class="path">keel/bin/curate — the only writer of memory · delta-only</span><div class="needs"><b>needs</b>transcript mining</div></li>
+    <li><div class="node">Rehearsal</div><span class="path">keel/bin/rehearse — known-answer cases · scores.jsonl · the trust floor</span><div class="needs"><b>needs</b>transcript mining · bin/run</div></li>
+    <li><div class="node">The skill library and its creator</div><span class="path">keel/bin/skill · registry.yml · .agents/skills/ generated beside .claude/skills/</span><div class="needs"><b>needs</b>LICENSE-CONTENT read · the agent files · rehearsal</div></li>
+  </ol>
+
+  <p class="tier">The world's edge</p>
+  <ol class="build">
+    <li><div class="node">The tool door</div><span class="path">keel/bin/door + keel/shared/tools/&lt;name&gt;.yml + checklist.md — read-only instruments admitted first</span><div class="needs"><b>needs</b>the probe</div></li>
+    <li><div class="node">The drill</div><span class="path">keel/bin/drill — exercises a tool's undo; writes only a date</span><div class="needs"><b>needs</b>the tool door</div></li>
+    <li><div class="node">The world's door</div><span class="path">keel/bin/inbound — one row per thing the world sent, as quoted data · with scout, the only reader of a tainted source</span><div class="needs"><b>needs</b>the tool door</div></li>
+    <li><div class="node">The reconciler</div><span class="path">keel/bin/reconcile — reads a record the company does not write</span><div class="needs"><b>needs</b>the tool door</div></li>
+    <li><div class="node">The Sender</div><span class="path">keel/bin/send — no model; the only thing that sends</span><div class="needs"><b>needs</b>the drill · the world's door</div></li>
+  </ol>
+
+  <p class="tier">The Watch</p>
+  <ol class="build">
+    <li><div class="node">The Watch, the Desk and the cord</div><span class="path">keel/bin/watch — obligations first · a LaunchAgent that exits</span><div class="needs"><b>needs</b>the world's door · the read-back page · the meter · rehearsal · the supervisor</div></li>
+  </ol>
+
+  <p class="tier">The website — six built pages, all from one root</p>
+  <ol class="build">
+    <li><div class="node">The mission-control server and client, kept</div><span class="path">the website's runtime</span><div class="needs"><b>needs</b>the logbook. <b>None of the pages is a new source of truth</b> — every page reads the same store</div></li>
+    <li><div class="node">Page 2 · agents and child flows</div><span class="path">tmux attach-session · claude --attach · inbox files</span><div class="needs"><b>needs</b>mission control · agent teams on · bin/run</div></li>
+    <li><div class="node">Page 3 · cost, tokens, efficiency</div><span class="path">every number taps</span><div class="needs"><b>needs</b>mission control · the meter</div></li>
+    <li><div class="node">Page 4 · tasks, tickets, PRs</div><span class="path">a card launches a session with a TEAM</span><div class="needs"><b>needs</b>mission control · bin/run</div></li>
+    <li><div class="node">Page 5 · engines, gates, stores, live</div><span class="path"></span><div class="needs"><b>needs</b>mission control · the store check</div></li>
+    <li><div class="node">Page 1 · the office</div><span class="path">Generative Agents demo mode, through the door</span><div class="needs"><b>needs</b>mission control</div></li>
+    <li><div class="node">Page 7 · canvas / playground</div><span class="path">Langflow idiom · --session-id --bg then --attach</span><div class="needs"><b>needs</b>mission control · bin/run</div></li>
+    <li><div class="node">The repository-to-graph extractor</div><span class="path">ours; 3d-force-graph reads {nodes, links} only</span><div class="needs"><b>needs</b>nothing</div></li>
+    <li><div class="node">Page 6 · 3D file graph</div><span class="path"></span><div class="needs"><b>needs</b>the extractor · mission control</div></li>
+  </ol>
+
+  <p class="tier">The last node</p>
+  <ol class="build">
+    <li><div class="node">The first measured overnight</div><span class="path">one week overnight against one week bounded</span><div class="needs"><b>needs</b>one real venture, driven</div></li>
+  </ol>
+</section>
+
+<!-- ============ §23 ============ -->
+<section id="s23">
+  <div class="sec"><span class="num">§23</span><h2>Coverage of the founder's list</h2></div>
+  <p class="sub">One row per founder item; the five dispositions summing to the total; and separately the count of rows marked <code>?</code>. Written against COVERAGE.md as it lands, never from memory.</p>
+  <div class="tally">TALLY (v2 · FINAL): IN <b>503 · 410</b> — RENAMED <b>90 · 157</b> — REFUSED <b>52 · 77</b> — OUTSIDE <b>13 · 14</b> — FOUNDER'S <b>13 · 13</b>; <b>671</b> items, <b>137</b> rows changed, <b>8</b> marked <code>?</code></div>
+  <p style="margin-top:10px">If the tally and <code>COVERAGE.md</code> disagree, <b>COVERAGE.md is right</b> — it is the table, this is a pointer to it.</p>
+</section>
+
+<footer>
+  <p>Every tile carries its section number so it can be found in <code>docs/03-system-design/final-v2/FINAL-PLAN-v2.md</code>.</p>
+  <p>Nothing on this page says anything the plan does not. Where the plan says ABSENT or UNVERIFIED, the tile says it too.</p>
+  <p>Nothing here was built, installed, authenticated, spent, published or pushed.</p>
+</footer>
+
+</main>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  var btn=document.getElementById('theme');
+  function current(){
+    var set=root.getAttribute('data-theme');
+    if(set) return set;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  }
+  function label(){ btn.textContent = current()==='dark' ? 'Switch to light' : 'Switch to dark'; }
+  label();
+  btn.addEventListener('click',function(){
+    root.setAttribute('data-theme', current()==='dark'?'light':'dark');
+    label();
+  });
+  var all=document.getElementById('expand');
+  all.addEventListener('click',function(){
+    var d=document.querySelectorAll('details.tile');
+    var anyClosed=Array.prototype.some.call(d,function(x){return !x.open;});
+    Array.prototype.forEach.call(d,function(x){x.open=anyClosed;});
+    all.textContent = anyClosed ? 'Close every tile' : 'Open every tile';
+  });
+})();
+</script>
+</html>

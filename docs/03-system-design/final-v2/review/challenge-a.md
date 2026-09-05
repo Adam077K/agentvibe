@@ -69,3 +69,20 @@ The plan never states which it is. §3.4's table contrasts the Operator with the
 **P2-11 · Band one is `plan` in three tables and `dontAsk` in §12.5's flowchart**, and v9's "cannot ask" holds for `dontAsk`, unsourced for `plan`. **Mechanism:** one band table referenced by every diagram.
 
 **P2-12 · The nightly reconciliation has a model in it and has no model in it.** §11.7 flowchart: "No model in the loop"; same section: "It is `analyst`'s work" (sonnet-5); §17.5 lists `bin/reconcile` among the no-model programs. [tail truncated in transit — Part 3b]
+The reconciliation is the anchor that makes every other number rung one rather than rung four, so which of the two runs it decides its own rung. §11.7 says "on no model" and hands the work to an agent with a model; §8.3 admits read-only instruments first because `analyst`'s anchor is the reconciliation. The plan needs both — a no-model `bin/reconcile` that cannot be talked out of its answer, and an `analyst` that interprets a mismatch for the Decide item — and names neither as owner of which half. **Mechanism:** a lint failing when one job appears both in §5.1 rule 4's no-model list and in an agent's routing line.
+
+**P2-13 · The generated skill directories sit at the repository root and inside each venture.** §7.1/§17.2: `.claude/skills/` and `.agents/skills/` at the repository root, Markdown source; §17.8's tree places both under `ventures/<name>/` generated from `keel/shared/skills/`. Under the tree the house's fifteen agents have no skills directory; under §7.1 a venture has no local skills; §7.6's namespace table assumes skills are not per venture. **Mechanism:** the §7.1 drift check, which cannot be written until one pair of paths is chosen.
+
+## P2 · Findings 14 to 21, concluding P2
+
+**P2-14 · A program dispatches agents, and only the Operator dispatches.** §0.3 "Only the Operator dispatches"; §7.5 `bin/skill` sequences four agents; §17.5 defends it. Nothing says whether `bin/skill` calls `bin/run` (a second caller of the launcher) or the Operator dispatches on its behalf (a routing rule, not a program). **Mechanism:** the ledger refusal of §6.6 extended to record which caller minted the run id.
+
+**P2-15 · The handover is seven fixed fields, and two sections add more.** §6.3 seven fields; §11.2 adds the rung; §11.3 adds `findings`/no score; §11.11 requires the anchor; §14.6 and §16.8 read a rung §6.3 does not carry. **Mechanism:** one schema file under `shared/schemas/` (§6.4).
+
+**P2-16 · "The two agents that declare `mcpServers`" is a fact about today's repository presented as a roster fact.** §3.1 argues from designer + sourcer; §5.2 grants servers to five (scout, designer, analyst, writer, growth). **Mechanism:** the grep-against-`.mcp.json` derivation run on the roster table.
+
+**P2-17 · `claim-append` is granted to the curator and refused to it.** §8.6/§8.7: curator uses `Write`, needs no server; §17.3 grants curator the server; §5.2 curator MCPs none. **Mechanism:** the schema lint that fails an `mcpServers` declaration no config backs, run against the roster.
+
+**P2-18 · The office page's seven prohibitions (§14.4) name no mechanism and are not marked WISH.** **Mechanism:** §21.3's fact-or-tap rule extended to a refusal list the renderer is checked against.
+
+**P2-19 · ABSENT and WISH are used for the same state**, and the difference decides how much of the plan reads as enforced. §12.4, §11.11, §13a.4 mark WISH; §2.1, §2.2, §2.4, §6.2, §8.8, §13.5 mark ABSENT alone for the identical situation. [tail truncated in transit — Part 4b]
