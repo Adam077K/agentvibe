@@ -53,3 +53,13 @@ fifty-one parts, one commit per round. A lane engine with `Write` would remove t
 `framer.md` declares `claude-sonnet-5`. The decision spine is the highest-leverage document of the session — every
 builder writes from it — so the dispatch overrode the model to `opus`. Cost: roughly 2.5× the token price for
 one lane. Recorded so the override is a choice and not drift.
+
+## 8 · v36 — a tainted read is held by `scout` and the world's door, never by an agent with a pen
+Builder 2 returned BLOCKED on section 8: SPINE §F says tainted READ-ONLY (Gmail, Calendar, Drive, Notion read, the
+open web) is `scout` only; SPINE §B.2 row 12 granted `steward` those reads while it also holds `Write`. One grant,
+two §A rules. Resolved by the orchestrator without the founder, because FINAL §9.4 already decides it and v33 says
+the trifecta split survives intact: any run that reads outside content is born without the tools that act, and a
+maker never reads a raw inbound row. So the world's door (a program) writes one inbound row per mail or calendar
+event, `scout` reads rows and returns facts, and `steward` writes obligations from that handover. SPINE §B.2 row 12
+and a new row v36 carry it; every builder was told. Cost: one more hop between a mail arriving and an obligation
+existing — the same hop FINAL §9.5 already required.
