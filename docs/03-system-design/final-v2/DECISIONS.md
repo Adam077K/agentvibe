@@ -96,3 +96,15 @@ the Operator is the interactive session started as `claude --agent operator` (on
 v50 ABSENT vs WISH defined; v51 the curator's five questions are the second admitted step list; v52 the founder's
 door writes the card. Every other finding is applied as written, or re-attributed: challenge B's six P1s are facts
 inherited from FINAL's measured seam (§7.5, §9.7, §14.6, §14.7, §13.8) mis-tagged as this session's research.
+
+## §14 — Close: reassembly, the page, the landing branch
+
+The fix round landed in `aac18d8` (24 parts). Reassembled to 6,337 lines · 35 flowcharts · 53 rows in §1 · zero
+`round-6/` references. Two things the orchestrator did by hand rather than through a lane, both recorded so they can
+be judged: §1's preamble still read "v6–v41" after the fix round and now names v42–v53 as the review round; the
+page's six stale figures (line count, row count and grouping, "ten of the fourteen carry no shell", seven `?`, the
+companion byte count) were substituted in place — figures only, no prose or layout touched, because a designer round
+for six substitutions costs more than it checks. `docs/final-v2` is composed by plumbing onto `origin/docs/final-plan`
+(7fe8ede, the head of PR #131): the whole of `final-v2/` plus the session file, 42 files. The LONG-TERM note is NOT
+on that branch — PR #131's LONG-TERM.md stands at 99 of its 100-line cap and the note is three lines; it lives on
+`ceo-1-1788609834` only, for the founder to place. Nothing pushed.
