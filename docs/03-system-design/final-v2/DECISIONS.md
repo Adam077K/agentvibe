@@ -108,3 +108,32 @@ for six substitutions costs more than it checks. `docs/final-v2` is composed by 
 (7fe8ede, the head of PR #131): the whole of `final-v2/` plus the session file, 42 files. The LONG-TERM note is NOT
 on that branch — PR #131's LONG-TERM.md stands at 99 of its 100-line cap and the note is three lines; it lives on
 `ceo-1-1788609834` only, for the founder to place. Nothing pushed.
+
+## §15 — The founder's interview on the open decisions · 2026-09-05
+
+Asked through AskUserQuestion in five rounds, every row of SPINE §I plus FINAL §19's five open rows. Answers verbatim
+where the founder typed; the chosen option's label where they picked one. Each becomes a row v54+ or a §20 status.
+
+| Row | Answer |
+|---|---|
+| §I 1 terms | *"When my Mac is not on, and then we need to use not the regular Claude code or codex in terminal, then you can use codex or Gemini I think they don't bun those. But still keep it open"* — **stays open**; clarified next round as **"Yes — a cloud lane for when the Mac is off"**, research on **Codex cloud tasks (OpenAI hosted)** only |
+| §I 8 managed file | **Yes — I will write it when building starts** |
+| §I 5 Codex | *"I will install it when the building starts, no need to think about now"* |
+| §I 6 gemini | **Authenticate with a personal Google account** |
+| §I 7 agent teams | **Turn it on, no model constraint** — teammates use their agent file's model |
+| §I 9 card → team | **Both: the card carries a 'solo or team' toggle**, default from the intent's kind |
+| §I 10 3D graph | **Build it, but last in the page order** |
+| §I 12 the room | *"use pixel-agents code or Star-Office-UI or AgentOffice"* — three candidates not in any research lane; a sourcer lane reads their licences from the file |
+| §I 2 Fable | **Fable as builder's and architect's default** (overrules v21's escalation-only) |
+| §I 3 Haiku | **Set ANTHROPIC_DEFAULT_HAIKU_MODEL to Sonnet 5 now** |
+| §I 4 LICENSE-CONTENT | **Fetch it at build time** — row stays open, library plan as written |
+| §I 11 second human | **Me only, for now** |
+| §I 13 first venture | **The harness itself** |
+| §I 14 roster size | **Start with the eight that have seeds or code paths** — Operator, builder, reviewer, architect, tester, guard, scout, designer; the six business agents and challenger come online when a venture needs them. *"and also plan the agents that will run on hermes agents - jobs or tasks that is fit for that."* Then: *"skip hermes for now. but think about agents like: customer support, marketing agents: leads, reacherch, security, competers, data anslisis and more that can run every set time or evant or something else. it to build the company like working."* |
+| FINAL §19.12 overnight | **Run the comparison; let the measurement decide** |
+| FINAL §19.13 sliders | **Keep 30% and 3/day; evidence moves them** |
+| FINAL §19.6 + 19.7 hook rewrite · pmset | **Neither yet — decide at build time** |
+| FINAL §19.8 disclosure · entity | **Disclose by default; entity per venture decided at intake** |
+| standing jobs | **Standing intents with a cadence or trigger, run by the Watch** |
+| next step | **Fold them into v2 now: new rows, §20 updated, research lanes for the new items.** Still nothing built |
+| push | **Do not push yet** |
