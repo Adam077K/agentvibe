@@ -19,7 +19,7 @@ not:        a build plan. Nothing here is built, installed, spent, published or 
 
 ## A · §1-v2 — the decisions table
 
-Thirty-six rows. Rows **v1–v5** are the founder's overrules of FINAL §1. Rows **v6–v36** are places a research
+Thirty-seven rows. Rows **v1–v5** are the founder's overrules of FINAL §1. Rows **v6–v37** are places a research
 fact moves a FINAL row, or a place FINAL stands *because* a fact was checked against it. The losing image is kept by
 name in every row and collected again in §J.
 
@@ -61,6 +61,7 @@ name in every row and collected again in §J.
 | **v34** | What makes a grant real | **The exact argv, emitted by one no-model launcher**, plus the managed file of v11, plus a nightly probe that asserts what a run can actually touch | **FINAL** §7.5 and row 13, unchanged. **Mechanism:** `bin/run` is the only thing that composes argv (ABSENT); `bin/probe` asserts it nightly (ABSENT) | `--allowedTools` as a narrowing; a prose rule describing a grant |
 | **v35** | `Workflow` in an agent's tool line | **Absent from every agent, deliberately.** The gate may not be invocable by the thing it gates | **FINAL / this repo**, now **independently cited**: runtimes.md quotes the vendor — *"The `Workflow` tool is removed from all subagents via the first filter applied to subagent tool sets"* | granting a dispatched engine the ability to run its own gate |
 | **v36** | Who may hold a tainted read | **`scout` only, and the world's door program.** Gmail, Calendar, Drive and Notion reads are tainted READ-ONLY (§F); no agent that holds `Write`, `Edit` or `Bash` reads them raw. `steward` writes obligations from `scout`'s handover; the world's door writes one inbound row per event and holds no model | **FINAL** §9.4–9.5 and v33, applied to a collision builder 2 found between §F and §B.2 row 12 — one grant, two rules. Decided by the orchestrator 2026-09-05, DECISIONS.md §8 | a steward that reads mail with a pen in its hand |
+| **v37** | The brief, now that agents have names | **Ten fields: FINAL's nine plus `agent:` — the roster name the launcher composes argv for.** `window+model:` stays as it is; the agent's row in §B.2 supplies its defaults and §G.1 overrides per move | **NEW:** fourteen named agents make "which agent" a fact the brief must carry, and neither reading was in §A until builder 1 asked (BLOCKED, §6). Chosen because it leaves FINAL's nine fields untouched. **Mechanism:** `bin/run` refuses a brief whose `agent:` is not a roster file (ABSENT) | `agent+window+model:` as one widened field; a brief that names no agent and lets the launcher guess |
 
 **Carried forward from FINAL §1, unchanged, by number:** rows **1, 2, 3, 4, 5, 7, 9, 14, 16, 17, 18, 20, 21, 22,
 23, 24, 25, 26, 27, 28, 29**. Rows **11, 12, 13, 19** are carried forward *and* moved, by v24/v25, v28, v34 and

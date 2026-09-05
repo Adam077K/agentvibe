@@ -63,3 +63,8 @@ maker never reads a raw inbound row. So the world's door (a program) writes one 
 event, `scout` reads rows and returns facts, and `steward` writes obligations from that handover. SPINE §B.2 row 12
 and a new row v36 carry it; every builder was told. Cost: one more hop between a mail arriving and an obligation
 existing — the same hop FINAL §9.5 already required.
+
+## 9 · v37 — the brief gains a tenth field, `agent:`
+Builder 1 returned BLOCKED on §6: fourteen named agents mean the brief must carry which agent runs it, and SPINE §A
+decided neither a tenth field nor a widened `window+model:`. Decided by the orchestrator: a tenth field `agent:`,
+because it leaves FINAL's nine untouched and the launcher can refuse a name that is not a roster file. Row v37.
