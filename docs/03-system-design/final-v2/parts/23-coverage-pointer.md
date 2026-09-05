@@ -33,7 +33,7 @@ the world's door, and a record the company does not write.
 **(NEW: written by the coverage lane, against `COVERAGE.md` as it lands, never from memory)**
 
 ```
-TALLY (v2 · FINAL): IN 503 · 410 — RENAMED 90 · 157 — REFUSED 52 · 77 — OUTSIDE 13 · 14 — FOUNDER'S 13 · 13; 671 items, 137 rows changed, 8 marked `?`
+TALLY (v2 · FINAL): IN 503 · 410 — RENAMED 90 · 157 — REFUSED 52 · 77 — OUTSIDE 13 · 14 — FOUNDER'S 13 · 13; 671 items, 137 rows changed, 5 marked `?` (8 when first written; the review settled two, the founder's interview two more)
 ```
 
 **(NEW: what the tally must count, so that a number here cannot drift from the table beside it)** One row per founder
