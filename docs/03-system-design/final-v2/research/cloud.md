@@ -91,3 +91,65 @@ Same URL · M on the figures, because the table was reconstructed by the fetch. 
 **Secrets and dependencies.** Both are environment configuration, not task input: *"Configure any dependencies, tools, environment variables, or secrets the task needs."* <https://learn.chatgpt.com/docs/cloud> · H.
 
 **One inference, flagged as such.** The phrase *"during the agent phase"* implies a separate earlier phase where dependency installation happens under a different network rule. That reading is consistent with dependencies being environment setup, but no page states the two-phase model explicitly. M on the inference, H on the quoted phrase.
+
+---
+
+## PART 4 of 5 — Resume, cancel and poll (Q5); the terms question (Q6)
+
+**Polling appears possible, and the citation is the weaker kind.** Three of the five commands the issue lists as existing are read operations: `codex cloud status TASK_ID`, `codex cloud diff TASK_ID`, and `codex cloud list --env ENV_ID --json`. The `--json` flag on `list` is the one that matters for a driver, since it implies machine-readable output. <https://github.com/openai/codex/issues/24777> · **M**, for the reason given in part 2: this is an issue author's assertion about the binary, unconfirmed by any vendor page and with no maintainer reply.
+
+**Applying a result locally is documented in the same list:** `codex cloud apply TASK_ID`. M. The vendor CLI page corroborates the capability without printing the command, describing `codex cloud` as letting you *"apply the result to your local repository from the terminal."* <https://learn.chatgpt.com/docs/codex/cli> · H on that quote.
+
+**Blocking wait, log streaming, follow-up messaging and structured output are all absent.** The same issue requests `codex cloud wait TASK_ID`, `codex cloud logs TASK_ID`, `codex cloud message TASK_ID` and `codex cloud output TASK_ID`. A feature request is evidence the feature is missing, so this is the firmer half of that source. M to H.
+
+**Cancel is unknown.** No cancel command appears in either the existing list or the requested list, and no vendor page mentions cancelling a cloud task. I found nothing either way. UNKNOWN, and I will not guess.
+
+**Follow-ups are documented as a user interface action, not a command:** *"Ask Codex to make follow-up changes."* <https://learn.chatgpt.com/docs/cloud> · H.
+
+**Does `codex exec resume` apply? Nothing says it does.** The prior lane's file records `codex exec resume --last | <SESSION_ID>` from <https://learn.chatgpt.com/docs/non-interactive-mode>, and that page is about local non-interactive sessions. No page I read connects `codex exec resume` to a cloud task, and the two surfaces use different nouns throughout: `SESSION_ID` for local exec, `TASK_ID` for cloud. Treat as **not applicable until shown otherwise**. M on the negative.
+
+**Terms: I did not obtain them, and I am not going to substitute a remembered clause.**
+
+Every OpenAI policy URL refused me:
+
+| URL | Result |
+|---|---|
+| `openai.com/policies/row-terms-of-use` | HTTP 403 |
+| `openai.com/policies/eu-terms-of-use/` | HTTP 403 |
+| `openai.com/policies/business-terms/` | HTTP 403 |
+
+With the prior lane's HTTP 403 on `openai.com/policies/terms-of-use`, that is four refusals against one host across two dates. My own rule is to stop after three failures on the same source and return the gap, so I stopped. **The OpenAI half of the terms question is UNKNOWN.** No clause about automated or programmatic use of a ChatGPT subscription has been read by this session or the previous one.
+
+**What can be said factually, and what it is not.** OpenAI documents and ships automation surfaces that run on a subscription rather than an API key: the Slack app, the GitHub `@codex` mention, and automatic pull request review on PR open, all covered in part 2. Separately it documents an API-key path billed at API pricing. **Documented product behaviour is not a terms clause.** A vendor shipping a feature does not tell you what its terms permit, and reading it that way is exactly the substitution I am refusing to make. L on any inference; H only on the fact that the features are documented.
+
+**For contrast, the Anthropic clause is already on file** in this session's runtimes research, quoted from the Consumer Terms section 3, prohibiting access *"through automated or non-human means"* except via an API key or *"where we otherwise explicitly permit it."* I did not re-fetch it today and I am not restating it as new evidence.
+
+---
+
+## PART 5 of 5 — Contrast (Q7), what this changes against parts/10, gaps
+
+**Anthropic, Claude Code on the web.** <https://code.claude.com/docs/en/claude-code-on-the-web> · H. Research preview for Pro, Max, Team, and Enterprise premium seats. *"each session runs in an isolated, Anthropic-managed VM."* Creation is documented argv, not a UI: `claude --cloud "Fix the authentication bug in src/auth/login.ts"`. *"The cloud VM clones your current directory's GitHub remote at your current branch, not your local checkout."* Parallelism is explicit: *"each `--cloud` command creates its own cloud session that runs independently."* Follow-ups from any machine: `claude -p "your message" --cloud <session-id>`, with `--output-format json` returning `{ok, session_id, url}`. Pull back with `claude --teleport <session-id>`; monitor with `/tasks`. Duration: *"Cloud sessions stop after a period of inactivity and the session's VM is reclaimed"*, no number. Quota: *"shares rate limits with all other Claude and Claude Code usage within your account... There is no separate compute charge for the cloud VM."*
+
+**Anthropic, Routines.** <https://code.claude.com/docs/en/routines> · H. *"Routines execute on Anthropic-managed cloud infrastructure... so they keep working when your laptop is closed."* Three triggers: schedule, API, GitHub. The API trigger is a quoted endpoint, which is the thing Codex lacks:
+
+```
+POST https://api.anthropic.com/v1/claude_code/routines/trig_.../fire
+Authorization: Bearer sk-ant-oat01-xxxxx
+anthropic-beta: experimental-cc-routine-2026-04-01
+{"text": "..."}
+```
+
+Returns `{"type":"routine_fire","claude_code_session_id":...,"claude_code_session_url":...}`. Token creation is web-only: *"The CLI cannot currently create or revoke tokens."* Schedule floor: *"The minimum interval is one hour; expressions that run more frequently are rejected."* Pro, Max, Team, Enterprise. Blocked hosts fail with `403` and `x-deny-reason: host_not_allowed`. Sharp caveat, quoted: *"A green status in the run list means the session started and exited without an infrastructure error. It does not mean the task in your prompt succeeded."*
+
+**Google, Jules.** *"Jules runs in a virtual machine where it clones your code, installs dependencies, and modifies files"* <https://jules.google/docs> · H. API base `https://jules.googleapis.com/v1alpha/`; create by POST to `/sessions` with `prompt`, `sourceContext`, optional `automationMode`; auth is *"pass the API key in the `X-Goog-Api-Key` header"*; outputs carry a `pullRequest` object. *"The Jules API is in an alpha release, which means it is experimental."* Only quota found: *"You can have at most 3 API keys at a time."* <https://developers.google.com/jules/api> · H
+
+**What this changes against parts/10**
+
+1. Section 10.5's Codex column has **no cloud row at all**. A hosted Codex lane exists.
+2. Section 10.2's *"one foreground slot is not parallel"* does not govern cloud tasks. Issue #19945 is a **local** `codex exec` TTY defect and cannot apply to work running in OpenAI's sandbox. Whether a local dispatcher hits it depends on whether `codex cloud exec` shares the local exec code path. UNKNOWN.
+3. Section 10.5's *"second checker family: yes in principle, blocked by #19945"* is narrower than stated. The `@codex review` route needs no local Codex.
+4. Section 10.5's Claude Code column has no `--cloud` or `--teleport` row. Both are documented argv today.
+5. Section 10.5's Routines row: the one-hour minimum is **confirmed verbatim**; the daily cap is confirmed to exist but published as no number. The *"no local files (fresh clone)"* cell is right about the laptop and misleading if read as "no repository" — routines clone every selected repo per run and push `claude/`-prefixed branches.
+6. Section 10.7's ABSENT rows are untouched. Nothing here is built.
+
+**Gaps.** *(the lane's message truncated here; the Gaps section follows as part 5b)*
