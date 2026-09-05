@@ -59,7 +59,7 @@ flowchart TB
 ```
 
 **(FINAL)** Scope, strictly: `TASTE` and `CRAFT` are the founder's and cross every venture. `FACTS`, `NEGATIVES`,
-`ALREADY-BUILT` and `OPEN` are per venture and do not cross without a promotion. **Credentials are not memory**, and are never in a file — **mechanism:** a `gitleaks`-class secret scan over every store write (**ABSENT**) and
+`ALREADY-BUILT` and `OPEN` are per venture and do not cross without a promotion. **Credentials are not memory**, and are never in a file — **mechanism:** a `gitleaks`-class secret scan over every store write, run as a **rung-one anchor on the house repository on every push** (**ABSENT**), which §13.8 already counts among the free deterministic checks and
 are never in any of these files. **Every item carries four things** — where it came from, when it was written, when
 it expires, and what would falsify it — and an item with no expiry is not accepted.
 

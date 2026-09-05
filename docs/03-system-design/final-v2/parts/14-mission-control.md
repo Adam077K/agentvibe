@@ -398,6 +398,18 @@ and no bulk adoption should happen before those fetches — the same discipline 
 
 ---
 
+### 14.10a The eighth page, and how it gets in
+
+**(NEW: v53 — the founder said *"and a lot more cool and important things"*, and the plan had a door for tools
+and none for surfaces.)** **Seven pages is the set that exists, not a ceiling.** An eighth page is admitted the
+way a tool is: proposed against an intent, through the **same §9.3 door**, declaring what it reads — the logbook
+and nothing else unless the door admits more — what each tap launches, and **its licence read from the file, not
+from a badge**. It carries one extra test the tool door does not: **every element is a fact or a tap**, §21.3's
+rule, so a page that renders an opinion fails admission. **Mechanism:** `bin/door` accepts `kind: page`
+(**ABSENT**).
+
+---
+
 ### 14.11 The terminal-pop mechanism, decided
 
 **(FOUNDER, and it is the sentence that makes this a mechanism section rather than a preference.)** *"it's directly

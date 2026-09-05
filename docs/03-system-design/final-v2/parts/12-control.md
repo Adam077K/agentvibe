@@ -62,9 +62,14 @@ nearest shipped analog anywhere is auto mode's classifier special-casing `rm` an
 a position the world does not hold, held knowingly: the axis everyone ships is *where the file is*, and the axis that
 predicts damage is *can this be undone*.
 
+**(NEW: the one duration this section needs is a founder's number, not a rule's.)** The undo window is
+`keel/settings.yml`'s `undo_window` — **one hour by default, the founder's to set** — and like the recall window
+it is **sized to the blast radius**: a wider act gets a shorter window, not a longer one. Writing an hour into the
+predicate itself would have put a schedule inside a rule, which this plan refuses everywhere else.
+
 ```mermaid
 flowchart TD
-    ACT["A run wants to act"] --> Q1{"Can the system itself undo this<br/>within an hour — **the plan's one duration inside a rule, kept deliberately: it is a blast-radius test, and the no-durations rule governs schedules, not decision predicates (P3-32)**, with nobody else noticing —<br/>and has that undo been DRILLED?"}
+    ACT["A run wants to act"] --> Q1{"Can the system itself undo this<br/>within the undo window, with nobody<br/>else noticing —<br/>and has that undo been DRILLED?"}
     Q1 -->|"yes"| TWO["TWO-WAY DOOR<br/>Do it. Record it, with the undo path.<br/>Do not ask."]
     Q1 -->|"no"| Q2{"Does it reach a person,<br/>money, or the public?"}
     Q2 -->|"yes"| ONE["ONE-WAY DOOR<br/>Never alone. Build it, stage it,<br/>ask WHICH."]

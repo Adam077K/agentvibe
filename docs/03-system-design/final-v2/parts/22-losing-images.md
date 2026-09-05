@@ -30,11 +30,11 @@ was stated once, and the chosen thing is then built properly. They are never re-
 
 ---
 
-### 22.2 The thirty-six moved by a fact, by a rule already written down, or by this round's review
+### 22.2 The thirty-seven moved by a fact, by a rule already written down, or by this round's review
 
 **(NEW: nineteen lost to a measurement; six lost to a rule this system already had)** The column names the row that
 beat each image and what did the beating. Where the fact came from a research lane this session, the lane is the
-source. **Numbers 6–30 are §J's own, unchanged.** **Numbers 31–41 are new this round — rows v42–v52, each an image the review found the plan still holding in one section while deciding against it in another.** The split is worth seeing: **6–24 fell to a fact from the world**,
+source. **Numbers 6–30 are §J's own, unchanged.** **Numbers 31–42 are new this round — rows v42–v53, each an image the review found the plan still holding in one section while deciding against it in another.** The split is worth seeing: **6–24 fell to a fact from the world**,
 and **25–30 fell to a rule that was already on the page** — the trifecta split, FINAL §6.1, the values the existing
 engine files already carry. The second kind costs nothing to decide and is the cheaper half of any design.
 
@@ -76,6 +76,7 @@ engine files already carry. The second kind costs nothing to decide and is the c
 | 39 | **ABSENT and WISH as interchangeable marks** | v50 | the two marks decide how much of the plan reads as enforced, and six sections used them for one state — designed-but-unbuilt against no-mechanism-proposed (P2-19) |
 | 40 | **one admitted step list, with the curator's five questions smuggled in** | v51 | 0 of 121 free reflections named the cause: evidence for admitting a second list by name, not for declining to call it one (P2-20) |
 | 41 | **a card with no writer** | v52 | a card exists before anyone drags it, and `keel/bin/run` writes only what happens after the drag (P2-21) |
+| 42 | **seven pages as a ceiling** | v53 | the founder asked for *"a lot more cool and important things"*, and the plan built a door for tools and none for surfaces. An eighth page enters through the §9.3 door or not at all (opinion O-1) |
 
 ---
 

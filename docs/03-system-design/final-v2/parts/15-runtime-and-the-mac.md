@@ -92,7 +92,7 @@ flowchart TB
 ```
 
 **(FINAL)** One house repository and one per venture; a push after every run; a nightly encrypted snapshot to object
-storage, **excluding secrets by construction because they were never in it**; blobs mirrored to one bucket — the only
+storage, **excluding secrets by construction because they were never in it** — a guarantee that rests on §13.2's secret scan (ABSENT), not on this sentence; blobs mirrored to one bucket — the only
 thing in the design that has to exist somewhere else — and **a hash with no blob is a known absence**, which is a
 different thing from a silent one.
 

@@ -21,9 +21,9 @@ measured:   this branch = ceo-1-1788609834 at b2cabad = local main, TREE A of fi
             2026-09-05: claude 2.1.261 · codex ABSENT · gemini 0.38.2 present and never authenticated
 not:        a build plan, a schedule, a first month, a price list. Nothing here was built, installed,
             authenticated, spent, published or pushed
-companions: final-v2/SPINE.md (the fifty-two rows and the roster, binding on every section) ·
+companions: final-v2/SPINE.md (the fifty-three rows and the roster, binding on every section) ·
             final-v2/COVERAGE.md (every item of the founder's list placed) · final-v2/DECISIONS.md (this session's
-            own decisions, as they were made) · final-v2/research/ (seven lanes, verbatim) · final-v2/page/final-plan-v2.html (71,210 bytes)
+            own decisions, as they were made) · final-v2/research/ (seven lanes, verbatim) · final-v2/page/final-plan-v2.html (71,585 bytes)
 ```
 
 ---
