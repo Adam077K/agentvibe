@@ -30,3 +30,13 @@ first.
 ## 5 · The thirty decisions
 Every place v3 and Keel differed is one row of `FINAL-PLAN.md` §1, with provenance, one line of why, and the losing
 image by name. That table is the whole merge; nothing else in this session decided anything the founder had not.
+
+## 6 · The founder's verdict on the final plan — 2026-09-05
+**"Most of it is fine"**, and five overrules, given by voice after the page: bring mission control back as a
+first-class surface with seven kinds of page; a roster of ten to fifteen expert agents with an operator, not three
+shapes; a skill library learned from the biggest agent systems plus a skill creator, and a model per agent; no
+ceiling on tools and MCPs; Codex and Claude Code from day one, using their loops and goals. And the standing purpose:
+a place where the founder or anyone opens a project, takes a task, and works with agents relentlessly to the perfect
+result. **What it changes:** §1 rows 6, 8, 10, 15 and 30 are superseded in place; the next team's prompt carries the
+direction verbatim and is the authority. Pushed and opened as a PR at the founder's word.
+
