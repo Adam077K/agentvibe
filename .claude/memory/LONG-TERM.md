@@ -89,18 +89,14 @@
 - **The frame is WATCH** (`docs/03-system-design/envision/2026-09-02-THE-SYSTEM.md`, decided 2026-09-03). WAKE (`dream/`) is round one's record. Two atoms bet/debt; keel and weather; the escapement; postures Drive·Walk·Serve·Tend·Dark; the Second buys silence never action; desk·bay·room·dailies; the five-hour watch with a two-way relief; the World Ledger; the refusal ledger. §29 maps every existing part to a fate.
 - Measured: `--allowedTools` restricts nothing; `--restricted --tools … --strict-mcp-config` is the seam; a `-p` child binds an inbox socket unless `--bare`; only managed settings survive a child's argv; the hook matches command strings; the five-hour limit stops every agent at once (have them write as they go, resume by name); tick 240 s not 300.
 - Next: re-derive `STARTUP-OS.md` v3 from WATCH (§29 migration table, §25 build order), v2 preserved under `designs/`. Start from `handoffs/2026-09-03-after-round-two.md`. Pending with the founder: widget decisions, the first move, the terms question, the managed settings file.
-## 2026-09-04 — The final plan, and how the founder chose its inputs
 
-- **The final plan is `docs/03-system-design/final/FINAL-PLAN.md` on branch `ceo-3-1788468144`**, with
-  `COVERAGE.md`, `CENSUS.md`, `DECISIONS.md` and `page/` beside it. Keel (round six, mind-1) is the base; v3
-  contributes the measured facts, the obligations, the Sender, the probe and the reconciliation. §1 holds all thirty
-  decisions with losing images. Nothing is built; nothing was pushed.
-- **Asked which round-6 files to read, the founder chose "Keel only" against the recommendation.** Read that the
-  way the 2026-08-12 pattern reads: overruled on scope, and meant it. THE-PLAN.md and the other round-6 files stay
-  unread by the merge; do not fold them in later without asking.
-- **A second model family is still unreachable from inside Claude Code**: `gemini` installed, never authenticated;
-  `codex` absent. Every review of the final plan is single-family and says so.
-- **2026-09-05: the founder overruled the final plan on the roster and the surfaces, and meant it.** Ten to fifteen
-  expert agents with an operator, not three shapes; mission control back as the founder's working surface; Codex
-  from day one. The next team's prompt is `docs/08-agents_work/handoffs/2026-09-05-THE-PLAN-NEXT-TEAM-PROMPT.md`.
+## 2026-09-04/05 — The final plan, its inputs, and the founder's verdict
 
+- **The final plan is `docs/03-system-design/final/FINAL-PLAN.md`** (with COVERAGE, CENSUS, DECISIONS, page/).
+  Keel (round six, mind-1) is the base; v3 gives the measured facts. §1 holds thirty decisions with losing images.
+- **Asked which round-6 files to read, the founder chose "Keel only" against the recommendation** and meant it;
+  THE-PLAN.md, mind-2 and Fable's design stay unread by the merge. Do not fold them in without asking.
+- **2026-09-05: the founder overruled rows 6, 8, 10, 15, 30** — ten to fifteen expert agents with an operator, not
+  three shapes; mission control back as the working surface; a learned skill library and a skill creator; Codex
+  from day one. Authority: `docs/08-agents_work/handoffs/2026-09-05-THE-PLAN-NEXT-TEAM-PROMPT.md`.
+- **A second model family is still unreachable**: `gemini` unauthenticated, `codex` absent; every review is single-family.
