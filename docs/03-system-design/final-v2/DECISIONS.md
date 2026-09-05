@@ -85,3 +85,14 @@ self-improvement section: FINAL §12 (three loops at three speeds, horizons on e
 logged as defects in the brief, the refusal line, the rethink trigger) inherited nowhere. Added as §13a between
 memory and mission control rather than renumbering fourteen cross-referenced sections. A hole found by a
 mechanical placement pass, not by reading — the pattern this repo keeps recording.
+
+## 12 · v42–v52 — eleven decisions the review round forced, decided by the orchestrator for the fix round
+Census, challenge A and challenge B returned 4 + 32 + 23 findings. Eleven needed a decision §A did not carry; each
+is decided from a rule already on the page or a measured fact, and each is reopenable by name: v42 agent files in
+`.claude/agents/`, argv in `keel/shared/argv/`; v43 a grant carrier per dispatch mechanism, night work on `-p` only;
+v44 the Watch is the sole writer of obligations, steward proposes; v45 eleven brief fields (`anchor:` added); v46
+the Operator is the interactive session started as `claude --agent operator` (one measurement UNVERIFIED); v47
+`bin/reconcile` computes, analyst interprets; v48 skills at the house root only; v49 `bin/skill` does not dispatch;
+v50 ABSENT vs WISH defined; v51 the curator's five questions are the second admitted step list; v52 the founder's
+door writes the card. Every other finding is applied as written, or re-attributed: challenge B's six P1s are facts
+inherited from FINAL's measured seam (§7.5, §9.7, §14.6, §14.7, §13.8) mis-tagged as this session's research.
