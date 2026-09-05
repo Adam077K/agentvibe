@@ -30,6 +30,7 @@ flowchart TD
     CODEX(["FOUNDER ACT · install codex<br/>command -v codex is absent today<br/>DECIDED 2026-09-05: installed when building starts"])
     TEAMS(["FOUNDER ACT · CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1<br/>experimental, no nested teams<br/>DECIDED 2026-09-05, v59: ON, and no model constraint —<br/>a teammate runs on its own file model"])
     LICENSE(["FOUNDER ACT · fetch and read LICENSE-CONTENT<br/>one fetch; unblocks the 2,111+ (v17)<br/>DECIDED 2026-09-05: fetched at build time; row stays open"])
+    HOSTED(["FOUNDER DECISION · which hosted lane may make<br/>when the Mac is off (§I row 15) — Codex cloud has no<br/>documented driver; claude --cloud and Routines do"])
 
     AGENTS1["WAVE ONE · eight agent files (v54)<br/>operator · builder · reviewer · architect · tester ·<br/>guard · scout · designer<br/>.claude/agents/*.md · the model set in<br/>prompt-standard.test.mjs moves in the same change,<br/>because builder and architect declare claude-fable-5-1 (v57)"]
     AGENTS2["WAVE TWO · seven agent files (v54)<br/>product · analyst · writer · growth · steward ·<br/>curator · challenger<br/>written when a venture needs them; each brings<br/>its own argv file with it"]
@@ -55,6 +56,7 @@ flowchart TD
     RECON["keel/bin/reconcile<br/>reads a record the company does not write"]
 
     READBACK["The read-back page<br/>nothing binds by voice"]
+    CLOUD["The cloud lane<br/>a hosted run's output lands as a PR or staged artifact ·<br/>bin/run's cloud carrier mints and records only ·<br/>the Watch reads PRs on wake · ABSENT"]
     WATCH["3 · keel/bin/watch, the Desk and the cord<br/>obligations first · a LaunchAgent that exits"]
 
     MC["mission-control/ server + client, kept<br/>the website's runtime"]
@@ -62,7 +64,7 @@ flowchart TD
     P3["Page 3 · cost, tokens, efficiency<br/>every number taps"]
     P4["Page 4 · tasks, tickets, PRs<br/>a card launches a session; its solo | team toggle<br/>decides which shape (v60)"]
     P5["Page 5 · engines, gates, stores, live"]
-    P1["Page 1 · the office<br/>Generative Agents demo mode, through the door"]
+    P1["Page 1 · the office · pixel-agents (MIT, read from file)<br/>through the door · our event-log → AgentEvent writer"]
     P7["Page 7 · canvas / playground<br/>Langflow idiom · --session-id --bg then --attach"]
     GRAPHLANE["A research lane on repository-to-graph tooling<br/>the thinnest-evidenced area; runs BEFORE the extractor (v61)"]
     EXTRACT["The repository-to-graph extractor<br/>ours; 3d-force-graph reads {nodes, links} only"]
@@ -84,6 +86,8 @@ flowchart TD
     ARGV --> PROBE
     RUN --> SUPERVISE
     RUN --> METER
+    RUN --> CLOUD
+    HOSTED --> CLOUD
     PRICES --> METER
     STORES --> READBACK
     STORES --> PRICES
@@ -101,6 +105,7 @@ flowchart TD
     INBOUND --> SENDER
     INBOUND --> WATCH
     READBACK --> WATCH
+    CLOUD --> WATCH
     METER --> WATCH
     REHEARSE --> WATCH
     SUPERVISE --> WATCH
@@ -152,6 +157,7 @@ two nodes the graph is wrong, and this table is how that is found.
 | `keel/bin/log` and `keel/logbook/` | §B.1 rule 4 | `LOG` |
 | `keel/logbook/sessions.jsonl` | §D.2, §17.4.1 | `RUN` (its one writer) |
 | `keel/bin/watch` and the Desk | §B.1 rule 4, §D.2 | `WATCH` |
+| `bin/run`'s `cloud` carrier (mints and records only) and the Watch's on-wake read of PRs | §I row 15, v56 | `CLOUD` |
 | `keel/bin/supervise` | §B.1 rule 4 | `SUPERVISE` |
 | `keel/bin/send` — the Sender | §B.1 rules 3 and 4, §C.1, §F | `SENDER` |
 | `keel/bin/inbound` — the world's door | §B.1 rule 4, v36 | `INBOUND` |
@@ -164,7 +170,8 @@ two nodes the graph is wrong, and this table is how that is found.
 | `keel/bin/skill` — the skill creator | §E.3 | `SKILL` |
 | `.agents/skills/` and the library's `registry.yml` | §E.1, §17.4.1 | `SKILL` |
 | The read-back page | §C.3 | `READBACK` |
-| Page 1, the office | §D | `P1` |
+| Page 1, the office — pixel-agents, through the tool door | §D, v62 | `P1` |
+| A writer from our event log into pixel-agents' `AgentEvent` model (schema not read from source — UNVERIFIED) | §D, v62 | `P1` |
 | Page 2, agents and child flows | §D | `P2` |
 | Page 3, cost, tokens and efficiency | §D, v14 | `P3` |
 | Page 4, tasks, tickets and PRs | §D, v16 | `P4` |
@@ -199,6 +206,13 @@ cannot exist before `bin/run` can hand a card to a team. **None of them is a new
 entire unattended half of the system through `PROBE`. `LICENSE` gates only the bulk import. `TEAMS` gates one page.
 `CODEX` gates one measurement whose failure leaves Codex in the foreground slot it already has. **Only one founder act
 is on the critical path of everything**, and it is four lines of JSON in a directory no run can reach.
+
+**(NEW, v56: `HOSTED` is the narrowest node in the graph, and it is a decision rather than an act)** It gates only
+`CLOUD` — the off-Mac maker lane — and nothing else downstream of `RUN` needs it: a run dispatched while the Mac is
+on never touches this node. Unlike `MANAGED`, `GEMINI`, `CODEX`, `TEAMS` and `LICENSE`, which the founder's interview
+of 2026-09-05 settled, `HOSTED` is still **OPEN** (§I row 15) — it names a choice among lanes with no documented
+driver today (Codex cloud) against lanes that share the Claude seat whose terms clause is §I row 1, also open. Two
+open decisions gate one narrow lane, and nothing else in the graph waits on either of them.
 
 **(FOUNDER, v54: the roster is two nodes now, and the second one is downstream of a running venture)** `AGENTS1` is
 eight files and sits where `AGENTS` did — everything that needs a grant needs it. `AGENTS2` is the other seven, and

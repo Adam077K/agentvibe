@@ -7,13 +7,13 @@ with one side is a recommendation wearing a question mark, and this section refu
 
 ---
 
-### 20.1 The fourteen, from SPINE §I
+### 20.1 The fifteen, from SPINE §I
 
 **(FOUNDER and NEW, per row)**
 
 | # | Decision | One side | The other | Whose | **Status after the founder's interview, 2026-09-05** |
 |---|---|---|---|---|---|
-| 1 | **The terms** — automated access on a subscription | the vendor ships and documents the unattended features (`-p`, `--max-budget-usd`, `/loop`, Routines, Remote Control, agent teams) and the subscription is paid for | the clause names an API key as the carve-out, and the downside of being wrong is the account, which takes the company. **OpenAI's terms returned HTTP 403 and are unread; Google's are unfetched** | the founder, after one reading | **OPEN, by the founder's word** — *"still keep it open"*. A cloud lane for when the Mac is off is researched instead (v56, PENDING) |
+| 1 | **The terms** — automated access on a subscription | the vendor ships and documents the unattended features (`-p`, `--max-budget-usd`, `/loop`, Routines, Remote Control, agent teams) and the subscription is paid for | the clause names an API key as the carve-out, and the downside of being wrong is the account, which takes the company. **OpenAI's terms returned HTTP 403 and are unread; Google's are unfetched** | the founder, after one reading | **OPEN, by the founder's word** — *"still keep it open"*. A cloud lane for when the Mac is off is researched, v56 |
 | 2 | **Is Fable 5.1 reachable on the subscription seat** | it is in the API catalogue and Fable is a valid frontmatter value | **no plan table names it**, and this repo's own lint does not carry `claude-fable-5-1`. Fallback is `claude-opus-5` | one measurement, then the founder | **DECIDED v57** — builder's and architect's default; reachability still one measurement |
 | 3 | **Haiku 4.5 retires from 2026-10-15** | nothing of ours defaults to it (v20) | `/goal`'s evaluator and the auto-mode classifier do, by vendor default. `ANTHROPIC_DEFAULT_HAIKU_MODEL` changes it **everywhere the small fast model is used** | the founder, on a dated review | **DECIDED v58** — `ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5`, set now |
 | 4 | **`LICENSE-CONTENT` in the skills upstream** | one fetch clears it and unlocks 2,111+ skills | until read, no bulk import: MIT covers the code, not necessarily the content | one fetch, then a decision | **OPEN** — *"Fetch it at build time"*; the library plan stands as written |
@@ -24,9 +24,10 @@ with one side is a recommendation wearing a question mark, and this section refu
 | 9 | **Does a card launch a team** | it is the founder's page 4, verbatim | **no prior art anywhere** — every board-to-session project maps one task to one agent | decided by the founder; built by us either way | **DECIDED v60** — both: the card carries a `solo \| team` toggle, defaulted from the intent's kind |
 | 10 | **The 3D graph extractor** | the renderer is MIT and free | the extractor is entirely ours and it is the least-researched area in the plan | the founder, on appetite | **DECIDED v61** — *"Build it, but last in the page order"* |
 | 11 | **The second human** on statutory obligations | cheap now, impossible in the moment it is needed | a trust and credential decision | the founder | **DECIDED v65** — *"Me only, for now"* |
-| 12 | **Which room** — Generative Agents `demo` (Apache 2.0, cold) or AI Town (MIT, alive, needs Convex) | the cheapest read-only display, one JSON file | a living project, if the founder wants it maintained | the founder | **PENDING v62** — three founder-named candidates (pixel-agents, Star-Office-UI, AgentOffice) under research |
+| 12 | **Which room** — Generative Agents `demo` (Apache 2.0, cold) or AI Town (MIT, alive, needs Convex) | the cheapest read-only display, one JSON file | a living project, if the founder wants it maintained | the founder | **DECIDED v62** — pixel-agents (MIT, alive, reads Claude Code); Star-Office-UI and "AgentOffice" refused with reasons; the founder may still name where they saw "AgentOffice" |
 | 13 | **The first venture** and its rung-1 anchor | adoption is the intake this founder uses most | the harness is the only venture whose anchors already exist — the 48-step suite | the founder | **DECIDED v64** — *"The harness itself"* |
 | 14 | **Fourteen agents is inside an unoccupied band** | the founder's decision, taken with the evidence in hand | every shipped running roster measured is 5–6; every roster of 150+ is a catalogue you pick from | **decided; reopened only by name** | **DECIDED v54** — two waves; the eight with seeds or code paths first |
+| 15 | **Which hosted lane may MAKE when the Mac is off** — Codex cloud (`codex cloud exec`, issue-only, UNVERIFIED) · Claude Code `--cloud` and Routines (documented argv and API; shares the Claude seat) · Jules (alpha API, third family) | Anthropic's is the only fully documented driver today and costs no extra compute | it is the same seat as the Floor and the same terms clause as row 1; Codex cloud is the founder's named preference and has no driver yet | the founder, with row 1 | **OPEN — raised by v56** |
 
 ---
 
@@ -86,7 +87,7 @@ None was guessed inside the section that found it, and each is now a row of §A.
 
 **(NEW: none of the six was a founder question, and that is the whole distinction)** Each closed on a rule that was
 already written down — the trifecta split reached A, FINAL §6.1 reached F, the seven existing engine files reached E,
-and C and D were placements of surfaces the plan already had. **The fourteen rows of 20.1 and the five of 20.2 have
+and C and D were placements of surfaces the plan already had. **The fifteen rows of 20.1 and the five of 20.2 have
 no such rule overhead**, which is exactly why they are the founder's and not an editor's. A question a standing rule
 can answer is not an open decision; it is an unfinished reading.
 
@@ -109,28 +110,29 @@ this section.
 |---|---|---|
 | **v54** | The roster ships in **two waves** — eight first, the six business agents and the challenger when a venture needs them (§5.0, §17.1, §19.1) | *"Start with the eight that have seeds or code paths"* |
 | **v55** | **Standing intents**: an intent that never expires, carrying a cadence or an inbound event class, dispatched by the Watch (§2.8, §4.1) | *"agents … that can run every set time or evant or something else. it to build the company like working"* |
-| **v56** | **A cloud lane for when the Mac is off** — OpenAI Codex cloud tasks. **PENDING research**; the terms row stays open | *"When my Mac is not on … you can use codex or Gemini … But still keep it open"* |
+| **v56** | **A cloud lane for when the Mac is off** — Codex cloud is admitted as a PR reviewer today; as a maker it is UNVERIFIED, with no documented driver; the documented off-Mac maker paths are Anthropic's `--cloud`/Routines and Google's Jules (alpha) (§10, §15). Which of these may make is row 15, raised by this decision | *"When my Mac is not on … you can use codex or Gemini … But still keep it open"* |
 | **v57** | **Fable 5.1 is builder's and architect's default**, overruling v21's escalation-only rule (§9.1, §5.2, §17.1) | *"Fable as builder's and architect's default"* |
 | **v58** | **`ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5`, set now**, ahead of Haiku 4.5's retirement (§9.8) | *"Set ANTHROPIC_DEFAULT_HAIKU_MODEL to Sonnet 5 now"* |
 | **v59** | **Agent teams on, no model constraint** — a teammate runs on its own agent file's model (§3.5, §9.2, §14.5) | *"Turn it on, no model constraint"* |
 | **v60** | **The card carries a `solo \| team` toggle**, defaulted from the intent's kind (§14.7, §17.4.1) | *"Both: the card carries a 'solo or team' toggle"* |
 | **v61** | **Page 6 is built last of the seven**, after one research lane on repo-to-graph tooling (§14.9, §19.1) | *"Build it, but last in the page order"* |
-| **v62** | **The room's renderer** — three founder-named candidates, none in any prior lane. **PENDING research** | *"use pixel-agents code or Star-Office-UI or AgentOffice"* |
+| **v62** | **pixel-agents (MIT, alive, reads Claude Code) is the room's renderer**, admitted through the tool door (§14.4, §17.7); Star-Office-UI and "AgentOffice" refused with reasons | *"use pixel-agents code or Star-Office-UI or AgentOffice"* |
 | **v63** | **Disclose by default**; the legal entity is a charter field answered at intake (FINAL §19.8, closed) | *"Disclose by default; entity per venture decided at intake"* |
 | **v64** | **The first venture is the harness itself** — its intents are the build order and its anchors already exist | *"The harness itself"* |
 | **v65** | **The founder only**, for now, as the second human on statutory obligations | *"Me only, for now"* |
 
-**(NEW: two of the twelve are PENDING, and pending is a state this section refuses to blur into decided)** **v56**
-and **v62** name a thing to research, not a thing to do: the founder chose a cloud lane and named three room
-candidates, and neither answer can be written into the plan until a lane reads the terms and the licences from the
-files themselves. **Until those lanes return, the sections they touch say PENDING rather than guessing** — §10 and
-§15 for v56, §14.4 and §17.7 for v62. A pending row is not an open decision either: the decision is taken and what
-is missing is evidence for how to carry it out.
+**(NEW: v56 and v62 named a thing to research, not a thing to do, and both returned the same day)** The founder chose
+a cloud lane and named three room candidates; the sourcer lane read the terms and the licences from the files
+themselves and both are **decided** — `research/cloud.md` for v56, `research/room.md` for v62 — with the sections
+they touch, §10 and §15 for v56 and §14.4 and §17.7 for v62, updated in step. **What is still open: rows 1, 4 (fetch
+at build), 15.** Row 15 is v56's own residue: it named the cloud lane and, in the same motion, raised the question of
+which hosted lane may make — that question is not answered by the research that opened it.
 
 **(NEW: what is still open after the interview, and it is a short list)** **Row 1, the terms**, by the founder's own
-word — *"still keep it open"* — and **row 4, `LICENSE-CONTENT`**, which is one fetch at build time. Rows 5 and 8 are
-**acts at build time** rather than choices. Everything else in 20.1 is decided, and 20.2's five rows are decided or
-deliberately deferred to the moment building starts.
+word — *"still keep it open"* — **row 4, `LICENSE-CONTENT`**, which is one fetch at build time — and **row 15, which
+hosted lane may make when the Mac is off**, raised by v56 and not settled by it. Rows 5 and 8 are **acts at build
+time** rather than choices. Everything else in 20.1 is decided, and 20.2's five rows are decided or deliberately
+deferred to the moment building starts.
 
 ---
 
