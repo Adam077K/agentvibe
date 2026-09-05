@@ -92,10 +92,8 @@
 
 ## 2026-09-04/05 — The final plan and the founder's verdict
 
-- **The final plan is `docs/03-system-design/final/FINAL-PLAN.md`** (with COVERAGE, CENSUS, DECISIONS, page/): Keel
-  (round six, mind-1) as the base, v3's measured facts inserted, thirty decisions with losing images in §1.
+- **The final plan is `docs/03-system-design/final/FINAL-PLAN.md`**: Keel as the base, v3's facts, thirty decisions in §1.
 - **The founder chose "Keel only" as input against the recommendation, and on 2026-09-05 overruled rows 6, 8, 10,
   15, 30**: ten to fifteen expert agents with an operator, mission control back as the working surface, a learned
   skill library plus a skill creator, Codex from day one. Authority:
-  `docs/08-agents_work/handoffs/2026-09-05-THE-PLAN-NEXT-TEAM-PROMPT.md`. Overruled and meant it; do not re-litigate.
-- **A second model family is still unreachable** (`gemini` unauthenticated, `codex` absent): every review is single-family.
+  `docs/08-agents_work/handoffs/2026-09-05-THE-PLAN-NEXT-TEAM-PROMPT.md`. Overruled and meant it. A second family is still unreachable: `gemini` unauthenticated, `codex` absent.
