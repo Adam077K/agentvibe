@@ -100,4 +100,7 @@
   unread by the merge; do not fold them in later without asking.
 - **A second model family is still unreachable from inside Claude Code**: `gemini` installed, never authenticated;
   `codex` absent. Every review of the final plan is single-family and says so.
+- **2026-09-05: the founder overruled the final plan on the roster and the surfaces, and meant it.** Ten to fifteen
+  expert agents with an operator, not three shapes; mission control back as the founder's working surface; Codex
+  from day one. The next team's prompt is `docs/08-agents_work/handoffs/2026-09-05-THE-PLAN-NEXT-TEAM-PROMPT.md`.
 

@@ -132,6 +132,15 @@ a proper noun: it survives only as a common noun for a running process; there is
 where the other speaks. The decision is one line; the losing image is kept by name so it can be argued for later.
 Rows are referenced from the sections that carry them. §21 points back here rather than repeating it.
 
+> **Superseded 2026-09-05, by the founder, on rows 6, 8, 10, 15 and 30.** After reading this plan the founder said
+> "most of it is fine" and overruled it in five places: the roster is a company of ten to fifteen expert agents with
+> an operator, not three shapes with labels (rows 6, 8); the 134 skills are replaced by a library learned from the
+> biggest agent systems plus a skill creator, not a holding directory (row 10); mission control returns as a
+> first-class surface with an office, an agent-flow page, a cost dashboard, a task board that launches sessions, an
+> engines page, a 3D file graph and a canvas of every session (row 15); Codex and Claude Code are both in from day
+> one (row 30). The rows below are kept as written so the losing images stay by name; the binding direction, verbatim,
+> is `docs/08-agents_work/handoffs/2026-09-05-THE-PLAN-NEXT-TEAM-PROMPT.md`.
+
 | # | The question | Decided | From | Why, in one line | The losing image, kept as |
 |---|---|---|---|---|---|
 | 1 | The base, the organs, the names | Keel's design is the base; its words stand. v3's organs and their names go | KEEL | the founder's verdict on v3: "the engines and the mythologies taken straight from the other frameworks … it's bad" | the OS-parts map (kernel · scheduler · processes · filesystem · syscalls · shell · daemons · cron · package manager · drivers · boot · manual) and the ten named stores |

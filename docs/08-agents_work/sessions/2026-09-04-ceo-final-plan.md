@@ -16,3 +16,4 @@ A census lane measured both trees and found ceo-1 a strict descendant of this br
 The reviewer's four blocking findings were real: scout and checker argv lacked `dontAsk`, taint could not narrow a fixed argv, the successor rule had no mechanism, one row claimed three runtimes stand a shape only one has been measured for.
 Nothing built, nothing pushed, nothing sent; the branch sits on local main with the plan, companions and page committed.
 Open for the founder: §19's fifteen decisions, the landing order of the three branches, and whether the unread round-6 files should ever enter the merge.
+The founder read the page, said most of it is fine, overruled rows 6, 8, 10, 15 and 30, and asked for the push and the next team's prompt; both done, direction recorded verbatim in the 2026-09-05 handoff.
