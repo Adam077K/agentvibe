@@ -67,3 +67,18 @@ All five sub-questions have evidence. The context-collapse paper is identified a
 6. Claude Code's `MEMORY.md` index (200 lines / 25KB, index loaded, topic files on demand) is **the same two-tier shape** this repo built for skills discovery. It is now a shipped default rather than a local invention.
 7. Every §05 discipline item — expiry, provenance, conflict resolution, decay — is **absent from all three CLIs**. Codex has no memory; Gemini CLI appends facts to one global heading with no expiry or dedupe.
 8. Benchmark numbers in this field are vendor-run on a dataset a competing vendor calls partly unusable. Any §10 claim resting on "mem0 scores X" is a claim about a self-report.
+
+## Gaps
+
+- The **"What survives compaction" table body** in the Claude Code docs rendered as an elided line; only the surrounding prose is quoted. The row-by-row list is unverified.
+- **openai.com dreaming page returned 403.** Its facts are search-snippet only, confidence L.
+- **No Letta page found stating the primary/sleep-time memory-edit split.** The documented URL now serves a differently-named feature.
+- **No independent, non-vendor 2026 memory benchmark run found.** Every number in the benchmark section is self-reported by a system's own authors.
+- **No measured skills-vs-RAG-vs-fine-tune comparison exists** in anything fetched. Anthropic's skills post gives zero numbers.
+- **Fine-tuning as a knowledge carrier was not searched.** Devin's knowledge features and Cursor rules were not fetched directly, only via Claude Code's `/init` list.
+- **Gemini CLI facts are search-synthesised.** Two direct documentation fetches returned 404.
+- A-MEM, LangMem and MemBench were not fetched this lane; the first two are covered in the prior catalogue, MemBench is uncovered.
+
+## Sources fetched (count) · failed fetches
+
+**26 tool calls** (one over the 25 ceiling): 14 WebFetch, 6 WebSearch, 6 local reads/greps. **10 fetches succeeded**: Claude Code memory, Claude Code context-window, Anthropic context engineering, Anthropic agent skills, arXiv 2510.04618 (abstract and HTML), Letta dreaming, Codex AGENTS.md, mem0 benchmarks, Zep rebuttal. **4 failed**: `google-gemini.github.io/gemini-cli/docs/cli/configuration.html` (404), `raw.githubusercontent.com/google-gemini/gemini-cli/main/docs/cli/configuration.md` (404), `openai.com/index/chatgpt-memory-dreaming/` (403), `developers.openai.com/codex/guides/agents-md/` (308 redirect, refetched successfully at the new host).

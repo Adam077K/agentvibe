@@ -117,3 +117,13 @@ MiniLM quote: *"384 dimensional dense vector space"*; *"input text longer than 2
 3. Third-party: *"Dividing output price by Scale SEAL SWE-bench Pro score shows Claude Haiku 4.5 about $0.13 of output per point, gpt-5.4 $0.25, Gemini 3.1 Pro $0.26, Claude Opus 4.6 $0.48."*
 4. Third-party: *"Claude Fable 5.1 takes #1 at 81.2%"* on SWE-bench Pro, dated 2026-09-03.
 5. The one **vendor** per-task-ish anchor that exists is Anthropic's, and it is per *developer-day*, not per task: $13/active day, $150–250/month, <$30/day for 90% of users.
+
+## Terms: automation, fair use, rate limits
+
+**Anthropic Consumer Terms** — <https://www.anthropic.com/legal/consumer-terms>, accessed 2026-09-05, **H**. This is the load-bearing quote for a subscription-fuelled autonomous crew: *"Except when you are accessing our Services via an Anthropic API Key or where we otherwise explicitly permit it, to access the Services through automated or non-human means, whether through a bot, script, or otherwise."* Also: *"You may not share your Account login information, Anthropic API key, or Account credentials with anyone else. You also may not make your Account available to anyone else."* And a competing-products/resale prohibition. **No numeric rate limit or "fair use" clause appears in that document.** Set against it, Anthropic's own product docs ship and document unattended operation on a subscription: print mode `-p`, `--max-budget-usd`, scheduled tasks/`/loop`, Remote Control, and agent teams — i.e. the "explicitly permit it" carve-out is exercised by first-party features. Where a *third-party* script drives a subscription seat, the clause is the governing text and I found nothing narrowing it.
+
+**OpenAI** — **FETCH FAILED, 403.** No OpenAI automation or fair-use clause is quoted here. UNVERIFIED.
+
+**Google** — **not fetched** (no calls left). Gemini API Additional Terms of Service, and the free-tier data-use clause, are UNVERIFIED.
+
+**Anthropic API rate limits** (distinct from subscription): tiers named *Start / Build / Scale*, no numbers on the pricing page; Claude Code's own doc recommends 200k–300k TPM and 5–7 RPM per user at 1–5 users, falling to 10k–15k TPM and 0.25–0.35 RPM at 500+.

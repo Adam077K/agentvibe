@@ -62,3 +62,20 @@ No system I reached carries an explicit **definition-of-ready** gate, a **blocke
 - **COVERAGE line 546** refuses "Plan draft" as mandating method. Fact: the largest shipped coding agent ships plan mode as one of six permission modes, and plan approval is what unblocks edits. That is a mode the human selects, not a step the run performs on itself, which is a different placement than the item's wording.
 - **§9.2 keys `may-alone` on reversibility.** Fact: neither shipped scheme does. Claude Code's floor is a fixed path list plus an action-class list; Codex's is workspace scope plus network. The nearest shipped analog to a reversibility rule is the classifier's special-casing of `rm`/`rmdir` on critical paths.
 - **§9.2's staged-not-sent pattern and its recall window have no analog** in anything I fetched. The shipped equivalent of "never alone" is a prompt or a deny rule, not a staged artifact.
+- **§6.1's "a run cannot dispatch its own successor"** has two shipped parallels: Copilot's "one branch ... exactly one pull request", and Claude Code's subagent rule that "any `permissionMode` in the subagent's frontmatter is ignored" — a child cannot widen its own grant.
+- **§6.2's `out-of-scope` and `negatives` fields**: no shipped brief schema I found requires either. Devin's "clear scope, boundaries" is the closest and is prose advice.
+- **§6.3's `uncertain` field**: no shipped handover schema I found has it. Linear's activity vocabulary (thought / action / response / elicitation) is the closest published state model and carries no uncertainty slot.
+- **§2.4's mandatory read-back**: unsupported and uncontradicted by shipped practice. Linear requires a 10-second `thought`, which acknowledges rather than confirms.
+- **§2.2 done-test carried verbatim into the brief**: Devin's checkpoint guidance is the only shipped near-equivalent, and it is optional there.
+
+## Gaps
+
+OpenAI's "A practical guide to building agents" failed to parse (7MB binary PDF) — its guardrail and human-in-the-loop guidance is UNSOURCED here. OpenAI Symphony: not searched, existence unverified. Cursor plan mode and Cursor's Linear integration: not fetched. OpenHands confirmation mode and security-analyzer risk levels: redirect not followed, not fetched. Jira agent integration: not fetched. Tree-of-Thoughts measured results: not fetched. Codex `on-failure` semantics and the Codex "Sandbox and approvals" page: not fetched. Devin's internal planning representation and any ACU/confidence surface: not fetched. Linear's stop/unassign semantics and full required-field list: one page only. The first fetch of code.claude.com/docs/en/iam returned the Authentication page, not permission modes; the permission material came from two other pages.
+
+## Sources fetched (12) · failed fetches (2)
+
+Fetched: code.claude.com/docs/en/iam · /permissions · /permission-modes · /github-actions · anthropic.com/engineering/building-effective-agents · learn.chatgpt.com/docs/config-file/config-basic · docs.github.com/en/copilot/concepts/agents/coding-agent/about-coding-agent · linear.app/developers/agents · docs.devin.ai/essential-guidelines/instructing-devin-effectively · arxiv.org/abs/2303.11366 · arxiv.org/abs/2310.01798 · arxiv.org/abs/2305.04091. All accessed 2026-09-05.
+
+Failed: cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf (binary, unparsed) · docs.all-hands.dev/usage/how-to/openhands-flows (308 to docs.openhands.dev, not followed — ceiling).
+
+No claims were appended to the ledger: every finding above is a fact about a moment in a vendor doc, and I could not fetch a second time to set a defensible `valid_until` within the call budget.
