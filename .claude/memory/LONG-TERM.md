@@ -90,13 +90,12 @@
 - Measured: `--allowedTools` restricts nothing; `--restricted --tools … --strict-mcp-config` is the seam; a `-p` child binds an inbox socket unless `--bare`; only managed settings survive a child's argv; the hook matches command strings; the five-hour limit stops every agent at once (have them write as they go, resume by name); tick 240 s not 300.
 - Next: re-derive `STARTUP-OS.md` v3 from WATCH (§29 migration table, §25 build order), v2 preserved under `designs/`. Start from `handoffs/2026-09-03-after-round-two.md`. Pending with the founder: widget decisions, the first move, the terms question, the managed settings file.
 
-## 2026-09-04/05 — The final plan, its inputs, and the founder's verdict
+## 2026-09-04/05 — The final plan and the founder's verdict
 
-- **The final plan is `docs/03-system-design/final/FINAL-PLAN.md`** (with COVERAGE, CENSUS, DECISIONS, page/).
-  Keel (round six, mind-1) is the base; v3 gives the measured facts. §1 holds thirty decisions with losing images.
-- **Asked which round-6 files to read, the founder chose "Keel only" against the recommendation** and meant it;
-  THE-PLAN.md, mind-2 and Fable's design stay unread by the merge. Do not fold them in without asking.
-- **2026-09-05: the founder overruled rows 6, 8, 10, 15, 30** — ten to fifteen expert agents with an operator, not
-  three shapes; mission control back as the working surface; a learned skill library and a skill creator; Codex
-  from day one. Authority: `docs/08-agents_work/handoffs/2026-09-05-THE-PLAN-NEXT-TEAM-PROMPT.md`.
-- **A second model family is still unreachable**: `gemini` unauthenticated, `codex` absent; every review is single-family.
+- **The final plan is `docs/03-system-design/final/FINAL-PLAN.md`** (with COVERAGE, CENSUS, DECISIONS, page/): Keel
+  (round six, mind-1) as the base, v3's measured facts inserted, thirty decisions with losing images in §1.
+- **The founder chose "Keel only" as input against the recommendation, and on 2026-09-05 overruled rows 6, 8, 10,
+  15, 30**: ten to fifteen expert agents with an operator, mission control back as the working surface, a learned
+  skill library plus a skill creator, Codex from day one. Authority:
+  `docs/08-agents_work/handoffs/2026-09-05-THE-PLAN-NEXT-TEAM-PROMPT.md`. Overruled and meant it; do not re-litigate.
+- **A second model family is still unreachable** (`gemini` unauthenticated, `codex` absent): every review is single-family.
