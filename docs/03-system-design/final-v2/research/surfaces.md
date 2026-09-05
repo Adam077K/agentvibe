@@ -69,3 +69,35 @@ exec.Command("tmux", "has-session", fmt.Sprintf("-t=%s", t.sanitizedName))
 ```
 
 Session names are prefixed `claudesquad_`. Messaging is `SendKeys` plus `TapEnter()` writing `0x0D`. This is the whole of "pop a terminal, watch it, type into it, kill it" in five commands with no macOS-specific API.
+
+## Licences
+
+| Project | LICENSE URL | Licence | Quoted line | Last commit (`pushed_at`) |
+|---|---|---|---|---|
+| vibe-kanban | <https://api.github.com/repos/BloopAI/vibe-kanban> | Apache-2.0 `[api]` | not quoted here; §4A.10 read `LICENSE` from file | **2026-04-24** |
+| openai/symphony | <https://api.github.com/repos/openai/symphony> | Apache-2.0 `[api]` | not quoted | **2026-08-19** |
+| stravu/crystal | <https://api.github.com/repos/stravu/crystal> | MIT `[api]` | not quoted | **2026-02-26** |
+| OpenHands | <https://api.github.com/repos/All-Hands-AI/OpenHands> | MIT `[api]` | not quoted | **2026-09-04** |
+| 3d-force-graph | <https://api.github.com/repos/vasturiano/3d-force-graph> | MIT `[api]` | not quoted | **2026-04-05** |
+| Gource | <https://api.github.com/repos/acaudwell/Gource> | GPL-3.0 `[api]` | not quoted | **2026-03-06** |
+| Langflow | <https://api.github.com/repos/langflow-ai/langflow> | MIT `[api]` | not quoted | **2026-09-05** |
+| Flowise | <https://api.github.com/repos/FlowiseAI/Flowise> | **NOASSERTION / "Other"** `[api]` · **ARCHIVED** | not quoted | 2026-08-13 |
+| n8n | <https://raw.githubusercontent.com/n8n-io/n8n/master/LICENSE.md> | Sustainable Use (NOASSERTION `[api]`) | *"You may use or modify the software only for your own internal business purposes or for non-commercial or personal use."* | **2026-09-05** |
+| claude-squad | §4A.10, read from `LICENSE.md` | AGPL-3.0 | prior survey | 2026-08-20 (prior survey) |
+
+## Launch mechanisms found
+
+| Mechanism | Who ships it | Exact command or API | What it needs |
+|---|---|---|---|
+| tmux split pane per teammate | Claude Code | `claude --teammate-mode tmux` (or `auto`) | tmux on PATH; pane ids land in `~/.claude/teams/{team}/config.json` |
+| iTerm2 native split pane | Claude Code | `claude --teammate-mode iterm2` | `it2` CLI (<https://github.com/mkusaka/it2>) **and** iTerm2 Python API enabled |
+| Background session + attach | Claude Code | `claude --bg …` then `claude --attach <id>` | a terminal to attach in; `--bg` prints the id |
+| Caller-assigned session id | Claude Code | `claude --session-id <uuid>` | a valid UUID minted by the caller |
+| Message a running agent | Claude Code agent teams | write/read `~/.claude/teams/{t}/inboxes/{agent}.json` | entries are validated on read; malformed ones are *"removed from the file"* |
+| Detached tmux session per agent | claude-squad (AGPL-3.0) | `tmux new-session -d -s <name> -c <dir> <program>`; `tmux attach-session -t <name>` | tmux; the tool owns the session |
+| Read a pane without attaching | claude-squad | `tmux capture-pane -p -e -J -t <name>` | tmux |
+| Type into a live pane | claude-squad | `SendKeys` + `0x0D` | tmux |
+| Worktree per board card | vibe-kanban (Apache-2.0, sunsetting) | its own Rust executor; *"a branch, a terminal, and a dev server"* | a 30-crate Rust runtime that owns execution |
+| Issue → isolated run | OpenAI Symphony (Apache-2.0) | polls Linear, one workspace per issue | Elixir runtime; Linear as control plane · **M** |
+
+**Not found:** any primary source for AppleScript, `open -a Terminal`, or an iTerm2 AppleScript hand-off. I fetched none, so the obvious macOS route is **unverified**, not absent.

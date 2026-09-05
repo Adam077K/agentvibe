@@ -72,3 +72,22 @@ The carve-out is API key, and the escape hatch is *"where we otherwise explicitl
 - **§5.2, Codex window row** — #19945 verified still open on 2026-09-05 with no maintainer reply, 130 days after opening. The row stands as written.
 - **§5.2, "no metered key"** — the Anthropic clause above names an API key as the carve-out from the automation prohibition, so the no-key choice and the automation question are the same question, not two.
 - **The plan's §1 row 30** ("Codex after a headless rehearsal") — the rehearsal is now specifiable from primary text: `codex exec --json`, no controlling TTY, non-trivial prompt, on a version ≥ 0.124.0.
+
+## Gaps
+
+1. **Codex `/goal` has no primary citation here.** <https://learn.chatgpt.com/docs/developer-commands?surface=cli> and <https://learn.chatgpt.com/use-cases/follow-goals> are the 308 targets; two calls closes this.
+2. **OpenAI's terms are unread** (403). The whole OpenAI half of the terms question is open.
+3. **Whether Codex `/goal` runs under `codex exec`** — unestablished, and it is the hinge for using Codex's goal feature from a driver.
+4. Whether Anthropic's documented headless features constitute the *"explicitly permit"* carve-out on a subscription.
+5. The meaning of the trailing Yes/No column in the Claude Code tools reference (`Monitor` Yes, `Workflow` Yes, `ScheduleWakeup` No, `Agent` No). I did not capture the header and will not guess it.
+6. `-w`, `--worktree`, `--tmux` did not appear in my CLI-reference fetch. Prior lane has them as measured.
+7. Routines' own page, desktop scheduled tasks, `/schedule`, Remote Control, agent teams, and the `workflows` page were not fetched.
+8. Codex config reference, `requirements.toml`, `codex mcp`, Automations, and whether Codex can serve as an MCP server — all still the prior lane's marks; I added nothing.
+9. Third-party routers not researched.
+10. **Nothing here was measured.** No runtime ran; `codex` remains uninstalled and I attempted no install.
+
+## Sources fetched (count) · failed fetches
+
+**10 pages fetched successfully:** Claude Code CLI reference, hooks, sub-agents, scheduled-tasks, goal, tools-reference, channels; Codex non-interactive-mode; GitHub issue openai/codex#19945; Anthropic Consumer Terms. **3 web searches.** **3 failures:** `developers.openai.com/codex/cli/slash-commands` (308 → learn.chatgpt.com, not followed, ceiling), `developers.openai.com/codex/use-cases/follow-goals` (308, same), `openai.com/policies/terms-of-use` (**403**). 25 of 25 calls spent.
+
+Sources: [Claude Code CLI reference](https://code.claude.com/docs/en/cli-reference) · [hooks](https://code.claude.com/docs/en/hooks) · [subagents](https://code.claude.com/docs/en/sub-agents) · [scheduled tasks](https://code.claude.com/docs/en/scheduled-tasks) · [goal](https://code.claude.com/docs/en/goal) · [tools reference](https://code.claude.com/docs/en/tools-reference) · [channels](https://code.claude.com/docs/en/channels) · [Codex non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode) · [openai/codex#19945](https://github.com/openai/codex/issues/19945) · [Anthropic Consumer Terms](https://www.anthropic.com/legal/consumer-terms) · [openai/codex#20536](https://github.com/openai/codex/issues/20536) · [openai/codex#34215](https://github.com/openai/codex/issues/34215)

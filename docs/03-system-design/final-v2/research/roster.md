@@ -98,3 +98,31 @@ Source: https://code.claude.com/docs/en/sub-agents · 2026-09-05 · confidence H
 7. **Cognition's recommendation**: start with *"a single-threaded linear agent"* where *"the context is continuous."* Same source · H.
 8. **Magentic-One's five agents** reach *"statistically comparable performance to previous SOTA methods on both GAIA and AssistantBench and competitive performance on WebArena"* — comparable, **not better**. Microsoft Research · 2026-09-05 · H.
 9. **SWE-bench generalist-vs-specialist: NOT MEASURED BY ME.** FINAL-PLAN §7.1 states *"OpenHands reaches 72% on SWE-Bench Verified with one generalist architecture across providers."* That is a local document's claim; I did not fetch a source for it and it is **UNVERIFIED** in this lane.
+
+## Coverage of the founder's §23–§30 by any shipped roster
+
+Category-level only for wshobson and VoltAgent — I have their category names and counts, **not their individual role names**, so a department marked present may be present as one agent or as fifteen.
+
+| § | Department | Appears in | Confidence |
+|---|---|---|---|
+| 23 | design & product | VoltAgent "Business & Product" (17); ChatDev **Designer** and CPO; TheAgentCompany **Product Manager**; CrewAI "Visual Content Analyst"; MetaGPT **product manager** | M |
+| 24 | engineering | Every roster. MetaGPT engineer/architect; ChatDev Programmer/Reviewer/Tester; Magentic-One **Coder**+**ComputerTerminal**; VoltAgent categories 01+02+03+04 (75); wshobson architecture/languages/infra/security | H |
+| 25 | data & analytics | VoltAgent "Data & AI" (13); wshobson data/ML; TheAgentCompany **Data Scientist** | H |
+| 26 | marketing & content | wshobson "SEO" + "business" + Tier 4 "SEO, deployment, content"; VoltAgent "Business & Product" | M |
+| 27 | **sales & growth** | **NONE of the rosters I fetched names a sales, lead-scraping, lead-scoring, CRM or churn agent** | M — absence over the fetched set only |
+| 28 | customer service | Only as framework *examples*, not shipped rosters: CrewAI "Customer Service Representative"; OpenAI SDK triage/billing/refund | H |
+| 29 | finance & legal | TheAgentCompany **Financial Staff**. **No legal, contract or compliance agent in any fetched roster** | M |
+| 30 | operations & HR | TheAgentCompany **Human Resource** and **Administrator** | H |
+
+**In no fetched roster:** sales and growth as a function (§27), legal and contracts (§29), branding and visual identity (§23), video and asset generation (§26), influencer outreach, cap-table tracking. Their absence from research rosters and code-agent catalogues is weak evidence — those systems target software and research, not a company.
+
+## What this changes against FINAL-PLAN §1 rows 6/8 and §7
+
+Facts, no recommendation.
+
+1. **Row 8 ("Labels, not names") is contradicted by every shipped system I fetched.** MetaGPT, ChatDev, Magentic-One, CrewAI, the OpenAI SDK, wshobson and VoltAgent all ship **named, persistent roles**. Zero of the seven ship an unnamed-shape-plus-loadout model. CrewAI goes furthest in the opposite direction: `backstory` exists explicitly to give an agent "context and personality".
+2. **Row 6's "three shapes" is closest to Magentic-One's five, but the axis differs.** Magentic-One splits by **grant** (browser, file-read, code, shell) under one Orchestrator, not by domain and not by maker/scout/checker. §7.1's rule "domain is a loadout" is consistent with all seven rosters at the *domain* level; the tool-axis split is a fourth cut none of §7 names.
+3. **§7.1's premise that specialists differ only in memory and a check is contradicted on one field: the model.** wshobson assigns five model tiers by role, and VoltAgent carries a per-agent `model`. The Claude Code format makes `model`, `effort`, `mcpServers`, `skills`, `memory` and `isolation` per-agent frontmatter. A loadout is therefore expressible **as a file per role** in this runtime, which removes the technical part of §7.2's objection to "a file per role" and leaves only the drift argument.
+4. **§7.2's "no registry of personalities" has no shipped precedent** among the systems fetched. The nearest is Anthropic's research system, which spawns 3–5 subagents that are unnamed and task-scoped — and whose own post says coding is *"not a good fit"* for that pattern.
+5. **The 10–15 target sits in an unoccupied band.** Running rosters are 5–6 (Magentic-One 5, ChatDev 6, MetaGPT 4–5, TheAgentCompany's 6 job functions, Anthropic's 3–5 concurrent). Catalogues are 150–202. Nobody I fetched publishes a measured roster size between them, in either direction.
+6. **Cognition and Anthropic do not conflict, and both bear on the split.** Anthropic's +90.2% is on **research** with independent parallel subtasks; Cognition's failure is on **one artifact** split across parallel builders. That is the maker/scout boundary in §7.1, and it is the one part of §7 that the world's evidence directly supports.

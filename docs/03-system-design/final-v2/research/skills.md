@@ -57,3 +57,47 @@ What the largest agent systems ship as skill libraries, in what format, under wh
 | VoltAgent/awesome-claude-code-subagents | not fetched | MIT **UNVERIFIED** | README only: "MIT License - see LICENSE" |
 | VoltAgent/awesome-claude-skills | not fetched | MIT **UNVERIFIED** | file listing only |
 | agentskills/agentskills (spec + skills-ref) | not fetched | **UNKNOWN** | — |
+
+## Skill creators found
+
+| Mechanism | Project | URL | In → out |
+|---|---|---|---|
+| `skill-creator` skill | anthropics/skills | `raw.githubusercontent.com/anthropics/skills/main/skills/skill-creator/SKILL.md` | In: user intent, triggering contexts, edge cases, success criteria. Out: a packaged `.skill` (SKILL.md + scripts/references/assets) plus `evals/evals.json`, graded with-skill-vs-baseline runs, `benchmark.json`, and a description tuned by `scripts/run_loop` |
+| `$skill-creator` command | OpenAI Codex | `learn.chatgpt.com/docs/build-skills` | In: answers to "what the skill does, when it should trigger, and whether it should stay instruction-only or include scripts". Out: a skill directory under `.agents/skills` |
+| Record & Replay | OpenAI Codex | same | In: a recorded demonstration. Out: "draft a reusable skill from the demonstration" |
+| `writing-skills` skill | obra/superpowers | `github.com/obra/superpowers` (`skills/writing-skills/SKILL.md`) | In: an authoring intent. Out: a skill, tested by the `drill` harness from `superpowers-evals` |
+| `plugin-eval` | wshobson/agents | `github.com/wshobson/agents` | In: a candidate plugin. Out: three graded layers — static, LLM judge across 4 dimensions, Monte Carlo over 50-100 runs |
+| `skills-ref validate` | agentskills/agentskills | `agentskills.io/specification` | In: a skill directory. Out: pass/fail on frontmatter and naming |
+
+## What this changes against FINAL-PLAN §11/§16.2
+
+Facts only. §11.3 is the row set I could read; §16.2 I could not — see Gaps.
+
+- **§11.3, "the 134 curated skills… move whole into `keel/holding/skills/`, which nothing reads."** The upstream those 134 came from now advertises 2,111+ skills (finding 12) under an MIT LICENSE file (table). The holding directory's contents are a 2026-08-12 snapshot of a corpus that has grown ~14x, and re-import is licence-clear.
+- **§11.3, "admission by test, not excision by argument."** Two shipped implementations of exactly that exist: `skill-creator`'s `evals/evals.json` with paired with-skill and baseline runs (finding 7), and `plugin-eval`'s three layers (finding 16). Neither was in the prior catalogue §14.
+- **§11.3, "A skill that is a procedure for how to produce work does not re-enter."** The published standard's recommended body sections are "Step-by-step instructions", "Examples of inputs and outputs", "Common edge cases" (finding 1). A skill written to spec is procedural by the spec's own recommendation. The plan's field-kit schema (§11.1: four descriptive headings, no procedure) and the SKILL.md standard therefore describe different artifacts wearing the same filename.
+- **§11.3, "Ninety days uncalled and it leaves."** No project fetched implements usage-based retirement (finding 20). The nearest shipped thing is dead-link and drift detection.
+- **§11.1 and §11.3 assume the library is a local directory.** Two of the largest corpora are consumed through a server or a registry instead: an MCP that does "complete local catalog search, agent-owned selection, stack validation, and planning" (finding 12), and `/plugin marketplace add` bundling skills with agents, commands, hooks, MCP and LSP servers in one unit (finding 17).
+- **Bearing on founder direction E, not on §11:** one path, `.agents/skills`, is read by both Codex and Gemini CLI (finding 11), and Codex does not use `.codex/skills`.
+- **§11.2's anchors table:** nothing fetched changes any row.
+
+## Gaps
+
+1. **I did not read FINAL-PLAN §16.2 (lines 2168–2187).** It was in my brief and I exhausted the 25-call ceiling on the other inputs and the fetches. Everything above about §16.2 is absent, not covered. The only thing I know of it is §11.3's own line: "§16.2 carries the fate class of every one of the 134 from the census."
+2. **Last-commit dates: none verified.** GitHub tree pages rendered commit *counts* (54, 681, 2,670, 569, 506) but no dates for any of the six repositories. Every "last commit" in the prior catalogue §14 is therefore un-refreshed by me.
+3. **Two licences read from a README or a file listing, not the file:** both VoltAgent repos. `LICENSE-CONTENT` in the upstream was not fetched and may carry different terms for skill *content* than MIT does for code — material if the 2,111 are vendored.
+4. **`anthropics/skills` per-skill LICENSE files not checked**, so which of the 19 are Apache 2.0 and which are source-available is inferred from one README sentence naming four directories.
+5. **`obra/superpowers` skill count is README-derived (~14) and UNVERIFIED against `/skills`.**
+6. **Gemini CLI frontmatter fields and built-in skill count** are not stated on its skills page.
+7. **Voyager-style self-building skill libraries were not fetched at all** — no budget reached them. The founder's direction C names this class and it is uncovered here.
+8. **`agentskills/agentskills`** (the spec repo and `skills-ref`) was not fetched: licence, release cadence and spec version are unknown.
+9. **Star counts are as rendered** (174.4k, 281.9k, 46k, 39.4k, 33.8k, 24.9k). I did not cross-check them against the API.
+10. **No claim was appended to the ledger.** No `claim-append` tool was available in this session, so every finding above is prose evidence, not a registered claim.
+
+## Sources fetched (count) · failed fetches
+
+**13 successful fetches**, 6 local file reads, 25 tool calls total.
+
+Fetched: `github.com/anthropics/skills` · `github.com/anthropics/skills/tree/main/skills` · `raw.githubusercontent.com/anthropics/skills/main/README.md` · `raw.githubusercontent.com/anthropics/skills/main/skills/skill-creator/SKILL.md` · `agentskills.io` · `agentskills.io/specification` · `github.com/obra/superpowers` · `github.com/obra/superpowers/blob/main/LICENSE` · `github.com/sickn33/antigravity-awesome-skills` · `.../blob/main/LICENSE` · `github.com/wshobson/agents` · `.../blob/main/LICENSE` · `github.com/VoltAgent/awesome-claude-code-subagents` · `github.com/VoltAgent/awesome-claude-skills` · `code.claude.com/docs/en/plugin-marketplaces` · `geminicli.com/docs/cli/skills/` · `learn.chatgpt.com/docs/build-skills`.
+
+**Failed: 2.** `github.com/anthropics/skills/blob/main/LICENSE.md` → HTTP 404 (there is no root LICENSE; finding 6). `developers.openai.com/codex/skills` → 308 redirect to `learn.chatgpt.com/docs/build-skills`, refetched successfully.
