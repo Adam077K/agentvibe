@@ -30,12 +30,13 @@ was stated once, and the chosen thing is then built properly. They are never re-
 
 ---
 
-### 22.2 The nineteen moved by a fact, and one settled by a standing rule
+### 22.2 The twenty-five moved by a fact, or by a rule already written down
 
-**(NEW: nineteen of these lost to a measurement, not to a preference)** The column names the row that beat it and the
-fact that did the beating. Where the fact came from a research lane this session, the lane is the source. **Numbers
-6–24 are §J's own**, unchanged. **Number 25 is not in §J**, because v36 was decided after §J was written; it is the
-one entry here that lost to a standing rule rather than to a new fact.
+**(NEW: nineteen lost to a measurement; six lost to a rule this system already had)** The column names the row that
+beat each image and what did the beating. Where the fact came from a research lane this session, the lane is the
+source. **Numbers 6–30 are §J's own, unchanged.** The split is worth seeing: **6–24 fell to a fact from the world**,
+and **25–30 fell to a rule that was already on the page** — the trifecta split, FINAL §6.1, the values the existing
+engine files already carry. The second kind costs nothing to decide and is the cheaper half of any design.
 
 | # | The losing image | Beaten by | The fact that moved it |
 |---|---|---|---|
@@ -58,7 +59,12 @@ one entry here that lost to a standing rule rather than to a new fact.
 | 22 | **FINAL §10.1's Letta attribution** | v25 | the current vendor page for that feature no longer supports the sentence. The **principle** stands — the thing that acts never edits memory — with its one shipped counter-example named rather than hidden: Claude Code's own auto memory is written by the acting agent, in-session |
 | 23 | **A plan-critique pass the same run performs on itself** | v30 | *"at times, their performance even degrades after self-correction"* (arXiv 2310.01798). Reflexion's 91% is not a counterexample: its feedback is external. That is why `challenger` is an agent |
 | 24 | **`script -qfc` wrapped around every Codex child** | v32 | the cure is *"incompatible with normal background / parallel job execution"*, which is what a crew is. Codex runs in the foreground slot instead, and the headless rehearsal is what widens it |
-| 25 | **A steward that reads mail with a pen in its hand** | v36 | **not a new fact — a standing rule reaching a collision.** §F held the tainted read at scout only while §B.2 row 12 granted steward the same reads, and steward carries `Write`. The trifecta split decided it: a tainted read is held by `scout` and by the **world's door**, a program with no model, and by nothing else. Steward writes obligations from the handover and the door's rows |
+| 25 | **A steward that reads mail with a pen in its hand** | v36 | **a standing rule reaching a collision, not a new fact.** §F held the tainted read at scout only while §B.2 row 12 granted steward the same reads, and steward carries `Write`. The trifecta split decided it: a tainted read is held by `scout` and by the **world's door**, a program with no model, and by nothing else. Steward writes obligations from the handover and the door's rows |
+| 26 | **A brief that names no agent and lets the launcher guess; `agent+window+model:` as one widened field** | v37 | fourteen named agents make *which agent* a fact the brief must carry. **Ten fields: FINAL's nine plus `agent:`**, the roster name the launcher composes argv for — chosen because it leaves FINAL's nine untouched. **Mechanism:** `bin/run` refuses a brief whose `agent:` is not a roster file (ABSENT). The field itself is carried in §6, not here |
+| 27 | **A read-back page as an eighth page; a briefing nobody can reach from mission control** | v38 | both were **already** published pages, and the founder's pages absorb rather than delete them (v4). The read-back is the intent-creation form on page 4's *new card* and page 7's *add session*; the briefing is page 5's top strip. Both stay phone pages, and neither becomes an eighth page |
+| 28 | **The website hosted as a published artifact; a cloud host reaching into the Mac** | v39 | a terminal pop needs `tmux` on the same machine, and a hosted page cannot reach it. `mission-control/` serves the seven pages on the Mac; the phone keeps the published pages for reading and deciding, and they cannot pop a terminal. **The cost, once:** two renderers over one state, which FINAL §13.1 refused |
+| 29 | **One `maxTurns` for every agent; no cap** | v40 | the seven existing engine files already use exactly two values — **30 producing, 25 read-only** — `maxTurns` binds when an `agentType` is named, and the lint ceiling is 120. A default that copies the measured seeds is a starting point, not a design, and measurement tunes it per agent afterwards |
+| 30 | **A worktree for every agent; no isolation for the four that edit source** | v41 | a worktree is for a run that writes the venture's own files; a store write is narrowed by argv instead (v34). **The cost, once:** creating a worktree still needs the sandbox escalated for that one command, and only four agents ever meet it |
 
 ---
 
