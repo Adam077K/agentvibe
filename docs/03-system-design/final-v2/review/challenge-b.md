@@ -89,3 +89,15 @@ Every gap the research names is carried, most more than once. **This is the stro
 | No prior art for a card launching a team | Y | §0.5, v16, §14.3, §14.7, §17.6, §20.1 row 9, §21.3 (falsifiable) |
 
 **No gap is stated as settled anywhere.** The one understatement is `requirements.toml` rendered `D` — P1.2.
+
+## What could not be traced, and why
+
+**Claims tagged `(FINAL)`** — inherited from `final/FINAL-PLAN.md`, outside this lane's scope, listed not scored: §6.3 I-PASS 23%/30%; §8.1 33% of 1,000 · 66% of 1,808 MCP servers, CVE-2025-54136; §11.1 GSM8K 95.5→91.5%, judges 60–68%; §11.3 swap consistency 65% / 23.8%; §13.6 zero of 121 reflections; §12.6/§15.8 `crossSessionInbound: refuse`, `isolatePeerMachines: true`; §15.3 `F_FULLFSYNC`, WAL starvation. §12.10 is the sharpest case: "(FINAL, v34.) Every line here is a measurement" then mixes inherited measurements with the blocks of P1.3.
+
+**Local measurements** of this Mac and branch — outside the evidence lens; three self-contradict (P2.7).
+
+**Not checked:** accuracy of any local measurement; accuracy of the research files themselves; accuracy of `(FINAL)` figures in their source.
+
+**Scope:** plan + seven research files only; no SPINE, COVERAGE, DECISIONS, parts, final/, round-6, or code. Single model family — one reviewer, not a panel. No producer self-assessment read. 22 of 30 tool calls.
+
+**The one thing to fix first:** §12.10 line 3512's parenthesis crediting `cognition.md` with four statistics it does not contain — it defeats the provenance check by naming a file.
