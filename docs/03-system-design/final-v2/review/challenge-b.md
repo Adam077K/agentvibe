@@ -70,3 +70,22 @@ Licences: the flowchart at §7.3 and §7.1's table are scrupulous. The licence p
 ## P3 findings
 
 **P3.1** "2,111-skill upstream" vs skills.md "2,111+" (v17, §7.1). **P3.2** Linear's ten-second `thought` stated flat (§2.5, §3.4); cognition.md marks M. **P3.3** §10.5 "Installed here | yes, 2.1.259" has no D/C mark. **P3.4** §16.3 "$74 a month against $1,300–1,700" tagged (FINAL) — bounds in no research file (they are FINAL §15.3's; fine as tagged). **P3.5** §11.10 Voyager "verified-before-stored" traceable to the lane's wording, not the paper; §13.8 handles it better with "confidence M, from the abstract".
+
+## The honest-gaps table
+
+Every gap the research names is carried, most more than once. **This is the strongest part of the plan.**
+
+| Gap | Carried honestly | Where |
+|---|---|---|
+| OpenAI terms unread (403) | Y | §9.10, §10.6 item 2, §20.1 row 1 |
+| Google terms unfetched | Y | same three places |
+| Codex `/goal` secondary-source only | Y | §10.3, §10.5 (`C`), §10.6 items 1 and 3 |
+| `-w` / `--tmux` unresolved | Y | §14.11, §10.6 item 6, §15.6 |
+| Max 20x price unverified | Y | §9.3, §14.6, §16.2 |
+| Fable on a subscription seat unverified | Y | v21, §9.2 (explicit fallback branch), §9.6, §20.1 row 2, §22.2 row 19 |
+| No vendor cost-per-task figure | Y | §16.9 (whole subsection), §9.6, v21 |
+| Memory benchmarks vendor-run | Y | §13.10 |
+| The 3D extractor unresearched | Y | §14.9, §14.3, §17.6, §20.1 row 10 |
+| No prior art for a card launching a team | Y | §0.5, v16, §14.3, §14.7, §17.6, §20.1 row 9, §21.3 (falsifiable) |
+
+**No gap is stated as settled anywhere.** The one understatement is `requirements.toml` rendered `D` — P1.2.
