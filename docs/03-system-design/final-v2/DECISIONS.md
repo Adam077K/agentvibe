@@ -251,15 +251,21 @@ late ones. Dispositions, all orchestrator-class (rules already on the page decid
   including the Operator, not eight"* at SPINE v70 (orchestrator, `f0b9d72`) and its three copies (v70 row, §3.5,
   §20.7 D5). **C (P1) §15.8 carries the 4x-ceiling check-in W14 superseded** — struck, corrected reading as v12's
   row, since §15.8's preamble promises nothing above contradicts it. **D (P1) shell count three ways** — §12.7 eleven
-  and §8.7's CLI row drops `analyst` (already in the fix brief; contradiction 1). **E (P2) two owners of the hands
-  table** — §8.7's thirteen-row copy reduced to a binding column, §17.3 the owner (already in the fix brief;
+  and §8.7's CLI row drops `analyst` (~~already in the fix brief~~ the message carrying it never reached the builder — sent again as round 2; contradiction 1). **E (P2) two owners of the hands
+  table** — §8.7's thirteen-row copy reduced to a binding column, §17.3 the owner (~~already in the fix brief~~ same: round 2;
   contradiction 19). **F (P3) §15.5 "§16 carries the arithmetic"** → §9.6 owns it, §16.3 restates. **G (P3) eight or
   nine lanes** — no edit: the header's own sentence reconciles them (eight thinking lanes plus the sourcer lane); the
-  header's "nine lane files under rethink/" is corrected to eight plus `research/world.md` (already in the fix
-  brief). **H (P3) §20.6's v54 row states the old composition in the present tense** — composition struck and pointed
+  header's "nine lane files under rethink/" is corrected to eight plus `research/world.md` (~~already in the fix
+  brief~~ round 2). **H (P3) §20.6's v54 row states the old composition in the present tense** — composition struck and pointed
   at v70; the two-waves decision itself stands.
 - **Two claims the lane could not settle under its seal:** W16/W28/W29 and R20 do exist in SPINE §M/§N (the lane was
   sealed from SPINE by brief); the fix round carries them into the plan's §1 preamble and cites R20 beside v31.
   COVERAGE §14's charter-field count is re-checked at reassembly.
 - **Not re-litigated:** the census's finding that the fix round itself is single-family, single-agent. Accepted risk,
   same as every review in this repository since 2026-08-23.
+
+*Correction, same day: three items above said "already in the fix brief". They were not — the two SendMessage
+additions carrying §8.7, the header and the W16/W28/W29 preamble were sent while the builder was mid-turn and never
+drained; the builder found §21b in the tree and said so in its return. All of B's copies, C, E, F, H, the preamble
+and the header went to the same builder as round 2. The measured fact for LONG-TERM: a message to a lane is delivered
+only if the lane's return confirms it; assume nothing arrived until the return names it.*
