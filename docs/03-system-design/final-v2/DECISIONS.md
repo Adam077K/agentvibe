@@ -399,7 +399,7 @@ decided from a rule already on the page or from a founder answer in §24 — and
 Sealed reviewer on Opus 5, `review/census-d.md`, measurement only. **The reference graph is complete: v1–v106,
 O1–O127, W1–W41, R1–R40 and E1–E15 all resolve in both directions, zero dangling, zero orphans; 249 §-references
 resolve; zero absent-and-unmarked repo paths; 48 of ~60 re-derived tree figures match to the digit; §19.1's graph
-measures 91 nodes and 195 edges exactly as the plan claims.** Two of its findings are challenge D's P2-1 and P2-8
+measures 91 nodes and 195 edges exactly as the plan claims** (a snapshot: round 1's P2-11 added the `BRIEFING` node and four edges, so both the graph and the plan's claim are **92 and 199** now, still agreeing — corrected 2026-09-06 on the builder's finding). Two of its findings are challenge D's P2-1 and P2-8
 already dispositioned in §25 and already with the builder — the §17.1 carrier drift and R9's status — and the
 census confirming them independently is worth recording, not re-deciding. What is new:
 
@@ -425,6 +425,6 @@ census confirming them independently is worth recording, not re-deciding. What i
 
 **Calibration, because a census that only lists drift misleads.** Every count the plan makes about its own
 structure matched: 106 rows, 127 mechanisms, 41 facts, 40 questions, 7 pages, 15 roles, eleven of fourteen with
-no shell, the coverage tally of 671, the graph's 91 and 195, and every figure about this repository's own
+no shell, the coverage tally of 671, the graph's 92 and 199 after round 1, and every figure about this repository's own
 suite — 48 check steps, 42 claims, 68 verdicts all PASS, 39 permission rules, 18 agent files at 18 pass · 0 fail
 · 0 warnings. Single family, one agent, rung 4 by the plan's own ladder; the lane says so of itself.
