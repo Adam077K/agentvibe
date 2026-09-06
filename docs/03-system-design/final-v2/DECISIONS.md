@@ -269,3 +269,26 @@ additions carrying §8.7, the header and the W16/W28/W29 preamble were sent whil
 drained; the builder found §21b in the tree and said so in its return. All of B's copies, C, E, F, H, the preamble
 and the header went to the same builder as round 2. The measured fact for LONG-TERM: a message to a lane is delivered
 only if the lane's return confirms it; assume nothing arrived until the return names it.*
+
+## §22 — The rethink round closes · 2026-09-06
+
+**What landed, in order:** SYNTHESIS from eight thinking lanes and a world lane → sixteen founder decisions and one
+deletion (§18, §19) → SPINE rows v66–v82 and §L/§M/§N → six builders applied the round to the parts → challenge C (13
+findings, §21) and census C (FAIL on 3 P1, §21b) → two fix rounds (`ecaec1a`, `da6f2f2`, `6805f82`), each finding
+re-verified by grep on disk before its commit → reassembly at **9,968 lines · 25 sections · 36 flowcharts** → page
+v2.2 (93 tiles, six render cells at zero overflow, `169,402` bytes) → session file → this entry.
+
+**One designer judgment accepted:** the brief named §4, §12 and §22 content and the page had no such sections; the
+designer added three self-contained sections rather than folding the rows into the rethink tiles alone. Kept — every
+row in them also has a §1c tile, the sections are deletable whole, and a founder who opens the page for the Watch or
+for egress finds them where the plan puts them.
+
+**Two things the round measured about itself, not about the plan.** First, a message to a running lane is delivered
+only when the lane's return quotes it (§21b's correction; LONG-TERM). Second, every review this round was one model
+family and one agent; the census said so of itself and the challenge said so of itself. Accepted risk, unchanged
+since 2026-08-23, exit condition 2026-11-17.
+
+**Open, the founder's:** rows 1 (terms), 4 (LICENSE-CONTENT at build), 15 (which hosted lane may make when the Mac is
+off — the measurement is DONE, the decision is not), 16 (the panel), 17 (landing order). **Nothing built, installed,
+authenticated, spent, published or pushed.** `docs/final-v2` is recomposed onto `origin/docs/final-plan` and stays
+local until the founder says otherwise.
