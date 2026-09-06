@@ -1,6 +1,6 @@
 ## 7 · Skills
 
-*obeys: v3, v17, v18, v19 (SPINE §E entire), and **v77** (the rethink round of 2026-09-06); inherits: FINAL §11, §16.2*
+*obeys: v3, v17, v18, v19 (SPINE §E entire), **v77** (the rethink round of 2026-09-06), and **O111, O114, O119 with R8, R14, W40** (the fixer round of 2026-09-06, SPINE §K row 7); inherits: FINAL §11, §16.2*
 
 **(FOUNDER, overruling FINAL §1 row 10.)** *"take all the skills that the biggest systems use, the biggest agent
 systems use, we can learn a lot from them, like, to have more engineering stuff and more creative stuff and to give
@@ -22,7 +22,7 @@ limits are the file's limits and they are not ours to soften:
 |---|---|
 | `name` | max 64 chars, `a-z0-9-`, *"Must match the parent directory name"* |
 | `description` | max 1024 chars |
-| Metadata cost | *"(~100 tokens): The `name` and `description` fields are loaded at startup for all skills"* |
+| Metadata cost | *"(~100 tokens): The `name` and `description` fields are loaded at startup for all skills"* — **the spec's figure; on this branch the measured constant is ≈53 tokens per skill, and 7.6a's checker measures its own** *(added 2026-09-06: O119 · THINKER: A13 · W40)* |
 | Instructions | *"(< 5000 tokens recommended)"* |
 | Body | *"Keep your main `SKILL.md` under 500 lines."* |
 | Optional | `license`, `compatibility` (max 500), `metadata`, `allowed-tools` (*"Experimental"*) |
@@ -123,6 +123,16 @@ directories for a known answer and find nothing. This is the same rule §11.4 st
 a property of what the process can open, never of what the prompt asked for — applied to the library rather than to
 the grant.
 
+**(NEW: O111 — the onboarding pack's rehearsal case is the same rule's third instance, and it was written against
+it)** v71 put *at least one rehearsal case with a known answer* **inside** each agent's pack, and a pack is what the
+agent's namespaces resolve to — so the case that judges the agent shipped where the agent could read it, and R19,
+the row's own falsifier, would have measured memorisation (THINKER: B17). **The pack carries a reference into
+`keel/golden/`, never a body** (v103, amends v71 through v89's Decide item); the seed pack is that reference plus
+namespaces (§5.0a). **Mechanism:** the same one as above — `check:manifest` (O11) fails a known-answer body found in
+**any** loaded directory, which now includes the directory a pack resolves to, and R19 runs on `golden/` cases the
+packed agent never loaded. **Losing image:** *the case carried in the pack* · `wins_if:` none — a contaminated
+falsifier has no winning state. **Cost, once:** one path in §17.1's pack table. Class: kernel · truth.
+
 ---
 
 ### 7.3 Admission by eval
@@ -143,10 +153,27 @@ support"* — and this section admits a skill on **2–3 cases**. Two rules abou
 the one that admits is the looser. **The fix is one shared predicate with two call sites (ABSENT):** the trust
 score, skill admission and §11's error rates all ask the same function whether the sample is enough, and it answers
 once. **The consequence is stated rather than softened:** an admission on 2–3 cases is admission **below the
-floor**, so it is recorded as `insufficient` and is exactly why v19's expiry is what does the work here. The
+floor**, so it is recorded as ~~`insufficient` and is exactly why v19's expiry is what does the work here~~
+**`provisional`, and the number that decides it is gathered from real work rather than from a third prompt
+(amended 2026-09-06: O114, below)**. The
 alternative — raising skill admission to the trust score's floor — is refused because it would price a skill's
 admission above the work it saves, and the losing image is kept: *two floors, one per section, each defensible
 alone*.
+
+**(NEW: O114 — admission is provisional, and the 2–3-case eval is a trigger smoke test, never a quality verdict.)**
+Two prompts cannot separate a skill from noise, and expiry re-runs the same underpowered test (THINKER: B11). So the
+eval above answers one question only — *does the description fire on the right prompt?* — and admits the skill
+**`provisional`**. **The quality verdict comes from real work, joined to O41:** `keel/shared/skills/registry.yml`
+(**ABSENT**) carries **`evidence: {n_present, pass_present, n_absent, pass_absent}`**, filled from anchored outcomes
+of runs where the skill was and was not in the loaded directory — **v77's per-namespace directories are the natural
+experiment**, since two agents on one move class load different sets. A decision is recorded when the evidence
+crosses a threshold in either direction, with **O25's floor as the minimum n**, and **not before a quarter of
+activations exists** (the fold took C's timing over B's *now*, DECISIONS §24). **(R14, OPEN)** sharpens *present*
+to *fired* if any CLI emits an activation event; without it presence is the unit and the row says so. **Losing
+image:** *sequential testing now* — §J 81 · `wins_if:` R14 yields no activation event; and *admission on 2–3 cases
+with expiry doing the work* · `wins_if:` R15 finds a published measurement that a small-n eval predicts real-work
+benefit. **Settled by:** among admitted skills, the share whose present-runs pass anchors no better than absent-runs
+after a quarter. Class: kernel · truth. **DEPENDS-ON-R14.**
 
 **(NEW: O47 — admission is bound to the bytes it was granted on.)** The admission record carries the **body hash**,
 and **a changed hash voids admission until re-eval**. Without it, admission is a claim about a file that anyone may
@@ -170,11 +197,11 @@ flowchart TD
     SEND -->|"no"| REJ["Refused. Procedure is what the<br/>done-test replaced"]
     SEND -->|"yes"| STATIC
     BODY -->|"anchor, exemplar,<br/>rehearsal case, reference"| STATIC["Static layer:<br/>deterministic structural analysis"]
-    STATIC --> EVAL["Eval layer: 2 to 3 realistic prompts,<br/>with-skill and baseline run in parallel,<br/>assertions graded"]
-    EVAL --> BEAT{"Does with-skill beat baseline?"}
+    STATIC --> EVAL["Trigger smoke test (O114): 2 to 3 realistic prompts,<br/>with-skill and baseline run in parallel,<br/>assertions graded"]
+    EVAL --> BEAT{"Does the description fire<br/>and with-skill beat baseline?"}
     BEAT -->|"no"| NEG["Not admitted. The cut is written to<br/>CURATION.yml with the test that made it —<br/>house scope, never a venture store (O47)"]
     BEAT -->|"yes"| TRIG["Tune the description<br/>for triggering accuracy"]
-    TRIG --> EXP["Admitted: a namespace, a valid_until,<br/>and the body hash (O47)"]
+    TRIG --> EXP["Admitted PROVISIONAL: a namespace, a valid_until,<br/>the body hash (O47), and evidence counters<br/>filled from anchored outcomes present vs absent (O114)"]
     EXP --> EVO{"Is the body a rehearsal case?"}
     EVO -->|"yes"| GOLD["keel/golden/ ONLY — eval-only.<br/>Never into a directory a run loads (O11)"]
     EVO -->|"no"| GEN["Generated from the one Markdown source into<br/>.claude/skills/ and .agents/skills/"]
@@ -213,7 +240,9 @@ already compulsory.
 
 **(R14, OPEN.)** Do any of the three CLIs emit a **skill-activation event** we can read? **Source class:** the three
 vendors' hook and telemetry documentation. **What it decides:** whether O41 is a field lookup or instrumentation we
-build. **Mechanism:** `bin/log` (**ABSENT**) either way; only its input moves.
+build — **and whether O114's `evidence:` counts *fired* or only *present*** (added 2026-09-06). **Mechanism:**
+`bin/log` (**ABSENT**) either way; only its input moves. The disposition of 7.4 now reads three things: activation,
+the `evidence:` counters, and the date.
 
 **(NEW: O48 — the miss is the signal, and today nothing emits it.)** A **`skill.miss` event** is written when a
 brief's declared namespace resolves to **zero unexpired skills**. Uncovered-field detection is named in this plan
@@ -303,7 +332,8 @@ not admit, or it counts the wrong library.
 
 **(FINAL, and now the standard's own mechanism rather than a local convention.)** **Never preloaded.** Progressive
 disclosure is what enforces it: *"The `name` and `description` fields are loaded at startup for all skills"* at
-**~100 tokens each**, the body loads only on judged relevance, and bundled files load below that. The consequence
+~~**~100 tokens each**~~ **≈53 tokens each, measured on the 134 here** *(amended 2026-09-06: O119 · THINKER: A13
+· W40)*, the body loads only on judged relevance, and bundled files load below that. The consequence
 binds the library's size: **every admitted skill taxes every unrelated task at startup**, so the namespace is not
 cosmetic — it is the thing that keeps a growing library from making a shrinking one's job more expensive. That is
 the same defect this repository already fixed once, when reading the whole manifest cost ~15,000 tokens per lookup.
@@ -318,7 +348,9 @@ checker, plus one generated directory per namespace so an agent loads only what 
 stops when the budget binds.**
 
 **Why a budget and not a count.** 7.6's own arithmetic is the argument: the published standard loads *"the `name`
-and `description` fields … at startup for all skills"* at roughly **100 tokens each**, so **every admitted skill
+and `description` fields … at startup for all skills"* at ~~roughly **100 tokens each**~~ **a measured ≈53 tokens
+each — 134 skills, 28,250 bytes of `name`+`description`, ≈7k tokens at 134 and ≈110k at 2,111** *(amended
+2026-09-06: O119 · THINKER: A13 · W40)*, so **every admitted skill
 taxes every unrelated run**, and the upstream advertises 2,111 candidates. That is the same defect this repository
 already paid for once, when reading the whole manifest cost ~15,000 tokens a lookup and a good new skill made every
 unrelated task dearer. A count would be arbitrary; a budget is the thing that actually binds, and it binds on the
@@ -330,6 +362,15 @@ generator pass** that writes a directory per namespace (**both ABSENT**). It ext
 generator: the generator already owns both output directories, so the per-namespace split is a rule inside it, not
 a second writer. **The cost, once:** the library stops being open-ended, which is what v3's ambition needs in order
 to stay affordable.
+
+**(NEW: O119 — the checker measures its own constant instead of carrying the spec's.)** A budget divided by a
+guessed per-skill cost is a guessed budget. The checker computes **frontmatter bytes ÷ 4 per skill, on every run**,
+so the constant is re-measured with the library rather than copied from a specification written for a different
+corpus; the measurement above (≈53, not 100) is its seed row and is cited as a thinker's, never as a plan fact.
+**R8 runs before the import**, and its result is the checker's first line. **Losing image:** *the spec's figure* ·
+`wins_if:` R8 shows the tax scales with declared namespaces — then the generator is the whole fix and this checker
+is over-built (v77's own losing image, §J 66). `vendor_wins_if:` the runtime reports per-skill startup tokens.
+**Path:** the checker (**ABSENT**). Class: kernel · truth.
 
 **(R8, OPEN — and it can refute this row outright.)** Does the skill metadata tax scale with the **installed
 library** or with the agent's **declared namespaces**? **Source class:** two trees, identical prompt, input tokens
@@ -367,6 +408,14 @@ dispositions. Nothing sits in a directory read by nothing.
 content rule refuses, so the honest prediction is that the library grows mostly by import and creation rather than
 by re-admitting what is here.
 
+**(FIXER: C · THINKER: C16 — said plainly, inside v3 and v77, no row.)** 73 of 134 cannot enter as written, and
+the library's value in 2027 is the company's own anchors, exemplars and negatives, not an import. **Import order
+follows from that: anchors first** — the 22 ANCHOR-CANDIDATEs above, each a check with an exit code and the only
+class whose admission makes a rung-1 anchor reachable (§11) — **no bulk import before R13 and R8 answer**, and the
+**admission ratio** (admitted : refused) is a briefing line so the founder reads the distribution and not the
+total. SPINE carries no row for this; it is an ordering inside decisions already taken, and the orchestrator may
+promote or drop it.
+
 **(NEW: two existing checks do not retire — they change subject, and that corrects FINAL §16.2.)** §16.2 wrote that
 *"`check:manifest` and `check:curation` … retire with it"*, because the library was going to a shelf. The library
 does not go to a shelf, so they stay and are re-pointed:
@@ -403,3 +452,6 @@ a new blocking check.
 | **Startup metadata stays inside a per-agent budget** (v77) | a checker modelled on `scripts/check-memory-budget.mjs`, plus one generated directory per namespace | checker shape **EXISTS** (memory budget); the skills checker and the generator pass are **ABSENT**; **R8** may retire the checker |
 | **A skill that never fired defaults to Deprecate at expiry** (O41) | activation logged by `bin/log` and joined to outcomes | **ABSENT** · **DEPENDS-ON-R14** — whether any CLI emits the event is unread |
 | **A namespace that resolves to nothing raises an event** (O48) | a `skill.miss` event from `bin/log` | **ABSENT** |
+| **Admission is provisional; the quality verdict is real work, present against absent** (O114 · 2026-09-06) | `evidence: {n_present, pass_present, n_absent, pass_absent}` on the `registry.yml` row, filled from anchored outcomes; a decision at a threshold with O25's floor, after a quarter of activations | `keel/shared/skills/registry.yml` **ABSENT** · **DEPENDS-ON-R14** · kernel · truth |
+| **The metadata tax is measured, not assumed** (O119 · 2026-09-06) | the checker computes frontmatter bytes ÷ 4 per skill on every run; R8 runs before the import | the checker **ABSENT**; the seed measurement is (THINKER: A13; W40) · kernel · truth |
+| **A pack's rehearsal case is a reference into `keel/golden/`, never a body** (O111 · 2026-09-06) | `check:manifest` (O11) fails a known-answer body in any loaded directory, including one a pack resolves to | `keel/golden/` **ABSENT**; `check:manifest` **EXISTS** and is re-pointed · kernel · truth |

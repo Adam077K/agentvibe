@@ -1,6 +1,6 @@
 ## 5 · The roster
 
-*obeys: SPINE §B entire; v1, v2, v6, v7, v8, v31, v33; inherits: FINAL §7 (as the losing image, and as the four rules that survive it)*
+*obeys: SPINE §B entire; v1, v2, v6, v7, v8, v31, v33; **and the fixer round of 2026-09-06 — v88, v90, v103, v105 with O91, O92, O103, O105, O111, O112, O120** (SPINE §K row 5); inherits: FINAL §7 (as the losing image, and as the four rules that survive it)*
 
 ---
 
@@ -69,24 +69,56 @@ other agent.
 ### 5.0a What makes an agent routable, and what makes it expire
 
 **(FOUNDER, rethink 2026-09-06: D6 → v71 — an onboarding pack, for every agent, wave one included)** A declared
-agent is not a routable one. Each of the fifteen carries a pack of four things, and **without them the agent is
-declared and not routable**:
+agent is not a routable one. Each of the fifteen carries a pack of four things, and ~~without them the agent is
+declared and not routable~~ **without a seed pack the agent is declared and not routable** (amended 2026-09-06:
+v103 / O111, through v89's Decide item):
 
-| The pack | What it is | Why this one |
-|---|---|---|
-| **A rehearsal case** | at least one, with a **known answer** | it is the only way to tell an agent that works from an agent that is described |
-| **An exemplar** | one piece of its own good output, **with provenance** | this is what distinguishes `writer` from *builder with a different prompt* |
-| **A demonstration** | one end-to-end run showing **its anchor actually fires** | an anchor that has never fired is a rung-4 belief wearing a rung-1 label (v73's argument, one level down) |
-| **Namespaces that resolve** | every namespace its file declares exists and holds at least one unexpired skill | otherwise the agent's skills line is decoration, and §7's `skill.miss` event is what notices |
+| The pack | What it is | Why this one | **Seed or harvested** *(added 2026-09-06: O111)* |
+|---|---|---|---|
+| **A rehearsal case** | at least one, with a **known answer** — **a reference into `keel/golden/`, never a body the pack carries** (THINKER: B17) | it is the only way to tell an agent that works from an agent that is described; a case the agent can read is the answer key filed with the exam, and R19 must run on cases the packed agent never saw | **seed** — required before the first dispatch |
+| **An exemplar** | one piece of its own good output, **with provenance** | this is what distinguishes `writer` from *builder with a different prompt* | **harvested** — the curator writes it after N anchored handovers (N is a `settings.yml` dial, O118) |
+| **A demonstration** | one end-to-end run showing **its anchor actually fires** | an anchor that has never fired is a rung-4 belief wearing a rung-1 label (v73's argument, one level down) | **the first dispatch is the demonstration**, and its handover row is the artifact (THINKER: C14) |
+| **Namespaces that resolve** | every namespace its file declares exists and holds at least one unexpired skill | otherwise the agent's skills line is decoration, and §7's `skill.miss` event is what notices | **seed** — required before the first dispatch |
 
 **Mechanism:** the four pack paths are declared in `keel/shared/roster.yml` (§L **O2**, **ABSENT**), and `bin/run`
 already refuses a brief naming a file that does not exist (v37, v45) — so *not routable* is an existing refusal
-reading a new field, not a new enforcement path. **The cost, once:** three artifacts per agent — **thirty for a
-ten-agent wave one**. **Why it is not ceremony:** in a band nobody publishes evidence for (§5.6), evidence is the
+reading a new field, not a new enforcement path. ~~**The cost, once:** three artifacts per agent — **thirty for a
+ten-agent wave one**.~~ **The cost, once (amended 2026-09-06: O111):** a seed pack is two references and no
+artifact — the `golden/` case and the namespaces — so wave one costs **ten seed packs and zero exemplars**, and the
+thirty artifacts v71 priced are harvested by the curator from anchored handovers rather than written before any run
+exists. **Why it is not ceremony:** in a band nobody publishes evidence for (§5.6), evidence is the
 only thing that can settle the design. **Settled by: (R19, OPEN)** — packed against unpacked on the same
-known-answer cases, using §7's admission runner; **if the packed agent does not win, the pack is ceremony and this
+known-answer cases, using §7's admission runner **on `keel/golden/` cases the packed agent never loaded** (O111);
+**if the packed agent does not win, the pack is ceremony and this
 row is refuted by its own test.** The founder's losing image is named with it: *"the agent file is the
 onboarding"* — true about the runtime and false about the company.
+
+**(NEW: O111 — why v71 as written could not start, and the fix is a state, not a smaller pack)** v71 required an
+exemplar *of the agent's own good output* before the agent was routable, and an exemplar of its own output needs a
+handover, which needs a dispatch, which the pack forbade — **the bootstrap deadlocked on its first agent**
+(THINKER: C14, B10). And the rehearsal case carried *in* the pack contradicted §7.2a's O11: the case that judges a
+run shipped in a directory the run could read (THINKER: B17). **Both fixes are one field.** `roster.yml` carries
+`pack: seed | harvested` per agent (**ABSENT**): a **seed** pack holds the `golden/` reference and the namespaces;
+`bin/run` routes a seed agent; its first dispatch *is* the demonstration; the curator harvests the exemplar after N
+anchored handovers and flips the state; **`bin/check-stores` refuses a `harvested` pack with no exemplar**
+(**ABSENT**), and `check:manifest` (O11) fails a known answer found in any loaded directory. **Losing images,
+each with `wins_if:`** — *v71 as written* · `wins_if:` the curator can harvest an exemplar from the founder's
+transcript corpus (§13.7) before any run, in which case the deadlock was never real; *a `pack: seed | full` state*
+(FIXER: C's name for the same shape) · `wins_if:` none — the fold kept `harvested` because it names the act that
+flips the state, and the difference is a word. **Settled by:** attempt the curator's pack for `builder` before any
+run under v71 as written and record whether it can be routed.
+
+**(NEW: O112 — trust has a probation state, because a floor above one makes every wave-one agent unroutable
+forever)** §5.6's trust score gates routing *below a floor*, and wave one has ten agents and **zero anchored
+history**, so with any floor above one, every agent is unroutable until it has what it cannot get (THINKER: B10).
+`roster.yml` gains **`trust: probation | scored | unroutable` per move class** (**ABSENT**; v103). In
+**probation** an agent is routable **only on the Floor or under a founder-authored intent**, with
+**adequacy-judged anchors** (§11, O108) — each anchored run counts toward the floor, and the floor is a number in
+`settings.yml` (O118) that is **O25's constant**, the same one §7.3 and §11.10 read. Promotion is by that number,
+never by a waiver. **Mechanism:** `bin/run` refuses a `probation` agent on an unattended brief no founder
+authored (**ABSENT**). **Losing image:** *the floor as written with a hand-waiver* · `wins_if:` the floor is one;
+the score is then decorative. **Settled by:** dispatch counts per agent in the first week; zero for any wave-one
+agent is the deadlock.
 
 **(FOUNDER, rethink 2026-09-06: D7 → v72 — an agent is not the one permanent thing in the system)** All fifteen
 agent files carry **`valid_until`**, and at expiry exactly one disposition is recorded — **Refresh · Merge ·
@@ -115,12 +147,26 @@ all, leaving the roster the one object in the system that can only grow.
    world's door program, **and by nothing that carries `Write`, `Edit` or `Bash`.** *(Mechanism: the MCP column of
    §5.2 is the argv; `bin/probe`, ABSENT, asserts it nightly.)*
 4. **The no-model programs stay programs.** The Watch · the Sender · the world's door · the probe · the reconciler ·
-   the log · the launcher · the curator's launcher · the drill · the rehearsal runner · the store check · the
-   supervisor. **A prompt injection that reaches one of these finds a program.** *(FINAL §7.4, §16.1. Mechanism, set
+   the log · the launcher · the curator's launcher · the drill · the rehearsal runner · the store check ·
+   ~~the supervisor~~ *(struck 2026-09-06: **O91** — `bin/supervise` is **REFUSE**d until R31 reads the vendor
+   daemon's lease semantics; the vendor ships a supervisor (THINKER: A7, W38) and a second one beside it is the
+   two-implementations defect this repository names; `bin/run` mints via bare `claude -p` in tmux, §6.4)*.
+   **A prompt injection that reaches one of these finds a program.** *(FINAL §7.4, §16.1. Mechanism, set
    2026-09-06 by the orchestrator, DECISIONS §21 · challenge C P2-2: `keel/shared/roster.yml` (§L **O2**) carries the
-   twelve under `kind: program`, and `bin/check-stores` **refuses an agent file whose name is on that list** and
+   ~~twelve~~ **eleven** under `kind: program`, and `bin/check-stores` **refuses an agent file whose name is on that list** and
    **refuses a `model:` on any program entry** — both **ABSENT**. The list is data, so promoting a program to an
-   agent is a diff on one file rather than a habit nobody can see.)*
+   agent is a diff on one file rather than a habit nobody can see.)* **(NEW: O103 — four of the eleven are the
+   trusted base.)** `send`, `inbound`, `watch` and `run` are the programs that touch the world; their `roster.yml`
+   rows carry **`world_touching: true`, `max_lines:`, `authored_by:`**; `bin/check-stores` **refuses one over its
+   line budget**; `keel/fixtures/` (O78) is their **only admission**; their diffs are **founder-line-reviewed**
+   (FOUNDER, fixer round 2026-09-06: E4 · v88, *"Small trusted base, per-wave sign-off"*). **The vendor's flags are
+   the floor and `bin/run` narrows above it, never widens** (O104, §12) — so a defect in the launcher yields a
+   narrower or refused run, and the founder reads four small programs rather than twenty-six. **Losing images:**
+   *every Keel PR at irreversible* — §J 78 · `wins_if:` a second family becomes reachable inside Claude Code; *a
+   `keel-build` tier with no sign-off* · `wins_if:` a wave lands with zero founder findings. **Settled by:**
+   sign-offs before the first dispatch exceed four (THINKER: A11). **Every `bin/` program also carries `class:
+   kernel | adapter | refuse`, `vendor_wins_if:` and `wins_if:`** (O105, v96); §17.5 holds the table, and §5.9
+   below marks the ones this section names.
 
 **(NEW: why rule 4 is the one most at risk from a roster ~~, and the mechanism is a naming discipline~~ — it has a
 mechanism now, and this is why it needed one)** *(corrected 2026-09-06 · challenge C P2-2: a discipline somebody
@@ -140,19 +186,19 @@ proves the work and is **never the agent's own report**)**
 | # | Name | The job it exists for | Expertise lens | Model | `cacheTtl` *(added 2026-09-06: W6)* | Tools | MCPs | Skill namespaces | Anchor — what proves it | The Operator routes here when |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | **builder** | Writes the code. One artifact, one worktree, continuous context | engineering | **`claude-fable-5-1`** (v57, the founder); fallback `claude-opus-5` while reachability is UNVERIFIED | unset · **O2** | Read Write Edit Bash Glob Grep | none by default | engineering · testing | the venture's own CI, plus the done-test, plus the tester's blind test | the intent's outcome is source code |
-| 2 | **reviewer** | Judges code it did not write, against a named dimension | engineering · correctness | `claude-sonnet-5`; a second family when reachable | unset · **O2** | Read Glob Grep | none | engineering · quality | findings reproduce from the diff alone; a finding with no reproduction is a hypothesis | any builder handover, before merge |
+| 2 | **reviewer** | Judges code it did not write, against a named dimension | engineering · correctness | `claude-sonnet-5`; ~~a second family when reachable~~ the second family is the **Gemini CLI or Codex CLI as a `bin/run` child from launchd, no key** — rung 4 until the calibration set passes *(amended 2026-09-06: E7 · v90, O92)* | unset · **O2** | Read Glob Grep | none | engineering · quality | findings reproduce from the diff alone; a finding with no reproduction is a hypothesis | any builder handover, before merge |
 | 3 | **architect** | The contract before the code: schema, API, data model, migration | engineering · systems | **`claude-fable-5-1`** (v57, the founder); fallback `claude-opus-5` while reachability is UNVERIFIED | unset · **O2** | Read Glob Grep Write (design paths only) | none | engineering · data | a migration that applies and rolls back in a scratch database | the work changes a schema, an interface or a stored shape |
 | 4 | **tester** | Writes the test that judges a build, **blind to the implementation** | quality | `claude-sonnet-5` | unset · **O2** | Read Write Edit Bash Glob Grep, `--add-dir` excluding the implementation | none | testing · quality | the test fails before the change and passes after | any intent whose done-test needs a new anchor (v8) |
 | 5 | **guard** | Security and adversarial review; every tool admission | security | `claude-opus-5` | unset · **O2** | Read Glob Grep | none | security | a proof of concept that reproduces, or the finding is a hypothesis | auth, credentials, network, outward acts, migrations, or a new tool at the door |
-| 6 | **scout** | Finds things out. Stateless, parallel legal here and only here. **Reads the untrusted world** | research | `claude-sonnet-5`; Gemini once authenticated | unset · **O2** | Read Glob Grep WebSearch WebFetch — **no Write, no credential, no send** | read-only servers, per run | research | every claim carries URL, quote and access date; `check-citations.mjs` blocks on a dead one | a bounded question of fact is cheaper to answer than to assume |
+| 6 | **scout** | Finds things out. Stateless, parallel legal here and only here. **Reads the untrusted world** | research | `claude-sonnet-5`; ~~Gemini once authenticated~~ the Gemini CLI on a personal account, **only as a `bin/run` child from launchd** *(amended 2026-09-06: E7 · v90, O92; W37)* | unset · **O2** | Read Glob Grep WebSearch WebFetch — **no Write, no credential, no send** | read-only servers, per run | research | every claim carries URL, quote and access date; `check-citations.mjs` blocks on a dead one | a bounded question of fact is cheaper to answer than to assume |
 | 7 | **designer** | UI, UX, brand, visual identity, prototypes. The perception loop: render, look, iterate | design | `claude-opus-5` | unset · **O2** | Read Write Edit Bash Glob Grep | `playwright` (per-run inline) | design · frontend | a rendered screenshot judged against a named anchor; never the agent's description of it | the artifact is seen by a person |
 | 8 | **product** | Turns fuzzy into a falsifiable done-test; specs, tickets, acceptance criteria, roadmap | product | `claude-sonnet-5` | unset · **O2** | Read Glob Grep Write (spec paths) | none | product | the store check refuses an intent whose done-test is not falsifiable by someone who did not do the work | the request cannot yet be dispatched |
 | 9 | **analyst** | Pipelines, KPIs, cohorts, A/B, anomalies, and the nightly reconciliation | data | `claude-sonnet-5` | unset · **O2** | Read Glob Grep ~~Bash~~ *(struck 2026-09-06: **O57**, contradiction 4)* | read-only analytics, error tracking, billing-read | data | the reconciliation reads a record the company does not write; a number that reconciles to our own log is rung 4, not rung 1 | a question is about what actually happened |
 | 10 | **writer** | Content, brand voice, SEO, ad copy, campaign drafts, video and asset briefs | growth · craft | ~~`claude-opus-5` for taste work; `claude-sonnet-5` for routine~~ `claude-sonnet-5`, escalating to `claude-opus-5` on a **§9.1 row with a named trigger**, never in this file *(moved 2026-09-06: **O57**)* | unset · **O2** | Read Write Edit Glob Grep | Higgsfield (rate-capped, spends credits) | growth · craft | staged, never sent; the anchor is the founder's taste store and a rung-2 external reaction | words or assets are the artifact |
 | 11 | **growth** | Leads, scoring, outreach *drafts*, CRM hygiene, funnel work. **Never sends** | growth | `claude-sonnet-5` | unset · **O2** | Read Glob Grep Write | CRM read-only | growth | a reply from a real person, recorded by the world's door; never a count of messages sent | the intent is about reaching people who are not yet customers |
 | 12 | **steward** | Obligations, invoices, expenses, contract *review*, compliance flags, vendors, support triage | operations · finance | `claude-sonnet-5` | unset · **O2** | Read Glob Grep Write (obligation **proposals** and operations paths — `obligations.yml` itself is the Watch's, v44) | **none** — mail, calendar, drive and Notion are read by the world's door (a program) into inbound rows, and by `scout`; steward writes from scout's handover, never from a raw row (v36) | operations | an obligation is discharged only by a record the company does not write | something is owed to someone by a date |
-| 13 | **curator** | What the company knows: memory, the transcript pass, and skill admission. **The only writer of memory** | knowledge | `claude-sonnet-5`; the summarising half on Gemini or a local model | unset · **O2** | Read Write Edit Glob Grep — **no Bash** | none | knowledge | a memory item with no source, date, expiry and falsifier is refused at the store check | nightly, and whenever a run's handover proposes a durable fact |
-| 14 | **challenger** | Attacks a finished plan or artifact for holes, contradictions, and rules with no mechanism | adversarial reasoning | `claude-opus-5`; a second family when reachable | unset · **O2** | Read Glob Grep | none | quality · research | every finding names the mechanism that would have caught it, or it is an opinion | before anything irreversible, and on every plan the Operator is about to bind |
+| 13 | **curator** | What the company knows: memory, the transcript pass, and skill admission. **The only writer of memory** | knowledge | `claude-sonnet-5`; the summarising half on ~~Gemini or a local model~~ the Gemini CLI as a `bin/run` child from launchd, or a local model *(amended 2026-09-06: E7 · v90)* | unset · **O2** | Read Write Edit Glob Grep — **no Bash** | none | knowledge | a memory item with no source, date, expiry and falsifier is refused at the store check | nightly, and whenever a run's handover proposes a durable fact |
+| 14 | **challenger** | Attacks a finished plan or artifact for holes, contradictions, and rules with no mechanism | adversarial reasoning | `claude-opus-5`; ~~a second family when reachable~~ the second family is the **Gemini CLI or Codex CLI as a `bin/run` child from launchd, no key** — rung 4 until the calibration set passes *(amended 2026-09-06: E7 · v90, O92)* | unset · **O2** | Read Glob Grep | none | quality · research | every finding names the mechanism that would have caught it, or it is an opinion | before anything irreversible, and on every plan the Operator is about to bind |
 
 **(NEW: where the roster is thinner than it looks, deliberately, and this is the table's most important row)**
 **~~Ten~~ Eleven of the fourteen carry no shell. Five carry no write of any kind. Only four can touch source.** That
@@ -188,7 +234,8 @@ plus `Agent(...)`, no `Write`, no `Edit`, no `Bash`, and its file is ABSENT like
 
 **(NEW: O2)** `keel/shared/roster.yml` (**ABSENT**) is the single declaration of the fifteen. It carries the
 frontmatter the runtime reads — `name`, `description`, `tools`, `model`, `mcpServers`, `skills`, `maxTurns`,
-`isolation` — and five fields the plan adds:
+`isolation` — and ~~five~~ **twelve** fields the plan adds *(re-derived 2026-09-06 from SPINE §B's amended block:
+five from the rethink round, seven from the fixer round)*:
 
 | Field | From | What it is for |
 |---|---|---|
@@ -196,10 +243,20 @@ frontmatter the runtime reads — `name`, `description`, `tools`, `model`, `mcpS
 | `wave:` | v54, v70 | *not yet written* and *not in the roster* are different states and must not read alike (§5.0) |
 | `valid_until:` | **v72** | the forced disposition — Refresh · Merge · Retire — with anchored evidence |
 | `cacheTtl:` | **W6** | `experimental.cacheTtl`, `5m` or `1h`, per agent |
-| the four pack paths | **v71** | rehearsal case · exemplar · demonstration · namespaces; a missing path is what makes the agent unroutable |
+| the four pack paths | **v71** | ~~rehearsal case · exemplar · demonstration · namespaces~~ a `golden/` reference · an exemplar path · the first dispatch's handover id · namespaces; a missing **seed** path is what makes the agent unroutable *(amended 2026-09-06: O111)* |
+| `pack: seed \| harvested` | **O111** · v103 | which of the four the agent holds today; `bin/run` routes a seed agent, `bin/check-stores` refuses `harvested` with no exemplar (§5.0a) |
+| `trust:` per move class | **O112** · v103 | `probation \| scored \| unroutable`; probation is routable on the Floor or under a founder-authored intent only (§5.0a) |
+| the carrier dimension | **O120** · v105 | trust is scored per agent **per model per carrier**, so *finishes with the Claude carrier denied* is a number rather than a hope (§5.6) |
+| `fallback:` | **O89** | v78's same-family links, composed by `bin/run` into `--fallback-model a,b` (§9.4a) |
+| `world_touching:` · `max_lines:` · `authored_by:` | **O103** · v88 | on the four program rows of the trusted base; `bin/check-stores` refuses one over budget (§5.1 rule 4) |
+| `class:` · `vendor_wins_if:` · `wins_if:` | **O105** · v96 | on every program row: `kernel \| adapter \| refuse`; a matched `vendor_wins_if:` forces Delete (§17.5) |
 
 **What is generated from it or checked against it:** §5.2's table above, §17.1's inventory rows, page 2's roster
-view, and the argv the launcher composes. **Why generate rather than write:** contradiction 1 above is one column
+view, the argv the launcher composes — **and the fifteen agent files themselves, generated from `roster.yml` and
+signed off by the founder per wave, so the irreversible edit is one generator diff per wave rather than one per
+file** (FOUNDER, fixer round 2026-09-06: E4 · v88, O103; THINKER: A11). `qa-tier-floor.yml` (**EXISTS**) gains
+`keel/**` at `lite`, the four trusted-base programs and `keel/host/**` at `full` (O103, **ABSENT** as an edit).
+**Why generate rather than write:** contradiction 1 above is one column
 counted twice and answered twice; contradiction 20 is three department tables already drifted on customer service;
 contradiction 17 is *which agent, which model, which band* answered in three places. **All three are the same
 defect** — one fact with several authors — and one file with several renderings is the only fix that does not
@@ -244,8 +301,9 @@ scope because it was right there. `out-of-scope` in the brief is the field that 
 what it does instead.
 
 **2 · reviewer.** Judges code it did not write, against one named dimension per session. Lens: engineering,
-correctness. `claude-sonnet-5`, and a second model family whenever one is reachable. **Read, Glob, Grep, and nothing
-else** — this is rule 2 of §5.1 and it is structural, not procedural. Skills: engineering, quality. **Anchor:**
+correctness. `claude-sonnet-5`, and a second model family ~~whenever one is reachable~~ **as a Gemini or Codex CLI
+child of `bin/run` from launchd, no key, rung 4 until calibrated** *(amended 2026-09-06: E7 · v90; §5.7)*. **Read,
+Glob, Grep, and nothing else** — this is rule 2 of §5.1 and it is structural, not procedural. Skills: engineering, quality. **Anchor:**
 findings reproduce from the diff alone. A finding that does not reproduce is a hypothesis and is labelled one.
 **The way it goes wrong:** it returns a score. It returns findings against a dimension, never a score, and when
 comparing two candidates it compares pairwise and order-swapped with the candidate stripped of its label.
@@ -279,8 +337,9 @@ finished.
 
 **6 · scout.** Finds things out. **The only agent for which parallel is legal**, because it is the only one whose
 subtasks are independent — which is precisely the boundary between Anthropic's +90.2% on research and Cognition's
-failure on one artifact. Lens: research. `claude-sonnet-5`; Gemini once authenticated, because it burns a different
-window. Read, Glob, Grep, WebSearch, WebFetch — **no Write, no credential, no send.** Read-only servers, admitted per
+failure on one artifact. Lens: research. `claude-sonnet-5`; ~~Gemini once authenticated~~ the Gemini CLI on a
+personal account, **only as a `bin/run` child from launchd** *(amended 2026-09-06: E7 · v90, O92)*, because it
+burns a different window. Read, Glob, Grep, WebSearch, WebFetch — **no Write, no credential, no send.** Read-only servers, admitted per
 run. Skills: research. **Anchor:** every claim carries a URL, a quote and an access date, and `check-citations.mjs`
 on this branch blocks on a dead path. **It is the trifecta agent** (v33): it reads the untrusted world, so it holds
 nothing and can reach nothing. A scout that could send would be one prompt injection away from being the attacker's
@@ -359,7 +418,8 @@ in-session. That is one shipped system doing the opposite of what this rule says
 counter-example. **Mechanism:** the curator's grant is the only one whose writable scope includes the memory paths.
 
 **14 · challenger.** Attacks a finished plan or artifact for holes, contradictions, and rules with no mechanism.
-Lens: adversarial reasoning. `claude-opus-5`, and a second model family whenever one is reachable. Read, Glob, Grep.
+Lens: adversarial reasoning. `claude-opus-5`, and a second model family ~~whenever one is reachable~~ **as a
+Gemini or Codex CLI child of `bin/run`, no key** *(amended 2026-09-06: E7 · v90; §5.7)*. Read, Glob, Grep.
 Skills: quality, research. **Anchor:** every finding names the mechanism that would have caught it, or it is an
 opinion. **Why this is an agent and not a step the author performs (v30):** *"LLMs struggle to self-correct their
 responses without external feedback, and at times, their performance even degrades after self-correction."*
@@ -479,13 +539,27 @@ a fact about the pairing:
 
 | Consumer | What it does with the score |
 |---|---|
-| **The launcher** | below the floor on a move class, **that class is unroutable for that agent until a rehearsal passes** — `bin/run` (**ABSENT**) |
-| **The briefing** | the score and its direction, per agent, so a falling one is seen before it is felt |
+| **The launcher** | ~~below the floor on a move class, **that class is unroutable for that agent until a rehearsal passes**~~ below the floor on a move class the agent is in **`probation`** for that class — routable on the Floor or under a founder-authored intent only, each anchored run counting toward the floor; **`unroutable`** is the state after a rehearsal fails, not the state before evidence exists *(amended 2026-09-06: O112 · v103)* — `bin/run` (**ABSENT**) |
+| **The briefing** | the score and its direction, per agent, so a falling one is seen before it is felt — **and beside it the artifacts kept per agent** (argv files per provider, pack references, calibration and mutation cases, routing rows), so what each name costs to keep is a number next to what it earns (FIXER: C · THINKER: C15, B22; no row — it is a second number beside v31's own falsifier, and the count is not reopened) |
 | **§5.6's claim above** | *"fourteen was too many"* becomes a checkable statement about specific rows |
 
 **Mechanism:** the score is derived from the ledger by the curator and read at those three places, and **below a
 sample floor it prints `insufficient` rather than a number** — §L **O25**'s one shared predicate, so admission, the
 error rates and this score cannot disagree about what *enough evidence* means. §21 carries what it measures.
+
+**(NEW: O120 — a carrier dimension on the score, because every carrier is one vendor's experimental surface)**
+The score is per agent *per model* (O26) and now **per carrier** (v105): fifteen agents, the Floor, page 2,
+cross-session messaging, `/goal` and the Operator are all Claude Code, and page 2 stands on a feature repaired
+four times and never promoted (THINKER: C12; FACT: world.md 12) — a terms, seat or teams change stops the
+company. **Mechanism:** the carrier is
+derived from the brief's `window+model:` joined to the handover by `brief_sha:` (§6.3), so no new handover field
+is written; `bin/run`'s deny switch (v78) takes **`--deny-carrier claude`** beside a family; v78's outage drill
+runs **once with the Claude carrier denied**; **one wave-one agent's Gemini argv is exercised before `AGENTS2`**;
+the kernel's stores are JSONL and YAML **readable by `-p` from any provider** (all **ABSENT**; the trust store is
+§13's). §21.2 claims *the company finishes something with the Claude carrier denied*. **Losing image:** *one
+vendor, exercised* · `wins_if:` a year with no terms change, no seat change and no teams regression — the second
+carrier was insurance never claimed, and it was still cheap. **Settled by:** whether anything finishes on the
+drilled night.
 
 ---
 
@@ -527,7 +601,18 @@ property of the grant rather than a promise in a prompt.
 thing, whenever a second family is reachable. **The honest state of that:** it is currently **an accepted risk, not
 a satisfied requirement** — there is no non-Anthropic model reachable from inside Claude Code, the irreversible tier
 asks for a 2-of-3 multi-judge panel and `risk: high` asks for two distinct model families, and neither is met today.
-Codex's admission (v5, v32) is the route to changing that, and until it passes its rehearsal the gap stays named.
+~~Codex's admission (v5, v32) is the route to changing that, and until it passes its rehearsal the gap stays named.~~
+**(FOUNDER, fixer round 2026-09-06: E7 · v90 — *"no keys, codex and gemini cli use."*)** The route is **the Gemini
+CLI on a personal Google account (free tier, §9.3) and the Codex CLI, both only as `bin/run` children from
+launchd** (O92) — **never a key**, and never from a Claude-hosted shell, because `gemini --version` dies with
+`EPERM` on `~/.gemini/settings.json` under the live sandbox (THINKER: A9; W37). *Reachable from inside Claude Code*
+therefore stays false and stops mattering: `bin/run` dissolves that boundary, and what gates a cross-family verdict
+is v78's rung demotion — **rung 4 until the family passes the move class's calibration set**, R11 measuring
+whether it catches anything the same family missed. §I row 17 closes as *no keys*. **Losing images:** *a metered
+checker-family key* — §J 74 · `wins_if:` O116's subsidy line exceeds N× the seat price, the vendor narrows the
+terms, or R40 finds the CLI route refused; *Gemini on every diff now* — §J 88 · `wins_if:` R11's first twenty-five
+pairs show the second family catching a defect the same-family reviewer missed. **(R40, OPEN)** reads Google's
+terms raw for the personal-account route; under E7 there is no key alternative to fall back on if it fails.
 
 ~~**(FOUNDER, v54: in wave one it is narrower still, and the narrowing is stated here rather than discovered)** The
 `challenger` file is wave two (§5.0), so until a venture brings it online **there is no challenger at all** and
@@ -540,10 +625,28 @@ pair of eyes, and §19's build order is what closes it.~~
 **(FOUNDER, rethink 2026-09-06: D5 → v70 — the narrowing above is withdrawn, and one third of it stands)**
 `challenger` is in **wave one** (§5.0), so the external critique v30 asks for exists from the first night rather
 than from the first venture that needs it. **What is still unmet is the second model family, and only that:** the
-challenger runs single-family until Codex or Gemini lands, so **its findings are labelled rung 4** rather than
+challenger runs single-family until ~~Codex or Gemini lands~~ the Gemini or Codex CLI passes its calibration set
+as a `bin/run` child (v90, O92), so **its findings are labelled rung 4** rather than
 presented as an independent check. That labelling is the whole of the honesty here — v78's fallback chains and its
 frozen calibration set are what stand in place of the panel §11.3 no longer describes (**v82**), and **(R10,
 OPEN)** is what would change it.
+
+---
+
+### 5.9 What the fixer round gives this section — one row per mechanism
+
+**(NEW: added 2026-09-06, re-derived from SPINE §L rows naming §5; each carries O105's class, and the state is the
+path's, never a paragraph's)**
+
+| Mechanism | What it enforces | Path | Class |
+|---|---|---|---|
+| **O111** · v103 | `pack: seed \| harvested`; a seed pack is a `golden/` reference plus namespaces; the first dispatch is the demonstration; `harvested` with no exemplar refused | `roster.yml` · `bin/check-stores` · `keel/golden/` — **ABSENT** | kernel · truth |
+| **O112** · v103 | `trust: probation \| scored \| unroutable` per move class; probation routable on the Floor or under a founder-authored intent only; the floor is O25's constant in `settings.yml` | `roster.yml` · `bin/run` — **ABSENT** | kernel · truth |
+| **O103** · v88 | `world_touching: true`, `max_lines:`, `authored_by:` on `send` · `inbound` · `watch` · `run`; over-budget refused; fixtures the only admission; agent files generated and signed off per wave; `keel/**` lite, the four and `keel/host/**` full | `roster.yml` · `.claude/qa-tier-floor.yml` (**EXISTS**; the edit **ABSENT**) | kernel · truth |
+| **O120** · v105 | trust per carrier; `--deny-carrier claude`; one drill with Claude denied; one Gemini argv exercised before `AGENTS2` | `bin/run` · the trust store — **ABSENT** | kernel · truth |
+| **O92** · v90 | the second family only as `bin/run` children from launchd; the real `denyRead` list; the probe asserts from both contexts | `keel/host/denyread.yml` · `bin/probe` — **ABSENT** (§15 owns the file) | adapter · the two CLIs |
+| **O91** | `supervisor` leaves rule 4; `bin/supervise` not built until R31 | `bin/supervise` — **REFUSE** | adapter · the daemon |
+| **O105** · v96 | `class:`, `vendor_wins_if:`, `wins_if:` on every program row; the marks lint refuses an adapter naming no surface | `rules.yml` · the marks lint — **ABSENT** (§17.5 holds the table) | kernel · record |
 
 ---
 

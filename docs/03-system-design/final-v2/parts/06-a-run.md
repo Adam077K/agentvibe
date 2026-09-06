@@ -1,6 +1,6 @@
 ## 6 · A Run, end to end
 
-*obeys: v12, v13, v34; SPINE §C.1 bands; inherits: FINAL §6.2, §6.3, §7.8*
+*obeys: v12, v13, v34; SPINE §C.1 bands; **the fixer round of 2026-09-06 — O84, O87–O91, O108, O110; R17, R28–R32** (SPINE §K row 6); inherits: FINAL §6.2, §6.3, §7.8*
 
 ---
 
@@ -21,14 +21,14 @@ context does not. FINAL's argument against long-lived agents was about context, 
 ```mermaid
 flowchart TD
     BIRTH["BORN — the Desk clears it,<br/>the Operator writes the brief"] --> BRIEF
-    BRIEF["The brief (6.2). Anything not in it<br/>is not in scope, and the run is told so"] --> ARGV["bin/run composes the argv from<br/>the named agent's file and the band.<br/>NOTHING ELSE COMPOSES ARGV. ABSENT"]
+    BRIEF["The brief (6.2). Anything not in it<br/>is not in scope, and the run is told so"] --> ARGV["bin/run composes the argv from<br/>the named agent's file and the band,<br/>as bare claude -p in tmux (6.5).<br/>NOTHING ELSE COMPOSES ARGV. ABSENT"]
     ARGV --> CTX["Fresh context. Loaded: charter, intent,<br/>the memory slice, the skills that trigger.<br/>Nothing else"]
     CTX --> GOAL["/goal set to the done-test verbatim,<br/>plus a turn clause"]
     GOAL --> ISO["bin/worktree HANDS IT one, in its argv,<br/>if it writes code or files.<br/>A run never creates its own. O14, ABSENT"]
     ISO --> WORK["WORKS — it chooses its own method"]
     WORK --> SELF{"Self-check against<br/>the done-test"}
     SELF -->|"fails"| WORK
-    SELF -->|"passes, or ceiling hit"| ANCH["THE ANCHOR — something outside<br/>the model checks it. Never its own report"]
+    SELF -->|"passes, or ceiling hit"| ANCH["THE ANCHOR — something outside<br/>the model checks it and prints<br/>ANCHOR name exit=code (O110).<br/>Never its own report"]
     WORK -->|"hits something outside its scope<br/>that is wrong"| CORD["PULLS THE CORD ON ITSELF:<br/>stops, records the defect, escalates.<br/>THIS IS A SUCCESS"]
     WORK -->|"reaches a question<br/>the envelope does not answer"| STAGE["Builds both options, stages them,<br/>queues a WHICH. It cannot ask"]
     STAGE --> HAND
@@ -109,11 +109,18 @@ of it. §2 carries the intent side of the same check.
 Under `-p` **the check-in is the only thing the runtime delivers, and nobody is there to message it** — so a night
 goal loop delivers three times and goes quiet, and quiet is byte-indistinguishable from finished. Three
 consequences, none of them optional. The `/goal` clause above is **not** a night-long supervisor and must not be
-written as one. §L **O21** composes the condition from v45's `anchor:` field — *"`<anchor>` exits 0, and
-`<done-test>`"* — so the most frequently executed judgement in the system becomes an exit code rather than a small
+written as one. §L **O21** composes the condition from v45's `anchor:` field — ~~*"`<anchor>` exits 0, and
+`<done-test>`"*~~ **(amended 2026-09-06: O110)** — so the most frequently executed judgement in the system becomes an exit code rather than a small
 model reading prose (**DEPENDS-ON-R17**; **(R17, OPEN)** also asks whether an exit-code condition behaves
 differently from a prose one). And the silence after the third check-in is what §6.4's reconciler exists to
 resolve.
+
+**(NEW: O110 — the goal condition is read by a model, never run by a shell)** *"`<anchor>` exits 0"* asks the
+evaluator to know an exit code it never sees (THINKER: A18). **Every anchor ends by printing `ANCHOR <name>
+exit=<code>` on its own line** — one `printf` per anchor in `keel/shared/anchors/*` (**ABSENT**) — and the `/goal`
+condition names **that line and the done-test**; the evaluator reads a line and runs nothing. **Losing image:**
+*"exits 0" in prose* · `wins_if:` R17 shows the evaluator accepts an exit code directly. `vendor_wins_if:` `/goal`
+takes a command and an exit code. Class: adapter. **DEPENDS-ON-R17.**
 
 **(NEW: why the field names the agent and not the argv, which is v34 restated where it is most likely to be
 violated)** The brief names *who*. **`bin/run` (ABSENT; FINAL names it `keel/bin/run`) composes the argv** from that
@@ -166,7 +173,19 @@ checker_family:  the family and model that CHECKED it
 checker_model:
 actor:           who performed the move — one legal value today, an agent run
 idempotency_key: on the STAGED ARTIFACT, not only on the resume path
+
+# added 2026-09-06 by O108 (v100) — two axes on the anchor claim; §11 owns the rule, this schema owns the fields
+verifier:        world | other-family | founder | same-family — who or what confirmed the anchor
+adequacy:        pass | fail | unjudged — written by a reader who wrote neither the done-test nor the anchor
 ```
+
+**(NEW: O108 — what `rung:` now requires)** A deterministic check of the wrong property is deterministic
+(THINKER: B8). `verifier:` is independence; `adequacy:` is whether the stated property was tested, written **by a
+reader who wrote neither** — `reviewer` on `-p`, or `challenger`. **Rung 1 counts only on world *and* pass;
+`bin/check-stores` refuses rung 1 `unjudged`** (**ABSENT**). §11.2 owns the ladder, §21 the Goodhart pair; the
+lines sit here because the schema is the one source (O6). **The carrier (O120)** is recovered by joining
+`brief_sha:` to the brief's `window+model:`, so trust per carrier (§5.6) needs no new field. **Losing image:** *one
+axis* · `wins_if:` a quarter in which adequacy never fails on a world-passed anchor.
 
 **(FINAL)** `uncertain` is the field to fight hardest for: it turns a confident wrong answer into a flagged one, and
 the anchor and the briefing read it first. **No shipped handover schema found has it.** Linear's activity vocabulary
@@ -226,7 +245,7 @@ here and **nothing performs it**~~ *(moved 2026-09-06: O15)*. Every mechanism ab
 | Step | What it does |
 |---|---|
 | Before exec | the launcher writes **`run.started`** — so a run that never reported is distinguishable from a run that never began |
-| On wake | the Watch reconciles our session log against **`claude agents --json --all`**, the tmux session list and the process table |
+| On wake | the Watch reconciles our session log against **`claude agents --json --all`**, the tmux session list and the process table — and the daemon's `roster.json` **read-only** (O91); `kind: operator` rows (O84) are skipped |
 | On a gap | it writes **`orphaned`, never `finished`** — the two must never be the same value, because one is an answer and the other is the absence of one |
 | Then | it **resumes by id**, or closes the run with a reason; and it **refuses a night lane the power assertions cannot promise to keep awake** |
 
@@ -234,12 +253,27 @@ here and **nothing performs it**~~ *(moved 2026-09-06: O15)*. Every mechanism ab
 that guessed `finished` would turn every crashed night into a completed one, and the handover — the thing every
 downstream reader trusts — would be missing with nobody looking for it.
 
-**(NEW: R9 — one thing about a long run that the strongest memory rule cannot currently see)** **(R9, OPEN)** —
-*does an unattended `-p` run auto-compact, and does it emit anything the log can see?* v24 says memory is written
+**(NEW: R9 — one thing about a long run that the strongest memory rule cannot currently see)** ~~**(R9, OPEN)** —
+*does an unattended `-p` run auto-compact, and does it emit anything the log can see?*~~ **Answered by O90; the
+remainder is R32 (amended 2026-09-06).** v24 says memory is written
 by the curator, delta-only, and never by the acting run; **an auto-compaction is the runtime rewriting a run's
-context in place**, which is the same act performed by something the rule cannot address. Measured with one long
+context in place**, which is the same act performed by something the rule cannot address. ~~Measured with one long
 `-p` run under `stream-json --verbose` plus the vendor's documentation. **If it is unobservable, the answer is to
-bound run length** rather than to widen the rule — which is a decision about this section, not about §13.
+bound run length** rather than to widen the rule — which is a decision about this section, not about §13.~~
+
+**(NEW: O90 — auto-compact is on by default, so the run is bounded before it can compact)** A long `-p` run **is
+compacted by the runtime** — the ACE collapse v24 forbids — at a 2x cache write on the next turn (THINKER: A10;
+W35). **`bin/run` sets `--autocompact <context>` from a `context:` column in `prices.yml`** (1,000,000 on Opus 5
+and Fable 5.1, 200,000 on Haiku) **so a run ends at `maxTurns` or its ceiling before it can compact** and resumes
+by id. **`PreCompact`**, in the child's `--settings` (O87), writes **`run.compacted`**. **Path:** `bin/run` · `prices.yml` (**ABSENT**).
+Class: adapter. **Losing image:** *let it compact and log it* · `wins_if:` **(R32, OPEN)** — one long `-p` run
+under `stream-json --verbose` — shows the event fires and the write spike is small.
+
+**(NEW: O88 — the night child writes no vendor transcript)** `~/.claude/projects` holds every stranger's body
+verbatim, outside `keel/` and inside the mining pass (THINKER: A4). **`bin/run` passes `--no-session-persistence`
+on every night child** (FOUNDER, fixer round 2026-09-06: E10 · v93); **the `stream-json` trace is the record**;
+`bin/mine` and the erasure grep are §13's and §12.8b's. Class: adapter. **Losing image:** *grep `keel/` and stop* · `wins_if:` a fixture canary is found under
+`~/.claude/projects` after a night — **(R30, OPEN)**. `vendor_wins_if:` a per-project transcript exclusion.
 
 **(FINAL §6.1 and §14.7, providers lane, measured 2026-09-04: two runtime facts that shape how long a run should be)** `maxTurns` **marks output partial
 and resumable rather than truncating it**, which is the restart-from-checkpoint primitive and does not need to be
@@ -249,9 +283,10 @@ fanning out under a bounded wait.
 
 **(FINAL)** **Enforced by:** the brief and handover schemas in `shared/schemas/` and `bin/run`, which births a run
 and **refuses a brief missing any field** (both ABSENT) · `--output-format json` (exists) · `--session-id <uuid>`
-(exists, and *"must be a valid UUID"*) · the runner's `SessionEnd` hook writing the partial handover (ABSENT).
+(exists, and *"must be a valid UUID"*) · the runner's `SessionEnd` hook writing the partial handover (ABSENT;
+carried in the child's `--settings`, O87).
 
-**(NEW: added 2026-09-06 — one row per mechanism this round gives the section)**
+**(NEW: 2026-09-06 — one row per mechanism the two rounds give the section; O81+ rows carry O105's class)**
 
 | Mechanism | What it enforces | Path |
 |---|---|---|
@@ -260,9 +295,17 @@ and **refuses a brief missing any field** (both ABSENT) · `--output-format json
 | **v67** | the child's `pgid` recorded before exec; unattended work refused on a carrier whose `stop:` is UNKNOWN | `bin/run` — **ABSENT** |
 | **O14** | a run never creates its own worktree; it is handed one in its argv | `bin/worktree` — **ABSENT** |
 | **O72** | the Desk refuses a run whose declared scope intersects a live run's worktree scope | the Desk — **ABSENT** |
-| **O71** | the launcher refuses to mint past N live sessions; the supervisor refuses to restart into a full table | `bin/run` · `bin/supervise` — **ABSENT**, **DEPENDS-ON-R23** |
+| **O71** | the launcher refuses to mint past N live sessions; ~~the supervisor refuses to restart into a full table~~ N is 3 until R29 *(amended 2026-09-06: O91)* | `bin/run` — **ABSENT**, **DEPENDS-ON-R23** · ~~`bin/supervise`~~ **REFUSE** |
 | **O73** | after N failures the run becomes a `blocked` card carrying the exact failure text, written to negatives | the card store · the negatives store — **ABSENT** |
 | **O7** | five additions on the handover, free now and a full backfill later | the handover schema — **ABSENT** |
+| **O87** | `--settings <json>` per child with its hooks and denies; `--agents <json>` refused | `bin/run` · `bin/probe` — **ABSENT** · **DEPENDS-ON-R28** · adapter |
+| **O88** | `--no-session-persistence` on every night child; the `stream-json` trace is the record | `bin/run` · `bin/mine` — **ABSENT** · R30 · adapter |
+| **O89** | same-family links from `roster.yml` into `--fallback-model a,b`; `PreModelSwitch` writes `model.switch` with the demotion and **blocks** an unrehearsed family; cross-family stays with `bin/run` (§9.4a owns the rule) | `bin/run` — **ABSENT** · adapter |
+| **O90** | `--autocompact <context>` from `prices.yml`; `PreCompact` writes `run.compacted` | `bin/run` · `prices.yml` — **ABSENT** · R32 · adapter |
+| **O91** | bare `claude -p` in a detached tmux session, never `--bg`; the daemon roster read-only | `bin/run` · `bin/watch` — **ABSENT**; `bin/supervise` — **REFUSE** · adapter |
+| **O108** | `verifier:` and `adequacy:` on the handover; rung 1 only on world **and** pass | the handover schema · `bin/check-stores` — **ABSENT** · kernel · truth |
+| **O110** | every anchor prints `ANCHOR <name> exit=<code>`; the `/goal` condition names the line | `keel/shared/anchors/*` — **ABSENT** · **DEPENDS-ON-R17** · adapter |
+| **O84** | `kind: operator` rows in `sessions.jsonl` (§3 owns the registry) | `sessions.jsonl` — **ABSENT** · kernel · record |
 
 ---
 
@@ -275,7 +318,7 @@ bands on different intents.
 | Band | What the launcher emits | Codex axes | What the run can do |
 |---|---|---|---|
 | **Read and report** | `plan` mode | `never` × `read-only` | Read, explore, report. It **does not edit source** |
-| **Build in a worktree** | `dontAsk`, with `--restricted` and an explicit `--tools` list | `never` × `workspace-write` | Everything in its grant, inside one worktree. **It cannot ask** |
+| **Build in a worktree** | `dontAsk`, with `--restricted` and an explicit `--tools` list — **plus `--settings` (O87) · `--no-session-persistence` (O88) · `--autocompact` (O90) · `--fallback-model` (O89), as bare `claude -p` in tmux (O91)** *(2026-09-06)* | `never` × `workspace-write` | Everything in its grant, inside one worktree. **It cannot ask** |
 | **Stage an outward act** | no mode, because **no agent performs it** | — | Stage a hashed artifact and stop. The Sender performs the act |
 
 **(NEW: what `--restricted` buys, in three clauses, because a reader will otherwise assume the tool list alone is
@@ -285,6 +328,23 @@ WebFetch, unless you name them individually in `--tools`, not through the `defau
 a tool omits it in fact. It needs v2.1.248+. `--permission-prompts none` means a run never hangs on a prompt nobody
 will answer, and under `-p` the tools needing terminal input are disabled anyway *"so the session never stalls
 waiting for input."*
+
+**(NEW: O87 — the child's hooks and denies ride its own argv; the flag ships, W35)** **`bin/run` composes
+`--settings <json>` per child** carrying its hooks — `PreModelSwitch` (O89), `PreCompact` (O90), `SessionEnd` —
+and its denies; **v43's matrix gains the `-p` row**; **`--agents <json>` is refused** (v42); the probe expects
+`--allow-dangerously-skip-permissions` refused. Night children run **`dontAsk --restricted`, where auto mode is
+inert**, so the managed file carries `permissions.deny` and `disableBypassPermissionsMode` only and the Floor keeps
+auto mode (FOUNDER, fixer round 2026-09-06: E9 · v92; THINKER: A3, A15; §12.6 owns the file). **Path:** `bin/run` ·
+`bin/probe` (**ABSENT**). Class: adapter. **DEPENDS-ON-R28** — *does `--restricted` ignore `--settings <file>`?*
+`vendor_wins_if:` per-invocation hooks natively.
+
+**(NEW: O91 — bare `-p` in tmux, never `--bg`, because the vendor ships a supervisor)** The daemon has its own
+leases and exits *"idle 5s with no clients"* (THINKER: A7; W38); two supervisors argue over an orphan.
+**`bin/run` mints every child as `tmux new-session -d -s <uuid8> -c <dir> claude -p …`** — pane, process group
+(v67) and session id ours — `--tmux=classic` for the worktree agents (O121, §14.5). **`bin/supervise`
+is REFUSEd** until **(R31, OPEN)** reads the daemon's lease semantics; §10.5 carries the daemon row. Class: adapter.
+**Losing image:** *`--bg` as the night's carrier* — §J 85 · `wins_if:` R31 shows a service mode that does not
+idle-exit and readable leases.
 
 **(NEW: O14 — where the worktree comes from, because the run cannot make one and the plan assumed it could)** v41
 gives four agents `isolation: worktree`, and **`git worktree add` cannot complete under the armed sandbox** — a
@@ -339,11 +399,14 @@ rule from the roster's side: parallel is legal where the unit is a store row and
 **(NEW: O71 — a run cannot be the fifty-first, and a crash loop cannot become the concurrency event)** §14.12
 names three bounds on the fleet and **none of them is a session count**, so a supervisor restarting a failing run
 can mint sessions without limit while every declared bound still reads green. **A session ceiling in settings:**
-the launcher refuses to mint past N live rows and **the supervisor refuses to restart into a full table**
-(`bin/run`, `bin/supervise` — **ABSENT**). N is not guessed: **(R23, OPEN)** asks whether `claude -p` children
+the launcher refuses to mint past N live rows ~~and **the supervisor refuses to restart into a full table**
+(`bin/run`, `bin/supervise` — **ABSENT**)~~ (`bin/run` — **ABSENT**; `bin/supervise` **REFUSE**d until R31, so the
+ceiling has one reader) *(amended 2026-09-06: O91)*. N is not guessed: **(R23, OPEN)** asks whether `claude -p` children
 have a concurrency ceiling at all and **whether the N+1th fails loudly, queues, or degrades silently** — vendor
-documentation first, then one measurement. Until it is answered the ceiling is set low and stated as arbitrary,
-which is visible in a way an absent ceiling is not.
+documentation first, then one measurement. ~~Until it is answered the ceiling is set low and stated as arbitrary,
+which is visible in a way an absent ceiling is not.~~ **Until then N is 3, stated as arbitrary**, and **(R29,
+OPEN)** — RSS per `-p` child and the page-in point on this Mac — sets it, not the vendor's 20 (THINKER: A14). The
+ceiling counts `-p` children; Operator sessions are the WIP limit's (O84, §4).
 
 **(NEW: two smaller ones, both from decided rows)** A run cannot **edit another agent's contract** — a builder that
 needs a schema change files an objection (v7), enforced by `--add-dir`. And a run cannot **perform an outward act**:

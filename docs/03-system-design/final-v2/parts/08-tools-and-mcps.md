@@ -1,6 +1,6 @@
 ## 8 · Tools and MCPs
 
-*obeys: v15, v33 (SPINE §F entire), and **v68** (the rethink round of 2026-09-06); inherits: FINAL §9.3 (the door), §9.4 (the trifecta), §16.3 (the connected hands)*
+*obeys: v15, v33 (SPINE §F entire), **v68** (the rethink round of 2026-09-06), and **v90, v94, v101 with O92, O94, O100, O105, O109, O122** (the fixer round of 2026-09-06, SPINE §K row 8); inherits: FINAL §9.3 (the door), §9.4 (the trifecta), §16.3 (the connected hands)*
 
 **(FOUNDER.)** *"there is no limitations of adding new MCPs or new tools to fill our needs. So there is so many
 filters we might need to include and get more MCPs or more of tools in order to do things better or to improve the
@@ -51,7 +51,7 @@ flowchart TD
     CEIL{"A counter and a ceiling —<br/>and does the ceiling REJECT?"}
     CEIL -->|"no"| NO
     CEIL -->|"yes"| ADMIT["Admitted, with a horizon:<br/>day, Floor only · night · never"]
-    ADMIT --> EGR["Every call leaves through bin/egress:<br/>logged, filtered by domain AND method,<br/>credentials injected the agent never sees (v68)"]
+    ADMIT --> EGR["Every call leaves through bin/egress, three transports (O94):<br/>a per-child stdio MCP server, the sandbox network block,<br/>credentials injected the agent never sees (v68)"]
     EGR --> WATCH["Description hash checked each session.<br/>Probed nightly by bin/probe"]
     WATCH -->|"hash changed"| FREEZE["FROZEN — a rug pull until proven otherwise.<br/>The founder is told"]
     WATCH -->|"horizon passes"| RENEW{"Still named by a live intent?"}
@@ -88,21 +88,38 @@ leg is missing **at dispatch**, and v68 is the only proposal of the round that s
 persuaded — it keeps the leg missing at the moment of the call. It is also what turns *"every call logged"* (8.1's
 own `WATCH` node) from a sentence into a count that can be compared against the runtime's.
 
+**(NEW: O94 — the obvious shape fails at the syscall, so the program is three transports with one configuration and
+one log.)** The shape v68 was read as — an HTTP proxy on `127.0.0.1` that every call passes through — **is
+unreachable by the process class it governs**: outbound loopback `connect()` is denied for sandboxed Bash, measured
+as `dial tcp 127.0.0.1:11434: connect: operation not permitted` (THINKER: A5; W36). A proxy nobody can reach logs
+zero calls, which reads as success. **`bin/egress` is therefore three transports**, inside v68's *"R2 may halve
+it"* clause: **(1) a stdio MCP server**
+`bin/run` spawns **per child** and names **alone** in `--strict-mcp-config`, fronting every admitted server — the
+call log, the domain-and-method filter and the credential injection live here, and stdio needs no socket; **(2) the
+sandbox `network` block** for anything Bash does; **(3) `credentials.injectHosts`** where R2 shows it injects a
+secret the child cannot read. `WebFetch` and `WebSearch` are runtime-side and reach none of the three, so they are
+**absent from `--tools` for every agent but `scout`**, which holds no credential — the trifecta is the control
+there. **(R2, OPEN) becomes the transport question:** which of the three carries what, one measured cell each; R2
+changes the program's size, never whether the guarantee exists. **Losing image:** *a loopback HTTP proxy on `127.0.0.1`* — §J 86 · `wins_if:` the sandbox gains a
+per-invocation loopback allow scoped to one port; the proxy is then reachable and it is one hop again. **Class:**
+adapter (O105); `vendor_wins_if:` that same loopback allow.
+
 **What this demotes, and it is a deletion (SYNTHESIS §7 deletion 10).** ~~`.claude/mcp-policy.json` as an
-**independent** control~~ — a policy whose calls no hook can see — **becomes the egress proxy's configuration**
-(moved 2026-09-06: D3). It is not removed from disk and its allow/deny shape is not rewritten; what goes is the
-claim that it enforces anything by itself. `--strict-mcp-config` then names **only the proxy**, so every server is
-declared twice on purpose: once to the proxy, which can see the call, and once in the run's argv, which cannot.
+**independent** control~~ — a policy whose calls no hook can see — **becomes ~~the egress proxy's~~ `bin/egress`'s
+configuration** (moved 2026-09-06: D3; amended 2026-09-06: O94). It is not removed from disk and its allow/deny
+shape is not rewritten; what goes is the claim that it enforces anything by itself. `--strict-mcp-config` then
+names **only ~~the proxy~~ the per-child stdio server**, so every server is declared twice on purpose: once to
+`bin/egress`, which can see the call, and once in the run's argv, which cannot.
 
-**Mechanism:** `bin/egress` (**ABSENT**); `--strict-mcp-config` **ships today**. **The cost, once:** one program,
-one hop of latency, and each server declared twice. **Settled by:** a deliberate exfiltration attempt failing at
-the proxy rather than at the prompt, and the proxy's call count matching the runtime's for one night.
+**Mechanism:** `bin/egress` · `bin/run` (**ABSENT**); `--strict-mcp-config` **ships today**. **The cost, once:**
+~~one program, one hop of latency, and each server declared twice~~ three transports declared instead of one hop,
+and each server declared twice (amended 2026-09-06: O94). **Settled by:** a deliberate exfiltration failing at the
+sandbox or the stdio server rather than at the prompt, and `bin/egress`'s call count matching the runtime's for one
+night.
 
-**(R2, OPEN — it can halve this row.)** Does the sandbox's documented, unused `credentials` block inject a secret at
+~~**(R2, OPEN — it can halve this row.)** Does the sandbox's documented, unused `credentials` block inject a secret at
 egress without the child being able to read it, and does its `network` block support an HTTP-method allowlist and
-TLS inspection? **Source class:** the vendor's sandboxing and settings reference, then one measured cell. **What it
-decides:** whether v68 is one configuration change or a program we write. The founder took the row **before** the
-answer, so what R2 can still change is the *size* of the program, never whether the guarantee exists.
+TLS inspection?~~ *(moved 2026-09-06: O94 — restated above as the transport question; source class unchanged.)*
 
 ---
 
@@ -134,6 +151,46 @@ argv fixed at dispatch and cannot narrow mid-run, so the class cannot be a runti
 matcher names that exact tool** — a hook matching `Bash|Edit|Write` governs no MCP call at all. Registered on this
 branch as `c-mcp-hook-matcher-must-name-the-tool`. Every admitted server is named in the run's argv and is otherwise
 absent by `--strict-mcp-config`.
+
+---
+
+### 8.2a Where reversibility lives — a property of a verb, in the admitted-tool file
+
+**(NEW: O109 · v101 — the one-way/two-way decision was the one decision the plan let a model make about itself.)**
+§12.2 asked, per act and at run time, *is this reversible?* — a flowchart a run walked with model output as its
+input, at the one point where a mistake is unrecoverable (THINKER: B13). **Reversibility is now a property of a
+verb, declared once, at the door, where the undo is drilled anyway.** The admitted-tool file
+`keel/shared/tools/<name>.yml` (**ABSENT**; 8.8's first row) gains:
+
+```
+verbs:
+  - name:       <verb>
+    effect:     none | metered | reaches-the-world   # O24's effect: is this same field
+    reversible: true | false
+    undo:       <command>                        # required when reversible is true
+    drilled:    <date>                           # undo exercised on the dry branch
+```
+
+**An unlisted verb is one-way.** `bin/run` composes the grant **from listed two-way verbs only**; the Sender and the
+door read the table; v76's away predicate reads it to decide whether a *which* default may fire (§4); §12.2's
+run-side question **is deleted** and its flowchart becomes a lookup. **Losing image:** *the run-side flowchart* —
+§J 79 · `wins_if:` grepping the launcher finds no predicate that takes model output. **Class:** kernel · truth
+(O105); `vendor_wins_if:` none conceivable.
+
+### 8.2b The outward-class ladder file — the same directory, keyed by class
+
+**(FOUNDER, fixer round 2026-09-06: E11 · v94 — *"Yes, after N recall-free sends per venture."*)** §12 owns the
+widening rule and §2 the charter's N; this section owns the file. Five outward classes, in order — `reply-to-existing-thread`
+· `follow-up-to-consented-contact` · `publish-to-preview` · `publish-to-owned-channel` · `first-contact` — each a
+file `keel/shared/tools/<class>.yml` (**ABSENT**; O100) carrying **`step`, `n_recall_free`, `recall_count`,
+`widened_at`, `undo_drilled`**. `bin/send` reads the step before any act; `bin/reconcile` writes `recall_count`
+from the world's record — a recall inside the window, or a reply asking to stop, which also writes the consent
+register (v69). After `n_recall_free` sends the Watch stages a *widen one step or stay* which; **a recall narrows
+the class one step without asking**; the consent register and the disclosure line (v63) are read at every step. **`first-contact` is reachable like any other class** — the founder's overrule of C's default that
+the ladder stop one step below it (THINKER: C10). **Losing images:** *the ladder stopping below `first-contact`* —
+§J 84 · `wins_if:` recalls per hundred sends on a widened `first-contact` class exceed the founder's own tapped
+rate; *widening on reply rate* (FIXER: B) · `wins_if:` a class widens on zero recalls while `bin/inbound` records
+zero replies. **Class:** kernel · truth. A tool file has `verbs:`; a class file has `step`.
 
 ---
 
@@ -253,6 +310,17 @@ item at a time — which is what the door is for.
 bundled `workflow-authoring` skill that **no namespace in 7.6 claims**. It is named here because it is a capability
 that arrived with a runtime rather than through this door; 7.6a is where its startup cost is counted.
 
+**(NEW: O122 — the one outbound channel this section never classed, and it is an adapter.)** `bin/bell` (§14 owns
+it) **is a wrapper over the vendor's push** (`agentPushNotifEnabled`), adding
+only what the push does not carry (THINKER: A19). The vendor's push is the admitted transport; `bin/bell` holds no
+credential of its own; it is marked **adapter · the vendor's push**, `vendor_wins_if:` the push exposes an acted-on
+read (O105). **Losing image:** *a fourth bell channel* — §J 83 · `wins_if:` no acted-on read after a quarter.
+
+**(NEW: O105 — every program this section names carries its class.)** `bin/door` · `bin/send` · `bin/probe`
+kernel · truth; `bin/egress` **adapter** · sandbox `network` + `credentials` + stdio MCP; `bin/bell` **adapter** ·
+the vendor's push. An adapter naming no surface fails v50's marks lint (**ABSENT**); a matched `vendor_wins_if:`
+forces Delete. §17.5 holds the table.
+
 **(NEW: `sourcer`'s grant is the door's own model, and it narrows under v2.)** `claim-append` was granted to
 `sourcer` while `sourcer`'s `tools:` line stayed `[Read, Glob, Grep, WebSearch, WebFetch]` — **no `Write`, no
 `Edit`**. That is the pattern the door adopts: *a narrow capability through one audited server, rather than a broad
@@ -286,15 +354,16 @@ the same key.
 | Gmail **send** | **the Sender**, founder-signed — **when:** never unattended until the founder widens the class |
 | Drive share · Calendar create · Notion write | **the Sender**, after a recall window — **when:** night only after the class is widened and the undo drilled |
 | Figma · Pencil · Stitch · Refero (Refero READ-ONLY) | **designer**, on a dry branch — **when:** night after the undo is drilled |
-| Higgsfield (image · video · audio) | **writer**, rate-capped — **when:** night, under a daily spend cap **recorded as a `provider_cap` and held at the provider — `bin/run` refuses the grant if it is `null` (O32); R21 decides whether it stays in WRITES at all**. Its publish and TikTok verbs are one-way and **never** — **the verb set itself is UNVERIFIED** (FINAL §16.3; the connected-tools list came from the 2026-09-04 session's own MCP server list) |
+| Higgsfield (image · video · audio) | **writer**, rate-capped — **when:** night, under a daily spend cap **recorded as a `provider_cap` and held at the provider — `bin/run` refuses the grant if it is `null` (O32); R21 decides whether it stays in WRITES at all**. Its publish and TikTok verbs are one-way and **never** — ~~**the verb set itself is UNVERIFIED**~~ **no verb is listed in its `tools/higgsfield.yml` yet, so every verb is one-way until one is (O109, 8.2a)** *(amended 2026-09-06)* (FINAL §16.3; the connected-tools list came from the 2026-09-04 session's own MCP server list) |
 | RunPod | **nobody** — **when:** never, until a capped key exists |
 | `claim-append` (local, `scripts/mcp/claim-append-server.mjs`, EXISTS) | **curator** does this with `Write` and needs no server; the pattern survives as the door's model — **when:** night |
 | Mem0 | **nobody** — **when:** never (8.5) |
 | Miro | nobody until an intent names it — **when:** through the door individually, or disconnected |
 | n8n | **nobody** — **when:** never — licence (v15) |
 | `git` · `node` · `bun` | **builder · tester · designer · ~~analyst~~ — the three that carry `Bash`** (§5.2; **O57** struck `analyst`'s `Bash`; architect never had one) *(corrected 2026-09-06 · census C item D)* — **when:** night |
-| `gh` | builder, when a repository read is the need — **when:** night; every use needs the sandbox's denial of `~/.config/gh` handled explicitly |
-| `gemini` | routed by section 9, not held by an agent — **when:** night |
+| `gh` | builder, when a repository read is the need — **when:** night; every use needs the sandbox's denial of `~/.config/gh` handled explicitly — **the real `denyRead` list lives in `keel/host/denyread.yml` (O92, §15), not in this row** |
+| `gemini` | ~~routed by section 9, not held by an agent~~ **a `bin/run` child from launchd only, never from a Claude-hosted shell** — `gemini --version` hits `EPERM` under the live sandbox (THINKER: A9; W37); routed by section 9 on a personal Google account, **no key** (FOUNDER, fixer round 2026-09-06: E7 · v90; O92) — **when:** night |
+| `codex` | **a `bin/run` child from launchd only**, the same rule, no key; `~/.codex` is in the `denyRead` list (O92, W37) *(added 2026-09-06: v90)* — **when:** night, after v5's headless rehearsal |
 | **Not connected, needed first**: analytics · error tracking · read-only billing · CI API · git host read | **analyst** (the reconciliation) · **scout** — **when:** night, and **before any hand**, per 8.3 |
 
 **One measurement lived only in the struck `Credential` column and is kept here rather than lost:** Higgsfield's API
@@ -351,9 +420,13 @@ already wraps an inbound payload in a block labelling it untrusted data, which i
 | The trifecta cannot form on any path | `bin/run` refuses the combined grant; `bin/probe` asserts it nightly | **ABSENT** |
 | A tainted read is held only by `scout` and the world's door (v36) | the door program writes one inbound row and holds no model; `bin/run` refuses any brief pairing an outside read with `Write`, `Edit` or `Bash` | **ABSENT** — the roster row is patched, the launcher that would enforce it is not built |
 | An MCP call is governed by a hook only if the matcher names it | registered as `c-mcp-hook-matcher-must-name-the-tool` | **EXISTS** as a claim, branch `ceo-1-1788609834` |
-| Servers absent unless named in argv | `--strict-mcp-config` — **naming only the egress proxy** (v68) | **shipped by the runtime**; the proxy it should name is **ABSENT** |
-| **Everything outbound passes one program** (v68) | `bin/egress` — logs every call, filters by domain **and** HTTP method, injects credentials the agent never sees | **ABSENT**. **R2** decides whether half of it is the sandbox's `credentials`/`network` blocks instead |
-| ~~Per-server allow/deny is an independent control~~ **Per-server allow/deny is the proxy's configuration** (moved 2026-09-06: D3, deletion 10) | `.claude/mcp-policy.json` (65 lines; the seed shape), read by `bin/egress` | file **EXISTS**, branch `ceo-1-1788609834`; the reader is **ABSENT** — until it exists this file enforces nothing |
+| Servers absent unless named in argv | `--strict-mcp-config` — **naming only ~~the egress proxy~~ the per-child stdio server `bin/egress` spawns** (v68; amended 2026-09-06: O94) | **shipped by the runtime**; the server it should name is **ABSENT** |
+| **Everything outbound passes one program** (v68) | `bin/egress` — ~~logs every call, filters by domain **and** HTTP method, injects credentials the agent never sees~~ **three transports, one configuration, one log (O94):** a per-child stdio MCP server · the sandbox `network` block for Bash · `credentials.injectHosts`; `WebFetch`/`WebSearch` off `--tools` for all but `scout` | **ABSENT**. **R2** is the transport question — which of the three carries what · adapter (O105) |
+| ~~Per-server allow/deny is an independent control~~ **Per-server allow/deny is ~~the proxy's~~ `bin/egress`'s configuration** (moved 2026-09-06: D3, deletion 10; amended 2026-09-06: O94) | `.claude/mcp-policy.json` (65 lines; the seed shape), read by `bin/egress` | file **EXISTS**, branch `ceo-1-1788609834`; the reader is **ABSENT** — until it exists this file enforces nothing |
+| **Reversibility is a property of a listed verb; an unlisted verb is one-way** (O109 · v101 · 2026-09-06) | `verbs:` in `keel/shared/tools/<name>.yml`; `bin/run` composes the grant from two-way verbs; the Sender, the door and v76's predicate read it | **ABSENT** · kernel · truth |
+| **An outward class widens after N recall-free sends and narrows on any recall; `first-contact` is reachable** (O100 · v94 · E11 · 2026-09-06) | `keel/shared/tools/<class>.yml` with `step`, `n_recall_free`, `recall_count`, `widened_at`, `undo_drilled`; `bin/send` reads the step, `bin/reconcile` writes recalls | **ABSENT** · kernel · truth |
+| **The second family starts only from launchd** (O92 · v90 · E7 · 2026-09-06) | `keel/host/denyread.yml` holds the real list, `~/.gemini`, `~/.codex`, `~/.config/openai` included; `bin/probe` asserts from both contexts | **ABSENT** (§15 owns the file) · adapter · the two CLIs · R40 |
+| **The bell is a wrapper, never a channel** (O122 · 2026-09-06) | `bin/bell` over `agentPushNotifEnabled` | **ABSENT** · adapter · the vendor's push (§14 owns the bell) |
 | **A credit- or money-spending tool has a recorded `provider_cap`** (O32) | `bin/door` records it; `bin/run` refuses a grant whose cap is `null` | **ABSENT** — nothing today caps Higgsfield or RunPod |
 | **Bulk personal data is classified and reviewed before it runs** (O33) | the door's checklist: `guard` review plus a data-classification row | **ABSENT** |
 | **What the provider actually granted is recorded** (O35) | `scopes_observed` beside `scopes_requested`; a binary's version string and sha256 at admission | **ABSENT** |
