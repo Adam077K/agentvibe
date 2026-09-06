@@ -204,8 +204,7 @@ panel row goes. The repo's three live `verified_by: judge` claims and the founde
 D13's fallback chains and calibration set are what stands in its place, and the two-family route runs through the
 no-model launcher, outside any Claude session.
 
-**R5, hours the Mac is off (prices D14), measured from `pmset -g log` on this Mac, 2026-09-06, read-only:** the figures
-printed above this entry's commit in the session transcript and summarised in SPINE §I row 15's status. Caveat: the
+**R5, hours the Mac is off (prices D14), measured from `pmset -g log` on this Mac, 2026-09-06, read-only:** **span 2026-08-30 21:44 → 2026-09-06 09:39 (156 h, all the log retains) · asleep 40.7 h (26%) in 487 episodes · zero episodes of one hour or longer · longest single sleep 0.3 h (about 20 minutes).** The Mac was never off long enough for a cloud lane to have bought anything back this week; the tail it would buy is measured at zero over 156 hours. Caveat: the
 log covers only the span it retains; DarkWake power-naps are counted as wakes, so "asleep" here means the machine could
 not have run a process. This is the measurement D14 asked for before deciding the hosted lane; the decision itself
 stays the founder's.
