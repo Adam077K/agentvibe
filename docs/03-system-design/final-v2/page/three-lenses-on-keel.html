@@ -1,0 +1,610 @@
+<title>Three Lenses on Keel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EEF1F3; --surface:#FFFFFF; --surface-2:#E4EAED; --ink:#14222B; --ink-2:#42535E; --ink-3:#5F6F79;
+  --line:#CBD5DA; --accent:#1B646C; --accent-ink:#FFFFFF; --accent-soft:#D8EBED; --brass:#7A5A18; --brass-soft:#F1E7CC;
+  --keel:#0F3A44; --p1:#95501F; --p1-soft:#F4E4D6; --founder:#5C3E86; --founder-soft:#E9E1F4; --focus:#1B646C;
+  --a:#1B646C; --b:#5C3E86; --c:#7A5A18;
+  --display:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif;
+  --body:"Instrument Sans",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F171B; --surface:#16222A; --surface-2:#1E2C35; --ink:#E6EDF0; --ink-2:#B4C2CA; --ink-3:#8A9AA4;
+    --line:#2C3D47; --accent:#5FB3BA; --accent-ink:#0F171B; --accent-soft:#173A40; --brass:#D2A756; --brass-soft:#3A2E14;
+    --keel:#9BD0D6; --p1:#E0915A; --p1-soft:#3D2416; --founder:#B79BE0; --founder-soft:#2E2340; --focus:#5FB3BA;
+    --a:#5FB3BA; --b:#B79BE0; --c:#D2A756;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F171B; --surface:#16222A; --surface-2:#1E2C35; --ink:#E6EDF0; --ink-2:#B4C2CA; --ink-3:#8A9AA4;
+  --line:#2C3D47; --accent:#5FB3BA; --accent-ink:#0F171B; --accent-soft:#173A40; --brass:#D2A756; --brass-soft:#3A2E14;
+  --keel:#9BD0D6; --p1:#E0915A; --p1-soft:#3D2416; --founder:#B79BE0; --founder-soft:#2E2340; --focus:#5FB3BA;
+  --a:#5FB3BA; --b:#B79BE0; --c:#D2A756;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.86em;background:var(--surface-2);padding:.05em .35em;border-radius:3px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 80px}
+header.top{padding:40px 0 18px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,5.4vw,56px);line-height:1.02;margin:10px 0 14px;letter-spacing:-.015em;text-wrap:balance;color:var(--keel)}
+.lede{font-size:17px;max-width:66ch;color:var(--ink-2);margin:0 0 18px}
+.lede b{color:var(--ink)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:14px}
+button.tg{font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;cursor:pointer}
+button.tg[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:focus-visible,summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+h2{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.01em;margin:44px 0 6px;text-wrap:balance}
+h2 + p.sub{margin:0 0 16px;color:var(--ink-2);max-width:70ch}
+.lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:22px}
+.lane{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--lane);padding:16px 18px 14px}
+.lane .who{font-family:var(--display);font-weight:700;font-size:20px;margin:0 0 2px}
+.lane .role{color:var(--ink-3);font-size:13px;margin:0 0 10px}
+.lane .count{font-family:var(--mono);font-size:12px;color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.lane p.q{margin:0;font-size:14px;color:var(--ink-2)}
+.lane p.q i{color:var(--ink)}
+.lane.a{--lane:var(--a)} .lane.b{--lane:var(--b)} .lane.c{--lane:var(--c)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+.scroll{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:500;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td.n{font-family:var(--mono);color:var(--ink-3);width:2.4em}
+td.who{font-family:var(--mono);font-size:12.5px;white-space:nowrap;color:var(--ink-2)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+.dot.a{background:var(--a)} .dot.b{background:var(--b)} .dot.c{background:var(--c)}
+.list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+details.f{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--sev)}
+details.f.p1{--sev:var(--p1)} details.f.p2{--sev:var(--brass)} details.f.p3{--sev:var(--ink-3)}
+details.f[hidden]{display:none}
+summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:baseline;padding:11px 14px}
+summary::-webkit-details-marker{display:none}
+summary .id{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);min-width:2.6em}
+summary .sev{font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:2px 7px;border:1px solid var(--sev);color:var(--sev);border-radius:3px}
+summary .t{font-weight:600;font-size:15px;text-wrap:balance}
+summary .fr{font-family:var(--mono);font-size:11px;color:var(--founder);border:1px solid var(--founder);padding:1px 6px;border-radius:3px;margin-left:8px;white-space:nowrap}
+.body{padding:2px 14px 14px 14px;display:grid;grid-template-columns:110px 1fr;gap:6px 14px;font-size:14px;border-top:1px dashed var(--line)}
+.body dt{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);padding-top:9px}
+.body dd{margin:0;padding-top:8px;color:var(--ink-2);max-width:78ch}
+.body dd:first-of-type{color:var(--ink)}
+.body dd q{font-style:italic;color:var(--ink)}
+@media (max-width:640px){.body{grid-template-columns:1fr;gap:2px}.body dt{padding-top:10px}.body dd{padding-top:2px}summary{grid-template-columns:auto 1fr}summary .sev{grid-column:1;grid-row:2}}
+.dec{counter-reset:d;display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.dec > div{background:var(--surface);border:1px solid var(--line);padding:14px 16px 14px 18px;display:grid;grid-template-columns:auto 1fr;gap:12px}
+.dec > div::before{counter-increment:d;content:counter(d);font-family:var(--display);font-weight:700;font-size:22px;color:var(--brass);line-height:1}
+.dec h3{margin:0 0 4px;font-size:16px;font-weight:600}
+.dec p{margin:0;color:var(--ink-2);font-size:14px;max-width:80ch}
+.dec .rec{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--brass);border:1px solid var(--brass);padding:1px 7px;border-radius:3px;margin-right:6px;vertical-align:1px}
+.dec .src{font-family:var(--mono);font-size:12px;color:var(--ink-3);margin-top:6px}
+.right{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:14px}
+.right div{background:var(--surface-2);padding:12px 14px;font-size:14px;color:var(--ink-2)}
+.right div b{color:var(--ink);display:block;margin-bottom:3px}
+.quote{border-left:3px solid var(--lane);padding:6px 0 6px 16px;margin:12px 0;color:var(--ink-2);font-size:15px}
+.quote b{color:var(--ink);font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:4px}
+.quote.a{--lane:var(--a)} .quote.b{--lane:var(--b)} .quote.c{--lane:var(--c)}
+.caveat{background:var(--brass-soft);border:1px solid var(--brass);padding:14px 16px;font-size:14px;color:var(--ink);margin-top:14px;max-width:80ch}
+footer{margin-top:50px;border-top:1px solid var(--line);padding-top:16px;font-size:13px;color:var(--ink-3);font-family:var(--mono)}
+.tabular{font-variant-numeric:tabular-nums}
+.count-line{font-family:var(--mono);font-size:12.5px;color:var(--ink-3);margin-top:10px}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow">Keel · THE PLAN v2 · thinker round · 2026-09-06</div>
+  <h1>Three sealed experts read the whole plan. Sixty-four findings, eight of them said three times.</h1>
+  <p class="lede">A practitioner, an outsider and a strategist each read the 82-row spine, the 9,968-line plan, the synthesis, the world facts, the decision log and the harness. None read a review, a return, a session file or each other. <b>Nothing in the plan has been changed.</b> Every finding is rung 4 by the plan's own ladder: one model family, one agent per lane, and each lane says so of itself.</p>
+  <div class="lanes">
+    <div class="lane a"><p class="who">A · The practitioner</p><p class="role">Has run agent fleets, on-call rotations and a one-person company. Walked the days with their hands and measured on this Mac.</p><div class="count"><span>21 findings</span><span>6 P1</span><span>8 P2</span><span>7 P3</span></div><p class="q"><i>“As built on paper, Keel is a superb audit of a harness; it is not yet an operation.”</i></p></div>
+    <div class="lane b"><p class="who">B · The outsider</p><p class="role">Control systems and organisational economics. Distrusts prose plans, and this is 958,966 bytes of one.</p><div class="count"><span>23 findings</span><span>7 P1</span><span>12 P2</span><span>4 P3</span></div><p class="q"><i>“A control loop whose sensor is the plant's own description converges on a consistent description, not a working plant.”</i></p></div>
+    <div class="lane c"><p class="who">C · The strategist</p><p class="role">Has seen what happened to every “AI company in a box” since 2024 and what the world facts imply for 2027.</p><div class="count"><span>20 findings</span><span>4 P1</span><span>11 P2</span><span>5 P3</span></div><p class="q"><i>“The best-governed harness in the world, and it has never been measured against a market.”</i></p></div>
+  </div>
+</header>
+
+<h2>Where all three converge</h2>
+<p class="sub">Convergence across postures designed not to overlap is the strongest signal this round can give. Eight findings arrived from three sealed contexts.</p>
+<div class="scroll"><table>
+<thead><tr><th>#</th><th>The convergent finding</th><th>Said by</th></tr></thead>
+<tbody>
+<tr><td class="n">1</td><td><b>The founder's attention is the scarcest input and nothing budgets it.</b> Every token is priced; a founder-hour never is. The first month asks twenty-plus sign-offs, thirty pack artifacts, and a <i>which</i> queue with no throughput bound.</td><td class="who"><span class="dot a"></span>A11 A20 · <span class="dot b"></span>B3 B18 · <span class="dot c"></span>C4 C20</td></tr>
+<tr><td class="n">2</td><td><b>No stranger in the build graph.</b> The only venture is the harness. “Worked” is defined as a stranger acting, and no node reaches one. The first venture after the harness must be one whose anchor is a stranger's action.</td><td class="who"><span class="dot a"></span>vision · <span class="dot b"></span>B4 · <span class="dot c"></span>C1</td></tr>
+<tr><td class="n">3</td><td><b>R12 on the harness cannot test assumption 1.</b> The harness is the most anchorable venture possible, so the fraction returns high whatever the truth for pricing, copy and positioning. Selection on the dependent variable.</td><td class="who"><span class="dot a"></span>vision · <span class="dot b"></span>B4 · <span class="dot c"></span>C2</td></tr>
+<tr><td class="n">4</td><td><b>Vendors are shipping the bottom half of the plan.</b> Terminal pop, fleet page, cost arithmetic, bell, messaging, scheduling, fallback chains, a supervisor daemon with leases. The doctrine has no rule for <i>not building</i>. The moat is the record, the negatives, the anchors with mutation cases, the taste store, the Sender with no model.</td><td class="who"><span class="dot a"></span>A7 A8 A19 · <span class="dot b"></span>B6 · <span class="dot c"></span>C3 C17</td></tr>
+<tr><td class="n">5</td><td><b>The night is designed before the machine that could run it exists.</b> A fanless Air on battery sleeping every nineteen minutes; the always-on box deferred behind a measurement it cannot take; a third of the mechanisms exist to survive a regime the vendor's own data puts at the tail.</td><td class="who"><span class="dot a"></span>A1 A14 · <span class="dot b"></span>B14 B15 · <span class="dot c"></span>C9 C13</td></tr>
+<tr><td class="n">6</td><td><b>Sixteen of sixteen is a warning, not a mandate.</b> Option sets where B is “cheaper” and C is “no work” are a choice architecture. Ratified rows now carry the same never-relitigate status as the founder's own words, and the taste store will learn the model's recommendations with the founder's signature on them.</td><td class="who"><span class="dot b"></span>B5 B16 · <span class="dot c"></span>vision</td></tr>
+<tr><td class="n">7</td><td><b>The plan cannot bind because nothing that acts can read it.</b> 156,000 words; the binding two percent (roster, routing, schemas, prices, facts, rules) should be data the prose is rendered from, with a short constitution as the Operator's pre-flight read.</td><td class="who"><span class="dot a"></span>vision · <span class="dot b"></span>B6 · <span class="dot c"></span>C18</td></tr>
+<tr><td class="n">8</td><td><b>Capacity is economics carried as a legal footnote.</b> Chaining the metered-key question behind the terms question is backwards: the shadow subsidy is computable today and is the size of the bet.</td><td class="who"><span class="dot a"></span>A12 · <span class="dot b"></span>B7 B21 · <span class="dot c"></span>C7</td></tr>
+</tbody></table></div>
+
+<h2>All sixty-four findings</h2>
+<p class="sub">Filter by lane or severity. P1: the system fails or the founder is misled. P2: a real cost, mechanism or assumption that will bite. P3: an improvement or a sharpening. A finding marked <span class="fr" style="margin:0">FOUNDER ROW</span> challenges a decision the founder made and says what would move it.</p>
+<div class="toolbar" id="filters">
+  <span class="eyebrow">Lane</span>
+  <button class="tg" data-k="lane" data-v="all" aria-pressed="true">All</button>
+  <button class="tg" data-k="lane" data-v="a" aria-pressed="false">A · practitioner</button>
+  <button class="tg" data-k="lane" data-v="b" aria-pressed="false">B · outsider</button>
+  <button class="tg" data-k="lane" data-v="c" aria-pressed="false">C · strategist</button>
+  <span class="eyebrow" style="margin-left:10px">Severity</span>
+  <button class="tg" data-k="sev" data-v="all" aria-pressed="true">All</button>
+  <button class="tg" data-k="sev" data-v="p1" aria-pressed="false">P1</button>
+  <button class="tg" data-k="sev" data-v="p2" aria-pressed="false">P2</button>
+  <button class="tg" data-k="sev" data-v="p3" aria-pressed="false">P3</button>
+  <button class="tg" id="openall" style="margin-left:auto">Open every finding</button>
+</div>
+<div class="count-line" id="countline">Showing 64 of 64</div>
+
+<div class="list" id="list">
+
+<!-- ===== P1 ===== -->
+<details class="f p1" data-lane="a"><summary><span class="id">A1</span><span class="sev">P1</span><span class="t">The night has no runtime on this machine, and R5 was read backwards</span></summary><dl class="body">
+<dt>Where</dt><dd>§15.1a, §15.2: <q>The Mac was never off long enough for a cloud lane to have bought anything back this week.</q></dd>
+<dt>Problem</dt><dd>Measured: MacBook Air M4, 16 GB, on battery at 71%; <code>pmset -g custom</code> shows <code>sleep 1</code> on AC and battery; 391 maintenance sleeps, 74 back-to-sleep and 24 clamshell sleeps in seven days. One sleep every nineteen minutes. The plan read “asleep 40.7 h” as no tail for a cloud lane; a practitioner reads it as never awake unattended. O15's refusal fires every night. “Battery” appears once in 960 KB, inside a deferral.</dd>
+<dt>Why it matters</dt><dd>§0.5, §3.3, §4, §6, §16.4 and the overnight-versus-bounded premise describe work that cannot start on the founder's hardware. Every unattended run orphans at the first maintenance sleep and reads as the system being broken.</dd>
+<dt>What would change</dt><dd>Buy the always-on box before the first night, not after. Or gate the Watch on a founder act stated as a daily habit: <code>pmset -a disablesleep 1</code>, on AC, lid open. Or redefine the first night honestly as the hours the founder is at the desk and not typing.</dd>
+<dt>How we'd know</dt><dd>Dispatch one child at 01:00; at 07:00 count maintenance sleeps during the run and whether the reconciler wrote <code>orphaned</code>.</dd></dl></details>
+
+<details class="f p1" data-lane="a"><summary><span class="id">A2</span><span class="sev">P1</span><span class="t">Page 2's tap opens nothing: the founder's teams are in-process and have no panes<span class="fr">FOUNDER ROW v4 · v59</span></span></summary><dl class="body">
+<dt>Where</dt><dd>§14.5, §14.11: <q>Read its tmux pane id from ~/.claude/teams/&lt;team&gt;/config.json</q></dd>
+<dt>Problem</dt><dd>Measured over every team config: 48 teams, 224 members, 219 with <code>backendType: in-process</code>; the only pane ids are the strings “in-process” and “leader”. No teammate on this Mac has ever had a pane. <code>--tmux</code> requires <code>--worktree</code> and wants iTerm2; the founder runs Ghostty and Warp.</dd>
+<dt>Why it matters</dt><dd>The one page whose substrate ships will show a fleet the founder cannot tap into. The decision stands; its implementation must say which sessions can pop.</dd>
+<dt>What would change</dt><dd>Split the tap into two verbs on the page: <i>attach</i> for sessions <code>bin/run</code> minted in tmux, <i>message</i> for in-process teammates via the shipped channel. Or make <code>--teammate-mode tmux=classic</code> a required argument of the Operator's launch and measure it in Ghostty.</dd>
+<dt>How we'd know</dt><dd>Start one team with teams on; a real <code>%N</code> pane id per member means the page can attach.</dd></dl></details>
+
+<details class="f p1" data-lane="a"><summary><span class="id">A3</span><span class="sev">P1</span><span class="t">The managed file costs the founder their own working mode, priced at “four lines of JSON”<span class="fr">FOUNDER ROW §I row 8</span></span></summary><dl class="body">
+<dt>Where</dt><dd>§19.3, §12.6: <q>Only one founder act is on the critical path of everything, and it is four lines of JSON.</q></dd>
+<dt>Problem</dt><dd>The founder works in auto mode with the dangerous-mode prompt skipped, in five parallel sessions. Managed settings are machine-wide: <code>disableAutoMode</code> removes the mode the founder uses every day on the Floor, not only from night children. Nothing in §3, §12, §14 or §19 says so. <code>--restricted</code> already ignores user settings, which is the argument for not needing the file for night children at all.</dd>
+<dt>Why it matters</dt><dd>The founder writes the file on build day, loses auto mode by lunch, deletes the file, and v10 is a wish again with nobody recording why.</dd>
+<dt>What would change</dt><dd>State the cost beside the act. Then either the managed file carries only <code>permissions.deny</code> and <code>disableBypassPermissionsMode</code>, with night children as <code>dontAsk --restricted</code>, or the founder consciously gives up auto mode.</dd>
+<dt>How we'd know</dt><dd>Write the file, open the usual session, try <code>/permissions auto</code>. If it refuses, the cost is real and was undisclosed.</dd></dl></details>
+
+<details class="f p1" data-lane="a"><summary><span class="id">A4</span><span class="sev">P1</span><span class="t">The erasable path is defeated by the transcript corpus the plan also mines<span class="fr">FOUNDER ROW v69</span></span></summary><dl class="body">
+<dt>Where</dt><dd>§12.8b, §13.7: <q>run one erasure end to end, then grep the whole tree for the subject and find nothing but hashes.</q></dd>
+<dt>Problem</dt><dd>Every scout or steward run is a <code>claude -p</code> child, and Claude Code writes its transcript to <code>~/.claude/projects</code>: 62 directories, 3,116 files, 3.1 GB, growing 56 a day. A stranger's name and message body sit there verbatim, outside <code>keel/</code>, under vendor retention, and inside the mining pass's input. The data also went to the vendor's API. “Grep the whole tree” greps the wrong tree.</dd>
+<dt>Why it matters</dt><dd>The decision is right; its “settled by” is false as written. The founder will believe an erasure completed while the body sits on the same disk.</dd>
+<dt>What would change</dt><dd><code>--no-session-persistence</code> exists today. <code>bin/run</code> passes it on every child whose brief carries a taint id; the erasure grep adds the transcript directory; §12.8b names vendor retention as out of reach.</dd>
+<dt>How we'd know</dt><dd>Plant a canary in a fixture inbound row, run scout then steward, grep the transcripts. A hit is the finding.</dd></dl></details>
+
+<details class="f p1" data-lane="a"><summary><span class="id">A5</span><span class="sev">P1</span><span class="t">An egress proxy on loopback cannot be reached from a sandboxed child. Measured.<span class="fr">FOUNDER ROW v68</span></span></summary><dl class="body">
+<dt>Where</dt><dd>§8.1a, §15.7 R4: <q>One no-model program logs every outbound call. The cost, once: one program, one hop of latency.</q></dd>
+<dt>Problem</dt><dd>From this session's sandboxed Bash, <code>ollama list</code> returned <code>dial tcp 127.0.0.1:11434: connect: operation not permitted</code>. Not refused: denied at the syscall. R4's unmeasured half is measured. A <code>bin/egress</code> proxy on loopback is unreachable by exactly the process class it governs. A local model service is dead for any sandboxed run, though <code>ollama</code> is installed and unnamed.</dd>
+<dt>Why it matters</dt><dd>The shape a builder reaches for first fails silently, and “the proxy's call count matching the runtime's for one night” reads zero, which looks like success.</dd>
+<dt>What would change</dt><dd>Write v68 as a stdio MCP server for tool calls plus the sandbox's own network block for raw HTTP, with the credentials block doing injection. R2 becomes the whole transport question.</dd>
+<dt>How we'd know</dt><dd>Start a listener on loopback outside the sandbox, probe it from a restricted child's Bash, read the errno.</dd></dl></details>
+
+<details class="f p1" data-lane="a"><summary><span class="id">A6</span><span class="sev">P1</span><span class="t">One Operator is the plan; five parallel orchestrators is the founder</span></summary><dl class="body">
+<dt>Where</dt><dd>§3.1, §4.1 gate 2, §14.12: <q>Is the founder on the Floor?</q></dd>
+<dt>Problem</dt><dd>Measured: 20 worktrees, five of them <code>ceo-*</code> sessions; 48 team configs; three terminals on one console login; 825 commits by Claude Code, 129 by the founder. The founder's working shape is N orchestrators on one repository. The plan has one Operator, one <code>founder.last</code>, one Desk, one cord, one sterility predicate, one sessions writer, and a lease that scopes only <code>bin/run</code>'s children.</dd>
+<dt>Why it matters</dt><dd>The plan describes a company with one boss; the founder runs a bullpen. The mechanisms that assume one Operator misreport rather than fail: gate 2 has no truth value, the reserve is drawn five ways, five Operators may answer the same <i>which</i>.</dd>
+<dt>What would change</dt><dd>Either one Operator at a time, enforced by a lease and stated as a founder behaviour change, or model N: an Operator is a row in <code>sessions.jsonl</code>, the WIP limit counts interactive sessions, <code>founder.last</code> is per venture, the <i>which</i> queue takes a claim before rendering.</dd>
+<dt>How we'd know</dt><dd>On build day, count team directories and <code>ceo-</code> worktrees before and after. Two concurrent Operators is the observation.</dd></dl></details>
+
+<details class="f p1" data-lane="b"><summary><span class="id">B1</span><span class="sev">P1</span><span class="t">The plan is a rung-4 artifact by its own ladder, and its process optimises the document, not the system</span></summary><dl class="body">
+<dt>Where</dt><dd>§11.2: <q>Same-family review usable to rank and to flag. Never sufficient to certify.</q></dd>
+<dt>Problem</dt><dd>584 ABSENT marks, 170 mechanism lines, 28 named programs of which 26 do not exist, 38 stores and no <code>keel/</code> directory. Every reviewer of this plan is one Anthropic model reading prose: rung 4, which may rank and flag and never certify. Yet rows are marked decided and never re-litigated. The rethink round produced 80 mechanisms, 17 rows and zero lines of code; its feedback signal is reviewers' agreement with the text.</dd>
+<dt>Why it matters</dt><dd>Every decision was taken at maximum uncertainty, before the first run. Each mechanism specified before contact with reality is specification debt, and “never re-litigated” raises the price of paying it.</dd>
+<dt>What would change</dt><dd>Label the plan LOW-CONFIDENCE in its own header as §11.2 requires of any rung-4 claim. Freeze §A. Build the three-first (log, mining, one driven venture) and treat every mechanism as a hypothesis with a <code>wins_if:</code> of its own.</dd>
+<dt>How we'd know</dt><dd>Count rows whose text changed after the first measured overnight. A third or more means the pre-build decisions were noise.</dd></dl></details>
+
+<details class="f p1" data-lane="b"><summary><span class="id">B2</span><span class="sev">P1</span><span class="t">One unbuilt program is the enforcement point for the whole control plane, and it will be written by the thing it constrains</span></summary><dl class="body">
+<dt>Where</dt><dd>§3.5, §12.1: <q>The Operator never composes argv itself; bin/run (ABSENT) composes the argv.</q></dd>
+<dt>Problem</dt><dd><code>bin/run</code> is the mechanism behind at least fifteen rules; <code>bin/watch</code>, <code>bin/send</code>, <code>bin/probe</code> and <code>bin/check-stores</code> carry most of the rest. No defence in depth: one defect voids every interlock. v64 makes the harness the first venture, so <code>builder</code> on Fable writes the launcher that narrows <code>builder</code>. The plan forbids agents editing judging machinery; the judging machinery is entirely absent and will be authored by agents.</dd>
+<dt>Why it matters</dt><dd>Either the founder reads and certifies twenty-six security-critical programs, which is the bottleneck role the plan promises they will not hold, or waves them through and the cage is built by the prisoner.</dd>
+<dt>What would change</dt><dd>Independence of enforcement layers: the argv narrowing and the managed deny file are vendor-enforced today and need no code; make those the floor so a defect in <code>bin/run</code> cannot widen a grant. The four programs that touch the world (Sender, Watch, door, launcher) are founder-authored or founder-line-reviewed, tiny by design, with fixtures as their only admission test.</dd>
+<dt>How we'd know</dt><dd>Diff authorship of those four programs by actor. Agent-authored and merged on a single-family verdict is the failure.</dd></dl></details>
+
+<details class="f p1" data-lane="b"><summary><span class="id">B3</span><span class="sev">P1</span><span class="t">The founder's adjudication rate is the system's throughput bound, and it is unmodelled</span></summary><dl class="body">
+<dt>Where</dt><dd>§3.3, §2.7: <q>Staged as a which, with both options built and left for the founder, who answers with one tap.</q></dd>
+<dt>Problem</dt><dd>Every question outside the envelope becomes a <i>which</i>; every <i>which</i> builds two options and waits on one human. If whiches arrive faster than one founder resolves them the queue grows without bound, and standing intents plus ten ventures guarantee the arrival rate. The plan budgets rings and tokens and never budgets whiches. Building both options burns half the capacity on the unchosen half by construction. Away mode drains the queue without a decision.</dd>
+<dt>Why it matters</dt><dd>The scarcest resource is founder decisions per day. At scale the morning is an adjudication queue, which is the inverted architecture §0.1a fears, arriving by a route nobody named.</dd>
+<dt>What would change</dt><dd>Treat founder decisions as a capacity like the window: measure decisions per day, hold a <i>which</i> budget per window, refuse to open a <i>which</i> when the backlog exceeds throughput times horizon. Build one option and a written second unless a ten-word summary cannot separate them.</dd>
+<dt>How we'd know</dt><dd>Whiches opened versus answered per week. A growing backlog is the founder as bottleneck.</dd></dl></details>
+
+<details class="f p1" data-lane="b"><summary><span class="id">B4</span><span class="sev">P1</span><span class="t">R12 on the harness cannot falsify assumption 1, so the “cheapest measurement” is uninformative</span></summary><dl class="body">
+<dt>Where</dt><dd>§0.1a: <q>what fraction of the harness venture's first thirty real done-tests reach rung 1 without inventing an anchor. It is the cheapest measurement named anywhere in the round.</q></dd>
+<dt>Problem</dt><dd>Assumption 1 is that most company work has a deterministic anchor. The harness is software, the one domain where that is known true. Sampling thirty done-tests from it measures the anchorability of software. Selection on the dependent variable. “Without inventing an anchor” is undefined, so the fraction is whatever the writer of the done-tests wants.</dd>
+<dt>Why it matters</dt><dd>Row 16 has the largest blast radius on the page. A measurement that cannot return low will return high, and the founder will read it as settling the roster, the night and the trust score.</dd>
+<dt>What would change</dt><dd>Run R12 on the founder's own past work: classify a random sample of the 3,060 transcripts by domain and ask, per task, whether a check outside a model could have judged it. Define “inventing an anchor” operationally.</dd>
+<dt>How we'd know</dt><dd>A per-domain fraction. Code at 80% and everything else under 30% means the architecture inverts for every venture that is not the harness.</dd></dl></details>
+
+<details class="f p1" data-lane="b"><summary><span class="id">B5</span><span class="sev">P1</span><span class="t">Sixteen ratifications filed as founder decisions launders the orchestrator's design into “never re-litigated”<span class="fr">FOUNDER ROW v66–v81</span></span></summary><dl class="body">
+<dt>Where</dt><dd>§20.7: <q>Sixteen for sixteen is the shape of a synthesis whose options were well separated, or of one whose alternatives were not written strongly enough to win.</q></dd>
+<dt>Problem</dt><dd>In the synthesis's option tables, A is argued, B is “cheaper” and C is “no work” in nearly every row. That is a choice architecture, not a decision. Rows v66–v81 then carry the same fixed, founder status as v1, which the founder originated in their own words. The plan notices the tally is ambiguous and keeps the label.</dd>
+<dt>Why it matters</dt><dd>The rule that protects the founder's real decisions from erosion is being used to protect the orchestrator's designs from revision.</dd>
+<dt>What would change</dt><dd>Two classes of founder row: originated (the founder's words) and ratified (picked from an agent's list). Ratified rows reopenable by any engine with a reason and a falsifier. Every option set carries a genuinely argued second option, and the founder sees their agreement rate as a number.</dd>
+<dt>How we'd know</dt><dd>Roughly 14 originated and 16 ratified today. Future rounds above 90% agreement mean the founder is not deciding.</dd></dl></details>
+
+<details class="f p1" data-lane="b"><summary><span class="id">B6</span><span class="sev">P1</span><span class="t">A plan this long cannot bind, because nothing that acts can read it; it is the un-generated prose it refuses</span></summary><dl class="body">
+<dt>Where</dt><dd>§4.1, §5.2a: <q>a number written into prose stops being re-derived and starts being quoted, and then it is wrong and nobody notices.</q></dd>
+<dt>Problem</dt><dd>155,990 words, roughly 240K tokens. No engine loads it: the session-start payload is capped at 4 KB. Every builder reads a slice, and the census found exactly the failure that predicts. The cure, generators from single-source YAML, is entirely absent, so today the plan is four hand-kept copies of one table with three struck through. 218 strikethroughs and 54 in-place moves make the current state a diff the reader computes in their head.</dd>
+<dt>Why it matters</dt><dd>The binding artifacts for a builder are the roster, routing, schemas, prices and facts: the 2% that fits in a brief. The other 98% is argument and archaeology, valuable as record and worthless as instruction.</dd>
+<dt>What would change</dt><dd>Invert before build: write <code>roster.yml</code>, <code>routing.yml</code>, the four schemas, <code>prices.yml</code>, <code>facts.yml</code> and a <code>rules.yml</code> with mechanism, path and state per rule. Render the prose from them. Move superseded paragraphs to an archive.</dd>
+<dt>How we'd know</dt><dd>A builder brief for any program that fits under 8K tokens with nothing missing, and a count of “corrected in place” notes that stops growing.</dd></dl></details>
+
+<details class="f p1" data-lane="b"><summary><span class="id">B7</span><span class="sev">P1</span><span class="t">The economics rest on a supplier-controlled resource the supplier says not to use this way, and the plan refuses to price the alternative</span></summary><dl class="body">
+<dt>Where</dt><dd>§9.10, §20.1 row 17: <q>deliberately carrying no expiry: attaching one would decide row 1.</q></dd>
+<dt>Problem</dt><dd>Every ceiling, reserve and cost line is denominated in a consumer seat whose quota is unpublished, whose window shape changed once already, whose cache TTL collapses twelvefold on overage, and whose terms name automated access as prohibited except by API key. Supplier risk with no hedge. Row 17 is chained behind row 1, which is backwards: the metered-key economics are computable today from the price table.</dd>
+<dt>Why it matters</dt><dd>If the seat is withdrawn the company stops the same night with no second economics. If it is kept, the founder is running a business on an arbitrage whose size they have never seen.</dd>
+<dt>What would change</dt><dd>Add one briefing line: cumulative shadow API cost of unattended work versus the seat's price. That is the implied subsidy and the size of the bet. Pre-compute the metered design as a losing image with a <code>wins_if:</code>.</dd>
+<dt>How we'd know</dt><dd>The subsidy line. Small means row 1 is cheap to close by buying a key; large means the founder knows what they are betting.</dd></dl></details>
+
+<details class="f p1" data-lane="c"><summary><span class="id">C1</span><span class="sev">P1</span><span class="t">The build graph never reaches a stranger; the first venture is the system itself<span class="fr">FOUNDER ROW v64</span></span></summary><dl class="body">
+<dt>Where</dt><dd>§1.1 v64, §21.4: <q>Worked looks like: a venture reaches rung 2. A stranger did something.</q></dd>
+<dt>Problem</dt><dd>The plan's own definition of worked requires a stranger. The build order has one venture node and it is the harness; no exit criterion is a contact-rung movement. In 156,000 words: founder 853 times, venture 259, customer 24, revenue 5, market 7, distribution 3. The user-insights file is empty; the moat and positioning files are unfilled templates; the long-term memory records zero customer-facing work ever run.</dd>
+<dt>Why it matters</dt><dd>Three years on this is the best-governed harness in the world and has never been measured against a market. A company optimising its own epistemics compounds provenance, not revenue.</dd>
+<dt>What would change</dt><dd>A second, customer-facing venture in the same wave as the harness, with a contact-rung-2 target as the exit of the overnight node. The harness is the venture whose anchors exist; the second is the venture whose stranger exists.</dd>
+<dt>How we'd know</dt><dd>The first briefing that carries a contact-rung movement for any venture. If wave two is written before one exists, this is confirmed.</dd></dl></details>
+
+<details class="f p1" data-lane="c"><summary><span class="id">C2</span><span class="sev">P1</span><span class="t">R12 is circular and cannot settle the assumption the whole architecture rests on</span></summary><dl class="body">
+<dt>Where</dt><dd>§11.2, §0.1a: <q>the evidence for it comes from the harness, the most anchorable venture that could have been chosen.</q></dd>
+<dt>Problem</dt><dd>One paragraph says the harness is the most anchorable venture possible; the next says its first thirty done-tests measure whether company work is anchorable. Measured there, R12 returns high whatever the truth for positioning, pricing, copy and design. The row that says nothing should be built against the inverted architecture before it is gated on an experiment designed to pass.</dd>
+<dt>Why it matters</dt><dd>Contrarian assumption 1 decides the roster, the night, the trust score and the founder's role. A rigged measurement keeps the current architecture by default while the founder believes it was tested.</dd>
+<dt>What would change</dt><dd>Run R12 on paper now at zero build cost: draft thirty done-tests a real venture needs in its first month from the founder's own department list, count how many name a deterministic anchor that is not invented. Then run it on the second venture's real thirty.</dd>
+<dt>How we'd know</dt><dd>Two fractions side by side. If they differ by more than the sample floor, the harness number was never evidence.</dd></dl></details>
+
+<details class="f p1" data-lane="c"><summary><span class="id">C3</span><span class="sev">P1</span><span class="t">The vendors are shipping the plan's mechanisms faster than the plan can be built, and the plan has no rule for not building</span></summary><dl class="body">
+<dt>Where</dt><dd>§13a.7: <q>the round found thirty-two facts that had moved under rows nobody had touched.</q></dd>
+<dt>Problem</dt><dd>In seventeen days of changelog the vendors shipped cross-session messaging, a scheduler, per-agent cache TTL, a blocking model-switch hook, read narrowing, four cost fields, Codex interrupt hooks, Gemini named subagents and Devin automations with concurrency caps. Against that, §L designs eighty mechanisms: a wake reconciler beside the vendor's agent census, a bell beside push notifications, a price file beside the vendor's pricing field, a session ceiling beside the vendor's cap. v81 detects a moved fact; nothing says <i>do not build what a vendor has announced</i>. The plan names “two implementations of one check disagree silently” as its recurring defect and is about to commit it at the scale of the runtime.</dd>
+<dt>Why it matters</dt><dd>Every mechanism built where a vendor surface lands within a year is a second implementation to maintain and founder attention spent on a layer that will be free.</dd>
+<dt>What would change</dt><dd><code>vendor_wins_if:</code> beside every §L row, and one doctrine line: a mechanism is built only where no vendor surface exists or is announced, or where it is one of the kernel four (direction, record, truth, taste). Sort §L by that line before §19 orders it.</dd>
+<dt>How we'd know</dt><dd>When the first program lands, count the functions a vendor field now provides. More than a third confirms it.</dd></dl></details>
+
+<details class="f p1" data-lane="c"><summary><span class="id">C4</span><span class="sev">P1</span><span class="t">The founder's attention is the scarcest resource and the plan spends it before any venture does</span></summary><dl class="body">
+<dt>Where</dt><dd>§2.7: <q>The complete list. If the system needs more than this, the design has failed.</q></dd>
+<dt>Problem</dt><dd>That list has ten rows. Before the first night the plan requires five founder-act nodes, a hook rewrite, a keychain token and tunnel, at least eight research questions needing a founder act, thirty onboarding artifacts, fifteen mutation cases, fifty-four <code>wins_if:</code> lines, sixteen-decision interview rounds, and every <i>which</i> the night stages. The long-term memory records the founder's own suspicion that more checks drive tokens much higher while output is no better; the rethink answered with eighty more mechanisms. Nothing budgets the founder's hours for building the harness at all.</dd>
+<dt>Why it matters</dt><dd>By the plan's own doctrine a rule with no mechanism is a wish, and §2.7 is a wish. The founder is misled about what this costs them, in the one resource nothing can buy back.</dd>
+<dt>What would change</dt><dd>The harness charter gets a ceiling in founder-hours per week, read by the Desk like a token ceiling; harness intents stop starting when it is spent, ventures do not. One founder act per week is the intake rate for founder-act nodes.</dd>
+<dt>How we'd know</dt><dd>Founder-minutes per week split harness against venture. If harness minutes are not falling by month two, the harness is the founder's job.</dd></dl></details>
+
+<!-- ===== P2 ===== -->
+<details class="f p2" data-lane="a"><summary><span class="id">A7</span><span class="sev">P2</span><span class="t">The vendor ships a daemon with leases, spare workers and a supervisor, and the plan designs a supervisor beside it</span></summary><dl class="body">
+<dt>Where</dt><dd>§15.2, §17.5, O15, O16, O70: <q>A LaunchAgent holds the Watch.</q></dd>
+<dt>Problem</dt><dd>Measured: <code>~/.claude/daemon/</code> with a control key, dispatch and roster; a daemon log reading “spare spawned”, “supervisor idle 5s with no clients, exiting, leases=0”. This repo's own sandbox names the daemon and jobs paths. The plan's inventory of scheduling surfaces omits it; <code>bin/supervise</code>, the reconciler and the lease are designed with no row saying what the vendor's supervisor already does.</dd>
+<dt>Why it matters</dt><dd>Two supervisors, two lease concepts, one process table. The first orphan at 03:00 is argued over by both.</dd>
+<dt>What would change</dt><dd>A daemon row in §10.5 and §15.6; decide whether <code>bin/run</code> mints via <code>--bg</code> (daemon-managed, listable) or bare <code>-p</code>; reconcile against the daemon's roster.</dd>
+<dt>How we'd know</dt><dd>Launch one child with <code>--bg</code>, read the daemon's roster and log. If the daemon owns its lifecycle, the supervisor is a second implementation of one check.</dd></dl></details>
+
+<details class="f p2" data-lane="a"><summary><span class="id">A8</span><span class="sev">P2</span><span class="t"><code>--fallback-model</code> is a shipped chain that reroutes silently, the exact thing v78 forbids<span class="fr">FOUNDER ROW v78</span></span></summary><dl class="body">
+<dt>Where</dt><dd>§9.4a: <q>A three-deep fallback: per agent, one frontmatter field × fifteen files, ABSENT.</q></dd>
+<dt>Problem</dt><dd>The CLI today accepts a comma-separated fallback list and retries the primary at the start. The plan mentions the flag zero times. Passed, the runtime reroutes mid-run with no rung demotion recorded; omitted, the only fallback is the runtime's own retry.</dd>
+<dt>Why it matters</dt><dd>The decision stands; its carrier is half-shipped and half-adverse.</dd>
+<dt>What would change</dt><dd>Compose the chain from the roster into the flag and register the model-switch hook to annotate every switch as a demotion, or refuse the flag and reroute between runs where the handover can record it.</dd>
+<dt>How we'd know</dt><dd>Dispatch with a deliberately invalid primary and read the handover's <code>maker_model</code>.</dd></dl></details>
+
+<details class="f p2" data-lane="a"><summary><span class="id">A9</span><span class="sev">P2</span><span class="t">The second family's CLI cannot start under the live sandbox, and the denyRead list is stale</span></summary><dl class="body">
+<dt>Where</dt><dd>§10.5, §15.4: <q>gemini -p --approval-mode plan</q></dd>
+<dt>Problem</dt><dd>Measured: <code>gemini --version</code> under the sandbox fails with EPERM on <code>~/.gemini/settings.json</code>. The live sandbox also denies <code>~/.codex</code> and <code>~/.config/openai</code>, three paths the plan omits. A scout routed to Gemini from any Claude-hosted shell dies at startup.</dd>
+<dt>Why it matters</dt><dd>The one free second family is unreachable from inside the harness that would dispatch it, and the failure reads as a broken install.</dd>
+<dt>What would change</dt><dd>Gemini and Codex run only as <code>bin/run</code> children, never from a Claude session's shell; the host file carries the real denyRead list; the probe asserts it from both contexts.</dd>
+<dt>How we'd know</dt><dd>The same command from a LaunchAgent.</dd></dl></details>
+
+<details class="f p2" data-lane="a"><summary><span class="id">A10</span><span class="sev">P2</span><span class="t">Auto-compact is on by default and per-invocation; R9 is half-answered and v24 is broken inside every long run</span></summary><dl class="body">
+<dt>Where</dt><dd>§13.3 R9: <q>Does an unattended -p run auto-compact, and does it emit anything the log can see?</q></dd>
+<dt>Problem</dt><dd>The CLI exposes <code>--autocompact</code> and user settings carry a window. A <code>-p</code> run compacts, and the runtime rewrites the run's context, which is the collapse v24 forbids. Compaction invalidates the standing prefix, so the next call is a 2x cache write on a one-hour TTL, and the prefix hash changes mid-run through no dispatch of ours.</dd>
+<dt>Why it matters</dt><dd>Two costs the plan never prices, inside the dominant term of its own cost model.</dd>
+<dt>What would change</dt><dd>Set the window to the model's full context so a run ends at its turn or token ceiling before it compacts; the tokenizer field carries the number.</dd>
+<dt>How we'd know</dt><dd>One run past 200k tokens with streaming output, looking for the compaction message and the cache-write spike.</dd></dl></details>
+
+<details class="f p2" data-lane="a"><summary><span class="id">A11</span><span class="sev">P2</span><span class="t">The bootstrap is undescribed, and every step of it is irreversible-tier under the repo's own classifier</span></summary><dl class="body">
+<dt>Where</dt><dd>§19, §5.0a: <q>nothing unattended runs before the managed settings file exists.</q></dd>
+<dt>Problem</dt><dd>Before one builder can be dispatched the graph needs twelve nodes, ten agent files and thirty pack artifacts, each needing a demonstration that its anchor fires, which needs the run that does not exist. Every one of those PRs touches agent or hook paths, which the classifier tiers irreversible: multi-judge plus founder sign-off per PR. The plan has no node for the harness that builds Keel, and v64 makes the circularity load-bearing.</dd>
+<dt>Why it matters</dt><dd>Twenty-plus founder sign-offs before the first dispatch, and a pack artifact that cannot be produced for wave one without an unwritten waiver.</dd>
+<dt>What would change</dt><dd>A §19 preamble naming the builder of each node, a bootstrap exemption for the demonstration artifact (the first run is the demonstration), and a founder decision whether Keel's own PRs ride the irreversible tier or a named build-time tier.</dd>
+<dt>How we'd know</dt><dd>Count founder sign-offs between the first Keel commit and the first dispatch.</dd></dl></details>
+
+<details class="f p2" data-lane="a"><summary><span class="id">A12</span><span class="sev">P2</span><span class="t">A ceiling in window share has no denominator on day one, and one already exists on disk<span class="fr">FOUNDER ROW v74</span></span></summary><dl class="body">
+<dt>Where</dt><dd>§16.2a, §2.1 charter: <q>tokens against an observed high-water mark, because no denominator is published.</q></dd>
+<dt>Problem</dt><dd>At intake the founder writes a ceiling as a fraction of a high-water mark not yet observed. Measured: the repo's budget guard already records a peak of 1,961,285 output tokens in a rolling five-hour window across 99 transcripts.</dd>
+<dt>Why it matters</dt><dd>The unit is right; without a seed the founder writes the first ceilings in a currency nothing has counted.</dd>
+<dt>What would change</dt><dd>Seed the high-water file from the budget guard's baseline; the founder writes a percentage of it; page 3 shows the absolute beside it.</dd>
+<dt>How we'd know</dt><dd>The first charter written: does the founder type a number or ask what a window is?</dd></dl></details>
+
+<details class="f p2" data-lane="a"><summary><span class="id">A13</span><span class="sev">P2</span><span class="t">The skill metadata tax, measured: ~53 tokens per skill, ~7k for 134, ~110k for 2,111</span></summary><dl class="body">
+<dt>Where</dt><dd>§7.6a: <q>roughly 100 tokens of metadata at startup for every installed skill.</q></dd>
+<dt>Problem</dt><dd>134 skills carry 28,250 bytes of name-and-description frontmatter, about 7,062 tokens. At the upstream's 2,111 that is roughly a tenth of a 1M window on every cold start before any work.</dd>
+<dt>What would change</dt><dd>Run R8 before the import (one command per tree, reading input tokens); write the measured per-skill cost into the checker as its constant.</dd></dl></details>
+
+<details class="f p2" data-lane="a"><summary><span class="id">A14</span><span class="sev">P2</span><span class="t">Twenty concurrent children on a 16 GB fanless laptop is an unmeasured bound</span></summary><dl class="body">
+<dt>Where</dt><dd>§14.12, R23: <q>20 concurrent subagents (the vendor's cap).</q></dd>
+<dt>Problem</dt><dd>16 GB, memory pressure at 44% free with five interactive sessions. Twenty Node children plus Bun, a Fastify server, a browser, tmux and a local model will page. R23 asks about the vendor's ceiling and should ask about this machine's.</dd>
+<dt>What would change</dt><dd>R23 gains RSS per child and the page-in point on this Mac; the sessions ceiling is set from that measurement, not the vendor's 20.</dd></dl></details>
+
+<details class="f p2" data-lane="b"><summary><span class="id">B8</span><span class="sev">P2</span><span class="t">The rung ladder conflates verifier independence with property adequacy, and the rung-1 share invites Goodhart</span></summary><dl class="body">
+<dt>Where</dt><dd>§11.2, §21.1: <q>for most company work there is a deterministic anchor, and finding it is the intellectual task of writing the done-test.</q></dd>
+<dt>Problem</dt><dd>Rung 1 includes “a test passes”, and the test is written by a model. The ladder measures who executed the check, not whether it tests the claim. A deterministic check of the wrong property is deterministic. A metric that must not fall on the share of checkable work will be met by writing done-tests that are checkable.</dd>
+<dt>Why it matters</dt><dd>The central quality number becomes a measure of how testable the goals were made, the self-report failure §11.7 exists to catch, one abstraction up.</dd>
+<dt>What would change</dt><dd>Two axes on every anchor: verifier and adequacy (does it test the stated property, judged by a second reader who wrote neither). Count rung 1 only when both hold. Report the share of intents whose done-test was rewritten after the anchor was chosen.</dd>
+<dt>How we'd know</dt><dd>Done-tests getting shorter and more mechanical while founder rejections of passed work rise.</dd></dl></details>
+
+<details class="f p2" data-lane="b"><summary><span class="id">B9</span><span class="sev">P2</span><span class="t">The lexicographic Desk moves the starvation problem rather than solving it, and its replay cannot measure value</span></summary><dl class="body">
+<dt>Where</dt><dd>§4.5: <q>The Desk ranks lexicographically: obligations first, then the founder's weight band, then cheapest inside the band.</q></dd>
+<dt>Problem</dt><dd>Any strict priority order starves the lower tiers when the upper tier saturates. A venture with customers produces an obligation tide, and the founder's weight-5 intent never runs while obligations exist. Nothing shares capacity across ventures. The replay measures dispatch counts under two orders, not outcomes, because undispatched intents produced no outcome.</dd>
+<dt>Why it matters</dt><dd>Scheduling under a shared resource is a solved problem with known failure modes; a bespoke comparator rediscovers them one night at a time.</dd>
+<dt>What would change</dt><dd>Weighted fair queueing across ventures with the founder's weight as the share, obligations pre-empting only inside their own lead time, slack-based ordering among obligations.</dd>
+<dt>How we'd know</dt><dd>Replay a synthetic month with an obligation tide on one venture; count the other venture's top-weight dispatches. Zero is starvation.</dd></dl></details>
+
+<details class="f p2" data-lane="b"><summary><span class="id">B10</span><span class="sev">P2</span><span class="t">Trust-gated routability deadlocks at cold start</span></summary><dl class="body">
+<dt>Where</dt><dd>§5.6, O26, v71: <q>below the floor on a move class, that class is unroutable for that agent until a rehearsal passes.</q></dd>
+<dt>Problem</dt><dd>The trust score prints insufficient below a sample floor; a pack requires one rehearsal case, which is below the floor. A new agent's every move class is unroutable until it has enough anchored runs, which it cannot accumulate because it is unroutable.</dd>
+<dt>Why it matters</dt><dd>Wave one is ten agents with zero anchored history. Day one is ten agents and no dispatch.</dd>
+<dt>What would change</dt><dd>A probation state: below the floor an agent is routable only on the Floor or under a founder-authored intent, and each anchored run counts. State the floor as a number and the probation as a status in the roster.</dd>
+<dt>How we'd know</dt><dd>Dispatch counts per agent in the first week. Zero for any wave-one agent is the deadlock.</dd></dl></details>
+
+<details class="f p2" data-lane="b"><summary><span class="id">B11</span><span class="sev">P2</span><span class="t">Skill admission at n=2–3 over 2,111 candidates is a false-positive factory, and expiry does not cure it</span></summary><dl class="body">
+<dt>Where</dt><dd>§7.3: <q>an admission on 2–3 cases is admission below the floor, so it is recorded as insufficient.</q></dd>
+<dt>Problem</dt><dd>With-skill versus baseline on two or three prompts has a false-positive rate near a coin toss; across two thousand candidates that admits hundreds that do nothing, each taxing every run's startup. Expiry re-runs the same underpowered test. The plan's own statistics rule says the sample supports no decision, and the mechanism decides anyway with a label attached.</dd>
+<dt>What would change</dt><dd>Sequential testing on real work: provisional admission, activation joined to anchor outcome, a decision when the evidence crosses a threshold in either direction. The admission eval becomes a smoke test for triggering.</dd>
+<dt>How we'd know</dt><dd>Among admitted skills, the share whose activated runs pass their anchors no better than baseline after a quarter.</dd></dl></details>
+
+<details class="f p2" data-lane="b"><summary><span class="id">B12</span><span class="sev">P2</span><span class="t">The curator grades every agent and nothing grades the curator; rung 1 rests on model-written cases</span></summary><dl class="body">
+<dt>Where</dt><dd>§13.1, §11.10: <q>the curator's grant is the only one whose writable scope includes the memory paths.</q></dd>
+<dt>Problem</dt><dd>The curator writes memory, taste, negatives, slice precision, the calibration number and the rehearsal cases the trust score is computed from. Its own anchor is a format check; a well-formed false item passes. The rehearsal runner is a program, but the cases are produced by a Sonnet curator over a small classifier's segmentation of transcripts.</dd>
+<dt>Why it matters</dt><dd>A single agent with unchecked authority over what the company believes and how every other agent is scored: the org-chart failure the plan otherwise designs against.</dd>
+<dt>What would change</dt><dd>A held-out discrimination test on every case set, not only taste, and a founder-labelled seed of cases no curator may edit, extending v78's calibration set to memory.</dd>
+<dt>How we'd know</dt><dd>Inject a well-formed false memory item in the scratch house and see whether anything downstream refuses it.</dd></dl></details>
+
+<details class="f p2" data-lane="b"><summary><span class="id">B13</span><span class="sev">P2</span><span class="t">Reversibility is judged per act by the run, which puts a rung-4 judgement at the most consequential gate</span></summary><dl class="body">
+<dt>Where</dt><dd>§12.2 flowchart: <q>Can the system itself undo this within the undo window, with nobody else noticing, and has that undo been drilled?</q></dd>
+<dt>Problem</dt><dd>The envelope is keyed on reversibility, and the question is answered by the run, a model, about its own intended action. The default never-list and the door's classes are data; the flowchart is not. A persuaded run answers yes.</dd>
+<dt>Why it matters</dt><dd>The one-way decision is where a mistake is unrecoverable, and it is the one decision the plan lets a model make about itself.</dd>
+<dt>What would change</dt><dd>Reversibility is a property of a verb in the admitted-tool file, never of an act. A run chooses verbs; an unlisted verb is one-way by default. Delete the run-side question.</dd>
+<dt>How we'd know</dt><dd>Grep the launcher: any reversibility predicate that takes model output as input.</dd></dl></details>
+
+<details class="f p2" data-lane="b"><summary><span class="id">B14</span><span class="sev">P2</span><span class="t">Away mode widens autonomy exactly when nobody can pull the cord<span class="fr">FOUNDER ROW v76</span></span></summary><dl class="body">
+<dt>Where</dt><dd>§4.4: <q>the reserve is released to autonomous work when the last event is older than the reserve's own horizon.</q></dd>
+<dt>Problem</dt><dd>Safety engineering uses dead-man principles: absence of the operator narrows what the machine may do. v76 inverts it: absence releases the reserve and executes <i>which</i> defaults. The founder's absence is also the period with no recall, no cord and no wake-me anyone will act on.</dd>
+<dt>Why it matters</dt><dd>The worst night to run at full capacity is the one where a wrong default fires and nobody sees the briefing for a week.</dd>
+<dt>What would change</dt><dd>Release the reserve only to work whose anchors have no effect and whose outputs stage; never execute a default that touches a one-way verb while away. What would move the row: one drilled week away with nothing regretted, or an incident.</dd>
+<dt>How we'd know</dt><dd>The count of defaults executed while away that the founder later reversed.</dd></dl></details>
+
+<details class="f p2" data-lane="b"><summary><span class="id">B15</span><span class="sev">P2</span><span class="t">R5 is one week from the busiest week the machine has had, and a decision is being priced on it</span></summary><dl class="body">
+<dt>Where</dt><dd>§15.1a: <q>span 2026-08-30 21:44 → 2026-09-06 09:39 (156 h, all the log retains).</q></dd>
+<dt>Problem</dt><dd>The week measured is the week this plan was written, with the founder running lanes day and night. Sleep in that week is a floor, not an estimate. The plan carries a caveat and then writes “prices the lane at zero” three times, with three decimal places.</dd>
+<dt>What would change</dt><dd>Log <code>pmset</code> continuously and re-read R5 after a month that includes a weekend away. State the number as a floor.</dd>
+<dt>How we'd know</dt><dd>The longest gap over thirty days.</dd></dl></details>
+
+<details class="f p2" data-lane="b"><summary><span class="id">B16</span><span class="sev">P2</span><span class="t">The taste loop trains on ratifications of model recommendations</span></summary><dl class="body">
+<dt>Where</dt><dd>§12.5, §11.6: <q>a fraction of rejections is held out, so it is scored on predicting what the founder wants rather than what they approve.</q></dd>
+<dt>Problem</dt><dd>Every <i>which</i> carries the run's recommendation. A founder answering with one tap mostly takes it; sixteen of sixteen is the evidence. The taste store is derived from those taps, so it learns the model's preferences with the founder's signature. The held-out test cannot detect that “accepted” is “recommended”.</dd>
+<dt>Why it matters</dt><dd>The one asset the plan calls the founder's alone becomes a mirror of the model.</dd>
+<dt>What would change</dt><dd>A control arm: on a random fraction of whiches, omit or randomise the recommendation. Record agreement with the recommendation beside the taste score.</dd>
+<dt>How we'd know</dt><dd>Agreement above 90% with the recommendation present and materially different choices without it.</dd></dl></details>
+
+<details class="f p2" data-lane="b"><summary><span class="id">B17</span><span class="sev">P2</span><span class="t">The onboarding pack's rehearsal case contradicts O11, and R19 is contaminated as written<span class="fr">FOUNDER ROW v71</span></span></summary><dl class="body">
+<dt>Where</dt><dd>§17.1, §7.2a: <q>The generator writes eval-only bodies into keel/golden/ and never into .claude/skills/.</q></dd>
+<dt>Problem</dt><dd>O11 says a rehearsal case must not be readable by the run it judges. v71 puts one in the agent's pack, and R19 tests packed versus unpacked on the same cases. Either the case is readable (contamination; R19 measures memorisation) or it is not, and “pack” means a file in golden. A twenty-third contradiction the census did not list.</dd>
+<dt>Why it matters</dt><dd>R19 is the falsifier for a founder row. A contaminated falsifier cannot fail.</dd>
+<dt>What would change</dt><dd>Split the pack: exemplar and demonstration are the agent's; the rehearsal case is golden's, referenced and never carried.</dd>
+<dt>How we'd know</dt><dd>Grep a running agent's loaded context for any known answer.</dd></dl></details>
+
+<details class="f p2" data-lane="b"><summary><span class="id">B18</span><span class="sev">P2</span><span class="t">“Two kinds of thing and nothing else” is false; the founder owns roughly forty dials the plan never inventories</span></summary><dl class="body">
+<dt>Where</dt><dd>§2: <q>The founder writes two kinds of thing and nothing else is required of them.</q></dd>
+<dt>Problem</dt><dd>Reserve share, interruptions per day, tick, WIP per venture, driven limit, sessions ceiling, undo window, exploration fraction, weight and ceiling and horizon per venture, recurrence on drills, cache TTL and expiry and fallback and turn caps on fifteen agents, expiry on every skill and memory item, wake-me thresholds, the sample floor, the high-water fraction. Each is “the founder's number”, which is the plan's way of not deciding.</dd>
+<dt>Why it matters</dt><dd>A control system with forty setpoints and no setpoint table is tuned by folklore.</dd>
+<dt>What would change</dt><dd>A settings schema listing every founder-set value, its default, and the briefing line that is its evidence. Delete the ones with no evidence line.</dd>
+<dt>How we'd know</dt><dd>The count, and how many carry a default the founder has never touched after a quarter.</dd></dl></details>
+
+<details class="f p2" data-lane="b"><summary><span class="id">B19</span><span class="sev">P2</span><span class="t">The emergency stop has four upstream dependencies</span></summary><dl class="body">
+<dt>Where</dt><dd>§12.9, §14.11: <q>One tap from mission control, one word on the Floor, one command in a terminal, and tested on purpose.</q></dd>
+<dt>Problem</dt><dd>From the phone the cord needs the tunnel up, the token check passing, the keychain readable by a detached process (open question) and the Mac awake. From the Mac it needs the launcher to have recorded a process group. There are at least four stop semantics. An e-stop with dependencies is a normal control.</dd>
+<dt>Why it matters</dt><dd>The one control the founder is told stops everything is the one most likely unreachable on the night it is needed.</dd>
+<dt>What would change</dt><dd>A stop that needs nothing: the Watch refuses to dispatch unless a founder-renewed lease is fresh, so the absence of the heartbeat is itself the stop. Keep the tap as the fast path.</dd>
+<dt>How we'd know</dt><dd>Drill the cord from the phone with the Mac's network off and count what stops.</dd></dl></details>
+
+<details class="f p2" data-lane="c"><summary><span class="id">C5</span><span class="sev">P2</span><span class="t">A charter carries no outcome, so the company has no scoreboard except its own activity</span></summary><dl class="body">
+<dt>Where</dt><dd>§2.1, §16.8: <q>cost per finished intent | must fall</q></dd>
+<dt>Problem</dt><dd>The charter has tempo, envelope, ceiling, weight, horizon, entity and cloud, and no outcome. Nothing knows what a venture is for in a number the world sets. The Desk ranks by obligation, unblocking, weight and cost; the weekly lines reward finishing intents. §16.8 admits its first line can be gamed by finishing small things. Wind-down has to choose at a horizon with nothing to compare against.</dd>
+<dt>Why it matters</dt><dd>A company without a scoreboard optimises throughput. Ten ventures at driven tempo with no outcome is an expensive way to be busy.</dd>
+<dt>What would change</dt><dd><code>outcome:</code> on the charter: one contact-rung target by the horizon, checkable by a record the company does not write. The Desk reads it as the tie-break inside a weight band; wind-down reads it at the horizon.</dd>
+<dt>How we'd know</dt><dd>The first horizon disposition that cites the outcome row rather than the founder's mood.</dd></dl></details>
+
+<details class="f p2" data-lane="c"><summary><span class="id">C6</span><span class="sev">P2</span><span class="t">A second model family is available today at zero cost and the plan treats it as blocked</span></summary><dl class="body">
+<dt>Where</dt><dd>§5.7, SYNTHESIS §6: <q>there is no non-Anthropic model reachable from inside Claude Code.</q></dd>
+<dt>Problem</dt><dd>The cross-model architecture hinges on a Codex TTY bug open 130 days while Gemini is installed and one terminal act from authenticated, carried as scout only. The launcher is a no-model program outside any Claude session, which dissolves the “inside Claude Code” constraint. The metered-key question is chained behind the Anthropic terms reading, though a Gemini or OpenAI key for a checker is not the Anthropic clause at all.</dd>
+<dt>Why it matters</dt><dd>Every review behind this plan is single-family, accepted to 2026-11-17. It need not be accepted for a day.</dd>
+<dt>What would change</dt><dd>Authenticate Gemini now and route reviewer and challenger to it as the second family for every diff, not scout only. Decouple a checker-family key from row 1: a few dollars a month, scoped to checking, on a vendor whose terms are not the open question.</dd>
+<dt>How we'd know</dt><dd>R11's twenty-five paired checks run within a month of the key existing.</dd></dl></details>
+
+<details class="f p2" data-lane="c"><summary><span class="id">C7</span><span class="sev">P2</span><span class="t">The capacity model is a business decision carried as a legal footnote</span></summary><dl class="body">
+<dt>Where</dt><dd>§16.2a: <q>A ceiling is stated in window share because no denominator is published.</q></dd>
+<dt>Problem</dt><dd>The throughput ceiling is unknowable by construction: one seat, two windows, shared with the founder's own chat, no published quota, teams at 7x, builders on Fable. The plan never estimates finished intents per window for the roster it designs, and defers the alternative behind a terms reading four fetches could not obtain.</dd>
+<dt>Why it matters</dt><dd>Whether Keel can run more than one venture is an economic fact, and it decides the roster, the night and the reserve.</dd>
+<dt>What would change</dt><dd>Treat capacity as its own decision: seat for the Floor and the Operator; metered or gateway for the night and the checkers, priced from R7 and the first overnight. Row 1 then governs only what the seat may do unattended.</dd>
+<dt>How we'd know</dt><dd>Finished intents per window on the briefing with the dollar shadow price beside it.</dd></dl></details>
+
+<details class="f p2" data-lane="c"><summary><span class="id">C8</span><span class="sev">P2</span><span class="t">Only taste crosses ventures; what the market taught venture A never reaches venture B</span></summary><dl class="body">
+<dt>Where</dt><dd>§13.2: <q>FACTS, NEGATIVES, ALREADY-BUILT and OPEN are per venture and do not cross without a promotion.</q></dd>
+<dt>Problem</dt><dd>The compounding asset of a multi-venture company is what happened in the world: a price that converted, a channel that replied, a positioning a stranger understood. Those are per-venture facts whose only path across is a founder-reviewed promotion. The plan calls negatives the highest-value store and scopes them to the venture.</dd>
+<dt>Why it matters</dt><dd>Ten ventures that each learn pricing from scratch is ten times the cost of one that learned it once.</dd>
+<dt>What would change</dt><dd>A house-scope market record, one row per contact-rung movement with the intent, venture, channel and proving record, written by the reconciler, readable by every venture's Desk.</dd>
+<dt>How we'd know</dt><dd>The second venture's first thirty intents cite the first venture's ship-log rows, or they do not.</dd></dl></details>
+
+<details class="f p2" data-lane="c"><summary><span class="id">C9</span><span class="sev">P2</span><span class="t">The night is built first and the vendor's own measurement says the unit of work is forty-five minutes</span></summary><dl class="body">
+<dt>Where</dt><dd>§3.3: <q>Forty-five minutes is the outer measured unattended stretch, and this mode is designed for a night.</q></dd>
+<dt>Problem</dt><dd>The plan reads W31 and W14 as costs of the mode and answers with more mechanism: orphan reconciler, lease, catch-up, power assertions, cloud lane. The only measurement that says whether a night pays, one week overnight against one week bounded, is the last node in the graph. A third of §L exists to survive a regime the vendor's data puts at the tail of anyone's practice.</dd>
+<dt>Why it matters</dt><dd>If bounded beats overnight, that third is sunk before the comparison runs, and the founder's hours with it.</dd>
+<dt>What would change</dt><dd>Invert the order: Floor, Desk, launcher, Sender, reconciliation, one venture; run the comparison as the first measurement; put the night machinery behind its result.</dd>
+<dt>How we'd know</dt><dd>Rung movement per window spent, overnight against bounded.</dd></dl></details>
+
+<details class="f p2" data-lane="c"><summary><span class="id">C10</span><span class="sev">P2</span><span class="t">Growth is bounded by the founder's tap rate, and the plan does not say so</span></summary><dl class="body">
+<dt>Where</dt><dd>§5.3: <q>It never sends. First contact with a stranger is on the default never list.</q></dd>
+<dt>Problem</dt><dd>The split is correct and every outward act routes through the Sender after a founder tap. The plan designs widening for tools and nothing equivalent for outward classes as a growth ladder: reply to an existing thread, follow up a consented contact, publish to a preview. Contact rungs 1 and 2 arrive at the founder's tap rate.</dd>
+<dt>Why it matters</dt><dd>A company whose every first contact is a founder tap grows at the founder's speed, the thing the company exists to escape.</dd>
+<dt>What would change</dt><dd>A widening ladder per outward class with a measured undo and a recall count: after N recall-free sends the class widens one step; a recall narrows it. Set per venture in the charter.</dd>
+<dt>How we'd know</dt><dd>Sends per week that needed no tap, and recalls per hundred sends.</dd></dl></details>
+
+<details class="f p2" data-lane="c"><summary><span class="id">C11</span><span class="sev">P2</span><span class="t">There is no null hypothesis: Keel is never compared against the vanilla runtime</span></summary><dl class="body">
+<dt>Where</dt><dd>§20.2 row 12: <q>one week overnight against one week bounded on the same venture.</q></dd>
+<dt>Problem</dt><dd>The only comparison is between two modes of Keel. Nothing compares Keel to a single Claude Code session with a good project file, goals, teams, scheduling and routines, which now supply most of what the plan builds. The doctrine has no falsifier for the rule “build Keel”.</dd>
+<dt>Why it matters</dt><dd>If the vanilla runtime achieves most of the purpose paragraph for none of the build, the founder should know before wave one.</dd>
+<dt>What would change</dt><dd>One venture-week on vanilla, one on Keel's kernel, same done-tests, judged by rung movement and founder-minutes.</dd>
+<dt>How we'd know</dt><dd>The two numbers side by side, before the launcher exists.</dd></dl></details>
+
+<details class="f p2" data-lane="c"><summary><span class="id">C12</span><span class="sev">P2</span><span class="t">Every carrier is one vendor's experimental surface, and only that vendor's argv is designed</span></summary><dl class="body">
+<dt>Where</dt><dd>§17.7: <q>Claude Code (subscription) | every agent of 17.1; the Floor, always; the Operator.</q></dd>
+<dt>Problem</dt><dd>v78 gives every agent a model fallback; nothing gives the company a runtime fallback. Fifteen agents, the Floor, page 2, messaging, goals, the cache economics and the Operator itself are one vendor, and page 2 stands on a feature repaired four times in the window and never promoted out of experimental. Only the Claude argv is specified.</dd>
+<dt>Why it matters</dt><dd>Platform risk is the one risk the rethink lanes did not have a lane for.</dd>
+<dt>What would change</dt><dd>Specify and exercise one wave-one agent's Gemini argv so the launcher is a real two-provider launcher before the roster grows; run the outage drill with the Claude carrier denied, not only the model.</dd>
+<dt>How we'd know</dt><dd>Does anything finish that night.</dd></dl></details>
+
+<details class="f p2" data-lane="c"><summary><span class="id">C13</span><span class="sev">P2</span><span class="t">Identity and autonomy share one machine, and the machine that would separate them is bought last</span></summary><dl class="body">
+<dt>Where</dt><dd>§15.1: <q>The box is bought after the first measured overnight, not before.</q></dd>
+<dt>Problem</dt><dd>The founder's signed-in browser, the mail and calendar grants, the keychain and the ventures' credentials sit on the Mac that runs unattended agents holding Bash. The sandbox is a guardrail against accident, not containment, and the plan says so. The always-on box is the one purchase that separates identity from autonomy, and it is deferred.</dd>
+<dt>Why it matters</dt><dd>One prompt injection on the founder's machine is a loss of the founder's identity, not only a venture's.</dd>
+<dt>What would change</dt><dd>Buy the box first; the founder's Mac stays the Floor and the client. The Watch, the Sender, the log and the night move there on day one.</dd>
+<dt>How we'd know</dt><dd>The probe attempts a keychain read from a night run on the box and fails.</dd></dl></details>
+
+<details class="f p2" data-lane="c"><summary><span class="id">C14</span><span class="sev">P2</span><span class="t">The onboarding pack deadlocks its own bootstrap<span class="fr">FOUNDER ROW v71</span></span></summary><dl class="body">
+<dt>Where</dt><dd>§17.1 pack table: <q>Exemplar of its own good output | the curator, from a real handover, with provenance | it carries no provenance, or was written rather than harvested.</q></dd>
+<dt>Problem</dt><dd>An agent is not routable without a pack; the pack's exemplar is written by the curator; the curator is a wave-one agent that needs its own pack; the exemplar must come from a real handover and fails if written rather than harvested; no handover exists before the first run, which cannot happen before the pack.</dd>
+<dt>Why it matters</dt><dd>The first day of the build stalls on a rule that refuses the only thing that could satisfy it.</dd>
+<dt>What would change</dt><dd>A seed state for wave-one packs: rehearsal case and demonstration required, exemplar harvested after the first N anchored handovers, with the seed marked on the roster.</dd>
+<dt>How we'd know</dt><dd>Attempt to write the curator's pack on day one under the rule as written.</dd></dl></details>
+
+<details class="f p2" data-lane="c"><summary><span class="id">C15</span><span class="sev">P2</span><span class="t">The roster's cost compounds per provider and per mechanism, not per file<span class="fr">FOUNDER ROW v1 · v31</span></span></summary><dl class="body">
+<dt>Where</dt><dd>v71, §17.8: <q>three artifacts per agent, thirty for a ten-agent wave one.</q></dd>
+<dt>Problem</dt><dd>Fourteen was decided as one file per agent. Since then each agent carries an argv file per provider, a pack of three, an expiry disposition, a three-deep fallback, a routing row, a cache TTL, a calibration number, a trust score per move class and a mutation case per anchor. The marginal agent is a dozen artifacts across three providers, and the evidence for the band is “unoccupied”.</dd>
+<dt>Why it matters</dt><dd>The cost of fourteen was stated once as a band; it is now multiplied by the rethink round and not restated.</dd>
+<dt>What would move it</dt><dd>Routing counts per agent per month, with the per-agent artifact count beside it so the founder sees what each name costs to keep.</dd></dl></details>
+
+<!-- ===== P3 ===== -->
+<details class="f p3" data-lane="a"><summary><span class="id">A15</span><span class="sev">P3</span><span class="t">Per-invocation settings are an argv carrier the grant matrix does not name</span></summary><dl class="body">
+<dt>Problem</dt><dd>The CLI accepts <code>--settings</code> and <code>--setting-sources</code>, putting settings on argv. Per-child write allowances and read narrowing may be composable by the launcher without the managed file, unless <code>--restricted</code> also ignores them: one measurement. Also on the same page: an inline agent definition flag (a second carrier for what v42 says has one home) and a dangerous-skip flag the managed file must be shown to cover.</dd></dl></details>
+
+<details class="f p3" data-lane="a"><summary><span class="id">A16</span><span class="sev">P3</span><span class="t">R3 sharpened: the runtime itself reads the keychain, and the classifier will block a probe from inside a session</span></summary><dl class="body">
+<dt>Problem</dt><dd>The login keychain has no idle timeout. Every child already reads the keychain for its token, so R3 is really whether that read survives a LaunchAgent context after clamshell sleep: one detached run. The auto-mode classifier blocked a read-only keychain probe today, so the launcher and the probe must run outside any Claude session or be denied by the harness they serve.</dd></dl></details>
+
+<details class="f p3" data-lane="a"><summary><span class="id">A17</span><span class="sev">P3</span><span class="t">The unresolved flags exist, and <code>--tmux</code> wants iTerm2</span></summary><dl class="body">
+<dt>Problem</dt><dd>The CLI on 2.1.263 lists <code>--worktree</code> and <code>--tmux</code>, closing two gaps the plan marks unresolved. <code>--tmux</code> requires a worktree and uses iTerm2 panes when available. Write <code>--tmux=classic</code> into the launcher for the four worktree agents and name Ghostty as the founder's terminal.</dd></dl></details>
+
+<details class="f p3" data-lane="a"><summary><span class="id">A18</span><span class="sev">P3</span><span class="t">The exit-code goal condition: the evaluator is a model reading a transcript, not a shell</span></summary><dl class="body">
+<dt>Problem</dt><dd>A small model checks whether the condition holds; it cannot run the anchor, only read what the run printed. The run should execute the anchor and print one canonical line, and the condition names that line. R17 then measures whether the evaluator honours it.</dd></dl></details>
+
+<details class="f p3" data-lane="a"><summary><span class="id">A19</span><span class="sev">P3</span><span class="t">The bell is a wrapper, not a transport; the transcript watermark is day-one</span></summary><dl class="body">
+<dt>Problem</dt><dd>Remote Control push and task notifications already ship and the user settings carry a push flag. The bell should be the budget and the acted-on rate in front of the vendor's push, not a fourth channel. The transcript corpus grew 56 files in a day, so the mining pass's steady state is one program from the first run: state it as day-one, not year-two.</dd></dl></details>
+
+<details class="f p3" data-lane="a"><summary><span class="id">A20</span><span class="sev">P3</span><span class="t">The founder's tempo is bursts, and three mechanisms assume a daily rhythm<span class="fr">FOUNDER ROW v76</span></span></summary><dl class="body">
+<dt>Problem</dt><dd>Commits per day over the last fortnight: 15, 85, 35, 305, 0, 105, 100, 1, 12, 0, 0, 0, 0, 56, 40. The interruption budget, the morning briefing and the five-hour reserve model a daily founder. v76 handles away; nothing handles burst. A reserve per weekly window with the away predicate on both edges would fit the founder that exists.</dd></dl></details>
+
+<details class="f p3" data-lane="a"><summary><span class="id">A21</span><span class="sev">P3</span><span class="t">The cord from the phone stops only the launcher's children</span></summary><dl class="body">
+<dt>Problem</dt><dd>Stopping subagents and teammates goes through their session. With five interactive Operators, a cord pulled on the phone signals the launcher's process groups and leaves five running teams untouched. Say so on the control: stops the night, not the Floor.</dd></dl></details>
+
+<details class="f p3" data-lane="b"><summary><span class="id">B20</span><span class="sev">P3</span><span class="t">Standing intents never expire; everything durable carries a horizon</span></summary><dl class="body">
+<dt>Problem</dt><dd>Two rules, one object. The horizon walker visits intents; a standing intent has no horizon to walk. A standing intent that has fired uselessly for a year is exactly what expiry exists to catch. Give it an expiry like everything else.</dd></dl></details>
+
+<details class="f p3" data-lane="b"><summary><span class="id">B21</span><span class="sev">P3</span><span class="t">“No durations” is over-applied into “no plant model”</span></summary><dl class="body">
+<dt>Problem</dt><dd>Refusing schedules is right. Refusing measured rates is different, and the plan has no capacity model: runs per window per shape, tokens per run, intents per week. Without it the reserve cannot be sized and the WIP limit cannot be derived. A units table in the facts file, per shape, with expiry.</dd></dl></details>
+
+<details class="f p3" data-lane="b"><summary><span class="id">B22</span><span class="sev">P3</span><span class="t">Once the generators exist, fourteen agents are fourteen loadouts, and v1's stated cost is nominal<span class="fr">FOUNDER ROW v1</span></span></summary><dl class="body">
+<dt>Problem</dt><dd>An agent file is a model, a grant, a namespace set, an anchor and a prompt, generated from one YAML row. FINAL's three shapes with loadouts per run are the same object with a different name. What v1 actually buys is the per-agent trust denominator and the packs, which are orthogonal to the count. The founder's decision and the losing image converged; say so rather than keep paying rhetorical cost for a difference that has become a file format.</dd></dl></details>
+
+<details class="f p3" data-lane="b"><summary><span class="id">B23</span><span class="sev">P3</span><span class="t">The Watch is an open-loop controller with static setpoints, and the plan should say that plainly</span></summary><dl class="body">
+<dt>Problem</dt><dd>The Watch ranks, materialises obligations, decides to ring, releases the reserve and fires defaults. It is the controller; the cheap-pass argument is about cost, not authority. Its setpoints are fixed numbers with no feedback except through the founder. Defensible, but name it: static gains on a non-stationary plant, retuned by hand, with control charts on the Watch's own outputs so drift in the controller is visible.</dd></dl></details>
+
+<details class="f p3" data-lane="c"><summary><span class="id">C16</span><span class="sev">P3</span><span class="t">The skills import is already mostly refused by the plan's own content rule<span class="fr">FOUNDER ROW v3</span></span></summary><dl class="body">
+<dt>Problem</dt><dd>73 of 134 skills on disk are procedure and cannot enter as written; the 2,111 upstream are written to a spec that recommends procedure; the vendor now bundles skills with the runtime. The instruction to take all the skills the biggest systems use survives as a container standard, an eval loop and a budget, with most of the corpus rewritten or refused. That is the right outcome and the founder should hear it plainly: the library's value in 2027 is the company's own anchors, exemplars and negatives.</dd></dl></details>
+
+<details class="f p3" data-lane="c"><summary><span class="id">C17</span><span class="sev">P3</span><span class="t">Five of seven pages are commodity within a year; page 4 is the one that is ours<span class="fr">FOUNDER ROW v4</span></span></summary><dl class="body">
+<dt>Problem</dt><dd>The office is pixel-agents; page 2 is the vendor's agent view; page 3 is the vendor's cost fields; page 6 is a renderer with no extractor; page 7 is a canvas idiom. Page 4, a card that launches a team against an intent with a done-test, is the single surface with no prior art and the only one that touches a venture's actual work. Build page 4 first and buy the rest.</dd></dl></details>
+
+<details class="f p3" data-lane="c"><summary><span class="id">C18</span><span class="sev">P3</span><span class="t">The plan is its own bottleneck: nothing reads 156,000 words cold, including its agents</span></summary><dl class="body">
+<dt>Problem</dt><dd>§0.3 states the four invariants in four sentences; the rest is 625 ABSENT marks, 82 rows, 80 mechanisms, 26 questions and 72 losing images. Split: a short constitution (the four invariants, the doctrine, the envelope, the open rows) as the Operator's pre-flight read, byte-identical for the cache; and the record, which is what this document already is. Test: a fresh agent given the constitution alone writes a brief that passes the store check.</dd></dl></details>
+
+<details class="f p3" data-lane="c"><summary><span class="id">C19</span><span class="sev">P3</span><span class="t">The cloud lane is designed against a tail measured at zero<span class="fr">FOUNDER ROW v56 · v79</span></span></summary><dl class="body">
+<dt>Problem</dt><dd>Two rows, a carrier, a charter field, a research subsection and a graph node stand behind a lane whose measured value is zero over 156 hours, whose driver is an issue-only claim and whose cancel path is unknown. The strategic reading of R5 is the reverse of a cloud lane: the Mac is never off because the founder is always on it. What would move it: a longer log with whole days off, or a documented cloud driver with cancel.</dd></dl></details>
+
+<details class="f p3" data-lane="c"><summary><span class="id">C20</span><span class="sev">P3</span><span class="t">The founder's hour has no price, so a which cannot be traded against autonomous work</span></summary><dl class="body">
+<dt>Problem</dt><dd>The reserve is 30%, the interruption budget is three a day, both options are built before a <i>which</i> is asked: every one spends founder attention without a price. The Desk cannot ask whether this <i>which</i> is worth more than the two builds it cost. One charter number, the founder's hour in window share, read by the away predicate and by the Desk when it decides to stage a <i>which</i> rather than pick the default.</dd></dl></details>
+
+</div>
+
+<h2>Founder rows the round challenges</h2>
+<p class="sub">Thirteen decisions you made. None is presented as a mistake by the plan's authors; each names what would move it.</p>
+<div class="scroll"><table>
+<thead><tr><th>Row</th><th>The challenge</th><th>By</th></tr></thead>
+<tbody>
+<tr><td class="who">v64</td><td>The harness as first venture keeps the company from ever reaching a stranger. Add a customer-facing venture in the same wave.</td><td class="who">C1 B4</td></tr>
+<tr><td class="who">v1 · v31</td><td>Once the generators exist, fourteen names are fourteen loadouts and the cost is nominal. The per-agent artifact count is now a dozen across three providers. Say <i>converged</i>; let the routing-count falsifier decide.</td><td class="who">B22 C15</td></tr>
+<tr><td class="who">v71</td><td>The onboarding pack deadlocks its own bootstrap; the rehearsal case inside the pack contradicts O11 and contaminates R19.</td><td class="who">C14 B10 B17</td></tr>
+<tr><td class="who">v76</td><td>Away mode releases the reserve and fires defaults exactly when nobody can pull the cord. Dead-man principle: absence narrows.</td><td class="who">B14 A21</td></tr>
+<tr><td class="who">v69</td><td>Right decision, false “settled by”: 3.1 GB of transcripts and vendor retention are outside the grep.</td><td class="who">A4</td></tr>
+<tr><td class="who">v68</td><td>The obvious egress shape, a loopback proxy, fails at the syscall. Must be a stdio MCP server plus the sandbox network block.</td><td class="who">A5</td></tr>
+<tr><td class="who">v78</td><td>The fallback carrier is half-shipped and half-adverse: a silent reroute flag exists and is unmentioned.</td><td class="who">A8</td></tr>
+<tr><td class="who">v74</td><td>No denominator on day one; the budget guard already holds a measured high-water mark to seed it.</td><td class="who">A12</td></tr>
+<tr><td class="who">v4 · v59</td><td>Page 2's tap must split into <i>attach</i> for minted sessions and <i>message</i> for in-process teammates.</td><td class="who">A2</td></tr>
+<tr><td class="who">v56 · v79</td><td>The cloud lane is designed against a tail measured at zero; the Mac is never off because the founder is always on it.</td><td class="who">C19 A1</td></tr>
+<tr><td class="who">v3</td><td>73 of 134 skills are procedure and refused by the plan's own rule; the library's value is the company's own anchors and negatives.</td><td class="who">C16 B11</td></tr>
+<tr><td class="who">§I row 8</td><td>The managed file costs the founder auto mode on the Floor, undisclosed.</td><td class="who">A3</td></tr>
+<tr><td class="who">v66–v81</td><td>Ratified rows, picked from an agent's list, should be a second class, reopenable with a falsifier.</td><td class="who">B5</td></tr>
+</tbody></table></div>
+
+<h2>Ten decisions not on the open list</h2>
+<p class="sub">Raised by the round; yours to take. The orchestrator's recommendation is marked on each, and the outsider's own warning applies: read a recommendation as a choice architecture. The alternatives are in the reports.</p>
+<div class="dec">
+<div><div><h3>Who the first stranger is</h3><p><span class="rec">RECOMMENDED</span>Name a customer-facing venture in wave one beside the harness, with a contact-rung-2 target as the exit of the overnight node.</p><div class="src">A vision · B4 · C1</div></div></div>
+<div><div><h3>Buy the always-on box before the first night, not after</h3><p><span class="rec">RECOMMENDED</span>The founder's Mac stays the Floor and the client; the Watch, Sender, log and night move to the box on day one.</p><div class="src">A1 · C13</div></div></div>
+<div><div><h3>A commodity line in the doctrine</h3><p><span class="rec">RECOMMENDED</span><code>vendor_wins_if:</code> beside every mechanism; build only where no vendor surface exists or is announced, or where it is one of the kernel four: direction, record, truth, taste. Reorder the build by it.</p><div class="src">C3 · B vision · A vision</div></div></div>
+<div><div><h3>Budget the founder's attention</h3><p><span class="rec">RECOMMENDED</span>A founder-hours ceiling per week on the harness charter, read by the Desk like a token ceiling; a <i>which</i> budget per window; one option built and a written second unless a ten-word summary cannot separate them; the briefing's first line is decisions taken, deferred, defaulted.</p><div class="src">C4 · B3 · C20</div></div></div>
+<div><div><h3>Run R12 on your own transcripts now, per domain, at zero build cost</h3><p><span class="rec">RECOMMENDED</span>Then again on the second venture's real thirty. Define “inventing an anchor” operationally first.</p><div class="src">B4 · C2</div></div></div>
+<div><div><h3>Two classes of founder row</h3><p><span class="rec">RECOMMENDED</span>Originated (your words) and ratified (picked from an agent's list). Ratified rows reopenable by any engine with a reason and a falsifier; every option set carries a genuinely argued second option; a control arm on whiches where the recommendation is hidden.</p><div class="src">B5 · B16</div></div></div>
+<div><div><h3>The capacity model as economics</h3><p><span class="rec">RECOMMENDED</span>Compute the shadow API cost of unattended work against the seat price as a briefing line; decouple a checker-family key from the terms question; decide seat-for-the-Floor, metered-for-the-night from R7 and the first overnight.</p><div class="src">B7 · C6 · C7</div></div></div>
+<div><div><h3>Invert the plan into data before build</h3><p><span class="rec">RECOMMENDED</span>Roster, routing, the four schemas, prices, facts and rules as YAML with mechanism, path and state; prose rendered from them; a short constitution as the Operator's pre-flight read; superseded paragraphs to an archive.</p><div class="src">B6 · C18</div></div></div>
+<div><div><h3>Model the founder's real shape</h3><p><span class="rec">RECOMMENDED · MODEL N</span>Either N Operators, each a row in the sessions log with the <i>which</i> queue taking a claim before answering, or one Operator enforced by lease as a stated behaviour change.</p><div class="src">A6 · A21</div></div></div>
+<div><div><h3>Bounded-day first, night second</h3><p><span class="rec">RECOMMENDED</span>Build Floor, Desk, launcher, Sender, reconciliation and one venture; run the overnight-versus-bounded comparison as the first measurement; put the night machinery behind its result.</p><div class="src">C9 · A1</div></div></div>
+</div>
+
+<h2>What all three say is right</h2>
+<p class="sub">So the critique is calibrated. A weaker plan would not have these.</p>
+<div class="right">
+<div><b>The trifecta as argv, and a Sender that holds no model</b>Removing a leg at dispatch time is structural. Staged-not-sent survives a fully persuaded agent, and few plans in this field can say that.</div>
+<div><b>ABSENT versus WISH, with a path per mechanism</b>Every builder knows what does not exist; nothing reads as enforced by being described.</div>
+<div><b>Losing images with a revival condition</b>Seventy-two decisions that can be wrong out loud, each with the observation that would revive it.</div>
+<div><b>A check that reads a record the company does not write outranks one that reads its own</b>The single idea that makes an autonomous company measurable rather than self-reporting.</div>
+<div><b>The world lane</b>Thirty-two vendor facts re-fetched against the plan in one round and applied in place. Most plans never re-read the vendor.</div>
+<div><b>Crash-only instincts, and unrated anchors</b>Run-started before exec, orphaned never finished, the lease; and an anchor that has never failed is unrated, the one instrument that can fall for a good reason.</div>
+</div>
+
+<h2>The vision, from each chair</h2>
+<div class="quote a"><b>A · the practitioner</b>A company that keeps working when the laptop closes, spends the founder's attention as its scarcest input, and can show any number against a record it did not write. <i>If I had the founder's hands for a week: buy the box; write the log and the launcher; run one builder against one real venture intent through one anchor; read the transcript in the morning; then decide what the second program is.</i></div>
+<div class="quote b"><b>B · the outsider</b>A measurement instrument wrapped around one person's judgement. The asset is the ledger of what this founder decided, what was tried, what failed and which checks predicted which outcomes. <i>Every serious runtime will ship dispatch, teams, messaging and a fleet page; none will ship a decade of one founder's labelled judgement with provenance. Build for the asset, and let the vendors build the rest.</i></div>
+<div class="quote c"><b>C · the strategist</b>A company kernel of four things on whatever runtime is current: direction, record, truth, taste. Everything else is an adapter to a vendor surface that will exist within a year. <i>The moat is a year of records, anchored, hash-chained, cross-venture, with the world's own replies attached. No vendor ships that and no competitor can copy it, because it is made of what happened.</i></div>
+
+<div class="caveat"><b>Caveat, in every lane's own words.</b> One model family, one agent per lane, three lanes of the same family. Convergence here is convergence of one family's reasoning, not independence. By the plan's own ladder every finding is rung 4: it may rank and flag, and it certifies nothing. The practitioner's measurements are reproducible by the commands quoted in the report. Three of the outsider's findings are also findings about reviews like this one.</div>
+
+<footer>
+Sources: docs/03-system-design/final-v2/review/thinker-A.md · thinker-B.md · thinker-C.md · thinkers-digest.md · DECISIONS §23. Recorded 2026-09-06. Nothing applied, nothing built, nothing pushed.
+</footer>
+</div>
+
+<script>
+(function(){
+  var state={lane:'all',sev:'all'};
+  var items=Array.prototype.slice.call(document.querySelectorAll('#list details.f'));
+  var count=document.getElementById('countline');
+  function apply(){
+    var n=0;
+    items.forEach(function(d){
+      var ok=(state.lane==='all'||d.dataset.lane===state.lane)&&(state.sev==='all'||d.classList.contains(state.sev));
+      d.hidden=!ok; if(ok) n++;
+    });
+    count.textContent='Showing '+n+' of '+items.length;
+  }
+  document.querySelectorAll('#filters button.tg[data-k]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var k=b.dataset.k; state[k]=b.dataset.v;
+      document.querySelectorAll('#filters button.tg[data-k="'+k+'"]').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
+      apply();
+    });
+  });
+  var oa=document.getElementById('openall'), open=false;
+  oa.addEventListener('click',function(){
+    open=!open;
+    items.forEach(function(d){ if(!d.hidden) d.open=open; });
+    oa.textContent=open?'Close every finding':'Open every finding';
+  });
+  try{ var saved=localStorage.getItem('tlk-open'); if(saved){ saved.split(',').forEach(function(id){ var el=document.getElementById(id); if(el) el.open=true; }); } }catch(e){}
+  items.forEach(function(d,i){ d.id=d.id||('f-'+d.querySelector('.id').textContent); d.addEventListener('toggle',function(){ try{ localStorage.setItem('tlk-open',items.filter(function(x){return x.open}).map(function(x){return x.id}).join(',')); }catch(e){} }); });
+})();
+</script>
