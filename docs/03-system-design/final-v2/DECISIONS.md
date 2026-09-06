@@ -172,3 +172,27 @@ ADD · REFUSE-STANDS — and for anything but KEEP a proposal with its mechanism
 the SPINE row it moves. Outputs land as files under `final-v2/rethink/`, committed as they land; a synthesis follows;
 the founder decides through AskUserQuestion, as in the interview. Nothing built, nothing pushed. Fan-out is nine by
 direct dispatch, the founder's standing preference (DECISIONS §5).
+
+## §18 — The founder's decisions on the rethink synthesis · 2026-09-06
+
+Asked in four AskUserQuestion rounds from rethink/SYNTHESIS.md §1, sixteen decisions D1–D16. **The founder chose the
+recommended option on all sixteen.** Recorded by label; each becomes a SPINE row v66–v81.
+
+| D | Decision | Founder's choice |
+|---|---|---|
+| D1 | Mission control's identity and the phone | Loopback bind + a keychain-held token on every write route + an authenticated tunnel for the phone |
+| D2 | What the cord stops | Both: the launcher records each child's process group and the cord signals it; `bin/run` refuses unattended work on a carrier whose stop path is UNKNOWN |
+| D3 | One egress program | Build `bin/egress`; `--strict-mcp-config` names only the proxy; the MCP policy file becomes its configuration |
+| D4 | Erasable data path and consent | Both now: hash in log and memory, one erasable per-subject store, a consent register with one writer read by the Sender before any contact |
+| D5 | Wave one | Curator and challenger both join wave one |
+| D6 | Onboarding pack | Yes, every agent, wave one included — not routable without it |
+| D7 | Agent expiry | Yes, all fifteen carry `valid_until` with a forced disposition (Refresh · Merge · Retire) |
+| D8 | Rate the anchors | Every anchor carries a mutation case or is marked unrated; §21's rung-1 share splits rated/unrated |
+| D9 | Currency | Ceilings in window share (tokens against an observed high-water mark), USD as a shadow price; exploration routed off the Claude seat past a founder-set fraction |
+| D10 | Desk ranking | Lexicographic: obligations · unblocking work · weight band · cheapest; `Decay` split and defined for standing intents |
+| D11 | Away mode | The last founder event as a derived value: release the reserve when away, execute a which's default at expiry, build one option not two, a since-you-left view |
+| D12 | Skill budget | Per-agent startup metadata budget, enforced; one generated directory per namespace |
+| D13 | Fallback | Three-deep `fallback:` per agent ending in stop-and-stage; cross-family reroute is a rung demotion unless rehearsed; a frozen `class: calibration` set; one provider-outage drill |
+| D14 | Hosted lane | Measure hours-off first; add the charter field `cloud: allow \| deny`, default deny, now |
+| D15 | Agent-to-agent messaging | A message is a handover or an objection on the handover schema, one append-only file each; asks carry a deadline and a fallback; the vendor transport's ids are attributes, never a join key |
+| D16 | Rethink triggers | `source:` and `valid_until` on every fact-based SPINE row; a scout standing intent re-fetches them; one `wins_if:` line per losing image |
