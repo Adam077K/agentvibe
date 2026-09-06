@@ -126,7 +126,8 @@ in `sessions.jsonl` (ABSENT, O84) · **`facts.yml`** (ABSENT, O117).
 
 **(FOUNDER, fixer round 2026-09-06: E1 → v83; E13 → v84 · O81)** *"dont need for now. use this mac and when cant use
 cloude."* The night runs **on this Mac** — no box — and the Watch decides every tick whether it can hold one. **A
-predicate, not a habit (THINKER: A1 · W33):** `pmset -g custom` reads `sleep 1` on AC and battery, 391 maintenance
+predicate, not a habit (THINKER: A1 · W33; the sleep counts are a reading on a rolling log window — §15.1b and W33
+carry that, and R37 settles it · amended 2026-09-06: census D):** `pmset -g custom` reads `sleep 1` on AC and battery, 391 maintenance
 sleeps in seven days; a habit the Watch cannot verify is a wish. `bin/watch` computes **`night_capable`** from
 `pmset -g batt` (AC), `pmset -g custom` (`sleep 0` or `disablesleep 1`) and `pmset -g assertions`, against the
 contract in `keel/host/power.yml` (§15 owns the file). An `unattended: true` brief is **refused with the printed

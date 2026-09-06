@@ -85,7 +85,11 @@ the founder's**, and the measurement it asked for has been taken.
 > zero episodes of one hour or longer · longest single sleep 0.3 h (about 20 minutes). The Mac was never off long
 > enough for a cloud lane to have bought anything back this week."*
 
-**The caveat travels with the number and is not a footnote to it.** The log covers **only the span it retains**, and
+**The caveat travels with the number and is not a footnote to it.** ~~The log covers~~ **The log window ROLLS: it
+covers** **only the span it retains**, and that span moves hourly — the same read gave **168 h and 348/77 sleeps a
+few hours later** on 2026-09-06 (census D), so the span, the 40.7 hours and the 487 episodes are **a reading, not a
+constant**, while **zero episodes of an hour or more** has held at every reading and is what the argument rests on.
+**R37** replaces all of it with thirty days including a weekend away (O82). And
 **DarkWake power-naps are counted as wakes** — so *asleep* here means *the machine could not have run a process*, and
 a longer history might read differently. What the measurement does settle is the shape of the argument: **487 short
 sleeps and no gap over an hour** is a tail a cloud lane cannot buy back, and §I row 1's terms question is a real cost
@@ -121,8 +125,10 @@ pushes `claude/`-prefixed branches, so it has a repository and not this laptop. 
 
 **(FOUNDER, fixer round 2026-09-06: E13 — *"Watch checks, refuses, routes to cloud"*; v84, `class: ratified`; the
 mechanism is O81.)** E1 put the night on this Mac, and this Mac sleeps. **(THINKER: A1 · W33)** — `pmset -g custom`
-reads `sleep 1` on AC and on battery; seven days of log hold 391 maintenance sleeps, 74 back-to-sleep and 24 clamshell
-sleeps; on battery at 71% when measured. Cited, not restated; its reading of R5 is carried here: *never awake
+reads `sleep 1` on AC and on battery; seven days of log hold **391 maintenance sleeps, 74 back-to-sleep and 24
+clamshell sleeps** — **a reading on a rolling window, not a constant**: hours later the same command gave 348 and 77,
+the clamshell 24 was exact at both, and the load-bearing finding, **zero episodes of an hour or more**, held at both
+*(amended 2026-09-06: census D; R37's thirty days is what settles it)*; on battery at 71% when measured. Cited, not restated; its reading of R5 is carried here: *never awake
 unattended* is the same log as *no tail for a cloud lane*. A habit is a wish the Watch cannot verify. So:
 
 - **`night_capable` is computed every tick** from three reads: on AC (`pmset -g batt`), sleep off — `sleep 0` or

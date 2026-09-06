@@ -300,8 +300,9 @@ operator` row in `sessions.jsonl` with a heartbeat (amended 2026-09-06: E8 / THI
 who is sleeping, what each is doing on the current task.
 
 **(FOUNDER, fixer round 2026-09-06: E8 · v91 · O84 — one Operator was already false.)** The plan drew one Operator;
-this Mac ran **five `ceo-*` worktrees in three terminals**, 825 commits by Claude Code to 129 by the founder (THINKER:
-A6 · W41). A premise false from the start makes the reserve, sterility and the lease misreport rather than fail. So an
+this Mac ran ~~**five**~~ **six `ceo-*` worktrees in three terminals**, ~~825~~ **851** commits by Claude Code to 129 by the founder (THINKER:
+A6 · W41; **re-measured 2026-09-06, census D** — §3.1 carries the commands and the reason the ratio is the fact
+rather than the number). A premise false from the start makes the reserve, sterility and the lease misreport rather than fail. So an
 Operator instance is **a row**: `kind: operator`, venture, heartbeat from a `SessionStart`/`Stop` hook pair in
 `operator.md`'s own settings; page 2 renders every live row, and a *which* on page 4 shows **who has claimed it**
 (`claim: {operator, at}`, one-tick expiry), so two Operators cannot answer one question. The founder-present gate is
@@ -332,8 +333,11 @@ an in-process teammate, through the shipped `SendMessage` transport (v80), whose
 never as a join key. The inbox file is that transport's on-disk form and stays read-validated; nothing here writes it
 by hand.
 
-**(THINKER: A2 · W34 — why the tap had to split.)** Forty-eight teams, 224 members, **219 `backendType: in-process`**,
-and pane ids that are the strings `"in-process"` and `"leader"`: **no teammate has a pane**, so a page promising one
+**(THINKER: A2 · W34 — why the tap had to split.)** Forty-eight teams, ~~224 members, **219 `backendType:
+in-process`**~~ **267 members, 262 `backendType: in-process`** *(re-measured 2026-09-06: census D; re-derive with
+`grep -ho '"tmuxPaneId": *"[^"]*"' ~/.claude/teams/*/config.json | sort | uniq -c` and the same for `"backendType"` — the corpus grows as teams
+are formed, and every reading so far has returned **zero** pane ids beginning with `%`, which is the fact this row
+rests on)*, and pane ids that are the strings `"in-process"` (219) and `"leader"` (43): **no teammate has a pane**, so a page promising one
 verb that always attaches would be blamed for the runtime. The founder's sentence is satisfiable for minted children
 and not for teammates, and the page says so per row. The manifest carries **`terminal: ghostty`** — the founder runs
 Ghostty, and `--tmux` wants iTerm2 — so `--teammate-mode tmux` inside tmux is a Floor habit the page detects, never a
@@ -409,7 +413,8 @@ computes **`night_capable`** from `pmset` every tick, refuses an `unattended: tr
 it is false, and ~~routes it to the cloud carrier where the charter says `cloud: allow`~~ **holds it, minting nothing,
 until the carrier's `stop:` is known (v67)** (amended 2026-09-06: challenge D P1-3; §15.1b carries the precondition
 that makes the predicate true at all). The measurement behind it:
-`sleep 1` on AC and battery, **391 maintenance sleeps in seven days**, 24 clamshell (THINKER: A1 · W33) — a habit the
+`sleep 1` on AC and battery, **391 maintenance sleeps in seven days**, 24 clamshell (THINKER: A1 · W33 — a reading on
+a rolling log window, dated and re-read in W33; 24 was exact at both readings) — a habit the
 Watch cannot verify is a wish, so it is a predicate and a page-3 fact. §4 owns the predicate and §15 the host file
 (`keel/host/power.yml`); this page renders it and the briefing carries the line. **Mechanism:** `bin/watch` ·
 `keel/host/power.yml` · `bin/probe` (**ABSENT**, §L O81) · an **adapter** over `pmset` · losing images: a
@@ -724,8 +729,9 @@ flowchart TD
 ```
 
 **(NEW: O121 · v95, fixer round 2026-09-06 — what changed in the diagram, and why.)** The old branch *yes, a teammate
-→ read its pane id* assumed a pane exists; **W34 measured that none does** (219 of 224 members `in-process`, pane ids
-that are the strings `"in-process"` and `"leader"`), so the row now declares which verb it carries and the page never
+→ read its pane id* assumed a pane exists; **W34 measured that none does** (~~219 of 224 members `in-process`~~ **262
+of 267**, pane ids that are the strings `"in-process"` and `"leader"` and **not one beginning with `%`** — §14.5
+carries the command and the date, re-measured 2026-09-06 by census D), so the row now declares which verb it carries and the page never
 promises an attach it cannot perform. The *background session* branch is gone with it: `bin/run` mints via **bare
 `claude -p` in a detached tmux session**, never `--bg` (O91; §J 85 keeps `--bg` as the night's carrier, `wins_if:` R31
 shows a service mode that does not idle-exit), so the pane, pgid and session id are ours. `claude --attach` remains for

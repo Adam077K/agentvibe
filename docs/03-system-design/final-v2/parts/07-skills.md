@@ -349,7 +349,10 @@ stops when the budget binds.**
 
 **Why a budget and not a count.** 7.6's own arithmetic is the argument: the published standard loads *"the `name`
 and `description` fields … at startup for all skills"* at ~~roughly **100 tokens each**~~ **a measured ≈53 tokens
-each — 134 skills, 28,250 bytes of `name`+`description`, ≈7k tokens at 134 and ≈110k at 2,111** *(amended
+each — 134 skills, ~~28,250~~ **29,344** bytes of `name`+`description` (**re-measured 2026-09-06: census D; re-derive with**
+`awk '/^name:|^description:/' .claude/skills/*/SKILL.md | wc -c` — it moves with every skill edit, which is exactly
+why **O119 has the checker measure its own constant on every run** rather than read one from here), ≈219 bytes and
+so ≈55 tokens per skill at the four-bytes-a-token approximation W40 used, **≈7k tokens at 134 and ≈116k at 2,111** *(amended
 2026-09-06: O119 · THINKER: A13 · W40)*, so **every admitted skill
 taxes every unrelated run**, and the upstream advertises 2,111 candidates. That is the same defect this repository
 already paid for once, when reading the whole manifest cost ~15,000 tokens a lookup and a good new skill made every

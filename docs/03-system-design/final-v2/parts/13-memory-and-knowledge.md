@@ -338,7 +338,11 @@ than behind it.
 ### 13.7 The transcripts — v26 stands, with the caveat that shapes the build
 
 **(FOUNDER, confirmed: mine them, locally.)** **(FINAL)** Thousands of past conversations sit on this Mac and nothing
-reads them — the census counted **3,060 files**. They contain, for free, the three things a new run most needs and can
+reads them. **This paragraph owns the corpus figure and every other site points here** *(amended 2026-09-06: census
+D — it was stated twice, as ~~3,060~~ here and ~~3,116~~ in §12.8b, and both were wrong)*: **3,034 `.jsonl` files
+across 63 project directories, 2.9 GB, growing about 56 files a day — measured 2026-09-06; re-derive with**
+`find ~/.claude/projects -name '*.jsonl' | wc -l` **and** `du -sh ~/.claude/projects`. It is a live number by construction, so
+read the command and not the digits: the count rose by five between census D's reading and this one. They contain, for free, the three things a new run most needs and can
 least invent: what this founder likes, what has already been built, and what has already failed.
 
 **(NEW: v26 — memory.md 4 searched for prior art and the honest result is that none exists in this shape.)** Three
@@ -355,7 +359,7 @@ costs one failed batch, not a broken system.
 
 ```mermaid
 flowchart TD
-    TR["The FLOOR's transcripts only — 3,116 files, 3.1 GB, 56 a day (THINKER: A4)<br/>SNAPSHOT — copied, never read live<br/>WATERMARK: only what is newer than the last pass (O42)<br/>a night child persists NO transcript (O88)"] --> TAINT{"Episode provenance carries<br/>a taint id? (O65)"}
+    TR["The FLOOR's transcripts only — the corpus figure is dated<br/>with its command in 13.7's own paragraph (THINKER: A4)<br/>SNAPSHOT — copied, never read live<br/>WATERMARK: only what is newer than the last pass (O42)<br/>a night child persists NO transcript (O88)"] --> TAINT{"Episode provenance carries<br/>a taint id? (O65)"}
     TAINT -->|"yes"| REFUSED["REFUSED — never enters the pass (v93)"]
     TAINT -->|"no"| LOCAL["Local pass · no window at all<br/>bin/embed — MiniLM (384 dims, Apache 2.0)<br/>+ a local index (O13)"]
     LOCAL --> RED["bin/redact FIRST — the ONE redaction program (O17):<br/>credentials, third-party PII, anything a client owns.<br/>A PII positive BLOCKS here (O66)"]
@@ -381,7 +385,7 @@ run on electricity and burn no window. The summarising half is `curator`'s row i
 Gemini or a local model"* — and Gemini is installed, unauthenticated, one founder act away (§I row 6).
 
 **(NEW: O42 — a watermark, so there is one mining program and not two.)** The pass carries a **watermark**: it reads
-what is newer than the last pass and nothing else. The backlog pass over 3,060 files and the steady pass over last
+what is newer than the last pass and nothing else. The backlog pass over the whole corpus and the steady pass over last
 night's transcripts stop being two programs with two failure modes, and **`bin/mine --since` is the whole of the
 difference between them.** With it, *"unread transcript count"* — a progress bar for a backlog that clears once and
 then reads zero forever — becomes **watermark lag**, which still means something in year two (deletion 17). **And it

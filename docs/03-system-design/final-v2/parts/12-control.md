@@ -550,7 +550,8 @@ end to end, then grep ~~the whole tree~~ **the whole tree and `~/.claude/project
 but hashes (amended 2026-09-06: E10 · v93 / THINKER: A4).
 
 **(FOUNDER, fixer round 2026-09-06: E10 · v93 — *"Keep them for mining"*; and the *settled by* above was false as
-written.)** (THINKER: A4) 3,116 transcripts, 3.1 GB, growing 56 a day, sit under `~/.claude/projects` — outside
+written.)** (THINKER: A4) ~~3,116 transcripts, 3.1 GB, growing 56 a day~~ **the transcript corpus — §13.7 states the count, its
+date and its command, and it grows daily** *(amended 2026-09-06: census D)* — sits under `~/.claude/projects`, outside
 `keel/`, inside the mining pass, holding every stranger's body verbatim. The founder would have believed an erasure
 completed while the subject sat on the same disk. Four things, all O88: **every night child passes
 `--no-session-persistence`**, so the vendor keeps no transcript of it and the run's own `stream-json` trace is the

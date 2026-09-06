@@ -29,8 +29,11 @@ rule:       the founder wins on FINAL rows 6, 8, 10, 15 and 30; the cost of each
             is designed and its path is named but not built, WISH means no mechanism is designed (v50).
             Every path exists on a named branch or is marked ABSENT. No stage states method. No schedule, no durations. Anything not in the inputs is
             marked UNVERIFIED
-measured:   this branch = ceo-1-1788609834 at b2cabad = local main, TREE A of final/CENSUS.md, carrying this
-            session's own documentation commits on top · ceo-3-1788468144 at 7286420, which holds final/ ·
+measured:   this branch = ceo-1-1788609834, BASED ON b2cabad (2026-08-31) = local main, TREE A of final/CENSUS.md,
+            carrying this session's own documentation commits on top. ~~at b2cabad~~ — the base is named and the HEAD
+            is not pinned (amended 2026-09-06, census D: b2cabad was read as the head and was 119 commits behind it
+            when the census ran, 123 when this line was written, and it moves with every commit of this session).
+            Re-derive with `git rev-parse --short HEAD` and `git rev-list --count b2cabad..HEAD` · ceo-3-1788468144 at 7286420, which holds final/ ·
             docs/final-plan at 7fe8ede, the head of PR #131 · origin/main at 4770d39. Tooling on this Mac,
             2026-09-05: claude 2.1.261 on 2026-09-05, 2.1.263 on 2026-09-06 — a version is a fact about a day, so
             re-derive it with `claude --version` rather than reading it here (corrected 2026-09-06, census C) ·
@@ -40,8 +43,10 @@ measured:   this branch = ceo-1-1788609834 at b2cabad = local main, TREE A of fi
             twenty-nine minor versions stale and no longer discriminates (W19; §10.8) · and the Mac's own
             hours-off, measured read-only from pmset -g log (R5, DONE — DECISIONS §19): span 2026-08-30 21:44 to
             2026-09-06 09:39, 156 h retained, asleep 40.7 h (26%) in 487 episodes, zero episodes of an hour or
-            more, longest single sleep 0.3 h. Caveat: only the span the log retains, and DarkWake naps count as
-            wakes, so "asleep" means the machine could not have run a process
+            more, longest single sleep 0.3 h. Caveats: the log window ROLLS and moves hourly — the same read gave
+            168 h and 348/77 sleeps later the same day (census D, 2026-09-06), so the span and the episode counts
+            are a reading while the zero is what has survived every one, and R37's thirty days settles it; and
+            DarkWake naps count as wakes, so "asleep" means the machine could not have run a process
 not:        a build plan, a schedule, a first month, a price list. Nothing here was built, installed,
             authenticated, spent, published or pushed
 companions: final-v2/SPINE.md (the ~~sixty-five~~ ~~eighty-two~~ **one hundred and six** rows and the roster, binding on every section —

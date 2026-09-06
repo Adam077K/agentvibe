@@ -66,7 +66,7 @@ flowchart TD
     CODEX(["FOUNDER ACT · install codex<br/>command -v codex is absent today<br/>DECIDED 2026-09-05: installed when building starts ·<br/>NO KEY (v90, E7): the CLI, as a bin/run child from launchd"])
     TEAMS(["FOUNDER ACT · CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1<br/>experimental, no nested teams<br/>DECIDED 2026-09-05, v59: ON, and no model constraint —<br/>a teammate runs on its own file model"])
     LICENSE(["FOUNDER ACT · fetch and read LICENSE-CONTENT<br/>one fetch; unblocks the 2,111+ (v17)<br/>DECIDED 2026-09-05: fetched at build time; row stays open"])
-    HOSTED(["FOUNDER DECISION · which hosted lane may make when the<br/>Mac cannot hold a night (§I row 15) · R5 DONE: 156 h of log,<br/>ZERO gaps of an hour — the tail is zero over the week measured ·<br/>RE-READ under E1/E13: with no box this lane is the night's<br/>FALLBACK, so v56(b)'s UNVERIFIED maker path is on the first<br/>night's critical path · R37 replaces the week (O82) ·<br/>cloud: allow | deny, default deny, decided either way (v79)"])
+    HOSTED(["FOUNDER DECISION · which hosted lane may make when the<br/>Mac cannot hold a night (§I row 15) · R5 DONE on a ROLLING<br/>log window (§15.1a): 156 h at that reading,<br/>ZERO gaps of an hour — the tail is zero over the week measured ·<br/>RE-READ under E1/E13: with no box this lane is the night's<br/>FALLBACK, so v56(b)'s UNVERIFIED maker path is on the first<br/>night's critical path · R37 replaces the week (O82) ·<br/>cloud: allow | deny, default deny, decided either way (v79)"])
 
     AGENTS1["WAVE ONE · ten agent files (v54, widened by v70)<br/>operator · builder · reviewer · architect · tester ·<br/>guard · scout · designer · curator · challenger<br/>.claude/agents/*.md · GENERATED from roster.yml, signed off<br/>per wave (v88, O103) · prompt-standard.test.mjs's model set<br/>moves in the same change: builder and architect declare<br/>claude-fable-5-1 (v57)"]
     AGENTS2["WAVE TWO · five agent files (v54, narrowed by v70)<br/>product · analyst · writer · growth · steward · written when a<br/>venture needs them — the stranger is the venture that will (C1)<br/>· two exercised carriers first (O120) · each brings its own argv"]
@@ -518,7 +518,8 @@ is the only cheap route to the same answer and needs no install at all.
 
 **(NEW: two nodes are not ABSENT paths and are drawn anyway)** `MC` is `mission-control/` on
 `ceo-1-1788609834` — 60 files that already exist and are kept (§18.5). `MINE` reads
-`~/.claude/projects/` — 3,060 transcripts that already exist. Both are drawn because everything downstream needs
+`~/.claude/projects/` — the transcripts that already exist, counted and dated once in §13.7 *(amended 2026-09-06:
+census D)*. Both are drawn because everything downstream needs
 them, not because anything must be created first.
 
 ---
@@ -688,7 +689,7 @@ is the only node in the round that exists to prevent a **duplicated outward act*
 own clone can tick and can send.
 
 **(NEW: one node was measured and one was shut, and they are the two that concern the world outside this Mac)**
-`HOSTED` is answered by measurement for the first time — **R5 is DONE**: 156 hours of log, 40.7 asleep in 487
+`HOSTED` is answered by measurement for the first time — **R5 is DONE** (on a rolling log window, §15.1a): 156 hours of log, 40.7 asleep in 487
 episodes, **zero episodes of an hour or more**, longest single sleep about twenty minutes. The tail a hosted maker
 lane would buy back is **zero over the week measured**, so the node stays a founder decision (§I row 15) but it is
 now a decision with a number under it. `CLOUD` is shut from the other end by **v67**: `bin/run` refuses to mint

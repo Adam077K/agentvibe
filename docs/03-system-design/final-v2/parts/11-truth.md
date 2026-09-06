@@ -118,8 +118,10 @@ excluded (O88); **(b) costs zero build.**
 done-test did not state, **(ii)** reads a record the company itself writes, or **(iii)** would still pass an artifact
 the founder rejected. **Losing image:** R12 on the harness alone. `wins_if:` the three fractions agree inside the
 sample floor (O25). **Settled by:** code high and everything else low inverts the architecture for every venture that
-is not the harness, and §0 says so before wave two. Path: **`bin/rehearse --r27`** — one `-p` pass · one founder
-sitting — **ABSENT** *(the program named 2026-09-06: challenge D P2-11; §17.5)*; §21 renders the
+is not the harness, and §0 says so before wave two. **Class: `kernel · truth`** *(added 2026-09-06: census D — v96 ·
+O105 requires a class on every O81–O127 and O102 stated none at any of its fourteen sites; this is its first
+statement and the other thirteen stay pointers, SPINE §L is the source)*. Path: **`bin/rehearse --r27`** — one `-p`
+pass · one founder sitting — **ABSENT** *(the program named 2026-09-06: challenge D P2-11; §17.5)*; §21 renders the
 three fractions.
 
 ---

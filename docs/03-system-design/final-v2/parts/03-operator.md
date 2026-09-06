@@ -48,8 +48,11 @@ own argv, and v34 — *one no-model launcher composes the grant, and nothing els
 it did.
 
 **(FOUNDER, fixer round 2026-09-06: E8 → v91 · O84 — how many Operators: N)** *"Model N Operators."* The plan had
-one Operator, one `founder.last`, one cord and one sterility predicate; the founder runs a bullpen — five `ceo-*`
-worktrees, three terminals, 825 commits by Claude Code to 129 by the founder (THINKER: A6 · W41) — so a premise false
+one Operator, one `founder.last`, one cord and one sterility predicate; the founder runs a bullpen — ~~five~~ **six**
+`ceo-*` worktrees, three terminals, ~~825~~ **851** commits by Claude Code to **129** by the founder (THINKER: A6 ·
+W41; **re-measured 2026-09-06: census D** — re-derive with `git worktree list | grep -c ceo-` and
+`git log --format='%an' | sort | uniq -c`, and note that the numerator moves with every commit while the founder's 129 was
+exact at both readings: **the ratio is the fact, not the number**) — so a premise false
 on day one would have made the reserve, sterility and the lease **misreport rather than fail**. An Operator instance
 is a `kind: operator` row in `keel/logbook/sessions.jsonl` — venture, host, and a **heartbeat from a
 `SessionStart`/`Stop` hook pair** in `operator.md`'s own settings. Four consequences: **a *which* is claimed before
