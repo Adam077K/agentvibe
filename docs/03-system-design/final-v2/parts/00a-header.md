@@ -63,7 +63,7 @@ companions: final-v2/SPINE.md (the ~~sixty-five~~ ~~eighty-two~~ **one hundred a
             lanes on Fable, 64 findings, and the orchestrator's digest, 2026-09-06) · final-v2/rethink-2/A-practitioner.md,
             B-outsider.md, C-strategist.md (three sealed fixer lanes; their fourteen merged questions and the founder's
             answers are DECISIONS §24) · final-v2/page/three-lenses-on-keel.html (the findings, presented) ·
-            final-v2/page/final-plan-v2.html (169,402 bytes, 93 tiles)
+            final-v2/page/final-plan-v2.html (~~169,402 bytes, 93 tiles~~ 253,283 bytes, 143 tiles — re-derive with `wc -c` and `grep -c '<details class="tile"'`)
 ```
 
 ---
