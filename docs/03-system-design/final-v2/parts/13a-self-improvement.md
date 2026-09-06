@@ -9,11 +9,13 @@ self-correction"* (arXiv 2310.01798, cognition.md 5) — and Reflexion's 91% pas
 being external (arXiv 2303.11366, cognition.md 6). Every loop below ends at something the system did not author: an
 exit code, a second agent that never read the author's reasoning, or a known answer.
 
-**(NEW: v96 · O105, fixer round 2026-09-06 — the doctrine gains one line.)** **Every
-mechanism carries `wins_if:`** — the observation under which it is wrong — beside `class: kernel | adapter | refuse`
-and `vendor_wins_if:`, the surface whose arrival forces Delete. A mechanism with no falsifier is a founder row in all
-but name (THINKER: A1–A10 · FIXER: B). The marks lint refuses an adapter naming no surface and a kernel naming none of
-direction · record · truth · taste. **Mechanism:** `rules.yml` and the marks lint (**ABSENT**, §L O105).
+**(NEW: v96 · O105, fixer round 2026-09-06 — the doctrine gains one line, and §0.3 states it once.)** **Every
+mechanism carries `wins_if:`** — the observation under which it is wrong — beside `class:` and `vendor_wins_if:`.
+A mechanism with no falsifier is a founder row in all but name (THINKER: A1–A10 · FIXER: B), which is why this section
+reads the mark on every row below. ~~The marks lint refuses an adapter naming no surface and a kernel naming none of
+direction · record · truth · taste.~~ **§0.3 carries the commodity line, the kernel test, the lint and the cost;
+this section cites it and does not restate it** (amended 2026-09-06: challenge D P3-7 — one doctrine written in three
+places is three chances to be wrong). **Mechanism:** `rules.yml` and the marks lint (**ABSENT**, §L O105).
 
 ---
 

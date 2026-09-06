@@ -129,16 +129,35 @@ unattended* is the same log as *no tail for a cloud lane*. A habit is a wish the
   `disablesleep 1` (`pmset -g custom`) — and the power assertions (`pmset -g assertions`). **`keel/host/power.yml`
   declares the contract** (ABSENT, §L O81). `class: adapter · pmset`; `vendor_wins_if:` the runtime refuses unattended
   work on a sleeping host.
-- **A brief carrying `unattended: true` is refused with the printed reason when false**, and routed to the cloud
-  carrier where the charter says `cloud: allow` (§15.1a). §4 carries the refusal and the route; §14 the page-3 fact and
+- **A brief carrying `unattended: true` is refused with the printed reason when false**, and ~~routed to the cloud
+  carrier where the charter says `cloud: allow`~~ **held, not minted, until the carrier's `stop:` is known (v67)** —
+  the charter's `cloud: allow` decides whether it may go at all, and v67 decides that today it may not (amended
+  2026-09-06: challenge D P1-3). §4 carries the refusal and the hold; §14 the page-3 fact and
   briefing line. This section owns the three reads and the host file, nothing else.
+
+**(NEW: the precondition, stated once, because four sentences of this plan implied it and none said it · amended
+2026-09-06: challenge D P1-3.)** **On this Mac the night runs only when the founder has run `pmset -a disablesleep 1`
+— or the predicate reads a held `caffeinate` assertion, which is R41, one measurement — and the machine is on AC.**
+Until one of those holds, `pmset -g custom` reads `sleep 1` (W33) and **`night_capable` is false every night**; every
+unattended brief is refused; the fallback **holds** the brief and mints nothing while the hosted carrier's `stop:`
+reads UNKNOWN (v67, §3.5); so no night runs, and **month one's scoreboard cannot be scored** — §13a.11 and §21.1b
+score it on *three consecutive nights with `orphaned = 0` and a handover each*, a predicate that cannot become true
+under a false one. **This is not a new refusal**: §20.2 row 7 deferred the `disablesleep` act to build time and that
+deferral stands. What was missing was the consequence, and it is stated here rather than left to be discovered on the
+first night. **(R41, OPEN)** — does a held `caffeinate -i` assertion visible in `pmset -g assertions` satisfy
+`night_capable`, and does it survive a lid close? If it does, the founder's act is a bounded command per night rather
+than a machine-wide policy change; if it does not, `disablesleep` is the only route and the deferral in §20.2 row 7 is
+what gates the first night. **Mechanism:** `keel/host/power.yml` declares which of the two the contract accepts
+(**ABSENT**, §L O81).
 - **The probe asserts it by attempting** (O10's rule): `bin/probe` mints a time-bounded detached child across
   `pmset sleepnow` and reads `run.started` against the wake.
 
 **(NEW: O82 — the standing measurement; thirty days is a floor.)** R5 measured one week, the busiest the machine has had
 (THINKER: B15). **`pmset -g log` becomes a v55 standing intent** whose output is one `keel/shared/facts.yml` row,
 `mac-off-hours` — longest gap and off-hours over **thirty days including a weekend away**, the floor not the target —
-and that row re-reads §I row 15 (**R37**, OPEN). It carries `valid_until` (O126) and a ceiling per run (v55). **§J 73's
+and that row re-reads §I row 15 (**R37**, OPEN). It carries `valid_until` (O126) and a ceiling per run (v55).
+`class: adapter · pmset`; its **`vendor_wins_if:` is the OS publishing an uptime history**, and §17.4.3 holds that
+column for every O81–O127 so it is looked up rather than repeated (added 2026-09-06: challenge D P3-6). **§J 73's
 `wins_if:` is written against this row**, so the box comes back by a measurement and not by an argument. Kept by name: §J 73 · 76 · 75.
 
 **Mechanism:** the three `pmset` reads in `bin/watch` and `keel/host/power.yml` (**ABSENT**, §L O81) · the sleep
@@ -485,7 +504,7 @@ documented with a URL and a date; `C` claimed by a third party. **Nothing in the
 | **Loops and goals** *(a row FINAL had no cell for)* | **D** **`/goal`** — a completion condition, a small fast model checks it each turn, three verdicts; **runs headless in one invocation**; 4,000-character condition; bounded by *"or stop after 20 turns"*. Plus `/loop`, cron tools, `Monitor`, `ScheduleWakeup`, three scheduling tiers | **C** `/goal` in 0.128.0 (2026-04-30): pursuing · paused · achieved · unmet · **budget_limited**. **Whether it runs under `codex exec` is not established**; **no `/loop`** | — |
 | Hooks | **D** **34 events, 10 documented as blocking** — *this moves FINAL's "32 events, 12 blocking"; my count is medium confidence and the page is the arbiter.* Blocking: PreToolUse, UserPromptSubmit, UserPromptExpansion, Stop, SubagentStop, TeammateIdle, TaskCreated, TaskCompleted, ConfigChange, PostToolBatch | **D** behind `codex_hooks = true` | **M** imports Claude Code hooks |
 | Policy seam | **D** **managed settings outrank argv**; `permissions.disableBypassPermissionsMode` and `disableAutoMode` *"can't be overridden"* there | **(FINAL §14.6, providers lane 2026-09-04; not re-read this session)** **`requirements.toml` outranks every flag** | **M** Policy Engine, `--admin-policy` — FINAL §14.6, providers lane 2026-09-04 |
-| Fleet and terminal | **D** `claude agents [--cwd] [--json] [--json --all]`; **`--bg`** and **`--attach <id>`**; `--teammate-mode tmux\|iterm2` (experimental, hidden). **`-w` / `--worktree` / `--tmux`: UNRESOLVED** — measured by a prior lane, absent from this session's CLI-reference fetch | — | **M** `-w` (prior lane) |
+| Fleet and terminal | **D** `claude agents [--cwd] [--json] [--json --all]`; **`--bg`** and **`--attach <id>`**; `--teammate-mode tmux\|iterm2` (experimental, hidden). ~~**`-w` / `--worktree` / `--tmux`: UNRESOLVED** — measured by a prior lane, absent from this session's CLI-reference fetch~~ **CLOSED 2026-09-06 (W35 · THINKER: A17 · challenge D P2-9):** `claude --help` 2.1.263 lists **`-w/--worktree`** and **`--tmux[=classic]`**; `bin/run` passes `--tmux=classic` for the worktree agents (O121) and `bin/worktree` is the `-w` adapter (O14). §10.6 gap 6 and §14.11 carry the same closure | — | **M** `-w` (prior lane) |
 | Inbound seam | **D** **Channels** — *"A channel is an MCP server that pushes events into your running Claude Code session"*; research preview; *"Being in `.mcp.json` isn't enough … a server also has to be named in `--channels`"*; Anthropic auth only | — | — |
 | Cost model | **D** subscription or key; `--max-budget-usd` per run (v2.1.217+), **a stall fuse, not a billing control** (v23) | **D** both; included in every ChatGPT plan (FINAL §14.6, providers lane 2026-09-04); **the only vendor publishing numeric per-window quotas** (§G.2) | free tier 60 rpm / 1,000 rpd |
 | Second checker family | **D** no | **D** in principle; **blocked by #19945** until the headless rehearsal passes (v32); **only as a `bin/run` child from launchd** (v90, O92) | **M** yes, installed, unauthenticated; **a personal Google account, no key** (E7, v90); **starts only from launchd** — `gemini --version` → `EPERM` under the sandbox (THINKER: A9 · W37); R40 OPEN |

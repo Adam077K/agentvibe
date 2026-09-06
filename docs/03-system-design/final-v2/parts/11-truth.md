@@ -118,7 +118,8 @@ excluded (O88); **(b) costs zero build.**
 done-test did not state, **(ii)** reads a record the company itself writes, or **(iii)** would still pass an artifact
 the founder rejected. **Losing image:** R12 on the harness alone. `wins_if:` the three fractions agree inside the
 sample floor (O25). **Settled by:** code high and everything else low inverts the architecture for every venture that
-is not the harness, and §0 says so before wave two. Path: one `-p` pass · one sitting — **ABSENT**; §21 renders the
+is not the harness, and §0 says so before wave two. Path: **`bin/rehearse --r27`** — one `-p` pass · one founder
+sitting — **ABSENT** *(the program named 2026-09-06: challenge D P2-11; §17.5)*; §21 renders the
 three fractions.
 
 ---
@@ -321,7 +322,8 @@ question goes to the founder, or the founder becomes the bottleneck they refused
 store**: an evidence-backed record of what this founder has accepted and rejected, mined from transcripts (§13) and
 from every *no, not like that* on the Floor. A taste check asks *does this artifact violate anything in the store?* —
 a rung-2 check with a real corpus behind it. What reaches the founder is the residue: the genuinely new taste
-question, as two built options and a which.
+question, as a which — ~~two built options~~ **one built, a second written unless a ten-word summary cannot separate
+them (v87)** *(amended 2026-09-06: challenge D P2-3)*.
 
 **(FINAL)** The store is never a preferences file the founder types, because a founder is an unreliable narrator of
 their own taste. It is derived from decisions only, and a fraction of rejections is held out, so it is scored on
@@ -520,7 +522,11 @@ flowchart TD
    four, which is contradiction 12: **two rules about the same arithmetic, and the looser one is the one that
    grants.** One predicate with two call sites (**ABSENT**) answers for the trust score, for skill admission and for
    the error rates of v73, and it answers the same way in all three. The consequence is stated rather than softened
-   in §7.3: an admission on 2–3 cases is an admission **below the floor**, recorded as `insufficient`.
+   in §7.3: an admission on 2–3 cases is an admission **below the floor**, recorded as ~~`insufficient`~~
+   **`provisional`, and the number that decides it is gathered from real work rather than from a third prompt**
+   *(amended 2026-09-06: challenge D P2-7 · O114; §7.3 owns the wording)*. `insufficient` stays this section's word
+   for a trust score below the floor — one state is *not enough evidence to print a number*, the other is
+   *admitted and not yet judged*, and the two must not share a word.
 2. **"Not yet trusted" has a productive destination.** A move that fails rehearsal goes to the Floor, where the
    founder does it *with* the agent — **and that session becomes the rehearsal case for next time.** This is the
    mechanism by which walking *with* the founder teaches the system to walk *for* them, and it is why the Floor is not

@@ -1,6 +1,10 @@
 # Keel · the final plan v2 of the whole company operating system
 
 ```
+confidence: LOW — adopted 2026-09-06 (challenge D P2-5), and it is a field rather than a mood: it reads LOW until
+            one measured overnight has run, and §21 counts the §A rows that changed when it did. It leaves v96's last
+            column as a losing image in the same change, because a thing carried on the header is adopted and an
+            adopted thing is not an image (B1 · O105 · v96; §13a.11 owns the count, §21.1b the reading)
 version:    final-v2 · 2026-09-06 (rethink round applied) · one company of named agents, one website, one launcher
             ~~final-v2 · 2026-09-05~~ (moved 2026-09-06: the rethink round of DECISIONS §17–§19 is folded into every
             section; the ~~eighty-two~~ **one hundred and six** rows of SPINE §A are what a section obeys — v83–v106 from the fixer round of 2026-09-06)

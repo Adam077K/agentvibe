@@ -101,7 +101,7 @@ published artifact*, and *a cloud host that reaches into the Mac*.
 | Balcony · **Last night** — the briefing | **the top strip of page 5** — and on the phone, as a published page (v38) |
 | FINAL §2.4's **read-back page** | **the intent-creation form wherever an intent is born** — page 4's *new card* and page 7's *add session* — and a published phone page for voice (v38) |
 | Balcony · **Ventures** | page 1 (the office), one venture per area |
-| Balcony · **Cord** | **a control present on every page**, not a view of its own — and since 2026-09-06 it reads **_stops the night, not the Floor_**: `--night` by default, `--all` behind a second tap (v91 · O85, §14.13) |
+| Balcony · **Cord** | **a control present on every page**, not a view of its own — and since 2026-09-06 it reads **_stops the night, not the Floor_**: `--night` by default, `--all` behind a second tap — the same reach §12.9 states once, which is *from the Operator or from a page control behind a second tap* *(amended 2026-09-06: challenge D P2-10)* (v91 · O85, §14.13) |
 | *(new)* | page 3, the dashboard v14 admits |
 
 **(FINAL, unchanged and still binding on the Floor.)** While the founder is on the Floor the system is **sterile**,
@@ -400,13 +400,15 @@ a dashboard. **Both are kept, by one rule: every number on the page names the ta
 | an anomaly | → **the cord** |
 | the quality-of-belief split — how much of what is believed is rung 1 and how much rung 4 (§11) | → the done-tests behind the rung-4 share |
 | **the portfolio strip** — every venture, its spend and its tempo *(new 2026-09-06: O12; it was page 1's second job)* | → retempo, or that venture's intents |
-| **`night_capable`** — can this Mac hold a night: AC · `sleep 0` or `disablesleep 1` · assertions, from `pmset` every tick, with the printed reason when false *(new 2026-09-06: E13 · v84 · O81)* | → the `unattended` brief it refused, and the cloud carrier it routed to where `cloud: allow` |
+| **`night_capable`** — can this Mac hold a night: AC · `sleep 0` or `disablesleep 1` · assertions, from `pmset` every tick, with the printed reason when false *(new 2026-09-06: E13 · v84 · O81)* | → the `unattended` brief it refused, ~~and the cloud carrier it routed to where `cloud: allow`~~ **which is held, not minted, until the carrier's `stop:` is known (v67)** *(amended 2026-09-06: challenge D P1-3)* |
 | **the window gauge against its high-water mark** — the founder's `ceiling:` as a percentage, the absolute beside it *(new 2026-09-06: O115 · W39)* | → retempo that venture |
 
 **(FOUNDER, fixer round 2026-09-06: E13 · v84 · O81 — E1's mechanism, and this page is where it shows.)** The founder
 chose no box (E1): the night runs on this Mac, and the cloud lane is the fallback when the Mac cannot. So the Watch
 computes **`night_capable`** from `pmset` every tick, refuses an `unattended: true` brief with the printed reason when
-it is false, and routes it to the cloud carrier where the charter says `cloud: allow`. The measurement behind it:
+it is false, and ~~routes it to the cloud carrier where the charter says `cloud: allow`~~ **holds it, minting nothing,
+until the carrier's `stop:` is known (v67)** (amended 2026-09-06: challenge D P1-3; §15.1b carries the precondition
+that makes the predicate true at all). The measurement behind it:
 `sleep 1` on AC and battery, **391 maintenance sleeps in seven days**, 24 clamshell (THINKER: A1 · W33) — a habit the
 Watch cannot verify is a wish, so it is a predicate and a page-3 fact. §4 owns the predicate and §15 the host file
 (`keel/host/power.yml`); this page renders it and the briefing carries the line. **Mechanism:** `bin/watch` ·
@@ -469,7 +471,9 @@ session and then, like, give it the task, and then it starts walking."*
 **What it shows.** A board with stages, a timeline, and a kanban; PRs beside tickets.
 
 **(NEW: v38 puts two of FINAL's Balcony views on this page rather than leaving them unplaced.)** **`Decide` is a
-"waiting on you" column on this board**, each card carrying its six fields and both options already built — so a
+"waiting on you" column on this board**, each card carrying its six fields and ~~both options already built~~ **one
+built, a second written unless a ten-word summary cannot separate them (v87)** *(amended 2026-09-06: challenge D
+P2-3)* — so a
 decision is a card in the same board as the work it blocks, rather than a separate view the founder must remember to
 open. And **the read-back is this page's *new card* form**: an intent is born here, so the restatement that binds it
 is born here too (§C.3). Nothing binds by voice; the founder confirms by tap or typed word, on this form.
@@ -591,7 +595,8 @@ answered, deferred, or let fall to a default. Beside it prints **the agreement r
 (v89, §13.3b). Two lines further down: **the shadow subsidy line** (O116 · R35) — Σ shadow USD of unattended runs at
 list price ÷ the seat price per month, the size of the bet on §I row 1, printed from the first run. And, from E13,
 **whether `night_capable` held all night** and what it refused. §3 and §4 own the which budget, §16 owns the subsidy
-arithmetic and `founder_hours:`; this strip renders them. **Mechanism:** the briefing generator (**ABSENT**, §L O95,
+arithmetic and `founder_hours:`; this strip renders them. **Mechanism:** the briefing generator, **`bin/briefing`**,
+which is the `keel briefing` verb *(the program named 2026-09-06: challenge D P2-11; §17.5, §19)* (**ABSENT**, §L O95,
 O96, O116) · `wins_if:` for the first line, v87's — a quarter with no backlog past one window's throughput and the
 second option chosen over a third of the time; for the subsidy line, it stays small for a quarter of two driven
 ventures.
@@ -771,9 +776,12 @@ never parsed live, because *"The entry format is internal to Claude Code and cha
 that parse these files directly can break on any release"* (v26, §13.7). A format change then costs one failed batch
 rather than a broken surface.
 
-**Count is bounded three ways, and the board refuses a drag that would breach any of them** (§14.7): **20 concurrent
-subagents** (the vendor's cap, with *"Concurrent subagent limit reached"* on overflow), the **WIP limit per venture**,
-and **at most two driven ventures**. Naming the bound in the surface is what makes it a control rather than a
+**Count is bounded ~~three~~ FOUR ways, and the board refuses a drag that would breach any of them** (§14.7): **20
+concurrent subagents** (the vendor's cap, with *"Concurrent subagent limit reached"* on overflow), the **WIP limit per
+venture**, **at most two driven ventures**, and — **the fourth, added 2026-09-06: challenge D P3-9 · O71** — the
+**session ceiling**, `sessions_ceiling` in `settings.yml`, N live `-p` children (N is 3 until R29 measures RSS per
+child on this Mac), which §6.6 added precisely because *none of the three above is a session count* and a crash loop
+could therefore mint sessions without limit while every declared bound read green. Naming the bound in the surface is what makes it a control rather than a
 disappointment.
 
 **Memory efficiency is four things already decided elsewhere, collected here because this is where the founder asked
@@ -837,8 +845,10 @@ website introduces, and the reason it is a control rather than a page. §12.9 ow
 Operators (§14.5) *stop everything* had two readings, and a phone tap that killed the founder's own Floor mid-sentence
 would be the second. So the cord is **`bin/stop`**, one verb: **`--night`** signals `bin/run`'s process groups and
 stops dispatch — *stops the night, not the Floor*, and every page's control and the phone **default to it and are
-labelled so**; **`--all`** also `SIGTERM`s every registered Operator session and its team. Four receivers (the Watch's
-file, the process groups, the Operator sessions, the cloud carrier's cancel where one exists), **one record**. The
+labelled so**; **`--all`** also `SIGTERM`s every registered Operator session and its team, **reachable from the
+Operator and from a page control behind a second tap — §12.9 states that once** *(amended 2026-09-06: challenge D
+P2-10)*. ~~Four receivers (the Watch's file, the process groups, the Operator sessions, the cloud carrier's cancel
+where one exists)~~ **The five receivers are listed once in §12.9 and cited here**, **one record**. The
 dead-man lease (v102, §4) is the stop that needs nothing; the tap stays the fast path. **Mechanism:** `bin/stop` ·
 every page's control declared in the manifest (**ABSENT**, §L O85; §12 owns the verb) · **How we would know:** pull
 `--all` and count survivors; the drill's count and the record disagreeing once is the `wins_if:`.
@@ -873,5 +883,5 @@ it.)**
 | The cord as `bin/stop --night` by default, `--all` behind a second tap; *stops the night, not the Floor* (§14.2, §14.13) | `bin/stop` · every page's control | **v91 · O85** (E8) | kernel · truth | the drill's count and the record disagree once | **ABSENT** |
 | `night_capable` as a page-3 fact and a briefing line, with the refused brief behind it (§14.6, §14.8) | `bin/watch` · `keel/host/power.yml` | **v84 · O81** (E13) | adapter · `pmset` | a night with the predicate true all night ends `orphaned` | **ABSENT** |
 | The window gauge seeded from `budget-guard.js`; the absolute beside the founder's percentage (§14.6) | `keel/logbook/window-highwater.yml` | **O115** — W39 | adapter · `rate_limits` | the first charter's founder asks what a window is | **ABSENT** |
-| The briefing's first line — decisions taken · deferred · defaulted, with founder-minutes — and the subsidy line (§14.8) | the briefing generator | **O95 · O96 · O116** (E3, E15) | kernel · direction · record | v87's; the subsidy stays small for a quarter of two driven ventures | **ABSENT** |
+| The briefing's first line — decisions taken · deferred · defaulted, with founder-minutes — and the subsidy line (§14.8) | `bin/briefing`, the briefing generator *(named 2026-09-06: challenge D P2-11)* | **O95 · O96 · O116** (E3, E15) | kernel · direction · record | v87's; the subsidy stays small for a quarter of two driven ventures | **ABSENT** |
 | `bin/bell` wraps the vendor's push, adding only classes, budget and acted-on rate (§14.13) | `bin/bell` | **O122** | adapter · the vendor's push | the acted-on rate cannot be computed after a quarter | **ABSENT** |

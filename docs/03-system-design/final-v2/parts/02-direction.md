@@ -101,9 +101,14 @@ forced.
 
 **(FOUNDER, fixer round 2026-09-06: E3 → v86 · O95 — the founder's hours are a charter field)** *"20 hours or no
 ceiling."* Every charter carries **`founder_hours:` per weekly window**; the harness's number is **20**, stated as
-the founder's and moved by evidence, and because the founder said *or no ceiling*, **a bind at 20 is reported, never
-enforced silently**. The Desk reads it exactly like `ceiling:` — harness intents stop starting when it is spent,
-ventures' do not — and `bin/log` writes a `founder.act` row on every tap, sign-off, terminal open and read-back, so
+the founder's and moved by evidence, and because the founder said *or no ceiling*, **`founder_hours:` is
+report-only, and this is the one place that says what it does** (amended 2026-09-06: challenge D P2-4). ~~The Desk
+reads it exactly like `ceiling:` — harness intents stop starting when it is spent, ventures' do not~~ — **the Desk
+reads it and reports; it stops nothing.** A bind at 20 raises a briefing line and a *which*, and work continues
+while the founder decides; the losing image is a hard bind, kept by name below with its own `wins_if:`. Two
+sentences of this section previously said *stop* and *report* about one field, and *report* is the one the founder's
+words carry. §4.1's gates and §12.9's ceilings therefore have no `founder_hours:` gate, and each says so in one line.
+`bin/log` writes a `founder.act` row on every tap, sign-off, terminal open and read-back, so
 **founder-minutes are measured from the first run** whichever way the number moves. The briefing's first line is
 *decisions taken · deferred · defaulted* (§3.8). **Mechanism:** the charter schema, `bin/log`, `bin/watch`
 (**ABSENT**, §L O95). **Why (THINKER: C4, B3, C20 · conv. 1):** the plan priced tokens exhaustively and never a

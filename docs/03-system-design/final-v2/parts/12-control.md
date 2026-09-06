@@ -136,6 +136,15 @@ per venture in the charter like the envelope:
 | 4 | `publish-to-owned-channel` | the same |
 | 5 | `first-contact` | **the same — reachable like any other class** (E11), never a tap per send forever |
 
+**How a class on the default `never` list reaches step 1 at all, stated once because two sentences of this plan
+implied opposite answers** (amended 2026-09-06: challenge D P1-2): **a venture's charter `ladder:` line removes the
+five outward classes above from that venture's default `never` list, one step at a time as the ladder widens;
+everything else on the `never` list stays never.** So *anything delivered to a person* (12.1) is `never` until the
+founder writes a `ladder:` line for that venture, and after it the removal is per class and per step rather than
+wholesale — the ladder does not override the list, it takes named classes out of it in the founder's own words, at
+the rate `n_recall_free` sets. This is E11's meaning — the founder chose that first contact widens — made
+mechanical, and it is why §5.3 #11 and §5.5 row 26 no longer read as a permanent refusal.
+
 Each class in `keel/shared/tools/<class>.yml` carries `step`, `n_recall_free`, `recall_count`, `widened_at`,
 `undo_drilled`. **`bin/send` reads the step; `bin/reconcile` writes `recall_count` from the world's record** — a
 recall inside the window, or a reply asking to stop, which also writes the consent register (§11.9). **A recall
@@ -174,7 +183,7 @@ able to run it fully autonomous."*
 vocabulary, Claude Code's permission modes, and Codex's two axes. A band that named only one of the three would leave
 the other two to be guessed at dispatch.)**
 
-| Band | Task types | Envelope | Claude Code mode | Codex `approval_policy` × `sandbox_mode` | Who runs in it |
+| Band | Task types | Envelope | Claude Code mode | Codex ~~`approval_policy` × `sandbox_mode`~~ `approval_policy` × `sandbox_mode` × **Guardian** *(amended 2026-09-06: challenge D P3-8 · W21 — §3.2 carries the same three axes and the reason; a band read as two settings was never the whole envelope on Codex)* | Who runs in it |
 |---|---|---|---|---|---|
 | **Read and report** | research, review, audit, analysis, challenge | `may-alone` | `plan` | `never` × `read-only` | scout · reviewer · guard · challenger · analyst |
 | **Build in a worktree** | code, design, copy, spec, schema, memory | `may-alone`, inside one venture's worktree | `dontAsk` with `--restricted` and an explicit `--tools` | `never` × `workspace-write` | builder · architect · tester · designer · product · writer · growth · steward · curator — **none of them holds a tainted read (v36)**; `steward` works from `scout`'s handover, never from a raw inbound row; the five with `isolation: none` (v41) run in this band on a narrowed `--add-dir`, **not a checkout** |
@@ -592,6 +601,12 @@ Nothing is built for this: the store, the horizon and the briefing already exist
 after. There is no *warn at 80%* an agent can reason past. Ceilings exist per run, per intent, and per venture per
 month, and **the tightest binds**.
 
+**(NEW: `founder_hours:` is not a fourth ceiling, and the omission is deliberate · amended 2026-09-06: challenge D
+P2-4.)** The charter's `founder_hours:` is **report-only** — the founder's words were *"20 hours or no ceiling"* — so
+a bind at 20 raises a briefing line and a *which* and blocks nothing. A ceiling here blocks pre-action; that field
+does not; putting it in this list would make it read as a stop. §2.1 states it once, §16.2b prices it, and §4.1's
+gates say the same about the gate list.
+
 **The cord.** One control that stops everything: ~~cancels running work~~ **signals every child's process group and
 stops the next dispatch** (moved 2026-09-06: v67), revokes outward grants, finishes nothing new, leaves every artifact
 in place. One tap from mission control — §14 makes it *a control present on every page* — one word on the Floor, one
@@ -632,6 +647,22 @@ drill's count and the record can disagree, which is the failure it exists to mak
 Operator enforced by a lease (§J 77). `wins_if:` a month of `sessions.jsonl` shows one live operator row at a time.
 Path: `bin/stop` · every page's control — **ABSENT**; §14 owns the control, §3 the Operator registry.
 
+**The receiver list, stated once here and cited everywhere else — ~~four~~ FIVE** (amended 2026-09-06: challenge D
+P2-10; this section and §14.13 carried two different lists of four, one holding the Sender's recall window and the
+other the Operator sessions, so *four receivers* named different sets in two places):
+
+1. **the cord file**, read first on every tick — it stops the next dispatch;
+2. **the recorded process groups** of `bin/run`'s children — `SIGTERM`, exit 143, a resumable turn;
+3. **the Sender's recall window** — everything inside it is recalled by the same act;
+4. **the registered Operator sessions and their teams** (O84) — reached by `--all` only, never by `--night`;
+5. **the hosted lane's cancel where one exists** — UNKNOWN today, which is why `bin/run` mints no unattended work on
+   that carrier at all (v67).
+
+**And one answer on `--all`'s reach:** it is available **from the Operator and from any page's control behind a
+second tap**; `--night` is the default on every page and on the phone, labelled *stops the night, not the Floor*.
+§14.2, §14.13 and §17.5 draw and list the control and cite this paragraph rather than restating it — *`--all` from
+the Operator only* and *`--all` behind a second tap* were two answers to one question.
+
 **(NEW: O86 · v102 — the stop that needs nothing.)** (THINKER: B19) Every stop above has upstream dependencies: the
 tunnel, the network, the page, the keychain. An e-stop with dependencies is a normal control. **`keel/logbook/founder.lease`
 is `founder.last` read against a second, longer horizon** — a dial in `settings.yml` — and **the Watch mints no
@@ -652,7 +683,7 @@ flowchart TD
     SIG --> HOLD["Outward grants revoked.<br/>The same tap recalls the Sender's window."]
     FILE --> HOLD
     HOLD --> KEEP["Every artifact stays in place.<br/>No delete, no rollback —<br/>undo is a separate, deliberate act."]
-    VERB --> REC["One record: four receivers —<br/>cord file · pgids · Sender's window · hosted UNKNOWN —<br/>each marked stopped or not"]
+    VERB --> REC["One record: FIVE receivers —<br/>cord file · pgids · Sender's window ·<br/>registered Operator sessions (--all only) ·<br/>hosted cancel where one exists (UNKNOWN) —<br/>each marked stopped or not"]
     PULL -.->|"the refusal that makes the cord true"| MINT["bin/run REFUSES to mint unattended work<br/>on a carrier whose stop: reads UNKNOWN"]
     LEASE["founder.lease stale — founder.last against<br/>a second, longer horizon (O86)"] -.->|"needs nothing: no tunnel,<br/>no network, no keychain"| FILE
 ```
@@ -662,7 +693,8 @@ in three other places besides.~~ **§16.5 owns it**, and a fuse explained four t
 clause that bears on control stays: **it does not bind the account**, so it is not one of the three ceilings above.
 §12.10's argv line still names the flag, because that is where the launcher composes it.
 
-**Mechanism:** `bin/stop`, one verb with `--night` and `--all`, writing one record (**ABSENT**, O85) · the cord file
+**Mechanism:** `bin/stop`, one verb with `--night` and `--all`, writing one record over the five receivers above
+(**ABSENT**, O85) · the cord file
 (**ABSENT**, read first on every tick) · the `pgid` field written by `bin/run` before exec and the signal path that
 reads it (**ABSENT**, §L) · the `stop:` column on §C.4's carrier table (**ABSENT**) · `keel/logbook/founder.lease`,
 read by `bin/watch` before it mints (**ABSENT**, O86) · the three ceilings in `bin/run` and `bin/send` (**ABSENT**).
@@ -762,7 +794,7 @@ path is not a rule.)**
 | The managed file carries `permissions.deny` and `disableBypassPermissionsMode` only; `disableAutoMode` struck | the managed file (a founder act) | **v92** (E9) | **ABSENT** until the file exists |
 | Per-child hooks and denies on argv; `--agents <json>` refused; the bypass-skip flag probed | `--settings <json>` from `bin/run` · `bin/probe` | **O87** | **ABSENT** · **DEPENDS-ON-R28**; the flag ships |
 | No vendor transcript of a night child; the erasure grep covers `~/.claude/projects`; mining refuses taint ids; vendor retention named out of reach | `--no-session-persistence` · `bin/mine --since` · `keel/host/settings.json` | **v93** (E10) · **O88** | **ABSENT**; the flag ships. **R30** is the canary |
-| One stop verb, two scopes, four receivers, one record; pages and the phone default to `--night` | `bin/stop` · every page's control | **v102** · **O85** | **ABSENT** |
+| One stop verb, two scopes, **five** receivers, one record; pages and the phone default to `--night`, `--all` from the Operator or behind a second tap *(amended 2026-09-06: challenge D P2-10)* | `bin/stop` · every page's control | **v102** · **O85** | **ABSENT** |
 | The stop that needs nothing — no unattended work while the founder's lease is stale | `keel/logbook/founder.lease` · `bin/watch` | **v102** · **O86** | **ABSENT**; the horizon is a dial |
 | Away narrows: `effect: none` staged work only; no one-way default fires; the burst edge | `bin/watch` · `keel/logbook/founder.last` · the verb table | **v76 amended** (E6) · **O127** | **ABSENT** |
 | A which is refused past the window's budget; one option built, the second written | `bin/watch` · `decide.jsonl` | **v87** (E15) · **O96** | **ABSENT**; the seed is six until **R34** |

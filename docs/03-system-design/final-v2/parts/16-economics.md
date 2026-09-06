@@ -169,11 +169,15 @@ and never a founder-hour (THINKER: A11, B3, B18, C4, C20). Three gauges, each re
 - **founder decisions** — whiches per window, `decisions_per_window × intent.horizon`, **seeded at six per five-hour
   window until R34** measures the real answering rate; the Desk refuses to open a which past it and the refusal is a row
   (v87, O96; §4 owns the admission control, §3 the which shape).
-- **founder hours** — `founder_hours:` per weekly window on the charter; **the harness's number is 20**; the Desk stops
-  starting harness intents when it is spent, and **a bind at 20 is reported, never enforced silently** (v86, O95).
+- **founder hours** — `founder_hours:` per weekly window on the charter; **the harness's number is 20**; ~~the Desk
+  stops starting harness intents when it is spent, and~~ **it is report-only — §2.1 states it once and this row
+  agrees**: a bind at 20 is **reported, never enforced silently**, and it stops nothing (v86, O95; amended
+  2026-09-06: challenge D P2-4). Read *like a ceiling* narrowly: the Desk reads the same field shape and takes a
+  different action on it.
 
 **(FOUNDER, E3, verbatim: *"20 hours or no ceiling"*.)** So **20**, `class: originated`, moved by evidence; and because
-of *"or no ceiling"*, the bind **reports** — a briefing line and a which — and never stops work in silence.
+of *"or no ceiling"*, the bind **reports** — a briefing line and a which — and never stops work, in silence or
+otherwise (amended 2026-09-06: challenge D P2-4; §2.1 owns the statement).
 **Founder-minutes are measured from the first run either way**: `bin/log` writes `founder.act` on every tap, sign-off,
 terminal open and read-back; §16.8 line 2 reads them. Losing images with `wins_if:` in v86: no ceiling · a hard bind.
 **(E15 — delegated; B's design, mechanised in §4.)** One option built plus a **written** second unless a ten-word summary
@@ -409,7 +413,7 @@ event rather than as a line.
 | budget in hours | the reserve per window — **now per five-hour window *and* per week** (v22), with **wall clock beside the window gauge** (v74); **and `founder_hours:` on the harness charter, 20, a bind reported** (v86, §16.2b) |
 | per-mission cost · per-worker cost · cost attribution | per intent and per run, joined by the id on every row; **per agent is now a real unit** (§16.1) |
 | mission budget cap · investment stop criteria | the intent's ceiling and expiry; the stop rule (§16.6) |
-| exploration vs exploitation spend | idle capacity buys knowledge, ~~bounded by being free~~ **metered: an exploration `class:` on the intent, routed to Gemini, local models or the Codex seat, and refused onto the Claude seat past a founder-set fraction** (moved 2026-09-06: v74, contradiction 18 — the weekly window is per seat and shared with chat and Cowork, so a night of exploration is subtracted from the next day); *both options built* is the only sampled diversity |
+| exploration vs exploitation spend | idle capacity buys knowledge, ~~bounded by being free~~ **metered: an exploration `class:` on the intent, routed to Gemini, local models or the Codex seat, and refused onto the Claude seat past a founder-set fraction** (moved 2026-09-06: v74, contradiction 18 — the weekly window is per seat and shared with chat and Cowork, so a night of exploration is subtracted from the next day); ~~*both options built*~~ **one built, a second written unless a ten-word summary cannot separate them (v87)** is the only sampled diversity *(amended 2026-09-06: challenge D P2-3)* |
 | cheap-tier bulk usage | **local models on electricity** (v20) · the Gemini CLI's free tier, a `bin/run` child from launchd (v90, O92) · ~~batch on the day a key exists~~ **no keys; batch is §J 74** (amended 2026-09-06: E7) |
 | cache-hit cost rate | measured per run from the runner's record; **the dominant term**, one line weekly |
 | company P&L · revenue tracking · payment analytics · burn · runway | a venture's own work; revenue **read from the processor as a claim, never typed**; a runway computed from a number the bank does not confirm is stamped *internal* and cannot promote anything (§11.7) |

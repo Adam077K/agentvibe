@@ -6,8 +6,10 @@
 its own last column. **Nothing from that column is repeated here word for word**, because two copies of one sentence
 in one document disagree the first time somebody edits one of them. What this section adds is the thing a column
 cannot hold: the **collection**, in one place, so that arguing for any of these later costs one lookup instead of
-~~twenty-four~~ ~~**seventy-two**~~ **eighty-eight** (moved 2026-09-06: SPINE §J is seventy-two entries; amended the same
-day by the fixer round to eighty-eight — 73–88 in §22.2b below, each with `source:` and `wins_if:`).
+~~twenty-four~~ ~~**seventy-two**~~ ~~**eighty-eight**~~ **ninety** (moved 2026-09-06: SPINE §J is seventy-two entries;
+amended the same day by the fixer round to eighty-eight — 73–88 in §22.2b below, each with `source:` and `wins_if:` —
+and to **ninety** when §J 89 and 90 were added for v96's and v97's images, which this section carried below §22.3's
+closing paragraph until challenge D P3-1 moved them into §22.2b where the text already said they were).
 
 **(NEW: why a losing image is kept at all)** A decision recorded without its alternative reads as the only thing
 anybody thought of. Each entry below was a real design that a real reader preferred, and five of them were this
@@ -163,7 +165,7 @@ half**, because it is the one a reader of an older draft may still believe.
 
 ---
 
-### 22.2b The sixteen the fixer round moved · 73–88
+### 22.2b The sixteen the fixer round moved · 73–88, and the two the orchestrator added · 89–90
 
 **(FOUNDER and NEW, 2026-09-06 — reproduced from SPINE §J, which is where they were written · DECISIONS §24)** Three
 are the founder's overrules of what every fixer lane recommended — **73 the box, 74 the key, 75 the vanilla week** —
@@ -210,14 +212,24 @@ own `wins_if:` so the retreat is also a claim.
 88. **Gemini on every diff now** (→ v90; v78 governs).
     `source:` C C6 · A, B declined. `wins_if:` R11's first twenty-five pairs show the second family catching a defect the same-family reviewer missed.
 
+**(NEW: 89 and 90 sit here rather than after §22.3's closing paragraph · moved 2026-09-06: challenge D P3-1)** They
+were added by the orchestrator on F6's finding and landed **outside any subsection**, after the *(FINAL)* paragraph
+that closes §22.3 — while §22.2b's own text said they were *reproduced below*. Two entries in a document's margin are
+two entries nobody counts, which is how the intro said eighty-eight.
+
+89. **§L built in §19's dependency order, every mechanism as ours** (→ v96, the commodity line; `class: ratified`). `source:` THINKER C3 · FIXER A O104 · B O93 · C O82 · DIGEST conv. 4. `wins_if:` a year in which no vendor ships any adapter's surface and every adapter had to be built by hand anyway — the sort then cost a lint and bought a delay. *Added 2026-09-06 by the orchestrator on F6's finding that v96 had no §J entry.*
+90. **The prose as the binding document** (→ v97, data-first with a constitution; `class: ratified`). `source:` THINKER B6, C18 · FIXER A O109 · B O92 · C O88/O89 · DIGEST conv. 7. `wins_if:` a builder brief for any §L program fits under 8K tokens drawn from the prose alone, three times running. *Added 2026-09-06 by the orchestrator, same finding.*
+
 **(NEW: the eleven orchestrator-class rows of the fixer round — v96–v106 — have losing images, and §J gave them no
 number)** SPINE §J 73–88 numbers the founder's three overrules and the thirteen lane shapes the fold did not take; the
 losing images of **v96** (*§L built in §19's order* — `wins_if:` a year in which no vendor ships any adapter's surface;
-and *`confidence: LOW` on the header until one overnight* — `wins_if:` fewer than one row in ten changes after it) and
+~~and *`confidence: LOW` on the header until one overnight* — `wins_if:` fewer than one row in ten changes after it~~ —
+**that second image was ADOPTED on 2026-09-06, challenge D P2-5**: the field is on the header block, so it is a live
+mark and not an image, and it leaves v96's last column in the same change) and
 **v97** (*the prose as the binding document* — `wins_if:` a builder brief for any §L program fits under 8K tokens from
 the prose alone, three times running) live in §1's last column, rows v96 and v97, and are **not repeated here word for
 word** by this section's own opening rule. The same is true of v98–v106. A reader sent here for them by §0.3 or §0.7
-should read §1 rows v96–v106; ~~no §J number is invented for them in this section, because a number that SPINE does not~~ SPINE §J 89 and 90 now carry v96's and v97's images (added 2026-09-06 by the orchestrator on this finding), reproduced below; the other nine (v98–v106) stay in §1's last column, because a number that SPINE does not
+should read §1 rows v96–v106; ~~no §J number is invented for them in this section, because a number that SPINE does not~~ SPINE §J 89 and 90 now carry v96's and v97's images (added 2026-09-06 by the orchestrator on this finding), reproduced **above, as entries 89 and 90 of this subsection** (moved 2026-09-06: challenge D P3-1); the other nine (v98–v106) stay in §1's last column, because a number that SPINE does not
 carry is one the fold cannot resolve.
 
 **(NEW: what the sixteen share with 55–72, and one way they differ)** Like the rethink round's eighteen, they arrive
@@ -250,6 +262,3 @@ it here should look in one of three places, not conclude it was never considered
 **(FINAL)** Everything above is kept so it can be argued for later. **Nothing here is deleted when it loses** — that
 is the whole point of writing it down, and it is why §1-v2's last column and this section exist as two views of one
 record rather than as two records.
-
-89. **§L built in §19's dependency order, every mechanism as ours** (→ v96, the commodity line; `class: ratified`). `source:` THINKER C3 · FIXER A O104 · B O93 · C O82 · DIGEST conv. 4. `wins_if:` a year in which no vendor ships any adapter's surface and every adapter had to be built by hand anyway — the sort then cost a lint and bought a delay. *Added 2026-09-06 by the orchestrator on F6's finding that v96 had no §J entry.*
-90. **The prose as the binding document** (→ v97, data-first with a constitution; `class: ratified`). `source:` THINKER B6, C18 · FIXER A O109 · B O92 · C O88/O89 · DIGEST conv. 7. `wins_if:` a builder brief for any §L program fits under 8K tokens drawn from the prose alone, three times running. *Added 2026-09-06 by the orchestrator, same finding.*

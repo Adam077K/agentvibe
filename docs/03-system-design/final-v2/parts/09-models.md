@@ -282,7 +282,7 @@ does this system cost* are the same question.
 | *"Cache hits and refreshes on Claude Fable 5.1 and Claude Mythos 5.1 are priced at 0.025x the base input price. All other models use the standard 0.1x multiplier."* | the whole of v57, and the corrected formula in 9.6 |
 | *"5-minute cache write \| 1.25x base input price"*; *"1-hour cache write \| 2x base input price"* | the write coefficient is a function of the TTL bought, not a constant |
 | *"The lifetime is an hour on a subscription and drops to five minutes once you're drawing on usage credits; on an API key or cloud provider, it's five minutes by default."* | **broader than FINAL stated**: three conditions shorten it, not one. It shortens **twelvefold at the moment the account crosses into overage**, which is exactly when the machine is busiest |
-| *"a 50% discount on both input and output tokens"*, and *"Batch API and prompt caching discounts can be combined"* | batch still needs a metered key; the row is ready for the day one exists |
+| *"a 50% discount on both input and output tokens"*, and *"Batch API and prompt caching discounts can be combined"* | ~~batch still needs a metered key; the row is ready for the day one exists~~ **batch needs a metered key and E7 is *no keys*, so there is no such day** (amended 2026-09-06: challenge D P1-1 · E7 · v90). The row is kept as a fact about the vendor, not as a plan: the metered design is the losing image at **§J 74**, with its own `wins_if:`, and §16.4 states the same thing once |
 
 **(FINAL §14.5, surviving.)** Because the cache is invalidated by any change to the stable prefix **including the
 tool definitions**, a bespoke grant per run would pay the cache-write share of the bill forever. So the standing

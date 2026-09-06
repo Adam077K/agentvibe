@@ -35,18 +35,18 @@ the perfect result."*
 **(FOUNDER, rethink 2026-09-06: D11)** Nothing is decided in §0 and two things are admitted here. §0.1 asks for a
 system that is *"self moving, self adjusting, improving"*, and the plan had no adjustment at all for the commonest
 state the founder is in — **away**. **v76** is that adjustment: the system reads one derived value, **the last
-founder event**, at four call sites — it releases the reserve ~~to autonomous work~~ **only to `effect: none` work
+founder event**, at **five** call sites (amended 2026-09-06: challenge D P3-4 — the burst edge is the fifth, and §4.4 counts five) — it releases the reserve ~~to autonomous work~~ **only to `effect: none` work
 whose outputs stage** when the last event is older than the reserve's own horizon and snaps it back on the first
 tap; ~~executes a *which*'s stated default at its intent's expiry with both built options
 archived~~ **fires no one-way default while away — a default fires only if it touches no one-way verb, the verb table
 deciding (v101)**; builds one option instead of two while away; keys page 5's *since you were last here* view on the
-event rather than on a date; and, **a fifth reading, the burst edge: the reserve is held per weekly window, and
+event rather than on a date; and, **the fifth, the burst edge: the reserve is held per weekly window, and
 founder events above a founder-set rate in the current five-hour window pause Claude-seat autonomy until the window
 rolls** *(amended 2026-09-06: FOUNDER, fixer round 2026-09-06: E6 — "Away narrows, plus a burst edge" · NEW: O127 ·
 THINKER: B14, A20)*. It reintroduces no approve verb and does not reverse v9: a silent run still cannot ask; §4.4
-owns the call sites. **Mechanism:** one predicate and one field shared by four call sites — **`bin/log`
-writes `keel/logbook/founder.last` on every founder-authored event and `bin/watch` reads it**, and the four call
-sites above read that one file. **ABSENT** — designed with its path named, in v50's sense, so it is ABSENT and not
+owns the call sites. **Mechanism:** one predicate and one field shared by **five** call sites — **`bin/log`
+writes `keel/logbook/founder.last` on every founder-authored event and `bin/watch` reads it**, and the five call
+sites above read that one file *(five, not four: amended 2026-09-06 · challenge D P3-4)*. **ABSENT** — designed with its path named, in v50's sense, so it is ABSENT and not
 WISH ~~and §A v76 names no path for it~~ *(path set by the orchestrator 2026-09-06, DECISIONS §21 · challenge C
 P2-1)*. Second, **the whole of §0 rests on contrarian assumption 1** (§I row 16): that a
 deterministic anchor exists for most company work. Rung 1, the trust score, regression-for-free, unattended night
@@ -63,7 +63,8 @@ across §23–§30; **(c)** the second venture's first thirty (v85). **The answe
 harness is the most anchorable venture that could have been chosen, so (a) returns high whatever the truth for
 pricing, copy and positioning — selection on the dependent variable. *Inventing an anchor* is defined: one that tests
 a property the done-test did not state, reads a record the company writes, or would pass a rejected artifact.
-**Mechanism:** O102's runner — one `-p` pass and one founder sitting under v86's `founder_hours:` (**ABSENT**); (b)
+**Mechanism:** O102's runner is **`bin/rehearse --r27`** (a mode of the rehearsal runner, named 2026-09-06:
+challenge D P2-11; §17.5) — one `-p` pass and one founder sitting under v86's `founder_hours:` (**ABSENT**); (b)
 needs zero build. Nothing should be built against the inverted architecture before (b) and (c) are taken.
 
 ---
@@ -109,7 +110,7 @@ flowchart TD
     DESK --> PICK{"Which of the fourteen<br/>does this kind of work?"}
     PICK --> RUN["A RUN — one agent, one artifact, one worktree,<br/>a brief it may not exceed, a grant that is argv"]
     RUN --> ANCH["THE ANCHOR — something outside the model<br/>says whether the done-test passed"]
-    ANCH --> HAND["HANDOVER — eighteen lines, always,<br/>including on failure (O7; §6.3's schema owns the count)"]
+    ANCH --> HAND["HANDOVER — every line the schema names,<br/>always, including on failure<br/>(O7; §6.3's schema owns the count)"]
     HAND --> LOG["The event log"]
     LOG --> MC["MISSION CONTROL — seven pages.<br/>Every element is a fact or a tap;<br/>every tap opens a terminal on the Mac"]
     MC --> F
@@ -120,6 +121,11 @@ flowchart TD
     LOG --> CUR["THE CURATOR — the only writer of memory"]
     CUR --> WATCH
 ```
+
+**(NEW: the handover box carries no line count · amended 2026-09-06: challenge D P3-5.)** It read *eighteen lines,
+always* while §6.3 had already added `verifier:` and `adequacy:` (O108), making twenty — and §6.3's own sentence says
+the schema *"owns the count, so no paragraph has to"*. The number is dropped from both places rather than corrected in
+two, because a count in prose is a thing to keep true and a schema is a thing that is true.
 
 **(NEW: what the picture asserts, said once so no section restates it)** Four things in that diagram are the design.
 **Only the founder's door creates an intent.** **Only the Operator dispatches**, and it holds no verb that could
@@ -137,8 +143,12 @@ kernel before adapter and never builds `refuse`. **Mechanism:** the marks lint (
 surface and a kernel naming none of the four — `keel/shared/rules.yml` and the lint, **ABSENT** (§L O105). **Why
 (THINKER: C3, A7, B1 · conv. 4):** vendors shipped the bottom half of this plan in one window — the terminal pop,
 the fleet page, the cost arithmetic, the bell, messaging, fallback chains, a supervisor daemon — and the doctrine had
-no rule for *not building*. **Losing image:** §L built in §19's order · `wins_if:` a year in which no vendor ships any
-adapter's surface (§22 collects it).
+no rule for *not building*. **The cost, once (added 2026-09-06: challenge D P3-7 — the doctrine changes were the two paragraphs in this plan
+with a Mechanism, a Why and a losing image and no cost line):** three marks on every §L row and every `bin/` program,
+written once by whoever writes the row, plus one lint; and a **sort before the build order**, which delays any adapter
+behind the kernel it reads into. What is bought is the deletions — a matched `vendor_wins_if:` removes a node rather
+than maintaining it, and `bin/supervise` is the first one it removed before it was built. **Losing image:** §L built
+in §19's order · `wins_if:` a year in which no vendor ships any adapter's surface (§22 collects it).
 
 **(NEW, fixer round 2026-09-06: v97 — what binds is data, and this picture is a rendering)** The binding content of
 the plan is **data** — `rules.yml`, `roster.yml`, `routing.yml`, the schemas, `prices.yml`, `facts.yml`,
@@ -149,7 +159,11 @@ for the cache, which is the Operator's pre-flight read (§3.1) and the only part
 reads. Its test: a fresh agent given only the constitution and the schemas writes a brief that passes `check-stores`.
 **Mechanism:** the generator and a byte-budget checker modelled on `scripts/check-memory-budget.mjs` (exists as a
 shape on this branch) — **ABSENT** (§L O107). **Why (THINKER: C18, B6 · conv. 7):** 156,000 words that nothing
-acting can read cannot bind. **Losing image:** the prose as the binding document · `wins_if:` a builder brief for any
+acting can read cannot bind. **The cost, once (added 2026-09-06: challenge D P3-7):** the data files and two generators — `rules.yml` and the
+renderer, the constitution and its byte checker — plus a lint that fails a hand-edited rendered table, which means a
+correction to any generated table is now a diff on the data rather than on the sentence in front of the reader. What
+is bought is that the only thing an acting agent reads is ≤ 4,096 bytes and byte-identical for the cache.
+**Losing image:** the prose as the binding document · `wins_if:` a builder brief for any
 §L program fits under 8K tokens from the prose alone, three times running.
 
 ---
@@ -190,7 +204,7 @@ the agent doing the work, which is what actually changed)**
 | **Mission control, page 4 — the board** | Tickets, PRs and a timeline. The founder drags a card into *working on it* | The drag launches a session with a team of agents and hands it the task. **Nothing in the world does this** — every board-to-session project found maps one task to one agent (v16), so this part is ours to build |
 | **The Floor** | A terminal, one agent, the same memory and the same envelope. The founder's own browser and own send button are here and nowhere else | The system goes sterile: nothing interrupts, nothing new is dispatched on the founder's window, the venture under their hands is held whole. When they leave, the queue that built up is one paragraph |
 | **A *which*** | ~~Two options, both already built~~ One option built and a written second, both built only when a ten-word summary cannot separate them (amended 2026-09-06: E15 · v87), and the cost of each. One tap | There is no approve verb anywhere in the system. Outside the envelope, the system builds both and asks *which* |
-| **The night** | Nothing. The founder is asleep | **Only when this Mac can hold a night** — `night_capable` from `pmset`, else the unattended brief is refused and routed to the cloud lane (v83, v84 · §4.1b) — and only while `founder.lease` is fresh (v102 · §4.4). Then obligations first, before any goal. Then, under each driven venture's ceiling, runs are born with a brief, work however they like, are checked by something outside the model, hand back every line the handover schema names (§6.3), and die. Routine work burns the Gemini window and never touches the founder's; embeddings and classification run locally on electricity. A fully autonomous run **cannot ask** — everything it would have asked is pre-decided or staged as a *which* |
+| **The night** | Nothing. The founder is asleep | **Only when this Mac can hold a night** — `night_capable` from `pmset`, else the unattended brief is refused and ~~routed to the cloud lane~~ **held, not minted, until the carrier's `stop:` is known (v67)** (v83, v84 · §4.1b · amended 2026-09-06: challenge D P1-3); §15.1b names the precondition that makes the predicate true — and only while `founder.lease` is fresh (v102 · §4.4). Then obligations first, before any goal. Then, under each driven venture's ceiling, runs are born with a brief, work however they like, are checked by something outside the model, hand back every line the handover schema names (§6.3), and die. Routine work burns the Gemini window and never touches the founder's; embeddings and classification run locally on electricity. A fully autonomous run **cannot ask** — everything it would have asked is pre-decided or staged as a *which* |
 | **Dawn** | The briefing again | The curator has already run: delta-only writes, one writer, an index loaded at start and topic files on demand |
 
 ---

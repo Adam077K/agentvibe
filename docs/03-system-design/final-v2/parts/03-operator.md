@@ -268,9 +268,10 @@ them. **Settled by:** pulling the cord mid-run, measuring time to quiescence, an
 **(FOUNDER, fixer round 2026-09-06: E8 → v91 · O85 — the cord has two scopes, because there are N Operators)**
 With five worktrees and three terminals open (W41) one cord was two things: *stop the night* and *stop me*.
 **`--night`** signals `bin/run`'s recorded process groups and stops dispatch; **`--all`** also `SIGTERM`s every
-registered Operator session and its team. One verb, `bin/stop`, with **four receivers** — the cord file, the process
-groups, the Sender's recall window, the hosted lane's UNKNOWN — and **one record** of what stopped and what did not,
-so the four semantics stop being four controls. Every page's control and the phone default to `--night`, labelled
+registered Operator session and its team. One verb, `bin/stop`, with ~~**four receivers** — the cord file, the process
+groups, the Sender's recall window, the hosted lane's UNKNOWN~~ **five receivers, listed once in §12.9** *(amended
+2026-09-06: challenge D P2-10 — two lists of four disagreed; the Operator sessions are the fifth)* — and **one record**
+of what stopped and what did not, so the semantics stop being separate controls. Every page's control and the phone default to `--night`, labelled
 *stops the night, not the Floor*. **Mechanism:** `bin/stop` (**ABSENT**, §L O85; §12 owns the verb, §14 the control).
 **Settled by:** the drill's count and the record disagreeing once. **Losing image:** the tap as the only e-stop ·
 `wins_if:` a year of drills in which the tap reaches quiescence from the phone every time, tunnel down.
@@ -410,7 +411,7 @@ The Operator returns exactly three kinds of thing, and nothing else reaches the 
 |---|---|---|
 | **A *which*** — ~~two options, both already built~~ one option built and a written second (both only when a ten-word summary cannot separate them), with the cost of each, `cost_to_answer_bytes` measured, and a recommendation that a founder-set fraction of the time is hidden or shuffled as a control arm (amended 2026-09-06: v87 · O96 · O97) | when a decision is outside the envelope, or a fully autonomous run hit a question — and never past the window's decision budget | never *may I*; there is no approve verb |
 | **A ring** — one line, on the phone | only when a `wake-me` line fired | the interruption budget is three a day, and a channel whose acted-on rate falls is demoted below its threshold. ICU alarms: 74–99% irrelevant **(FINAL §1 row 18, §13.5)** produces trained inattention, not annoyance |
-| **The briefing** — a page the founder opens | whenever the founder opens it, so it is **never** an interruption | **its first line is *decisions taken · deferred · defaulted*, with the bytes each cost** (amended 2026-09-06: E15 · O96 · O95), then FINAL's: what moved with the evidence; the raw work biggest first; the *whiches*, ~~both built~~ one built and a written second; **what could not be checked, named**; what it cost per venture and per window — and the founder's own hours against `founder_hours:`, a bind at 20 reported and never silently enforced (v86); what the Operator would do next, none of it started |
+| **The briefing** — a page the founder opens | whenever the founder opens it, so it is **never** an interruption | **its first line is *decisions taken · deferred · defaulted*, with ~~the bytes~~ the **founder-minutes** each cost** (amended 2026-09-06: E15 · O96 · O95 · challenge D P3-3 — O95 carries minutes and they are what the line shows; `cost_to_answer_bytes` stays on the which row, where §4.5 and §12.5 put it), then FINAL's: what moved with the evidence; the raw work biggest first; the *whiches*, ~~both built~~ one built and a written second; **what could not be checked, named**; what it cost per venture and per window — and the founder's own hours against `founder_hours:`, a bind at 20 reported and never silently enforced (v86); what the Operator would do next, none of it started |
 
 **(NEW: the field of the handover that the briefing reads first, and why it is the field to fight for)** `uncertain`
 — *what I am not sure about and what would settle it*. It turns a confident wrong answer into a flagged one. **No

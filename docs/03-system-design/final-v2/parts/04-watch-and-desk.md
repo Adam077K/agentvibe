@@ -51,7 +51,7 @@ flowchart TD
     G7 -->|"yes"| G8{"8 · WIP limit for this venture,<br/>and overall, already reached?<br/>WIP counts sessions (v91)"}
     G8 -->|"yes"| SLEEP
     G8 -->|"no"| NIGHT{"9 · unattended: true, and<br/>night_capable false? (v84)"}
-    NIGHT -->|"yes"| CLOUDR["Refused with the printed reason;<br/>routed to the cloud carrier where cloud: allow,<br/>else not minted. A page-3 fact"]
+    NIGHT -->|"yes"| CLOUDR["Refused with the printed reason;<br/>HELD, not minted, until the carrier's stop: is known (v67).<br/>A page-3 fact"]
     CLOUDR --> SLEEP
     NIGHT -->|"no"| DISPATCH["Open a Run —<br/>the Operator writes the brief, section 6"]
     DISPATCH --> SLEEP
@@ -67,6 +67,11 @@ lease at 0a, v84's `night_capable` at 9), cheapest and most absolute first: **th
 founder's heartbeat beats the night; an obligation beats a goal; the founder's presence beats capacity; capacity
 beats desire; provenance beats opportunity; the envelope beats capability; flow limits beat all of it; the machine's
 own sleep beats every unattended brief.**
+
+**(NEW: there is no `founder_hours:` gate here, and the omission is deliberate · amended 2026-09-06: challenge D
+P2-4)** Eleven gates and none of them reads `founder_hours:`, because the field is **report-only** — the founder said
+*"20 hours or no ceiling"*, so a bind raises a briefing line and a *which* and stops nothing, and a gate is a thing
+that stops. §2.1 states it once; §16.2b prices it; §12.9 says the same about the three ceilings.
 
 **(FOUNDER, v55: a standing intent is read by the tick and dispatched like any other candidate, which is the whole
 of what the founder asked for)** The founder asked for agents *"that can run every set time or evant or something
@@ -125,8 +130,12 @@ predicate, not a habit (THINKER: A1 · W33):** `pmset -g custom` reads `sleep 1`
 sleeps in seven days; a habit the Watch cannot verify is a wish. `bin/watch` computes **`night_capable`** from
 `pmset -g batt` (AC), `pmset -g custom` (`sleep 0` or `disablesleep 1`) and `pmset -g assertions`, against the
 contract in `keel/host/power.yml` (§15 owns the file). An `unattended: true` brief is **refused with the printed
-reason when it is false** and routed to the **cloud carrier where the charter says `cloud: allow`** (§2.1), else not
-minted; predicate and reason are a **page-3 fact and a briefing line**. The probe asserts it **by attempting it** — a
+reason when it is false** and ~~routed to the **cloud carrier where the charter says `cloud: allow`** (§2.1), else not
+minted~~ **held, not minted, until the carrier's `stop:` is known (v67)** — the charter's `cloud: allow` decides
+whether it may ever go, and v67 decides that today it may not (amended 2026-09-06: challenge D P1-3; §2.1, §3.5);
+predicate and reason are a **page-3 fact and a briefing line**. **The precondition under the predicate is §15.1b's,
+stated there once:** until the founder runs `pmset -a disablesleep 1`, or R41 shows a held `caffeinate` assertion
+satisfies it, the predicate is false every night and nothing unattended runs at all. The probe asserts it **by attempting it** — a
 detached child across `pmset sleepnow`, `run.started` read against the wake. **Mechanism:** `bin/watch` ·
 `keel/host/power.yml` · `bin/probe` (**ABSENT**, §L O81); adapter over `pmset`, `vendor_wins_if:` the runtime refuses
 unattended work on a sleeping host. **Not decided here:** the cloud maker path is UNVERIFIED (v56(b)) and holds a
@@ -269,7 +278,7 @@ held **per weekly window**, and founder events above a founder-set rate in the *
 Claude-seat autonomy until the window rolls** — a busy Floor drains the seat the night shares (v22). **This sits inside the founder's own
 numbers** — *"Keep 30% and 3/day; evidence moves them"* — and changes what reads them, not what they are. **It
 reintroduces no approve verb and does not reverse v9:** a silent run still cannot ask; a *which* whose default fires
-is a decision the founder already wrote down. **Mechanism:** one predicate and one field shared by four call sites —
+is a decision the founder already wrote down. **Mechanism:** one predicate and one field shared by **five** call sites, the five listed above *(amended 2026-09-06: challenge D P3-4 — this paragraph said five in its first line and four in this one)* —
 **`bin/log` writes `keel/logbook/founder.last` on every founder-authored event and `bin/watch` reads it** (**ABSENT**;
 ~~§A v76 names no path~~ *path set by the orchestrator 2026-09-06, DECISIONS §21 · challenge C P2-1*). The mark is
 **ABSENT** rather than **WISH** because v50 asks for a designed mechanism *with its path named*, and this now has

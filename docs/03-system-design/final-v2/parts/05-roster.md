@@ -164,9 +164,10 @@ all, leaving the roster the one object in the system that can only grow.
    narrower or refused run, and the founder reads four small programs rather than twenty-six. **Losing images:**
    *every Keel PR at irreversible* — §J 78 · `wins_if:` a second family becomes reachable inside Claude Code; *a
    `keel-build` tier with no sign-off* · `wins_if:` a wave lands with zero founder findings. **Settled by:**
-   sign-offs before the first dispatch exceed four (THINKER: A11). **Every `bin/` program also carries `class:
-   kernel | adapter | refuse`, `vendor_wins_if:` and `wins_if:`** (O105, v96); §17.5 holds the table, and §5.9
-   below marks the ones this section names.
+   sign-offs before the first dispatch exceed four (THINKER: A11). **Every `bin/` program also carries O105's three marks**
+   ~~`class: kernel | adapter | refuse`, `vendor_wins_if:` and `wins_if:`~~ (O105, v96 — amended 2026-09-06:
+   challenge D P3-7): **§0.3 states the commodity line and its cost once**, §17.5 holds the table, and §5.9 below
+   marks the ones this section names.
 
 **(NEW: why rule 4 is the one most at risk from a roster ~~, and the mechanism is a naming discipline~~ — it has a
 mechanism now, and this is why it needed one)** *(corrected 2026-09-06 · challenge C P2-2: a discipline somebody
@@ -384,14 +385,18 @@ Edit, Glob, Grep. MCP: Higgsfield, rate-capped,
 **11 · growth.** Leads, scoring, outreach **drafts**, CRM hygiene, funnel work. Lens: growth. `claude-sonnet-5`.
 Read, Glob, Grep, Write. CRM read-only. Skills: growth. **Anchor:** **a reply from a real person**, recorded by the
 world's door — never a count of messages sent, which is the metric that makes an outreach agent look productive
-while it burns a reputation. **It never sends.** First contact with a stranger is on the default `never` list, and
+while it burns a reputation. **It never sends.** ~~First contact with a stranger is on the default `never` list~~
+**First contact is step 5 of the outward-class ladder, per venture (v94)** (amended 2026-09-06: challenge D P1-2 ·
+E11): the class is reachable after N recall-free sends in the classes below it, and §12.2b states once what the
+charter's `ladder:` line does to the default `never` list. Either way `growth` does not send: the Sender does, and
 the Sender's own rate limits are absolute numbers in a program no model can reach.
 
 **12 · steward.** Obligations, invoices, expenses, contract **review**, compliance flags, vendors, support triage.
 Lens: operations, finance. `claude-sonnet-5`. Read, Glob, Grep, and `Write` on obligations and operations paths.
 **MCPs: none** (v36). Skills: operations. **Anchor:** an obligation is discharged only by a record the company does
 not write. Contract **drafting that binds**, tax filing and cap-table edits are one-way doors and are refused: they
-reach the founder as a *which*, with both options prepared.
+reach the founder as a *which* — ~~with both options prepared~~ **one built, a second written unless a ten-word
+summary cannot separate them (v87)** *(amended 2026-09-06: challenge D P2-3)*.
 
 **(NEW: v36 — where steward's input comes from, and why it is not a server on its own line)** An earlier draft of
 this roster gave `steward` read access to Gmail, Calendar, Drive and Notion. **That was one grant breaking two
@@ -486,10 +491,10 @@ rather than deferring)**
 | 23 | design & product | designer (UI, UX, branding, visual identity, prototype, accessibility) · product (spec, roadmap, feedback triage) | **User-testing simulation** — a simulated user is the machine grading its own homework; the rung-1 anchor is a real reaction |
 | 24 | engineering | builder · reviewer · architect · tester · guard. Documentation is written by whoever made the thing, and its anchor is that a cold reader can run it | **A separate documentation agent** — docs split from the artifact drift the moment the artifact moves. That is v7's reasoning applied in the other direction |
 | 25 | data & analytics | analyst (pipelines, tracking, dashboards, KPIs, cohorts, A/B, cleaning, anomalies) | **Data labelling** as an agent — it is a founder-taste task and feeds the taste store through the Floor |
-| 26 | marketing & content | writer (calendar, blog, video and asset briefs, SEO, ad copy, social, email, brand voice) | **Influencer outreach** — first contact with a stranger is on the default `never` list |
+| 26 | marketing & content | writer (calendar, blog, video and asset briefs, SEO, ad copy, social, email, brand voice) | **Influencer outreach** — ~~first contact with a stranger is on the default `never` list~~ **first-contact is step 5 of the ladder, per venture (v94)**, so this is refused until that venture's ladder reaches it, and never refused forever *(amended 2026-09-06: challenge D P1-2 · E11; §12.2b)* |
 | 27 | sales & growth | growth (scraping, scoring, outreach drafts, CRM, follow-up, deal stage, referral) | **Churn prediction** — no venture has the data; it is a wish until one does |
 | 28 | customer service | the world's door writes the inbound row and `scout` reads the source (v36); steward triages it, because a support ticket is an obligation with a due date; writer drafts the reply; **the Sender sends** | **An autonomous reply bot** — a person is on the other side, so it is REACHES-THE-WORLD and never unattended until the founder widens the class |
-| 29 | finance & legal | steward (invoices, expenses, budget-vs-actual, contract *review*, compliance flags) · analyst (the reconciliation) | **Contract drafting that binds, tax filing, cap-table edits** — one-way doors; they reach the founder as a *which*, with both options prepared |
+| 29 | finance & legal | steward (invoices, expenses, budget-vs-actual, contract *review*, compliance flags) · analyst (the reconciliation) | **Contract drafting that binds, tax filing, cap-table edits** — one-way doors; they reach the founder as a *which*, ~~with both options prepared~~ **one built and a second written unless a ten-word summary cannot separate them (v87)** *(amended 2026-09-06: challenge D P2-3)* |
 | 30 | operations & HR | steward (vendors, process docs, internal tooling requests, and calendar and meeting notes **as inbound rows**, never as a mailbox it opens — v36) | **Hiring pipeline** — there are no employees; revisit when there are |
 
 **(NEW: contradiction 20 — this table is the source, and the other two are renderings of it)** The eight

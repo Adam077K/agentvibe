@@ -81,11 +81,11 @@ fails lint (O106). `roster.yml` also carries **the trusted base's fields** on it
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 0 | **Operator** | **1** | `.claude/agents/operator.md` — ABSENT | `orchestrator.md` (154 lines) | `claude-opus-5` | Read Glob Grep Agent | none | — | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | it dispatched, and it did not build: a diff authored by the Operator is a defect. **It runs as the founder's main interactive session, `claude --agent operator` (v46)** |
 | 1 | **builder** | **1** | `.claude/agents/builder.md` — ABSENT as v2's file | `builder.md` (134 lines) | **`claude-fable-5-1`** (v57); fallback `claude-opus-5`, reachability UNVERIFIED | Read Write Edit Bash Glob Grep | none by default | engineering · testing | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | worktree (v41) | the venture's own CI, plus the done-test, plus the tester's blind test |
-| 2 | **reviewer** | **1** | `.claude/agents/reviewer.md` — ABSENT as v2's file | `reviewer-readonly.md` (169 lines) — **not** `reviewer.md`, which carries Bash | `claude-sonnet-5`; a second family when reachable | Read Glob Grep | none | engineering · quality | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | findings reproduce from the diff alone |
+| 2 | **reviewer** | **1** | `.claude/agents/reviewer.md` — ABSENT as v2's file | `reviewer-readonly.md` (169 lines) — **not** `reviewer.md`, which carries Bash | `claude-sonnet-5`; ~~a second family when reachable~~ the second family is the **Gemini CLI or Codex CLI as a `bin/run` child from launchd, no key** — rung 4 until the calibration set passes *(amended 2026-09-06: challenge D P2-1 · E7 · v90, O92; §5.2 row 2)* | Read Glob Grep | none | engineering · quality | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | findings reproduce from the diff alone |
 | 3 | **architect** | **1** | `.claude/agents/architect.md` — ABSENT | none | **`claude-fable-5-1`** (v57); fallback `claude-opus-5`, reachability UNVERIFIED | Read Glob Grep Write (design paths only) | none | engineering · data | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | worktree (v41) | a migration that applies and rolls back in a scratch database |
 | 4 | **tester** | **1** | `.claude/agents/tester.md` — ABSENT | none | `claude-sonnet-5` | Read Write Edit Bash Glob Grep, `--add-dir` excluding the implementation | none | testing · quality | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | worktree (v41) | the test fails before the change and passes after |
 | 5 | **guard** | **1** | `.claude/agents/guard.md` — ABSENT | none | `claude-opus-5` | Read Glob Grep | none | security | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | a proof of concept that reproduces |
-| 6 | **scout** | **1** | `.claude/agents/scout.md` — ABSENT | `sourcer.md` (147 lines, `mcpServers: [claim-append]`) | `claude-sonnet-5`; Gemini once authenticated | Read Glob Grep WebSearch WebFetch — no Write, no credential, no send | read-only servers, admitted per run | research | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | every claim carries URL, quote and access date; `scripts/check-citations.mjs` (846 lines) blocks on a dead one |
+| 6 | **scout** | **1** | `.claude/agents/scout.md` — ABSENT | `sourcer.md` (147 lines, `mcpServers: [claim-append]`) | `claude-sonnet-5`; ~~Gemini once authenticated~~ the Gemini CLI on a personal account, **only as a `bin/run` child from launchd** *(amended 2026-09-06: challenge D P2-1 · E7 · v90, O92; W37 — §5.2 row 6)* | Read Glob Grep WebSearch WebFetch — no Write, no credential, no send | read-only servers, admitted per run | research | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | every claim carries URL, quote and access date; `scripts/check-citations.mjs` (846 lines) blocks on a dead one |
 | 7 | **designer** | **1** | `.claude/agents/designer.md` — ABSENT as v2's file | `designer.md` (151 lines, `mcpServers: [playwright]`) | `claude-opus-5` | Read Write Edit Bash Glob Grep | `playwright`, per-run inline | design · frontend | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | worktree (v41) | a rendered screenshot judged against a named anchor |
 | 8 | **product** | 2 | `.claude/agents/product.md` — ABSENT | `framer.md` (121 lines) | `claude-sonnet-5` | Read Glob Grep Write (spec paths) | none | product | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | the store check refuses a done-test not falsifiable by someone who did not do the work |
 | 9 | **analyst** | 2 | `.claude/agents/analyst.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep ~~Bash~~ *(struck: **O57**)* | read-only analytics · error tracking · billing-read | data | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | the reconciliation reads a record the company does not write |
@@ -93,7 +93,7 @@ fails lint (O106). `roster.yml` also carries **the trusted base's fields** on it
 | 11 | **growth** | 2 | `.claude/agents/growth.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write | CRM read-only | growth | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | a reply from a real person, recorded by the world's door |
 | 12 | **steward** | 2 | `.claude/agents/steward.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write (obligations and operations paths) | **none** (v36) — it writes from scout's handover and the world's door's rows, never from a raw mailbox | operations | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | an obligation is discharged only by a record the company does not write |
 | 13 | **curator** | **1** *(v70)* | `.claude/agents/curator.md` — ABSENT | none | `claude-sonnet-5`; the summarising half on Gemini or a local model | Read Write Edit Glob Grep — no Bash | none | knowledge | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | a memory item with no source, date, expiry and falsifier is refused at the store check |
-| 14 | **challenger** | **1** *(v70)* | `.claude/agents/challenger.md` — ABSENT | none | `claude-opus-5`; a second family when reachable | Read Glob Grep | none | quality · research | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | every finding names the mechanism that would have caught it |
+| 14 | **challenger** | **1** *(v70)* | `.claude/agents/challenger.md` — ABSENT | none | `claude-opus-5`; ~~a second family when reachable~~ the second family is the **Gemini CLI or Codex CLI as a `bin/run` child from launchd, no key** — rung 4 until the calibration set passes *(amended 2026-09-06: challenge D P2-1 · E7 · v90, O92; §5.2 row 14)* | Read Glob Grep | none | quality · research | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | every finding names the mechanism that would have caught it |
 
 **(NEW: what leaves, and it is thirteen files of eighteen)** `reviewer.md` (149 lines, `tools: [Read, Glob, Grep,
 Bash]`) is **gone**: a checker has no shell, so the v2 `reviewer` is seeded from `reviewer-readonly.md` instead. The
@@ -260,7 +260,7 @@ fails it. Compressed here to what v2 changes; the schemas stand as FINAL §16.4 
 | Store | Path | The one writer | What v2 changes |
 |---|---|---|---|
 | Charter | `keel/ventures/<v>/charter.md` | the founder, through the read-back | unchanged |
-| Intent | `keel/ventures/<v>/intents/<id>.md` | the founder's door, through the read-back | page 4's cards point at intent ids; **the schema gains two optional fields, `every:` (a cadence) and `on:` (an inbound event class), for a standing intent that never expires (v55, §2.8)** — the Watch reads them on each tick and the store check refuses `every:` without a ceiling per run |
+| Intent | `keel/ventures/<v>/intents/<id>.md` | the founder's door, through the read-back | page 4's cards point at intent ids; **the schema gains two optional fields, `every:` (a cadence) and `on:` (an inbound event class), for a standing intent that ~~never expires~~ never finishes but expires — `valid_until` with a forced disposition, like everything durable (v55 · O126, §2.8; amended 2026-09-06: challenge D P2-2)** — the Watch reads them on each tick, `bin/horizon` forces the disposition, and the store check refuses `every:` without a ceiling per run |
 | Obligation | `keel/ventures/<v>/obligations.yml` | the Watch, alone (v44) | read by **steward** as well as the Watch. `steward` writes **proposals** into `keel/ventures/<v>/obligations-draft/` from `scout`'s handover; the Watch materialises a proposal into a row after the store check |
 | Facts | `keel/ventures/<v>/memory/facts.md` | **the curator** | v25 makes the single writer an agent with a name and a grant |
 | Measured facts | `keel/shared/facts.yml` | the probe; **and the meter, for the units table** (O117) | gains the model-expiry rows of 17.4.1; **the units table** (v104, O117 — §16.3a) · **`mac-off-hours`** from the standing `pmset -g log` intent (O82, §15.1b) · the practitioner's W33–W41 as (THINKER: An) rows |
@@ -355,6 +355,79 @@ recurs in this plan more than any other, and each row below is one fact given on
 adapter naming no surface, a kernel naming none of the four, and an option set whose second option's only reason is
 *cheaper* or *no work* all fail it. **Twenty rows**, derived from §L O81–O127; the sessions registry's operator rows are also noted in 17.4.1.
 
+**(NEW: the two columns in full, for every O81–O127 · added 2026-09-06: challenge D P3-6.)** The table above carries
+`class:` and `vendor_wins_if:` for the **twenty** mechanisms that are stores or schemas. The plan's own text carried
+neither column for the other twenty-seven — no `vendor_wins_if:` appeared anywhere in it for O93, O95, O96, O97, O98,
+O104, O111, O112, O116, O120, O123, O126 or O127, and no `class:` for O98, O102 or O127 — while SPINE §L carried a
+value, often `—`, for every one. **A `—` is a value and its absence is not**: an adapter with no named surface fails
+the marks lint, and a kernel with `—` is the correct reading that nothing kernel is waiting on a vendor to ship.
+**This table is the plan-side copy of §L's two columns and nothing else** — the mechanism, its path, its readers and
+its `wins_if:` stay in §L and in the section that owns each one, so this adds one lookup and no second fact.
+**Derived, never typed:** every row below is read out of SPINE §L's `class:` and `vendor_wins_if:` columns, and a
+disagreement between this table and §L is this table being wrong.
+
+| id | `class:` | `vendor_wins_if:` |
+|---|---|---|
+| **O81** | adapter · `pmset` | the runtime refuses unattended work on a sleeping host |
+| **O82** | adapter · `pmset` | the OS publishes an uptime history |
+| **O83** | kernel · truth | per-invocation keychain ACLs |
+| **O84** | kernel · record | `claude agents --json` lists sessions with a venture |
+| **O85** | kernel · truth | the daemon exposes a scoped stop with a report |
+| **O86** | kernel · direction | — |
+| **O87** | adapter · `--settings` | per-invocation hooks natively |
+| **O88** | adapter · `--no-session-persistence` | a per-project transcript exclusion or an erasure verb |
+| **O89** | adapter · `--fallback-model` + `PreModelSwitch` | the flag takes a per-link policy and reports each switch |
+| **O90** | adapter · `--autocompact` + `PreCompact` | — |
+| **O91** | adapter · the daemon (W38) | a service mode that does not idle-exit, with readable leases |
+| **O92** | adapter · the two CLIs (W37) | `denyRead` narrowable per invocation |
+| **O93** | kernel · truth | — |
+| **O94** | adapter · sandbox `network` + `credentials` + stdio MCP (W36) | a per-invocation loopback allow scoped to one port (§J 86) |
+| **O95** | kernel · direction | — |
+| **O96** | kernel · direction | — |
+| **O97** | kernel · taste | — |
+| **O98** | kernel · direction | — |
+| **O99** | kernel · record | — |
+| **O100** | kernel · truth | — |
+| **O101** | kernel · direction | — |
+| **O102** | kernel · truth | — |
+| **O103** | kernel · truth | — |
+| **O104** | kernel · truth | — |
+| **O105** | kernel · record | — |
+| **O106** | kernel · record | — |
+| **O107** | kernel · direction | — |
+| **O108** | kernel · truth | — |
+| **O109** | kernel · truth | — |
+| **O110** | adapter · `/goal` | `/goal` takes a command and an expected exit code |
+| **O111** | kernel · truth | — |
+| **O112** | kernel · truth | — |
+| **O113** | kernel · taste | — |
+| **O114** | kernel · truth | R14's activation event sharpens *present* to *fired* |
+| **O115** | adapter · `rate_limits` | the vendor emits window utilisation as a status field |
+| **O116** | kernel · record | — |
+| **O117** | kernel · record | — |
+| **O118** | kernel · record | — |
+| **O119** | kernel · truth | the runtime reports per-skill startup tokens |
+| **O120** | kernel · truth | — |
+| **O121** | adapter · `claude agents` + `SendMessage` + tmux | `claude --attach` accepts a teammate id |
+| **O122** | adapter · the vendor's push | the push exposes an acted-on read |
+| **O123** | kernel · record | — |
+| **O124** | kernel · record | — |
+| **O125** | kernel · direction | — |
+| **O126** | kernel · direction | — |
+| **O127** | kernel · direction | — |
+
+**Forty-seven rows, one per mechanism O81 through O127.** Read the classes as a count, re-derived from the column
+beside them rather than recalled: **thirty-four kernel** — fourteen truth, nine record, nine direction, two taste —
+and **thirteen adapters**, each naming the surface it is the thinnest reader of. That ratio is the commodity line working (§0.3): the round added more kernel than adapter, and
+every adapter carries the condition that deletes it.
+
+**(One disposition of DECISIONS §25 is NOT applied here, and it is named rather than performed.)** §25 asks that
+**O90's class be re-read as kernel · truth**, glossing it *a carrier drill is ours* — which is O120's content, not
+O90's. SPINE §L O90 reads **`adapter · --autocompact + PreCompact`**, and §6.4 and §9.6 both call it an adapter over
+those two vendor surfaces; O120 is already `kernel · truth` in §L. Changing this one cell would put the plan and the
+SPINE into disagreement about one mechanism's class — the defect P3-6 exists to close — so **the table carries §L's
+value** and the re-read is recorded here for whoever reconciles it.
+
 ---
 
 ### 17.5 Every command, tap and verb
@@ -362,7 +435,10 @@ adapter naming no surface, a kernel naming none of the four, and an option set w
 **(FINAL §16.5, inherited)** Every `keel` verb is **ABSENT**: `keel charter <venture>` · `keel intend <venture>` ·
 `keel tempo <venture> driven|attended|watching|parked` · `keel floor <venture>` · `keel adopt <path>` · `keel stop` ·
 `keel briefing` · `keel why <run-id|intent-id>` · `keel status` · `keel watch start|stop` · `keel door <tool>` ·
-`keel drill <tool>` · `keel rehearse <move-class>` · `keel probe` · `keel restore --scratch`.
+`keel drill <tool>` · `keel rehearse <move-class>` · `keel probe` · `keel restore --scratch`. **Two of those verbs
+now name the program behind them** (amended 2026-09-06: challenge D P2-11 — a mechanism with no path is not a rule,
+and both of these were ABSENT with nothing to be absent): **`keel briefing` runs `bin/briefing`**, and **`keel
+rehearse` gains the mode `bin/rehearse --r27`**, O102's runner.
 
 **(NEW: the programs v2 adds, and every one is ABSENT)**
 
@@ -373,7 +449,7 @@ adapter naming no surface, a kernel naming none of the four, and an option set w
 | `keel/bin/probe` | asserts nightly what a run can actually touch — **by attempting, from both contexts, never importing `bin/run`** (O93); sleeps a child against `power.yml` (O81); a founder keychain read from a night child must fail (O83); refuses a widened launcher (O104) | a prompt injection that reaches it finds a program; never inside a Claude session (O93 — THINKER: A16) | kernel · truth · — |
 | `keel/bin/send` · `inbound` · `watch` · `reconcile` · `log` · `check-stores` · `door` · `drill` · `rehearse` · `curate` | FINAL §16.1's no-model programs, unchanged in kind; **`send`, `inbound`, `watch`, `run` are the trusted base** (v88, O103): `world_touching: true`, a line budget, fixtures as the only admission | **§B.1 rule 4**: ~~the twelve~~ **the eleven** stay programs (amended 2026-09-06: O91 — `supervise` leaves the list) | kernel — `send` · `door` · `reconcile` · `check-stores` · `drill` · `rehearse` **truth**; `inbound` · `log` **record**; `watch` **direction** (its `pmset` reads an adapter, O81); `curate` **taste** · — |
 | **`keel/bin/supervise`** | ~~supervises `bin/watch` and its tree~~ **REFUSED, not built** (amended 2026-09-06: O91) | **(THINKER: A7 · W38)** the vendor ships a supervisor daemon with leases; two supervisors over one process table argue over the first orphan. The Watch's crash-only tick holds the restart ceiling (§15.2). **R31** reopens it | **refuse** · a service mode that does not idle-exit, with readable leases (§J 85) |
-| **`keel/bin/stop`** *(O85, v102)* | **the one stop verb**: `--night` signals `bin/run`'s process groups and stops dispatch; `--all` also `SIGTERM`s every Operator session; four receivers, **one record** of what stopped and what did not; pages and the phone default to `--night` | four stop semantics were four controls with no record; the dead-man lease (17.4.3) is the stop that needs nothing | kernel · truth · the daemon exposes a scoped stop with a report |
+| **`keel/bin/stop`** *(O85, v102)* | **the one stop verb**: `--night` signals `bin/run`'s process groups and stops dispatch; `--all` also `SIGTERM`s every Operator session; ~~four receivers~~ **five receivers, listed once in §12.9** *(amended 2026-09-06: challenge D P2-10)*, **one record** of what stopped and what did not; pages and the phone default to `--night` | four stop semantics were four controls with no record; the dead-man lease (17.4.3) is the stop that needs nothing | kernel · truth · the daemon exposes a scoped stop with a report |
 | **`keel/bin/egress`** *(v68; O94)* | **one door out, as three transports and one log** (amended 2026-09-06: O94): a stdio MCP server per child named alone in `--strict-mcp-config`; the sandbox `network` block for Bash; `credentials.injectHosts` where R2 shows it injects. ~~A loopback proxy~~ — **(THINKER: A5 · W36)** outbound loopback `connect()` is denied for sandboxed Bash (§J 86) | the **only proposal of the round that survives an agent being fully persuaded**: the trifecta guarantees a leg is missing at dispatch, this keeps it missing at the syscall. **(R2, OPEN)** | adapter · sandbox `network` + `credentials` + stdio MCP · a per-invocation loopback allow scoped to one port |
 | **`keel/bin/worktree`** *(O14)* | creates the worktree and **hands its path to the run in argv** | `git worktree add` **cannot complete under the armed sandbox**, and interactive escalation is unavailable to an unattended run by construction. A run never creates its own | adapter · `-w/--worktree` (W35) · the flag makes the tree where the sandbox can write |
 | **`keel/bin/embed`** · **`keel/bin/classify`** *(O13)* | embeddings, classification, dedup and PII detection on the local tier | the local tier has **no reachable carrier**: the sandbox denies a loopback `bind()` **and, measured 2026-09-06, a loopback `connect()`** (W36); the consumer `curator` carries no `Bash` and no MCP. A no-model program in the Watch's launchd context handing the curator a file — v47's shape. **DEPENDS-ON-R4** | adapter · a local model runtime from the launchd context · — |
@@ -384,6 +460,8 @@ adapter naming no surface, a kernel naming none of the four, and an option set w
 | **`keel/bin/replay-desk`** *(O20)* | replays the Desk's own ranking rows and the gate that stopped each candidate; **R38's obligation-tide replay runs here** | the Desk **already writes its ranking and nothing reads it**. A no-model replayer is the only way to tune scheduling without living a month, and it is what settles **v75** (§J 80) | kernel · direction · — |
 | **`keel/bin/drill`** + **`keel/fixtures/`** *(O78; O83, O113)* | a scratch house the Sender, Watch, door and launcher can be run against; **the keychain-read drill and the curator's canary live here** | those four have **no test seam**, and a Sender defect is an outward act that cannot be recalled. Blue-green at a tick boundary (**O79**) is free beside it | kernel · truth · — |
 | **`keel/bin/intend`** *(v52)* | creates the card with its intent id | the founder's door; one writer for the card | kernel · direction · the runtime ships a work-item object between goal and run (R16) |
+| **`keel/bin/briefing`** *(O95, O96, O116; O74–O76, O123 · added 2026-09-06: challenge D P2-11)* | **generates the briefing** — the first line *decisions taken · deferred · defaulted* with the founder-minutes each cost (O95, O96), the agreement rate beside it (v89 · O97), the shadow subsidy line (O116 · R35), the control charts including the Watch's four rates (O74, O123), the restore drill's number (O76) and the seventh weekly line (O75). It is the `keel briefing` verb, and page 5's top strip renders what it writes | it reads five stores and writes one page; a model in it would be a model summarising the evidence the briefing exists to show raw (§3.8's *what the Operator may never hand back*). **ABSENT** | kernel · record · — |
+| **`keel/bin/rehearse --r27`** *(O102 · R27 · added 2026-09-06: challenge D P2-11)* | **O102's runner**, a mode of the rehearsal runner rather than a program of its own: one Sonnet `-p` pass labelling thirty Floor episodes by domain, one founder sitting rating them under `founder_hours:` (O95), thirty paper done-tests across §23–§30, and the second venture's first thirty — three fractions per domain, side by side | the runner already owns known-answer cases and their scoring; a second program would be a second implementation of the same loop. The founder sitting is a founder act, counted against the runbook (O125). **ABSENT**; (b) costs zero build | kernel · truth · — |
 
 **(NEW: O105 — the adapter table, the commodity line made countable.)** Every mechanism that wraps a shipped vendor
 surface, with the surface, so that when the surface widens the row is deleted rather than maintained:
@@ -411,8 +489,9 @@ id; `message:` for in-process teammates via `SendMessage`; `terminal: ghostty`**
 → its run, a window row → retempo, an anomaly → the cord · page 4 **drag a card into "working on it" → launch a
 session and hand it the task, as a team or as the solo chain, per the card's own toggle (v60)** · page 5 tap a gate → its last ten resolutions, tap a store → its schema
 and its one writer · page 6 tap a node → open it on the Floor · page 7 add a session → choose worktree, project,
-provider, model, task and agent. **The cord is on every page, and its verb is `bin/stop --night`; `--all` from the Operator only** (O85,
-v102 — amended 2026-09-06: E8).
+provider, model, task and agent. **The cord is on every page, and its verb is `bin/stop --night`; ~~`--all` from the Operator only~~ `--all` from the
+Operator or from a page control behind a second tap — §12.9 states the reach and the five receivers once** (O85,
+v102 — amended 2026-09-06: E8 · challenge D P2-10).
 
 **(NEW: the Claude Code verbs that ship, and this list is what page 2 and page 7 are built out of)** ~~`claude --bg`~~
 **`claude --bg` — never the night's carrier (O91); bare `claude -p` in a detached tmux session instead** ·

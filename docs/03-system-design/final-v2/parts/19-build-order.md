@@ -86,7 +86,8 @@ flowchart TD
     CURATE["keel/bin/curate + the curator, nightly<br/>the only writer of memory · delta-only · GRADED (O113): the<br/>held-out test before it may judge, a calibration seed it never<br/>edits, a nightly canary · the taste control arm (O97)"]
     REHEARSE["keel/bin/rehearse<br/>known-answer cases · scores.jsonl · the trust floor · every<br/>anchor prints ANCHOR &lt;name&gt; exit=&lt;code&gt; (O110, R17)"]
     ADEQUACY["Two axes on every anchor · v100 O108<br/>verifier: world | other-family | founder | same-family ·<br/>adequacy: pass | fail | unjudged, by a reader who wrote neither ·<br/>rung 1 ONLY when world AND pass · before the first rung-1 claim"]
-    R27RUN["R12's runner · O102 (R27)<br/>(a) the harness's first thirty · (b) thirty Floor episodes<br/>labelled by one Sonnet -p pass, rated in one sitting, plus thirty<br/>paper done-tests across §23–§30 · (c) the stranger's first thirty ·<br/>§I row 16 is settled by (b) and (c), never (a) alone"]
+    R27RUN["R12's runner · O102 (R27) · keel/bin/rehearse --r27<br/>(a) the harness's first thirty · (b) thirty Floor episodes<br/>labelled by one Sonnet -p pass, rated in one sitting, plus thirty<br/>paper done-tests across §23–§30 · (c) the stranger's first thirty ·<br/>§I row 16 is settled by (b) and (c), never (a) alone"]
+    BRIEFING["keel/bin/briefing · the briefing generator<br/>the keel briefing verb · first line: decisions taken · deferred ·<br/>defaulted, with the founder-minutes each cost (O95, O96) ·<br/>the agreement rate (O97, v89) · the shadow subsidy line (O116, R35)<br/>· the control charts incl. the Watch's four rates (O74, O123) ·<br/>the restore drill's number (O76) · page 5's strip renders it"]
 
     SKILL["keel/bin/skill · the library · registry.yml ·<br/>.agents/skills/ generated beside .claude/skills/ · admission<br/>PROVISIONAL, joined to O41 with an evidence block (O114, R14)"]
 
@@ -336,6 +337,10 @@ flowchart TD
     REDACT --> SENDER
     WATCH --> BELL
     WATCH --> REPLAY
+    METER --> BRIEFING
+    DECIDE --> BRIEFING
+    MARKET --> BRIEFING
+    BRIEFING --> P5
     LOCAL --> CURATE
     FIXTURES --> SENDER
     FIXTURES --> INBOUND
@@ -523,8 +528,11 @@ them, not because anything must be created first.
 **(NEW: the same completeness claim, made a third time, against the fixer round · 2026-09-06)** One row per ABSENT
 path, and a path in two nodes means the graph is wrong. The round's stores and programs are **eighteen new nodes and
 nine vendor surfaces**; its mechanisms join nodes that exist. Count the nodes, never quote them: the graph declares
-**91 nodes and 195 edges** (was 65 and 115), checked by a parser that fails on an undefined id, an unresolved edge
-endpoint, an unbalanced quote or a cycle on a solid edge. Provenance per row is the SPINE row's own.
+**~~91 nodes and 195 edges~~ 92 nodes and 199 edges** (was 65 and 115), checked by a parser that fails on an
+undefined id, an unresolved edge endpoint, an unbalanced quote or a cycle on a solid edge. *(Amended 2026-09-06:
+challenge D P2-11 adds `BRIEFING`, the briefing generator, which the plan named ABSENT in §14.8 and §16.8 with no
+path anywhere, and four edges into it — `METER`, `DECIDE`, `MARKET` in, `P5` out.)* Provenance per row is the SPINE
+row's own.
 
 **Stores, schemas and programs — the new nodes**
 
@@ -547,7 +555,8 @@ endpoint, an unbalanced quote or a cycle on a solid edge. Provenance per row is 
 | `verifier:` and `adequacy:` on the handover; the rung-1 refusal | **v100** · §L O108 | `ADEQUACY`; the refusal joins `STORES` |
 | The trusted base's roster rows and tier floors | **v88** · §L O103 (E4) | `TCB`; admission joins `FIXTURES` |
 | The carrier drill and `--deny-carrier` | **v105** · §L O120 | `CARRIERDRILL`; the switch joins `RUN` |
-| R12's runner — one `-p` pass, one sitting, thirty paper done-tests | §L O102 · **R27** | `R27RUN` |
+| R12's runner — **`keel/bin/rehearse --r27`**: one `-p` pass, one founder sitting, thirty paper done-tests *(the program named 2026-09-06: challenge D P2-11)* | §L O102 · **R27** | `R27RUN` |
+| **`keel/bin/briefing`** — the briefing generator behind the `keel briefing` verb, ABSENT in §14.8 and §16.8 with no path until now *(added 2026-09-06: challenge D P2-11)* | §L O95, O96, O116 · O74–O76, O123 | `BRIEFING` |
 | `bin/mine --since` | **v93** · §L O88 (E10) | joins `MINE` — the node exists; the taint refusal and the `~/.claude/projects` scope are new |
 | `keel/host/denyread.yml` | **v90** · §L O92 (E7) | joins `HOST`; asserted by `PROBE` |
 | The `pmset -g log` standing intent → `facts.yml` `mac-off-hours` | §L O82 · **R37** | joins `FRESH` (v55's shape); the row lands in `FACTS` |

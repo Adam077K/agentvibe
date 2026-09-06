@@ -30,7 +30,10 @@ flowchart TD
     SELF -->|"fails"| WORK
     SELF -->|"passes, or ceiling hit"| ANCH["THE ANCHOR — something outside<br/>the model checks it and prints<br/>ANCHOR name exit=code (O110).<br/>Never its own report"]
     WORK -->|"hits something outside its scope<br/>that is wrong"| CORD["PULLS THE CORD ON ITSELF:<br/>stops, records the defect, escalates.<br/>THIS IS A SUCCESS"]
-    WORK -->|"reaches a question<br/>the envelope does not answer"| STAGE["Builds both options, stages them,<br/>queues a WHICH. It cannot ask"]
+    WORK -->|"reaches a question<br/>the envelope does not answer"| BUDGET{"Decision budget left in this window?<br/>decisions_per_window x horizon, six per<br/>five-hour window until R34 (O96)"}
+    BUDGET -->|"no"| REFUSED["The Desk REFUSES to open a which.<br/>The refusal is a ROW, never silence.<br/>The work waits for the next window"]
+    BUDGET -->|"yes"| STAGE["One built, a second written unless a<br/>ten-word summary cannot separate them (v87).<br/>Stages them, queues a WHICH. It cannot ask"]
+    REFUSED --> HAND
     STAGE --> HAND
     ANCH --> HAND["HANDOVER — the schema's fields (6.3),<br/>always, including on failure"]
     CORD --> HAND
@@ -142,9 +145,11 @@ unavailable model.
 
 ### 6.3 The handover
 
-**(FINAL, plus the three fields the rest of the plan already reads back)** ~~**Ten fixed fields**~~ **Ten fixed
-fields plus five additions (O7), one of them a group of four — eighteen lines, always, even on failure** *(moved
-2026-09-06: O7)* — FINAL's seven plus `rung`, `findings` and `anchor`, held in **one schema file,
+**(FINAL, plus the three fields the rest of the plan already reads back)** ~~**Ten fixed fields**~~ ~~**Ten fixed
+fields plus five additions (O7), one of them a group of four — eighteen lines, always**~~ **Every line the schema
+names, always, even on failure** *(moved 2026-09-06: O7; the count dropped from this paragraph 2026-09-06 · challenge
+D P3-5 — O108 added `verifier:` and `adequacy:` two paragraphs below, which made eighteen twenty the moment it was
+written)* — FINAL's seven plus `rung`, `findings` and `anchor`, held in **one schema file,
 `keel/shared/schemas/handover.yml` (ABSENT)**, which every table that shows them is generated from **and which owns
 the count, so no paragraph has to** (§L **O6**: a `schema_version` on every row, and a reader refuses an unknown
 version rather than guessing). The I-PASS bundle cut medical errors 23% and preventable
@@ -397,8 +402,10 @@ rather than a merge conflict at landing, where it costs both runs. §5.7's paral
 rule from the roster's side: parallel is legal where the unit is a store row and refused where it is a file.
 
 **(NEW: O71 — a run cannot be the fifty-first, and a crash loop cannot become the concurrency event)** §14.12
-names three bounds on the fleet and **none of them is a session count**, so a supervisor restarting a failing run
-can mint sessions without limit while every declared bound still reads green. **A session ceiling in settings:**
+named three bounds on the fleet and **none of them was a session count**, so a supervisor restarting a failing run
+could mint sessions without limit while every declared bound still read green. **This row is the fourth bound, and
+§14.12 carries it as one now** (amended 2026-09-06: challenge D P3-9 — §14.12 said *three ways* after this row had
+added the fourth). **A session ceiling in settings:**
 the launcher refuses to mint past N live rows ~~and **the supervisor refuses to restart into a full table**
 (`bin/run`, `bin/supervise` — **ABSENT**)~~ (`bin/run` — **ABSENT**; `bin/supervise` **REFUSE**d until R31, so the
 ceiling has one reader) *(amended 2026-09-06: O91)*. N is not guessed: **(R23, OPEN)** asks whether `claude -p` children
