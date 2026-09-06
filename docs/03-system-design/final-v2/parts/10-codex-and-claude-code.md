@@ -1,7 +1,7 @@
 ## 10 · Codex and Claude Code, from day one
 
-*obeys: v5, v11, v12, v32 (SPINE §H entire), **v56** (the cloud lane, 10.2a); inherits: FINAL §1 row 30 as the losing
-image, §16.7, §14.6*
+*obeys: v5, v11, v12, v32 (SPINE §H entire), **v56** (the cloud lane, 10.2a), and **v67, v78** (the rethink round of
+2026-09-06, carried in 10.8); inherits: FINAL §1 row 30 as the losing image, §16.7, §14.6*
 
 **(FOUNDER, overruling FINAL §1 row 30.)** *"I run from day one of the system to include codex and Claude code in
 the system. So we will need to understand how we are doing it. If you're walking straight from codex, or straight
@@ -86,11 +86,17 @@ FINAL was written:
 | Command | `codex exec --json` |
 | TTY | **no controlling TTY** |
 | Prompt | **non-trivial** — a smoke prompt does not exercise the defect |
-| Version | **≥ 0.124.0** |
+| Version | ~~**≥ 0.124.0**~~ **the installed version, recorded** (moved 2026-09-06: W19 — Codex is at 0.153.4, so the old floor is satisfied by anything installed and discriminates nothing; §10.8) |
 | Judged against | known-answer cases |
 
 **Pass** and Codex becomes a night checker and a maker on mid-to-hard work. **Fail** and it stays in the foreground
 slot. **The test is the plan, not the issue closing** — 130 days of silence is not a schedule.
+
+**(NEW: this test is R10, and R10 is the hinge of the whole cross-model design.)** The table above is not one
+open question among several — **v5, v32, v78, v82 and §I row 15 all read differently depending on its answer.**
+Pass and rung 2 becomes parallel and a second family is a lane; fail and the second family is one foreground slot
+forever, at 1/N availability. **R26 is the cheap route to it**: reading the unread Codex June–August window would
+settle whether #19945 was fixed without installing anything. Both are stated in full at 10.8.
 
 **(NEW: the prerequisite is a founder act.)** Codex is **not installed** on this machine. Installing it and running
 the rehearsal is section 20 row 5.
@@ -240,12 +246,10 @@ always-on tier. The Watch is the loop.** The vendor's own three scheduling tiers
 
 **(FINAL §16.7, standing.)** Routines stay **refused for the Watch** — cloud-only, cannot reach local files.
 
-**Codex `/goal` is not used.** It exists (**0.128.0, 2026-04-30**) with states *pursuing, paused, achieved, unmet,
-budget_limited*, but **the evidence is third-party — search summaries and tracker items, not a primary page** (the
-two primary URLs 308-redirected and were not followed). Two of its own tracker items are the argument against
-relying on it: **#20536**, asking that the command be documented at all, and **#34215**, *"Goal mode cannot increase
-its token budget and resume after becoming budget_limited"*. And the hinge is unestablished: **whether Codex
-`/goal` runs under `codex exec` is not known.** Revisit when 10.2's test passes.
+**Codex `/goal` is not used, and it is a gap line rather than a description** (SYNTHESIS §7 deletion 28, applied
+2026-09-06). ~~Four sentences on its states, its two tracker items and its unestablished headless behaviour~~ — a
+feature described at length reads as one relied upon, and this one is `C`-confidence off two 308-redirected sources
+and is used by no row. **It survives as gap 1 of 10.6.**
 
 ---
 
@@ -325,7 +329,10 @@ each incoming message as an event"* — is *"not available when `DISABLE_TELEMET
 **(NEW: these are the ten gaps the runtimes lane named about itself. They are listed because a plan that hides its
 own unknowns spends them later at a worse price.)**
 
-1. **Codex `/goal` has no primary citation** — the two primary URLs 308-redirected. **Two fetches close it.**
+1. **Codex `/goal` has no primary citation, is `C`-confidence, and is used by no row** — it exists at 0.128.0 with
+   a `budget_limited` state it cannot resume from (#34215), its own tracker asks for it to be documented at all
+   (#20536), whether it runs under `codex exec` is unestablished, and the two primary URLs 308-redirected.
+   **Two fetches close it** (deletion 28: this is the whole of Codex `/goal` in this plan).
 2. **OpenAI's terms are unread** (HTTP 403). The whole OpenAI half of the terms question of section 9.10 is open.
 3. **Whether Codex `/goal` runs under `codex exec` is unestablished** — and it is the hinge for using Codex's goal
    feature from a driver at all.
@@ -402,3 +409,89 @@ named fifteen; several are folded here where they are the same hole seen from tw
 | **A hosted run never writes into the house directly** — a pull request or a staged artifact, never the working tree (v56, 10.2a) | reconciliation on wake, against the PR or the staged artifact | **ABSENT** |
 | **Minting a cloud task is not a run** | `bin/run`'s `cloud` carrier — it mints a task and records its id, and does nothing else | **ABSENT** |
 | **A night's cloud work is read, not trusted** | the Watch reads the pull requests on wake | **ABSENT** |
+| **No unattended work is minted on a carrier that cannot be stopped** (v67) | `bin/run` reads the carrier's `stop:` column and refuses `UNKNOWN`; the launcher records each child's process group and the cord signals it | **ABSENT**. Per carrier: Claude `-p` → the process group · **local Codex → the `Interrupt` hook (W22)** · **Codex cloud → UNKNOWN, so the maker lane stays shut** (10.6 gap 14) |
+| **A reroute off a limited or unreachable family is bounded and labelled** (v78) | a three-deep `fallback:` ending in stop-and-stage; a rung demotion unless rehearsed for that move class | **ABSENT** — and Codex's one foreground slot is why a chain naming it must end in stop-and-stage (§9.4a) |
+| **The Codex version in play is a recorded fact, not a floor** (W19, O35) | the admitted-tool file records the binary's version string and sha256 at admission (§8.1) | **ABSENT** — Codex is not installed |
+
+---
+
+### 10.8 What moved under this section on 2026-09-06
+
+**(NEW: SPINE §H.5, carried whole. Nothing above is deleted.)** Seven facts and one absence land here, from
+`research/world.md` accessed 2026-09-06, and one of them is a whole missing row. **None of them was decided by
+anyone** — each moved a statement in this section without a decision attached, which is why they sit together
+rather than being scattered as corrections.
+
+**(FACT: world.md 19 — W19. The rehearsal floor no longer discriminates.)** Codex is at **0.153.4 (2026-09-04)**;
+the window also shows 0.153.3, 0.153.2, 0.153.0, 0.152.0, 0.151.0, 0.150.1 and 0.150.0. 10.2's condition
+~~*"version ≥ 0.124.0"*~~ is **twenty-nine minor versions stale** and is satisfied by anything installed, so it
+tests nothing. **Restate it as *the installed version, recorded*** (moved 2026-09-06: W19), which is a fact the
+admission record can hold and a floor cannot — §8's O35 records a binary's version string and sha256 at admission,
+so the mechanism already exists in this plan and this row is what it is for.
+
+**(FACT: world.md 24 — W24. On the two questions this section most needs answered, the finding is *absence*.)**
+Nothing in the Codex entries readable for **2026-08-26 → 2026-09-04** mentions `codex cloud exec`, a cloud REST
+API, cloud task creation, cancel or poll, goal mode, or **#19945**. **10.2 stands and v56(b) stands.** Read the
+shape of this precisely: it is four weeks of release notes with no mention, against questions that would be
+answered on a documentation page rather than in a changelog. **Absence is not denial** — no vendor page states that
+Codex cloud lacks a creation API. The **June–August window is unread** after three fetch failures, and reading it
+is **R26**. One correction inward: **0.152.0 adds credential-refresh progress to `codex exec`**, which *adds output
+to the stream 10.2 depends on being clean* — the only `codex exec` change in the window, and it moves in the wrong
+direction for a parser.
+
+**(FACT: world.md 21 — W21. Codex has a third control axis, Guardian, and §C.1's cell models two.)** *"Full Access
+skips Guardian reviews for confirmation-only actions. User approval mode skips background Guardian scoring and
+prewarming, while sensitive-action checks and requests for user input retain their existing handling."* So
+Guardian is a **background scoring layer whose behaviour changes with the approval mode** — the band table's
+`approval_policy` × `sandbox_mode` pair understates what governs a Codex run, and the correction lands in §C.1
+rather than here. Also: *"Guardian review history survives compaction, restarts, and user-created forks while
+respecting rollback boundaries and **isolating subagent history**"* — Codex subagents keep their own review
+history, which 10.5's subagent row does not describe.
+
+**(FACT: world.md 22 — W22. The cord has a Codex-side receiver and no row named it.)** Codex 0.150.0 shipped
+`Interrupt` hooks: *"run commands or MCP handlers when an active top-level turn is interrupted"*. **v67 is what
+this answers to** — the launcher records each child's process group and the cord signals it, and `bin/run` refuses
+to mint unattended work on a carrier whose `stop:` reads **UNKNOWN**. `Interrupt` is what a Codex carrier's `stop:`
+column would name, and it is the reason the *local* Codex carrier can plausibly carry a value at all. **The cloud
+carrier still cannot:** cancelling a hosted task is UNKNOWN (10.6 gap 14), which under v67 means the Codex-cloud
+maker lane stays shut — not as a new refusal, but as §I row 15's state stated in the cord's own terms.
+
+**(FACT: world.md 20 — W20. Codex ships `@` mentions between tasks.)** Agents can *"read, create, or message tasks
+from terminal"* (0.150.0). **Two providers shipped agent-to-agent messaging inside one window** — this and Claude
+Code's cross-session `SendMessage`/`ListAgents` — and the plan modelled neither. The shape is decided in **v80**
+(§3): a message is a **handover or an objection**, on the handover schema, and the vendor transport's ids are
+recorded as attributes and never as a join key. What that decision buys here is that Codex's `@` mention and
+Anthropic's socket are **one shape in the ledger**, not two.
+
+**(FACT: world.md 23 — W23. An admitted tool's output can be rewritten before the model sees it.)** A Codex
+extension can *"inspect or replace MCP tool results before reaching the model"* (0.151.0). §8's door tests a tool's
+*input* surface; this is the return path, and it pairs with **O65**'s taint id and per-venture canary. Named here
+because it is a property of **this runtime**, not of the tool: the same server is safer under the Claude carrier
+than under the Codex one, which is a routing fact.
+
+**(FACT: world.md 25, 27 — W25 and W27. §10 has no Gemini row of any kind, and that is now a hole with a name.)**
+Gemini CLI ships **named subagents** with *"their own set of tools, MCP servers, system instructions, and context
+window"*, delegated by `@agent`, defined in `~/.gemini/agents` (personal) or `.gemini/agents` (project) — **a third
+agent-file location beside `.claude/agents/` and Codex TOML**, which v42 decided one home without contemplating.
+And its releases since 0.30 are dominated by security hardening, including *"enforce fail-closed workspace trust
+and filter mcpServers in restricted mode"* — **the nearest analogue to `--restricted` in any third runtime**, and
+the thing a Gemini row in 10.5 would be written against. Gemini is carried in this plan as a price and as
+*"scout, once authenticated"*; that is thinner than the evidence now supports, and the gap is recorded rather than
+filled here.
+
+**(NEW: v78 lands on this section as the thing that makes a one-slot family survivable.)** 9.4a decides a
+three-deep `fallback:` per agent ending in *stop and stage*, a **rung demotion** on any cross-family reroute not
+rehearsed for that move class, a frozen `class: calibration` set, and one provider-outage drill. Read against 10.2:
+Codex is **one foreground slot**, so it is not a fallback destination for parallel work, and a chain naming it must
+end in stop-and-stage rather than pretending a second lane exists.
+
+**(R10 — the hinge, and it is this section's hinge more than anyone's.)** Does `codex exec --json` return output
+with **no controlling TTY**, on a current version, with a non-trivial prompt? **Source class:** five known-answer
+cases on an installed binary. **What it decides:** pass and rung 2 becomes **parallel** and a second family is a
+lane; fail and the second family is **one foreground slot forever, at 1/N availability**. **v5, v32, v78, v82 and
+§I row 15 all read differently depending on it** — which is why it is named as the hinge rather than as one more
+open question. Its prerequisite is a founder act: Codex is not installed.
+
+**(R26 — the only cheap route to R10.)** Was **#19945** fixed between Codex 0.125 and 0.153? **Source class:** the
+unread June–August changelog window, against which three fetches already failed. It would settle R10 **without a
+local install**, which is the entire reason it is worth naming separately from R10.

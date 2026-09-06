@@ -1,6 +1,6 @@
 ## 9 · Models
 
-*obeys: v20, v22, v23, and v57, v58, v59 which overrule v21 and §G.1's teammate row (SPINE §G entire); inherits: FINAL §5, §14.5, §15.3 with its coefficients corrected*
+*obeys: v20, v22, v23, and v57, v58, v59 which overrule v21 and §G.1's teammate row (SPINE §G entire), and **v78** (the rethink round of 2026-09-06); inherits: FINAL §5, §14.5, §15.3 with its coefficients corrected*
 
 **(FOUNDER.)** *"we need to understand what models each agent gets because we don't need everyone running on Opus or
 Fable or Astra or Terra ChatGPT models. We can also define it."*
@@ -49,6 +49,37 @@ cheapest re-read of a large standing context.
 **(NEW: no agent defaults to Haiku, and 9.8 is why.)** The genuinely cheap work does not go to a cheap model at all
 — it goes to a local one, or to no model.
 
+**(FACT: world.md 10 — W10. The field above became binding on 2026-09-01, and before that it was advisory.)**
+*"Changed `CLAUDE_CODE_SUBAGENT_MODEL` to set the default subagent model rather than override everything: an agent
+definition's `model:` and an explicit per-spawn model now take precedence over it"* (2.1.251). Until that change,
+**one environment variable silently flattened all fourteen per-agent choices** — the table above would have been
+true on disk and false at runtime, with nothing in a log to say so. It is recorded here because a reader of the
+table needs to know the field outranks the environment, and because a *downgrade* of the runtime restores the
+flattening.
+
+**(FACT: world.md 2 — W2. Write the full id, never the alias, and this is a routing rule rather than a style
+rule.)** *"Changed `fable` and `best` in Claude apps gateway sessions to keep resolving to Fable 5 for now, since
+gateways not yet configured for Fable 5.1 reject it; pick Fable 5.1 in `/model` to use it"* (2.1.258). **An agent
+file naming `fable` and one naming `claude-fable-5-1` are not the same routing** — the alias lands on the legacy
+model, whose cache read is **1.00 against Fable 5.1's 0.25** (9.9), which is four times the coefficient v57 is
+spending for. So `builder` and `architect` carry the full id, and 9.9's lint set must admit that exact string in
+the same change that writes either file.
+
+**(FACT: world.md 6 — W6. The per-agent frontmatter carries a second cost field, and it decides whether v57's
+argument holds at all.)** `experimental.cacheTtl` is *"`5m`" or `"1h"` … a per-agent prompt cache TTL used when no
+subagent TTL setting is configured"*, with `promptCacheTtl` and `subagentPromptCacheTtl` as settings beside it. The
+roster's model column therefore gains a **`cacheTtl` companion**: v57 justifies Fable on a cache read at 0.025x,
+and the TTL is what decides whether that cache is **warm** when the sibling reads it. A one-hour agent and a
+five-minute agent on the same standing prefix are two different prices for one design (9.6's `W(ttl)`).
+
+**(FACT: world.md 17 — W17. A blocking gate exists for exactly this rule and no row uses it.)**
+`PreModelSwitch` and `PostModelSwitch` hook events shipped in 2.1.251, *"(block, confirm, or annotate a model
+switch)"*. **v57's default and v21's overruled escalation are both statements about which model a run may end up
+on, and neither has a mechanism** — the `model:` field sets a start, not a floor. `PreModelSwitch` is the gate that
+could refuse a downgrade off `claude-fable-5-1` mid-run, or refuse a silent climb onto it. **It is named here and
+not adopted here:** the hook belongs to §12's envelope, which owns hook events, and this section records that the
+gate exists, is blocking, and is currently unused by any row in the plan.
+
 ---
 
 ### 9.2 Model per move
@@ -75,6 +106,15 @@ that is now the standing condition of the two agents that do most of the buildin
 climb into. **What the change removes is a trigger nobody could observe cheaply** — *failed twice* and *horizon
 beyond one window* both needed history the ledger does not carry yet — and what it adds is a flat, checkable field
 in two files.
+
+**(NEW: O5 — *which agent, which model, which band* is answered in three places, and this is contradiction 17.)**
+The same routing decision is written in **§B.2's roster table**, in **§C.1's band table** and in **9.2 above**, and
+nothing checks that the three agree. They already differ in emphasis and there is no run in which a disagreement
+would surface — the launcher reads one of them and the other two are prose. **The fix is a generator, not a rule:**
+one file, `keel/shared/routing.yml` (**ABSENT**), holds agent → model → band → carrier, and all three tables are
+generated from it. **The cost, once:** one file and one generator pass; the tables stop being authored and start
+being rendered. **Settled by:** edit the model of one agent in the file and watch three tables move, or the
+generator is not wired.
 
 **(FINAL §5.3, surviving and now sourced.)** *"The only justification for a harder window on a move is that a
 routine one has been measured to fail that move's rehearsal — the reverse of the usual instinct."* And: work judged
@@ -153,6 +193,36 @@ reconciliation stay permitted.
 
 ---
 
+### 9.4a When a family is limited, unreachable or wrong — v78
+
+**(FOUNDER, rethink 2026-09-06: D13 → v78.)** 9.4 says a family limit is a **reroute** and never says **where the
+reroute goes**. Because Codex is one foreground slot (§10.2) and Gemini is scout-only, **a seat-limit stop stops the
+whole company**, and a reroute with no rule silently trades correctness for availability. Four things, decided
+together:
+
+| The rule | What it is | Mechanism |
+|---|---|---|
+| **A three-deep `fallback:` per agent, ending in *stop and stage*** | the last rung is not another model — it is the run halting and leaving its work staged for the founder | one frontmatter field × fifteen files — **ABSENT** |
+| **A cross-family reroute is recorded as a rung demotion** | unless that family has passed the rehearsal for that **move class**, its output is rung 4 and says so | the rung field on the handover (§11.2) — **ABSENT** |
+| **A `class: calibration` rehearsal set that is never edited** | an instrument refreshed by the rule that refreshes its subject cannot detect drift | a `class:` field on a rehearsal case (§7.2a, §11.10) — **ABSENT** |
+| **One provider-outage drill, with the primary family denied at the launcher** | a fallback nobody has run is a design, not a fallback | one deny switch in `bin/run` — **ABSENT** |
+
+**The demotion clause is the load-bearing half, and it is what makes this different from a retry list.** A fallback
+chain alone answers *can the work continue*; it does not answer *is the answer still worth what the first answer
+was worth*. Rerouting `builder` from Fable 5.1 to Sonnet 5 mid-build buys availability, and the price is paid in a
+place nothing measures unless the demotion is written down. **A reroute that says out loud what it bought is the
+whole cost of this row.**
+
+**(FACT: world.md 19 — the version floor that gated this is stale.)** v32's Codex rehearsal is specified as
+~~*"version ≥ 0.124.0"*~~ **the installed version, recorded** (moved 2026-09-06: W19) — Codex is at **0.153.4
+(2026-09-04)**, twenty-nine minor versions on, so the floor is satisfied by anything installed and no longer
+discriminates. §10.8 carries the restatement; O35 is what records the version and its hash at admission.
+
+**The cost, once:** one drilled night. **Settled by:** the drill's completion count against a normal night, and
+whether calibration results move when a model id changes. **This moves v22 and §11.10** and reverses neither.
+
+---
+
 ### 9.5 Cache facts that bind
 
 **(FINAL §14.5, confirmed verbatim and found to be broader than it stated.)** **89% of the historical bill on this
@@ -173,6 +243,35 @@ the prefix and neither is used yet: `--exclude-dynamic-system-prompt-sections` a
 
 **(NEW: the meter cannot come from `/usage`.)** *"`/usage` reports the cache hit rate for the main conversation
 only"*, so the meter reads each run's own reported token fields, joined by the id minted at dispatch.
+
+**(NEW: O39 — hash the standing prefix at dispatch, and turn on the two flags that stabilise it.)** The paragraph
+above states a rule — the standing prompts are byte-identical and carry no timestamp — with **nothing that checks
+it**. A hit rate answers the question a day late and on a bill: it says the cache missed, not **what changed**.
+**So `bin/run` (ABSENT) hashes the standing prefix — system prompt, tool definitions, skill metadata — records the
+hash on the dispatch row, and treats a change as an event.** A hit rate is a lagging indicator on a bill; a prefix
+hash is a leading indicator on a dispatch, and it names the culprit in the same row. The two shipped flags named
+above, `--exclude-dynamic-system-prompt-sections` and `--system-prompt-snapshot on`, are turned on in the same
+change: they are what make the prefix stable enough for the hash to mean anything. **The cost, once:** one sha256
+per dispatch.
+
+**(R7, OPEN — it is the premise under v57 and under 9.6's formula.)** What is the **cache-read share per dispatch
+shape**, and do those two flags move it? **Source class:** ten real moves per shape, read from **each run's own
+token fields**, never from `/usage`. **What it decides:** whether the 89% figure this section leans on holds for
+*our* shapes, and it is the same assumption on which two competent reviewers priced this machine's predecessor and
+**diverged tenfold** (9.6). Also gains 7.6a's budget a denominator: skill metadata is part of the prefix being
+hashed.
+
+**(FACT: world.md 4 — W4. Four of the numbers this section says are computed are now emitted as structured
+fields.)** The vendor ships a per-session **`prompt_cache` object** for status-line scripts (*"hit ratio, misses,
+tokens re-cached, warm/cold"*), a **`rate_limits.spend_limit`** status-line field with a Spend limit bar in
+`/usage`, a **per-loop `/usage` breakdown** (run count, total tokens, tokens per run, last run), and a
+**`modelPricing` managed setting** that makes `/cost`, the status line and telemetry use contracted rates instead
+of list price. **Read one at a time, they change what the meter does rather than what it means:** a number this
+plan says to compute from the event log can now be *read* where the vendor emits it, and computing it anyway is a
+second implementation of a vendor's own arithmetic. The `prompt_cache` object is per session and does not replace
+R7's per-run token fields, which is the one place this fact does **not** reach. Page 3's use of these fields is
+§14's, and `modelPricing` is what would make O8's `prices.yml` a fallback rather than the source on a contracted
+account.
 
 ---
 
@@ -201,6 +300,12 @@ Fails if: shapes vary per run · the standing prompt is regenerated ·
           usage credits mid-batch, which shortens the TTL twelvefold.
 ```
 
+**(NEW: contradiction 15 — this formula is carried twice with the same coefficients, and §9 owns it.)** §16.3
+carried a duplicate of the block above. **Two implementations of one check disagree silently**, and this repository
+has already paid for that class once. **The formula lives here and nowhere else.** §16.3 keeps only its
+tenfold-divergence argument and cites 9.6 for the arithmetic (SYNTHESIS §7 deletion 20). If a coefficient below
+changes, exactly one place changes.
+
 Base input and the published absolutes both appear so either can be checked against the other:
 
 | Model | Base in / out $/MTok | Cache read $/MTok | Cache write 5m / 1h | Context |
@@ -210,6 +315,23 @@ Base input and the published absolutes both appear so either can be checked agai
 | Sonnet 5 (`claude-sonnet-5`) | 2 / 10 | 0.20 | 2.50 / 4 | 1M |
 | Haiku 4.5 (`claude-haiku-4-5-20251001`) | 1 / 5 | 0.10 | 1.25 / 2 | 200K |
 | `gpt-5.3-codex` | 1.75 / 14 | 0.175 | — | — |
+
+**(FACT: world.md 1, 3 — the two rows above that a vendor moved, and both hold.)** **W1:** Fable 5.1 shipped as
+`claude-fable-5-1`, *"1M context, $10/$50 per Mtok with $0.25/Mtok cache reads"* — the id, the context and the
+0.025x read in this table are **confirmed from the vendor's own changelog**, and v57's remaining UNVERIFIED is
+narrower than it was: it is the **subscription seat**, not the model. **W3:** Sonnet 5's **$2/$10 is the standard
+list price, not a limited-time promo** — *"Updated the `/model` picker and the bundled `claude-api` skill to show
+Sonnet 5's $2/$10 per Mtok pricing as its standard list price rather than a limited-time promo"*. Any promo caveat
+on a Sonnet row anywhere in this plan is stale; there is none in this table, and this sentence is why.
+
+**(NEW: O8 — a price is a fetched fact, so it carries an expiry and a stale row refuses to route.)** The table above
+is prose, which means it rots exactly like every other fetched fact in this plan and nothing notices. **Every row
+moves into `keel/shared/prices.yml` (ABSENT) with `fetched_at` and `valid_until`, and a stale row REFUSES ROUTING
+rather than mis-pricing.** Refusing is the whole point: a wrong price does not fail, it produces a plausible number
+that a ceiling is then computed from (§16), and nothing downstream can tell. **Gemini's quota is carried as a
+count, not a price** — 60/min and 1,000/day — because it has no per-token figure and a zero would be read as free.
+This is the same rule §9.11 already states for model ids, applied to the number beside the id, and it is what
+v81's `source:` and `valid_until` look like for this section.
 
 **(NEW: this is the quantitative backing for v57, and it is the one number that changes an instinct.)** List price
 runs **10x in and 10x out** from Haiku 4.5 to Fable 5.1 — but **Fable's cache reads are only 2.5x Haiku's**. On the
@@ -237,6 +359,14 @@ Opus 5 and Fable 5.x are on it; **Sonnet 4.6 and earlier are not.**
 that much on the current engines.** This system carries several such budgets — the context caps, the handoff ceiling,
 the session-start payload budget. They are not adjusted here by arithmetic, because an adjusted guess is still a
 guess; **they are re-measured, and until they are, every one of them is marked as measured on the old tokenizer.**
+
+**(NEW: O77 — a mark is not a mechanism, so every ceiling names its tokenizer.)** Marking a budget *measured on the
+old tokenizer* tells a reader something and tells the launcher nothing. **Every ceiling carries `tokenizer:`, and
+`bin/run` (ABSENT) refuses to enforce a legacy cap on a current-tokenizer model.** The failure this prevents is the
+one worth naming: a ceiling that fires ~30% early produces a run that stops mid-work with no error, and **a ceiling
+that fires early is indistinguishable from a stuck run** — the same silent-empty-result shape §10.2 refuses in
+Codex, arriving through our own arithmetic. **The cost, once:** one field per ceiling and one comparison at
+dispatch.
 
 ---
 
@@ -323,7 +453,15 @@ company's whole capacity.
 | The small fast model is Sonnet 5, not Haiku 4.5 | `ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5` in the launcher's environment, and in the managed file's `env` if it carries one (v58) | **ABSENT** — `bin/run` does not exist; the variable itself is shipped and documented |
 | A teammate runs on its own file's model | the teammate is a full session started from an agent file; `bin/run` names the file, never a model (v59) | **ABSENT** — teams are on (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), the launcher is not built |
 | A run's cost is measured, never estimated | each run's own reported cost fields, joined by the dispatch id | **ABSENT** — the event log on this branch is the spine |
-| A stall cannot run forever | `--max-budget-usd`; subagent spend counts toward it; overflow fails a spawn with `Budget limit reached` | **shipped** (v2.1.217+). **It is not a billing control** — print mode only, computed locally at list price, and *"the session cost figure isn't relevant for billing purposes"* for subscribers (v23) |
+| A stall cannot run forever | `--max-budget-usd`; subagent spend counts toward it; overflow fails a spawn with `Budget limit reached` | **shipped** (v2.1.217+). **It is not a billing control** — print mode only, computed locally at list price, and *"the session cost figure isn't relevant for billing purposes"* for subscribers (v23). **(FACT: world.md 5 — W5)** the estimate now includes the *"1.1× US-only-inference premium for data-residency workspaces"*: still local, now with a residency multiplier |
+| **Each agent declares a three-deep `fallback:` ending in stop-and-stage** (v78) | one frontmatter field × fifteen files; `bin/run` reads it | **ABSENT** |
+| **A cross-family reroute is recorded as a rung demotion unless rehearsed for that move class** (v78) | the rung field on the handover; the `class: calibration` set that is never edited | **ABSENT** |
+| **The fallback has been run at least once** (v78) | one provider-outage drill with the primary family denied at the launcher | **ABSENT** |
+| **Routing is generated, never authored three times** (O5, contradiction 17) | `keel/shared/routing.yml` generates §B.2, §C.1 and 9.2 | **ABSENT** |
+| **A stale price refuses to route** (O8) | `keel/shared/prices.yml` with `fetched_at` and `valid_until` per row; Gemini carried as a quota count, not a price | **ABSENT** — the table in 9.6 is prose today |
+| **The standing prefix is hashed at dispatch and a change is an event** (O39) | `bin/run`, with `--exclude-dynamic-system-prompt-sections` and `--system-prompt-snapshot on` | `bin/run` **ABSENT**; both flags **shipped and unused**. **R7** measures whether they move the share |
+| **A ceiling is never enforced against the wrong tokenizer** (O77) | `tokenizer:` on every ceiling; `bin/run` refuses a legacy cap on a current-tokenizer model | **ABSENT** |
+| **A model switch can be refused** (W17) | `PreModelSwitch` — a blocking hook event | **shipped by the runtime, used by no row.** Adopting it is §12's, not this section's |
 | A reserve is held per window **and** per week | a founder-set slider, and a weekly line reporting how often it was needed against how often it expired unused | **ABSENT** |
 | The Watch distinguishes a stop from a reroute | the message-shape test of 9.4 | **ABSENT** |
 | Model ids expire rather than rot | an expiry in the facts store; the store check fails a stale one | **ABSENT** |

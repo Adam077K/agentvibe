@@ -1,6 +1,6 @@
 ## 8 · Tools and MCPs
 
-*obeys: v15, v33 (SPINE §F entire); inherits: FINAL §9.3 (the door), §9.4 (the trifecta), §16.3 (the connected hands)*
+*obeys: v15, v33 (SPINE §F entire), and **v68** (the rethink round of 2026-09-06); inherits: FINAL §9.3 (the door), §9.4 (the trifecta), §16.3 (the connected hands)*
 
 **(FOUNDER.)** *"there is no limitations of adding new MCPs or new tools to fill our needs. So there is so many
 filters we might need to include and get more MCPs or more of tools in order to do things better or to improve the
@@ -35,18 +35,24 @@ flowchart TD
     WHO -->|"none may"| SENDERQ{"Does it REACH THE WORLD?"}
     SENDERQ -->|"yes"| SENDER["Only the Sender holds it.<br/>The Sender holds no model"]
     SENDERQ -->|"no"| NO
-    WHO -->|"a named agent or agents"| PIN["Pin the version.<br/>Hash the tool descriptions.<br/>A person reads the full description once"]
+    WHO -->|"a named agent or agents"| PIN["Pin the version.<br/>Hash the tool descriptions.<br/>Record a binary's version string and sha256 (O35).<br/>A person reads the full description once"]
     SENDER --> PIN
-    PIN --> SCOPE["Scope the credential:<br/>one venture, least privilege, an expiry —<br/>narrower than the tool"]
+    PIN --> SCOPE["Scope the credential:<br/>one venture, least privilege, an expiry —<br/>narrower than the tool.<br/>Record scopes_observed beside scopes_requested (O35)"]
     SCOPE --> TRI{"Would granting this create the<br/>trifecta on any path? (8.7)"}
     TRI -->|"yes"| SPLIT["SPLIT THE RUN. Structural, not a setting.<br/>The reader is born a scout and stays one"]
     TRI -->|"no"| GUARD
     SPLIT --> GUARD["guard reviews it — every tool admission<br/>is on guard's routing line"]
     GUARD --> REH["Rehearse it: a known call, a known answer,<br/>on its dry branch, headless"]
-    REH --> CEIL{"A counter and a ceiling —<br/>and does the ceiling REJECT?"}
+    REH --> CAP{"Does it spend credits or money?"}
+    CAP -->|"yes"| PCAP{"Is a provider_cap recorded,<br/>held AT the provider? (O32)"}
+    PCAP -->|"null"| NO
+    PCAP -->|"a number"| CEIL
+    CAP -->|"no"| CEIL
+    CEIL{"A counter and a ceiling —<br/>and does the ceiling REJECT?"}
     CEIL -->|"no"| NO
     CEIL -->|"yes"| ADMIT["Admitted, with a horizon:<br/>day, Floor only · night · never"]
-    ADMIT --> WATCH["Every call logged.<br/>Description hash checked each session.<br/>Probed nightly by bin/probe"]
+    ADMIT --> EGR["Every call leaves through bin/egress:<br/>logged, filtered by domain AND method,<br/>credentials injected the agent never sees (v68)"]
+    EGR --> WATCH["Description hash checked each session.<br/>Probed nightly by bin/probe"]
     WATCH -->|"hash changed"| FREEZE["FROZEN — a rug pull until proven otherwise.<br/>The founder is told"]
     WATCH -->|"horizon passes"| RENEW{"Still named by a live intent?"}
     RENEW -->|"no"| REVOKE["Revoked. Credential rotated"]
@@ -58,18 +64,64 @@ does it give us we could not build in a day, its LICENSE file, our monthly test,
 alive* — **take the mechanism, not the dependency**, because every framework that wants to own the loop is a second
 control plane beside the runtime, and two implementations of one thing disagree silently.
 
+**(NEW: O35 — the admission record says what we asked for and not what we got, and for a CLI it says nothing at
+all.)** Two fields are added to the admitted-tool file (**ABSENT**). **`scopes_observed`, read back from the
+provider** and recorded beside `scopes_requested`: an OAuth grant is what the provider *issued*, not what we typed
+into a consent screen, and the two differ often enough that the difference is the interesting number.
+**A binary's version string and its sha256, recorded at admission**: version pinning is defined in this section for
+**MCP descriptions** and is **undefined for the binaries that actually run at night** — `gh`, `git`, `node`, `bun`,
+`codex`, `gemini` — which is the larger surface and the one nothing currently hashes. **The cost, once:** two reads
+at admission time. **Settled by:** a re-read that disagrees with the record, which is a rug pull one layer below
+the one 8.1 already watches for.
+
+---
+
+### 8.1a The door in the wall — one program everything leaves through
+
+**(FOUNDER, rethink 2026-09-06: D3 → v68.)** *"Build `bin/egress`; `--strict-mcp-config` names only the proxy; the
+MCP policy file becomes its configuration."* **One no-model program logs every outbound call, filters by domain
+**and HTTP method**, and injects credentials the agent never sees.**
+
+**Why it is a program and not another rule.** 8.1's door decides what may be *admitted*; nothing in this section
+decides what happens at the **syscall**. That gap is where the trifecta argument runs out: 8.7's split guarantees a
+leg is missing **at dispatch**, and v68 is the only proposal of the round that survives an agent being *fully*
+persuaded — it keeps the leg missing at the moment of the call. It is also what turns *"every call logged"* (8.1's
+own `WATCH` node) from a sentence into a count that can be compared against the runtime's.
+
+**What this demotes, and it is a deletion (SYNTHESIS §7 deletion 10).** ~~`.claude/mcp-policy.json` as an
+**independent** control~~ — a policy whose calls no hook can see — **becomes the egress proxy's configuration**
+(moved 2026-09-06: D3). It is not removed from disk and its allow/deny shape is not rewritten; what goes is the
+claim that it enforces anything by itself. `--strict-mcp-config` then names **only the proxy**, so every server is
+declared twice on purpose: once to the proxy, which can see the call, and once in the run's argv, which cannot.
+
+**Mechanism:** `bin/egress` (**ABSENT**); `--strict-mcp-config` **ships today**. **The cost, once:** one program,
+one hop of latency, and each server declared twice. **Settled by:** a deliberate exfiltration attempt failing at
+the proxy rather than at the prompt, and the proxy's call count matching the runtime's for one night.
+
+**(R2, OPEN — it can halve this row.)** Does the sandbox's documented, unused `credentials` block inject a secret at
+egress without the child being able to read it, and does its `network` block support an HTTP-method allowlist and
+TLS inspection? **Source class:** the vendor's sandboxing and settings reference, then one measured cell. **What it
+decides:** whether v68 is one configuration change or a program we write. The founder took the row **before** the
+answer, so what R2 can still change is the *size* of the program, never whether the guarantee exists.
+
 ---
 
 ### 8.2 The four classes
 
-**(SPINE §F, and each row's "who may hold it" is now a roster name rather than a shape.)**
+**(SPINE §F is the decision, and this section stops carrying a second copy of it — contradiction 19, SYNTHESIS §7
+deletion 12.)** The four-class table stood in **four** places: SPINE §F, here, §17.3 and COVERAGE. Four renderings
+of one table is three chances to drift, and the tainted row had already drifted once — which is what v36 had to
+settle. **§F holds the decision; §17.3 holds the inventory copy; this section points at §F and keeps only what §F
+does not carry.**
 
-| Class | Example | Who may hold it | Night? |
-|---|---|---|---|
-| **READ-ONLY** | Playwright headless, a render, a repo read API, analytics, error tracking | any agent whose grant names it | yes |
-| **READ-ONLY, tainted** | Gmail read, Calendar read, Drive read, Notion read, the open web | **`scout`, and the world's door program — nothing else.** No agent holding `Write`, `Edit` or `Bash` reads them raw (v36) | yes |
-| **WRITES, reversible** | Figma, Pencil, a design file on a dry branch | **designer**, after the undo is drilled | yes |
-| **REACHES THE WORLD** | send, publish, pay, deploy, share, delete | **no agent. The Sender**, which holds no model | only after the founder widens the class |
+**Read the classes at SPINE §F: READ-ONLY · READ-ONLY, tainted · WRITES, reversible · REACHES THE WORLD**, each
+with its examples, its holder and its night disposition. Two deltas belong to this section rather than to §F, and
+they are stated once here:
+
+- **v36 narrows the tainted row.** §F reads *"scout only"*; the holder is **`scout` and the world's door program**,
+  and **no agent holding `Write`, `Edit` or `Bash` reads a tainted source raw** (8.7).
+- **The per-agent bindings are 8.7's table**, which is the roster-decided reading of the same four classes and is
+  where a reader should go for *who holds what*.
 
 **(NEW: the class is assigned at the door and consumed at dispatch, which is what makes it structural.)** A grant is
 argv fixed at dispatch and cannot narrow mid-run, so the class cannot be a runtime judgement. **Mechanism:**
@@ -137,6 +189,27 @@ arguing.)**
 | **The founder's signed-in Chrome** | REACHES THE WORLD **and** holds private data — the widest hand in the building | nothing. It stays day-only, Floor-only, held by the founder, at any trust score |
 | **A user-testing simulation** | it is the machine grading its own homework; the rung-1 anchor is a real reaction | nothing — this is a truth rule, not a tool rule |
 
+**(NEW: O32 — one rule was giving two answers, and this is contradiction 8.)** The table above refuses **RunPod**
+for *"spends money at a rate under an uncapped key"*, and 8.7 admits **Higgsfield**, which spends credits, *"under a
+daily spend cap"* **that no named program enforces**. Same property, opposite verdicts, and the difference was which
+row a reader landed on first. **The fix is one field at the door: `provider_cap`, required on any credit-spending
+or money-spending tool, and `bin/run` refuses a grant whose recorded cap is `null`** (both **ABSENT**). A cap in
+our prose is not a cap; a cap held **at the provider** survives our own program being wrong. RunPod's refusal is
+unchanged and now says what would reverse it in the same words the rule uses.
+
+**(R21, OPEN — it decides which class Higgsfield sits in.)** Does any **credit-spending server expose a spend or
+balance read**? **Source class:** vendor API documentation, one fetch each. **What it decides:** with a balance
+read, a program can hold an absolute ceiling and Higgsfield stays in **WRITES, reversible**; without one, spending
+is an act with no readable counter and it belongs in **REACHES THE WORLD**, where the Sender holds it and no agent
+does.
+
+**(NEW: O33 — the one item in the departments that is both unprecedented and legally exposed.)** **Bulk collection
+of personal data passes the door with `guard` and a data-classification row *before* it runs**, never after.
+Lead scraping is the only entry in the department tables that is unprecedented in **every** fetched roster **and**
+legally exposed, and it is the shape most likely to be proposed as an ordinary growth tool. **Mechanism:** the
+door's checklist (**ABSENT**) — one required review and one required classification row, which §12's three data
+classes then govern for retention. **The cost, once:** one review on one class of tool.
+
 ---
 
 ### 8.6 One MCP shape serves both runtimes
@@ -154,7 +227,29 @@ guarantees are not.** Section 10 is where that is resolved into one launcher.
 `claim-append`. **Two** agent files declare `mcpServers` — `designer` (`playwright`) and `sourcer`
 (`claim-append`, #112). Derive it, do not quote it: `grep -n 'mcpServers' .claude/agents/*.md` against
 `Object.keys(require('./.mcp.json').mcpServers)`. `.claude/mcp-policy.json` EXISTS (per-server allow/deny; the
-shape the door's per-tool file inherits).
+shape the door's per-tool file inherits) — and as of v68 it is **the egress proxy's configuration**, not a control
+in its own right (8.1a).
+
+**(FACT: world.md 23 — W23. An admitted tool's *output* is now a taint path, and the door tests the input.)** A
+Codex extension can *"inspect or replace MCP tool results before reaching the model"* (0.151.0, 2026-08-29). Every
+rule in 8.1 governs what a server is *allowed to do*; none of them governs what an extension does to the server's
+answer on the way back. So a tool that passes admission, keeps its description hash and stays inside its scope can
+still deliver text the model treats as a result and nobody wrote. **This is the rug pull with the direction
+reversed**, and it pairs with O65's taint id: a rewritten result is an inbound row by any honest reading, so it
+carries a taint id or the Sender refuses what descends from it. **Mechanism:** the extension surface is Codex's;
+what we control is `--ignore-user-config` on the Codex carrier and O65's lineage check at the Sender (both
+**ABSENT**).
+
+**(NEW: O36 — nothing governs a config import, and a config import carries everything this section governs.)**
+**`/import` and `claude import` are refused inside the house.** 8.1's door governs *tools* and v53 governs *pages*;
+an import carries **MCP servers, commands, subagents and skills** in one act, past both. It is the one command that
+can widen a grant without touching argv, a settings file or an agent file. **Mechanism:** a `UserPromptSubmit` hook
+that refuses the two verbs (**ABSENT**). **The cost, once:** the founder imports by hand, through the door, one
+item at a time — which is what the door is for.
+
+**(FACT: world.md 16 — the installed library is wider than the admitted one.)** The `Workflow` tool now ships a
+bundled `workflow-authoring` skill that **no namespace in 7.6 claims**. It is named here because it is a capability
+that arrived with a runtime rather than through this door; 7.6a is where its startup cost is counted.
 
 **(NEW: `sourcer`'s grant is the door's own model, and it narrows under v2.)** `claim-append` was granted to
 `sourcer` while `sourcer`'s `tools:` line stayed `[Read, Glob, Grep, WebSearch, WebFetch]` — **no `Write`, no
@@ -180,7 +275,7 @@ the door.)**
 | Gmail **send** | REACHES THE WORLD, one-way | OAuth | **the Sender**, founder-signed | never unattended until the founder widens the class |
 | Drive share · Calendar create · Notion write | REACHES THE WORLD (a share is durable) | OAuth | **the Sender**, after a recall window | night only after the class is widened and the undo drilled |
 | Figma · Pencil · Stitch · Refero (Refero READ-ONLY) | WRITES, reversible | OAuth / local files / API key | **designer**, on a dry branch | night after the undo is drilled |
-| Higgsfield (image · video · audio) | reversible artifact, **SPENDS credits** | API key; failed to connect in the census session (`ENOTFOUND`) | **writer**, rate-capped | night, under a daily spend cap. Its publish and TikTok verbs are one-way and **never** — **the verb set itself is UNVERIFIED** (FINAL §16.3; the connected-tools list came from the 2026-09-04 session's own MCP server list) |
+| Higgsfield (image · video · audio) | reversible artifact, **SPENDS credits** | API key; failed to connect in the census session (`ENOTFOUND`) | **writer**, rate-capped | night, under a daily spend cap **recorded as a `provider_cap` and held at the provider — `bin/run` refuses the grant if it is `null` (O32); R21 decides whether it stays in WRITES at all**. Its publish and TikTok verbs are one-way and **never** — **the verb set itself is UNVERIFIED** (FINAL §16.3; the connected-tools list came from the 2026-09-04 session's own MCP server list) |
 | RunPod | **SPENDS MONEY at a rate** | API key, **uncapped** | **nobody** | never, until a capped key exists |
 | `claim-append` (local, `scripts/mcp/claim-append-server.mjs`, EXISTS) | WRITES LOCALLY | none | **curator** does this with `Write` and needs no server. The pattern survives as the door's model | night |
 | Mem0 | REACHES THE WORLD | unauthenticated | **nobody** | never (8.5) |
@@ -202,6 +297,15 @@ build, a CVE, an invoice, a support message — **a program writes one row into 
 *"No model reads a stranger's text with a tool in its hand."* The door holds no model, so there is nothing in it to
 steer; a prompt injection that reaches it finds a program. A scout with no credentials reads the row, and `steward`
 writes the obligation **from `scout`'s handover, never from a raw row**.
+
+**(NEW: O65 — taint has to survive the handover, and today it stops at the door.)** The door writes one row and the
+taint is a property of that row; **a handover derived from it carries nothing**, so three hops later a staged
+artifact's lineage is a matter of belief. **Two fields fix it.** Every inbound row gets a **taint id**, and any
+handover derived from it carries the id forward; **`bin/send` (ABSENT) refuses a staged artifact whose lineage
+names an uncleared id.** And every inbound row's provenance carries a **per-venture canary string** which the
+Sender also refuses — so a payload that persuades an agent to echo its own provenance **turns an injection attempt
+into a `wake-me`** rather than into a send. **The cost, once:** one id, one string, one refusal at the Sender.
+**Settled by:** plant the canary in a fixture inbound row, run the chain end to end, and the Sender must stop.
 
 **(FINAL §9.4 — why the two-legs argument does not survive.)** Taint is **static at dispatch**, not judged while a
 run is going: *"any run whose brief reads content from outside the company … is born as a scout, without the tools
@@ -232,8 +336,14 @@ already wraps an inbound payload in a block labelling it untrusted data, which i
 | The trifecta cannot form on any path | `bin/run` refuses the combined grant; `bin/probe` asserts it nightly | **ABSENT** |
 | A tainted read is held only by `scout` and the world's door (v36) | the door program writes one inbound row and holds no model; `bin/run` refuses any brief pairing an outside read with `Write`, `Edit` or `Bash` | **ABSENT** — the roster row is patched, the launcher that would enforce it is not built |
 | An MCP call is governed by a hook only if the matcher names it | registered as `c-mcp-hook-matcher-must-name-the-tool` | **EXISTS** as a claim, branch `ceo-1-1788609834` |
-| Servers absent unless named in argv | `--strict-mcp-config` | **shipped by the runtime** |
-| Per-server allow/deny | `.claude/mcp-policy.json` (65 lines; the seed shape) | **EXISTS**, branch `ceo-1-1788609834` |
+| Servers absent unless named in argv | `--strict-mcp-config` — **naming only the egress proxy** (v68) | **shipped by the runtime**; the proxy it should name is **ABSENT** |
+| **Everything outbound passes one program** (v68) | `bin/egress` — logs every call, filters by domain **and** HTTP method, injects credentials the agent never sees | **ABSENT**. **R2** decides whether half of it is the sandbox's `credentials`/`network` blocks instead |
+| ~~Per-server allow/deny is an independent control~~ **Per-server allow/deny is the proxy's configuration** (moved 2026-09-06: D3, deletion 10) | `.claude/mcp-policy.json` (65 lines; the seed shape), read by `bin/egress` | file **EXISTS**, branch `ceo-1-1788609834`; the reader is **ABSENT** — until it exists this file enforces nothing |
+| **A credit- or money-spending tool has a recorded `provider_cap`** (O32) | `bin/door` records it; `bin/run` refuses a grant whose cap is `null` | **ABSENT** — nothing today caps Higgsfield or RunPod |
+| **Bulk personal data is classified and reviewed before it runs** (O33) | the door's checklist: `guard` review plus a data-classification row | **ABSENT** |
+| **What the provider actually granted is recorded** (O35) | `scopes_observed` beside `scopes_requested`; a binary's version string and sha256 at admission | **ABSENT** |
+| **A config import cannot widen a grant** (O36) | a `UserPromptSubmit` hook refusing `/import` and `claude import` | **ABSENT** — nothing governs it today |
+| **Taint survives the handover, and an injection attempt wakes the founder** (O65) | a taint id on every inbound row, carried by derived handovers; a per-venture canary the Sender refuses; `bin/send` refuses an uncleared lineage | **ABSENT** |
 | A declared MCP server is backed by real config | `.claude/hooks/schema-lint.js` fails a declaration nothing backs | **EXISTS**, branch `ceo-1-1788609834` |
 | Every tool admission is reviewed adversarially | `guard`'s routing line names it | **WISH** until the roster files exist |
 | A spending tool has a capped credential | the cap must be at the provider, not in our prose | **WISH** — nothing today caps RunPod |

@@ -1,6 +1,6 @@
 ## 11 · Truth — how anything is known to be good
 
-*obeys: v8, v30, and §B.2's anchor column · inherits: FINAL §8, and §7.6's rehearsal set*
+*obeys: v8, v30, and §B.2's anchor column, and **v73** and **v82** (the rethink round of 2026-09-06) · inherits: FINAL §8, and §7.6's rehearsal set*
 
 ---
 
@@ -83,6 +83,48 @@ rung is a field on the handover and the briefing renders rung 4 differently from
 claims the mechanism exists today: `scripts/check-citations.mjs` on branch `ceo-1-1788609834` blocks on a dead path,
 wired as `check:citations-exist` in the check suite.
 
+**(NEW: O29 — the `claim-source` resolver goes from SHADOW to blocking, on `scout` handovers only.)** The resolver
+fetches a claim's URL and asserts the quoted line is present in the fetched text; on this branch it runs in
+**SHADOW**, computing `claim.would_block` and failing nothing. Promoting it everywhere at once would put fetch
+latency and network flake in front of every agent. **Promoting it on `scout` handovers alone puts the friction
+exactly where the anchor already is** — `scout`'s whole anchor is *"every claim carries URL, quote and access
+date"*, so a scout whose citation does not resolve has failed its own test, not somebody else's rule.
+**Mechanism:** `scripts/ledger.mjs` — **EXISTS**, in SHADOW, branch `ceo-1-1788609834`; the per-agent promotion is
+**ABSENT**. Rule 10 governs it unchanged: offline or timed out is `unresolved`, never `pass`.
+
+**(R12, OPEN — and it is the cheapest measurement named anywhere in the rethink round.)** What fraction of a
+venture's real done-tests reach **rung 1 without inventing an anchor**? **Source class:** the harness venture's
+first thirty intents. **What it decides: contrarian assumption 1** — that most company work has a deterministic
+anchor waiting to be found — and with it the shape of this whole section. The paragraph above says *"for most
+company work there is a deterministic anchor"*, and **that sentence has never been measured.** If the true fraction
+is small, the ladder still stands and the design around it does not: rung 4 becomes the common case rather than the
+labelled exception, and §21's rung-1 share is measuring an aspiration.
+
+---
+
+### 11.2a Is the anchor itself anchored — v73
+
+**(FOUNDER, rethink 2026-09-06: D8 → v73.)** **Every anchor carries a mutation case — a known-bad input it must
+fail — or it is marked `unrated`. §21's rung-1 share splits into rated and unrated.**
+
+**Why, and it is this section's own argument turned on itself.** 11.11 lists fifteen anchors and **not one has ever
+been shown to fail when it should.** An anchor that has never failed is not evidence that the work is good; it is a
+check whose sensitivity is unmeasured, which is **a rung-4 belief wearing a rung-1 label** — precisely the error
+11.7 built the reconciliation to catch, one level up. This repository has already shipped a change that **removed a
+control while every test stayed green** (the eighth CI-chain bypass), which is what that failure looks like when
+nobody is watching for it.
+
+**Mechanism, and it costs nothing new.** The mutation case is written by whoever writes the anchor, as a
+**rehearsal-case body under v18** — so it inherits §7's admission, §7.2a's eval-only placement in `keel/golden/`,
+and v19's forced expiry **free**. There is no new store, no new format and no new gate: an anchor with a case is
+rated, an anchor without one is `unrated`, and the store check reads the field. **The cost, once:** one case per
+anchor.
+
+**What this changes about §21, stated plainly.** The rung-1 share stops being one number and becomes two, and
+**the rated share will start low** — today it is zero of fifteen. That is the instrument reporting correctly for
+the first time rather than a regression. **Settled by:** an anchor that **passes** its known-bad input is `unrated`
+by definition, whatever its author intended; the first rung-1 share that falls is the system telling the truth.
+
 ---
 
 ### 11.3 The other family, and what it actually is on day one
@@ -99,7 +141,34 @@ reachable in exactly one shape and two founder acts widen it:
 |---|---|---|
 | **Codex `gpt-5.3-codex` as a checker on a prepared diff** | admitted day one by v5; foreground slot only, stdout redirected to a file while inheriting the parent shell's TTY (v32) | **one foreground slot is not parallel**, so Codex is not a night lane until the H.2 rehearsal passes detached |
 | **Gemini on routine checking** | installed, unauthenticated — §I row 6, one terminal act by the founder | until it happens, routine checking has no second family and falls to rung 4 with the label |
-| **A three-family panel** | reserved for a one-way door with no rung-1 anchor (FINAL §8.3) | there is no non-Anthropic model reachable from inside Claude Code, so a `judge` claim with an empty panel resolves `unresolved` forever, and saying so is the design |
+
+**(FOUNDER, rethink 2026-09-06, DECISIONS §19 → v82: the third row of that table is deleted.)** The table above
+carried a third route, **~~a three-family panel~~**, *"reserved for a one-way door with no rung-1 anchor"*. The
+founder's word, verbatim: ***"Delete the row from the plan."*** It is gone, and the deletion is recorded here
+rather than performed silently, because the row is what a reader would otherwise go looking for.
+
+**Why it went, and what is untouched.** It **read as a capability** while it needed Gemini authenticated **and**
+Codex detached-capable **and** panel machinery, none of which exists — the same failure shape §11.1 refuses, at the
+level of the plan rather than the run. **The repository's three live `verified_by: judge` claims and the founder
+waiver running to 2026-11-17 are untouched:** this deletes a sentence in a plan, not a claim in a ledger, and those
+three claims still resolve `unresolved` and still say so. **What stands in its place is v78** — a three-deep
+`fallback:` per agent, a rung demotion on any unrehearsed cross-family reroute, and a frozen calibration set (§9.4a)
+— and **the two-family route runs through the no-model launcher, outside any Claude session**, which is the one
+shape that does not need a panel to exist. **A deletion carries no falsifier; what would reopen it is a reachable
+non-Anthropic model, which is R10** (§10.8), the hinge.
+
+**(NEW: deletion 26 — the one honest sentence about a second family lives here, and the other five copies go.)**
+**A second model family is used whenever one is reachable for the move — and today, one is reachable in exactly the
+one shape this table names.** That sentence was written in six places across this plan and enforced in none, which
+is how a rule becomes decoration. It is stated **once, here**, beside its own state, and every other section points
+at this paragraph rather than restating it.
+
+**(R11, OPEN — nobody has measured what the second family buys *us*.)** Does a second model family reduce **escaped
+defects on our own move classes**, and by how much? **Source class:** twenty-five paired checks drawn from our own
+event log. **What it decides:** whether rung 2 outranks rung 4 on any given class — the ladder asserts it and this
+would measure it — and contrarian assumption 2. **It is blocked on O7's four provenance fields on the handover,
+which are cheap to add now and unreconstructable later:** without maker family, checker family and the model id of
+each, the paired comparison cannot be assembled from history at all.
 
 **(FINAL, redrawn for the roster)** What the checker does, and what happens when it disagrees:
 
@@ -150,6 +219,23 @@ has nothing to average (ABSENT). Rule 10 of this repo already holds the general 
 implementation path**, so the blindness is a property of what the process can open, not of what the prompt asked for
 (§B.2 row 4; composed by `bin/run`, ABSENT; asserted by `bin/probe`, ABSENT).
 
+**(NEW: O28 — the blindness is argv on one carrier and UNVERIFIED on the other two, so the carrier is the rule.)**
+`--add-dir` is a **launcher** flag. A tester running as a **subagent** or as a **teammate** was never started by
+`bin/run` with its own argv, and nothing in this plan establishes that the exclusion survives either path. **So
+`tester` and `challenger` route on the `-p` carrier only, until `bin/probe` asserts read-denial on subagents and
+teams.** This is a routing constraint on two of fifteen agents, not a new mechanism, and it is the cheapest way to
+stop an unverified guarantee from being load-bearing. **(FACT: world.md 8 — W8 names the field that could lift
+it):** `permissions.blockReadsOutsideWorkingDirectories` is a **read** narrowing expressible in settings rather
+than argv, which is exactly the carrier this rule could not name. It is not adopted here — it is what the probe
+would be pointed at.
+
+**(FACT: world.md 30c — W32. The vendor independently reports the failure v8 splits the tests to catch.)**
+From Anthropic's own engineering writing on long-running agents: *"Claude tended to mark a feature as complete
+without proper testing"*, and providing testing tools *"dramatically improved performance"*. That is the builder's
+self-check being mistaken for an anchor, named by the party with the most data and the least incentive to say it.
+v8 is unchanged and now independently cited; the post is qualitative and carries no measured numbers, so it
+supports the split rather than sizing it.
+
 **The anchor on the tester's own work** — because the tester is an agent and this section trusts no agent's report:
 **the test fails before the change and passes after.** A test that passes before the change is not testing the change,
 and that is checkable by running it twice with no model in the loop.
@@ -164,8 +250,11 @@ inputs**. So `challenger` is a roster entry with a grant, not a step in anybody'
 
 **(NEW: v30's mechanism, stated as two exclusions.)** The challenger never reads the artifact's author's reasoning —
 only the artifact and its done-test — and it carries `Read Glob Grep` and no `Write`, `Edit` or `Bash` (§B.2 row 14).
-Both are argv facts. **A second model family whenever one is reachable**, and §11.3's honest reading applies: when
-none is, the challenger's finding is rung 4, and it is labelled rung 4.
+Both are argv facts, and both are argv **on the `-p` carrier**, which is why O28 routes the challenger there until
+the probe says otherwise (11.4). ~~**A second model family whenever one is reachable**~~ — **deleted here and
+stated once in 11.3** (deletion 26, 2026-09-06): five of the six copies of that sentence go, because a rule written
+six times and enforced zero times reads as a guarantee. §11.3's reading governs: when no second family is
+reachable, the challenger's finding is rung 4, and it is labelled rung 4.
 
 **(FINAL)** Its own anchor is the one that keeps it from becoming an opinion generator: **every finding names the
 mechanism that would have caught it, or it is an opinion.** That is checkable by a reader who did not do the work,
@@ -192,6 +281,16 @@ predicting what the founder *wants* rather than what they *approve*.
 carries `type: user` and `type: feedback` notes written by the acting agent in-session — typed extraction of exactly
 this material. It is a precedent for the *content* and a counter-example to the writer rule (v25, §13). A **brand
 voice profile** and a **golden output archive** are marked *none found* in the same table: no shipped CLI has either.
+
+**(NEW: O62 — a taste check earns the right to judge before it judges anything.)** **Any taste or brand check must
+first pass a held-out discrimination test: rank labelled approved artifacts above rejected ones, on a held-out
+slice it never saw.** Its measured rate prints **beside every verdict it issues**, so a reader always knows what
+the instrument is worth. **Below chance, the check is deleted rather than tuned** — a check that cannot separate
+what the founder accepted from what they rejected is not a weak instrument, it is not an instrument, and tuning it
+against the same corpus is how a rung-4 opinion acquires a rung-2 label. **Mechanism:** the §7.3 eval runner, which
+**exists upstream** as `skill-creator`'s paired with-skill/baseline loop; the held-out split and the printed rate
+are **ABSENT**. This is the same discipline §11.1 applies to a model reviewing itself, applied to the store that
+speaks for the founder's taste.
 
 **Mechanism:** the taste store is written only by the curator (v25); the held-out fraction and its score are a field
 on the store, checked by `bin/check-stores` (ABSENT).
@@ -236,6 +335,33 @@ one at a time through §12's door.
 anchor, **the set of live done-tests across all ventures *is* the regression suite**, re-run on the routine window at
 close to zero marginal cost. Nothing extra is maintained. That is a consequence of the done-test design and the
 strongest argument for it.
+
+**(NEW: O24 — the free regression suite is also a fleet of hands, and nothing currently says so.)** *"The set of
+live done-tests across all ventures is the regression suite, re-run on the routine window"* — re-read that sentence
+with §8's four classes in mind. A done-test whose anchor **sends**, **charges**, **deploys** or **files** is a
+REACHES-THE-WORLD act, and re-running it nightly **turns the regression suite into a Sender** — a v33 breach
+arriving through the one mechanism this plan calls free. **So every anchor declares `effect: none | metered |
+reaches-the-world`, and the unattended re-run executes only `none`.** A `metered` anchor costs money per run and
+belongs to §16's ceiling; a `reaches-the-world` anchor runs only through the Sender, with the founder's act in
+front of it. **Mechanism:** the anchor declaration (**ABSENT**), read by whatever schedules the re-run. **The cost,
+once:** one field per anchor, written by the same hand as v73's mutation case.
+
+**(NEW: O30 — the verdict is signed, and the guarantee is stated honestly.)** `scripts/verdict.mjs` **EXISTS** on
+this branch and binds a verdict to `sha256(diff)`, so an **inherited** verdict cannot pass for a fresh one. It does
+not stop a **forged** one: anyone with repo-write can author a `.qa/verdicts/*.json`, which the workflow says about
+itself. **So the verdict is signed with a key under a path every agent's grant excludes and `denyRead` covers**
+(the key path **ABSENT**). **What that buys, precisely: it raises forging from a file write to defeating a checked
+deny rule.** It is a guardrail, not containment — the same honest reading §12 gives the sandbox — and saying so is
+the point, because a signature described as containment is worse than no signature.
+
+**(NEW: O19 — three named mechanisms rest on one predicate nobody has defined.)** *"The same failure twice"* is
+what stops the fast loop, what increments the sighting counter, and what memory dedup calls a duplicate — **three
+consumers, one comparison, and no definition anywhere.** Byte equality is wrong (a timestamp or a path defeats it)
+and a model deciding is a rung-4 judgement inside a rung-1 gate. **So: the anchor's exit signature where there is
+one, and cosine over local embeddings of normalised failure text where there is not, calibrated on labelled
+pairs.** One shared hash, one implementation, three call sites — **ABSENT**, and it rests on **O13**'s local
+embedding program (§15), which is why it is named here and built there. Two implementations of this predicate would
+disagree silently, which is the class this repository has already paid for.
 
 **(FINAL)** The check suite on branch `ceo-1-1788609834` (`scripts/run-checks.mjs`, 48 steps) is the founding
 population of rung-1 anchors for the harness venture, and its rule survives whole and is worth restating because it is
@@ -304,7 +430,12 @@ flowchart TD
 1. **A trust score is a measurement, not a rating.** It is the observed pass rate of anchored checks for that agent on
    that move class, and **no run scores itself** — §11.1 applied to the question of who may work alone. Below a sample
    floor it prints **`insufficient`** rather than a number, because a pass rate over four cases is a number that
-   invites a decision it cannot support.
+   invites a decision it cannot support. **(NEW: O25 — that floor is now one shared predicate, not a sentence here
+   and a different one in §7.)** §7.3 admits a skill on **2–3 cases** while this rule refuses to print a number over
+   four, which is contradiction 12: **two rules about the same arithmetic, and the looser one is the one that
+   grants.** One predicate with two call sites (**ABSENT**) answers for the trust score, for skill admission and for
+   the error rates of v73, and it answers the same way in all three. The consequence is stated rather than softened
+   in §7.3: an admission on 2–3 cases is an admission **below the floor**, recorded as `insufficient`.
 2. **"Not yet trusted" has a productive destination.** A move that fails rehearsal goes to the Floor, where the
    founder does it *with* the agent — **and that session becomes the rehearsal case for next time.** This is the
    mechanism by which walking *with* the founder teaches the system to walk *for* them, and it is why the Floor is not
@@ -328,10 +459,13 @@ A rehearsal case is a `SKILL.md` body under §E's content rule, which means the 
 expiry (v19) apply to it as to everything else the library holds.
 
 **(NEW: H.2 is a rehearsal case in this exact sense, and it is the one that matters most on day one.)** Codex's
-admission test — `codex exec --json`, **no controlling TTY**, a non-trivial prompt, version ≥ 0.124.0, against
-known-answer cases — is what widens Codex from a foreground checker to a night lane. Pass and rung 2 becomes
-parallel; fail and it stays in the foreground slot. **#19945 has been open 130 days with no maintainer reply**, so
-the test is the plan, and the issue closing is not.
+admission test — `codex exec --json`, **no controlling TTY**, a non-trivial prompt, ~~version ≥ 0.124.0~~ **the
+installed version, recorded** (moved 2026-09-06: W19 — Codex is at 0.153.4, twenty-nine minor versions past the old
+floor, which now admits anything), against known-answer cases — is what widens Codex from a foreground checker to a
+night lane. Pass and rung 2 becomes parallel; fail and it stays in the foreground slot. **#19945 has been open 130
+days with no maintainer reply**, so the test is the plan, and the issue closing is not. **It is R10, the hinge of
+the cross-model design** (§10.8), and **v82's deleted panel row is one of the things that reads differently
+depending on its answer.**
 
 ---
 
@@ -363,6 +497,38 @@ section's reading of them, and the two rows that cannot reach rung 1 today are n
 as a roster fact: **the agents that check are the ones whose own output cannot be checked deterministically**, and
 that is why the second family is bought and why §11.3 refuses to round it up.
 
+**(NEW: v73 — all fifteen rows are `unrated` today, and that is the table's second finding.)** Not one anchor above
+carries a **mutation case**, so not one has been shown to fail when it should (11.2a). The column is not added here
+because it would be fifteen identical cells; the statement is the same and cheaper: **rated: 0 of 15.** As cases
+land, §21's rung-1 share reports rated and unrated separately, and the rated share starts at zero by construction.
+
+**(FACT: world.md 30a — W30. The only outside comparator this design has.)** TheAgentCompany, whose paper was
+accessed 2026-09-06 and has no 2026 revision: *"The most competitive agent can complete **30%** of tasks
+autonomously"*, over six job functions — *"Software Engineer, Product Manager, Data Scientist, Human Resource,
+Financial Staff, Administrator"*, which is close to this roster's own span. **It is a floor for §21 and not a
+target**, and it is the only external number a fourteen-agent design has to check itself against. Read it as a
+bound on expectations, not as a benchmark to beat: their tasks are not ours, and the comparison is honest only at
+the order of magnitude.
+
 **Mechanism for the whole table:** the anchor is a required field on every brief and every handover; `bin/run` refuses
 a brief whose done-test names no anchor, and `bin/probe` asserts each agent's grant nightly (both ABSENT). Until they
 exist, this table is a **WISH** — and naming it as one here is cheaper than discovering it during the first night.
+
+---
+
+### 11.11a What enforces this section
+
+| Rule | Mechanism | State |
+|---|---|---|
+| A done-test names an anchor, or it is refused | `bin/check-stores`; the rung is a field on the handover | **ABSENT** |
+| A research claim's citation resolves | `scripts/check-citations.mjs`, wired as `check:citations-exist` | **EXISTS**, branch `ceo-1-1788609834` |
+| **A `scout` handover's citations are fetched and quoted, blocking** (O29) | `scripts/ledger.mjs`'s `claim-source` resolver, promoted from SHADOW on `scout` only | resolver **EXISTS** in SHADOW; the per-agent promotion is **ABSENT** |
+| **Every anchor carries a mutation case or is marked `unrated`** (v73) | the case is a rehearsal-case body under v18, so §7's admission and v19's expiry carry it | **ABSENT** — rated: 0 of 15 |
+| **Every anchor declares `effect:`, and the unattended re-run executes only `none`** (O24) | the anchor declaration, read by whatever schedules the re-run | **ABSENT** — today the regression suite could send |
+| **A verdict cannot be inherited, and forging one means defeating a deny rule** (O30) | `scripts/verdict.mjs` binds `sha256(diff)`; the signing key sits under a path `denyRead` covers and no grant names | `verdict.mjs` **EXISTS**; the key path **ABSENT**. A guardrail, not containment |
+| **"The same failure twice" means one thing** (O19) | one shared predicate: exit signature, else cosine over local embeddings of normalised failure text, calibrated on labelled pairs | **ABSENT**; rests on O13's local embedding program |
+| **A taste check proves it can discriminate before it may judge** (O62) | the §7.3 eval runner over a held-out labelled slice; the rate prints beside every verdict; below chance it is deleted | runner **EXISTS** upstream; the held-out split and printed rate are **ABSENT** |
+| **One sample floor answers for the trust score, skill admission and the error rates** (O25) | one predicate, two call sites | **ABSENT** |
+| **`tester` and `challenger` route on the `-p` carrier until blindness is probed** (O28) | the launcher's carrier choice; `bin/probe` asserts read-denial | **ABSENT**. **W8** names the settings field that could lift it |
+| A checker never averages scores | the checker's handover schema carries `findings` and no score field | **ABSENT** |
+| A flipped verdict under a swap is `unresolved` | `bin/run` presents an ordered pair twice, swapped; Rule 10 already pins `unresolved` distinct from `pass` | ordering **ABSENT**; Rule 10 **EXISTS**, branch `ceo-1-1788609834` |
