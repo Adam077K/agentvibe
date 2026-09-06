@@ -292,3 +292,16 @@ since 2026-08-23, exit condition 2026-11-17.
 off — the measurement is DONE, the decision is not), 16 (the panel), 17 (landing order). **Nothing built, installed,
 authenticated, spent, published or pushed.** `docs/final-v2` is recomposed onto `origin/docs/final-plan` and stays
 local until the founder says otherwise.
+
+## §23 — The thinker round · 2026-09-06
+
+The founder asked for three expert agents to evaluate the whole system critically, thinking unlike its authors, with
+the big vision. Three sealed reviewer lanes on Fable — A the practitioner, B the outsider (control systems and
+organisational economics), C the strategist — read the spine, the whole plan, the synthesis, the world facts, the
+decision log and the harness; none read a review, a return, a session file or another lane. 64 findings
+(`review/thinker-A.md` 21 · `thinker-B.md` 23 · `thinker-C.md` 20), recorded verbatim; the orchestrator's digest is
+`review/thinkers-digest.md`: eight convergences, ten measured falsifications of mechanisms as written, thirteen
+founder rows challenged and labelled, ten decisions not on the open list with a recommendation each, and the
+mechanism corrections that need no decision. **Nothing applied.** The founder decides what moves; the mechanism
+corrections in digest §5 wait for that reading because several sit inside founder rows. Single family, rung 4 by
+the plan's own ladder, said so by every lane.
