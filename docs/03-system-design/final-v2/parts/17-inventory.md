@@ -25,31 +25,57 @@ that already passes the lint; nine have no seed and are written from the standar
 
 **(FOUNDER, v54: the `Wave` column says which are written first, and it is an order, not a shortlist)** The founder
 chose to *"Start with the eight that have seeds or code paths"*: the Operator, `builder`, `reviewer`, `architect`,
-`tester`, `guard`, `scout` and `designer` are **wave 1**; the six business agents and `challenger` are **wave 2**,
-online when a venture needs them. **All fifteen rows stay in this inventory and all fifteen files are still ABSENT**
-— the column records when each is written, never whether the roster contains it, and §5.0 states the cost of the two
-that wave one does without. Read the `Wave` and `Seed` columns together, because they do not agree and the
-disagreement is informative: **five of the eight in wave one carry a seed file** (Operator, builder, reviewer, scout,
-designer) and **three do not** — `architect`, `tester` and `guard` are in wave one on a code path rather than a seed,
-which is the founder's other criterion.
+`tester`, `guard`, `scout` and `designer` are **wave 1**; ~~the six business agents and `challenger` are **wave
+2**~~ **(moved 2026-09-06: D5 → v70)** `curator` and `challenger` join wave 1, so **wave one is ten and wave two is
+five** — `product`, `analyst`, `writer`, `growth`, `steward` — online when a venture needs them. **All fifteen rows
+stay in this inventory and all fifteen files are still ABSENT** — the column records when each is written, never
+whether the roster contains it, and §5.0 states the cost of the one that wave one does without. Read the `Wave` and
+`Seed` columns together, because they do not agree and the disagreement is informative: **five of the ten in wave
+one carry a seed file** (Operator, builder, reviewer, scout, designer) and **five do not** — `architect`, `tester`,
+`guard`, `curator` and `challenger` are in wave one on a code path rather than a seed, which is the founder's other
+criterion, and the curator's four are named in §5.0.
 
-| # | Name | Wave | File | Seed on `ceo-1-1788609834` | Model | Tools (the argv grant) | MCPs | Skill namespaces | maxTurns | Isolation | Anchor — what proves it |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 0 | **Operator** | **1** | `.claude/agents/operator.md` — ABSENT | `orchestrator.md` (154 lines) | `claude-opus-5` | Read Glob Grep Agent | none | — | 30 (v40) | none (v41) | it dispatched, and it did not build: a diff authored by the Operator is a defect. **It runs as the founder's main interactive session, `claude --agent operator` (v46)** |
-| 1 | **builder** | **1** | `.claude/agents/builder.md` — ABSENT as v2's file | `builder.md` (134 lines) | **`claude-fable-5-1`** (v57); fallback `claude-opus-5`, reachability UNVERIFIED | Read Write Edit Bash Glob Grep | none by default | engineering · testing | 30 (v40) | worktree (v41) | the venture's own CI, plus the done-test, plus the tester's blind test |
-| 2 | **reviewer** | **1** | `.claude/agents/reviewer.md` — ABSENT as v2's file | `reviewer-readonly.md` (169 lines) — **not** `reviewer.md`, which carries Bash | `claude-sonnet-5`; a second family when reachable | Read Glob Grep | none | engineering · quality | 25 (v40) | none (v41) | findings reproduce from the diff alone |
-| 3 | **architect** | **1** | `.claude/agents/architect.md` — ABSENT | none | **`claude-fable-5-1`** (v57); fallback `claude-opus-5`, reachability UNVERIFIED | Read Glob Grep Write (design paths only) | none | engineering · data | 30 (v40) | worktree (v41) | a migration that applies and rolls back in a scratch database |
-| 4 | **tester** | **1** | `.claude/agents/tester.md` — ABSENT | none | `claude-sonnet-5` | Read Write Edit Bash Glob Grep, `--add-dir` excluding the implementation | none | testing · quality | 30 (v40) | worktree (v41) | the test fails before the change and passes after |
-| 5 | **guard** | **1** | `.claude/agents/guard.md` — ABSENT | none | `claude-opus-5` | Read Glob Grep | none | security | 25 (v40) | none (v41) | a proof of concept that reproduces |
-| 6 | **scout** | **1** | `.claude/agents/scout.md` — ABSENT | `sourcer.md` (147 lines, `mcpServers: [claim-append]`) | `claude-sonnet-5`; Gemini once authenticated | Read Glob Grep WebSearch WebFetch — no Write, no credential, no send | read-only servers, admitted per run | research | 25 (v40) | none (v41) | every claim carries URL, quote and access date; `scripts/check-citations.mjs` (846 lines) blocks on a dead one |
-| 7 | **designer** | **1** | `.claude/agents/designer.md` — ABSENT as v2's file | `designer.md` (151 lines, `mcpServers: [playwright]`) | `claude-opus-5` | Read Write Edit Bash Glob Grep | `playwright`, per-run inline | design · frontend | 30 (v40) | worktree (v41) | a rendered screenshot judged against a named anchor |
-| 8 | **product** | 2 | `.claude/agents/product.md` — ABSENT | `framer.md` (121 lines) | `claude-sonnet-5` | Read Glob Grep Write (spec paths) | none | product | 30 (v40) | none (v41) | the store check refuses a done-test not falsifiable by someone who did not do the work |
-| 9 | **analyst** | 2 | `.claude/agents/analyst.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Bash | read-only analytics · error tracking · billing-read | data | 25 (v40) | none (v41) | the reconciliation reads a record the company does not write |
-| 10 | **writer** | 2 | `.claude/agents/writer.md` — ABSENT | none | split: `claude-opus-5` for taste work, `claude-sonnet-5` for routine | Read Write Edit Glob Grep | Higgsfield, rate-capped | growth · craft | 30 (v40) | none (v41) | staged, never sent; the founder's taste store and a rung-2 external reaction |
-| 11 | **growth** | 2 | `.claude/agents/growth.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write | CRM read-only | growth | 30 (v40) | none (v41) | a reply from a real person, recorded by the world's door |
-| 12 | **steward** | 2 | `.claude/agents/steward.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write (obligations and operations paths) | **none** (v36) — it writes from scout's handover and the world's door's rows, never from a raw mailbox | operations | 30 (v40) | none (v41) | an obligation is discharged only by a record the company does not write |
-| 13 | **curator** | 2 | `.claude/agents/curator.md` — ABSENT | none | `claude-sonnet-5`; the summarising half on Gemini or a local model | Read Write Edit Glob Grep — no Bash | none | knowledge | 30 (v40) | none (v41) | a memory item with no source, date, expiry and falsifier is refused at the store check |
-| 14 | **challenger** | 2 | `.claude/agents/challenger.md` — ABSENT | none | `claude-opus-5`; a second family when reachable | Read Glob Grep | none | quality · research | 25 (v40) | none (v41) | every finding names the mechanism that would have caught it |
+**(FOUNDER, rethink 2026-09-06: D6 → v71 — three pack artifacts per agent, and they are inventory, not ceremony)**
+An agent with no pack is **declared and not routable**, so the pack is part of what *"the file exists"* has to
+mean. Three artifacts per agent plus the namespace check, **forty-five artifacts for fifteen agents, thirty of them
+for wave one**, all **ABSENT**:
+
+| Pack artifact | Path | The one writer | Fails when |
+|---|---|---|---|
+| Rehearsal case, known answer | `keel/shared/packs/<agent>/rehearsal.md` | the curator, as a v18 rehearsal body | the file is missing, or its expected answer is not machine-checkable |
+| Exemplar of its own good output | `keel/shared/packs/<agent>/exemplar.md` | the curator, from a real handover, **with provenance** | it carries no provenance, or was written rather than harvested |
+| End-to-end demonstration that the anchor fires | `keel/shared/packs/<agent>/demonstration.md` | whoever writes the anchor | the anchor has never been observed to fire |
+| Namespaces resolve | the `Skill namespaces` column above | — | a declared namespace holds zero unexpired skills — §7's `skill.miss` event |
+
+**Mechanism:** the four paths are declared per agent in `keel/shared/roster.yml` (§L **O2**, **ABSENT**), and
+`bin/run` already refuses a brief naming a file that does not exist (v37, v45). **(R19, OPEN)** is the test that
+would refute the pack.
+
+**(FOUNDER, rethink 2026-09-06: D7 → v72, and W6 — the two columns this table gains)** `valid_until` is on **all
+fifteen** rows: at expiry exactly one disposition is recorded — **Refresh · Merge · Retire** — with the anchored
+evidence attached, enforced by the same forced-disposition rule `scripts/ledger.mjs` already blocks on. `cacheTtl`
+is `experimental.cacheTtl` (**FACT: world.md 6**), per-agent frontmatter taking `5m` or `1h`; it ships **unset**,
+because the value is a per-agent build-time choice answering one question — is this agent's standing prefix read
+again inside five minutes? — and §5.2a states the test. Neither column is written by hand: **O2** generates both
+from `keel/shared/roster.yml`, which is where the wave, the colour, the pack paths and the expiry all live.
+
+| # | Name | Wave | File | Seed on `ceo-1-1788609834` | Model | Tools (the argv grant) | MCPs | Skill namespaces | maxTurns | `cacheTtl` *(W6)* | `valid_until` *(v72)* | Isolation | Anchor — what proves it |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | **Operator** | **1** | `.claude/agents/operator.md` — ABSENT | `orchestrator.md` (154 lines) | `claude-opus-5` | Read Glob Grep Agent | none | — | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | it dispatched, and it did not build: a diff authored by the Operator is a defect. **It runs as the founder's main interactive session, `claude --agent operator` (v46)** |
+| 1 | **builder** | **1** | `.claude/agents/builder.md` — ABSENT as v2's file | `builder.md` (134 lines) | **`claude-fable-5-1`** (v57); fallback `claude-opus-5`, reachability UNVERIFIED | Read Write Edit Bash Glob Grep | none by default | engineering · testing | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | worktree (v41) | the venture's own CI, plus the done-test, plus the tester's blind test |
+| 2 | **reviewer** | **1** | `.claude/agents/reviewer.md` — ABSENT as v2's file | `reviewer-readonly.md` (169 lines) — **not** `reviewer.md`, which carries Bash | `claude-sonnet-5`; a second family when reachable | Read Glob Grep | none | engineering · quality | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | findings reproduce from the diff alone |
+| 3 | **architect** | **1** | `.claude/agents/architect.md` — ABSENT | none | **`claude-fable-5-1`** (v57); fallback `claude-opus-5`, reachability UNVERIFIED | Read Glob Grep Write (design paths only) | none | engineering · data | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | worktree (v41) | a migration that applies and rolls back in a scratch database |
+| 4 | **tester** | **1** | `.claude/agents/tester.md` — ABSENT | none | `claude-sonnet-5` | Read Write Edit Bash Glob Grep, `--add-dir` excluding the implementation | none | testing · quality | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | worktree (v41) | the test fails before the change and passes after |
+| 5 | **guard** | **1** | `.claude/agents/guard.md` — ABSENT | none | `claude-opus-5` | Read Glob Grep | none | security | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | a proof of concept that reproduces |
+| 6 | **scout** | **1** | `.claude/agents/scout.md` — ABSENT | `sourcer.md` (147 lines, `mcpServers: [claim-append]`) | `claude-sonnet-5`; Gemini once authenticated | Read Glob Grep WebSearch WebFetch — no Write, no credential, no send | read-only servers, admitted per run | research | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | every claim carries URL, quote and access date; `scripts/check-citations.mjs` (846 lines) blocks on a dead one |
+| 7 | **designer** | **1** | `.claude/agents/designer.md` — ABSENT as v2's file | `designer.md` (151 lines, `mcpServers: [playwright]`) | `claude-opus-5` | Read Write Edit Bash Glob Grep | `playwright`, per-run inline | design · frontend | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | worktree (v41) | a rendered screenshot judged against a named anchor |
+| 8 | **product** | 2 | `.claude/agents/product.md` — ABSENT | `framer.md` (121 lines) | `claude-sonnet-5` | Read Glob Grep Write (spec paths) | none | product | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | the store check refuses a done-test not falsifiable by someone who did not do the work |
+| 9 | **analyst** | 2 | `.claude/agents/analyst.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep ~~Bash~~ *(struck: **O57**)* | read-only analytics · error tracking · billing-read | data | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | the reconciliation reads a record the company does not write |
+| 10 | **writer** | 2 | `.claude/agents/writer.md` — ABSENT | none | ~~split in the file~~ `claude-sonnet-5`, escalating to `claude-opus-5` on a §9.1 row *(moved: **O57**)* | Read Write Edit Glob Grep | Higgsfield, rate-capped | growth · craft | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | staged, never sent; the founder's taste store and a rung-2 external reaction |
+| 11 | **growth** | 2 | `.claude/agents/growth.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write | CRM read-only | growth | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | a reply from a real person, recorded by the world's door |
+| 12 | **steward** | 2 | `.claude/agents/steward.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write (obligations and operations paths) | **none** (v36) — it writes from scout's handover and the world's door's rows, never from a raw mailbox | operations | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | an obligation is discharged only by a record the company does not write |
+| 13 | **curator** | **1** *(v70)* | `.claude/agents/curator.md` — ABSENT | none | `claude-sonnet-5`; the summarising half on Gemini or a local model | Read Write Edit Glob Grep — no Bash | none | knowledge | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | a memory item with no source, date, expiry and falsifier is refused at the store check |
+| 14 | **challenger** | **1** *(v70)* | `.claude/agents/challenger.md` — ABSENT | none | `claude-opus-5`; a second family when reachable | Read Glob Grep | none | quality · research | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | every finding names the mechanism that would have caught it |
 
 **(NEW: what leaves, and it is thirteen files of eighteen)** `reviewer.md` (149 lines, `tools: [Read, Glob, Grep,
 Bash]`) is **gone**: a checker has no shell, so the v2 `reviewer` is seeded from `reviewer-readonly.md` instead. The
@@ -59,7 +85,9 @@ declares `model:`, `tools:`, `mcpServers:`, `maxTurns:` or `isolation:`, so noth
 
 **(NEW: the model set is not the founder's whim, it is §G.1's instruction made countable — and v57 moves two of the
 rows)** Of the fourteen, **two run `claude-fable-5-1`** (builder, architect, by the founder's decision v57), **three
-run `claude-opus-5`** (guard, designer, challenger), **eight run `claude-sonnet-5`**, and **one is split** (writer).
+run `claude-opus-5`** (guard, designer, challenger), **~~eight~~ nine run `claude-sonnet-5`**, and ~~**one is
+split** (writer)~~ **none is split in its file** — `writer`'s escalation moved to a §9.1 routing row *(moved
+2026-09-06: **O57**)*.
 The Operator is a fourth `claude-opus-5` seat and is counted separately because it dispatches rather than produces.
 Both Fable rows carry `claude-opus-5` as the fallback while reachability on the seat is UNVERIFIED, so the count of
 *files that would load today* is unchanged; what changed is the value each declares.
@@ -147,6 +175,15 @@ installed skill, instructions under 5,000 tokens, body under 500 lines.
 **none is admitted**; each row is its disposition when it reaches the door. Anything may be proposed — §F's door is
 material, not a ceiling.
 
+**(NEW: contradiction 19 — this table is one of four copies, and it is the one that stays)** The four-class hands
+table was written out **four times**: as the decision (SPINE §F), in §8.2, here, and in COVERAGE. Four copies of one
+classification is four places for a tool to be classed differently and one incident to find out. **Two survive with
+different jobs: §F is the decision, and §17.3 is the inventory** — this one, because an inventory is where a
+*holder* and a *credential* belong. §8 keeps a pointer instead of a copy. Nothing about any row's class changes.
+**And one column here is descriptive, not enforcing** *(deletion 14)*: `Day · night · never` records the design
+intent, while **the enforced horizon is the one in the admitted-tool file**, `keel/shared/tools/<name>.yml`, which
+the door reads. Where they ever disagree, the file is right.
+
 | Hand | Class (§F) | Credential | Who may hold it | Day · night · never | Disposition at the door |
 |---|---|---|---|---|---|
 | the founder's signed-in Chrome (`claude-in-chrome`) | REACHES THE WORLD + private data | the founder's own sessions | **nobody but the founder, on the Floor** | day, Floor only, forever | the widest hand in the building; never a night grant, never shared |
@@ -223,7 +260,7 @@ fails it. Compressed here to what v2 changes; the schemas stand as FINAL §16.4 
 | Teams config | `~/.claude/teams/<team>/config.json` · `inboxes/<agent>.json` · `~/.claude/tasks/<team>/` | the vendor's; session ids **and tmux pane ids**; team name is `session-` + the first eight characters of the session id | **Claude Code itself — READ-ONLY to us** | page 2 | anything of ours writes it. The file is *"overwritten on the next state update"*, so a write is lost and looks like a bug in the page |
 | Cards | `keel/ventures/<v>/cards/<id>.yml` | card id · intent id · stage · venture · **`solo \| team`, defaulted from the intent's kind (v60)** · the team or chain it launched · the PR · the execution cap | **the founder's door — `bin/intend` (ABSENT) creates the card with its intent id (v52)**; `keel/bin/run` writes only the session id and the stage, and the founder's drag is an input to it, never a second writer (v34) | page 4; the Watch | a card in "working on it" with no session id; a stage change with no logbook row |
 | Sessions registry | `keel/logbook/sessions.jsonl` | session id (a UUID we mint) · provider · agent · venture · tmux session name · pane id · state · started · ended | `keel/bin/run` | pages 2, 3, 7; `claude --attach`; `tmux attach-session` | a session id that is not a valid UUID (`--session-id` refuses it); a row with no provider |
-| Price table | `keel/shared/prices.yml` | model id · input · output · cache write at **1.25x for 5 minutes and 2x for 1 hour** · cache read at 0.1x, **0.025x for Fable 5.1 and Mythos 5.1** · batch at 50% both directions · source URL · date · expiry | the founder, from the vendor page; the probe stamps the date | page 3; the meter | a model id used anywhere with no price row — **refused, not scored at zero**; a row past its expiry |
+| Price table | `keel/shared/prices.yml` | model id · input · output · cache write at **1.25x for 5 minutes and 2x for 1 hour** · cache read at 0.1x, **0.025x for Fable 5.1 and Mythos 5.1** · batch at 50% both directions · source URL · ~~date · expiry~~ **`fetched_at` and `valid_until` per row** *(added 2026-09-06: **O8**)*; **a quota that is a count and not a price is carried as a count** — Gemini's 60/min and 1,000/day | the founder, from the vendor page; the probe stamps `fetched_at` | page 3; the meter; **`bin/run`** | a model id used anywhere with no price row — **refused, not scored at zero**; and **a row past `valid_until` refuses routing to that model** rather than mis-pricing it, because a stale price is a wrong number that looks like a right one |
 | Skills registry | `keel/shared/skills/registry.yml` | name · namespace · body class (anchor · exemplar · rehearsal · reference) · with-skill and baseline scores · n · `valid_until` · both directory paths | `keel/bin/skill` | agents at load; the store check | a skill in either directory with no registry row; an expiry passed with no disposition |
 | Model-expiry facts | rows in `keel/shared/facts.yml` | model id · retirement date · source URL · date read | the probe | the store check; §20's dated review | a model id in any agent file with no fact row, or a retirement date in the past. **This is G.4's mechanism**: Haiku 4.5 is committed *"not sooner than October 15, 2026"* |
 
@@ -231,6 +268,30 @@ fails it. Compressed here to what v2 changes; the schemas stand as FINAL §16.4 
 mechanisms that already exist on this branch: `scripts/ledger.mjs` (expiry, resolvers, `unresolved ≠ pass`),
 `scripts/evict-memory.mjs` (1,125 lines, archive rules), `scripts/check-memory-budget.mjs` (size caps) and
 `scripts/verdict.mjs` (sha256 binding of evidence to the exact artifact).
+
+#### 17.4.2 The stores and schemas the rethink round adds
+
+**(NEW: §L, 2026-09-06 — every one is ABSENT, and each is here because a rule the plan already states had no store
+behind it)** The one-writer rule is what generates most of this table: a fact with two authors is the defect that
+recurs in this plan more than any other, and each row below is one fact given one author.
+
+| Store or schema | Path | The one writer | Readers | Fails when |
+|---|---|---|---|---|
+| **Work items** (**O1**) | `keel/ventures/<v>/work/w-*.yml` — `intent` · `purpose` · `ceiling` · `blocked_on` · `attempts` · `last_failure` · `card` | the Watch, materialising from `work-draft/` after the store check — v44's obligation pattern reused | the Desk · page 4 · `bin/run` | a live intent has **zero** work rows; **a board card is a view of a work row and never a second object**. **(R16, OPEN)** decides two objects or three |
+| **The roster** (**O2**) | `keel/shared/roster.yml` — frontmatter plus `color` · `wave` · `valid_until` · `cacheTtl` · the four v71 pack paths · anchor | the founder, through review | §5.2 · §17.1 · page 2 · the argv files · `bin/run` | any of those views is **written by hand instead of generated**; a count in prose disagrees with the file |
+| **Charter schema** (**O3**) | `keel/shared/schemas/charter.yml` | the schema is the source; **the prose is generated from it** | `bin/check-stores` · §2 | a six-line charter with no entity **both loads and is refused** — §2.1 enforces six lines, COVERAGE §14 says five fields, v63 requires a seventh, and **the founder's row is the one that loses** (contradiction 2) |
+| **Brief schema** (**O4**) | `keel/shared/schemas/brief.yml` | as above | `bin/run` · §6.2 · §13a | a table is built on the wrong field count — 13a.5 says ten, **v45 decided eleven** (contradiction 3) |
+| **Routing table** (**O5**) | `keel/shared/routing.yml` | the founder, through review | §3.2's bands · §5.2 · §9.2 — **all generated or checked from it** | *which agent, which model, which band* is answered in three places with nothing checking that they agree (contradiction 17) |
+| **Event schema** (**O6**) | `keel/shared/schemas/event.yml` · `bin/log` | the schema; `bin/log` refuses a row that fails it | every reader of the logbook | a row carries no `schema_version`, or **a reader guesses at an unknown version instead of refusing** — v26's posture toward the vendor's format, turned on our own |
+| **The decide queue** (**O9**) | `keel/logbook/decide.jsonl` — one house-level queue replacing ten per-venture `open.md` stores | `bin/log`, one writer | pages 4 and 5 · the Operator · the night escalation (**O49**) | a row carries no intent id. Ten queues meant **nine writer-contention points for one founder** |
+| **The host directory** (**O10**) | `keel/host/` — plist · managed-settings template · env file (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`, `ANTHROPIC_DEFAULT_HAIKU_MODEL`) · the sandbox block · the `denyRead` list · expected macOS grants | the founder | `bin/probe` | the live machine differs from the declaration — and **the probe asserts it by attempting the operation**, never by reading a database |
+| **Eval-only bodies** (**O11**) | `keel/golden/` | the skill creator, at admission | the rehearsal runner only | a rehearsal case ships into the two directories an agent loads from, **so the case that judges a run can be read by that run** (contradiction 11) |
+| **Page manifests** (**O12**) | `keel/surfaces/pages/<n>.yml` — every element is a `fact:` (a store path) or a `tap:` (a `bin/` verb) | the founder, through review | the renderer, which **builds only from it** | an element resolves to neither. Page 1 loses the venture toggle and the portfolio moves to page 3's strip (contradiction 9) |
+| **The consent register** (**v69**) | `keel/consent.yml` — one row per subject per relationship | one writer, enforced by `bin/check-stores` | **the Sender, before any contact** | the Sender acts on a subject with no consent row. *"Consent"* was **the one keyword of ~640 absent from v2's own text** |
+| **The per-subject store** (**v69**) | `keel/subjects/<hash>.yml` — the erasable body; **the log and memory hold only the hash** | one writer | the Sender · the world's door | an erasure leaves anything but a **known absence**: delete the row, and the hash resolves to nothing. §12 and §13 carry the rule |
+| **The Watch/Sender lease** (**O16**) | `keel/logbook/watch.lease` — a host id and a heartbeat | whichever host holds it | `bin/watch` · `bin/send`, both of which **refuse to act without it** | two hosts tick at once. **The only failure in the round that ends in a duplicated outward act**, and the reason the restore drill's clone can never send |
+| **The window high-water mark** (**v74**) | `keel/logbook/window-highwater.yml` | the meter | the Desk · the briefing · page 3 | a ceiling is denominated in dollars nobody is billed. **No denominator is published**, so the gauge is tokens against an observed high-water mark |
+| **The scratch house** (**O78**) | `keel/fixtures/` · `bin/drill` | the drill | the Sender · the Watch · the door · the launcher, under test | **a Sender defect is an outward act that cannot be recalled**, and these four have no test seam today |
 
 ---
 
@@ -249,6 +310,15 @@ mechanisms that already exist on this branch: `scripts/ledger.mjs` (expiry, reso
 | `keel/bin/skill` | the skill creator of §E.3 and 17.2 | it orchestrates four agents; a fifteenth agent orchestrating agents is the Operator, and there is one |
 | `keel/bin/probe` | asserts nightly what a run can actually touch | a prompt injection that reaches it finds a program |
 | `keel/bin/send` · `inbound` · `watch` · `reconcile` · `log` · `check-stores` · `door` · `drill` · `rehearse` · `curate` · `supervise` | FINAL §16.1's no-model programs, unchanged | **§B.1 rule 4**: the twelve stay programs |
+| **`keel/bin/egress`** *(v68)* | **one door out.** Logs every call, filters by domain **and HTTP method**, and **injects credentials the agent never sees**; `--strict-mcp-config` names only this proxy, and `.claude/mcp-policy.json` becomes its configuration rather than an independent control | it is the **only proposal of the round that survives an agent being fully persuaded**: the trifecta guarantees a leg is missing at dispatch, this keeps it missing at the syscall. A model cannot be the thing that decides what leaves. **(R2, OPEN)** may turn half of it into configuration |
+| **`keel/bin/worktree`** *(O14)* | creates the worktree and **hands its path to the run in argv** | `git worktree add` **cannot complete under the armed sandbox**, and interactive escalation is unavailable to an unattended run by construction. A run never creates its own |
+| **`keel/bin/embed`** · **`keel/bin/classify`** *(O13)* | embeddings, classification, dedup and PII detection on the local tier | the local tier has **no reachable carrier**: the sandbox denies a loopback `bind()`, and the consumer `curator` carries no `Bash` and no MCP. So it is a no-model program in the Watch's launchd context handing the curator a file — v47's shape. **DEPENDS-ON-R4** |
+| **`keel/bin/redact`** *(O17)* | **one** redaction implementation, used by the mining pass and by the `gitleaks`-class scan | redaction is implemented **twice** today, and two implementations of one check disagree. It is also **O66**'s PII gate on two paths |
+| **`keel/bin/bell`** *(O18)* | the **only thing that may ring**: reads the wake-me classes, the interruption budget and the per-channel acted-on rate | the interruption budget is designed and **its transport is named nowhere**. Two things that can ring is two budgets |
+| **`keel/bin/horizon`** *(O23)* | one pass over every durable store: **forced disposition at expiry** for intents and charters, plus a **lapse record** — one row per thing that expired unactioned, ordered by what it stopped | 13a.6 marks this a WISH. An expiry with no pass over it is a date nobody reads |
+| **`keel/bin/mine --since`** *(O42)* | the transcript pass with a **watermark**, so the backlog pass and the steady pass are one program | *"unread transcript count"* is a progress bar for a backlog that clears once; **watermark lag** stays meaningful in year two |
+| **`keel/bin/replay-desk`** *(O20)* | replays the Desk's own ranking rows and the gate that stopped each candidate | the Desk **already writes its ranking and nothing reads it**. A no-model replayer is the only way to tune scheduling without living a month, and it is what settles **v75** |
+| **`keel/bin/drill`** + **`keel/fixtures/`** *(O78)* | a scratch house the Sender, Watch, door and launcher can be run against | those four have **no test seam**, and a Sender defect is an outward act that cannot be recalled. Blue-green at a tick boundary (**O79**) is free beside it, because every tick is already crash-only |
 
 **(FOUNDER, v4)** **Mission-control taps, by page** — page 1 tap an avatar → that agent's terminal · page 2 tap →
 `tmux attach-session -t <name>` or `claude --attach <id>`, message → write the agent's inbox file · page 3 a cost row
@@ -329,7 +399,7 @@ renderers read the same logbook.
 |---|---|---|---|---|
 | **Claude Code** (subscription) | every agent of 17.1; **the Floor, always**; the Operator | **two windows: a rolling five-hour AND a weekly, per seat, shared with Claude chat and Cowork** (v22); one-hour cache | `<agent>.claude-code.argv` — ABSENT | installed, **2.1.261** |
 | **Codex CLI** (subscription) | **day one (v5), in one position:** checker on a prepared diff, foreground, stdout to a file while inheriting the parent shell's TTY | its own window; **the only vendor publishing numeric per-window quotas** | `<agent>.codex.argv` — ABSENT | **not installed** (`command -v codex` → absent). #19945 open **130 days with no maintainer reply** |
-| **Gemini CLI** (subscription) | scout on routine work; the summarising half of the curator | free tier 60 requests/min, 1,000/day on a personal account; paid tiers UNVERIFIED | `<agent>.gemini.argv` — ABSENT | installed **0.38.2**, never authenticated; auth state unreadable (`~/.gemini` is `denyRead`) |
+| **Gemini CLI** (subscription) | scout on routine work; the summarising half of the curator | free tier 60 requests/min, 1,000/day on a personal account; paid tiers UNVERIFIED | `<agent>.gemini.argv` — ABSENT | installed **0.38.2**, never authenticated; auth state unreadable (`~/.gemini` is `denyRead`). **(FACT: world.md 25)** it ships **named subagents** with their own tools, MCP servers and context windows, delegated by `@agent` and defined in **`.gemini/agents`** — an **eighth** named roster in the world (§5.8 fact 1) and a **third agent-file location**, which is a case v42 did not contemplate. §17.8 carries the path |
 | **Local models** | **real work, not no work** (v20): embeddings, classification, dedup, PII detection | none — electricity | — | ABSENT. MiniLM (384 dims, Apache 2.0, 256-word-piece truncation) · Qwen3-0.6B (32,768 context, Apache 2.0); on-disk size not published |
 | **The artifact runtime** | the published phone pages: Balcony views, the briefing, the read-back. **It cannot pop a terminal**, which is why it is not the website's host (v39) | free | — | exists; measured: database, user identity, comments that wake the session |
 | **Routines** (cloud) | **refused for the Watch**: cloud-only, cannot reach anything this system stores on the Mac. **Read *no local files* narrowly** — a routine clones every selected repo per run and pushes `claude/`-prefixed branches, so it has a repository and not this laptop (cloud.md) | **1-hour minimum, confirmed verbatim**: *"The minimum interval is one hour; expressions that run more frequently are rejected."* The **daily cap exists and is published as no number** — superseding this cell's earlier *unverified*, which doubted the cap rather than its size | — | exists; **API fire endpoint documented** (§10.2a) |
@@ -360,9 +430,16 @@ only things that exist today are the `mission-control/` seed and the `.claude/` 
 
 ```
 keel/                                   one private repository · the house
-  settings.yml                          windows{reserve, models} · tick · driven_limit (2) · wip · interruptions/day
-  STOP                                  the cord: a file, read first every tick; a control on every mission-control page
+  settings.yml                          windows{reserve, models} · tick · driven_limit (2) · wip · interruptions/day ·
+                                        sessions_ceiling (O71, R23)
+  STOP                                  the cord: a file, read first every tick; a control on every mission-control page.
+                                        The cord SIGNALS the recorded process group now (v67), it does not only stop the
+                                        next dispatch
   people.yml                            named humans: consent per relationship; first contact narrower than reply
+  consent.yml                           v69 · THE CONSENT REGISTER: one row per subject per relationship, one writer,
+                                        read by the Sender BEFORE any contact
+  subjects/<hash>.yml                   v69 · the erasable body. The log and memory hold only the hash, so an erasure
+                                        turns it into a known absence
   .claude/agents/                       THE FIFTEEN — one file per agent (v42: the path the runtime reads
                                         and the path the PS-* lint globs; `keel/agents/` does not exist)
     operator.md builder.md reviewer.md architect.md tester.md guard.md scout.md designer.md
@@ -371,13 +448,41 @@ keel/                                   one private repository · the house
                                         strings on the `claude -p` carrier, and only there (v43)
   bin/
     run · skill · probe · watch · send · inbound · reconcile · log · check-stores · door · drill · rehearse ·
-    curate · supervise
+    curate · supervise · intend
+    egress                              v68 · the one door out: every call logged, filtered by domain AND method,
+                                        credentials injected where the agent never sees them
+    worktree                            O14 · creates the tree and hands its path to the run in argv
+    embed · classify                    O13 · the local tier as programs, not a service (DEPENDS-ON-R4)
+    redact                              O17 · ONE redaction, used by the mining pass and the secret scan
+    bell                                O18 · the only thing that may ring
+    horizon                             O23 · forced disposition at expiry, plus one lapse record per thing that
+                                        expired unactioned
+    mine --since                        O42 · the watermark: the backlog pass and the steady pass are one program
+    replay-desk                         O20 · replays the Desk's own rows; it is what settles v75
+  fixtures/                             O78 · the scratch house: the Sender, Watch, door and launcher have no other
+                                        test seam, and a Sender defect cannot be recalled
+  host/                                 O10 · plist · managed-settings template · env file · sandbox block ·
+                                        denyRead list · expected macOS grants — asserted by bin/probe BY ATTEMPTING
+                                        THE OPERATION
+  golden/                               O11 · eval-only bodies: the case that judges a run may not be readable by it
+  surfaces/pages/<n>.yml                O12 · the page manifest: every element is a fact: (a store path) or a
+                                        tap: (a bin/ verb); the renderer builds only from this
   shared/
+    roster.yml                          O2 · THE ONE ROSTER FILE: frontmatter plus color · wave · valid_until (v72) ·
+                                        cacheTtl (W6) · the four v71 pack paths · anchor. 17.1, 5.2 and page 2 are
+                                        generated from it or checked against it
+    routing.yml                         O5 · which agent, which model, which band — answered ONCE, and the three
+                                        views generated from it
+    schemas/                            O3 charter.yml · O4 brief.yml · O6 event.yml · handover.yml (O7's five
+                                        additions). The schema is the source and the prose is generated
+    packs/<agent>/                      v71 · rehearsal.md · exemplar.md · demonstration.md — no pack, not routable
     skills/                             THE LIBRARY, one source of truth, thirteen namespaces
       <name>/SKILL.md                   one of four bodies: anchor · exemplar · rehearsal case · reference
       registry.yml                      name · namespace · body class · eval scores · n · valid_until
     prices.yml                          model id · in · out · cache write (1.25x 5-min, 2x 1-hour) · cache read
-                                        (0.1x; 0.025x Fable) · batch 50% · source · date · expiry
+                                        (0.1x; 0.025x Fable) · batch 50% · source · O8: fetched_at · valid_until
+                                        per row, a stale row REFUSING routing; a quota carried as a count
+                                        (Gemini 60/min, 1,000/day), never as a price
     facts.yml                           measured facts, each with its re-measurement command and its expiry,
                                         including one model-expiry row per model id in use
     tools/<name>.yml · checklist.md     every admitted hand: class · credential scope · rate · drill date · hash
@@ -387,6 +492,13 @@ keel/                                   one private repository · the house
     rehearsals/<move-class>/            known-answer cases; scores.jsonl per agent
   ventures/<name>/
     charter.md · intents/<id>.md · obligations.yml
+                                        the charter gains cloud: allow | deny, default deny (v79); the intent gains
+                                        class: for exploration (v74)
+    work/w-*.yml · work-draft/          O1 · intent · purpose · ceiling · blocked_on · attempts · last_failure ·
+                                        card. A CARD IS A VIEW OF A WORK ROW, not a second object (R16).
+                                        !! O1 DECLARES keel/ventures/<v>/work/ AND THIS TREE ALREADY GIVES work/ TO
+                                        THE VENTURE'S SOURCE REPOSITORY (see below). Named, not silently renamed:
+                                        one of the two paths moves, and it is a build-order decision (§19)
     cards/<id>.yml                      the board's cards: intent id · stage · the team it launched · the PR
     memory/{facts,negatives,already-built,open}.md
     ship-log.md
@@ -395,13 +507,29 @@ keel/                                   one private repository · the house
                                         and Gemini CLI, not .codex/skills
   .claude/skills/                       AT THE HOUSE ROOT (v48), GENERATED from shared/skills — read by Claude
                                         Code. A venture carries no skills directory; skills are not per venture
+  .gemini/agents/                       W25 · A THIRD AGENT-FILE LOCATION, per provider: Gemini CLI ships named
+                                        subagents with their own tools, MCP servers and context windows, delegated
+                                        by @agent. v42 decided ONE path and did not contemplate this case; the file
+                                        is GENERATED from shared/roster.yml (O2) for the agents Gemini may stand
   mission-control/                      the website: seven pages, each a control, every tap opening a terminal here
     server/ client/ scripts/            seeded from mission-control/ on ceo-1-1788609834 (60 files) — §18
   logbook/
-    events.jsonl · ledger.jsonl         typed, append-only, gen_ai.* names, an id on every row, F_FULLFSYNC
-    sessions.jsonl                      session id (UUID) · provider · agent · venture · tmux name · pane id · state
-    runs/<id>/                          brief · trace · handover · evidence
-    desk/<tick>.json · inbound/
+    events.jsonl · ledger.jsonl         typed, append-only, gen_ai.* names, an id on every row, F_FULLFSYNC.
+                                        O6: a schema_version on every row and a reader that REFUSES an unknown one.
+                                        O31: hash-chained — each row carries the sha256 of the previous
+    events/YYYY-MM.jsonl                O40 · rotated, with a rebuildable rollup; no surface reads the raw file
+                                        (DEPENDS-ON-R22)
+    decide.jsonl                        O9 · ONE house-level decide queue, replacing ten per-venture open.md stores.
+                                        It is also where a night run escalates, never to the Operator (O49)
+    watch.lease                         O16 · host id and heartbeat. The Watch refuses to tick without it and the
+                                        Sender refuses to act without it, so the restore drill's clone cannot send
+    window-highwater.yml                v74 · tokens against an observed high-water mark, because no denominator is
+                                        published. Wall clock beside it; USD as a shadow price
+    sessions.jsonl                      session id (UUID) · provider · agent · venture · tmux name · pane id · state.
+                                        O15 writes run.started before exec and ORPHANED, never finished, on a gap
+    runs/<id>/                          brief · trace · handover · evidence. O22: the brief's done-test is
+                                        byte-identical to the intent's, and brief and handover are adjacent hashed rows
+    desk/<tick>.json · inbound/         O20 · the Desk's rows become event-log rows and gain a replayer
   .index/                               SQLite, WAL; vectors; deletable; rebuilt in one pass
   .secrets/                             NOT in git. Keychain references only.
 ```

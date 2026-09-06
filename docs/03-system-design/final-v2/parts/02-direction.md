@@ -18,8 +18,9 @@ Nothing else in FINAL §2 moves. The Charter, the Intent, the Obligation and the
 
 ### 2.1 The Charter
 
-**(FINAL)** One per venture, written once, changed rarely, read constantly, short enough for a phone screen. Six
-lines.
+**(FINAL)** One per venture, written once, changed rarely, read constantly, short enough for a phone screen. ~~Six
+lines.~~ **(NEW: contradiction 2)** The count is the schema's, not this paragraph's — three places counted it
+differently and the paragraph below says what that cost.
 
 ```
 venture:   plainly, what this is and who it is for
@@ -28,6 +29,8 @@ envelope:  may-alone / never / wake-me
 ceiling:   what this venture may spend, per window and in money, per month
 weight:    1–5, the founder's priority, read by the Desk
 horizon:   the date this charter is re-read, or it stops
+entity:    the legal entity this venture publishes as, or none — what v63's disclosure line reads
+cloud:     allow | deny — default deny; may a hosted lane MAKE for this venture (v79)
 ```
 
 **(FINAL)** `tempo` is the founder's own distinction made structural: *walk for me* and *walk with me* are one field
@@ -37,14 +40,44 @@ it stops applying. The Charter is the standing-orders half of the naval pair: po
 their own words, read by everything else many times — the right cost shape for a founder who thinks by voice and
 hates being interrupted.
 
-**(FINAL)** **Enforced by:** a charter missing any of the six lines does not load and its venture is `parked` until
-it does — `bin/check-stores` (ABSENT; FINAL names it `keel/bin/check-stores`).
+**(FINAL)** **Enforced by:** a charter missing any line ~~of the six~~ **the schema declares** does not load and its
+venture is `parked` until it does — `bin/check-stores` reading `keel/shared/schemas/charter.yml` (both ABSENT; FINAL
+names the checker `keel/bin/check-stores`).
+
+**(NEW: contradiction 2 — three counts of one object, and the founder's row is the one that loses)** §2.1 enforced
+**six** lines, COVERAGE §14 says **five** fields, and **v63** requires a **seventh** — the legal entity behind the
+disclosure line. So a six-line charter with no entity **both loads and is refused**, and it is the founder's row that
+loses, silently, because the loader never asks for the seventh and nothing downstream notices. **(NEW: O3)** One
+schema is the source and the prose above is **generated from it**: `keel/shared/schemas/charter.yml` (**ABSENT**),
+read by `bin/check-stores` (**ABSENT**). The count moves with the schema, and a count written into a paragraph is
+what produced the contradiction in the first place.
 
 **(NEW: v22 changes what `ceiling` means, and the charter's own words do not change)** *Per window* is now **two
 windows per seat** — a rolling five-hour and a weekly, shared with Claude chat and Cowork — so a ceiling is checked
 against both. The founder writes one line; the Watch reads it against two fuses. **Mechanism:** `bin/watch` (ABSENT)
 reads the ceiling and the reserve per window; §4 carries the distinction between a seat limit and a model-family
 limit, which is the difference between a stop and a reroute.
+
+**(FOUNDER, rethink 2026-09-06: D9)** And ***in money*** **is no longer what a ceiling is denominated in.** **v74**
+makes it a **window gauge** — tokens against an observed high-water mark, since no denominator is published — with
+wall clock beside it and USD kept as a **shadow price**, because on a subscription the dollar is a locally computed
+shadow of a bill nobody sends (v23). The founder still writes one line and the line still reads the same; what
+changes is the unit the Watch checks it in. **Mechanism:** one high-water file and one rule in the Desk (**ABSENT**);
+§16 owns the currency and §4 owns the reserve.
+
+**(FOUNDER, rethink 2026-09-06: D14)** The charter gains **`cloud: allow | deny`, default `deny`** — may a hosted
+lane MAKE for this venture while the Mac is off. It is decided **now, and independently of which lane wins**: §I row
+15 is still the founder's, and a venture that must not leave the Mac has to be able to say so before there is
+anything to say it to. **Mechanism:** one field, refused when absent by `bin/check-stores` (**ABSENT**); a hosted
+run's output still lands as a pull request or a staged artifact the Mac reconciles on wake, never into the house
+directly (v56).
+
+**(NEW: O63 — the horizon needs a third disposition, and wind-down is the one nothing named)** At a charter's
+horizon **exactly one disposition** is recorded — **continue · park · wind down**. The store check refuses `tempo:
+parked` while an obligation is undischarged, and refuses promotion to `driven` while any date the charter relies on
+has passed. Without the third value a venture that should end has only *parked*, which keeps its obligations live and
+owned by nobody. **Mechanism:** `bin/check-stores` (**ABSENT**, §L O63); the pass that finds the passed horizon is
+`bin/horizon` (**ABSENT**, §L O23), which §4 owns.
 
 ---
 
@@ -62,6 +95,7 @@ evidence:   what will be attached to prove the done-test passed
 
 every:      OPTIONAL, v55 — a cadence: this intent is considered again every time it comes round
 on:         OPTIONAL, v55 — an inbound event class: this intent is considered when one arrives
+class:      OPTIONAL, v74 — exploration; an exploratory intent is routed off the Claude seat
 ```
 
 **(FINAL)** The done-test is the whole design compressed into one field. Compare two ways of instructing one piece
@@ -86,6 +120,54 @@ the condition holds, returning Not yet met, Met, or Impossible. The condition li
 the one hard constraint the done-test's wording must respect. **Mechanism:** the launcher composes the `/goal`
 string from the intent's `done-test:` field verbatim, never paraphrased — `bin/run` (ABSENT). §6 carries the run
 side of this.
+
+**(FOUNDER, rethink 2026-09-06: D9)** The intent gains **`class:`**, and the only value the plan needs today is
+**exploration**. An exploratory intent routes to Gemini, a local model or the Codex seat, and **the Desk refuses an
+exploratory dispatch onto the Claude seat past a fraction the founder sets**. The reason is v22: the weekly window is
+per seat and shared with Claude chat and Cowork, so *"idle capacity is bounded by being free"* is false and a night
+of exploration is subtracted from the next day. **Mechanism:** one field on the intent and one rule in the Desk
+(**ABSENT**); the enumeration lives in the intent schema, not in this paragraph.
+
+**(NEW: O22 — the copy that is mandated and checked by nothing)** §6.2 mandates that a brief's `done-test:` is a
+verbatim copy of the intent's, and nothing verifies it. The launcher now **refuses a brief whose `done-test:` is not
+byte-identical to the intent's**, and brief and handover are logged as **adjacent hashed rows**. **Mechanism:**
+`bin/run` (**ABSENT**, §L O22). This repository has lost a measurement in synthesis twice; a byte compare is the
+cheapest place to stop the third, and it is the same defect one layer up.
+
+**(NEW: O23 — an expiry with no forced disposition is a date nobody reads)** `expires:` already stops an intent being
+live. What was missing is what v19 gives a skill: at expiry **exactly one disposition is recorded**, and a **lapse
+record** — one row per thing that expired unactioned, ordered by what it stopped — so the number of things that
+quietly lapsed is readable rather than inferred. **Mechanism:** `bin/horizon` (**ABSENT**, §L O23) walks every
+durable store, intents and charters included; `scripts/ledger.mjs` **exists** on branch `ceo-1-1788609834` and
+already forces one disposition at a claim's expiry, which is the idiom being reused. §4 carries the pass.
+
+---
+
+### 2.2a The work item — the object between an intent and a run
+
+**(NEW: O1 — every surface already assumes this object and no store holds it)** An intent is a goal; a run is one
+disposable unit of work. Between them the plan has been passing *candidate work* around as a phrase, so page 4's
+cards, the Desk's queue and the retry counter each hold their own idea of it. It becomes one store:
+
+```yaml
+w-2026-09-06-0007:
+  intent:        i-2026-09-04-0012      # it does not load without one
+  purpose:       one sentence
+  ceiling:       per run
+  blocked_on:    []                     # other work rows, or an open which
+  attempts:      0
+  last_failure:  null                   # the exact text, never a summary
+  card:          the page 4 card that is a view of this row
+```
+
+**(NEW)** **A board card is a view of a work row, not a second object.** Otherwise page 4 and the Desk hold two
+answers to *what is being worked on* and disagree the first time either is edited. Proposals land in `work-draft/`
+and **the Watch materialises them after the store check** — v44's obligation pattern reused rather than a second
+one invented for the same shape. **Mechanism:** `keel/ventures/<v>/work/`, with `bin/check-stores` refusing a live
+intent that has zero work rows — **ABSENT** (§L O1). **(R16, OPEN)** decides whether this is two objects or three:
+whether any shipped agent system carries a scheduling object between the goal and the run, read from Symphony,
+Linear's agent session model and Copilot's task object. Until it is answered the design is **two** — the intent and
+the work row — and the run stays disposable.
 
 ---
 
@@ -167,6 +249,20 @@ projects without direction*, which is a provenance rule rather than a budget cap
 is text, never voice**: the founder's instructions arrive transcribed with errors, and a misheard word costs one tap
 instead of one night. **The spike file records the reason**, so the Watch does not re-propose the same rejected work
 every night — the most obvious way an always-on system burns tokens forever.
+
+**(NEW: O51 — the fourth door's provenance test is the same as the fifth's, and it was weaker)** Idle work must serve
+a **live intent, a standing intent, or the negatives and knowledge stores**, or it is a leak with a cheap price tag.
+The Watch's idle branch reads the **same** provenance test as its dispatch branch rather than a looser one, because
+*cheap* is not a provenance: a night of unowned work that costs little is still work the founder did not direct, and
+*"never runs my projects without direction"* is a provenance rule, not a budget cap. **Mechanism:** the Desk's gates
+(**ABSENT**, §L O51); §4 carries the gate order and names which gate this is.
+
+**(NEW: O60 — bug intake, the one intake the four doors did not name)** An anchor that fails twice writes a **card
+whose done-test IS the reproducing command**. Where there is no reproduction it is not a ticket at all: it is a
+bounded question for `scout`, which returns a reproduction or the reason there is none. That keeps the one class of
+work that arrives already falsifiable from being paraphrased into an unfalsifiable one on its way in. **Mechanism:**
+`bin/intend` (**ABSENT**, §L O60), entering through the proposal queue like every other non-founder door — it creates
+candidate work under an intent, never an intent.
 
 **(FINAL)** The world's door is a program that writes one row and does nothing else; **no model reads a stranger's
 text with a tool in its hand.** The transcript is kept verbatim, transcription errors preserved, because

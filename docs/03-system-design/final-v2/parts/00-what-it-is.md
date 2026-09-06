@@ -30,6 +30,28 @@ the perfect result."*
 
 ---
 
+### 0.1a What this section rests on, and the one adjustment it could not make
+
+**(FOUNDER, rethink 2026-09-06: D11)** Nothing is decided in §0 and two things are admitted here. §0.1 asks for a
+system that is *"self moving, self adjusting, improving"*, and the plan had no adjustment at all for the commonest
+state the founder is in — **away**. **v76** is that adjustment: the system reads one derived value, **the last
+founder event**, at four call sites — it releases the reserve to autonomous work when the last event is older than
+the reserve's own horizon and snaps it back on the first tap, executes a *which*'s stated default at its intent's
+expiry with both built options archived, builds one option instead of two while away, and keys page 5's *since you
+were last here* view on the event rather than on a date. It reintroduces no approve verb and does not reverse v9: a
+silent run still cannot ask. **Mechanism:** one predicate and one field shared by four call sites — **ABSENT**, and
+§A v76 names no path for it. Second, **the whole of §0 rests on contrarian assumption 1** (§I row 16): that a
+deterministic anchor exists for most company work. Rung 1, the trust score, regression-for-free, unattended night
+work, the refusal of consensus voting and the promise that the founder is not the bottleneck all hang on it, and the
+evidence for it comes from the harness — the most anchorable venture that could have been chosen. **If it is false
+the architecture inverts:** the night's product becomes built options with their costs, the morning becomes an
+adjudication queue, the taste store becomes the primary asset, mission control's centre of gravity moves off pages 3
+and 5 onto a decision queue, and the roster shrinks. **(R12, OPEN)** settles it: what fraction of the harness
+venture's **first thirty** real done-tests reach rung 1 *without inventing an anchor*. It is the cheapest measurement
+named anywhere in the round, and nothing should be built against the inverted architecture before it is taken.
+
+---
+
 ### 0.2 What it is, in one sentence, and what the name argues
 
 **(FINAL)** A company operating system for one founder and many ventures. Not a harness, which is a set of tools

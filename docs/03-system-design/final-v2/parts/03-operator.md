@@ -46,13 +46,34 @@ it did.
 
 ---
 
+### 3.1a Who may call the surface that dispatches
+
+**(FOUNDER, rethink 2026-09-06: D1 → v66)** The Operator is reached through mission control, and until this round
+nothing in the plan said **who may call it**. The founder's answer is three things at once and it is recorded in
+DECISIONS §18: *"Loopback bind + a keychain-held token on every write route + an authenticated tunnel for the
+phone."* The server binds loopback only; every route that **writes** — a dispatch, an edit-arguments verb, a tap
+that answers a *which* — checks one token held in the macOS keychain; the phone arrives through an authenticated
+tunnel rather than over the founder's own network.
+
+**(NEW: contradiction 16)** Three sentences could not all stand: v39 let the phone reach *"the local server over
+your own network"*, §14.13 said every page writes *"nothing but the inbox file and the intent log"*, and the seed
+pins `127.0.0.1`. An unauthenticated dispatch plane on any network the Mac joins is what v39 as written describes,
+and it is now the losing image. **Mechanism:** the loopback pin exists in the seed; the token check is one
+middleware and the token is keychain-held (**ABSENT**); the tunnel is named at build time (**ABSENT**). Whether a
+detached night process can read that keychain item without an interactive unlock is **(R3, OPEN)** — the unattended
+half of §3.3 rests on it and nothing has tested it. **Settled by:** `lsof -nP -iTCP -sTCP:LISTEN` showing a
+non-loopback bind, or a tap accepted from a device that presented no token. §14 carries the surface; this section
+carries the consequence, which is that **a dispatch is an authenticated act**.
+
+---
+
 ### 3.2 Graded autonomy — one table, three things at once
 
 **(FOUNDER)** *"how much it asks me depends on the type of task."* **(NEW: this becomes one band table, and every
 band names its envelope terms, its Claude Code permission mode and its Codex axes, so that a band is a real setting
 rather than an adjective.)** This is the row every section about control obeys.
 
-| Band | Task types | Envelope | Claude Code mode | Codex `approval_policy` × `sandbox_mode` | Who runs in it |
+| Band | Task types | Envelope | Claude Code mode | Codex ~~`approval_policy` × `sandbox_mode`~~ `approval_policy` × `sandbox_mode` × **Guardian** *(moved 2026-09-06: W21)* | Who runs in it |
 |---|---|---|---|---|---|
 | **Read and report** | research, review, audit, analysis, challenge | `may-alone` | `plan` | `never` × `read-only` | scout · reviewer · guard · challenger · analyst |
 | **Build in a worktree** | code, design, copy, spec, schema, memory | `may-alone`, inside one venture's worktree | `dontAsk` with `--restricted` and an explicit `--tools` | `never` × `workspace-write` | builder · architect · tester · designer · product · writer · growth · steward · curator — the five with `isolation: none` (product, writer, growth, steward, curator; v41) run in this band on a narrowed `--add-dir`, **not a checkout** |
@@ -73,6 +94,30 @@ guardrail against accident. It is not the envelope.** It can be switched off wit
 reviewing a model, and **nothing in it keys on reversibility** (v28) — both shipped schemes key on path and action
 class. The envelope keys on reversibility, stands alone in the world in doing so, and is enforced by the argv and the
 managed file rather than by a classifier.
+
+**(FACT: world.md 21 — the Codex cell of every band is three axes, not two)** ~~Codex is `approval_policy` ×
+`sandbox_mode`~~ **Guardian** is a third control axis: a background scoring layer whose behaviour changes with the
+approval mode — *"Full Access skips Guardian reviews for confirmation-only actions. User approval mode skips
+background Guardian scoring and prewarming, while sensitive-action checks and requests for user input retain their
+existing handling"* — and its review history *"survives compaction, restarts, and user-created forks … isolating
+subagent history"*. Two consequences for this table. The band's Codex cell **understated what governs a Codex run**,
+so a band read as two settings was never the whole envelope there; and Codex subagents carry **their own review
+history**, which §10 does not describe. **Mechanism:** the axis is the vendor's, not ours — what is ours is that
+`bin/run` (ABSENT) records which approval mode a Codex dispatch used, because that is what decides whether Guardian
+scored the run at all.
+
+**(NEW: contradiction 4)** ~~`analyst` sits in *read and report* here and holds `Bash` in §5.2~~ — one agent, two
+answers, and the shell is the half that goes. §L **O57** strikes `analyst`'s `Bash`; v47 already gave every
+comparison to `bin/reconcile`, so nothing is lost with it and the placement above stands unchanged. §5 carries the
+strike.
+
+**(NEW: O5 — contradiction 17)** *Which agent, which model, which band* is answered in **three places**: the roster
+table (§5.2), this band table, and §9.2's routing. Nothing checks that they agree, and a disagreement between them
+is a mis-route, which is the one defect class the anchor ladder is structurally blind to — an artifact that passes
+its done-test, the blind test and CI while answering the wrong question. **Mechanism:** one machine-readable
+`keel/shared/routing.yml` (**ABSENT**), from which all three views are **generated or checked**; the three tables
+stop being three decisions and become three renderings. Nothing here changes any routing; it changes how many
+places may change one.
 
 ---
 
@@ -106,6 +151,27 @@ taste; v9 makes it the **only channel a silent run has**, which is a much strong
 **(NEW)** What still reaches the founder while a fully autonomous night runs: the `wake-me` list, the interruption
 budget of three unprompted interruptions a day, and the briefing — which is never an interruption, because the
 founder opens it.
+
+**(FACT: world.md 30b and 14 — the measured ceiling this mode is designed above, stated as the cost of the mode)**
+The vendor's own measurement of its own users: *"the 99.9th percentile turn duration nearly doubled, from under 25
+minutes in late September to over 45 minutes in early January"*, and *"roughly 20% of sessions use full
+auto-approve, which increases to over 40% as users gain experience"*. **Forty-five minutes is the outer measured
+unattended stretch, and this mode is designed for a night.** The mechanism that produces the gap is W14's
+check-in cap: `/goal` check-ins back off 30 min → 1 h → every 2 h, and **an idle session gets at most three
+check-ins per goal** until someone messages it. Under `-p` the check-in is the only thing the runtime delivers and
+**nobody is there to message it**, so a night goal loop delivers three times and then goes quiet — quiet being
+byte-indistinguishable from finished. Two mechanisms answer it and neither is optional: §L **O21** composes
+`/goal`'s condition from v45's `anchor:` field — *"`<anchor>` exits 0, and `<done-test>`"* — turning the most
+frequently executed judgement in the system from a small model reading prose into an exit code
+(`bin/run` composes it, **ABSENT**, **DEPENDS-ON-R17**); and §L **O15**, the wake reconciler, writes `orphaned`
+rather than `finished` when a run goes quiet (`bin/watch`, **ABSENT**). §6 carries the reconciler.
+
+**(NEW: O49 — contradiction 5)** ~~*"The Operator is the escalation"* for a night run~~ — §4.4 says the Operator is
+not always on, in the same plan, so a run that stops at 03:00 escalated to something that was not running. **Night
+escalation is a queue row plus the wake-me test, and never the Operator.** The stopped run writes to the house
+decide queue (§L **O9**, `keel/logbook/decide.jsonl`, **ABSENT**); the `wake-me` list decides whether it also
+rings, against the interruption budget; the Operator reads the row when it next runs, like every other reader.
+**Mechanism:** the queue is a store with one writer, so an escalation survives the absence of every session.
 
 ```mermaid
 flowchart TD
@@ -141,16 +207,43 @@ where `product` sits behind it.
 **(NEW: v13. One dispatch mechanism for everything is the losing image, and it loses because the three shipped
 mechanisms have different documented properties and picking one would mean using it outside what it does)**
 
-| Mechanism | Used for | The sourced constraint that shapes the design |
-|---|---|---|
-| **Agent teams** | the fleet the founder watches on page 2 — a lead plus named teammates, each a full independent session, messageable by name | **turned on by the founder** (v59: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), and experimental in the vendor's own words; **no nested teams**; one team per session; `/resume` does not restore in-process teammates; spawning needs an interactive session, so `-p` never forms a team. Tokens: *"approximately 7x more … when teammates run in plan mode"* — **at each teammate's own model price** (v59) |
-| **Subagents** | depth inside one agent — a builder's own exploration, a scout fan-out | depth 3 by default, 20 concurrent, `Workflow` removed from all of them (v35); a subagent's `permissionMode` frontmatter is ignored; main-conversation auto memory is not loaded into subagents except a fork |
-| **`claude -p` children through the launcher** | unattended night work, and every non-Claude provider | `--session-id` must be a valid UUID, minted by us; `--restricted` needs v2.1.248+; `--max-budget-usd` is a stall fuse, not a billing control (v23); `-p` disables tools needing terminal input, so a session never stalls waiting |
+| Mechanism | Used for | The sourced constraint that shapes the design | `stop:` — what the cord reaches *(added 2026-09-06: v67)* |
+|---|---|---|---|
+| **Agent teams** | the fleet the founder watches on page 2 — a lead plus named teammates, each a full independent session, messageable by name | **turned on by the founder** (v59: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), and experimental in the vendor's own words; **no nested teams**; one team per session; `/resume` does not restore in-process teammates; spawning needs an interactive session, so `-p` never forms a team. Tokens: *"approximately 7x more … when teammates run in plan mode"* — **at each teammate's own model price** (v59) | through their session |
+| **Subagents** | depth inside one agent — a builder's own exploration, a scout fan-out | depth 3 by default, 20 concurrent, `Workflow` removed from all of them (v35); a subagent's `permissionMode` frontmatter is ignored; main-conversation auto memory is not loaded into subagents except a fork | through their session |
+| **`claude -p` children through the launcher** | unattended night work, and every non-Claude provider | `--session-id` must be a valid UUID, minted by us; `--restricted` needs v2.1.248+; `--max-budget-usd` is a stall fuse, not a billing control (v23); `-p` disables tools needing terminal input, so a session never stalls waiting | the **recorded process group**, signalled — `SIGTERM` is measured to give exit 143 and a resumable turn |
+| **A channel between sessions already running** — *(added 2026-09-06: v80, W11, W20)*. **Not a fourth dispatch mechanism: nothing in this row starts a session** | one agent asking another for a handover or filing an objection, and page 2's message control | `SendMessage`/`ListAgents` across sessions on one machine, *"on Bedrock, Vertex, and Foundry, and when telemetry is disabled"*; the **inbox socket closes a connection that sends no complete line within 30 seconds**, so a poster connects once its data is ready (world.md 11). Codex ships the same idea as `@` task mentions (world.md 20) — **two providers shipped this in one window and the plan modelled neither** | none of its own; the two sessions it joins stop by their own rows |
+| **A hosted lane** (v79) | nothing yet | — | **UNKNOWN**, and `bin/run` therefore refuses to mint unattended work on it |
 
 **(NEW: the one consequence of the teams constraint that a surface designer must know before drawing page 2)** There
 are **no nested teams** and one team per session. So the child-flow page shows **one level of teammates**, and
 everything deeper is subagents. A page drawn as a tree of teams of teams would be drawing something the runtime
 cannot produce.
+
+**(FOUNDER, rethink 2026-09-06: D2 → v67 — what the cord actually stops, and why every row above now declares it)**
+The founder took both halves: *"the launcher records each child's process group and the cord signals it; `bin/run`
+refuses unattended work on a carrier whose stop path is UNKNOWN."* ~~The cord as designed stops the next
+dispatch~~ — **it signals work already in flight** (contradiction 6: §12.9 says the cord *"cancels running work"*
+while its mechanism was a file read at the next tick, which stops nothing that is already running).
+**Mechanism:** one `pgid` field written by `bin/run` before exec, one signal path, and the `stop:` column above
+(**ABSENT**). `SIGTERM` is measured to give exit 143 and a resumable turn, so the cord stops a run **without
+destroying it** — which is what makes pulling it cheap enough to pull. The refusal is the load-bearing half: a
+carrier whose `stop:` reads UNKNOWN may not be given unattended work at all, which is why the hosted lane's row is
+shut and stays shut until cancellation is documented (§I row 15's state anyway). **(FACT: world.md 22)** Codex
+shipped `Interrupt` hooks, the natural Codex-side receiver for exactly this signal, and no row in the plan named
+them. **Settled by:** pulling the cord mid-run, measuring time to quiescence, and whether the run resumes.
+
+**(FOUNDER, rethink 2026-09-06: D15 → v80 — what a message between two running agents is)** *"A message is a
+handover or an objection on the handover schema, one append-only file each; asks carry a deadline and a fallback;
+the vendor transport's ids are attributes, never a join key."* There is no third shape. An **ask** carries a
+deadline and the asker's **stated fallback if unanswered**, so a dead responder degrades the asking run rather than
+hanging it. **Why the vendor transport is not adopted as the record:** free-form agent chat is evidence with no
+provenance and no ledger row, and the teams mailbox is a document *"overwritten on the next state update"* — a
+lost-update surface where a vanished message looks exactly like one never sent. **Mechanism:** no new schema —
+three required fields on the handover (§L **O7**, §6.4), one append-only file per message; the transport's ids are
+recorded as **attributes** of that file and never as a join key. **Settled by:** a run whose only input was a peer
+message still reconstructing from files alone, and killing the responder mid-run — the asker must still hand over.
+This closes the COVERAGE `?` on *worker-to-worker request* and *peer help request*.
 
 **(FOUNDER, v59: teams are on, and a teammate runs on its own agent file's model)** *"Turn it on, no model
 constraint."* So `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set, and a teammate is dispatched at **the model its
@@ -174,6 +267,13 @@ the card and the founder can flip it before dragging. **Mechanism:** one field o
 brief carrying an intent id and a named agent; `bin/run` (ABSENT) composes the argv from the agent's file and the
 band. If the Operator composed argv, then every future agent would be a new place a grant could be written wrongly,
 and there would be fourteen implementations of one narrowing.
+
+**(NEW: O53 — and the same rule holds for the surface, which is where it was about to be broken)** Page 4's
+*edit-arguments* verb writes **a new brief, never argv**. The launcher recomposes from that brief and may
+**narrow**, never widen beyond the band, and it **refuses surface-supplied argv** outright. Without the refusal the
+one narrowing v34 protects would have a second author with a text box, and the founder's own tap would be the way
+past the envelope. **Mechanism:** `bin/run` (**ABSENT**) rejects a dispatch carrying argv fields, and the brief is
+the only input it accepts; §14 draws the verb.
 
 ---
 
@@ -200,7 +300,7 @@ flowchart TD
 
     B1 --> PICK
     B2 --> PICK
-    PICK{"Which agent? Wave one is eight of them, v54.<br/>See the routing column in section 5"}
+    PICK{"Which agent? Wave one is TEN of them, v54 + v70.<br/>Generated from routing.yml, O5.<br/>See the routing column in section 5"}
     PICK --> BRIEF["THE OPERATOR emits a BRIEF:<br/>intent id, done-test verbatim, out-of-scope,<br/>ceiling, the named agent, the anchor"]
     BRIEF --> LAUNCH["bin/run composes the argv.<br/>Nothing else may. ABSENT"]
     LAUNCH --> HOW{"Which dispatch<br/>mechanism?"}
@@ -212,18 +312,22 @@ flowchart TD
     PRINT --> RUN
 ```
 
-**(FOUNDER, v54: in wave one the Operator has eight agents to route among, and two of the routes above do not exist
-yet — said once, here, because it changes what the Operator does rather than only what the roster contains)** The
-founder chose to start with the eight that have a seed file or a code path today: the Operator, `builder`,
-`reviewer`, `architect`, `tester`, `guard`, `scout` and `designer`. Two of this section's routes are wave two. **The
-`product` dispatch of §3.6 has nobody in it**, so a genuinely fuzzy request is closed the other way — the founder
-writes the done-test themselves, through the read-back, with the Operator proposing two candidates as it already
-does; nothing binds without their confirm either way, so the provenance rule is unchanged. And **`challenger` is not
-in wave one**, so a plan about to bind is attacked by **`guard`'s adversarial review plus the founder's own read**
-until wave two. That is weaker than v30 asks for and the plan says so rather than pretending otherwise. It keeps the
-half that v30 measured as load-bearing — the critique is **external**, from an agent that reads the artifact and its
-done-test and never the author's reasoning — and it loses the half v30 also asks for, **a second model family**,
-because `guard` runs on the same one. §5 carries the two waves and §19 draws them.
+**(FOUNDER, v54: in wave one the Operator has ~~eight~~ ten agents to route among, and one of the routes above does
+not exist yet — said once, here, because it changes what the Operator does rather than only what the roster
+contains)** The founder chose to start with the ones that have a seed file or a code path today: the Operator,
+`builder`, `reviewer`, `architect`, `tester`, `guard`, `scout` and `designer`. **(FOUNDER, rethink 2026-09-06: D5 →
+v70)** *"Curator and challenger both join wave one"* — so wave one is **ten agents plus the Operator, not eight**,
+and v54's own test is what admits them: the curator has four verified code paths on this branch
+(`evict-memory.mjs`, `ledger.mjs`, `check-citations.mjs`, `check-memory-budget.mjs`). **The `product` dispatch of
+§3.6 still has nobody in it**, so a genuinely fuzzy request is closed the other way — the founder writes the
+done-test themselves, through the read-back, with the Operator proposing two candidates as it already does; nothing
+binds without their confirm either way, so the provenance rule is unchanged. ~~And **`challenger` is not in wave
+one**, so a plan about to bind is attacked by **`guard`'s adversarial review plus the founder's own read** until
+wave two.~~ **A plan about to bind is attacked by `challenger`, from wave one** (moved 2026-09-06: D5 → v70) — the
+cheapest file in the roster, read-only, and wave one's only gap with a *measured* harm behind it (v30). What is
+still lost is the half v30 also asks for, **a second model family**: the challenger runs single-family until Codex
+or Gemini lands, and **its findings are labelled rung 4 rather than hidden**. §5 carries the two waves and §19
+draws them.
 
 ---
 
@@ -237,6 +341,10 @@ list, and this repository has already shipped eight of those)**
 | Writes or edits a file | Its `tools:` line carries no `Write` and no `Edit`; the argv, composed by `bin/run` (ABSENT), and asserted by `bin/probe` (ABSENT) |
 | Runs a shell command | No `Bash` in its `tools:` line, for the reason in §3.1 |
 | Composes argv | Only `bin/run` does (v34, ABSENT) |
+| Takes argv from a surface | **O53**: the *edit-arguments* verb writes a new brief, never argv; `bin/run` recomposes, may narrow, never widens beyond the band, and refuses surface-supplied argv (**ABSENT**) |
+| Accepts a dispatch from a caller that presented no token | **v66**: loopback bind, one keychain-held token checked on every write route, the phone through an authenticated tunnel — the pin exists in the seed, the middleware and the tunnel are **ABSENT** |
+| Mints unattended work on a carrier it cannot stop | **v67**: `bin/run` refuses a carrier whose `stop:` reads UNKNOWN; the cord signals the recorded process group (**ABSENT**) |
+| Serves as the night escalation | **O49**: a run that stops at 03:00 writes a row to the house decide queue (**O9**, `keel/logbook/decide.jsonl`, **ABSENT**) and the `wake-me` test decides whether it rings. The Operator reads that queue; it is not the queue |
 | Creates an intent | Only the founder's confirm writes `intents/*.md`; the read-back page is its only writer (ABSENT) |
 | Performs an outward act | The band table gives every agent `never` on that class; the Sender is the only thing that sends, and it holds no model (v33) |
 | Dispatch a team inside a team | The runtime has **no nested teams**. It is not a rule we enforce; it is a thing that does not exist |
@@ -263,6 +371,14 @@ The Operator returns exactly three kinds of thing, and nothing else reaches the 
 — *what I am not sure about and what would settle it*. It turns a confident wrong answer into a flagged one. **No
 shipped handover schema found has it**, which is exactly why it will be the first field to erode under pressure and
 the one worth naming here.
+
+**(NEW: O80 — and the field needs a number behind it, or it erodes without anyone noticing)** `uncertain:` is
+written by the run **about itself**, and nothing ever checks it, **so a confidently wrong run pays nothing**. Each
+agent therefore carries a **calibration number**: how often an empty `uncertain:` preceded a defect found later.
+**Mechanism:** derived by the `curator` from the handover and the defect that followed it (**ABSENT**) — never
+self-reported, for the same reason the field itself is suspect. It prints beside the agent's trust score, and a
+falling number is the one signal that distinguishes an agent that is confident from an agent that is right. §21
+carries what it measures.
 
 **(NEW: what the Operator may never hand back)** Its own summary in place of the evidence. This repository has
 already recorded the failure twice: a worker measured *"29 of 30 check steps pass; only `check:mc` fails"* and the
