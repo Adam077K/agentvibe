@@ -439,7 +439,7 @@
 | Real-work validation project | IN | IN | 21 | the harness itself is the first venture; intents are the build order, `npm run check` and the probe are the anchor | SPINE v64 |
 | Synthetic first mission | REFUSED | REFUSED | 21 | the prior system was built and never ran a venture; this would repeat that | agree |
 | Fake-company test case | REFUSED | REFUSED | 21 | a fixture world is not a first night of evidence | agree |
-| Venture intake protocol | IN | IN | 2 | the Charter is the intake, and it is five fields | agree |
+| Venture intake protocol | IN | IN | 2 | the Charter is the intake; ~~it is five fields~~ its fields are whatever `keel/shared/schemas/charter.yml` declares — the schema is the source, the prose is generated from it (O3; contradiction 2 closed 2026-09-06) | SPINE §L O3 |
 | Bounded intake artifacts | IN | IN | 2 | five fields is the whole intake; anything more is a plan nobody reads | agree |
 | Cross-mission scheduling | IN | IN | 4 | the Desk ranks across ventures, bounded by the WIP limit | agree |
 | Second human role | IN | IN | 20 | decided: the founder only, for now — statutory clocks wake the founder | SPINE v65 |
