@@ -334,7 +334,7 @@ read the foreign content decides.
 loadout, checked at dispatch. With a named roster it is also a property of a **file**: `scout`'s `tools:` line carries
 no `Write` and no credential, and the roster is the rule as a table — ~~*ten* of the fourteen carry no shell~~
 **eleven of the fourteen carry no shell** *(corrected 2026-09-06: **O57** strikes `analyst`'s `Bash`; §5.2 ·
-challenge C P1-3)**, five carry no write of any kind, and only four can touch source. **Read that count from
+challenge C P1-3)*, five carry no write of any kind, and only four can touch source. **Read that count from
 `keel/shared/roster.yml` (§L **O2**, ABSENT), never from a summary sentence**: §5.2 carried two hand-written counts of
 one column and both drifted from the column beside them, which is why the table, §17.1 and page 2 are generated from
 that one file or checked against it. ~~§B.2's own summary~~ is retired as the source for it. The check at dispatch

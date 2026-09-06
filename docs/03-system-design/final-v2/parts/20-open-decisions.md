@@ -113,7 +113,7 @@ this section.
 
 | Row | What the founder decided | In their words |
 |---|---|---|
-| **v54** | The roster ships in **two waves** — eight first, the six business agents and the challenger when a venture needs them (§5.0, §17.1, §19.1) | *"Start with the eight that have seeds or code paths"* |
+| **v54** | The roster ships in **two waves** — ~~eight first, the six business agents and the challenger when a venture needs them~~ **ten including the Operator first, five when a venture needs them** *(composition moved 2026-09-06: D5 → v70 · census C item H; the two-waves decision itself stands unchanged)* (§5.0, §17.1, §19.1) | *"Start with the eight that have seeds or code paths"* |
 | **v55** | **Standing intents**: an intent that never expires, carrying a cadence or an inbound event class, dispatched by the Watch (§2.8, §4.1) | *"agents … that can run every set time or evant or something else. it to build the company like working"* |
 | **v56** | **A cloud lane for when the Mac is off** — Codex cloud is admitted as a PR reviewer today; as a maker it is UNVERIFIED, with no documented driver; the documented off-Mac maker paths are Anthropic's `--cloud`/Routines and Google's Jules (alpha) (§10, §15). Which of these may make is row 15, raised by this decision | *"When my Mac is not on … you can use codex or Gemini … But still keep it open"* |
 | **v57** | **Fable 5.1 is builder's and architect's default**, overruling v21's escalation-only rule (§9.1, §5.2, §17.1) | *"Fable as builder's and architect's default"* |

@@ -25,7 +25,9 @@ rule:       the founder wins on FINAL rows 6, 8, 10, 15 and 30; the cost of each
 measured:   this branch = ceo-1-1788609834 at b2cabad = local main, TREE A of final/CENSUS.md, carrying this
             session's own documentation commits on top · ceo-3-1788468144 at 7286420, which holds final/ ·
             docs/final-plan at 7fe8ede, the head of PR #131 · origin/main at 4770d39. Tooling on this Mac,
-            2026-09-05: claude 2.1.261 · codex ABSENT · gemini 0.38.2 present and never authenticated.
+            2026-09-05: claude 2.1.261 on 2026-09-05, 2.1.263 on 2026-09-06 — a version is a fact about a day, so
+            re-derive it with `claude --version` rather than reading it here (corrected 2026-09-06, census C) ·
+            codex ABSENT · gemini 0.38.2 present and never authenticated.
             Added 2026-09-06: the shipped Codex is 0.153.4, released 2026-09-04 (FACT: world.md 19) — nothing is
             installed here, and the number is recorded because v32's rehearsal floor of ">= 0.124.0" is
             twenty-nine minor versions stale and no longer discriminates (W19; §10.8) · and the Mac's own
@@ -42,7 +44,9 @@ companions: final-v2/SPINE.md (the ~~sixty-five~~ **eighty-two** rows and the ro
             twenty-six research questions) (moved 2026-09-06: SPINE §A) ·
             final-v2/COVERAGE.md (every item of the founder's list placed) · final-v2/DECISIONS.md (this session's
             own decisions, as they were made — §17–§19 are the rethink round) · final-v2/research/ (seven lanes
-            plus world, room and cloud, verbatim) · final-v2/rethink/ (nine lane files and the synthesis) ·
+            plus world, room and cloud, verbatim) · final-v2/rethink/ (~~nine lane files and the synthesis~~
+            eight thinking-lane files, L1-L8, plus the world lane at final-v2/research/world.md, and the synthesis
+            and the founder's list beside them — corrected 2026-09-06, census C) ·
             final-v2/page/final-plan-v2.html (100,099 bytes)
 ```
 
