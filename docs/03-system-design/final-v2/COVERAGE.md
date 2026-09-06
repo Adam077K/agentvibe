@@ -22,21 +22,21 @@
 |---|---|---|---|---|---|
 | Mission statement format | RENAMED | RENAMED | 2 | the Charter, read by every run, not a document nobody re-reads | agree |
 | North-star metric | REFUSED | REFUSED | 11 | one metric per venture invites optimising the proxy; done-tests measure | agree |
-| Goal tree | RENAMED | RENAMED | 2 | intent then candidate work, two levels; an unpruned goal tree rots | agree |
-| Sub-goal chain | RENAMED | RENAMED | 4 | candidate work under one intent, ranked by the Desk | agree |
+| Goal tree | RENAMED | RENAMED | 2 | intent then candidate work, two levels, now the work-item store's own rows; an unpruned goal tree rots | SPINE §L O1 |
+| Sub-goal chain | RENAMED | RENAMED | 4 | candidate work under one intent, one work-item row per item, ranked by the Desk | SPINE §L O1 |
 | Move-level task | IN | IN | 6 | the Run is the move: one outcome, a ceiling, a handover, death | agree |
 | Done-test criteria | IN | IN | 2 | written before work starts, and it is now also the `/goal` condition | SPINE v12 |
 | Binding vs proposed goal | IN | IN | 2 | only the founder's door binds, and the read-back is what binds it | SPINE v29 |
-| Priority queue | IN | IN | 4 | the Desk ranks; ties reach the founder as a which | agree |
+| Priority queue | IN | IN | 4 | the Desk ranks lexicographically — obligations, then unblocking work, then weight band, then cheapest; ties reach the founder as a which | SPINE v75 |
 | Goal window cap | IN | IN | 4 | a ceiling per intent, a WIP limit per venture, 20 concurrent subagents | SPINE v13 |
 | Competing mechanisms | REFUSED | REFUSED | 1 | two mechanisms for one job is how two risk classifiers happened | agree |
 | Opportunity detection | IN | IN | 2 | a standing intent's cadence — research and competitor watch routed to `scout` — feeds the watch door; proposals, never work | SPINE v55 |
 | Unsolicited work policy | IN | IN | 2 | unsolicited work cannot become an intent; idle capacity buys knowledge | agree |
 | Abandonment criteria | IN | IN | 2 | expiry on every intent, and the ceiling stops the run | agree |
 | Wrong-goal detection | IN | IN | 6 | Impossible is one of `/goal`'s three verdicts and it terminates the loop | SPINE v12 |
-| Blocked state | IN | IN | 6 | handover outcome blocked, naming what would clear it | agree |
+| Blocked state | IN | IN | 6 | handover outcome blocked, and the work item's own `blocked_on` field names what would clear it | SPINE §L O1 |
 | Stalled state | IN | IN | 4 | decay in the ranking; repeated blocks wake the founder | agree |
-| Retry ladder | IN | IN | 6 | one rung: the same failure twice stops, and then the model escalates | SPINE v21 |
+| Retry ladder | IN | IN | 6 | the work item's `attempts`/`last_failure` fields carry it, and O19's same-failure hash decides whether a second failure counts as a repeat | SPINE §L O1 |
 | Escalation ladder | IN | IN | 11 | the anchor ladder for truth, the door class for permission | agree |
 | Pivot trigger | FOUNDER'S | FOUNDER'S | 2 | the system reports; changing an intent's purpose is the founder's | agree |
 | Parking lot | IN | IN | 4 | the parked tempo, surfaced at the briefing | agree |
@@ -49,7 +49,7 @@
 | Mission dependency graph | RENAMED | RENAMED | 4 | a readiness boolean; a graph is more machinery than one founder needs | agree |
 | Sunk-cost check | IN | IN | 16 | the stop rule excludes sunk cost explicitly | agree |
 | Success probability estimate | REFUSED | REFUSED | 4 | the estimator is the interested party; measured cost replaces predicted value | agree |
-| Goal conflict resolver | IN | IN | 4 | the Desk's ranking is the resolver | agree |
+| Goal conflict resolver | IN | IN | 4 | the Desk's lexicographic order is the resolver now, not a weighted formula two mechanisms could disagree about | SPINE v75 |
 
 ## 02 Workers & roster
 
@@ -61,7 +61,7 @@
 | maxTurns cap | IN | IN | 5 | `maxTurns` is per-agent frontmatter and binds when a dispatch names an agentType | fact |
 | Fresh context window | IN | IN | 6 | every run starts from files, never from the last run's summary | agree |
 | Agent naming scheme | RENAMED | IN | 5 | real names, one file each — zero of seven shipped rosters use unnamed shapes | SPINE v2 |
-| Agent color tag | REFUSED | REFUSED | 14 | a terminal convenience; the office page identifies an agent by name and avatar | ? |
+| Agent color tag | REFUSED | IN | 5 | `roster.yml` carries a `color:` field per agent, closing the doubt the founder never answered | SPINE §L O2 |
 | Capability grant | IN | IN | 8 | the exact argv, composed by one no-model launcher and by nothing else | SPINE v34 |
 | Capability revoke | IN | IN | 8 | automatic at horizon; the managed file is the tier a running process cannot clear | SPINE v11 |
 | Persona council | REFUSED | REFUSED | 11 | a panel of personas is same-family review in costume | agree |
@@ -72,8 +72,8 @@
 | Apprenticeship pattern | IN | IN | 11 | a move that fails rehearsal goes to the Floor, and that session becomes a case | agree |
 | Planner-executor split | RENAMED | IN | 3 | the Operator dispatches and cannot build: no Write, no Edit, no Bash | founder |
 | Cheap-tier executor | IN | RENAMED | 9 | no Haiku tier; Gemini's own window and local models on electricity carry it | SPINE v20 |
-| Trust score | IN | IN | 11 | measured from anchored outcomes, never self-reported | agree |
-| Worker retirement | IN | IN | 6 | the run dies at handover; the agent file persists and changes through the roster | SPINE v1 |
+| Trust score | IN | IN | 11 | measured from anchored outcomes, never self-reported, and now has three named readers: the launcher, the briefing, and §5.6's claim | SPINE §L O26 |
+| Worker retirement | IN | IN | 6 | the run dies at handover; the agent file itself now carries `valid_until` and retires by forced disposition — Refresh, Merge or Retire | SPINE v72 |
 | Garbage-output handler | IN | IN | 11 | the anchor catches it and the run stops on defect | agree |
 | Output validation gate | IN | IN | 11 | §B.2's anchor column is the gate, and it is per agent | SPINE v1 |
 | Model-per-move policy | IN | IN | 9 | the agent's default, plus the named rules that change it for one move | founder |
@@ -84,7 +84,7 @@
 | Worker cost cap | IN | IN | 16 | the per-run ceiling; `--max-budget-usd` is a stall fuse, not a billing control | SPINE v23 |
 | Role definition | REFUSED | IN | 5 | fourteen jobs, each with the reason it exists and what proves its work | founder |
 | Skill-to-role mapping | REFUSED | IN | 7 | each agent's row names the skill namespaces it carries | SPINE v3 |
-| Onboarding checklist per agent | REFUSED | RENAMED | 5 | the agent file is the onboarding: job, lens, model, tools, skills, anchor | SPINE v2 |
+| Onboarding checklist per agent | REFUSED | RENAMED | 5 | the onboarding pack — a rehearsal case, an exemplar, an end-to-end demonstration — is what makes the agent file routable at all | SPINE v71 |
 
 ## 03 Hands (tools & access)
 
@@ -128,7 +128,7 @@
 | Tool denylist | IN | IN | 12 | `permissions.deny` in the managed file, which binds in every mode including bypass | SPINE v10 |
 | Tool discovery protocol | REFUSED | REFUSED | 8 | automatic discovery is how fifteen servers got connected by clicking | agree |
 | Tool version pinning | IN | IN | 8 | pinned, with description hashes checked every session | agree |
-| Tool audit log | IN | IN | 14 | the event log with `gen_ai.*` attribute names and an id on every row | agree |
+| Tool audit log | IN | IN | 14 | `bin/egress` logs every outbound call by domain and method, and the event log with `gen_ai.*` names carries the row | SPINE v68 |
 | Tool sandbox isolation | IN | IN | 12 | worktrees, the OS sandbox, and the trifecta split | agree |
 | Tool timeout policy | IN | IN | 6 | the wall-clock half of the run's ceiling | agree |
 
@@ -211,8 +211,8 @@
 | Baton handoff | IN | IN | 6 | the handover is the baton, and it is fixed-field | agree |
 | Board rewrite cycle | RENAMED | RENAMED | 13 | delta-only: ACE measured 18,282 tokens collapsing to 122 on one rewrite | SPINE v24 |
 | Board cap size | IN | IN | 13 | a byte cap per store | agree |
-| Worker-to-worker request | REFUSED | RENAMED | 3 | teammates are messageable by name inside one team; a builder still files an objection | ? |
-| Peer help request | REFUSED | RENAMED | 3 | the same channel and the same doubt: no nested teams, one team per session | ? |
+| Worker-to-worker request | REFUSED | IN | 3 | a message is a handover or an objection, one append-only file; teammates are messageable by name inside one team | SPINE v80 |
+| Peer help request | REFUSED | IN | 3 | the same handover-or-objection shape; an ask carries a deadline and the asker's own stated fallback if unanswered | SPINE v80 |
 | Stuck-worker escalation | IN | IN | 12 | the cord, and wake-me on repeated blocks | agree |
 | File lease | IN | IN | 6 | one worktree and one branch per run makes a lease unnecessary | SPINE v6 |
 | File lock alternative | IN | IN | 6 | the same worktree; one artifact is never split across two builders | SPINE v6 |
@@ -281,8 +281,8 @@
 | Statistical quality method | IN | IN | 11 | pass rates on the rehearsal set, and on 2–3 eval cases per skill | SPINE §E.2 |
 | External-world verdict | IN | IN | 11 | rung 1: a record the company does not write | agree |
 | Ground-truth comparison | IN | IN | 11 | known-answer cases — which is also the test that widens Codex | SPINE v32 |
-| False-positive rate | IN | IN | 11 | measured on known-answer cases, never typed by the run that wants to pass | agree |
-| False-negative rate | IN | IN | 11 | the same set, and it is what makes a trust score mean anything | agree |
+| False-positive rate | IN | IN | 11 | measured on known-answer cases, and only where the anchor carries a rated mutation case — an `unrated` anchor prints no rate | SPINE v73 |
+| False-negative rate | IN | IN | 11 | the same rated set; §21's rung-1 share now splits rated from unrated so this number cannot hide behind an uncalibrated anchor | SPINE v73 |
 | Reviewer disagreement resolution | IN | IN | 11 | the anchor wins; a checker disputing the test goes to the founder | agree |
 | Confidence scoring | RENAMED | RENAMED | 11 | the anchor rung, which is auditable where a self-report is not | agree |
 | Hallucination detection | IN | IN | 11 | the URL is fetched and the quoted line checked; a dead path blocks | fact |
@@ -308,8 +308,8 @@
 | Daily spend cap | IN | IN | 12 | the Sender recomputes the ceiling before it acts; `--max-budget-usd` cannot do this | SPINE v23 |
 | Kill switch | IN | IN | 14 | the cord, and it is a control present on every page | SPINE v4 |
 | Remote kill access | IN | IN | 14 | the same cord from the phone; a kill in two places is a kill that disagrees | agree |
-| Prompt injection defense | IN | IN | 12 | structural: scout reads the untrusted world holding no key and no send | SPINE v33 |
-| Fetched-content taint tracking | IN | IN | 8 | READ-ONLY tainted is its own class, held by `scout` and the world's door and by nothing else | SPINE v36 |
+| Prompt injection defense | IN | IN | 12 | structural: scout reads the untrusted world holding no key and no send; a taint id and a per-venture canary make an attempt a wake-me | SPINE §L O65 |
+| Fetched-content taint tracking | IN | IN | 8 | a taint id travels with any handover derived from an inbound row, and the Sender refuses a staged artifact whose lineage names an uncleared one | SPINE §L O65 |
 | Research reach exemption | IN | IN | 8 | scout reaches the world precisely because it holds nothing | SPINE v33 |
 | Structured-input matching | IN | IN | 12 | declare what is read and refuse the rest, at the line rather than the value | fact |
 | String-matching bypass fix | IN | IN | 12 | the same rewrite; eight chained-step bypasses were closed by it | fact |
@@ -320,7 +320,7 @@
 | Approval workflow | RENAMED | RENAMED | 3 | a which with both options built — and `dontAsk` denies the question outright | SPINE v9 |
 | Human override path | IN | IN | 15 | the founder overrides from either surface, and every tap opens a terminal on the Mac | founder |
 | Compliance policy mapping | IN | IN | 12 | the chain of direction is the audit trail; legal reaches the founder | agree |
-| Data retention policy | IN | IN | 15 | prompt and response bodies are a separate opt-in stream with its own retention | agree |
+| Data retention policy | IN | IN | 15 | retention declared per store now — a store declaring forever may not hold a body — and prompt/response bodies remain their own opt-in stream | SPINE §L O34 |
 
 ## 10 Surfaces
 
@@ -377,7 +377,7 @@
 | Low-power tier | IN | IN | 9 | local models on electricity are the bottom of the ladder | SPINE v20 |
 | Cost-ascending home tiers | IN | IN | 9 | local, then Gemini's window, then Sonnet, then Opus, then Fable by one named rule | SPINE v21 |
 | Container isolation | RENAMED | RENAMED | 6 | git worktrees — and `git worktree add` needs the sandbox lifted for that one command | fact |
-| Multi-host failover | REFUSED | REFUSED | 15 | one founder, one Mac; recovery is a git clone | agree |
+| Multi-host failover | REFUSED | REFUSED | 15 | one founder, one Mac; the watch/Sender lease is what stops the one failure a naive clone-and-recover could cause — a duplicated outward act | SPINE §L O16 |
 | Runtime health monitor | IN | IN | 4 | the Watch's cheap pass every tick | agree |
 
 ## 12 Self-improvement
@@ -414,9 +414,9 @@
 | Cost-vs-value comparison | IN | IN | 16 | cost is measured; value is the done-test passing | agree |
 | Investment stop criteria | IN | IN | 16 | the ceiling stop, with sunk cost explicitly excluded | agree |
 | Mission budget cap | IN | IN | 16 | ceilings in tokens and wall-clock; the dollar one is a stall fuse | SPINE v23 |
-| Budget in money | IN | RENAMED | 16 | no per-run dollar ceiling binds the account — the window is the real budget | SPINE v23 |
+| Budget in money | IN | RENAMED | 16 | a window gauge against an observed high-water mark, wall clock beside it, USD kept only as a shadow price | SPINE v74 |
 | Budget in hours | IN | IN | 16 | wall-clock, and the rolling window is measured in it | SPINE v22 |
-| Exploration spend | IN | IN | 16 | idle capacity is the exploration budget, bounded by being free | agree |
+| Exploration spend | IN | IN | 16 | idle capacity is not free after all — the weekly window is shared with Claude chat and Cowork, so the Desk refuses exploratory work onto the Claude seat past a founder-set fraction | SPINE v74 |
 | Exploitation spend | IN | IN | 16 | the driven ventures' ceilings, at most two at a time | agree |
 | Cheap-tier bulk usage | IN | RENAMED | 9 | local models and Gemini's own window; there is no Haiku tier | SPINE v20 |
 | Cache-hit cost rate | RENAMED | IN | 16 | 0.1x read, 1.25x write at five minutes, 2x at one hour, 0.025x read for Fable | fact |
@@ -473,12 +473,12 @@
 | Item | FINAL | v2 | v2 § | Why | Rule |
 |---|---|---|---|---|---|
 | PII detection | IN | IN | 9 | a local model on electricity, run before anything leaves the machine | SPINE v20 |
-| Data classification tags | IN | IN | 13 | memory items carry scope; the shared and never lists define the classes | agree |
+| Data classification tags | IN | IN | 13 | three data classes now — ours, a third party's, a named person's — assigned by the writing program, keying the never-list on class rather than path | SPINE §L O34 |
 | Data residency policy | IN | IN | 15 | local-first, which is why Mem0 is refused: memory would leave the machine | SPINE §F |
 | GDPR/privacy compliance | FOUNDER'S | FOUNDER'S | 2 | a venture obligation with a statutory clock | agree |
-| Data retention schedule | IN | IN | 15 | a separate retention for prompt and response bodies | agree |
-| Data deletion request | IN | IN | 13 | the one exception to archive-not-delete, with its own record | agree |
-| Consent management | IN | IN | 12 | the people register, read by the Sender before any contact | SPINE v33 |
+| Data retention schedule | IN | IN | 15 | retention declared per store — a store declaring forever may not hold a body — beside the separate stream for prompt/response bodies | SPINE §L O34 |
+| Data deletion request | IN | IN | 13 | the one exception to archive-not-delete: erasure deletes the per-subject store's row and the hash left behind becomes a known absence | SPINE v69 |
+| Consent management | IN | IN | 12 | the consent register — one writer, read by the Sender before any contact — closes the single keyword absent from v2's own text | SPINE v69 |
 | Anonymization pipeline | IN | IN | 13 | redaction before mining, not after | agree |
 | Third-party data sharing policy | IN | IN | 12 | the never list; client data stays off any path that reaches the world | agree |
 
@@ -568,7 +568,7 @@
 | Definition of done | RENAMED | IN | 2 | the done-test is the definition, and it is falsifiable by someone who did not do the work | agree |
 | Persistence policy | IN | IN | 4 | the Watch is the loop; a goal survives transient failures including rate limits | SPINE v12 |
 | Relentless-retry condition | IN | IN | 6 | one retry with the error in context; four unrecoverable errors ends the goal | fact |
-| Give-up condition | IN | IN | 6 | Impossible is a `/goal` verdict, and `or stop after N turns` is the other end | SPINE v12 |
+| Give-up condition | IN | IN | 6 | the work item's `ceiling` field is the stop, and Impossible is still the `/goal` verdict that ends the intent | SPINE §L O1 |
 | Self-check before submit | IN | IN | 11 | the builder tests its own work before handover, and it is not the anchor | SPINE v8 |
 | Explain-your-reasoning step | IN | IN | 14 | the trace, captured rather than performed | agree |
 | Chain-of-thought log | IN | IN | 14 | `--output-format stream-json --verbose` emits each message as the loop runs | fact |
@@ -580,11 +580,11 @@
 
 | Item | FINAL | v2 | v2 § | Why | Rule |
 |---|---|---|---|---|---|
-| Ticket template | RENAMED | IN | 14 | page 4's card fields, drawn from Linear and from Copilot's one branch, one PR | SPINE v16 |
+| Ticket template | RENAMED | IN | 14 | the work item's own card fields, drawn from Linear and from Copilot's one branch, one PR | SPINE §L O1 |
 | Ticket priority field | RENAMED | RENAMED | 4 | the Desk's ranking, shown on the board rather than typed into it | agree |
 | Ticket owner field | RENAMED | IN | 14 | Linear's field is delegate rather than assignee, and that is the one copied | fact |
-| Ticket dependency field | RENAMED | RENAMED | 4 | the readiness boolean | agree |
-| Ticket status field | RENAMED | IN | 14 | the board's stages; dragging a card into working-on-it launches per the card's own solo/team toggle | SPINE v60 |
+| Ticket dependency field | RENAMED | RENAMED | 4 | the work item's `blocked_on` field is the readiness boolean | SPINE §L O1 |
+| Ticket status field | RENAMED | IN | 14 | the work item's `card` field carries the board's stage; dragging a card into working-on-it launches per its own solo/team toggle | SPINE §L O1 |
 | Ticket size estimate | RENAMED | RENAMED | 6 | the ceiling, and measured medians rather than an estimate | agree |
 | Epic-to-ticket mapping | RENAMED | RENAMED | 4 | intent to candidate work, two levels | agree |
 | Backlog grooming | REFUSED | REFUSED | 4 | the Desk re-ranks on a cadence; grooming is a ceremony for a team | agree |
@@ -595,7 +595,7 @@
 | Ticket audit trail | IN | IN | 14 | the event log, joined by the ids | agree |
 | Cross-ticket linking | IN | IN | 14 | intent ids on every row; one isolated workspace per issue is the Symphony shape | fact |
 | Duplicate-ticket detection | IN | IN | 13 | the already-built registry and the negatives store answer it together | agree |
-| Ticket aging alert | IN | IN | 4 | decay in the ranking, plus expiry on the intent | agree |
+| Ticket aging alert | IN | IN | 4 | decay in the lexicographic ranking, plus the work item's own expiry | SPINE §L O1 |
 | Definition-of-ready check | REFUSED | REFUSED | 4 | readiness is a boolean, not a meeting, and nothing shipped has one either | fact |
 
 ## 23 Departments — design & product
@@ -743,7 +743,7 @@
 | Local model runner | IN | IN | 9 | MiniLM at 384 dims and Qwen3-0.6B, both Apache 2.0, no window at all | SPINE v20 |
 | macOS permission grants | IN | IN | 15 | measured, and stated as measured | agree |
 | launchd scheduling | IN | IN | 15 | a LaunchAgent, because the Watch must run as the founder's user | agree |
-| Menu-bar agent status | IN | IN | 15 | a glyph: running, waiting on you, or stopped | agree |
+| Menu-bar agent status | IN | REFUSED | 15 | deleted: a status living in two places is one that disagrees, and mission control's own pages already show it | SPINE §J 72 |
 | Local file system access | IN | IN | 12 | scoped per grant, and the write boundary is the session project root | fact |
 | Keychain credential storage | IN | IN | 15 | references, never values in a file a run can read | agree |
 | Background process management | IN | IN | 15 | `tmux kill-session`, plus a process-group kill because a hang is alive | SPINE §D.1 |
@@ -766,7 +766,7 @@
 | Consensus-required threshold | REFUSED | REFUSED | 11 | a vote among models has no anchor, so there is no threshold to set | agree |
 | Model specialization map | REFUSED | RENAMED | 9 | §G.1 maps moves, not capabilities, because capabilities move faster than a map | agree |
 | Model cost-tier routing | IN | IN | 9 | three on Opus, eight on Sonnet, one split, and Fable now the default for builder and architect, not an escalation | SPINE v57 |
-| Model fallback chain | IN | IN | 9 | a family limit is a reroute and a seat limit is a stop; they are different events | SPINE v22 |
+| Model fallback chain | IN | IN | 9 | a three-deep `fallback:` per agent ending in stop-and-stage; a cross-family reroute is recorded as a rung demotion unless that family passed rehearsal for the move class | SPINE v78 |
 | Sandbox mode per CLI | IN | IN | 12 | the band table names Claude Code's mode and Codex's two axes for every band | SPINE §C.1 |
 | Approval-mode per CLI | IN | IN | 12 | `never` in every band, because no agent performs an outward act | SPINE §C.1 |
 | Subagent support per CLI | IN | IN | 3 | depth 3, 20 concurrent, and `Workflow` removed from all of them | fact |
@@ -789,15 +789,15 @@
 | Style/tone diversity check | IN | IN | 3 | both options built for a which, where diversity actually pays | agree |
 | Independent verification agent | IN | IN | 5 | `reviewer`, `guard` and `challenger`, none of which can edit what it judges | SPINE v1 |
 | Vendor-lock-in avoidance | IN | IN | 10 | one launcher emits both providers' argv, so an outage is a routing change | SPINE v5 |
-| Model-drift detection | IN | IN | 11 | the rehearsal set re-run on a cadence, and model ids carry an expiry besides | SPINE §G.4 |
+| Model-drift detection | IN | IN | 11 | a frozen `class: calibration` set that is never edited, re-run on a cadence, so drift is measured against a fixed target rather than a moving one | SPINE v78 |
 | Output-diversity sampling | REFUSED | REFUSED | 11 | as a standing policy it multiplies cost with no anchor to pick between outputs | agree |
 
 ## 35 Open-mindedness & rethink triggers
 
 | Item | FINAL | v2 | v2 § | Why | Rule |
 |---|---|---|---|---|---|
-| Assumption-challenge prompt | IN | IN | 11 | every durable decision names what would falsify it, and `challenger` is who asks | SPINE v30 |
-| Periodic architecture rethink | IN | IN | 7 | forced by expiry rather than remembered | SPINE v19 |
+| Assumption-challenge prompt | IN | IN | 11 | every SPINE row resting on a fetched fact now carries `source:` and `valid_until`, and `challenger` is still who asks about the rest | SPINE v81 |
+| Periodic architecture rethink | IN | IN | 7 | forced twice now: expiry on skills and grants (v19), and a `scout` standing intent re-fetching external facts, opening a Decide item naming the row it invalidates | SPINE v81 |
 | "Why does this exist" audit | IN | IN | 7 | the same expiry, applied to every skill, grant and memory item | SPINE v19 |
 | Sunset-candidate review | IN | IN | 7 | Deprecate is one of the three dispositions at expiry | SPINE v19 |
 | Alternative-architecture proposal | FOUNDER'S | FOUNDER'S | 20 | commissioning another design is the founder's call | agree |
@@ -937,14 +937,14 @@ awk -F'|' 'NF==8 && $2 !~ /^ *(Item|-+) *$/ {gsub(/^[ \t]+|[ \t]+$/,"",$3); gsub
 
 | Disposition | v2 | FINAL | Move |
 |---|---|---|---|
-| IN | **503** | 410 | +93 |
-| RENAMED | **90** | 157 | −67 |
+| IN | **505** | 410 | +95 |
+| RENAMED | **88** | 157 | −69 |
 | REFUSED | **52** | 77 | −25 |
 | OUTSIDE | **13** | 14 | −1 |
 | FOUNDER'S | **13** | 13 | 0 |
 | **Total** | **671** | **671** | |
 
-**137 rows changed disposition.** The direction is one-way and it is the shape of the founder's five overrules: a plan that refused a roster, a library, a dashboard and a second provider had to call those items REFUSED or RENAMED, and a plan that has all four calls them IN. The largest blocks are §02 (a registry, agent files, names, role definitions, a planner-executor split), §04 (the whole skill library, its router, its manifest, its cut list, its retirement), §10 (mission control and its seven pages), §23–§30 (every department becomes a named agent rather than an assembled loadout), and Wing 9 (four human owner roles become four agents).
+**139 rows changed disposition.** The direction is one-way and it is the shape of the founder's five overrules: a plan that refused a roster, a library, a dashboard and a second provider had to call those items REFUSED or RENAMED, and a plan that has all four calls them IN. The largest blocks are §02 (a registry, agent files, names, role definitions, a planner-executor split), §04 (the whole skill library, its router, its manifest, its cut list, its retirement), §10 (mission control and its seven pages), §23–§30 (every department becomes a named agent rather than an assembled loadout), and Wing 9 (four human owner roles become four agents).
 
 **The one row that moved the other way** is `Hiring-pipeline agent`, OUTSIDE → REFUSED: §B.4 refuses it by name because there are no employees, which is a stronger statement than *someone else's problem*.
 
@@ -952,18 +952,17 @@ awk -F'|' 'NF==8 && $2 !~ /^ *(Item|-+) *$/ {gsub(/^[ \t]+|[ \t]+$/,"",$3); gsub
 
 **2026-09-05 — re-placed against SPINE vv54–v65.** 17 rows re-read against the founder's interview (SPINE.md v54–v65 and §I row 15): none changed FINAL or v2 disposition, so the tally above is unchanged at 671 total and 137 changed. All 17 changed only `Why` and `Rule` — 15 gained a `SPINE vNN` citation replacing `founder`, `fact`, `agree` or an unresolved `?`; 2 (`Second human role`, `Ticket status field`) resolved a `?` to `SPINE v65` and `SPINE v60`, so the `?` footnote below now lists five rows, not seven. Rows touched: §01 Recurring mission cadence, Opportunity detection · §02 Agent registry · §07 Overnight non-interactive work · §10 Office floor visualization · §11 Model pin retirement · §14 Real-work validation project, Second human role · §18 Model usage license · §22 Ticket status field · §25 Anomaly detection agent · §27 Lead scraping agent · §28 Support ticket triage · §32 Codex CLI integration · §33 Model cost-tier routing · Wing 9 Security/compliance owner · Wing 3 Agent registry with a profile per agent. No row outside this list was touched.
 
-### The five `?` rows
+**2026-09-06 — re-placed against the rethink round (SPINE v66–v82, §L, §M).** Three of the five `?` rows resolved: `Agent color tag` (REFUSED → IN, `roster.yml`'s `color:` field, SPINE §L O2) and `Worker-to-worker request`/`Peer help request` (both RENAMED → IN, the handover-or-objection message shape, SPINE v80). `Menu-bar agent status` moved the other way, IN → REFUSED, deleted per SYNTHESIS §7 (deletion 23, SPINE §J 72). Thirty rows besides gained a sharper `Why` and `Rule` from the round's mechanisms and decisions — O1 (the work-item store), v75 (the Desk's lexicographic order), v72/O26 (agent expiry and the trust score's readers), v71 (the onboarding pack), v68/O65 (the egress door and taint), v69/O34 (consent, deletion, retention and classification), v78 (fallback chains), v73 (rated anchors), v74 (the window gauge), v81 (rethink triggers) and O16 (the watch/Sender lease) — with no further disposition changes. The tally above moves to **IN 505 · RENAMED 88 · REFUSED 52 · Total 671**, and **139 rows now changed disposition** from FINAL. The `?` footnote below now lists two rows, not five.
 
-Placements this file could not settle from its inputs. Every one is a disposition question. The sixth, `Improvement backlog`, was a **section** question and is settled: §K added §13a for it, and the row is now IN there. Two more were resolved by the founder's interview and moved out of this table: `Second human role` (§I row 11, DECIDED v65 — the founder only, for now) and `Ticket status field` (open decision 9, DECIDED v60 — a solo/team toggle on the card).
+### The two `?` rows
+
+Placements this file could not settle from its inputs. Every one is a disposition question. The sixth, `Improvement backlog`, was a **section** question and is settled: §K added §13a for it, and the row is now IN there. `Second human role` (§I row 11, DECIDED v65 — the founder only, for now) and `Ticket status field` (open decision 9, DECIDED v60 — a solo/team toggle on the card) were resolved by the founder's interview and moved out of this table. **The rethink round of 2026-09-06 resolved three more:** `Agent color tag` (`roster.yml`'s `color:` field, SPINE §L O2) and `Worker-to-worker request` / `Peer help request` together (a message is a handover or an objection, SPINE v80) — v13's agent teams and v6's one-artifact caution turned out not to disagree once the message itself was given a schema. Two rows remain.
 
 | Row | Section | The doubt |
 |---|---|---|
-| Agent color tag | 02 | SPINE is silent. FINAL refused colour as a terminal convenience, and that reason survives; but agents are named and persistent now and page 1 renders each as an avatar, which is the case for an identity marker. Left REFUSED on FINAL's reason |
 | Compute rental tool | 03 | §F refuses **RunPod as it stands** — it spends money at a rate under an uncapped key — which is not the same as refusing rented compute as a class. Read as REFUSED for the named vendor only |
-| Worker-to-worker request | 06 | v13 admits agent teams whose teammates are messageable by name, so peer messaging exists; v6's reasoning is that implicit conflicting decisions are exactly how two agents on one artifact fail. Both are in the spine |
-| Peer help request | 06 | the same doubt, and it should be answered the same way in both places |
 | Infra layer (Wing 5) | wing 5 | IN here, while every venture-facing DevOps row of §17 is OUTSIDE. The two readings disagree about who owns hosting, and FINAL had the same split |
 
-**How the 671 were decided.** `agree` where SPINE moved nothing and FINAL stands. `SPINE vN` or `SPINE §X` where a v2 row or a lettered section settles it — v1, v2, v3 and v4 between them account for most of the 137 moves, and every one of §A's thirty-six rows is cited by at least one item. Verify with `grep -oE 'SPINE v[0-9]+' COVERAGE.md | sort -u`. `founder` where the direction itself decides, quoted in SPINE §B, §C, §D, §E, §F or §G. `fact` where a research fact from `roster.md`, `memory.md`, `cognition.md`, `skills.md`, `models.md`, `surfaces.md` or `runtimes.md` decides the row rather than a preference.
+**How the 671 were decided.** `agree` where SPINE moved nothing and FINAL stands. `SPINE vN` or `SPINE §X` where a v2 row or a lettered section settles it — v1, v2, v3 and v4 between them account for most of the 139 moves, and every one of §A's thirty-six rows is cited by at least one item. `SPINE §L On` is the same pattern one level down: a numbered mechanism inside the rethink round's lettered section (`SPINE §L O2`, `SPINE §L O34`). Verify with `grep -oE 'SPINE v[0-9]+' COVERAGE.md | sort -u` and `grep -oE 'SPINE §L O[0-9]+' COVERAGE.md | sort -u`. `founder` where the direction itself decides, quoted in SPINE §B, §C, §D, §E, §F or §G. `fact` where a research fact from `roster.md`, `memory.md`, `cognition.md`, `skills.md`, `models.md`, `surfaces.md` or `runtimes.md` decides the row rather than a preference.
 
 **No row is placed on a mechanism that does not exist.** Where the plan wants a thing and has no mechanism for it, the row says so in its Why — the wish-list tools of §F, the ABSENT paths of §B–§H are the honest cases, and they are marked rather than dressed.
