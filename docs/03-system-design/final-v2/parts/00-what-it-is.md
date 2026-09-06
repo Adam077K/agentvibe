@@ -35,11 +35,16 @@ the perfect result."*
 **(FOUNDER, rethink 2026-09-06: D11)** Nothing is decided in §0 and two things are admitted here. §0.1 asks for a
 system that is *"self moving, self adjusting, improving"*, and the plan had no adjustment at all for the commonest
 state the founder is in — **away**. **v76** is that adjustment: the system reads one derived value, **the last
-founder event**, at four call sites — it releases the reserve to autonomous work when the last event is older than
-the reserve's own horizon and snaps it back on the first tap, executes a *which*'s stated default at its intent's
-expiry with both built options archived, builds one option instead of two while away, and keys page 5's *since you
-were last here* view on the event rather than on a date. It reintroduces no approve verb and does not reverse v9: a
-silent run still cannot ask. **Mechanism:** one predicate and one field shared by four call sites — **`bin/log`
+founder event**, at four call sites — it releases the reserve ~~to autonomous work~~ **only to `effect: none` work
+whose outputs stage** when the last event is older than the reserve's own horizon and snaps it back on the first
+tap; ~~executes a *which*'s stated default at its intent's expiry with both built options
+archived~~ **fires no one-way default while away — a default fires only if it touches no one-way verb, the verb table
+deciding (v101)**; builds one option instead of two while away; keys page 5's *since you were last here* view on the
+event rather than on a date; and, **a fifth reading, the burst edge: the reserve is held per weekly window, and
+founder events above a founder-set rate in the current five-hour window pause Claude-seat autonomy until the window
+rolls** *(amended 2026-09-06: FOUNDER, fixer round 2026-09-06: E6 — "Away narrows, plus a burst edge" · NEW: O127 ·
+THINKER: B14, A20)*. It reintroduces no approve verb and does not reverse v9: a silent run still cannot ask; §4.4
+owns the call sites. **Mechanism:** one predicate and one field shared by four call sites — **`bin/log`
 writes `keel/logbook/founder.last` on every founder-authored event and `bin/watch` reads it**, and the four call
 sites above read that one file. **ABSENT** — designed with its path named, in v50's sense, so it is ABSENT and not
 WISH ~~and §A v76 names no path for it~~ *(path set by the orchestrator 2026-09-06, DECISIONS §21 · challenge C
@@ -49,9 +54,17 @@ work, the refusal of consensus voting and the promise that the founder is not th
 evidence for it comes from the harness — the most anchorable venture that could have been chosen. **If it is false
 the architecture inverts:** the night's product becomes built options with their costs, the morning becomes an
 adjudication queue, the taste store becomes the primary asset, mission control's centre of gravity moves off pages 3
-and 5 onto a decision queue, and the roster shrinks. **(R12, OPEN)** settles it: what fraction of the harness
-venture's **first thirty** real done-tests reach rung 1 *without inventing an anchor*. It is the cheapest measurement
-named anywhere in the round, and nothing should be built against the inverted architecture before it is taken.
+and 5 onto a decision queue, and the roster shrinks. ~~**(R12, OPEN)** settles it: what fraction of the harness
+venture's **first thirty** real done-tests reach rung 1 *without inventing an anchor*.~~ **(R27, OPEN) settles it,
+and never by the harness alone** *(amended 2026-09-06: NEW: O102 · THINKER: C2, B4 · conv. 3)*: R12 is split three
+ways — **(a)** the harness's first thirty; **(b)** thirty random Floor episodes, domain-labelled by one Sonnet `-p`
+pass and rated by the founder in one sitting — *could a program have judged this?* — plus thirty paper done-tests
+across §23–§30; **(c)** the second venture's first thirty (v85). **The answer is (b) and (c) together**, because the
+harness is the most anchorable venture that could have been chosen, so (a) returns high whatever the truth for
+pricing, copy and positioning — selection on the dependent variable. *Inventing an anchor* is defined: one that tests
+a property the done-test did not state, reads a record the company writes, or would pass a rejected artifact.
+**Mechanism:** O102's runner — one `-p` pass and one founder sitting under v86's `founder_hours:` (**ABSENT**); (b)
+needs zero build. Nothing should be built against the inverted architecture before (b) and (c) are taken.
 
 ---
 
@@ -113,6 +126,32 @@ flowchart TD
 build instead. **Only the Sender touches the world**, and it holds no model. **Only the curator writes memory**, and
 it holds no shell. Everything else is a consequence.
 
+**(NEW, fixer round 2026-09-06: v96 — the four invariants are the kernel, and the commodity line is doctrine)** The
+**kernel test:** a mechanism is *kernel* only if it holds **direction, record, truth or taste** — and the four
+sentences above are one each: the founder's door holds direction, the log holds the record, the no-model Sender holds
+truth, the curator holds taste. Everything else Keel builds is an **adapter**, the thinnest reader of a named vendor
+surface into the record, or it is **refused**. **The commodity line, once:** every mechanism in SPINE §L and every
+`bin/` program carries `class: kernel | adapter | refuse`, `vendor_wins_if:` and `wins_if:`; a matched
+`vendor_wins_if:` forces Delete, like a skill at expiry; §L is sorted by class before §19 orders it, and §19 builds
+kernel before adapter and never builds `refuse`. **Mechanism:** the marks lint (v50) refuses an adapter naming no
+surface and a kernel naming none of the four — `keel/shared/rules.yml` and the lint, **ABSENT** (§L O105). **Why
+(THINKER: C3, A7, B1 · conv. 4):** vendors shipped the bottom half of this plan in one window — the terminal pop,
+the fleet page, the cost arithmetic, the bell, messaging, fallback chains, a supervisor daemon — and the doctrine had
+no rule for *not building*. **Losing image:** §L built in §19's order · `wins_if:` a year in which no vendor ships any
+adapter's surface (§22 collects it).
+
+**(NEW, fixer round 2026-09-06: v97 — what binds is data, and this picture is a rendering)** The binding content of
+the plan is **data** — `rules.yml`, `roster.yml`, `routing.yml`, the schemas, `prices.yml`, `facts.yml`,
+`settings.yml` — and the prose, this section included, is rendered from it: a hand-edited rendered table fails lint
+and superseded prose moves to an archive (§L O106). The four invariants above and `rules.yml` generate the
+**constitution**, `keel/constitution.md`, **≤ 4,096 bytes** — `session-start.js`'s own budget (#76) — byte-identical
+for the cache, which is the Operator's pre-flight read (§3.1) and the only part of the plan anything that acts ever
+reads. Its test: a fresh agent given only the constitution and the schemas writes a brief that passes `check-stores`.
+**Mechanism:** the generator and a byte-budget checker modelled on `scripts/check-memory-budget.mjs` (exists as a
+shape on this branch) — **ABSENT** (§L O107). **Why (THINKER: C18, B6 · conv. 7):** 156,000 words that nothing
+acting can read cannot bind. **Losing image:** the prose as the binding document · `wins_if:` a builder brief for any
+§L program fits under 8K tokens from the prose alone, three times running.
+
 ---
 
 ### 0.4 The five ideas, re-read against the founder's direction
@@ -145,13 +184,13 @@ the agent doing the work, which is what actually changed)**
 | Where the founder is | What they see | What is running behind it |
 |---|---|---|
 | **The phone, first thing** | Nothing, unless a `wake-me` line fired. If one did: one line | The Watch slept through everything that did not qualify. The interruption budget is three a day, and a channel whose acted-on rate falls is demoted below its threshold |
-| **The briefing** | One page the founder opens, so it is never an interruption. What moved, with the evidence; the raw work biggest first — the rendered page, the played video, the diff, the email that would go out, staged and unsent; two *whiches*, both built; what could not be checked, named; what it cost per venture and per window; what the Operator would do next, none of it started | `writer` staged the email and never held the key. `designer` produced the render and its anchor is the screenshot judged against a named target, not its own description. `analyst` produced the cost rows, and every one of them taps through to its run |
+| **The briefing** | One page the founder opens, so it is never an interruption. What moved, with the evidence; the raw work biggest first — the rendered page, the played video, the diff, the email that would go out, staged and unsent; the *whiches*, ~~both built~~ one option built and a written second unless a ten-word summary cannot separate them, and its first line is *decisions taken · deferred · defaulted* (amended 2026-09-06: E15 · v87 · O96); what could not be checked, named; what it cost per venture and per window; what the Operator would do next, none of it started | `writer` staged the email and never held the key. `designer` produced the render and its anchor is the screenshot judged against a named target, not its own description. `analyst` produced the cost rows, and every one of them taps through to its run |
 | **Mission control, page 2 — agents and child flows** | The Operator and its children: who is working, who is sleeping, what each is doing on the current task | Agent teams — a lead plus named teammates, each a full session. One level of teammates is visible because the runtime ships **no nested teams**; the deeper tree is subagents |
 | **A tap on an agent** | A terminal opens on the Mac and the founder is inside that session | *"remember each agent or each session that we are opening in the mission control or any other surface, it's directly opening it in the terminal in my Mac because everything is run on it"* (FOUNDER). The mechanism is the documented tmux CLI (§15) |
 | **Mission control, page 4 — the board** | Tickets, PRs and a timeline. The founder drags a card into *working on it* | The drag launches a session with a team of agents and hands it the task. **Nothing in the world does this** — every board-to-session project found maps one task to one agent (v16), so this part is ours to build |
 | **The Floor** | A terminal, one agent, the same memory and the same envelope. The founder's own browser and own send button are here and nowhere else | The system goes sterile: nothing interrupts, nothing new is dispatched on the founder's window, the venture under their hands is held whole. When they leave, the queue that built up is one paragraph |
-| **A *which*** | Two options, both already built, and the cost of each. One tap | There is no approve verb anywhere in the system. Outside the envelope, the system builds both and asks *which* |
-| **The night** | Nothing. The founder is asleep | Obligations first, before any goal. Then, under each driven venture's ceiling, runs are born with a brief, work however they like, are checked by something outside the model, hand back every line the handover schema names (§6.3), and die. Routine work burns the Gemini window and never touches the founder's; embeddings and classification run locally on electricity. A fully autonomous run **cannot ask** — everything it would have asked is pre-decided or staged as a *which* |
+| **A *which*** | ~~Two options, both already built~~ One option built and a written second, both built only when a ten-word summary cannot separate them (amended 2026-09-06: E15 · v87), and the cost of each. One tap | There is no approve verb anywhere in the system. Outside the envelope, the system builds both and asks *which* |
+| **The night** | Nothing. The founder is asleep | **Only when this Mac can hold a night** — `night_capable` from `pmset`, else the unattended brief is refused and routed to the cloud lane (v83, v84 · §4.1b) — and only while `founder.lease` is fresh (v102 · §4.4). Then obligations first, before any goal. Then, under each driven venture's ceiling, runs are born with a brief, work however they like, are checked by something outside the model, hand back every line the handover schema names (§6.3), and die. Routine work burns the Gemini window and never touches the founder's; embeddings and classification run locally on electricity. A fully autonomous run **cannot ask** — everything it would have asked is pre-decided or staged as a *which* |
 | **Dawn** | The briefing again | The curator has already run: delta-only writes, one writer, an index loaded at start and topic files on demand |
 
 ---
@@ -178,7 +217,9 @@ build.
 ### 0.7 The vocabulary
 
 **(FINAL)** Very few names are spent, each a plain English word doing the job that word already does. Nothing is
-called an engine, a crew, a swarm, a council, a brain, a kernel, a mouth or a bench.
+called an engine, a crew, a swarm, a council, a brain, ~~a kernel,~~ a mouth or a bench — *kernel* is spent once,
+on the four things Keel holds itself, direction · record · truth · taste, and on nothing else (amended 2026-09-06:
+NEW: v96 · §0.3).
 
 | Word | What it is | Where it lives |
 |---|---|---|
@@ -199,7 +240,7 @@ word for)**
 
 | Word | What it is | Why it is added | Where it lives |
 |---|---|---|---|
-| **Operator** | The orchestrator of the agents, and the founder's contact point. One agent file. Dispatches; never builds | **(FOUNDER)** *"We need an operator, which is, like, the orchestrator of the agents. which is also the contact point with me"* | `.claude/agents/operator.md` (ABSENT; the eighteen existing agent files on this branch, `ceo-1-1788609834`, are the format seed) |
+| **Operator** | The orchestrator of the agents, and the founder's contact point. One agent file; **N instances at once**, each a row in `sessions.jsonl` (v91, §3.1). Dispatches; never builds | **(FOUNDER)** *"We need an operator, which is, like, the orchestrator of the agents. which is also the contact point with me"* | `.claude/agents/operator.md` (ABSENT; the eighteen existing agent files on this branch, `ceo-1-1788609834`, are the format seed) |
 | **Agent** | A named role with its own file, model, tools, MCPs, skills and anchor. **FINAL refused this word as a proper noun; the founder restored it** | **(FOUNDER)** *"each agent with its own expertise so we can adjust his knowledge and his tools and his way of walking and thinking"*, and roster.md fact 1: seven of seven shipped systems name their roles, zero ship unnamed shapes | `.claude/agents/<name>.md` (fifteen files, all ABSENT) |
 | **Page** | One of the seven surfaces of mission control. Every element on it is a fact or a tap | **(FOUNDER)** *"I want you to have pages with different things"* | mission control, a website (ABSENT; `mission-control/` exists on this branch as the server spine) |
 | **Board** | Page 4: stages, a timeline, a kanban. Cards move across it | **(FOUNDER)** *"a place where I can manage the tasks and the tickets and the PRs … to jog the tasks on a board which has different stages"* | page 4 (ABSENT) |

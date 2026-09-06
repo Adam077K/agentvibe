@@ -31,6 +31,9 @@ weight:    1–5, the founder's priority, read by the Desk
 horizon:   the date this charter is re-read, or it stops
 entity:    the legal entity this venture publishes as, or none — what v63's disclosure line reads
 cloud:     allow | deny — default deny; may a hosted lane MAKE for this venture (v79)
+outcome:   one contact-rung target by the horizon, checkable by a record the company does not write (v98)
+founder_hours: per weekly window, the founder's hours this venture may draw; the harness's number is 20 (v86)
+ladder:    per outward class, the step this venture stands on and its N recall-free sends before widening (v94)
 ```
 
 **(FINAL)** `tempo` is the founder's own distinction made structural: *walk for me* and *walk with me* are one field
@@ -70,14 +73,65 @@ lane MAKE for this venture while the Mac is off. It is decided **now, and indepe
 15 is still the founder's, and a venture that must not leave the Mac has to be able to say so before there is
 anything to say it to. **Mechanism:** one field, refused when absent by `bin/check-stores` (**ABSENT**); a hosted
 run's output still lands as a pull request or a staged artifact the Mac reconciles on wake, never into the house
-directly (v56).
+directly (v56). **(FOUNDER, fixer round 2026-09-06: E1 → v83; E13 → v84)** With no always-on box — *"use this mac
+and when cant use cloude"* — this field is read on every refused unattended brief: when `night_capable` is false the
+Watch routes it to the cloud carrier **only where `cloud: allow`** (§4.1b), putting the maker lane's UNVERIFIED
+status on the first night's critical path (§I row 15).
 
 **(NEW: O63 — the horizon needs a third disposition, and wind-down is the one nothing named)** At a charter's
 horizon **exactly one disposition** is recorded — **continue · park · wind down**. The store check refuses `tempo:
 parked` while an obligation is undischarged, and refuses promotion to `driven` while any date the charter relies on
 has passed. Without the third value a venture that should end has only *parked*, which keeps its obligations live and
 owned by nobody. **Mechanism:** `bin/check-stores` (**ABSENT**, §L O63); the pass that finds the passed horizon is
-`bin/horizon` (**ABSENT**, §L O23), which §4 owns.
+`bin/horizon` (**ABSENT**, §L O23), which §4 owns. **(NEW, fixer round 2026-09-06: O98)** And `continue` is refused
+at the horizon when the market record shows **no movement toward `outcome:` since the last horizon**, unless the
+founder waives with a reason — the row is below.
+
+**(NEW, fixer round 2026-09-06: v98 · O98 — what a charter is for)** Every driven charter carries **`outcome:`** —
+one contact-rung target by the horizon, in the founder's words, checkable by a record the company does not write
+(§11.9's ladder supplies the anchors). Three readers: `bin/check-stores` **refuses `tempo: driven` without it**; the
+Desk reads it as the **tie-break inside a weight band** — distance to outcome, from `keel/shared/market.jsonl`, which
+`bin/reconcile` alone writes (v99; §4.5 owns the comparator, §13 the store); O63 reads it at the horizon as above.
+The harness's outcome is the founder's line under v64 — *a stranger's action on a venture Keel serves, recorded by
+`bin/reconcile`* — so the harness too is scored by the stranger. **Mechanism:**
+`keel/shared/schemas/charter.yml` and `bin/check-stores` (**ABSENT**, §L O98). **Why (THINKER: C5, C1):** weight was
+the only scoreboard, and weight is the founder's opinion of a venture rather than the world's. **Losing image:**
+weight as the only scoreboard · `wins_if:` a quarter of horizon dispositions match what the outcome row would have
+forced.
+
+**(FOUNDER, fixer round 2026-09-06: E3 → v86 · O95 — the founder's hours are a charter field)** *"20 hours or no
+ceiling."* Every charter carries **`founder_hours:` per weekly window**; the harness's number is **20**, stated as
+the founder's and moved by evidence, and because the founder said *or no ceiling*, **a bind at 20 is reported, never
+enforced silently**. The Desk reads it exactly like `ceiling:` — harness intents stop starting when it is spent,
+ventures' do not — and `bin/log` writes a `founder.act` row on every tap, sign-off, terminal open and read-back, so
+**founder-minutes are measured from the first run** whichever way the number moves. The briefing's first line is
+*decisions taken · deferred · defaulted* (§3.8). **Mechanism:** the charter schema, `bin/log`, `bin/watch`
+(**ABSENT**, §L O95). **Why (THINKER: C4, B3, C20 · conv. 1):** the plan priced tokens exhaustively and never a
+founder-hour. **Losing images:** no ceiling · `wins_if:` month
+two's harness minutes fall with the bind never reached; a hard bind · `wins_if:` the founder asks for it.
+
+**(FOUNDER, fixer round 2026-09-06: E2 → v85 · O101 — the first stranger)** *"An existing project of yours."* A
+**second, customer-facing venture** from the founder's existing projects joins wave one beside the harness, named at
+intake, chartered with `outcome:` at **contact rung 2**; `OVERNIGHT` in §19 exits on a contact-rung movement on it
+that `bin/reconcile` recorded, and wave two comes online by its routing (v54). **v64 stands:** the harness is still
+the venture whose anchors exist. **Why (THINKER: C1, B4 · conv. 2):** *worked* is a stranger acting, and no build node reached one;
+R27's (c) is this venture's first thirty. **Mechanism:**
+`ventures/<v2>/charter.md` (**ABSENT**, §L O101). **Losing images:** the harness's own outward act as the stranger ·
+`wins_if:` no existing project has a reachable stranger; a harness-only wave one · `wins_if:` R27's fractions agree
+with the harness inside the sample floor.
+
+**(FOUNDER, fixer round 2026-09-06: E11 → v94 · O100 — the outward-class ladder, decided per venture in the
+charter like the envelope)** *"Yes, after N recall-free sends per venture."* Five classes in widening order —
+`reply-to-existing-thread` · `follow-up-to-consented-contact` · `publish-to-preview` · `publish-to-owned-channel` ·
+`first-contact` — and the charter's `ladder:` line names, per class, the step this venture stands on and its N. The
+founder overruled the lane's default of stopping one step below: **`first-contact` widens like any class after N
+recall-free sends**, a recall narrows one step without asking, and consent (v69) and disclosure (v63) are read at
+every step. The state — `step`, `n_recall_free`, `recall_count`, `widened_at`, `undo_drilled` — lives in
+`keel/shared/tools/<class>.yml`, and the mechanism is §12's (`bin/send` reads the step, `bin/reconcile` writes
+recalls, the Watch stages a widen-or-stay *which*; **ABSENT**, §L O100). **Why (THINKER: C10):** widening existed for
+tools and not for outward classes, so rung 1 and 2 arrived at the founder's tap rate. **Losing images:** the ladder stopping below first contact — §J 84 · `wins_if:` recalls per
+hundred sends on a widened `first-contact` class exceed the founder's own tapped rate; widening on reply rate ·
+`wins_if:` a class widens on zero recalls while `bin/inbound` records zero replies.
 
 ---
 
@@ -96,6 +150,7 @@ evidence:   what will be attached to prove the done-test passed
 every:      OPTIONAL, v55 — a cadence: this intent is considered again every time it comes round
 on:         OPTIONAL, v55 — an inbound event class: this intent is considered when one arrives
 class:      OPTIONAL, v74 — exploration; an exploratory intent is routed off the Claude seat
+valid_until: REQUIRED on a standing intent, O126 — it never finishes but expires, like everything durable
 ```
 
 **(FINAL)** The done-test is the whole design compressed into one field. Compare two ways of instructing one piece
@@ -105,6 +160,12 @@ I can open on my phone. A person outside this project can read it in thirty seco
 and who it is for. Three positioning options were considered and the two rejected ones are written down with the
 reason. Nothing on the page is a placeholder." The second constrains quality more tightly and method not at all, and
 someone who did not do the work can check it — the property everything in §11 depends on.
+
+**(NEW, fixer round 2026-09-06: O102 · R27)** Thirty **paper done-tests** written across §23–§30's company work are
+part (b) of R27 — with the founder's thirty rated Floor episodes, they are the half of contrarian assumption 1 that
+the harness cannot test, because the harness is the most anchorable venture that could have been chosen (§0.1a).
+*Inventing an anchor* is defined there. **Mechanism:** O102's one sitting under `founder_hours:` (**ABSENT**); zero
+build.
 
 **(FINAL)** A done-test must be falsifiable or the Intent does not open. This is the one hard gate on the founder's
 own input, and it is done conversationally, by the read-back: *"make the marketing better"* has no done-test, the
@@ -300,7 +361,9 @@ here is a voice transcription with preserved errors — the exact condition the 
 
 **(NEW: v9 makes the read-back the last cheap moment, which it was not in FINAL)** A fully autonomous run **cannot
 ask**: `dontAsk` denies `AskUserQuestion` even when it is allowed. So a question that was not settled at the
-read-back has exactly two fates — pre-decided in the envelope, or staged as a *which* with both options built. There
+read-back has exactly two fates — pre-decided in the envelope, or staged as a *which* with ~~both options built~~
+**one option built and a written second, both built only when a ten-word summary cannot separate them, and only
+while the window's decision budget holds** (amended 2026-09-06: E15 · v87 · O96; §4.5 owns the budget). There
 is no third outcome and no approve verb. That makes the read-back the highest-leverage exchange in the system, and
 the place where an ambiguity is cheapest to kill.
 
@@ -357,7 +420,7 @@ this, the design has failed.
 | Writes a Charter | Once per venture | Voice → the Operator's read-back → tap |
 | Opens an Intent, or confirms one the Operator drafted | When they want something | Voice or text → read-back → tap |
 | **Drags a card into a working stage** *(NEW: the founder's page 4)* | When they want a queued thing started | Mission control, page 4 |
-| Answers a **which**, from options already built | Only when the envelope requires it | One tap, phone |
+| Answers a **which** — ~~from options already built~~ one built and a written second, the recommendation sometimes hidden as a control arm (amended 2026-09-06: v87 · O97) | Only when the envelope requires it, and never past the window's decision budget (O96) | One tap, phone |
 | Defers an obligation, shown its consequence | Rarely | One tap, phone |
 | Sets a tempo | When a venture's rhythm changes | One tap |
 | Opens the briefing | When they feel like it | One page |
@@ -366,7 +429,10 @@ this, the design has failed.
 | Pulls the cord | Whenever they want it to stop | One tap, one word, or one command |
 
 **(FINAL)** Absent from that list, deliberately: approvals of routine actions, ticket grooming, standups, sprint
-planning, and reviewing the system's own internal work. The founder's list contains all of those; §23 says what
+planning, and reviewing the system's own internal work. **(NEW, fixer round 2026-09-06: v102)** Also absent: renewing
+a lease. `founder.lease` is `founder.last` read against a second, longer horizon, renewed by any founder-authored
+event in the list above, and while it is stale the Watch mints nothing unattended (§4.4) — the founder's ordinary
+presence is the heartbeat, and their absence is the stop. The founder's list contains all of those; §23 says what
 happened to each.
 
 **(NEW: one thing the founder's direction adds to the list that is easy to miss)** *"we also need to manage, you
@@ -384,8 +450,9 @@ reacherch, security, competers, data anslisis and more that can run every set ti
 build the company like working."* Asked which shape that should take, the founder chose **standing intents with a
 cadence or trigger, run by the Watch**.
 
-**(FOUNDER: what a standing intent is)** An intent that **never expires**, carrying `every:` — a cadence — or `on:`
-— an inbound event class. It is written once, through the same read-back as any other intent, and it is the
+**(FOUNDER: what a standing intent is)** An intent that ~~**never expires**~~ **never finishes but expires** —
+it carries `valid_until` with a forced disposition like everything durable (amended 2026-09-06: NEW: O126 ·
+THINKER: B20) — carrying `every:` — a cadence — or `on:` — an inbound event class. It is written once, through the same read-back as any other intent, and it is the
 `owner:` field FINAL §2.2 already anticipated: *"founder, or the venture's own standing intent"*. Every time it comes
 round, the Watch treats it as candidate work like any other and dispatches it to the agent its kind already routes
 to. **Its outputs stage; they never send** — a standing intent is a recurring *reason to consider work*, not a
@@ -410,7 +477,12 @@ run work inside the thing that does the work, where nothing ranks it against an 
 Both are kept in §22.
 
 **(NEW: what has to hold for a cadence not to be a leak)** A standing intent that fires forever needs a bound that
-is not its own expiry, because it has none. So the ceiling is **per run**, not per intent, and a standing intent
-with `every:` and no per-run ceiling does not load. **Mechanism:** the intent schema gains the two optional fields;
+is not its own expiry, ~~because it has none~~ because its expiry is a date and a leak is a rate (amended 2026-09-06:
+O126). So the ceiling is **per run**, not per intent, and a standing intent
+with `every:` and no per-run ceiling does not load. **And it expires:** `valid_until` is required on a standing
+intent, and at expiry `bin/horizon` (§L O23) forces exactly one disposition — Refresh · Deprecate · Waive with a new
+date — so the company's recurring work is re-decided on a date rather than running until someone notices
+(**ABSENT**, §L O126). **Losing image:** a standing intent with no expiry · `wins_if:` every standing intent Refreshes
+on evidence for a year. **Mechanism:** the intent schema gains the two optional fields;
 `bin/watch` reads them on each tick (**ABSENT**); `bin/check-stores` refuses `every:` without a ceiling per run
 (**ABSENT**). §4 carries the tick side.

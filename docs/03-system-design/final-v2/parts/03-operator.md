@@ -19,7 +19,9 @@ question answered before it started.
 
 ### 3.1 Identity
 
-**(NEW: v46 — the Operator's runtime position, decided, because page 2 depends on it.)** The Operator is
+**(NEW: v46 — the Operator's runtime position, decided, because page 2 depends on it.)** ~~The Operator is~~ **An
+Operator instance is** — N run at once, each a row in `sessions.jsonl` with a heartbeat (amended 2026-09-06: E8 ·
+v91; the paragraph after the table) —
 the founder's **interactive session**, started as `claude --agent operator`, so one agent file governs it and
 it can still form the agent team page 2 draws. It is inventoried as a file (§17.1 row 0) and runs as the main
 session; a dispatched agent file could not form a team (v13, §14.5). Whether `--agent` binds the file's
@@ -37,12 +39,27 @@ fourteen it dispatches)**
 | **No** | `Write`, `Edit`, `Bash` | An Operator that can edit will edit instead of dispatching. It is the same argument that keeps `Write` off `reviewer`: the thing that can do the work will do the work, and then nothing was orchestrated |
 | **MCPs** | none | Nothing it does touches a server. The two agents that declare `mcpServers` today are `designer` and `sourcer` — a fact about **this repository as it stands**, not a roster rule; **v2's roster grants servers to five** (scout, designer, analyst, writer, growth; §5.2). Neither kind of work is this |
 | **Mechanism** | its argv, composed by `bin/run` (ABSENT), plus the nightly probe `bin/probe` (ABSENT) that asserts what it can actually touch | v34: a grant is argv, not prose. A capability nobody probes is a memory of one |
+| **Pre-flight read** *(NEW, fixer round 2026-09-06: v97 · O107)* | `keel/constitution.md`, **≤ 4,096 bytes** — `session-start.js`'s own budget (#76) — generated from §0.3's four invariants and `keel/shared/rules.yml`: doctrine in six lines, the envelope's three lists, the open §I rows by id, the binding files' paths; byte-identical for the cache (**ABSENT**) | Nothing that acts can read 156,000 words (THINKER: C18, B6). It is the only part of the plan an Operator reads, and its test is the Operator's own rehearsal case: a fresh agent given only it and the schemas writes a brief that passes `check-stores` |
 
 **(NEW: why the no-`Bash` line is not decoration)** This repository has already measured what a shell in the wrong
 hand does: `Bash` has no path concept in the hook that scopes `Write` and `Edit`, so an agent holding a shell is
 narrowed by the sandbox and the managed file and by nothing else. An Operator with `Bash` could compose and run its
 own argv, and v34 — *one no-model launcher composes the grant, and nothing else may* — would be false the first time
 it did.
+
+**(FOUNDER, fixer round 2026-09-06: E8 → v91 · O84 — how many Operators: N)** *"Model N Operators."* The plan had
+one Operator, one `founder.last`, one cord and one sterility predicate; the founder runs a bullpen — five `ceo-*`
+worktrees, three terminals, 825 commits by Claude Code to 129 by the founder (THINKER: A6 · W41) — so a premise false
+on day one would have made the reserve, sterility and the lease **misreport rather than fail**. An Operator instance
+is a `kind: operator` row in `keel/logbook/sessions.jsonl` — venture, host, and a **heartbeat from a
+`SessionStart`/`Stop` hook pair** in `operator.md`'s own settings. Four consequences: **a *which* is claimed before
+it is answered** — `claim: {operator, at}` on the `decide.jsonl` row, expiring after one tick, so two Operators cannot
+answer one question; **the founder-present gate is per venture** — §4.1's gate 2 is true for a venture when a fresh
+operator row names it; **WIP counts sessions**; and the reserve stays per seat, one number shared by every Operator.
+**Mechanism:** `sessions.jsonl` · `decide.jsonl` · the hook pair (**ABSENT**, §L O84). **Cost, once:** one hook pair,
+one field on the decide row. **Losing image:** one Operator enforced by a lease — §J 77 · `wins_if:` a month of
+`sessions.jsonl` shows one live operator row at a time. **Settled by:** two Operators holding one claim; pull `--all`
+and count survivors.
 
 ---
 
@@ -61,7 +78,10 @@ pins `127.0.0.1`. An unauthenticated dispatch plane on any network the Mac joins
 and it is now the losing image. **Mechanism:** the loopback pin exists in the seed; the token check is one
 middleware and the token is keychain-held (**ABSENT**); the tunnel is named at build time (**ABSENT**). Whether a
 detached night process can read that keychain item without an interactive unlock is **(R3, OPEN)** — the unattended
-half of §3.3 rests on it and nothing has tested it. **Settled by:** `lsof -nP -iTCP -sTCP:LISTEN` showing a
+half of §3.3 rests on it and nothing has tested it — and under E1 its sharper form is **(R33, OPEN)**: can a
+LaunchAgent on *this* Mac read a keychain item after sleep, and after reboot with the screen locked (§20.8). The
+same machine now holds identity and autonomy (v83), so §15's probe drills the other direction too: a night child's
+keychain read of a founder item **must fail**, and a pass is a `wake-me` (§L O83). **Settled by:** `lsof -nP -iTCP -sTCP:LISTEN` showing a
 non-loopback bind, or a tap accepted from a device that presented no token. §14 carries the surface; this section
 carries the consequence, which is that **a dispatch is an authenticated act**.
 
@@ -127,8 +147,13 @@ places may change one.
 
 **(NEW)** It is the **build in a worktree** band with three additions:
 
-- the managed settings file of v11 — `permissions.deny`, `disableBypassPermissionsMode`, `disableAutoMode`, and
-  **not** `disableAllHooks` or `allowManagedHooksOnly`, because either of those kills `/goal`;
+- the managed settings file of v11 — `permissions.deny`, `disableBypassPermissionsMode`, ~~`disableAutoMode`,~~ and
+  **not** `disableAllHooks` or `allowManagedHooksOnly`, because either of those kills `/goal`. **`disableAutoMode` is
+  struck** (FOUNDER, fixer round 2026-09-06: E9 → v92 · THINKER: A3): the founder works the Floor in auto mode, and a
+  machine-wide managed file would have removed it — so the Floor keeps the founder's mode, and a night child runs
+  `dontAsk --restricted`, where auto mode is inert, with its hooks and denies on a **per-child `--settings`** (§L
+  O87, **DEPENDS-ON-R28** — whether `--restricted` ignores `--settings` as it ignores the settings files; §12 owns
+  the matrix);
 - `/goal <the done-test> or stop after N turns` on every dispatched run (v12);
 - the cord read first, on every tick, before anything else.
 
@@ -142,15 +167,20 @@ Every question the run would have asked has exactly two fates:
 
 1. **Pre-decided in the envelope** — the founder wrote `may-alone`, `never` and `wake-me` once, per venture, in
    their own words, and inside that envelope silence is permission.
-2. **Staged as a *which*, with both options built** and left for the founder, who answers with one tap when they
-   next open the page.
+2. **Staged as a *which*, with ~~both options built~~ one option built and a written second** — both built only
+   when a ten-word summary cannot separate them, and **only while the window's decision budget holds** (amended
+   2026-09-06: E15 → v87 · O96: the Desk refuses to open a *which* past `decisions_per_window × horizon`, seeded at
+   six per five-hour window until R34; the refusal is a row, and the run then takes the branch below) — and left
+   for the founder, who answers with one tap when they next open the page.
 
 **There is no third outcome, and no approve verb anywhere in the system.** FINAL had staged-not-sent as a rule of
 taste; v9 makes it the **only channel a silent run has**, which is a much stronger reason to keep it.
 
 **(NEW)** What still reaches the founder while a fully autonomous night runs: the `wake-me` list, the interruption
 budget of three unprompted interruptions a day, and the briefing — which is never an interruption, because the
-founder opens it.
+founder opens it. **(NEW, fixer round 2026-09-06: v102 · O86)** And what runs at all depends on the founder's
+ordinary presence: while `keel/logbook/founder.lease` is stale — `founder.last` against a second, longer horizon —
+the Watch mints nothing unattended, so the mode has a stop that needs no tap, no tunnel and no keychain (§4.4).
 
 **(FACT: world.md 30b and 14 — the measured ceiling this mode is designed above, stated as the cost of the mode)**
 The vendor's own measurement of its own users: *"the 99.9th percentile turn duration nearly doubled, from under 25
@@ -177,8 +207,10 @@ rings, against the interruption budget; the Operator reads the row when it next 
 flowchart TD
     Q["A run reaches a question"] --> M{"Is the answer<br/>in the envelope?"}
     M -->|"yes"| GO["Proceed. Silence is permission"]
-    M -->|"no"| C{"Can both options<br/>be built?"}
-    C -->|"yes"| BUILD["Build both. Stage them.<br/>Queue a WHICH"]
+    M -->|"no"| C{"Can one option be built and<br/>a second written, or does a ten-word<br/>summary fail to separate them? (v87)"}
+    C -->|"yes"| BUD{"Decision budget left<br/>in this window? (O96)"}
+    BUD -->|"yes"| BUILD["Build one, write the second —<br/>both only if the summaries tie.<br/>Stage. Queue a WHICH"]
+    BUD -->|"no"| REFUSE["The refusal is a row.<br/>Stop, hand over, the which waits<br/>for the next window"]
     C -->|"no"| CORD["Pull the cord on itself:<br/>stop, record the defect, hand over.<br/>THIS IS A SUCCESS"]
     BUILD --> WAIT["The founder taps<br/>when they next open the page"]
     ASK["Ask the founder now"] -.->|"DENIED by dontAsk,<br/>even if allowed"| X["Not a branch"]
@@ -213,7 +245,7 @@ mechanisms have different documented properties and picking one would mean using
 | **Subagents** | depth inside one agent — a builder's own exploration, a scout fan-out | depth 3 by default, 20 concurrent, `Workflow` removed from all of them (v35); a subagent's `permissionMode` frontmatter is ignored; main-conversation auto memory is not loaded into subagents except a fork | through their session |
 | **`claude -p` children through the launcher** | unattended night work, and every non-Claude provider | `--session-id` must be a valid UUID, minted by us; `--restricted` needs v2.1.248+; `--max-budget-usd` is a stall fuse, not a billing control (v23); `-p` disables tools needing terminal input, so a session never stalls waiting | the **recorded process group**, signalled — `SIGTERM` is measured to give exit 143 and a resumable turn |
 | **A channel between sessions already running** — *(added 2026-09-06: v80, W11, W20)*. **Not a fourth dispatch mechanism: nothing in this row starts a session** | one agent asking another for a handover or filing an objection, and page 2's message control | `SendMessage`/`ListAgents` across sessions on one machine, *"on Bedrock, Vertex, and Foundry, and when telemetry is disabled"*; the **inbox socket closes a connection that sends no complete line within 30 seconds**, so a poster connects once its data is ready (world.md 11). Codex ships the same idea as `@` task mentions (world.md 20) — **two providers shipped this in one window and the plan modelled neither** | none of its own; the two sessions it joins stop by their own rows |
-| **A hosted lane** (v79) | nothing yet | — | **UNKNOWN**, and `bin/run` therefore refuses to mint unattended work on it |
+| **A hosted lane** (v79) | ~~nothing yet~~ the night's **fallback** when `night_capable` is false and the venture's charter says `cloud: allow` — an unattended brief refused on this Mac is routed here (amended 2026-09-06: E1 → v83 · E13 → v84; §4.1b) | there is no always-on box (E1); the maker path is UNVERIFIED (v56(b)), which is now on the critical path of the first night (§I row 15) | **UNKNOWN**, and `bin/run` therefore refuses to mint unattended work on it — so until a cancel path is documented the fallback holds a brief and mints nothing |
 
 **(NEW: the one consequence of the teams constraint that a surface designer must know before drawing page 2)** There
 are **no nested teams** and one team per session. So the child-flow page shows **one level of teammates**, and
@@ -232,6 +264,16 @@ carrier whose `stop:` reads UNKNOWN may not be given unattended work at all, whi
 shut and stays shut until cancellation is documented (§I row 15's state anyway). **(FACT: world.md 22)** Codex
 shipped `Interrupt` hooks, the natural Codex-side receiver for exactly this signal, and no row in the plan named
 them. **Settled by:** pulling the cord mid-run, measuring time to quiescence, and whether the run resumes.
+
+**(FOUNDER, fixer round 2026-09-06: E8 → v91 · O85 — the cord has two scopes, because there are N Operators)**
+With five worktrees and three terminals open (W41) one cord was two things: *stop the night* and *stop me*.
+**`--night`** signals `bin/run`'s recorded process groups and stops dispatch; **`--all`** also `SIGTERM`s every
+registered Operator session and its team. One verb, `bin/stop`, with **four receivers** — the cord file, the process
+groups, the Sender's recall window, the hosted lane's UNKNOWN — and **one record** of what stopped and what did not,
+so the four semantics stop being four controls. Every page's control and the phone default to `--night`, labelled
+*stops the night, not the Floor*. **Mechanism:** `bin/stop` (**ABSENT**, §L O85; §12 owns the verb, §14 the control).
+**Settled by:** the drill's count and the record disagreeing once. **Losing image:** the tap as the only e-stop ·
+`wins_if:` a year of drills in which the tap reaches quiescence from the phone every time, tunnel down.
 
 **(FOUNDER, rethink 2026-09-06: D15 → v80 — what a message between two running agents is)** *"A message is a
 handover or an objection on the handover schema, one append-only file each; asks carry a deadline and a fallback;
@@ -349,7 +391,10 @@ list, and this repository has already shipped eight of those)**
 | Performs an outward act | The band table gives every agent `never` on that class; the Sender is the only thing that sends, and it holds no model (v33) |
 | Dispatch a team inside a team | The runtime has **no nested teams**. It is not a rule we enforce; it is a thing that does not exist |
 | Run its own gate | `Workflow` is absent from every agent file, deliberately: the gate may not be invocable by the thing it gates (v35), and the vendor removes it from every subagent regardless |
-| Override the founder | There is no approve verb. Outside the envelope the answer is a *which*, with both options built |
+| Override the founder | There is no approve verb. Outside the envelope the answer is a *which*, with ~~both options built~~ one option built and a written second (v87) |
+| Answers a *which* another instance claimed | **O84**: a *which* carries `claim: {operator, at}`, one-tick expiry; only the claimant answers (**ABSENT**) |
+| Reads the plan cold | **O107**: its pre-flight read is the constitution, ≤ 4,096 bytes, generated from `rules.yml` (**ABSENT**); 156,000 words are not an input to anything that acts |
+| Mints unattended work while the founder's lease is stale | **v102**: `founder.lease` is read by the Watch before any unattended dispatch; absence of the heartbeat is the stop (**ABSENT**, §4.4) |
 
 ---
 
@@ -363,9 +408,9 @@ The Operator returns exactly three kinds of thing, and nothing else reaches the 
 
 | What | When | The rule it obeys |
 |---|---|---|
-| **A *which*** — two options, both already built, with the cost of each and a recommendation | when a decision is outside the envelope, or a fully autonomous run hit a question | never *may I*; there is no approve verb |
+| **A *which*** — ~~two options, both already built~~ one option built and a written second (both only when a ten-word summary cannot separate them), with the cost of each, `cost_to_answer_bytes` measured, and a recommendation that a founder-set fraction of the time is hidden or shuffled as a control arm (amended 2026-09-06: v87 · O96 · O97) | when a decision is outside the envelope, or a fully autonomous run hit a question — and never past the window's decision budget | never *may I*; there is no approve verb |
 | **A ring** — one line, on the phone | only when a `wake-me` line fired | the interruption budget is three a day, and a channel whose acted-on rate falls is demoted below its threshold. ICU alarms: 74–99% irrelevant **(FINAL §1 row 18, §13.5)** produces trained inattention, not annoyance |
-| **The briefing** — a page the founder opens | whenever the founder opens it, so it is **never** an interruption | its contents are FINAL's: what moved with the evidence; the raw work biggest first; the *whiches*, both built; **what could not be checked, named**; what it cost per venture and per window; what the Operator would do next, none of it started |
+| **The briefing** — a page the founder opens | whenever the founder opens it, so it is **never** an interruption | **its first line is *decisions taken · deferred · defaulted*, with the bytes each cost** (amended 2026-09-06: E15 · O96 · O95), then FINAL's: what moved with the evidence; the raw work biggest first; the *whiches*, ~~both built~~ one built and a written second; **what could not be checked, named**; what it cost per venture and per window — and the founder's own hours against `founder_hours:`, a bind at 20 reported and never silently enforced (v86); what the Operator would do next, none of it started |
 
 **(NEW: the field of the handover that the briefing reads first, and why it is the field to fight for)** `uncertain`
 — *what I am not sure about and what would settle it*. It turns a confident wrong answer into a flagged one. **No
@@ -379,6 +424,12 @@ agent therefore carries a **calibration number**: how often an empty `uncertain:
 self-reported, for the same reason the field itself is suspect. It prints beside the agent's trust score, and a
 falling number is the one signal that distinguishes an agent that is confident from an agent that is right. §21
 carries what it measures.
+
+**(FOUNDER, fixer round 2026-09-06: E3 → v86 · O95 — the founder's minutes are measured from the first run)** `bin/log`
+writes a `founder.act` row on every tap, sign-off, terminal open and read-back, so the briefing's founder-hours line
+is a measurement and not a diary; the Desk reads the harness charter's `founder_hours:` like a ceiling, and the
+agreement rate between the founder's answers and the shown recommendation prints beside the taste score (v89 ·
+O97). **Mechanism:** `bin/log`, `bin/watch` (**ABSENT**, §L O95); §2.1 owns the field.
 
 **(NEW: what the Operator may never hand back)** Its own summary in place of the evidence. This repository has
 already recorded the failure twice: a worker measured *"29 of 30 check steps pass; only `check:mc` fails"* and the
