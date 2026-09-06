@@ -154,3 +154,21 @@ COVERAGE re-placement); a designer lane re-renders the page. One correction to F
 Code fleet surface is spatial"* is overturned by three live projects. What no lane could do: register the durable
 facts as ledger claims — the claim-append server is in no lane's tool set — so that is a build-time task, named in the
 session file. Nothing built, nothing pushed.
+
+## §17 — The rethink round · 2026-09-06
+
+**The founder, verbatim:** *"So now I wanted to adjust the research and the thinking according to my answers. I wanted
+to run back a couple of agents, a couple of thinking agents to think about ways to improve and to scale, change, do
+differently rethink parts of the system because we were looking for the best system that we can ever have in all of
+those fields. So doing a rerun on the current system will help us achieve that. Remember that that list is keyword
+only, so you need to reason to understand more first to haven't talked about."* — and the 35-section list re-sent.
+
+**What runs.** Eight thinking lanes (`framer`, model overridden to Opus as for the spine — DECISIONS §7) and one
+sourcer lane, each by reference to SPINE v1–v65, the sections, COVERAGE and the research, with the founder's list
+copied to `final-v2/rethink/FOUNDER-LIST.md`. The founder's rows (v1–v5, v54–v65) are fixed: a lane improves inside
+them and does not reverse them. Every other row may be challenged with a reason. For every keyword a lane first writes
+what it means for a one-founder company of agents, then where v2 has it, then a verdict — KEEP · IMPROVE · RETHINK ·
+ADD · REFUSE-STANDS — and for anything but KEEP a proposal with its mechanism, its cost once, what would settle it, and
+the SPINE row it moves. Outputs land as files under `final-v2/rethink/`, committed as they land; a synthesis follows;
+the founder decides through AskUserQuestion, as in the interview. Nothing built, nothing pushed. Fan-out is nine by
+direct dispatch, the founder's standing preference (DECISIONS §5).
