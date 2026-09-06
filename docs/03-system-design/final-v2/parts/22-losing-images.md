@@ -6,11 +6,14 @@
 its own last column. **Nothing from that column is repeated here word for word**, because two copies of one sentence
 in one document disagree the first time somebody edits one of them. What this section adds is the thing a column
 cannot hold: the **collection**, in one place, so that arguing for any of these later costs one lookup instead of
-~~twenty-four~~ **seventy-two** (moved 2026-09-06: SPINE §J is seventy-two entries).
+~~twenty-four~~ ~~**seventy-two**~~ **eighty-eight** (moved 2026-09-06: SPINE §J is seventy-two entries; amended the same
+day by the fixer round to eighty-eight — 73–88 in §22.2b below, each with `source:` and `wins_if:`).
 
 **(NEW: why a losing image is kept at all)** A decision recorded without its alternative reads as the only thing
 anybody thought of. Each entry below was a real design that a real reader preferred, and five of them were this
-system's own position until the founder overruled it on 2026-09-05. **Reopening one is a founder act, by name and by
+system's own position until the founder overruled it on 2026-09-05 — **and three more were the position of all three
+fixer lanes until the founder overruled them on 2026-09-06: the box (E1), the checker-family key (E7), the vanilla week
+(E14), entries 73–75** (amended 2026-09-06). **Reopening one is a founder act, by name and by
 number.**
 
 **(FOUNDER, rethink 2026-09-06: D16 · v81 — the format changed, and this section is where the change was paid for)**
@@ -157,6 +160,72 @@ half**, because it is the one a reader of an older draft may still believe.
 72. **The orchestrator's deletions of the rethink round, kept by name** (SYNTHESIS §7, the rows that are not a founder decision).
     The rank formula's two companions — *the intent's own urgency as a second scale* and *"the Desk decomposes"* — the **menu-bar glyph** (no substrate, and a status living in two places is one that disagrees), the per-venture **`open.md`** store (ten queues, one founder, nine writer-contention points → O9), **`logbook/desk/<tick>.json` as a file per tick** (the highest-volume artifact holding an answer whose value decays in hours → O20), the dependency on **`skills-ref validate`** (licence UNKNOWN and never fetched; its four checks are re-implementable from the spec text → keep the checks), **`keel/logbook/backlog.jsonl`** (an improvement is an intent, said twice in COVERAGE → O46), the duplicate cost formula in §16.3, `analyst`'s `Bash`, `writer`'s split model default, the `Night?` column of the four-class table, three of the four copies of that table, page 1's second job, *"unread transcript count"*, the *Pareto prompt archive*, the message priority tag, and the name *venture health score*.
     `wins_if:` any one of them is reached for by a builder who finds no replacement — each was deleted because something else already holds its job, so a builder unable to name that something is the observation that brings it back.
+
+---
+
+### 22.2b The sixteen the fixer round moved · 73–88
+
+**(FOUNDER and NEW, 2026-09-06 — reproduced from SPINE §J, which is where they were written · DECISIONS §24)** Three
+are the founder's overrules of what every fixer lane recommended — **73 the box, 74 the key, 75 the vanilla week** —
+and are `class: originated`: the founder's words beat the lanes' designs, and the cost is stated once in the §1 row.
+**76–88 are the lane shapes the fold did not take**, each naming the lane that drew it in `source:` (A the
+practitioner, B the outsider, C the strategist; THINKER ids where a thinker's finding carried it) and the row that
+beat it. **Every entry carries `source:` as well as `wins_if:`** — the fixer round's addition to v81's format, so
+that an image can be traced to the file that argued it and not only to the fact that would revive it.
+
+**(NEW: read 73 against 76, and 74 against 88 — they are the same argument at two strengths)** 76 is the cheaper box
+and 88 is the free second family used more; each is what a reader who lost 73 or 74 reaches for next, and each has its
+own `wins_if:` so the retreat is also a claim.
+
+73. **The always-on box** — Mac mini or Linux (→ v83, §I 18; FOUNDER, fixer round 2026-09-06: E1 · `class: originated` — *"dont need for now. use this mac and when cant use cloude"*).
+    `source:` A v83 · B Q5 · C v89 · THINKER: A1, C13. `wins_if:` R37 shows maintenance sleeps inside declared nights, or three attempted nights each end `orphaned`.
+74. **A checker-family API key** (C's *17a*) and the metered design — batch at 50%, no weekly window (→ v90; §I 17 closed; FOUNDER E7 · `class: originated` — *"no keys, codex and gemini cli use."*).
+    `source:` B B7/Q4 · C C6/C7. `wins_if:` O116's line exceeds N× the seat price, the vendor narrows the terms, or R40 finds the CLI route refused.
+75. **The vanilla-runtime week** — a venture-week on plain Claude Code before `bin/run` (→ §20.2 row 12 stays the comparison; FOUNDER E14 · `class: originated` — *"No, compare Keel's modes only"*).
+    `source:` C v95/C11. `wins_if:` row 12 cannot separate Keel's two modes on rung movement per window.
+76. **A Linux box** instead of a second Mac (→ 73).
+    `source:` B Q5(a) · A Q1(b). `wins_if:` 73's, and R33 fails on macOS after sleep.
+77. **One Operator enforced by a lease** (→ v91).
+    `source:` A A6 · B Q6(b). `wins_if:` a month of `sessions.jsonl` shows one live operator row at a time.
+78. **Every Keel PR at irreversible**, the panel unmet (→ v88).
+    `source:` A A11 · B. `wins_if:` a second family becomes reachable inside Claude Code.
+79. **The run-side reversibility flowchart** (→ v101).
+    `source:` B B13. `wins_if:` grepping the launcher finds no predicate taking model output.
+80. **Weighted fair queueing now** (→ v75 stands; R38).
+    `source:` B B9 · C declined. `wins_if:` R38's replay starves a second venture's top-weight intent under an obligation tide.
+81. **Sequential skill testing now** (→ O114).
+    `source:` B B11 · C declined. `wins_if:` R14 yields no activation event.
+82. **Two curators on two families** (→ O113).
+    `source:` B B12 · C declined. `wins_if:` R10 passes and Gemini is authenticated for the curator's pass.
+83. **A fourth bell channel** (→ O122).
+    `source:` A A19. `wins_if:` the vendor's push exposes no acted-on read after a quarter.
+84. **The ladder stopping one step below `first-contact`** (→ v94; FOUNDER E11 overrules — *"Yes, after N recall-free sends per venture"*).
+    `source:` C Q5(a) · B. `wins_if:` recalls per hundred sends on a widened `first-contact` class exceed the founder's own tapped rate.
+85. **`--bg` as the night's carrier** (→ O91).
+    `source:` A A7. `wins_if:` R31 shows a service mode that does not idle-exit and readable leases.
+86. **A loopback HTTP proxy on `127.0.0.1`** as `bin/egress` (→ O94; W36).
+    `source:` A A5. `wins_if:` the sandbox gains a per-invocation loopback allow scoped to one port.
+87. **The world's vote** — a venture's Desk share moved on contact-rung movement (→ v99, v98).
+    `source:` B O103. `wins_if:` two quarters of market rows in which the founder's weight never moves toward the venture the world is answering.
+88. **Gemini on every diff now** (→ v90; v78 governs).
+    `source:` C C6 · A, B declined. `wins_if:` R11's first twenty-five pairs show the second family catching a defect the same-family reviewer missed.
+
+**(NEW: the eleven orchestrator-class rows of the fixer round — v96–v106 — have losing images, and §J gave them no
+number)** SPINE §J 73–88 numbers the founder's three overrules and the thirteen lane shapes the fold did not take; the
+losing images of **v96** (*§L built in §19's order* — `wins_if:` a year in which no vendor ships any adapter's surface;
+and *`confidence: LOW` on the header until one overnight* — `wins_if:` fewer than one row in ten changes after it) and
+**v97** (*the prose as the binding document* — `wins_if:` a builder brief for any §L program fits under 8K tokens from
+the prose alone, three times running) live in §1's last column, rows v96 and v97, and are **not repeated here word for
+word** by this section's own opening rule. The same is true of v98–v106. A reader sent here for them by §0.3 or §0.7
+should read §1 rows v96–v106; no §J number is invented for them in this section, because a number that SPINE does not
+carry is one the fold cannot resolve.
+
+**(NEW: what the sixteen share with 55–72, and one way they differ)** Like the rethink round's eighteen, they arrive
+with their falsifier written by the people who wrote the reason. Unlike them, **three of the sixteen lost to the
+founder rather than to an argument** — and a founder overrule is the one kind of loss this register cannot argue
+down, only reopen by name: 73 through §I row 18's `wins_if:`, 74 through §I row 17's, 75 through §20.2 row 12's
+inability to separate the two modes. The `source:` line exists so that when one of them is reopened, the lane that
+argued it is read first and not reconstructed.
 
 ---
 

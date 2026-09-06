@@ -7,10 +7,13 @@ with one side is a recommendation wearing a question mark, and this section refu
 
 ---
 
-### 20.1 The ~~fifteen~~ **seventeen**, from SPINE §I
+### 20.1 The ~~fifteen~~ ~~**seventeen**~~ **eighteen**, from SPINE §I
 
 **(FOUNDER and NEW, per row)** (moved 2026-09-06: SPINE §I rows 16 and 17) The rethink round added two rows and
-closed none. **Neither is a new question** — row 16 is an assumption the plan has been making since FINAL §11.2 and
+closed none. **(FOUNDER, fixer round 2026-09-06: E1, E7, E13 · amended)** The fixer round added one row — **18, the
+always-on box** — and **closed two by overrule**: row 17, *no keys*, and row 18 itself, *no box*. Row 15 is re-read
+under E1 and E13, and row 16's settling measurement is R27's (b) and (c), never (a) alone. **Eighteen rows, four open:
+1, 4, 15, 16.** **Neither is a new question** — row 16 is an assumption the plan has been making since FINAL §11.2 and
 treating as settled, and row 17 is the half of row 1 nobody had written down. **An assumption that gets written as a
 row acquires two sides and an owner**, which is the whole difference between this section and a premise.
 
@@ -30,9 +33,10 @@ row acquires two sides and an owner**, which is the whole difference between thi
 | 12 | **Which room** — Generative Agents `demo` (Apache 2.0, cold) or AI Town (MIT, alive, needs Convex) | the cheapest read-only display, one JSON file | a living project, if the founder wants it maintained | the founder | **DECIDED v62** — pixel-agents (MIT, alive, reads Claude Code); Star-Office-UI and "AgentOffice" refused with reasons; the founder may still name where they saw "AgentOffice" |
 | 13 | **The first venture** and its rung-1 anchor | adoption is the intake this founder uses most | the harness is the only venture whose anchors already exist — the 48-step suite | the founder | **DECIDED v64** — *"The harness itself"* |
 | 14 | **Fourteen agents is inside an unoccupied band** | the founder's decision, taken with the evidence in hand | every shipped running roster measured is 5–6; every roster of 150+ is a catalogue you pick from | **decided; reopened only by name** | **DECIDED v54** — two waves; the eight with seeds or code paths first |
-| 15 | **Which hosted lane may MAKE when the Mac is off** — Codex cloud (`codex cloud exec`, issue-only, UNVERIFIED) · Claude Code `--cloud` and Routines (documented argv and API; shares the Claude seat) · Jules (alpha API, third family) | Anthropic's is the only fully documented driver today and costs no extra compute | it is the same seat as the Floor and the same terms clause as row 1; Codex cloud is the founder's named preference and has no driver yet. **What would close it:** a vendor page or `codex cloud exec --help` on an installed binary (the measurement row 5 already names), OpenAI's terms actually read (four HTTP 403 refusals so far — `research/cloud.md` part 4), the undocumented maximum cloud-task duration, and a cancel command — none of the four is published today | the founder, with row 1 | **MEASURED (R5), and the decision is pending the founder** — see **v79**. *(moved 2026-09-06: the row read "OPEN — raised by v56", which was true and carried no number.)* The measurement D14 asked for is **taken** (DECISIONS §19), read-only from `pmset -g log` on this Mac: **span 2026-08-30 21:44 → 2026-09-06 09:39 · 156 h, all the log retains · asleep 40.7 h (26%) in 487 episodes · ZERO episodes of one hour or longer · longest single sleep 0.3 h, about twenty minutes.** The tail a hosted maker lane would buy back is **zero over the week measured**. **The caveat travels with the number:** the log covers only the span it retains, and DarkWake power-naps count as wakes, so *asleep* here means the machine could not have run a process. **What is decided either way, and is decided now:** the charter field `cloud: allow \| deny`, default `deny` (**v79**). **What shuts the lane from the other end:** **v67** — `bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN, and cancelling a hosted Codex task is exactly that |
-| 16 | **Contrarian assumption 1 — that a deterministic anchor exists for most company work** (FINAL §11.2). Rung 1, the trust score, regression-for-free, unattended night work, the refusal of consensus voting and the promise that the founder is not the bottleneck all hang here | the harness venture's anchors are real and deterministic today — `npm run check` and the probe — and every part of the architecture resting on them works | **the evidence comes from the most anchorable venture that could have been chosen.** What a real venture is made of — positioning, a price, copy that converts, a design someone likes, whether to pivot — is what §11.2's own table answers with *taste* or *the founder*. **If false the architecture inverts:** the night's product becomes built options with their costs, the morning becomes an adjudication queue, the taste store becomes the primary asset, mission control's centre of gravity moves off pages 3 and 5 onto a decision queue, and **the roster shrinks** | **the measurement first, then the founder** | **OPEN — raised by the rethink round** (SYNTHESIS §6, lane L7). **Settled by R12:** what fraction of the harness venture's **first thirty** real done-tests reach rung 1 *without inventing an anchor*. It is the cheapest measurement named anywhere in the round, and **nothing should be built against the inverted architecture before it** |
-| 17 | **If row 1 answers *no*, does the architecture move to a metered API key** | a key buys the carve-out the terms name explicitly, and with it batch at 50% both directions, stacking with caching; v22's two windows stop mattering and **the reserve is redesigned** | it is a different economics and a different plan — money per token instead of a seat — and the founder has not been asked for it. It is downstream of row 1 and cannot be answered before it | the founder, after row 1 | **OPEN — raised by the rethink round** (SYNTHESIS §6, the fourth assumption). Listed rather than argued, and **deliberately carrying no expiry: attaching one would decide row 1**, which the founder kept open by their own word — that is why the synthesis refused **X2**. Its useful half is already discharged for free by **v64**, which confines automated seat access to the harness venture |
+| 15 | **Which hosted lane may MAKE when the Mac is off** — Codex cloud (`codex cloud exec`, issue-only, UNVERIFIED) · Claude Code `--cloud` and Routines (documented argv and API; shares the Claude seat) · Jules (alpha API, third family) | Anthropic's is the only fully documented driver today and costs no extra compute | it is the same seat as the Floor and the same terms clause as row 1; Codex cloud is the founder's named preference and has no driver yet. **What would close it:** a vendor page or `codex cloud exec --help` on an installed binary (the measurement row 5 already names), OpenAI's terms actually read (four HTTP 403 refusals so far — `research/cloud.md` part 4), the undocumented maximum cloud-task duration, and a cancel command — none of the four is published today | the founder, with row 1 | **MEASURED (R5), and the decision is pending the founder** — see **v79**. *(moved 2026-09-06: the row read "OPEN — raised by v56", which was true and carried no number.)* The measurement D14 asked for is **taken** (DECISIONS §19), read-only from `pmset -g log` on this Mac: **span 2026-08-30 21:44 → 2026-09-06 09:39 · 156 h, all the log retains · asleep 40.7 h (26%) in 487 episodes · ZERO episodes of one hour or longer · longest single sleep 0.3 h, about twenty minutes.** The tail a hosted maker lane would buy back is **zero over the week measured**. **The caveat travels with the number:** the log covers only the span it retains, and DarkWake power-naps count as wakes, so *asleep* here means the machine could not have run a process. **What is decided either way, and is decided now:** the charter field `cloud: allow \| deny`, default `deny` (**v79**). **What shuts the lane from the other end:** **v67** — `bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN, and cancelling a hosted Codex task is exactly that. **Re-read 2026-09-06 under E1/E13 (FOUNDER, fixer round: E1 · v83, v84 · NEW: O81, O82):** with no box, the cloud lane is the night's *fallback* whenever `night_capable` is false — the Watch refuses the unattended brief with its reason and routes it here where the charter says `cloud: allow` — so **the maker path's UNVERIFIED status (v56 b) is now on the critical path of the first night this Mac cannot hold.** Still the founder's, with row 1; **R37** (thirty days of `pmset -g log` including a weekend away, O82) replaces R5's week as the number under it |
+| 16 | **Contrarian assumption 1 — that a deterministic anchor exists for most company work** (FINAL §11.2). Rung 1, the trust score, regression-for-free, unattended night work, the refusal of consensus voting and the promise that the founder is not the bottleneck all hang here | the harness venture's anchors are real and deterministic today — `npm run check` and the probe — and every part of the architecture resting on them works | **the evidence comes from the most anchorable venture that could have been chosen.** What a real venture is made of — positioning, a price, copy that converts, a design someone likes, whether to pivot — is what §11.2's own table answers with *taste* or *the founder*. **If false the architecture inverts:** the night's product becomes built options with their costs, the morning becomes an adjudication queue, the taste store becomes the primary asset, mission control's centre of gravity moves off pages 3 and 5 onto a decision queue, and **the roster shrinks** | **the measurement first, then the founder** | **OPEN — raised by the rethink round** (SYNTHESIS §6, lane L7). **Settled by R12:** what fraction of the harness venture's **first thirty** real done-tests reach rung 1 *without inventing an anchor*. It is the cheapest measurement named anywhere in the round, and **nothing should be built against the inverted architecture before it**. **Amended 2026-09-06 (NEW: O102 · R27 / THINKER: C2, B4 · conv. 3):** R12 on the harness alone cannot test this row — the harness is the most anchorable venture possible, so its fraction returns high whatever the truth for pricing, copy or positioning. **R12 is R27 (a)·(b)·(c)** — (a) the harness's first thirty, (b) thirty random Floor episodes domain-labelled by one Sonnet `-p` pass and rated by the founder in one sitting plus thirty paper done-tests across §23–§30, (c) the second venture's first thirty — **and this row is settled by (b) and (c), never (a) alone.** *Inventing an anchor* is defined: one that tests a property the done-test did not state, reads a record the company writes, or would pass a rejected artifact |
+| 17 | **If row 1 answers *no*, does the architecture move to a metered API key** | a key buys the carve-out the terms name explicitly, and with it batch at 50% both directions, stacking with caching; v22's two windows stop mattering and **the reserve is redesigned** | it is a different economics and a different plan — money per token instead of a seat — and the founder has not been asked for it. It is downstream of row 1 and cannot be answered before it | the founder, after row 1 | ~~**OPEN — raised by the rethink round** (SYNTHESIS §6, the fourth assumption). Listed rather than argued, and **deliberately carrying no expiry: attaching one would decide row 1**, which the founder kept open by their own word — that is why the synthesis refused **X2**. Its useful half is already discharged for free by **v64**, which confines automated seat access to the harness venture~~ **CLOSED 2026-09-06 — *no keys*** (FOUNDER, fixer round 2026-09-06: E7 · v90 · `class: originated`: *"no keys, codex and gemini cli use."*). The second family is the Gemini CLI on a personal account and the Codex CLI, both only as `bin/run` children from launchd (NEW: O92). The metered economics stay **§J 74** with a `wins_if:`; row 1 stays open by the founder's word |
+| 18 | **The always-on box** — Mac mini or Linux, the night's machine while the Mac stays the Floor | five findings dissolve on it — the Mac sleeps every nineteen minutes on battery (W33), one Operator was false on day one, the second family cannot start under the sandbox, the founder's identity and the company's autonomy share a keychain (THINKER: A1, A3, A9, A21, C13) | the founder's money and desk; the cloud lane is a fallback and R5's tail was zero; one more machine to keep true | the founder | **CLOSED 2026-09-06 — *no box*** (FOUNDER, fixer round 2026-09-06: E1 · v83 · `class: originated`: *"dont need for now. use this mac and when cant use cloude"*). **Overrules all three fixer lanes.** The night runs on this Mac behind a `night_capable` predicate (E13 · v84 · O81); the cloud lane is the fallback; identity and autonomy on one machine is an accepted risk drilled by O83 — the probe attempts a keychain read of a founder item from a night child and must fail. **Reopenable by name:** `wins_if:` §J 73's — R37 shows maintenance sleeps inside declared nights, or three attempted nights each end `orphaned` |
 
 ---
 
@@ -45,9 +49,9 @@ carries a disposition, and two of the five are still deferred on purpose.**
 | FINAL §19 | Decision | One side | The other | Whose | **Status after the founder's interview, 2026-09-05** |
 |---|---|---|---|---|---|
 | 6 | **The hook rewrite to structured tool input, and registering `budget-guard.js`** | both are correct in shape and measured; the string matcher has both bypassed and over-blocked, and the guard has **zero references in `settings.json`** today | both are edits to the judging machinery, one-way from day one | the founder | **DEFERRED to build time** — *"Neither yet — decide at build time"*. **(NEW, rethink 2026-09-06: O38 and O50 take the shape and leave the act.)** Both halves now have a decided *specification* and neither has been performed: **O38** is marked **ADOPTED-AS-SPEC** in SPINE §L — deny through the `decision` object on non-blocking hook events, keep `exit 2` for the documented blocking ones — and **O50**'s answer on `budget-guard.js` is **register it**, one entry in `.claude/settings.json` against a hook that already exists (§18.4). **The founder's deferral is preserved exactly**: what was deferred is the edit to the judging machinery, which is one-way from day one, and a decided shape is not that edit |
-| 7 | **`pmset -a disablesleep 1`** | it runs with the lid shut, which is what a night lane is | it defeats thermal and battery policy, and is not a change to make on the founder's behalf | the founder | **DEFERRED to build time** — the same answer as row 6, *"Neither yet"* |
+| 7 | **`pmset -a disablesleep 1`** | it runs with the lid shut, which is what a night lane is | it defeats thermal and battery policy, and is not a change to make on the founder's behalf | the founder | **DEFERRED to build time** — the same answer as row 6, *"Neither yet"*. **(FOUNDER, fixer round 2026-09-06: E13 · v84 · NEW: O81 — the deferral stands, and the habit is no longer what the night rests on.)** `pmset -g custom` reads `sleep 1` on AC and battery today, with 391 maintenance sleeps in seven days (THINKER: A1 · W33), so a night gated on a founder remembering to run this is a night that ends `orphaned`. The Watch reads a `night_capable` **predicate** from `pmset` every tick and refuses an unattended brief with the reason when it is false, routing it to the cloud carrier where the charter allows; whether the founder ever runs this command is one input to that predicate, never the gate |
 | 8 | **Disclosure of machine-made work; the legal entity and jurisdiction per venture** | a dated founder decision with a reopen trigger | one-way doors, on the default `never` list | the founder | **DECIDED v63** — *"Disclose by default; entity per venture decided at intake"* |
-| 12 | **The overnight premise** — nobody has measured whether a crew that runs overnight beats one that stops | the first overnight starts a standing comparison: one week overnight against one week bounded on the same venture | every founder in the corpus reviews in the morning; if overnight does not beat bounded, the system runs bounded and says so | the measurement | **DECIDED: run the comparison** — *"Run the comparison; let the measurement decide"*. The premise stays a measurement, not a belief |
+| 12 | **The overnight premise** — nobody has measured whether a crew that runs overnight beats one that stops | the first overnight starts a standing comparison: one week overnight against one week bounded on the same venture | every founder in the corpus reviews in the morning; if overnight does not beat bounded, the system runs bounded and says so | the measurement | **DECIDED: run the comparison** — *"Run the comparison; let the measurement decide"*. The premise stays a measurement, not a belief. **(FOUNDER, fixer round 2026-09-06: E14 — this row STAYS the comparison, and it compares Keel's two modes only.)** Lane C proposed a null hypothesis first — one venture-week on plain Claude Code before `bin/run` exists — and the founder overruled it: *"No, compare Keel's modes only"*. The vanilla week is **§J 75** with its `wins_if:`. **Two things the fixer round adds to how the comparison is read** (NEW: O124, O125 · v106): the bounded day comes first and the comparison is read only **after three scoreboard rows exist** in `keel/logbook/nights.jsonl`, and it is judged on rung movement per window and founder-minutes, both written by programs |
 | 13 | **The two sliders** — the reserve at 30% and three interruptions a day | each carries a weekly evidence line | *"idk means decide"* set them; the evidence moves them | the founder, on evidence | **DECIDED: kept as set** — *"Keep 30% and 3/day; evidence moves them"* |
 
 ---
@@ -188,6 +192,42 @@ can be wrong out loud. That is the register §22 now carries for all seventy-two
 
 ---
 
+### 20.7b Decided in the fixer round · 2026-09-06
+
+**(FOUNDER, DECISIONS §24)** Three fixer lanes took the thinker round's sixty-four findings, sent twenty-four
+questions, merged to fourteen, asked in four `AskUserQuestion` rounds. **Four are overrules of what the lanes
+recommended and are final** — no box, no key, first contact reachable, no vanilla week; two the founder delegated
+(E5, E15) and the orchestrator's default is recorded as `class: ratified` so it can be reversed by name. Every row
+carries the founder's words verbatim; the §1 row carries the mechanism, the cost and the losing image, and none is
+re-argued here. **Two classes now (E5 · v89):** *originated* rows are the founder's words and are never re-litigated;
+*ratified* rows were picked from an agent's list and reopen through a Decide item with a reason and a falsifier.
+
+| E | Row | The founder's words | What was decided | Class |
+|---|---|---|---|---|
+| E1 | **v83** | *"dont need for now. use this mac and when cant use cloude"* | **No box.** The night runs on this Mac; the cloud lane is the fallback. **Overrules A, B and C.** §I row 18 closes; §J 73 | originated |
+| E2 | **v85** | *"An existing project of yours (Recommended)"* | A second, customer-facing venture joins wave one, chartered with `outcome:` at contact rung 2; `OVERNIGHT` exits on its contact-rung movement | originated |
+| E3 | **v86** | *"20 hours or no ceiling"* | `founder_hours:` is a charter field; the harness's number is 20, moved by evidence; a bind at 20 is reported, never enforced silently | originated |
+| E4 | **v88** | *"Small trusted base, per-wave sign-off (Recommended)"* | `send` · `inbound` · `watch` · `run` founder-line-reviewed at a line budget, fixtures the only admission; agent files generated from `roster.yml`; `keel/**` otherwise lite; the launcher narrows the vendor floor and never widens it | ratified |
+| E5 | **v89** | *"idk"* | Deferred; the default applied: `class: originated \| ratified` on every FOUNDER row, the row itself ratified | ratified |
+| E6 | **v76** amended | *"Away narrows, plus a burst edge (Recommended)"* | Away, the reserve goes only to `effect: none` work whose outputs stage; no one-way default fires; a burst edge pauses Claude-seat autonomy; the reserve is per weekly window | ratified |
+| E7 | **v90** | *"no keys, codex and gemini cli use."* | **No API keys.** The second family is the Gemini CLI and the Codex CLI, only as `bin/run` children from launchd. **Overrules C's 17a and B's Q4.** §I row 17 closes; §J 74 | originated |
+| E8 | **v91** | *"Model N Operators (Recommended)"* | N Operators as `sessions.jsonl` rows with heartbeats; a which is claimed before it is answered; the cord gains `--night` and `--all` | ratified |
+| E9 | **v92** | *"Keep auto mode on the Floor (Recommended)"* | The managed file carries `permissions.deny` and `disableBypassPermissionsMode` only; `disableAutoMode` struck; night children run `dontAsk --restricted` with per-child `--settings` | ratified |
+| E10 | **v93** | *"Keep them for mining (Recommended)"* | The Floor's transcripts stay; night children pass `--no-session-persistence`; the erasure grep covers `~/.claude/projects`; vendor retention named out of reach | ratified |
+| E11 | **v94** | *"Yes, after N recall-free sends per venture"* | `first-contact` widens like any class after N recall-free sends per venture; a recall narrows one step; consent and disclosure read at every step. **Overrules C's default.** §J 84 | originated |
+| E12 | **v95** | *"4 → 5 → 3 → 2 → 7 → 1 → 6 (Recommended)"* | The page order; pages 1, 2, 3 and 7 are adapters; page 2's tap splits into *attach* and *message* | ratified |
+| E13 | **v84** | *"Watch checks, refuses, routes to cloud (Recommended)"* | A `night_capable` predicate from `pmset` every tick; an unattended brief refused with its reason when false and routed to the cloud lane. **E1's mechanism** | ratified |
+| E14 | §J 75 | *"No, compare Keel's modes only"* | **No vanilla-runtime week.** §20.2 row 12 stays the comparison. **Overrules C11** | originated |
+| E15 | **v87** | *"i dont get it, do what best for the sytem "* | Delegated; B's design taken: the Desk refuses a which past `decisions_per_window × horizon`, six per five-hour window until R34; one option built plus a written second; the briefing's first line is decisions taken · deferred · defaulted | ratified |
+
+**(NEW: what the four overrules did to the lanes' designs, so the deleted nodes are not redrawn)** E1 removes the `BOX`
+root every lane drew and makes A's `night_capable` predicate plus the cloud lane the whole answer to the night; E7
+removes 17a and the Gemini key; E11 raises the ladder's ceiling to the founder's appetite; E14 removes `NULLWEEK`.
+The eleven orchestrator-class decisions the round took without asking — **v96–v106** — are `NEW` rows in §1 and are
+reopenable; §L O81–O127 carry their mechanisms, each with `class:`, `wins_if:` and `vendor_wins_if:`.
+
+---
+
 **(NEW: one item that looks like a decision and is not)** `scripts/prompt-standard.test.mjs` pins a model set that
 does not contain `claude-fable-5-1`. That is a **red test**, not an open question: the set moves in the same change
 that writes builder's file, whichever way 20.1 row 2 is answered. **And v57 makes it bind at the first file rather
@@ -197,9 +237,10 @@ seat, the fallback is `claude-opus-5` and the pinned set still has to be correct
 
 ---
 
-**(NEW, 2026-09-06: what is still open when this section closes, and it is five things)** After the interview of
-2026-09-05 and the rethink round of 2026-09-06, **five rows of 20.1 are open and everything else is decided, an act
-at build time, or a measurement.** Naming them beats counting them:
+**(NEW, 2026-09-06: what is still open when this section closes, and it is ~~five~~ four things)** After the interview of
+2026-09-05, the rethink round and the fixer round of 2026-09-06, ~~**five rows of 20.1 are open**~~ **four rows of 20.1
+are open** (amended 2026-09-06: E1, E7 closed rows 18 and 17) and everything else is decided, an act
+at build time, or a measurement. Naming them beats counting them:
 
 - **Row 1 — the terms.** Open **by the founder's own word**: *"still keep it open"*. OpenAI's terms returned HTTP 403
   and are unread; Google's are unfetched. It carries **no expiry on purpose**, and row 17 is why: attaching one would
@@ -207,11 +248,15 @@ at build time, or a measurement.** Naming them beats counting them:
 - **Row 4 — `LICENSE-CONTENT`.** One fetch at build time. It gates the bulk import and nothing else in the graph.
 - **Row 15 — which hosted lane may make.** The *measurement* is closed (R5, above) and the *decision* is not. **Do
   not read one as the other**: what the number says is that the tail is zero over the week measured, which is an
-  argument and not a choice. The charter field `cloud: allow \| deny` is decided either way (v79).
-- **Row 16 — contrarian assumption 1.** Raised by the rethink round and settled by **R12**, the cheapest measurement
-  named anywhere in it. **This is the row with the largest blast radius on this page**, because the architecture
+  argument and not a choice. The charter field `cloud: allow \| deny` is decided either way (v79). **Re-read under
+  E1/E13 (amended 2026-09-06):** the lane is the night's fallback now, so the decision sits on the first night's
+  critical path rather than beside it, and R37 replaces R5's week.
+- **Row 16 — contrarian assumption 1.** Raised by the rethink round and settled by ~~**R12**~~ **R27's (b) and (c),
+  never (a) alone** (amended 2026-09-06: NEW: O102 / THINKER: C2, B4). **This is the row with the largest blast radius on this page**, because the architecture
   inverts if it is false, and it has been treated as settled everywhere in v2 without ever being asked.
-- **Row 17 — the metered key.** Downstream of row 1 and unanswerable before it.
+- ~~**Row 17 — the metered key.** Downstream of row 1 and unanswerable before it.~~ **CLOSED 2026-09-06: *no keys*
+  (E7 · v90).** Row 18, the box, was raised and closed in the same round (E1 · v83); both are reopenable only by name,
+  through the `wins_if:` of §J 74 and §J 73.
 
 **(NEW: two of the five were raised by the round that was meant to close things, and that is the correct outcome)**
 Rows 16 and 17 are **assumptions this plan was already making**, promoted into rows with two sides and an owner. A
@@ -221,7 +266,7 @@ staying at fifteen while both assumptions kept being made silently is what failu
 
 ---
 
-### 20.8 Research first — the twenty-six questions
+### 20.8 Research first — the ~~twenty-six~~ **forty** questions (R27–R40 added 2026-09-06, fixer round)
 
 **(NEW: §1 pointed here for the R-list and the list was not here · added 2026-09-06 · challenge C P3-3)** §1.1 says
 the round produced *"the twenty-six questions nothing resting on them can be decided without"* and sent the reader to
@@ -267,6 +312,29 @@ in DECISIONS §19; it prices **v79** and closes the *measurement* half of row 15
 | **R24** | Does **pixel-agents** render ten venture areas and fifty live agents, and what is its `AgentEvent` schema and ingest rate? | **v62**'s UNVERIFIED, and the writer §14.4 says is ours to build | OPEN |
 | **R25** | What are **`/schedule`**'s semantics — interval floor, storage, headless status? | Whether **v55**'s Watch-dispatched standing intents should route through it or ignore it | OPEN |
 | **R26** | Was **#19945** fixed between Codex 0.125 and 0.153? | It would settle **R10** without a local install, and **it is the only cheap route to it** | OPEN |
+
+**(NEW: R27–R40, the fixer round's questions · 2026-09-06 · SPINE §N)** Merged from the three fixer files into one
+numbering. **Two were dropped by overrule and are named so nobody re-asks them:** A's *ssh to a box* (E1) and C's
+*vanilla-week numbers* (E14). Three cost **zero build** — R27(b), R34 and R35 read what this Mac already holds.
+**R33 is R3's unattended half made critical by E1:** with no box, the LaunchAgent that must read a keychain item at
+three in the morning is on this Mac, after sleep, with the screen locked.
+
+| id | The question | What it decides | Status |
+|---|---|---|---|
+| **R27** | **R12, split three ways:** (a) the harness's first thirty; (b) thirty random Floor episodes, domain-labelled by one Sonnet `-p` pass, rated by the founder in one sitting — *could a program have judged this?* — plus thirty paper done-tests across §23–§30; (c) the second venture's first thirty. *Inventing an anchor* = one that tests a property the done-test did not state, reads a record the company writes, or would pass a rejected artifact | **§I row 16, by domain** — (b) and (c) together, never (a) alone (O102) | OPEN — (b) zero build |
+| **R28** | Does `--restricted` ignore `--settings <file>` as it ignores the settings files? | **O87** — per-child hooks and denies on the `-p` carrier (E9) | OPEN |
+| **R29** | RSS per `-p` child and the page-in point on this Mac | **O71**'s `sessions_ceiling`; 3 until measured (THINKER: A14) | OPEN |
+| **R30** | Does `--no-session-persistence` suppress the `~/.claude/projects` JSONL for a `-p` child? | **O88 · v93**'s *settled by* (E10) | OPEN |
+| **R31** | The daemon's lease semantics, idle exit, and what `claude agents --json` lists after it exits | **O91** — `bin/supervise` REFUSED until answered | OPEN |
+| **R32** | Does `PreCompact` fire under `-p`, and does a compaction cost a 2x cache write? | **O90**; the rest of R9 | OPEN |
+| **R33** | Can a LaunchAgent on THIS Mac read a keychain item after sleep, and after reboot with the screen locked? | **R3's unattended half**, critical under E1; `--bare` skips keychain reads | OPEN |
+| **R34** | The founder's measured decision throughput: whiches and `AskUserQuestion` rounds answered per day | **O96**'s seed — six per five-hour window until this replaces it (E15) | OPEN — zero build |
+| **R35** | Cumulative shadow USD of unattended work on this seat against the seat price, today | **O116**'s first reading; the size of the bet on §I row 1 | OPEN — zero build |
+| **R36** | Baseline the Watch's ring, dispatch, refusal and which-open rates over the first month | **O123** | OPEN |
+| **R37** | The Mac's off-hours and longest gap over thirty days including a weekend away, as a floor | **§I row 15** on a month; **§I 18 / §J 73**'s `wins_if:` (E1) | OPEN |
+| **R38** | Under a synthetic obligation tide, how often does a second venture's top-weight intent dispatch under v75's order? | **v75**'s own *settled by*, before any comparator is replaced (§J 80) | OPEN |
+| **R39** | Does the taste store's held-out rate differ on control-arm whiches only versus all? | **O97** | OPEN |
+| **R40** | Do Google's terms permit automated access through the Gemini CLI on a personal account, for checking? | **v90** — under E7 there is no key alternative | OPEN |
 
 
 **(NEW: the numbering has no hole, and the plan had one)** **R20** — the roster-size ablation — exists in SPINE §N and
