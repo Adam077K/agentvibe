@@ -196,3 +196,16 @@ recommended option on all sixteen.** Recorded by label; each becomes a SPINE row
 | D14 | Hosted lane | Measure hours-off first; add the charter field `cloud: allow \| deny`, default deny, now |
 | D15 | Agent-to-agent messaging | A message is a handover or an objection on the handover schema, one append-only file each; asks carry a deadline and a fallback; the vendor transport's ids are attributes, never a join key |
 | D16 | Rethink triggers | `source:` and `valid_until` on every fact-based SPINE row; a scout standing intent re-fetches them; one `wins_if:` line per losing image |
+
+## §19 — One deletion decided, one measurement taken · 2026-09-06
+
+**Deletion 27 (SYNTHESIS §7, marked the founder's):** *"Delete the row from the plan"* — §11.3's three-family review
+panel row goes. The repo's three live `verified_by: judge` claims and the founder waiver to 2026-11-17 are untouched;
+D13's fallback chains and calibration set are what stands in its place, and the two-family route runs through the
+no-model launcher, outside any Claude session.
+
+**R5, hours the Mac is off (prices D14), measured from `pmset -g log` on this Mac, 2026-09-06, read-only:** the figures
+printed above this entry's commit in the session transcript and summarised in SPINE §I row 15's status. Caveat: the
+log covers only the span it retains; DarkWake power-naps are counted as wakes, so "asleep" here means the machine could
+not have run a process. This is the measurement D14 asked for before deciding the hosted lane; the decision itself
+stays the founder's.
