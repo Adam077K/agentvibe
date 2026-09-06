@@ -95,8 +95,9 @@ slot. **The test is the plan, not the issue closing** — 130 days of silence is
 **(NEW: this test is R10, and R10 is the hinge of the whole cross-model design.)** The table above is not one
 open question among several — **v5, v32, v78, v82 and §I row 15 all read differently depending on its answer.**
 Pass and rung 2 becomes parallel and a second family is a lane; fail and the second family is one foreground slot
-forever, at 1/N availability. **R26 is the cheap route to it**: reading the unread Codex June–August window would
-settle whether #19945 was fixed without installing anything. Both are stated in full at 10.8.
+forever, at 1/N availability. **(R26, OPEN)** is the cheap route to it *(mark added 2026-09-06 · challenge C
+P3-2 — the hinge's cheapest route was the one open question carried nowhere as open)*: reading the unread Codex
+June–August window would settle whether #19945 was fixed without installing anything. Both are stated in full at 10.8.
 
 **(NEW: the prerequisite is a founder act.)** Codex is **not installed** on this machine. Installing it and running
 the rehearsal is section 20 row 5.
@@ -471,13 +472,22 @@ than under the Codex one, which is a routing fact.
 
 **(FACT: world.md 25, 27 — W25 and W27. §10 has no Gemini row of any kind, and that is now a hole with a name.)**
 Gemini CLI ships **named subagents** with *"their own set of tools, MCP servers, system instructions, and context
-window"*, delegated by `@agent`, defined in `~/.gemini/agents` (personal) or `.gemini/agents` (project) — **a third
-agent-file location beside `.claude/agents/` and Codex TOML**, which v42 decided one home without contemplating.
+window"*, delegated by `@agent`, defined in `~/.gemini/agents` (personal) or `.gemini/agents` (project) — ~~**a third
+agent-file location beside `.claude/agents/` and Codex TOML**, which v42 decided one home without contemplating~~
+**(corrected 2026-09-06 · challenge C P1-4)**: it is **a generated view of `keel/shared/roster.yml` (§L O2) for the
+agents Gemini may stand**, not a third home. **v42 stands unamended** — the one home an agent file is *written* in is
+`.claude/agents/<name>.md`; `.gemini/agents/` is regenerated from the roster like `.agents/skills/` and
+`.claude/skills/` already are under v48, so nothing is authored twice and no second path can drift. §17.8 carries the
+path and the generator.
 And its releases since 0.30 are dominated by security hardening, including *"enforce fail-closed workspace trust
 and filter mcpServers in restricted mode"* — **the nearest analogue to `--restricted` in any third runtime**, and
 the thing a Gemini row in 10.5 would be written against. Gemini is carried in this plan as a price and as
-*"scout, once authenticated"*; that is thinner than the evidence now supports, and the gap is recorded rather than
-filled here.
+*"scout, once authenticated"*; that is thinner than the evidence now supports. ~~The gap is recorded rather than
+filled here.~~ **(corrected 2026-09-06 · challenge C P1-4)** **The agent-file half of the gap is filled and its owner
+is named:** `.gemini/agents/` is generated from `roster.yml` by **O2**'s generator pass (ABSENT), for the agents the
+§17.8 table says Gemini may stand — `scout` on routine work and the summarising half of the `curator`. Recorded as
+the orchestrator's reading of **W25** under **v42**, reopenable by name. What stays open is the *row* — §10.5 has no
+Gemini entry and no `--restricted` analogue written against it.
 
 **(NEW: v78 lands on this section as the thing that makes a one-slot family survivable.)** 9.4a decides a
 three-deep `fallback:` per agent ending in *stop and stage*, a **rung demotion** on any cross-family reroute not
@@ -492,6 +502,6 @@ lane; fail and the second family is **one foreground slot forever, at 1/N availa
 §I row 15 all read differently depending on it** — which is why it is named as the hinge rather than as one more
 open question. Its prerequisite is a founder act: Codex is not installed.
 
-**(R26 — the only cheap route to R10.)** Was **#19945** fixed between Codex 0.125 and 0.153? **Source class:** the
+**(R26, OPEN — the only cheap route to R10.)** Was **#19945** fixed between Codex 0.125 and 0.153? **Source class:** the
 unread June–August changelog window, against which three fetches already failed. It would settle R10 **without a
 local install**, which is the entire reason it is worth naming separately from R10.

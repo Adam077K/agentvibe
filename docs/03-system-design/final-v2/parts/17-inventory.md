@@ -138,8 +138,9 @@ there.
 
 **(NEW: the four admissible bodies are the content rule, and they are ours)** **anchor** (a check with an exit code) ·
 **exemplar** (examples of good, with provenance) · **rehearsal case** (input plus known answer) · **reference** (a
-vendor fact with an expiry). A step list is admitted in exactly one place: a checklist the Sender reads aloud, where
-the judge is absent and the act cannot be taken back. **The cost, once (v18):** an imported skill written to the
+vendor fact with an expiry). A step list is admitted in exactly ~~one place~~ **two places** **(corrected 2026-09-06:
+v51 · challenge C P1-1)**: a checklist the Sender reads aloud, where the judge is absent and the act cannot be taken
+back, and **the curator's five fixed questions** (§13.6, admitted as the second step list by **v51**). **The cost, once (v18):** an imported skill written to the
 published spec's recommended *"Step-by-step instructions"* body fails our admission and needs a pass.
 
 **(FINAL §16.2, re-decided under v3 and v19)** The 134 no longer move into a holding directory read by nothing. Each
@@ -399,7 +400,7 @@ renderers read the same logbook.
 |---|---|---|---|---|
 | **Claude Code** (subscription) | every agent of 17.1; **the Floor, always**; the Operator | **two windows: a rolling five-hour AND a weekly, per seat, shared with Claude chat and Cowork** (v22); one-hour cache | `<agent>.claude-code.argv` — ABSENT | installed, **2.1.261** |
 | **Codex CLI** (subscription) | **day one (v5), in one position:** checker on a prepared diff, foreground, stdout to a file while inheriting the parent shell's TTY | its own window; **the only vendor publishing numeric per-window quotas** | `<agent>.codex.argv` — ABSENT | **not installed** (`command -v codex` → absent). #19945 open **130 days with no maintainer reply** |
-| **Gemini CLI** (subscription) | scout on routine work; the summarising half of the curator | free tier 60 requests/min, 1,000/day on a personal account; paid tiers UNVERIFIED | `<agent>.gemini.argv` — ABSENT | installed **0.38.2**, never authenticated; auth state unreadable (`~/.gemini` is `denyRead`). **(FACT: world.md 25)** it ships **named subagents** with their own tools, MCP servers and context windows, delegated by `@agent` and defined in **`.gemini/agents`** — an **eighth** named roster in the world (§5.8 fact 1) and a **third agent-file location**, which is a case v42 did not contemplate. §17.8 carries the path |
+| **Gemini CLI** (subscription) | scout on routine work; the summarising half of the curator | free tier 60 requests/min, 1,000/day on a personal account; paid tiers UNVERIFIED | `<agent>.gemini.argv` — ABSENT | installed **0.38.2**, never authenticated; auth state unreadable (`~/.gemini` is `denyRead`). **(FACT: world.md 25)** it ships **named subagents** with their own tools, MCP servers and context windows, delegated by `@agent` and defined in **`.gemini/agents`** — an **eighth** named roster in the world (§5.8 fact 1) and ~~a **third agent-file location**, which is a case v42 did not contemplate~~ **a generated view of `roster.yml` (O2), not a third home — v42 stands** *(corrected 2026-09-06 · challenge C P1-4)*. §17.8 carries the path and the generator |
 | **Local models** | **real work, not no work** (v20): embeddings, classification, dedup, PII detection | none — electricity | — | ABSENT. MiniLM (384 dims, Apache 2.0, 256-word-piece truncation) · Qwen3-0.6B (32,768 context, Apache 2.0); on-disk size not published |
 | **The artifact runtime** | the published phone pages: Balcony views, the briefing, the read-back. **It cannot pop a terminal**, which is why it is not the website's host (v39) | free | — | exists; measured: database, user identity, comments that wake the session |
 | **Routines** (cloud) | **refused for the Watch**: cloud-only, cannot reach anything this system stores on the Mac. **Read *no local files* narrowly** — a routine clones every selected repo per run and pushes `claude/`-prefixed branches, so it has a repository and not this laptop (cloud.md) | **1-hour minimum, confirmed verbatim**: *"The minimum interval is one hour; expressions that run more frequently are rejected."* The **daily cap exists and is published as no number** — superseding this cell's earlier *unverified*, which doubted the cap rather than its size | — | exists; **API fire endpoint documented** (§10.2a) |
@@ -411,7 +412,9 @@ renderers read the same logbook.
 both** (§H.1): the Operator is the founder's contact point and runs inside Claude Code; every dispatch to any provider
 goes through `keel/bin/run`. **The cost, stated once:** one foreground slot is not parallel, so **local Codex is not a
 night lane** until the headless rehearsal passes — `codex exec --json`, no controlling TTY, a non-trivial prompt,
-version ≥ 0.124.0, against known-answer cases. **(NEW, v56: that cost is about the LOCAL binary and does not govern
+~~version ≥ 0.124.0~~ **the installed version, recorded** *(moved 2026-09-06: W19 · challenge C P3-4 — Codex ships
+0.153.4, so the old floor is twenty-nine minor versions stale and is satisfied by anything installed, which means it
+no longer discriminates)*, against known-answer cases. **(NEW, v56: that cost is about the LOCAL binary and does not govern
 the row above it.)** #19945 is a local TTY defect, so it cannot reach a task running in OpenAI's sandbox — which is
 why `@codex review` is admitted today while local Codex waits on a rehearsal.
 
@@ -506,10 +509,13 @@ keel/                                   one private repository · the house
                                         and Gemini CLI, not .codex/skills
   .claude/skills/                       AT THE HOUSE ROOT (v48), GENERATED from shared/skills — read by Claude
                                         Code. A venture carries no skills directory; skills are not per venture
-  .gemini/agents/                       W25 · A THIRD AGENT-FILE LOCATION, per provider: Gemini CLI ships named
-                                        subagents with their own tools, MCP servers and context windows, delegated
-                                        by @agent. v42 decided ONE path and did not contemplate this case; the file
-                                        is GENERATED from shared/roster.yml (O2) for the agents Gemini may stand
+  .gemini/agents/                       W25 · A GENERATED VIEW OF shared/roster.yml (O2), not a third home
+                                        (corrected 2026-09-06, challenge C P1-4): Gemini CLI ships named subagents
+                                        with their own tools, MCP servers and context windows, delegated by @agent.
+                                        v42 STANDS — an agent file is written in ONE place, .claude/agents/<name>.md;
+                                        this directory is GENERATED from shared/roster.yml (O2) for the agents Gemini
+                                        may stand, the same way .claude/skills and .agents/skills are (v48), so
+                                        nothing is authored twice and no second path can drift
   mission-control/                      the website: seven pages, each a control, every tap opening a terminal here
     server/ client/ scripts/            seeded from mission-control/ on ceo-1-1788609834 (60 files) — §18
   logbook/

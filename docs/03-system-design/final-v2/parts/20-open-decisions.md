@@ -157,7 +157,7 @@ image, and **none of them is re-argued in this section or anywhere else.**
 | D2 | **v67** | **Both:** the launcher records each child's process group and the cord signals it; `bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN |
 | D3 | **v68** | Build **`bin/egress`** — one no-model program logs every call, filters by domain and method, and injects credentials the agent never sees; `--strict-mcp-config` names only the proxy and the MCP policy file becomes its configuration |
 | D4 | **v69** | **Both now:** a hash in the log and in memory, one erasable per-subject store holding the body, and a **consent register** with one writer, read by the Sender before any contact |
-| D5 | **v70** | The **curator and the challenger both join wave one** — ten agents plus the Operator, not eight |
+| D5 | **v70** | The **curator and the challenger both join wave one** — ten ~~agents plus~~ **including** the Operator, not eight *(reworded 2026-09-06 · census C item B: "plus" summed to sixteen against a fifteen-role roster; SPINE v70 carries the same wording)* |
 | D6 | **v71** | An **onboarding pack for every agent, wave one included**. Without it the agent is declared and not routable |
 | D7 | **v72** | **All fifteen agent files carry `valid_until`**, with exactly one recorded disposition at expiry — Refresh · Merge · Retire |
 | D8 | **v73** | **Every anchor carries a mutation case** — a known-bad input it must fail — or is marked `unrated`; §21's rung-1 share splits rated and unrated |
@@ -218,3 +218,58 @@ Rows 16 and 17 are **assumptions this plan was already making**, promoted into r
 round that only closes decisions cannot find those; **v81 is the mechanism that makes finding them routine rather
 than dependent on eight lanes being dispatched by hand.** The count going up is not the round failing. The count
 staying at fifteen while both assumptions kept being made silently is what failure would have looked like.
+
+---
+
+### 20.8 Research first — the twenty-six questions
+
+**(NEW: §1 pointed here for the R-list and the list was not here · added 2026-09-06 · challenge C P3-3)** §1.1 says
+the round produced *"the twenty-six questions nothing resting on them can be decided without"* and sent the reader to
+§20 for them. §20 carried seventeen open decisions and FINAL §19's rows; **R5 and R12 appeared inside two of those
+rows and the other twenty-four appeared nowhere**, so a reader counting the plan's research questions from this
+document alone could not find them. **SPINE §N is reproduced below**, unchanged in substance: id · the question ·
+what it decides · status. The source class per question stays in SPINE §N and is not repeated here, because a second
+copy of it is a second thing to keep true.
+
+**Read it as the plan's own list of what it does not know.** Nothing here is a decision and nothing here has an
+owner: each is a bounded question with a source class, and **nothing resting on one can be decided without it**.
+**R10 is the hinge** — the one question whose answer changes the shape of the cross-model architecture rather than
+one of its rows; **v5, v32, v78, v82 and §I row 15 all read differently depending on it**, and **R26** is the only
+cheap route to it. **R12** is the cheapest measurement named anywhere in the round and settles §20.1's row 16, the
+row with the largest blast radius on this page. **One is DONE:** R5, measured on this Mac on 2026-09-06 and recorded
+in DECISIONS §19; it prices **v79** and closes the *measurement* half of row 15 while leaving the *decision* open.
+
+| id | The question | What it decides | Status |
+|---|---|---|---|
+| **R1** | Is the Bash sandbox's `filesystem.allowWrite` settable **per `claude -p` invocation**, or project-scoped only? | Whether the shell can be narrowed to a run's worktree, making `isolation: worktree` **enforced** rather than declared | OPEN |
+| **R2** | Does the sandbox `credentials` block inject a secret at egress without the child being able to read it, and does `network` support an HTTP-method allowlist and TLS inspection? | Whether **v68** is one config change or a program we write | OPEN |
+| **R3** | Can a non-interactive background process read a macOS keychain item without an interactive unlock, and under what ACL? | Whether §15.4's credential plan works at 3 a.m. at all — **the unattended half rests on it and nothing has tested it**. Also prices **v66**'s keychain-held token | OPEN |
+| **R4** | Can a sandboxed run reach a local model, and in which shape — server inside, server outside, or in-process? | Whether the local tier is a service or a program (**O13**). Inbound `bind()` is measured denied; **outbound connect to loopback is unmeasured** | OPEN |
+| **R5** | How many hours is the Mac actually off, when, and what is the longest single gap? | Prices **v79** — a cloud lane buying back a small tail is not worth §I row 1 | **DONE 2026-09-06** (DECISIONS §19): span 2026-08-30 21:44 → 2026-09-06 09:39, **156 h · asleep 40.7 h (26%) in 487 episodes · zero episodes of an hour or more · longest single sleep 0.3 h**. The tail is **zero** over the week measured. Caveat: only the span the log retains, and DarkWake naps count as wakes |
+| **R6** | Which inbound sources document a **polling** read with a cursor, and which need a listening socket? | Whether the world's door wakes and reads or must be reachable from the internet — **nothing lifts an inbound `bind` under the armed sandbox** | OPEN |
+| **R7** | What is the cache-read share per dispatch shape, and do `--exclude-dynamic-system-prompt-sections` and `--system-prompt-snapshot on` move it? | The premise under **v57**, under §16.3's formula, and under the tenfold reviewer divergence §16.3 records | OPEN |
+| **R8** | Does the skill metadata tax scale with the **installed library** or with the agent's **declared namespaces**? | **v77** — and if it scales with namespaces, the budget is unnecessary | OPEN |
+| **R9** | Does an unattended `-p` run **auto-compact**, and does it emit anything the log can see? | Whether **v24**, the strongest memory rule, is being broken where it cannot see. If unobservable, the answer is to bound run length | OPEN |
+| **R10** | Does `codex exec --json` return output with **no controlling TTY**, on a current version, with a non-trivial prompt? | **The single hinge of the cross-model architecture.** Pass and rung 2 becomes parallel; fail and the second family is one foreground slot forever. Note **W19**: the version floor must be restated | OPEN |
+| **R11** | Does a second model family reduce escaped defects on **our** move classes, and by how much? | Whether rung 2 outranks rung 4 on any given class, and contrarian assumption 2. **Blocked on O7's four provenance fields — cheap now, unreconstructable later** | OPEN |
+| **R12** | What fraction of a venture's real done-tests reach rung 1 **without inventing an anchor**? | **Contrarian assumption 1 (§I row 16), and with it the shape of the whole architecture.** The cheapest measurement named anywhere in the round | OPEN |
+| **R13** | Does `LICENSE-CONTENT` permit **derivative** skill bodies, not merely redistribution? | Narrower than §I row 4 and decisive: under v18 we would **rewrite** imported bodies, which is a derivative work MIT-on-the-code says nothing about | OPEN |
+| **R14** | Do any of the three CLIs emit a **skill-activation event** we can read? | Whether **O41** is instrumentation or a field lookup | OPEN |
+| **R15** | Is there any published measurement of **selection accuracy as installed-skill count rises**? | The real risk of importing thousands. If nobody has measured it, **v77**'s budget is what bounds the exposure | OPEN |
+| **R16** | Does any shipped agent system carry a **scheduling object between the goal and the run** — two objects or three? | **O1**'s shape; cognition.md's ticket table is explicitly incomplete here | OPEN |
+| **R17** | What does `/goal`'s evaluator accept as a condition, and does an **exit-code** condition behave differently from a prose one? | **O21**, which is otherwise a design argument. Now also bounded by **W14**'s three-check-in cap | OPEN |
+| **R18** | Is there measured evidence for a **re-attempt ceiling across sessions**? | The N in the attempt counter (**O73**), which is otherwise taste | OPEN |
+| **R19** | Does an **onboarding pack** change an agent's anchored pass rate? | **v71**, and whether wave two should be gated on evidence at all | OPEN |
+| **R20** | Has anyone published a **roster-size ablation between six and one hundred and fifty**? | The only fact that could responsibly move **v31** in either direction. **W30** closed the headline; the leaderboard remains unobtained | OPEN |
+| **R21** | Does any **credit-spending server expose a spend or balance read**? | **O32**: with a balance read a program can hold an absolute ceiling and Higgsfield stays in WRITES; without one it belongs in REACHES-THE-WORLD | OPEN |
+| **R22** | What does **page 3 cost to render at a year of rows**, and where is the knee? | Whether **O40** is a day-one shape or a later migration touching the one store the design says is never edited | OPEN |
+| **R23** | Is there a **concurrency ceiling on `claude -p` children**, and does the N+1th fail loudly, queue, or degrade silently? | **O71** — the board refuses a drag that would breach a bound, and no bound is a session count | OPEN |
+| **R24** | Does **pixel-agents** render ten venture areas and fifty live agents, and what is its `AgentEvent` schema and ingest rate? | **v62**'s UNVERIFIED, and the writer §14.4 says is ours to build | OPEN |
+| **R25** | What are **`/schedule`**'s semantics — interval floor, storage, headless status? | Whether **v55**'s Watch-dispatched standing intents should route through it or ignore it | OPEN |
+| **R26** | Was **#19945** fixed between Codex 0.125 and 0.153? | It would settle **R10** without a local install, and **it is the only cheap route to it** | OPEN |
+
+
+**(NEW: the numbering has no hole, and the plan had one)** **R20** — the roster-size ablation — exists in SPINE §N and
+was cited nowhere in the plan until 2026-09-06, so a reader counting from the document alone got twenty-five. It is
+cited now beside the **v31** claim in §21.2, where it belongs: it is the one fact that could move the roster size in
+either direction, and **W30** closed its headline while the leaderboard remains unobtained.

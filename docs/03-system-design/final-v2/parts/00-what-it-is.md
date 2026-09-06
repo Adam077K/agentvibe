@@ -39,8 +39,11 @@ founder event**, at four call sites — it releases the reserve to autonomous wo
 the reserve's own horizon and snaps it back on the first tap, executes a *which*'s stated default at its intent's
 expiry with both built options archived, builds one option instead of two while away, and keys page 5's *since you
 were last here* view on the event rather than on a date. It reintroduces no approve verb and does not reverse v9: a
-silent run still cannot ask. **Mechanism:** one predicate and one field shared by four call sites — **ABSENT**, and
-§A v76 names no path for it. Second, **the whole of §0 rests on contrarian assumption 1** (§I row 16): that a
+silent run still cannot ask. **Mechanism:** one predicate and one field shared by four call sites — **`bin/log`
+writes `keel/logbook/founder.last` on every founder-authored event and `bin/watch` reads it**, and the four call
+sites above read that one file. **ABSENT** — designed with its path named, in v50's sense, so it is ABSENT and not
+WISH ~~and §A v76 names no path for it~~ *(path set by the orchestrator 2026-09-06, DECISIONS §21 · challenge C
+P2-1)*. Second, **the whole of §0 rests on contrarian assumption 1** (§I row 16): that a
 deterministic anchor exists for most company work. Rung 1, the trust score, regression-for-free, unattended night
 work, the refusal of consensus voting and the promise that the founder is not the bottleneck all hang on it, and the
 evidence for it comes from the harness — the most anchorable venture that could have been chosen. **If it is false

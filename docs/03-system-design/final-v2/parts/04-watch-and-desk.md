@@ -95,7 +95,8 @@ wrong and nobody notices. **Mechanism:** the field is read from settings; anyone
 **(FINAL, with the rethink round's four additions)** **Enforced by:** `bin/watch` (ABSENT; FINAL names it
 `keel/bin/watch`) · the cord file `STOP` (ABSENT) · `settings.yml` holding the tick, the reserve per window, the WIP
 limits (ABSENT) · **`bin/horizon`** (ABSENT, §L O23) · **`catch_up:` on the standing intent** (ABSENT, §L O52) ·
-**`bin/replay-desk`** (ABSENT, §L O20) · **the last-founder-event predicate** (ABSENT, v76).
+**`bin/replay-desk`** (ABSENT, §L O20) · **the last-founder-event predicate over `keel/logbook/founder.last`** —
+written by `bin/log`, read by `bin/watch` (ABSENT, v76).
 
 ---
 
@@ -222,8 +223,11 @@ option instead of two, because the second exists to be chosen between and nobody
 ***since you were last here*** view keyed on the event, never on a date. **This sits inside the founder's own
 numbers** — *"Keep 30% and 3/day; evidence moves them"* — and changes what reads them, not what they are. **It
 reintroduces no approve verb and does not reverse v9:** a silent run still cannot ask; a *which* whose default fires
-is a decision the founder already wrote down. **Mechanism:** one predicate and one field shared by four call sites
-(**ABSENT**; §A v76 names no path). **Settled by:** the reserve hit rate §21.1 already measures moving off
+is a decision the founder already wrote down. **Mechanism:** one predicate and one field shared by four call sites —
+**`bin/log` writes `keel/logbook/founder.last` on every founder-authored event and `bin/watch` reads it** (**ABSENT**;
+~~§A v76 names no path~~ *path set by the orchestrator 2026-09-06, DECISIONS §21 · challenge C P2-1*). The mark is
+**ABSENT** rather than **WISH** because v50 asks for a designed mechanism *with its path named*, and this now has
+one. **Settled by:** the reserve hit rate §21.1 already measures moving off
 *expired-unused*, and the count of second options built and never chosen falling.
 
 ---
@@ -265,9 +269,23 @@ obligation schema carries the class (**ABSENT**, §L O55); the promotion is a br
 
 **(FINAL)** **There is no success-probability estimate anywhere:** the system does not predict the value of work,
 it measures what work of that kind cost before, takes the founder's weight as given, and lets recency and expiry do
-the rest. Two escape hatches from real practice: one **spinning slot** is always held for whatever the founder asks
-next, so a spoken instruction never queues behind autonomous work; and the Desk **re-ranks on a cadence**, not on
-every event, so a noisy input cannot make it thrash.
+the rest. Two escape hatches from real practice, **both given a mechanism and a mark on 2026-09-06 (challenge C
+P2-5), because a rule with neither is a wish in a subsection where every other rule has one**: one **spinning slot**
+is always held for whatever the founder asks next, so a spoken instruction never queues behind autonomous work; and
+the Desk ~~**re-ranks on a cadence**, not on every event~~ **re-ranks on every tick**, so a noisy input cannot make it
+thrash.
+
+**The spinning slot is not a second reserve.** It is **one slot inside the reserve §4.2 already holds** — the same
+number, spent differently: the Desk stops at the reserve line as it always did, and the topmost slot below that line
+is the one it will not fill with autonomous work. Nothing new is reserved, so §4.2's arithmetic is untouched and the
+founder's one slider still sets the whole of it. **Mechanism:** one branch in `bin/watch`'s dispatch loop, holding
+the last slot above the reserve line unless the item is founder-authored (**ABSENT**). A slot held by an
+unaccounted-for rule is capacity that disappears from the gauge the founder tunes.
+
+**"On every tick" is not a schedule, and that is the whole point of the change.** The tick is `settings.yml`'s, the
+founder's number (§4.1), and the Desk re-ranks once per tick because that is when it runs at all — so a noisy input
+still cannot make it thrash, and the plan states no interval of its own. A *cadence* here would have been a second
+clock beside the Watch's, which is what §13a.3 and §18.7 refuse.
 
 **(FINAL)** The Desk records its ranking **and the gate that stopped each candidate**, at every tick, which is what
 makes *why did you not do that* answerable. **Enforced by:** `bin/watch` writes ~~`logbook/desk/<tick>.json`~~

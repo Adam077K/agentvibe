@@ -278,11 +278,22 @@ company.
 So the recovery plan is a credential plan: a password manager as the single source of truth, its emergency kit
 **printed and stored physically**, hardware keys registered **in pairs with the second off-site**, and a k-of-n split
 for the handful of secrets that unlock everything else. **The standard mistake is escrowing the vault and not the
-second factor that protects the vault.**
+second factor that protects the vault.** **(NEW: the escrow half is a WISH, and naming it that is the honest mark ·
+2026-09-06 · challenge C P2-4)** All three of those — **the printed emergency kit · the hardware keys registered in
+pairs with the second off-site · the k-of-n split** — are **WISH** in v50's sense: no mechanism is designed, no path
+is named, and none of them is a thing a program in this plan performs. They are founder acts against a vendor's
+product, and the plan's own §19 has no node for any of them. They stay because the failure they cover is real; the
+mark stops them reading as designed work.
 
-**(FINAL)** **The restore is drilled or none of this is true.** Monthly, the fleet is restored into a scratch
-directory from the remote alone and the anchors run there, with the result in the briefing. Twice a year, on a machine
-that is not this one, the company is rebuilt from the log and the escrow, and **the drill produces a number**.
+**(FINAL)** **The restore is drilled or none of this is true.** The fleet is restored into a scratch directory from
+the remote alone and the anchors run there, with the result in the briefing; and on a machine that is not this one,
+the company is rebuilt from the log and the escrow, and **the drill produces a number**. **(NEW: the two cadences are
+struck, and this is the same refusal §13a.3 and §18.7 already make · 2026-09-06 · challenge C P2-4)** ~~Monthly~~ and
+~~twice a year~~ are gone from this plan. **Each drill is one obligation row carrying `recurs:`, and the number in it
+is the founder's, set in the charter — exactly like `undo_window`, one hour by default and the founder's to set
+(§12.2).** The plan states that the drill recurs and that its result reaches the briefing; **it states no interval**,
+because a cadence written into a plan is a schedule the SPINE refuses and the plan cannot keep. `bin/watch` reads
+`recurs:` on the obligation the same way it reads `every:` on a standing intent (v55), so this costs nothing new.
 
 **(FINAL)** Credentials are **keychain references in every file, never values**: a file that contains a secret is a
 file that gets committed eventually.
@@ -303,8 +314,10 @@ then one detached measurement.
 the obligations store** (v44), surfaced by the briefing, with the same forced disposition every dated thing here
 carries. §12.8c holds the decision; this is the section whose plan it repairs.
 
-**Mechanism:** the drill as an obligation with `recurs: monthly` in the harness venture's obligations (**ABSENT**) ·
-rotation rows in `obligations.yml` (**ABSENT**, §L O67).
+**Mechanism:** the two drills as **two obligation rows carrying `recurs:`** in the harness venture's obligations,
+their intervals read from the charter and never written here (**ABSENT**) · rotation rows in `obligations.yml`
+(**ABSENT**, §L O67) · the escrow half — printed kit, paired hardware keys, k-of-n split — **WISH**, no mechanism
+designed *(all three marks set 2026-09-06 · challenge C P2-4)*.
 
 ---
 
@@ -345,7 +358,9 @@ default"* (models.md, accessed 2026-09-05). **Five minutes applies in three situ
 provider, **and the moment the account draws on credits**, which is exactly when the machine is busiest. The TTL is a
 function of billing state and shortens twelve-fold at the worst possible moment.
 
-**The consequences, unchanged from FINAL and now with the right coefficients** (§16 carries the arithmetic): the tick
+**The consequences, unchanged from FINAL and now with the right coefficients** (~~§16 carries the arithmetic~~
+**§9.6 owns the arithmetic; §16.3 restates it** — *corrected 2026-09-06 · census C item F, and §16.3's own heading
+already says so*): the tick
 period is chosen for control latency rather than for cost; runs of one shape are batched inside the TTL the Watch
 observes; **the standing prompts are byte-identical and carry no timestamp**; and the set of shapes is closed, because
 **the cache is invalidated by any change to the stable prefix including the tool definitions**, so a bespoke grant per
@@ -467,7 +482,7 @@ this Mac, this account and these runtimes — they are not design, and nothing a
 | Hooks: **34 events, 10 documented blocking**; `PermissionRequest` is **non-blocking** — *"Exit code 2 isn't honored for this event … Deny through the `decision` object instead"* | **runtimes.md** | §15.6 — a hook written the obvious way silently fails to deny |
 | `Monitor` is unavailable when `DISABLE_TELEMETRY` or `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` is set | **runtimes.md** | a trap for this repo specifically |
 | `/goal` is *"a wrapper around a session-scoped prompt-based Stop hook"*, and is unavailable under `disableAllHooks` or `allowManagedHooksOnly` | **runtimes.md** | v11 · §12.6 — the managed file omits both |
-| A goal **defers evaluation while a subagent or background shell is running**; check-ins start at 30 minutes and double to a 4x ceiling; under `-p` *"this is the only way Claude Code delivers check-ins"* | **runtimes.md** | §12.5 — an unattended run's only heartbeat |
+| A goal **defers evaluation while a subagent or background shell is running**; ~~check-ins start at 30 minutes and double to a 4x ceiling~~ **check-ins back off 30 min → 1 h → every 2 h, at most three per goal** *(moved 2026-09-06: W14 · census C item C — the struck reading is FINAL's, superseded at six other sites, and §15.8's preamble promises nothing above contradicts it)*; under `-p` *"this is the only way Claude Code delivers check-ins"* | **runtimes.md**, W14 | §12.5 — an unattended run's only heartbeat; **v12** carries the row |
 | `/goal` leaves the goal active after transient failures **including rate limits**, and terminates only on Met, Impossible, `/goal clear`, or four unrecoverable errors | **runtimes.md** | the behaviour a night wants |
 | Agent teams: experimental, off by default, **no nested teams**, one team per session, `/resume` does not restore them, `-p` never forms one; **~7x tokens in plan mode**; *"Use Sonnet for teammates"* — **our position is v59: a teammate runs on its own agent file's model**, the 7x cost stated in §9 and §16 | **surfaces.md · models.md** | §14.5 · v13 · §G.1 |
 | `~/.claude/teams/<team>/config.json` holds session ids **and tmux pane ids**, and is *"overwritten on the next state update"* | **surfaces.md** | §14.5 — read source, never a write target |

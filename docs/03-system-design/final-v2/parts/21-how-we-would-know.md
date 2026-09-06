@@ -89,6 +89,14 @@ chose fourteen agents plus the Operator, with the evidence in hand: **every ship
 every roster of 150+ is a catalogue you pick from, and ten to fifteen sits in a band nobody publishes evidence for,
 in either direction.** That is an unoccupied band, not a refuted one. Which means it is measurable here first.
 
+**(R20, OPEN — the one fact that could move v31 without waiting a month, and it is the plan's only uncited research
+question · added 2026-09-06 · challenge C P3-1)** *Has anyone published a **roster-size ablation between six and one
+hundred and fifty**?* **Source class:** Google ADK, LangGraph templates, Sakana, Cognition's and Factory's rosters,
+TheAgentCompany's leaderboard (SPINE §N). **What it decides:** the only fact that could responsibly move **v31** in
+either direction. **W30** closed the headline; **the leaderboard remains unobtained**, which is why this stays OPEN.
+Read it against the row below: R20 is the *world's* answer and the routing counts are *ours*, and the plan does not
+need R20 to move — it needs to stop claiming the band is unoccupied if someone has already occupied it.
+
 | Claim | Falsified by | Where the record already exists |
 |---|---|---|
 | **v6 — one artifact, one agent, continuous context.** The roster names *who* does a kind of work; it never splits one build across two builders | a measured build of one artifact by two agents in parallel that beats one agent on the same done-test, at comparable cost. Anthropic's own post says coding is *"not a good fit for multi-agent systems today"*, and Cognition's failure is on one artifact — so a counter-measurement here would be news, not noise | `keel/logbook/runs/<id>/` and the done-test's exit code |

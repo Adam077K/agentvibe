@@ -316,7 +316,7 @@ flowchart TD
 not exist yet — said once, here, because it changes what the Operator does rather than only what the roster
 contains)** The founder chose to start with the ones that have a seed file or a code path today: the Operator,
 `builder`, `reviewer`, `architect`, `tester`, `guard`, `scout` and `designer`. **(FOUNDER, rethink 2026-09-06: D5 →
-v70)** *"Curator and challenger both join wave one"* — so wave one is **ten agents plus the Operator, not eight**,
+v70)** *"Curator and challenger both join wave one"* — so wave one is **ten ~~agents plus~~ including the Operator, not eight** *(reworded 2026-09-06 · census C item B: "plus" summed to sixteen against a fifteen-role roster; SPINE v70 carries the same wording)*,
 and v54's own test is what admits them: the curator has four verified code paths on this branch
 (`evict-memory.mjs`, `ledger.mjs`, `check-citations.mjs`, `check-memory-budget.mjs`). **The `product` dispatch of
 §3.6 still has nobody in it**, so a genuinely fuzzy request is closed the other way — the founder writes the

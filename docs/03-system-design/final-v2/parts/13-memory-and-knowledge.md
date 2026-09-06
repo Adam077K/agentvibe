@@ -359,8 +359,10 @@ generator rule keeps them apart; without it, the archive quietly becomes an answ
 **(FINAL)** A field kit contains no steps, and this is enforced by what its sections *are*: all four headings are
 descriptive and none can hold *first do this, then do that*. **(NEW: v18 makes the same refusal at the library level,
 and names the collision honestly.)** The published SKILL.md spec recommends *"Step-by-step instructions"*; this
-system admits a step list in **exactly one place** — a checklist the Sender reads aloud, where the judge is absent and
-the act cannot be taken back. **The cost, stated once:** an imported skill written to the spec's recommendation fails
+system admits a step list in **exactly ~~one place~~ two places** **(corrected 2026-09-06: v51 widened v18 · challenge
+C P1-1)** — a checklist the Sender reads aloud, where the judge is absent and the act cannot be taken back, and **the
+curator's five fixed questions** (§13.6), admitted by **v51** on the evidence FINAL §10.7 cites: 0 of 121 free
+reflections named the cause. **The cost, stated once:** an imported skill written to the spec's recommendation fails
 our admission and needs a pass.
 
 **(NEW: v19 overrules one half of FINAL's kit lifecycle, and the half it overrules is the unshippable one.)** FINAL

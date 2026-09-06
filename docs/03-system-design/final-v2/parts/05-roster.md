@@ -116,9 +116,15 @@ all, leaving the roster the one object in the system that can only grow.
    §5.2 is the argv; `bin/probe`, ABSENT, asserts it nightly.)*
 4. **The no-model programs stay programs.** The Watch · the Sender · the world's door · the probe · the reconciler ·
    the log · the launcher · the curator's launcher · the drill · the rehearsal runner · the store check · the
-   supervisor. **A prompt injection that reaches one of these finds a program.** *(FINAL §7.4, §16.1.)*
+   supervisor. **A prompt injection that reaches one of these finds a program.** *(FINAL §7.4, §16.1. Mechanism, set
+   2026-09-06 by the orchestrator, DECISIONS §21 · challenge C P2-2: `keel/shared/roster.yml` (§L **O2**) carries the
+   twelve under `kind: program`, and `bin/check-stores` **refuses an agent file whose name is on that list** and
+   **refuses a `model:` on any program entry** — both **ABSENT**. The list is data, so promoting a program to an
+   agent is a diff on one file rather than a habit nobody can see.)*
 
-**(NEW: why rule 4 is the one most at risk from a roster, and the mechanism is a naming discipline)** Fourteen names
+**(NEW: why rule 4 is the one most at risk from a roster ~~, and the mechanism is a naming discipline~~ — it has a
+mechanism now, and this is why it needed one)** *(corrected 2026-09-06 · challenge C P2-2: a discipline somebody
+applies is what §12.10 and §13a call a wish; the two refusals above are what a program can check.)* Fourteen names
 create fourteen invitations to add a fifteenth for something that is currently a program. The test is whether the
 thing needs judgement. The Sender does not: it recomputes a ceiling, reads a checklist aloud into the log, performs
 one act, and holds a recall window. Making it an agent would put a model between the decision and the act, which is
@@ -548,7 +554,7 @@ Nothing is left to be discovered by a reader comparing two documents)**
 
 | Fact | What it says | What the roster does with it |
 |---|---|---|
-| 1 | Every shipped roster names its roles; ~~**zero of seven**~~ **zero of eight** ship unnamed shapes *(moved 2026-09-06: W25)* | **Adopted.** It is the founder's decision and the world agrees with it. **The eighth is Gemini CLI**, which ships **named subagents** with their own tools, MCP servers and context windows, delegated by `@agent` and defined in `.gemini/agents` (world.md 25) — a third provider naming its roles, and a **third agent-file location**, which is a case v42 did not contemplate. §17.8 carries the path |
+| 1 | Every shipped roster names its roles; ~~**zero of seven**~~ **zero of eight** ship unnamed shapes *(moved 2026-09-06: W25)* | **Adopted.** It is the founder's decision and the world agrees with it. **The eighth is Gemini CLI**, which ships **named subagents** with their own tools, MCP servers and context windows, delegated by `@agent` and defined in `.gemini/agents` (world.md 25) — a third provider naming its roles, and ~~a **third agent-file location**, which is a case v42 did not contemplate~~ **a directory generated from `roster.yml` (O2) for the agents Gemini may stand — v42's one home stands** *(corrected 2026-09-06 · challenge C P1-4)*. §17.8 carries the path and the generator |
 | 2 | Magentic-One splits by **grant** — browser, file-read, code, shell — not by domain | **Adopted as the second axis.** §5.2 splits by job *and* its `tools` column splits by grant. Both cuts are present and they are not the same cut |
 | 3 | Per-agent model is first-class frontmatter | **Adopted.** It is what makes per-agent routing a file field rather than a wish, and it removes the technical half of FINAL's objection to a file per role |
 | 4 | Coding is single-threaded, from Anthropic's own post | **Adopted as v6.** One artifact, one builder, never parallelised |

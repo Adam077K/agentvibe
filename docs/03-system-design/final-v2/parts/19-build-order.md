@@ -33,8 +33,8 @@ flowchart TD
     LICENSE(["FOUNDER ACT · fetch and read LICENSE-CONTENT<br/>one fetch; unblocks the 2,111+ (v17)<br/>DECIDED 2026-09-05: fetched at build time; row stays open"])
     HOSTED(["FOUNDER DECISION · which hosted lane may make<br/>when the Mac is off (§I row 15) — Codex cloud has no<br/>documented driver; claude --cloud and Routines do<br/>MEASURED 2026-09-06, R5 DONE: 156 h of log, asleep 40.7 h<br/>in 487 episodes, ZERO gaps of an hour — the tail this<br/>lane would buy back is zero over the week measured.<br/>The charter field cloud: allow or deny, default deny,<br/>is decided either way (v79)"])
 
-    AGENTS1["WAVE ONE · eight agent files (v54)<br/>operator · builder · reviewer · architect · tester ·<br/>guard · scout · designer<br/>.claude/agents/*.md · the model set in<br/>prompt-standard.test.mjs moves in the same change,<br/>because builder and architect declare claude-fable-5-1 (v57)"]
-    AGENTS2["WAVE TWO · seven agent files (v54)<br/>product · analyst · writer · growth · steward ·<br/>curator · challenger<br/>written when a venture needs them; each brings<br/>its own argv file with it"]
+    AGENTS1["WAVE ONE · ten agent files (v54, widened by v70)<br/>ten not eight: curator and challenger moved here 2026-09-06<br/>operator · builder · reviewer · architect · tester ·<br/>guard · scout · designer · curator · challenger<br/>.claude/agents/*.md · the model set in<br/>prompt-standard.test.mjs moves in the same change,<br/>because builder and architect declare claude-fable-5-1 (v57)"]
+    AGENTS2["WAVE TWO · five agent files (v54, narrowed by v70)<br/>five not seven: curator and challenger are wave one<br/>product · analyst · writer · growth · steward<br/>written when a venture needs them; each brings<br/>its own argv file with it"]
     ARGV["keel/shared/argv/&lt;agent&gt;.&lt;provider&gt;.argv<br/>the grant IS these strings"]
     PROBE["keel/bin/probe<br/>what a run can actually touch, nightly"]
     RUN["keel/bin/run<br/>the only thing that composes argv · mints the UUID ·<br/>writes keel/logbook/sessions.jsonl<br/>seed: mission-control/scripts/consume-dispatch.ts"]
@@ -71,7 +71,7 @@ flowchart TD
     EXTRACT["The repository-to-graph extractor<br/>ours; 3d-force-graph reads {nodes, links} only"]
     P6["Page 6 · 3D file graph<br/>LAST of the seven pages (v61)"]
 
-    CODEXTEST["The Codex headless rehearsal<br/>codex exec --json · no controlling TTY ·<br/>non-trivial prompt · version >= 0.124.0"]
+    CODEXTEST["The Codex headless rehearsal · R10<br/>codex exec --json · no controlling TTY ·<br/>non-trivial prompt · THE INSTALLED VERSION, RECORDED (W19)<br/>not the retired >= 0.124.0 floor: 0.153.4 ships today, so<br/>that floor is 29 minor versions stale and discriminates nothing"]
     VENTURE["3 · One real venture, driven<br/>a real done-test and a rung-1 anchor"]
     OVERNIGHT["The first measured overnight<br/>one week overnight against one week bounded"]
 
@@ -86,6 +86,9 @@ flowchart TD
     HOST["keel/host/ · O10<br/>plist · managed-settings template · env file ·<br/>sandbox block · denyRead list · expected macOS grants —<br/>the one place the machine is declared"]
     CONSENT["keel/consent.yml + keel/subjects/&lt;hash&gt;.yml · v69<br/>the register has ONE writer and is read by the Sender<br/>BEFORE any contact · log and memory hold a hash, never a<br/>body, so erasure deletes one subject row and the hash<br/>becomes a known absence"]
     HIGHWATER["The window high-water file · v74<br/>tokens observed, because no denominator is published ·<br/>wall clock beside it, USD kept as a shadow price"]
+    FOUNDERLAST["keel/logbook/founder.last · v76<br/>the last founder event: bin/log writes it, bin/watch<br/>reads it · ONE predicate at FOUR call sites — release the<br/>reserve and snap it back on the first tap · fire a<br/>which's stated default at expiry, archiving both options ·<br/>build one option instead of two · page 5's since you were<br/>last here, keyed on the event and never on a date"]
+    SKILLBUDGET["The per-agent startup metadata budget · v77<br/>a checker modelled on scripts/check-memory-budget.mjs,<br/>which EXISTS and blocks · 7.6a names no path for it yet ·<br/>R8 can retire it outright: if the tax scales with declared<br/>namespaces, the per-namespace generator is the whole fix"]
+    FRESH["The scout standing intent · v81<br/>re-fetches every row carrying source: and valid_until, on<br/>the free Gemini window · a changed fact opens a Decide item<br/>NAMING the row it invalidates · v55's shape, so it is data<br/>the Watch ticks and not a new program"]
 
     EGRESS["keel/bin/egress · v68<br/>ONE no-model door: every call logged, filtered by domain<br/>AND method, credentials injected that the agent never<br/>sees · --strict-mcp-config names only the proxy and<br/>mcp-policy.json becomes its configuration"]
     WORKTREE["keel/bin/worktree · O14<br/>a run NEVER creates its own — git worktree add cannot<br/>complete under the armed sandbox and escalation is<br/>unavailable to an unattended run · it is handed one"]
@@ -191,6 +194,14 @@ flowchart TD
     CONSENT --> SENDER
     METER --> HIGHWATER
     HIGHWATER --> WATCH
+    LOG --> FOUNDERLAST
+    FOUNDERLAST --> WATCH
+    FOUNDERLAST --> DECIDE
+    FOUNDERLAST --> P5
+    SKILL --> SKILLBUDGET
+    GEMINI --> FRESH
+    WATCH --> FRESH
+    FRESH --> DECIDE
     DOOR --> EGRESS
     EGRESS --> INBOUND
     EGRESS --> SENDER
@@ -218,8 +229,8 @@ in 19.2a below**, in three groups, because they arrived as a set and behave as t
 
 | ABSENT path or artifact | SPINE | Node |
 |---|---|---|
-| `.claude/agents/operator.md` and the seven other wave-one files | §B.2, §C, v54 | `AGENTS1` |
-| The seven wave-two agent files — product · analyst · writer · growth · steward · curator · challenger | §B.2, v54 | `AGENTS2` |
+| `.claude/agents/operator.md` and the ~~seven~~ **nine** other wave-one files — including `curator` and `challenger` *(moved 2026-09-06: D5 → v70)* | §B.2, §C, v54, **v70** | `AGENTS1` |
+| The ~~seven~~ **five** wave-two agent files — product · analyst · writer · growth · steward ~~· curator · challenger~~ *(moved 2026-09-06: D5 → v70 — the last two are wave one)* | §B.2, v54, **v70** | `AGENTS2` |
 | `keel/shared/argv/<agent>.<provider>.argv` | §B.1 rule 1, §H.1 | `ARGV` for wave one; each wave-two file brings its own with it (v54) |
 | `keel/bin/run` | §B.1 rule 1, §C.4, v34 | `RUN` |
 | `keel/bin/probe` | §B.1 rule 4, v34 | `PROBE` |
@@ -258,7 +269,11 @@ a wish)** The same completeness claim as 19.2, made against SPINE §L: **one row
 nodes means the graph is wrong.** They group into three kinds, and the kinds behave differently in a build order —
 **a store is written once and read forever, a program is a thing somebody writes, and a mechanism is a rule that
 lands inside a program that already has a node.** Only the first two are new nodes; the third joins one, which is
-why the graph grew by twenty-one nodes and not by eighty.
+why the graph grew by twenty-one nodes and not by eighty. **(NEW: three further nodes, and they are not §L's ·
+2026-09-06 · challenge C P2-3)** `FOUNDERLAST`, `SKILLBUDGET` and `FRESH` carry three **founder** rows — v76, v77 and
+v81 — that were named ABSENT in their own sections and had no node here at all. They are counted apart from the
+twenty-one on purpose: the twenty-one is what the rethink round's *mechanisms* cost, and mixing the two would spoil
+the only number in this section anyone can check.
 
 **Stores and schemas — O1–O12, plus the two the founder's rows add**
 
@@ -272,12 +287,13 @@ why the graph grew by twenty-one nodes and not by eighty.
 | `keel/shared/schemas/event.yml` — `schema_version` on every row | §L O6 | `SCHEMAS`; the logger change joins `LOG` |
 | The handover schema's five fields | §L O7 (**R11** is blocked on it) | `SCHEMAS`; the writer joins `RUN` |
 | `keel/shared/prices.yml` with `fetched_at` and `valid_until` | §L O8 | `PRICES` — the node exists; the two fields and the stale-row refusal are what is new |
-| `keel/logbook/decide.jsonl` | §L O9 · O49 · v76's which-expiry | `DECIDE` |
+| `keel/logbook/decide.jsonl` | §L O9 · O49 · v76's which-expiry, which is **one of v76's four call sites and not its path** — the path is the row below *(clarified 2026-09-06 · challenge C P2-3)* | `DECIDE` |
 | `keel/host/` | §L O10 | `HOST` |
 | `keel/golden/` | §L O11 (contradiction 11) | `GOLDEN` |
 | `keel/surfaces/pages/<n>.yml` | §L O12 (contradiction 9) | `PAGEMAN` |
 | `keel/consent.yml` — the register — and `keel/subjects/<hash>.yml`, the erasable per-subject store | **v69** | `CONSENT` |
 | The window high-water file | **v74** | `HIGHWATER` |
+| `keel/logbook/founder.last` — the last founder event, written by `bin/log`, read by `bin/watch`, with **one predicate over it at four call sites** *(added 2026-09-06 · challenge C P2-3)* | **v76** (§0.1a, §4.4) | `FOUNDERLAST`; the four call sites join `WATCH`, `DECIDE` and `P5` |
 
 **Programs — O13–O20, O23, O60, O78, O79, plus the founder's one**
 
@@ -296,6 +312,8 @@ why the graph grew by twenty-one nodes and not by eighty.
 | `keel/bin/intend` | §L O60 | `INTEND` |
 | `keel/fixtures/` | §L O78 | `FIXTURES`; `bin/drill` gains the scratch house and keeps node `DRILL` |
 | Blue-green at a tick boundary | §L O79 | joins `WATCH` and `SENDER` — free, because every tick is already crash-only |
+| The per-agent startup metadata checker — modelled on `scripts/check-memory-budget.mjs`, which EXISTS and blocks; **§7.6a names no path for it yet**, and **R8** can retire it outright *(added 2026-09-06 · challenge C P2-3)* | **v77** (§7.6a, §7.8) | `SKILLBUDGET` |
+| The `scout` standing intent that re-fetches every row carrying `source:`/`valid_until` on the free Gemini window and opens a Decide item **naming the row it invalidates** — **v55**'s shape, so it is data the Watch ticks *(added 2026-09-06 · challenge C P2-3)* | **v81** (§13a.7, §13a.10) | `FRESH`; the rows it opens land in `DECIDE` |
 
 **Mechanisms — the rules that land inside a program that already has a node**
 
@@ -312,6 +330,8 @@ why the graph grew by twenty-one nodes and not by eighty.
 | A terminal `blocked` state after N failures — **R18** sets N | §L O73 | `RUN`, written to the card store and the negatives store |
 | The deterministic accessibility check · the verbatim legal clause | §L O58, O59 | `P5` and `RECON`; both sit on grants and checks that exist |
 | The page manifest's readers: the census join, the citing-or-refusing Q&A | §L O70, O54 | `P2` and the page renderers, downstream of `PAGEMAN` |
+| **v77**'s one generated directory per namespace — a rule **inside** §7.1's generator, which already owns both output directories, not a second writer *(added 2026-09-06 · challenge C P2-3)* | **v77** (§7.6a), extends **v48** | `SKILL` |
+| **v81**'s `source:` and `valid_until` on every row resting on a fetched fact, and one `wins_if:` line per §22 entry — written once, by whoever wrote the row *(added 2026-09-06 · challenge C P2-3)* | **v81** (§1.1, §13a.10, §22) | no node — the fields are written into the plan itself; the program that reads them is `FRESH` |
 | Deletions and rules with no program: the project-settings grant tier, the backlog file, the parallelism axis, `analyst`'s shell, `CURATION.yml` as the failed-candidate home, the hook rewrite as spec | §L O37, O46, O69, O57, O47, O38 | no node — §18.7 carries them as fates |
 
 **(NEW: three of these paths are named more narrowly than SPINE §L names them, and the difference is recorded
@@ -325,6 +345,15 @@ says only *two stores*. **None of the three is a change of behaviour** — §L's
 path that differs between the spine and the build order is precisely the drift the spine exists to stop, and the
 cheapest moment to see it is now.
 
+**(NEW: three founder rows were ABSENT with no node, and the completeness claim above is what found them)** This
+table and 19.2 both claim *one row per ABSENT path*. **v76**'s last-founder-event predicate reached the graph only as
+*which-expiry* folded into `DECIDE` — one of its four call sites, standing in for the path itself. **v77**'s checker
+and per-namespace generator and **v81**'s `source:`/`valid_until` fields and `scout` standing intent were named
+ABSENT in their own sections and appeared here nowhere. All three are rows above now, with `FOUNDERLAST`,
+`SKILLBUDGET` and `FRESH` in the graph. **The lesson is about the claim, not the three rows:** a completeness claim
+is worth what it costs to falsify, and this one was falsified by reading it against §A rather than against §L —
+the founder rows carry ABSENT mechanisms too, and only §L was swept when the table was written.
+
 **(NEW: two rows are free before the first run and expensive after, and the graph cannot show that)** **O7**'s five
 handover fields and **O6**'s `schema_version` cost nothing while no run has written a row, and cost a **full backfill**
 the moment one has. They are marked *free now, backfill later* in §L for that reason, and **R11** — does a second
@@ -336,9 +365,11 @@ pay more for it and to lose one measurement outright.
 `codex exec --json` return output with no controlling TTY, on a current version, with a non-trivial prompt. Pass and
 rung 2 becomes parallel and a second family is a lane; fail and the second family is one foreground slot forever, at
 1/N availability. **v5, v32, v78, v82 and §I row 15 all read differently depending on it.** Note **W19** against the
-node's own label: the rehearsal floor written there as `>= 0.124.0` is twenty-nine minor versions stale against the
-shipped 0.153.4 and no longer discriminates — the floor is **the installed version, recorded**. **R26**, reading the
-unread Codex June–August changelog window, is the only cheap route to the same answer and needs no install at all.
+node's own label, **which now carries the corrected floor rather than a note beside a stale one** *(corrected
+2026-09-06 · challenge C P3-4)*: the rehearsal floor once written there as `>= 0.124.0` is twenty-nine minor versions
+stale against the shipped 0.153.4 and no longer discriminates — the floor is **the installed version, recorded**.
+**(R26, OPEN)** *(mark added 2026-09-06 · challenge C P3-2)*, reading the unread Codex June–August changelog window,
+is the only cheap route to the same answer and needs no install at all.
 
 ---
 
@@ -374,14 +405,20 @@ of 2026-09-05 settled, `HOSTED` is still **OPEN** (§I row 15) — it names a ch
 driver today (Codex cloud) against lanes that share the Claude seat whose terms clause is §I row 1, also open. Two
 open decisions gate one narrow lane, and nothing else in the graph waits on either of them.
 
-**(FOUNDER, v54: the roster is two nodes now, and the second one is downstream of a running venture)** `AGENTS1` is
-eight files and sits where `AGENTS` did — everything that needs a grant needs it. `AGENTS2` is the other seven, and
+**(FOUNDER, v54: the roster is two nodes now, and the second one is downstream of a running venture · sizes moved
+2026-09-06: D5 → v70)** `AGENTS1` is ~~eight~~ **ten** files and sits where `AGENTS` did — everything that needs a
+grant needs it. `AGENTS2` is the other ~~seven~~ **five**, and
 the only edge into it comes **from** `VENTURE`: they are written when a venture needs them. **No edge is drawn from
 `AGENTS2` to `ARGV`, and the omission is deliberate rather than an oversight** — that edge would close a cycle
 (`AGENTS2 → ARGV → RUN → … → VENTURE → AGENTS2`), and the cycle would be real rather than a drawing artifact, because
 wave two is written after the machine is already running. Each wave-two file therefore brings its own argv file with
 it, the same way wave one's arrives with `AGENTS1`. **What the split does not change:** all fifteen rows stay in the
-§17.1 inventory, and §5.0 states once what wave one does without.
+§17.1 inventory, and §5.0 states once what wave one does without. **(FOUNDER, rethink 2026-09-06: D5 → v70 — what
+v70 moved, and the graph moves with it)** `curator` and `challenger` are **wave one**, so both are inside `AGENTS1`
+and neither is reached through `VENTURE`: memory has a writer from the first night, and a plan about to bind is
+attacked by something that is not its author. v70 moves v54's implementation and reverses nothing — v54's own test is
+*"a seed file or a code path today"*, and `curator` has four verified code paths on this branch while `challenger` is
+one read-only file. §5.0's two tables are the same split stated once.
 
 **(FOUNDER, v61: page 6 is the only page with edges from every other page, and that is what "last" means here)**
 `P2`, `P3`, `P4`, `P5` and `P7` all point into `P6`, so the graph refuses to build it early rather than a sentence
@@ -401,7 +438,10 @@ is why the world's door is a node in its own right rather than a detail inside t
 **(NEW: what the rethink round of 2026-09-06 did to this graph, and the shape of the change is the finding)** It
 added **twenty-one nodes — eleven stores and schemas, ten programs — and not one new root.** Every one of them hangs
 off `LOG`, `RUN`, `STORES`, `DOOR` or `WATCH`, which is what a round of *mechanism* fixes looks like when it is
-drawn: eighty decisions (§L), and the trunk did not move. Had the round found a second architecture, this graph
+drawn: eighty decisions (§L), and the trunk did not move. **(NEW: three founder-row nodes joined on 2026-09-06 —
+`FOUNDERLAST`, `SKILLBUDGET`, `FRESH`, challenge C P2-3 — and they do not disturb this reading:** they hang off
+`LOG`, `SKILL` and `WATCH`/`GEMINI`, so the count of new roots is **still zero**, and they are counted separately
+from the twenty-one because they are founder rows and not §L mechanisms.**)** Had the round found a second architecture, this graph
 would have a second source. It has none. **Four of the twenty-one change an ordering rather than adding work.**
 `PACKS` is the sharpest — **v71 makes an agent unroutable without its onboarding pack**, so `AGENTS1 → ROSTER →
 PACKS → ROUTING → RUN` is the order, and the pack is not paperwork filed after the fact: it is what distinguishes

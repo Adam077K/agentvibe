@@ -303,7 +303,7 @@ design, so it is not adopted on a guess.)**
 | Alternative-architecture proposal | **§22's losing-images ledger**, each kept by name so it can be argued for later, plus **13a.8's queue**. **(NEW: v81)** each entry now carries `wins_if:` — the condition under which that losing image would be the better choice — so an argument for one is a check rather than a mood |
 | Contrarian-review agent | **`challenger`, §B.2 row 14** — `claude-opus-5`, Read Glob Grep, no write, routed before anything irreversible |
 | Fresh-eyes onboarding review | **v30's mechanism is the durable version:** the challenger sees the artifact and its done-test, **not** the author's reasoning. Fresh eyes as structure, not a first week |
-| Session-scoped rethink checklist | **Refused twice over.** v18 admits a step list in one place only, the Sender's checklist; and a rethink checklist inside a session is a plan-critique the run performs on itself, which v30 measures as harmful |
+| Session-scoped rethink checklist | **Refused twice over.** v18 admits a step list in ~~one place only, the Sender's checklist~~ **two places only — the Sender's checklist and the curator's five fixed questions (v51)** **(corrected 2026-09-06 · challenge C P1-1)**, and a rethink checklist is neither; and a rethink checklist inside a session is a plan-critique the run performs on itself, which v30 measures as harmful |
 
 ---
 
