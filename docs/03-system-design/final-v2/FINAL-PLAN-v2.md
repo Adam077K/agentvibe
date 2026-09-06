@@ -5111,9 +5111,24 @@ through the `decision` object instead"* (§15.8) — so **a hook written the obv
 is the worst direction for a control to fail in. The specification does not wait on the rewrite; the rewrite is an
 edit to the judging machinery and stays the founder's.
 
+**(FACT: world.md 17 — W17. A blocking gate shipped for the one thing §9 routes on, and no row uses it.)**
+`PreModelSwitch` and `PostModelSwitch` are hook events that can *"block, confirm, or annotate a model switch"*. §9
+records that they exist and that **no row reads them**; hook events are this section's, so the placement is here.
+**`PreModelSwitch` is the enforcement point for v57's routing and v78's fallback chain**: a switch to a family that
+has **not passed the rehearsal for that move class** is either **blocked**, or **annotated as a rung demotion** and
+allowed — which is exactly the choice v78 states and had no carrier for. Without it, a cross-family reroute silently
+trades correctness for availability, and the handover records the model it ran on with nothing recording that the
+rung fell.
+
+**Two things this does not become.** It is **not a second router** — §9.2 and `routing.yml` (**O5**) decide which
+model; the hook only refuses or annotates a *switch away from* that decision. And it is **not a model judging a
+model**: the predicate is a lookup against the rehearsal record, so it belongs behind a hook exit for the same reason
+`qa-verdict` does.
+
 **Mechanism:** the project-tier deletion (**a deletion**, §L O37; §18 carries it) ·
 `permissions.blockReadsOutsideWorkingDirectories` in the checked-in settings file (**the field ships; unset here**) ·
-the hook rewrite (**ABSENT**, §L O38, **ADOPTED-AS-SPEC**).
+the hook rewrite (**ABSENT**, §L O38, **ADOPTED-AS-SPEC**) · a `PreModelSwitch` hook registered by `bin/run` in the
+run's settings (**the event ships; the hook ABSENT**, W17).
 
 ---
 
@@ -5410,6 +5425,7 @@ path is not a rule.)**
 | Grants in two tiers, not three | a deletion; §18 carries the fate | **O37** · **W7** | a deletion |
 | Reads narrowed by a settings field, not by argv | `permissions.blockReadsOutsideWorkingDirectories` | **W8** | the field ships; **unset here** |
 | Deny through the `decision` object on non-blocking hook events | the hooks | **O38** | **ADOPTED-AS-SPEC** |
+| `PreModelSwitch` as the gate on v57's routing and v78's fallback — block, or annotate the rung demotion | a hook registered by `bin/run` in the run's settings | **W17** | the event **ships**; the hook **ABSENT** |
 
 ---
 
@@ -5507,10 +5523,11 @@ two.)** Three sentences could not all hold: **a deletion request is honoured** (
 (§15.3), and **eviction archives and never deletes** (§13.3, and it is the rule this section is proudest of). The
 founder's answer keeps all three by moving what they are about:
 
-**No personal datum enters memory. A memory item holds a hash.** The body lives in **one erasable per-subject store**
-outside memory and outside the log. Erasure deletes that row, and the hash it leaves behind becomes **a known
-absence** — which is what §13.3's REMOVE branch was already unable to express, because *expired* and *falsified* are
-its only two reasons to remove an item and *this person asked* is neither.
+**No personal datum enters memory. A memory item holds a hash.** The body lives in **one erasable per-subject store,
+`keel/subjects/<hash>.yml`**, outside memory and outside the log, keyed by the same hash the item carries. Erasure
+deletes that file, and the hash it leaves behind becomes **a known absence** — which is what §13.3's REMOVE branch was
+already unable to express, because *expired* and *falsified* are its only two reasons to remove an item and *this
+person asked* is neither.
 
 **So §13.3 does not gain an exception, and that is the point.** REMOVE is still refused for tidiness; eviction still
 archives; the archive still leaves a stub under every heading so a citation resolves. What changes is that the thing a
@@ -5520,9 +5537,10 @@ person can ask to have deleted was never in any of those files.
 · a named person's**, written by the writing program rather than judged at read time, and **a store declaring
 `retention: forever` may not hold a body**. Memory declares forever. That is exactly why it may only hold a hash.
 
-**Mechanism:** the hash indirection in the memory writer and `bin/log` (**ABSENT**, §L) · the per-subject store with
-one writer, enforced by `bin/check-stores` (**ABSENT**) · the class and retention fields on the item schema
-(**ABSENT**).
+**Mechanism:** the hash indirection in the memory writer and `bin/log` (**ABSENT**, §L) · `keel/subjects/<hash>.yml`
+with one writer, enforced by `bin/check-stores` (**ABSENT**) · the class and retention fields on the item schema
+(**ABSENT**). The consent register `keel/consent.yml` is the Sender's, not the curator's — §12.8b owns it, and memory
+never reads it.
 
 ---
 
@@ -5880,7 +5898,7 @@ it.)**
 
 | Mechanism | Path | From | State |
 |---|---|---|---|
-| Memory holds a hash; the body lives in one erasable per-subject store | the memory writer · `bin/check-stores` | **v69** (D4) | **ABSENT** |
+| Memory holds a hash; the body lives in one erasable per-subject store | the memory writer · `keel/subjects/<hash>.yml`; enforced by `bin/check-stores` | **v69** (D4) | **ABSENT** |
 | One redaction program, three call sites — store writes, the mining pass, the PII gate | `bin/redact` | **O17** (with **O66**) | **ABSENT** |
 | A watermark, so the backlog pass and the steady pass are one program | `bin/mine --since` | **O42** | **ABSENT** |
 | The dedup threshold calibrated on labelled pairs; a conflict pair with an owner and an expiry | the curator's pass | **O44** | **ABSENT** |
@@ -7230,7 +7248,7 @@ is still right** (§13).
 **(FOUNDER, rethink 2026-09-06: D4 — the sentence above stands, and it took an indirection to make it stand.
 Contradiction 7.)** *The log is never edited* could not hold beside *a deletion request is honoured* (§16.7) and
 *eviction never deletes* (§13.3) — three rules, one of which had to give. **None of them gave.** No personal datum
-enters the log: **the log holds a hash**, one erasable per-subject store holds the body, and erasure deletes that row
+enters the log: **the log holds a hash**, `keel/subjects/<hash>.yml` holds the body, and erasure deletes that file
 so the hash becomes **a known absence** — the same shape this section already uses two paragraphs above for a blob
 that is gone, *which is a different thing from a silent one*. §12.8b carries the store and the consent register;
 §13.2a carries memory's half.
@@ -9705,7 +9723,12 @@ TALLY (v2 · FINAL): IN 505 · 410 — RENAMED 88 · 157 — REFUSED 52 · 77 �
 ```
 
 *(moved 2026-09-06: the line read `IN 503 · RENAMED 90 · 137 rows changed · 5 marked ?`, correct until the rethink
-round re-placed the rows below.)* **The `?` sequence, and one correction to it:** **8** when first written · **7**
+round re-placed the rows below.)* **The two `?` rows that remain, named rather than counted:** **`Compute rental tool`** (IN in FINAL,
+**REFUSED** in v2 — RunPod spends money at a rate under an uncapped key) and **`Infra layer: hosting, edge
+functions, serverless`** in the wings (IN in both). A `?` is a row a reviewer should read first, so naming the two
+costs one line and saves the reader the lookup a count alone forces.
+
+**The `?` sequence, and one correction to it:** **8** when first written · **7**
 after the review round · **5** after the founder's interview · **2** after the rethink round. The old line
 parenthesised this as *"the review settled two, the founder's interview two more"*, which does not reach 5 from 8 —
 **it was one out**, and the sequence above is taken from `COVERAGE.md`'s own dated notes rather than re-derived here.
@@ -9719,8 +9742,9 @@ v2's own text.**
   It closes with a **consent register**: one store, one writer, **read by the Sender before any contact**. It arrives
   beside the erasable path — no personal datum enters the event log or memory, both hold a hash, one per-subject
   store holds the body, and erasure deletes that row so the hash becomes *a known absence*. **Mechanism:** one
-  indirection in `bin/log` and the memory writer; two stores whose single writer `bin/check-stores` enforces
-  (ABSENT); one line on the Sender's checklist. §12 and §16 carry it.
+  indirection in `bin/log` and the memory writer; two stores whose single writer `bin/check-stores` enforces —
+  **`keel/consent.yml`** for the register and **`keel/subjects/<hash>.yml`** for the bodies, both ABSENT; one line
+  on the Sender's checklist. §12 and §16 carry it, and §19 places both in the build order.
 - **`worker-to-worker request`** and **`peer help request`** were one `?` seen twice, and **v80** settles both: a
   message between two running agents **is a handover or an objection**, on the handover schema, one append-only file
   each. It is not a fourth dispatch mechanism, and the vendor transport's ids are recorded as attributes and never
