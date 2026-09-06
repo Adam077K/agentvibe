@@ -41,11 +41,14 @@ in §17 and ordered in §19), the thirty-two world facts that moved a row with n
 **~~all thirty-two applied in place below~~ twenty-nine are applied in place below and marked *(moved 2026-09-06:
 W-n)*; three move no row at all and are recorded in SPINE §M only** *(corrected 2026-09-06 · census C: the sentence
 claimed thirty-two applications and three of the identifiers appear nowhere in the plan, so a reader checking the set
-found a hole rather than a reason)*. **The three, named so the identifier set is complete here:** **W16** — the
-`Workflow` tool's prompt footprint fell from ~5.7k to ~1k tokens, so **v35 is unchanged and cheaper**; **W28** —
-Devin's automations ship a max-concurrent-runs cap and per-automation cost attribution, so **v55 is unchanged**, and
-it feeds **D10** and **O32** rather than moving a row; **W29** — Factory's named droid taxonomy is **NOT FOUND** on a
-second page, which turns roster.md's UNVERIFIED into NOT FOUND and leaves **v1 and v2 unaffected**), and the twenty-six questions nothing resting on them can be
+found a hole rather than a reason)*. **The three, named so the identifier set is complete here, each fact and each
+binding quoted from SPINE §M rather than paraphrased:** **W16** — *"The `Workflow` tool's prompt footprint fell from
+~5.7k to ~1k tokens, with a bundled `workflow-authoring` skill"*, binding *"**v35 unchanged and cheaper**; §E's
+thirteen namespaces do not list the bundled skill"*; **W28** — *"Devin's automations ship a **max-concurrent-runs cap
+per automation** and **per-automation cost attribution**"*, binding *"**v55** — Devin ships v55's exact shape plus two
+ceilings v55 has no mechanism for; the store check refuses `every:` without a ceiling **per run**, which is a
+different cut. Feeds **v75** and **O32**"*; **W29** — *"Factory's named droid taxonomy is **NOT FOUND** on a second,
+different page"*, binding *"roster.md's UNVERIFIED becomes NOT FOUND; **v1 and v2 unaffected**"*), and the twenty-six questions nothing resting on them can be
 decided without (**SPINE §N, reproduced in §20.8** — *corrected 2026-09-06 · challenge C P3-3: this read "listed in
 §20" while §20 listed none of them; the list exists now and §20.8 is where it is*).
 
