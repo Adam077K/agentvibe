@@ -252,7 +252,7 @@ is still right** (§13).
 **(FOUNDER, rethink 2026-09-06: D4 — the sentence above stands, and it took an indirection to make it stand.
 Contradiction 7.)** *The log is never edited* could not hold beside *a deletion request is honoured* (§16.7) and
 *eviction never deletes* (§13.3) — three rules, one of which had to give. **None of them gave.** No personal datum
-enters the log: **the log holds a hash**, one erasable per-subject store holds the body, and erasure deletes that row
+enters the log: **the log holds a hash**, `keel/subjects/<hash>.yml` holds the body, and erasure deletes that file
 so the hash becomes **a known absence** — the same shape this section already uses two paragraphs above for a blob
 that is gone, *which is a different thing from a silent one*. §12.8b carries the store and the consent register;
 §13.2a carries memory's half.

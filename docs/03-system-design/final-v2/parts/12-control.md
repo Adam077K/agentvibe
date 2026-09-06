@@ -283,9 +283,24 @@ through the `decision` object instead"* (§15.8) — so **a hook written the obv
 is the worst direction for a control to fail in. The specification does not wait on the rewrite; the rewrite is an
 edit to the judging machinery and stays the founder's.
 
+**(FACT: world.md 17 — W17. A blocking gate shipped for the one thing §9 routes on, and no row uses it.)**
+`PreModelSwitch` and `PostModelSwitch` are hook events that can *"block, confirm, or annotate a model switch"*. §9
+records that they exist and that **no row reads them**; hook events are this section's, so the placement is here.
+**`PreModelSwitch` is the enforcement point for v57's routing and v78's fallback chain**: a switch to a family that
+has **not passed the rehearsal for that move class** is either **blocked**, or **annotated as a rung demotion** and
+allowed — which is exactly the choice v78 states and had no carrier for. Without it, a cross-family reroute silently
+trades correctness for availability, and the handover records the model it ran on with nothing recording that the
+rung fell.
+
+**Two things this does not become.** It is **not a second router** — §9.2 and `routing.yml` (**O5**) decide which
+model; the hook only refuses or annotates a *switch away from* that decision. And it is **not a model judging a
+model**: the predicate is a lookup against the rehearsal record, so it belongs behind a hook exit for the same reason
+`qa-verdict` does.
+
 **Mechanism:** the project-tier deletion (**a deletion**, §L O37; §18 carries it) ·
 `permissions.blockReadsOutsideWorkingDirectories` in the checked-in settings file (**the field ships; unset here**) ·
-the hook rewrite (**ABSENT**, §L O38, **ADOPTED-AS-SPEC**).
+the hook rewrite (**ABSENT**, §L O38, **ADOPTED-AS-SPEC**) · a `PreModelSwitch` hook registered by `bin/run` in the
+run's settings (**the event ships; the hook ABSENT**, W17).
 
 ---
 
@@ -582,3 +597,4 @@ path is not a rule.)**
 | Grants in two tiers, not three | a deletion; §18 carries the fate | **O37** · **W7** | a deletion |
 | Reads narrowed by a settings field, not by argv | `permissions.blockReadsOutsideWorkingDirectories` | **W8** | the field ships; **unset here** |
 | Deny through the `decision` object on non-blocking hook events | the hooks | **O38** | **ADOPTED-AS-SPEC** |
+| `PreModelSwitch` as the gate on v57's routing and v78's fallback — block, or annotate the rung demotion | a hook registered by `bin/run` in the run's settings | **W17** | the event **ships**; the hook **ABSENT** |

@@ -37,7 +37,12 @@ TALLY (v2 · FINAL): IN 505 · 410 — RENAMED 88 · 157 — REFUSED 52 · 77 �
 ```
 
 *(moved 2026-09-06: the line read `IN 503 · RENAMED 90 · 137 rows changed · 5 marked ?`, correct until the rethink
-round re-placed the rows below.)* **The `?` sequence, and one correction to it:** **8** when first written · **7**
+round re-placed the rows below.)* **The two `?` rows that remain, named rather than counted:** **`Compute rental tool`** (IN in FINAL,
+**REFUSED** in v2 — RunPod spends money at a rate under an uncapped key) and **`Infra layer: hosting, edge
+functions, serverless`** in the wings (IN in both). A `?` is a row a reviewer should read first, so naming the two
+costs one line and saves the reader the lookup a count alone forces.
+
+**The `?` sequence, and one correction to it:** **8** when first written · **7**
 after the review round · **5** after the founder's interview · **2** after the rethink round. The old line
 parenthesised this as *"the review settled two, the founder's interview two more"*, which does not reach 5 from 8 —
 **it was one out**, and the sequence above is taken from `COVERAGE.md`'s own dated notes rather than re-derived here.
@@ -51,8 +56,9 @@ v2's own text.**
   It closes with a **consent register**: one store, one writer, **read by the Sender before any contact**. It arrives
   beside the erasable path — no personal datum enters the event log or memory, both hold a hash, one per-subject
   store holds the body, and erasure deletes that row so the hash becomes *a known absence*. **Mechanism:** one
-  indirection in `bin/log` and the memory writer; two stores whose single writer `bin/check-stores` enforces
-  (ABSENT); one line on the Sender's checklist. §12 and §16 carry it.
+  indirection in `bin/log` and the memory writer; two stores whose single writer `bin/check-stores` enforces —
+  **`keel/consent.yml`** for the register and **`keel/subjects/<hash>.yml`** for the bodies, both ABSENT; one line
+  on the Sender's checklist. §12 and §16 carry it, and §19 places both in the build order.
 - **`worker-to-worker request`** and **`peer help request`** were one `?` seen twice, and **v80** settles both: a
   message between two running agents **is a handover or an objection**, on the handover schema, one append-only file
   each. It is not a fourth dispatch mechanism, and the vendor transport's ids are recorded as attributes and never

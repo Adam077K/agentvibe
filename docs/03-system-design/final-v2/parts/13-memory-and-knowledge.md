@@ -92,10 +92,11 @@ two.)** Three sentences could not all hold: **a deletion request is honoured** (
 (§15.3), and **eviction archives and never deletes** (§13.3, and it is the rule this section is proudest of). The
 founder's answer keeps all three by moving what they are about:
 
-**No personal datum enters memory. A memory item holds a hash.** The body lives in **one erasable per-subject store**
-outside memory and outside the log. Erasure deletes that row, and the hash it leaves behind becomes **a known
-absence** — which is what §13.3's REMOVE branch was already unable to express, because *expired* and *falsified* are
-its only two reasons to remove an item and *this person asked* is neither.
+**No personal datum enters memory. A memory item holds a hash.** The body lives in **one erasable per-subject store,
+`keel/subjects/<hash>.yml`**, outside memory and outside the log, keyed by the same hash the item carries. Erasure
+deletes that file, and the hash it leaves behind becomes **a known absence** — which is what §13.3's REMOVE branch was
+already unable to express, because *expired* and *falsified* are its only two reasons to remove an item and *this
+person asked* is neither.
 
 **So §13.3 does not gain an exception, and that is the point.** REMOVE is still refused for tidiness; eviction still
 archives; the archive still leaves a stub under every heading so a citation resolves. What changes is that the thing a
@@ -105,9 +106,10 @@ person can ask to have deleted was never in any of those files.
 · a named person's**, written by the writing program rather than judged at read time, and **a store declaring
 `retention: forever` may not hold a body**. Memory declares forever. That is exactly why it may only hold a hash.
 
-**Mechanism:** the hash indirection in the memory writer and `bin/log` (**ABSENT**, §L) · the per-subject store with
-one writer, enforced by `bin/check-stores` (**ABSENT**) · the class and retention fields on the item schema
-(**ABSENT**).
+**Mechanism:** the hash indirection in the memory writer and `bin/log` (**ABSENT**, §L) · `keel/subjects/<hash>.yml`
+with one writer, enforced by `bin/check-stores` (**ABSENT**) · the class and retention fields on the item schema
+(**ABSENT**). The consent register `keel/consent.yml` is the Sender's, not the curator's — §12.8b owns it, and memory
+never reads it.
 
 ---
 
@@ -465,7 +467,7 @@ it.)**
 
 | Mechanism | Path | From | State |
 |---|---|---|---|
-| Memory holds a hash; the body lives in one erasable per-subject store | the memory writer · `bin/check-stores` | **v69** (D4) | **ABSENT** |
+| Memory holds a hash; the body lives in one erasable per-subject store | the memory writer · `keel/subjects/<hash>.yml`; enforced by `bin/check-stores` | **v69** (D4) | **ABSENT** |
 | One redaction program, three call sites — store writes, the mining pass, the PII gate | `bin/redact` | **O17** (with **O66**) | **ABSENT** |
 | A watermark, so the backlog pass and the steady pass are one program | `bin/mine --since` | **O42** | **ABSENT** |
 | The dedup threshold calibrated on labelled pairs; a conflict pair with an owner and an expiry | the curator's pass | **O44** | **ABSENT** |
