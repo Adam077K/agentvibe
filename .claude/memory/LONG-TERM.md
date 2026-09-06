@@ -89,3 +89,4 @@
   choice with an open field, recommended option first. They pick against the recommendation often (Fable as a default,
   no model constraint on teammates, "both" on a binary) and type new requirements into the open field — treat every
   free-text answer as a new row, not a footnote.
+- **A SendMessage to a running lane is delivered only if the lane's return names it** (2026-09-06, twice in one round): additions sent mid-turn never drained, and the lane found the decisions in the tree instead. Treat every addition as undelivered until the return quotes it; re-send as a numbered round rather than assuming.
