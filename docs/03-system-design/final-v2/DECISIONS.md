@@ -393,3 +393,38 @@ decided from a rule already on the page or from a founder answer in §24 — and
   every O81–O127, O82's value included; O90's class re-read as kernel · truth (a carrier drill is ours). **P3-7**
   one cost line each in §0.3; §13a and §5.1 cite. **P3-8** W21 into §12.3. **P3-9** four bounds in §14.12.
   **P3-10** one clause in §20.7b: E7 governs model access; tool credentials are §17.3's.
+
+## §26 — Census D's findings, decided for the fix round's round 2 · 2026-09-06
+
+Sealed reviewer on Opus 5, `review/census-d.md`, measurement only. **The reference graph is complete: v1–v106,
+O1–O127, W1–W41, R1–R40 and E1–E15 all resolve in both directions, zero dangling, zero orphans; 249 §-references
+resolve; zero absent-and-unmarked repo paths; 48 of ~60 re-derived tree figures match to the digit; §19.1's graph
+measures 91 nodes and 195 edges exactly as the plan claims.** Two of its findings are challenge D's P2-1 and P2-8
+already dispositioned in §25 and already with the builder — the §17.1 carrier drift and R9's status — and the
+census confirming them independently is worth recording, not re-deciding. What is new:
+
+- **O102 states no class at any of its fourteen sites** where v96 · O105 requires one on every O81–O127. Add
+  `kernel · truth` (SPINE's value) at O102's first statement, §11.2. The 52 of O1–O80 that state none are
+  correct by the plan's own convention: §13a says the class is SPINE §L's and not restated.
+- **Nine figures drifted, and the fix is the doctrine's, not a new number.** The plan's own lesson — a frozen
+  figure in prose rots and a command does not — decides these. Where the plan states a tree figure as a live
+  fact it gains `measured 2026-09-06; re-derive with <command>`: session files 171→172, LONG-TERM 84→92,
+  commits 825→848, `ceo-*` worktrees five→six, team members 224/219→262/257 (W34), skill frontmatter
+  28,250→28,078 bytes (W40). Two need more than a date: **W33's sleep counts (391/74→348/77) and R5's span sit
+  on a rolling `pmset` log whose window moves hourly** — the fact says so, keeps the clamshell count (24, exact
+  at both readings) and the finding that survives every reading, **zero episodes of an hour or more**, and
+  points at R37's thirty-day standing measurement. **The transcript corpus is stated twice and both are now
+  wrong** — 3,060 in §18.4 and 3,116 in §13.7 against 3,029 measured: one figure, dated, with its command, and
+  the second site becomes a pointer.
+- **The page figure in the header is stale** — 169,402 bytes / 93 tiles against 253,283 / 143. The orchestrator
+  patches it after the final reassembly, with the line count, in one pass.
+- **The header's branch head `b2cabad` is stale** (HEAD is 119 commits ahead). The header already says it
+  carries this session's commits on top, so the fix is to name the base and stop pinning a head that moves.
+- **Not re-measured, and recorded as such:** W36's denied loopback (the probe was denied in this session),
+  R5's asleep-hours pairing, `hw.memsize`. The lane's own scope note stands.
+
+**Calibration, because a census that only lists drift misleads.** Every count the plan makes about its own
+structure matched: 106 rows, 127 mechanisms, 41 facts, 40 questions, 7 pages, 15 roles, eleven of fourteen with
+no shell, the coverage tally of 671, the graph's 91 and 195, and every figure about this repository's own
+suite — 48 check steps, 42 claims, 68 verdicts all PASS, 39 permission rules, 18 agent files at 18 pass · 0 fail
+· 0 warnings. Single family, one agent, rung 4 by the plan's own ladder; the lane says so of itself.
