@@ -47,7 +47,7 @@ companions: final-v2/SPINE.md (the ~~sixty-five~~ **eighty-two** rows and the ro
             plus world, room and cloud, verbatim) · final-v2/rethink/ (~~nine lane files and the synthesis~~
             eight thinking-lane files, L1-L8, plus the world lane at final-v2/research/world.md, and the synthesis
             and the founder's list beside them — corrected 2026-09-06, census C) ·
-            final-v2/page/final-plan-v2.html (100,099 bytes)
+            final-v2/page/final-plan-v2.html (169,402 bytes, 93 tiles)
 ```
 
 ---
