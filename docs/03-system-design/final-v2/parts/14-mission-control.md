@@ -1,6 +1,7 @@
 ## 14 · Mission control — seven pages, one state, and every tap opens a terminal on the Mac
 
-*obeys: §D entire, v4, v14, v15, v16, **v62** (the room's renderer, §14.4) · inherits: FINAL §13 — the Floor and the Balcony are absorbed, not deleted*
+*obeys: §D entire, v4, v14, v15, v16, **v62** (the room's renderer, §14.4) and **v66** (the surface's identity,
+rethink round 2026-09-06) · inherits: FINAL §13 — the Floor and the Balcony are absorbed, not deleted*
 
 ---
 
@@ -55,7 +56,28 @@ seed rather than starting a website from nothing.
 | Surface | What it is for | What it cannot do |
 |---|---|---|
 | **The published artifact pages** — the absorbed Balcony views, the briefing, the read-back (v38) | reading and **deciding**, from anywhere, with a shared database, viewer identity and comment threads that wake the publishing session | **cannot pop a terminal**, because it is not on the Mac |
-| **The local server**, over the founder's own network | everything else, including every tap that opens a terminal | not reachable when the Mac is off, which is the same condition the whole night already has (§15.1) |
+| **The local server**, ~~over the founder's own network~~ **bound to loopback and reached from the phone through an authenticated tunnel** (moved 2026-09-06: v66) | everything else, including every tap that opens a terminal | not reachable when the Mac is off, which is the same condition the whole night already has (§15.1) |
+
+**(FOUNDER, rethink 2026-09-06: D1 — and it resolves contradiction 16, which was three sentences about one server
+disagreeing.)** v39 said the phone reaches *"the local server over your own network"*; §14.13 said every page writes
+*"nothing but the inbox file and the intent log"*; and the seed already pins `127.0.0.1`. Read together they describe
+**an unauthenticated dispatch plane on any network the Mac joins** — because a page that can write the intent log and
+pop a terminal is a dispatch plane, whatever the table calls it. The founder's answer is three things and each has a
+cost of roughly one line:
+
+- **Loopback bind.** Already true of the seed; it stops being an accident and becomes the decision.
+- **One token, held in the macOS keychain, checked on every write route.** One middleware. Reads may be open on
+  loopback; **every write route checks**, because the write routes are the dispatch.
+- **The phone through an authenticated tunnel**, named at build time. Not the local network.
+
+**This moves v39's implementation and reverses nothing about it.** **Settled by:**
+`lsof -nP -iTCP -sTCP:LISTEN` showing a non-loopback bind, or a tap accepted from a device that presented no token —
+either one falsifies the row. **(R3, OPEN)** prices the keychain half: whether a **non-interactive background process
+can read a keychain item without an interactive unlock, and under what ACL**, is unmeasured, and §15.4's whole
+unattended credential plan rests on the same answer.
+
+**Mechanism:** the loopback pin (**the seed already has it**) · the token middleware and the keychain item
+(**ABSENT**, §L) · the tunnel, named at build time (**ABSENT**).
 
 **The cost, stated once and not re-litigated (v39):** **two renderers over one state** — which FINAL §13.1 explicitly
 refused when it said there is no third source of truth. It is accepted here because **a tap that opens a terminal
@@ -130,10 +152,35 @@ to.
 
 ---
 
+### 14.3a The page manifest — how *every element is a fact or a tap* stops being a promise
+
+**(NEW: O12.)** §14.1 keeps FINAL §13.2's rule — **every element is either a fact or a tap, and nothing is only
+informational** — and until now nothing could check it, so §14.4's own prohibitions are marked WISH in their first
+line. The manifest is the check. **A page is a file**, `keel/surfaces/pages/<n>.yml`, and **every element on it
+resolves to either a store path (`fact:`) or a `bin/` verb (`tap:`)**. The renderer builds **only** from the manifest,
+so an element with neither cannot be drawn — not *should not*, cannot.
+
+**What it buys immediately, beyond the rule.** Three of this section's hardest sentences become greppable: *no page
+holds state another page cannot see* is a join over `fact:` paths; *a tap on a website cannot widen a grant* is the
+assertion that every `tap:` names a `bin/` verb and never argv (v34, **O53**); and *page 1 is never where a decision
+is made* is a count.
+
+**(NEW: contradiction 9, and the count is the fix.)** §14.4 says page 1 is **never where a decision is made** and the
+page was also carrying the **venture toggle and the portfolio** — a control that switches which venture the founder is
+looking at is a decision surface, whatever the room around it looks like. **Page 1 declares zero elements of kind
+`tap: decide`**, and the toggle and the portfolio move to **page 3's strip** (§14.4, §14.6, and deletion 24). Page 1
+keeps the room; it loses its second job.
+
+**Mechanism:** `keel/surfaces/pages/<n>.yml` per page and the renderer that builds only from it (**ABSENT**, §L O12) ·
+the manifest lint asserting page 1's `tap: decide` count is zero (**ABSENT**).
+
+---
+
 ### 14.4 Page 1 · The office
 
-**(NEW: the prohibitions in this subsection are WISH under v50 — no renderer check enforces any of them
-today, and none names a mechanism.)**
+**(NEW: the prohibitions in this subsection ~~are WISH under v50 — no renderer check enforces any of them today, and
+none names a mechanism~~ now name one: the page manifest of §14.3a, which is ABSENT rather than absent-in-principle
+— moved 2026-09-06: O12.)**
 
 **What it shows.** The room: every live run a light, one venture per area, and the night replayed at speed in the
 morning. **(FOUNDER)** *"include it with the office, and also the place where it updates and shows what we are
@@ -213,6 +260,17 @@ is a legitimate requirement and a disqualifying control surface*, and the reason
 surface will always win the argument against a useful one.** The one change v4 makes: an avatar may open a terminal.
 It may not *be* the decision.
 
+**(NEW: O12 — page 1 loses its second job, and the guard rail above is the reason. Contradiction 9.)** The **venture
+toggle and the portfolio move to page 3's strip** (§14.6, deletion 24). Switching which venture the founder is looking
+at is a decision made on the page that is *never where a decision is made*, and the room is one venture per area
+already — the toggle was the portfolio's control wearing the room's clothes. **Page 1's manifest declares zero
+elements of kind `tap: decide`**, and that is a count a lint can take rather than a promise a reviewer must hold.
+
+**(R24, OPEN — and it is the one measurement page 1 rests on.)** Does **pixel-agents** actually render **ten venture
+areas and fifty live agents**, and what is its **`AgentEvent` schema and ingest rate**? The schema is UNVERIFIED above
+because the lane read the README rather than the type in source, and the writer's target shape is the one thing that
+is genuinely ours here. One file read closes the schema; one local run at our own emission rate closes the rest.
+
 ---
 
 ### 14.5 Page 2 · Agents and child flows — the page whose substrate already ships
@@ -263,6 +321,22 @@ page says which is which because they behave differently when the session ends.
 array for scripting, and `--json --all` includes completed ones. Its caveat is the page's problem, not a blocker:
 *"Opening agent view requires an interactive terminal."*
 
+**(NEW: O70 — where the census comes from, because the obvious source is a file that rewrites itself.)** The page's
+census is **`claude agents --json --all` joined to our own `sessions.jsonl`**. The vendor's `config.json` enriches it
+with **tmux pane ids only** — nothing else — because the vendor says of that file *"your changes are overwritten on
+the next state update"*, and **a page polling fifty rewriting files shows a different fleet on every render**. Two
+sources, one of them ours and stable, one of them the vendor's and narrow.
+
+**Why our log is the join key and not the vendor's ids.** A row in `sessions.jsonl` is written by `bin/run` at
+dispatch and carries the intent id; a vendor id is an attribute of a session that may vanish. That is the same rule
+**v80** applies to the messaging transport — vendor ids are recorded as attributes and **never as a join key**.
+
+**(FACT: world.md 12 — W12, and it is what this page is actually for.)** Agent teams were **repaired four times in the
+window and never promoted out of experimental**, and the recurring failure class is **lost teammate output** — a
+teammate's final answer not reaching the lead, a transcript going blank during long retry waits. v59 turns teams on;
+the risk of that decision is exactly the thing page 2 renders. A page that draws only *who is working* would show a
+healthy fleet on the night this fails, because the fleet **is** healthy and the output is what is missing.
+
 **State.** The substrate **ships**. The page is **ABSENT**.
 
 ---
@@ -283,6 +357,25 @@ a dashboard. **Both are kept, by one rule: every number on the page names the ta
 | cache hit rate, and the reserve | → the batching decision it implies (§16) |
 | an anomaly | → **the cord** |
 | the quality-of-belief split — how much of what is believed is rung 1 and how much rung 4 (§11) | → the done-tests behind the rung-4 share |
+| **the portfolio strip** — every venture, its spend and its tempo *(new 2026-09-06: O12; it was page 1's second job)* | → retempo, or that venture's intents |
+
+**(FACT: world.md 4 — W4, and it changes what this page computes rather than what it shows.)** Four of the numbers
+above are now **structured vendor fields the page can read instead of derive**: a per-session `prompt_cache` object
+for status-line scripts (hit ratio, misses, tokens re-cached, warm/cold); `rate_limits.spend_limit`; the `/usage`
+Loops breakdown with per-loop run count, total tokens, tokens per run and last run; and the `modelPricing` managed
+setting, which makes contracted rates rather than list price the basis for `/cost` and telemetry. **Read the field
+where a field exists.** A number this page computes from the log and the price table can disagree with the number the
+runtime shows in `/cost`, and when they disagree the founder has no way to tell which is wrong.
+
+**What stays computed, and it is not a small remainder.** Per-agent, per-intent and per-venture rollups have no vendor
+field — the vendor knows about sessions, not about our roster — so the join by dispatch id (§16.1) still does that
+work. The rule is narrow: **vendor field where one exists, our join where one does not, and the page says which it
+is drawing.**
+
+**(R22, OPEN — and this page is where it bites.)** **What does page 3 cost to render at a year of rows, and where is
+the knee?** The answer decides whether **O40**'s log rotation and rebuildable rollups are a day-one shape or a later
+migration — and a later migration touches the one store this plan says is never edited (§15.3). Measured against a
+synthesised log at this Mac's own emission rate, against the real server. §16.1a carries the rotation.
 
 **Substrate.** The event log, with `gen_ai.*` attribute names and an id on every row, joined to §16's price table.
 `~/.agentvibe/events.jsonl` exists on this Mac — 1.1 MB, 3,843 rows — and `mission-control/` (60 files, a Bun and Hono
@@ -316,6 +409,16 @@ session and then, like, give it the task, and then it starts walking."*
 decision is a card in the same board as the work it blocks, rather than a separate view the founder must remember to
 open. And **the read-back is this page's *new card* form**: an intent is born here, so the restatement that binds it
 is born here too (§C.3). Nothing binds by voice; the founder confirms by tap or typed word, on this form.
+
+**(NEW: O9 — the column is a view over one queue, and there was nearly one queue per venture. Deletion 31.)** The
+decide items live in **one house-level queue**, `keel/logbook/decide.jsonl`, replacing **ten per-venture `open.md`
+stores**. Ten queues and one founder is nine writer-contention points and nine places a decision can be missed; the
+founder does not decide per venture, they decide in one sitting. **A row with no intent id is refused**, which is what
+keeps the "waiting on you" column a view of blocked work rather than a second inbox.
+
+**And this is also where a night escalates to (O49, §4).** 13a.1 said *"the Operator is the escalation"* while §4.4
+says the Operator is not always on, so a run that stops at 03:00 escalated to something that was not running. **It
+escalates to a row in this queue plus the wake-me test** — the queue is awake because it is a file.
 
 **(NEW: v36 decides where a card may come from, and it is the same rule as the trifecta.)** A card that originates
 outside the company — a support message, an invoice, a failed build, a reply — is created from **an inbound row
@@ -403,10 +506,18 @@ falsifier. *How does the whole thing work* → this document and its diagrams. *
 intent id and an intent cannot exist without a founder sentence behind it, everything the system ever did traces back
 to something the founder actually said** — not a logging feature, a consequence of one rule.
 
+**(NEW: O54 — the one element on any page that a model writes, and it cites or it refuses.)** *Ask the company
+anything* is answered by a model, and every other element in this section is a fact or a tap. So it carries the
+narrowest possible contract: **an answer renders only with the log-row ids or memory-item ids it rests on, and zero
+citations renders as *I cannot answer that from the log*.** Not a hedge, not a summary with a caveat — a refusal.
+The three deeper reads above already resolve to ids (the handover, the brief, the ranking at that tick), so the
+citation is a field the renderer has rather than a discipline the model must keep. This is `check-citations.mjs`'s
+own idiom, turned on a surface.
+
 **(NEW: v38 — the briefing is the top strip of this page, and `Decide` is not.)** *Last night* lives here, above the
 engines, because the briefing answers *what happened* and this is the page that answers *how it works*. `Decide` went
-to page 4 instead, as a "waiting on you" column, so that a decision sits beside the work it blocks. **Both remain
-published phone pages**, which is how they are read away from the Mac (v39).
+to page 4 instead, as a "waiting on you" column over the one house queue (**O9**, §14.7), so that a decision sits
+beside the work it blocks. **Both remain published phone pages**, which is how they are read away from the Mac (v39).
 
 **(FINAL §13.4, unchanged.)** The briefing's shape is the newsroom budget meeting: what moved, what finished, what is
 stuck, **what I could not check**, what is waiting on you, what it cost, whether the books agree with the bank, what
@@ -516,7 +627,9 @@ tmux has-session -t <name>                            # does it still exist
 
 ```mermaid
 flowchart TD
-    TAP["A tap on ANY page:<br/>an avatar · a row · a card · a node · a canvas item"] --> WHO{"Does this agent<br/>already have a session?"}
+    TAP["A tap on ANY page:<br/>an avatar · a row · a card · a node · a canvas item"] --> AUTH{"v66: is this a WRITE route?<br/>Every write route checks the<br/>keychain-held token"}
+    AUTH -->|"no token"| REFUSE["REFUSED, and logged.<br/>A tap is a dispatch, whatever<br/>the page calls it."]
+    AUTH -->|"token checks out"| WHO{"Does this agent<br/>already have a session?"}
     WHO -->|"yes, a teammate"| PANE["Read its tmux pane id from<br/>~/.claude/teams/&lt;team&gt;/config.json<br/>(READ ONLY — it is overwritten on every state update)"]
     WHO -->|"yes, a background session"| ATT["claude --attach &lt;id&gt;"]
     WHO -->|"no"| NEW["bin/run composes the argv,<br/>mints a UUID for --session-id,<br/>and starts a detached tmux session"]
@@ -548,6 +661,11 @@ later attaches to; `--name` sets a name *"shown in `/resume` and the terminal ti
 hand-off**: *"Not found: any primary source … I fetched none, so the obvious macOS route is unverified, not absent."*
 The design does not rest on it. **Also UNRESOLVED:** `-w` / `--worktree` and `--tmux`, which a prior measurement
 recorded and this session's fetch of the CLI reference did not document. One `claude --help` closes it.
+
+**(NEW: v66 — the tap is the dispatch, so the tap is what is authenticated.)** Every route in the diagram above that
+**writes** — mint a session, attach, write an inbox file, drag a card — **checks the keychain-held token**. Reads may
+be open on loopback. The distinction is not cosmetic: this page-set's whole argument is that a tap opens a terminal on
+this Mac, which means the surface that pops terminals is a dispatch plane and has to be treated as one (§14.1).
 
 ---
 
@@ -596,12 +714,39 @@ already has one.
 `--bg`. The redirect row's *"dies with the session"* is now only half true — the mailbox is on disk, though *"its
 durability is not stated on the page."* The *page that answers back* row is unaffected by anything fetched.
 
-**The cord is on every page, and it is the same cord** (§12.9): one file, read first on every tick, cancelling running
-work, revoking outward grants, finishing nothing new, leaving every artifact in place. **There is one kill and not
-two, because a kill that lives in a second place is a kill that disagrees** — which is exactly the risk a seven-page
-website introduces, and the reason it is a control rather than a page.
+**(NEW: O18 — the *Be told* row named a bell and no transport, in a plan where every rule names a mechanism.)** The
+interruption budget is designed in detail — three a day, `wake-me` classes, a statutory class exempt from it (**O55**)
+and a waiting customer's clock that promotes past it (**O56**) — and **nothing was named that could actually make a
+sound**. One no-model program, `bin/bell`, is **the only thing that may ring**, and it reads three inputs: the
+`wake-me` classes, the budget, and the per-channel acted-on rate. **A channel the founder never acts on stops being a
+channel**, which is the only defence against the budget being spent on the cheapest thing to send.
 
-**Enforced by:** every page reading the one state and writing nothing but the inbox file and the intent log
+**Why it is a program and not a page control.** Everything else in this section is reached by the founder opening it;
+a bell is the one thing that reaches *out*. That makes it an outward act in §12's sense, and outward acts here are
+performed by programs that hold no model.
+
+**The cord is on every page, and it is the same cord** (§12.9): ~~one file, read first on every tick, cancelling
+running work~~ **two halves under one word — the file the Watch reads first on every tick, which stops the next
+dispatch, and the signal to each child's recorded process group, which stops work already running** (moved 2026-09-06:
+v67) — revoking outward grants, finishing nothing new, leaving every artifact in place. **There is one kill and not
+two, because a kill that lives in a second place is a kill that disagrees** — which is exactly the risk a seven-page
+website introduces, and the reason it is a control rather than a page. §12.9 owns both halves; this page taps them.
+
+**Enforced by:** every page reading the one state and writing nothing but the inbox file and the intent log —
+**and every write route checking the token, because those two writes are a dispatch** (moved 2026-09-06: v66)
 (**ABSENT**) · `~/.agentvibe/events.jsonl` and `mission-control/`'s SSE feed (**exist** on branch
 `ceo-1-1788609834`; the spine, renamed) · the room's JSON writer (**ABSENT**) · `bin/run` as the only composer of
 argv, so that a tap on a website cannot widen a grant (**ABSENT**).
+
+**(NEW: one row per mechanism the rethink round of 2026-09-06 added to this section, with the path SPINE §L gives
+it.)**
+
+| Mechanism | Path | From | State |
+|---|---|---|---|
+| Loopback bind · one keychain-held token on every write route · an authenticated tunnel | the seed's `127.0.0.1` pin · one middleware · the tunnel | **v66** (D1) | pin **exists**; token and tunnel **ABSENT** |
+| The page manifest — every element a `fact:` path or a `tap:` verb; page 1's `tap: decide` count is zero | `keel/surfaces/pages/<n>.yml` | **O12** | **ABSENT** |
+| One house decide queue, replacing ten per-venture stores; a row with no intent id is refused | `keel/logbook/decide.jsonl` | **O9** | **ABSENT** |
+| Page 2's census: the vendor's fleet list joined to our own session log, pane ids only from `config.json` | the page's reader | **O70** | **ABSENT** |
+| The Q&A answer renders with its ids or renders a refusal | the page's renderer | **O54** | **ABSENT** |
+| One bell, reading the classes, the budget and the per-channel acted-on rate | `bin/bell` | **O18** | **ABSENT** |
+| Page 3 reads the vendor's `prompt_cache`, `rate_limits.spend_limit`, Loops breakdown and `modelPricing` | the page's reader | **W4** | fields **ship**; the reader **ABSENT** |

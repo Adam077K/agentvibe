@@ -93,7 +93,7 @@ flowchart TD
     DESK --> PICK{"Which of the fourteen<br/>does this kind of work?"}
     PICK --> RUN["A RUN — one agent, one artifact, one worktree,<br/>a brief it may not exceed, a grant that is argv"]
     RUN --> ANCH["THE ANCHOR — something outside the model<br/>says whether the done-test passed"]
-    ANCH --> HAND["HANDOVER — seven fields, always,<br/>including on failure"]
+    ANCH --> HAND["HANDOVER — eighteen lines, always,<br/>including on failure (O7; §6.3's schema owns the count)"]
     HAND --> LOG["The event log"]
     LOG --> MC["MISSION CONTROL — seven pages.<br/>Every element is a fact or a tap;<br/>every tap opens a terminal on the Mac"]
     MC --> F
@@ -148,7 +148,7 @@ the agent doing the work, which is what actually changed)**
 | **Mission control, page 4 — the board** | Tickets, PRs and a timeline. The founder drags a card into *working on it* | The drag launches a session with a team of agents and hands it the task. **Nothing in the world does this** — every board-to-session project found maps one task to one agent (v16), so this part is ours to build |
 | **The Floor** | A terminal, one agent, the same memory and the same envelope. The founder's own browser and own send button are here and nowhere else | The system goes sterile: nothing interrupts, nothing new is dispatched on the founder's window, the venture under their hands is held whole. When they leave, the queue that built up is one paragraph |
 | **A *which*** | Two options, both already built, and the cost of each. One tap | There is no approve verb anywhere in the system. Outside the envelope, the system builds both and asks *which* |
-| **The night** | Nothing. The founder is asleep | Obligations first, before any goal. Then, under each driven venture's ceiling, runs are born with a brief, work however they like, are checked by something outside the model, hand back seven fields, and die. Routine work burns the Gemini window and never touches the founder's; embeddings and classification run locally on electricity. A fully autonomous run **cannot ask** — everything it would have asked is pre-decided or staged as a *which* |
+| **The night** | Nothing. The founder is asleep | Obligations first, before any goal. Then, under each driven venture's ceiling, runs are born with a brief, work however they like, are checked by something outside the model, hand back every line the handover schema names (§6.3), and die. Routine work burns the Gemini window and never touches the founder's; embeddings and classification run locally on electricity. A fully autonomous run **cannot ask** — everything it would have asked is pre-decided or staged as a *which* |
 | **Dawn** | The briefing again | The curator has already run: delta-only writes, one writer, an index loaded at start and topic files on demand |
 
 ---

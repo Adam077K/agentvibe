@@ -277,7 +277,7 @@ recurs in this plan more than any other, and each row below is one fact given on
 
 | Store or schema | Path | The one writer | Readers | Fails when |
 |---|---|---|---|---|
-| **Work items** (**O1**) | `keel/ventures/<v>/work/w-*.yml` — `intent` · `purpose` · `ceiling` · `blocked_on` · `attempts` · `last_failure` · `card` | the Watch, materialising from `work-draft/` after the store check — v44's obligation pattern reused | the Desk · page 4 · `bin/run` | a live intent has **zero** work rows; **a board card is a view of a work row and never a second object**. **(R16, OPEN)** decides two objects or three |
+| **Work items** (**O1**) | `keel/ventures/<v>/items/w-*.yml` — `intent` · `purpose` · `ceiling` · `blocked_on` · `attempts` · `last_failure` · `card`. **(NEW: orchestrator, 2026-09-06)** O1 declared `work/`, which this inventory already gives to the venture's source repository, so the store is named `items/` and `work/` is left where it was | the Watch, materialising from `items-draft/` after the store check — v44's obligation pattern reused | the Desk · page 4 · `bin/run` | a live intent has **zero** work rows; **a board card is a view of a work row and never a second object**. **(R16, OPEN)** decides two objects or three |
 | **The roster** (**O2**) | `keel/shared/roster.yml` — frontmatter plus `color` · `wave` · `valid_until` · `cacheTtl` · the four v71 pack paths · anchor | the founder, through review | §5.2 · §17.1 · page 2 · the argv files · `bin/run` | any of those views is **written by hand instead of generated**; a count in prose disagrees with the file |
 | **Charter schema** (**O3**) | `keel/shared/schemas/charter.yml` | the schema is the source; **the prose is generated from it** | `bin/check-stores` · §2 | a six-line charter with no entity **both loads and is refused** — §2.1 enforces six lines, COVERAGE §14 says five fields, v63 requires a seventh, and **the founder's row is the one that loses** (contradiction 2) |
 | **Brief schema** (**O4**) | `keel/shared/schemas/brief.yml` | as above | `bin/run` · §6.2 · §13a | a table is built on the wrong field count — 13a.5 says ten, **v45 decided eleven** (contradiction 3) |
@@ -494,11 +494,10 @@ keel/                                   one private repository · the house
     charter.md · intents/<id>.md · obligations.yml
                                         the charter gains cloud: allow | deny, default deny (v79); the intent gains
                                         class: for exploration (v74)
-    work/w-*.yml · work-draft/          O1 · intent · purpose · ceiling · blocked_on · attempts · last_failure ·
+    items/w-*.yml · items-draft/        O1 · intent · purpose · ceiling · blocked_on · attempts · last_failure ·
                                         card. A CARD IS A VIEW OF A WORK ROW, not a second object (R16).
-                                        !! O1 DECLARES keel/ventures/<v>/work/ AND THIS TREE ALREADY GIVES work/ TO
-                                        THE VENTURE'S SOURCE REPOSITORY (see below). Named, not silently renamed:
-                                        one of the two paths moves, and it is a build-order decision (§19)
+                                        NEW (orchestrator, 2026-09-06): O1 declared work/, which this tree already
+                                        gives to the venture's source repository below, so the store is named items/
     cards/<id>.yml                      the board's cards: intent id · stage · the team it launched · the PR
     memory/{facts,negatives,already-built,open}.md
     ship-log.md

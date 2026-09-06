@@ -1,7 +1,7 @@
 ## 15 · Runtime and the Mac — the facts that bind, and each provider
 
-*obeys: §D.1, §D.2, v13's constraints, and **v56** — which gives this section its one stated exception (§15.1a) ·
-inherits: FINAL §14 and §16.7*
+*obeys: §D.1, §D.2, v13's constraints, **v56** — which gives this section its one stated exception (§15.1a) — and
+**v79**, which prices that exception with a measurement (rethink round, 2026-09-06) · inherits: FINAL §14 and §16.7*
 
 ---
 
@@ -15,7 +15,9 @@ in the same interview and which exists only for the hours this sentence is false
 Mac**, by `mission-control/` — the Bun and Hono server and React client on branch `ceo-1-1788609834` — because a tap
 that pops a terminal needs `tmux` on the same machine, and a published page cannot reach it. So the website inherits
 every fact in this section: it is up while the Mac is up, it dies at logout with everything else, and it is reachable
-from the phone over the founder's own network. **What the phone keeps when the Mac is asleep** is the published
+from the phone ~~over the founder's own network~~ **through an authenticated tunnel, the server itself bound to
+loopback and every write route checking a keychain-held token** (moved 2026-09-06: v66; §14.1 carries the row).
+**What the phone keeps when the Mac is asleep** is the published
 artifact pages — the briefing, the read-back, and the Decide items — which are for reading and deciding and can pop
 nothing. §14.1 carries the cost of that split, stated once: two renderers over one state.
 
@@ -52,6 +54,35 @@ directly. `bin/run` gains a `cloud` carrier that **mints a task and records its 
 Watch reads the pull requests on wake. **All three are ABSENT.** The reason the shape is this and not a remote write
 is the same reason §15.3 gives for plain files: a machine that was asleep cannot have judged anything, so the judgement
 happens here, once it is awake.
+
+**(NEW: v67 shuts the maker half of this lane today, and the refusal is mechanical.)** The carrier table gains a
+`stop:` column and **`bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN** (§12.9).
+Cancel is UNKNOWN for Codex cloud — the row above says so — so the maker lane is refused by the launcher rather than
+by a policy someone has to remember. The **reviewer** lane is unaffected: it starts nothing unattended.
+
+**(FOUNDER, rethink 2026-09-06: D14 — decide the lane after the measurement, and add the charter field now.)** Two
+things, and only the second is a decision about the lane. First, **the charter gains `cloud: allow | deny`, default
+`deny`** — whichever lane eventually wins, a venture may say no, and the field costs one line to add now and a
+migration to add later. `bin/check-stores` refuses a charter without it. Second, the lane itself stays **§I row 15,
+the founder's**, and the measurement it asked for has been taken.
+
+**R5 is DONE, and it prices the lane at zero for the week measured.** From `pmset -g log` on this Mac, read-only,
+2026-09-06 (DECISIONS §19, verbatim):
+
+> *"span 2026-08-30 21:44 → 2026-09-06 09:39 (156 h, all the log retains) · asleep 40.7 h (26%) in 487 episodes ·
+> zero episodes of one hour or longer · longest single sleep 0.3 h (about 20 minutes). The Mac was never off long
+> enough for a cloud lane to have bought anything back this week."*
+
+**The caveat travels with the number and is not a footnote to it.** The log covers **only the span it retains**, and
+**DarkWake power-naps are counted as wakes** — so *asleep* here means *the machine could not have run a process*, and
+a longer history might read differently. What the measurement does settle is the shape of the argument: **487 short
+sleeps and no gap over an hour** is a tail a cloud lane cannot buy back, and §I row 1's terms question is a real cost
+to pay for it. It does not close row 15; it prices it.
+
+**(FACT: world.md 24 — and it cuts the other way from how it reads.)** Four weeks of Codex release notes mention **no
+cloud exec, no cancel and no #19945**. That is **absence, not denial**: the June–August window is unread (**R26**),
+and no vendor page states that a cloud creation API does not exist. The maker row above stays UNVERIFIED for that
+reason rather than becoming a negative.
 
 **Two rows stay open, and neither is an agent's to close.**
 
@@ -105,7 +136,72 @@ clone — so they cannot reach anything this system stores. **Desktop scheduled 
 1-minute minimum, local files. **`/loop`**: machine on **and** session open. Only the middle tier and a LaunchAgent
 touch local files without an open session, and only the LaunchAgent is ours to supervise.
 
-**Mechanism:** `~/Library/LaunchAgents/…watch.plist` and `bin/supervise` (both **ABSENT**).
+**(NEW: O79 — blue-green at a tick boundary, and it is free because of the last fact above.)** Every tick is already
+crash-only, so a new `bin/watch` or `bin/send` is swapped **between ticks** rather than during one: the running tick
+finishes, the next one starts on the new code, and a bad swap costs one tick rather than a partial outward act. This
+is the whole of the deployment story for the two programs that may act on the world, and it needs no mechanism beyond
+the boundary that already exists.
+
+**Mechanism:** `~/Library/LaunchAgents/…watch.plist` and `bin/supervise` (both **ABSENT**) · the tick-boundary swap
+in `bin/watch` and `bin/send` (**ABSENT**, §L O79).
+
+---
+
+### 15.2a The host directory, and a probe that asserts by attempting
+
+**(NEW: O10.)** Every fact this section states about the machine — the plist, the managed-settings template, the env
+file (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`, `ANTHROPIC_DEFAULT_HAIKU_MODEL`), the sandbox block, the `denyRead`
+list, the expected macOS grants — is **configuration that lives somewhere or a sentence that rots**. It lives in
+**`keel/host/`**, one directory, in git, and it is what a new machine is rebuilt from.
+
+**And `bin/probe` asserts the live machine matches it by attempting the operation, never by reading a database.** The
+distinction is the whole value of the program. Reading a settings file tells you what someone intended; attempting a
+cross-venture read, a write outside the worktree, or a fetch of a denied path tells you what the machine will actually
+do tonight. This repository has already been wrong about a grant it had configured correctly — the sandbox deny-set is
+per session root, which hid half a finding three times in one day.
+
+**(NEW: O14 — a run never creates its own worktree.)** v41 gives four agents `isolation: worktree`; **`git worktree
+add` cannot complete under the armed sandbox** (§15.8), and interactive escalation is unavailable to an unattended run
+**by construction** — there is nobody to approve it. So **`bin/worktree` makes it and `bin/run` hands it over in the
+argv**. A build plan that assumes a worker makes its own stalls on its first step, and the failure is not loud: the
+partial checkout looks like the worker's own broken work.
+
+**(R1, OPEN — and it decides whether `isolation: worktree` is enforced or merely declared.)** Is the Bash sandbox's
+`filesystem.allowWrite` settable **per `claude -p` invocation**, or project-scoped only? Per-invocation, the shell
+narrows to the run's own worktree and the isolation is a fact; project-scoped, it stays a convention the agents keep.
+Vendor reference first, then one measured cell.
+
+**Mechanism:** `keel/host/` (**ABSENT**) · `bin/probe`, asserting by attempting (**ABSENT**) · `bin/worktree`
+(**ABSENT**).
+
+---
+
+### 15.2b The wake reconciler — what *"resume, not restart"* never had
+
+**(NEW: O15, and contradiction 13 is that the sentence was asserted with no carrier.)** §6 says a run resumes rather
+than restarts, and **nothing performs it**. On wake, the state of last night is four sources that disagree: our own
+session log, `claude agents --json --all`, the tmux session list, and the process table. The reconciler is the program
+that reads all four and writes one answer.
+
+**Three rules, and the middle one is the one that matters.**
+
+- **`bin/run` writes `run.started` before exec**, so a run that dies between mint and start is visible rather than
+  absent.
+- **The reconciler writes `orphaned`, never `finished`.** A run whose process is gone and whose done-test never ran
+  did not finish, and calling it finished is how a night of nothing reads like a night of work. From `orphaned` it
+  either **resumes by id** or **closes with a reason**.
+- **It refuses a night lane the power assertions cannot promise to keep awake.** `caffeinate -i` is time-bounded and
+  nothing but `pmset -a disablesleep 1` prevents lid sleep (§15.2); minting eight hours of work against an assertion
+  that expires in two is a plan to produce orphans.
+
+**(NEW: W14 is why this is not optional, and it is the sharpest fact of the round for this section.)** Under `-p`,
+`/goal` check-ins are the only way the runtime delivers anything, they back off **30 min → 1 h → every 2 h**, and an
+idle session gets **at most three check-ins per goal** until someone messages it. **Nobody is there to message it.**
+So a night goal loop delivers three times and goes quiet — and *quiet* is exactly what a finished run and an orphaned
+run look like from outside. Without the reconciler, the two are the same row.
+
+**Mechanism:** `run.started` written by `bin/run` before exec (**ABSENT**) · the reconciliation pass in `bin/watch`
+over the four sources (**ABSENT**, §L O15).
 
 ---
 
@@ -153,7 +249,21 @@ different thing from a silent one.
 **(FINAL)** The log is the truth and is never edited; memory is a curated view over it; **if memory is wrong the log
 is still right** (§13).
 
-**Mechanism:** `bin/log` with `F_FULLFSYNC` (**ABSENT**) · the push in every run's close (**ABSENT**) · the nightly
+**(FOUNDER, rethink 2026-09-06: D4 — the sentence above stands, and it took an indirection to make it stand.
+Contradiction 7.)** *The log is never edited* could not hold beside *a deletion request is honoured* (§16.7) and
+*eviction never deletes* (§13.3) — three rules, one of which had to give. **None of them gave.** No personal datum
+enters the log: **the log holds a hash**, one erasable per-subject store holds the body, and erasure deletes that row
+so the hash becomes **a known absence** — the same shape this section already uses two paragraphs above for a blob
+that is gone, *which is a different thing from a silent one*. §12.8b carries the store and the consent register;
+§13.2a carries memory's half.
+
+**(NEW: O31 — and it is what makes *never edited* checkable rather than promised.)** Each row carries **the sha256 of
+the row before it**. Today the guarantee is a convention: the file is editable without trace, and the recovery plan
+above rests entirely on it being right. A chain does not prevent an edit; it makes one detectable, which is the most
+a file on the founder's own machine can offer and more than a convention offers.
+
+**Mechanism:** `bin/log` with `F_FULLFSYNC` **and the previous row's hash on every row** (**ABSENT**, §L O31) · the
+hash indirection for personal data (**ABSENT**, §L, v69) · the push in every run's close (**ABSENT**) · the nightly
 snapshot job (**ABSENT**).
 
 ---
@@ -182,7 +292,45 @@ file that gets committed eventually.
 `npm run test:sandbox` on branch `ceo-1-1788609834` fails if the sandbox is disarmed. §12.10's caveat applies
 unchanged: **that is a guardrail against accident, not containment.**
 
-**Mechanism:** the drill as an obligation with `recurs: monthly` in the harness venture's obligations (**ABSENT**).
+**(R3, OPEN — and the unattended half of this plan rests on it with nothing tested.)** Can a **non-interactive
+background process read a macOS keychain item without an interactive unlock, and under what ACL**? Everything above
+assumes it can: the LaunchAgent runs as the founder's user *because that is what reaches the keychain*. If it cannot
+at 3 a.m., the credential plan works exactly when someone is watching, which is when it is least needed. **It also
+prices v66's keychain-held token** (§14.1) — the same question, asked of the surface. Apple platform documentation,
+then one detached measurement.
+
+**(NEW: O67 — rotation stops being a promise with no clock.)** *"At the horizon"* becomes **one row per credential in
+the obligations store** (v44), surfaced by the briefing, with the same forced disposition every dated thing here
+carries. §12.8c holds the decision; this is the section whose plan it repairs.
+
+**Mechanism:** the drill as an obligation with `recurs: monthly` in the harness venture's obligations (**ABSENT**) ·
+rotation rows in `obligations.yml` (**ABSENT**, §L O67).
+
+---
+
+### 15.4a The lease, and a house to break
+
+**(NEW: O16 — the only failure in the whole round that ends in a duplicated outward act.)** The drill above restores
+the fleet **from the remote alone** and runs the anchors there. That clone has the Watch's plist, the Sender's code
+and the obligations store. **Nothing stops it ticking, and nothing stops it sending.** Twice a year, a drill that
+succeeds is a second company acting on the world on the founder's behalf, and the duplicate is an email or a payment
+rather than a file.
+
+**The lease is one file.** `logbook/watch.lease` holds **a host id and a heartbeat**. The **Watch refuses to tick
+without it** and the **Sender refuses to act without it**, so the restored clone — a different host id, a stale
+heartbeat — can do neither. It is also the honest replacement for COVERAGE §11's refusal reason: *"one founder, one
+Mac"* is **falsified by this section's own restore drill** (deletion 32), and the lease is what actually holds where
+that sentence did not.
+
+**(NEW: O78 — a scratch house, because four programs that touch the world have no test seam.)** The Sender, the
+Watch, the world's door and the launcher are exactly the four things a defect in cannot be recalled, and there is
+nowhere to exercise them. **`keel/fixtures/` is a scratch house and `bin/drill` runs against it** — fixture charters,
+fixture obligations, a fixture inbound row, and a Sender whose outward act lands in the fixture rather than in the
+world. It is what makes the monthly restore drill a rehearsal rather than a first performance, and it is what O16's
+lease is tested against.
+
+**Mechanism:** `logbook/watch.lease`, refused-without by `bin/watch` and `bin/send` (**ABSENT**, §L O16) ·
+`keel/fixtures/` and `bin/drill` (**ABSENT**, §L O78).
 
 ---
 
@@ -277,6 +425,19 @@ retirement is committed *"Not sooner than October 15, 2026"*, the nearest retire
 names. `ANTHROPIC_DEFAULT_HAIKU_MODEL` changes the evaluator, **and it changes it everywhere the small fast model is
 used**, not only for `/goal`.
 
+**(NEW: O13 — the tier has a shape and had no carrier, which is a different gap and a worse one.)** A model with a
+licence and a size still needs something able to call it, and **the local tier has no reachable carrier**: the armed
+sandbox **denies a loopback `bind()`**, so a model server started inside a run cannot be reached, and this tier's only
+consumer, `curator`, carries **no `Bash` and no MCP** (§13.1) — it could not call one if it were there. So the tier is
+**`bin/embed` and `bin/classify`, no-model programs in the Watch's launchd context, handing the curator a file.**
+That is v47's shape, reused rather than invented, and it is why §13.7's mining diagram names two programs instead of a
+service.
+
+**(R4, OPEN, and it is the whole of the design question.)** Can a sandboxed run reach a local model, and **in which
+shape — server inside, server outside, or in-process**? Inbound `bind()` is **measured denied**; **outbound connect to
+loopback is unmeasured**, and if it works, a server outside the sandbox is reachable and the tier could be a service
+after all. The programs above are what the tier is until that is measured.
+
 **(UNVERIFIED, and named.)** On-disk byte sizes are not stated on either model page. FINAL's *"under 100 MB"* for the
 embedder is consistent with the parameter count and is **not quoted from the page**.
 
@@ -321,8 +482,31 @@ this Mac, this account and these runtimes — they are not design, and nothing a
 taken under it.)** `git worktree add` cannot complete under the armed sandbox — exit 128 across the agent-config paths
 — and adding those paths to the write allow-list does not lift it. That one command needs the sandbox disabled. It is
 a known, measured limit rather than a defect in anyone's work, and it is the reason a build plan that assumes a worker
-can make its own worktree will stall on its first step.
+can make its own worktree will stall on its first step. **That is what `bin/worktree` is for (O14, §15.2a):** the
+program runs where the escalation is available, and the run is handed the result.
+
+**(R6, OPEN — and it decides whether the world's door is a reader or a listener.)** **Which inbound sources document a
+polling read with a cursor, and which need a listening socket?** The table above already carries the constraint that
+answers half of it: **nothing lifts an inbound `bind`** under the armed sandbox. So a source that requires being
+reachable from the internet cannot be served by a program on this Mac as configured, and the door either polls with a
+cursor or the source does not enter through it. One page per source, vendor documentation.
 
 **Enforced by:** a facts store with one row per fact, its date and the command or URL that re-measures it, checked for
 expiry like any other item (**ABSENT**; the substrate is `scripts/ledger.mjs`, which exists on branch
 `ceo-1-1788609834` and already forces a disposition when a date comes due).
+
+**(NEW: one row per mechanism the rethink round of 2026-09-06 added to this section, with the path SPINE §L gives
+it.)**
+
+| Mechanism | Path | From | State |
+|---|---|---|---|
+| The host directory, and a probe that asserts **by attempting the operation** | `keel/host/` · `bin/probe` | **O10** | **ABSENT** |
+| The local tier as programs, because it has no reachable carrier | `bin/embed` · `bin/classify` | **O13** | **ABSENT**; **DEPENDS-ON-R4** |
+| A run never creates its own worktree; it is handed one in its argv | `bin/worktree` | **O14** | **ABSENT** |
+| The wake reconciler — `orphaned`, never `finished` | `bin/run` (`run.started` before exec) · `bin/watch` | **O15** | **ABSENT** |
+| The Watch/Sender lease — host id and heartbeat, refused-without | `logbook/watch.lease` | **O16** | **ABSENT** |
+| A scratch house and a drill for the four programs that touch the world | `keel/fixtures/` · `bin/drill` | **O78** | **ABSENT** |
+| Blue-green at a tick boundary | `bin/watch` · `bin/send` | **O79** | **ABSENT**; the boundary exists |
+| The log's hash chain, and the hash indirection for personal data | `bin/log` | **O31** · **v69** | **ABSENT** |
+| `cloud: allow \| deny` on every charter, default `deny`, refused when absent | the charter schema · `bin/check-stores` | **v79** (D14) | **ABSENT** |
+| Rotation as a row per credential | `obligations.yml` | **O67** | store decided (v44); rows **ABSENT** |

@@ -1,7 +1,7 @@
 ## 12 · Control — what may be done alone, and what never
 
-*obeys: §C.1's bands, v9, v10, v28, v33 · inherits: FINAL §9. The tool door itself lives in §8 (Tools and MCPs) and
-is not restated here.*
+*obeys: §C.1's bands, v9, v10, v28, v33, and **v67, v68, v69** from the rethink round of 2026-09-06 · inherits:
+FINAL §9. The tool door itself lives in §8 (Tools and MCPs) and is not restated here.*
 
 ---
 
@@ -102,6 +102,22 @@ alone' is a prompt or a deny rule, not a staged artifact."*
 
 **Mechanism:** the door test runs before a brief carries a `REACHES THE WORLD` grant (ABSENT) · the drill dates in
 `shared/tools/<name>.yml` (ABSENT) · `bin/send`, which holds no model (ABSENT).
+
+---
+
+### 12.2a The Sender's checklist gains a provenance line
+
+**(NEW: O64.)** Inbound licences are read exceptionally well in this plan — v17 blocks a 2,111-skill import on one
+unread file — and **outbound is unchecked**: nothing records the licence of a third-party asset embedded in an
+artifact the Sender publishes. So the checklist the Sender reads before an outward act carries one more line beside
+v63's disclosure — **source, licence, date read**, per asset. A staged artifact whose provenance line is empty is
+refused, the way a brief naming a file that does not exist is already refused.
+
+**Why it belongs on the checklist and not in a review.** The Sender holds no model, so the line is a field that is
+present or absent rather than a judgement someone makes at the last inch. That is the same reason the disclosure line
+sits there.
+
+**Mechanism:** the Sender's checklist (**ABSENT**, §L O64) · `bin/send`, which holds no model (**ABSENT**).
 
 ---
 
@@ -240,6 +256,39 @@ is disarmed.
 
 ---
 
+### 12.6a Two tiers of grant, not three — and one narrowing that is a settings field
+
+**(NEW: O37.)** A tool grant lives in **exactly two places**: the argv `bin/run` composes, and the managed file a
+running process cannot clear. **The project `settings.json` tier is deleted.** A third tier that neither the launcher
+owns nor the founder writes is a grant nobody reviews and a place two answers can disagree; §18 carries the deletion
+as a fate.
+
+**(FACT: world.md 7 — W7, and it is independent support rather than the reason.)** `--restricted` *"refuses
+`bypassPermissions`, and ignores user, project and local settings files"*. So on the `-p` carrier — the carrier every
+unattended run uses — **the project tier is already ignored by the runtime**, and deleting it removes a tier that
+binds nothing where it matters and misleads everywhere else. The same clause gives **v10 a second mechanism**: the
+flag refuses the widest mode by itself, so §12.4's managed setting is no longer the only thing standing there.
+
+**(FACT: world.md 8 — W8, and it is the carrier v43 could not name.)**
+`permissions.blockReadsOutsideWorkingDirectories` is a **read** narrowing expressible in settings rather than in
+argv. v43 records the tester's blindness (v8) and the builder's exclusion from the architect's paths (v7) as
+**UNVERIFIED** on the subagent and team carriers because no carrier could hold them; this is one, for reads. It is
+what **O28** is waiting on — until `bin/probe` asserts read-denial there, `tester` and `challenger` route on the
+`-p` carrier only, where blindness is argv (§11).
+
+**(NEW: O38 — ADOPTED-AS-SPEC. The decision is taken; the act is deferred to build time by the founder, DECISIONS
+§15.)** A hook denies through the **`decision` object on the non-blocking events** and keeps `exit 2` only for the
+documented blocking ones. `PermissionRequest` is non-blocking — *"Exit code 2 isn't honored for this event … Deny
+through the `decision` object instead"* (§15.8) — so **a hook written the obvious way silently fails to deny**, which
+is the worst direction for a control to fail in. The specification does not wait on the rewrite; the rewrite is an
+edit to the judging machinery and stays the founder's.
+
+**Mechanism:** the project-tier deletion (**a deletion**, §L O37; §18 carries it) ·
+`permissions.blockReadsOutsideWorkingDirectories` in the checked-in settings file (**the field ships; unset here**) ·
+the hook rewrite (**ABSENT**, §L O38, **ADOPTED-AS-SPEC**).
+
+---
+
 ### 12.7 The trifecta split — the one structural safety rule, now expressed as a roster
 
 **(FINAL, v33.)** An execution path holding all three of **private data**, **untrusted content** and **the ability to
@@ -313,6 +362,99 @@ person, recorded by the world's door* — so the door is not only the safety bou
 
 ---
 
+### 12.8a Everything leaving a run passes one program
+
+**(FOUNDER, rethink 2026-09-06: D3.)** *Build `bin/egress`.* One **no-model program** logs every call, filters by
+**domain and HTTP method**, and **injects credentials the agent never sees**. `--strict-mcp-config` names only the
+proxy, and **`.claude/mcp-policy.json` stops being an independent control and becomes this program's configuration**
+(deletion 10) — a policy whose calls no hook can see was never a control, and calling it one meant the plan believed
+it had two boundaries where it had one.
+
+**Why this and not a prompt.** It is the only proposal of the round that survives an agent being *fully* persuaded.
+§12.7's trifecta split guarantees a leg is missing **at dispatch**; the door outward keeps it missing **at the
+syscall**. **v33 gains a mechanism** it had only as a shape rule.
+
+**The cost, once:** one program, one hop of latency, and every server declared twice. **Settled by:** a deliberate
+exfiltration attempt failing at the proxy rather than at the prompt, and the proxy's call count matching the
+runtime's for one night.
+
+**(R2, OPEN — and it decides how much of this is code.)** The sandbox schema has a documented `credentials` block
+(`mask`, per-host `injectHosts`) and a `network` block with `allowedDomains`, `strictAllowlist` and `tlsTerminate`,
+and **this repository uses neither** (§12.10). If injection and an HTTP-method allowlist behave as documented, **half
+of `bin/egress` is configuration rather than a program**. The half that is not — the call log — is ours either way,
+which is why the row is decided now and the research only narrows it.
+
+**Mechanism:** `bin/egress` (**ABSENT**, §L) · `--strict-mcp-config` (**ships**) · `.claude/mcp-policy.json` demoted
+to its configuration (§8 carries the tool door itself).
+
+---
+
+### 12.8b The erasable path, the consent register, and the class on every row
+
+**(FOUNDER, rethink 2026-09-06: D4 — *both, now*. It resolves contradiction 7, which no single section could have
+fixed alone.)** Three sentences in this plan could not all hold: **a deletion request is honoured** (§16.7), **the log
+is never edited** (§15.3), and **eviction archives and never deletes** (§13.3). The reconciliation is an indirection
+rather than an exception to any of them:
+
+- **No personal datum enters the event log or memory. Both hold a hash.**
+- **One erasable per-subject store holds the body — `keel/subjects/<hash>.yml`, keyed by the same hash the log
+  carries.**
+- **Erasure deletes that row, and the hash becomes *a known absence*** — the same shape §15.3 already uses for a blob
+  that is gone, which is a different thing from a silent one.
+
+So the log stays append-only and never edited, memory still never deletes, and a person's data still leaves the system
+completely, because the only place it ever was is the one store built to be emptied. §13.2a and §15.3 carry the same
+reconciliation from their own ends.
+
+**The consent register — `keel/consent.yml`.** *May we contact this person at all* was **the single keyword of roughly
+640 absent from v2's own text** (§23). It is a store with **one writer**, read by the Sender **before any contact**.
+No consent row, no contact — checked by the program that sends, never by the run that drafts. It sits at house level
+and not per venture, for the same reason the decide queue does (**O9**): a person who asked not to be contacted did
+not ask it of one venture.
+
+**(NEW: O34 — three data classes, assigned by the writing program.)** Every store row carries **ours · a third
+party's · a named person's**, and the `never` list keys on **the class** rather than on a path list, which goes stale
+the first time a store is renamed. **Retention is declared per store**, and **a store declaring *forever* may not hold
+a body** — which is what makes the three bullets above checkable rather than aspirational.
+
+**(NEW: O66 — PII detection becomes a gate on two paths, and it is measured before it blocks.)** The Sender's
+checklist and the mining pass (§13.7) both run it; a positive **blocks**, and an override is a *which*. **Its
+false-positive rate is measured for a week before it blocks anything**, because a gate that cries wolf is a gate
+people route around — and this repository has already taken that lesson once, blocking on the deterministic half of
+its citation checker and leaving the heuristic half a warning.
+
+**The cost, once:** one indirection per inbound row, one store, one checklist line. **Settled by:** run one erasure
+end to end, then grep the whole tree for the subject and find nothing but hashes.
+
+**Mechanism:** the hash indirection in `bin/log` and the memory writer (**ABSENT**) · `keel/subjects/<hash>.yml` and
+`keel/consent.yml`, one writer each, enforced by `bin/check-stores` (**ABSENT**) · the class and retention fields on
+every store (**ABSENT**) · `bin/redact` as the PII gate (**ABSENT**, §L O17 and O66) · one line on the Sender's
+checklist (**ABSENT**).
+
+---
+
+### 12.8c Two things that happened without a record, and now leave one
+
+**(NEW: O31 — the log is hash-chained, and every escalation is a row in it.)** Each log row carries **the sha256 of
+the row before it**, so a row removed or rewritten is detectable rather than invisible. Today the log is append-only
+**by convention** and editable without trace, which is a weaker guarantee than the one §15.3 rests the entire recovery
+plan on — *if memory is wrong the log is still right* is a claim about a file nothing protects.
+
+**And both escape hatches write a row.** A sandbox escalation — `dangerouslyDisableSandbox`, or any other — **emits an
+event that appears in the briefing**. §12.10 says plainly that the sandbox is a guardrail rather than containment
+*because* a documented escape hatch exists; an escape hatch that is used and recorded nowhere is the half of that
+sentence no one can check afterwards.
+
+**(NEW: O67 — rotation is an obligation, and it needs no new mechanism.)** §15.4's credential plan says rotation
+happens *at the horizon*, which is a promise with no clock. It becomes **one row per credential in the obligations
+store** (v44), surfaced by the briefing, carrying the same forced disposition every other dated thing here carries.
+Nothing is built for this: the store, the horizon and the briefing already exist in the design.
+
+**Mechanism:** the chain and the escalation row in `bin/log` (**ABSENT**, §L O31) · rotation rows in
+`obligations.yml` (**the store is decided by v44; the rows ABSENT**, §L O67).
+
+---
+
 ### 12.9 Ceilings, and the cord
 
 **(FINAL)** Two mechanisms, both deliberately blunt.
@@ -321,22 +463,53 @@ person, recorded by the world's door* — so the door is not only the safety bou
 after. There is no *warn at 80%* an agent can reason past. Ceilings exist per run, per intent, and per venture per
 month, and **the tightest binds**.
 
-**The cord.** One control that stops everything: cancels running work, revokes outward grants, finishes nothing new,
-leaves every artifact in place. One tap from mission control — §14 makes it *a control present on every page* — one
-word on the Floor, one command in a terminal, and tested on purpose. It does not delete and does not roll back; undo
-is a separate, deliberate act, because the state after a panic stop is exactly when you least want an automatic
-mutation. The cord is **a file, read first on every tick**; the same tap recalls everything in the Sender's window;
-there is one kill and not two, because a kill that lives in a second place is a kill that disagrees.
+**The cord.** One control that stops everything: ~~cancels running work~~ **signals every child's process group and
+stops the next dispatch** (moved 2026-09-06: v67), revokes outward grants, finishes nothing new, leaves every artifact
+in place. One tap from mission control — §14 makes it *a control present on every page* — one word on the Floor, one
+command in a terminal, and tested on purpose. It does not delete and does not roll back; undo is a separate,
+deliberate act, because the state after a panic stop is exactly when you least want an automatic mutation. The same
+tap recalls everything in the Sender's window; there is one kill and not two, because a kill that lives in a second
+place is a kill that disagrees.
 
-**(NEW: v23 corrects what one of these mechanisms actually is, and the correction matters in the direction of less
-safety, not more.)** `--max-budget-usd` is **not a billing control**. It is print mode only, *"Claude Code computes
-the dollar figure locally from token counts at list price"*, and for subscribers *"the session cost figure isn't
-relevant for billing purposes"* (models.md, accessed 2026-09-05). What it genuinely is: a **stall fuse**. Subagent
-spend counts toward it, and overflow fails a spawn with `Budget limit reached` (v2.1.217+). It is kept for that, and a
-ceiling that binds the account is §16's business, not this section's.
+**(FOUNDER, rethink 2026-09-06: D2 — and it resolves contradiction 6, which was that the cord's description and the
+cord's mechanism were two different controls sharing one word.)** The founder chose **both**. `bin/run` records each
+child's **process group id** before exec, and the cord **signals the group**. A file read at the next tick could never
+stop work already running — it stops the *next dispatch*, which is a real guarantee and a different one. Both halves
+stay, named apart, so nobody reads the weaker one as the stronger.
 
-**Mechanism:** the cord file (**ABSENT**, read first on every tick) · the three ceilings in `bin/run` and `bin/send`
-(**ABSENT**) · `--max-budget-usd` per run (exists, and is a stall fuse).
+**And a carrier whose stop path is unknown may not be given unattended work.** §C.4's carrier table gains a **`stop:`**
+column, and `bin/run` **refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN**. Today that shuts
+the Codex-cloud *maker* lane, where cancellation is undocumented (§15.1a) — which is §I row 15's state anyway, so the
+refusal costs the plan nothing it had.
+
+**(FACT: world.md 22.)** Codex shipped `Interrupt` hooks — *"New `Interrupt` hooks run commands or MCP handlers when
+an active top-level turn is interrupted"* — which is **the cord's natural Codex-side receiver**, and no row named it
+before this round. §10.8 carries the fact.
+
+**Why signalling does not destroy what it stops.** `SIGTERM` is measured to give **exit 143 and a resumable turn**
+(§15.8), so the cord stops a run without losing it. That is what makes *leaves every artifact in place* true of
+running work and not only of finished work. **Settled by:** pulling the cord mid-run, measuring time to quiescence,
+and whether the run resumes.
+
+```mermaid
+flowchart TD
+    PULL["The cord is pulled —<br/>any page, the Floor, or a terminal"] --> TWO{"Two halves, one word<br/>until v67 split them"}
+    TWO -->|"work already running"| SIG["bin/run recorded each child's pgid before exec.<br/>The cord signals the GROUP.<br/>SIGTERM: exit 143, a resumable turn (§15.8)"]
+    TWO -->|"work not yet started"| FILE["The cord file, read first on every tick.<br/>The Watch starts nothing new."]
+    SIG --> HOLD["Outward grants revoked.<br/>The same tap recalls the Sender's window."]
+    FILE --> HOLD
+    HOLD --> KEEP["Every artifact stays in place.<br/>No delete, no rollback —<br/>undo is a separate, deliberate act."]
+    PULL -.->|"the refusal that makes the cord true"| MINT["bin/run REFUSES to mint unattended work<br/>on a carrier whose stop: reads UNKNOWN"]
+```
+
+**(Deletion 13, 2026-09-06 — `--max-budget-usd` leaves this section.)** ~~It was explained here as a stall fuse, and
+in three other places besides.~~ **§16.5 owns it**, and a fuse explained four times invites a fifth misreading. The one
+clause that bears on control stays: **it does not bind the account**, so it is not one of the three ceilings above.
+§12.10's argv line still names the flag, because that is where the launcher composes it.
+
+**Mechanism:** the cord file (**ABSENT**, read first on every tick) · the `pgid` field written by `bin/run` before
+exec and the signal path that reads it (**ABSENT**, §L) · the `stop:` column on §C.4's carrier table (**ABSENT**) ·
+the three ceilings in `bin/run` and `bin/send` (**ABSENT**).
 
 ---
 
@@ -381,7 +554,31 @@ control is the argv, the deny rules, and the fact that the thing which sends hol
 isolation file (**ABSENT**) · `bin/probe` nightly (**ABSENT**) · `npm run test:sandbox` (exists on branch
 `ceo-1-1788609834`).
 
-**The honest summary of this section's state:** the *rules* are decided and every one of them names a mechanism. **Six
-of those mechanisms do not exist yet**, and until they do, the parts of this section that depend on them are WISHes
-wearing rule clothing. The two that exist today — the armed sandbox test and the deny rules in settings — are the two
-that were built for a smaller purpose than this section asks of them.
+**The honest summary of this section's state:** the *rules* are decided and every one of them names a mechanism.
+~~**Six of those mechanisms do not exist yet**~~ **Almost every one of them is ABSENT — read the table below rather
+than a number here, because the rethink round added twelve more rows to it** (moved 2026-09-06: the count was written
+before v67, v68, v69 and seven O ids landed in this section). Until they exist, the parts of this section that depend
+on them are WISHes wearing rule clothing. The two mechanisms that exist today — the armed sandbox test and the deny
+rules in settings — are the two that were built for a smaller purpose than this section asks of them.
+
+---
+
+### 12.10a Enforced by — the mechanisms this section names
+
+**(NEW: one row per mechanism the rethink round of 2026-09-06 added, with the path SPINE §L gives it. A row with no
+path is not a rule.)**
+
+| Mechanism | Path | From | State |
+|---|---|---|---|
+| The egress door — one log, domain **and method** filtering, credential injection | `bin/egress`; `.claude/mcp-policy.json` as its configuration | **v68** (D3) | **ABSENT**; `--strict-mcp-config` ships |
+| The hash indirection — no personal datum in the log or memory | `bin/log` · the memory writer | **v69** (D4) | **ABSENT** |
+| The erasable per-subject store and the consent register, one writer each | `keel/subjects/<hash>.yml` · `keel/consent.yml`; enforced by `bin/check-stores` | **v69** (D4) | **ABSENT** |
+| Three data classes on every row; retention declared per store | the writing programs · `bin/check-stores` | **O34** | **ABSENT** |
+| PII as a gate on the Sender's checklist and the mining pass | `bin/redact` | **O66** (with **O17**) | **ABSENT**; measured a week before it blocks |
+| The log's hash chain, and an event row per sandbox escalation | `bin/log` | **O31** | **ABSENT** |
+| Rotation as a row per credential | `obligations.yml` | **O67** | store decided (v44); rows **ABSENT** |
+| The provenance line — source, licence, date read | the Sender's checklist | **O64** | **ABSENT** |
+| The cord's signal path, and the carrier's `stop:` column | `bin/run` (pgid before exec) · §C.4's table | **v67** (D2) | **ABSENT** |
+| Grants in two tiers, not three | a deletion; §18 carries the fate | **O37** · **W7** | a deletion |
+| Reads narrowed by a settings field, not by argv | `permissions.blockReadsOutsideWorkingDirectories` | **W8** | the field ships; **unset here** |
+| Deny through the `decision` object on non-blocking hook events | the hooks | **O38** | **ADOPTED-AS-SPEC** |

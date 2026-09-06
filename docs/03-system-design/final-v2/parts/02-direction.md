@@ -150,8 +150,8 @@ disposable unit of work. Between them the plan has been passing *candidate work*
 cards, the Desk's queue and the retry counter each hold their own idea of it. It becomes one store:
 
 ```yaml
-w-2026-09-06-0007:
-  intent:        i-2026-09-04-0012      # it does not load without one
+i-2026-09-06-0007:                      # the item's own id, in items/w-*.yml
+  intent:        i-2026-09-04-0012      # the INTENT it serves; it does not load without one
   purpose:       one sentence
   ceiling:       per run
   blocked_on:    []                     # other work rows, or an open which
@@ -161,10 +161,12 @@ w-2026-09-06-0007:
 ```
 
 **(NEW)** **A board card is a view of a work row, not a second object.** Otherwise page 4 and the Desk hold two
-answers to *what is being worked on* and disagree the first time either is edited. Proposals land in `work-draft/`
-and **the Watch materialises them after the store check** — v44's obligation pattern reused rather than a second
-one invented for the same shape. **Mechanism:** `keel/ventures/<v>/work/`, with `bin/check-stores` refusing a live
-intent that has zero work rows — **ABSENT** (§L O1). **(R16, OPEN)** decides whether this is two objects or three:
+answers to *what is being worked on* and disagree the first time either is edited. Proposals land in
+`keel/ventures/<v>/items-draft/` and **the Watch materialises them after the store check** — v44's obligation
+pattern reused rather than a second one invented for the same shape. **Mechanism:**
+`keel/ventures/<v>/items/w-*.yml`, with `bin/check-stores` refusing a live intent that has zero work rows —
+**ABSENT** (§L O1, which names the same store `work/`; the directory is `items/` here because `work/` is already
+the venture's source repository in §17.8's tree). **(R16, OPEN)** decides whether this is two objects or three:
 whether any shipped agent system carries a scheduling object between the goal and the run, read from Symphony,
 Linear's agent session model and Copilot's task object. Until it is answered the design is **two** — the intent and
 the work row — and the run stays disposable.

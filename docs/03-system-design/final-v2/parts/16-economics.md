@@ -1,7 +1,8 @@
 ## 16 · Economics — where the money and the window actually go
 
-*obeys: §G.2, §G.3, v22, v23, and v57 and v59 which change what the arithmetic assumes · inherits: FINAL §15, with
-its cost formula corrected*
+*obeys: §G.2, §G.3, v22, v23, v57 and v59 which change what the arithmetic assumes, and **v74**, which changes what a
+ceiling is denominated in (rethink round, 2026-09-06) · inherits: FINAL §15 — **and the corrected cost formula now
+lives in §9.6, cited here and not restated** (deletion 20, contradiction 15)*
 
 ---
 
@@ -34,8 +35,41 @@ record, joined by the id minted at dispatch — **not** output tokens, which are
 heuristic, which cannot attribute. One review session on this machine produced **1.4 million output tokens in five
 hours with no loop running**, and a meter without a per-run axis cannot see that.
 
+**(FACT: world.md 4 — W4. Four of these numbers stopped needing to be computed.)** The vendor now emits a per-session
+**`prompt_cache`** object for status-line scripts (hit ratio, misses, tokens re-cached, warm/cold), a
+**`rate_limits.spend_limit`** field, a **`/usage` Loops breakdown** with per-loop run count, total tokens, tokens per
+run and last run, and a **`modelPricing`** managed setting that makes contracted rates rather than list price the
+basis for `/cost` and telemetry. **Read the field where a field exists** — a number this section derives can disagree
+with the number the runtime prints, and when they disagree nothing here can say which is wrong. The rollups above have
+no vendor field, because the vendor knows about sessions and not about our roster; those stay ours, joined by the
+dispatch id. §14.6 renders both and says which it is drawing.
+
 **Mechanism:** a ledger line per run, written from each run's `--output-format json` cost fields (**ABSENT**);
 `bin/warroom`'s per-worker cost pricing exists on branch `ceo-1-1788609834` and is absorbed into it.
+
+---
+
+### 16.1a The log rotates, and no surface reads the raw file
+
+**(NEW: O40, DEPENDS-ON-R22.)** Every number in this section is derived from one append-only file that only grows, and
+**three surfaces read it directly** (§14.6, the briefing, the weekly lines). At a year of rows that is a page waiting
+to get slow and a store waiting to get corrupted in one piece. The shape:
+
+- **The log rotates into a file per period**, `logbook/events/YYYY-MM.jsonl`.
+- **A rollup per period is derived and rebuildable**, and **no surface reads the raw file**.
+- **The index partitions by the same period**, so a corrupt period costs a period rather than the history.
+
+**Nothing is deleted.** The rollup stands to the log exactly as memory already does (§13.2): a derived view over a
+record that remains the truth, rebuildable by re-running the deriving pass. That is why this can be done to the one
+store the plan says is never edited **without touching that rule** — rotation appends and derives; it does not edit.
+
+**(R22, OPEN, and it decides day-one versus later.)** **What does page 3 cost to render at a year of rows, and where
+is the knee?** Measured against a synthesised log at this Mac's own emission rate, against the real server. If the
+knee is far out, this is a later migration; if it is near, doing it after a year of rows means migrating the one store
+that must not be lost. §14.6 carries the page's half.
+
+**Mechanism:** `logbook/events/YYYY-MM.jsonl` and the derived rollup (**ABSENT**, §L O40) · the partitioned index
+(**ABSENT**).
 
 ---
 
@@ -77,38 +111,67 @@ minute and 1,000 a day** on a personal Google account; the paid per-tier CLI quo
 
 ---
 
-### 16.3 The cost formula, corrected
+### 16.2a What a ceiling is denominated in — and the dollar is not it
+
+**(FOUNDER, rethink 2026-09-06: D9. This changes the currency of every ceiling in the plan, and §12.9's three
+ceilings are what it changes.)** A ceiling is stated in **window share: tokens against an observed high-water mark**,
+because **no denominator is published** and one measured from this seat is the only one that exists. **Wall clock sits
+beside it**, and **USD is kept as a shadow price** — computed, shown, never binding.
+
+**Why the dollar had to go, and it is not a preference.** On a subscription the dollar is *"computed locally from
+token counts at list price"* against a bill nobody sends (v23, §16.5). A ceiling denominated in it binds nothing, and
+**an absent ceiling is visible while a wrong one is not** — a founder who sees `$40 of $100` believes something is
+holding.
+
+**(Deletion 21, 2026-09-06.)** ~~Dollar ceilings, as ceilings.~~ They are a shadow price now. ~~And every token budget
+inherited from a Sonnet-4.6-era measurement~~ — see §16.3 on the tokenizer, and **O77** below, which is what stops a
+stale budget firing silently.
+
+**(NEW: contradiction 18 — this is where *"bounded by being free"* dies.)** §16.7 said exploration is *"bounded by
+being free"*; **v22 measured that the weekly window is per seat and shared with Claude chat and Cowork.** A night of
+exploration is therefore **subtracted from the next day**, and the sentence was not a small optimism — it was the
+reason no mechanism was ever built for exploration spend. So:
+
+- **An intent carries a `class:`**, and exploration is one of its values.
+- **Exploration-class work routes to Gemini, local models, or the Codex seat** — windows that are not the one the
+  founder works in.
+- **The Desk refuses an exploratory dispatch onto the Claude seat past a fraction the founder sets.** The fraction is
+  the founder's number, not a rule's, exactly like §12.2's undo window.
+
+**Settled by:** split one weekly window between driven and exploratory work. **If exploration is invisible there, the
+old sentence was right and this is over-built** — which is the falsifier the original sentence never carried.
+
+**Mechanism:** one high-water file (**ABSENT**) · one rule in the Desk's comparator (**ABSENT**, §4) · one `class:`
+field on the intent (**ABSENT**, §2).
+
+---
+
+### 16.3 The cost formula ~~, corrected~~ — why it diverges tenfold; §9.6 owns the arithmetic
 
 **(FINAL, and the reason it is kept at all.)** Two competent reviewers priced this machine's predecessor within days
 of each other and **diverged tenfold** — $74 a month against $1,300–1,700 — on **one assumption, the cache hit rate**,
 which sets whether context costs a read multiple or a write multiple on the 89% of the bill that is context. The plan
 does not pick a number. It says **what determines it**.
 
-**(NEW: §G.3 corrects two coefficients, and FINAL was wrong in both directions.)** FINAL multiplied the standing
-prompt by **1.25** on the first run of a batch *while assuming the one-hour TTL*. **1.25x is the five-minute write.
-A one-hour write is 2x.** And FINAL's sibling-read coefficient of **0.10** is right for Opus 5, Sonnet 5 and Haiku 4.5
-and **wrong by 4x for Fable 5.1 and Mythos 5.1, where reads are 0.025x** — $0.25 per MTok.
+**(Deletion 20 and contradiction 15, 2026-09-06: the formula itself leaves this section.)** ~~The four-line cost
+expression, its `W` and `R` coefficient table and its fails-if list stood here in full, byte-for-byte the same
+arithmetic as §9.6's.~~ **§9.6 owns the formula; this section cites it and does not restate it.** Two copies of one
+formula is two implementations of one check, and this repository has already found what that costs — twice, once in
+risk classification and once in the CI chain guard. What §9.6 carries, in one line: **the dominant term, by a
+distance, is whether the siblings hit the cache**, with a one-hour cache **write** at **2x** base input (not FINAL's
+1.25x, which is the five-minute write) and a sibling **read** at **0.1x** everywhere except **Fable 5.1 and Mythos
+5.1 at 0.025x**.
 
-```
-cost per night ≈ (standing prompt tokens) × W          on the FIRST run of a batch
-               + (standing prompt tokens) × (siblings − 1) × R   on every sibling that HITS
-               + (divergence tokens per run) × siblings × 1.0
-               + output
+**What this section keeps, because no other section computes it:** the **divergence argument** above. Two competent
+reviewers, one assumption, a tenfold spread. That is an argument about how to *use* the formula, not a second copy of
+it, and it is the reason §16.8's line 5 watches the cache-hit rate rather than targeting it.
 
-where  W = 2.00   buying the 1-HOUR TTL   ← what a subscription gives, and what a batch relies on
-       W = 1.25   buying the 5-MINUTE TTL
-       R = 0.100  Opus 5 · Sonnet 5 · Haiku 4.5
-       R = 0.025  Fable 5.1 · Mythos 5.1
-
-Dominant term, by a distance: whether the siblings hit the cache.
-Fails if: shapes vary per run · the standing prompt is regenerated · the TTL is shorter than the batch
-          · the TTL silently drops to five minutes because the account began drawing on credits.
-```
-
-**(NEW: one more correction that has nothing to do with price and everything to do with the inputs.)** Opus 5 and
-Fable 5.x use a newer tokenizer producing *"approximately 30% more tokens for the same text"* than Sonnet 4.6 and
-earlier. **Any token budget inherited from a Sonnet-4.6-era measurement understates by about that much**, so a
-byte-count carried over from an older plan is not a token count for these engines.
+**(NEW: O77 — the tokenizer discontinuity stops being a caveat and becomes a field.)** Opus 5 and Fable 5.x use a
+newer tokenizer producing *"approximately 30% more tokens for the same text"* than Sonnet 4.6 and earlier, so **any
+budget inherited from a Sonnet-4.6-era measurement understates by about that much**. The fix is not vigilance:
+**every ceiling carries `tokenizer:`, and the launcher refuses to enforce a legacy cap on a current-tokenizer
+model.** The reason it must refuse rather than warn is that **a ceiling that fires early is indistinguishable from a
+stuck run** — the founder sees a night that stopped, and nothing in the log says which of the two it was.
 
 **(FINAL, unchanged and still the first thing to do.)** Before any estimate is believed: **ten real moves against the
 runner's own reported cost**, on the subscription, in window units per run. Every prior round's dollar figure is kept
@@ -178,6 +241,23 @@ attached to that day, not to this one.
 
 ---
 
+### 16.4a The largest source of unplanned context is now a settings ceiling
+
+**(FACT: world.md 18 — W18, and it is the one context number in this plan that a vendor will enforce for us.)**
+`bashOutputMaxChars` and `taskOutputMaxChars` raise how much command and background-task output a run receives inline
+before it is saved to a file, **up to 128K characters**. Against that, this plan's own handoff limit is **≤ 500 tokens
+by convention** — a convention nobody enforces, sitting beside a vendor ceiling that is enforced and two orders of
+magnitude wider.
+
+**Why it belongs in this section rather than in the context budget.** §16.3's dominant term is the *stable* prefix; a
+tool result pasted inline is **divergence tokens**, the term that is multiplied by every sibling and never cached. A
+command that prints 128K characters into a run is the cheapest way to lose a night's cache economics, and it happens
+without anyone choosing it. **The settings value is a number the founder sets and the ledger can attribute** — set it
+low, and the output lands in a file the run can read on demand, which is the same just-in-time shape §13.8 quotes the
+vendor stating for data generally.
+
+---
+
 ### 16.5 `--max-budget-usd` is a stall fuse, not a spend control
 
 **(NEW: v23, and the correction runs in the direction of less protection, which is why it is stated plainly.)** The
@@ -188,9 +268,20 @@ for subscribers *"the session cost figure isn't relevant for billing purposes."*
 and once spend reaches it, *"spawning another subagent fails with `Budget limit reached`"* (v2.1.217+). That is a fuse
 against a run that has stopped making progress and started making calls — the failure mode a night actually has.
 
+**(FACT: world.md 5 — W5, and it makes the local estimate less local.)** *"Cost estimates (`/cost`, status line,
+`--max-budget-usd`) now include the 1.1× US-only-inference premium for data-residency workspaces."* Still a local
+estimate at list price; now a local estimate with a **residency multiplier** in it. It changes nothing about what the
+flag binds — which is nothing — and it does change the number a reader might otherwise reconcile against a bill.
+
+**(Deletion 13, 2026-09-06: this subsection is now the only place that explains the flag.)** It was explained here and
+in three other places besides — §12.9 most fully, which now carries one clause and a pointer. **A fuse explained four
+times invites a fifth misreading**, and the misreading is always the same one: that it is a spend control.
+
 **What binds the account instead:** usage credits with a monthly spend limit, and on Team or Enterprise, admin spend
 limits. Neither is a per-run control, and the ceilings that matter to this design are §12.9's — **pre-action, per run,
-per intent, per venture per month, tightest binds** — which are ours to implement and are **ABSENT**.
+per intent, per venture per month, tightest binds** — which are ours to implement and are **ABSENT**. **Since v74
+they are denominated in window share rather than in dollars** (§16.2a); the dollar figure this flag prints is the
+shadow price beside them.
 
 ---
 
@@ -205,6 +296,16 @@ which, with the alternative already framed.
 push, the anchors, the log write and the reconciliation stay permitted. **A model with no entry in the price table is
 refused, not scored at zero.**
 
+**(NEW: O8 — the price table gets a clock, and a stale row refuses routing.)** *A model with no entry is refused
+rather than scored at zero* is the right rule with a hole in it: **a row that is present and wrong is worse than a row
+that is missing**, because the refusal never fires. So `keel/shared/prices.yml` carries **`fetched_at` and
+`valid_until` per row**, and **a stale row refuses routing** exactly as a missing one does. This is v19's forced-expiry
+idiom applied to the one table that turns tokens into a number the founder reads.
+
+**And Gemini's quota is carried as a count, not a price.** **60 requests a minute and 1,000 a day** is not a rate in
+dollars, and storing it as one would invent a figure the vendor does not publish. A count is what the router needs
+anyway.
+
 **(NEW: v22 makes the rope read two gauges.)** A five-hour exhaustion stops starting until the window rolls. A
 **weekly** exhaustion stops starting for the rest of the week, and it is the one that should reach the briefing as an
 event rather than as a line.
@@ -217,11 +318,11 @@ event rather than as a line.
 
 | The founder asked for | Here it is |
 |---|---|
-| budget in money · daily spend cap · spend-rate limit | the charter's money ceiling per month and a rate per tool; **the Sender rejects at the ceiling independently of the number in the instruction**; a tool with a null rate cannot carry `SPENDS MONEY` |
-| budget in hours | the reserve per window — **now per five-hour window *and* per week** (v22) |
+| budget in money · daily spend cap · spend-rate limit | **the charter's ceiling is window share; money is the shadow price beside it** (v74, §16.2a). The money ceiling per month and the rate per tool survive **where real money moves** — **the Sender rejects at the ceiling independently of the number in the instruction**, and a tool with a null rate cannot carry `SPENDS MONEY` (**O32**'s `provider_cap`, §8) |
+| budget in hours | the reserve per window — **now per five-hour window *and* per week** (v22), with **wall clock beside the window gauge** (v74) |
 | per-mission cost · per-worker cost · cost attribution | per intent and per run, joined by the id on every row; **per agent is now a real unit** (§16.1) |
 | mission budget cap · investment stop criteria | the intent's ceiling and expiry; the stop rule (§16.6) |
-| exploration vs exploitation spend | idle capacity buys knowledge, bounded by being free; *both options built* is the only sampled diversity |
+| exploration vs exploitation spend | idle capacity buys knowledge, ~~bounded by being free~~ **metered: an exploration `class:` on the intent, routed to Gemini, local models or the Codex seat, and refused onto the Claude seat past a founder-set fraction** (moved 2026-09-06: v74, contradiction 18 — the weekly window is per seat and shared with chat and Cowork, so a night of exploration is subtracted from the next day); *both options built* is the only sampled diversity |
 | cheap-tier bulk usage | **local models on electricity** (v20) · the Gemini window once authenticated · batch on the day a key exists |
 | cache-hit cost rate | measured per run from the runner's record; **the dominant term**, one line weekly |
 | company P&L · revenue tracking · payment analytics · burn · runway | a venture's own work; revenue **read from the processor as a claim, never typed**; a runway computed from a number the bank does not confirm is stamped *internal* and cannot promote anything (§11.7) |
@@ -230,7 +331,7 @@ event rather than as a line.
 
 ---
 
-### 16.8 The six weekly lines
+### 16.8 The weekly lines — ~~six~~ seven since 2026-09-06 (O75)
 
 **(FINAL §15.5 and §12, collected. Each must be reported whether or not it flatters, and each names what it would take
 to game it.)**
@@ -241,13 +342,25 @@ to game it.)**
 | 2 | **founder-minutes per finished intent** | must fall | the founder's own time, measured, not estimated |
 | 3 | **cost per surviving artifact** | reported, and **undefined when it is undefined** | a month of cheap runs that produced nothing has no such number, and **reporting a small one is the arithmetic by which producing nothing looks efficient** |
 | 4 | **interventions per surviving artifact** — redirects, rejections and rework | must fall | **the denominator is survivorship**, so producing more does not help |
-| 5 | **the cache-hit cost rate** | watched, not targeted | it is the dominant term of §16.3, and it is read from the runner's own record |
-| 6 | **the rung-1 share of finished work** (§11) | must not fall | it is *quality of belief*; if it falls the system is producing more and knowing less |
+| 5 | **the cache-hit cost rate** | watched, not targeted | it is the dominant term §9.6 owns, and it is read from the runner's own record |
+| 6 | **the rung-1 share of finished work** (§11) | must not fall | it is *quality of belief*; if it falls the system is producing more and knowing less. **Since v73 it splits into rated and unrated** (§21), and the unrated half is the honest one |
+| 7 | **cost per rung movement, per venture** *(new 2026-09-06: O75)* | watched | **the only ROI this system can compute honestly**: the numerator is measured from the runner's own record and the denominator — a belief moving from rung 4 to rung 1 — is set by the world, not by us. Cost per finished intent can be gamed by finishing small things; this cannot, because a rung does not move without an anchor |
+
+**(NEW: O74 — one control chart instead of three thresholds someone invents at 3 a.m.)** Three of the lines above beg
+for a *warn at* number: cache-read share, tokens per run, and the trust pass rate. **There is no defensible constant
+for any of them**, and a threshold picked to make a chart look decisive is exactly the kind of number this section
+refuses everywhere else. So each is plotted **against its own history** and the alarm is *this shape has moved off its
+own baseline*, which needs no constant and survives a model change, a roster change and a tokenizer change.
 
 **(FINAL)** Two more lines belong in the briefing beside them and are not numbers: **the reconciliation line** — the
 books agree with the bank, or the incident — and **the week's most expensive refusal**: what was going to happen, what
 stopped it, what it would have been worth. **A refusal that tops that line four weeks running is a design defect
 wearing a safety costume, and is narrowed by name.**
+
+**(NEW: O76 — and the third thing beside them is a number after all.)** **The restore drill's number goes on the
+briefing** (§15.4). *The restore is drilled or none of this is true* is the strongest sentence in §15, and it was the
+only claim in the plan whose evidence never reached the founder's weekly reading. A drill that produces a number
+nobody sees is a drill that stops being run.
 
 **(NEW: a scope note, because two sections must not define one number.)** **§21.1 carries FINAL §20's six numbers and
 governs every line that appears in both.** Four of the six above are in that set — cost per finished intent, the
@@ -257,9 +370,10 @@ interventions per **finished** artifact, and line 4 above counts them per **surv
 stricter denominator FINAL §12 argued for. **§21 owns that reconciliation and this section defers to it: FINAL
 §15.5's two weekly numbers are cost per finished intent and founder-minutes per finished intent, while
 interventions per surviving artifact is FINAL §12/§20's number, so §21 governs and "surviving" is the word used
-here.** **The two lines this section genuinely adds
-are 3 and 5** — cost per surviving artifact, and the cache-hit cost rate — because both are arithmetic about money
-that no other section computes.
+here.** **The lines this section genuinely adds
+are ~~3 and 5~~ 3, 5 and 7** (moved 2026-09-06: O75) — cost per surviving artifact, the cache-hit cost rate, and cost
+per rung movement — because all three are arithmetic about money that no other section computes. Line 7 is shared with
+§21, which owns the rung ladder; **§21 governs what a rung movement *is* and this section prices it.**
 
 ---
 
@@ -279,5 +393,21 @@ which is why §G.1 routes on **cache behaviour, window, and family independence*
 and never on a benchmark score.
 
 **Enforced by:** the ledger line per run (**ABSENT**) · the price table, with a model that has no entry **refused
-rather than scored at zero** (**ABSENT**) · the three ceilings of §12.9 (**ABSENT**) · the six weekly lines in the
-briefing (**ABSENT**) · `--max-budget-usd` per run as a stall fuse (**exists**).
+rather than scored at zero**, **and a stale row refused the same way** (**ABSENT**, O8) · the three ceilings of §12.9,
+**denominated in window share** (**ABSENT**, v74) · the ~~six~~ **seven** weekly lines in the briefing (**ABSENT**) ·
+`--max-budget-usd` per run as a stall fuse (**exists**).
+
+**(NEW: one row per mechanism the rethink round of 2026-09-06 added to this section, with the path SPINE §L gives
+it.)**
+
+| Mechanism | Path | From | State |
+|---|---|---|---|
+| Ceilings in window share against an observed high-water mark; exploration routed off the Claude seat | one high-water file · one Desk rule · `class:` on the intent | **v74** (D9) | **ABSENT** |
+| A price file with `fetched_at` / `valid_until`; a stale row refuses routing | `keel/shared/prices.yml` | **O8** | **ABSENT** |
+| `tokenizer:` on every ceiling; the launcher refuses a legacy cap on a current-tokenizer model | `bin/run` | **O77** | **ABSENT** |
+| The log rotates; a rebuildable rollup; no surface reads the raw file | `logbook/events/YYYY-MM.jsonl` | **O40** | **ABSENT**; **DEPENDS-ON-R22** |
+| One control chart per shape, over its own history, instead of three invented thresholds | the briefing | **O74** | **ABSENT** |
+| Cost per rung movement, per venture | the briefing | **O75** | **ABSENT** |
+| The restore drill's number on the briefing | the briefing | **O76** | **ABSENT** |
+| Four vendor cost fields read rather than computed | the ledger's reader · §14.6 | **W4** | fields **ship**; the reader **ABSENT** |
+| Inline output caps set low, so tool output lands in a file | `bashOutputMaxChars` · `taskOutputMaxChars` | **W18** | the settings **ship**; **unset here** |

@@ -79,12 +79,12 @@ flowchart TD
     PACKS["The onboarding packs · v71<br/>per agent, wave one included: one rehearsal case with a<br/>known answer, one exemplar of its own output with<br/>provenance, one end-to-end demonstration that its anchor<br/>fires, namespaces that resolve ·<br/>WITHOUT THEM AN AGENT IS DECLARED AND NOT ROUTABLE"]
     ROUTING["keel/shared/routing.yml · O5<br/>which agent, which model, which band — answered ONCE and<br/>generated into §B.2, §C.1 and §9.2, which today answer it<br/>in three places with nothing checking that they agree"]
     SCHEMAS["keel/shared/schemas/ · O3 O4 O6 O7<br/>charter.yml · brief.yml, eleven fields per v45 ·<br/>event.yml, a schema_version on every row and a reader<br/>that refuses an unknown version · the handover's five<br/>fields: objection, brief_sha, maker and checker<br/>family plus model, actor, idempotency key"]
-    WORK["keel/ventures/&lt;v&gt;/items/ · O1<br/>i-*.yml with intent, purpose, ceiling, blocked_on,<br/>attempts, last_failure, card · proposals land in<br/>items-draft/ · A BOARD CARD IS A VIEW OF A WORK ROW"]
+    WORK["keel/ventures/&lt;v&gt;/items/ · O1<br/>w-*.yml with intent, purpose, ceiling, blocked_on,<br/>attempts, last_failure, card · proposals land in<br/>items-draft/ · A BOARD CARD IS A VIEW OF A WORK ROW"]
     DECIDE["keel/logbook/decide.jsonl · O9<br/>one house queue replacing ten per-venture open.md ·<br/>a row with no intent id is refused ·<br/>the night escalation target, never the Operator (O49)"]
     GOLDEN["keel/golden/ · O11<br/>eval-only bodies, so the case that will judge a run<br/>cannot be read by that run · one frontmatter field,<br/>one generator rule, check:manifest re-pointed"]
     PAGEMAN["keel/surfaces/pages/&lt;n&gt;.yml · O12<br/>every element resolves to a store path or a bin/ verb<br/>and the renderer builds only from it ·<br/>page 1 loses the venture toggle to page 3's strip"]
     HOST["keel/host/ · O10<br/>plist · managed-settings template · env file ·<br/>sandbox block · denyRead list · expected macOS grants —<br/>the one place the machine is declared"]
-    CONSENT["The consent register and the per-subject store · v69<br/>one writer, read by the Sender BEFORE any contact ·<br/>log and memory hold a hash, never a body, so erasure<br/>deletes one row and the hash becomes a known absence"]
+    CONSENT["keel/consent.yml + keel/subjects/&lt;hash&gt;.yml · v69<br/>the register has ONE writer and is read by the Sender<br/>BEFORE any contact · log and memory hold a hash, never a<br/>body, so erasure deletes one subject row and the hash<br/>becomes a known absence"]
     HIGHWATER["The window high-water file · v74<br/>tokens observed, because no denominator is published ·<br/>wall clock beside it, USD kept as a shadow price"]
 
     EGRESS["keel/bin/egress · v68<br/>ONE no-model door: every call logged, filtered by domain<br/>AND method, credentials injected that the agent never<br/>sees · --strict-mcp-config names only the proxy and<br/>mcp-policy.json becomes its configuration"]
@@ -264,7 +264,7 @@ why the graph grew by twenty-one nodes and not by eighty.
 
 | ABSENT path | SPINE | Node |
 |---|---|---|
-| `keel/ventures/<v>/items/` — `i-*.yml`, and `items-draft/` | §L O1 (**R16** decides two objects or three) | `WORK` |
+| `keel/ventures/<v>/items/` — `w-*.yml`, and `items-draft/` | §L O1 (**R16** decides two objects or three) | `WORK` |
 | `keel/shared/roster.yml` | §L O2 · v72's `valid_until` · v71's pack paths | `ROSTER` |
 | `keel/shared/schemas/charter.yml` | §L O3 (contradiction 2) · v79's `cloud:` field | `SCHEMAS` |
 | `keel/shared/schemas/brief.yml` — eleven fields | §L O4 (contradiction 3) | `SCHEMAS` |
@@ -276,7 +276,7 @@ why the graph grew by twenty-one nodes and not by eighty.
 | `keel/host/` | §L O10 | `HOST` |
 | `keel/golden/` | §L O11 (contradiction 11) | `GOLDEN` |
 | `keel/surfaces/pages/<n>.yml` | §L O12 (contradiction 9) | `PAGEMAN` |
-| The consent register and the erasable per-subject store | **v69** | `CONSENT` |
+| `keel/consent.yml` — the register — and `keel/subjects/<hash>.yml`, the erasable per-subject store | **v69** | `CONSENT` |
 | The window high-water file | **v74** | `HIGHWATER` |
 
 **Programs — O13–O20, O23, O60, O78, O79, plus the founder's one**
@@ -313,6 +313,17 @@ why the graph grew by twenty-one nodes and not by eighty.
 | The deterministic accessibility check · the verbatim legal clause | §L O58, O59 | `P5` and `RECON`; both sit on grants and checks that exist |
 | The page manifest's readers: the census join, the citing-or-refusing Q&A | §L O70, O54 | `P2` and the page renderers, downstream of `PAGEMAN` |
 | Deletions and rules with no program: the project-settings grant tier, the backlog file, the parallelism axis, `analyst`'s shell, `CURATION.yml` as the failed-candidate home, the hook rewrite as spec | §L O37, O46, O69, O57, O47, O38 | no node — §18.7 carries them as fates |
+
+**(NEW: three of these paths are named more narrowly than SPINE §L names them, and the difference is recorded
+rather than applied in silence)** §L writes the work-item store as `keel/ventures/<v>/work/` holding `w-*.yml`. **It
+is `items/` holding `w-*.yml` here, with drafts in `items-draft/`** — because **`work/` is already the venture's own
+source repository**, and a store path that collides with the tree a builder checks out is a defect found by a `git
+status` at three in the morning rather than by a review. **v69**'s two stores are named the same way:
+`keel/consent.yml` for the register and `keel/subjects/<hash>.yml` for the erasable per-subject bodies, where §L
+says only *two stores*. **None of the three is a change of behaviour** — §L's fields, its one-writer rule and
+`bin/check-stores`' refusals are untouched, and only directory and file names move. They are written down because a
+path that differs between the spine and the build order is precisely the drift the spine exists to stop, and the
+cheapest moment to see it is now.
 
 **(NEW: two rows are free before the first run and expensive after, and the graph cannot show that)** **O7**'s five
 handover fields and **O6**'s `schema_version` cost nothing while no run has written a row, and cost a **full backfill**
