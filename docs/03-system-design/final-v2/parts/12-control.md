@@ -1,7 +1,9 @@
 ## 12 · Control — what may be done alone, and what never
 
-*obeys: §C.1's bands, v9, v10, v28, v33, and **v67, v68, v69** from the rethink round of 2026-09-06 · inherits:
-FINAL §9. The tool door itself lives in §8 (Tools and MCPs) and is not restated here.*
+*obeys: §C.1's bands, v9, v10, v28, v33, **v67, v68, v69** from the rethink round of 2026-09-06, and **v76 amended,
+v87, v92, v93, v94, v101, v102** with **O83, O85, O86, O87, O88, O89, O93, O96, O100, O104, O109, O127** from the
+fixer round of 2026-09-06 (DECISIONS §24) · inherits: FINAL §9. The tool door itself lives in §8 (Tools and MCPs)
+and is not restated here.*
 
 ---
 
@@ -24,7 +26,7 @@ loophole. Written the way the founder would say it:
 
 ```
 may-alone:  write code · run tests · make branches · research anything · draft anything ·
-            build both options of a choice · spend up to the venture ceiling on capacity ·
+            build one option of a choice and write the second (v87; ~~both~~) · spend up to the venture ceiling on capacity ·
             (NOT calendar or mail: the world's door and scout read those, v36)
 never:      send mail as me · post publicly · pay anyone · sign anything · touch production
             data · change a live price · contact a customer · delete anything a person made
@@ -67,9 +69,20 @@ predicts damage is *can this be undone*.
 it is **sized to the blast radius**: a wider act gets a shorter window, not a longer one. Writing an hour into the
 predicate itself would have put a schedule inside a rule, which this plan refuses everywhere else.
 
+**(NEW: O109 · v101 — reversibility is a property of a verb in the admitted-tool file, never a question a run answers
+about its own act.)** (THINKER: B13) The one-way/two-way decision is where a mistake is unrecoverable, and it was the
+one decision this plan let a model make about itself — the flowchart's first question was asked *by the run*. Data
+can be probed; a question cannot. So `keel/shared/tools/<name>.yml` gains **`verbs: [{name, effect: none | metered |
+reaches-the-world, reversible: bool, undo: <cmd>, drilled: <date>}]`**; **an unlisted verb is one-way**; `bin/run`
+composes the grant from the listed two-way verbs; the Sender, the door and v76's away predicate read the table; O24's
+`effect:` on an anchor is the same field. **The first question below is a lookup now, and the run-side form of it is
+deleted.** v28 stands and gains its mechanism. **The cost, once:** one table per admitted tool, filled at the door
+where the undo is drilled anyway (§8). **Losing image:** the flowchart as a run-side question (§J 79). `wins_if:`
+grepping the launcher finds no predicate that takes model output — the flowchart was a lookup in practice.
+
 ```mermaid
 flowchart TD
-    ACT["A run wants to act"] --> Q1{"Can the system itself undo this<br/>within the undo window, with nobody<br/>else noticing —<br/>and has that undo been DRILLED?"}
+    ACT["A run wants to act"] --> Q1{"Is the verb listed in tools/&lt;name&gt;.yml<br/>with reversible: true and a drilled undo? (v101)<br/>A LOOKUP. An unlisted verb is one-way."}
     Q1 -->|"yes"| TWO["TWO-WAY DOOR<br/>Do it. Record it, with the undo path.<br/>Do not ask."]
     Q1 -->|"no"| Q2{"Does it reach a person,<br/>money, or the public?"}
     Q2 -->|"yes"| ONE["ONE-WAY DOOR<br/>Never alone. Build it, stage it,<br/>ask WHICH."]
@@ -80,7 +93,7 @@ flowchart TD
     Q4 -->|"no"| QUEUE["Queue a WHICH.<br/>Keep working on everything else."]
     ONE --> STAGE["STAGED: the artifact exists,<br/>hashed, ready, unsent"]
     STAGE --> TAP["One tap runs the Sender"]
-    STAGE -.->|"a class the charter WIDENED,<br/>per venture, per class"| WIDE["The Sender runs without the tap,<br/>after a recall window, inside the ceiling"]
+    STAGE -.->|"a class the LADDER widened,<br/>per venture, per class (12.2b)"| WIDE["The Sender runs without the tap,<br/>after a recall window, inside the ceiling"]
 ```
 
 **(FINAL)** The staged-not-sent pattern is the whole trick. A post is written, previewed and sits there; an email is
@@ -92,16 +105,47 @@ answer* affordable: **the asking blocks the last inch, never the work.**
 
 **(FINAL)** Two additions that keep the door test honest. **An undo is drilled or the door is one-way**: a two-way
 door whose undo has not been exercised is treated as one-way until it is, by the rule that an untested kill switch is
-a story about a kill switch; the drill runner writes only a date. **A widened class executes after a recall window**,
-not on the instant: the Sender holds it for a window sized to the blast radius, the phone can recall it, and the
-receipt says plainly when a recall is not an undo.
+a story about a kill switch; the drill runner writes only a date — **the `drilled:` field on the verb** (v101).
+**A widened class executes after a recall window**, not on the instant: the Sender holds it for a window sized to
+the blast radius, the phone can recall it, and the receipt says plainly when a recall is not an undo.
 
 **(NEW: cognition.md again, and it is worth naming because it is the strongest claim in this section.)** *"§9.2's
 staged-not-sent pattern and its recall window have no analog in anything I fetched. The shipped equivalent of 'never
 alone' is a prompt or a deny rule, not a staged artifact."*
 
-**Mechanism:** the door test runs before a brief carries a `REACHES THE WORLD` grant (ABSENT) · the drill dates in
-`shared/tools/<name>.yml` (ABSENT) · `bin/send`, which holds no model (ABSENT).
+**Mechanism:** ~~the door test runs before a brief carries a `REACHES THE WORLD` grant~~ the verb table in
+`keel/shared/tools/<name>.yml`, read by `bin/run` at composition, by the Sender and by the door (amended 2026-09-06:
+O109) (ABSENT) · the drill dates as `drilled:` on each verb (ABSENT) · `bin/send`, which holds no model (ABSENT).
+
+---
+
+### 12.2b The widening ladder per outward class — v94, and `first-contact` is on it
+
+**(FOUNDER, fixer round 2026-09-06: E11 · v94 · `class: originated` — *"Yes, after N recall-free sends per
+venture"*.)** This overrules the strategist's own default, which stopped the ladder one step below first contact
+(§J 84). (THINKER: C10) The trifecta is right and every outward act routes through the Sender after a tap or a
+widened class; **widening existed for tools — drill the undo, then night — and not for outward classes**, so contact
+rungs 1 and 2 arrived at the founder's tap rate. The ladder is the same shape 12.2 already uses for a two-way door,
+per venture in the charter like the envelope:
+
+| Step | Class | Widens after |
+|---|---|---|
+| 1 | `reply-to-existing-thread` | `n_recall_free` sends inside the class, per venture — the Watch stages a *widen one step, or stay* which |
+| 2 | `follow-up-to-consented-contact` | the same |
+| 3 | `publish-to-preview` | the same |
+| 4 | `publish-to-owned-channel` | the same |
+| 5 | `first-contact` | **the same — reachable like any other class** (E11), never a tap per send forever |
+
+Each class in `keel/shared/tools/<class>.yml` carries `step`, `n_recall_free`, `recall_count`, `widened_at`,
+`undo_drilled`. **`bin/send` reads the step; `bin/reconcile` writes `recall_count` from the world's record** — a
+recall inside the window, or a reply asking to stop, which also writes the consent register (§11.9). **A recall
+narrows the class by one step without asking.** **The consent register (v69) and the disclosure line (v63) are read
+at every step**, first contact included. The `N` is the charter's, per venture (§2). **The cost, once:** one file per
+class, two counters, one which shape. **Losing images:** the ladder stopping below first contact — §J 84, `wins_if:`
+recalls per hundred sends on a widened `first-contact` class exceed the founder's own tapped rate; widening on reply
+rate (B) — `wins_if:` a class widens on zero recalls while `bin/inbound` records zero replies. **Settled by:** sends
+per week that needed no tap, and recalls per hundred sends, on the briefing. Path: `keel/shared/tools/<class>.yml` ·
+`bin/send` · `bin/reconcile` — **ABSENT** (O100).
 
 ---
 
@@ -147,7 +191,7 @@ flowchart TD
     B2 --> DISPATCH
     B3 --> NOAGENT["NO AGENT IS DISPATCHED.<br/>The artifact is staged, hashed, unsent."]
     NOAGENT --> DOOR{"Widened for this venture<br/>and this class?"}
-    DOOR -->|"no"| WHICH["A WHICH on the desk.<br/>Both options already built."]
+    DOOR -->|"no"| WHICH["A WHICH on the desk, if the window's<br/>which budget allows one (v87).<br/>One option built, the second written."]
     DOOR -->|"yes"| SENDER["The Sender — a program, no model —<br/>after the recall window, inside the ceiling"]
     DISPATCH --> RUN["The run"]
     RUN -->|"hits a wake-me condition"| WATCH["BAND 4 · the Watch decides whether to ring,<br/>against the interruption budget"]
@@ -162,7 +206,9 @@ on, and it is the vendor's, not ours.
 
 **(NEW: and one thing the table deliberately does not use.)** **`auto` mode's classifier is not the envelope.** It is
 *"a second model, the classifier"* reviewing actions instead of the founder; it can be switched off with
-`disableAutoMode`; and nothing in it keys on reversibility. It is a cheap guardrail against accident. §11.1's rule
+`disableAutoMode` — ~~and the managed file does~~ **and the managed file no longer does (amended 2026-09-06: E9 ·
+v92): the Floor keeps the founder's mode, and night children run `dontAsk --restricted`, where auto mode is inert**;
+and nothing in it keys on reversibility. It is a cheap guardrail against accident. §11.1's rule
 applies to it unchanged — a model checking a model is a screen, not a verdict.
 
 ---
@@ -197,7 +243,8 @@ mode that lets a run work unattended is the mode that switches it off.
 approve verb:
 
 1. It was **pre-decided in the envelope** — `may-alone`, `never`, or the venture's widened class.
-2. It is **staged as a which, with both options built**, and left on the desk.
+2. It is **staged as a which, with ~~both options built~~ one option built and the second written** (amended
+   2026-09-06: E15 · v87), and left on the desk — **if the Desk will open one at all** (below).
 
 ```mermaid
 flowchart TD
@@ -206,10 +253,37 @@ flowchart TD
     MODE -->|"the Floor · the founder is here"| ASK["Ask. The founder is beside it."]
     DENIED --> ENV{"Pre-decided in the envelope?"}
     ENV -->|"yes"| GO["Proceed. Record the clause<br/>that authorised it."]
-    ENV -->|"no"| BUILD["Build BOTH options.<br/>Stage them, hashed, unsent."]
-    BUILD --> DESK["A WHICH on the desk, carrying six fields:<br/>the question typed FACT or PREFERENCE ·<br/>the recommendation and its one reason ·<br/>what happens if the founder says nothing ·<br/>the class and its drill date ·<br/>the cost of being wrong · both options, built"]
+    ENV -->|"no"| BUDGET{"Is the which budget for this window<br/>spent? decisions_per_window × horizon (v87)"}
+    BUDGET -->|"yes"| REFUSED["The Desk REFUSES to open a which.<br/>The refusal is a row. The work waits."]
+    BUDGET -->|"no"| BUILD["Build ONE option; WRITE the second —<br/>unless a ten-word summary cannot separate them (v87).<br/>Stage it, hashed, unsent."]
+    BUILD --> DESK["A WHICH on the desk, carrying six fields:<br/>the question typed FACT or PREFERENCE ·<br/>the recommendation and its one reason (or hidden, O97) ·<br/>what happens if the founder says nothing —<br/>a default fires only if it touches no one-way verb (v76) ·<br/>the class and its drill date ·<br/>the cost of being wrong · one option built, one written"]
     DESK --> TAP["One tap. That is the whole interaction."]
 ```
+
+**(FOUNDER, fixer round 2026-09-06: E15 · v87 — delegated, *"do what best for the sytem"*; the outsider's design,
+`class: ratified`.)** (THINKER: B3) The founder's adjudication rate is the throughput bound and nothing modelled it:
+a which queue that grows without bound is a queue the founder stops reading. So **the Desk refuses to open a which
+past `decisions_per_window × intent.horizon`** — seeded at **six per five-hour window** until **R34** replaces the
+seed with the measured answering rate from the transcript corpus; the refusal is a row, never silence. A which
+carries `kind:`, `cost_to_answer_bytes` and `recommendation_shown:` (O97's control arm hides a founder-set fraction
+of recommendations, §13). **One option is built and the second written, unless a ten-word summary cannot separate
+them** — the two-built default was the cost the queue could not carry. The briefing's first line is *decisions taken
+· deferred · defaulted* (O96; §16 owns the briefing, §4 the Desk's admission). Inside v9 and v76; reopenable.
+**Losing image:** whiches unbounded, both options always built. `wins_if:` a quarter with no backlog past one
+window's throughput and the second option chosen over a third of the time. Path: `bin/watch` · `decide.jsonl` —
+**ABSENT**.
+
+**(FOUNDER, fixer round 2026-09-06: E6 · v76 amended · O127 — *"Away narrows, plus a burst edge"*.)** (THINKER: B14,
+A20) v76 as written released the reserve to autonomous work and fired a which's stated default at expiry — **exactly
+when nobody could pull the cord and no recall was possible**. Dead-man principle: absence narrows. So while the last
+founder event is older than the reserve's horizon, **the reserve goes only to `effect: none` work whose outputs
+stage**, and **no one-way default fires** — a default fires only if it touches no one-way verb, and 12.2's verb table
+decides that, not a judgement; the reserve is per weekly window (v22); and a **burst edge** — founder events in the
+current five-hour window above a founder-set rate — pauses Claude-seat autonomy until the window rolls, because the
+founder's tempo is bursts (commits per day over a fortnight: 15 · 85 · 35 · 305 · 0 · 105 · 100 · 1 · 12 · 0 · 0 · 0
+· 0 · 56 · 40). Beyond a second, longer horizon the dead-man lease stops unattended dispatch entirely (12.9). §4 owns
+the four call sites; this section owns what the *says nothing* field may do. `wins_if:` a drilled week away regrets
+nothing.
 
 **(NEW: v9's consequence for the rest of the plan.)** This makes FINAL's staged-not-sent rule **load-bearing rather
 than stylistic**. In an attended session it is good manners; in an unattended run it is the only channel that exists.
@@ -238,7 +312,20 @@ be in that file.
 |---|---|
 | `permissions.deny` — the deny rules that bind in every mode, including bypass | `disableAllHooks` |
 | `permissions.disableBypassPermissionsMode: "disable"` (v10) | `allowManagedHooksOnly` |
-| `permissions.disableAutoMode: "disable"` (the classifier is not the envelope, §12.3) | — |
+| ~~`permissions.disableAutoMode: "disable"` (the classifier is not the envelope, §12.3)~~ **struck** (amended 2026-09-06: E9 · v92) | `disableAutoMode` — **the Floor keeps the founder's mode** |
+
+**(FOUNDER, fixer round 2026-09-06: E9 · v92 — *"Keep auto mode on the Floor"*.)** (THINKER: A3, A15) The founder's
+own settings carry `autoMode`, `skipDangerousModePermissionPrompt` and `skipAutoPermissionPrompt`; managed settings
+are machine-wide; so the file as v11 wrote it removed the mode the founder works in from their own hands, and §19
+had priced the act at four lines of JSON without pricing the Floor. Striking the key promotes nothing — 12.3 still
+says the classifier is not the envelope; it stops removing it. **What carries a night child's narrowing instead is
+argv: `dontAsk --restricted`, where auto mode is inert, plus per-child `--settings <json>`** (O87) carrying that
+child's hooks — `PreModelSwitch` (12.6a), `PreCompact` (§9.6), `SessionEnd` — and child-specific denies. v43's
+grant matrix gains the `--settings` carrier on its `-p` row (12.10); `bin/run` **refuses `--agents <json>`** (one
+home for an agent file, v42); `bin/probe` attempts `claude agents --allow-dangerously-skip-permissions` and expects
+refusal. **DEPENDS-ON-R28**: does `--restricted` ignore `--settings <file>` as it ignores the settings files? If it
+does, the hooks ride another carrier and the row says so. **Losing image:** v11 as written. `wins_if:` the founder
+gives up auto mode on the Floor. Path: `bin/run` · `bin/probe` — **ABSENT**; the flag ships (W35).
 
 **The cost, stated once and not re-litigated (v11):** a run can therefore register its own Stop hook. That is a
 **smaller hole than losing the goal loop**, and the nightly probe checks it. Narrowing that would otherwise have gone
@@ -297,10 +384,17 @@ model; the hook only refuses or annotates a *switch away from* that decision. An
 model**: the predicate is a lookup against the rehearsal record, so it belongs behind a hook exit for the same reason
 `qa-verdict` does.
 
+**(NEW: O89 — adopted, and the carrier is named.)** (THINKER: A8) `--fallback-model a,b` ships and reroutes silently.
+`bin/run` composes v78's same-family links into it from `roster.yml`, and **registers `PreModelSwitch` in the child's
+`--settings` (O87)**: the hook writes a `model.switch` event row carrying the rung demotion and **blocks** a switch to
+a family unrehearsed for the move class; cross-family and *stop and stage* stay with `bin/run` between runs. §9.4a
+carries the chain; this section carries the hook. `wins_if:` the hook does not fire under `-p` — then the flag is
+refused and the launcher does every reroute.
+
 **Mechanism:** the project-tier deletion (**a deletion**, §L O37; §18 carries it) ·
 `permissions.blockReadsOutsideWorkingDirectories` in the checked-in settings file (**the field ships; unset here**) ·
 the hook rewrite (**ABSENT**, §L O38, **ADOPTED-AS-SPEC**) · a `PreModelSwitch` hook registered by `bin/run` in the
-run's settings (**the event ships; the hook ABSENT**, W17).
+child's `--settings` (**the event and the flag ship; the hook ABSENT**, W17 · O89 · O87).
 
 ---
 
@@ -443,7 +537,23 @@ people route around — and this repository has already taken that lesson once, 
 its citation checker and leaving the heuristic half a warning.
 
 **The cost, once:** one indirection per inbound row, one store, one checklist line. **Settled by:** run one erasure
-end to end, then grep the whole tree for the subject and find nothing but hashes.
+end to end, then grep ~~the whole tree~~ **the whole tree and `~/.claude/projects`** for the subject and find nothing
+but hashes (amended 2026-09-06: E10 · v93 / THINKER: A4).
+
+**(FOUNDER, fixer round 2026-09-06: E10 · v93 — *"Keep them for mining"*; and the *settled by* above was false as
+written.)** (THINKER: A4) 3,116 transcripts, 3.1 GB, growing 56 a day, sit under `~/.claude/projects` — outside
+`keel/`, inside the mining pass, holding every stranger's body verbatim. The founder would have believed an erasure
+completed while the subject sat on the same disk. Four things, all O88: **every night child passes
+`--no-session-persistence`**, so the vendor keeps no transcript of it and the run's own `stream-json` trace is the
+record; **the founder's own Floor transcripts are kept for mining**, long retention, at the founder's word; **`bin/mine
+--since` reads only the Floor's `~/.claude/projects` and refuses any episode whose provenance carries a taint id**
+(O65); and **the erasure grep covers `~/.claude/projects`**. **Vendor-side retention — Anthropic's, Google's — is named
+out of reach**, and the disclosure line (v63) says so to the person it concerns. **R30** is the canary: plant one in a
+fixture inbound row, run scout → steward, `grep -r <canary> ~/.claude/projects` returns nothing; erase; `grep -r
+<canary> keel/` finds only the hash. **Losing images:** cap the Floor's transcripts at 30 days — `wins_if:` mining
+finds nothing older than a month; grep `keel/` and stop — `wins_if:` the vendor ships a transcript exclusion or an
+erasure verb. Path: `bin/run` · `bin/mine` · `keel/host/settings.json` — **ABSENT**; the flag ships (W35). §13 owns
+the mining pass.
 
 **Mechanism:** the hash indirection in `bin/log` and the memory writer (**ABSENT**) · `keel/subjects/<hash>.yml` and
 `keel/consent.yml`, one writer each, enforced by `bin/check-stores` (**ABSENT**) · the class and retention fields on
@@ -510,15 +620,41 @@ before this round. §10.8 carries the fact.
 running work and not only of finished work. **Settled by:** pulling the cord mid-run, measuring time to quiescence,
 and whether the run resumes.
 
+**(NEW: O85 · v102 — one stop verb, four receivers, one record; and two scopes, because there is more than one
+Operator.)** (THINKER: B19, A6, A21 · W41) The cord had four semantics wearing one word — the cord file, the recorded
+process groups, the Sender's recall window, and the hosted lane's UNKNOWN — and four semantics are four controls
+until something writes one record of what stopped and what did not. **`bin/stop` is that verb.** It has **two
+scopes**, because the founder runs a bullpen and not one Operator (five `ceo-*` worktrees, three terminals, one
+console login, W41): **`--night`** signals `bin/run`'s process groups and stops dispatch; **`--all`** also `SIGTERM`s
+every registered Operator session and its team (O84). **Every page's control and the phone default to `--night`,
+labelled *stops the night, not the Floor*.** It writes one record — receiver by receiver, stopped or not — so the
+drill's count and the record can disagree, which is the failure it exists to make visible. **Losing image:** one
+Operator enforced by a lease (§J 77). `wins_if:` a month of `sessions.jsonl` shows one live operator row at a time.
+Path: `bin/stop` · every page's control — **ABSENT**; §14 owns the control, §3 the Operator registry.
+
+**(NEW: O86 · v102 — the stop that needs nothing.)** (THINKER: B19) Every stop above has upstream dependencies: the
+tunnel, the network, the page, the keychain. An e-stop with dependencies is a normal control. **`keel/logbook/founder.lease`
+is `founder.last` read against a second, longer horizon** — a dial in `settings.yml` — and **the Watch mints no
+unattended work while it is stale.** Absence of the heartbeat is itself the stop, reachable with the Mac's network
+off, the tunnel down and the keychain locked; any founder-authored event renews it. The tap stays the fast path. It
+does not reverse v9 and it does not reintroduce an approve verb — it narrows dispatch, never a run's questions.
+**Losing images:** the tap as the e-stop — `wins_if:` a year of drills in which the tap reaches quiescence from the
+phone every time, tunnel down; a lease renewed by hand — `wins_if:` `founder.last` goes stale while the founder is at
+the desk. **Drill:** pull the cord from the phone with the Mac's network off and count what stops. Path:
+`keel/logbook/founder.lease` · `bin/watch` — **ABSENT**; §4 owns the Watch's read.
+
 ```mermaid
 flowchart TD
-    PULL["The cord is pulled —<br/>any page, the Floor, or a terminal"] --> TWO{"Two halves, one word<br/>until v67 split them"}
+    PULL["The cord is pulled —<br/>any page, the Floor, a terminal, or the phone"] --> VERB["bin/stop — one verb, one record (O85).<br/>--night: the night's children and dispatch (the default).<br/>--all: also every Operator session and its team"]
+    VERB --> TWO{"Two halves, one word<br/>until v67 split them"}
     TWO -->|"work already running"| SIG["bin/run recorded each child's pgid before exec.<br/>The cord signals the GROUP.<br/>SIGTERM: exit 143, a resumable turn (§15.8)"]
     TWO -->|"work not yet started"| FILE["The cord file, read first on every tick.<br/>The Watch starts nothing new."]
     SIG --> HOLD["Outward grants revoked.<br/>The same tap recalls the Sender's window."]
     FILE --> HOLD
     HOLD --> KEEP["Every artifact stays in place.<br/>No delete, no rollback —<br/>undo is a separate, deliberate act."]
+    VERB --> REC["One record: four receivers —<br/>cord file · pgids · Sender's window · hosted UNKNOWN —<br/>each marked stopped or not"]
     PULL -.->|"the refusal that makes the cord true"| MINT["bin/run REFUSES to mint unattended work<br/>on a carrier whose stop: reads UNKNOWN"]
+    LEASE["founder.lease stale — founder.last against<br/>a second, longer horizon (O86)"] -.->|"needs nothing: no tunnel,<br/>no network, no keychain"| FILE
 ```
 
 **(Deletion 13, 2026-09-06 — `--max-budget-usd` leaves this section.)** ~~It was explained here as a stall fuse, and
@@ -526,9 +662,10 @@ in three other places besides.~~ **§16.5 owns it**, and a fuse explained four t
 clause that bears on control stays: **it does not bind the account**, so it is not one of the three ceilings above.
 §12.10's argv line still names the flag, because that is where the launcher composes it.
 
-**Mechanism:** the cord file (**ABSENT**, read first on every tick) · the `pgid` field written by `bin/run` before
-exec and the signal path that reads it (**ABSENT**, §L) · the `stop:` column on §C.4's carrier table (**ABSENT**) ·
-the three ceilings in `bin/run` and `bin/send` (**ABSENT**).
+**Mechanism:** `bin/stop`, one verb with `--night` and `--all`, writing one record (**ABSENT**, O85) · the cord file
+(**ABSENT**, read first on every tick) · the `pgid` field written by `bin/run` before exec and the signal path that
+reads it (**ABSENT**, §L) · the `stop:` column on §C.4's carrier table (**ABSENT**) · `keel/logbook/founder.lease`,
+read by `bin/watch` before it mints (**ABSENT**, O86) · the three ceilings in `bin/run` and `bin/send` (**ABSENT**).
 
 ---
 
@@ -545,9 +682,27 @@ the three ceilings in `bin/run` and `bin/send` (**ABSENT**).
   exclusion from the architect's paths (v7) are argv facts on `-p` and `permissions.deny` `Edit(<path>)` rules
   on the other two, **UNVERIFIED** until `bin/probe` (ABSENT) asserts them per row. `--allowedTools` restricts nothing. A `claude -p`
   child is narrowed by `--restricted --tools <list> --strict-mcp-config --permission-mode dontAsk --permission-prompts
-  none --add-dir <worktree> --max-budget-usd <n>`, under the managed file of §12.6. **The Operator never composes
+  none --add-dir <worktree> --max-budget-usd <n>`, under the managed file of §12.6 — **and, since 2026-09-06, the
+  `-p` row carries a fourth narrowing: `--settings <json>` per child with its hooks and denies (O87, R28), beside
+  `--no-session-persistence` (O88), `--autocompact <context>` (O90) and `--fallback-model a,b` (O89), the whole argv
+  minted inside a detached tmux session and never via `--bg` (O91, §10.5)**. **The Operator never composes
   argv**; it emits a brief with an intent id, and `bin/run` composes it. That is what keeps v34 true as the roster
   grows.
+- **The vendor's flags are the floor, and `bin/run` composes above it and cannot widen it** (NEW: O104 · v88, E4;
+  THINKER: B2). The floor is `--restricted`, an explicit `--tools` list, managed `permissions.deny`,
+  `disableBypassPermissionsMode` and `blockReadsOutsideWorkingDirectories` (W7, W8) — none of them ours to write. So a
+  launcher defect yields a **narrower or refused** run, never a wider one, and the one unbuilt program that is the
+  whole enforcement point is not also the thing that could loosen it. The scratch house (O78) widens it deliberately
+  and **the probe must refuse** — `wins_if:` the probe fails to refuse a deliberately widened launcher.
+- **The probe is authored apart from the launcher and never imports it; `bin/probe`, `bin/run` and `bin/send` never
+  run inside a Claude session** (NEW: O93; THINKER: A16, B). A probe that imports the launcher asserts the launcher's
+  opinion of itself. And the auto-mode classifier blocked a read-only `security find-generic-password` on this Mac —
+  the harness would deny the programs that serve it — so the three world-touching programs run from launchd, never
+  from a session. `wins_if:` every composed argv was inside the floor anyway for a year.
+- **Identity and autonomy share this Mac, and that is drilled, not assumed** (NEW: O83; FOUNDER: E1 · v83; THINKER:
+  C13). With no box, the founder's keychain and the night's children are on one machine. `bin/probe` attempts a
+  keychain read of a founder item **from a night child** and must fail; **a pass is a `wake-me`**. `wins_if:` the drill
+  passes once — §J 73 comes back. Path: `bin/probe` · `keel/fixtures/` — **ABSENT**; §15 owns the host.
 - **The sandbox is a guardrail against accident, not containment.** `failIfUnavailable` is set, `denyRead` covers the
   credential stores, and there is a documented escape hatch. Describing it as containment is the error to avoid.
 - **The runtime's sandbox schema HAS a full `network` block** (`allowedDomains`, `strictAllowlist`,
@@ -601,4 +756,16 @@ path is not a rule.)**
 | Grants in two tiers, not three | a deletion; §18 carries the fate | **O37** · **W7** | a deletion |
 | Reads narrowed by a settings field, not by argv | `permissions.blockReadsOutsideWorkingDirectories` | **W8** | the field ships; **unset here** |
 | Deny through the `decision` object on non-blocking hook events | the hooks | **O38** | **ADOPTED-AS-SPEC** |
-| `PreModelSwitch` as the gate on v57's routing and v78's fallback — block, or annotate the rung demotion | a hook registered by `bin/run` in the run's settings | **W17** | the event **ships**; the hook **ABSENT** |
+| `PreModelSwitch` as the gate on v57's routing and v78's fallback — block, or annotate the rung demotion; the same-family links ride `--fallback-model a,b` | a hook registered by `bin/run` in the child's `--settings` | **W17** · **O89** | the event and the flag **ship**; the hook **ABSENT** · `wins_if:` it does not fire under `-p` |
+| Reversibility as a property of a verb; an unlisted verb is one-way; §12.2's run-side question deleted | `keel/shared/tools/<name>.yml` `verbs:` · `bin/run` · `bin/send` · the door | **v101** · **O109** | **ABSENT** |
+| The widening ladder per outward class, `first-contact` reachable after N recall-free sends per venture; a recall narrows one step; consent and disclosure read at every step | `keel/shared/tools/<class>.yml` · `bin/send` · `bin/reconcile` | **v94** (E11) · **O100** | **ABSENT** |
+| The managed file carries `permissions.deny` and `disableBypassPermissionsMode` only; `disableAutoMode` struck | the managed file (a founder act) | **v92** (E9) | **ABSENT** until the file exists |
+| Per-child hooks and denies on argv; `--agents <json>` refused; the bypass-skip flag probed | `--settings <json>` from `bin/run` · `bin/probe` | **O87** | **ABSENT** · **DEPENDS-ON-R28**; the flag ships |
+| No vendor transcript of a night child; the erasure grep covers `~/.claude/projects`; mining refuses taint ids; vendor retention named out of reach | `--no-session-persistence` · `bin/mine --since` · `keel/host/settings.json` | **v93** (E10) · **O88** | **ABSENT**; the flag ships. **R30** is the canary |
+| One stop verb, two scopes, four receivers, one record; pages and the phone default to `--night` | `bin/stop` · every page's control | **v102** · **O85** | **ABSENT** |
+| The stop that needs nothing — no unattended work while the founder's lease is stale | `keel/logbook/founder.lease` · `bin/watch` | **v102** · **O86** | **ABSENT**; the horizon is a dial |
+| Away narrows: `effect: none` staged work only; no one-way default fires; the burst edge | `bin/watch` · `keel/logbook/founder.last` · the verb table | **v76 amended** (E6) · **O127** | **ABSENT** |
+| A which is refused past the window's budget; one option built, the second written | `bin/watch` · `decide.jsonl` | **v87** (E15) · **O96** | **ABSENT**; the seed is six until **R34** |
+| The vendor's flags are the floor; the launcher narrows and never widens; the probe refuses a widened one | `bin/run` · `keel/host/` · `bin/probe` | **O104** (E4) | **ABSENT** |
+| The probe never imports the launcher; probe, run and send never run inside a Claude session | `bin/probe` · `bin/run` · `bin/send` from launchd | **O93** | **ABSENT** |
+| A night child cannot read a founder keychain item; a pass is a `wake-me` | `bin/probe` · `keel/fixtures/` | **O83** (E1) | **ABSENT** |

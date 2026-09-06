@@ -1,7 +1,9 @@
 ## 10 · Codex and Claude Code, from day one
 
-*obeys: v5, v11, v12, v32 (SPINE §H entire), **v56** (the cloud lane, 10.2a), and **v67, v78** (the rethink round of
-2026-09-06, carried in 10.8); inherits: FINAL §1 row 30 as the losing image, §16.7, §14.6*
+*obeys: v5, v11, v12, v32 (SPINE §H entire), **v56** (the cloud lane, 10.2a), **v67, v78** (the rethink round of
+2026-09-06, carried in 10.8), and **v90, v92** with **O87, O88, O89, O90, O91, O92, O120, O121** (the fixer round of
+2026-09-06, DECISIONS §24; §H.4 amended, §H.5's Gemini hole filled); inherits: FINAL §1 row 30 as the losing image,
+§16.7, §14.6*
 
 **(FOUNDER, overruling FINAL §1 row 30.)** *"I run from day one of the system to include codex and Claude code in
 the system. So we will need to understand how we are doing it. If you're walking straight from codex, or straight
@@ -39,14 +41,14 @@ argv; **OpenAI's `requirements.toml` outranks every flag** (FINAL §14.6, not re
 flowchart TD
     OP["The Operator emits a brief with an intent id.<br/>It never composes argv"] --> RUN["bin/run — the only thing that composes argv.<br/>It holds no model · ABSENT"]
     RUN --> PICK{"Which provider does this<br/>move's position name? (10.5)"}
-    PICK -->|"builder, architect, tester, designer,<br/>product, writer, growth, steward, curator,<br/>reviewer, guard, challenger, analyst — and the Floor"| CC["claude --session-id UUID<br/>--restricted --tools LIST --strict-mcp-config<br/>--permission-mode dontAsk --max-budget-usd N<br/>-p '/goal &lt;done-test&gt; or stop after N turns'"]
-    PICK -->|"a checker on a prepared diff"| CX["codex exec --json<br/>FOREGROUND, stdout redirected to a file,<br/>inheriting the parent shell's TTY"]
-    PICK -->|"routine scouting and the summarising half"| GM["gemini -p --approval-mode plan<br/>installed 0.38.2, NEVER AUTHENTICATED"]
+    PICK -->|"builder, architect, tester, designer,<br/>product, writer, growth, steward, curator,<br/>reviewer, guard, challenger, analyst — and the Floor"| CC["claude --session-id UUID<br/>--restricted --tools LIST --strict-mcp-config<br/>--permission-mode dontAsk --max-budget-usd N<br/>--settings CHILD.json --no-session-persistence<br/>--autocompact CONTEXT --fallback-model A,B<br/>-p '/goal &lt;done-test&gt; or stop after N turns'<br/>inside a detached tmux session — never --bg (O91)"]
+    PICK -->|"a checker on a prepared diff"| CX["codex exec --json<br/>FOREGROUND, stdout redirected to a file,<br/>inheriting the parent shell's TTY.<br/>A bin/run child from launchd only (O92)"]
+    PICK -->|"routine scouting and the summarising half;<br/>a second family under v78's demotion"| GM["gemini -p --approval-mode plan<br/>installed 0.38.2, personal Google account, NO KEY (v90).<br/>A bin/run child from launchd only — EPERM<br/>from any Claude-hosted shell (O92, W37)"]
     CC --> LOG["ONE LOGBOOK: the event log.<br/>gen_ai.* attributes, the intent id on every row"]
     CX --> LOG
     GM --> LOG
     LOG --> MC["Mission control reads it.<br/>No second source of truth"]
-    CC -.->|"managed settings outrank argv"| MS["Managed settings file: permissions.deny,<br/>disableBypassPermissionsMode, disableAutoMode —<br/>and NOT the two hook settings (10.4)"]
+    CC -.->|"managed settings outrank argv"| MS["Managed settings file: permissions.deny and<br/>disableBypassPermissionsMode ONLY (v92) —<br/>NOT disableAutoMode, NOT the two hook settings (10.4)"]
     CX -.->|"requirements.toml outranks every flag"| RQ["requirements.toml — Codex's equivalent tier"]
     RUN -.->|"asserted nightly"| PROBE["bin/probe — what a run can<br/>ACTUALLY touch · ABSENT"]
 ```
@@ -100,7 +102,11 @@ P3-2 — the hinge's cheapest route was the one open question carried nowhere as
 June–August window would settle whether #19945 was fixed without installing anything. Both are stated in full at 10.8.
 
 **(NEW: the prerequisite is a founder act.)** Codex is **not installed** on this machine. Installing it and running
-the rehearsal is section 20 row 5.
+the rehearsal is section 20 row 5. **(FOUNDER, fixer round 2026-09-06: E7 · v90 / O92.)** Once installed it runs
+**only as a `bin/run` child from the launchd context, on the subscription, never a key** — `~/.codex` is a denied
+read under the live sandbox (THINKER: A9 · W37), so a Codex child started from a Claude-hosted shell would fail the
+way `gemini --version` measurably does, and the rehearsal itself must be run from launchd or it tests the sandbox
+rather than #19945. 9.4b carries the row; §15's `keel/host/denyread.yml` carries the list.
 
 ---
 
@@ -268,7 +274,16 @@ therefore removes the goal loop the founder asked for.
 |---|---|
 | `permissions.deny` | `disableAllHooks` |
 | `permissions.disableBypassPermissionsMode: "disable"` | `allowManagedHooksOnly` |
-| `disableAutoMode` | — |
+| ~~`disableAutoMode`~~ **struck** (amended 2026-09-06: E9 · v92) | `disableAutoMode` — the Floor keeps the founder's mode |
+
+**(FOUNDER, fixer round 2026-09-06: E9 · v92 — *"Keep auto mode on the Floor"*.)** (THINKER: A3, A15) The founder
+works in auto mode with the dangerous-mode prompt skipped; managed settings are machine-wide, so the file as v11
+wrote it removed that mode from the founder's own hands, and §19 had priced the act at four lines of JSON without
+pricing the Floor. Striking the key promotes nothing — the classifier is still not the envelope (§12.3). **Night
+children run `dontAsk --restricted`, where auto mode is inert, with per-child `--settings <json>` on argv carrying
+that child's hooks and denies** (O87; **R28** asks whether `--restricted` ignores `--settings` as it ignores the
+settings files). §12.6 owns the file's contents; the table above is repeated here because this is where a reader
+trips. **Losing image:** v11 as written. `wins_if:` the founder gives up auto mode on the Floor.
 
 **The cost, stated once: a run can therefore register its own Stop hook.** That is a smaller hole than losing the
 goal loop, and **the nightly probe is what keeps it a known hole rather than an unknown one**. Narrowing is carried
@@ -305,6 +320,8 @@ in that lane was measured — no runtime was run.)**
 | Goals | `/goal`, `D`, **headless-capable** | `/goal` 0.128+, `C`, **headless status unknown** |
 | Per-run spend | `--max-budget-usd`; subagent spend counts toward it | included in every ChatGPT plan (FINAL §14.6, providers lane 2026-09-04) |
 | Shared config | `CLAUDE.md`, `SKILL.md`, `.mcp.json`; imports Codex and Gemini config | `AGENTS.md`, `SKILL.md`, `config.toml`, `mcp_servers` |
+| **Daemon** *(NEW: O91 — the row this table did not have; THINKER: A7 · W38; R31)* | **The vendor ships a supervisor.** `--bg` starts a daemon under `~/.claude/daemon/{control.key,dispatch,roster.json}` and `~/.claude/jobs/`; `daemon-auth-status.json` reads `auth_required`; it **idle-exits** — measured *"idle 5s with no clients — exiting … leases=0"* — and its lease semantics are unread (**R31**). Its paths are in this repo's own `denyRead` (O92). **So `bin/run` never mints via `--bg`: every night child is bare `claude -p` inside a detached tmux session — the pane, the process group (v67) and the session id are ours** — and O15's reconciler reads the daemon roster and `claude agents --json --all` **read-only**, as the vendor's view of anything the founder started by hand, never as the list of our runs. **`bin/supervise` is REFUSE until R31 answers** — two supervisors and one process table argue over the first orphan at 03:00. `wins_if:` the daemon documents a service mode that does not idle-exit and leases we can read (§J 85) | none documented |
+| **Shipped flags this plan now names** *(NEW: W35 — `claude --help` 2.1.263 lists them; THINKER: A4, A8, A10, A15, A17)* | `--settings <json>` per child, carrying its hooks and denies (**O87**, R28) · `--agents <json>` **refused** by `bin/run` — one home for an agent file, v42 (O87) · `--no-session-persistence` on every night child; the `stream-json` trace is the record (**O88**) · `--autocompact <context>` from `prices.yml` (**O90**, §9.6) · `--fallback-model a,b` for the same-family links, with `PreModelSwitch` annotating (**O89**, §9.4a) · `--tmux=classic` for the worktree agents and `-w/--worktree` (**O121**, O14) · the probe attempts `claude agents --allow-dangerously-skip-permissions` and expects refusal (O87). **Gap 6 of 10.6 closes on the same measurement** | `--sandbox`, `--ephemeral`, `--json`, `--output-schema` as above |
 | **Cloud lane** *(NEW, cloud.md parts 2 and 5 — the row this table did not have)* | **documented argv, not a UI.** `claude --cloud "<task>"`, where *"each session runs in an isolated, Anthropic-managed VM"* and *"The cloud VM clones your current directory's GitHub remote at your current branch, not your local checkout"*; follow up from any machine with `claude -p "your message" --cloud <session-id>`; pull the session back with `claude --teleport <session-id>`. **Routines add the thing Codex lacks, a fire endpoint**: `POST https://api.anthropic.com/v1/claude_code/routines/trig_.../fire`. Quota *"shares rate limits with all other Claude and Claude Code usage within your account"* | **a TUI, plus two chat triggers.** `codex cloud` is *"Browse active and completed chats, submit work to a configured environment, and apply the result to your local repository from the terminal"*; the human-free triggers are `@codex review` on a pull request and `@Codex` in Slack. **No endpoint and no printed non-interactive command** — `codex cloud exec` appears only in open issue #24777 (M). Internet off by default *"during the agent phase"*; Plus and above only |
 | Second checker family | **no** — it cannot check itself | **yes, and narrower than "blocked" (cloud.md part 5 item 3).** The `@codex review` route needs no local Codex, so #19945 cannot reach it — it is admitted today (10.2a). What 10.2's test widens is the **local** foreground checker |
 
@@ -318,8 +335,8 @@ each incoming message as an event"* — is *"not available when `DISABLE_TELEMET
 | Provider | Which of the fifteen may run on it | Window | State today |
 |---|---|---|---|
 | **Claude Code** (subscription) | all fifteen, **and the Floor, always** | rolling five-hour **and weekly**, per seat, shared with Claude chat and Cowork | installed 2.1.261, measured |
-| **Codex CLI** (subscription) | **`reviewer` and `guard` only, on a prepared diff, in the foreground.** Widens to `builder` on mid-to-hard work if 10.2's test passes | its own 5-hour window; the only one publishing numeric quotas | **not installed**; #19945 open |
-| **Gemini CLI** (subscription) | **`scout`**, and the summarising half of `curator` | 60 rpm / 1,000 rpd free on a personal account | installed 0.38.2, **never authenticated** |
+| **Codex CLI** (subscription, **no key** — v90) | **`reviewer` and `guard` only, on a prepared diff, in the foreground.** Widens to `builder` on mid-to-hard work if 10.2's test passes. **A `bin/run` child from the launchd context only** (O92) | its own 5-hour window; the only one publishing numeric quotas | **not installed**; #19945 open; `~/.codex` a denied read under the sandbox (W37) |
+| **Gemini CLI** (personal Google account, **no key** — v90) | **`scout`**, and the summarising half of `curator`; **and `reviewer` and `challenger` as the second family on a move class once Gemini passes that class's calibration set — rung 4 until then (v78, §11.3)**. One wave-one Gemini argv is exercised before `AGENTS2` (O120). **A `bin/run` child from the launchd context only, never from a Claude-hosted shell** (O92; amended 2026-09-06: E7) | 60 rpm / 1,000 rpd free on a personal account — the whole daily count of the second family, and the row says so (E7) | installed 0.38.2, ~~never authenticated~~ **authentication decided: personal account (§I row 6)**; `gemini --version` → `EPERM` under the live sandbox (THINKER: A9 · W37); Google's terms unread — **R40** gates the route |
 | **Local models** | no agent — moves, not positions: embeddings, classification, dedup, PII detection | electricity | **ABSENT** |
 | **Routines** (cloud) | **refused for the Watch** — it cannot reach anything this system stores on the Mac. **Read *no local files* narrowly (cloud.md part 5 item 5):** it is right about the laptop and wrong if read as *no repository* — a routine clones every selected repo per run and pushes `claude/`-prefixed branches | **1-hour minimum, now confirmed verbatim**: *"The minimum interval is one hour; expressions that run more frequently are rejected."* The **daily cap exists and is published as no number** — which supersedes this cell's earlier *unverified*, because what was unverified was the cap's existence and what is unknown is its size | exists; its **API fire endpoint is documented** (10.2a), and it is the documented off-Mac maker path — §I row 15 |
 
@@ -341,8 +358,10 @@ own unknowns spends them later at a worse price.)**
    subscription. Section 9.10; the founder's decision.
 5. **The trailing Yes/No column in the tools reference** (`Monitor` Yes, `Workflow` Yes, `ScheduleWakeup` No,
    `Agent` No) — the header was not captured and the lane refused to guess it.
-6. **`-w`, `--worktree` and `--tmux` did not appear** in the CLI-reference fetch. A prior lane has them as measured;
-   treat as unconfirmed here.
+6. ~~**`-w`, `--worktree` and `--tmux` did not appear** in the CLI-reference fetch. A prior lane has them as measured;
+   treat as unconfirmed here.~~ **CLOSED 2026-09-06** (THINKER: A4 · W35): `claude --help` 2.1.263 lists `-w/--worktree`
+   and `--tmux[=classic]`, beside `--no-session-persistence`, `--settings`, `--setting-sources`, `--agents`,
+   `--autocompact` and `--fallback-model`. 10.5's flags row carries what each one is for.
 7. **Routines' own page, desktop scheduled tasks, `/schedule`, Remote Control, agent teams and the workflows page
    were not fetched.** The agent-teams facts used above come from the surfaces lane, not this one.
 8. **Codex config reference, `requirements.toml`, `codex mcp`, Automations, and whether Codex can serve as an MCP
@@ -413,6 +432,16 @@ named fifteen; several are folded here where they are the same hole seen from tw
 | **No unattended work is minted on a carrier that cannot be stopped** (v67) | `bin/run` reads the carrier's `stop:` column and refuses `UNKNOWN`; the launcher records each child's process group and the cord signals it | **ABSENT**. Per carrier: Claude `-p` → the process group · **local Codex → the `Interrupt` hook (W22)** · **Codex cloud → UNKNOWN, so the maker lane stays shut** (10.6 gap 14) |
 | **A reroute off a limited or unreachable family is bounded and labelled** (v78) | a three-deep `fallback:` ending in stop-and-stage; a rung demotion unless rehearsed for that move class | **ABSENT** — and Codex's one foreground slot is why a chain naming it must end in stop-and-stage (§9.4a) |
 | **The Codex version in play is a recorded fact, not a floor** (W19, O35) | the admitted-tool file records the binary's version string and sha256 at admission (§8.1) | **ABSENT** — Codex is not installed |
+| **A night child is bare `claude -p` in a detached tmux session, never `--bg`** (O91) | `bin/run` — `tmux new-session -d -s <uuid8> -c <dir> claude -p …`; the pane, pgid and session id are ours; O15 reads the daemon roster read-only | **ABSENT**; the daemon's lease semantics are **R31** |
+| **No second supervisor beside the vendor's** (O91) | `bin/supervise` — **REFUSE** until R31 | **REFUSE** · `wins_if:` §J 85's |
+| **The managed file carries `permissions.deny` and `disableBypassPermissionsMode` only** (v92, E9) | the file omits `disableAutoMode` as well as the two hook settings (10.4); night children run `dontAsk --restricted` where auto mode is inert | **ABSENT** until the file exists |
+| **Each child carries its own hooks and denies on argv** (O87) | `--settings <json>` per child from `bin/run`; `--agents <json>` refused (v42); the probe expects `--allow-dangerously-skip-permissions` refused | **ABSENT** · **DEPENDS-ON-R28** |
+| **The vendor keeps no transcript of a night child** (O88, v93) | `--no-session-persistence` on every night child; the `stream-json` trace is the record | **ABSENT**; the flag ships. **R30** is the canary |
+| **A run ends before the runtime can compact it** (O90) | `--autocompact <context>` from `prices.yml`'s `context:` column; `PreCompact` writes `run.compacted` | **ABSENT**; the flag ships. **R32** |
+| **The same-family fallback rides the shipped flag and every switch is annotated** (O89) | `--fallback-model a,b` composed from `roster.yml`; `PreModelSwitch` in the child's `--settings` writes the demotion and blocks an unrehearsed family (§9.4a) | **ABSENT**; the flag and the hook event ship |
+| **The second family is a CLI from launchd, never a key, never a Claude-hosted shell** (v90, O92) | the Gemini and Codex CLIs as `bin/run` children from the launchd context; `keel/host/denyread.yml`; `bin/probe` asserts from both contexts | **ABSENT**; `EPERM` measured under the sandbox (W37); **R40** |
+| **The company has finished a night with the Claude carrier denied** (O120, v105) | `--deny-carrier claude` on `bin/run`'s deny switch; one drilled night; one wave-one Gemini argv before `AGENTS2` | **ABSENT** |
+| **Page 2 attaches only where a session has a tmux name** (O121) | `pages/2.yml` declares `attach:` where `sessions.jsonl` carries a tmux name, `message:` for in-process teammates; `--tmux=classic` for the worktree agents; `terminal: ghostty` | **ABSENT** (W34: no `%N` pane id exists today); §14 owns the page |
 
 ---
 
@@ -486,14 +515,42 @@ the thing a Gemini row in 10.5 would be written against. Gemini is carried in th
 filled here.~~ **(corrected 2026-09-06 · challenge C P1-4)** **The agent-file half of the gap is filled and its owner
 is named:** `.gemini/agents/` is generated from `roster.yml` by **O2**'s generator pass (ABSENT), for the agents the
 §17.8 table says Gemini may stand — `scout` on routine work and the summarising half of the `curator`. Recorded as
-the orchestrator's reading of **W25** under **v42**, reopenable by name. What stays open is the *row* — §10.5 has no
-Gemini entry and no `--restricted` analogue written against it.
+the orchestrator's reading of **W25** under **v42**, reopenable by name. ~~What stays open is the *row* — §10.5 has no
+Gemini entry and no `--restricted` analogue written against it.~~ **The row is filled (amended 2026-09-06: E7 ·
+v90):** 10.5's provider table now carries Gemini as a second family with no key, from launchd only, under v78's
+demotion; the `--restricted` analogue it is written against is the fail-closed restricted mode quoted above, and
+the sandbox measurement that forces the launchd carrier is next.
+
+**(FOUNDER, fixer round 2026-09-06: E7 · v90 · `class: originated` — *"no keys, codex and gemini cli use."*)**
+The strategist's C6 put Gemini on every diff behind a scoped checker-family key and the outsider's Q4 asked for the
+same key; both are overruled. **The second family is the two CLIs on the subscription and the personal account,
+both only as `bin/run` children from the launchd context.** (THINKER: A9 · W37) The carrier is a measurement:
+`gemini --version` under the live sandbox → `EPERM: operation not permitted` on `~/.gemini/settings.json`, and
+`~/.gemini`, `~/.codex`, `~/.config/openai` are denied reads — so a second-family child started from inside a Claude
+session reads as a broken install, and `bin/probe` asserts the pair (`EPERM` inside, exit 0 from launchd). The real
+`denyRead` list (`~/.ssh ~/.aws ~/.config/gh ~/.netrc **/.env* ~/.gemini ~/.codex ~/.config/openai
+~/.claude/{daemon,jobs,routines}`) is `keel/host/denyread.yml`, §15's. §9.4b carries the row and its losing images
+(§J 74 the key, §J 88 Gemini on every diff now); §11.3 carries what a Gemini verdict is worth on day one.
+
+**(NEW: O91 — the vendor ships a supervisor, so this plan does not build one beside it.)** (THINKER: A7 · W38)
+`~/.claude/daemon/{control.key,dispatch,roster.json}` and `~/.claude/jobs/` exist on this Mac; the daemon `--bg`
+starts logged *"idle 5s with no clients — exiting … leases=0"*. A supervisor that idle-exits cannot hold a night, and
+a second supervisor beside it means two process tables arguing over the first orphan at 03:00. So every night child
+is **bare `claude -p` in a detached tmux session, never `--bg`** — 10.5's daemon row — and **`bin/supervise` is
+REFUSE until R31** reads the daemon's lease semantics and what `claude agents --json` lists after it exits. **Losing
+image:** `--bg` as the night's carrier under the vendor's supervisor (§J 85). `wins_if:` R31 shows a service mode
+that does not idle-exit and readable leases — then `bin/supervise` was a second implementation and goes for good.
+**Settled by:** `claude --bg` one child and read `daemon.log` for the idle exit; a `-p` child in tmux survives the
+daemon exiting.
 
 **(NEW: v78 lands on this section as the thing that makes a one-slot family survivable.)** 9.4a decides a
 three-deep `fallback:` per agent ending in *stop and stage*, a **rung demotion** on any cross-family reroute not
 rehearsed for that move class, a frozen `class: calibration` set, and one provider-outage drill. Read against 10.2:
 Codex is **one foreground slot**, so it is not a fallback destination for parallel work, and a chain naming it must
-end in stop-and-stage rather than pretending a second lane exists.
+end in stop-and-stage rather than pretending a second lane exists. **(amended 2026-09-06: O89, O120)** The same-family
+links of that chain ride `--fallback-model a,b` with `PreModelSwitch` annotating each switch as a demotion (§9.4a);
+the cross-family link stays with `bin/run` between runs; and the drill runs once more with **`--deny-carrier
+claude`**, because every carrier this section names is one vendor's surface (THINKER: C12).
 
 **(R10 — the hinge, and it is this section's hinge more than anyone's.)** Does `codex exec --json` return output
 with **no controlling TTY**, on a current version, with a non-trivial prompt? **Source class:** five known-answer

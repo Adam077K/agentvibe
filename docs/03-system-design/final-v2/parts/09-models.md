@@ -1,6 +1,6 @@
 ## 9 · Models
 
-*obeys: v20, v22, v23, and v57, v58, v59 which overrule v21 and §G.1's teammate row (SPINE §G entire), and **v78** (the rethink round of 2026-09-06); inherits: FINAL §5, §14.5, §15.3 with its coefficients corrected*
+*obeys: v20, v22, v23, and v57, v58, v59 which overrule v21 and §G.1's teammate row (SPINE §G entire), **v78** (the rethink round of 2026-09-06), and **v90, v105** with **O89, O90, O92, O105, O115, O120** (the fixer round of 2026-09-06, DECISIONS §24; §G.1 and §G.5 amended); inherits: FINAL §5, §14.5, §15.3 with its coefficients corrected*
 
 **(FOUNDER.)** *"we need to understand what models each agent gets because we don't need everyone running on Opus or
 Fable or Astra or Terra ChatGPT models. We can also define it."*
@@ -76,9 +76,11 @@ five-minute agent on the same standing prefix are two different prices for one d
 `PreModelSwitch` and `PostModelSwitch` hook events shipped in 2.1.251, *"(block, confirm, or annotate a model
 switch)"*. **v57's default and v21's overruled escalation are both statements about which model a run may end up
 on, and neither has a mechanism** — the `model:` field sets a start, not a floor. `PreModelSwitch` is the gate that
-could refuse a downgrade off `claude-fable-5-1` mid-run, or refuse a silent climb onto it. **It is named here and
+could refuse a downgrade off `claude-fable-5-1` mid-run, or refuse a silent climb onto it. ~~**It is named here and
 not adopted here:** the hook belongs to §12's envelope, which owns hook events, and this section records that the
-gate exists, is blocking, and is currently unused by any row in the plan.
+gate exists, is blocking, and is currently unused by any row in the plan.~~ **Adopted (amended 2026-09-06: O89):**
+`bin/run` registers it in every child's `--settings` and it annotates each switch as a rung demotion, 9.4a; §12.6a
+still owns the hook event and how it is registered.
 
 ---
 
@@ -92,9 +94,9 @@ move.)** Each row names its trigger, so a route can be checked rather than argue
 | Any agent's default | as 9.1 | not everyone on the top tier — the founder's instruction |
 | Anything `builder` or `architect` does | `claude-fable-5-1` **as the default, not as an escalation** (v57) | 1M context, and **cache reads at 0.025x base input against 0.1x everywhere else**, so a large standing context is cheap to re-read. **Availability on a subscription seat is UNVERIFIED** — no plan table names Fable. Fallback is `claude-opus-5` |
 | A teammate inside an agent team | **the model its own agent file declares** (v59) | the founder: *"Turn it on, no model constraint."* A teammate is a full session running one of the fifteen files, so it runs at that file's model. The vendor's advice to floor teammates at Sonnet is the losing image, §22 |
-| Routine scouting, mail sorting, link checks, the summarising half of the transcript pass | **Gemini**, once authenticated | it burns a different window and never touches the founder's. Free tier: **60 requests/min, 1,000 requests/day** on a personal account |
+| Routine scouting, mail sorting, link checks, the summarising half of the transcript pass | **the Gemini CLI** ~~once authenticated~~ on a personal Google account, **no key**, and **only as a `bin/run` child from the launchd context, never from a Claude-hosted shell** (amended 2026-09-06: E7 · v90 / O92 · THINKER: A9 · W37) | it burns a different window and never touches the founder's. Free tier: **60 requests/min, 1,000 requests/day** on a personal account — the second family's daily count is the free tier's, and the row says so (E7) |
 | Embeddings, classification, dedup, PII detection | **local, on electricity** — MiniLM (**384 dims**, Apache 2.0, *"input text longer than 256 word pieces is truncated"*) and Qwen3-0.6B (**32,768** context, Apache 2.0) | no window at all, and no vendor |
-| A checker on a prepared diff | Codex `gpt-5.3-codex`, in the one position of section 10 | a second model family, which is what the anchor ladder pays for |
+| A checker on a prepared diff | **the Codex CLI** `gpt-5.3-codex`, in the one position of section 10, **once installed, a `bin/run` child from launchd like Gemini** (amended 2026-09-06: E7 · v90 / O92) | a second model family, which is what the anchor ladder pays for. **A cross-family verdict is rung 4 until that family passes the move class's calibration set** (v78, 9.4b) |
 | A deterministic answer — test, grep, diff, sum, reconcile | **no model** | a no-model program is the cheapest and the only one that cannot be talked out of its answer |
 | `/goal`'s evaluator and the auto-mode classifier | **`claude-sonnet-5`, set by us** — `ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5` (v58) | the founder: *"Set ANTHROPIC_DEFAULT_HAIKU_MODEL to Sonnet 5 now"*, ahead of Haiku 4.5's retirement. See 9.8 |
 
@@ -133,9 +135,9 @@ flowchart TD
     Q2 -->|"no"| Q3{"A teammate inside an agent team?"}
     Q3 -->|"yes"| SON["ITS OWN FILE'S MODEL, v59.<br/>No Sonnet floor on teammates"]
     Q3 -->|"no"| Q4{"Routine scouting, sorting, link checks,<br/>or the summarising half?"}
-    Q4 -->|"yes"| GEM["GEMINI — a different window<br/>from the founder's"]
+    Q4 -->|"yes"| GEM["GEMINI CLI — a different window from the founder's.<br/>No key. A bin/run child from launchd only (v90, O92)"]
     Q4 -->|"no"| Q5{"A checker on a prepared diff?"}
-    Q5 -->|"yes"| CDX["CODEX gpt-5.3-codex —<br/>the one foreground position of section 10"]
+    Q5 -->|"yes"| CDX["CODEX CLI gpt-5.3-codex —<br/>the one foreground position of section 10.<br/>No key. A bin/run child from launchd only (v90, O92).<br/>Rung 4 until calibrated (v78)"]
     Q5 -->|"no"| Q6{"Is this agent's declared default<br/>claude-fable-5-1? builder or architect, v57"}
     Q6 -->|"no"| OUT["The agent's default stands"]
     Q6 -->|"yes"| FAB{"Is claude-fable-5-1 reachable<br/>on this seat?"}
@@ -202,10 +204,31 @@ together:
 
 | The rule | What it is | Mechanism |
 |---|---|---|
-| **A three-deep `fallback:` per agent, ending in *stop and stage*** | the last rung is not another model — it is the run halting and leaving its work staged for the founder | one frontmatter field × fifteen files — **ABSENT** |
-| **A cross-family reroute is recorded as a rung demotion** | unless that family has passed the rehearsal for that **move class**, its output is rung 4 and says so | the rung field on the handover (§11.2) — **ABSENT** |
+| **A three-deep `fallback:` per agent, ending in *stop and stage*** | the last rung is not another model — it is the run halting and leaving its work staged for the founder | one frontmatter field × fifteen files, **composed by `bin/run` from `roster.yml` into `--fallback-model a,b` for the same-family links** (amended 2026-09-06: O89) — **ABSENT**; the flag ships (W35) |
+| **A cross-family reroute is recorded as a rung demotion** | unless that family has passed the rehearsal for that **move class**, its output is rung 4 and says so | the rung field on the handover (§11.2), **written by the `PreModelSwitch` hook as a `model.switch` row** (amended 2026-09-06: O89) — **ABSENT** |
 | **A `class: calibration` rehearsal set that is never edited** | an instrument refreshed by the rule that refreshes its subject cannot detect drift | a `class:` field on a rehearsal case (§7.2a, §11.10) — **ABSENT** |
-| **One provider-outage drill, with the primary family denied at the launcher** | a fallback nobody has run is a design, not a fallback | one deny switch in `bin/run` — **ABSENT** |
+| **One provider-outage drill, with the primary family denied at the launcher** | a fallback nobody has run is a design, not a fallback | one deny switch in `bin/run`, **which also takes `--deny-carrier claude`** (amended 2026-09-06: O120 · v105) — **ABSENT** |
+
+**(NEW: O89 — the chain rides a shipped flag, and the flag alone is the silent reroute v78 forbids.)** (THINKER: A8)
+`--fallback-model a,b` is in `claude --help` 2.1.263 (W35): it retries the primary and reroutes on availability, and
+the plan mentioned it zero times. Refusing it forfeits the vendor's retry; passing it unannotated is the reroute this
+row refuses. So the chain has **two carriers and one source**: `bin/run` composes the **same-family links** from
+`roster.yml`'s `fallback:` into `--fallback-model`, and a **`PreModelSwitch` hook in the child's `--settings`** (O87,
+§12.6) writes a `model.switch` row carrying the rung demotion and **blocks** a switch to a family unrehearsed for the
+move class. The **cross-family link and *stop and stage***, which the flag cannot express, stay with `bin/run` between
+runs, where the handover records `maker_model` (O7). **Losing image:** refuse the flag. `wins_if:` the hook does not
+fire under `-p` — then the launcher does every reroute. **Settled by:** dispatch with an invalid primary id; the
+handover's `maker_model` and the `model.switch` row agree, and the rung fell. Path: `bin/run` · the child's
+`--settings` — **ABSENT**; the flag and the hook event ship.
+
+**(NEW: O120 · v105 — platform risk is a carrier, and the drill runs once with the Claude carrier denied.)**
+(THINKER: C12 · FACT: world.md 12) Fifteen agents, the Floor, page 2, `/goal` and the Operator are Claude Code, and
+page 2 stands on a feature repaired four times and never promoted. So the trust score gains a **carrier dimension**
+beside O26's model dimension; `bin/run`'s deny switch takes **`--deny-carrier claude`** as well as a family; v78's
+drill runs **once with the Claude carrier denied**; **one wave-one Gemini argv is exercised before `AGENTS2`**; and
+every kernel store is readable by `-p` from any provider. §21.2 scores the drilled night. **Losing image:** one
+vendor, exercised. `wins_if:` a year with no terms change, no seat change and no teams regression. Path: `bin/run` ·
+the trust store — **ABSENT**.
 
 **The demotion clause is the load-bearing half, and it is what makes this different from a retry list.** A fallback
 chain alone answers *can the work continue*; it does not answer *is the answer still worth what the first answer
@@ -220,6 +243,31 @@ discriminates. §10.8 carries the restatement; O35 is what records the version a
 
 **The cost, once:** one drilled night. **Settled by:** the drill's completion count against a normal night, and
 whether calibration results move when a model id changes. **This moves v22 and §11.10** and reverses neither.
+
+---
+
+### 9.4b The second family without a key — v90
+
+**(FOUNDER, fixer round 2026-09-06: E7 · v90 · `class: originated`.)** *"no keys, codex and gemini cli use."* This
+overrules the strategist's row 17a and the outsider's Q4, both of which decoupled a checker-family API key from the
+Anthropic terms question; **§I row 17 closes as *no keys***, and the metered economics — batch at 50%, no weekly
+window — are §J 74. **The second family is the Gemini CLI on a personal Google account (free tier, 9.3) and the
+Codex CLI once installed, both only as `bin/run` children from the launchd context** (O92), and routing between
+families is v78's rule: a cross-family verdict is a rung demotion until that family passes the move class's
+`class: calibration` set, and R11's twenty-five paired checks measure what the family buys.
+
+**Why the carrier is launchd and not a shell — a measurement, not a preference.** (THINKER: A9 · W37)
+`gemini --version` under the live sandbox returns `EPERM` on `~/.gemini/settings.json`, and `~/.gemini`, `~/.codex`
+and `~/.config/openai` are denied reads — so **the second family cannot start from any Claude-hosted shell**, and a
+Gemini subagent inside a session reads as a broken install. The real `denyRead` list is `keel/host/denyread.yml`
+(§15's, O92); `bin/probe` asserts it **from both contexts**: `EPERM` inside, exit 0 from launchd. **Losing image:**
+Gemini callable from any shell. `wins_if:` `denyRead` becomes narrowable per invocation.
+
+**What the row does not do.** It does not put Gemini on every diff now — that is **§J 88**; v78 governs, and
+`reviewer` and `challenger` reach rung 2 on a move class only once Gemini passes its calibration set (§11.3). And
+**R40** reads Google's terms raw, because the personal-account CLI is now a live route with no key alternative (9.10).
+**The cost, once:** the free tier's 1,000 requests a day is the second family's whole daily count. Path:
+`keel/host/denyread.yml` · `bin/probe` — **ABSENT**; the CLIs ship (W37).
 
 ---
 
@@ -333,6 +381,14 @@ count, not a price** — 60/min and 1,000/day — because it has no per-token fi
 This is the same rule §9.11 already states for model ids, applied to the number beside the id, and it is what
 v81's `source:` and `valid_until` look like for this section.
 
+**(NEW: O90 — the `Context` column becomes a `context:` field the launcher reads.)** (THINKER: A10) `--autocompact`
+is on by default, so a long `-p` run is compacted by the runtime — the ACE collapse v24 forbids, where v24 cannot see
+— at a 2x cache write on the next turn. `bin/run` sets **`--autocompact <context>` from `prices.yml`'s `context:`
+column** (1,000,000 on Opus 5 and Fable 5.1; 200,000 on Haiku 4.5), so a run ends at `maxTurns` or its ceiling
+**before it can compact**; `PreCompact` writes `run.compacted` where it fires, and **R32** asks whether it fires under
+`-p`. **Losing image:** let it compact and log it. `wins_if:` R32 shows the event fires and the write spike is small.
+Path: `bin/run` · `prices.yml` — **ABSENT**; the flag ships (W35). §6 owns the run's ceiling.
+
 **(NEW: this is the quantitative backing for v57, and it is the one number that changes an instinct.)** List price
 runs **10x in and 10x out** from Haiku 4.5 to Fable 5.1 — but **Fable's cache reads are only 2.5x Haiku's**. On the
 cache-dominated workload FINAL §14.5 measured at 89% context, the model spread collapses. **A long-horizon build
@@ -367,6 +423,11 @@ one worth naming: a ceiling that fires ~30% early produces a run that stops mid-
 that fires early is indistinguishable from a stuck run** — the same silent-empty-result shape §10.2 refuses in
 Codex, arriving through our own arithmetic. **The cost, once:** one field per ceiling and one comparison at
 dispatch.
+
+**(NEW: O115 — the first ceiling this rule bites is the window gauge's seed.)** (THINKER: A12 · W39) §16 seeds
+`keel/logbook/window-highwater.yml` from `budget-guard.js`'s baseline — **peak 1,961,285 output tokens in any rolling
+five hours over 99 transcripts** — with `seed: true` and **`tokenizer: sonnet-4.6-era`**. A ceiling against that seed
+is a legacy cap until the first observed week replaces it. §16 owns the file.
 
 ---
 
@@ -435,12 +496,18 @@ own shipped and documented features exercise: `-p`, `--max-budget-usd`, `/loop`,
 teams. **Where a third-party program drives a subscription seat, that clause is the governing text, and nothing
 narrowing it was found.** Confidence on the quote: high. Confidence on the interpretation: low.
 
-**OpenAI's terms returned HTTP 403 and are unread. Google's were not fetched.** So two thirds of this question has
-no text behind it at all.
+**OpenAI's terms returned HTTP 403 and are unread. ~~Google's were not fetched.~~** Google's are unfetched, **and
+since E7 (v90) routes the second family through the Gemini CLI on a personal account, that reading now gates a
+live route — R40** (amended 2026-09-06: E7 · v90). So two thirds of this question has no text behind it at all,
+and one of those thirds is on the critical path of every cross-family verdict.
 
 It is a **founder decision after one reading**, it is section 20 row 1, and this section does not argue either side
 further. What it does record is the shape of the downside: the thing at risk is the account, and the account is the
 company's whole capacity.
+
+**(FOUNDER, fixer round 2026-09-06: E7 · v90 — §I row 17 is CLOSED: *no keys*.)** The metered design stays a losing
+image with a falsifier — §J 74, `wins_if:` O116's shadow-subsidy line exceeds N× the seat price, the vendor narrows
+the terms, or R40 finds the CLI route refused. Row 1 stays open by the founder's word; §20 carries both rows.
 
 ---
 
@@ -454,15 +521,26 @@ company's whole capacity.
 | A teammate runs on its own file's model | the teammate is a full session started from an agent file; `bin/run` names the file, never a model (v59) | **ABSENT** — teams are on (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), the launcher is not built |
 | A run's cost is measured, never estimated | each run's own reported cost fields, joined by the dispatch id | **ABSENT** — the event log on this branch is the spine |
 | A stall cannot run forever | `--max-budget-usd`; subagent spend counts toward it; overflow fails a spawn with `Budget limit reached` | **shipped** (v2.1.217+). **It is not a billing control** — print mode only, computed locally at list price, and *"the session cost figure isn't relevant for billing purposes"* for subscribers (v23). **(FACT: world.md 5 — W5)** the estimate now includes the *"1.1× US-only-inference premium for data-residency workspaces"*: still local, now with a residency multiplier |
-| **Each agent declares a three-deep `fallback:` ending in stop-and-stage** (v78) | one frontmatter field × fifteen files; `bin/run` reads it | **ABSENT** |
-| **A cross-family reroute is recorded as a rung demotion unless rehearsed for that move class** (v78) | the rung field on the handover; the `class: calibration` set that is never edited | **ABSENT** |
+| **Each agent declares a three-deep `fallback:` ending in stop-and-stage** (v78) | one frontmatter field × fifteen files; `bin/run` reads it and **composes the same-family links into `--fallback-model a,b`** (O89) | **ABSENT**; the flag **ships** (W35) |
+| **A cross-family reroute is recorded as a rung demotion unless rehearsed for that move class** (v78) | the rung field on the handover; the `class: calibration` set that is never edited; **`PreModelSwitch` in the child's `--settings` writes `model.switch` with the demotion and blocks an unrehearsed family** (O89) | **ABSENT**; the hook event **ships**. `wins_if:` it does not fire under `-p` |
+| **Cross-family and stop-and-stage happen between runs, never inside the flag** (O89) | `bin/run`, with the handover's `maker_model` (O7) | **ABSENT** |
 | **The fallback has been run at least once** (v78) | one provider-outage drill with the primary family denied at the launcher | **ABSENT** |
+| **The second family is a CLI, never a key** (v90, E7) | the Gemini CLI on a personal Google account and the Codex CLI, both only as `bin/run` children from launchd; `keel/host/denyread.yml` holds the real list and `bin/probe` asserts it from both contexts (O92) | **ABSENT**; the CLIs ship; `gemini --version` measured `EPERM` under the sandbox (W37). **R40** reads Google's terms |
+| **A cross-family verdict is rung 4 until calibrated** (v90 → v78) | the calibration set per move class; R11 measures the family's yield | **ABSENT** |
+| **The Claude carrier can be denied and the company drilled without it** (O120, v105) | `--deny-carrier claude` on `bin/run`'s deny switch; a carrier dimension on the trust score; one wave-one Gemini argv exercised before `AGENTS2` | **ABSENT** |
+| **A run cannot be compacted by the runtime** (O90) | `--autocompact <context>` from `prices.yml`'s `context:` column; `PreCompact` writes `run.compacted` | **ABSENT**; the flag ships. **R32** asks whether the hook fires under `-p` |
+| **A legacy-tokenizer seed is marked as one** (O115 with O77) | `tokenizer: sonnet-4.6-era` on `keel/logbook/window-highwater.yml`'s seed, from `budget-guard.js`'s baseline (W39) | **ABSENT** — the file is §16's; the baseline **EXISTS** |
 | **Routing is generated, never authored three times** (O5, contradiction 17) | `keel/shared/routing.yml` generates §B.2, §C.1 and 9.2 | **ABSENT** |
 | **A stale price refuses to route** (O8) | `keel/shared/prices.yml` with `fetched_at` and `valid_until` per row; Gemini carried as a quota count, not a price | **ABSENT** — the table in 9.6 is prose today |
 | **The standing prefix is hashed at dispatch and a change is an event** (O39) | `bin/run`, with `--exclude-dynamic-system-prompt-sections` and `--system-prompt-snapshot on` | `bin/run` **ABSENT**; both flags **shipped and unused**. **R7** measures whether they move the share |
 | **A ceiling is never enforced against the wrong tokenizer** (O77) | `tokenizer:` on every ceiling; `bin/run` refuses a legacy cap on a current-tokenizer model | **ABSENT** |
-| **A model switch can be refused** (W17) | `PreModelSwitch` — a blocking hook event | **shipped by the runtime, used by no row.** Adopting it is §12's, not this section's |
+| **A model switch can be refused** (W17) | `PreModelSwitch` — a blocking hook event | **shipped by the runtime**; ~~used by no row~~ **used by O89** (amended 2026-09-06); §12.6a owns how it is registered |
 | A reserve is held per window **and** per week | a founder-set slider, and a weekly line reporting how often it was needed against how often it expired unused | **ABSENT** |
 | The Watch distinguishes a stop from a reroute | the message-shape test of 9.4 | **ABSENT** |
 | Model ids expire rather than rot | an expiry in the facts store; the store check fails a stale one | **ABSENT** |
 | A model with no entry in the price table is refused | FINAL §15.4's rule: refused, **not scored at zero** | **ABSENT** |
+
+**(NEW: O105 — every mechanism above carries `class:` and `vendor_wins_if:` in `rules.yml`, and this table is
+rendered from it once O106's renderer exists.)** O89, O90, O92, O115 and O8 are **adapters** over `--fallback-model`,
+`--autocompact`, the two CLIs, `rate_limits` and `modelPricing`; a matched `vendor_wins_if:` forces Delete (v96). O120
+and v78's calibration set are **kernel · truth**. §17.5 carries the adapter table.

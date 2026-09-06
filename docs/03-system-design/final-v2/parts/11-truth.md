@@ -1,6 +1,8 @@
 ## 11 · Truth — how anything is known to be good
 
-*obeys: v8, v30, and §B.2's anchor column, and **v73** and **v82** (the rethink round of 2026-09-06) · inherits: FINAL §8, and §7.6's rehearsal set*
+*obeys: v8, v30, and §B.2's anchor column, **v73** and **v82** (the rethink round of 2026-09-06), and **v90, v94, v99,
+v100** with **O100, O102, O108, O110, O113** (the fixer round of 2026-09-06, DECISIONS §24) · inherits: FINAL §8, and
+§7.6's rehearsal set*
 
 ---
 
@@ -49,7 +51,9 @@ flowchart TD
     FAMQ -->|"yes"| A2
     FAMQ -->|"no"| A4
     A4 --> WARN["Marked LOW-CONFIDENCE in the handover<br/>and in the briefing. Never presented as verified."]
-    A1 --> BELIEVED["Believed"]
+    A1 --> ADQ{"adequacy: pass?<br/>written by a reader who wrote<br/>neither the done-test nor the anchor (v100)"}
+    ADQ -->|"pass"| BELIEVED["Believed — rung 1 only when<br/>verifier is world AND adequacy is pass"]
+    ADQ -->|"fail · unjudged"| WARN
     A2 --> BELIEVED
     A3 --> BELIEVED
     WARN --> SHOWN["Shown, with the weakness named"]
@@ -93,12 +97,29 @@ date"*, so a scout whose citation does not resolve has failed its own test, not 
 **ABSENT**. Rule 10 governs it unchanged: offline or timed out is `unresolved`, never `pass`.
 
 **(R12, OPEN — and it is the cheapest measurement named anywhere in the rethink round.)** What fraction of a
-venture's real done-tests reach **rung 1 without inventing an anchor**? **Source class:** the harness venture's
-first thirty intents. **What it decides: contrarian assumption 1** — that most company work has a deterministic
+venture's real done-tests reach **rung 1 without inventing an anchor**? **Source class:** ~~the harness venture's
+first thirty intents~~ **three corpora, and the harness is only one of them — R27** (amended 2026-09-06: O102 ·
+THINKER: B4, C2 · conv. 3). **What it decides: contrarian assumption 1** — that most company work has a deterministic
 anchor waiting to be found — and with it the shape of this whole section. The paragraph above says *"for most
 company work there is a deterministic anchor"*, and **that sentence has never been measured.** If the true fraction
 is small, the ladder still stands and the design around it does not: rung 4 becomes the common case rather than the
 labelled exception, and §21's rung-1 share is measuring an aspiration.
+
+**(NEW: O102 — R12 is R27, split three ways, because the harness cannot test the assumption it was chosen under.)**
+The harness is the most anchorable venture possible, so its thirty return a high fraction whatever the truth for
+pricing, copy or positioning — selection on the dependent variable. R27 is three fractions side by side, per domain:
+**(a)** the harness's first thirty, as written; **(b)** thirty random Floor episodes from the founder's own transcript
+corpus, domain-labelled by one Sonnet `-p` pass and **rated by the founder in one sitting** (under O95) — *could a
+program have judged this?* — plus thirty **paper done-tests** drafted across §23–§30; **(c)** the second venture's
+real first thirty (v85). **§I row 16 is settled by (b) and (c) together, never by (a) alone.** Tainted episodes are
+excluded (O88); **(b) costs zero build.**
+
+***Inventing an anchor*, defined once so the fraction can be counted:** an anchor that **(i)** tests a property the
+done-test did not state, **(ii)** reads a record the company itself writes, or **(iii)** would still pass an artifact
+the founder rejected. **Losing image:** R12 on the harness alone. `wins_if:` the three fractions agree inside the
+sample floor (O25). **Settled by:** code high and everything else low inverts the architecture for every venture that
+is not the harness, and §0 says so before wave two. Path: one `-p` pass · one sitting — **ABSENT**; §21 renders the
+three fractions.
 
 ---
 
@@ -127,6 +148,29 @@ by definition, whatever its author intended; the first rung-1 share that falls i
 
 ---
 
+### 11.2b Two axes on every anchor — v100
+
+**(NEW: O108 · v100.)** (THINKER: B8) **A deterministic check of the wrong property is deterministic.** v73's mutation
+case proves an anchor is *sensitive*; 11.4's *fails before, passes after* proves sensitivity to *the change*; neither
+proves the property checked was the one stated. The ladder conflated **verifier independence** with **property
+adequacy**, and a share that must not fall will be met by writing checkable done-tests. So every anchor carries two
+fields:
+
+| Field | Values | Written by |
+|---|---|---|
+| `verifier:` | `world \| other-family \| founder \| same-family` | the rung, as the ladder already assigns it |
+| `adequacy:` | `pass \| fail \| unjudged` | **a reader who wrote neither the done-test nor the anchor** — `reviewer` on the `-p` carrier, or `challenger` — into its own handover |
+
+**Rung 1 is counted only when `verifier` is `world` and `adequacy` is `pass`**, and `bin/check-stores` refuses a
+rung-1 claim with adequacy unjudged. Beside the rung-1 share, **§21 reports the Goodhart pair**: the share of
+done-tests rewritten after their anchor was chosen, and founder rejections of work that passed — done-tests
+shortening while rejections rise is Goodhart running, and those two lines are the only instrument that sees it.
+**The cost, once:** two fields, one reader per anchor on the cheapest model that passes the routing rehearsal.
+**Losing image:** one axis. `wins_if:` a quarter in which adequacy never fails on an anchor the world passed. Path:
+the handover schema · `bin/check-stores` — **ABSENT**; §21 owns the pair's rendering.
+
+---
+
 ### 11.3 The other family, and what it actually is on day one
 
 **(FINAL)** A checker on the maker's family is a compromised instrument by measurement. FINAL §8.3 assumed three live
@@ -139,8 +183,14 @@ reachable in exactly one shape and two founder acts widen it:
 
 | Rung-2 route | State | What it costs, stated once |
 |---|---|---|
-| **Codex `gpt-5.3-codex` as a checker on a prepared diff** | admitted day one by v5; foreground slot only, stdout redirected to a file while inheriting the parent shell's TTY (v32) | **one foreground slot is not parallel**, so Codex is not a night lane until the H.2 rehearsal passes detached |
-| **Gemini on routine checking** | installed, unauthenticated — §I row 6, one terminal act by the founder | until it happens, routine checking has no second family and falls to rung 4 with the label |
+| **Codex `gpt-5.3-codex` as a checker on a prepared diff** | admitted day one by v5; foreground slot only, stdout redirected to a file while inheriting the parent shell's TTY (v32); **a `bin/run` child from launchd, on the subscription, never a key** (amended 2026-09-06: E7 · v90 / O92) | **one foreground slot is not parallel**, so Codex is not a night lane until the H.2 rehearsal passes detached |
+| **Gemini on routine checking** | ~~installed, unauthenticated — §I row 6, one terminal act by the founder~~ **personal Google account, no key (E7 · v90); a `bin/run` child from the launchd context only, because `gemini --version` dies with `EPERM` under the live sandbox (O92 · THINKER: A9 · W37)** | until it happens, routine checking has no second family and falls to rung 4 with the label. **And once it happens, a Gemini verdict on a move class is rung 2 only after Gemini passes that class's `class: calibration` set (v78), and is labelled rung 4 until then** — *Gemini on every diff now* is §J 88 |
+
+**(FOUNDER, fixer round 2026-09-06: E7 · v90 · `class: originated` — *"no keys, codex and gemini cli use."*)** The
+strategist's C6 put `reviewer` and `challenger` on Gemini for every diff behind a scoped key; the founder overruled
+the key and v78 governs the routing: the second family is **two CLIs from launchd**, and the calibration set turns a
+cross-family verdict from rung 4 into rung 2 one move class at a time. §9.4b carries the row; §10.5 the carrier;
+**R11** measures whether the family buys anything, **R40** whether the route is permitted.
 
 **(FOUNDER, rethink 2026-09-06, DECISIONS §19 → v82: the third row of that table is deleted.)** The table above
 carried a third route, **~~a three-family panel~~**, *"reserved for a one-way door with no rung-1 anchor"*. The
@@ -181,8 +231,8 @@ flowchart LR
     RUNIT -->|"passes"| FAM
     DET -->|"no"| FAM
     FAM{"Is a family that did NOT make it<br/>reachable for this move?"}
-    FAM -->|"Codex, foreground slot"| CHK["checker · read-only, no shell"]
-    FAM -->|"Gemini, once authenticated"| CHK
+    FAM -->|"Codex CLI, foreground slot,<br/>a launchd child (O92)"| CHK["checker · read-only, no shell.<br/>Rung 2 once the family passed this move<br/>class's calibration set, else rung 4 (v78, v90)"]
+    FAM -->|"Gemini CLI, personal account, no key,<br/>a launchd child (v90, O92)"| CHK
     FAM -->|"neither"| SAME["reviewer / guard / challenger<br/>on the maker's family = RUNG 4.<br/>Ranks and flags. Never certifies."]
     CHK --> SEV{"Severity?"}
     SAME --> SEV
@@ -292,6 +342,14 @@ against the same corpus is how a rung-4 opinion acquires a rung-2 label. **Mecha
 are **ABSENT**. This is the same discipline §11.1 applies to a model reviewing itself, applied to the store that
 speaks for the founder's taste.
 
+**(NEW: O113 — the curator grades everyone, so something grades the curator.)** (THINKER: B12; C takes the seed)
+Four rules, one store check: **every case set the curator writes passes O62's held-out test before it may judge**; a
+**founder-labelled `class: calibration` seed no curator edits** scores its dedup and conflict decisions (O44); a
+memory item's `falsifier:` must be **executable** — a command with an exit code, or a URL plus the quoted line — or
+`bin/check-stores` refuses it; and a **nightly canary**, one well-formed false item, must be refused downstream.
+**Losing image:** two curators on two families (§J 82). `wins_if:` the format check alone refuses every canary for a
+year. Path: `bin/check-stores` · `keel/golden/` · `keel/fixtures/` — **ABSENT**; §13 owns the pass.
+
 **Mechanism:** the taste store is written only by the curator (v25); the held-out fraction and its score are a field
 on the store, checked by `bin/check-stores` (ABSENT).
 
@@ -344,7 +402,17 @@ arriving through the one mechanism this plan calls free. **So every anchor decla
 reaches-the-world`, and the unattended re-run executes only `none`.** A `metered` anchor costs money per run and
 belongs to §16's ceiling; a `reaches-the-world` anchor runs only through the Sender, with the founder's act in
 front of it. **Mechanism:** the anchor declaration (**ABSENT**), read by whatever schedules the re-run. **The cost,
-once:** one field per anchor, written by the same hand as v73's mutation case.
+once:** one field per anchor, written by the same hand as v73's mutation case. **(amended 2026-09-06: O109 · v101)**
+`effect:` is **the same field** the verb table carries in `keel/shared/tools/<name>.yml` — one table serves the
+anchor and the grant, and §12.2 owns it.
+
+**(NEW: O110 — the anchor's verdict is a printed line, because the evaluator reads and never runs.)** (THINKER: A18)
+O21 composes the `/goal` condition as *"`<anchor>` exits 0"* — but the evaluator is a small model reading prose, not
+a shell running a command, so an exit code it cannot see is a sentence it has to believe. **Every anchor prints
+`ANCHOR <name> exit=<code>` on its own line**; the `/goal` condition names that line and the done-test; the evaluator
+reads a line and runs nothing. **Losing image:** *"exits 0"* in prose. `wins_if:` **R17** shows the evaluator accepts
+an exit code directly. Path: `keel/shared/anchors/*` · `bin/run` — **ABSENT** · **DEPENDS-ON-R17**; one `printf` per
+anchor. §6 owns the condition's composition.
 
 **(NEW: O30 — the verdict is signed, and the guarantee is stated honestly.)** `scripts/verdict.mjs` **EXISTS** on
 this branch and binds a verdict to `sha256(diff)`, so an **inherited** verdict cannot pass for a fresh one. It does
@@ -395,8 +463,25 @@ contact rung 1, not rung 0. `writer`'s is the founder's taste store plus a **run
 records that sales-and-growth as a function and legal-and-contracts have **no shipped precedent anywhere**, so those
 two anchors are deliberately the most external in the roster.
 
-**Mechanism:** the rung table read by `bin/reconcile` (ABSENT) · a venture's `ship-log.md` written only by that
-program (ABSENT).
+**(NEW: O99 · v99 — the rungs are unchanged; what changes is where a movement is written, and it is one place.)**
+(THINKER: C8) Only taste crossed ventures, so ten ventures would learn pricing from scratch ten times. **A house-scope
+market record, `keel/shared/market.jsonl`: one row per contact-rung movement** — venture · intent · class (`price ·
+channel · positioning · copy · design · offer`) · artifact hash · movement (rung from → to) · the proving record
+(processor id, analytics id, reply id) · consent ref · taint ids — **written only by `bin/reconcile`**, so every row
+is rung 1 by construction. **The ship log becomes a view of it.** A world-reply negative is house scope with class
+`market` (O43). §13 owns how a slice loads it; §4 the Desk's tie-break (O98); §17 the inventory. **Losing image:**
+per-venture facts with founder-reviewed promotion. `wins_if:` a year of two ventures with no cross-loaded market row.
+*The world's vote* is §J 87, refused.
+
+**(NEW: O100 · v94 — the recall count that widens or narrows an outward class comes from the same record.)**
+`bin/reconcile` writes each class's `recall_count` from the world's record — a recall inside the window, or a reply
+asking to stop, which also writes the consent register; a recall narrows one step without asking; **`first-contact`
+is reachable like any other class** (FOUNDER: E11). §12.2b owns the ladder; this section owns why its counters are
+rung 1.
+
+**Mechanism:** the rung table read by `bin/reconcile` (ABSENT) · ~~a venture's `ship-log.md` written only by that
+program~~ `keel/shared/market.jsonl`, written only by `bin/reconcile`, with the ship log as a view (amended
+2026-09-06: O99) (ABSENT).
 
 ---
 
@@ -439,7 +524,10 @@ flowchart TD
 2. **"Not yet trusted" has a productive destination.** A move that fails rehearsal goes to the Floor, where the
    founder does it *with* the agent — **and that session becomes the rehearsal case for next time.** This is the
    mechanism by which walking *with* the founder teaches the system to walk *for* them, and it is why the Floor is not
-   a consolation prize.
+   a consolation prize. **(amended 2026-09-06: O112 · v103)** That destination is now a named state: `trust:
+   probation | scored | unroutable` per move class in `roster.yml`, where a probation agent runs only on the Floor or
+   under a founder-authored intent with adequacy-judged anchors (11.2b), each counting toward the floor. §5 owns the
+   field; this section owns why the floor is not one.
 3. **The cases come from the founder's own past.** Thousands of transcripts hold hundreds of *no, not like that* and
    *yes, that's it* — **a labelled dataset of this founder's judgement, gathered free over years.** §13.7's mining
    pass is what extracts them, which is why that pass is the work to do first: it is the only source of rehearsal
@@ -478,7 +566,7 @@ section's reading of them, and the two rows that cannot reach rung 1 today are n
 |---|---|---|
 | **Operator** | the store check refuses an intent whose done-test is not falsifiable by someone who did not do the work; nothing binds by voice (§C.3) | 1 on the refusal · 3 on the read-back |
 | **builder** | the venture's own CI, plus the done-test, plus the tester's blind test | 1 |
-| **reviewer** | findings reproduce from the diff alone; a finding with no reproduction is a hypothesis | 1 on reproduction · **2 only when a second family is reachable, else 4** |
+| **reviewer** | findings reproduce from the diff alone; a finding with no reproduction is a hypothesis | 1 on reproduction · **2 only when a second family is reachable ~~, else 4~~ and has passed the move class's calibration set, else 4 (amended 2026-09-06: v90 → v78)** |
 | **architect** | a migration that applies and rolls back in a scratch database | 1 |
 | **tester** | the test fails before the change and passes after | 1 |
 | **guard** | a proof of concept that reproduces, or the finding is a hypothesis | 1 |
@@ -487,10 +575,10 @@ section's reading of them, and the two rows that cannot reach rung 1 today are n
 | **product** | the store check refuses a done-test that is not falsifiable by an outsider | 1 |
 | **analyst** | the reconciliation reads a record the company does not write; **a number that reconciles to our own log is rung 4, not rung 1** | 1, and it says so when it is not |
 | **writer** | staged, never sent; the founder's taste store and a rung-2 external reaction | 2 and 3 |
-| **growth** | a reply from a real person, recorded by the world's door; never a count of messages sent | contact rung 1 |
+| **growth** | a reply from a real person, recorded by the world's door; never a count of messages sent — **and written as a row in `market.jsonl` by `bin/reconcile`, never by `growth`** (O99) | contact rung 1 |
 | **steward** | an obligation is discharged only by a record the company does not write | 1 |
 | **curator** | a memory item with no source, date, expiry and falsifier is refused at the store check | 1 |
-| **challenger** | every finding names the mechanism that would have caught it, or it is an opinion | 1 on that test · **2 only when a second family is reachable, else 4** |
+| **challenger** | every finding names the mechanism that would have caught it, or it is an opinion | 1 on that test · **2 only when a second family is reachable ~~, else 4~~ and has passed the move class's calibration set, else 4 (amended 2026-09-06: v90 → v78)** |
 
 **(NEW: the table's own finding.)** Thirteen of fifteen rows reach rung 1 on their primary anchor. The two that do not
 — `reviewer` and `challenger` — are precisely the two whose job is judgement, which is the section's thesis restated
@@ -501,6 +589,9 @@ that is why the second family is bought and why §11.3 refuses to round it up.
 carries a **mutation case**, so not one has been shown to fail when it should (11.2a). The column is not added here
 because it would be fifteen identical cells; the statement is the same and cheaper: **rated: 0 of 15.** As cases
 land, §21's rung-1 share reports rated and unrated separately, and the rated share starts at zero by construction.
+**(v100, the third finding:)** every rung in the table is a `verifier:` value and none carries an `adequacy:` yet —
+**adequacy: 0 of 15 judged** — so by 11.2b's rule the rung-1 column above is what the ladder *assigns*, not yet
+what `check-stores` would *count*.
 
 **(FACT: world.md 30a — W30. The only outside comparator this design has.)** TheAgentCompany, whose paper was
 accessed 2026-09-06 and has no 2026 revision: *"The most competitive agent can complete **30%** of tasks
@@ -532,3 +623,11 @@ exist, this table is a **WISH** — and naming it as one here is cheaper than di
 | **`tester` and `challenger` route on the `-p` carrier until blindness is probed** (O28) | the launcher's carrier choice; `bin/probe` asserts read-denial | **ABSENT**. **W8** names the settings field that could lift it |
 | A checker never averages scores | the checker's handover schema carries `findings` and no score field | **ABSENT** |
 | A flipped verdict under a swap is `unresolved` | `bin/run` presents an ordered pair twice, swapped; Rule 10 already pins `unresolved` distinct from `pass` | ordering **ABSENT**; Rule 10 **EXISTS**, branch `ceo-1-1788609834` |
+| **Rung 1 is counted only when `verifier: world` and `adequacy: pass`, adequacy written by a reader who wrote neither** (v100, O108) | two fields on the handover; `bin/check-stores` refuses rung 1 unjudged; §21 reports the Goodhart pair | **ABSENT** — adequacy: 0 of 15 judged |
+| **An anchor's verdict is a printed line the evaluator reads, never a command it runs** (O110) | `ANCHOR <name> exit=<code>` from every anchor; the `/goal` condition names the line | **ABSENT** · **DEPENDS-ON-R17** |
+| **Assumption 1 is measured on three corpora, never the harness alone** (O102, R27) | one Sonnet `-p` labelling pass over thirty Floor episodes, rated by the founder in one sitting; thirty paper done-tests; VENTURE2's first thirty; *inventing an anchor* defined three ways | **ABSENT**; (b) costs zero build |
+| **The curator's case sets pass the held-out test; its falsifiers execute; a nightly canary is refused** (O113) | `bin/check-stores` · the founder-labelled `class: calibration` seed in `keel/golden/` · the canary in `keel/fixtures/` | **ABSENT** |
+| **A cross-family verdict is rung 4 until the family passes the move class's calibration set** (v90 → v78) | the calibration set; the CLIs from launchd (O92) | **ABSENT**; the CLIs ship |
+| **A contact-rung movement is written once, by the reconciliation, and the ship log is a view** (v99, O99) | `keel/shared/market.jsonl`, written only by `bin/reconcile` | **ABSENT** |
+| **A recall count is the world's, and it narrows a class without asking** (O100, v94) | `bin/reconcile` writes `recall_count` into `tools/<class>.yml`; `bin/send` reads the step; §12.2b owns the ladder | **ABSENT** |
+| **A probation agent counts toward its floor only on adequacy-judged anchors** (O112, v103) | `trust:` per move class in `roster.yml`; §5 owns the field | **ABSENT** |
