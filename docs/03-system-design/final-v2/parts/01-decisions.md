@@ -5,7 +5,7 @@
 ---
 
 **(NEW: what this section is for, and why it is reproduced rather than summarised)** This is the row set every other
-section writes from. Twenty-three sections cannot disagree if each of them decides nothing that is not here. Rows
+section writes from. Twenty-five sections cannot disagree if each of them decides nothing that is not here. Rows
 **v1–v5** are the founder's overrules of FINAL §1 — they are not arguments, they are decisions, and each is followed
 in §1.2 by one paragraph stating the cost once and the chosen thing. Rows **v6–v41** are places a fact from the
 world moves a FINAL row, or a place FINAL stands *because* a fact was checked against it; rows **v42–v53** are what

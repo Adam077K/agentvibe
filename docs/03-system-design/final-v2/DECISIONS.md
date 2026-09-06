@@ -208,3 +208,11 @@ no-model launcher, outside any Claude session.
 log covers only the span it retains; DarkWake power-naps are counted as wakes, so "asleep" here means the machine could
 not have run a process. This is the measurement D14 asked for before deciding the hosted lane; the decision itself
 stays the founder's.
+
+## §20 — Two names decided while the rethink round was applied · 2026-09-06
+
+**The work-item store (O1) is `keel/ventures/<v>/items/i-*.yml`, drafts in `items-draft/`.** Builder B2 found the
+collision: O1 said `work/`, and §17.8's tree already gives `work/` to the venture's own source repository. Renamed by the
+orchestrator; the fields are unchanged. **v69's two stores take B2's coined paths:** `keel/consent.yml` (the consent
+register) and `keel/subjects/<hash>.yml` (the erasable per-subject body). **`cacheTtl` ships `unset`** in every agent
+row: W6 gives the column, no row decides a value, and the test that would decide one is written beside the column.
