@@ -1,7 +1,8 @@
 ## 16 · Economics — where the money and the window actually go
 
 *obeys: §G.2, §G.3, v22, v23, v57 and v59 which change what the arithmetic assumes, and **v74**, which changes what a
-ceiling is denominated in (rethink round, 2026-09-06) · inherits: FINAL §15 — **and the corrected cost formula now
+ceiling is denominated in (rethink round, 2026-09-06) · **and, from the fixer round of 2026-09-06, v86, v90, v104,
+v106's `shadow_usd`, v76 as amended, SPINE §L O95, O115, O116, O117, O118, O123, O127** · inherits: FINAL §15 — **and the corrected cost formula now
 lives in §9.6, cited here and not restated** (deletion 20, contradiction 15)*
 
 ---
@@ -84,6 +85,13 @@ vendor's own sentence names both and names what they are shared with:
 **So the reserve is per window *and* per week, and a weekly exhaustion is a different event from a five-hour one.**
 One is a pause; the other ends the week.
 
+**(FOUNDER, fixer round 2026-09-06: E6 — *"Away narrows, plus a burst edge"*; v76 amended, O127; §4 carries the
+predicate.)** **The reserve is held per weekly window**, not per day — **(THINKER: A20)** the founder's tempo is bursts, a
+305-commit day beside four silent ones; a daily reserve is the losing image (`wins_if:` a flat daily rate). **Away, the reserve goes only to `effect: none`
+work whose outputs stage** (v101's verb table decides `effect:`). And **the burst edge**: founder events in the current
+five-hour window above a founder-set rate (a dial, §16.3b) **pause Claude-seat autonomy until the window rolls** —
+one seat, shared (v22).
+
 **(NEW: and the second half of v22, which is the operationally sharper one.)** Two limit *shapes*:
 
 ```mermaid
@@ -141,8 +149,57 @@ reason no mechanism was ever built for exploration spend. So:
 **Settled by:** split one weekly window between driven and exploratory work. **If exploration is invisible there, the
 old sentence was right and this is over-built** — which is the falsifier the original sentence never carried.
 
-**Mechanism:** one high-water file (**ABSENT**) · one rule in the Desk's comparator (**ABSENT**, §4) · one `class:`
-field on the intent (**ABSENT**, §2).
+**(NEW: O115 — a measured denominator from the first run.)** A fraction of an unobserved mark is a guessed ceiling, which v74
+refuses; `.claude/hooks/budget-guard.js` (the fuse O50 registers) already holds one — **(THINKER: A12 · W39)** a peak
+of **1,961,285 output tokens in any rolling five hours over 99 transcripts**. So `keel/logbook/window-highwater.yml` is **seeded from it**, `seed: true`, `tokenizer: sonnet-4.6-era`
+(O77's field); **the founder writes `ceiling:` as a percentage**, page 3 shows the absolute, and **the first observed
+week replaces the seed** (§18.4). Adapter over `rate_limits`; `vendor_wins_if:` the vendor emits window utilisation.
+
+**Mechanism:** one high-water file, **seeded** (`keel/logbook/window-highwater.yml`, **ABSENT**, §L O115; the baseline
+**exists**) · one rule in the Desk's comparator (**ABSENT**, §4) · one `class:` field on the intent (**ABSENT**, §2).
+
+---
+
+### 16.2b Three gauges, not one — the window, the founder's decisions, the founder's hours
+
+**(FOUNDER, fixer round 2026-09-06: E3 and E15 — convergence 1, with the founder's numbers.)** The plan priced tokens
+and never a founder-hour (THINKER: A11, B3, B18, C4, C20). Three gauges, each read by the Desk like a ceiling:
+
+- **the window** — tokens against the high-water mark, wall clock beside it, USD the shadow (§16.2a).
+- **founder decisions** — whiches per window, `decisions_per_window × intent.horizon`, **seeded at six per five-hour
+  window until R34** measures the real answering rate; the Desk refuses to open a which past it and the refusal is a row
+  (v87, O96; §4 owns the admission control, §3 the which shape).
+- **founder hours** — `founder_hours:` per weekly window on the charter; **the harness's number is 20**; the Desk stops
+  starting harness intents when it is spent, and **a bind at 20 is reported, never enforced silently** (v86, O95).
+
+**(FOUNDER, E3, verbatim: *"20 hours or no ceiling"*.)** So **20**, `class: originated`, moved by evidence; and because
+of *"or no ceiling"*, the bind **reports** — a briefing line and a which — and never stops work in silence.
+**Founder-minutes are measured from the first run either way**: `bin/log` writes `founder.act` on every tap, sign-off,
+terminal open and read-back; §16.8 line 2 reads them. Losing images with `wins_if:` in v86: no ceiling · a hard bind.
+**(E15 — delegated; B's design, mechanised in §4.)** One option built plus a **written** second unless a ten-word summary
+cannot separate them (THINKER: B3); **the briefing's first line is decisions taken · deferred · defaulted**; the seed of
+six is a dial, `assumed` until R34.
+
+**Mechanism:** `founder_hours:` and `founder.act` (**ABSENT**, §L O95) · `decisions_per_window` (**ABSENT**, O96; **R34**
+OPEN) · the Desk's two refusals (**ABSENT**, §4).
+
+---
+
+### 16.2c The subsidy line — what the seat is worth, and the metered design as a losing image
+
+**(NEW: O116 — economics carried as a legal footnote, made a number.)** (THINKER: A12, B7, B21, C7): §I row 17 chained
+behind row 1 was backwards — the shadow price v74 computes is **the size of the bet on row 1** today. So **from the first run the briefing carries one line: Σ shadow USD of unattended runs at
+list price ÷ the seat price per month**. **R35** is its first reading — `~/.agentvibe/events.jsonl` priced by §9.6, zero
+build, OPEN. `class: kernel · record`; `wins_if:` it stays small for a quarter of two driven ventures.
+
+**(FOUNDER, fixer round 2026-09-06: E7 — *"no keys, codex and gemini cli use."*; v90.)** The metered design — batch at
+50%, a five-minute TTL, no weekly window, the reserve redesigned — is **§J 74**,
+`wins_if:` **O116's line exceeds N× the seat price, the vendor narrows the terms, or R40 finds the CLI route refused**.
+§I row 17 is **CLOSED** as *no keys*: the Gemini CLI on a personal account (1,000 requests a day, the free tier's count)
+and the Codex CLI, both only as `bin/run` children from launchd (O92; §9, §15.4). The subsidy line is what would reopen it.
+
+**Mechanism:** the subsidy line (**ABSENT**, §L O116; **R35** OPEN) · `shadow_usd` on `nights.jsonl` (**ABSENT**, v106 ·
+O124; §21).
 
 ---
 
@@ -179,6 +236,34 @@ as **a target a real bill can falsify**, never as an estimate to plan on.
 
 ---
 
+### 16.3a The plant model — rates as data, the reserve derived and printed beside the typed number
+
+**(NEW: v104 / O117 — *"no durations"* was over-applied into *"no plant model"*.)** (THINKER: B21, C7) Refusing
+**measured rates** left the reserve unsizeable. So `keel/shared/facts.yml` gains a **units table** — per shape: **tokens
+per run · runs per window · wall clock per run · finished intents per week · decisions per day**, each with
+`measured_at`, `valid_until` and the re-measure command, **written by the meter alone**. **The rule:** `settings.yml`
+**refuses a number neither derived from a units row nor labelled `assumed`**; **the reserve, WIP and *two driven
+ventures* are derived, and the derivation prints on the briefing beside the founder's typed number**. Losing image,
+rates as sentences: `wins_if:` a quarter in which no settings number moves after the rates land.
+
+**Mechanism:** the units table and the meter's write (**ABSENT**, §L O117) · `settings.yml`'s refusal and the derivation
+line (**ABSENT**, O117).
+
+---
+
+### 16.3b The dial inventory — every founder-set number, with its evidence line
+
+**(NEW: v104 / O118 — forty dials were uninventoried.)** (THINKER: B18) A control system with forty setpoints and no
+setpoint table is tuned by folklore. **`keel/shared/schemas/settings.yml` inventories every founder-set value** with
+`default:` · `evidence:` (the briefing line that is its feedback) · `label: measured | assumed | founder` ·
+`last_touched:`, and **the lint fails a dial with no evidence line**. SPINE §L O118 lists the dials, so the count is
+derived there and never carried here. **The briefing counts dials, and dials untouched for a quarter.** §17 inventories
+the path. Losing image, dials in prose: `wins_if:` a quarter in which no evidence line moved a default.
+
+**Mechanism:** `keel/shared/schemas/settings.yml`, its lint, the briefing's count (**ABSENT**, §L O118).
+
+---
+
 ### 16.4 Where cost is actually saved
 
 **(FINAL)** Not by making the runs thriftier. **By moving work off the expensive window.**
@@ -192,10 +277,10 @@ flowchart LR
     S2 -->|"no"| S3{"Extraction, ranking, classification,<br/>dedup, PII, embeddings?"}
     S3 -->|"yes"| L["LOCAL — electricity.<br/>MiniLM 384-dim · Qwen3-0.6B.<br/>Both Apache 2.0. No window at all."]
     S3 -->|"no"| S4{"Judgement or generation?"}
-    S4 -->|"routine"| G["GEMINI — once authenticated.<br/>60 rpm / 1,000 rpd free.<br/>It burns a different window."]
-    S4 -->|"a check on a prepared diff"| CX["CODEX — the foreground slot (v32).<br/>A second family, which is what<br/>the anchor ladder pays for."]
+    S4 -->|"routine"| G["GEMINI CLI — personal account, free tier,<br/>60 rpm / 1,000 rpd. No key (v90).<br/>A bin/run child from launchd (O92)."]
+    S4 -->|"a check on a prepared diff"| CX["CODEX CLI — the foreground slot (v32).<br/>A second family, which is what<br/>the anchor ladder pays for. No key (v90)."]
     S4 -->|"mid-to-hard making"| B["THE CLAUDE WINDOW"]
-    B -.->|"only if a metered key is ever bought"| BATCH["BATCH — 50% off BOTH directions,<br/>and it STACKS with caching. Deferred."]
+    B -.->|"a losing image, §J 74 — no keys (E7)"| BATCH["BATCH — 50% off BOTH directions,<br/>and it STACKS with caching. Not bought."]
 ```
 
 **(FINAL, and it is the claim to hold the design to.)** **The majority of what a company does every day is not
@@ -235,9 +320,11 @@ and the product of the two is a measurement nobody here has taken. **What the pl
 measurement, not an estimate** — the per-run cost fields, joined by the dispatch id, split by dispatch mechanism, so
 *teams cost too much* becomes a checkable statement about specific runs rather than an argument about a multiplier.
 
-**(FINAL, holding: batch still needs a metered key.)** 50% off both directions, stacking with caching. Batch prices
+~~**(FINAL, holding: batch still needs a metered key.)** 50% off both directions, stacking with caching. Batch prices
 are now published for every model, so the row is ready for the day a key exists — and §G.5's terms question is
-attached to that day, not to this one.
+attached to that day, not to this one.~~ **(amended 2026-09-06: E7 / v90 — *"no keys"*; there is no such day.)** Batch
+is part of **§J 74**; its prices stay in `prices.yml` so the shadow computation can price the image, and nothing routes
+on them.
 
 ---
 
@@ -319,11 +406,11 @@ event rather than as a line.
 | The founder asked for | Here it is |
 |---|---|
 | budget in money · daily spend cap · spend-rate limit | **the charter's ceiling is window share; money is the shadow price beside it** (v74, §16.2a). The money ceiling per month and the rate per tool survive **where real money moves** — **the Sender rejects at the ceiling independently of the number in the instruction**, and a tool with a null rate cannot carry `SPENDS MONEY` (**O32**'s `provider_cap`, §8) |
-| budget in hours | the reserve per window — **now per five-hour window *and* per week** (v22), with **wall clock beside the window gauge** (v74) |
+| budget in hours | the reserve per window — **now per five-hour window *and* per week** (v22), with **wall clock beside the window gauge** (v74); **and `founder_hours:` on the harness charter, 20, a bind reported** (v86, §16.2b) |
 | per-mission cost · per-worker cost · cost attribution | per intent and per run, joined by the id on every row; **per agent is now a real unit** (§16.1) |
 | mission budget cap · investment stop criteria | the intent's ceiling and expiry; the stop rule (§16.6) |
 | exploration vs exploitation spend | idle capacity buys knowledge, ~~bounded by being free~~ **metered: an exploration `class:` on the intent, routed to Gemini, local models or the Codex seat, and refused onto the Claude seat past a founder-set fraction** (moved 2026-09-06: v74, contradiction 18 — the weekly window is per seat and shared with chat and Cowork, so a night of exploration is subtracted from the next day); *both options built* is the only sampled diversity |
-| cheap-tier bulk usage | **local models on electricity** (v20) · the Gemini window once authenticated · batch on the day a key exists |
+| cheap-tier bulk usage | **local models on electricity** (v20) · the Gemini CLI's free tier, a `bin/run` child from launchd (v90, O92) · ~~batch on the day a key exists~~ **no keys; batch is §J 74** (amended 2026-09-06: E7) |
 | cache-hit cost rate | measured per run from the runner's record; **the dominant term**, one line weekly |
 | company P&L · revenue tracking · payment analytics · burn · runway | a venture's own work; revenue **read from the processor as a claim, never typed**; a runway computed from a number the bank does not confirm is stamped *internal* and cannot promote anything (§11.7) |
 | ROI per mission | cost per finished intent; revenue attribution this founder mostly cannot make honestly yet, so it is **reported as undefined rather than guessed** |
@@ -339,7 +426,7 @@ to game it.)**
 | # | The line | Direction | Why it cannot be gamed |
 |---|---|---|---|
 | 1 | **cost per finished intent** | must fall | the denominator is *finished*, which means a done-test passed |
-| 2 | **founder-minutes per finished intent** | must fall | the founder's own time, measured, not estimated |
+| 2 | **founder-minutes per finished intent** | must fall | the founder's own time, measured, not estimated — **from `founder.act` rows** (O95, §16.2b) |
 | 3 | **cost per surviving artifact** | reported, and **undefined when it is undefined** | a month of cheap runs that produced nothing has no such number, and **reporting a small one is the arithmetic by which producing nothing looks efficient** |
 | 4 | **interventions per surviving artifact** — redirects, rejections and rework | must fall | **the denominator is survivorship**, so producing more does not help |
 | 5 | **the cache-hit cost rate** | watched, not targeted | it is the dominant term §9.6 owns, and it is read from the runner's own record |
@@ -350,7 +437,7 @@ to game it.)**
 for a *warn at* number: cache-read share, tokens per run, and the trust pass rate. **There is no defensible constant
 for any of them**, and a threshold picked to make a chart look decisive is exactly the kind of number this section
 refuses everywhere else. So each is plotted **against its own history** and the alarm is *this shape has moved off its
-own baseline*, which needs no constant and survives a model change, a roster change and a tokenizer change.
+own baseline*, which needs no constant and survives a model change, a roster change and a tokenizer change. **(O123)** The Watch's own four rates are charted the same way; **R36** baselines them (§4 owns the controller).
 
 **(FINAL)** Two more lines belong in the briefing beside them and are not numbers: **the reconciliation line** — the
 books agree with the bank, or the incident — and **the week's most expensive refusal**: what was going to happen, what
@@ -360,7 +447,8 @@ wearing a safety costume, and is narrowed by name.**
 **(NEW: O76 — and the third thing beside them is a number after all.)** **The restore drill's number goes on the
 briefing** (§15.4). *The restore is drilled or none of this is true* is the strongest sentence in §15, and it was the
 only claim in the plan whose evidence never reached the founder's weekly reading. A drill that produces a number
-nobody sees is a drill that stops being run.
+nobody sees is a drill that stops being run. Beside it since 2026-09-06: §16.2b's first line, §16.2c's subsidy
+line, §16.3a's derivation line, and `shadow_usd` on `nights.jsonl` (v106; §21).
 
 **(NEW: a scope note, because two sections must not define one number.)** **§21.1 carries FINAL §20's six numbers and
 governs every line that appears in both.** Four of the six above are in that set — cost per finished intent, the
@@ -395,7 +483,8 @@ and never on a benchmark score.
 **Enforced by:** the ledger line per run (**ABSENT**) · the price table, with a model that has no entry **refused
 rather than scored at zero**, **and a stale row refused the same way** (**ABSENT**, O8) · the three ceilings of §12.9,
 **denominated in window share** (**ABSENT**, v74) · the ~~six~~ **seven** weekly lines in the briefing (**ABSENT**) ·
-`--max-budget-usd` per run as a stall fuse (**exists**).
+`--max-budget-usd` per run as a stall fuse (**exists**) · **the three gauges of §16.2b and the subsidy line of §16.2c**
+(**ABSENT**, O95 · O96 · O115 · O116) · **the plant model and the dial inventory** (**ABSENT**, O117 · O118).
 
 **(NEW: one row per mechanism the rethink round of 2026-09-06 added to this section, with the path SPINE §L gives
 it.)**
@@ -411,3 +500,6 @@ it.)**
 | The restore drill's number on the briefing | the briefing | **O76** | **ABSENT** |
 | Four vendor cost fields read rather than computed | the ledger's reader · §14.6 | **W4** | fields **ship**; the reader **ABSENT** |
 | Inline output caps set low, so tool output lands in a file | `bashOutputMaxChars` · `taskOutputMaxChars` | **W18** | the settings **ship**; **unset here** |
+
+**(NEW: the fixer round's rows, all ABSENT.)** O115 (W39) · O95 (E3) · O96 (E15; R34) · O116 (R35) · O117 · O118 ·
+O127 (E6) · O123 (R36) · v106's `shadow_usd` (§21) · §J 74 kept by name (E7).

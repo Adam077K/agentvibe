@@ -1,7 +1,9 @@
 ## 15 · Runtime and the Mac — the facts that bind, and each provider
 
 *obeys: §D.1, §D.2, v13's constraints, **v56** — which gives this section its one stated exception (§15.1a) — and
-**v79**, which prices that exception with a measurement (rethink round, 2026-09-06) · inherits: FINAL §14 and §16.7*
+**v79**, which prices that exception with a measurement (rethink round, 2026-09-06) · **and, from the fixer round of
+2026-09-06, v83 (no box), v84 (`night_capable`), v90's carrier rule, SPINE §L O81, O82, O83, O88, O91, O92, O93, O104;
+R29, R33, R37** · inherits: FINAL §14 and §16.7*
 
 ---
 
@@ -10,6 +12,12 @@
 **(FOUNDER, and it is why this section exists at all.)** *"everything is run on it."* Day one is this Mac: lid open,
 on power, logged in — **with one stated exception (v56)**, the cloud lane of §15.1a, which the same founder asked for
 in the same interview and which exists only for the hours this sentence is false.
+
+**(FOUNDER, fixer round 2026-09-06: E1.)** *"dont need for now. use this mac and when cant use cloude"* — **v83**,
+`class: originated`. **No always-on box.** The night runs on this Mac; when the Mac cannot hold a night, the cloud lane
+of §15.1a is the fallback. The box is **§J 73**, a losing image with a `wins_if:` (R37 shows maintenance sleeps inside
+declared nights, or three attempted nights each end `orphaned`), and §I row 18 closes on it. What *"lid open, on power,
+logged in"* was as a habit is now a **predicate** (§15.1b, v84).
 
 **(NEW: v39 makes that sentence a hosting decision, not only a runtime one.)** **Mission control is served on this
 Mac**, by `mission-control/` — the Bun and Hono server and React client on branch `ceo-1-1788609834` — because a tap
@@ -21,14 +29,18 @@ loopback and every write route checking a keychain-held token** (moved 2026-09-0
 artifact pages — the briefing, the read-back, and the Decide items — which are for reading and deciding and can pop
 nothing. §14.1 carries the cost of that split, stated once: two renderers over one state.
 
-**(FINAL)** The target is the split the design implies. **The Watch, the Sender and the log on an always-on machine**,
+~~**(FINAL)** The target is the split the design implies. **The Watch, the Sender and the log on an always-on machine**,
 because obligations must complete and the log must never be lost. **The runs wherever they are cheapest**, because
 they hold no credentials by construction. **The founder's Mac as a client** — a very good one — that can sleep
-without the company stopping.
+without the company stopping.~~
 
-**(FINAL, and the reason the split is small.)** A small always-on box with a real service manager solves every laptop
+~~**(FINAL, and the reason the split is small.)** A small always-on box with a real service manager solves every laptop
 problem for a few pounds a month. **It does not solve the credential problem; it relocates it**, which is why only the
-three no-model parts move there. The box is bought after the first measured overnight, not before.
+three no-model parts move there. The box is bought after the first measured overnight, not before.~~
+
+**(amended 2026-09-06: E1 / v83.)** The split is **§J 73**, kept by name. Three lanes drew it (THINKER: A1, C13; FIXER:
+A's S1, C's stage 2) and the founder overruled all three. What it would have bought: a machine that does not sleep (§15.1b
+answers with a predicate) and **one holding no founder identity** (§15.4: an accepted risk with a standing drill, O83).
 
 ---
 
@@ -93,6 +105,9 @@ reason rather than becoming a negative.
 - **§I row 15, which hosted lane may MAKE when the Mac is off** — raised by v56 and **the founder's, with row 1**.
   The tension is stated once and not re-argued: the founder's named preference has no driver, and the lane with a
   driver runs on the seat the terms question is about.
+  **(amended 2026-09-06: E1 / E13.)** With no box, **the cloud lane is the night's fallback whenever `night_capable`
+  is false** (§15.1b), so the maker path's UNVERIFIED status — v56(b) above — is now **on the critical path of the
+  first night**. R37 replaces the week R5 measured. Still the founder's, with row 1.
 
 **(NEW: what this exception does NOT move.)** Routines stay **refused for the Watch** — a one-hour minimum interval,
 *"The minimum interval is one hour; expressions that run more frequently are rejected"*, and no reach into anything
@@ -102,13 +117,44 @@ pushes `claude/`-prefixed branches, so it has a repository and not this laptop. 
 
 ---
 
+### 15.1b The night on this Mac — `night_capable`, a predicate and not a habit
+
+**(FOUNDER, fixer round 2026-09-06: E13 — *"Watch checks, refuses, routes to cloud"*; v84, `class: ratified`; the
+mechanism is O81.)** E1 put the night on this Mac, and this Mac sleeps. **(THINKER: A1 · W33)** — `pmset -g custom`
+reads `sleep 1` on AC and on battery; seven days of log hold 391 maintenance sleeps, 74 back-to-sleep and 24 clamshell
+sleeps; on battery at 71% when measured. Cited, not restated; its reading of R5 is carried here: *never awake
+unattended* is the same log as *no tail for a cloud lane*. A habit is a wish the Watch cannot verify. So:
+
+- **`night_capable` is computed every tick** from three reads: on AC (`pmset -g batt`), sleep off — `sleep 0` or
+  `disablesleep 1` (`pmset -g custom`) — and the power assertions (`pmset -g assertions`). **`keel/host/power.yml`
+  declares the contract** (ABSENT, §L O81). `class: adapter · pmset`; `vendor_wins_if:` the runtime refuses unattended
+  work on a sleeping host.
+- **A brief carrying `unattended: true` is refused with the printed reason when false**, and routed to the cloud
+  carrier where the charter says `cloud: allow` (§15.1a). §4 carries the refusal and the route; §14 the page-3 fact and
+  briefing line. This section owns the three reads and the host file, nothing else.
+- **The probe asserts it by attempting** (O10's rule): `bin/probe` mints a time-bounded detached child across
+  `pmset sleepnow` and reads `run.started` against the wake.
+
+**(NEW: O82 — the standing measurement; thirty days is a floor.)** R5 measured one week, the busiest the machine has had
+(THINKER: B15). **`pmset -g log` becomes a v55 standing intent** whose output is one `keel/shared/facts.yml` row,
+`mac-off-hours` — longest gap and off-hours over **thirty days including a weekend away**, the floor not the target —
+and that row re-reads §I row 15 (**R37**, OPEN). It carries `valid_until` (O126) and a ceiling per run (v55). **§J 73's
+`wins_if:` is written against this row**, so the box comes back by a measurement and not by an argument. Kept by name: §J 73 · 76 · 75.
+
+**Mechanism:** the three `pmset` reads in `bin/watch` and `keel/host/power.yml` (**ABSENT**, §L O81) · the sleep
+drill in `bin/probe` (**ABSENT**, O81) · the `mac-off-hours` standing intent and its `facts.yml` row (**ABSENT**,
+§L O82; R37 OPEN).
+
+---
+
 ### 15.2 Supervision, on macOS
 
 **(FINAL, from Apple's documentation.)** A **LaunchAgent** holds the Watch. It runs as the founder's user, which is
 what reaches the keychain and the subscription's OAuth, and **it dies at logout** — so the honest statement is that
 the Mac stays logged in with the lid open, or the night ends, **with one stated exception (v56)**: the cloud lane of
 §15.1a keeps running, because it never needed this machine. What it cannot do is reach anything stored on it, which
-is why it is an exception to the runtime and not to the Watch.
+is why it is an exception to the runtime and not to the Watch. **(amended 2026-09-06: v84)** *"Or the night ends"* is
+`night_capable`'s call now (§15.1b).
 
 Six facts, each of which changes the code:
 
@@ -117,8 +163,14 @@ Six facts, each of which changes the code:
 - **`StartInterval` coalesces missed firings**, so a Mac that slept through four ticks fires once on wake.
 - **`caffeinate -i`, time-bounded**, prevents idle sleep. **Nothing but `pmset -a disablesleep 1` prevents lid
   sleep.**
-- **`launchd` has no restart ceiling beyond its throttle**, so the supervisor implements one — N restarts in T
-  seconds, then it escalates rather than loops.
+- **`launchd` has no restart ceiling beyond its throttle**, so ~~the supervisor implements one~~ **the Watch's own
+  tick implements one** (amended 2026-09-06: O91) — N restarts in T seconds, then it escalates rather than loops.
+  **`bin/supervise` is REFUSED, not built** (§L O91, `class: refuse`): the vendor ships a supervisor daemon with leases
+  — **(THINKER: A7 · W38)** `~/.claude/daemon/{control.key,dispatch,roster.json}`, `~/.claude/jobs/`, *"idle 5s with
+  no clients — exiting … leases=0"* — and two supervisors over one process table argue over the first orphan at 03:00.
+  Until **R31** reads the daemon's lease semantics, `bin/run` mints via bare `claude -p` in a detached tmux session
+  (pane, process group and session id ours), never via `--bg` (§J 85); O15 reads the daemon's roster **read-only**.
+  `vendor_wins_if:` a service mode that does not idle-exit, with readable leases.
 - **`KeepAlive` cannot catch a hang**, so a separate heartbeat, and a **process-group kill**: a timeout that kills a
   child while its grandchild runs on is a timeout that does nothing.
 - **Every tick is crash-only** — read state from disk, take one move, write, exit. A tick that vanishes loses exactly
@@ -142,7 +194,8 @@ finishes, the next one starts on the new code, and a bad swap costs one tick rat
 is the whole of the deployment story for the two programs that may act on the world, and it needs no mechanism beyond
 the boundary that already exists.
 
-**Mechanism:** `~/Library/LaunchAgents/…watch.plist` and `bin/supervise` (both **ABSENT**) · the tick-boundary swap
+**Mechanism:** `~/Library/LaunchAgents/…watch.plist` (**ABSENT**) · ~~`bin/supervise` (ABSENT)~~ **`bin/supervise` —
+REFUSE until R31** (amended 2026-09-06: O91) · the tick-boundary swap
 in `bin/watch` and `bin/send` (**ABSENT**, §L O79).
 
 ---
@@ -154,11 +207,27 @@ file (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`, `ANTHROPIC_DEFAULT_HAIKU_MODEL`), 
 list, the expected macOS grants — is **configuration that lives somewhere or a sentence that rots**. It lives in
 **`keel/host/`**, one directory, in git, and it is what a new machine is rebuilt from.
 
+**(NEW: the fixer round adds four files to it, every one ABSENT.)** `power.yml` — the `night_capable` contract (O81,
+§15.1b) · `denyread.yml` — **the real `denyRead` list** (O92, §15.4) · `settings.json` — what a night child runs under,
+`--no-session-persistence` on every one (O88; §12 and §13 own the rule) · `RUNBOOK.md` — the first-month runbook from
+`rules.yml` where `state: absent` plus the founder-act list (O125; §19 owns it). The managed-settings template now
+carries **`permissions.deny` and `disableBypassPermissionsMode` only**, `disableAutoMode` struck (v92, E9; §12).
+
 **And `bin/probe` asserts the live machine matches it by attempting the operation, never by reading a database.** The
 distinction is the whole value of the program. Reading a settings file tells you what someone intended; attempting a
 cross-venture read, a write outside the worktree, or a fetch of a denied path tells you what the machine will actually
 do tonight. This repository has already been wrong about a grant it had configured correctly — the sandbox deny-set is
 per session root, which hid half a finding three times in one day.
+
+**(NEW: O93.)** `bin/probe` **never imports `bin/run`** — a probe sharing the launcher's code shares its defects — and
+asserts from **both contexts**, a sandboxed Claude shell and launchd, recording both exit codes (§15.4). And `bin/probe`, `bin/run` and `bin/send` **never run inside
+a Claude session**: **(THINKER: A16)** the auto-mode classifier blocked a read-only `security find-generic-password` —
+the harness would deny the programs that serve it. **(NEW: O104 — the vendor floor.)** `--restricted`, explicit
+`--tools`, managed `permissions.deny`, `disableBypassPermissionsMode`, `blockReadsOutsideWorkingDirectories` (FACT:
+world.md 7, 8); `bin/run` composes above it and **cannot widen it**, so a launcher defect yields a narrower or refused
+run; the scratch house (§15.4a) deliberately widens it and **the probe must refuse that launcher**. §12 owns the
+floor. **(NEW: O83.)** From a night child the probe attempts a keychain read of a **founder** item and **must fail**;
+a pass is a `wake-me` (§15.4).
 
 **(NEW: O14 — a run never creates its own worktree.)** v41 gives four agents `isolation: worktree`; **`git worktree
 add` cannot complete under the armed sandbox** (§15.8), and interactive escalation is unavailable to an unattended run
@@ -172,7 +241,8 @@ narrows to the run's own worktree and the isolation is a fact; project-scoped, i
 Vendor reference first, then one measured cell.
 
 **Mechanism:** `keel/host/` (**ABSENT**) · `bin/probe`, asserting by attempting (**ABSENT**) · `bin/worktree`
-(**ABSENT**).
+(**ABSENT**) · the four host files above (**ABSENT**, §L O81, O92, O88, O125) · the keychain-read drill and the
+widened-launcher refusal in `bin/probe` (**ABSENT**, O83, O104) · O93's authorship rule (the marks lint, **ABSENT**).
 
 ---
 
@@ -299,9 +369,17 @@ because a cadence written into a plan is a schedule the SPINE refuses and the pl
 file that gets committed eventually.
 
 **(NEW: the sandbox already helps here and is worth naming, because it is one of the few controls that exists today.)**
-`denyRead` covers the credential stores — `~/.ssh`, `~/.aws`, `~/.config/gh`, `~/.netrc`, `**/.env*` — and
-`npm run test:sandbox` on branch `ceo-1-1788609834` fails if the sandbox is disarmed. §12.10's caveat applies
-unchanged: **that is a guardrail against accident, not containment.**
+`denyRead` covers the credential stores — ~~`~/.ssh`, `~/.aws`, `~/.config/gh`, `~/.netrc`, `**/.env*`~~ **the real
+list is longer** (amended 2026-09-06: O92 · THINKER: A9 · W37): `~/.ssh` · `~/.aws` · `~/.config/gh` · `~/.netrc` ·
+`**/.env*` · **`~/.gemini` · `~/.codex` · `~/.config/openai` · `~/.claude/{daemon,jobs,routines}`** — held in
+**`keel/host/denyread.yml`** (ABSENT), the one source the settings block is generated from and the probe asserts
+against. The provider entries are why the second family cannot start from a Claude-hosted shell: **(THINKER: A9)**
+`gemini --version` under the live sandbox → `EPERM` on `~/.gemini/settings.json`, which reads as a broken install. So
+**Gemini and Codex run only as `bin/run` children from the launchd context** (v90, E7: *"no keys, codex and gemini cli
+use."*; §9 and §10 route them), and the probe asserts the list from **both contexts** — `EPERM` in a sandboxed Claude
+shell, exit 0 from launchd (O93). `vendor_wins_if:` `denyRead` narrowable per invocation. `npm run test:sandbox` on
+branch `ceo-1-1788609834` fails if the sandbox is disarmed. §12.10's caveat applies unchanged: **that is a guardrail
+against accident, not containment.**
 
 **(R3, OPEN — and the unattended half of this plan rests on it with nothing tested.)** Can a **non-interactive
 background process read a macOS keychain item without an interactive unlock, and under what ACL**? Everything above
@@ -310,6 +388,19 @@ at 3 a.m., the credential plan works exactly when someone is watching, which is 
 prices v66's keychain-held token** (§14.1) — the same question, asked of the surface. Apple platform documentation,
 then one detached measurement.
 
+**(amended 2026-09-06: E1 — re-sharpened for THIS Mac, there being no other machine to ask it of.)** **(THINKER: A9)**
+narrows it: the login keychain here is `no-timeout`; `--bare` skips keychain reads, so a child needs the keychain **only
+for OAuth**; the unmeasured half is a **LaunchAgent on this Mac after sleep, and after a reboot with the screen locked**
+— **R33**, OPEN. Under E1 that is the critical half: every night child is a launchd child of this user on this machine.
+
+**(FOUNDER, fixer round 2026-09-06: E1 — identity and autonomy share this Mac: an accepted risk with a standing drill.)**
+**(THINKER: C13)**: the box was the one purchase separating the founder's identity from the company's autonomy. The
+founder declined it, so the two share one keychain and one user. Recorded
+as **accepted**, and drilled: **O83** — `bin/probe` attempts a keychain read of a **founder** item from a night child
+and **must fail**; a pass is a `wake-me`, its fixture in `keel/fixtures/` (§15.4a), and **§J 73's `wins_if:` is also
+this**: the drill passes once, and the box comes back. `class: kernel · truth`; `vendor_wins_if:` per-invocation
+keychain ACLs.
+
 **(NEW: O67 — rotation stops being a promise with no clock.)** *"At the horizon"* becomes **one row per credential in
 the obligations store** (v44), surfaced by the briefing, with the same forced disposition every dated thing here
 carries. §12.8c holds the decision; this is the section whose plan it repairs.
@@ -317,7 +408,8 @@ carries. §12.8c holds the decision; this is the section whose plan it repairs.
 **Mechanism:** the two drills as **two obligation rows carrying `recurs:`** in the harness venture's obligations,
 their intervals read from the charter and never written here (**ABSENT**) · rotation rows in `obligations.yml`
 (**ABSENT**, §L O67) · the escrow half — printed kit, paired hardware keys, k-of-n split — **WISH**, no mechanism
-designed *(all three marks set 2026-09-06 · challenge C P2-4)*.
+designed *(all three marks set 2026-09-06 · challenge C P2-4)* · `keel/host/denyread.yml` (**ABSENT**, §L O92) · the
+keychain-read drill (**ABSENT**, §L O83; R33 OPEN).
 
 ---
 
@@ -325,7 +417,7 @@ designed *(all three marks set 2026-09-06 · challenge C P2-4)*.
 
 **(NEW: O16 — the only failure in the whole round that ends in a duplicated outward act.)** The drill above restores
 the fleet **from the remote alone** and runs the anchors there. That clone has the Watch's plist, the Sender's code
-and the obligations store. **Nothing stops it ticking, and nothing stops it sending.** Twice a year, a drill that
+and the obligations store. **Nothing stops it ticking, and nothing stops it sending.** ~~Twice a year,~~ **Each time it recurs,** a drill that
 succeeds is a second company acting on the world on the founder's behalf, and the duplicate is an email or a payment
 rather than a file.
 
@@ -339,7 +431,7 @@ that sentence did not.
 Watch, the world's door and the launcher are exactly the four things a defect in cannot be recalled, and there is
 nowhere to exercise them. **`keel/fixtures/` is a scratch house and `bin/drill` runs against it** — fixture charters,
 fixture obligations, a fixture inbound row, and a Sender whose outward act lands in the fixture rather than in the
-world. It is what makes the monthly restore drill a rehearsal rather than a first performance, and it is what O16's
+world. It is what makes the ~~monthly~~ restore drill (its `recurs:` is the charter's, §15.4) a rehearsal rather than a first performance, and it is what O16's
 lease is tested against.
 
 **Mechanism:** `logbook/watch.lease`, refused-without by `bin/watch` and `bin/send` (**ABSENT**, §L O16) ·
@@ -396,7 +488,8 @@ documented with a URL and a date; `C` claimed by a third party. **Nothing in the
 | Fleet and terminal | **D** `claude agents [--cwd] [--json] [--json --all]`; **`--bg`** and **`--attach <id>`**; `--teammate-mode tmux\|iterm2` (experimental, hidden). **`-w` / `--worktree` / `--tmux`: UNRESOLVED** — measured by a prior lane, absent from this session's CLI-reference fetch | — | **M** `-w` (prior lane) |
 | Inbound seam | **D** **Channels** — *"A channel is an MCP server that pushes events into your running Claude Code session"*; research preview; *"Being in `.mcp.json` isn't enough … a server also has to be named in `--channels`"*; Anthropic auth only | — | — |
 | Cost model | **D** subscription or key; `--max-budget-usd` per run (v2.1.217+), **a stall fuse, not a billing control** (v23) | **D** both; included in every ChatGPT plan (FINAL §14.6, providers lane 2026-09-04); **the only vendor publishing numeric per-window quotas** (§G.2) | free tier 60 rpm / 1,000 rpd |
-| Second checker family | **D** no | **D** in principle; **blocked by #19945** until the headless rehearsal passes (v32) | **M** yes, installed, unauthenticated |
+| Second checker family | **D** no | **D** in principle; **blocked by #19945** until the headless rehearsal passes (v32); **only as a `bin/run` child from launchd** (v90, O92) | **M** yes, installed, unauthenticated; **a personal Google account, no key** (E7, v90); **starts only from launchd** — `gemini --version` → `EPERM` under the sandbox (THINKER: A9 · W37); R40 OPEN |
+| **The daemon** *(NEW 2026-09-06: O91 · THINKER: A7 · W38)* | **M** `~/.claude/daemon/{control.key,dispatch,roster.json}`, `~/.claude/jobs/`; started by `--bg`; *"idle 5s with no clients — exiting … leases=0"*; paths under this repo's own `denyRead`. **Never the night's carrier**: bare `-p` in tmux; O15 reads `roster.json` read-only; `bin/supervise` REFUSED until **R31** | — | — |
 | Shared config | **M** `CLAUDE.md`, `SKILL.md`, `.mcp.json`; imports codex and gemini config; `/import` appends a one-time copy of `AGENTS.md` | **D** `AGENTS.md`, `SKILL.md`, `config.toml`; `project_doc_max_bytes` 32 KiB | **M** `GEMINI.md`, skills, extensions |
 | **Claude Code on the web / Routines** (the same seat) *(NEW, v56)* | **D** **the only fully documented off-Mac maker path today**: `claude --cloud "<task>"`, follow-ups by `claude -p … --cloud <session-id>`, `claude --teleport <session-id>`; Routines add `POST …/routines/trig_…/fire`. **Whether the crew may use it for making is §I row 15, the founder's**. **Shares the Claude seat** — *"shares rate limits with all other Claude and Claude Code usage within your account… There is no separate compute charge for the cloud VM"*, so it competes with the Floor rather than adding capacity. State: exists; documented. **§I row 1's terms clause governs it**, and that row is open by the founder's word | — | — |
 | **Codex cloud** (subscription, **Plus and above**) *(NEW, v56)* | — | **D** **PR reviewer, and only that today**: `@codex review` on a pull request, or automatic review on PR open — vendor-documented, needs no local Codex, and therefore **sidesteps #19945**. **As a maker: UNVERIFIED** — no vendor page prints a non-interactive command or an endpoint; `codex cloud exec` is an open feature request's author's claim (#24777, M). **No numeric cloud quota is published** — only *"Cloud chats on ChatGPT plans use GPT-5.6 Sol and may use more of your allowance than local messages."* The published five-hour numbers are for **local** messages. **Internet blocked by default in the agent phase**; allowlist and HTTP-method restriction are per environment. State: exists; **not usable from here without a driver**, and Codex is not installed. Max task duration **UNKNOWN**; cancel **UNKNOWN** | — |
@@ -449,9 +542,12 @@ That is v47's shape, reused rather than invented, and it is why §13.7's mining 
 service.
 
 **(R4, OPEN, and it is the whole of the design question.)** Can a sandboxed run reach a local model, and **in which
-shape — server inside, server outside, or in-process**? Inbound `bind()` is **measured denied**; **outbound connect to
+shape — server inside, server outside, or in-process**? Inbound `bind()` is **measured denied**; ~~**outbound connect to
 loopback is unmeasured**, and if it works, a server outside the sandbox is reachable and the tier could be a service
-after all. The programs above are what the tier is until that is measured.
+after all~~ **outbound loopback `connect()` is measured denied too** (amended 2026-09-06: W36 · THINKER: A5 —
+`dial tcp 127.0.0.1:11434: … operation not permitted` from sandboxed Bash), so a server outside the sandbox is **not**
+reachable by a sandboxed run either — the same fact that rules out a loopback proxy for `bin/egress` (§8, O94; §J 86).
+R4 still asks the in-process shape and the launchd context, where the programs above run.
 
 **(UNVERIFIED, and named.)** On-disk byte sizes are not stated on either model page. FINAL's *"under 100 MB"* for the
 embedder is consistent with the parameter count and is **not quoted from the page**.
@@ -492,6 +588,7 @@ this Mac, this account and these runtimes — they are not design, and nothing a
 | The account's **five-hour window and a weekly window**, per seat, *"shared with Claude chat and Cowork"*; a seat limit cannot be escaped with `/model`, a family limit can | **models.md** | v22 · §16 · §14.6 |
 | `--max-budget-usd` is print-mode only, computed locally at list price; subagent spend counts toward it; overflow fails a spawn with `Budget limit reached` | **models.md** | v23 — a stall fuse |
 | Nobody has run a real business profitably unattended; nobody has measured overnight against bounded operation; **nobody has built a detector for an agent misreporting its own progress**; per-action approval is the weakest control anyone has measured | FINAL §14.7 | §11.7 · §12.2 |
+| The practitioner's five measurements on this Mac — sleep on AC (W33), loopback `connect()` denied (W36), `gemini` `EPERM` (W37), the daemon (W38), eight unnamed flags (W35) | **(THINKER: A1, A5, A9, A7, A4)** — bound for `facts.yml` (O117), cited never restated | §15.1b · §15.7 · §15.4 · §15.2 · §17.5 |
 
 **(NEW: one fact about this repository's own working conditions belongs here, because every measurement above was
 taken under it.)** `git worktree add` cannot complete under the armed sandbox — exit 128 across the agent-config paths
@@ -507,8 +604,8 @@ reachable from the internet cannot be served by a program on this Mac as configu
 cursor or the source does not enter through it. One page per source, vendor documentation.
 
 **Enforced by:** a facts store with one row per fact, its date and the command or URL that re-measures it, checked for
-expiry like any other item (**ABSENT**; the substrate is `scripts/ledger.mjs`, which exists on branch
-`ceo-1-1788609834` and already forces a disposition when a date comes due).
+expiry like any other item (**ABSENT**; **named 2026-09-06: `keel/shared/facts.yml`, §L O117**; the substrate is
+`scripts/ledger.mjs`, which exists on branch `ceo-1-1788609834` and already forces a disposition when a date comes due).
 
 **(NEW: one row per mechanism the rethink round of 2026-09-06 added to this section, with the path SPINE §L gives
 it.)**
@@ -525,3 +622,17 @@ it.)**
 | The log's hash chain, and the hash indirection for personal data | `bin/log` | **O31** · **v69** | **ABSENT** |
 | `cloud: allow \| deny` on every charter, default `deny`, refused when absent | the charter schema · `bin/check-stores` | **v79** (D14) | **ABSENT** |
 | Rotation as a row per credential | `obligations.yml` | **O67** | store decided (v44); rows **ABSENT** |
+
+**(NEW: the fixer round's rows, each with its `class:`.)**
+
+| Mechanism | Path | From | State |
+|---|---|---|---|
+| **`night_capable`** — three `pmset` reads every tick; the probe sleeps a child · adapter | `bin/watch` · `keel/host/power.yml` · `bin/probe` | **O81** (E13, v84) | **ABSENT** |
+| `pmset -g log` as a standing intent → `facts.yml` `mac-off-hours`, thirty days as a floor · adapter | a v55 intent · `keel/shared/facts.yml` | **O82** | **ABSENT**; **R37** OPEN |
+| The keychain-read drill from a night child, which must fail · kernel | `bin/probe` · `keel/fixtures/` | **O83** (E1) | **ABSENT**; **R33** OPEN |
+| `--no-session-persistence` on every night child · adapter | `bin/run` · `keel/host/settings.json` | **O88** (E10, v93) | **ABSENT**; **R30** OPEN |
+| Bare `claude -p` in a detached tmux session, never `--bg`; the daemon read-only · adapter | `bin/run` · `bin/watch` | **O91** | **ABSENT** · `bin/supervise` **REFUSE** until **R31** |
+| The real `denyRead` list, asserted from both contexts · adapter | `keel/host/denyread.yml` · `bin/probe` | **O92** (E7, v90) | **ABSENT**; **R40** OPEN |
+| The probe authored apart from the launcher; probe, run, send never inside a Claude session · kernel | `bin/probe` | **O93** | **ABSENT** |
+| The vendor floor: `bin/run` narrows and never widens; the probe refuses a widened launcher · kernel | `bin/run` · `keel/host/` | **O104** (E4, v88) | **ABSENT** |
+| `sessions_ceiling` from this Mac's RSS per `-p` child (16 GB; `ps` denied in the sandbox), **3 until measured**; the vendor's 20 is the losing image | `settings.yml`, `assumed` (O118) | **R29** (THINKER: A14) | OPEN |
